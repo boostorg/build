@@ -407,7 +407,7 @@ class TestCmd:
         try:
             p = popen2.Popen3(cmd, 1)
         except AttributeError:
-            (tochild, fromchild, childerr) = os.popen3(cmd)
+            (tochild, fromchild, childerr) = os.popen3(join(cmd, " "))
             if stdin:
                 if type(stdin) is ListType:
                     for line in stdin:
