@@ -673,7 +673,7 @@ rule .package ( dst-dir : src-files + )
 }
 
 # RPM distro file.
-rpm-tool = [ GLOB $(PATH) : "rpm" ] ;
+rpm-tool = [ GLOB $(PATH) : "rpmbuild" "rpm" ] ;
 rule .rpm ( name : source )
 {
     local rpm-arch = ;
@@ -704,7 +704,7 @@ rule .rpm ( name : source )
 actions .rpm. {
     export BOOST_JAM_DOCS="$(docs)"
     export BOOST_JAM_TOOLSET="$(toolset)"
-    rpm -ta $(target-opt)$(arch) $(>) | tee rpm.out
+    $(rpm-tool[1]) -ta $(target-opt)$(arch) $(>) | tee rpm.out
     cp `grep -e '^Wrote:' rpm.out | sed 's/^Wrote: //'` .
     rm -f rpm.out
 }
