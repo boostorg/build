@@ -21,7 +21,7 @@ import errors : error ;
 import project-root ;
 import print ;
 import class : class new ;
-
+import errors ;
 
 #
 #   Loads jamfile at the given location. After loading, project global
@@ -219,10 +219,9 @@ rule find-target ( id : current-location )
         } 
         else if $(explicit)
         {
-            print.wrapped-text 
+            errors.error
               "The target id" $(id) ",specified by project at" $(current-location)
                 "is invalid (missing 'use-project'?)" ;
-            EXIT ;
         }
     }    
 }
@@ -420,12 +419,10 @@ rule project-attributes ( location )
 
             if $(result[1]) = "@error"
             {
-                print.wrapped-text
+                errors.error
                     "Requirements for project at '$(self.location)'"
-                    "conflict with parent's." ;
-                print.wrapped-text
+                    "conflict with parent's." :
                     "Explanation: " $(result[2-]) ;
-                EXIT ;
             }
             else
             {
@@ -449,9 +446,8 @@ rule project-attributes ( location )
         else if ! $(attribute) in "id" "default-build" "location" "source-location"
            "project-root" "project-root-module" "parent" "projects-to-build" 
         {
-            print.wrapped-text "Invalid project attribute '$(attribute)' specified "
+            errors.error "Invalid project attribute '$(attribute)' specified "
                                "for project at '$(self.location)'" ;
-            EXIT ;
         }
         else
         {
