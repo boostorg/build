@@ -1,10 +1,39 @@
-#  (C) Copyright David Abrahams 2002. Permission to copy, use, modify, sell and
+#  (C) Copyright David Abrahams 2002.
+#  Copyright (C) 2003 Rene Rivera.
+#  Permission to copy, use, modify, sell and
 #  distribute this software is granted provided this copyright notice appears in
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
 import regex ;
-rule chars ( string )
+
+# Characters considered whitespace, as a list.
+.whitespace-chars = " " "	" "
+" ;
+
+# Characters considered whitespace, as a single string.
+.whitespace = $(.whitespace-chars:J="") ;
+
+# Returns the canonical set of whitespace characters, as a list.
+#
+rule whitespace-chars ( )
+{
+    return $(.whitespace-chars) ;
+}
+
+# Returns the canonical set of whitespace characters, as a single string.
+#
+rule whitespace ( )
+{
+    return $(.whitespace) ;
+}
+
+# Splits the given string into a list of strings composed
+# of each character of the string in sequence.
+#
+rule chars (
+    string # The string to split.
+    )
 {
     local result ;
     while $(string)
@@ -23,26 +52,27 @@ rule chars ( string )
     return $(result) ;
 }
 
-rule join ( strings * : separator ? )
+# Concatenates the given strings, inserting the given separator
+# between each string.
+#
+rule join (
+    strings * # The strings to join.
+    : separator ? # The optional separator.
+    )
 {
     separator ?= "" ;
-    local result = $(strings[1]) ;
-    for local x in $(strings[2-])
-    {
-        result = $(result)$(separator)$(x) ;
-    }
-    return $(result) ;
+    return $(strings:J=$(separator)) ;
 }
 
 # Split a string into whitespace separated words.
+#
 rule words (
     string # The string to split.
     : whitespace * # Optional, characters to consider as whitespace.
     )
 {
     whitespace = $(whitespace:J="") ;
-    whitespace ?= " 	
-" ;
+    whitespace ?= $(.whitespace) ;
     local w = ;
     while $(string)
     {
@@ -54,6 +84,18 @@ rule words (
         string = $(string[2]) ;
     }
     return $(w) ;
+}
+
+# Check that the given string is composed entirely of whitespace.
+#
+rule is-whitespace (
+    string ? # The string to test.
+    )
+{
+    if ! $(string) { return true ; }
+    else if $(string) = "" { return true ; }
+    else if [ MATCH "^([$(.whitespace)]+)$" : $(string) ] { return true ; }
+    else { return ; }
 }
 
 rule __test__ ( )
@@ -71,4 +113,11 @@ rule __test__ ( )
     
     assert.result a//b/c/d : join a "" b c d : / ;
     assert.result abcd : join  a "" b c d ;
+    
+    assert.result a b c : words "a b	c" ;
+    
+    assert.true is-whitespace "     	" ;
+    assert.false is-whitespace "  a b c	" ;
+    assert.true is-whitespace "" ;
+    assert.true is-whitespace ;
 }
