@@ -89,7 +89,7 @@ char *jambase[] = {
 "{\n",
 "for local e in $(ARGV[2-]) \n",
 "{\n",
-"if ! [ MATCH \"(-).*\" : $(e) ] \n",
+"if ! [ MATCH \"^(-).*\" : $(e) ] \n",
 "{\n",
 "UPDATE $(e) ;\n",
 "}\n",
