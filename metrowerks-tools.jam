@@ -49,7 +49,7 @@ flags metrowerks CFLAGS <inlining>on : -inline on ;
 flags metrowerks CFLAGS <inlining>full : -inline auto -inline level=8 ;
 flags metrowerks CFLAGS <user-interface>console/<runtime-link>dynamic : -prefix UseDLLPrefix.h ;
 
-if $(BOOST_CODEWARRIOR_7)
+if ! $(BOOST_CODEWARRIOR_6)
 {
     flags metrowerks STDLIBS <runtime-link>static/<runtime-build>release : MSL_C_x86.lib;MSL_Runtime_x86.lib;msl_c++_x86.lib;gdi32.lib;user32.lib;kernel32.lib ;
   flags metrowerks STDLIBS <runtime-link>dynamic/<runtime-build>release : MSL_All-DLL_x86.lib;gdi32.lib;user32.lib;kernel32.lib ;
@@ -70,7 +70,7 @@ flags metrowerks FINDLIBS <find-library> ;
 # If the user specified METROWERKS_INCLUDE_ROOT, use that
 # Otherwise, if he specified METROWERKS_ROOT, use that
 # Otherwise, look at the "standard" environment variable CWFOLDER
-METROWERKS_INCLUDE_ROOT ?= $(METROWERKS_ROOT) ;
+METROWERKS_INCLUDE_ROOT = $(METROWERKS_ROOT) ;
 METROWERKS_INCLUDE_ROOT ?= $(CWFOLDER) ;
 
 # This is the list of subdirectories below METROWERKS_INCLUDE_ROOT to search.
