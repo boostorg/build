@@ -148,5 +148,6 @@ variant release : common :
 # Profiling variant by Toon Knapen <toon@si-lab.com>
 variant profile : release :
     <profiling>on
+    <debug-symbols>on
     ;
 
