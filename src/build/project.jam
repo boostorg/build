@@ -90,31 +90,48 @@ rule lookup ( id : current-location )
             error Jamfile location must be specified for relative project-id $(id) ;
         }
 
-        local module-name = [ module-name $(location) ] ;
-
-        if ! $(project-id)
+        if $(location) in $(.projects) 
         {
-            return [ $(module-name).location ] ;
+            local module-name = [ module-name $(location) ] ;
+
+            if ! $(project-id)
+            {
+                return [ $(module-name).location ] ;
+            }
+            else 
+            {
+                local base-id = [ $(module-name).id ] ;
+
+                if ! $(base-id)
+                {
+                    error "Project in $(location) has no project id" ;
+                }
+                else
+                {
+                    local rooted-id = $(base-id)/$(project-id) ;
+                    return $($(rooted-id).jamfile-location) ;
+                }
+           }     
         }
-        else 
-        {
-            local base-id = [ $(module-name).id ] ;
+    }
+}
 
-            if ! $(base-id)
-            {
-                error "Project in $(location) has no project id" ;
-            }
-            else
-            {
-                local rooted-id = $(base-id)/$(project-id) ;
-                return $($(rooted-id).jamfile-location) ;
-            }
-       }     
+# Helper for 'find-target'
+local rule remove-trailing-slash ( string )
+{
+    if [ MATCH (.*/) : $(string) ]
+    {
+        return [ MATCH (.*)/ : $(string) ] ;
+    }
+    else
+    {
+        return $(string) ;
     }
 }
 
 # Given an 'id' for a target, return an instance of 'main-target' that
 # corresponds to it. If there's no such main-target, returns empty string.
+# The project referred to by id is loaded if it is not already loaded.
 rule find-target ( id : current-location )
 {
     # Find the project first          
@@ -126,7 +143,7 @@ rule find-target ( id : current-location )
         explicit = 1 ;
         # Take the last "/" separated component after "@" as target id.
         local split = [ MATCH (.*@(.*/)*)([^/]*) : $(id) ] ;
-        project-id = $(split[1]) ;
+        project-id = [ remove-trailing-slash $(split[1]) ] ;
         target-id = $(split[3]) ;
     }
     else
@@ -136,7 +153,8 @@ rule find-target ( id : current-location )
         local split = [ MATCH ((.*/)*)([^/]*) : $(id) ] ;
         if $(split[1]) 
         {
-                project-id = $(split[1])@ ;        
+            project-id = [ remove-trailing-slash $(split[1]) ] ;
+            project-id = $(project-id)@ ;        
         }
         else
         {
@@ -144,7 +162,28 @@ rule find-target ( id : current-location )
         }
         target-id = $(split[3]) ;
     }
+
     local location = [ lookup $(project-id) : $(current-location) ] ;
+    if ! $(location)
+    {
+        # Try to load the project at the specified location
+        location = [ MATCH (.*)@(.*) : $(project-id) ] ;
+        ECHO "XXX: looking if there's a jamfile at" $(location[1]) ;
+        if [ find-jamfile $(location[1]) ]
+        {
+            ECHO "XXXX: found" ;
+            load $(location[1]) ;
+            # If there's proeject-id relative to the 'location' the
+            # jamfile at 'location' should made those available somehow.
+            location = [ lookup $(project-id) : $(current-location) ] ;
+            ECHO "XXXXX: $(location)" ;
+        }                        
+        else
+        {
+            location = ;
+        }
+    }
+
     if $(location) {
         local project-module = [ module-name $(location) ] ;
         local project-target = [ $(project-module).target ] ;
@@ -165,9 +204,14 @@ rule find-target ( id : current-location )
 rule project ( id ? : option1 * : option2 * : option3 * )
 {
     local caller = [ CALLER_MODULE ] ;
-    $(id).jamfile-location = [ $(caller).location ] ;
+    
+    if $(id) {
+        id = [ os.path.root $(id) / ] ;
 
-    poke $(caller) : __id__ : $(id) ;
+        $(id).jamfile-location = [ $(caller).location ] ;
+
+        poke $(caller) : __id__ : $(id) ;
+    }
 
     if $(option1) {
         assign-option [ CALLER_MODULE ] : $(option1) ;
@@ -455,6 +499,28 @@ module project-rules {
         print.list-item "Source location:" [ source-location ] ;
         print.list-item "Subprojects:" [ sequence.insertion-sort [ subprojects ] ] ;
         print.list-end ;
+    }
+
+    rule use-project ( id : where )
+    {
+        local used-location = [ os.path.root $(where) [ location ] ] ;
+        local project-module = [ project.load $(used-location) ] ;
+        local declared-id = [ $(project-module).id ] ;
+
+        # CONSIDER: Should move this import somewhere?
+        import errors : error ;
+        #errors.push-context "error: in 'use-project' rule at" [ errors.call-site ] ;
+
+        if ! $(declared-id)
+        {
+            error "project loaded by 'use-project' has no project-id." ;
+        }
+        if $(declared-id) != $(id)
+        {
+            error "project-id of a project differs from passed to 'use-project'" ;
+        }
+
+        #errors.pop-context ;
     }
 }
 
