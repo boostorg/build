@@ -264,6 +264,16 @@ actions link bind LIBRARIES
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) 
 }
 
+
+# Always remove archive and start again. Here's rationale from
+# Andre Hentz:
+# I had a file, say a1.c, that was included into liba.a. 
+# I moved a1.c to a2.c, updated my Jamfiles and rebuilt. 
+# My program was crashing with absurd errors. 
+# After some debugging I traced it back to the fact that a1.o was *still* 
+# in liba.a 
+RM = [ common.rm-command ] ;
+
 # Declare action for creating static libraries
 # The 'r' letter means to replace files in the archive
 # The 'u' letter means only outdated files in the archive
@@ -273,6 +283,7 @@ actions link bind LIBRARIES
 #   some platforms, for whatever reasons.
 actions piecemeal archive 
 {
+    $(RM) "$(<)"
     ar ruc "$(<)" "$(>)"
 }
 

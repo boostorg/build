@@ -289,6 +289,11 @@ else
 nl = "
 " ;
 
+rule rm-command ( ) 
+{
+     return $(RM) ;
+}
+
 # Returns the command needed to set the environment variable on the
 # current platform.  The variable setting persists through all
 # following commands and is visible in the environment seen by
