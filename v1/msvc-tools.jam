@@ -14,7 +14,7 @@ if ! $(MSVCDir)
     MSVC_ROOT ?= $(VISUALC) ;
     MSVC_ROOT ?= "C:\\Program Files\\Microsoft Visual C++\\VC98" ;
     MSVC_TOOL_PATH ?= "$(MSVC_ROOT)"$(SLASH)bin$(SLASH) ;
-    MSVC_SETUP ?= \"$(MSVC_TOOL_PATH)VCVARS32.BAT\" ;
+    MSVC_SETUP ?= "CALL \"$(MSVC_TOOL_PATH)VCVARS32.BAT\"" ;
 }
 else
 {
