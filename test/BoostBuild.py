@@ -186,9 +186,7 @@ class Tester(TestCmd.TestCmd):
 
     def touch(self, names):
         self.wait_for_time_change()
-        if not type(names) == types.ListType:
-                names = [names]
-        for name in names:
+        for name in self.adjust_names(names):
                 os.utime(self.native_file_name(name), None)
 
     def rm(self, names):
