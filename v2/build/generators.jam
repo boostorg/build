@@ -124,7 +124,6 @@ class generator
       # was not specified.
     
     : requirements *
-    : optional-properties *
                 )
     {                    
         self.id = $(id) ;
@@ -132,7 +131,6 @@ class generator
         self.source-types = $(source-types) ;
         self.target-types-and-names = $(target-types-and-names) ;
         self.requirements = $(requirements) ;
-        self.optional-properties = $(optional-properties) ;
         
         for local e in $(target-types-and-names)
         {        
@@ -153,17 +151,6 @@ class generator
         {        
             sequence.transform type.validate : $(self.target-types) ;
         }
-        
-        
-        # Add the bases of the target types to our optional properties.
-        # Since optional properties improve a generator's match-rank, a
-        # generator which requires only a base target type will not be as
-        # good a match as a generator which requires one of its derived
-        # target types (and thus has the base type as an optional
-        # property).
-        self.optional-properties
-          += [ feature.expand <base-target-type>$(self.target-types) ]
-            ;
     }
                             
     ############## End of constructor #################
@@ -196,18 +183,9 @@ class generator
     {
         return $(self.requirements) ;
     }
-
-    # Returns the list of properties which increase this generator's 
-    # specificity for the given target-type.
-    # TODO: comment is out of date.
-    rule optional-properties ( )
-    {
-        return $(self.optional-properties) ;
-    }
     
-    # Returns a number telling how well generator's properties match
-    # the passed properties, or an empty list if the generator can't
-    # be run at all.
+    # Returns a true value if the generator can be run with the specified 
+    # properties.
     rule match-rank ( property-set-to-match )
     {
         # See if generator's requirements are satisfied by
@@ -233,26 +211,12 @@ class generator
         if $(property-requirements) in $(properties-to-match) 
            && $(feature-requirements) in $(properties-to-match:G)
         {
-            # We only count matched optional properties to achive better
-            # orthogonality:
-            # - required properties are what is needed to generators to run
-            # - optional properties are used to resolve ambiguities
-            #
-            # For example, we have two generators
-            # - CPP->OBJ, with required property <toolset>msvc
-            # - RC->OBJ, without required properties
-            #
-            # If we could required properties, then the first one will be
-            # considered more specific, and the second one will never be
-            # tried.
-            return 
-              [ sequence.length
-                  [ set.intersection 
-                      [ optional-properties ] 
-                    : $(properties-to-match)
-                  ]
-              ] ;
-        }            
+            return true ;
+        }
+        else
+        {
+            return ;
+        }
     }
         
     # Returns another generator which differers from $(self) in
@@ -649,11 +613,11 @@ rule register ( g )
 # Rationale: the instance is returned so that it's possible to first register
 # a generator and then call 'run' method on that generator, bypassing all
 # generator selection.
-rule register-standard ( id : source-types + : target-types + : requirements * 
-   : optional-properties * )
+rule register-standard ( id : source-types + : target-types + : requirements * )
+
 {
     local g = [ new generator $(id) : $(source-types) : $(target-types)
-      : $(requirements) : $(optional-properties) ] ;
+      : $(requirements) ] ;
     register $(g) ;   
     return $(g) ;
 }
@@ -674,6 +638,13 @@ rule generators-for-toolset ( toolset )
 {
     return $(.generators-for-toolset.$(toolset)) ;
 }
+
+rule override ( overrider-id : overridee-id )
+{
+    .override.$(overrider-id) += $(overridee-id) ;    
+}
+
+
 
     
 # Set if results of the current generators search are going to be cached
@@ -851,9 +822,8 @@ local rule find-viable-generators ( target-type : property-set )
                 local m = [ $(g).match-rank $(property-set) ] ;
                 if $(m) 
                 {
-                    generators.dout [ indent ] "  matched with rank" $(m) ;
+                    generators.dout [ indent ] "  is viable" ;
                     viable-generators += $(g) ;
-                    generator-rank += $(m) ;
                     t = ;
                 }                                    
             }            
@@ -861,7 +831,34 @@ local rule find-viable-generators ( target-type : property-set )
         t = $(t[2-]) ;
     }
     
-    return [ sequence.select-highest-ranked $(viable-generators) : $(generator-rank) ] ;        
+    # Generators which override 'all'.
+    local all-overrides ;
+    # Generators which are overriden
+    local overriden-ids ;    
+    for local g in $(viable-generators)
+    {
+        local id = [ $(g).id ] ;
+        local this-overrides = $(.override.$(id)) ;
+        overriden-ids += $(this-overrides) ;
+        if all in $(this-overrides)
+        {
+            all-overrides += $(g) ;
+        }        
+    }         
+    if $(all-overrides)
+    {
+        viable-generators = $(all-overrides) ;
+    }
+    local result ;
+    for local g in $(viable-generators)
+    {
+        if ! [ $(g).id ] in $(overriden-ids)
+        {
+            result += $(g) ;
+        }        
+    }
+                        
+    return $(result) ;
 }
     
 # Given a vector of vectors, of of them represents results of running some 
