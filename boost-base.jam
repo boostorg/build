@@ -1305,57 +1305,56 @@ rule is-link-compatible
 # find-compatible-subvariant main-target : toolset variant : dependent-simple-properties
 rule find-compatible-subvariant ( main-target : toolset variant : dependent-simple-properties * )
 {
-    local requirements = [ select-properties $(toolset) $(variant)
-                            : $(gTARGET_REQUIREMENTS($(main-target))) ] ;
-                                
-    local free-properties = [ segregate-free-properties requirements ] ;
+    local BUILD = ;
+    local subvariants = [ expand-target-subvariants $(main-target) : $(variant) : $(toolset) : BUILD ] ;
 
-    # begin with the properties overridden by the target requirements
-    local override-properties = $(requirements) ;
+    local compatible-subvariant = ;
 
-    # add properties from build-request, checking for compatibility
-    local p ;
-    for p in [ difference $(dependent-simple-properties) : $(requirements) ]
+    for local subvariant in $(subvariants)
     {
-        local f = $(p:G) ;
-        if $(f) in $(requirements:G)
-        {
-            local required-value
-                = [ split-path [ get-values $(f) : $(override-properties) ] ] ;
+        local target = ;
+        local properties = ;
+        local toolset = ;
+        local variant = ;
+        split-target-subvariant target properties toolset variant : $(subvariant) ;
 
-            if ( ! $(p:G=) in $(required-value) ) &&
-                ( ! [ is-link-compatible $(f) : $(required-value) : $(p:G=) ] )
+        local requirements = $(properties[2-]) ;
+        local build-request = [ difference $(dependent-simple-properties) : $(requirements) ] ;
+        
+        local is-subvariant-incompatible = ;
+        for local p in $(build-request)
+        {
+            local f = $(p:G) ;
+            if $(f) in $(requirements:G)
             {
-                EXIT $(main-target): required property $(f)$(required-value)
-                    incompatible with requested $(p) ;
+                local required-value
+                    = [ split-path [ get-values $(f) : $(requirements) ] ] ;
+
+                if ( ! [ is-link-compatible $(f) : $(required-value) : $(p:G=) ] )
+                {
+                    is-subvariant-incompatible = true ;
+                }
             }
         }
-        else
+        if ! $(is-subvariant-incompatible)
         {
-            override-properties += $(p) ;
+            compatible-subvariant += $(subvariant) ;
         }
     }
-    
-    local base-properties = $(gBASE_PROPERTIES($(toolset),$(variant))) ;
-    segregate-overrides override-properties : base-properties ;
 
-    local all-properties = $(base-properties) $(free-properties) ;
-    
-    local rules = [ select-ungristed $(gTARGET_REQUIREMENTS($(<))) ] ;
-    for local r in $(rules)
+    if ! $(compatible-subvariant)
     {
-        all-properties = [ $(r) $(toolset) $(variant) : $(all-properties) ] ;
+        EXIT No compatible subvariant found for: $(main-target) ;
     }
-    
-    # build the path identifying the subvariant
-    local subvariant-id
-            = [ join $(toolset) $(variant)
-                [ ungrist-properties [ sort $(override-properties) ] ]
-                : $(SLASH) ] ;
 
-    return $(subvariant-id)
-        [ fixup-path-properties $(all-properties) ]
-        $(override-properties) ;
+    {
+        local target = ;
+        local properties = ;
+        local toolset = ;
+        local variant = ;
+        split-target-subvariant target properties toolset variant : $(compatible-subvariant[1]) ;
+        return $(properties) ;
+    }
 }
 
 # link-libraries libs... : toolset variant : dependent-simple-properties
@@ -1579,44 +1578,75 @@ rule subvariant-target
   return $(gTARGET_FILES($(subvariant))) ;
 }
 
+# Generate the expanded subvariants of a target.
+#
+rule expand-target-subvariants ( target : local-build * : tools : build-var )
+{
+    $(build-var) = [ get-BUILD $(local-build) ] ;
+    local variants = [ select-ungristed $($(build-var)) ] ;
+    local build-request = [ difference $($(build-var)) : $(variants) ] ;
+
+    local subvariants = ;
+    for local toolset in $(tools)
+    {
+        for local variant in $(variants)
+        {
+            local rules = [ select-ungristed $(gTARGET_REQUIREMENTS($(target))) ] ;
+            local requirements = [ select-gristed $(gTARGET_REQUIREMENTS($(target))) ] ;
+            #ECHO "    " requirements == $(requirements) ;
+            
+            local expanded
+                = [ expand-build-request $(toolset) $(variant) $(target)
+                    : $(requirements) : $(build-request) ] ;
+            
+            for local instance in $(expanded)
+            {
+                local properties = [ split-path-at-grist $(instance) ] ;
+                for local r in $(rules)
+                {
+                    properties = [ $(r) $(toolset) $(variant) : $(properties) ] ;
+                }
+                properties = [ join $(properties) : $(SLASH) ] ;
+                
+                subvariants += $(target)|$(properties)|$(toolset)|$(variant) ;
+            }
+        }
+    }
+    return $(subvariants) ;
+}
+
+# Given an expanded subvariant of a terget, sets the various variables accordingly.
+#
+rule split-target-subvariant ( target-var properties-var toolset-var variant-var : subvariant )
+{
+    local subvariant-items = [ SUBST $(subvariant) (.*)[|](.*)[|](.*)[|](.*) $1 $2 $3 $4 ] ;
+    $(target-var) = $(subvariant-items[1]) ;
+    $(properties-var) = [ split-path-at-grist $(subvariant-items[2]) ] ;
+    $(toolset-var) = $(subvariant-items[3]) ;
+    $(variant-var) = $(subvariant-items[4]) ;
+    return $((target-var)) ;
+}
+
 # main-target target : local-build
 #
 # Generates requested subvariant build instructions for the given main target
 rule main-target
 {
-  local BUILD = [ get-BUILD $(>) ] ;
-  local variants = [ select-ungristed $(BUILD) ] ;
-  local build-request = [ difference $(BUILD) : $(variants) ] ;
-  
-  # include each jamfile describing a dependee target.
-  dependent-include $(gTARGET_LIBS($(<))) $(gTARGET_DLLS($(<))) ;
-  
-  local toolset ;
-  for toolset in $(TOOLS)
-  {
-    local v ;
-    for v in $(variants)
+    local BUILD = ;
+    local subvariants = [ expand-target-subvariants $(<) : $(>) : $(TOOLS) : BUILD ] ;
+
+    # include each jamfile describing a dependee target.
+    dependent-include $(gTARGET_LIBS($(<))) $(gTARGET_DLLS($(<))) ;
+
+    for local subvariant in $(subvariants)
     {
-      local rules = [ select-ungristed $(gTARGET_REQUIREMENTS($(<))) ] ;
-      local requirements = [ select-gristed $(gTARGET_REQUIREMENTS($(<))) ] ;
-
-      local expanded
-          = [ expand-build-request $(toolset) $(v) $(<)
-              : $(requirements) : $(build-request) ] ;
-
-      for local x in $(expanded)
-      {
-          local properties = [ split-path-at-grist $(x) ] ;
-          for local r in $(rules)
-          {
-              properties = [ $(r) $(toolset) $(v) : $(properties) ] ;
-          }
-          
-          subvariant-target $(<)
-                : $(properties) : $(toolset) $(v) ;
-      }
+        local target = ;
+        local properties = ;
+        local toolset = ;
+        local variant = ;
+        split-target-subvariant target properties toolset variant : $(subvariant) ;
+        subvariant-target $(target) : $(properties) : $(toolset) $(variant) ;
     }
-  }
 }
 
 gTARGET_TYPE_ID(exe) = EXE ;
@@ -1816,49 +1846,38 @@ rule stage ( name : sources + : requirements * : local-build * )
         local target = $(source:D=:G=) ;
         local target-id = [ FGristFiles $(target) ] ;
 
-        # main-target...
-        local build = [ get-BUILD $(source-local-build) ] ;
-        local variants = [ select-ungristed $(build) ] ;
-        local build-request = [ difference $(build) : $(variants) ] ;
+        local build = ;
+        local subvariants = [ expand-target-subvariants $(target-id) : $(source-local-build) : $(TOOLS) : build ] ;
 
         dependent-include $(target) ;
 
-        for local toolset in $(TOOLS)
+        for local subvariant in $(subvariants)
         {
-            for local variant in $(variants)
+            local s-target = ;
+            local s-properties = ;
+            local s-toolset = ;
+            local s-variant = ;
+            split-target-subvariant s-target s-properties s-toolset s-variant : $(subvariant) ;
+
+            local target-subvariant =
+                [ subvariant-target $(s-target) : $(s-properties) : $(s-toolset) $(s-variant) ] ;
+
+            files += $(target-subvariant) ;
+            file-mode($(target-subvariant)) = $($(gTARGET_TYPE($(s-target)))MODE) ;
+            local tag-text = "" ;
             {
-                local target-requirements = [ select-gristed $(gTARGET_REQUIREMENTS($(target-id))) ] ;
-
-                local expanded =
-                    [ expand-build-request $(toolset) $(variant) $(target-id)
-                        : $(target-requirements) : $(build-request) ] ;
-
-                for local instance in $(expanded)
+                local subvariant = [ split-path $(s-properties[1]) ] ;
+                if $(tag-value($(stage-id)!prefix)) { tag-text = $(tag-value($(stage-id)!prefix)) ; }
+                else { if $(gTAG(prefix)) { tag-text = $(gTAG(prefix)) ; } }
+                for v in $(subvariant)
                 {
-                    local properties = [ split-path-at-grist $(instance) ] ;
-
-                    local target-subvariant =
-                        [ subvariant-target $(target-id) : $(properties) : $(toolset) $(variant) ] ;
-
-                    files += $(target-subvariant) ;
-                    file-mode($(target-subvariant)) = $($(gTARGET_TYPE($(target-id)))MODE) ;
-                    local tag-text = "" ;
-                    {
-                        local subvariant = [ split-path [ SUBST $(target-subvariant[1]:G) (<)(.*)(>) $2 ] ] ;
-                        subvariant = $(subvariant[3-]) ;
-                        if $(tag-value($(stage-id)!prefix)) { tag-text = $(tag-value($(stage-id)!prefix)) ; }
-                        else { if $(gTAG(prefix)) { tag-text = $(gTAG(prefix)) ; } }
-                        for v in $(subvariant)
-                        {
-                            if $(tag-value($(stage-id)!$(v)))) { tag-text = $(tag-text)$(tag-value($(stage-id)!$(v))) ; }
-                            else { if $(gTAG($(v))) { tag-text = $(tag-text)$(gTAG($(v))) ; } }
-                        }
-                        if $(tag-value($(stage-id)!postfix)) { tag-text = $(tag-text)$(tag-value($(stage-id)!postfix)) ; }
-                        else { if $(gTAG(postfix)) { tag-text = $(tag-text)$(gTAG(postfix)) ; } }
-                    }
-                    file-tag($(target-subvariant)) = $(tag-text) ;
+                    if $(tag-value($(stage-id)!$(v)))) { tag-text = $(tag-text)$(tag-value($(stage-id)!$(v))) ; }
+                    else { if $(gTAG($(v))) { tag-text = $(tag-text)$(gTAG($(v))) ; } }
                 }
+                if $(tag-value($(stage-id)!postfix)) { tag-text = $(tag-text)$(tag-value($(stage-id)!postfix)) ; }
+                else { if $(gTAG(postfix)) { tag-text = $(tag-text)$(gTAG(postfix)) ; } }
             }
+            file-tag($(target-subvariant)) = $(tag-text) ;
         }
     }
 
