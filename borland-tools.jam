@@ -26,31 +26,24 @@ flags borland CFLAGS <inlining>off : -vi- ;
 flags borland CFLAGS <inlining>on : -vi -w-inl ;
 flags borland CFLAGS <inlining>full : -vi -w-inl ;
 
-# build the link options
-
-
+# build the options common to the link and C/C++ command-lines
 {
-    local flag-vars = USER-INTERFACE TARGET-TYPE THREADING RUNTIME-LINK ;
-    local $(flag-vars) ;
+    local bcc-common-flags ;
 
-    if ! [ get-values <target-type> : $(gBUILD_PROPERTIES) ] in $(SHARED_TYPES)
+    flags borland bcc-common-flags <runtime-link>dynamic : -tWR ;
+    
+    local target-type = [ get-values <target-type> : $(gBUILD_PROPERTIES) ] ;
+    if ! $(target-type) || ! ( $(target-type) in $(SHARED_TYPES) )
     {
-        flags borland USER-INTERFACE <user-interface>console : -tWC ;
+        flags borland bcc-common-flags <user-interface>console : -tWC ;
     }
     
-    flags borland TARGET-TYPE <target-type>$(SHARED_TYPES) : -tWD ;
-    flags borland THREADING <threading>multi : -tWM ;
-    flags borland RUNTIME-LINK <runtime-link>dynamic : -tWR ;
+    flags borland bcc-common-flags <target-type>$(SHARED_TYPES) : -tWD ;
+    flags borland bcc-common-flags : -WM- ;
+    flags borland bcc-common-flags <threading>multi : -tWM ;
 
-    $(flag-vars) ?= "" ;
-
-    flags borland LINKFLAGS :
-      $(RUNTIME-LINK) $(USER-INTERFACE) $(TARGET-TYPE) -WM- $(THREADING)
-        ;
-    
-    flags borland CFLAGS :
-      $(RUNTIME-LINK) $(USER-INTERFACE) $(TARGET-TYPE) -WM- $(THREADING)
-        ;
+    flags borland LINKFLAGS : $(bcc-common-flags) ;
+    flags borland CFLAGS : $(bcc-common-flags) ;
 }
 
     
