@@ -318,7 +318,9 @@ rule text (
             }
         }
     }
-    else if $(output-target)
+    # We ignore empty output because the Windows ECHO command is
+    # braindamaged. It doesn't have any facility for echoing a blank line.
+    else if $(output-target) && $(strings)
     {
         if ! $($(output-target).did-action)
         {
