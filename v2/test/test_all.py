@@ -103,6 +103,7 @@ tests = [ "project_test1",
           "loop",
           "conditionals3",
           "tag",
+          "suffix",
 	  ]
 
 if os.name == 'posix':

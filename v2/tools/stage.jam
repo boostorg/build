@@ -88,6 +88,7 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
                 i2 = [ new file-target $(n:D=) : [ $(i).type ] 
                   : $(self.project) ] ;
                 local a = [ new action $(i2) : $(i) : common.copy ] ;
+                $(i2).suffix [ $(i).suffix ] ;
                 $(i2).action $(a) ;
             }
             
