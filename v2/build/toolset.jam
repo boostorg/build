@@ -69,14 +69,10 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
                               #   unconditionally
              values * )
 {
-    .$(rule-or-module).flags += $(.flag-no) ;
-      
-    .$(rule-or-module).variable.$(.flag-no) += $(variable-name) ;
-    .$(rule-or-module).values.$(.flag-no) += $(values) ;
-    
+    local match-type ;   
     if $(condition[1]:G=)
     {
-        .$(rule-or-module).match-type.$(.flag-no) += property-set ;
+        match-type = property-set ;
         property.validate-property-sets $(condition) ;
         if ! $(values)
         {
@@ -87,7 +83,7 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
     }
     else if $(condition)
     {
-        .$(rule-or-module).match-type.$(.flag-no) += feature ;
+        match-type += feature ;
         if $(values)
         {
             error non-empty value set used with feature match criterion ;
@@ -95,14 +91,35 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
     }
     else
     {
-        .$(rule-or-module).match-type.$(.flag-no) += unconditional ;
+        # CONSIDER: Why setting match type and calling error?
+        match-type += unconditional ;
         error empty value set used with unconditional match criterion ;
-    }
-    
-    .$(rule-or-module).condition.$(.flag-no) += $(condition) ;    
-    
+    }    
+    add-flag $(rule-or-module) : $(match-type) : $(variable-name)
+      : $(condition) : $(values) ;
+}
+
+# Adds new flag setting with the specified values
+# Does no checking
+local rule add-flag ( rule-or-module : match-type : 
+    variable-name : condition * : values * )
+{
+    .$(rule-or-module).flags += $(.flag-no) ;
+
+    # Store all flags for a module
+    local module_ = [ MATCH "([^.]*).*" : $(rule-or-module) ] ;    
+    .module-flags.$(module_) += $(.flag-no) ;
+    # Store flag-no -> rule-or-module mapping
+    .rule-or-module.$(.flag-no) = $(rule-or-module) ;
+
+    .$(rule-or-module).match-type.$(.flag-no) = $(match-type) ;
+    .$(rule-or-module).variable.$(.flag-no) += $(variable-name) ;
+    .$(rule-or-module).values.$(.flag-no) += $(values) ;
+    .$(rule-or-module).condition.$(.flag-no) += $(condition) ;            
+                   
     .flag-no = [ numbers.increment $(.flag-no) ] ;
 }
+    
 
 # Returns the first element of 'property-sets' which is a subset of
 # 'properties', or an empty list if no such element exists.
@@ -169,6 +186,86 @@ rule set-target-variables ( rule-or-module target : properties * )
         set-target-variables $(module_) $(target) : $(properties) ;
     }
 }
+
+.toolsets += $(toolset) ;
+
+# Registers a new toolset
+rule register ( toolset )
+{
+    feature.extend toolset : $(toolset) ;
+    .toolsets += $(toolset) ;
+}
+
+# Make toolset 'toolset', defined in a module of the same name,
+# inherit from 'base'
+# 1. The 'init' rule from 'base' is imported into 'toolset' with full
+#    name. Another 'init' is called, which forwards to the base one.
+# 2. All generators from 'base' are cloned. The ids are adjusted and 
+#    <toolset> property in requires is adjusted too
+# 3. All flags are inherited
+# 4. All rules are imported.
+rule inherit ( toolset : base )
+{
+    import $(base) ;
+    
+    inherit-generators $(toolset) : $(base) ;
+    inherit-flags $(toolset) : $(base) ;
+    inherit-rules $(toolset) : $(base) ;
+}
+
+rule inherit-generators ( toolset : base )
+{
+    local base-generators = [ generators.generators-for-toolset $(base) ] ;
+    for local g in $(base-generators)
+    {
+        local id = [ $(g).id ] ;
+        local new-id = $(id:B=$(toolset)) ;
+        generators.register [ $(g).clone $(new-id) : $(toolset) ] ;
+    }    
+}
+
+rule inherit-flags ( toolset : base )
+{
+    for local f in $(.module-flags.$(base))
+    {        
+        local rule-or-module = $(.rule-or-module.$(f)) ; 
+        local rule_ = [ MATCH "[^.]*\.(.*)" : $(rule-or-module) ] ;
+        local new-rule-or-module ;
+        if $(rule_)
+        {
+            new-rule-or-module = $(toolset).$(rule_) ;
+        }
+        else
+        {
+            new-rule-or-module = $(toolset) ;
+        }
+                                        
+        add-flag
+           $(new-rule-or-module)
+           : $(.$(rule-or-module).match-type.$(f))
+           : $(.$(rule-or-module).variable.$(f)) 
+           : $(.$(rule-or-module).condition.$(f))              
+           : $(.$(rule-or-module).values.$(f))
+           ;
+    }            
+}
+
+rule inherit-rules ( toolset : base )
+{
+    # It appears that "action" creates local rule... 
+    local base-generators = [ generators.generators-for-toolset $(base) ] ;
+    local rules ;
+    for local g in $(base-generators)
+    {
+        local id = [ MATCH "[^.]*\.(.*)" : [ $(g).id ] ] ;
+        rules += $(id) ;
+    }    
+    IMPORT $(base) : $(rules) : $(toolset) : $(rules) : localized ;
+    # Import the rules to the global scope
+    IMPORT $(toolset) : $(rules) : : $(toolset).$(rules) ;
+}
+
+
 
 local rule __test__ ( )
 {

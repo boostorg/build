@@ -79,6 +79,7 @@ rule generator (
 
     self.id = $(id) ;
     self.source-types = $(source-types) ;
+    self.target-types-and-names = $(target-types-and-names) ;
     self.requirements = $(requirements) ;
     
     for local e in $(target-types-and-names)
@@ -127,7 +128,19 @@ rule generator (
     {
         return $(self.optional-properties) ;
     }
-
+    
+    # Returns another generator which differers from $(self) in
+    # - id
+    # - value to <toolset> feature in properties
+    rule clone ( new-id : new-toolset-name )
+    {
+        return [ new $(__class__) $(new-id) : $(self.source-types)
+                 : $(self.target-types-and-names) 
+                 : [ property.change $(self.requirements) 
+                   : toolset $(new-toolset-name) ]
+             ] ;
+    }
+    
     # Tries to invoke this generator on the given sources. Returns a
     # list of generated targets (instances of 'virtual-target').
     rule run ( project  # Project for which the targets are generated
@@ -463,8 +476,11 @@ rule register ( g )
     for local t in [ $(g).target-types ] 
     {            
         .generators.$(t) += $(g) ;
-    }
+    }    
     
+    # Update the set of generators for toolset
+    local id = [ $(g).id ] ;
+    .generators-for-toolset.$(id:S=) += $(g) ;
 }
     
 
@@ -479,13 +495,16 @@ rule register-composing ( id : source-types + : target-types + : requirements * 
 {
     local g = [ new composing-generator $(id) : $(source-types) 
                 : $(target-types) : $(requirements) ] ;
-    .generators += $(g) ;
-
-    for local t in [ $(g).target-types ] 
-    {            
-        .generators.$(t) += $(g) ;
-    }
+    register $(g) ;
 }
+
+# Returns all generators which belong to 'toolset', i.e. which
+# ids are $(toolset).<something>
+rule generators-for-toolset ( toolset )
+{
+    return $(.generators-for-toolset.$(toolset)) ;
+}
+
     
 # Set if results of the current generators search are going to be cached
 # This means no futher attempts to cache generators search should be

@@ -381,7 +381,7 @@ rule C-compiling-generator ( id : source-types + : target-types + :
 {
     generator.__init__ $(id) : $(source-types) : $(target-types) :
                        $(requirements) ;
-
+    
     rule action-class ( )
     {
         return compile-action ;
