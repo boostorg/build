@@ -286,9 +286,13 @@ if $(NT)
         ECHO  "         set JAM_TOOLSET=VISUALC" ;
         ECHO  ;
         ECHO  "  - if your toolset's installation path contains spaces, surround" ;
-        ECHO  "    it with quotes:" ;
+        ECHO  "    it with TWO SETS of quotes:" ;
         ECHO  ;
-        ECHO  "    e.g.: set VISUALC=\"C:\\Program Files\\Microsoft Visual C++\\VC98\"" ;
+        ECHO  "    e.g.: set VISUALC=\"\"C:\\Program Files\\Microsoft Visual C++\\VC98\"\"" ;
+        ECHO  ;
+        ECHO  "    The outer quotes will prevent Jam from splitting its elements," ;
+        ECHO  "    and the inner quotes will keep the path as a single argument on" ;
+        ECHO  "    the build command line." ;
         ECHO  ;
         EXIT  ;
       }
