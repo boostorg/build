@@ -16,6 +16,7 @@ import common ;
 
 feature.feature xsl:param : : free ;
 feature.feature xsl:path : : free ;
+feature.feature catalog : : free ;
 
 # Initialize xsltproc support. The parameters are:
 #   xsltproc: The xsltproc executable
@@ -58,7 +59,11 @@ rule xslt ( target : source stylesheet : properties * )
   FLAGS on $(target) = [ compute-xslt-flags $(target) : $(properties) ] ;
   NAME on $(target) = $(.xsltproc) ;
     
-  CATALOG = [ common.variable-setting-command "XML_CATALOG_FILES" "catalog.xml" ] ;  
+  for local catalog in [ feature.get-values <catalog> : $(properties) ]
+  {
+    CATALOG = [ common.variable-setting-command "XML_CATALOG_FILES" $(catalog) ] ;
+  }
+
   xslt-xsltproc $(target) : $(source) ;
 }
 
@@ -68,7 +73,12 @@ rule xslt-dir ( target : source stylesheet : properties * : dirname )
   FLAGS on $(target) = [ compute-xslt-flags $(target) : $(properties) ] ;
   DIRECTORY on $(target) = $(dirname) ;
   NAME on $(target) = $(.xsltproc) ;
-  CATALOG = [ common.variable-setting-command "XML_CATALOG_FILES" "catalog.xml" ] ;      
+  
+  for local catalog in [ feature.get-values <catalog> : $(properties) ]
+  {
+    CATALOG = [ common.variable-setting-command "XML_CATALOG_FILES" $(catalog) ] ; 
+  }
+
   xslt-xsltproc-dir $(target) : $(source) ;
 }
 
