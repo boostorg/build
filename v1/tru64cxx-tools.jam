@@ -72,7 +72,7 @@ actions tru64cxx-Link-shared bind NEEDLIBS
 
 rule Cc-action
 {
-   cxx-Cc-action $(<) : $(>) ;
+   tru64cxx-Cc-action $(<) : $(>) ;
 }
 
 actions tru64cxx-Cc-action
@@ -101,7 +101,7 @@ rule Archive-action
 actions updated together piecemeal tru64cxx-Archive-action
 {
   rm -f $(<)
-  ar r$(ARFLAGS) $(<) $(>) cxx_repository/*
+  ar r$(ARFLAGS) $(<) $(>)
 }
 
 
