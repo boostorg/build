@@ -16,10 +16,20 @@ toolset.inherit vacpp : unix ;
 feature.subfeature toolset vacpp : version ;
 
 # Configures the vacpp toolset. 
-rule init ( version ? : path * )
+rule init ( version ? : command * : options * )
 {
-#    feature.extend-subfeature toolset vacpp : version : $(version) ;      
-#    flags vacpp VACPP_PATH <toolset>vacpp-$(version) : $(path) ;
+    local condition = [ common.check-init-parameters vacpp : version $(version) ] ;
+    local command = [ common.get-invocation-command vacpp : xlc : $(command) ] ;
+
+    common.handle-options acc : $(condition) : $(command) : $(options) ;    
+    
+    if $(command)
+    {        
+        command = [ common.get-absolute-tool-path $(command[-1]) ] ;
+    }
+    local root = $(command:D) ;
+    
+    flags vacpp ROOT $(condition) : $(root) ;    
 }
 
 
@@ -79,17 +89,17 @@ flags vacpp VA_CXX_COMPILER <threading>multi : xlC_r ;
 
 actions vacpp.link bind NEEDLIBS
 {
-    $(VA_CXX_COMPILER) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    $(ROOT)/$(VA_CXX_COMPILER) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
 }
 
 actions vacpp.compile.c
 {    
-    $(VA_C_COMPILER) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(ROOT)/$(VA_C_COMPILER) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 actions vacpp.compile.c++
 {
-    $(VA_CXX_COMPILER) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(ROOT)/$(VA_CXX_COMPILER) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 actions updated together piecemeal vacpp.archive

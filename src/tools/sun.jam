@@ -21,7 +21,7 @@ feature.compose <stdlib>sun-stlport
     : <cxxflags>-library=stlport4 <linkflags>-library=stlport4
     ;
 
-rule init ( version ? : command * ) 
+rule init ( version ? : command * : options * ) 
 {
     local condition = [ 
       common.check-init-parameters sun : version $(version) ] ;
@@ -29,9 +29,10 @@ rule init ( version ? : command * )
     command = [ common.get-invocation-command sun : CC 
         : $(command) : "/opt/SUNWspro/bin" ] ;
     
+    common.handle-options sun : $(condition) : $(command) : $(options) ;
+    
     command_c = $(command[1--2]) $(command[-1]:B=cc) ;
 
-    toolset.flags sun CONFIG_COMMAND $(condition) : $(command) ;
     toolset.flags sun CONFIG_C_COMMAND $(condition) : $(command_c) ;
 }
 

@@ -25,7 +25,7 @@ toolset.inherit-rules intel-linux : gcc ;
 #   version in mandatory
 #   name (default icc) is used to invoke the specified intellinux complier
 #   compile and link options allow you to specify addition command line options for each version
-rule init ( version ? :  command * : compile_options * : link_options * )
+rule init ( version ? :  command * : options * )
 {
     local condition = [ common.check-init-parameters intel-linux
         : version $(version) ] ;
@@ -33,9 +33,7 @@ rule init ( version ? :  command * : compile_options * : link_options * )
     command = [ common.get-invocation-command intel-linux : icc 
         : $(command) : /opt/intel_cc_80/bin ] ;
                 
-    flags intel-linux CONFIG_COMMAND $(condition) : $(command) ;
-    flags intel-linux CONFIG_COMPILE $(condition) : $(compile_options) ;
-    flags intel-linux CONFIG_LINK $(condition) : $(link_options) ;
+    common.handle-options intel-linux : $(condition) : $(command) : $(options) ;
 }
 
 flags intel-linux.compile OPTIONS <inlining>off : "-Ob0" ;
@@ -44,21 +42,21 @@ flags intel-linux.compile OPTIONS <inlining>full : "-Ob2" ;
 flags intel-linux.compile OPTIONS <optimization>space : "-O1" ; # no specific space optimization flag in icc
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" -c -xc++ $(CONFIG_COMPILE) $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -c -xc++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" -c -xc $(CONFIG_COMPILE) $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -c -xc $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(CONFIG_LINK) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(OPTIONS)
 }
 
 # Differ from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(CONFIG_LINK) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(OPTIONS)
 }

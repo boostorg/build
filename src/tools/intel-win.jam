@@ -24,15 +24,20 @@ toolset.inherit-rules intel-win : msvc ;
 # Initializes the intel toolset for windows
 rule init ( version ? :     # the compiler version
             command * :     # the command to invoke the compiler itself
-            compatibility ? # Compatibility mode: either 'vc6', 'vc7', 'vc7.1'
+            options *       # Additional option: <compatibility>
+                            # either 'vc6', 'vc7', 'vc7.1'
                             # or 'native'(default).
           )
 {           
+    local compatibility = 
+      [ feature.get-values <compatibility> : $(options) ] ;
     local condition = [  common.check-init-parameters intel-win
         : version $(version) : compatibility $(compatibility) ] ;
     
     command = [ common.get-invocation-command intel-win : icc.exe :
         $(command) ] ;    
+    
+    common.handle-options intel-win : $(condition) : $(command) : $(options) ;
 
     local root = [ common.get-absolute-tool-path $(command[-1]) ] ;)
     

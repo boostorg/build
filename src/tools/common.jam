@@ -15,6 +15,8 @@ import feature ;
 import errors ;
 import path ;
 import sequence ;
+import toolset ;
+
 
 # The rule checks toolset parameters. Each trailing parameter 
 # should be a pair of parameter name and parameter value.
@@ -233,6 +235,29 @@ rule check-tool ( xcommand + )
         return $(xcommand) ;
     }
 }
+
+# Handle common options for toolset, specifically sets the following
+# flag variables:
+# - CONFIG_COMMAND to 'command'
+# - OPTIONS for compile.c to the value of <cflags> in options
+# - OPTIONS for compile.c++ to the value of <cxxflags> in options
+# - OPTIOns for compile to the value of <compileflags> in options
+# - OPTIONs for link to the value of <linkflags> in options
+rule handle-options ( toolset : condition * : command ? : options * )
+{
+    # The last parameter ('true') says it's OK to set flags for another
+    # module,   
+    toolset.flags $(toolset) CONFIG_COMMAND $(condition) : $(command) : unchecked ;
+    toolset.flags $(toolset).compile OPTIONS $(condition) :
+      [ feature.get-values <compileflags> : $(options) ] : unchecked ;
+    toolset.flags $(toolset).compile.c OPTIONS $(condition) :
+      [ feature.get-values <cflags> : $(options) ] : unchecked ;
+    toolset.flags $(toolset).compile.c++ OPTIONS $(condition) :
+      [ feature.get-values <cxxflags> : $(options) ] : unchecked ;
+    toolset.flags $(toolset).link OPTIONS $(condition) :
+      [ feature.get-values <linkflags> : $(options) ] : unchecked ;        
+}
+
 
 # returns the location of the "program files" directory on a windows
 # platform
