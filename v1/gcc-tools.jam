@@ -69,6 +69,55 @@ else if $(UNIX)
     }
 }
 
+# Set architecture options.
+#
+# x86 and compatible
+flags gcc CFLAGS <architecture>i386 : -mcpu=i386 ;
+flags gcc CFLAGS <architecture>i486 : -mcpu=i486 ;
+flags gcc CFLAGS <architecture>i586 : -mcpu=i586 ;
+flags gcc CFLAGS <architecture>i686 : -mcpu=i686 ;
+flags gcc CFLAGS <architecture>k6 : -mcpu=k6 ;
+# Sparc
+flags gcc CFLAGS <architecture>v7 : -mcpu=v7 ;
+flags gcc CFLAGS <architecture>cypress : -mcpu=cypress ;
+flags gcc CFLAGS <architecture>v8 : -mcpu=v8 ;
+flags gcc CFLAGS <architecture>supersparc : -mcpu=supersparc ;
+flags gcc CFLAGS <architecture>sparclite : -mcpu=sparclite ;
+flags gcc CFLAGS <architecture>hypersparc : -mcpu=hypersparc ;
+flags gcc CFLAGS <architecture>sparclite86x : -mcpu=sparclite86x ;
+flags gcc CFLAGS <architecture>f930 : -mcpu=f930 ;
+flags gcc CFLAGS <architecture>f934 : -mcpu=f934 ;
+flags gcc CFLAGS <architecture>sparclet : -mcpu=sparclet ;
+flags gcc CFLAGS <architecture>tsc701 : -mcpu=tsc701 ;
+flags gcc CFLAGS <architecture>v9 : -mcpu=v9 ;
+flags gcc CFLAGS <architecture>ultrasparc : -mcpu=ultrasparc ;
+# RS/6000 & PowerPC
+flags gcc CFLAGS <architecture>rios : -mcpu=rios ;
+flags gcc CFLAGS <architecture>rios1 : -mcpu=rios1 ;
+flags gcc CFLAGS <architecture>rsc : -mcpu=rsc ;
+flags gcc CFLAGS <architecture>rios2 : -mcpu=rios2 ;
+flags gcc CFLAGS <architecture>rs64a : -mcpu=rs64a ;
+flags gcc CFLAGS <architecture>601 : -mcpu=601 ;
+flags gcc CFLAGS <architecture>602 : -mcpu=602 ;
+flags gcc CFLAGS <architecture>603 : -mcpu=603 ;
+flags gcc CFLAGS <architecture>603e : -mcpu=603e ;
+flags gcc CFLAGS <architecture>604 : -mcpu=604 ;
+flags gcc CFLAGS <architecture>604e : -mcpu=604e ;
+flags gcc CFLAGS <architecture>620 : -mcpu=620 ;
+flags gcc CFLAGS <architecture>630 : -mcpu=630 ;
+flags gcc CFLAGS <architecture>740 : -mcpu=740 ;
+flags gcc CFLAGS <architecture>750 : -mcpu=750 ;
+flags gcc CFLAGS <architecture>power : -mcpu=power ;
+flags gcc CFLAGS <architecture>power2 : -mcpu=power2 ;
+flags gcc CFLAGS <architecture>powerpc : -mcpu=powerpc ;
+flags gcc CFLAGS <architecture>403 : -mcpu=403 ;
+flags gcc CFLAGS <architecture>505 : -mcpu=505 ;
+flags gcc CFLAGS <architecture>801 : -mcpu=801 ;
+flags gcc CFLAGS <architecture>821 : -mcpu=821 ;
+flags gcc CFLAGS <architecture>823 : -mcpu=823 ;
+flags gcc CFLAGS <architecture>860 : -mcpu=860 ;
+flags gcc CFLAGS <architecture>power-common : -mcpu=common ;
+
 #
 # define compiler names if not set:
 GCC ?= gcc ;
