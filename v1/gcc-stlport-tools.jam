@@ -1,0 +1,23 @@
+# (C) Copyright David Abrahams and Carlos Pinto Coelho 2001. Permission
+# to copy, use, modify, sell and distribute this software is granted
+# provided this copyright notice appears in all copies. This software is
+# provided "as is" without express or implied warranty, and with no
+# claim as to its suitability for any purpose.
+
+# this is simply an extension to the gcc toolset. 
+extends-toolset gcc ;
+
+STDHDRS = ;
+STDLIBPATH = ;
+flags gcc-stlport STDHDRS : $(STLPORT_ROOT)$(SLASH)stlport $(GCC_INCLUDE_DIRECTORY) ;
+flags gcc-stlport STDLIBPATH : $(STLPORT_ROOT)$(SLASH)lib $(GCC_STDLIB_DIRECTORY) ;
+
+flags gcc-stlport DEFINES <runtime-build>debug : _STLP_DEBUG ;
+flags gcc-stlport FINDLIBS <runtime-link>static/<runtime-build>debug    : stlport_cygwin_stldebug ;
+flags gcc-stlport FINDLIBS <runtime-link>static/<runtime-build>release  : stlport_cygwin ;
+flags gcc-stlport FINDLIBS <runtime-link>dynamic/<runtime-build>debug    : stlport_cygwin_stldebug.dll.4.5.b8 ;
+flags gcc-stlport FINDLIBS <runtime-link>dynamic/<runtime-build>release  : stlport_cygwin.dll.4.5.b8 ;
+flags gcc-stlport CFLAGS <runtime-link>dynamic    : -D_STLP_USE_DYNAMIC_LIB ;
+
+
+

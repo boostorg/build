@@ -1,0 +1,94 @@
+(C) Copyright David Abrahams 2001. Permission to copy, use,
+modify, sell and distribute this software is granted provided this
+copyright notice appears in all copies. This software is provided
+"as is" without express or implied warranty, and with no claim as
+to its suitability for any purpose.
+
+Boost Build system TODO
+===== ===== ====== ====
+Items preceded by ** are complete.
+
+Implement linking with prebuilt libraries. Should be trivial, except for
+    choosing different libraries for different variants. This might require
+    allowing sources to be qualified with toolset/variant grist. Also argues for
+    a different syntax for library dependencies: <lib> is too
+    confusable. Perhaps <#> or some other symbolic name.
+
+Implement <sysinclude> feature for separately searching #include <...> paths?
+    I think this may be a bad idea, since it isn't a portable feature. Maybe it
+    would be best to try to get all compilers to work with the same #include
+    search algorithm.
+
+Clean up documentation
+    ** TOC hyperlinks
+    describe gristing
+    revise free/path feature definition
+    
+Add a hook function to allow output directory customization that some people
+want (instead of subdirectories, string together short names with '-').
+
+Platform support:
+    Unix paths on Mac/VMS
+    Integrate Win95/98/ME support
+
+    Since the above require modification to Jam compiled source, getting the
+    code into the Perforce public depot would be good at this point.
+
+Compile allyourbase/boost-base.jam into Jam itself.
+    It might be best to review differences between allyourbase.jam and Jambase,
+    and arrange the new Jambase to be a superset of the perforce Jambase so that
+    a boost-compiled Jam can be used on standard Jambase projects without
+    modification. OTOH, people can always use -f with the standard Jambase.
+
+Open problem:
+    How do we get Metrowerks STDHDRS properly initialized? The corresponding
+    shell variables don't end in PATH nor do they follow the correct syntax for
+    the -I option (e.g. they have preceding '+' signs).
+
+Testing
+    Linux
+    Other Unices
+    MacOS
+
+Additional toolset descriptions
+    Kai (needs refurbishment)
+    Intel
+    Comeau
+    ...
+
+Better support for single-valued free features. GCC needs a default
+    ftemplate-depth-NN setting which can be overridden.
+
+** A way to factor toolset commonality, e.g. for STLPort versions of a toolset
+
+=== for test system ===
+
+Add platform library path to <runtime-link>dynamic executable targets' RUN_PATH,
+    so they can be run even without the tools set up in the environment.
+
+Add Jam rules for constructing build/test tools (built exes used for build/test). 
+    Must only try to build one compiler/variant of these
+
+Implement some test tools:
+    success/failure inverter for expected failures (must prefix build actions to
+    be able to use it)
+    
+    automatic PATH/LD_LIBRARY_PATH adjustment to account for DLL/runtime lib
+    dependencies, so even exes with dynamically-linked library dependencies can
+    be run through the test system. I think it is possible to do this entirely
+    in Jam with some hackery.
+    
+    Facilities to update boost html compiler status page
+
+
+=== FTJam core requests ===
+
+In debugging output, indirect rule invocations should reflect the rule name
+being invoked.
+
+Fix modulus on nesting in debug output, so my emacs stepping tools don't get
+confused.
+
+Expand MAXLINE for NT, possibly as described by Chris Antos.
+
+Implement a way to invert the result of a rule, so that failure becomes success.

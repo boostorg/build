@@ -1,0 +1,9 @@
+project-root ;
+
+exe foo : foo.cpp ;
+unit-test testfoo : foo.cpp ;
+lib top : top.cpp ;
+lib dtop : top.cpp ;
+
+subinclude x y ;
+
