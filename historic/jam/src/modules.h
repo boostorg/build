@@ -13,11 +13,11 @@ struct module_t
     struct hash* variables;
 };
 
-typedef struct module module; /* MSVC debugger gets confused unless this is provided */
+typedef struct module_t module_t ; /* MSVC debugger gets confused unless this is provided */
 
 module_t* bindmodule( char* name );
 module_t* root_module();
-void bind_module_var( module*, char* name );
+void bind_module_var( module_t*, char* name );
 void enter_module( module_t* );
 void exit_module( module_t* );
 void delete_module( module_t* );
