@@ -75,7 +75,7 @@ toolset darwin cc :  "-o " : -D
     : -g -O0 -fno-inline -pg ;
 ## GCC 2.x, 3.x
 toolset gcc gcc : "-o " : -D
-    : -static -s -O3 -finline-functions
+    : -s -O3 -finline-functions
     : -g -O0 -fno-inline -pg ;
 ## GCC 2.x, 3.x on CYGWIN but without cygwin1.dll
 toolset gcc-nocygwin gcc : "-o " : -D
