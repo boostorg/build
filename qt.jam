@@ -9,6 +9,13 @@ import errors ;
 import type ;
 import class : class new ;
 import generators ;
+import project ;
+
+# Convert this module into a project, so that we can declare
+# targets here.
+
+project.initialize $(__name__) ;
+project qt ;
 
 # Initialized the QT support module. The 'prefix' parameter 
 # tells where QT is installed. When not given, environmental
@@ -39,14 +46,14 @@ rule init ( prefix ? )
         .prefix = $(prefix) ;
         
         feature.extend uses : qt ;
-        feature.action <uses>qt : add-properties ;            
+        #feature.action <uses>qt : add-properties ;            
         
-        generators.register-standard qt.moc : H : CPP(moc_%) : <uses>qt ;    
+        generators.register-standard qt.moc : H : CPP(moc_%) : <allow>qt ;    
         
         type.register UI : ui ;
         type.register UIC_H : : H ;
         
-        generators.register-standard qt.uic-h : UI : UIC_H : <uses>qt ;
+        generators.register-standard qt.uic-h : UI : UIC_H : <allow>qt ;
         
         # The following generator is used to convert UI files to CPP
         # It creates UIC_H from UI, and constructs CPP from UI/UIC_H
@@ -75,21 +82,17 @@ rule init ( prefix ? )
     
         class qt.uic-cpp-generator : generator ; 
         generators.register [ new qt.uic-cpp-generator ] ;
+        
+        # Finally, declare prebuilt target for QT library.
+        local usage-requirements = 
+             <include>$(.prefix)/include 
+             <dll-path>$(.prefix)/lib
+             <library-path>$(.prefix)/lib     
+             <allow>qt
+             ;  
+        lib qt : : <name>qt-mt <threading>multi : : $(usage-requirements) ;
+        lib qt : : <name>qt <threading>single : : $(usage-requirements) ;        
     }
-}
-
-rule add-properties ( property : properties * )
-{
-    local lib-name ;
-    if <threading>multi in $(properties)
-    {
-        lib-name = qt-mt ;
-    }
-    else
-    {
-        lib-name = qt ;
-    }
-    return <include>$(.prefix)/include <dll-path>$(.prefix)/lib <library-path>$(.prefix)/lib <find-shared-library>$(lib-name) ;
 }
 
 # -f forces moc to include the processed source file.
