@@ -328,6 +328,8 @@ else if $(UNIX)
         RANLIB          ?= "" ;
         SUFEXE          ?= .exe ;
         YACC            ?= bison -y ;
+        MKDIR           ?= mkdir -p ;
+        SUFDLL          ?= .dll ;
 
     case DGUX :
         RANLIB          ?= "" ;
