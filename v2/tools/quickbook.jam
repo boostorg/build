@@ -1,0 +1,410 @@
+#
+#   Copyright (c) 2005 João Abecasis
+#   Copyright (c) 2005 Vladimir Prus
+#
+#   Distributed under the Boost Software License, Version 1.0. (See
+#   accompanying file LICENSE_1_0.txt or copy at
+#   http://www.boost.org/LICENSE_1_0.txt)
+#
+
+# This toolset defines a generator to translate QuickBook to BoostBook. It can
+# be used to generate nice (!) user documentation in different formats
+# (pdf/html/...), from a single text file with simple markup.
+#
+# The toolset defines the QUICKBOOK type (file extension 'qbk') and the
+# quickbook-to-boostbook rule.
+#
+#
+#   ===========================================================================
+#   Q & A
+#   ===========================================================================
+#
+#   If you don't know what this is all about, some Q&A below will hopefully get
+#   you up to speed with QuickBook and the toolset.
+#
+#
+#   What is QuickBook ?
+#
+#       QuickBook is a WikiWiki style documentation tool geared towards C++
+#       documentation using simple rules and markup for simple formatting tasks.
+#       QuickBook extends the WikiWiki concept. Like the WikiWiki, QuickBook
+#       documents are simple text files. A single QuickBook document can
+#       generate a fully linked set of nice HTML and PostScript/PDF documents
+#       complete with images and syntax-colorized source code.
+#
+#
+#   Where can I get QuickBook ?
+#
+#       Quickbook can be found in Boost's repository, under the tools/quickbook
+#       directory it was added there on Jan 2005, some time after the release of
+#       Boost v1.32.0 and will hopefully be an integral part of the Boost
+#       distribution starting from v1.33.
+#
+#       Here's a link to the CVS repository:
+#           http://cvs.sourceforge.net/viewcvs.py/boost/boost/tools/quickbook/
+#
+#       And to CVS version of QuickBook's QuickBook-generated docs:
+#           http://cvs.sourceforge.net/viewcvs.py/*checkout*/boost/boost/tools/quickbook/doc/html/index.html
+#
+#
+#   How do I use QuickBook and this toolset in my projects ?
+#
+#       The minimal example is:
+#
+#           using boostbook ;
+#           using quickbook ;
+#
+#           boostbook my_docs : my_docs_source.qbk ;
+#
+#       where my_docs is a target name and my_docs_source.qbk is a QuickBook
+#       file. The documentation format to be generated is determined by the
+#       boostbook toolset. By default html documentation should be generated,
+#       but you should check BoostBook's docs to be sure.
+#
+#
+#   What do I need ?
+#
+#       You should start by setting up the BoostBook toolset. Please refer to
+#       boostbook.jam and the BoostBook documentation for information on how to
+#       do this.
+#
+#       A QuickBook executable is also needed. By default the toolset will
+#       automatically generate this, by looking for the QuickBook sources in the
+#       following directories:
+#
+#           BOOST_ROOT/tools/quickbook/
+#           BOOST_BUILD_PATH/../../quickbook/
+#
+#       If QuickBook sources are not found the toolset will still try to find
+#       the 'quickbook' command using the PATH environment variable.
+#
+#
+#   How do I provide a custom 'quickbook' executable ?
+#
+#           using quickbook : /path/to/quickbook ;
+#
+#       or, if quickbook can be found in your PATH,
+#
+#           using quickbook : quickbook ;
+#
+#
+#   For convenience three alternatives are tried to get a QuickBook executable:
+#
+#       1.  If the user points us to the a QuickBook executable, that is used.
+#           Some tweaks still have to be done because we need a proper path to
+#           mark the executable as a dependency for the project executable:
+#               - search the path for command
+#               - (on Windows) add .exe .com .bat .cmd ... %PATHEXT%
+#
+#       2.  Look for QuickBook source directory and compile QuickBook using the
+#           default toolset, in release mode (gcc-generated quickbook is some
+#           tens of MB large in debug mode).
+#           Search takes place in the following directories:
+#               - BOOST_ROOT/tools/quickbook
+#               - BOOST_BUILD_PATH/../../quickbook
+#
+#       3. As a last resort, search the environment's PATH for 'quickbook'... and pray ;)
+#
+
+import boostbook ;
+import "class" : new ;
+import feature ;
+import generators ;
+import path ;
+import toolset ;
+import type ;
+
+# The one and only QUICKBOOK type!
+type.register QUICKBOOK : qbk ;
+
+# The <quickbook-binary> feature is used to mark QuickBook executable as a
+# dependency for QuickBook to BoostBook translation.
+feature.feature <quickbook-binary> : : free dependency ;
+
+# quickbook-binary-generator handles generation of the QuickBook executable, by
+# marking it as a dependency for QuickBook sources.
+#
+# If the user supplied the invocation command for the executable that will be
+# used.
+# Otherwise we search some sensible places for the QuickBook source and
+# compile it from scratch using the default toolset.
+# As a last resort we will search the PATH environment variable for 'quickbook'.
+class quickbook-binary-generator : generator
+{
+    import modules path property-set quickbook targets virtual-target ;
+
+    rule __init__ ( command ? : * : * )
+    {
+        quickbook-command = $(command) ;
+
+        generator.__init__ $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+
+    rule run ( project name ? : property-set : sources * : multiple ? )
+    {
+        # QuickBook invocation command.
+        local quickbook-binary-target ;
+
+        if $(quickbook-command)
+        {
+            # The user provided us with the invocation command. We still need to
+            # make sure it is a complete path, so that we can tag it as a
+            # virtual target.
+
+            # Get actual fully-qualified quickbook-command
+            local command = [ quickbook.get-quickbook-command $(quickbook-command) ] ;
+
+            # Mark $(quickbook-command) as a virtual-target so bjam will not
+            # generate it.
+            quickbook-binary-target = [ virtual-target.from-file $(command) : $(project) ] ;
+        }
+        else
+        {
+            # We're on our own.
+
+            # Search for QuickBook sources in sensible places
+            #   $(BOOST_ROOT)/tools/quickbook
+            #   $(BOOST_BUILD_PATH)/../../quickbook
+
+            local boost-root = [ modules.peek : BOOST_ROOT ] ;
+            local boost-build-path = [ modules.peek : BOOST_BUILD_PATH ] ;
+
+            local search-dirs ;
+
+            if $(boost-root)
+            {
+                search-dirs += [ path.join $(boost-root) tools ] ;
+            }
+
+            if $(boost-build-path)
+            {
+                search-dirs += $(boost-build-path)/../.. ;
+            }
+
+            local quickbook-dir ;
+
+            for local dir in $(search-dirs)
+            {
+                quickbook-dir += [ path.glob $(dir) : quickbook ] ;
+            }
+
+            # If the QuickBook source directory was found, mark its main target
+            # as a dependency for the current project. Otherwise, try to find
+            # 'quickbook' in user's PATH
+            if $(quickbook-dir)
+            {
+                # QuickBook found!
+                quickbook-dir = [ path.make $(quickbook-dir[1]) ] ;
+
+                # Get the main-target in QuickBook directory.
+                local quickbook-main-target = [ targets.resolve-reference $(quickbook-dir) : $(project) ] ;
+
+                # The first element are the actual targets, the second are
+                # properties found in target-id, which we don't care about
+                # since we've passed the id ourselves.
+                quickbook-main-target = $(quickbook-main-target[1]) ;
+
+                # Request an empty property set to build the QuickBook with default
+                # toolset, independently of what's specified in 'property-set'.
+                local quickbook-property-set = [ property-set.empty ] ;
+
+                # Add <variant>release to the quickbook-property-set: compiling
+                # with gcc in the default 'debug' mode generates an executable
+                # several tens of megabytes large. This may also be true for
+                # other compilers.
+                # (In general, Boost.Spirit-based parsers ask for "aggressive
+                # inlining" although this is not strictly necessary)
+                quickbook-property-set = [ $(quickbook-property-set).add-raw <variant>release ] ;
+
+                # Mark the quickbook-main-target for generation, this will be
+                # the quickbook executable.
+                quickbook-binary-target = [ $(quickbook-main-target).generate $(quickbook-property-set) ] ;
+
+                # Ignore usage-requirements returned as the first element
+                # of the list.
+                quickbook-binary-target = $(quickbook-binary-target[2-]) ;
+            }
+            else
+            {
+                ECHO "QuickBook warning: The path to the quickbook executable was" ;
+                ECHO "  not provided. Additionally couldn't find QuickBook" ;
+                ECHO "  sources searching in" ;
+                ECHO "    * BOOST_ROOT/tools/quickbook" ;
+                ECHO "    * BOOST_BUILD_PATH/../../quickbook" ;
+                ECHO "  Will now try to find a precompiled executable by searching" ;
+                ECHO "  the PATH for 'quickbook'." ;
+                ECHO "  To disable this warning in the future, or to completely" ;
+                ECHO "  avoid compilation of quickbook, you can explicitly set the" ;
+                ECHO "  path to a quickbook executable command in user-config.jam" ;
+                ECHO "  or site-config.jam with the call" ;
+                ECHO "    using quickbook : /path/to/quickbook ;" ;
+
+                # As a last resort, search for 'quickbook' command in path.
+                # Note that even if the 'quickbook' command is not found,
+                # get-quickbook-command will still return 'quickbook' and might
+                # generate an error while generating the virtual-target.
+
+                # Marking the QuickBook executable as virtual-target lets bjam pretend
+                # it has been built.
+                quickbook-binary-target = [ virtual-target.from-file [ quickbook.get-quickbook-command ] : $(project) ] ;
+            }
+        }
+
+        # Add $(quickbook-binary-target) as a dependency of the current project
+        # and set it as the <quickbook-binary> feature for the
+        # quickbook-to-boostbook rule, below.
+        property-set = [ $(property-set).add-raw
+          <dependency>$(quickbook-binary-target)
+          <quickbook-binary>$(quickbook-binary-target) ] ;
+
+        return [ generator.run $(project) $(name) : $(property-set) : $(sources) : $(multiple) ] ;
+    }
+
+}
+
+# Initialize toolset. The optional command argument supplies a path to the
+# QuickBook executable.
+rule init ( command ? )
+{
+    # Initialization of module registers QUICKBOOK to XML generator.
+    # Registering the generator here requires the call 'using quickbook ;' to
+    # appear in "user" code but provides an easy way to override the 'quickbook'
+    # command.
+
+    if ! $(.initialized)
+    {
+        .initialized = true ;
+
+        generators.register [ new quickbook-binary-generator
+            $(command) : quickbook.quickbook-to-boostbook : QUICKBOOK : XML ] ;
+    }
+}
+
+# The <quickbook-binary> feature holds the command to run QuickBook
+# (which translates quickbook to boostbook)
+toolset.flags quickbook.quickbook-to-boostbook COMMAND <quickbook-binary> ;
+
+# Mark dependency of quickbook sources on <quickbook-binary> upon direct
+# invocation of quickbook-to-boostbook rule.
+rule quickbook-to-boostbook ( target : source : properties * )
+{
+    DEPENDS $(target) : [ on $(target) return $(COMMAND) ] ;
+}
+
+# $(1) target
+# $(2) source
+actions quickbook-to-boostbook bind COMMAND
+{
+    $(COMMAND) $(2) $(1) ;
+}
+
+# get-quickbook-command will try to find 'quickbook' on the user's path and
+# return the full path to a user supplied command.
+#
+# When pointing to a precompiled 'quickbook' executable, it seems intuitive
+# that a command found in PATH does not require full path qualification.
+#  However, because we are tagging the executable as a virtual-target, we still
+# need the full path internally...
+#
+# Putting some extra work here for everyone's benefit hopefully won't break
+# anything.
+#
+# common.get-invocation-command doesn't return the full path we need here.
+rule get-quickbook-command ( user-supplied-command ? )
+{
+    # Default value for quickbook binary.
+    user-supplied-command ?= quickbook ;
+
+    # On windows executables come in different formats and shapes ;)
+    # The empty string gives precedence to user-supplied-command, before
+    # looking for things like quickbook.exe.exe
+    local path-ext = "" [ programs-extensions ] ;
+
+    # If user-supplied-command contains directory elements, assume we have an
+    # absolute path and don't search the environment's PATH.
+    local search-path ;
+
+    if ! $(user-supplied-command:D)
+    {
+        search-path = [ path.programs-path ] ;
+    }
+
+    # Search the path for the command (exclude directories from result)
+    local possible-commands = [ exclude-directories
+        [ path.glob $(search-path) : $(user-supplied-command)$(path-ext) ]
+    ] ;
+
+    if $(possible-commands)
+    {
+        # We have a match.
+        return [ path.make $(possible-commands[1]) ] ;
+    }
+    else
+    {
+        # Giving up :(
+        ECHO "QuickBook warning: Failed to find QuickBook." ;
+        ECHO "  (Tried searching PATH using:" $(user-supplied-command) ")" ;
+        ECHO "  Giving up!" ;
+        # Back to square one :(
+        return [ path.make $(user-supplied-command) ] ;
+    }
+}
+
+# On windows systems searching the path for a command must take into account the
+# executable's file extensions. For those systems programs-extensions gets the
+# environment's executable extensions (PATHEXT) or sets up a default set if the
+# none are found.
+local rule programs-extensions ( )
+{
+    local path-ext ;
+
+    if $(OS) = NT
+    {
+        path-ext = [ split-word ";" : [ modules.peek : PATHEXT ] ] ;
+        # Set up a default set of executable extensions if none are available.
+        if ! $(path-ext)
+        {
+            path-ext = .COM .EXE .BAT .CMD ;
+        }
+    }
+
+    return $(path-ext) ;
+}
+
+# Goes through an array of paths returning only those which are NOT directories.
+local rule exclude-directories ( paths * )
+{
+    local return-paths ;
+
+    for local path in $(paths)
+    {
+        if ! [ path.exists $(path)/. ]
+        {
+            return-paths += $(path) ;
+        }
+    }
+
+    return $(return-paths) ;
+}
+
+# This rule separates a variables into its components by splitting words at
+# every occurrence of a separator-character
+local rule split-word ( separator-characters : path-extensions * )
+{
+    local return-value ;
+
+    for local extension in [ MATCH "([^$(separator-characters)]*);?(.+)?" : $(path-extensions) ]
+    {
+        if [ MATCH "($(separator-characters))" : $(extension) ] 
+        {
+            return-value += [ split-word $(separator-characters) : $(extension) ] ;
+        }
+        else
+        {
+            return-value += $(extension) ;
+        }
+    }
+
+    return $(return-value) ;
+}
+
