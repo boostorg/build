@@ -2105,7 +2105,8 @@ actions Fortran
 
 actions HardLink
 {
-    $(RM) $(<) && $(LN) $(>) $(<)
+    $(RM) $(<)
+    $(LN) $(>) $(<)
 }
 
 actions Install
