@@ -2684,7 +2684,7 @@ rule force-NT-static-link ( pattern : toolset : subvariant-path properties * )
 rule std::locale-support ( toolset variant : subvariant-path properties * )
 {
     return [ 
-      force-NT-static-link .*(metrowerks|cwpro).* 
+      force-NT-static-link .*(metrowerks|cwpro|cw).* 
         : $(toolset) : $(subvariant-path) $(properties)
           ] ;
 }
