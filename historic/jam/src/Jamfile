@@ -216,7 +216,7 @@ rule Package
 	}
 }
 
-VERSION = boost-jam-3.1.3 ;
+VERSION = boost-jam-3.1.5 ;
 RELEASE = 1 ;
 
 switch $(OSPLAT)
