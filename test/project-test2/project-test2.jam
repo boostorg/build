@@ -25,7 +25,7 @@ rule main-target-class ( name : project : requirements * )
 
     rule construct ( source-targets * : properties * )
     {
-        local t = [ new virtual-target $(self.local-name)
+        local t = [ new virtual-target $(self.name)
                     : $(self.project) : $(properties) ] ;
         local a = [ new action $(t) : : project-test2.touch-file : $(properties) ] ;
         $(t).action $(a) ;
