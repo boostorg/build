@@ -42,6 +42,7 @@ actions compile
 local rule link-options ( target : sources * : property-set * )
 {
     local options ;
+    local libs ;
     for local p in $(property-set)
     {
         if $(p) = <debug-symbols>on
@@ -52,13 +53,18 @@ local rule link-options ( target : sources * : property-set * )
         {
             options += -L$(p:G=) ;
         }
-        else if $(p:G) = <library>
+        else if $(p:G) = <find-library>
         {
             options += -l$(p:G=) ;
-        }
+        }        
+        else if $(p:G) = <library>
+        {
+            libs += [ $(p:G=).actualize ] ;
+        }        
     }
     
     OPTIONS on $(target) = $(options) ;
+    LIBS on $(target) = $(libs) ;
 }
 
 rule link ( target : sources * : property-set * )
@@ -66,9 +72,9 @@ rule link ( target : sources * : property-set * )
     link-options $(target) : $(sources) : $(property-set) ;
 }
 
-actions link
+actions link bind LIBS
 {
-    g++ $(OPTIONS) -o $(<) $(>)
+    g++ $(OPTIONS) -o $(<) $(>) $(LIBS)
 }
 
 rule archive ( target : sources * : property-set * )
@@ -85,7 +91,7 @@ rule link-dll ( target : sources * : property-set * )
     link-options $(target) : $(sources) : $(property-set) ;
 }
 
-actions link-dll
+actions link-dll bind LIBS
 {
-    g++  -o $(<) -shared $(>) $(OPTIONS)
+    g++ $(OPTIONS) -o $(<) -Wl,-soname,$(<[1]:D=) -shared $(>) $(LIBS)
 }
