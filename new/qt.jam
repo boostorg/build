@@ -69,7 +69,16 @@ rule init ( prefix ? )
 
 rule qt.add-properties ( property : properties * )
 {
-    return <include>$(.prefix)/include <dll-path>$(.prefix)/lib <library-path>$(.prefix)/lib <find-shared-library>qt-mt ;
+    local lib-name ;
+    if <threading>multi in $(properties)
+    {
+	lib-name = qt-mt ;
+    }
+    else
+    {
+	lib-name = qt ;
+    }
+    return <include>$(.prefix)/include <dll-path>$(.prefix)/lib <library-path>$(.prefix)/lib <find-shared-library>$(lib-name) ;
 }
 
 # -f forces moc to include the processed source file.
