@@ -39,6 +39,7 @@ import regex ;
 import property ;
 import errors ;
 
+
 # Base class for all abstract targets.
 rule abstract-target ( name      # name of the target in Jamfile
                        : project # the project module where the target is declared
@@ -127,6 +128,7 @@ class project-target : abstract-target ;
 rule main-target ( name : project )
 {
     import errors : error ;
+    import numbers : range ;
 
     abstract-target.__init__ $(name) : $(project) ;
 
@@ -142,30 +144,69 @@ rule main-target ( name : project )
     # Returns the result of calling 'generate' on that alternative.
     rule generate ( properties * )
     {
-        # At this stage we just try to generate each variant and if
-        # more than one succeeds, consider it as an error.
-        local alternatives ;
+        # Try to generate all the alternatives.
+        local alternatives = [ new vector ] ;
 
         for local v in $(self.alternatives)
         {
             local vtargets = [ $(v).generate $(properties) ] ;
             if $(vtargets) && $(vtargets[1]) != "@error"
             {
-                alternatives += $(v) $(vtargets) "@" ;
+                $(alternatives).push-back [ new vector $(v) $(vtargets) ] ;
             }
         }
-        if ! $(alternatives)
+        if [ $(alternatives).empty ]
         {
             # TODO: Should print a name
             error "No viable alternative found for main target" [ full-name ] ;
         }
-        # We have "@" at the end. Another one means two or more alts.
-        if "@" in $(alternatives[1--2])
-        {
-            error "Ambiguous alternatives for main target" [ full-name ]  ;
+        local result ;
+        if [ $(alternatives).size ] = 1 
+        {  
+            result = [ $(alternatives).get-at 1 ] ;
+            result = $(result[2-]) ;
         }
+        else
+        {
+            # Find the alternative with the longest set of non-free requirements
+            local r = [ range 1 : [ $(alternatives).size ] ] [ $(alternatives).size ] ;
+
+            # First compute the length of requirements sets
+            local req-length ;
+            for local p in $(r) 
+            {
+                local target = [ $(alternatives).at $(p) : 1 ] ;
+                assert.equal [ is-a $(target) : basic-target ] : true ;
+                local props = [ $(target).requirements ] ;
+                req-length += [ sequence.length [ property.remove-free 
+                                [ $(target).requirements ] ] ] ;
+            }
+
+            # Then find if there's single requirements set with maximum length
+            local req-length2 = [ sequence.insertion-sort $(req-length) ] ;
+            if $(req-length2[-1]) != $(req-length2[-2]) 
+            {
+                # Have signle maximum value
+                local max-length = $(req-length2[-1]) ;
+                local best ;
+                while $(r) && ! $(best) 
+                {                
+                    if $(req-length[$(r[1])]) = $(max-length) 
+                    {
+                        best = [ $(alternatives).get-at $(r[1]) ] ;      
+                    }
+                    r = $(r[2-]) ;
+                }
+                result = $(best[2-]) ;
+            } 
+            else
+            {
+                error "Ambiguous alternatives for main target" [ full-name ]  ;
+            }                    
+        } 
+
         # Now return virtual targets for the only alternative
-        return $(alternatives[2--2]) ;
+        return $(result) ;
     }
 }
 
@@ -293,6 +334,12 @@ rule basic-target ( name : project
     rule construct ( source-targets * : properties * )
     {
         errors.error "method should be defined in derived classes" ;
+    }
+
+    # Returns the requirements for this target
+    rule requirements ( )
+    {
+        return $(self.requirements) ;
     }
 
 }
