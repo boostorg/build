@@ -1,6 +1,8 @@
 #!/usr/bin/python
 import os
 
+import string
+
 # clear environment for testing
 #
 for s in (
@@ -13,29 +15,69 @@ for s in (
     except:
         pass
 
-import unit_tests
-import module_actions
-import startup_v1
-import startup_v2
-import project_test1
-import project_test3
-import project_test4
-import generators_test
-import dependency_test
-import direct_request_test
-import path_features
-import relative_sources
-import no_type
-import chain
-import default_build
-import main_properties
-import use_requirements
-import conditionals
-import stage
-import prebuilt
-import project_dependencies
-import build_dir
-if os.name == 'posix':
-    import symlink
-import searched_lib
+def run_tests(critical_tests, other_tests):
+    """Runs first critical tests and then other_tests.
 
+       Stops on first error, and write the name of failed test to
+       test_results.txt. Critical tests are run in the specified order,
+       other tests are run starting with the one that failed the last time.
+    """
+    last_failed = last_failed_test()
+    other_tests = reorder_tests(other_tests, last_failed)
+    all_tests = critical_tests + other_tests
+
+    for i in all_tests:
+        print ("%-25s : " %(i)),
+        try:
+            __import__(i)
+        except:
+            print "FAILED"
+            open('test_results.txt', 'w').write(i)
+            raise
+        print "PASSED"
+    # Erase the file on success
+    open('test_results.txt', 'w')
+        
+
+def last_failed_test():
+    "Returns the name of last failed test or None"
+    try:
+        f = open("test_results.txt")
+        s = string.strip(f.read())
+        return s
+    except:
+        return None
+
+def reorder_tests(tests, first_test):
+    try:
+        n = tests.index(first_test)
+        return [first_test] + tests[:n] + tests[n+1:]
+    except ValueError:
+        return tests
+
+            
+critical_tests = ["unit_tests", "module_actions", "startup_v1", "startup_v2"]
+tests = [ "project_test1",
+          "project_test3",
+          "project_test4",
+          "generators_test",
+          "dependency_test",
+          "direct_request_test",
+          "path_features",
+          "relative_sources",
+          "no_type",
+          "chain",
+          "default_build",
+          "main_properties",
+          "use_requirements",
+          "conditionals",
+          "stage",
+          "prebuilt",
+          "project_dependencies",
+          "build_dir",
+          "searched_lib"]
+
+if os.name == 'posix':
+    tests.append("symlink")
+
+run_tests(critical_tests, tests)
