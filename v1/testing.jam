@@ -412,6 +412,11 @@ rule run-test ( type-to-test run-target : sources * )
     }
     
     capture-run-output $(run-target) : $(executable) ;
+
+    if ! ( --preserve-test-targets in $(ARGV) )
+    {
+        RmTemps $(run-target) : $(targets-to-test) ;
+    }
 }
 
 # The rule is just used for argument checking
