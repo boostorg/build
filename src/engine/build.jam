@@ -607,6 +607,7 @@ dist.source = $(dist.source:D=)
     [ .path modules regex.c ]
     [ .path modules property-set.c ]
     [ .path modules sequence.c ]
+    [ .path modules order.c ]
     boost-jam.spec
     ;
 dist.bin =
