@@ -432,6 +432,7 @@ make1b( state *pState )
 
         case T_FATE_TOUCHED:
         case T_FATE_MISSING:
+        case T_FATE_NEEDTMP:
         case T_FATE_OUTDATED:
         case T_FATE_UPDATE:
 
