@@ -416,7 +416,11 @@ rule generate-dependencies ( property-set : project : generation-ps )
         {
             errors.error "cannot generate dependency " $(p) ;
         }
-        xproperties += $(p:G)$(g) [ $(g).usage-requirements ] ;
+        xproperties += $(p:G)$(g) ;
+        for local gi in $(g)
+        {            
+            xproperties += [ $(gi).usage-requirements ] ;
+        }        
     }
     local r = [ property-set.create 
         [ $(property-set).base ] 

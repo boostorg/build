@@ -87,7 +87,11 @@ rule normalize-target-list ( targets )
 # Creates a generator
 rule generator ( 
       id # identifies the generator - should be name of the rule which
-     # sets up build actions
+         # sets up build actions
+      composing ? # whether generator processes each source target in
+                  # turn, converting it to required types.
+                  # Ordinary generators pass all sources together to
+                  # recusrive generators.construct-types call.
     
     : source-types *  # types that this generator can handle
     
@@ -111,6 +115,7 @@ rule generator (
     import errors : error ;
 
     self.id = $(id) ;
+    self.composing = $(composing) ;
     self.source-types = $(source-types) ;
     self.target-types-and-names = $(target-types-and-names) ;
     self.requirements = $(requirements) ;
@@ -232,13 +237,13 @@ rule generator (
     {
         generators.dout [ indent ] "  generator" $(self.id) ;
         generators.dout [ indent ] "  multiple:" $(mutliple) ;
-                        
-        # Ordinary generators take only one source targets
-        if $(sources[2])
+        generators.dout [ indent ] "  composing:" $(self.composing) ;        
+        
+        if ! $(self.composing) && $(sources[2]) && $(self.source-types[2])
         {
-            error "unsupported" ;
+            errors.error "Unsupported source/source-type combination" ;
         }
-
+                                
         if $(self.source-types[2])
         {
             multiple = ;
@@ -249,20 +254,25 @@ rule generator (
         # Targets that can't be consumed and will be returned as-is.
         local bypassed = ;
         
-        convert-to-consumable-types $(project) $(name) : 
-          $(property-set) : $(sources) : $(multiple)
-          :
-          : consumed bypassed ;
-        
+        if $(self.composing)
+        {
+            convert-multiple-sources-to-consumable-types $(project)
+              : $(property-set) : $(sources) : consumed bypassed ;            
+        }
+        else
+        {            
+            convert-to-consumable-types $(project) $(name) : 
+              $(property-set) : $(sources) : $(multiple)
+                :
+                : consumed bypassed ;
+        }
+                
         local result ;
         if $(consumed)  
         {            
             result = [ construct-result $(consumed) : $(project) $(name) 
                      : $(property-set) ] ;
-            if $(result)
-            {            
-                result += $(bypassed) ;
-            }
+            result += $(bypassed) ;
         }
                             
                 
@@ -293,7 +303,7 @@ rule generator (
     {
         local result ;
         # If this is 1->1 transformation, apply it to all consumed targets in order.
-        if ! $(self.source-types[2])
+        if ! $(self.source-types[2]) && ! $(self.composing)
         {
             generators.dout [ indent ] "alt1" ;
             for local r in $(consumed)
@@ -384,7 +394,7 @@ rule generator (
     # handle. The intention is to produce the set of targets can should be
     # used when generator is run.
     rule convert-to-consumable-types ( project name ? : 
-        property-set : source : multiple ? 
+        property-set : sources + : multiple ? 
         : only-one ? # convert 'source' to only one of source types
                      # if there's more that one possibility, report an
                      # error 
@@ -399,9 +409,18 @@ rule generator (
         local _consumed ;
         local _bypassed ;
         local missing-types ; 
-        
-        consume-directly $(source) : _consumed : missing-types ;
 
+        if $(sources[2])
+        {
+            # Don't know how to handle several sources yet. Just try 
+            # to pass the request to other generator
+            missing-types = $(self.source-types) ;
+        }
+        else
+        {            
+            consume-directly $(sources) : _consumed : missing-types ;
+        }
+        
         # No need to search for transformation if
         # some source type has consumed source and
         # no more source types are needed.
@@ -418,7 +437,7 @@ rule generator (
         if $(missing-types)
         {            
             local transformed = [ generators.construct-types $(project) $(name)
-              : $(missing-types) : $(multiple) : $(property-set) : $(source) ] ;
+              : $(missing-types) : $(multiple) : $(property-set) : $(sources) ] ;
                                 
             # Add targets of right type to 'consumed'. Add others to
             # 'bypassed'. The 'generators.construct' rule has done
@@ -463,50 +482,6 @@ rule generator (
         $(bypassed-var) += $(_bypassed) ;
     }
     
-    rule consume-directly ( source : consumed-var : missing-types-var )
-    {
-        local real-source-type = [ $(source).type ] ;
-
-        for local st in $(self.source-types)
-        {
-            # The 'source' if of right type already)
-            if $(real-source-type) = $(st) || 
-              [ type.is-derived $(real-source-type) $(st) ]
-            {
-                $(consumed-var) += $(source) ;
-            }
-            else
-            {
-               $(missing-types-var) += $(st) ;
-            }
-        }        
-    }
-    
-    
-    # Returns the class to be used to actions. Default implementation 
-    # returns "action".
-    rule action-class ( )
-    {
-        return "action" ;
-    }    
-}
-
-class generator ;
-
-# Generator which is able to produce desired target types from arbitrary number
-# of sources, provided they all are of supported times. This is different from
-# ordinary generator, which does maps N sources to M targets, where both N and M
-# are fixed. For example, compiler takes cpp files and produces object. Linker
-# can take any number of objects, and produces one exe.
-#
-# The generator works by attempting to convert each source into one of the
-# allowed target types, and then consuming the result of convertion.
-rule composing-generator ( id : source-types * : target-types + :
-                           requirements * )
-{
-    generator.__init__ $(id) : $(source-types) : $(target-types) :
-                       $(requirements) ;
-    
     # Converts several files to consumable types.
     rule convert-multiple-sources-to-consumable-types
       ( project : property-set : sources * : consumed-var bypassed-var )
@@ -536,34 +511,36 @@ rule composing-generator ( id : source-types * : target-types + :
             $(bypassed-var) = ;
         }        
     }
-                  
-    rule run ( project name ? : property-set : sources + : multiple ? ) 
-    {
-        generators.dout [ indent ] "  composing generator" $(self.id) ;
-
-        local consumed ;
-        local bypassed ;
         
-        convert-multiple-sources-to-consumable-types $(project)
-          : $(property-set) : $(sources) : consumed bypassed ;
+    rule consume-directly ( source : consumed-var : missing-types-var )
+    {
+        local real-source-type = [ $(source).type ] ;
 
-        local result ;
-        if $(consumed) 
+        for local st in $(self.source-types)
         {
-            generators.dout [ indent ] "  SUCCESS" ;
-            result += [ generated-targets $(consumed) : $(property-set) 
-                        : $(project) $(name) ] ;
-            result += $(bypassed) ;
-        } 
-        else
-        {
-            generators.dout [ indent ] "  FAILURE" ;
-        }
-        return $(result) ;
+            # The 'source' if of right type already)
+            if $(real-source-type) = $(st) || 
+              [ type.is-derived $(real-source-type) $(st) ]
+            {
+                $(consumed-var) += $(source) ;
+            }
+            else
+            {
+               $(missing-types-var) += $(st) ;
+            }
+        }        
     }
+    
+    
+    # Returns the class to be used to actions. Default implementation 
+    # returns "action".
+    rule action-class ( )
+    {
+        return "action" ;
+    }    
 }
 
-class composing-generator : generator ;
+class generator ;
 
 import errors : error ;
 
@@ -596,7 +573,7 @@ rule register-standard ( id : source-types + : target-types + : requirements * )
 # registers it.
 rule register-composing ( id : source-types + : target-types + : requirements * )
 {
-    local g = [ new composing-generator $(id) : $(source-types) 
+    local g = [ new generator $(id) true : $(source-types) 
                 : $(target-types) : $(requirements) ] ;
     register $(g) ;
 }
@@ -695,14 +672,14 @@ rule try-one-generator ( project name ? : generator multiple ? :
 }
 
 rule construct-types ( project name ? : target-types + : multiple ? : 
-    property-set : source )
+    property-set : sources + )
 {
     local result ;
     local matched-types ; 
     for local t in $(target-types)
     {
         local r = [ construct $(project) $(name) : $(t) $(multiple) : $(property-set) :
-          $(source) ] ;
+          $(sources) ] ;
         if $(r)
         {
             result += $(r) ;
@@ -723,7 +700,7 @@ rule construct-types ( project name ? : target-types + : multiple ? :
     }
     else
     {
-        return $(source) ;
+        return $(sources) ;
     }
 }
 

@@ -95,10 +95,12 @@ rule init ( version ? path ? : vendor ? : setup ? compiler ? linker ? )
 # Declare generators
 
 # is it possible to combine these?
-generators.register-linker msvc.link : RSP : EXE : <toolset>msvc ;
-generators.register-linker msvc.link : RSP : SHARED_LIB IMPORT_LIB : <toolset>msvc ;
+# make the generators non-composing, so that they don't convert each source
+# into separate rsp file.
+generators.register-linker msvc.link "" : RSP : EXE : <toolset>msvc ;
+generators.register-linker msvc.link "" : RSP : SHARED_LIB IMPORT_LIB : <toolset>msvc ;
 
-generators.register-composing msvc.archive : RSP : STATIC_LIB : <toolset>msvc ;
+generators.register-standard msvc.archive : RSP : STATIC_LIB : <toolset>msvc ;
 generators.register-c-compiler msvc.compile : CPP : OBJ : <toolset>msvc ;
 generators.register-c-compiler msvc.compile : C : OBJ : <toolset>msvc ;
 
