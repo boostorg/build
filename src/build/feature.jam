@@ -108,7 +108,7 @@ rule feature ( name : values * : attributes * )
 }
 
 # returns true iff all elements of names are valid features.
-rule valid ( name + )
+rule valid ( names + )
 {
     if $(names) in $(all-features)
     {
@@ -119,6 +119,10 @@ rule valid ( name + )
 # return the attibutes of the given feature
 rule attributes ( feature )
 {
+    if ! [ valid $(feature) ]
+    {
+        error \"$(feature)\" is not a valid feature name ;
+    }
     return $($(feature).attributes) ;
 }
 
