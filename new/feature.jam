@@ -698,6 +698,54 @@ rule split ( property-set )
     return $(result) ;
 }
 
+# Appends a rule to the list of rules assigned to the given feature or property.
+# That rules will be in extending property sets by the 'run-actions' rule. 
+# The rule should accept single argument -- a property, and return a set of additional 
+# properties to be added. Property should be specified in the usual way:
+# <feature>value, and feature should be specified as <feature>.
+rule action ( property-or-feature : rule-name )
+{
+    # Is the name in global scope
+    if ! $(rule-name) in [ RULENAMES ]
+    {
+        # No, should be in caller's scope
+        local caller = [ CALLER_MODULE ] ;
+        if ! $(rule-name) in [ RULENAMES $(caller) ]
+        {
+            error "invalid rule name" ;
+        }        
+        rule-name = $(caller).$(rule-name) ;
+    }
+    
+    .rules.$(property-or-feature) += $(rule-name) ;
+}
+
+# Returns 'properties' augmented with results of calling rule associated with properties.
+# If both a property and its feature have rules, only rules for the property are executed.
+rule run-actions ( properties * )
+{
+    local added = ;
+    for local e in $(properties)
+    {
+        local rules ;
+        if $(.rules.$(e)) 
+        {
+            rules = $(.rules.$(e)) ;
+        }
+        else if $(.rules.$(e:G)) 
+        {
+            rules = $(.rules.$(e:G)) ;
+        }
+        for local r in $(rules)
+        {
+            added += [ $(r) $(e) ] ;
+        }
+    }
+    return $(properties) $(added) ;            
+}
+
+
+
 }
 class feature-space ;
 
@@ -721,6 +769,8 @@ local rule __test__ ( )
         feature runtime-link : dynamic static : symmetric ;
         feature optimization : on off ;
         feature variant : debug release : implicit composite ;
+        feature stdlib : native stlport ;
+        feature magic : : free ;
 
         compose <variant>debug : <define>_DEBUG <optimization>off ;
         compose <variant>release : <define>NDEBUG <optimization>on ;
@@ -728,7 +778,34 @@ local rule __test__ ( )
         extend-feature toolset : msvc metrowerks ;
         subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
           3.0 3.0.1 3.0.2 : optional ;
+        
+        rule handle-stlport ( property )
+        {
+            return <include>/path/to/stlport ;
+        }
+        
+        rule handle-magic ( property )
+        {
+            return <define>MAGIC=$(property:G=) ;
+        }
+        
+        rule handle-magic2 ( property )
+        {
+            return <define>MAGIC=BIG_MAGIC ;
+        }
+        
+        rule handle-magic3 ( property )
+        {
+            return <define>MAGIC=VERY_BIG_MAGIC ;
+        }
 
+        
+                
+        action <stdlib>stlport : handle-stlport ;
+        action <magic> : handle-magic ;
+        action <magic>17 : handle-magic2 ;
+        action <magic>17 : handle-magic3 ;
+        
         assert.result <toolset>gcc <toolset-version>3.0.1
           : expand-subfeatures <toolset>gcc-3.0.1 ;
 
@@ -754,9 +831,19 @@ local rule __test__ ( )
           : defaults <runtime-link> <define> <optimization>
           ;
 
-        assert.result <runtime-link>static <define>foobar <optimization>on <toolset>gcc <variant>debug <dummy>dummy1
+        assert.result <runtime-link>static <define>foobar <optimization>on <toolset>gcc <variant>debug 
+                      <stdlib>native <dummy>dummy1
           : add-defaults <runtime-link>static <define>foobar <optimization>on
           ;
+        
+        assert.result  <toolset>gcc <define>foo <stdlib>stlport <magic>3 <include>/path/to/stlport <define>MAGIC=3
+          : run-actions <toolset>gcc <define>foo <stdlib>stlport <magic>3
+          ;
+        
+        assert.result <magic>17 <define>MAGIC=BIG_MAGIC <define>MAGIC=VERY_BIG_MAGIC
+          : run-actions <magic>17 
+          ;
+        
 
         assert.result gcc-3.0.1 debug <optimization>on
           : minimize [ expand gcc-3.0.1 debug <optimization>on ]
