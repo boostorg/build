@@ -9,7 +9,7 @@
 #  if particular target should be created at all.
 
 import "class" : new ;
-import path property-set utility sequence errors ;
+import path property-set utility sequence errors set ;
 
 #                       +--------------------------+
 #                       | virtual-target           |
@@ -792,9 +792,43 @@ rule register-actual-name ( actual-name : virtual-target )
 {
     if $(.actual.$(actual-name))
     {
-        errors.error "Duplicate name of actual target:" $(actual-name) 
-          : "previous virtual target" [ $(.actual.$(actual-name)).str ] 
-          : "another virtual target" [ $(virtual-target).str ] ;
+        local cs1 = [ $(.actual.$(actual-name)).creating-subvariant ] ;
+        local cs2 = [ $(virtual-target).creating-subvariant ] ;
+        local cmt1 = [ $(cs1).main-target ] ;
+        local cmt2 = [ $(cs1).main-target ] ;
+        
+        
+        local action1 = [ $(.actual.$(actual-name)).action ] ;
+        local action2 = [ $(virtual-target).action ] ;
+        local properties-added ;
+        local properties-removed ;
+        if $(action1) && $(action2)
+        {
+            local p1 = [ $(action1).properties ] ;
+            p1 = [ $(p1).raw ] ;
+            local p2 = [ $(action2).properties ] ;
+            p2 = [ $(p2).raw ] ;
+            properties-removed = [ set.difference $(p1) : $(p2) ] ;
+            properties-removed ?= "none" ;
+            properties-added = [ set.difference $(p2) : $(p1) ] ;
+            properties-added ?= "none" ;
+        }        
+        if $(properties-added) != "none" || $(properties-removed) != "none"
+        {            
+            errors.error "Duplicate name of actual target:" $(actual-name) 
+              : "previous virtual target" [ $(.actual.$(actual-name)).str ] 
+              : "created from" [ $(cmt1).location ]
+              : "another virtual target" [ $(virtual-target).str ]
+              : "created from" [ $(cmt2).location ]                
+              : "added properties: " $(properties-added) 
+              : "removed properties: " $(properties-removed) ;
+        }
+        else
+        {
+            errors.error "Duplicate name of actual target:" $(actual-name) 
+              : "previous virtual target" [ $(.actual.$(actual-name)).str ] 
+              : "another virtual target" [ $(virtual-target).str ] ;            
+        }        
     }
     else
     {

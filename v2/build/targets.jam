@@ -83,10 +83,10 @@ import assert ;
 # Base class for all abstract targets.
 class abstract-target 
 {
-    import project assert "class" ;    
+    import project assert "class" errors ;    
         
     rule __init__ ( name      # name of the target in Jamfile
-        : project-target             # the project target to which this one belongs
+        : project-target      # the project target to which this one belongs
     )
     {        
         assert.true class.is-a $(project-target) : project-target ;
@@ -97,6 +97,7 @@ class abstract-target
         
         self.name = $(name) ;
         self.project = $(project-target) ;
+        self.location = [ errors.nearest-user-location ] ;
     }    
     
     # Returns the name of this target.
@@ -110,7 +111,13 @@ class abstract-target
     {
         return $(self.project) ;
     }
-        
+    
+    # Return the location where the target was declared
+    rule location ( )
+    {
+        return $(self.location) ;
+    }
+            
     # Returns a user-readable name for this target.
     rule full-name ( )
     {
