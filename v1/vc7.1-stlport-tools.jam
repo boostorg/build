@@ -1,6 +1,6 @@
 extends-toolset msvc ;
 
-CURR_TOOLSET = vc-7.1-stlport ;
+flags $(gCURRENT_TOOLSET) STLPORT_LIB_BASE_NAME ;
 STLPORT_LIB_BASE_NAME = stlport_vc71 ;
 
 # bring in the STLPort configuration

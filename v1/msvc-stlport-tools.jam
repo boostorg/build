@@ -8,7 +8,9 @@
 
 extends-toolset msvc ;
 
-CURR_TOOLSET = msvc-stlport ;
+flags $(gCURRENT_TOOLSET) STLPORT_LIB_BASE_NAME ;
+flags $(gCURRENT_TOOLSET) STLPORT_LIB_STATIC_SUFFIX ;
+
 STLPORT_LIB_BASE_NAME ?= stlport_vc6 ;
 STLPORT_LIB_STATIC_SUFFIX ?= _static ;
 
@@ -17,4 +19,3 @@ SEARCH on stlport.jam = $(BOOST_BUILD_PATH) ;
 include stlport.jam ;
 
 flags msvc-stlport VC_STDLIB_PATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)$(STLPORT_LIB_DIRECTORY) ] ;
-#~ flags msvc-stlport THIS_FLAG_IS_UNUSED_BUT_ENSURES_TAG_ISNT_IGNORED <stlport-version> :  ;

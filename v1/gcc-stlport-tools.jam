@@ -5,6 +5,8 @@
 # this is simply an extension to the gcc toolset. 
 extends-toolset gcc ;
 
+flags $(gCURRENT_TOOLSET) STLPORT_LIB_BASE_NAME ;
+
 if $(NT)
 {
     STLPORT_LIB_BASE_NAME = stlport_cygwin ;

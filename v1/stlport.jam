@@ -7,9 +7,6 @@
 # Use this toolset to add STLport flavor for any base toolset
 # define STLPORT_LIB_BASE_NAME to the shared between debug and release 
 # versions prefix for stlport library name for example stlport_sunpro
-flags stlport STLPORT_LIB_BASE_NAME ;
-flags stlport STLPORT_LIB_DEBUG_SUFFIX ;
-flags stlport STLPORT_LIB_STATIC_SUFFIX ;
 
 # STLport iostreams or native iostreams
 feature stlport-iostream : on off ;

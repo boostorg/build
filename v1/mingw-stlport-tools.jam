@@ -5,7 +5,8 @@
 
 extends-toolset mingw ;
 
-CURR_TOOLSET          = mingw-stlport ;
+flags $(gCURRENT_TOOLSET) STLPORT_LIB_BASE_NAME ;
+
 STLPORT_LIB_BASE_NAME = stlport_mingw32 ;
 
 SEARCH on stlport.jam = $(BOOST_BUILD_PATH) ;

@@ -1,7 +1,8 @@
 extends-toolset msvc-stlport ;
 
-CURR_TOOLSET = vc7-stlport ;
-STLPORT_LIB_BASE_NAME = stlport_vc70 ;
+flags $(gCURRENT_TOOLSET) STLPORT_LIB_BASE_NAME ;
+
+STLPORT_LIB_BASE_NAME ?= stlport_vc70 ;
 
 # bring in the STLPort configuration
 SEARCH on stlport.jam = $(BOOST_BUILD_PATH) ;

@@ -12,8 +12,10 @@
 
 extends-toolset dmc ;
 
+flags $(gCURRENT_TOOLSET) STLPORT_LIB_BASE_NAME ;
+
+STLPORT_LIB_BASE_NAME ?= stlp45dm ;
+
 SEARCH on stlport.jam = $(BOOST_BUILD_PATH) ;
 include stlport.jam ;
-
-STLPORT_LIB_BASE_NAME = stlp45dm ;
 
