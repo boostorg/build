@@ -430,7 +430,7 @@ rule searched-lib-generator ( )
             # attach an action and properties to the target
             a = [ new null-action $(t) : $(property-set) ] ;
             $(t).action $(a) ;
-            return $(t) ;
+            return [ virtual-target.register $(t) ] ;
         }
     }
 }
