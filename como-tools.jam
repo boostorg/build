@@ -82,7 +82,7 @@ actions como-Cc-action
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    $(COMO_BIN_DIRECTORY)como -c -e10 --wchar_t --no_microsoft_bugs -D_WCHAR_T_DEFINED -m -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<:D=)" "$(>)"
+    $(COMO_BIN_DIRECTORY)como -c -e10 --wchar_t -D__cdecl=  --no_microsoft_bugs -D_WCHAR_T_DEFINED -m -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<:D=)" "$(>)"
     $(MV) $(<:D=) $(<)
 }
 
@@ -99,7 +99,7 @@ actions como-C++-action
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    $(COMO_BIN_DIRECTORY)como -c -e10 --wchar_t --no_microsoft_bugs -D_WCHAR_T_DEFINED -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)"  -o "$(<:D=)" "$(>)"
+    $(COMO_BIN_DIRECTORY)como -c -e10 --wchar_t -D__cdecl= --no_microsoft_bugs --no_anachronisms -D__cdecl= --new_for_init -D_WCHAR_T_DEFINED -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)"  -o "$(<:D=)" "$(>)"
     $(MV) $(<:D=) $(<)
 }
 
