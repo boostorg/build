@@ -16,6 +16,10 @@
 # - Figure out what to do with the so_locations file.
 # - Figure out what to do with the ii_files directory.
 
+# The following #// line will be used by the regression test table generation
+# program as the column heading for HTML tables. Must not include version number.
+#//<a href="http://www.sgi.com/developers/devtools/languages/mipspro.html">SGI<br>MIPSpro</a>
+
 # compute directories for invoking MIPSpro: first try ROOT and
 # TOOLROOT, which are traditionally used for this purpose.
 MIPSPRO_ROOT_DIRECTORY ?= "$(ROOT)/usr" ;
