@@ -1066,6 +1066,7 @@ rule Object
         case .C :   C++ $(<) : $(>) ;
         case .cc :  C++ $(<) : $(>) ;
         case .cpp : C++ $(<) : $(>) ;
+        case .cxx : C++ $(<) : $(>) ;
         case .f :   Fortran $(<) : $(>) ;
         case .s :   As $(<) : $(>) ;
         case * :    UserObject $(<) : $(>) ;
