@@ -19,6 +19,8 @@ rule difference ( B * : A * )
     return $(result) ;
 }
 
+NATIVE_RULE set : difference ;
+
 # intersection set1 : set2
 #
 # Removes from set1 any items which don't appear in set2 and returns the result.
