@@ -8,18 +8,24 @@ import regex ;
 import scanner ;
 
 feature.feature xsl:param : : free ;
-feature.feature format : onehtml docbook : incidental implicit composite ;
+feature.feature format : html onehtml pdf ps docbook fo 
+  : incidental implicit composite ;
 
 type.register XML : xml ;
 type.register DOCBOOK : docbook ; 
 type.register HTML : html ;
-
+type.register FO : fo ;
+type.register PDF : pdf ;
+type.register PS : ps ;
 type.register XSLT : xsl ;
+
 #generators.register-standard boostbook.xslt : XML XSLT : * ;
 
 generators.register-standard boostbook.boostbook-to-docbook : XML : DOCBOOK ;
-generators.register-standard boostbook.docbook-to-onehtml 
-  : DOCBOOK : HTML ;
+generators.register-standard boostbook.docbook-to-onehtml : DOCBOOK : HTML ;
+generators.register-standard boostbook.docbook-to-fo : DOCBOOK : FO ;
+generators.register-standard boostbook.fo-to-print : FO : PDF ;
+generators.register-standard boostbook.fo-to-print : FO : PS ;
 
 rule xslt ( target : source stylesheet : properties * )
 { 
@@ -47,6 +53,51 @@ rule docbook-to-onehtml ( target : source : properties * )
   xslt $(target) : $(source) "$(dir)/tools/boostbook/xsl/html-single.xsl" : $(properties) ;
 }
 
+rule docbook-to-fo ( target : source : properties * )
+{
+  local dir = [ modules.peek : BOOST_ROOT ] ;
+  xslt $(target) : $(source) "$(dir)/tools/boostbook/xsl/fo.xsl" : $(properties) ;
+}
+
+rule fo-to-print ( target : source : properties * )
+{
+  local dir = [ modules.peek : BOOST_ROOT ] ;
+  JAVA_HOME on $(target) = [ modules.peek : JAVA_HOME ] ;
+  FOP_DIR on $(target) = [ modules.peek : FOP_DIR ] ;
+  fop $(target) : $(source) ;
+}
+
+actions fop
+{
+  JAVA_HOME=$(JAVA_HOME) $(FOP_DIR)/fop.sh $(>) $(<)
+}
+
+rule xml-catalog-action ( target : property-set ? )
+{
+  action.__init__ $(target) : : generate-xml-catalog : $(property-set) ;
+
+  rule actualize ( )
+  {
+    if ! $(self.actualized)
+    {
+      self.actualized = true ;
+      boostbook.write-xml-catalog-1 $(self.target) : "foobar" ;
+    }
+  }
+}
+
+class xml-catalog-action : action ;
+
+actions write-xml-catalog-1
+{
+    echo "$(>)" > "$(<)"
+}
+
+actions piecemeal write-xml-catalog-2
+{
+    echo "$(>)" >> "$(<)"
+}
+
 rule boostbook-target-class ( name : project : sources * : requirements * 
                               : default-build * )
 {
@@ -55,23 +106,35 @@ rule boostbook-target-class ( name : project : sources * : requirements *
 
   rule construct ( source-targets * : property-set )
   {
+    # Not working :(
+#    local path = [ project.attribute $(self.project) location ] ;
+#    local catalog = [ new file-target catalog : XML : $(self.project) ] ;
+#    $(catalog).action [ new xml-catalog-action $(catalog) : $(property-set) ] ;
+#    $(catalog).set-path $(path) ;
+#    $(catalog).set-actual-name "$(path)/catalog.xml" ;
+
     local properties = [ $(property-set).raw ] ;
 
     local format = [ feature.get-values <format> : $(properties) ] ;
-    local targets ;
+    local targets = ;
 
     local type = none ;
 
     switch $(format) 
     {
-      case docbook : type = DOCBOOK ;
       case onehtml : type = HTML ;
+      case docbook : type = DOCBOOK ;
+      case fo      : type = FO ;
+      case pdf     : type = PDF ;
+      case ps      : type = PS ;
     }
 
     for local i in $(source-targets) 
     {
-      targets += [ generators.construct ($self.project) : $(type) 
-                   : $(property-set) : $(i) ] ;
+      local target = [ generators.construct $(self.project)
+                       : $(type) : $(property-set) : $(i) ] ;
+#      $(target).depends $(catalog) ;
+      targets += $(target) ;
     }
 
     return $(targets) ;
@@ -83,6 +146,7 @@ class boostbook-target-class : basic-target ;
 rule boostbook ( target-name : source : requirements * : default-build * )
 { 
   local project = [ CALLER_MODULE ] ;
+
   targets.main-target-alternative 
     [ new boostbook-target-class $(target-name) : $(project) : $(source) 
         : [ targets.main-target-requirements $(requirements) : $(project) ]
@@ -94,6 +158,11 @@ actions xslt-xsltproc
 {
   XML_CATALOG_FILES=catalog.xml xsltproc $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
 }
+
+#############################################################################
+# XML Catalog Generation
+#############################################################################
+
 
 # XInclude scanner. Mostly stolen from c-scanner :)
 # Note that this assumes an "xi" prefix for XIncludes. This isn't always the
