@@ -255,7 +255,7 @@ actions (failed-as-expected)
     echo failed as expected > $(<)
 }
 
-toolset.flags testing.capture-output ARG <testing.arg> ;
+toolset.flags testing.capture-output ARGS <testing.arg> ;
 toolset.flags testing.capture-output INPUT_FILES <testing.input-file> ;
 toolset.flags testing.capture-output LAUNCHER <testing.launcher> ;
 rule capture-output ( target : source : properties * )
@@ -288,44 +288,78 @@ rule capture-output ( target : source : properties * )
         dll-paths = [ sequence.transform path.native : $(dll-paths) ] ;
         if [ modules.peek : NT ]
         {
-            SET_DLL_PATHS on $(target) = 
+            PATH_SETUP on $(target) = 
               [ common.path-variable-setting-command PATH : $(dll-paths) %PATH% ] ;
         }
         else
         {
-            SET_DLL_PATHS on $(target) = 
+            PATH_SETUP on $(target) = 
               [ common.path-variable-setting-command LD_LIBRARY_PATH :
                   $(dll-paths) %PATH% : exported ] ;
         }        
     }        
 }
 
+
+
 if [ os.name ] = NT
 {
-    ENV_PATH = %PATH% ;
+    STATUS = %status% ;
+    SET_STATUS = "set status=%ERRORLEVEL%" ;
+    RUN_OUTPUT_NL = "echo." ;
+    STATUS_0 = "%status% EQU 0 (" ;
+    STATUS_NOT_0 = "%status% NEQ 0 (" ;
+    VERBOSE = "%verbose% EQU 0 (" ;
+    ENDIF = ")" ;
+    SHELL_SET = "set" ;
+    
     CATENATE = type ;
     CP = copy ;
 }
 else
 {
-    ENV_PATH = $PATH ;
-    ENV_LD_LIBRARY_PATH = $LD_LIBRARY_PATH ;
+    STATUS = "$status" ;
+    SET_STATUS = "status=$?" ;
+    RUN_OUTPUT_NL = "echo" ;
+    STATUS_0 = "test $status -eq 0 ; then" ;
+    STATUS_NOT_0 = "test $status -ne 0 ; then" ;
+    VERBOSE = "test $verbose -eq 0 ; then" ;
+    ENDIF = "fi" ;
+    SHELL_SET = "" ;
+    
     CATENATE = cat ;
     CP = cp ;
 }
 
-
-RUN_OUTPUT_HEADER = "echo ====== BEGIN OUTPUT ====== &&" ;
-RUN_OUTPUT_FOOTER = " && echo ====== END OUTPUT ======" ;
-if --verbose-test in $(ARGV)
+if --verbose-test in [ modules.peek : ARGV ] 
 {
-    VERBOSE_CAT = "&& "$(RUN_OUTPUT_HEADER)" "$(CATENATE)" " ;
+    VERBOSE_TEST = 1 ;
+}
+else
+{
+    VERBOSE_TEST = 0 ;
 }
 
 actions capture-output bind INPUT_FILES output-file
 {
-    $(SET_DLL_PATHS)
-    $(LAUNCHER) $(>)  $(ARG) "$(INPUT_FILES)" > $(output-file) 2>&1 && $(CP) $(output-file) $(<) $(VERBOSE_CAT)$(<)$(RUN_OUTPUT_FOOTER) || ( $(RUN_OUTPUT_HEADER) $(CATENATE) $(output-file) $(RUN_OUTPUT_FOOTER) && exit 1 )
+    $(PATH_SETUP)
+    $(LAUNCHER) $(>) $(ARGS) "$(INPUT_FILES)" > $(output-file) 2>&1      
+    $(SET_STATUS)
+    $(RUN_OUTPUT_NL) >> $(output-file)
+    echo EXIT STATUS: $(STATUS) >> $(output-file)
+    if $(STATUS_0)
+        $(CP) $(output-file) $(<)
+    $(ENDIF)
+    $(SHELL_SET)verbose=$(VERBOSE_TEST)
+    if $(STATUS_NOT_0)
+        $(SHELL_SET)verbose=0
+    $(ENDIF)
+    if $(VERBOSE)
+        echo ====== BEGIN OUTPUT ======
+        $(CATENATE) $(output-file)
+        echo ====== END OUTPUT ======
+    $(ENDIF)
+    exit $(STATUS)      
 }
 
 rule unit-test ( name : sources * : requirements * : default-build *
