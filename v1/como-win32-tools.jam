@@ -118,7 +118,7 @@ actions como-C++-action
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    $(COMO_BIN_DIRECTORY)como -c -e5 --no_version --no_prelink_verbose --display_error_number --long_long --wchar_t --no_anachronisms --new_for_init --diag_suppress=9,21,161,748,940,962 -D__STL_LONG_LONG -D_WCHAR_T_DEFINED -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(COMO_BIN_DIRECTORY)como -c -e5 --no_version --no_prelink_verbose --display_error_number --long_long --diag_suppress=9,21,161,748,940,962 -D__STL_LONG_LONG -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
