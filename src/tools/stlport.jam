@@ -38,6 +38,7 @@ import project ;
 import "class" : new ;
 import targets ;
 import property-set ; 
+import common ;
 
 # Make this module into a project.
 project.initialize $(__name__) ;
@@ -54,8 +55,6 @@ project stlport ;
 
 feature.extend stdlib : stlport ;
 feature.compose <stdlib>stlport : <library>/stlport//stlport ;
-
-subfeature stdlib stlport : version : : optional propagated ;
 
 # STLport iostreams or native iostreams
 subfeature stdlib stlport : iostream : hostios : optional propagated  ;
@@ -81,13 +80,33 @@ class stlport-target-class : basic-target
     import feature project type errors generators ;
     import set : difference ;       
     
-    rule __init__ ( project : headers ? : libraries ? : requirements * )
+    rule __init__ ( project : headers ? : libraries ? :  version ? )
     {
-        basic-target.__init__ stlport : $(project) : : $(requirements) ;
+        basic-target.__init__ stlport : $(project) ;
         self.headers = $(headers) ;
         self.libraries = $(libraries) ;
+        self.version = $(version) ;
     }
-            
+    
+    rule match ( property-set )
+    {
+        # Override the rule which detects if this basic-target is
+        # suitable for the specified property set.
+        # Basically, just checks that requested version is equal to
+        # self.version. We could have added stlport-$(version) to
+        # requirements, but then stlport-$(version) would show in
+        # the common properties, causing recursive building of ourselfs.
+        
+        if [ $(property-set).get <stdlib-stlport:version> ] = $(self.version)
+        {
+            return stlport-$(self.version) ;
+        }
+        else
+        {
+            return no-match ;
+        }
+    }
+                
     rule generate ( property-set )
     {
         # Since this target is built with <stdlib>stlport, it will also
@@ -164,15 +183,17 @@ class stlport-target-class : basic-target
     }    
 }
 
-rule stlport-target ( headers ? : libraries ? : requirements * )
+rule stlport-target ( headers ? : libraries ? : version ? )
 {
     local project = [ project.current ] ;
     
     targets.main-target-alternative
       [ new stlport-target-class  $(project) : $(headers) : $(libraries)        
-        : [ targets.main-target-requirements $(requirements) : $(project) ] 
+        : $(version)
       ] ;
 }
+
+local .version-subfeature-defined ;
 
 # Initialize stlport support. 
 rule init ( version ? :
@@ -180,9 +201,21 @@ rule init ( version ? :
             libraries ? # Location of libraries
          )
 {
-    feature.extend-subfeature stdlib stlport : version : $(version) ;
-    
+    # FIXME: need to use common.check-init-parameters here.
+    # At the moment, that rule always tries to define subfeature
+    # of the 'toolset' feature, while we need to define subfeature
+    # of <stdlib>stlport, so tweaks to check-init-parameters are needed.
+    if $(version)
+    {   
+        if ! $(.version-subfeature-defined)
+        {            
+            feature.subfeature stdlib stlport : version : : propagated ;
+            .version-subfeature-defined = true ;
+        }        
+        feature.extend-subfeature stdlib stlport : version : $(version) ;
+    }
+        
     # Declare the main target for this STLPort version.
-    stlport-target $(headers) : $(libraries) : <stdlib>stlport-$(version) ;
+    stlport-target $(headers) : $(libraries) : $(version) ;
 }
 
