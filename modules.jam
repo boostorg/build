@@ -53,10 +53,13 @@ rule load ( module-name )
             # run any pending tests
             for local m in $(untested)
             {
-                ECHO testing module $(m)... ;
-                module $(m)
+                if ( $(BOOST_BUILD_TEST) = 1 ) || ( $(m) in $(BOOST_BUILD_TEST) )
                 {
-                    __test__ ;
+                    ECHO testing module $(m)... ;
+                    module $(m)
+                    {
+                        __test__ ;
+                    }
                 }
             }
             untested = ;
