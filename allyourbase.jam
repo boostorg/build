@@ -1384,23 +1384,7 @@ rule split-path
 # account for.
 if $(NEW_BOOST_JAM) {
 
-rule split ( string separator )
-{
-    local result ;
-    local s = $(string) ;
-    
-    while $(s)
-    {
-        local match = [ SUBST $(s) (.*)$(separator)(.*) $1 $2 ] ;
-        
-        local tail = $(match[2]) ;
-        tail ?= $(s) ;
-
-        result = $(tail) $(result) ;
-        s = $(match[1]) ;
-    }
-    return $(result) ;
-}
+include new-split.jam ; # this is temporary.
 
 } else {
 
