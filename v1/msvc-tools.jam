@@ -57,7 +57,7 @@ rule Link-action
 
 actions msvc-Link-action bind NEEDLIBS 
 {
-    $(MSVC_TOOL_PATH)link /nologo $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) $(NEEDLIBS) "$(>)"
+    $(MSVC_TOOL_PATH)link /nologo $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(NEEDLIBS)" "$(>)"
 }
 
 #### Cc #####

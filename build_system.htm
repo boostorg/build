@@ -143,6 +143,7 @@
               <li><a href="#negative_indexing">Negative Indexing</a>
               <li><a href="#BINDRULE">Target Binding Detection</a>
               <li><a href="#FAIL_EXPECTED">Return Code Inversion</a>
+              <li><a href="#NOCARE">Ignoring Return Codes</a>
               <li><a href="#SUBST_rule">The <tt>SUBST</tt> Rule</a>
               <li><a href="#JAM_VERSION">The <tt>JAM_VERSION</tt> global variable</a>
               <li>
@@ -1607,6 +1608,14 @@ rule bind-rule ( target : path )
       of the build actions for arguments to <tt>FAIL_EXPECTED</tt> is inverted:
       if it fails, building of dependent targets continues as though it
       succeeded. If it succeeds, dependent targets are skipped.
+
+      <h4><a name="NOCARE">Ignoring Return Codes</a></h4>
+
+      <p>Perforce Jam suppplied a <tt>NOCARE</tt> rule which is typically used
+      for header files to indicate that if they are not found, the dependent
+      targets should be built anyway. Boost Jam extends <tt>NOCARE</tt> to apply
+      to targets with build actions: if their build actions exit with a nonzero
+      return code, dependent targets will still be built.
 
       <h4><a name="SUBST_rule">The <tt>SUBST</tt> Rule</a></h4>
 

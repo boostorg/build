@@ -59,7 +59,7 @@ rule Link-action
 
 actions intel-win32-Link-action bind NEEDLIBS 
 {
-    $(INTEL_TOOL_PATH)xilink /nologo $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" $(UNDEFS) /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) $(NEEDLIBS) "$(>)"
+    $(INTEL_TOOL_PATH)xilink /nologo $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" $(UNDEFS) /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(NEEDLIBS)" "$(>)"
 }
 
 #### Cc #####

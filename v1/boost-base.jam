@@ -164,7 +164,8 @@ RUN_PATH ?= $(PATH) ;
 # A simple action to run an executable target
 actions Run
 {
-    $(SHELL_EXPORT)PATH=$(RUN_PATH)
+    $(SHELL_SET)PATH=$(RUN_PATH)
+    $(SHELL_EXPORT)PATH
     $(<)
 }
 

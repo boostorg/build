@@ -7,6 +7,17 @@ to its suitability for any purpose.
 Boost Build system TODO
 ===== ===== ====== ====
 
+DONE * Fix split-path bug which unroots paths on Unix
+
+DONE * move NEEDLIBS to end of link line
+
+* Fix bug with not found Python scripts
+
+* $(REDIRECT) for toolset invocations:
+              Unix: > filename 2>&1 -- puts stdout && stderr in same file
+
+* add "|| exit $?" for unix to get it to exit for multi-line test commands.
+
 * Make it possible to qualify dependencies just like requirements.
 
 * consider eliminating the need for <*>
@@ -15,12 +26,12 @@ Boost Build system TODO
 
 * Add support for invoking debuggers from within the build system.
 
-* Fix the subinclude problem with project-wide variable settings (e.g.
+DONE * Fix the subinclude problem with project-wide variable settings (e.g.
 BOOST_ROOT) that Beman pointed out to me.
 
 * Move test target rules from status/Jamfile into boost-base.jam
 
-* Add requested test targets. I think we need at least the following
+SORTA DONE * Add requested test targets. I think we need at least the following
 capability:
 1. The ability to run any built executable
 2. Two categories of test targets (call them "test" and "full-test") which
@@ -33,9 +44,9 @@ needs to be updated by running the executable with stdout redirected to the
 
 * Add examples directory back into CVS
 
-* Support for KCC
+DONE * Support for KCC
 
-* Specific support for GCC-3
+DONE * Specific support for GCC-3
 
 * Eliminate the need for intermediate dispatching rules (e.g. C++-action) in
 each toolset.
@@ -69,7 +80,7 @@ Implement <sysinclude> feature for separately searching #include <...> paths?
     search algorithm.
 
 Clean up documentation
-    describe gristing
+    DONE describe gristing
     revise free/path feature definition
     
 Add a hook function to allow output directory customization that some people
@@ -77,12 +88,10 @@ want (instead of subdirectories, string together short names with '-').
 
 Platform support:
     Unix paths on Mac/VMS
-    Integrate Win95/98/ME support
+    DONE Integrate Win95/98/ME support
 
-    Since the above require modification to Jam compiled source, getting the
-    code into the Perforce public depot would be good at this point.
 
-Compile allyourbase/boost-base.jam into Jam itself.
+DONE (something better) Compile allyourbase/boost-base.jam into Jam itself.
     It might be best to review differences between allyourbase.jam and Jambase,
     and arrange the new Jambase to be a superset of the perforce Jambase so that
     a boost-compiled Jam can be used on standard Jambase projects without
@@ -99,9 +108,9 @@ Testing
     MacOS
 
 Additional toolset descriptions
-    Kai (needs refurbishment)
-    Intel
-    Comeau
+    DONE Kai (needs refurbishment)
+    DONE, but needs rework Intel
+    DONE(windows) Comeau
     ...
 
 Better support for single-valued free features. GCC needs a default
@@ -129,12 +138,12 @@ Implement some test tools:
 
 === FTJam core requests ===
 
-In debugging output, indirect rule invocations should reflect the rule name
+DONE In debugging output, indirect rule invocations should reflect the rule name
 being invoked.
 
-Fix modulus on nesting in debug output, so my emacs stepping tools don't get
+DONE Fix modulus on nesting in debug output, so my emacs stepping tools don't get
 confused.
 
-Expand MAXLINE for NT, possibly as described by Chris Antos.
+DONE-ish Expand MAXLINE for NT, possibly as described by Chris Antos.
 
-Implement a way to invert the result of a rule, so that failure becomes success.
+DONE Implement a way to invert the result of a rule, so that failure becomes success.

@@ -19,7 +19,7 @@ rule Link-action
 
 actions kcc-Link-action bind NEEDLIBS
 {
-    $(kcc.bin-directory)KCC $(LINKFLAGS) -o "$(<)" $(UNDEFS) -L$(STDLIBPATH) $(NEEDLIBS) "$(>)"
+    $(kcc.bin-directory)KCC $(LINKFLAGS) -o "$(<)" -L$(STDLIBPATH) "$(>)" NEEDLIBS
 }
 
 #### Cc #####

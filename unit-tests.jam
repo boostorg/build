@@ -7,6 +7,7 @@
 # assert_equal a : b
 #
 # exits with an assertion failure if a != b
+ECHO running unit tests... ;
 rule assert_equal
 {
     if $(<) != $(>)
@@ -75,6 +76,7 @@ assert_equal [ is-subset a b c : c a b d ] : true ;
 assert_equal [ is-subset a b z : c a b d ] : ;
 
 # split-path
+assert_equal [ split-path /a/b/c ] : / a b c ;
 assert_equal [ split-path b/c.d/.f/g./h.i ] : b c.d .f g. h.i ;
 assert_equal [ split-path <a>b/c/<d>e ] : <a>b c <d>e ;
 assert_equal [ split-path <a>/<d>/<e> ] : <a> <d> <e> ;
@@ -267,3 +269,4 @@ assert_equal [ strip-initial a b c : a b d e f g ] : a b d e f g ;
 assert_equal [ strip-initial a b c : b d e f g ] : b d e f g ;
 assert_equal [ strip-initial a b c : ] :  ;
 
+ECHO unit tests complete. ;

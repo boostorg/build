@@ -80,7 +80,7 @@ actions metrowerks-Link-action bind NEEDLIBS
 {
     $(METROWERKS_SETUP)
     $(METROWERKS_LINK_SETUP)$(STDLIBS)
-    mwld -export dllexport -nowraplines $(LINKFLAGS) -L$(LIBPATH) -L$(STDLIBPATH) $(IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])"  $(UNDEFS) $(NEEDLIBS) "$(>)" -l$(FINDLIBS)
+    mwld -export dllexport -nowraplines $(LINKFLAGS) -L$(LIBPATH) -L$(STDLIBPATH) $(IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" "$(NEEDLIBS)" "$(>)" -l$(FINDLIBS)
 }
 
 #### Cc #####

@@ -8,7 +8,7 @@ rule split ( string separator )
     
     while $(s)
     {
-        local match = [ SUBST $(s) (.*)$(separator)(.*) $1 $2 ] ;
+        local match = [ SUBST $(s) ^(.*)$(separator)(.*) $1 $2 ] ;
         
         local tail = $(match[2]) ;
         tail ?= $(s) ;

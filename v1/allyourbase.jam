@@ -1387,13 +1387,20 @@ if $(JAM_VERSION[1]) >= 03 {
 SEARCH on new-split.jam = $(BOOST_BUILD_PATH) ;
 include new-split.jam ; # this is temporary.
 
+rule split-path
+{
+    return [ SUBST $(<[1]) "^([/$(SLASH)]+).*" $1 ] # rooting slash(es), if any
+           [ split $(<) "[/$(SLASH)]" ]            # the rest.
+           ;
+}
+
 } else {
 
 rule split # string pattern
 {
     local source = $(<[1]) ;
     local divider = $(<[2]) ;
-    local pattern = "(.*)("$(divider)")(.*)" ;
+    local pattern = "^(.*)("$(divider)")(.*)" ;
 
     # SUBST rule is weird. When there's no match it returns the original string.
     local match = [ SUBST $(source) $(pattern) $1$2$3xxx ] ;
@@ -1409,12 +1416,18 @@ rule split # string pattern
     }
 }
 
-}
-
-# simpler reimplementation of split-path for boost
 rule split-path
 {
-    return [ split $(<) "[/$(SLASH)]" ] ;
+    local unmatched = [ SUBST $(<[1]) "^([/$(SLASH)]+).*" $2 ] ;
+    local root ;
+    if ! $(unmatched)
+    {
+        root = [ SUBST $(<[1]) "^([/$(SLASH)]+).*" $1 ] ;
+    }
+    return $(root) [ split $(<) "[/$(SLASH)]" ]
+           ;
+}
+
 }
 
 # dwa 6/4/01 - added for boost
