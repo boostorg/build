@@ -446,162 +446,7 @@ exe a : a.cpp
       </para>        
 
   </section>
-      
-    
-<!--
-
-    <para>Construction of each main target begins with finding
-      properties for <emphasis>this</emphasis> main target. They are found by
-      processing both build request, and <emphasis>target requirements</emphasis>,
-      which give properties needed for the target to build. For
-      example, a given main target might require certian defines, or
-      will not work unless compiled in multithreaded mode. The process
-      of finding properties for main target is described in <link linkend=
-        "bbv2.reference.variants.proprefine">property refinement</link>.
-    </para>
-    
-    <para>After that, dependencies (i.e. other main targets) are built
-      recursively. Build request for dependencies is not always equal
-      to those of dependent &#x2014; certain properties are dropped and
-      user can explicitly specify desired properties for dependencies.
-      See <link linkend="bbv2.reference.features.attributes.propagated">
-        propagated features</link> and <xref linkend=
-        "bbv2.advanced.targets.references"/> for details.</para>
-    
-    <para>When dependencies are constructed, the dependency graph for
-      this main target and for this property set is created, which
-      describes which files need to be created, on which other files
-      they depend and what actions are needed to construct those files.
-      There's more that one method, and user can define new ones, but
-      usually, this involves <emphasis>generators</emphasis> and <emphasis>target
-        types</emphasis>.</para>
-    
-    <para>Target type is just a way to classify targets. For example,
-      there are builtin types <literal>EXE</literal>, <literal>OBJ</literal> and
-      <literal>CPP</literal>. <link linkend=
-        "bbv2.reference.generators">Generators</link> are objects
-      that know how to convert between different target type. When a
-      target of a given type must be created, all generators for that
-      type, which can handle needed properties, are found. Each is
-      passed the list of sources, and either fails, or returns a
-      dependency graph. If a generator cannot produce desired type from
-      given sources, it may try to recursively construct types that it
-  can handle from the types is was passed. This allows to try all
-      possible transformations. When all generators are tried, a
-      dependency graph is selected.</para>
-    
-    <para>Finally, the dependency graph is passed to underlying
-      Boost.Jam program, which runs all actions needed to bring all
-      main targets up-to date. At this step, implicit dependencies are
-      also scanned and accounted for, as described "here." [ link? ]</para>
-    
-    <para>Given a list of targets ids and a build request, building goes
-      this way. First, for each id we obtain the abstract targets
-      corresponding to it. This also loads all necessary projects. If
-      no target id is given, project in the current directory is used.
-      Build request is expanded, and for each resulting property set,
-      the <literal>generate</literal> method of all targets is called, which
-      yields a list of virtual targets. After that all virtual targets
-      are actualized, and target "all" is set to depend on all created
-      actual targets. Lastly, depending on whether <literal>- XXXXXX -clean</literal>
-      option was given, either target "all" or target "clean" is
-      updated. Generation of virtual target from abstract one is
-      performed as follows:</para>
-    
-    <itemizedlist>
-      <listitem>
-        <para>For project targets, all of main targets are generated
-          with the same properties. Then all projects referred via
-          "build-project" are generated as well. If it's not possible
-          to refine requested properties with project requirements, the
-          project is skipped.</para>
-        
-        <para id="bbv2.reference.buildprocess.explict">
-          It is possible to disable building of certain target using the
-          <literal>explicit</literal> rule, available in all project
-          modules. The syntax is
-          
-<programlisting>
-rule explicit ( target-name )
-</programlisting>
-
-          If this rule is invoked on a target, it will be built only
-          when it's explicitly requested on the command line.
-        </para>
-      </listitem>
-      
-      <listitem>
-        <para>
-          For main target, with several alternatives, one of them is
-    selected as described <link linkend=
-            "bbv2.reference.buildprocess.alternatives">below</link>.
-          If there's only one
-          alternative, it's used unconditionally.
-
-          <orderedlist>
-            <listitem>
-              <simpara>
-                All main target alternatives which requirements are
-                satisfied by the build request are enumerated.
-          </simpara>
-            </listitem>
-            
-            <listitem>
-              <simpara>
-                If there are several such alternatives, the one which
-                longer requirements list is selected.
-              </simpara>
-            </listitem>
-          </orderedlist>
-      </para>
-      </listitem>
-      
-      <listitem>
-        <para>
-          For the selected alternative
-          
-          <orderedlist>
-            <listitem>
-              <simpara>
-                Each target reference in the source list are
-                recursively constructed.
-              </simpara>
-            </listitem>
-            
-            <listitem>
-              <simpara>
-                Properties are refined with alternative's requirements,
-                and active features in the resulting set are executed.
-              </simpara>
-            </listitem>
-            
-            <listitem>
-              <simpara>
-                Conditional properties are evaluated.
-              </simpara>
-            </listitem>
-            
-            <listitem>
-              <simpara>
-                The dependency graph for the target is constructed in a
-                way which depends on the kind of main target, typically
-                using generators.
-              </simpara>
-            </listitem>
-          </orderedlist>
-        </para>
-      </listitem>
-      
-      <listitem>
-        <simpara>
-          If, when building sources, the properties on recursively
-          created targets are not link-compatibile with build properties,
-          a warning is issued.
-        </simpara>
-      </listitem>
-    </itemizedlist>
--->
-     
+              
   </section>
 
 
@@ -803,16 +648,6 @@ rule explicit ( target-name )
               components of composite features in a build property set.</para>
           </listitem>
 
-<!-- I no longer think link-incompatbile properties are a good idea, so
-     hide them from the docs.
-          <listitem>
-            <para><emphasis>link-incompatible</emphasis></para>
-
-            <para>See <link linkend=
-                "bbv2.reference.variants.compat">below</link>.</para>
-          </listitem>
--->
-
           <listitem>
             <para><emphasis>dependency</emphasis></para>
 
@@ -867,46 +702,6 @@ rule feature ( name : allowed-values * : attributes * )
         V1, so can't document this for V2.". Will clean up soon -DWA ]
       </para>
 
-<!-- I no longer think link compatibility is a great idea, so comment out
-     this part of docs.
-
-      <section id="bbv2.reference.variants.compat">
-        <title>Link compatible and incompatible properties</title>
-        
-        <para>When the build system tries to generate a target (such as
-          library dependency) matching a given build request, it may find
-          that an exact match isn't possible &#x2014; for example, the
-          target may impose additonal build requirements. We need to
-          determine whether a buildable version of that target can actually
-          be used.</para>
-        
-        <para>The build request can originate in many ways: it may come
-          directly from the user's command-line, from a dependency of a
-          main target upon a library, or from a dependency of a target upon
-          an executable used to build that target, for example. For each
-          way, there are different rules whether we can use a given
-          subvariant or not. The current rules are described below.</para>
-        
-        <para>Two property sets are called <emphasis>link-compatible</emphasis> when
-          targets with those property sets can be used interchangably. In
-          turn, two property sets are link compatible when there's no
-          link-incompatible feature which has different values in those
-          property sets.</para>
-        
-        <para>When building of a main target is requested from a command
-          line or some project, link-compatibility is not considered. When
-          building is requested by other main target, via sources or
-          dependency properties, the requested and actual property sets
-          must be link-compatible, otherwise a warning is produced.</para>
-
-  <para><emphasis role="bold">Rationale:</emphasis>Link-compatibility is not considered when
-  main target is requested by a project, because it causes problems
-  in practice. For example, some parts of a project might be
-  single-threaded, while others &#x2014; multi-threaded. They are
-  not link-compatible, but they are not linked, either. So, there's
-  no need to issue error or warning. The errors used to be
-  generated, and only caused problems.</para> -->
-
       </section>
 
     <section id="bbv2.reference.variants.proprefine">
@@ -918,12 +713,6 @@ rule feature ( name : allowed-values * : attributes * )
         <emphasis>property refinement</emphasis> and is performed by these rules</para>
       
       <orderedlist>
-        <listitem>
-          <simpara>
-            If original properties and required properties are not
-            link-compatible, refinement fails.
-          </simpara>
-        </listitem>
 
         <listitem>
           <simpara>
