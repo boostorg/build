@@ -756,6 +756,7 @@ local rule find-viable-generators ( target-type : property-set )
                 local m = [ $(g).match-rank $(property-set) ] ;
                 if $(m) 
                 {
+                    generators.dout [ indent ] "  matched with rank" $(m) ;
                     viable-generators += $(g) ;
                     generator-rank += $(m) ;
                     t = ;
@@ -830,7 +831,7 @@ local rule construct-with-caching (
         local .caching = true ;
         
         local t = $(sources[1]) ;            
-            
+                    
         local signature = [ sequence.join [ $(t).type ] $(target-type) $(property-set) : - ] ;
             
         # Get a transformation template from cache or create it.
