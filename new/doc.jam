@@ -11,7 +11,10 @@ rule document-module ( docs + )
     $(module-name).brief = [ MATCH "([^\\.]*\\.)" : $(docs:J=" ") ] ;
     $(module-name).docs = $(docs) ;
 
-    documented-modules += $(module-name) ;
+    if ! $(module-name) in $(documented-modules)
+    {
+        documented-modules += $(module-name) ;
+    }
 }
 
 rule document-rule ( name : docs + )
@@ -22,7 +25,10 @@ rule document-rule ( name : docs + )
     $(module-name).$(name).brief = [ MATCH "([^\\.]*\\.)" : $(docs:J=" ") ] ;
     $(module-name).$(name).docs = $(docs) ;
 
-    $(module-name).rules += $(name) ;
+    if ! $(name) in $($(module-name).rules)
+    {
+        $(module-name).rules += $(name) ;
+    }
 }
 
 rule document-variable ( name : docs + )
@@ -33,7 +39,10 @@ rule document-variable ( name : docs + )
     $(module-name).$(name).brief = [ MATCH "([^\\.]*\\.)" : $(docs:J=" ") ] ;
     $(module-name).$(name).docs = $(docs) ;
 
-    $(module-name).variables += $(name) ;
+    if ! $(name) in $($(module-name).variables)
+    {
+        $(module-name).variables += $(name) ;
+    }
 }
 
 # We can now document ourselves :-)
