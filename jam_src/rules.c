@@ -63,6 +63,7 @@ enter_rule( char *rulename, module* m )
         r->procedure = (PARSE *)0;
         r->actions = 0;
         r->arguments = 0;
+        r->local_only = 0;
     }
 
     return r;
@@ -336,23 +337,38 @@ void set_rule_body( RULE* rule, argument_list* args, PARSE* procedure )
     rule->procedure = procedure;
 }
 
-static RULE* global_rule( char* rulename, module* m )
+static char* global_name( char* rulename, module* m )
 {
-    char global_name[4096] = "";
-    strncat(global_name, m->name, sizeof(global_name) - 1);
-    strncat(global_name, rulename, sizeof(global_name) - 1);
-    return enter_rule( global_name, root_module() );
+    char name[4096] = "";
+    strncat(name, m->name, sizeof(name) - 1);
+    strncat(name, rulename, sizeof(name) - 1 );
+    return newstr(name);
 }
 
-RULE* new_rule_body( module* m, char* rulename, argument_list* args, PARSE* procedure )
+static RULE* global_rule( char* rulename, module* m )
+{
+    char* name = global_name( rulename, m);
+    RULE* result = enter_rule( name, root_module() );
+    freestr(name);
+    return result;
+}
+
+RULE* new_rule_body( module* m, char* rulename, argument_list* args, PARSE* procedure, int local_only )
 {
     RULE* local = enter_rule( rulename, m );
-    RULE* global = global_rule( rulename, m );
     procedure->module = m;
-    procedure->rulename = copystr( global->name );
+    if ( !local_only )
+    {
+        RULE* global = global_rule( rulename, m );
+        procedure->rulename = copystr( global->name );
+        set_rule_body( global, args, procedure );
+    }
+    else
+    {
+        local->local_only = 1;
+        procedure->rulename = global_name( rulename, m );
+    }
     set_rule_body( local, args, procedure );
-    set_rule_body( global, args, procedure );
-    
     return local;
 }
 

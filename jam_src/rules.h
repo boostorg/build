@@ -82,6 +82,7 @@ struct _rule {
     PARSE   *procedure;     /* parse tree from RULE */
     argument_list* arguments;  /* argument checking info, or NULL for unchecked */
     rule_actions* actions;     /* build actions, or NULL for no actions */
+    int      local_only;       /* nonzero if this rule is local to a module */
 } ;
 
 /* ACTIONS - a chain of ACTIONs */
@@ -134,13 +135,14 @@ struct _target {
 # define	T_FLAG_TOUCHED	0x08	/* ALWAYS applied or -t target */
 # define	T_FLAG_LEAVES	0x10	/* LEAVES applied */
 # define	T_FLAG_NOUPDATE	0x20	/* NOUPDATE applied */
+# define	T_FLAG_VISITED  0x40    /* CWM: Used in debugging */
 
 /* this flag was added to support a new builting rule named "FAIL_EXPECTED" */
 /* it is used to indicate that the result of running a given action should  */
 /* be inverted (i.e. ok <=> fail). This is useful to launch certain test    */
 /* runs from a Jamfile..                                                    */
 /*                                                                          */
-# define        T_FLAG_FAIL_EXPECTED  0x40    /* FAIL_EXPECTED applied */
+# define        T_FLAG_FAIL_EXPECTED  0x80    /* FAIL_EXPECTED applied */
 
 	char	binding;		/* how target relates to real file */
 
@@ -201,8 +203,8 @@ struct _target {
 RULE 	*bindrule( char *rulename, module* );
 
 RULE*   import_rule( RULE* source, module* m, char* name );
-RULE*    new_rule_body( module* m, char* rulename, argument_list* args, PARSE* procedure );
-RULE*    new_rule_actions( module* m, char* rulename, char* command, LIST* bindlist, int flags );
+RULE*   new_rule_body( module* m, char* rulename, argument_list* args, PARSE* procedure, int local );
+RULE*   new_rule_actions( module* m, char* rulename, char* command, LIST* bindlist, int flags );
 TARGET  *bindtarget( char *targetname );
 void 	touchtarget( char *t );
 TARGETS *targetlist( TARGETS *chain, LIST  *targets );

@@ -58,8 +58,7 @@ parse_file( char *f, FRAME* frame )
 
 	    /* Run the parse tree. */
 
-	    (*(p->func))( p, frame );
-
+            parse_evaluate( p, frame );
 	    parse_free( p );
 	}
 }
@@ -92,6 +91,16 @@ parse_make(
 	p->refs = 1;
         p->module = 0;
         p->rulename = 0;
+        
+        if ( left )
+        {
+            p->file = left->file;
+            p->line = left->line;
+        }
+        else
+        {
+            yyinput_stream( &p->file, &p->line );
+        }
 
 	return p;
 }
@@ -122,4 +131,10 @@ parse_free( PARSE *p )
             freestr( p->rulename );
 	
 	free( (char *)p );
+}
+
+LIST* parse_evaluate( PARSE *p, FRAME* frame )
+{
+    frame->procedure = p;
+    return (*p->func)(p, frame);
 }

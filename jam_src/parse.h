@@ -16,6 +16,7 @@
 # define PARSE_DWA20011020_H
 # include "frames.h"
 # include "modules.h"
+# include "lists.h"
 
 /*
  * parse.h - make and destroy parse trees as driven by the parser
@@ -25,8 +26,6 @@
  * parse tree node
  */
 
-typedef struct _PARSE PARSE;
-
 struct _PARSE {
     LIST    *(*func)( PARSE *p, FRAME *frame );
     PARSE   *left;
@@ -34,10 +33,12 @@ struct _PARSE {
     PARSE   *third;
     char    *string;
     char    *string1;
-    int num;
-    int refs;
-    module* module;
-    char* rulename;
+    int      num;
+    int      refs;
+    module*  module;
+    char*    rulename;
+    char*    file;
+    int      line;
 } ;
 
 void    parse_file( char *f, FRAME* frame );
@@ -50,9 +51,10 @@ PARSE * parse_make(
     PARSE   *third,
     char    *string,
     char    *string1,
-    int num );
+    int      num );
 
 void    parse_refer( PARSE *p );
 void    parse_free( PARSE *p );
+LIST*   parse_evaluate( PARSE *p, FRAME* frame );
 
 #endif // PARSE_DWA20011020_H

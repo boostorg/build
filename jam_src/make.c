@@ -75,6 +75,12 @@ typedef struct {
 static void make0( TARGET *t, int pbinding, time_t ptime, 
 		int depth, COUNTS *counts, int anyhow );
 
+#define OPT_GRAPH_DEBUG_EXT
+        
+#ifdef OPT_GRAPH_DEBUG_EXT
+static void dependGraphOutput( TARGET *t, int depth );
+#endif
+
 static char *target_fate[] = 
 {
 	"init",		/* T_FATE_INIT */
@@ -122,6 +128,17 @@ make(
 
 	    make0( t, T_BIND_UNBOUND, (time_t)0, 0, counts, anyhow );
 	}
+        
+#ifdef OPT_GRAPH_DEBUG_EXT
+	if( DEBUG_GRAPH )
+	{
+	    for( i = 0; i < n_targets; i++ )
+	    {
+		TARGET *t = bindtarget( targets[i] );
+		dependGraphOutput( t, 0 );
+	    }
+	}
+#endif
 
 	if( DEBUG_MAKE )
 	{
@@ -454,3 +471,96 @@ make0(
 		spaces( depth ), t->name );
 }
 
+
+#ifdef OPT_GRAPH_DEBUG_EXT
+
+/*
+ * dependGraphOutput() - output the DG after make0 has run
+ */
+
+static void
+dependGraphOutput( TARGET *t, int depth )
+{
+    TARGETS	*c;
+
+    if (   (t->flags & T_FLAG_VISITED) != 0
+	|| !t->name
+	|| !t->boundname)
+	return;
+
+    t->flags |= T_FLAG_VISITED;
+
+    switch (t->fate)
+    {
+      case T_FATE_TOUCHED:
+      case T_FATE_MISSING:
+      case T_FATE_OUTDATED:
+      case T_FATE_UPDATE:
+	printf( "->%s%2d Name: %s\n", spaces(depth), depth, t->name );
+	break;
+      default:
+	printf( "  %s%2d Name: %s\n", spaces(depth), depth, t->name );
+	break;
+    }
+
+    if( strcmp (t->name, t->boundname) )
+    {
+	printf( "  %s    Loc: %s\n", spaces(depth), t->boundname );
+    }
+
+    switch (t->fate) {
+      case T_FATE_STABLE:
+	printf( "  %s       : Stable\n", spaces(depth) );
+	break;
+      case T_FATE_NEWER:
+	printf( "  %s       : Newer\n", spaces(depth) );
+	break;
+      case T_FATE_ISTMP:
+	printf( "  %s       : Up to date temp file\n", spaces(depth) );
+	break;
+      case T_FATE_TOUCHED:
+	printf( "  %s       : Been touched, updating it\n",
+	       spaces(depth) );
+	break;
+      case T_FATE_MISSING:
+	printf( "  %s       : Missing, creating it\n", spaces(depth) );
+	break;
+      case T_FATE_OUTDATED:
+	printf( "  %s       : Outdated, updating it\n", spaces(depth) );
+	break;
+      case T_FATE_UPDATE:
+	printf( "  %s       : Updating it\n", spaces(depth) );
+	break;
+      case T_FATE_CANTFIND:
+	printf( "  %s       : Can't find it\n", spaces(depth) );
+	break;
+      case T_FATE_CANTMAKE:
+	printf( "  %s       : Can't make it\n", spaces(depth) );
+	break;
+    }
+
+    for( c = t->deps[ T_DEPS_DEPENDS ]; c; c = c->next )
+    {
+	printf( "  %s       : Depends on %s (%s)\n", spaces(depth),
+	       c->target->name, target_fate[ c->target->fate ] );
+    }
+
+    for( c = t->deps[ T_DEPS_INCLUDES ]; c; c = c->next )
+    {
+	printf( "  %s       : Includes %s (%s)\n", spaces(depth),
+	       c->target->name, target_fate[ c->target->fate ] );
+    }
+
+    for( c = t->deps[ T_DEPS_DEPENDS ]; c; c = c->next )
+    {
+	dependGraphOutput( c->target, depth + 1 );
+    }
+
+    for( c = t->deps[ T_DEPS_INCLUDES ]; c; c = c->next )
+    {
+	dependGraphOutput( c->target, depth + 1 );
+    }
+
+}
+
+#endif
