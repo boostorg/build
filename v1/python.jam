@@ -33,7 +33,8 @@ if $(NT) || ( $(UNIX) && $(OS) = CYGWIN )
 if $(PYTHON_WINDOWS)
 {
     # common properties required for compiling any Python module.
-    PYTHON_PROPERTIES ?=
+    PYTHON_PROPERTIES =
+      boost-python-disable-borland
       select-nt-python-includes
       <runtime-link>dynamic
       <sysinclude>@boost
@@ -219,6 +220,16 @@ rule python-static-multithread ( toolset variant : properties * )
         {
             properties = [ difference $(properties) : <threading>single ] <threading>multi ;
         }
+    }
+    return $(properties) ;
+}
+
+# Borland compilers are not supported
+rule boost-python-disable-borland ( toolset variant : properties * )
+{
+    if [ MATCH .*(bcc|borland).* : $(toolset) ]
+    {
+        properties += <build>no ;
     }
     return $(properties) ;
 }
@@ -477,6 +488,7 @@ rule boost-python-runtest (
       boost-test $(sources)
         : RUN_PYD
         : $(requirements)
+          boost-python-disable-borland
           <default>python-intel-use-gcc-stdlib # unless otherwise
 					       # specified, assume the GCC standard
 					       # library is needed for intel
