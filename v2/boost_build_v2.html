@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                                </style>
+                                    </style>
   </head>
   <!-- Things yet to document:
-                                                - build request, build request expansion and directly requested targets
-                                                - conditional properties
-                                              -->
+                                                  - build request, build request expansion and directly requested targets
+                                                  - conditional properties
+                                                -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -138,12 +138,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>examples-v2</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                                         it somewhere. 
-                                          
-                                            <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                                            into one of the locations where it can be found (given in <a href=
-                                            "#config_files_location">this table</a>). This prevent you from
-                                            accidentally overwriting your config when updating.</p> -->
+                                               it somewhere. 
+                                                
+                                                  <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                                                  into one of the locations where it can be found (given in <a href=
+                                                  "#config_files_location">this table</a>). This prevent you from
+                                                  accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -327,9 +327,9 @@ boost-build /path/to/boost.build ;
 </pre>
     Then, to use this library in src/Jamfile, we can write: 
 <pre>
-     exe app : app.cpp ../lib/lib1/lib1 ;
+     exe app : app.cpp ../lib/lib1//lib1 ;
 </pre>
-    While "app.cpp" is a regular source file, "../lib/lib1/lib1" is a
+    While "app.cpp" is a regular source file, "../lib/lib1//lib1" is a
     reference to another target, here, library "lib1" declared in Jamfile at
     "../lib/lib1". When linking the "app" binary, the needed version of the
     library will be built and linked in. But what is meant by "needed"? For
@@ -363,11 +363,13 @@ boost-build /path/to/boost.build ;
     paths any longer. Or course, the path will be interpreted relatively to
     "lib/lib1" and will be adjusted according to the <tt>bjam</tt>s
     invocation directory. For example, if building from project root, the
-    final compiler's command line will contain <tt>-Ilib/lib1</tt>. The
-    second problem is that we hardcode the path to library's Jamfile. Imagine
-    it's hardcoded in 20 different places and we change the directory layout.
-    The solution is to use project ids &mdash; symbolic names, not tied to
-    directory layout. First, we assign a project id to Jamfile in lib/lib1: 
+    final compiler's command line will contain <tt>-Ilib/lib1</tt>. 
+
+    <p>The second problem is that we hardcode the path to library's Jamfile.
+    Imagine it's hardcoded in 20 different places and we change the directory
+    layout. The solution is to use project ids &mdash; symbolic names, not
+    tied to directory layout. First, we assign a project id to Jamfile in
+    lib/lib1:</p>
 <pre>
     project lib1
         : usage-requirements &lt;include&gt;.
@@ -375,10 +377,10 @@ boost-build /path/to/boost.build ;
 </pre>
     Second, we use the project id to refer to the library in src/Jamfile: 
 <pre>
-    exe app : app.cpp @/lib1/lib1 ;
+    exe app : app.cpp /lib1//lib1 ;
 </pre>
-    The "@/lib1/lib1" syntax is used to refer to target "lib1" in project
-    with global id "@/lib1" (the slash is used to specify global id). This
+    The "/lib1//lib1" syntax is used to refer to target "lib1" in project
+    with global id "/lib1" (the slash is used to specify global id). This
     way, users of "lib1" do not depend on its location, only on id, which is
     supposedly stable. The only thing left, it to make sure that src/Jamfile
     knows the project id that it uses. We add to [top]/Jamfile the following
@@ -400,7 +402,7 @@ boost-build /path/to/boost.build ;
 <pre>
     lib utils : utils.cpp ; # Uses Boost.Filesystem
     lib core : core.cpp ;   # Uses 'utils'
-    exe app : app.cpp core utils @/boost/filesystem/fs ;
+    exe app : app.cpp core utils /boost/filesystem//fs ;
    
 </pre>
     This works, but each application should, in effect, explicitly specify
@@ -415,7 +417,7 @@ boost-build /path/to/boost.build ;
     executable. Seems like the effect is the same as when library is
     specified in sources. But the feature allows us to write:</p>
 <pre>
-    lib utils : utils.cpp : : : &lt;library&gt;@/boost/filesystem/fs ;
+    lib utils : utils.cpp : : : &lt;library&gt;/boost/filesystem//fs ;
     lib core : core.cpp : : : &lt;library&gt;utils ;
     exe app : app.cpp core ;
    
@@ -424,16 +426,16 @@ boost-build /path/to/boost.build ;
     <p>The application uses "core", which has &lt;library&gt;utils in usage
     requirements, so that property will added to build properties for "app".
     As the result, "utils" will be linked to "app" &mdash; automatically.
-    Likewise, "@/boost/filesystem/fs" will be linked in without any
+    Likewise, "/boost/filesystem//fs" will be linked in without any
     effort.</p>
 
     <p>The &lt;library&gt; property can be used in more ways. For example, if
-    "@/boost/filesystem/fs" should be linked to all applications in your
-    project, you can add &lt;library&gt;@/boost/filesystem/fs to requirements
+    "/boost/filesystem//fs" should be linked to all applications in your
+    project, you can add &lt;library&gt;/boost/filesystem//fs to requirements
     of the project, like this:</p>
 <pre>
     project 
-       : requirements &lt;library&gt;@/boost/filesystem/fs
+       : requirements &lt;library&gt;/boost/filesystem//fs
        ;
    
 </pre>
@@ -495,15 +497,15 @@ boost-build /path/to/boost.build ;
         cannot change. But still, you want static linking to that library in
         all cases. You can use target references everywhere: 
 <pre>
-    exe e1 : e1.cpp @/other_project/lib1/&lt;link&gt;static ;
-    exe e10 : e10.cpp @/other_project/lib1/&lt;link&gt;static ;
+    exe e1 : e1.cpp /other_project//lib1/&lt;link&gt;static ;
+    exe e10 : e10.cpp /other_project//lib1/&lt;link&gt;static ;
    
 </pre>
         but that's far from being convenient. Another way is to introduce a
         level of indirection: create a local target, which will refer to
         static version of <tt>lib1</tt>. Here's the solution: 
 <pre>
-    alias lib1 : @/other_project/lib1/&lt;link&gt;static ;
+    alias lib1 : /other_project//lib1/&lt;link&gt;static ;
     exe e1 : e1.cpp lib1 ;
     exe e10 : e10.cpp lib1 ;
    
@@ -536,7 +538,7 @@ boost-build /path/to/boost.build ;
     depends on properties of dependents. If "app" binary should use "lib2",
     we can write: 
 <pre>
-    exe app : app.cpp @/lib/lib1/lib2 ../lib/lib2/lib2 ;
+    exe app : app.cpp /lib/lib1//lib2 ../lib/lib2//lib2 ;
 </pre>
     If we build release version of "app", then it will be linked with
     "lib2_release.a", and debug version will use "lib2_debug.a". Another
@@ -1448,17 +1450,17 @@ borland/runtime-link=static,dynamic
 
       <li>It allows to have main target names with slashes. 
       <!-- The motivation for which is:
-      So, to summarize:
-      1. The project which extract tarfile may extract all possible kinds of 
-      targets, and it's reasonable to use them directly from other project.
-      2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
-      maintainability, and therefore, must use main target name which contains 
-      slashes?
-      3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
-      option, because you should not change existing tree 
+            So, to summarize:
+            1. The project which extract tarfile may extract all possible kinds of 
+            targets, and it's reasonable to use them directly from other project.
+            2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
+            maintainability, and therefore, must use main target name which contains 
+            slashes?
+            3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
+            option, because you should not change existing tree 
 
-      That makes good rationale for why main target must contain names.
-       -->
+            That makes good rationale for why main target must contain names.
+             -->
       </li>
     </ul>
 
@@ -1476,15 +1478,6 @@ borland/runtime-link=static,dynamic
     would cause the version of <tt>cmdline</tt> library, optimized for space,
     to be linked in even if the <tt>compiler</tt> executable is build with
     optimization for speed. 
-
-    <h5>Ambiguity resolution</h5>
-
-    <p>Target reference may have the same form as a pathname, for example
-    <tt>lib/a</tt>. In order to determine if this is target reference or
-    pathname, it is checked if there's a jamfile in the specified path. If
-    there is one, it is loaded and if the specified target is declared by
-    that project it is used. Otherwise, we just treat the target reference as
-    a file name.</p>
 
     <h4>File targets</h4>
     As described above, file targets corresponds to files that Boost.Build
