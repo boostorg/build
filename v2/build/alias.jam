@@ -44,6 +44,12 @@ class alias-target-class : basic-target
         return $(source-targets) ;
     }   
     
+    # This check makes no sense for 'alias', so just
+    # disable it.
+    rule check-for-link-compatibility ( * : * )
+    {
+    }
+        
     rule compute-usage-requirements ( subvariant ) 
     {
         local base = [ basic-target.compute-usage-requirements $(subvariant) ] ;
