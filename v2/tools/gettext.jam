@@ -86,7 +86,7 @@ rule init ( path ? # Path where all tools are located. If not specified,
 # command line.
 rule update ( name : existing-translation sources + : requirements * )
 {
-    local project = [ CALLER_MODULE ] ;
+    local project = [ project.current ] ;
     
     targets.main-target-alternative
       [ new update-translations-class $(name) : $(project) : 

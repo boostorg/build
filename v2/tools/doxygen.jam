@@ -151,7 +151,7 @@ rule xml-to-boostbook ( target : source : properties * )
 # User-level rule to generate BoostBook XML from a set of headers via Doxygen. 
 rule doxygen ( target-name : sources * : requirements * : default-build * )
 {
-  local project = [ CALLER_MODULE ] ;
+  local project = [ project.current ] ;
 
   local doxyfile = [ 
     new typed-target $(target-name) : $(project) : BOOSTBOOK

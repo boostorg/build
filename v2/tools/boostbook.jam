@@ -15,6 +15,7 @@ import feature ;
 import generators ;
 import print ;
 import property ;
+import project ;
 import property-set ;
 import regex ;
 import scanner ;
@@ -347,7 +348,7 @@ class boostbook-target-class : basic-target
 
 rule boostbook ( target-name : sources * : requirements * : default-build * )
 { 
-  local project = [ CALLER_MODULE ] ;
+  local project = [ project.current ] ;
  
   targets.main-target-alternative 
     [ new boostbook-target-class $(target-name) : $(project) 

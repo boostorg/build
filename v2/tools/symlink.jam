@@ -6,7 +6,7 @@
 # Defines the "symlink" special target. 'symlink' targets make symbolic links
 # to the sources.
 
-import targets modules path class os feature ;
+import targets modules path class os feature project ;
 
 .count = 0 ;
 
@@ -94,7 +94,7 @@ rule symlink (
     : sources *
     )
 {
-    local project = [ CALLER_MODULE ] ;
+    local project = [ project.current ] ;
     
     return [ targets.main-target-alternative
         [ class.new symlink-targets $(project) : $(targets) : 

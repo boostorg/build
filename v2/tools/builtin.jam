@@ -22,6 +22,7 @@ import alias ;
 import property ;
 import print ;
 import utility ;
+import project ;
 
 # This feature is used to determine which OS we're on.
 # In future, this may become <target-os> and <host-os>
@@ -450,7 +451,7 @@ class lib-target-class : basic-target
 rule lib ( name : sources * : requirements * : default-build * 
     : usage-requirements * )
 {
-    local project = [ CALLER_MODULE ] ;
+    local project = [ project.current ] ;
         
     # This is a circular module dependency, so it must be imported here
     import targets ;
@@ -515,7 +516,7 @@ class exe-target-class : typed-target
 rule exe ( name : sources * : requirements * : default-build * 
     : usage-requirements * )
 {
-    local project = [ CALLER_MODULE ] ;
+    local project = [ project.current ] ;
         
     # This is a circular module dependency, so it must be imported here
     import targets ;

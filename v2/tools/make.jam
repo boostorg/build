@@ -12,6 +12,7 @@ import errors : error ;
 import type : type ;
 import regex ;
 import property-set ;
+import project ;
 
 class make-target-class : basic-target
 {
@@ -43,7 +44,7 @@ class make-target-class : basic-target
 rule make ( target-name : sources * : generating-rule + : requirements * 
             : caller ? )
 {
-    caller ?= [ CALLER_MODULE ] ;
+    caller ?= [ project.current ] ;
     local rules = [ RULENAMES $(caller) ] ;
     if $(generating-rule[1]) in $(rules)
     {

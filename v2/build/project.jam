@@ -254,7 +254,6 @@ local rule load-jamfile (
         .jamfile-modules += $(jamfile-module) ;
         modules.load $(jamfile-module) :  [ path.native $(jamfile-to-load) ] : . ;
     }
-    
 }
 
 # Initialize the module for a project. 
@@ -305,6 +304,8 @@ rule initialize (
         
         inherit-attributes $(module-name) : $(project-root-module) : $(parent-module) ;
     }    
+    
+    .current-project = $(module-name) ;
 }
 
 # Make 'project-module' inherit attributes of project root and parent module.
@@ -482,6 +483,12 @@ class project-attributes
     
 }
 
+# Returns the project which is currently being loaded
+rule current ( )
+{
+    return $(.current-project) ;
+}
+
 # Returns the project-attribute instance for the specified jamfile module.
 rule attributes ( project )
 {
@@ -519,6 +526,7 @@ rule path-relative-to-project-location ( path project )
 # Use/load a project.
 rule use ( id : location )
 {
+    local saved-project = $(.current-project) ;
     local project-module = [ project.load $(location) ] ;
     local declared-id = [ project.attribute $(project-module) id ] ;
 
@@ -530,6 +538,7 @@ rule use ( id : location )
     {
         error project \"$(declared-id)\" at \"$(location)\" redeclared with id \"$(id)\". ;
     }
+    .current-project = $(saved-project) ;
 }
 
 # This module defines rules common to all projects
