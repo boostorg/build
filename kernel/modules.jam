@@ -129,6 +129,12 @@ rule load (
             local rules = [ RULENAMES $(__name__) ] ;
             IMPORT $(__name__) : $(rules) : $(__name__) : $(__name__).$(rules) ;
         }
+
+        if $(module-name) != modules && ! [ binding $(module-name) ]
+        {
+            import errors ;
+            errors.error "couldn't find module" $(module-name) in $(search) ;
+        }
         
         # Pop the loading stack. Must happen before testing or we'll find a circular loading dependency
         .loading = $(.loading[1--2]) ;
@@ -184,6 +190,58 @@ rule record-binding ( module-target : binding )
     $(.loading[-1]).__binding__ = $(binding) ;
 }
 
+# Transform each path in the list, with all backslashes converted to
+# forward slashes and all detectable redundancy removed.  Something
+# like this is probably needed in path.jam, but I'm not sure of that,
+# I don't understand it, and I'm not ready to move all of path.jam
+# into the kernel.
+local rule normalize-raw-paths ( paths * )
+{
+    local result ;
+    for p in $(paths:T)
+    {
+        local elements ; # the simplified path elements
+        local dotdots ;  # a stack of .. elements we've seen
+        
+        # consume the last path element in p until there's nothing
+        # left
+        while $(p)
+        {
+            local split = [ MATCH ^(.+)/(.*)$ : $(p) ] ;
+            
+            if ! $(split) 
+            {   # no further slashes; prepend the last element
+                elements = $(p) $(elements) ;
+            }
+            else if $(split[2]) = .
+            {                   # ignore the identity directory
+            }
+            else if $(split[2]) = ..
+            {                   # prepare to absorb the next named element
+                dotdots += .. ; # push parent onto stack
+            }
+            else if $(dotdots)
+            {                              # absorb a named element
+                dotdots = $(dotdots[2-]) ; # pop parent off stack
+            }
+            else if $(split[2]) # if the element was empty, ignore it
+            {                   # to drop a trailing slash
+                elements = $(split[2]) $(elements) ;
+            }
+            # drop the last element of p
+            p = $(split[1]) ;
+        }
+        
+        # prepend any unused parent directories
+        elements = $(dotdots) $(elements) ;
+        # If everything cancelled out, it's the identity directory.
+        elements ?= . ;
+        
+        result += $(elements:J=/) ;
+    }
+    return $(result) ;
+}
+
 # load the indicated module and import rule names into the current
 # module. Any members of rules-opt will be available without
 # qualification in the caller's module. Any members of rename-opt will
@@ -207,16 +265,32 @@ rule import ( module-names + : rules-opt * : rename-opt * )
         errors.error when loading multiple modules, no specific rules or renaming is allowed ;
     }
     
+    # if the importing module isn't already in the BOOST_BUILD_PATH,
+    # prepend it to the path.  We don't want to invert the search
+    # order of modules that are already there.
     local caller = [ CALLER_MODULE ] ;
+    local cwd = [ PWD ] ;
+    
     local caller-location ; 
     if $(caller)
     {
         caller-location = [ binding $(caller) ] ;
+        caller-location = $(caller-location:D) ;
+        caller-location = [ normalize-raw-paths $(caller-location:R=$(cwd)) ] ;
     }
     
+    local search = [ peek : BOOST_BUILD_PATH ] ;
+    search = [ normalize-raw-paths $(search:R=$(cwd)) ] ;
+    
+    if $(caller-location) && ! $(caller-location) in $(search)
+    {
+        search = $(caller-location) $(search) ;
+    }
+    
+    # Import each specified module
     for local m in $(module-names)
     {
-        load $(m) : : $(caller-location:D) [ peek : BOOST_BUILD_PATH ] ;
+        load $(m) : : $(search) ;
         local all-rules = [ RULENAMES $(m) ] ;
     
         # import all the rules with qualification
@@ -264,6 +338,7 @@ IMPORT modules : $(globalize) : : modules.$(globalize) ;
 local rule __test__ ( )
 {
     import assert ;
+    import modules : normalize-raw-paths ;
     
     module modules.__test__
     {
@@ -273,6 +348,14 @@ local rule __test__ ( )
     assert.result bar : peek modules.__test__ : foo ;
     poke modules.__test__ : foo : bar baz ;
     assert.result bar baz : peek modules.__test__ : foo ;
+    assert.result c:/foo/bar : normalize-raw-paths c:/x/../foo/./xx/yy/../../bar ;
+    assert.result . : normalize-raw-paths . ;
+    assert.result .. : normalize-raw-paths .. ;
+    assert.result ../.. : normalize-raw-paths ../.. ;
+    assert.result / / : normalize-raw-paths / \\ ;
+    assert.result a : normalize-raw-paths a ;
+    assert.result a : normalize-raw-paths a/ ;
+    assert.result /a : normalize-raw-paths /a/ ;
 }
 
 

@@ -1,7 +1,16 @@
-#  (C) Copyright David Abrahams 2001. Permission to copy, use, modify, sell and
-#  distribute this software is granted provided this copyright notice appears in
-#  all copies. This software is provided "as is" without express or implied
-#  warranty, and with no claim as to its suitability for any purpose.
+#  (C) Copyright David Abrahams 2001-2003. Permission to copy, use,
+#  modify, sell and distribute this software is granted provided this
+#  copyright notice appears in all copies. This software is provided
+#  "as is" without express or implied warranty, and with no claim as
+#  to its suitability for any purpose.
+
+# This file is part of Boost.Build version 2.  You can think of it as
+# forming the main() routine.  It is invoked by the bootstrapping code
+# in bootstrap.jam.
+#
+# The version of bootstrap.jam invoking this lives in
+# tools/build/kernel until BBv1 is retired, so that BBv1 can have its
+# bootstrap.jam in this directory.
 import project ;
 import sequence ;
 import modules ;
@@ -64,7 +73,7 @@ project.load "." ;
 
 if [ MATCH (--dump-projects) : [ modules.peek : ARGV ] ]
 {
-    project-root.print ;
+    project-roots.print ;
 }
 
 if ! [ feature.values toolset ] 

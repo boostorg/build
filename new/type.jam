@@ -12,7 +12,10 @@ import class : class new ;
 import errors ;
 import property ;
 import scanner ;
-import targets ;
+
+# This creates a circular dependency
+# project-test1 -> project -> project-root -> builtin -> type -> targets -> project
+# import targets ; 
 
 # The feature is optional so that it never implicitly added.
 # It's used only for internal purposes, and in all cases we
@@ -227,6 +230,8 @@ rule main-target-rule ( name : sources * : requirements * : default-build *
     # a project.
     local project = [ CALLER_MODULE ] ;
     
+    # This is a circular module dependency, so it must be imported here
+    import targets ;
     targets.main-target-alternative
       [ new typed-target $(name) : $(project) : $(.main-target-type.$(rulename))
         : $(sources)
