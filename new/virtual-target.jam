@@ -35,9 +35,13 @@ rule virtual-target ( name : type ? : project
     
     # Sets the suffix. When generating target name, it will be used in preference to
     # the suffix that is associated with 'type'
-    rule suffix ( suffix ) 
+    rule suffix ( suffix ? ) 
     {
-        self.suffix = $(suffix) ;
+        if $(suffix)
+        {            
+            self.suffix = $(suffix) ;
+        }
+        return $(self.suffix) ;
     }
         
     # Property set that distinguished different variants of a target.
@@ -246,6 +250,11 @@ rule action ( targets + : sources * : action-name : properties * )
               $(actual-targets) : $(actual-sources) : [ properties ] ;
         }        
     }    
+    
+    rule set-targets ( targets * )
+    {
+        self.targets = $(targets) ;
+    }    
 }
 class action ;
 
@@ -295,11 +304,19 @@ rule register ( target )
     {
         local a1 = [ $(t).action ] ;
         local a2 = [ $(target).action ] ;
-        if ! $(result) && [ $(a1).action-name ] = [ $(a2).action-name ] && [ $(a1).properties ] = [ $(a2).properties ]
-          && [ $(a1).sources ] = [ $(a2).sources ] 
-          {
-              result = $(t) ;
-          }          
+        
+        if ! $(result)
+        {
+            if ! $(a1) && ! $(a2)
+            {
+                result = $(t) ;
+            }
+            else if $(a1) && $(a2) && [ $(a1).action-name ] = [ $(a2).action-name ] 
+              && [ $(a1).properties ] = [ $(a2).properties ] && [ $(a1).sources ] = [ $(a2).sources ] 
+            {
+                result = $(t) ;
+            }          
+        }        
     }          
     if ! $(result)
     {        
@@ -310,8 +327,76 @@ rule register ( target )
     return $(result) ;
 }
 
+# Clones a virtual target, copying all fields that can be set in ctor, setting
+# project of new targets to 'project'. 
+# If 'dont-recurse' is not set, clones action as well, which causes cloning
+# of every target and action accessing from 'target'.
+# Parameters 'project', 'name', 'type' and 'suffix' specify the lonely
+# source target that should be substituted into the template.
+rule clone-template ( target dont-recurse ? : project name type suffix )
+{
+    local old-name = [ $(target).name ] ;
+    local new-name = $(old-name) ;
+    local m = [ MATCH (.*)(%)(.*) : $(old-name) ] ;
+    if $(m)
+    {
+        new-name = [ sequence.join $(m[1]) $(name) $(m[3]) ] ;
+    }
+    
+    
+    local cloned = [ new virtual-target $(new-name) : [ $(target).type ] :
+                                $(project) : [ $(target).subvariant ] ] ;    
+    
+    if ! $(dont-recurse) && [ $(target).action ]
+    {
+        local cloned-action = [ clone-action-template [ $(target).action ] $(target) $(cloned) $(project) $(name) 
+          $(type) $(suffix)
+        ] ;
+        
+        cloned-targets = $(cloned) ;
+        for t in [ $(cloned-action).targets ]
+        {
+            if $(t) != $(target)
+            {
+                cloned-targets += [ clone-template $(t) dont-recurse : $(project) $(name) $(type) $(suffix) ] ;
+            }                
+        }   
+        local cloned-targets2 ;
+        for local t in $(cloned-targets)
+        {
+            $(t).action $(cloned-action) ;
+            
+            cloned-targets2 += [ register $(t) ] ;
+            
+        }
+        $(cloned-action).set-targets $(cloned-targets2) ;            
+        cloned = $(cloned-targets2[1]) ;
+    }
+    else
+    {
+        cloned = [ register $(cloned) ] ;
+    }
+    
+    if $(old-name) = % && ! [ $(cloned).action ] && [ $(cloned).type ] = $(type)
+    {
+        $(cloned).suffix $(suffix) ;
+    }
+    
+    return $(cloned) ;
+}
 
+# Clones an action template: helper for clone-template above.
+local rule clone-action-template ( action from cloned-from project name type suffix )
+{
+    local targets ;
+    local sources ; 
+    
+    for local t in [ $(action).sources ]
+    {
+        sources += [ clone-template $(t) : $(project) $(name) $(type) $(suffix) ] ; 
+    }
 
-
-
-
+    local cloned = [ new action [ $(action).targets ] : $(sources) : [ $(action).action-name ] : [ $(action).properties ] ] ;
+    
+    return $(cloned) ;    
+}

@@ -1,21 +1,12 @@
+#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
 
-#
-# G1:
-#     - <target-type>EXE 
-#     - <toolset>gcc  
-#     Allowed source types: OBJ
-#
-# G2:
-#     - <target-type>OBJ
-#     - <toolset>gcc
-#     Allowed source types: CPP
-#
-# G3: 
-#      - <target-type>CPP
-#      Allowed source types: WHL
-#
-#
-#
+#  Manages 'generators' --- objects which can do transformation between different
+#  target types and contain algorithm for finding transformation from sources
+#  to targets.
+
 #####################
 #
 # 1.We should make sure we don't find the same transformation twice. For
@@ -195,8 +186,17 @@ rule generator ( id : source-types + : target-types-and-names + : requirements *
                 local transformed = [ generators.construct-dbg $(project) $(name) :
                       $(st) $(multiple) 
                       : $(properties) : $(sources[1]) ] ;
-                consumed += [ $(transformed).get-at 1 ] ;
-                bypassed += [ $(transformed).get-at 2 ] ;
+                for local t in $(transformed)
+                {
+                    if [ $(t).type ] = $(st)
+                    {
+                        consumed += $(t) ;
+                    }
+                    else
+                    {
+                        bypassed += $(t) ;
+                    }
+                }                
             }
         }    
 
@@ -338,14 +338,23 @@ rule composing-generator ( id : source-types + : target-types + :
             {
                 local r = [ generators.construct-dbg-types $(project) : $(self.source-types)
                             : * : $(properties) : $(s) ] ;
-                if ! [ $(r).get-at 1 ]
+                if ! $(r[1]) || ! [ $(r[1]).type ] in $(self.source-types)
                 {
                    failed = true ;
                 }
                 else
                 {
-                    consumed += [ $(r).get-at 1 ] ;
-                    bypassed += [ $(r).get-at 2 ] ;
+                    for local t in $(r)
+                    {
+                        if [ $(t).type ] in $(self.source-types)
+                        {
+                            consumed += $(t) ;
+                        }
+                        else
+                        {
+                            bypassed += $(t) ;
+                        }                        
+                    }
                 }
             }
             sources = $(sources[2-]) ;
@@ -405,6 +414,11 @@ class composing-generator : generator ;
             .generators.$(t) += $(g) ;
         }
     }
+    
+    # Set if results of the current generators search are going to be cached
+    # This means no futher attempts to cache generators search should be
+    # made.
+    .caching = ;
 
 
     rule try-one-generator ( project name ? : generator multiple ? : 
@@ -450,16 +464,8 @@ class composing-generator : generator ;
             {
                 local try2 = [ construct-dbg-types $(project) $(name) : $(target-types) : : $(properties)
                   : $(e) ] ;
-
-                if [ $(try2).get-at 1 ] 
-                {
-                    result += [ $(try2).get-at 1 ] ;
-                    extra2 += [ $(try2).get-at 2 ] ;
-                }
-                else       
-                {
-                    extra2 += $(e) ;
-                }
+    
+                result += $(try2) ;
             }    
             generators.dout "-- done trying to convert extra targets" [ $(v).str ] ;   
         }
@@ -471,7 +477,7 @@ class composing-generator : generator ;
           [ new vector $(extra2) ] ] ;         
         generators.dout [ indent ] "  generator" [ $(generator).id ] " spawned " ;
         generators.dout [ indent ] " " [ $(rr).str ] ;
-        return $(rr) ;                     
+        return $(result) $(extra2) ;                     
     }
 
     rule construct-dbg-types ( project name ? : target-types + : multiple ? : 
@@ -482,9 +488,9 @@ class composing-generator : generator ;
         {
             local r = [ construct-dbg $(project) $(name) : $(t) $(multiple) : $(properties) :
                              $(source) ] ;
-            if [ $(r).get-at 1 ]
+            if $(r)
             {
-                results += $(r) ;
+                results += [ new vector $(r) ] ;
             }
         }
         if $(results[2])
@@ -494,15 +500,85 @@ class composing-generator : generator ;
         }
         if $(results[1])
         {
-            return $(results[1]) ;
+            return [ $(results[1]).get ] ;
         }
         else
         {
-           return [ new vector [ new vector ] 
-                                  [ new vector $(source) ] ] ;       
+           return $(source) ;
         }
     }
     
+    local rule find-viable-generators ( target-type : properties * )
+    {
+        # Select generators that can create the required target type.
+        local viable-generators = ;
+        local generator-rank = ;
+        # TODO: rank generators by optional properties.
+        for local g in $(.generators.$(target-type))
+        {
+            # Avoid trying the same generator twice on different levels.
+            if ! $(g) in $(.active-generators) 
+              && ! ( [ is-a $(g) : composing-generator ] && $(.had-composing-generator) )
+            {                
+                if [ $(g).requirements ] in $(properties) 
+                {
+                    viable-generators += $(g) ;
+                    generator-rank += [ sequence.length [ set.intersection 
+                        [ $(g).optional-properties ] : $(properties) ] ] ;
+                }            
+            }            
+        }
+        
+        return [ sequence.select-highest-ranked $(viable-generators) : $(generator-rank) ] ;        
+    }
+    
+    # Given a vector of vectors, of of them represents results of running some 
+    # generator, returns the 'best' result, it it exists. Otherwise, exit with
+    # and error. Result is returned as plain jam list.
+    local rule select-dependency-graph ( options )
+    {
+        if [ $(options).size ] = 0
+        {
+            return ;
+        }
+        else if [ $(options).size ] = 1
+        {
+            return [ $(options).get-at 1 ] ;
+        }
+        else
+        {
+            # We have several alternatives and need to check if they
+            # are the same. 
+            
+            for local r in [ $(options).get ] 
+            {
+                normalize-target-list $(r) ;
+                generators.dout [ $(r).str ] ;
+            }
+
+            local f = [ $(options).at 1 ] ;
+            local mismatch ;
+            for local r in [ $(results).get ] 
+            {
+                if ! [ utility.equal $(r) $(f) ] 
+                {
+                    mismatch = true ;
+                }
+            }
+
+            if ! $(mismatch)
+            {
+                return [ $(f).get ] ;
+            }
+            else 
+            {                        
+                error [ $(options).size ] "possible generations for "
+                       $(target-types) "Can't handle this now." ;
+            }            
+        }                        
+    }
+    
+        
     # Attempts to create target of 'target-type' with 'properties'
     # from 'sources'. The 'sources' are treated as a collection of
     # *possible* ingridients -- i.e. it is not required to consume
@@ -525,28 +601,53 @@ class composing-generator : generator ;
             generators.dout [ indent ] "*** multiple" ;
         }
         generators.dout [ indent ] "*** properties:" $(properties) ;        
-                            
-        # Select generators that can create the required target type.
-        local viable-generators = ;
-        local generator-rank = ;
-        # TODO: rank generators by optional properties.
-        for local g in $(.generators.$(target-type))
-        {
-            # Avoid trying the same generator twice on different levels.
-            if ! $(g) in $(.active-generators) 
-              && ! ( [ is-a $(g) : composing-generator ] && $(.had-composing-generator) )
-            {                
-                if [ $(g).requirements ] in $(properties) 
-                {
-                    viable-generators += $(g) ;
-                    generator-rank += [ sequence.length [ set.intersection 
-                        [ $(g).optional-properties ] : $(properties) ] ] ;
-                }            
-            }            
-        }
         
-        viable-generators = [ sequence.select-highest-ranked $(viable-generators) : $(generator-rank) ] ;
-
+        generators.dout [ indent ] "*** level:" $(level) ;
+        
+        local result ;
+        
+        # TODO: should probably use a better logic to decide when to activate 
+        # caching
+        # NOTE: This code is currently disabled.
+        if ! $(.caching) && ! $(sources[2]) && $(sources[1]) && ! $(name)
+        {
+            local .caching = true ;
+            
+            local t = $(sources[1]) ;            
+            
+            local signature = [ sequence.join [ $(t).type ] $(target-type) $(properties) : - ] ;
+            
+            # Get a transformation template from cache or create it.
+            local cresult ;
+            if $(.transformation.cache.$(signature))
+            {
+                cresult = $(.transformation.cache.$(signature)) ;
+            }
+            else {                            
+                local ut = [ new virtual-target % : [ $(t).type ] : "no project" ] ;            
+                cresult = [ construct-dbg $(project) : $(target-type) $(multiple) : $(properties) : $(ut) ] ;
+                .transformation.cache.$(signature) = $(cresult) ;                
+            }
+                                    
+            # Substitute the real source name in the transformation template.
+            if $(cresult)
+            {                
+                generators.dout [ indent ] "*** putting to cache?" ;
+                for local c in $(cresult)
+                {
+                    local cc = [ virtual-target.clone-template $(c) : $(project) [ $(t).name ] 
+                      [ $(t).type ] [ $(t).suffix ] ] ;
+                    generators.dout [ indent ] "*** cloning " [ $(c).str ] ;
+                    generators.dout [ indent ] "*** cloned" $(cc) --- [ $(cc).str ] ;
+                    result += $(cc) ;
+                }
+            }    
+        } else {
+            
+                
+        viable-generators = [ find-viable-generators $(target-type) : $(properties) ] ;
+        
+        
         #Don't do any error reporting there, just return empty string.
         #Possibly, we can have a switch which would turn output of such 
         #messages.
@@ -556,11 +657,16 @@ class composing-generator : generator ;
         #}
 
         local results = [ new vector ] ;
+        
+        generators.dout [ indent ] "*** " [ sequence.length $(viable-generators) ] 
+          " viable generators " ;
 
         for local g in $(viable-generators)
         {
-            .active-generators = $(g) $(.active-generators) ;
-            local had-composing-generator-save = $(.had-composing-generator) ;
+            #This variables will be restored on exit from this scope.
+            local .had-composing-generator ;
+            local .active-generators = $(g) $(.active-generators) ;
+            
             if [ is-a $(g) : composing-generator ] 
             {
                 generators.dout "Had composing generator set to true" ;
@@ -570,13 +676,9 @@ class composing-generator : generator ;
             local r = [ try-one-generator $(project) $(name) : $(g) $(multiple) : $(target-type) :
                         $(properties) : $(sources) ] ;
             
-            .active-generators = $(.active-generators[2-]) ;            
-            generators.dout "Restoring 'had...' to " $(had-composing-generator-save) ;
-            .had-composing-generator = $(had-composing-generator-save) ;
-
-            if [ $(r).get-at 1 ]
+            if $(r)
             {
-                $(results).push-back $(r) ;
+                $(results).push-back [ new vector $(r) ] ;
             }
         }
 
@@ -586,7 +688,6 @@ class composing-generator : generator ;
         #    error "No generator could produce desired targets" ;
         #}
 
-        local result ;
         if ! [ $(results).size ] in 0 1
         {
             # We have several alternatives and need to check if they
@@ -594,12 +695,11 @@ class composing-generator : generator ;
             
             for local r in [ $(results).get ] 
             {
-                normalize-target-list [ $(r).at 1 ] ;
-                normalize-target-list [ $(r).at 2 ] ;
+                normalize-target-list $(r) ;
                 generators.dout [ $(r).str ] ;
             }
 
-            local f = [ $(results).at 0 ] ;
+            local f = [ $(results).at 1 ] ;
             local mismatch ;
             for local r in [ $(results).get ] 
             {
@@ -620,27 +720,11 @@ class composing-generator : generator ;
                        $(target-types) "Can't handle this now." ;
             }
         }
-
-
-        if ! [ $(results).empty ]
-        {
-            result = [ $(results).at 1 ] ;
-            for local c in [ $(result).get-at 1 ] 
-            {
-                generators.dout [ indent ] "*** constructed" [ $(c).str ] ;
-            }
-            for local c in [ $(result).get-at 2 ]
-            {
-                generators.dout [ indent ] "*** also got" [ $(c).str ] ;
-            }
-
-            generators.dout ;
-        } 
-        else
-        {
-            result = [ new vector [ new vector ] 
-                                  [ new vector $(sources) ] ] ;       
+        
+        result = [ select-dependency-graph $(results) ] ;
         }
+        
+        
         decrase-indent ;
         
         return $(result) ;        
