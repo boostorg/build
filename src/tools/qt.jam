@@ -61,7 +61,7 @@ rule init ( prefix ? )
         # mocced.
         rule qt.uic-cpp-generator 
         {
-            generator.__init__ qt.uic-cpp : UI UIC_H : CPP : <uses>qt ;
+            generator.__init__ qt.uic-cpp : UI UIC_H : CPP : <allow>qt ;
             
             rule run ( project name ? : properties * : sources + :  multiple ? )
             {
