@@ -320,7 +320,21 @@ rule relative-to ( path1 path2 )
     return [ join . $(root_1) $(split2) ] ;
 }
 
-
+# Returns the list of paths which are used by the operating system
+# for looking up programs
+rule programs-path ( )
+{
+    local result ;
+    local raw = [ modules.peek : PATH Path path ] ;
+    for local p in $(raw)
+    {
+        if $(p)
+        {
+            result += [ path.make $(p) ] ;
+        }        
+    }
+    return $(result) ;
+}
 
 rule make-NT ( native )
 {
