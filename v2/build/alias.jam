@@ -49,6 +49,11 @@ class alias-target-class : basic-target
     rule check-for-link-compatibility ( * : * )
     {
     }
+    
+    rule check-for-unused-sources ( * : * )
+    {
+    }
+    
         
     rule compute-usage-requirements ( subvariant ) 
     {

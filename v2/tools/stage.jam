@@ -146,7 +146,7 @@ class stage-target-class : basic-target
         local result ;
         for local i in $(source-targets)
         {
-            if [ $(i).type ] != SEARCHED_LIB
+            if ! [ $(i).intermediate ] && [ $(i).type ] != SEARCHED_LIB
             {
                 local staged-targets ;
                 
