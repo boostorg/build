@@ -109,6 +109,15 @@ rule init ( prefix ? )
     }
 }
 
+# Query the installation directory
+# This is needed in at least two scenarios
+# First, when re-using sources from the Qt-Tree.
+# Second, to "install" custom Qt plugins to the Qt-Tree.
+rule directory 
+{ 
+    return $(.prefix) ; 
+} 
+
 # -f forces moc to include the processed source file.
 # Without it, it would think that .qpp is not a header and would not
 # include it from the generated file.

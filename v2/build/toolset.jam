@@ -61,24 +61,20 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
                               # module, an error is issued.
     
              variable-name    # Variable that should be set on target
-             condition * :    # Can specify either
-                              #
-                              # - a set of feature names. Values of all mentioned
-                              #   feature that are present in build property set
-                              #   will be appended to the variable. The 'actualize'
-                              #   method will be called on values of all dependency
-                              #   features. The next argument will be unused.
-                              #
-                              # - a set of property sets. If one of those property 
-                              #   sets is contained in build properties, 'values'
-                              #   will be added to the variable.
-                              #   Implied values are not allowed: "<toolset>gcc" should
-                              #   be used, not just "gcc". Subfeatures, like in
-                              #   "<toolset>gcc-3.2" are allowed.
-                              #
-                              # - empty. 'values' will be added to the variable 
-                              #   unconditionally
-             values * :
+             condition * :    # A condition when this flag should be applied.
+                              # Should be set of property sets. If one of
+                              # those property sets is contained in build
+                              # properties, the flag will be used.
+                              # Implied values are not allowed:
+                              # "<toolset>gcc" should be used, not just
+                              # "gcc". Subfeatures, like in "<toolset>gcc-3.2"
+                              # are allowed. If left empty, the flag will
+                              # always used.
+
+
+             values * :       # The value to add to variable. If <feature>
+                              # is specified, then the value of 'feature' 
+                              # will be added.
              unchecked ?      # If value 'unchecked' is passed, will not test
                               # that flags are set for the calling module.
           )
@@ -89,45 +85,32 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
     {
         errors.error "Module $(caller) attempted to set flags for module $(module_)" ;
     }
-        
-    local match-type ;   
-    if $(condition[1]:G=)
+    
+    if $(condition) && ! $(condition:G=)
     {
-        match-type = property-set ;
+        # We have condition in the form '<feature>', that is, without
+        # value. That's a previous syntax:
+        #
+        #   flags gcc.link RPATH <dll-path> ;
+        # for compatibility, convert it to
+        #   flags gcc.link RPATH : <dll-path> ;                
+        values = $(condition) ;
+        condition = ;
+    }
+    
+    if $(condition)
+    {
         property.validate-property-sets $(condition) ;
-        if ! $(values)
-        {
-            # I don't think I like this test anymore.
-#             error empty value set used with property-set match criterion:
-#               : \"$(condition)\" ;
-        }
         condition = [ normalize-condition $(condition) ] ;
     }
-    else if $(condition)
-    {
-        match-type += feature ;
-        if $(values)
-        {
-            error non-empty value set used with feature match criterion ;
-        }
-    }
-    else
-    {
-        match-type += unconditional ;
-        
-        # I don't like this condition anymore
-        if ! $(values)-is-nonempty
-        {
-            error empty value set used with unconditional match criterion ;
-        }
-    }    
-    add-flag $(rule-or-module) : $(match-type) : $(variable-name)
+    
+    add-flag $(rule-or-module) : $(variable-name)
       : $(condition) : $(values) ;
 }
 
 # Adds new flag setting with the specified values
 # Does no checking
-local rule add-flag ( rule-or-module : match-type : 
+local rule add-flag ( rule-or-module :
     variable-name : condition * : values * )
 {
     .$(rule-or-module).flags += $(.flag-no) ;
@@ -138,7 +121,6 @@ local rule add-flag ( rule-or-module : match-type :
     # Store flag-no -> rule-or-module mapping
     .rule-or-module.$(.flag-no) = $(rule-or-module) ;
 
-    .$(rule-or-module).match-type.$(.flag-no) = $(match-type) ;
     .$(rule-or-module).variable.$(.flag-no) += $(variable-name) ;
     .$(rule-or-module).values.$(.flag-no) += $(values) ;
     .$(rule-or-module).condition.$(.flag-no) += $(condition) ;            
@@ -165,6 +147,59 @@ local rule find-property-subset ( property-sets * : properties * )
     return $(result) ;
 }
 
+rule handle-flag-value ( value * : properties * )
+{
+    local result ;
+    if $(value:G)
+    {
+        local matches = [ property.select $(value) : $(properties) ] ;
+        for local p in $(matches)
+        {
+            local att = [ feature.attributes $(p:G) ] ;
+            if dependency in $(att)
+            {
+                # the value of a dependency feature is a target
+                # and must be actualized
+                result += [ $(p:G=).actualize ] ;
+            }                
+            else if path in $(att) || free in $(att)
+            {
+                local values ;
+                # Treat features with && in the value
+                # specially -- each &&-separated element is considered
+                # separate value. This is needed to handle searched
+                # libraries, which must be in specific order.                    
+                if ! [ MATCH (&&) : $(p:G=) ]
+                {
+                    values = $(p:G=) ;
+                }
+                else                      
+                {
+                    values = [ regex.split $(p:G=) "&&" ] ;
+                }
+                if path in $(att)
+                {                                            
+                        result += [ sequence.transform path.native : $(values) ] ;
+                }
+                else
+                {
+                    result += $(values) ;
+                }                    
+            }    
+            else 
+            {
+                result += $(p:G=) ;
+            }
+        }        
+    }
+    else
+    {
+        result += $(values) ;
+    }      
+    return $(result) ;
+}
+
+
 rule set-target-variables ( rule-or-module targets + : properties * )
 { 
     for local f in $(.$(rule-or-module).flags) 
@@ -174,57 +209,10 @@ rule set-target-variables ( rule-or-module targets + : properties * )
         local values = $(.$(rule-or-module).values.$(f)) ;
         local result ;
         
-        switch $(.$(rule-or-module).match-type.$(f))
+        if ! $(condition) ||
+          [ find-property-subset $(condition) : $(properties) ]
         {
-         case unconditional :
-              result += $(values) ;
-              
-         case property-set : 
-            if [ find-property-subset $(condition) : $(properties) ]
-            {
-                result += $(values) ;
-            }
-            
-         case feature : # add the values of all specified features to the variable
-            local matches = [ property.select $(condition) : $(properties) ] ;
-            for local p in $(matches)
-            {
-                local att = [ feature.attributes $(p:G) ] ;
-                if dependency in $(att)
-                {
-                    # the value of a dependency feature is a target
-                    # and must be actualized
-                    result += [ $(p:G=).actualize ] ;
-                }                
-                else if path in $(att) || free in $(att)
-                {
-                    local values ;
-                    # Treat features with && in the value
-                    # specially -- each &&-separated element is considered
-                    # separate value. This is needed to handle searched
-                    # libraries, which must be in specific order.                    
-                    if ! [ MATCH (&&) : $(p:G=) ]
-                    {
-                        values = $(p:G=) ;
-                    }
-                    else                      
-                    {
-                        values = [ regex.split $(p:G=) "&&" ] ;
-                    }
-                    if path in $(att)
-                    {                                            
-                        result += [ sequence.transform path.native : $(values) ] ;
-                    }
-                    else
-                    {
-                        result += $(values) ;
-                    }                    
-                }    
-                else 
-                {
-                    result += $(p:G=) ;
-                }
-            }
+            result += [ handle-flag-value $(values) : $(properties) ] ;
         }
 
         # Without this test, the assignment below would create a
@@ -242,21 +230,7 @@ rule set-target-variables ( rule-or-module targets + : properties * )
     if $(next)
     {
         set-target-variables $(next) $(targets) : $(properties) ;        
-    }
-    else
-    {
-        # If there's no next dot-separated element, we've got the module name.
-        # Allow a rule-based hook for more-sophisticated setting
-        # of build options than flags allows.
-        if prepare-target in [ RULENAMES $(module_) ]
-        {
-            module $(module_)
-            {
-                prepare-target [ modules.peek toolset : targets ] : [ modules.peek toolset : properties ] ;
-            }
-        }
-    }
-    
+    }    
 }
 
 .toolsets += $(toolset) ;
@@ -326,7 +300,7 @@ rule inherit-flags ( toolset : base : prohibited-properties * )
         if [ set.difference
                 $(.$(rule-or-module).condition.$(f)) :
                 $(prohibited-properties)
-           ]
+           ] || ! $(.$(rule-or-module).condition.$(f))
         {
             local rule_ = [ MATCH "[^.]*\.(.*)" : $(rule-or-module) ] ;
             local new-rule-or-module ;
@@ -341,7 +315,6 @@ rule inherit-flags ( toolset : base : prohibited-properties * )
                                         
             add-flag
                $(new-rule-or-module)
-               : $(.$(rule-or-module).match-type.$(f))
                : $(.$(rule-or-module).variable.$(f)) 
                : $(.$(rule-or-module).condition.$(f))              
                : $(.$(rule-or-module).values.$(f))

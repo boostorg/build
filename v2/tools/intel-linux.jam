@@ -17,9 +17,9 @@ feature.extend-subfeature toolset intel : platform : linux ;
 
 toolset.inherit-generators intel-linux 
      <toolset>intel <toolset-intel:platform>linux : gcc ;
-toolset.inherit-flags intel-linux : gcc 
-    : <inlining>off <inlining>on <inlining>full <optimization>space ;
 toolset.inherit-rules intel-linux : gcc ;
+toolset.inherit-flags intel-linux : gcc 
+        : <inlining>off <inlining>on <inlining>full <optimization>space ;
 
 # Initializes the intel-linux toolset
 #   version in mandatory
@@ -34,6 +34,9 @@ rule init ( version ? :  command * : options * )
         : $(command) : /opt/intel_cc_80/bin ] ;
                 
     common.handle-options intel-linux : $(condition) : $(command) : $(options) ;
+
+    gcc.init-link-flags intel-linux gnu $(condition) ;
+
 }
 
 flags intel-linux.compile OPTIONS <inlining>off : "-Ob0" ;
