@@ -140,22 +140,24 @@ bjam variant=release inlining=off debug-symbols=on
       <title>Build Requests and Target Requirements</title>
 
       <para>      
-        The set of properties specified in the command line constitute a
-        <firstterm>build request</firstterm>&#x2014;a description of
+        The set of properties specified in the command line constitute
+        a <firstterm>build request</firstterm>&#x2014;a description of
         the desired properties for building the requested targets (or,
         if no targets were explicitly requested, the project in the
-        current directory).  The <emphasis>actual</emphasis> properties
-        used for building targets is typically a combination of the
-        build request and properties derived from the
-        project's Jamfiles.  For example, the
+        current directory).  The <emphasis>actual</emphasis>
+        properties used for building targets is typically a
+        combination of the build request and properties derived from
+        the project's <filename>Jamroot</filename> (and its other
+        Jamfiles, as described in <xref
+        linkend="bbv2.tutorial.hierarchy"/>).  For example, the
         locations of <code>#include</code>d header files are normally
-        not specified on the command-line, but described
-        in <filename>Jamfile</filename>s as <firstterm>target
-          requirements</firstterm> and automatically combined with the
+        not specified on the command-line, but described in
+        Jamfiles as <firstterm>target
+        requirements</firstterm> and automatically combined with the
         build request for those targets.  Multithread-enabled
-        compilation is another example of a typical target requirement.
-        The <filename>Jamfile</filename> fragment below illustrates how
-        these requirements might be specified.
+        compilation is another example of a typical target
+        requirement.  The Jamfile fragment below
+        illustrates how these requirements might be specified.
       </para>
 
 <programlisting>
@@ -207,9 +209,9 @@ However, when a
         them.  However, as projects grow, that approach leads to a great
         deal of repeated boilerplate in Jamfiles.
         
-        Fortunately, there's a better way. Each project (i.e. each
-        <filename>Jamfile</filename>), can specify a set of <firstterm>attributes</firstterm>,
-        including requirements:
+        Fortunately, there's a better way. Each project can specify a
+        set of <firstterm>attributes</firstterm>, including
+        requirements:
 
 <programlisting>
 project 
