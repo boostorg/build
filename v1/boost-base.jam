@@ -69,7 +69,7 @@
 
 if $(NT)
 {
-    TOOLS ?= borland gcc metrowerks msvc ;
+    TOOLS ?= vc7.1 ;
 }
 else
 {
@@ -2365,6 +2365,7 @@ rule stage ( name : sources + : requirements * : local-build * )
     # are getting defined in the dependent phase skip the actual instructions.
     #
     local destination-files = ;
+    local result-files = ;
     local locate-target = $(locate) ;
     if $(ALL_LOCATE_TARGET)
     {
@@ -2398,6 +2399,7 @@ rule stage ( name : sources + : requirements * : local-build * )
                 [ FDirName $(locate-target) [ split-path $(stage-dir) ] $(destination-subdir) ] ;
             for local df in $(destination-file)
             {
+                result-files += $(df) ;
                 FileClone $(df) : $(file) ;
             }
             local target = $(stage-id) $(destination-subdir) $(destination-file:G=) ;
@@ -2425,6 +2427,8 @@ rule stage ( name : sources + : requirements * : local-build * )
     }
 
     Clean clean : $(destination-files) ;
+
+    return $(result-files) ;
 
     }
 }
