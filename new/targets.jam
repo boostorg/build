@@ -12,120 +12,32 @@
 
 #  Each target is an instanse of some class derived from 'target' class.
 
-#  Note: classes will be actually declared in the implementation section.
-#  Declaring them here will cause incomplete ctor declarations to be used.
-
-#  Base target class.
-rule target ( )
-{
-    # Adds new depencies for this target
-    rule depends ( d + ) { }
-    # Retrives the list of dependencies
-    rule dependencies ( ) { }
-    # Generates build instruction for the target and the specified build
-    # request. If 'build-request' is omitted, default build is performed,
-    # if appropriate
-    rule generate ( build-request * ) { }
-}
-
-#  Project target class (derived from 'target')
-rule project-target ( requirements * : default-build * )
-{
-
-}
-
-#  Concrete target (derived from 'target')
-rule typed-target ( name : type : sources * : requirements * : default-build * )
-{
-}
-
-
-#
-#  Returns the target instance for the specified jamfile-location and target
-#  pair. If 'jamfile-location' is not yet known, loads Jamfile there.
-#
-rule abstract-target-name ( jamfile-location : target-in-jamfile ? )
-
-#
-#   Creates project target at the specified location
-#
-rule create-abstract-project-target ( jamfile-location )
-
-
-
-# Class which represents a virtual target
-rule virtual-target ( name : subvariant : project )
-{
-    # Name of the target
-    rule name ( ) { }
-    # Property set that distinguishes different variants of a target.
-    # May be a subset of the property set that is used for building.
-    # Determines the location of target, in an unspecified way.
-    rule subvariant ( ) { }
-    # Project where this target was declared
-    rule project ( ) { }
-
-    rule includes ( ) { }
-    rule add_includes ( i + ) { }
-
-    rule dependencies ( ) { }
-    rule depends ( d + ) { }
-
-    # If 'a' is supplied, sets action to 'a'.
-    # Returns the action currently set.
-    rule action ( a ? ) { }
-
-    # Generates all the actual targets and build instructions needed to build
-    # this target. Returns the actual target name. Can be called several times.
-    # Does no processing for other targets that 'action' will generate.
-    # Rationale: we might need only one file from the set created by an
-    # action, and there's no need to run the action if the file is up-to-date,
-    # only because some other file in set is out-of-date.
-    rule actualize ( ) { }
-}
-
-# Class which represents an action.
-# Both 'targets' and 'sources' should list instances of 'virtual-target'.
-# Action name should name a rule with this prototype
-#     rule action_name ( targets + : sources * : properties * )
-# Targets and sources are passed as actual jam targets. The rule may
-# not establish dependency relationship, but should do everything else.
-rule action ( targets + : sources * : action_name : properties * )
-{
-    rule targets ( ) { }
-    rule sources ( ) { }
-    rule action_name ( ) { }
-    rule properties ( ) { }
-    # Generates actual build instructions.
-    rule actualize ( ) { }
-}
-
-
-
-
-# Interface description end.
-###########################################################################
-
 import sequence ;
 import class : class ;
 import regex ;
 import property ;
 
+#  Base target class.
 rule target ( )
 {
     __dependencies__ = ;
 
+    # Adds new depencies for this target
     rule depends ( d + )
     {
         d = [ sequence.insertion-sort $(d) ] ;
         __dependencies__ = [ sequence.merge $(__dependencies__) $(d) ] ;
     }
 
+    # Retrives the list of dependencies
     rule dependencies ( )
     {
         return $(__dependencies__) ;
     }
 
+    # Generates build instruction for the target and the specified build
+    # request. If 'build-request' is omitted, default build is performed,
+    # if appropriate
     rule generate ( build-request * )
     {
         for local d in [ dependencies ] {
@@ -136,6 +48,7 @@ rule target ( )
 
 class.class target ;
 
+#  Project target class (derived from 'target')
 rule project-target ( requirements * : default-build * )
 {
     __requirements__ = $(requirements) ;
@@ -146,6 +59,7 @@ rule project-target ( requirements * : default-build * )
 
 class.class project-target : target ;
 
+#  Concrete target (derived from 'target')
 rule typed-target ( name : type : sources * : requirements * : default-build * )
 {
     __name__ = $(name) ;
@@ -168,6 +82,10 @@ class.class typed-target : target ;
 
  __targets__ = ;
 
+#
+#  Returns the target instance for the specified jamfile-location and target
+#  pair. If 'jamfile-location' is not yet known, loads Jamfile there.
+#
 rule abstract-target-name ( jamfile-location : target-in-jamfile ? )
 {
     if $(target-in-jamfile)  {
@@ -177,11 +95,15 @@ rule abstract-target-name ( jamfile-location : target-in-jamfile ? )
     }
 }
 
+#
+#   Creates project target at the specified location
+#
 rule create-abstract-project-target ( jamfile-location )
 {
     local target = [ abstract-target-name $(jamfile-location) ] ;
     class.instance $(target) : project-target ;
 }
+
 
 # Class which represents a virtual target
 rule virtual-target ( name : subvariant : project )
@@ -220,6 +142,8 @@ rule virtual-target ( name : subvariant : project )
                                [ sequence.insertion-sort $(d) ] ] ;
     }
 
+    # If 'a' is supplied, sets action to 'a'.
+    # Returns the action currently set.
     rule action ( a ? )
     {
         if $(a) {
@@ -228,6 +152,12 @@ rule virtual-target ( name : subvariant : project )
         return $(__action__) ;
     }
 
+    # Generates all the actual targets and build instructions needed to build
+    # this target. Returns the actual target name. Can be called several times.
+    # Does no processing for other targets that 'action' will generate.
+    # Rationale: we might need only one file from the set created by an
+    # action, and there's no need to run the action if the file is up-to-date,
+    # only because some other file in set is out-of-date.
     rule actualize ( )
     {
         ECHO "Actualizing target $(__name__)" ;
@@ -273,6 +203,12 @@ rule virtual-target ( name : subvariant : project )
 
 class virtual-target ;
 
+# Class which represents an action.
+# Both 'targets' and 'sources' should list instances of 'virtual-target'.
+# Action name should name a rule with this prototype
+#     rule action_name ( targets + : sources * : properties * )
+# Targets and sources are passed as actual jam targets. The rule may
+# not establish dependency relationship, but should do everything else.
 rule action ( targets + : sources * : action_name : properties )
 {
     __targets__ = $(targets) ;
@@ -297,6 +233,7 @@ rule action ( targets + : sources * : action_name : properties )
         return $(__properties__) ;
     }
 
+    # Generates actual build instructions.
     rule actualize ( )
     {
         local actual_targets ;
