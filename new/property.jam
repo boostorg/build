@@ -95,7 +95,7 @@ rule evaluate-conditionals ( properties * )
     local conditionals ;
     for local p in $(properties)
     {
-        if [ MATCH (:) : $(p) ]
+        if [ MATCH (:<) : $(p) ]
         {
             conditionals += $(p) ;
         }
