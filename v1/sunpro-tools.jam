@@ -120,7 +120,7 @@ rule Link-action
 
 actions together sunpro-Link-action bind NEEDLIBS
 {
-    $(.CXX[1]:R=$(SUNPRO_BIN_DIR)) $(.CXX[2-]) -xildoff -h,$(<[1]:D=)$(SO_VER) $(LINKFLAGS) -o "$(<[1]:T)$(SO_EXT)" -L"$(LIBPATH:T)" "$(>)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    $(.CXX[1]:R=$(SUNPRO_BIN_DIR)) $(.CXX[2-]) -xildoff -h,$(<[1]:D=)$(SO_VER) $(LINKFLAGS) -o "$(<[1]:T)$(SO_EXT)" -L"$(LIBPATH:T)" -L"$(STDLIBPATH)" "$(>)" "$(NEEDLIBS)" -l$(FINDLIBS)
     $(DO_LN)$(LN)$(_)"$(<[1]:T)$(SO_EXT)"$(_)"$(<[1])"
 }
 
