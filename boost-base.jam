@@ -966,7 +966,7 @@ rule remove-incompatible-builds ( requirements * : build-request * : target-name
         }
         else
         {
-            build-request = result ;
+            build-request = $(result) ;
         }
     }
     return $(build-request) ;
@@ -1927,7 +1927,7 @@ rule with-command-file ( rule-name targets * : sources * )
     # clean up afterwards
     # Can't really do this until <find-library> arguments are accounted for.
     # remove-command-file $(targets) : $(command-file) ;
-    return result ;
+    return $(result) ;
 }
 
 TAG(prefix) = "" ;
