@@ -344,6 +344,9 @@ else if $(UNIX)
     case IRIX :
         RANLIB          ?= "" ;
 
+    case LINUX :
+        CLONE           ?= cp -fpd ;
+
     case MPEIX :
         HDRS            += /usr/include ;
         RANLIB          ?= "" ; 
