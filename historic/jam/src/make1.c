@@ -62,7 +62,7 @@
 # include "command.h"
 # include "execcmd.h"
 
-static CMD *make1cmds( ACTIONS *a0 );
+static CMD *make1cmds( TARGET *t );
 static LIST *make1list( LIST *l, TARGETS *targets, int flags );
 static SETTINGS *make1settings( LIST *vars );
 static void make1bind( TARGET *t, int warn );
@@ -425,10 +425,7 @@ make1b( state *pState )
                 if( DEBUG_MAKE && !( counts->total % 100 ) )
                     printf( "...on %dth target...\n", counts->total );
 
-                pushsettings( pState->t->settings );
-                pState->t->cmds = (char *)make1cmds( pState->t->actions );
-                popsettings( pState->t->settings );
-
+                pState->t->cmds = (char *)make1cmds( pState->t );
                 pState->t->progress = T_MAKE_RUNNING;
             }
 
@@ -660,6 +657,41 @@ make1d(state *pState)
 }
 
 /*
+ * swap_settings() - replace the settings from the current module and
+ *                   target with those from the new module and target
+ */
+static void swap_settings(
+    module** current_module
+    , TARGET** current_target
+    , module* new_module
+    , TARGET* new_target)
+{
+    if (new_module == root_module())
+        new_module = 0;
+    
+    if (new_target == *current_target && new_module == *current_module)
+        return;
+
+    if (*current_target)
+        popsettings( (*current_target)->settings );
+        
+    if (new_module != *current_module)
+    {
+        if (*current_module)
+            exit_module( *current_module );
+
+        *current_module = new_module;
+        
+        if (new_module)
+            enter_module( new_module );
+    }
+
+    *current_target = new_target;
+    if (new_target)
+        pushsettings( new_target->settings );
+}
+
+/*
  * make1cmds() - turn ACTIONS into CMDs, grouping, splitting, etc
  *
  * Essentially copies a chain of ACTIONs to a chain of CMDs, 
@@ -670,16 +702,20 @@ make1d(state *pState)
  */
 
 static CMD *
-make1cmds( ACTIONS *a0 )
+make1cmds( TARGET *t )
 {
 	CMD *cmds = 0;
-	LIST *shell = var_get( "JAMSHELL" );	/* shell is per-target */
-
+	LIST *shell = 0;
+        
+        module *settings_module = 0;
+        TARGET *settings_target = 0;
+        
 	/* Step through actions */
 	/* Actions may be shared with other targets or grouped with */
 	/* RULE_TOGETHER, so actions already seen are skipped. */
-
-	for( ; a0; a0 = a0->next )
+        
+        ACTIONS* a0;
+	for(a0 = t->actions ; a0; a0 = a0->next )
 	{
 	    RULE    *rule = a0->action->rule;
             rule_actions *actions = rule->actions;
@@ -720,6 +756,10 @@ make1cmds( ACTIONS *a0 )
 		continue;
 	    }
 
+            swap_settings( &settings_module, &settings_target, rule->module, t );
+            if (!shell)
+                shell = var_get( "JAMSHELL" );	/* shell is per-target */
+                
 	    /* If we had 'actions xxx bind vars' we bind the vars now */
 
 	    boundvars = make1settings( actions->bindlist );
@@ -801,6 +841,7 @@ make1cmds( ACTIONS *a0 )
 	    freesettings( boundvars );
 	}
 
+        swap_settings( &settings_module, &settings_target, 0, 0 );
 	return cmds;
 }
 
