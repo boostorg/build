@@ -91,13 +91,13 @@ rule load ( module-name : filename ? : search * : module-tag ? )
         }
         loading-modules = $(loading-modules[1--2]) ;
         
-        local test = [ peek : BOOST_BUILD_TEST ] ;
-        if ! $(suppress-test) && $(test)-is-nonempty
+        local argv = [ peek : ARGV ] ;
+        if ! $(suppress-test)
         {
             # run any pending tests
             for local m in $(untested)
             {
-                if ( $(test) = 1 ) || ( $(m) in $(test) )
+                if ( --debug in $(argv) ) || ( --debug-module=$(m) in $(argv) )
                 {
                     ECHO testing module $(m)... ;
                     module $(m)
