@@ -18,31 +18,46 @@ import type ;
 #                       +--------------------------+
 #                       | actualize-action() = 0   |
 #                       | actualize-location() = 0 |
-#                       +------------+-------------+
-#                                    |
-#                                    ^
-#                                   / \
-#                                  +-+-+
-#                                    |
-#    +-------------+       +---------+------------+
-#    | action      |       | abstract-file-target |
-#    +=============+       +======================+
-#    | action-name |   +---+ action               |
-#    +-------------+   |   | actualize-action()   |
-#    | actualize() +---+   +---------+------------+
-#    | path()      |                 |
-#    +------+------+                 ^
-#           |                       / \
-#           ^                      +-+-+
-#          / \                       |
-#         +-+-+              +-------+-------------------+
-#           |                |                           |
-#    +------+------+  +------+---------------+  +--------+-------------+
-#    | link-action |  | file-target          |  | searched-lib-target  |
-#    +=============+  +======================+  +======================+
-#    |             |  | actualize-location() |  | actualize-location() |
-#    +-------------+  +----------------------+  +----------------------+
+#                       +----------------+---------+
+#                                        |
+#                                        ^
+#                                       / \
+#                                      +-+-+
+#                                        |
+#    +---------------------+     +---------+------------+
+#    | action              |     | abstract-file-target |
+#    +=====================|   1 +======================+
+#    | action-name         |  +--| action               |
+#    | properties          |  |  +----------------------+
+#    +---------------------+--+  | actualize-action()   |
+#    | actualize()         |0..1 +-----------+----------+
+#    | path()              |                 |
+#    | adjust-properties() |                 |
+#    | actualize-sources() |                 |
+#    +------+--------------+                 ^
+#           |                               / \
+#           ^                              +-+-+
+#          / \                               |
+#         +-+-+                +-------------|-------------+
+#           |                  |                           |
+#           |           +------+---------------+  +--------+-------------+
+#           |           | file-target          |  | searched-lib-target  |
+#           |           +======================+  +======================+
+#           |           | actualize-location() |  | actualize-location() |
+#           |           +----------------------+  +----------------------+
+#           |
+#         +--------------------------------+
+#         |                                |
+#    +---------------------+     +---------------------+
+#    | compile-action      |     | link-action         |
+#    +=====================+     +=====================+
+#    | adjust-properties() |     | adjust-properties() |
+#    +---------------------+     | actualize-sources() |
+#                                +---------------------+
 #
+# The 'compile-action' and 'link-action' classes are defined not here,
+# but in builtin.jam modules. They are shown in the diagram to give
+# the big picture.
 
 # Potential target. It can be converted into jam target and used in
 # building, if needed. However, it can be also dropped, which allows
