@@ -226,7 +226,7 @@ int unlink( char *f ); 	/* In filevms.c */
 # define OS_COHERENT
 # define NO_VFORK
 # endif
-# ifdef __cygwin__
+# if defined(__cygwin__) || defined(__CYGWIN__)
 # define OSMINOR "OS=CYGWIN"
 # define OS_CYGWIN
 # endif
@@ -519,4 +519,5 @@ extern struct globs globs;
 # define DEBUG_PROFILE	( globs.debug[ 10 ] )	/* dump rule execution times */
 # define DEBUG_PARSE	( globs.debug[ 11 ] )	/* debug parsing */
 # define DEBUG_GRAPH	( globs.debug[ 12 ] )	/* debug dependencies */
+
 
