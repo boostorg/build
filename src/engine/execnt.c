@@ -97,6 +97,16 @@ set_is_win95( void )
     is_nt_351 = os_info.dwMajorVersion == 3;
 }
 
+int maxline()
+{
+    if (!is_win95_defined)
+        set_is_win95();
+    
+    /* Set the maximum command line length according to the OS */
+    return is_nt_351 ? 996
+        : is_win95 ? 1023
+        : 2047;
+}
 
 static char**
 string_to_args( const char*  string, int*  pcount )
@@ -313,19 +323,12 @@ int use_bat_file(char* command)
 {
     char *p = command;
     
-    /* on Windows NT 3.51, the maximal line length is 996 bytes !! */
-    /* while it's much bigger NT 4 and 2k                          */
-    /* Win95 seems to have a similar maximum */
-    int max_line = is_nt_351 ? 996
-        : is_win95 ? 1003
-        : MAXLINE;
-
-    int inquote = 0;
+    char inquote = 0;
     
     /* Look for newlines and unquoted i/o redirection */
     do
     {
-        p += strcspn( p, "\n\"<>" );
+        p += strcspn( p, "'\n\"<>|" );
 
         switch (*p)
         {
@@ -341,13 +344,21 @@ int use_bat_file(char* command)
             break;
             
         case '"':
+        case '\'':
             if (p > command && p[-1] != '\\')
-                inquote = !inquote;
+            {
+                if (inquote == *p)
+                    inquote = 0;
+                else if (inquote == 0)
+                    inquote = *p;
+            }
+                
             ++p;
             break;
             
         case '<':
         case '>':
+        case '|':
             if (!inquote)
                 return 1;
             ++p;
@@ -356,7 +367,7 @@ int use_bat_file(char* command)
     }
     while (*p);
     
-    return p - command >= max_line;
+    return p - command >= MAXLINE;
 }
 
 void execnt_unit_test()
