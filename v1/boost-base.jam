@@ -563,7 +563,7 @@ rule include-tools
 
     # clear any lingering target variables that may have been declared
     $(gTARGET_VARIABLES) = ;
-    gTARGET_VARIABLES = ; # start over from the beginning
+    gTARGET_VARIABLES = NEEDLIBS ; # start over from the beginning
     
     gRELEVANT_FEATURES($(<)) = ; # clear relevant feature set
     gDEPENDENCY_VARIABLES($(<)) = ;
@@ -705,8 +705,9 @@ rule set-target-variables # file-target
     for s in $(gTARGET_VARIABLES)
     {
         $(s) on $(<) = $($(s)) ;
-        
-        if $(s) in $(gDEPENDENCY_VARIABLES($(gCURRENT_TOOLSET)))
+
+        # set up dependencies if the target is a "top-level" target
+        if ( $(s) in $(gDEPENDENCY_VARIABLES($(gCURRENT_TOOLSET))) ) && $(gTARGET_TYPE($(<)))
         {
             DEPENDS $(<) : $($(s)) ;
         }
@@ -1201,6 +1202,7 @@ else
 # depend-on-libraries target-files : library-targets
 rule depend-on-libraries
 {
+    NEEDLIBS += $(>) ;
     NEEDLIBS on $(<) += $(>) ;
     DEPENDS $(<) : $(>) ;
     # To run these targets, we need everything needed to run the libraries
@@ -1264,16 +1266,19 @@ rule subvariant-target
 
     if $(gTARGET_LIBS($(<)))
     {
-        # Protect target variables against modification while lib dependencies
-        # are built. They will be made empty here, and restored when this scope exits
-        local $(gTARGET_VARIABLES) ;
-        
-        # extract the simple properties from dependent-properties
-        local simple-properties = $(gBUILD_PROPERTIES) ;
-        segregate-free-properties simple-properties ;
-        
-        # generate library build instructions
-        local libs = [ link-libraries $(gTARGET_LIBS($(<))) : $(3) : $(simple-properties) ] ;
+        local libs ;
+        {
+            # Protect target variables against modification while lib dependencies
+            # are built. They will be made empty here, and restored when this scope exits
+            local $(gTARGET_VARIABLES) ;
+
+            # extract the simple properties from dependent-properties
+            local simple-properties = $(gBUILD_PROPERTIES) ;
+            segregate-free-properties simple-properties ;
+
+            # generate library build instructionsn
+            libs = [ link-libraries $(gTARGET_LIBS($(<))) : $(3) : $(simple-properties) ] ;
+        }
         depend-on-libraries $(target-files) : $(libs) ;
     }
 
@@ -1381,4 +1386,20 @@ actions quietly piecemeal list-files-aux1
 actions quietly piecemeal list-files-aux2
 {
     echo "$(>)" >> $(<)
+}
+
+rule with-command-file ( rule-name targets * : sources * )
+{
+    local command-file = $(<[2]:S=.CMD) ;
+    
+    LOCATE on $(command-file) = $(gLOCATE($(targets))) ;
+    
+    list-files $(command-file) : $(sources) ;
+
+    gCOMMAND_FILE($(targets)) += $(command-file) ;
+    DEPENDS $(targets) : $(command-file) ;
+    
+    local ignored = [ $(rule-name) $(targets) : $(command-file) ] ;
+    RmTemps $(targets[1]) : $(command-file) ;
+    Clean clean : $(command-file) ;
 }
