@@ -20,6 +20,11 @@ import toolset ;
 import errors : error ;
 import symlink ;
 
+# This feature is used to determine which OS we're on.
+# In future, this may become <target-os> and <host-os>
+local os = [ modules.peek : OS ] ;
+feature os : $(os) : propagated link-incompatible ;
+
 feature toolset : : implicit propagated link-incompatible symmetric ;
 feature link : shared static : propagated ;
 feature link-runtime : shared static : propagated ;
