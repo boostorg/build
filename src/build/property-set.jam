@@ -63,6 +63,16 @@ class property-set
             {
                 self.non-dependency += $(p) ;
             }
+            
+            if [ MATCH (:) : $(p:G=) ]            
+            {
+                self.conditional += $(p) ;
+            }
+            else
+            {
+                self.non-conditional += $(p) ;
+            }
+            
                                     
             if propagated in $(att)
             {
@@ -106,8 +116,17 @@ class property-set
     {
         return $(self.non-dependency) ;
     }
-
     
+    rule conditional ( )
+    {
+        return $(self.conditional) ;
+    }
+        
+    rule non-conditional ( )
+    {
+        return $(self.non-conditional) ;
+    }
+              
     # Returns incidental properties
     rule incidental ( )
     {
@@ -130,6 +149,16 @@ class property-set
         }
         return $(self.refined.$(ps)) ;
     }
+    
+    rule expand ( )
+    {
+        if ! $(self.expanded)
+        {
+            self.expanded = [ property-set.create [ feature.expand $(self.raw) ] ] ;
+        }
+        return $(self.expanded) ;
+    }
+    
     
     rule expand-composites ( )
     {

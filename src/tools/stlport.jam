@@ -96,7 +96,7 @@ class stlport-target-class : basic-target
         # manually.
         
         property-set = [ property-set.create [ difference
-            [ $(property-set).raw ] : <library>/stlport//stlport ] ] ;
+            [ $(property-set).raw ] : <library>/stlport//stlport <stdlib>stlport ] ] ;
         return [ basic-target.generate $(property-set) ] ;
     }
     
