@@ -63,7 +63,8 @@ rule insertion-sort ( s * : ordered * )
     return $(result__) ;
 }
 
-# join the elements of s into one long string. If joint is supplied, it is used as a separator.
+# join the elements of s into one long string. If joint is supplied,
+# it is used as a separator.
 rule join ( s * : joint ? )
 {
     local result ;
@@ -74,6 +75,44 @@ rule join ( s * : joint ? )
         result ?= $(x) ;
     }
     return $(result) ;
+}
+
+# Find the length of any sequence in log(N) time.
+rule length ( s * )
+{
+    local length = "" ;
+    local zeros p10 d z ; # declared once for speed
+    
+    # Find the power of 10 that is just less than length(s)
+    zeros = "" ;
+    p10 = 1 ;
+    while $(s[$(p10)0])
+    {
+        p10 = $(p10)0 ;
+        zeros = $(zeros[1])0 $(zeros) ;
+    }
+    
+    # zeros is a list of the form  ... 000 00 0 ""
+    for z in $(zeros) # for each digit in the result
+    {
+        # Find the next digit
+        d = 0 1 2 3 4 5 6 7 8 9 ;
+        while $(s[$(d[2])$(z)])
+        {
+            d = $(d[2-]) ;
+        }
+        
+        # append it to the result
+        length = $(length)$(d[1]) ;
+        
+        # Explanation: $(d[1])$(z) the largest number x of the form
+        # n000..., where n is a digit, such that x <= length(s). Here
+        # we're deleting x elements from the list. Since $(s[n]-)
+        # removes n - 1 elements from the list, we chop an additional
+        # one off the end.
+        s = $(s[$(d[1])$(z)--2]) ;
+    }
+    return $(length) ;
 }
 
 local rule __test__ ( )
@@ -116,5 +155,19 @@ local rule __test__ ( )
         assert.result 9 8 7 6 5 4 3 2 1 : sequence.insertion-sort 9 6 5 3 8 7 1 2 4 : test-greater ;
         assert.result foo-bar-baz : sequence.join foo bar baz : - ;
         assert.result substandard : sequence.join sub stan dard ;
+        
+        assert.result 0 : sequence.length ;
+        assert.result 3 : sequence.length a b c ;
+        assert.result 17 : sequence.length 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 ;
+        
+        assert.result 1 : sequence.length a ;
+        assert.result 10 : sequence.length a b c d e f g h i j ;
+        local p2 = x x ;
+        for local i in 1 2 3 4 5 6 7
+        {
+          p2 = $(p2) $(p2) ;
+        }
+        assert.result 256 : sequence.length $(p2) ;
+        
     }
 }
