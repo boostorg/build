@@ -152,6 +152,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_metrowerks_" (
     set BOOST_JAM_CC=mwcc -runtime staticsingle -DNT
     set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
     set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
+    set BOOST_JAM_OPT_YYACC=-o bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
@@ -163,9 +164,10 @@ if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
 if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
         set PATH=%PATH%;%BOOST_JAM_TOOLSET_ROOT%bin)
-    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG "%BOOST_JAM_TOOLSET_ROOT%lib\kernel32.lib"
+    set BOOST_JAM_CC="%BOOST_JAM_TOOLSET_ROOT%bin\cl.exe" /nologo /GZ /Zi /ML -DNT -DYYDEBUG "%MSSdk%\lib\kernel32.lib"
     set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
+    set BOOST_JAM_OPT_YYACC=/Febootstrap.%BOOST_JAM_TOOLSET%\yyacc0
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
@@ -177,9 +179,10 @@ if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
 if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
         set PATH=%PATH%;%BOOST_JAM_TOOLSET_ROOT%bin)
-    set BOOST_JAM_CC="%BOOST_JAM_TOOLSET_ROOT%bin\cl.exe" /nologo /GZ /Zi /MLd -DNT -DYYDEBUG "%BOOST_JAM_TOOLSET_ROOT%lib\kernel32.lib"
+    set BOOST_JAM_CC="%BOOST_JAM_TOOLSET_ROOT%bin\cl.exe" /nologo /GZ /Zi /ML -DNT -DYYDEBUG "%MSSdk%\lib\kernel32.lib"
     set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
+    set BOOST_JAM_OPT_YYACC=/Febootstrap.%BOOST_JAM_TOOLSET%\yyacc0
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_borland_" (
@@ -191,39 +194,45 @@ if "_%BOOST_JAM_TOOLSET%_" == "_borland_" (
             set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\) ) )
 if "_%BOOST_JAM_TOOLSET%_" == "_borland_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (set PATH=%PATH%;%BOOST_JAM_TOOLSET_ROOT%Bin)
-    set BOOST_JAM_CC=gcc -WC -w- -q "-I%BOOST_JAM_TOOLSET_ROOT%Include" "-L%BOOST_JAM_TOOLSET_ROOT%Lib" /DNT -nbootstrap.%BOOST_JAM_TOOLSET%
+    set BOOST_JAM_CC=bcc32 -WC -w- -q "-I%BOOST_JAM_TOOLSET_ROOT%Include" "-L%BOOST_JAM_TOOLSET_ROOT%Lib" /DNT -nbootstrap.%BOOST_JAM_TOOLSET%
     set BOOST_JAM_OPT_JAM=-ejam0
     set BOOST_JAM_OPT_MKJAMBASE=-emkjambasejam0
+    set BOOST_JAM_OPT_YYACC=-eyyacc0
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_como_" (
     set BOOST_JAM_CC=como
     set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
     set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
+    set BOOST_JAM_OPT_YYACC=-o bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_gcc_" (
     set BOOST_JAM_CC=gcc
     set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
     set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
+    set BOOST_JAM_OPT_YYACC=-o bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_gcc-nocygwin_" (
     set BOOST_JAM_CC=gcc -mno-cygwin
     set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
     set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
+    set BOOST_JAM_OPT_YYACC=-o bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_intel-win32_" (
     set BOOST_JAM_CC=icl /nologo
     set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
+    set BOOST_JAM_OPT_YYACC=/Febootstrap.%BOOST_JAM_TOOLSET%\yyacc0
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_mingw_" (
     set BOOST_JAM_CC=gcc -DMINGW
     set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
     set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
+    set BOOST_JAM_OPT_YYACC=-o bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe
     set _known_=1
 )
 if "_%_known_%_" == "__" (
@@ -235,6 +244,7 @@ echo ###
 echo ### Using '%BOOST_JAM_TOOLSET%' toolset.
 echo ###
 
+set YYACC_SOURCES=yyacc.c
 set MKJAMBASE_SOURCES=mkjambase.c
 set BJAM_SOURCES=
 set BJAM_SOURCES=%BJAM_SOURCES% command.c compile.c execnt.c execunix.c execvms.c expand.c
@@ -244,12 +254,37 @@ set BJAM_SOURCES=%BJAM_SOURCES% newstr.c option.c parse.c pathunix.c pathvms.c r
 set BJAM_SOURCES=%BJAM_SOURCES% rules.c scan.c search.c subst.c timestamp.c variable.c modules.c
 set BJAM_SOURCES=%BJAM_SOURCES% strings.c filesys.c builtins.c pwd.c
 
-REM No "yyacc" script available, yet, and therefore no grammar bootstrap.
 @echo ON
 rd /S /Q bootstrap.%BOOST_JAM_TOOLSET%
 md bootstrap.%BOOST_JAM_TOOLSET%
+@if not exist jamgram.y goto Bootstrap_GrammarPrep
+@if not exist jamgramtab.h goto Bootstrap_GrammarPrep
+@goto Skip_GrammarPrep
+:Bootstrap_GrammarPrep
+%BOOST_JAM_CC% %BOOST_JAM_OPT_YYACC% %YYACC_SOURCES%
+@if not exist ".\bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe" goto Skip_GrammarPrep
+".\bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe" jamgram.y jamgramtab.h jamgram.yy
+:Skip_GrammarPrep
+@if not exist jamgram.c goto Bootstrap_GrammarBuild
+@if not exist jamgram.h goto Bootstrap_GrammarBuild
+@goto Skip_GrammarBuild
+:Bootstrap_GrammarBuild
+@ECHO OFF
+@setlocal & endlocal
+@call :Test_Path yacc.exe
+@if not errorlevel 1 (set YACC=yacc -d)
+@setlocal & endlocal
+@call :Test_Path bison.exe
+@if not errorlevel 1 ( if "_%YACC%_" == "__" (set YACC=bison -y -d --yacc) )
+@if "_%YACC%_" == "__" goto Skip_GrammarBuild
+@echo ON
+%YACC% jamgram.y
+rename y.tab.c jamgram.c
+rename y.tab.h jamgram.h
+:Skip_GrammarBuild
+@echo ON
 @if exist jambase.c goto Skip_Jambase
-%JAM_CC% %BOOST_JAM_MKJAMBASE_OPT%
+%BOOST_JAM_CC% %BOOST_JAM_OPT_MKJAMBASE% %MKJAMBASE_SOURCES%
 @if not exist ".\bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe" goto Skip_Jambase
 ".\bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe" jambase.c Jambase
 :Skip_Jambase
