@@ -29,6 +29,7 @@ feature debug-symbols : on off : propagated ;
 feature define : : free ;
 feature "include" : : free path ;
 feature cxxflags : : free ;
+feature version : : free ;
 
 feature dependency : : free dependency ;
 feature library : : free dependency ;
