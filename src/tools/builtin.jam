@@ -512,6 +512,8 @@ rule link-action ( targets + : sources * : action-name : properties * )
 {
     action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
     import path ;
+    import sequence ;
+
     
     # Find all libraries in sources, and <library> properties
     # For each source/property-value, which is instance of searched-lib-target,

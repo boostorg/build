@@ -8,6 +8,7 @@ import feature ;
 import errors ;
 import type ;
 import class : class new ;
+import generators ;
 
 # Initialized the QT support module. The 'prefix' parameter 
 # tells where QT is installed. When not given, environmental
@@ -38,7 +39,7 @@ rule init ( prefix ? )
         .prefix = $(prefix) ;
         
         feature.extend uses : qt ;
-        feature.action <uses>qt : qt.add-properties ;            
+        feature.action <uses>qt : add-properties ;            
         
         generators.register-standard qt.moc : H : CPP(moc_%) : <uses>qt ;    
         
@@ -77,7 +78,7 @@ rule init ( prefix ? )
     }
 }
 
-rule qt.add-properties ( property : properties * )
+rule add-properties ( property : properties * )
 {
     local lib-name ;
     if <threading>multi in $(properties)
