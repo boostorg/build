@@ -106,7 +106,7 @@ rule evaluate-conditionals-in-context ( properties * : context * )
     for local p in $(conditionals)
     {
         # Separate condition and property
-        local s = [ MATCH ([^:]*):(.*) : $(p) ] ;
+        local s = [ MATCH (.*):(<.*) : $(p) ] ;
         # Split condition into individual properties
         local c = [ regex.split $(s[1]) "," ] ;
         # Evaluate condition
@@ -121,6 +121,35 @@ rule evaluate-conditionals-in-context ( properties * : context * )
 rule evaluate-conditionals ( properties * )
 {
     return [ evaluate-conditionals-in-context $(properties) : $(properties) ] ;
+}
+
+rule expand-subfeatures-in-conditions ( properties * )
+{
+    local result ;
+    for local p in $(properties)
+    {
+        local s = [ MATCH ([^:]*):(<.*) : $(p) ] ;        
+        if ! $(s)
+        {
+            result += $(p) ;
+        }
+        else
+        {
+            local condition = $(s[1]) ;
+            local value = $(s[2]) ;
+            local e = [ feature.expand-subfeatures $(condition) ] ;
+            if $(e) = $(condition)
+            {
+                result += $(p) ;
+            }
+            else
+            {
+                local individual-subfeatures = [ set.difference $(e) : $(condition) ] ;
+                result += $(individual-subfeatures:J=,):$(value) ;
+            }            
+        }        
+    }    
+    return $(result) ;
 }
 
 
@@ -312,7 +341,8 @@ rule select ( features * : properties * )
 
 # Returns a modified version of properties with all values of the
 # given feature replaced by the given value.
-rule change ( properties * : feature value )
+# If 'value' is empty the feature will be removed
+rule change ( properties * : feature value ? )
 {
     local result ; 
     for local p in $(properties)
