@@ -352,7 +352,7 @@ actions capture-output bind INPUT_FILES output-file
     $(ENDIF)
     $(SHELL_SET)verbose=$(VERBOSE_TEST)
     if $(STATUS_NOT_0)
-        $(SHELL_SET)verbose=0
+        $(SHELL_SET)verbose=1
     $(ENDIF)
     if $(VERBOSE)
         echo ====== BEGIN OUTPUT ======
