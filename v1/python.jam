@@ -118,7 +118,7 @@ else if $(UNIX)
     else if $(OS) = AIX
     {
         PYTHON_PROPERTIES 
-          += <*><*><linkflags>"-bI:$(PYTHON_LIB_PATH)/python.exp"
+          += <*><*><linkflags>"-Wl,bI:$(PYTHON_LIB_PATH)/python.exp"
             <*><*><find-library>pthreads ;
     }
 }
