@@ -23,12 +23,11 @@ import type ;
 import modules path project ;
 import xsltproc : xslt xslt-dir ;
 
-feature.feature xsl:param : : free ;
 feature.feature format : html onehtml man pdf ps docbook fo tests
   : incidental implicit composite ;
 
 type.register DTDXML : dtdxml ;
-type.register XML : xml ;
+type.register XML : xml : : main ;
 type.register DOCBOOK : docbook ; 
 type.register HTML : html ;
 type.register FO : fo ;
@@ -85,6 +84,11 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? )
       .boostbook-xsl-dir = [ path.join $(boost-root-path) tools boostbook xsl/ ] ;
       .boostbook-dtd-dir = [ path.join $(boost-root-path) tools boostbook dtd/ ] ;
     }
+    else
+    {
+        errors.error 
+          "Boost root is not specified. Don't know where to find BoostBook files." ;
+    }        
   }
 }
 
@@ -212,7 +216,6 @@ rule xml-catalog-action ( target : property-set ? : catalog-entries * )
       print.text $(text) : true ;
 
 #      ALWAYS $(actual) ;
-      TEMPORARY $(actual) ;
       NOUPDATE $(actual) ;
     }
   }
@@ -269,7 +272,7 @@ rule boostbook-target-class ( name : project : sources * : requirements *
       case ps      : type = PS ;
       case tests   : type = TESTS ;
     }
- 
+    
     if $(manifest)
     {
       local base-target = [ generators.construct $(self.project) 
@@ -315,6 +318,8 @@ rule boostbook ( target-name : sources * : requirements * : default-build * )
     ] ;
 }
 
+IMPORT $(__name__) : boostbook : : boostbook ;
+
 #############################################################################
 # Dependency scanners
 #############################################################################
@@ -328,6 +333,7 @@ rule xinclude-scanner ( includes * )
   import scanner ;
 
   scanner.__init__ ;
+  self.includes = $(includes) ;
 
   rule pattern ( )
   {
@@ -338,13 +344,10 @@ rule xinclude-scanner ( includes * )
   {
     local target_path = [ path.native [ path.parent [ path.make
                           [ virtual-target.binding $(target) ] ] ] ] ;
-
-    for local i in $(matches) 
-    {
-      local i2 = [ SEARCH_FOR_TARGET $(i) : $(target_path) ] ;
-      INCLUDES $(target) : $(i2) ;
-    }
-
+      
+    INCLUDES $(target) : $(matches) ;
+    SEARCH on $(matches) = $(target_path) $(self.includes:G=) ;
+    
     BINDRULE on $(matches) = virtual-target.remember-binding ;
 
     for local j in $(matches)
@@ -355,7 +358,7 @@ rule xinclude-scanner ( includes * )
 }
 
 class xinclude-scanner : scanner ;
-scanner.register xinclude-scanner ;
+scanner.register xinclude-scanner : xsl:path ;
 type.set-scanner XML : xinclude-scanner ;
 
 #############################################################################

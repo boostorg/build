@@ -6,9 +6,16 @@
 
 #  This module defines rules to apply an XSLT stylesheet to an XML file 
 #  using the xsltproc driver, part of libxslt.
+#
+#  Note: except for 'init', this modules does not provide any rules
+#  for end users. 
 
 import feature ;
 import regex ;
+import common ;
+
+feature.feature xsl:param : : free ;
+feature.feature xsl:path : : free ;
 
 # Initialize xsltproc support. The parameters are:
 #   xsltproc: The xsltproc executable
@@ -26,60 +33,54 @@ rule init ( xsltproc ? )
   }
 }
 
-rule xslt ( target : source stylesheet : properties * )
-{ 
+rule compute-xslt-flags ( target : properties * )
+{
   local flags ;
+  # Translate <xsl:param> into command line flags.  
   for local param in [ feature.get-values <xsl:param> : $(properties) ]
   {
     local namevalue = [ regex.split $(param) "=" ] ;
     flags += --stringparam $(namevalue[1]) $(namevalue[2]) ;
   }
+  # Translate <xsl:path>
+  for local path in [ feature.get-values <xsl:path> : $(properties) ] 
+  {
+    flags += --path $(path:G=) ;
+  }
+        
+  return $(flags) ;
+}
+
+
+rule xslt ( target : source stylesheet : properties * )
+{ 
   STYLESHEET on $(target) = $(stylesheet) ;
-  FLAGS on $(target) = $(flags) ;
+  FLAGS on $(target) = [ compute-xslt-flags $(target) : $(properties) ] ;
   NAME on $(target) = $(.xsltproc) ;
+    
+  CATALOG = [ common.variable-setting-command "XML_CATALOG_FILES" "catalog.xml" ] ;  
   xslt-xsltproc $(target) : $(source) ;
 }
 
 rule xslt-dir ( target : source stylesheet : properties * : dirname )
-{ 
-  local flags ;
-  for local param in [ feature.get-values <xsl:param> : $(properties) ]
-  {
-    local namevalue = [ regex.split $(param) "=" ] ;
-    flags += --stringparam $(namevalue[1]) $(namevalue[2]) ;
-  }
-
+{   
   STYLESHEET on $(target) = $(stylesheet) ;
-  FLAGS on $(target) = $(flags) ;
+  FLAGS on $(target) = [ compute-xslt-flags $(target) : $(properties) ] ;
   DIRECTORY on $(target) = $(dirname) ;
   NAME on $(target) = $(.xsltproc) ;
+  CATALOG = [ common.variable-setting-command "XML_CATALOG_FILES" "catalog.xml" ] ;      
   xslt-xsltproc-dir $(target) : $(source) ;
 }
-if [ modules.peek : NT ]
-{
-  actions xslt-xsltproc
-  {
-    set XML_CATALOG_FILES=catalog.xml
-    $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
-  }
 
-  actions xslt-xsltproc-dir
-  {
-    set XML_CATALOG_FILES=catalog.xml
-    $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
-  }
+
+actions xslt-xsltproc
+{
+  $(CATALOG) $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
 }
-else
-{
-  actions xslt-xsltproc
-  {
-    XML_CATALOG_FILES=catalog.xml $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
-  }
 
-  actions xslt-xsltproc-dir
-  {
-    XML_CATALOG_FILES=catalog.xml $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
-  }
+actions xslt-xsltproc-dir
+{
+  $(CATALOG) $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
 }
 
 IMPORT $(__name__) : xslt : : xslt ;
