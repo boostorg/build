@@ -1,3 +1,5 @@
+module build-system { rule __dummy { } } # Keep the bogus assertion in Jambase happy
+ 
 import project ;
 import targets ;
 import assert ;
