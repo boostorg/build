@@ -772,8 +772,17 @@ class basic-target : abstract-target
     rule match ( property-set )
     {    
         local condition = [ $(self.requirements).base ] ;
+        local condition2 ;
         # Weed out conditional properties.
-        condition = [ MATCH ^([^:]*)\$ : $(condition) ] ;
+        for local c in $(condition)
+        {
+            if [ MATCH ^([^:]*)\$ : $(c:G=) ]
+            {
+                condition2 += $(c) ;
+            }
+        }
+        condition = $(condition2) ;
+        
         if $(condition) in [ $(property-set).raw ] 
         {
             return $(condition) ;
