@@ -321,6 +321,8 @@ rule initialize (
         #
         local project-root-module = [ project-roots.load $(location) ] ;
         local project-root = [ $(project-root-module).project-root get-location ] ;
+        
+        $(attributes).set project-root-module : $(project-root-module) : exact ;
 
         local parent = [ find-jamfile $(location) $(project-root) ] ;
         local parent-module = ;
@@ -561,7 +563,6 @@ rule use ( id : location )
 # This module defines rules common to all projects
 module project-rules
 {
-
     rule project ( id ? : options * : * )
     {
         import project ;

@@ -106,6 +106,7 @@ tests = [ "project_test1",
           "suffix",
           "inherit_toolset",
           "skipping",
+          "project_root",
 	  ]
 
 if os.name == 'posix':
