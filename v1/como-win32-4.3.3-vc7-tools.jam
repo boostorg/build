@@ -10,26 +10,25 @@
 #//<a href="http://www.comeaucomputing.com/">Comeau<br>C++</a>
 
 {
-include-tools vc7 ;
-C++FLAGS =  ;
-CFLAGS =  ;
-DEFINES =  ;
-UNDEFS = ;
-HDRS =   ;
-STDHDRS =  ;
-LINKFLAGS =  ;
-ARFLAGS =  ;
-NO_WARN =  ;
-STDHDRS =  ;
-STDLIB_PATH = ;
-LIBPATH = ;
-NEEDLIBS =  ;
-FINDLIBS =  ;
+    include-tools vc7 ;
+    C++FLAGS =  ;
+    CFLAGS =  ;
+    DEFINES =  ;
+    UNDEFS = ;
+    HDRS =   ;
+    STDHDRS =  ;
+    LINKFLAGS =  ;
+    ARFLAGS =  ;
+    NO_WARN =  ;
+    STDHDRS =  ;
+    STDLIB_PATH = ;
+    LIBPATH = ;
+    NEEDLIBS =  ;
+    FINDLIBS =  ;
 
-COMO_BASE = $(COMO_4_3_3_BASE) ;
+    COMO_BASE = $(COMO_4_3_3_BASE) ;
 
-extends-toolset como-win32 ;
+    extends-toolset como-win32 ;
 
-
-C++FLAGS += -DBOOST_DISABLE_WIN32 --wchar_t ;
+    C++FLAGS += -DBOOST_DISABLE_WIN32 --wchar_t ;
 }

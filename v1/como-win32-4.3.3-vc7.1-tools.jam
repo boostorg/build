@@ -10,6 +10,7 @@
 #//<a href="http://www.comeaucomputing.com/">Comeau<br>C++</a>
 
 {
+    include-tools vc7.1 ;
     local COMO_BACKEND = "vc71" ;
     local COMO_BACKEND_PATH = $(VC71_ROOT) ;
 
