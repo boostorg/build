@@ -216,7 +216,7 @@ rule xml-catalog-action ( target : property-set ? : catalog-entries * )
       print.text $(text) : true ;
 
 #      ALWAYS $(actual) ;
-      NOUPDATE $(actual) ;
+      TEMPORARY $(actual) ;
     }
   }
 }
