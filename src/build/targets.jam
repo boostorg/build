@@ -823,12 +823,8 @@ class basic-target : abstract-target
         return $(rproperties) ;
     }
 
-    # Generate all sources for this target. For each source, the return value will
-    # contain a list of virtual targets generated from the source, followed by 
-    # <@>source-name element. 
-    # IOW, virtual targets which come from different sources are separated 
-    # The first element in return value is always property-set with usage requirements
-    # of all generated targets.
+    # Generate all sources for this target. Returns property-set with 
+    # usage requirements, followed by the list of virtual targets.
     local rule generate-sources ( property-set )
     {      
         local usage-requirements = [ property-set.empty ] ;
@@ -845,7 +841,6 @@ class basic-target : abstract-target
                         
             usage-requirements = [ $(usage-requirements).add $(more-targets[1]) ] ;
             source-targets += $(more-targets[2-]) ;            
-            source-targets += <@>$(s) ;
         } 
         return $(usage-requirements) $(source-targets) ;
     }
@@ -891,21 +886,12 @@ class basic-target : abstract-target
                 local deps = [ $(rproperties).dependency ] ;
                 check-for-link-compatibility $(deps:G=) : $(property-set) ;
                                             
-                local source-target-groups = [ generate-sources $(rproperties) ] ;
+                local source-targets = [ generate-sources $(rproperties) ] ;
                 
                 usage-requirements = 
-                  [ $(usage-requirements).add $(source-target-groups[1]) ] ;
-                source-target-groups = $(source-target-groups[2-]) ;
+                  [ $(usage-requirements).add $(source-targets[1]) ] ;
+                source-targets = $(source-targets[2-]) ;
                                 
-                local source-targets = ;
-                for local s in $(source-target-groups)
-                {
-                    if $(s:G) != <@>
-                    {                        
-                        source-targets += $(s) ;
-                    }
-                }
-                            
                 rproperties = [ $(rproperties).add $(usage-requirements) ] ;
 
                 local tagged-name = [ tag-name $(self.name) : $(rproperties) ] ;
@@ -916,7 +902,7 @@ class basic-target : abstract-target
                 local result = 
                   [ construct $(source-targets) : $(rproperties) ] ;
                 check-for-unused-sources 
-                  $(result) : $(source-target-groups) ;
+                  $(result) : $(source-targets) ;
 
                 local s = [ create-subvariant $(result) : $(property-set) : $(source-targets)
                   : $(rproperties) : $(usage-requirements) ] ;
@@ -981,43 +967,30 @@ class basic-target : abstract-target
     }
     
         
-    # Check that 'result' makes use of all the 'sources', i.e. Specifically,
-    # that for all specified sources, at least one virtual target is either
-    # present in result directly, or as dependency of some returned virtual
-    # target. If this is not the case, issues a warning. 
+    # Check that each source virtual target is either directly present in the
+    # result, or is in dependency graph of some returned virtual target. 
+    # If this is not the case, issues a warning. 
     # Note that 'result' *can* be empty. For
     # example, in this use case:
     #    alias platform-sources ;
     #    alias platform-sources : a.cpp : <os>NT ;
     # result will be empty in the first case.
-    local rule check-for-unused-sources ( result * : source-groups * )
+    local rule check-for-unused-sources ( result * : sources * )
     {
         local used-sources ;
         for local r in $(result)
         {
             used-sources += [ virtual-target.traverse $(r) : include-roots : 1 ] ;
         }
-               
-        local group ;
-        for local s in $(source-groups)
+        
+        local unused = [ set.difference $(sources) : $(used-sources) ] ;
+        if $(unused)
         {
-            if $(s:G) != <@>
-            {
-                group += $(s) ;
-            }
-            else
-            {
-                
-                # We've collected a group of targets that originates from single
-                # dependency main target, and must check that at least one of them
-                # is used. If no targets were created for dependency, it's OK.                
-                if $(group) && ! [ set.intersection $(group) : $(used-sources) ] 
-                {
-                    errors.warning "Unused source" $(s:G=) "in main target" [ full-name ] ;                    
-                }
-                group = ;
-            }                        
-        }        
+            for local u in $(unused)
+            {               
+                errors.warning "Unused source" [ $(u).str ] "in main target" [ full-name ] ;                    
+            }                            
+        }                                                       
     }
     
     # Checks if 'targets' are link-compatible with 'build-request' and
