@@ -26,7 +26,7 @@ rule create ( raw-properties * )
 LIST *property_set_create( PARSE *parse, FRAME *frame )
 {
     LIST* properties = lol_get( frame->args, 0 );    
-    LIST* sorted = list_short(properties);
+    LIST* sorted = list_sort(properties);
     LIST* unique = list_unique(sorted);
 
     LIST* val;
@@ -63,8 +63,10 @@ LIST *property_set_create( PARSE *parse, FRAME *frame )
     }
     
     string_free(var);
+    /* The 'unique' is freed in 'frame_free' class. */
     list_free(sorted);
-    list_free(unique);
+
+
 
     return val;
 
