@@ -296,7 +296,7 @@ generators.register
         converted to the right types to actually create the result.
       </para>
 
-      <para>The <code>generated-target</code> method can be overrided when you
+      <para>The <code>generated-target</code> method can be overridden when you
         want to add additional properties to the generated targets or use
         additional sources. For example (which is real), you have a tool for
         analysing programs, which should be given a name of executable and the
@@ -420,14 +420,19 @@ actions inline-file
       </para>
 
       <para>
-        There are two approaches: using a generic
-        feature which is passed to the tool, and using a more specific feature
-        which is translated to a specific options. For example, with a C++
-        compiler it's possible to pass either <code>&lt;cxxflags&gt;-O3</code>
-        or <code>&lt;optimization&gt;speed</code>. A generic feature is
-        almost always should be defined, to provide a "back door" for the
-        user. Specific features, however, are preferred for a couple of
-        reasons:
+        There are two ways to control a tool using features. The
+        first is to declare a "generic" feature, which value is passed to the
+        tool without modification. For example, the value of the
+        <code>cxxflags</code> feature ends up in the compiler's command
+        line. Such a generic feature allows the user to get full control and
+        should be always provided when you write a tool.
+      </para>
+
+      <para>The second approach is to declare a more specific feature, 
+        which is directly translated to specific options. For example, 
+        the <code>&lt;optimization&gt;speed</code> property might add
+        <literal>-O3</literal> to the compiler's command line. Specific
+        features are preferred over generic for a couple of reasons:
 
         <itemizedlist>
           <listitem>
@@ -452,8 +457,10 @@ actions inline-file
       <para>Adding a feature requires three steps:
 
         <orderedlist>
-          <listitem><para>Declaring a feature. For that, the "feature.feature" rule is used. You
-              should have to decide on the set of feature attributes:
+          <listitem><para>Declaring a feature. For that, the "feature.feature"
+              rule is used. You should have to decide on the set of <link
+              linkend="bbv2.reference.features.attributes">feature
+              attributes</link>:
 
               <itemizedlist>
                 <listitem><para>if feature has several values, and
@@ -476,7 +483,7 @@ actions inline-file
 
           <listitem><para>Converting the feature value into variable. To use
               feature in build action, it must be converted into a variable,
-              acessible in build action. This is accomplished by
+              accessible in build action. This is accomplished by
               "toolset.flags" rule.</para></listitem>
 
       
@@ -491,7 +498,7 @@ actions inline-file
 
       <para>Here's an another example.
         Let's see how we can make a feature which refers to a target. For example,
-        when linking dynamic libraries on windows, one sometimes needs to specific
+        when linking dynamic libraries on windows, one sometimes needs to specify
         "DEF file", telling what functions should be exported. It would be nice to
         use this file like this:
 <programlisting>
@@ -588,15 +595,15 @@ feature.compose &lt;parallelism&gt;fake : &lt;library&gt;/mpi//fake/&lt;parallel
     <title>Main target rules</title>
     <para>
       The main target rule is what creates a top-level target, for example "exe" or
-      "lib". It's quite likely that's you'll want to declare your own and
-      there are as much as three way to do that.
+      "lib". It's quite likely that you'll want to declare your own and
+      there are as many as three ways to do that.
     </para>
     
     <para>The first is the simplest, but is sufficient in a number of
-      case. Just write a wrapper rule, which will redirect to any of existing
-      rules. For example, you have only one library per directory and want all
-      cpp files in the directory to be compiled. You can achieve this effect
-      with:
+      cases. Just write a wrapper rule, which will redirect to any of the
+      existing rules. For example, you have only one library per directory and
+      want all cpp files in the directory to be compiled. You can achieve this
+      effect with:
 <programlisting>
 lib codegen : [ glob *.cpp ] ;
 </programlisting>
@@ -631,7 +638,7 @@ generators.register-standard obfuscate.file : CPP : OBFUSCATED_CPP ;
     </para>
 
     <para>
-      The remaining method is to declared your own main target class. The
+      The remaining method is to declare your own main target class. The
       simplest example of this can be found in "build/alias.jam" file. The
       current V2 uses this method when transformations are relatively
       complex. However, we might deprecate this approach. If you find that you

@@ -176,7 +176,7 @@ using gcc : 3.4 : : &lt;compileflags&gt;-m64 &lt;linkflags&gt;-m64 ;
       </para>
 
       <para>In addition to Jamfiles, Boost.Build has another user-editable
-        file, project-root.jam, which is mostly usefull to declare constants
+        file, project-root.jam, which is mostly useful to declare constants
         global to all the projects. It is described in more detail <link
         linkend="bbv2.advanced.project-root">below</link>.
       </para>
@@ -355,8 +355,15 @@ function-name main-target-name
         </listitem>
       </itemizedlist>
 
-      <para>Some main target rules have shorter list of parameters, and
-        you should consult their documentation for details.</para>
+      <para>Note that the actual requirements, default-build and
+        usage-requirements attributes for a target are obtained by combining
+        the explicitly specified one with those specified for the project
+        where a target is declared.
+      </para>
+      <para>          
+        Some main target rules have shorter list of parameters, and
+        you should consult their documentation for details.
+      </para>
       
       <para>The list of sources specifies what should be processed to get
         the resulting targets. Most of the time, it's just a list of
@@ -402,6 +409,60 @@ exe c : c.cpp /boost/program_options//program_opions ;
         necessary for this main target. 
       </section>
 -->
+      <para>Requirements are the properties that should always be present when
+        building a target. Typically, they are includes and defines:
+<programlisting>
+exe hello : hello.cpp : &lt;include&gt;/opt/boost &lt;define&gt;MY_DEBUG ;
+</programlisting>
+        In special circumstances, other properties can be used, for example if
+        a library does not work if it's shared, or a file can't be compiled
+        with optimization due to a compiler bug, one can use
+<programlisting>
+lib util : util.cpp : &lt;link&gt;static ;
+obj main : main.cpp : &lt;optimization&gt;off ;
+</programlisting>                
+      </para>
+
+      <para>Sometimes, requirements are necessary only for a specific
+        compiler, or build variant. The 
+        <link linkend="v2.reference.variants.propcond">conditional
+        properties</link> can be used in that case:
+<programlisting>
+lib util : util.cpp : &lt;toolset&gt;msvc:&lt;link&gt;static ;
+</programlisting>
+        In means when whenever <code>&lt;toolset&gt;msvc</code> property is
+        in build properties, the <code>&lt;link&gt;static</code> property will
+        be included as well. The conditional requirements can be "chained":
+<programlisting>
+lib util : util.cpp : &lt;toolset&gt;msvc:&lt;link&gt;static 
+                      &lt;link&gt;static:&lt;define&gt;STATIC_LINK ;
+</programlisting>
+        will set of static link and the <code>STATIC_LINK</code> define on the
+        <code>msvc</code> toolset.
+      </para>
+
+      <para>The default-build attribute is
+        a set of properties which should be used if build request does not
+        specify a value. For example:
+<programlisting>
+exe hello : hello.cpp : : &lt;threading&gt;multi ;
+</programlisting>
+        would build the target in multi-threaded mode, unless the user
+        explicitly requests single-threaded version. The difference between
+        requirements and default-build is that requirements cannot be
+        overriden in any way.
+      </para>
+
+      <para>A target of the same name can be declared several times. In that
+        case is declaration is called an
+        <firstterm>alternative</firstterm>. When the target is build, one of
+        the alternatives will be selected and use. Alternatives need not be
+        defined by the same main target rule. The following is OK:
+<programlisting>
+lib helpers : helpers.hpp ;
+alias helpers : helpers.lib : &lt;toolset&gt;msvc ;
+</programlisting>
+      </para>
 
       <para>Building of the same main target can differ greatly from
         platform to platform. For example, you might have different list
@@ -437,7 +498,7 @@ exe hello : hello.cpp
       <title>Projects</title>
 
       <para>As mentioned before, targets are grouped into project, and each
-        Jamfile is a separate project. Projects are usefull because it allows
+        Jamfile is a separate project. Projects are useful because it allows
         to group related targets together, define properties common to all
         those targets, and assign a symbolic name to the project, allowing to
         easily refer to the targets in the project. Two last goals are
@@ -720,27 +781,135 @@ should be absolute project id.
   <section id="bbv2.advanced.build_process">
     <title>Build process</title>
 
-  <para>This section will describe two things: how you specify what to build,
-    and how the main targets are actually build. 
-  </para>
+    <para>When you've described your targets, you want Boost.Build to run the
+      right tools and create the needed targets. This section will describe
+      two things: how you specify what to build, and how the main targets are
+      actually constructed.
+    </para>
 
-  <para>
-    The command line specifies which targets to build and with what
-    properties. For example:
+    <para>The most important thing to note is that in Boost.Build, unlike
+      other build tools, the targets you declare do not correspond to specific
+      files. What you declare in Jamfiles is more like "metatarget". Depending
+      on the properties that you specify on the command line, each
+      "metatarget" will produce a set of real targets corresponding to the
+      requested properties. It is quite possible that the same metatarget is
+      build several times with different properties, and will, of course,
+      produce different files.
+    </para>
+    <tip>
+      <para>
+        This means that for Boost.Build, you cannot directly obtain build
+        variant from Jamfile. There could be several variants requested by the
+        user, and each target can be build with different properties. 
+      </para>
+    </tip>
+
+    <section>
+      <title>Build request</title>
+
+      <para>
+        The command line specifies which targets to build and with what
+        properties. For example:
 <programlisting>
 bjam app1 lib1//lib1 toolset=gcc variant=debug optimization=full
 </programlisting>
-    would build two targets, "app1" and "lib1//lib1" with the specified
-    properties. You can refer to any targets, using 
-    <link linkend="bbv2.reference.ids">target id</link> and specify arbitrary
-    properties. Some of the properties are very common, and for them the name
-    of the property can be omitted. For example, the above can be written as:
+        would build two targets, "app1" and "lib1//lib1" with the specified
+        properties. You can refer to any targets, using 
+        <link linkend="bbv2.reference.ids">target id</link> and specify arbitrary
+        properties. Some of the properties are very common, and for them the name
+        of the property can be omitted. For example, the above can be written as:
 <programlisting>
 bjam app1 lib1//lib1 gcc debug optimization=full
 </programlisting>
-    The complete syntax which has some additional shortcuts if described <link
-    linkend="bbv2.reference.commandline">here</link>.
-  </para>
+        The complete syntax which has some additional shortcuts if described <link
+          linkend="bbv2.reference.commandline">here</link>.
+      </para>
+    </section>
+
+    <section><title>Building a main target</title>
+
+      <para>When you request, directly or indirectly, a build of a main target
+        with specific requirements, the following steps are made. Some brief
+        explanation is provided, and more detailes are given in the <link
+        linkend="bbv2.reference.buildprocess">reference</link>.
+        <orderedlist>
+          
+          <listitem><para>Applying default build. If the default-build
+          property of a target specifies a value of a feature which is not
+          present in the build request, that value is added.</para></listitem>
+          
+          <listitem><para>Selecting the main target alternative to use. For
+              each alternative we look how many properties are present both in
+              alternative's requirements, and in build request. The
+              alternative with large number of matching properties is selected.
+            </para></listitem>
+          
+          <listitem><para>Determining "common" properties. The build request
+              is <link linkend="bbv2.reference.variants.proprefine">refined</link>
+              with target's requirements. The conditional properties in
+              requirements are handled as well. Finally, default values of
+              features are added.
+            </para></listitem>
+          
+          <listitem><para>Building targets referred by the sources list and
+              dependency properties. The list of sources and the properties
+              can refer to other target using <link
+              linkend="bbv2.reference.ids">target references</link>. For each
+              reference, we take all <link
+              linkend="bbv2.reference.features.attributes.propagated">propagated</link>
+              properties, refine them by explicit properties specified in the
+              target reference, and pass the resulting properties as build
+              request to the other target.              
+            </para></listitem>
+          
+          <listitem><para>Adding the usage requirements produces when building
+              dependencies to the "common" properties. When dependencies are
+              built in the previous step, they return both the set of created
+              "real" targets, and usage requirements. The usage requirements
+              are added to the common properties and the resulting property
+              set will be used for building the current target.              
+            </para></listitem>
+          
+          <listitem><para>Building the target using generators. To convert the
+              sources to the desired type, Boost.Build uses "generators" ---
+              objects which correspond to tools like compilers and
+              linkers. Each generator declares what type of targets in can
+              produce and what type of sources it requires. Using this
+              information, Boost.Build determines which generators must be run
+              to produce a specific target from specific sources. When
+              generators are run, they return the "real" targets.
+            </para></listitem>
+          
+          <listitem><para>Computing the usage requirements to be returned. The
+          conditional properties in usage requirements are expanded and the
+          result is returned.</para></listitem>
+        </orderedlist>        
+      </para>
+    </section>
+
+    <section><title>Building a project</title>
+
+      <para>Often, user request a build of a complete project, not just one
+        main target. In fact, invoking <command>bjam</command> without
+        parameters builds the project defined in the current directory.</para>
+
+      <para>When a project is build, the build request is passed without
+        modification to all main targets in that project. It's is possible to
+        prevent implicit building of a target in a project with the
+        <code>explicit</code> rule:
+<programlisting>
+explicit hello_test ;
+</programlisting>
+        would cause the <code>hello_test</code> target to be built only if
+        explicitly requested by the user or by some other target.
+      </para>
+
+      <para>The Jamfile for a project can include a number of
+      <code>build-project</code> rule calls, that specify additional projects
+      to be built.
+      </para>
+
+    </section>
 
   </section>
 
@@ -1171,7 +1340,7 @@ unit-test helpers_test : helpers_test.cpp helpers ;
 
       <para>The <link linkend="bbv2.tutorial.libs">usage requirements</link>
       is also important mechanism to simplify Jamfile. If a library requires
-      all clients to use specific includes, or macroses when compiling the
+      all clients to use specific includes, or macros when compiling the
       code which depends on the library, this information can be cleanly
       represented.</para>
 
