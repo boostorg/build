@@ -376,10 +376,10 @@ rule run-test ( type-to-test run-target : sources * )
         SET_VERBOSE_OPTION on $(run-target) = "set verbose=$(verbose-test)" ;
         SET_VERBOSE on $(run-target) = "set verbose=0" ;
         RUN_OUTPUT_NL on $(run-target) = "echo." ;
-        RUN_OUTPUT_STATUS on $(run-target) = "echo EXIT STATUS: $status" ;
+        RUN_OUTPUT_STATUS on $(run-target) = "echo EXIT STATUS: %status%" ;
         IF_STATUS_0 on $(run-target) = "if %status% EQU 0 (" ;
-        IF_STATUS_NOT_0 on $(run-target) = "if %status NEQ 0 (" ;
-        IF_VERBOSE on $(run-target) = "if %verbose EQU 0 (" ;
+        IF_STATUS_NOT_0 on $(run-target) = "if %status% NEQ 0 (" ;
+        IF_VERBOSE on $(run-target) = "if %verbose% EQU 0 (" ;
         IF_END on $(run-target) = ")" ;
         EXIT_STATUS on $(run-target) = "exit %status%" ;
     }
