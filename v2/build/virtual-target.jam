@@ -984,6 +984,7 @@ local rule clone-action-template ( action from cloned-from : new-source )
 class subvariant
 {
     import sequence ;    
+    import type ;
     
     rule __init__ ( main-target # The instance of main-target class
         : property-set                     # Properties requested for this target
@@ -1071,40 +1072,46 @@ class subvariant
         }
         return $(all-targets) ;                        
     }
-    
-        
-    # Returns a list of properties which contain implicit includes,
-    # needed to handle dependencies of generated headers.
-    # The name of feature is given by 'feature', this is typically 'include'.
-    # The values of feature are all target directories of this dependency graph,
-    # plus target directories of all dependency graphs referred to by
-    # <implicit-dependency> property
-    rule implicit-includes ( feature )
+               
+    # Returns the properties which specify implicit include paths to
+    # generated headers. This traverses all targets in this subvariant,
+    # and subvariants referred by <implcit-dependecy>properties.
+    # For all targets which are of type 'target-type' (or for all targets,
+    # if 'target-type' is not specified), the result will contain
+    # <$(feature)>path-to-that-target.
+    rule implicit-includes ( feature : target-type ? )
     {
-        local target-paths = [ all-target-directories ] ;    
+        local target-paths = [ all-target-directories $(target-type) ] ;    
         target-paths = [ sequence.unique $(target-paths) ] ;
         return $(target-paths:G=$(feature)) ;        
     }
         
-    rule all-target-directories ( )
+    rule all-target-directories ( target-type ? )
     {
         if ! $(self.target-directories)
         {
-            compute-target-directories ;
+            compute-target-directories $(target-type) ;
         }                
         return $(self.target-directories) ;
     }
     
-    rule compute-target-directories ( )
+    rule compute-target-directories ( target-type ? )
     {        
         local result ;
         for local t in $(self.created-targets)
         {
-            result = [ sequence.merge $(result) : [ $(t).path ] ] ;
+            if $(target-type) && ! [ type.is-derived [ $(t).type ] $(target-type) ] 
+            {
+                # Skip target which is of wrong type.
+            }
+            else
+            {                
+                result = [ sequence.merge $(result) : [ $(t).path ] ] ;
+            }            
         }
         for local d in $(self.other-dg)
         {
-            result += [ $(d).all-target-directories ] ;
+            result += [ $(d).all-target-directories $(target-type) ] ;
         }
         self.target-directories = $(result) ;
     }   
