@@ -137,6 +137,9 @@ toolset.flags borland.link FINDLIBS-SA <find-shared-library> ;
 toolset.flags borland.link LIBRARIES <library-file> ;
 toolset.flags borland.link LIBRARIES <library> ;
 
+flags builtin.response-file LIBRARY_PATH_OPTION <toolset>borland : -L : unchecked ;
+flags builtin.response-file LIBRARY_OPTION <toolset>borland : -l : unchecked ;
+
 
 # bcc32 needs to have ilink32 in the path in order to invoke it, so explicitly
 # specifying $(BCC_TOOL_PATH)bcc32 doesn't help. You need to add
@@ -147,7 +150,7 @@ if [ os.name ] = NT
     actions link bind LIBRARIES
     {
         set PATH=$(.root);%PATH%
-        "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)" $(FINDLIBS:S=.lib)
+        "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)"
         $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)$(<[2]) $(NEED_IMPLIB)$(<[1])        
     }
 }
@@ -156,7 +159,7 @@ else
     actions link bind LIBRARIES
     {
         export PATH=$(.root):$PATH
-        "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)" $(FINDLIBS:S=.lib)
+        "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)"
         $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)$(<[2]) $(NEED_IMPLIB)$(<[1])                  
     }
 }

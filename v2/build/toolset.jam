@@ -69,11 +69,14 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
                               #
                               # - empty. 'values' will be added to the variable 
                               #   unconditionally
-             values * )
+             values * :
+             unchecked ?      # If value 'unchecked' is passed, will not test
+                              # that flags are set for the calling module.
+          )
 {
     local module_ = [ MATCH "([^.]*).*" : $(rule-or-module) ] ;
     local caller = [ CALLER_MODULE ] ;
-    if $(module_) != $(caller)
+    if $(unchecked) != unchecked && $(module_) != $(caller)
     {
         errors.error "Module $(caller) attempted to set flags for module $(module_)" ;
     }

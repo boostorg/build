@@ -274,8 +274,8 @@ rule response-file ( target : sources * : properties * )
     print.output $(target) ;
     print.text [ on $(target)
                  return "$(LIBRARY_PATH_OPTION)$(LIBRARY_PATH)"
-                        "$(FINDLIBS_ST:S=.lib)"
-                        "$(FINDLIBS_SA:S=.lib)"
+                        "$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)"
+                        "$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)"
                ] ;
 }
 
@@ -653,7 +653,6 @@ IMPORT $(__name__) : register-linker : : generators.register-linker ;
 declare-type NT CYGWIN : RSP : rsp ;
 if [ os.name ] in NT CYGWIN # must be conditional; we'll error on other OSes
 {
-    flags builtin.response-file LIBRARY_PATH_OPTION : /LIBPATH: ;
     flags builtin.response-file FINDLIBS_ST <find-static-library> ;
     flags builtin.response-file FINDLIBS_SA <find-shared-library> ;
     flags builtin.response-file LIBRARY_PATH <library-path> ;

@@ -171,6 +171,10 @@ toolset.flags msvc.link USER_LINKFLAGS <linkflags> ;
 toolset.flags msvc.link LINKPATH <library-path> ;
 toolset.flags msvc.link FINDLIBS <find-static-library> <find-shared-library> ;
 
+flags builtin.response-file LIBRARY_PATH_OPTION <toolset>msvc : /LIBPATH: : unchecked ;
+flags builtin.response-file LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
+
+
 # incremental linking a DLL causes no end of problems: if the
 # actual exports don't change, the import .lib file is never
 # updated. Therefore, the .lib is always out-of-date and gets
