@@ -226,6 +226,7 @@ rule select-highest-ranked ( elements * : ranks * )
         return $(result) ;
     }    
 }
+NATIVE_RULE sequence : select-highest-ranked ;
 
 
 local rule __test__ ( )
