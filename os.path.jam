@@ -17,7 +17,7 @@ import errors : error ;
 #
 
 os = $(OS) ;
-if $(os) = LINIX {
+if $(UNIX) {
     os = UNIX ;
 }
 
