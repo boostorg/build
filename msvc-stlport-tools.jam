@@ -30,8 +30,15 @@
 # program as the column heading for HTML tables. Must not include version number.
 #//<a href="http://msdn.microsoft.com/vstudio/default.asp">Micro-<br>soft<br>VC++</a><br><a href="http://www.stlport.org/">STLport</a>
 
-# this is simply an extension to the msvc toolset. 
-extends-toolset msvc ;
+{
+    # This is simply an extension to the msvc toolset. However,
+    # STLPort doesn't have any single-threaded builds, so we're going
+    # to force all such targets to be built with multithread support.
+    # This is essentially a usage-requirement on the stlport library.
+    local gBUILD_PROPERTIES = [ difference $(gBUILD_PROPERTIES) : <threading>single ] <threading>multi ;
+    extends-toolset msvc ;
+}
+
 
 MSVC_STDHDRS = $(STDHDRS) ;
 MSVC_STDLIBPATH = $(STDLIBPATH) ;
