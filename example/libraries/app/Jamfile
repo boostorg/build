@@ -1,8 +1,5 @@
 
-lib z : : <name>z_d <link>static ;
-lib z : : <name>z_r <link>shared ;
-
 # Declare a executable file, which uses a library. Note that
 # includes that for library will be automatically used
 # when compiling 'app.cpp'
-exe app : app.cpp ../lib1/lib1 z ; 
+exe app : app.cpp ../lib1/lib1 ; 
