@@ -96,9 +96,9 @@ class stage-target-class : basic-target
         
     # Constructs the targets of types for which a type exists
     # with the form STAGED_*.
-    rule construct-special-targets ( property-set : source : type )
+    rule construct-special-targets ( name : property-set : source : type )
     {
-        local targets = [ generators.construct $(self.project) : $(type) :
+        local targets = [ generators.construct $(self.project) $(name) : $(type) :
             $(property-set) : $(source) : * ] ;
 
         return $(targets[2-]) ;
@@ -106,22 +106,15 @@ class stage-target-class : basic-target
         
     rule construct ( name : source-targets * : property-set )
     {        
-        local name = [ $(property-set).get <name> ] ;
-        if $(name) && $(source-targets[2])
-        {
-            errors.error "<name> property cannot be specified when staging several targets" ;
-        }
-        
         if [ $(property-set).get <traverse-dependencies> ] = "on"
         {
             source-targets = [ collect-targets $(source-targets) 
               : [ $(property-set).get <include-type> ] ] ;
         }
 
-
         property-set = [ update-location $(property-set) ] ;          
         local include-types = [ $(property-set).get <include-type> ] ;
-        
+                               
         local result ;
         for local i in $(source-targets)
         {
@@ -136,12 +129,26 @@ class stage-target-class : basic-target
                 local staged-targets ;
                 
                 local t = [ $(i).type ] ;
-                
+                                
+                local properties = [ property-set.empty ] ;
+                local a = [ $(i).action ] ;                    
+                if $(a)
+                {
+                    properties = [ $(a).properties ] ;
+                }
+                local tag = [ $(property-set).get <tag> ] ;
+                tag = $(tag:G=<tag>) ;
+                local n = [ $(property-set).get <name> ] ;
+                n = $(n:G=<name>) ;
+                properties = [ $(properties).add-raw $(tag) $(n) ] ;                  
+                                        
+                name = [ targets.tag-name [ $(i).name ] : $(properties) ] ;
+                                                                                                                                
                 # See if something special should be done when staging this
                 # type. It is indicated by presense of special "staged" type            
                 if $(t) && [ type.registered STAGED_$(t) ]
                 {
-                    staged-targets = [ construct-special-targets $(property-set) : $(i) : STAGED_$(t) ] ;
+                    staged-targets = [ construct-special-targets $(name) : $(property-set) : $(i) : STAGED_$(t) ] ;
                 }
                 else             
                 {                
@@ -339,7 +346,17 @@ class stage-shared-lib-generator : generator
     
     rule run ( project name ? : property-set : source : multiple ? )
     {
-        if [ $(property-set).get <so-version> ] && [ modules.peek : UNIX ] 
+        local name-changed ;
+        if [ $(property-set).get <so-version> ]
+        {
+            name-changed = true ;
+        }
+        if $(name) != [ $(source).name ]
+        {
+            name-changed = true ;
+        }
+        
+        if $(name-changed) && [ modules.peek : UNIX ] 
         {
             # Need to change the name of the target and relink
             local relinked = 
@@ -347,6 +364,9 @@ class stage-shared-lib-generator : generator
             # FIXME: use hardcoded .so.
             local so-version = [ $(property-set).get <so-version> ] ;
             $(relinked).suffix so.$(so-version) ;
+            # Break into private member of 'virtual-target' and change
+            # the name.
+            modules.poke $(relinked) : self.name : $(name) ;
             return $(relinked) ;
         }
         else
