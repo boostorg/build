@@ -2589,8 +2589,14 @@ rule import ( modules + )
     }
 }
 
-# declare a project's installable sources (raw sources or built targets)
-rule install ( name type : sources + : options * )
+# Declare a project's installable sources (raw sources or built targets)
+#
+rule install (
+    name # The name to refer to these set of targets/sources.
+    type # The type of targets/sources, and therefore their install location.
+    : sources + # The targets and sources to make available for installation.
+    : options *
+    )
 {
     if $(gINSTALL_SOURCES) && ! $(name) in $(gINSTALL_EXCLUSIONS)
     {
@@ -2625,4 +2631,21 @@ rule install-subinclude ( jamfiles + : options * )
 rule install-sources ( type )
 {
     return $(gINSTALL_SOURCES($(type))) ;
+}
+
+# Returns requirements for building libraries with the common
+# naming conventions. To use add a call in the requirements section
+# of the target(s):
+#
+#   [ common-names ]
+#
+rule common-names (
+    version-number ? # Version number for name tag, defaults to $(BOOST_VERSION)
+    )
+{
+    version-number ?= $(BOOST_VERSION) ;
+    local version-tag = [ MATCH "^([^.]+).([^.]+)" : $(version-number) ] ;
+    version-tag = $(version-tag:J="_") ;
+    
+    return common-stage-tag <tag><postfix>-$(version-tag) ;
 }
