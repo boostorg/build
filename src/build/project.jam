@@ -209,7 +209,7 @@ rule module-name ( jamfile-location )
 # declarations.
 #
 JAMFILE = [ modules.peek : JAMFILE ] ;
-JAMFILE ?= [Jj]amfile [Jj]amfile.jam ;
+JAMFILE ?= [Jj]amfile.v2 [Jj]amfile [Jj]amfile.jam ;
 
 # Find the Jamfile at the given location. This returns the exact names of
 # all the Jamfiles in the given directory. The optional parent-root argument
@@ -262,13 +262,24 @@ local rule load-jamfile (
 
     # Multiple Jamfiles found in the same place. Warn about this.
     # And ensure we use only one of them.
+    # As a temporary convenience measure, if there's Jamfile.v2 amount
+    # found files, suppress the warning and use it.
     #
     if $(jamfile-to-load[2-])
     {
-        ECHO
-          "WARNING: Found multiple Jamfiles at this '"$(dir)"' location!"
-            "Loading the first one: '" [ path.basename $(jamfile-to-load[1]) ]  "'." ;
-        
+        local v2-jamfiles = [ MATCH (.*[Jj]amfile\\.v2) : $(jamfile-to-load) ] ;
+
+        if $(v2-jamfiles) && ! $(v2-jamfiles[2])
+        {
+            jamfile-to-load = $(v2-jamfiles) ;
+        }        
+        else
+        {                    
+            ECHO
+              "WARNING: Found multiple Jamfiles at this '"$(dir)"' location!"
+                "Loading the first one: '" [ path.basename $(jamfile-to-load[1]) ]  "'." ;
+        }
+                    
         jamfile-to-load = $(jamfile-to-load[1]) ;
     }
     
@@ -622,7 +633,7 @@ module project-rules
         local location = [ project.attribute $(__name__) location ] ;
         local all-paths = [ path.glob $(location) : $(wildcards) ] ;
         return $(all-paths:D="") ;
-    }    
+    }        
 }
 
 
