@@ -1,0 +1,8 @@
+
+project /boost-build-test-project-1
+    : requirements <threading>multi <include>/home/ghost/local/include ;
+
+exe foo : foo.cpp ;
+
+subinclude dir2 ;
+subinclude dir ;

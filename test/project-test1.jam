@@ -1,0 +1,43 @@
+
+
+SEARCH on <module@>modules.jam = $(BOOST_BUILD_PATH) ;
+module modules { include <module@>modules.jam ; }
+# Bring the import rule into the global module
+IMPORT modules : import : : import ;
+import modules ; # The modules module can tolerate being included twice
+
+
+import project ;
+
+import targets ;
+
+rule exe ( name : sources )
+{
+    local module-name = [ CALLER_MODULE ] ;
+
+    local project-target =
+        [ targets.abstract-target-name [ $(module-name).location ] ] ;
+
+    local exe-target = [ class.new typed-target $(name) : EXE ] ;
+
+    $(project-target).depends $(exe-target) ;
+
+}
+
+IMPORT $(__name__) : exe : : exe ;
+
+project.load project-test1 ;
+
+project.dump ;
+
+for local id in @/cool-library project-test1@/cool-library project-test1@dir {
+    ECHO "Project id" ;
+    ECHO "    $(id)" ;
+    ECHO "resolves to" ;
+    ECHO "   " [ project.lookup $(id) ] ;
+    ECHO "" ;
+}
+
+local target = [ targets.abstract-target-name project-test1 ] ;
+$(target).generate ;
+
