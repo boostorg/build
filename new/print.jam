@@ -1,0 +1,120 @@
+#  Copyright (C) Rene Rivera 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+# Utilities for generating format independent output. Using these
+# will help in generation of documentation in at minimum plain/console
+# and html.
+
+import modules ;
+
+# Generate a section with a description. The type of output can be
+# controlled by the value of the 'output-type' variable. If not set
+# it defaults to 'console' indicating immediate display to the console.
+# Other possible values are: 'html-file'.
+#
+rule section (
+    name # The name of the section.
+    description * # A number of description lines.
+    )
+{
+    local output = $(output-type) ;
+    output ?= console ;
+    if $(output) = console
+    {
+        ECHO $(name): ;
+        ECHO ;
+        if $(description)
+        {
+            echo-with-wordwrap " " $(description) : "  " ;
+            ECHO ;
+        }
+    }
+}
+
+# Generate the start of a list of items. The type of output can be
+# controlled by the value of the 'output-type' variable. If not set
+# it defaults to 'console' indicating immediate display to the console.
+# Other possible values are: 'html-file'.
+#
+rule list-start ( )
+{
+    local output = $(output-type) ;
+    output ?= console ;
+    if $(output) = console
+    {
+    }
+}
+
+# Generate an item in a list. The type of output can be
+# controlled by the value of the 'output-type' variable. If not set
+# it defaults to 'console' indicating immediate display to the console.
+# Other possible values are: 'html-file'.
+#
+rule list-item (
+    item + # The item to list.
+    )
+{
+    local output = $(output-type) ;
+    output ?= console ;
+    if $(output) = console
+    {
+        echo-with-wordwrap "*" $(item) : "  " ;
+    }
+}
+
+# Generate the end of a list of items. The type of output can be
+# controlled by the value of the 'output-type' variable. If not set
+# it defaults to 'console' indicating immediate display to the console.
+# Other possible values are: 'html-file'.
+#
+rule list-end ( )
+{
+    local output = $(output-type) ;
+    output ?= console ;
+    if $(output) = console
+    {
+        ECHO ;
+    }
+}
+
+# Echo to console the given text word-wrapping to a 78 character margin.
+#
+rule echo-with-wordwrap (
+    text + # The text to echo.
+    : indent ? # An optional indentation applied to wrapped lines.
+    )
+{
+    text = $(text:J=" ") ;
+    indent ?= "" ;
+    local use-indent = "" ;
+    local char-match =
+        ".?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?" ;
+    while $(text)
+    {
+        local s = "" ;
+        local t = "" ;
+        # divide s into the first 78 characters and the rest
+        s = [ MATCH "^($(char-match))(.*)" : $(text) ] ;
+        
+        if $(s[2])
+        {
+            # split the first half at a space
+            t = [ MATCH "^(.*)[\\ ]([^\\ ]*)$" : $(s[1]) ] ;
+        }
+        else
+        {
+            t = $(s) ;
+        }
+        
+        if ! $(t[2])
+        {
+            t += "" ;
+        }
+        
+        text = $(t[2])$(s[2]) ;
+        ECHO $(use-indent)$(t[1]) ;
+        use-indent = $(indent) ;
+    }
+}
