@@ -101,7 +101,7 @@ rule init (
     
     if [ os.name ] = NT
     {
-        setup = $(setup)"  ;
+        setup = $(setup)"
 " ;
     }
     else
