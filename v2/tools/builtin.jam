@@ -71,6 +71,9 @@ feature location : : free path ;
 feature dll-path : : free path ;
 feature hardcode-dll-paths : false true : incidental propagated ;
 
+#provides means to specify def-file for windows dlls.
+feature def-file : : free dependency ;
+
 # This feature is used to allow specific generators to run.
 # For example, QT tools can only be invoked when QT library
 # is used. In that case, <allow>qt will be in usage requirement
