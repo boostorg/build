@@ -10,11 +10,20 @@ Boost Build system TODO
 * Devise a way to transmit paths with spaces through variables NOT ending in
   PATH to Jam. Be sure that toolsets can be invoked through these variables.
 
+* Complete work on using command-files for linking on windows. Neccessary features:
+  1. Factor the response generation code out so it can be re-used
+  2. Make the decision about whether to use command-files on a per-toolset,
+     per-platform basis.
+
+* Correct the support for find-library. I'm not sure what that entails.
+
+* Consider auto-quoting bound paths containing spaces.
+
 DONE * Fix split-path bug which unroots paths on Unix
 
 DONE * move NEEDLIBS to end of link line
 
-* Fix bug with not found Python scripts
+DONE * Fix bug with not found Python scripts
 
 * $(REDIRECT) for toolset invocations:
               Unix: > filename 2>&1 -- puts stdout && stderr in same file
@@ -23,7 +32,7 @@ DONE * move NEEDLIBS to end of link line
 
 * Make it possible to qualify dependencies just like requirements.
 
-* consider eliminating the need for <*>
+* Eliminate the need for <*>
 
 * Support for warnings
 
@@ -50,6 +59,8 @@ needs to be updated by running the executable with stdout redirected to the
 DONE * Support for KCC
 
 DONE * Specific support for GCC-3
+
+* Low-priority: eliminate duplicate header scans.
 
 * Eliminate the need for intermediate dispatching rules (e.g. C++-action) in
 each toolset.

@@ -37,6 +37,8 @@ flags msvc CFLAGS <runtime-build>debug/<runtime-link>static/<threading>single : 
 flags msvc CFLAGS <runtime-build>release/<runtime-link>static/<threading>multi : /MT ;
 flags msvc CFLAGS <runtime-build>debug/<runtime-link>static/<threading>multi : /MTd ;
 
+flags msvc CFLAGS <cflags> ;
+flags msvc C++FLAGS <cxxflags> ;
 flags msvc DEFINES <define> ;
 flags msvc UNDEFS <undef> ;
 flags msvc HDRS <include> ;
@@ -52,22 +54,14 @@ flags msvc LINKFLAGS <target-type>DLL : /DLL ;
 
 rule Link-action
 {
-    if $(COMMAND_FILES)
-    {
-        local command-file = $(<[1]:S=.CMD) ;
-        LOCATE on $(command-file) = $(gLOCATE($(<))) ;
-        COMMAND on $(<) = @ ;
-        msvc-Link-action $(<) : $(command-file) ;
+    local command-file = $(<[1]:S=.CMD) ;
+    LOCATE on $(command-file) = $(gLOCATE($(<))) ;
+    COMMAND on $(<) = @ ;
+    msvc-Link-action $(<) : $(command-file) ;
 
-        list-files $(command-file) : $(>) ;
-        DEPENDS $(<) : $(command-file) ;
-        RmTemps $(<[1]) : $(command-file) ;
-    }
-    else
-    {
-        COMMAND on $(<) = "" ;
-        msvc-Link-action $(<) : $(>) ;
-    }
+    list-files $(command-file) : $(>) ;
+    DEPENDS $(<) : $(command-file) ;
+    RmTemps $(<[1]) : $(command-file) ;
 }
 
 actions together msvc-Link-action bind NEEDLIBS
