@@ -6,4 +6,4 @@ exe f : a.cpp b.cxx obj_1 obj_2 lib/auxilliary ;
 obj obj_1 : z.cpp : <define>SELECT=1 ;
 obj obj_2 : z.cpp : <define>SELECT=2 ;
 
-nm_exe e : e.cpp ;
+nm-exe e : e.cpp ;

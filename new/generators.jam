@@ -90,7 +90,7 @@ rule normalize-target-list ( targets )
 # Creates a generator
 rule generator ( 
       id # identifies the generator - should be name of the rule which
-	 # sets up build actions
+     # sets up build actions
     
     : source-types +  # types that this generator can handle
     
@@ -565,7 +565,9 @@ local rule find-viable-generators ( target-type : properties * )
     local generator-rank = ;
 
     import type ;
-    local t = [ type.all-bases $(target-type) ] ;
+    #VP: the following breaks the NM transformation test.
+    #local t = [ type.all-bases $(target-type) ] ;
+    local t = $(target-type) ;
     
     while $(t[1])
     {
