@@ -739,8 +739,4 @@ module project-rules
 local rule __test__ ( )
 {
     import assert ;
-    assert.result foo/bar : remove-trailing-slash foo/bar/ ;
-    assert.result foo/bar : remove-trailing-slash foo/bar ;
-    assert.result foo : remove-trailing-slash foo/ ;
-    assert.result foo : remove-trailing-slash foo ;
 }

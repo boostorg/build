@@ -293,7 +293,7 @@ nl = "
 # current platform.
 rule variable-setting-command ( variable value )
 {
-    if [ modules.peek : NT ]
+    if [ os.name ] = NT
     {
         return "set $(variable)=$(value)$(nl)" ;
     }
@@ -307,10 +307,42 @@ rule variable-setting-command ( variable value )
 # current platform. Each element of values is expected to be a path,
 # elements are joined with os-specific characer which delimits paths in
 # environment variables.
+#
+# Each element of value can have the form '$VARIABLE'. This means that
+# the value of environment variable 'VARIABLE' should be used. For example:
+# 
+#   common.path-variable-setting-command PATH : $PATH foo : exported ;
+#
+# would add 'foo' to the end of 'PATH' variable.
 rule path-variable-setting-command ( variable : values * : exported ? )
 {   
     local result ;
-    if [ modules.peek : NT ]
+    
+    # Handle references to variables.
+    local values2 ;
+    # Create regex. Dollar is in separate variable to avoid
+    # interpreting it as variable access in bjam.
+    d = $ ;
+    # Backslash protects special meaning of '$' in regexps.
+    r = \\$(d)(.*) ;
+    for local v in $(values)
+    {
+        local m = [ MATCH $(r) : $(v) ] ;
+        if $(m) && [ os.name ] = NT 
+        {
+            values2 += %$(m)% ;
+        }          
+        else
+        {            
+            # If there's no match, just add the value
+            # If there's match but we're not on NT, the $VAR syntax
+            # is already OK.
+            values2 += $(v) ;
+        }
+    }
+    values = $(values2) ;
+        
+    if [ os.name ] = NT
     {
         result = set $(variable)=$(values:J=";")$(nl) ;                
     }
@@ -483,3 +515,26 @@ actions quietly piecemeal response-file-2
     echo "$(>)" >> "$(<)"
 }
 
+rule __test__ ( ) {
+
+    import assert ;
+    
+    local save-os = [ modules.peek os : name ] ;
+    
+    modules.poke os : name : LINUX ;
+    
+    assert.result "PATH=foo:$PATH:bar" :
+      path-variable-setting-command PATH : foo $PATH bar ;
+    
+    modules.poke os : name : NT ;
+    
+nl = "
+" ;
+    
+    assert.result "set PATH=foo;%PATH%;bar$(nl)" :
+      path-variable-setting-command PATH : foo $PATH bar ;
+
+
+    modules.poke os : name : $(save-os) ;      
+      
+}    
