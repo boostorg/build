@@ -172,7 +172,7 @@ PYTHON_PROPERTIES +=
 
 if $(NT)
 {
-    # Most Windows compilers pick up implicit directions from #pragmas
+   # Most Windows compilers pick up implicit directions from #pragmas
     # to look for those libraries.
     PYTHON_PROPERTIES += <library-path>$(PYTHON_LIB_PATH) ;
 }
@@ -457,6 +457,57 @@ rule python-runtest-aux ( target : sources + )
 
     PYTHON on $(target) = $(python) ;
     DEPENDS $(target) : $(python) ;
+}
+
+rule check-python-config ( )
+{
+    if ! $(gPYTHON_CONFIG_CHECKED)
+    {
+        # This represents an improvement over the checking that was in
+        # Boost 1.28.0, but it is still an imperfect hack. For
+        # Boost.Build v2 we will clean up the rules.
+        local stdlibs = [ GLOB $(PYTHON_STDLIB_PATH) : "*.py" ] ;
+        if ! $(stdlibs)
+        {
+            gNO_PYTHON_INSTALL = true ;
+            ECHO "---------------------------------------------------------------------" ;
+            ECHO skipping Boost.Python library build due to missing or incorrect configuration ;
+            ECHO You can configure the location of your python installation by setting: ;
+            ECHO "PYTHON_ROOT    - currently" \"$(PYTHON_ROOT:J=" ")\" ;
+            ECHO "PYTHON_VERSION - The 2-part python Major.Minor version number (e.g." ;
+            ECHO "                 \"2.2\", NOT \"2.2.1\")  - currently" \"$(PYTHON_VERSION)\" ;
+            ECHO ;
+            ECHO "The following are automatically configured from PYTHON_ROOT if not" ;
+            ECHO "otherwise set:" ;
+            
+            if ! $(NT)
+            {
+                ECHO "    PYTHON_INCLUDES    - path to Python #include directories; currently" \"$(PYTHON_INCLUDES:J=" ")\" ;
+            }
+            else if [ intersection $(TOOLS) : $(gcc-compilers) ]
+            {
+                ECHO "    GCC_PYTHON_ROOT    - path to Cygwin Python installation; currently" ;
+                ECHO "                          \""$(GCC_PYTHON_ROOT:J=" ")\" ;
+                ECHO "    GCC_PYTHON_DEBUG_ROOT - path to Cygwin debug-python installation" ;
+                ECHO "                            (configured --with-pydebug); currently" ;
+                ECHO "                          \""$(GCC_PYTHON_DEBUG_ROOT:J=" ")\" ;
+            }
+            
+            {
+                ECHO "    PYTHON_LIB_PATH    - path to Python library; currently" ;
+                ECHO "                         " \"$(PYTHON_LIB_PATH:J=" ")\" ;
+                ECHO "    PYTHON_STDLIB_PATH - path to Python standard library modules; currently" ;
+                ECHO "                         " \"$(PYTHON_STDLIB_PATH:J=" ")\" ;
+            }
+            
+            ECHO "---------------------------------------------------------------------" ;
+        }
+        gPYTHON_CONFIG_CHECKED = true ;
+    }
+    if ! $(gNO_PYTHON_INSTALL)
+    {
+        return true ;
+    }
 }
 
 }
