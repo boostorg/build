@@ -985,7 +985,7 @@ class subvariant
 
         # Pre-compose the list of other dependency graphs, on which this one
         # depends
-        local deps = [ $(build-properties).get implicit-dependency ] ;
+        local deps = [ $(build-properties).get <implicit-dependency> ] ;
         for local d in $(deps)
         {
             self.other-dg += [ $(d:G=).creating-subvariant ] ;
