@@ -36,7 +36,7 @@ generators.register-standard lex.lex : LEX : C ;
 
 generators.register-standard extra.whale : WHL : CPP WHL-LR0 ;
 generators.register-standard extra.dolphin : DLP : CPP ;
-generators.register-standard extra.wd : WD : WHL DLP ;
+generators.register-standard extra.wd : WD : WHL(%_parser) DLP(%_lexer) ;
 generators.register-standard qt.uic : UI UIC-H : CPP ;
 generators.register-standard qt.uic-h : UI : UIC-H ;
 

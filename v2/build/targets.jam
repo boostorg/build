@@ -424,7 +424,6 @@ rule main-target-alternative ( target-name project class-name
 rule typed-target ( name : project : type 
     : sources * : requirements * : default-build * )
 {
-    ECHO "Typed target: type is " $(type) ;
     basic-target.__init__ $(name) : $(project) 
       : $(sources) : $(requirements) : $(defailt-build) ;
     

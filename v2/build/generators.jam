@@ -96,7 +96,14 @@ rule normalize-target-list ( targets )
     $(targets).sort ;                   
 }
 
-rule generator ( id : source-types + : target-types + : requirements *
+# Creates a generator with given properties.
+# 'id' identifies the generator, it should be name of the rule which actually set ups build actions
+# 'source-types' are types that this generator can handle
+# 'target-types-and-names' defines which types generator will create and, optionally, names
+# for created targets. Each element should have the form type["(" name-pattern ")"], for 
+# example, obj(%_x). Name of generated target will be found by replacing % with the name of source,
+# provided explicit name was not specified.
+rule generator ( id : source-types + : target-types-and-names + : requirements *
                 )
 {
     import generators ;
@@ -109,10 +116,15 @@ rule generator ( id : source-types + : target-types + : requirements *
 
     self.id = $(id) ;
     self.source-types = $(source-types) ;
-    self.target-types = $(target-types) ;
     self.requirements = $(requirements) ;
-
-
+    
+    for local e in $(target-types-and-names)
+    {        
+        local m = [ MATCH ([^\\(]*)(\\((.*)%(.*)\\))? : $(e) ] ;
+        self.target-types += $(m[1]) ;
+        self.name-pre-post.$(m[1]) = $(m[3]) $(m[4]) ;
+    }
+    
     rule id ( )
     {
         return $(self.id) ;
@@ -270,8 +282,18 @@ rule generator ( id : source-types + : target-types + : requirements *
         # Create generated target for each target type.
         local targets ;
         for local t in $(self.target-types)                 
-        {       
-            targets += [ new virtual-target $(name) : $(t) : $(project) : 
+        {      
+            local generated-name ;
+            if $(self.name-pre-post.$(t))
+            {
+                generated-name = [ sequence.join $(self.name-pre-post.$(t)[1]) $(name) $(self.name-pre-post.$(t)[2]) ] ;
+            }
+            else
+            {
+                generated-name = $(name) ;
+            }
+            
+            targets += [ new virtual-target $(generated-name) : $(t) : $(project) : 
               [ property.remove incidental : $(properties) ] ] ;
         }                 
         # Assign an action for each target
@@ -279,8 +301,9 @@ rule generator ( id : source-types + : target-types + : requirements *
         for local t in $(targets)
         {
             $(t).action $(a) ;
-        }                         
-        return $(targets) ;
+        }       
+        
+        return [ sequence.transform virtual-target.register : $(targets) ] ;
     }    
 }
 
@@ -502,7 +525,7 @@ class composing-generator : generator ;
             generators.dout [ indent ] "*** multiple" ;
         }
         generators.dout [ indent ] "*** properties:" $(properties) ;        
-
+                            
         # Select generators that can create the required target type.
         local viable-generators = ;
         local generator-rank = ;
@@ -619,7 +642,8 @@ class composing-generator : generator ;
                                   [ new vector $(sources) ] ] ;       
         }
         decrase-indent ;
-        return $(result) ;
+        
+        return $(result) ;        
     }
 
 #}
