@@ -8,7 +8,7 @@ import regex ;
 import scanner ;
 
 feature.feature xsl:param : : free ;
-feature.feature format : html onehtml pdf ps docbook fo 
+feature.feature format : onehtml pdf ps docbook fo 
   : incidental implicit composite ;
 
 type.register XML : xml ;
