@@ -93,6 +93,8 @@ rule Link-action
 # for xlc, we repeat all libraries so that dependencies are always resolved
 actions xlc-Link-action bind NEEDLIBS
 {
+    $(SHELL_SET)$(gSHELL_LIBPATH)=$(LINK_LIBPATH)$(gAPPEND_LD_LIBRARY_PATH)
+    $(SHELL_EXPORT)$(gSHELL_LIBPATH)
     $(VA_CXX_COMPILER:R=$(VA_TOOL_PATH)) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -bdynamic -l$(FINDLIBS)
 }
 
