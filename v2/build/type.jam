@@ -12,6 +12,9 @@ import class : class new ;
 import errors ;
 import property ;
 
+# The feature is optional so that it never implicitly added.
+# It's used only for internal purposes, and in all cases we
+# want to explicitly use it.
 feature.feature target-type : : composite optional ;
 
 # feature.feature base-target-type : : composite optional ;
