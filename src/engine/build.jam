@@ -273,7 +273,7 @@ else
 }
 
 # Debug assertions, or not.
-if ! $(debug)
+if ! $(debug) && ! --noassert in $(ARGV)
 {
     --defs += NDEBUG ;
 }
