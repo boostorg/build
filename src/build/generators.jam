@@ -1010,6 +1010,9 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
         ensure-type $(sources) ;
     }
 
+    # Intermediate targets are not passed to generators
+    # and just returned unmodified.
+    local intermediate ;
     if ! $(.construct-stack)
     {
         local sources2 ;
@@ -1019,6 +1022,10 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
             {
                 sources2 += $(s) ;
             }
+            else
+            {
+                intermediate += $(s) ;
+            }            
         }
         sources = $(sources2) ;
     }
@@ -1051,7 +1058,12 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
     decrease-indent ;
         
     .construct-stack = $(.construct-stack[2-]) ;
-
+    
+    if ! $(.construct-stack)
+    {
+        result += $(intermediate) ;
+    }
+    
     # For all targets of 'allowed-type', reset the 'intermediate' attribute.
     if ! $(.construct-stack) && $(allowed-type) != * # This is first invocation in stack
     {
