@@ -1601,6 +1601,8 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
             segregate-free-properties simple-properties ;
 
             # generate library build instructions
+            local BUILD = $(BUILD) ;
+            BUILD ?= $(gTARGET_DEFAULT_BUILD($(target))) ;
             libs = [ link-libraries [ get-values <LIB> : $(gTARGET_DEPS($(target))) ]
                     : $(toolset) $(variant) : $(simple-properties) ] ;
             dlls = [ link-libraries [ get-values <DLL> : $(gTARGET_DEPS($(target))) ]
