@@ -147,6 +147,27 @@ class abstract-target
     }        
 }
 
+if --debug-building in [ modules.peek : ARGV ]            
+{
+    modules.poke : .debug-building : true ;
+}
+
+
+rule indent ( )
+{
+    return $(.indent:J="") ;
+}
+
+rule increase-indent ( )
+{
+    .indent += "    " ;
+}
+
+rule decrease-indent ( )
+{
+    .indent = $(.indent[2-]) ;
+}
+
 #  Project target class (derived from 'abstract-target')
 #
 #  This class these responsibilities:
@@ -202,9 +223,10 @@ class project-target : abstract-target
     # Generates all possible targets contained in this project.
     rule generate ( property-set * )
     {
-        if --debug-targets in [ modules.peek : ARGV ]
+        if [ modules.peek : .debug-building ] 
         {
-            ECHO "Building project" [ name ] " ('$(__name__)') with" [ $(property-set).raw ] ;
+            ECHO [ targets.indent ] "building project" [ name ] " ('$(__name__)') with" [ $(property-set).raw ] ;
+            targets.increase-indent ;
         }
                 
         local usage-requirements = [ property-set.empty ] ;
@@ -216,6 +238,7 @@ class project-target : abstract-target
             usage-requirements = [ $(usage-requirements).add $(g[1]) ] ;
             targets += $(g[2-]) ;
         }
+        targets.decrease-indent ;
         return $(usage-requirements) [ sequence.unique $(targets) ] ;        
     }
         
@@ -1013,15 +1036,22 @@ class basic-target : abstract-target
     # overridden.
     rule generate ( property-set )
     {
-        if --debug-targets in [ modules.peek : ARGV ]
+        if [ modules.peek : .debug-building ] 
         {
-            ECHO "Building $(self.name) with" [ $(property-set).raw ] ;
+            ECHO [ targets.indent ] "Building target '$(self.name)'" ;
+            ECHO [ targets.indent ] "Build request: " [ $(property-set).raw ] ;
+            targets.increase-indent ;
         }
                 
         if ! $(self.generated.$(property-set)) 
         {           
             local rproperties = [ targets.common-properties $(property-set) 
-              $(self.requirements) ] ;            
+              $(self.requirements) ] ;           
+            
+            if [ modules.peek : .debug-building ] 
+            {
+                ECHO [ targets.indent ] "Common properties are" [ $(rproperties).raw ] ;
+            }
                         
             if $(rproperties[1]) != "@error"                    
             {
@@ -1036,9 +1066,10 @@ class basic-target : abstract-target
                 generate-dependencies $(self.sources) : $(rproperties)
                   : source-targets usage-requirements ;
                 
-                if --debug-targets in [ modules.peek : ARGV ]
+                if [ modules.peek : .debug-building ] 
                 {
-                    ECHO "Usage requirements for $(self.name) are $(usage-requirements)" ;
+                    ECHO [ targets.indent ] 
+                      "Usage requirements for $(self.name) are $(usage-requirements)" ;
                 }
 
                 rproperties = [ property-set.create $(properties) 
@@ -1077,6 +1108,16 @@ class basic-target : abstract-target
                 self.generated.$(property-set) = $(rproperties) ;
             }       
         }                
+        else
+        {
+            if [ modules.peek : .debug-building ] 
+            {
+                ECHO [ targets.indent ] "Already built" ;
+            }            
+        }
+        
+        
+        targets.decrease-indent ;
         return $(self.generated.$(property-set)) ;
     }
 
