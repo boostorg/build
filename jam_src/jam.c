@@ -226,6 +226,9 @@ int  main( int argc, char **argv, char **arg_environ )
         printf( "Boost.Jam  " );
         printf( "Version %s.  ", VERSION );
         printf( "%s.\n", OSMINOR );
+        printf( "    Copyright 1993, 2000 Christopher Seiwald.\n" );
+        printf( "    Copyright 2001 David Turner.\n" );
+        printf( "    Copyright 2001 David Abrahams.\n" );
 
         return EXITOK;
     }
