@@ -8,8 +8,8 @@ generators.register-standard foo.foo : FOO : CPP H ;
 
 rule foo ( targets * : sources * : properties * )
 {
-    # On NT, you may need an exported symbol in order to have an import lib generated
-    if [ os.name ] = NT
+    # On NT, you need an exported symbol in order to have an import lib generated
+    if [ os.name ] = NT && <main-target-type>LIB in $(properties)
     {
         .decl =  "echo void __declspec(dllexport) foo(){}" ;
     }
