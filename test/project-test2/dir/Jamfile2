@@ -1,6 +1,0 @@
-
-project /boost-build-test-project-1/dir 
-    : requirements <threading>single <include>/home/ghost/build/boost-cvs 
-    : source-location src 
-    : default-build release
-    ;
