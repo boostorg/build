@@ -671,6 +671,8 @@ void var_expand_unit_test()
     for ( l2 = l, e2 = expected; l2 && e2; l2 = list_next(l2), e2 = list_next(e2) )
         assert( !strcmp( e2->string, l2->string ) );
     list_free(l);
+
+    list_free(expected);
     
     lol_free(lol);
 }
