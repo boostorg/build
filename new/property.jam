@@ -296,9 +296,14 @@ rule take ( attributes + : properties * : feature-space ? )
 rule select ( features * : properties * )
 {
     local result ;
+    
+    # add any missing angle brackets
+    local empty = "" ;
+    features = $(empty:G=$(features)) ;
+    
     for local p in $(properties)
     {
-        if $(p:G) = <$(features)> 
+        if $(p:G) in $(features)
         {
             result += $(p) ;
         }
@@ -461,6 +466,11 @@ local rule __test__ ( )
     assert.result <include>a 
         : select include : <include>a <toolset>gcc ;
 
+    assert.result <include>a 
+        : select include bar : <include>a <toolset>gcc ;
+
+    assert.result <include>a <toolset>gcc
+        : select include <bar> <toolset> : <include>a <toolset>gcc ;
 
     pm = [ new property-map ] ;
     $(pm).insert <toolset>gcc : o ;
