@@ -155,26 +155,34 @@ rule as-path ( properties * : feature-space ? )
 {
     feature-space ?= feature ;
     
-    # trim redundancy
-    properties = [ $(feature-space).minimize $(properties) ] ;
+    local entry = .result.$(properties:J=-).$(feature-space) ;
     
-    # sort according to path-order
-    properties = [ sequence.insertion-sort $(properties) : path-order $(feature-space) ] ;
-    
-    local components ;
-    for local p in $(properties)
+    if ! $($(entry))
     {
-        if $(p:G)
+        # trim redundancy
+        properties = [ $(feature-space).minimize $(properties) ] ;
+    
+        # sort according to path-order
+        properties = [ sequence.insertion-sort $(properties) : path-order $(feature-space) ] ;
+    
+        local components ;
+        for local p in $(properties)
         {
-            local f = [ ungrist $(p:G) ] ;
-            components += $(f)-$(p:G=) ;
+            if $(p:G)
+            {
+                local f = [ ungrist $(p:G) ] ;
+                components += $(f)-$(p:G=) ;
+            }
+            else
+            {
+                components += $(p) ;
+            }
         }
-        else
-        {
-            components += $(p) ;
-        }
-    }
-    return $(components:J=/) ;
+        
+        $(entry) = $(components:J=/) ;
+    }    
+    
+    return $($(entry)) ;
 }
 
 # Exit with error if property is not valid.
