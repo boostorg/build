@@ -470,7 +470,7 @@ rule searched-lib-generator ( )
                             : [ feature.get-values <search> : $(properties) ]
                       ] ;
             # attach an action and properties to the target
-            a = [ new null-action $(t) : $(property-set) ] ;
+            a = [ xnew null-action $(t) : $(property-set) ] ;
             $(t).action $(a) ;
             return [ virtual-target.register $(t) ] ;
         }
@@ -482,11 +482,15 @@ class searched-lib-generator : generator ;
 generators.register [ new searched-lib-generator ] ;
 
 
-
-rule compile-action ( targets + : sources * : action-name : properties * )
+xclass compile-action : action 
 {
-    action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
     import sequence ;
+    
+    rule __init__ ( targets + : sources * : action-name : properties * )
+    {
+        action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
+    }
+    
     
     # For all virtual targets for the same dependency graph as self, 
     # i.e. which belong to the same main target, add their directories
@@ -502,8 +506,6 @@ rule compile-action ( targets + : sources * : action-name : properties * )
         return $(properties) $(target-paths:G=include) ;
     }    
 }
-
-class compile-action : action ;
 
 rule C-compiling-generator ( id : source-types + : target-types + :
                              requirements * )
@@ -532,13 +534,16 @@ rule register-c-compiler ( id : source-types + : target-types + :
 # register all generators as "generator.some-rule", not with "some-module.some-rule".)
 IMPORT $(__name__) : register-c-compiler : : generators.register-c-compiler ;
 
-rule link-action ( targets + : sources * : action-name : properties * )
+xclass link-action : action
 {
-    action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
     import path ;
     import sequence ;
-
     
+    rule __init__ ( targets + : sources * : action-name : properties * )
+    {            
+        action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
+    }
+        
     # Find all libraries in sources, and <library> properties
     # For each source/property-value, which is instance of searched-lib-target,
     # add appropriate <find-shared-library> or <find-static-library> property.
@@ -639,8 +644,6 @@ rule link-action ( targets + : sources * : action-name : properties * )
         action.actualize-sources $(real-sources) ;
     }    
 } 
-
-class link-action : action ;
 
 
 rule linking-generator ( id 
