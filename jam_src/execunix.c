@@ -8,6 +8,7 @@
 # include "lists.h"
 # include "execcmd.h"
 # include <errno.h>
+# include <time.h>
 
 #if defined(sun) || defined(__sun)
 #include <unistd.h> /* need to include unistd.h on sun for the vfork prototype*/
@@ -15,22 +16,10 @@
 #endif
 
 # ifdef USE_EXECUNIX
+# include <sys/times.h>
 
 # ifdef NO_VFORK
 # define vfork() fork()
-# endif
-
-# if defined( OS_NT ) || defined( OS_OS2 )
-
-# define USE_EXECNT
-
-# include <process.h>
-
-# if !defined( __BORLANDC__ ) && !defined( OS_OS2 )
-# define wait my_wait
-static int my_wait( int *status );
-# endif
-
 # endif
 
 /*
@@ -71,13 +60,8 @@ static void (*istat)( int );
 static struct
 {
 	int	pid; /* on win32, a real process handle */
-	void	(*func)( void *closure, int status );
+	void	(*func)( void *closure, int status, timing_info* );
 	void 	*closure;
-
-# ifdef USE_EXECNT
-	char	*tempfile;
-# endif
-
 } cmdtab[ MAXJOBS ] = {{0}};
 
 /*
@@ -98,17 +82,13 @@ onintr( int disp )
 void
 execcmd( 
 	char *string,
-	void (*func)( void *closure, int status ),
+	void (*func)( void *closure, int status, timing_info* ),
 	void *closure,
 	LIST *shell )
 {
 	int pid;
 	int slot;
 	char *argv[ MAXARGC + 1 ];	/* +1 for NULL */
-
-# ifdef USE_EXECNT
-	char *p;
-# endif
 
 	/* Find a slot in the running commands table for this one. */
 
@@ -122,49 +102,6 @@ execcmd(
 	    exit( EXITBAD );
 	}
 
-# ifdef USE_EXECNT
-	if( !cmdtab[ slot ].tempfile )
-	{
-	    char *tempdir;
-
-	    if( !( tempdir = getenv( "TEMP" ) ) &&
-		!( tempdir = getenv( "TMP" ) ) )
-		    tempdir = "\\temp";
-
-	    cmdtab[ slot ].tempfile = malloc( strlen( tempdir ) + 14 );
-
-	    sprintf( cmdtab[ slot ].tempfile, "%s\\jamtmp%02d.bat", 
-				tempdir, slot );
-	}
-
-	/* Trim leading, ending white space */
-
-	while( isspace( *string ) )
-		++string;
-
-	p = strchr( string, '\n' );
-
-	while( p && isspace( *p ) )
-		++p;
-
-	/* If multi line, or too long, or JAMSHELL is set, write to bat file. */
-	/* Otherwise, exec directly. */
-	/* Frankly, if it is a single long line I don't think the */
-	/* command interpreter will do any better -- it will fail. */
-
-	if( p && *p || strlen( string ) > MAXLINE || shell )
-	{
-	    FILE *f;
-
-	    /* Write command to bat file. */
-
-	    f = fopen( cmdtab[ slot ].tempfile, "w" );
-	    fputs( string, f );
-	    fclose( f );
-
-	    string = cmdtab[ slot ].tempfile;
-	}
-# endif
 
 	/* Forumulate argv */
 	/* If shell was defined, be prepared for % and ! subs. */
@@ -197,13 +134,8 @@ execcmd(
 	}
 	else
 	{
-# ifdef USE_EXECNT
-	    argv[0] = "cmd.exe";
-	    argv[1] = "/Q/C";		/* anything more is non-portable */
-# else
 	    argv[0] = "/bin/sh";
 	    argv[1] = "-c";
-# endif
 	    argv[2] = string;
 	    argv[3] = 0;
 	}
@@ -215,13 +147,6 @@ execcmd(
 
 	/* Start the command */
 
-# ifdef USE_EXECNT
-	if( ( pid = spawnvp( P_NOWAIT, argv[0], argv ) ) == -1 )
-	{
-	    perror( "spawn" );
-	    exit( EXITBAD );
-	}
-# else
 	if ((pid = vfork()) == 0) 
    	{
 		execvp( argv[0], argv );
@@ -233,7 +158,7 @@ execcmd(
 	    perror( "vfork" );
 	    exit( EXITBAD );
 	}
-# endif
+
 	/* Save the operation for execwait() to find. */
 
 	cmdtab[ slot ].pid = pid;
@@ -258,14 +183,17 @@ execwait()
 	int i;
 	int status, w;
 	int rstat;
-
+    timing_info time;
+    struct tms old_time, new_time;
+    
 	/* Handle naive make1() which doesn't know if cmds are running. */
 
 	if( !cmdsrunning )
 	    return 0;
 
-	/* Pick up process pid and status */
+    times(&old_time);
     
+	/* Pick up process pid and status */
 	while( ( w = wait( &status ) ) == -1 && errno == EINTR )
 		;
 
@@ -276,6 +204,11 @@ execwait()
 	    exit( EXITBAD );
 	}
 
+    times(&new_time);
+
+    time.system = (double)(new_time.tms_cstime - old_time.tms_cstime) / CLOCKS_PER_SEC;
+    time.user = (double)(new_time.tms_cutime - old_time.tms_cutime) / CLOCKS_PER_SEC;
+    
 	/* Find the process in the cmdtab. */
 
 	for( i = 0; i < MAXJOBS; i++ )
@@ -288,6 +221,7 @@ execwait()
 	    exit( EXITBAD );
 	}
 
+    
 	/* Drive the completion */
 
 	if( !--cmdsrunning )
@@ -302,7 +236,7 @@ execwait()
 
 	cmdtab[ i ].pid = 0;
 
-	(*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat );
+	(*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time );
 
 	return 1;
 }

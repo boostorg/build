@@ -82,6 +82,7 @@ static const char *target_fate[] =
 	"newer",	/* T_FATE_NEWER */
 	"temp", 	/* T_FATE_ISTMP */
 	"touched", 	/* T_FATE_TOUCHED */
+	"rebuild", 	/* T_FATE_REBUILD */
 	"missing", 	/* T_FATE_MISSING */
 	"needtmp", 	/* T_FATE_NEEDTMP */
 	"old", 		/* T_FATE_OUTDATED */
@@ -174,6 +175,63 @@ make(
 	return status;
 }
 
+/* Force any dependents of t that have already at least begun being
+ * visited by make0 to be updated.
+ */
+static void update_dependents(TARGET* t)
+{
+    TARGETS *q;
+    
+    for (q = t->dependents; q; q = q->next)
+    {
+        TARGET* p = q->target;
+        char fate0 = p->fate;
+
+        /* If we've already at least begun visiting it and
+         * we're not already rebuilding it for other reasons
+         */
+        if (fate0 != T_FATE_INIT && fate0 < T_FATE_BUILD)
+        {
+            p->fate = T_FATE_UPDATE;
+            
+            if (DEBUG_FATE)
+            {
+                printf( "fate change  %s from %s to %s (as dependent of %s)\n",
+                        p->name, target_fate[fate0], target_fate[p->fate], t->name);
+            }
+    
+            /* If we're done visiting it, go back and make sure its
+             * dependents get rebuilt.
+             */
+            if (fate0 > T_FATE_MAKING)
+                update_dependents(p);
+        }
+    }
+}
+
+/* Make sure that all of t's rebuilds get rebuilt */
+static void force_rebuilds(TARGET* t)
+{
+    TARGETS* d;
+    for (d = t->rebuilds; d; d = d->next)
+    {
+        TARGET* r = d->target;
+
+        /* If it's not already being rebuilt for other reasons */
+        if (r->fate < T_FATE_BUILD)
+        {
+            if (DEBUG_FATE)
+                printf( "fate change  %s from %s to %s (by rebuild)\n",
+                        r->name, target_fate[r->fate], target_fate[T_FATE_REBUILD]);
+            
+            /* Force rebuild it */
+            r->fate = T_FATE_REBUILD;
+
+            /* And make sure its dependents are updated too */
+            update_dependents(r);
+        }
+    }
+}
 /*
  * make0() - bind and scan everything to make a TARGET
  *
@@ -362,7 +420,7 @@ make0(
 
 	last = 0;
 	leaf = 0;
-	fate = T_FATE_STABLE;
+    fate = T_FATE_STABLE;
 
 	for( c = t->depends; c; c = c->next )
 	{
@@ -515,7 +573,7 @@ make0(
 		       t->name, target_fate[fate],
 		       oldTimeStamp ? " (by timestamp)" : "" );
 	    else
-		printf( "fate change  %s adjusted from %s to %s%s\n",
+		printf( "fate change  %s from %s to %s%s\n",
 		       t->name, target_fate[savedFate], target_fate[fate],
 		       oldTimeStamp ? " (by timestamp)" : "" );
 #endif
@@ -551,8 +609,19 @@ make0(
 
 	t->time = max( t->time, last );
 	t->leaf = leaf ? leaf : t->time ;
-	t->fate = fate;
+    /* This target's fate may have been updated by virtue of following
+     * some target's rebuilds list, so only allow it to be increased
+     * to the fate we've calculated.  Otherwise, grab its new fate.
+     */
+    if (fate > t->fate)
+        t->fate = fate;
+    else
+        fate = t->fate;
 
+    /* Step 4g: if this target needs to be built, force rebuild
+     * everything in this target's rebuilds list */
+    if (fate >= T_FATE_BUILD && fate < T_FATE_BROKEN)
+        force_rebuilds(t);
 	/* 
 	 * Step 5: sort dependents by their update time. 
 	 */
@@ -673,6 +742,9 @@ dependGraphOutput( TARGET *t, int depth )
 	break;
       case T_FATE_OUTDATED:
 	printf( "  %s       : Outdated, updating it\n", spaces(depth) );
+	break;
+      case T_FATE_REBUILD:
+	printf( "  %s       : Rebuild, Updating it\n", spaces(depth) );
 	break;
       case T_FATE_UPDATE:
 	printf( "  %s       : Updating it\n", spaces(depth) );

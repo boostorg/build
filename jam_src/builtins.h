@@ -17,6 +17,7 @@ void load_builtins();
 
 LIST *builtin_calc( PARSE *parse, FRAME *args );
 LIST *builtin_depends( PARSE *parse, FRAME *args );
+LIST *builtin_rebuilds( PARSE *parse, FRAME *args );
 LIST *builtin_echo( PARSE *parse, FRAME *args );
 LIST *builtin_exit( PARSE *parse, FRAME *args );
 LIST *builtin_flags( PARSE *parse, FRAME *args );

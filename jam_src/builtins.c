@@ -113,6 +113,12 @@ load_builtins()
       bind_builtin( "INCLUDES" ,
                     builtin_depends, 1, 0 ) );
 
+    {
+        char * args[] = { "targets", "*", ":", "targets-to-rebuild", "*", 0 };
+        bind_builtin( "REBUILDS" ,
+                      builtin_rebuilds, 0, args );
+    }
+    
     duplicate_rule( "Leaves" ,
       bind_builtin( "LEAVES" ,
                     builtin_flags, T_FLAG_LEAVES, 0 ) );
@@ -376,7 +382,6 @@ builtin_depends(
 {
 	LIST *targets = lol_get( frame->args, 0 );
 	LIST *sources = lol_get( frame->args, 1 );
-	int which = parse->num;
 	LIST *l;
 
 	for( l = targets; l; l = list_next( l ) )
@@ -397,6 +402,39 @@ builtin_depends(
 	    }
 
 	    t->depends = targetlist( t->depends, sources );
+	}
+
+    /* Enter reverse links */
+	for( l = sources; l; l = list_next( l ) )
+	{
+	    TARGET *s = bindtarget( l->string );
+        s->dependents = targetlist( s->dependents, targets );
+    }
+
+	return L0;
+}
+
+/*
+ * builtin_rebuilds() - REBUILDS rule
+ *
+ * The REBUILDS builtin rule appends each of the listed
+ * rebuild-targets in its 2nd argument on the rebuilds list of each of
+ * the listed targets in its first argument.
+ */
+
+LIST *
+builtin_rebuilds(
+	PARSE	*parse,
+	FRAME *frame )
+{
+	LIST *targets = lol_get( frame->args, 0 );
+	LIST *rebuilds = lol_get( frame->args, 1 );
+	LIST *l;
+
+	for( l = targets; l; l = list_next( l ) )
+	{
+	    TARGET *t = bindtarget( l->string );
+	    t->rebuilds = targetlist( t->rebuilds, rebuilds );
 	}
 
 	return L0;

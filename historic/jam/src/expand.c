@@ -136,14 +136,14 @@ expand:
     /*
      * Input so far (ignore blanks):
      *
-     *	stuff-in-outbuf $(variable) remainder
-     *			 ^	             ^
-     *			 in		     end
+     *  stuff-in-outbuf $(variable) remainder
+     *                   ^                   ^
+     *                   in                  end
      * Output so far:
      *
-     *	stuff-in-outbuf $
-     *	^	         ^
-     *	out_buf          out
+     *  stuff-in-outbuf $
+     *  ^                ^
+     *  out_buf          out
      *
      *
      * We just copied the $ of $(...), so back up one on the output.
@@ -169,9 +169,9 @@ expand:
     /*
      * Input so far (ignore blanks):
      *
-     *	stuff-in-outbuf $(variable) remainder
-     *			  ^	   ^         ^
-     *			  inp      in        end
+     *  stuff-in-outbuf $(variable) remainder
+     *                    ^        ^         ^
+     *                    inp      in        end
      */
     prefix_length = buf->size;
     string_append_range( buf, inp, in - 1 );
@@ -190,14 +190,14 @@ expand:
     /*
      * Input so far (ignore blanks):
      *
-     *	stuff-in-outbuf $(variable) remainder
-     *			            ^        ^
-     *			            in       end
+     *  stuff-in-outbuf $(variable) remainder
+     *                              ^        ^
+     *                              in       end
      * Output so far:
      *
-     *	stuff-in-outbuf variable
-     *	^	        ^       ^
-     *	out_buf         out	ov
+     *  stuff-in-outbuf variable
+     *  ^               ^       ^
+     *  out_buf         out     ov
      *
      * Later we will overwrite 'variable' in out_buf, but we'll be
      * done with it by then.  'variable' may be a multi-element list, 
@@ -714,3 +714,9 @@ void var_expand_unit_test()
     lol_free(lol);
 }
 #endif
+
+/*
+     Local Variables:
+     tab-width: 8
+     End:
+ */
