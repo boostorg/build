@@ -11,9 +11,9 @@
     <section id="bbv2.reference.init">
       <title>Initialization</title>
 
-      <para>bjam's first job upon startup is to load the Jam code which
+      <para>bjam's first job upon startup is to load the Jam code that
         implements the build system. To do this, it searches for a file
-        called "boost-build.jam", first in the invocation directory, then
+        called <filename>boost-build.jam</filename>, first in the invocation directory, then
         in its parent and so forth up to the filesystem root, and finally
         in the directories specified by the environment variable
         BOOST_BUILD_PATH. When found, the file is interpreted, and should
@@ -26,14 +26,14 @@ rule boost-build ( location ? )
 
       <para>
         If location is a relative path, it is treated as relative to
-        the directory of boost-build.jam. The directory specified by
-        location and directories in BOOST_BUILD_PATH are then searched for
-        a file called bootstrap.jam which is interpreted and is expected to
+        the directory of <filename>boost-build.jam</filename>. The directory specified by
+        that location and the directories in BOOST_BUILD_PATH are then searched for
+        a file called <filename>bootstrap.jam</filename>, which is expected to
         bootstrap the build system. This arrangement allows the build
         system to work without any command-line or environment variable
         settings. For example, if the build system files were located in a
         directory "build-system/" at your project root, you might place a
-        boost-build.jam at the project root containing:
+        <filename>boost-build.jam</filename> at the project root containing:
 
 <programlisting>
 boost-build build-system ;
@@ -42,9 +42,9 @@ boost-build build-system ;
         In this case, running bjam anywhere in the project tree will
         automatically find the build system.</para>
 
-      <para>The default "bootstrap.jam", after loading some standard
+      <para>The default <filename>bootstrap.jam</filename>, after loading some standard
         definitions, loads two files, which can be provided/customised by
-        user: "site-config.jam" and "user-config.jam".</para>
+        user: <filename>site-config.jam</filename> and <filename>user-config.jam</filename>.</para>
 
       <para>Locations where those files a search are summarized below:</para>
 
@@ -69,14 +69,14 @@ boost-build build-system ;
               <entry>Linux</entry>
 
               <entry>
-                <simpara>/etc</simpara>
-                <simpara>$HOME</simpara>
-                <simpara>$BOOST_BUILD_PATH</simpara>
+                <simpara><code>/etc</code></simpara>
+                <simpara><code>$HOME</code></simpara>
+                <simpara><code>$BOOST_BUILD_PATH</code></simpara>
               </entry>
 
               <entry>
-                <simpara>$HOME</simpara>
-                <simpara>$BOOST_BUILD_PATH</simpara>
+                <simpara><code>$HOME</code></simpara>
+                <simpara><code>$BOOST_BUILD_PATH</code></simpara>
               </entry>
             </row>
 
@@ -84,14 +84,14 @@ boost-build build-system ;
               <entry>Windows</entry>
 
               <entry>
-                <simpara>$SystemRoot</simpara>
-                <simpara>$HOME</simpara>
-                <simpara>$BOOST_BUILD_PATH</simpara>
+                <simpara><code>%SystemRoot%</code></simpara>
+                <simpara><code>%HOME%</code></simpara>
+                <simpara><code>%BOOST_BUILD_PATH%</code></simpara>
               </entry>
 
               <entry>
-                <simpara>$HOME</simpara>
-                <simpara>$BOOST_BUILD_PATH</simpara>
+                <simpara><code>%HOME%</code></simpara>
+                <simpara><code>%BOOST_BUILD_PATH%</code></simpara>
               </entry>
             </row>
           </tbody>
@@ -100,6 +100,7 @@ boost-build build-system ;
 
       <para>
         Boost.Build comes with default versions of those files,
+        <!-- Where are those files installed?  The user can't use them as templates unless she can find them -->
         which can serve as templates for customized versions.
       </para>
 
@@ -129,7 +130,7 @@ boost-build build-system ;
         <itemizedlist>
           <listitem>
             <simpara>
-              An argument which does not contain slashes or the "="
+              An argument that does not contain slashes or the "="
               symbol is either a value of an implicit feature, or target to
               be built. It is taken to be value of a feature if appropriate
               feature exists. Otherwise, it is considered a <link linkend=
@@ -476,7 +477,7 @@ exe a : a.cpp
       <para>A <emphasis>property</emphasis> is a (feature,value) pair, expressed as
         &lt;feature&gt;value.</para>
 
-      <para>A <emphasis>subfeature</emphasis> is a feature which only exists in the
+      <para>A <emphasis>subfeature</emphasis> is a feature that only exists in the
         presence of its parent feature, and whose identity can be derived
         (in the context of its parent) from its value. A subfeature's
         parent can never be another subfeature. Thus, features and their
@@ -501,7 +502,7 @@ exe a : a.cpp
         path representation of the previous example would be
         <literal>&lt;toolset&gt;gcc/&lt;runtime-link&gt;static</literal>.</para>
       
-      <para>A <emphasis>build specification</emphasis> is a property set which fully
+      <para>A <emphasis>build specification</emphasis> is a property set that fully
         describes the set of features used to build a target.</para>
       
       <section id="bbv2.reference.features.validity">
@@ -540,7 +541,7 @@ exe a : a.cpp
             <para>Incidental features are assumed not to affect build
               products at all. As a consequence, the build system may use
               the same file for targets whose build specification differs
-              only in incidental features. A feature which controls a
+              only in incidental features. A feature that controls a
               compiler's warning level is one example of a likely
               incidental feature.</para>
             
@@ -591,9 +592,9 @@ exe a : a.cpp
           <listitem>
             <para><emphasis>optional</emphasis></para>
             
-            <para>An optional feature is a feature which is not required to
+            <para>An optional feature is a feature that is not required to
               appear in a build specification. Every non-optional non-free
-              feature has a default value which is used when a value for
+              feature has a default value that is used when a value for
               the feature is not otherwise specified, either in a target's
               requirements or in the user's build request. [A feature's
               default value is given by the first value listed in the
@@ -663,7 +664,7 @@ exe a : a.cpp
           </listitem>
         </itemizedlist>
 
-        <para>Features which are neither free nor incidental are called
+        <para>Features that are neither free nor incidental are called
           <emphasis>base</emphasis> features.</para>
 
 
@@ -691,7 +692,7 @@ rule feature ( name : allowed-values * : attributes * )
       
       <para>
         A build variant, or (simply variant) is a special kind of composite
-        feature which automatically incorporates the default values of
+        feature that automatically incorporates the default values of
         features that . Typically you'll want at least two separate
         variants: one for debugging, and one for your release code. [
         Volodya says: "Yea, we'd need to mention that it's a composite
@@ -832,13 +833,13 @@ lib/b.cpp                            -- regular file
 
             So, to summarize:
 
-            1. The project which extract tarfile may extract all possible kinds
+            1. The project that extract tarfile may extract all possible kinds
             of targets, and it's reasonable to use them directly from other
             project.
 
             2. The rule for unpacking tar is inplemented in terms of
             "patch-file", for maintainability, and therefore, must use main
-            target name which contains slashes?
+            target name that contains slashes?
 
             3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is
             not an option, because you should not change existing tree 
@@ -937,7 +938,7 @@ requested-properties -&gt; property-path
       <para>When trying to construct a target, the first step is to select
         all possible generators for the requested target type, which
         required properties are a subset of requested properties.
-        Generators which were already selected up the call stack are
+        Generators that were already selected up the call stack are
         excluded. In addition, if any composing generators were selected
         up the call stack, all other composing generators are ignored
         (TODO: define composing generators). The found generators
@@ -950,7 +951,7 @@ requested-properties -&gt; property-path
       <title>Running generators</title>
 
       <para>When generators are selected, each is run to produce a list of
-        created targets. This list might include targets which are not of
+        created targets. This list might include targets that are not of
         requested types, because generators create the same targets as
         some tool, and tool's behaviour is fixed. (Note: should specify
         that in some cases we actually want extra targets). If generator
@@ -962,7 +963,7 @@ requested-properties -&gt; property-path
         that the set of propagated properties is different from what was
         used for building sources.</para>
 
-      <para>For all targets which are not of requested types, we try to
+      <para>For all targets that are not of requested types, we try to
         convert them to requested type, using a second call to
         <literal>construct</literal>. This is done in order to support
         transformation sequences where single source file expands to
@@ -990,7 +991,7 @@ requested-properties -&gt; property-path
 
       <para>Because target location is determined by the build system, it
         is sometimes necessary to adjust properties, in order to not
-        break actions. For example, if there's an action which generates
+        break actions. For example, if there's an action that generates
         a header, say "a_parser.h", and a source file "a.cpp" which
         includes that file, we must make everything work as if a_parser.h
         is generated in the same directory where it would be generated
