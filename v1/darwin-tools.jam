@@ -17,7 +17,7 @@ free-feature bundle-loader ;
 feature warnings : on off ;
 
 # Type of shared object to create.
-feature link-format : default dynamic bundle ;
+free-feature link-format ;
 
 # compute directories for invoking GCC
 #
@@ -80,7 +80,6 @@ flags darwin DEFINES <define> ;
 flags darwin UNDEFS <undef> ;
 flags darwin HDRS <include> ;
 flags darwin STDHDRS <sysinclude> ;
-flags darwin LINKFLAGS <linkflags> ;
 flags darwin LIBPATH <library-path> ;
 flags darwin NEEDLIBS <library-file> ;
 flags darwin FINDLIBS <find-library> ;
@@ -140,6 +139,15 @@ else
         -Wl,-dynamic -nostartfiles -Wl,-dylib -Wl,-ldylib1.o ;
 }
 
+flags darwin .LINKFLAGS <linkflags> ;
+flags darwin DLLFLAGS : ;
+if -bind_at_load in $(.LINKFLAGS)
+{
+    flags darwin DLLFLAGS <target-type>$(SHARED_TYPES) : -bind_at_load ;
+    .LINKFLAGS = [ difference $(.LINKFLAGS) : -bind_at_load ] ;
+}
+flags darwin LINKFLAGS : $(.LINKFLAGS) ;
+
 
 #### Link ####
 
@@ -149,14 +157,12 @@ rule Link-action
     DEPENDS $(<) : $(NEEDLIBS) $(NEEDIMPS) ;
     if $(TARGET_TYPE) in $(SHARED_TYPES) && $(LINK_FORMAT) != bundle
     {
-        DLLFLAGS on $(<) = ;
-        #~ DLLFLAGS on $(<) =
+        #~ LINKFLAGS on $(<) +=
             #~ "-Wl,-dylib_compatibility_version,$(DLLVERSION) -W,l-dylib_current_version,$(DLLVERSION)" ;
         darwin-Link-DyLib-action $(<) : $(>) ;
     }
     else
     {
-        DLLFLAGS on $(<) = ;
         darwin-Link-action $(<) : $(>) ;
     }
 }
@@ -166,19 +172,20 @@ actions darwin-Link-action bind NEEDLIBS NEEDIMPS
     $(SHELL_SET)$(gSHELL_LIBPATH)=$(RUN_LD_LIBRARY_PATH)
     $(SHELL_EXPORT)$(gSHELL_LIBPATH)
     $(.GCC_BIN_DIR)$(.GXX) $(LINKFLAGS) -o "$(<[1])" "$(>)" \
+      -F$(FRAMEWORKS:D) -framework$(_)$(FRAMEWORKS:D=) \
       -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) \
-      -F$(FRAMEWORKS:D) -framework$(_)$(FRAMEWORKS:D=) -bundle_loader$(_)"$(BUNDLE_LOADER)" "$(BUNDLE_LOADER)"
+      -bundle_loader$(_)"$(BUNDLE_LOADER)" "$(BUNDLE_LOADER)"
 }
 
 actions darwin-Link-DyLib-action bind NEEDLIBS NEEDIMPS
 {
     $(SHELL_SET)$(gSHELL_LIBPATH)=$(RUN_LD_LIBRARY_PATH)
     $(SHELL_EXPORT)$(gSHELL_LIBPATH)
-    ld -dynamic -m -r -d -o "$(<[1]:S=.lo)" "$(>)" \
+    ld -dynamic -m -r -d -o $(DLLFLAGS) "$(<[1]:S=.lo)" "$(>)" \
     && \
-    $(.GCC_BIN_DIR)$(.GXX) $(LINKFLAGS) $(DLLFLAGS) -o "$(<[1])" "$(<[1]:S=.lo)" \
-      -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) \
+    $(.GCC_BIN_DIR)$(.GXX) $(LINKFLAGS) -o "$(<[1])" "$(<[1]:S=.lo)" \
       -F$(FRAMEWORKS:D) -framework$(_)$(FRAMEWORKS:D=) \
+      -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) \
     && \
     rm -f "$(<[1]:S=.lo)"
 }
