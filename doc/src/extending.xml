@@ -571,7 +571,7 @@ actions inline-file
 
       <bridgehead>Another example</bridgehead>
 
-      <para>Here's an another example.
+      <para>Here's another example.
         Let's see how we can make a feature that refers to a target. For example,
         when linking dynamic libraries on windows, one sometimes needs to specify
         "DEF file", telling what functions should be exported. It would be nice to
@@ -579,7 +579,13 @@ actions inline-file
 <programlisting>
         lib a : a.cpp : &lt;def-file&gt;a.def ;
 </programlisting>
+<!-- Why would that be nice?  It seems to me that having a.def in the sources is the obvious and much nicer thing to do: 
+
+        lib a : a.cpp a.def ;
+-->
         Actually, this feature is already supported, but anyway...
+        <!-- Something about saying that is very off-putting.  I'm
+             sorry that I can't put my finger on it -->
       </para>
 
       <orderedlist>
@@ -590,16 +596,24 @@ feature def-file : : free dependency ;
 </programlisting>
             </para></listitem>
 
-        <listitem><para>One of the toolsets that cares about DEF files is
-msvc. The following line should be added to it.
+        <listitem><para>One of the toolsets that cares about
+        <!-- The toolset doesn't "care." What do your really mean? -->
+        DEF files is msvc. The following line should be added to it.
+        <!-- Are you saying the msvc toolset is broken (or that it
+             doesn't use DEF files) as-shipped and the reader needs to
+             fix it? -->
 
 <programlisting>
 flags msvc.link DEF_FILE &lt;def-file&gt; ;
 </programlisting>
+            <!-- And that line does... what? -->
             </para></listitem>
-
+            
         <listitem><para>Since the DEF_FILE variable is not used by the
-msvc.link action, we need to modify it to be:
+msvc.link action, 
+<!-- It's not?  You just told us that MSVC "cares" about DEF files. I
+     presume that means that it uses them in some appropriate way? -->
+we need to modify it to be:
 
 <programlisting>
 actions link bind DEF_FILE
@@ -610,11 +624,17 @@ actions link bind DEF_FILE
             </para>
           
           
-          <para> Note the "bind DEF_FILE" part. It tells bjam that DEF_FILE
-            refers to a file, otherwise the variable will contain internal
-            target name, which is not likely to make sense for the linker.
+          <para> Note the <code>bind DEF_FILE</code> part. It tells
+          bjam to translate the internal target name in
+          <varname>DEF_FILE</varname> to a corresponding filename in
+          the <code>link</code> action.  Without it the expansion of
+          <code>$(DEF_FILE)</code> would be a strange symbol that is
+          not likely to make sense for the linker.
           </para>
 
+          <!-- I have a note here that says: "none of this works for
+               targets in general, only source files."  I'm not sure
+               what I meant by that; maybe you can figure it out. -->
           <para>
             We've almost done, but should stop for a small workaround. Add the following
             code to msvc.jam
@@ -625,20 +645,23 @@ rule link
     DEPENDS $(&lt;) : [ on $(&lt;) return $(DEF_FILE) ] ;
 }
 </programlisting>
+<!-- You *must* explain the part in [...] above.  It's completely opaque to the casual reader -->
 
             This is needed to accomodate some bug in bjam, which hopefully
-            will be fixed one day.</para></listitem>
+            will be fixed one day.
+            <!-- This is *NOT* a bug!!  Anyway,  BBv2 shouild handle this automatically.  Why doesn't it? -->
+</para></listitem>
 
       </orderedlist>
 
       <bridgehead>Variants and composite features.</bridgehead>
 
       <para>Sometimes you want to create a shorcut for some set of
-        features. For example, <code>release</code> is a value of the
-        <code>variant</code> and is a shortcut for a set of features.
+        features. For example, <code>release</code> is a value of 
+        <code>&lt;variant&gt;</code> and is a shortcut for a set of features.
       </para>
 
-      <para>It is possible to define your build variants. For example:
+      <para>It is possible to define your own build variants. For example:
 <programlisting>
 variant crazy : &lt;optimization&gt;speed &lt;inlining&gt;off
                 &lt;debug-symbols&gt;on &lt;profiling&gt;on ;
@@ -813,7 +836,6 @@ using yfc ;
 
 <!--
      Local Variables:
-     mode: xml
      sgml-indent-data: t     
      sgml-parent-document: ("userman.xml" "chapter")
      sgml-set-face: t
