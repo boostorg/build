@@ -1876,6 +1876,13 @@ gGENERATOR_FUNCTION(DLL) = dll-files ;
 gIS_DEPENDENCY(DLL) = TRUE ;
 rule dll ( target : sources + : requirements * : default-build * )
 {
+    if $(JAMUNAME[1]) = OpenBSD
+    {
+        if ! [ get-values <dllversion> : $(requirements) ]
+        {
+            requirements += <dllversion>0.0 ;
+        }
+    }
     declare-local-target $(target) : $(sources) : $(requirements) : $(default-build) : DLL ;
 }
 
