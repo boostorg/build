@@ -1,9 +1,8 @@
 @ECHO OFF
-REM Copyrigt (C) 2002-2003 Rene Rivera.
-REM Permission to copy, use, modify, sell and distribute this software
-REM is granted provided this copyright notice appears in all copies.
-REM This software is provided "as is" without express or implied
-REM warranty, and with no claim as to its suitability for any purpose.
+REM (C) Copyright Rene Rivera, 2002-2003.
+REM
+REM See accompanying license for terms and conditions of use.
+REM
 setlocal
 goto Start
 

@@ -1,7 +1,7 @@
-# Copyright (C) Rene Rivera 2002. Permission to copy, use, modify, sell and
-# distribute this software is granted provided this copyright notice appears in
-# all copies. This software is provided "as is" without express or implied
-# warranty, and with no claim as to its suitability for any purpose.
+# (C) Copyright Rene Rivera, 2002.
+#
+# See accompanying license for terms and conditions of use.
+#
 
 # Represents the projet-root of a collection of projects. This maintains
 # information about the root, and pointers to the project defined within

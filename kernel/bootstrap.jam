@@ -1,10 +1,8 @@
-#  (C) Copyright David Abrahams 2001.
-#  (C) Copyright Rene Rivera 2003.
+# (C) Copyright David Abrahams, 2001.
+# (C) Copyright Rene Rivera, 2003.
 #
-#  Permission to copy, use, modify, sell and
-#  distribute this software is granted provided this copyright notice appears in
-#  all copies. This software is provided "as is" without express or implied
-#  warranty, and with no claim as to its suitability for any purpose.
+# See accompanying license for terms and conditions of use.
+#
 
 # First of all, check the jam version
 
