@@ -59,9 +59,11 @@ toolset borland bcc32 : -e -n : /D
     : -WC -w- -q "-I$(toolset-root)Include" "-L$(toolset-root)Lib" -O2 -vi -w-inl
     : -WC -w- -q "-I$(toolset-root)Include" "-L$(toolset-root)Lib" -v -Od -vi- ;
 ## Generic Unix cc
-toolset cc cc : "-o " : -D
-    : -s -O
-    : -g ;
+if ! $(CC) { CC = cc ; }
+toolset cc $(CC) : "-o " : -D
+    : -s -O $(CFLAGS)
+    : -g $(CFLAGS)
+    : $(LIBS) ;
 ## Comeau C/C++ 4.x
 toolset como como : "-o " : -D
     : --inlining
@@ -163,7 +165,7 @@ else
 locate-target = $(LOCATE_TARGET) ;
 if $(VMS)
 {
-    locate-target ?= [.bin.vms] ;
+    locate-target ?= [.bin_vms] ;
     platform = vms ;
 }
 else if $(MAC)
@@ -183,7 +185,14 @@ else
 }
 if $(debug)
 {
-    locate-target = $(locate-target).debug ;
+    if $(VMS)
+    {
+        locate-target = $(locate-target)_debug ;
+    }
+    else
+    {
+        locate-target = $(locate-target).debug ;
+    }
 }
 
 # We have some different files for UNIX, VMS, and NT.
@@ -364,7 +373,7 @@ dist.source =
     ;
 dist.source = $(dist.source:D=)
     $(dist.docs)
-    build.jam build.bat build.sh
+    build.jam build.bat build.sh build_vms.com
     Jambase Jamfile
     jamgram.y jamgram.yy
     debian/changelog debian/control debian/copyright debian/jam.man.sgml debian/rules
@@ -403,11 +412,13 @@ rule .binary
 {
     local zip = ;
     if $(NT) { zip = $($(<).exe:S=.zip) ; }
-    if $(UNIX) { zip = $($(<).exe:S=.gz) ; }
+    if $(UNIX) { zip = $($(<).exe:S=.tgz) ; }
+    zip = $(zip:S=)-$(VERSION)-$(RELEASE)-$(platform)$(zip:S) ;
     DEPENDS $(zip) : $($(<).exe) ;
     DEPENDS dist : $(zip) ;
-    LOCATE on $(zip) = $(locate-target) ;
-    .zip $(zip) : $($(<).exe) ;
+    #~ LOCATE on $(zip) = $(locate-target) ;
+    if $(NT) { .zip $(zip) : $($(<).exe) ; }
+    if $(UNIX) { .pack $(zip) : $($(<).exe) ; }
     .clean $(zip) ;
 }
 

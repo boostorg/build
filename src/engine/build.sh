@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyrigt (C) 2002 Rene Rivera.
+# Copyrigt (C) 2002-2003 Rene Rivera.
 # Permission to copy, use, modify, sell and distribute this software
 # is granted provided this copyright notice appears in all copies.
 # This software is provided "as is" without express or implied
@@ -32,9 +32,11 @@ error_exit ()
     echo "### Toolsets supported by this script are:"
     echo "###     acc, como, darwin, gcc, intel-linux, kcc, kylix, mipspro,"
     echo "###     sunpro, tru64cxx, vacpp"
+    echo "###"
     echo "### A special toolset; cc, is available which is used as a fallback"
-    echo "### when a more specific toolset is not available and the cc command"
-    echo "### detected."
+    echo "### when a more specific toolset is not found and the cc command is"
+    echo "### detected. The 'cc' toolset will use the CC, CFLAGS, and LIBS"
+    echo "### envrironment variables, if present."
     echo "###"
     exit 1
 }
@@ -42,10 +44,10 @@ error_exit ()
 # Check that a command is in the PATH.
 test_path ()
 {
-    if `whence 2>/dev/null`; then
-        whence $1 2>/dev/null
+    if `whence 1>/dev/null 2>/dev/null`; then
+        whence $1 1>/dev/null 2>/dev/null
     else
-        hash $1 2>/dev/null
+        hash $1 1>/dev/null 2>/dev/null
     fi
 }
 
@@ -63,6 +65,12 @@ Guess_Toolset ()
     if test_uname Darwin ; then BOOST_JAM_TOOLSET=darwin
     elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
     elif test_path icc ; then BOOST_JAM_TOOLSET=intel-linux
+    elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
+        BOOST_JAM_TOOLSET=intel-linux
+        BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler70/ia32/
+    elif test -r /opt/intel/compiler60/ia32/bin/iccvars.sh ; then
+        BOOST_JAM_TOOLSET=intel-linux
+        BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler60/ia32/
     elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
         BOOST_JAM_TOOLSET=intel-linux
         BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
@@ -73,7 +81,10 @@ Guess_Toolset ()
     elif test_path aCC ; then BOOST_JAM_TOOLSET=acc
     elif test_uname HP-UX ; then BOOST_JAM_TOOLSET=acc
     # Test for "cc" as the default fallback.
-    elif test_path cc ; then BOOST_JAM_TOOLSET=cc
+    elif test_path $CC ; then BOOST_JAM_TOOLSET=cc
+    elif test_path cc ; then
+        BOOST_JAM_TOOLSET=cc
+        CC=cc
     fi
     if test "$BOOST_JAM_TOOLSET" = "" ; then
         error_exit "Could not find a suitable toolset."
@@ -143,7 +154,11 @@ case $BOOST_JAM_TOOLSET in
     ;;
     
     cc)
-    BOOST_JAM_CC=cc
+    if test -z "$CC" ; then CC=cc ; fi
+    BOOST_JAM_CC=$CC
+    BOOST_JAM_OPT_JAM="$BOOST_JAM_OPT_JAM $CFLAGS $LIBS"
+    BOOST_JAM_OPT_MKJAMBASE="$BOOST_JAM_OPT_MKJAMBASE $CFLAGS $LIBS"
+    BOOST_JAM_OPT_YYACC="$BOOST_JAM_OPT_YYACC $CFLAGS $LIBS"
     ;;
    
     *)
