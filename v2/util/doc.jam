@@ -13,6 +13,7 @@ import print ;
 import set ;
 import container ;
 import class ;
+import sequence ;
 
 # List of possible modules, but which really aren't.
 #
@@ -376,7 +377,7 @@ local rule print-help-options (
     if $(options-to-list)
     {
         print.list-start ;
-        for local option in $(options-to-list)
+        for local option in [ sequence.insertion-sort $(options-to-list) ]
         {
             local def = disabled ;
             if $($(module-name)..option.$(option).default) != "(empty)"
@@ -404,7 +405,7 @@ local rule print-help-module-section (
     {
         print.section $(section-head) $(section-description) ;
         print.list-start ;
-        for local item in $($(module).$(section))
+        for local item in [ sequence.insertion-sort $($(module).$(section)) ]
         {
             local show = ;
             if ! $($(module).$(item).is-local)
@@ -438,7 +439,7 @@ local rule print-help-all (
     if $(documented-modules)
     {
         print.list-start ;
-        for local module-name in $(documented-modules)
+        for local module-name in [ sequence.insertion-sort $(documented-modules) ]
         {
             # The brief docs for each module.
             print.list-item $(module-name): $($(module-name).brief) ;
@@ -489,7 +490,7 @@ local rule print-help-rules (
     if [ set.intersection $(name) : $($(module-name).rules) $($(module-name).class-rules) ]
     {
         # Print out the given rules.
-        for local rule-name in $(name)
+        for local rule-name in [ sequence.insertion-sort $(name) ]
         {
             if $(.option.show-locals) || ! $($(module-name).$(rule-name).is-local)
             {
@@ -522,14 +523,15 @@ local rule print-help-classes (
     if [ set.intersection $(name) : $($(module-name).classes) ]
     {
         # Print out the given classes.
-        for local class-name in $(name)
+        for local class-name in [ sequence.insertion-sort $(name) ]
         {
             if $(.option.show-locals) || ! $($(module-name).$(class-name).is-local)
             {
                 local signature = $($(module-name).$(class-name).signature:J=" ") ;
                 signature ?= "" ;
                 print.section "Class '$(module-name).$(class-name) ( $(signature) )'"
-                    $($(module-name).$(class-name).docs) ;
+                    $($(module-name).$(class-name).docs)
+                   "Inherits from '"$($(module-name).$(class-name).super-name)"'." ;
                 if $($(module-name).$(class-name).args)
                 {
                     print.list-start ;
@@ -559,7 +561,7 @@ local rule print-help-variables (
     if [ set.intersection $(name) : $($(module-name).variables) ]
     {
         # Print out the given variables.
-        for local variable-name in $(name)
+        for local variable-name in [ sequence.insertion-sort $(name) ]
         {
             print.section "Variable '$(module-name).$(variable-name)'" $($(module-name).$(variable-name).docs) ;
             if $($(module-name).$(variable-name).default) ||
@@ -801,7 +803,7 @@ local rule scan-class (
     # [1] = class?, [2] = name, [3] = superclass
     local class-parts =
         [ MATCH "^[$(ws)]*([^$(ws)]+)[$(ws)]+([^$(ws)]+)[$(ws)]+:*[$(ws)]*([^$(ws);]*)" : $(syntax) ] ;
-    if $(class-parts[1]) = "class"
+    if $(class-parts[1]) = "class" || $(class-parts[1]) = "class.class"
     {
         set-class-doc $(class-parts[2]) $(module-name) : $(class-parts[3]) ;
     }
