@@ -134,22 +134,26 @@ goto :eof
 set BOOST_JAM_TOOLSET=
 
 REM If no arguments guess the toolset;
-REM or if first argument is an option guess the toolser;
+REM or if first argument is an option guess the toolset;
 REM otherwise the argument is the toolset to use.
 if "_%1_" == "__" (
     call :Guess_Toolset
+    if not errorlevel 1 goto Setup_Toolset
 ) else (
     call :Test_Option %1
     if not errorlevel 1 (
         call :Guess_Toolset
+        if not errorlevel 1 goto Setup_Toolset
     ) else (
         setlocal & endlocal
         set BOOST_JAM_TOOLSET=%1
         shift
+        goto Setup_Toolset
     )
 )
 if errorlevel 1 goto Finish
 
+:Setup_Toolset
 REM Setup the toolset command and options. This bit of code
 REM needs to be flexible enough to handle both when
 REM the toolset was guessed at and found, or when the toolset
