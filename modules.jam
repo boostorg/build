@@ -19,7 +19,10 @@
 # module
 local rule no_test_defined
 {
-    ECHO warning: no __test__ rule defined in module [ CALLER_MODULE ] ;
+    if ! ( --quiet in [ peek : ARGV ] )
+    {
+        ECHO warning: no __test__ rule defined in module [ CALLER_MODULE ] ;
+    }
 }
 
 # return the binding of the given module
@@ -119,7 +122,11 @@ rule load (
                    && ( ( --debug in $(argv) ) || ( --debug-module=$(m) in $(argv) ) )
                 {
                     .tested += $(m) ;
-                    ECHO testing module $(m)... ;
+                    if ! ( --quiet in $(argv) )
+                    {
+                        ECHO testing module $(m)... ;
+                    }
+                    
                     module $(m)
                     {
                         __test__ ;
@@ -167,33 +174,20 @@ rule import ( module-name : rules-opt * : rename-opt * )
     IMPORT $(module-name) : $(source-names) : [ CALLER_MODULE ] : $(target-names) ;
 }
 
-# Localize the rules of one module into another.
-#
-rule localize (
-    module-name # The module to localize from.
-    export # Do we export the rules from the callee module.
-    : rules-opt * # Optional list of rules to localize.
-    : rename-opt * # Optional list of names to use instead of rules-opt.
+# Define exported copies in $(target-module) of all rules exported
+# from $(source-module).  Also make them available in the global
+# module with qualification, so that it is just as though the rules
+# were defined originally in $(target-module).
+rule clone-rules (
+    source-module
+    target-module 
     )
 {
-    local source-names = $(rules-opt) ;
-    if $(rules-opt) = *
-    {
-        source-names = [ RULENAMES $(module-name) ] ;
-    }
+    local rules = [ RULENAMES $(source-module) ] ;
     
-    local target-names = $(rename-opt) ;
-    target-names ?= $(source-names) ;
-    
-    local caller-module = [ CALLER_MODULE ] ;
-    
-    IMPORT $(module-name) : $(source-names) : $(caller-module) : $(target-names) : LOCALIZE ;
-    
-    if $(export)
-    {
-        EXPORT $(caller-module) : $(target-names) ;
-        IMPORT $(caller-module) : $(target-names) : : $(caller-module).$(target-names) ;
-    }
+    IMPORT $(source-module) : $(rules) : $(target-module) : $(rules) : LOCALIZE ;
+    EXPORT $(target-module) : $(rules) ;
+    IMPORT $(target-module) : $(rules) : : $(target-module).$(rules) ;
 }
 
 local rule __test__ ( )

@@ -18,7 +18,10 @@ rule __test__
 {
     rule identity ( args * ) { return $(args) ; }
 
-    ECHO os: name= [ name ] ;
-    ECHO os: version= [ version ] ;
+    if ! ( --quiet in [ modules.peek : ARGV ] )
+    {
+        ECHO os: name= [ name ] ;
+        ECHO os: version= [ version ] ;
+    }
     assert.true name ;
 }
