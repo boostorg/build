@@ -19,7 +19,8 @@ rule process ( option-name : value ? )
     assert.result --help : MATCH ^(--help).* : $(option-name) ;
     if [ doc.help ]
     {
-        EXIT ;
+	# Indicate that regular build process should be skipped.
+        return true ;
     }
 }
   

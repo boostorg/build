@@ -67,7 +67,7 @@ rule help ( )
                 [ sequence.insertion-sort
                     [ set.difference
                         [ GLOB $(path-to-modules) : *\\.jam ] :
-                        [ GLOB $(path-to-modules) : $(not-modules)\\.jam ] ] ] ;
+                        [ GLOB $(path-to-modules) : $(not-modules)\\.jam ] ] ] ;                
             do-scan $(modules-to-list[1--2]) ;
             do-scan $(modules-to-list[-1]) : print-help-all ;
             did-help = true ;
@@ -157,7 +157,13 @@ local rule split-symbol (
         local module-path = [ GLOB $(path-to-modules) : $(module-name)\\.jam ] ;
         if $(module-path)
         {
-            result = $(module-path) $(symbol-name) ;
+            # The 'module-name' in fact refers to module. Return the full 
+            # module path and a symbol within it. If 'symbol' passed to this 
+            # rule is already module, 'symbol-name' will be empty. Otherwise, 
+            # it's initialized on the previous loop iteration. 
+            # In case there are several modules by this name, 
+            # use the first one.
+            result = $(module-path[1]) $(symbol-name) ;
         }
         else
         {
@@ -925,7 +931,7 @@ rule scan-module (
     target # The module file.
     : text * # The text in the file, one item per line.
     )
-{
+{    
     if $(.option.debug) { ECHO "HELP:" scanning module target '$(target)' ; }
     local module-name = $(.module<$(target)>.name) ;
     local module-documented = ;
@@ -966,6 +972,11 @@ rule scan-module (
         local ignored = [ $(action-rule) $(module-name) : $(action-args) ] ;
     }
 }
+
+# Import scan-module to global scope, so that it's available during
+# header scanning phase.
+IMPORT $(__name__) : scan-module : : doc.scan-module ;
+
 
 # Add a scan action to perform to generate the help documentation.
 # The action rule is passed the name of the module as the first argument.
