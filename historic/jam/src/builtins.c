@@ -15,6 +15,7 @@
 # include "frames.h"
 # include "hash.h"
 # include "strings.h"
+# include "pwd.h"
 
 /*
  * builtins.c - builtin jam rules
@@ -169,6 +170,12 @@ load_builtins()
           char * args[] = { 0 };
           bind_builtin( "BACKTRACE" ,
                         builtin_backtrace, 0, args );
+      }
+
+      {
+          char * args[] = { 0 };
+          bind_builtin( "PWD" ,
+                        builtin_pwd, 0, args );
       }
 }
 
@@ -567,6 +574,17 @@ LIST *builtin_caller_module( PARSE *parse, FRAME *frame )
         
         return result;
     }
+}
+
+/*
+ * Return the current working directory.
+ *
+ * Usage: pwd = [ PWD ] ;
+ */
+LIST*
+builtin_pwd( PARSE *parse, FRAME *frame )
+{
+    return pwd();
 }
 
 static void lol_build( LOL* lol, char** elements )

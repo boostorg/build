@@ -27,5 +27,6 @@ LIST *builtin_import( PARSE *parse, FRAME *args );
 LIST *builtin_export( PARSE *parse, FRAME *args );
 LIST *builtin_caller_module( PARSE *parse, FRAME *args );
 LIST *builtin_backtrace( PARSE *parse, FRAME *args );
+LIST *builtin_pwd( PARSE *parse, FRAME *args );
 
 #endif
