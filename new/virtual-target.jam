@@ -580,7 +580,7 @@ rule action ( targets + : sources * : action-name + : property-set ? )
 
             # Action name can include additional argument to rule, which should not
             # be passed to 'set-target-variables'
-            toolset.set-target-variables $(self.action-name[1]) $(actual-targets[0]) :
+            toolset.set-target-variables $(self.action-name[1]) $(actual-targets) :
               $(properties) ;
 
             $(self.action-name)

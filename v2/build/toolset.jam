@@ -153,7 +153,7 @@ local rule find-property-subset ( property-sets * : properties * )
     return $(result) ;
 }
 
-rule set-target-variables ( rule-or-module target : properties * )
+rule set-target-variables ( rule-or-module targets + : properties * )
 { 
     for local f in $(.$(rule-or-module).flags) 
     {
@@ -196,7 +196,7 @@ rule set-target-variables ( rule-or-module target : properties * )
         # module globals intended to be used as defaults.
         if $(result)-is-nonempty
         {
-            $(variable) on $(target) += $(result) ;
+            $(variable) on $(targets) += $(result) ;
         }
     }
     
@@ -204,7 +204,7 @@ rule set-target-variables ( rule-or-module target : properties * )
     local module_ = [ MATCH ^(.+)\\..* : $(rule-or-module) ] ;
     if $(module_)
     {
-        set-target-variables $(module_) $(target) : $(properties) ;
+        set-target-variables $(module_) $(targets) : $(properties) ;
         
         # Allow a rule-based hook for more-sophisticated setting
         # of build options than flags allows.
