@@ -602,6 +602,11 @@ dist.source = $(dist.source:D=)
     [ .path debian copyright ]
     [ .path debian jam.man.sgml ]
     [ .path debian rules ]
+    [ .path modules set.c ]
+    [ .path modules path.c ]
+    [ .path modules regex.c ]
+    [ .path modules property-set.c ]
+    [ .path modules sequence.c ]
     boost-jam.spec
     ;
 dist.bin =
