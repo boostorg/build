@@ -13,6 +13,7 @@ import print ;
 import type ;
 import feature ;
 import errors ;
+import path ;
 
 # The rule checks toolset parameters. Each trailing parameter 
 # should be a pair of parameter name and parameter value.
@@ -76,6 +77,46 @@ rule check-init-parameters ( toolset : * )
         errors.user-error $(message[1]) : $(message[2]) : $(message[3]) : $(message[4]) ;
     }                
     .all-signatures += $(sig) ;
+}
+
+# Attempts to find tool (binary) named 'name' in PATH and in 'additiona-paths'.
+# If found in path, returns 'name'.
+# If found in additional paths, returns full name. If there are several possibilities,
+# returns them all.
+# Otherwise, returns empty string.
+rule find-tool ( name : additional-paths * )
+{
+    local m = [ GLOB [ modules.peek : PATH Path path ] : $(name) ] ;
+    if $(m)
+    {
+        return $(name) ;
+    } 
+    else 
+    {        
+        return [ path.glob $(additional-paths) : $(name) ] ;    
+    }    
+}
+
+# Checks that a tool can be invoked by 'command'. 
+# If command is not an absolute path, checks if it can be found in 'path'.
+# If comand is absolute path, check that it exists. Returns 'command'
+# if ok and empty string otherwise.
+rule check-tool ( command )
+{
+    if $(command:D)
+    {
+        if [ path.exist [ path.make $(command) ] ]
+        {
+            return $(command) ;
+        }        
+    }
+    else
+    {
+        if [ GLOB [ modules.peek : PATH Path path ] : $(command) ]
+        {
+            return $(command) ;
+        }        
+    }        
 }
 
 
