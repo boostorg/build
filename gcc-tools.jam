@@ -352,23 +352,17 @@ rule Link-action
     IMPLIB_COMMAND on $(<) = "-Wl,--export-all-symbols -Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__ -Wl,--out-implib," ;
     DEPENDS $(<) : $(NEEDLIBS) $(NEEDIMPS) ;
     gRUN_LD_LIBRARY_PATH($(<)) += $(STDLIBPATH:T) ;
-    if $(<[2]) && $(NT) && ( -mno-cygwin in $(gBUILD_PROPERTIES:G=) )
-    {
-        gcc-dllwrap $(<) : $(>) ;
+    
+    # Workaround GCC's lack of command-files and NT's line-length limitation.
+    if $(NT) {
+        JAMSHELL on $(<) = % ;
     }
-    else
+
+    gcc-Link-action $(<) : $(>) ;
+
+    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && ( $(OS) = LINUX || $(OS) = OPENBSD ) && ! $(NO_GNU_LN)
     {
-        # Workaround GCC's lack of command-files and NT's line-length limitation.
-        if $(NT) {
-            JAMSHELL on $(<) = % ;
-        }
-        
-        gcc-Link-action $(<) : $(>) ;
-        
-        if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && ( $(OS) = LINUX || $(OS) = OPENBSD ) && ! $(NO_GNU_LN)
-        {
-            return "$(<[1]).$(DLLVERSION)" ;
-        }
+        return "$(<[1]).$(DLLVERSION)" ;
     }
 }
 
@@ -379,11 +373,6 @@ actions gcc-Link-action bind NEEDLIBS NEEDIMPS
     $(SHELL_EXPORT)$(gSHELL_LIBPATH)
     $(GCC_BIN_DIR)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" "$(IMPLIB_FLAGS)$(NEEDIMPS)" -l$(FINDLIBS) $(LNOPT)$(RPATH_LINK). $(LNOPT)$(SONAME)$(<[1]:D=)$(SOTAG)
     $(ACTION_1)$(LN)$(SPACE)-fs$(SPACE)"$(<[1]:D=)$(OUTTAG)"$(SPACE)"$(<[1])"
-}
-
-actions gcc-dllwrap bind NEEDLIBS NEEDIMPS
-{
-    dllwrap --dllname $(<[1]) -o foo.pyd $(>) -s --entry _DllMain@12 --target=i386-mingw32 -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" "$(IMPLIB_FLAGS)$(NEEDIMPS)" -l"$(FINDLIBS)" -Wl,-rpath-link,. $(LINKFLAGS)     
 }
 
 #### Cc #####
