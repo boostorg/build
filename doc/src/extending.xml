@@ -105,24 +105,86 @@ and linked it.
   "../../example/customization">example/customization</ulink>
   directory.</para>
 
-    </section>
-    <section id="bbv2.extending.targets">
-      <title>Target types</title>
+  </section>
+  <section id="bbv2.extending.targets">
+    <title>Target types</title>
+    <para/>
+  </section>
+  
+  <section id="bbv2.extending.tools">
+    <title>Tools</title>
       <para/>
-    </section>
+  </section>
+  
+  <section id="bbv2.extending.rules">
+    <title>Main target rules</title>
+    <para>
+      The main target rule is what creates a top-level target, for example "exe" or
+      "lib". It's quite likely that's you'll want to declare your own and
+      there are as much as three way to do that.
+    </para>
+    
+    <para>The first is the simplest, but is sufficient in a number of
+      case. Just write a wrapper rule, which will redirect to any of existing
+      rules. For example, you have only one library per directory and want all
+      cpp files in the directory to be compiled. You can achieve this effect
+      with:
+<programlisting>
+lib codegen : [ glob *.cpp ] ;
+</programlisting>
+      but what if you want to make it even simple. Then, you add the following
+      definition to the project-root.jam file:
+<programlisting>
+rule glib ( name : extra-sources * : requirements * )
+{
+    lib $(name) : [ glob *.cpp ] $(extra-sources) : $(requirements) ;
+}
+</programlisting>
+which would allow to reduce Jamfile to
+<programlisting>
+glib codegen ;
+</programlisting>
+    </para>
 
-    <section id="bbv2.extending.tools">
-      <title>Tools</title>
-      <para/>
-    </section>
+    <para>The second approach is suitable when your target rule should just
+      produce a target of specific type. Then, when declaring a type you
+      should tell Boost.Build that a main target rule should be created.
+      For example, if you create a module "obfuscate.jam" containing:
 
-    <section id="bbv2.extending.rules">
-      <title>Main target rules</title>
-      <para/>
-    </section>
+<programlisting>
+import type ;
+type.register OBFUSCATED_CPP  : ocpp : : main ;
+
+import generators ;
+generators.register-standard obfuscate.file : CPP : OBFUSCATED_CPP ;
+</programlisting>
+      and import that module, you'll be able to use the rule "obfuscated-cpp"
+      in Jamfiles, which will convert source to the OBFUSCATED_CPP type.
+    </para>
+
+    <para>
+      The remaining method is to declared your own main target class. The
+      simplest example of this can be found in "build/alias.jam" file. The
+      current V2 uses this method when transformations are relatively
+      complex. However, we might deprecate this approach. If you find that you
+      need to use it (that is, the first two approaches are not sufficient),
+      please let us know by posting to the mailing list.
+    </para>
+    
+
+  </section>
 
     <section id="bbv2.extending.scanners">
       <title>Scanners</title>
       <para/>
     </section>
   </appendix>
+
+<!--
+     Local Variables:
+     mode: xml
+     sgml-indent-data: t     
+     sgml-parent-document: ("userman.xml" "chapter")
+     sgml-set-face: t
+     End:
+-->

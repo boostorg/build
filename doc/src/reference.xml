@@ -484,7 +484,7 @@ Boost.Build comes with default versions of those files,
     symbol is either a value of an implicit feature, or target to
     be built. It is taken to be value of a feature if appropriate
     feature exists. Otherwise, it is considered a <link linkend=
-    "bbv2.advanced.ids">target id</link>. Special target name "clean"
+    "bbv2.reference.ids">target id</link>. Special target name "clean"
     has the same effect as "--clean" option.
       </simpara>
     </listitem>
@@ -630,6 +630,118 @@ linked binaries would be created.
 
     <section id="bbv2.reference.buildreq">
       <title>Build request</title>
+
+    <section id="bbv2.reference.ids">
+      <title>Target identifiers and references</title>
+
+      <para><emphasis>Target identifier</emphasis> is used to denote a
+      target. The syntax is:</para>
+
+<programlisting>
+target-id -&gt; (project-id | target-name | file-name )
+              | (project-id | directory-name) "//" target-name   
+project-id -&gt; path
+target-name -&gt; path
+file-name -&gt; path
+directory-name -&gt; path                  
+</programlisting>
+
+      <para>
+This grammar allows some elements to be recognized as either
+
+  <itemizedlist>
+    <listitem>
+      <simpara>
+        project id (at this point, all project ids start with slash).
+      </simpara>
+    </listitem>
+
+    <listitem>
+      <simpara>
+        name of target declared in current Jamfile (note that target
+        names may include slash).
+      </simpara>
+    </listitem>
+
+    <listitem>
+      <simpara>
+        a regular file, denoted by absolute name or name relative to
+        project's sources location.
+      </simpara>
+    </listitem>
+  </itemizedlist>
+
+  To determine the real meaning a check is made if project-id
+  by the specified name exists, and then if main target of that
+  name exists. For example, valid target ids might be:
+
+<screen>
+a                                    -- target in current project
+lib/b.cpp                            -- regular file
+/boost/thread                        -- project "/boost/thread"
+/home/ghost/build/lr_library//parser -- target in specific project
+</screen>
+
+    </para>
+
+  <para><emphasis role="bold">Rationale:</emphasis>Target is separated from project by special
+  separator (not just slash), because:</para>
+
+  <itemizedlist>
+    <listitem>
+      <simpara>
+        It emphasises that projects and targets are different things.
+      </simpara>
+    </listitem>
+
+    <listitem>
+      <simpara>
+        It allows to have main target names with slashes. 
+
+    <!-- The motivation for which is:
+
+    So, to summarize:
+
+    1. The project which extract tarfile may extract all possible kinds
+       of targets, and it's reasonable to use them directly from other
+       project.
+
+    2. The rule for unpacking tar is inplemented in terms of
+       "patch-file", for maintainability, and therefore, must use main
+       target name which contains slashes?
+
+    3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is
+       not an option, because you should not change existing tree 
+
+    That makes good rationale for why main target must contain names.
+    -->
+      </simpara>
+    </listitem>
+  </itemizedlist>
+
+  <para id="bbv2.reference.targets.references">
+    <emphasis>Target reference</emphasis> is used to
+  specify a source target, and may additionally specify desired
+  properties for that target. It has this syntax:</para>
+
+<programlisting>
+target-reference -&gt; target-id [ "/" requested-properties ]
+requested-properties -&gt; property-path
+</programlisting>
+
+      <para>
+For example,
+
+<programlisting>
+exe compiler : compiler.cpp libs/cmdline/&lt;optimization&gt;space ;
+</programlisting>
+
+would cause the version of <literal>cmdline</literal> library,
+optimized for space, to be linked in even if the
+<literal>compiler</literal> executable is build with optimization for
+speed.
+      </para>
+    </section>
 
       <para/>
     </section>
