@@ -1,0 +1,380 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+  <head>
+    <meta name="generator" content=
+    "HTML Tidy for Linux/x86 (vers 1st March 2002), see www.w3.org">
+    <!--tidy options: -i -wrap 78 -->
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+    <title>Boost.Build v2 user manual</title>
+<style type="text/css">
+        hr { color: black }
+        p.revision { text-align: right; font-style: italic }
+        pre.code { margin-left: 2em } 
+        pre.output { margin-left: 2em }
+        img.banner { border: 0; float: left }
+        h1 { text-align: right }
+        br.clear { clear: left }
+        p.alert { color: red }
+        table { align: center; border: thin; }
+</style>
+  </head>
+
+  <body>
+    <p><a href="../../index.htm"><img class="banner" height="86" width="277"
+    alt="C++ Boost" src="../../c++boost.gif"></a></p>
+
+    <h1>Boost.Build v2 user manual<br class="clear">
+    </h1>
+    <hr>
+
+    <p class="alert">This is preliminary version intended to document
+    everything implemeneted but not yet ready for any practical use.</p>
+    <hr>
+
+    <dl class="page-index">
+      <dt><a href="#sec-reference">Reference documentation</a></dt>
+
+      <dd>
+        <dl class="page-index">
+          <dt><a href="#features_properties">Features and properties</a></dt>
+
+          <dt><a href="#initialization">Initialization</a></dt>
+
+          <dt><a href="#command_line">Command line</a></dt>
+
+          <dt><a href="#projects">Projects</a></dt>
+
+          <dt><a href="#targets">Targets</a></dt>
+
+          <dt><a href="#build_process">Build process</a></dt>
+        </dl>
+      </dd>
+    </dl>
+    <hr>
+
+    <h2><a name="sec-reference">Reference</a></h2>
+
+    <h3><a name="features_properties">Features and properties</a></h3>
+
+    <h4>Definition</h4>
+
+    <h4>Link compatible and imcompatible properties</h4>
+
+    <h4>Definition of property refinement</h4>
+
+    <h3><a name="initialization">Initialization</a></h3>
+
+    <h3><a name="command_line">Command line</a></h3>
+
+    <p>Boost.Build extends Jam's command line in two ways. First, command
+    line arguments can be used not only to specify targets to build, but also
+    to specify build variants or arbitrary build request. Second, there are
+    additional command line options.</p>
+
+    <h4>Command line arguments</h4>
+    Command line arguments specify targets and build request using the
+    following rules. 
+
+    <ul>
+      <li>An argument which does not contain slashes or the "=" symbol is
+      either a value of an implicit feature, or target to be build. It is
+      taken to be value of a feature if appropriate feature exists.
+      Otherwise, it is considered target name.</li>
+
+      <li>
+        An argument with either slashes or the "=" symbol specifies build
+        properties. It is converted into a set of build properties as
+        follows: 
+
+        <ul>
+          <li>The argument is split at each slash.</li>
+
+          <li>
+            Each component is converted into a set of properties. If
+            component is a value of implicit feature, it is not changed.
+            Otherwise, it should have the form 
+<pre>
+    &lt;feature-name&gt;=&lt;feature-value&gt;[","&lt;feature-value&gt;]*
+   
+</pre>
+            For each specified value, a propertry with that value and the
+            specified feature name is added to the set.
+          </li>
+
+          <li>Property sets for each of the component are set-theoretically
+          multiplicated.</li>
+        </ul>
+      </li>
+    </ul>
+    For example, the command line 
+<pre>
+    target1 debug gcc/runtime-link=dynamic,static
+   
+</pre>
+    would cause target called <tt>target1</tt> to be rebuild in debug mode,
+    except that for gcc, both dynamically and statically linked binaries
+    would be created. 
+
+    <p>TODO: should allow</p>
+<pre>
+    target1 debug gcc,borland/runtime-link=static
+   
+</pre>
+    to work. 
+
+    <h4>Command line options</h4>
+
+    <p>All of the Boost.Build options start with the "--" prefix. They are
+    described in the following table.</p>
+
+    <table align="center">
+      <caption>
+        Command line options
+      </caption>
+
+      <thead>
+        <tr>
+          <th>Option</th>
+
+          <th>Description</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td><tt>--debug</tt></td>
+
+          <td>Enables internal checks.</td>
+        </tr>
+
+        <tr>
+          <td><tt>--dump-projects</tt></td>
+
+          <td>Cause the project structure to be output.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3><a name="projects">Projects</a></h3>
+
+    <p>Boost.Build considers every software it build as organized into
+    projects, which corresponds to a single Jamfile. The project are
+    organized in a hierarchical structure, so for each project we can talk
+    about parent project, which is always unique and a number of subprojects.
+    (TODO: project root).</p>
+
+    <h4>Project attributes</h4>
+
+    <p>For each project, there are several attributes.</p>
+
+    <p><em>Project id</em> is used to denote the project from other project.
+    Each project id is a hierarchical path, such as "boost/thread". When
+    project-id need to be referred from other projects there are two
+    alternatives:</p>
+
+    <ul>
+      <li>Use absolute proejct-id, which starts with "/", for example
+      <tt>/boost/thread</tt>.</li>
+
+      <li>Use relative project-id, which is appended to the project-id of the
+      project where it is used.</li>
+    </ul>
+    <br>
+    <br>
+     
+
+    <p><em>Source location</em> specifies directory where sources for the
+    project are located.</p>
+
+    <p><em>Project requirements</em> are requirements that apply to all the
+    targets in the projects as well as all subprojects.</p>
+
+    <p><em>Default build</em> is the build request that should be used when
+    no build request is specified explicitly.</p>
+
+    <p>The default values for those attributes are given in the table below.
+    In order to affect them, Jamfile may call the <tt>project</tt> rule. The
+    rule has this syntax:</p>
+<pre>
+    project id : &lt;attributes&gt; ;
+   
+</pre>
+    Here, attributes is a sequence of (attribute-name, attribute-value)
+    pairs. The list of attribute names along with its handling is shown in
+    the table below. For example, it it possible to write: 
+<pre>
+    project tennis 
+        : requirements &lt;threading&gt;multi 
+        : default-build release
+        ;
+   
+</pre>
+
+    <table>
+      <tr>
+        <th>Attribute</th>
+
+        <th>Name for the 'project' rule</th>
+
+        <th>Default value</th>
+
+        <th>Handling by the 'project' rule</th>
+      </tr>
+
+      <tr>
+        <td>Project id</td>
+
+        <td>none</td>
+
+        <td>none</td>
+
+        <td>Assigned from the first parameter of the 'project' rule. It is
+        assumed to denote absolute project id.</td>
+      </tr>
+
+      <tr>
+        <td>Source location</td>
+
+        <td><tt>source-location</tt></td>
+
+        <td>The location of jamfile for the project</td>
+
+        <td>Sets to the passed value</td>
+      </tr>
+
+      <tr>
+        <td>Requirements</td>
+
+        <td><tt>requirements</tt></td>
+
+        <td>The parent's requirements</td>
+
+        <td>The parent's requirements are refined with the passed requirement
+        and the result is used as the project requirements.</td>
+      </tr>
+
+      <tr>
+        <td>Default build</td>
+
+        <td><tt>default-build</tt></td>
+
+        <td>TODO</td>
+
+        <td>Sets to the passed value</td>
+      </tr>
+    </table>
+
+    <h4>Project relationship</h4>
+
+    <p>There are two kinds of project relationships.</p>
+
+    <p>First is parent-child. This relationship is established implicitly:
+    parent directories of a project are searched, and the first found Jamfile
+    is assumed to define the parent project. The parent-child relationship
+    affects only attribute values for the child project.</p>
+
+    <p>Second is build relationship. Some project may request to recursively
+    build other projects. Those project need not be child projects. The
+    <tt>build-project</tt> rule is used for that:</p>
+<pre>
+    build-project src ;
+   
+</pre>
+
+    <h3><a name="targets">Targets</a></h3>
+
+    <h4>Main targets and main target alternatives</h4>
+
+    <h4>Target identifiers and references</h4>
+
+    <p>Target identifier is used to denote a target.</p>
+
+    <p>Target reference is used to refer to a target, and may additionally
+    specify desired properties for that target.</p>
+
+    <p>Simplified target reference has the same form as pathname, for example
+    <tt>lib/a</tt>. In order to determine if this is target reference or
+    pathname, it is checked if there's a jamfile in the specified path. If
+    there is one, it is loaded and if the specified target is declared by
+    that project it is used. Otherwise, we just treat the target reference as
+    file name.</p>
+
+    <h3><a name="build_process">Build process</a></h3>
+
+    <p>The build works in this way. On startup, the project in the current
+    directory is read. As the result a tree of projects is constructed. After
+    that, the build request is constructed from the command line. Then, the
+    steps are:</p>
+
+    <ol>
+      <li>The project in the current dir is passed the build request. If the
+      build request does not satisfy the project's requirements, a warning is
+      issued and the build of the project is skipped. Otherwise, the process
+      is repeated recusrively for all subprojects.</li>
+
+      <li>
+        An attempts to make all the main targets in the project is performed.
+        For each main target: 
+
+        <ol>
+          <li>All main target alternatives which requirements are satisfied
+          by the build request are enumerated.</li>
+
+          <li>If there are several such alternatives, the one which longer
+          requirements list is selected.</li>
+        </ol>
+      </li>
+
+      <li>
+        For each selected alternative 
+
+        <ol>
+          <li>Each target reference in the source list are recursively
+          constructed.</li>
+
+          <li>The dependency graph for the target is constructed by running
+          so called matching process, using generated source targets and
+          ordinary sources.</li>
+        </ol>
+      </li>
+    </ol>
+
+    <p>The dependency graph constructed for each target is build of so called
+    "virtual targets", which do not yet correspond to jam's targets. It is
+    therefore converted to jam's dependency graph which is then build.</p>
+
+    <p>The paths for build targets are determined with a method having two
+    properties. First, non-free features are represented in path. Second,
+    free features are not represented in path (because that would make them
+    overly long), but two targets with different free features are never
+    mixed. Each project has a base directory for all its target.</p>
+
+    <p>Path for each target is relative to the base and has two components.
+    The first component represents all non-free features used to build the
+    target. If the set of free properties used to build the target is equal
+    to the set of free properties in the project's requirements, then the
+    second component is empty. Otherwise, the second part has the form
+    "main_target-&lt;name&gt;", where "name" is the name of main target which
+    build required the current target.</p>
+
+    <p>For example, we might have these paths:</p>
+<pre>
+    debug/optimization-off
+    debug/main-target-a
+   
+</pre>
+    <hr>
+
+    <p class="revision">Last modified: July 7, 2002</p>
+
+    <p>&copy; Copyright Vladimir Prus 2002. Permission to copy, use, modify,
+    sell and distribute this document is granted provided this copyright
+    notice appears in all copies. This document is provided ``as is'' without
+    express or implied warranty, and with no claim as to its suitability for
+    any purpose.</p>
+  </body>
+</html>
+
