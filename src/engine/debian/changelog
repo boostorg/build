@@ -1,3 +1,9 @@
+bjam (3.1.9-2) unstable; urgency=low
+
+  * Use default value of BOOST_BUILD_PATH is not is set in environment.
+
+ -- Vladimir Prus <ghost@zigzag.lvk.cs.msu.su>  Wed, 17 Dec 2003 16:44:35 +0300
+
 bjam (3.1.9-1) unstable; urgency=low
 
   * Implement NATIVE_FILE builtin and several native rules.
