@@ -176,7 +176,14 @@ rule Link-PYD
 
 declare-target-type PYD : <shared-linkable>true ;
 gGENERATOR_FUNCTION(PYD) = python-files ;
-SUFPYD = .pyd $(SUFDLL[2-]) ;
+if $(NT)
+{
+    SUFPYD = .pyd $(SUFDLL[2-]) ;
+}
+else
+{
+    SUFPYD = $(SUFDLL) ;
+}
 PYDMODE = $(DLLMODE) ;
 SHARED_TYPES += PYD ;
 
