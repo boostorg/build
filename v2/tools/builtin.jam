@@ -81,6 +81,7 @@ feature def-file : : free dependency ;
 # of the library.
 feature allow : : free ;
 
+feature dependency : : free dependency ;
 
 # Windows-specific features
 
