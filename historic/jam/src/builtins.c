@@ -277,6 +277,7 @@ load_builtins()
       init_regex();
       init_property_set();
       init_sequence();
+      init_order();
 }
 
 /*

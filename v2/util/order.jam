@@ -35,6 +35,7 @@ class order
     {
         .constraits += $(first)--$(second) ;
     }
+    NATIVE_RULE class@order : add-pair ;
     
     # Given a list of objects, reorder them so that the constains specified
     # by 'add-pair' are satisfied.
@@ -92,6 +93,7 @@ class order
         }        
         return $(result) ;
     }                     
+    NATIVE_RULE class@order : order ;
     
     # Eliminate constains which mentions objects not in 'objects'.
     # In graph-theory terms, this is finding subgraph induced by

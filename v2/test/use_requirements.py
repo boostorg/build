@@ -244,7 +244,7 @@ t.rm(".")
 t.write(
     "Jamfile", 
 """ 
-lib main : main.cpp : : : <library>libs//lib1 ; 
+lib main : main.cpp : <use>libs//lib1 : : <library>libs//lib1 ; 
 exe hello : hello.cpp main : ;
 """)
 

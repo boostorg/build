@@ -277,7 +277,7 @@ jam.source =
     timestamp.c variable.c modules.c strings.c filesys.c 
     builtins.c pwd.c class.c native.c modules/set.c 
     modules/path.c modules/regex.c modules/property-set.c
-    modules/sequence.c
+    modules/sequence.c modules/order.c
     ;
 if $(NT)
 {
