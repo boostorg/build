@@ -16,7 +16,15 @@ import os ;
 
 import version ;
 
-if ! --ignore-config in [ modules.peek : ARGV ] 
+# Check if we can load 'test-config.jam'. If we can, load it and
+# ignore user configs.
+local test-config = [ GLOB [ modules.peek : BOOST_BUILD_PATH ] : test-config.jam ] ;
+if $(test-config)
+{
+    import test-config ;    
+}
+
+if ! $(test-config) && ! --ignore-config in [ modules.peek : ARGV ] 
 {    
     module site-config 
     {

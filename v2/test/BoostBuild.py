@@ -85,6 +85,7 @@ class Tester(TestCmd.TestCmd):
         if boost_build_path is None:
             boost_build_path = os.path.join(self.original_workdir,
                                             "..", "new")
+            boost_build_path += ":" + self.original_workdir
 
         verbosity = ' -d0 --quiet '
         if '--verbose' in sys.argv:
@@ -95,7 +96,7 @@ class Tester(TestCmd.TestCmd):
             self
             , program=os.path.join(
                 '..', 'jam_src', jam_build_dir, executable)
-              +  ' --ignore-config -sBOOST_BUILD_PATH=' + boost_build_path
+              +  ' -sBOOST_BUILD_PATH=' + boost_build_path
               + verbosity
               + arguments
             , match=match
