@@ -12,11 +12,19 @@ rm -rf example/versioned
 # This one is too low-level and misleading
 rm -rf example/make
 
+# Remove unnecessary top-level files
 find . -maxdepth 1 -type f | egrep -v "roll.sh|bootstrap.jam|build-system.jam|boost_build_v2.html|c++boost.gif|index_v2.html|hacking.txt|site-config.jam|user-config.jam" | xargs rm -f
 
 # Prepare some more files.
 mv index_v2.html index.html
 echo -e "boost-build kernel ;\n" > boost-build.jam
+
+# Build the documentation
+touch doc/project-root.jam
+export BOOST_ROOT=/home/ghost/Work/boost-rc
+cd doc
+bjam --v2
+cd ..
 
 # Make packages
 find . -name CVS | xargs rm -rf

@@ -6,8 +6,13 @@ boostbook userman : src/userman.xml
    : <xsl:param>toc.section.depth=1
      <xsl:param>doc.standalone=true 
    ;
-
+   
+if ! $(BOOST_ROOT)
+{   
+    BOOST_ROOT = [ modules.peek : BOOST_ROOT ] ;   
+}    
+      
 # Copy stylesheet and images from 'official' docs location
-stage html : ../../../../doc/html/boostbook.css ;
+stage html : $(BOOST_ROOT)/doc/html/boostbook.css ;
 stage html/images
-    : [ path.glob ../../../../doc/html/images : *.png ] ;
+    : [ path.glob $(BOOST_ROOT)/doc/html/images : *.png ] ;
