@@ -323,7 +323,7 @@ if $(NT)
 {
     # the list of supported toolsets on Windows NT and Windows 95/98
     #
-    local SUPPORTED_TOOLSETS = "BORLANDC" "VISUALC" "VISUALC16" "INTELC" "WATCOM"
+    local SUPPORTED_TOOLSETS = "BORLANDC" "VC7" "VISUALC" "VISUALC16" "INTELC" "WATCOM"
                                "MINGW" "LCC" ;
   
     # this variable holds the current toolset
@@ -477,6 +477,29 @@ if $(NT)
                    \"$(VISUALC)\\lib\\kernel32.lib\" ;
     OPTIM       ?= "" ;
     STDHDRS     ?= $(VISUALC)\\include ;
+    UNDEFFLAG   ?= "/u _" ;
+    }
+    else if $(TOOLSET) = VC7
+    {
+    ECHO "Compiler is Microsoft Visual C++ .NET" ;
+
+    AR          ?= lib ;
+    AS          ?= masm386 ;
+    CC          ?= cl /nologo ;
+    CCFLAGS     ?= "" ;
+    C++         ?= $(CC) ;
+    C++FLAGS    ?= $(CCFLAGS) ;
+    LINK        ?= link /nologo ;
+    LINKFLAGS   ?= "" ;
+    LINKLIBS    ?= \"$(VISUALC)\\PlatformSDK\\lib\\advapi32.lib\"
+                   # $(VISUALC)\\lib\\libc.lib
+                   # $(VISUALC)\\lib\\oldnames.lib
+                   \"$(VISUALC)\\PlatformSDK\\lib\\gdi32.lib\"
+                   \"$(VISUALC)\\PlatformSDK\\lib\\user32.lib\"
+                   \"$(VISUALC)\\PlatformSDK\\lib\\kernel32.lib\" ;
+    OPTIM       ?= "" ;
+    STDHDRS     ?= \"$(VISUALC)\\include\"
+									 \"$(VISUALC)\\PlatformSDK\\include\" ;
     UNDEFFLAG   ?= "/u _" ;
     }
     else if $(TOOLSET) = INTELC
@@ -2113,7 +2136,7 @@ if $(NOARUPDATE)
 
 if $(NT)
 {
-  if $(TOOLSET) = VISUALC || $(TOOLSET) = INTELC
+  if $(TOOLSET) = VISUALC || $(TOOLSET) = VC7 || $(TOOLSET) = INTELC
   {
     actions updated together piecemeal Archive
     {
