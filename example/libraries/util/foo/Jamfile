@@ -1,0 +1,5 @@
+
+project 
+    : usage-requirements <include>include ;
+
+lib bar : bar.cpp ;
