@@ -20,19 +20,19 @@ rule load (
 {
     # Find the project-root.jam corresponding to this directory.
     #
-    local location = [ os.path.parent
-         [ os.path.make [ find-to-root $(dir) : project-root.jam ] ] ] ;
+    local location = [ find-to-root $(dir) : project-root.jam ] ;
 
     # No project-root file found.
     #
     if ! $(location)
     {
-        EXIT
-            "Failed to find the project root for:" $(dir)"." "Did not"
-            "find a project-root.jam file there or in any of its parent"
-            "directories."
-            "Please consult the documentation at 'http://www.boost.org'." ;
+        ECHO "Failed to find the project root for directory '$(dir)'." ;
+        ECHO "Did not find a project-root.jam file there or in any of its parent"
+            "directories." ;
+        EXIT "Please consult the documentation at 'http://www.boost.org'." ;
     }
+    location = [ os.path.parent [ os.path.make $(location) ] ] ;
+
 
     local module-name = project-root<$(location)> ;
 
