@@ -23,7 +23,7 @@
 # include "strings.h"
 # include <string.h>
 
-static void call_bind_rule(
+void call_bind_rule(
     char* target_,
     char* boundname_ )
 {
@@ -70,7 +70,7 @@ static void call_bind_rule(
 char *
 search( 
 	char	*target,
-	time_t	*time )
+ 	time_t	*time )
 {
 	PATHNAME f[1];
     LIST    *varlist;
@@ -87,7 +87,7 @@ search(
     f->f_grist.len = 0;
 
     if( varlist = var_get( "LOCATE" ) )
-    {
+      {
         f->f_root.ptr = varlist->string;
         f->f_root.len = strlen( varlist->string );
 

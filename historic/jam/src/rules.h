@@ -216,6 +216,8 @@ RULE*   import_rule( RULE* source, module* m, char* name );
 RULE*   new_rule_body( module* m, char* rulename, argument_list* args, PARSE* procedure, int export );
 RULE*   new_rule_actions( module* m, char* rulename, char* command, LIST* bindlist, int flags );
 TARGET  *bindtarget( char *targetname );
+void bind_explicitly_located_targets();
+TARGET* search_for_targets ( char * name, LIST* search_path );
 void 	touchtarget( char *t );
 TARGETS *targetlist( TARGETS *chain, LIST  *targets );
 TARGETS *targetentry( TARGETS *chain, TARGET *target );

@@ -129,6 +129,11 @@ make(
 
 	memset( (char *)counts, 0, sizeof( *counts ) );
 
+    /* First bind all targets with LOCATE_TARGET setting. This is
+       needed to correctly handle dependencies to generated headers.       
+    */
+    bind_explicitly_located_targets();
+
 	for( i = 0; i < n_targets; i++ )
 	{
 	    TARGET *t = bindtarget( targets[i] );

@@ -188,6 +188,12 @@ load_builtins()
           bind_builtin( "PWD" ,
                         builtin_pwd, 0, args );
       }
+
+      {
+          char * args[] = { "target", "*", ":", "path", "*", 0 };
+          bind_builtin( "SEARCH_FOR_TARGET",
+                        builtin_search_for_target, 0, args );
+      }
 }
 
 /*
@@ -680,6 +686,16 @@ builtin_update( PARSE *parse, FRAME *frame)
     for ( ; arg1; arg1 = list_next( arg1 ) )
         mark_target_for_updating( newstr(arg1->string) );
     return L0;
+}
+
+LIST*
+builtin_search_for_target( PARSE *parse, FRAME *frame )
+{
+    LIST* arg1 = lol_get( frame->args, 0 );
+    LIST* arg2 = lol_get( frame->args, 1 );
+
+    TARGET* t = search_for_target( arg1->string, arg2 );
+    return list_new( L0, t->name );
 }
 
 static void lol_build( LOL* lol, char** elements )
