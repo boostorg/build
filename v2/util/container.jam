@@ -223,7 +223,7 @@ class vector : node
     # Returns true if content is equal to the content of other vector.
     # Uses 'utility.equal' for comparison.
     rule equal ( another )
-    {
+    {        
         local mismatch ;
         if [ size ] = [ $(another).size ]
         {
@@ -234,7 +234,12 @@ class vector : node
                     mismatch = true ;
                 }
             }
+        } 
+        else
+        {
+            mismatch = true ;
         }
+                        
         if ! $(mismatch) 
         {
             return true ;
@@ -299,6 +304,9 @@ local rule __test__ ( )
     assert.false $(l4).equal $(l3) ;
     local l5 = [ new vector 3 4 6 ] ;
     assert.true $(l4).equal $(l5) ;
+    # Check that vectors of different sizes are considered non-equal
+    $(l5).pop-back ;    
+    assert.false $(l4).equal $(l5) ;
     local l6 = [ new vector [ new vector 1 2 3 ] ] ;
     assert.true $(l6).equal [ new vector [ new vector 1 2 3 ] ] ;
 }
