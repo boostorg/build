@@ -99,7 +99,8 @@
 
                 <ul>
                     <li><a href="#subproject_rule">The <tt>subproject</tt> Rule</a> 
-                    <li><a href="#main_targets">Describing Main Targets</a> 
+                    <li><a href="#main_targets">Describing Main Targets</a>
+                    <li><a href="#template_targets">Describing Template Targets</a>
                     <li><a href="#stage_targets">Describing Stage Targets</a>
                     <li><a href="#jamfile_example">Example</a> 
                 </ul>
@@ -234,7 +235,7 @@ jam -sTOOLS=gcc my_target
 
       <tr>
         <td>
-            <pre>jam -f<i>allyourbase-path</i> stools=&quot;msvc gcc&quot;</pre> 
+            <pre>jam -f<i>allyourbase-path</i> -sTOOLS=&quot;msvc gcc&quot;</pre> 
 
         <td>default-build <tt>all</tt> with msvc and gcc
 
@@ -368,6 +369,7 @@ subinclude foo/bar/baz <font color="#7f7f7f">foo/bar/...</font> ;
 the system's capabilities and overall design. It also introduces the terminology 
 and concepts necessary to understand the sections on writing Jamfiles and command-line 
 invocations. 
+
 <h3><a name="project_subproject">Projects and Subprojects</a></h3>
 
     <p>A <b>project</b> is a source directory tree containing at least one
@@ -422,7 +424,7 @@ invocations.
     <p>A <b>feature</b> is a normalized (toolset-independent) description of an
     individual build parameter, such as whether inlining is enabled. Each
     feature usually corresponds to a command-line option of one or more build
-    tools. Features come in three varieties:
+    tools. Features come in four varieties:
 
     <ol>
       <li><b>Simple features</b> can take on any of several predetermined
@@ -570,7 +572,7 @@ invocations.
  | | | | `-<b>user-interface-gui</b>
  . . . `-runtime-link-static
  . . .   +-<b>user-interface-console</b>
- . . .   `user-interface-GUI<b></b>
+ . . .   `user-interface-gui<b></b>
 </pre>
     </blockquote>
 
@@ -657,11 +659,11 @@ exe my_target : my_source1.cpp my_source2.c ;
 
         <td rowspan="2">Platform-dependent
 
-        <td><tt>stools="gcc msvc"</tt> 
+        <td><tt>-sTOOLS="gcc msvc"</tt> 
         <td>build with gcc and msvc
 
       <tr>
-        <td><tt>stools=gcc</tt> 
+        <td><tt>-sTOOLS=gcc</tt> 
         <td>build with gcc
 
       <tr>
@@ -749,8 +751,8 @@ project-root ;
     
 <ul>
     <li><i>target-type</i> may be one of <tt>exe</tt>, <tt>lib</tt>, <tt>dll</tt>, 
-        or <tt>stage</tt>. These are actually names of Jam rules. Additional main 
-        target rules are possible; see <tt><a href=
+        <tt>stage</tt> or <tt>template</tt>. These are actually names of Jam rules.
+        Additional main target rules are possible; see <tt><a href=
       "../../status/Jamfile">status/Jamfile</a></tt> or <tt><a href=
       "../../libs/python/build/Jamfile">libs/python/build/Jamfile</a></tt> for 
         examples.<br>
@@ -767,11 +769,11 @@ project-root ;
         file in the build system.<br>
         <br>
     <li><i>sources</i> is a list of paths to source files and dependency targets. 
-        A dependency target path is preceded by <tt>&lt;lib&gt;, &lt;dll&gt;, 
-        </tt>or <tt>&lt;exe&gt; </tt>, and the final path component specifies 
-        the name of a main target in a Jamfile located in the directory given 
-        by the initial path components. Paths may be absolute or relative. The 
-        type of dependency is also used to decide how to link to it when needed. 
+        A dependency target path is preceded by <tt>&lt;template&gt;</tt>,
+        <tt>&lt;lib&gt;</tt>, <tt>&lt;dll&gt;</tt>, or <tt>&lt;exe&gt;</tt>,
+        and the final path component specifies the name of a main target in a Jamfile located
+        in the directory given by the initial path components. Paths may be absolute or
+        relative. The type of dependency is also used to decide how to link to it when needed. 
         Specifying a <tt>&lt;lib&gt;</tt> indicates the use of static linking, 
         as opposed to specifying a <tt>&lt;dll&gt;</tt> which uses dynamic linking. 
         For example in Unix static linking will be done directly, and dynamic 
@@ -787,7 +789,7 @@ project-root ;
         properties intrinsic to the target. Requirements are given as sets of 
         optionally-<b>qualified build properties</b>: 
         <blockquote> 
-            <pre>
+<pre>
 [[&lt;<i>compiler</i>&gt;]&lt;<i>variant</i>&gt;]&lt;<i>feature</i>&gt;<i>value</i>
 </pre>
         </blockquote>
@@ -809,7 +811,7 @@ project-root ;
         values may be specified for a simple feature by separating them with a 
         slash, forming (qualified) <b>multi-valued properties</b>: 
         <blockquote> 
-            <pre>
+<pre>
 [[&lt;<i>compiler</i>&gt;]&lt;<i>variant</i>&gt;]&lt;<i>feature</i>&gt;<i>value1</i>[/<i>value2</i>...]
 </pre>
         </blockquote>
@@ -823,7 +825,7 @@ project-root ;
         built only when another target like an exe is built. Such use might look 
         like: 
         <blockquote> 
-            <pre>
+<pre>
 lib basic : basic.cpp : : &lt;suppress&gt;true ;<br><br>exe test : test.cpp &lt;lib&gt;basic ;<br>
 </pre>
         </blockquote>
@@ -838,15 +840,27 @@ lib basic : basic.cpp : : &lt;suppress&gt;true ;<br><br>exe test : test.cpp &lt;
     "#default_build">default-BUILD</a></i>, more-specific qualification
     overrides less-specific.
 
-    
-<blockquote> </blockquote>
-<h4><a name="stage_targets">Describing Stage Targets</a></h4>
-<p>Stage targets are a special kind of target that don't build a single file but 
+    <h4><a name="template_targets">Describing Template Targets</a></h4>
+
+    <p>Template targets provide a way to handle commonalities between projects targets.
+    They have the same form as <a href="#main_targets">main targets</a> but do not
+    initiate build requests. A target that lists a template as a dependency inherits
+    all the settings from the template, i.e. the templates sources, requirements and
+    default build settings will be added to the targets settings. Paths mentioned in a
+    template definition are always relative to the subdirectory of the Jamfile
+    containing the templates definition, regardless of the subdirectory of the dependent
+    main target. Typically a project will have at least one template target that handles
+    defines, include paths and additional compiler flags common to all targets in the project.
+
+    <h4><a name="stage_targets">Describing Stage Targets</a></h4>
+
+    <p>Stage targets are a special kind of target that don't build a single file but 
     to a collection of files. The goal is to create a directory which is composed 
     of the various files that other targets generate, or individual files. When 
     built a stage target creates a directory with the same name as the target, 
     and copies the dependent files to it. The form of the target is the same as 
     that of <a href="#main_targets">main targets</a> with some differences...
+
 <ul>
     <li><i>target-type</i> is <tt>stage</tt>. See <tt><a href=
       "../../libs/regex/build/Jamfile">libs/regex/build/Jamfile</a></tt> for an 
@@ -856,16 +870,17 @@ lib basic : basic.cpp : : &lt;suppress&gt;true ;<br><br>exe test : test.cpp &lt;
         created. <br>
         <br>
     <li><i>sources</i> is the same as main targets and one can list both generated 
-        targets like <tt>&lt;exe&gt;test_exe</tt> and individual files.<br>
+        targets like <tt>&lt;exe&gt;test_exe</tt> and individual files, but not
+        template targets.<br>
         <br>
-    <li> <i>Requirements</i> the build properties specified are used as with main 
+    <li><i>Requirements</i> the build properties specified are used as with main 
         targets. But one additional type of requirement is possible: <tt>&lt;tag&gt;</tt>... 
         A tag specifies how to &quot;augment&quot; the names of the copied files. 
         This is needed to distinguish the various files if your collecting different 
         builds of the same targets. The syntax is: 
         <blockquote> 
-            <pre>
-&lt;tag&gt;&lt;<i>feature | variant</i>&gt;<i>value</i>
+<pre>
+&lt;tag&gt;&lt;<i>feature|variant</i>&gt;<i>value</i>
 </pre>
         </blockquote>
         <br>
@@ -875,21 +890,23 @@ lib basic : basic.cpp : : &lt;suppress&gt;true ;<br><br>exe test : test.cpp &lt;
         <tt>tag</tt>s, <tt>&lt;tag&gt;&lt;prefix&gt;</tt> and <tt>&lt;tag&gt;&lt;postfix&gt;</tt>, 
         let one prepend and append a value to the &quot;augmentation&quot; respectively.<br>
         <br>
-    <li> <i>Default-BUILD</i> acts in the same manner as a main target.<br>
+    <li> <i>default-BUILD</i> acts in the same manner as a main target.<br>
     </li>
 </ul>
-<h4><a name="jamfile_example">Example</a></h4>
 
-    <p>This artificially complex example shows how an executable called "foo"
-    might be described in a Jamfile. The executable is composed of the sources
+    <h4><a name="jamfile_example">Example</a></h4>
+
+    <p>This artificially complex example shows how two executables called "foo"
+    and "fop" might be described in a Jamfile. All common settings are factored out
+    in the templates "base" and "executable". Foo is composed of the sources
     <tt>./foo.cpp</tt> and <tt>./src/bar.cpp</tt> (specified relative to the
-    directory in which the Jamfile resides), and the built target which results
-    from building the target <tt>baz</tt> as described in
-    <tt>../bazlib/Jamfile</tt>.
+    directory in which the Jamfile resides). Fop only has one sourcefile <tt>./fop.cpp</tt>.
+    Both executables link against the built target which results from building the target 
+    <tt>baz</tt> as described in <tt>../bazlib/Jamfile</tt>.
 
     <blockquote>
 <pre>
-exe foo : foo.cpp src/bar.cpp &lt;lib&gt;../bazlib/baz
+template base : 
     ## <a href="#target_requirements">Requirements</a> ##
     : &lt;include&gt;../bazlib/include 
       &lt;define&gt;BUILDING_FOO=1
@@ -905,6 +922,12 @@ exe foo : foo.cpp src/bar.cpp &lt;lib&gt;../bazlib/baz
     : debug release
       &lt;debug&gt;&lt;runtime-link&gt;static/dynamic
     ;
+
+template executable : &lt;template&gt;base &lt;lib&gt;../bazlib/baz ;
+
+exe foo : &lt;template&gt;executable foo.cpp src/bar.cpp ;
+
+exe fop : &lt;template&gt;executable fop.cpp ;
 </pre>
     </blockquote>
 
@@ -968,11 +991,11 @@ variant <i>name</i> : [&lt;<i>toolset-name</i>&gt;]&lt;<i>feature</i>&gt;value..
     amongst various variants, and therefore targets. For example:
     <blockquote>
     <pre>
-variant my-globals : &lt;rtti&gt;off ;
+variant my-globals : &lt;rtti&gt;off ;
 
 variant my-debug : my-globals debug ;
 
-variant mym-release : my-globals release ;
+variant my-release : my-globals release ;
 </pre>
     </blockquote>
     More examples can be found in <a href="features.jam">features.jam</a>. 
@@ -1029,6 +1052,7 @@ actions msvc-C++-action
         to take advantage of the special <tt>&lt;target-type&gt;</tt> feature, 
         which will have the same value using the <tt>flags</tt> rule described 
         below. 
+
         <p>
 
       <li>
@@ -1093,8 +1117,9 @@ flags <i>toolset variable condition</i> [: <i>value</i>...]
 flags msvc CFLAGS &lt;optimization&gt;off : /Od ;
 </pre>
     </blockquote>
-    It says that the string <tt>/OD</tt> should be added to the global <tt>CFLAGS</tt> 
+    It says that the string <tt>/Od</tt> should be added to the global <tt>CFLAGS</tt> 
 variable whenever a build configuration includes the property <tt>&lt;optimization&gt;off</tt>. 
+
 <p>Similarly, in the following example,
 
     <blockquote>
@@ -1260,6 +1285,7 @@ flags msvc HDRS &lt;include&gt; ;
         <tt>&lt;</tt>s and trailing <tt>&gt;</tt>s are added if necessary to form 
         an expression of the form <tt>&lt;</tt><i>expr2</i><tt>&gt;</tt>; <tt>&lt;</tt><i>expr2</i><tt>&gt;</tt> 
         is then prepended. 
+
         <p>
 
       
@@ -1272,6 +1298,7 @@ flags msvc HDRS &lt;include&gt; ;
         space (&quot;<tt>&nbsp;</tt>&quot;) boundaries. Boost Jam modifies that 
         behavior by allowing variables to be <a
         href="#variable_quoting">quoted</a>. 
+
         <p>
 
       <li>
@@ -1926,7 +1953,8 @@ rule BACKTRACE ( )
     <li>A <b>subvariant target</b> has additional grist identifying its main target 
         and subvariant. This grist is joined to <tt>$(SOURCE_GRIST)</tt> with 
         the platform's directory separator. Thus, on UNIX, a subvariant target 
-        of <tt>my_target</tt> above might be identified as <tt>&lt;bar!baz/my_target/optimization-space/runtime-link-static&gt;my_source.o</tt>. 
+        of <tt>my_target</tt> above might be identified as
+        <tt>&lt;bar!baz/my_target/optimization-space/runtime-link-static&gt;my_source.o</tt>. 
         Note that the part of the grist following the first slash, known as the 
         <b>subvariant id</b>, also corresponds to a fragment of the subvariant 
         directory path where the corresponding target is generated. Most built 
@@ -2054,6 +2082,7 @@ rule BACKTRACE ( )
 itself a variant of <a href=
     "http://www.perforce.com/jam/jam.html">Jam/MR</a>. It is hoped that crucial 
 features we rely on will eventually be incorporated back into the Jam/MR release. 
+
 <p><a name="2">[2]</a> Note: right now, a dependency feature of a main
     target makes <b>all</b> resulting built targets dependent, including
     intermediate targets. That means that if an executable is dependent on an
