@@ -67,6 +67,7 @@ Guess_Toolset ()
     elif test_path KCC ; then BOOST_JAM_TOOLSET=kcc
     elif test_path bc++ ; then BOOST_JAM_TOOLSET=kylix
     elif test_path aCC ; then BOOST_JAM_TOOLSET=acc
+    elif test_uname HP-UX ; then BOOST_JAM_TOOLSET=acc
     # Test for "cc" as the default fallback.
     elif test_path cc ; then BOOST_JAM_TOOLSET=cc
     fi
@@ -134,7 +135,7 @@ case $BOOST_JAM_TOOLSET in
     ;;
     
     acc)
-    BOOST_JAM_CC=cc
+    BOOST_JAM_CC=cc -Ae
     ;;
     
     cc)
