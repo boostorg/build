@@ -331,8 +331,34 @@ rule run-test ( type-to-test run-target : sources * )
     MakeLocate $(run-target) : $(LOCATE_TARGET) ;
     
     local executable = [ test-executable($(type-to-test)) $(targets-to-test[1]) ] ;
-    DEPENDS $(run-target) : $(executable) $(targets-to-test) $(gRUN_TEST_INPUT_FILES) ;
-    INPUT_FILES on $(run-target) = $(gRUN_TEST_INPUT_FILES) ;
+    local x-input-files = [ expand-source-names $(gRUN_TEST_INPUT_FILES) ] ;
+    local x-input-deps = ;
+    for local x-input-file in [ select-gristed $(x-input-files) ]
+    {
+        local input-file-type = [ ungrist $(x-input-file:G:L) ] ;
+        local input-file-type-id = $(gTARGET_TYPE_ID($(input-file-type))) ;
+        local input-file-typed = $(x-input-file:G=$(input-file-type-id)) ;
+        
+        dependent-include $(input-file-typed) ;
+        
+        local input-file-path = [ target-path-of $(input-file-typed) ] ;
+        local input-file-target = [ target-id-of $(input-file-path) ] ;
+        
+        local [ protect-subproject ] ;
+        enter-subproject [ directory-of $(input-file-path) ] ;
+        
+        local p = $(gBUILD_PROPERTIES) ;
+        segregate-free-properties p ;
+        local input-file-subvariant = [
+            find-compatible-subvariant $(input-file-target)
+                : $(gCURRENT_TOOLSET) $(variant)
+                : $(p) ] ;
+        local input-file-dep = [ subvariant-target $(input-file-target) : $(input-file-subvariant) : $(gCURRENT_TOOLSET) $(variant) ] ;
+        x-input-deps += $(input-file-dep) ;
+    }
+    x-input-deps += [ select-ungristed $(x-input-files) ] ;
+    DEPENDS $(run-target) : $(executable) $(targets-to-test) $(x-input-deps) ;
+    INPUT_FILES on $(run-target) = $(x-input-deps) ;
     ARGS on $(run-target) = $(gRUN_TEST_ARGS) ;
     ARGS2 on $(run-target) = $(gRUN_TEST_ARGS2) ;
     
@@ -385,7 +411,7 @@ rule run-test ( type-to-test run-target : sources * )
     local debugger = [ MATCH ^--debugger=(.*) : $(ARGV) ] ;
     debugger = $(debugger)" " ;
     local newline = "
-    " ;
+" ;
     PATH_SETUP on $(run-target) = $(path-setup:J=$(newline):E=)$(newline)$(debugger:E=) ;
     local verbose-test = 1 ;
     if --verbose-test in $(ARGV)
