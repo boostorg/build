@@ -136,7 +136,7 @@ rule Link-action ( target implib ? : sources + : target-type ? )
 actions together vc-Link
 {
     $(VC_SETUP)
-    "$(VC_TOOL_PATH)$(VC_LINKER)" /nologo $(NOINCREMENTAL) $(LINKFLAGS) $(PDB_LINKFLAG)"$(VC_PDB_FILE)" /out:"$(<[1])" /IMPLIB:"$(<[2])" /LIBPATH:"$(LIBPATH)" /LIBPATH:"$(STDLIBPATH)" "$(FINDLIBS:S=.lib)" @"$(>)"
+    "$(VC_TOOL_PATH)$(VC_LINKER)" /nologo /subsystem:console $(NOINCREMENTAL) $(LINKFLAGS) $(PDB_LINKFLAG)"$(VC_PDB_FILE)" /out:"$(<[1])" /IMPLIB:"$(<[2])" /LIBPATH:"$(LIBPATH)" /LIBPATH:"$(STDLIBPATH)" "$(FINDLIBS:S=.lib)" @"$(>)"
 }
 
 #### Cc #####
