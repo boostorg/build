@@ -456,10 +456,6 @@ rule generate-dependencies ( property-set : project : generation-ps )
             errors.error "cannot generate dependency " $(p) ;
         }
         xproperties += $(p:G)$(g) ;
-        for local gi in $(g)
-        {            
-            xproperties += [ $(gi).usage-requirements ] ;
-        }        
     }
     local r = [ property-set.create 
         [ $(property-set).base ] 
@@ -537,18 +533,8 @@ rule basic-target ( name : project
         {
             # TODO: issue a warning when requirements change properties, but
             # link-compatibility is still not broken.
-            
-            # Generate dependency requirements. Here, we generate only 
-            # denepdency requirements specified for this targets. Dependency
-            # requirements may also code from dependencies. However, when they
-            # come from dependencies, the value is not target id, but rather
-            # virtual target names, so generators.construct can use them.
-            
+                        
             rproperties = [ $(rproperties).evaluate-conditionals ] ;
-            
-            rproperties = 
-              [ targets.generate-dependencies $(rproperties) : $(self.project) 
-                : $(rproperties) ] ;
             
             # TODO: this line might cause target's properties to be
             # unqual to project's reference properties. As the
@@ -584,6 +570,19 @@ rule basic-target ( name : project
         return $(source-targets) ;
     }
 
+    # Collects and returns usage requirements from all passed
+    # targets or dependency properties
+    local rule get-usage-requirements ( targets-or-properties * )
+    {
+        local result ;
+        for local e in $(targets-or-properties)
+        {
+            result += [ $(e:G=).usage-requirements ] ;
+        }                      
+        return $(result) ;
+    }
+    
+
     # Determines final build properties, generates sources,
     # and calls 'construct'. This method should not be
     # overridden.
@@ -593,50 +592,29 @@ rule basic-target ( name : project
         {           
             local rproperties = [ final-properties $(property-set) ] ;            
             if $(rproperties[1]) != "@error"                    
-            {                                
+            {
+                rproperties = 
+                  [ targets.generate-dependencies $(rproperties) : $(self.project) 
+                    : $(rproperties) ] ;
+                                            
                 local source-targets = [ generate-sources $(rproperties) ] ;                
-                
-                # Grab usage requirements from source targets
-                local usage-requirements ;
-                for local e in $(source-targets)
-                {
-                    usage-requirements += [ $(e).usage-requirements ] ;
-                }                      
+            
+                local usage-requirements = 
+                  [ get-usage-requirements $(source-targets)  
+                    [ $(rproperties).dependency ] 
+                  ] ;
+
                 rproperties = [ $(rproperties).add 
                   [ property-set.create $(usage-requirements) ] ] ;
-               
+
                 local result = 
                   [ construct $(source-targets) : $(rproperties) ] ;
                 check-for-unused-sources 
                   $(result) : $(source-targets) ;
-                
-                # Apply use requirement of this target to all generated
-                # virtual targets.
-                # Evaluate conditional in context of real build properties
-                xusage-requirements = [ $(self.usage-requirements).evaluate-conditionals 
-                   $(rproperties) ] ;                
-                local xusage-requirements = 
-                  [ targets.generate-dependencies 
-                      $(xusage-requirements) 
-                        : $(self.project) : $(rproperties) ] ;
-                xusage-requirements = [ $(xusage-requirements).raw ] ;
-                
-                for local e in $(result)                    
-                {
-                    $(e).set-usage-requirements $(xusage-requirements) ;
-                    $(e).root true ;
-                }                    
-        
-                # Process all vtargets that will be created if this main target
-                # is created.
-                local all-targets = 
-                  [ sequence.transform virtual-target.traverse : $(result) ] ; 
-                local dg = [ new subvariant-dg $(__name__) : $(property-set) 
-                  : $(rproperties) : $(all-targets) ] ;
-                for local v in $(all-targets)          
-                {
-                    $(v).dg $(dg) ;            
-                }                
+
+
+                set-usage-requirements $(result) : $(rproperties) ;
+                create-subvariant-dg $(result) : $(property-set) : $(rproperties) ;
 
                 self.generated.$(property-set) = $(result) ;
             } 
@@ -647,7 +625,51 @@ rule basic-target ( name : project
         }                
         return $(self.generated.$(property-set)) ;
     }
+
+    # Given the set of generated targets, and refined build 
+    # properties, determines and sets appripriate usage requirements
+    # on those targets.
+    local rule set-usage-requirements ( targets * : rproperties )
+    {
+        xusage-requirements = [ $(self.usage-requirements).evaluate-conditionals 
+          $(rproperties) ] ;                
+
+        local xusage-requirements = 
+          [ targets.generate-dependencies 
+              $(xusage-requirements) 
+                : $(self.project) : $(rproperties) ] ;
+        local usage-requirements2 = [ get-usage-requirements
+            [ $(xusage-requirements).dependency ] ] ;
+        xusage-requirements = [ $(xusage-requirements).raw ] ;
+        xusage-requirements += $(usage-requirements2) ;
+
+        for local e in $(targets)                    
+        {
+            $(e).set-usage-requirements $(xusage-requirements) ;            
+        }                    
+    }
     
+    # Creates a new subvariant-dg instances for 'targets'
+    local rule create-subvariant-dg ( targets * : build-request : rproperties )
+    {
+        for local e in $(targets)                    
+        {
+            $(e).root true ;
+        }                    
+        
+        # Process all vtargets that will be created if this main target
+        # is created.
+        local all-targets = 
+          [ sequence.transform virtual-target.traverse : $(targets) ] ; 
+        local dg = [ new subvariant-dg $(__name__) : $(build-request) 
+          : $(rproperties) : $(all-targets) ] ;
+        for local v in $(all-targets)          
+        {
+            $(v).dg $(dg) ;            
+        }                        
+    }
+    
+        
     # Check that 'result' makes use of all the 'sources'. If not,
     # issues a warning. Note that 'result' *can* be empty. For
     # example, in this use case:
