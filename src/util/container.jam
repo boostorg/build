@@ -7,6 +7,7 @@
 
 import class : * ;
 import sequence ;
+import utility ;
 
 
 # Base for container objects. This lets us construct recursive structures.
@@ -199,8 +200,48 @@ rule vector (
             return [ range 1 : $(size) ] $(size) ;
         }      
     }
+
+    # Returns the textual representation of content.
+    rule str ( )
+    {
+        return "[" [ sequence.transform utility.str : $(self.value) ] "]" ;
+    }
+
+    # Sorts the vector inplace, calling 'utility.less' for
+    # comparisons.
+    rule sort ( )
+    {
+        self.value = 
+            [ sequence.insertion-sort $(self.value) : utility.less ] ;
+    }
+
+    # Returns true if content is equal to the content of other vector.
+    # Uses 'utility.equal' for comparison.
+    rule equal ( another )
+    {
+        local mismatch ;
+        if [ size ] = [ $(another).size ]
+        {
+            for local i in [ indices ]
+            {
+                if ! [ utility.equal [ at $(i) ] [ $(another).at $(i) ] ]
+                {
+                    mismatch = true ;
+                }
+            }
+        }
+        if ! $(mismatch) 
+        {
+            return true ;
+        }
+    }
 }
 class vector : node ;
+
+module class@vector
+{
+    import numbers : range ;
+}
 
 local rule __test__ ( )
 {
@@ -209,9 +250,11 @@ local rule __test__ ( )
     local l = [ new vector ] ;
     assert.result 0 : $(l).size ;
     assert.result : $(l).indices ;
+    assert.result "[" "]" : $(l).str ;
     $(l).push-back b ;
     $(l).push-front a ;
     assert.result 1 2 : $(l).indices ;
+    assert.result "[" a b "]" : $(l).str ;
     assert.result a : $(l).front ;
     assert.result b : $(l).back ;
     $(l).insert 2 : d ;
@@ -242,9 +285,20 @@ local rule __test__ ( )
     local l3 = [ new vector ] ;
     $(l3).push-back [ new vector 1 2 3 4 5 ] ;
     $(l3).push-back [ new vector a b c ] ;
+    assert.result "[" "[" 1 2 3 4 5 "]" "[" a b c "]" "]" : $(l3).str ;
     $(l3).push-back [ new vector [ new vector x y z ] [ new vector 7 8 9 ] ] ;
     assert.result 1 : $(l3).at 1 : 1 ;
     assert.result b : $(l3).at 2 : 2 ;
     assert.result a b c : $(l3).get-at 2 ;
     assert.result 7 8 9 : $(l3).get-at 3 : 2 ;
+
+    local l4 = [ new vector 4 3 6 ] ;
+    $(l4).sort ;
+    assert.result 3 4 6 : $(l4).get ;
+
+    assert.false $(l4).equal $(l3) ;
+    local l5 = [ new vector 3 4 6 ] ;
+    assert.true $(l4).equal $(l5) ;
+    local l6 = [ new vector [ new vector 1 2 3 ] ] ;
+    assert.true $(l6).equal [ new vector [ new vector 1 2 3 ] ] ;
 }

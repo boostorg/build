@@ -268,6 +268,13 @@ rule is-derived ( class : bases + )
     return $(found) ;
 }
 
+# Returns true if the 'value' is a class instance.
+rule is-instance ( value # The value to check 
+     )
+{
+    return [ MATCH "(object@).*" : $(value) ] ;        
+}
+
 # Check if the given value is of the given type.
 #
 rule is-a (
