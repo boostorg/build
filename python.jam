@@ -188,18 +188,6 @@ if $(NT)
     PYTHON_PROPERTIES += <library-path>$(PYTHON_LIB_PATH) ;
 }
 
-# Set gcc-specific release build properties
-{
-    local gcc-release-properties
-      = <optimization>speed <cxxflags>-fomit-frame-pointer
-      <inlining>on
-      # GCC 2.95.4, which ships with Debian, chokes on this.
-      # <cxxflags>-foptimize-sibling-calls 
-      ;
-    
-    PYTHON_PROPERTIES += <$(gcc-compilers)><release>$(gcc-release-properties) ;
-}
-
 BOOST_PYTHON_V2_PROPERTIES 
   = $(PYTHON_PROPERTIES)
     <metrowerks><*><cxxflags>"-inline deferred" 
