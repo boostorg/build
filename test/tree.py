@@ -61,16 +61,18 @@ def trees_difference(a, b, current_name=""):
                 result.touched_files.append(current_name)
 
         # One is a file, one is a directory.
-        elif (((a.children is None) and (b.children is not None))
+        # this case is disabled because svn_tree doesn't distinguish
+        # empty directories from files, at least on Cygwin.
+        elif 0 and (((a.children is None) and (b.children is not None))
             or ((a.children is not None) and (b.children is None))):
             a.pprint()
             b.pprint()
-            raise SVNTypeMismatch
+            raise svn_tree.SVNTypeMismatch
         # They're both directories.
         else:
             # accounted_for holds childrens present in both trees
             accounted_for = []
-            for a_child in a.children:
+            for a_child in (a.children or []):
                 b_child = svn_tree.get_child(b, a_child.name)
                 if b_child:
                     accounted_for.append(b_child)
@@ -83,7 +85,7 @@ def trees_difference(a, b, current_name=""):
                         result.removed_files.append(current_name + "/" + a_child.name)
                     else:
                         result.removed_files.append(a_child.name)
-            for b_child in b.children:
+            for b_child in (b.children or []):
                 if (b_child not in accounted_for):
                     result.added_files.extend(traverse_tree(b_child, current_name))
 
