@@ -51,7 +51,7 @@ CFLAGS =
 # MingW - gcc on Win32
 #
 #CC = gcc
-#CFLAGS = -DNT
+#CFLAGS = -DMINGW
 
 # MPEIX
 #CC = gcc
