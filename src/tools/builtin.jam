@@ -29,7 +29,7 @@ import project ;
 local os = [ modules.peek : OS ] ;
 feature os : $(os) : propagated link-incompatible ;
 
-feature toolset : : implicit propagated link-incompatible symmetric ;
+feature toolset : : implicit propagated symmetric ;
 
 feature stdlib : native : propagated link-incompatible composite ;
 
@@ -42,8 +42,8 @@ feature optimization : off speed space : propagated ;
 feature profiling : off on : propagated ;
 feature inlining : off on full : propagated ;
 
-feature threading : single multi : link-incompatible propagated ;
-feature rtti : on off : link-incompatible propagated ;
+feature threading : single multi : propagated ;
+feature rtti : on off : propagated ;
 feature exception-handling : on off : propagated ;
 feature debug-symbols : on off : propagated ;
 feature define : : free ;
