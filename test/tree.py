@@ -21,6 +21,16 @@ class Trees_difference:
         self.removed_files.extend(other.removed_files)
         self.modified_files.extend(other.modified_files)
         self.touched_files.extend(other.touched_files)
+     
+    def ignore_directories(self):
+        "Removes directories for list of found differences"
+
+        def not_dir(x):
+            return x[-1] != "/"
+        self.added_files = filter(not_dir, self.added_files)
+        self.removed_files = filter(not_dir, self.removed_files)
+        self.modified_files = filter(not_dir, self.modified_files)
+        self.touched_files = filter(not_dir, self.touched_files)
 
     def pprint(self):
         print "Added files   :", self.added_files

@@ -139,11 +139,11 @@ rule from-command-line ( command-line * : feature-space ? )
     {
         if ! [ MATCH "^(-).*" : $(e) ] 
         {
-            # Build request spec either contains slashes, or has "=" in it, 
-            # or is the name of an implicit property.
+            # Build request spec either has "=" in it, or completely
+            # consists of implicit feature values.
             local fs = feature-space ;
-            if [ MATCH "(.*/.*)" : $(e) ] || [ MATCH "(.*=.*)" : $(e) ] ||
-               [ $(feature-space).is-implicit-value $(e) ] 
+            if [ MATCH "(.*=.*)" : $(e) ] 
+               || [ $(feature-space).is-implicit-value $(e:D=) ] 
             {
                 properties += [ convert-command-line-element $(e) : $(feature-space) ] ;
             }
