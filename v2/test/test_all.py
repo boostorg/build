@@ -122,6 +122,7 @@ tests = [ "project_test1",
           "standalone",
           "expansion",
           "wrapper",
+          "duplicate",
           #"ordered_properties",
           ]
 
