@@ -77,16 +77,57 @@ rule refine ( properties * : requirements * : feature-space ? )
     }
 }
 
-# Returns a path which represents the given property set.
-# TODO: this is a quick sketch. We need much better logic.
-rule as-path ( properties * )
+# Helper for as-path, below. Orders properties with the implicit ones
+# first, and within the two sections in alphabetical order of feature
+# name.
+local rule path-order ( feature-space x y )
 {
+    if $(y:G) && ! $(x:G)
+    {
+        return true ;
+    }
+    else if $(x:G) && ! $(y:G)
+    {
+        return ;
+    }
+    else
+    {
+        if ! $(x:G)
+        {
+            x = [ $(feature-space).expand-subfeatures $(x) ] ;
+            y = [ $(feature-space).expand-subfeatures $(y) ] ;
+        }
+        
+        if $(x[0]) < $(y[0])
+        {
+            return true ;
+        }
+    }
+}
+
+# Returns a path which represents the given expanded property set.
+rule as-path ( properties * : feature-space ? )
+{
+    feature-space ?= feature ;
+    
+    # trim redundancy
+    properties = [ $(feature-space).minimize $(properties) ] ;
+    
+    # sort according to path-order
+    properties = [ sequence.insertion-sort $(properties) : path-order $(feature-space) ] ;
+    
     local components ;
     for local p in $(properties)
     {
-        local name = [ ungrist $(p:G) ] ;
-        local value = $(p:G=) ;
-        components += $(name)-$(value) ;
+        if $(p:G)
+        {
+            local f = [ ungrist $(p:G) ] ;
+            components += $(f)-$(p:G=) ;
+        }
+        else
+        {
+            components += $(p) ;
+        }
     }
     return $(components:J=/) ;
 }
@@ -111,6 +152,7 @@ local rule __test__ ( )
 
         compose <variant>debug : <define>_DEBUG <optimization>off ;
         compose <variant>release : <define>NDEBUG <optimization>on ;
+
     }
 
     assert.result <toolset>gcc <rtti>off <define>FOO
@@ -129,15 +171,20 @@ local rule __test__ ( )
         : refine <toolset>gcc : <rtti>off : $(test-space)
         ;
 
+    assert.result debug
+      : as-path <optimization>off <variant>debug
+      : $(test-space)
+      ;
+
+    assert.result gcc/debug/rtti-off
+      : as-path <toolset>gcc <optimization>off <rtti>off <variant>debug
+      : $(test-space)
+      ;
 
     r = [ refine <toolset>gcc <rtti>off
             : <rtti>on
             : $(test-space) ] ;
     assert.equal $(r[1]) : "@error" ;
-
-    assert.result optimization-off/variant-debug
-        : as-path <optimization>off <variant>debug
-        ;
 
 }
 
