@@ -5,5 +5,4 @@ import toolset ;
 # prefix. 
 toolset.using qt ;
 
-# Not that good, but sufficient for testing
-toolset.using stlport : /path/to/stlport ;
+
