@@ -147,6 +147,21 @@ rule abstract-target ( name      # name of the target in Jamfile
 class abstract-target ;
 
 #  Project target class (derived from 'abstract-target')
+#
+#  This class these responsibilities:
+#  - maintaining a list of main target in this project and
+#    building it
+#  - computing 'reference-properties' which would be used for building
+#    a main target in this project, if that main target has no requirements,
+#    or default build of its own. TODO: the code which implements this
+#    is duplication of main-target logic. Need to merge.
+#
+#  Main targets are constructed in two stages:
+#  - When Jamfile is read, a number of calls to 'add-alternative' is made.
+#    At that time, alternatives can also be renamed to account for inline
+#    targets.
+#  - The first time 'main-target' or 'has-main-target' rule is called,
+#    all alternatives are enumerated an main targets are created.
 rule project-target ( name : project : requirements * : default-build * )
 {
     import project targets ;
@@ -208,6 +223,11 @@ rule project-target ( name : project : requirements * : default-build * )
     {
         local result ;
         
+        if ! $(self.built-main-targets)
+        {
+            build-main-targets ;
+        }
+        
         # Collect all main targets here, except for "explicit" ones.
         for local name in $(self.main-targets)
         {
@@ -234,45 +254,58 @@ rule project-target ( name : project : requirements * : default-build * )
     {
         self.explicit-targets += $(target-name) ;
     }
-        
+    
+    # Add new target alternative
+    rule add-alternative ( target-instance )
+    {
+        self.alternatives += $(target-instance) ;
+    }
+    
+            
     # Returns a 'main-target' class instance corresponding to the 'name'.
-    # Creates the instance if needed.
     rule main-target ( name )
     {
-        if ! $(self.main-target.$(name))
+        if ! $(self.built-main-targets)
         {
-            self.main-targets += $(name) ;
-            self.main-target.$(name) =
-                [ new main-target $(name) : $(self.project) ] ;
+            build-main-targets ;
         }
+                        
         return $(self.main-target.$(name)) ;
     }
 
     # Tells if a main target with the specified name exists.
     rule has-main-target ( name )
     {
+        if ! $(self.built-main-targets)
+        {
+            build-main-targets ;
+        }
+        
         if $(self.main-target.$(name)) 
         {
             return true ;
         } 
     }
     
-    # Changes name of existing main target.
-    # Private.
-    rule rename-main-target ( name : new-name )
+    rule build-main-targets ( )
     {
-        local t = $(self.main-target.$(name)) ;
-        # Remove all name.
-        self.main-target.$(name) = ;        
-        self.main-targets = [ set.difference $(self.main-targets) : $(name) ] ;
-        
-        self.main-target.$(new-name) = $(t) ;
-        self.main-targets += $(new-name) ;
-        
-        $(t).rename $(new-name) ;
+        self.built-main-targets = true ;
+        for local a in $(self.alternatives)
+        {
+            local name = [ $(a).name ] ;
+            local target = $(self.main-target.$(name)) ;
+            if ! $(target)
+            {
+                self.main-target.$(name) = 
+                  [ new main-target $(name) : $(self.project) ] ;
+                self.main-targets += $(name) ;
+                target = $(self.main-target.$(name)) ;
+            }
+            
+            $(target).add-alternative $(a) ;            
+        }    
     }
-    
-    
+                    
     # Returns the properties which would be used for a main
     # target in this project, if generation with
     # 'properties' is requested, and that main target 
@@ -1012,9 +1045,10 @@ rule main-target-sources ( sources * : main-target-name )
             # NOTE: on windows, this won't work if 'main-target-name'
             # if single letter. But other alternatives are even worse.
             local new-name = $(main-target-name)..$(name) ;
-            local p = [ $(t).project ] ;            
-            local pt = [ project.target $(p) ] ;
-            $(pt).rename-main-target $(name) : $(new-name) ;
+            $(t).rename $(new-name) ;
+            #local p = [ $(t).project ] ;            
+            #local pt = [ project.target $(p) ] ;
+            #$(pt).rename-main-target $(name) : $(new-name) ;
             result += $(new-name) ;
         }
         else
@@ -1086,15 +1120,11 @@ rule main-target-default-build (
 }         
 
 # Registers the specified target as a main target alternatives.
-# Gets project and name for 'target', obtains main target
-# from them, and adds targets to the list of alternatives for
-# the main target.
-# Return main target.
+# Returns 'target'.
 rule main-target-alternative ( target ) 
 {               
     local ptarget = [ project.target [ $(target).project ] ] ;
-    local mtarget = [ $(ptarget).main-target [ $(target).name ] ] ;
-
-    $(mtarget).add-alternative $(target) ;
-    return $(mtarget) ;
+    
+    $(ptarget).add-alternative $(target) ;
+    return $(target) ;
 }

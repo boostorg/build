@@ -29,5 +29,22 @@ t.rm("bin/$toolset/debug/everything..a.exe")
 t.run_build_system("everything..a")
 t.expect_addition("bin/$toolset/debug/everything..a.exe")
 
+t.rm("bin")
+
+# Now check that inline targets with the same name but
+# present in different places are not confused between
+# each other, and with top-level targets.
+t.write("Jamfile", """
+exe a : a.cpp ;
+alias everything : [ exe a : a.cpp ] ;
+alias everything2 : [ exe a : a.cpp ] ; 
+""")
+
+t.run_build_system()
+t.expect_addition("bin/$toolset/debug/a.exe")
+t.expect_addition("bin/$toolset/debug/everything..a.exe")
+t.expect_addition("bin/$toolset/debug/everything2..a.exe")
+
+
 t.cleanup()
 
