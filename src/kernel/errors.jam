@@ -194,6 +194,28 @@ rule lol->list ( * )
     return $(result) ;
 }
 
+# Return the file:line for the nearest entry in backtrace which correspond
+# to a user module.
+rule nearest-user-location ( )
+{
+    local bt = [ BACKTRACE ] ;
+    
+    local result ;
+    while $(bt) && ! $(result)
+    {
+        local m = [ MATCH ^(.+)\\.$ : $(bt[3]) ] ;
+        local user-modules = ([Jj]amfile(.jam|.v2|)|user-config.jam|site-config.jam|project-root.jam) ;
+        
+        if [ MATCH $(user-modules) : $(bt[1]:D=) ] 
+        {                
+            result = $(bt[1]):$(bt[2]) ;
+        }            
+        bt = $(bt[5-]) ;
+    }
+    return $(result) ;
+}
+
+
 rule __test__ ( )
 {
     # show that we can correctly catch an expected error
