@@ -7,9 +7,11 @@
 # The following #// line will be used by the regression test table generation
 # program as the column heading for HTML tables. Must not include version number.
 #//<a href="http://developer.intel.com/software/products/compilers/">Intel<br>C++</a><br><a href="http://www.stlport.org/">STLport</a>
+
+STLPORT_LIB_BASE_NAME ?= stlport_icl ;
+
 {
     local INTEL_BASE_MSVC_TOOLSET = msvc-stlport ;
-    STLPORT_LIB_BASE_NAME = stlport_icl ;
     extends-toolset intel-win32 ;
     
     # Intel's compiler doesn't seem to encode the path to the STLPort
