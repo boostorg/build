@@ -92,7 +92,7 @@ rule import ( module-name : rules-opt * : rename-opt * )
     local source-names = $(rules-opt) ;
     if $(rules-opt) = *
     {
-        source-names = [ RULENAMES module-name ] ;
+        source-names = [ RULENAMES $(module-name) ] ;
     }
     
     local target-names = $(rename-opt) ;
