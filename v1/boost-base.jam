@@ -1612,25 +1612,26 @@ rule find-compatible-subvariant ( main-target : toolset variant : dependent-simp
 # dependent-properties, returning a list of all generated targets.
 rule link-libraries ( libs * : toolset variant : dependent-simple-properties * )
 {
-  local lib-path result ;
-  for lib-path in $(libs)
-  {
-    local lib-path = [ target-path-of $(lib-path) ] ;
-    local lib-target = [ target-id-of $(lib-path) ] ;
+    local lib-path result ;
+    
+    for lib-path in $(libs)
+    {
+        local lib-path = [ target-path-of $(lib-path) ] ;
+        local lib-target = [ target-id-of $(lib-path) ] ;
 
-    # Enter the dependee subproject
-    local [ protect-subproject ] ;
-    enter-subproject [ directory-of $(lib-path) ] ;
+        # Enter the dependee subproject
+        local [ protect-subproject ] ;
+        enter-subproject [ directory-of $(lib-path) ] ;
 
-    local lib-subvariant = [ 
-      find-compatible-subvariant $(lib-target)
-        : $(toolset) $(variant)
-          : $(dependent-simple-properties) ] ;
+        local lib-subvariant = [ 
+          find-compatible-subvariant $(lib-target)
+            : $(toolset) $(variant)
+              : $(dependent-simple-properties) ] ;
 
-    # Generate build instructions for the library target
-    result += [ subvariant-target $(lib-target) : $(lib-subvariant) : $(toolset) $(variant) ] ;
-  }
-  return $(result) ;
+        # Generate build instructions for the library target
+        result += [ subvariant-target $(lib-target) : $(lib-subvariant) : $(toolset) $(variant) ] ;
+    }
+    return $(result) ;
 }
 
 # Which configuration(s) to build if nothing is explicitly specified
@@ -1971,11 +1972,19 @@ rule expand-target-subvariants ( target : local-build * : tools + : )
                 {
                     properties = [ $(r) $(toolset) $(variant) : $(properties) ] ;
                 }
-                # the rules may have modified the build request, reconstruct it
-                properties = [ expand-build-request $(toolset) $(variant) $(target)
-                    : $(properties[2-]) : $(build-request) ] ;
                 
-                subvariants += $(target)|$(properties)|$(toolset)|$(variant) ;
+                if ! ( <build>no in $(properties) )
+                {
+                    # the rules may have modified the build request, reconstruct it
+                    properties = [ expand-build-request $(toolset) $(variant) $(target)
+                      : $(properties[2-]) : $(build-request) ] ;
+                    
+                    subvariants += $(target)|$(properties)|$(toolset)|$(variant) ;
+                }
+                else if --dump-unbuilt
+                {
+                    ECHO **** skipping build of $(target); toolset= $(toolset) variant= $(variant) **** ;
+                }
             }
         }
     }

@@ -73,7 +73,8 @@ feature build : yes no ;
 # ??.
 feature stdlib : "default" gcc stlport ;
 
-# ??.
+# Used to specify "default-BUILD" properties that will be used if not
+# overridden by the BUILD variable.
 free-feature "default" ;
 
 # Custom flags for the various build procedures.
@@ -174,7 +175,7 @@ feature instruction-set :
 
 gLINK_COMPATIBLE = <shared-linkable>true <target-type> <inlining> ;
 
-gALWAYS_RELEVANT = <target-type> <tag> <default> ;
+gALWAYS_RELEVANT = <target-type> <tag> <default> <build> ;
 
 ##### Requirements by target type #####
 gTARGET_TYPE_REQUIREMENTS(DLL) = <shared-linkable>true ;

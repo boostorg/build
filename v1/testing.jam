@@ -64,7 +64,7 @@ rule boost-test ( sources + : target-type : requirements * : test-name ? : defau
                       : $(target-type)
             ] ;
             
-            if $(result) in $(.all-boost-tests)
+            if $(result) && $(result) in $(.all-boost-tests)
             {
                 EXIT boost-test \"$(result)\" declared twice ;
                 .all-boost-tests += $(result) ;
