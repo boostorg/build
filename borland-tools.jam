@@ -129,7 +129,8 @@ rule Archive-action
 
 actions updated together piecemeal borland-Archive-action
 {
-    $(BCC_TOOL_PATH)tlib /P32 /u /a /C "$(<)" +-"$(>)"
+    $(BCC_TOOL_PATH)tlib /P64 /u /a /C "$(<)" +-"$(>)"
 }
+
 
 
