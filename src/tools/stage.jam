@@ -437,5 +437,89 @@ rule stage ( name : sources * : requirements * : default-build * )
 
 IMPORT $(__name__) : stage : : stage ;
 
+rule add-variant-and-compiler ( name : property-set )
+{
+    return [ rename $(name) : $(property-set) ] ;
+}
+
+rule add-variant ( name : property-set )
+{
+    return [ rename $(name) : $(property-set) : unversioned ] ;
+}
+IMPORT $(__name__) : add-variant add-variant-and-compiler
+  : : stage.add-variant stage.add-variant-and-compiler ;
+
+rule rename ( name : property-set : unversioned ? )
+{    
+    local properties = [ $(property-set).raw ] ;
+    
+    local tags = ;
+    
+    local thread-tag ;
+    if <threading>multi in $(properties) { thread-tag = mt ; }
+    
+    local runtime-tag = ;
+    if <link-runtime>static in $(properties) { runtime-tag += s ; }
+    if <runtime-build>debug in $(properties) { runtime-tag += g ; }
+    
+    if <variant>debug-python in $(properties) { runtime-tag += y ; }
+    if <variant>debug in $(properties) { runtime-tag += d ; }
+    if <stdlib>stlport in $(properties) { runtime-tag += p ; }
+    if <stdlib-stlport:iostream>hostios in $(properties) { runtime-tag += n ; }
+    
+    local toolset-tag = ;
+    # 'unversioned' should be a parameter.
+    if ! $(unversioned)
+    {
+        switch [ $(property-set).get <toolset> ]
+        {
+            case borland* : toolset-tag += bcb ;
+            case como* : toolset-tag += como ;
+            case cw : toolset-tag += cw ;
+            case darwin* : toolset-tag += ;
+            case edg* : toolset-tag += edg ;
+            case gcc* : toolset-tag += gcc ;
+            case intel-linux* : toolset-tag += il ;
+            case intel-win* : toolset-tag += iw ;
+            case kcc* : toolset-tag += kcc ;
+            case kylix* : toolset-tag += bck ;
+            #case metrowerks* : toolset-tag += cw ;
+            #case mingw* : toolset-tag += mgw ;
+            case mipspro* : toolset-tag += mp ;
+            case msvc* : toolset-tag += vc ;
+            case sun* : toolset-tag += sw ;
+            case tru64cxx* : toolset-tag += tru ;
+            case vacpp* : toolset-tag += xlc ;
+        }
+        local version = [ MATCH "<toolset.*version>(.*)" : $(properties) ] ;
+        toolset-tag += $(version) ;
+    }
+
+    # Note yet clear if this should be added on Linux (where we have
+    # version in soname) and how it should be done on Windows.
+    #local version-tag = ;
+    #if ! $(gUNVERSIONED_VARIANT_TAG)
+    #{
+    #    local version-number = [ get-values <version> : $(properties) ] ;
+    #    version-number ?= $(BOOST_VERSION) ;
+    #    version-tag = [ MATCH "^([^.]+)[.]([^.]+)" : $(version-number[1]) ] ;
+    #    version-tag = $(version-tag:J="_") ;
+    #}
+    
+    tags += $(toolset-tag:J=) ;
+    tags += $(thread-tag:J=) ;
+    tags += $(runtime-tag:J=) ;
+    #tags += $(version-tag) ;
+    
+    if $(tags)
+    {
+        return $(name)-$(tags:J=-) ;
+    }
+    else
+    {
+        return $(name) ;
+    }
+}
+
 
 
