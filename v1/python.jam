@@ -25,6 +25,7 @@ local RUN_PATH = $(RUN_PATH) ;
 
 # Decide which toolsets should be treated like an ordinary (unix) GCC installation
 gcc-compilers = [ MATCH ^(gcc.*)$ : $(TOOLS) ] ;
+mingw-compilers = [ MATCH ^(mingw.*)$ : $(TOOLS) ] ;
 gcc-compilers = [ difference $(gcc-compilers) : gcc-nocygwin ] ;
 
 if $(NT)
@@ -106,7 +107,7 @@ rule select-python-library ( toolset variant : properties * )
 {
     if $(NT) 
     {
-        if $(toolset) = mingw
+        if $(toolset) in $(mingw-compilers)
         {
             local lib = python$(PYTHON_VERSION_NODOT) ;
             if <define>BOOST_DEBUG_PYTHON in $(properties)
