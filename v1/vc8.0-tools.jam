@@ -1,0 +1,22 @@
+extends-toolset msvc ;
+
+# singleton variables...
+set-as-singleton VC80_ROOT ;
+
+if ! $(MSVCDir)
+{
+    ProgramFiles ?= $(PROGRAMFILES) ;
+    VC80_ROOT ?= $(ProgramFiles:J=" ")"\\Microsoft Visual Studio .NET Whidbey\\VC7" ;
+    VC_TOOL_PATH = "$(VC80_ROOT)"\\bin\\ ;
+    VC_SETUP = "CALL \"$(VC_TOOL_PATH)VCVARS32.BAT\" >nul" ;
+}
+VC_PDB_NAME = vc80 ;
+
+feature native-wchar_t : on off ;
+
+flags vc8.0 C++FLAGS : /Zc:forScope ;
+flags vc8.0 C++FLAGS <native-wchar_t>on : /Zc:wchar_t ;
+
+# The following #// line will be used by the regression test table generation
+# program as the column heading for HTML tables. Must not include version number.
+#//<a href="http://msdn.microsoft.com/vstudio/whidbey/default.aspx">Micro-<br>soft<br>VC++</a>
