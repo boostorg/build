@@ -27,6 +27,7 @@ if $(NT)
     PYTHON_ROOT ?= c:/tools/python ;
     
     PYTHON_LIB_PATH ?= $(PYTHON_ROOT)/libs $(PYTHON_ROOT)/PCBuild ;
+    PYTHON_STDLIB_PATH ?= $(PYTHON_ROOT)/Lib ;
 
     # Locate Python libraries. In the case of MSVC the libraries are
     # found implicitly, and GCC/MINGW will use -lpython<version> to
@@ -60,6 +61,7 @@ else if $(UNIX)
     PYTHON_ROOT ?= /usr/local ;
     PYTHON_INCLUDES ?= $(PYTHON_ROOT)/include/python$(PYTHON_VERSION) ;
     PYTHON_LIB_PATH ?= $(PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config ;
+    PYTHON_STDLIB_PATH ?= $(PYTHON_ROOT)/lib/python$(PYTHON_VERSION) ;
 
     PYTHON_PROPERTIES ?=
       <include>$(PYTHON_INCLUDES)
