@@ -49,7 +49,10 @@ class Tester(TestCmd.TestCmd):
         if os.name == 'nt':
             jam_build_dir = "bin.ntx86"
         elif os.name == 'posix':
-            jam_build_dir = "bin.linuxx86"
+            if os.uname()[0].lower().startswith('cygwin'):
+                jam_build_dir = "bin.cygwinx86"
+            else:
+                jam_build_dir = "bin.linuxx86"
         else:
             raise "Don't know directory where jam is build for this system"
 
