@@ -632,7 +632,7 @@ jam [ -a ] [ -n ] [ -v ] [ -q ]
 	<P><TABLE WIDTH=75% ALIGN=CENTER><TR><TD><DL>
 
 	<P><DT><CODE>
-	GLOB <i>directories</I> : <I>patterns</I>
+	GLOB <i>directories</I> : <I>patterns</I> : <I>downcase-opt</I>
 	</CODE>
 
 	<DD>  Using the same wildcards as for the patterns in the <A
@@ -642,7 +642,14 @@ jam [ -a ] [ -n ] [ -v ] [ -q ]
 	A to the list of C source and header files in dir1 or dir2.
 	The resulting filenames are the full pathnames, including the
 	directory, but the pattern is applied only to the file name
-	without the directory.
+	without the directory.  
+
+    <p>If <I>downcase-opt</I> is supplied, filenames are converted to
+	all-lowercase before matching against the pattern; you can use
+	this to do case-insensitive matching using lowercase patterns.
+	The paths returned will still have mixed case if the OS supplies
+	them.  On Windows NT and Cygwin, filenames are always downcased
+	before matching.
 
 	</DL></TABLE>
 

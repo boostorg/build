@@ -19,6 +19,7 @@
 # include "pwd.h"
 # include "pathsys.h"
 # include "make.h"
+# include <ctype.h>
 
 /*
  * builtins.c - builtin jam rules
@@ -93,9 +94,13 @@ load_builtins()
       bind_builtin( "EXIT" ,
                     builtin_exit, 0, 0 ) ) );
 
-    duplicate_rule( "Glob" ,
-      bind_builtin( "GLOB" ,
-                    builtin_glob, 0, 0 ) );
+    {
+        char * args[] = { "directories", "*", ":", "patterns", "*", ":", "downcase-filenames", "?", 0 };
+        duplicate_rule(
+            "Glob" ,
+            bind_builtin( "GLOB" , builtin_glob, 0, args )
+            );
+    }
 
     duplicate_rule( "Includes" ,
       bind_builtin( "INCLUDES" ,
@@ -284,56 +289,73 @@ builtin_flags(
  */
 
 struct globbing {
-	LIST	*patterns;
-	LIST	*results;
+    LIST    *patterns;
+    LIST    *results;
+    LIST    *downcase;
 } ;
 
 static void
 builtin_glob_back(
-	void	*closure,
-	char	*file,
-	int	status,
-	time_t	time )
+    void    *closure,
+    char    *file,
+    int status,
+    time_t  time )
 {
-	struct globbing *globbing = (struct globbing *)closure;
-	LIST		*l;
-	PATHNAME	f;
-	string          buf[1];
+    struct globbing *globbing = (struct globbing *)closure;
+    LIST        *l;
+    PATHNAME    f;
+    string          buf[1];
 
-	/* Null out directory for matching. */
-	/* We wish we had file_dirscan() pass up a PATHNAME. */
+    /* Null out directory for matching. */
+    /* We wish we had file_dirscan() pass up a PATHNAME. */
 
-	path_parse( file, &f );
-	f.f_dir.len = 0;
-        string_new( buf );
-	path_build( &f, buf, 0 );
+    path_parse( file, &f );
+    f.f_dir.len = 0;
+    string_new( buf );
+    path_build( &f, buf, 0 );
 
-	for( l = globbing->patterns; l; l = l->next )
-	    if( !glob( l->string, buf->value ) )
-	{
-	    globbing->results = list_new( globbing->results, newstr( file ) );
-	    break;
-	}
-        string_free( buf );
+    if (globbing->downcase)
+    {
+        char* p;
+        for ( p = buf->value; *p; ++p )
+        {
+            *p = tolower(*p);
+        }
+    }
+
+    for( l = globbing->patterns; l; l = l->next )
+        if( !glob( l->string, buf->value ) )
+        {
+            globbing->results = list_new( globbing->results, newstr( file ) );
+            break;
+        }
+    string_free( buf );
 }
 
 LIST *
 builtin_glob(
-	PARSE	*parse,
-	FRAME *frame )
+    PARSE   *parse,
+    FRAME *frame )
 {
-	LIST *l = lol_get( frame->args, 0 );
-	LIST *r = lol_get( frame->args, 1 );
+    LIST *l = lol_get( frame->args, 0 );
+    LIST *r = lol_get( frame->args, 1 );
+    
+    struct globbing globbing;
 
-	struct globbing globbing;
+    globbing.results = L0;
+    globbing.patterns = r;
+    
+    globbing.downcase
+# if defined( OS_NT ) || defined( OS_CYGWIN )
+       = l;  /* always downcase filenames if any files can be found */
+# else 
+       = lol_get( frame->args, 2 ); /* conditionally downcase filenames */
+# endif
+    
+    for( ; l; l = list_next( l ) )
+        file_dirscan( l->string, builtin_glob_back, &globbing );
 
-	globbing.results = L0;
-	globbing.patterns = r;
-
-	for( ; l; l = list_next( l ) )
-	    file_dirscan( l->string, builtin_glob_back, &globbing );
-
-	return globbing.results;
+    return globbing.results;
 }
 
 /*
