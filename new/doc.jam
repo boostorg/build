@@ -15,10 +15,6 @@ import container ;
 import class ;
 import sequence ;
 
-# List of possible modules, but which really aren't.
-#
-not-modules = boost-build bootstrap site-config test user-config ;
-
 # The type of output to generate.
 # "console" is formated text echoed to the console (the default);
 # "text" is formated text appended to the output file;
@@ -46,161 +42,32 @@ help-output-file = help ;
 #
 .option.debug ?= ;
 
-# Handle --help options, displaying or generating instructions and
-# documentation. This return "true" to indicate that it did some
-# help to tell the caller to prevent the regular build actions
-# from occuring.
+# Enable or disable a documentation option.
 #
-rule help ( )
-{
-    if ! $(.did-help)
-    {
-        .did-help = [ help-options ] ;
-    }
-}
-
-# Temporary so that the option parsing can be guarded to execute once
-# until some of this is moved to help.jam options file.
-#
-local rule help-options ( )
-{
-    local args = [ class.new vector [ modules.peek : ARGV ] ] ;
-    local did-help = ;
-    local command = [ $(args).front ] ; $(args).pop-front ;
-    while $(command)
-    {
-        switch $(command)
-        {
-            case --help-all :
-            local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
-            path-to-modules ?= . ;
-            local modules-to-list =
-                [ sequence.insertion-sort
-                    [ set.difference
-                        [ GLOB $(path-to-modules) : *\\.jam ] :
-                        [ GLOB $(path-to-modules) : $(not-modules)\\.jam ] ] ] ;                
-            do-scan $(modules-to-list[1--2]) ;
-            do-scan $(modules-to-list[-1]) : print-help-all ;
-            did-help = true ;
-            
-            case --help-enable-* :
-            local option = [ MATCH --help-enable-(.*) : $(command) ] ; option = $(option:L) ;
-            .option.$(option) = enabled ;
-            did-help = true ;
-            
-            case --help-disable-* :
-            local option = [ MATCH --help-disable-(.*) : $(command) ] ; option = $(option:L) ;
-            .option.$(option) = ;
-            did-help = true ;
-            
-            case --help-output :
-            help-output = [ $(args).front ] ; $(args).pop-front ;
-            did-help = true ;
-            
-            case --help-output-file :
-            help-output-file = [ $(args).front ] ; $(args).pop-front ;
-            did-help = true ;
-            
-            case --help-options :
-            local doc-module-spec = [ split-symbol doc ] ;
-            do-scan $(doc-module-spec[1]) : print-help-options ;
-            did-help = true ;
-            
-            case --help-usage :
-            print-help-usage ;
-            did-help = true ;
-            
-            case --help :
-            local spec = ;
-            if ! [ MATCH --(.*) : [ $(args).front ] ]
-            {
-                spec = [ $(args).front ] ; $(args).pop-front ;
-            }
-            if $(spec)
-            {
-                local spec-parts = [ split-symbol $(spec) ] ;
-                if $(spec-parts)
-                {
-                    if $(spec-parts[2])
-                    {
-                        do-scan $(spec-parts[1]) : print-help-classes $(spec-parts[2]) ;
-                        do-scan $(spec-parts[1]) : print-help-rules $(spec-parts[2]) ;
-                        do-scan $(spec-parts[1]) : print-help-variables $(spec-parts[2]) ;
-                    }
-                    else
-                    {
-                        do-scan $(spec-parts[1]) : print-help-module ;
-                    }
-                }
-                else
-                {
-                    EXIT "Unrecognized help option '"$(command)" "$(spec)"'." ;
-                }
-            }
-            else
-            {
-                print-help-top ;
-            }
-            did-help = true ;
-        }
-        command = [ $(args).front ] ; $(args).pop-front ;
-    }
-    if $(did-help)
-    {
-        UPDATE all ;
-    }
-    return $(did-help) ;
-}
-
-# Split a reference to a symbol into module and symbol parts.
-#
-local rule split-symbol (
-    symbol # The symbol to split.
+local rule set-option (
+    option # The option name.
+    : value ? # Enabled (non-empty), or disabled (empty)
     )
 {
-    local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
-    path-to-modules ?= . ;
-    local module-name = $(symbol) ;
-    local symbol-name = ;
-    local result = ;
-    while ! $(result)
-    {
-        local module-path = [ GLOB $(path-to-modules) : $(module-name)\\.jam ] ;
-        if $(module-path)
-        {
-            # The 'module-name' in fact refers to module. Return the full 
-            # module path and a symbol within it. If 'symbol' passed to this 
-            # rule is already module, 'symbol-name' will be empty. Otherwise, 
-            # it's initialized on the previous loop iteration. 
-            # In case there are several modules by this name, 
-            # use the first one.
-            result = $(module-path[1]) $(symbol-name) ;
-        }
-        else
-        {
-            if ! $(module-name:S)
-            {
-                result = - ;
-            }
-            else
-            {
-                local next-symbol-part = [ MATCH ^.(.*) : $(module-name:S) ] ;
-                if $(symbol-name)
-                {
-                    symbol-name = $(next-symbol-part).$(symbol-name) ;
-                }
-                else
-                {
-                    symbol-name = $(next-symbol-part) ;
-                }
-                module-name = $(module-name:B) ;
-            }
-        }
-    }
-    if $(result) != -
-    {
-        return $(result) ;
-    }
+    .option.$(option) = $(value) ;
+}
+
+# Set the type of output.
+#
+local rule set-output (
+    type
+    )
+{
+    help-output = $(type) ;
+}
+
+# Set the output to a file.
+#
+local rule set-output-file (
+    file
+    )
+{
+    help-output-file = $(file) ;
 }
 
 # Extracts the brief comment from a complete comment. The brief
@@ -401,7 +268,7 @@ local rule print-help-usage ( )
         Build all targets, even if they are current. ;
     print.list-item -fx;
         Read '"x"' as the Jamfile for building instead of searching
-        for the Boost.BUild system. ;
+        for the Boost.Build system. ;
     print.list-item -jx;
         Run up to '"x"' commands concurrently. ;
     print.list-item -n;
@@ -410,7 +277,7 @@ local rule print-help-usage ( )
     print.list-item -ox;
         Write the build commands to the file '"x"'. ;
     print.list-item -q;
-        Quit as soon as the build of a target fails. Specifying this prevent the
+        Quit as soon as the build of a target fails. Specifying this prevents the
         attempt of building as many targets as possible regardless of failures. ;
     print.list-item -sx=y;
         Sets a Jam variable '"x"' to the value '"y"', overriding any value that
