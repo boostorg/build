@@ -860,12 +860,20 @@ class basic-target : abstract-target
     # the condition is satisfied by 'property-set'.
     rule match ( property-set )
     {    
-        local condition = [ $(self.requirements).base ] ;
-        # Weed out conditional properties.
-        condition = [ MATCH ^([^:]*)\$ : $(condition) ] ;
+        # The condition is composed of all base non-conditional properties.
+        # It's not clear if we should expand 'self.requirements' or not.
+        # For one thing, it would be nice to be able to put
+        #    <toolset>msvc-6.0 
+        # in requirements.
+        # On the other hand, if we have <variant>release in condition it 
+        # does not make sense to require <optimization>full to be in
+        # build request just to select this variant.
+        local bcondition = [ $(self.requirements).base ] ;
+        local ccondition = [ $(self.requirements).conditional ] ;
+        local condition = [ set.difference $(bcondition) : $(ccondition) ] ;
         if $(condition) in [ $(property-set).raw ] 
         {
-            return $(condition) ;
+            return $(condition) ;            
         }
         else
         {
