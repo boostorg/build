@@ -523,7 +523,7 @@ set-as-singleton
 # dwa 6/17/01 - added test
 DEPENDS all : shell files lib dll exe obj ;
 DEPENDS all shell files lib dll exe obj test : first ;
-NOTFILE all first shell files lib dll exe obj dirs clean uninstall test ;
+NOTFILE all first shell files lib dll exe obj dirs clean uninstall test nothing ;
 ALWAYS clean uninstall ;
 
 #

@@ -70,7 +70,7 @@ rule boost-test ( sources + : target-type : requirements * : test-name ? : defau
                 .all-boost-tests += $(result) ;
             }
             
-            if --dump-tests in $(ARGV)
+            if --dump-tests in $(ARGV) && $(result)
             {
                 dump-test $(library) : $(result) : $(requirements) ;
             }
@@ -153,6 +153,13 @@ local rule dump-test ( library ? : targets + : requirements * )
         ":" \"$(source-files)\"
           ;
     
+    if --dump-test-targets in $(ARGV)
+    {
+        ECHO boost-test(TARGET)
+            \"$(test-id)\" [$(dump-test-info)] ":"
+            \"$(targets)\"
+            ;
+    }
 }
 
 
