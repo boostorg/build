@@ -162,6 +162,8 @@ rule virtual-target ( name  # Name of this target -- specifies the name of
         # Do anything only on the first invocation
         if ! $(self.made.$(name)) {
             self.made.$(name) = true ;
+            
+            virtual-target.register-actual-name $(name) : $(__name__) ;            
 
             for local i in $(self.dependencies) {
                 DEPENDS $(name) : [ $(i).actualize ] ;
@@ -737,6 +739,21 @@ rule register ( target )
 
     return $(result) ;
 }
+
+rule register-actual-name ( actual-name : virtual-target )
+{
+    if $(.actual.$(actual-name))
+    {
+        errors.error "Duplicate name of actual target:" $(actual-name) 
+          : "previous virtual target" [ $(.actual.$(actual-name)).str ] 
+          : "another virtual target" [ $(virtual-target).str ] ;
+    }
+    else
+    {
+        .actual.$(actual-name) = $(virtual-target) ;
+    }        
+}
+
 
 # Traverses the dependency graph of 'target' and return all targets that will
 # be created before this one is created. If root of some dependency graph is
