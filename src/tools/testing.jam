@@ -23,15 +23,14 @@
 #  regression testing utilities, see
 #  http://www.boost.org/more/regression.html
 
-# Things to do/consider:
-#  - No-skipping on <threading>multi
+# Things to do:
 #  - Teach compiler_status handle Jamfile.v2.
 #  - Grab RUN_PATH logic from V1 testing.jam
 #  - Implement all the parameters to 'run': args/input_files
-#  - Add link/link-fail?
+# Notes:
 #  - <no-warn> is not implemented, since in Como-specific, and it's not clear how
 #     to implement it
-#  - std::locale-support is not impelemted (it's used in some tests).
+#  - std::locale-support is not impelemted (it's used in one test).
 
   
 import targets ;
@@ -54,6 +53,8 @@ rule init ( ) { }
 feature.feature testing.launcher : : optional free ;
 feature.feature location-prefix : : free ;
 feature.feature test-info : : free incidental ;
+feature.feature testing.arg : : free incidental ;
+feature.feature testing.input-file : : free dependency ;
 
 # Register target types.
 type.register TEST : test ;
@@ -107,8 +108,10 @@ rule compile-fail ( sources + : requirements * : target-name ? )
 
 rule run ( sources + : args * : input-files * : requirements * : target-name ? 
     : default-build * )
-{    
-    if $(args) || $(input-files) || $(default-build)
+{      
+    requirements += <testing.arg>$(args:J=" ") ;
+    requirements += <testing.input-file>$(input-files[1]) ;
+    if $(input-files[2]) || $(default-build)
     {
         EXIT "NOT supported" ;
     }    
@@ -118,7 +121,9 @@ rule run ( sources + : args * : input-files * : requirements * : target-name ?
 rule run-fail ( sources + : args * : input-files * : requirements * : target-name ? 
     : default-build * )
 {    
-    if $(args) || $(input-files) || $(default-build)
+    requirements += <testing.arg>$(args:J=" ") ;    
+    requirements += <testing.input-file>$(input-files[1]) ;
+    if $(input-files[2]) || $(default-build)
     {
         EXIT "NOT supported" ;
     }    
@@ -254,7 +259,8 @@ actions unit-test
     $(LAUNCHER) $(>) && touch $(<)
 }
 
-
+toolset.flags testing.capture-output ARG <testing.arg> ;
+toolset.flags testing.capture-output INPUT_FILES <testing.input-file> ;
 rule capture-output ( target : source : properties * )
 {
     output-file on $(target) = $(target:S=.output) ;
@@ -265,6 +271,12 @@ rule capture-output ( target : source : properties * )
     # but it also puts .output into dependency graph, so we must tell jam
     # it's OK if it cannot find the target or updating rule.
     NOCARE $(target:S=.output) ;        
+    
+    # This has two-fold effect. First it adds input files to the dependendency
+    # graph, preventing a warning. Second, it causes input files to be bound
+    # before target is created. Therefore, they are bound using SEARCH setting 
+    # on them and not LOCATE setting of $(target), as in other case (due to jam bug).
+    DEPENDS $(target) : [ on $(target) return $(INPUT_FILES) ] ;
 }
 
 
@@ -295,7 +307,7 @@ actions capture-output bind INPUT_FILES output-file
     $(SHELL_EXPORT)$(PATH_VAR)
     $(SHELL_SET)LD_LIBRARY_PATH=$(RUN_LD_LIBRARY_PATH:J=$(SPLITPATH))
     $(SHELL_EXPORT)$(LD_LIBRARY_PATH_VAR)
-    $(>)  $(ARGS) "$(INPUT_FILES)" > $(output-file) 2>&1 && $(CP) $(output-file) $(<) $(VERBOSE_CAT)$(<)$(RUN_OUTPUT_FOOTER) || ( $(RUN_OUTPUT_HEADER) $(CATENATE) $(output-file) $(RUN_OUTPUT_FOOTER) && exit 1 )
+    $(>)  $(ARG) "$(INPUT_FILES)" > $(output-file) 2>&1 && $(CP) $(output-file) $(<) $(VERBOSE_CAT)$(<)$(RUN_OUTPUT_FOOTER) || ( $(RUN_OUTPUT_HEADER) $(CATENATE) $(output-file) $(RUN_OUTPUT_FOOTER) && exit 1 )
 }
 
 IMPORT $(__name__) : compile compile-fail test-suite run run-fail 
