@@ -45,11 +45,11 @@ flags borland CFLAGS <inlining>full : -vi -w-inl ;
     $(flag-vars) ?= "" ;
 
     flags borland LINKFLAGS :
-      $(USER-INTERFACE) $(TARGET-TYPE) $(RUNTIME-LINK) $(THREADING)
+      $(RUNTIME-LINK) $(USER-INTERFACE) $(TARGET-TYPE) -WM- $(THREADING)
         ;
     
     flags borland CFLAGS :
-      $(USER-INTERFACE) $(TARGET-TYPE) $(RUNTIME-LINK) $(THREADING)
+      $(RUNTIME-LINK) $(USER-INTERFACE) $(TARGET-TYPE) -WM- $(THREADING)
         ;
 }
 
@@ -131,4 +131,5 @@ actions updated together piecemeal borland-Archive-action
 {
     $(BCC_TOOL_PATH)tlib /P32 /u /a /C "$(<)" +-"$(>)"
 }
+
 
