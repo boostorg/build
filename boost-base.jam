@@ -2136,7 +2136,7 @@ rule stage ( name : sources + : requirements * : local-build * )
         [ grist-targets $(name) ] ;
     local arch-subdirs = [ get-values <architecture-subdirs> : $(requirements) ] ;
     local tree-root = [ get-values <tree-subdirs> : $(requirements) ] ;
-    if $(tree-root) { tree-root = [ split-path $(tree-root) ] ; }
+    if $(tree-root) { tree-root = [ split-path $(tree-root[1]) ] ; }
     local locate = [ get-values <locate> : $(requirements) ] ;
     if $(locate) { locate = [ split-path $(locate) ] ; }
     local fake-target = [ get-values <target> : $(requirements) ] ;
@@ -2247,7 +2247,10 @@ rule stage ( name : sources + : requirements * : local-build * )
         else
         {
             destination-file = $(file:D=) ;
-            destination-subdir = [ strip-initial $(tree-root) : [ split-path $(file:D) ] ] ;
+            if $(tree-root)
+            {
+                destination-subdir = [ strip-initial $(tree-root) : [ split-path $(file:D) ] ] ;
+            }
         }
         destination-file =
             [ grist-targets $(destination-file) : [ split-path $(stage-dir) ] $(destination-subdir) ] ;
