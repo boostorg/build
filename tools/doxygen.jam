@@ -15,6 +15,7 @@ import feature ;
 import property ;
 import generators ;
 import boostbook ;
+import type ;
 
 feature.feature recursive : off on ;
 feature.feature pattern : : free ;
