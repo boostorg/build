@@ -29,8 +29,12 @@ rule refine ( properties * : requirements * )
     # Record them so that we can handle 'properties'.
     for local r in $(requirements)
     {
-        # Note: cannot use local here, so take an ugly name
-        __require__$(r:G) = $(r:G=) ;
+        # Don't consider conditional requirements.
+        if ! [ MATCH (:) : $(r:G=) ]
+        {            
+            # Note: cannot use local here, so take an ugly name
+            __require__$(r:G) = $(r:G=) ;
+        }        
     }
 
     for local p in $(properties)
@@ -498,6 +502,11 @@ local rule __test__ ( )
 
     assert.result <toolset>gcc <rtti>off <rtti>off:<define>FOO
         : refine <toolset>gcc : <rtti>off <rtti>off:<define>FOO 
+        : $(test-space)
+        ;
+    
+    assert.result <toolset>gcc:<define>foo <toolset>gcc:<define>bar 
+        : refine <toolset>gcc:<define>foo : <toolset>gcc:<define>bar 
         : $(test-space)
         ;
 
