@@ -482,12 +482,12 @@ rule set-as-singleton ( variables + )
     for local variable in $(variables)
     {
         $(variable) = $($(variable):J=" ") ;
-        if ! $(gSINGLETON_SET($(variable)))
-        {
-            gSINGLETON($(variable)) = $($(variable)) ;
-            gSINGLETON_SET($(variable)) = true ;
-        }
-        $(variable) ?= $(gSINGLETON($(variable))) ;
+        #~ if ! $(gSINGLETON_SET($(variable)))
+        #~ {
+            #~ gSINGLETON($(variable)) = $($(variable)) ;
+            #~ gSINGLETON_SET($(variable)) = true ;
+        #~ }
+        #~ $(variable) ?= $(gSINGLETON($(variable))) ;
     }
 }
 
