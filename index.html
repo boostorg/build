@@ -1,0 +1,168 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Building Boost Libraries</title>
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+
+<h1>
+
+    <img src="../../c++boost.gif" alt="c++boost.gif (8819 bytes)" align= "center" width="277" height="86">Building
+Boost Libraries</h1>
+<table border="1" cellpadding="5" width="656">
+  <tr>
+    <td width="638"><font size="5" color="#FF0000"><b>Read This First!</b></font>
+      <p>Boost.Build is currently in preliminary form.&nbsp; Some features are
+      missing or incomplete. Instructions for accomplishing basic tasks (this
+      page) are rudimentary.&nbsp; But enough functionality is working well to
+      make providing Boost.Build worthwhile.&nbsp; The important bits-and-pieces
+      are all there - what is left to do is some of the relatively minor glue to
+      make the system smooth and easy to use.</p>
+      <p>Don't expect building a full Boost object library for any random
+      compiler to work yet.&nbsp; If there isn't a jam configuration file for
+      your favorite compiler, consider contributing one. Secondary tasks like
+      copying libraries to installation specific directories are also weak.</p>
+      <p>Do expect building object libraries for some of the individual Boost
+      libraries like Python and Regex Libraries to show lots of signs of life.</p>
+      <p>Note that the underlying Jam build engine is mature software, and has
+      been widely used for many years.&nbsp; The FTJam and Boost specific
+      extensions are well on their way to being stable, and have begun to attract interest and use
+      outside of Boost.</td>
+  </tr>
+</table>
+<p><a href="#Introduction">Introduction</a><br>
+<a href="#Preliminaries">Preliminaries</a><br>
+<a href="#Building">Building Boost Libraries</a><br>
+<a href="#Moretools">More on using the tools</a><br>
+<a href="#Tools">Tools available</a></p>
+<h2><a name="Introduction">Introduction</a></h2>
+<p>These instructions explain how to accomplish common tasks using <b>Boost.Build</b>,
+the Boost Build System.</p>
+<p>For tasks not covered here, see the full <a href="build_system.htm">build
+system documentation</a>.</p>
+<h2><a name="Preliminaries">Preliminaries</a></h2>
+<ul>
+  <li><a href="../../more/download.html">Download Boost</a>, and unpack the full
+    directory structure into some root directory.</li>
+  <li>Download FTJam, and install the binary executable where it will be found
+    when invoked from the command line.</li>
+</ul>
+<blockquote>
+  <ul>
+    <li>For easy-to-build source files, see the <a href="http://freetype.sourceforge.net/jam/index.html">FTJam</a>
+      site on SourceForge.</li>
+    <li>For Linux and Win32 pre-built executables, see the <a href="http://sourceforge.net/project/showfiles.php?group_id=3157">ftjam
+      section of the FreeType file list</a>.</li>
+  </ul>
+</blockquote>
+<ul>
+  <li>Set any environmental variables required to run your compiler and related
+    tools from the command line. (It might be a good idea to verify your command line compiler is working if
+    you don't use it regularly.) If you don't want to clutter your environment,
+    see <a href="#Moretools">More on using the tools</a> for alternatives.</li>
+</ul>
+<h2><a name="Building">Building</a> Boost Libraries</h2>
+<p>Using your operating system's command line interpreter, execute the following
+steps.&nbsp; The sample commands given will work for both UNIX and Windows.</p>
+<ul>
+  <li>Change to the Boost root directory.&nbsp; (The directory you unpacked the
+    distribution into.&nbsp; Among others, it contain the file c++boost.gif,
+    subdirectories boost, libs, more, etc.)</li>
+</ul>
+<blockquote>
+  <blockquote>
+    <p><code>chdir my_boost</code></p>
+  </blockquote>
+</blockquote>
+<ul>
+  <li>Build the Boost libraries for your <a href="#Tools">tools</a>. The example
+    is for the GNU and Metrowerks compilers.</li>
+</ul>
+<blockquote>
+  <blockquote>
+    <p><code>jam -ftools/build/allyourbase.jam</code><code> -sTOOLS=&quot;</code><code>gcc
+    metrowerks</code><code>&quot;</code></p>
+  </blockquote>
+</blockquote>
+<h2><a name="Moretools">More on using the tools</a></h2>
+<p>The build system's toolsets are designed to work in either of two ways:</p>
+<ol>
+  <li>The user sets up all of the environment for each toolset he wants to use,
+    in the normal way. For example, for Microsoft VC++, ...vc98/bin is in the
+    path, vcvars32.bat or equivalent has been invoked, etc. For Metrowerks
+    CodeWarrior, cwenv.bat or equivalent has been called and ...Other Metrowerks
+    Tools/Command Line Tools is in the path.<br>
+    <br>
+  </li>
+  <li>The user doesn't want his environment cluttered with this junk and wants
+    to avoid the many other things done by the vendor's script files. Instead,
+    he or she sets variables which point to the toolset installation directories
+    (possibly in the Jamrules, or a user-setup.jam file invoked by the Jamrules).
+    These variables are used by the build system to locate the tools and invoke
+    the necessary setup. They are described in the comments in each toolset's
+    .jam file.</li>
+</ol>
+<h2><a name="Tools">Tools</a> available</h2>
+<table border="1" cellpadding="5">
+  <tr>
+    <td><b>TOOLS Name</b></td>
+    <td><b>Description</b></td>
+  </tr>
+  <tr>
+    <td><code>borland</code></td>
+    <td>Borland command line compiler tools</td>
+  </tr>
+  <tr>
+    <td>como</td>
+    <td>Comeau command line compiler tools</td>
+  </tr>
+  <tr>
+    <td><code>gcc</code></td>
+    <td>GNU GCC command line compiler tools</td>
+  </tr>
+  <tr>
+    <td><code>gcc-stlport</code></td>
+    <td>GNU GCC command line compiler tools, using the STLport library</td>
+  </tr>
+  <tr>
+    <td>intel-win32</td>
+    <td>Intel command line compiler tools, in the Win32 environment using the
+      Microsoft library</td>
+  </tr>
+  <tr>
+    <td><code>kcc</code></td>
+    <td>KAI command line compiler tools</td>
+  </tr>
+  <tr>
+    <td><code>metrowerks</code></td>
+    <td>Metrowerks CodeWarrior command line compiler tools</td>
+  </tr>
+  <tr>
+    <td><code>msvc</code></td>
+    <td>Microsoft Visual C++ command line compiler tools</td>
+  </tr>
+  <tr>
+    <td>vacpp</td>
+    <td>IBM Visual Age C++ command line compiler tools</td>
+  </tr>
+</table>
+<p>Unless otherwise specified, the library is assumed to be the one shipped with
+the compiler.</p>
+<p>Additional tools can be supplied by adding an appropriate xxxx-tools.jam file
+to the tools/build subdirectory, where xxxx is the name of the tool being
+added.&nbsp; If you write an additional toolset file, please submit it to Boost
+so others may benefit from your work.</p>
+<hr>
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->24 September, 2001<!--webbot bot="Timestamp" endspan i-checksum="39337" -->
+</p>
+<p>© Copyright 2001 Beman Dawes</p>
+<p>&nbsp;</p>
+
+</body>
+
+</html>

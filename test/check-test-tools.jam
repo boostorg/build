@@ -1,0 +1,34 @@
+include recursive.jam ;
+include assert-equal.jam ;
+
+#####################################
+# Test the testing tools right here #
+#####################################
+
+# This command always exits with a failure.
+Jam-fail "EXIT error ;" ;
+
+# This should fail to fail
+Jam-fail
+     "include recursive.jam ; Jam-fail \"# this innocuous Jamfile should fail to fail\" ;"
+      ;
+
+check-arguments goodbye 1 : z ;
+check-arguments hello 1-2 3 1-4 : a b : y z z : w ;
+
+DOLLAR = "\$" ;
+Jam-fail "check-arguments hello 1-2 3 1-4 : a b : c d e f : w ;"
+    : "rule 'hello' expects 3 elements in $(DOLLAR)(2), got arguments ( a b : c d e f : w ) instead."
+    ;
+    
+Jam-fail "check-arguments goodbye 1 : z x ;"
+    : "rule 'goodbye' expects 1 elements in $(DOLLAR)(1), got arguments ( z x ) instead."
+    ;
+
+Jam-fail "include assert-equal.jam ; assert-equal fubar : ECHO checking that assertions fail ;"
+    : "ASSERTION FAILURE"
+    ;
+
+local NOTHING = ;
+assert-equal $(NOTHING) : ECHO checking that assertions succeed ;
+

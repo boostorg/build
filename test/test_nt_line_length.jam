@@ -1,0 +1,24 @@
+if $(NT)
+{
+    ten = 0 1 2 3 4 5 6 7 8 9 ;
+    1x7chars = 0_____ ;
+    # add a digit and multiply by 10
+    10x8chars = $(ten)$(1x7chars) ;
+    # add a digit to each of 10 strings and multiply by 10
+    100x9chars = $(ten)$(10x8chars) ;
+    # add a digit to each of 100 strings and multiply by 10
+    1000x10chars = $(ten)$(100x9chars) ;
+
+    actions do_echo
+    {
+    echo $(text)
+    }
+
+    400x10chars = $(ten[1-4])$(100x9chars) ;
+
+    text on foo = $(400x10chars) 40$(10x8chars[1-9]) 01234 ;
+    text on foo = $(1000x10chars) $(1000x10chars) ;
+    JAMSHELL on foo = % ;
+
+    do_echo foo ;
+}
