@@ -18,13 +18,15 @@ if ! $(COMO_PATH_SETUP) # do this once
     COMO_STDLIB_PATH ?= $(COMO_BASE)$(SLASH)$(DOTDOT)$(SLASH)libcomo ;
 
     COMO_BACKEND_SETUP = $(COMO_BACKEND_SETUP) ;
+    newline = "
+" ;
     if $(NT)
     {
-        COMO_BACKEND_INCLUDE_SETUP ?= "set \"COMO_MS_INCLUDE="$(MSVCDir)"/include\"" ;
+        COMO_BACKEND_INCLUDE_SETUP ?= "set \"COMO_MS_INCLUDE="$(VISUALC)"/include\"" ;
         COMO_BACKEND_LIB_SETUP ?= "set \"LIB="$(COMO_STDLIB_PATH)";%LIB%\"" ;
         COMO_PATH_SETUP ?= "set \"PATH="$(COMO_BIN_DIRECTORY)";%PATH%\"" ;
-        COMO_BACKEND_SETUP ?= "call "\"$(MSVCDir)$(SLASH)bin$(SLASH)vcvars32"\"" ;
-        COMO_BACKEND_SETUP ?= REM set MSVCDir or COMO_BACKEND_SETUP to set up the back end ;
+        COMO_BACKEND_SETUP ?= "call "\"$(VISUALC)$(SLASH)bin$(SLASH)vcvars32"\"" ;
+        COMO_BACKEND_SETUP ?= REM set VISUALC or COMO_BACKEND_SETUP to set up the back end ;
         COMO_BASE_SETUP ?= "set \"COMO_BASE=$(COMO_BASE)\"" ;
         COMO_PATH_SETUP ?= REM set COMO_BASE to set up the path for Comeau ;
     }
@@ -47,7 +49,7 @@ flags como STDHDRS <sysinclude> ;
 flags como LINKFLAGS <linkflags> ;
 
 flags como STDHDRS : $(COMO_INCLUDE_PATH) ;
-flags como STDLIBPATH : $(COMO_STDLIB_PATH)$(SLASH) ;
+flags como STDLIB_PATH : $(COMO_STDLIB_PATH)$(SLASH) ;
 
 flags como LIBPATH <library-path> ;
 flags como NEEDLIBS <library-file> ;
