@@ -7,5 +7,5 @@
 import toolset : using ;
 
 using gcc ;
-# using msvc ;
-# using borland ;
+using msvc : : "P:/Program Files/Microsoft Visual Studio/vc98" : : vcvars32-p.bat ;
+using borland ;
