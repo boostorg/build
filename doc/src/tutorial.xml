@@ -176,7 +176,7 @@ exe hello
         If the build request given on the <command>bjam</command>
         command-line explictly contradicts a target's requirements,
         the command-line usually overrides (or, in the case of
-        &ldquo;free&rdquo; features like <varname>&lt;include&gt;</varname>,
+        &#x201C;free&rdquo;&#x201D; features like <varname>&lt;include&gt;</varname>,
         <footnote>
 <para>
 See <xref linkend="bbv2.reference.features.attributes"/>
