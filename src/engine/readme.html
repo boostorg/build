@@ -1,0 +1,272 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <meta name="generator" content=
+    "HTML Tidy for Linux/x86 (vers 1st November 2002), see www.w3.org">
+    <meta http-equiv="Content-Type" content=
+    "text/html; charset=iso-8859-1">
+    <link rel="stylesheet" type="text/css" href=
+    "../../../boost.css">
+    <title>Boost.Jam</title>
+    <meta name="author" content="Rene Rivera">
+    <meta name="description" content=
+    "Boost.Jam (bjam) is the core build tool for using the Boost.Build system. BJam is based on Perforce's Jam/MR.">
+  </head>
+  <body link="#0000ff" vlink="#800080">
+    <table border="0" cellpadding="7" cellspacing="0" width="100%"
+    summary="header">
+      <tbody>
+        <tr>
+          <td valign="top" width="300">
+            <h3><a href="../../../index.htm"><img height="86"
+            width="277" alt="C++ Boost" src="../../../c++boost.gif"
+            border="0"></a></h3>
+          </td>
+          <td valign="top">
+            <h1 align="center">Boost.Jam</h1>
+            <h2 align="center"><br>
+            </h2>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <hr>
+    <dl class="index">
+      <dt><a href="#introduction">Introduction</a></dt>
+      <dt><a href="#features">Features</a></dt>
+      <dt><a href="#contents">Contents</a></dt>
+      <dt><a href="#installing">Installing</a></dt>
+    </dl>
+    <h2><a name="introduction"></a>Introduction</h2>
+    <p>Boost.Jam (BJam) &nbsp;is a build tool based on FTJam, which
+    in turn is based on Perforce Jam. It contains significant
+    improvements made to facilitate its use in the Boost Build
+    System, but should be backward compatible with Perforce
+    Jam.</p>
+    <p>This is version 3.1.3 of BJam and is based on version 2.4 of
+    Jam/MR:</p>
+<pre>
+/+\
++\  Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
+\+/
+This is Release 2.4 of Jam/MR, a make-like program.
+License is hereby granted to use this software and distribute it
+freely, as long as this copyright notice is retained and modifications
+are clearly marked.
+ALL WARRANTIES ARE HEREBY DISCLAIMED.
+</pre>
+    <h2><a name="features"></a>Features</h2>
+    <p>Jam is a make(1) replacement that makes building simple
+    things simple and building complicated things manageable.</p>
+    <p>Jam's language is expressive, making Jamfiles (c.f.
+    Makefiles) compact.&nbsp; Here's a sample:</p>
+<pre>
+Main smail : main.c map.c resolve.c deliver.c
+     misc.c parser.y alias.c pw.c headers.c
+     scanner.l getpath.c str.c ;
+</pre>
+    <p>This builds "smail" from a dozen source files.&nbsp; Jam
+    handles header file dependencies automatically and
+    on-the-fly.</p>
+    <p>Jam is very portable: it runs on UNIX, VMS, Mac, and NT.
+    Most Jamfiles themselves are portable, like the sample
+    above.</p>
+    <p>Jam is unintrusive: it is small, it has negligible CPU
+    overhead, and it doesn't create any of its own funny files
+    (c.f. Odin, nmake, SunOS make).</p>
+    <p>Jam can build large projects spread across many directories
+    in one pass, without recursing, tracking the relationships
+    among all files. Jam can do this with multiple, concurrent
+    processes.</p>
+    <p>Jam isn't under the blinkin GNU copyright, so you can
+    incorporate it into commercial products.</p>
+    <h2><a name="contents"></a>Contents</h2>
+    <table cellpadding="2" cellspacing="2" border="0">
+      <tbody>
+        <tr>
+          <td valign="top"><a href="Jam.html">Jam.html</a></td>
+          <td valign="top">Jam and language reference.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a href=
+          "Jambase.html">Jambase.html</a></td>
+          <td valign="top">Reference for the Jambase boilerplate
+          file.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a href=
+          "Jamfile.html">Jamfile.html</a></td>
+          <td valign="top">Easy reading on creating a Jamfile and
+          using jam.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a href="RELNOTES">RELNOTES</a></td>
+          <td valign="top">Release 2.4 release notes.</td>
+        </tr>
+        <tr>
+          <td valign="top"><a href="Porting">Porting</a></td>
+          <td valign="top">Notes on porting jam to wildcat
+          platforms.</td>
+        </tr>
+      </tbody>
+    </table>
+    <h2><a name="installing"></a>Installing</h2>
+    <dl>
+      <dt>Installing BJam after building it is simply a matter of
+      copying the generated executables someplace in your
+      <tt>PATH</tt>. For building the executables there are a set
+      of <tt>build</tt> bootstrap scripts to accomodate particular
+      environments. The scripts take one optional argument, the
+      name of the toolset to build with. When the toolset is not
+      given an attempt is made to detect an available toolset and
+      use that. The build scripts accept these areguments:</dt>
+    </dl>
+<pre>
+&lt;build script name&gt; [toolset]
+</pre>
+    <p>Running the scripts without arguments will give you the best
+    chance of success. On Windows platforms from a command console
+    do:</p>
+<pre>
+cd &lt;jam source location&gt;
+.\build.bat
+</pre>
+    <p>On Unix type platforms do:</p>
+<pre>
+cd &lt;jam source location&gt;
+sh ./build.sh
+</pre>
+    <p>If the scripts fail to detect an appropriate toolset to
+    build with your particular toolset may not be auto-detectable.
+    In that case, you can specify the toolset as the first
+    argument, this assumes that the toolset is readily available in
+    the <tt>PATH</tt>. The supported toolsets, and wether they are
+    auto-detected, are:</p>
+    <table cellpadding="2" cellspacing="2" border="1">
+      <tbody>
+        <tr>
+          <th valign="top">Script</th>
+          <th valign="top">Platforms</th>
+          <th valign="top">Toolsets</th>
+          <th valign="top">Detection</th>
+        </tr>
+        <tr>
+          <td valign="top" rowspan="4" colspan="1">
+          <tt>build.bat</tt></td>
+          <td valign="top" rowspan="4" colspan="1">Windows NT,
+          2000, and XP</td>
+          <td valign="top"><a href=
+          "http://www.borland.com/bcppbuilder/freecompiler"><tt>borland</tt></a>,
+          <a href="http://www.borland.com/">Borland</a> C++Builder
+          (BCC 5.5)</td>
+          <td valign="top">* Common install location:
+          <tt>"C:\Borland\BCC55"</tt><br>
+           * <tt>BCC32.EXE</tt> in <tt>PATH</tt></td>
+        </tr>
+        <tr>
+          <td valign="top"><a href=
+          "http://www.metrowerks.com"><tt>metrowerks</tt></a>,
+          MetroWerks CodeWarrior C/C++ 7.x, 8.x</td>
+          <td valign="top">* <tt>CWFolder</tt> variable
+          configured<br>
+           * <tt>MWCC.EXE</tt> in <tt>PATH</tt></td>
+        </tr>
+        <tr>
+          <td valign="top"><a href=
+          "http://msdn.microsoft.com/visualc/">msvc</a>, Microsoft
+          Visual C++ 6.x</td>
+          <td valign="top">* Common install locations:
+          <tt>"C:\Program Files\Microsoft Visual Studio"</tt>,
+          <tt>"C:\Program Files\Microsoft Visual C++"<br>
+          </tt> * <tt>CL.EXE</tt> in <tt>PATH</tt></td>
+        </tr>
+        <tr>
+          <td valign="top"><a href=
+          "http://msdn.microsoft.com/visualc/">vc7</a>, Microsoft
+          Visual C++ 7.x</td>
+          <td valign="top">* Common install location:
+          <tt>"C:\Program Files\Microsoft Visual Studio
+          .NET"</tt></td>
+        </tr>
+        <tr>
+          <td valign="top" rowspan="6" colspan="1">
+          <tt>build.sh</tt></td>
+          <td valign="top" rowspan="5" colspan="1">Unix, Linux,
+          Cygwin, etc.</td>
+          <td valign="top"><a href=
+          "http://www.comeaucomputing.com">como</a>,
+          Comeau.Computing C/C++</td>
+          <td valign="top">* <tt>como</tt> in <tt>PATH</tt></td>
+        </tr>
+        <tr>
+          <td valign="top"><a href="http://gcc.gnu.org">gcc</a>,
+          GNU GCC</td>
+          <td valign="top">* <tt>gcc</tt> in <tt>PATH</tt></td>
+        </tr>
+        <tr>
+          <td valign="top"><a href=
+          "http://www.intel.com/software/products/compilers/c60l/">intel-linux</a>,
+          Intel C++ for Linux</td>
+          <td valign="top">* Common install location:
+          <tt>"/opt/intel/compiler50"</tt><br>
+           * <tt>icc</tt> in <tt>PATH</tt></td>
+        </tr>
+        <tr>
+          <td valign="top"><a href=
+          "http://developer.intel.com/software/products/kcc/">kcc</a>,
+          Intel KAI C++</td>
+          <td valign="top">* <tt>KCC</tt> in <tt>PATH</tt></td>
+        </tr>
+        <tr>
+          <td valign="top"><a href=
+          "http://www-3.ibm.com/software/ad/vacpp/">vacpp</a>, IBM
+          VisualAge C++</td>
+          <td valign="top">* <tt>xlc</tt> in <tt>PATH</tt></td>
+        </tr>
+        <tr>
+          <td valign="top">MacOS X<br>
+          </td>
+          <td valign="top"><a href=
+          "http://developer.apple.com/tools/compilers.html">darwin</a>,
+          Apple MacOS X GCC</td>
+          <td valign="top">* <tt>uname</tt> is
+          <tt>"Darwin"</tt></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The built executables are placed in a subdirectory specific
+    to your platform. For example, in Linux running on an Intel x86
+    compatible chip, the executables are placed in:
+    <tt>"bin.linuxx86"</tt>. There are two executables generated:
+    <tt>jam[.exe]</tt>, and <tt>bjam[.exe]</tt>, both are the same
+    binary but with different names. The "jam" invocation is used
+    for compatability with the Perforce Jam/MR functionality,
+    whereas "bjam" is used for the extended Boost.Build
+    functionality.</p>
+    <p>The <tt>build</tt> scripts support additional invocation
+    arguments for use by developers of Boost.Jam. The extra
+    arguments come after the toolset, and can take the form of
+    <tt>"--options"</tt> or targets for the <tt>build.jam</tt>
+    script:</p>
+<pre>
+&lt;build script name&gt; [toolset] [--options* [targets]*]
+</pre>
+    <p>There is current only one available option,
+    <tt>"--debug"</tt>, which builds debugging versions of the
+    executable. When built they are placed in their own directory
+    <tt>"bin.&lt;platform&gt;.debug"</tt>.</p>
+    <p>Currently there are two targets supported: <tt>dist</tt>,
+    and <tt>clean</tt>. Respectively they: generate packages
+    (compressed archives) as appropriate for distribution in the
+    platform, or remove all the built executables and objects.</p>
+    <hr>
+    <p>Revised 
+    <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
+     12 November, 2002 
+    <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
+    </p>
+    <p><i>&copy; Copyright <a href=
+    "mailto:rrivera@acm.org">Ren&eacute; Rivera</a> 2002. All
+    Rights Reserved.</i></p>
+  </body>
+</html>
