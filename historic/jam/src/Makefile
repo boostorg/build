@@ -76,7 +76,7 @@ CFLAGS =
 #
 all: jam0
 	chmod a+w jambase.c
-	./jam0
+	./jam0 -sJAMBASE= -sBOOST_ROOT= -sBOOST_BUILD_PATH=
 
 # for other systems
 #all: jam0
