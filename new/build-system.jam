@@ -13,6 +13,9 @@ rule construct ( module-name )
 # Default patterns to search for the Jamfiles to use for build
 # declarations.
 #
+import modules ;
+
+JAMFILE = [ modules.peek : JAMFILE ] ;
 JAMFILE ?= [Jj]amfile [Jj]amfile.jam ;
 
 # Load a Jamfile at the given directory. Will attempt to load

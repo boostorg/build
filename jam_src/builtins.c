@@ -354,6 +354,7 @@ builtin_match(
 	    {
                 string_append_range( buf, re->startp[i], re->endp[i] );
 		result = list_new( result, newstr( buf->value ) );
+                string_truncate( buf, 0 );
 	    }
             
             string_free( buf );

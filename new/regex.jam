@@ -19,8 +19,9 @@ rule split ( string separator )
     local match = 1 ;
     while $(match)
     {
-        match = [ SUBST $(s) ^(.*)($(separator))(.*) $1 $2 $3 ] ;
+        match = [ MATCH ^(.*)($(separator))(.*) : $(s) ] ;
         if $(match) {
+            match += "" ; # in case 3rd item was empty - works around MATCH bug
             result = $(match[3]) $(result) ;
             s = $(match[1]) ;
         }
