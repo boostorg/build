@@ -621,6 +621,32 @@ local rule in-features ( feature-set-var property )
     }
 }
 
+# Helper for minimize, below - returns the list with
+# the same properties, but where all subfeatures
+# are in the end of the list
+local rule move-subfeatures-to-the-end ( properties * )
+{
+    local x1 ;
+    local x2 ;
+    for local p in $(properties)
+    {
+        # Check if grist contains dash. If it is, this
+        # is possibly subfeature, so move it to the end
+        # FIXME: in general, this may be ordinary feature.
+        local g = $(p:G) ;
+        if [ MATCH "(-)" : $(g) ] 
+        {
+            x2 += $(p) ;
+        }
+        else
+        {
+            x1 += $(p) ;
+        }                
+    }
+    return $(x1) $(x2) ;    
+}
+
+
 # Given an expanded property set, eliminate all redundancy: properties
 # which are elements of other (composite) properties in the set will
 # be eliminated. Non-symmetric properties equal to default values will be
@@ -645,6 +671,7 @@ rule minimize ( properties * )
     }
         
     # handle subfeatures and implicit features
+    x = [ move-subfeatures-to-the-end $(x) ] ;    
     local result ;
     while $(x)
     {
@@ -918,6 +945,14 @@ local rule __test__ ( )
         
         assert.result debug <optimization>on
           : minimize [ expand debug <optimization>on ]
+          ;
+
+        assert.result gcc-3.0
+          : minimize <toolset>gcc <toolset-gcc:version>3.0 
+          ;
+                
+        assert.result gcc-3.0
+          : minimize <toolset-gcc:version>3.0 <toolset>gcc
           ;
         
         assert.result <x>y/z <a>b/c <d>e/f
