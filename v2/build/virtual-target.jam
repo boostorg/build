@@ -150,8 +150,8 @@ class virtual-target
         errors.error "method should be defined in derived classes" ;
     }
     
-    # Returns the path to this target, if it corresponds to a file,
-    # and empty list otherwise.
+    # If the target is generated one, returns the path where it will be
+    # generated. Otherwise, returns empty list.
     rule path ( )
     {
         errors.error "method should be defined in derived classes" ;        
@@ -348,52 +348,77 @@ class abstract-file-target : virtual-target
     rule actual-name ( )
     {
         if ! $(self.actual-name)
+        {            
+            local grist = [ grist ] ;
+            
+            local basename = [ actual-basename ] ;
+            self.actual-name = <$(grist)>$(basename) ;
+            
+        }
+        return $(self.actual-name) ;
+    }
+        
+    # Helper to 'actual-name', above. Compute unique prefix used to distinguish
+    # this target from other targets with the same name which create different
+    # file.
+    rule grist ( )
+    {
+        # Depending on target, there may be different approaches to generating
+        # unique prefixes. We'll generate prefixes in the form 
+        # <one letter approach code> <the actual prefix>
+        local path = [ path ] ;
+        if $(path)
         {
+            # The target will be generated to a know path. Just use the path
+            # for identification, since path is as unique as it can get.
+            return p$(path) ;            
+        }
+        else
+        {
+            # File is either source, which will be searched for, or is not a file at
+            # all. Use the location of project for distinguishing.
             local project-location = [ project.attribute $(self.project) location ] ;
             local location-grist =
-                [ sequence.join [ regex.split $(project-location) "/" ] : "!" ] ;
-            local grist ;
-
-            local properties ;
+              [ sequence.join [ regex.split $(project-location) "/" ] : "!" ] ;
+            
             if $(self.action)
             {
                 local ps = [ $(self.action).properties ] ;     
                 local property-grist = [ $(ps).as-path ] ;
-                grist = $(location-grist)/$(property-grist) ;
-                properties = [ $(ps).raw ] ;
-            }
-            if ! $(grist)
-            {
-                grist = $(location-grist) ;
-            }
-            # Adding this to grist looks ugly. It's still here for the 
-            # same of 'symlink' rule -- got to consider what to do
-            # about it.
-            if $(self.path)
-            {
-                grist = $(grist)@$(self.path)@ ;
+                location-grist = $(location-grist)/$(property-grist) ;
             }            
-
-            local name = [ path.native $(self.name) ] ;
-            if $(self.suffix)
-            {
-                self.actual-name = [ sequence.join <$(grist)>$(name)
-                $(self.suffix) : "." ] ;
-            }
-            else if $(self.type)
-            {
-                self.actual-name = [ sequence.join <$(grist)>$(name)
-                  [ type.generated-target-suffix $(self.type) :
-                    $(properties)
-                  ] : "." ] ;
-            }
-            else
-            {
-                self.actual-name = <$(grist)>$(name) ;
-            }
-        }
-        return $(self.actual-name) ;
+                        
+            return l$(location-grist) ;
+        }                
     }
+        
+    # Helper to actual-name, above. Compute the 'basename' of the filename
+    # of the actual created file.
+    rule actual-basename ( )
+    {
+        local name = [ path.native $(self.name) ] ;
+        if $(self.suffix)
+        {
+            name = $(name).$(self.suffix) ;
+        }
+        else if $(self.type)
+        {
+            local properties ;
+            if $(self.action)
+            {
+                local ps = [ $(self.action).properties ] ;
+                properties = [ $(ps).raw ] ;
+            }                        
+            local suffix = [ type.generated-target-suffix $(self.type) :
+              $(properties) ] ;
+            if $(suffix)
+            {                
+                name = $(name).$(suffix) ;
+            }            
+        }
+        return $(name) ;        
+    }
+    
 
 }
 
@@ -414,6 +439,7 @@ class abstract-file-target : virtual-target
 class file-target : abstract-file-target 
 {
     import common ;    
+    import errors ;
     
     rule __init__ (
       name
@@ -426,18 +452,7 @@ class file-target : abstract-file-target
         
     rule actualize-location ( target )
     {
-        if $(self.path)
-        {
-            LOCATE on $(target) = $(self.path) ;
-            # Make sure the path exists. Do this only
-            # for derived files.
-            if $(self.action)
-            {
-                DEPENDS $(target) : $(self.path) ;
-                common.MkDir $(self.path) ;
-            }
-        }
-        else if $(self.action)
+        if $(self.action)
         {
             # This is a derived file.
             local path = [ path ] ;
@@ -460,21 +475,24 @@ class file-target : abstract-file-target
     {
         if ! $(self.path)
         {
-            local build-dir = [ project.attribute $(self.project) build-dir ] ;
-            if ! $(build-dir)
-            {
-                build-dir = [ project.attribute $(self.project) location ] ;
-            }
-
-            local path = [ path.join
-                            $(build-dir)
-                             bin
-                             [ $(self.action).path ]
-                         ] ;
-
-            # Store the computed path, so that it's not recomputed
-            # any more
-            self.path = [ path.native $(path) ] ;
+            if $(self.action)
+            {                
+                local build-dir = [ project.attribute $(self.project) build-dir ] ;
+                if ! $(build-dir)
+                {
+                    build-dir = [ project.attribute $(self.project) location ] ;
+                }
+                
+                local path = [ path.join
+                    $(build-dir)
+                      bin
+                      [ $(self.action).path ]
+                ] ;
+                
+                # Store the computed path, so that it's not recomputed
+                # any more
+                self.path = [ path.native $(path) ] ;
+            }            
         }
         return $(self.path) ;
      }
