@@ -2142,12 +2142,12 @@ actions MkDir1
 
 actions together Ranlib
 {
-    $(RANLIB) $(<)
+    $(RANLIB) "$(<)"
 }
 
 actions quietly updated piecemeal together RmTemps
 {
-    $(RM) $(>)
+    $(RM) "$(>)"
 }
 
 actions Shell
