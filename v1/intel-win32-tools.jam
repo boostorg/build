@@ -18,7 +18,7 @@ set-as-singleton INTELC ;
 # INTEL_PATH or INTELC (in order to respect FTJam setup) environment
 # variables to point at the intel-win32 installation directory
 INTEL_PATH ?= $(INTELC) ;
-INTEL_TOOL_PATH ?= "$(INTEL_PATH)"/bin/ ;
+INTEL_TOOL_PATH ?= "$(INTEL_PATH)"\\bin\\ ;
 
 # if you have vc6 and vc7 installed, you may want your intel compiler
 # to use the VC7 libraries. In that case, you might set
@@ -30,16 +30,60 @@ INTEL_BASE_MSVC_TOOLSET ?= msvc ;
 extends-toolset $(INTEL_BASE_MSVC_TOOLSET) ;
 
 VC_TOOL_PATH = $(INTEL_TOOL_PATH) ;
-VC_STDLIB_PATH = "$(INTEL_PATH)"\\Bin ;
+VC_STDLIB_PATH = "$(INTEL_PATH)"\\bin ;
 VC_COMPILER = icl ;
 VC_LINKER = xilink ;
 
-C++FLAGS = 
-  [ difference $(C++FLAGS) : /Zc:wchar_t,forScope ] # remove ms-specific options
-  /Qwn5 /Qwd985 /Qansi_alias
-    ; # reduce number of errors
+# Extract the compiler version from its installation path
+local version = $(INTEL_VERSION) ;
+version ?= [ MATCH .*[\\/][Cc][Oo][Mm][Pp][Ii][Ll][Ee][Rr]([0-9])[0-9][\\/].* : $(INTEL_TOOL_PATH) ] ;
+
+# Reduce the number of spurious error messages
+C++FLAGS += /Qwn5 /Qwd985 ;
+
+# Enable ADL
+C++FLAGS += -Qoption,c,--arg_dep_lookup ;
+
+if $(version) <= 5
+{
+    # remove options unrecognized by Intel5
+    C++FLAGS = [ difference $(C++FLAGS) : /Zc:wchar_t,forScope ] ;
+}
+else
+{
+    C++FLAGS += /Zc:forScope ;  # Add support for correct for loop scoping
+}
+
+# Add options recognized only by intel7
+if $(version) >= 7
+{
+    C++FLAGS += /Qansi_alias ;
+}
+
+# tell the compiler about the base toolset.
+if $(INTEL_BASE_MSVC_TOOLSET) = msvc
+{
+    C++FLAGS += /Qvc6 ;
+    # no wchar_t support in vc6 dinkum library.
+}
+else
+{
+    if $(version) > 5
+    {
+        # Add support for wchar_t
+        C++FLAGS += /Zc:wchar_t
+          # Tell the dinkumware library about it.
+          -D_NATIVE_WCHAR_T_DEFINED
+          ;
+    }
+    
+    C++FLAGS += /Q$(INTEL_BASE_MSVC_TOOLSET) ;
+}
+
+# remove any duplicates caused by the additions above
+C++FLAGS = [ unique $(C++FLAGS) ] ;
 
 if $(VC_SETUP)
 {
-    VC_SETUP = "CALL $(INTEL_TOOL_PATH)ICCVARS.BAT > nul" ;
+    VC_SETUP = "CALL \"$(INTEL_TOOL_PATH)ICCVARS.BAT\" > nul" ;
 }
