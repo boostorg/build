@@ -103,7 +103,5 @@ flags $(CURR_TOOLSET) DEFINES <stlport-debug-alloc>on : _STLP_DEBUG_ALLOC=1 ;
 flags $(CURR_TOOLSET) DEFINES <runtime-build>debug : _STLP_DEBUG=1 _STLP_DEBUG_UNINITIALIZED=1 ;
 flags $(CURR_TOOLSET) DEFINES <runtime-link>dynamic : _STLP_USE_DYNAMIC_LIB=1 ;
 
-flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>debug/<runtime-link>static    : $(STLPORT_LIB_BASE_NAME)_stldebug_static ;
-flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>debug/<runtime-link>dynamic   : $(STLPORT_LIB_BASE_NAME)_stldebug ;
-flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>release/<runtime-link>static  : $(STLPORT_LIB_BASE_NAME)_static ;
-flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>release/<runtime-link>dynamic : $(STLPORT_LIB_BASE_NAME) ;
+flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>debug    : $(STLPORT_LIB_BASE_NAME)_stldebug ;
+flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>release  : $(STLPORT_LIB_BASE_NAME) ;
