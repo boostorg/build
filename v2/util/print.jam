@@ -72,19 +72,24 @@ rule section (
                     lines $(paragraph[2-]) : "  " "  " ;
                     lines ;
                 }
-                else if [ MATCH "(::)$" : $(paragraph[-1]) ]
-                {
-                    pre = yes ;
-                    local p = [ MATCH "(.*)([	 ]*)(::)$" : $(paragraph[-1]) ] ;
-                    if $(p[2]) && $(p[2]) != "" { paragraph = $(paragraph[1--2]) $(p[1]): ; }
-                    else { paragraph = $(paragraph[1--2]) $(p[1]) ; }
-                    lines [ split-at-words " " $(paragraph) ] : "  " "  " ;
-                    lines ;
-                }
                 else
                 {
-                    lines [ split-at-words " " $(paragraph) ] : "  " "  " ;
-                    lines ;
+                    local p = [ MATCH "(.*)(::)$" : $(paragraph[-1]) ] ;
+                    local pws = [ MATCH "([ 	]*)$" : $(p[1]) ] ;
+                    p = [ MATCH "(.*)($(pws))($(p[2]))$" :  $(paragraph[-1]) ] ;
+                    if $(p[3]) = ::
+                    {
+                        pre = yes ;
+                        if ! $(p[2]) || $(p[2]) = "" { paragraph = $(paragraph[1--2]) $(p[1]): ; }
+                        else { paragraph = $(paragraph[1--2]) $(p[1]) ; }
+                        lines [ split-at-words " " $(paragraph) ] : "  " "  " ;
+                        lines ;
+                    }
+                    else
+                    {
+                        lines [ split-at-words " " $(paragraph) ] : "  " "  " ;
+                        lines ;
+                    }
                 }
             }
         }
