@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include "jam.h"
 #include "regexp.h"
 #include "hash.h"
 
@@ -90,3 +91,4 @@ builtin_subst(
   
   return result;
 }
+
