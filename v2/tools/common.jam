@@ -498,7 +498,7 @@ rule response-file ( targets + : sources * : the-response-file : properties * )
 
     print.text
         [ on $(targets[1])
-          return -D$(DEFINES) -I"$(INCLUDES)"
+          return -D$(DEFINES) -I\"$(INCLUDES)\"
         ] ;
 }
 
