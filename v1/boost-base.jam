@@ -189,10 +189,20 @@ rule main-from-objects ( targets * : objects * : type )
     gFILES($(targets[1])) = $(targets) $(extra-files) ;
 }
 
+rule .do-link ( targets + : sources + : type )
+{
+    # Prepare NEEDLIBS for use by the toolsets' link action (e.g. for
+    # invoking with-command-file)
+    local NEEDLIBS = [ on $(<) return $(NEEDLIBS) ] ;
+    
+    return [ Link-action $(targets) : $(sources) : $(type) ] ;
+}
+
 rule Link-EXE
 {
     # N.B. By the time this rule is invoked, we had better have gRUN_PATH completely set.
-    local extra-files = [ Link-action $(<) : $(>) : EXE ] ;
+    
+    local extra-files = [ .do-link $(<) : $(>) : EXE ] ;
     RUN_PATH on $(<) = [ join [ unique $(gRUN_PATH($(<))) $(gTOOLSET_LIB_PATH) ] : $(SPLITPATH) ] ;
     if $(UNIX) 
     {
@@ -216,7 +226,7 @@ rule Link-DLL
         }
     }
     
-    return [ Link-action $(<) : $(>) : DLL ] ;
+    return [ .do-link $(<) : $(>) : DLL ] ;
 }
 
 rule Aix-Implib-Action
@@ -1651,7 +1661,7 @@ else
 }
 
 # Helper
-rule depend-on-libraries ( targets + : libs * )
+rule depend-on-libs ( targets + : libs * )
 {
     LIBPATH on $(<) += [ unique $(gLOCATE($(>))) ] ;
     DEPENDS $(<) : $(>) ;
@@ -1662,9 +1672,9 @@ rule depend-on-libraries ( targets + : libs * )
 
 rule depend-on-static ( targets + : static-libs * )
 {
-    NEEDLIBS = [ unique $(NEEDLIBS) $(>) ] ;
+    local NEEDLIBS = [ unique $(NEEDLIBS) $(>) ] ;
     NEEDLIBS on $(<) = [ on $(<) return [ unique $(NEEDLIBS) $(>) ] ] ;
-    depend-on-libraries $(targets) : $(static-libs) ;
+    depend-on-libs $(targets) : $(static-libs) ;
 }
 
 rule depend-on-shared ( targets + : dlls-and-import-libs * )
@@ -1685,7 +1695,7 @@ rule depend-on-shared ( targets + : dlls-and-import-libs * )
 
     FINDLIBS on $(<) += [ unique $(gTARGET_BASENAME($(gTARGET_SUBVARIANT($(>))))) ] ;
     
-    depend-on-libraries $(targets) : $(dlls-and-import-libs) ;
+    depend-on-libs $(targets) : $(dlls-and-import-libs) ;
 }
 
 # Given build properties, returns the normalised version of the <tag> features for
@@ -1733,8 +1743,7 @@ rule generate-dependencies ( main-target : subvariant-targets + )
               = [ link-libraries $(lib-main-targets)
                   : $(gCURRENT_TOOLSET) $(variant) : $(p)
                 ] ;
-            local r = depend-on-$(t) ;
-            $(r) $(subvariant-targets) : $(lib-targets) ;
+            depend-on-$(t) $(subvariant-targets) : $(lib-targets) ;
         }
     }
 }

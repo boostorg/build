@@ -335,7 +335,7 @@ rule Link-PYD
             Aix-Implib-Action $(<) : $(>) ;
         }
     }
-    Link-action $(<) : $(>) : PYD ;
+    .do-link $(<) : $(>) : PYD ;
 }
 
 declare-target-type PYD : <shared-linkable>true ;
