@@ -164,21 +164,21 @@ rule main-from-objects ( targets * : objects * : type )
 {
     # make compiled sources a dependency of target
 
-    MakeLocate $(<) : $(LOCATE_TARGET) ;
+    MakeLocate $(targets) : $(LOCATE_TARGET) ;
 
-    Clean clean : $(<) ;
+    Clean clean : $(targets) ;
 
-    MODE on $(<) = $($(type)MODE) ;
+    MODE on $(targets) = $($(type)MODE) ;
     local link-function = Link-$(type) ;
-    local extra-files = [ $(link-function) $(<) : $(>) : $(3) ] ;
-    Chmod $(<[1]) ;
-    DEPENDS $(<) : $(>) ;
+    local extra-files = [ $(link-function) $(targets) : $(objects) : $(type) ] ;
+    Chmod $(targets[1]) ;
+    DEPENDS $(targets) : $(objects) ;
     
     # locate and attach the extra files generated
     MakeLocate $(extra-files) : $(LOCATE_TARGET) ;
-    DEPENDS $(<[2-]) $(extra-files) : $(<[1]) ;
+    DEPENDS $(targets) : $(extra-files) ;
     
-    gFILES($(<[1])) = $(<) $(extra-files) ;
+    gFILES($(targets[1])) = $(targets) $(extra-files) ;
 }
 
 rule Link-EXE
