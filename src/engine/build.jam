@@ -6,7 +6,7 @@
 
 # Info about what we are building.
 NAME = boost-jam ;
-VERSION = 3.1.6 ;
+VERSION = 3.1.7 ;
 RELEASE = 1 ;
 
 # Generate development debug binaries?
