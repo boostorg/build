@@ -431,20 +431,48 @@ class lib-target-class : basic-target
     }            
 }
 
-rule lib ( name : sources * : requirements * : default-build * 
+rule lib ( names + : sources * : requirements * : default-build * 
     : usage-requirements * )
 {
     local project = [ project.current ] ;
-        
+    
     # This is a circular module dependency, so it must be imported here
     import targets ;
-    targets.main-target-alternative
-      [ new lib-target-class $(name) : $(project) 
-        : [ targets.main-target-sources $(sources) : $(name) ] 
-        : [ targets.main-target-requirements $(requirements) : $(project) ] 
-        : [ targets.main-target-default-build $(default-build) : $(project) ]
-        : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-      ] ;
+
+    local result ;
+    if $(sources) || <name> in $(requirements:G)
+    {        
+        if $(names[2])
+        {
+            errors.user-error "When several names are given to the 'lib' rule" :
+              "it's not allows to specify either sources or <name> property " ;
+        }
+                
+        local name = $(names[1]) ;
+        result = [ targets.main-target-alternative
+          [ new lib-target-class $(name) : $(project) 
+            : [ targets.main-target-sources $(sources) : $(name) ] 
+            : [ targets.main-target-requirements $(requirements) : $(project) ] 
+            : [ targets.main-target-default-build $(default-build) : $(project) ]
+            : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
+         ] ] ;
+    }    
+    else
+    {
+        for local name in $(names)
+        {    
+            result += [ 
+            targets.main-target-alternative
+              [ new lib-target-class $(name) : $(project) 
+                : 
+                : [ targets.main-target-requirements $(requirements) <name>$(name)  :
+                    $(project) ] 
+                : [ targets.main-target-default-build $(default-build) : $(project) ]
+                : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
+             ] ] ;        
+        }        
+    }   
+    return $(result) ;
 }
 IMPORT $(__name__) : lib : : lib ;
 
