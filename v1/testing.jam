@@ -18,16 +18,15 @@ local rule get-var-value ( name + )
 
 local rule get-library-name ( path )
 {
-    local match1 = [ MATCH [/\\]libs[/\\](.*)[/\\](test|example) : $(path) ] ;
-    local match2 = [ MATCH [/\\]libs[/\\](.*)$ : $(path) ] ;
-    local match3 = [ MATCH ([/\\]status$) : $(path) ] ;
+    local forward_slash_path = "" ;
+    for i in [ split-path $(path) ] { forward_slash_path = $(forward_slash_path)/$(i) ; }
+    path = $(forward_slash_path) ;
 
-    if $(match1) 
-    {
-        local result = "" ;
-        for i in [ split-path $(match1[0]) ] { result = $(result)/$(i) ; }
-        return [ MATCH [/](.*) : $(result) ] ;
-    }
+    local match1 = [ MATCH /libs/(.*)/(test|example) : $(path) ] ;
+    local match2 = [ MATCH /libs/(.*)$ : $(path) ] ;
+    local match3 = [ MATCH (/status$) : $(path) ] ;
+
+    if $(match1) { return $(match1[0]) ; }
     else if $(match2) { return $(match2[0]) ; }
     else if $(match3) { return "" ; }
     else { EXIT Cannot extract library name from path $(path) ; }

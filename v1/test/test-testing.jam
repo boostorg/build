@@ -1,0 +1,22 @@
+import testing ;
+
+local rule assert ( path : expected )
+    {
+    local library_name = [ get-library-name $(path) ] ;
+    Echo \"$(library_name)\" "=" \"$(expected)\" ;
+    if $(library_name) != $(expected) 
+        {
+        EXIT Assertion failed: \"$(library_name)\" "!=" \"$(expected)\" ;
+        } 
+    }
+
+assert "\\libs\\library1/test"  : "library1" ; 
+assert "\\libs\\library1/test1" : "library1" ; 
+assert "/libs\\library1\\ddddddd\\sublibrary1/test1" : "library1/ddddddd/sublibrary1" ; 
+assert "/libs/test/test1" : "test" ; 
+assert "/libs/test/sublib/test1" : "test/sublib" ; 
+assert "/status" : "" ; 
+
+# Regression
+
+assert "\\libs\\numeric\\ublas" : "numeric/ublas" ;
