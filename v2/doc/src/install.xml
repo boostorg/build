@@ -26,7 +26,7 @@
       <listitem>
         <simpara>
           Boost.Build uses <ulink
-          url= "../../../tools/build/jam_src/index.html">Boost.Jam</ulink>, an
+          url= "../../tools/build/jam_src/index.html">Boost.Jam</ulink>, an
           extension of the <ulink
           url="http://www.perforce.com/jam/jam.html">Perforce
           Jam</ulink> portable <command>make</command> replacement. The
@@ -37,7 +37,7 @@
           If a prebuilt executable is not provided for your platform
           or you are using Boost's sources in an unreleased state, it
           may be neccessary to <ulink
-          url= "../../../tools/build/jam_src/index.html#building_bjam">build <command>bjam</command>
+          url= "../../tools/build/jam_src/index.html#building_bjam">build <command>bjam</command>
           from sources</ulink> included in the Boost source tree.
         </simpara>
       </listitem>
