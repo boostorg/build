@@ -56,19 +56,13 @@ type.register BOOSTBOOK_MAIN ;
 rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? )
 {
 
-  if ! $(docbook-xsl-dir)
-  {
-    docbook-xsl-dir = [ modules.peek : DOCBOOK_XSL_DIR ] ;
-  }
+  docbook-xsl-dir ?= [ modules.peek : DOCBOOK_XSL_DIR ] ;
 
-  if ! $(docbook-dtd-dir)
-  {
-    docbook-dtd-dir = [ modules.peek : DOCBOOK_DTD_DIR ] ;
-  }
+  docbook-dtd-dir ?= [ modules.peek : DOCBOOK_DTD_DIR ] ;
 
   if ! $(.initialized) 
   {
-    $(.initialized) = true ;
+    .initialized = true ;
     if $(docbook-xsl-dir) 
     {
       .docbook-xsl-dir = [ path.make $(docbook-xsl-dir) ] ;
