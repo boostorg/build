@@ -106,8 +106,8 @@ toolset kylix bc++ : -o : -D
 }
 ## MINGW GCC
 toolset mingw gcc : "-o " : -D
-    : -s -O3 -finline-functions -DMINGW
-    : -g -O0 -fno-inline -pg -DMINGW ;
+    : -s -O3 -finline-functions -D$(OS)
+    : -g -O0 -fno-inline -pg -D$(OS) ;
 ## MIPS Pro
 toolset mipspro cc : "-o " : -D
     : -s -O3 -g0 -INLINE:none
