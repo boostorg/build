@@ -17,7 +17,7 @@ import set ;
 
 feature.extend toolset : gcc ;
 toolset.inherit gcc : unix ;
-feature.subfeature toolset gcc : version : : optional propagated link-incompatible ;
+feature.subfeature toolset gcc : version : : optional propagated ;
 
 # Make the "o" suffix used for gcc toolset on all
 # platforms
