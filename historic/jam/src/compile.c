@@ -164,7 +164,7 @@ static RULE* bind_builtin( char* name, LIST*(*f)(PARSE*, FRAME*), int flags, cha
     }
 
     return new_rule_body( root_module(), name, arg_list,
-                          parse_make( f, P0, P0, P0, C0, C0, flags ), 0 );
+                          parse_make( f, P0, P0, P0, C0, C0, flags ), 1 );
 }
 
 static RULE* duplicate_rule( char* name, RULE* other )
@@ -216,7 +216,8 @@ compile_builtins()
             "source_module", "?"
             , ":", "source_rules", "*"
             , ":", "target_module", "?"
-            , ":", "target_rules", "*", 0
+            , ":", "target_rules", "*"
+            , ":", "localize", "?", 0
         };
         
         bind_builtin( "IMPORT", builtin_import, 0, args );
@@ -856,14 +857,14 @@ evaluate_rule(
     rulename = l->string;
     rule = bindrule( l->string, frame->module );
 
-    if ( rule->procedure && rule->procedure->module != prev_module )
+    if ( rule->procedure && rule->module != prev_module )
     {
         /* propagate current module to nested rule invocations */
-        frame->module = rule->procedure->module;
+        frame->module = rule->module;
         
         /* swap variables */
         exit_module( prev_module );
-        enter_module( rule->procedure->module );
+        enter_module( rule->module );
     }
 
     /* drop the rule name */
@@ -1081,7 +1082,7 @@ compile_setcomp(
             lol_add( arg_list->data, parse_evaluate( p->right, frame ) );
     }
     
-    new_rule_body( frame->module, parse->string, arg_list, parse->left, parse->num );
+    new_rule_body( frame->module, parse->string, arg_list, parse->left, !parse->num );
     return L0;
 }
 
@@ -1326,7 +1327,7 @@ static void add_rule_name( void* r_, void* result_ )
     RULE* r = r_;
     LIST** result = result_;
 
-    if ( !r->local_only )
+    if ( r->exported )
         *result = list_new( *result, copystr( r->name ) );
 }
 
@@ -1353,7 +1354,7 @@ static void unknown_rule( FRAME *frame, char* key, char *module_name, char *rule
 }
 
 /*
- * builtin_import() - IMPORT ( SOURCE_MODULE ? : SOURCE_RULES * : TARGET_MODULE ? : TARGET_RULES * )
+ * builtin_import() - IMPORT ( SOURCE_MODULE ? : SOURCE_RULES * : TARGET_MODULE ? : TARGET_RULES * : LOCALIZE ? )
  *
  * The IMPORT rule imports rules from the SOURCE_MODULE into the
  * TARGET_MODULE as local rules. If either SOURCE_MODULE or
@@ -1363,7 +1364,9 @@ static void unknown_rule( FRAME *frame, char* key, char *module_name, char *rule
  * TARGET_MODULE. If SOURCE_RULES contains a name which doesn't
  * correspond to a rule in SOURCE_MODULE, or if it contains a
  * different number of items than TARGET_RULES, an error is issued.
- * 
+ * if LOCALIZE is specified, the rules will be executed in
+ * TARGET_MODULE, with corresponding access to its module local
+ * variables.
  */
 static LIST *
 builtin_import(
@@ -1374,6 +1377,7 @@ builtin_import(
     LIST *source_rules = lol_get( frame->args, 1 );
     LIST *target_module_list = lol_get( frame->args, 2 );
     LIST *target_rules = lol_get( frame->args, 3 );
+    LIST *localize = lol_get( frame->args, 4 );
 
     module* target_module = bindmodule( target_module_list ? target_module_list->string : 0 );
     module* source_module = bindmodule( source_module_list ? source_module_list->string : 0 );
@@ -1392,7 +1396,9 @@ builtin_import(
             unknown_rule( frame, "IMPORT", source_module->name, r_.name );
         
         imported = import_rule( r, target_module, target_name->string );
-        imported->local_only = 1;
+        if ( localize )
+            imported->module = target_module;
+        imported->exported = 0; /* this rule is really part of some other module; just refer to it here, but don't let it out */
     }
     
     if ( source_name || target_name )
@@ -1433,7 +1439,7 @@ builtin_export(
         if ( !hashcheck( m->rules, (HASHDATA**)&r ) )
             unknown_rule( frame, "EXPORT", m->name, r_.name );
         
-        r->local_only = 0;
+        r->exported = 1;
     }
     return L0;
 }

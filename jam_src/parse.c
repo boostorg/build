@@ -89,7 +89,6 @@ parse_make(
 	p->string1 = string1;
 	p->num = num;
 	p->refs = 1;
-        p->module = 0;
         p->rulename = 0;
         
         if ( left )

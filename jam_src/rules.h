@@ -79,11 +79,15 @@ typedef struct argument_list argument_list;
 
 struct _rule {
     char    *name;
-    PARSE   *procedure;     /* parse tree from RULE */
+    PARSE   *procedure;        /* parse tree from RULE */
     argument_list* arguments;  /* argument checking info, or NULL for unchecked */
     rule_actions* actions;     /* build actions, or NULL for no actions */
-    int      local_only;       /* nonzero if this rule is local to a module */
-} ;
+    module  *module;           /* module in which this rule is executed */
+    int     exported;          /* nonzero if this rule is supposed to
+                                * appear in the global module and be
+                                * automatically imported into other modules
+                                */
+};
 
 /* ACTIONS - a chain of ACTIONs */
 
@@ -203,7 +207,7 @@ struct _target {
 RULE 	*bindrule( char *rulename, module* );
 
 RULE*   import_rule( RULE* source, module* m, char* name );
-RULE*   new_rule_body( module* m, char* rulename, argument_list* args, PARSE* procedure, int local );
+RULE*   new_rule_body( module* m, char* rulename, argument_list* args, PARSE* procedure, int export );
 RULE*   new_rule_actions( module* m, char* rulename, char* command, LIST* bindlist, int flags );
 TARGET  *bindtarget( char *targetname );
 void 	touchtarget( char *t );
