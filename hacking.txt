@@ -31,13 +31,19 @@ Additional resources include
 
 BUGS and PATCHES
 
-When reporting a bug, please try to provide a minimal reproducible testcase.
-Shell script with some annotations is much better than verbose description of
-the problem. Also, always try to test with CVS HEAD state. 
+When reporting a bug, please try to provide the following information.
+
+   - What you did. A minimal reproducible testcase is very much appreciated.
+     Shell script with some annotations is much better than verbose description of
+     the problem. A regression test is the best (see test/test_system.html).
+   - What you got.
+   - What you expected.
+   - What version of Boost.Build and Boost.Jam did you use. If possible,
+     please try to test with the CVS HEAD state.
 
 When submitting a patch, please:
 
-  - make a single patch for a single logical change  
+  - make a single patch for a single logical change
   - follow the policies and coding conventions below,
   - set patches in unified diff format,
   - provide a log message together with the patch
@@ -63,7 +69,7 @@ what happend to it, and why. Consider, the following log message
        where two virtual target correspond to one Jam target name.
  
 The log messages for the last two files are good. They tell what was
-changes. The change to the first file is clearly undercommented.
+changed. The change to the first file is clearly undercommented.
 
 It's OK to use terse log messages for uninteresting changes, like
 ones induces by interface changes elsewhere. 
