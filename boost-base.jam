@@ -1444,6 +1444,11 @@ rule find-compatible-subvariant ( main-target : toolset variant : dependent-simp
     local sv-overrides =
         [ difference $(dependent-simple-properties) : [ select-gristed $(sv-properties) ] ] ;
 
+    if ! $(gTARGET_TYPE($(main-target)))
+    {
+        EXIT unknown dependent target $(main-target) ;
+    }
+    
     # check to make sure we can link against the subvariant
     local target-requirements
         = [ select-gristed $(gTARGET_REQUIREMENTS($(main-target))) ] ;
@@ -1480,15 +1485,14 @@ rule find-compatible-subvariant ( main-target : toolset variant : dependent-simp
     return $(sv-properties) ;
 }
 
-# link-libraries libs... : toolset variant : dependent-simple-properties
-#
+
 # For each target specified in libs, generate build instructions
 # for a subvariant that can be linked with a dependent target with
 # dependent-properties, returning a list of all generated targets.
-rule link-libraries
+rule link-libraries ( libs * : toolset variant : dependent-simple-properties * )
 {
   local lib-path result ;
-  for lib-path in $(<)
+  for lib-path in $(libs)
   {
     local new-subdir = TOP [ top-relative-tokens [ directory-of $(lib-path) ] ] ;
     
@@ -1499,10 +1503,14 @@ rule link-libraries
     SubDir $(new-subdir) ;
 
     local lib-target = [ FGristFiles $(lib-path:D=) ] ;
-    local lib-subvariant = [ find-compatible-subvariant $(lib-target) : $(>) : $(3) ] ;
+      
+    local lib-subvariant = [ 
+      find-compatible-subvariant $(lib-target)
+        : $(toolset) $(variant)
+          : $(dependent-simple-properties) ] ;
 
     # Generate build instructions for the library target
-    result += [ subvariant-target $(lib-target) : $(lib-subvariant) : $(>) ] ;
+    result += [ subvariant-target $(lib-target) : $(lib-subvariant) : $(toolset) $(variant) ] ;
   }
   return $(result) ;
 }
