@@ -608,7 +608,7 @@ rule feature-default
 # The variable will be set "on" the target so it may be  used in its build actions. 
 rule flags
 {
-    local toolset = $(<[1]) ;
+    local toolset = $(gCURRENT_TOOLSET) ;
     local variable = $(<[2]) ;
     local condition = $(<[3-]) ;
 
@@ -661,23 +661,32 @@ rule flags
 # properties of the target.
 rule include-tools 
 {
-    gCURRENT_TOOLSET = $(<) ;
+    if ! $(gIN_INCLUDE_TOOLS)
+    {
+        gCURRENT_TOOLSET = $(<) ;
+        gRELEVANT_FEATURES($(<)) = ; # clear relevant feature set
+        gDEPENDENCY_VARIABLES($(<)) = ;
 
-    # clear any lingering target variables that may have been declared
-    $(gTARGET_VARIABLES) = ;
-    gTARGET_VARIABLES = NEEDLIBS ; # start over from the beginning
+        # clear any lingering target variables that may have been declared
+        $(gTARGET_VARIABLES) = ;
+        gTARGET_VARIABLES = NEEDLIBS ; # start over from the beginning
+    }
+
     
-    gRELEVANT_FEATURES($(<)) = ; # clear relevant feature set
-    gDEPENDENCY_VARIABLES($(<)) = ;
-
-    SEARCH on <jam-module>$(<)-tools.jam = $(BOOST_BUILD_PATH) ;
-    include <jam-module>$(<)-tools.jam ;
-
+    {
+        local gIN_INCLUDE_TOOLS = true ;
+        SEARCH on <jam-module>$(<)-tools.jam = $(BOOST_BUILD_PATH) ;
+        include <jam-module>$(<)-tools.jam ;
+    }
+    
     # Always maintain the list of relevant features as unique
-    gRELEVANT_FEATURES($(<)) = [ 
-      unique $(gRELEVANT_FEATURES($(<))) 
-        $(gALWAYS_RELEVANT)
-    ] ;
+    if ! $(gIN_INCLUDE_TOOLS)
+    {
+        gRELEVANT_FEATURES($(<)) = [ 
+          unique $(gRELEVANT_FEATURES($(<))) 
+            $(gALWAYS_RELEVANT)
+        ] ;
+    }
     
     gINCLUDED(<jam-module>$(<)-tools.jam) = TRUE ;
 }
@@ -688,13 +697,7 @@ rule include-tools
 # defined is an extension of the given toolset.
 rule extends-toolset
 {
-    {
-        local gCURRENT_TOOLSET ; # protect this from being clobbered
-        include-tools $(<) ;
-    }
-    # Add the relevant features from the base toolset
-    gRELEVANT_FEATURES($(gCURRENT_TOOLSET)) += $(gRELEVANT_FEATURES($(<))) ;
-    gDEPENDENCY_VARIABLES($(gCURRENT_TOOLSET)) += $(gDEPENDENCY_VARIABLES($(<))) ;
+    include-tools $(<) ;
 }
 
 # relevant-features toolset
