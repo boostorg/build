@@ -176,7 +176,7 @@ class generator
     {
         return $(self.target-types) ;
     }
-
+    
     # Returns the required properties for this generator. Properties
     # in returned set must be present in build properties if this 
     # generator is to be used. If result has grist-only element,
@@ -236,6 +236,33 @@ class generator
                    $(new-toolset-properties)
                ] ;
     }
+    
+    # Creates another generator that is the same as $(self), except that
+    # if 'base' is in target types of $(self), 'type' will in target types
+    # of the new generator.
+    rule clone-and-change-target-type ( base : type )
+    {
+        local target-types ;
+        for local t in $(self.target-types-and-names)
+        {
+            local m = [ MATCH ([^\\(]*)(\\(.*\\))? : $(t) ] ;
+            if $(m) = $(base)
+            {
+                target-types += $(type)$(m[2]:E="") ;
+            }
+            else
+            {
+                target-types += $(t) ;
+            }                                        
+        }
+                
+        return [ new $(__class__) $(self.id) $(self.composing)
+                 : $(self.source-types)
+                 : $(target-types) 
+                 : $(self.requirements)
+               ] ;
+    }
+
     
     # Tries to invoke this generator on the given sources. Returns a
     # list of generated targets (instances of 'virtual-target').
@@ -662,44 +689,6 @@ rule override ( overrider-id : overridee-id )
 # made.
 .caching = ;
 
-# For all t in 'targets':
-# if [ $(t).type ] in $(target-types), add 't' to result
-# if [ $(t).type ] in base type for any of 'target-types', add 't' to result
-# otherwise, add 't' to extra.
-rule base-to-derived-type-conversion ( targets * : target-types +
-    : result-var extra-var )
-{
-    for local t in $(targets) 
-    {
-        if [ $(t).type ] in $(target-types)
-        {
-            $(result-var) += $(t) ;
-        }
-        else 
-        {
-            # We might have asked for a type 'D', but found only generator for
-            # a type 'B', where 'D' is derived from 'B'. In this case, the 
-            # generation succeeds, but we should change type of the generated target.
-            
-            local at = [ $(t).type ] ;
-            local found ;
-            for local tt in $(target-types)
-            {
-                if ! $(found) && [ type.is-derived $(tt) $(at) ] 
-                {
-                    $(t).set-type $(tt) ;
-                    $(result-var) += $(t) ;
-                    found = 1 ;
-                }                
-            }            
-            if ! $(found)
-            {
-                $(extra-var) += $(t) ;                
-            }            
-        }        
-    }    
-}
-
 # Returns a list of source type which can possibly be converted
 # to 'target-type' by some chain of generator invocation.
 #
@@ -846,9 +835,18 @@ local rule try-one-generator-really ( project name ? : generator multiple ? :
         usage-requirements = [ property-set.empty ] ;
     }
     
-    base-to-derived-type-conversion $(targets) : $(target-type) 
-        : result extra ;
-            
+    for local t in $(targets)       
+    {
+        if [ $(t).type ] = $(target-type)
+        {
+            result += $(t) ;
+        }
+        else
+        {
+            extra += $(t) ;
+        }        
+    }
+                
     # Now try to convert extra targets 
     # 'construct' will to its best to return only requested
     # target types, so if we receive any extra from that call,
@@ -958,7 +956,6 @@ local rule ensure-type ( targets * )
         }        
     }    
 }
-
     
 # Returns generators which can be used to construct target of specified type
 # with specified properties. Uses the following algorithm:
@@ -977,30 +974,59 @@ local rule find-viable-generators-aux ( target-type : property-set )
     local generator-rank = ;
 
     import type ;
-    # Try all-type generators first. Assume they have
-    # quite specific requirements.
-    local t = * [ type.all-bases $(target-type) ] ;
+    local t = [ type.all-bases $(target-type) ] ;
     
     generators.dout  [ indent ] find-viable-generators target-type= $(target-type) 
       property-set= [ $(property-set).as-path ]
           ;
     
+    # Get the lit of generators for the requested type.
+    # If no generator is registered, try base type, and so on.
+    local generators ;
     while $(t[1])
     {
-        generators.dout  [ indent ] "trying type" $(t[1]) ;
-        for local g in $(.generators.$(t[1]))
+        generators.dout  [ indent ] "trying type" $(t[1]) ;    
+        if $(.generators.$(t[1]))
         {
-            generators.dout [ indent ] "trying generator" [ $(g).id ] "(" [ $(g).source-types ] -> [ $(g).target-types ] ")" ;
+            generators.dout [ indent ] "there are generators for this type" ;
+            generators = $(.generators.$(t[1])) ;
             
-            local m = [ $(g).match-rank $(property-set) ] ;
-            if $(m) 
+            if $(t[1]) != $(target-type)
             {
-                generators.dout [ indent ] "  is viable" ;
-                viable-generators += $(g) ;
-                t = ;
-            }                                    
-        }
-        t = $(t[2-]) ;
+                # We're here, when no generators for target-type are found,
+                # but there are some generators for a base type.
+                # We'll try to use them, but they will produce targets of
+                # base type, not of 'target-type'. So, we clone the generators
+                # and modify the list of target types.
+                local generators2 ;
+                for local g in $(generators)
+                {
+                    # generators.register adds generator to the list of generators
+                    # for toolsets, which is a bit strange, but should work.
+                    # That list is only used when inheriting toolset, which
+                    # should have being done before generators are run.
+                    generators2 += [ 
+                      $(g).clone-and-change-target-type $(t[1]) : $(target-type) ] ;
+                    generators.register $(generators2[-1]) ;
+                }                
+                generators = $(generators2) ;
+            }                        
+            t = ;
+        }        
+        t = $(t[2-]) ;            
+    }
+    
+    
+    for local g in $(generators)
+    {
+        generators.dout [ indent ] "trying generator" [ $(g).id ] "(" [ $(g).source-types ] -> [ $(g).target-types ] ")" ;
+            
+        local m = [ $(g).match-rank $(property-set) ] ;
+        if $(m) 
+        {
+            generators.dout [ indent ] "  is viable" ;
+            viable-generators += $(g) ;
+        }                                    
     }
                             
     return $(viable-generators) ;
