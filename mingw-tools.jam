@@ -43,23 +43,25 @@ actions mingw-Link-action bind NEEDLIBS
 
 rule Cc-action
 {
+    SPACE on $(<) = " " ;
     mingw-Cc-action $(<) : $(>) ;
 }
 
 actions mingw-Cc-action
 {
-    $(MINGW_BIN_DIRECTORY)mingw -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(MINGW_BIN_DIRECTORY)mingw -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -isystem$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
 rule C++-action
 {
+    SPACE on $(<) = " " ;
     mingw-C++-action $(<) : $(>) ;
 }
 
 actions mingw-C++-action
 {
-    $(MINGW_BIN_DIRECTORY)g++ -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(MINGW_BIN_DIRECTORY)g++ -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -isystem$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
