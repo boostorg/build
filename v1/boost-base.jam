@@ -1,3 +1,8 @@
+#~ Copyright 2002-2004 Rene Rivera.
+#~ Copyright 2001-2004 David Abrahams.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
 #  (C) Copyright David Abrahams and Carlos Pinto Coelho 2001. Permission to
 #  copy, use, modify, sell and distribute this software is granted provided this
 #  copyright notice appears in all copies. This software is provided "as is"
@@ -1377,7 +1382,7 @@ rule declare-basic-target ( target-id : sources * : requirements * : default-bui
         # type, and the corresponding <target-type> property.
         #
         gTARGET_REQUIREMENTS($(target-id))
-            = $(requirements) $(gTARGET_TYPE_REQUIREMENTS($(target-type))) ;
+            = toolset::requirements $(requirements) $(gTARGET_TYPE_REQUIREMENTS($(target-type))) ;
         if ! $(gNO_TARGET_TYPE_REQUIREMENT($(target-type)))
         {
             gTARGET_REQUIREMENTS($(target-id)) += <target-type>$(target-type) ;
@@ -2575,69 +2580,43 @@ rule common-variant-tag ( toolset variant : properties * )
     if <stlport-iostream>off in $(properties) { runtime-tag += n ; }
     
     local toolset-tag = ;
-    switch $(toolset)
+    if ! $(gUNVERSIONED_VARIANT_TAG)
     {
-        case *borland* : toolset-tag += bcb ;
-        case *como* : toolset-tag += como ;
-        case *cwpro8* :
+        switch $(toolset)
         {
-            toolset-tag += cw8 ;
-            if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
+            case borland* : toolset-tag += bcb ;
+            case como* : toolset-tag += como ;
+            case cwpro8* : toolset-tag += cw 8 ;
+            case cwpro9* : toolset-tag += cw 9 ;
+            case darwin* : toolset-tag += ;
+            case edg* : toolset-tag += edg ;
+            case gcc* : toolset-tag += gcc ;
+            case intel-linux* : toolset-tag += il ;
+            case intel-win32* : toolset-tag += iw ;
+            case kcc* : toolset-tag += kcc ;
+            case kylix* : toolset-tag += bck ;
+            case metrowerks* : toolset-tag += cw ;
+            case mingw* : toolset-tag += mgw ;
+            case mipspro* : toolset-tag += mp ;
+            case msvc* : toolset-tag += vc 6 ;
+            case sunpro* : toolset-tag += sw ;
+            case tru64cxx* : toolset-tag += tru ;
+            case vacpp* : toolset-tag += xlc ;
+            case vc[678]* : toolset-tag += [ MATCH "vc([678])[.]([0123456789]*)" : $(toolset) ] ;
+            case * :
+            toolset-tag += [ MATCH "^([^-]*)" : $(toolset) ] ;
         }
-        case *cwpro9* :
-        {
-            toolset-tag += cw9 ;
-            if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
-        }
-        case *darwin* : toolset-tag += ;
-        case *edg* : toolset-tag += edg ;
-        case *gcc* : toolset-tag += gcc ;
-        case *intel-linux* : toolset-tag += il ;
-        case *intel-win32* :
-        {
-            toolset-tag += iw ;
-            if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
-        }
-        case *kcc* : toolset-tag += kcc ;
-        case *kylix* : toolset-tag += bck ;
-        case *metrowerks* : toolset-tag += cw ;
-        case *mingw* : toolset-tag += mgw ;
-        case *mipspro* : toolset-tag += mp ;
-        case *msvc* : 
-        {
-            toolset-tag += vc6 ;
-            if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
-        }
-        case *sunpro* : toolset-tag += sw ;
-        case *tru64cxx* : toolset-tag += tru ;
-        case *vacpp* : toolset-tag += xlc ;
-        case *vc7* : 
-        {
-            toolset-tag += vc7 ;
-            toolset-tag += [ MATCH "vc7[.]([0123456789]*)" : $(toolset) ] ;
-            if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
-            # <stlport-iostream> is always on, no matter what we may think
-            # this is an stlport build requirement.
-            runtime-tag = [ difference $(runtime-tag) : n ] ;
-        }
-        case *vc8* : 
-        {
-            toolset-tag += vc8 ;
-            toolset-tag += [ MATCH "vc8[.]([0123456789]*)" : $(toolset) ] ;
-            if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
-            # <stlport-iostream> is always on, no matter what we may think
-            # this is an stlport build requirement.
-            runtime-tag = [ difference $(runtime-tag) : n ] ;
-        }
-        case * :
-        toolset-tag += [ MATCH "^([^-]*)" : $(toolset) ] ;
+        toolset-tag += [ MATCH "[-]([0123456789]+).([0123456789]*)" : $(toolset) ] ;
     }
-    toolset-tag += [ MATCH "[-]([0123456789]+).([0123456789]*)" : $(toolset) ] ;
     
-    local version-number = [ get-values <version> : $(properties) ] ;
-    version-number ?= $(BOOST_VERSION) ;
-    local version-tag = [ MATCH "^([^.]+).([^.]+)" : $(version-number[1]) ] ;
-    version-tag = $(version-tag:J="_") ;
+    local version-tag = ;
+    if ! $(gUNVERSIONED_VARIANT_TAG)
+    {
+        local version-number = [ get-values <version> : $(properties) ] ;
+        version-number ?= $(BOOST_VERSION) ;
+        version-tag = [ MATCH "^([^.]+).([^.]+)" : $(version-number[1]) ] ;
+        version-tag = $(version-tag:J="_") ;
+    }
     
     tags += $(toolset-tag:J=) ;
     tags += $(thread-tag:J=) ;
@@ -2821,4 +2800,75 @@ rule common-names ( )
 rule common-stage-tag ( toolset variant : subvariant-path properties * )
 {
     return [ common-variant-tag $(toolset) $(variant) : $(subvariant-path) $(properties) ] ;
+}
+
+# Enforces toolset level requirements. This is added to all targets.
+rule toolset::requirements ( toolset variant : subvariant-path properties * )
+{
+    local requirements = ;
+    switch $(toolset)
+    {
+        case cwpro8* :
+        {
+            # dynamic runtime only comes in the multi-threading flavor
+            if <runtime-link>dynamic in $(properties) { requirements += <threading>multi ; }
+        }
+        case cwpro9* :
+        {
+            # dynamic runtime only comes in the multi-threading flavor
+            if <runtime-link>dynamic in $(properties) { requirements += <threading>multi ; }
+        }
+        case cw* :
+        {
+            # dynamic runtime only comes in the multi-threading flavor
+            if <runtime-link>dynamic in $(properties) { requirements += <threading>multi ; }
+        }
+        case msvc* :
+        {
+            # dynamic runtime only comes in the multi-threading flavor
+            if <runtime-link>dynamic in $(properties) { requirements += <threading>multi ; }
+            if [ MATCH .*(stlport).* : $(toolset) ] ||
+                [ MATCH .*(stlport).* : $(properties:G) ]
+            {
+                # STLPort doesn't have any single-threaded builds, so we're going
+                # to force all such targets to be built with multithread support.
+                # This is essentially a usage-requirement on the stlport library.
+                requirements += <threading>multi ;
+            }
+        }
+        case vc* :
+        {
+            # dynamic runtime only comes in the multi-threading flavor
+            if <runtime-link>dynamic in $(properties) { requirements += <threading>multi ; }
+            if [ MATCH .*(stlport).* : $(toolset) ] ||
+                [ MATCH .*(stlport).* : $(properties:G) ]
+            {
+                # STLPort doesn't have any single-threaded builds, so we're going
+                # to force all such targets to be built with multithread support.
+                # This is essentially a usage-requirement on the stlport library.
+                requirements += <threading>multi ;
+                # STLPort doesn't support <stlport-iostream>off with vc7 and vc8.
+                # This is essentially a usage-requirement on the stlport library.
+                switch $(toolset)
+                {
+                    case vc7* : requirements += <stlport-iostream>on ;
+                    case vc8* : requirements += <stlport-iostream>on ;
+                    case vc-7* : requirements += <stlport-iostream>on ;
+                    case vc-8* : requirements += <stlport-iostream>on ;
+                }
+            }
+        }
+        case intel-win32* :
+        {
+            # dynamic runtime only comes in the multi-threading flavor
+            if <runtime-link>dynamic in $(properties) { requirements += <threading>multi ; }
+        }
+    }
+    requirements = [ unique $(requirements) ] ;
+    properties =
+        [ sort
+            [ difference $(properties) : [ get-properties $(requirements:G) : $(properties) ] ]
+            $(requirements)
+            ] ;
+    return $(subvariant-path) $(properties) ;
 }
