@@ -8,8 +8,8 @@ import modules ; # The modules module can tolerate being included twice
 
 
 import project ;
-
 import targets ;
+import assert ;
 
 rule exe ( name : sources )
 {
@@ -30,14 +30,13 @@ project.load project-test1 ;
 
 project.dump ;
 
-for local id in @/cool-library project-test1@/cool-library project-test1@dir {
-    ECHO "Project id" ;
-    ECHO "    $(id)" ;
-    ECHO "resolves to" ;
-    ECHO "   " [ project.lookup $(id) ] ;
-    ECHO "" ;
-}
 
-local target = [ targets.abstract-target-name project-test1 ] ;
-$(target).generate ;
+assert.result project-test1/dir2 : project.lookup @/cool-library ;
+assert.result project-test1/dir2 : project.lookup project-test1@/cool-library ;
+assert.result project-test1/dir  : project.lookup project-test1@dir ;
+
+#local target = [ targets.abstract-target-name project-test1 ] ;
+#$(target).generate ;
+
+actions unbuilt { } unbuilt all ;
 
