@@ -26,21 +26,28 @@ def run_tests(critical_tests, other_tests):
 
     invocation_dir = os.getcwd()
 
+    failures_count = 0
     for i in all_tests:
         print ("%-25s : " %(i)),
         try:
             __import__(i)
         except:
             print "FAILED"
-            f = open(os.path.join(invocation_dir, 'test_results.txt'), 'w')
-            f.write(i)
-            f.close()
-            raise
+            if failures_count == 0:
+                f = open(os.path.join(invocation_dir, 'test_results.txt'), 'w')
+                f.write(i)
+                f.close()
+            failures_count = failures_count + 1
+            # Restore the current directory, which might be changed by the
+            # test
+            os.chdir(invocation_dir)
+            continue
         print "PASSED"
         sys.stdout.flush()  # makes testing under emacs more entertaining.
         
     # Erase the file on success
-    open('test_results.txt', 'w')
+    if failures_count == 0:
+        open('test_results.txt', 'w')
         
 
 def last_failed_test():
