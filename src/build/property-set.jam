@@ -14,8 +14,14 @@ import sequence ;
 #   the 'property-set.create' rule should be used to create new instances.
 #   Instances are immutable.
 # 
-# - each property is classified as either base, free, dependency or incidental,
-#   and it's possible to efficiently obtain properties of each class.
+# - each property is classified with regard to it's effect on build
+#   results. Incidental properties have no effect on build results, from
+#   Boost.Build point of view. Others are either free, or non-free, which we
+#   call 'base'. Each property belong to exactly one of those categories and
+#   it's possible to get list of properties in each category.
+#
+#   In addition, it's possible to get list of properties with specific
+#   attribute.
 #
 # - several operations, like and refine and as-path are provided. They all use
 #   caching whenever possible.
@@ -34,26 +40,30 @@ class property-set
         for local p in $(raw-properties)
         {
             local att = [ feature.attributes $(p:G) ] ;        
+            # A feature can be both incidental and free,
+            # in which case we add it to incidental.
             if incidental in $(att)
             {
                 self.incidental += $(p) ;
             }
             else if free in $(att)
             {
-                if dependency in $(att)
-                {
-                    self.dependency += $(p) ;
-                }
-                else
-                {
-                    self.free += $(p) ;
-                }            
+                self.free += $(p) ;
             }
             else 
             {
                 self.base += $(p) ;
             }
-            
+        
+            if dependency in $(att)
+            {
+                self.dependency += $(p) ;
+            }
+            else
+            {
+                self.non-dependency += $(p) ;
+            }
+                                    
             if propagated in $(att)
             {
                 self.propagated += $(p) ;
@@ -63,6 +73,7 @@ class property-set
                 self.link-incompatible += $(p) ;
             }                                
         }
+        
     }
     
     
@@ -90,6 +101,12 @@ class property-set
     {
         return $(self.dependency) ;
     }
+    
+    rule non-dependency ( )
+    {
+        return $(self.non-dependency) ;
+    }
+
     
     # Returns incidental properties
     rule incidental ( )
