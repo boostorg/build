@@ -216,10 +216,18 @@ rule set-target-variables-aux ( rule-or-module : property-set )
         if ! $(condition) ||
           [ find-property-subset $(condition) : $(properties) ]
         {
+            local processed ;
             for local v in $(values)
             {                
-                result += $(variable) $(v) ;
+                # The value might be <feature-name> so needs special
+                # treatment.
+                processed += [ 
+                  handle-flag-value $(v) : $(properties) ] ;
             }
+            for local r in $(processed)
+            {                        
+                result += $(variable) $(r) ;
+            }            
         }
     }
     
@@ -258,18 +266,7 @@ rule set-target-variables ( rule-or-module targets + : property-set )
             # Here, $(settings[1]) is the name of variable to assign
             # and $(settings[2]) is the value.
             
-            # The value might be <feature-name> so needs special
-            # treatment.
-            local value = [ 
-              handle-flag-value $(settings[2]) : $(properties) ] ;
-            # Without this test, the assignment below would create a
-            # target variable even if $(result) is empty.  That is
-            # undesirable because the empty target variable would mask
-            # module globals intended to be used as defaults.
-            if $(value)-is-nonempty
-            {
-                $(settings[1]) on $(targets) += $(value) ;
-            }            
+            $(settings[1]) on $(targets) += $(settings[2]) ;
             settings = $(settings[3-]) ;
         }    
     }
