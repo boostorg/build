@@ -32,22 +32,24 @@ LIST *regex_transform( PARSE *parse, FRAME *frame )
 
 
     /* Result is cached and intentionally never freed */
-    regexp *re = regex_compile( pattern->string );
-
-    for(; l; l = l->next)
     {
-        if( regexec( re, l->string ) )
+        regexp *re = regex_compile( pattern->string );
+
+        for(; l; l = l->next)
         {
-            if (re->startp[1])
+            if( regexec( re, l->string ) )
             {
-                string_append_range( buf, re->startp[1], re->endp[1] );
-                result = list_new( result, newstr( buf->value ) );                
-                string_truncate( buf, 0 );
+                if (re->startp[1])
+                {
+                    string_append_range( buf, re->startp[1], re->endp[1] );
+                    result = list_new( result, newstr( buf->value ) );                
+                    string_truncate( buf, 0 );
+                }
             }
         }
+        string_free( buf );
     }
-    string_free( buf );
-
+    
     return result;
 }
 
