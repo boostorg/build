@@ -118,7 +118,7 @@ rule from-command-line ( command-line * : feature-space ? )
             if [ MATCH "(.*/.*)" : $(e) ] || [ MATCH "(.*=.*)" : $(e) ] ||
                [ $(feature-space).is-implicit-value $(e) ] 
             {
-                properties += [ convert-command-line-element $(e) ] ;
+                properties += [ convert-command-line-element $(e) : $(feature-space) ] ;
             }
             else
             {
@@ -131,7 +131,7 @@ rule from-command-line ( command-line * : feature-space ? )
 
 # Converts one element of command line build request specification into
 # internal form.
-local rule convert-command-line-element ( e )
+local rule convert-command-line-element ( e : feature-space )
 {
     local result ;
     local parts = [ regex.split $(e) "/" ] ;
@@ -148,6 +148,11 @@ local rule convert-command-line-element ( e )
         else
         {
             lresult = $(p) ;
+        }
+
+        for local p in $(lresult)
+        {
+            property.validate $(p) : $(feature-space) ;
         }
 
         if ! $(result) 
@@ -176,6 +181,7 @@ local rule __test__ ( )
         local test-space = [ modules.peek build-request : test-space ] ;
         
         import build-request ;
+        import errors : try catch ;
 
         feature toolset : gcc msvc : implicit ;
         subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
@@ -186,6 +192,8 @@ local rule __test__ ( )
         feature "include" : : free ;
         
         feature stdlib : native stlport : implicit ;
+
+        feature runtime-link : dynamic static : symmetric ;
         
         # empty build requests should expand to empty.
         assert.result
@@ -230,10 +238,11 @@ local rule __test__ ( )
         assert.equal [ $(r).get-at 1 ] : ;
         assert.equal [ $(r).get-at 2 ] : debug <runtime-link>dynamic ;
 
-        r = [ build-request.from-command-line bjam gcc/debug runtime-link=dynamic/static 
-                : $(test-space) ] ;
-        assert.equal [ $(r).get-at 1 ] : ;
-        assert.equal [ $(r).get-at 2 ] : gcc/debug <runtime-link>dynamic/static ;
+        try ;
+            build-request.from-command-line bjam gcc/debug runtime-link=dynamic/static 
+                : $(test-space) ;
+        catch "Invalid property 'static': 'static' is not a value of implicit feature." ;
+
 
         r = [ build-request.from-command-line bjam -d2 --debug debug target 
                runtime-link=dynamic
