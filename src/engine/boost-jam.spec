@@ -1,5 +1,5 @@
 Name: boost-jam
-Version: 3.1
+Version: 3.1.1
 Summary: Build tool
 Release: 1
 Source: boost-jam-%{version}.src.tar.gz
