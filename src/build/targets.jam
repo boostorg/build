@@ -638,6 +638,13 @@ rule find ( id : project )
         
     if ! $(target)
     {
+        ECHO "error: Unable to find file or target named" ;
+        ECHO "error:     '$(id)'" ;
+        ECHO "error: referred from project at" ;
+        ECHO "error:     '$(current-location)'" ;
+        EXIT ;
+        
+        
         errors.error "Unable to resolve target-id $(id)" : 
           "Reference was made from project at '$(current-location)'" ;
     }        
