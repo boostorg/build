@@ -344,7 +344,8 @@ rule inherit-attributes ( project-module : project-root-module : parent-module ?
     {
         local attributes = $($(project-module).attributes) ;        
         local pattributes = [ attributes $(parent-module) ] ;
-        $(attributes).set parent : [ path.parent $(parent-module) ] ;
+        $(attributes).set parent : [ path.parent 
+            [ modules.binding $(parent-module) ] ] ;
         $(attributes).set default-build 
             : [ $(pattributes).get default-build ] ;
         $(attributes).set requirements
