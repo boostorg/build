@@ -224,11 +224,6 @@ class stage-target-class : basic-target
         result = [ sequence.unique $(result) ] ;        
     }
         
-    # Don't do nothing.
-    rule check-for-unused-sources ( result * : sources * )
-    {        
-    }
-    
     rule check-for-link-compatibility ( * : * )
     {
     }

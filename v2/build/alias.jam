@@ -50,12 +50,7 @@ class alias-target-class : basic-target
     rule check-for-link-compatibility ( * : * )
     {
     }
-    
-    rule check-for-unused-sources ( * : * )
-    {
-    }
-    
-        
+            
     rule compute-usage-requirements ( subvariant ) 
     {
         local base = [ basic-target.compute-usage-requirements $(subvariant) ] ;

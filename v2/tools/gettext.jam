@@ -169,11 +169,7 @@ class update-translations-class : basic-target
             }            
         }
         return $(.constructed) ;                
-    }    
-    
-    rule check-for-unused-sources ( result * : sources * )
-    {        
-    }
+    }        
 }
 
 flags gettext.extract KEYWORD <gettext.keyword> ;
