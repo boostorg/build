@@ -149,6 +149,15 @@ rule init (
         .LD = $(prefix)$(linker) ;
     }     
     .initialized = true ; # remember that we've initialized at least one version of msvc
+    
+    # The following options work only for 7* versions. It means
+    # that if the user has not specified a version he gets 6.0 compatible
+    # behavious (i.e. a bit buggy)
+    if [ MATCH ^(7|[^7].*) : $(version) ] 
+    {
+        flags msvc.compile CFLAGS : /Zc:forScope /Zc:wchar_t ;
+    }
+    
 }
 
 .CC = cl ;
