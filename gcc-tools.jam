@@ -50,6 +50,9 @@ GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/bin/ ;
 GCC_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if GCC_ROOT_DIRECTORY not set
 GCC_STDLIB_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/lib ;
 
+# Make sure this gets set "on" the target
+flags gcc GCC_BIN_DIRECTORY : $(GCC_BIN_DIRECTORY) ;
+
 flags gcc LINKFLAGS <runtime-link>static : -static ;
 flags gcc CFLAGS <debug-symbols>on : -g ;
 flags gcc LINKFLAGS <debug-symbols>on : -g ;
