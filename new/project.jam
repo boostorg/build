@@ -54,23 +54,46 @@ import property-set ;
 #   Returns the project module for the Jamfile.
 #
 rule load ( jamfile-location )
-{
-    local module-name = [ module-name $(jamfile-location) ] ;
-    
+{   
+    # Load project root, first. It might decide to act as Jamfile.
+    project-root.load $(jamfile-location) ;
+        
+    local module-name = [ module-name $(jamfile-location) ] ;        
     # If Jamfile is already loaded, don't try again.
     if ! $(jamfile-location) in $(.project-locations)
     {      
         .project-locations += $(jamfile-location) ; 
-                
+
+        
         load-jamfile $(jamfile-location) ;
                 
         for local p in [ attribute $(module-name) projects-to-build ]
         {
             load [ path.join $(jamfile-location) $(p) ] ;
         }
-    }    
+    }                
     return $(module-name) ;        
 }
+
+# Makes the specified 'module' act as if it were a regularly loaded Jamfile 
+# at 'location'. If Jamfile is already located for that location, it's an 
+# error. 
+rule act-as-jamfile ( module : location )
+{
+    if $(location) in $(.project-locations)
+    {
+        errors.error "Jamfile was already loaded for '$(location)'" ;
+    }
+    # Set up non-default mapping from location to module.
+    .module.$(location) = $(module) ;    
+    
+    # Add the location to the list of project locations
+    # so that we don't try to load Jamfile in future
+    .project-locations += $(location) ;
+    
+    initialize $(module) : $(location) ;
+}
+
 
 #   Returns the project module, given its id.
 #   Projects can be referred using path@project-id notation. In it, 'path'
@@ -254,10 +277,16 @@ rule find-target ( id : current-location )
 
 #
 # Returns the name of module corresponding to 'jamfile-location'.
+# If no module corresponds to location yet, associates default
+# module name with that location.
 #
 rule module-name ( jamfile-location )
 {
-    return Jamfile<$(jamfile-location)> ;
+    if ! $(.module.$(jamfile-location))
+    {
+        .module.$(jamfile-location) =  Jamfile<$(jamfile-location)> ;
+    }
+    return $(.module.$(jamfile-location)) ;
 }
 
 # Default patterns to search for the Jamfiles to use for build
@@ -412,9 +441,13 @@ rule inherit-attributes ( project-module : project-root-module : parent-module ?
             # Have to compute relative path from parent dir to our dir
             # Convert both paths to absolute, since we cannot
             # find relative path from ".." to "."
+            
+            local location = [ attribute $(project-module) location ] ;
+            local parent-location = [ attribute $(parent-module) location ] ;
+            
             local pwd = [ path.pwd ] ;
-            local parent-dir = [ path.root [ path.parent $(parent) ] $(pwd) ] ;
-            local our-dir = [ path.root [ path.parent $(jamfile) ] $(pwd) ] ;
+            local parent-dir = [ path.root $(parent-location) $(pwd) ] ;
+            local our-dir = [ path.root $(location) $(pwd) ] ;
             $(attributes).set build-dir : [ path.join $(parent-build-dir) 
                   [ path.relative $(our-dir) $(parent-dir) ] ] : exact ;
         }        
