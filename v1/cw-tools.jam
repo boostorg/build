@@ -88,15 +88,15 @@ flags cw FLAGS : [ conditional $(cw-errors) : "-maxerrors $(cw-errors[1])" : "-m
 # Warnings, default to maximum 20 warnings
 if off in $(cw-warnings)
 {
-    flags cw FLAGS : "-warn off" ;
+    flags cw FLAGS : "-warnings off" ;
 }
 else if error in $(cw-warnings)
 {
-    flags cw FLAGS : "-warn error" ;
+    flags cw FLAGS : "-warnings error" ;
 }
 else
 {
-    flags cw FLAGS : "-warn on" ;
+    flags cw FLAGS : "-warnings on" ;
 }
 if ! ( off in $(cw-warnings) )
 {
@@ -114,42 +114,52 @@ if ! ( off in $(cw-warnings) )
 cw-warnings = [ difference $(cw-warnings) : on off error ] ;
 if $(cw-warnings)
 {
-    flags cw CFLAGS <warnings>no-illegal-pragmas : "-warn nopragmas" ;
-    flags cw CFLAGS <warnings>illegal-pragmas : "-warn pragmas" ;
-    flags cw CFLAGS <warnings>no-empty-declarations : "-warn noempty" ;
-    flags cw CFLAGS <warnings>empty-declarations : "-warn empty" ;
-    flags cw CFLAGS <warnings>no-empty-declarations : "-warn noempty" ;
-    flags cw CFLAGS <warnings>empty-declarations : "-warn empty" ;
-    flags cw CFLAGS <warnings>no-unwanted-effect : "-warn nounwanted" ;
-    flags cw CFLAGS <warnings>unwanted-effect : "-warn unwanted" ;
-    flags cw CFLAGS <warnings>no-unused-arg : "-warn nounusedarg" ;
-    flags cw CFLAGS <warnings>unused-arg : "-warn unsedarg" ;
-    flags cw CFLAGS <warnings>no-unused-var : "-warn nounusedvar" ;
-    flags cw CFLAGS <warnings>unused-var : "-warn unsedvar" ;
-    flags cw CFLAGS <warnings>no-unused-expresssion : "-warn nounusedexpr" ;
-    flags cw CFLAGS <warnings>unused-expresssion : "-warn unsedexpr" ;
-    flags cw CFLAGS <warnings>no-extra-comma : "-warn nocomma" ;
-    flags cw CFLAGS <warnings>extra-comma : "-warn comma" ;
-    flags cw CFLAGS <warnings>no-pedantic : "-warn nopedantic" ;
-    flags cw CFLAGS <warnings>pedantic : "-warn pedantic" ;
-    flags cw CFLAGS <warnings>no-hidden-virtual : "-warn nohidden" ;
-    flags cw CFLAGS <warnings>hidden-virtual : "-warn hidden" ;
-    flags cw CFLAGS <warnings>no-implicit-convert : "-warn noimplicit" ;
-    flags cw CFLAGS <warnings>implicit-convert : "-warn implicit" ;
-    flags cw CFLAGS <warnings>no-not-inlined : "-warn nonotinlined" ;
-    flags cw CFLAGS <warnings>not-inlined : "-warn notinlined" ;
-    flags cw CFLAGS <warnings>no-inconsistent-class : "-warn nostructclass" ;
-    flags cw CFLAGS <warnings>inconsistent-class : "-warn structclass" ;
-    flags cw CFLAGS <warnings>no-structure-pad : "-warn nopadding" ;
-    flags cw CFLAGS <warnings>structure-pad : "-warn padding" ;
-    flags cw CFLAGS <warnings>no-unused-return : "-warn nonotused" ;
-    flags cw CFLAGS <warnings>unused-return : "-warn notused" ;
-    flags cw CFLAGS <warnings>no-pointer-conversion : "-warn noptrintconv" ;
-    flags cw CFLAGS <warnings>pointer-conversion : "-warn ptrintconv" ;
+    flags cw CFLAGS <warnings>no-illegal-pragmas : "-warnings nopragmas" ;
+    flags cw CFLAGS <warnings>illegal-pragmas : "-warnings pragmas" ;
+    flags cw CFLAGS <warnings>no-empty-declarations : "-warnings noempty" ;
+    flags cw CFLAGS <warnings>empty-declarations : "-warnings empty" ;
+    flags cw CFLAGS <warnings>no-empty-declarations : "-warnings noempty" ;
+    flags cw CFLAGS <warnings>empty-declarations : "-warnings empty" ;
+    flags cw CFLAGS <warnings>no-unwanted-effect : "-warnings nounwanted" ;
+    flags cw CFLAGS <warnings>unwanted-effect : "-warnings unwanted" ;
+    flags cw CFLAGS <warnings>no-unused-arg : "-warnings nounusedarg" ;
+    flags cw CFLAGS <warnings>unused-arg : "-warnings unsedarg" ;
+    flags cw CFLAGS <warnings>no-unused-var : "-warnings nounusedvar" ;
+    flags cw CFLAGS <warnings>unused-var : "-warnings unsedvar" ;
+    flags cw CFLAGS <warnings>no-extra-comma : "-warnings nocomma" ;
+    flags cw CFLAGS <warnings>extra-comma : "-warnings comma" ;
+    flags cw CFLAGS <warnings>no-pedantic : "-warnings nopedantic" ;
+    flags cw CFLAGS <warnings>pedantic : "-warnings pedantic" ;
+    flags cw CFLAGS <warnings>no-hidden-virtual : "-warnings nohidden" ;
+    flags cw CFLAGS <warnings>hidden-virtual : "-warnings hidden" ;
+    flags cw CFLAGS <warnings>no-implicit-convert : "-warnings noimplicit" ;
+    flags cw CFLAGS <warnings>implicit-convert : "-warnings implicit" ;
+    flags cw CFLAGS <warnings>no-not-inlined : "-warnings nonotinlined" ;
+    flags cw CFLAGS <warnings>not-inlined : "-warnings notinlined" ;
+    flags cw CFLAGS <warnings>no-inconsistent-class : "-warnings nostructclass" ;
+    flags cw CFLAGS <warnings>inconsistent-class : "-warnings structclass" ;
+    if $(NT)
+    {
+        flags cw CFLAGS <warnings>no-unused-expresssion : "-warnings nounusedexpr" ;
+        flags cw CFLAGS <warnings>unused-expresssion : "-warnings unsedexpr" ;
+        flags cw CFLAGS <warnings>no-structure-pad : "-warnings nopadding" ;
+        flags cw CFLAGS <warnings>structure-pad : "-warnings padding" ;
+        flags cw CFLAGS <warnings>no-unused-return : "-warnings nonotused" ;
+        flags cw CFLAGS <warnings>unused-return : "-warnings notused" ;
+        flags cw CFLAGS <warnings>no-pointer-conversion : "-warnings noptrintconv" ;
+        flags cw CFLAGS <warnings>pointer-conversion : "-warnings ptrintconv" ;
+    }
 }
 else
 {
-    flags cw CFLAGS : "-warn nounusedexpr,nounused" ;
+    if $(NT)
+    {
+        flags cw CFLAGS : "-warnings nounusedexpr,nounused" ;
+    }
+    else
+    {
+        flags cw CFLAGS : "-warnings nounused" ;
+    }
 }
 
 # Search for files in search paths
@@ -162,15 +172,18 @@ if $(cw-version) in 8.0 9.0
     # Use latest ISO conforming templates
     flags cw C++FLAGS : -iso_templates on ;
     
-    # The runtime libraries
-    flags cw CFLAGS <runtime-link>static/<threading>single/<runtime-build>release : -runtime ss ;
-    flags cw CFLAGS <runtime-link>static/<threading>single/<runtime-build>debug : -runtime ssd ;
-    
-    flags cw CFLAGS <runtime-link>static/<threading>multi/<runtime-build>release : -runtime sm ;
-    flags cw CFLAGS <runtime-link>static/<threading>multi/<runtime-build>debug : -runtime smd ;
-    
-    flags cw CFLAGS <runtime-link>dynamic/<runtime-build>release : -runtime dm ;
-    flags cw CFLAGS <runtime-link>dynamic/<runtime-build>debug : -runtime dmd ;
+    if $(NT)
+    {
+        # The runtime libraries
+        flags cw CFLAGS <runtime-link>static/<threading>single/<runtime-build>release : -runtime ss ;
+        flags cw CFLAGS <runtime-link>static/<threading>single/<runtime-build>debug : -runtime ssd ;
+        
+        flags cw CFLAGS <runtime-link>static/<threading>multi/<runtime-build>release : -runtime sm ;
+        flags cw CFLAGS <runtime-link>static/<threading>multi/<runtime-build>debug : -runtime smd ;
+        
+        flags cw CFLAGS <runtime-link>dynamic/<runtime-build>release : -runtime dm ;
+        flags cw CFLAGS <runtime-link>dynamic/<runtime-build>debug : -runtime dmd ;
+    }
 }
 if $(NT) && $(cw-version) in 6.0 7.0 8.0
 {
@@ -222,6 +235,9 @@ flags cw FLAGS : -nowraplines ;
 
 flags cw CW_PREFIX : "-prefix " ;
 
+# CodeWarrior has it's own set of standard headers, so ignore the default.
+flags cw STDHDRS : ;
+
 #### Link ####
 rule Link-action
 {
@@ -232,7 +248,14 @@ rule Link-action
             [ on $(<[1]) return $(FINDLIBS) ] :
             $(gTARGET_BASENAME($(gTARGET_SUBVARIANT($(NEEDLIBS))))) ] ;
     gRUN_PATH($(<)) += $(CW_RUN_PATH) ;
-    with-command-file cw-Link-action $(<) : $(>) $(NEEDLIBS) ;
+    if $(NT)
+    {
+        with-command-file cw-Link-action $(<) : $(>) $(NEEDLIBS) ;
+    }
+    else
+    {
+        cw-Link-action $(<) : $(>) $(NEEDLIBS) ;
+    }
 }
 
 actions cw-Link-action
