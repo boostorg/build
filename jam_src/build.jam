@@ -148,7 +148,7 @@ toolset msvc cl : /Fe : -D
     : /nologo
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
-    : kernel32.lib ;
+    : kernel32.lib advapi32.lib ;
 ## Sun Workshop 6 C++
 toolset sunpro cc : "-o " : -D
     :
@@ -169,7 +169,7 @@ toolset vc7 cl : /Fe : -D
     : /nologo
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
-    : kernel32.lib ;
+    : kernel32.lib advapi32.lib ;
 ## VMS/OpenVMS DEC C
 toolset vmsdecc cc : /OBJECT= : "/DEFINES=(" "," ")"
     : /STANDARD=VAXC /PREFIX_LIBRARY_ENTRIES=ALL_ENTRIES
@@ -275,11 +275,11 @@ jam.source =
     option.c parse.c regexp.c rules.c
     scan.c search.c subst.c
     timestamp.c variable.c modules.c strings.c filesys.c 
-    builtins.c pwd.c class.c
+    builtins.c pwd.c class.c 
     ;
 if $(NT)
 {
-    jam.source += execnt.c filent.c pathunix.c ;
+    jam.source += execnt.c filent.c pathunix.c w32_getreg.c ;
 }
 else if $(OS2)
 {

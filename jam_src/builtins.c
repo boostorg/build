@@ -49,6 +49,10 @@
 # define P0 (PARSE *)0
 # define C0 (char *)0
 
+# ifdef OS_NT
+LIST* builtin_system_registry( PARSE *parse, FRAME *frame );
+# endif
+
 int glob( char *s, char *c );
 
 static void lol_build( LOL* lol, char** elements );
@@ -251,6 +255,13 @@ load_builtins()
           bind_builtin( "CALC",
               builtin_calc, 0, args );
       }
+# ifdef OS_NT
+      {
+          char * args[] = { "key_path", ":", "data", "?", 0 };
+          bind_builtin( "W32_GETREG",
+              builtin_system_registry, 0, args );
+      }
+# endif
 }
 
 /*
