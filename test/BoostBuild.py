@@ -172,7 +172,7 @@ class Tester(TestCmd.TestCmd):
         self.difference = trees_difference(self.previous_tree, self.tree)
         self.unexpected_difference = copy.deepcopy(self.difference)
 
-        self.last_build_time = time.time
+        self.last_build_time = time.time()
 
     def read(self, name):
         return open(self.native_file_name(name), "rb").read()
@@ -299,8 +299,8 @@ class Tester(TestCmd.TestCmd):
     # Wait while time is no longer equal to the time last "run_build_system"
     # call finished.
     def wait_for_time_change(self):
-        while int(time.time()) == self.last_build_time:
-            os.sleep(0.1)
+        while int(time.time()) == int(self.last_build_time):
+            time.sleep(0.1)
 
 
 class List:
