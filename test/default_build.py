@@ -61,7 +61,6 @@ void foo() {}
 #endif
 """)
 
-# Uncomment when BB10 is resolved.
-#t.run_build_system()
+t.run_build_system()
 
 t.cleanup()
