@@ -9,10 +9,10 @@
       <title>Introduction</title>
 
   <para>This document explains how to extend Boost.Build to accomodate
-  your local requirements. Let's start with quite simple, but
+  your local requirements. Let's start with a simple but
   realistic example.</para>
 
-  <para>Say you're writing an application which generates C++ code. If
+  <para>Say you're writing an application that generates C++ code. If
   you ever did this, you know that it's not nice. Embedding large
   portions of C++ code in string literals is very awkward. A much
   better solution is:</para>
@@ -21,7 +21,7 @@
     <listitem>
       <simpara>
         Write the template of the code to be generated, leaving
-    placeholders at the points which will change
+    placeholders at the points that will change
       </simpara>
     </listitem>
 
@@ -37,45 +37,50 @@
     </listitem>
   </orderedlist>
 
-  <para>It's quite easy to achieve. You write special verbatim files,
-  which are just C++, except that the very first line of the file
-  gives a name of variable that should be generated. A simple tool
-  is created which takes verbatim file and creates a cpp file with
-  a single char* variable, which name is taken from the first line
-  of verbatim file, and which value is properly quoted content of
-  the verbatim file.</para>
+  <para>It's quite easy to achieve. You write special verbatim files
+  that are just C++, except that the very first line of the file
+  contains the name of a variable that should be generated. A simple tool
+  is created that takes a verbatim file and creates a cpp file with
+  a single <code>char*</code> variable whose name is taken from the first line
+  of the verbatim file and whose value is the file's properly quoted content.</para>
 
   <para>Let's see what Boost.Build can do.</para>
 
   <para>First off, Boost.Build has no idea about "verbatim files". So,
-  you must register a new type. The following code does it:</para>
+  you must register a new target type. The following code does
+  it:</para>
 
 <programlisting>
 import type ;
-type.register VERBATIM : verbatim ;
+type.register VERBATIM : vrb ;
 </programlisting>
 
-  <para>The first parameter to 'type.register' gives the name of
-  declared type. By convention, it's uppercase. The second
-  parameter is suffix for this type. So, if Boost.Build sees
-  "code.verbatim" in the list of sources, it knows that it's of
-  type <literal>VERBATIM</literal>.</para>
+<!-- changed "verbatim" to "vrb."  Too many similar things
+     (verbatim/VERBATIM) makes for easy confusion -->
 
-  <para>Lastly, you need a tool to convert verbatim files to C++. Say
-  you've sketched such a tool in Python. Then, you have to inform
-  Boost.Build about the tool. The Boost.Build concept which
-  represents a tool is <emphasis>generator</emphasis>.</para>
+  <para>The first parameter to
+  <functionname>type.register</functionname> gives the name of the
+  declared type. By convention, it's uppercase. The second parameter
+  is the suffix for files of this type. So, if Boost.Build sees
+  <filename>code.vrb</filename> in a list of sources, it knows that it's of type
+  <code>VERBATIM</code>.</para>
 
-  <para>First, you say that generator 'inline-file' is able to convert
-  VERBATIM type into C++:</para>
+  <para>Next, you tell Boost.Build that the verbatim files can be
+  transformed into C++ files in one build step.  A
+  <firstterm>generator</firstterm> is a template for a build step that
+  transforms targets of one type (or set of types) into another.  Our
+  generator will be called <code>verbatim.inline-file</code>; it
+  transforms <code>VERBATIM</code> files into <code>CPP</code> files:
 
 <programlisting>
 import generators ;
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
 </programlisting>
+  </para>
 
-  <para>Second, you must specify the commands to be run to actually
-  perform convertion:</para>
+  <para>Lastly, you have to inform Boost.Build about the shell
+  commands used to make that transformation.  That's done with an
+  <code>actions</code> declaration.
 
 <programlisting>
 actions inline-file
@@ -83,14 +88,21 @@ actions inline-file
     "./inline-file.py" $(&lt;) $(&gt;)
 }
 </programlisting>
+
+<!-- You need to explain all the parameters to an "actions" and
+     describe the accompanying rule declaration: the user has no clue
+     what $(<) and $(>) are, and doesn't know about the third
+     parameter that gets passed to the rule. -->
+
 <!-- We use verbatim.inline-file in one place and just inline-file in
              another. Is this confusing for user?
         -->
+</para>
 
   <para>Now, we're ready to tie it all together. Put all the code
-  above in file "verbatim.jam", add "import verbatim ;" to
-  "project-root.jam", and it's possible to write the following in
-  Jamfile:</para>
+  above in file <filename>verbatim.jam</filename>, add <code>import verbatim ;</code> 
+  to <filename>project-root.jam</filename>, and it's possible to write
+  the following in Jamfile:</para>
 
 <programlisting>
 exe codegen : codegen.cpp class_template.verbatim usage.verbatim ;
@@ -182,7 +194,7 @@ class verbatim-scanner : common-scanner
 }
 </programlisting>         
           All the complex logic is in the <code>common-scanner</code> class,
-          and you only need to override the method which returns the regular
+          and you only need to override the method that returns the regular
           expression to be used for scanning. The paranthethis in the regular
           expression indicate which part of the string is the name of the
           included file. 
@@ -194,7 +206,7 @@ scanner.register verbatim-scanner : include ;
 </programlisting>
             The value of the second parameter, in this case
             <code>include</code>, specifies which properties contain the list
-            of paths which should be searched for the included files.
+            of paths that should be searched for the included files.
          </para>
 
         <para>Finally, we assign the new scaner to the <code>VERBATIM</code>
@@ -217,10 +229,10 @@ type.set-scanner VERBATIM : verbatim-scanner ;
       </para>
 
       <para>For each additional tool, a Boost.Build object called generator
-        must be created. That object has specific types of targets which it
+        must be created. That object has specific types of targets that it
         accepts an produces. Using that information, Boost.Build is able
         to automatically invoke the generator. For example, if you declare a
-        generator which takes a target of the type <literal>D</literal> and
+        generator that takes a target of the type <literal>D</literal> and
         produces a target of the type <literal>OBJ</literal>, when placing a
         file with extention <literal>.d</literal> in a list of sources will
         cause Boost.Build to invoke your generator, and then to link the
@@ -246,7 +258,7 @@ actions inline-file
 
       <para>We declare a standard generator, specifying its id, the source type
         and the target type. When invoked, the generator will create a target
-        of type <literal>CPP</literal> which will have the source target of
+        of type <literal>CPP</literal> that will have the source target of
         type <literal>VERBATIM</literal> as the only source. But what command
         will be used to actually generate the file? In bjam, actions are
         specified using named "actions" blocks and the name of the action
@@ -347,7 +359,7 @@ generators.register [ new itrace-generator nm.itrace : EXE : ITRACE ] ;
         The <code>generated-targets</code> rule will be called with a single
         source target of type <literal>EXE</literal>. The call to the
         <code>virtual-target.traverse</code> will return all targets the
-        executable depends on, and we further find files which are not
+        executable depends on, and we further find files that are not
         produced from anything. The found targets are added to the sources.
       </para>
       
@@ -356,7 +368,7 @@ generators.register [ new itrace-generator nm.itrace : EXE : ITRACE ] ;
         sources to the desired types can be completely customized. Here's
         another real example. Tests for the Boost Python library usually
         consist of two parts: a Python program and a C++ file. The C++ file is
-        compiled to Python extension which is loaded by the Python
+        compiled to Python extension that is loaded by the Python
         program. But in the likely case that both files have the same name,
         the created Python extension must be renamed. Otherwise, Python
         program will import itself, not the extension. Here's how it can be
@@ -451,11 +463,11 @@ actions inline-file
       with. The user does not have to adjust the values for a exact tool.  For
       example, <code>&lt;optimization&gt;speed</code> has the same meaning for
       all C++ compilers and the user does not have to worry about the exact
-      options which are passed to the compiler's command line.
+      options passed to the compiler's command line.
     </para>
 
     <para>
-      Besides such portable features there are special 'raw' features which
+      Besides such portable features there are special 'raw' features that
       allow the user to pass any value to the command line parameters for a
       particular tool, if so desired. For example, the
       <code>&lt;cxxflags&gt;</code> feature allows to pass any command line
@@ -533,7 +545,7 @@ actions inline-file
       <bridgehead>Another example</bridgehead>
 
       <para>Here's an another example.
-        Let's see how we can make a feature which refers to a target. For example,
+        Let's see how we can make a feature that refers to a target. For example,
         when linking dynamic libraries on windows, one sometimes needs to specify
         "DEF file", telling what functions should be exported. It would be nice to
         use this file like this:
@@ -551,7 +563,7 @@ feature def-file : : free dependency ;
 </programlisting>
             </para></listitem>
 
-        <listitem><para>One of the toolsets which cares about DEF files is
+        <listitem><para>One of the toolsets that cares about DEF files is
 msvc. The following line should be added to it.
 
 <programlisting>
@@ -597,7 +609,7 @@ rule link
       <para>Sometimes you want to create a shorcut for some set of
         features. For example, <code>release</code> is a value of the
         <code>variant</code> and is a shortcut for a set of features.
-        </para>.
+      </para>
 
       <para>It is possible to define your build variants. For example:
 <programlisting>
@@ -614,7 +626,7 @@ variant super_release : release : &lt;define&gt;USE_ASM ;
       </para>
 
       <para>You are not restricted to using the <code>variant</code> feature
-      only. Here's example which defines a brand new feature:
+      only. Here's example that defines a brand new feature:
 <programlisting>
 feature parallelism : mpi fake none : composite link-incompatible ;
 feature.compose &lt;parallelism&gt;mpi : &lt;library&gt;/mpi//mpi/&lt;parallelism&gt;none ;
@@ -654,7 +666,7 @@ generators.register-standard obfuscate.file : CPP : OBFUSCATED_CPP ;
       in Jamfiles, which will convert source to the OBFUSCATED_CPP type.
     </para>
     
-    <para>The second way is to write a wrapper rule, which will redirect to
+    <para>The second way is to write a wrapper rule that will redirect to
       any of the existing rules. For example, you have only one library per
       directory and want all cpp files in the directory to be compiled. You
       can achieve this effect with:
@@ -691,7 +703,7 @@ glib codegen ;
     <title>Toolset modules</title>
 
     <para>If your extensions will be used only on one project, they can be
-      placed in a separate <filename>.jam</filename> file which will be
+      placed in a separate <filename>.jam</filename> file that will be
       imported by your <filename>project-root.jam</filename>. If the
       extensions will be used on many projects, the users will thank you for 
       a finishing touch.
@@ -700,12 +712,12 @@ glib codegen ;
     <para>The standard way to use a tool in Boost.Build is the
       <code>using</code> rule. To make it work, you module should provide an
       <code>init</code> rule. The rule will be called with the same parameters
-      which were passed to the <code>using</code> rule. The set of allowed
+      that were passed to the <code>using</code> rule. The set of allowed
       parameters is determined by you. For example, you can allow the user to
       specify paths, tool version, or tool options.
     </para>
 
-    <para>Here are some guidelines which help to make Boost.Build more
+    <para>Here are some guidelines that help to make Boost.Build more
       consistent:
       <itemizedlist>
         <listitem><para>The <code>init</code> rule should never fail. Even if
