@@ -355,10 +355,15 @@ rule Link-action
         DLL_LINK_FLAGS = "" ;
     }
 
+    # Allow gcc-nocygwin to avoid this flag
+    if ! $(GCC_NO_EXPORT_ALL) {
+        DLL_LINK_FLAGS = "$(DLL_LINK_FLAGS)-Wl,--export-all-symbols " ;
+    }
+
     # This will appear before the import library name when building a DLL, but
     # will be "multiplied away" otherwise. The --exclude-symbols directive
     # proved to be neccessary with some versions of Cygwin.
-    IMPLIB_COMMAND on $(<) = "$(DLL_LINK_FLAGS)-Wl,--export-all-symbols -Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__ -Wl,--out-implib," ;
+    IMPLIB_COMMAND on $(<) = "$(DLL_LINK_FLAGS)-Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__ -Wl,--out-implib," ;
     DEPENDS $(<) : $(NEEDLIBS) $(NEEDIMPS) ;
     gRUN_LD_LIBRARY_PATH($(<)) += $(STDLIBPATH:T) ;
     
