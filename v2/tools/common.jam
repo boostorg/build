@@ -166,6 +166,8 @@ rule response-file ( targets + : sources * : the-response-file : properties * )
     local rsp = $(the-response-file:G=$(g)-rsp) ;
     LOCATE on $(rsp) = [ on $(the-response-file) return $(LOCATE) ] ;    
     DEPENDS $(targets) : $(rsp) ;
+    # Cause RSP to be recreated if sources are out-of-date.
+    DEPENDS $(rsp) : $(sources) ;
         
     # Add libraries from <library> property to the list of sources.
     local libraries ;
