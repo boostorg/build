@@ -17,15 +17,31 @@ its use in the Boost Build System, but should be backward compatible
 with Perforce Jam.
 
 Authors:
-	Perforce Jam : Cristopher Seiwald
-	FT Jam       : David Turner
-	Boost Jam    : David Abrahams
+    Perforce Jam : Cristopher Seiwald
+    FT Jam       : David Turner
+    Boost Jam    : David Abrahams
+
+Copyright:
+    /+\
+    +\  Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
+    \+/
+    License is hereby granted to use this software and distribute it
+    freely, as long as this copyright notice is retained and modifications 
+    are clearly marked.
+    ALL WARRANTIES ARE HEREBY DISCLAIMED.
+
+Also:
+    (C) Copyright David Abrahams 2001-2002. Permission to copy, use,
+    modify, sell and distribute this software is granted provided this
+    copyright notice appears in all copies. This software is provided
+    "as is" without express or implied warranty, and with no claim as
+    to its suitability for any purpose.
 
 %prep
 %setup -n %{name}-%{version}
 
 %build
-LOCATE_TARGET=bin ./build.sh
+LOCATE_TARGET=bin ./build.sh $BOOST_JAM_TOOLSET
 
 %install
 rm -rf $RPM_BUILD_ROOT
