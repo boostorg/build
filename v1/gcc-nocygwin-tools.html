@@ -80,22 +80,23 @@ download the prebuilt executable for Windows.
 <h2>Building Boost</h2>
 <p>
 You'll have to set up (at least) the following environment
-variables before starting Boost jam:
+variable before starting Boost jam:
 </p>
 <p>
 <code>
-BOOST_ROOT<br>
 STLPORT_ROOT
 </code>
 </p>
 <p>
 Make sure to use Windows-style pathnames and not the
 /cygdrive/x/... style (you're using the Windows native Boost jam,
-remember). Set up <code>PYTHON_ROOT</code> if you want the python
-library built, making sure to point it at a <b>Windows</b>
-installation of Python, and not a Cygwin one. If your STLport
-libraries don't have names like stlport_mingw32&#8230; you will also
-need to set the environment variable
+remember). Configure additional variables as described <a
+href="../../libs/python/doc/building.html">here</a> if you want to build
+the <a href="../../libs/python/doc/index.html">Boost.Python</a>
+library, making sure to point it at a <b>Windows</b> installation of
+Python and not a Cygwin one. If your STLport libraries don't have
+names like stlport_mingw32&#8230; you will also need to set the
+environment variable
 <code>NOCYGWIN_STLPORT_LIB_ID</code> to replace the "mingw32" part of
 the library names.
 </p>
@@ -103,10 +104,10 @@ the library names.
 Once your environment is right, you can run:
 </p>
 <p>
-<code>
+<pre>
 jam -sTOOLS=gcc-nocygwin
-</code>
-</p>
+</pre>
+
 <p>
 from the Boost root directory, and away goes the build. If you want to
 see exactly what's going on, try supplying jam the <code>-d2</code>
@@ -114,21 +115,17 @@ option to show the raw commands as they execute. At the time of
 writing, the Python example simple_vector.cpp fails to compile in the
 debug variant because of an incompatability with the STLport debugging
 STL containers, but everything else should build properly.
-</p>
+
 <p>
 You might also like to specify build sub-variants, for example
 vtable-thunks if you're working with COM or DirectX. For example:
-</p>
-<p>
-<code>
+<pre>
 jam -sTOOLS=gcc-nocygwin -sBUILD="release &lt;vtable-thunks&gt;on"
-</code>
-</p>
-<p>
+</pre>
+
 However, if you're messing around with this stuff, make extra sure
 that you build all your libraries (including STLport) with the same
 vtable style.
-</p>
 
 <h2>Boost threads library and gcc 2.95.3-5</h2>
 <p>
