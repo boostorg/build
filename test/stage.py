@@ -66,6 +66,11 @@ t.run_build_system()
 t.expect_addition("dist/a.exe")
 
 t.rm("dist")
+# Workaround a BIG BUG: the response file is not deleted,
+# even if application *is* deleted. We'll try to use the
+# same response file when building from subdir, with very
+# bad results.
+t.rm("d/bin")
 t.run_build_system(subdir="d")
 t.expect_addition("dist/a.exe")
 
