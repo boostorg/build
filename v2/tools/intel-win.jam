@@ -39,7 +39,7 @@ rule init ( version ? :     # the compiler version
     
     common.handle-options intel-win : $(condition) : $(command) : $(options) ;
 
-    local root = [ common.get-absolute-tool-path $(command[-1]) ] ;)
+    local root = [ common.get-absolute-tool-path $(command[-1]) ] ;
     
     local setup ;
     setup = $(root:D)/iclvars.bat ;
