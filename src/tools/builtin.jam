@@ -421,7 +421,7 @@ class lib-target-class : basic-target
         # subvariant, we add usage requirements.
         for local t in [ $(subvariant).created-targets ]
         {
-            local s = [ $(t).dg ] ;
+            local s = [ $(t).creating-subvariant ] ;
             if $(s) != $(subvariant)
             {
                 result = [ $(result).add [ $(s).usage-requirements ] ] ;
@@ -561,8 +561,8 @@ class compile-action : action
     # to include path.
     rule adjust-properties ( properties * )
     {        
-        local dg = [ $(self.targets[1]).dg ] ;
-        return $(properties) [ $(dg).implicit-includes "include" ] ;
+        local s = [ $(self.targets[1]).creating-subvariant ] ;
+        return $(properties) [ $(s).implicit-includes "include" ] ;
     }    
 }
 

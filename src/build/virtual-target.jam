@@ -261,22 +261,27 @@ class abstract-file-target : virtual-target
         return $(self.root) ;
     }
 
-    # Sets the dependency graph this target is part of.
-    # 'dg' is an instance of 'subvariant-dg' class.
-    rule dg ( dg ? )
+    # Gets or sets the subvariant which created this target. Subvariant
+    # is set when target is brought into existance, and is never changed
+    # after that. In particual, if target is shared by subvariant, only 
+    # the first is stored.    
+    rule creating-subvariant ( s ? # If specified, specified the value to set,
+                                   # which should be instance of 'subvariant'
+                                   # class.
+                             )
     {
-        if $(dg) && ( ! $(self.dg) && ! $(overwrite) )
+        if $(s) && ( ! $(self.creating-subvariant) && ! $(overwrite) )
         {
-            if $(self.dg)
+            if $(self.creating-subvariant)
             {
                 errors.error "Attempt to change 'dg'" ;
             }
             else
             {                
-                self.dg = $(dg) ;
+                self.creatin-subvariant = $(s) ;
             }            
         }
-        return $(self.dg) ;
+        return $(self.creatin-subvariant) ;
     }
 
     rule actualize-action ( target )
@@ -830,7 +835,7 @@ rule clone-action ( action : new-project : new-action-name ? : new-properties ? 
             $(cloned-target).depends $(d) ;
         }                    
         $(cloned-target).root [ $(target).root ] ;
-        $(cloned-target).dg [ $(target).dg ] ;
+        $(cloned-target).creating-subvariant [ $(target).creating-subvariant ] ;
         
         cloned-targets += $(cloned-target) ;
     }        
@@ -967,7 +972,7 @@ class subvariant
         local deps = [ $(build-properties).get implicit-dependency ] ;
         for local d in $(deps)
         {
-            self.other-dg += [ $(d:G=).dg ] ;
+            self.other-dg += [ $(d:G=).creating-subvariant ] ;
         }
         
         self.other-dg = [ sequence.unique $(self.other-dg) ] ;
@@ -1022,7 +1027,7 @@ class subvariant
         local r ;
         for local t in $(all-targets)
         {            
-            r += [ $(t).dg ] ;
+            r += [ $(t).creating-subvariant ] ;
         }
         r = [ sequence.unique $(r) ] ;
         for local s in $(r) 

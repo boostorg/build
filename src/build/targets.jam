@@ -968,16 +968,16 @@ class basic-target : abstract-target
         # is created.
         local all-targets = 
           [ sequence.transform virtual-target.traverse : $(targets) ] ; 
-        local dg = [ new subvariant $(__name__) : $(build-request) : $(sources)
+        local s = [ new subvariant $(__name__) : $(build-request) : $(sources)
           : $(rproperties) : $(usage-requirements) : $(all-targets) ] ;
         for local v in $(all-targets)          
         {
-            if ! [ $(v).dg ]
+            if ! [ $(v).creating-subvariant ]
             {                
-                $(v).dg $(dg) ;            
+                $(v).creating-subvariant $(s) ;            
             }            
         }                        
-        return $(dg) ;
+        return $(s) ;
     }
     
         
@@ -1035,8 +1035,8 @@ class basic-target : abstract-target
                 {
                     if [ $(p).link-incompatible-with $(build-request) ]
                     {
-                        local dg = [ $(t).dg ] ;
-                        local other-mt = [ $(dg).main-target ] ;
+                        local s = [ $(t).creating-subvariant ] ;
+                        local other-mt = [ $(s).main-target ] ;
                         ECHO "warning: targets produced from" [ $(other-mt).name ] 
                             "are link incompatible" ;
                         ECHO "warning: with main target" [ name ] ;
