@@ -51,6 +51,8 @@
 
           <dt><a href="#method-write">Method <tt>write</tt></a></dt>
 
+          <dt><a href="#method-copy">Method <tt>copy</tt></a></dt>
+
           <dt><a href="#method-touch">Method <tt>touch</tt></a></dt>
 
           <dt><a href="#method-run_build_system">Method
@@ -88,7 +90,7 @@
       <li>Setting the initial working directory state</li>
 
       <li>
-        Running the build system and check: 
+        Running the build system and checking: 
 
         <ol>
           <li>generated output,</li>
@@ -181,7 +183,7 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     <p>After than, the test author may specify that some change is expected,
     for example, by calling <tt>expect_addition("foo")</tt>. This call will
     check if the file was indeed added, and if so, will remove its name from
-    the list of added files in <tt>unexpected_difference</tt>.Likewise, it's
+    the list of added files in <tt>unexpected_difference</tt>. Likewise, it's
     possible to specify that some changes are not interesting, for example a
     call <tt>ignore("*.obj")</tt> will just remove every files with ".obj"
     extension from <tt>unexpected_difference</tt>.</p>
@@ -202,7 +204,8 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     This is true on all platforms. In some contexts, a list of files is
     allowed. In that case any object with sequence interface is allowed.</p>
 
-    <h3><a name="method-__init__">Method <tt>__init__(self)</tt></a></h3>
+    <h3><a name="method-__init__">Method <tt>__init__(self,
+    arguments="")</tt></a></h3>
 
     <p><b>Effects:</b></p>
 
@@ -210,8 +213,14 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
       <li>Remembers the current working directory in member
       <tt>original_workdir</tt>.</li>
 
-      <li>Invokes the base method <tt>__init__</tt> with appropriate
-      parameters.</li>
+      <li>Determines the location of <tt>bjam</tt> binary and build system
+      files, assuming that the current directory is
+      <tt>tools/build/test</tt>. Formulates jam invocation command, which
+      will include explicit setting for <tt>BOOST_BUILD_PATH</tt> variable
+      and arguments passed to this methods, if any. This command will be used
+      by subsequent invocation of <a href=
+      "#method-run_build_system"><tt>run_build_system</tt></a>. Finally,
+      initializes the base class.</li>
 
       <li>Changes current working dir to the temporary working directory
       created by the base constructor.</li>
@@ -225,7 +234,8 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     <p>Replaces the content of the current working directory with the content
     of directory at <tt>tree_location</tt>. If <tt>tree_location</tt> is not
     absolute pathname, it will be treated as relative to
-    <tt>self.original_workdir</tt>.</p>
+    <tt>self.original_workdir</tt>. This methods also explicitly makes the
+    copied files writeable.</p>
 
     <h3><a name="method-write">Method <tt>write(self, name,
     content)</tt></a></h3>
@@ -235,6 +245,12 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     <p>Writes the specified content to the file given by <tt>name</tt> under
     the temporary working directory. If the file already exists, it is
     overwritten. Any required directories are automatically created.</p>
+
+    <h3><a name="method-copy">Method <tt>copy(self, src, dst)</tt></a></h3>
+
+    <p><b>Effects:</b></p>
+
+    <p>Equvivalent to <tt>self.write(self.read(src), dst)</tt>.</p>
 
     <h3><a name="method-touch">Method <tt>touch(self, names)</tt></a></h3>
 
@@ -298,10 +314,10 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     <p>Each method accepts a list of names. Those names are always
     unix-style, even on other systems.</p>
 
-    <p><b>Note:</b>The <tt>List</tt> helper class might be useful to create
+    <p><b>Note:</b> The <tt>List</tt> helper class might be useful to create
     lists of names.</p>
 
-    <p><b>Note:</b>The file content can be examined using
+    <p><b>Note:</b> The file content can be examined using
     <tt>TestCmd.read</tt> function.</p>
 
     <p>The members are:</p>
@@ -349,13 +365,13 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
 
     <h4>Method <tt>__init__(self, string)</tt></h4>
 
-    <p><b>Effects:</b>Splits the string on unescaped spaces and tabs. The
+    <p><b>Effects:</b> Splits the string on unescaped spaces and tabs. The
     split components can further be retrieved using standard sequence
     access.</p>
 
     <h4>Method <tt>__mul__(self, other)</tt></h4>
 
-    <p><b>Effects:</b>Returns an <tt>List</tt> instance, which elements are
+    <p><b>Effects:</b> Returns an <tt>List</tt> instance, which elements are
     all possible concatenations of two string, first of which is from
     <tt>self</tt>, and second of which is from <tt>other</tt>.</p>
 
@@ -381,7 +397,7 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
 </pre>
     <hr>
 
-    <p class="revision">Last modified: April 18, 2002</p>
+    <p class="revision">Last modified: May 5, 2002</p>
 
     <p>&copy; Copyright Vladimir Prus 2002. Permission to copy, use, modify,
     sell and distribute this document is granted provided this copyright
