@@ -43,6 +43,17 @@ rule find-to-root ( dir : patterns + )
 # Remember the value of $(BOOST_BUILD_PATH) supplied to us by the user.
 BOOST_BUILD_PATH.user-value = $(BOOST_BUILD_PATH) ;
 
+# On Unix only, when BOOST_BUILD_PATH is not supplied by user, put
+# sensible default value. This allowes Boost.Build to work without
+# any environment variables, which is good in itself and also
+# required by Debian Policy.
+if ! $(BOOST_BUILD_PATH) && $(UNIX)
+{
+    BOOST_BUILD_PATH = /usr/share/boost-build ;
+}
+
+
+
 # This rule can be invoked from an optional user's boost-build.jam
 # file to both indicate where to find the build system files, and to
 # load them. The path indicated is relative to the location of the
