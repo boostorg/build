@@ -405,7 +405,9 @@ rule python-runtest-aux ( target : sources + )
         python = $(PYTHON_D) ;
     }
     
-    PYTHONPATH on $(target) = [ join $(pythonpath) : $(splitpath) ] ;
+    # adding the dummy at the end fixes a problem which causes a
+    # trailing space to be added to the last path.
+    PYTHONPATH on $(target) = [ join $(pythonpath) "" : $(splitpath) ] ;
     
     # set the path so that DLLs linked into extension modules will be
     # found
