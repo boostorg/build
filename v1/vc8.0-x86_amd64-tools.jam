@@ -1,0 +1,40 @@
+#
+# This is my first cut at getting the x86 to amd64 cross compiler working
+# with a change also to  lwm_win32.hpp (no   long_type   is defined in THIS compiler)
+# everything SEEMS to compile, tho it seems to step on the vc8.0 libraries
+# I suspect we'll need to change that
+# the executables fail to run on a 32bit OS, I'll install WinXP64 when I get back
+# from my trip....  Wednesday Oct 6 and see what happens
+#
+#       THIS IS PRELIMINARY ONLY
+#
+extends-toolset msvc ;
+
+# singleton variables...
+set-as-singleton VC80_ROOT ;
+
+if ! $(MSVCDir)
+{
+    if $(VS80COMNTOOLS)
+    {
+        VC80_ROOT ?= $(VS80COMNTOOLS:J=" ")..\\..\\VC ;
+    }
+    else
+    {
+        ProgramFiles ?= $(PROGRAMFILES) ;
+        VC80_ROOT ?= $(ProgramFiles:J=" ")"\\Microsoft Visual Studio .NET Whidbey\\VC7" ;
+    }
+    VC_TOOL_PATH = "$(VC80_ROOT)"\\bin\\x86_amd64\\ ;
+    VC_SETUP = "CALL \"$(VC_TOOL_PATH)\\VCVARSamd64.bat\" >nul" ;
+}
+
+VC_PDB_NAME = vc80 ;
+
+# The following #// line will be used by the regression test table generation
+# program as the column heading for HTML tables. Must not include version number.
+#//<a href="http://msdn.microsoft.com/vstudio/whidbey/default.aspx">Micro-<br>soft<br>VC++</a>
+
+
+
+
+
