@@ -33,6 +33,7 @@ LIST *compile_include( PARSE *parse, FRAME *frame );
 LIST *compile_list( PARSE *parse, FRAME *frame );
 LIST *compile_local( PARSE *parse, FRAME *frame );
 LIST *compile_module( PARSE *parse, FRAME *frame );
+LIST *compile_class( PARSE *parse, FRAME *frame );
 LIST *compile_null( PARSE *parse, FRAME *frame );
 LIST *compile_on( PARSE *parse, FRAME *frame );
 LIST *compile_rule( PARSE *parse, FRAME *frame );

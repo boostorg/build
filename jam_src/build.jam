@@ -267,7 +267,7 @@ jam.source =
     option.c parse.c regexp.c rules.c
     scan.c search.c subst.c
     timestamp.c variable.c modules.c strings.c filesys.c 
-    builtins.c pwd.c
+    builtins.c pwd.c class.c
     ;
 if $(NT)
 {

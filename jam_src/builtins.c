@@ -227,6 +227,13 @@ load_builtins()
           bind_builtin( "IMPORTED_MODULES",
                         builtin_imported_modules, 0, args );
       }
+
+      {
+          char * args[] = { "instance_module", ":", "class_module", 0 };
+          bind_builtin( "INSTANCE",
+                        builtin_instance, 0, args );
+      }
+
 }
 
 /*
@@ -898,6 +905,17 @@ LIST *builtin_imported_modules( PARSE *parse, FRAME *frame )
     return result;
 }
 
+LIST *builtin_instance( PARSE *parse, FRAME *frame )
+{
+    LIST* arg1 = lol_get( frame->args, 0 );
+    LIST* arg2 = lol_get( frame->args, 1 );
+
+    module_t* instance = bindmodule( arg1->string );
+    module_t* class_module = bindmodule( arg2->string );
+    instance->class_module = class_module;
+
+    return L0;
+}
 
 static void lol_build( LOL* lol, char** elements )
 {

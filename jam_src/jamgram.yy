@@ -75,6 +75,7 @@
 # define plist( s )	  	parse_make( compile_list,P0,P0,P0,s,S0,0 )
 # define plocal( l,r,t )  	parse_make( compile_local,l,r,t,S0,S0,0 )
 # define pmodule( l,r )	  	parse_make( compile_module,l,r,P0,S0,S0,0 )
+# define pclass( l,r )	  	parse_make( compile_class,l,r,P0,S0,S0,0 )
 # define pnull()	  	parse_make( compile_null,P0,P0,P0,S0,S0,0 )
 # define pon( l,r )	  	parse_make( compile_on,l,r,P0,S0,S0,0 )
 # define prule( s,p )     	parse_make( compile_rule,p,P0,P0,s,S0,0 )
@@ -162,6 +163,8 @@ rule	: `{` block `}`
 		{ $$.parse = pif( $2.parse, $4.parse, pnull() ); }
 	| `module` list `{` block `}` 
 		{ $$.parse = pmodule( $2.parse, $4.parse ); }
+	| `xclass` lol `{` block `}` 
+		{ $$.parse = pclass( $2.parse, $4.parse ); }
 	| `while` expr `{` block `}` 
 		{ $$.parse = pwhile( $2.parse, $4.parse ); }
 	| `if` expr `{` block `}` `else` rule

@@ -716,6 +716,9 @@ RULE *lookup_rule( char *rulename, module_t *m, int local_only )
     module_t* original_module = m;
     r->name = rulename;
 
+    if (m->class_module)
+        m = m->class_module;
+
     if (m->rules && hashcheck( m->rules, (HASHDATA **)&r ) )
         result = r;
     else if (!local_only && m->imported_modules) {
@@ -736,6 +739,18 @@ RULE *lookup_rule( char *rulename, module_t *m, int local_only )
     {
         if (local_only && !result->exported)
             result = 0;
+        else
+        {
+            /* Lookup started in class module. We've found a rule in class module,
+               which is marked for execution in that module, or in some instances.
+               Mark it for execution in the instance where we've started lookup.
+            */
+            int execute_in_class = (result->module == m);
+            int execute_in_some_instance = 
+            (result->module->class_module && result->module->class_module == m);
+            if (original_module != m && (execute_in_class || execute_in_some_instance))
+                result->module = original_module;            
+        }
     }
 
     return result;

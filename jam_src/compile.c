@@ -28,6 +28,7 @@
 # include "modules.h"
 # include "strings.h"
 # include "builtins.h"
+# include "class.h"
 
 # include <time.h>
 # include <assert.h>
@@ -381,6 +382,31 @@ compile_include(
     return L0;
 }
 
+static LIST* evaluate_in_module ( char* module_name, PARSE * p, FRAME* frame)
+{
+    LIST* result;
+
+    module_t* outer_module = frame->module;
+    frame->module = module_name ? bindmodule( module_name ) : root_module();
+
+    if ( outer_module != frame->module )
+    {
+        exit_module( outer_module );
+        enter_module( frame->module );
+    }
+    
+    result = parse_evaluate( p, frame );
+    
+    if ( outer_module != frame->module )
+    {
+        exit_module( frame->module );
+        enter_module( outer_module );
+        frame->module = outer_module;
+    }
+
+    return result;
+}
+
 LIST *
 compile_module(
     PARSE   *p,
@@ -389,28 +415,33 @@ compile_module(
     /* Here we are entering a module declaration block. 
      */
     LIST* module_name = parse_evaluate( p->left, frame );
-    LIST* result;
-
-    module_t* outer_module = frame->module;
-    frame->module = module_name ? bindmodule( module_name->string ) : root_module();
-
-    if ( outer_module != frame->module )
-    {
-        exit_module( outer_module );
-        enter_module( frame->module );
-    }
-    
-    result = parse_evaluate( p->right, frame );
-    
-    if ( outer_module != frame->module )
-    {
-        exit_module( frame->module );
-        enter_module( outer_module );
-        frame->module = outer_module;
-    }
+    LIST* result = evaluate_in_module( module_name ? module_name->string : 0, 
+                                       p->right, frame );
     
     list_free( module_name );
     return result;
+}
+
+LIST *
+compile_class( 
+    PARSE *p, 
+    FRAME *frame )
+{
+    /** Todo: check for empty class name.
+        Check for class redeclaration. */
+
+    char* class_module = 0;
+
+    LIST* name = parse_evaluate( p->left->right, frame );
+    LIST* bases = 0;
+
+    if (p->left->left)
+        bases = parse_evaluate( p->left->left->right, frame );
+
+    class_module = make_class_module(name, bases, frame);    
+    evaluate_in_module( class_module, p->right, frame );
+
+    return L0;    
 }
 
 

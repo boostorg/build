@@ -241,12 +241,48 @@ rule new ( class args * : * )
     return $(id) ;
 }
 
+rule xinit ( instance : class )
+{
+    module $(instance)
+    {
+        __class__ = $(2) ;
+        __name__ = $(1) ;
+    }    
+}
+
+
+rule xnew ( class args * : * )
+{
+    .next-instance.$(class) ?= 1 ;
+    local id = object($(class))@$(.next-instance.$(class)) ;
+#    local id = object@$(.next-instance.$(class)) ;
+    
+    xinit $(id) : $(class) ;    
+   
+    # The calling module is the instance name
+#    local instance = [ CALLER_MODULE ] ;
+
+    # __name__ will denote the current class, similar to modules.
+#    __name__ = $(instance) ;    
+    
+    INSTANCE $(id) : class@$(class) ;
+    IMPORT_MODULE $(id) : ;
+    $(id).__init__ $(args) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+          
+    # bump the next unique object name
+    .next-instance.$(class) = [ numbers.increment $(.next-instance.$(class)) ] ;
+    
+    # Return the name of the new instance.
+    return $(id) ;
+}
+
+
 rule bases ( class )
 {
-    if ! ( $(class) in $(classes) )
-    {
-        error class $(class) not defined ;
-    }
+    #if ! ( $(class) in $(classes) )
+    #{
+    #    error class $(class) not defined ;
+    #}
     
     module class@$(class)
     {
@@ -256,11 +292,11 @@ rule bases ( class )
 
 rule is-derived ( class : bases + )
 {
-    local all = $(class) $(bases) ;
-    if ! ( $(all) in $(classes) )
-    {
-        error class(es) [ set.difference $(class) $(bases) : $(classes) ] not defined ;
-    }
+    #local all = $(class) $(bases) ;
+    #if ! ( $(all) in $(classes) )
+    #{
+    #    error class(es) [ set.difference $(class) $(bases) : $(classes) ] not defined ;
+    #}
     
     local stack = $(class) ;
     local visited found ;
@@ -319,12 +355,15 @@ local rule __test__ ( )
 
     # This will be the construction function for a class called
     # 'myclass'
-    local rule myclass ( x_ * : y_ * )
+    xclass myclass 
     {
-        # set some instance variables
-        x = $(x_) ;
-        y = $(y_) ;
-
+        rule __init__ ( x_ * : y_ * )
+        {            
+            # set some instance variables
+            x = $(x_) ;
+            y = $(y_) ;
+        }
+        
         rule set-x ( newx * )
         {
             x = $(newx) ;
@@ -371,13 +410,15 @@ local rule __test__ ( )
             return $(__class__) ;
         }
     }
-    class myclass ;
 
-    local rule derived1 ( z_ )
-    {
-        myclass.__init__ $(z_) : X ;
-        z = $(z_) ;
-
+    xclass derived1 : myclass
+    {        
+        rule __init__ ( z_ )
+        {
+            myclass.__init__ $(z_) : X ;
+            z = $(z_) ;
+        }
+        
         # override g
         rule g ( args * )
         {
@@ -394,12 +435,14 @@ local rule __test__ ( )
             return $(z) ;
         }
     }
-    class derived1 : myclass ;
 
-    local rule derived2 ( )
+    xclass derived2 : myclass 
     {
-        myclass.__init__ 1 : 2 ;
-
+        rule __init__ ( )
+        {            
+            myclass.__init__ 1 : 2 ;
+        }
+        
         # override g
         rule g ( args * )
         {
@@ -412,13 +455,15 @@ local rule __test__ ( )
              return [ myclass.get-x ] ;
          }
     }
-    class derived2 : myclass ;
 
-    local rule derived2a ( )
+
+    xclass derived2a : derived2
     {
-        derived2.__init__ ;
+        rule __init__ 
+        {
+            derived2.__init__ ;
+        }                
     }
-    class derived2a : derived2 ;
 
     local rule expect_derived2 ( [derived2] x ) { }
 
@@ -428,11 +473,11 @@ local rule __test__ ( )
     }
     class bad_subclass : myclass ;
 
-    local a = [ new myclass 3 4 5 : 4 5 ] ;
-    local b = [ new derived1 4 ] ;
-    local c = [ new derived2 ] ;
-    local d = [ new derived2 ] ;
-    local e = [ new derived2a ] ;
+    local a = [ xnew myclass 3 4 5 : 4 5 ] ;
+    local b = [ xnew derived1 4 ] ;
+    local c = [ xnew derived2 ] ;
+    local d = [ xnew derived2 ] ;
+    local e = [ xnew derived2a ] ;
 
     expect_derived2 $(d) ;
     expect_derived2 $(e) ;
@@ -454,19 +499,19 @@ local rule __test__ ( )
     }
 
 
-    try ;
-    {
-        new bad_subclass ;
-    }
-    catch
-      bad_subclass.bad_subclass failed to call base class constructor myclass.__init__
-      ;
+    #try ;
+    #{
+    #    new bad_subclass ;
+    #}
+    #catch
+    #  bad_subclass.bad_subclass failed to call base class constructor myclass.__init__
+    #  ;
 
-    try ;
-    {
-        class bad_subclass ;
-    }
-    catch bad_subclass has already been declared ;
+    #try ;
+    #{
+    #    class bad_subclass ;
+    #}
+    #catch bad_subclass has already been declared ;
 
     assert.result 3 4 5 : $(a).get-x ;
     assert.result 4 5 : $(a).get-y ;
