@@ -439,7 +439,7 @@ def _examine_edge(states, queue, g):
             print 'discarding %s due to lower cost state(%s)' % (g, v.group)
 
     elif not (g.generator or v.group.generator) \
-             and _sort_tuple(g.atoms()) != _sort_tuple(v.group.atoms()):
+             and _sort_tuple(g.atoms()) == _sort_tuple(v.group.atoms()):
         # These are two different ways of combining the same groups of
         # a given type to produce a larger group, without using a generator
         if debug:
@@ -601,6 +601,17 @@ def graph(group, indent = 0, visited = None):
             [graph(g,indent+1,visited) for g in group.parents])
     return s
 
+def ambiguities(group):
+    """Returns a list of groups that caused ambiguities with this one
+    or its constituents.
+    """
+    result = []
+    for g in group.parents:
+        result.extend(ambiguities(g))
+    if group.ambiguous and type(group.ambiguous) is not type(1):
+        result.append(group.ambiguous)
+    return result
+
 def search(generators, targets, sources):
     import sys
     global queue_moves
@@ -610,6 +621,14 @@ def search(generators, targets, sources):
     for g in optimal_graphs(targets, sources, generators):
         print 80 * '='
         print graph(g)
+
+        if g.ambiguous:
+            print 40 * '-'
+            print 'ambiguities:'
+            for a in ambiguities(g):
+                print graph(a)
+                print
+                
         print queue_moves, 'queue_moves'
         print 80 * '='
         sys.stdout.flush()
