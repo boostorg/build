@@ -130,22 +130,29 @@ rule dll-files ( module implib ? : sources * : target-type ? )
 #
 rule template-modifier ( target : source )
 {
+    local source-id ;
+    {
+        local RELATIVE_SUBDIR = [ directory-of $(source:G=) ] ;
+        source-id = [ target-id-of $(source) ] ;
+    }
+    
     # Make sure it's defined.
     #
-    dependent-include $(source:G=) ;
+    if ! $(gTARGET_TYPE($(source-id)))
+    {
+        dependent-include $(source:G=) ;
+    }
     
     # Copy the base specs into the target specs, adjust any paths
     #
-    local RELATIVE_SUBDIR = [ directory-of $(source:G=) ] ;
-    local id = [ target-id-of $(source) ] ;
     gTARGET_SOURCES($(target)) +=
-        [ root-paths $(gTARGET_SOURCES($(id))) : $(RELATIVE_SUBDIR) ] ;
+        [ root-paths $(gTARGET_SOURCES($(source-id))) : [ directory-of $(source:G=) ] ] ;
     gTARGET_DEPS($(target)) +=
-        [ root-paths $(gTARGET_DEPS($(id))) : $(RELATIVE_SUBDIR) ] ;
+        [ root-paths $(gTARGET_DEPS($(source-id))) : [ directory-of $(source:G=) ] ] ;
     gTARGET_REQUIREMENTS($(target)) +=
-        [ fixup-path-properties $(gTARGET_REQUIREMENTS($(id))) ] ;
+        [ fixup-path-properties $(gTARGET_REQUIREMENTS($(source-id))) ] ;
     gTARGET_DEFAULT_BUILD($(target)) +=
-        $(gTARGET_DEFAULT_BUILD($(id))) ;
+        $(gTARGET_DEFAULT_BUILD($(source-id))) ;
 }
 
 # main-from-objects exe-target : obj-target... : ("EXE"|"DLL")
@@ -1605,7 +1612,7 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
     # transfer target variables to the target file.
     set-target-variables $(target-files) ;
 
-    if [ get-values <LIB> <$(SHARED_TYPES)> : $(gTARGET_DEPS($(target))) ]
+    if [ get-values <$(STATIC_TYPES)> <$(SHARED_TYPES)> : $(gTARGET_DEPS($(target))) ]
     {
         local libs dlls ;
         {
@@ -1620,7 +1627,7 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
             # generate library build instructions
             local BUILD = $(BUILD) ;
             BUILD ?= $(gTARGET_DEFAULT_BUILD($(target))) ;
-            libs = [ link-libraries [ get-values <LIB> : $(gTARGET_DEPS($(target))) ]
+            libs = [ link-libraries [ get-values <$(STATIC_TYPES)> : $(gTARGET_DEPS($(target))) ]
                     : $(toolset) $(variant) : $(simple-properties) ] ;
             dlls = [ link-libraries [ get-values <$(SHARED_TYPES)> : $(gTARGET_DEPS($(target))) ]
                     : $(toolset) $(variant) : $(simple-properties) ] ;
@@ -1695,7 +1702,7 @@ rule main-target
     local subvariants = [ expand-target-subvariants $(<) : $(>) : $(TOOLS) ] ;
 
     # include each jamfile describing a dependee target.
-    dependent-include [ get-values <LIB> <DLL> : $(gTARGET_DEPS($(<))) ] ;
+    dependent-include [ get-values <$(STATIC_TYPES)> <$(SHARED_TYPES)> : $(gTARGET_DEPS($(<))) ] ;
 
     for local subvariant in $(subvariants)
     {
@@ -1939,6 +1946,9 @@ rule grist-targets ( targets + : subdir-tokens * )
 #
 rule stage ( name : sources + : requirements * : local-build * )
 {
+    if ! $(gIN_LIB_INCLUDE)
+    {
+
     local stage-id =
         [ grist-targets $(name) ] ;
     local tags =
@@ -1961,9 +1971,9 @@ rule stage ( name : sources + : requirements * : local-build * )
         local target = $(source:D=:G=) ;
         local target-id = [ target-id-of $(source) ] ;
         local target-subdir = [ simplify-path-tokens [ top-relative-tokens [ directory-of $(source) ] ] ] ;
-        local subvariants = [ expand-target-subvariants $(target-id) : $(local-build) : $(TOOLS) ] ;
 
         dependent-include $(source:G=) ;
+        local subvariants = [ expand-target-subvariants $(target-id) : $(local-build) : $(TOOLS) ] ;
 
         for local subvariant in $(subvariants)
         {
@@ -2004,22 +2014,18 @@ rule stage ( name : sources + : requirements * : local-build * )
         destination-file =
             [ grist-targets $(destination-file) : [ split-path $(stage-dir) ] ] ;
         destination-files += $(destination-file) ;
-        if ! $(gIN_LIB_INCLUDE)
         {
-            {
-                local FILEMODE = $(FILEMODE) ;
-                if $(file-mode($(file))) { FILEMODE = $(file-mode($(file))) ; }
-                MakeLocate $(destination-file) :
-                    [ FDirName [ split-path $(LOCATE_TARGET)/$(stage-dir) ] ] ;
-                File $(destination-file) : $(file) ;
-            }
+            local FILEMODE = $(FILEMODE) ;
+            if $(file-mode($(file))) { FILEMODE = $(file-mode($(file))) ; }
+            MakeLocate $(destination-file) :
+                [ FDirName [ split-path $(LOCATE_TARGET)/$(stage-dir) ] ] ;
+            File $(destination-file) : $(file) ;
         }
     }
     declare-fake-targets $(stage-id) : $(destination-files) ;
 
-    if ! $(gIN_LIB_INCLUDE)
-    {
-        Clean clean : $(destination-files) ;
+    Clean clean : $(destination-files) ;
+
     }
 }
 
