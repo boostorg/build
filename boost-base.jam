@@ -76,6 +76,8 @@ else
     TOOLS ?= gcc ;
 }
 
+SHARED_TYPES = DLL ;
+
 # detect-build-tools <tools-name> : <detection-command>
 #
 # Declares a pseudotarget for the specified build tools which is built by
@@ -630,13 +632,29 @@ rule relevant-features # name
     return $(gRELEVANT_FEATURES($(<))) ;
 }
 
-# variant name : [<toolset>]<feature>value...
+# variant name [ : parents... ] : [<toolset>]<feature>value...
 #
 # Declare a build variant, whose configuration is given by the given (optionally
 # toolset-qualified) properties.
-rule variant ( name : tool-properties * )
+rule variant ( name : parents-or-properties * : tool-properties * )
 {
-    gALL_VARIANTS += $(name)
+    gALL_VARIANTS += $(name) ;
+    local parents ;
+    if ! $(tool-properties)
+    {
+        if $(parents-or-properties[1]:G)
+        {
+            tool-properties = $(parents-or-properties) ;
+        }
+        else
+        {
+            parents = $(parents-or-properties) ;
+        }
+    }
+    else
+    {
+        parents = $(parents-or-properties) ;
+    }
     local toolset ;
     for toolset in $(TOOLS)
     {
@@ -647,8 +665,28 @@ rule variant ( name : tool-properties * )
         # is neccessary to get the relevant-features correctly set. We supply
         # the variant name as the target name, so that error messages will look
         # coherent.
-        gBASE_PROPERTIES($(toolset),$(name))
-            = [ sort [ select-properties $(toolset) $(toolset) $(name) : $(tool-properties) ] ] ;
+        local name-properties
+            = [ select-properties $(toolset) $(toolset) $(name) : $(tool-properties) ] ;
+        if $(parents)
+        {
+            local parent ;
+            for parent in $(parents)
+            {
+                local parent-properties
+                    = $(gBASE_PROPERTIES($(toolset),$(parent))) ;
+                local inherited-features
+                    = [ unique
+                        [ difference $(parent-properties:G) : $(name-properties:G) ]
+                        $(gFREE_FEATURES)
+                        $(gPATH_FEATURES)
+                        $(gDEPENDENCY_FEATURES ] ;
+                local inherited-properties
+                    = [ get-properties $(inherited-features) : $(parent-properties) ] ;
+                name-properties
+                    += $(inherited-properties) ;
+            }
+        }
+        gBASE_PROPERTIES($(toolset),$(name)) = [ sort $(name-properties) ] ;
     }
 }
 
@@ -1381,8 +1419,6 @@ rule main-target
   }
 }
 
-SHARED_TYPES = DLL ;
-
 gGENERATOR_FUNCTION(EXE) = executable-file ;
 # exe target : sources : requirements : local-build
 #
@@ -1407,7 +1443,17 @@ gGENERATOR_FUNCTION(LIB) = library-file ;
 # Declare a statically-linked library target.
 rule lib
 {
-    declare-local-target $(<) : $(2) : $(3) : $(4) : LIB ;
+    local suppress = [ get-values <suppress> : $(4) ] ;
+    if $(suppress)
+    {
+    	local gSUPPRESS_FAKE_TARGETS = $(suppress[1]) ;
+        declare-local-target $(<) : $(2) : $(3) :
+            [ difference $(4) : [ get-properties <suppress> : $(4) ] ] : LIB ;
+    }
+    else
+    {
+        declare-local-target $(<) : $(2) : $(3) : $(4) : LIB ;
+    }
 }
 
 # unit-test target : sources : requirements : local-build
