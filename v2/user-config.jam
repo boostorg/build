@@ -52,10 +52,11 @@ import toolset : using ;
 #  using qt : /usr/opt/qt ;
 
 #  xsltproc (from libxslt) configuration
-using xsltproc ;
+#  using xsltproc ;
 
-#  BoostBook configuration
-using boostbook ;
+#  BoostBook configuration. Please see BoostBook for documentation
+#  on this.
+#  using boostbook ;
 #  using boostbook : /home/gregod/Projects/share/docbook-xsl-1.60.1/ 
 #                  : /home/gregod/Projects/share/docbook-dtd-4.2/
 #                  ;
