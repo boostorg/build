@@ -244,11 +244,11 @@ rule build-test ( test-file-generator test-file + : sources + : requirements * )
     # Generator functions don't handle this job for us; perhaps they should.
     set-target-variables $(dependency) ;
     
-    # The .test file goes with the other subvariant targets
-    MakeLocate $(test-file:S=.test) : $(LOCATE_TARGET) ;
-    MakeLocate $(test-file:S=.success) : $(LOCATE_TARGET) ;
-    MakeLocate $(test-file:S=.failure) : $(LOCATE_TARGET) ;
-
+    # The test files go with the other subvariant targets
+    local test-files = $(test-file:S=.test) $(test-file:S=.success) $(test-file:S=.failure) ;
+    MakeLocate $(test-files) : $(LOCATE_TARGET) ;
+    Clean clean : $(test-files) ;
+    
     # Generate the test file
     $(test-file-generator) $(test-file) : $(dependency) ;
 
