@@ -72,7 +72,7 @@ if --version in [ modules.peek : ARGV ]
 # We always load project in "." so that 'use-project' directives has
 # any chance of been seen. Otherwise, we won't be able to refer to
 # subprojects using target ids.
-project.load "." ;
+current-project = [ project.load "." ] ;
 
 if [ MATCH (--dump-projects) : [ modules.peek : ARGV ] ]
 {
@@ -123,7 +123,7 @@ for local id in $(target-ids)
     }
     else
     {
-        local t = [ targets.find $(id) : "." ] ;
+        local t = [ targets.find $(id) : $(current-project) ] ;
         if ! $(t)
         {
             error target $(id) does not exist ;
