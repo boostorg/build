@@ -237,7 +237,7 @@ int  main( int argc, char **argv, char **arg_environ )
     if( ( s = getoptval( optv, 'v', 0 ) ) )
     {
         printf( "Boost.Jam  " );
-        printf( "Version %s. %s. ", VERSION, OSMINOR );
+        printf( "Version %s. %s.\n", VERSION, OSMINOR );
 	   printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.  \n" );
         printf( "   Copyright 2001 David Turner.\n" );
         printf( "   Copyright 2001-2002 David Abrahams.\n" );
