@@ -142,9 +142,16 @@ rule python-files ( module implib ? : sources * )
     
     dll-files $(actual-module) $(implib) : $(sources) : PYD ;
 
-    if $(NT) && ( $(gCURRENT_TOOLSET) = gcc )
+    if ( $(gCURRENT_TOOLSET) = gcc )
     {
-        add-cygwin-python-run-path $(<[-1]) ;
+        if $(NT)
+        {
+            add-cygwin-python-run-path $(<[-1]) ;
+        }
+        else
+        {
+            gRUN_PATH($(module)) += $(GCC_ROOT_DIRECTORY)/lib ;
+        }
     }
 }
 
