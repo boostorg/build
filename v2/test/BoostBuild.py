@@ -17,10 +17,12 @@ def get_toolset():
     else:
         return "gcc"
 
+windows = 0
 
 # Prepare the map of suffixes
 suffixes = {'.exe': '', '.dll': '.so', '.lib': '.a', '.obj': '.o'}
 if os.environ.get('OS','').lower().startswith('windows'):
+    windows = 1
     suffixes = {}
     if get_toolset() in ["gcc"]:
         suffixes['.lib'] = '.a' # static libs have '.a' suffix with mingw...
@@ -85,7 +87,11 @@ class Tester(TestCmd.TestCmd):
         if boost_build_path is None:
             boost_build_path = os.path.join(self.original_workdir,
                                             "..", "new")
-            boost_build_path += ":" + self.original_workdir
+            if windows:
+                boost_build_path += ";" + self.original_workdir
+            else:
+                boost_build_path += ":" + self.original_workdir
+            
 
         verbosity = ' -d0 --quiet '
         if '--verbose' in sys.argv:
