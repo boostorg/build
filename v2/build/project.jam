@@ -434,9 +434,10 @@ rule project-attributes ( location )
         }
         else if $(attribute) = "use-requirements"
         {
-            if [ property.remove free : $(specification) ]
+            local non-free = [ property.remove free : $(specification) ] ;
+            if $(non-free)
             {
-                errors.error "use-requirements" $($(real-pos2)) "have non-free properties" ;
+                errors.error "use-requirements" $($(real-pos2)) "have non-free properties" $(non-free) ;
             }            
             self.use-requirements += [ property.translate-paths $(specification)
                                       : $(self.location) ] ;
