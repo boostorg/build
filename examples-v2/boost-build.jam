@@ -1,2 +1,2 @@
 
-boost-build ../new ;
+boost-build ../kernel ;
