@@ -10,6 +10,7 @@ feature.subfeature toolset gcc : version : : optional ;
 # Make the "o" suffix used for gcc toolset on all
 # platforms
 type.set-generated-target-suffix OBJ : <toolset>gcc : o ;
+type.set-generated-target-suffix STATIC_LIB : <toolset>gcc : a ;
 
 
 # Initializes the gcc toolset
