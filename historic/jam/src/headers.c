@@ -94,7 +94,13 @@ headers( TARGET *t )
 #endif
 
         if( lol_get( frame->args, 1 ) )
-            evaluate_rule( hdrrule->string, frame );
+        {
+            /* The third argument to HDRRULE is the bound name of
+             * $(<) */
+            lol_add( frame->args, list_new( L0, t->boundname ) );
+
+            list_free( evaluate_rule( hdrrule->string, frame ) );
+        }
 
         /* Clean up */
 

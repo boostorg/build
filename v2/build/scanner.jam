@@ -108,10 +108,10 @@ rule propagate ( scanner : targets * : including-target )
 }
 
 
-rule hdrrule ( target : matches * )
+rule hdrrule ( target : matches * : binding )
 {
     local scanner = [ on $(target) return $(SCANNER) ] ;
-    $(scanner).process $(target) : $(matches) ;
+    $(scanner).process $(target) : $(matches) : $(binding) ;
 }
 # hdrrule must be available at global scope so that it can be invoked
 # by header scanning
