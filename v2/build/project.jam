@@ -275,7 +275,7 @@ rule initialize (
     $(module-name).attributes = [ new project-attributes $(location) ] ;
     local attributes = $($(module-name).attributes) ;
     
-    $(attributes).set source-location : $(location) : exact ;    
+    $(attributes).set source-location : [ path.make $(location) ] : exact ;    
     $(attributes).set requirements : [ property-set.empty ] : exact ;
     $(attributes).set usage-requirements : [ property-set.empty ] : exact ;    
 
@@ -441,7 +441,8 @@ class project-attributes
         }        
         else if $(attribute) = "source-location"
         { 
-            self.source-location = [ path.root $(specification) $(self.location) ] ;
+            self.source-location = [ path.root 
+                [ path.make $(specification) ] $(self.location) ] ;
         }            
         else if $(attribute) = "build-dir"
         {
