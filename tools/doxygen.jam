@@ -99,7 +99,7 @@ rule doxygen-xml-target-class ( name : project : sources * : requirements *
   rule construct ( source-targets * : property-set )
   {
     local target = 
-       [ virtual-target.from-file $(self.name) : $(self.project) ] ;
+       [ new file-target $(self.name) : DOXYGEN_XML : $(self.project) ] ;
     local a = [ new action $(target) : $(source-targets) : doxygen.extract-xml 
                 : $(property-set) ] ;
     $(target).action $(a) ;
@@ -119,3 +119,4 @@ rule doxygen ( target-name : sources * : requirements * : default-build * )
         : [ targets.main-target-default-build $(default-build) : $(project) ]
     ] ;
 }
+IMPORT $(__name__) : doxygen : : doxygen ;
