@@ -506,6 +506,18 @@ rule file-target (
 class file-target : abstract-file-target ;
 
 
+rule notfile-target ( name : project )
+{
+    abstract-file-target.__init__ $(name) : : $(project) ;
+            
+    rule actualize-location ( target )
+    {
+        NOTFILE $(target) ;
+        ALWAYS $(target) ;
+    }    
+}    
+class notfile-target : abstract-file-target ;
+
 
 # Returns the binding for the given actual target.
 # CONSIDER: not sure this rule belongs here.
