@@ -192,7 +192,8 @@ BJAM_SOURCES="\
  newstr.c option.c parse.c pathunix.c pathvms.c regexp.c\
  rules.c scan.c search.c subst.c timestamp.c variable.c modules.c\
  strings.c filesys.c builtins.c pwd.c class.c native.c modules/set.c\
- modules/path.c modules/regex.c modules/property-set.c"
+ modules/path.c modules/regex.c modules/property-set.c\
+ modules/sequence.c"
 
 echo_run rm -rf bootstrap.$BOOST_JAM_TOOLSET
 echo_run mkdir bootstrap.$BOOST_JAM_TOOLSET
