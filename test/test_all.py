@@ -14,6 +14,7 @@ for s in (
         pass
 
 import unit_tests
+import module_actions
 import startup_v1
 import startup_v2
 import project_test1
