@@ -24,12 +24,7 @@ feature.feature prefix : : free ;
 
 type.register DOXYFILE : doxyfile ; # Doxygen input file
 type.register DOXYGEN_XML_MULTIFILE : : XML ; # Doxygen XML multi-file output
-type.register DOXYGEN_XML : doxygen : XML ; # Doxygen XML output
-
-generators.register-composing doxygen.headers-to-doxyfile : H HPP : DOXYFILE ; 
-generators.register-standard doxygen.run : DOXYFILE : DOXYGEN_XML_MULTIFILE ;
-generators.register-standard doxygen.collect : DOXYGEN_XML_MULTIFILE : DOXYGEN_XML ;
-generators.register-standard doxygen.xml-to-boostbook : DOXYGEN_XML : BOOSTBOOK ;
+type.register DOXYGEN_XML : doxygen : XML : main ; # Doxygen XML output
 
 # Initialize the Doxygen module. Parameters are:
 #   name: the name of the 'doxygen' executable. If not specified, the name
@@ -39,11 +34,27 @@ rule init ( name ? )
   if ! $(.initialized)
   {
     .initialized = true ;
-
+      
     if $(name)
     {
       .doxygen = $(name) ; 
+    }   
+    
+    generators.register-composing doxygen.headers-to-doxyfile : H HPP : DOXYFILE ; 
+    generators.register-standard doxygen.run : DOXYFILE : DOXYGEN_XML_MULTIFILE ;
+    generators.register-standard doxygen.xml-to-boostbook : DOXYGEN_XML : BOOSTBOOK ;
+    
+    if ! [ boostbook.xsl-dir ]
+    {
+        ECHO "warning: Doxygen initialization: Boost.Build stylesheets not found " ;
+        ECHO "warning: Generation of single XML file won't be possible. " ;
     }
+    else
+    {          
+        generators.register-standard doxygen.collect : DOXYGEN_XML_MULTIFILE : DOXYGEN_XML ;
+    }
+            
+    IMPORT $(__name__) : doxygen : : doxygen ;
   }
 }
 
@@ -158,4 +169,3 @@ rule doxygen ( target-name : sources * : requirements * : default-build * )
       : [ targets.main-target-default-build $(default-build) : $(project) ] 
     ] ;
 }
-IMPORT $(__name__) : doxygen : : doxygen ;
