@@ -70,7 +70,7 @@ rule lookup ( id : current-location )
     if $(location)
     {
         location =
-            [ os.path.root-relative-path $(location) $(current-location) ] ;
+            [ os.path.root $(location) $(current-location) ] ;
     }
     else
     {
