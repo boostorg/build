@@ -294,6 +294,8 @@ type.register H : h ;
 type.register HPP : hpp : H ;
 type.register C : c ;
 
+type.set-scanner C : c-scanner ;
+
 # The generator class for libraries (target type LIB). Depending on properties it will
 # request building of the approapriate specific type -- SHARED_LIB, STATIC_LIB or 
 # SHARED_LIB.

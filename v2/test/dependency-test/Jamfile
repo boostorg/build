@@ -4,7 +4,7 @@ project test
     ;
 
 exe a 
-    : x.foo a.cpp 
+    : x.foo a.cpp a_c.c
     ;
     
 exe b
