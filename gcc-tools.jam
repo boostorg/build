@@ -1,8 +1,9 @@
-# (C) Copyright David Abrahams, 2001.
-# (C) Copyright Rene Rivera, 2003.
-#
-# See accompanying license for terms and conditions of use.
-#
+#~ Copyright (c) 2001 David Abrahams.
+#~ Copyright (c) 2002-2003 Rene Rivera.
+
+#~ Use, modification and distribution is subject to the Boost Software
+#~ License Version 1.0. (See accompanying file LICENSE_1_0.txt or
+#~ http://www.boost.org/LICENSE_1_0.txt)
 
 # The following #// line will be used by the regression test table generation
 # program as the column heading for HTML tables. Must not include version number.
@@ -341,6 +342,11 @@ flags gcc TARGET_TYPE <target-type> ;
 flags gcc .AR : [ GLOB $(GCC_BIN_DIRECTORY) $(PATH) : ar ar.exe ] ;
 .AR ?= ar ;
 
+# used to manipulate the object files produced by GCC to
+# prevent the merging of debug symbols (which happens to be n^2 slow)
+flags gcc .OBJCOPY : [ GLOB $(GCC_BIN_DIRECTORY) $(PATH) : objcopy ] ;
+flags gcc OBJCOPY_FLAGS <debug-symbols>on : "--set-section-flags .debug_str=contents,debug" ;
+
 #### Link ####
 
 rule Link-action
@@ -422,6 +428,7 @@ rule Cc-action
 actions gcc-Cc-action
 {
     $(.GCC[1]:R=$(GCC_BIN_DIR)) $(.GCC[2-]) -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I$(_)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.OBJCOPY[1])$(_)$(OBJCOPY_FLAGS)$(_)"$(<)"
 }
 
 #### C++ ####
@@ -434,6 +441,7 @@ rule C++-action
 actions gcc-C++-action
 {
     $(.GXX[1]:R=$(GCC_BIN_DIR)) $(.GXX[2-]) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I$(_)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.OBJCOPY[1])$(_)$(OBJCOPY_FLAGS)$(_)"$(<)"
 }
 
 #### Archive ####
