@@ -5,7 +5,8 @@ import property ;
 
 rule mfc-compile ( target : sources * : property-set * )
 {
-    PROPERTIES on $(target) = [ property.as-path $(property-set) ] ;
+    PROPERTIES on $(target) = [ 
+      property.as-path [ property.remove incidental : $(property-set) ] ] ;      
 }
 
 actions mfc-compile
