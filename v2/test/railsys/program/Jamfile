@@ -26,7 +26,7 @@ project program
     : requirements 
         <include>$(BOOST_ROOT)
         <threading>multi
-        <uses>qt
+        <library>@/qt/qt
         <hardcode-dll-paths>true
         <stdlib>stlport
         <dependency>@/libx
@@ -37,7 +37,7 @@ project program
         : 
         default-build release
         <threading>multi
-        <uses>qt
+        <library>@/qt/qt
         <stdlib>stlport
         <hardcode-dll-paths>true
         ;
