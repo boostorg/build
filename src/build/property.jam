@@ -118,11 +118,6 @@ rule evaluate-conditionals-in-context ( properties * : context * )
     return $(result) ;    
 }
 
-rule evaluate-conditionals ( properties * )
-{
-    return [ evaluate-conditionals-in-context $(properties) : $(properties) ] ;
-}
-
 rule expand-subfeatures-in-conditions ( properties * )
 {
     local result ;
@@ -550,9 +545,11 @@ local rule __test__ ( )
         : $(test-space)
         ;
 
-    assert.result <toolset>gcc <variant>release <rtti>off <define>MY_RELEASE
-        : evaluate-conditionals <toolset>gcc <variant>release <rtti>off
-          <variant>release,<rtti>off:<define>MY_RELEASE       
+    assert.result <define>MY_RELEASE
+        : evaluate-conditionals-in-context 
+          <variant>release,<rtti>off:<define>MY_RELEASE
+          : <toolset>gcc <variant>release <rtti>off
+                 
         ;
 
     assert.result debug
