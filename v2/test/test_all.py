@@ -61,6 +61,9 @@ def reorder_tests(tests, first_test):
 
             
 critical_tests = ["unit_tests", "module_actions", "startup_v1", "startup_v2"]
+
+critical_tests += ["core_d12", "core_typecheck"]
+
 tests = [ "project_test1",
           "project_test3",
           "project_test4",
