@@ -54,15 +54,27 @@ rule load ( jamfile-location )
 #
 #   Returns the name of project module given its id.
 #   Projects can be referred using path@project-id notation. In it, 'path'
-#   selects jamfile location and 'project-id' names project relatively to
-#   the selected jamfile. Rooted 'project-id' is possible:
+#   selects jamfile location relatively to 'current-location' and 'project-id'
+#   names project relatively to the selected jamfile.
+#   Rooted 'project-id' is possible:
 #   "@/boost" will refer to the top-level project called "boost".
-#   If part after "@" is not rooted, then part before "@" must be present.
 #
-rule lookup ( id )
+rule lookup ( id : current-location )
 {
     local split = [ MATCH (.*)@(.*) : $(id)  ] ;
     local location = $(split[1]) ;
+    # A jam quirk: if there's no part before "@", 'location' will be empty
+    # string, and ?= won't change it.
+    if $(location)
+    {
+        location =
+            [ os.path.root-relative-path $(location) $(current-location) ] ;
+    }
+    else
+    {
+        location = $(current-location) ;
+    }
+
     local project-id = $(split[2]) ;
 
     if [ os.path.is-rooted $(project-id) ]
@@ -78,8 +90,15 @@ rule lookup ( id )
 
             if $(base-id)
             {
-                local rooted-id = $(base-id)/$(project-id) ;
-                return $($(rooted-id).jamfile-location) ;
+                if $(project-id)
+                {
+                    local rooted-id = $(base-id)/$(project-id) ;
+                    return $($(rooted-id).jamfile-location) ;
+                }
+                else
+                {
+                    return $($(base-id).jamfile-location) ;
+                }
             }
             else
             {
