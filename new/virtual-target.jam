@@ -150,6 +150,11 @@ rule virtual-target ( name : type ? : project
 
             local a = [ action ] ;
             if $(a) {
+                if $(name:D)
+                {
+                    errors.error 
+                         "name for constructed target includes directory" ;
+                }                
                 $(a).actualize ;                
                 local path = [ path ] ;
                 LOCATE on $(name) = $(path) ;
@@ -447,7 +452,14 @@ rule clone-template ( target dont-recurse ? : project name type suffix )
     local m = [ MATCH (.*)(%)(.*) : $(old-name) ] ;
     if $(m)
     {
-        new-name = [ sequence.join $(m[1]) $(name) $(m[3]) ] ;
+        if [ $(target).action ]
+        {
+            new-name = [ sequence.join $(m[1]) $(name:D=) $(m[3]) ] ;
+        }
+        else
+        {            
+            new-name = [ sequence.join $(m[1]) $(name) $(m[3]) ] ;
+        }        
     }
     
     

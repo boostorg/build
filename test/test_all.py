@@ -23,3 +23,5 @@ import generators_test
 import dependency_test
 import direct_request_test
 import path_features
+import relative_sources
+
