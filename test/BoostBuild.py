@@ -253,7 +253,7 @@ class Tester(TestCmd.TestCmd):
 	# If test failed, print the difference
         if condition and hasattr(self, 'difference'):
             self.difference.pprint()
-        TestCmd.fail_test(self, condition, *args)
+        TestCmd.TestCmd.fail_test(self, condition, *args)
         
     # A number of methods below check expectations with actual difference
     # between directory trees before and after build.
