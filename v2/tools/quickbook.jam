@@ -337,16 +337,16 @@ rule get-quickbook-command ( user-supplied-command ? )
 
     # If user-supplied-command contains directory elements, assume we have an
     # absolute path and don't search the environment's PATH.
-    local search-path ;
+    local search-path = $(user-supplied-command:D) ;
 
-    if ! $(user-supplied-command:D)
+    if ! $(search-path)
     {
         search-path = [ path.programs-path ] ;
     }
 
     # Search the path for the command (exclude directories from result)
     local possible-commands = [ exclude-directories
-        [ path.glob $(search-path) : $(user-supplied-command)$(path-ext) ]
+        [ path.glob $(search-path) : $(user-supplied-command:D=)$(path-ext) ]
     ] ;
 
     if $(possible-commands)
