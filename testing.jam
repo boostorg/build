@@ -64,7 +64,10 @@ rule boost-test ( sources + : target-type : requirements * : test-name ? : defau
                 # Format them into a single string of quoted strings
                 dump-test-info = \"$(dump-test-info:J=\"\ \")\" ;
                 
-                ECHO "(boost-test" \"$(test-name)\" [$(dump-test-info)]  ":" \"$(source-files)\" ")" ;
+                ECHO boost-test($(target-type)) \"$(test-name)\" 
+                  [$(dump-test-info)]
+                    ":" \"$(source-files)\"
+                     ;
             }
 
         }
