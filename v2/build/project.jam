@@ -117,10 +117,18 @@ rule find ( name : current-location )
         # root, willing to act as Jamfile. In that case, project-root
         # must be placed in the directory referred by id.
         
-        if [ find-jamfile $(location) ]
+        project-module = [ module-name $(location) ] ;
+        if ! $(project-module) in $(.jamfile-modules) 
         {
-            project-module = [ load $(location) ] ;
-        }        
+            if [ find-jamfile $(location) ]
+            {
+                project-module = [ load $(location) ] ;            
+            }        
+            else
+            {
+                project-module = ;
+            }
+        }                    
     }
     
     return $(project-module) ;

@@ -243,8 +243,68 @@ load_builtins()
       {
           char * args[] = { "path", 0 };
           bind_builtin( "NORMALIZE_PATH",
-                        builtin_normalize_path, 0, args );
+              builtin_normalize_path, 0, args );
       }
+
+      {
+          char * args[] = { "args", "*", 0 };
+          bind_builtin( "CALC",
+              builtin_calc, 0, args );
+      }
+}
+
+/*
+* builtin_calc() - CALC rule
+*
+* The CALC rule performs simple mathematical operations on two arguments.
+*/
+
+LIST *
+builtin_calc(
+    PARSE *parse,
+    FRAME *frame )
+{
+    LIST *arg = lol_get( frame->args, 0 );
+
+    LIST *result = 0;
+    long lhs_value;
+    long rhs_value;
+    long result_value;
+    char buffer [16];
+    const char* lhs;
+    const char* op;
+    const char* rhs;
+
+    if (arg == 0) return L0;
+    lhs = arg->string;
+
+    arg = list_next( arg );
+    if (arg == 0) return L0;
+    op = arg->string;
+
+    arg = list_next( arg );
+    if (arg == 0) return L0;
+    rhs = arg->string;
+
+    lhs_value = atoi (lhs);
+    rhs_value = atoi (rhs);
+
+    if (strcmp ("+", op) == 0)
+    {
+        result_value = lhs_value + rhs_value;
+    }
+    else if (strcmp ("-", op) == 0)
+    {
+        result_value = lhs_value - rhs_value;
+    }
+    else
+    {
+        return L0;
+    }
+
+    sprintf (buffer, "%ld", result_value);
+    result = list_new( result, newstr( buffer ) );
+    return result;
 }
 
 /*

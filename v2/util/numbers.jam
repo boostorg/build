@@ -37,60 +37,14 @@ rule check ( numbers * )
 
 rule increment ( number )
 {
-    switch $(number)
-    {
-        # error check right here for speed, since we need zero detection anyway
-        case *[^0-9]* : 
-              error $(n) "in" $(numbers) : is not a number ;
-        
-        case *[1-9]* : 
-        {
-            local x = $(incr[$(number)]) ;
-            if $(x)
-            {
-                return $(x) ;
-            }
-            else
-            {
-                extend ;
-                # this recursion would be expensive, but it happens so rarely...
-                return [ increment $(number) ] ;
-            }
-        }
-        
-        # Handle zeros
-        case * :
-          return 1 ;
-    }
+    return [ CALC $(number) + 1 ] ;
 }
 
 rule decrement ( number )
 {
-
-    switch $(number)
-    {
-        # error check right here for speed, since we need zero detection anyway
-        case *[^0-9]* : 
-              error $(n) "in" $(numbers) : is not a number ;
-        
-        case *[1-9]* : 
-        {
-            local x = $(natural[$(number)]) ;
-            if $(x)
-            {
-                return $(x) ;
-            }
-            else
-            {
-                # this recursion would be expensive, but it happens so rarely...
-                extend ;
-                return [ decrement $(number) ] ;
-            }
-        }
-        
-        case * :
-          error can't decrement zero! ;
-    }
+    # Previous rule did not allow decrementing zero. 
+    # Is that what we want?
+    return [ CALC $(number) - 1 ] ;
 }
 
 rule range ( start finish ? : step ? )
