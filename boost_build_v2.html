@@ -61,6 +61,9 @@
 
     <h4>Definition</h4>
 
+    <p>TODO: give a name and describe the property set joined with slashes. I
+    use the term "property path" somewhere below.</p>
+
     <h4>Link compatible and imcompatible properties</h4>
 
     <h4>Definition of property refinement</h4>
@@ -183,7 +186,7 @@
       project where it is used.</li>
     </ul>
     <br>
-    <br>
+     <br>
      
 
     <p><em>Source location</em> specifies directory where sources for the
@@ -269,7 +272,7 @@
 
     <h4>Project relationship</h4>
 
-    <p>There are two kinds of project relationships.</p>
+    <p>There are three kinds of project relationships.</p>
 
     <p>First is parent-child. This relationship is established implicitly:
     parent directories of a project are searched, and the first found Jamfile
@@ -280,22 +283,99 @@
     build other projects. Those project need not be child projects. The
     <tt>build-project</tt> rule is used for that:</p>
 <pre>
-    build-project src ;
+    build-project src ;   
+</pre>
+
+    <p>The third kind is the 'use' relationship. In means that one project
+    uses targets from another. It is possible to just refer to target in
+    other projects using target id. However, if target id uses project id, it
+    is required that the project id is known. The <tt>use-project</tt> rule
+    is employed to guarantee that.</p>
+<pre>
+    use-project ( id : location )
    
 </pre>
+    It loads the project at the specified location, which makes its project
+    id available in the project which invokes the rule. It is required that
+    the <tt>id</tt> parameter passed to the <tt>use-project</tt> rule be
+    equal to the id that the loaded project declared. At this moment, the
+    <tt>id</tt> paremeter should be absolute project id. 
 
     <h3><a name="targets">Targets</a></h3>
 
     <h4>Main targets and main target alternatives</h4>
 
+    <p><em>Main target</em> is a named entity which can be build, for example
+    a named executable file. To declare a main target, user invokes some of
+    the <a href="#main_target_rules">main target rules</a>, passing it things
+    like list of source and requirement.</p>
+
+    <p>It is possible to have different list of sources for different
+    toolsets, therefore it is possible to invoce main target rules several
+    times for a single main target. For example:</p>
+<pre>
+    exe a.exe : a_gcc.cpp : &lt;toolset&gt; ;
+    exe a.exe : a.cpp ;
+</pre>
+    Each call to the 'exe' rule defines a new <em>main target
+    alternative</em> for the main target <tt>a.exe</tt>. In this case, the
+    first alternative will be used for the <tt>gcc</tt> toolset, while the
+    second alternative will be used in other cases. TODO: document the exact
+    selection method under "Build process" below. 
+
     <h4>Target identifiers and references</h4>
 
-    <p>Target identifier is used to denote a target.</p>
+    <p>Target identifier is used to denote a target. It is described by the
+    following grammar:</p>
+<pre>
+    target-id -&gt; project-reference local-target-name
+    project-reference -&gt; [jamfile-location] [ "@" [project-id] ]
+    jamfile-location -&gt; pathname 
+    project-id -&gt; pathname
+    local-target-name -&gt; identifier
+</pre>
+    For example, valid target ids might be: 
+<pre>
+    a
+    lib/b
+    @/boost/thread
+    /home/ghost/build/lr_library@parser/lalr1
+</pre>
+    To map the target id into target, the project where that target is
+    contained is first found: 
 
-    <p>Target reference is used to refer to a target, and may additionally
-    specify desired properties for that target.</p>
+    <ol>
+      <li>If <tt>project-reference</tt> is empty, then the current project is
+      used &mdash; i.e. the project there the target id occurs.</li>
 
-    <p>Simplified target reference has the same form as pathname, for example
+      <li>If the project id is absolute, the project with that id is
+      used.</li>
+
+      <li>If the project id is relative, it is treated relatively to
+      project-id of the project at <tt>jamfile-location</tt>. If that project
+      does not declare project id, it is an error.</li>
+    </ol>
+    After that, the target given by <tt>local-target-name</tt> in the found
+    project is used. 
+
+    <p>Target reference is used to specify a source target, and may
+    additionally specify desired properties for that target. It has this
+    syntax:</p>
+<pre>
+    target-reference -&gt; target-id [ "/" requested-properties ]
+    requested-properties -&gt; property-path
+</pre>
+    For example, 
+<pre>
+    exe compiler : compiler.cpp libs/cmdline/&lt;optimization&gt;space ;
+</pre>
+    would cause the version of <tt>cmdline</tt> library, optimized to space,
+    to be linked in even if the <tt>compile</tt> executable is build with
+    speed optimization. 
+
+    <h5>Ambiguity resolution</h5>
+
+    <p>Target reference may have the same form as a pathname, for example
     <tt>lib/a</tt>. In order to determine if this is target reference or
     pathname, it is checked if there's a jamfile in the specified path. If
     there is one, it is loaded and if the specified target is declared by
