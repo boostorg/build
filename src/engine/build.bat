@@ -127,6 +127,11 @@ if not errorlevel 1 (
     set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\
     goto :eof)
 setlocal & endlocal
+if EXIST "C:\MinGW\bin\gcc.exe" (
+    set BOOST_JAM_TOOLSET=mingw
+    set BOOST_JAM_TOOLSET_ROOT=C:\MinGW\
+    goto :eof)
+setlocal & endlocal
 call :Error_Print "Could not find a suitable toolset."
 goto :eof
 
@@ -220,35 +225,36 @@ if "_%BOOST_JAM_TOOLSET%_" == "_borland_" (
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_como_" (
-    set BOOST_JAM_CC=como
+    set BOOST_JAM_CC=como -DNT
     set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
     set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
     set BOOST_JAM_OPT_YYACC=-o bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_gcc_" (
-    set BOOST_JAM_CC=gcc
+    set BOOST_JAM_CC=gcc -DNT
     set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
     set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
     set BOOST_JAM_OPT_YYACC=-o bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_gcc-nocygwin_" (
-    set BOOST_JAM_CC=gcc -mno-cygwin
+    set BOOST_JAM_CC=gcc -DNT -mno-cygwin
     set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
     set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
     set BOOST_JAM_OPT_YYACC=-o bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_intel-win32_" (
-    set BOOST_JAM_CC=icl /nologo
+    set BOOST_JAM_CC=icl -DNT /nologo
     set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
     set BOOST_JAM_OPT_YYACC=/Febootstrap.%BOOST_JAM_TOOLSET%\yyacc0
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_mingw_" (
-    set BOOST_JAM_CC=gcc -DMINGW
+    if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
+    set BOOST_JAM_CC=gcc -DNT
     set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
     set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
     set BOOST_JAM_OPT_YYACC=-o bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe
