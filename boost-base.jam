@@ -1580,7 +1580,7 @@ rule subvariant-target
 
 # Generate the expanded subvariants of a target.
 #
-rule expand-target-subvariants ( target : local-build * : tools : build-var )
+rule expand-target-subvariants ( target : local-build * : tools + : build-var )
 {
     $(build-var) = [ get-BUILD $(local-build) ] ;
     local variants = [ select-ungristed $($(build-var)) ] ;
