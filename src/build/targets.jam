@@ -1139,6 +1139,9 @@ class basic-target : abstract-target
         local result = [ property-set.create
             [ $(xusage-requirements).non-dependency ] $(extra) ] ;
         
+        result = [ $(result).add 
+          [ $(subvariant).sources-usage-requirements ] ] ;        
+        
         return $(result) ;
     }
     
@@ -1256,7 +1259,6 @@ rule tag-name ( name : property-set )
     
     local tagged-name = $(name) ;
 
-    
     local name_f = [ $(property-set).get <name> ] ;
     local tags = [ $(property-set).get <tag> ] ;
     
