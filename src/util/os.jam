@@ -4,13 +4,54 @@
 #  warranty, and with no claim as to its suitability for any purpose.
 
 import modules ;
-name = [ modules.peek : OS ] ;
-platform = [ modules.peek : OSPLAT ] ;
-version = [ modules.peek : OSVER ] ;
+.name = [ modules.peek : OS ] ;
+.platform = [ modules.peek : OSPLAT ] ;
+.version = [ modules.peek : OSVER ] ;
 
-rule name { return $(name) ; }
-rule platform { return $(platform) ; }
-rule version { return $(version) ; }
+local rule constant ( c )
+{
+    # First look for platform-specific name, then general value
+    local variables = .$(c)-$(.name) .$(c) ;
+    local result = $($(variables)) ;
+    return $(result[1]) ;
+}
+
+rule get-constant  ( )
+{
+    # Find the name of the constant being accessed, which is
+    # equal to the name used to invoke us.
+    local bt = [ BACKTRACE 1 ] ;
+    local rulename = [ MATCH ([^.]*)$ : $(bt[4]) ] ;
+    return [ constant $(rulename) ] ;
+}
+
+
+# export all the common constants
+.constants = name platform version shared-library-path-variable path-separator ;
+for local constant in $(.constants) 
+{
+    IMPORT $(__name__) : get-constant : $(__name__) : $(constant) ;
+}
+EXPORT $(__name__) : $(.constants) ;
+
+.shared-library-path-variable-NT = PATH ;
+.path-separator-NT = ";" ;
+.expand-variable-prefix-NT = % ;
+.expand-variable-suffix-NT = % ;
+
+.shared-library-path-variable = LD_LIBRARY_PATH ;
+.path-separator = ":" ;
+.expand-variable-prefix = $ ;
+.expand-variable-suffix = "" ;
+
+# Return the string needed to represent the expansion of the named
+# shell variable.
+rule expand-variable ( variable )
+{
+    local prefix = [ constant expand-variable-prefix ] ;
+    local suffix = [ constant expand-variable-suffix ] ;
+    return $(prefix)$(variable)$(suffix) ;
+}
 
 # Returns true if running on windows, whether in cygwin or not.
 rule on-windows 
