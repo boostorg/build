@@ -59,7 +59,8 @@ feature library : : free dependency ;
 feature find-shared-library : : free ;
 feature find-static-library : : free ;
 feature library-path : : free path ;
-feature library-file : : free path ;
+# Internal feature.
+feature library-file : : free dependency ;
 
 feature uses : : free ;
 
@@ -248,8 +249,8 @@ declare-type : SHARED_LIB : so : LIB : main ;
 
 declare-type : SEARCHED_LIB : : LIB : main ;
 
-declare-type NT CYGWIN : EXE : exe : : main ;
-declare-type : EXE : : : main ;
+declare-type NT CYGWIN : EXE : exe : : ;
+declare-type : EXE : : : ;
 
 declare-type : PYTHON_EXTENSION : : SHARED_LIB : main ;
 # We can't give "dll" suffix to PYTHON_EXTENSION, because
@@ -282,7 +283,7 @@ rule response-file ( target : sources * : properties * )
     local libraries ;
     for local p in $(properties)
     {
-        if $(p:G) = <library> && 
+        if $(p:G) = <library-file> && 
           ! [ type.is-derived [ $(p:G=).type ] SHARED_LIB ] 
         {
             libraries += $(p:G=) ;
@@ -402,6 +403,9 @@ class lib-target-class : basic-target
                 
     rule construct ( source-targets * : property-set )
     {        
+        local libs = [ $(property-set).get <library> ] ;
+        source-targets += $(libs:G=) ;
+                
         local properties = [ $(property-set).raw ] ;
         # Determine the needed target type
         local actual-type ;
@@ -423,7 +427,7 @@ class lib-target-class : basic-target
                 : $(property-set) : $(source-targets) : LIB ] ;        
     }            
     
-    rule compute-usage-requirements ( rproperties : created-targets )
+    rule compute-usage-requirements ( rproperties : created-targets * )
     {
         local result = [ basic-target.compute-usage-requirements $(rproperties) ] ;
         
@@ -478,6 +482,44 @@ rule lib ( name : sources * : requirements * : default-build *
       ] ;
 }
 IMPORT $(__name__) : lib : : lib ;
+
+
+class exe-target-class : typed-target
+{
+    rule __init__ ( name : project
+        : sources * : requirements * : default-build * : usage-requirements * )
+    {    
+        typed-target.__init__ $(name) : $(project) : EXE 
+          : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;        
+    }
+                
+    rule construct ( source-targets * : property-set )
+    {        
+        local libs = [ $(property-set).get <library> ] ;
+        source-targets += $(libs:G=) ;
+        
+        return [ typed-target.construct $(source-targets) : $(property-set) ] ;
+    }            
+}
+
+rule exe ( name : sources * : requirements * : default-build * 
+    : usage-requirements * )
+{
+    local project = [ CALLER_MODULE ] ;
+        
+    # This is a circular module dependency, so it must be imported here
+    import targets ;
+    targets.main-target-alternative
+      [ new exe-target-class $(name) : $(project) 
+        : [ targets.main-target-sources $(sources) : $(name) ] 
+        : [ targets.main-target-requirements $(requirements) : $(project) ] 
+        : [ targets.main-target-default-build $(default-build) : $(project) ]
+        : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
+      ] ;
+}
+IMPORT $(__name__) : exe : : exe ;
+
+
 
 class searched-lib-generator : generator
 {
@@ -577,72 +619,8 @@ class link-action : action
         action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
     }
         
-    # Find all libraries in sources, and <library> properties
-    # For each source/property-value, which is instance of searched-lib-target,
-    # add appropriate <find-shared-library> or <find-static-library> property.
-    # (replacing the origianal <library> is needed)
-    # Convert library sources into <library> properties.
-    # If <hardcode-dll-paths>true is in properties, for each library source
-    # add <dll-path> property with the absolute path to that library.
-    rule adjust-properties ( properties * )
-    {        
-        # Identify all library sources and all <library> properties
-        # Remove that latter from 'properties'
-        
-        local libraries ;
-        for local s in $(self.sources)
-        {
-            if [ type.is-derived [ $(s).type ] LIB ] 
-            {
-                libraries += $(s) ;
-            }            
-        }
-        local properties2 ;
-        for local p in $(properties)
-        {
-            if $(p:G) = <library> 
-            {
-                libraries += $(p:G=) ;
-            }
-            else
-            {
-                properties2 += $(p) ;
-            }            
-        }
-                        
-        # Add needed properties
-        local pwd = [ path.pwd ] ;
-        local rpaths ;
-        for local s in $(libraries)
-        {
-            if [ class.is-a $(s) : searched-lib-target ]
-            {
-                local name = [ $(s).real-name ] ;
-                if [ $(s).shared ] 
-                {                    
-                    properties2 += <find-shared-library>$(name) ;
-                    if $(hardcore-rpath)
-                    {
-                        rpaths += $(search) ;
-                    }                                    
-                }
-                else
-                {
-                    properties2 += <find-static-library>$(name) ;
-                }         
-            } 
-            else 
-            {       
-                properties2 += <library>$(s) ;        
-            }            
-        }        
-        
-        return $(properties2) ;        
-    }
-    
     # Filters out all sources which are of LIB type and actualizes the remaining
     # sources by calling base method.
-    # Library sources are handled by "adjust-properties" above.
     rule actualize-sources ( sources * )
     {
         local real-sources ; 
@@ -665,6 +643,8 @@ class link-action : action
 
 class linking-generator : generator
 {
+    import property-set ;
+    
     rule __init__ ( id 
         composing ? : # Specify if generator is composing. The generator will be
         # composing if non-empty string is passed, or parameter is
@@ -701,7 +681,68 @@ class linking-generator : generator
         return $(result) ;
     }
     
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        local sources2 ;     # sources to pass to inherited rule
+        local properties2 ;  # properties to pass to inherited rule
+        local libraries ;    # sources which are libraries
+        
+        # Separate 'sources' into 'libraries' and 'sources2'.
+        # It is needed because library sources need special treatment.
+        for local s in $(sources)
+        {
+            if [ type.is-derived [ $(s).type ] LIB ] 
+            {
+                libraries += $(s) ;
+            }            
+            else
+            {
+                sources2 += $(s) ;
+            }            
+        }
 
+        # For all library source, add necessary property. Depending on
+        # target type, it's either <library-file>, <find-shared-library>
+        # or <find-static-library>.
+        properties2 = [ $(property-set).raw ] ;        
+        for local s in $(libraries)
+        {
+            if [ class.is-a $(s) : searched-lib-target ]
+            {
+                local name = [ $(s).real-name ] ;
+                if [ $(s).shared ] 
+                {                    
+                    properties2 += <find-shared-library>$(name) ;
+                }
+                else
+                {
+                    properties2 += <find-static-library>$(name) ;
+                }         
+            } 
+            else 
+            {      
+                properties2 += <library-file>$(s) ;        
+            }            
+        }                
+        
+        # Sorry, still pass 'sources', which includes library targets.
+        # We need to set dependency on libraries, which is currently done
+        # by 'actualize-sources' above, via some secret hook. We need a better
+        # mechanism, but until it's implemented, need to pass all sources.
+        local spawn = [ generator.generated-targets $(sources)
+          : [ property-set.create $(properties2) ] : $(project) $(name) ] ;
+        
+        # And we'll also get warning about unused sources :-(
+        #if $(libraries)
+        #{                
+        #    for local s in $(spawn)
+        #    {
+        #        $(s).depends $(libraries) ;
+        #    }        
+        #}        
+        return $(spawn) ;
+    }
+        
     rule action-class ( )
     {
         return link-action ;

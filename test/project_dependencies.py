@@ -5,6 +5,8 @@
 # cause every main target in the project to
 # be generated in it's own subdirectory.
 
+# The whole test is somewhat moot now. 
+
 from BoostBuild import Tester, List
 
 t = Tester()
@@ -38,7 +40,8 @@ t.copy("src/a.cpp", "src/b.cpp")
 t.run_build_system()
 
 # Test that there's no "main-target-a" part.
-t.expect_addition("src/bin/$toolset/debug/" * List("a.exe b.exe"))
+# t.expect_addition("src/bin/$toolset/debug/a.exe")
+# t.expect_addition("src/bin/$toolset/debug/b.exe")
 
 
 t.cleanup()

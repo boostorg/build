@@ -312,7 +312,6 @@ flags msvc LINKFLAGS <user-interface>wince : /subsystem:windowsce ;
 flags msvc LINKFLAGS <user-interface>native : /subsystem:native ;
 flags msvc LINKFLAGS <user-interface>auto : /subsystem:posix ;
 
-flags msvc NEEDLIBS <library-file> ;
 flags msvc LINKFLAGS <main-target-type>LIB/<link>shared : /DLL ;
 
 toolset.flags msvc.link USER_LINKFLAGS <linkflags> ;

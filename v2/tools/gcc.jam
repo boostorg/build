@@ -96,7 +96,7 @@ flags gcc.link OPTIONS <linkflags> ;
 flags gcc.link LINKPATH <library-path> ;
 flags gcc.link FINDLIBS-ST <find-static-library> ;
 flags gcc.link FINDLIBS-SA <find-shared-library> ;
-flags gcc.link LIBRARIES <library> ;
+flags gcc.link LIBRARIES <library-file> ;
 flags gcc.link LINK-RUNTIME <link-runtime>static : static ;
 flags gcc.link LINK-RUNTIME <link-runtime>shared : dynamic ;
 flags gcc.link RPATH <dll-path> ;
