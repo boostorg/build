@@ -1,0 +1,98 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Building Boost Libraries</title>
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000">
+
+<h1>
+
+    <img src="../../c++boost.gif" alt="c++boost.gif (8819 bytes)" align= "center" width="277" height="86">Building
+Boost Libraries</h1>
+<h2>Introduction</h2>
+<p>These instructions explain how to accomplish common tasks using <b>Boost.Build</b>,
+the <a href="build_system.htm">Boost Build System</a>.</p>
+<p>For tasks not covered here, see the full <a href="build_system.htm">build
+system documentation</a>.</p>
+<h2>Preliminaries</h2>
+<ul>
+  <li><a href="../../more/download.html">Download Boost</a>, and unpack the full
+    directory structure into some root directory.</li>
+  <li>Download FTJam, and install the binary executable where it will be found
+    when invoked from the command line.</li>
+  <li>Set any environmental variables required to run your compiler and related
+    tools from the command line.</li>
+</ul>
+<h2>Building Boost Libraries</h2>
+<p>Using your operating system's command line interpreter, execute the following
+steps.&nbsp; The sample commands given will work for both UNIX and Windows.</p>
+<ul>
+  <li>Change to the Boost root directory.&nbsp; (The directory you unpacked the
+    distribution into.&nbsp; Should contain the file c++boost.gif,
+    subdirectories boost, libs, more, etc.)</li>
+</ul>
+<blockquote>
+  <blockquote>
+    <p><code>chdir my_boost</code></p>
+  </blockquote>
+</blockquote>
+<ul>
+  <li>Build the Boost libraries for your <a href="#Tools">tools</a>. The example
+    is for the GNU and Metrowerks compilers.</li>
+</ul>
+<blockquote>
+  <blockquote>
+    <p><code>jam -ftools/build/allyourbase.jam</code><code> -sTOOLS=&quot;</code><code>gcc
+    metrowerks</code><code>&quot;</code></p>
+  </blockquote>
+</blockquote>
+<h2><a name="Tools">Tools</a></h2>
+<p>Unless otherwise specified, the library is assumed to be the one shipped with
+the compiler.</p>
+<p>Additional tools may be supplied by adding an appropriate xxxx-tools.jam file
+to the tools/build subdirectory, where xxxx is the name of the tool being
+added..</p>
+<table border="1" cellpadding="5">
+  <tr>
+    <td><b>Name</b></td>
+    <td><b>Description</b></td>
+  </tr>
+  <tr>
+    <td><code>borland</code></td>
+    <td>Borland command line compiler tools</td>
+  </tr>
+  <tr>
+    <td><code>gcc</code></td>
+    <td>GNU GCC command line compiler tools</td>
+  </tr>
+  <tr>
+    <td><code>gcc-stlport</code></td>
+    <td>GNU GCC command line compiler tools, using the STLport library</td>
+  </tr>
+  <tr>
+    <td><code>kcc</code></td>
+    <td>KAI command line compiler tools</td>
+  </tr>
+  <tr>
+    <td><code>metrowerks</code></td>
+    <td>Metrowerks CodeWarrior command line compiler tools</td>
+  </tr>
+  <tr>
+    <td><code>msvc</code></td>
+    <td>Microsoft Visual C++ command line compiler tools</td>
+  </tr>
+</table>
+<hr>
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->29 July, 2001<!--webbot bot="Timestamp" endspan i-checksum="21080" -->
+</p>
+<p>© Beman Dawes, 2001</p>
+<p>&nbsp;</p>
+
+</body>
+
+</html>
