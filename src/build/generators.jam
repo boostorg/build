@@ -787,16 +787,16 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
                          # generator is reuiqred, see builtin.lib-generator for example.
     )
 {
-    local use-requirements ;
+    local usage-requirements ;
     if (.construct-stack)
     {
         ensure-type $(sources) ;
         for local e in $(sources)
         {
-            use-requirements += [ $(e).use-requirements ] ;
+            usage-requirements += [ $(e).usage-requirements ] ;
         }               
     }
-    properties += $(use-requirements) ;
+    properties += $(usage-requirements) ;
     properties = [ sequence.unique $(properties) ] ;
     
     .construct-stack += 1 ;

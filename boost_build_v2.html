@@ -304,14 +304,14 @@ boost-build /path/to/boost.build ;
     better solution is to modify lib/lib1/Jamfilie in this way: 
 <pre>
     project 
-        : use-requirements &lt;include&gt;.
+        : usage-requirements &lt;include&gt;.
         ;
 
      lib lib1 : lib1.cpp ;
 </pre>
-    Use requirements are requirements which are applied to dependents. In
+    Usage requirements are requirements which are applied to dependents. In
     this case, &lt;include&gt; will be applied to all targets which use
-    "lib1". You'd need to specify use requirements only once, and programs
+    "lib1". You'd need to specify usage requirements only once, and programs
     which use "lib1" don't have to care about include paths any longer. Or
     course, the path will be interpreted relatively to "lib/lib1" and will be
     adjusted according to the <tt>bjam</tt>s invocation directory. For
@@ -322,7 +322,7 @@ boost-build /path/to/boost.build ;
     ids. First, we assign a project id to Jamfile in lib/lib1: 
 <pre>
     project lib1
-        : use-requirements &lt;include&gt;.
+        : usage-requirements &lt;include&gt;.
         ;
 </pre>
     Second, we use the project id to refer to the library in src/Jamfile: 
