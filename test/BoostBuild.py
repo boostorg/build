@@ -23,9 +23,9 @@ suffixes = {}
 
 # Prepare the map of suffixes
 def prepare_suffix_map(toolset):
+    global windows, suffixes    
     suffixes = {'.exe': '', '.dll': '.so', '.lib': '.a', '.obj': '.o'}
     if os.environ.get('OS','').lower().startswith('windows'):
-        global windows, suffixes
         windows = 1
         suffixes = {}
         if toolset in ["gcc"]:
@@ -77,7 +77,7 @@ class Tester(TestCmd.TestCmd):
         if pass_toolset:
             arguments = self.toolset + " " + arguments
 
-        prepare_suffix_map(pass_toolset and 'gcc' or self.toolset)
+        prepare_suffix_map(pass_toolset and self.toolset or 'gcc')
 
         jam_build_dir = ""
         if os.name == 'nt':
