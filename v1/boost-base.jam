@@ -1618,41 +1618,51 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
   # SOURCE_GRIST identifies the subproject directory; TARGET_GRIST will identify
   # the target and subvariant, since unique versions of files will be built for
   # that combination.
+  local tags = [ get-properties <tag> : $(gIMPOSED_REQUIREMENTS($(target))) ] ;
   local TARGET_GRIST = [ join-path $(SOURCE_GRIST) $(target:G=) $(subvariant-id) ] ;
   local subvariant = $(target:G=$(TARGET_GRIST)) ;
 
-  # Do nothing if build instructions and dependencies for this target have
-  # already been generated. 
+  # Keep track of the generated targets.
   if ! $(TARGET_GRIST) in $(gDECLARED_TARGETS)
   {
     gDECLARED_TARGETS += $(TARGET_GRIST) ;
+  }
 
-    local target-type = $(gTARGET_TYPE($(target))) ;
-    if ! $(target-type)
-    {
-        EXIT unknown target type for $(target) ;
-    }
-    
-    gTARGET_TYPE($(subvariant)) = $(target-type) ;
-    
-    # LOCATE_TARGET affects where built targets are generated. We move it
-    # relative to the default location based on the subvariant 
-    local LOCATE_TARGET
-      = [ join-path $(LOCATE_TARGET) $(BIN_DIRECTORY) $(target:G=) $(subvariant-id) ] ;
+  # Make sure we know how to generate these types of targets.
+  local target-type = $(gTARGET_TYPE($(target))) ;
+  if ! $(target-type)
+  {
+      EXIT unknown target type for $(target) ;
+  }
+  
+  gTARGET_TYPE($(subvariant)) = $(target-type) ;
+  
+  # LOCATE_TARGET affects where built targets are generated. We move it
+  # relative to the default location based on the subvariant 
+  local LOCATE_TARGET
+    = [ join-path $(LOCATE_TARGET) $(BIN_DIRECTORY) $(target:G=) $(subvariant-id) ] ;
 
-    local target-files = [ FAppendSuffix $(subvariant) : $(SUF$(target-type)) ] ;
-    if $(gNAME_ADJUST($(target-type)))
-    {
-        target-files = [
-          $(gNAME_ADJUST($(target-type))) $(target-files)
-          : $(subvariant-id) $(build-properties)
-            : $(toolset) $(variant) ] ;
-    }
+  # First order names have the suffix, if any according to the platform.
+  local target-files = [ FAppendSuffix $(subvariant) : $(SUF$(target-type)) ] ;
+  # Second order names have any tags as imposed from stage target contexts.
+  target-files = [ rename-target $(target-files) : [ split-path [ ungrist $(subvariant:G) ] ] : $(tags) ] ;
+  # Third order names are customized as determined by a rename rule on the target type.
+  if $(gNAME_ADJUST($(target-type)))
+  {
+    target-files = [
+      $(gNAME_ADJUST($(target-type))) $(target-files)
+      : $(subvariant-id) $(build-properties)
+      : $(toolset) $(variant) ] ;
+  }
 
+  # Do nothing if we already have the build instructions for the specific
+  # target files of this subvariant target.
+  if ! $(target-files) in $(gTARGET_FILES($(target)))
+  {
     gTARGET_SUBVARIANT($(target-files)) = $(target) ;
     
-    gTARGET_FILES($(subvariant)) = $(target-files) ;
-    gTARGET_FILES($(<)) += $(target-files) ;
+    ###gTARGET_FILES($(subvariant)) = $(target-files) ;
+    gTARGET_FILES($(target)) += $(target-files) ;
 
     # Remember the path from the build root to the subvariant directory
     gSUBVARIANT_PATH($(subvariant)) = $(subvariant-id) ;
@@ -1708,11 +1718,11 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
     # dispatch to the appropriate declaration function. Here we are using an
     # FTJam-only feature (thanks, David Turner!)
     local ignored = [ $(gGENERATOR_FUNCTION($(target-type))) $(target-files)
-                        : $(gTARGET_SOURCES($(<))) ] ;
+                        : $(gTARGET_SOURCES($(target))) ] ;
                         
     $(gTARGET_VARIABLES) = ; # Be sure that we don't mask bugs with lingering target variables
   }
-  return $(gTARGET_FILES($(subvariant))) ;
+  return $(target-files) ;
 }
 
 # Generate the expanded subvariants of a target.
@@ -1728,8 +1738,12 @@ rule expand-target-subvariants ( target : local-build * : tools + : )
     {
         for local variant in $(variants)
         {
-            local rules = [ select-ungristed $(gTARGET_REQUIREMENTS($(target))) ] ;
-            local requirements = [ select-gristed $(gTARGET_REQUIREMENTS($(target))) ] ;
+            local rules = [ select-ungristed
+                $(gTARGET_REQUIREMENTS($(target)))
+                $(gIMPOSED_REQUIREMENTS($(target))) ] ;
+            local requirements = [ select-gristed
+                $(gTARGET_REQUIREMENTS($(target)))
+                $(gIMPOSED_REQUIREMENTS($(target))) ] ;
             
             local expanded
                 = [ expand-build-request $(toolset) $(variant) $(target)
@@ -2043,6 +2057,10 @@ rule stage ( name : sources + : requirements * : local-build * )
     local file-mode ;
     local file-tagged ;
 
+    # Prevent built object from getting deleted so that when targets are linked
+    # multiple times they are available.
+    local KEEPOBJS = true ;
+
     # For each source, collect its information, and possibly generate it.
     #
     for local source in $(sources)
@@ -2060,6 +2078,7 @@ rule stage ( name : sources + : requirements * : local-build * )
             local target-subdir = [ simplify-path-tokens [ top-relative-tokens [ directory-of $(source) ] ] ] ;
 
             dependent-include $(source:G=) ;
+            local gIMPOSED_REQUIREMENTS($(target-id)) = $(tags) ;
             local subvariants = [ expand-target-subvariants $(target-id) : $(local-build) : $(TOOLS) ] ;
 
             for local subvariant in $(subvariants)
@@ -2092,7 +2111,7 @@ rule stage ( name : sources + : requirements * : local-build * )
                     for local sv in $(sv-files)
                     {
                         local renamed-target =
-                            [ rename-target $(sv) : [ split-path $(s-properties[1]) ] : $(tags) ] ;
+                            [ rename-target $(sv) : [ split-path $(s-properties[1]) ] : ] ; ## $(tags) ] ;
 
                         files += $(sv) ;
                         file-mode($(sv)) = $($(gTARGET_TYPE($(s-target)))MODE) ;
