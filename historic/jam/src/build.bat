@@ -7,7 +7,11 @@ REM warranty, and with no claim as to its suitability for any purpose.
 setlocal
 goto Start
 
+REM NOTE: The "setlocal & endlocal" construct is used to reset the errorlevel to 0.
+REM NOTE: The "set _error_=" construct is used to set the errorlevel to 1
+
 :Error_Print
+REM Output an error message and set the errorlevel to indicate failure.
 setlocal
 ECHO ###
 ECHO ### %1
@@ -15,13 +19,16 @@ ECHO ###
 ECHO ### You can specify the toolset as the argument, i.e.:
 ECHO ###     .\build.bat msvc
 ECHO ###
-ECHO ### Toolsets supported by this script are: borland, metrowerks, msvc, vc7
+ECHO ### Toolsets supported by this script are: borland, como, gcc, gcc-nocygwin, intel-win32, metrowerks, mingw, msvc, vc7
 ECHO ###
 set _error_=
 endlocal
 goto :eof
 
 :Test_Path
+REM Tests for the given file(executable) presence in the directories in the PATH
+REM environment variable. Additionaly sets FOUND_PATH to the path of the
+REM found file.
 setlocal & endlocal
 setlocal
 set test=%~$PATH:1
@@ -30,6 +37,7 @@ if not errorlevel 1 set FOUND_PATH=%~dp$PATH:1
 goto :eof
 
 :Test_Option
+REM Tests wether the given string is in the form of an option: "-*"
 setlocal & endlocal
 setlocal
 set test=%1
@@ -37,37 +45,82 @@ if not "-" == "%test:~0,1%" set _error_=
 endlocal
 goto :eof
 
-REM Try and guess the toolset to bootstrap the build with...
 :Guess_Toolset
+REM Try and guess the toolset to bootstrap the build with...
+REM Sets BOOST_JAM_TOOLSET to the first found toolset.
+REM May also set BOOST_JAM_TOOLSET_ROOT to the
+REM location of the found toolset.
 setlocal & endlocal
-if NOT "_%CWFolder%_" == "__" (set BOOST_JAM_TOOLSET=metrowerks& goto :eof)
+if NOT "_%CWFolder%_" == "__" (
+    set BOOST_JAM_TOOLSET=metrowerks
+    set BOOST_JAM_TOOLSET_ROOT=%CWFolder%\
+    goto :eof )
 setlocal & endlocal
 call :Test_Path mwcc.exe
-if not errorlevel 1 (set BOOST_JAM_TOOLSET=metrowerks& goto :eof)
+if not errorlevel 1 (
+    set BOOST_JAM_TOOLSET=metrowerks
+    set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\..\
+    goto :eof)
 setlocal & endlocal
-if NOT "_%MSVCDir%_" == "__" (set BOOST_JAM_TOOLSET=msvc& goto :eof)
+if NOT "_%MSVCDir%_" == "__" (
+    set BOOST_JAM_TOOLSET=msvc
+    set BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\
+    goto :eof)
 setlocal & endlocal
-if EXIST "C:\Program Files\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT" (set BOOST_JAM_TOOLSET=msvc& goto :eof)
+if EXIST "C:\Program Files\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT" (
+    set BOOST_JAM_TOOLSET=msvc
+    set BOOST_JAM_TOOLSET_ROOT=C:\Program Files\Microsoft Visual Studio\VC98\
+    goto :eof)
 setlocal & endlocal
-if EXIST "C:\Program Files\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" (set BOOST_JAM_TOOLSET=msvc& goto :eof)
+if EXIST "C:\Program Files\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" (
+    set BOOST_JAM_TOOLSET=msvc
+    set BOOST_JAM_TOOLSET_ROOT=C:\Program Files\Microsoft Visual C++\VC98\
+    goto :eof)
 setlocal & endlocal
-if EXIST "C:\Program Files\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (set BOOST_JAM_TOOLSET=vc7& goto :eof)
+if EXIST "C:\Program Files\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
+    set BOOST_JAM_TOOLSET=vc7
+    set BOOST_JAM_TOOLSET_ROOT=C:\Program Files\Microsoft Visual Studio .NET\VC7\
+    goto :eof)
 setlocal & endlocal
 call :Test_Path cl.exe
-if not errorlevel 1 (set BOOST_JAM_TOOLSET=msvc& goto :eof)
+if not errorlevel 1 (
+    set BOOST_JAM_TOOLSET=msvc
+    set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\
+    goto :eof)
 setlocal & endlocal
-if EXIST "C:\Borland\BCC55\Bin\bcc32.exe" (set BOOST_JAM_TOOLSET=borland& goto :eof)
+call :Test_Path vcvars32.bat
+if not errorlevel 1 (
+    set BOOST_JAM_TOOLSET=msvc
+    call "%FOUND_PATH%VCVARS32.BAT"
+    set BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\
+    goto :eof)
+setlocal & endlocal
+if EXIST "C:\Borland\BCC55\Bin\bcc32.exe" (
+    set BOOST_JAM_TOOLSET=borland
+    set BOOST_JAM_TOOLSET_ROOT=C:\Borland\BCC55\
+    goto :eof)
 setlocal & endlocal
 call :Test_Path bcc32.exe
-if not errorlevel 1 (set BOOST_JAM_TOOLSET=borland& goto :eof)
+if not errorlevel 1 (
+    set BOOST_JAM_TOOLSET=borland
+    set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\
+    goto :eof)
+setlocal & endlocal
+call :Test_Path icl.exe
+if not errorlevel 1 (
+    set BOOST_JAM_TOOLSET=intel-win32
+    set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\
+    goto :eof)
 setlocal & endlocal
 call :Error_Print "Could not find a suitable toolset."
 goto :eof
 
 :Start
-REM Reset the toolset.
 set BOOST_JAM_TOOLSET=
 
+REM If no arguments guess the toolset;
+REM or if first argument is an option guess the toolser;
+REM otherwise the argument is the toolset to use.
 if "_%1_" == "__" (
     call :Guess_Toolset
 ) else (
@@ -82,52 +135,96 @@ if "_%1_" == "__" (
 )
 if errorlevel 1 goto Finish
 
+REM Setup the toolset command and options. This bit of code
+REM needs to be flexible enough to handle both when
+REM the toolset was guessed at and found, or when the toolset
+REM was indicated in the command arguments.
+REM NOTE: The strange multiple "if ?? == _toolset_" tests are that way
+REM because in BAT variables are subsituted only once during a single
+REM command. A complete "if ... ( commands ) else ( commands )"
+REM is a single command, even though it's in multiple lines here.
 if "_%BOOST_JAM_TOOLSET%_" == "_metrowerks_" (
+    if NOT "_%CWFolder%_" == "__" (
+        set BOOST_JAM_TOOLSET_ROOT=%CWFolder%\) )
+if "_%BOOST_JAM_TOOLSET%_" == "_metrowerks_" (
+    if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
+        set PATH=%PATH%;%BOOST_JAM_TOOLSET_ROOT%Other Metrowerks Tools\Command Line Tools)
     set BOOST_JAM_CC=mwcc -runtime staticsingle -DNT
     set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
     set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
-    if EXIST "C:\Program Files\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT" (
-        call "C:\Program Files\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT"
-    ) else if EXIST "C:\Program Files\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" (
-        call "C:\Program Files\Microsoft Visual C++\VC98\bin\VCVARS32.BAT"
-    )
-)
+    if NOT "_%MSVCDir%_" == "__" (
+        set BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\) )
 if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
-    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG %MSVCDIR%\lib\kernel32.lib
+    if EXIST "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" (
+        call "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" ) )
+if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
+    if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
+        set PATH=%PATH%;%BOOST_JAM_TOOLSET_ROOT%bin)
+    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG "%BOOST_JAM_TOOLSET_ROOT%lib\kernel32.lib"
     set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
-    if EXIST "C:\Program Files\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
-        call "C:\Program Files\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT"
-    )
-)
+    if NOT "_%MSVCDir%_" == "__" (
+        set BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\) )
 if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
-    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG %MSVCDIR%\lib\kernel32.lib
+    if EXIST "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" (
+        call "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" ) )
+if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
+    if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
+        set PATH=%PATH%;%BOOST_JAM_TOOLSET_ROOT%bin)
+    set BOOST_JAM_CC="%BOOST_JAM_TOOLSET_ROOT%bin\cl.exe" /nologo /GZ /Zi /MLd -DNT -DYYDEBUG "%BOOST_JAM_TOOLSET_ROOT%lib\kernel32.lib"
     set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_borland_" (
-    call :Test_Path bcc32.exe
-    if errorlevel 1 (
-        if EXIST "C:\Borland\BCC55\Bin\bcc32.exe" (
-            set PATH=%PATH%;C:\Borland\BCC55\Bin
-            call :Test_Path bcc32.exe
-        )
-    )
-)
+    if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
+        call :Test_Path bcc32.exe ) )
 if "_%BOOST_JAM_TOOLSET%_" == "_borland_" (
-    if not errorlevel 1 (
-        set BOOST_JAM_CC=bcc32 -WC -w- -q -I%FOUND_PATH%..\Include -L%FOUND_PATH%..\Lib /DNT -nbootstrap.%BOOST_JAM_TOOLSET%
-        set BOOST_JAM_OPT_JAM=-ejam0
-        set BOOST_JAM_OPT_MKJAMBASE=-emkjambasejam0
-        set _known_=1
-    )
+    if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
+        if not errorlevel 1 (
+            set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\) ) )
+if "_%BOOST_JAM_TOOLSET%_" == "_borland_" (
+    if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (set PATH=%PATH%;%BOOST_JAM_TOOLSET_ROOT%Bin)
+    set BOOST_JAM_CC=gcc -WC -w- -q "-I%BOOST_JAM_TOOLSET_ROOT%Include" "-L%BOOST_JAM_TOOLSET_ROOT%Lib" /DNT -nbootstrap.%BOOST_JAM_TOOLSET%
+    set BOOST_JAM_OPT_JAM=-ejam0
+    set BOOST_JAM_OPT_MKJAMBASE=-emkjambasejam0
+    set _known_=1
+)
+if "_%BOOST_JAM_TOOLSET%_" == "_como_" (
+    set BOOST_JAM_CC=como
+    set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
+    set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
+    set _known_=1
+)
+if "_%BOOST_JAM_TOOLSET%_" == "_gcc_" (
+    set BOOST_JAM_CC=gcc
+    set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
+    set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
+    set _known_=1
+)
+if "_%BOOST_JAM_TOOLSET%_" == "_gcc-nocygwin_" (
+    set BOOST_JAM_CC=gcc -mno-cygwin
+    set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
+    set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
+    set _known_=1
+)
+if "_%BOOST_JAM_TOOLSET%_" == "_intel-win32_" (
+    set BOOST_JAM_CC=icl /nologo
+    set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
+    set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
+    set _known_=1
+)
+if "_%BOOST_JAM_TOOLSET%_" == "_mingw_" (
+    set BOOST_JAM_CC=gcc -DMINGW
+    set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
+    set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
+    set _known_=1
 )
 if "_%_known_%_" == "__" (
     call :Error_Print "Unknown toolset: %BOOST_JAM_TOOLSET%"
@@ -147,7 +244,7 @@ set BJAM_SOURCES=%BJAM_SOURCES% newstr.c option.c parse.c pathunix.c pathvms.c r
 set BJAM_SOURCES=%BJAM_SOURCES% rules.c scan.c search.c subst.c timestamp.c variable.c modules.c
 set BJAM_SOURCES=%BJAM_SOURCES% strings.c filesys.c builtins.c pwd.c
 
-REM ~ REM No "yyacc" script available, yet, and therefore no grammar bootstrap.
+REM No "yyacc" script available, yet, and therefore no grammar bootstrap.
 @echo ON
 rd /S /Q bootstrap.%BOOST_JAM_TOOLSET%
 md bootstrap.%BOOST_JAM_TOOLSET%
@@ -158,7 +255,7 @@ md bootstrap.%BOOST_JAM_TOOLSET%
 :Skip_Jambase
 %BOOST_JAM_CC% %BOOST_JAM_OPT_JAM% %BJAM_SOURCES%
 @if not exist ".\bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe" goto Skip_Jam
-.\bootstrap.%BOOST_JAM_TOOLSET%\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% %1 %2 %3 %4 %5 %6 %7 %8 %9
+.\bootstrap.%BOOST_JAM_TOOLSET%\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " %1 %2 %3 %4 %5 %6 %7 %8 %9
 :Skip_Jam
 
 :Finish
