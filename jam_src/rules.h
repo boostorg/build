@@ -235,9 +235,7 @@ void freeactions( ACTIONS *chain );
 SETTINGS *addsettings( SETTINGS *head, int append, char *symbol, LIST *value );
 void 	pushsettings( SETTINGS *v );
 void 	popsettings( SETTINGS *v );
-#ifdef OPT_FIX_TARGET_VARIABLES_EXT
 SETTINGS *copysettings( SETTINGS *v );
-#endif
 void 	freesettings( SETTINGS *v );
 void    rule_free( RULE *r );
 void	donerules();
