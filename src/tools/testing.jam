@@ -256,10 +256,12 @@ actions (failed-as-expected)
     echo failed as expected > $(<)
 }
 
+MAKE_FILE = [ common.file-creation-command ] ;
+
 toolset.flags testing.unit-test LAUNCHER <testing.launcher> ;
 actions unit-test 
 {
-    $(LAUNCHER) $(>) && touch $(<)
+    $(LAUNCHER) $(>) && $(MAKE_FILE) $(<)
 }
 
 toolset.flags testing.capture-output ARG <testing.arg> ;
