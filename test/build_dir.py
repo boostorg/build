@@ -17,10 +17,10 @@ project
 exe a : a.cpp ;
 build-project src ;    
 """)
-t.write("a.cpp", "int main() {}")
+t.write("a.cpp", "int main() {}\n")
 
 t.write("src/Jamfile", "exe b : b.cpp ; ")
-t.write("b.cpp", "int main() {}")
+t.write("b.cpp", "int main() {}\n")
 
 t.run_build_system()
 
