@@ -386,14 +386,17 @@ rule translate-paths ( properties * : path )
 
 # Class which maintains a property set -> string
 # mapping
-rule property-map ( )
+xclass property-map
 {
     import numbers ;
     import sequence ;
     import errors : error ;
     
-    self.next-flag = 1 ;
-
+    rule __init__ ( )
+    {        
+        self.next-flag = 1 ;
+    }
+    
     # Associate 'value' with 'properties'
     rule insert ( properties + : value )
     {
@@ -445,9 +448,6 @@ rule property-map ( )
     }      
 }
 
-class property-map ;
-
-
 local rule __test__ ( )
 {
     import errors : try catch ;
@@ -472,7 +472,7 @@ local rule __test__ ( )
     compose <variant>release : <define>NDEBUG <optimization>on ;
 
     import assert ;
-    import class : new ;
+    import class : xnew ;
     
     validate gcc gcc-3.0.1 : $(test-space) ;
     validate <toolset>gcc  <toolset>gcc-3.0.1 : $(test-space) ;
@@ -559,7 +559,7 @@ local rule __test__ ( )
     assert.result <toolset>kylix <include>a 
         : change <toolset>gcc <include>a : toolset kylix ;
 
-    pm = [ new property-map ] ;
+    pm = [ xnew property-map ] ;
     $(pm).insert <toolset>gcc : o ;
     $(pm).insert <toolset>gcc <os>NT : obj ;
     $(pm).insert <toolset>gcc <os>CYGWIN : obj ;

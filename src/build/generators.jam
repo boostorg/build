@@ -252,7 +252,7 @@ xclass generator
     # - value to <toolset> feature in properties
     rule clone ( new-id : new-toolset-name )
     {
-        return [ new $(__class__) $(new-id)
+        return [ xnew $(__class__) $(new-id)
                  : $(self.source-types)
                  : $(self.target-types-and-names) 
                  : [ property.change $(self.requirements) 

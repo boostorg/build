@@ -317,12 +317,16 @@ actions quietly piecemeal response-file-2
 }
 #####
 
-rule c-scanner ( includes * )
+xclass c-scanner : scanner 
 {
-    scanner.__init__ ;
+    import regex virtual-target path scanner ;    
     
-    import regex virtual-target path scanner ;
-    self.includes = $(includes) ;
+    rule __init__ ( includes * )
+    {
+        scanner.__init__ ;
+    
+        self.includes = $(includes) ;
+    }    
 
     rule pattern ( )
     {
@@ -370,7 +374,6 @@ rule c-scanner ( includes * )
     }        
 }
 
-class c-scanner : scanner ;
 scanner.register c-scanner : include ;
 
 type.set-scanner CPP : c-scanner ;
@@ -483,7 +486,6 @@ xclass searched-lib-generator : generator
 }
 
 generators.register [ xnew searched-lib-generator ] ;
-
 
 xclass compile-action : action 
 {
