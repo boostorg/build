@@ -79,7 +79,7 @@ if [ MATCH (--dump-projects) : [ modules.peek : ARGV ] ]
     project-roots.print ;
 }
 
-if ! [ feature.values toolset ] 
+if ! [ feature.values <toolset> ] 
 {
     ECHO "warning: no toolsets are configured." ;
     ECHO "warning: you won't be able to build C++ programs." ;

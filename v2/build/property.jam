@@ -3,7 +3,6 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-import feature : grist ;
 import utility : ungrist ;
 import sequence : unique ;
 import errors : error ;
@@ -193,11 +192,12 @@ local rule validate1 ( property )
     local msg ;
     if $(property:G)
     {
-        local feature = [ ungrist $(property:G) ] ; # Ungrist for better error messages
+        local feature = $(property:G) ;
         local value = $(property:G=) ;
 
         if ! [ feature.valid $(feature) ]
         {
+            feature = [ ungrist $(property:G) ] ; # Ungrist for better error messages
             msg = "unknown feature '$(feature)'" ;
         }
         else if $(value) && ! free in [ feature.attributes $(feature) ] 
@@ -206,6 +206,7 @@ local rule validate1 ( property )
         } 
         else if ! $(value)
         {
+            feature = [ ungrist $(property:G) ] ; # Ungrist for better error messages
             msg = "No value specified for feature '$(feature)'" ; 
         }
     }
@@ -314,7 +315,6 @@ rule select ( features * : properties * )
 rule change ( properties * : feature value )
 {
     local result ; 
-    feature = [ grist $(feature) ] ;
     for local p in $(properties)
     {
         if $(p:G) = $(feature)
@@ -467,7 +467,6 @@ local rule __test__ ( )
     import assert ;
     import "class" : new ;
     
-    validate gcc gcc-3.0.1 : $(test-space) ;
     validate <toolset>gcc  <toolset>gcc-3.0.1 : $(test-space) ;
     
     assert.true path-order $(test-space) debug <define>foo ;
@@ -550,7 +549,7 @@ local rule __test__ ( )
         : select include <bar> <toolset> : <include>a <toolset>gcc ;
     
     assert.result <toolset>kylix <include>a 
-        : change <toolset>gcc <include>a : toolset kylix ;
+        : change <toolset>gcc <include>a : <toolset> kylix ;
 
     pm = [ new property-map ] ;
     $(pm).insert <toolset>gcc : o ;

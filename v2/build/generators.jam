@@ -262,7 +262,7 @@ class generator
                  : $(self.source-types)
                  : $(self.target-types-and-names) 
                  : [ property.change $(self.requirements) 
-                     : toolset $(new-toolset-name)
+                     : <toolset> $(new-toolset-name)
                    ]
                ] ;
     }
