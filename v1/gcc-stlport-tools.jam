@@ -19,5 +19,41 @@ else
 SEARCH on stlport.jam = $(BOOST_BUILD_PATH) ;
 include stlport.jam ;
 
-# pthread is always needed when using the library (i.e. iostreams).
-flags gcc-stlport FINDLIBS <stlport-iostream>on : pthread ;
+# threading libraries always needed when using the library (i.e. iostreams).
+if $(UNIX)
+{
+    switch $(JAMUNAME)
+    {
+    case SunOS* :
+        {
+        flags gcc LINKFLAGS <stlport-iostream>on : -pthreads ;
+        flags gcc FINDLIBS <stlport-iostream>on : rt ;
+        }
+    case BeOS :
+        {
+        # BeOS has no threading options, don't set anything here.
+        }
+    case Darwin :
+        {
+        # MacOS X, doesn't need any threading options set
+        # -lpthread is linked to by default.
+        }
+    case *BSD :
+        {
+        flags gcc LINKFLAGS <stlport-iostream>on : -pthread ;
+        }
+    case IRIX :
+        {
+        # gcc on IRIX does not support multi-threading, don't set anything here.
+        }
+    case HP_UX :
+        {
+        # gcc on HP-UX does not support multi-threading, don't set anything here
+        }
+    case * :
+        {
+        flags gcc LINKFLAGS <stlport-iostream>on : -pthread ;
+        flags gcc FINDLIBS <stlport-iostream>on : rt ;
+        }
+    }
+}
