@@ -26,6 +26,26 @@
 #  
 #  - <name> tells the new name of the staged target. In this case, only
 #    one target can be specified in sources.
+#
+#  The stage rule can also traverse dependencies, for example to install a
+#  program an all required libraries. Two properties affect this.
+#
+#  - <traverse-dependencies>on tells that dependencies should be traversed.
+#    For each target in 'stage' sources, all sources to that target and all
+#    dependency properties are traversed. Sources and dependecy properties of
+#    those target are traversed recursively.
+#
+#  - <include-type>SOME_TYPE tells that targets of SOME_TYPE or a type derived
+#    from SOME_TYPE, should be included.
+#    If no such property is specified, then all found targets will be staged.
+#    Otherwise, only targets with types mentioned in <include-type> property
+#    will be included.
+#    
+#    Example usage::
+#
+#    stage dist : hello_world : 
+#        <traverse-dependencies>on <include-type>EXE <include-type>SHARED_LIB ;
+#
 
 import targets ;
 import "class" : new ;
@@ -35,6 +55,10 @@ import type : type ;
 import type ;
 import regex ;
 import generators ;
+import feature ;
+
+feature.feature <traverse-dependencies> : off on : incidental ;
+feature.feature <include-type> : : free incidental ;
 
 class stage-target-class : basic-target
 {
@@ -54,7 +78,13 @@ class stage-target-class : basic-target
         {
             errors.error "<name> property cannot be specified when staging several targets" ;
         }
-                        
+        
+        if [ $(property-set).get <traverse-dependencies> ] = "on"
+        {
+            source-targets = [ collect-targets $(source-targets) 
+              : [ $(property-set).get <include-type> ] ] ;
+        }
+                                
         local location = [ feature.get-values <location> : 
             [ $(property-set).raw ] ] ;
         if ! $(location)
@@ -115,10 +145,62 @@ class stage-target-class : basic-target
         return $(result) ;
     }   
     
+    rule collect-targets ( targets * : types-to-include * )
+    {
+        # Find subvariants
+        local s ;        
+        for local t in $(targets)
+        {
+            s += [ $(t).dg ] ;
+        }
+        s = [ sequence.unique $(s) ] ;
+        
+        local result = $(targets) ;
+        for local i in $(s)
+        {
+            result += [ $(i).all-referenced-targets ] ;
+        }
+        result = [ sequence.unique $(result) ] ;
+        
+        if $(types-to-include)
+        {
+            local result2 ;
+            for local r in $(result)
+            {
+                if [ include-type [ $(r).type ] : $(types-to-include) ]                  
+                {
+                    result2 += $(r) ;
+                }                
+            }           
+            return $(result2) ;
+        }
+        else
+        {
+            return $(result) ;        
+        }                                
+    }
+        
     # Don't do nothing.
     rule check-for-unused-sources ( result * : sources * )
     {        
     }
+    
+    # Returns true iff 'type' is subtype of some element of 'types-to-include'.
+    local rule include-type ( type : types-to-include * )
+    {
+        local found ;
+        while $(types-to-include) && ! $(found)
+        {
+            if [ type.is-subtype $(type) $(types-to-include[1]) ]
+            {
+                found = true ;
+            }            
+            types-to-include = $(types-to-include[2-]) ;
+        }
+        
+        return $(found) ;
+    }
+    
     
 }
 
