@@ -528,6 +528,11 @@ execcmd(
         /* Write command to bat file. */
 
         f = fopen( cmdtab[ slot ].tempfile, "w" );
+        if (!f)
+        {
+            printf( "failed to write command file!\n" );
+            exit( EXITBAD );
+        }
         fputs( string, f );
         fclose( f );
 
