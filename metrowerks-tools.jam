@@ -34,7 +34,7 @@ flags metrowerks LINKFLAGS <debug-symbols>on : -g ;
 flags metrowerks LINKFLAGS <target-type>$(SHARED_TYPES) : -shared ;
 flags metrowerks CFLAGS <optimization>off : -O0 ;
 flags metrowerks CFLAGS <optimization>speed : -opt full ;
-flags metrowerks CFLAGS <optimization>space : -O4,s intrinsics ;
+flags metrowerks CFLAGS <optimization>space : -O4,s "-opt intrinsics" ;
 flags metrowerks CFLAGS <inlining>off : -inline off ;
 flags metrowerks CFLAGS <inlining>on : -inline on ;
 flags metrowerks CFLAGS <inlining>full : -inline auto -inline level=8 ;
