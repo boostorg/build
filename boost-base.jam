@@ -964,15 +964,21 @@ rule remove-incompatible-builds ( requirements * : build-request * : target-name
                 {
                     local skipped = [ difference $(requested) : $(value) ] ;
                     
-                    ECHO $(target-name) requires $(p:G)$(value),
-                        skipping requested build configuration(s) $(p:G)$(skipped). ;
+                    if ! $(gNOWARN_INCOMPATIBLE_BUILDS)
+                    {
+                        ECHO $(target-name) requires $(p:G)$(value),
+                            skipping requested build configuration(s) $(p:G)$(skipped). ;
+                    }
                     
                     result += $(p:G)$(value) ;
                 }
                 else
                 {
-                    ECHO skipping $(target-name) due to incompatible
-                        build requirements $(p:G)$(value). ;
+                    if ! $(gNOWARN_INCOMPATIBLE_BUILDS)
+                    {
+                        ECHO skipping $(target-name) due to incompatible
+                            build requirements $(p:G)$(value). ;
+                    }
                     skip = true ;
                 }
             }
@@ -1848,6 +1854,8 @@ rule expand-target-subvariants ( target : local-build * : tools + : )
                 = [ expand-build-request $(toolset) $(variant) $(target)
                     : $(requirements) : $(build-request) ] ;
             
+            local gNOWARN_INCOMPATIBLE_BUILDS = TRUE ;
+            
             for local instance in $(expanded)
             {
                 local properties = [ split-path-at-grist $(instance) ] ;
@@ -1998,15 +2006,39 @@ rule build-command-file ( command : sources * )
 }
 
 # command-file-dump-1st: dump the first source path into the target
-actions quietly command-file-dump-1st
+if $(NT)
 {
-    echo "$(>)" > "$(<)"
+# the windows command shell has the anyoing effect of appending whitespace
+# when redirecting with > and >>
+    actions quietly command-file-dump-1st
+    {
+        echo "$(>)">"$(<)"
+    }
+}
+else
+{
+    actions quietly command-file-dump-1st
+    {
+        echo "$(>)" > "$(<)"
+    }
 }
 
 # command-file-dump: dump the remaining source paths into the target
-actions quietly piecemeal command-file-dump-rest
+if $(NT)
 {
-    echo "$(>)" >> "$(<)"
+# the windows command shell has the anyoing effect of appending whitespace
+# when redirecting with > and >>
+    actions quietly piecemeal command-file-dump-rest
+    {
+        echo "$(>)">>"$(<)"
+    }
+}
+else
+{
+    actions quietly piecemeal command-file-dump-rest
+    {
+        echo "$(>)" >> "$(<)"
+    }
 }
 
 # Clean up the temporary COMMAND-FILE used to build TARGETS.
@@ -2357,8 +2389,9 @@ rule target-path-of ( target-ref )
     {
         path = [ join @$(PROJECT) [ simplify-path-tokens [ top-relative-tokens $(path) ] ] : / ] ;
     }
-    path = $(path)/$(target-ref:D=) ;
-    return $(path) ;
+    local grist = $(target-ref:G) ;
+    path = $(path)/$(target-ref:D=:G=) ;
+    return $(path:G=$(grist)) ;
 }
 
 # Common rules for generating a single stage tag based on the
@@ -2416,7 +2449,7 @@ rule common-stage-tag ( toolset variant : properties * )
         case *mingw* : toolset-tag += mgw ;
         case *mipspro* : toolset-tag += mp ;
         case *msvc* : 
-        { 
+        {
             toolset-tag += vc6 ;
             if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
         }
@@ -2424,7 +2457,7 @@ rule common-stage-tag ( toolset variant : properties * )
         case *tru64cxx* : toolset-tag += tru ;
         case *vacpp* : toolset-tag += xlc ;
         case *vc7* : 
-        { 
+        {
             toolset-tag += vc ;
             if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
         }
@@ -2437,7 +2470,7 @@ rule common-stage-tag ( toolset variant : properties * )
     
     if $(tags)
     {
-        return $(properties) <tag><prefix>-$(tags:J=-) ;
+        return $(properties) <*><*><tag><prefix>-$(tags:J=-) ;
     }
     else
     {
@@ -2543,4 +2576,42 @@ rule import ( modules + )
             $(n).included = true ;
         }
     }
+}
+
+# declare a project's installable sources (raw sources or built targets)
+rule install ( name type : sources + : options * )
+{
+    if $(gINSTALL_SOURCES) && ! $(name) in $(gINSTALL_EXCLUSIONS)
+    {
+        local result ;
+        for local source in $(sources)
+        {
+            result += [ target-path-of $(source) ] ;
+        }
+        if ! $(result) in $(gINSTALL_SOURCES($(type)))
+        {
+            gINSTALL_SOURCES($(type)) += $(result) ;
+        }
+        return $(result) ;
+    }
+}
+
+#
+rule install-subinclude ( jamfiles + : options * )
+{
+    local gINSTALL_SOURCES = TRUE ;
+    local gIN_LIB_INCLUDE = TRUE ;
+    local gINSTALL_EXCLUSIONS = [ get-values <exclude> : $(options) ] ;
+    
+    for local jamfile in $(jamfiles)
+    {
+      local sub-jamfile = [ relative-path $(jamfile) ] ;
+      dependent-include $(sub-jamfile) ;
+    }
+}
+
+# get project installation sources of a given type
+rule install-sources ( type )
+{
+    return $(gINSTALL_SOURCES($(type))) ;
 }
