@@ -28,6 +28,9 @@ if $(NT)
 {
     PYTHON_ROOT ?= c:/tools/python ;
     
+    # Reconstitute any paths split due to embedded spaces.
+    PYTHON_ROOT = $(PYTHON_ROOT:J=" ") ;
+    
     PYTHON_LIB_PATH ?= $(PYTHON_ROOT)/libs $(PYTHON_ROOT)/PCBuild ;
     PYTHON_STDLIB_PATH ?= $(PYTHON_ROOT)/Lib ;
 
@@ -60,6 +63,7 @@ else if $(UNIX)
 {
     PYTHON_VERSION ?= 1.5 ;
     PYTHON_ROOT ?= /usr/local ;
+    PYTHON_ROOT = $(PYTHON_ROOT:J=" ") ;
     PYTHON_INCLUDES ?= $(PYTHON_ROOT)/include/python$(PYTHON_VERSION) ;
     PYTHON_LIB_PATH ?= $(PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config ;
     PYTHON_STDLIB_PATH ?= $(PYTHON_ROOT)/lib/python$(PYTHON_VERSION) ;
