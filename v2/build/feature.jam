@@ -350,6 +350,7 @@ local rule expand-subfeatures-aux (
     {
         local full-name = <$(ungristed-feature)-$(s)> ;
         if ! optional in $($(full-name).attributes)
+          && [ is-subfeature-of $(result[1]) $(full-name) ]
         {
             if ! $(full-name) in $(result:G)
             {
