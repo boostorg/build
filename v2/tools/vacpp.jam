@@ -72,27 +72,24 @@ flags vacpp FINDLIBS <find-shared-library> ;
 flags vacpp FINDLIBS <find-static-library> ;
 
 # Select the compiler name according to the threading model.
-# flags vacpp VA_C_COMPILER  <threading>single : xlc   ;
-# flags vacpp VA_C_COMPILER  <threading>multi : xlc_r ;
-# flags vacpp VA_CXX_COMPILER <threading>single : xlC   ;
-# flags vacpp VA_CXX_COMPILER <threading>multi : xlC_r ;
+flags vacpp VA_C_COMPILER  <threading>single : xlc   ;
+flags vacpp VA_C_COMPILER  <threading>multi : xlc_r ;
+flags vacpp VA_CXX_COMPILER <threading>single : xlC   ;
+flags vacpp VA_CXX_COMPILER <threading>multi : xlC_r ;
 
 actions vacpp.link bind NEEDLIBS
 {
-#    $(VA_CXX_COMPILER) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
-    xlC_r $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    $(VA_CXX_COMPILER) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
 }
 
 actions vacpp.compile.c
 {    
-#    $(VA_C_COMPILER) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
-    xlc_r -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(VA_C_COMPILER) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 actions vacpp.compile.c++
 {
-#    $(VA_CXX_COMPILER) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
-    xlC_r -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(VA_CXX_COMPILER) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 actions updated together piecemeal vacpp.archive
