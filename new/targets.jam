@@ -412,6 +412,7 @@ rule main-target ( name : project )
         local result ;
         for local p in $(all-property-sets)
         {
+            p = [ $(p).expand-composites ] ;
             p = [ $(p).add-defaults ] ;
             local r = [ generate-really $(p) ] ;
             usage-requirements = [ $(usage-requirements).add $(r[1]) ] ;

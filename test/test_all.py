@@ -99,6 +99,7 @@ tests = [ "project_test1",
           "c_file",
           "inline",
           "conditionals2",
+          "property_expansion",
 	  ]
 
 if os.name == 'posix':

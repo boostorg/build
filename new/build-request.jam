@@ -32,9 +32,7 @@ rule expand-no-defaults ( property-sets * )
     # Now combine all of the expanded property-sets
     local product = [ x-product $(expanded-property-sets) : $(feature-space) ] ;
     
-    return [ 
-      sequence.transform apply-to-property-set feature.expand-composites
-        : $(product) ] ;
+    return $(product) ;
 }
 
 # implementaiton of x-product, below
