@@ -41,6 +41,23 @@ free-feature dllversion ; # <dllversion>1.27.0 (for use with soname-ing)
 # Can the target participate in a shared library?
 feature shared-linkable : false true ;
 
+# Type of CPU architecture to compile for.
+feature architecture :
+    # The default is the machine we are on, i.e. nothing
+    native
+    # x86 and compatible
+    i386 i486 i586 i686 k6
+    # Sparc
+    v7 cypress v8 supersparc sparclite hypersparc sparclite86x
+    f930 f934 sparclet tsc701 v9 ultrasparc
+    # RS/6000 & PowerPC
+    rios rios1 rsc rios2 rs64a
+    601 602 603 603e 604 604e 620 630 740 750
+    power power2 powerpc
+    403 505 801 821 823 860
+    power-common
+    ;
+
 gLINK_COMPATIBLE = <shared-linkable>true <target-type> <inlining> ;
 
 gALWAYS_RELEVANT = <target-type> ;
@@ -64,6 +81,8 @@ COMMON_PROPERTIES ?=
     # support - see borland-tools.jam 
     <borland><wide-character-support>off
     "<cwpro8><cxxflags>-iso_templates on"
+    
+    <architecture>native
     ;
     
 variant common :
