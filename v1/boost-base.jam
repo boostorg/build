@@ -1442,21 +1442,19 @@ rule depend-on-dlls
     gRUN_LD_LIBRARY_PATH($(<)) = [ unique $(gRUN_LD_LIBRARY_PATH($(<))) $(gRUN_LD_LIBRARY_PATH($(>))) ] ;
 }
 
-# subvariant-target target : subvariant-id build-properties : toolset variant
-#
 # Given target, a main target name gristed with $(SOURCE_GRIST), generate build
 # instructions for a subvariant target using the given toolset, variant, etc.
 #
 # RETURNS: the a list of target names for the files built by the subvariant. If
 # the target is a library, the first filename is the one that should be linked
 # into a dependent target.
-rule subvariant-target 
+rule subvariant-target ( target : subvariant-id build-properties * : toolset variant )
 {
   # SOURCE_GRIST identifies the subproject directory; TARGET_GRIST will identify
   # the target and subvariant, since unique versions of files will be built for
   # that combination.
-  local TARGET_GRIST = [ join-path $(SOURCE_GRIST) $(<:G=) $(>[1]) ] ;
-  local subvariant = $(<:G=$(TARGET_GRIST)) ;
+  local TARGET_GRIST = [ join-path $(SOURCE_GRIST) $(target:G=) $(subvariant-id) ] ;
+  local subvariant = $(target:G=$(TARGET_GRIST)) ;
 
   # Do nothing if build instructions and dependencies for this target have
   # already been generated. 
@@ -1464,40 +1462,43 @@ rule subvariant-target
   {
     gDECLARED_TARGETS += $(TARGET_GRIST) ;
 
-    local target-type = $(gTARGET_TYPE($(<))) ;
+    local target-type = $(gTARGET_TYPE($(target))) ;
     if ! $(target-type)
     {
-        EXIT unknown target type for $(<) ;
+        EXIT unknown target type for $(target) ;
     }
     
     # LOCATE_TARGET affects where built targets are generated. We move it
     # relative to the default location based on the subvariant 
     local LOCATE_TARGET
-      = [ join-path $(LOCATE_TARGET) $(BIN_DIRECTORY) $(<:G=) $(>[1]) ] ;
+      = [ join-path $(LOCATE_TARGET) $(BIN_DIRECTORY) $(target:G=) $(subvariant-id) ] ;
 
     local target-files = [ FAppendSuffix $(subvariant) : $(SUF$(target-type)) ] ;
     if $(gNAME_ADJUST($(target-type)))
     {
-        target-files = [ $(gNAME_ADJUST($(target-type))) $(target-files) : $(2) : $(3) ] ;
+        target-files = [
+          $(gNAME_ADJUST($(target-type))) $(target-files)
+          : $(subvariant-id) $(build-properties)
+            : $(toolset) $(variant) ] ;
     }
 
-    gTARGET_SUBVARIANT($(target-files)) = $(<) ;
+    gTARGET_SUBVARIANT($(target-files)) = $(target) ;
     
     gTARGET_FILES($(subvariant)) = $(target-files) ;
     gTARGET_FILES($(<)) += $(target-files) ;
 
     # Remember the path from the build root to the subvariant directory
-    gSUBVARIANT_PATH($(subvariant)) = $(>[1]) ;
+    gSUBVARIANT_PATH($(subvariant)) = $(subvariant-id) ;
     
-    declare-fake-targets $(<) : $(target-files) ;
+    declare-fake-targets $(target) : $(target-files) ;
 
     # set up gBUILD_PROPERTIES for include-tools (below)
-    local gBUILD_PROPERTIES = $(>[2-]) ;
+    local gBUILD_PROPERTIES = $(build-properties) ;
 
     # Include the toolset specification. This will set up the global flags
     # variables in a way appropriate to this build. 
     
-    include-tools $(3[1]) ;
+    include-tools $(toolset) ;
 
     # headers should be identified specific to the target, since search paths
     # may differ for different subvariants. The same header name or relative
@@ -1507,10 +1508,9 @@ rule subvariant-target
     # transfer target variables to the target file.
     set-target-variables $(target-files) ;
 
-    if $(gTARGET_LIBS($(<))) || $(gTARGET_DLLS($(<)))
+    if $(gTARGET_LIBS($(target))) || $(gTARGET_DLLS($(target)))
     {
-        local libs ;
-        local dlls ;
+        local libs dlls ;
         {
             # Protect target variables against modification while lib dependencies
             # are built. They will be made empty here, and restored when this scope exits
@@ -1520,9 +1520,11 @@ rule subvariant-target
             local simple-properties = $(gBUILD_PROPERTIES) ;
             segregate-free-properties simple-properties ;
 
-            # generate library build instructionsn
-            libs = [ link-libraries $(gTARGET_LIBS($(<))) : $(3) : $(simple-properties) ] ;
-            dlls = [ link-libraries $(gTARGET_DLLS($(<))) : $(3) : $(simple-properties) ] ;
+            # generate library build instructions
+            libs = [ link-libraries $(gTARGET_LIBS($(target)))
+                    : $(toolset) $(variant) : $(simple-properties) ] ;
+            dlls = [ link-libraries $(gTARGET_DLLS($(target)))
+                    : $(toolset) $(variant) : $(simple-properties) ] ;
         }
         depend-on-libraries $(target-files) : $(libs) ;
         depend-on-dlls $(target-files) : $(dlls) ;
