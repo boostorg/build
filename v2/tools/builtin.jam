@@ -46,7 +46,7 @@ feature rtti : on off : link-incompatible propagated ;
 feature exception-handling : on off : propagated ;
 feature debug-symbols : on off : propagated ;
 feature define : : free ;
-feature "include" : : free path ;
+feature "include" : : free path order-sensitive ;
 feature cflags : : free ;
 feature cxxflags : : free ;
 feature linkflags : : free ;
@@ -74,9 +74,9 @@ feature dependency : : free dependency incidental ;
 feature implicit-dependency : : free dependency incidental ;
 
 feature library : : free dependency ;
-feature find-shared-library : : free ;
-feature find-static-library : : free ;
-feature library-path : : free path ;
+feature find-shared-library : : free order-sensitive ;
+feature find-static-library : : free order-sensitive ;
+feature library-path : : free path order-sensitive ;
 # Internal feature.
 feature library-file : : free dependency ;
 

@@ -29,6 +29,7 @@ local rule setup ( )
       propagated 
       link-incompatible
       subfeature
+      order-sensitive
       ;
 
     .all-features = ;
