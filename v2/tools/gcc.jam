@@ -32,7 +32,7 @@ rule init ( version ? name ? )
 {
     common.check-init-parameters gcc : version $(version) ;
         
-    name ?= "gcc" ;
+    name ?= "g++" ;
     
     local condition = <toolset>gcc-$(version) ;
     condition ?= <toolset>gcc ;
