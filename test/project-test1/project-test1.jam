@@ -1,6 +1,7 @@
 import project ;
 import targets ;
 import assert ;
+import project-root ;
 
 project.load "." ;
 
