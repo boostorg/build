@@ -472,11 +472,20 @@ OSFULL = $(OS)$(OSVER)$(OSPLAT) $(OS)$(OSPLAT) $(OS)$(OSVER) $(OS) ;
 # they are correctly interpreted as a single entry instead of as a list if
 # they happen to contain spaces.
 #
+# This also remembers the first(global) value so that it can be reset
+# when cleared, but used again.
+#
 rule set-as-singleton ( variables + )
 {
     for local variable in $(variables)
     {
         $(variable) = $($(variable):J=" ") ;
+        if ! $(gSINGLETON_SET($(variable)))
+        {
+            gSINGLETON($(variable)) = $($(variable)) ;
+            gSINGLETON_SET($(variable)) = true ;
+        }
+        $(variable) ?= $(gSINGLETON($(variable))) ;
     }
 }
 
