@@ -7,6 +7,11 @@
 <chapter id="bbv2.tutorial" status="draft">
   <title>Tutorial</title>
 
+<!--   You can't launch into this stuff without describing how to configure -->
+<!--   Boost.Build... unless of course you think it's likely to work with -->
+<!--   no configuration.  But even if you do you have to tell people how to -->
+<!--   configure their installation in case it doesn't work. -->
+
   <section id="bbv2.tutorial.hello">
     <title>Hello, world</title>
 
@@ -21,10 +26,10 @@ exe hello : hello.cpp ;
 
       Even with this simple setup, you can do some interesting
       things. First of all, just invoking <command>bjam</command> will
-      build the debug variant of the <command>hello</command>
+      build the debug variant of the <filename>hello</filename>>
       executable by compiling and
       linking <filename>hello.cpp</filename>.  Now, to build the
-      release variant of <command>hello</command>, invoke
+      release variant of <filename>hello</filename>, invoke 
 
 <screen>
 bjam release
@@ -43,15 +48,19 @@ exe hello2 : hello.cpp ;
       Now we can build both the debug and release variants of our
       project:
 
+<!--       The phrasing above misleadingly makes it seem as though adding -->
+<!--       this line makes it possible to build two variants, whereas -->
+<!--       they're totally unrelated. -->
+
 <screen>
 bjam debug release
 </screen>
 
-      Note that two variants of <command>hello2</command> are linked.
+      Note that two variants of <filename>hello2</filename> are linked.
       Since we have already built both variants
-      of <command>hello</command>, hello.cpp won't be recompiled;
+      of <filename>hello</filename>, hello.cpp won't be recompiled;
       instead the existing object files will just be linked into the
-      corresponding variants of <command>hello2</command>. Now 
+      corresponding variants of <filename>hello2</filename>. Now 
       let's remove all the built products:
 
 <screen>
@@ -60,7 +69,10 @@ bjam --clean debug release
 
       It's also possible to build or clean specific targets.  The
       following two commands, respectively, build or clean only the
-      debug version of <command>hello2</command>.
+      debug version of <filename>hello2</filename>.
+
+<!-- You can't say that without first telling people that the debug
+variant is the default one, or you just sow confusion. -->
 
 <screen>
 bjam hello2
@@ -77,8 +89,8 @@ bjam --clean hello2
       debug and release variants, or single- and multi-threaded
       builds, Boost.Build uses <firstterm>features</firstterm> with
       associated <firstterm>values</firstterm>.  For
-      example, the "debug-symbols" feature can have a value of "on" or
-      "off".  A <firstterm>property</firstterm> is just a (feature,
+      example, the <code>debug-symbols</code> feature can have a value of <code>on</code> or
+      <code>off</code>.  A <firstterm>property</firstterm> is just a (feature,
       value) pair.  When a user initiates a build, Boost.Build
       automatically translates the requested properties into appropriate
       command-line flags for invoking toolset components like compilers
@@ -86,7 +98,7 @@ bjam --clean hello2
 
     <para>There are many built-in features that can be combined to
       produce arbitrary build configurations.  The following command
-      builds the project's &quot;release&quot; variant with inlining
+      builds the project's <code>release</code> variant with inlining
       disabled and debug symbols enabled:
 
 <screen>
@@ -101,9 +113,9 @@ bjam release inlining=off debug-symbols=on
 </screen>
 </para>
 
-    <para>The "release" and "debug" that we've seen
+    <para>The <option>release</option> and <option>debug</option> that we've seen
       in <command>bjam</command> invocations are just a shorthand way to
-      specify values of the "variant" feature.  For example, the command
+      specify values of the <varname>variant</varname> feature.  For example, the command
       above could also have been written this way:
 
       <screen>
@@ -111,15 +123,16 @@ bjam variant=release inlining=off debug-symbols=on
       </screen>
     </para>
 
-    <para>  &quot;variant&quot; is so commonly-used that it has been given
-      special status as an <firstterm>implicit</firstterm> feature
-      &#x2014; Boost.Build will deduce the its identity just from the name
-      of one of its values.  
+    <para> <varname>variant</varname> is so commonly-used that it has
+      been given special status as an <firstterm>implicit</firstterm>
+      feature&#x2014;Boost.Build will deduce the its identity just
+      from the name of one of its values.
     </para>
 
     <para>
-      A complete description of features can be found
-      <link linkend="bbv2.reference.features">here</link>. 
+      A complete description of features can be found in <xref linkend="bbv2.reference.features"/>.
+<!--       <link linkend="bbv2.reference.features">here</link>.  -->
+<!-- You can't use "here" style links because they don't work in printed documentation. -->
     </para>
 
 
@@ -128,7 +141,7 @@ bjam variant=release inlining=off debug-symbols=on
 
       <para>      
         The set of properties specified in the command line constitute a
-        <firstterm>build request</firstterm> &#x2014; a description of
+        <firstterm>build request</firstterm>&#x2014;a description of
         the desired properties for building the requested targets (or,
         if no targets were explicitly requested, the project in the
         current directory).  The <emphasis>actual</emphasis> properties
@@ -152,16 +165,24 @@ exe hello
     ;
 </programlisting>
 
+<!-- Can those requirements be written as
+     "include=/home/ghost/Work/boost threading=multi"?  If so, we
+     should do everything in the manual, or at the very least in the
+     tutorial, that way.  If not, why not? -->
+
       <para> 
         When <filename>hello</filename> is built, the two
         requirements specified above will normally always be present.
         If the build request given on the <command>bjam</command>
         command-line explictly contradicts a target's requirements,
         the command-line usually overrides (or, in the case of
-        &quot;free&quot; feautures like <code>&lt;include&gt;</code>
-        <footnote>See <xref
-        linkend="bbv2.reference.features.attributes"/></footnote>,
-        augments) the target requirements.  
+        &ldquo;free&rdquo; features like <varname>&lt;include&gt;</varname>,
+        <footnote>
+<para>
+See <xref linkend="bbv2.reference.features.attributes"/>
+        augments) the target requirements.
+</para>
+</footnote>
 <!--
 However, when a
         contradiction of a target's requrements involves certain
@@ -169,6 +190,11 @@ However, when a
         will be skipped.  See <xref linkend=
         "bbv2.reference.variants.compat"/> for more information.
 -->
+
+<!--         Don't leave flotsam in the document/code.  If the above is wrong, take -->
+<!--         it out.  That's what source control is for. -->
+
+
       </para>
 
     </section>
@@ -195,7 +221,7 @@ exe hello2 : hello.cpp ;
 </programlisting>
 
         The effect would be as if we specified the same requirement for
-        both <command>hello</command> and <command>hello2</command>.
+        both <filename>hello</filename> and <filename>hello2</filename>.
       </para>
     </section>
   </section>
@@ -205,7 +231,7 @@ exe hello2 : hello.cpp ;
 
     <para>So far we've only considered examples with one project
       (i.e. with one <filename>Jamfile</filename>). A typical large
-      software project would be composed of sub-projects organized
+      codebase would be composed of many projects organized
       into a tree. The top of the tree is called the
       <firstterm>project root</firstterm>.  Besides a
       <filename>Jamfile</filename>, the project root directory
@@ -214,6 +240,9 @@ exe hello2 : hello.cpp ;
       project, rooted in the nearest parent directory containing a
       <filename>Jamfile</filename>. For example, in the following
       directory layout:
+
+<!--       Shouldn't we be introducing Jamroot here instead of -->
+<!--       project-root.jam?  It certainly is simpler. -->
 
 <screen>
 top/ 
@@ -256,11 +285,15 @@ top/
 
       in its requirements, then all of its sub-projects will have it
       in their requirements, too.  Of course, any project can add
-      additional includes. <footnote>Many features will be overridden,
+      include paths to those specified by its parents. <footnote>
+      <para>Many
+      features will be overridden,
       rather than added-to, in sub-projects.  See <xref
       linkend="bbv2.reference.features.attributes"/> for more
-      information</footnote> More details can be found in the section
-      on <link linkend= "bbv2.advanced.projects">projects</link>.
+      information</para>
+    </footnote> 
+    More details can be found in 
+      <xref linkend= "bbv2.advanced.projects"/>.
     </para>
 
     <para>
@@ -286,11 +319,17 @@ build-project src ;
   <section id="bbv2.tutorial.libs">
     <title>Libraries and Dependent Targets</title>
 
-    <comment>TODO: need to make this
-      section consistent with "examples-v2/libraries".</comment>
+    <remark>TODO: need to make this
+      section consistent with "examples-v2/libraries".</remark>
+
+<!-- 
+     What does that mean?  Either make that change (much preferred),
+     or leave a comment that someone else can understand and use to
+     fix this section (only an option for the lazy ;->).
+-->
 
     <para>
-      Targets that are "needed" by other targets are called
+      Targets that are &#x201C;needed&#x201D; by other targets are called
       <firstterm>dependencies</firstterm> of those other targets.  The
       targets that need the other targets are called
       <firstterm>dependent</firstterm> targets.
@@ -313,30 +352,41 @@ exe app : app.cpp ../util/foo//bar ;
 
       While <code>app.cpp</code> refers to a regular source file,
       <code>../util/foo//bar</code> is a reference to another target:
-      a library "bar" declared in the <filename>Jamfile</filename> at
+      a library <filename>bar</filename> declared in the <filename>Jamfile</filename> at
       <filename>../util/foo</filename>.  When linking the
-      <command>app</command> executable, the appropriate version of
+      <filename>app</filename> executable, the appropriate version of
       <code>bar</code> will be built and linked in. What do we mean by
-      "appropriate"? For example, suppose we build "app" with:
+      &#x201C;appropriate&#x201D;? For example, suppose we build <filename>app</filename> with:
 
 <screen>
 bjam app optimization=full cxxflags=-w-8080
 </screen>
 
+<!-- I think it's a bad idea to expose nonportable features like
+     cxxflags this early in the documentation.  It will tend to
+     encourage people who aren't familiar with Boost.Build to use them
+     when it could be avoided. I suggest using a portable feature like
+     <include> or <define> -->
+
       Which properties must be used to build <code>foo</code>? The
       answer is that some properties are
-      <firstterm>propagated</firstterm> &#x2014; Boost.Build attempts to
+      <firstterm>propagated</firstterm>&#x2014;Boost.Build attempts to
       use dependencies with the same value of propagated features. The
-      &lt;optimization&gt; feature is propagated, so both "app" and
-      "foo" will be compiled with full optimization. But
-      &lt;cxxflags&gt; feature is not propagated: its value will be
-      added as-is to compiler flags for "a.cpp", but won't affect
-      "foo". There is still a couple of problems. First, the library
-      probably has some headers which must be used when compiling
-      "app.cpp". We could use requirements on "app" to add those
-      includes, but then this work will be repeated for all programs
-      which use "foo". A better solution is to modify
-      util/foo/Jamfilie in this way:
+      <varname>&lt;optimization&gt;</varname> feature is propagated, so both <filename>app</filename> and
+      <filename>foo</filename> will be compiled with full optimization. But
+      <varname>&lt;cxxflags&gt;</varname> is not propagated: its value will be
+      added as-is to the compiler flags for <filename>a.cpp</filename>, but won't affect
+      <filename>foo</filename>.  There are still a couple of problems.  First, the library
+      probably has some headers that must be used when compiling
+      <filename>app.cpp</filename>. We could manually add the neccessary
+      <code>#include</code> paths to <filename>app</filename>'s
+      requirements as values of the
+      <varname>&lt;include&gt;</varname> feature, but then this work will be repeated for all programs
+      that use <filename>foo</filename>. A better solution is to modify
+      <filename>util/foo/Jamfile</filename> in this way:
+
+      <!-- Look up the rules for using "that" vs. "which." It's "Janfile,"
+           not "Jamfilie." Take care to avoid silly typos. -->
 
 <programlisting>
 project 
@@ -346,24 +396,44 @@ project
 lib foo : foo.cpp ;
 </programlisting>
 
-      Usage requirements are requirements which are applied to
-      dependents. In this case, &lt;include&gt; will be applied to all
-      targets which use "foo" &#x2014; i.e. targets which have "foo"
-      either in sources or in dependency properties. You'd need to
-      specify usage requirements only once, and programs which use "foo"
-      don't have to care about include paths any longer. Or course, the
-      path will be interpreted relatively to "util/foo" and will be
-      adjusted according to the <command>bjam</command>s invocation
-      directory. For
-      example, if building from project root, the final compiler's
+      Usage requirements are applied not to the target being declared
+      but to its
+      dependents. In this case, <literal>&lt;include&gt;.</literal> will be applied to all
+      targets that use <filename>foo</filename>&#x2014;i.e. targets that have <filename>foo</filename>
+      either in their sources or in their dependency properties. 
+      <!-- You can't use the term "dependency properties" without first
+      defining it!  This sort of thing happens over and over.  I
+      suggest just saying "all targets that directly depend on foo." -->
+      You'd need to
+      specify usage requirements only once, and programs that use <filename>foo</filename>
+      don't have to care about include paths any longer. 
+      <!-- Point of good writing: programs are inanimate and don't
+           "care" about include paths.  I suggest striking the previous
+           sentence anyway as it's redundant. -->
+      Of course, the
+      path will be interpreted relatively to <filename>util/foo</filename> and will be
+      adjusted according to the <command>bjam</command> invocation
+      directory. 
+      <!-- You need to explain this path adjustment in the first place
+           you introduce #include paths, probably with a "Tip"
+           element.  It applies to all relative paths in
+           Boost.Build, some of which you've covered. -->
+      For
+      example, if building from project root, the final compiler
       command line will contain <option>-Ilib/foo</option>.
     </para>
 
-    <para>The second problem is that we hardcode the path to library's
-      Jamfile. Imagine it's hardcoded in 20 different places and we
-      change the directory layout. The solution is to use project ids
-      &#x2014; symbolic names, not tied to directory layout. First, we
-      assign a project id to Jamfile in util/foo:</para>
+    <para>
+    The second problem <!-- by this point I've completely forgotten
+    that there was a first problem. I suggest starting the a new
+    paragraph for the first one, and describing these as improvements
+    we can make, rather than problems. -->
+    is that we hardcode the path to library's Jamfile. Imagine it's
+    hardcoded in 20 different places and we change the directory
+    layout. The solution is to use project ids &#x2014;symbolic names
+    not tied to directory layout. First, we assign a project id to the
+    project in <filename>util/foo:</filename>
+      </para>
 
 <programlisting>
 project foo
@@ -379,18 +449,38 @@ project foo
 exe app : app.cpp /foo//bar ;
 </programlisting>
 
-      The "/foo//bar" syntax is used to refer to target "foo" in
-      project with global id "/foo" (the slash is used to specify global
-      id). This way, users of "foo" do not depend on its location, only
-      on id, which is supposedly stable. The only thing left, it to make
-      sure that src/Jamfile knows the project id that it uses. We add to
-      top/Jamfile the following line:
+<!-- It is counterintuitive and confusing to assign a top-level
+     absolute project ID to this subproject.  It should be something
+     like /myproject/foo.
+
+     In fact I'm beginning to
+     wonder what the point of labelling the project root with
+     project-root.jam or Jamroot is.  See my jamboost post. -DWA
+-->
+
+      The <filename>/foo//bar</filename> syntax is used to refer to the target <filename>bar</filename> in
+      <!-- I assume I was right to change foo into bar here.  Please
+           take care not to make errors like this one; it leaves the
+           reader mightily confused about what's really going on if he
+           assumes the documentation is correct. -->
+      the project with global id <filename>/foo</filename> (the slash 
+      is used to specify global id). 
+      <!-- as opposed to what?  There's no such thing as a "local" id
+           is there? This parenthetical remark is more confusing than
+           enlightening. It gives the impression that we could leave
+           the slash off and still have a project id, but a path
+           without a preceding slash always specifies a file path
+           (right?) -->
+      This way, users of <filename>foo</filename> do not depend on its location, only
+      on id, which is supposedly stable. The only thing left is to make
+      sure that <filename>src/Jamfile</filename> knows the project id that it uses. We add to
+      <filename>top/Jamfile</filename> the following line:
 
 <programlisting>
 use-project /foo : util/foo ;
 </programlisting>
 
-      Now, all projects can refer to "foo" using the symbolic
+      Now, all projects can refer to <filename>foo</filename> using the symbolic
       name. If the library is moved somewhere, only a single line in the
       top-level Jamfile should be changed.
     </para>
@@ -399,10 +489,10 @@ use-project /foo : util/foo ;
   <section id="bbv2.tutorial.depends">
     <title>Library dependencies</title>
 
-    <para>The previous example was simple. Often, there are long chains
-      of dependencies between libraries. The main application is a thin
-      wrapper on top of library with core logic, which uses library of
-      utility functions, which uses boost filesystem library.
+    <para>The previous example was simple, but there are often long chains
+      of dependencies between libraries. For example, the main application might be a thin
+      wrapper on top of library with core logic, which uses another library of
+      utility functions, which in turn uses the boost filesystem library.
       Expressing these dependencies is straightforward:</para>
 
 <programlisting>
@@ -411,33 +501,72 @@ lib core : core.cpp utils ;
 exe app : app.cpp core ;
 </programlisting>
 
+    <!-- Point of style: the "ask a question and then answer it" style
+         you frequently use just complication.  Use fewer words;
+         just come out and say what you mean.
+
+         Also, you can't have a "First,..." without a "Second,..." or
+         a "Next,...." Don't underestimate how much confusion that can
+         add for the reader.
+
+         Also, "built just as written, and everything will work" is
+         vague and confusing.
+
+         This information might be too low-level for the main flow of
+         the tutorial.  It also might turn out to be specific to some
+         particular platforms.  It would be much better to handle it
+         in a callout box if you feel compelled to mention it here.
+
+         If you want to keep the info here, the whole paragraph needs
+         to be rewritten.  You could say all this (including the
+         one-sentence paragraph that follows) in one or two sentences.
+
+           "When core is built as a dynamic library, it is linked
+           directly into utils.  Static libraries can't link to other
+           libraries, so when core is built as a static library, its
+           dependency on utils is passed along to core's dependents,
+           causing app to be linked with both core and utils."
+
+         The material here probably doesn't warrant a whole section of
+         the document.  "Libraries and Dependent Targets" isn't easy
+         to distinguish from "Library Dependencies" anyway.  Merge the
+         two.
+
+         You *definitely* can't talk about "returning back" library
+         targets.  That assumes the reader has a mental model of the
+         Boost.Build internals!
+
+    -->
+
     <para>So, what's the reason to even mention this case? First,
       because it's a bit more complex that it seems. When using shared
       linking, libraries are build just as written, and everything will
       work. However, what happens with static linking? It's not
       possible to include another library in static library.
       Boost.Build solves this problem by returning back library targets
-      which appear as sources for static libraries. In this case, if
-      everything is built statically, the "app" target will link not
-      only "core" library, but also "utils" and
-      "/boost/filesystem//fs".</para>
+      that appear as sources for static libraries. In this case, if
+      everything is built statically, the <filename>app</filename> target will link not
+      only <filename>core</filename> library, but also <filename>utils</filename> and
+      <filename>/boost/filesystem//fs</filename>.</para>
 
     <para>So, the net result is that the above code will work for both
       static linking and for shared linking.</para>
 
-    <para>Sometimes, you want all applications in some project to link
-      to a certain library. Putting the library in sources of all
-      targets is possible, but verbose. You can do better by using the
-      &lt;source&gt; property. For example, if "/boost/filesystem//fs"
+<tip>
+    <para>If you want all applications in some project to link
+      to a certain library, you can avoid having to specify it directly the sources of every
+      target by using the
+      <varname>&lt;source&gt;</varname> property. For example, if <filename>/boost/filesystem//fs</filename>
       should be linked to all applications in your project, you can add
-      &lt;source&gt;/boost/filesystem//fs to requirements of the
-      project, like this:</para>
+      <code>&lt;source&gt;/boost/filesystem//fs</code> to the project's requirements, like this:</para>
 
 <programlisting>
 project 
    : requirements &lt;source&gt;/boost/filesystem//fs
    ;   
 </programlisting>
+</tip>
+
     </section>
 
   <section id="bbv2.tutorial.linkage">
@@ -445,84 +574,122 @@ project
 
     <para>While the
       previous section explained how to create and use libraries, it
-      omitted one important detail. Libraries can be either
+      omitted one important detail. 
+      <!-- The foregoing sentence adds nothing -->
+      Libraries can be either
       <emphasis>static</emphasis>, which means they are included in executable
-      files which use them, or <emphasis>shared</emphasis> (a.k.a.
+      files that use them, or <emphasis>shared</emphasis> (a.k.a.
       <emphasis>dynamic</emphasis>), which are only referred to from executables,
       and must be available at run time. Boost.Build can work with both
-      types. By default, all libraries are shared. This is much more
+      types. 
+    <!-- This section seems to be introducing the idea of static and
+         shared libraries, but you just spent a couple of paragraphs
+         talking about them in the previous section!  Clearly that is
+         not "one important detail that was omitted." Please take care
+         that terms are defined and concepts introduced before they're
+         used. -->
+      By default, all libraries are shared. This is much more
       efficient in build time and space. But the need to install all
-      libraries to some location is not always convenient, especially
-      for debug builds. Also, if the installed shared library changes,
-      all application which use it might start to behave differently.
+      libraries to some location
+      <!-- If I'm a reader who doesn't know about shared linking as
+           this section seems to assume, I have absolutely no context
+           for "the need to install all libraries to some location."
+           It has no obvious relationship to anything we're discussing
+           here. -->
+      is not always convenient, especially
+      for debug builds. 
+      <!-- An incongruous assumption about the reader's knowledge.
+           The relationship of debug builds to all this is
+           non-obvious. -->
+      Also, if the installed shared library changes,
+      all applications that use it might start to behave differently.
     </para>
 
     <para>Static libraries do not suffer from these problems, but
-      considerably increase the size of application. Before describing
-      static libraries, it's reasonable to give another, quite simple
+      can considerably increase the size of an application. Before describing
+      how to use static libraries, it's reasonable to give another, quite simple
       approach. If your project is built with
-      &lt;hardcode-dll-paths&gt;true property, then the application
-      will include the full paths for all shared libraries, eliminating
-      the above problems. Unfortunately, you no longer can move shared
+      <code>&lt;hardcode-dll-paths&gt;true</code> property, the application
+      will include the full paths to all shared libraries, eliminating
+      the above problems. 
+      <!-- Not the last one.  So it solves just one of two problems
+           mentioned above. -->
+      Unfortunately, once that's done, you can no longer move that shared
       library to a different location, which makes this option suitable
       only for debug builds. Further, only gcc compiler supports this
-      option.</para>
+      option.
+      <!-- Now you tell me?!  You should put all this information in a
+           <tip> box that begins "If you're a GCC user..." -->
+    </para>
 
-    <para>Building a library statically is easy. You'd need to change
-      the value of &lt;link&gt; feature from it's deafault value
-      <literal>shared</literal>, to <literal>static</literal>. So, to build everything as
-      static libraries, you'd say</para>
+    <para>Building a library statically is easy; you just change
+      the value of <varname>&lt;link&gt;</varname> feature from it's default value
+      <literal>shared</literal> to <literal>static</literal>. So, to build everything as
+      static libraries, you'd say
 
 <screen>
 bjam link=static
 </screen>
 
-    <para>
-      on the command line. The linking mode can be fine-tuned on
-      per-target basis.
+      on the command line. </para>
 
-      <orderedlist>
-        <listitem>
+      <para>
+        We can also use the <varname>&lt;link&gt;</varname> property
+        to express linking requirements on a per-target basis.  
+        <!-- <orderedlist> The use of an orderedlist is inappropriate here. -->
+        For example, if a particular executable can be correctly built
+        only with the static version of a library, we can qualify the
+        executable's <link
+        linkend="bbv2.reference.targets.references">target
+        reference</link> to the library as follows:
+
+<!-- There has been no earlier indication that target references can
+     contain properties.  You can't assume that the reader will
+     recognize that strange incantation as a target reference, or that
+     she'll know what it means.  You also can't assume that hyperlinks
+     will help the reader, because she may be working from a printout,
+     as I was. -->
+
+<programlisting>
+exe important : main.cpp helpers/&lt;link&gt;static ;
+</programlisting>
+
+No matter what arguments are specified on the <command>bjam</command>
+command-line, <filename>important</filename> will only be linked with
+the static version of <filename>helpers</filename>.
+</para>
+
+
+          <!-- Take note of the difference between "build" and
+               "built."  This error is repeated throughout. -->
           <para>
-            Suppose your library can be only build statically. This is
-            easily achieved using requirements:
+            A library that can only be built statically (or
+            dynamically) can be described by putting the
+            <varname>&lt;link&gt;</varname> feature in its
+            requirements:
 
 <programlisting>
 lib l : l.cpp : &lt;link&gt;static ;
 </programlisting>
             
           </para>
-        </listitem>
 
-        <listitem>
           <para>
-            What if library can be both static and shared, but when
-            using it in specific executable, you want it static?
-            <link linkend="bbv2.reference.targets.references">Target
-              references</link> are here to help:
-
-<programlisting>
-exe important : main.cpp helpers/&lt;link&gt;static ;
-</programlisting>
-
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
-            What if the library is defined in some other project, which
-            you cannot change. But still, you want static linking to that
-            library in all cases. You can use target references everywhere:
+            If you need use a library defined in some other project
+            (one you can't change) but you still want static (or dynamic) linking
+            to that library in all cases, you
+            <emphasis>could</emphasis> use target references
+            everywhere:
 
 <programlisting>
 exe e1 : e1.cpp /other_project//bar/&lt;link&gt;static ;
 exe e10 : e10.cpp /other_project//bar/&lt;link&gt;static ;
 </programlisting>
 
-            but that's far from being convenient. Another way is to
-            introduce a level of indirection: create a local target, which will
-            refer to static version of <filename>foo</filename>. Here's the
-            solution:
+            but that's far from being convenient. A better approach is
+            to introduce a level of indirection.  Create a local
+            <type>alias</type> target that refers to the static (or
+            dynamic) version of <filename>foo</filename>:
 
 <programlisting>
 alias foo : /other_project//bar/&lt;link&gt;static ;
@@ -530,53 +697,95 @@ exe e1 : e1.cpp foo ;
 exe e10 : e10.cpp foo ;
 </programlisting>
 
-            Note that the <link linkend="bbv2.builtins.alias">alias</link> 
-            rule is specifically used for rename a reference to a target and possibly
+            The <link linkend="bbv2.builtins.alias"><functionname>alias</functionname></link> 
+            rule is specifically used to rename a reference to a target and possibly
             change the properties.
+            
+            <!-- You should introduce the alias rule in an earlier
+                 section, before describing how it applies to this
+                 specific use-case, and the foregoing sentence should
+                 go there. -->
 
           </para>
-        </listitem>
-      </orderedlist>
-    </para>
   </section>
 
   <section id="bbv2.tutorial.conditions">
     <title>Conditions and alternatives</title>
 
-    <para>As we've just figured out, properties can significally affect the
-      way targets are built. The processing of the &lt;link&gt; feature is
-      built in the build system, and is quite complex. But there is a couple
-      of mechanisms which allow ordinary users to do different things 
+    <!-- We haven't "just figured out" anything.  You didn't lead the
+         reader through a deductive process. -->
+
+    <para>As we've just seen, properties can significally affect the
+      way targets are built.  
+      <!-- What is the point in saying that?  Affecting the way
+           targets are built is the whole point of properties.  The
+           previous sentence makes it sound like affecting the way
+           targets are built is just an incidental characteristic. -->
+      The processing of the <varname>&lt;link&gt;</varname> feature is
+      built in, and is quite complex, but 
+      <!-- These two points don't make an appropriate "A but B"
+           clause, because <link> doesn't allow the system to "do
+           different things depending on properties. -->
+      there are a couple
+      of mechanisms that allow ordinary users to do different things 
       depending on properties.
+      <!-- They don't _allow users_ to do different things; it's the
+           build system that does different things.  And "different
+           things" is too vague. -->
     </para>
 
-    <para>The first mechanism is called <firstterm>conditinal
-        requirement</firstterm>. For example, you might want to set specific
-      defines when the library is build as shared, or you have your own define
-      to be used in release mode. Here's a piece of Jamfile.
+    <!-- You could replace the foregoing paragraph with: 
+
+           "Sometimes, particular relationships need to be maintained
+           among a target's build properties.  In this section we'll
+           discuss two mechanisms for expressing those relationships."
+
+         It took me about five minutes to figure out how to say that,
+         and it still isn't perfect.  But at least it says what we're
+         about to talk about with _some_ precision.  Saying what you
+         mean is hard and requires an investment of effort and
+         attention.
+          -->
+
+    <para>The first mechanism is called a <firstterm>conditional
+    requirement</firstterm>. For example, you might want to set
+    specific <code>#defines</code> when a library is built as shared,
+    or when a target's <code>release</code> variant is built in
+    release mode.
+      <!-- "Here's a piece of Jamfile" adds nothing. -->
 <programlisting>
 lib network : network.cpp 
-    : &lt;link&gt;shared:&lt;define&gt;NEWORK_LIB_SHARED 
-      &lt;variant&gt;release:&lt;define&gt;EXTRA_FAST
+    : <strong>&lt;link&gt;shared:&lt;define&gt;NEWORK_LIB_SHARED</strong>
+      <strong>&lt;variant&gt;release:&lt;define&gt;EXTRA_FAST</strong>
     ;
 </programlisting>
-      This will have exactly the effect we wanted: whenever &lt;link&gt;shared
-      is in properties, &lt;define&gt;NEWORK_LIB_SHARED will be in properties
-      as well.
+
+      In the example above, whenever <filename>network</filename> is
+      built with <code>&lt;link&gt;shared</code>,
+      <code>&lt;define&gt;NEWORK_LIB_SHARED</code> will be in its
+      properties, too.
     </para>
 
     <para>
-      Sometimes different variant of a target are so different, that
-      describing them using conditional requirements would be hard. Imagine
-      that a library has different sources on two supported toolsets, and
-      dummy implementation for all the other toolset. We can express this
-      situation using <firstterm>target alternatives</firstterm>:
+      Sometimes the ways a target is built are so different that
+      describing them using conditional requirements would be
+      hard. For example, imagine that a library actually uses
+      different source files depending on the toolset used to build
+      it. We can express this situation using <firstterm>target
+      alternatives</firstterm>:
 <programlisting>
-lib demangler : dummy_demangler.cpp ;
-lib demangler : demangler_gcc.cpp : &lt;toolset&gt;gcc ;
-lib demangler : demangler_msvc.cpp : &lt;toolset&gt;msvc ;
+lib demangler : dummy_demangler.cpp ;                      # alternative 1
+lib demangler : demangler_gcc.cpp : &lt;toolset&gt;gcc ;   # alternative 2
+lib demangler : demangler_msvc.cpp : &lt;toolset&gt;msvc ; # alternative 3
 </programlisting>
-      The proper alternative will be automatically selected. 
+        In the example above, when built with <literal>gcc</literal>
+        or <literal>msvc</literal>, <filename>demangler</filename>
+        will use a source file specific to the toolset.  Otherwise, it
+        will use a generic source file,
+        <filename>dummy_demangler.cpp</filename>.
+      <!-- You can't say "The proper alternative will be automatically
+           selected" because it presumes the user understands what's
+           proper.  You haven't even said what an alternative is! -->
     </para>
     
   </section>
@@ -586,14 +795,26 @@ lib demangler : demangler_msvc.cpp : &lt;toolset&gt;msvc ;
     <title>Prebuilt targets</title>
 
     <para>
-      We've just learned how to use libraries which are created by
-      Boost.Build. But some libraries are not. At the same time, those
+      We've just learned how to use libraries that are created by
+      Boost.Build. But some libraries are not. 
+      <!-- You can't start a sentence with "But" -->
+      At the same time, those
       libraries can have different versions (release and debug, for
       example), that we
       should select depending on build properties. Prebuilt targets
-      provide a mechanism for that. Jamfile in util/lib2 can contain:
+      provide a mechanism for that. The Jamfile in util/lib2 can contain:
 
+      <!-- You should replace the above with:  
+
+                        To link to libraries whose build instructions
+                        aren't given in a Jamfile, you just need to
+                        create targets with an appropriate <file>
+                        property.  Target alternatives can be used to
+                        associate multiple library files with a single
+                        conceptual target.
+      -->
 <programlisting>
+# util/lib2/Jamfile
 lib lib2
     : 
     : &lt;file&gt;lib2_release.a &lt;variant&gt;release
@@ -605,49 +826,67 @@ lib lib2
     ;
 </programlisting>
 
-      This defines two alternatives for target "lib2", and for each
-      one names a prebuilt file. Naturally, there are no sources.
-      Instead, the &lt;file&gt; feature is used to specify the file name.
-      Which alternative is selected depends on properties of dependents.
-      If "app" binary should use "lib2", we can write:
+      This <!-- you can't say "this defines" without an antecedent for
+           "this", e.g. "this example defines..." --> code 
+      defines two alternatives for <filename>lib2</filename>, and for each
+      one names a prebuilt file.  Naturally, there are no sources.
+      Instead, the <varname>&lt;file&gt;</varname> feature is used to
+      specify the file name.  
+    </para>
+    <para>
+      Once a prebuilt target has been declared, it can be used just like any other target:
 
 <programlisting>
 exe app : app.cpp ../util/lib2//lib2 ;
 </programlisting>
 
-      If we build release version of "app", then it will be linked
-      with "lib2_release.a", and debug version will use "lib2_debug.a".
-      Another important kind of prebuilt targets are system libraries
-      &#x2014; more specifically, libraries which are automatically found
-      by the compiler. E.g. gcc uses "-l" switch for that. Such libraries
-      should be declared almost like regular ones:
+      As with any library target, the alternative selected depends on the
+      properties propagated from <filename>lib2</filename>'s dependents.
+      If we build the the release and debug versions of <filename>app</filename> will be linked
+      with <filename>lib2_release.a</filename> and <filename>lib2_debug.a</filename>, respectively.  
 
-<programlisting>
-lib zlib : : &lt;name&gt;z ;
-</programlisting>
-
-      We again don't specify any sources, but give a name which
-      should be passed to the compiler. In this example, and for gcc
-      compiler, the "-lz" option will be added. Paths where library
-      should be searched can also be specified:
-
-<programlisting>
-lib zlib : : &lt;name&gt;z &lt;search&gt;/opt/lib ;
-</programlisting>
-
-      And, of course, two variants can be used:
-
-<programlisting>
-lib zlib : : &lt;name&gt;z &lt;variant&gt;release ;
-lib zlib : : &lt;name&gt;z_d &lt;variant&gt;debug ;
-</programlisting>
-
-      Of course, you'll probably never in your life need debug
-      version of zlib, but for other libraries this is quite reasonable.
     </para>
 
-    <para>More advanced use of prebuilt target is described in <link
-        linkend="bbv2.recipies.site-config">a FAQ entry</link>.</para>
+    <para>
+      System libraries&#x2014;those that are automatically found by
+      the toolset by searching through some set of predetermined
+      paths&#x2014;should be declared almost like regular ones:
+
+<programlisting>
+lib pythonlib : : &lt;name&gt;python22 ;
+</programlisting>
+
+      We again don't specify any sources, but give a
+      <varname>name</varname> that should be passed to the
+      compiler. If the gcc toolset were used to link an executable
+      target to <filename>pythonlib</filename>, <option>-lpython22</option>
+      would appear in the command line (other compilers may use
+      different options). 
+    </para>
+
+    <para>
+      We can also specify where the toolset should look for the library:
+
+<programlisting>
+lib pythonlib : : &lt;name&gt;python22 &lt;search&gt;/opt/lib ;
+</programlisting>
+
+      And, of course, target alternatives can be used in the usual way:
+
+<programlisting>
+lib pythonlib : : &lt;name&gt;python22 &lt;variant&gt;release ;
+lib pythonlib : : &lt;name&gt;python22_d &lt;variant&gt;debug ;
+</programlisting>
+
+    </para>
+
+    <para>A more advanced use of prebuilt targets is described in <xref
+        linkend="bbv2.recipies.site-config"/>.
+
+    <!-- "xxx is described in a FAQ entry" is confusing for the person
+         who is working with a printed manual. -->
+
+        </para>
 
   </section>
 
@@ -655,7 +894,7 @@ lib zlib : : &lt;name&gt;z_d &lt;variant&gt;debug ;
 
 <!--
      Local Variables:
-     mode: xml
+     mode: nxml
      sgml-indent-data:t
      sgml-parent-document:("userman.xml" "chapter")
      sgml-set-face: t
