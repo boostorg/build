@@ -289,7 +289,7 @@ int  main( int argc, char **argv, char **arg_environ )
 
 #ifndef NDEBUG
     run_unit_tests();
-#endif // NDEBUG
+#endif
 #if YYDEBUG != 0
     if ( DEBUG_PARSE )
         yydebug = 1;
