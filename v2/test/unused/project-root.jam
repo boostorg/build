@@ -3,7 +3,7 @@ import type ;
 import generators ;
 import print ;
 import virtual-target ;
-import class : class new xnew ;
+import class : xnew ;
 import modules ;
 import targets ;
 
@@ -19,10 +19,10 @@ xclass test-target-class : basic-target
         
     rule construct ( source-targets * : property-set )
     {
-	    if [ modules.peek : GENERATE_NOTHING ]
-	    {
-	        return ;
-	    }
+        if [ modules.peek : GENERATE_NOTHING ]
+        {
+            return ;
+        }
         else if [ modules.peek : GENERATE_ONLY_UNUSABLE ] 
         {
             return [ virtual-target.from-file b.x : $(self.project) ] 
@@ -38,7 +38,7 @@ xclass test-target-class : basic-target
     
     rule compute-usage-requirements ( rproperties )
     {
-	    return [ property-set.create <define>FOO ] ;
+        return [ property-set.create <define>FOO ] ;
     }
 }
 

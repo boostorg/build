@@ -6,7 +6,7 @@
 #  This module defines the 'make' main target rule.
 
 import targets ;
-import class : class new xnew ;
+import class : xnew ;
 import property ;
 import errors : error ;
 import type : type ;

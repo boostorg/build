@@ -7,7 +7,6 @@
 #  This module defines rules to handle generation of documentation
 #  from BoostBook sources.
 
-import class : class new ;
 import common ;
 import errors ;
 import targets ;
@@ -338,15 +337,18 @@ IMPORT $(__name__) : boostbook : : boostbook ;
 # XInclude scanner. Mostly stolen from c-scanner :)
 # Note that this assumes an "xi" prefix for XIncludes. This isn't always the
 # case for XML documents, but we'll assume it's true for anything we encounter.
-rule xinclude-scanner ( includes * )
+xclass xinclude-scanner : scanner 
 {
-  import virtual-target ;
-  import path ;
-  import scanner ;
-
-  scanner.__init__ ;
-  self.includes = $(includes) ;
-
+    import virtual-target ;
+    import path ;
+    import scanner ;
+        
+    rule __init__ ( includes * )
+    {
+        scanner.__init__ ;
+        self.includes = $(includes) ;
+    }
+    
   rule pattern ( )
   {
     return "xi:include[ ]*href=\"([^\"]*)\"" ;
@@ -370,7 +372,6 @@ rule xinclude-scanner ( includes * )
   }
 }
 
-class xinclude-scanner : scanner ;
 scanner.register xinclude-scanner : xsl:path ;
 type.set-scanner XML : xinclude-scanner ;
 

@@ -10,7 +10,7 @@ import feature ;
 import property ;
 import numbers ;
 import container ;
-import class : class new xnew ;
+import class : xnew ;
 import string ;
 
 # Transform property-set by applying f to each component property.

@@ -7,7 +7,6 @@ import feature : grist ;
 import utility : ungrist ;
 import sequence : unique ;
 import errors : error ;
-import class : class ;
 import feature ;
 import regex ;
 import sequence ;

@@ -40,7 +40,7 @@
 #  'construct' rule has a parameter, telling if multiple targets can be returned. If
 #  the parameter is false, conversion of extra targets is not performed.
 
-import class : class new is-a xnew ;
+import class : is-a xnew ;
 import container ;
 import numbers : range ;
 import utility : str equal ;

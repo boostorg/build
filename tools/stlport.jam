@@ -35,7 +35,7 @@
 
 import feature : feature subfeature ;
 import project ;
-import class : class new xnew ;
+import class : xnew ;
 import targets ;
 import property-set ; 
 

@@ -47,7 +47,7 @@
 import targets ;
 import property-set ;
 import virtual-target ;
-import class : class xnew ;
+import class : xnew ;
 import project ;
 import type ;
 import generators ;

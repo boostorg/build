@@ -1,5 +1,5 @@
 
-import class : class new xnew ;
+import class : xnew ;
 
 import lex ;
 import qt ;

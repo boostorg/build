@@ -6,7 +6,7 @@
 #  This module defines a special generator, which handles targets with
 #  <file> property. It allows to use prebuilt targets.
 
-import class : class new xnew ;
+import class : xnew ;
 import generators ; 
 import feature : feature ;
 

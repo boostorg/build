@@ -26,7 +26,7 @@
 #  actual targets. However, actions can also create scanners in a special
 #  way, instead of relying on just target type.
 
-import class : class xnew ;
+import class : xnew ;
 import property virtual-target ;
 
 #  Base scanner class. 
