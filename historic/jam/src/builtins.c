@@ -178,7 +178,7 @@ load_builtins()
       }
 
       {
-          char * args[] = { 0 };
+          char * args[] = { "levels", "?", 0 };
           bind_builtin( "BACKTRACE" ,
                         builtin_backtrace, 0, args );
       }
@@ -600,8 +600,11 @@ void backtrace( FRAME *frame )
  */
 LIST *builtin_backtrace( PARSE *parse, FRAME *frame )
 {
+    LIST* levels_arg = lol_get( frame->args, 0 );
+    int levels = levels_arg ? atoi( levels_arg->string ) : ((unsigned int)(-1) >> 1) ;
+
     LIST* result = L0;
-    while ( frame = frame->prev )
+    for(; (frame = frame->prev) && levels ; --levels )
     {
         char* file;
         int line;
