@@ -580,6 +580,13 @@ class file-reference : abstract-target
           [ $(self.project).get source-location ] ] ;        
         return [ path.exists [ path.native $(location) ] ] ;
     }    
+    
+    # Returns the location of target. Needed by 'testing.jam'
+    rule location ( )
+    {
+        return [ path.root $(self.name)
+          [ $(self.project).get source-location ] ] ;    
+    }    
 }
 
 
