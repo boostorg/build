@@ -218,7 +218,8 @@ file_archscan(
 	while( read( fd, &ar_hdr, SARHDR ) == SARHDR &&
 	       !memcmp( ar_hdr.ar_fmag, ARFMAG, SARFMAG ) )
 	{
-	    char    lar_name[256];
+	    char    lar_name_[257];
+            char*   lar_name = lar_name_ + 1;
 	    long    lar_date;
 	    long    lar_size;
 	    long    lar_offset;
