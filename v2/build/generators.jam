@@ -95,6 +95,7 @@ class generator
     import generators ;
     import assert ;
     import generators : indent increase-indent decrease-indent generators.dout ;
+    import generators ;
     import set ;
     import utility : equal ;
     import feature ;
@@ -269,7 +270,7 @@ class generator
         {
             multiple = ;
         }
-        
+                
         # We don't run composing generators if no name is specified. The reason
         # is that composing generator combines several targets, which can have
         # different names, and it cannot decide which name to give for produced
@@ -289,7 +290,6 @@ class generator
     
     rule run-really ( project name ? : property-set : sources + : multiple ? )
     {
-                
         # Targets that this generator will consume directly.
         local consumed = ;
         # Targets that can't be consumed and will be returned as-is.
@@ -301,7 +301,7 @@ class generator
               : $(property-set) : $(sources) : consumed bypassed ;            
         }
         else
-        {            
+        {               
             convert-to-consumable-types $(project) $(name) : 
               $(property-set) : $(sources) : $(multiple)
                 :
@@ -575,7 +575,7 @@ class generator
     rule action-class ( )
     {
         return "action" ;
-    }    
+    }        
 }
 
 import errors : error ;
@@ -698,9 +698,119 @@ rule base-to-derived-type-conversion ( targets * : target-types +
     }    
 }
 
+# Returns a list of source type which can possibly be converted
+# to 'target-type' by some chain of generator invocation.
+#
+# More formally, takes all generators for 'target-type' and
+# returns union of source types for those generators and result
+# of calling itself recusrively on source types.
+local rule viable-source-types-real ( target-type )
+{
+    # Find all generators for 'target-type'. Unlike 'find-viable-generators'
+    # we don't care about property-set
+    local generators ;
+
+    local t = [ type.all-bases $(target-type) ] ;
+    while $(t[1])
+    {
+        generators += $(.generators.$(t[1])) ;
+        t = $(t[2-]) ;
+    }
+          
+    # Find all source type for those generators
+    local source-types ;
+    for local g in $(generators)
+    {
+        source-types += [ $(g).source-types ] ;
+    }
+    
+    local result = $(source-types) ;
+    for local s in $(source-types)
+    {
+        result += [ viable-source-types $(s) ] ;
+    }
+    local result2 ;
+    for local s in $(result)
+    {
+        result2 += [ type.all-derived $(s) ] ;
+    }    
+    result = [ sequence.unique $(result2) ] ;
+    
+    return $(result) ;                
+}
+
+# Helper rule, caches the result of 'viable-source-types-real'.
+rule viable-source-types ( target-type )
+{
+    local key = .vst.$(target-type) ;
+    if ! $($(key))
+    {
+        local v = [ viable-source-types-real $(target-type) ] ;
+        if ! $(v)
+        {
+            v = none ;
+        }
+        $(key) = $(v) ;
+    }
+    
+    if $($(key)) != none
+    {
+        return $($(key)) ;
+    }        
+}
+
+# Returns the list of source types, which, when passed to 'run'
+# method of 'generator', has some change of being eventually used
+# (probably after conversion by other generators)
+rule viable-source-types-for-generator-real ( generator ) 
+{        
+    local source-types = [ $(generator).source-types ] ;
+    if ! $(source-types)
+    {
+        # If generator does not specify any source types,
+        # it might be special generator like builtin.lib-generator
+        # which just relays to other generators. Return '*' to
+        # indicate that any source type is possibly OK, since we don't
+        # know for sure.
+        return * ;
+    }
+    else
+    {            
+        local result ;
+        for local s in $(source-types)
+        {
+            result += [ type.all-derived $(s) ] 
+              [ generators.viable-source-types $(s) ] ;
+        }
+        result = [ sequence.unique $(result) ] ;
+        return $(result) ;
+    }        
+}    
+
+# Helper rule, caches the result of 'viable-source-types-for-genrator'.
+local rule viable-source-types-for-generator ( generator )
+{
+    local key = .vstg.$(generator) ;
+    if ! $($(key))
+    {
+        local v = [ viable-source-types-for-generator-real $(generator) ] ;
+        if ! $(v)
+        {
+            v = none ;
+        }
+        $(key) = $(v) ;        
+    }
+    
+    if $($(key)) != none
+    {
+        return $($(key)) ;
+    }        
+}
+
+
 
 # Returns usage requirements + list of created targets
-local rule try-one-generator ( project name ? : generator multiple ? : 
+local rule try-one-generator-really ( project name ? : generator multiple ? : 
     target-type : property-set : sources * )
 {
     local targets =
@@ -709,6 +819,7 @@ local rule try-one-generator ( project name ? : generator multiple ? :
                        : $(sources)
                        : $(multiple)
       ] ;
+        
 
     # Generated targets that are of required types
     local result ;
@@ -759,6 +870,37 @@ local rule try-one-generator ( project name ? : generator multiple ? :
     }    
     return $(result) $(extra2) ;                     
 }
+
+# Checks if generator invocation can be pruned, because it's guaranteed
+# to fail. If so, quickly returns empty list. Otherwise, calls
+# try-one-generator-really.
+local rule try-one-generator ( project name ? : generator multiple ? : 
+    target-type : property-set : sources * )
+{    
+    local source-types ;
+    for local s in $(sources)
+    {
+        source-types += [ $(s).type ] ;
+    }
+    local viable-source-types = 
+      [ viable-source-types-for-generator $(generator) ] ;
+    
+    if  $(source-types) && $(viable-source-types) != * && 
+      ! [ set.intersection $(source-types) : $(viable-source-types) ] 
+    {
+        local id = [ $(generator).id ] ;
+        generators.dout [ indent ] "generator '$(id)' pruned" ;
+        #generators.dout [ indent ] "source-types" '$(source-types)' ;
+        #generators.dout [ indent ] "viable-source-types" '$(viable-source-types)' ;
+    }          
+    else {
+        return [ try-one-generator-really $(project) $(name)
+          : $(generator) $(multiple) 
+            : $(target-type) : $(property-set) : $(sources) ] ;
+    }       
+}
+
+
 
 rule construct-types ( project name ? : target-types + : multiple ? : 
     property-set : sources + )
