@@ -132,16 +132,6 @@ class abstract-target
         errors.error "method should be defined in derived classes" ;
     }
     
-    # Set an object which will adjust build properties.
-    # It must have 'adjust' method and will be called
-    # immediately on enterting the 'generate' rule.
-    # Currently used only for implementation of direct
-    # build request
-    rule set-property-adjuster ( property-adjuster )
-    {
-        errors.error "method should be defined in derived classes" ;        
-    }
-    
     rule rename ( new-name )
     {
         self.name = $(new-name) ;
@@ -179,14 +169,6 @@ class project-target : abstract-target
         
         self.requirements = $(requirements) ;
         self.default-build = $(default-build) ;
-    }
-    
-    rule set-property-adjuster ( property-adjuster )
-    {
-        for local t in [ targets-to-build ] 
-        {  
-            $(t).set-property-adjuster $(property-adjuster) ;
-        }
     }
     
     # Generates all possible targets contained in this project.
@@ -384,11 +366,6 @@ class main-target : abstract-target
         self.alternatives += $(target) ;
     }
 
-    rule set-property-adjuster ( property-adjuster )
-    {
-        self.property-adjuster = $(property-adjuster) ;
-    }
-
     local rule select-alternatives ( property-set )
     {
         local viable ; # alternatives that may be used
@@ -506,12 +483,6 @@ class main-target : abstract-target
     # that no targets are generated.
     local rule generate-really ( property-set )
     {    
-        if $(self.property-adjuster)
-        {
-            property-set = [ $(self.property-adjuster).adjust 
-              $(property-set) ] ;
-        }
-                                                
         local best-alternatives = [ select-alternatives $(property-set) ] ;
         if ! $(best-alternatives)
         {

@@ -143,17 +143,6 @@ virtual-targets = ;
 
 if $(expanded) 
 {        
-    local dr-adjuster = [ new directly-requested-properties-adjuster ] ;    
-    for local p in $(expanded)
-    {
-        $(dr-adjuster).add-requested-property-set $(p) ;
-    }
-    
-    for local t in $(targets) 
-    {   
-        $(t).set-property-adjuster $(dr-adjuster) ;
-    }
-    
     for local p in $(expanded)
     {
         for local t in $(targets)
