@@ -516,6 +516,10 @@ rule basic-target ( name : project
             # come from dependencies, the value is not target id, but rather
             # virtual target names, so generators.construct can use them.
             
+            # defaults should be added as soon as possible. For example, conditionals
+            # might have "<variant>debug:..." and won't work if defaults are not 
+            # applied.
+            rproperties = [ $(rproperties).add-defaults ] ;   
             rproperties = [ $(rproperties).evaluate-conditionals ] ;
             
             rproperties = 
@@ -563,7 +567,7 @@ rule basic-target ( name : project
     {
         if ! $(self.generated.$(property-set)) 
         { 
-            local rproperties = [ final-properties $(property-set) ] ;
+            local rproperties = [ final-properties $(property-set) ] ;            
             if $(rproperties[1]) != "@error"                    
             {                                
                 local source-targets = [ generate-sources $(rproperties) ] ;                

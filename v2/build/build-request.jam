@@ -21,7 +21,7 @@ local rule apply-to-property-set ( f property-set )
 
 # expand the given build request by combining all property-sets which don't
 # specify conflicting non-free features.
-local rule expand-no-defaults ( property-sets * : feature-space ? )
+rule expand-no-defaults ( property-sets * : feature-space ? )
 {
     feature-space ?= feature ;
     

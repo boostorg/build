@@ -128,6 +128,17 @@ local rule property-set ( raw-properties * )
         return $(self.run) ;
     }
     
+    rule add-defaults ( )
+    {
+        if ! $(self.defaults)
+        {
+            self.defaults = [ property-set.create 
+                [ feature.add-defaults $(self.raw) ] ] ;
+        }
+        return $(self.defaults) ;
+    }
+    
+    
     rule as-path ( )
     {
         if ! $(self.as-path)

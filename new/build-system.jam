@@ -72,7 +72,7 @@ properties = [ $(build-request).get-at 2 ] ;
 
 if $(properties) 
 {    
-    expanded = [ build-request.expand $(properties) ] ;
+    expanded = [ build-request.expand-no-defaults $(properties) ] ;
 }
 
 
