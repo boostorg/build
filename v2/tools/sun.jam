@@ -77,6 +77,10 @@ flags sun.link LIBRARIES <library-file> ;
 flags sun.link LINK-RUNTIME <link-runtime>static : static ;
 flags sun.link LINK-RUNTIME <link-runtime>shared : dynamic ;
 flags sun.link RPATH <dll-path> ;
+# On gcc, there are separate options for dll path at runtime and
+# link time. On Solaris, there's only one: -R, so we have to use
+# it, even though it's bad idea.
+flags sun.link RPATH <xdll-path> ;
 
 rule link ( targets * : sources * : properties * )
 {
