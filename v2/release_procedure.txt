@@ -3,9 +3,16 @@
 
 [ Must be done from a Unix shell ]
 
-0. Make sure that "bjam --version" output is correct. Update version string if
+
+
+0. Look for all issues for current milestone in the tracker. Close the fixed one,
+   if not already closed. Move to a later milestone, or fix all the unfixed
+   ones.
+
+   Make sure that "bjam --version" output is correct. Update version string if
    needed. Update bjam version and the version check is necessary.  
-   Check the download locations in "index_v2.html".
+   Check the download locations in "index_v2.html". Check that "last modified"
+   strings in docs are correct.
 
 1. Make sure you don't have any local modification, and tag the CVS tree with 
    Milestone_X tag.
@@ -35,7 +42,7 @@
 
 8. Announce the release, etc.
 
-
+9. Update the "next milestone query" in the tracker.
 
 
    
