@@ -162,8 +162,9 @@ rule dump-test ( target )
     local type = [ $(target).type ] ;
     local name = [ $(target).name ] ;
     local project = [ $(target).project ] ;
-    local project-root = [ project.attribute $(project) project-root-module ] ;
-    local project-root-location = [ $(project-root).location ] ;
+    
+    local project-root = [ $(project).get project-root ] ;
+    local project-root-location = [ $(project-root).get-location ] ;
     
     local sources = [ $(target).sources ] ;
     local source-files ;
@@ -174,7 +175,7 @@ rule dump-test ( target )
             source-files += 
               [ path.relative 
                   [ path.root [ $(s).location ] [ path.pwd ] ]
-                    $(project-root-location) ] ;
+                  [ path.root $(project-root-location) [ path.pwd ] ] ] ;
         }                
     }
           
