@@ -1,3 +1,9 @@
+/*
+ * Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
+ *
+ * This file is part of Jam - see jam.c for Copyright information.
+ */
+
 # include "jam.h"
 # include "lists.h"
 # include "variable.h"
