@@ -231,6 +231,12 @@ class property-set
         return $(self.as-path) ;
     }        
     
+    # Computes the target path that should be used for 
+    # target with these properties.
+    # Returns a list of
+    #   - the computed path
+    #   - if the path is relative to build directory, a value of
+    #     'true'. 
     rule target-path ( )
     {
         if ! $(self.target-path)
@@ -253,12 +259,14 @@ class property-set
                 local prefix = [ get <location-prefix> ] ;            
                 if $(prefix)
                 {
-                    self.target-path = "." [ path.join $(prefix) $(p) ] ;
+                    self.target-path = [ path.join $(prefix) $(p) ] ;
                 }   
                 else
                 {
-                    self.target-path = "." $(p) ;
+                    self.target-path = $(p) ;
                 }                
+                # The path is relative to build dir.
+                self.target-path += true ;
             }            
         } 
         return $(self.target-path) ;
