@@ -198,7 +198,7 @@ local rule declare-type ( os * : type : suffixes * : base-type ? : main ? )
 declare-type NT : OBJ : obj : : main ;
 declare-type : OBJ : o : : main ;
 
-declare-type NT : STATIC_LIB : a : LIB : main ; # this is a lie, should be lib.
+declare-type NT : STATIC_LIB : lib : LIB : main ;
 declare-type : STATIC_LIB : a : LIB : main ;
 
 declare-type NT CYGWIN : SHARED_LIB : dll : LIB : main ;
