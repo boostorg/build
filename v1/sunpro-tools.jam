@@ -55,6 +55,7 @@ flags sunpro CFLAGS <optimization>speed : -fast -O4 ;
 flags sunpro CFLAGS <optimization>space : -O2 -xspace ;
 flags sunpro C++FLAGS <inlining>off : +d ;
 flags sunpro CFLAGS <threading>multi : -mt ;
+flags sunpro LINKFLAGS <threading>multi : -mt ;
 flags sunpro C++FLAGS <rtti>on  : -features=rtti ;
 flags sunpro C++FLAGS <rtti>off : -features=no%rtti ;
 flags sunpro C++FLAGS <exception-handling>on : -features=except ;
