@@ -54,7 +54,7 @@
  */
 
 void
-file_dirscan( 
+file_dirscan(
 	char *dir,
 	scanback func,
 	void *closure )
@@ -67,7 +67,7 @@ file_dirscan(
     struct _finddata_t finfo[1];
 
     dir = short_path_to_long_path( dir );
-	
+
     /* First enter directory itself */
 
     memset( (char *)&f, '\0', sizeof( f ) );
@@ -78,7 +78,7 @@ file_dirscan(
     dir = *dir ? dir : ".";
 
     /* Special case \ or d:\ : enter it */
- 
+
     if( f.f_dir.len == 1 && f.f_dir.ptr[0] == '\\' )
         (*func)( closure, dir, 0 /* not stat()'ed */, (time_t)0 );
     else if( f.f_dir.len == 3 && f.f_dir.ptr[1] == ':' )
@@ -123,7 +123,7 @@ file_dirscan(
         string_free( filespec );
         return;
     }
-        
+
     string_new( filename );
     while( !ret )
     {
@@ -134,7 +134,7 @@ file_dirscan(
         path_build( &f, filename, 0 );
 
         (*func)( closure, filename->value, 1 /* stat()'ed */, finfo->time_write );
- 
+
         ret = _findnext( handle, finfo );
     }
 
@@ -237,9 +237,10 @@ file_archscan(
 		** 15 characters (ie. don't fit into a ar_name
 		*/
 
-		string_table = malloc(lar_size);
+		string_table = malloc(lar_size+1);
 		if (read(fd, string_table, lar_size) != lar_size)
 		    printf("error reading string table\n");
+		string_table[lar_size] = '\0';
 		offset += SARHDR + lar_size;
 		continue;
 	    }
@@ -263,7 +264,7 @@ file_archscan(
 	    /* strip trailing white-space, slashes, and backslashes */
 
 	    while( endname-- > name )
-		if( !isspace(*endname) && *endname != '\\' && *endname != '/' )
+	    	if( !isspace(*endname) && *endname != '\\' && *endname != '/' )
 		    break;
 	    *++endname = 0;
 
