@@ -260,33 +260,34 @@ rule glob ( dir : patterns + )
 rule all-parents ( path : upper_limit ? : cwd ? )
 {
     cwd ?= [ pwd ] ;
-    local rpath = [ root $(path) $(cwd) ] ;
+    local path_ele = [ regex.split [ root $(path) $(cwd) ] "/" ] ;
 
     if ! $(upper_limit) {
         upper_limit = / ;
-    } 
-    upper_limit = [ root $(upper_limit) $(cwd) ] ;
-
-    # Leave only directory names below 'upper_limits'
-    # Assure pruned_path[2] will have no leading '/'
-    local pruned_path = [ regex.match "($(upper_limit))/*(.*)" :  $(rpath) : 1 2 ] ;
-    if ! $(pruned_path) {
-        error "$(upper_limit) is not prefix of $(path)" ;
     }
+    local upper_ele = [ regex.split [ root $(upper_limit) $(cwd) ] "/" ] ;
 
-    if $(pruned_path[2])
-    {
-        # Length of 'tokens' is equal to the number of paths to check.
-        local tokens = [ regex.split $(pruned_path[2]) "/" ] ;
-
+    # Leave only elements in 'path_ele' below 'upper_ele'
+    while $(path_ele) && $(upper_ele[1]) = $(path_ele[1]) {
+        upper_ele = $(upper_ele[2-]) ;
+        path_ele = $(path_ele[2-]) ;
+    }
+    
+    # All upper elements removed ?
+    if ! $(upper_ele) {
+        # Create the relative paths to parents, number of elements in 'path_ele'
         local result ;
-        for local i in $(tokens) {
+        for local i in $(path_ele) {
             path = [ parent $(path) ] ;
             result += $(path) ;
         }
         return $(result) ;
     }
+    else {
+        error "$(upper_limit) is not prefix of $(path)" ;
+    }
 }
+
 
 #
 #  Search for 'pattern' in parent directories of 'dir', up till and including

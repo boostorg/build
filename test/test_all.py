@@ -95,6 +95,7 @@ tests = [ "project_test1",
           "absolute_sources",
           "dependency_property",
           "custom_generator",
+          "bad_dirname",
 	  ]
 
 if os.name == 'posix':
