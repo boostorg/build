@@ -491,24 +491,35 @@ class file-target : abstract-file-target
         if ! $(self.path)
         {
             if $(self.action)
-            {                
-                local build-dir = [ $(self.project).get build-dir ] ;
-                if ! $(build-dir)
+            {       
+                # The <location> feature can be used to explicitly
+                # change the location of generated targetsv
+                local p = [ $(self.action).properties ] ;
+                local l = [ $(p).get <location> ] ;
+                if $(l)
                 {
-                    build-dir = [ path.join 
-                        [ $(self.project).get location ]
-                        bin
-                    ] ;
+                    self.path = [ path.native $(l) ] ;
                 }
-                
-                local path = [ path.join
-                    $(build-dir)
-                      [ $(self.action).path ]
-                ] ;
-                
-                # Store the computed path, so that it's not recomputed
-                # any more
-                self.path = [ path.native $(path) ] ;
+                else 
+                {                    
+                    local build-dir = [ $(self.project).get build-dir ] ;
+                    if ! $(build-dir)
+                    {
+                        build-dir = [ path.join 
+                            [ $(self.project).get location ]
+                              bin
+                        ] ;
+                    }
+                    
+                    local path = [ path.join
+                        $(build-dir)
+                          [ $(self.action).path ]
+                    ] ;
+                    
+                    # Store the computed path, so that it's not recomputed
+                    # any more
+                    self.path = [ path.native $(path) ] ;
+                }                
             }            
         }
         return $(self.path) ;
