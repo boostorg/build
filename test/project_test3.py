@@ -4,7 +4,7 @@ from BoostBuild import Tester, List
 import os
 from string import strip
 
-t = Tester()
+t = Tester(translate_suffixes=0)
 
 # First check some startup
 t.set_tree("project-test3")

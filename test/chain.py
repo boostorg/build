@@ -5,7 +5,7 @@
 # 2) than if 'make' create targets of type CPP, they are
 # correctly used (there was a bug with it).
 
-from BoostBuild import Tester, exe_suffix
+from BoostBuild import Tester
 t = Tester()
 
 # In order to correctly link this app, 'b.cpp', created by 'make'
@@ -48,6 +48,6 @@ make b.cpp : : create ;
 t.write("a.cpp", "")
 
 t.run_build_system()
-t.expect_addition("bin/gcc/debug/a" + exe_suffix)
+t.expect_addition("bin/gcc/debug/a.exe")
 
 t.cleanup()

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from BoostBuild import Tester, List, dll_suffix, exe_suffix
+from BoostBuild import Tester, List
 import os
 from string import strip
 
@@ -10,9 +10,8 @@ t = Tester()
 t.set_tree("direct-request-test")
 t.run_build_system(extra_args="define=MACROS")
 
-t.expect_addition("bin/gcc/debug/"
-                  * (List("a.o b.o")
-                     + ('b'+dll_suffix)
-                     + ('a'+exe_suffix)))
+t.expect_addition("bin/gcc/debug/" 
+                  * (List("a.o b.o b.dll a.exe")))
+
 
 t.cleanup()

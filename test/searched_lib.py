@@ -3,7 +3,7 @@
 # Test usage of searched-libs: one which are found via -l
 # switch to the linker/compiler. 
 
-from BoostBuild import Tester, exe_suffix
+from BoostBuild import Tester
 import string
 t = Tester()
 
@@ -13,9 +13,9 @@ t.write("lib/Jamfile", "lib test_lib : test_lib.cpp ;")
 t.write("lib/test_lib.cpp", "void foo() {}\n");
 
 t.run_build_system(subdir="lib")
-t.expect_addition("lib/bin/gcc/debug/test_lib.so")
+t.expect_addition("lib/bin/gcc/debug/test_lib.dll")
 
-t.copy("lib/bin/gcc/debug/test_lib.so", "lib/libtest_lib.so")
+t.copy("lib/bin/gcc/debug/test_lib.dll", "lib/libtest_lib.dll")
 
 
 # A regression test: <library>property referring to

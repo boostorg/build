@@ -4,7 +4,7 @@ from BoostBuild import Tester
 import os
 from string import strip, find
 
-t = Tester()
+t = Tester(translate_suffixes=0)
 
 
 t.set_tree("project-test4")
