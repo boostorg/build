@@ -109,7 +109,11 @@ local rule grist ( features * )
 empty = "" ;
 
 # declare a new feature with the given name, values, and attributes.
-rule feature ( name : values * : attributes * )
+rule feature ( 
+    name         # feature name
+  : values *     # the allowable values - may be extended later with feature.extend
+  : attributes * # The feature's attributes (e.g. implicit, free, propagated...)
+)
 {
     name = [ grist $(name) ] ;
 
@@ -155,12 +159,9 @@ rule defaults ( features * )
     local result ;
     for local f in [ grist $(features) ]
     {
-        if free in $($(f).attributes)
+        local a = $($(f).attributes) ;
+        if ( free in $(a) ) || ( optional in $(a) )
         {
-        }
-        else if optional in $($(f).attributes)
-        {
-            result += $(f) ;
         }
         else
         {
@@ -219,6 +220,7 @@ rule implied-feature ( implicit-value )
 
 local rule find-implied-subfeature ( feature subvalue : value-string ? )
 {
+    # feature should be of the form <feature-name>
     if $(feature) != $(feature:G)
     {
         error invalid feature $(feature) ;
@@ -229,9 +231,14 @@ local rule find-implied-subfeature ( feature subvalue : value-string ? )
     return $($(feature)$(value-string)<>$(subvalue).subfeature) ;
 }
 
-# Given a feature name and a subfeature value, find the associated
-# subfeature.
-rule implied-subfeature ( feature subvalue : value-string ? )
+# Given a feature and a value of one of its subfeatures, find the name
+# of the subfeature. If value-string is supplied, looks for implied
+# subfeatures that are specific to that value of feature
+rule implied-subfeature ( 
+  feature               # The main feature name
+    subvalue            # The value of one of its subfeatures
+    : value-string ?    # The value of the main feature
+)
 {
     feature = [ grist $(feature) ] ;
     local subfeature = [ find-implied-subfeature $(feature) $(subvalue)
@@ -255,12 +262,19 @@ local rule validate-feature ( feature )
     }
 }
 
-# expand-subfeatures <toolset>gcc-2.95.2-linux-x86
+# Given a feature and value, or just a value corresponding to an
+# implicit feature, returns a property set consisting of all component
+# subfeatures and their values. For example:
+#
+#   expand-subfeatures <toolset>gcc-2.95.2-linux-x86
 #       -> <toolset>gcc <toolset-version>2.95.2 <toolset-os>linux <toolset-cpu>x86
 #
-# equivalent to:
+#   equivalent to:
 #       expand-subfeatures gcc-2.95.2-linux-x86
-local rule expand-subfeatures-aux ( feature ? : value )
+local rule expand-subfeatures-aux ( 
+    feature ? # The name of the feature, or empty if value corresponds to an implicit property
+  : value     # The value of the feature.
+)
 {
     if $(feature)
     {
@@ -292,7 +306,21 @@ local rule expand-subfeatures-aux ( feature ? : value )
     return $(result) ;
 }
 
-rule expand-subfeatures ( properties * )
+# Make all elements of properties corresponding to implicit features
+# explicit, and express all subfeature values as separate properties
+# in their own right. For example, the property
+#
+#    gcc-2.95.2-linux-x86
+#
+# might expand to
+#
+#   <toolset>gcc <toolset-version>2.95.2 <toolset-os>linux <toolset-cpu>x86
+#
+rule expand-subfeatures ( 
+  properties * # property set with elements of the form
+	       # <feature>value-string or just value-string in the
+	       # case of implicit features.
+)
 {
     local result ;
     for local p in $(properties)
@@ -439,7 +467,7 @@ rule subfeature ( feature value-string ? : subfeature : subvalues * )
     $(feature).subfeatures += $(subfeature) ;
     extend-subfeature $(feature) $(value-string) : $(subfeature) : $(subvalues) ;
     local f = [ utility.ungrist $(feature) ] ;
-    feature $(f)-$(subfeature) : $(subvalues) ;
+    feature $(f)-$(subfeature) : $(subvalues) : optional ;
 }
 
 # Set the components of the given composite property
@@ -578,7 +606,7 @@ rule minimize ( properties * )
         if ! $(p:G)
         {
             error minimize requires an expanded property set, but \"$(p)\"
-              appears to be an un-expanded implicit feature ;
+              appears to be the value of an un-expanded implicit feature ;
         }
         x = [ set.difference $(x) : $($(p).components) ] ;
     }
@@ -621,6 +649,22 @@ rule minimize ( properties * )
         }
     }
     return $(result) ;
+}
+
+# Given a set of properties, add default values for features not
+# represented in the set.
+rule add-defaults ( properties * )
+{
+    for local v in $(properties:G=)
+    {
+        if $(v) in $(properties)
+        {
+            error add-defaults requires explicitly specified features,
+                but $(v) appears to be the value of an un-expanded implicit feature ;
+        }
+    }
+    local missing = [ set.difference $(.all-features) : $(properties:G) ] ;
+    return $(properties) [ defaults $(missing) ] ;
 }
 
 # Given a property-set of the form
@@ -702,6 +746,14 @@ local rule __test__ ( )
 
         assert.result <variant>debug <define>_DEBUG <optimization>on
           : expand debug <optimization>on
+          ;
+        
+        assert.result <runtime-link>dynamic <optimization>on
+          : defaults <runtime-link> <define> <optimization>
+          ;
+
+        assert.result <runtime-link>static <define>foobar <optimization>on <toolset>gcc <variant>debug <dummy>dummy1
+          : add-defaults <runtime-link>static <define>foobar <optimization>on
           ;
 
         assert.result gcc-3.0.1 debug <optimization>on
