@@ -383,7 +383,7 @@ rule generate-dependencies ( properties * : project : extra-properties * )
     {
         if dependency in [ feature.attributes $(p:G) ]
         {
-            local g = [ targets.generate $(p:G=) : $(project) 
+            local g = [ targets.generate $(p:TG=) : $(project) 
               : $(properties) $(extra-properties) ] ;
             if ! $(g) 
             {
