@@ -1,0 +1,4 @@
+
+exe a : a.cpp b ;
+
+make-b-main-target ;
