@@ -386,3 +386,33 @@ actions unit-test
 IMPORT $(__name__) : compile compile-fail test-suite run run-fail 
   : : compile compile-fail test-suite run run-fail ;
 
+
+type.register TIME : time ;
+generators.register-standard testing.time : : TIME ;
+
+rule record-time ( target source : user : system )
+{
+    local src-string = [$(source:G=:J=",")"] " ;
+    USER_TIME on $(target) += $(src-string)$(user) ;
+    SYSTEM_TIME on $(target) += $(src-string)$(system) ;
+}
+
+IMPORT testing : record-time : : testing.record-time ;
+rule time ( target : source : properties *  )
+{
+    # Set up rule for recording timing information
+    __TIMING_RULE__ on $(source) = testing.record-time $(target) ;
+    
+    # Make sure that the source is rebuilt any time we need to
+    # retrieve that information
+    REBUILDS $(target) : $(source) ;
+}
+
+actions time
+{
+    echo user: $(USER_TIME)
+    echo system: $(SYSTEM_TIME)
+      
+    echo user: $(USER_TIME)" seconds" > $(<)
+    echo system: $(SYSTEM_TIME)" seconds" > $(<)
+}
