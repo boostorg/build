@@ -223,7 +223,7 @@ rule abstract-file-target ( name
     # computation from properties.
     rule set-path ( path )
     {
-        self.path = $(path) ;
+        self.path = [ path.native $(path) ] ;
     }
 
     # If 'a' is supplied, sets action to 'a'.
