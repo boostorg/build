@@ -68,7 +68,7 @@ flags gcc.compile OPTIONS <profiling>on : -pg ;
 # But we'll solve that problem when it's time. In that case
 # we'll just add another parameter to 'init' and move this login
 # inside 'init'.
-if [ os.path ] != CYGWIN
+if [ os.name ] != CYGWIN
 {        
     flags gcc.compile OPTIONS <link>shared/<main-target-type>LIB : -fPIC ;
 }    
