@@ -28,12 +28,6 @@
 # singleton variables...
 set-as-singleton MINGW_ROOT_DIRECTORY MINGW_BIN_DIRECTORY MINGW_INCLUDE_DIRECTORY MINGW_STDLIB_DIRECTORY ;
 
-# Get these variable set on the targets so that we can re-use the
-# build actions for other toolsets using this one as a base.
-flags mingw MINGW_BIN_DIRECTORY ;
-flags mingw MINGW_INCLUDE_DIRECTORY ;
-flags mingw MINGW_STDLIB_DIRECTORY ;
-
 {
     local GCC_ROOT_DIRECTORY = $(MINGW_ROOT_DIRECTORY) ;
     local GCC_BIN_DIRECTORY = $(MINGW_BIN_DIRECTORY) ;
