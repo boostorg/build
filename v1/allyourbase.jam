@@ -386,6 +386,9 @@ else if $(UNIX)
     case UNIXWARE :
         RANLIB          ?= "" ;
         RELOCATE        ?= true ;
+
+    case OSF :
+        DLL_AS_LIB      ?= true ;
     }
 
     # UNIX defaults
@@ -449,6 +452,7 @@ UNDEFFLAG       ?= "-u _" ;
 YACC            ?= ;
 YACCFILES       ?= ;
 YACCFLAGS       ?= ;
+DLL_AS_LIB      ?= ;
 
 HDRPATTERN = 
         "^[     ]*#[    ]*include[      ]*([<\"][^\">]*[\">]).*$" ;
