@@ -288,14 +288,21 @@ rule lines (
     }
 }
 
-# Output text directly to the current target.
+# Output text directly to the current target. When doing output
+# to a file, one can indicate if the text should be output to
+# "prefix" it, as the "body" (default), or "suffix" of the file. This is
+# independant of the actual execution order of the text rule. This rule
+# invokes a singular action, one action only once, which does the
+# build of the file. Therefore actions on the target outside of this
+# rule will happen entirely before and/or after all output using this rule.
 #
 rule text (
-    strings *     # The strings of text to output.
+    strings * # The strings of text to output.
     : overwrite ? # true to overwrite the output (if it is a file)
-    : prefix-or-suffix ? # Indication of special prefix or suffix text.
+    : prefix-body-suffix ? # Indication to output prefix, body, or suffix (for a file).
     )
 {
+    prefix-body-suffix ?= body ;
     if $(output-target) = console
     {
         if ! $(strings)
@@ -311,41 +318,52 @@ rule text (
             }
         }
     }
-    # Don't do anything if 'strings' is empty.
-    # Otherwise, no actions will be created for 
-    # 'body' target, and bjam will say it can't update it
-    else if $(output-target) && $(strings)
+    else if $(output-target)
     {
-        $(output-target).line ?= 0 ;
-        if $(prefix-or-suffix) != suffix 
-        {            
-            DEPENDS $(output-target) : $(output-target:G=body) ;
-            ALWAYS $(output-target:G=body) ;
-            LOCATE on $(output-target:G=body) = 
-              [ on $(output-target) return $(LOCATE) ] ;
-        }       
-        while $(strings)
+        if ! $($(output-target).did-action)
         {
-            local line-v = $(output-target).line.$($(output-target).line) ;
-            local echo-string = [ escape $(strings[1]) ] ;
-            local target = $(output-target:G=body) ;
-            if $(prefix-or-suffix) = suffix
-            {
-                target = $(output-target) ;
-            }
-            $(line-v) on $(target) = $(echo-string) ;
-            NOTFILE $(line-v) ;
-            if $(overwrite) = "true" 
-            {
-              overwrite = false ;
-              text-overwrite-action $(target) : $(line-v) ;
-            }
-            else
-            {
-              text-action $(target) : $(line-v) ;
-            }
+            $(output-target).did-action = yes ;
+            _ on $(output-target) = " " ;
+            nl on $(output-target) = "
+" ;
+            text-redirect-0 on $(output-target) = ">>" ;
+            text-redirect-n on $(output-target) = ">>" ;
+            text-front on $(output-target) = ;
+            text-prefix on $(output-target) = ;
+            text-body on $(output-target) = ;
+            text-suffix on $(output-target) = ;
+            text-action $(output-target) ;
+            text-front-section.$(soutput-target) = ;
+        }
+        if $(overwrite)
+        {
+            text-redirect-0 on $(output-target) = ">" ;
+        }
+        if ! $(text-front-section.$(output-target))
+        {
+            text-front on $(output-target) = [ escape $(strings[1]) ] ;
+            text-front-section.$(output-target) = $(prefix-body-suffix) ;
             strings = $(strings[2-]) ;
-            $(output-target).line = [ numbers.increment $($(output-target).line) ] ;
+        }
+        if $(strings)
+        {
+            if ( $(prefix-body-suffix) = prefix &&
+                    $(text-front-section.$(output-target)) != prefix ) ||
+                ( $(prefix-body-suffix) = body &&
+                $(text-front-section.$(output-target)) = suffix )
+            {
+                text-$(text-front-section.$(output-target)) on $(output-target) =
+                    [ on $(output-target) return $(text-front) ]
+                    [ on $(output-target) return $(text-$(text-front-section.$(output-target))) ] ;
+                text-front on $(output-target) = [ escape $(strings[1]) ] ;
+                text-front-section.$(output-target) = $(prefix-body-suffix) ;
+                strings = $(strings[2-]) ;
+            }
+            while $(strings)
+            {
+                text-$(prefix-body-suffix) on $(output-target) += [ escape $(strings[1]) ] ;
+                strings = $(strings[2-]) ;
+            }
         }
     }
 }
@@ -383,19 +401,15 @@ rule escape-html (
     return $(html-text) ;
 }
 
-
-# Append single line to target file.
+# Outputs the text strings collected by the text rule to the output
+# file.
 #
 actions quietly text-action
 {
-    echo $($(>)) >> $(<:G=)
-}
-
-# Writes a single line to target file (overwriting or creating the
-# file as necessary)
-actions quietly text-overwrite-action
-{
-    echo $($(>)) > $(<:G=)
+echo$(_)$(text-front)$(_)$(text-redirect-0)$(_)"$(<)"
+echo$(_)$(text-prefix)$(_)$(text-redirect-n)$(_)"$(<)"$(nl)
+echo$(_)$(text-body)$(_)$(text-redirect-n)$(_)"$(<)"$(nl)
+echo$(_)$(text-suffix)$(_)$(text-redirect-n)$(_)"$(<)"$(nl)
 }
 
 if [ modules.peek : NT ]
