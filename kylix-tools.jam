@@ -7,18 +7,25 @@
 
 # The following #// line will be used by the regression test table generation
 # program as the column heading for HTML tables. Must not include version number.
-#//<a href="http://www.borland.com/bcppbuilder/freecompiler/">Kylix</a>
+#//<a href="http://www.borland.com/kylix">Kylix</a>
 
 # Borland tool definitions for Kylix.
 
-# BCCROOT is the install location of the kylix tools.
-set-as-singleton BCCROOT ;
+# KYLIX_PATH is the install location of the kylix tools.
+# This will be either /usr/local/kylix3 or ~/kylix3 depending upon install options.
+set-as-singleton KYLIX_PATH ;
 
-# compute kylix tool path
-# You can either put the kylix bin directory in your PATH, or you can set
-# BCCROOT to point at the kylix installation directory
-BCC_TOOL_PATH = $(BCCROOT)$(SLASH)bin$(SLASH) ;
-BCC_TOOL_PATH ?= "" ; # Don't clobber adjoining text if BCCROOT isn't set
+# compute kylix execution prefix
+# You can either source the "kylixpath" shell script provided by Borland
+# or set KYLIX_PATH to point to your Kylix install directory
+if $(KYLIX_PATH)
+{
+	KYLIX_EXEC_PREFIX = "source $(KYLIX_PATH)/bin/kylixpath > /dev/null && " ;
+}
+else
+{
+	KYLIX_EXEC_PREFIX = "" ;
+}
 
 # specify compilation and link flags
 flags kylix CFLAGS <debug-symbols>on : -v ;
@@ -70,15 +77,9 @@ flags kylix FINDLIBS : m ;
 flags kylix FINDLIBS : dl ;
 flags kylix CFLAGS <threading>single : -DBOOST_NO_THREADS ;
 
-#flags kylix STDHDRS : $(BCCROOT)$(SLASH)include ;  # kylix knows where to find its headers by itself. This did only confuse it.
-flags kylix STDLIBPATH : $(BCCROOT)$(SLASH)lib ;
-
 flags kylix LIBPATH <library-path> ;
 flags kylix NEEDLIBS <library-file> ;
 flags kylix FINDLIBS <find-library> ;
-
-# For detailed information about kylix tools and their command-line switches,
-# see http://www.objectcentral.com/vide/help/videdoc/bcc32.html
 
 #### Link ####
 
@@ -94,8 +95,7 @@ rule Link-action
 
 actions kylix-Link-action
 {
-    export PATH=$(BCC_TOOL_PATH):$PATH
-    "$(BCC_TOOL_PATH)bc++" -v -q $(LINKFLAGS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -o"$(<[1])" "$(>)" lib$(FINDLIBS).so
+    $(KYLIX_EXEC_PREFIX)bc++ -v -q $(LINKFLAGS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -o"$(<[1])" "$(>)" lib$(FINDLIBS).so
 }
 
 #### Cc #####
@@ -107,7 +107,7 @@ rule Cc-action
 
 actions kylix-Cc-action
 {
-    "$(BCC_TOOL_PATH)bc++" -P- -j5 -q -c -w -a8 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    $(KYLIX_EXEC_PREFIX)bc++ -P- -g255 -j5 -q -c -w -a8 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -120,6 +120,7 @@ rule C++-action
 # for C++ compiles the following options are turned on by default:
 #
 # -j5    stops after 5 errors
+# -g255  allow an infinite number of warnings
 # -q     no banner
 # -c     compile to object
 # -P     C++ code regardless of file extention
@@ -133,7 +134,7 @@ rule C++-action
 #
 actions kylix-C++-action
 {
-    "$(BCC_TOOL_PATH)bc++" -j5 -q -c -w -Ve -Vx -a8 -x -xd -RT -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    $(KYLIX_EXEC_PREFIX)bc++ -j5 -g255 -q -c -w -Ve -Vx -a8 -x -xd -RT -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 #### Archive ####
@@ -146,6 +147,7 @@ actions updated together piecemeal kylix-Archive-action
 {
     ar -r $(<) $(>)
 }
+
 
 
 
