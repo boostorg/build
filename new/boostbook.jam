@@ -20,6 +20,7 @@ import regex ;
 import scanner ;
 import make ;
 import type ;
+import modules path project ;
 
 feature.feature xsl:param : : free ;
 feature.feature format : html onehtml man pdf ps docbook fo tests
