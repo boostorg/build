@@ -17,6 +17,7 @@ import os ;
 import stage ;
 import prebuilt ;
 import toolset ;
+import errors : error ;
 
 feature toolset : gcc : implicit propagated link-incompatible ;
 feature shared : false true : propagated ;
@@ -60,8 +61,7 @@ rule variant ( name : parents-or-properties * : tool-properties * )
     # between base variants.
     if $(parents[2])
     {
-        print.wrapped-text "error: multiple base variants are not yet supported" ;
-        EXIT ;
+        error "multiple base variants are not yet supported" ;
     }
     
     # Record explicitly specified properties for this variant
@@ -107,26 +107,30 @@ variant release : <optimization>on <debug-symbols>off ;
 
 type.register LIB : : : main ;
 
-if [ os.name ] in NT CYGWIN
+# register the given type on the specified OSes, or on remaining OSes
+# if os is not specified.
+local rule declare-type ( os * : type : suffixes * : base-type ? : main ? ) 
 {
-    type.register EXE : exe : : main ;
-    type.register SHARED-LIB : dll : LIB : main ;
-    
-    if [ os.name ] = CYGWIN
+    if ! [ type.registered $(type) ]
     {
-        type.register STATIC-LIB : a : LIB : main ;
-    }
-    else
-    {
-        type.register STATIC-LIB : lib : LIB : main ;
+        if ( ! $(os) ) || [ os.name ] in $(os)
+        {
+            type.register $(type) : $(suffixes) : $(base-type) : $(main) ;
+        }
     }
 }
-else
-{
-    type.register EXE : : : main ;
-    type.register SHARED-LIB : so : LIB : main ;
-    type.register STATIC-LIB : a : LIB : main ;
-}
+
+declare-type NT : STATIC_LIB : a : LIB : main ;
+declare-type : STATIC_LIB : a : LIB : main ;
+
+declare-type NT : SHARED_LIB : dll : LIB : main ;
+declare-type : SHARED_LIB : so : LIB : main ;
+
+declare-type NT CYGWIN : EXE : exe : : main ;
+declare-type : EXE : : : main ;
+
+declare-type NT CYGWIN : PYTHON_EXTENSION : dll : SHARED_LIB : main ;
+declare-type : PYTHON_EXTENSION : so : SHARED_LIB : main ;
 
 type.register CPP : cpp cxx ;
 
@@ -209,18 +213,18 @@ type.register OBJ : o : : main ;
 
 rule lib-generator ( ) 
 {
-    composing-generator.__init__ lib-generator : unknown-source-type : LIB ;
+    composing-generator.__init__ lib-generator : unknown-source-type : LIB : <main-target-type>LIB ;
     
     rule run ( project name ? : properties * : sources + )
     {
         local actual-type ;
         if <shared>true in $(properties)
         {
-            actual-type = SHARED-LIB ;
+            actual-type = SHARED_LIB ;
         }
         else 
         {
-            actual-type = STATIC-LIB ;
+            actual-type = STATIC_LIB ;
         }
         return [ generators.construct $(project) $(name) : $(actual-type) : $(properties)
           : $(sources) : allow-composing-generators ] ;

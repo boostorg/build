@@ -124,6 +124,10 @@ rule generator (
         self.name-pre-post.$(m[1]) = $(m[3]) $(m[4]) ;
     }
     
+    self.optional-properties
+      = [ feature.expand <base-target-type>$(self.target-types) ]
+          ;
+    
     rule id ( )
     {
         return $(self.id) ;
@@ -154,6 +158,7 @@ rule generator (
     # TODO: comment is out of date.
     rule optional-properties ( )
     {
+        return $(self.optional-properties) ;
     }
 
     # Tries to invoke this generator on the given sources. Returns a
@@ -558,23 +563,78 @@ local rule find-viable-generators ( target-type : properties * )
     # Select generators that can create the required target type.
     local viable-generators = ;
     local generator-rank = ;
-    # TODO: rank generators by optional properties.
-    for local g in $(.generators.$(target-type))
+
+    import type ;
+    local t = [ type.all-bases $(target-type) ] ;
+    
+    while $(t[1])
     {
-        # Avoid trying the same generator twice on different levels.
-        if ! $(g) in $(.active-generators) 
-          && ! ( [ is-a $(g) : composing-generator ] && $(.had-composing-generator) )
-          {           
-              if [ $(g).requirements ] in $(properties) 
-              {
-                  viable-generators += $(g) ;
-                  generator-rank += [ sequence.length [ set.intersection 
-                      [ $(g).optional-properties ] : $(properties) ] ] ;
+        for local g in $(.generators.$(t))
+        {
+            # Avoid trying the same generator twice on different levels.
+            if ! $(g) in $(.active-generators) 
+              && ! ( [ is-a $(g) : composing-generator ] && $(.had-composing-generator) )
+              {           
+                  if [ $(g).requirements ] in $(properties) 
+                  {
+                      viable-generators += $(g) ;
+                      generator-rank += [ sequence.length [ set.intersection 
+                          [ $(g).optional-properties ] : $(properties) ] ] ;
+                      t = ;
+                  }            
               }            
-          }            
+        }
+        t = $(t[2-]) ;
     }
     
     return [ sequence.select-highest-ranked $(viable-generators) : $(generator-rank) ] ;        
+}
+
+# currently unused. Sorry for the cruft. Delete at will
+local rule find-viable-generators.new ( target-type : properties * )
+{
+    # Select generators that can create the required target type.
+    local viable-generators = ;
+    local generator-rank = ;
+    
+    import type ;
+    local t = [ type.all-bases $(target-type) ] ;
+    
+    while $(t[1])
+    {
+        generators.dout [ indent ] " ...checking type" [ $(t[1]) ] ;
+        
+        for local g in $(.generators.$(t[1]))
+        {
+            generators.dout [ indent ] " ...checking" [ $(g).id ] ;
+            # Avoid trying the same generator twice on different levels.
+            if ! $(g) in $(.active-generators) 
+              && ! ( [ is-a $(g) : composing-generator ] && $(.had-composing-generator) )
+              {           
+                  local requirements = [ $(g).requirements ] ;
+                  generators.dout [ indent ] " ...requirements:" $(requirements) ;
+                  
+                  if $(requirements) in $(properties) 
+                  {
+                      local optional = [ $(g).optional-properties ] ;
+                      local match = $(requirements) [ set.intersection $(optional) : $(properties) ] ;
+                      
+                      if $(match)
+                      {
+                          viable-generators += $(g) ;
+                          generator-rank += [ sequence.length $(match) ] ;
+                          generators.dout [ indent ] " ...matched" [ $(g).id ]
+                            "with rank $(generator-rank[-1]) :" $(match) ;
+                          t = ;
+                      } 
+                  }
+              } 
+        }
+        t = $(t[2-]) ;
+    }
+    
+    
+    return [ sequence.select-highest-ranked $(viable-generators) : $(generator-rank) ] ; 
 }
     
 # Given a vector of vectors, of of them represents results of running some 
@@ -669,7 +729,7 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
         generators.dout [ indent ] "    from" [ $(s).str ] ;
     }
     generators.dout [ indent ] "    properties:" $(properties) ;        
-    
+
     local .had-composing-generator = $(.had-composing-generator) ;
     if $(allow-composing-generators)
     {
@@ -728,7 +788,7 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
         local results = [ new vector ] ;
         
         generators.dout [ indent ] "*** " [ sequence.length $(viable-generators) ] 
-          " viable generators " ;
+          " viable generators" ;
 
         for local g in $(viable-generators)
         {
@@ -785,8 +845,8 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
             }
             else 
             {                        
-                error [ $(results).size ] "possible generations for "
-                       $(target-types) "Can't handle this now." ;
+                error [ $(results).size ] "possible generations for " $(target-types)
+                  : "generations:" [ $(results).str ] ;
             }
         }
         
