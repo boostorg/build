@@ -43,6 +43,15 @@ class alias-target-class : basic-target
     {
         return $(source-targets) ;
     }   
+    
+    rule compute-usage-requirements ( subvariant ) 
+    {
+        local base = [ basic-target.compute-usage-requirements $(subvariant) ] ;
+        # Add source's usage requirement. If we don't do this, "alias" does not
+        # look like 100% alias.
+        return [ $(base).add [ $(subvariant).sources-usage-requirements ] ] ;
+    }
+    
 }
 
 # Declares the 'alias' target. It will build sources, and return them unaltered.
