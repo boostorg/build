@@ -44,7 +44,7 @@ t.copy("dir/Jamfile3", "dir/Jamfile")
 
 expected="""Cannot satisfy request to build dir/foo1 with properties  <variant>debug
 <optimization>off <rtti>on
-Explanation: link-incompatible properties <rtti>on and <rtti>off
+No viable alternative found.
 
 """
 

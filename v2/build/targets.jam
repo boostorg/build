@@ -157,8 +157,14 @@ rule main-target ( name : project )
         }
         if [ $(alternatives).empty ]
         {
-            # TODO: Should print a name
-            error "No viable alternative found for main target" [ full-name ] ;
+            # TODO: probably, should explain, for each alternative, why it can't
+            # be build.
+            print.wrapped-text
+                "Cannot satisfy request to build" [ full-name ]
+                 "with properties " $(properties) ;
+            print.wrapped-text
+                 "No viable alternative found." ;
+            EXIT ;
         }
         local result ;
         if [ $(alternatives).size ] = 1 
@@ -262,36 +268,35 @@ rule basic-target ( name : project
             {
                 local rproperties =
                     [ property.refine $(properties) : $(self.requirements) ] ;
-                if $(rproperties[1]) = "@error"
-                {
-                    print.wrapped-text
-                        "Cannot satisfy request to build" [ full-name ]
-                        "with properties " $(properties) ;
-                    print.wrapped-text
-                        "Explanation:" $(rproperties[2-]) ;
-                    EXIT ;
-                 }
-                 # TODO: issue a warning when requirements change properties, but
-                 # link-compatibility is still not broken.
 
-                 local source-targets ;
-                 for local s in $(self.sources)
-                 {
-                    # Try treating this source as reference to main target
-                    local more-targets = [ generate-source $(s) : $(properties) ] ;
-                    if $(more-targets)
+                if $(rproperties[1]) != "@error"                    
+                {
+                    # TODO: issue a warning when requirements change properties, but
+                    # link-compatibility is still not broken.
+
+                    local source-targets ;
+                    for local s in $(self.sources)
                     {
-                        source-targets += $(more-targets) ;
+                        # Try treating this source as reference to main target
+                        local more-targets = [ generate-source $(s) : $(properties) ] ;
+                        if $(more-targets)
+                        {
+                            source-targets += $(more-targets) ;
+                        }
+                        else 
+                        {
+                            # Just a source file
+                            source-targets +=
+                                [ new virtual-target $(s) : $(self.project) ] ;
+                        }
                     }
-                    else 
-                    {
-                        # Just a source file
-                        source-targets +=
-                            [ new virtual-target $(s) : $(self.project) ] ;
-                    }
-                }
-                self.generated.$(property-path) = 
-                    [ construct $(source-targets) : $(properties) ] ;                                                                                                                                        
+                    self.generated.$(property-path) = 
+                        [ construct $(source-targets) : $(properties) ] ;                                                                                                                                        
+                } 
+                else
+                {
+                    self.generated.$(property-path) = $(rproperties) ;
+                }       
             }                
             return $(self.generated.$(property-path)) ;
         }
