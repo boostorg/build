@@ -61,7 +61,7 @@ if $(PYTHON_WINDOWS)
 }
 else if $(UNIX) && $(OS) = MACOSX
 {
-    PYTHON_EMBEDDED_LIBRARY = dl util ;
+    PYTHON_EMBEDDED_LIBRARY = ;
 }
 else
 {
