@@ -244,7 +244,9 @@ yylex()
 	    *b = 0;
 	    yylval.type = STRING;
 	    yylval.string = newstr( buf );
-
+        yylval.file = incp->fname;
+        yylval.line = incp->line;
+        
 	}
 	else
 	{
@@ -258,17 +260,17 @@ yylex()
 
 	    for( ;; )
 	    {
-		/* Skip past white space */
+            /* Skip past white space */
 
-		while( c != EOF && isspace( c ) )
-			c = yychar();
+            while( c != EOF && isspace( c ) )
+                c = yychar();
 
-		/* Not a comment?  Swallow up comment line. */
+            /* Not a comment?  Swallow up comment line. */
 
-		if( c != '#' )
-			break;
-		while( ( c = yychar() ) != EOF && c != '\n' )
-			;
+            if( c != '#' )
+                break;
+            while( ( c = yychar() ) != EOF && c != '\n' )
+                ;
 	    }
 
 	    /* c now points to the first character of a token. */
@@ -276,6 +278,9 @@ yylex()
 	    if( c == EOF )
 		goto eof;
 
+        yylval.file = incp->fname;
+        yylval.line = incp->line;
+        
 	    /* look for white space to delimit word */
 	    /* "'s get stripped but preserve white space */
 
@@ -343,6 +348,9 @@ yylex()
 	return yylval.type;
 
 eof:
+    yylval.file = "end-of-input"; /* just in case */
+    yylval.line = 0;
+        
 	yylval.type = EOF;
 	return yylval.type;
 }
@@ -371,4 +379,21 @@ symdump( YYSTYPE *s )
 		break;
 	}
 	return buf;
+}
+
+/*  Get information about the current file and line, for those epsilon
+ *  transitions that produce a parse
+ */
+void yyinput_stream( char** name, int* line )
+{
+    if (incp)
+    {
+        *name = incp->fname;
+        *line = incp->line;
+    }
+    else
+    {
+        *name = "(builtin)";
+        *line = -1;
+    }
 }
