@@ -268,6 +268,19 @@ rule is-derived ( class : bases + )
     return $(found) ;
 }
 
+# Check if the given value is of the given type.
+#
+rule is-a (
+    instance # The value to check.
+    : type # The type to test for.
+    )
+{
+    if [ MATCH "(object@).*" : $(instance) ]
+    {
+        return [ class.is-derived [ modules.peek $(instance) : __class__ ] : $(type) ] ;
+    }
+}
+
 rule __test__ ( )
 {
     module class.__test__
@@ -441,5 +454,10 @@ rule __test__ ( )
         assert.true is-derived derived3 : myclass ;
         
         assert.false is-derived myclass : derived1 ;
+        
+        assert.true is-a $(a) : myclass ;
+        assert.true is-a $(c) : derived2 ;
+        assert.true is-a $(d) : myclass ;
+        assert.false is-a literal : myclass ;
     }
 }
