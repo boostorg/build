@@ -52,4 +52,22 @@ alias a : $(pwd)/a.cpp ;
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug/a.exe")
 
+# Test absolute path in target ids
+t.rm(".")
+t.write("d1/project-root.jam", "")
+t.write("d1/Jamfile", """
+exe a : a.cpp ;
+""")
+t.write("d1/a.cpp", """
+int main() { return 0; }
+""")
+t.write("d2/project-root.jam", "")
+t.write("d2/Jamfile", """
+local pwd = [ PWD ] ;
+alias x : $(pwd)/../d1//a ;
+""")
+
+t.run_build_system(subdir="d2")
+t.expect_addition("d1/bin/$toolset/debug/a.exe")
+
 t.cleanup()
