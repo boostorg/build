@@ -285,30 +285,33 @@ rule inherit ( toolset : base )
     inherit-rules $(toolset) : $(base) ;
 }
 
-rule inherit-generators ( toolset properties * : base )
+rule inherit-generators ( toolset properties * : base : generators-to-ignore * )
 {
     properties ?= <toolset>$(toolset) ;
     local base-generators = [ generators.generators-for-toolset $(base) ] ;
     for local g in $(base-generators)
     {
         local id = [ $(g).id ] ;
+        
+        if ! $(id) in $(generators-to-ignore)
+        {            
+            # Some generator names have multiple periods in their name, so
+            # $(id:B=$(toolset)) doesn't generate the right new-id name.
+            # e.g. if id = gcc.compile.c++, $(id:B=darwin) = darwin.c++,
+            # which is not what we want. Manually parse the base and suffix
+            # (if there's a better way to do this, I'd love to see it.)
+            # See also register in module generators.
+            local base = $(id) ;
+            local suffix = "" ;
+            while $(base:S)
+            {
+                suffix = $(base:S)$(suffix) ;
+                base = $(base:B) ;
+            }
+            local new-id = $(toolset)$(suffix) ;
 
-        # Some generator names have multiple periods in their name, so
-        # $(id:B=$(toolset)) doesn't generate the right new-id name.
-        # e.g. if id = gcc.compile.c++, $(id:B=darwin) = darwin.c++,
-        # which is not what we want. Manually parse the base and suffix
-        # (if there's a better way to do this, I'd love to see it.)
-        # See also register in module generators.
-        local base = $(id) ;
-        local suffix = "" ;
-        while $(base:S)
-        {
-          suffix = $(base:S)$(suffix) ;
-          base = $(base:B) ;
-        }
-        local new-id = $(toolset)$(suffix) ;
-
-        generators.register [ $(g).clone $(new-id) : $(properties) ] ;
+            generators.register [ $(g).clone $(new-id) : $(properties) ] ;
+        }        
     }    
 }
 
