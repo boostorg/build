@@ -98,6 +98,10 @@ class Tester(TestCmd.TestCmd):
                 jam_build_dir = "bin.solaris"
             elif os.uname()[0] == 'Darwin':
                 jam_build_dir = "bin.macosxppc"
+            elif os.uname()[0] == "AIX":
+                jam_build_dir = "bin.aix"
+            elif os.uname()[0] == "IRIX64":
+                jam_build_dir = "bin.irix"
             else:
                 raise "Don't know directory where jam is build for this system: " + os.name + "/" + os.uname()[0]
         else:
