@@ -152,8 +152,8 @@ case $BOOST_JAM_TOOLSET in
     if test -r /opt/SUNWspro/bin/CC ; then
         BOOST_JAM_TOOLSET_ROOT=/opt/SUNWspro/
     fi
-    if test -r ${BOOST_JAM_TOOLSET_ROOT}bin/CC ; then
-        export PATH=${BOOST_JAM_TOOLSET_ROOT}bin:${PATH}
+    if test -r $BOOST_JAM_TOOLSET_ROOTbin/CC ; then
+        export PATH=$BOOST_JAM_TOOLSET_ROOTbin:$PATH
     fi
     BOOST_JAM_CC=CC
     ;;
