@@ -271,6 +271,12 @@ load_builtins()
       }
 # endif
 
+      {
+          char * args[] = { "targets", "*", 0 };
+          bind_builtin( "ISFILE",
+              builtin_flags, T_FLAG_NOUPDATE, 0 );
+      }
+
       /* Initialize builtin modules */
       init_set();
       init_path();
