@@ -53,7 +53,7 @@ feature linkflags : : free ;
 feature archiveflags : : free ;
 feature version : : free ;
 
-feature dependency : : free dependency ;
+feature use : : free dependency ;
 feature implicit-dependency : : free dependency ;
 feature library : : free dependency ;
 feature find-shared-library : : free ;

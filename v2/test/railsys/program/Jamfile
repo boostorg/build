@@ -29,7 +29,7 @@ project program
         <library>/qt//qt
         <hardcode-dll-paths>true
         <stdlib>stlport
-        <dependency>/libx
+        <use>/libx
 #        <dependency>../libx/src
            
  : usage-requirements 
