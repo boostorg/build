@@ -9,7 +9,7 @@ import extra ;
 import type ;
 
 type.register UI : ui ;
-type.register UIC-H : h ;
+type.register UIC_H : h ;
 
 type.register X1 : x1 ;
 type.register X2 : x2  ;
@@ -17,8 +17,8 @@ type.register X_PRO : x_pro ;
 
 import generators ;
 
-generators.register-standard qt.uic : UI UIC-H : CPP ;
-generators.register-standard qt.uic-h : UI : UIC-H ;
+generators.register-standard qt.uic : UI UIC_H : CPP ;
+generators.register-standard qt.uic-h : UI : UIC_H ;
 
 # That's an interesting example. Currently, X_PRO will be processed
 # twice.
@@ -33,15 +33,15 @@ generators.register-standard extra.x_pro : X_PRO : X1 X2 ;
 #if $(no-var) {
 import nm ;
 
-type.register CPP-MARKED : marked.cpp : CPP ;
+type.register CPP_MARKED : marked.cpp : CPP ;
 type.register POSITIONS : positions ;
 type.register NM.TARGET.CPP : target.cpp : CPP ;
 type.register NM_EXE : : EXE : main ;
 
 # Should inherit generators from base class?
 generators.register-composing gcc.link : OBJ : NM_EXE : <toolset>gcc ;
-generators.register-standard nm.target-source : CPP-MARKED : NM.TARGET.CPP ;
-generators.register-standard nm.cpp-mark : CPP : CPP-MARKED POSITIONS ;
+generators.register-standard nm.target-source : CPP_MARKED : NM.TARGET.CPP ;
+generators.register-standard nm.cpp-mark : CPP : CPP_MARKED POSITIONS ;
     
         
 rule nm.target.cpp-obj-generator 

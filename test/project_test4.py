@@ -38,12 +38,10 @@ t.expect_content("bin/gcc/debug/main-target-b.exe/b.exe",
 
 t.copy("lib/Jamfile2", "lib/Jamfile")
 
-expected="""Requirements for project at 'lib' conflict with parent's.
-Explanation:  link-incompatible properties <threading>single and
-<threading>multi
-
+expected="""error: Requirements for project at 'lib' conflict with parent's.
+Explanation:  link-incompatible properties <threading>single and <threading>multi
 """
-t.run_build_system(stdout=expected, status=None)
+t.run_build_system("--no-error-backtrace", stdout=expected, status=None)
 
 t.copy("lib/Jamfile3", "lib/Jamfile")
 
