@@ -14,6 +14,7 @@ LIST * 	var_get( char *symbol );
 void 	var_set( char *symbol, LIST *value, int flag );
 LIST * 	var_swap( char *symbol, LIST *value );
 void 	var_done();
+void    var_hash_swap( struct hash** );
 
 /*
  * Defines for var_set().

@@ -121,11 +121,11 @@ assert-equal x y x-y
     assert-index 2--2 : b c d ;
     assert-index -3--2 : c d ;
     assert-index 1--2 : a b c d ;
-    assert-index --2 : a b c d ;
+    assert-index 1--2 : a b c d ;
     assert-index 1--10 : ;
     x = a ;
     assert-index 1--2 : ;
-    assert-index --2 : ;
+    assert-index 1--2 : ;
 }
 
 #
@@ -148,14 +148,16 @@ assert-equal x y x-y
         local f = [ id x y z ] ;
         assert-equal x y z : identity $(f) ;
         
-        module local w y ;
-        module local x2 x3 z = 1 2 3 ;
-
-        module local x3 ; # should not affect x3
-        assert-equal 1 2 3 : identity $(x3) ;
+        w = ;
+        y = ;
+        x2 = 1 2 3 ;
+        x3 = $(x2) ;
+        z = $(x2) ;
         
-        module local x3 = ; # should reset x3
+        x3 = ; # should reset x3
         
+        # drops one element from the head of x
+        # moves the first element of z from the head of z to the head of y
         rule shift1 ( )
         {
             x = $(x[2-]) ;
@@ -200,9 +202,9 @@ assert-equal x y x-y
         EXIT unexpectedly failed to find exported rule "not_really" in "my_module" ;
     }
     
+    # show that my_module doesn't have access to our variables
     my_module.shift1 ;
-    y = $(y[2-]) ;
-    assert-equal $(x) : identity $(y) ;
+    assert-equal $(x[3-]) : identity $(y) ;
 
     # check module locals
     assert-equal : my_module.get w ;
@@ -212,7 +214,7 @@ assert-equal x y x-y
     assert-equal : my_module.get z ;
     
     my_module.shift2 ;
-    y = $(y[2-]) ;
+    x = $(x[3-]) ;
     assert-equal $(x) : identity $(y) ;
 
     # Prove that the module's rule is not exposed to the world at large without
@@ -225,16 +227,21 @@ assert-equal x y x-y
     IMPORT my_module : shift1 shift2 : : shifty shift2 ;
 
     shifty ;
-    y = $(y[2-]) ;
     assert-equal $(x) : identity $(y) ;
 
     shift2 ;
-    y = $(y[2-]) ;
+    assert-equal $(x) : identity $(y) ;
+
+    # Now do the same with localization
+    IMPORT my_module : shift1 : : shifty : LOCALIZE ;
+
+    shifty ;
+    y = $(y[3-]) ;
     assert-equal $(x) : identity $(y) ;
 
     # import everything from my_module into the global module using
     # the same names.
-    IMPORT my_module : [ RULENAMES my_module ] : : [ RULENAMES my_module ] ;
+    IMPORT my_module : [ RULENAMES my_module ] : : [ RULENAMES my_module ] : LOCALIZE ;
 
     shift1 ;
     y = $(y[2-]) ;

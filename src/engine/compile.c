@@ -277,7 +277,10 @@ compile_foreach(
     }
 
         if ( parse->num )
+        {
             popsettings( s );
+            freesettings( s );
+        }
 
     list_free( nv );
 
@@ -751,7 +754,16 @@ evaluate_rule(
     profile_frame prof[1];
     module    *prev_module = frame->module;
     
-    LIST*  l = var_expand( L0, rulename, rulename+strlen(rulename), frame->args, 0 );
+    LIST      *l;
+    {
+        LOL arg_context_, *arg_context = &arg_context_;
+        if ( !frame->prev )
+            lol_init(arg_context);
+        else
+            arg_context = frame->prev->args;
+        
+        l = var_expand( L0, rulename, rulename+strlen(rulename), arg_context, 0 );
+    }
 
     if ( !l )
     {
@@ -895,7 +907,7 @@ compile_set(
     LIST    *nt = parse_evaluate( parse->left, frame );
     LIST    *ns = parse_evaluate( parse->right, frame );
     LIST    *l;
-    int setflag;
+    int     setflag;
     char    *trace;
 
     switch( parse->num )
@@ -909,6 +921,7 @@ compile_set(
     if( DEBUG_COMPILE )
     {
         debug_compile( 0, "set", frame);
+        printf( frame->module->name );
         list_print( nt );
         printf( " %s ", trace );
         list_print( ns );
@@ -925,54 +938,6 @@ compile_set(
 
     return ns;
 }
-
-/*
- * compile_set_module() - compile the "module local set variable" statement
- *
- *  parse->left     variable names
- *  parse->right    variable values 
- */
-LIST *
-compile_set_module(
-    PARSE   *parse,
-    FRAME *frame )
-{
-    LIST    *nt = parse_evaluate( parse->left, frame );
-    LIST    *ns = parse_evaluate( parse->right, frame );
-    LIST    *l;
-    int setflag;
-    char    *trace;
-
-    switch( parse->num )
-    {
-    case ASSIGN_SET:    setflag = VAR_SET; trace = "="; break;
-    default:        setflag = VAR_APPEND; trace = ""; break;
-    }
-    
-    if( DEBUG_COMPILE )
-    {
-        debug_compile( 0, "set module", frame);
-        printf( "(%s)", frame->module->name );
-        list_print( nt );
-        printf( " %s ", trace );
-        list_print( ns );
-        printf( "\n" );
-    }
-
-    /* Call var_set to set variable */
-    /* var_set keeps ns, so need to copy it */
-
-    for( l = nt; l; l = list_next( l ) )
-    {
-        bind_module_var( frame->module, l->string );
-        var_set( l->string, list_copy( L0, ns ), setflag );
-    }
-
-    list_free( nt );
-
-    return ns;
-}
-
 
 /*
  * compile_setcomp() - support for `rule` - save parse tree 

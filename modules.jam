@@ -4,9 +4,9 @@
 #  warranty, and with no claim as to its suitability for any purpose.
 
 # Keep a record so that no module is included multiple times
-module local loaded-modules ;
-module local loading-modules ;
-module local untested ;
+loaded-modules ?= ;
+loading-modules ?= ;
+untested ?= ;
 
 # meant to be invoked from import when no __test__ rule is defined in a given
 # module
@@ -21,6 +21,29 @@ rule binding ( module )
     return $($(module).__binding__) ;
 }
 
+# Sets the module-local value of a variable.  This is the most
+# reliable way to set a module-local variable in a different module;
+# it eliminates issues of name shadowing due to dynamic scoping.
+rule poke ( module-name ? : variables + : value * )
+{
+    module $(<)
+    {
+        $(>) = $(3) ;
+    }
+}
+
+# Returns the module-local value of a variable.  This is the most
+# reliable way to examine a module-local variable in a different
+# module; it eliminates issues of name shadowing due to dynamic
+# scoping.
+rule peek ( module-name ? : variables + )
+{
+    module $(<)
+    {
+        return $($(>)) ;
+    }
+}
+
 # load the indicated module if it is not already loaded.
 rule load ( module-name : filename ? : search * )
 {
@@ -32,29 +55,31 @@ rule load ( module-name : filename ? : search * )
         local suppress-test = $(untested[1]) ; # suppress tests until all recursive loads are complete.
         untested += $(module-name) ; # add the module to the stack of untested modules
         
+        poke $(module-name) : __name__ : $(module-name) ;
+        poke $(module-name) : __file__ : $(filename) ;
+        
         module $(module-name)
         {
-            module local __name__ = $(module-name) ;
-            
             # Prepare a default behavior, in case no __test__ is defined.
-            IMPORT modules : no_test_defined : $(module-name) : __test__ ;
+            IMPORT modules : no_test_defined : $(__name__) : __test__ ;
 
             # Add some grist so that the module will have a unique target name
-            local module-target = $(filename:G=module@) ;
+            local module-target = $(__file__:G=module@) ;
             
-            search ?= $(BOOST_BUILD_PATH) ;
-            SEARCH on $(module-target) = $(search) ;
+            search ?= [ modules.peek : BOOST_BUILD_PATH ] ;
+            SEARCH on $(module-target) = $(3) ;
             BINDRULE on $(module-target) = modules.record-binding ;
             include $(module-target) ;
         }
         loading-modules = $(loading-modules[1--2]) ;
         
-        if ! $(suppress-test) && $(BOOST_BUILD_TEST)-is-nonempty
+        local test = [ peek : BOOST_BUILD_TEST ] ;
+        if ! $(suppress-test) && $(test)-is-nonempty
         {
             # run any pending tests
             for local m in $(untested)
             {
-                if ( $(BOOST_BUILD_TEST) = 1 ) || ( $(m) in $(BOOST_BUILD_TEST) )
+                if ( $(test) = 1 ) || ( $(m) in $(test) )
                 {
                     ECHO testing module $(m)... ;
                     module $(m)
@@ -78,7 +103,7 @@ rule load ( module-name : filename ? : search * )
 # each loaded module.
 rule record-binding ( module-target : binding )
 {
-    module local $(module-target:G=:S=).__binding__ = $(binding) ;
+    $(module-target:G=:S=).__binding__ = $(binding) ;
 }
 
 # load the indicated module and import rule names into the current
@@ -103,4 +128,19 @@ rule import ( module-name : rules-opt * : rename-opt * )
     target-names ?= $(source-names) ;
     IMPORT $(module-name) : $(source-names) : [ CALLER_MODULE ] : $(target-names) ;
 }
+
+local rule __test__ ( )
+{
+    import assert ;
+    
+    module modules.__test__
+    {
+        foo = bar ;
+    }
+    
+    assert.result bar : peek modules.__test__ : foo ;
+    poke modules.__test__ : foo : bar baz ;
+    assert.result bar baz : peek modules.__test__ : foo ;
+}
+
 

@@ -10,8 +10,7 @@ struct module
 {
     char* name;
     struct hash* rules;
-    struct hash* local_names;
-    struct _settings* locals;
+    struct hash* variables;
 };
 
 typedef struct module module; /* MSVC debugger gets confused unless this is provided */
