@@ -397,15 +397,8 @@ rule python-test-target ( test-target : sources + )
     }    
 }
 
-if $(UNIX)
+if $(NT)
 {
-    gAPPEND_LD_LIBRARY_PATH = ":$"$(gSHELL_LIBPATH) ;
-    gAPPEND_PATH = ":$"PATH ;
-}
-else if $(NT)
-{
-    gAPPEND_LD_LIBRARY_PATH = "" ;
-    gAPPEND_PATH =  ";%PATH%" ;
     PYTHON_SHELL_LIBPATH = LD_LIBRARY_PATH ;
 }
 PYTHON_SHELL_LIBPATH ?= $(gSHELL_LIBPATH) ;

@@ -239,13 +239,18 @@ RUN_PATH ?= $(PATH) ;
 if $(UNIX)
 {
     RUN_LD_LIBRARY_PATH ?= $($(gSHELL_LIBPATH)) ;
+    gAPPEND_LD_LIBRARY_PATH = ":$"$(gSHELL_LIBPATH) ;
+    gAPPEND_PATH = ":$"PATH ;
 } 
 if $(NT)
 {
     # Try some other likely spellings
     RUN_PATH ?= $(Path) ;
     RUN_PATH ?= $(path) ;
+    gAPPEND_LD_LIBRARY_PATH = ";%LD_LIBRARY_PATH%" ;
+    gAPPEND_PATH =  ";%PATH%" ;
 }
+
 # Now set this, just in case someone tries to use it.
 PATH = $(RUN_PATH) ;
 if $(UNIX)
