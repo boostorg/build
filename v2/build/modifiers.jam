@@ -121,7 +121,6 @@ rule modifier (
         local result = [ new file-target $(new-name) : $(new-type) : $(new-project) ] ;
         
         if [ $(target).dependencies ] { $(result).depends [ $(target).dependencies ] ; }
-        $(result).suffix [ $(target).suffix ] ;
         $(result).root [ $(target).root ] ;
         $(result).set-usage-requirements [ $(target).usage-requirements ] ;
         

@@ -95,6 +95,18 @@ rule apply-default-suffix ( suffix : list * )
     return $(result) ;    
 }
 
+# If 'name' contains a dot, returns the part before the first dot.
+# If 'name' contains no dot, returns it unmodified.
+rule basename ( name )
+{    
+    while $(name:S)
+    {
+        name = $(name:B) ;
+    }
+    return $(name) ;
+}
+
+
 
 local rule __test__ ( )
 {
@@ -135,6 +147,10 @@ local rule __test__ ( )
     assert.result "not sure" : equal [ new test-class__ ] 1 ;
     
     assert.result foo.lib foo.lib : apply-default-suffix .lib : foo.lib foo.lib ;
+    
+    assert.result foo : basename foo ;
+    assert.result foo : basename foo.so ;
+    assert.result foo : basename foo.so.1 ;
 }
 
 

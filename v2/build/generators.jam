@@ -387,11 +387,12 @@ class generator
     {
         if ! $(name)
         {
-            name = [ $(sources[1]).name ] ;            
+            name = [ utility.basename [ $(sources[1]).name ] ] ;
 
             for local s in $(sources[2])
             {
-                if [ $(s).name ] != $(name)
+                local n2 = [ utility.basename [ $(s).name ] ] ;
+                if $(n2) != $(name)
                 {
                     error "$(self.id): source targets have different names: cannot determine target name" ;
                 }
@@ -401,6 +402,11 @@ class generator
             name = $(name:D=) ;
         }
         
+        # Assign an action for each target
+        local action = [ action-class ] ;
+        local a = [ class.new $(action) $(sources) : $(self.id) : 
+                    $(property-set) ] ;
+                
         # Create generated target for each target type.
         local targets ;
         local pre = $(self.name-prefix) ;
@@ -411,15 +417,11 @@ class generator
             pre = $(pre[2-]) ;
             post = $(post[2-]) ;
             
-            targets += [ class.new file-target $(generated-name) : $(t) : $(project) ] ;
+            targets += [ class.new file-target $(generated-name) 
+              : $(t) : $(project) : $(a) ] ;
         }                 
-        # Assign an action for each target
-        local action = [ action-class ] ;
-        local a = [ class.new $(action) $(targets) : $(sources) : $(self.id) : 
-                    $(property-set) ] ;
         for local t in $(targets)
         {
-            $(t).action $(a) ;
             $(t).set-intermediate true ;
         }       
         

@@ -191,10 +191,12 @@ class searched-lib-target : abstract-file-target
         : project 
         : shared ?                                
         : real-name ?
-        : search *                 
+        : search *
+        : action
     )
     {
-        abstract-file-target.__init__ $(name) : SEARCHED_LIB : $(project) ;
+        abstract-file-target.__init__ $(name) : SEARCHED_LIB : $(project) 
+          : $(action) ;
         
         self.shared = $(shared) ;
         self.real-name = $(real-name) ;
@@ -422,14 +424,13 @@ class searched-lib-generator : generator
             {
                 shared = true ;
             }        
-            
+
+            a = [ new null-action $(property-set) ] ;
             local t = [ new searched-lib-target $(name) : $(project) : $(shared)
                             : [ feature.get-values <name> : $(properties) ]
                             : [ feature.get-values <search> : $(properties) ]
+                            : $(a)
                       ] ;
-            # attach an action and properties to the target
-            a = [ new null-action $(t) : $(property-set) ] ;
-            $(t).action $(a) ;
             # We return sources for a simple reason. If there's
             #    lib png : z : <name>png ; 
             # the 'z' target should be returned, so that apps linking to
@@ -463,7 +464,7 @@ class compile-action : action
 {
     import sequence ;
     
-    rule __init__ ( targets + : sources * : action-name : properties * )
+    rule __init__ ( targets * : sources * : action-name : properties * )
     {
         action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
     }
