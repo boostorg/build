@@ -18,6 +18,7 @@ import property ;
 import property-set ;
 import regex ;
 import scanner ;
+import sequence ;
 import make ;
 import type ;
 import modules path project ;
@@ -77,20 +78,32 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? )
     {
       .docbook-dtd-dir = [ path.make $(docbook-dtd-dir) ] ;
     }
- 
-    local boost-root = [ path.make [ modules.peek : BOOST_ROOT ] ] ;
-    local search-dirs = [ path.join $(boost-root) tools boostbook ] ;
-    local boostbook-xsl-dir = [ GLOB [ path.native $(search-dirs) ] : xsl ] ;
-    local boostbook-dtd-dir = [ GLOB [ path.native $(search-dirs) ] : dtd ] ;
+   
+    local search-dirs ;
+    if [ modules.peek : BOOST_ROOT ] {
+      local boost-root = [ path.make [ modules.peek : BOOST_ROOT ] ] ;
+      search-dirs = [ path.join $(boost-root) tools boostbook ] ;
+    }
+    local boost-build-root = [
+        sequence.transform path.make : [ modules.peek : BOOST_BUILD_PATH ]
+    ] ;
+    search-dirs += $(boost-build-root)/../boostbook ;
+    local native-search-dirs = [
+        sequence.transform path.native : $(search-dirs)
+    ] ;
+    ECHO $(search-dirs) ;
+    local boostbook-xsl-dir = [ GLOB $(native-search-dirs) : xsl ] ;
+    local boostbook-dtd-dir = [ GLOB $(native-search-dirs) : dtd ] ;
     .boostbook-xsl-dir = [ path.make $(boostbook-xsl-dir[1]) ] ;
     .boostbook-dtd-dir = [ path.make $(boostbook-dtd-dir[1]) ] ;
     if ! $(.boostbook-xsl-dir) || ! $(.boostbook-dtd-dir)
     {
         errors.error
-          couldn't find BoostBook xsl/ or dtd/ directories; 
+          couldn't find BoostBook xsl or dtd directories; 
         : please set \"BOOST_ROOT\" variable to the root directory of
         your boost installation.  Searched in:
-          : $(search-dirs:J="") ;
+          : $(search-dirs:J="
+") ;
     }    
     # Add trailing slash since some other code 
     # uses :B modifier to add last element, and fails
