@@ -4,7 +4,7 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-#   Each (sub)project is represented by a module with name Jamfile@jamfile-path.
+#   Each subproject is represented by a module with name Jamfile<jamfile-path>.
 #   The module interface is:
 #
 #       rule location ( )
@@ -14,20 +14,22 @@
 #       rule requirements ( )
 #       rule default-build ( )
 #       rule source-location ( )
+#       rule target ( ) -- returns the 'project-target' for this project.
 
-#       rule subprojects ( )  XXX currently 'subincludes' -- should rename.
+#       rule subprojects ( )
 #
 #   Targets defined in Jamfile, as well as target representing the entire
 #   Jamfile will be available using facilities in the 'targets' module.
 #
 
-import modules : poke ;
+import modules : peek poke ;
 import numbers ;
 import os.path ;
 import sequence ;
 import targets ;
 import errors : error ;
 import project-root ;
+import print ;
 
 
 #
@@ -43,9 +45,9 @@ rule load ( jamfile-location )
     {
         .projects += $(jamfile-location) ;
 
-        for local subinclude in [ $(module-name).subincludes ]
+        for local subproject in [ $(module-name).subprojects ]
         {
-            load [ os.path.join $(jamfile-location) $(subinclude) ] ;
+            load [ os.path.join $(jamfile-location) $(subproject) ] ;
         }
     }
     return $(module-name) ;
@@ -87,7 +89,7 @@ rule lookup ( id : current-location )
         {
             error Jamfile location must be specified for relative project-id $(id) ;
         }
-        
+
         local module-name = [ module-name $(location) ] ;
         local base-id = [ $(module-name).id ] ;
 
@@ -108,20 +110,19 @@ rule lookup ( id : current-location )
     }
 }
 
+# Given an 'id' for a target, return an instance of 'main-target' that
+# corresponds to it.
+rule find-target ( id : current-location )
+{
+    error "Not yet implemented" ;
+}
+
 rule project ( id ? : option1 * : option2 * : option3 * )
 {
-#   ECHO "Declared project '$(id)'" ;
-
     local caller = [ CALLER_MODULE ] ;
     $(id).jamfile-location = [ $(caller).location ] ;
 
     poke $(caller) : __id__ : $(id) ;
-
-    module [ CALLER_MODULE ]
-    {
-        import targets ;
-        targets.create-abstract-project-target [ location ] ;
-    }
 
     if $(option1) {
         assign-option [ CALLER_MODULE ] : $(option1) ;
@@ -141,14 +142,34 @@ rule assign-option ( module : option + )
 
     switch $(first) {
     case "requirements" :
-        poke $(module) : __requirements__ : $(tail) ;
+        local inherited = [ peek $(module) : __requirements__ ] ;
+        local specified = $(tail) ;
+        local result = [ property.refine $(inherited) : $(specified) ] ;
+
+        if $(result[1]) = "@error"
+        {
+            local location = [ $(module).location ] ;
+            print.wrapped-text
+                "Requirements for project at '$(location)'"
+                "conflict with parent's." ;
+            print.wrapped-text
+                "Explanation: " $(result[2-]) ;
+            EXIT ;
+        }
+        else
+        {
+            poke $(module) : __requirements__ : $(result) ;
+        }
+
     case "default-build" :
          poke $(module) : __default-build__ : $(tail) ;
     case "source-location" :
          poke $(module) : __source-location__
               : [ os.path.join [ $(module).location ] $(tail) ] ;
     case * :
-         error "Invalid project option" ;
+         print.wrapped-text "Invalid project option '$(first)' specified "
+                            "for project '$(module)'" ;
+         EXIT ;
     }
 }
 
@@ -182,39 +203,27 @@ local rule find-jamfile (
     local jamfile-glob = ;
     if $(parent-root)
     {
-        jamfile-glob = [ os.path.make
-            [ find-to-root [ os.path.native $(dir:P) ] : $(JAMFILE) ] ] ;
+        if $(parent-root) != $(dir) {
+            # 'find-to-root' does not handle relative paths gracefully,
+            # so use os.path module
+
+            local parent-dirs = [ os.path.all-parents $(dir) : $(parent-root) ] ;
+            # Remove dir and add parent-root to the list of searched dirs
+            parent-dirs = $(parent-dirs[2-]) $(parent-root) ;
+
+            while $(parent-dirs) && ! $(jamfile-glob)
+            {
+                jamfile-glob = [ os.path.glob $(parent-dirs[1]) : $(JAMFILE) ] ;
+                parent-dirs = $(parent-dirs[2-]) ;
+            }
+        }
     }
     else
     {
         jamfile-glob = [ os.path.glob $(dir) : $(JAMFILE) ] ;
     }
 
-    # Normalize the paths of each file found.
-    #
-    local jamfile-found = ;
-    if $(parent-root)
-    {
-        parent-root = [ os.path.make $(parent-root) ] ;
-    }
-    for local jamfile in $(jamfile-glob)
-    {
-        # Filter out if the found file is above the target parent root.
-        if $(parent-root)
-        {
-            if ! [ MATCH "$(parent-root)\\/(.*)" : $(jamfile) ]
-            {
-                jamfile = ;
-            }
-        }
-
-        if $(jamfile)
-        {
-            jamfile-found += $(jamfile) ;
-        }
-    }
-
-    return $(jamfile-found) ;
+    return $(jamfile-glob) ;
 }
 
 # Load a Jamfile at the given directory. Will attempt to load
@@ -312,6 +321,7 @@ local rule initialize (
         import project : project ;
     }
 
+
     # Import rules common to all project modules from project-rules module,
     # define at the end of this file.
     modules.clone-rules project-rules $(module-name) ;
@@ -375,14 +385,25 @@ module project-rules {
         return $(__source-location__) ;
     }
 
-    rule subinclude ( jamfile-location )
+    rule subproject ( jamfile-location )
     {
-        __subincludes__ += $(jamfile-location) ;
+        __subprojects__ += $(jamfile-location) ;
     }
 
-    rule subincludes ( )
+    rule subprojects ( )
     {
-        return $(__subincludes__) ;
+        return $(__subprojects__) ;
+    }
+
+    rule target ( )
+    {
+        # FIXME: this should be done better!
+        import class : new ;
+        if ! $(__target__)
+        {
+            __target__ = [ new project-target "<project>" : $(__name__) ] ;
+        }
+        return $(__target__) ;
     }
 
     rule print ( )
@@ -399,7 +420,7 @@ module project-rules {
         print.list-item "Requirements:" [ requirements ] ;
         print.list-item "Default build:" [ default-build ] ;
         print.list-item "Source location:" [ source-location ] ;
-        print.list-item "Subincludes:" [ sequence.insertion-sort [ subincludes ] ] ;
+        print.list-item "Subprojects:" [ sequence.insertion-sort [ subprojects ] ] ;
         print.list-end ;
     }
 }

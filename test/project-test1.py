@@ -3,54 +3,75 @@
 from BoostBuild import Tester
 import os
 
-t = Tester()
+t = Tester("--build-system=project-test1")
 
 # This test does no modifications, so run in in the invocation dir
 
 os.chdir(t.original_workdir)
 
-expected_output="""Project Roots:
+
+expected_output1="""Project Roots:
  
-'project-test1/dir2':
+"""
+
+expected_output2="""'%(root-dir-prefix)sdir2':
  
-  Module for project-root is 'project-root<project-test1/dir2>'
+  Module for project-root is 'project-root<%(root-dir-prefix)sdir2>'
  
 Projects:
  
 '/cool-library':
  
-* Project root: project-test1/dir2
+* Project root: %(root-dir-prefix)sdir2
 * Parent project: (none)
 * Requirements: <include>/home/ghost/build/boost-cvs
 * Default build: debug
-* Source location: project-test1/dir2
-* Subincludes:
- 
-'project-test1':
- 
-  Module for project-root is 'project-root<project-test1>'
- 
-Projects:
- 
-'/boost-build-test-project-1/dir':
- 
-* Project root: project-test1
-* Parent project: project-test1
-* Requirements: <threading>multi <include>/home/ghost/local/include
-* Default build: release
-* Source location: project-test1/dir/src
-* Subincludes:
- 
-'/boost-build-test-project-1':
- 
-* Project root: project-test1
-* Parent project: (none)
-* Requirements: <threading>multi <include>/home/ghost/local/include
-* Default build: debug
-* Source location: project-test1
-* Subincludes: dir dir2
+* Source location: %(root-dir-prefix)sdir2
+* Subprojects:
  
 """
 
-t.run_build_system("--build-system=project-test1", stdout=expected_output)
+expected_output3="""'%(root-dir)s':
+ 
+  Module for project-root is 'project-root<%(root-dir)s>'
+ 
+Projects:
+ 
+'/boost-build-test-project-1':
+ 
+* Project root: %(root-dir)s
+* Parent project: (none)
+* Requirements: <threading>multi <include>/home/ghost/local/include
+* Default build: debug
+* Source location: %(root-dir)s
+* Subprojects: dir dir2
+ 
+'/boost-build-test-project-1/dir':
+ 
+* Project root: %(root-dir)s
+* Parent project: %(root-dir)s
+* Requirements: <threading>multi <include>/home/ghost/local/include
+* Default build: release
+* Source location: %(root-dir-prefix)sdir/src
+* Subprojects:
+ 
+"""
+
+# Test that correct project structure is created when jam is invoked
+# outside of the source tree.
+expected = (expected_output1 + expected_output2 + expected_output3) % \
+    {"root-dir": "project-test1",
+     "root-dir-prefix": "project-test1/" }
+
+t.run_build_system(stdout=expected)
+
+# Test that correct project structure is created when jam is invoked
+# at the top of the source tree.
+expected = (expected_output1 + expected_output3 + expected_output2) % \
+    {"root-dir": ".",
+     "root-dir-prefix": "" }
+
+os.chdir("project-test1")
+t.run_build_system(stdout=expected)
+
 t.pass_test()
