@@ -723,21 +723,8 @@ rule HdrRule
     INCLUDES $(<) : $(s) ;
     NOCARE $(s) ;
 
-    # This is equivalent to doing a SEARCH for the headers. It's
-    # done this way to get around the inability of Jam to distinguish
-    # files from directories. That would cause problems of false
-    # updates when a directory has the same name as a header. The
-    # HdrSearchAndLocate does the search manually and sets LOCATE
-    # only if it find a file, ignoring directories.
-
-    for local angle-include in $(angle-includes)
-    {
-        HdrSearchAndLocate $(angle-include) : $(HDRSEARCH) ;
-    }
-    for local quoted-include in $(quoted-includes)
-    {
-        HdrSearchAndLocate $(quoted-include) : $(gBINDING($(<)):D) $(HDRSEARCH) ;
-    }
+    SEARCH on $(angle-includes) = $(HDRSEARCH)  ;
+    SEARCH on $(quoted-includes) = $(gBINDING($(<)):D) $(HDRSEARCH)  ;
     
     BINDRULE on $(s) = remember-binding ;
 
