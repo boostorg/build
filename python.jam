@@ -358,7 +358,7 @@ actions python-test-target bind PYTHON
     $(SHELL_EXPORT)$(gSHELL_LIBPATH)
     $(SHELL_SET)PYTHONPATH=$(PYTHONPATH)
     $(SHELL_EXPORT)PYTHONPATH
-    $(PYTHON_LAUNCH) $(PYTHON) $(PYTHON_ARGS) "$(>)" $(ARGS) 2>&1 "$(<)" || $(CATENATE) "$(<)"
+    $(PYTHON_LAUNCH) $(PYTHON) $(PYTHON_ARGS) "$(>)" $(ARGS)
 }
 
 SUFPYTHON_RUNTEST = .run ;
