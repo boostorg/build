@@ -394,7 +394,8 @@ rule main-target ( name : project )
 class main-target : abstract-target ;
 
 # Attempts to generate the target given by target
-# reference.
+# reference. Either returns all the virtual targets
+# generated (possible none), or string "@main target not found"
 rule generate ( target-reference # Target reference
     : project                    # Project where the reference is made
     : property-set               # Properties of the main target that 
@@ -429,6 +430,10 @@ rule generate ( target-reference # Target reference
                   $(rproperties[2-]) ;
         }
         return [ $(main-target).generate $(rproperties) ] ;        
+    }  
+    else
+    {
+        return "@main target not found" ;
     }    
 }
 
@@ -565,7 +570,7 @@ rule basic-target ( name : project
             local more-targets = 
               [ targets.generate $(s) : $(self.project) 
                 : $(property-set) ] ;
-            if $(more-targets)
+            if $(more-targets) != "@main target not found"
             {
                 source-targets += $(more-targets) ;
             }
@@ -644,8 +649,12 @@ rule basic-target ( name : project
     }
     
     # Check that 'result' makes use of all the 'sources'. If not,
-    # issues a warning.
-    local rule check-for-unused-sources ( result + : sources * )
+    # issues a warning. Note that 'result' *can* be empty. For
+    # example, in this use case:
+    #    alias platform-sources ;
+    #    alias platform-sources : a.cpp : <os>NT ;
+    # result will be empty in the first case.
+    local rule check-for-unused-sources ( result * : sources * )
     {
         local used-sources ;
         for local r in $(result)
