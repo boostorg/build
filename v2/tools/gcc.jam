@@ -16,8 +16,7 @@ import "class" : new ;
 import order ;
 import set ;
 
-#feature.extend toolset : gcc ;
-
+feature.extend toolset : gcc ;
 toolset.inherit gcc : unix ;
 feature.subfeature toolset gcc : version : : optional propagated link-incompatible ;
 
