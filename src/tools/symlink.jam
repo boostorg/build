@@ -56,7 +56,7 @@ rule symlink-targets (
         for local t in $(source-targets)
         {
             local s = $(self.targets[$(i)]) ;
-            local vt = [ class.new virtual-target $(s) : [ $(t).type ] : $(self.project) ] ;
+            local vt = [ class.new file-target $(s) : [ $(t).type ] : $(self.project) ] ;
             $(vt).action [ class.new action $(vt) : $(t) : symlink.ln ] ;
             self.virtual-targets += $(vt) ;
             i = [ numbers.increment $(i) ] ;

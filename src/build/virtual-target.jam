@@ -11,30 +11,168 @@
 import class : class new ;
 import type ;
 
-# Class which represents a virtual target
-rule virtual-target ( name : type ? : project )
+# Potential target. It can be converted into jam target and used in
+# building, if needed. However, it can be also dropped, which allows
+# to search for different transformation and select only one.
+#
+rule virtual-target ( name  # Name of this target -- specifies the name of
+                  : project # Project to which this target belongs
+    )
 {
     self.name = $(name) ;
-    self.type = $(type) ;    
     self.project = $(project) ;
-
-    self.includes  = ;
     self.dependencies = ;
-    self.action = ;
-
-    self.actual-name = ;
-
-
-    # Name of the target
+    
+    # Name of this target.
     rule name ( ) { return $(self.name) ; }
     
+    # Project of this target.
+    rule project ( ) { return $(self.project) ; }
+    
+    # Adds additional instances of 'virtual-target' that this
+    # one depends on.
+    rule depends ( d + )
+    {
+        self.dependencies = [ sequence.merge $(self.dependencies)
+                               : [ sequence.insertion-sort $(d) ] ] ;
+    }
+    
+    rule dependencies ( ) 
+    {
+        return $(self.dependencies) ;
+    }
+            
+    # Generates all the actual targets and set ups build actions for
+    # this target. 
+    #
+    # If 'scanner' is specified, creates an additional target
+    # with the same location as actual target, which will depend on the
+    # actual target and be associated with 'scanner'. That additional
+    # target is returned. See the docs (#dependency_scanning) for rationale.
+    # Target must correspond to a file if 'scanner' is specified.
+    # 
+    # If scanner is not specified, then actual target is returned.
+    rule actualize ( scanner ? )
+    {
+        # ### This comment is probably out-of-date. Ignore for now.
+        # When we have explicitly specified target, we need to create a 
+        # target and associate scanner with it.
+        # There may be many different scanners, but there's only one
+        # generating action. Therefore, generating action actualizes this
+        # target without any scanner. Actual target with scanners will
+        # depend on actual target without scanner. 
+        local actual-name = [ actualize-no-scanner ] ; 
+
+        if ! $(scanner)
+        {
+            return $(actual-name) ;
+        }
+        else 
+        {
+            # Add the scanner instance to the grist for name.
+            local g = [ sequence.join 
+                [ utility.ungrist $(actual-name:G) ] $(scanner) : - ] ;
+            local name = $(actual-name:G=$(g)) ;
+
+            if ! $(self.made.$(name)) {
+                self.made.$(name) = true ;
+                
+                DEPENDS $(name) : $(actual-name) ;
+                BINDRULE on $(name) = virtual-target.remember-binding ;
+
+                actualize-location $(name) ;
+                                                                
+                scanner.install $(scanner) : $(name) $(__name__) ;
+            }
+            return $(name) ;            
+        }
+        
+    }                
+    
+# private: (overridables)
+    
+    # Sets up build actions for 'target'. Should call appriate rules
+    # and set target variables.
+    rule actualize-action ( target )
+    {
+        errors.error "method should be defined in derived classes" ;        
+    }
+    
+    # Sets up variables on 'target' which specify its location.
+    rule actualize-location ( target )
+    {
+        errors.error "method should be defined in derived classes" ;                
+    }
+            
+    # Return that actual target name that should be used
+    # (for the case where no scanner is involved)
+    rule actual-name ( )
+    {
+        errors.error "method should be defined in derived classes" ;        
+    }
+    
+# implementation
+    rule actualize-no-scanner ( )
+    {
+        local name = [ actual-name ] ;
+
+        # Do anything only on the first invocation
+        if ! $(self.made.$(name)) {
+            self.made.$(name) = true ;
+                       
+            for local i in $(self.dependencies) {
+                DEPENDS $(name) : [ $(i).actualize ] ;
+            }
+            BINDRULE on $(name) = virtual-target.remember-binding ;
+
+            actualize-location $(name) ;            
+            actualize-action $(name) ;            
+        }                        
+        return $(name) ;
+    }
+    
+            
+}
+
+class virtual-target ;
+
+
+# Target which correspond to a file.
+#
+# May be a source file (when no action is specified), or
+# derived file (otherwise).
+#
+# The target's grist is concatenation of project's location,
+# properties of action (for derived files), and the value
+# passed to 'extra-grist'.
+#
+# The file path is determined as
+#    - value passed to the 'set-path' method, if any
+#    - for derived files, project's build dir, joined with components
+#      that describe action's properties, joined with the value
+#      passed to 'extra-path' method, if any,
+#    - for source files, project's source dir
+#
+# The file suffix is
+#     - the value passed to the 'suffix' method, if any, or
+#     - the suffix which correspond to the target's type.
+#
+rule file-target ( name  
+                  : type ?  # Optional type for this target
+                  : project 
+    )
+{
+    virtual-target.__init__ $(name) : $(project) ;
+    
+    self.type = $(type) ;
+    self.action = ;
+                         
     rule type ( ) { return $(self.type) ; }
     rule set-type ( type ) 
     {
         self.type = $(type) ;
     }     
-    
-    
+        
     # Sets the suffix. When generating target name, it will be used in preference to
     # the suffix that is associated with 'type'
     rule suffix ( suffix ? ) 
@@ -52,23 +190,7 @@ rule virtual-target ( name : type ? : project )
     {
         self.path = $(path) ;
     }
-          
-        
-    # Property set that distinguishes different variants of a target.
-    # May be a subset of the property set that is used for building.
-    # Determines the location of target, in an unspecified way.
-    #rule subvariant ( ) { return $(self.subvariant) ; }
-
-    # Project where this target was declared
-    rule project ( ) { return $(self.project) ; }
-
-    rule dependencies ( ) { return $(self.dependencies) ; }
-    rule depends ( d + )
-    {
-        self.dependencies = [ sequence.merge $(self.dependencies)
-                               : [ sequence.insertion-sort $(d) ] ] ;
-    }
-    
+                     
     # If 'a' is supplied, sets action to 'a'.
     # Returns the action currently set.
     rule action ( a ? )
@@ -125,95 +247,58 @@ rule virtual-target ( name : type ? : project )
     {
         self.extra-grist = $(g) ;
     }
-    
-
-    # Generates all the actual targets and build instructions needed to build
-    # this target. Returns the actual target name. Can be called several times.
-    # Does no processing for other targets that 'action' will generate.
-    # Rationale: we might need only one file from the set created by an
-    # action, and there's no need to run the action if the file is up-to-date,
-    # only because some other file in set is out-of-date.
-    rule actualize ( scanner ? )
-    {        
-        # When we have explicitly specified target, we need to create a 
-        # target and associate scanner with it.
-        # There may be many different scanners, but there's only one
-        # generating action. Therefore, generating action actualizes this
-        # target without any scanner. Actual target with scanners will
-        # depend on actual target without scanner. 
-        actualize-no-scanner ; 
-
-        local actual-name = [ actual-name ] ;
-
-        if ! $(scanner)
-        {
-            return $(actual-name) ;
-        }
-        else 
-        {
-            local g = [ sequence.join 
-                [ utility.ungrist $(actual-name:G) ] $(scanner) : - ] ;
-            local name = $(actual-name:G=$(g)) ;
-
-
-            if ! $(self.made.$(name)) {
-
-                self.made.$(name) = true ;
-                DEPENDS $(name) : $(actual-name) ;
-                BINDRULE on $(name) = virtual-target.remember-binding ;
-
-                if [ action ] {                
-                    LOCATE on $(name) = [ path ] ;
-                } else {
-                    SEARCH on $(name) = [ path.native 
-                        [ project.attribute $(self.project) source-location ] ] ;
-                }
-
-                scanner.install $(scanner) : $(name) $(__name__) ;
-            }
-            return $(name) ;            
-        }
-    }
-
-    local rule actualize-no-scanner ( )
+                
+    rule actualize-action ( target )
     {
-        local name = [ actual-name ] ;
-
-        if ! $(self.made.$(name)) {
-
-            self.made.$(name) = true ;
-            
-            for local i in $(self.dependencies) {
-                DEPENDS $(name) : [ $(i).actualize ] ;
-            }
-            BINDRULE on $(name) = virtual-target.remember-binding ;
-
-            local a = [ action ] ;
-            if $(a) {
-                if $(name:D)
-                {
-                    errors.error 
-                         "name for constructed target includes directory" ;
-                }                
-                $(a).actualize ;                
-                local path = [ path ] ;
-                LOCATE on $(name) = $(path) ;
-                DEPENDS $(name) : $(path) ;
-                common.MkDir $(path) ;
-                common.Clean clean : $(name) ;
-            } 
-            else if $(self.path)
-            {
-                LOCATE on $(name) = $(self.path) ;
-            }
-            else 
-            {
-                SEARCH on $(name) =
-                    [ path.native [ project.attribute $(self.project) source-location ] ] ;
-            }
-        }                
+        if $(self.action)
+        {    
+            # ### Not sure what this was used for
+            #    if $(name:D)
+            #    {
+            #        errors.error 
+            #             "name for constructed target includes directory" ;
+            #    }                
+                            
+            $(self.action).actualize ;                
+            common.Clean clean : $(name) ;            
+        }
     }
-        
+    
+    rule actualize-location ( target )
+    {
+        if $(self.path)
+        {
+            LOCATE on $(target) = $(self.path) ;
+            # Make sure the path exists. Do this only
+            # for derived files.
+            if $(self.action)
+            {                
+                DEPENDS $(target) : $(self.path) ;            
+                common.MkDir $(self.path) ;            
+            }            
+        }
+        else if $(self.action)
+        {
+            # This is a derived file.
+            local path = [ path.native [ path.join 
+                                        [ project.attribute $(self.project) location ] 
+                                        [ $(self.action).path ] 
+                                         $(self.extra-path)                           
+                                       ] ] ;
+            LOCATE on $(target) = $(path) ;
+            
+            # Make sure the path exists.
+            DEPENDS $(target) : $(path) ;            
+            common.MkDir $(path) ;
+        }
+        else
+        {
+            # This is a source file.
+            SEARCH on $(target) = 
+              [ path.native [ project.attribute $(self.project) source-location ] ] ;
+        }                           
+    }
+                
     rule str ( )
     {        
         local action = [ action ] ;
@@ -268,11 +353,7 @@ rule virtual-target ( name : type ? : project )
                 local property-grist = [ property.as-path $(p) ] ;
                 grist = $(location-grist)/$(property-grist) ;
             }       
-            #local property-grist =
-            #    [ property.as-path $(self.subvariant) ] ;
-            # Set empty value to avoid eating adjacent text
-            #local grist = $(location-grist)/$(property-grist) ;
-            #if ! $(self.subvariant) {
+            
             if ! $(grist)
             {
                 grist = $(location-grist) ;
@@ -301,6 +382,9 @@ rule virtual-target ( name : type ? : project )
     }
     
     # Returns the directory for this target
+    # ### This partly DUPLICATES functionality of actualize-location
+    # above. Seems like subvariant-dg.all-target-paths is the only method 
+    # which needs it. Will clean it up when cleaning subvariant.
     rule path ( )
     {
         if $(self.path)
@@ -317,10 +401,9 @@ rule virtual-target ( name : type ? : project )
                 
             return [ path.native $(path) ] ;
         }        
-     }
-    
+     }    
 }
-class virtual-target ;
+class file-target : virtual-target ;
 
 # Returns the binding for the given actual target.
 # CONSIDER: not sure this rule belongs here.
@@ -454,11 +537,11 @@ rule from-file ( file : project )
         if ! $(type)
         {
             # warning "cannot determine type for file $(file)" ;
-            result = [ new virtual-target $(file) :  : $(project) ] ;            
+            result = [ new file-target $(file) :  : $(project) ] ;            
         }
         else
         {      
-            local v = [ new virtual-target $(name) : $(type) : $(project) ] ;    
+            local v = [ new file-target $(name) : $(type) : $(project) ] ;    
             $(v).suffix [ MATCH ^.(.*)$ : $(file:S) ] ;
             result = $(v) ;
         }    
@@ -562,7 +645,7 @@ rule clone-template ( target dont-recurse ? : new-source )
     }
     else 
     {
-        local cloned = [ new virtual-target $(new-name) : [ $(target).type ] :
+        local cloned = [ new file-target $(new-name) : [ $(target).type ] :
           [ $(new-source).project ] ] ;    
     
         if ! $(dont-recurse) && [ $(target).action ]

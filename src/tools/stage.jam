@@ -23,7 +23,7 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
         local result ;
         for local i in $(source-targets)
         {
-            local i2 = [ new virtual-target [ $(i).name ] : [ $(i).type ] 
+            local i2 = [ new file-target [ $(i).name ] : [ $(i).type ] 
               : $(self.project) ] ;
             local a = [ new action $(i2) : $(i) : common.copy ] ;
             $(i2).action $(a) ;

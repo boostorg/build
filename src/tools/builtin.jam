@@ -20,7 +20,7 @@ import toolset ;
 import errors : error ;
 import symlink ;
 
-feature toolset : gcc : implicit propagated link-incompatible ;
+feature toolset : gcc : implicit propagated link-incompatible symmetric ;
 feature shared : false true : propagated ;
 feature optimization : off on : propagated ;
 feature threading : single multi : link-incompatible propagated ;
@@ -36,17 +36,33 @@ feature find-library : : free ;
 feature library-path : : free path ;
 feature library-file : : free path ;
 
-feature variant : : implicit composite propagated ;
+feature variant : : implicit composite propagated symmetric ;
 
-# Declarating of new variants should be done via this rule
-rule variant ( name : parents-or-properties * : tool-properties * )
+# Declares a new variant.
+# First determines explicit properties for this variant, by
+# refining parents' explicit properties with the passed explicit
+# properties. The result is remembered and will be used if
+# this variant is used as parent.
+#
+# Second, determines the full property set for this variant by
+# adding to the explicit properties default values for all properties 
+# which neither present nor are symmetric.
+#
+# Lastly, makes appropriate value of 'variant' property expand
+# to the full property set.
+rule variant ( name           # Name of the variant
+    : parents-or-properties * # Specifies parent variants, if 
+                              # 'explicit-properties' are given,
+                              # and explicit-properties otherwise.
+    : explicit-properties *   # Explicit properties.
+    )
 {
     local parents ;
-    if ! $(tool-properties)
+    if ! $(explicit-properties)
     {
         if $(parents-or-properties[1]:G)
         {
-            tool-properties = $(parents-or-properties) ;
+            explicit-properties = $(parents-or-properties) ;
         }
         else
         {
@@ -65,9 +81,6 @@ rule variant ( name : parents-or-properties * : tool-properties * )
         error "multiple base variants are not yet supported" ;
     }
     
-    # Record explicitly specified properties for this variant
-    .explicit-properties.$(name) = $(tool-properties) ;
-
     local inherited ;
     # Add explicitly specified properties for parents
     for local p in $(parents)
@@ -80,26 +93,27 @@ rule variant ( name : parents-or-properties * : tool-properties * )
         
         inherited += $(.explicit-properties.$(p)) ;
     }
-    tool-properties = [ property.refine $(inherited) : $(tool-properties) ] ;
+    explicit-properties = [ property.refine $(inherited) : $(explicit-properties) ] ;
     
-    tool-properties = [ feature.add-defaults $(tool-properties) ] ;
-
-    # We should remove default value of 'variant'.
-    # Also, remove default value of 'toolset'. CONSIDER: this move is questionable,
-    # if we have default toolset, then why eliminate it? We'll have simple target
-    # paths of "bin/debug" for default toolset.
-    # TODO: we need to eliminate all 'symmetric' features.
-    local tool-properties2 ;
-    for local p in $(tool-properties)
+    # Record explicitly specified properties for this variant
+    # We do this after inheriting parents' properties, so that
+    # they affect other variants, derived from this one.
+    .explicit-properties.$(name) = $(explicit-properties) ;
+       
+    local fool-properties = [ feature.add-defaults $(explicit-properties) ] ;
+    
+    # Eliminate all symmetric features.    
+    local full-properties2 ;
+    for local p in $(fool-properties)
     {
-        if $(p:G) != <variant> && $(p:G) != <toolset>
+        if ! symmetric in [ feature.attributes $(p:G) ]
         {
-            tool-properties2 += $(p) ;
+            full-properties2 += $(p) ;
         }        
     }
         
     feature.extend variant : $(name) ;
-    feature.compose <variant>$(name) : $(tool-properties2) ;    
+    feature.compose <variant>$(name) : $(full-properties2) ;    
 }
 IMPORT $(__name__) : variant : : variant ;
 
