@@ -233,6 +233,21 @@ rule take ( attributes + : properties * : feature-space ? )
     return $(result) ;
 }
 
+# Selects properties which correspond to any of the given features.
+rule select ( features * : properties * )
+{
+    local result ;
+    for local p in $(properties)
+    {
+        if $(p:G) = <$(features)> 
+        {
+            result += $(p) ;
+        }
+    }
+    return $(result) ;
+}
+
+
 local rule __test__ ( )
 {
     import class : new ;
@@ -308,5 +323,8 @@ local rule __test__ ( )
 
     assert.result <rtti>on 
         : remove free implicit : <toolset>gcc <define>foo <rtti>on : $(test-space) ;
+
+    assert.result <include>a 
+        : select include : <include>a <toolset>gcc ;
 }
 
