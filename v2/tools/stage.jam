@@ -37,6 +37,12 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
     
     rule construct ( source-targets * : property-set )
     {
+        local name = [ $(property-set).get <name> ] ;
+        if $(name) && $(source-targets[2])
+        {
+            errors.error "<name> property cannot be specified when staging several targets" ;
+        }
+                        
         local location = [ feature.get-values <location> : 
             [ $(property-set).raw ] ] ;
         if ! $(location)
@@ -65,7 +71,12 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
             }
             else             
             {                
-              local n = [ $(i).name ] ;
+                local n = [ $(i).name ] ;
+                if $(name)
+                {
+                    n = $(name) ;
+                }
+                
                 i2 = [ new file-target $(n:D=) : [ $(i).type ] 
                   : $(self.project) ] ;
                 local a = [ new action $(i2) : $(i) : common.copy ] ;
