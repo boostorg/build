@@ -774,7 +774,7 @@ lib network : network.cpp
       it. We can express this situation using <firstterm>target
       alternatives</firstterm>:
 <programlisting>
-lib demangler : dummy_demangler.cpp ;                      # alternative 1
+lib demangler : dummy_demangler.cpp ;              # alternative 1
 lib demangler : demangler_gcc.cpp : &lt;toolset&gt;gcc ;   # alternative 2
 lib demangler : demangler_msvc.cpp : &lt;toolset&gt;msvc ; # alternative 3
 </programlisting>
