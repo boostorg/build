@@ -5,13 +5,13 @@
 
 # Various container classes.
 
-import class : * ;
+import "class" : * ;
 
 # Base for container objects. This lets us construct recursive structures.
 # That is containers with containers in them, specifically so we can tell
 # literal values from node values.
 #
-xclass node 
+class node 
 {
     rule __init__ (
       value ? # Optional value to set node to initially.
@@ -41,7 +41,7 @@ xclass node
 #
 # TODO: Possibly add assertion checks.
 #
-xclass vector : node 
+class vector : node 
 {
     import numbers : range ;
     import utility ;
@@ -245,7 +245,7 @@ xclass vector : node
 local rule __test__ ( )
 {
     import assert ;
-    import class : new ;
+    import "class" : new ;
     
     local l = [ new vector ] ;
     assert.result 0 : $(l).size ;

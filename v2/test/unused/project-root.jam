@@ -3,14 +3,14 @@ import type ;
 import generators ;
 import print ;
 import virtual-target ;
-import class : new ;
+import "class" : new ;
 import modules ;
 import targets ;
 
 
 type.register X : x ;
 
-xclass test-target-class : basic-target
+class test-target-class : basic-target
 {
     rule __init__ ( name : project )
     {

@@ -164,7 +164,7 @@ rule docbook-to-fo ( target : source : properties * )
   xslt $(target) : $(source) $(stylesheet) : $(properties) ;
 }
 
-xclass xml-catalog-action : action
+class xml-catalog-action : action
 {
     import boostbook ;
     import print ;
@@ -232,7 +232,7 @@ xclass xml-catalog-action : action
   }
 }
 
-xclass boostbook-target-class : basic-target
+class boostbook-target-class : basic-target
 {
     import feature ;
     import virtual-target ;
@@ -337,7 +337,7 @@ IMPORT $(__name__) : boostbook : : boostbook ;
 # XInclude scanner. Mostly stolen from c-scanner :)
 # Note that this assumes an "xi" prefix for XIncludes. This isn't always the
 # case for XML documents, but we'll assume it's true for anything we encounter.
-xclass xinclude-scanner : scanner 
+class xinclude-scanner : scanner 
 {
     import virtual-target ;
     import path ;

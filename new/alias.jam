@@ -24,13 +24,13 @@
 #
 
 import targets ;
-import class : new ;
+import "class" : new ;
 import property ;
 import errors : error ;
 import type : type ;
 import regex ;
 
-xclass alias-target-class : basic-target 
+class alias-target-class : basic-target 
 {
     rule __init__ ( name : project : sources * : requirements * : default-build * )
     {

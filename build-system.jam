@@ -20,7 +20,7 @@ import feature ;
 import property-set ;
 import build-request ;
 import errors : error ;
-import class : new ;
+import "class" : new ;
 
 import builtin ;
 import make ;

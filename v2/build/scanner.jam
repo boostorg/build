@@ -26,11 +26,11 @@
 #  actual targets. However, actions can also create scanners in a special
 #  way, instead of relying on just target type.
 
-import class : new ;
+import "class" : new ;
 import property virtual-target ;
 
 #  Base scanner class. 
-xclass scanner 
+class scanner 
 {
     rule __init__ ( )
     {

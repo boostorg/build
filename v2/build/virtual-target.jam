@@ -8,7 +8,7 @@
 #  when searching for possible transormation sequences, when it's not known
 #  if particular target should be created at all.
 
-import class : new ;
+import "class" : new ;
 import path property-set utility sequence errors ;
 
 #                       +--------------------------+
@@ -63,7 +63,7 @@ import path property-set utility sequence errors ;
 # building, if needed. However, it can be also dropped, which allows
 # to search for different transformation and select only one.
 #
-xclass virtual-target 
+class virtual-target 
 {
     import virtual-target utility scanner ;    
     
@@ -200,7 +200,7 @@ xclass virtual-target
 # The target's grist is concatenation of project's location,
 # properties of action (for derived files), and, optionally,
 # value identifying the main target.
-xclass abstract-file-target : virtual-target
+class abstract-file-target : virtual-target
 {
     import project regex sequence path type ;
     
@@ -417,7 +417,7 @@ xclass abstract-file-target : virtual-target
 #     - the value passed to the 'suffix' method, if any, or
 #     - the suffix which correspond to the target's type.
 #
-xclass file-target : abstract-file-target 
+class file-target : abstract-file-target 
 {
     import common ;    
     
@@ -511,7 +511,7 @@ xclass file-target : abstract-file-target
 
 }
 
-xclass notfile-target : abstract-file-target
+class notfile-target : abstract-file-target
 {
     rule __init__ ( name : project )
     {
@@ -549,7 +549,7 @@ IMPORT virtual-target : remember-binding : : virtual-target.remember-binding ;
 #     rule action-name ( targets + : sources * : properties * )
 # Targets and sources are passed as actual jam targets. The rule may
 # not establish dependency relationship, but should do everything else.
-xclass action 
+class action 
 {
     import type toolset property-set indirect class ;
     
@@ -678,7 +678,7 @@ xclass action
 # specific properties out of nowhere. It's needed to distinguish virtual
 # targets with different properties that are known to exist, and have no 
 # actions which create them.
-xclass null-action : action 
+class null-action : action 
 {
     rule __init__ ( targets + : property-set ? )
     {
@@ -921,7 +921,7 @@ local rule clone-action-template ( action from cloned-from : new-source )
     return $(cloned) ;
 }
 
-xclass subvariant-dg 
+class subvariant-dg 
 {
     import sequence ;    
     

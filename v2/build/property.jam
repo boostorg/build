@@ -385,7 +385,7 @@ rule translate-paths ( properties * : path )
 
 # Class which maintains a property set -> string
 # mapping
-xclass property-map
+class property-map
 {
     import numbers ;
     import sequence ;
@@ -471,7 +471,7 @@ local rule __test__ ( )
     compose <variant>release : <define>NDEBUG <optimization>on ;
 
     import assert ;
-    import class : new ;
+    import "class" : new ;
     
     validate gcc gcc-3.0.1 : $(test-space) ;
     validate <toolset>gcc  <toolset>gcc-3.0.1 : $(test-space) ;

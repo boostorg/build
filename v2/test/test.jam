@@ -2,7 +2,7 @@ import indirect ;
 import string ;
 import numbers ;
 import sequence ;
-import class ;
+import "class" ;
 import os ;
 import path ;
 import feature ;

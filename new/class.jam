@@ -170,13 +170,13 @@ local rule typecheck ( x )
 
 local rule __test__ ( )
 {
-    import class : * ;
+    import "class" : * ;
     import assert ;
     import errors : * ;
 
     # This will be the construction function for a class called
     # 'myclass'
-    xclass myclass 
+    class myclass 
     {
         import assert : nonempty-variable ;        
         
@@ -251,7 +251,7 @@ local rule __test__ ( )
     }
 #    class myclass ;
 
-    xclass derived1 : myclass
+    class derived1 : myclass
     {        
         rule __init__ ( z_ )
         {
@@ -292,7 +292,7 @@ local rule __test__ ( )
     }
 #    class derived1 : myclass ;
 
-    xclass derived2 : myclass 
+    class derived2 : myclass 
     {
         rule __init__ ( )
         {            
@@ -313,7 +313,7 @@ local rule __test__ ( )
     }
 #    class derived2 : myclass ;
 
-    xclass derived2a : derived2
+    class derived2a : derived2
     {
         rule __init__ 
         {
@@ -397,7 +397,7 @@ local rule __test__ ( )
     assert.result c.x : $(c).get-x ;
     assert.result d.x : $(d).get-x ;
 
-    xclass derived3 : derived1 derived2 
+    class derived3 : derived1 derived2 
     {
         rule __init__ ( )
         {

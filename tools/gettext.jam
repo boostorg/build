@@ -47,7 +47,7 @@
 import targets ;
 import property-set ;
 import virtual-target ;
-import class : new ;
+import "class" : new ;
 import project ;
 import type ;
 import generators ;
@@ -115,7 +115,7 @@ feature gettext.types : : free ;
 
 generators.register-standard gettext.compile : gettext.PO : gettext.catalog ;
 
-xclass update-translations-class : basic-target
+class update-translations-class : basic-target
 {
     import regex : split ;
    

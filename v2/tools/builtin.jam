@@ -5,7 +5,7 @@
 
 #  Defines standard features and rules.
 
-import class : new ;
+import "class" : new ;
 
 import feature : feature compose ;
 import toolset : flags ;
@@ -168,7 +168,7 @@ rule handle-ndebug ( property : properties * )
 
 feature.action <optimization>speed : handle-ndebug ;
 
-xclass searched-lib-target : abstract-file-target
+class searched-lib-target : abstract-file-target
 {
     rule __init__ ( name     
         : project 
@@ -317,7 +317,7 @@ actions quietly piecemeal response-file-2
 }
 #####
 
-xclass c-scanner : scanner 
+class c-scanner : scanner 
 {
     import regex virtual-target path scanner ;    
     
@@ -382,7 +382,7 @@ type.set-scanner CPP : c-scanner ;
 type.register H : h hpp ;
 type.register C : c ;
 
-xclass lib-target-class : basic-target
+class lib-target-class : basic-target
 {
     import generators : construct : generators.construct ;    
     
@@ -447,7 +447,7 @@ rule lib ( name : sources * : requirements * : default-build *
 }
 IMPORT $(__name__) : lib : : lib ;
 
-xclass searched-lib-generator : generator
+class searched-lib-generator : generator
 {
     rule __init__ ( )
     {
@@ -488,7 +488,7 @@ xclass searched-lib-generator : generator
 generators.register [ new searched-lib-generator ] ;
 
 
-xclass compile-action : action 
+class compile-action : action 
 {
     import sequence ;
     
@@ -513,7 +513,7 @@ xclass compile-action : action
     }    
 }
 
-xclass C-compiling-generator : generator
+class C-compiling-generator : generator
 {
     rule __init__ ( id : source-types + : target-types + :
         requirements * )
@@ -540,7 +540,7 @@ rule register-c-compiler ( id : source-types + : target-types + :
 # register all generators as "generator.some-rule", not with "some-module.some-rule".)
 IMPORT $(__name__) : register-c-compiler : : generators.register-c-compiler ;
 
-xclass link-action : action
+class link-action : action
 {
     import path ;
     import sequence ;
@@ -652,7 +652,7 @@ xclass link-action : action
 } 
 
 
-xclass linking-generator : generator
+class linking-generator : generator
 {
     rule __init__ ( id 
         composing ? : # Specify if generator is composing. The generator will be

@@ -163,7 +163,7 @@ rule	: `{` block `}`
 		{ $$.parse = pif( $2.parse, $4.parse, pnull() ); }
 	| `module` list `{` block `}` 
 		{ $$.parse = pmodule( $2.parse, $4.parse ); }
-	| `xclass` lol `{` block `}` 
+	| `class` lol `{` block `}` 
 		{ $$.parse = pclass( $2.parse, $4.parse ); }
 	| `while` expr `{` block `}` 
 		{ $$.parse = pwhile( $2.parse, $4.parse ); }

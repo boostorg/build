@@ -35,7 +35,7 @@
 
 import feature : feature subfeature ;
 import project ;
-import class : new ;
+import "class" : new ;
 import targets ;
 import property-set ; 
 
@@ -76,7 +76,7 @@ subfeature stdlib stlport : extensions : noext : optional propagated ;
 # - when host iostreams are used, we really should produce nothing. It would
 #   be hard/impossible to achieve this using prebuilt targets.
 
-xclass stlport-target-class : basic-target
+class stlport-target-class : basic-target
 {
     import feature project type errors generators ;
     import set : difference ;       

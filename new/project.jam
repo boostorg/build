@@ -44,7 +44,7 @@ import errors : error ;
 import project-roots ;
 
 import print ;
-import class : new ;
+import "class" : new ;
 import errors ;
 import assert ;
 import property-set ;
@@ -381,7 +381,7 @@ rule register-id ( id : module )
 #
 # The standard attributes are "id", "location", "project-root", "parent"
 # "requirements", "default-build", "source-location" and "projects-to-build".
-xclass project-attributes 
+class project-attributes 
 {
     import property ;
     import property-set ;

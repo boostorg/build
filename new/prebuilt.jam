@@ -6,17 +6,17 @@
 #  This module defines a special generator, which handles targets with
 #  <file> property. It allows to use prebuilt targets.
 
-import class : new ;
+import "class" : new ;
 import generators ; 
 import feature : feature ;
 
 feature file : : free path ;
 
-xclass prebuilt-file-generator : generator 
+class prebuilt-file-generator : generator 
 {    
     import feature type errors path ;
     import regex : match ;
-    import class : new ;
+    import "class" : new ;
         
     rule __init__ ( )
     {        

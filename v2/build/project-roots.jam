@@ -10,7 +10,7 @@
 
 import modules ;
 import path ;
-import class ;
+import "class" ;
 import set ;
 import regex ;
 
@@ -97,7 +97,7 @@ rule print ( )
 
 # Class encapsulating settings for a single project root.
 #
-xclass project-root-object 
+class project-root-object 
 {
     import path ;
     import set ;    

@@ -28,7 +28,7 @@
 #    one target can be specified in sources.
 
 import targets ;
-import class : new ;
+import "class" : new ;
 import property ;
 import errors : error ;
 import type : type ;
@@ -36,10 +36,10 @@ import type ;
 import regex ;
 import generators ;
 
-xclass stage-target-class : basic-target
+class stage-target-class : basic-target
 {
     import feature project type errors generators ;    
-    import class : new ;
+    import "class" : new ;
     
     rule __init__ ( name-and-dir : project : sources * : requirements * : default-build * )
     {
@@ -115,7 +115,7 @@ xclass stage-target-class : basic-target
 # cause relinking to the new location.
 type.register STAGED_EXE : : EXE ;
 
-xclass stage-exe-generator : generator
+class stage-exe-generator : generator
 {
     import type property-set modules ;    
     

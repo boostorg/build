@@ -1,5 +1,5 @@
 
-import class : new ;
+import "class" : new ;
 
 import lex ;
 import qt ;
@@ -41,7 +41,7 @@ type.register NM_EXE : : EXE : main ;
 generators.register-standard nm.target-source : CPP_MARKED : NM.TARGET.CPP ;
 generators.register-standard nm.cpp-mark : CPP : CPP_MARKED POSITIONS ;
     
-xclass nm::target::cpp-obj-generator : generator
+class nm::target::cpp-obj-generator : generator
 {
     rule __init__ ( )
     {        

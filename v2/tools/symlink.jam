@@ -14,7 +14,7 @@ feature.feature symlink-location : project-relative build-relative : incidental 
 
 # The class representing "symlink" targets.
 #
-xclass symlink-targets : basic-target
+class symlink-targets : basic-target
 {
     import numbers modules class property project ;
     

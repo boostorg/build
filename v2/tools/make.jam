@@ -6,17 +6,17 @@
 #  This module defines the 'make' main target rule.
 
 import targets ;
-import class : new ;
+import "class" : new ;
 import property ;
 import errors : error ;
 import type : type ;
 import regex ;
 import property-set ;
 
-xclass make-target-class : basic-target
+class make-target-class : basic-target
 {
     import type regex virtual-target ;    
-    import class : new ;
+    import "class" : new ;
     
     rule __init__ ( name : project : sources * : requirements * 
         : make-rule + : default-build * )

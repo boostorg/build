@@ -49,26 +49,26 @@
      ACTIONS_t = 275,
      BIND_t = 276,
      CASE_t = 277,
-     DEFAULT_t = 278,
-     ELSE_t = 279,
-     EXISTING_t = 280,
-     FOR_t = 281,
-     IF_t = 282,
-     IGNORE_t = 283,
-     IN_t = 284,
-     INCLUDE_t = 285,
-     LOCAL_t = 286,
-     MODULE_t = 287,
-     ON_t = 288,
-     PIECEMEAL_t = 289,
-     QUIETLY_t = 290,
-     RETURN_t = 291,
-     RULE_t = 292,
-     SWITCH_t = 293,
-     TOGETHER_t = 294,
-     UPDATED_t = 295,
-     WHILE_t = 296,
-     XCLASS_t = 297,
+     CLASS_t = 278,
+     DEFAULT_t = 279,
+     ELSE_t = 280,
+     EXISTING_t = 281,
+     FOR_t = 282,
+     IF_t = 283,
+     IGNORE_t = 284,
+     IN_t = 285,
+     INCLUDE_t = 286,
+     LOCAL_t = 287,
+     MODULE_t = 288,
+     ON_t = 289,
+     PIECEMEAL_t = 290,
+     QUIETLY_t = 291,
+     RETURN_t = 292,
+     RULE_t = 293,
+     SWITCH_t = 294,
+     TOGETHER_t = 295,
+     UPDATED_t = 296,
+     WHILE_t = 297,
      _LBRACE_t = 298,
      _BAR_t = 299,
      _BARBAR_t = 300,
@@ -97,26 +97,26 @@
 #define ACTIONS_t 275
 #define BIND_t 276
 #define CASE_t 277
-#define DEFAULT_t 278
-#define ELSE_t 279
-#define EXISTING_t 280
-#define FOR_t 281
-#define IF_t 282
-#define IGNORE_t 283
-#define IN_t 284
-#define INCLUDE_t 285
-#define LOCAL_t 286
-#define MODULE_t 287
-#define ON_t 288
-#define PIECEMEAL_t 289
-#define QUIETLY_t 290
-#define RETURN_t 291
-#define RULE_t 292
-#define SWITCH_t 293
-#define TOGETHER_t 294
-#define UPDATED_t 295
-#define WHILE_t 296
-#define XCLASS_t 297
+#define CLASS_t 278
+#define DEFAULT_t 279
+#define ELSE_t 280
+#define EXISTING_t 281
+#define FOR_t 282
+#define IF_t 283
+#define IGNORE_t 284
+#define IN_t 285
+#define INCLUDE_t 286
+#define LOCAL_t 287
+#define MODULE_t 288
+#define ON_t 289
+#define PIECEMEAL_t 290
+#define QUIETLY_t 291
+#define RETURN_t 292
+#define RULE_t 293
+#define SWITCH_t 294
+#define TOGETHER_t 295
+#define UPDATED_t 296
+#define WHILE_t 297
 #define _LBRACE_t 298
 #define _BAR_t 299
 #define _BARBAR_t 300
