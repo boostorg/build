@@ -28,7 +28,11 @@ cp `find bin -name "*.pdf"` ../..
 rm -rf bin
 cd ..
 
+# Get the boost logo.
+wget http://boost.org/boost-build2/boost.png
+
 # Adjust the links, so they work with the standalone package
+perl -pi -e 's%../../../boost.png%boost.png%' index.html
 perl -pi -e 's%../../../doc/html/bbv2.html%doc/html/index.html%' index.html
 perl -pi -e 's%../../../doc/html/bbv2.installation.html%doc/html/bbv2.installation.html%' index.html
 
