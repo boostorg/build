@@ -127,7 +127,7 @@ rule_free( RULE* r )
  */
 
 TARGET *
-bindtarget( char *targetname )
+bindtarget( const char *targetname )
 {
 	TARGET target, *t = &target;
 
@@ -251,6 +251,27 @@ TARGET* search_for_target ( char * name, LIST* search_path )
 }
 
 /*
+ * copytarget() - make a new target with the old target's name
+ *
+ * Not entered into hash table -- for internal nodes.
+ */
+
+TARGET *
+copytarget( const TARGET *ot )
+{
+	TARGET *t;
+
+	t = (TARGET *)malloc( sizeof( *t ) );
+	memset( (char *)t, '\0', sizeof( *t ) );
+	t->name = copystr( ot->name );
+	t->boundname = t->name;
+
+	t->flags |= T_FLAG_NOTFILE | T_FLAG_INTERNAL;
+
+	return t;
+}
+
+/*
  * touchtarget() - mark a target to simulate being new
  */
 
@@ -301,6 +322,32 @@ targetentry(
 	else chain->tail->next = c;
 	chain->tail = c;
 	c->next = 0;
+
+	return chain;
+}
+
+/*
+ * targetchain() - append two TARGET chains
+ *
+ * Inputs:
+ *	chain	exisitng TARGETS to append to
+ *	target	new target to append
+ */
+
+TARGETS *
+targetchain( 
+	TARGETS	*chain,
+	TARGETS	*targets )
+{
+	TARGETS *c;
+
+	if( !targets )
+	    return chain;
+	else if( !chain )
+	    return targets;
+
+	chain->tail->next = targets;
+	chain->tail = targets->tail;
 
 	return chain;
 }
@@ -406,7 +453,6 @@ popsettings( SETTINGS *v )
 	pushsettings( v );	/* just swap again */
 }
 
-#ifdef OPT_FIX_TARGET_VARIABLES_EXT
 /*
  * copysettings() - duplicate a settings list, returning the new copy
  */
@@ -420,7 +466,6 @@ copysettings( SETTINGS *head )
 
     return copy;
 }
-#endif
 
 /*
  *    freetargets() - delete a targets list
@@ -474,10 +519,10 @@ static void freetarget( void *xt, void *data )
     TARGET* t = (TARGET *)xt;
     if ( t->settings )
         freesettings( t->settings );
-    if ( t->deps[0] )
-        freetargets( t->deps[0] );
-    if ( t->deps[1] )
-        freetargets( t->deps[1] );
+    if ( t->depends )
+        freetargets( t->depends );
+    if ( t->includes )
+        freetarget( t->includes, (void*)0);
     if ( t->actions )
         freeactions( t->actions );
 }
@@ -489,7 +534,7 @@ static void freetarget( void *xt, void *data )
 void
 donerules()
 {
-    hashenumerate( targethash, freetarget, 0 );
+     hashenumerate( targethash, freetarget, 0 );
 	hashdone( targethash );
     while ( settings_freelist )
     {

@@ -82,7 +82,7 @@ load_builtins()
 
     duplicate_rule( "Depends" ,
       bind_builtin( "DEPENDS" ,
-                    builtin_depends, T_DEPS_DEPENDS, 0 ) );
+                    builtin_depends, 0, 0 ) );
 
     duplicate_rule( "echo" ,
     duplicate_rule( "Echo" ,
@@ -104,7 +104,7 @@ load_builtins()
 
     duplicate_rule( "Includes" ,
       bind_builtin( "INCLUDES" ,
-                    builtin_depends, T_DEPS_INCLUDES, 0 ) );
+                    builtin_depends, 1, 0 ) );
 
     duplicate_rule( "Leaves" ,
       bind_builtin( "LEAVES" ,
@@ -236,7 +236,19 @@ builtin_depends(
 	for( l = targets; l; l = list_next( l ) )
 	{
 	    TARGET *t = bindtarget( l->string );
-	    t->deps[ which ] = targetlist( t->deps[ which ], sources );
+
+	    /* If doing INCLUDES, switch to the TARGET's include */
+	    /* TARGET, creating it if needed.  The internal include */
+	    /* TARGET shares the name of its parent. */
+
+	    if( parse->num )
+	    {
+		if( !t->includes )
+		    t->includes = copytarget( t );
+		t = t->includes;
+	    }
+
+	    t->depends = targetlist( t->depends, sources );
 	}
 
 	return L0;

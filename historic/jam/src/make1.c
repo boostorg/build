@@ -265,7 +265,6 @@ make1a( state *pState)
 {
     TARGET* t = pState->t;
 	TARGETS	*c;
-	int i;
 
 	/* If the parent is the first to try to build this target */
 	/* or this target is in the make1c() quagmire, arrange for the */
@@ -301,11 +300,8 @@ make1a( state *pState)
 
 	{
 		stack temp_stack = { NULL };
-		for( i = T_DEPS_DEPENDS; i <= T_DEPS_INCLUDES; i++ )
-			for( c = pState->t->deps[i]; c && !intr; c = c->next )
-			{
-				push_state(&temp_stack, c->target, pState->t, T_STATE_MAKE1A);
-			}
+        for( c = t->depends; c && !intr; c = c->next )            
+            push_state(&temp_stack, c->target, pState->t, T_STATE_MAKE1A);
 
 		/* using stacks reverses the order of execution. Reverse it back */
 		push_stack_on_stack(&state_stack, &temp_stack);
@@ -332,7 +328,6 @@ make1b( state *pState )
 {
     TARGET      *t = pState->t;
     TARGETS     *c;
-    int         i;
     char        *failed = "dependents";
 
     /* If any dependents are still outstanding, wait until they */
@@ -366,13 +361,12 @@ make1b( state *pState )
 
     /* Collect status from dependents */
 
-    for( i = T_DEPS_DEPENDS; i <= T_DEPS_INCLUDES; i++ )
-        for( c = pState->t->deps[i]; c; c = c->next )
-            if( c->target->status > pState->t->status && !( c->target->flags & T_FLAG_NOCARE ) )
-            {
-                failed = c->target->name;
-                pState->t->status = c->target->status;
-            }
+    for( c = t->depends; c; c = c->next )
+        if( c->target->status > t->status && !( c->target->flags & T_FLAG_NOCARE ))
+        {
+            failed = c->target->name;
+            pState->t->status = c->target->status;
+        }
 
     /* If actions on deps have failed, bail. */
     /* Otherwise, execute all actions to make target */
