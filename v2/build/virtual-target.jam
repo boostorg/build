@@ -227,6 +227,21 @@ class abstract-file-target : virtual-target
         {
             self.suffix = $(suffix) ;
         }
+        else if ! $(self.suffix)
+        {
+            if $(self.type)
+            {
+                local properties ;
+                if $(self.action)
+                {
+                    local ps = [ $(self.action).properties ] ;
+                    properties = [ $(ps).raw ] ;
+                }                        
+                self.suffix = [ type.generated-target-suffix $(self.type) :
+                  $(properties) ] ;            
+            }            
+        }
+        
         return $(self.suffix) ;
     }
 
@@ -412,26 +427,15 @@ class abstract-file-target : virtual-target
     rule actual-basename ( )
     {
         local name = [ path.native $(self.name) ] ;
-        if $(self.suffix)
+        local suffix = [ suffix ] ;
+        if $(suffix)
         {
-            name = $(name).$(self.suffix) ;
+            return $(name).$(suffix) ;        
         }
-        else if $(self.type)
+        else
         {
-            local properties ;
-            if $(self.action)
-            {
-                local ps = [ $(self.action).properties ] ;
-                properties = [ $(ps).raw ] ;
-            }                        
-            local suffix = [ type.generated-target-suffix $(self.type) :
-              $(properties) ] ;
-            if $(suffix)
-            {                
-                name = $(name).$(suffix) ;
-            }            
-        }
-        return $(name) ;        
+            return $(name) ;
+        }                               
     }
     
 
