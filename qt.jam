@@ -69,7 +69,7 @@ rule init ( prefix ? )
 
 rule qt.add-properties ( property )
 {
-    return <include>$(.prefix)/include <linkflags>-Wl,-rpath,$(.prefix)/lib <linkflags>-L$(.prefix)/lib <linkflags>-lqt-mt ;
+    return <include>$(.prefix)/include <dll-path>$(.prefix)/lib <library-path>$(.prefix)/lib <find-shared-library>qt-mt ;
 }
 
 # -f forces moc to include the processed source file.
