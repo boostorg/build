@@ -62,6 +62,7 @@ rule register ( type : suffixes * : base-type ? : main ? )
         }
         
         feature.extend target-type : $(type) ;
+        feature.extend main-target-type : $(type) ;
         
         feature.compose <target-type>$(type) : $(base-type:G=<base-target-type>) ; 
         feature.extend base-target-type : $(type) ;
