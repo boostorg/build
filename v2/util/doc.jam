@@ -808,6 +808,7 @@ local rule scan-class (
 rule scan-module (
     target # The module file.
     : text * # The text in the file, one item per line.
+    : binding
     )
 {    
     if $(.option.debug) { ECHO "HELP:" scanning module target '$(target)' ; }
