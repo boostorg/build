@@ -578,6 +578,7 @@ class composing-generator : generator ;
         }                        
     }
     
+    .construct-stack = ;
         
     # Attempts to create target of 'target-type' with 'properties'
     # from 'sources'. The 'sources' are treated as a collection of
@@ -588,12 +589,15 @@ class composing-generator : generator ;
     # even if a composing generators was already used up the call stack.
     #
     #
-    # Returns a vector of two vectors. The first contains targets of 
-    # requested types. The second contains all unused sources and
-    # additionally generated targets.    
+    # Returns a list of target. When this invocation is first instance of
+    # 'construct' in stack, returns only targets of requested 'target-type',
+    # otherwise, returns also unused sources and additionally generated
+    # targets.    
     rule construct-dbg ( project name ? : target-type multiple ? : properties * : sources + 
                          : allow-composing-generators ? )
     {
+        .construct-stack += 1 ;
+
         increase-indent ;
         generators.dout [ indent ] "*** construct" $(target-type) ;
         for local s in $(sources)
@@ -737,7 +741,26 @@ class composing-generator : generator ;
         
         decrase-indent ;
         
-        return $(result) ;        
+        .construct-stack = $(.construct-stack[2-]) ;
+
+        if ! $(.construct-stack) # This is first invocation in stack
+        {
+            local result2 ;
+            for local t in $(result)
+            {
+                local type = [ $(t).type ] ;                
+                if $(type) = $(target-type) 
+                   || [ type.is-derived $(type) $(target-type) ]
+                {
+                    result2 += $(t) ;
+                }
+            }                
+            return $(result2) ;
+        } 
+        else
+        {                            
+            return $(result) ;        
+        }        
     }
 
 #}
