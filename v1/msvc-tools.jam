@@ -31,10 +31,11 @@ else
 
 VC_COMPILER = cl ;
 VC_LINKER = link ;
-  
-flags msvc CFLAGS <debug-symbols>on : /Zi ;
-flags msvc PDB_CFLAG <debug-symbols>on : /Fd ;
-flags msvc PDB_LINKFLAG <debug-symbols>on : /PDB: ;
+VC_PDB_NAME = vc60 ;
+
+flags msvc CFLAGS <debug-symbols>on/<debug-store>object : /Z7 ;
+flags msvc CFLAGS <debug-symbols>on/<debug-store>database : /Zi ;
+flags msvc PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;
 flags msvc LINKFLAGS <debug-symbols>on : /DEBUG ;
 
 flags msvc CFLAGS <optimization>off : /Od ;
@@ -76,16 +77,12 @@ flags msvc FINDLIBS <find-library> ;
 flags msvc LINKFLAGS <target-type>$(SHARED_TYPES) : /DLL ;
 
 
-rule vc-set-pdb-file ( targets + )
+rule vc-set-pdb-file ( targets + : name )
 {
-    local pdb = $(targets[1]:S=.pdb) ;
-    VC_PDB_FILE on $(targets) = $(LOCATE_TARGET)$(pdb:G=) ;
+    local pdb = $(targets[1]:B=$(name):S=.pdb) ;
+    VC_PDB_FILE on $(targets) = $(pdb:G=:R=$(LOCATE_TARGET)) ;
     LOCATE on $(pdb) = $(LOCATE_TARGET) ;
     Clean clean : $(pdb) ;
-}
-
-actions quietly vc-set-pdb-file
-{
 }
 
 #### Link ####
@@ -103,7 +100,7 @@ rule Link-action ( target implib ? : sources + : target-type ? )
         # don't want it.
         NOINCREMENTAL on $(<) = /INCREMENTAL:NO ;
     }
-    vc-set-pdb-file $(<) ;
+    vc-set-pdb-file $(<) : $(target:B) ;
 }
 
 actions together vc-Link bind NEEDLIBS
@@ -116,11 +113,11 @@ actions together vc-Link bind NEEDLIBS
 
 rule Cc-action
 {
-    vc-set-pdb-file $(<) ;
+    vc-set-pdb-file $(<) : $(VC_PDB_NAME) ;
     vc-Cc $(<) : $(>) ;
 }
 
-actions vc-Cc bind
+actions vc-Cc
 {
     $(VC_SETUP)
     "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm400 -nologo -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" "$(>)"
@@ -129,11 +126,11 @@ actions vc-Cc bind
 #### C++ ####
 rule C++-action
 {
-    vc-set-pdb-file $(<) ;
+    vc-set-pdb-file $(<) : $(VC_PDB_NAME) ;
     vc-C++ $(<) : $(>) ;
 }
 
-actions vc-C++ bind 
+actions vc-C++
 {
     $(VC_SETUP)
     "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm400 -nologo -GX -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" -Tp"$(>)"
@@ -142,7 +139,7 @@ actions vc-C++ bind
 #### Archive ####
 rule Archive-action
 {
-    vc-set-pdb-file $(<) ;
+    vc-set-pdb-file $(<) : $(<:B) ;
     with-command-file vc-Archive $(<) : $(>) ;
 }
 

@@ -6,3 +6,4 @@ if ! $(MSVCDir)
     VC_TOOL_PATH = "$(VC7_ROOT)"\\bin\\ ;
     VC_SETUP = "CALL \"$(VC_TOOL_PATH)VCVARS32.BAT\" >nul" ;
 }
+VC_PDB_NAME = vc70 ;

@@ -1045,9 +1045,14 @@ rule expand-build-request
 
         # Which features will pick up a default value because they are not in
         # the base variant or in the overrides?
-        local relevant_features = [ relevant-features $(toolset) ] ;
-        local defaulted-features = [ difference $(relevant_features)
-                                    : $(override-properties:G) $(base-properties:G) ] ;
+        local relevant-features = [ relevant-features $(toolset) ] ;
+        local override-free-features = [ intersection $(gSINGLE_VALUED_FREE_FEATURES)
+                                        : $(free-properties:G) ] ;
+        local defaulted-features = [ difference $(relevant-features)
+                                    : $(override-properties:G) $(base-properties:G)
+                                      $(override-free-features)
+                                   ] ;
+        
         local defaulted-properties = [ feature-default $(defaulted-features) ] ;
         # VP: defaulted-properties have the form <feature>value and there's 1 value.
         # Hence, each element of defaulted-properties will be part of each

@@ -18,6 +18,7 @@ feature runtime-build : debug release ;
 feature optimization : off speed space ;
 feature inlining : off on full ;
 feature debug-symbols : on off : ;
+free-feature debug-store : object database ;
 free-feature user-interface : console gui ;
 
 feature wide-character-support : on off ;
@@ -41,6 +42,7 @@ free-feature dllversion ; # <dllversion>1.27.0 (for use with soname-ing)
 feature shared-linkable : false true ;
 
 gLINK_COMPATIBLE = <shared-linkable>true <target-type> <inlining> ;
+
 gALWAYS_RELEVANT = <target-type> ;
 
 ##### Requirements by target type #####
