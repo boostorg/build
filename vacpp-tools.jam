@@ -15,13 +15,17 @@
 # IBM/Aix 4.3.3.0. They should also work for VisualAge on Windows NT,
 # OS/2 and AS/400.
 
-VA_BIN = "" ;
+# The default tool path is declared as empty. This looks for the tools in
+# the current path. You can overide this in derived toolsets.
+set-as-singleton VA_TOOL_PATH ;
+flags vacpp VA_TOOL_PATH ;
+VA_TOOL_PATH = "" ;
 
-flags vacpp CC  <threading>single : xlc   ;
-flags vacpp CC  <threading>multi : xlc_r ;
-
-flags vacpp CXX <threading>single : xlC   ;
-flags vacpp CXX <threading>multi : xlC_r ;
+# Select the compiler name according to the threading model.
+flags vacpp VA_C_COMPILER  <threading>single : xlc   ;
+flags vacpp VA_C_COMPILER  <threading>multi : xlc_r ;
+flags vacpp VA_CXX_COMPILER <threading>single : xlC   ;
+flags vacpp VA_CXX_COMPILER <threading>multi : xlC_r ;
 
 # This disables the automatic generation of separate include files for
 # template functions and class declarations.
@@ -89,7 +93,7 @@ rule Link-action
 # for xlc, we repeat all libraries so that dependencies are always resolved
 actions xlc-Link-action bind NEEDLIBS
 {
-    $(CXX:R=$(VA_BIN)) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -bdynamic
+    $(VA_CXX_COMPILER:R=$(VA_TOOL_PATH)) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -bdynamic
 }
 
 #### Cc #####
@@ -102,7 +106,7 @@ rule Cc-action
 # Always allow C++ comments in C source files!
 actions xlc-Cc-action
 {
-    $(CC:R=$(VA_BIN)) -qcpluscmt -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(VA_C_COMPILER:R=$(VA_TOOL_PATH)) -qcpluscmt -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -113,7 +117,7 @@ rule C++-action
 
 actions xlc-C++-action
 {
-    $(CXX:R=$(VA_BIN)) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(VA_CXX_COMPILER:R=$(VA_TOOL_PATH)) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
