@@ -11,7 +11,7 @@
 #include <qvbox.h>
 #include <qgrid.h>
 
-#include "lcdrange.qpp"
+#include "lcdrange.h"
 
 
 class MyWidget : public QVBox
