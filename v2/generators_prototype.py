@@ -221,12 +221,11 @@ class TargetTypeGroup(object):
         self.size = size
         self.parents = parents
         self.generator = generator
-        self.cost = reduce(lambda x,y:x + y.cost, parents, 1)
         self.siblings = None
         self.id = TargetTypeGroup.instances
         self.ambiguous = reduce(lambda x,y: x or y.ambiguous and 1,
                                 parents, None)
-        
+
         self.generators = { generator : 1 } # it doesn't hurt to store None here
         ignored = [ self.generators.update(p.generators) for p in parents ]
         
@@ -235,15 +234,23 @@ class TargetTypeGroup(object):
         
         TargetTypeGroup.instances += 1
 
+        if generator:
+            self.moves = { (id(generator),id(parents)) : 1 }
+        else:
+            self.moves = {}
+        
         if not parents:
             self.consumed_sources = {self:1}
             self.__extra_targets = ()
-        elif len(parents) == 1:
-            self.consumed_sources = parents[0].consumed_sources
         else:
-            self.consumed_sources = {}
-            for c in parents:
-                self.consumed_sources.update(c.consumed_sources)
+            ignored = [ self.moves.update(p.moves) for p in parents ]
+            
+            if len(parents) == 1:
+                self.consumed_sources = parents[0].consumed_sources
+            else:
+                self.consumed_sources = {}
+                for c in parents:
+                    self.consumed_sources.update(c.consumed_sources)
 
     # constituents property - the set of all target groups consumed in
     # creating this group
@@ -256,7 +263,8 @@ class TargetTypeGroup(object):
             
     constituents = property(__get_constituents)
 
-
+    cost = property(lambda self: len(self.moves))
+    
     # extra targets property - in general, every target group sits at
     # the root of a DAG.  The extra targets are the ones produced by
     # generators that run in this DAG but which are not part of the
@@ -381,7 +389,7 @@ def parent_sets(chosen, signature, all_groups, generator):
     >>> signature = (('y',0,'*'),('z',1,'1'))
     >>> chosen = (groups['x'][0],)
     >>> [ x for x in parent_sets(chosen, signature, groups, Generator('x',('y*', 'z'))) ]
-    [(1.x(#0$1), 1.z(#3$1)), (1.x(#0$1), 1.y(#1$1), 1.z(#3$1)), (1.x(#0$1), 2.y(#2$1), 1.z(#3$1))]
+    [(1.x(#0$0), 1.z(#3$0)), (1.x(#0$0), 1.y(#1$0), 1.z(#3$0)), (1.x(#0$0), 2.y(#2$0), 1.z(#3$0))]
     """
     if len(signature) == 0:
         # The entire signature was satisfied; we can just yield the
