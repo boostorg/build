@@ -28,7 +28,7 @@ class Trees_difference:
         print "Modified files:", self.modified_files
         print "Touched files :", self.touched_files
 
-    def empty():
+    def empty(self):
         return (len(self.added_files) == 0 and len(self.removed_files) == 0)\
                 and len(modified_files) == 0 and len(self.touched_files) == 0
 
