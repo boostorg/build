@@ -18,7 +18,7 @@ import sequence ;
 # The type of output to generate.
 # "console" is formated text echoed to the console (the default);
 # "text" is formated text appended to the output file;
-# "html" is HTLM output to the file.
+# "html" is HTML output to the file.
 #
 help-output = console ;
 
