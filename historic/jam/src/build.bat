@@ -18,9 +18,14 @@ if "%1" == "vc7" goto Set_MSVC7_Defaut
 if "%1" == "borland" goto Set_Borland
 ECHO ###
 ECHO ### Unknown toolset: %1
+goto Print_Help
+
+:Print_Help
 ECHO ###
 ECHO ### You can specify the toolset as the argument, i.e.:
 ECHO ###     .\build.bat msvc
+ECHO ###
+ECHO ### Toolsets supported by this script are: borland, metrowerks, msvc, vc7
 ECHO ###
 goto Finish
 
@@ -32,13 +37,9 @@ if EXIST "C:\Program Files\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" goto Set_
 if EXIST "C:\Program Files\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT" goto Set_MSVS_Defaut
 if EXIST "C:\Program Files\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" goto Set_MSVC7_Defaut
 if EXIST "C:\Borland\BCC55\Bin\bcc32.exe" goto Set_Borland
-ECHO "###"
-ECHO "### Could not find a suitable toolset."
-ECHO "###"
-ECHO "### You can specify the toolset as the argument, i.e.:"
-ECHO "###     .\build.bat msvc"
-ECHO "###"
-goto Finish
+ECHO ###
+ECHO ### Could not find a suitable toolset.
+goto Print_Help
 
 :Set_Metrowerks
 set BOOST_JAM_TOOLSET=metrowerks
@@ -75,9 +76,9 @@ set BOOST_JAM_OPT_MKJAMBASE=-emkjambasejam0
 goto Build
 
 :Build
-ECHO "###"
-ECHO "### Using '%BOOST_JAM_TOOLSET%' toolset."
-ECHO "###"
+ECHO ###
+ECHO ### Using '%BOOST_JAM_TOOLSET%' toolset.
+ECHO ###
 
 set MKJAMBASE_SOURCES=mkjambase.c
 set BJAM_SOURCES=
@@ -88,7 +89,7 @@ set BJAM_SOURCES=%BJAM_SOURCES% newstr.c option.c parse.c pathunix.c pathvms.c r
 set BJAM_SOURCES=%BJAM_SOURCES% rules.c scan.c search.c subst.c timestamp.c variable.c modules.c
 set BJAM_SOURCES=%BJAM_SOURCES% strings.c filesys.c builtins.c pwd.c
 
-REM No "yyacc" script available, yet.
+REM No "yyacc" script available, yet, and therefore no grammar bootstrap.
 @ECHO ON
 rd /S /Q bootstrap.%BOOST_JAM_TOOLSET%
 md bootstrap.%BOOST_JAM_TOOLSET%
@@ -99,6 +100,6 @@ md bootstrap.%BOOST_JAM_TOOLSET%
 :Build_BJAM
 %BOOST_JAM_CC% %BOOST_JAM_OPT_JAM% %BJAM_SOURCES%
 @if NOT EXIST ".\bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe" goto Finish
-.\bootstrap.%BOOST_JAM_TOOLSET%\jam0 -f build.jam -sBOOST_JAM_TOOLSET=%BOOST_JAM_TOOLSET%
+.\bootstrap.%BOOST_JAM_TOOLSET%\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET%
 
 :Finish

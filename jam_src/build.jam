@@ -9,61 +9,116 @@ NAME = boost-jam ;
 VERSION = 3.1.3 ;
 RELEASE = 1 ;
 
+# Generate development debug binaries?
+if --debug in $(ARGV)
+{
+    debug = true ;
+}
+
 # Configure the implemented toolsets. These are minimal
 # commands and options to compile the full Jam. When
 # adding new toolsets make sure to add them to the
 # "known" list also.
-rule toolset ( name command : opt.out + : opt.define + : flags * : linklibs * )
+rule toolset ( name command : opt.out + : opt.define + : release-flags * : debug-flags * : linklibs * )
 {
     tool.$(name).cc ?= $(command) ;
     tool.$(name).opt.out ?= $(opt.out) ;
     tool.$(name).opt.define ?= $(opt.define) ;
-    tool.$(name).flags ?= $(flags) ;
+    if $(debug)
+    {
+        tool.$(name).flags ?= $(debug-flags) ;
+    }
+    else
+    {
+        tool.$(name).flags ?= $(release-flags) ;
+    }
     tool.$(name).linklibs ?= $(linklibs) ;
     toolsets += $(name) ;
 }
 ## Borland C++ 5.5.x
-toolset borland bcc32 : -e -n : /D : -WC -w- -q -IC:\\Borland\\BCC55\\Include -LC:\\Borland\\BCC55\\Lib -O2 ;
+toolset borland bcc32 : -e -n : /D
+    : -WC -w- -q -IC:\\Borland\\BCC55\\Include -LC:\\Borland\\BCC55\\Lib -O2 -vi -w-inl
+    : -WC -w- -q -IC:\\Borland\\BCC55\\Include -LC:\\Borland\\BCC55\\Lib -v -Od -vi- ;
 ## Comeau C/C++ 4.x
-toolset como como : "-o " : -D ;
+toolset como como : "-o " : -D
+    : --inlining
+    : --no_inlining ;
 ## MacOSX Darwin, using GCC 2.9.x, 3.x
-toolset darwin cc :  "-o " : -D : -Wl,-x -O3 ;
+toolset darwin cc :  "-o " : -D
+    : -Wl,-x -O3 -finline-functions
+    : -g -O0 -fno-inline -pg ;
 ## GCC 2.x, 3.x
-toolset gcc gcc : "-o " : -D : -s -O3 ;
+toolset gcc gcc : "-o " : -D
+    : -s -O3 -finline-functions
+    : -g -O0 -fno-inline -pg ;
 ## GCC 2.x, 3.x on CYGWIN but without cygwin1.dll
-toolset gcc-nocygwin gcc : "-o " : -D : -s -O3 -mno-cygwin ;
+toolset gcc-nocygwin gcc : "-o " : -D
+    : -s -O3 -finline-functions -mno-cygwin
+    : -s -O3 -fno-inline -pg -mno-cygwin ;
 ## Intel C/C++ for Linux
-toolset intel-linux icc : "-o " : -D : -Xlinker -s -O3 ;
+toolset intel-linux icc : "-o " : -D
+    : -Xlinker -s -O3
+    : -g -O0 -p ;
 ## Intel C/C++ for Win32
-toolset intel-win32 icl : /Fe : -D : /nologo /GZ /Zi /MLd ;
+toolset intel-win32 icl : /Fe : -D
+    : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
+    : /nologo /MLd /DEBUG /Z7 /Od /Ob0 ;
 ## KCC ?
-toolset kcc KCC : "-o " : -D : -s +K2 ;
+toolset kcc KCC : "-o " : -D
+    : -s +K2
+    : -g +K0 ;
 ## Borland Kylix
-toolset kylix bc++ : -o : -D : -tC -q -O2 ;
+toolset kylix bc++ : -o : -D
+    : -tC -q -O2 -vi -w-inl
+    : -tC -q -v -Od -vi- ;
 ## Metrowerks CodeWarrior 8.x
-{ local mwcc = ; if $(NT) { mwcc = mwcc ; } else { mwcc = mwc$(OSPLAT:L) ; }
-  toolset metrowerks $(mwcc) : "-o " : -D : -runtime staticsingle -O ; }
+{
+    local mwcc = ; if $(NT) { mwcc = mwcc ; } else { mwcc = mwc$(OSPLAT:L) ; }
+    toolset metrowerks $(mwcc) : "-o " : -D
+        : -subsystem console -runtime staticsingle -opt full -inline auto -inline level=8
+        : -subsystem console -runtime staticsingle -O0 -inline off ;
+}
 ## MINGW GCC
-toolset mingw gcc : "-o " : -D : -s -O3 -DMINGW ;
+toolset mingw gcc : "-o " : -D
+    : -s -O3 -finline-functions -DMINGW
+    : -g -O0 -fno-inline -pg -DMINGW ;
 ## MIPS Pro
-toolset mipspro cc : "-o " : -D : -s -O3 -g0 ;
+toolset mipspro cc : "-o " : -D
+    : -s -O3 -g0 -INLINE:none
+    : -g -O0 -INLINE ;
 ## Microsoft Visual Studio C++ 6.x
-toolset msvc cl : /Fe : -D : /nologo /GZ /Zi /MLd : $(MSVCDir)\\lib\\kernel32.lib ;
+toolset msvc cl : /Fe : -D
+    : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
+    : /nologo /MLd /DEBUG /Z7 /Od /Ob0
+    : $(MSVCDir)\\lib\\kernel32.lib ;
 ## Sun Workshop 6 C++
-toolset sunpro CC : "-o " : -D : -s -fast -O4 ;
+toolset sunpro CC : "-o " : -D
+    : -s -fast -O4
+    : -g +d ;
 ## Compaq Alpha CXX
-toolset tru64cxx cc : "-o " : -D : -s -O5 ;
+toolset tru64cxx cc : "-o " : -D
+    : -s -O5 -inline speed
+    : -g -O0 -pg ;
 ## IBM VisualAge C++
-toolset vacpp xlc : "-o " : -D : -s -O3 -qstrict ;
+toolset vacpp xlc : "-o " : -D
+    : -s -O3 -qstrict -qinline
+    : -g -qNOOPTimize -qnoinline -pg ;
 ## Microsoft Visual C++ .NET 7.x
-toolset vc7 cl : /Fe : -D : /nologo /GZ /Zi /MLd : $(MSVCDir)\\lib\\kernel32.lib ;
+toolset vc7 cl : /Fe : -D
+    : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
+    : /nologo /MLd /DEBUG /Z7 /Od /Ob0
+    : $(MSVCDir)\\lib\\kernel32.lib ;
 
 # First set the build commands and options according to the
 # preset toolset.
-toolset = $(BOOST_JAM_TOOLSET) ;
+toolset = [ MATCH --toolset=(.*) : $(ARGV) ] ;
 if ! $(toolset) in $(toolsets)
 {
-    EXIT "Unknown toolset '$(toolset)'." ;
+    ECHO "###" ;
+    ECHO "###" Unknown toolset: $(toolset) ;
+    ECHO "###" ;
+    ECHO "###" Known toolsets are: $(toolsets:J=", ") ;
+    EXIT "###" ;
 }
 --cc = $(tool.$(toolset).cc) ;
 if $(tool.$(toolset).opt.out[2])
@@ -84,7 +139,7 @@ else
 locate-target = $(LOCATE_TARGET) ;
 if $(VMS)
 {
-    locate-target ?= [.binvms] ;
+    locate-target ?= [.bin.vms] ;
     platform = vms ;
 }
 else if $(MAC)
@@ -96,6 +151,10 @@ else
 {
     locate-target ?= bin.$(OS:L)$(OSPLAT:L) ;
     platform = $(OS:L)$(OSPLAT:L) ;
+}
+if $(debug)
+{
+    locate-target = $(locate-target).debug ;
 }
 
 # We have some different files for UNIX, VMS, and NT.
@@ -128,6 +187,12 @@ else if $(MAC)
 else
 {
     jam.source += execunix.c fileunix.c pathunix.c ;
+}
+
+# Debug assertions, or not.
+if ! $(debug)
+{
+    --defs += NDEBUG ;
 }
 
 # Enable some optional features.
@@ -195,8 +260,8 @@ rule .yyacc
 }
 actions .yyacc {    ./yyacc $(<) $(>) }
 
-yacc ?= [ GLOB $(PATH) : bison bison.exe ] ;
 yacc ?= [ GLOB $(PATH) : yacc yacc.exe ] ;
+yacc ?= [ GLOB $(PATH) : bison bison.exe ] ;
 yacc = $(yacc[1]) ;
 switch $(yacc:D=:S=)
 {
@@ -210,18 +275,18 @@ rule .yacc
 }
 if $(NT) { actions .yacc
 {    $(yacc) $(>)
-    rename y.tab.c $(<:S=.c)
-    rename y.tab.h $(<:S=.h) } }
+    rename y.tab.c $(<[1]:S=.c)
+    rename y.tab.h $(<[1]:S=.h) } }
 if $(UNIX) { actions .yacc
 {    $(yacc) $(>)
-    mv -f y.tab.c $(<:S=.c)
-    mv -f y.tab.h $(<:S=.h) } }
+    mv -f y.tab.c $(<[1]:S=.c)
+    mv -f y.tab.h $(<[1]:S=.h) } }
 
 # How to build the grammar.
 if $(yacc)
 {
     .yyacc jamgram.y jamgramtab.h : jamgram.yy ;
-    .yacc jamgram.c : jamgram.y ;
+    .yacc jamgram.c jamgram.h : jamgram.y ;
 }
 
 # How to build the compiled in jambase.

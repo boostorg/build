@@ -25,15 +25,17 @@ function error_exit()
     echo "### You can specify the toolset as the argument, i.e.:"
     echo "###     ./build.sh gcc"
     echo "###"
+    echo "### Toolsets supported by this script are: como, darwin, gcc, intel-linux, kcc, vacpp"
+    echo "###"
     exit 1
 }
-function test_run ()
+function test_path ()
 {
-    q=`$* 2>/dev/null`
+    hash $1 2>/dev/null
 }
 function test_uname ()
 {
-    if test_run uname; then
+    if test_path uname; then
         test `uname` = $*
     fi
 }
@@ -41,9 +43,12 @@ function test_uname ()
 function Guess_Toolset ()
 {
     if test_uname Darwin ; then BOOST_JAM_TOOLSET=darwin
-    elif test_run gcc --version ; then BOOST_JAM_TOOLSET=gcc
-    elif [[ -e /opt/intel/compiler50/ia32/bin/iccvars.sh ]] ; then BOOST_JAM_TOOLSET=intel-linux
-    elif test_run xlc ; then BOOST_JAM_TOOLSET=vacpp
+    elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
+    elif test_path icc ; then BOOST_JAM_TOOLSET=intel-linux
+    elif test -e /opt/intel/compiler50/ia32/bin/iccvars.sh ; then BOOST_JAM_TOOLSET=intel-linux
+    elif test_path xlc ; then BOOST_JAM_TOOLSET=vacpp
+    elif test_path como ; then BOOST_JAM_TOOLSET=como
+    elif test_path KCC ; then BOOST_JAM_TOOLSET=kcc
     fi
     if test "$BOOST_JAM_TOOLSET" = "" ; then
         error_exit "Could not find a suitable toolset."
@@ -53,35 +58,49 @@ function Guess_Toolset ()
 # The one option we support in the invocation
 # is the name of the toolset to force building
 # with.
-if test "$1" = ""; then
-    Guess_Toolset
-else
-    BOOST_JAM_TOOLSET=$1
-fi
+case "$1" in
+    -*) Guess_Toolset ;;
+    ?*) BOOST_JAM_TOOLSET=$1 ; shift ;;
+    *) Guess_Toolset ;;
+esac
 case $BOOST_JAM_TOOLSET in
     gcc)
     BOOST_JAM_CC=gcc
-    BOOST_JAM_OPT_JAM="-O3 -o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-O3 -o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
+    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
+    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     darwin)
     BOOST_JAM_CC=cc
-    BOOST_JAM_OPT_JAM="-O3 -o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-O3 -o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
+    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
+    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     intel-linux)
-    echo_run /opt/intel/compiler50/ia32/bin/iccvars.sh
+    if test -e /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
+        . /opt/intel/compiler50/ia32/bin/iccvars.sh
+    fi
     BOOST_JAM_CC=icc
-    BOOST_JAM_OPT_JAM="-Xlinker -O3 -o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-Xlinker -O3 -o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
+    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
+    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     vacpp)
     BOOST_JAM_CC=xlc
-    BOOST_JAM_OPT_JAM="-qstrict -O3 -o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-qstrict -O3 -o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
+    BOOST_JAM_OPT_JAM="-qstrict -o bootstrap.$BOOST_JAM_TOOLSET/jam0"
+    BOOST_JAM_OPT_MKJAMBASE="-qstrict -o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
+    ;;
+    
+    como)
+    BOOST_JAM_CC=como
+    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
+    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
+    ;;
+    
+    kcc)
+    BOOST_JAM_CC=KCC
+    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
+    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     *)
@@ -104,16 +123,24 @@ BJAM_SOURCES="\
 
 echo_run rm -rf bootstrap.$BOOST_JAM_TOOLSET
 echo_run mkdir bootstrap.$BOOST_JAM_TOOLSET
-if [[ ! -a jamgram.y || ! -a jamgramtab.h ]] ; then
-    echo_run ./yyacc jamgram.y jamgramtab.h jamgram.yy
+if test ! -e jamgram.y -o ! -e jamgramtab.h ; then
+    echo_run /bin/sh ./yyacc jamgram.y jamgramtab.h jamgram.yy
 fi
-if [[ ! -a jambase.c ]] ; then
+if test ! -e jamgram.c -o ! -e jamgram.h ; then
+    if test_path yacc ; then YACC="yacc -d"
+    elif test_path bison ; then YACC="bison -y -d --yacc"
+    fi
+    echo_run $YACC jamgram.y
+    mv -f y.tab.c jamgram.c
+    mv -f y.tab.h jamgram.h
+fi
+if test ! -e jambase.c ; then
     echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_MKJAMBASE} ${MKJAMBASE_SOURCES}
-    if test -e "./bootstrap.$BOOST_JAM_TOOLSET/mkjambase0" ; then
+    if test -x "./bootstrap.$BOOST_JAM_TOOLSET/mkjambase0" ; then
         echo_run ./bootstrap.$BOOST_JAM_TOOLSET/mkjambase0 jambase.c Jambase
     fi
 fi
 echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_JAM} ${BJAM_SOURCES}
-if [[ -e "./bootstrap.$BOOST_JAM_TOOLSET/jam0" ]] ; then
-    echo_run ./bootstrap.$BOOST_JAM_TOOLSET/jam0 -f build.jam -sBOOST_JAM_TOOLSET=$BOOST_JAM_TOOLSET
+if test -x "./bootstrap.$BOOST_JAM_TOOLSET/jam0" ; then
+    echo_run ./bootstrap.$BOOST_JAM_TOOLSET/jam0 -f build.jam --toolset=$BOOST_JAM_TOOLSET "$@"
 fi
