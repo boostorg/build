@@ -2166,7 +2166,17 @@ actions MkDir1
     $(MKDIR) "$(<)"
 }
 
-actions together Ranlib
+rule Ranlib
+{
+    Ranlib-action $(<) : $(>) ;
+}
+
+rule Ranlib-action
+{
+    system-Ranlib $(<) : $(>) ;
+}
+
+actions together system-Ranlib
 {
     $(RANLIB) "$(<)"
 }

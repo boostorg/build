@@ -10,7 +10,7 @@
 free-feature framework ;
 
 # singleton variables...
-set-as-singleton CW_ROOT CWFOLDER CWFolder ;
+set-as-singleton CW_ROOT CWFOLDER CWFolder CWINSTALL ;
 
 flags cw cw-version : $(CW_VERSION) ;
 flags cw cw-root : $(CW_ROOT) ;
@@ -41,7 +41,7 @@ flags cw LIBPATH <library-path> ;
 flags cw NEEDLIBS <library-file> ;
 flags cw FINDLIBS <find-library> ;
 flags cw PREFIX <prefix> ;
-if $(JAMUNAME) = Darwin
+if $(OS) = MACOSX
 {
     flags cw FRAMEWORKS <framework> ;
 }
@@ -70,7 +70,6 @@ if $(NT)
 }
 
 # Some language related options
-flags cw C++FLAGS : -DNOMINMAX ;
 flags cw CFLAGS <eh-model>msvc : -exc ms ;
 flags cw CFLAGS <include-search>directory : "-cwd proj" ;
 flags cw CFLAGS <include-search>source : "-cwd source" ;
@@ -245,11 +244,33 @@ flags cw CW_PREFIX : "-prefix " ;
 # CodeWarrior has it's own set of standard headers, so ignore the default.
 flags cw STDHDRS : ;
 
-# For MacOSX carbon framework seems to be required for correct linking.
-if $(JAMUNAME) = Darwin
+# MacOSX.. only the MSL/Carbon/Mach-O combination is working.
+if $(OS) = MACOSX
 {
+    # We use the compiler for both compiles and link, because we may need
+    # to compile the console stubs source. The compiler passes all options
+    # down to the linker anyway.
+    flags cw MWCC : mwcc ;
+    flags cw MWLD : mwcc ;
+    # For Carbon we need this prefix file to tell CW that's what we are targetting.
+    flags cw PREFIX : MSLCarbonPrefix.h ;
+    # We need to add the framework, as it's not added automatically.
     flags cw FRAMEWORKS : Carbon ;
+    # For comsole apps we need to compile in the MSL functions that will
+    # talk to the MacOSX console.
+    flags cw LINKFLAGS <user-interface>console :
+        "-prefix" "MSLCarbonPrefix.h"
+        "$(CWINSTALL)/MSL/MSL_C/MSL_MacOS/Src/console_OS_X.c" ;
 }
+
+if $(NT)
+{
+    flags cw MWCC : mwcc ;
+    flags cw MWLD : mwld ;
+}
+
+#~ flags cw CFLAGS : -verbose ;
+#~ flags cw LINKFLAGS : -verbose ;
 
 #### Link ####
 rule Link-action
@@ -264,20 +285,14 @@ rule Link-action
     gRUN_PATH($(<)) += $(CW_RUN_PATH) ;
     if $(NT)
     {
-        with-command-file cw-Link@-action $(<) : $(>) $(NEEDLIBS) ;
+        CMD on $(<) = "@" ;
+        with-command-file cw-Link-action $(<) : $(>) $(NEEDLIBS) ;
     }
     else
     {
+        CMD on $(<) = "" ;
         cw-Link-action $(<) : $(>) $(NEEDLIBS) ;
     }
-}
-
-actions cw-Link@-action
-{
-    $(CW_SETUP)
-    $(CW_CLEAR_ERROR)
-    $(CW_LINK_SETUP)$(STDLIBS:J=;)
-    mwld $(FLAGS) $(LINKFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -framework$(_)$(FRAMEWORKS) $(CW_IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" @"$(>)" "$(FINDLIBS)$(SUFLIB)"
 }
 
 actions cw-Link-action
@@ -285,12 +300,13 @@ actions cw-Link-action
     $(CW_SETUP)
     $(CW_CLEAR_ERROR)
     $(CW_LINK_SETUP)$(STDLIBS:J=;)
-    mwld $(FLAGS) $(LINKFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -framework$(_)$(FRAMEWORKS) $(CW_IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" "$(>)" "$(FINDLIBS)$(SUFLIB)"
+    $(MWLD) $(FLAGS) "$(LINKFLAGS)" "-L$(LIBPATH)" "-L$(STDLIBPATH)" -framework$(_)"$(FRAMEWORKS)" $(CW_IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" $(CMD)"$(>)" "$(FINDLIBS)$(SUFLIB)"
 }
 
 #### Cc #####
 rule Cc-action
 {
+    _ on $(<) = " " ;
     cw-Cc-action $(<) : $(>) ;
 }
 
@@ -298,12 +314,13 @@ actions cw-Cc-action
 {
     $(CW_SETUP)
     $(CW_CLEAR_ERROR)
-    mwcc -c -lang c -U$(UNDEFS) -D$(DEFINES) $(FLAGS) $(CFLAGS) "-I$(HDRS)" -I- "-I$(STDHDRS)" "-I$(SYSHDRS)" $(CW_PREFIX)"$(PREFIX)" -o "$(<)" "$(>)"
+    $(MWCC) -c -lang c -U$(UNDEFS) -D$(DEFINES) $(FLAGS) $(CFLAGS) "-I$(HDRS)" -I-$(_)"-I$(STDHDRS)" -I-$(_)"-I$(SYSHDRS)" $(CW_PREFIX)"$(PREFIX)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
 rule C++-action
 {
+    _ on $(<) = " " ;
     cw-C++-action $(<) : $(>) ;
 }
 
@@ -311,32 +328,34 @@ actions cw-C++-action
 {
     $(CW_SETUP)
     $(CW_CLEAR_ERROR)
-    mwcc -c -lang c++ -U$(UNDEFS) -D$(DEFINES) $(FLAGS) $(CFLAGS) $(C++FLAGS) "-I$(HDRS)" -I- "-I$(STDHDRS)" "-I$(SYSHDRS)" $(CW_PREFIX)"$(PREFIX)" -o "$(<)" "$(>)"
+    $(MWCC) -c -lang c++ -U$(UNDEFS) -D$(DEFINES) $(FLAGS) $(CFLAGS) $(C++FLAGS) "-I$(HDRS)" -I-$(_)"-I$(STDHDRS)" -I-$(_)"-I$(SYSHDRS)" $(CW_PREFIX)"$(PREFIX)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
 rule Archive-action
 {
+    _ on $(<) = " " ;
     if $(NT)
     {
-        with-command-file cw-Archive@-action $(<) : $(>) [ on $(<) return $(NEEDLIBS) ] ;
+        CMD on $(<) = "@" ;
+        with-command-file cw-Archive-action $(<) : $(>) [ on $(<) return $(NEEDLIBS) ] ;
     }
     else
     {
+        CMD on $(<) = "" ;
         cw-Archive-action $(<) : $(>) [ on $(<) return $(NEEDLIBS) ] ;
     }
 }
 
-actions together cw-Archive@-action
+## CW in general doesn't produce archive that ranlib is intereted in. So
+## don't run ranlib.
+rule Ranlib-action
 {
-    $(CW_SETUP)
-    $(CW_CLEAR_ERROR)
-    mwld -library $(FLAGS) $(ARFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -o "$(<)" @"$(>)" "$(FINDLIBS)$(SUFLIB)"
 }
 
 actions together cw-Archive-action
 {
     $(CW_SETUP)
     $(CW_CLEAR_ERROR)
-    mwld -library $(FLAGS) $(ARFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -o "$(<)" "$(>)" "$(FINDLIBS)$(SUFLIB)"
+    $(MWLD) -library $(FLAGS) $(ARFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -o "$(<)" $(CMD)"$(>)" "$(FINDLIBS)$(SUFLIB)"
 }
