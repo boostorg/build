@@ -83,6 +83,20 @@ rule stlport-target-class ( project : headers ? : libraries ? : requirements * )
     self.libraries = $(libraries) ;
     
     import feature project type errors generators ;
+    import set : difference ;
+    
+    rule generate ( property-set )
+    {
+        # Since this target is built with <stdlib>stlport, it will also
+        # have <library>/stlport//stlport in requirements, which will
+        # cause a loop in main target references. Remove that property
+        # manually.
+        
+        property-set = [ property-set.create [ difference
+            [ $(property-set).raw ] : <library>/stlport//stlport ] ] ;
+        return [ basic-target.generate $(property-set) ] ;
+    }
+    
     
     rule construct ( source-targets * : property-set )
     {
