@@ -6,7 +6,7 @@
 #  This file is used to configure your Boost.Build installation. Please read
 #  the user manual to find out where to put it.
 
-#  Toolset declarations are most important in this file. The tell Boost.Build
+#  Toolset declarations are most important in this file. They tell Boost.Build
 #  what compilers are available and where to look for them. The first toolset
 #  will become "default" one.
 #  Some important libraries can also be configured.
