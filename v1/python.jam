@@ -6,12 +6,12 @@ gPYTHON_INCLUDED = true ;
 if $(NT)
 {
     CATENATE = type ;
-    PYTHON_VERSION ?= 2.1 ;
+    PYTHON_VERSION ?= 2.2 ;
 }
 else if $(UNIX)
 {
     CATENATE = cat ;
-    PYTHON_VERSION ?= 1.5 ;
+    PYTHON_VERSION ?= 2.2 ;
 }
 
 # Strip the dot from the Python version in order to be able to name
@@ -196,7 +196,6 @@ BOOST_PYTHON_V2_PROPERTIES
       <cwpro8><*><cxxflags>"-inline deferred"  # added for internal testing purposes
         <cxx><*><sysinclude>$(BOOST_ROOT)/boost/compatibility/cpp_c_headers
          <define>BOOST_PYTHON_DYNAMIC_LIB
-           <define>BOOST_PYTHON_V2
       ;
 
 # Extends the RUN_PATH assignment for targets built under Cygwin so
