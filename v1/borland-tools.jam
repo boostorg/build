@@ -76,7 +76,7 @@ flags borland C++FLAGS <cxxflags> ;
 flags borland DEFINES <define> ;
 flags borland UNDEFS <undef> ;
 flags borland HDRS <include> ;
-flags borland STDHDRS <sysinclude> ;
+flags borland SYSHDRS <sysinclude> ;
 flags borland LINKFLAGS <linkflags> ;
 flags borland ARFLAGS <arflags> ;
 
@@ -143,7 +143,7 @@ rule Cc-action
 
 actions borland-Cc-action
 {
-    "$(BCC_TOOL_PATH)bcc32" -j5 -g255 -q -c -w -a8 -b- -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(BCC_TOOL_PATH)bcc32" -j5 -g255 -q -c -w -a8 -b- -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o"$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -170,7 +170,7 @@ rule C++-action
 #
 actions borland-C++-action
 {
-    "$(BCC_TOOL_PATH)bcc32" -j5 -g255 -q -c -P -w -Ve -Vx -a8 -b- -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(BCC_TOOL_PATH)bcc32" -j5 -g255 -q -c -P -w -Ve -Vx -a8 -b- -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o"$(<)" "$(>)"
 }
 
 if ! $(BORLAND_ARCHIVE_LINESEP)

@@ -74,7 +74,7 @@ flags vacpp C++FLAGS <cxxflags> ;
 flags vacpp DEFINES <define> ;
 flags vacpp UNDEFS <undef> ;
 flags vacpp HDRS <include> ;
-flags vacpp STDHDRS <sysinclude> ;
+flags vacpp SYSHDRS <sysinclude> ;
 flags vacpp LINKFLAGS <linkflags> ;
 flags vacpp ARFLAGS <arflags> ;
 
@@ -120,7 +120,7 @@ rule Cc-action
 # Always allow C++ comments in C source files!
 actions xlc-Cc-action
 {
-    $(VA_C_COMPILER:R=$(VA_TOOL_PATH)) -qcpluscmt -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(VA_C_COMPILER:R=$(VA_TOOL_PATH)) -qcpluscmt -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -131,7 +131,7 @@ rule C++-action
 
 actions xlc-C++-action
 {
-    $(VA_CXX_COMPILER:R=$(VA_TOOL_PATH)) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(VA_CXX_COMPILER:R=$(VA_TOOL_PATH)) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####

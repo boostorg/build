@@ -66,7 +66,7 @@ flags kylix C++FLAGS <cxxflags> ;
 flags kylix DEFINES <define> ;
 flags kylix UNDEFS <undef> ;
 flags kylix HDRS <include> ;
-flags kylix STDHDRS <sysinclude> ;
+flags kylix SYSHDRS <sysinclude> ;
 flags kylix LINKFLAGS <linkflags> ;
 flags kylix ARFLAGS <arflags> ;
 flags kylix FINDLIBS : pthread ;
@@ -105,7 +105,7 @@ rule Cc-action
 
 actions kylix-Cc-action
 {
-    $(KYLIX_EXEC_PREFIX)bc++ -P- -g255 -j5 -q -c -w -a8 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    $(KYLIX_EXEC_PREFIX)bc++ -P- -g255 -j5 -q -c -w -a8 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o"$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -132,7 +132,7 @@ rule C++-action
 #
 actions kylix-C++-action
 {
-    $(KYLIX_EXEC_PREFIX)bc++ -j5 -g255 -q -c -w -Ve -Vx -a8 -x -xd -RT -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    $(KYLIX_EXEC_PREFIX)bc++ -j5 -g255 -q -c -w -Ve -Vx -a8 -x -xd -RT -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o"$(<)" "$(>)"
 }
 
 #### Archive ####

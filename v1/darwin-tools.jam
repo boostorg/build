@@ -78,7 +78,7 @@ flags darwin C++FLAGS <cxxflags> ;
 flags darwin DEFINES <define> ;
 flags darwin UNDEFS <undef> ;
 flags darwin HDRS <include> ;
-flags darwin STDHDRS <sysinclude> ;
+flags darwin SYSHDRS <sysinclude> ;
 flags darwin LIBPATH <library-path> ;
 flags darwin NEEDLIBS <library-file> ;
 flags darwin FINDLIBS <find-library> ;
@@ -199,7 +199,7 @@ rule Cc-action
 
 actions darwin-Cc-action
 {
-    $(.GCC_BIN_DIR)$(.GCC) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -F$(FRAMEWORKS:D) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.GCC_BIN_DIR)$(.GCC) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -F$(FRAMEWORKS:D) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -211,7 +211,7 @@ rule C++-action
 
 actions darwin-C++-action
 {
-    $(.GCC_BIN_DIR)$(.GXX) -c -ftemplate-depth-256 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -F$(FRAMEWORKS:D) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.GCC_BIN_DIR)$(.GXX) -c -ftemplate-depth-256 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -F$(FRAMEWORKS:D) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####

@@ -84,6 +84,10 @@ rule get-stlport-root
 STLPORT_INCLUDE_DIRECTORY ?= stlport ;
 STLPORT_LIB_DIRECTORY ?= lib ;
 
+# Clear out the STD paths so that the real toolset doesn't include
+# anything but the STLport as the STD.
+STDHDRS = ;
+STDLIBPATH = ;
 flags $(CURR_TOOLSET) STDHDRS : [ join [ get-stlport-root ] $(SLASH)$(STLPORT_INCLUDE_DIRECTORY) ] ;
 flags $(CURR_TOOLSET) STDLIBPATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)$(STLPORT_LIB_DIRECTORY) ] ;
 

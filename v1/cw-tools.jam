@@ -31,7 +31,7 @@ flags cw C++FLAGS <cxxflags> ;
 flags cw DEFINES <define> ;
 flags cw UNDEFS <undef> ;
 flags cw HDRS <include> ;
-flags cw STDHDRS <sysinclude> ;
+flags cw SYSHDRS <sysinclude> ;
 flags cw LINKFLAGS <linkflags> ;
 flags cw ARFLAGS <arflags> ;
 flags cw LIBPATH <library-path> ;
@@ -246,7 +246,7 @@ rule Cc-action
 actions cw-Cc-action
 {
     $(CW_SETUP)
-    mwcc -c -lang c -U$(UNDEFS) -D$(DEFINES) $(FLAGS) $(CFLAGS) "-I$(HDRS)" -I- "-I$(STDHDRS)" $(CW_PREFIX)"$(PREFIX)" -o "$(<)" "$(>)"
+    mwcc -c -lang c -U$(UNDEFS) -D$(DEFINES) $(FLAGS) $(CFLAGS) "-I$(HDRS)" -I- "-I$(STDHDRS)" "-I$(SYSHDRS)" $(CW_PREFIX)"$(PREFIX)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -258,7 +258,7 @@ rule C++-action
 actions cw-C++-action
 {
     $(CW_SETUP)
-    mwcc -c -lang c++ -U$(UNDEFS) -D$(DEFINES) $(FLAGS) $(CFLAGS) $(C++FLAGS) "-I$(HDRS)" -I- "-I$(STDHDRS)" $(CW_PREFIX)"$(PREFIX)" -o "$(<)" "$(>)"
+    mwcc -c -lang c++ -U$(UNDEFS) -D$(DEFINES) $(FLAGS) $(CFLAGS) $(C++FLAGS) "-I$(HDRS)" -I- "-I$(STDHDRS)" "-I$(SYSHDRS)" $(CW_PREFIX)"$(PREFIX)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####

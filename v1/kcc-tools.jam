@@ -19,7 +19,7 @@ flags kcc C++FLAGS <cxxflags> ;
 flags kcc DEFINES <define> ;
 flags kcc UNDEFS <undef> ;
 flags kcc HDRS <include> ;
-flags kcc STDHDRS <sysinclude> ;
+flags kcc SYSHDRS <sysinclude> ;
 flags kcc LINKFLAGS <linkflags> ;
 flags kcc ARFLAGS <arflags> ;
 
@@ -53,7 +53,7 @@ rule Cc-action
 
 actions kcc-Cc-action
 {
-    $(kcc.bin-directory)KCC -c $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(kcc.bin-directory)KCC -c $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -64,7 +64,7 @@ rule C++-action
 
 actions kcc-C++-action
 {
-    $(kcc.bin-directory)KCC -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(kcc.bin-directory)KCC -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 

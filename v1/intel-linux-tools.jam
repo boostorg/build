@@ -97,7 +97,7 @@ flags intel-linux LIBPATH <library-path> ;
 flags intel-linux NEEDLIBS <library-file> ;
 flags intel-linux FINDLIBS <find-library> ;
 
-flags intel-linux STDHDRS <sysinclude> ;
+flags intel-linux SYSHDRS <sysinclude> ;
 flags intel-linux LINKFLAGS <linkflags> ;
 
 flags intel-linux ARFLAGS <arflags> ;
@@ -123,7 +123,7 @@ rule Cc-action
 actions intel-linux-Cc-action
 {
     $(INTEL_LINUX_SETUP)
-    icc -c -w1 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    icc -c -w1 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -136,7 +136,7 @@ rule C++-action
 actions intel-linux-C++-action
 {
     $(INTEL_LINUX_SETUP)
-    icc -c -w1 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    icc -c -w1 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####

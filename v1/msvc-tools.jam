@@ -97,7 +97,7 @@ flags msvc C++FLAGS <cxxflags> ;
 flags msvc DEFINES <define> ;
 flags msvc UNDEFS <undef> ;
 flags msvc HDRS <include> ;
-flags msvc STDHDRS <sysinclude> ;
+flags msvc SYSHDRS <sysinclude> ;
 flags msvc LINKFLAGS <linkflags> ;
 flags msvc ARFLAGS <arflags> ;
 
@@ -160,7 +160,7 @@ rule Cc-action
 actions vc-Cc
 {
     $(VC_SETUP)
-    "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm800 -nologo -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" "$(>)"
+    "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm800 -nologo -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -173,7 +173,7 @@ rule C++-action
 actions vc-C++
 {
     $(VC_SETUP)
-    "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm800 -nologo /EHsc -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" -Tp"$(>)"
+    "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm800 -nologo /EHsc -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" -Tp"$(>)"
 }
 
 #### Archive ####

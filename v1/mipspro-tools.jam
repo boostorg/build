@@ -146,7 +146,7 @@ flags mipspro C++FLAGS <cxxflags> ;
 flags mipspro LIBPATH <library-path> ;
 flags mipspro NEEDLIBS <library-file> ;
 flags mipspro FINDLIBS <find-library> ;
-flags mipspro STDHDRS <sysinclude> ;
+flags mipspro SYSHDRS <sysinclude> ;
 flags mipspro LINKFLAGS <linkflags> ;
 flags mipspro ARFLAGS <arflags> ;
 
@@ -170,6 +170,7 @@ actions mipspro-Link-action bind NEEDLIBS
         "-I$(HDRS)" \
         "-I$(STDC++HDRS)" \
         "-I$(STDHDRS)" \
+        "-I$(SYSHDRS)" \
         "$(LINKFLAGS)" \
         "$(NEEDLIBS)" \
         "$(NEEDLIBS)" \
@@ -193,6 +194,7 @@ actions mipspro-Cc-action
         "$(CFLAGS)" \
         "-I$(HDRS)" \
         "-I$(STDHDRS)" \
+        "-I$(SYSHDRS)" \
         -o "$(<)" \
         "$(>)"
 }
@@ -214,6 +216,7 @@ actions mipspro-C++-action
         "-I$(HDRS)" \
         "-I$(STDC++HDRS)" \
         "-I$(STDHDRS)" \
+        "-I$(SYSHDRS)" \
         -o "$(<)" \
         "$(>)"
 }
@@ -240,6 +243,7 @@ actions mipspro-Archive-action
         "-I$(HDRS)" \
         "-I$(STDC++HDRS)" \
         "-I$(STDHDRS)" \
+        "-I$(SYSHDRS)" \
         "-WR,$(ARFLAGS)" \
         -o "$(<)" \
         "$(>)"

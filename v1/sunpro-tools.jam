@@ -83,7 +83,7 @@ flags sunpro C++FLAGS <cxxflags> ;
 flags sunpro DEFINES <define> ;
 flags sunpro UNDEFS <undef> ;
 flags sunpro HDRS <include> ;
-flags sunpro STDHDRS <sysinclude> ;
+flags sunpro SYSHDRS <sysinclude> ;
 flags sunpro LINKFLAGS <linkflags> ;
 flags sunpro LINKFLAGS <debug-symbols>off : -s ;
 flags sunpro ARFLAGS <arflags> ;
@@ -145,7 +145,7 @@ rule Cc-action
 
 actions sunpro-Cc-action
 {
-    $(.CC[1]:R=$(SUNPRO_BIN_DIR)) $(.CC[2-]) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.CC[1]:R=$(SUNPRO_BIN_DIR)) $(.CC[2-]) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -156,6 +156,6 @@ rule C++-action
 
 actions sunpro-C++-action
 {
-    $(.CXX[1]:R=$(SUNPRO_BIN_DIR)) $(.CXX[2-]) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.CXX[1]:R=$(SUNPRO_BIN_DIR)) $(.CXX[2-]) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 

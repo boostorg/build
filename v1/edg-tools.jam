@@ -33,7 +33,7 @@ flags edg C++FLAGS <cxxflags> ;
 flags edg DEFINES <define> ;
 flags edg UNDEFS <undef> ;
 flags edg HDRS <include> ;
-flags edg STDHDRS <sysinclude> ;
+flags edg SYSHDRS <sysinclude> ;
 flags edg LINKFLAGS <linkflags> ;
 flags edg ARFLAGS <arflags> ;
 
@@ -63,7 +63,7 @@ rule Cc-action
 
 actions edg-Cc-action
 {
-    $(ECCP) -c --c99 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(ECCP) -c --c99 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -74,7 +74,7 @@ rule C++-action
 
 actions edg-C++-action
 {
-    $(ECCP) -tused -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)"  -o "$(<)" "$(>)"
+    $(ECCP) -tused -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)"  -o "$(<)" "$(>)"
 }
 
 #### Archive ####

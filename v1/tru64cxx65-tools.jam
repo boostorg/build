@@ -62,7 +62,7 @@ flags tru64cxx65 C++FLAGS <cxxflags> ;
 flags tru64cxx65 DEFINES <define> ;
 flags tru64cxx65 UNDEFS <undef> ;
 flags tru64cxx65 HDRS <include> ;
-flags tru64cxx65 STDHDRS <sysinclude> ;
+flags tru64cxx65 SYSHDRS <sysinclude> ;
 flags tru64cxx65 LINKFLAGS <linkflags> ;
 flags tru64cxx65 ARFLAGS <arflags> ;
 
@@ -98,7 +98,7 @@ rule Cc-action
 
 actions tru64cxx65-Cc-action
 {
-   cc -std1 -msg_display_number -msg-disable 186,450,1115 -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+   cc -std1 -msg_display_number -msg-disable 186,450,1115 -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -111,7 +111,7 @@ rule C++-action
 # really can't ignore this one!
 actions tru64cxx65-C++-action
 {
-   cxx -c -tlocal -noimplicit_include -D__USE_STD_IOSTREAM -nousing_std -msg_display_number -msg_disable 186,450,1115 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+   cxx -c -tlocal -noimplicit_include -D__USE_STD_IOSTREAM -nousing_std -msg_display_number -msg_disable 186,450,1115 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####

@@ -35,7 +35,7 @@ flags tru64cxx C++FLAGS <cxxflags> ;
 flags tru64cxx DEFINES <define> ;
 flags tru64cxx UNDEFS <undef> ;
 flags tru64cxx HDRS <include> ;
-flags tru64cxx STDHDRS <sysinclude> ;
+flags tru64cxx SYSHDRS <sysinclude> ;
 flags tru64cxx LINKFLAGS <linkflags> ;
 flags tru64cxx ARFLAGS <arflags> ;
 
@@ -75,7 +75,7 @@ rule Cc-action
 
 actions tru64cxx-Cc-action
 {
-   cc -std1 -msg_display_number -msg-disable 186,450,1115 -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+   cc -std1 -msg_display_number -msg-disable 186,450,1115 -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -86,7 +86,7 @@ rule C++-action
 
 actions tru64cxx-C++-action
 {
-   cxx -c -newcxx -x cxx  -msg_display_number -msg_disable 186,450,1115 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+   cxx -c -newcxx -x cxx  -msg_display_number -msg_disable 186,450,1115 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
