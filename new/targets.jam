@@ -262,12 +262,12 @@ rule main-target ( name : project )
     import sequence ;
     import print ;
     import build-request feature property-set ;
-    
+        
     # Add a new alternative for this target
     rule add-alternative ( target )
     {
         local d = [ $(target).default-build ] ;
-        if $(self.alternatives) && $(d)
+        if $(self.alternatives) && [ $(d).raw ]
         {
             errors.error "default build can be specified only in first alternative" 
               : "main target is " [ full-name ] ;
@@ -497,6 +497,10 @@ rule basic-target ( name : project
         requirements = [ property-set.empty ] ;
     }    
     self.requirements = $(requirements) ;
+    if ! $(default-build) 
+    {
+        default-build = [ property-set.empty ] ;
+    }    
     self.default-build = $(default-build) ;
     if ! $(usage-requirements)
     {

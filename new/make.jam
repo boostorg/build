@@ -54,7 +54,6 @@ rule make ( target-name : sources * : generating-rule + : requirements *
      [ new make-target-class $(target-name) : $(caller) : $(sources) :
          [ targets.main-target-requirements $(requirements) : $(caller) ] :
           $(generating-rule) :
-          :
          [ targets.main-target-default-build : $(caller) ] 
      ] ;
          
