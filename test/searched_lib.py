@@ -80,4 +80,23 @@ lib l : : <name>l_r <variant>release ;
 
 t.run_build_system("-n")
 
+# A regression test. Two virtual target with the same properties
+# were created for 'l' target, which caused and error to be reported
+# when actualizing targets. The final error is correct, but we should
+# not create two duplicated targets. Thanks to Andre Hentz
+# for finding this bug.
+t.write("project-root.jam", "")
+
+t.write("a.cpp", "")
+
+t.write("Jamfile", """
+project a : requirements <link-runtime>static ;
+
+lib a : a.cpp l ;
+lib l : : <name>l_f ;
+""")
+
+t.run_build_system("-n")
+
+
 t.cleanup()
