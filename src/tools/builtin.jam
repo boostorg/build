@@ -23,10 +23,13 @@ feature rtti : on off : link-incompatible propagated ;
 feature debug-symbols : on off : propagated ;
 feature define : : free ;
 feature "include" : : free path ;
+feature cxxflags : : free ;
+
 feature dependency : : free dependency ;
 feature library : : free dependency ;
 feature find-library : : free ;
 feature library-path : : free path ;
+feature library-file : : free path ;
 
 feature variant : : implicit composite propagated ;
 
