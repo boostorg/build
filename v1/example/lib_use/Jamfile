@@ -1,11 +1,11 @@
-# (C) Copyright Rene Rivera, 2002.
+# (C) Copyright Rene Rivera, 2002, 2005.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Example of how to define and depend on a library target.
 # This is for Boost.Build-V1
 
-subproject tools/build/examples/lib_use ;
+subproject tools/build/v1/example/lib_use ;
 
 # Declare the library target. Composed of a single source file.
 # The real name of the target will vary according to the build
