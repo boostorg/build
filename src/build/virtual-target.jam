@@ -124,7 +124,6 @@ class virtual-target
                 self.made.$(name) = true ;
 
                 DEPENDS $(name) : $(actual-name) ;
-                BINDRULE on $(name) = virtual-target.remember-binding ;
 
                 actualize-location $(name) ;
 
@@ -178,7 +177,6 @@ class virtual-target
             for local i in $(self.dependencies) {
                 DEPENDS $(name) : [ $(i).actualize ] ;
             }
-            BINDRULE on $(name) = virtual-target.remember-binding ;
 
             actualize-location $(name) ;
             actualize-action $(name) ;
@@ -515,23 +513,6 @@ class notfile-target : abstract-file-target
         ALWAYS $(target) ;
     }    
 }    
-
-
-# Returns the binding for the given actual target.
-# CONSIDER: not sure this rule belongs here.
-rule binding ( target )
-{
-    return $(.binding.$(target)) ;
-}
-
-
-rule remember-binding ( target : bound-path )
-{
-    .binding.$(target) = $(bound-path) ;
-}
-# virtual-target.remember-binding must be available in the global
-# module in order to be invoked by the builtin binding process.
-IMPORT virtual-target : remember-binding : : virtual-target.remember-binding ;
 
 # Class which represents an action.
 # Both 'targets' and 'sources' should list instances of 'virtual-target'.

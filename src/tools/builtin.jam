@@ -283,15 +283,14 @@ class c-scanner : scanner
         return "#include[ ]*(<(.*)>|\"(.*)\")" ;
     }
 
-    rule process ( target : matches * )
+    rule process ( target : matches * : binding )
     {
         local angle = [ regex.transform $(matches) : "<(.*)>" ] ;
         local quoted = [ regex.transform $(matches) : "\"(.*)\"" ] ;
 
         # CONSIDER: the new scoping rule seem to defeat "on target" variables.
         local g = [ on $(target) return $(HDRGRIST) ] ;  
-        local b = [ path.native [ path.parent [ path.make
-                      [ virtual-target.binding $(target) ] ] ] ] ;
+        local b = [ NORMALIZE_PATH $(binding:D) ] ;
 
         # Attach binding of including file to included targets.
         # When target is directly created from virtual target
@@ -313,8 +312,6 @@ class c-scanner : scanner
         SEARCH on $(angle) = $(self.includes:G=) ;
         SEARCH on $(quoted) = $(b) $(self.includes:G=) ;
         
-        BINDRULE on $(angle) $(quoted) = virtual-target.remember-binding ;
-
         # Just propagate current scanner to includes, in a hope
         # that includes do not change scanners. 
         scanner.propagate $(__name__) : $(angle) $(quoted) : $(target) ;

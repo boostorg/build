@@ -363,17 +363,14 @@ class xinclude-scanner : scanner
     return "xi:include[ ]*href=\"([^\"]*)\"" ;
   }
 
-  rule process ( target : matches * )
+  rule process ( target : matches * : binding )
   {
-    local target_path = [ path.native [ path.parent [ path.make
-                          [ virtual-target.binding $(target) ] ] ] ] ;
+    local target_path = [ NORMALIZE_PATH $(binding:D) ] ;
 
     NOCARE $(matches) ;
     INCLUDES $(target) : $(matches) ;
     SEARCH on $(matches) = $(target_path) $(self.includes:G=) ;
     
-    BINDRULE on $(matches) = virtual-target.remember-binding ;
-
     scanner.propagate $(__name__) : $(matches) : $(target) ;     
   }
 }
