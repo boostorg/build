@@ -237,7 +237,7 @@ rule main-target ( name : project )
         else
         {
             # Find the alternative with the longest set of non-free and 
-            # non-indicental requirements
+            # non-indicental requirements and are in 'properties'
             local r = [ $(alternatives).indices ] ;
 
             # First compute the length of requirements sets
@@ -245,28 +245,22 @@ rule main-target ( name : project )
             for local p in $(r) 
             {
                 local target = [ $(alternatives).at $(p) : 1 ] ;
-                assert.equal [ is-a $(target) : basic-target ] : true ;
-                local props = [ $(target).requirements ] ;
-                req-length += [ sequence.length [ property.remove free :
-                                [ $(target).requirements ] ] ] ;
+                # FIXME: in general, 'abstract-target' derivatives might not
+                # have 'requirements' method. 
+                # assert.equal [ is-a $(target) : basic-target ] : true ;
+                local req = [ $(target).requirements ] ;
+                req = [ property.remove free incidental : $(req) ] ;
+                req-length += [ sequence.length 
+                    [ set.intersection $(req) : $(properties) ] ] ;
             }
-
-            # Then find if there's single requirements set with maximum length
-            local req-length2 = [ sequence.insertion-sort $(req-length) ] ;
-            if $(req-length2[-1]) != $(req-length2[-2]) 
-            {
-                # Have signle maximum value
-                local max-length = $(req-length2[-1]) ;
-                local best ;
-                while $(r) && ! $(best) 
-                {                
-                    if $(req-length[$(r[1])]) = $(max-length) 
-                    {
-                        best = [ $(alternatives).get-at $(r[1]) ] ;      
-                    }
-                    r = $(r[2-]) ;
-                }
-                result = $(best[2-]) ;
+                        
+            local best = [ sequence.select-highest-ranked $(r) : $(req-length) ] ;
+                        
+            if ! $(best[2]) 
+            {                
+                local index = $(best[1]) ;
+                result = [ $(alternatives).get-at $(index) ] ;
+                result = $(result[2-]) ;
             } 
             else
             {
@@ -382,7 +376,7 @@ rule basic-target ( name : project
                     [ property.refine $(properties) : $(self.requirements) ] ;
 
                 rproperties = [ property.evaluate-conditionals $(rproperties) ] ;
-                
+                                
                 if $(rproperties[1]) != "@error"                    
                 {
                     # TODO: issue a warning when requirements change properties, but
@@ -472,7 +466,7 @@ rule basic-target ( name : project
             return [ $(main-target).generate $(rproperties) ] ;        
         }
     }
-
+        
     # Constructs the virtual targets for this abstract targets and
     # the dependecy graph. Returns the list of virtual targets.
     # Should be overrided in derived classes.

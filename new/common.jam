@@ -61,3 +61,14 @@ actions piecemeal together existing Clean
     rm $(>)
 }
 
+rule copy 
+{    
+}
+
+
+actions copy
+{
+    cp $(>) $(<)
+}
+
+

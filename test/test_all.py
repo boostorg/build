@@ -30,3 +30,5 @@ import default_build
 import main_properties
 import use_requirements
 import conditionals
+import stage
+import prebuilt

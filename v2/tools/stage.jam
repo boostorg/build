@@ -1,0 +1,56 @@
+#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+#  This module defines the 'stage' rule, used to copy a set of targets to
+#  a single location
+
+import targets ;
+import class : class new ;
+import property ;
+import errors : error ;
+import type : type ;
+import regex ;
+
+rule stage-target-class ( name-and-dir : project : sources * : requirements * : default-build * )
+{
+    basic-target.__init__ $(name-and-dir) : $(project) : $(sources) : $(requirements) 
+                          : $(default-build) ;
+    
+    rule construct ( source-targets * : properties * )
+    {
+        local result ;
+        for local i in $(source-targets)
+        {
+            local i2 = [ new virtual-target [ $(i).name ] : [ $(i).type ] 
+              : $(self.project) ] ;
+            local a = [ new action $(i2) : $(i) : common.copy ] ;
+            $(i2).action $(a) ;
+            
+            local pl = [ project.attribute $(self.project) location ] ;
+            local path = [ path.root [ path.native $(self.name) ] $(pl) ] ;
+        
+            $(i2).set-path $(path) ;
+            $(i2).extra-grist stage-$(self.name) ;
+            result += $(i2) ;
+        }
+        return $(result) ;
+    }   
+}
+
+class stage-target-class : basic-target ;
+
+rule stage ( directory : sources * : requirements * : default-build * )
+{
+    # FIXME: for now, just use directory as target name. We really
+    # need to implement unnamed main targets.
+    targets.main-target-alternative 
+      $(directory) [ CALLER_MODULE ] stage-target-class : 2 : : 3 
+        : $(sources) : $(requirements) : $(default-build) ;
+}
+
+IMPORT $(__name__) : stage : : stage ;
+
+
+

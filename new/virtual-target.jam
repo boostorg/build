@@ -40,6 +40,14 @@ rule virtual-target ( name : type ? : project )
         }
         return $(self.suffix) ;
     }
+    
+    # Sets the path. When generating target name, it will override any path
+    # computation from properties. 
+    rule set-path ( path )
+    {
+        self.path = $(path) ;
+    }
+          
         
     # Property set that distinguishes different variants of a target.
     # May be a subset of the property set that is used for building.
@@ -106,6 +114,13 @@ rule virtual-target ( name : type ? : project )
     {
         self.extra-path = $(p) ;
     }
+    
+    # Specifies an extra grist to be added to the target name.
+    rule extra-grist ( g )
+    {
+        self.extra-grist = $(g) ;
+    }
+    
 
     # Generates all the actual targets and build instructions needed to build
     # this target. Returns the actual target name. Can be called several times.
@@ -181,7 +196,13 @@ rule virtual-target ( name : type ? : project )
                 DEPENDS $(name) : $(path) ;
                 common.MkDir $(path) ;
                 common.Clean clean : $(name) ;
-            } else {
+            } 
+            else if $(self.path)
+            {
+                LOCATE on $(name) = $(self.path) ;
+            }
+            else 
+            {
                 SEARCH on $(name) =
                     [ path.native [ project.attribute $(self.project) source-location ] ] ;
             }
@@ -251,7 +272,11 @@ rule virtual-target ( name : type ? : project )
             {
                 grist = $(location-grist) ;
             }
-
+            if $(self.extra-grist) 
+            {
+                grist = $(grist)/$(self.extra-grist) ;
+            }                       
+            
             if $(self.suffix)
             {
                 self.actual-name = [ sequence.join <$(grist)>$(self.name) 
@@ -273,13 +298,20 @@ rule virtual-target ( name : type ? : project )
     # Returns the directory for this target
     rule path ( )
     {
-        local path = [ path.join 
-                         [ project.attribute $(self.project) location ] 
-                         [ $(self.action).path ] 
-                         $(self.extra-path)                           
-                     ] ;
+        if $(self.path)
+        {
+            return $(self.path) ;
+        }
+        else
+        {            
+            local path = [ path.join 
+                             [ project.attribute $(self.project) location ] 
+                             [ $(self.action).path ] 
+                             $(self.extra-path)                           
+                         ] ;
                 
-        return [ path.native $(path) ] ;
+            return [ path.native $(path) ] ;
+        }        
      }
     
 }

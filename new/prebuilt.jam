@@ -1,0 +1,56 @@
+#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+#  This module defines the 'prebuilt' rule, which allows to use targets
+#  created outside of Boost.Build, or for which no source is available..
+
+import targets ;
+import class : class new ;
+import property ;
+import errors : error ;
+import type : type ;
+import regex ;
+
+rule prebuilt-target-class ( name : project : type file : requirements * : use-requirements * )
+{
+    abstract-target.__init__ $(name) : $(project) ;
+    self.type = $(type) ;
+    self.file = $(file) ;
+    self.requirements = $(requirements) ;
+    self.use-requirements = $(use-requirements) ;
+    
+    rule generate (  properties * )
+    {
+        local pl = [ project.attribute $(self.project) location ] ;
+        local path = [ path.root [ path.native $(self.file:D) ] $(pl) ] ;
+        
+        # CONSIDER: refine properties?
+        local t = [ new virtual-target $(self.file:S=:D=) : $(self.type)
+          : $(self.project) ] ;
+        $(t).set-use-requirements $(self.use-requirements) ;
+        $(t).set-path $(path) ;
+        $(t).extra-grist [ property.as-path $(self.requirements) ] ;
+        $(t).suffix [ MATCH .(.*) : $(self.file:S) ] ;
+        return $(t) ;    
+    }   
+    
+    rule requirements ( )
+    {
+        return $(self.requirements) ;
+    }    
+}
+
+class prebuilt-target-class : abstract-target ;
+
+rule prebuilt ( type target-name : file : requirements * : use-requirements * )
+{
+    targets.main-target-alternative 
+      $(target-name) [ CALLER_MODULE ] prebuilt-target-class : 2 : 3 :  
+        : $(type) $(file) : $(requirements) : $(use-requirements) ;
+}
+
+IMPORT $(__name__) : prebuilt : : prebuilt ;
+
+
