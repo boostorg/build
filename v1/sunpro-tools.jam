@@ -1,50 +1,71 @@
-# (C) Copyright Christopher Currie, Gennadiy Rozental 2002. 
-# Permission to copy, use, modify, sell and distribute this software 
-# is granted provided this copyright notice appears in all copies. 
-# This software is provided "as is" without express or implied warranty,
-# and with no claim as to its suitability for any purpose.
+#~ Copyright 2002 Christopher Currie, Gennadiy Rozental.
+#~ Copyright 2003 Christopher Currie.
 
-# The following #// line will be used by the regression test table generation
-# program as the column heading for HTML tables. Must not include version
-# number.
+#~ Use, modification and distribution is subject to the Boost Software
+#~ License Version 1.0. (See accompanying file LICENSE_1_0.txt or
+#~ http://www.boost.org/LICENSE_1_0.txt)
+
+# The following #// line will be used by the regression test table
+# generation program as the column heading for HTML tables. Must not
+# include version number.
 #//<a href="http://wwws.sun.com/software/sundev/suncc/index.html">Sun<br>C++</a>
 
-# Sun Workshop 6 / Sun ONE C++ compiler
+# The sunpro toolset can be user-configured using the following
+# variables:
+#
+# SUNPRO_ROOT_DIRECTORY
+#       The directory in which Sun C++ was installed. Defaults to
+#       unset. Usually, there is no need to set this variable at all.
+#       However, if CC is not in the path it is usually sufficient
+#       to configure this one variable. More fine-grained configuration
+#       is available by setting the following:
+#
+# SUNPRO_BIN_DIRECTORY
+#       The directory prefix used to find the CC and cc executables.
+#       Defaults to $(SUNPRO_ROOT_DIRECTORY)/bin/, or "" if 
+#       SUNPRO_ROOT_DIRECTORY is not set.
+#
+# SUNPRO_CXX
+#       The name by which CC is invoked. Defaults to "CC". You can also
+#       use this in lieu of setting the <cxxflags> property to force
+#       options such as "-Qoption CC -xcomdat" into the CC command line:
+#       "-sSUNPRO_CXX=CC -Qoption CC -xcomdat".
+#
+# SUNPRO_CC
+#       Similar to SUNPRO_CXX, the name by which cc is invoked for "C"
+#       language targets.
 
 # singleton variables...
-set-as-singleton SUNPRO_ROOT SUNPRO_BIN_PATH ; 
+set-as-singleton SUNPRO_ROOT_DIRECTORY SUNPRO_BIN_DIRECTORY ;
 
-# You can either put the sunpro bin directory in your PATH, or you can set
-# SUNPRO_ROOT to point at the sunpro installation directory, or you can set
-# SUNPRO_BIN_PATH to point at sunpro bin directory
-# SUNPRO_CC to name the C++ compiler executable (default: CC)
-# SUNPRO_cc to name the C compiler executable (default: cc)
+flags sunpro SUNPRO_BIN_DIRECTORY : $(SUNPRO_BIN_DIRECTORY) ;
 
-SUNPRO_BIN_PATH = $(SUNPRO_ROOT)$(SLASH)bin$(SLASH) ;
-SUNPRO_BIN_PATH ?= "" ; # Don't clobber adjoining text if SUNPRO_ROOT isn't set
-SUNPRO_cc ?= $(SUNPRO_BIN_PATH)cc ;
-SUNPRO_CC ?= $(SUNPRO_BIN_PATH)CC ;
+SUNPRO_BIN_DIRECTORY ?= $(SUNPRO_ROOT_DIRECTORY)/bin/ ;
+SUNPRO_BIN_DIRECTORY ?= "" ; # Don't clobber adjoining text if SUNPRO_ROOT_DIRECTORY isn't set
+
+# Make sure this gets set "on" the target
+flags sunpro SUNPRO_BIN_DIR : $(SUNPRO_BIN_DIRECTORY) ;
 
 flags sunpro LINKFLAGS <runtime-link>static  : -staticlib=Crun ;
 flags sunpro LINKFLAGS <target-type>$(SHARED_TYPES) : -G ;
-
 flags sunpro CFLAGS <debug-symbols>on : -g ;
 flags sunpro LINKFLAGS <debug-symbols>on : -g ;
-
 flags sunpro CFLAGS <optimization>speed : -fast -O4 ;
+
 flags sunpro CFLAGS <optimization>space : -O2 -xspace ;
-
 flags sunpro C++FLAGS <inlining>off : +d ;
-
 flags sunpro CFLAGS <threading>multi : -mt ;
-
 flags sunpro C++FLAGS <rtti>on  : -features=rtti ;
 flags sunpro C++FLAGS <rtti>off : -features=no%rtti ;
-
 flags sunpro C++FLAGS <exception-handling>on : -features=except ;
 flags sunpro C++FLAGS <exception-handling>off : -features=no%except ;
 
-# architecture/instruction-set options, a la gcc
+flags sunpro DLLVERSION <dllversion> ;
+
+flags sunpro .CXX : $(SUNPRO_CXX) ;
+flags sunpro .CC  : $(SUNPRO_CC) ;
+
+# architecture/instruction-set options
 .ARCH = <architecture>sparc <architecture>native ;
 flags sunpro CFLAGS <architecture>native/<instruction-set>default : -xtarget=generic ;
 flags sunpro CFLAGS $(.ARCH)/<instruction-set>v7 : -xarch=v7 ;
@@ -72,16 +93,35 @@ flags sunpro FINDLIBS <find-library> ;
 
 flags sunpro TARGET_TYPE <target-type> ;
 
+.CXX ?= CC ;
+.CC  ?= cc ;
+
 #### Link ####
 
 rule Link-action
 {
+    _ on $(<) = " " ;
+
+    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES)
+    {
+        SO_EXT on $(<) = ".$(DLLVERSION)" ;
+        SO_VER on $(<) = ".$(DLLVERSION)" ;
+        DO_LN  on $(<) = "" ;
+    }
+    else
+    {
+        SO_EXT on $(<) = "" ;
+        SO_VER on $(<) = ;
+        DO_LN  on $(<) = ;
+    }
+
     sunpro-Link-action $(<) : $(>) ;
 }
 
 actions together sunpro-Link-action bind NEEDLIBS
 {
-    $(SUNPRO_CC) -o "$(<:T)" -xildoff -L$(LIBPATH) $(LINKFLAGS) "$(>:T)" "$(NEEDLIBS)" "-l$(FINDLIBS)"
+    $(.CXX[1]:R=$(SUNPRO_BIN_DIR)) $(.CXX[2-]) -xildoff -h,$(<[1]:D=)$(SO_VER) $(LINKFLAGS) -o "$(<[1]:T)$(SO_EXT)" -L"$(LIBPATH:T)" "$(>)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    $(DO_LN)$(LN)$(_)"$(<[1]:T)$(SO_EXT)"$(_)"$(<[1])"
 }
 
 #### Archive ####
@@ -93,31 +133,29 @@ rule Archive-action
 
 actions together sunpro-Archive-action
 {
-    $(SUNPRO_CC) -xar $(ARFLAGS) -o "$(<:T)" "$(>:T)"
+    $(.CXX[1]:R=$(SUNPRO_BIN_DIR)) $(.CXX[2]) -xar -o "$(<:T)" "$(>:T)"
 }
 
 #### Cc #####
 
 rule Cc-action
 {
-    SPACE on $(<) = " " ;
     sunpro-Cc-action $(<) : $(>) ;
 }
 
 actions sunpro-Cc-action
 {
-    $(SUNPRO_cc) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.CC[1]:R=$(SUNPRO_BIN_DIR)) $(.CC[2-]) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
 rule C++-action
 {
-    SPACE on $(<) = " " ;
     sunpro-C++-action $(<) : $(>) ;
 }
 
 actions sunpro-C++-action
 {
-    $(SUNPRO_CC) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.CXX[1]:R=$(SUNPRO_BIN_DIR)) $(.CXX[2-]) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
