@@ -764,8 +764,8 @@ rule basic-target ( name : project
             {
                 # We've collected a group of targets that originates from single
                 # dependency main target, and must check that at least one of them
-                # is used.
-                if ! [ set.intersection $(group) : $(used-sources) ] 
+                # is used. If no targets were created for dependency, it's OK.                
+                if $(group) && ! [ set.intersection $(group) : $(used-sources) ] 
                 {
                     errors.warning "Unused source" $(s:G=) "in main target" [ full-name ] ;                    
                 }
