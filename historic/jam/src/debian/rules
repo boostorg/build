@@ -21,11 +21,7 @@ build: build-stamp
 build-stamp: debian/jam.1
 	dh_testdir
 
-  # bootstrap
-	${MAKE}
-  # update generated files
-	rm jamgram.c jamgram.h
-	${MAKE}
+	./build.sh
 
 	touch build-stamp
 
@@ -46,8 +42,8 @@ install: build
 	dh_clean -k
 	dh_installdirs
 
-	./jam0 -sBINDIR=${topdir}/debian/${jam}/usr/bin install
-	cd debian/${jam}/usr/bin && mv jam ${binname}
+	install -d ${topdir}/debian/${jam}/usr/bin
+	install -m755 bin.linuxx86/bjam ${topdir}/debian/${jam}/usr/bin/
 	install -d ${topdir}/debian/${jam}/usr/share/man/man1/
 	install -m644 debian/jam.1 ${topdir}/debian/${jam}/usr/share/man/man1/${binname}.1
 
