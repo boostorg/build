@@ -156,10 +156,19 @@ rule find ( name : current-location )
     else
     {
         local location = [ path.root $(name) $(current-location) ] ;
-        if [ find-jamfile $(location) ]
+        # If no project is registered for the given location, try to
+        # load it. First see if we have Jamfile. If not we might have project
+        # root, willing to act as Jamfile. In that case, project-root
+        # must be placed o
+        if $(location) in $(.project-location) ||
+          [ find-jamfile $(location) ] && [ load $(location) ] ||
+          [ path.parent [ project-roots.find-project-root $(location) ] ] = $(location) 
+            && [ project-roots.load $(location) ]
         {
-            project-module = [ load $(location) ] ;
-        }        
+            # We've managed to find or load project. Returns the module
+            # name
+            project-module = [ module-name $(location) ] ;
+        }
     }
     return $(project-module) ;
 }
