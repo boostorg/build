@@ -755,8 +755,8 @@ exe e10 : e10.cpp foo ;
       <!-- "Here's a piece of Jamfile" adds nothing. -->
 <programlisting>
 lib network : network.cpp 
-    : <strong>&lt;link&gt;shared:&lt;define&gt;NEWORK_LIB_SHARED</strong>
-      <strong>&lt;variant&gt;release:&lt;define&gt;EXTRA_FAST</strong>
+    : <emphasis role="bold">&lt;link&gt;shared:&lt;define&gt;NEWORK_LIB_SHARED</emphasis>
+     &lt;variant&gt;release:&lt;define&gt;EXTRA_FAST
     ;
 </programlisting>
 
