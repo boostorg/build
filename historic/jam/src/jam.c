@@ -199,6 +199,8 @@ int  main( int argc, char **argv, char **arg_environ )
     char		*all = "all";
     int		anyhow = 0;
     int		status;
+    int arg_c = argc;
+    char ** arg_v = argv;
 
 # ifdef OS_MAC
     InitGraf(&qd.thePort);
@@ -206,7 +208,7 @@ int  main( int argc, char **argv, char **arg_environ )
 
     argc--, argv++;
 
-    if( ( n = getoptions( argc, argv, "d:j:f:s:t:ano:v", optv ) ) < 0 )
+    if( ( n = getoptions( argc, argv, "-:d:j:f:s:t:ano:v", optv ) ) < 0 )
     {
         printf( "\nusage: jam [ options ] targets...\n\n" );
 
@@ -218,7 +220,8 @@ int  main( int argc, char **argv, char **arg_environ )
         printf( "-ox     Write the updating actions to file x.\n" );
         printf( "-sx=y   Set variable x=y, overriding environment.\n" );
         printf( "-tx     Rebuild x, even if it is up-to-date.\n" );
-        printf( "-v      Print the version of jam and exit.\n\n" );
+        printf( "-v      Print the version of jam and exit.\n" );
+        printf( "--x     Option is ignored.\n\n" );
 
         exit( EXITBAD );
     }
@@ -234,7 +237,7 @@ int  main( int argc, char **argv, char **arg_environ )
         printf( "%s.\n", OSMINOR );
 	   printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.  \n" );
         printf( "   Copyright 2001 David Turner.\n" );
-        printf( "   Copyright 2001 David Abrahams.\n" );
+        printf( "   Copyright 2001-2002 David Abrahams.\n" );
 
         return EXITOK;
     }
@@ -304,7 +307,7 @@ int  main( int argc, char **argv, char **arg_environ )
     }
 
     var_set( "JAM_VERSION",
-             list_new( list_new( L0, newstr( "03" ) ), newstr( "00" ) ),
+             list_new( list_new( L0, newstr( "03" ) ), newstr( "01" ) ),
              VAR_SET );
 
     /* And JAMUNAME */
@@ -347,6 +350,13 @@ int  main( int argc, char **argv, char **arg_environ )
         symv[0] = s;
         symv[1] = 0;
         var_defines( symv );
+    }
+
+    /* Set the ARGV to reflect the complete list of arguments of invocation. */
+
+    for ( n = 0; n < arg_c; ++n )
+    {
+        var_set( "ARGV", list_new( L0, newstr( arg_v[n] ) ), VAR_APPEND );
     }
 
 	/* Initialize built-in rules */
