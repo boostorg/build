@@ -29,12 +29,13 @@ feature.feature format : html onehtml man pdf ps docbook fo tests
 
 type.register DTDXML : dtdxml ;
 type.register XML : xml : : main ;
-type.register DOCBOOK : docbook ; 
+type.register BOOSTBOOK : boostbook : XML ;
+type.register DOCBOOK : docbook : XML ; 
 type.register HTML : html ;
-type.register FO : fo ;
+type.register FO : fo : XML ;
 type.register PDF : pdf ;
 type.register PS : ps ;
-type.register XSLT : xsl ;
+type.register XSLT : xsl : XML ;
 type.register HTMLDIR ;
 type.register MANPAGES ;
 type.register TESTS : tests ;
@@ -79,20 +80,18 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? )
       .docbook-dtd-dir = [ path.make $(docbook-dtd-dir) ] ;
     }
    
-    local search-dirs ;
-    if [ modules.peek : BOOST_ROOT ] {
-      local boost-root = [ path.make [ modules.peek : BOOST_ROOT ] ] ;
-      search-dirs = [ path.join $(boost-root) tools boostbook ] ;
-    }
+    local boost-root = [ path.make [ modules.peek : BOOST_ROOT ] ] ;
     local boost-build-root = [
         sequence.transform path.make : [ modules.peek : BOOST_BUILD_PATH ]
-    ] ;
-    search-dirs += $(boost-build-root)/../boostbook ;
+    ] ; 
+    local search-dirs = [ path.join $(boost-root) tools boostbook ] 
+                        $(boost-build-root)/../boostbook ;
     local native-search-dirs = [
         sequence.transform path.native : $(search-dirs)
     ] ;
     local boostbook-xsl-dir = [ GLOB $(native-search-dirs) : xsl ] ;
     local boostbook-dtd-dir = [ GLOB $(native-search-dirs) : dtd ] ;
+
     .boostbook-xsl-dir = [ path.make $(boostbook-xsl-dir[1]) ] ;
     .boostbook-dtd-dir = [ path.make $(boostbook-dtd-dir[1]) ] ;
     if ! $(.boostbook-xsl-dir) || ! $(.boostbook-dtd-dir)
