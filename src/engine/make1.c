@@ -941,11 +941,19 @@ make1list(
 	if( t->binding == T_BIND_UNBOUND )
 	    make1bind( t, !( flags & RULE_EXISTING ) );
 
-	if( ( flags & RULE_EXISTING ) && t->binding != T_BIND_EXISTS )
-	    continue;
+    if ( ( flags & RULE_EXISTING ) && ( flags & RULE_NEWSRCS ) )
+    {
+        if ( t->binding != T_BIND_EXISTS && t->fate <= T_FATE_STABLE)
+            continue;
+    }
+    else
+    { 
+        if( ( flags & RULE_EXISTING ) && t->binding != T_BIND_EXISTS )
+            continue;
 
-	if( ( flags & RULE_NEWSRCS ) && t->fate <= T_FATE_STABLE )
-	    continue;
+        if( ( flags & RULE_NEWSRCS ) && t->fate <= T_FATE_STABLE )
+            continue;
+    }
 
 	/* Prohibit duplicates for RULE_TOGETHER */
 
