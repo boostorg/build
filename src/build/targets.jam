@@ -192,34 +192,15 @@ class project-target : abstract-target
     # Generates all possible targets contained in this project.
     rule generate ( property-set * )
     {
-        # Project properties are directly imposed on all main targets.
-        # However, we'd need to check if this project can be build at
-        # all.
-        
-        local xproperties = [ $(property-set).refine $(self.requirements) ] ;
-
         local usage-requirements = [ property-set.empty ] ;
         local targets ;
         
-        if $(xproperties[1]) = "@error"
+        for local t in [ targets-to-build ] 
         {
-            local id = [ project.attribute $(self.project) id ] ;
-            print.wrapped-text "warning: skipping build of project $(id:E=) at"
-              [ project.attribute $(self.project) location ] 
-               "due to unsatisfied requirements." ;
-            print.wrapped-text "warning: explanation: " $(xproperties[2-]) ;
-            print.wrapped-text "warning: build-request: " $(properties) ;
-            print.wrapped-text "warning: requirements: " [ $(self.requirements).raw ] ;
+            local g = [ $(t).generate $(property-set) ] ;
+            usage-requirements = [ $(usage-requirements).add $(g[1]) ] ;
+            targets += $(g[2-]) ;
         }
-        else 
-        {    
-            for local t in [ targets-to-build ] 
-            {
-                local g = [ $(t).generate $(property-set) ] ;
-                usage-requirements = [ $(usage-requirements).add $(g[1]) ] ;
-                targets += $(g[2-]) ;
-            }
-        }    
         return $(usage-requirements) $(targets) ;        
     }
         
@@ -838,11 +819,21 @@ class basic-target : abstract-target
     {    
         # First check if our requirements can be satisfied.
         local rproperties = [ $(property-set).refine $(self.requirements) ] ;        
-        if $(rproperties[1]) != "@error"
-        {            
+        
+        # Kluge: previously, link-incompatible alternatives were skipped
+        # completely. Until a better alternative selection algorithm is
+        # in place, treat such alternatives as having rank of zero.
+        # As another kluge, add 1 to all other ranks so that zero is worse that
+        # anything.        
+        if [ $(rproperties).link-incompatible-with $(property-set) ]
+        {
+            return 0 ;
+        }
+        else
+        {                         
             # Returns the number of properties common to requirements
             # and build request.
-            return [ sequence.length [ set.intersection 
+            return [ sequence.length "fake" [ set.intersection 
                 [ $(self.requirements).base ] :
                   [ $(property-set).raw ] ] ] ;
         }        

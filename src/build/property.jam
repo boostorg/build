@@ -13,13 +13,10 @@ import sequence ;
 import set ;
 import path ;
 
-# Refines 'properties' by overriding any elements for which a different
-# value is specified in 'requirements'. If the resulting property set
-# will be link-incompatible with 'properties', it is an error.
+# Refines 'properties' by overriding any non-free properties 
+# for which a different value is specified in 'requirements'. 
 # Conditional requirements are just added without modification.
-# On success, returns properties. On error, returns a list which first
-# element is "@error" and the other elements compose the explanation
-# string.
+# Returns the resulting list of properties.
 rule refine ( properties * : requirements * )
 {
     local result ;
@@ -52,16 +49,7 @@ rule refine ( properties * : requirements * )
                 local value = $(p:G=) ;
                 if $(value) != $(required-value)
                 {
-                    if link-incompatible in [ feature.attributes $(p:G) ]
-                    {
-                        error = @error link-incompatible properties $(p) and
-                                $(p:G)$(required-value) ;
-                        # Cannot break, so just iterate again
-                    }
-                    else
-                    {
-                        result += $(p:G)$(required-value) ;
-                    }
+                    result += $(p:G)$(required-value) ;
                 }
                 else
                 {
@@ -525,11 +513,6 @@ local rule __test__ ( )
       : $(test-space)
       ;
         
-    r = [ refine <toolset>gcc <rtti>off
-            : <rtti>on
-            : $(test-space) ] ;
-    assert.equal $(r[1]) : "@error" ;
-
     try ;
         validate <feature>value : $(test-space) ;
     catch "Invalid property '<feature>value': unknown feature 'feature'." ;
