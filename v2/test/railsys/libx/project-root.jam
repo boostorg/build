@@ -1,8 +1,6 @@
 
-import toolset ; 
-
 # Tell that QT should be used. QTDIR will give installation
 # prefix. 
-toolset.using qt ;
+using qt ;
 
 

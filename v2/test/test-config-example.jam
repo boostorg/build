@@ -4,8 +4,6 @@
 # and tweak it. When tests are run, only this file will be loaded,
 # while site-config.jam and user-config.jam will be ignored.
 
-import toolset : using ;
-
 using gcc ;
 using msvc : : "P:/Program Files/Microsoft Visual Studio/vc98" : : vcvars32-p.bat ;
 using borland ;

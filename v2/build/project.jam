@@ -291,6 +291,7 @@ local rule load-jamfile (
     initialize $(jamfile-module) : [ path.parent $(jamfile-to-load) ] 
       : $(jamfile-to-load:BS) ;
 
+    local saved-project = $(.current-project) ;
     # Now load the Jamfile in it's own context.
     # Initialization might have load parent Jamfiles, which might have
     # loaded the current Jamfile with use-project. Do a final check to make
@@ -302,16 +303,20 @@ local rule load-jamfile (
         if $(jamfile-to-load:BS) in $(JAMROOT)
         {
             jamfile = [ find-jamfile $(dir) : no-errors ] ;
-            # project-root.jam might have loaded some modules which used 
-            # project.initialize, and clobbered .current-project
-            .current-project = [ target $(module-name) ] $(.current-project) ;            
             if $(jamfile)
             {                
                 load-aux $(jamfile-module) : [ path.native $(jamfile) ] ;
             }            
         }        
     }
-    .current-project = $(.current-project[2-]) ;
+    if $(.current-project) != $(saved-project)
+    {
+        errors.error "The value of the .current-project variable"
+          : "has magically changed after loading a Jamfile."
+          : "This means some of the targets might be defined a the wrong project."
+          ;
+    }
+    
 }
 
 
@@ -406,7 +411,7 @@ rule initialize (
         }                
     }    
     
-    .current-project = [ target $(module-name) ] $(.current-project) ;
+    .current-project = [ target $(module-name) ] ;
 }
 
 # Make 'project-module' inherit attributes of project root and parent module.
@@ -583,7 +588,7 @@ class project-attributes
 # Returns the project which is currently being loaded
 rule current ( )
 {
-    return $(.current-project[1]) ;
+    return $(.current-project) ;
 }
 
 # Returns the project-attribute instance for the specified jamfile module.
@@ -632,13 +637,52 @@ rule use ( id : location )
     .current-project = $(saved-project) ;
 }
 
+
+# Initializes an additional toolset-like module.
+# First load 'toolset-module' and then calls its 'init'
+# rule with trailing arguments
+rule _using ( toolset-module : * )
+{
+    import $(toolset-module) ;
+    if ! $(.$(toolset-module)-init-callled)
+    {        
+        $(toolset-module)-init-callled = true ;
+        $(toolset-module).init $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }    
+}
+
 # This module defines rules common to all projects
 module project-rules
-{
-    # Make toolset.using accessible in project context
-    import toolset : using ;
-    EXPORT project-rules : using ;
+{                
+    rule using ( toolset-module : * )
+    {
+        import toolset ;
+        import modules ;
+        import project ;
+        
+        project._using $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;    
+        # The above might have clobbered .current-project
+        # Restore the the right value.
+        modules.poke project : .current-project 
+          : [ project.target $(__name__) ] ;
+    }
     
+    import modules ;
+    
+    rule import ( * : * : * )
+    {
+        modules.import project ;
+                
+        local caller = [ CALLER_MODULE ] ;
+        module $(caller)
+        {
+            modules.import $(1) : $(2) : $(3) ;
+        }
+        modules.poke project : .current-project 
+          : [ project.target $(__name__) ] ;                        
+    }
+
+        
     rule project ( id ? : options * : * )
     {
         import project ;
