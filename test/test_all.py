@@ -26,13 +26,17 @@ def run_tests(critical_tests, other_tests):
     other_tests = reorder_tests(other_tests, last_failed)
     all_tests = critical_tests + other_tests
 
+    invocation_dir = os.getcwd()
+
     for i in all_tests:
         print ("%-25s : " %(i)),
         try:
             __import__(i)
         except:
             print "FAILED"
-            open('test_results.txt', 'w').write(i)
+            f = open(os.path.join(invocation_dir, 'test_results.txt'), 'w')
+            f.write(i)
+            f.close()
             raise
         print "PASSED"
     # Erase the file on success
