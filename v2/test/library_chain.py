@@ -8,6 +8,7 @@
 #  Test that a chain of libraries work ok, not matter if we use static or
 #  shared linking.
 from BoostBuild import Tester, List
+import string
 
 t = Tester()
 
@@ -72,6 +73,17 @@ lib b : b.cpp ../a//a/<link>shared : <link>static ;
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug/main.exe")
 t.rm(["bin", "a/bin", "b/bin"])
+
+# Test that putting library in sources of a searched library
+# works.
+t.write("Jamfile", """
+exe main : main.cpp png ;
+lib png : z : <name>png ;
+lib z : : <name>zzz ;
+""")
+t.run_build_system("-a -n -d+2")
+t.fail_test(string.find(t.stdout(), "zzz") == -1)
+
 
 
 t.cleanup()

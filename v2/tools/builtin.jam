@@ -16,7 +16,6 @@ import generators ;
 import regex ;
 import virtual-target ;
 import os ;
-import prebuilt ;
 import symlink ;
 import alias ;
 import property ;
@@ -76,6 +75,7 @@ feature implicit-dependency : : free dependency incidental ;
 
 feature source : : free dependency incidental ;
 feature library : : free dependency incidental ;
+feature file : : free dependency incidental ;
 feature find-shared-library : : free ; #order-sensitive ;
 feature find-static-library : : free ; #order-sensitive ;
 feature library-path : : free path ; #order-sensitive ;
@@ -360,6 +360,11 @@ class lib-target-class : basic-target
         {
             actual-type = SEARCHED_LIB ;
         }
+        else if <file> in $(properties:G)
+        {
+            # The generator for 
+            actual-type = LIB ;
+        }        
         else if <link>shared in $(properties)
         {
             actual-type = SHARED_LIB ;
@@ -446,24 +451,8 @@ rule lib ( names + : sources * : requirements * : default-build *
     import targets ;
 
     local result ;
-    if $(sources) || <name> in $(requirements:G)
-    {        
-        if $(names[2])
-        {
-            errors.user-error "When several names are given to the 'lib' rule" :
-              "it's not allows to specify either sources or <name> property " ;
-        }
-                
-        local name = $(names[1]) ;
-        result = [ targets.main-target-alternative
-          [ new lib-target-class $(name) : $(project) 
-            : [ targets.main-target-sources $(sources) : $(name) ] 
-            : [ targets.main-target-requirements $(requirements) : $(project) ] 
-            : [ targets.main-target-default-build $(default-build) : $(project) ]
-            : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-         ] ] ;
-    }    
-    else
+    if ! $(sources) && ! $(requirements) 
+      && ! $(default-build) && ! $(usage-requirements)
     {
         for local name in $(names)
         {    
@@ -477,7 +466,24 @@ rule lib ( names + : sources * : requirements * : default-build *
                 : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
              ] ] ;        
         }        
-    }   
+    }
+    else
+    {
+        if $(names[2])
+        {
+            errors.user-error "When several names are given to the 'lib' rule" :
+              "it's not allows to specify sources or requirements. " ;
+        }
+                
+        local name = $(names[1]) ;
+        result = [ targets.main-target-alternative
+          [ new lib-target-class $(name) : $(project) 
+            : [ targets.main-target-sources $(sources) : $(name) ] 
+            : [ targets.main-target-requirements $(requirements) : $(project) ] 
+            : [ targets.main-target-default-build $(default-build) : $(project) ]
+            : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
+         ] ] ;
+    }    
     return $(result) ;
 }
 IMPORT $(__name__) : lib : : lib ;
@@ -585,12 +591,36 @@ class searched-lib-generator : generator
             # attach an action and properties to the target
             a = [ new null-action $(t) : $(property-set) ] ;
             $(t).action $(a) ;
-            return [ virtual-target.register $(t) ] ;
+            # We return sources for a simple reason. If there's
+            #    lib png : z : <name>png ; 
+            # the 'z' target should be returned, so that apps linking to
+            # 'png' will link to 'z', too.
+            return [ virtual-target.register $(t) ] $(sources) ;
         }
     }
 }
 
 generators.register [ new searched-lib-generator ] ;
+
+class prebuilt-lib-generator : generator
+{
+    rule __init__ ( * : * )
+    {
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+
+    rule run ( project name ? : property-set : sources * : multiple ? )
+    {
+        local f = [ $(property-set).get <file> ] ;
+        return $(f) $(sources) ;
+    }    
+}
+
+generators.register 
+  [ new prebuilt-lib-generator builtin.prebuilt : : LIB : <file> ] ;
+
+    
+
 
 
 class compile-action : action 
