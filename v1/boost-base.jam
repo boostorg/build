@@ -1434,12 +1434,18 @@ rule find-compatible-subvariant ( main-target : toolset variant : dependent-simp
 
     # now that we have a mostly (or completely) compatible subvariant do the overrides
     local gTARGET_REQUIREMENTS($(main-target)) =
+        # property rules...
+        [ select-ungristed $(gTARGET_REQUIREMENTS($(main-target))) ]
+        # always relevant properties to target...
         [ difference
             $(target-requirements) :
             [ get-properties [ difference $(sv-overrides:G) : $(gALWAYS_RELEVANT) ] : $(target-requirements) ] ]
-        [ difference
-            $(sv-overrides) :
-            [ get-properties $(gALWAYS_RELEVANT) : $(sv-overrides) ] ]
+        # link compatible properties, on the target...
+        [ get-properties
+            [ difference $(sv-overrides:G) : $(gALWAYS_RELEVANT) ] : $(target-requirements) ]
+        # overrides from dependent...
+        [ get-properties
+            [ difference $(sv-overrides:G) : $(override-conflicts:G) ] : $(dependent-simple-properties) ]
         ;
     subvariant = [ expand-target-subvariants $(sv-target) : $(sv-variant) : $(sv-toolset) ] ;
     split-target-subvariant sv-target sv-properties sv-toolset sv-variant : $(subvariant) ;
