@@ -118,7 +118,7 @@ if $(NT)
 {
 actions borland-Link-action 
 {
-    set PATH=$(BCC_TOOL_PATH);%PATH%
+    set PATH=$(BCC_TOOL_PATH);"%PATH%"
     "$(BCC_TOOL_PATH)bcc32" -v -q $(LINKFLAGS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)" $(FINDLIBS:S=.lib)
 }
 }

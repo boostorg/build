@@ -254,7 +254,7 @@ if $(NT)
     RUN_PATH ?= $(Path) ;
     RUN_PATH ?= $(path) ;
     gAPPEND_LD_LIBRARY_PATH = ";%LD_LIBRARY_PATH%" ;
-    gAPPEND_PATH =  ";%PATH%" ;
+    gAPPEND_PATH =  ;\"%PATH%\" ;
 }
 
 # Now set this, just in case someone tries to use it.
