@@ -342,11 +342,6 @@ rule Link-action
     }
 }
 
-rule gcc-Link-action
-{
-    JAM_SEMAPHORE on $(<) = gcc-Link-action-semaphore ;
-}
-
 # for gcc, we repeat all libraries so that dependencies are always resolved
 actions gcc-Link-action bind NEEDLIBS NEEDIMPS
 {
