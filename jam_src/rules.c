@@ -33,7 +33,9 @@
  *    targetentry() - add a TARGET to a chain of TARGETS
  *    actionlist() - append to an ACTION chain
  *    addsettings() - add a deferred "set" command to a target
+#ifndef OPT_FIX_TARGET_VARIABLES_EXT
  *    usesettings() - set all target specific variables
+#endif
  *    pushsettings() - set all target specific variables
  *    popsettings() - reset target specific variables to their pre-push values
  *    freesettings() - delete a settings list
@@ -272,6 +274,22 @@ popsettings( SETTINGS *v )
 {
 	pushsettings( v );	/* just swap again */
 }
+
+#ifdef OPT_FIX_TARGET_VARIABLES_EXT
+/*
+ * copysettings() - duplicate a settings list, returning the new copy
+ */
+SETTINGS*
+copysettings( SETTINGS *head )
+{
+    SETTINGS *copy = 0, *v;
+
+    for (v = head; v; v = v->next)
+	copy = addsettings(copy, 0, v->symbol, list_copy(0, v->value));
+
+    return copy;
+}
+#endif
 
 /*
  *    freesettings() - delete a settings list

@@ -80,8 +80,6 @@ static void make0( TARGET *t, time_t ptime, int depth,
 
 static TARGETS *make0sort( TARGETS *c );
 
-#define OPT_GRAPH_DEBUG_EXT
-        
 #ifdef OPT_GRAPH_DEBUG_EXT
 static void dependGraphOutput( TARGET *t, int depth );
 #endif
@@ -125,6 +123,10 @@ make(
 	COUNTS counts[1];
 	int status = 0;		/* 1 if anything fails */
 
+#ifdef OPT_HEADER_CACHE_EXT
+	hcache_init();
+#endif
+
 	memset( (char *)counts, 0, sizeof( *counts ) );
 
 	for( i = 0; i < n_targets; i++ )
@@ -164,6 +166,10 @@ make(
 		        counts->cantmake > 1 ? "s" : "" );
 	}
 
+#ifdef OPT_HEADER_CACHE_EXT
+	hcache_done();
+#endif
+
 	status = counts->cantfind || counts->cantmake;
 
 	for( i = 0; i < n_targets; i++ )
@@ -191,6 +197,13 @@ make0(
 	int	fate, hfate;
 	time_t	last, leaf, hlast, hleaf;
 	char	*flag = "";
+#ifdef OPT_FIX_TARGET_VARIABLES_EXT
+	SETTINGS *saved;
+#endif	
+
+#ifdef OPT_GRAPH_DEBUG_EXT
+	int	savedFate, oldTimeStamp;
+#endif
 
 	if( DEBUG_MAKEPROG )
 	    printf( "make\t--\t%s%s\n", spaces( depth ), t->name );
@@ -232,7 +245,15 @@ make0(
 
 	/* Step 2a: set "on target" variables. */
 
+#ifdef OPT_FIX_TARGET_VARIABLES_EXT
+	/* we must make a copy of the target's settings before pushing
+	   since calling the target's HDRRULE can change these
+	   settings. */
+	saved = copysettings( t->settings );
+	pushsettings( saved );
+#else	
 	pushsettings( t->settings );
+#endif
 
 	/* Step 2b: find and timestamp the target file (if it's a file). */
 
@@ -254,7 +275,12 @@ make0(
 
 	/* Step 2d: reset "on target" variables */
 
+#ifdef OPT_FIX_TARGET_VARIABLES_EXT
+	popsettings( saved );
+	freesettings( saved );
+#else
 	popsettings( t->settings );
+#endif
 
 	/* 
 	 * Pause for a little progress reporting 
@@ -313,7 +339,23 @@ make0(
 
 	    last = max( last, c->target->time );
 	    last = max( last, c->target->htime );
+#ifdef OPT_GRAPH_DEBUG_EXT
+	    if( DEBUG_FATE )
+		if( fate < c->target->fate )
+		    printf( "fate change  %s from %s to %s by dependency %s\n",
+			    t->name,
+			    target_fate[fate], target_fate[c->target->fate],
+			    c->target->name);
+#endif
 	    fate = max( fate, c->target->fate );
+#ifdef OPT_GRAPH_DEBUG_EXT
+	    if( DEBUG_FATE )
+		if( fate < c->target->hfate )
+		    printf( "fate change  %s from %s to %s by headers in %s\n",
+			    t->name,
+			    target_fate[fate], target_fate[c->target->hfate],
+			    c->target->name);
+#endif
 	    fate = max( fate, c->target->hfate );
 	}
 
@@ -321,6 +363,12 @@ make0(
 
 	if( t->flags & T_FLAG_NOUPDATE )
 	{
+#ifdef OPT_GRAPH_DEBUG_EXT
+	    if( DEBUG_FATE )
+		if( fate != T_FATE_STABLE )
+		    printf( "fate change  %s back to stable, NOUPDATE.\n",
+			   t->name);
+#endif
 	    last = 0;
 	    t->time = 0;
 
@@ -346,6 +394,10 @@ make0(
 		If target newer than parent, mark target newer.
 		Don't propagate child's "newer" status.
 	*/
+#ifdef OPT_GRAPH_DEBUG_EXT
+	savedFate = fate;
+	oldTimeStamp = 0;
+#endif
 
 	if( fate >= T_FATE_BROKEN )
 	{
@@ -361,10 +413,16 @@ make0(
 	}
 	else if( t->binding == T_BIND_EXISTS && last > t->time )
 	{
+#ifdef OPT_GRAPH_DEBUG_EXT
+	    oldTimeStamp = 1;
+#endif
 	    fate = T_FATE_OUTDATED;
 	}
 	else if( t->binding == T_BIND_PARENTS && last > ptime )
 	{
+#ifdef OPT_GRAPH_DEBUG_EXT
+	    oldTimeStamp = 1;
+#endif
 	    fate = T_FATE_OUTDATED;
 	}
 	else if( t->flags & T_FLAG_TOUCHED )
@@ -381,12 +439,26 @@ make0(
 	}
 	else if( t->binding == T_BIND_EXISTS && t->time > ptime )
 	{
+#ifdef OPT_GRAPH_DEBUG_EXT
+	    oldTimeStamp = 1;
+#endif
 	    fate = T_FATE_NEWER;
 	}
 	else if( fate == T_FATE_NEWER )
 	{
 	    fate = T_FATE_STABLE;
 	}
+#ifdef OPT_GRAPH_DEBUG_EXT
+	if( DEBUG_FATE && fate != savedFate )
+	    if( savedFate == T_FATE_STABLE )
+		printf( "fate change  %s set to %s%s\n",
+		       t->name, target_fate[fate],
+		       oldTimeStamp ? " (by timestamp)" : "" );
+	    else
+		printf( "fate change  %s adjusted from %s to %s%s\n",
+		       t->name, target_fate[savedFate], target_fate[fate],
+		       oldTimeStamp ? " (by timestamp)" : "" );
+#endif
 
 	/* Step 3c: handle missing files */
 	/* If it's missing and there are no actions to create it, boom. */
@@ -400,6 +472,12 @@ make0(
 	{
 	    if( t->flags & T_FLAG_NOCARE )
 	    {
+#ifdef OPT_GRAPH_DEBUG_EXT
+		if( DEBUG_FATE )
+		    printf( "fate change  %s to STABLE from %s, "
+			    "no actions, no dependents and don't care\n",
+			    t->name, target_fate[fate]);
+#endif
 		fate = T_FATE_STABLE;
 	    }
 	    else
@@ -439,7 +517,25 @@ make0(
 	    hlast = max( hlast, c->target->htime );
 	    hleaf = max( hleaf, c->target->leaf );
 	    hleaf = max( hleaf, c->target->hleaf );
+#ifdef OPT_GRAPH_DEBUG_EXT
+	    if( DEBUG_FATE )
+		if( hfate < c->target->fate )
+		    printf( "hfate change %s from %s to %s by "
+			    "dependency %s\n",
+			    t->name,
+			    target_fate[hfate], target_fate[c->target->fate],
+			    c->target->name);
+#endif
 	    hfate = max( hfate, c->target->fate );
+#ifdef OPT_GRAPH_DEBUG_EXT
+	    if( DEBUG_FATE )
+		if( hfate < c->target->hfate )
+		    printf( "hfate change %s from %s to %s by "
+			    "headers in %s\n",
+			    t->name,
+			    target_fate[hfate], target_fate[c->target->hfate],
+			    c->target->name);
+#endif
 	    hfate = max( hfate, c->target->hfate );
 	}
 
@@ -453,8 +549,12 @@ make0(
 	 * Step 5: a little harmless tabulating for tracing purposes 
 	 */
 
+#ifdef OPT_IMPROVED_PATIENCE_EXT
+	++counts->targets;
+#else	
 	if( !( ++counts->targets % 1000 ) && DEBUG_MAKE )
 	    printf( "...patience...\n" );
+#endif
 
 	if( fate == T_FATE_ISTMP )
 	    counts->temp++;
@@ -512,7 +612,8 @@ dependGraphOutput( TARGET *t, int depth )
 	printf( "  %s    Loc: %s\n", spaces(depth), t->boundname );
     }
 
-    switch (t->fate) {
+    switch( t->fate )
+    {
       case T_FATE_STABLE:
 	printf( "  %s       : Stable\n", spaces(depth) );
 	break;
@@ -523,8 +624,7 @@ dependGraphOutput( TARGET *t, int depth )
 	printf( "  %s       : Up to date temp file\n", spaces(depth) );
 	break;
       case T_FATE_TOUCHED:
-	printf( "  %s       : Been touched, updating it\n",
-	       spaces(depth) );
+        printf( "  %s       : Been touched, updating it\n", spaces(depth) );
 	break;
       case T_FATE_MISSING:
 	printf( "  %s       : Missing, creating it\n", spaces(depth) );
@@ -541,6 +641,18 @@ dependGraphOutput( TARGET *t, int depth )
       case T_FATE_CANTMAKE:
 	printf( "  %s       : Can't make it\n", spaces(depth) );
 	break;
+    }
+
+    if( t->flags & ~T_FLAG_VISITED )
+    {
+	printf( "  %s       : ", spaces(depth) );
+	if( t->flags & T_FLAG_TEMP ) printf ("TEMPORARY ");
+	if( t->flags & T_FLAG_NOCARE ) printf ("NOCARE ");
+	if( t->flags & T_FLAG_NOTFILE ) printf ("NOTFILE ");
+	if( t->flags & T_FLAG_TOUCHED ) printf ("TOUCHED ");
+	if( t->flags & T_FLAG_LEAVES ) printf ("LEAVES ");
+	if( t->flags & T_FLAG_NOUPDATE ) printf ("NOUPDATE ");
+	printf( "\n" );
     }
 
     for( c = t->deps[ T_DEPS_DEPENDS ]; c; c = c->next )
