@@ -83,7 +83,14 @@ timestamp(
         p = path.value;
 
 	do
-            *p = tolower( *p );
+    {
+        *p = tolower( *p );
+#  ifdef NT
+        /* On NT, we must use backslashes or the file won't be found. */
+        if (*p == '/')
+            *p = PATH_DELIM;
+#  endif 
+    }
 	while( *p++ );
 
 	target = path.value;
