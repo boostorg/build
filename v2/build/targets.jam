@@ -723,10 +723,8 @@ rule generate-dependencies ( property-set : project : generation-ps )
         xproperties += $(p:G)$(g[2-]) ;
     }
     local r = [ property-set.create 
-        [ $(property-set).base ] 
-        [ $(property-set).free ] 
-          $(xproperties)
-        [ $(property-set).incidental ] ] ;
+        $(xproperties)
+        [ $(property-set).non-dependency ] ] ;
     return $(usage-requirements) $(r) ;
 }
 
