@@ -121,7 +121,15 @@ rule generator (
         self.target-types += $(m[1]) ;
         self.name-pre-post.$(m[1]) = $(m[3]) $(m[4]) ;
     }
+
+    # Note that 'transform' here, is the same as 'for_each'.
+    sequence.transform type.validate : $(self.source-types) ;
+    if $(self.target-types) != *
+    {        
+        sequence.transform type.validate : $(self.target-types) ;
+    }
     
+        
     self.optional-properties
       = [ feature.expand <base-target-type>$(self.target-types) ]
           ;
@@ -478,7 +486,7 @@ rule generator (
 
 class generator ;
 
-rule composing-generator ( id : source-types + : target-types + :
+rule composing-generator ( id : source-types * : target-types + :
                            requirements * )
 {
     generator.__init__ $(id) : $(source-types) : $(target-types) :

@@ -109,6 +109,16 @@ rule registered ( type )
     }
 }
 
+# Issues an error if 'type' is unknown.
+rule validate ( type )
+{
+    if ! $(type) in $(.types)
+    {
+        errors.error "Unknown target type $(type)" ;
+    }    
+}
+
+
 # Sets a scanner class that will be used for this 'type'.
 rule set-scanner ( type : scanner )
 {

@@ -291,7 +291,7 @@ type.register C : c ;
 # "shared" feature.
 rule lib-generator ( ) 
 {
-    composing-generator.__init__ lib-generator : unknown-source-type : LIB : <main-target-type>LIB ;
+    composing-generator.__init__ lib-generator : : LIB : <main-target-type>LIB ;
     
     rule run ( project name ? : properties * : sources * )
     {
