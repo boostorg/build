@@ -7,7 +7,6 @@
 #  typed targets.
 
 import feature ;
-import targets ;
 import generators : * ;
 import class : class new ;
 
@@ -17,12 +16,14 @@ feature.feature base-target-type : : composite optional ;
 feature.feature main-target-type : : optional incidental ;
 
 # Registers a target type, possible derived from a 'base-type'. 
-# If 'suffix' is provided, it is associated with this target type.
+# If 'suffixes' are provided, they given all the suffixes that mean a file is of 'type'.
+# Also, the first element gives the suffix to be used when constructing and object of
+# 'type'.
 # If 'main' is given, a rule with the same name as the target type
 # and signature
 #     rule target-type ( name : sources * : requirements * : default-build )
 # will be added to the global scope.
-rule register ( type : suffix ? : base-type ? : main ? ) 
+rule register ( type : suffixes * : base-type ? : main ? ) 
 {
     if $(type) in $(.types)
     {
@@ -31,8 +32,8 @@ rule register ( type : suffix ? : base-type ? : main ? )
     else
     {
         .types += $(type) ;
-        .suffix.$(type) = $(suffix) ;
-        .type.$(suffix) = $(type) ;
+        .suffix.$(type) = $(suffixes[1]) ;
+        .type.$(suffixes) = $(type) ;
         feature.extend target-type : $(type) ;
         feature.compose <target-type>$(type) : $(base-type:G=<base-target-type>) ;
         feature.compose <base-target-type>$(type) : $(base-type:G=<base-target-type>) ;            
@@ -44,48 +45,18 @@ rule register ( type : suffix ? : base-type ? : main ? )
     }
 }
 
-# Returns suffix to the 'type'.
-rule suffix ( type )
+# Returns suffix that should be used when generating target of 'type'.
+rule generated-target-suffix ( type )
 {
     return $(.suffix.$(type)) ;
 }
 
-# Creates a virtual target with approariate name and type from 'file'.
-# TODO: passing project with all virtual targets starts to be annoying.
-rule from-file ( file : project )
+# Returns file type given its suffix.
+rule type ( suffix ) 
 {
-    local name = $(file:S=) ;
-    local type = $(.type$(file:S)) ;    
-    if ! $(type)
-    {
-        # warning "cannot determine type for file $(file)" ;
-        return [ new virtual-target $(file) :  : $(project) ] ;            
-    }
-    else
-    {      
-        return [ new virtual-target $(name) : $(type) : $(project) ] ;    
-    }    
+    return $(.type$(suffix)) ;        
 }
 
-
-rule typed-target ( name : project : type 
-    : sources * : requirements * : default-build * )
-{
-    ECHO "Typed target: type is " $(type) ;
-    basic-target.__init__ $(name) : $(project) 
-      : $(sources) : $(requirements) : $(defailt-build) ;
-    
-    self.type = $(type) ;
-    
-    rule construct ( source-targets * : properties * )
-    {
-        local r = [ generators.construct-dbg $(self.project) $(self.name) : $(self.type) 
-          : $(properties) <main-target-type>$(self.type) : $(source-targets) ] ;
-        return [ $(r).get-at 1 ] [ $(r).get-at 2 ] ;
-    }            
-}
-                    
-class typed-target : basic-target ;
 
 rule main-target-rule ( name : sources * : requirements * : default-build ? )
 {
@@ -99,13 +70,3 @@ rule main-target-rule ( name : sources * : requirements * : default-build ? )
         ;    
 }
 
-rule construct-dbg-x ( target-types + : properties * : source-files  + )
-{
-    local sources ;
-    for local s in $(source-files)
-    {
-        sources += [ from-file $(s) : "some project" ] ;
-    }
-    return [ construct-dbg "result" : $(target-types) : $(properties) :
-      $(sources) ] ;
-}
