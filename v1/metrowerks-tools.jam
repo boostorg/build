@@ -96,7 +96,7 @@ actions metrowerks-Link-action
 {
     $(METROWERKS_SETUP)
     $(METROWERKS_LINK_SETUP)$(STDLIBS)
-    mwld -search -maxerrors 20 -maxwarnings 20 -export dllexport -nowraplines $(LINKFLAGS) -L$(LIBPATH) -L$(STDLIBPATH) $(IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" @"$(>)" $(FINDLIBS)$(SUFLIB)
+    mwld -search -maxerrors 5 -maxwarnings 20 -export dllexport -nowraplines $(LINKFLAGS) -L$(LIBPATH) -L$(STDLIBPATH) $(IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" @"$(>)" $(FINDLIBS)$(SUFLIB)
 }
 
 #### Cc #####
@@ -109,7 +109,7 @@ rule Cc-action
 actions metrowerks-Cc-action
 {
     $(METROWERKS_SETUP)
-    mwcc -maxerrors 20 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -nowraplines $(CFLAGS)  -I"$(HDRS)" -I- -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    mwcc -maxerrors 5 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -nowraplines $(CFLAGS)  -I"$(HDRS)" -I- -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -121,7 +121,7 @@ rule C++-action
 actions metrowerks-C++-action
 {
     $(METROWERKS_SETUP)
-    mwcc  -maxerrors 20 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -DNOMINMAX -nowraplines -lang c++ $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I- -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    mwcc  -maxerrors 5 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -DNOMINMAX -nowraplines -lang c++ $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I- -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
