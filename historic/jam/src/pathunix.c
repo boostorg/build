@@ -207,7 +207,10 @@ path_build(
 
     {
         string_append_range( file, f->f_root.ptr, f->f_root.ptr + f->f_root.len  );
-        string_push_back( file, as_path_delim( f->f_root.ptr[f->f_root.len] ) );
+        /* If 'root' already ends with path delimeter, 
+           don't add yet another one. */
+        if( ! is_path_delim( f->f_root.ptr[f->f_root.len-1] ) )
+            string_push_back( file, as_path_delim( f->f_root.ptr[f->f_root.len] ) );
     }
 
     if( f->f_dir.len )
@@ -215,19 +218,14 @@ path_build(
         string_append_range( file, f->f_dir.ptr, f->f_dir.ptr + f->f_dir.len  );
     }
 
-    /* UNIX: Put / between dir and file */
-    /* NT:   Put \ between dir and file */
-
+    /* Put the path separator between directory and file, if needed
+    */
     if( f->f_dir.len && ( f->f_base.len || f->f_suffix.len ) )
     {
-        /* UNIX: Special case for dir \ : don't add another \ */
-        /* NT:   Special case for dir / : don't add another / */
-
-# if PATH_DELIM == '\\'
-        if( !( f->f_dir.len == 3 && f->f_dir.ptr[1] == ':' ) )
-# endif
-            if( !( f->f_dir.len == 1 && is_path_delim( f->f_dir.ptr[0] ) ) )
-                string_push_back( file, as_path_delim( f->f_dir.ptr[f->f_dir.len] ) );
+        /* If 'root' already ends with path delimeter, 
+           don't add yet another one. */
+        if( ! is_path_delim( f->f_dir.ptr[f->f_dir.len-1] ) )
+            string_push_back( file, as_path_delim( f->f_dir.ptr[f->f_dir.len] ) );
     }
 
     if( f->f_base.len )
