@@ -982,27 +982,6 @@ class basic-target : abstract-target
             return no-match ;
         }        
     }
-
-    #
-    # Allows the user to tag the name of the target, according to properties.
-    #
-    rule tag-name ( name : property-set )
-    {
-        local properties = [ $(property-set).raw ] ;
-
-        local tagged-name = $(name) ;
-
-        if <tag> in $(properties:G)
-        {
-            local tags = [ $(property-set).get <tag> ] ;
-            for local tag in $(tags)
-            {
-                tagged-name = $(tagged-name)$(tag) ;
-            }
-        }
-
-        return $(tagged-name) ;
-    }
     
     # Takes a target reference, which might be either target id
     # or a dependency property, and generates that target using
@@ -1073,13 +1052,14 @@ class basic-target : abstract-target
                 # usage requirements.
                 source-targets = [ sequence.unique $(source-targets) ] ;
                                                 
-                local tagged-name = [ tag-name $(self.name) : $(rproperties) ] ;
-
-                local original-name = $(self.name) ;
-                self.name = $(tagged-name) ;
-                
+                # Compute the real name for generated targets, using
+                # the <tag> feature.
+                local tagged-name = [ 
+                  targets.tag-name $(self.name) : $(rproperties) ] ;
+               
                 local result = 
-                  [ construct $(source-targets) : $(rproperties) ] ;
+                  [ construct $(tagged-name) : 
+                    $(source-targets) : $(rproperties) ] ;
                 
                 local gur = $(result[1]) ;
                 result = $(result[2-]) ;
@@ -1091,8 +1071,6 @@ class basic-target : abstract-target
                 ur = [ $(ur).add $(gur) ] ;
                 $(s).set-usage-requirements $(ur) ;
                 self.generated.$(property-set) = $(ur) $(result) ;
-
-                self.name = $(original-name) ;
             } 
             else
             {
@@ -1182,7 +1160,7 @@ class basic-target : abstract-target
     # Constructs the virtual targets for this abstract targets and
     # the dependecy graph. Returns the list of virtual targets.
     # Should be overrided in derived classes.
-    rule construct ( source-targets * : properties * )
+    rule construct ( name : source-targets * : properties * )
     {
         errors.error "method should be defined in derived classes" ;
     }
@@ -1206,9 +1184,9 @@ class typed-target : basic-target
         return $(self.type) ;
     }
             
-    rule construct ( source-targets * : property-set )
+    rule construct ( name : source-targets * : property-set )
     {
-        local r = [ generators.construct $(self.project) $(self.name) : $(self.type) 
+        local r = [ generators.construct $(self.project) $(name) : $(self.type) 
           : [ property-set.create [ $(property-set).raw ] # [ feature.expand
               <main-target-type>$(self.type) ]
           # ]
@@ -1221,6 +1199,47 @@ class typed-target : basic-target
         return $(r) ;
     }            
 }
+
+#
+# Given a base target name and a set of properties, returns the
+# name which should be really used, by looking at the <tag> properties.
+# The tag properties come in two flavour:
+#   - <tag>value, 
+#   - <tag>@rule-name
+# In the first case, value is just added to name
+# In the second case, the specified rule is called with name and properties
+# and should return the new name.
+rule tag-name ( name : property-set )
+{
+    local properties = [ $(property-set).raw ] ;
+    
+    local tagged-name = $(name) ;
+    
+    if <tag> in $(properties:G)
+    {
+        local tags = [ $(property-set).get <tag> ] ;
+        
+        local rule-name = [ MATCH ^@(.*) : $(tags) ] ;
+        if $(rule-name)
+        {
+            if $(tags[2])
+            {
+                errors.error "<tag>@rulename is present but is the the only <tag> feature" ;
+            }
+            tagged-name = [ $(rule-name) $(name) : $(property-set) ] ;
+        }
+        else
+        {                            
+            for local tag in $(tags)
+            {
+                tagged-name = $(tagged-name)$(tag) ;
+            }
+        }        
+    }
+    
+    return $(tagged-name) ;
+}
+
 
 # Return the list of sources to use, if main target rule is invoked
 # with 'sources'. If there are any objects in 'sources', they are treated

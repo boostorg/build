@@ -120,7 +120,7 @@ class stlport-target-class : basic-target
     }
     
     
-    rule construct ( source-targets * : property-set )
+    rule construct ( name : source-targets * : property-set )
     {
         # Deduce the name of stlport library, based on toolset and
         # debug setting.
