@@ -8,17 +8,18 @@
 
 # Adapted from msvc-tools.jam by Beman Dawes
 
-# compute INTEL tool path
-# You can either put the intel-win32 bin directory in your PATH, or you can set
-# INTELROOT to point at the intel-win32 installation directory
-INTEL_TOOL_PATH ?= "$(INTEL_PATH)"$(SLASH)bin$(SLASH) ;
- # try the variable that FTJam tells you to set
-INTEL_TOOL_PATH ?= "$(INTELC)"$(SLASH)bin$(SLASH) ;
+# compute INTEL tool path You can either use the environment variable
+# setup that comes with the Intel compiler, or you can set the
+# INTEL_PATH or INTELC (in order to respect FTJam setup) environment
+# variables to point at the intel-win32 installation directory
+INTEL_PATH ?= $(INTELC) ;
+INTEL_TOOL_PATH ?= "$(INTEL_PATH)"/bin/ ;
 INTEL_TOOL_PATH ?= "" ; # Don't clobber adjoining text if INTELROOT isn't set
 
 extends-toolset msvc ;
 
 flags intel-win32 STDHDRS : $(VISUALC)$(SLASH)include ;
+flags intel-win32 STDLIBPATH : "$(INTEL_PATH)"\\Lib "$(INTEL_PATH)"\\Bin ;
 
 #### Link ####
 
