@@ -1412,7 +1412,7 @@ rule remove-command-file ( targets + : command-file )
     TEMPORARY $(command-file) ;
     Clean clean : $(command-file) ; # Mark the file for removal via clean
 }
-actions quietly piecemeal together remove-command-file
+actions ignore quietly piecemeal together remove-command-file
 {
     $(RM) $(>)
 }
