@@ -536,7 +536,7 @@ class generator
               : $(sources[1]) : $(multiple) : true : _c _b ;
             if ! $(_c)
             {
-                generators.dout [ indent ] " failed to convert " [ $(sources[1]).str ] ;
+                generators.dout [ indent ] " failed to convert " $(sources[1]) ;
                 # failed = true ;
             }
             $(consumed-var) += $(_c) ;            
