@@ -134,7 +134,7 @@ case $BOOST_JAM_TOOLSET in
     ;;
     
     como)
-    BOOST_JAM_CC=como
+    BOOST_JAM_CC="como --c"
     ;;
     
     kcc)
