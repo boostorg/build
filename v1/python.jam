@@ -81,13 +81,22 @@ if $(NT)
 }
 else if $(UNIX) && $(OS) = MACOSX
 {
-    PYTHON_ROOT ?= /Library/Frameworks/Python.framework/Versions/$(PYTHON_VERSION) ;
+    if ! $(PYTHON_ROOT)
+    {
+        if [ GLOB /System/Library/Frameworks : Python.framework ]
+        {
+            PYTHON_ROOT ?= /System/Library/Frameworks/Python.framework/Versions/$(PYTHON_VERSION) ;
+        }
+        else
+        {
+            PYTHON_ROOT ?= /Library/Frameworks/Python.framework/Versions/$(PYTHON_VERSION) ;
+        }
+    }
     PYTHON_ROOT = $(PYTHON_ROOT:J=" ") ;
     PYTHON_INCLUDES ?= $(PYTHON_ROOT)/include/python$(PYTHON_VERSION) ;
 
     PYTHON_PROPERTIES ?=
       <sysinclude>$(PYTHON_INCLUDES)
-        <warnings>off
       ;
 }
 else if $(UNIX)

@@ -157,7 +157,7 @@ actions darwin-Link-action bind NEEDLIBS NEEDIMPS
     $(SHELL_EXPORT)$(gSHELL_LIBPATH)
     $(.GCC_BIN_DIR)$(.GXX) $(LINKFLAGS) -o "$(<[1])" "$(>)" \
       -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) \
-      -framework$(_)$(FRAMEWORKS) -bundle_loader$(_)"$(BUNDLE_LOADER)" "$(BUNDLE_LOADER)"
+      -F$(FRAMEWORKS:D) -framework$(_)$(FRAMEWORKS:D=) -bundle_loader$(_)"$(BUNDLE_LOADER)" "$(BUNDLE_LOADER)"
 }
 
 actions darwin-Link-DyLib-action bind NEEDLIBS NEEDIMPS
@@ -168,7 +168,7 @@ actions darwin-Link-DyLib-action bind NEEDLIBS NEEDIMPS
     && \
     $(.GCC_BIN_DIR)$(.GXX) $(LINKFLAGS) $(DLLFLAGS) -o "$(<[1])" "$(<[1]:S=.lo)" \
       -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) \
-      -framework$(_)$(FRAMEWORKS) \
+      -F$(FRAMEWORKS:D) -framework$(_)$(FRAMEWORKS:D=) \
     && \
     rm -f "$(<[1]:S=.lo)"
 }
@@ -183,7 +183,7 @@ rule Cc-action
 
 actions darwin-Cc-action
 {
-    $(.GCC_BIN_DIR)$(.GCC) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.GCC_BIN_DIR)$(.GCC) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -F$(FRAMEWORKS:D) -framework$(_)$(FRAMEWORKS:D=) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -195,7 +195,7 @@ rule C++-action
 
 actions darwin-C++-action
 {
-    $(.GCC_BIN_DIR)$(.GXX) -c -ftemplate-depth-120 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.GCC_BIN_DIR)$(.GXX) -c -ftemplate-depth-120 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -F$(FRAMEWORKS:D) -framework$(_)$(FRAMEWORKS:D=) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
