@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-            </style>
+                </style>
   </head>
   <!-- Things yet to document:
-                                      - build request, build request expansion and directly requested targets
-                                      - conditional properties
-                                    -->
+                                        - build request, build request expansion and directly requested targets
+                                        - conditional properties
+                                      -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -63,6 +63,14 @@
       <dd>
         <dl class="page-index">
           <dt><a href="#overview">Overview</a></dt>
+
+          <dt><a href="#builins">Builtin facilities</a></dt>
+
+          <dd>
+            <dl class="page-index">
+              <dt><a href="#builtins_features">Features</a></dt>
+            </dl>
+          </dd>
 
           <dt><a href="#features_properties">Features and properties</a></dt>
 
@@ -130,12 +138,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>examples-v2</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-           it somewhere.
-            
-              <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-              into one of the locations where it can be found (given in <a href=
-              "#config_files_location">this table</a>). This prevent you from
-              accidentally overwriting your config when updating.</p> -->
+                 it somewhere.
+                  
+                    <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                    into one of the locations where it can be found (given in <a href=
+                    "#config_files_location">this table</a>). This prevent you from
+                    accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -627,6 +635,36 @@ boost-build /path/to/boost.build ;
     program, which runs all actions needed to bring all main targets up-to
     date. At this step, implicit dependencies are also scanned and accounted
     for, as described <a href="#dependency_scanning">here</a>.</p>
+
+    <h3 id="builtins">Builtin facilities</h3>
+
+    <h4 id="builtins_features">Features</h4>
+
+    <dl>
+      <dt><tt>variant</tt></dt>
+
+      <dd>
+        The feature which combines several low-level features in order to
+        make building most common variants simple. 
+
+        <p><b>Allowed values:</b> <tt>debug</tt>, <tt>release</tt></p>
+
+        <p>The value <tt>on</tt> expands to</p>
+<pre>
+    &lt;optimization&gt;off &lt;debug-symbols&gt;on &lt;inlining&gt;off &lt;runtime-debugging&gt;on
+   
+</pre>
+
+        <p>The value <tt>off</tt> expands to</p>
+<pre>
+&lt;optimization&gt;speed &lt;debug-symbols&gt;off &lt;inlining&gt;full &lt;runtime-debugging&gt;off
+</pre>
+
+        <p><b>Rationale:</b> Runtime debugging is on in debug build so suit
+        expectations of people used various IDEs. It's assumed other folks
+        don't have any specific expectation in this point.</p>
+      </dd>
+    </dl>
 
     <h3><a name="features_properties">Features and properties</a></h3>
 
@@ -1693,11 +1731,11 @@ borland/runtime-link=static,dynamic
 
     <p class="revision">Last modified: Apr 25, 2003</p>
 
-    <p>&copy; Copyright Vladimir Prus 2002-2003. Permission to copy, use, modify,
-    sell and distribute this document is granted provided this copyright
-    notice appears in all copies. This document is provided ``as is'' without
-    express or implied warranty, and with no claim as to its suitability for
-    any purpose.</p>
+    <p>&copy; Copyright Vladimir Prus 2002-2003. Permission to copy, use,
+    modify, sell and distribute this document is granted provided this
+    copyright notice appears in all copies. This document is provided ``as
+    is'' without express or implied warranty, and with no claim as to its
+    suitability for any purpose.</p>
     <!-- sf logo -->
   </body>
 </html>
