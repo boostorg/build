@@ -73,8 +73,8 @@ flags gcc CFLAGS <inlining>off : -fno-inline ;
 flags gcc CFLAGS <inlining>on : -Wno-inline ;
 flags gcc CFLAGS <inlining>full : -finline-functions -Wno-inline ;
 
-flags gcc GXX : $(GXX) ;
-flags gcc GCC : $(GCC) ;
+flags gcc .GXX : $(GXX) ;
+flags gcc .GCC : $(GCC) ;
 
 #
 # set threading options for various platforms:
@@ -119,8 +119,8 @@ else if $(UNIX)
         # MacOS X, doesn't need any threading options set
         # -lpthread is linked to by default.
         # There is no gcc/g++, we need to use cc/c++ instead:
-        GCC ?= cc ;
-        GXX ?= c++ ;
+        .GCC ?= cc ;
+        .GXX ?= c++ ;
         }
     case *BSD :
         {
@@ -274,8 +274,8 @@ if $(MIPS)
 
 #
 # define compiler names if not set:
-GCC ?= gcc ;
-GXX ?= g++ ;
+.GCC ?= gcc ;
+.GXX ?= g++ ;
 
 
 flags gcc CFLAGS <profiling>on : -pg ;
@@ -395,7 +395,7 @@ actions gcc-Link-action bind NEEDLIBS NEEDIMPS
 {
     $(SHELL_SET)$(gSHELL_LIBPATH)=$(RUN_LD_LIBRARY_PATH)
     $(SHELL_EXPORT)$(gSHELL_LIBPATH)
-    $(GCC_BIN_DIR)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" "$(IMPLIB_FLAGS)$(NEEDIMPS)" -l$(FINDLIBS) $(LNOPT)$(RPATH_LINK). $(LNOPT)$(SONAME)$(<[1]:D=)$(SOTAG)
+    $(GCC_BIN_DIR)$(.GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" "$(IMPLIB_FLAGS)$(NEEDIMPS)" -l$(FINDLIBS) $(LNOPT)$(RPATH_LINK). $(LNOPT)$(SONAME)$(<[1]:D=)$(SOTAG)
     $(ACTION_1)$(LN)$(SPACE)-fs$(SPACE)"$(<[1]:D=)$(OUTTAG)"$(SPACE)"$(<[1])"
 }
 
@@ -409,7 +409,7 @@ rule Cc-action
 
 actions gcc-Cc-action
 {
-    $(GCC_BIN_DIR)$(GCC) -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(GCC_BIN_DIR)$(.GCC) -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -421,7 +421,7 @@ rule C++-action
 
 actions gcc-C++-action
 {
-    $(GXX:R=$(GCC_BIN_DIR)) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.GXX:R=$(GCC_BIN_DIR)) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
