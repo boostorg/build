@@ -128,7 +128,7 @@ rule modifier (
         local action = [ $(target).action ] ;
         local action-class = [ modules.peek $(action) : __class__ ] ;
         
-        local ps = [ $(action).properties-ps ] ;
+        local ps = [ $(action).properties ] ;
         local cloned-action = [ new $(action-class) $(result) : 
           [ $(action).sources ] : [ $(action).action-name ] : $(ps) ] ;
         $(result).action $(cloned-action) ;

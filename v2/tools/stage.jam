@@ -97,7 +97,7 @@ class stage-target-class : basic-target
                 {                    
                     # Copy the properties of original target. They, in particular
                     # can affect the suffix of the target.
-                    new-a = [ new action $(i2) : $(i) : common.copy : [ $(a).properties-ps ] ] ;
+                    new-a = [ new action $(i2) : $(i) : common.copy : [ $(a).properties ] ] ;
                 }
                 else
                 {
@@ -156,7 +156,7 @@ class stage-exe-generator : generator
 
         # Add our free properties to the property set, so that 
         # stage can affect the relinking details.
-        local ps = [ $(action).properties-ps ] ;
+        local ps = [ $(action).properties ] ;
         local new-ps = [ $(ps).add [ property-set.create [ $(property-set).free ] ] ] ;
         local cloned-action = [ class.new $(action-class) $(cloned-target) : 
           [ $(action).sources ] : [ $(action).action-name ] : $(new-ps) ] ;
