@@ -14,7 +14,7 @@ if ! $(MSVCDir)
     MSVC_ROOT ?= $(VISUALC) ;
     MSVC_ROOT ?= "C:\\Program Files\\Microsoft Visual C++\\VC98" ;
     MSVC_TOOL_PATH ?= "$(MSVC_ROOT)"$(SLASH)bin$(SLASH) ;
-    MSVC_SETUP ?= "CALL \"$(MSVC_TOOL_PATH)VCVARS32.BAT\"" ;
+    MSVC_SETUP ?= "CALL \"$(MSVC_TOOL_PATH)VCVARS32.BAT\" >nul" ;
 }
 else
 {
@@ -79,7 +79,7 @@ rule Link-action
 actions together msvc-Link-action bind NEEDLIBS
 {
     $(MSVC_SETUP)
-    $(MSVC_TOOL_PATH)link /nologo $(NOINCREMENTAL) $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(FINDLIBS)" @"$(>)"
+    $(MSVC_TOOL_PATH)link /nologo $(NOINCREMENTAL) $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /IMPLIB:$(<[2]) /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(FINDLIBS)" @"$(>)"
 }
 
 #### Cc #####
