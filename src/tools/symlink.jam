@@ -54,7 +54,7 @@ rule symlink-targets (
         for local t in $(source-targets)
         {
             local s = $(self.targets[$(i)]) ;
-            local vt = [ class.new file-target $(s:D=) : [ $(t).type ] : $(self.project) ] ;
+            local vt = [ class.xnew file-target $(s:D=) : [ $(t).type ] : $(self.project) ] ;
             $(vt).action [ class.new action $(vt) : $(t) : symlink.ln : $(property-set) ] ;
             
             # Place the symlink in the directory relative to the project

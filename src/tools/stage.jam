@@ -28,7 +28,7 @@
 #    one target can be specified in sources.
 
 import targets ;
-import class : class new ;
+import class : class new xnew ;
 import property ;
 import errors : error ;
 import type : type ;
@@ -85,7 +85,7 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
                     n = $(name) ;
                 }
                 
-                i2 = [ new file-target $(n:D=) : [ $(i).type ] 
+                i2 = [ xnew file-target $(n:D=) : [ $(i).type ] 
                   : $(self.project) ] ;
                 local a = [ new action $(i2) : $(i) : common.copy ] ;
                 $(i2).suffix [ $(i).suffix ] ;
@@ -123,7 +123,7 @@ rule stage-exe-generator
         # FIXME: this must become some rule in virtual-target module
         # we're cloning the target and action.        
         local n = [ $(source).name ] ;
-        local cloned-target = [ new file-target $(n:D=) : [ $(source).type ] 
+        local cloned-target = [ xnew file-target $(n:D=) : [ $(source).type ] 
                   : $(project) ] ;
         local d = [ $(source).dependencies ] ;
         if $(d)

@@ -168,20 +168,23 @@ rule handle-ndebug ( property : properties * )
 
 feature.action <optimization>speed : handle-ndebug ;
 
-
-rule searched-lib-target ( name     
-                  : project 
-                  : shared ?                                
-                  : real-name ?
-                  : search *                 
-    )
+xclass searched-lib-target : abstract-file-target
 {
-    abstract-file-target.__init__ $(name) : SEARCHED_LIB : $(project) ;
+    rule __init__ ( name     
+        : project 
+        : shared ?                                
+        : real-name ?
+        : search *                 
+    )
+    {
+        abstract-file-target.__init__ $(name) : SEARCHED_LIB : $(project) ;
+        
+        self.shared = $(shared) ;
+        self.real-name = $(real-name) ;
+        self.real-name ?= $(name) ;
+        self.search = $(search) ;
+    }
     
-    self.shared = $(shared) ;
-    self.real-name = $(real-name) ;
-    self.real-name ?= $(name) ;
-    self.search = $(search) ;
     
     rule shared ( )
     {
@@ -207,10 +210,6 @@ rule searched-lib-target ( name
     {
     }
 }    
-
-
-class searched-lib-target : abstract-file-target ;
-
 
 type.register LIB : : : main ;
 
@@ -466,7 +465,7 @@ rule searched-lib-generator ( )
                 shared = true ;
             }        
             
-            local t = [ new searched-lib-target $(name) : $(project) : $(shared)
+            local t = [ xnew searched-lib-target $(name) : $(project) : $(shared)
                             : [ feature.get-values <name> : $(properties) ]
                             : [ feature.get-values <search> : $(properties) ]
                       ] ;

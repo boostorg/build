@@ -6,7 +6,7 @@
 #  This module defines a special generator, which handles targets with
 #  <file> property. It allows to use prebuilt targets.
 
-import class : class new ;
+import class : class new xnew ;
 import generators ; 
 import feature : feature ;
 
@@ -29,7 +29,7 @@ rule prebuilt-file-generator
             errors.error "Unknown type for prebuilt target " $(name) in $(project) ;
         }
         
-        local t = [ new file-target $(filename:S=:D=) : $(type) : $(project) ] ;
+        local t = [ xnew file-target $(filename:S=:D=) : $(type) : $(project) ] ;
         $(t).set-path [ path.parent $(filename) ] ;
         # By default, Boost.Build determines the suffix of file from its type.
         # Since we already have file, specify suffix explicitly.
