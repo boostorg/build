@@ -12,10 +12,11 @@ import tempfile
 import sys
 
 def get_toolset():
-    if (len(sys.argv) > 1):
-        return sys.argv[1]
-    else:
-        return "gcc"
+    toolset = None;
+    for arg in sys.argv[1:]:
+        if not arg.startswith('-'):
+            toolset = arg
+    return toolset or 'gcc'
 
 windows = 0
 
