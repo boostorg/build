@@ -295,15 +295,12 @@ rule boost-python-runtest (
 
     # declare the two subsidiary tests.
     declare-local-target $(<) : $(>) : $(PYTHON_PROPERTIES) : $(4) : PYTHON_TEST ;
-    declare-local-target $(<) : $(>) : $(PYTHON_PROPERTIES) : $(4) : PYTHON_RUNTEST ;
+    declare-local-target $(<) : $(>) : $(PYTHON_PROPERTIES) : $(4) <suppress>true : PYTHON_RUNTEST ;
 }
 
 rule boost-python-test ( name : sources + : requirements * : default-BUILD * )
 {
-    type-DEPENDS test : $(name) ;
-    
-    local gSUPPRESS_FAKE_TARGETS = true ;
-    extension $(name) : $(sources) : $(requirements) : $(4) ;
+    extension $(name) : $(sources) : $(requirements) <suppress>true : $(4) ;
 }
 
 # special rules for two new target types: PYTHON_TEST and PYTHON_RUNTEST.
