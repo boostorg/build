@@ -377,22 +377,23 @@ rule abstract-file-target ( name
             {
                 grist = $(grist)/main-target-$(smt) ;                
             }
-            
+
+            local name = [ path.native $(self.name) ] ;
             if $(self.suffix)
             {
-                self.actual-name = [ sequence.join <$(grist)>$(self.name)
+                self.actual-name = [ sequence.join <$(grist)>$(name)
                 $(self.suffix) : "." ] ;
             }
             else if $(self.type)
             {
-                self.actual-name = [ sequence.join <$(grist)>$(self.name)
+                self.actual-name = [ sequence.join <$(grist)>$(name)
                   [ type.generated-target-suffix $(self.type) :
                     $(properties)
                   ] : "." ] ;
             }
             else
             {
-                self.actual-name = <$(grist)>$(self.name) ;
+                self.actual-name = <$(grist)>$(name) ;
             }
         }
         return $(self.actual-name) ;
@@ -682,7 +683,7 @@ rule from-file ( file : project )
     }
     else
     {
-        local name = $(file:S=) ;
+        local name = [ path.make $(file:S=) ] ;
         local type = [ type.type $(file:S) ] ;
         local result ;
         if ! $(type)

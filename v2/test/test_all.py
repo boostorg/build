@@ -88,6 +88,7 @@ tests = [ "project_test1",
           "print",
 	  "ndebug",
 	  "explicit",
+	  "absolute_sources",
 	  ]
 
 if os.name == 'posix' and not os.uname()[0].startswith('CYGWIN'):
