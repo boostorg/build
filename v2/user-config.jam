@@ -26,7 +26,7 @@ import toolset : using ;
 
 #  Configure msvc (default version, searched in standard location
 #  and PATH).
-using msvc ;
+#  using msvc ;
 
 #  Borland configuration
 #  using borland ;
@@ -65,5 +65,4 @@ using msvc ;
 
   
  
-
 
