@@ -10,6 +10,16 @@ import numbers ;
 
 .flag-no = 1 ;
 
+# Initializes an additional toolset-like module.
+# First load 'toolset-module' and then calls it's 'init'
+# rule with trailing arguments
+rule using ( toolset-module : * )
+{
+    import $(toolset-module) ;
+    $(toolset-module).init $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+}
+
+
 # Specifies the flags (variables) that must be set on targets under certain
 # conditions, described by arguments.
 rule flags ( rule-or-module   # If contains dot, should be a rule name.
@@ -45,7 +55,7 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
 
 
 rule set-target-variables ( rule-or-module target : properties * )
-{
+{    
     for local f in $(.$(rule-or-module).flags) 
     {
         local variable = $(.$(rule-or-module).variable.$(f)) ;
@@ -72,15 +82,15 @@ rule set-target-variables ( rule-or-module target : properties * )
                 for local r in $(requirements)
                 { 
                     local item = [ feature.get-values $(r) : $(properties) ] ;
-                    if $(item)
+                    for local i in $(item)
                     {                        
                         if dependency in [ feature.attributes $(r:G) ] 
                         {
-                            result += [ $(item).actualize ] ;
+                            result += [ $(i).actualize ] ;
                         }
                         else
                         {
-                            result += $(item) ;
+                            result += $(i) ;
                         }
                     }                    
                 }                

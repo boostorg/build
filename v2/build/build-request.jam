@@ -122,6 +122,26 @@ rule expand ( property-sets * : feature-space ? )
     return $(result) ;
 }
 
+# Returns true if 'v' is either implicit value, or
+# the part before the first '-' symbol is implicit value
+local rule looks-like-implicit-value ( v : feature-space ? )
+{
+    feature-space ?= feature ;
+    
+    if [ $(feature-space).is-implicit-value $(v) ]
+    {
+        return true ;
+    }
+    else
+    {
+        local split = [ regex.split $(v) - ] ;
+        if [ $(feature-space).is-implicit-value $(split[1]) ]
+        {
+            return true ;
+        }        
+    }
+}
+
 
 # Takes the command line tokens (such as taken from ARGV rule) and constructs
 # build request from it.
@@ -143,7 +163,7 @@ rule from-command-line ( command-line * : feature-space ? )
             # consists of implicit feature values.
             local fs = feature-space ;
             if [ MATCH "(.*=.*)" : $(e) ] 
-               || [ $(feature-space).is-implicit-value $(e:D=) ] 
+               || [ looks-like-implicit-value $(e:D=) : $(feature-space) ] 
             {
                 properties += [ convert-command-line-element $(e) : $(feature-space) ] ;
             }
@@ -177,10 +197,16 @@ local rule convert-command-line-element ( e : feature-space )
             lresult = [ regex.split $(p) "," ] ;
         }
 
-        for local p in $(lresult)
-        {
-            property.validate $(p) : $(feature-space) ;
+        if ! [ MATCH (.*-.*) : $(p) ]
+        {          
+            # property.validate cannot handle subfeatures,
+            # so we avoid the check here.
+            for local p in $(lresult)
+            {
+                property.validate $(p) : $(feature-space) ;
+            }
         }
+        
 
         if ! $(result) 
         {
@@ -308,6 +334,12 @@ rule __test__ ( )
         assert.equal [ $(r).get-at 1 ] : ;
         assert.equal [ $(r).get-at 2 ] : msvc gcc/<runtime-link>static 
                         borland/<runtime-link>static ;
+        
+        r = [ build-request.from-command-line bjam gcc-3.0
+              : $(test-space) ] ;
+        assert.equal [ $(r).get-at 1 ] : ;
+        assert.equal [ $(r).get-at 2 ] : gcc-3.0 ;
+        
     }
 }
 
