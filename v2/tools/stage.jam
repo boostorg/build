@@ -297,7 +297,8 @@ rule stage ( name : sources * : requirements * : default-build * )
     local project = [ project.current ] ;
     
     targets.main-target-alternative
-      [ new stage-target-class $(name) : $(project) : $(sources)
+      [ new stage-target-class $(name) : $(project) 
+        : [ targets.main-target-sources $(sources) : $(name) ]
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
         : [ targets.main-target-default-build $(default-build) : $(project) ] 
       ] ;
