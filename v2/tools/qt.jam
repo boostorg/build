@@ -10,6 +10,7 @@ import type ;
 import "class" : new ;
 import generators ;
 import project ;
+import toolset : flags ;
 
 # Convert this module into a project, so that we can declare
 # targets here.
@@ -44,9 +45,6 @@ rule init ( prefix ? )
     {            
         .initialized = true ;
         .prefix = $(prefix) ;
-        
-        feature.extend uses : qt ;
-        #feature.action <uses>qt : add-properties ;            
         
         generators.register-standard qt.moc : H : CPP(moc_%) : <allow>qt ;    
         
@@ -105,16 +103,29 @@ actions moc
     $(.prefix)/bin/moc -f $(>) -o $(<)
 }
 
+space = " " ;
+
+# Sometimes it's required to make 'plugins' available during
+# uic invocation. To help with this we add paths to all dependency
+# libraries to uic commane line. The intention is that it's possible
+# to write
+#    
+#     exe a : ... a.ui ... : <uses>some_plugin ; 
+# 
+# and have everything work. We'd add quite a bunch of unrelated paths
+# but it won't hurt.
+flags qt.uic-h LIBRARY_PATH <xdll-path> ;
 actions uic-h
 {
-    $(.prefix)/bin/uic $(>) -o $(<)
+    $(.prefix)/bin/uic $(>) -o $(<) -L$(space)$(LIBRARY_PATH)
 }
 
+flags qt.uic-cpp LIBRARY_PATH <xdll-path> ;
 # The second target is uic-generated header name. It's placed in
 # build dir, but we want to include it using only basename.
 actions uic-cpp
 {
-    $(.prefix)/bin/uic $(>[1]) -i $(>[2]:D=) -o $(<)
+    $(.prefix)/bin/uic $(>[1]) -i $(>[2]:D=) -o $(<) -L$(space)$(LIBRARY_PATH)
 }
 
 
