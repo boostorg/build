@@ -70,7 +70,7 @@ flags kylix FINDLIBS : m ;
 flags kylix FINDLIBS : dl ;
 flags kylix CFLAGS <threading>single : -DBOOST_NO_THREADS ;
 
-flags kylix STDHDRS : $(BCCROOT)$(SLASH)include ;
+#flags kylix STDHDRS : $(BCCROOT)$(SLASH)include ;  # kylix knows where to find its headers by itself. This did only confuse it.
 flags kylix STDLIBPATH : $(BCCROOT)$(SLASH)lib ;
 
 flags kylix LIBPATH <library-path> ;
