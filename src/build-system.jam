@@ -11,7 +11,9 @@
 # The version of bootstrap.jam invoking this lives in
 # tools/build/kernel until BBv1 is retired, so that BBv1 can have its
 # bootstrap.jam in this directory.
+
 import project ;
+import targets ;
 import sequence ;
 import modules ;
 import feature ;
@@ -120,7 +122,7 @@ for local id in $(target-ids)
     }
     else
     {
-        local t = [ project.find-target $(id) : "." ] ;
+        local t = [ targets.find $(id) : "." ] ;
         if ! $(t)
         {
             error target $(id) does not exist ;
