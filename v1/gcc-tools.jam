@@ -127,6 +127,10 @@ else if $(UNIX)
         flags gcc LINKFLAGS <threading>multi : -pthread ;
         # there is no -lrt on BSD
         }
+    case IRIX :
+        {
+        # gcc on IRIX does not support multi-threading, don't set anything here.
+        }
     case * :
         {
         flags gcc CFLAGS <threading>multi : -pthread ;
