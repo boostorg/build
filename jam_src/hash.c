@@ -6,6 +6,7 @@
 
 # include "jam.h"
 # include "hash.h"
+# include <assert.h>
 
 /* 
  * hash.c - simple in-memory hashing routines 
@@ -66,6 +67,7 @@ struct hash
 	 */ 
 	struct {
 		int more;	/* how many more ITEMs fit in lists[ list ] */
+        ITEM *free; /* free list of items */
 		char *next;	/* where to put more ITEMs in lists[ list ] */
 		int datalen;	/* length of records in this hash table */
 		int size;	/* sizeof( ITEM ) + aligned datalen */
@@ -83,6 +85,50 @@ struct hash
 
 static void hashrehash( struct hash *hp );
 static void hashstat( struct hash *hp );
+
+/*
+ * hash_free() - remove the given item from the table if it's there.
+ * Returns 1 if found, 0 otherwise.
+ *
+ * NOTE: 2nd argument is HASHDATA*, not HASHDATA** as elsewhere.
+ */
+int
+hash_free(
+	register struct hash *hp,
+	HASHDATA *data)
+{
+	ITEM **prev;
+	register ITEM **i;
+	unsigned char *b = (unsigned char*)data->key;
+	unsigned int keyval;
+
+	keyval = *b;
+
+	while( *b )
+		keyval = keyval * 2147059363 + *b++;
+
+    prev = hp->tab.base + ( keyval % hp->tab.nel );
+	while(*prev )
+    {
+        register ITEM* i = *prev;
+	    if( keyval == i->hdr.keyval && 
+            !strcmp( i->data.key, data->key ) )
+        {
+            /* unlink the record from the hash chain */
+            *prev = i->hdr.next;
+            /* link it into the freelist */
+            i->hdr.next = hp->items.free;
+            hp->items.free = i;
+            /* mark it free so we skip it during enumeration */
+            i->data.key = 0;
+            /* we have another item */
+            hp->items.more++;
+            return 1;
+        }
+        prev = &i->hdr.next;
+    }
+    return 0;
+}
 
 /*
  * hashitem() - find a record in the table, and optionally enter a new one
@@ -122,8 +168,18 @@ hashitem(
 
 	if( enter ) 
 	{
-		i = (ITEM *)hp->items.next;
-		hp->items.next += hp->items.size;
+        /* try to grab one from the free list */
+        if ( hp->items.free )
+        {
+            i = hp->items.free;
+            hp->items.free = i->hdr.next;
+            assert( i->data.key == 0 );
+        }
+        else
+        {
+            i = (ITEM *)hp->items.next;
+            hp->items.next += hp->items.size;
+        }
 		hp->items.more--;
 		memcpy( (char *)&i->data, (char *)*data, hp->items.datalen );
 		i->hdr.keyval = keyval;
@@ -145,7 +201,8 @@ static void hashrehash( register struct hash *hp )
 
 	hp->items.more = i ? 2 * hp->items.nel : hp->inel;
 	hp->items.next = (char *)malloc( hp->items.more * hp->items.size );
-
+    hp->items.free = 0;
+    
 	hp->items.lists[i].nel = hp->items.more;
 	hp->items.lists[i].base = hp->items.next;
 	hp->items.nel += hp->items.more;
@@ -167,7 +224,9 @@ static void hashrehash( register struct hash *hp )
 		{
 			register ITEM *i = (ITEM *)next;
 			ITEM **ip = hp->tab.base + i->hdr.keyval % hp->tab.nel;
-
+            /* code currently assumes rehashing only when there are no free items */
+            assert( i->data.key != 0 ); 
+            
 			i->hdr.next = *ip;
 			*ip = i;
 		}
@@ -187,7 +246,9 @@ void hashenumerate( struct hash *hp, void (*f)(void*,void*), void* data )
         for( ; nel--; next += hp->items.size )
         {
             register ITEM *i = (ITEM *)next;
-            f(&i->data, data);
+            
+            if ( i->data.key != 0 ) /* don't enumerate freed items */
+                f(&i->data, data);
         }
     }
 }
@@ -211,6 +272,7 @@ hashinit(
 	hp->tab.nel = 0;
 	hp->tab.base = (ITEM **)0;
 	hp->items.more = 0;
+    hp->items.free = 0;
 	hp->items.datalen = datalen;
 	hp->items.size = sizeof( struct hashhdr ) + ALIGNED( datalen );
 	hp->items.list = -1;

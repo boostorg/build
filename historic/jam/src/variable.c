@@ -367,9 +367,16 @@ var_dump(
 /*
  * var_done() - free variable tables
  */
+static void delete_var_( void* xvar, void* data )
+{
+    VARIABLE *v = xvar;
+    freestr( v->symbol );
+    list_free( v-> value );
+}
 
 void
 var_done()
 {
+    hashenumerate( varhash, delete_var_, (void*)0 );
 	hashdone( varhash );
 }

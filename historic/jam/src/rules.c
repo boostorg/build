@@ -74,7 +74,7 @@ enter_rule( char *rulename, module *target_module )
 
     r->name = rulename;
 
-    if ( hashenter( target_module->rules, (HASHDATA **)&r ) )
+    if ( hashenter( demand_rules( target_module ), (HASHDATA **)&r ) )
     {
         r->name = newstr( rulename );	/* never freed */
         r->procedure = (PARSE *)0;
@@ -105,6 +105,21 @@ define_rule( module *src_module, char *rulename, module *target_module )
     }
 
     return r;
+}
+
+void
+rule_free( RULE* r )
+{
+    freestr( r->name );
+    r->name = "";
+    parse_free( r->procedure );
+    r->procedure = 0;
+	if ( r->arguments )
+	    args_free( r->arguments );
+    r->arguments = 0;
+    if ( r->actions )
+		actions_free( r->actions );
+    r->actions = 0;
 }
 
 /*
@@ -622,13 +637,6 @@ RULE* new_rule_body( module* m, char* rulename, argument_list* args, PARSE* proc
     if ( procedure->rulename == 0 )
         procedure->rulename = global_rule_name( local );
 
-    /* export the rule to the global module  if neccessary */
-    if ( exported )
-    {
-        RULE* global = global_rule( local );
-        set_rule_body( global, args, procedure );
-    }
-
     return local;
 }
 
@@ -666,7 +674,7 @@ RULE *bindrule( char *rulename, module* m )
     RULE rule, *r = &rule;
     r->name = rulename;
     
-    if ( hashcheck( m->rules, (HASHDATA **)&r ) )
+    if ( m->rules && hashcheck( m->rules, (HASHDATA **)&r ) )
         return r;
     else
         return enter_rule( rulename, root_module() );

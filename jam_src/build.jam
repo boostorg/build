@@ -378,10 +378,13 @@ actions .yyacc
 # How to build the grammar.
 if $(NT)
 {
-    local SUFEXE = .exe ;
+    SUFEXE = .exe ;
+    # try some other likely spellings...
+    PATH ?= $(Path) ;
+    PATH ?= $(path) ;
 }
-
 SUFEXE ?= "" ;
+
 yacc ?= [ GLOB $(PATH) : yacc$(SUFEXE) ] ;
 yacc ?= [ GLOB $(PATH) : bison$(SUFEXE) ] ;
 yacc = $(yacc[1]) ;
@@ -391,7 +394,7 @@ switch $(yacc:D=:S=)
     case yacc  : yacc += -d ;
 }
 
-if $(debug)
+if $(debug) && $(yacc)
 {
     yacc += -t -v ;
 }
@@ -403,6 +406,7 @@ rule .yacc
 }
 if $(NT) { actions .yacc
 {    $(yacc) $(>)
+    del /f $(<[1]:S=.c) $(<[1]:S=.h)
     rename y.tab.c $(<[1]:S=.c)
     rename y.tab.h $(<[1]:S=.h) } }
 if $(UNIX) { actions .yacc

@@ -161,6 +161,19 @@ load_builtins()
                          builtin_rulenames, 0, args );
       }
 
+
+      {
+          char * args[] = { "module", "?", 0 };
+          bind_builtin( "VARNAMES" ,
+                         builtin_varnames, 0, args );
+      }
+
+      {
+          char * args[] = { "module", "?", 0 };
+          bind_builtin( "DELETE_MODULE" ,
+                         builtin_delete_module, 0, args );
+      }
+
       {
            char * args[] = { "source_module", "?",
                              ":", "source_rules", "*",
@@ -492,7 +505,57 @@ builtin_rulenames(
     LIST *result = L0;
     module* source_module = bindmodule( arg0 ? arg0->string : 0 );
 
-    hashenumerate( source_module->rules, add_rule_name, &result );
+    if ( source_module->rules )
+        hashenumerate( source_module->rules, add_rule_name, &result );
+    return result;
+}
+
+/*  builtin_varnames() - VARNAMES ( MODULE ? )
+ *
+ *  Returns a list of the variable names in the given MODULE. If
+ *  MODULE is not supplied, returns the list of variable names in the
+ *  global module.
+ */
+
+/* helper function for builtin_varnames(), below.  Used with
+ * hashenumerate, will prepend the key of each element to a list
+ */
+static void add_hash_key( void* np, void* result_ )
+{
+    LIST** result = result_;
+
+    *result = list_new( *result, copystr( *(char**)np ) );
+}
+
+LIST *
+builtin_varnames(
+    PARSE   *parse,
+    FRAME *frame )
+{
+    LIST *arg0 = lol_get( frame->args, 0 );
+    LIST *result = L0;
+    module* source_module = bindmodule( arg0 ? arg0->string : 0 );
+
+    if ( source_module->variables )
+        hashenumerate( source_module->variables, add_hash_key, &result );
+    return result;
+}
+
+/*
+ * builtin_delete_module() - MODULE ?
+ *
+ * Clears all rules and variables from the given module.
+ */
+LIST *
+builtin_delete_module(
+    PARSE   *parse,
+    FRAME *frame )
+{
+    LIST *arg0 = lol_get( frame->args, 0 );
+    LIST *result = L0;
+    module* source_module = bindmodule( arg0 ? arg0->string : 0 );
+
+    delete_module( source_module );
     return result;
 }
 
@@ -544,8 +607,12 @@ builtin_import(
         RULE r_, *r = &r_, *imported;
         r_.name = source_name->string;
                 
-        if ( !hashcheck( source_module->rules, (HASHDATA**)&r ) )
+        if ( !source_module->rules
+             || !hashcheck( source_module->rules, (HASHDATA**)&r )
+            )
+        {
             unknown_rule( frame, "IMPORT", source_module->name, r_.name );
+        }
         
         imported = import_rule( r, target_module, target_name->string );
         if ( localize )
@@ -593,7 +660,7 @@ builtin_export(
         RULE r_, *r = &r_;
         r_.name = rules->string;
                 
-        if ( !hashcheck( m->rules, (HASHDATA**)&r ) )
+        if ( !m->rules || !hashcheck( m->rules, (HASHDATA**)&r ) )
             unknown_rule( frame, "EXPORT", m->name, r_.name );
         
         r->exported = 1;
@@ -640,8 +707,15 @@ void print_source_line( PARSE* p )
 /* Print a single line of error backtrace for the given frame */
 void backtrace_line( FRAME *frame )
 {
-    print_source_line( frame->procedure );
-    printf( " in %s\n", frame->rulename );
+    if ( frame == 0 )
+    {
+        printf( "(no frame):" );
+    }
+    else
+    {
+        print_source_line( frame->procedure );
+        printf( " in %s\n", frame->rulename );
+    }
 }
 
 /*  Print the entire backtrace from the given frame to the Jambase
@@ -649,6 +723,7 @@ void backtrace_line( FRAME *frame )
  */
 void backtrace( FRAME *frame )
 {
+	if ( !frame ) return;
     while ( frame = frame->prev )
     {
         backtrace_line( frame );

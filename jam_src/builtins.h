@@ -24,6 +24,8 @@ LIST *builtin_subst( PARSE  *parse, FRAME *args );
 LIST *builtin_match( PARSE *parse, FRAME *args );
 LIST *builtin_hdrmacro( PARSE *parse, FRAME *args );
 LIST *builtin_rulenames( PARSE *parse, FRAME *args );
+LIST *builtin_varnames( PARSE *parse, FRAME *args );
+LIST *builtin_delete_module( PARSE *parse, FRAME *args );
 LIST *builtin_import( PARSE *parse, FRAME *args );
 LIST *builtin_export( PARSE *parse, FRAME *args );
 LIST *builtin_caller_module( PARSE *parse, FRAME *args );
