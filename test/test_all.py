@@ -100,6 +100,7 @@ tests = [ "project_test1",
           "inline",
           "conditionals2",
           "property_expansion",
+          "loop",
 	  ]
 
 if os.name == 'posix':
