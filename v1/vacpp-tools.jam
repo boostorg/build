@@ -13,27 +13,27 @@
 # IBM/Aix 3.4. They should also work for VisualAge
 # on Windows NT, OS/2 and AS/400.
 
-flags xlc LINKFLAGS <runtime-link>static : -bstatic ;
-flags xlc CFLAGS <debug-symbols>on : -g ;
-flags xlc LINKFLAGS <debug-symbols>on : -g ;
-flags xlc CFLAGS <optimization>off : -qNOOPTimize ;
-flags xlc CFLAGS <optimization>speed : -O5 ;
+flags vacpp LINKFLAGS <runtime-link>static : -bstatic ;
+flags vacpp CFLAGS <debug-symbols>on : -g ;
+flags vacpp LINKFLAGS <debug-symbols>on : -g ;
+flags vacpp CFLAGS <optimization>off : -qNOOPTimize ;
+flags vacpp CFLAGS <optimization>speed : -O5 ;
 
-flags xlc CFLAGS <optimization>space : -qcompact -O2 ;
-flags xlc CFLAGS <inlining>off : -qnoinline ;
-flags xlc CFLAGS <inlining>full : -qinline ;
+flags vacpp CFLAGS <optimization>space : -qcompact -O2 ;
+flags vacpp CFLAGS <inlining>off : -qnoinline ;
+flags vacpp CFLAGS <inlining>full : -qinline ;
 
-flags xlc CFLAGS <profiling>on : -pg ;
-flags xlc LINKFLAGS <profiling>on : -pg ;
+flags vacpp CFLAGS <profiling>on : -pg ;
+flags vacpp LINKFLAGS <profiling>on : -pg ;
 
-flags xlc CFLAGS <cflags> ;
-flags xlc C++FLAGS <cxxflags> ;
-flags xlc DEFINES <define> ;
-flags xlc UNDEFS <undef> ;
-flags xlc HDRS <include> ;
-flags xlc STDHDRS <sysinclude> ;
-flags xlc LINKFLAGS <linkflags> ;
-flags xlc ARFLAGS <arflags> ;
+flags vacpp CFLAGS <cflags> ;
+flags vacpp C++FLAGS <cxxflags> ;
+flags vacpp DEFINES <define> ;
+flags vacpp UNDEFS <undef> ;
+flags vacpp HDRS <include> ;
+flags vacpp STDHDRS <sysinclude> ;
+flags vacpp LINKFLAGS <linkflags> ;
+flags vacpp ARFLAGS <arflags> ;
 
 if ! $(ARFLAGS)
 {
