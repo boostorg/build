@@ -81,19 +81,41 @@ rule project-target ( name : project : requirements * : default-build * )
     # Generates all possible targets contained in this project.
     rule generate ( properties * )
     {
-        local result ;
-        for local name in $(self.main-targets)
+        # Project properties are directly imposed on all main targets.
+        # However, we'd need to check if this project can be build at
+        # all.
+        local properties = 
+          [ property.refine $(properties) : $(self.requirements) ] ;
+        if $(properties[1]) = "@error"
         {
-            local t = [ main-target $(name) ] ;
-            result += [ $(t).generate $(properties) ] ;
+            local id = [ project.attribute $(self.project) id ] ;
+            if $(id) 
+            {                
+                print.wrapped-text "warning: skipping build of project" $(id)
+                  "at" [ project.attribute $(self.project) location ] ;
+            }
+            else
+            {
+                print.wrapped-text "warning: skipping build of project at"
+                  [ project.attribute $(self.project) location ] ;
+            }            
         }
-        for local pn in [ project.attribute $(self.project) projects-to-build ]
-        {
-            local p = [ project.module-name $(pn) ] ;
-            local t = [ project.target [ project.attribute $(p) location ] ] ;
-            result += [ $(t).generate $(properties) ] ;
-        }
-        return $(result) ;
+        else 
+        {            
+            local result ;
+            for local name in $(self.main-targets)
+            {
+                local t = [ main-target $(name) ] ;
+                result += [ $(t).generate $(properties) ] ;
+            }
+            for local pn in [ project.attribute $(self.project) projects-to-build ]
+            {
+                local p = [ project.module-name $(pn) ] ;
+                local t = [ project.target [ project.attribute $(p) location ] ] ;
+                result += [ $(t).generate $(properties) ] ;
+            }
+            return $(result) ;
+        }        
     }
 
     # Returns a 'main-target' class instance corresponding to the 'name'.
@@ -153,15 +175,12 @@ rule main-target ( name : project )
         }
         if [ $(alternatives).empty ]
         {
-            # TODO: probably, should explain, for each alternative, why it can't
-            # be build.
-            print.wrapped-text
-                "Cannot satisfy request to build" [ full-name ]
-                 "with properties " $(properties) ;
-            print.wrapped-text
-                 "No viable alternative found." ;
-            EXIT ;
-        }
+            # TODO: probably, should explain, for each alternative, 
+            # why it can't be build.
+            print.wrapped-text 
+                "warning: skipped build of" [ full-name ]
+                "with properties" $(properties) ;
+        } else {            
         local result ;
         if [ $(alternatives).size ] = 1 
         {  
@@ -238,6 +257,7 @@ rule main-target ( name : project )
 
         # Now return virtual targets for the only alternative
         return $(result) ;
+        }        
     }
 }
 
@@ -440,6 +460,12 @@ rule typed-target ( name : project : type
     {
         local r = [ generators.construct $(self.project) $(self.name) : $(self.type) 
           : $(properties) <main-target-type>$(self.type) : $(source-targets) ] ;
+        if ! $(r)
+        {
+            print.wrapped-text "error: unable to construct" [ full-name ] ;
+            EXIT ;
+        }
+        
         return $(r) ;
     }            
 }

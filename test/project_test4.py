@@ -47,16 +47,28 @@ t.run_build_system(stdout=expected, status=None)
 
 t.copy("lib/Jamfile3", "lib/Jamfile")
 
-expected="""Cannot satisfy request to build lib/b.obj with properties  <toolset>gcc
+expected="""warning: skipped build of lib/b.obj with properties <toolset>gcc
 <shared>false <optimization>on <threading>single <rtti>on <debug-symbols>on
 <variant>debug
-No viable alternative found.
-
+don't know how to make <.>lib/b.obj/<optimization>on
+...skipped <./gcc/debug/shared-false/threading-single>a.exe for lack of <.>lib/b.obj/<optimization>on...
 """
 
 t.run_build_system(stdout=expected, status=None)
 
+# Check that project can be skipped as well
+t.copy("Jamfile4", "Jamfile")
 
+expected="""warning: skipping build of project at lib2
+"""
+t.run_build_system(stdout=expected, status=None)
+
+t.copy("lib2/Jamfile2", "lib2/Jamfile")
+
+expected="""warning: skipping build of project /mylib at lib2
+"""
+
+t.run_build_system(stdout=expected, status=None)
 
 # We don't yet make targets depend on Jamfile, so need to start from scratch
 t.set_tree("project-test4")

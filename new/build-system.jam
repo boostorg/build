@@ -48,6 +48,7 @@ for t in $(virtual-targets)
 {
     actual-targets += [ $(t).actualize ] ;
 }
+NOTFILE all ;
 DEPENDS all : $(actual-targets) ;
 
 # If there are any targets in the command line, cause them to be updated
