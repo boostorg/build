@@ -44,7 +44,6 @@ if $(PYTHON_WINDOWS)
       <$(gcc-compilers)><*><find-library>python$(PYTHON_VERSION).dll 
       ;
     
-    CYGWIN_PYTHON_ROOT ?= $(CYGWIN_ROOT) ;
     CYGWIN_PYTHON_ROOT ?= /usr ;
     PYTHON_ROOT ?= $(CYGWIN_PYTHON_ROOT) ;
     if $(CYGWIN_PYTHON_ROOT) = /usr
