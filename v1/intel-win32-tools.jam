@@ -28,7 +28,9 @@ extends-toolset $(INTEL_BASE_MSVC_TOOLSET) ;
 
 flags intel-win32 STDHDRS : $(VC_TOOL_PATH)../include ;
 flags intel-win32 STDLIBPATH : "$(INTEL_PATH)"\\Lib "$(INTEL_PATH)"\\Bin ;
+flags intel-win32 RUN_PATH : "$(INTEL_PATH)"\\Bin ;
 
 VC_TOOL_PATH = $(INTEL_TOOL_PATH) ;
+VC_STDLIB_PATH = "$(INTEL_PATH)"\\Bin ;
 VC_COMPILER = icl ;
 VC_LINKER = xilink ;

@@ -43,6 +43,7 @@ else
 VC_COMPILER = cl ;
 VC_LINKER = link ;
 VC_PDB_NAME = vc60 ;
+VC_STDLIB_PATH = ;
 
 flags msvc CFLAGS <debug-symbols>on/<debug-store>object : /Z7 ;
 flags msvc CFLAGS <debug-symbols>on/<debug-store>database : /Zi ;
@@ -101,6 +102,8 @@ rule vc-set-pdb-file ( targets + : name )
 rule Link-action ( target implib ? : sources + : target-type ? )
 {
     with-command-file vc-Link $(<) : $(sources) $(NEEDLIBS) ;
+
+    gRUN_PATH($(<)) += $(VC_STDLIB_PATH) ;
     if $(implib)
     {
         # incremental linking a DLL causes no end of problems: if the
