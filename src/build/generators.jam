@@ -297,13 +297,21 @@ rule generator ( id : source-types + : target-types-and-names + : requirements *
               [ property.remove incidental : $(properties) ] ] ;
         }                 
         # Assign an action for each target
-        local a = [ new action $(targets) : $(sources) : $(self.id) : $(properties) ] ;
+        local action = [ action-class ] ;
+        local a = [ new $(action) $(targets) : $(sources) : $(self.id) : $(properties) ] ;
         for local t in $(targets)
         {
             $(t).action $(a) ;
         }       
         
         return [ sequence.transform virtual-target.register : $(targets) ] ;
+    }    
+    
+    # Returns the class to be used to actions. Default implementation 
+    # returns "action".
+    rule action-class ( )
+    {
+        return "action" ;
     }    
 }
 

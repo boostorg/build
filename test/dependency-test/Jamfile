@@ -1,0 +1,14 @@
+
+project test 
+    : requirements <include>src1 
+    ;
+
+exe a 
+    : x.foo a.cpp 
+    ;
+    
+exe b
+    : b.cpp
+    ;    
+    
+#DEPENDS tra-ra : <./gcc/debug/shared-false/threading-single>x.h ;

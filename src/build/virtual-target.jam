@@ -231,6 +231,8 @@ rule action ( targets + : sources * : action-name : properties * )
         if ! $(self.actualized)
         {
             self.actualized = true ;
+
+            local properties = [ adjust-properties [ properties ] ] ;
             
             local actual-targets ;
             for local i in [ targets ]
@@ -250,6 +252,16 @@ rule action ( targets + : sources * : action-name : properties * )
               $(actual-targets) : $(actual-sources) : [ properties ] ;
         }        
     }    
+    
+    # Determined real properties when trying building with 'properties'.
+    # This is last chance to fix properties, for example to adjust includes
+    # to get generated headers correctly. Default implementation returns
+    # its argument.
+    rule adjust-properties ( properties * )
+    {
+        return $(property) ;
+    }
+    
     
     rule set-targets ( targets * )
     {
@@ -395,8 +407,11 @@ local rule clone-action-template ( action from cloned-from project name type suf
     {
         sources += [ clone-template $(t) : $(project) $(name) $(type) $(suffix) ] ; 
     }
+    
+    local action-class = [ modules.peek $(action) : __class__ ] ;
 
-    local cloned = [ new action [ $(action).targets ] : $(sources) : [ $(action).action-name ] : [ $(action).properties ] ] ;
+    local cloned = [ new $(action-class) [ $(action).targets ] : $(sources) 
+                     : [ $(action).action-name ] : [ $(action).properties ] ] ;
     
     return $(cloned) ;    
 }
