@@ -165,21 +165,9 @@ rule variant ( name           # Name of the variant
 IMPORT $(__name__) : variant : : variant ;
 
 variant debug : <optimization>off <debug-symbols>on <inlining>off <runtime-debugging>on ;
-variant release : <optimization>speed <debug-symbols>off <inlining>full <runtime-debugging>off ;
+variant release : <optimization>speed <debug-symbols>off <inlining>full 
+                  <runtime-debugging>off <define>NDEBUG ;
 variant profile : release : <profiling>on <debug-symbols>on ;
-
-# When <optimization>speed is specified, we need to add <define>NDEBUG
-# It is done via 'active' features, because it should be done for
-# all targets built with <optimization>speed. Since <define> is free, it is
-# not propagated, we can't just add it to 'release'. And we cannot make
-# <define> propagated, because (i) free features cannot be propagated and
-# (ii) this is dangerous.
-rule handle-ndebug ( property : properties * )
-{
-    return <define>NDEBUG ;
-}
-
-feature.action <optimization>speed : handle-ndebug ;
 
 class searched-lib-target : abstract-file-target
 {
