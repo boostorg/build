@@ -85,7 +85,7 @@ toolset cc $(CC) : "-o " : -D
     : $(LIBS) ;
 ## Comeau C/C++ 4.x
 toolset como como : "-o " : -D
-    :
+    : --c
     [ opt --release : --inlining ]
     [ opt --debug : --no_inlining ] ;
 ## MacOSX Darwin, using GCC 2.9.x, 3.x
