@@ -14,6 +14,7 @@ import type ;
 import feature ;
 import errors ;
 import path ;
+import sequence ;
 
 # The rule checks toolset parameters. Each trailing parameter 
 # should be a pair of parameter name and parameter value.
