@@ -258,30 +258,28 @@
 
     <h3><a name="initialization">Initialization</a></h3>
 
-    <p>Immediately upon startup, the <tt>bjam</tt> executable attempts to
-    find the location of build system files. It does so by looking for a file
-    called <tt>boost-build.jam</tt>. That file is first looked in the
-    invocation directory and its parents up to the filesystem root, and then
-    in the directories from variable BOOST_BUILD_PATH. When found, the file
-    is loaded and should specify the build system location by calling the
-    <tt>boost-build</tt> rule:</p>
+    <p>bjam's first job upon startup is to load the Jam code which implements
+    the build system. To do this, it searches for a file called
+    "boost-build.jam", first in the invocation directory, then in its parent
+    and so forth up to the filesystem root, and finally in the directories
+    specified by the environment variable BOOST_BUILD_PATH. When found, the
+    file is interpreted, and should specify the build system location by
+    calling the boost-build rule:</p>
 <pre>
-    rule boost-build ( location ? )
-   
+      rule boost-build ( location ? )
 </pre>
-    The directory specified by location and directories in
-    <tt>BOOST_BUILD_PATH</tt> are searched for a file called
-    <tt>bootstrap.jam</tt> which is loaded and completes startup. 
-
-    <p>This arrangement allows to make build system work without any
-    environmental variables. For example, build system files can be placed in
-    a directory <tt>boost-build</tt> at your project root, and a file
-    <tt>boost-build.jam</tt> at the project root can contain:</p>
+    If location is a relative path, it is treated as relative to the
+    directory of boost-build.jam. The directory specified by location and
+    directories in BOOST_BUILD_PATH are then searched for a file called
+    bootstrap.jam which is interpreted and is expected to bootstrap the build
+    system. This arrangement allows the build system to work without any
+    command-line or environment variable settings. For example, if the build
+    system files were located in a directory "build-system/" at your project
+    root, you might place a boost-build.jam at the project root containing: 
 <pre>
-    boost-build boost-build ;
-   
+     boost-build build-system ;
 </pre>
-    In this case, running <tt>bjam</tt> in the project root will
+    In this case, running bjam anywhere in the project tree will
     automatically find the build system. 
 
     <h3><a name="command_line">Command line</a></h3>
@@ -304,35 +302,40 @@
       <li>An argument which does not contain slashes or the "=" symbol is
       either a value of an implicit feature, or target to be built. It is
       taken to be value of a feature if appropriate feature exists.
-      Otherwise, it is considered target name.</li>
+      Otherwise, it is considered a <a href="#target_id">target id</a>.</li>
 
       <li>
-        An argument with either slashes or the "=" symbol specifies build
-        properties. It is converted into a set of build properties as
-        follows: 
-
-        <ul>
-          <li>The argument is split at each slash.</li>
-
-          <li>
-            Each component is converted into a set of properties as follows.
-            If component is a value of implicit feature, the property set
-            fill only include corresponding property, e.g. <tt>gcc</tt> will
-            become <tt>&lt;toolset&gt;gcc</tt>. Otherwise, it should have the
-            form 
+        An argument with either slashes or the "=" symbol specifies a number
+        of <a href="#build_request">build request</a> elements. properties.
+        In the simplest form, it's just a set of properties, separated by
+        slashes, which become a single build request element, for example: 
 <pre>
-    &lt;feature-name&gt;=&lt;feature-value1&gt;[","&lt;feature-valueN&gt;]*
-   
+borland/&lt;runtime-link&gt;static
 </pre>
-            and the property set will be 
+        More complex form is used to save typing. For example, instead of 
 <pre>
-&lt;feature-name&gt;feature-value1 ... &lt;feature-name&gt;feature-valueN
+borland/runtime-link=static borland/runtime-link=dynamic
 </pre>
-          </li>
-
-          <li>Property sets for each of the component are set-theoretically
-          multiplicated.</li>
-        </ul>
+        one can use 
+<pre>
+borland/runtime-link=static,dynamic
+</pre>
+        Exactly, the convertion from argument to build request elements is
+        performed by (1) splitting the argument at each slash, (2) converting
+        each split part into a set of properties and (3) taking all possible
+        combination of the property sets. Each split part should have the
+        either the form 
+<pre>
+    <em>feature-name</em>=<em>feature-value1</em>[","<em>feature-valueN</em>]*   
+</pre>
+        or, in case of implict feature 
+<pre>
+    <em>feature-value1</em>[","<em>feature-valueN</em>;]*   
+</pre>
+        and will be converted into property set 
+<pre>
+&lt;feature-name&gt;feature-value1 .... &lt;feature-name&gt;feature-valueN
+</pre>
       </li>
     </ul>
     For example, the command line 
@@ -543,7 +546,7 @@
     second alternative will be used in other cases. TODO: document the exact
     selection method under "Build process" below. 
 
-    <h4>Target identifiers and references</h4>
+    <h4 id="target_id">Target identifiers and references</h4>
 
     <p><em>Target identifier</em> is used to denote a target. It is described
     by the following grammar:</p>
