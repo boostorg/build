@@ -52,6 +52,8 @@ flags metrowerks CFLAGS <inlining>on : -inline on ;
 flags metrowerks CFLAGS <inlining>full : -inline auto -inline level=8 ;
 flags metrowerks CFLAGS <user-interface>console/<runtime-link>dynamic : -prefix UseDLLPrefix.h ;
 
+flags metrowerks CFLAGS <eh-model>msvc : -exc ms ;
+
 if ! $(BOOST_CODEWARRIOR_6)
 {
     flags metrowerks STDLIBS <runtime-link>static/<runtime-build>release : MSL_C_x86.lib;MSL_Runtime_x86.lib;msl_c++_x86.lib;gdi32.lib;user32.lib;kernel32.lib ;
