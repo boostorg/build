@@ -311,13 +311,16 @@ rule text (
             }
         }
     }
-    else if $(output-target)
+    # Don't do anything if 'strings' is empty.
+    # Otherwise, no actions will be created for 
+    # 'body' target, and bjam will say it can't update it
+    else if $(output-target) && $(strings)
     {
-        local rule get-locate ( ) { return $(LOCATE) ; }
         $(output-target).line ?= 0 ;
         DEPENDS $(output-target) : $(output-target:G=body) ;
         ALWAYS $(output-target:G=body) ;
-        LOCATE on $(output-target:G=body) = [ on $(output-target) get-locate ] ;
+        LOCATE on $(output-target:G=body) = 
+          [ on $(output-target) return $(LOCATE) ] ;
         while $(strings)
         {
             local line-v = $(output-target).line.$($(output-target).line) ;
