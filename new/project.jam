@@ -42,7 +42,7 @@ rule load ( jamfile-location )
     if $(loaded)
     {
         .projects += $(jamfile-location) ;
-        
+
         for local subinclude in [ $(module-name).subincludes ]
         {
             load [ os.path.join $(jamfile-location) $(subinclude) ] ;
@@ -65,7 +65,7 @@ rule lookup ( id )
     local location = $(split[1]) ;
     local project-id = $(split[2]) ;
 
-    if [ os.path.is_rooted $(project-id) ]
+    if [ os.path.is-rooted $(project-id) ]
     {
         return $($(project-id).jamfile-location) ;
     }
@@ -75,7 +75,7 @@ rule lookup ( id )
         {
             local module-name = [ module-name $(location) ] ;
             local base-id = [ $(module-name).id ] ;
-            
+
             if $(base-id)
             {
                 local rooted-id = $(base-id)/$(project-id) ;
@@ -107,7 +107,7 @@ rule project ( id ? : option1 * : option2 * : option3 * )
         import targets ;
         targets.create-abstract-project-target [ location ] ;
     }
-    
+
     if $(option1) {
         assign-option [ CALLER_MODULE ] : $(option1) ;
     }
@@ -143,14 +143,7 @@ rule assign-option ( module : option + )
 #
 rule module-name ( jamfile-location )
 {
-    local absolute
-      = [ os.path.native 
-          [ os.path.root_relative_path
-              [ os.path.make $(jamfile-location) ]
-              [ os.path.make [ PWD ] ]
-                ] ] ;
-      
-    return Jamfile<$(absolute)> ;
+    return Jamfile<$(jamfile-location)> ;
 }
 
 #
@@ -175,6 +168,7 @@ rule dump ( )
 
         local project-root = [ $(module-name).project-root ] ;
         local parent = [ $(module-name).parent ] ;
+        parent ?= none ;
         local requirements = [ $(module-name).requirements ] ;
         local default-build = [ $(module-name).default-build ] ;
         local source-location = [ $(module-name).source-location ] ;
@@ -212,11 +206,12 @@ local rule find-jamfile (
     local jamfile-glob = ;
     if $(parent-root)
     {
-        jamfile-glob = [ find-to-root $(dir:P) : $(JAMFILE) ] ;
+        jamfile-glob = [ os.path.make
+            [ find-to-root [ os.path.native $(dir:P) ] : $(JAMFILE) ] ] ;
     }
     else
     {
-        jamfile-glob = [ GLOB $(dir) : $(JAMFILE) ] ;
+        jamfile-glob = [ os.path.glob $(dir) : $(JAMFILE) ] ;
     }
 
     # Normalize the paths of each file found.
@@ -228,22 +223,18 @@ local rule find-jamfile (
     }
     for local jamfile in $(jamfile-glob)
     {
-        local normalized = [ os.path.make $(jamfile) ] ;
-        
-        normalized = [ os.path.root_relative_path $(normalized) [ os.path.make [ PWD ] ] ] ;
-
         # Filter out if the found file is above the target parent root.
         if $(parent-root)
         {
-            if ! [ MATCH "$(parent-root)\\/(.*)" : $(normalized) ]
+            if ! [ MATCH "$(parent-root)\\/(.*)" : $(jamfile) ]
             {
-                normalized = ;
+                jamfile = ;
             }
         }
 
-        if $(normalized)
+        if $(jamfile)
         {
-            jamfile-found += [ os.path.native $(normalized) ] ;
+            jamfile-found += $(jamfile) ;
         }
     }
 
@@ -276,7 +267,7 @@ local rule load-jamfile (
 
     # The module of the jamfile.
     #
-    local jamfile-module = Jamfile<$(jamfile-to-load[1]:D)> ;
+    local jamfile-module = [ module-name  [ os.path.parent $(jamfile-to-load[1]) ] ] ;
 
     # Don't even bother with the rest if we know the file is already loaded.
     #
@@ -289,8 +280,9 @@ local rule load-jamfile (
         {
             ECHO
                 "WARNING: Found multiple Jamfiles at this '"$(dir)"' location!"
-                "Loading the first one: '"$(jamfile-to-load[1]:D=)"'." ;
+                "Loading the first one: '" [ os.path.basename $(jamfile-to-load[1]) ]  "'." ;
         }
+
         jamfile-to-load = $(jamfile-to-load[1]) ;
 
         # Initialize the jamfile module before loading.
@@ -304,7 +296,7 @@ local rule load-jamfile (
 
         # Now load the Jamfile in it's own context.
         #
-        modules.load $(jamfile-module) : $(jamfile-to-load) : . ;
+        modules.load $(jamfile-module) :  [ os.path.native $(jamfile-to-load) ] : . ;
 
         # Indicate we loaded the Jamfile.
         #
@@ -329,14 +321,14 @@ local rule initialize (
     # Make sure we've loaded the project-root corresponding to this
     # Jamfile.
     #
-    local project-root-module = [ project-root.load $(jamfile:D) ] ;
+    local project-root-module = [ project-root.load [ os.path.parent $(jamfile) ] ] ;
     local project-root = [ $(project-root-module).location ] ;
 
-    local parent = [ find-jamfile $(jamfile:D) $(project-root) ] ;
+    local parent = [ find-jamfile [ os.path.parent $(jamfile) ] $(project-root) ] ;
     local parent-module = ;
     if $(parent)
     {
-        parent-module = [ load $(parent[1]:D) ] ;
+        parent-module = [ load [ os.path.parent $(parent[1]) ] ] ;
     }
 
     module $(module-name)
@@ -352,9 +344,9 @@ local rule initialize (
     modules.poke $(module-name) : __source-location__ : $(jamfile-location) ;
     modules.poke $(module-name) : __project-root__ : $(project-root) ;
     modules.poke $(module-name) : __project-root-module__ : $(project-root-module) ;
-    modules.poke $(module-name) : __parent__ : $(parent) ;
     if $(parent-module)
     {
+        modules.poke $(module-name) : __parent__ : [ os.path.parent $(parent) ] ;
         modules.poke $(module-name) : __default-build__ : [ $(parent-module).default-build ] ;
         modules.poke $(module-name) : __requirements__ : [ $(parent-module).requirements ] ;
     }

@@ -13,4 +13,4 @@ rule __dummy
     EXIT "don't call this rule" ;
 }
 
-project.load [ PWD ] ;
+project.load "." ;
