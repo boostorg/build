@@ -265,9 +265,18 @@ bjam
              
 
       <tr>
-        <td><code>bjam -sTOOLS=&quot;msvc&quot; -sBUILD=&quot;&lt;cxxflags&gt;/G6&quot;<br>
-&nbsp;</code><td>default-build <tt>all</tt> with msvc, adding a compiler 
-        specific command line switch</table>
+        <td><code>set TOOLS=msvc<br>
+        bjam -sBUILD=&quot;&lt;cxxflags&gt;/G6&quot;<br>
+&nbsp;</code><td>Set an NT environment variable to always build with MSVC<br>
+         default-build <tt>all</tt>, adding a compiler command line switch</tr>
+             
+
+      <tr>
+        <td><code>set TOOLS=msvc gcc<br>
+        bjam -sBUILD=&quot;&lt;msvc&gt;&lt;*&gt;&lt;cxxflags&gt;/G6&quot;<br>
+&nbsp;</code><td>Set an NT environment variable to always build with MSVC and 
+        GCC<br>
+         default-build <tt>all</tt>, adding a MSVC-specific compiler command line switch</table>
 
     <h3><a name="setting_variables">Setting Jam Variables</a></h3>
 
