@@ -45,7 +45,7 @@ rule load (
 
         # Remember the project-root, and some info about it.
         #
-        .project-root += $(module-name) ;
+        .roots += $(module-name) ;
         modules.poke $(module-name) : .module : $(module-name) ;
         modules.poke $(module-name) : .location : $(location) ;
 
@@ -70,10 +70,10 @@ rule print ( )
     import print ;
 
     print.section "Project Roots" ;
-    local project-roots = [ sequence.insertion-sort $(.project-root) ] ;
-    for local project-root in $(projects-roots)
+    local roots = [ sequence.insertion-sort $(.roots) ] ;
+    for local root in $(roots)
     {
-        $(project-root).print ;
+        $(root).print ;
     }
 }
 
