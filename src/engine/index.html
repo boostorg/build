@@ -119,6 +119,8 @@
         line handling</a></dt>
 
         <dt><a href="#semaphores">Semaphores</a></dt>
+
+        <dt><a href="#semaphores">The W32_GETREG rule</a></dt>
       </dl>
     </dd>
 
@@ -1023,6 +1025,43 @@ UPDATE $(previous-updates) a-new-target ;
   <p>The semantic of semaphores is that in a group of targets which have the
   same semaphore, only one can be updated at the moment, regardless of "-j"
   option.</p>
+
+  <h3 id="w32_getreg">The W32_GETREG rule</h3>
+<pre>
+    rule W32_GETREG ( path : data ? )
+</pre>
+
+<p>    
+    Defined only for win32 platform. It reads the registry of Windows.
+    'path' is the location of the information, and 'data' is
+    the name of the value which we want to get. If 'data' is omitted,
+    the default value of 'path' will be returned. The 'path' value
+    must conform to MS key path format and must be prefixed with
+    one of the predefined root keys. As usual,
+
+<ul>    
+    <li>'HKLM' is equivalent to 'HKEY_LOCAL_MACHINE'.
+    <li>'HKCU' is equivalent to 'HKEY_CURRENT_USER'.
+    <li>'HKCR' is equivalent to 'HKEY_CLASSES_ROOT'.
+</ul>    
+    
+<p>    
+    Other predefined root keys are not supported.    
+<p>    
+    Currently supported data types : 'REG_DWORD', 'REG_SZ',
+    'REG_EXPAND_SZ', 'REG_MULTI_SZ'. The data with 'REG_DWORD' type
+    will be turned into a string, 'REG_MULTI_SZ' into a list of strings,
+    and for those with 'REG_EXPAND_SZ' type environment variables
+    in it will be replaced with their defined values.
+    The data with 'REG_SZ' type and other unsupported types
+    will be put into a string without modification. If it can't
+    receive the value of the data, it just return an empty list.
+    For example,
+
+<pre>
+    local PSDK-location =
+    [ PROFILE HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\MicrosoftSDK\\Directories : "Install Dir" ] ;
+</pre>
 
   <h2><a name="jam_fundamentals">Jam Fundamentals</a></h2>
 

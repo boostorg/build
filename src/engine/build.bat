@@ -229,7 +229,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
 if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
         set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
-    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib
+    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib advapi32.lib
     set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
     set BOOST_JAM_OPT_YYACC=/Febootstrap.%BOOST_JAM_TOOLSET%\yyacc0
@@ -244,7 +244,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
 if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
         set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
-    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib
+    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib advapi32.lib
     set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
     set BOOST_JAM_OPT_YYACC=/Febootstrap.%BOOST_JAM_TOOLSET%\yyacc0
@@ -318,7 +318,7 @@ set BJAM_SOURCES=%BJAM_SOURCES% filent.c fileos2.c fileunix.c filevms.c glob.c h
 set BJAM_SOURCES=%BJAM_SOURCES% hdrmacro.c headers.c jam.c jambase.c jamgram.c lists.c make.c make1.c
 set BJAM_SOURCES=%BJAM_SOURCES% newstr.c option.c parse.c pathunix.c pathvms.c regexp.c
 set BJAM_SOURCES=%BJAM_SOURCES% rules.c scan.c search.c subst.c timestamp.c variable.c modules.c
-set BJAM_SOURCES=%BJAM_SOURCES% strings.c filesys.c builtins.c pwd.c class.c
+set BJAM_SOURCES=%BJAM_SOURCES% strings.c filesys.c builtins.c pwd.c class.c w32_getreg.c
 
 @echo ON
 rd /S /Q bootstrap.%BOOST_JAM_TOOLSET%
