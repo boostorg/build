@@ -29,7 +29,7 @@ char 	*hashsccssid="@(#)hash.c	1.14  ()  6/20/88";
 
 struct hashhdr {
 	struct item *next;
-	int keyval;			/* for quick comparisons */
+	unsigned int keyval;			/* for quick comparisons */
 } ;
 
 /* This structure overlays the one handed to hashenter(). */
@@ -96,8 +96,8 @@ hashitem(
 {
 	ITEM **base;
 	register ITEM *i;
-	char *b = (*data)->key;
-	int keyval;
+	unsigned char *b = (unsigned char*)(*data)->key;
+	unsigned int keyval;
 
 	if( enter && !hp->items.more )
 	    hashrehash( hp );
@@ -109,8 +109,6 @@ hashitem(
 
 	while( *b )
 		keyval = keyval * 2147059363 + *b++;
-
-	keyval &= 0x7FFFFFFF;
 
 	base = hp->tab.base + ( keyval % hp->tab.nel );
 
