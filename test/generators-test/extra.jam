@@ -7,7 +7,7 @@ type.register DLP : dlp ;
 type.register WHL_LR0 : lr0 ;
 type.register WD : wd ;
 
-generators.register-standard extra.whale : WHL : CPP WHL_LR0 ;
+generators.register-standard extra.whale : WHL : CPP WHL_LR0 H H(%_symbols) ;
 generators.register-standard extra.dolphin : DLP : CPP ;
 generators.register-standard extra.wd : WD : WHL(%_parser) DLP(%_lexer) ;
 
