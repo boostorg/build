@@ -49,7 +49,8 @@ rule alias ( name : sources * : requirements * : default-build * )
     local project = [ CALLER_MODULE ] ;
     
     targets.main-target-alternative
-      [ new alias-target-class $(name) : $(project) : $(sources)
+      [ new alias-target-class $(name) : $(project) 
+        : [ targets.main-target-sources $(sources) : $(name) ] 
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
         : [ targets.main-target-default-build $(default-build) : $(project) ] 
       ] ;

@@ -77,6 +77,7 @@ import project ;
 import feature ;
 import virtual-target ;
 import path ;
+import set ;
 
 # Base class for all abstract targets.
 rule abstract-target ( name      # name of the target in Jamfile
@@ -138,6 +139,10 @@ rule abstract-target ( name      # name of the target in Jamfile
         errors.error "method should be defined in derived classes" ;        
     }
     
+    rule rename ( new-name )
+    {
+        self.name = $(new-name) ;
+    }        
 }
 class abstract-target ;
 
@@ -148,6 +153,7 @@ rule project-target ( name : project : requirements * : default-build * )
     import path ;
     import print ;
     import property-set ;
+    IMPORT targets : set.difference : $(__name__) : set.difference ;
     
     abstract-target.__init__ $(name) : $(project) ;
 
@@ -250,6 +256,22 @@ rule project-target ( name : project : requirements * : default-build * )
             return true ;
         } 
     }
+    
+    # Changes name of existing main target.
+    # Private.
+    rule rename-main-target ( name : new-name )
+    {
+        local t = $(self.main-target.$(name)) ;
+        # Remove all name.
+        self.main-target.$(name) = ;        
+        self.main-targets = [ set.difference $(self.main-targets) : $(name) ] ;
+        
+        self.main-target.$(new-name) = $(t) ;
+        self.main-targets += $(new-name) ;
+        
+        $(t).rename $(new-name) ;
+    }
+    
     
     # Returns the properties which would be used for a main
     # target in this project, if generation with
@@ -427,6 +449,17 @@ rule main-target ( name : project )
             return $(result) ;
         }        
     }
+    
+    rule rename ( new-name )
+    {
+        abstract-target.rename $(new-name) ;
+        for local a in $(self.alternatives)
+        {
+            $(a).rename $(new-name) ;
+        }
+        
+    }
+    
 }
 
 class main-target : abstract-target ;
@@ -933,6 +966,34 @@ rule typed-target ( name : project : type
 }
 class typed-target : basic-target ;
 
+# Return the list of sources to use, if main target rule is invoked
+# with 'sources'. If there are any objects in 'sources', they are treated
+# as main target instances, and WRITEME.
+rule main-target-sources ( sources * : main-target-name )
+{
+    local result ;
+    for local t in $(sources)
+    {
+        if [ class.is-instance $(t) ]
+        {
+            local name = [ $(t).name ] ;
+            # NOTE: on windows, this won't work if 'main-target-name'
+            # if single letter. But other alternatives are even worse.
+            local new-name = $(main-target-name)..$(name) ;
+            local p = [ $(t).project ] ;            
+            local pt = [ project.target $(p) ] ;
+            $(pt).rename-main-target $(name) : $(new-name) ;
+            result += $(new-name) ;
+        }
+        else
+        {
+            result += $(t) ;
+        }                
+    }    
+    return $(result) ;
+}
+
+
 # Returns the requirement to use when declaring a main target,
 # which are obtained by
 # - translating all specified property paths, and
@@ -996,10 +1057,12 @@ rule main-target-default-build (
 # Gets project and name for 'target', obtains main target
 # from them, and adds targets to the list of alternatives for
 # the main target.
+# Return main target.
 rule main-target-alternative ( target ) 
 {               
     local ptarget = [ project.target [ $(target).project ] ] ;
     local mtarget = [ $(ptarget).main-target [ $(target).name ] ] ;
 
     $(mtarget).add-alternative $(target) ;
+    return $(mtarget) ;
 }

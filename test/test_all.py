@@ -97,6 +97,7 @@ tests = [ "project_test1",
           "custom_generator",
           "bad_dirname",
           "c_file",
+          "inline",
 	  ]
 
 if os.name == 'posix':
