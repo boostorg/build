@@ -1,4 +1,4 @@
-#  (C) Copyright David Abrahams 2001. Permission to copy, use, modify, sell and
+#  (C) Copyright David Abrahams 2002. Permission to copy, use, modify, sell and
 #  distribute this software is granted provided this copyright notice appears in
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
@@ -14,7 +14,7 @@ import assert ;
 
 # Return the elements e of $(sequence) for which [ $(predicate) e ] is
 # has a non-null value.
-rule filter ( predicate + : sequence * )
+rule filter ( predicate__ + : sequence__ * )
 {
     # trailing underscores hopefully prevent collisions with module
     # locals in the caller
@@ -22,9 +22,9 @@ rule filter ( predicate + : sequence * )
     
     module [ CALLER_MODULE ]
     {
-        for local e in $(sequence)
+        for local e in $(sequence__)
         {
-            if [ $(predicate) $(e) ]
+            if [ $(predicate__) $(e) ]
             {
                 result__ += $(e) ;
             }
@@ -32,6 +32,25 @@ rule filter ( predicate + : sequence * )
     }
     return $(result__) ;
 }
+
+# return a new sequence consisting of [ $(function) $(e) ] for each
+# element e of $(sequence).
+rule transform ( function__ + : sequence__ * )
+{
+    # trailing underscores hopefully prevent collisions with module
+    # locals in the caller
+    local result__ ; 
+    
+    module [ CALLER_MODULE ]
+    {
+        for local e in $(sequence__)
+        {
+            result__ += [ $(function__) $(e) ] ;
+        }
+    }
+    return $(result__) ;
+}
+
 
 rule less ( a b )
 {
@@ -115,6 +134,19 @@ rule length ( s * )
     return $(length) ;
 }
 
+rule unique ( list * )
+{
+    local result ;
+    for local f in $(list)
+    {
+        if ! $(f) in $(result)
+        {
+            result += $(f) ;
+        }
+    }
+    return $(result) ;
+}
+
 local rule __test__ ( )
 {
     # use a unique module so we can test the use of local rules.
@@ -143,6 +175,20 @@ local rule __test__ ( )
         
         assert.result 3 3 3 : sequence.filter is-equal-test 3 : 1 2 3 4 3 5 3 5 7 ;
         
+        local rule append-x ( n )
+        {
+            return $(n)x ;
+        }
+        
+        assert.result 1x 2x 3x : sequence.transform append-x : 1 2 3 ;
+        
+        local rule repeat2 ( x )
+        {
+            return $(x) $(x) ;
+        }
+        
+        assert.result 1 1 2 2 3 3 : sequence.transform repeat2 : 1 2 3 ;
+        
         local rule test-greater ( a b )
         {
             if $(a) > $(b)
@@ -150,7 +196,6 @@ local rule __test__ ( )
                 return true ;
             }
         }
-        
         assert.result 1 2 3 4 5 6 7 8 9 : sequence.insertion-sort 9 6 5 3 8 7 1 2 4 ;
         assert.result 9 8 7 6 5 4 3 2 1 : sequence.insertion-sort 9 6 5 3 8 7 1 2 4 : test-greater ;
         assert.result foo-bar-baz : sequence.join foo bar baz : - ;
@@ -162,12 +207,15 @@ local rule __test__ ( )
         
         assert.result 1 : sequence.length a ;
         assert.result 10 : sequence.length a b c d e f g h i j ;
-        local p2 = x x ;
-        for local i in 1 2 3 4 5 6 7
+        
+        local p2 = x ;
+        for local i in 1 2 3 4 5 6 7 8
         {
           p2 = $(p2) $(p2) ;
         }
         assert.result 256 : sequence.length $(p2) ;
         
+        assert.result 1 2 3 4 5
+          : sequence.unique 1 2 3 2 4 3 3 5 5 5 ;
     }
 }

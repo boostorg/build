@@ -1,0 +1,141 @@
+#  (C) Copyright David Abrahams 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+import sequence ;
+import set ;
+import regex ;
+import feature ;
+import numbers ;
+
+# given a build request element of the form
+# property1/property2/.../propertyN, return true if any of the
+# properties has a composite feature.
+local rule has-composite-feature ( feature-space element )
+{
+    # get the individual properties
+    local properties = regex.split element / ;
+    local result = ;
+    for local p in $(properties)
+    {
+        if composite in [ feature.attributes [ property.get-feature $(p) ] ]
+        {
+            result = $(p) ;
+        }
+    }
+    return result ;
+}
+
+local rule expand-element ( f element )
+{
+    local properties = [ regex.split $(element) / ] ;
+    return [ string.join [ $(f) $(properties) ] : / ] ;
+}
+
+# expand the given build request by combining all elements which don't
+# specify conflicting non-free features.
+rule expand ( elements * : feature-space ? )
+{
+    feature-space ?= feature ;
+    
+    # First make all features and subfeatures explicit
+    local expanded-elements = [ 
+      sequence.transform expand-element $(feature-space).expand-subfeatures
+        : $(elements) ] ;
+    
+    # Now combine all of the expanded elements
+    local product = [ x-product $(expanded-elements) : $(feature-space) ] ;
+    
+    return [ 
+      sequence.transform expand-element $(feature-space).expand-composites
+        : $(product) ] ;
+}
+
+local rule x-product-aux ( elements + : feature-space )
+{
+    local result ;
+    local p = [ regex.split $(elements[1]) / ] ;
+    local f = [ set.difference $(p:G) [ $(feature-space).free-features ] ] ;
+    
+    # No conflict with things used at a higher level?
+    if ! [ set.intersection $(f) : $(x-product-used) ]
+    {
+        local x-product-seen ;
+        {
+            # don't mix in any conflicting features
+            local x-product-used = $(x-product-used) $(f) ;
+            
+            if $(elements[2])
+            {
+                local rest = [ x-product-aux $(elements[2-]) : $(feature-space) ] ;
+                result = $(elements[1])/$(rest) ;
+            }
+            
+            result ?= $(elements[1]) ;
+        }
+        
+        # If we didn't encounter a conflicting feature lower down,
+        # don't recurse again.
+        if ! [ set.intersection $(f) : $(x-product-seen) ]
+        {
+            elements = ;
+        }
+    }
+    
+    if $(elements[2])
+    {
+        result += [ x-product-aux $(elements[2-]) : $(feature-space) ] ;
+    }
+    
+    # Note that we've seen these features so that higher levels will
+    # recurse again without them set.
+    x-product-seen += $(f) ;
+    return $(result) ;
+}
+
+local rule x-product ( elements * : feature-space )
+{
+    local x-product-seen x-product-used ;
+    return [ x-product-aux $(elements) : $(feature-space) ] ;
+}
+
+local rule __test__ ( )
+{
+    import assert ;
+    import errors : try catch ;
+    import class ;
+    
+    local test-space = [ class.new feature-space ] ;
+    
+    module $(test-space)
+    {
+        import build-request ;
+
+        feature toolset : gcc msvc : implicit ;
+        subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
+          3.0 3.0.1 3.0.2 ;
+
+        feature variant : debug release : implicit composite ;
+        feature inlining : on off ;
+        
+        feature stdlib : native stlport : implicit ;
+        
+        assert.result
+          <toolset>gcc/<toolset-version>3.0.1/<stdlib>stlport/<variant>debug
+          <toolset>msvc/<stdlib>stlport/<variant>debug
+          <toolset>msvc/<variant>debug 
+          
+          : build-request.expand gcc-3.0.1/stlport msvc/stlport msvc debug
+          : $(test-space) ;
+        
+        assert.result
+          <toolset>gcc/<toolset-version>3.0.1/<stdlib>stlport/<variant>debug/<inlining>off
+          <toolset>gcc/<toolset-version>3.0.1/<stdlib>stlport/<variant>release/<inlining>off
+          
+          : build-request.expand gcc-3.0.1/stlport debug release <inlining>off
+          : $(test-space) ;
+    }
+}
+
+
