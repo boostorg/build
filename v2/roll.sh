@@ -27,8 +27,8 @@ rm -rf bin
 cd ..
 
 # Adjust the links, so they work with the standalone package
-perl -pi -e 's%../../../doc/html/bbv2.html%doc/html/index.html' index.html
-perl -pi -e 's%../../../doc/html/bbv2.installation.html%doc/html/bbv2.installation.html' index.html
+perl -pi -e 's%../../../doc/html/bbv2.html%doc/html/index.html%' index.html
+perl -pi -e 's%../../../doc/html/bbv2.installation.html%doc/html/bbv2.installation.html%' index.html
 
 # Make packages
 find . -name CVS | xargs rm -rf
