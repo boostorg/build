@@ -254,6 +254,20 @@ class List:
     def __delitem__(self, key):
         del self.l[key]
 
+    def __coerce__(self, other):
+        if isinstance(other, type("")):
+            return (self,List(other))
+        else:
+            return None
+
+    def __str__(self):
+        return str(self.l)
+
+    def __repr__(self):
+        return ( self.__module__ + '.List('
+                 + repr(string.join(self.l, ' '))
+                 + ')')
+                        
     def __mul__(self, other):
         result = List()
         for f in self:
@@ -261,7 +275,11 @@ class List:
                 result.l.append(f + s)
         return result
 
-
+# quickie tests. Should use doctest instead.    
+if __name__ == '__main__':
+    assert str(List("foo bar") * "/baz") == "['foo/baz', 'bar/baz']"
+    assert repr("foo/" * List("bar baz")) == "__main__.List('foo/bar foo/baz')"
+    print 'tests passed'
 
 
 
