@@ -8,7 +8,7 @@
 
 
 #define LIBX_SOURCE
-#include <libx/test_libx.h>
+#include <test_libx.h>
 
 TestLibX::TestLibX()
 {

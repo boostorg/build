@@ -8,7 +8,7 @@
 
 #include "../include/test_a.h"
 
-#include <libx/test_libx.h>
+#include <test_libx.h>
 
 int main()
 {
