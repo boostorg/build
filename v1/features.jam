@@ -26,6 +26,9 @@ feature unicode-application : on off ;
 feature exception-handling : on off ;
 feature rtti : on off ;
 
+feature stdlib : "default" gcc stlport ;
+
+free-feature "default" ;
 free-feature cflags ;
 free-feature linkflags ;
 free-feature cxxflags ;
@@ -84,7 +87,7 @@ feature instruction-set :
 
 gLINK_COMPATIBLE = <shared-linkable>true <target-type> <inlining> ;
 
-gALWAYS_RELEVANT = <target-type> <tag> ;
+gALWAYS_RELEVANT = <target-type> <tag> <default> ;
 
 ##### Requirements by target type #####
 gTARGET_TYPE_REQUIREMENTS(DLL) = <shared-linkable>true ;
