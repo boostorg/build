@@ -7,15 +7,15 @@
 
 import feature : feature compose ;
 
-feature toolset : gcc : implicit ;
-feature optimization : off on ;
-feature threading : single multi : link-incompatible ;
-feature rtti : on off : link-incompatible ;
-feature debug-symbols : on off ;
+feature toolset : gcc : implicit propagated ;
+feature optimization : off on : propagated ;
+feature threading : single multi : link-incompatible propagated ;
+feature rtti : on off : link-incompatible propagated ;
+feature debug-symbols : on off : propagated ;
 feature define : : free ;
 feature "include" : : free ;
 
-feature variant : debug release : implicit composite ;
+feature variant : debug release : implicit composite propagated ;
 compose <variant>debug : <optimization>off <rtti>on <debug-symbols>on ;
 compose <variant>release : <optimization>on <rtti>on <debug-symbols>off ;
 
