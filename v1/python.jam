@@ -124,6 +124,7 @@ else if $(UNIX)
     PYTHON_PROPERTIES ?=
       <sysinclude>$(PYTHON_INCLUDES)
         <library-path>$(PYTHON_LIB_PATH)
+          python-intel-use-gcc-stdlib
       ;
     
     if $(OS) = OSF
@@ -185,6 +186,22 @@ CYGWIN_ROOT ?= c:/cygwin ;
                 ;
         }
     }
+}
+
+# Normally on Linux, Python is built with GCC.  A "poor QOI choice" in
+# the implementation of the intel tools prevents the use of
+# intel-linked shared libs by a GCC-built executable unless they have
+# been told to use the GCC runtime.  This rule adds the requisite
+# flags to the compile and link lines.
+rule python-intel-use-gcc-stdlib ( toolset variant : properties * )
+{
+    if ! $(PYTHON_WINDOWS)
+      && ! <define>BOOST_PYTHON_STATIC_LIB in $(properties)
+      && [ MATCH (intel) : $(toolset) ]
+    {
+        properties += <cxxflags>-cxxlib-gcc <linkflags>-cxxlib-gcc ;
+    }
+    return $(properties) ;
 }
 
 # select-python-library
