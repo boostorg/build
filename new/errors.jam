@@ -67,8 +67,9 @@ rule try ( )
 # messages is not found in the corresponding argument in the error call.
 rule catch ( messages * : * )
 {
+    .disabled = $(.disabled[2-]) ; # pop the stack    
+    
     import sequence ;
-    .disabled = $(.disabled[2-]) ; # pop the stack
 
     for local n in $(.args)
     {
