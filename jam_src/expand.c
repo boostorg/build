@@ -425,7 +425,6 @@ var_expand(
                 string_append( buf, rem->string );
 			l = list_new( l, newstr( buf->value ) );
 		    }
-            string_free( &variable );
 		}
         string_new( &out1 );
 
@@ -433,6 +432,8 @@ var_expand(
 
 		if( evalue )
 		    list_free( evalue );
+
+          string_free( &variable );
 	    }
 
 	    /* variables & remainder were gifts from var_expand */
