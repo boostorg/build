@@ -40,6 +40,9 @@ type.register XSLT : xsl : XML ;
 type.register HTMLDIR ;
 type.register MANPAGES ;
 type.register TESTS : tests ;
+# Artificial target type, used to require invocation of top-level
+# BoostBook generator.
+type.register BOOSTBOOK_MAIN ;
 
 
 # Initialize BoostBook support. The parameters are:
@@ -205,7 +208,7 @@ class xml-catalog-action : action
     import boostbook ;
     import print ;
 
-    rule __init__ ( target : property-set ? : catalog-entries * )
+    rule __init__ ( target : property-set ? )
     {
         action.__init__ $(target) : : generate-xml-catalog : $(property-set) ;
     }
@@ -268,97 +271,94 @@ class xml-catalog-action : action
   }
 }
 
-class boostbook-target-class : basic-target
+class boostbook-generator : generator
 {
     import feature ;
     import virtual-target ;
     import generators ;
+      
+    
+    rule __init__ ( * : * )
+    {
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+    
+    rule run ( project name ? : property-set : sources * : multiple ? )
+    {
+        local path = [ $(project).get location ] ;
+        local catalog = [ new file-target catalog : XML : $(project) ] ;
         
-    rule __init__ ( name : project : sources * : requirements * 
-                              : default-build * : catalog-entries * )
-    {
+        $(catalog).action [ new xml-catalog-action $(catalog) : $(property-set) ] ;
+        $(catalog).set-path $(path) ;                
+        catalog = [ virtual-target.register $(catalog) ] ;
+        
+        local targets = $(catalog) ;
 
-        basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements)
-          : $(default-build) ;
-        self.catalog-entries = $(catalog-entries) ;
+        local type = none ;
+        local manifest ; 
+        local format = [ $(property-set).get <format> ] ;
+        switch $(format) 
+        {
+            case html    : 
+            {
+                type = HTMLDIR ;
+                manifest = HTML.manifest ;
+            }
+            
+            case onehtml : type = HTML ;
+            
+            case man : 
+            {
+                type = MANPAGES ;
+                manifest = man.manifest ;
+            }
+            
+            case docbook : type = DOCBOOK ;
+            case fo      : type = FO ;
+            case pdf     : type = PDF ;
+            case ps      : type = PS ;
+            case tests   : type = TESTS ;
+        }
+        
+        if $(manifest)
+        {
+            local base-target = [ generators.construct $(project) 
+              : DOCBOOK : $(property-set) : $(sources) ] ;
+            $(base-target).depends $(catalog) ;
+            
+            local target = [ generators.construct $(project) $(manifest)
+              : $(type) : $(property-set) : $(base-target) ] ;
+            $(target).set-path $(format) ;
+            
+            targets += $(target) ;
+        }
+        else {
+            local target = [ generators.construct $(project)
+              : $(type) : $(property-set) : $(sources) ] ;
+            
+            if ! $(target)
+            {
+                errors.error "Cannot build documentation type '$(format)'" ;
+            }
+            else 
+            {
+                $(target).depends $(catalog) ;
+                targets += $(target) ;
+            }
+        }
+        
+        return $(targets) ;
     }
-    
-  rule construct ( source-targets * : property-set )
-  {
-    local path = [ $(self.project).get location ] ;
-    local catalog = [ new file-target catalog : XML : $(self.project) ] ;
-    $(catalog).action [ new xml-catalog-action $(catalog) : $(property-set) 
-                                               : $(self.catalog-entries) ] ;
-
-    $(catalog).set-path $(path) ;
-    catalog = [ virtual-target.register $(catalog) ] ;
-    local properties = [ $(property-set).raw ] ;
-
-    local format = [ feature.get-values <format> : $(properties) ] ;
-    local targets = $(catalog) ;
-
-    local type = none ;
-    local manifest ; 
-    switch $(format) 
-    {
-      case html    : 
-      {
-        type = HTMLDIR ;
-        manifest = HTML.manifest ;
-      }
-
-      case onehtml : type = HTML ;
- 
-      case man : 
-      {
-        type = MANPAGES ;
-        manifest = man.manifest ;
-      }
-
-      case docbook : type = DOCBOOK ;
-      case fo      : type = FO ;
-      case pdf     : type = PDF ;
-      case ps      : type = PS ;
-      case tests   : type = TESTS ;
-    }
-    
-    if $(manifest)
-    {
-      local base-target = [ generators.construct $(self.project) 
-                            : DOCBOOK : $(property-set) : $(source-targets) ] ;
-      $(base-target).depends $(catalog) ;
-
-      local target = [ generators.construct $(self.project) $(manifest)
-                       : $(type) : $(property-set) : $(base-target) ] ;
-      $(target).set-path $(format) ;
-
-      targets += $(target) ;
-    }
-    else {
-      local target = [ generators.construct $(self.project)
-                       : $(type) : $(property-set) : $(source-targets) ] ;
-
-      if ! $(target)
-      {
-        errors.error "Cannot build documentation type '$(format)'" ;
-      }
-      else 
-      {
-        $(target).depends $(catalog) ;
-        targets += $(target) ;
-      }
-    }
-
-    return $(targets) ;
-  }
 }
+
+generators.register [ new boostbook-generator boostbook.main : : BOOSTBOOK_MAIN ] ;
 
 rule boostbook ( target-name : sources * : requirements * : default-build * )
 { 
   local project = [ project.current ] ;
- 
+    
   targets.main-target-alternative 
-    [ new boostbook-target-class $(target-name) : $(project) 
+    [ new typed-target $(target-name) : $(project) : BOOSTBOOK_MAIN
         : [ targets.main-target-sources $(sources) : $(target-name) ] 
         : [ targets.main-target-requirements $(requirements) : $(project) ]
         : [ targets.main-target-default-build $(default-build) : $(project) ] 
