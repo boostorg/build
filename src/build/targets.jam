@@ -400,7 +400,7 @@ rule basic-target ( name : project
                         if dependency in [ feature.attributes $(p:G) ]
                         {
                             local g = [ generate-source $(p:G=) : $(properties) ] ;
-                            xproperties += $(p:G)$(g) ;
+                            xproperties += $(p:G)$(g) [ $(g).use-requirements ] ;
                         }
                         else
                         {
