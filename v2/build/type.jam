@@ -57,7 +57,7 @@ rule register ( type : suffixes * : base-type ? : main ? )
         .types += $(type) ;
         .bases.$(type) = $(base-type) ;
 
-        if $(suffixes)
+        if $(suffixes)-not-empty
         {            
             # Generated targets of 'type' will use the first of 'suffixes'
             # (this may be overriden)            
@@ -191,6 +191,9 @@ rule is-derived ( type base )
 # generating, but only one type should be auto-detected for
 # a file with that suffix. User should explicitly specify which
 # one.
+#
+# The 'suffix' parameter can be empty string ("") to indicate that
+# no suffix should be used.
 rule set-generated-target-suffix ( type : properties * : suffix )
 {
     properties = <target-type>$(type) $(properties) ;
@@ -216,10 +219,22 @@ rule change-generated-target-suffix ( type : properties * : suffix )
 rule generated-target-suffix ( type : properties * )
 {
     local result ;
-    while $(type) && ! $(result)
+    local found ;
+    while $(type) && ! $(found)
     {
         result = [ $(.suffixes).find <target-type>$(type) $(properties) ] ;
+        # If the suffix is explicitly set to empty string, we consider suffix
+        # to be found. If we did not compare with "", there would be no
+        # way for user to set empty suffix.
+        if $(result)-is-not-empty
+        {
+            found = true ;
+        }
         type = $(.bases.$(type)) ;
+    }
+    if $(result) = "" 
+    {
+        result = ;
     }
     return $(result) ;
 }
