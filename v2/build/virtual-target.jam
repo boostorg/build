@@ -674,7 +674,7 @@ rule traverse ( target )
 #  - project for new target is the same as for 'new-target'
 #  - other attributes are copied
 #
-# If 'dont-resurse' is not set, clones action, which results in
+# If 'dont-recurse' is not set, clones action, which results in
 # cloning of other targets, and, ultimately, cloning of the
 # entire dependency graph.
 rule clone-template ( target dont-recurse ? : new-source )
