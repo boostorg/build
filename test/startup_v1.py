@@ -14,6 +14,7 @@ def match_re(actual,expected):
 t = Tester(
     executable='jam'
     , match=match_re
+    , boost_build_path=''
     )
 
 t.set_tree('startup')

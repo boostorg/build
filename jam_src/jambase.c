@@ -53,7 +53,7 @@ char *jambase[] = {
 "{\n",
 "local boost-build-files =\n",
 "[ find-to-root [ PWD ] : boost-build.jam ]\n",
-"[ GLOB $(BOOST_ROOT) : boost-build.jam ] ;\n",
+"[ GLOB $(BOOST_BUILD_PATH) $(BOOST_ROOT) : boost-build.jam ] ;\n",
 ".boost-build-file = $(boost-build-files[1]) ;\n",
 "if ! $(.boost-build-file)\n",
 "{\n",

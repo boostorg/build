@@ -3,7 +3,7 @@
 from BoostBuild import Tester
 import os
 
-t = Tester("--build-system=project-test1")
+t = Tester("--build-system=project-test1", boost_build_path='')
 
 # This test does no modifications, so run in in the invocation dir
 

@@ -10,6 +10,7 @@ def match_re(actual,expected):
 # Test the v1 startup behavior
 t = Tester(
     match= match_re
+    , boost_build_path=''
     )
 
 t.set_tree('startup')
