@@ -66,10 +66,29 @@ rule load ( jamfile-location )
     {      
         load-jamfile $(jamfile-location) ;
                 
+        # We want to make sure that child project are loaded only
+        # after parent projects. In particular, because parent projects
+        # define attributes whch are inherited by children, and we don't
+        # want children to be loaded before parents has defined everything.
+        # So, for "build-project" and "use-project" we only record relevant
+        # information, and actually load the mentioned projects after
+        # loading the current Jamfile.       
         for local p in [ attribute $(module-name) projects-to-build ]
         {
             load [ path.join $(jamfile-location) $(p) ] ;
         }
+
+        local used = [ modules.peek $(module-name) : .used-projects ] ;
+                import project ;
+        while $(used)
+        {
+            local id = $(used[1]) ;
+            local where = $(used[2]) ;
+            
+            project.use $(id) : [ path.root 
+                [ path.make $(where) ] $(jamfile-location) ] ;
+            used = $(used[3-]) ;
+        }        
     }                
     return $(module-name) ;        
 }
@@ -571,11 +590,8 @@ module project-rules
 
     rule use-project ( id : where )
     {
-        import project ;
-        import path ;
-        local attributes = [ project.attributes $(__name__) ] ;
-        project.use $(id) : [ path.root 
-            [ path.make $(where) ] [ $(attributes).get location ] ] ;
+        # See comment in 'load' for explanation.
+        .used-projects += $(id) $(where) ;
     }
 
     rule build-project ( dir )
