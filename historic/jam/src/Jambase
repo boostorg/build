@@ -100,10 +100,13 @@ if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
     #
     # boost-build.jam is expected to invoke the "boost-build" rule to
     # load the Boost.Build files.
+    
+    local search-path = $(BOOST_BUILD_PATH) $(BOOST_ROOT) ;
+    
     local boost-build-files =
         [ find-to-root [ PWD ] : boost-build.jam ]
         # Another temporary measure so Jam works with Boost.Build v1
-        [ GLOB $(BOOST_BUILD_PATH) $(BOOST_ROOT) : boost-build.jam ] ;
+        [ GLOB $(search-path) : boost-build.jam ] ;
     
     .boost-build-file = $(boost-build-files[1]) ;
     
@@ -123,7 +126,7 @@ if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
         }
 
         ECHO "Attempted search from" [ PWD ] "up to the root" ;
-        ECHO "and in these directories from BOOST_BUILD_PATH: "$(BOOST_BUILD_PATH:J=", ")"." ;
+        ECHO "and in these directories from BOOST_BUILD_PATH and BOOST_ROOT: "$(search-path:J=", ")"." ;
         EXIT "Please consult the documentation at 'http://www.boost.org'." ;
     }
     
@@ -142,7 +145,7 @@ if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
         ECHO "Unable to load Boost.Build" ;
         ECHO -------------------------- ;
         ECHO "\"$(.boost-build-file)\" was found by searching from" [ PWD ] "up to the root" ;
-        ECHO "and in these directories from BOOST_BUILD_PATH: "$(BOOST_BUILD_PATH:J=", ")"." ;
+        ECHO "and in these directories from BOOST_BUILD_PATH and BOOST_ROOT: "$(search-path:J=", ")"." ;
         ECHO ;
         ECHO "However, it failed to call the \"boost-build\" rule to indicate" ;
         ECHO "the location of the build system." ;
