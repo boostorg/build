@@ -344,7 +344,8 @@ rule validate-value-string ( feature value-string )
 
         if ! ( $(values[1]) in $($(feature).values) )
         {
-            error \"$(values[1])\" is not a known value of feature $(feature) ;
+            error \"$(values[1])\" is not a known value of feature $(feature)
+              : legal values: \"$($(feature).values)\" ;
         }
 
         if $(values[2])
