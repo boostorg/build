@@ -142,6 +142,32 @@ rule import ( module-name : rules-opt * : rename-opt * )
     IMPORT $(module-name) : $(source-names) : [ CALLER_MODULE ] : $(target-names) ;
 }
 
+# Localize the rules of one module into another.
+#
+rule localize (
+    module-name # The module to localize from.
+    export # Do we export the rules from the callee module.
+    : rules-opt * # Optional list of rules to localize.
+    : rename-opt * # Optional list of names to use instead of rules-opt.
+    )
+{
+    local source-names = $(rules-opt) ;
+    if $(rules-opt) = *
+    {
+        source-names = [ RULENAMES $(module-name) ] ;
+    }
+    
+    local target-names = $(rename-opt) ;
+    target-names ?= $(source-names) ;
+    local caller-module = [ CALLER_MODULE ] ;
+    IMPORT $(module-name) : $(source-names) : $(caller-module) : $(target-names) : LOCALIZE ;
+    if $(export)
+    {
+        EXPORT $(caller-module) : $(target-names) ;
+        IMPORT $(caller-module) : $(target-names) : : $(caller-module).$(target-names) ;
+    }
+}
+
 local rule __test__ ( )
 {
     import assert ;
