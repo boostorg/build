@@ -462,7 +462,12 @@ rule response-file ( targets + : sources * : the-response-file : properties * )
         [ on $(targets[1])
           return "$(LIBRARY_OPTION)$(FINDLIBS_ST)"
             "$(LIBRARY_OPTION)$(FINDLIBS_SA)"
-        ] ] ;    
+        ] ] ;
+
+    print.text
+        [ on $(targets[1])
+          return -D$(DEFINES) -I"$(INCLUDES)"
+        ] ;
 }
 
 # response-file generation is broken up into two phases, the first of

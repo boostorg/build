@@ -225,8 +225,8 @@ generators.register-linker msvc.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : 
 generators.register-linker msvc.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB RSP : <toolset>msvc ;
 
 generators.register-archiver msvc.archive : OBJ : STATIC_LIB RSP : <toolset>msvc ;
-generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
-generators.register-c-compiler msvc.compile.c : C : OBJ : <toolset>msvc ;
+generators.register-c-compiler msvc.compile.c++ : CPP : OBJ RSP(%_cpp) : <toolset>msvc ;
+generators.register-c-compiler msvc.compile.c : C : OBJ RSP(%_cpp) : <toolset>msvc ;
 generators.register-standard msvc.compile.rc : RC : OBJ(%_res) : <toolset>msvc ;
 generators.override msvc.compile.rc : rc.resource-compile ;
 
@@ -265,11 +265,11 @@ flags msvc WHATEVER <toolset-msvc:version> ;
 # The actions differ only by explicit selection of input language
 actions compile.c
 {
-    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<:W)" "$(>:W)"
+    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"$(<[2]:W)" -c -Fo"$(<[1]:W)"
 }
 actions compile.c++
 {
-    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<:W)" "$(>:W)"
+    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"$(<[2]:W)" -c -Fo"$(<[1]:W)" 
 }
 
 actions compile.rc
@@ -358,4 +358,14 @@ actions link.dll bind DEF_FILE
     $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"$(<[3]:W)"
 }
 
-        
+rule compile.c++ ( targets + : sources * : properties * )
+{
+    common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;
+}
+
+rule compile.c ( targets + : sources * : properties * )
+{
+    common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;
+}
+
+
