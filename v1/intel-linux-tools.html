@@ -30,14 +30,17 @@
 
   <h2>Introduction</h2>
 
-  <p>Boost.Build's <a href=
-  "http://www.intel.com/software/products/compilers/c60l/">intel-linux</a>
-  toolset supports the Intel C++ Compiler for Linux.</p>
+  <p>Boost.Build's intel-linux toolset supports the <a
+  href="http://www.intel.com/software/products/compilers/clin/index.htm">Intel
+  C++ Compiler for Linux</a>.</p>
 
-  <h2>Configuration Variables</h2>The intel-linux toolset responds to the
-  following variables which can be set in the environment or configured on
-  the jam command-line using
-  <code>-s<i>VARIABLE_NAME</i>=</code><i>value</i>:
+  <h2>Configuration Variables</h2>The intel-linux toolset responds to
+  the following variables which can be set in the environment or
+  configured on the jam command-line using
+  <code>-s<i>VARIABLE_NAME</i>=</code><i>value</i>.  If neither
+  variable is set but <code>iccvars.sh</code> can be found in the
+  <code>PATH</code>, then the version of the tools installed where
+  <code>iccvars.sh</code> lives is used.
 
   <table border="1" summary="settings">
     <tr>
@@ -51,28 +54,33 @@
     </tr>
 
     <tr>
-      <td><code>INTEL_LINUX_VERSION</code></td>
+      <td><code>INTEL_VERSION</code></td>
 
       <td>The version of the compiler to use.</td>
 
-      <td><code>"60"</code></td>
+      <td><code>70</code></td>
 
-      <td>This is used to locate the setup script for the compiler. The
-      script used is
-      <code>/opt/intel/compiler$(INTEL_LINUX_VERSION)/ia32/bin/iccvars.sh</code>.
-      This variable is only used if and only if the setup script has not been
-      previously loaded. This is to allow for installations where the setup
-      is already done. In which case the script is not executed before the
-      invocation of the tools.</td>
+      <td>If <code>INTEL_PATH</code> is set, this variable is ignored.
+
+
+    <tr>
+      <td><code>INTEL_PATH</code></td>
+
+      <td>The path to the compiler installation.</td>
+
+<td>The default installation location for the version specified by
+<code>INTEL_VERSION</code>
+
     </tr>
   </table>
+
   <hr>
 
   <p>Revised 
   <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-   14 May, 2002 <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+   3 Jan, 2004 <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
 
-  <p>Copyright &copy; Dave Abrahams 2002.</p>
+  <p>Copyright &copy; Dave Abrahams 2002-2003.</p>
 
   <p><small>Use, modification, and distribution are subject to the Boost
   Software License, Version 1.0. (See accompanying file <a href=
