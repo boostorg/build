@@ -5,7 +5,7 @@ import os ;
 import type ;
 
 feature.extend toolset : gcc ;
-feature.subfeature toolset gcc : version : : optional ;
+feature.subfeature toolset gcc : version : : optional propagated link-incompatible ;
 
 # Make the "o" suffix used for gcc toolset on all
 # platforms
