@@ -20,6 +20,8 @@ module* root_module();
 void bind_module_var( module*, char* name );
 void enter_module( module* );
 void exit_module( module* );
+void delete_module( module* );
+struct hash* demand_rules( module* );
 
 #endif
 

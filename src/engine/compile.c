@@ -643,7 +643,7 @@ type_check( char* type_name, LIST *values, FRAME* caller, RULE* called, LIST* ar
         RULE checker_, *checker = &checker_;
 
         checker->name = type_name;
-        if ( !hashcheck( typecheck->rules, (HASHDATA**)&checker ) )
+        if ( !typecheck->rules || !hashcheck( typecheck->rules, (HASHDATA**)&checker ) )
             return;
     }
     
@@ -931,8 +931,9 @@ evaluate_rule(
     if( !rule->actions && !rule->procedure )
     {
         backtrace_line( frame->prev );
-        printf( "warning: unknown rule %s\n", rule->name );
+        printf( "rule %s unknown in module %s\n", rule->name, frame->module->name );
         backtrace( frame->prev );
+        exit(1);
     }
 
     /* If this rule will be executed for updating the targets */

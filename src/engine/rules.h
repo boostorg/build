@@ -238,6 +238,7 @@ void 	popsettings( SETTINGS *v );
 SETTINGS *copysettings( SETTINGS *v );
 #endif
 void 	freesettings( SETTINGS *v );
+void    rule_free( RULE *r );
 void	donerules();
 
 argument_list* args_new();
