@@ -230,9 +230,9 @@ sh ./build.sh
         <td valign="top"><a href=
         "http://msdn.microsoft.com/visualc/">msvc</a>, Microsoft Visual C++
         6.x</td>
-        <td valign="top">* Common install locations: <tt>"C:\Program
-        Files\Microsoft Visual Studio"</tt>, <tt>"C:\Program Files\Microsoft
-        Visual C++"<br>
+        <td valign="top">* <tt>VCVARS32.BAT</tt> already configured<br>
+         * Common install locations: <tt>"C:\Program Files\Microsoft Visual
+        Studio"</tt>, <tt>"C:\Program Files\Microsoft Visual C++"<br>
         </tt> * <tt>CL.EXE</tt> in <tt>PATH</tt></td>
       </tr>
       <tr>
@@ -243,9 +243,15 @@ sh ./build.sh
         Files\Microsoft Visual Studio .NET"</tt></td>
       </tr>
       <tr>
-        <td valign="top" rowspan="10" colspan="1"><tt>build.sh</tt></td>
-        <td valign="top" rowspan="9" colspan="1">Unix, Linux, Cygwin,
+        <td valign="top" rowspan="11" colspan="1"><tt>build.sh</tt></td>
+        <td valign="top" rowspan="10" colspan="1">Unix, Linux, Cygwin,
         etc.</td>
+        <td valign="top"><a href="http://www.hp.com/go/c++">acc</a>, HP-UX
+        aCC</td>
+        <td valign="top">* <tt>aCC</tt> in <tt>PATH</tt><br>
+         * <tt>uname</tt> is "HP-UX"</td>
+      </tr>
+      <tr>
         <td valign="top"><a href="http://www.comeaucomputing.com">como</a>,
         Comeau.Computing C/C++</td>
         <td valign="top">* <tt>como</tt> in <tt>PATH</tt></td>
@@ -258,9 +264,10 @@ sh ./build.sh
         <td valign="top"><a href=
         "http://www.intel.com/software/products/compilers/c60l/">intel-linux</a>,
         Intel C++ for Linux</td>
-        <td valign="top">* Common install location:
-        <tt>"/opt/intel/compiler50"</tt><br>
-         * <tt>icc</tt> in <tt>PATH</tt></td>
+        <td valign="top">* <tt>icc</tt> in <tt>PATH</tt><br>
+         * Common install locations: <tt>"/opt/intel/compiler70"</tt>,
+        <tt>"/opt/intel/compiler60"</tt>,
+        <tt>"/opt/intel/compiler50"</tt></td>
       </tr>
       <tr>
         <td valign="top"><a href=
@@ -917,7 +924,7 @@ if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
     <hr>
     <p>Revised 
     <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-     5 January, 2003 
+     2 February, 2003 
     <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
     </p>
     <p><i>&copy; Copyright <a href="mailto:rrivera@acm.org">Ren&eacute;
