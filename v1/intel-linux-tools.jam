@@ -29,7 +29,7 @@ flags intel-linux LINKFLAGS <debug-symbols>off : -Xlinker -s ;
 # optimizations
 flags intel-linux CFLAGS <optimization>off : -O0 ;
 flags intel-linux CFLAGS <optimization>space : -O2 ;
-flags intel-linux CFLAGS <optimization>speed : -O3 -tpp6 ;
+flags intel-linux CFLAGS <optimization>speed : -O3 ;
 
 # inlining
 # results using -ip are worse than without?
