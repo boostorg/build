@@ -241,10 +241,10 @@ class Tester(TestCmd.TestCmd):
         self.last_build_time = time.time()
 
     def read(self, name):
-        return open(self.native_file_name(name), "r").read()
+        return open(self.native_file_name(name), "rb").read()
 
     def read_and_strip(self, name):
-        lines = open(self.native_file_name(name), "r").readlines()
+        lines = open(self.native_file_name(name), "rb").readlines()
         result = string.join(map(string.rstrip, lines), "\n")
         if lines and lines[-1][-1] == '\n':
             return result + '\n'
