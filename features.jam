@@ -32,6 +32,7 @@ path-feature "include" ; # <include>../foo/bar/mumble
 path-feature library-path ;
 dependency-feature library-file ;
 free-feature find-library ;
+path-feature sysinclude ; # <sysinclude>/fu/man/chu
 
 # Can the target participate in a shared library?
 feature shared-linkable : false true ;
@@ -58,28 +59,23 @@ COMMON_PROPERTIES ?=
     <borland><wide-character-support>off
     ;
     
-variant debug :
+variant common :
     $(COMMON_PROPERTIES)
     <profiling>off
+    ;
+    
+variant debug : common :
     <debug-symbols>on
     <runtime-build>debug
     <optimization>off
     <inlining>off
     ;
 
-variant debug-python :
-    $(COMMON_PROPERTIES)
-    <profiling>off
-    <debug-symbols>on
-    <runtime-build>debug
+variant debug-python : debug :
     <define>BOOST_DEBUG_PYTHON
-    <optimization>off
-    <inlining>off
     ;
 
-variant release : 
-    $(COMMON_PROPERTIES)
-    <profiling>off
+variant release : common :
     <debug-symbols>off
     <runtime-build>release
     <optimization>speed
@@ -88,13 +84,7 @@ variant release :
     ;
 
 # Profiling variant by Toon Knapen <toon@si-lab.com>
-variant profile :
-    $(COMMON_PROPERTIES)
-    <debug-symbols>off
+variant profile : release :
     <profiling>on
-    <runtime-build>release
-    <optimization>speed
-    <inlining>full
-    <define>NDEBUG
     ;
 

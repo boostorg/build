@@ -9,6 +9,7 @@ GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)bin$(SLASH) ;
 GCC_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if GCC_ROOT_DIRECTORY not set
 GCC_INCLUDE_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)include ;
 GCC_STDLIB_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)lib ;
+local SPACE ?= " " ;
 
 flags gcc LINKFLAGS <runtime-link>static : -static ;
 flags gcc CFLAGS <debug-symbols>on : -g ;
@@ -34,11 +35,14 @@ if $(UNIX)
 flags gcc CFLAGS <profiling>on : -pg ;
 flags gcc LINKFLAGS <profiling>on : -pg ;
 
+flags gcc C++FLAGS <rtti>off : -fno-rtti ;
+
 flags gcc CFLAGS <cflags> ;
 flags gcc C++FLAGS <cxxflags> ;
 flags gcc DEFINES <define> ;
 flags gcc UNDEFS <undef> ;
 flags gcc HDRS <include> ;
+flags gcc STDHDRS <sysinclude> ;
 
 flags gcc STDHDRS : $(GCC_INCLUDE_DIRECTORY) ;
 flags gcc STDLIBPATH : $(GCC_STDLIB_DIRECTORY) ;
@@ -46,7 +50,7 @@ flags gcc STDLIBPATH : $(GCC_STDLIB_DIRECTORY) ;
 if ! $(NT) # The compiler complains about -fPIC on NT
 {
     flags gcc CFLAGS <shared-linkable>true : -fPIC ;
-    flags gcc LINKFLAGS <shared-linkable>true : -fPIC ;
+    flags gcc LINKFLAGS <shared-linkable>true : -fPIC -Wl,-Bsymbolic ;
 }
 
 
@@ -102,7 +106,7 @@ rule Cc-action
 
 actions gcc-Cc-action
 {
-    $(GCC_BIN_DIRECTORY)gcc -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(GCC_BIN_DIRECTORY)gcc -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -isystem$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -113,7 +117,7 @@ rule C++-action
 
 actions gcc-C++-action
 {
-    $(GCC_BIN_DIRECTORY)g++ -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(GCC_BIN_DIRECTORY)g++ -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -isystem$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
