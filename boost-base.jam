@@ -1593,7 +1593,6 @@ rule split-target-subvariant ( target-var properties-var toolset-var variant-var
 # Generates requested subvariant build instructions for the given main target
 rule main-target
 {
-    local BUILD = ;
     local subvariants = [ expand-target-subvariants $(<) : $(>) : $(TOOLS) : BUILD ] ;
 
     # include each jamfile describing a dependee target.
