@@ -460,7 +460,8 @@ rule target ( location )
         #TODO: Need to have some checks that 'location' is correct.
 
         local pmodule = [ module-name $(location) ] ;        
-        .target.$(location) = [ new project-target $(pmodule) : $(pmodule) ] ;
+        .target.$(location) = [ new project-target $(pmodule) : $(pmodule) 
+           : [ attribute $(pmodule) requirements ] ] ;
     }
     return $(.target.$(location)) ;    
 }
