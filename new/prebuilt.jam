@@ -17,6 +17,7 @@ rule prebuilt-file-generator
     generator.__init__ prebuilt-file-generator : : * : <file> ;    
     
     import feature type errors path ;
+    import regex : match ;
     
     rule run ( project name ? : property-set : sources * )
     {
@@ -30,6 +31,9 @@ rule prebuilt-file-generator
         
         local t = [ new file-target $(filename:S=:D=) : $(type) : $(project) ] ;
         $(t).set-path [ path.parent $(filename) ] ;
+        # By default, Boost.Build determines the suffix of file from its type.
+        # Since we already have file, specify suffix explicitly.
+        $(t).suffix [ regex.match .(.*) : $(filename:S) ] ;
                                
         $(t).action [ new null-action $(t) : $(property-set) ] ;
         
