@@ -474,13 +474,15 @@ rule .rpm ( name : source )
     DEPENDS $(name).src.rpm : $(name).$(rpm-arch).rpm ;
     docs on $(target) = $(dist.docs:J=" ") ;
     arch on $(target) = $(rpm-arch) ;
+    if $(rpm-arch) = ppc { target-opt on $(target) = --target= ; }
+    else { target-opt on $(target) = "--target " ; }
     .rpm-build $(target) : $(source) ;
     .clean $(name).$(rpm-arch).rpm $(name).src.rpm ;
 }
 actions .rpm-build
 {    export BOOST_JAM_DOCS="$(docs)"
     export BOOST_JAM_TOOLSET="$(toolset)"
-    rpm -ta --target=$(arch) $(>) | tee rpm.out
+    rpm -ta $(target-opt)$(arch) $(>) | tee rpm.out
     cp `grep -e '^Wrote:' rpm.out | sed 's/^Wrote: //'` .
     rm -f rpm.out }
 
