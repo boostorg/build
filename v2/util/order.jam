@@ -114,16 +114,13 @@ class order
     # 'obj' comes second.
     rule has-no-dependents ( obj : constraints * )
     {
-#        ECHO "hnd entry " $(obj) $(constraints) ;
         local failed ;
         while $(constraints) && ! $(failed)          
         {
             local c = $(constraints[1]) ;
             local m = [ MATCH (.*)--(.*) : $(c) ] ;
-#            ECHO "checking" $(m) ;
             if $(m[2]) = $(obj)
             {
-#                ECHO "hnd" $(obj) $(constraints) "failed" ;
                 failed = true ;
             }            
             constraints = $(constraints[2-]) ;
