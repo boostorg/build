@@ -1,8 +1,6 @@
 
 import class : class new ;
 
-import gcc ;
-import borland ;
 import lex ;
 import qt ;
 import extra ;
