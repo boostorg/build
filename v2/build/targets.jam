@@ -76,6 +76,7 @@ import property-set ;
 import project ;
 import feature ;
 import virtual-target ;
+import path ;
 
 # Base class for all abstract targets.
 rule abstract-target ( name      # name of the target in Jamfile
@@ -433,13 +434,18 @@ local rule remove-trailing-slash ( string )
     return $(stripped) ;
 }
 
-
-# Given an 'id' for a target, return an instance of 'abstract-target' that
-# corresponds to it. If there's no such target, returns empty string.
-# The project referred to by id is loaded if it is not already loaded.
-rule find ( id : current-location )
+if "--quiet" in [ modules.peek : ARGV ]
 {
-    local target ;
+    .quiet = true ;
+}
+
+
+# Given an 'id' for a target, return an instance of 'abstract-target' or 
+# 'virtual-target' that corresponds to it. 
+# The project referred to by id is loaded if it is not already loaded.
+rule find-old ( id : current-location )
+{
+    local target ;    
     # Find if this is project
     local project-module = [ project.find $(id) : $(current-location) ] ;
     if $(project-module)
@@ -471,9 +477,93 @@ rule find ( id : current-location )
               The target id \"$(id)\", specified by project at \"$(current-location)\"
                 is invalid (missing 'use-project'?) ;
         }
+        
+        # Ok, this must be a file
+        if ! $(target)
+        {
+            local project-module = [ project.module-name $(current-location) ] ;
+            target = [ virtual-target.from-file $(id) : $(project-module) ] ;
+        }        
     }    
+    
+    if ! $(.quiet) && $(target) && ! $(.issued-deprecation-warning)
+    {
+        .issued-deprecation-warning = true ;
+        ECHO "warning: target id '$(id)' uses deprecated syntax," ;
+        ECHO "warning: which may be removed in a future version." ;
+        ECHO "warning: reference is made from $(current-location)" ;
+    }
+        
     return $(target) ;
 }
+
+rule find ( id : current-location )
+{
+    local target ;    
+    
+    if ! [ MATCH (@) : $(id) ]
+    {        
+        local split = [ MATCH (.*)//(.*) : $(id) ] ;
+    
+        local project-part = $(split[1]) ;
+        local target-part = $(split[2]) ;
+        if ! $(split)
+        {
+            project-part = . ;
+            target-part = $(id) ;
+        }
+        
+        # Make a more convenient name
+        local have-project-reference = $(split) ;
+        
+        # The project used for finding main targets and for providing base directory
+        # for file paths.
+        local base-project = [ project.find $(project-part) : $(current-location) ] ;
+            
+        # Interpret target-part as project-id
+        if ! $(have-project-reference)
+        {   
+            local project-module = [ project.find $(target-part) : $(current-location) ] ;
+            if $(project-module)
+            {
+                target = [ project.target $(project-module) ] ;
+            }        
+        }
+                
+        # Interpret target-name as name of main target
+        if ! $(target)
+        {
+            local project-target = [ project.target $(base-project) ] ;        
+            if [ $(project-target).has-main-target $(target-part) ] 
+            {
+                target = [ $(project-target).main-target $(target-part) ] ;
+            }
+        }
+            
+        if ! $(target) && ! $(have-project-reference)
+        {
+            local location = [ path.root $(target-part)
+                [ project.attribute $(base-project) source-location ] ] ;
+            if [ GLOB $(location:D) : $(location:D=) ] 
+            {
+                target = [ virtual-target.from-file $(target-part) : $(base-project) ] ;
+            }        
+        }
+    }
+    
+    
+    if ! $(target)
+    {
+        target = [ find-old $(id) : $(current-location) ] ;
+    }
+    
+    if ! $(target)
+    {
+        error.error "Unable to resolve target-id $(id)" ;
+    }        
+    return $(target) ;
+}
+
 
 
 # Attempts to generate the target given by target reference, which
@@ -498,11 +588,14 @@ rule generate-from-reference
         sproperties = [ feature.expand-composites $(sproperties) ] ;
     }
 
-    # Check if such target exists
-    local main-target = 
+    # Find the target
+    local target = 
       [ find $(id) : [ project.attribute $(project) location ] ] ;
+       
+    # Now, do an ugly thing: if we've got instance of 'abstract-target',
+    # generate it, and if we've got an instance of 'virtual-target', return it
         
-    if $(main-target) {
+    if [ class.is-a $(target) : abstract-target ] {
         # Take properties which should be propagated and refine them
         # with source-specific requirements.
         local propagated = [ $(property-set).propagated ] ;
@@ -515,7 +608,7 @@ rule generate-from-reference
                 "Invalid properties specified for " $(source) ":"
                   $(rproperties[2-]) ;
         }
-        return [ $(main-target).generate $(rproperties) ] ;        
+        return [ $(target).generate $(rproperties) ] ;        
     }  
     else
     {
@@ -525,7 +618,7 @@ rule generate-from-reference
               "error: target reference '$(target-reference)' contains properties," :
               "error: but refers to a file" ;
         }        
-        return [ property-set.empty ] [ virtual-target.from-file $(id) : $(project) ] ;
+        return [ property-set.empty ] $(target) ;
     }    
 }
 

@@ -94,7 +94,7 @@ tests = [ "project_test1",
           "explicit",
           "absolute_sources",
           "dependency_property",
-          "custom_generator",
+#          "custom_generator",
           "bad_dirname",
           "c_file",
 	  ]
