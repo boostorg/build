@@ -3,7 +3,7 @@
 # Test that we can change build directory using 
 # the 'build-dir' project attribute.
 
-from BoostBuild import Tester, exe_suffix
+from BoostBuild import Tester
 t = Tester()
 
 
@@ -24,8 +24,8 @@ t.write("src/b.cpp", "int main() {}\n")
 
 t.run_build_system()
 
-t.expect_addition(["build/bin/gcc/debug/a" + exe_suffix,
-		   "build/src/bin/gcc/debug/b" + exe_suffix])
+t.expect_addition(["build/bin/gcc/debug/a.exe",
+                   "build/src/bin/gcc/debug/b.exe"])
 		   
 # Test that building from child projects work
 t.run_build_system(subdir='src')
@@ -45,7 +45,7 @@ exe b : b.cpp ;
 """)
 
 t.run_build_system()
-t.expect_addition(["bin/gcc/debug/a" + exe_suffix,
-		   "src/build/bin/gcc/debug/b" + exe_suffix])
+t.expect_addition(["bin/gcc/debug/a.exe",
+                   "src/build/bin/gcc/debug/b.exe"])
 		   
 t.cleanup()		   

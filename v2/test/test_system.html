@@ -352,8 +352,11 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     to occur. They check <tt>self.unexpected_difference</tt>, and if the
     change is present there, it is removed. Otherwise, test fails.</p>
 
-    <p>Each method accepts a list of names. Those names are always
-    unix-style, even on other systems.</p>
+    <p>Each method accepts a list of names. Those names use <tt>/</tt> path
+    separator on all systems. Additionaly, the test system translates
+    suffixes appropriately. For the test to be portable, suffixes should use
+    Windows convention: <tt>exe</tt> for executables, <tt>dll</tt> for
+    dynamic libraries and <tt>lib</tt> for static libraries.</p>
 
     <p><b>Note:</b> The <tt>List</tt> helper class might be useful to create
     lists of names.</p>

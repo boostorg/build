@@ -11,12 +11,11 @@ import time
 import tempfile
 import sys
 
-# Compute an executable suffix for tests to use
-exe_suffix = ''
-dll_suffix = '.so'
+# Prepare the map of suffixes
+suffixes = {'.exe': '', '.dll': '.so', '.lib': '.a'}
 if os.environ.get('OS','').lower().startswith('windows'):
-    exe_suffix = '.exe'
-    dll_suffix = '.dll'
+    suffixes = {'.lib': '.a'} # static libs have '.a' suffix with mingw...
+    
 #
 # FIXME: this is copy-pasted from TestSCons.py
 # Should be moved to TestCmd.py?
@@ -48,10 +47,12 @@ class Tester(TestCmd.TestCmd):
     """
     def __init__(self, arguments="", executable = 'bjam', match =
                  TestCmd.match_exact, boost_build_path = None,
+                 translate_suffixes = 1,
                  **keywords):
 
         self.original_workdir = os.getcwd()
         self.last_build_time = 0
+        self.translate_suffixes = translate_suffixes
 
         jam_build_dir = ""
         if os.name == 'nt':
@@ -262,10 +263,8 @@ class Tester(TestCmd.TestCmd):
     # All the 'ignore*' methods allow wildcards.
 
     # All names can be lists, which are taken to be directory components
-    def expect_addition(self, names):
-        if type(names) == types.StringType:
-                names = [names]
-        for name in names:
+    def expect_addition(self, names):        
+        for name in self.adjust_names(names):
                 try:
                         self.unexpected_difference.added_files.remove(name)
                 except:
@@ -276,9 +275,7 @@ class Tester(TestCmd.TestCmd):
         ignore_elements(self.unexpected_difference.added_files, wildcard)
 
     def expect_removal(self, names):
-        if type(names) == types.StringType:
-                names = [names]
-        for name in names:
+        for name in self.adjust_names(names):
                 try:
                         self.unexpected_difference.removed_files.remove(name)
                 except:
@@ -289,9 +286,7 @@ class Tester(TestCmd.TestCmd):
         ignore_elements(self.unexpected_difference.removed_files, wildcard)
 
     def expect_modification(self, names):
-        if type(names) == types.StringType:
-                names = [names]
-        for name in names:
+        for name in self.adjust_names(names):
                 try:
                         self.unexpected_difference.modified_files.remove(name)
                 except:
@@ -303,11 +298,8 @@ class Tester(TestCmd.TestCmd):
 
     def expect_touch(self, names):
         
-        if type(names) == types.StringType:
-            names = [names]
-            
         d = self.unexpected_difference
-        for name in names:
+        for name in self.adjust_names(names):
 
             # We need to check in both touched and modified files if
             # it's a Windows exe because they sometimes have slight
@@ -339,9 +331,7 @@ class Tester(TestCmd.TestCmd):
         ignore_elements(self.unexpected_difference.touched_files, wildcard)
 
     def expect_nothing(self, names):
-        if type(names) == types.StringType:
-            names = [names]
-        for name in names:
+        for name in self.adjust_names(names):
             if name in self.difference.added_files:
                 print "File %s is added, but no action was expected" % (name,)
                 self.fail_test(1)
@@ -417,7 +407,31 @@ class Tester(TestCmd.TestCmd):
         w = fnmatch.translate(wildcard)
         list[:] = filter(lambda x, w=w: not w(x), list)
 
+    def adjust_suffix(self, name):
+        if not self.translate_suffixes:
+            return name
+        
+        pos = string.rfind(name, ".")
+        if pos != -1:
+            suffix = name[pos:]
+            name = name[:pos]
+
+            if suffixes.has_key(suffix):
+                suffix = suffixes[suffix]
+        else:
+            suffix = ''
+
+        return name + suffix
+
+    # Acceps either string of list of string and returns list of strings
+    # Adjusts suffixes on all names.
+    def adjust_names(self, names):
+        if type(names) == types.StringType:
+                names = [names]
+        return map(self.adjust_suffix, names)
+
     def native_file_name(self, name):
+        name = self.adjust_suffix(name)
         elements = string.split(name, "/")
         return os.path.normpath(apply(os.path.join, [self.workdir]+elements))
 

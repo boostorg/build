@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from BoostBuild import Tester, List, exe_suffix, dll_suffix
+from BoostBuild import Tester, List
 
 t = Tester()
 
@@ -8,9 +8,9 @@ t.set_tree("dependency-test")
 t.run_build_system()
 # Check that main target 'c' was able to find 'x.h' from
 # 'a's dependency graph
-t.expect_addition("bin/gcc/debug/main-target-c/c" + exe_suffix)
+t.expect_addition("bin/gcc/debug/main-target-c/c.exe")
 # Check that main target 'e' was able to find 'y.h'
-t.expect_addition("bin/gcc/debug/main-target-e/e" + exe_suffix)
+t.expect_addition("bin/gcc/debug/main-target-e/e.exe")
 
 # Check handling of first level includes.
 
@@ -18,35 +18,35 @@ t.expect_addition("bin/gcc/debug/main-target-e/e" + exe_suffix)
 t.touch("a.h")
 t.run_build_system()
 
-t.expect_touch("bin/gcc/debug/a" + exe_suffix)
+t.expect_touch("bin/gcc/debug/a.exe")
 t.expect_touch("bin/gcc/debug/a.o")
-t.expect_touch("bin/gcc/debug/b" + exe_suffix)
+t.expect_touch("bin/gcc/debug/b.exe")
 t.expect_touch("bin/gcc/debug/b.o")
-t.expect_touch("bin/gcc/debug/main-target-c/c" + exe_suffix)
+t.expect_touch("bin/gcc/debug/main-target-c/c.exe")
 t.expect_nothing_more()
 
 # Only 'a' include <a.h> and should be updated
 t.touch("src1/a.h")
 t.run_build_system()
 
-t.expect_touch("bin/gcc/debug/a" + exe_suffix)
+t.expect_touch("bin/gcc/debug/a.exe")
 t.expect_touch("bin/gcc/debug/a.o")
-t.expect_touch("bin/gcc/debug/main-target-c/c" + exe_suffix)
+t.expect_touch("bin/gcc/debug/main-target-c/c.exe")
 t.expect_nothing_more()
 
 # "src/a.h" includes "b.h" (in the same dir)
 t.touch("src1/b.h")
 t.run_build_system()
-t.expect_touch("bin/gcc/debug/a" + exe_suffix)
+t.expect_touch("bin/gcc/debug/a.exe")
 t.expect_touch("bin/gcc/debug/a.o")
-t.expect_touch("bin/gcc/debug/main-target-c/c" + exe_suffix)
+t.expect_touch("bin/gcc/debug/main-target-c/c.exe")
 t.expect_nothing_more()
 
 # included by "src/b.h". We had a bug: file included via "",
 # like "b.h" is in this case was not scanned at all.
 t.touch("src1/c.h")
 t.run_build_system()
-t.expect_touch("bin/gcc/debug/a" + exe_suffix)
+t.expect_touch("bin/gcc/debug/a.exe")
 
 t.touch("b.h")
 t.run_build_system()
