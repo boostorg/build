@@ -82,6 +82,3 @@ actions xslt-xsltproc-dir
 {
   $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(DIRECTORY)/" "$(STYLESHEET)" "$(>)"
 }
-
-IMPORT $(__name__) : xslt : : xslt ;
-IMPORT $(__name__) : xslt-dir : : xslt-dir ;
