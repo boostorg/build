@@ -137,7 +137,8 @@ rule expand-subfeatures-in-conditions ( properties * )
             local e ;
             for local c in $(condition)
             {           
-                if [ MATCH "^(<toolset>|<toolset->)" : $(c:G) ]
+                if [ MATCH "^(<toolset>|<toolset->)" : $(c:G) ] ||
+                   [ MATCH "^(<os>)" : $(c:G) ]
                 {
                     # It common that condition includes a toolset which
                     # was never defined, or mentiones subfeatures which
