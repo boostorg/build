@@ -600,6 +600,26 @@ class action
         }
     }
 
+    # Helper for 'actualize-sources'.
+    # For each passed source, actualizes it with the appropriate scanner.
+    # Returns the actualized virtual targets.
+    rule actualize-source-type ( sources * )
+    {
+        local result = ;
+        for local i in $(sources)
+        {
+            local scanner ;
+            if [ $(i).type ]
+            {
+                scanner =
+                  [ type.get-scanner [ $(i).type ] : $(properties) ] ;
+            }
+            result += [ $(i).actualize $(scanner) ] ;
+        }
+        
+        return $(result) ;
+    }
+    
     # Creates actual jam targets for sources. Initialized two member
     # variables:.
     # 'self.actual-sources' -- sources which are passed to updating action
@@ -610,16 +630,10 @@ class action
     # if caller wants it.
     rule actualize-sources ( sources * )
     {
-        for local i in $(sources)
-        {
-            local scanner ;
-            if [ $(i).type ]
-            {
-                scanner =
-                  [ type.get-scanner [ $(i).type ] : $(properties) ] ;
-            }
-            self.actual-sources += [ $(i).actualize $(scanner) ] ;
-        }
+        local dependencies = [ $(self.properties).get <dependency> ] ;
+                
+        self.dependency-only-sources += [ actualize-source-type $(dependencies) ] ;
+        self.actual-sources += [ actualize-source-type $(sources) ] ;
     }
 
     rule path ( )
