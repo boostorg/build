@@ -953,21 +953,6 @@ class subvariant-dg
             self.other-dg += [ $(d:G=).dg ] ;
         }
         
-        for local t in $(virtual-targets)
-        {
-            local a = [ $(t).action ] ;
-            if $(a)
-            {
-                for local s in [ $(a).sources ]
-                {
-                    if [ $(s).root ]
-                    {
-                        self.other-dg += [ $(s).dg ] ;
-                    }
-                }
-            }
-        }
-        
         self.other-dg = [ sequence.unique $(self.other-dg) ] ;
     }
     
