@@ -31,17 +31,13 @@ rule init ( prefix ? )
     
     feature.extend uses : qt ;
     feature.action <uses>qt : qt.add-properties ;            
-    
-    # The target type for sources that should be processed with the
-    # moc tool.
-    type.register QPP : qpp ;
-       
-    generators.register-standard qt.moc : QPP : CPP(moc_%) ;    
+           
+    generators.register-standard qt.moc : H : CPP(moc_%) : <uses>qt ;    
 }
 
 rule qt.add-properties ( property )
 {
-    return <include>$(.prefix)/include <linkflags>-L$(.prefix)/lib <linkflags>-lqt ;
+    return <include>$(.prefix)/include <linkflags>-Wl,-rpath,$(.prefix)/lib <linkflags>-L$(.prefix)/lib <linkflags>-lqt-mt ;
 }
 
 # -f forces moc to include the processed source file.
