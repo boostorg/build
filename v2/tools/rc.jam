@@ -9,6 +9,10 @@ import feature ;
 
 type.register RC : rc ;
 
+rule init ( )
+{
+}
+
 rule resource-compile ( target : sources * : properties * )
 {
     local OS = [ feature.get-values <os> : $(properties) ] ;
