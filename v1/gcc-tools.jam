@@ -68,6 +68,9 @@ flags gcc CFLAGS <inlining>off : -fno-inline ;
 flags gcc CFLAGS <inlining>on : -Wno-inline ;
 flags gcc CFLAGS <inlining>full : -finline-functions -Wno-inline ;
 
+flags gcc GXX : $(GXX) ;
+flags gcc GCC : $(GCC) ;
+
 #
 # set threading options for various platforms:
 #
@@ -364,7 +367,7 @@ rule C++-action
 
 actions gcc-C++-action
 {
-    $(GCC_BIN_DIR)$(GXX) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(GXX:R=$(GCC_BIN_DIR)) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
