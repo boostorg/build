@@ -250,7 +250,6 @@ class Tester(TestCmd.TestCmd):
                         self.unexpected_difference.added_files.remove(name)
                 except:
                         print "File %s not added as expected" % (name,)
-                        os.system('ls -lR')
                         self.fail_test(1)
 
     def ignore_addition(self, wildcard):
@@ -264,7 +263,6 @@ class Tester(TestCmd.TestCmd):
                         self.unexpected_difference.removed_files.remove(name)
                 except:
                         print "File %s not removed as expected" % (name,)
-                        os.system('ls -lR')
                         self.fail_test(1)
 
     def ignore_removal(self, wildcard):
@@ -278,7 +276,6 @@ class Tester(TestCmd.TestCmd):
                         self.unexpected_difference.modified_files.remove(name)
                 except:
                         print "File %s not modified as expected" % (name,)
-                        os.system('ls -lR')
                         self.fail_test(1)
 
     def ignore_modification(self, wildcard):
@@ -292,7 +289,6 @@ class Tester(TestCmd.TestCmd):
                         self.unexpected_difference.touched_files.remove(name)
                 except:
                         print "File %s not touched as expected" % (name,)
-                        os.system('ls -lR')
                         self.fail_test(1)
 
 
