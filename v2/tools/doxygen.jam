@@ -16,6 +16,7 @@ import property ;
 import generators ;
 import boostbook ;
 import type ;
+import path ;
 
 feature.feature recursive : off on ;
 feature.feature pattern : : free ;
@@ -64,9 +65,12 @@ rule extract-xml ( target : sources * : properties * )
   doxygen-action $(index-target) : $(>) ;
 
   local xsl-dir = [ boostbook.xsl-dir ] ;
+  local pwd = [ path.pwd ] ;
+  local collect-path = $(pwd)/$(index-target:G=:P) ;
   DEPENDS $(target) : $(index-target) ;
   xslt $(target) : $(index-target) "$(xsl-dir)/doxygen/collect.xsl" 
-                 : <xsl:param>doxygen.xml.path=/home/gregod/Projects/Boost/boost/libs/any/doc/xml ;
+                 : <xsl:param>doxygen.xml.path=$(collect-path)
+                 ;
 }
 
 actions doxygen-action
