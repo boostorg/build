@@ -60,7 +60,7 @@ class Tester(TestCmd.TestCmd):
             , program=os.path.join(
                 '..', 'jam_src', jam_build_dir, executable)
               +  ' -sBOOST_BUILD_PATH=' + boost_build_path
-              + ' -d0 --debug --quiet'
+              + ' -d0 --quiet'
               + ' ' + arguments
             , match=match
             , workdir='')

@@ -341,7 +341,7 @@ local rule initialize (
         $(attributes).set default-build 
             : [ $(pattributes).get default-build ] ;
         $(attributes).set requirements
-            : [ $(pattributes).get requirements ] ;
+            : [ $(pattributes).get requirements ] : exact ;
     }
     else
     {
@@ -375,6 +375,8 @@ rule project-attributes ( location )
         }
         else if $(attribute) = "requirements" 
         {
+            specification = [ property.translate-paths $(specification)
+                              : $(self.location) ] ;
             local current = $(self.requirements) ;
             local result = [ property.refine $(current) : 
                              [ property.make $(specification) ] ] ;

@@ -21,7 +21,7 @@ feature threading : single multi : link-incompatible propagated ;
 feature rtti : on off : link-incompatible propagated ;
 feature debug-symbols : on off : propagated ;
 feature define : : free ;
-feature "include" : : free ;
+feature "include" : : free path ;
 
 feature variant : : implicit composite propagated ;
 
@@ -44,8 +44,19 @@ rule variant ( name : parents-or-properties * : tool-properties * )
     {
         parents = $(parents-or-properties) ;
     }
+
+    # The problem is that we have to check for conflicts
+    # between base variants.
+    if $(parents[2])
+    {
+        print.wrapped-text "error: multiple base variants are not yet supported" ;
+        EXIT ;
+    }
+    
     # Record explicitly specified properties for this variant
     .explicit-properties.$(name) = $(tool-properties) ;
+
+    local inherited ;
     # Add explicitly specified properties for parents
     for local p in $(parents)
     {
@@ -55,10 +66,12 @@ rule variant ( name : parents-or-properties * : tool-properties * )
             error "Invalid base varaint" $(p)  ;
         }
         
-        tool-properties += $(.explicit-properties.$(p)) ;
-    }   
+        inherited += $(.explicit-properties.$(p)) ;
+    }
+    tool-properties = [ property.refine $(inherited) : $(tool-properties) ] ;
     
     tool-properties = [ feature.add-defaults $(tool-properties) ] ;
+
     # We should remove default value of 'variant'.
     local tool-properties2 ;
     for local p in $(tool-properties)
