@@ -23,7 +23,7 @@ toolset.inherit-rules intel-win : msvc ;
 
 # Initializes the intel toolset for windows
 rule init ( version ? :     # the compiler version
-            command ? :     # the command to invoke the compiler itself
+            command * :     # the command to invoke the compiler itself
             compatibility ? # Compatibility mode: either 'vc6', 'vc7', 'vc7.1'
                             # or 'native'(default).
           )
@@ -34,28 +34,21 @@ rule init ( version ? :     # the compiler version
     command = [ common.get-invocation-command intel-win : icc.exe :
         $(command) ] ;    
 
+    local root = [ common.get-absolute-tool-path $(command[-1]) ] ;)
     
     local setup ;
-    if $(command:D)
-    {                                   
-        setup = $(command:D)/iclvars.bat ;
-        setup = "call \""$(setup)"\" > nul " ;
+    setup = $(root:D)/iclvars.bat ;
+    setup = "call \""$(setup)"\" > nul " ;
         
-        if [ os.name ] = NT
-        {
-            setup = $(setup)"
+    if [ os.name ] = NT
+    {
+        setup = $(setup)"
 " ;
-        }
-        else
-        {
-            setup = "cmd /S /C "$(setup)" \"&&\" " ;
-        }
     }
     else
     {
-        setup = "" ;
+        setup = "cmd /S /C "$(setup)" \"&&\" " ;
     }
-    
     
     
     flags intel-win.compile .CC $(condition) : $(setup)icl ; 

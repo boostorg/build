@@ -57,7 +57,7 @@ feature.subfeature toolset msvc : vendor
 rule init ( 
   version ? # the msvc version which is being configured. When omitted
             # the tools invoked when no explicit version is given will be configured.
-    : command ? 
+    : command * 
    # the command to invoke the compiler. If not specified:
    #       - if version is given, default location for that version will be searched
    # 
@@ -82,7 +82,7 @@ rule init (
         
     if $(command)
     {        
-        command = [ common.get-absolute-tool-path $(command) ] ;
+        command = [ common.get-absolute-tool-path $(command[-1]) ] ;
     }
     local root = $(command:D) ;
                   
