@@ -1290,7 +1290,7 @@ rule root-paths # paths... : root
         local rooted = $(path:R=$(>)) ;
         if $(rooted) != $(path)
         {
-            path = [ tokens-to-simple-path [ split-path $(rooted) ] ] ;
+            path = [ tokens-to-simple-path [ split-path $(rooted:G=) ] ] ;
             path = $(path:G=$(rooted:G)) ;
         }
         result += $(path) ;
