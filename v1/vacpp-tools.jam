@@ -15,6 +15,10 @@
 # IBM/Aix 4.3.3.0. They should also work for VisualAge on Windows NT,
 # OS/2 and AS/400.
 
+# The following #// line will be used by the regression test table generation
+# program as the column heading for HTML tables. Must not include version number.
+#//<a href="http://www.ibm.com/software/awdtools/vacpp/">IBM<br>VisualAge<br>C++</a>
+
 # The default tool path is declared as empty. This looks for the tools in
 # the current path. You can overide this in derived toolsets.
 set-as-singleton VA_TOOL_PATH ;
@@ -87,13 +91,23 @@ if ! $(ARFLAGS)
 
 rule Link-action
 {
+    if $(gTARGET_TYPE($(<))) = EXE
+    {
+        LINKFLAGS on $(<) += -brtl ;
+    }
+    if $(gTARGET_TYPE($(<))) in $(SHARED_TYPES)
+    {
+        LINKFLAGS on $(<) += -G ;
+    }
     xlc-Link-action $(<) : $(>) ;
 }
 
 # for xlc, we repeat all libraries so that dependencies are always resolved
 actions xlc-Link-action bind NEEDLIBS
 {
-    $(VA_CXX_COMPILER:R=$(VA_TOOL_PATH)) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -bdynamic
+    $(SHELL_SET)$(gSHELL_LIBPATH)=$(LINK_LIBPATH)$(gAPPEND_LD_LIBRARY_PATH)
+    $(SHELL_EXPORT)$(gSHELL_LIBPATH)
+    $(VA_CXX_COMPILER:R=$(VA_TOOL_PATH)) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -bdynamic -l$(FINDLIBS)
 }
 
 #### Cc #####
