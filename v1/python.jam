@@ -338,6 +338,10 @@ rule python-test-target ( test-target : sources + )
     type-DEPENDS test : $(test-target) ;
     MakeLocate $(test-target) : $(LOCATE_TARGET) ;
     MakeLocate $(test-target) : $(LOCATE_TARGET) ;
+    if $(RUN_ALL_TESTS) 
+    {
+        ALWAYS $(test-target) ;
+    }
 }
 
 if $(UNIX)
