@@ -16,7 +16,6 @@ rm -rf example/make
 find . -maxdepth 1 -type f | egrep -v "roll.sh|bootstrap.jam|build-system.jam|boost_build_v2.html|boost.png|index_v2.html|hacking.txt|site-config.jam|user-config.jam" | xargs rm -f
 
 # Prepare some more files.
-mv index_v2.html index.html
 echo -e "boost-build kernel ;\n" > boost-build.jam
 
 # Build the documentation
@@ -26,6 +25,10 @@ cd doc
 bjam --v2
 rm -rf bin
 cd ..
+
+# Adjust the links, so they work with the standalone package
+perl -pi -e 's%../../../doc/html/bbv2.html%doc/html/index.html' index.html
+perl -pi -e 's%../../../doc/html/bbv2.installation.html%doc/html/bbv2.installation.html' index.html
 
 # Make packages
 find . -name CVS | xargs rm -rf
