@@ -43,4 +43,26 @@ t.write('d/d2/a.cpp', """
 
 t.run_build_system()
 
+# A regression test. Searched targets were not associated
+# with any properties. For that reason, if the same searched
+# lib is generated with two different properties, we had an
+# error saying they are actualized to the same Jam target name.
+
+t.write("project-root.jam", "")
+
+t.write("a.cpp", "")
+
+# The 'l' library will be built in two variants:
+# 'debug' (directly requested) and 'release' (requested
+# from 'a').
+t.write("Jamfile", """
+exe a : a.cpp l/<variant>release ;
+
+lib l : : <name>l_d <variant>debug ;
+lib l : : <name>l_r <variant>release ;
+""")
+
+t.run_build_system("-n")
+
+
 t.cleanup()
