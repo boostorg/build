@@ -91,7 +91,6 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? )
     local native-search-dirs = [
         sequence.transform path.native : $(search-dirs)
     ] ;
-    ECHO $(search-dirs) ;
     local boostbook-xsl-dir = [ GLOB $(native-search-dirs) : xsl ] ;
     local boostbook-dtd-dir = [ GLOB $(native-search-dirs) : dtd ] ;
     .boostbook-xsl-dir = [ path.make $(boostbook-xsl-dir[1]) ] ;
