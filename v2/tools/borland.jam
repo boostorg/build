@@ -114,8 +114,6 @@ flags borland.compile OPTIONS <cxxflags> ;
 flags borland.compile DEFINES <define> ;
 flags borland.compile INCLUDES <include> ;
 
-flags borland.link OPTIONS <link>shared : -tWD ;
-
 flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 
 #
@@ -158,6 +156,9 @@ toolset.flags borland.link FINDLIBS-SA <find-shared-library> ;
 toolset.flags borland.link LIBRARIES <library-file> ;
 toolset.flags borland.link LIBRARIES <library> ;
 
+flags borland.link OPTIONS <linkflags> ;
+flags borland.link OPTIONS <link>shared : -tWD ;
+
 flags builtin.response-file LIBRARY_PATH_OPTION <toolset>borland : -L : unchecked ;
 flags builtin.response-file LIBRARY_OPTION <toolset>borland : "" : unchecked ;
 
@@ -168,12 +169,13 @@ flags builtin.response-file LIBRARY_OPTION <toolset>borland : "" : unchecked ;
 # $(BCC_TOOL_PATH) to the path
 # The NEED_IMPLIB variable controls whether we need to invoke implib.
 
+flags borland.archive AROPTIONS <archiveflags> ;
 # Declare action for archives. We don't use response file
 # since it's hard to get "+-" there.
 # CONSIDER: don't know what 'together' is for...
 actions updated together piecemeal archive
 { 
-    "$(.root)tlib" /P256 /u /a /C "$(<:W)" +-"$(>:W)"
+    "$(.root)tlib" $(AROPTIONS) /u /a /C "$(<:W)" +-"$(>:W)"
 }
 
 
@@ -197,7 +199,7 @@ if [ os.name ] = CYGWIN
     # options.
     actions updated together piecemeal archive
     { 
-        echo "\"$(.root)tlib\" /P256 /u /a /C \"$(<:W)\" +-\"$(>:W)\"" > $(<:D)/tlib.bat
+        echo "\"$(.root)tlib\" $(OPTIONS) /u /a /C \"$(<:W)\" +-\"$(>:W)\"" > $(<:D)/tlib.bat
         chmod +x $(<:D)/tlib.bat && $(<:D)/tlib.bat && rm $(<:D)/tlib.bat ;
     }
 }
