@@ -52,7 +52,7 @@ flags gcc GCC_STDLIB_DIRECTORY : $(GCC_STDLIB_DIRECTORY) ;
 
 GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/bin/ ;
 GCC_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if GCC_ROOT_DIRECTORY not set
-GCC_STDLIB_DIRECTORY ?= $(GCC_ROOT_DIRECTORY:E="")/lib ;
+GCC_STDLIB_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/lib ;
 
 # Make sure this gets set "on" the target
 flags gcc GCC_BIN_DIR : $(GCC_BIN_DIRECTORY) ;
