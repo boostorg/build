@@ -14,7 +14,7 @@ export DH_COMPAT=3
 
 topdir=$(shell pwd)
 
-jam=jam
+jam=bjam
 binname=bjam
 
 build: build-stamp
