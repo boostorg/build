@@ -9,12 +9,12 @@
   projects using Boost.Build. The information provided here is relatively
   high-level, and <xref linkend="bbv2.reference"/> as
   well as the on-line help system must be used to obtain
-  low-level documentation (see the <xref linkend=
+  low-level documentation (see <xref linkend=
   "bbv2.reference.init.options.help"/>).</para>
 
   <para>Boost.Build actually consists of two parts - Boost.Jam, a
   build engine with its own interpreted language, and Boost.Build itself,
-  implemented in Boost.Jam's language. The chain of event which happen when
+  implemented in Boost.Jam's language. The chain of events when
   you type <command>bjam</command> on the command line is:
       <orderedlist>
         <listitem>
@@ -184,7 +184,7 @@ using gcc : 3.2 : g++-3.2 ;
         explicitly specify the command.
     </para>
 
-    <para>As shown above, both <parameter
+    <para>As shown above, both the <parameter
     class="function">version</parameter> and <parameter
     class="function">invocation-command</parameter> parameters are
     optional, but there's an important restriction: if you configure
@@ -687,6 +687,11 @@ project tennis
         unrelated to filesystem, such as "boost/thread". <link linkend=
           "bbv2.reference.ids">Target references</link> make use of project ids to
         specify a target.</para>
+        <!-- 
+             This is actually spelled "project-id," isn't it?  You
+             have to fix all of these and use a code font.  Also below
+             in the table.
+        -->
 
       <para><emphasis>Source location</emphasis> specifies the directory where sources
         for the project are located.</para>
@@ -696,6 +701,14 @@ project tennis
 
       <para><emphasis>Default build</emphasis> is the build request that should be
         used when no build request is specified explicitly.</para>
+        <!-- 
+             This contradicts your earlier description of default
+             build and I believe it is incorrect.  Specifying a build
+             request does not neccessarily render default build
+             ineffective, because it may cover different features.
+             This description is repeated too many times in the
+             documentation; you almost *had* to get it wrong once.
+        -->
 
       <para id="bbv2.advanced.projects.attributes.projectrule">
         The default values for those attributes are
@@ -709,6 +722,10 @@ project tennis
                 <entry>Attribute</entry>
                 
                 <entry>Name for the 'project' rule</entry>
+                <!-- Incorrectly gives the impression that Project IDs
+                     (for example) are not called “Project ID” except
+                     in the context of the 'project' rule.  BTW, use
+                     <function>...</function>, not single quotes -->
                 
                 <entry>Default value</entry>
                 
@@ -973,24 +990,33 @@ should be absolute project id.
     <title>The Build Process</title>
 
     <para>When you've described your targets, you want Boost.Build to run the
-      right tools and create the needed targets. This section will describe
+      right tools and create the needed targets. 
+      <!-- That sentence is awkward and doesn't add much. -->
+      This section will describe
       two things: how you specify what to build, and how the main targets are
       actually constructed.
     </para>
 
     <para>The most important thing to note is that in Boost.Build, unlike
       other build tools, the targets you declare do not correspond to specific
-      files. What you declare in Jamfiles is more like "metatarget". Depending
-      on the properties that you specify on the command line, each
-      "metatarget" will produce a set of real targets corresponding to the
-      requested properties. It is quite possible that the same metatarget is
-      build several times with different properties, and will, of course,
-      produce different files.
+      files. What you declare in a Jamfile is more like a “metatarget.” 
+      <!-- Do we need a new word?  We already have “main target.” If
+           you're going to introduce “metatarget” you should at least
+           tie it together with the main target concept. It's too
+           strange to have been saying “main target” all along and now
+           suddenly start saying “what you declare in a jamfile” -->
+      Depending on the properties you specify on the command line,
+      each metatarget will produce a set of real targets corresponding
+      to the requested properties. It is quite possible that the same
+      metatarget is built several times with different properties,
+      <!-- Don't say “of course”—it just makes those not already
+           familiar with what you're describing feel stupid. --> 
+      producing different files.
     </para>
     <tip>
       <para>
-        This means that for Boost.Build, you cannot directly obtain build
-        variant from Jamfile. There could be several variants requested by the
+        This means that for Boost.Build, you cannot directly obtain a build
+        variant from a Jamfile. There could be several variants requested by the
         user, and each target can be built with different properties. 
       </para>
     </tip>
@@ -999,7 +1025,7 @@ should be absolute project id.
       <title>Build request</title>
 
       <para>
-        The command line specifies which targets to build and with what
+        The command line specifies which targets to build and with which
         properties. For example:
 <programlisting>
 bjam app1 lib1//lib1 toolset=gcc variant=debug optimization=full
@@ -1012,8 +1038,9 @@ bjam app1 lib1//lib1 toolset=gcc variant=debug optimization=full
 <programlisting>
 bjam app1 lib1//lib1 gcc debug optimization=full
 </programlisting>
-        The complete syntax that has some additional shortcuts if described <link
-          linkend="bbv2.reference.commandline">here</link>.
+        The complete syntax, which has some additional shortcuts, is
+        described in <xref linkend="bbv2.reference.commandline"/>.
+        <!-- The previous text was unintelligible. Did I guess your meaning? -->
       </para>
     </section>
 
@@ -1021,13 +1048,19 @@ bjam app1 lib1//lib1 gcc debug optimization=full
 
       <para>When you request, directly or indirectly, a build of a main target
         with specific requirements, the following steps are made. Some brief
-        explanation is provided, and more detailes are given in the <link
-        linkend="bbv2.reference.buildprocess">reference</link>.
+        explanation is provided, and more details are given in <xref
+        linkend="bbv2.reference.buildprocess"/>.
         <orderedlist>
           
           <listitem><para>Applying default build. If the default-build
           property of a target specifies a value of a feature that is not
-          present in the build request, that value is added.</para></listitem>
+          present in the build request, that value is added.</para>
+          <!--
+              Added to what?  Don't say “the build request!” The
+              request is what was requested; if its meaning changes
+              the reader will be confused.
+          -->
+          </listitem>
           
           <listitem><para>Selecting the main target alternative to use. For
               each alternative we look how many properties are present both in
@@ -1035,9 +1068,20 @@ bjam app1 lib1//lib1 gcc debug optimization=full
               alternative with large number of matching properties is selected.
             </para></listitem>
           
-          <listitem><para>Determining "common" properties. The build request
+          <listitem><para>Determining "common" properties. 
+          <!-- It would be nice to have a better name for this.  But
+               even more importantly, unless you say something about
+               the reason for choosing whatever term you use, the
+               reader is going to wonder what it means. -->
+              The build request
               is <link linkend="bbv2.reference.variants.proprefine">refined</link>
-              with target's requirements. The conditional properties in
+              with target's requirements. 
+              <!-- It's good that you have the links here and below,
+                   but I'm concerned that it doesn't communicate well
+                   in print and there's not enough information for the
+                   print reader.  Maybe we need separate XSL for PDF
+                   printing that generates a readable footnote. -->
+              The conditional properties in
               requirements are handled as well. Finally, default values of
               features are added.
             </para></listitem>
@@ -1053,9 +1097,11 @@ bjam app1 lib1//lib1 gcc debug optimization=full
               request to the other target.              
             </para></listitem>
           
-          <listitem><para>Adding the usage requirements produces when building
+          <listitem><para>Adding the usage requirements produced when building
               dependencies to the "common" properties. When dependencies are
-              built in the previous step, they return both the set of created
+              built in the previous step, they return 
+              <!-- don't assume reader has a mental model for BB internals! -->
+              both the set of created
               "real" targets, and usage requirements. The usage requirements
               are added to the common properties and the resulting property
               set will be used for building the current target.              
@@ -1064,7 +1110,10 @@ bjam app1 lib1//lib1 gcc debug optimization=full
           <listitem><para>Building the target using generators. To convert the
               sources to the desired type, Boost.Build uses "generators" ---
               objects that correspond to tools like compilers and
-              linkers. Each generator declares what type of targets in can
+              linkers. Each generator declares what type of targets it
+              <!-- Was "in." Why are these short and unmistakable
+                   words so commonly misspelled? -->
+              can
               produce and what type of sources it requires. Using this
               information, Boost.Build determines which generators must be run
               to produce a specific target from specific sources. When
@@ -1072,7 +1121,9 @@ bjam app1 lib1//lib1 gcc debug optimization=full
             </para></listitem>
           
           <listitem><para>Computing the usage requirements to be returned. The
-          conditional properties in usage requirements are expanded and the
+          conditional properties in usage requirements are expanded 
+          <!-- what does "expanded" mean? -->
+          and the
           result is returned.</para></listitem>
         </orderedlist>        
       </para>
@@ -1080,12 +1131,19 @@ bjam app1 lib1//lib1 gcc debug optimization=full
 
     <section><title>Building a project</title>
 
-      <para>Often, user request a build of a complete project, not just one
-        main target. In fact, invoking <command>bjam</command> without
-        parameters builds the project defined in the current directory.</para>
+      <para>Often, a user builds a complete project, not just one main
+      target. In fact, invoking <command>bjam</command> without
+      arguments
+      <!-- do you know the difference between parameters and
+           arguments?  I only learned this year -->
+      builds the project defined in the current
+      directory.</para>
 
-      <para>When a project is build, the build request is passed without
-        modification to all main targets in that project. It's is possible to
+      <para>When a project is built, the build request is passed without
+        modification to all main targets in that project.
+        <!-- What does it mean to pass a build request to a target?
+             -->
+        It's is possible to
         prevent implicit building of a target in a project with the
         <code>explicit</code> rule:
 <programlisting>
@@ -1096,7 +1154,9 @@ explicit hello_test ;
       </para>
 
       <para>The Jamfile for a project can include a number of
-      <code>build-project</code> rule calls, that specify additional projects
+      <code>build-project</code> rule calls
+      <!-- A comma would only be correct here in German -->
+      that specify additional projects
       to be built.
       </para>
 
@@ -1107,6 +1167,8 @@ explicit hello_test ;
   <section id="bbv2.advanced.builtins.targets">
     <title>Builtin target types</title>
 
+    <!-- Every section must have immediate content, even if it's only
+         an introductory sentence or two -->
     <section>
       <title>Programs</title>
 
@@ -1135,7 +1197,10 @@ exe hello : hello.cpp some_library.lib /some_project//library
           manually, or place the application and the libraries to the same
           directory, for example using the <link linkend="bbv2.builtins.stage">
             stage</link> rule.
-      </para>
+        </para>
+        <!-- We should be emphasizing the use of the built-in testing
+             rules rather than continually discussing these quirks of
+             running programs with dynamic libraries. -->
       </tip>
     </section>
 
@@ -1149,7 +1214,7 @@ exe hello : hello.cpp some_library.lib /some_project//library
 lib helpers : helpers.cpp : &lt;include&gt;boost : : &lt;include&gt;. ;
 </programlisting>
       </para>
-
+      <!-- Add one sentence that says what the above does. -->
       <para>In the most common case, the <code>lib</code> creates a library
         from the specified sources. Depending on the value of
         &lt;link&gt; feature the library will be either static or
@@ -1158,6 +1223,7 @@ lib helpers : helpers.cpp : &lt;include&gt;boost : : &lt;include&gt;. ;
         searched by the compiler (typically, using the <option>-l</option>
         option). The second case is where the library is available as a 
         prebuilt file and the full path is known.          
+        <!-- But the first case is also prebuilt.  This is confusingly phrased. -->
         </para>
       
       <para>
@@ -1168,18 +1234,18 @@ lib compress : : &lt;file&gt;/opt/libs/compress.a ;
 </programlisting>
         The <code>name</code> property specifies the name that should be
         passed to the <option>-l</option> option, and the <code>file</code>
-        property specifies the file location. The <code>search</code> feature
-        specifies paths where the library should be searched. That feature can
-        be specified several time, or can be omitted -- in which case only
+        property specifies the file location. The <varname>search</varname> feature
+        specifies paths in which to search for the library. That feature can
+        be specified several times, or it can be omitted, in which case only
         default compiler paths will be searched.
       </para>
 
-      <para>The difference between using the <code>file</code> feature as
-        opposed to the <code>name</code> name feature together with the
-        <code>search</code> feature is that <code>file</code> is more
+      <para>The difference between using the <varname>file</varname> feature as
+        opposed to the <varname>name</varname> feature together with the
+        <varname>search</varname> feature is that <varname>file</varname> is more
         precise. A specific file will be used. On the other hand, the
-        <code>search</code> feature only adds a library path, and the
-        <code>name</code> feature gives the basic name of the library. The
+        <varname>search</varname> feature only adds a library path, and the
+        <varname>name</varname> feature gives the basic name of the library. The
         search rules are specific to the linker. For example, given these
         definition:
 <programlisting>
@@ -1189,9 +1255,10 @@ lib b : : &lt;variant&gt;release &lt;file&gt;/pool/release/b.so ;
 lib b : : &lt;variant&gt;debug &lt;file&gt;/pool/debug/b.so ;
 </programlisting>
         It's possible to use release version of <code>a</code> and debug
-        version of <code>b</code>. Had we used the <code>name</code> and
-        <code>search</code> features, the linker would always pick either
+        version of <code>b</code>. Had we used the <varname>name</varname> and
+        <varname>search</varname> features, the linker would always pick either
         release or debug versions.
+        <!-- explain -->
       </para>
       
       <para>
@@ -1203,7 +1270,7 @@ lib gui db aux ;
           and is does exactly the same as:
 <programlisting>
 lib z : : &lt;name&gt;z ;            
-lib giu : : &lt;name&gt;gui ;            
+lib gui : : &lt;name&gt;gui ;            
 lib db : : &lt;name&gt;db ;            
 lib aux : : &lt;name&gt;aux ;            
 </programlisting>
@@ -1222,10 +1289,16 @@ lib png : z : &lt;name&gt;png ;
 
       <note>
         <para>When a library (say, <code>a</code>), that has another
-          library, (say, <code>b</code>) is linked dynamically, the <code>b</code>
-          library will be incorporated in <code>a</code>. (If <code>b</code>
+          library, (say, <code>b</code>) 
+          <!-- how can a library "have" a library? -->
+          is linked dynamically, the <code>b</code>
+          library will be incorporated 
+          <!-- Incorporated?  Be precise. -->
+          in <code>a</code>. (If <code>b</code>
           is dynamic library as well, then <code>a</code> will only refer to
-          it, and not include any extra code.) When the <code>a</code>
+          it, and not include any extra code.) 
+          <!-- Don't parenthesize a whole sentence. -->
+          When the <code>a</code>
           library is linked statically, Boost.Build will assure that all
           executables that link to <code>a</code> will also link to
           <code>b</code>.
@@ -1233,15 +1306,23 @@ lib png : z : &lt;name&gt;png ;
       </note>
          
       <para>One feature of Boost.Build that is very important for libraries
-        is usage requirements. For example, if you write:
+        is usage requirements. 
+        <!-- Rephrase that.  But then, it's much too late for an
+             introduction of usage requirements - you've already
+             discussed them many times. -->
+        For example, if you write:
 <programlisting>
 lib helpers : helpers.cpp : : : &lt;include&gt;. ;
 </programlisting>
-        then compiler include path for all targets that use
-        <code>helpers</code> will contain the directory where the target is
-        defined.path to "helpers.cpp". So, the user need only to add
-        <code>helpers</code> to the list of sources, and don't bother about
-        other requirements. This allows to greatly simplify Jamfiles.
+        then the compiler include path for all targets that use
+        <code>helpers</code> will contain the directory 
+        <!-- The rest of this sentence is unintelligible -->
+        where the target is defined.path to "helpers.cpp". The user
+        only needs to add <code>helpers</code> to the list of sources,
+        and needn't consider the requirements its use imposes on a
+        dependent target. This feature greatly simplifies Jamfiles.
+        <!-- You can't say “allows to”—you need a noun.  This error is
+             repeated throughout. -->
       </para>
 
       <note>
@@ -1270,13 +1351,17 @@ lib a : a.cpp : &lt;use&gt;b : : &lt;library&gt;b ;
 <programlisting>
 alias core : im reader writer ;
 </programlisting>
-        will build the sources and return the generated source targets
+        will build the sources
+        <!-- it's not immediately obvious that there are sources.  Make this more transparent -->
+        and return
+        <!-- no mental model -->
+        the generated source targets
         without modification. 
       </para>
 
       <para>
-        The <code>alias</code> rule is a convenience tool. If you often build
-        the same group of targets at the same time, you can define the alias
+        The <functionname>alias</functionname> rule is a convenience tool. If you often build
+        the same group of targets at the same time, you can define an alias
         to save typing.        
       </para>
 
@@ -1285,13 +1370,14 @@ alias core : im reader writer ;
         properties. For example, if you always want static linking for a
         specific C++ Boost library, you can write the following:
 <programlisting>
-alias boost_thread : /boost/thread//boost_thread : &lt;link&gt;static ;
+alias threads : /boost/thread//boost_thread : &lt;link&gt;static ;
 </programlisting>
-        and use only the <code>boost_thread</code> alias in your Jamfiles.
+        and use only the <code>threads</code> alias in your Jamfiles.
+        <!-- changed name for clarity -->
       </para>              
 
       <para>
-        It is also allowed to specify usage requirements for the
+        You can also specify usage requirements for the
         <code>alias</code> target. If you write the following:
 <programlisting>
 alias header_only_library : : : :  &lt;include&gt;/usr/include/header_only_library ; 
@@ -1301,7 +1387,7 @@ alias header_only_library : : : :  &lt;include&gt;/usr/include/header_only_libra
         requirements are propagated, too. For example:
 <programlisting>
 lib lib : lib.cpp : : : &lt;include&gt;. ;
-alias lib_alias ;
+alias lib_alias ; <!-- This line can't possibly be correct!?? -->
 exe main : main.cpp lib_alias ;
 </programlisting>
         will compile <filename>main.cpp</filename> with the additional include.
@@ -1312,23 +1398,23 @@ exe main : main.cpp lib_alias ;
     <section id="bbv2.builtins.stage">
       <title>Installing</title>
 
-      <para>For installing the built target you should use the
-        <code>stage</code> rule follows the <link
+      <para>For installing a built target you should use the
+        <code>stage</code> rule, which follows the <link
           linkend="bbv2.main-target-rule-syntax">common syntax</link>. For
         example:
 <programlisting>
 stage dist : hello helpers ;
 </programlisting>
         will cause the targets <code>hello</code> and <code>helpers</code> to
-        be moved to the <filename>dist</filename> directory. The directory can
+        be moved to the <filename>dist</filename> directory. <!-- relative to what? --> The directory can
         be changed with the <code>location</code> property:
 <programlisting>
 stage dist : hello helpers : &lt;location&gt;/usr/bin ;
 </programlisting>
         While you can achieve the same effect by changing the target name to
         <filename>/usr/bin</filename>, using the <code>location</code>
-        property is better because it allows to use easy to remember name on
-        command line, and in other targets.
+        property is better because it allows you to use a memnonic target name on the
+        command line and in other targets. <!-- do you really need "on the...?" -->
       </para>
 
       <para>The <code>location</code> property is especially handy when the location
@@ -1351,6 +1437,11 @@ stage dist : hello
            : &lt;traverse-dependencies&gt;on &lt;include-type&gt;EXE
              &lt;include-type&gt;LIB
            ;
+<!-- I dislike the names being used here.  “include” already has a
+     different meaning, and “traverse” is just vague—it isn't clear
+     what happens when those dependencies are traversed.  You could
+     replace both names with “install” and it would be an improvement
+     -->
 </programlisting>
         will find all targets that <code>hello</code> depends on, and install
         all of the which are either executables or libraries. More
@@ -1389,10 +1480,10 @@ unit-test helpers_test : helpers_test.cpp helpers ;
 </programlisting>
       </para>
 
-      <para>The <code>unit-test</code> rule behaves like the
-        <code>exe</code> rule, but after the executable is created it is
-        run. If the executable returns error, the build system will also
-        return error and will try running the executable on the next
+      <para>The <functionname>unit-test</functionname> rule behaves like the
+        <functionname>exe</functionname> rule, but after the executable is created it is
+        run. If the executable returns an error code, the build system will also
+        return an error and will try running the executable on the next
         invocation until it runs successfully. This behaviour ensures that you
         can't miss a unit test failure.
       </para>
@@ -1645,7 +1736,7 @@ bjam msvc release some_target
 
 <!--
      Local Variables:
-     mode: xml
+     mode: nxml
      sgml-indent-data: t     
      sgml-parent-document: ("userman.xml" "chapter")
      sgml-set-face: t
