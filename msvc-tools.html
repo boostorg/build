@@ -43,7 +43,7 @@ environment or configured on the jam command-line using
     <td>The path to the MSVC installation directory
     <td><code>c:\Program&nbsp;Files\Microsoft&nbsp;Visual&nbsp;C++\VC98</code>
     <td>If <code>MSVCDir</code> is set in the environment, the toolset
-    will assume <code>VCVARS32.BAT</code>has already been called, and
+    will assume <code>VCVARS32.BAT</code> has already been called, and
     will ignore this variable.
 
 <tr>
@@ -52,10 +52,35 @@ environment or configured on the jam command-line using
     <td><code>c:\Program&nbsp;Files\Microsoft&nbsp;Visual&nbsp;C++\VC98</code>
     <td>If <code>MSVCDir</code> or <code>MSVC_ROOT</code> is set in
     the environment, the toolset will assume
-    <code>VCVARS32.BAT</code>has already been called, and will ignore
+    <code>VCVARS32.BAT</code> has already been called, and will ignore
     this variable.
 
+<tr>
+    <td><code>MSSDK_ROOT</code>
+    <td>The path to the Mircrosoft Platform SDK installation directory
+    <td>(none)
+    <td>If <code>MSSdk</code> is set in the environment, the toolset
+    will assume <code>SetEnv.BAT</code> has already been called, and
+    will ignore this variable.
+
 </table>
+
+<h2><a name="related">Related</a></h2>
+
+The support for use of the Microsoft Platform SDK on this toolset can be further
+configured with the use of a pair of <a href="build_system.htm#features">features</a>.
+The features specify what the target platform environment is.
+
+<ul>
+    <li>Feature <code>ms-platform</code> specifies the OS variant to target. Possible
+    values are: <code>2000</code>, <code>xp32</code>, <code>xp64</code>,
+    <code>pre32</code>, and <code>pre64</code></li>
+    <li>Feature <code>ms-build</code> specifies the type of code to target. Possible
+    values are: <code>debug</code>, and <code>retail</code></li>
+</ul>
+
+These features are only relevant if you don't setup your own target environment
+by running the <code>SetEnv.BAT</code> utility.
 
 <hr>
 <p>Revised 

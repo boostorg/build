@@ -80,6 +80,14 @@ feature instruction-set :
     r2000 r3000 r3900 r4000 r4100 r4300 r4400 r4600 r4650 r5000 r6000 r8000 orion
     ;
 
+# Custom features to support indication of what variant of the
+# MS platform to build against.
+if $(NT)
+{
+    feature ms-platform : default 2000 xp32 xp64 pre32 pre64 ;
+    feature ms-build : default debug retail ;
+}
+
 gLINK_COMPATIBLE = <shared-linkable>true <target-type> <inlining> ;
 
 gALWAYS_RELEVANT = <target-type> ;
@@ -107,6 +115,14 @@ COMMON_PROPERTIES ?=
     <architecture>native
     <instruction-set>default
     ;
+
+if $(NT)
+{
+    COMMON_PROPERTIES +=
+        <ms-platform>default
+        <ms-build>default
+        ;
+}
     
 variant common :
     $(COMMON_PROPERTIES)
