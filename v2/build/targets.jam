@@ -385,6 +385,10 @@ rule generate-dependencies ( properties * : project : extra-properties * )
         {
             local g = [ targets.generate $(p:G=) : $(project) 
               : $(properties) $(extra-properties) ] ;
+            if ! $(g) 
+            {
+                errors.error "cannot generate dependency " $(p) ;
+            }
             xproperties += $(p:G)$(g) [ $(g).use-requirements ] ;
         }
         else
