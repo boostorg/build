@@ -178,6 +178,7 @@ local rule set-module-copyright (
 local rule set-rule-doc (
     name # The name of the rule.
     module-name ? # The name of the module to document.
+    is-local ? # Wether the rule is local to the module.
     : docs * # The documentation for the rule.
     )
 {
@@ -185,6 +186,7 @@ local rule set-rule-doc (
 
     $(module-name).$(name).brief = [ brief-comment $(docs) ] ;
     $(module-name).$(name).docs = $(docs) ;
+    $(module-name).$(name).is-local = $(is-local) ;
 
     if ! $(name) in $($(module-name).rules)
     {
@@ -281,7 +283,19 @@ local rule print-help-module-section (
         print.list-start ;
         for local item in $($(module).$(section))
         {
-            print.list-item $(item): $($(module).$(item).brief) ;
+            local show = ;
+            if ! $($(module).$(item).is-local)
+            {
+                show = yes ;
+            }
+            if show-locals in $(self.options)
+            {
+                show = yes ;
+            }
+            if $(show)
+            {
+                print.list-item $(item): $($(module).$(item).brief) ;
+            }
         }
         print.list-end ;
     }
@@ -494,7 +508,7 @@ local rule scan-rule (
         local is-local = [ MATCH "^(local).*" : $(rule-parts[1]) ] ;
         if $(comment-block)
         {
-            set-rule-doc $(rule-name) $(module-name) : $(comment-block) ;
+            set-rule-doc $(rule-name) $(module-name) $(is-local) : $(comment-block) ;
         }
         # parse args of rule.
         $(var) = $(rule-parts[3-]) $($(var)) ;
@@ -598,12 +612,12 @@ local rule scan-variable (
         if $(var-parts[2]) = "?="
         {
             default-value = $(value) ;
-			default-value ?= "(empty)" ;
+            default-value ?= "(empty)" ;
         }
         else
         {
             initial-value = $(value) ;
-			initial-value ?= "(empty)" ;
+            initial-value ?= "(empty)" ;
         }
         if $(comment-block)
         {
