@@ -213,12 +213,16 @@ type.register H : h ;
 type.register C : c ;
 type.register OBJ : o : : main ;
 
+# Generator for 'lib' target, which relays to generators for either
+# "STATIC_LIB" or "SHARED_LIB", depending on the value of 
+# "shared" feature.
 rule lib-generator ( ) 
 {
     composing-generator.__init__ lib-generator : unknown-source-type : LIB : <main-target-type>LIB ;
     
     rule run ( project name ? : properties * : sources + )
     {
+        # Determine the needed target type
         local actual-type ;
         if <shared>true in $(properties)
         {
@@ -228,8 +232,10 @@ rule lib-generator ( )
         {
             actual-type = STATIC_LIB ;
         }
+        # Construct the target. Pass 'allow-composing', since generators for 
+        # library types are composing and we need to find them.
         return [ generators.construct $(project) $(name) : $(actual-type) : $(properties)
-          : $(sources) : allow-composing-generators ] ;
+          : $(sources) : allow-composing ] ;
     }
 }
 

@@ -523,7 +523,8 @@ rule typed-target ( name : project : type
           : $(properties) # [ feature.expand
               <main-target-type>$(self.type)
           # ]
-            : $(source-targets) ] ;
+            : $(source-targets) 
+            : allow-composing ] ;
         if ! $(r)
         {
             errors.error "unable to construct" [ full-name ] ;
