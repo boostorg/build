@@ -275,6 +275,19 @@ make0(
 
 	/* Step 2c: If its a file, search for headers. */
 
+#ifdef OPT_SEMAPHORE
+	{
+	    LIST *var = var_get( "JAM_SEMAPHORE" );
+	    if( var )
+	    {
+		TARGET *semaphore = bindtarget( var->string );
+
+		semaphore->progress = T_MAKE_SEMAPHORE;
+		t->semaphore = semaphore;
+	    }
+	}
+#endif
+
 	if( t->binding == T_BIND_EXISTS )
 	    headers( t );
 
