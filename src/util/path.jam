@@ -3,19 +3,22 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
+#  Performs various path manipulations. Path are always in a 'normilized' 
+#  representation. In it, a path may be either:
+#
+#     - '.', or
+#
+#     - ['/'] [ ( '..' '/' )*  (token '/')* token ]
+# 
+#   In plain english, path can be rooted, '..' elements are allowed only
+#   at the beginning, and it never ends in slash, except for path consisting
+#   of slash only.
+
 import modules ;
 import sequence ;
 import regex ;
 import errors : error ;
 
-#   All path manipulations are done with 'normilized' representation. A path
-#   may be either
-#   - '.', or
-#   - ['/'] [ ( '..' '/' )*  (token '/')* token ]
-#   In plain english, path can be rooted, '..' elements are allowed only
-#   at the beginning, and it never ends in slash, except for path containg
-#   of slash only.
-#
 
 os = [ modules.peek : OS ] ;
 if [ modules.peek : UNIX ] {
@@ -31,7 +34,7 @@ rule make ( native )
 }
 
 #
-#    Builds native representation of the path
+#    Builds native representation of the path.
 #
 rule native ( path )
 {
@@ -39,7 +42,7 @@ rule native ( path )
 }
 
 #
-#    Tests if a path is rooted
+#    Tests if a path is rooted.
 #
 rule is-rooted ( path )
 {
@@ -47,7 +50,7 @@ rule is-rooted ( path )
 }
 
 #
-#    Tests if a path has a parent
+#    Tests if a path has a parent.
 #
 rule has-parent ( path )
 {
@@ -59,7 +62,7 @@ rule has-parent ( path )
 }
 
 #
-#    Returns the path without any directory components
+#    Returns the path without any directory components.
 #
 rule basename ( path )
 {
@@ -218,7 +221,7 @@ rule root ( path root )
 }
 
 #
-#   Returns the current working directory
+#   Returns the current working directory.
 #
 rule pwd ( )
 {
@@ -286,9 +289,7 @@ rule glob-in-parents ( dir : patterns + : upper-limit ? )
     return $(result) ;    
 }
 
-#
-#   Implementation
-#
+
 rule make-NT ( native )
 {
     local tokens = [ regex.split $(native) "[/\\]" ] ;
