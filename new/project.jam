@@ -115,7 +115,11 @@ rule lookup-with-load ( id : current-location )
     if ! $(location)
     {
         # Try to load the project at the specified location
-        location = [ MATCH (.*)@(.*) : $(project-id) ] ;
+        location = [ MATCH (.*)@(.*) : $(id) ] ;
+        if ! $(location)
+        {
+            location = "." ;
+        }        
         location = [ path.root $(location[1]) $(current-location) ] ;
         if [ find-jamfile $(location) ]
         {
@@ -216,8 +220,8 @@ rule find-target ( id : current-location )
         else if $(explicit)
         {
             print.wrapped-text 
-              "The target id" $(id) " specified by project at" $(current-location)
-                "is invalid" ;
+              "The target id" $(id) ",specified by project at" $(current-location)
+                "is invalid (missing 'use-project'?)" ;
             EXIT ;
         }
     }    
@@ -377,10 +381,6 @@ local rule initialize (
             : [ $(pattributes).get default-build ] ;
         $(attributes).set requirements
             : [ $(pattributes).get requirements ] : exact ;
-    }
-    else
-    {
-        $(attributes).set default-build : debug ;
     }
 }
 

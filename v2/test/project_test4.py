@@ -61,14 +61,14 @@ t.copy("Jamfile4", "Jamfile")
 
 expected="""warning: skipping build of project at lib2
 """
-t.run_build_system(stdout=expected, status=None)
+t.run_build_system("rtti=on", stdout=expected, status=None)
 
 t.copy("lib2/Jamfile2", "lib2/Jamfile")
 
 expected="""warning: skipping build of project /mylib at lib2
 """
 
-t.run_build_system(stdout=expected, status=None)
+t.run_build_system("rtti=on", stdout=expected, status=None)
 
 # We don't yet make targets depend on Jamfile, so need to start from scratch
 t.set_tree("project-test4")

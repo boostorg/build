@@ -102,7 +102,7 @@ rule type ( suffix )
 }
 
 
-rule main-target-rule ( name : sources * : requirements * : default-build ? )
+rule main-target-rule ( name : sources * : requirements * : default-build * )
 {
     # First find requuired target type, which is equal to the name used to
     # invoke us.

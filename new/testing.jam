@@ -1,0 +1,56 @@
+#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+#  Testing support.
+  
+import targets ;
+import class : class new ;
+import property ;
+
+rule unit-test-target-class ( name : project : sources * : requirements * 
+                         : default-build )
+{
+    typed-target.__init__ $(name) : $(project) : EXE : $(sources) 
+      : $(requirements) : $(default-build) ;
+       
+    rule construct ( source-targets * : properties * )
+    {
+        local result = 
+          [ typed-target.construct $(source-targets) : $(properties) ] ;
+        local exe = $(result[1]) ;
+        local timestamp = [ new virtual-target $(self.name) : : $(self.project)
+                            : [ $(exe).subvariant ] ] ;
+        $(timestamp).suffix "passed" ;
+
+        local a = [ new action $(timestamp) : $(exe) : testing.run ] ;
+        $(timestamp).action $(a) ;
+        return $(timestamp) ;
+    }   
+}
+
+class unit-test-target-class : typed-target ;
+
+rule run 
+{    
+}
+
+actions run 
+{
+    $(>) && touch $(<)
+}
+
+
+
+rule unit-test ( target-name : sources * : requirements * )
+{
+    # TODO: what to do with default build?
+    targets.main-target-alternative 
+      $(target-name) [ CALLER_MODULE ] unit-test-target-class : 2 : 3 
+        : $(sources) : $(requirements) : $(default-build) ;
+}
+
+IMPORT $(__name__) : unit-test : : unit-test ;
+
+

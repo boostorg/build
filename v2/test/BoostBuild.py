@@ -8,6 +8,7 @@ import shutil
 import string
 import types
 import time
+import tempfile
 
 #
 # FIXME: this is copy-pasted from TestSCons.py
@@ -166,6 +167,7 @@ class Tester(TestCmd.TestCmd):
             if stderr:
                 print "STDERR ==================="
                 print stderr
+            self.maybe_do_diff(self.stdout(), stdout)
             self.fail_test(1)
 
         if not stderr is None and not match(self.stderr(), stderr):
@@ -175,6 +177,7 @@ class Tester(TestCmd.TestCmd):
             print stderr
             print "Actual STDERR ============"
             print self.stderr()
+            self.maybe_do_diff(self.stderr(), stderr)
             self.fail_test(1)
 
         self.tree = build_tree(self.workdir)
@@ -297,6 +300,21 @@ class Tester(TestCmd.TestCmd):
             print "Got:\n"
             print actual
             self.fail_test(1)
+
+    def maybe_do_diff(self, actual, expected):
+        if os.environ.has_key("DO_DIFF") and os.environ["DO_DIFF"] != '':
+            
+            e = tempfile.mktemp("expected")
+            a = tempfile.mktemp("actual")
+            open(e, "w").write(expected)
+            open(a, "w").write(actual)
+            print "DIFFERENCE"
+            if os.system("diff -u " + e + " " + a):
+                print "Unable to compute difference"               
+            os.unlink(e)
+            os.unlink(a)    
+        else:
+            print "Set environmental variable 'DO_DIFF' to examine difference." 
 
     # Helpers
     def mul(self, *arguments):

@@ -70,6 +70,9 @@ rule abstract-target ( name      # name of the target in Jamfile
     # of some problem returns a list with "@error" as the first element
     # and explanation in all others. (CONSIDER: need some utilities for
     # this method of error reporting? 'is-error'?)
+    #
+    # If 'properties' are empty or consist of lonely <toolset>xxx, 
+    # uses default set(s) of properties.
     rule generate ( properties * )
     {
         errors.error "method should be defined in derived classes" ;
@@ -280,11 +283,10 @@ rule main-target ( name : project )
         # allowed to be propagated.
         local ref = [ project.attribute $(self.project) requirements ]
                     $(properties) ;
+        ref = [ property.refine $(properties) : $(ref) ] ;
+        ref = [ property.evaluate-conditionals $(ref) ] ;
         ref = [ property.take free : [ property.remove incidental : $(ref) ] ] ;
         
-        local pr = [ property.take free : [ property.remove incidental : 
-                       [ project.attribute $(self.project) requirements ] ] ] ;
-
         # Process all vtargets that will be created if this main target
         # is created.
         local all-targets = 
@@ -334,21 +336,20 @@ rule basic-target ( name : project
     self.requirements = $(requirements) ;
     self.default-build = $(default-build) ;
 
-    # Applies default-build if 'properties' are empty.
+    # Applies default-build if 'properties' are empty or 
+    # have only single <toolset> element.
     # Generates sources. Calls 'construct'
     # This method should not be overriden.
     #
-    # Note: historical perspectives of this rule are not clear....
-    # since generators will be allowed to change requirements as they
-    # search from targets to sources, we won't be able to call
-    # generate on sources right here, because we don't know properties
-    # that should be used.
     rule generate ( properties * )
     {
-        if ! $(properties)
+        if ! $(properties) || $(properties:G) = <toolset>
         {
             # CONSIDER: I'm really not sure if this is correct...
-            properties = [ build-request.expand $(self.default-build) ] ;
+            # FIXME: as in 'build-system' we stick default toolset
+            properties = [ build-request.expand $(properties) 
+                           $(self.default-build) ] ;
+            
             local result = ;
             for local p in $(properties)
             {
@@ -367,6 +368,8 @@ rule basic-target ( name : project
             {
                 local rproperties =
                     [ property.refine $(properties) : $(self.requirements) ] ;
+
+                rproperties = [ property.evaluate-conditionals $(rproperties) ] ;
 
                 if $(rproperties[1]) != "@error"                    
                 {
@@ -508,7 +511,7 @@ rule typed-target ( name : project : type
     : sources * : requirements * : default-build * )
 {
     basic-target.__init__ $(name) : $(project) 
-      : $(sources) : $(requirements) : $(defailt-build) ;
+      : $(sources) : $(requirements) : $(default-build) ;
     
     self.type = $(type) ;
     

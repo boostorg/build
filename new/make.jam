@@ -14,7 +14,7 @@ import type : type ;
 import regex ;
 
 rule make-target-class ( name : project : sources * : requirements * 
-                         : make-rule + : default-build )
+                         : make-rule + : default-build * )
 {
     basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements) 
                           : $(default-build) ;

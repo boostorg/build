@@ -11,10 +11,22 @@ import build-request ;
 import builtin ;
 import make ;
 
+import version ;
+
 import site-config ;
 import user-config ;
 
-current-project = [ project.load "."  ] ;
+if --version in [ modules.peek : ARGV ]
+{
+    version.print ;
+    EXIT ;
+}
+
+# We always load project in "." so that 'use-project' directives has
+# any chance of been seen. Otherwise, we won't be able to refer to
+# subprojects using target ids.
+project.load "." ;
+
 if [ MATCH (--dump-projects) : [ modules.peek : ARGV ] ]
 {
     project-root.print ;
@@ -26,7 +38,20 @@ properties = [ $(build-request).get-at 2 ] ;
 # For the time being, just stick toolset to the build request. We'd need to
 # find a way to select default toolset collection and a method to override
 # that from command line
-expanded = [ build-request.expand $(properties) <toolset>gcc ] ;
+if $(properties) 
+{    
+    if ! <toolset> in $(properties:G)
+    {
+        properties = <toolset>gcc $(properties) ;
+    }    
+    expanded = [ build-request.expand $(properties) ] ;
+}
+else
+{
+    # If properties contain only <toolset>, the 'generate' method of
+    # 'abstract-target' will apply its default-build clause.
+    expanded = <toolset>gcc ;
+}
 
 
 local target-ids = [ $(build-request).get-at 1 ] ;

@@ -15,7 +15,6 @@ Did not find a project-root.jam file there or in any of its parent directories.
 Please consult the documentation at 'http://www.boost.org'.
 """)
 
-
 t.set_tree("project-test3")
 t.run_build_system()
 

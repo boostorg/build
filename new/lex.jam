@@ -1,6 +1,10 @@
 
 import type ;
 import generators ;
+import feature ;
+import property ;
+
+feature.feature flex.prefix : : free ;
 
 type.register LEX : l ;
 
@@ -8,9 +12,14 @@ generators.register-standard lex.lex : LEX : C ;
 
 rule lex ( target : source : properties * )
 {   
+    local r = [ property.select flex.prefix : $(properties) ] ;
+    if $(r)
+    {
+        PREFIX on $(<) = $(r:G=) ;
+    }
 }
 
 actions lex 
 {
-    flex -o$(<) $(>)
+    flex -P$(PREFIX) -o$(<) $(>)    
 }
