@@ -86,9 +86,10 @@ tests = [ "project_test1",
           "unused",
           "default_features",
           "print",
-	  "ndebug",
-	  "explicit",
-	  "absolute_sources",
+          "ndebug",
+          "explicit",
+          "absolute_sources",
+          "dependency_property",
 	  ]
 
 if os.name == 'posix':
