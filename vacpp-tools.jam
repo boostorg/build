@@ -33,7 +33,10 @@ flags vacpp CFLAGS <inlining>off : -qnoinline ;
 flags vacpp CFLAGS <inlining>on : -qinline ;
 flags vacpp CFLAGS <inlining>full : -qinline ;
 
-flags vacpp C++FLAGS <excpetion-handling>off : -qnoeh ;
+# The following is needed to get rid of most of the annoying linker warnings
+# about duplicated symbols when you use templates.
+flags vacpp C++FLAGS : -qstaticinline -qfuncsect ;
+flags vacpp C++FLAGS <exception-handling>off : -qnoeh ;
 flags vacpp C++FLAGS <exception-handling>on : -qeh ;
 
 flags vacpp C++FLAGS <rtti>off : -qnortti ;
