@@ -265,32 +265,37 @@ rule import ( module-names + : rules-opt * : rename-opt * )
         errors.error when loading multiple modules, no specific rules or renaming is allowed ;
     }
     
-    # if the importing module isn't already in the BOOST_BUILD_PATH,
-    # prepend it to the path.  We don't want to invert the search
-    # order of modules that are already there.
-    local caller = [ CALLER_MODULE ] ;
-    local cwd = [ PWD ] ;
-    
-    local caller-location ; 
-    if $(caller)
-    {
-        caller-location = [ binding $(caller) ] ;
-        caller-location = $(caller-location:D) ;
-        caller-location = [ normalize-raw-paths $(caller-location:R=$(cwd)) ] ;
-    }
-    
-    local search = [ peek : BOOST_BUILD_PATH ] ;
-    search = [ normalize-raw-paths $(search:R=$(cwd)) ] ;
-    
-    if $(caller-location) && ! $(caller-location) in $(search)
-    {
-        search = $(caller-location) $(search) ;
-    }
-    
+    local caller = [ CALLER_MODULE ] ;    
+        
     # Import each specified module
     for local m in $(module-names)
     {
-        load $(m) : : $(search) ;
+        if ! $(m) in $(.loaded)
+        {           
+            # if the importing module isn't already in the BOOST_BUILD_PATH,
+            # prepend it to the path.  We don't want to invert the search
+            # order of modules that are already there.
+            local cwd = [ PWD ] ;
+            
+            local caller-location ; 
+            if $(caller)
+            {
+                caller-location = [ binding $(caller) ] ;
+                caller-location = $(caller-location:D) ;
+                caller-location = [ normalize-raw-paths $(caller-location:R=$(cwd)) ] ;
+            }
+            
+            local search = [ peek : BOOST_BUILD_PATH ] ;
+            search = [ normalize-raw-paths $(search:R=$(cwd)) ] ;
+            
+            if $(caller-location) && ! $(caller-location) in $(search)
+            {
+                search = $(caller-location) $(search) ;
+            }
+                        
+            load $(m) : : $(search) ;
+        }
+        
         local all-rules = [ RULENAMES $(m) ] ;
     
         # import all the rules with qualification
