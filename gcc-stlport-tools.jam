@@ -7,48 +7,17 @@
 # this is simply an extension to the gcc toolset. 
 extends-toolset gcc ;
 
-# singleton variables...
-set-as-singleton STLPORT_INCLUDE_DIRECTORY STLPORT_LIB_DIRECTORY STLPORT_ROOT ;
-
 if $(NT)
 {
-    GCC_STLPORT_LIB_ID = cygwin ;
+    STLPORT_LIB_BASE_NAME = stlport_cygwin ;
 }
 else
 {
-    GCC_STLPORT_LIB_ID = gcc ;
+    STLPORT_LIB_BASE_NAME = stlport_gcc ;
 }
 
-STLPORT_INCLUDE_DIRECTORY ?= stlport ;
-STLPORT_LIB_DIRECTORY ?= lib ;
+SEARCH on stlport.jam = $(BOOST_BUILD_PATH) ;
+include stlport.jam ;
 
-{
-    local save-gcc-STDHDRS = $(STDHDRS) ;
-    local save-gcc-STDLIBPATH = $(STDLIBPATH) ;
-      
-    STDHDRS = ;
-    STDLIBPATH = ;
-    
-    flags gcc-stlport STDHDRS
-      : $(STLPORT_ROOT)$(SLASH)$(STLPORT_INCLUDE_DIRECTORY) $(save-gcc-STDHDRS) ;
-    flags gcc-stlport STDLIBPATH
-      : $(STLPORT_ROOT)$(SLASH)$(STLPORT_LIB_DIRECTORY) $(save-gcc-STDLIBPATH)
-        ;
-    
-    # Make sure that STLPort libraries get added to the LD_LIBRARY_PATH
-    GCC_STDLIB_DIRECTORY += $(STLPORT_ROOT)$(SLASH)$(STLPORT_LIB_DIRECTORY) ;
-}
-
-flags gcc-stlport DEFINES <runtime-build>debug : _STLP_DEBUG ;
-flags gcc-stlport FINDLIBS <runtime-link>static/<runtime-build>debug
-  : stlport_$(GCC_STLPORT_LIB_ID)_stldebug pthread ;
-flags gcc-stlport FINDLIBS <runtime-link>static/<runtime-build>release
-  : stlport_$(GCC_STLPORT_LIB_ID) pthread ;
-flags gcc-stlport FINDLIBS <runtime-link>dynamic/<runtime-build>debug 
-  : stlport_$(GCC_STLPORT_LIB_ID)_stldebug pthread ;
-flags gcc-stlport FINDLIBS <runtime-link>dynamic/<runtime-build>release 
-  : stlport_$(GCC_STLPORT_LIB_ID) pthread ;
-flags gcc-stlport CFLAGS <runtime-link>dynamic    : -D_STLP_USE_DYNAMIC_LIB ;
-
-
-
+# pthread is always needed when using the library (i.e. iostreams).
+flags gcc-stlport FINDLIBS <stlport-iostream>on : pthread ;

@@ -5,7 +5,6 @@
 # to its suitability for any purpose.
 
 # Use this toolset to add STLport flavor for any base toolset
-# define CURR_TOOLSET to the name of base toolset
 # define STLPORT_LIB_BASE_NAME to the shared between debug and release 
 # versions prefix for stlport library name for example stlport_sunpro
 
@@ -21,7 +20,10 @@ feature stlport-anachronisms : on off ;
 # STLport debug allocation
 feature stlport-debug-alloc : off on ;
 
+# ?
 feature stlport-cstd-namespace : std global ;
+
+CURR_TOOLSET = $(gCURRENT_TOOLSET) ;
 
 STLPORT_VERSION = 4.5.3 ;
 STLPORT_VERSIONS = 4.5 ;
@@ -29,7 +31,7 @@ feature stlport-version : $(STLPORT_VERSION) $(STLPORT_VERSIONS) ;
 flags $(CURR_TOOLSET) STLPORT_VERSION <stlport-version> ;
 
 # singleton variables...
-set-as-singleton STLPORT_INCLUDE_DIRECTORY STLPORT_LIB_DIRECTORY STLPORT_PATH ;
+set-as-singleton STLPORT_INCLUDE_DIRECTORY STLPORT_LIB_DIRECTORY STLPORT_PATH STLPORT_ROOT ;
 
 #############################################################################
 
@@ -46,6 +48,7 @@ rule get-stlport-root
     local path ;
     path ?= $(STLPORT_$(version)_PATH) ;
     path ?= $(STLPORT_PATH)$(SLASH)STLport-$(version) ;
+    path ?= $(STLPORT_ROOT) ; #<< For backward compatability.
     
     if $(version) && ! $(path)
     {
@@ -80,7 +83,7 @@ STLPORT_INCLUDE_DIRECTORY ?= stlport ;
 STLPORT_LIB_DIRECTORY ?= lib ;
 
 flags $(CURR_TOOLSET) STDHDRS : [ join [ get-stlport-root ] $(SLASH)$(STLPORT_INCLUDE_DIRECTORY) ] ;
-flags $(CURR_TOOLSET) LIBPATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)$(STLPORT_LIB_DIRECTORY) ] ;
+flags $(CURR_TOOLSET) STDLIBPATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)$(STLPORT_LIB_DIRECTORY) ] ;
 
 flags $(CURR_TOOLSET) DEFINES <stlport-iostream>off : _STLP_NO_OWN_IOSTREAMS=1 _STLP_HAS_NO_NEW_IOSTREAMS=1 ;
 flags $(CURR_TOOLSET) DEFINES <stlport-extensions>off : _STLP_NO_EXTENSIONS=1 ;
@@ -88,9 +91,9 @@ flags $(CURR_TOOLSET) DEFINES <stlport-anachronisms>off : _STLP_NO_ANACHRONISMS=
 flags $(CURR_TOOLSET) DEFINES <stlport-cstd-namespace>global : _STLP_VENDOR_GLOBAL_CSTD=1 ;
 flags $(CURR_TOOLSET) DEFINES <exception-handling>off : _STLP_NO_EXCEPTIONS=1 ;
 flags $(CURR_TOOLSET) DEFINES <stlport-debug-alloc>on : _STLP_DEBUG_ALLOC=1 ;
-#!! flags $(CURR_TOOLSET) DEFINES <runtime-build>debug : _STLP_DEBUG=1 _STLP_DEBUG_UNINITIALIZED=1 ;
-#!! flags $(CURR_TOOLSET) DEFINES <threading>single : _STLP_NO_THREADS=1 ;
+flags $(CURR_TOOLSET) DEFINES <runtime-build>debug : _STLP_DEBUG=1 _STLP_DEBUG_UNINITIALIZED=1 ;
+flags $(CURR_TOOLSET) DEFINES <threading>single : _STLP_NO_THREADS=1 ;
+flags $(CURR_TOOLSET) DEFINES <runtime-link>dynamic : _STLP_USE_DYNAMIC_LIB=1 ;
 
-#!! flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>debug    : $(STLPORT_LIB_BASE_NAME)_stldebug ;
-flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>debug    : $(STLPORT_LIB_BASE_NAME) ;
+flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>debug    : $(STLPORT_LIB_BASE_NAME)_stldebug ;
 flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>release  : $(STLPORT_LIB_BASE_NAME) ;

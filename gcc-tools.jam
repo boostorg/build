@@ -102,6 +102,7 @@ else if $(UNIX)
         # There is no gcc/g++, we need to use cc/c++ instead:
         GCC ?= cc ;
         GXX ?= c++ ;
+        G++_SYSINCLUDE_FLAG = -I ;
         }
     case * :
         {
@@ -153,7 +154,7 @@ flags gcc CFLAGS $(.ARCH)/<instruction-set>tsc701 : -mcpu=tsc701 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>v9 : -mcpu=v9 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>ultrasparc : -mcpu=ultrasparc ;
 # RS/6000 & PowerPC
-.ARCH = <architecture>sparc <architecture>native ;
+.ARCH = <architecture>power <architecture>native ;
 flags gcc CFLAGS <architecture>power/<instruction-set>default : -mcpu=power ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>rios : -mcpu=rios ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>rios1 : -mcpu=rios1 ;
@@ -309,7 +310,7 @@ rule Link-action
     # proved to be neccessary with some versions of Cygwin.
     IMPLIB_COMMAND on $(<) = "-Wl,--export-all-symbols -Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__ -Wl,--out-implib," ;
     DEPENDS $(<) : $(NEEDLIBS) $(NEEDIMPS) ;
-    gRUN_LD_LIBRARY_PATH($(<)) += $(GCC_STDLIB_DIRECTORY) ;
+    gRUN_LD_LIBRARY_PATH($(<)) += $(STDLIBPATH:T) ;
     if $(<[2]) && $(NT) && ( -mno-cygwin in $(gBUILD_PROPERTIES:G=) )
     {
         gcc-dllwrap $(<) : $(>) ;
