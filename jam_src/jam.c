@@ -319,10 +319,17 @@ int  main( int argc, char **argv, char **arg_environ )
         var_set( "JAMDATE", list_new( L0, newstr( date ) ), VAR_SET );
     }
 
+ 
+    {
+   /* Pleace don't change the following line. The 'bump_version.py' script
+       expect a specific format of it. */
+    char  *major_version = "03", *minor_version = "01", *changenum = "08";
     var_set( "JAM_VERSION",
-             list_new( list_new( list_new( L0, newstr( "03" ) ), newstr( "01" ) ), 
-                       newstr( "08" ) ),
+             list_new( list_new( list_new( L0, newstr( major_version ) ), 
+                                 newstr( minor_version ) ), 
+                       newstr( changenum ) ),
              VAR_SET );
+    }
 
     /* And JAMUNAME */
 # ifdef unix
