@@ -83,10 +83,10 @@ assert_equal [ split-path x ] : x ;
 assert_equal [ split-path $(DOT) ] : $(DOT) ;
 if $(NT)
 {
-    assert_equal [ split-path x:\\y\\z\\w ] : x:\\y z w ;
-    assert_equal [ split-path x:\\y\\z ] : x:\\y z ;
-    assert_equal [ split-path x:\\y ] : x:\\y ;
-    assert_equal [ split-path x:\\ ] : x:\\ ;
+    assert_equal [ split-path x:\\y\\z\\w ] : x: y z w ;
+    assert_equal [ split-path x:\\y\\z ] : x: y z ;
+    assert_equal [ split-path x:\\y ] : x: y ;
+    assert_equal [ split-path x:\\ ] : x: ;
     assert_equal [ split-path x: ] : x: ;
 }
 
@@ -172,12 +172,29 @@ assert_equal [ ungrist-properties <TEST_FEATURE1>a <TEST_FEATURE2>c ]
     : TEST_FEATURE1-a TEST_FEATURE2-c ;
 
 
+# simplify-path-tokens
+{
+    local $(gTOP)_TOKENS = .. .. .. ;
+    local gINVOCATION_SUBDIR_TOKENS = d e ;
+    assert_equal [ simplify-path-tokens a b . c .. .. d e ] : a d e ;
+    assert_equal [ simplify-path-tokens a b .. .. .. d e ] : .. d e ;
+    assert_equal [ simplify-path-tokens .. .. d e : xxx ] : .. .. d e ;
+    assert_equal [ simplify-path-tokens a b .. .. : xxx ] : xxx ;
+    $(gTOP)_TOKENS = .. .. ;
+    assert_equal [ simplify-path-tokens .. .. d e : xxx ] : xxx ; 
+    assert_equal [ simplify-path-tokens .. .. d e f g : xxx ] : f g ; 
+}
+
 # fixup-path-properties
 {
     local RELATIVE_SUBDIR = foobar ;
     local gPATH_FEATURES = <include> ;
     assert_equal [ fixup-path-properties <a>b <include>.. <c>d ]
-                : <include>foobar$(SLASH).. <a>b <c>d ;
+                : <include>. <a>b <c>d ;
+                
+    RELATIVE_SUBDIR = foobar/baz ;
+    assert_equal [ fixup-path-properties <a>b <include>.. <c>d ]
+                : <include>foobar <a>b <c>d ;
 }
 # multiply-property-sets
 assert_equal [ multiply-property-sets <b>1 <a>2/3 <c>4/5 ]
@@ -250,15 +267,3 @@ assert_equal [ strip-initial a b c : a b d e f g ] : a b d e f g ;
 assert_equal [ strip-initial a b c : b d e f g ] : b d e f g ;
 assert_equal [ strip-initial a b c : ] :  ;
 
-# simplify-path-tokens
-{
-    local $(gTOP)_TOKENS = .. .. .. ;
-    local gINVOCATION_SUBDIR_TOKENS = d e ;
-    assert_equal [ simplify-path-tokens a b . c .. .. d e ] : a d e ;
-    assert_equal [ simplify-path-tokens a b .. .. .. d e ] : .. d e ;
-    assert_equal [ simplify-path-tokens .. .. d e : xxx ] : .. .. d e ;
-    assert_equal [ simplify-path-tokens a b .. .. : xxx ] : xxx ;
-    $(gTOP)_TOKENS = .. .. ;
-    assert_equal [ simplify-path-tokens .. .. d e : xxx ] : xxx ; 
-    assert_equal [ simplify-path-tokens .. .. d e f g : xxx ] : f g ; 
-}
