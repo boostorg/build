@@ -311,6 +311,11 @@ rule Link-action
     }
     else
     {
+        # Workaround GCC's lack of command-files and NT's line-length limitation.
+        if $(NT) {
+            JAMSHELL on $(<) = % ;
+        }
+        
         gcc-Link-action $(<) : $(>) ;
     }
 }
