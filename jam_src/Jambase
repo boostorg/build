@@ -80,7 +80,7 @@ rule boost-build ( dir ? )
     local bootstrap-file =
         [ GLOB $(BOOST_BUILD_PATH) : bootstrap.jam ] ;
     .bootstrap-file = $(bootstrap-file[1]) ;
-    
+            
     # There is no boost-build.jam we can find, exit with an error
     #
     if ! $(.bootstrap-file)
@@ -96,6 +96,13 @@ rule boost-build ( dir ? )
         ECHO ;
         EXIT "Please consult the documentation at 'http://www.boost.org'." ;
     }
+    
+    if [ MATCH .*(--debug-configuration).* : $(ARGV) ]
+    {
+        ECHO "notice: loading Boost.Build from" 
+          [ NORMALIZE_PATH $(.bootstrap-file:D) ] ;
+    }
+    
     
     # Load the build system, now that we know where to start from.
     #
@@ -121,6 +128,12 @@ if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
     
     .boost-build-file = $(boost-build-files[1]) ;
     
+    if [ MATCH .*(--debug-configuration).* : $(ARGV) ]
+    {
+        ECHO "notice: found boost-build.jam at" 
+          [ NORMALIZE_PATH $(.boost-build-file) ] ;
+    }
+        
     # There is no boost-build.jam we can find, exit with an error, and information.
     #
     if ! $(.boost-build-file)
