@@ -1,2 +1,6 @@
 
-exe hello : main.cpp hello_world_widget.ui : <uses>qt ;
+project
+    : default-build <threading>multi
+    ;
+
+exe hello : main.cpp hello_world_widget.ui : <library>/qt//qt ;
