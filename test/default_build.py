@@ -7,7 +7,7 @@ t = Tester(pass_toolset=0)
 
 t.write("project-root.jam", "import gcc ;")
 t.write("Jamfile", "exe a : a.cpp : : debug release ;")
-t.write("a.cpp", "int main() {}\n")
+t.write("a.cpp", "int main() { return 0; }\n")
 
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug/a.exe")
