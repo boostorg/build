@@ -191,7 +191,7 @@ boost-build /path/to/boost.build ;
    feature-name=feature-value
 </pre>
     syntax for it. Complete description of features can be found <a href=
-    "features_properties">here</a>. The set of properties specified in the
+    "#features_properties">here</a>. The set of properties specified in the
     command line constitute <em>build request</em> &mdash; the desired
     properties for requested targets, or for the project in the current
     directory. The actual set of properties used for building is often
@@ -211,7 +211,7 @@ boost-build /path/to/boost.build ;
     always be present. This leads to a question: what if user explictly
     requested single-threading. The answer is that requirement can affect
     build properties only to a certain degree: the requested and actual
-    properties must be link-compatible. See <a href="link_compatibility">link
+    properties must be link-compatible. See <a href="#link_compatibility">link
     compatibility</a> below. If they are not link compatible, the bulding of
     the target is skipped. Previously, we've added "hello2" target. Seems
     like we have to specify the same requirements for it, which results in
