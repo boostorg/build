@@ -1440,7 +1440,7 @@ rule split ( string separator )
     
     while $(s)
     {
-        local match = [ SUBST $(s) ^(.*)$(separator)(.*) $1 $2 ] ;
+        local match = [ MATCH ^(.*)$(separator)(.*) : $(s) ] ;
         
         local tail = $(match[2]) ;
         tail ?= $(s) ;
@@ -1456,7 +1456,7 @@ rule split-path ( path )
     if ! $(gSPLIT_PATH_CACHE($(path)))
     {
         gSPLIT_PATH_CACHE($(path)) =
-          [ SUBST $(path) "^([/$(SLASH)]+).*" $1 ] # rooting slash(es), if any
+          [ MATCH  "^([/$(SLASH)]+).*" : $(path) ] # rooting slash(es), if any
             [ split $(path) "[/$(SLASH)]" ]        # the rest.
               ;
     }
@@ -1678,7 +1678,7 @@ rule remember-binding ( target : bound-path ) {
 rule subst-list ( list + : pattern ) {
     local result ;
     for local i in $(list) {
-        result += [ SUBST $(i) $(pattern) "$1" ] ;
+        result += [ MATCH "($(pattern))" : $(i) ] ;
     }
     return $(result) ;
 }

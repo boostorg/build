@@ -17,8 +17,9 @@ else if $(UNIX)
 # Strip the dot from the Python version in order to be able to name
 # libraries
 PYTHON_VERSION_NODOT
- = [ SUBST $(PYTHON_VERSION) ([0-9]*)\.([0-9]*) $1$2 ]
+ = [ MATCH ([0-9]*)\.([0-9]*) : $(PYTHON_VERSION) ]
       ;
+PYTHON_VERSION_NODOT = $(PYTHON_VERSION_NODOT:J=) ;
 
 local RUN_PATH = $(RUN_PATH) ;
 
@@ -429,7 +430,7 @@ rule python-runtest-aux ( target : sources + )
             if $(p:R=xx) = $(p)
             {
                 p = [ split-path $(p) ] ;
-                p = [ join-path /cygdrive [ SUBST $(p[1]) ^(.).* $1 ] $(p[2-]) ] ;
+                p = [ join-path /cygdrive [ MATCH ^(.).* : $(p[1]) ] $(p[2-]) ] ;
             }
             pp += $(p) ;
         }

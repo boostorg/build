@@ -66,14 +66,18 @@ rule version-header ( target : name version comment-text * )
     # Translat the name & version into the various version info definitions.
     #
     local s = " " ;
-    local target-suffix = [ SUBST $(target:S) .(.*) $1 ] ;
+    local target-suffix = [ MATCH .(.*) : $(target:S) ] ;
     local target-tag = [ join  [ split-path $(target-dir) ] $(target:B) $(target-suffix) : "_" ] ;
     target-tag = $(target-tag:U) ;
     local name-tag = [ join [ split $(name:U) "\\." ] : "_" ] ;
     local version-parts = ;
-    version-parts += [ SUBST $(version) ^(.*)\\.(.*) $1 ] ;
-    version-parts += [ SUBST $(version) ^(.*)\\.(.*)\\.* $2 ] ;
-    version-parts += [ SUBST $(version) ^(.*)\\.(.*)\\.(.*) $3 ] ;
+    local t ;
+    t = [ MATCH ^(.*)\\.(.*) : $(version) ] ;
+    version-parts += $(t[1]) ;
+    t = [ MATCH ^(.*)\\.(.*)\\.* : $(version) ] ;
+    version-parts += $(t[2]) ; 
+    t = [ MATCH ^(.*)\\.(.*)\\.(.*) : $(version) ] ;
+    version-parts += $(t[3]) ;
     if ! $(version-parts[2]) { version-parts += 0 0 ; }
     if ! $(version-parts[3]) { version-parts += 0 ; }
     local version-id = $(version-parts[1]) ;

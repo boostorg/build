@@ -380,6 +380,20 @@ rule select-gristed ( list * )
     return $(result) ;
 }
 
+# Returns grist without "<"/">" for elements matching "<.*>",
+# and ignores other elements.
+rule ungrist ( names * )
+{
+    local result ;
+    for local name in $(names)
+    {
+        local stripped = [ MATCH ^<(.*)>$ : $(name) ] ;
+        result += $(stripped) ;
+    }
+    return $(result) ;
+}
+
+
 # Split a qualified property into 3 elements. 
 #
 # Grammar description of qualified-property :
@@ -1150,7 +1164,7 @@ rule expand-source-names ( sources * )
     local x-sources = ;
     for local source in $(sources)
     {
-        local grist = [ SUBST $(source:G) (<)(.*)(>) $2 ] ;
+        local grist = [ ungrist $(source:G) ] ;
         local type = $(gTARGET_TYPE_ID($(grist))) ;
         if $(type)
         {
@@ -1246,7 +1260,7 @@ rule declare-local-target ( target : sources * : requirements * : default-build 
         local dependencies ;
         for local source in [ select-gristed $(x-sources) ]
         {
-            local dependency-type = [ SUBST $(source:G:L) (<)(.*)(>) $2 ] ;
+            local dependency-type = [ ungrist $(source:G:L) ] ;
             local dependency-type-id = $(gTARGET_TYPE_ID($(dependency-type))) ;
             if $(gIS_DEPENDENCY($(dependency-type-id)))
             {
@@ -1268,7 +1282,7 @@ rule declare-local-target ( target : sources * : requirements * : default-build 
         #
         for local mod in $(gTARGET_DEPS($(target-id)))
         {
-            local dependency-type-id = [ SUBST $(mod:G) (<)(.*)(>) $2 ] ;
+            local dependency-type-id = [ ungrist $(mod:G) ] ;
             local modifier-function = $(gMODIFIER_FUNCTION($(dependency-type-id))) ;
             if $(modifier-function)
             {
@@ -1728,7 +1742,7 @@ rule expand-target-subvariants ( target : local-build * : tools + : )
 #
 rule split-target-subvariant ( target-var properties-var toolset-var variant-var : subvariant )
 {
-    local subvariant-items = [ SUBST $(subvariant) (.*)[|](.*)[|](.*)[|](.*) $1 $2 $3 $4 ] ;
+    local subvariant-items = [ MATCH (.*)[|](.*)[|](.*)[|](.*) : $(subvariant) ] ;
     $(target-var) = $(subvariant-items[1]) ;
     $(properties-var) = [ split-path-at-grist $(subvariant-items[2]) ] ;
     $(toolset-var) = $(subvariant-items[3]) ;
@@ -1917,7 +1931,8 @@ rule rename-target ( target + : subvariant * : tags * )
     local tag-values = ;
     for local tag in $(tags)
     {
-        local tag-tokens = [ SUBST $(tag:G=) (<)(.*)(>)(.*) $2 $4 ] ;
+        local tag-tokens = [ MATCH (<)(.*)(>)(.*) : $(tag:G=) ] ;
+        tag-tokens = $(tag-tokens[2]) $(tag-tokens[4]) ;
         tag-values += $(tag-tokens[2]:G=$(tag-tokens[1])) ;
     }
 
