@@ -275,7 +275,15 @@ rule initialize (
     $(module-name).attributes = [ new project-attributes $(location) ] ;
     local attributes = $($(module-name).attributes) ;
     
-    $(attributes).set source-location : [ path.make $(location) ] : exact ;    
+    if $(location)
+    {        
+        $(attributes).set source-location : [ path.make $(location) ] : exact ;    
+    }
+    else
+    {
+        $(attributes).set source-location : "" : exact ;    
+    }
+    
     $(attributes).set requirements : [ property-set.empty ] : exact ;
     $(attributes).set usage-requirements : [ property-set.empty ] : exact ;    
 
