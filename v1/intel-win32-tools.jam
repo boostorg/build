@@ -6,9 +6,7 @@
 # "as is" without express or implied warranty, and with no claim as
 # to its suitability for any purpose.
 
-# Adapted from msvc-tools.jam by Beman Dawes
-
-# compute INTEL tool path You can either use the environment variable
+# compute INTEL tool path. You can either use the environment variable
 # setup that comes with the Intel compiler, or you can set the
 # INTEL_PATH or INTELC (in order to respect FTJam setup) environment
 # variables to point at the intel-win32 installation directory
@@ -16,66 +14,18 @@ INTEL_PATH ?= $(INTELC) ;
 INTEL_TOOL_PATH ?= "$(INTEL_PATH)"/bin/ ;
 INTEL_TOOL_PATH ?= "" ; # Don't clobber adjoining text if INTELROOT isn't set
 
-extends-toolset msvc ;
+# if you have vc6 and vc7 installed, you may want your intel compiler
+# to use the VC7 libraries. In that case, you might set
+#       INTEL_BASE_MSVC_TOOLSET = vc7
+# instead.
 
-flags intel-win32 STDHDRS : $(VISUALC)$(SLASH)include ;
+INTEL_BASE_MSVC_TOOLSET ?= msvc ;
+
+extends-toolset $(INTEL_BASE_MSVC_TOOLSET) ;
+
+flags intel-win32 STDHDRS : $(VC_TOOL_PATH)../include ;
 flags intel-win32 STDLIBPATH : "$(INTEL_PATH)"\\Lib "$(INTEL_PATH)"\\Bin ;
 
-#### Link ####
-
-rule Link-action
-{
-    with-command-file intel-win32-Link-action $(<) : $(>) $(NEEDLIBS) ;
-    if $(<[2])
-    {
-        # incremental linking a DLL causes no end of problems: if the
-        # actual exports don't change, the import .lib file is never
-        # updated. Therefore, the .lib is always out-of-date and gets
-        # rebuilt every time. I'm not sure that incremental linking is
-        # such a great idea in general, but in this case I'm sure we
-        # don't want it.
-        NOINCREMENTAL on $(<) = /INCREMENTAL:NO ;
-    }
-}
-
-actions intel-win32-Link-action bind NEEDLIBS 
-{
-    $(MSVC_SETUP)
-    $(INTEL_TOOL_PATH)xilink /nologo $(NOINCREMENTAL) $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /IMPLIB:$(<[2]) /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(FINDLIBS:S=.lib)" @"$(>)"
-}
-
-#### Cc #####
-
-rule Cc-action
-{
-    intel-win32-Cc-action $(<) : $(>) ;
-}
-
-actions intel-win32-Cc-action
-{
-    $(INTEL_TOOL_PATH)icl /Zm400 -nologo -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -Fo"$(<)" "$(>)"
-}
-
-#### C++ ####
-rule C++-action
-{
-    intel-win32-C++-action $(<) : $(>) ;
-}
-
-actions intel-win32-C++-action
-{
-    $(INTEL_TOOL_PATH)icl /Zm400 -nologo -GX -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -Fo"$(<)" -Tp"$(>)"
-}
-
-#### Archive ####
-rule Archive-action
-{
-    intel-win32-Archive-action $(<) : $(>) ;
-}
-
-actions updated together piecemeal intel-win32-Archive-action
-{
-    if exist "$(<)" set _$(<:B)_="$(<)"
-    $(INTEL_TOOL_PATH)xilink $(ARFLAGS) /lib /out:"$(<)" %_$(<:B)_% "$(>)"
-}
-
+VC_TOOL_PATH = $(INTEL_TOOL_PATH) ;
+VC_COMPILER = icl ;
+VC_LINKER = xilink ;
