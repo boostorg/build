@@ -868,6 +868,7 @@ evaluate_rule(
         pushsettings( local_args );
         result = parse_evaluate( parse, frame );
         popsettings( local_args );
+        freesettings( local_args );
         
         parse_free( parse );
     }
