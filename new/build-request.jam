@@ -98,9 +98,9 @@ local rule x-product ( property-sets * : feature-space )
 
 # Takes the command line tokens (such as taken from ARGV rule) and constructs
 # build request from it.
-# Returns a list of two lists (where "list" means container.jam's "list"). 
-# First is the list of targets specified in the command line, and second is
-# the list of requested build properties. 
+# Returns a vector of two vectors (where "vector" means container.jam's "vector"). 
+# First is the set of targets specified in the command line, and second is
+# the set of requested build properties. 
 rule from-command-line ( command-line * : feature-space ? )
 {
     local targets ;
@@ -126,7 +126,7 @@ rule from-command-line ( command-line * : feature-space ? )
             }
         }
     }
-    return [ new list [ new list $(targets) ] [ new list $(properties) ] ] ;
+    return [ new vector [ new vector $(targets) ] [ new vector $(properties) ] ] ;
 }
 
 # Converts one element of command line build request specification into

@@ -19,11 +19,15 @@ rule node (
 {
     self.value = $(value) ;
     
+    # Set the value of this node, passing nothing will clear it.
+    #
     rule set ( value ? )
     {
         self.value = $(value) ;
     }
     
+    # Get the value of this node.
+    #
     rule get ( )
     {
         return $(self.value) ;
@@ -31,26 +35,42 @@ rule node (
 }
 class node ;
 
-# A simple list. Interface mimics the C++ std::list.
+# A simple vector. Interface mimics the C++ std::vector and std::list,
+# with the exception that indices are one (1) based to follow Jam standard.
 #
-rule list (
-    values * # Initial contents of list.
+# TODO: Possibly add assertion checks.
+#
+rule vector (
+    values * # Initial contents of vector.
     )
 {
     node.__init__ ;
     self.value = $(values) ;
     
+    # Get the value of the first element.
+    #
     rule front ( )
     {
         return $(self.value[1]) ;
     }
     
+    # Get the value of the last element.
+    #
     rule back ( )
     {
         return $(self.value[-1]) ;
     }
     
-    rule at ( index : * )
+    # Get the value of the element at the given index, one based.
+    # Access to elements of recursive structures is supported directly.
+    # Specifying additional index values recursively accesses the elements as
+    # containers. For example: [ $(v).at 1 : 2 ] would retrieve the second element
+    # of our first element. This assuming the first element is a container.
+    #
+    rule at (
+        index # The element index, one based.
+        : * # Additional indices to access recursively.
+        )
     {
         local r = $(self.value[$(index)]) ;
         if $(2)
@@ -60,7 +80,14 @@ rule list (
         return $(r) ;
     }
     
-    rule get-at ( index : * )
+    # Get the value contained in the given element. This has the same
+    # functionality and interface as "at" but in addition gets the value
+    # of the referenced element, assuming it's a "node".
+    #
+    rule get-at (
+        index # The element index, one based.
+        : * # Additional indices to access recursively.
+        )
     {
         local r = $(self.value[$(index)]) ;
         if $(2)
@@ -70,27 +97,49 @@ rule list (
         return [ $(r).get ] ;
     }
     
-    rule push-front ( value )
+    # Insert the given value into the front of the vector pushing the
+    # rest of the elements back.
+    #
+    rule push-front (
+        value # Value to become first element.
+        )
     {
         self.value = $(value) $(self.value) ;
     }
     
+    # Remove the front element from the vector. Does not return the value.
+    # No effect if vector is empty.
+    #
     rule pop-front ( )
     {
         self.value = $(self.value[2-]) ;
     }
     
-    rule push-back ( value )
+    # Add the given value at the end of the vector.
+    #
+    rule push-back (
+        value # Value to become back element.
+        )
     {
         self.value += $(value) ;
     }
     
+    # Remove the back element from the vector. Does not return the value.
+    # No effect if vector is empty.
+    #
     rule pop-back ( )
     {
         self.value = $(self.value[1--2]) ;
     }
     
-    rule insert ( index : value )
+    # Insert the given value at the given index, one based. The values
+    # at and to the right of the of the index are push back to make room
+    # for the new value.
+    #
+    rule insert (
+        index # The index to insert at, one based.
+        : value # The value to insert.
+        )
     {
         local left = $(self.value[1-$(index)]) ;
         left = $(left[1--2]) ;
@@ -98,7 +147,13 @@ rule list (
         self.value = $(left) $(value) $(right) ;
     }
     
-    rule erase ( start end ? )
+    # Remove one or more elements from the vector. The range is inclusive,
+    # and not specifying an end is equivalent to the [start,start] range.
+    #
+    rule erase (
+        start # Index of first element ro remove.
+        end ? # Optional, index of last element to remove.
+        )
     {
         end ?= $(start) ;
         local left = $(self.value[1-$(start)]) ;
@@ -108,16 +163,23 @@ rule list (
         self.value = $(left) $(right) ;
     }
     
+    # Remove all elements from the vector.
+    #
     rule clear ( )
     {
         self.value = ;
     }
     
+    # The number of elements in the vector.
+    #
     rule size ( )
     {
         return [ sequence.length $(self.value) ] ;
     }
     
+    # Returns "true" if there are NO elements in the vector, empty
+    # otherwise.
+    #
     rule empty ( )
     {
         if ! $(self.value)
@@ -126,13 +188,13 @@ rule list (
         }
     }
 }
-class list : node ;
+class vector : node ;
 
 local rule __test__ ( )
 {
     import assert ;
     
-    local l = [ new list ] ;
+    local l = [ new vector ] ;
     assert.result 0 : $(l).size ;
     $(l).push-back b ;
     $(l).push-front a ;
@@ -151,7 +213,7 @@ local rule __test__ ( )
     $(l).erase 3 4 ;
     assert.result 2 : $(l).size ;
     
-    local l2 = [ new list q w e r t y ] ;
+    local l2 = [ new vector q w e r t y ] ;
     assert.result 6 : $(l2).size ;
     $(l).push-back $(l2) ;
     assert.result 3 : $(l).size ;
@@ -163,10 +225,10 @@ local rule __test__ ( )
     $(l2).pop-back ;
     assert.result t : $(l2-alias).back ;
     
-    local l3 = [ new list ] ;
-    $(l3).push-back [ new list 1 2 3 4 5 ] ;
-    $(l3).push-back [ new list a b c ] ;
-    $(l3).push-back [ new list [ new list x y z ] [ new list 7 8 9 ] ] ;
+    local l3 = [ new vector ] ;
+    $(l3).push-back [ new vector 1 2 3 4 5 ] ;
+    $(l3).push-back [ new vector a b c ] ;
+    $(l3).push-back [ new vector [ new vector x y z ] [ new vector 7 8 9 ] ] ;
     assert.result 1 : $(l3).at 1 : 1 ;
     assert.result b : $(l3).at 2 : 2 ;
     assert.result a b c : $(l3).get-at 2 ;
