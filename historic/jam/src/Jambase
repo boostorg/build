@@ -809,7 +809,7 @@ else if $(UNIX)
 
     case AMIGA :
     CC          ?= gcc ;
-    YACC        ?= bison ;
+    YACC        ?= "bison -y" ;
 
     case CYGWIN :   
     CC          ?= gcc ;
@@ -818,7 +818,7 @@ else if $(UNIX)
     JAMSHELL    ?= sh -c ;
     RANLIB      ?= "" ;
     SUFEXE      ?= .exe ;
-    YACC        ?= bison ;
+    YACC        ?= "bison -y" ;
 
     case DGUX :
     RANLIB      ?= "" ;
