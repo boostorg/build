@@ -33,3 +33,4 @@ t.run_build_system("-ffile.jam -d2")
 t.fail_test(t.stdout().find("a all") == -1)
 t.fail_test(t.stdout().find("b all") == -1)
 
+t.cleanup()
