@@ -261,10 +261,10 @@ file_archscan(
 		endname = name + sizeof( ar_hdr.ar_name );
 	    }
 
-	    /* strip trailing space, slashes, and backslashes */
+	    /* strip trailing space, eols, slashes, and backslashes */
 
 	    while( endname-- > name )
-		if( *endname != ' ' && *endname != '\\' && *endname != '/' )
+		if( *endname != ' ' && *endname != '\n' && *endname != '\\' && *endname != '/' )
 		    break;
 	    *++endname = 0;
 
