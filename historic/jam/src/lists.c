@@ -283,6 +283,23 @@ list_in(LIST* l, char* value)
     return 0;
 }
 
+LIST *  
+list_unique( LIST *sorted_list)
+{
+    LIST* result = 0;
+    LIST* last_added = 0;
+
+    for(; sorted_list; sorted_list = sorted_list->next)
+    {
+        if (!last_added || strcmp(sorted_list->string, last_added->string) != 0)
+        {
+            result = list_new(result, sorted_list->string);
+            last_added = sorted_list;
+        }
+    }
+    return result;    
+}
+
 
 /*
  * lol_init() - initialize a LOL (list of lists)

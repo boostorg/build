@@ -275,6 +275,7 @@ load_builtins()
       init_set();
       init_path();
       init_regex();
+      init_property_set();
 }
 
 /*
