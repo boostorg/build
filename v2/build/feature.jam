@@ -534,7 +534,7 @@ rule expand-composites ( properties * )
                             result += $(x) ;
                         }
                     }
-                }
+                }                
                 else if $(f) in $(result:G)
                 {
                     error explicitly-specified values of non-free feature
@@ -545,6 +545,7 @@ rule expand-composites ( properties * )
                 {
                     result += $(x) ;
                 }
+            }            
         }
     }
     return $(result) ;
