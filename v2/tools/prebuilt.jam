@@ -12,13 +12,17 @@ import feature : feature ;
 
 feature file : : free path ;
 
-rule prebuilt-file-generator 
-{
-    generator.__init__ prebuilt-file-generator : : * : <file> ;    
-    
+xclass prebuilt-file-generator : generator 
+{    
     import feature type errors path ;
     import regex : match ;
-    
+    import class : xnew ;
+        
+    rule __init__ ( )
+    {        
+        generator.__init__ prebuilt-file-generator : : * : <file> ;    
+    }
+        
     rule run ( project name ? : property-set : sources * )
     {
         local properties = [ $(property-set).raw ] ;
@@ -43,9 +47,7 @@ rule prebuilt-file-generator
     }
 }
 
-class prebuilt-file-generator : generator ;
-
-generators.register [ new prebuilt-file-generator ] ;
+generators.register [ xnew prebuilt-file-generator ] ;
 
 
 

@@ -10,7 +10,7 @@ import feature ;
 import property ;
 import numbers ;
 import container ;
-import class : class new ;
+import class : class new xnew ;
 import string ;
 
 # Transform property-set by applying f to each component property.
@@ -168,7 +168,7 @@ rule from-command-line ( command-line * )
             }
         }
     }
-    return [ new vector [ new vector $(targets) ] [ new vector $(properties) ] ] ;
+    return [ xnew vector [ xnew vector $(targets) ] [ xnew vector $(properties) ] ] ;
 }
 
 # Converts one element of command line build request specification into

@@ -113,17 +113,21 @@ class stage-target-class : basic-target ;
 # cause relinking to the new location.
 type.register STAGED_EXE : : EXE ;
 
-rule stage-exe-generator
+xclass stage-exe-generator : generator
 {
-    generator.__init__ stage-exe : EXE : STAGED_EXE ;
-    import type property-set modules ;
+    import type property-set modules ;    
+    
+    rule __init__ ( )
+    {
+        generator.__init__ stage-exe : EXE : STAGED_EXE ;
+    }
     
     rule run ( project name ? : property-set : source : multiple ? )
     {
         # FIXME: this must become some rule in virtual-target module
         # we're cloning the target and action.        
         local n = [ $(source).name ] ;
-        local cloned-target = [ xnew file-target $(n:D=) : [ $(source).type ] 
+        local cloned-target = [ class.xnew file-target $(n:D=) : [ $(source).type ] 
                   : $(project) ] ;
         local d = [ $(source).dependencies ] ;
         if $(d)
@@ -141,7 +145,7 @@ rule stage-exe-generator
         # stage can affect the relinking details.
         local ps = [ $(action).properties-ps ] ;
         local new-ps = [ $(ps).add [ property-set.create [ $(property-set).free ] ] ] ;
-        local cloned-action = [ xnew $(action-class) $(cloned-target) : 
+        local cloned-action = [ class.xnew $(action-class) $(cloned-target) : 
           [ $(action).sources ] : [ $(action).action-name ] : $(new-ps) ] ;
         
         $(cloned-target).action $(cloned-action) ;
@@ -150,8 +154,7 @@ rule stage-exe-generator
     }    
 }
 
-class stage-exe-generator : generator ;
-generators.register [ new stage-exe-generator ] ;
+generators.register [ xnew stage-exe-generator ] ;
 
 
 

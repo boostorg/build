@@ -357,13 +357,14 @@ local rule __test__ ( )
     # 'myclass'
     xclass myclass 
     {
-        import assert ;        
+        import assert : nonempty-variable ;        
         
         rule __init__ ( x_ * : y_ * )
         {            
             # set some instance variables
             x = $(x_) ;
             y = $(y_) ;
+            foo += 10 ;
         }
         
         rule set-x ( newx * )
@@ -421,15 +422,20 @@ local rule __test__ ( )
         {
             assert.equal 1 : 1 ;
         }                
-                
+        
+        rule get-foo ( )
+        {
+            return $(foo) ;
+        }                        
     }
+#    class myclass ;
 
     xclass derived1 : myclass
     {        
         rule __init__ ( z_ )
         {
             myclass.__init__ $(z_) : X ;
-            z = $(z_) ;
+            z = $(z_) ;            
         }
         
         # override g
@@ -447,12 +453,23 @@ local rule __test__ ( )
         {
             return $(z) ;
         }
-        
+
+        # Check that 'assert.equal' visible in base class is visible
+        # here.
         rule invariant2 ( )
         {
             assert.equal 2 : 2 ;
         }                
+        
+        # Check that 'nonempty-variable' visible in base class is
+        # visible here.
+        rule invariant3 ( )
+        {
+            local v = 10 ;
+            nonempty-variable v ;
+        }                
     }
+#    class derived1 : myclass ;
 
     xclass derived2 : myclass 
     {
@@ -473,6 +490,7 @@ local rule __test__ ( )
              return [ myclass.get-x ] ;
          }
     }
+#    class derived2 : myclass ;
 
     xclass derived2a : derived2
     {
@@ -481,6 +499,7 @@ local rule __test__ ( )
             derived2.__init__ ;
         }                
     }
+#    class derived2a : derived2 ;
 
     local rule expect_derived2 ( [derived2] x ) { }
 
@@ -492,6 +511,7 @@ local rule __test__ ( )
 
     local a = [ xnew myclass 3 4 5 : 4 5 ] ;
     local b = [ xnew derived1 4 ] ;
+    local b2 = [ xnew derived1 4 ] ;
     local c = [ xnew derived2 ] ;
     local d = [ xnew derived2 ] ;
     local e = [ xnew derived2a ] ;
@@ -542,8 +562,11 @@ local rule __test__ ( )
     assert.result derived2.g : $(c).f ;
     assert.result derived2.g : $(d).f ;
     
+    assert.result 10 : $(b).get-foo ;
+    
     $(a).invariant ;
     $(b).invariant2 ;
+    $(b).invariant3 ;
     
     # Check that the __class__  attribute is getting properly set.
     assert.result myclass : $(a).get-class ;

@@ -41,7 +41,7 @@
 #  the parameter is false, conversion of extra targets is not performed.
 
 import class : class new is-a xnew ;
-import container : vector ;
+import container ;
 import numbers : range ;
 import utility : str equal ;
 import set sequence ;
@@ -87,7 +87,23 @@ rule normalize-target-list ( targets )
 }
 
 # Creates a generator
-rule generator ( 
+xclass generator 
+{
+    import generators ;
+    import assert ;
+    import generators : indent increase-indent decrease-indent generators.dout ;
+    import set ;
+    import utility : equal ;
+    import feature ;
+    import errors : error ;
+    import sequence ;
+    import type ;
+    import virtual-target ;
+    import class : xnew ;
+   
+    EXPORT class@generator : indent increase-indent decrease-indent generators.dout ;
+    
+    rule __init__ (  
       id # identifies the generator - should be name of the rule which
          # sets up build actions
       composing ? # whether generator processes each source target in
@@ -107,49 +123,41 @@ rule generator (
     
     : requirements *
                 )
-{
-    import generators ;
-    import assert ;
-    import generators : indent increase-indent decrease-indent generators.dout ;
-    import set ;
-    import utility : equal ;
-    import feature ;
-    import errors : error ;
-    import sequence ;
-    import type ;
-    import virtual-target ;
-    
-    self.id = $(id) ;
-    self.composing = $(composing) ;
-    self.source-types = $(source-types) ;
-    self.target-types-and-names = $(target-types-and-names) ;
-    self.requirements = $(requirements) ;
-    
-    for local e in $(target-types-and-names)
-    {        
-        local m = [ MATCH ([^\\(]*)(\\((.*)%(.*)\\))? : $(e) ] ;
-        self.target-types += $(m[1]) ;
-        self.name-pre-post.$(m[1]) = $(m[3]) $(m[4]) ;
+    {                    
+        self.id = $(id) ;
+        self.composing = $(composing) ;
+        self.source-types = $(source-types) ;
+        self.target-types-and-names = $(target-types-and-names) ;
+        self.requirements = $(requirements) ;
+        
+        for local e in $(target-types-and-names)
+        {        
+            local m = [ MATCH ([^\\(]*)(\\((.*)%(.*)\\))? : $(e) ] ;
+            self.target-types += $(m[1]) ;
+            self.name-pre-post.$(m[1]) = $(m[3]) $(m[4]) ;
+        }
+            
+            
+            
+        # Note that 'transform' here, is the same as 'for_each'.
+        sequence.transform type.validate : $(self.source-types) ;
+        if $(self.target-types) != *
+        {        
+            sequence.transform type.validate : $(self.target-types) ;
+        }
+        
+        
+        # Add the bases of the target types to our optional properties.
+        # Since optional properties improve a generator's match-rank, a
+        # generator which requires only a base target type will not be as
+        # good a match as a generator which requires one of its derived
+        # target types (and thus has the base type as an optional
+        # property).
+        self.optional-properties
+          = [ feature.expand <base-target-type>$(self.target-types) ]
+            ;
     }
-
-    # Note that 'transform' here, is the same as 'for_each'.
-    sequence.transform type.validate : $(self.source-types) ;
-    if $(self.target-types) != *
-    {        
-        sequence.transform type.validate : $(self.target-types) ;
-    }
-    
-
-    # Add the bases of the target types to our optional properties.
-    # Since optional properties improve a generator's match-rank, a
-    # generator which requires only a base target type will not be as
-    # good a match as a generator which requires one of its derived
-    # target types (and thus has the base type as an optional
-    # property).
-    self.optional-properties
-      = [ feature.expand <base-target-type>$(self.target-types) ]
-          ;
-    
+                            
     ############## End of constructor #################
     
     rule id ( )
@@ -336,7 +344,7 @@ rule generator (
                 
         if $(result)
         {
-           local v = [ new vector $(result) ] ;
+           local v = [ class.xnew vector $(result) ] ;
            generators.dout [ indent ] "  SUCCESS: " [ $(v).str ] ;
         }
         else
@@ -371,7 +379,7 @@ rule generator (
         }
         else
         {
-            local v = [ new vector $(consumed) ] ;
+            local v = [ class.xnew vector $(consumed) ] ;
             generators.dout [ indent ] "alt2 : consumed is" [ $(v).str ] ;
             if $(consumed) 
             {
@@ -434,11 +442,11 @@ rule generator (
                 generated-name = $(name) ;
             }
             
-            targets += [ xnew file-target $(generated-name) : $(t) : $(project) ] ;
+            targets += [ class.xnew file-target $(generated-name) : $(t) : $(project) ] ;
         }                 
         # Assign an action for each target
         local action = [ action-class ] ;
-        local a = [ xnew $(action) $(targets) : $(sources) : $(self.id) : 
+        local a = [ class.xnew $(action) $(targets) : $(sources) : $(self.id) : 
                     $(property-set) ] ;
         for local t in $(targets)
         {
@@ -598,8 +606,6 @@ rule generator (
     }    
 }
 
-class generator ;
-
 import errors : error ;
 
 .generators = ;
@@ -608,7 +614,7 @@ import errors : error ;
 rule register ( g )
 {
     .generators += $(g) ;
-    
+                   
     for local t in [ $(g).target-types ] 
     {            
         .generators.$(t) += $(g) ;
@@ -622,7 +628,7 @@ rule register ( g )
 # Creates new instance of the 'generator' class and registers it.
 rule register-standard ( id : source-types + : target-types + : requirements * )
 {
-    local g = [ new generator $(id) : $(source-types) : $(target-types)
+    local g = [ xnew generator $(id) : $(source-types) : $(target-types)
       : $(requirements) ] ;
     register $(g) ;
 }
@@ -631,7 +637,7 @@ rule register-standard ( id : source-types + : target-types + : requirements * )
 # registers it.
 rule register-composing ( id : source-types + : target-types + : requirements * )
 {
-    local g = [ new generator $(id) true : $(source-types) 
+    local g = [ xnew generator $(id) true : $(source-types) 
                 : $(target-types) : $(requirements) ] ;
     register $(g) ;
 }
@@ -729,8 +735,8 @@ local rule try-one-generator ( project name ? : generator multiple ? :
     {
         extra2 = $(extra) ;
     }
-    local rr = [ new vector [ new vector $(result) ] 
-      [ new vector $(extra2) ] ] ;         
+    local rr = [ xnew vector [ xnew vector $(result) ] 
+      [ xnew vector $(extra2) ] ] ;         
     generators.dout [ indent ] "  generator" [ $(generator).id ] " spawned " ;
     generators.dout [ indent ] " " [ $(rr).str ] ;
     return $(result) $(extra2) ;                     
@@ -813,7 +819,7 @@ local rule find-viable-generators ( target-type : property-set )
         generators.dout  [ indent ] "trying type" $(t[1]) ;
         for local g in $(.generators.$(t[1]))
         {
-            generators.dout [ indent ] "trying generator" [ $(g).source-types ] -> [ $(g).target-types ] ;
+            generators.dout [ indent ] "trying generator" [ $(g).id ] "(" [ $(g).source-types ] -> [ $(g).target-types ] ")" ;
             
             # Avoid trying the same generator twice on different levels.
             if ! $(g) in $(.active-generators) 
@@ -936,7 +942,7 @@ local rule construct-without-caching (
 {
     viable-generators = [ find-viable-generators $(target-type) : $(property-set) ] ;
                     
-    local results = [ new vector ] ;
+    local results = [ xnew vector ] ;
     
     generators.dout [ indent ] "*** " [ sequence.length $(viable-generators) ] 
       " viable generators" ;
@@ -951,7 +957,7 @@ local rule construct-without-caching (
         
         if $(r)
         {
-            $(results).push-back [ new vector $(r) ] ;
+            $(results).push-back [ xnew vector $(r) ] ;
         }
     }
     

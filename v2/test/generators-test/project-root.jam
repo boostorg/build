@@ -1,5 +1,5 @@
 
-import class : class new ;
+import class : class new xnew ;
 
 import lex ;
 import qt ;
@@ -41,11 +41,13 @@ type.register NM_EXE : : EXE : main ;
 generators.register-standard nm.target-source : CPP_MARKED : NM.TARGET.CPP ;
 generators.register-standard nm.cpp-mark : CPP : CPP_MARKED POSITIONS ;
     
-        
-rule nm.target.cpp-obj-generator 
+xclass nm::target::cpp-obj-generator : generator
 {
-    generator.__init__ nm.target-obj : NM.TARGET.CPP : OBJ ;
-
+    rule __init__ ( )
+    {        
+        generator.__init__ nm.target-obj : NM.TARGET.CPP : OBJ ;
+    }
+    
     rule requirements ( )
     {
         return <main-target-type>NM_EXE ;
@@ -77,9 +79,8 @@ rule nm.target.cpp-obj-generator
         }        
     }                
 }
-class nm.target.cpp-obj-generator : generator ;    
 
-generators.register [ new nm.target.cpp-obj-generator ] ;
+generators.register [ xnew nm::target::cpp-obj-generator ] ;
 #}
 
 

@@ -7,7 +7,7 @@ import modules ;
 import feature ;
 import errors ;
 import type ;
-import class : class new ;
+import class : class new xnew ;
 import generators ;
 import project ;
 
@@ -59,10 +59,13 @@ rule init ( prefix ? )
         # It creates UIC_H from UI, and constructs CPP from UI/UIC_H
         # In addition, it also returns UIC_H target, so that it can bee
         # mocced.
-        rule qt.uic-cpp-generator 
+        xclass qt::uic-cpp-generator : generator
         {
-            generator.__init__ qt.uic-cpp : UI UIC_H : CPP : <allow>qt ;
-            
+            rule __init__ ( )
+            {
+                generator.__init__ qt.uic-cpp : UI UIC_H : CPP : <allow>qt ;
+            }
+                        
             rule run ( project name ? : properties * : sources + :  multiple ? )
             {
                 # Construct CPP as usual
@@ -80,8 +83,7 @@ rule init ( prefix ? )
             }               
         }
     
-        class qt.uic-cpp-generator : generator ; 
-        generators.register [ new qt.uic-cpp-generator ] ;
+        generators.register [ xnew qt::uic-cpp-generator ] ;
         
         # Finally, declare prebuilt target for QT library.
         local usage-requirements = 
