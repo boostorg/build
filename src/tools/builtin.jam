@@ -631,6 +631,7 @@ class linking-generator : generator
     {   
         local libs = [ $(property-set).get <library> ] ;
         sources += $(libs:G=) ;
+
         
         if [ $(property-set).get <hardcode-dll-paths> ] = true
         {

@@ -451,6 +451,7 @@ class generator
         for local t in $(targets)
         {
             $(t).action $(a) ;
+            $(t).set-intermediate true ;
         }       
         
         return [ sequence.transform virtual-target.register : $(targets) ] ;
@@ -1007,7 +1008,20 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
     {
         ensure-type $(sources) ;
     }
-    
+
+    if ! $(.construct-stack)
+    {
+        local sources2 ;
+        for local s in $(sources)
+        {
+            if ! [ $(s).intermediate ] 
+            {
+                sources2 += $(s) ;
+            }
+        }
+        sources = $(sources2) ;
+    }
+        
     .construct-stack += 1 ;
 
     increase-indent ;
@@ -1037,6 +1051,7 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
         
     .construct-stack = $(.construct-stack[2-]) ;
 
+    # For all targets of 'allowed-type', reset the 'intermediate' attribute.
     if ! $(.construct-stack) && $(allowed-type) != * # This is first invocation in stack
     {
         local result2 ;
@@ -1052,14 +1067,12 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
             # checking for unused sources a bit harder.
             if $(type) = $(target-type) || [ type.is-derived $(type) $(allowed-type) ]
             {
-                  result2 += $(t) ;
+                $(t).set-intermediate ;
             }
         }                
-        return $(result2) ;
     } 
-    else
-    {                            
-        return $(result) ;        
-    }        
+            
+    
+    return $(result) ;        
 }
 

@@ -258,6 +258,18 @@ class abstract-file-target : virtual-target
         }
         return $(self.root) ;
     }
+    
+    rule set-intermediate ( value ? )
+    {
+        self.intermediate = $(value) ;
+    }
+    
+    rule intermediate ( )      
+    {
+        return $(self.intermediate) ;
+    }
+    
+    
 
     # Gets or sets the subvariant which created this target. Subvariant
     # is set when target is brought into existance, and is never changed
@@ -913,6 +925,7 @@ rule clone-template ( target dont-recurse ? : new-source : new-project )
     {
         local cloned = [ new file-target $(new-name) : [ $(target).type ] :
           $(new-project) ] ;
+        $(cloned).set-intermediate [ $(target).intermediate ] ;
 
         if ! $(dont-recurse) && [ $(target).action ]
         {
