@@ -42,6 +42,12 @@ t.expect_touch("bin/gcc/debug/a.o")
 t.expect_touch("bin/gcc/debug/main-target-c/c" + exe_suffix)
 t.expect_nothing_more()
 
+# included by "src/b.h". We had a bug: file included via "",
+# like "b.h" is in this case was not scanned at all.
+t.touch("src1/c.h")
+t.run_build_system()
+t.expect_touch("bin/gcc/debug/a" + exe_suffix)
+
 t.touch("b.h")
 t.run_build_system()
 t.expect_nothing_more()
