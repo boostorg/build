@@ -297,6 +297,7 @@ local rule validate-feature ( feature )
 local rule expand-subfeatures-aux ( 
     feature ? # The name of the feature, or empty if value corresponds to an implicit property
   : value     # The value of the feature.
+  : dont-validate ? # If set, no validation of value string will be done  
 )
 {
     if $(feature)
@@ -312,8 +313,11 @@ local rule expand-subfeatures-aux (
     {
         validate-feature $(feature) ;
     }
-    validate-value-string $(feature) $(value) ;
-
+    if ! $(dont-validate)
+    {        
+        validate-value-string $(feature) $(value) ;
+    }
+    
     local components = [ regex.split $(value) "-" ] ;
     
     # get the top-level feature's value
@@ -360,6 +364,7 @@ rule expand-subfeatures (
   properties * # property set with elements of the form
            # <feature>value-string or just value-string in the
            # case of implicit features.
+  : dont-validate ?
 )
 {
     local result ;
@@ -368,7 +373,7 @@ rule expand-subfeatures (
         # Don't expand subfeatures in subfeatures
         if ! [ MATCH "(:)" : $(p:G) ]
         {            
-            result += [ expand-subfeatures-aux $(p:G) : $(p:G=) ] ;
+            result += [ expand-subfeatures-aux $(p:G) : $(p:G=) : $(dont-validate) ] ;
         }
         else
         {

@@ -128,7 +128,7 @@ rule expand-subfeatures-in-conditions ( properties * )
     local result ;
     for local p in $(properties)
     {
-        local s = [ MATCH ([^:]*):(<.*) : $(p) ] ;        
+        local s = [ MATCH (.*):(<.*) : $(p) ] ;        
         if ! $(s)
         {
             result += $(p) ;
@@ -136,8 +136,26 @@ rule expand-subfeatures-in-conditions ( properties * )
         else
         {
             local condition = $(s[1]) ;
+            # Condition might include several elements
+            condition = [ regex.split $(condition) "," ] ;
             local value = $(s[2]) ;
-            local e = [ feature.expand-subfeatures $(condition) ] ;
+            local e ;
+            for local c in $(condition)
+            {           
+                if [ MATCH "^(<toolset>|<toolset->)" : $(c:G) ]
+                {
+                    # It common that condition includes a toolset which
+                    # was never defined, or mentiones subfeatures which
+                    # were never defined. In that case, validation will
+                    # only produce an spirious error, so don't validate.
+                    e += [ feature.expand-subfeatures $(c) : true ] ;
+                }               
+                else
+                {
+                    e += [ feature.expand-subfeatures $(c) ] ;
+                }                
+            }
+            
             if $(e) = $(condition)
             {
                 result += $(p) ;
