@@ -43,7 +43,7 @@
 #       Similar to GXX, the name by which gcc is invoked for "C"
 #       language targets.
 
-GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/bin/
+GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/bin/ ;
 GCC_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if GCC_ROOT_DIRECTORY not set
 GCC_INCLUDE_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/include ;
 GCC_STDLIB_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/lib ;
