@@ -674,6 +674,13 @@ execcmd(
     }
 
     /* the rest is for Windows NT only */
+    /* spawn doesn't like quotes aroudn the command name */
+    if ( argv[0][0] == '"')
+    {
+        int l = strlen(argv[0]);
+        if (argv[0][l-1] == '"') argv[0][l-1] = '\0';
+        strcpy(argv[0],argv[0]+1);
+    }
     if( ( pid = spawnvp( P_NOWAIT, argv[0], argv ) ) == -1 )
     {
         perror( "spawn" );
