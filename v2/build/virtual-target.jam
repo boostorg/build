@@ -796,6 +796,54 @@ rule traverse ( target : include-roots ? : include-sources ? )
     return $(result) ;
 }
 
+# Takes an 'action' instances and creates new instance of it
+# and all produced target. The rule-name and properties are set
+# to 'new-rule-name' and 'new-properties', if those are specified.
+# Returns the cloned action.
+rule clone-action ( action : new-project : new-action-name ? : new-properties ? )
+{
+    if ! $(new-action-name)
+    {
+        new-action-name = [ $(action).action-name ] ;
+    }
+    if ! $(new-properties)
+    {
+        new-properties = [ $(action).properties ] ;
+    }
+                    
+    local cloned-targets ;
+    for local target in [ $(action).targets ]
+    {
+        local n = [ $(target).name ] ;
+        local cloned-target = [ class.new file-target $(n:D=) : [ $(target).type ] 
+          : $(new-project) ] ;
+        local d = [ $(target).dependencies ] ;
+        if $(d)
+        {            
+            $(cloned-target).depends $(d) ;
+        }                    
+        $(cloned-target).root [ $(target).root ] ;
+        $(cloned-target).dg [ $(target).dg ] ;
+        
+        cloned-targets += $(cloned-target) ;
+    }        
+        
+    local action-class = [ modules.peek $(action) : __class__ ] ;
+    
+    local cloned-action = [ class.new $(action-class) $(cloned-targets) : 
+      [ $(action).sources ] : $(new-action-name) : $(new-properties) ] ;
+    
+    for local cloned-target in $(cloned-targets)
+    {        
+        $(cloned-target).action $(cloned-action) ;
+    }
+    
+    
+    return $(cloned-action) ;        
+}
+
+
+
 
 # Clones a dependency graph template, given one of its root,
 # and a new source target to instantinate the template with.

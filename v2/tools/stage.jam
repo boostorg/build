@@ -219,33 +219,15 @@ class stage-exe-generator : generator
     
     rule run ( project name ? : property-set : source : multiple ? )
     {
-        # FIXME: this must become some rule in virtual-target module
-        # we're cloning the target and action.        
-        local n = [ $(source).name ] ;
-        local cloned-target = [ class.new file-target $(n:D=) : [ $(source).type ] 
-                  : $(project) ] ;
-        local d = [ $(source).dependencies ] ;
-        if $(d)
-        {            
-            $(cloned-target).depends $(d) ;
-        }                    
-        $(cloned-target).root [ $(source).root ] ;
-        $(cloned-target).dg [ $(source).dg ] ;
-        
-          
-        local action = [ $(source).action ] ;        
-        local action-class = [ modules.peek $(action) : __class__ ] ;
-
-        # Add our free properties to the property set, so that 
+        local action = [ $(source).action ] ;
+                       
         # stage can affect the relinking details.
         local ps = [ $(action).properties ] ;
         local new-ps = [ $(ps).add [ property-set.create [ $(property-set).free ] ] ] ;
-        local cloned-action = [ class.new $(action-class) $(cloned-target) : 
-          [ $(action).sources ] : [ $(action).action-name ] : $(new-ps) ] ;
         
-        $(cloned-target).action $(cloned-action) ;
-        
-        return $(cloned-target) ;
+        local cloned-action = [ virtual-target.clone-action $(action) : $(project) :
+          "" : $(new-ps) ] ;
+        return [ $(cloned-action).targets ] ;                        
     }    
 }
 
