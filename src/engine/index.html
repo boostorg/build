@@ -135,8 +135,8 @@
     facilitate its use in the Boost Build System, but should be backward
     compatible with Perforce Jam.</p>
 
-    <p>This is version 3.1.4 of BJam and is based on version 2.4 of
-    Jam/MR:</p>
+    
+<p>This is version 3.1.5 of BJam and is based on version 2.4 of Jam/MR:</p>
 <pre>
 /+\
 +\  Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
@@ -180,39 +180,18 @@ Main smail : main.c map.c resolve.c deliver.c
 
     <h2><a name="contents"></a>Contents</h2>
 
-    <table cellpadding="2" cellspacing="2" border="0" summary=
+    
+<table cellpadding="2" cellspacing="2" border="0" summary=
     "Contents of Jam documents.">
-      <tr>
-        <td valign="top"><a href="Jam.html">Jam.html</a></td>
-
-        <td valign="top">Jam and language reference.</td>
-      </tr>
-
-      <tr>
-        <td valign="top"><a href="Jambase.html">Jambase.html</a></td>
-
-        <td valign="top">Reference for the Jambase boilerplate file.</td>
-      </tr>
-
-      <tr>
-        <td valign="top"><a href="Jamfile.html">Jamfile.html</a></td>
-
-        <td valign="top">Easy reading on creating a Jamfile and using
-        jam.</td>
-      </tr>
-
-      <tr>
-        <td valign="top"><a href="RELNOTES">RELNOTES</a></td>
-
-        <td valign="top">Release 2.4 release notes.</td>
-      </tr>
-
-      <tr>
-        <td valign="top"><a href="Porting">Porting</a></td>
-
-        <td valign="top">Notes on porting jam to wildcat platforms.</td>
-      </tr>
-    </table>
+  <tr> 
+    <td valign="top"><a href="Jam.html">Jam.html</a></td>
+    <td valign="top">Jam and language reference.</td>
+  </tr>
+  <tr> 
+    <td valign="top"><a href="Porting">Porting</a></td>
+    <td valign="top">Notes on porting jam to wildcat platforms.</td>
+  </tr>
+</table>
 
     <h2><a name="installing"></a>Installing</h2>
 
@@ -317,7 +296,8 @@ sh ./build.sh
         href="http://gcc.gnu.org">GCC</a> as the <a href=
         "http://www.mingw.org">MinGW</a> configuration</td>
 
-        <td valign="top">&nbsp;</td>
+        
+    <td valign="top">* Common install location: <tt>"C:\MinGW"</tt></td>
       </tr>
 
       <tr>
@@ -336,8 +316,13 @@ sh ./build.sh
         "http://msdn.microsoft.com/visualc/">vc7</a>, Microsoft Visual C++
         7.x</td>
 
-        <td valign="top">* Common install location: <tt>"C:\Program
-        Files\Microsoft Visual Studio .NET"</tt></td>
+        
+    <td valign="top">* <tt>VCVARS32.BAT</tt> or <tt>VSVARS32.BAT</tt> already 
+      configured<br>
+      * Common install location: <tt>"C:\Program Files\Microsoft Visual Studio 
+      .NET"</tt><br>
+      * Common install location: <tt>"C:\Program Files\Microsoft Visual Studio 
+      .NET 2003"</tt></td>
       </tr>
 
       <tr>
@@ -443,17 +428,20 @@ sh ./build.sh
     used for compatability with the Perforce Jam/MR functionality, whereas
     "bjam" is used for the extended Boost.Build functionality.</p>
 
-    <p>The <tt>build</tt> scripts support additional invocation arguments for
-    use by developers of Boost.Jam. The extra arguments come after the
-    toolset, and can take the form of <tt>"--options"</tt> or targets for the
-    <tt>build.jam</tt> script:</p>
+    
+<p>The <tt>build</tt> scripts support additional invocation arguments for use 
+  by developers of Boost.Jam. The extra arguments come after the toolset, and 
+  can take the form of <tt>"--option"</tt> or targets for the <tt>build.jam</tt> 
+  script:</p>
 <pre>
-&lt;build script name&gt; [toolset] [--options* [targets]*]
+&lt;build script name&gt; [toolset] [--option+ target*]
 </pre>
 
-    <p>There is current only one available option, <tt>"--debug"</tt>, which
-    builds debugging versions of the executable. When built they are placed
-    in their own directory <tt>"bin.&lt;platform&gt;.debug"</tt>.</p>
+    
+<p>There is current only one available option, <tt>"--debug"</tt>, which builds 
+  debugging versions of the executable. When built they are placed in their own 
+  directory <tt>"bin.&lt;platform&gt;.debug"</tt>. To specify targets without 
+  options, one can suply a special ignore option <tt>&quot;---&quot;</tt>.</p>
 
     <p>Currently there are two targets supported: <tt>dist</tt>, and
     <tt>clean</tt>. Respectively they: generate packages (compressed
@@ -1139,7 +1127,7 @@ UPDATE $(previous-updates) a-new-target ;
     Grist is used instead of identifying targets with absolute paths for two
     reasons:</p>
 
-    <ol summary="">
+    <ol>
       <li>The location of targets cannot always be derived solely from what
       the user puts in a Jamfile, but sometimes depends also on the <a href=
       "#binding">binding</a> process. Some mechanism to distinctly identify
@@ -1187,32 +1175,28 @@ if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
     unintuitive, with regards to how other Unix programs accept options.
     There are two variants accepted as valid for an option:</p>
 
-    <ol summary="">
+    <ol>
       <li><tt>-xvalue</tt>, and</li>
 
       <li><tt>-x value</tt>.</li>
     </ol>
 
-    <p>Please also read <a href="./Jam.html">The Jam language reference</a>
-    for the additional details, and the <a href="./RELNOTES">Jam release
-    notes</a> for a brief description of recent, but <b>fundamental changes
-    to the Jam language</b> without which you will probably not understand
-    any of the build system code. In particular, note that the
-    <tt>return</tt> statement does not affect control flow.</p>
+    
+<p>Please also read <a href="./Jam.html">The Jam language reference</a> for the 
+  additional details.</p>
     <hr>
 
-    <p>Revised 
-    <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-     2 February, 2003 
-    <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
-    </p>
-
-    <p><i>&copy; Copyright <a href="mailto:rrivera@acm.org">Ren&eacute;
-    Rivera</a>, David Abrahams, Vladimir Prus 2003. All Rights Reserved.</i>
-    Permission to copy, use, modify, sell and distribute this document is
-    granted provided this copyright notice appears in all copies. This
-    document is provided "as is" without express or implied warranty, and
-    with no claim as to its suitability for any purpose.</p>
+    
+<p>Revised 
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
+  7 June, 2003 
+  <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
+</p>
+<p><i>&copy; Copyright Ren&eacute; Rivera, David Abrahams, Vladimir Prus 2003. 
+  All Rights Reserved.</i> Permission to copy, use, modify, sell and distribute 
+  this document is granted provided this copyright notice appears in all copies. 
+  This document is provided "as is" without express or implied warranty, and with 
+  no claim as to its suitability for any purpose.</p>
   </body>
 </html>
 

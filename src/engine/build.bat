@@ -1,5 +1,5 @@
 @ECHO OFF
-REM Copyrigt (C) 2002 Rene Rivera.
+REM Copyrigt (C) 2002-2003 Rene Rivera.
 REM Permission to copy, use, modify, sell and distribute this software
 REM is granted provided this copyright notice appears in all copies.
 REM This software is provided "as is" without express or implied
@@ -62,6 +62,31 @@ if not errorlevel 1 (
     set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\..\
     goto :eof)
 setlocal & endlocal
+if NOT "_%VCINSTALLDIR%_" == "__" (
+    set BOOST_JAM_TOOLSET=vc7
+    set BOOST_JAM_TOOLSET_ROOT=%VCINSTALLDIR%\VC7\
+    goto :eof)
+setlocal & endlocal
+if EXIST "%ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\bin\VCVARS32.BAT" (
+    set BOOST_JAM_TOOLSET=vc7
+    set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\
+    goto :eof)
+setlocal & endlocal
+if EXIST "C:\Program Files\Microsoft Visual Studio .NET 2003\VC7\bin\VCVARS32.BAT" (
+    set BOOST_JAM_TOOLSET=vc7
+    set BOOST_JAM_TOOLSET_ROOT=C:\Program Files\Microsoft Visual Studio .NET 2003\VC7\
+    goto :eof)
+setlocal & endlocal
+if EXIST "%ProgramFiles%\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
+    set BOOST_JAM_TOOLSET=vc7
+    set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET\VC7\
+    goto :eof)
+setlocal & endlocal
+if EXIST "C:\Program Files\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
+    set BOOST_JAM_TOOLSET=vc7
+    set BOOST_JAM_TOOLSET_ROOT=C:\Program Files\Microsoft Visual Studio .NET\VC7\
+    goto :eof)
+setlocal & endlocal
 if NOT "_%MSVCDir%_" == "__" (
     set BOOST_JAM_TOOLSET=msvc
     set BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\
@@ -85,16 +110,6 @@ setlocal & endlocal
 if EXIST "C:\Program Files\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" (
     set BOOST_JAM_TOOLSET=msvc
     set BOOST_JAM_TOOLSET_ROOT=C:\Program Files\Microsoft Visual C++\VC98\
-    goto :eof)
-setlocal & endlocal
-if EXIST "%ProgramFiles%\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
-    set BOOST_JAM_TOOLSET=vc7
-    set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET\VC7\
-    goto :eof)
-setlocal & endlocal
-if EXIST "C:\Program Files\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
-    set BOOST_JAM_TOOLSET=vc7
-    set BOOST_JAM_TOOLSET_ROOT=C:\Program Files\Microsoft Visual Studio .NET\VC7\
     goto :eof)
 setlocal & endlocal
 call :Test_Path cl.exe
@@ -135,6 +150,26 @@ setlocal & endlocal
 call :Error_Print "Could not find a suitable toolset."
 goto :eof
 
+:Guess_Yacc
+REM Tries to find bison or yacc in common places so we can build the grammar.
+setlocal & endlocal
+call :Test_Path yacc.exe
+if not errorlevel 1 (
+    set YACC=yacc -d
+    goto :eof)
+setlocal & endlocal
+call :Test_Path bison.exe
+if not errorlevel 1 (
+    set YACC=bison -d --yacc
+    goto :eof)
+setlocal & endlocal
+if EXIST "C:\Program Files\GnuWin32\bin\bison.exe" (
+    set YACC="C:\Program Files\GnuWin32\bin\bison.exe" -d --yacc
+    goto :eof)
+setlocal & endlocal
+call :Error_Print "Could not find Yacc to build the Jam grammar."
+goto :eof
+
 :Start
 set BOOST_JAM_TOOLSET=
 
@@ -172,7 +207,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_metrowerks_" (
         set BOOST_JAM_TOOLSET_ROOT=%CWFolder%\) )
 if "_%BOOST_JAM_TOOLSET%_" == "_metrowerks_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
-        set PATH=%PATH%;%BOOST_JAM_TOOLSET_ROOT%Other Metrowerks Tools\Command Line Tools)
+        set PATH=%BOOST_JAM_TOOLSET_ROOT%Other Metrowerks Tools\Command Line Tools;%PATH%)
     set BOOST_JAM_CC=mwcc -runtime staticsingle -DNT
     set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
     set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
@@ -187,8 +222,8 @@ if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
         call "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" ) )
 if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
-        set PATH=%PATH%;%BOOST_JAM_TOOLSET_ROOT%bin)
-    set BOOST_JAM_CC="%BOOST_JAM_TOOLSET_ROOT%bin\cl.exe" /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib
+        set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
+    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib
     set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
     set BOOST_JAM_OPT_YYACC=/Febootstrap.%BOOST_JAM_TOOLSET%\yyacc0
@@ -202,8 +237,8 @@ if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
         call "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" ) )
 if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
-        set PATH=%PATH%;%BOOST_JAM_TOOLSET_ROOT%bin)
-    set BOOST_JAM_CC="%BOOST_JAM_TOOLSET_ROOT%bin\cl.exe" /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib
+        set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
+    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib
     set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
     set BOOST_JAM_OPT_YYACC=/Febootstrap.%BOOST_JAM_TOOLSET%\yyacc0
@@ -217,7 +252,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_borland_" (
         if not errorlevel 1 (
             set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\) ) )
 if "_%BOOST_JAM_TOOLSET%_" == "_borland_" (
-    if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (set PATH=%PATH%;%BOOST_JAM_TOOLSET_ROOT%Bin)
+    if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (set PATH=%BOOST_JAM_TOOLSET_ROOT%Bin;%PATH%)
     set BOOST_JAM_CC=bcc32 -WC -w- -q "-I%BOOST_JAM_TOOLSET_ROOT%Include" "-L%BOOST_JAM_TOOLSET_ROOT%Lib" /DNT -nbootstrap.%BOOST_JAM_TOOLSET%
     set BOOST_JAM_OPT_JAM=-ejam0
     set BOOST_JAM_OPT_MKJAMBASE=-emkjambasejam0
@@ -288,20 +323,17 @@ md bootstrap.%BOOST_JAM_TOOLSET%
 :Bootstrap_GrammarPrep
 %BOOST_JAM_CC% %BOOST_JAM_OPT_YYACC% %YYACC_SOURCES%
 @if not exist ".\bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe" goto Skip_GrammarPrep
-".\bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe" jamgram.y jamgramtab.h jamgram.yy
+.\bootstrap.%BOOST_JAM_TOOLSET%\yyacc0 jamgram.y jamgramtab.h jamgram.yy
 :Skip_GrammarPrep
 @if not exist jamgram.c goto Bootstrap_GrammarBuild
 @if not exist jamgram.h goto Bootstrap_GrammarBuild
 @goto Skip_GrammarBuild
 :Bootstrap_GrammarBuild
-@ECHO OFF
-@setlocal & endlocal
-@call :Test_Path yacc.exe
-@if not errorlevel 1 (set YACC=yacc -d)
-@setlocal & endlocal
-@call :Test_Path bison.exe
-@if not errorlevel 1 ( if "_%YACC%_" == "__" (set YACC=bison -y -d --yacc) )
-@if "_%YACC%_" == "__" goto Skip_GrammarBuild
+@echo OFF
+if "_%YACC%_" == "__" (
+    call :Guess_Yacc
+)
+if errorlevel 1 goto Finish
 @echo ON
 %YACC% jamgram.y
 rename y.tab.c jamgram.c
@@ -311,7 +343,7 @@ rename y.tab.h jamgram.h
 @if exist jambase.c goto Skip_Jambase
 %BOOST_JAM_CC% %BOOST_JAM_OPT_MKJAMBASE% %MKJAMBASE_SOURCES%
 @if not exist ".\bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe" goto Skip_Jambase
-".\bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe" jambase.c Jambase
+.\bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0 jambase.c Jambase
 :Skip_Jambase
 %BOOST_JAM_CC% %BOOST_JAM_OPT_JAM% %BJAM_SOURCES%
 @if not exist ".\bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe" goto Skip_Jam
