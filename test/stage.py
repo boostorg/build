@@ -6,11 +6,24 @@ from BoostBuild import Tester
 t = Tester()
 
 t.write("project-root.jam", "import gcc ;")
-t.write("Jamfile", """
+
+t.write(
+    "Jamfile", 
+"""
 lib a : a.cpp ;
 stage dist : a a.h auxilliary/1 ;
 """)
-t.write("a.cpp", "")
+
+t.write(
+    "a.cpp",
+"""
+int
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+must_export_something;
+""")
+
 t.write("a.h", "")
 t.write("auxilliary/1", "")
 
@@ -37,11 +50,16 @@ t.expect_addition("rs/a.dll")
 t.write("project-root.jam", """
 path-constant DIST : dist ;
 """)
+
 t.write("Jamfile", "build-project d ;")
-t.write("d/Jamfile","""
+
+t.write(
+    "d/Jamfile",
+"""
 exe a : a.cpp ;
 stage dist : a : <location>$(DIST) ;
 """)
+
 t.write("d/a.cpp", "int main() { return 0;}\n")
 
 t.run_build_system()
