@@ -1851,15 +1851,11 @@ rule stage ( name : sources + : requirements * : local-build * )
 {
     local stage-id =
         [ grist-targets $(name) ] ;
-    local stage-local-build =
-        [ select-gristed $(local-build) ] ;
-    local source-local-build =
-        [ select-ungristed $(local-build) ] ;
     local tags =
         [ get-properties <tag> : $(requirements) ] ;
 
     # Supress the regular build of this target
-    local gSUPPRESS_FAKE_TARGETS =  [ get-values <suppress> : $(stage-local-build) ] ;
+    local gSUPPRESS_FAKE_TARGETS =  [ get-values <suppress> : $(local-build) ] ;
 
     local stage-dir = $(name:G=) ;
     local files = [ select-ungristed $(sources) ] ;
@@ -1877,7 +1873,7 @@ rule stage ( name : sources + : requirements * : local-build * )
         local target-id = [ FGristFiles $(target) ] ;
 
         local BUILD = ;
-        local subvariants = [ expand-target-subvariants $(target-id) : $(source-local-build) : $(TOOLS) : BUILD ] ;
+        local subvariants = [ expand-target-subvariants $(target-id) : $(local-build) : $(TOOLS) : BUILD ] ;
 
         dependent-include $(target) ;
 
