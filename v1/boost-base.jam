@@ -1910,13 +1910,15 @@ rule unit-test ( target +  : sources + : requirements * : default-build * : cmd-
         include testing.jam ;
     }
     
-    run $(sources)
-      : $(cmd-line)
-      : # input-files
-      : $(requirements)
-      : $(target)
-      : $(default-build)
-        ;
+    DEPENDS all
+      : [ run $(sources)
+          : $(cmd-line)
+          : # input-files
+          : $(requirements)
+          : $(target)
+          : $(default-build)
+        ]
+      ;
 }
 
 # Used to build command files from a list of sources.
