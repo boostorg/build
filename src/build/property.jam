@@ -201,10 +201,9 @@ rule validate ( property : feature-space ?  )
         {
             msg = "unknown feature '$(feature)'" ;
         }
-        else if $(value) && ! $(value) in [ $(feature-space).values $(feature) ]
-                && ! free in [ $(feature-space).attributes $(feature) ] 
+        else if $(value) && ! free in [ $(feature-space).attributes $(feature) ] 
         {
-            msg = "value '"$(value:J=" ")"' is not valid for feature'"$(feature)' ;
+            $(feature-space).validate-value-string $(feature) $(value) ;
         } 
         else if ! $(value)
         {
@@ -213,10 +212,8 @@ rule validate ( property : feature-space ?  )
     }
     else
     {
-        if ! [ $(feature-space).is-implicit-value $(property) ]
-        {
-            msg = '$(property:J=" ")' "is not a value of implicit feature" ;        
-        }
+        local feature = [ $(feature-space).implied-feature $(property) ] ;
+        $(feature-space).validate-value-string $(feature) $(property) ;
     }
     if $(msg) 
     {
@@ -389,6 +386,8 @@ local rule __test__ ( )
         import assert ;
 
         feature toolset : gcc : implicit ;
+        subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
+          3.0 3.0.1 3.0.2 : optional ;
         feature define : : free ;
         feature runtime-link : dynamic static : symmetric link-incompatible ;
         feature optimization : on off ;
@@ -400,6 +399,11 @@ local rule __test__ ( )
 
     }
 
+    validate gcc : $(test-space) ;
+    validate gcc-3.0.1 : $(test-space) ;
+    validate <toolset>gcc : $(test-space) ;
+    validate <toolset>gcc-3.0.1 : $(test-space) ;
+    
     assert.result <toolset>gcc <rtti>off <define>FOO
         : refine <toolset>gcc <rtti>off
         : <define>FOO
@@ -447,7 +451,7 @@ local rule __test__ ( )
 
     try ;
         validate <rtti>default : $(test-space) ;
-    catch "Invalid property '<rtti>default': value 'default' is not valid for feature'rtti'." ;
+    catch \"default\" is not a known value of feature <rtti> ;
     
     validate <define>WHATEVER : $(test-space) ;
 
@@ -457,7 +461,7 @@ local rule __test__ ( )
 
     try ;
         validate value : $(test-space) ;
-    catch "Invalid property 'value': 'value' is not a value of implicit feature." ;
+    catch "value" is not a value of an implicit feature ;
            
 
     assert.result <rtti>on 

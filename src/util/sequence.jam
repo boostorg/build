@@ -259,6 +259,7 @@ local rule __test__ ( )
 
         assert.result foo-bar-baz : sequence.join foo bar baz : - ;
         assert.result substandard : sequence.join sub stan dard ;
+        assert.result 3.0.1 : sequence.join 3.0.1 : - ;
 
         assert.result 0 : sequence.length ;
         assert.result 3 : sequence.length a b c ;

@@ -31,9 +31,9 @@ rule init ( a1 * : a2 * : a3 * )
             
         # NOTE: this should be collapsed in one line once
         # 'toolset.flags' supports specifying module name.
-        toolset.flags gcc.compile NAME <toolset>gcc/<toolset-version>$(version) : $(name) ;
-        toolset.flags gcc.link NAME <toolset>gcc/<toolset-version>$(version) : $(name) ;            
-        toolset.flags gcc.link-dll NAME <toolset>gcc/<toolset-version>$(version) : $(name) ;                        
+        toolset.flags gcc.compile NAME <toolset>gcc-$(version) : $(name) ;
+        toolset.flags gcc.link NAME <toolset>gcc-$(version) : $(name) ;            
+        toolset.flags gcc.link-dll NAME <toolset>gcc-$(version) : $(name) ;                        
         
         # TODO: set path accordingly.
     }    
