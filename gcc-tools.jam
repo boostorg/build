@@ -427,6 +427,7 @@ rule Cc-action
 
 actions gcc-Cc-action
 {
+    set -e
     $(.GCC[1]:R=$(GCC_BIN_DIR)) $(.GCC[2-]) -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I$(_)"$(STDHDRS)" -o "$(<)" "$(>)"
     $(.OBJCOPY[1])$(_)$(OBJCOPY_FLAGS)$(_)"$(<)"
 }
@@ -440,6 +441,7 @@ rule C++-action
 
 actions gcc-C++-action
 {
+    set -e
     $(.GXX[1]:R=$(GCC_BIN_DIR)) $(.GXX[2-]) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I$(_)"$(STDHDRS)" -o "$(<)" "$(>)"
     $(.OBJCOPY[1])$(_)$(OBJCOPY_FLAGS)$(_)"$(<)"
 }
