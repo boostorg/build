@@ -298,6 +298,32 @@ rule project-target ( name : project : requirements * : default-build * )
 }
 class project-target : abstract-target ;
 
+
+
+# Helper rules to detect cycles in main target references
+local rule start-building ( main-target-instance )
+{
+    if $(main-target-instance) in $(.targets-being-built)
+    {
+        local names ;
+        for local t in $(.targets-being-built) $(main-target-instance)
+        {
+            names += [ $(t).full-name ] ;
+        }
+        
+        errors.error "Recursion in main target references" 
+          : "the following target are being built currently:"
+          : $(names) ;
+    }
+    .targets-being-built += $(main-target-instance) ;    
+}
+
+local rule end-building ( main-target-instance )
+{
+    .targets-being-built = $(.targets-being-built[1--2]) ;
+}
+
+
 # A named top-level target in Jamfile
 rule main-target ( name : project )
 {
@@ -309,6 +335,7 @@ rule main-target ( name : project )
     import sequence ;
     import print ;
     import build-request feature property-set ;
+    import targets : start-building end-building ;
         
     # Add a new alternative for this target
     rule add-alternative ( target )
@@ -407,6 +434,7 @@ rule main-target ( name : project )
     # Returns the result of calling 'generate' on that alternative.
     rule generate ( property-set )
     {
+        start-building $(__name__) ;
         local all-property-sets = [ apply-default-build $(property-set) ] ;
         local usage-requirements = [ property-set.empty ] ;
         local result ;
@@ -418,6 +446,7 @@ rule main-target ( name : project )
             usage-requirements = [ $(usage-requirements).add $(r[1]) ] ;
             result += $(r[2-]) ;
         }
+        end-building $(__name__) ;
         return $(usage-requirements) $(result) ;                
     }
         
