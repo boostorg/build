@@ -202,7 +202,7 @@ int  main( int argc, char **argv, char **arg_environ )
     int		n;
     char		*s;
     struct option	optv[N_OPTS];
-    char		*all = "all";
+    const char	*all = "all";
     int		anyhow = 0;
     int		status;
     int arg_c = argc;
@@ -425,7 +425,7 @@ int  main( int argc, char **argv, char **arg_environ )
         else 
         {
             int targets_count = list_length(targets);
-            char **targets2 = (char **)malloc(targets_count * sizeof(char *));
+            const char **targets2 = (const char **)malloc(targets_count * sizeof(char *));
             int n = 0;
             for ( ; targets; targets = list_next(targets) )
             {

@@ -10,7 +10,7 @@
 
 #include "lists.h"
 
-int make( int n_targets, char **targets, int anyhow );
+int make( int n_targets, const char **targets, int anyhow );
 int make1( TARGET *t );
 
 /*
