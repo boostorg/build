@@ -202,6 +202,7 @@ rule exists ( file )
 {
     return [ path.glob $(file:D) : $(file:D=) ] ;
 }
+NATIVE_RULE path : exists ;
 
 
 
