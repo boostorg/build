@@ -14,7 +14,7 @@ import errors ;
 generators.register-standard fop.render : FO : PDF ;
 generators.register-standard fop.render : FO : PS ;
 
-rule init ( fop-command ? : java-home ? )
+rule init ( fop-command ? : java-home ? : java ? )
 {
     fop-command = [ common.get-invocation-command fop : fop : $(fop-command) 
       : [ modules.peek : FOP_DIR ] ] ;
@@ -22,6 +22,7 @@ rule init ( fop-command ? : java-home ? )
     if $(.initialized)
     {
         if $(.FOP_COMMAND) != $(fop-command) || $(JAVA_HOME) != $(java-home)
+           || $(JAVACMD) != $(java)
         {
             errors.user-error "fop: reinitialization with different options" ;
         }        
@@ -33,15 +34,23 @@ rule init ( fop-command ? : java-home ? )
         if $(java-home) 
         {            
             .FOP_SETUP = [ common.variable-setting-command JAVA_HOME $(java-home) ] ;
-        }    
+        } 
+        else
+        {
+            .FOP_SETUP = [ common.variable-setting-command JAVACMD $(java) ] ;
+        }
     }
     
     # Make sure the fop command is executed from within the directory where it's located.
-    if $(.FOP_COMMAND:D)
-    {
-        .FOP_SETUP = $(.FOP_SETUP)"
-cd "$(.FOP_COMMAND:D) ;
-    }
+
+    # DPG: I can't see how this could ever be correct, because it
+    # messes up path names that are used in the command.
+
+    # if $(.FOP_COMMAND:D)
+    # {
+    #     .FOP_SETUP = $(.FOP_SETUP)"
+# cd "$(.FOP_COMMAND:D) ;
+    # }
       
 }
 
@@ -82,6 +91,5 @@ rule render ( source : target : properties * )
 
 actions render
 {
-  $(.FOP_SETUP)
-  $(.FOP_COMMAND) $(>) $(<)
+  $(.FOP_SETUP) $(.FOP_COMMAND) $(>) $(<)
 }
