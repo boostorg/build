@@ -7,6 +7,13 @@
 // software is provided "as is" without express or implied warranty, and
 // with no claim as to its suitability for any purpose.
 
+#ifdef _WIN32
+#ifdef LIBX_SOURCE
+__declspec(dllexport)
+#else
+__declspec(dllimport)
+#endif
+#endif
 class TestLibX
 {
 public:
