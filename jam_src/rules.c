@@ -292,6 +292,33 @@ copysettings( SETTINGS *head )
 #endif
 
 /*
+ *    freetargets() - delete a targets list
+ */
+void freetargets( TARGETS *chain )
+{
+    while( chain )
+    {
+        TARGETS* n = chain->next;
+        free( chain );
+        chain = n;
+    }
+}
+
+/*
+ *    freeactions() - delete an action list
+ */
+void freeactions( ACTIONS *chain )
+{
+    while( chain )
+    {
+        ACTIONS* n = chain->next;
+        free( chain );
+        chain = n;
+    }
+}
+
+
+/*
  *    freesettings() - delete a settings list
  */
 
@@ -311,6 +338,19 @@ freesettings( SETTINGS *v )
 	}
 }
 
+static void freetarget( void *xt, void *data )
+{
+    TARGET* t = (TARGET *)xt;
+    if ( t->settings )
+        freesettings( t->settings );
+    if ( t->deps[0] )
+        freetargets( t->deps[0] );
+    if ( t->deps[1] )
+        freetargets( t->deps[1] );
+    if ( t->actions )
+        freeactions( t->actions );
+}
+
 /*
  * donerules() - free TARGET tables
  */
@@ -318,6 +358,7 @@ freesettings( SETTINGS *v )
 void
 donerules()
 {
+    hashenumerate( targethash, freetarget, 0 );
 	hashdone( targethash );
     while ( settings_freelist )
     {
