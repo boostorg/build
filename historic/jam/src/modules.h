@@ -6,6 +6,8 @@
 #ifndef MODULES_DWA10182001_H
 # define MODULES_DWA10182001_H
 
+#include "lists.h"
+
 struct module_t
 {
     char* name;
@@ -23,7 +25,12 @@ void bind_module_var( module_t*, char* name );
 void enter_module( module_t* );
 void exit_module( module_t* );
 void delete_module( module_t* );
+
+void import_module(LIST* module_names, module_t* target_module);
+LIST* imported_modules(module_t* module);
+
 struct hash* demand_rules( module_t* );
+
 
 #endif
 

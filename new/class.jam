@@ -357,6 +357,8 @@ local rule __test__ ( )
     # 'myclass'
     xclass myclass 
     {
+        import assert ;        
+        
         rule __init__ ( x_ * : y_ * )
         {            
             # set some instance variables
@@ -409,6 +411,17 @@ local rule __test__ ( )
         {
             return $(__class__) ;
         }
+        
+        rule get-instance ( )
+        {
+            return $(__name__) ;
+        }
+        
+        rule invariant ( )
+        {
+            assert.equal 1 : 1 ;
+        }                
+                
     }
 
     xclass derived1 : myclass
@@ -434,6 +447,11 @@ local rule __test__ ( )
         {
             return $(z) ;
         }
+        
+        rule invariant2 ( )
+        {
+            assert.equal 2 : 2 ;
+        }                
     }
 
     xclass derived2 : myclass 
@@ -455,7 +473,6 @@ local rule __test__ ( )
              return [ myclass.get-x ] ;
          }
     }
-
 
     xclass derived2a : derived2
     {
@@ -524,10 +541,14 @@ local rule __test__ ( )
     assert.result derived1.g : $(b).f ;
     assert.result derived2.g : $(c).f ;
     assert.result derived2.g : $(d).f ;
-
+    
+    $(a).invariant ;
+    $(b).invariant2 ;
+    
     # Check that the __class__  attribute is getting properly set.
     assert.result myclass : $(a).get-class ;
     assert.result derived1 : $(b).get-class ;
+    assert.result $(a) : $(a).get-instance ;
 
     $(a).set-x a.x ;
     $(b).set-x b.x ;
