@@ -1282,6 +1282,32 @@ rule split-path
     return $(result) ;
 }
 
+rule split # string pattern
+{
+    local source = $(<[1]) ;
+    local divider = $(<[2]) ;
+    local pattern = "(.*)("$(divider)")(.*)" ;
+
+    # SUBST rule is weird. When there's no match it returns the original string.
+    local match = [ SUBST $(source) $(pattern) $1$2$3xxx ] ;
+    if ( $(match) = $(source) )
+    {
+        return $(source) ;
+    }
+    else
+    {
+        local head = [ SUBST $(source) $(pattern) $1 ] ;
+        local tail = [ SUBST $(source) $(pattern) $3 ] ;
+        return [ split $(head) $(divider) ] $(tail) ;
+    }
+}
+
+# simpler reimplementation of split-path for boost
+rule split-path
+{
+    return [ split $(<) "[/$(SLASH)]" ] ;
+}
+
 # dwa 6/4/01 - added for boost
 # reverse item1 item2... 
 #
@@ -1532,13 +1558,11 @@ rule join
     return $(_r) ;
 }
 
+# Given $(<), the tokens comprising a relative path from D1 to a subdirectory
+# D2, return the relative path from D2 to D1, using ../../ etc.
 rule FSubDir
 {
-    local _i _d ;
-
-    # If $(>) is the path to the current directory, compute the
-    # path (using ../../ etc) back to that root directory.
-    # Sets result in $(<)
+    local _d ;
 
     if ! $(<[1]) 
     {
@@ -1548,6 +1572,7 @@ rule FSubDir
     {
         _d = $(DOTDOT) ;
 
+        local _i ;
         for _i in $(<[2-])
         {
             _d = $(_d:R=$(DOTDOT)) ;
