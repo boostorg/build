@@ -231,14 +231,15 @@ class abstract-file-target : virtual-target
         {
             if $(self.type)
             {
-                local properties ;
+                # CONSIDER: is it ever possible that self.action is not defined?
+                # It theory, only possible for source files with no
+                # suffix at all.
                 if $(self.action)
                 {
-                    local ps = [ $(self.action).properties ] ;
-                    properties = [ $(ps).raw ] ;
-                }                        
-                self.suffix = [ type.generated-target-suffix $(self.type) :
-                  $(properties) ] ;            
+                    local ps = [ $(self.action).properties ] ;                
+                    self.suffix = [ type.generated-target-suffix $(self.type) :
+                      $(ps) ] ;            
+                }                
             }            
         }
         
@@ -496,34 +497,21 @@ class file-target : abstract-file-target
         {
             if $(self.action)
             {       
-                # The <location> feature can be used to explicitly
-                # change the location of generated targetsv
-                local p = [ $(self.action).properties ] ;
-                local l = [ $(p).get <location> ] ;
-                if $(l)
-                {
-                    self.path = [ path.native $(l) ] ;
+                local p = [ $(self.action).properties ] ;                
+                local path = [ $(p).target-path ] ;
+                
+                if $(path[1]) = "."
+                {        
+                    # Indicates that the path is relative to
+                    # build dir.
+                    path = [ path.root $(path[2]) 
+                      [ $(self.project).build-dir ] ] ;
                 }
-                else 
-                {                    
-                    local build-dir = [ $(self.project).get build-dir ] ;
-                    if ! $(build-dir)
-                    {
-                        build-dir = [ path.join 
-                            [ $(self.project).get location ]
-                              bin
-                        ] ;
-                    }
-                    
-                    local path = [ path.join
-                        $(build-dir)
-                          [ $(self.action).path ]
-                    ] ;
-                    
-                    # Store the computed path, so that it's not recomputed
-                    # any more
-                    self.path = [ path.native $(path) ] ;
-                }                
+                
+                
+                # Store the computed path, so that it's not recomputed
+                # any more
+                self.path = [ path.native $(path) ] ;
             }            
         }
         return $(self.path) ;
@@ -673,22 +661,6 @@ class action
           actualize-source-type $(dependencies) : $(property-set) ] ;
         self.actual-sources += [ 
           actualize-source-type $(sources) : $(property-set) ] ;
-    }
-
-    rule path ( )
-    {
-        local p = [ $(self.properties).as-path ] ;
-        # Really, an ugly hack. Boost regression test system requires
-        # specific target paths, and it seems that changing it to handle
-        # other directory layout is really hard. For that reason,
-        # we teach V2 to do the things regression system requires.
-        # The value o '<location-prefix>' is predended to the path.
-        local prefix = [ $(self.properties).get <location-prefix> ] ;
-        if $(prefix)
-        {
-            p = [ path.join $(prefix) $(p) ] ;
-        }        
-        return $(p) ;
     }
 
     # Determined real properties when trying building with 'properties'.
