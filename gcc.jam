@@ -50,7 +50,7 @@ if [ os.name ] = NT
 # Declare generators
 generators.register-linker gcc.link : LIB OBJ : EXE : <toolset>gcc ;
 generators.register-composing gcc.archive : OBJ : STATIC_LIB : <toolset>gcc ;
-generators.register-linker gcc.link-dll : OBJ : SHARED_LIB : <toolset>gcc ;
+generators.register-linker gcc.link-dll : LIB OBJ : SHARED_LIB : <toolset>gcc ;
 generators.register-c-compiler gcc.compile : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile : C : OBJ : <toolset>gcc ;
 
