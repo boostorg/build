@@ -44,6 +44,8 @@ rule vector (
     values * # Initial contents of vector.
     )
 {
+    import numbers : range ;
+
     node.__init__ ;
     self.value = $(values) ;
     
@@ -187,6 +189,16 @@ rule vector (
             return true ;
         }
     }
+
+    # Returns the list of all valid indices for this vector.
+    rule indices ( )
+    {
+        if ! [ empty ] 
+        {
+            local size = [ size ] ;
+            return [ range 1 : $(size) ] $(size) ;
+        }      
+    }
 }
 class vector : node ;
 
@@ -196,8 +208,10 @@ local rule __test__ ( )
     
     local l = [ new vector ] ;
     assert.result 0 : $(l).size ;
+    assert.result : $(l).indices ;
     $(l).push-back b ;
     $(l).push-front a ;
+    assert.result 1 2 : $(l).indices ;
     assert.result a : $(l).front ;
     assert.result b : $(l).back ;
     $(l).insert 2 : d ;
