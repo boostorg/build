@@ -18,6 +18,7 @@ import path ;
 import print ;
 import regex ;
 import stage ;
+import project ;
 
 feature.feature doxygen:param : : free ;
 feature.feature prefix : : free ;
