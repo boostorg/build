@@ -25,8 +25,8 @@ make foo.bar : : creator foobar ;
 """)
 
 t.run_build_system()
-t.expect_addition("bin/debug/foo.bar")
-t.fail_test(find(t.read("bin/debug/foo.bar"), "foobar") == -1)
+t.expect_addition("bin/$toolset/debug/foo.bar")
+t.fail_test(find(t.read("bin/$toolset/debug/foo.bar"), "foobar") == -1)
 
 
 t.cleanup()
