@@ -21,8 +21,8 @@ import scanner ;
 import make ;
 
 feature.feature xsl:param : : free ;
-feature.feature format : html onehtml man pdf ps docbook fo 
-  : incidental implicit composite propagated ;
+feature.feature format : html onehtml man pdf ps docbook fo tests
+  : incidental implicit composite ;
 
 type.register DTDXML : dtdxml ;
 type.register XML : xml ;
@@ -34,12 +34,11 @@ type.register PS : ps ;
 type.register XSLT : xsl ;
 type.register HTMLDIR ;
 type.register MANPAGES ;
-
-# Generates handle -> * rules a bit strangely, so don't try to use them for now
-#generators.register-standard boostbook.xslt : XML XSLT : * ;
+type.register TESTS : tests ;
 
 generators.register-standard boostbook.dtdxml-to-boostbook : DTDXML : XML ;
 generators.register-standard boostbook.boostbook-to-docbook : XML : DOCBOOK ;
+generators.register-standard boostbook.boostbook-to-tests : XML : TESTS ;
 generators.register-standard boostbook.docbook-to-onehtml : DOCBOOK : HTML ;
 generators.register-standard boostbook.docbook-to-htmldir : DOCBOOK : HTMLDIR ;
 generators.register-standard boostbook.docbook-to-manpages : DOCBOOK : MANPAGES ;
@@ -53,9 +52,7 @@ generators.register-standard boostbook.docbook-to-fo : DOCBOOK : FO ;
 #   docbook-dtd-dir: The DocBook DTD directory. If not provided, we use
 #     DOCBOOK_DTD_DIR From the environment (if available). Otherwise, we let
 #     the XML processor load the DTD remotely.
-#
-#   xsltproc: The xsltproc executable
-rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : xsltproc ? )
+rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? )
 {
   if ! $(docbook-xsl-dir)
   {
@@ -67,11 +64,6 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : xsltproc ? )
     docbook-dtd-dir = [ modules.peek : DOCBOOK_DTD_DIR ] ;
   }
 
-  if ! $(xsltproc)
-  {
-    xsltroc = [ modules.peek : XSLTPROC ] ;
-  }
-
   if ! $(.initialized) 
   {
     $(.initialized) = true ;
@@ -80,7 +72,6 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : xsltproc ? )
     local boost-root = [ path.make [ modules.peek : BOOST_ROOT ] ] ;
     .boostbook-xsl-dir = [ path.join $(boost-root) tools boostbook xsl/ ] ;
     .boostbook-dtd-dir = [ path.join $(boost-root) tools boostbook dtd/ ] ;
-    .xsltproc = $(xsltproc) ;
   }
 }
 
@@ -102,36 +93,6 @@ rule docbook-xsl-dir
 rule docbook-dtd-dir
 {
   return $(.docbook-dtd-dir) ;
-}
-
-rule xslt ( target : source stylesheet : properties * )
-{ 
-  local flags ;
-  for local param in [ feature.get-values <xsl:param> : $(properties) ]
-  {
-    local namevalue = [ regex.split $(param) "=" ] ;
-    flags += --stringparam $(namevalue[1]) $(namevalue[2]) ;
-  }
-  STYLESHEET on $(target) = $(stylesheet) ;
-  FLAGS on $(target) = $(flags) ;
-  NAME on $(target) = $(.xsltproc) ;
-  xslt-xsltproc $(target) : $(source) ;
-}
-
-rule xslt-dir ( target : source stylesheet : properties * : dirname )
-{ 
-  local flags ;
-  for local param in [ feature.get-values <xsl:param> : $(properties) ]
-  {
-    local namevalue = [ regex.split $(param) "=" ] ;
-    flags += --stringparam $(namevalue[1]) $(namevalue[2]) ;
-  }
-
-  STYLESHEET on $(target) = $(stylesheet) ;
-  FLAGS on $(target) = $(flags) ;
-  DIRECTORY on $(target) = $(dirname) ;
-  NAME on $(target) = $(.xsltproc) ;
-  xslt-xsltproc-dir $(target) : $(source) ;
 }
 
 rule dtdxml-to-boostbook ( target : source : properties * )
@@ -286,6 +247,7 @@ rule boostbook-target-class ( name : project : sources * : requirements *
       case fo      : type = FO ;
       case pdf     : type = PDF ;
       case ps      : type = PS ;
+      case tests   : type = TESTS ;
     }
  
     if $(manifest)
@@ -332,33 +294,6 @@ rule boostbook ( target-name : sources * : requirements * : default-build * )
     ] ;
 }
 
-if [ modules.peek : NT ]
-{
-  actions xslt-xsltproc
-  {
-    set XML_CATALOG_FILES=catalog.xml
-    $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
-  }
-
-  actions xslt-xsltproc-dir
-  {
-    set XML_CATALOG_FILES=catalog.xml
-    $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
-  }
-}
-else
-{
-  actions xslt-xsltproc
-  {
-    XML_CATALOG_FILES=catalog.xml $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
-  }
-
-  actions xslt-xsltproc-dir
-  {
-    XML_CATALOG_FILES=catalog.xml $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
-  }
-}
-
 #############################################################################
 # Dependency scanners
 #############################################################################
@@ -401,9 +336,8 @@ type.set-scanner XML : xinclude-scanner ;
 #############################################################################
 # Testsuite handling
 #############################################################################
-rule testsuite-to-jamfiles ( target : source : properties * )
+rule boostbook-to-tests ( target : source : properties * )
 {
-  ECHO $(target) ;
   local boost_root = [ modules.peek : BOOST_ROOT ] ;
   local native-path =
     [ path.native [ path.join $(.boostbook-xsl-dir) testing/ ] ] ;
@@ -411,13 +345,4 @@ rule testsuite-to-jamfiles ( target : source : properties * )
   xslt $(target) : $(source) $(stylesheet) 
                  : $(properties) <xsl:param>boost.root=$(boost_root) 
                  ;
-}
-
-rule testsuite ( target-name : source : requirements * )
-{
-  local project = [ CALLER_MODULE ] ;
-
-  make $(target-name) : $(source) : boostbook.testsuite-to-jamfiles
-                      : $(requirements)
-                      ;
 }

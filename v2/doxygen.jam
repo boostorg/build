@@ -56,32 +56,37 @@ rule extract-xml ( target : sources * : properties * )
     RECURSIVE on $(target) = NO ;
   }
 
-  PATTERNS on $(target) = [ feature.get-values <pattern> : $(properties) ] ;
-  NAME on $(target) = [ name ] ;  
-  doxygen-action $(<) : $(>) ;
+  local index-target = $(target:B="xml/index":S=".xml") ;
+  PATTERNS on $(index-target) = 
+    [ feature.get-values <pattern> : $(properties) ] ;
+  NAME on $(index-target) = [ name ] ;  
+  doxygen-action $(index-target) : $(>) ;
+
+  local xsl-dir = [ boostbook.xsl-dir ] ;
+  DEPENDS $(target) : $(index-target) ;
+  xslt $(target) : $(index-target) "$(xsl-dir)/doxygen/collect.xsl" 
+                 : <xsl:param>doxygen.xml.path=/home/gregod/Projects/Boost/boost/libs/any/doc/xml ;
 }
 
 actions doxygen-action
 {
-  $(NAME:E=doxygen) -g $(<:S=.doxyfile)
-  echo "GENERATE_HTML  = NO" >> $(<:S=.doxyfile)
-  echo "GENERATE_LATEX = NO" >> $(<:S=.doxyfile)
-  echo "GENERATE_XML   = YES" >> $(<:S=.doxyfile)
-  echo "INPUT          = $(>) " >> $(<:S=.doxyfile)
-  echo "MONOLITHIC_XML_FILE = $(<)" >> $(<:S=.doxyfile) 
-  echo "RECURSIVE      = $(RECURSIVE) " >> $(<:S=.doxyfile)
-  echo "FILE_PATTERNS  = $(PATTERNS) " >> $(<:S=.doxyfile) 
-  $(NAME:E=doxygen) $(<:S=.doxyfile) ;
+  $(NAME:E=doxygen) -g doxyfile
+  echo "GENERATE_HTML  = NO" >> doxyfile
+  echo "GENERATE_LATEX = NO" >> doxyfile
+  echo "GENERATE_XML   = YES" >> doxyfile
+  echo "INPUT          = $(>) " >> doxyfile
+  echo "RECURSIVE      = $(RECURSIVE) " >> doxyfile
+  echo "FILE_PATTERNS  = $(PATTERNS) " >> doxyfile 
+  $(NAME:E=doxygen) doxyfile ;
 }
 
 rule xml-to-boostbook ( target : source : properties * )
 {
   local xsl-dir = [ boostbook.xsl-dir ] ;
 
-  boostbook.xslt $(target) 
-               : $(source) "$(xsl-dir)/doxygen/doxygen2boostbook.xsl" 
-               : $(properties) 
-               ;
+  xslt $(target) : $(source) "$(xsl-dir)/doxygen/doxygen2boostbook.xsl" 
+                 : $(properties) 
+                 ;
 }
 
 rule doxygen-xml-target-class ( name : project : sources * : requirements *

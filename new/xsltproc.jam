@@ -1,0 +1,86 @@
+#  Copyright (C) 2003 Doug Gregor. Permission to copy, use, modify,
+#  sell and distribute this software is granted provided this
+#  copyright notice appears in all copies. This software is provided
+#  "as is" without express or implied warranty, and with no claim as
+#  to its suitability for any purpose.
+
+#  This module defines rules to apply an XSLT stylesheet to an XML file 
+#  using the xsltproc driver, part of libxslt.
+
+import feature ;
+import regex ;
+
+# Initialize xsltproc support. The parameters are:
+#   xsltproc: The xsltproc executable
+rule init ( xsltproc ? )
+{
+  if ! $(xsltproc)
+  {
+    xsltproc = [ modules.peek : XSLTPROC ] ;
+  }
+
+  if ! $(.initialized) 
+  {
+    $(.initialized) = true ;
+    .xsltproc = $(xsltproc) ;
+  }
+}
+
+rule xslt ( target : source stylesheet : properties * )
+{ 
+  local flags ;
+  for local param in [ feature.get-values <xsl:param> : $(properties) ]
+  {
+    local namevalue = [ regex.split $(param) "=" ] ;
+    flags += --stringparam $(namevalue[1]) $(namevalue[2]) ;
+  }
+  STYLESHEET on $(target) = $(stylesheet) ;
+  FLAGS on $(target) = $(flags) ;
+  NAME on $(target) = $(.xsltproc) ;
+  xslt-xsltproc $(target) : $(source) ;
+}
+
+rule xslt-dir ( target : source stylesheet : properties * : dirname )
+{ 
+  local flags ;
+  for local param in [ feature.get-values <xsl:param> : $(properties) ]
+  {
+    local namevalue = [ regex.split $(param) "=" ] ;
+    flags += --stringparam $(namevalue[1]) $(namevalue[2]) ;
+  }
+
+  STYLESHEET on $(target) = $(stylesheet) ;
+  FLAGS on $(target) = $(flags) ;
+  DIRECTORY on $(target) = $(dirname) ;
+  NAME on $(target) = $(.xsltproc) ;
+  xslt-xsltproc-dir $(target) : $(source) ;
+}
+if [ modules.peek : NT ]
+{
+  actions xslt-xsltproc
+  {
+    set XML_CATALOG_FILES=catalog.xml
+    $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
+  }
+
+  actions xslt-xsltproc-dir
+  {
+    set XML_CATALOG_FILES=catalog.xml
+    $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
+  }
+}
+else
+{
+  actions xslt-xsltproc
+  {
+    XML_CATALOG_FILES=catalog.xml $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
+  }
+
+  actions xslt-xsltproc-dir
+  {
+    XML_CATALOG_FILES=catalog.xml $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
+  }
+}
+
+IMPORT $(__name__) : xslt : : xslt ;
+IMPORT $(__name__) : xslt-dir : : xslt-dir ;
