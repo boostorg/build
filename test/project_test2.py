@@ -14,9 +14,9 @@ print t.stdout()
 # Note that without this line the test would be brittle: it would silently
 # pass if those files were accicendally present in the original 'project-test2'
 # dir.
-t.expect_addition("bin/foo1")
-t.expect_addition("bin/foo2")
-t.expect_addition("dir/bin/foo1")
+t.expect_addition("bin/debug/rtti-on/foo1")
+t.expect_addition("bin/debug/rtti-on/foo2")
+t.expect_addition("dir/bin/debug/rtti-on/foo1")
 
 if os.name == 'nt':
     props = '" <variant>debug <optimization>off <rtti>on  "'
@@ -24,8 +24,8 @@ else:
     props = ' <variant>debug <optimization>off <rtti>on  \n'
 
 
-t.fail_test(strip(t.read("bin/foo1")) != strip(props))
-t.fail_test(strip(t.read("bin/foo2")) != strip(props))   
+t.fail_test(strip(t.read("bin/debug/rtti-on/foo1")) != strip(props))
+t.fail_test(strip(t.read("bin/debug/rtti-on/foo2")) != strip(props))   
 
 # Now check that incompatible requirements for subproject are checked.
 
