@@ -200,11 +200,12 @@ if $(NT) && $(cw-version) in 6.0
 # The paths to system and runtime libraries
 if $(NT)
 {
-    # Having CW_SETUP split into two lines is intentional. It is
-    # the only way to get the CMD to correctly clear the values of ERRORLEVEL
-    # which is erronously set by the cwenv.bat from CW-9.
-    flags cw CW_SETUP : "call \"$(cw-root)\\Other Metrowerks Tools\\Command Line Tools\\cwenv.bat\" -quiet
-    set ERRORLEVEL=" ;
+    flags cw CW_SETUP : "call \"$(cw-root)\\Other Metrowerks Tools\\Command Line Tools\\cwenv.bat\" -quiet" ;
+    # This is needed after the setup because the CW-9 setup erronously sets the
+    # ERRORLEVEL pseudo-var directly overriding the real value. The aregument is
+    # quoted to prevent the value from getting set to " " because bjam insertes
+    # extra spaces at the end of action commands.
+    flags cw CW_CLEAR_ERROR : "set \"ERRORLEVEL=\"" ;
     flags cw CW_LINK_SETUP : "set MWWinx86LibraryFiles=" ;
     flags cw CW_IMPLIB_COMMAND : "-implib " ;
     flags cw CW_RUN_PATH :
@@ -237,6 +238,7 @@ rule Link-action
 actions cw-Link-action
 {
     $(CW_SETUP)
+    $(CW_CLEAR_ERROR)
     $(CW_LINK_SETUP)$(STDLIBS:J=;)
     mwld $(FLAGS) $(LINKFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" $(CW_IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" @"$(>)" "$(FINDLIBS)$(SUFLIB)"
 }
@@ -250,6 +252,7 @@ rule Cc-action
 actions cw-Cc-action
 {
     $(CW_SETUP)
+    $(CW_CLEAR_ERROR)
     mwcc -c -lang c -U$(UNDEFS) -D$(DEFINES) $(FLAGS) $(CFLAGS) "-I$(HDRS)" -I- "-I$(STDHDRS)" "-I$(SYSHDRS)" $(CW_PREFIX)"$(PREFIX)" -o "$(<)" "$(>)"
 }
 
@@ -262,6 +265,7 @@ rule C++-action
 actions cw-C++-action
 {
     $(CW_SETUP)
+    $(CW_CLEAR_ERROR)
     mwcc -c -lang c++ -U$(UNDEFS) -D$(DEFINES) $(FLAGS) $(CFLAGS) $(C++FLAGS) "-I$(HDRS)" -I- "-I$(STDHDRS)" "-I$(SYSHDRS)" $(CW_PREFIX)"$(PREFIX)" -o "$(<)" "$(>)"
 }
 
@@ -274,5 +278,6 @@ rule Archive-action
 actions together cw-Archive-action
 {
     $(CW_SETUP)
+    $(CW_CLEAR_ERROR)
     mwld -library $(FLAGS) $(ARFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -o "$(<)" @"$(>)" "$(FINDLIBS)$(SUFLIB)"
 }
