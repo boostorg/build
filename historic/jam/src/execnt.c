@@ -315,6 +315,8 @@ onintr( int disp )
 	printf( "...interrupted\n" );
 }
 
+#if 0 // the shell is too different from direct invocation; let's
+      // always use the shell unless forced.
 /*
  * use_bat_file() - return true iff the command demands the use of a
  * .bat file to run it
@@ -379,10 +381,11 @@ int use_bat_file(char* command)
     
     return p - command >= MAXLINE;
 }
+#endif
 
 void execnt_unit_test()
 {
-#ifndef NDEBUG
+#if 0 && !defined(NDEBUG)
     /* vc6 preprocessor is broken, so assert with these strings gets
      * confused. Use a table instead.
      */
@@ -492,7 +495,8 @@ execcmd(
     /* Frankly, if it is a single long line I don't think the */
     /* command interpreter will do any better -- it will fail. */
 
-    if( shell || !raw_cmd && use_bat_file( string ) )
+    if( shell || !raw_cmd // && use_bat_file( string )
+        )
     {
         FILE *f;
 
