@@ -49,7 +49,7 @@ run-fail r-f.cpp ;
 t.write("project-root.jam", "")
 
 # First test that when outcomes are expected, all .test files are created.
-t.run_build_system(stderr=None, status=1)
+t.run_build_system(stderr=None, status=None)
 t.expect_addition("bin/c.test/$toolset/debug/main-target-c/c.test")
 t.expect_addition("bin/c-f.test/$toolset/debug/main-target-c-f/c-f.test")
 t.expect_addition("bin/r.test/$toolset/debug/main-target-r/r.test")

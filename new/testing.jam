@@ -45,6 +45,7 @@ import project ;
 import property-set ;
 import virtual-target ;
 import path ;
+import os ;
 
 rule init ( ) { }
 
@@ -280,10 +281,11 @@ rule capture-output ( target : source : properties * )
 }
 
 
-if $(NT)
+if [ os.name ] = NT
 {
     ENV_PATH = %PATH% ;
-    CATENATE = type ;    
+    CATENATE = type ;
+    CP = copy ;
 }
 else
 {
