@@ -25,9 +25,12 @@ import path ;
 # Each parameter name corresponds to subfeature. This rule will declare subfeature
 # the first time non-empty parameter value is passed, and will extend it with
 # all the values.
+#
+# The return value from this rule is a condition to be used for flags settings.
 rule check-init-parameters ( toolset : * )
 {
     local sig = $(toolset) ;
+    local condition = <toolset>$(toolset) ;
     for local index in 2 3 4 5 6 7 8 9
     {
         local name = $($(index)[1]) ;
@@ -35,6 +38,7 @@ rule check-init-parameters ( toolset : * )
                 
         if $(value)-is-specified 
         {
+            condition = $(condition)-$(value) ;
             if $(.had-unspecified-value.$(toolset).$(name))
             {
                 errors.user-error
@@ -42,12 +46,28 @@ rule check-init-parameters ( toolset : * )
                 "no value was specified in earlier initialization" :
                 "an explicit value is specified now" ;
             }
+            # The below logic is for intel compiler. It calls this rule
+            # with 'intel-linux' and 'intel-win' as toolset, so we need to
+            # get the base part of toolset name.
+            # We can't pass 'intel' as toolset, because it that case it will
+            # be impossible to register versionles intel-linux and
+            # intel-win of specific version.
+            local t = $(toolset) ;
+            local m = [ MATCH ([^-]*)- : $(toolset) ] ;
+            if $(m)
+            {
+                t = $(m[1]) ;
+            }                                    
             if ! $(.had-value.$(toolset).$(name)) 
             {
-                feature.subfeature toolset $(toolset) : $(name) : : propagated ;
+                if ! $(.declared-subfeature.$(t).$(name))
+                {
+                    feature.subfeature toolset $(t) : $(name) : : propagated ;
+                    .declared-subfeature.$(t).$(name) = true ;
+                }                
                 .had-value.$(toolset).$(name) = true ;
             }
-            feature.extend-subfeature toolset $(toolset) : $(name) : $(value) ;
+            feature.extend-subfeature toolset $(t) : $(name) : $(value) ;
         }
         else
         {
@@ -77,7 +97,38 @@ rule check-init-parameters ( toolset : * )
         errors.user-error $(message[1]) : $(message[2]) : $(message[3]) : $(message[4]) ;
     }                
     .all-signatures += $(sig) ;
+    
+    return $(condition) ;
 }
+
+# A helper rule to get the command to invoke some tool. The rule is either passed
+# a user provided command, it which case it checks it for correctness, or it tries
+# to find the tool using it's name, the PATH, and additional path.
+# This rule returns the command to be used when invoking the tool. If we can't
+# find the tool, a warning is issued.
+rule get-invocation-command ( 
+    toolset : tool : user-provided-command ? : additional-paths * )
+{
+    local command ;
+    if ! $(user-provided-command)
+    {
+        command = [ common.find-tool $(tool) : $(additional-paths) ] ;
+    }
+    else
+    {
+        command = [ common.check-tool $(user-provided-command) ] ;
+    }
+    if ! $(command)
+    {
+        ECHO "warning: toolset $(toolset) initialization: can't find tool $(tool)" ;
+        ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
+        # It's possible, in theory, that user-provided command is OK, but we're
+        # not smart enough to understand that. 
+        command = $(user-provided-command) ;
+    }
+    return $(command) ;
+}
+
 
 # Attempts to find tool (binary) named 'name' in PATH and in 'additiona-paths'.
 # If found in path, returns 'name'.
@@ -105,7 +156,7 @@ rule check-tool ( command )
 {
     if $(command:D)
     {
-        if [ path.exist [ path.make $(command) ] ]
+        if [ path.exists $(command) ]
         {
             return $(command) ;
         }        

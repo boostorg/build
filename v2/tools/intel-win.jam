@@ -15,7 +15,6 @@ import common ;
 import intel ;
 
 feature.extend-subfeature toolset intel : platform : win ;
-feature.subfeature toolset intel : base-vc ;
 
 import msvc ;
 toolset.inherit-generators intel-win <toolset>intel <toolset-intel:platform>win : msvc ;
@@ -23,32 +22,42 @@ toolset.inherit-flags intel-win : msvc ;
 toolset.inherit-rules intel-win : msvc ;
 
 # Initializes the intel toolset for windows
-rule init ( version :  # version is mandatory
-            setup   :  # patch to the iclvars.bat script
-            base-vc ?  # VC version to emulate: either 'vc6', 'vc7' or 'vc7.1'
-                       # vc6 is used by default
+rule init ( version ? :     # the compiler version
+            command ? :     # the command to invoke the compiler itself
+            compatibility ? # Compatibility mode: either 'vc6', 'vc7', 'vc7.1'
+                            # or 'native'.
           )
 {           
-    base-vc ?= vc6 ;
-    feature.extend-subfeature toolset intel : base-vc : $(base-vc) ;
-           
-    feature.extend-subfeature toolset intel : version : $(version) ;    
-                    
-    check-setup $(version) : $(setup) ;
+    local condition = [  common.check-init-parameters intel-win
+        : version $(version) : compatibility $(compatibility) ] ;
     
-    setup = "call \""$(setup)"\" > nul " ;
+    command = [ common.get-invocation-command intel-win : icc.exe :
+        $(command) ] ;    
+
     
-    if [ os.name ] = NT
-    {
-        setup = $(setup)"
+    local setup ;
+    if $(command:D)
+    {                                   
+        setup = $(command:D)/iclvars.bat ;
+        setup = "call \""$(setup)"\" > nul " ;
+        
+        if [ os.name ] = NT
+        {
+            setup = $(setup)"
 " ;
+        }
+        else
+        {
+            setup = "cmd /S /C "$(setup)" \"&&\" " ;
+        }
     }
     else
     {
-        setup = "cmd /S /C "$(setup)" \"&&\" " ;
+        setup = "" ;
     }
     
-    local condition = <toolset>intel-win-$(version)-$(base-vc) ;
+    
+    
     flags intel-win.compile .CC $(condition) : $(setup)icl ; 
     flags intel-win.link .LD $(condition) : $(setup)xilink ; 
     flags intel-win.archive .LD $(condition) : $(setup)xilink ;       
@@ -74,7 +83,7 @@ rule init ( version :  # version is mandatory
         C++FLAGS += /Qansi_alias ;
     }
     
-    if $(base-vc) = vc6
+    if $(compatibility) = vc6
     {
         C++FLAGS += 
           # Emulate VC6
@@ -97,21 +106,12 @@ rule init ( version :  # version is mandatory
               ;
         }
     }        
-    if $(base-vc)
+    if $(compatibility) && $(compatibility) != native
     {        
         C++FLAGS += /Q$(base-vc) ;
     }
     flags intel-win CFLAGS $(condition) : $(C++FLAGS) ;
     
-}
-
-rule check-setup ( version : setup )
-{
-    if ! [ GLOB $(setup:D) : $(setup:D=) ] 
-    {
-        ECHO warning: toolset intel-win $(version) initialization: ;
-        ECHO warning: couldn't find compiler ;
-    }    
 }
 
 flags intel-win.link LIBRARY_OPTION <toolset>intel : "" ;
