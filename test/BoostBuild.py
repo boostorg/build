@@ -93,7 +93,11 @@ class Tester(TestCmd.TestCmd):
                     print 'Setting $TMP to /tmp to get around problem with short path names'
                     os.environ['TMP'] = '/tmp'
             elif os.uname()[0] == 'Linux':
-                jam_build_dir = "bin.linuxx86"
+                cpu = os.uname()[4]
+                if re.match("i.86", cpu):
+                    jam_build_dir = "bin.linuxx86";
+                else:
+                    jam_build_dir = "bin.linux" + os.uname()[4]
             elif os.uname()[0] == 'SunOS':
                 jam_build_dir = "bin.solaris"
             elif os.uname()[0] == 'Darwin':
