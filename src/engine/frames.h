@@ -27,3 +27,4 @@ void frame_init( FRAME* ); /* implemented in compile.c */
 void frame_free( FRAME* ); /* implemented in compile.c */
 
 #endif // FRAMES_DWA20011021_H
+

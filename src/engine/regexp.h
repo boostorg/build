@@ -29,3 +29,4 @@ void regerror( char *s );
 #define	MAGIC	0234
 
 #endif // REGEXP_DWA20011023_H
+

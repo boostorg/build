@@ -92,3 +92,4 @@ LIST *	lol_get( LOL *lol, int i );
 void	lol_print( LOL *lol );
 
 #endif // LISTS_DWA20011022_H
+
