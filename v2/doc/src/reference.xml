@@ -417,26 +417,26 @@ exe app : app.cpp : &lt;implicit-dependency&gt;parser ;
             common properties, unless (2) tells otherwise.</para></listitem>
 
         <listitem><para>If either build request, or requirements (non-conditional
-            or conditional) include a expandable property (either composite,
+            or conditional) include an expandable property (either composite,
             or property with specified subfeature value), the behaviour is
-            equvivalent to explicitly adding all expanded properties to build
+            equivalent to explicitly adding all expanded properties to build
             request or requirements.</para></listitem>
 
-        <listitem><para>If requirements include conditional property, and
+        <listitem><para>If requirements include a conditional property, and
             condiiton of this property is true in context of common
             properties, then the conditional property should be in common
             properties as well.</para></listitem>
 
-        <listitem><para>If no value for a property is given by other rules
-            here, it has default value if common properties.</para></listitem>
+        <listitem><para>If no value for a feature is given by other rules
+            here, it has default value in common properties.</para></listitem>
       </orderedlist>
 
-      <para>Those rulse are declarative, they don't specify how to compute the
+      <para>Those rules are declarative, they don't specify how to compute the
         common properties. However, they provide enough information for the
         user. The important point is the handling of conditional
         requirements. The condition can be satisfied either by property in
         build request, by non-conditional requirements, or even by another
-        conditional property. For example, for following example works as
+        conditional property. For example, the following example works as
         expected:
 <programlisting>
 exe a : a.cpp 
@@ -447,7 +447,7 @@ exe a : a.cpp
 
   </section>
       
-
+    
 <!--
 
     <para>Construction of each main target begins with finding
