@@ -630,16 +630,34 @@ feature.compose &lt;parallelism&gt;fake : &lt;library&gt;/mpi//fake/&lt;parallel
   <section id="bbv2.extending.rules">
     <title>Main target rules</title>
     <para>
-      The main target rule is what creates a top-level target, for example "exe" or
-      "lib". It's quite likely that you'll want to declare your own and
-      there are as many as three ways to do that.
+      A main target rule is what creates a top-level target, for example "exe"
+      or "lib". It's quite likely that you'll want to declare your own and
+      there are two ways to do this.
+    </para>
+
+    <para id="bbv2.extending.rules.main-type">The first way applies then when
+      your target rule should just produce a target of specific type. Then, a
+      rule is already defined for you! When you define a new type, Boost.Build
+      automatically defines a corresponding rule. The name of the rule is
+      obtained from the name of the type, by downcasing all letters and
+      replacing underscores with slashes. For example, if you create a module
+      "obfuscate.jam" containing:
+
+<programlisting>
+import type ;
+type.register OBFUSCATED_CPP  : ocpp ;
+
+import generators ;
+generators.register-standard obfuscate.file : CPP : OBFUSCATED_CPP ;
+</programlisting>
+      and import that module, you'll be able to use the rule "obfuscated-cpp"
+      in Jamfiles, which will convert source to the OBFUSCATED_CPP type.
     </para>
     
-    <para>The first is the simplest, but is sufficient in a number of
-      cases. Just write a wrapper rule, which will redirect to any of the
-      existing rules. For example, you have only one library per directory and
-      want all cpp files in the directory to be compiled. You can achieve this
-      effect with:
+    <para>The second way is to write a wrapper rule, which will redirect to
+      any of the existing rules. For example, you have only one library per
+      directory and want all cpp files in the directory to be compiled. You
+      can achieve this effect with:
 <programlisting>
 lib codegen : [ glob *.cpp ] ;
 </programlisting>
@@ -657,33 +675,15 @@ glib codegen ;
 </programlisting>
     </para>
 
-    <para id="bbv2.extending.rules.main-type">The second approach is suitable
-      when your target rule should just produce a target of specific
-      type. Then, when declaring a type you should tell Boost.Build that a
-      main target rule should be created.  For example, if you create a module
-      "obfuscate.jam" containing:
-
-<programlisting>
-import type ;
-type.register OBFUSCATED_CPP  : ocpp : : main ;
-
-import generators ;
-generators.register-standard obfuscate.file : CPP : OBFUSCATED_CPP ;
-</programlisting>
-      and import that module, you'll be able to use the rule "obfuscated-cpp"
-      in Jamfiles, which will convert source to the OBFUSCATED_CPP type.
-    </para>
-
     <para>
-      The remaining method is to declare your own main target class. The
-      simplest example of this can be found in "build/alias.jam" file. The
-      current V2 uses this method when transformations are relatively
-      complex. However, we might deprecate this approach. If you find that you
-      need to use it (that is, the first two approaches are not sufficient),
-      please let us know by posting to the mailing list.
+      Note that because you can associate custom generator with a target
+      type, the logic of building can be rather compiler. For example, the
+      <code>boostbook</code> module declares a target type
+      <code>BOOSTBOOK_MAIN</code> and a custom generator for that type,
+      which implements pretty complex logic. You can use that as example if
+      your main target rule is non-trivial.
     </para>
-    
-
+         
   </section>
 
   <section id="bbv2.extending.toolset_modules">
