@@ -6,7 +6,7 @@
 #  Testing support.
   
 import targets ;
-import class : class new xnew ;
+import class : xnew ;
 import property ;
 import feature ;
 import toolset ;

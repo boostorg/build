@@ -66,8 +66,8 @@
 #                            .   | construct    |   | construct   |    | construct    |
 #                                +--------------+   +-------------+    +--------------+
 
+import class ;
 import sequence ;
-import class : class new ;
 import regex ;
 import property ;
 import errors ;
@@ -772,7 +772,7 @@ xclass basic-target : abstract-target
     import virtual-target targets ;
     import property-set ;
     import set sequence errors ;
-    import class : new xnew ;
+    import class : xnew ;
         
     rule __init__ ( name : project
         : sources * : requirements * : 

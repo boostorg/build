@@ -8,7 +8,7 @@
 #  when searching for possible transormation sequences, when it's not known
 #  if particular target should be created at all.
 
-import class : class new xnew ;
+import class : xnew ;
 import path property-set utility sequence errors ;
 
 #                       +--------------------------+

@@ -5,7 +5,7 @@
 
 #  Defines standard features and rules.
 
-import class : class new xnew ;
+import class : xnew ;
 
 import feature : feature compose ;
 import toolset : flags ;
