@@ -656,7 +656,7 @@ rule find ( id : current-location )
         # The project used for finding main targets and for providing base directory
         # for file paths.
         local base-project = [ project.find $(project-part) : $(current-location) ] ;
-            
+                
         # Interpret target-part as project-id
         if ! $(have-project-reference)
         {   
@@ -668,7 +668,7 @@ rule find ( id : current-location )
         }
                 
         # Interpret target-name as name of main target
-        if ! $(target)
+        if ! $(target) && $(base-project)
         {
             local project-target = [ project.target $(base-project) ] ;        
             if [ $(project-target).has-main-target $(target-part) ] 
@@ -677,7 +677,7 @@ rule find ( id : current-location )
             }
         }
             
-        if ! $(target) && ! $(have-project-reference)
+        if ! $(target) && ! $(have-project-reference) && $(base-project)
         {
             local location = [ path.root $(target-part)
                 [ project.attribute $(base-project) source-location ] ] ;
