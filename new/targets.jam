@@ -47,14 +47,14 @@ rule abstract-target ( name      # name of the target in Jamfile
     # messages which should name problematic targets. Another is setting correct
     # paths for sources and generated files.
 
-    self.local-name = $(local-name) ;
+    self.name = $(name) ;
     self.project = $(project) ;
 
     # Returns a user-readable name for this target.
-    rule name ( )
+    rule full-name ( )
     {
         local location = [ $(self.project).location ] ;
-        return $(location)/$(self.local-name) ;
+        return $(location)/$(self.name) ;
     }
 
     # Takes properties in split form ("<feature1>foo <feature2>bar").
@@ -72,9 +72,9 @@ rule abstract-target ( name      # name of the target in Jamfile
 class abstract-target ;
 
 #  Project target class (derived from 'abstract-target')
-rule project-target ( local-name : project : requirements * : default-build * )
+rule project-target ( name : project : requirements * : default-build * )
 {
-    abstract-target.__init__ $(local-name) : $(project) ;
+    abstract-target.__init__ $(name) : $(project) ;
 
     self.requirements = $(requirements) ;
     self.default-build = $(default-build) ;
@@ -105,7 +105,7 @@ rule project-target ( local-name : project : requirements * : default-build * )
         {
             self.main-targets += $(name) ;
             self.main-target.$(name) =
-                [ new main-target $(self.local-name) : $(self.project) ] ;
+                [ new main-target $(self.name) : $(self.project) ] ;
         }
         return $(self.main-target.$(name)) ;
     }
@@ -144,12 +144,12 @@ rule main-target ( name : project )
         if ! $(alternatives)
         {
             # TODO: Should print a name
-            error "No viable variant found for main target" [ name ] ;
+            error "No viable variant found for main target" [ full-name ] ;
         }
         # We have "@" at the end. Another one means two or more alts.
         if "@" in $(alternatives[1--2])
         {
-            error "Ambiguous variants for main target" [ name ]  ;
+            error "Ambiguous variants for main target" [ full-name ]  ;
         }
         # Now return virtual targets for the only alternative
         return $(alternatives[2--2]) ;
@@ -170,7 +170,6 @@ rule basic-target ( name : project
 {
     abstract-target.__init__ $(name) : $(project) ;
 
-    self.name = $(name) ;
     self.sources = $(sources) ;
     self.requirements = $(requirements) ;
     self.default-build = $(default-build) ;
@@ -201,7 +200,7 @@ rule basic-target ( name : project
         if $(rproperties[1]) = "@error"
         {
             print.wrapped-text
-                "Cannot satisfy request to build" [ name ]
+                "Cannot satisfy request to build" [ full-name ]
                 "with properties " $(properties) ;
             print.wrapped-text
                 "Explanation:" $(rproperties[2-]) ;
@@ -242,7 +241,7 @@ rule basic-target ( name : project
         if $(rproperties[1]) = "@error"
         {
             error
-                "When building" [ name ] " with properties " $(properties)
+                "When building" [ full-name ] " with properties " $(properties)
                 "Invalid properties specified for " $(source) ":"
                 $(rproperties[2-]) ;
         }
