@@ -1384,26 +1384,26 @@ rule build-command-file ( command : sources * )
     {
         # Handle the first target specially, so that the first source file
         # will clear the command file
-        command-file-dump-1st $(command) : $(sources) ;
+        command-file-dump-1st $(command) : $(sources[1]) ;
     }    
     
     if $(sources[2])
     {
         # Then fill the rest up piecemeal
-        command-file-dump-rest $(command) : $(sources) ;
+        command-file-dump-rest $(command) : $(sources[2-]) ;
     }
 }
 
 # command-file-dump-1st: dump the first source path into the target
 actions quietly command-file-dump-1st
 {
-    echo "$(>[1])" > "$(<)"
+    echo "$(>)" > "$(<)"
 }
 
 # command-file-dump: dump the remaining source paths into the target
 actions quietly piecemeal command-file-dump-rest
 {
-    echo "$(>[2-])" >> "$(<)"
+    echo "$(>)" >> "$(<)"
 }
 
 # Clean up the temporary COMMAND-FILE used to build TARGETS.
