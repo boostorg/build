@@ -320,7 +320,7 @@ rule select-nt-python-includes ( toolset variant : properties * )
             <sysinclude>$(python-nt-sysinclude) # in case the user is using a source installation
               ;
         
-        if ( $(toolset) = cwpro8 ) && ( $(variant) = debug-python )
+        if [ MATCH (cwpro) : $(toolset) ] && ( $(variant) = debug-python )
         {
             properties = [ difference $(properties) : <define>_DEBUG ] ;  #it warns about redefinition otherwise.
         }
