@@ -16,6 +16,7 @@ import virtual-target ;
 import os ;
 import stage ;
 import prebuilt ;
+import toolset ;
 
 feature toolset : gcc : implicit propagated link-incompatible ;
 feature shared : false true : propagated ;
