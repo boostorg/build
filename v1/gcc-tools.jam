@@ -129,6 +129,13 @@ else if $(UNIX)
         flags gcc LINKFLAGS <threading>multi : -pthread ;
         # there is no -lrt on BSD
         }
+    case DragonFly :
+        {
+        flags gcc CFLAGS <threading>multi : -pthread ;
+        flags gcc LINKFLAGS <threading>multi : -pthread ;
+        # there is no -lrt on BSD - DragonFly is a FreeBSD variant,
+        # which anoyingly doesn't say it's a *BSD.
+        }
     case IRIX :
         {
         # gcc on IRIX does not support multi-threading, don't set anything here.
