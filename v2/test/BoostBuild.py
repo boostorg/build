@@ -9,6 +9,7 @@ import string
 import types
 import time
 import tempfile
+import sys
 
 # Compute an executable suffix for tests to use
 exe_suffix = ''
@@ -46,7 +47,8 @@ class Tester(TestCmd.TestCmd):
     behavior.
     """
     def __init__(self, arguments="", executable = 'bjam', match =
-                 TestCmd.match_exact, boost_build_path = None):
+                 TestCmd.match_exact, boost_build_path = None,
+                 **keywords):
 
         self.original_workdir = os.getcwd()
         self.last_build_time = 0
@@ -63,17 +65,23 @@ class Tester(TestCmd.TestCmd):
             raise "Don't know directory where jam is build for this system"
 
         if boost_build_path is None:
-            boost_build_path = os.path.join(self.original_workdir, "..", "new")
+            boost_build_path = os.path.join(self.original_workdir,
+                                            "..", "new")
+
+        verbosity = ' -d0 --quiet '
+        if '--verbose' in sys.argv:
+            verbosity = ' -d+2 '
 
         TestCmd.TestCmd.__init__(
             self
             , program=os.path.join(
                 '..', 'jam_src', jam_build_dir, executable)
               +  ' -sBOOST_BUILD_PATH=' + boost_build_path
-              + ' -d0 --quiet'
-              + ' ' + arguments
+              + verbosity
+              + arguments
             , match=match
-            , workdir='')
+            , workdir=''
+            , **keywords)
 
         os.chdir(self.workdir)
 
