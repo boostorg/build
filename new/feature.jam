@@ -173,7 +173,7 @@ rule implied-feature ( implicit-value )
     if ! $(feature)
     {
         error \"$(implicit-value)\" is not a value of an implicit feature ;
-        feature = "" ;
+        feature = "" ; # keep testing happy; it expects a result.
     }
     return $(feature) ;
 }
@@ -239,16 +239,16 @@ local rule expand-subfeatures-aux (
     if $(feature)
     {
         feature = [ grist $(feature) ] ;
-        validate-feature $(feature) ;
     }
 
     if ! $(feature)
     {
         feature = [ implied-feature $(value) ] ;
     }
-    else if ! $(feature) in $(.all-features)
+    else
     {
-        error unknown feature $(feature) ;
+        validate-feature $(feature) ;
+        validate-value-string $(feature) $(value) ;
     }
 
     local components = [ regex.split $(value) "-" ] ;
@@ -332,10 +332,13 @@ rule validate-value-string ( feature value-string )
 {
     feature = [ grist $(feature) ] ;
     
-    local values = $(value-string) ;
-    
-    if ! ( $(values) in $(feature).values )
+    if ! ( 
+      free in $($(feature).attributes) 
+      || ( $(value-string) in $(feature).values )
+    )
     {
+        local values = $(value-string) ;
+    
         if $($(feature).subfeatures)
         {
             values = [ regex.split $(value-string) - ] ;
