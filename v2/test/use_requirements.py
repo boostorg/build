@@ -4,15 +4,18 @@ from BoostBuild import Tester
 t = Tester()
 
 # Test that use requirements on main target work
+# (and a propagated all the way up, not only to direct
+# dependents)
 t.write("project-root.jam", "import gcc ;")
 
 t.write(
     "Jamfile",
 """
     lib b : b.cpp : <link>shared:<define>SHARED_B
-    : : <define>FOO <link>shared:<define>SHARED_B
+    : : <define>FOO <link>shared:<define>SHARED_B    
     ;
-    exe a : a.cpp b ;
+    lib c : c.cpp b ;
+    exe a : a.cpp c ;
 """)
 
 t.write(
@@ -24,6 +27,17 @@ __declspec(dllexport)
 #endif
 foo() {}\n
 """)
+
+t.write(
+    "c.cpp",
+"""
+void
+#if defined(_WIN32) && defined(SHARED_B)
+__declspec(dllexport)
+#endif
+create_lib_please() {}\n
+""")
+
 
 t.write(
     "a.cpp",
