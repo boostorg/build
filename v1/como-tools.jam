@@ -8,9 +8,21 @@
 # program as the column heading for HTML tables. Must not include version number.
 #//<a href="http://www.comeaucomputing.com/">Comeau<br>C++</a>
 
+# variables used to configure como-tools.jam
+#
+# COMO_PATH - path to installation
+# COMO_BIN_PATH - path to como executable, defaults to $(COMO_PATH)/bin/
+# COMO_INCLUDE_PATH - path to libcomo headers, defaults to $(COMO_PATH)/libcomo
+# COMO_STDLIB_PATH - path to built libcomo object, defaults to $(COMO_PATH)/libcomo
+
+# Keep using COMO_BASE for backward compatibility
+COMO_BASE ?= $(COMO_PATH) ;
+
 # compute directories for invoking como
 if ! $(COMO_PATH_SETUP) # do this once
 {
+    # Keep using COMO_BIN_DIRECTORY for backward compatibility.
+    COMO_BIN_DIRECTORY ?= $(COMO_BIN_PATH) ;
     COMO_BIN_DIRECTORY ?= $(COMO_BASE)$(SLASH)bin$(SLASH) ;
     COMO_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if COMO_ROOT_DIRECTORY not
                                # set
@@ -31,10 +43,9 @@ if ! $(COMO_PATH_SETUP) # do this once
         COMO_BACKEND_SETUP ?= "call "\"$(VISUALC)$(SLASH)bin$(SLASH)vcvars32"\"" ;
         COMO_BACKEND_SETUP ?= REM set VISUALC or COMO_BACKEND_SETUP to set up the back end ;
         COMO_BASE_SETUP ?= "set \"COMO_BASE=$(COMO_BASE)\"" ;
-        COMO_PATH_SETUP ?= REM set COMO_BASE to set up the path for Comeau ;
+        COMO_PATH_SETUP ?= REM set COMO_PATH to set up the path for Comeau ;
     }
     COMO_PATH_SETUP ?= "" ;
-
 }
 
 flags como C++FLAGS <exception-handling>off : --no_exceptions ;
