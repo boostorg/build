@@ -75,12 +75,12 @@ flags gcc.compile INCLUDES <include> ;
 
 actions compile.c++
 {
-    $(NAME:E=g++) -Wall -ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    $(NAME:E=g++) -x c++ -Wall -ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 actions compile.c
 {
-    $(NAME:E=gcc) -Wall $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    $(NAME:E=gcc) -x c -Wall $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 
