@@ -2579,8 +2579,8 @@ rule common-variant-tag ( toolset variant : properties * )
     if <runtime-build>debug in $(properties) { runtime-tag += g ; }
     if [ MATCH .*(debug-python).* : $(variant) ] { runtime-tag += y ; }
     else { if [ MATCH .*(debug).* : $(variant) ] { runtime-tag += d ; } }
-    if [ MATCH .*(stlport).* : $(toolset) ] ||
-        [ MATCH .*(stlport).* : $(properties:G) ]
+    if [ MATCH .*(stlp).* : $(toolset) ] ||
+        [ MATCH .*(stlp).* : $(properties:G) ]
     { runtime-tag += p ; }
     if <stlport-iostream>off in $(properties) { runtime-tag += n ; }
     
@@ -2841,8 +2841,8 @@ rule toolset::requirements ( toolset variant : subvariant-path properties * )
         {
             # dynamic runtime only comes in the multi-threading flavor
             if <runtime-link>dynamic in $(properties) { requirements += <threading>multi ; }
-            if [ MATCH .*(stlport).* : $(toolset) ] ||
-                [ MATCH .*(stlport).* : $(properties:G) ]
+            if [ MATCH .*(stlp).* : $(toolset) ] ||
+                [ MATCH .*(stlp).* : $(properties:G) ]
             {
                 # STLPort doesn't have any single-threaded builds, so we're going
                 # to force all such targets to be built with multithread support.
@@ -2854,8 +2854,8 @@ rule toolset::requirements ( toolset variant : subvariant-path properties * )
         {
             # dynamic runtime only comes in the multi-threading flavor
             if <runtime-link>dynamic in $(properties) { requirements += <threading>multi ; }
-            if [ MATCH .*(stlport).* : $(toolset) ] ||
-                [ MATCH .*(stlport).* : $(properties:G) ]
+            if [ MATCH .*(stlp).* : $(toolset) ] ||
+                [ MATCH .*(stlp).* : $(properties:G) ]
             {
                 # STLPort doesn't have any single-threaded builds, so we're going
                 # to force all such targets to be built with multithread support.
@@ -2873,6 +2873,11 @@ rule toolset::requirements ( toolset variant : subvariant-path properties * )
             }
         }
         case intel-win32* :
+        {
+            # dynamic runtime only comes in the multi-threading flavor
+            if <runtime-link>dynamic in $(properties) { requirements += <threading>multi ; }
+        }
+        case iw* :
         {
             # dynamic runtime only comes in the multi-threading flavor
             if <runtime-link>dynamic in $(properties) { requirements += <threading>multi ; }
