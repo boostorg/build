@@ -366,26 +366,65 @@ class main-target : abstract-target
         self.alternatives += $(target) ;
     }
 
+    # Returns the best viable alternative for this property-set
+    # See the documentation for selection rules.
     local rule select-alternatives ( property-set )
     {
-        local viable ; # alternatives that may be used
-        local ranks ;  # ranks for viable alternatives
-        for local v in $(self.alternatives)
+        # The algorithm: we keep the current best viable alternative.
+        # When we've got new best viable alternative, we compare it
+        # with the current one. 
+        
+        local best ;
+        local best-properties ;
+                        
+        if $(self.alternatives[2-])
         {
-            # For now, alternative should be derived from 'basic-target'.
-            # We'll see if this restriction if reasonable.
-            assert.equal [ is-a $(v) : basic-target ] : true ;                            
-            local m = [ $(v).match-rank $(property-set) ] ;
-            
-            if $(m)
+            local bad ;
+            local worklist = $(self.alternatives) ;    
+            while $(worklist) && ! $(bad)
             {
-                viable += $(v) ;
-                ranks += $(m) ;
+                local v = $(worklist[1]) ; 
+                local properties = [ $(v).match $(property-set) ] ;
+                           
+                if $(properties) != no-match
+                {                                    
+                    if ! $(best)
+                    {
+                        best = $(v) ;
+                        best-properties = $(properties) ;
+                    }
+                    else
+                    {                                                   
+                        if $(properties) = $(best-properties)
+                        {
+                            bad = true ;
+                        }
+                        else if $(properties) in $(best-properties) 
+                        {
+                            # Do nothing, this alternative is worse
+                        }
+                        else if $(best-properties) in $(properties)
+                        {
+                            best = $(v) ;
+                            best-properties = $(properties) ;
+                        }
+                        else 
+                        {
+                            bad = true ;
+                        }                                                
+                    }
+                }
+                worklist = $(worklist[2-]) ;                
             }
+            if ! $(bad)
+            {
+                return $(best) ;
+            }                                    
         }
-                                                                    
-        local best = [ sequence.select-highest-ranked $(viable) : $(ranks) ] ;
-        return $(best) ;
+        else
+        {
+            return $(self.alternatives) ;
+        }        
     }
     
     
@@ -486,20 +525,13 @@ class main-target : abstract-target
         local best-alternatives = [ select-alternatives $(property-set) ] ;
         if ! $(best-alternatives)
         {
-            # TODO: probably, should explain, for each alternative, 
-            # why it can't be build.
-            print.wrapped-text 
-                "warning: skipped build of" [ full-name ]
+            errors.error
+                "skipped build of" [ full-name ]
                 "with properties" [ $(property-set).raw ]
                   "because no best-matching alternative could be found"
                   ; 
             return [ property-set.empty ] ;
         }
-        else if $(best-alternatives[2])
-        {
-            # TODO: again, a better error message in in order.
-            errors.error "Ambiguous alternatives for main target" [ full-name ]  ;            
-        }        
         else
         {
             local result = [ $(best-alternatives).generate $(property-set) ] ;
@@ -781,32 +813,20 @@ class basic-target : abstract-target
         return $(self.default-build) ;
     }
     
-    # Returns a number which estimates this targets's suitability for
-    # building with the given 'property-set'. Among several alternatives
-    # for a main target, the one with greatest match-rank will be used
-    # to do actual generation. Return of empty value mean this target
-    # can't be built with the given 'property-set'.
-    rule match-rank ( property-set )
+    # Returns the alternative condition for this alternative, if
+    # the condition is satisfied by 'property-set'.
+    rule match ( property-set )
     {    
-        # First check if our requirements can be satisfied.
-        local rproperties = [ $(property-set).refine $(self.requirements) ] ;        
-        
-        # Kluge: previously, link-incompatible alternatives were skipped
-        # completely. Until a better alternative selection algorithm is
-        # in place, treat such alternatives as having rank of zero.
-        # As another kluge, add 1 to all other ranks so that zero is worse that
-        # anything.        
-        if [ $(rproperties).link-incompatible-with $(property-set) ]
+        local condition = [ $(self.requirements).base ] ;
+        # Weed out conditional properties.
+        condition = [ MATCH ^([^:]*)\$ : $(condition) ] ;
+        if $(condition) in [ $(property-set).raw ] 
         {
-            return 0 ;
+            return $(condition) ;
         }
         else
-        {                         
-            # Returns the number of properties common to requirements
-            # and build request.
-            return [ sequence.length "fake" [ set.intersection 
-                [ $(self.requirements).base ] :
-                  [ $(property-set).raw ] ] ] ;
+        {
+            return no-match ;
         }        
     }
 

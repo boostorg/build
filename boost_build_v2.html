@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                                                                    </style>
+                                                                        </style>
   </head>
   <!-- Things yet to document:
-                                                                  - build request, build request expansion and directly requested targets
-                                                                  - conditional properties
-                                                                -->
+                                                                    - build request, build request expansion and directly requested targets
+                                                                    - conditional properties
+                                                                  -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -127,6 +127,13 @@
 
                 <dt><a href="#build_process">Build process</a></dt>
 
+                <dd>
+                  <dl class="page-index">
+                    <dt><a href="#alternative_selection">Alternative
+                    selection</a></dt>
+                  </dl>
+                </dd>
+
                 <dt><a href="#generated_headers">Generated headers</a></dt>
               </dl>
             </dd>
@@ -179,12 +186,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>examples-v2</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                                                                                               it somewhere. 
-                                                                                                
-                                                                                                  <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                                                                                                  into one of the locations where it can be found (given in <a href=
-                                                                                                  "#config_files_location">this table</a>). This prevent you from
-                                                                                                  accidentally overwriting your config when updating.</p> -->
+                                                                                                     it somewhere. 
+                                                                                                      
+                                                                                                        <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                                                                                                        into one of the locations where it can be found (given in <a href=
+                                                                                                        "#config_files_location">this table</a>). This prevent you from
+                                                                                                        accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -740,8 +747,8 @@ boost-build /path/to/boost.build ;
     Each call to the 'exe' rule defines a new <em>main target
     alternative</em> for the main target <tt>a</tt>. In this case, the first
     alternative will be used for the <tt>gcc</tt> toolset, while the second
-    alternative will be used in other cases. TODO: document the exact
-    selection method under "Build process" below. 
+    alternative will be used in other cases. See <a href=
+    "#alternative_selection">below</a> for details. 
 
     <p>Sometime a main target is really needed only by some other main
     target. E.g. a rule that declared test-suite uses a main target that
@@ -1029,17 +1036,17 @@ boost-build /path/to/boost.build ;
 
       <li>It allows to have main target names with slashes. 
       <!-- The motivation for which is:
-                                                            So, to summarize:
-                                                            1. The project which extract tarfile may extract all possible kinds of 
-                                                            targets, and it's reasonable to use them directly from other project.
-                                                            2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
-                                                            maintainability, and therefore, must use main target name which contains 
-                                                            slashes?
-                                                            3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
-                                                            option, because you should not change existing tree 
+                                                                  So, to summarize:
+                                                                  1. The project which extract tarfile may extract all possible kinds of 
+                                                                  targets, and it's reasonable to use them directly from other project.
+                                                                  2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
+                                                                  maintainability, and therefore, must use main target name which contains 
+                                                                  slashes?
+                                                                  3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
+                                                                  option, because you should not change existing tree 
 
-                                                            That makes good rationale for why main target must contain names.
-                                                             -->
+                                                                  That makes good rationale for why main target must contain names.
+                                                                   -->
       </li>
     </ul>
 
@@ -1652,7 +1659,9 @@ borland/runtime-link=static,dynamic
       </li>
 
       <li>
-        For main target, steps are: 
+        For main target, with several alternatives, one of them is selected
+        as described <a href="#alternative_selection">below</a>. If there's
+        only one alternative, it's used unconditionally. 
 
         <ol>
           <li>All main target alternatives which requirements are satisfied
@@ -1685,6 +1694,27 @@ borland/runtime-link=static,dynamic
       targets are not link-compatibile with build properties, a warning is
       issued.</li>
     </ul>
+
+    <h4 id="alternative_selection">Alternative selection</h4>
+
+    <p>When there are several alternatives, one of them must be selected. The
+    process is as follows:</p>
+
+    <ol>
+      <li>For each alternative <em>condition</em> is defined as the set of
+      base properies in requirements. [Note: it might be better to explicitly
+      specify the condition explicitly, as in conditional requirements].</li>
+
+      <li>An alternative is viable only if all properties in condition are
+      present in build request.</li>
+
+      <li>If there's one viable alternative, it's choosen. Otherwise, an
+      attempt is made to find one best alternative. An alternative a is
+      better than another alternative b, iff set of properties in b's
+      condition is stict subset of the set of properities of 'a's condition.
+      If there's one viable alternative, which is better than all other, it's
+      selected. Otherwise, an error is reported.</li>
+    </ol>
 
     <h3 id="generated_headers">Generated headers</h3>
 
