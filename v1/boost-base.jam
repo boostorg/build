@@ -1172,7 +1172,7 @@ rule declare-fake-targets
     # The following checks that we're in the subdirectory of Jam's invocation
     # so that we can arrange for ungristed target names to be built from the
     # command-line.
-    if [ in-invocation-subdir ]
+    if $(<:G) && [ in-invocation-subdir ]
     {
         DEPENDS $(<:G=) : $(<) ; # allows $(<:G=) to be used to build all variants
         NOTFILE $(<:G=) ;
@@ -1367,39 +1367,66 @@ rule unit-test
     }
 }
 
-rule list-files
+# Used to build command files from a list of sources.
+rule build-command-file ( command : sources * )
 {
-    DEPENDS $(<) : $(>) ;
+    DEPENDS $(command) : $(sources) ;
+    # First empty the file
+    command-file-clear $(command) : $(sources) ;
+    # Then fill it up piecemeal
+    command-file-dump $(command) : $(sources) ;
+}
 
-    list-files-aux1 $(<) : $(>[1]) ;
-    if $(>[2])
+# command-file-clear: silently remove the target if it exists
+if $(NT)
+{
+    # NT needs special handling because DEL always barks if the file isn't found
+    actions quietly command-file-clear
     {
-        list-files-aux2 $(<) : $(>[2-]) ;
+        IF EXIST "$(<)" $(RM) "$(<)"
+    }
+}
+else
+{
+    actions quietly command-file-clear
+    {
+        $(RM) "$(<)"
     }
 }
 
-actions quietly piecemeal list-files-aux1
+# command-file-dump: dump the source paths into the target
+actions quietly piecemeal command-file-dump
 {
-    echo "$(>)" > $(<)
+    echo "$(>)" >> "$(<)"
 }
 
-actions quietly piecemeal list-files-aux2
+# Clean up the temporary COMMAND-FILE used to build TARGETS.
+rule remove-command-file ( targets + : command-file )
 {
-    echo "$(>)" >> $(<)
+    TEMPORARY $(command-file) ;
+    Clean clean : $(command-file) ; # Mark the file for removal via clean
+}
+actions quietly piecemeal together remove-command-file
+{
+    $(RM) $(>)
 }
 
+# build TARGETS from SOURCES using a command-file, where RULE-NAME is
+# used to generate the build instructions from the command-file to
+# TARGETS
 rule with-command-file ( rule-name targets * : sources * )
 {
+    # create a command-file target and place it where the first target
+    # will be built
     local command-file = $(<[2]:S=.CMD) ;
-    
-    LOCATE on $(command-file) = $(gLOCATE($(targets))) ;
-    
-    list-files $(command-file) : $(sources) ;
+    LOCATE on $(command-file) = $(gLOCATE($(targets[1]))) ;
+    build-command-file $(command-file) : $(sources) ;
 
-    gCOMMAND_FILE($(targets)) += $(command-file) ;
+    # Build the targets from the command-file instead of the sources
     DEPENDS $(targets) : $(command-file) ;
-    
-    local ignored = [ $(rule-name) $(targets) : $(command-file) ] ;
-    RmTemps $(targets[1]) : $(command-file) ;
-    Clean clean : $(command-file) ;
+    local result = [ $(rule-name) $(targets) : $(command-file) ] ;
+
+    # clean up afterwards
+    remove-command-file $(targets) : $(command-file) ;
+    return result ;
 }
