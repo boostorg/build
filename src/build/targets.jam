@@ -125,17 +125,17 @@ class abstract-target
         return $(location)/$(self.name) ;
     }
         
-    # Takes properties in split form ("<feature1>foo <feature2>bar").
-    # Generates virtual targets for this abstract target, using the specified properties,
-    # unless a different value of some feature is required by the target. The properties
-    # on returned virtual targets should be link-compatible with the requested ones.
-    #
-    # On success, returns: 
-    # - a property-set with the usage requirements to be applied to dependents
-    # - a list of produced virtual targets, which may be empty.
-    #
-    # If 'properties' are empty, performs default build of this target, in a way specific
-    # to derived class.
+    # Takes a property set.  Generates virtual targets for this abstract
+    # target, using the specified properties, unless a different value of some
+    # feature is required by the target. 
+    # On
+    # success, returns: 
+    # - a property-set with the usage requirements to be
+    #   applied to dependents 
+    # - a list of produced virtual targets, which may be
+    #    empty.  
+    # If 'property-set' are empty, performs default build of this
+    # target, in a way specific to derived class.
     rule generate ( property-set )
     {
         errors.error "method should be defined in derived classes" ;
@@ -1045,7 +1045,6 @@ class basic-target : abstract-target
             local result = 
               [ targets.generate-from-reference $(id) : $(self.project) 
                 : $(property-set) ] ;
-            check-for-link-compatibility $(result[2-]) : $(property-set) ;
         
             $(result-var) += $(result[2-]:G=$(grist)) ;
             $(usage-requirements-var) += [ $(result[1]).raw ] ;
@@ -1192,36 +1191,6 @@ class basic-target : abstract-target
         }                        
         return $(s) ;
     }
-               
-    # Checks if 'targets' are link-compatible with 'build-request' and
-    # issues a warning if that's not the case.
-    local rule check-for-link-compatibility ( targets * : build-request )
-    {
-        local checked ;
-        for local t in $(targets)
-        {
-            local a = [ $(t).action ] ;
-            if $(a)
-            {
-                local p = [ $(a).properties ] ;
-                if ! $(p) in $(cheched)
-                {
-                    if [ $(p).link-incompatible-with $(build-request) ]
-                    {
-                        local s = [ $(t).creating-subvariant ] ;
-                        local other-mt = [ $(s).main-target ] ;
-                        ECHO "warning: targets produced from" [ $(other-mt).name ] 
-                            "are link incompatible" ;
-                        ECHO "warning: with main target" [ name ] ;
-                    }                    
-                }                
-                checked += $(p) ;
-            }            
-        }
-        
-    }
-    
-    
         
     # Constructs the virtual targets for this abstract targets and
     # the dependecy graph. Returns the list of virtual targets.
