@@ -44,7 +44,8 @@ else:
 t.write('project-root.jam', 'import gcc ;')
 t.write('Jamfile', 'exe main : main.cpp d/d2/a ;')
 t.write("main.cpp", """
-int main() { return 0; }
+void foo();
+int main() { foo(); return 0; }
 """)
 
 t.write('d/d2/Jamfile', """

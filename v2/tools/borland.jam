@@ -140,14 +140,14 @@ actions compile.c
 
 # Declare flags and action for linking
 toolset.flags borland.link OPTIONS <debug-symbols>on : -v ;
-toolset.flags borland.link LINKPATH <library-path> ;
+toolset.flags borland.link LIBRARY_PATH <library-path> ;
 toolset.flags borland.link FINDLIBS-ST <find-static-library> ;
 toolset.flags borland.link FINDLIBS-SA <find-shared-library> ;
 toolset.flags borland.link LIBRARIES <library-file> ;
 toolset.flags borland.link LIBRARIES <library> ;
 
 flags builtin.response-file LIBRARY_PATH_OPTION <toolset>borland : -L : unchecked ;
-flags builtin.response-file LIBRARY_OPTION <toolset>borland : -l : unchecked ;
+flags builtin.response-file LIBRARY_OPTION <toolset>borland : "" : unchecked ;
 
 
 
@@ -205,7 +205,7 @@ else
 
 actions link bind LIBRARIES
 {
-    $(.set-path)$(.root:W)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(>:W)"
+    $(.set-path)$(.root:W)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(>:W)"
     $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)"$(<[2]:W)" $(NEED_IMPLIB)"$(<[1]:W)"
 }
 
