@@ -25,6 +25,12 @@ flags gcc CFLAGS <inlining>off : -fno-inline ;
 flags gcc CFLAGS <inlining>on : -Wno-inline ;
 flags gcc CFLAGS <inlining>full : -finline-functions -Wno-inline ;
 
+if $(UNIX)
+{
+	flags gcc CFLAGS <threading>multi : -pthread ;
+	flags gcc LINKFLAGS <threading>multi : -pthread ;
+}
+
 flags gcc CFLAGS <profiling>on : -pg ;
 flags gcc LINKFLAGS <profiling>on : -pg ;
 
