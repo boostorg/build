@@ -66,7 +66,7 @@ sed '
 	s/}/_RBRACE/
 	s/(/_LPAREN/
 	s/)/_RPAREN/
-	s/FILE/_FILE_/
+	s/.*/&_t/
 	G
 	s/\n/ /
 ' > $T.1

@@ -262,6 +262,11 @@ Jambase Rules
 	      linking. (Unix only.)
 
 </BLOCKQUOTE>
+       <B>SoftLink</B> <I>target</I> : <I>source</I> ;
+<BLOCKQUOTE>
+              Makes <I>target</I> a symbolic link to <I>source,</I> if it isn't one
+              already. (Unix only.)
+</BLOCKQUOTE>
 	<B>SubDir</B> <I>VAR d1 ... dn</I> ;
 <BLOCKQUOTE>
 		Sets up housekeeping for the source files located
@@ -599,6 +604,13 @@ Jambase Variables
 		header files can be found for a given source file.
 </BLOCKQUOTE>
 
+       INSTALLGRIST
+
+<BLOCKQUOTE>
+		Used by the Install* rules to grist paths to installed
+		files; defaults to "installed".
+</BLOCKQUOTE>
+
        JAMFILE
 
 <BLOCKQUOTE>
@@ -914,12 +926,6 @@ Jambase Variables
 	<BR>
 	Last updated: Dec 31, 2000
 	<BR>
-<<<<<<< variant A
 	$Id$
->>>>>>> variant B
-	$Id$
-####### Ancestor
-	$Id$
-======= end
 </BODY>
 </HTML>
