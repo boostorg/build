@@ -90,6 +90,10 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-xsl-dir ?
   }
 }
 
+rule xsl-dir
+{
+  return $(.boostbook-xsl-dir) ;
+}
 
 rule xslt ( target : source stylesheet : properties * )
 { 
@@ -325,11 +329,6 @@ actions xslt-xsltproc-dir
 {
   XML_CATALOG_FILES=catalog.xml xsltproc $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
 }
-
-#############################################################################
-# XML Catalog Generation
-#############################################################################
-
 
 # XInclude scanner. Mostly stolen from c-scanner :)
 # Note that this assumes an "xi" prefix for XIncludes. This isn't always the

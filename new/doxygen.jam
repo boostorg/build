@@ -1,0 +1,70 @@
+#  Copyright (C) 2003 Doug Gregor. Permission to copy, use, modify,
+#  sell and distribute this software is granted provided this
+#  copyright notice appears in all copies. This software is provided
+#  "as is" without express or implied warranty, and with no claim as
+#  to its suitability for any purpose.
+
+#  This module defines rules to handle generation of BoostBook XML
+#  from Doxygen XML output. At the moment, this requires a special
+#  version of Doxygen that can output a single XML file instead of a
+#  set of XML files.
+
+import class : class new ;
+import targets ;
+import feature ;
+import property ;
+import generators ;
+import boostbook ;
+
+type.register DOXYGEN_XML : doxygen ; # Doxygen XML output
+
+generators.register-standard doxygen.extract-xml : H C CPP : DOXYGEN_XML ;
+generators.register-standard doxygen.xml-to-boostbook : DOXYGEN_XML : XML ;
+
+# Initialize the Doxygen module. Parameters are:
+#   name: the name of the 'doxygen' executable. If not specified, the name
+#         'doxygen' will be used
+rule init ( name ? )
+{
+  if ! $(.initialized)
+  {
+    .initialized = true ;
+
+    if $(name)
+    {
+      .doxygen = $(name) ; 
+    }
+  }
+}
+
+rule name ( )
+{
+  return $(.doxygen) ;
+}
+
+rule extract-xml ( target : sources * : properties * )
+{
+  NAME on $(target) = [ name ] ;  
+  doxygen-action $(<) : $(>) ;
+}
+
+actions doxygen-action
+{
+  $(NAME:E=doxygen) -g $(<:S=.doxyfile)
+  echo "GENERATE_HTML = NO " >> $(<:S=.doxyfile)
+  echo "GENERATE_LATEX = NO " >> $(<:S=.doxyfile)
+  echo "GENERATE_XML = YES " >> $(<:S=.doxyfile)
+  echo "INPUT = $(>)" >> $(<:S=.doxyfile)
+  echo "MONOLITHIC_XML_FILE = $(<)" >> $(<:S=.doxyfile)
+  $(NAME:E=doxygen) $(<:S=.doxyfile) ;
+}
+
+rule xml-to-boostbook ( target : source : properties * )
+{
+  local xsl-dir = [ boostbook.xsl-dir ] ;
+
+  boostbook.xslt $(target) 
+               : $(source) "$(xsl-dir)/doxygen/doxygen2boostbook.xsl" 
+               : $(properties) 
+               ;
+}
