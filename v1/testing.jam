@@ -19,7 +19,7 @@ local rule get-var-value ( name + )
 local rule get-library-name ( path )
 {
     local match1 = [ MATCH [/\\]libs[/\\](.*)[/\\](test|example) : $(path) ] ;
-    local match2 = [ MATCH [/\\]libs[/\\]([^/\\]+)$ : $(path) ] ;
+    local match2 = [ MATCH [/\\]libs[/\\](.*)$ : $(path) ] ;
     local match3 = [ MATCH ([/\\]status$) : $(path) ] ;
 
     if $(match1) 
