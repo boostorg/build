@@ -2289,6 +2289,10 @@ rule stage ( name : sources + : requirements * : local-build * )
     #
     local destination-files = ;
     local locate-target = $(locate) ;
+    if $(ALL_LOCATE_TARGET)
+    {
+        locate-target ?= [ join-path [ split-path $(ALL_LOCATE_TARGET) ] $(SUBDIR_TOKENS) ] ;
+    }
     locate-target ?= [ split-path $(SUBDIR) ] ;
     for local file in $(files)
     {
