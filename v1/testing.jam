@@ -48,7 +48,9 @@ rule boost-test ( sources + : target-type : requirements * : test-name ? : defau
             # manufacture a test name if none supplied explicitly
             test-name ?= $(sources[1]:D=:S=) ;
             
-            local library = [ get-library-name $(RELATIVE_SUBDIR) ] ;
+            local library = "" ;
+            if $(RELATIVE_SUBDIR) { library = [ get-library-name $(RELATIVE_SUBDIR) ] ; }
+            
             # Make sure that targets don't become part of "all"
             local gSUPPRESS_FAKE_TARGETS = true ;
             
