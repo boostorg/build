@@ -5,13 +5,14 @@
 
 # Polymorphic class system built on top of core Jam facilities.
 #
-# Classes are defined by creating a rule of the same name to act as
-# the "constructor", which in turn sets instance attributes and
-# defines rules::
+# Classes are defined by 'class' keywords::
 #
-#     rule myclass ( arg1 )          # constructor
+#     class myclass ( arg1 )          
 #     {
-#         self.attribute = $(arg1) ;
+#         rule __init__ ( )          # constructor
+#         {
+#             self.attribute = $(arg1) ;
+#         }
 #
 #         rule method1 ( )           # method
 #         {
@@ -23,29 +24,29 @@
 #             return $(self.attribute) ;
 #         }
 #     }
-#     class myclass ;                # establish myclass as a class
 #
-# New instance modules are created by invoking [ new <class> <args...> ]::
+# The __init__ rule is the constructor, and sets member variables.
+#
+# New instances are created by invoking [ new <class> <args...> ]::
 #
 #     local x = [ new myclass foo ] ;        # x is a new myclass object
 #     assert.result foo : [ $(x).method1 ] ; # $(x).method1 returns "foo"
 #
-# To write a derived class, you must:
+# Derived class are created by mentioning base classes in the declaration::
 #
-#   1. call the constructors of all base classes as <base>.__init__ from
-#      the derived class' constructor rule
-#
-#   2. add the base classes to the derived class declaration. ::
-#
-#     rule derived ( arg )
+#     class derived : myclass 
 #     {
-#          myclass.__init__ $(arg) ;  # call base __init__
+#          rule __init__ ( arg )
+#          {
+#              myclass.__init__ $(arg) ;  # call base __init__
+#
+#          }
+#
 #          rule method2 ( )           # method override
 #          {
 #              return $(self.attribute)XXX ;
 #          }
 #     }
-#     class derived : myclass ;
 #
 # All methods operate virtually, replacing behavior in the base
 # classes. For example::
@@ -55,10 +56,10 @@
 #
 # Each class instance is its own core Jam module. All instance
 # attributes and methods are accessible without additional
-# qualification from within the class instance, and it has no
-# unqualified access to any other names other than those defined or
-# imported by the class' constructor or methods. By convention,
-# attribute names are prefixed with "self.".
+# qualification from within the class instance. All rules imported in
+# class declaration, or visible in base classses are also visible.
+# Base methods are available in qualified form: base-name.method-name.
+# By convention, attribute names are prefixed with "self.".
 
 import numbers ;
 import errors : * ;
