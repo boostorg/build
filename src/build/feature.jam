@@ -629,7 +629,8 @@ rule expand-composites ( properties * )
                 {
                     error explicitly-specified values of non-free feature
                       $(f) conflict :
-                        values: [ get-values $(f) : $(properties) ] $(x:G=) ;
+                        "existing values:" [ get-values $(f) : $(properties) ] :
+                        "value from expanding " $(p) ":" (x:G=) ;
                 }
                 else
                 {
