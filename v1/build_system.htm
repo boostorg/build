@@ -16,8 +16,9 @@
     <h2><a name="synopsis">Synopsis</a></h2>
 
     <p>Boost.Build is a system for large project software construction built on
-        <a href="http://freetype.sourceforge.net/jam/index.html">FTJam</a>,
-        an open-source make replacement<a href="#1">[1]</a>. Key features are:
+        Boost Jam, a descendant of &quot;<a
+        href="http://www.perforce.com/jam/jam.html">Perforce Jam</a>&quot;, an
+        open-source make replacement<a href="#1">[1]</a>. Key features are:
 
     <ul>
       <li>A simple target description language
@@ -176,7 +177,7 @@
 
     <h2><a name="getting_started">Getting Started</a></h2>
 
-    <h3><a name="installing_jam">Installing FTJam</a></h3>
+    <h3><a name="installing_jam">Installing Boost Jam</a></h3>
 
     <ul>
       <li><a href="http://freetype.sourceforge.net/jam/index.html#where">This
@@ -1813,13 +1814,15 @@ ECHO [ SUBST xyz (.)(.)(.) [$1] ($2) {$3} ] ;
       the source directories (they may be read-only)
     </ul>
 
-    <h2><a name="footnotes">Footnotes</a></h2>
-    <a name="1">[1]</a> FTJam is a variant of <a href=
+    <h2><a name="footnotes">Footnotes</a></h2> <a name="1">[1]</a> Boost Jam is
+    actually descended directly from <a
+    href="http://freetype.sourceforge.net/jam/index.html">FTJam</a>, which was
+    itself a variant of <a href=
     "http://www.perforce.com/jam/jam.html">Jam/MR</a>. It is hoped that crucial
-    features we rely on from FTJam will eventually be incorportated into the
-    official Jam release. 
+    features we rely on will eventually be incorportated back into the Jam/MR
+    release.
 
-    <p><a name="2">[2]</a>Note: right now, a dependency feature of a main
+    <p><a name="2">[2]</a> Note: right now, a dependency feature of a main
     target makes <b>all</b> resulting built targets dependent, including
     intermediate targets. That means that if an executable is dependent on an
     external library, and that library changes, all the sources comprising the
@@ -1834,7 +1837,7 @@ ECHO [ SUBST xyz (.)(.)(.) [$1] ($2) {$3} ] ;
 
     <p>Revised 
     <!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan
-                        -->29 July, 2001 
+                        -->11 November, 2001 
     <!--webbot bot="Timestamp" endspan i-checksum="21080"
                         -->
 </body>
