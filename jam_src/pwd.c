@@ -12,8 +12,8 @@
 #include <limits.h>
 
 #ifdef NT
-#include <tchar.h>
 #include <windows.h>
+#include <tchar.h>
 
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
