@@ -49,6 +49,7 @@ feature "include" : : free path ;
 feature cflags : : free ;
 feature cxxflags : : free ;
 feature linkflags : : free ;
+feature archiveflags : : free ;
 feature version : : free ;
 
 feature dependency : : free dependency ;
