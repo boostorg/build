@@ -16,6 +16,11 @@
 # include "filesys.h"
 # include "strings.h"
 # include "pathsys.h"
+# include <stdio.h>
+
+#if defined(sun) || defined(__sun)
+# include <unistd.h> // needed for read and close prototype
+#endif
 
 # ifdef USE_FILEUNIX
 
