@@ -94,7 +94,11 @@ rule stage-exe-generator
         local n = [ $(source).name ] ;
         local cloned-target = [ new file-target $(n:D=) : [ $(source).type ] 
                   : $(project) ] ;
-        $(cloned-target).depends [ $(source).dependencies ] ;
+        local d = [ $(source).dependencies ] ;
+        if $(d)
+        {            
+            $(cloned-target).depends $(d) ;
+        }                    
         $(cloned-target).root [ $(source).root ] ;
         $(cloned-target).dg [ $(source).dg ] ;
         
