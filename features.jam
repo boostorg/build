@@ -42,21 +42,41 @@ free-feature dllversion ; # <dllversion>1.27.0 (for use with soname-ing)
 # Can the target participate in a shared library?
 feature shared-linkable : false true ;
 
+# The addressing model to generate code for.
+# Currently a limited set only specifying the bit size of pointers.
+feature address-model : default 16 32 64 ;
+
 # Type of CPU architecture to compile for.
 feature architecture :
     # The default is the machine we are on, i.e. nothing
     native
     # x86 and compatible
-    i386 i486 i586 i686 k6
+    x86
+    # Sparc
+    sparc
+    # RS/6000 & PowerPC
+    power
+    # MIPS/SGI
+    mips1 mips2 mips3 mips4
+    ;
+
+# The specific instruction set in an architecture to compile.
+feature instruction-set :
+    # Default should probably always be the lowest common denominator.
+    default
+    # x86 and compatible
+    i386 i486 i586 i686 pentium pentiumpro k6 athlon
     # Sparc
     v7 cypress v8 supersparc sparclite hypersparc sparclite86x
     f930 f934 sparclet tsc701 v9 ultrasparc
     # RS/6000 & PowerPC
     rios rios1 rsc rios2 rs64a
     601 602 603 603e 604 604e 620 630 740 750
-    power power2 powerpc
+    power power2 powerpc power64
     403 505 801 821 823 860
     power-common
+    # MIPS
+    r2000 r3000 r3900 r4000 r4100 r4300 r4400 r4600 r4650 r5000 r6000 r8000 orion
     ;
 
 gLINK_COMPATIBLE = <shared-linkable>true <target-type> <inlining> ;
@@ -84,7 +104,9 @@ COMMON_PROPERTIES ?=
     <borland><wide-character-support>off
     "<cwpro8><cxxflags>-iso_templates on"
     
+    <address-model>default
     <architecture>native
+    <instruction-set>default
     ;
     
 variant common :

@@ -108,54 +108,102 @@ else if $(UNIX)
     }
 }
 
-# Set architecture options.
+# Set architecture/instruction-set options.
 #
 # x86 and compatible
-flags gcc CFLAGS <architecture>i386 : -mcpu=i386 ;
-flags gcc CFLAGS <architecture>i486 : -mcpu=i486 ;
-flags gcc CFLAGS <architecture>i586 : -mcpu=i586 ;
-flags gcc CFLAGS <architecture>i686 : -mcpu=i686 ;
-flags gcc CFLAGS <architecture>k6 : -mcpu=k6 ;
+.ARCH = <architecture>x86 <architecture>native ;
+flags gcc CFLAGS <architecture>x86/<instruction-set>default : -mcpu=i386 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>i386 : -mcpu=i386 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>i486 : -mcpu=i486 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>i586 : -mcpu=i586 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>i686 : -mcpu=i686 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>pentium : -mcpu=pentium ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>pentiumpro : -mcpu=pentiumpro ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>k6 : -mcpu=k6 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>athlon : -mcpu=athlon ;
 # Sparc
-flags gcc CFLAGS <architecture>v7 : -mcpu=v7 ;
-flags gcc CFLAGS <architecture>cypress : -mcpu=cypress ;
-flags gcc CFLAGS <architecture>v8 : -mcpu=v8 ;
-flags gcc CFLAGS <architecture>supersparc : -mcpu=supersparc ;
-flags gcc CFLAGS <architecture>sparclite : -mcpu=sparclite ;
-flags gcc CFLAGS <architecture>hypersparc : -mcpu=hypersparc ;
-flags gcc CFLAGS <architecture>sparclite86x : -mcpu=sparclite86x ;
-flags gcc CFLAGS <architecture>f930 : -mcpu=f930 ;
-flags gcc CFLAGS <architecture>f934 : -mcpu=f934 ;
-flags gcc CFLAGS <architecture>sparclet : -mcpu=sparclet ;
-flags gcc CFLAGS <architecture>tsc701 : -mcpu=tsc701 ;
-flags gcc CFLAGS <architecture>v9 : -mcpu=v9 ;
-flags gcc CFLAGS <architecture>ultrasparc : -mcpu=ultrasparc ;
+.ARCH = <architecture>sparc <architecture>native ;
+flags gcc CFLAGS <architecture>sparc/<instruction-set>default : -mcpu=v7 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>v7 : -mcpu=v7 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>cypress : -mcpu=cypress ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>v8 : -mcpu=v8 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>supersparc : -mcpu=supersparc ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>sparclite : -mcpu=sparclite ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>hypersparc : -mcpu=hypersparc ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>sparclite86x : -mcpu=sparclite86x ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>f930 : -mcpu=f930 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>f934 : -mcpu=f934 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>sparclet : -mcpu=sparclet ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>tsc701 : -mcpu=tsc701 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>v9 : -mcpu=v9 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>ultrasparc : -mcpu=ultrasparc ;
 # RS/6000 & PowerPC
-flags gcc CFLAGS <architecture>rios : -mcpu=rios ;
-flags gcc CFLAGS <architecture>rios1 : -mcpu=rios1 ;
-flags gcc CFLAGS <architecture>rsc : -mcpu=rsc ;
-flags gcc CFLAGS <architecture>rios2 : -mcpu=rios2 ;
-flags gcc CFLAGS <architecture>rs64a : -mcpu=rs64a ;
-flags gcc CFLAGS <architecture>601 : -mcpu=601 ;
-flags gcc CFLAGS <architecture>602 : -mcpu=602 ;
-flags gcc CFLAGS <architecture>603 : -mcpu=603 ;
-flags gcc CFLAGS <architecture>603e : -mcpu=603e ;
-flags gcc CFLAGS <architecture>604 : -mcpu=604 ;
-flags gcc CFLAGS <architecture>604e : -mcpu=604e ;
-flags gcc CFLAGS <architecture>620 : -mcpu=620 ;
-flags gcc CFLAGS <architecture>630 : -mcpu=630 ;
-flags gcc CFLAGS <architecture>740 : -mcpu=740 ;
-flags gcc CFLAGS <architecture>750 : -mcpu=750 ;
-flags gcc CFLAGS <architecture>power : -mcpu=power ;
-flags gcc CFLAGS <architecture>power2 : -mcpu=power2 ;
-flags gcc CFLAGS <architecture>powerpc : -mcpu=powerpc ;
-flags gcc CFLAGS <architecture>403 : -mcpu=403 ;
-flags gcc CFLAGS <architecture>505 : -mcpu=505 ;
-flags gcc CFLAGS <architecture>801 : -mcpu=801 ;
-flags gcc CFLAGS <architecture>821 : -mcpu=821 ;
-flags gcc CFLAGS <architecture>823 : -mcpu=823 ;
-flags gcc CFLAGS <architecture>860 : -mcpu=860 ;
-flags gcc CFLAGS <architecture>power-common : -mcpu=common ;
+.ARCH = <architecture>sparc <architecture>native ;
+flags gcc CFLAGS <architecture>power/<instruction-set>default : -mcpu=power ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>rios : -mcpu=rios ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>rios1 : -mcpu=rios1 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>rsc : -mcpu=rsc ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>rios2 : -mcpu=rios2 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>rs64a : -mcpu=rs64a ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>601 : -mcpu=601 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>602 : -mcpu=602 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>603 : -mcpu=603 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>603e : -mcpu=603e ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>604 : -mcpu=604 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>604e : -mcpu=604e ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>620 : -mcpu=620 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>630 : -mcpu=630 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>740 : -mcpu=740 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>750 : -mcpu=750 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>power : -mcpu=power ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>power2 : -mcpu=power2 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>powerpc : -mcpu=powerpc ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>power64 : -mcpu=power64 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>403 : -mcpu=403 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>505 : -mcpu=505 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>801 : -mcpu=801 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>821 : -mcpu=821 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>823 : -mcpu=823 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>860 : -mcpu=860 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>power-common : -mcpu=common ;
+# MIPS-1-2-3-4
+flags gcc MIPS <architecture>mips1 <architecture>mips2 <architecture>mips3 <architecture>mips4 : TRUE ;
+flags gcc MIPS
+    <instruction-set>r2000 <instruction-set>r3000 <instruction-set>r3900
+    <instruction-set>r4000 <instruction-set>r4100 <instruction-set>r4300
+    <instruction-set>r4400 <instruction-set>r4600 <instruction-set>r4650
+    <instruction-set>r5000 <instruction-set>r6000 <instruction-set>r8000
+    <instruction-set>orion
+    : TRUE ;
+if $(MIPS)
+{
+    flags gcc CFLAGS <architecture>mips1 : -mips1 ;
+    flags gcc CFLAGS <architecture>mips2 : -mips2 ;
+    flags gcc CFLAGS <architecture>mips3 : -mips3 ;
+    flags gcc CFLAGS <architecture>mips4 : -mips4 ;
+    flags gcc CFLAGS <instruction-set>r2000 : -mcpu=r2000 ;
+    flags gcc CFLAGS <instruction-set>r3000 : -mcpu=r3000 ;
+    flags gcc CFLAGS <instruction-set>r3900 : -mcpu=r3900 ;
+    flags gcc CFLAGS <instruction-set>r4000 : -mcpu=r4000 ;
+    flags gcc CFLAGS <instruction-set>r4100 : -mcpu=r4100 ;
+    flags gcc CFLAGS <instruction-set>r4300 : -mcpu=r4300 ;
+    flags gcc CFLAGS <instruction-set>r4400 : -mcpu=r4400 ;
+    flags gcc CFLAGS <instruction-set>r4600 : -mcpu=r4600 ;
+    flags gcc CFLAGS <instruction-set>r4650 : -mcpu=r4650 ;
+    flags gcc CFLAGS <instruction-set>r5000 : -mcpu=r5000 ;
+    flags gcc CFLAGS <instruction-set>r6000 : -mcpu=r6000 ;
+    flags gcc CFLAGS <instruction-set>r8000 : -mcpu=r8000 ;
+    flags gcc CFLAGS <instruction-set>orion : -mcpu=orion ;
+    #   ...addressing model options
+    flags gcc ADDRESS_MODEL_INVALID <address-model>16 : TRUE ;
+    if $(ADDRESS_MODEL_INVALID)
+    {
+        EXIT "Error: Invalid addressing model for MIPS architecture (16)." ;
+    }
+    flags gcc CFLAGS <address-model>default : -mgp32 ;
+    flags gcc CFLAGS <address-model>32 : -mgp32 ;
+    flags gcc CFLAGS <address-model>64 : -mgp64 -mlong64 ;
+}
 
 #
 # define compiler names if not set:
