@@ -20,6 +20,7 @@ import regex ;
 import stage ;
 
 feature.feature doxygen:param : : free ;
+feature.feature prefix : : free ;
 
 type.register DOXYFILE : doxyfile ; # Doxygen input file
 type.register DOXYGEN_XML_MULTIFILE : : XML ; # Doxygen XML multi-file output
@@ -121,7 +122,13 @@ rule xml-to-boostbook ( target : source : properties * )
 	              [ path.join [ boostbook.xsl-dir ] doxygen 
 	                doxygen2boostbook.xsl ] ] ;
 
-  xslt $(target) : $(source) $(d2b-xsl) : $(properties) ;
+  local xslt-properties = $(properties) ;
+  for local prefix in [ feature.get-values <prefix> : $(properties) ]
+  {
+    xslt-properties += "<xsl:param>boost.doxygen.header.prefix=$(prefix)" ;
+  }
+
+  xslt $(target) : $(source) $(d2b-xsl) : $(xslt-properties) ;
 }
 
 # User-level rule to generate BoostBook XML from a set of headers via Doxygen. 
