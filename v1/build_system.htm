@@ -16,7 +16,7 @@
     <h2><a name="synopsis">Synopsis</a></h2>
 
     <p>Boost.Build is a system for large project software construction built on
-        Boost Jam, a descendant of &quot;<a
+        Boost.Jam, a descendant of &quot;<a
         href="http://www.perforce.com/jam/jam.html">Perforce Jam</a>&quot;, an
         open-source make replacement<a href="#1">[1]</a>. Key features are:
 
@@ -41,6 +41,19 @@
       <li>Automatic building of subproject dependencies
     </ul>
 
+    <h2><a name="status">Status</a></h2>
+
+    Boost.Build v1 is a useful, mature system. However, its design and
+    structure are not easily adapted to support some of the features
+    we'd like to see in the future. To this end, the Boost.Build
+    developers have begun work on v2 of Boost.Build, which will be
+    based around this
+    <a href="architecture.html">design document</a>. If you are
+    interested in contributing to this effort or you wish to discuss
+    the design of Boost.Build, please post inquiries to the <a
+    href="http://groups.yahoo.com/group/jamboost/">jamboost</a>
+    mailing list at yahoogroups.
+
     <p><a href="#design_criteria">Here</a> are some of the design criteria that
     led to these features.
 
@@ -49,11 +62,13 @@
     <ul>
       <li><a href="#synopsis">Synopsis</a>
 
+      <li><a href="#status">Status</a>
+
       <li>
         <a href="#getting_started">Getting Started</a> 
 
         <ul>
-          <li><a href="#installing_jam">Installing Jam</a>
+          <li><a href="#installing_jam">Installing Boost.Jam</a>
 
           <li><a href="#initiating">Initiating a Build</a>
 
@@ -183,40 +198,26 @@
 
     <h2><a name="getting_started">Getting Started</a></h2>
 
-    <h3><a name="installing_jam">Installing Boost Jam</a></h3>
-
-    <ul>
-      <li>The Boost Jam sources are located in the <tt>tools/build/jam_src</tt>
-      subdirectory of the Boost installation.
-
-      <li>The <a href="http://public.perforce.com/public/jam/src/README">Jam
-      README</a> contains basic installation instructions.
-
-      
-    <li>If you are installing on Windows, the make process may prompt you to set 
-        some environment variables, and stop. Don't be alarmed; just follow the 
-        instructions and start over. Please keep in mind that these variable settings 
-        are case-sensitive. The variable settings necessary for bootstrapping 
-        Jam are not needed once it has been built. 
-    <li>Note that the supplied Makefile may require editing for your
-      platform; see the <a href=
-      "http://public.perforce.com/public/jam/src/README">Jam README</a> for
-      details. The Makefile is used for bootstrapping Jam; it builds Jam into a
-      subdirectory called <tt>bin.</tt><i>platform</i>.
-    </ul>
+    <h3><a name="installing_jam">Installing Boost.Jam</a></h3>
+    
+    Follow these <a href="index.html#Jam">instructions</a> to acquire
+    a bjam executable for your platform. Install it somewhere in your
+    path.
 
     <h3><a name="initiating">Initiating a Build</a></h3>
 
-    <p>The easiest way to get going is to set the <tt>BOOST_ROOT</tt>
-    environment variable to point at the Boost installation directory, though
-    you can also set <tt>BOOST_ROOT</tt> on the command-line, using
-    <tt>-s...</tt>. You can use the <tt>TOOLS</tt> variable to indicate which
-    toolset(s) to build with, and the <tt>BUILD</tt> variable to describe how
-    you want things built. In most cases it should be sufficient to invoke Jam
-    with no variable settings. The following examples all assume that
-    <tt>BOOST_ROOT</tt> has been set in the environment.
+    <p>Boost.Build responds to several global variable settins. The
+    easiest way to get going is usually to use environment variables,
+    though you can also set them on the command-line, using
+    <tt>-s</tt><i>VARIABLE_NAME</i><tt>=</tt><i>value</i>.  In
+    addition to the <a href="index.html#Configuring">toolset
+    configuration variables</a>, you can use the <tt>TOOLS</tt>
+    variable to indicate which toolset(s) to build with, and the
+    <tt>BUILD</tt> variable to describe how you want things built. In
+    many cases it should be sufficient to invoke <code>bjam</code>
+    with no variable settings.
 
-    <p>Here are some sample Boost Jam invocations:
+    <p>Some example Boost.Jam invocations:
 
     <table border="1" summary="Sample Jam Invocations=">
       <tr>
@@ -227,7 +228,7 @@
       <tr>
         <td>
 <pre>
-jam -sTOOLS=gcc my_target
+bjam -sTOOLS=gcc my_target
 </pre>
 
         <td>default (debug) <tt><a href="#build">BUILD</a></tt> of
@@ -235,7 +236,7 @@ jam -sTOOLS=gcc my_target
 
       <tr>
         <td>
-            <pre>jam -f<i>allyourbase-path</i> -sTOOLS=&quot;msvc gcc&quot;</pre> 
+            <pre>bjam -sTOOLS=&quot;msvc gcc&quot;</pre> 
 
         <td>default-build <tt>all</tt> with msvc and gcc
 
@@ -243,7 +244,7 @@ jam -sTOOLS=gcc my_target
         <td>
 <pre>
 set TOOLS=msvc
-jam
+bjam
 </pre>
 
         <td>Set an NT environment variable to always build with MSVC<br>
@@ -252,15 +253,16 @@ jam
       <tr>
         <td>
 <pre>
-jam -sBUILD=release
+bjam &quot;-sBUILD=release &lt;debug-symbols&gt;on&quot;
 </pre>
 
-        <td>release build <tt>all</tt> with default <tt><a href=
-        "#tools">TOOLS</a></tt>:<br>
+        <td>release build with debug symbols of <tt>all</tt> using
+        default <tt><a href=
+        "#tools">TOOLS</a></tt>
          
 
       <tr>
-        <td><pre>jam -sBUILD=&quot;debug release&quot;</pre> 
+        <td><pre>bjam -sBUILD=&quot;debug release&quot;</pre> 
 
         <td>debug and release build <tt>all</tt>.
     </table>
@@ -277,7 +279,7 @@ jam -sBUILD=release
 <blockquote><pre>
 &gt; <a href="#build">BUILD</a>=&quot;debug release&quot;  <i># assuming Unix</i>
 &gt; export <a href="#build">BUILD</a>
-&gt; jam ...
+&gt; bjam ...
 </pre></blockquote>
         This approach can be OK for quick-and-dirty tests, but environment variable
       settings tend to be unstable and non-uniform across users and machines, so
@@ -659,7 +661,7 @@ exe my_target : my_source1.cpp my_source2.c ;
 
         <td rowspan="2">Platform-dependent
 
-        <td><tt>-sTOOLS="gcc msvc"</tt> 
+        <td><tt>&quot;-sTOOLS=gcc msvc&quot;</tt> 
         <td>build with gcc and msvc
 
       <tr>
@@ -679,18 +681,18 @@ exe my_target : my_source1.cpp my_source2.c ;
         <td>build the <tt>release</tt> variant
 
       <tr>
-        <td><tt>-sBUILD="debug release"</tt> 
+        <td><tt>&quot;-sBUILD=debug release&quot;</tt> 
 
         <td>build both <tt>debug</tt> and <tt>release</tt> variants
 
       <tr>
-        <td><tt>-sBUILD="&lt;optimization&gt;speed"</tt> 
+        <td><tt>&quot;-sBUILD=&lt;optimization&gt;speed&quot;</tt> 
 
         <td>build a subvariant of the default variant (<tt>debug</tt>) with
         optimization for speed.
 
       <tr>
-        <td><tt>-sBUILD="debug release &lt;runtime-link&gt;static/dynamic"</tt>
+        <td><tt>&quot;-sBUILD=debug release &lt;runtime-link&gt;static/dynamic&quot;</tt>
         
 
         <td>build subvariants of the debug and release variants that link to
