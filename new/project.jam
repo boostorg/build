@@ -161,45 +161,6 @@ rule module-name ( jamfile-location )
     return Jamfile<$(jamfile-location)> ;
 }
 
-#
-# Output a human readable description of the project structure.
-#
-rule dump ( )
-{
-    # Sort projects so that output is independent of order. It is
-    # needed to allow tests to works despite possible change in
-    # project inclusion order.
-    local projects = [ sequence.insertion-sort $(.projects) ] ;
-
-    ECHO "Projects structure dump" ;
-    ECHO "" ;
-    for local i in $(projects) {
-        ECHO "    Location: $(i)" ;
-        local module-name = [ module-name $(i) ] ;
-        local id = [ $(module-name).id ] ;
-        id ?= "(none)" ;
-        ECHO "    Project id: $(id)" ;
-        ECHO "" ;
-
-        local project-root = [ $(module-name).project-root ] ;
-        local parent = [ $(module-name).parent ] ;
-        parent ?= none ;
-        local requirements = [ $(module-name).requirements ] ;
-        local default-build = [ $(module-name).default-build ] ;
-        local source-location = [ $(module-name).source-location ] ;
-        local subincludes = [ $(module-name).subincludes ] ;
-        subincludes = [ sequence.insertion-sort $(subincludes) ] ;
-        ECHO "        Project root: $(project-root)" ;
-        ECHO "        Parent project: $(parent)" ;
-        ECHO "        Requirements:" $(requirements) ;
-        ECHO "        Default build:" $(default-build) ;
-        ECHO "        Source location:" $(source-location) ;
-        ECHO "        Subincludes:" $(subincludes) ;
-
-        ECHO "" ;
-    }
-}
-
 # Default patterns to search for the Jamfiles to use for build
 # declarations.
 #
@@ -429,10 +390,12 @@ module project-rules {
         import sequence ;
         import print ;
 
-        print.section "'"$(__id__)"'" ;
+        local id = [ id ] ; id ?= (none) ;
+        local parent = [ parent ] ; parent ?= (none) ;
+        print.section "'"$(id)"'" ;
         print.list-start ;
         print.list-item "Project root:" [ project-root ] ;
-        print.list-item "Parent project:" [ parent ] ;
+        print.list-item "Parent project:" $(parent) ;
         print.list-item "Requirements:" [ requirements ] ;
         print.list-item "Default build:" [ default-build ] ;
         print.list-item "Source location:" [ source-location ] ;
