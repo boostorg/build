@@ -16,6 +16,7 @@
 # define RULES_DWA_20011020_H
 
 # include "modules.h"
+# include "jam.h"
 
 /*
  * rules.h -  targets, rules, and related information

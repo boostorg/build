@@ -37,6 +37,7 @@
 %token TOGETHER_t
 %token UPDATED_t
 %token WHILE_t
+%token XCLASS_t
 %token _LBRACE_t
 %token _BAR_t
 %token _BARBAR_t
@@ -118,6 +119,7 @@
 # define plist( s )	  	parse_make( compile_list,P0,P0,P0,s,S0,0 )
 # define plocal( l,r,t )  	parse_make( compile_local,l,r,t,S0,S0,0 )
 # define pmodule( l,r )	  	parse_make( compile_module,l,r,P0,S0,S0,0 )
+# define pclass( l,r )	  	parse_make( compile_class,l,r,P0,S0,S0,0 )
 # define pnull()	  	parse_make( compile_null,P0,P0,P0,S0,S0,0 )
 # define pon( l,r )	  	parse_make( compile_on,l,r,P0,S0,S0,0 )
 # define prule( s,p )     	parse_make( compile_rule,p,P0,P0,s,S0,0 )
@@ -205,6 +207,8 @@ rule	: _LBRACE_t block _RBRACE_t
 		{ $$.parse = pif( $2.parse, $4.parse, pnull() ); }
 	| MODULE_t list _LBRACE_t block _RBRACE_t 
 		{ $$.parse = pmodule( $2.parse, $4.parse ); }
+	| XCLASS_t lol _LBRACE_t block _RBRACE_t 
+		{ $$.parse = pclass( $2.parse, $4.parse ); }
 	| WHILE_t expr _LBRACE_t block _RBRACE_t 
 		{ $$.parse = pwhile( $2.parse, $4.parse ); }
 	| IF_t expr _LBRACE_t block _RBRACE_t ELSE_t rule

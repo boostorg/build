@@ -37,6 +37,7 @@
     { "together", TOGETHER_t },
     { "updated", UPDATED_t },
     { "while", WHILE_t },
+    { "xclass", XCLASS_t },
     { "{", _LBRACE_t },
     { "|", _BAR_t },
     { "||", _BARBAR_t },
