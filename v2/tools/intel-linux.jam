@@ -30,7 +30,7 @@ rule init ( version ? :  command * : compile_options * : link_options * )
     local condition = [ common.check-init-parameters intel-linux
         : version $(version) ] ;
     
-    name = [ common.get-invocation-command intel-linux : icc 
+    command = [ common.get-invocation-command intel-linux : icc 
         : $(command) : /opt/intel_cc_80/bin ] ;
                 
     flags intel-linux CONFIG_COMMAND $(condition) : $(command) ;
