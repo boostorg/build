@@ -1,0 +1,18 @@
+if --v2 in $(ARGV)
+{
+    if $(JAM_VERSION:J="") < 030103
+    {
+        ECHO "error: Boost.Jam 3.1.3 or later required" ;
+        EXIT ;
+    }
+    else
+    {
+        boost-build $(BOOST_ROOT)/tools/build/new/ ;    
+    }   
+}
+else
+{
+    ECHO "error: Boost.Jam --v2 required" ;
+    EXIT ;
+}    
+

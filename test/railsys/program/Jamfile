@@ -1,0 +1,47 @@
+# ================================================================
+#
+#  Railsys
+#  --------------
+#
+#  Copyright (c) 2002 Institute of Transport, 
+#             Railway Construction and Operation, 
+#             University of Hanover, Germany
+#
+# Permission to copy, use, modify, sell and distribute this software is
+# granted provided this copyright notice appears in all copies. This
+# software is provided "as is" without express or implied warranty, and
+# with no claim as to its suitability for any purpose.
+#
+#  02/21/02! Jürgen Hunold
+#
+#  $Id$
+#
+# ================================================================
+
+local BOOST_ROOT = [ modules.peek : BOOST_ROOT ] ;
+
+use-project /libx : ../libx/src ;
+
+project program
+    : requirements 
+        <include>$(BOOST_ROOT)
+        <threading>multi
+        <uses>qt
+        <hardcode-dll-paths>true
+        <stdlib>stlport
+        <dependency>@/libx
+#        <dependency>../libx/src
+           
+ : usage-requirements 
+        <include>$(BOOST_ROOT)
+        : 
+        default-build release
+        <threading>multi
+        <uses>qt
+        <stdlib>stlport
+        <hardcode-dll-paths>true
+        ;
+
+
+build-project main ;
+
