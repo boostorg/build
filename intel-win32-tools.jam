@@ -41,6 +41,9 @@ version ?= [ MATCH .*[\\/][Cc][Oo][Mm][Pp][Ii][Ll][Ee][Rr]([0-9])[0-9][\\/].* : 
 # Reduce the number of spurious error messages
 C++FLAGS += /Qwn5 /Qwd985 ;
 
+# Enable ADL
+C++FLAGS += -Qoption,c,--arg_dep_lookup ;
+
 if $(version) <= 5
 {
     # remove options unrecognized by Intel5
