@@ -17,7 +17,7 @@
 
 # The following #// line will be used by the regression test table generation
 # program as the column heading for HTML tables. Must not include version number.
-#//<a href="http://www.metrowerks.com/products/windows/">Metro-<br>werks<br>Code-<br>Warrior</a>
+#//<a href="http://www.metrowerks.com/MW/Develop/Desktop/default.htm">Metro-<br>werks<br>Code-<br>Warrior</a>
 
 # singleton variables...
 set-as-singleton METROWERKS_ROOT CWFOLDER ;
