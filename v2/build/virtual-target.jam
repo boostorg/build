@@ -395,7 +395,12 @@ class abstract-file-target : virtual-target
             {
                 local ps = [ $(self.action).properties ] ;     
                 local property-grist = [ $(ps).as-path ] ;
-                location-grist = $(location-grist)/$(property-grist) ;
+                # 'property-grist' can be empty when 'ps' is an empty
+                # property set.
+                if $(property-grist)
+                {                    
+                    location-grist = $(location-grist)/$(property-grist) ;
+                }                
             }            
                         
             return l$(location-grist) ;
@@ -518,6 +523,11 @@ class notfile-target : abstract-file-target
         abstract-file-target.__init__ $(name) : : $(project) ;
     }
     
+    # Returns nothing, to indicate that target path is not known.
+    rule path ( )
+    {
+        return ;
+    }
             
     rule actualize-location ( target )
     {
