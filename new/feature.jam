@@ -27,9 +27,12 @@ local rule setup ( )
       dependency  
       propagated 
       link-incompatible
+      subfeature
       ;
 
     .all-features = ;
+    .all-subfeatures = ; # non-subfeatures
+    .all-top-features = ; # non-subfeatures
     .all-implicit-values = ;
 }
 setup ;
@@ -127,6 +130,14 @@ rule feature (
     $(attributes).features += $(name) ;
 
     .all-features += $(name) ;
+    if subfeature in $(attributes)
+    {
+        .all-subfeatures += $(name) ;
+    }
+    else
+    {
+        .all-top-features += $(name) ;
+    }
     extend $(name) : $(values) ;    
 }
 
@@ -138,7 +149,7 @@ rule set-default ( feature : value )
     if ! $(value) in $($(f).values) 
     {
         errors.error "The specified default value, '$(value)' is invalid" 
-          : "values values are " $($(f).values) ;
+          : "allowed values are: " $($(f).values) ;
     }    
     $(f).default = $(value) ;
 }
@@ -257,8 +268,9 @@ rule implied-subfeature (
 
     if ! $(subfeature)
     {
+        value-string ?= "" ;
         error \"$(subvalue)\" is not a known subfeature value of
-          feature $(feature) ;
+          $(feature)$(value-string) ;
     }
 
     return $(subfeature) ;
@@ -331,6 +343,20 @@ local rule expand-subfeatures-aux (
         }
     }
 
+    # Add all the default feature values for non-optional subfeatures.
+    local ungristed-feature = [ utility.ungrist $(feature) ] ;
+    for local s in $($(feature).subfeatures)
+    {
+        local full-name = <$(ungristed-feature)-$(s)> ;
+        if ! optional in $($(full-name).attributes)
+        {
+            if ! $(full-name) in $(result:G)
+            {
+                result += $(full-name)$($(full-name).default) ;
+            }
+        }
+    }
+    
     return $(result) ;
 }
 
@@ -451,12 +477,12 @@ rule extend-subfeature (
 
     local subfeature-name = [ get-subfeature-name $(subfeature) $(value-string) ] ;
     
+    local f = [ utility.ungrist $(feature) ] ;
+    extend $(f)-$(subfeature-name) : $(subvalues) ;
+    
     # provide a way to get from the given feature or property and
     # subfeature value to the subfeature name.
-    for local subvalue in $(subvalues)
-    {
-        $(feature)$(value-string:E="")<>$(subvalue).subfeature = $(subfeature-name) ;
-    }
+    $(feature)$(value-string:E="")<>$(subvalues).subfeature = $(subfeature-name) ;
 }
 
 # Can be called three ways:
@@ -535,7 +561,6 @@ rule subfeature (
     validate-feature $(feature) ;
     
     # Add grist to the subfeature name if a value-string was supplied
-    local value-prefix = $(value-string): ;
     local subfeature-name = [ get-subfeature-name $(subfeature) $(value-string) ] ;
     
     if $(subfeature-name) in $($(feature).subfeatures)
@@ -544,9 +569,13 @@ rule subfeature (
           "specific to "$(value-string) ;
     }
     $(feature).subfeatures += $(subfeature-name) ;
-    extend-subfeature $(feature) $(value-string) : $(subfeature) : $(subvalues) ;
+    
+    # First declare the subfeature as a feature in its own right
     local f = [ utility.ungrist $(feature) ] ;
-    feature $(f)-$(subfeature-name) : $(subvalues) : $(attributes) ;
+    feature $(f)-$(subfeature-name) : $(subvalues) : $(attributes) subfeature ;
+    
+    # Now make sure the subfeature values are known.
+    extend-subfeature $(feature) $(value-string) : $(subfeature) : $(subvalues) ;
 }
 
 # Set the components of the given composite property
@@ -662,6 +691,60 @@ rule expand-composites ( properties * )
     return $(result) ;
 }
 
+# Return true iff f is an ordinary subfeature of the parent-property's
+# feature, or if f is a subfeature fo the parent-property's feature
+# specific to the parent-property's value
+local rule is-subfeature ( parent-property f )
+{
+    if subfeature in $($(f).attributes)
+    {
+        local specific-subfeature = [ MATCH <(.*):(.*)> : $(f) ] ;
+        if $(specific-subfeature)
+        {
+            # The feature has the form
+            # <topfeature-topvalue:subfeature>,
+            # e.g. <toolset-msvc:version>
+            local feature-value = [ split-top-feature $(specific-subfeature[1]) ] ;
+            if <$(feature-value[1])>$(feature-value[2]) = $(parent-property)
+            {
+                return true ;
+            }
+        }
+        else
+        {
+            # The feature has the form <topfeature-subfeature>,
+            # e.g. <toolset-version>
+            local top-sub = [ split-top-feature [ utility.ungrist $(f) ] ] ;
+            
+            if $(top-sub[2]) && <$(top-sub[1])> = $(parent-property:G)
+            {
+                return true ;
+            }
+        }
+    }
+}
+
+# as above, for subproperties
+local rule is-subproperty ( parent-property p )
+{
+    return [ is-subfeature $(parent-property) $(p:G) ] ;
+}
+
+# Given a property, return the subset of features consisting of all
+# ordinary subfeatures of the property's feature, and all specific
+# subfeatures of the property's feature which are conditional on the
+# property's value.
+local rule select-subfeatures ( parent-property : features * )
+{
+    return [ sequence.filter is-subfeature $(parent-property) : $(features) ] ;
+}
+  
+# as above, for subproperties
+local rule select-subproperties ( parent-property : properties * )
+{
+    return [ sequence.filter is-subproperty $(parent-property) : $(properties) ] ;
+}
+
 # Given a property set which may consist of composite and implicit
 # properties and combined subfeature values, returns an expanded,
 # normalized property set with all implicit features expressed
@@ -724,75 +807,89 @@ local rule move-subfeatures-to-the-end ( properties * )
 # to the corresponding main property.
 rule minimize ( properties * )
 {
-    # remove properties implied by composite features
-    local x = $(properties) ;
-    local components ;
-    for local p in $(properties)
+    # Precondition checking
+    local implicits = [ set.intersection $(p:G=) : $(p:G) ] ;
+    if $(implicits)
     {
-        if ! $(p:G)
-        {
-            error minimize requires an expanded property set, but \"$(p)\"
-              appears to be the value of an un-expanded implicit feature ;
-        }
-        components += $($(p).components:G) ;
-        x = [ set.difference $(x) : $($(p).components) ] ;
+        error minimize requires an expanded property set, but \"$(implicits[1])\"
+          appears to be the value of an un-expanded implicit feature ;
     }
         
+    # remove properties implied by composite features
+    local components = $($(properties).components) ;
+    local x = [ set.difference $(properties) : $(components) ] ;
+    
     # handle subfeatures and implicit features
     x = [ move-subfeatures-to-the-end $(x) ] ;    
     local result ;
     while $(x)
     {
-        local p = $(x[1]) ;
+        local p fullp = $(x[1]) ;
         local f = $(p:G) ;
+        local v = $(p:G=) ;
         
         # eliminate features in implicit properties.
         if implicit in [ attributes $(f) ]
         {
-            p = $(p:G="") ;
+            p = $(v) ;
         }
-        
-        # eliminate properties which value is equal to feature's default
-        # and which are not symmetric
-        if $(p) = [ defaults $(f) ] && ! symmetric in [ attributes $(f) ]
-          # If the feature is not specified in any of composite ones,
-          # then removing it is OK, because adding defaults would bring that
-          # feature back --- there's 1-1 correspondence between minimized
-          # and full property set.
-          && ! $(f:G) in $(components)
+
+        # locate all subproperties of $(x[1]) in the property set
+        local subproperties = [ select-subproperties $(fullp) : $(x) ] ;
+        if $(subproperties)
         {
-            x = $(x[2-]) ;
+            # reconstitute the joined property name
+            local sorted = [ sequence.insertion-sort $(subproperties) ] ;
+            result += $(p)-$(sorted:G="":J=-) ;
+
+            x = [ set.difference $(x[2-]) : $(subproperties) ] ;
         }
         else
-        {                    
-            # locate all subproperties of f in the property set
-            local subproperties ;
-            local subfeatures = $($(f).subfeatures:G=) ;
-            if $(subfeatures)
-            {
-                local f_ = [ utility.ungrist $(f) ] ;
-                subfeatures = [ grist $(f_)-$(subfeatures) ] ;
-                subproperties = [ sequence.filter in-features subfeatures : $(x) ] ;
-            }
+        {
+            # eliminate properties whose value is equal to feature's
+            # default and which are not symmetric and which do not
+            # contradict values implied by composite properties.
             
-            if $(subproperties)
-            {
-                # reconstitute the joined property name
-                local sorted = [ sequence.insertion-sort $(subproperties) ] ;
-                result += $(p)-$(sorted:G="":J=-) ;
-                
-                x = [ set.difference $(x[2-]) : $(subproperties) ] ;
-            }
-            else
+            # since all component properties of composites in the set
+            # have been eliminated, any remaining property whose
+            # feature is the same as a component of a composite in the
+            # set must have a non-redundant value.
+            if $(fullp) != [ defaults $(f) ]
+              || symmetric in [ attributes $(f) ]
+                || $(fullp:G) in $(components:G)
             {
                 result += $(p) ;
-                x = $(x[2-]) ;
             }
-        }        
+
+            x = $(x[2-]) ;
+        }
     }
     return $(result) ;
 }
 
+# given an ungristed string, finds the longest prefix which is a
+# top-level feature name followed by a dash, and return a pair
+# consisting of the parts before and after that dash.  More
+# interesting than a simple split because feature names can contain
+# dashes.
+local rule split-top-feature ( feature-plus )
+{
+    local e = [ regex.split $(feature-plus) - ] ;
+    local f = $(e[1]) ;
+    
+    local v ;
+    while $(e)
+    {
+        if <$(f)> in $(.all-top-features)
+        {
+            v = $(f) $(e[2-]:J=-) ;
+        }
+        e = $(e[2-]) ;
+        f = $(f)-$(e[1]) ;
+    }
+    return $(v) ;
+}
+  
 # Given a set of properties, add default values for features not
 # represented in the set. 
 # Note: if there's there's ordinary feature F1 and composite feature
@@ -825,8 +922,21 @@ rule add-defaults ( properties * )
     # 2. Free properties with ":" in values. We don't care, since free properties
     #    don't have defaults.
     local xproperties = [ MATCH "^([^:]+)$" : $(properties) ] ;
-    local missing = [ set.difference $(.all-features) : $(xproperties:G) ] ;
-    return $(properties) [ defaults $(missing) ] ;
+    local missing-top = [ set.difference $(.all-top-features) : $(xproperties:G) ] ;
+    local more =  [ defaults $(missing-top) ] ;
+    properties += $(more) ;
+    xproperties += $(more) ;
+    
+    # Add defaults for subfeatures of features which are present
+    for local p in $(xproperties)
+    {
+        local s = $($(p:G).subfeatures) ;
+        local f = [ utility.ungrist $(p:G) ] ;
+        local missing-subs = [ set.difference <$(f)-$(s)> : $(properties:G) ] ;
+        properties += [ defaults [ select-subfeatures $(p) : $(missing-subs) ] ] ;
+    }
+    
+    return $(properties)  ;
 }
 
 # Given a property-set of the form
@@ -901,9 +1011,9 @@ local rule __test__ ( )
     # use a fresh copy of the feature module
     prepare-test feature-test-temp ;
 
-    # This is a local rule and so must be explicitly reimported into
+    # These are local rules and so must be explicitly reimported into
     # the testing module
-    import feature : extend-feature validate-feature ; 
+    import feature : extend-feature validate-feature select-subfeatures ; 
     
     import errors : try catch ;
     import assert ;
@@ -912,7 +1022,7 @@ local rule __test__ ( )
     feature define : : free ;
     feature runtime-link : dynamic static : symmetric ;
     feature optimization : on off ;
-    feature variant : debug release : implicit composite ;
+    feature variant : debug release : implicit composite symmetric ;
     feature stdlib : native stlport ;
     feature magic : : free ;
 
@@ -948,6 +1058,24 @@ local rule __test__ ( )
     action <magic>17 : handle-magic2 ;
     action <magic>17 : handle-magic3 ;
 
+    assert.result <toolset-gcc:version>
+      : select-subfeatures <toolset>gcc
+         : <toolset-gcc:version>
+           <toolset-msvc:version>
+           <toolset-version>
+           <stdlib>
+      ;
+           
+    subfeature stdlib : version : 3 4 : optional ;
+
+    assert.result <stdlib-version>
+      : select-subfeatures <stdlib>native
+         : <toolset-gcc:version>
+           <toolset-msvc:version>
+           <toolset-version>
+           <stdlib-version>
+      ;
+           
     assert.result <toolset>gcc <toolset-gcc:version>3.0.1
       : expand-subfeatures <toolset>gcc-3.0.1 ;
 
@@ -960,6 +1088,10 @@ local rule __test__ ( )
     feature dummy : dummy1 dummy2 ;
     subfeature dummy : subdummy : x y z : optional ;
 
+    feature fu : fu1 fu2 : optional ;
+    subfeature fu : subfu : x y z : optional ;
+    subfeature fu : subfu2 : q r s ;
+    
     assert.result a c e
       : get-values x : <x>a <y>b <x>c <y>d <x>e ;
 
@@ -968,6 +1100,10 @@ local rule __test__ ( )
       : expand gcc-3.0.1 debug <optimization>on
       ;
 
+    assert.result <fu>fu1 <fu-subfu2>q
+      : expand-subfeatures <fu>fu1
+      ;
+    
     assert.result <variant>debug <define>_DEBUG <optimization>on
       : expand debug <optimization>on
       ;
@@ -982,7 +1118,16 @@ local rule __test__ ( )
 
     assert.result <runtime-link>static <define>foobar <optimization>on <toolset>gcc:<define>FOO
       <toolset>gcc <variant>debug <stdlib>native <dummy>dummy1
-      : add-defaults <runtime-link>static <define>foobar <optimization>on <toolset>gcc:<define>FOO
+
+      : add-defaults <runtime-link>static <define>foobar
+        <optimization>on <toolset>gcc:<define>FOO 
+      ;
+    
+    assert.result <runtime-link>static <define>foobar <optimization>on <toolset>gcc:<define>FOO
+      <fu>fu1 <toolset>gcc <variant>debug <stdlib>native <dummy>dummy1 <fu-subfu2>q
+
+      : add-defaults <runtime-link>static <define>foobar
+        <optimization>on <toolset>gcc:<define>FOO <fu>fu1
       ;
     
     set-default <runtime-link> : static ;
@@ -1099,14 +1244,14 @@ local rule __test__ ( )
         implied-subfeature toolset 3.0.1 ;
     }
     catch \"3.0.1\" is not a known subfeature value of
-      feature <toolset> ;
+      <toolset> ;
 
     try ;
     {
         implied-subfeature toolset not-a-version : gcc ;
     }
     catch \"not-a-version\" is not a known subfeature value of
-      feature <toolset> ;
+      <toolset>gcc ;
 
     # leave a clean copy of the features module behind
     finish-test feature-test-temp ;

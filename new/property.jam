@@ -458,13 +458,13 @@ local rule __test__ ( )
     
     feature.prepare-test property-test-temp ;
 
-    feature toolset : gcc : implicit ;
+    feature toolset : gcc : implicit symmetric ;
     subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
       3.0 3.0.1 3.0.2 : optional ;
     feature define : : free ;
     feature runtime-link : dynamic static : symmetric link-incompatible ;
     feature optimization : on off ;
-    feature variant : debug release : implicit composite ;
+    feature variant : debug release : implicit composite symmetric ;
     feature rtti : on off : link-incompatible ;
 
     compose <variant>debug : <define>_DEBUG <optimization>off ;

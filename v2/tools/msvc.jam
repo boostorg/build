@@ -34,7 +34,11 @@ feature.subfeature toolset msvc : vendor
     # versions of msvc are link-compatible
     # link-incompatible  
     ;
-  
+
+# Remember whether any versions have been initialized, allowing us to
+# set the first initialized version as the default.
+.initialized = ;
+
 # Initialize the toolset for a specific version. As the result, path to
 # compiler and, possible, program names are set up, and will be used when
 # that version of compiler is requested. For example, you might have::
@@ -71,12 +75,17 @@ rule init (
   
     if $(version)
     {      
-        feature.extend-subfeature toolset msvc : version : $(version) ;
+        feature.extend <toolset>msvc version : $(version) ;
+        
+        if ! $(.initialized) # The first version initialized becomes the default.
+        {
+            feature.set-default toolset-msvc:version : $(version) ;
+        }
     }
     
     if $(vendor) && ( $(vendor) != intel )
     {
-        feature.extend-subfeature toolset msvc : vendor : $(vendor) ;
+        feature.extend <toolset>msvc vendor : $(vendor) ;
     }
             
     # setup will be used iff a path has been specified.  If setup is
@@ -135,6 +144,7 @@ rule init (
         .CC = $(prefix)$(compiler) ;    
         .LD = $(prefix)$(linker) ;
     }     
+    .initialized = true ; # remember that we've initialized at least one version of msvc
 }
 
 .CC = cl ;
