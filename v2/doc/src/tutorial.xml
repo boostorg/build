@@ -42,7 +42,7 @@ bjam release
 
       Note that debug and release variants are created in different
       directories, so you can switch between variants or even build
-      multiple variants at once, without any unneccessary
+      multiple variants at once, without any unnecessary
       recompilation. Let's extend the example by adding another line
       to our project's <filename>Jamroot</filename>:
 
@@ -369,7 +369,7 @@ bjam app optimization=full define=USE_ASM
     <para>Let's improve this project further.
       The library
       probably has some headers that must be used when compiling
-      <filename>app.cpp</filename>. We could manually add the neccessary
+      <filename>app.cpp</filename>. We could manually add the necessary
       <code>#include</code> paths to <filename>app</filename>'s
       requirements as values of the
       <varname>&lt;include&gt;</varname> feature, but then this work will 

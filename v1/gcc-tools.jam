@@ -418,7 +418,7 @@ rule Link-action
 
         # This will appear before the import library name when building a DLL, but
         # will be "multiplied away" otherwise. The --exclude-symbols directive
-        # proved to be neccessary with some versions of Cygwin.
+        # proved to be necessary with some versions of Cygwin.
         DLL_LINK_FLAGS on $(<) += "-Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__" ;
 
         # set the link command to generate an import library

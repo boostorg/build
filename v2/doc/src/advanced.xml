@@ -155,7 +155,7 @@ nonstandard name, you can just supply that name:
 <programlisting>
 using gcc : : g++-3.2 ;
 </programlisting>
-Otherwise, it might be neccessary to supply the complete path to the
+Otherwise, it might be necessary to supply the complete path to the
 compiler executable:
 <programlisting>
 using msvc : : Z:/Programs/Microsoft Visual Studio/vc98/bin/cl ;

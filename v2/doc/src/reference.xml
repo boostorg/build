@@ -645,7 +645,7 @@ exe a : a.cpp
               feature. When generating targets from a set of build
               properties, composite features are recursively expanded and
               <emphasis>added</emphasis> to the build property set, so rules can find
-              them if neccessary. Non-composite non-free features override
+              them if necessary. Non-composite non-free features override
               components of composite features in a build property set.</para>
           </listitem>
 

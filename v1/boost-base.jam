@@ -488,7 +488,7 @@ rule replace-properties ( property-set * : new-properties * )
 # normalize-properties properties
 #
 # Normalizes a set of (possibly qualified) properties by prepending <*> as many
-# times as neccessary to ensure that each property has at least 3 gristed elements.
+# times as necessary to ensure that each property has at least 3 gristed elements.
 rule normalize-properties
 {
     local property ;
@@ -710,7 +710,7 @@ rule flags
 # include-tools toolset
 #
 # Unconditionally process the specification file for the given toolset. It is
-# neccessary to do this for each target built with that toolset, since the
+# necessary to do this for each target built with that toolset, since the
 # toolset will invoke the flags rule to set global variables based on the build
 # properties of the target.
 rule include-tools 
@@ -757,7 +757,7 @@ rule extends-toolset
 # relevant-features toolset
 #
 # Returns the set of unique features relevant to the given toolset; includes the
-# toolset description file as a side-effect if neccessary.
+# toolset description file as a side-effect if necessary.
 rule relevant-features # name
 {
     if ! $(gRELEVANT_FEATURES($(<)))
@@ -797,7 +797,7 @@ rule variant ( name : parents-or-properties * : tool-properties * )
         # Because properties in a variant declaration are only qualified with
         # toolset and not variant, we specify the toolset where
         # select-properties expects a variant name. The first toolset parameter
-        # is neccessary to get the relevant-features correctly set. We supply
+        # is necessary to get the relevant-features correctly set. We supply
         # the variant name as the target name, so that error messages will look
         # coherent.
         local name-properties
@@ -919,7 +919,7 @@ rule set-target-variables ( targets * )
 }
 
 # For path properties, add a relative path prefix to the value as
-# neccessary to locate the path relative to the given subproject
+# necessary to locate the path relative to the given subproject
 # directory.
 rule fixup-path-properties ( properties * : subproject-directory ? )
 {

@@ -571,11 +571,12 @@ rule check-python-config ( )
             ECHO "otherwise set:" ;
             ECHO ;
             ECHO "    PYTHON_LIB_PATH       - path to Python library object; currently" ;
-            ECHO "                          \""$(PYTHON_LIB_PATH:J=" ")\" ;
+            ECHO "                            \""$(PYTHON_LIB_PATH:J=" ")\" ;
             
             if ! $(NT)
             {
-                ECHO "    PYTHON_INCLUDES    - path to Python #include directories; currently" \"$(PYTHON_INCLUDES:J=" ")\" ;
+                ECHO "    PYTHON_INCLUDES       - path to Python #include directories; currently" ;
+                ECHO "                            \""$(PYTHON_INCLUDES:J=" ")\" ;
             }
             else if [ intersection $(TOOLS) : $(gcc-compilers) ]
             {
