@@ -243,6 +243,8 @@ var_expand(
 
 		    if( bracket[1] && ( dash = strchr( bracket + 2, '-' ) ) )
 		    {
+                        if( dash == bracket + 2 && *( bracket + 1 ) == '-')
+                            --dash;
 			string_truncate( &variable, dash - varname );
 			sub1 = atoi( bracket + 1 );
 			sub2 = atoi( dash + 1 );
@@ -564,8 +566,12 @@ static int adjust_index( int index, int length )
 {
     if ( index < 0 )
         index = length + 1 + index;
-    if ( index < 0 )
-        index = 0;
+    /** For first range index negative values are ok.
+        For second return value of 0 means don't use second bound. 
+        We need to make it -1 so that all elements are skipped.
+    */
+    if ( index == 0 )
+        index = -1;
     return index;
 }
 

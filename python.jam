@@ -38,11 +38,9 @@ if $(NT)
 
     # common properties required for compiling any Python module.
     PYTHON_PROPERTIES ?=
-      <include>$(PYTHON_ROOT)/include
-      <include>$(PYTHON_ROOT)/PC # in case the user is using a source installation
+      select-python-includes
       <runtime-link>dynamic
       <include>$(BOOST_ROOT)
-      <debug-python><define>_DEBUG
       <gcc><*><define>SIZEOF_LONG=4
       <gcc><*><define>USE_DL_IMPORT
       <gcc><*><find-library>python$(PYTHON_VERSION).dll 
@@ -50,6 +48,9 @@ if $(NT)
     
     GCC_PYTHON_ROOT ?= $(CYGWIN_ROOT)/usr/local ;
     GCC_PYTHON_ROOT ?= /usr/local ;
+    
+    GCC_PYTHON_DEBUG_ROOT ?= $(CYGWIN_ROOT)/usr/local/pydebug ;
+    GCC_PYTHON_DEBUG_ROOT ?= /usr/local/pydebug ;
 }
 else if $(UNIX)
 {
@@ -92,7 +93,16 @@ rule select-python-library ( toolset variant : properties * )
             }
             properties += <find-library>$(lib) ;
         }
-        else if ! ( $(toolset) in msvc intel-win32 gcc )
+        else if $(toolset) = gcc
+        {
+            local python-root = $(GCC_PYTHON_ROOT) ;
+            if <define>BOOST_DEBUG_PYTHON in $(properties)
+            {
+                python-root = $(GCC_PYTHON_DEBUG_ROOT) ;
+            }
+            properties += <library-path>$(python-root)/lib/python$(PYTHON_VERSION)/config ;
+        }
+        else if ! ( $(toolset) = msvc )
         {
             local lib = $(PYTHON_LIB) ;
             if <define>BOOST_DEBUG_PYTHON in $(properties)
@@ -101,6 +111,28 @@ rule select-python-library ( toolset variant : properties * )
             }
             properties += <library-file>$(lib) ;
         } 
+    }
+    return $(properties) ;
+}
+
+rule select-python-includes ( toolset variant : properties * )
+{
+    if $(toolset) = gcc
+    {
+        local python-root = $(GCC_PYTHON_ROOT) ;
+        if <define>BOOST_DEBUG_PYTHON in $(properties)
+        {
+            python-root = $(GCC_PYTHON_DEBUG_ROOT) ;
+        }
+        properties += <include>$(python-root)/include/python$(PYTHON_VERSION) ;
+    }
+    else
+    {
+      properties +=
+          <include>$(PYTHON_ROOT)/include
+            <include>$(PYTHON_ROOT)/PC # in case the user is using a source installation
+              <debug-python><define>_DEBUG
+              ;
     }
     return $(properties) ;
 }
@@ -124,7 +156,12 @@ rule add-cygwin-python-run-path ( module )
     local d = $(GCC_ROOT_DIRECTORY) ;
     while $(d:D) != $(d)
     {
-        gRUN_PATH($(module)) += $(GCC_PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config ;
+        local python-root = $(GCC_PYTHON_ROOT) ;
+        if <define>BOOST_DEBUG_PYTHON in $(gBUILD_PROPERTIES)
+        {
+            python-root = $(GCC_PYTHON_DEBUG_ROOT) ;
+        }
+        gRUN_PATH($(module)) += $(python-root)/lib/python$(PYTHON_VERSION)/config ;
 
         d = $(d:D) ;
     }
@@ -136,9 +173,7 @@ rule add-cygwin-python-run-path ( module )
 # dll-files.
 rule python-files ( module implib ? : sources * )
 {
-    local actual-module = $(module) ;
-    
-    dll-files $(actual-module) $(implib) : $(sources) : PYD ;
+    dll-files $(module) $(implib) : $(sources) : PYD ;
 
     if ( $(gCURRENT_TOOLSET) = gcc )
     {
@@ -161,7 +196,13 @@ if $(NT)
 
     rule name-adjust-PYD ( pyd implib ? : properties * : toolset variant )
     {
-        if <define>BOOST_DEBUG_PYTHON in $(properties)
+        # Cygwin python is only happy if compiled modules have a .dll
+        # extension
+        if $(toolset) = gcc
+        {
+            pyd = $(pyd:S=.dll) ;
+        }
+        else if <define>BOOST_DEBUG_PYTHON in $(properties)
         {
             pyd = $(pyd:S=)_d$(pyd:S) ;
         }
@@ -239,9 +280,7 @@ rule python-test-target ( test-target : sources + )
 {
     python-runtest-aux $(test-target) : $(sources) ;
     Clean clean : $(test-target) ; # remove the test-target as part of any clean operation
-    local debug = [ SUBST $(test-target:B) (_d)$ $1 ] ;
-    debug ?= "" ;
-    type-DEPENDS test$(debug) : $(test-target) ;
+    type-DEPENDS test : $(test-target) ;
     MakeLocate $(test-target) : $(LOCATE_TARGET) ;
 }
 actions python-test-target bind PYTHON
@@ -257,6 +296,7 @@ SUFPYTHON_RUNTEST = .run ;
 gGENERATOR_FUNCTION(PYTHON_RUNTEST) = python-runtest-target ;
 rule python-runtest-target ( test-target : sources + )
 {
+    type-DEPENDS runtest : $(test-target) ;
     python-runtest-aux $(test-target) : $(sources) ;
     NOTFILE $(test-target) ;
     ALWAYS $(test-target) ;
@@ -304,8 +344,12 @@ rule python-runtest-aux ( target : sources + )
     if $(NT) && ( $(gCURRENT_TOOLSET) = gcc )
     {
         python = python$(PYTHON_VERSION)$(SUFEXE) ;
-        SEARCH on $(python) = [ join-path [ split-path $(GCC_PYTHON_ROOT)/bin ] ] $(RUN_PATH) ;
-        # Fix up path splitter for cygwin.
+        local python-root = $(GCC_PYTHON_ROOT) ;
+        if <define>BOOST_DEBUG_PYTHON in $(gBUILD_PROPERTIES)
+        {
+            python-root = $(GCC_PYTHON_DEBUG_ROOT) ;
+        }
+        SEARCH on $(python) = [ join-path [ split-path $(python-root)/bin ] ] $(RUN_PATH) ;
         splitpath = ":" ;
         
         local pp ;
@@ -334,7 +378,7 @@ rule python-runtest-aux ( target : sources + )
         $(gRUN_PATH($(target)))                      # location of module dependencies
         $(>:D)                                  # directory of python driver file(s)
         $(PATH)                                 # base PATH from environment
-        : $(splitpath) ] ;                      # platform path separator
+        : $(SPLITPATH) ] ;                      # platform path separator
 
     PYTHON on $(target) = $(python) ;
     DEPENDS $(target) : $(python) ;

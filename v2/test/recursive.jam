@@ -69,7 +69,6 @@ rule Jam-fail ( command : expected-output ? )
     return $(target) ;
 }
 
-
 # The temporary jamfile we write is called "temp.jam". If the user has set
 # BOOST_BUILD_ROOT, it will be built there.
 gBOOST_TEST_JAMFILE = temp.jam ;
@@ -89,10 +88,11 @@ rule invoke-Jam ( command )
 }
 actions invoke-Jam
 {
-    echo $(PREFIX) $(<:G=) > $(gBOOST_TEST_JAMFILE)
-    jam -f../Jambase -sJAMFILE=$(gBOOST_TEST_JAMFILE)  $(JAMARGS) >$(redirect)
-    $(REMOVE) $(gBOOST_TEST_JAMFILE)
+    echo "$(PREFIX) $(<:G=)" > $(gBOOST_TEST_JAMFILE)
+    jam -sBOOST_BUILD_PATH=.. -sJAMFILE=$(gBOOST_TEST_JAMFILE)  $(JAMARGS) >$(redirect)
 }
+#     $(REMOVE) $(gBOOST_TEST_JAMFILE)
+
 
 # These actions expect to find the ungristed part of $(<) in scratch-output.txt
 # and return a nonzero exit code otherwise
@@ -111,7 +111,7 @@ else
     # a regular expression. Is there a simpler find?
     actions quietly Expect-in-output
     {
-        $(VERBOSE)scratch-output.txt ;
+        $(VERBOSE)scratch-output.txt;
         grep "$(<:G=)" scratch-output.txt
     }
 }

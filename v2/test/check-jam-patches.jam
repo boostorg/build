@@ -120,6 +120,12 @@ assert-equal x y x-y
     assert-index -2 : d ;
     assert-index 2--2 : b c d ;
     assert-index -3--2 : c d ;
+    assert-index 1--2 : a b c d ;
+    assert-index --2 : a b c d ;
+    assert-index 1--10 : ;
+    x = a ;
+    assert-index 1--2 : ;
+    assert-index --2 : ;
 }
 
 #

@@ -39,11 +39,16 @@ rule load ( module-name )
             IMPORT modules : no_test_defined : $(module-name) : __test__ ;
 
             # Add some grist so that the module will have a unique target name
-            local module-target = $(module-name:G=module@:S=.jam) ;
+            local module-target ;
+	    if $(module-name:S) != .jam {
+		module-target = $(module-name:G=module@).jam ;
+	    } else {
+		module-target = $(module-name:G=module@) ;
+	    }				
             
             SEARCH on $(module-target) = $(BOOST_BUILD_PATH) ;
             BINDRULE on $(module-target) = modules.record-binding ;
-            include $(module-name:G=module@:S=.jam) ;
+            include $(module-target) ;
 
         }
         loading-modules = $(loading-modules[1--2]) ;

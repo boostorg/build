@@ -71,9 +71,22 @@ variant debug : common :
     <inlining>off
     ;
 
-variant debug-python : debug :
-    <define>BOOST_DEBUG_PYTHON
-    ;
+if $(NT)    
+{
+    variant debug-python : debug :
+      <define>BOOST_DEBUG_PYTHON
+      <define>_DEBUG
+      <gcc><define>Py_DEBUG
+      ;
+}
+else
+{
+    variant debug-python : debug :
+      <define>BOOST_DEBUG_PYTHON
+      <define>Py_DEBUG
+      ;
+    
+}
 
 variant release : common :
     <debug-symbols>off

@@ -223,9 +223,8 @@ int  main( int argc, char **argv, char **arg_environ )
 
     if( ( s = getoptval( optv, 'v', 0 ) ) )
     {
-        printf( "Jam/MR  " );
+        printf( "Boost.Jam  " );
         printf( "Version %s.  ", VERSION );
-        printf( "Copyright 1993, 2000 Christopher Seiwald.  " );
         printf( "%s.\n", OSMINOR );
 
         return EXITOK;
