@@ -39,12 +39,11 @@ above covers most of it.
       We will implement a variation of Rene Rivera's ideas for
       allowing Boost.Build to work "out-of-the-box", with no
       environment variable settings. The idea involves searching
-      upward from the invocation directory for "project-root.jam",
+      upward from the invocation directory for "<tt>boost-build.jam</tt>"
+      and "<tt>project-root.jam</tt>",
       which can then be loaded to get the location of the build system
-      installation and project-specific settings. <b>Details to be
-      fleshed out with Rene's help</b>, but the resolution will modify
-      the way the next section is written. There are two core Jam
-      extensions I expect to rely on for this functionality:
+      installation and project-specific settings, respectively.
+      There are two core Jam extensions I expect to rely on for this functionality:
 
      <ol>
      <li> The <tt>PWD</tt> builtin rule, which returns the absolute path name
@@ -65,9 +64,32 @@ above covers most of it.
 
 <h3>Initialization</h3>
 
-   <tt>Jambase</tt> is read. <tt>BOOST_BUILD_PATH</tt> is set, so none of the default
-   Jambase code takes effect. Instead, we search for the file called
-   <tt>boost-build.jam</tt> on <tt>BOOST_BUILD_PATH</tt> and read that.
+   <p>
+   We check the name used to invoke Jam, and if the name is not the recognized
+   Boost.Jam invocation we continue with the execution of the builtin <tt>Jambase</tt>.
+   </p>
+   
+   <p>
+   Otherwise, when we recognize a Boost.Jam invocation, we:
+   
+   <ol>
+   <li> We attempt to load "boost-build.jam" by searching from the current
+        invocation directory up to the root of the file-system and in the paths
+        specified by BOOST_BUILD_PATH. Within this, one invokes the "<tt>boost-build</tt>"
+        rule to indicate where the Boost.Build system files are, and to load them.
+   </li>
+   <li> If the Boost.Build system isn't loaded yet we error and exit, giving
+        brief instructions on possible errors.
+   </li>
+   <li> We attempt to load "<tt>project-root.jam</tt>" by searching from the current
+        invocation directory up to the root of the file-system. When found its
+        location is noted as the <tt>PROJECT_ROOT</tt>.
+   <li> Finaly we load the "<tt>Jamfile</tt>" in the invocation directory. There are
+        various spellings considered when finding the "<tt>Jamfile</tt>", the pattern
+        for the name must fit: <tt>(J|j)amfile[.jam]</tt>.
+   </li>
+   </ol>
+   </p>
 
    <p>
    ** the current Jambase gives an error about FTJam toolset
