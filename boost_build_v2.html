@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                            </style>
+                                </style>
   </head>
   <!-- Things yet to document:
-                                              - build request, build request expansion and directly requested targets
-                                              - conditional properties
-                                            -->
+                                                - build request, build request expansion and directly requested targets
+                                                - conditional properties
+                                              -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -138,12 +138,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>examples-v2</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                                   it somewhere. 
-                                    
-                                      <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                                      into one of the locations where it can be found (given in <a href=
-                                      "#config_files_location">this table</a>). This prevent you from
-                                      accidentally overwriting your config when updating.</p> -->
+                                         it somewhere. 
+                                          
+                                            <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                                            into one of the locations where it can be found (given in <a href=
+                                            "#config_files_location">this table</a>). This prevent you from
+                                            accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -1405,38 +1405,62 @@ borland/runtime-link=static,dynamic
 
     <h4 id="target_id">Target identifiers and references</h4>
 
-    <p><em>Target identifier</em> is used to denote a target. It is described
-    by the following grammar:</p>
+    <p><em>Target identifier</em> is used to denote a target. There are two
+    syntaxes for it. First is the preferred one, described below. The second
+    is older syntax, which is retained to backward compatibility reasons, but
+    will be removed in a future release. It is not documented</p>
+
+    <p>The current syntax is</p>
 <pre>
-    target-id -&gt; project-reference local-target-name
-    project-reference -&gt; [jamfile-location] [ "@" [project-id] ]
-    jamfile-location -&gt; pathname 
-    project-id -&gt; pathname
-    local-target-name -&gt; identifier
+    target-id -&gt; (project-id | target-name | file-name )
+                  | (project-id | directory-name) "//" target-name   
+    project-id -&gt; path
+    target-name -&gt; path
+    file-name -&gt; path
+    directory-name -&gt; path                  
 </pre>
-    For example, valid target ids might be: 
+    This grammar allows some elements to be recognized as either 
+
+    <ul>
+      <li>project id (at this point, all project ids start with slash).</li>
+
+      <li>name of target declared in current Jamfile (note that target names
+      may include slash).</li>
+
+      <li>a regular file, denoted by absolute name or name relative to
+      project's sources location.</li>
+    </ul>
+    To determine the real meaning a check is made if project-id by the
+    specified name exists, and then if main target of that name exists. For
+    example, valid target ids might be: 
 <pre>
-    a
-    lib/b
-    @/boost/thread
-    /home/ghost/build/lr_library@parser/lalr1
+    a                                    -- target in current project
+    lib/b.cpp                            -- regular file
+    /boost/thread                        -- project "/boost/thread"
+    /home/ghost/build/lr_library//parser -- target in specific project
 </pre>
-    To map the target id into target, the project where that target is
-    contained is first found: 
 
-    <ol>
-      <li>If <tt>project-reference</tt> is empty, then the current project is
-      used &mdash; i.e. the project there the target id occurs.</li>
+    <p><b>Rationale:</b>Target is separated from project by special separator
+    (not just slash), because:</p>
 
-      <li>If the project id is absolute, the project with that id is
-      used.</li>
+    <ul>
+      <li>It emphasises that projects and targets are different things.</li>
 
-      <li>If the project id is relative, it is treated relatively to
-      project-id of the project at <tt>jamfile-location</tt>. If that project
-      does not declare project id, it is an error.</li>
-    </ol>
-    After that, the target given by <tt>local-target-name</tt> in the found
-    project is used. 
+      <li>It allows to have main target names with slashes. 
+      <!-- The motivation for which is:
+      So, to summarize:
+      1. The project which extract tarfile may extract all possible kinds of 
+      targets, and it's reasonable to use them directly from other project.
+      2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
+      maintainability, and therefore, must use main target name which contains 
+      slashes?
+      3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
+      option, because you should not change existing tree 
+
+      That makes good rationale for why main target must contain names.
+       -->
+      </li>
+    </ul>
 
     <p id="target_reference"><em>Target reference</em> is used to specify a
     source target, and may additionally specify desired properties for that
