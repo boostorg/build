@@ -18,7 +18,7 @@ set-as-singleton INTELC ;
 # INTEL_PATH or INTELC (in order to respect FTJam setup) environment
 # variables to point at the intel-win32 installation directory
 INTEL_PATH ?= $(INTELC) ;
-INTEL_TOOL_PATH ?= "$(INTEL_PATH)"/bin/ ;
+INTEL_TOOL_PATH ?= "$(INTEL_PATH)"\\bin\\ ;
 
 # if you have vc6 and vc7 installed, you may want your intel compiler
 # to use the VC7 libraries. In that case, you might set
@@ -30,7 +30,7 @@ INTEL_BASE_MSVC_TOOLSET ?= msvc ;
 extends-toolset $(INTEL_BASE_MSVC_TOOLSET) ;
 
 VC_TOOL_PATH = $(INTEL_TOOL_PATH) ;
-VC_STDLIB_PATH = "$(INTEL_PATH)"\\Bin ;
+VC_STDLIB_PATH = "$(INTEL_PATH)"\\bin ;
 VC_COMPILER = icl ;
 VC_LINKER = xilink ;
 
@@ -41,5 +41,5 @@ C++FLAGS =
 
 if $(VC_SETUP)
 {
-    VC_SETUP = "CALL $(INTEL_TOOL_PATH)ICCVARS.BAT > nul" ;
+    VC_SETUP = "CALL \"$(INTEL_TOOL_PATH)ICCVARS.BAT\" > nul" ;
 }
