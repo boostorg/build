@@ -1,4 +1,5 @@
 
+import gcc ;
 import property ;
 
 rule yfc-compile ( target : sources * : property-set * )

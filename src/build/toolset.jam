@@ -10,7 +10,29 @@ import numbers ;
 
 .flag-no = 1 ;
 
-rule flags ( rule-or-module variable-name condition * : values * )
+# Specifies the flags (variables) that must be set on targets under certain
+# conditions, described by arguments.
+rule flags ( rule-or-module   # If contains dot, should be a rule name.
+                              # The flags will be applied when that rule is
+                              # used to set up build actions.
+                              #
+                              # If does not contain dot, should be a module name.
+                              # The flags will be applied for all rules in that
+                              # module. THIS PART IS NOT IMPLEMENTED YET.
+    
+             variable-name    # Variable that should be set on target
+             condition * :    # Can specify either
+                              #
+                              # - a set of feature names. Values of all mentioned
+                              #   feature that are present in build property set
+                              #   will be appended to the variable. The 'actualize'
+                              #   method will be called on values of all dependency
+                              #   features. The next argument will be unused.
+                              #
+                              # - a set of property sets. If one of those property 
+                              #   sets is contained in build properties, 'values'
+                              #   will be added to the variable.
+             values * )
 {
     .$(rule-or-module).flags += $(.flag-no) ;
       
@@ -38,7 +60,7 @@ rule set-target-variables ( rule-or-module target : properties * )
                         
             if $(requirements:G=)
             {
-                
+                # This is a property set
                 if ! $(found) && $(requirements) in $(properties)
                 {
                     result += $(values) ;
@@ -48,8 +70,19 @@ rule set-target-variables ( rule-or-module target : properties * )
             else
             {
                 for local r in $(requirements)
-                {                    
-                    result += [ feature.get-values $(r) : $(properties) ] ;
+                { 
+                    local item = [ feature.get-values $(r) : $(properties) ] ;
+                    if $(item)
+                    {                        
+                        if dependency in [ feature.attributes $(r:G) ] 
+                        {
+                            result += [ $(item).actualize ] ;
+                        }
+                        else
+                        {
+                            result += $(item) ;
+                        }
+                    }                    
                 }                
             }
         }

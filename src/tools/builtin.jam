@@ -20,7 +20,7 @@ import toolset ;
 import errors : error ;
 import symlink ;
 
-feature toolset : gcc : implicit propagated link-incompatible symmetric ;
+feature toolset : : implicit propagated link-incompatible symmetric ;
 feature shared : false true : propagated ;
 feature optimization : off on : propagated ;
 feature threading : single multi : link-incompatible propagated ;

@@ -2,7 +2,10 @@
 import property ;
 import generators ;
 import os ;
-  
+
+feature.extend toolset : gcc ;
+
+# Declare generators
 generators.register-composing gcc.link : LIB OBJ : EXE : <toolset>gcc ;
 generators.register-composing gcc.archive : OBJ : STATIC_LIB : <toolset>gcc ;
 generators.register-composing gcc.link-dll : OBJ : SHARED_LIB : <toolset>gcc ;
@@ -10,10 +13,7 @@ generators.register-c-compiler gcc.compile : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile : C : OBJ : <toolset>gcc ;
 
 
-rule compile ( target : sources * : property-set * )
-{ 
-}
-
+# Declare flags and action for compilation
 toolset.flags gcc.compile OPTIONS <optimization>on : -O2 ;
 toolset.flags gcc.compile OPTIONS <debug-symbols>on : -g ;
 toolset.flags gcc.compile OPTIONS <cxxflags> ;
@@ -25,65 +25,30 @@ actions compile
     g++ -ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I$(INCLUDES) -c -o $(<) $(>) 
 }
 
-local rule link-options ( target : sources * : property-set * )
+# Declare flags and action for linking
+toolset.flags gcc.link OPTIONS <debug-symbols>on : -g ;
+toolset.flags gcc.link LINKPATH <library-path> ;
+toolset.flags gcc.link FINDLIBS <find-library> ;
+toolset.flags gcc.link LIBRARIES <library-file> ;
+toolset.flags gcc.link LIBRARIES <library> ;
+
+actions link bind LIBRARIES
 {
-    local options ;
-    local libs ;
-    local findlibs ;
-    for local p in $(property-set)
-    {
-        if $(p) = <debug-symbols>on
-        {
-            options += -g ;
-        }
-        else if $(p:G) = <library-path>
-        {
-            options += -L$(p:G=) ;
-        }
-        else if $(p:G) = <find-library>
-        {
-            findlibs += -l$(p:G=) ;
-        }        
-        else if $(p:G) = <library-file>
-        {
-            libs += $(p:G=) ;
-        }        
-        else if $(p:G) = <library>
-        {
-            libs += [ $(p:G=).actualize ] ;
-        }        
-    }
-    
-    DEPENDS $(target) : $(LIBS) ;
-    
-    OPTIONS on $(target) = $(options) ;
-    LIBS on $(target) = $(libs) ;
-    FINDLIBS on $(target) = $(findlibs) ;
+    g++ $(OPTIONS) -L$(LINKPATH) -o $(<) $(>) $(LIBRARIES) -l$(FINDLIBS)
 }
 
-rule link ( target : sources * : property-set * )
-{
-    link-options $(target) : $(sources) : $(property-set) ;
-}
-
-actions link bind LIBS
-{
-    g++ $(OPTIONS) -o $(<) $(>) $(LIBS) $(FINDLIBS)
-}
-
-rule archive ( target : sources * : property-set * )
-{
-}
-
+# Declare action for creating static libraries
 actions archive 
 {
     ar ur $(<) $(>)
 }
 
-rule link-dll ( target : sources * : property-set * )
-{
-    link-options $(target) : $(sources) : $(property-set) ;
-}
+# Declare flags and action for linking shared libraries
+toolset.flags gcc.link-dll OPTIONS <debug-symbols>on : -g ;
+toolset.flags gcc.link-dll LINKPATH <library-path> ;
+toolset.flags gcc.link-dll FINDLIBS <find-library> ;
+toolset.flags gcc.link-dll LIBRARIES <library-file> ;
+toolset.flags gcc.link-dll LIBRARIES <library> ;
 
 actions link-dll bind LIBS
 {
