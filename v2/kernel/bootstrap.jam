@@ -32,7 +32,7 @@ IMPORT modules : import : : import ;
       tools         # toolsets for handling specific build jobs and targets.
       
       new           # until we get everything sorted out, there is
-        		    # still some code here
+                    # still some code here
       
       .             # build-system.jam lives here
       
@@ -46,9 +46,11 @@ IMPORT modules : import : : import ;
 #
 import modules ;
 
-# Check command-line args as soon as possible.  This is first action,
-# so that we can interrupt the regular build process if the user is
-# asking for help.
+# Check command-line args as soon as possible.  For each option try
+# to load module named after option. Is that succeeds, invoke 'process'
+# rule in the module. The rule may return "true" to indicate that the
+# regular built process should not be attempted.
+local dont-build ;
 for local arg in [ MATCH ^--([^-=].*) : $(ARGV) ]
 {
     local split = [ MATCH ^(([^-=]+)[^=]*)(=?)(.*)$ : $(arg) ] ;
@@ -67,6 +69,7 @@ for local arg in [ MATCH ^--([^-=].*) : $(ARGV) ]
     local option-files = [ 
       GLOB $(plugin-dir:D=$(BOOST_BUILD_PATH)) : $(full-name).jam $(prefix).jam 
     ] ;
+
     
     if $(option-files)
     {
@@ -80,16 +83,20 @@ for local arg in [ MATCH ^--([^-=].*) : $(ARGV) ]
         # the value will be empty.
         if process in [ RULENAMES $(module-name) ]
         {
-            modules.call-in $(module-name) : process --$(full-name) : $(value) ;
+            dont-build += 
+              [ modules.call-in $(module-name) : process --$(full-name) : $(value) ] ;
         }
     }
 }
 
-# Allow users to override the build system file from the
-# command-line (mostly for testing)
-local build-system = [ MATCH --build-system=(.*) : $(ARGV) ] ;
-build-system ?= build-system ;
+if ! $(dont-build)
+{   
+    # Allow users to override the build system file from the
+    # command-line (mostly for testing)
+    local build-system = [ MATCH --build-system=(.*) : $(ARGV) ] ;
+    build-system ?= build-system ;
 
-# Use last element in case of multiple command-line options
-import $(build-system[-2]) ;
+    # Use last element in case of multiple command-line options
+    import $(build-system[-2]) ;
+}
 
