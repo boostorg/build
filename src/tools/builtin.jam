@@ -365,10 +365,9 @@ rule lib-generator ( )
         {
             actual-type = STATIC_LIB ;
         }
-        # Construct the target. Pass 'allow-composing', since generators for 
-        # library types are composing and we need to find them.
+        # Construct the target.
         return [ generators.construct $(project) $(name) : $(actual-type) 
-                : $(property-set) : $(sources) : allow-composing ] ;
+                : $(property-set) : $(sources) ] ;
     }
 }
 

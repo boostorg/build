@@ -745,13 +745,12 @@ local rule ensure-type ( targets * )
 # - iterates over requested target-type and all it's bases (in the order returned bt
 #   type.all-bases.
 # - for each type find all generators that generate that type and which requirements
-#   are satisfied by properties. If 'sallow-composing' is not given, ignores all
-#   composing generators.
+#   are satisfied by properties.
 # - if the set of generators is not empty, returns that set.
 #
 # Note: this algorithm explicitly ignores generators for base classes if there's
 # at least one generator for requested target-type.
-local rule find-viable-generators ( target-type : property-set : allow-composing ? )
+local rule find-viable-generators ( target-type : property-set )
 {
     # Select generators that can create the required target type.
     local viable-generators = ;
@@ -764,7 +763,6 @@ local rule find-viable-generators ( target-type : property-set : allow-composing
     
     generators.dout  [ indent ] find-viable-generators target-type= $(target-type) 
       property-set= [ $(property-set).as-path ]
-        $(allow-composing)
           ;
     
     while $(t[1])
@@ -774,20 +772,17 @@ local rule find-viable-generators ( target-type : property-set : allow-composing
         {
             generators.dout [ indent ] "trying generator" [ $(g).source-types ] -> [ $(g).target-types ] ;
             
-            allow-composing = 1 ;
             # Avoid trying the same generator twice on different levels.
             if ! $(g) in $(.active-generators) 
-              && ( $(allow-composing) || ! ( [ is-a $(g) : composing-generator ]
-                   ) )
-              {       
-                  local m = [ $(g).match-rank $(property-set) ] ;
-                  if $(m) 
-                  {
-                      viable-generators += $(g) ;
-                      generator-rank += $(m) ;
-                      t = ;
-                  }                                    
-              }            
+            {       
+                local m = [ $(g).match-rank $(property-set) ] ;
+                if $(m) 
+                {
+                    viable-generators += $(g) ;
+                    generator-rank += $(m) ;
+                    t = ;
+                }                                    
+            }            
         }
         t = $(t[2-]) ;
     }
@@ -891,8 +886,7 @@ local rule construct-with-caching (
 local rule construct-without-caching (
    project name ? : target-type multiple ? : property-set : sources * )
 {
-    viable-generators = [ find-viable-generators $(target-type) : $(property-set) 
-      : $(allow-composing) ] ;
+    viable-generators = [ find-viable-generators $(target-type) : $(property-set) ] ;
                     
     local results = [ new vector ] ;
     
@@ -928,16 +922,7 @@ local rule construct-without-caching (
 # 'construct' in stack, returns only targets of requested 'target-type',
 # otherwise, returns also unused sources and additionally generated
 # targets.    
-rule construct ( project name ? : target-type multiple ? : property-set * : sources * 
-    : allow-composing ?  # Allows to use composing generators for constructing this
-                         # target. This will be typically set when creating main targets,
-                         # and unset when called recursively from 'run' method of 
-                         # standard generators. Therefore, composing generators will
-                         # be tried for main targets, but not for any intermediate.
-                         # It prevents things like infinite recursion (LIB <- LIB <- ..).
-                         # Generator may pass non-empty value if finding composing
-                         # generator is reuiqred, see builtin.lib-generator for example.
-    )
+rule construct ( project name ? : target-type multiple ? : property-set * : sources * )
 {
     local usage-requirements ;
     if (.construct-stack)
