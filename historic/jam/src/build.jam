@@ -161,7 +161,7 @@ toolset vc7 cl : /Fe : -D
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     : kernel32.lib ;
 ## VMS/OpenVMS DEC C
-toolset vms cc : /OBJECT= : /DEFINE=
+toolset vms cc : /OBJECT= : "/DEFINES=(" "," ")"
     : /STANDARD=VAXC
     ;
 toolset vms link .link : /EXECUTABLE= :
@@ -393,9 +393,12 @@ rule .exe
     }
     return $(exe) ;
 }
-actions .cc. {
+if ! $(--def[2]) { actions .cc. {
     $(--cc) $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def)$(--defs) $(--flags) "$(--libs)" $(>)
-}
+} }
+else { actions .cc. {
+    $(--cc) $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def[1])$(--defs:J=$(--def[2]))$(--def[3]) $(--flags) "$(--libs)" $(>)
+} }
 if $(VMS) { actions .ld. {
     $(--link) $(--link-bin)$(<:D=) $(--link-dir)$(<:D) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>J=", ")
 } }
