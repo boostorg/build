@@ -179,6 +179,7 @@ class Tester(TestCmd.TestCmd):
 
         self.tree = build_tree(self.workdir)
         self.difference = trees_difference(self.previous_tree, self.tree)
+        self.difference.ignore_directories()
         self.unexpected_difference = copy.deepcopy(self.difference)
 
         self.last_build_time = time.time()

@@ -107,6 +107,33 @@ rule lookup ( id : current-location )
     }
 }
 
+# Agressively tries to lookup target: if it's not found, loads
+# project at location specified by target-id and tries again
+rule lookup-with-load ( id : current-location )
+{
+    local location = [ lookup $(id) : $(current-location) ] ;
+    if ! $(location)
+    {
+        # Try to load the project at the specified location
+        location = [ MATCH (.*)@(.*) : $(project-id) ] ;
+        location = [ path.root $(location[1]) $(current-location) ] ;
+        if [ find-jamfile $(location) ]
+        {
+            load $(location) ;
+            # If there's project-id relative to the 'location' the
+            # jamfile at 'location' should made those available somehow.
+            location = [ lookup $(id) : $(current-location) ] ;
+        }                        
+        else
+        {
+            location = ;
+        }
+    }
+    return $(location) ;
+}
+
+
+
 # Helper for 'find-target'
 local rule remove-trailing-slash ( string )
 {
@@ -120,8 +147,8 @@ local rule remove-trailing-slash ( string )
     }
 }
 
-# Given an 'id' for a target, return an instance of 'main-target' that
-# corresponds to it. If there's no such main-target, returns empty string.
+# Given an 'id' for a target, return an instance of 'abstract-target' that
+# corresponds to it. If there's no such target, returns empty string.
 # The project referred to by id is loaded if it is not already loaded.
 rule find-target ( id : current-location )
 {
@@ -154,38 +181,46 @@ rule find-target ( id : current-location )
         target-id = $(split[3]) ;
     }
 
-    local location = [ lookup $(project-id) : $(current-location) ] ;
-    if ! $(location)
+    # First check if there's a project with such id. In that case, we'll
+    # return project target for it.
+
+    local location ;
+    if [ MATCH (@) : $(id) ]
     {
-        # Try to load the project at the specified location
-        location = [ MATCH (.*)@(.*) : $(project-id) ] ;
-        if [ find-jamfile $(location[1]) ]
-        {
-            load $(location[1]) ;
-            # If there's project-id relative to the 'location' the
-            # jamfile at 'location' should made those available somehow.
-            location = [ lookup $(project-id) : $(current-location) ] ;
-        }                        
-        else
-        {
-            location = ;
-        }
+        location = [ lookup-with-load $(id) 
+        : $(current-location) ] ;
+    }
+    else
+    {
+        # When id has no "@" and we're looking for a project, treat id
+        # as path.
+        location = [ lookup-with-load $(id)@ : $(current-location) ] ;
     }
 
-    if $(location) {
-        local project-target = [ project.target $(location) ] ;
-        if [ $(project-target).has-main-target $(target-id) ] 
-        {
-            return [ $(project-target).main-target $(target-id) ] ;
-        }
-    } 
-    else if $(explicit)
+    if $(location)
     {
-        print.wrapped-text 
-            "The target id" $(id) " specified by project at" $(current-location)
-            "is invalid" ;
-        EXIT ;
+        return [ project.target $(location) ] ;
     }
+    else 
+    {
+        # Now treat 'id' as referring to a main target
+        location = [ lookup-with-load $(project-id) : $(current-location) ] ;
+
+        if $(location) {
+            local project-target = [ project.target $(location) ] ;
+            if [ $(project-target).has-main-target $(target-id) ] 
+            {
+                return [ $(project-target).main-target $(target-id) ] ;
+            }
+        } 
+        else if $(explicit)
+        {
+            print.wrapped-text 
+              "The target id" $(id) " specified by project at" $(current-location)
+                "is invalid" ;
+            EXIT ;
+        }
+    }    
 }
 
 #

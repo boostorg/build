@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from BoostBuild import Tester
+from BoostBuild import Tester, List
 import os
 from string import strip
 
@@ -100,5 +100,31 @@ t.expect_removal(["bin/gcc/debug/a.obj",
                  "lib2/bin/gcc/debug/l.exe",
                  "lib3/bin/gcc/debug/f.obj",
                   ])
+
+# Now test target ids in command line
+t.set_tree("project-test3")
+t.run_build_system("lib/b.obj")
+t.expect_addition("lib/bin/gcc/debug/b.obj")
+t.expect_nothing_more()
+
+t.run_build_system("clean lib/b.obj")
+t.expect_removal("lib/bin/gcc/debug/b.obj")
+t.expect_nothing_more()
+
+t.run_build_system("release lib2@helper/e.obj @/lib3/f.obj")
+t.expect_addition("lib2/helper/bin/gcc/release/e.obj")
+t.expect_addition("lib3/bin/gcc/release/f.obj")
+t.expect_nothing_more()
+
+# Test project ids in command line work as well
+t.set_tree("project-test3")
+t.run_build_system("@/lib2")
+t.expect_addition("lib2/bin/gcc/debug/" * List("c.obj d.obj l.exe"))
+t.expect_addition("bin/gcc/debug/a.obj")
+t.expect_nothing_more()
+
+t.run_build_system("lib")
+t.expect_addition("lib/bin/gcc/debug/" * List("b.obj m.exe"))
+t.expect_nothing_more()
 
 t.cleanup()

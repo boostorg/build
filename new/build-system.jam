@@ -22,7 +22,6 @@ if [ MATCH (--dump-projects) : [ modules.peek : ARGV ] ]
 
 build-request = [ build-request.from-command-line [ modules.peek : ARGV ] ] ;
 
-targets = [ $(build-request).get-at 1 ] ;
 properties = [ $(build-request).get-at 2 ] ;
 # For the time being, just stick toolset to the build request. We'd need to
 # find a way to select default toolset collection and a method to override
@@ -30,24 +29,67 @@ properties = [ $(build-request).get-at 2 ] ;
 expanded = [ build-request.expand $(properties) <toolset>gcc ] ;
 
 
-root-target = [ project.target "." ] ;
+local target-ids = [ $(build-request).get-at 1 ] ;
+local targets
+local clean ;
+
+if "--clean" in [ modules.peek : ARGV ]
+{
+    clean = true ;
+}
+
+for local id in $(target-ids)
+{
+    if $(id) = clean
+    {
+        clean = true ;
+    }
+    else
+    {
+        local t = [ project.find-target $(id) : "." ] ;
+        if ! $(t)
+        {
+            print.wrapped-text "error: target" $(id) "does not exist" ;
+            EXIT ;
+        }
+        else
+        {
+            targets += $(t) ;
+        }                
+    }    
+}
+
+if ! $(targets)
+{
+    targets += [ project.target "." ] ; 
+}
+
 virtual-targets = ;
 
 if $(expanded) 
 {
     for local p in $(expanded)
     {
-        $(root-target).direct-build-request [ feature.split $(p) ] ;
+        for local t in $(targets) 
+        {            
+            $(t).direct-build-request [ feature.split $(p) ] ;
+        }        
     }
     
     for local p in $(expanded)
     {
-        virtual-targets += [ $(root-target).generate [ feature.split $(p) ] ] ;
+        for local t in $(targets)
+        {            
+            virtual-targets += [ $(t).generate [ feature.split $(p) ] ] ;
+        }        
     }
 }
 else
 {
-    virtual-targets = [ $(root-target).generate ] ;
+    for local t in $(targets)
+    {        
+        virtual-targets += [ $(t).generate ] ;
+    }    
 }
 
 
@@ -59,7 +101,14 @@ for t in $(virtual-targets)
 NOTFILE all ;
 DEPENDS all : $(actual-targets) ;
 
-# If there are any targets in the command line, cause them to be updated
-UPDATE $(targets) ;
+if $(clean)
+{
+    UPDATE clean ;
+}
+else
+{
+    UPDATE all ;
+}
+
 
 
