@@ -176,6 +176,10 @@ extern int yydebug;
 #ifndef NDEBUG
 static void run_unit_tests()
 {
+# if defined( USE_EXECNT )
+    extern void execnt_unit_test();
+    execnt_unit_test();
+# endif 
     string_unit_test();
     var_expand_unit_test();
 }
