@@ -169,7 +169,9 @@ extern char **environ;
 # endif
 # endif
 
+# if YYDEBUG != 0
 extern int yydebug;
+# endif
 
 #ifndef NDEBUG
 static void run_unit_tests()
@@ -268,8 +270,10 @@ int  main( int argc, char **argv, char **arg_environ )
 #ifndef NDEBUG
     run_unit_tests();
 #endif // NDEBUG
+#if YYDEBUG != 0
     if ( DEBUG_PARSE )
         yydebug = 1;
+#endif
 
     /* Set JAMDATE first */
 
