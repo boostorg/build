@@ -117,8 +117,10 @@
         a <a href="#main_target">main target</a> is build with a particular
         value of a propagated feature, and depends on some other main
         targets, the build systems attempts to use subvariants of those main
-        targets with the same value of the feature. For instance, binary
-        compiled with optimization would use optimized libraries.</p>
+        targets with the same value of the feature. For instance, when an
+        optimized exectuable is requested, one usually wants it to be linked
+        with optimized libraries. Thus, the &lt;optimization&gt; feature is
+        propagated.</p>
       </li>
 
       <li>
@@ -215,6 +217,14 @@
     match isn't possible &mdash; for example, the target may impose additonal
     build requirements. We need to determine whether a buildable version of
     that target can actually be used.</p>
+
+    <p>The build request can originate in many ways: It may come directly
+    from the user's command-line, from a dependency of a main target upon a
+    library, or from a dependency of a target upon an executable used to
+    build that target, for example. For each way, there are different rules
+    whether we can use a given subvariant or not. However we currently only
+    assume linking and therefore use a simple approach described in the
+    following paragraph.</p>
 
     <p>In general, there are many possible situations: a libary which is
     dependency of a main target and should be linked into it, target which is
