@@ -35,9 +35,14 @@ rule refine ( properties * : requirements * )
     }
 
     for local p in $(properties)
-    {
+    {       
         # No processing for free properties
-        if free in [ feature.attributes $(p:G) ]
+        if [ MATCH (:) : $(p:G=) ]
+        {
+            # Skip conditional properties
+            result += $(p) ;
+        }        
+        else if free in [ feature.attributes $(p:G) ]
         {
             result += $(p) ;
         }
@@ -68,7 +73,7 @@ rule refine ( properties * : requirements * )
     {
          __require__$(r:G) = ;
     }
-
+    
     if $(error)
     {
         return $(error) ;
