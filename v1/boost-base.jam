@@ -2745,18 +2745,33 @@ rule install (
     : options *
     )
 {
-    if $(gINSTALL_SOURCES) && ! $(name) in $(gINSTALL_EXCLUSIONS)
+    if $(gINSTALL_SOURCES)
     {
-        local result ;
-        for local source in $(sources)
+        local _include_ ;
+        if $(gINSTALL_INCLUSIONS)
         {
-            result += [ target-path-of $(source) ] ;
+            if $(name) in $(gINSTALL_INCLUSIONS)
+            {
+                _include_ = true ;
+            }
         }
-        if ! $(result) in $(gINSTALL_SOURCES($(type)))
+        else if ! $(name) in $(gINSTALL_EXCLUSIONS)
         {
-            gINSTALL_SOURCES($(type)) += $(result) ;
+            _include_ = true ;
         }
-        return $(result) ;
+        if $(_include_)
+        {
+            local result ;
+            for local source in $(sources)
+            {
+                result += [ target-path-of $(source) ] ;
+            }
+            if ! $(result) in $(gINSTALL_SOURCES($(type)))
+            {
+                gINSTALL_SOURCES($(type)) += $(result) ;
+            }
+            return $(result) ;
+        }
     }
 }
 
@@ -2766,6 +2781,7 @@ rule install-subinclude ( jamfiles + : options * )
     local gINSTALL_SOURCES = TRUE ;
     local gIN_LIB_INCLUDE = TRUE ;
     local gINSTALL_EXCLUSIONS = [ get-values <exclude> : $(options) ] ;
+    local gINSTALL_INCLUSIONS = [ get-values <include> : $(options) ] ;
     
     for local jamfile in $(jamfiles)
     {
