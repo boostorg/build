@@ -141,7 +141,7 @@ rule Link-EXE
 {
     # N.B. By the time this rule is invoked, we had better have gRUN_PATH completely set.
     Link-action $(<) : $(>) : EXE ;
-    RUN_PATH on $(<) = [ join $(gRUN_PATH($(<))) $(RUN_PATH) : $(SPLITPATH) ] ;
+    RUN_PATH on $(<) = [ join $(gRUN_PATH($(<))) : $(SPLITPATH) ] ;
     if $(UNIX) 
     {
         RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) $(RUN_LD_LIBRARY_PATH) : $(SPLITPATH) ] ;
@@ -190,7 +190,7 @@ if $(UNIX)
 {
     actions Run
     {
-        $(SHELL_SET)PATH=$(RUN_PATH)
+        $(SHELL_SET)PATH=$(RUN_PATH):$PATH
         $(SHELL_EXPORT)PATH
         $(SHELL_SET)LD_LIBRARY_PATH=$(RUN_LD_LIBRARY_PATH)
         $(SHELL_EXPORT)LD_LIBRARY_PATH
@@ -201,7 +201,7 @@ else
 {
     actions Run
     {
-        $(SHELL_SET)PATH=$(RUN_PATH)
+        $(SHELL_SET)PATH=$(RUN_PATH);%PATH%
         $(SHELL_EXPORT)PATH
         $(<) $(COMMAND-LINE)
     }
