@@ -194,6 +194,7 @@ if $(NT)
     LEX_OUTPUT      ?= -o ;
     
     LN              ?= $(CP) ;
+    NULL_OUT        ?= >NUL: ;
 }
 else if $(OS2)
 {
@@ -2088,17 +2089,17 @@ actions Chown
 
 actions piecemeal together existing Clean
 {
-    $(RM) "$(>)"
+    $(RM) "$(>)" $(NULL_OUT)
 }
 
 actions File
 {
-    $(CP) "$(>)" "$(<)"
+    $(CP) "$(>)" "$(<)" $(NULL_OUT)
 }
 
 actions FileClone
 {
-    $(CLONE) "$(>)" "$(<)"
+    $(CLONE) "$(>)" "$(<)" $(NULL_OUT)
 }
 
 actions GenFile1
@@ -2113,8 +2114,8 @@ actions Fortran
 
 actions HardLink
 {
-    $(RM) $(<)
-    $(LN) $(>) $(<)
+    $(RM) "$(<)" $(NULL_OUT)
+    $(LN) "$(>)" "$(<)" $(NULL_OUT)
 }
 
 actions Install
