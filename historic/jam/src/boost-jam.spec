@@ -4,7 +4,7 @@ Summary: Build tool
 Release: 1
 Source: boost-jam-%{version}.src.tar.gz
 
-Copyright: GPL
+License: GPL
 Group: Development/Tools
 URL: http://www.boost.org
 Packager: Vladimir Prus <ghost@cs.msu.su>
@@ -25,13 +25,13 @@ Authors:
 %setup -n boost-jam-%{version}
 
 %build
-make
+YACC="" LOCATE_TARGET=bin make
 
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT%{_bindir}
 mkdir -p $RPM_BUILD_ROOT%{_docdir}/boost-jam
-install -m 755 bin.linuxx86/jam $RPM_BUILD_ROOT%{_bindir}/jam
+install -m 755 bin/jam $RPM_BUILD_ROOT%{_bindir}/jam
 ln -sf jam $RPM_BUILD_ROOT%{_bindir}/bjam
 install -m 644 Jam.html Jambase.html Jamfile.html README RELNOTES INSTALL \
         $RPM_BUILD_ROOT%{_docdir}/boost-jam
