@@ -101,6 +101,7 @@ flags gcc ON_WINDOWS : $(on-windows) ;
 if $(on-windows)
 {
     flags gcc CFLAGS <threading>multi : -mthreads ;
+    flags gcc LINKFLAGS <threading>multi : -mthreads ;
 }
 else if $(UNIX)
 {
