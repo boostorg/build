@@ -22,19 +22,12 @@ extends-toolset msvc ;
 
 rule Link-action
 {
-    local command-file = $(<[1]:S=.CMD) ;
-    LOCATE on $(command-file) = $(gLOCATE($(<))) ;
-    COMMAND on $(<) = @ ;
-    intel-win32-Link-action $(<) : $(command-file) ;
-
-    list-files $(command-file) : $(>) ;
-    DEPENDS $(<) : $(command-file) ;
-    RmTemps $(<[1]) : $(command-file) ;
+    with-command-file intel-win32-Link-action $(<) : $(>) $(NEEDLIBS) ;
 }
 
 actions intel-win32-Link-action bind NEEDLIBS 
 {
-    $(INTEL_TOOL_PATH)xilink /nologo $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" $(UNDEFS) /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(NEEDLIBS)" "$(FINDLIBS)" $(COMMAND)"$(>)"
+    $(INTEL_TOOL_PATH)xilink /nologo $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" $(UNDEFS) /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(FINDLIBS)" @"$(>)"
 }
 
 #### Cc #####
