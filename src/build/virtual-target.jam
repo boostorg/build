@@ -219,7 +219,6 @@ class abstract-file-target : virtual-target
             
         self.type = $(type) ;
         self.action = $(action) ;
-        self.exact-name = $(exact) ;
         if $(action)
         {         
             $(action).add-targets $(__name__) ;
@@ -232,14 +231,6 @@ class abstract-file-target : virtual-target
     }
     
     rule type ( ) { return $(self.type) ; }
-    rule set-type ( type )
-    {
-        self.type = $(type) ;
-        if ! $(self.exact-name)
-        {            
-            _adjust-name [ utility.basename $(self.name) ] ;
-        }        
-    }
 
     # Sets the path. When generating target name, it will override any path
     # computation from properties.
