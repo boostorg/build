@@ -1,2 +1,4 @@
 
-import gcc ;
+#import gcc ;
+#import kylix ;
+#import msvc ;

@@ -39,14 +39,14 @@ lib simple
 # is used, and in this case, regardless of the build requested on this
 # target.
 #
-exe simple
-    :
-        # SOURCES
-        simple.cpp
-        <lib>simple
-    :
-        # REQUIREMENTS
-        <threading>multi
-    :
-        # DEFAULT BUILDS
-    ;
+#exe simple
+#    :
+#        # SOURCES
+#        simple.cpp
+#        <lib>simple
+#    :
+#        # REQUIREMENTS
+#        <threading>multi
+#    :
+#        # DEFAULT BUILDS
+#    ;

@@ -1,5 +1,12 @@
 
-exe hello : hello.cpp ;
+project
+    : explicit-targets hello ;
 
-symlink hello_debug hello_release : hello/<variant>debug hello/<variant>release ;
-symlink links/hello_release : hello/<variant>release ;
+exe hello : hello.cpp d1/a.cpp ; #d2/a.cpp ;
+
+exe hello2 : hello.cpp ;
+
+#symlink hello_debug hello_release : hello/<variant>debug hello/<variant>release ;
+#symlink links/hello_release : hello/<variant>release ;
+
+stage dist : hello ; #aux/1 ;
