@@ -12,6 +12,9 @@
 # include "newstr.h"
 # include "hash.h"
 # include "modules.h"
+# include "search.h"
+# include "lists.h"
+# include "pathsys.h"
 
 /*  This file is ALSO:
  *  (C) Copyright David Abrahams 2001. Permission to copy, use,
@@ -48,6 +51,15 @@
 static void set_rule_actions( RULE* rule, rule_actions* actions );
 static void set_rule_body( RULE* rule, argument_list* args, PARSE* procedure );
 static struct hash *targethash = 0;
+
+typedef struct _located_target LOCATED_TARGET ;
+
+struct _located_target {
+    char* file_name;
+    TARGET* target;
+};
+static struct hash *located_targets = 0;
+
 
 
 
@@ -117,6 +129,118 @@ bindtarget( char *targetname )
 	}
 
 	return t;
+}
+
+
+static void bind_explicitly_located_target(void* xtarget, void* data)
+{
+    TARGET* t = (TARGET*)xtarget;
+    if (! (t->flags & T_FLAG_NOTFILE) )
+    {
+        /* Check if there's a setting for LOCATE_TARGET */
+        SETTINGS* s = t->settings;
+        for(; s ; s = s->next)
+        {            
+            if (strcmp(s->symbol, "LOCATE") == 0) 
+            {
+                pushsettings(t->settings);
+                t->boundname = search( t->name, &t->time );
+                t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
+                popsettings(t->settings);
+
+                {
+                    LOCATED_TARGET lt = { t->boundname, t }, *lta = &lt;
+                    if (!located_targets)
+                        located_targets = hashinit( sizeof(LOCATED_TARGET),
+                                                    "located targets" );
+
+                    /* TODO: should check if we've entered the item or not. */
+                    hashenter(located_targets, (HASHDATA **)&lta);
+                }
+
+                break;
+            }
+        }
+    }
+}
+
+void bind_explicitly_located_targets()
+{
+    hashenumerate(targethash, bind_explicitly_located_target, (void*)0);
+}
+
+/* TODO: this is probably not a good idea to use functions in other modules like
+  that. */
+void call_bind_rule(char* target, char* boundname);
+
+TARGET* search_for_target ( char * name, LIST* search_path )
+{
+    PATHNAME f[1];
+    string buf[1];
+    LOCATED_TARGET lt, *lta = &lt;
+    time_t time;
+    int found = 0;
+    TARGET* result;
+
+    string_new( buf );
+
+	path_parse( name, f );
+
+    f->f_grist.ptr = 0;
+    f->f_grist.len = 0;
+
+    while( search_path )
+    {
+        f->f_root.ptr = search_path->string;
+        f->f_root.len = strlen( search_path->string );
+
+        string_truncate( buf, 0 );
+        path_build( f, buf, 1 );
+
+        lt.file_name = buf->value ;
+
+        if (! located_targets )
+            located_targets = hashinit( sizeof(LOCATED_TARGET),
+                                        "located targets" );
+
+
+        if ( hashcheck( located_targets, (HASHDATA **)&lta ) )
+        {
+            return lta->target;
+        }
+
+        timestamp( buf->value, &time );
+        if (time)
+        {
+            found = 1;
+            break;
+        }
+
+        search_path = list_next( search_path );
+    }
+
+    if ( ! found )
+    {
+        f->f_root.ptr = 0;
+        f->f_root.len = 0;
+
+        string_truncate( buf, 0 );
+        path_build( f, buf, 1 );
+
+        timestamp( buf->value, &time );        
+    }
+
+    result = bindtarget( name );
+    result->boundname = newstr( buf->value );
+    result->time = time;
+    result->binding = time ? T_BIND_EXISTS : T_BIND_MISSING;
+
+    call_bind_rule( result->name, result->boundname );
+    
+    string_free( buf );
+
+    return result;
+
 }
 
 /*

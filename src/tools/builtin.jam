@@ -46,7 +46,60 @@ rule c-scanner ( includes * )
 
     rule process ( target : matches * )
     {
-        ECHO "c-scanner: processing target" $(target) with $(matches) ;
+        local angle = [ regex.transform $(matches) : "<(.*)>" ] ;
+        local quoted = [ regex.transform $(matches) : "\"(.*)\"" ] ;
+
+        # CONSIDER: the new scoping rule seem to defeat "on target" variables.
+        local g = [ on $(target) return $(HDRGRIST) ] ;  
+        local b = [ path.native [ path.parent [ path.make
+                      [ virtual-target.binding $(target) ] ] ] ] ;
+
+        # Attach binding of including file to included targets.
+        # When target is directly created from virtual target
+        # this extra information is unnecessary. But in other
+        # cases, it allows to distinguish between two headers of the 
+        # same name included from different places.      
+        # We don't need this extra information for angle includes,
+        # since they should not depend on including file (we can't
+        # get literal "." in include path).
+        local g2 = $(g)"#"$(b) ;
+       
+        angle = $(angle:G=$(g)) ;
+        quoted = $(quoted:G=$(g2)) ;
+
+        for local i in $(angle)
+        {            
+            local i2 = [ SEARCH_FOR_TARGET $(i) : $(self.includes:G=) ] ;
+            INCLUDES $(target) : $(i2) ;
+            if $(i2) = $(i)
+            {
+                NOCARE $(i) ;
+                SEARCH on $(i) = $(self.includes:G=) ;
+            }
+        }
+        
+
+        ECHO "Binding is" [ virtual-target.binding $(target) ] ;
+        for local i in $(quoted)
+        {
+            local path = $(b) $(self.includes:G=) ;
+            local i2 = [ SEARCH_FOR_TARGET $(i) : $(path) ] ;
+            INCLUDES $(target) : $(i2) ;
+            if $(i2) = $(i)
+            {
+                NOCARE $(i) ;
+                SEARCH on $(i) = $(path) ;
+            }
+        }
+
+        BINDRULE on $(angle) $(quoted) = virtual-target.remember-binding ;
+
+        # Just propagate current scanner to includes, in a hope
+        # that includes do not change scanners. 
+        for local a in $(angle)
+        {            
+            scanner.install $(__name__) : $(a) : $(target) ;
+        }
     }        
 }
 
