@@ -8,9 +8,9 @@
 //  http://www.boost.org
 // 
 
-// This file will declare 'foo' is 'MACROS' is defined.
+// This file will declare 'foo' is 'MACROS' is NOT defined.
 
-#ifdef MACROS
+#ifndef MACROS
 void
 # ifdef _WIN32
 __declspec(dllexport)

@@ -8,6 +8,8 @@
 //  http://www.boost.org
 // 
 
+// This file will declare 'foo' is 'MACROS' is defined.
+
 #ifdef MACROS
 void
 # ifdef _WIN32
