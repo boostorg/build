@@ -47,7 +47,7 @@ def trees_difference(a, b, current_name=""):
             assert a.name == b.name
             if svn_tree.compare_file_nodes(a, b):
                 result.modified_files.append(current_name)
-            if (a.mtime != b.mtime):
+            elif (a.mtime != b.mtime):
                 result.touched_files.append(current_name)
 
         # One is a file, one is a directory.

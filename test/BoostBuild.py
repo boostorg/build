@@ -280,7 +280,9 @@ class Tester(TestCmd.TestCmd):
 
     def expect_nothing_more(self):
         if not self.unexpected_difference.empty():
-                self.fail_test(1)
+           print "Expected nothing more, but got the following:"
+           self.unexpected_difference.pprint()
+           self.fail_test(1)       
 
     def expect_content(self, name, content, exact=0):
         if exact:
