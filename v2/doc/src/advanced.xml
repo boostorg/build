@@ -744,9 +744,11 @@ exe hello : hello.cpp some_library.lib /some_project//library
           : &lt;threading&gt;multi 
           ;
 </programlisting>
-        This will create an executable file from the sources -- which can
-        include C and C++ files, object files and libraries. Boost.Build will
-        automatically try to convert targets of other types.
+        This will create an executable file from the sources -- in this case,
+        one C++ file, one library file present in the same directory, and
+        another library which is created by Boost.Build. Generally, sources
+        can include C and C++ files, object files and libraries. Boost.Build
+        will automatically try to convert targets of other types.
       </para>
 
       <tip>
@@ -787,12 +789,15 @@ lib helpers : helpers.cpp : &lt;include&gt;boost : : &lt;include&gt;. ;
       <para>
         The syntax for these case is given below:
 <programlisting>
-lib z : : &lt;name&gt;z ;            
+lib z : : &lt;name&gt;z &lt;search&gt;/home/ghost ;            
 lib compress : : &lt;file&gt;/opt/libs/compress.a ;
 </programlisting>
         The <code>name</code> property specifies the name which should be
         passed to the <option>-l</option> option, and the <code>file</code>
-        property specifies the file location.
+        property specifies the file location. The <code>search</code> feature
+        specifies paths where the library should be searched. That feature can
+        be specified several time, or can be omitted -- in which case only
+        default compiler paths will be searched.
       </para>
       
       <para>
@@ -851,7 +856,7 @@ lib helpers : helpers.cpp : : : &lt;include&gt;. ;
           you'd need to use the following:
 <programlisting>
 lib b : a.cpp ;
-lib a : a.cpp : &lt;use&gt;b : : &gt;library&gt;b ;
+lib a : a.cpp : &lt;use&gt;b : : &lt;library&gt;b ;
 </programlisting>
           This specifies that <code>a</code> uses <code>b</code>, and causes
           all executables which link to <code>a</code> also link to
