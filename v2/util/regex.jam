@@ -25,10 +25,10 @@ rule __test__ ( )
 {
     import assert ;
     
-    assert.rule split "a/b/c" / : a b c ;
-    assert.rule split "/a/b/c" / : a b c ;
-    assert.rule split "//a/b/c" / : "" a b c ;
-    assert.rule split "/a//b/c" / : a "" b c ;
-    assert.rule split "/a//b/c/" / : a "" b c "" ;
-    assert.rule split "/a//b/c//" / : a "" b c "" "" ;
+    assert.result a b c : split "a/b/c" / ;
+    assert.result a b c : split "/a/b/c" / ;
+    assert.result "" a b c : split "//a/b/c" / ;
+    assert.result a "" b c : split "/a//b/c" / ;
+    assert.result a "" b c "" : split "/a//b/c/" / ;
+    assert.result a "" b c "" "" : split "/a//b/c//" / ;
 }

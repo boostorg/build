@@ -4,10 +4,11 @@
 #  warranty, and with no claim as to its suitability for any purpose.
 
 # Keep a record so that no module is included multiple times
-module local imported-modules ;
+module local loaded-modules ;
 
-# meant to be invoked from 
-rule no_test_defined
+# meant to be invoked from import when no __test__ rule is defined in a given
+# module
+local rule no_test_defined
 {
     ECHO warning: no __test__ rule defined in module [ CALLER_MODULE ] ;
 }
@@ -25,15 +26,19 @@ rule binding ( module )
 # module are imported into the caller's module.
 rule import ( module-name : rules-opt * : rename-opt * )
 {
-
-    if ! ( $(module-name) in $(imported-modules) )
+    # First see if the module needs to be loaded
+    if ! ( $(module-name) in $(loaded-modules) )
     {
-        imported-modules += $(module-name) ;
+        loaded-modules += $(module-name) ;
         
         module $(module-name)
         {
+            module local __name__ = $(module-name) ;
+            
+            # Prepare a default behavior, in case no __test__ is defined.
             IMPORT $(module-name) : modules : no_test_defined : __test__ ;
 
+            # Add some grist so that the module will have a unique target name
             local module-target = $(module-name:G=module@:S=.jam) ;
             
             SEARCH on $(module-target) = $(BOOST_BUILD_PATH) ;
@@ -41,13 +46,15 @@ rule import ( module-name : rules-opt * : rename-opt * )
             include $(module-name:G=module@:S=.jam) ;
 
             # run the module's test, if any.
-            if $(BOOST_BUILD_TEST)
+            if nonempty$(BOOST_BUILD_TEST)
             {
                 ECHO testing module $(module-name)... ;
                 local ignored = [ __test__ ] ;
             }
         }
     }
+
+    # If any rules are to be imported, do so now.
     if $(rules-opt)
     {
         if $(rules-opt) = *
@@ -59,8 +66,28 @@ rule import ( module-name : rules-opt * : rename-opt * )
     }
 }
 
+# This helper is used by import (above) to record the binding (path) of
+# each loaded module.
 rule record-binding ( module-target : binding )
 {
     module local $(module-target:G=:S=).__binding__ = $(binding) ;
 }
 
+# Returns the module-local value of a variable.
+rule peek ( module-name variable )
+{
+    module $(module-name)
+    {
+        return $($(variable)) ;
+    }
+}
+
+rule __test__ ( )
+{
+    import assert ;
+    module modules.__test__
+    {
+        module local foo = bar ;
+    }
+    assert.result bar :  peek modules.__test__ foo ;
+}

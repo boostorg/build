@@ -3,22 +3,17 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-rule report-module ( prefix ? : suffix ? )
-{
-    # We report some large line number so that emacs, etc., will at least locate the file.
-    ECHO $(prefix) [ modules.binding [ CALLER_MODULE 1 ]  ] ":" line 99999 $(suffix) ;
-}
+import errors : error ;
 
 rule equal ( a * : b * )
 {
     if $(a) != $(b)
     {
-        report-module ;
-        EXIT assertion failure: \"$(a)\" "!=" \"$(b)\" ;
+        error assertion failure: \"$(a)\" "!=" \"$(b)\" ;
     }
 }
 
-rule Rule ( rule-name args * : expected * )
+rule result ( expected * : rule-name args * )
 {
     
     module [ CALLER_MODULE ]
@@ -28,20 +23,18 @@ rule Rule ( rule-name args * : expected * )
 
     if $(result) != $(expected)
     {
-        report-module ;
-        ECHO assertion failure: "[" $(rule-name) \"$(args)\" "]" ;
-        ECHO expected: \"$(expected)\" ;
-        EXIT got: \"$(result)\" ;
+        error assertion failure: "[" $(rule-name) \"$(args)\" "]" 
+          : expected: \"$(expected)\"
+          : got: \"$(result)\" ;
     }
 }
 
 rule nonempty-variable ( name )
 {
     local empty ;
-    if $($(variable)) = $(empty)
+    if $($(variable)) = $(empty) 
     {
-        report-module ;
-        EXIT assertion failure, expecting non-empty variable $(variable) ;
+        error assertion failure: expecting non-empty variable $(variable) ;
     }
 }
 
@@ -56,17 +49,8 @@ rule true ( rule-name args * )
 
     if ! $(result)
     {
-        report-module ;
-        EXIT assertion failure, expecting true result from
+        error assertion failure: expecting true result from
             "[" $(rule-name) \"$(args)\" "]" ;
     }
 }
 
-# Get around the capitalized naming (required to avoid a clash with the rule
-# keyword) by importing Rule into the global namespace as assert.rule
-IMPORT : assert : Rule : assert.rule ;
-
-rule __test__ ( )
-{
-    # no tests yet for assertions
-}

@@ -1,0 +1,46 @@
+#  (C) Copyright David Abrahams 2001. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+# A utility rule used to report the including module when there is an error, so
+# that editors may find it.
+rule report-module ( prefix ? : suffix ? : frames ? )
+{
+    frames ?= 1 ;
+    # We report some large line number so that emacs, etc., will at least locate the file.
+    ECHO $(prefix) [ modules.binding [ CALLER_MODULE $(frames) ]  ] ":" line 99999 $(suffix) ;
+}
+
+rule backtrace
+{
+    local digits = 1 2 3 4 5 6 7 8 9 ;
+    local bt = [ BACKTRACE ] ;
+    bt = $(bt[5-]) ;
+    while $(bt)
+    {
+        ECHO $(bt[1]):$(bt[2]): "in" $(bt[4]) ;
+        
+        for local n in $(digits)
+        {
+            if $($(n))-is-not-empty
+            {
+                ECHO $($(n)) ;
+            }
+        }
+        digits = ;
+                
+        bt = $(bt[5-]) ;
+    }
+}
+
+rule error
+{
+    backtrace error: $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    EXIT ;
+}
+
+rule warning
+{
+    backtrace warning: $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+}
