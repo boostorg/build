@@ -1783,6 +1783,9 @@ rule unit-test
 # Used to build command files from a list of sources.
 rule build-command-file ( command : sources * )
 {
+    # Clean up after ourselves
+    Clean clean : $(command) ;
+    
     DEPENDS $(command) : $(sources) ;
     
     # Check whether there's anything to dump, so that we don't end up
