@@ -26,7 +26,7 @@
       <listitem>
         <simpara>
           Boost.Build uses <ulink
-          url= "../jam_src/index.html">Boost.Jam</ulink>, an
+          url= "../../../tools/build/jam_src/index.html">Boost.Jam</ulink>, an
           extension of the <ulink
           url="http://www.perforce.com/jam/jam.html">Perforce
           Jam</ulink> portable <command>make</command> replacement. The
@@ -37,7 +37,7 @@
           If a prebuilt executable is not provided for your platform
           or you are using Boost's sources in an unreleased state, it
           may be neccessary to <ulink
-          url= "../../jam_src/index.html#building_bjam">build <command>bjam</command>
+          url= "../../../tools/build/jam_src/index.html#building_bjam">build <command>bjam</command>
           from sources</ulink> included in the Boost source tree.
         </simpara>
       </listitem>
@@ -132,10 +132,10 @@ boost-build <replaceable>/path/to/boost.build</replaceable> ;
     </itemizedlist>
 
   <para><emphasis role="bold">N.B.</emphasis>
-  When <command>bjam</command> is invokedfrom anywhere in the Boost
+  When <command>bjam</command> is invoked from anywhere in the Boost
   directory tree <emphasis>other than</emphasis> the Boost.Build root
   and its subdirectories, <ulink url="../../tools/build">Boost.Build
-  v1</ulink> is used by default. To overide the default and use
+  v1</ulink> is used by default. To override the default and use
   Boost.Build v2, you have to add the <option>--v2</option> command
   line option to all <command>bjam</command> invocations.</para>
 

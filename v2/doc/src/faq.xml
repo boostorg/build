@@ -27,7 +27,7 @@ exe b : a.cpp ;
     The above snippet requires two different compilations
     of 'a.cpp', which differ only in 'include' property.
     Since the 'include' property is free, Boost.Build
-    can't generate two ojects files into different directories.
+    can't generate two objects files into different directories.
     On the other hand, it's dangerous to compile the file only
     once -- maybe you really want to compile with different
     includes.
@@ -100,7 +100,7 @@ exe a : a_obj ;
     need the following code:
 <programlisting>
 import modules ;
-local path = [ modules.peek : SOME_LIBRARY_PATH ] ;
+local SOME_LIBRARY_PATH = [ modules.peek : SOME_LIBRARY_PATH ] ;
 exe a : a.cpp : &lt;include&gt;$(SOME_LIBRARY_PATH) ;
 </programlisting>
     </para>
@@ -176,7 +176,7 @@ exe viewer : viewer png z ;
 
   </section>
 
-  <section>
+  <section id="bbv2.faq.external">
     <title>Can I get output of external program as a variable in a Jamfile?
     </title>
 
@@ -236,7 +236,7 @@ exe a : a.cpp b ;
 obj b : b.cpp : &lt;cflags&gt;-g ;
 </programlisting>
       You can also use <link linkend="bbv2.tutorial.conditions">conditional
-      properties</link> to a finer control:
+      properties</link> for finer control:
 <programlisting>
 exe a : a.cpp b ;
 obj b : b.cpp : &lt;variant&gt;release:&lt;optimization&gt;off ;
@@ -314,6 +314,30 @@ stage installed : application : &lt;dll-path&gt;/usr/lib/snake
       
   </section>
 
+  <section id="bbv2.recipies.site-config">
+    <title>Targets in site-config.jam</title>
+
+    <para>It is desirable to declare standard libraries available on a
+      given system. Putting target declaration in Jamfile is not really
+      good, since locations of the libraries can vary. The solution is
+      to put the following to site-config.jam.</para>    
+<programlisting>
+import project ;
+project.initialize $(__name__) ;
+project site-config ;
+lib zlib : : &lt;name&gt;z ;
+</programlisting>
+
+    <para>The second line allows this module to act as project. The
+      third line gives id to this project &#x2014; it really has no location
+      and cannot be used otherwise. The fourth line just declares a
+      target. Now, one can write:
+<programlisting>
+exe hello : hello.cpp /site-config//zlib ;
+</programlisting>
+      in any Jamfile.</para>
+
+  </section>
     
   </chapter>
 <!--

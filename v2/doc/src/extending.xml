@@ -2,7 +2,7 @@
 <!DOCTYPE appendix PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd">
 
-  <appendix id="bbv2.extender">
+  <chapter id="bbv2.extender">
     <title>Extender Manual</title>
 
     <section id="bbv2.extender.intro">
@@ -37,7 +37,7 @@
     </listitem>
   </orderedlist>
 
-  <para>It's quite easy to archive. You write special verbatim files,
+  <para>It's quite easy to achieve. You write special verbatim files,
   which are just C++, except that the very first line of the file
   gives a name of variable that should be generated. A simple tool
   is created which takes verbatim file and creates a cpp file with
@@ -103,7 +103,7 @@ and linked it.
 
       <para>In the subsequent sections, we will extend this example, and review
         all the mechanisms in detail. The complete code is available in <ulink url=
-          "../../example/customization">example/customization</ulink>
+          "../../../tools/build/v2/example/customization">example/customization</ulink>
         directory.
       </para>
 
@@ -245,27 +245,167 @@ actions inline-file
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
 generators.register-composing mex.mex : CPP LIB : MEX ;
 </programlisting>
-        The first generators takes a <emph>single</emph> source of type
+        The first generators takes a <emphasis>single</emphasis> source of type
         <code>VERBATIM</code> and produces a result. The second generator
         takes any number of sources, which can have either the
         <code>CPP</code> or the <code>LIB</code> type. Composing generators
-        are typically used for generating top-levle target type. For example,
+        are typically used for generating top-level target type. For example,
         the first generator invoked when building an <code>exe</code> target
         is a composing generator corresponding to the proper linker.
       </para>
 
+      <para>You should also know about two specific function for registering
+        generators: <code>generators.register-c-compiler</code> and
+        <code>generators.register-linker</code>. The first sets up header
+        dependecy scanning for C files, and the seconds handles various
+        complexities like searched libraries. For that reason, you should always
+        use those functions when adding support for compilers and linkers.
+      </para>
+
+      <para>(Need a note about UNIX)</para>
+
+      <bridgehead>Custom generator classes</bridgehead>
+
+      <para>The standard generators allows you to specify source and target
+        types, action, and a set of flags. If you need anything more complex,
+        you need to create a new generator class with your own logic. Then,
+        you have to create an instance of that class and register it. Here's
+        an example how you can create your own generator class:
+<programlisting>
+class custom-generator : generator
+{
+    rule __init__ ( * : * )
+    {
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+}
+
+generators.register 
+  [ new custom-generator verbatim.inline-file : VERBATIM : CPP ] ;
+</programlisting>
+        This generator will work exactly like the
+        <code>verbatim.inline-file</code> generator we've defined above, but
+        it's possible to customize the behaviour by overriding methods of the
+        <code>generator</code> class.
+      </para>
+
+      <para>There are two methods of interest. The <code>run</code> methods is
+        responsible for overall process - it takes a number of source targets,
+        converts them the the right types, and creates the result. The
+        <code>generated-targets</code> method is called when all sources are
+        converted to the right types to actually create the result.
+      </para>
+
+      <para>The <code>generated-target</code> method can be overridden when you
+        want to add additional properties to the generated targets or use
+        additional sources. For example (which is real), you have a tool for
+        analysing programs, which should be given a name of executable and the
+        list of all sources. Naturally, you don't want to list all source
+        files manually. Here's how the <code>generated-target</code> method
+        can find the list of sources automatically:
+<programlisting>
+class itrace-generator : generator {
+....
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        local leafs ;
+        local temp = [ virtual-target.traverse $(sources[1]) : : include-sources ] ;
+        for local t in $(temp)
+        {
+            if ! [ $(t).action ]
+            {
+                leafs += $(t) ;
+            }
+        }
+        return [ generator.generated-targets $(sources) $(leafs)
+          : $(property-set) : $(project) $(name) ] ;
+    }
+}
+generators.register [ new itrace-generator nm.itrace : EXE : ITRACE ] ;
+</programlisting>
+        The <code>generated-targets</code> rule will be called with a single
+        source target of type <literal>EXE</literal>. The call to the
+        <code>virtual-target.traverse</code> will return all targets the
+        executable depends on, and we further find files which are not
+        produced from anything. The found targets are added to the sources.
+      </para>
+      
+      <para>The <code>run</code> method can be overriden to completely
+        customize the way generator works. In particular, the conversion of
+        sources to the desired types can be completely customized. Here's
+        another real example. Tests for the Boost Python library usually
+        consist of two parts: a Python program and a C++ file. The C++ file is
+        compiled to Python extension which is loaded by the Python
+        program. But in the likely case that both files have the same name,
+        the created Python extension must be renamed. Otherwise, Python
+        program will import itself, not the extension. Here's how it can be
+        done:
+<programlisting>
+rule run ( project name ? : property-set : sources * : multiple ? )
+{       
+    local python ;
+    for local s in $(sources)
+    {
+        if [ $(s).type ] = PY
+        {
+            python = $(s) ;
+        }
+    }
+    
+    local libs ;
+    for local s in $(sources)
+    {
+        if [ type.is-derived [ $(s).type ] LIB ]
+        {
+            libs += $(s) ;
+        }
+    }
+    
+    local new-sources ;
+    for local s in $(sources)
+    {
+        if [ type.is-derived [ $(s).type ] CPP ] 
+        {
+            local name = [ $(s).name ] ;
+            if $(name) = [ $(python).name ] 
+            {
+                name = $(name)_ext ;
+            }                                
+            new-sources += [ generators.construct $(project) $(name) :
+              PYTHON_EXTENSION : $(property-set) : $(s) $(libs) ] ;
+        }
+    }
+        
+    result = [ construct-result $(python) $(new-sources) : $(project) $(name) 
+                 : $(property-set) ] ;        
+}    
+</programlisting>        
+        First, we separate all source into python files, libraries and C++
+        sources. For each C++ source we create a separate Python extension by
+        calling <code>generators.construct</code> and passing the C++ source
+        and the libraries. At this point, we also change the extension's name,
+        if necessary.        
+      </para>
+
+ 
+    </section>
+
+    <section id="bbv2.extending.features">
+      <title>Features</title>
       <para>
-        Often, the command line used when invoking a tool should depend on the
-        properties. The simplest mechanism is the <code>toolset.flags</code>
-        rule. Consider an example:
+        Often, we need to control the options passed the invoked tools. This 
+        is done with features. Consider an example:
 <programlisting>
 # Declare a new feature
 import feature : feature ;
 feature verbatim-options : : free ;
+
 # Cause the value of the 'verbatim-options' feature to be
 # available as 'OPTIONS' variable inside verbatim.inline-file
 import toolset : flags ;
 flags verbatim.inline-file OPTIONS &lt;verbatim-options&gt; ;
+
+# Use the "OPTIONS" variable
 actions inline-file
 {
     "./inline-file.py" $(OPTIONS) $(&lt;) $(&gt;)
@@ -278,7 +418,191 @@ actions inline-file
         You'd need to consult online help (--help) to find all the features of
         the <code>toolset.flags</code> rule.
       </para>
+
+    <para>
+      Although you can define any set of features and interpret their values
+      in any way, Boost.Build suggests the following coding standard for
+      designing features.
+    </para>
+
+    <para>Most features should have a fixed set of values, which is portable
+      (tool neutral) across the class of tools they are designed to work
+      with. The user does not have to adjust the values for a exact tool.  For
+      example, <code>&lt;optimization&gt;speed</code> has the same meaning for
+      all C++ compilers and the user does not have to worry about the exact
+      options which are passed to the compiler's command line.
+    </para>
+
+    <para>
+      Besides such portable features there are special 'raw' features which
+      allow the user to pass any value to the command line parameters for a
+      particular tool, if so desired. For example, the
+      <code>&lt;cxxflags&gt;</code> feature allows to pass any command line
+      options to a C++ compiler. The <code>&lt;include&gt;</code> feature
+      allows to pass any value to the <code>-I</code> and the interpretation
+      is tool-specific. (There an <link
+      linkend="bbv2.faq.external">example</link> of very smart usage of that
+      feature).  Of course one should always strive to use the portable
+      features but these should still be provided as a backdoor just to make
+      sure Boost.Build does not take away any control from the user. 
+    </para>
+   
+    <para>
+      Some of the reasons why portable features are better are:
+      <itemizedlist>
+        <listitem>
+          <para>Since a portable feature have a fixed set of value, you will
+            be able to build your project with two different settings of the
+            feature. Boost.Build will automatically use two different
+            directories for produced files. If you pass raw compiler options,
+            Boost.Build assumes you know what you are doing, and would not
+            care about what options are passed.
+          </para>
+        </listitem>
+        
+        <listitem>
+          <para>Unlike "raw" features, you don't need to use specific
+            compiler flags in Jamfile, and it will more likely work on other systems.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </para>
+           
+      <bridgehead>Steps for adding a feauture</bridgehead>
+      <para>Adding a feature requires three steps:
+
+        <orderedlist>
+          <listitem><para>Declaring a feature. For that, the "feature.feature"
+              rule is used. You should have to decide on the set of <link
+              linkend="bbv2.reference.features.attributes">feature
+              attributes</link>:
+
+              <itemizedlist>
+                <listitem><para>if feature has several values, and
+                    significally affects build, make it "propagated", so that
+                    whole project is build with the same value by
+                    default</para></listitem> 
+
+                <listitem><para>if a feature does not have a fixed list of
+                    values, it must be "free".</para></listitem>
+
+                <listitem><para>if feature is used to refer to a path, it must
+                be "path".</para></listitem>
+        
+                <listitem><para>if feature is used to refer to some target, it
+                must be "dependency".</para></listitem>
+              </itemizedlist>
+              </para>
+          </listitem>
+              
+
+          <listitem><para>Converting the feature value into variable. To use
+              feature in build action, it must be converted into a variable,
+              accessible in build action. This is accomplished by
+              "toolset.flags" rule.</para></listitem>
+
       
+          <listitem><para>Using the variable. The variable set in step 2 can
+              be used in build action to form command parameters or
+              files.</para></listitem>
+
+        </orderedlist>
+      </para>
+
+      <bridgehead>Another example</bridgehead>
+
+      <para>Here's an another example.
+        Let's see how we can make a feature which refers to a target. For example,
+        when linking dynamic libraries on windows, one sometimes needs to specify
+        "DEF file", telling what functions should be exported. It would be nice to
+        use this file like this:
+<programlisting>
+        lib a : a.cpp : &lt;def-file&gt;a.def ;
+</programlisting>
+        Actually, this feature is already supported, but anyway...
+      </para>
+
+      <orderedlist>
+        <listitem>
+          <para>Since the feature refers to a target, it must be "dependency".
+<programlisting>
+feature def-file : : free dependency ;
+</programlisting>
+            </para></listitem>
+
+        <listitem><para>One of the toolsets which cares about DEF files is
+msvc. The following line should be added to it.
+
+<programlisting>
+flags msvc.link DEF_FILE &lt;def-file&gt; ;
+</programlisting>
+            </para></listitem>
+
+        <listitem><para>Since the DEF_FILE variable is not used by the
+msvc.link action, we need to modify it to be:
+
+<programlisting>
+actions link bind DEF_FILE
+{
+    $(.LD) .... /DEF:$(DEF_FILE) ....
+}
+</programlisting>
+            </para>
+          
+          
+          <para> Note the "bind DEF_FILE" part. It tells bjam that DEF_FILE
+            refers to a file, otherwise the variable will contain internal
+            target name, which is not likely to make sense for the linker.
+          </para>
+
+          <para>
+            We've almost done, but should stop for a small workaround. Add the following
+            code to msvc.jam
+
+<programlisting>
+rule link
+{
+    DEPENDS $(&lt;) : [ on $(&lt;) return $(DEF_FILE) ] ;
+}
+</programlisting>
+
+            This is needed to accomodate some bug in bjam, which hopefully
+            will be fixed one day.</para></listitem>
+
+      </orderedlist>
+
+      <bridgehead>Variants and composite features.</bridgehead>
+
+      <para>Sometimes you want to create a shorcut for some set of
+        features. For example, <code>release</code> is a value of the
+        <code>variant</code> and is a shortcut for a set of features.
+        </para>.
+
+      <para>It is possible to define your build variants. For example:
+<programlisting>
+variant crazy : &lt;optimization&gt;speed &lt;inlining&gt;off
+                &lt;debug-symbols&gt;on &lt;profiling&gt;on ;
+</programlisting>
+        will define a new variant with the specified set of properties. You
+        can also extend an existing variant:
+<programlisting>
+variant super_release : release : &lt;define&gt;USE_ASM ;
+</programlisting>
+        In this case, <code>super_release</code> will expand to all properties
+        specified by <code>release</code>, and the additional one you've specified.
+      </para>
+
+      <para>You are not restricted to using the <code>variant</code> feature
+      only. Here's example which defines a brand new feature:
+<programlisting>
+feature parallelism : mpi fake none : composite link-incompatible ;
+feature.compose &lt;parallelism&gt;mpi : &lt;library&gt;/mpi//mpi/&lt;parallelism&gt;none ;
+feature.compose &lt;parallelism&gt;fake : &lt;library&gt;/mpi//fake/&lt;parallelism&gt;none ;
+</programlisting>
+        This will allow you to specify value of feature
+        <code>parallelism</code>, which will expand to link to the necessary
+        library. 
+      </para>
      
   </section>
   
@@ -286,15 +610,15 @@ actions inline-file
     <title>Main target rules</title>
     <para>
       The main target rule is what creates a top-level target, for example "exe" or
-      "lib". It's quite likely that's you'll want to declare your own and
-      there are as much as three way to do that.
+      "lib". It's quite likely that you'll want to declare your own and
+      there are as many as three ways to do that.
     </para>
     
     <para>The first is the simplest, but is sufficient in a number of
-      case. Just write a wrapper rule, which will redirect to any of existing
-      rules. For example, you have only one library per directory and want all
-      cpp files in the directory to be compiled. You can achieve this effect
-      with:
+      cases. Just write a wrapper rule, which will redirect to any of the
+      existing rules. For example, you have only one library per directory and
+      want all cpp files in the directory to be compiled. You can achieve this
+      effect with:
 <programlisting>
 lib codegen : [ glob *.cpp ] ;
 </programlisting>
@@ -329,7 +653,7 @@ generators.register-standard obfuscate.file : CPP : OBFUSCATED_CPP ;
     </para>
 
     <para>
-      The remaining method is to declared your own main target class. The
+      The remaining method is to declare your own main target class. The
       simplest example of this can be found in "build/alias.jam" file. The
       current V2 uses this method when transformations are relatively
       complex. However, we might deprecate this approach. If you find that you
@@ -340,7 +664,87 @@ generators.register-standard obfuscate.file : CPP : OBFUSCATED_CPP ;
 
   </section>
 
-  </appendix>
+  <section id="bbv2.extending.toolset_modules">
+
+    <title>Toolset modules</title>
+
+    <para>If your extensions will be used only on one project, they can be
+      placed in a separate <filename>.jam</filename> file which will be
+      imported by your <filename>project-root.jam</filename>. If the
+      extensions will be used on many projects, the users will thank you for 
+      a finishing touch.
+    </para>
+
+    <para>The standard way to use a tool in Boost.Build is the
+      <code>using</code> rule. To make it work, you module should provide an
+      <code>init</code> rule. The rule will be called with the same parameters
+      which were passed to the <code>using</code> rule. The set of allowed
+      parameters is determined by you. For example, you can allow the user to
+      specify paths, tool version, or tool options.
+    </para>
+
+    <para>Here are some guidelines which help to make Boost.Build more
+      consistent:
+      <itemizedlist>
+        <listitem><para>The <code>init</code> rule should never fail. Even if
+          user provided a wrong path, you should emit a warning and go
+          on. Configuration may be shared between different machines, and
+          wrong values on one machine can be OK on another.
+          </para></listitem>
+
+        <listitem><para>Prefer specifying command to be executed to specifying
+            path. First of all, this gives more control: it's possible to
+            specify
+<programlisting>
+/usr/bin/g++-snapshot
+time g++
+</programlisting>
+            as the command. Second, while some tools have a logical
+            "installation root", it better if user don't have to remember if
+            a specific tool requires a full command or a path.            
+          </para></listitem>
+
+        <listitem><para>Check for multiple initialization. A user can try to
+            initialize the module several times. You need to check for this
+            and decide what to do. Typically, unless you support several
+            versions of a tool, duplicate initialization is a user error. If
+            tool version can be specified during initialization, make sure the
+            version is either always specified, or never specified (in which
+            case the tool is initialied only once). For example, if you allow:
+<programlisting>
+using yfc ;
+using yfc : 3.3 ;
+using yfc : 3.4 ;
+</programlisting>
+            Then it's not clear if the first initialization corresponds to
+            version 3.3 of the tool, version 3.4 of the tool, or some other
+            version. This can lead to building twice with the same version.
+            </para></listitem>
+
+        <listitem><para>If possible, the <code>init</code> must be callable
+          with no parameters. In which case, it should try to autodetect all
+          the necessary information, for example, by looking for a tool in
+          <envar>PATH</envar> or in common installation locations. Often this
+          is possible and allows the user to simply write:
+<programlisting>
+using yfc ;
+</programlisting>
+          </para></listitem>
+
+        <listitem><para>Consider using facilities in the
+          <code>tools/common</code> module. You can take a look at how
+          <code>tools/gcc.jam</code> uses that module in the <code>init</code> rule.
+          </para></listitem>
+
+      </itemizedlist>
+    </para>
+
+
+      
+
+  </section>
+
+  </chapter>
 
 <!--
      Local Variables:
