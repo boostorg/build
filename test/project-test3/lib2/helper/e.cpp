@@ -1,4 +1,4 @@
-//  Copyright (c) 2003 boost.org
+//  Copyright (c) 2003 Vladimir Prus
 //
 //  Permission to copy, use, modify, sell and distribute this software
 //  is granted provided this copyright notice appears in all copies.
