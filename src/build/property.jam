@@ -247,6 +247,26 @@ rule select ( features * : properties * )
     return $(result) ;
 }
 
+# Interpret all path properties in 'properties' as relative to 'path'
+rule translate-paths ( properties * : path )
+{
+    local result ;
+    for local p in $(properties)
+    {
+        if path in [ feature.attributes $(p:G) ] 
+        {
+            local t = [ path.root $(p:G=) $(path) ] ;
+            result += $(t:G=$(p:G)) ;
+        }
+        else
+        {
+            result += $(p) ;
+        }        
+    }
+    return $(result) ;
+}
+
+
 
 local rule __test__ ( )
 {

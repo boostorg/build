@@ -470,8 +470,11 @@ rule main-target-alternative ( target-name project class-name
     {
         local real-pos = $(.args[$(requirements-pos)]) ;
         local project-requirements = [ project.attribute $(project) requirements ] ;
+
+        local loc = [ project.attribute $(project) location ] ;
+        local requirements = [ property.translate-paths $($(real-pos)) : $(loc) ] ; 
         
-        local requirements = [ property.refine $(project-requirements) : $($(real-pos)) ] ;
+        requirements = [ property.refine $(project-requirements) : $(requirements) ] ;
         if $(requirements[1]) = "@error" 
         {
             error "Conflicting requirements for target:" $(requirements) ;
