@@ -28,15 +28,13 @@ type.set-generated-target-suffix STATIC_LIB : <toolset>gcc : a ;
 # Initializes the gcc toolset
 # The name parameter specifies the name used to invoke the compiler, and
 # can be absolute.
-rule init ( version ? name ? )
+rule init ( version ? : command ? )
 {
-    common.check-init-parameters gcc : version $(version) ;
-        
-    name ?= "g++" ;
+    local condition = [ common.check-init-parameters gcc : version $(version) ] ;
+
+    command ?= "g++" ;
     
-    local condition = <toolset>gcc-$(version) ;
-    condition ?= <toolset>gcc ;
-    flags gcc CONFIG_NAME $(condition) : $(name) ;
+    flags gcc CONFIG_COMMAND $(condition) : $(command) ;
 }
 
 if [ os.name ] = NT
@@ -81,7 +79,7 @@ rule compile.c++
 
 actions compile.c++
 {
-    "$(CONFIG_NAME)" $(LANG) -Wall -ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    "$(CONFIG_COMMAND)" $(LANG) -Wall -ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 rule compile.c
@@ -98,7 +96,7 @@ rule compile.c
 
 actions compile.c
 {
-    "$(CONFIG_NAME)" $(LANG) -Wall $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    "$(CONFIG_COMMAND)" $(LANG) -Wall $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 
@@ -133,7 +131,7 @@ rule link ( targets * : sources * : properties * )
 
 actions link bind LIBRARIES
 {
-    "$(CONFIG_NAME)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
+    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
 }
 
 # Declare action for creating static libraries
@@ -151,7 +149,7 @@ rule link.dll ( targets * : sources * : properties * )
 # Differ from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_NAME)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
+    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
 }
 
 # Set up threading support. It's somewhat contrived, so perform it at the end,
@@ -168,7 +166,7 @@ else if [ modules.peek : UNIX ]
     case SunOS* :
         {
         flags gcc OPTIONS <threading>multi : -pthreads ;
-        flags gcc FINDLIBS <threading>multi : rt ;
+        flags gcc FINDLIBS-SA <threading>multi : rt ;
         }
     case BeOS :
         {
@@ -190,7 +188,7 @@ else if [ modules.peek : UNIX ]
     case * :
         {
         flags gcc OPTIONS <threading>multi : -pthread ;
-        flags gcc FINDLIBS <threading>multi : rt ;
+        flags gcc FINDLIBS-SA <threading>multi : rt ;
         }
     }
 }
