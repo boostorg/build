@@ -386,6 +386,14 @@ local rule initialize (
                   [ path.relative $(our-dir) $(parent-dir) ] ] : exact ;
         }        
     }
+    else
+    {
+        $(attributes).set requirements
+            : [ property-set.empty ] : exact ;
+        $(attributes).set usage-requirements
+            : [ property-set.empty ] : exact ;
+    }
+    
 }
 
 # Associate the given id with the given location
@@ -416,9 +424,16 @@ rule project-attributes ( location )
         {
             specification = [ property.translate-paths $(specification)
                               : $(self.location) ] ;
-            local current = $(self.requirements) ;
-            local result = [ property.refine $(current) : 
-                             [ property.make $(specification) ] ] ;
+            specification = [ property.make $(specification) ] ;
+            result = [ property-set.create $(specification) ] ;            
+            
+            # If we have inherited properties, need to refine them with the
+            # specified.
+            local current = $(self.requirements) ;                                    
+            if $(current)
+            {
+                result = [ $(current).refine $(result) ] ;
+            }
 
             if $(result[1]) = "@error"
             {
@@ -439,8 +454,17 @@ rule project-attributes ( location )
             {
                 errors.error "usage-requirements" $($(real-pos2)) "have non-free properties" $(non-free) ;
             }            
-            self.usage-requirements += [ property.translate-paths $(specification)
+            local t = [ property.translate-paths $(specification)
                                       : $(self.location) ] ;
+            if $(self.usage-requirements)
+            {
+                self.usage-requirements = [ property-set.create 
+                    [ $(self.usage-requirements).raw ] $(t) ] ;
+            }
+            else 
+            {
+                self.usage-requirements = [ property-set.create $(t) ] ;
+            }                        
         }        
         else if $(attribute) = "source-location"
         { 
@@ -480,7 +504,7 @@ rule project-attributes ( location )
         print.list-start ;
         print.list-item "Project root:" $(self.project-root) ;
         print.list-item "Parent project:" $(parent) ;
-        print.list-item "Requirements:" $(self.requirements) ;
+        print.list-item "Requirements:" [ $(self.requirements).raw ] ;
         print.list-item "Default build:" $(self.default-build) ;
         print.list-item "Source location:" $(self.source-location) ;
         print.list-item "Projects to build:" 

@@ -72,6 +72,7 @@ import regex ;
 import property ;
 import errors ;
 import common ;
+import property-set ;
 
 
 # Base class for all abstract targets.
@@ -109,7 +110,7 @@ rule abstract-target ( name      # name of the target in Jamfile
     # Adds one more direct build request for this target. If later generate
     # is called with the same non-free non-incidental properties as in one
     # of direct build requests, then that build request is used instead.
-    rule direct-build-request ( properties * )
+    rule direct-build-request ( property-set )
     {
     }
     
@@ -122,7 +123,7 @@ rule abstract-target ( name      # name of the target in Jamfile
     #
     # If 'properties' are empty, performs default build of this target, in a way specific
     # to derived class.
-    rule generate ( properties * )
+    rule generate ( property-set )
     {
         errors.error "method should be defined in derived classes" ;
     }
@@ -137,29 +138,30 @@ rule project-target ( name : project : requirements * : default-build * )
     self.requirements = $(requirements) ;
     self.default-build = $(default-build) ;
 
-    rule direct-build-request ( properties * )
+    rule direct-build-request ( property-set )
     {
         for local name in $(self.main-targets)
         {
             local t = [ main-target $(name) ] ;
-            result += [ $(t).direct-build-request $(properties) ] ;
+            result += [ $(t).direct-build-request $(property-set) ] ;
         }
         for local pn in [ project.attribute $(self.project) projects-to-build ]
         {
             local p = [ project.module-name $(pn) ] ;
             local t = [ project.target [ project.attribute $(p) location ] ] ;
-            result += [ $(t).direct-build-request $(properties) ] ;
+            result += [ $(t).direct-build-request $(property-set) ] ;
         }            
     }
     
     # Generates all possible targets contained in this project.
-    rule generate ( properties * )
+    rule generate ( property-set * )
     {
         # Project properties are directly imposed on all main targets.
         # However, we'd need to check if this project can be build at
         # all.
-        local xproperties = 
-          [ property.refine $(properties) : $(self.requirements) ] ;
+        
+        local xproperties = [ $(property-set).refine $(self.requirements) ] ;
+
         if $(xproperties[1]) = "@error"
         {
             local id = [ project.attribute $(self.project) id ] ;
@@ -168,7 +170,7 @@ rule project-target ( name : project : requirements * : default-build * )
                "due to unsatisfied requirements." ;
             print.wrapped-text "warning: explanation: " $(xproperties[2-]) ;
             print.wrapped-text "warning: build-request: " $(properties) ;
-            print.wrapped-text "warning: requirements: " $(self.requirements) ;
+            print.wrapped-text "warning: requirements: " [ $(self.requirements).raw ] ;
         }
         else 
         {            
@@ -176,14 +178,14 @@ rule project-target ( name : project : requirements * : default-build * )
             for local name in $(self.main-targets)
             {
                 local t = [ main-target $(name) ] ;
-                result += [ $(t).generate $(properties) ] ;
+                result += [ $(t).generate $(property-set) ] ;
             }
             local self-location = [ project.attribute $(self.project) location ] ;
             for local pn in [ project.attribute $(self.project) projects-to-build ]
             {
                 local p = [ project.module-name [ path.join $(self-location) $(pn) ] ] ;
                 local t = [ project.target [ project.attribute $(p) location ] ] ;
-                result += [ $(t).generate $(properties) ] ;
+                result += [ $(t).generate $(property-set) ] ;
             }
             return $(result) ;
         }        
@@ -215,19 +217,19 @@ rule project-target ( name : project : requirements * : default-build * )
     # target in this project, if generation with
     # 'properties' is requested, and that main target 
     # does not have any requirements of its own.
-    rule reference-properties ( properties * )
+    rule reference-properties ( property-set )
     {
-        # Note that free properties can appear on 'properties' only
-        # from direct build request, because free properties are not
-        # allowed to be propagated.
-                
-        local ref = [ project.attribute $(self.project) requirements ] ;
-        ref = [ property.refine $(properties) : $(ref) ] ;
-        ref = [ property.evaluate-conditionals $(ref) ] ;
-        ref = [ property.take free : [ property.remove incidental : $(ref) ] ] ;
-        ref = [ targets.generate-dependencies $(ref) : $(self.project) ] ;
-        return $(ref) ;
-    }
+        if ! $(self.ref-props.$(property-set))
+        {            
+            local ref = [ project.attribute $(self.project) requirements ] ;
+            local ps = [ $(property-set).refine $(ref) ] ;
+            ps = [ $(ps).evaluate-conditionals ] ;
+            
+            ps = [ targets.generate-dependencies $(ps) : $(self.project) : $(ps) ] ;
+            self.ref-props.$(property-set) = $(ps) ;
+        }
+        return $(self.ref-props.$(property-set)) ;        
+    }    
     
 }
 class project-target : abstract-target ;
@@ -246,9 +248,9 @@ rule main-target ( name : project )
         self.alternatives += $(target) ;
     }
 
-    rule direct-build-request ( properties * )
+    rule direct-build-request ( property-set )
     {
-        local base = [ property.remove free incidental : $(properties) ] ;
+        local base = [ $(property-set).base ] ;
         local ep = $(self.direct-request.$(base:J=-)) ;
         if $(ep) && $(ep) != $(properties) 
         {
@@ -256,7 +258,7 @@ rule main-target ( name : project )
         }
         else
         {
-            self.direct-request.$(base:J=-) = $(properties) ;
+            self.direct-request.$(base:J=-) = $(property-set) ;
         }                
     }
     
@@ -265,13 +267,13 @@ rule main-target ( name : project )
     # which requirements are satisfied by 'properties' and picking the one with
     # longest requirements set.
     # Returns the result of calling 'generate' on that alternative.
-    rule generate ( properties * )
+    rule generate ( property-set )
     {
-        local base = [ property.remove free incidental : $(properties) ] ;
+        local base = [ $(property-set).base ] ;
         local ep = $(self.direct-request.$(base:J=-)) ;
         if $(ep) 
         {
-            properties = $(ep) ;
+            property-set = $(ep) ;
         }
         
         # Try to generate all the alternatives.
@@ -279,7 +281,7 @@ rule main-target ( name : project )
 
         for local v in $(self.alternatives)
         {
-            local vtargets = [ $(v).generate $(properties) ] ;
+            local vtargets = [ $(v).generate $(property-set) ] ;
             if $(vtargets) && $(vtargets[1]) != "@error"
             {
                 $(alternatives).push-back [ new vector $(v) $(vtargets) ] ;
@@ -291,7 +293,7 @@ rule main-target ( name : project )
             # why it can't be build.
             print.wrapped-text 
                 "warning: skipped build of" [ full-name ]
-                "with properties" $(properties) ;
+                "with properties" [ $(property-set).raw ]  ;
         } else {            
         local result ;
         if [ $(alternatives).size ] = 1 
@@ -314,9 +316,9 @@ rule main-target ( name : project )
                 # have 'requirements' method. 
                 # assert.equal [ is-a $(target) : basic-target ] : true ;
                 local req = [ $(target).requirements ] ;
-                req = [ property.remove free incidental : $(req) ] ;
+                req = [ $(req).base ] ;
                 req-length += [ sequence.length 
-                    [ set.intersection $(req) : $(properties) ] ] ;
+                    [ set.intersection $(req) : [ $(property-set).raw ] ] ] ;
             }
                         
             local best = [ sequence.select-highest-ranked $(r) : $(req-length) ] ;
@@ -343,7 +345,7 @@ rule main-target ( name : project )
         # is created.
         local all-targets = 
             [ sequence.transform virtual-target.traverse : $(result) ] ; 
-        local dg = [ new subvariant-dg $(__name__) : $(properties) : $(all-targets) ] ;
+        local dg = [ new subvariant-dg $(__name__) : $(property-set) : $(all-targets) ] ;
         for local v in $(all-targets)          
         {
             $(v).dg $(dg) ;            
@@ -361,7 +363,7 @@ class main-target : abstract-target ;
 # reference.
 rule generate ( target-reference # Target reference
     : project                    # Project where the reference is made
-    : properties *               # Properties of the main target that 
+    : property-set               # Properties of the main target that 
                                  # makes the reference
    )
 {
@@ -382,8 +384,9 @@ rule generate ( target-reference # Target reference
     if $(main-target) {
         # Take properties which should be propagated and refine them
         # with source-specific requirements.
-        local propagated = [ property.take propagated : $(properties) ] ;
-        local rproperties = [ property.refine $(propagated) : $(sproperties) ] ;
+        local propagated = [ $(property-set).propagated ] ;
+        local rproperties = [ $(propagated).refine 
+          [ property-set.create $(sproperties) ] ] ;
         if $(rproperties[1]) = "@error"
         {
             errors.error
@@ -395,42 +398,32 @@ rule generate ( target-reference # Target reference
     }    
 }
 
-# Returns a list of properties, where all dependency properties are
-# replaced as follows:
-# - the value of dependency property is treated as target reference,
-#   which is generated with 'properties' + 'extra-properties'
-# - the created virtual target's become replace the property value,
-#    for example <library>a/b might become 
-#    <library>object(virtual-target)@1
-# In addition, usage requirements for all created virtual targets
-# are added to the properties.
+# Returns new property set which inclues all properties from
+# 'property-set', except that all dependency properties are
+# generated with 'generation-ps', and the obtained virtual targets
+# are added as the values of original features.
 #
-# The purpose of 'extra-properties' is to be able to replace dependency
-# features only in certain set of properties, which does not include
-# all build properties. A concrete example is when we process use properties.
-# Dependency features must be replaced using full build properties of target,
-# but we don't want to add build properties to usage requirements.
-rule generate-dependencies ( properties * : project : extra-properties * )
+# For example, <library>a/b might become <library>object(virtual-target)@1
+# In addition, usage requirements for all created virtual targets
+# are added to the created property set.
+rule generate-dependencies ( property-set : project : generation-ps )
 {
-    local xproperties ;
-    for local p in $(properties)
+    local xproperties ;    
+    for local p in [ $(property-set).dependency ] 
     {
-        if dependency in [ feature.attributes $(p:G) ]
+        local g = [ targets.generate $(p:TG=) : $(project) : $(generation-ps) ] ;
+        if ! $(g) 
         {
-            local g = [ targets.generate $(p:TG=) : $(project) 
-              : $(properties) $(extra-properties) ] ;
-            if ! $(g) 
-            {
-                errors.error "cannot generate dependency " $(p) ;
-            }
-            xproperties += $(p:G)$(g) [ $(g).usage-requirements ] ;
+            errors.error "cannot generate dependency " $(p) ;
         }
-        else
-        {
-            xproperties += $(p) ;
-        }                        
+        xproperties += $(p:G)$(g) [ $(g).usage-requirements ] ;
     }
-    return $(xproperties) ;
+    local r = [ property-set.create 
+        [ $(property-set).base ] 
+        [ $(property-set).free ] 
+          $(xproperties)
+        [ $(property-set).incidental ] ] ;
+    return $(r) ;
 }
 
 
@@ -448,8 +441,15 @@ rule basic-target ( name : project
     abstract-target.__init__ $(name) : $(project) ;
 
     self.sources = $(sources) ;
+    if ! $(requirements) {
+        requirements = [ property-set.empty ] ;
+    }    
     self.requirements = $(requirements) ;
     self.default-build = $(default-build) ;
+    if ! $(usage-requirements)
+    {
+        usage-requirements = [ property-set.empty ] ;
+    }    
     self.usage-requirements = $(usage-requirements) ;
 
     if $(sources:G)
@@ -463,35 +463,31 @@ rule basic-target ( name : project
     # Generates sources. Calls 'construct'
     # This method should not be overriden.
     #
-    rule generate ( properties * )
+    rule generate ( property-set )
     {
-        if ! $(properties) || $(properties:G) = <toolset>
+        if ! [ $(property-set).raw ] 
         {
             # CONSIDER: I'm really not sure if this is correct...
             # FIXME: as in 'build-system' we stick default toolset
-            properties = [ build-request.expand $(properties) 
-                           $(self.default-build) ] ;
+            properties = [ build-request.expand $(self.default-build) ] ;
             
             local result = ;
             for local p in $(properties)
             {
-                result += [ generate [ feature.split $(p) ] ] ;
+                result += [ generate [ property-set.create [ feature.split $(p) ] ] ] ;
             }
             return $(result) ;
         } else {
 
-            property-path = [ property.as-path 
-                [ property.remove free incidental : $(properties) ] ] ;
+            
+            property-path = [ property.as-path [ $(property-set).base ] ] ;
             if ! $(property-path) 
             {
                 property-path = X ;
             }
             if ! $(self.generated.$(property-path)) 
             {
-                local rproperties =
-                    [ property.refine $(properties) : $(self.requirements) ] ;
-
-                rproperties = [ property.evaluate-conditionals $(rproperties) ] ;
+                local rproperties = [ $(property-set).refine $(self.requirements) ] ;
                                 
                 if $(rproperties[1]) != "@error"                    
                 {
@@ -503,9 +499,12 @@ rule basic-target ( name : project
                     # requirements may also code from dependencies. However, when they
                     # come from dependencies, the value is not target id, but rather
                     # virtual target names, so generators.construct can use them.
+                    
+                    rproperties = [ $(rproperties).evaluate-conditionals ] ;
 
                     local xproperties = 
-                      [ targets.generate-dependencies $(rproperties) : $(self.project) ] ;
+                      [ targets.generate-dependencies $(rproperties) : $(self.project) 
+                        : $(rproperties) ] ;
 
 
                     local source-targets ;
@@ -513,7 +512,7 @@ rule basic-target ( name : project
                     {
                         # Try treating this source as reference to main target
                         local more-targets = 
-                          [ targets.generate $(s) : $(self.project) : $(properties) ] ;
+                          [ targets.generate $(s) : $(self.project) : $(property-set) ] ;
                         if $(more-targets)
                         {
                             source-targets += $(more-targets) ;
@@ -529,16 +528,19 @@ rule basic-target ( name : project
                     # unqual to project's reference properties. As the
                     # result, we create per-target bin directory while
                     # it's not really needed.
-                    xproperties = [ feature.run-actions $(xproperties) ] ;
-                    
+                                        
+                    xproperties = [ $(xproperties).run-actions ] ;
+                               
                     self.generated.$(property-path) = 
                         [ construct $(source-targets) : $(xproperties) ] ;                             
                     
                     # Apply use requirement of this target to all generated
                     # virtual targets.
                     local xusage-requirements = 
-                      [ targets.generate-dependencies $(self.usage-requirements) 
+                      [ targets.generate-dependencies 
+                          $(self.usage-requirements) 
                         : $(self.project) : $(rproperties) ] ;
+                    xusage-requirements = [ $(xusage-requirements).raw ] ;
                     
                     for local e in $(self.generated.$(property-path))                    
                     {
@@ -579,11 +581,11 @@ rule typed-target ( name : project : type
     
     self.type = $(type) ;
     
-    rule construct ( source-targets * : properties * )
+    rule construct ( source-targets * : property-set )
     {
         local r = [ generators.construct $(self.project) $(self.name) : $(self.type) 
-          : $(properties) # [ feature.expand
-              <main-target-type>$(self.type)
+          : [ property-set.create [ $(property-set).raw ] # [ feature.expand
+              <main-target-type>$(self.type) ]
           # ]
             : $(source-targets) 
             : allow-composing ] ;
@@ -609,8 +611,9 @@ rule main-target-requirements (
 {
     local loc = [ project.attribute $(project) location ] ;
     local requirements = [ property.translate-paths $(specification) : $(loc) ] ; 
+    local requirements = [ property-set.create $(requirements) ] ;
     local project-requirements = [ project.attribute $(project) requirements ] ;
-    requirements = [ property.refine $(project-requirements) : $(requirements) ] ;
+    requirements = [ $(project-requirements).refine $(requirements) ] ;    
     if $(requirements[1]) = "@error" 
     {
         errors.error "Conflicting requirements for target:" $(requirements) ;
@@ -629,11 +632,11 @@ rule main-target-usage-requirements (
 {
     local loc = [ project.attribute $(project) location ] ;         
     local project-usage-requirements = [ project.attribute $(project) usage-requirements ] ;
-
-    local usage-requirements = [ property.translate-paths $(specification) : $(loc) ] ;
-    usage-requirements += $(project-usage-requirements) ;
-
-    return $(usage-requirements) ;
+        
+    local usage-requirements = [ property-set.create 
+        [ property.translate-paths $(specification) : $(loc) ] ] ;
+    
+    return [ $(project-usage-requirements).add $(usage-requirements) ] ;
 }
 
 # Return the default build value to use when declaring a main target,

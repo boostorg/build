@@ -157,6 +157,7 @@ rule generator (
     # in returned set must be present in build properties if this 
     # generator is to be used. If result has grist-only element,
     # that build properties must include some value of that feature.
+    # XXX: remove this method?
     rule requirements ( )
     {
         return $(self.requirements) ;
@@ -173,7 +174,7 @@ rule generator (
     # Returns a number telling how good generator's properties match
     # the passed properties, or empty list if generator can't be run
     # at all.
-    rule match-rank ( properties * )
+    rule match-rank ( property-set )
     {
         # See if generator's requirements are satisfied by 'properties'.
         # Treat feature name in requirements (i.e. grist-only element),
@@ -192,7 +193,8 @@ rule generator (
                 features += $(r) ;
             }                      
         }
-                                  
+
+        local properties = [ $(property-set).raw ] ;
         if $(requirements) in $(properties) && $(features) in $(properties:G)
         {
             return [ sequence.length [ set.intersection 
@@ -217,7 +219,7 @@ rule generator (
     rule run ( project  # Project for which the targets are generated
                name ?   # Determines the name of 'name' attribute for 
                         # all generated targets. See 'generated-targets' method.
-               : properties * # Desired properties for generated targets.
+               : property-set # Desired properties for generated targets.
                : sources + :  # Source targets.
                multiple ? # Allows the rule to run generator several times and return
                           # multiple targets of the same type. When this argument is not
@@ -230,7 +232,7 @@ rule generator (
     {
         generators.dout [ indent ] "  generator" $(self.id) ;
         generators.dout [ indent ] "  multiple:" $(mutliple) ;
-                
+                        
         # Ordinary generators take only one source targets
         if $(sources[2])
         {
@@ -248,7 +250,7 @@ rule generator (
         local bypassed = ;
         
         convert-to-consumable-types $(project) $(name) : 
-          $(properties) : $(sources) : $(multiple)
+          $(property-set) : $(sources) : $(multiple)
           :
           : consumed bypassed ;
         
@@ -256,7 +258,7 @@ rule generator (
         if $(consumed)  
         {            
             result = [ construct-result $(consumed) : $(project) $(name) 
-                     : $(properties) ] ;
+                     : $(property-set) ] ;
         }
                             
         if $(result)
@@ -301,7 +303,7 @@ rule generator (
                    # Otherwise, might contain several targets with the type of 
                    # $(self.source-types[1])                               
         : project name ? 
-        : properties *  # Properties to be used for all actions create here
+        : property-set  # Properties to be used for all actions create here
     )
     {
         local result ;
@@ -311,7 +313,7 @@ rule generator (
             generators.dout [ indent ] "alt1" ;
             for local r in $(consumed)
             {                
-                result += [ generated-targets $(r) : $(properties) : $(project) $(name) ] ; #(targets) ;
+                result += [ generated-targets $(r) : $(property-set) : $(project) $(name) ] ; #(targets) ;
             }
         }
         else
@@ -320,7 +322,8 @@ rule generator (
             generators.dout [ indent ] "alt2 : consumed is" [ $(v).str ] ;
             if $(consumed) 
             {
-                result += [ generated-targets $(consumed) : $(properties) : $(project) $(name) ] ;
+                result += [ generated-targets $(consumed) : $(property-set) 
+                            : $(project) $(name) ] ;
             }                        
         }
         return $(result) ;
@@ -346,7 +349,7 @@ rule generator (
     # Note that this pattern mechanism has nothing to do with implicit patterns
     # in make. It's a way to produce target which name is different for name of 
     # source.
-    rule generated-targets ( sources + : properties * : project name ? )
+    rule generated-targets ( sources + : property-set : project name ? )
     {
         if ! $(name)
         {
@@ -382,7 +385,8 @@ rule generator (
         }                 
         # Assign an action for each target
         local action = [ action-class ] ;
-        local a = [ new $(action) $(targets) : $(sources) : $(self.id) : $(properties) ] ;
+        local a = [ new $(action) $(targets) : $(sources) : $(self.id) : 
+                    $(property-set) ] ;
         for local t in $(targets)
         {
             $(t).action $(a) ;
@@ -395,7 +399,7 @@ rule generator (
     # handle. The intention is to produce the set of targets can should be
     # used when generator is run.
     rule convert-to-consumable-types ( project name ? : 
-        properties * : source : multiple ? 
+        property-set : source : multiple ? 
         : only-one ? # convert 'source' to only one of source types
                      # if there's more that one possibility, report an
                      # error 
@@ -449,7 +453,7 @@ rule generator (
         if $(missing-types)
         {            
             local transformed = [ generators.construct-types $(project) $(name)
-              : $(missing-types) : $(multiple) : $(properties) : $(source) ] ;
+              : $(missing-types) : $(multiple) : $(property-set) : $(source) ] ;
                                 
             # Add targets of right type to 'consumed'. Add others to
             # 'bypassed'. The 'generators.construct' rule has done
@@ -468,8 +472,7 @@ rule generator (
                 }
             }               
         }   
-        
-        
+                
         $(consumed-var) += $(_consumed) ;
         $(bypassed-var) += $(_bypassed) ;
     }
@@ -492,7 +495,7 @@ rule composing-generator ( id : source-types * : target-types + :
     generator.__init__ $(id) : $(source-types) : $(target-types) :
                        $(requirements) ;
 
-    rule run ( project name ? : properties * : sources + ) 
+    rule run ( project name ? : property-set : sources + ) 
     {
         generators.dout [ indent ] "  composing generator" $(self.id) ;
 
@@ -507,7 +510,7 @@ rule composing-generator ( id : source-types * : target-types + :
             local c ;
             local b ;
             # TODO: need to check for failure on each source.
-            convert-to-consumable-types $(project) : $(properties)
+            convert-to-consumable-types $(project) : $(property-set)
               : $(sources[1]) : * : true : c b ;
             if ! $(c)
             {
@@ -523,7 +526,8 @@ rule composing-generator ( id : source-types * : target-types + :
         if ! $(failed) 
         {
             generators.dout [ indent ] "  SUCCESS" ;
-            result += [ generated-targets $(consumed) : $(properties) : $(project) $(name) ] ;
+            result += [ generated-targets $(consumed) : $(property-set) 
+                        : $(project) $(name) ] ;
             result += $(bypassed) ;
         } 
         else
@@ -622,9 +626,9 @@ rule base-to-derived-type-conversion ( targets * : target-types +
 
 
 rule try-one-generator ( project name ? : generator multiple ? : 
-    target-types + : properties * : sources * )
+    target-types + : property-set : sources * )
 {
-    local targets = [ $(generator).run $(project) $(name) : $(properties) : $(sources)
+    local targets = [ $(generator).run $(project) $(name) : $(property-set) : $(sources)
       : $(multiple) ] ;
 
     # Generated targets that are of required types
@@ -644,8 +648,8 @@ rule try-one-generator ( project name ? : generator multiple ? :
     {
         for local e in $(extra) 
         {
-            local try2 = [ construct-types $(project) $(name) : $(target-types) : : $(properties)
-              : $(e) ] ;
+            local try2 = [ construct-types $(project) $(name) 
+                       : $(target-types) : : $(property-set) : $(e) ] ;
     
             result += $(try2) ;
         }    
@@ -662,13 +666,13 @@ rule try-one-generator ( project name ? : generator multiple ? :
 }
 
 rule construct-types ( project name ? : target-types + : multiple ? : 
-    properties * : source )
+    property-set : source )
 {
     local result ;
     local matched-types ; 
     for local t in $(target-types)
     {
-        local r = [ construct $(project) $(name) : $(t) $(multiple) : $(properties) :
+        local r = [ construct $(project) $(name) : $(t) $(multiple) : $(property-set) :
           $(source) ] ;
         if $(r)
         {
@@ -719,7 +723,7 @@ local rule ensure-type ( targets * )
 #
 # Note: this algorithm explicitly ignores generators for base classes if there's
 # at least one generator for requested target-type.
-local rule find-viable-generators ( target-type : properties * : allow-composing ? )
+local rule find-viable-generators ( target-type : property-set : allow-composing ? )
 {
     # Select generators that can create the required target type.
     local viable-generators = ;
@@ -738,7 +742,7 @@ local rule find-viable-generators ( target-type : properties * : allow-composing
             if ! $(g) in $(.active-generators) 
               && ! ( [ is-a $(g) : composing-generator ] && ! $(allow-composing) )
               {       
-                  local m = [ $(g).match-rank $(properties) ] ;
+                  local m = [ $(g).match-rank $(property-set) ] ;
                   if $(m) 
                   {
                       viable-generators += $(g) ;
@@ -803,7 +807,7 @@ local rule select-dependency-graph ( options )
 
 # Attempt to construct the target by looking at transformation cache.
 local rule construct-with-caching (
-   project name ? : target-type multiple ? : properties * : sources * )
+   project name ? : target-type multiple ? : property-set : sources * )
 {     
     local result ;
     if ! $(.caching) && ! $(sources[2]) && $(sources[1]) && ! $(name)
@@ -812,7 +816,7 @@ local rule construct-with-caching (
         
         local t = $(sources[1]) ;            
             
-        local signature = [ sequence.join [ $(t).type ] $(target-type) $(properties) : - ] ;
+        local signature = [ sequence.join [ $(t).type ] $(target-type) $(property-set) : - ] ;
             
         # Get a transformation template from cache or create it.
         local cresult ;
@@ -823,7 +827,8 @@ local rule construct-with-caching (
         else 
         {                            
             local ut = [ new file-target % : [ $(t).type ] : "no project" ] ;            
-            cresult = [ construct $(project) : $(target-type) $(multiple) : $(properties) : $(ut) ] ;
+            cresult = [ construct $(project) : $(target-type) $(multiple) 
+              : $(property-set) : $(ut) ] ;
             .transformation.cache.$(signature) = $(cresult) ;                
         }
                                     
@@ -846,9 +851,9 @@ local rule construct-with-caching (
 # Attempts to construct target by finding viable generators, running them
 # and selecting the dependency graph
 local rule construct-without-caching (
-   project name ? : target-type multiple ? : properties * : sources * )
+   project name ? : target-type multiple ? : property-set : sources * )
 {
-    viable-generators = [ find-viable-generators $(target-type) : $(properties) 
+    viable-generators = [ find-viable-generators $(target-type) : $(property-set) 
       : $(allow-composing) ] ;
                     
     local results = [ new vector ] ;
@@ -862,7 +867,7 @@ local rule construct-without-caching (
         local .active-generators = $(g) $(.active-generators) ;
         
         local r = [ try-one-generator $(project) $(name) : $(g) $(multiple) : $(target-type) :
-          $(properties) : $(sources) ] ;
+          $(property-set) : $(sources) ] ;
         
         if $(r)
         {
@@ -885,7 +890,7 @@ local rule construct-without-caching (
 # 'construct' in stack, returns only targets of requested 'target-type',
 # otherwise, returns also unused sources and additionally generated
 # targets.    
-rule construct ( project name ? : target-type multiple ? : properties * : sources * 
+rule construct ( project name ? : target-type multiple ? : property-set * : sources * 
     : allow-composing ?  # Allows to use composing generators for constructing this
                          # target. This will be typically set when creating main targets,
                          # and unset when called recursively from 'run' method of 
@@ -905,8 +910,8 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
             usage-requirements += [ $(e).usage-requirements ] ;
         }               
     }
-    properties += $(usage-requirements) ;
-    properties = [ sequence.unique $(properties) ] ;
+    property-set = [ $(property-set).add 
+      [ property-set.create $(usage-requirements) ] ] ;
     
     .construct-stack += 1 ;
 
@@ -926,11 +931,11 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
     generators.dout [ indent ] "    properties:" $(properties) ;        
                
     local result = [ construct-with-caching $(project) $(name)  
-      : $(target-type) $(multiple) : $(properties) : $(sources) ] ;
+      : $(target-type) $(multiple) : $(property-set) : $(sources) ] ;
     
     if ! $(result)  {
         result = [ construct-without-caching $(project) $(name)  
-      : $(target-type) $(multiple) : $(properties) : $(sources) ] ;
+      : $(target-type) $(multiple) : $(property-set) : $(sources) ] ;
     }
                 
     decrease-indent ;
@@ -940,8 +945,8 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
     if ! $(.construct-stack) # This is first invocation in stack
     {
         # Make roots of dependency graph depend on all 'dependency' features.
-        local dp = [ property.take dependency : $(properties) ] ;
-                       
+        local dp = [ $(property-set).dependency ] ;
+                               
         if $(dp)
         {      
             for local t in $(result)

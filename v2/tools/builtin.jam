@@ -293,8 +293,9 @@ rule lib-generator ( )
 {
     composing-generator.__init__ lib-generator : : LIB : <main-target-type>LIB ;
     
-    rule run ( project name ? : properties * : sources * )
+    rule run ( project name ? : property-set : sources * )
     {
+        local properties = [ $(property-set).raw ] ;
         # Determine the needed target type
         local actual-type ;
         if <search> in $(properties:G) || <name> in $(properties:G)
@@ -311,8 +312,8 @@ rule lib-generator ( )
         }
         # Construct the target. Pass 'allow-composing', since generators for 
         # library types are composing and we need to find them.
-        return [ generators.construct $(project) $(name) : $(actual-type) : $(properties)
-          : $(sources) : allow-composing ] ;
+        return [ generators.construct $(project) $(name) : $(actual-type) 
+                : $(property-set) : $(sources) : allow-composing ] ;
     }
 }
 

@@ -10,6 +10,8 @@
 
 import class : class new ;
 import type ;
+import property-set ;
+import utility ;
 
 #                       +--------------------------+
 #                       | virtual-target           |
@@ -349,8 +351,8 @@ rule abstract-file-target ( name
             local properties ;
             if $(self.action)
             {
-                properties = [ property.remove free incidental : [ $(self.action).properties ] ] ;
-                local property-grist = [ property.as-path $(properties) ] ;
+                local ps = [ $(self.action).properties-ps ] ;     
+                local property-grist = [ $(ps).as-path ] ;
                 grist = $(location-grist)/$(property-grist) ;
             }
             if ! $(grist)
@@ -447,21 +449,16 @@ rule file-target (
      {
          if $(self.action)
          {
-             local properties = [ property.take free : [ property.remove incidental :
-                 [ $(self.action).properties  ] ] ] ;
-
+             local ps = [ $(self.action).properties-ps ] ;
+             
              local main-target = [ $(self.dg).main-target ] ;
              local project = [ $(main-target).project ] ;
              local plocation = [ project.attribute $(project) location ] ;
              local ptarget = [ project.target $(plocation) ] ;
-             local ref = [ $(ptarget).reference-properties [ $(self.dg).properties ] ] ;
+             local ref-ps = [ $(ptarget).reference-properties [ $(self.dg).properties-ps ] ] ;
 
-             properties = [ sequence.insertion-sort
-                            [ sequence.unique $(properties) ] ] ;
-             ref = [ sequence.insertion-sort
-                     [ sequence.unique $(ref) ] ] ;
 
-             if $(properties) != $(ref)
+             if [ $(ps).free ] != [ $(ref-ps).free ]
              {
                  self.extra-path = [ sequence.join main-target- [ $(main-target).name ] ] ;
              }
@@ -491,7 +488,7 @@ rule file-target (
                              [ $(self.action).path ]
                              $(self.extra-path)
                          ] ;
-
+            
             return [ path.native $(path) ] ;
         }
      }
@@ -522,13 +519,24 @@ rule remember-binding ( target : bound-path )
 #     rule action-name ( targets + : sources * : properties * )
 # Targets and sources are passed as actual jam targets. The rule may
 # not establish dependency relationship, but should do everything else.
-rule action ( targets + : sources * : action-name : properties * )
+rule action ( targets + : sources * : action-name : property-set ? )
 {
     self.targets = $(targets) ;
     self.sources = $(sources) ;
     self.action-name = $(action-name) ;
-    self.properties = $(properties) ;
-
+    
+    if ! $(property-set) 
+    {
+        property-set = [ property-set.empty ] ;
+    }
+        
+    if ! [ class.is-instance $(property-set) ]
+    {        
+        errors.error "Property set instance required" ;
+    }
+    
+    self.properties = $(property-set) ;
+    
     rule targets ( )
     {
         return $(self.targets) ;
@@ -544,7 +552,7 @@ rule action ( targets + : sources * : action-name : properties * )
         return $(self.action-name) ;
     }
 
-    rule properties ( )
+    rule properties-ps ( )
     {
         return $(self.properties) ;
     }
@@ -556,7 +564,8 @@ rule action ( targets + : sources * : action-name : properties * )
         {
             self.actualized = true ;
 
-            local properties = [ adjust-properties [ properties ] ] ;
+            local ps = [ properties-ps ] ;
+            local properties = [ adjust-properties [ $(ps).raw ] ] ;
 
 
             local actual-targets ;
@@ -601,11 +610,9 @@ rule action ( targets + : sources * : action-name : properties * )
 
     rule path ( )
     {
-        local subvariant = [ property.remove free incidental : $(self.properties) ] ;
-        local pp = [ property.as-path $(subvariant) ] ;
-        return $(pp) ;
+        local p = [ $(self.properties).as-path ] ;
+        return $(p) ;
     }
-
 
     # Determined real properties when trying building with 'properties'.
     # This is last chance to fix properties, for example to adjust includes
@@ -678,7 +685,7 @@ rule register ( target )
                 result = $(t) ;
             }
             else if $(a1) && $(a2) && [ $(a1).action-name ] = [ $(a2).action-name ]
-              && [ $(a1).properties ] = [ $(a2).properties ] && [ $(a1).sources ] = [ $(a2).sources ]
+              && [ $(a1).properties-ps ] = [ $(a2).properties-ps ] && [ $(a1).sources ] = [ $(a2).sources ]
             {
                 result = $(t) ;
             }
@@ -801,18 +808,19 @@ local rule clone-action-template ( action from cloned-from : new-source )
 
     local action-class = [ modules.peek $(action) : __class__ ] ;
 
+    local ps = [ $(action).properties-ps ] ;
     local cloned = [ new $(action-class) [ $(action).targets ] : $(sources)
-                     : [ $(action).action-name ] : [ $(action).properties ] ] ;
+                     : [ $(action).action-name ] : $(ps) ] ;
 
     return $(cloned) ;
 }
 
 local rule subvariant-dg ( main-target # The instance of main-target class
-    : properties *                     # Properties requested for this target
+    : property-set                     # Properties requested for this target
     : virtual-targets * )
 {
     self.main-target = $(main-target) ;
-    self.properties = $(properties) ;
+    self.properties = $(property-set) ;
     self.virtual-targets = $(virtual-targets) ;
 
     # Pre-compose the list of other dependency graphs, on which this one
@@ -836,19 +844,28 @@ local rule subvariant-dg ( main-target # The instance of main-target class
         }
     }
     self.other-dg = [ sequence.unique $(self.other-dg) ] ;
-
+   
     rule main-target ( )
     {
         return $(self.main-target) ;
     }
 
-    rule properties ( )
+    rule properties-ps ( )
     {
         return $(self.properties) ;
     }
-
+    
     rule all-target-directories ( )
     {
+        if ! $(self.target-directories)
+        {
+            compute-target-directories ;
+        }                
+        return $(self.target-directories) ;
+    }
+    
+    rule compute-target-directories ( )
+    {        
         local result ;
         for local t in $(self.virtual-targets)
         {
@@ -858,8 +875,8 @@ local rule subvariant-dg ( main-target # The instance of main-target class
         {
             result += [ $(d).all-target-directories ] ;
         }
-        return $(result) ;
-    }
+        self.target-directories = $(result) ;
+    }   
 }
 
 class subvariant-dg ;

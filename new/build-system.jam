@@ -6,6 +6,7 @@ import project ;
 import sequence ;
 import modules ;
 import feature ;
+import property-set ;
 import build-request ;
 import errors : error ;
 
@@ -109,8 +110,9 @@ if $(expanded)
     for local p in $(expanded)
     {
         for local t in $(targets) 
-        {            
-            $(t).direct-build-request [ feature.split $(p) ] ;
+        {   
+            $(t).direct-build-request 
+              [ property-set.create [ feature.split $(p) ] ] ;
         }        
     }
     
@@ -118,7 +120,8 @@ if $(expanded)
     {
         for local t in $(targets)
         {            
-            virtual-targets += [ $(t).generate [ feature.split $(p) ] ] ;
+            virtual-targets += [ $(t).generate 
+              [ property-set.create [ feature.split $(p) ] ] ] ;
         }        
     }
 }
@@ -126,7 +129,7 @@ else
 {
     for local t in $(targets)
     {        
-        virtual-targets += [ $(t).generate ] ;
+        virtual-targets += [ $(t).generate [ property-set.empty ] ] ;
     }    
 }
 
