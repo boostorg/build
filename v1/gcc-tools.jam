@@ -9,7 +9,6 @@
 #//<a href="http://gcc.gnu.org/">GNU<br>GCC</a>
 
 # compute directories for invoking GCC
-SPACE ?= " " ;
 GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)bin$(SLASH) ;
 GCC_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if GCC_ROOT_DIRECTORY not set
 GCC_INCLUDE_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)include ;
@@ -172,19 +171,38 @@ flags gcc NEEDLIBS <library-file> ;
 flags gcc FINDLIBS <find-library> ;
 
 flags gcc DLLVERSION <dllversion> ;
-if $(DLLVERSION)
-{
-	DLLVERSION = $(DLLVERSION[1]) ;
-}
-else
-{
-	DLLVERSION = $(BOOST_VERSION) ;
-}
+DLLVERSION = $(DLLVERSION[1]) ;
+DLLVERSION ?= $(BOOST_VERSION) ;
+
+flags gcc TARGET_TYPE <target-type> ;
 
 #### Link ####
 
 rule Link-action
 {
+    SPACE on $(<) = " " ;
+    # if we don't have a GNU linker then we can't pass any GNU-ld specific flags:
+    if $(NO_GNU_LN)
+    {
+        LNOPT on $(<) = ;
+    }
+    else
+    {
+        LNOPT on $(<) = "" ;
+    }
+    # do we use sonames or not?
+    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && $(OS) = LINUX && ! $(NO_GNU_LN)
+    {
+        OUTTAG on $(<) = ".$(DLLVERSION)" ;
+        SOTAG on $(<) = ".$(DLLVERSION)" ;
+        ACTION_1 on $(<) = "" ;
+    }
+    else
+    {
+        OUTTAG on $(<) = "" ;
+        SOTAG on $(<) = ;
+        ACTION_1 on $(<) = ;
+    }
     # This will appear before the import library name when building a DLL, but
     # will be "multiplied away" otherwise. The --exclude-symbols directive
     # proved to be neccessary with some versions of Cygwin.
@@ -202,35 +220,12 @@ rule Link-action
 }
 
 # for gcc, we repeat all libraries so that dependencies are always resolved
-if $(NO_GNU_LN)
+actions gcc-Link-action bind NEEDLIBS
 {
-  # if we don't have a GNU linker then we can't pass any GNU-ld specific flags:
-  actions gcc-Link-action bind NEEDLIBS
-  {
-    $(GCC_BIN_DIRECTORY)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
-  }
-}
-else
-{
- if $(DLLVERSION) && $(UNIX)
- {
-  actions gcc-Link-action bind NEEDLIBS
-  {
     $(SHELL_SET)LD_LIBRARY_PATH=$(RUN_LD_LIBRARY_PATH)
     $(SHELL_EXPORT)LD_LIBRARY_PATH
-    $(GCC_BIN_DIRECTORY)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1]).$(DLLVERSION)" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,. -Wl,-soname,$(<[1]:D=).$(DLLVERSION)
-    $(LN) -fs $(<[1]:D=).$(DLLVERSION) $(<[1])
-  }
- }
- else
- {
-  actions gcc-Link-action bind NEEDLIBS
-  {
-    $(SHELL_SET)LD_LIBRARY_PATH=$(RUN_LD_LIBRARY_PATH)
-    $(SHELL_EXPORT)LD_LIBRARY_PATH
-    $(GCC_BIN_DIRECTORY)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,.
-  }
- }
+    $(GCC_BIN_DIRECTORY)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(LNOPT)-Wl,-rpath-link,.$(SPACE)"-Wl,-soname,$(<[1]:D=)$(SOTAG)"
+    $(ACTION_1)$(LN)$(SPACE)-fs$(SPACE)"$(<[1]:D=)$(OUTTAG)"$(SPACE)"$(<[1])"
 }
 
 actions gcc-dllwrap bind NEEDLIBS
@@ -242,6 +237,7 @@ actions gcc-dllwrap bind NEEDLIBS
 
 rule Cc-action
 {
+    SPACE on $(<) = " " ;
     gcc-Cc-action $(<) : $(>) ;
 }
 
@@ -253,6 +249,7 @@ actions gcc-Cc-action
 #### C++ ####
 rule C++-action
 {
+    SPACE on $(<) = " " ;
     gcc-C++-action $(<) : $(>) ;
 }
 
@@ -272,10 +269,3 @@ actions updated together piecemeal gcc-Archive-action
 {
     ar ru$(ARFLAGS) "$(<:T)" "$(>:T)"
 }
-
-
-
-
-
-
-
