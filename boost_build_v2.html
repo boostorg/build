@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-    </style>
+        </style>
   </head>
   <!-- Things yet to document:
-                                  - build request, build request expansion and directly requested targets
-                                  - conditional properties
-                                -->
+                                    - build request, build request expansion and directly requested targets
+                                    - conditional properties
+                                  -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -106,28 +106,60 @@
     <hr>
 
     <h2 id="installation">Installation</h2>
-    When using package management or installers, Boost.Build is ready to work
-    instantly. In other case, two steps are required: 
+    Assuming you're installing Boost.Build from sources, the following steps
+    are needed. All paths are given relatively to Boost.Build root directory,
+    which is the directory with the document you are reading. When using
+    Boost distribution, Boost.Build root is located at
+    <tt>$boost_root/tools/build</tt>. 
 
     <ol>
-      <li>Place the Boost.Jam binary, called "bjam", somewhere in your
-      <tt>PATH</tt>.</li>
+      <li>Go to "jam_src" directory and build Boost.Jam. Two convenient
+      scripts are provided, "build.sh" (for Unix systems) and "build.bat"
+      (for Windows). Run the appropriate one and Boost.Jam will be built to
+      directory <tt>bin.{platform_name}.</tt>. The <a href=
+      "jam_src/index.html">Boost.Jam documentation</a> has more details in
+      case you need them.</li>
+
+      <li>Place the Boost.Jam binary, called "bjam" or "bjam.exe", somewhere
+      in your <tt>PATH</tt>.</li>
+
+      <li style="list-style: none">After that, you can go to "examples-v2"
+      directory and run <tt>bjam --version</tt>.</li>
 
       <li>
-        Specify the location of Boost.Build files. You can either set
-        environmental variable <tt>BOOST_BUILD_PATH</tt>, or create, at the
-        top of your project, a file called <tt>boost-build.jam</tt>, with a
-        single line: 
-<pre>
-boost-build /path/to/boost.build ;
-</pre>
-        The directory "examples" in the distribution already has this file,
-        so you can build projects there and add new without doing anything.
+        Configure toolsets to use. Open <tt>new/user-config.jam</tt> file and
+        follow instructions there to specify what compiles/libraries you have
+        and where they are located. After that, you should be able to go to
+        <tt>examples-v2/hello</tt>, and run <tt>bjam</tt> there. A simple
+        application will be built. You can also play with other projects in
+        <tt>examples-v2</tt>. 
+
+        <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+        into one of the locations where it can be found (given in <a href=
+        "#config_files_location">this table</a>). This prevent you from
+        accidentally overwriting your config when updating.</p>
       </li>
     </ol>
 
-    <p>To verify your installation, you can use <tt>bjam --version</tt> at
-    the command line.</p>
+    <p>When starting a new project which uses Boost.Build, you need to make
+    sure that build system can be found. There are two ways.</p>
+
+    <ul>
+      <li>Set enviromnetal variable <tt>BOOST_BUILD_PATH</tt> to the absolute
+      path to <tt>new</tt> directory in Boost.Build installation.</li>
+
+      <li>
+        Create, at the top of your project, a file called
+        <tt>boost-build.jam</tt>, with a single line: 
+<pre>
+boost-build /path/to/boost.build ;
+</pre>
+      </li>
+    </ul>
+
+    <p>If you're trying to use Boost.Build V2 on Boost itself, please note
+    that when building Boost, V1 is used by default. You'd have to add
+    <tt>--v2</tt> command line option to all "bjam" invocations.</p>
 
     <h2><a name="sec-tutorial">Tutorial</a></h2>
 
@@ -786,6 +818,9 @@ boost-build /path/to/boost.build ;
       </li>
     </ul>
 
+    <p>Features which are neither free nor incidental are called
+    <em>base</em> features.</p>
+
     <p>TODO: document active features..</p>
 
     <h4><a name="feature_declaration">Feature Declaration</a></h4>
@@ -904,7 +939,8 @@ exe hello : hello.cpp : &lt;toolset&gt;yfc:&lt;cxxflags&gt;-disable-pointless-wa
 
     <p>Locations where those files a search are summarized below:</p>
 
-    <table align="center" summary="search paths for configuration files">
+    <table id="config_files_location" align="center" summary=
+    "search paths for configuration files">
       <caption>
         search paths for configuration files
       </caption>
