@@ -60,11 +60,11 @@ rule load ( jamfile-location )
     # Load project root, first. It might decide to act as Jamfile.
     project-roots.load $(jamfile-location) ;
         
-    local module-name = [ module-name $(jamfile-location) ] ;        
+    local module-name = [ module-name $(jamfile-location) ] ;            
     # If Jamfile is already loaded, don't try again.
-    if ! $(jamfile-location) in $(.project-locations)
+    if ! $(module-name) in $(.jamfile-modules)
     {      
-        .project-locations += $(jamfile-location) ; 
+        .jamfile-modules += $(module-name) ; 
         
         load-jamfile $(jamfile-location) ;
                 
@@ -81,7 +81,7 @@ rule load ( jamfile-location )
 # error. 
 rule act-as-jamfile ( module : location )
 {
-    if $(location) in $(.project-locations)
+    if [ module-name $(location) ] in $(.jamfile-modules)
     {
         errors.error "Jamfile was already loaded for '$(location)'" ;
     }
@@ -90,58 +90,11 @@ rule act-as-jamfile ( module : location )
     
     # Add the location to the list of project locations
     # so that we don't try to load Jamfile in future
-    .project-locations += $(location) ;
+    .jamfile-modules += [ module-name $(location) ] ;
     
     initialize $(module) : $(location) ;
 }
 
-
-#   Returns the project module, given its id.
-#   Projects can be referred using @project-id notation. 
-#   Where <project-id> is a path. When this path is not absolute, it's relative
-#   to the project in 'current-location'.
-rule lookup ( id : current-location )
-{
-    local split = [ MATCH ^(@)(.*) : $(id)  ] ;
-    if ! $(split)
-    {
-        error "Project id '$(id)' is invalid" ;
-    }
-    
-    local project-id = $(split[2]) ;
-    
-    local location = $(current-location) ; 
-
-    if [ path.is-rooted $(project-id) ]
-    {
-        return $($(project-id).jamfile-module) ;
-    }
-    else 
-    {
-        # Find the project module for this location
-        assert.in $(location) : $(.project-locations) ;        
-        local module-name = [ module-name $(location) ] ;
-
-        if ! $(project-id)
-        {
-            return $(module-name) ;
-        }
-        else 
-        {
-            local base-id = [ attribute $(module-name) id ] ;
-            
-            if ! $(base-id)
-            {
-                error "Project in $(location) has no project id" ;
-            }
-            else
-            {
-                local rooted-id = $(base-id)/$(project-id) ;
-                return $($(rooted-id).jamfile-module) ;
-            }                 
-        }        
-    }
-}
 
 # Given 'name' which can be project-id or plain directory name,
 # return project module corresponding to that id or directory.
@@ -149,43 +102,36 @@ rule lookup ( id : current-location )
 rule find ( name : current-location )
 {
     local project-module ;
-    if [ MATCH (@) : $(name) ]
-    {     
-        project-module = [ lookup $(name) : $(current-location) ] ;
-    }
-    else
-    {                
-        # Try interpreting name as project id which does not have '@'
-        # prefix.
-        if [ path.is-rooted $(name) ]
-        {            
-            project-module = [ find @$(name) : $(current-location) ] ;
-        }            
+    
+    # Try interpreting name as project id.
+    if [ path.is-rooted $(name) ]
+    {            
+        project-module =  $($(name).jamfile-module) ;
+    }            
                 
-        if ! $(project-module)
-        {            
-            local location = [ path.root $(name) $(current-location) ] ;
-            # If no project is registered for the given location, try to
-            # load it. First see if we have Jamfile. If not we might have project
-            # root, willing to act as Jamfile. In that case, project-root
-            # must be placed in the directory referred by id.
-            
-            local root-location = 
-              [ project-roots.find-project-root $(location) ] ;
-            if $(root-location)
-            {
-                root-location = [ path.parent $(root-location) ] ;
-            }
-                        
+    if ! $(project-module)
+    {            
+        local location = [ path.root $(name) $(current-location) ] ;
+        # If no project is registered for the given location, try to
+        # load it. First see if we have Jamfile. If not we might have project
+        # root, willing to act as Jamfile. In that case, project-root
+        # must be placed in the directory referred by id.
+        
+        local root-location = 
+          [ project-roots.find-project-root $(location) ] ;
+        if $(root-location)
+        {
+            root-location = [ path.parent $(root-location) ] ;
+        }
+        
             if $(location) in $(.project-location) ||
               [ find-jamfile $(location) ] && [ load $(location) ] ||
-               $(root-location) = $(location) && [ project-roots.load $(location) ]
-                  {
-                      # We've managed to find or load project. Returns the module
-                      # name
-                      project-module = [ module-name $(location) ] ;
-                  }
-        }
+                $(root-location) = $(location) && [ project-roots.load $(location) ]
+                {
+                    # We've managed to find or load project. Returns the module
+                    # name
+                    project-module = [ module-name $(location) ] ;
+                }
     }
     
     return $(project-module) ;
@@ -200,6 +146,10 @@ rule module-name ( jamfile-location )
 {
     if ! $(.module.$(jamfile-location))
     {
+        # Root the path, so that locations are always umbiguious.
+        # Without this, we can't decide if '../../exe/program1' and '.'
+        # are the same paths, or not.
+        jamfile-location = [ path.root $(jamfile-location) [ path.pwd ] ] ;
         .module.$(jamfile-location) =  Jamfile<$(jamfile-location)> ;
     }
     return $(.module.$(jamfile-location)) ;

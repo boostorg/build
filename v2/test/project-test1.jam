@@ -7,11 +7,6 @@ import project-roots ;
 
 project-roots.print ;
 
-assert.result Jamfile<project-test1/dir2> : project.lookup @/cool-library : "." ;
-assert.result Jamfile<project-test1/dir>  : project.lookup @dir : "project-test1" ;
-assert.result Jamfile<project-test1>      : project.lookup @ : "project-test1" ;
-
-
 NOTFILE all ;
 
 

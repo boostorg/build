@@ -108,6 +108,7 @@ tests = [ "project_test1",
           "project_root",
           "glob",
           "project_root_constants",
+          "double_loading",
 	  ]
 
 if os.name == 'posix':
