@@ -970,9 +970,14 @@ local rule construct-without-caching (
 # 'construct' in stack, returns only targets of requested 'target-type',
 # otherwise, returns also unused sources and additionally generated
 # targets.    
+#
+# Does not return target which are not of 'allowed-type' or of type derived from
+# it. If 'allowed-type' is not specified, it's defaulted to 'target-type'.
+# See lib-target-class for use case of this.
 rule construct ( project name ? : target-type multiple ? : property-set * : sources * 
-   : return-all ? )
+   : allowed-type * )
 {
+    allowed-type ?= $(target-type) ;
     if (.construct-stack)
     {
         ensure-type $(sources) ;
@@ -1020,8 +1025,7 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
             # is specified. If we don't do this, then all targets calling
             # 'construct' will get unused target returned, which will break
             # checking for unused sources a bit harder.
-            if $(return-all) || 
-              $(type) = $(target-type) || [ type.is-derived $(type) $(target-type) ]
+            if $(type) = $(target-type) || [ type.is-derived $(type) $(allowed-type) ]
             {
                   result2 += $(t) ;
             }
