@@ -217,9 +217,34 @@ rule glob ( dirs * : patterns + )
     }
     else
     {        
-        for dir in $(dirs)
+        # When a pattern has not directory, we glob directly.
+        # Take care of special ".." value. The "GLOB" rule simply ignores
+        # the ".." element (and ".") element in directory listings. This is
+        # needed so that 
+        #
+        #    [ glob libs/*/Jamfile ]
+        #
+        # don't return 
+        #
+        #    libs/../Jamfile (which is the same as ./Jamfile)
+        #
+        # On the other hand, when ".." is explicitly present in the pattern
+        # we need to return it.
+        # 
+        for local dir in $(dirs)
         {
-            result += [ sequence.transform make : [ GLOB [ native $(dir) ] : $(patterns) ] ] ;
+            for local p in $(patterns)
+            {                
+                if $(p) != ".."
+                {                
+                    result += [ sequence.transform make 
+                        : [ GLOB [ native $(dir) ] : $(p) ] ] ;
+                }            
+                else
+                {
+                    result += [ path.join $(dir) .. ] ;
+                }            
+            }            
         }
     }    
     return $(result) ;
