@@ -5,16 +5,36 @@
 #  warranty, and with no claim as to its suitability for any purpose.
 
 #  Implements project representation and loading.
-#
 #   Each project is represented by 
 #   - a module where all the Jamfile content live. 
 #   - an instance of 'project-attributes' class.
+#     (given module name, can be obtained by 'attributes' rule)
 #   - an instance of 'project-target' class (from targets.jam)
+#     (given a module name, can be obtained by 'target' rule)
 #
-#   There are two kinds of projects. Regular ones are associated with Jamfiles
-#   at a specific location. The 'module-name' rule can be used to map location
-#   to Jamfile modules. Standalone project are not associated with Jamfiles, they
-#   can be declared anywhere and are accessible only by project id.
+#  Typically, projects are created as result of loading Jamfile, which is
+#  do by rules 'load' and 'initialize', below. First, module for Jamfile
+#  is loaded and new project-attributes instance is created. Some rules
+#  necessary for project are added to the module (see 'project-rules' module)
+#  at the bottom of this file.
+#  Default project attributes are set (inheriting attributes of parent project, if
+#  it exists). After that, Jamfile is read. It can declare its own attributes,
+#  via 'project' rule, which will be combined with already set attributes.
+#
+#
+#  The 'project' rule can also declare project id, which will be associated with 
+#  the project module.
+#
+#  There can also be 'standalone' projects. They are created by calling 'initialize'
+#  on arbitrary module, and not specifying location. After the call, the module can
+#  call 'project' rule, declare main target and behave as regular projects. However,
+#  since it's not associated with any location, it's better declare only prebuilt 
+#  targets.
+#
+#  The list of all loaded Jamfile is stored in variable .project-locations. It's possible
+#  to obtain module name for a location using 'module-name' rule. The standalone projects
+#  are not recorded, the only way to use them is by project id.
+
 
 import modules : peek poke ;
 import numbers ;
@@ -30,22 +50,26 @@ import property-set ;
 #
 #   Loads jamfile at the given location. After loading, project global
 #   file and jamfile needed by the loaded one will be loaded recursively.
+#   If the jamfile at that location is loaded already, does nothing.
+#   Returns the project module for the Jamfile.
 #
 rule load ( jamfile-location )
 {
-    local loaded = ;
-    local module-name = [ load-jamfile $(jamfile-location) loaded ] ;
-
-    if $(loaded)
-    {
-        .project-locations += $(jamfile-location) ;
-
+    local module-name = [ module-name $(jamfile-location) ] ;
+    
+    # If Jamfile is already loaded, don't try again.
+    if ! $(jamfile-location) in $(.project-locations)
+    {      
+        .project-locations += $(jamfile-location) ; 
+                
+        load-jamfile $(jamfile-location) ;
+                
         for local p in [ attribute $(module-name) projects-to-build ]
         {
             load [ path.join $(jamfile-location) $(p) ] ;
         }
-    }
-    return $(module-name) ;
+    }    
+    return $(module-name) ;        
 }
 
 #   Returns the project module, given its id.
@@ -268,13 +292,12 @@ local rule find-jamfile (
     return $(jamfile-glob) ;
 }
 
-# Load a Jamfile at the given directory. Will attempt to load
-# the file as indicated by the JAMFILE patterns. We return the
-# module for the Jamfile.
-#
+# Load a Jamfile at the given directory. Returns nothing.
+# Will attempt to load the file as indicated by the JAMFILE patterns. 
+# Effect of calling this rule twice with the same 'dir' is underfined.
+
 local rule load-jamfile (
     dir # The directory of the project Jamfile.
-    loaded-var ? # Name of variable to indicated we loaded the Jamfile.
     )
 {
     # See if the Jamfile is where it should be.
@@ -296,63 +319,47 @@ local rule load-jamfile (
     #
     local jamfile-module = [ module-name  [ path.parent $(jamfile-to-load[1]) ] ] ;
 
-    # Don't even bother with the rest if we know the file is already loaded.
+    # Multiple Jamfiles found in the same place. Warn about this.
+    # And ensure we use only one of them.
     #
-    if ! [ modules.binding $(jamfile-module) ]
+    if $(jamfile-to-load[2-])
     {
-        # Multiple Jamfiles found in the same place. Warn about this.
-        # And ensure we use only one of them.
-        #
-        if $(jamfile-to-load[2-])
-        {
-            ECHO
-                "WARNING: Found multiple Jamfiles at this '"$(dir)"' location!"
-                "Loading the first one: '" [ path.basename $(jamfile-to-load[1]) ]  "'." ;
-        }
-
-        jamfile-to-load = $(jamfile-to-load[1]) ;
-
-        # Initialize the jamfile module before loading.
-        #
-        initialize $(jamfile-module) : $(jamfile-to-load) ;
-
-        # Now load the Jamfile in it's own context.
-        #
-        modules.load $(jamfile-module) :  [ path.native $(jamfile-to-load) ] : . ;
-
-        # Indicate we loaded the Jamfile.
-        #
-        if $(loaded-var)
-        {
-            $(loaded-var) = true ;
-        }
+        ECHO
+          "WARNING: Found multiple Jamfiles at this '"$(dir)"' location!"
+            "Loading the first one: '" [ path.basename $(jamfile-to-load[1]) ]  "'." ;
     }
-
-    # Return the Jamfile's filename/module.
+    
+    jamfile-to-load = $(jamfile-to-load[1]) ;
+    
+    # Initialize the jamfile module before loading.
     #
-    return $(jamfile-module) ;
+    initialize $(jamfile-module) : [ path.parent $(jamfile-to-load) ] ;
+    
+    # Now load the Jamfile in it's own context.
+    #
+    modules.load $(jamfile-module) :  [ path.native $(jamfile-to-load) ] : . ;
 }
 
 # Initialize the module for a project. 
 #
 rule initialize (
-    module-name # The name of the projecte module.
-    : jamfile ? # The location (binding) of the jamfile for the project to initialize.
-                # If not specified, stanalone project will be initialized.                 
+    module-name # The name of the project module.
+    : location ? # The location (directory) of the project to initialize.
+                 # If not specified, stanalone project will be initialized.               
     )
 {
     # TODO: need to consider if standalone projects can do anything but defining
-    # prebuilt targets. If so, we need to give more sensible "jamfile", so that
+    # prebuilt targets. If so, we need to give more sensible "location", so that
     # source paths are correct.
-    jamfile ?= "" ;
+    location ?= "" ;
     # Create the module for the Jamfile first.    
     module $(module-name)
     {          
     }    
-    $(module-name).attributes = [ new project-attributes [ path.parent $(jamfile) ] ] ;
+    $(module-name).attributes = [ new project-attributes $(location) ] ;
     local attributes = $($(module-name).attributes) ;
     
-    $(attributes).set source-location : $(jamfile-location) : exact ;    
+    $(attributes).set source-location : $(location) : exact ;    
     $(attributes).set requirements : [ property-set.empty ] : exact ;
     $(attributes).set usage-requirements : [ property-set.empty ] : exact ;    
 
@@ -362,15 +369,15 @@ rule initialize (
 
     # We search for parent/project-root only if jamfile was specified --- i.e
     # if the project is not standalone.
-    if $(jamfile)
+    if $(location)
     {       
         # Make sure we've loaded the project-root corresponding to this
         # Jamfile.
         #
-        local project-root-module = [ project-root.load [ path.parent $(jamfile) ] ] ;
+        local project-root-module = [ project-root.load $(location) ] ;
         local project-root = [ $(project-root-module).project-root get-location ] ;
 
-        local parent = [ find-jamfile [ path.parent $(jamfile) ] $(project-root) ] ;
+        local parent = [ find-jamfile $(location) $(project-root) ] ;
         local parent-module = ;
         if $(parent)
         {
