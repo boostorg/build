@@ -3,10 +3,17 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-# Keep a record so that no module is included multiple times
-loaded-modules ?= ;
-loading-modules ?= ;
-untested ?= ;
+# Essentially an include guard; ensures that no module is loaded multiple times
+.loaded ?= ;
+
+# A list of modules currently being loaded for error reporting of circular dependencies
+.loading ?= ;
+
+# A list of modules needing to be tested via __test__ rule
+.untested ?= ;
+
+# A list of modules which have been tested via __test__
+.tested ?= ;
 
 # meant to be invoked from import when no __test__ rule is defined in a given
 # module
@@ -57,16 +64,30 @@ rule call-in ( module-name ? : rule-name args * : * )
 }
 
 # load the indicated module if it is not already loaded.
-rule load ( module-name : filename ? : search * )
+rule load (
+  module-name      # name of module to load. Rules will be defined in this module
+    : filename ?   # (partial) path to file; Defaults to $(module-name).jam
+    : search *     # Directories in which to search for filename. Defaults to $(BOOST_BUILD_PATH)
+)
 {
-    filename ?= $(module-name).jam ;
-    if ! ( $(module-name) in $(loaded-modules) )
+    # Avoid loading modules twice
+    if ! ( $(module-name) in $(.loaded) )
     {
-        loaded-modules += $(module-name) ;
-        loading-modules += $(module-name) ;
-        local suppress-test = $(untested[1]) ; # suppress tests until all recursive loads are complete.
-        untested += $(module-name) ; # add the module to the stack of untested modules
+        filename ?= $(module-name).jam ;
         
+        # Mark the module loaded so we don't try to load it recursively
+        .loaded += $(module-name) ;
+        
+        # suppress tests if any module loads are already in progress. 
+        local suppress-test = $(.loading[1]) ;
+        
+        # Push this module on the loading stack
+        .loading += $(module-name) ;
+        
+        # Remember that it's untested
+        .untested += $(module-name) ; 
+        
+        # Insert the new module's __name__ and __file__ globals
         poke $(module-name) : __name__ : $(module-name) ;
         poke $(module-name) : __file__ : $(filename) ;
         
@@ -78,22 +99,26 @@ rule load ( module-name : filename ? : search * )
             # Add some grist so that the module will have a unique target name
             local module-target = $(__file__:G=module@) ;
             
-            search = $(3) ;
+            local search = $(3) ;
             search ?= [ modules.peek : BOOST_BUILD_PATH ] ;
             SEARCH on $(module-target) = $(search) ;
             BINDRULE on $(module-target) = modules.record-binding ;
             include $(module-target) ;
         }
-        loading-modules = $(loading-modules[1--2]) ;
         
-        local argv = [ peek : ARGV ] ;
+        # Pop the loading stack. Must happen before testing or we'll find a circular loading dependency
+        .loading = $(.loading[1--2]) ;
+        
+        # Run any pending tests if this is an outer load
         if ! $(suppress-test)
         {
-            # run any pending tests
-            for local m in $(untested)
+            local argv = [ peek : ARGV ] ;
+            for local m in $(.untested)
             {
-                if ( --debug in $(argv) ) || ( --debug-module=$(m) in $(argv) )
+                if ( ! $(m) in $(.tested) )    # avoid recursive test invocations
+                   && ( ( --debug in $(argv) ) || ( --debug-module=$(m) in $(argv) ) )
                 {
+                    .tested += $(m) ;
                     ECHO testing module $(m)... ;
                     module $(m)
                     {
@@ -101,14 +126,14 @@ rule load ( module-name : filename ? : search * )
                     }
                 }
             }
-            untested = ;
+            .untested = ;
         }
     }
-    else if $(module-name) in $(loading-modules)
+    else if $(module-name) in $(.loading)
     {
         ECHO loading \"$(module-name)\" ;
         ECHO circular module loading dependency: ;
-        EXIT $(loading-modules) $(module-name) ;
+        EXIT $(.loading)" ->" $(module-name) ;
     }
 }
 
@@ -116,7 +141,7 @@ rule load ( module-name : filename ? : search * )
 # each loaded module.
 rule record-binding ( module-target : binding )
 {
-    $(loading-modules[-1]).__binding__ = $(binding) ;
+    $(.loading[-1]).__binding__ = $(binding) ;
 }
 
 # load the indicated module and import rule names into the current
@@ -159,8 +184,11 @@ rule localize (
     
     local target-names = $(rename-opt) ;
     target-names ?= $(source-names) ;
+    
     local caller-module = [ CALLER_MODULE ] ;
+    
     IMPORT $(module-name) : $(source-names) : $(caller-module) : $(target-names) : LOCALIZE ;
+    
     if $(export)
     {
         EXPORT $(caller-module) : $(target-names) ;
