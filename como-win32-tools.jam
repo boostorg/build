@@ -97,7 +97,7 @@ actions como-Link-action bind NEEDLIBS
 
 rule Cc-action
 {
-    if $(>:G=) in $(NO_WARN) { WARN on $(<) = "" ; }
+    if $(>:G=:D=) in $(NO_WARN) { WARN on $(<) = "" ; }
     else { WARN on $(<) = --a ; }
     como-Cc-action $(<) : $(>) ;
 }
@@ -115,7 +115,7 @@ actions como-Cc-action
 #### C++ ####
 rule C++-action
 {
-    if $(>:G=) in $(NO_WARN) { WARN on $(<) = "" ; }
+    if $(>:G=:D=) in $(NO_WARN) { WARN on $(<) = "" ; }
     else { WARN on $(<) = --a ; }
     como-C++-action $(<) : $(>) ;
 }
