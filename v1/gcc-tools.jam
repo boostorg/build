@@ -403,7 +403,7 @@ rule Link-action
     DLL_LINK_FLAGS = "$(DLL_LINK_FLAGS)-Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__ " ;
     
     # set the link command to generate an import library
-    if ! !(NO_GNU_LN)
+    if ! $(NO_GNU_LN)
     {
         IMPLIB_COMMAND on $(<) = "$(DLL_LINK_FLAGS)-Wl,--out-implib," ;
     }
