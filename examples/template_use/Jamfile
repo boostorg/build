@@ -17,8 +17,8 @@ template t-common
         # SOURCES
     :
         # REQUIREMENTS
-		<include>$(SUBDIR)/include
-		<define>SOME_DEFINE
+        <include>$(SUBDIR)/include
+        <define>SOME_DEFINE
     :
         # DEFAULT BUILDS
     ;

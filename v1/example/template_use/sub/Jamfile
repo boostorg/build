@@ -18,7 +18,7 @@ subproject tools/build/examples/template_use/sub ;
 lib simple
     :
         # SOURCES
-		<template>../t-common
+        <template>../t-common
         simple_lib.cpp
     :
         # REQUIREMENTS
@@ -33,7 +33,7 @@ lib simple
 exe simple
     :
         # SOURCES
-		<template>../t-common
+        <template>../t-common
         simple.cpp
         <lib>simple
     :
