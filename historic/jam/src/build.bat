@@ -321,7 +321,28 @@ set BJAM_SOURCES=%BJAM_SOURCES% strings.c filesys.c builtins.c pwd.c class.c w32
 set BJAM_SOURCES=%BJAM_SOURCES% modules/set.c modules/path.c modules/regex.c 
 set BJAM_SOURCES=%BJAM_SOURCES% modules/property-set.c modules/sequence.c modules/order.c
 
+set BJAM_INCREMENTAL=
+if "_%1" == "_--incremental" (
+    set BJAM_INCREMENTAL=incremental
+)
+if "_%2" == "_--incremental" (
+    set BJAM_INCREMENTAL=incremental
+)
+if "_%3" == "_--incremental" (
+    set BJAM_INCREMENTAL=incremental
+)
+if "_%4" == "_--incremental" (
+    set BJAM_INCREMENTAL=incremental
+)
+if "_%BJAM_INCREMENTAL%_" == "_incremental_" (
+    if not exist ".\bootstrap\jam0.exe" (
+        set BJAM_INCREMENTAL=
+    )
+)
+
+
 @echo ON
+@if "_%BJAM_INCREMENTAL%_" == "_incremental_" goto Skip_Bootstrap
 rd /S /Q bootstrap
 md bootstrap
 @if not exist jamgram.y goto Bootstrap_GrammarPrep
@@ -356,8 +377,11 @@ rename y.tab.h jamgram.h
 .\bootstrap\mkjambase0 jambase.c Jambase
 :Skip_Jambase
 %BOOST_JAM_CC% %BOOST_JAM_OPT_JAM% %BJAM_SOURCES%
+:Skip_Bootstrap
 @if not exist ".\bootstrap\jam0.exe" goto Skip_Jam
+@if "_%BJAM_INCREMENTAL%_" == "_incremental_" goto Skip_Clean
 .\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " clean
+:Skip_Clean
 .\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " %1 %2 %3 %4 %5 %6 %7 %8 %9
 :Skip_Jam
 
