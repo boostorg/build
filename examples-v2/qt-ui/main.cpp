@@ -1,4 +1,4 @@
-#include "hello_world_widget.hpp"
+#include "hello_world_widget.h"
 #include <qapplication.h>
 
 #include <qpushbutton.h>
