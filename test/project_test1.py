@@ -11,50 +11,50 @@ os.chdir(t.original_workdir)
 
 
 expected_output1="""Project Roots:
- 
+
 """
 
 expected_output2="""'%(root-dir-prefix)sdir2':
- 
+
   Module for project-root is 'project-root<%(root-dir-prefix)sdir2>'
- 
+
 Projects:
- 
+
 '/cool-library':
- 
+
 * Project root: %(root-dir-prefix)sdir2
 * Parent project: (none)
 * Requirements: <include>/home/ghost/build/boost-cvs
 * Default build: debug
 * Source location: %(root-dir-prefix)sdir2
 * Subprojects:
- 
+
 """
 
 expected_output3="""'%(root-dir)s':
- 
+
   Module for project-root is 'project-root<%(root-dir)s>'
- 
+
 Projects:
- 
+
 '/boost-build-test-project-1':
- 
+
 * Project root: %(root-dir)s
 * Parent project: (none)
 * Requirements: <threading>multi <include>/home/ghost/local/include
 * Default build: debug
 * Source location: %(root-dir)s
 * Subprojects: dir dir2
- 
+
 '/boost-build-test-project-1/dir':
- 
+
 * Project root: %(root-dir)s
 * Parent project: %(root-dir)s
 * Requirements: <threading>multi <include>/home/ghost/local/include
 * Default build: release
 * Source location: %(root-dir-prefix)sdir/src
 * Subprojects:
- 
+
 """
 
 # Test that correct project structure is created when jam is invoked
