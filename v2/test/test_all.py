@@ -85,6 +85,7 @@ tests = [ "project_test1",
           "alternatives",
           "unused",
           "default_features",
+          "railsys",
 	  ]
 
 if os.name == 'posix':

@@ -15,4 +15,6 @@ int main()
 {
     TestLibX stTestLibX;
     TestA stTestA;
+    
+    stTestLibX.do_something();
 };

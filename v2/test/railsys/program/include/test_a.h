@@ -17,4 +17,7 @@ class TestA : public QObject
 public:
 
     TestA();
+    
+    // Needed to suppress 'unused variable' varning.
+    void do_something() { }
 };

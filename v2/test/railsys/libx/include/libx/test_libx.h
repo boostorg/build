@@ -12,4 +12,8 @@ class TestLibX
 public:
 
     TestLibX();
+    
+    // Needed to suppress 'unused variable' warning
+    // in some cases.
+    void do_something() {}
 };

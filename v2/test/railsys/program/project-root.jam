@@ -1,11 +1,9 @@
 
-import gcc ;
-#import msvc ;
 import toolset ; 
 
 # Tell that QT should be used. QTDIR will give installation
 # prefix. 
 toolset.using qt ;
 
-#Alternatively, the prefix can be given as second argument
-#toolset.using qt : /usr/share/qt ;
+# Not that good, but sufficient for testing
+toolset.using stlport : /path/to/stlport ;
