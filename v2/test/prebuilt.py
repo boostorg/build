@@ -24,4 +24,14 @@ t.run_build_system("debug release")
 t.expect_addition("bin/$toolset/debug/main-target-hello/hello.exe")
 t.expect_addition("bin/$toolset/release/main-target-hello/hello.exe")
 
+t.rm("bin")
+# Now test that prebuilt file specified by absolute name 
+# works too.
+t.copy("ext/Jamfile3", "ext/Jamfile")
+t.expand_toolset("ext/Jamfile")
+t.run_build_system("debug release")
+t.expect_addition("bin/$toolset/debug/main-target-hello/hello.exe")
+t.expect_addition("bin/$toolset/release/main-target-hello/hello.exe")
+
+
 t.cleanup()
