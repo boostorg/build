@@ -512,6 +512,11 @@ class main-target : abstract-target
         return $(usage-requirements) $(result) ;                
     }
         
+    # Generates the main target with the given property set
+    # and returns a list which first element is property-set object
+    # containing usage-requirements of generated target and with
+    # generated virtual target in other elements. It's possible
+    # that no targets are generated.
     local rule generate-really ( property-set )
     {    
         if $(self.property-adjuster)
@@ -530,6 +535,7 @@ class main-target : abstract-target
                 "with properties" [ $(property-set).raw ]
                   "because no best-matching alternative could be found"
                   ; 
+            return [ property-set.empty ] ;
         }
         else if $(best-alternatives[2])
         {
