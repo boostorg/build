@@ -1469,6 +1469,11 @@ rule depend-on-libraries
 
 rule depend-on-dlls
 {
+    if $(DLL_AS_LIB)
+    {
+        NEEDLIBS += $(>) ;
+        NEEDLIBS on $(<) += $(>) ;
+    }
     LIBPATH on $(<) += $(gLOCATE($(>))) ;
     FINDLIBS on $(<) += $(gTARGET_NAME($(gTARGET_SUBVARIANT($(>))))) ; # $(gTARGET_SUBVARIANT($(>)):G=) ;
     DEPENDS $(<) : $(>) ;
