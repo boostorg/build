@@ -34,14 +34,17 @@ EXE <------- OBJ* <-------- foo.cpp
 EST.EXE <---- OBJ* <----------------------------------------- CPP
                ^
                |  
-               +--------------------- CPP <---+-------------- ASM
+               +--------------------- CPP <---+------------NM_ ASM
                |                              |
                +- CPP <------ STATIC_DATA* <--+
                |  STATIC_DATA       ^
                |                    | 
                |                    |       
-               |                   ASM <--- TCPP <----------  ECPP
+               |                 NM_ASM <--- CPP <----------  ECPP
                +--------------------------- CPP  <-+
+
+NM.EXE <---- NM_OBJ *  <-------- NM_ASM <------ CPP 
+                       <-------- NM_ASM 
 
 Note: all STATIC_DATA files produced from sources are linked together
 to create one CPP and one STATIC_DATA file. 
