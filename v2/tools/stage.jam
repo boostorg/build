@@ -106,17 +106,84 @@ class stage-target-class : basic-target
         
     rule construct ( name : source-targets * : property-set )
     {        
+        source-targets = [ 
+          targets-to-stage $(source-targets) : $(property-set) ] ;
+        
+        property-set = [ update-location $(property-set) ] ;          
+                               
+        local result ;
+        for local i in $(source-targets)
+        {            
+            local staged-targets ;
+                        
+            local properties = [ property-set.empty ] ;
+            local a = [ $(i).action ] ;                    
+            if $(a)
+            {
+                properties = [ $(a).properties ] ;
+            }
+            properties = [ $(properties).add-raw 
+              [ $(property-set).free ] ] ;
+            
+            name = [ targets.tag-name [ $(i).name ] : $(properties) ] ;
+                        
+            # See if something special should be done when staging this
+            # type. It is indicated by presense of special "staged" type            
+            local t = [ $(i).type ] ;            
+            if $(t) && [ type.registered STAGED_$(t) ]
+            {
+                staged-targets = [ construct-special-targets $(name) : $(property-set) : $(i) : STAGED_$(t) ] ;
+            }
+            else             
+            {                
+                staged-targets = [ stage.copy-file $(name) : $(self.project) : $(i) : $(property-set) ] ;
+            }
+            
+            if ! $(staged-targets)
+            {                    
+                errors.error "Unable to generate staged version of " [ $(source).str ] ;
+            }                
+            
+            for t in $(staged-targets) 
+            {
+                result += [ virtual-target.register $(t) ] ;          
+            }            
+        }
+        
+        return [ property-set.empty ] $(result) ;
+    }   
+    
+
+    # Given the list of source targets explicitly passed to 'stage',
+    # returns the list of targets which must be staged.
+    rule targets-to-stage ( source-targets * : property-set )
+    {   
+        local result ;
+        
+        # Traverse the dependencies, if needed.
         if [ $(property-set).get <traverse-dependencies> ] = "on"
         {
             source-targets = [ collect-targets $(source-targets) 
               : [ $(property-set).get <include-type> ] ] ;
         }
-
-        property-set = [ update-location $(property-set) ] ;          
-        local include-types = [ $(property-set).get <include-type> ] ;
-                               
-        local result ;
-        for local i in $(source-targets)
+        
+        # Filter the target types, if needed
+        local included-types = [ $(property-set).get <include-type> ] ;               
+        if $(included-types)
+        {
+            for local r in $(source-targets)
+            {
+                local ty = [ $(r).type ] ;        
+                if $(ty) && $(ty) != SEARCHED_LIB
+                {
+                    if [ include-type $(ty) : $(included-types) ]                  
+                    {
+                        result += $(r) ;
+                    }                
+                }           
+            }
+        }
+        else
         {
             # Intermediate targets are those with "unrequested" types.
             # For example, given "exe a : a.cpp" we can end with RSP
@@ -124,84 +191,16 @@ class stage-target-class : basic-target
             # By default, we don't install such targets.
             # If specific list of installable types is given, we don't
             # care if target is intermediate or not.
-            if ! [ $(i).intermediate ] && [ $(i).type ] != SEARCHED_LIB
-            {
-                local staged-targets ;
-                
-                local t = [ $(i).type ] ;
-                                
-                local properties = [ property-set.empty ] ;
-                local a = [ $(i).action ] ;                    
-                if $(a)
+            for local r in $(source-targets)
+            {                
+                if ! [ $(r).intermediate ]
                 {
-                    properties = [ $(a).properties ] ;
+                    result += $(r) ;
                 }
-                local tag = [ $(property-set).get <tag> ] ;
-                tag = $(tag:G=<tag>) ;
-                local n = [ $(property-set).get <name> ] ;
-                n = $(n:G=<name>) ;
-                properties = [ $(properties).add-raw $(tag) $(n) ] ;                  
-                                        
-                name = [ targets.tag-name [ $(i).name ] : $(properties) ] ;
-                                                                                                                                
-                # See if something special should be done when staging this
-                # type. It is indicated by presense of special "staged" type            
-                if $(t) && [ type.registered STAGED_$(t) ]
-                {
-                    staged-targets = [ construct-special-targets $(name) : $(property-set) : $(i) : STAGED_$(t) ] ;
-                }
-                else             
-                {                
-                    staged-targets = [ stage.copy-file $(name) : $(self.project) : $(i) ] ;
-                }
-                
-                if ! $(staged-targets)
-                {                    
-                    errors.error "Unable to generate staged version of " [ $(source).str ] ;
-                }                
-
-                for t in [ select-included $(staged-targets) : $(include-types) ]
-                {
-                    local a = [ $(t).action ] ;
-                    {
-                        for local s in [ $(a).targets ]
-                        {
-                            $(s).set-path [ $(property-set).get <location> ] ;
-                        }                        
-                    }
-                    
-                    result += [ virtual-target.register $(t) ] ;          
-                }            
             }            
         }
-        
-        return [ property-set.empty ] $(result) ;
-    }   
-    
-    rule select-included ( source-targets * : types-to-include * )
-    {
-        local result-targets ;
-        if $(types-to-include)
-        {            
-            for local r in $(source-targets)
-            {
-                local ty = [ $(r).type ] ;        
-                if $(ty)
-                {
-                    if [ include-type $(ty) : $(types-to-include) ]                  
-                    {
-                        result-targets += $(r) ;
-                    }                
-                }           
-            }
-        }
-        else
-        {
-            result-targets = $(source-targets) ;
-        }
-        
-        
-        return $(result-targets) ;
+                
+        return $(result) ;
     }
     
     rule collect-targets ( targets * : types-to-include * )
@@ -229,11 +228,7 @@ class stage-target-class : basic-target
         }        
         result = [ sequence.unique $(result2) ] ;        
     }
-        
-    rule check-for-link-compatibility ( * : * )
-    {
-    }
-        
+                
     # Returns true iff 'type' is subtype of some element of 'types-to-include'.
     local rule include-type ( type : types-to-include * )
     {
@@ -255,7 +250,7 @@ class stage-target-class : basic-target
 
 # Create a target named 'name' in the current project
 # which will be created by copying of 'source'
-rule copy-file ( name ? : project : source )
+rule copy-file ( name ? : project : source : extra-properties )
 {   
     local n = [ $(source).name ] ;
     # Not sure what it does. Tests seem to tolerate removal of
@@ -270,14 +265,17 @@ rule copy-file ( name ? : project : source )
     local a = [ $(source).action ] ;
     local new-a ;
     if $(a)
-    {                    
+    {            
+        local p = [ $(a).properties ] ;
         # Copy the properties of original target. They, in particular
         # can affect the suffix of the target.
-        new-a = [ new action $(targets) : $(source) : common.copy : [ $(a).properties ] ] ;
+        new-a = [ new action $(targets) : $(source) : common.copy : 
+          [ $(p).add-raw [ $(extra-properties).free ] ] ] ;
     }
     else
     {
-        new-a = [ new action $(targets) : $(source) : common.copy ] ;
+        new-a = [ new action $(targets) : $(source) : common.copy :
+          [ property-set.create [ $(extra-properties).free ] ] ] ;
     }                                
     $(targets).suffix [ $(source).suffix ] ;
     $(targets).action $(new-a) ;
@@ -371,7 +369,8 @@ class stage-shared-lib-generator : generator
         }
         else
         {            
-            return [ stage.copy-file $(name) : $(project) : $(source) ] ;
+            return [ stage.copy-file $(name) : $(project) 
+              : $(source) : $(property-set) ] ;
         }        
     }    
 }
