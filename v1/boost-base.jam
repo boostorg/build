@@ -76,6 +76,21 @@ if $(NT)
 {
     TOOLS ?= vc-7_1 ;
 }
+else if $(UNIX)
+{
+  switch $(JAMUNAME)
+    {
+    case Darwin* :
+        {
+        TOOLS ?= darwin ;
+        }
+
+    case * :
+        {
+        TOOLS ?= gcc ;
+        }
+    }
+}
 else
 {
     TOOLS ?= gcc ;
