@@ -22,8 +22,9 @@ rule binding ( module )
 }
 
 # load the indicated module if it is not already loaded.
-rule load ( module-name )
+rule load ( module-name : filename ? : search * )
 {
+    filename ?= $(module-name).jam ;
     if ! ( $(module-name) in $(loaded-modules) )
     {
         loaded-modules += $(module-name) ;
@@ -39,17 +40,12 @@ rule load ( module-name )
             IMPORT modules : no_test_defined : $(module-name) : __test__ ;
 
             # Add some grist so that the module will have a unique target name
-            local module-target ;
-	    if $(module-name:S) != .jam {
-		module-target = $(module-name:G=module@).jam ;
-	    } else {
-		module-target = $(module-name:G=module@) ;
-	    }				
+            local module-target = $(filename:G=module@) ;
             
-            SEARCH on $(module-target) = $(BOOST_BUILD_PATH) ;
+            search ?= $(BOOST_BUILD_PATH) ;
+            SEARCH on $(module-target) = $(search) ;
             BINDRULE on $(module-target) = modules.record-binding ;
             include $(module-target) ;
-
         }
         loading-modules = $(loading-modules[1--2]) ;
         
