@@ -464,6 +464,34 @@ HDRPATTERN =
 #" My Jam mode gets its syntax highlighting confused without this comment
 
 OSFULL = $(OS)$(OSVER)$(OSPLAT) $(OS)$(OSPLAT) $(OS)$(OSVER) $(OS) ;
+
+#
+# Rule to automate patching of singleton variables from the user so that
+# they are correctly interpreted as a single entry instead of as a list if
+# they happen to contain spaces.
+#
+rule set-as-singleton ( variables + )
+{
+    for local variable in $(variables)
+    {
+        $(variable) = $($(variable):J=" ") ;
+    }
+}
+
+#
+# "Fix" the known possibly directory variables.
+#
+set-as-singleton
+    BINDIR
+    CW
+    JAMFILE
+    JAMRULES
+    JAMSHELL
+    LIBDIR
+    MANDIR
+    WATCOM
+    ;
+
 #
 # Base dependencies - first for "bootstrap" kinds of rules
 #
