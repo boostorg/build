@@ -18,15 +18,17 @@ t = Tester()
 # The resulting OBJ will be unusable, but it must be created.
 
 t.write("project-root.jam", """ 
-import rc ; 
+import rcc ; 
 """)
 
-t.write("rc.jam", """ 
+t.write("rcc.jam", """ 
 import type ;
 import generators ;
 import print ;
 
-type.register RC : rc ;
+# Use 'RCC' to avoid conflicts with definitions in
+# the standard rc.jam and msvc.jam
+type.register RCC : rcc ;
 
 rule resource-compile ( targets * : sources * : properties * )
 {
@@ -34,25 +36,18 @@ rule resource-compile ( targets * : sources * : properties * )
     print.text "rc-object" ;
 }
 
-generators.register-standard rc.resource-compile : RC : OBJ ;
+generators.register-standard rcc.resource-compile : RCC : OBJ ;
 
 """)
 
 t.write("Jamfile", """ 
-exe hello : hello.cpp r.rc ; 
+obj r : r.rcc ; 
 """)
 
-t.write("hello.cpp", """ 
-int main()
-{
-    return 0;
-} 
+t.write("r.rcc", """ 
 """)
 
-t.write("r.rc", """ 
-""")
-
-t.run_build_system(status=None, stderr=None)
+t.run_build_system()
 t.expect_content("bin/$toolset/debug/r.obj", "rc-object\n")
 
 t.cleanup()
