@@ -501,9 +501,8 @@ compile_on(
 	PARSE	*parse,
 	FRAME	*frame )
 {
-    LIST    *nt = parse_evaluate( parse->left, frame );
+	LIST    *nt = parse_evaluate( parse->left, frame );
 	LIST	*result = 0;
-    PARSE   *p;
 
 	if( DEBUG_COMPILE )
 	{
@@ -517,7 +516,7 @@ compile_on(
 	    TARGET *t = bindtarget( nt->string );
 	    pushsettings( t->settings );
 
-        result = parse_evaluate( parse->right, frame );
+	    result = parse_evaluate( parse->right, frame );
 
 	    t->boundname = search( t->name, &t->time );
 	    popsettings( t->settings );
