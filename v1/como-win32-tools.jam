@@ -44,7 +44,7 @@ if ! $(COMO_PATH_SETUP) # do this once
     COMO_BACKEND_INCLUDE_SETUP ?= "set \"COMO_MS_INCLUDE="$(VC7_ROOT)"/include\"" ;
     COMO_BACKEND_LIB_SETUP ?= "set \"LIB="$(COMO_STDLIB_PATH)";%LIB%\"" ;
     COMO_PATH_SETUP ?= "set \"PATH="$(COMO_BIN_DIRECTORY)";%PATH%\"" ;
-    COMO_BACKEND_SETUP ?= "call "\"$(VSCOMNTOOLS)vsvars32"\"" ;
+    COMO_BACKEND_SETUP ?= "call "\"$(VSCOMNTOOLS)vsvars32"\" >nul" ;
     COMO_BACKEND_SETUP ?= REM set VC7_ROOT or COMO_BACKEND_SETUP to set up the back end ;
     COMO_BASE_SETUP ?= "set \"COMO_BASE=$(COMO_BASE)\"" ;
     COMO_PATH_SETUP ?= REM set COMO_PATH to set up the path for Comeau ;
