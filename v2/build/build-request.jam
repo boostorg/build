@@ -35,6 +35,7 @@ rule expand ( property-sets * : feature-space ? )
         : $(product) ] ;
 }
 
+# implementaiton of x-product, below
 local rule x-product-aux ( property-sets + : feature-space )
 {
     local result ;
@@ -79,10 +80,18 @@ local rule x-product-aux ( property-sets + : feature-space )
     return $(result) ;
 }
 
+# Return the cross-product of all elements of property-sets, less any
+# that would contain conflicting values for single-valued features.
 local rule x-product ( property-sets * : feature-space )
 {
-    local x-product-seen x-product-used ;
-    return [ x-product-aux $(property-sets) : $(feature-space) ] ;
+    if $(property-sets).non-empty
+    {
+        # prepare some "scoped globals" that can be used by the
+        # implementation function, x-product-aux.
+        local x-product-seen x-product-used ;
+        return [ x-product-aux $(property-sets) : $(feature-space) ] ;
+    }
+    # otherwise return empty
 }
 
 local rule __test__ ( )
@@ -108,6 +117,11 @@ local rule __test__ ( )
         feature "include" : : free ;
         
         feature stdlib : native stlport : implicit ;
+        
+        # empty build requests should expand to empty.
+        assert.result
+          : build-request.expand
+          : $(test-space) ;
         
         assert.result
           <toolset>gcc/<toolset-version>3.0.1/<stdlib>stlport/<variant>debug
