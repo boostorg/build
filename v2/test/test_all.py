@@ -33,4 +33,5 @@ import conditionals
 import stage
 import prebuilt
 import project_dependencies
+import build_dir
 
