@@ -11,6 +11,7 @@ import regex ;
 import sequence ;
 import set ;
 import path ;
+import assert ;
 
 # Refines 'properties' by overriding any non-free properties 
 # for which a different value is specified in 'requirements'. 
@@ -410,7 +411,13 @@ rule translate-paths ( properties * : path )
         
         if path in [ feature.attributes $(p:G) ] 
         {
-            local t = [ path.root [ path.make $(p:TG=) ] $(path) ] ;
+            local values = [ regex.split $(p:TG=) "&&" ] ;
+            local t ;
+            for local v in $(values)
+            {
+                t += [ path.root [ path.make $(v) ] $(path) ] ;                
+            }
+            t = $(t:J="&&") ;            
             result += $(condition)$(t:TG=$(p:G)) ;
         }
         else
