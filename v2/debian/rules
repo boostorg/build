@@ -26,7 +26,7 @@ binary-indep:
 
 	(tar --exclude make --exclude CVS -cpf - example/* ) | ( cd `pwd`/debian/tmp/usr/share/doc/boost-build && tar xpf - )
 
-	sed 's/#  using gcc/using gcc/' user-config.jam > `pwd`/debian/tmp/etc/site-config.jam
+	sed 's/#  using gcc ;/using gcc ;/' user-config.jam > `pwd`/debian/tmp/etc/site-config.jam
 
 #	dh_install
 #	dh_installmenu
