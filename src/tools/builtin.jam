@@ -53,6 +53,8 @@ feature linkflags : : free ;
 feature archiveflags : : free ;
 feature version : : free ;
 
+feature.feature location-prefix : : free ;
+
 # The following features are incidental, since
 # in themself they have no effect on build products.
 # Not making them incidental will result in problems in corner

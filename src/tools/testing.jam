@@ -54,7 +54,6 @@ rule init ( ) { }
 # The feature which controls the name of program used to
 # lanch test programs. 
 feature.feature testing.launcher : : optional free ;
-feature.feature location-prefix : : free ;
 feature.feature test-info : : free incidental ;
 feature.feature testing.arg : : free incidental ;
 feature.feature testing.input-file : : free dependency ;
