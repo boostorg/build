@@ -297,6 +297,11 @@ if $(MIPS)
     flags gcc CFLAGS <address-model>32 : -mgp32 ;
     flags gcc CFLAGS <address-model>64 : -mgp64 -mlong64 ;
 }
+#S390
+if $(OSPLAT) = 390
+{
+    flags gcc CFLAGS <threading>multi : -D_REENTRANT ;
+}
 
 #
 # define compiler names if not set:
