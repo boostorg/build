@@ -22,7 +22,7 @@ rule backtrace ( skip-frames messages * : * )
     local bt = [ BACKTRACE ] ;
     bt = $(bt[$(drop-elements)-]) ; 
     
-    local args = messages 2 3 4 5 6 7 8 9 ;
+    local args = $(.args) ;
     while $(bt)
     {
         local m = [ MATCH ^(.+)\\.$ : $(bt[3]) ] ;
@@ -44,9 +44,9 @@ rule backtrace ( skip-frames messages * : * )
     }
 }
 
-args ?= messages 2 3 4 5 6 7 8 9 ;
-disabled ?= ;
-last-$(args) ?= ;
+.args ?= messages 2 3 4 5 6 7 8 9 ;
+.disabled ?= ;
+.last-$(.args) ?= ;
 
 # try-catch --
 #
@@ -59,8 +59,8 @@ last-$(args) ?= ;
 # begin looking for error messages
 rule try ( )
 {
-    disabled += true ;
-    last-$(args) = ;
+    .disabled += true ;
+    .last-$(.args) = ;
 }
 
 # stop looking for error messages; generate an error if an argument of
@@ -68,17 +68,17 @@ rule try ( )
 rule catch ( messages * : * )
 {
     import sequence ;
-    disabled = $(disabled[2-]) ; # pop the stack
+    .disabled = $(.disabled[2-]) ; # pop the stack
 
-    for local n in $(args)
+    for local n in $(.args)
     {
-        if ! $($(n)) in $(last-$(n))
+        if ! $($(n)) in $(.last-$(n))
         {
             local v = [ sequence.join $($(n)) : " " ] ;
             v ?= "" ;
-            local joined = [ sequence.join $(last-$(n)) : " " ] ;
+            local joined = [ sequence.join $(.last-$(n)) : " " ] ;
             
-            last-$(args) = ;
+            .last-$(.args) = ;
             error-skip-frames 3 expected \"$(v)\" in argument $(n) of error
               : got \"$(joined)\" instead ;
         }
@@ -87,16 +87,16 @@ rule catch ( messages * : * )
 
 rule error-skip-frames ( skip-frames messages * : * )
 {
-    if ! $(disabled)
+    if ! $(.disabled)
     {
         backtrace $(skip-frames) error: $(messages) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
         EXIT ;
     }
-    else if ! $(last-$(args))
+    else if ! $(.last-$(.args))
     {
-        for local n in $(args)
+        for local n in $(.args)
         {
-            last-$(n) = $($(n)) ;
+            .last-$(n) = $($(n)) ;
         }
     }
 }
