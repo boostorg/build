@@ -3,17 +3,20 @@ import type ;
 import generators ;
 import print ;
 import virtual-target ;
-import class : class new ;
+import class : class new xnew ;
 import modules ;
 import targets ;
 
 
 type.register X : x ;
 
-rule test-target-class ( name : project )
+xclass test-target-class : basic-target
 {
-    basic-target.__init__ $(name) : $(project) ;
-    
+    rule __init__ ( name : project )
+    {
+        basic-target.__init__ $(name) : $(project) ;
+    }
+        
     rule construct ( source-targets * : property-set )
     {
 	    if [ modules.peek : GENERATE_NOTHING ]
@@ -38,14 +41,13 @@ rule test-target-class ( name : project )
 	    return [ property-set.create <define>FOO ] ;
     }
 }
-class test-target-class : basic-target ;
 
 rule make-b-main-target
 {
     local project = [ CALLER_MODULE ] ;    
     
     targets.main-target-alternative 
-      [ new test-target-class b : $(project) ] ;
+      [ xnew test-target-class b : $(project) ] ;
 }
 
 IMPORT $(__name__) : make-b-main-target : : make-b-main-target ;

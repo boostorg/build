@@ -35,7 +35,7 @@
 
 import feature : feature subfeature ;
 import project ;
-import class : class new ;
+import class : class new xnew ;
 import targets ;
 import property-set ; 
 
@@ -76,15 +76,18 @@ subfeature stdlib stlport : extensions : noext : optional propagated ;
 # - when host iostreams are used, we really should produce nothing. It would
 #   be hard/impossible to achieve this using prebuilt targets.
 
-rule stlport-target-class ( project : headers ? : libraries ? : requirements * )
+xclass stlport-target-class : basic-target
 {
-    basic-target.__init__ stlport : $(project) : : $(requirements) ;
-    self.headers = $(headers) ;
-    self.libraries = $(libraries) ;
-    
     import feature project type errors generators ;
-    import set : difference ;
+    import set : difference ;       
     
+    rule __init__ ( project : headers ? : libraries ? : requirements * )
+    {
+        basic-target.__init__ stlport : $(project) : : $(requirements) ;
+        self.headers = $(headers) ;
+        self.libraries = $(libraries) ;
+    }
+            
     rule generate ( property-set )
     {
         # Since this target is built with <stdlib>stlport, it will also
@@ -159,15 +162,13 @@ rule stlport-target-class ( project : headers ? : libraries ? : requirements * )
         return [ property-set.create $(usage-requirements) ] ;
     }    
 }
-class stlport-target-class : basic-target ;
-
 
 rule stlport-target ( headers ? : libraries ? : requirements * )
 {
     local project = [ CALLER_MODULE ] ;
     
     targets.main-target-alternative
-      [ new stlport-target-class  $(project) : $(headers) : $(libraries)        
+      [ xnew stlport-target-class  $(project) : $(headers) : $(libraries)        
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
       ] ;
 }
