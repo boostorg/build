@@ -18,6 +18,7 @@ import stage ;
 import prebuilt ;
 import toolset ;
 import errors : error ;
+import symlink ;
 
 feature toolset : gcc : implicit propagated link-incompatible ;
 feature shared : false true : propagated ;
