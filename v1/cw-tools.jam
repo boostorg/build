@@ -303,12 +303,26 @@ actions cw-C++-action
 #### Archive ####
 rule Archive-action
 {
-    with-command-file cw-Archive-action $(<) : $(>) [ on $(<) return $(NEEDLIBS) ] ;
+    if $(NT)
+    {
+        with-command-file cw-Archive-action $(<) : $(>) [ on $(<) return $(NEEDLIBS) ] ;
+    }
+    else
+    {
+        cw-Archive-action $(<) : $(>) [ on $(<) return $(NEEDLIBS) ] ;
+    }
+}
+
+actions together cw-Archive@-action
+{
+    $(CW_SETUP)
+    $(CW_CLEAR_ERROR)
+    mwld -library $(FLAGS) $(ARFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -o "$(<)" @"$(>)" "$(FINDLIBS)$(SUFLIB)"
 }
 
 actions together cw-Archive-action
 {
     $(CW_SETUP)
     $(CW_CLEAR_ERROR)
-    mwld -library $(FLAGS) $(ARFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -o "$(<)" @"$(>)" "$(FINDLIBS)$(SUFLIB)"
+    mwld -library $(FLAGS) $(ARFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -o "$(<)" "$(>)" "$(FINDLIBS)$(SUFLIB)"
 }
