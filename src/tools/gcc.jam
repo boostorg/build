@@ -17,7 +17,13 @@ import set ;
 import common ;
 
 feature.extend toolset : gcc ;
-toolset.inherit gcc : unix ;
+
+import unix ;
+toolset.inherit-generators gcc : unix : unix.link unix.link.dll ;
+toolset.inherit-flags gcc : unix ;
+toolset.inherit-rules gcc : unix ;
+
+
 
 # Make the "o" suffix used for gcc toolset on all
 # platforms
@@ -151,9 +157,16 @@ class gcc-linking-generator : unix-linking-generator
         }
                         
         return [ unix-linking-generator.generated-targets 
-            $(sources) : $(property-set) : $(property-set) $(name) ] ;
+            $(sources) : $(property-set) : $(project) $(name) ] ;
     }    
 }
+
+generators.register [ new gcc-linking-generator gcc.link : LIB OBJ : EXE 
+    : <toolset>gcc ] ;
+
+generators.register [ new gcc-linking-generator gcc.link.dll : LIB OBJ : SHARED_LIB 
+    : <toolset>gcc ] ;
+
 
 
 # Declare flags and action for linking
