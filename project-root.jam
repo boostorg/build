@@ -11,6 +11,7 @@
 import modules ;
 import os.path ;
 import class ;
+import set ;
 
 # Load the project-root file for the given directory. The directory can
 # be either the project-root itself, or any subdirectory. Fails if it can't
@@ -167,6 +168,13 @@ rule project-root-object (
             self.projects += $(project-module) ;
             intern-constants $(project-module) ;
             modules.clone-rules project-context $(project-module) ;
+            
+            # Import project-root rules declared by teh user into each project.
+            #
+            local user-rules = [ set.difference
+                [ RULENAMES $(self.module) ] :
+                [ RULENAMES project-root-context ] ] ;
+            IMPORT $(self.module) : $(user-rules) : $(project-module) : $(user-rules) ;
         }
     }
     
