@@ -4,7 +4,7 @@
 #  warranty, and with no claim as to its suitability for any purpose.
 
 
-#   Supports 'abstact' targets, which are targets explicitly defined in Jamfile.
+#   Supports 'abstract' targets, which are targets explicitly defined in Jamfile.
 #
 #   Abstract targets are represented by classes derived from 'abstract-target' class. 
 #   The first abstract target is 'project-target', which is created for each
@@ -57,7 +57,7 @@ rule abstract-target ( name      # name of the target in Jamfile
         return $(location)/$(self.name) ;
     }
 
-    # Adds one more direct build request for this targets. If later generate
+    # Adds one more direct build request for this target. If later generate
     # is called with the same non-free non-incidental properties as in one
     # of direct build requests, then that build request is used instead.
     rule direct-build-request ( properties * )
@@ -65,8 +65,8 @@ rule abstract-target ( name      # name of the target in Jamfile
     }
     
     # Takes properties in split form ("<feature1>foo <feature2>bar").
-    # Generates virtual targets for this abstract targets which are matching
-    # 'properties' as closely as possible. It 'properties' are not specified,
+    # Generates virtual targets for this abstract target which match
+    # 'properties' as closely as possible. If 'properties' are not specified,
     # default values are used. If it not possible to build anything because
     # of some problem returns a list with "@error" as the first element
     # and explanation in all others. (CONSIDER: need some utilities for
