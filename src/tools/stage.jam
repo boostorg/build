@@ -70,7 +70,61 @@ class stage-target-class : basic-target
         basic-target.__init__ $(name-and-dir) : $(project) : $(sources) : $(requirements) 
           : $(default-build) ;
     }
+
+    # If <location> is not set, sets it based on the project data.
+    rule update-location ( property-set )
+    {
+        local loc = [ $(property-set).get <location> ] ;
+        if ! $(loc)
+        {
+            loc = [ project.path-relative-to-project-location $(self.name)
+              $(self.project) ] ;
+
+            property-set = [ $(property-set).add-raw $(loc:G=<location>) ] ;
+        }
         
+        return $(property-set) ;
+    }
+        
+    # Constructs the targets of types for which a type exists
+    # with the form STAGED_*.
+    rule construct-special-targets ( property-set : source : type )
+    {
+        local targets = [ generators.construct $(self.project) : $(type) :
+            $(property-set) : $(source) : * ] ;
+
+        return $(targets) ;
+    }
+    
+    # Constructs the targets of types for which there is no STAGED_* type.
+    rule construct-regular-targets ( property-set : source )
+    {
+        local n = [ $(source).name ] ;
+        if $(name)
+        {
+            n = $(name) ;
+        }
+        
+        targets = [ new file-target $(n:D=) : [ $(source).type ] 
+            : $(self.project) ] ;
+        local a = [ $(source).action ] ;
+        local new-a ;
+        if $(a)
+        {                    
+            # Copy the properties of original target. They, in particular
+            # can affect the suffix of the target.
+            new-a = [ new action $(targets) : $(source) : common.copy : [ $(a).properties ] ] ;
+        }
+        else
+        {
+            new-a = [ new action $(targets) : $(source) : common.copy ] ;
+        }                                
+        $(targets).suffix [ $(source).suffix ] ;
+        $(targets).action $(new-a) ;
+    
+        return $(targets) ;
+    }
+    
     rule construct ( source-targets * : property-set )
     {
         local name = [ $(property-set).get <name> ] ;
@@ -84,68 +138,42 @@ class stage-target-class : basic-target
             source-targets = [ collect-targets $(source-targets) 
               : [ $(property-set).get <include-type> ] ] ;
         }
-                                
-        local location = [ feature.get-values <location> : 
-            [ $(property-set).raw ] ] ;
-        if ! $(location)
-        {
-            location = [ project.path-relative-to-project-location $(self.name)
-              $(self.project) ] ;
-        }
-                
+
+        property-set = [ update-location $(property-set) ] ;
+
         local result ;
         for local i in $(source-targets)
         {
-            local i2 ; # Staged target(s)
-            
-            local t = [ $(i).type ] ;           
-            
-            # See if something special should be done when staging this
-            # type. It is indicated by presense of special "staged" type            
-            if $(t) && [ type.registered STAGED_$(t) ]
+            if [ $(i).type ] != SEARCHED_LIB
             {
-                i2 = [ generators.construct $(self.project) : STAGED_$(t) :
-                      $(property-set) : $(i) : * ] ;
-                if ! $(i2)
-                {                    
-                    errors.error "Unable to generate staged version of " [ $(i).str ] ;
-                }                
-            }
-            else             
-            {                
-                local n = [ $(i).name ] ;
-                if $(name)
+                local staged-targets ;
+                
+                local t = [ $(i).type ] ;
+                
+                # See if something special should be done when staging this
+                # type. It is indicated by presense of special "staged" type            
+                if $(t) && [ type.registered STAGED_$(t) ]
                 {
-                    n = $(name) ;
+                    staged-targets = [ construct-special-targets $(property-set) : $(i) : STAGED_$(t) ] ;
+                }
+                else             
+                {                
+                    staged-targets = [ construct-regular-targets $(property-set) : $(i) ] ;
                 }
                 
-                i2 = [ new file-target $(n:D=) : [ $(i).type ] 
-                  : $(self.project) ] ;
-                local a = [ $(i).action ] ;
-                local new-a ;
-                if $(a)
+                if ! $(staged-targets)
                 {                    
-                    # Copy the properties of original target. They, in particular
-                    # can affect the suffix of the target.
-                    new-a = [ new action $(i2) : $(i) : common.copy : [ $(a).properties ] ] ;
-                }
-                else
-                {
-                    new-a = [ new action $(i2) : $(i) : common.copy ] ;
-                }                                
-                $(i2).suffix [ $(i).suffix ] ;
-                $(i2).action $(new-a) ;
-            }
-            
-            # FIXME: Since we can have <location> property, it might be better
-            # to use it to distinguish staged copies with different locations.
-            for t in $(i2)
-            {                
-                $(t).set-path $(location) ;
-                result += [ virtual-target.register $(t) ] ;                
-            }            
+                    errors.error "Unable to generate staged version of " [ $(source).str ] ;
+                }                
 
+                for t in $(staged-targets)
+                {                
+                    $(t).set-path [ $(property-set).get <location> ] ;                    
+                    result += [ virtual-target.register $(t) ] ;                
+                }            
+            }
         }
+
         return $(result) ;
     }   
     
@@ -236,8 +264,8 @@ class stage-exe-generator : generator
         local cloned-action = [ virtual-target.clone-action $(action) : $(project) :
           "" : $(new-ps) ] ;
         local result = [ $(cloned-action).targets ] ;                        
+
         return $(result) ;
-        
     }    
 }
 
