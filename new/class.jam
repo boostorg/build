@@ -86,7 +86,7 @@ rule instance ( name : class args * : * )
         IMPORT $(<) : $(rules) : : $(<).$(rules) ;
         
         # Now initialize the instance
-        __init__ $(>[2]) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+        __init__ $(>[2-]) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
         
         # Make a record of the instance's class. We need to do this
         # last because it will be set to each of the class' base
