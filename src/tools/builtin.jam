@@ -644,28 +644,6 @@ class linking-generator : generator
         local result = [ generator.run $(project) $(name) : $(property-set)
           : $(sources) : $(multiple) ] ;
         
-        if $(result)
-        {
-            # Explicitly set dependency on all <library> features.
-
-            local libs = [ feature.get-values <library> : 
-                [ $(property-set).raw ] ] ;
-
-            if $(libs)
-            {
-                for local t in $(result)
-                {
-                    # The 'if' statement handles the case where
-                    # one of the targets created by <library> is not
-                    # consumed and is part of result. DLLs on windows
-                    # are an example.
-                    if $(libs:G=) != $(t)
-                    {                        
-                        $(t).depends $(libs:G=) ;
-                    }                    
-                }
-            }            
-        }
         return $(result) ;
     }
     
