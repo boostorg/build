@@ -1891,13 +1891,16 @@ rule stage ( name : sources + : requirements * : local-build * )
 
             local target-subvariant =
                 [ subvariant-target $(s-target) : $(s-properties) : $(s-toolset) $(s-variant) ] ;
-            
-            local renamed-target =
-                [ rename-target $(target-subvariant) : [ split-path $(s-properties[1]) ] : $(tags) ] ;
 
-            files += $(target-subvariant) ;
-            file-mode($(target-subvariant)) = $($(gTARGET_TYPE($(s-target)))MODE) ;
-            file-tagged($(target-subvariant)) = $(renamed-target) ;
+            for local sv in $(target-subvariant)
+            {
+                local renamed-target =
+                    [ rename-target $(sv) : [ split-path $(s-properties[1]) ] : $(tags) ] ;
+
+                files += $(sv) ;
+                file-mode($(sv)) = $($(gTARGET_TYPE($(s-target)))MODE) ;
+                file-tagged($(sv)) = $(renamed-target) ;
+            }
         }
     }
 
