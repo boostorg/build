@@ -105,7 +105,7 @@ toolset mipspro cc : "-o " : -D
 toolset msvc cl : /Fe : -D
     : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
     : /nologo /MLd /DEBUG /Z7 /Od /Ob0
-    : /LIBPATH:"$(LIB)" kernel32.lib ;
+    : /LIBPATH:$(LIB:J=" ") kernel32.lib ;
 ## Sun Workshop 6 C++
 toolset sunpro CC : "-o " : -D
     : -s -fast -O4
@@ -122,7 +122,7 @@ toolset vacpp xlc : "-o " : -D
 toolset vc7 cl : /Fe : -D
     : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
     : /nologo /MLd /DEBUG /Z7 /Od /Ob0
-    : /LIBPATH:"$(LIB)" kernel32.lib ;
+    : /LIBPATH:$(LIB:J=" ") kernel32.lib ;
 
 # First set the build commands and options according to the
 # preset toolset.
@@ -261,7 +261,7 @@ rule .exe
     .clean $(exe) ;
     return $(exe) ;
 }
-actions .cc {    $(--cc) $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def)$(--defs) $(--flags) $(--libs) $(>) }
+actions .cc {    $(--cc) $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def)$(--defs) $(--flags) "$(--libs)" $(>) }
 
 rule .link
 {
