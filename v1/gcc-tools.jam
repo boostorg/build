@@ -52,6 +52,14 @@ else if $(UNIX)
         {
         # BeOS has no threading options, don't set anything here.
         }
+    case Darwin :
+        {
+        # MacOS X, doesn't need any threading options set
+        # -lpthread is linked to by default.
+        # There is no gcc/g++, we need to use cc/c++ instead:
+        GCC ?= cc ;
+        GXX ?= c++ ;
+        }
     case * :
         {
         flags gcc CFLAGS <threading>multi : -pthread ;
@@ -60,6 +68,12 @@ else if $(UNIX)
         }
     }
 }
+
+#
+# define compiler names if not set:
+GCC ?= gcc ;
+GXX ?= g++ ;
+
 
 flags gcc CFLAGS <profiling>on : -pg ;
 flags gcc LINKFLAGS <profiling>on : -pg ;
@@ -140,14 +154,14 @@ if $(NO_GNU_LN)
   # if we don't have a GNU linker then we can't pass any GNU-ld specific flags:
   actions gcc-Link-action bind NEEDLIBS
   {
-    $(GCC_BIN_DIRECTORY)g++ $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    $(GCC_BIN_DIRECTORY)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
   }
 }
 else
 {
   actions gcc-Link-action bind NEEDLIBS
   {
-    $(GCC_BIN_DIRECTORY)g++ $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,. -Wl,-soname,$(<[1]:D=).$(DLLVERSION)
+    $(GCC_BIN_DIRECTORY)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,. -Wl,-soname,$(<[1]:D=).$(DLLVERSION)
   }
 }
 
@@ -165,7 +179,7 @@ rule Cc-action
 
 actions gcc-Cc-action
 {
-    $(GCC_BIN_DIRECTORY)gcc -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -isystem$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(GCC_BIN_DIRECTORY)$(GCC) -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -isystem$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -176,7 +190,7 @@ rule C++-action
 
 actions gcc-C++-action
 {
-    $(GCC_BIN_DIRECTORY)g++ -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -isystem$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(GCC_BIN_DIRECTORY)$(GXX) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -isystem$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
@@ -190,6 +204,7 @@ actions updated together piecemeal gcc-Archive-action
 {
     ar ru$(ARFLAGS) "$(<:T)" "$(>:T)"
 }
+
 
 
 
