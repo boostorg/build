@@ -12,7 +12,7 @@ import modules ;
 import print ;
 import set ;
 import container ;
-import class ;
+import "class" ;
 import sequence ;
 
 # The type of output to generate.

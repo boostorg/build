@@ -8,7 +8,7 @@
 
 import feature ;
 import generators : * ;
-import class : new ;
+import "class" : new ;
 import errors ;
 import property ;
 import scanner ;

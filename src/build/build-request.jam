@@ -10,7 +10,7 @@ import feature ;
 import property ;
 import numbers ;
 import container ;
-import class : new ;
+import "class" : new ;
 import string ;
 
 # Transform property-set by applying f to each component property.
@@ -249,10 +249,10 @@ local rule convert-command-line-element ( e )
 #
 # will cause a release version of 'b' to be compiled and linked into 'a'. The 
 # release version will be compiled without "define=MACROS".
-xclass directly-requested-properties-adjuster
+class directly-requested-properties-adjuster
 {    
     import property-set ;
-    import class : new ;
+    import "class" : new ;
     
     rule __init__ ( )
     {            

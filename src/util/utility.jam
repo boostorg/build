@@ -3,7 +3,7 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-import class : is-instance ;
+import "class" : is-instance ;
 import errors ;
 
 rule ungrist ( names * )
@@ -99,12 +99,12 @@ rule apply-default-suffix ( suffix : list * )
 local rule __test__ ( )
 {
     import assert ;
-    import class : new ;
+    import "class" : new ;
     assert.result foo bar : ungrist <foo> <bar> ;
 
     assert.result 123 : str 123 ;
 
-    xclass test-class__ 
+    class test-class__ 
     {
         rule __init__ ( )
         {            

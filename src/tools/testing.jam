@@ -6,7 +6,7 @@
 #  Testing support.
   
 import targets ;
-import class : new ;
+import "class" : new ;
 import property ;
 import feature ;
 import toolset ;
@@ -15,7 +15,7 @@ import toolset ;
 # lanch test programs. 
 feature.feature testing.launcher : : optional free ;
 
-xclass unit-test-target-class : typed-target
+class unit-test-target-class : typed-target
 {
     rule __init__ ( name : project : sources * : requirements * 
                          : default-build * )

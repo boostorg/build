@@ -18,6 +18,7 @@
 %token ACTIONS_t
 %token BIND_t
 %token CASE_t
+%token CLASS_t
 %token DEFAULT_t
 %token ELSE_t
 %token EXISTING_t
@@ -37,7 +38,6 @@
 %token TOGETHER_t
 %token UPDATED_t
 %token WHILE_t
-%token XCLASS_t
 %token _LBRACE_t
 %token _BAR_t
 %token _BARBAR_t
@@ -207,7 +207,7 @@ rule	: _LBRACE_t block _RBRACE_t
 		{ $$.parse = pif( $2.parse, $4.parse, pnull() ); }
 	| MODULE_t list _LBRACE_t block _RBRACE_t 
 		{ $$.parse = pmodule( $2.parse, $4.parse ); }
-	| XCLASS_t lol _LBRACE_t block _RBRACE_t 
+	| CLASS_t lol _LBRACE_t block _RBRACE_t 
 		{ $$.parse = pclass( $2.parse, $4.parse ); }
 	| WHILE_t expr _LBRACE_t block _RBRACE_t 
 		{ $$.parse = pwhile( $2.parse, $4.parse ); }
