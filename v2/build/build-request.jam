@@ -9,54 +9,37 @@ import regex ;
 import feature ;
 import numbers ;
 
-# given a build request element of the form
-# property1/property2/.../propertyN, return true if any of the
-# properties has a composite feature.
-local rule has-composite-feature ( feature-space element )
+# Transform property-set by applying f to each component property.
+local rule apply-to-property-set ( f property-set )
 {
-    # get the individual properties
-    local properties = regex.split element / ;
-    local result = ;
-    for local p in $(properties)
-    {
-        if composite in [ feature.attributes [ property.get-feature $(p) ] ]
-        {
-            result = $(p) ;
-        }
-    }
-    return result ;
-}
-
-local rule expand-element ( f element )
-{
-    local properties = [ regex.split $(element) / ] ;
+    local properties = [ feature.split $(property-set) ] ;
     return [ string.join [ $(f) $(properties) ] : / ] ;
 }
 
-# expand the given build request by combining all elements which don't
+# expand the given build request by combining all property-sets which don't
 # specify conflicting non-free features.
-rule expand ( elements * : feature-space ? )
+rule expand ( property-sets * : feature-space ? )
 {
     feature-space ?= feature ;
     
     # First make all features and subfeatures explicit
-    local expanded-elements = [ 
-      sequence.transform expand-element $(feature-space).expand-subfeatures
-        : $(elements) ] ;
+    local expanded-property-sets = [ 
+      sequence.transform apply-to-property-set $(feature-space).expand-subfeatures
+        : $(property-sets) ] ;
     
-    # Now combine all of the expanded elements
-    local product = [ x-product $(expanded-elements) : $(feature-space) ] ;
+    # Now combine all of the expanded property-sets
+    local product = [ x-product $(expanded-property-sets) : $(feature-space) ] ;
     
     return [ 
-      sequence.transform expand-element $(feature-space).expand-composites
+      sequence.transform apply-to-property-set $(feature-space).expand-composites
         : $(product) ] ;
 }
 
-local rule x-product-aux ( elements + : feature-space )
+local rule x-product-aux ( property-sets + : feature-space )
 {
     local result ;
-    local p = [ regex.split $(elements[1]) / ] ;
-    local f = [ set.difference $(p:G) [ $(feature-space).free-features ] ] ;
+    local p = [ feature.split $(property-sets[1]) ] ;
+    local f = [ set.difference $(p:G) : [ $(feature-space).free-features ] ] ;
     local seen ;
     # No conflict with things used at a higher level?
     if ! [ set.intersection $(f) : $(x-product-used) ]
@@ -66,28 +49,28 @@ local rule x-product-aux ( elements + : feature-space )
             # don't mix in any conflicting features
             local x-product-used = $(x-product-used) $(f) ;
             
-            if $(elements[2])
+            if $(property-sets[2])
             {
-                local rest = [ x-product-aux $(elements[2-]) : $(feature-space) ] ;
-                result = $(elements[1])/$(rest) ;
+                local rest = [ x-product-aux $(property-sets[2-]) : $(feature-space) ] ;
+                result = $(property-sets[1])/$(rest) ;
             }
             
-            result ?= $(elements[1]) ;
+            result ?= $(property-sets[1]) ;
         }
         
         # If we didn't encounter a conflicting feature lower down,
         # don't recurse again.
         if ! [ set.intersection $(f) : $(x-product-seen) ]
         {
-            elements = ;
+            property-sets = ;
         }
         
         seen = $(x-product-seen) ;
     }
     
-    if $(elements[2])
+    if $(property-sets[2])
     {
-        result += [ x-product-aux $(elements[2-]) : $(feature-space) ] ;
+        result += [ x-product-aux $(property-sets[2-]) : $(feature-space) ] ;
     }
     
     # Note that we've seen these features so that higher levels will
@@ -96,10 +79,10 @@ local rule x-product-aux ( elements + : feature-space )
     return $(result) ;
 }
 
-local rule x-product ( elements * : feature-space )
+local rule x-product ( property-sets * : feature-space )
 {
     local x-product-seen x-product-used ;
-    return [ x-product-aux $(elements) : $(feature-space) ] ;
+    return [ x-product-aux $(property-sets) : $(feature-space) ] ;
 }
 
 local rule __test__ ( )
@@ -120,6 +103,7 @@ local rule __test__ ( )
 
         feature variant : debug release : implicit composite ;
         feature inlining : on off ;
+        feature "include" : : free ;
         
         feature stdlib : native stlport : implicit ;
         
@@ -144,6 +128,14 @@ local rule __test__ ( )
           <toolset>gcc/<toolset-version>3.0.1/<stdlib>stlport/<variant>release/<inlining>off
           
           : build-request.expand gcc-3.0.1/stlport debug release <inlining>off
+          : $(test-space) ;        
+
+        assert.result
+          <include>a/b/c/<toolset>gcc/<toolset-version>3.0.1/<stdlib>stlport/<variant>debug/<include>x/y/z
+          <include>a/b/c/<toolset>msvc/<stdlib>stlport/<variant>debug/<include>x/y/z
+          <include>a/b/c/<toolset>msvc/<variant>debug/<include>x/y/z 
+          
+          : build-request.expand <include>a/b/c gcc-3.0.1/stlport msvc/stlport msvc debug  <include>x/y/z
           : $(test-space) ;
     }
 }
