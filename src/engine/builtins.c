@@ -244,10 +244,10 @@ builtin_depends(
 	    if( parse->num )
 	    {
             if( !t->includes ) {
-		    t->includes = copytarget( t );
-            t->includes->original_target = t;
+                t->includes = copytarget( t );
+                t->includes->original_target = t;
             }
-		t = t->includes;
+            t = t->includes;
 	    }
 
 	    t->depends = targetlist( t->depends, sources );
