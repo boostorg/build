@@ -492,6 +492,7 @@ rule project-attributes ( location )
         }        
         else if ! $(attribute) in "id" "default-build" "location" "source-location"
            "project-root" "project-root-module" "parent" "projects-to-build" 
+           "explicit-targets"
         {
             errors.error "Invalid project attribute '$(attribute)' specified "
                                "for project at '$(self.location)'" ;
