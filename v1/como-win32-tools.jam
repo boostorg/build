@@ -8,6 +8,10 @@
 # program as the column heading for HTML tables. Must not include version number.
 #//<a href="http://www.comeaucomputing.com/">Comeau<br>C++</a>
 
+# Feature to allow specifying files that will compile with warnings disabled.
+# This is usefull for files that use windows headers.
+free-feature no-warn ;
+
 # variables used to configure como-tools.jam
 #
 # COMO_PATH - path to installation
@@ -61,6 +65,7 @@ flags como HDRS <include> ;
 flags como STDHDRS <sysinclude> ;
 flags como LINKFLAGS <linkflags> ;
 flags como ARFLAGS <arflags> ;
+flags como NO_WARN <no-warn> ;
 
 flags como STDHDRS : $(COMO_INCLUDE_PATH) ;
 flags como STDLIB_PATH : $(COMO_STDLIB_PATH)$(SLASH) ;
@@ -92,6 +97,8 @@ actions como-Link-action bind NEEDLIBS
 
 rule Cc-action
 {
+    if $(>:G=) in $(NO_WARN) { WARN on $(<) = "" ; }
+    else { WARN on $(<) = --a ; }
     como-Cc-action $(<) : $(>) ;
 }
 
@@ -102,12 +109,14 @@ actions como-Cc-action
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    $(COMO_BIN_DIRECTORY)como -c -e5 --no_version --display_error_number --diag_suppress=9,21,161,748,940,962 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<:D=)" "$(>)"
+    $(COMO_BIN_DIRECTORY)como -c -e5 --no_version --display_error_number --diag_suppress=9,21,161,748,940,962 -U$(UNDEFS) -D$(DEFINES) $(WARN) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<:D=)" "$(>)"
 }
 
 #### C++ ####
 rule C++-action
 {
+    if $(>:G=) in $(NO_WARN) { WARN on $(<) = "" ; }
+    else { WARN on $(<) = --a ; }
     como-C++-action $(<) : $(>) ;
 }
 
@@ -118,7 +127,7 @@ actions como-C++-action
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    $(COMO_BIN_DIRECTORY)como -c -e5 --no_version --no_prelink_verbose --display_error_number --long_long --diag_suppress=9,21,161,748,940,962 -D__STL_LONG_LONG -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(COMO_BIN_DIRECTORY)como -c -e5 --no_version --no_prelink_verbose --display_error_number --long_long --diag_suppress=9,21,161,748,940,962 -D__STL_LONG_LONG -U$(UNDEFS) -D$(DEFINES) $(WARN) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
