@@ -28,7 +28,7 @@ rule maker ( targets * : sources * : properties * )
     if <the_feature>false in $(properties)
     && <the_feature>true in $(properties)
     {
-	EXIT "Oops, two different values of non-free feature" ;
+        EXIT "Oops, two different values of non-free feature" ;
     }    
     CMD on $(targets) = [ file-creation-command ] ;
 }

@@ -52,11 +52,11 @@ t.run_build_system("-n --no-error-backtrace", status=0)
 # This happens only of "build-project b" is placed first.
 t.write("Jamfile", """
     project 
-	: default-build <define>FOO 
-	;
+        : default-build <define>FOO 
+    ;
 
     build-project a ;
-    build-project b ;	
+    build-project b ;   
 """)
 
 t.write("a/Jamfile", """

@@ -84,10 +84,10 @@ t.expect_touch(["bin/$toolset/debug/a.obj",
 
 
 t.run_build_system(extra_args="release optimization=off,speed")
-t.expect_addition([ "bin/$toolset/release/a.exe", 
-		    "bin/$toolset/release/a.obj", 
-		    "bin/$toolset/release/optimization-off/a.exe", 
-		    "bin/$toolset/release/optimization-off/a.obj"])
+t.expect_addition(["bin/$toolset/release/a.exe", 
+                  "bin/$toolset/release/a.obj", 
+                  "bin/$toolset/release/optimization-off/a.exe", 
+                  "bin/$toolset/release/optimization-off/a.obj"])
 
 t.run_build_system(extra_args='clean')
 t.expect_removal(["bin/$toolset/debug/a.obj",

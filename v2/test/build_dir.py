@@ -26,16 +26,16 @@ t.run_build_system()
 
 t.expect_addition(["build/bin/$toolset/debug/a.exe",
                    "build/src/bin/$toolset/debug/b.exe"])
-		   
+           
 # Test that building from child projects work
 t.run_build_system(subdir='src')
-t.expect_nothing_more()		   
-		   
+t.expect_nothing_more()        
+           
 # Test that project can override build dir
 t.write("Jamfile", """
 exe a : a.cpp ;
 build-project src ;
-""")		   
+""")           
 
 t.write("src/Jamfile", """
 project
@@ -47,5 +47,5 @@ exe b : b.cpp ;
 t.run_build_system()
 t.expect_addition(["bin/$toolset/debug/a.exe",
                    "src/build/bin/$toolset/debug/b.exe"])
-		   
-t.cleanup()		   
+           
+t.cleanup()        
