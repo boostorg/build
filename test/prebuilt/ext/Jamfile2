@@ -1,0 +1,15 @@
+
+project ext ;
+
+prebuilt LIB a 
+    :   bin/gcc/debug/a.a
+    :   <variant>debug
+    :   <include>debug
+    ;
+    
+prebuilt LIB a
+    :   bin/gcc/release/a.a
+    :	<variant>release
+    :   <include>release
+    ;
+    

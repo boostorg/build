@@ -14,8 +14,10 @@ import generators ;
 import regex ;
 import virtual-target ;
 import os ;
+import stage ;
+import prebuilt ;
 
-feature toolset : gcc : implicit propagated ;
+feature toolset : gcc : implicit propagated link-incompatible ;
 feature shared : false true : propagated ;
 feature optimization : off on : propagated ;
 feature threading : single multi : link-incompatible propagated ;
