@@ -26,7 +26,7 @@ feature stlport-cstd-namespace : std global ;
 CURR_TOOLSET = $(gCURRENT_TOOLSET) ;
 
 # STLport versions
-STLPORT_VERSION ?= 4.6 ;
+STLPORT_VERSION ?= 4.6.2 ;
 STLPORT_VERSIONS ?= 4.6 4.5.3 4.5 ;
 feature stlport-version : [ unique $(STLPORT_VERSION) $(STLPORT_VERSIONS) ] ;
 flags $(CURR_TOOLSET) STLPORT_VERSION_RELEVANT_FEATURE <stlport-version> ;
