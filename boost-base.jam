@@ -1868,11 +1868,10 @@ rule stage ( name : sources + : requirements * : local-build * )
 
         local target-subdir =  [ top-relative-tokens [ directory-of $(source) ] ] ;
         local [ protect-subdir ] ;
-        SubDir TOP $(target-subdir) ;
+        SubDir $(gTOP) $(target-subdir) ;
         local target = $(source:D=:G=) ;
         local target-id = [ FGristFiles $(target) ] ;
 
-        local BUILD = ;
         local subvariants = [ expand-target-subvariants $(target-id) : $(local-build) : $(TOOLS) : BUILD ] ;
 
         dependent-include $(target) ;
