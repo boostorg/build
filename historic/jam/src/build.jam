@@ -148,6 +148,16 @@ toolset vms link .link : /EXECUTABLE= :
 # First set the build commands and options according to the
 # preset toolset.
 toolset = [ MATCH --toolset=(.*) : $(ARGV) ] ;
+if ! $(toolset)
+{
+    # For some reason, the following test does not catch 
+    # empty toolset.
+    ECHO "###" ;
+    ECHO "###" No toolset specified. Please use --toolset option. ;
+    ECHO "###" ;
+    ECHO "###" Known toolsets are: $(toolsets:J=", ") ;
+    EXIT "###" ;    
+}
 if ! $(toolset) in $(toolsets)
 {
     ECHO "###" ;

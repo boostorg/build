@@ -60,23 +60,11 @@
 # include "make.h"
 # include "headers.h"
 # include "command.h"
+# include <assert.h>
 
 # ifndef max
 # define max( a,b ) ((a)>(b)?(a):(b))
 # endif
-
-typedef struct {
-	int	temp;
-	int	updating;
-	int	cantfind;
-	int	cantmake;
-	int	targets;
-	int	made;
-} COUNTS ;
-
-
-static void make0( TARGET *t, TARGET  *p, int depth, 
-		COUNTS *counts, int anyhow );
 
 static TARGETS *make0sort( TARGETS *c );
 
@@ -191,7 +179,7 @@ make(
  * calls itself on those headers, and calls itself on any dependents.
  */
 
-static void
+void
 make0( 
 	TARGET	*t,
 	TARGET  *p,		/* parent */
@@ -205,17 +193,6 @@ make0(
 	int	fate;
 	const char *flag = "";
 	SETTINGS *s;
-
-/*
-
-	TARGETS	*c;
-	int	fate, hfate;
-	time_t	last, leaf, hlast, hleaf;
-	char	*flag = "";
-*/
-#ifdef OPT_FIX_TARGET_VARIABLES_EXT
-	SETTINGS *saved;
-#endif	
 
 #ifdef OPT_GRAPH_DEBUG_EXT
 	int	savedFate, oldTimeStamp;
@@ -256,8 +233,10 @@ make0(
             if( another_target )
             {
                 TARGET* includes;
-                if (!t->includes)
+                if (!t->includes) {
                     t->includes = copytarget(t);
+                    t->includes->original_target = t;
+                }
                 includes = t->includes;
                 includes->depends = targetlist( includes->depends,
                                               list_new( L0, another_target ) );
@@ -588,21 +567,23 @@ make0(
 	if( t->flags & T_FLAG_INTERNAL )
 	    return;
 
+    if (counts) {
 #ifdef OPT_IMPROVED_PATIENCE_EXT
-	++counts->targets;
+        ++counts->targets;
 #else	
-	if( !( ++counts->targets % 1000 ) && DEBUG_MAKE )
-	    printf( "...patience...\n" );
+        if( !( ++counts->targets % 1000 ) && DEBUG_MAKE )
+            printf( "...patience...\n" );
 #endif
 
-	if( fate == T_FATE_ISTMP )
-	    counts->temp++;
-	else if( fate == T_FATE_CANTFIND )
-	    counts->cantfind++;
-	else if( fate == T_FATE_CANTMAKE && t->actions )
-	    counts->cantmake++;
-	else if( fate >= T_FATE_BUILD && fate < T_FATE_BROKEN && t->actions )
-	    counts->updating++;
+        if( fate == T_FATE_ISTMP )
+            counts->temp++;
+        else if( fate == T_FATE_CANTFIND )
+            counts->cantfind++;
+        else if( fate == T_FATE_CANTMAKE && t->actions )
+            counts->cantmake++;
+        else if( fate >= T_FATE_BUILD && fate < T_FATE_BROKEN && t->actions )
+            counts->updating++;
+    }
 
 	if( !( t->flags & T_FLAG_NOTFILE ) && fate >= T_FATE_SPOIL )
 	    flag = "+";
@@ -623,6 +604,17 @@ make0(
 }
 
 #ifdef OPT_GRAPH_DEBUG_EXT
+
+static const char* target_name( TARGET* t )
+{
+    static char buf[1000];
+    if (t->flags & T_FLAG_INTERNAL) {
+        sprintf(buf, "%s (internal node)", t->name);
+        return buf;
+    } else {
+        return t->name;
+    }
+}
 
 /*
  * dependGraphOutput() - output the DG after make0 has run
@@ -646,10 +638,10 @@ dependGraphOutput( TARGET *t, int depth )
       case T_FATE_MISSING:
       case T_FATE_OUTDATED:
       case T_FATE_UPDATE:
-	printf( "->%s%2d Name: %s\n", spaces(depth), depth, t->name );
+	printf( "->%s%2d Name: %s\n", spaces(depth), depth, target_name(t) );
 	break;
       default:
-	printf( "  %s%2d Name: %s\n", spaces(depth), depth, t->name );
+	printf( "  %s%2d Name: %s\n", spaces(depth), depth, target_name(t) );
 	break;
     }
 
@@ -703,27 +695,14 @@ dependGraphOutput( TARGET *t, int depth )
 
     for( c = t->depends; c; c = c->next )
     {
-        if (! (c->target->flags & T_FLAG_INTERNAL))
 	printf( "  %s       : Depends on %s (%s)\n", spaces(depth),
-	       c->target->name, target_fate[ c->target->fate ] );
+	       target_name(c->target), target_fate[ c->target->fate ] );
     }
 
-    if (t->includes)
-    for( c = t->includes->depends; c; c = c->next )
-    {
-	printf( "  %s       : Includes %s (%s)\n", spaces(depth),
-	       c->target->name, target_fate[ c->target->fate ] );
-    }
 
     for( c = t->depends; c; c = c->next )
     {
 
-	dependGraphOutput( c->target, depth + 1 );
-    }
-
-    if (t->includes)
-    for( c = t->includes->depends; c; c = c->next )
-    {
 	dependGraphOutput( c->target, depth + 1 );
     }
 }

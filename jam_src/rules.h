@@ -171,6 +171,8 @@ struct _target {
 
 	TARGETS		*depends;	/* dependencies */
 	TARGET		*includes;	/* includes */
+    TARGET        *original_target; /* original_target->includes = this */
+    char rescanned;
 
 	time_t	time;			/* update time */
 	time_t	leaf;			/* update time of leaf sources */
@@ -210,6 +212,8 @@ struct _target {
 	int	asynccnt;		/* child deps outstanding */
 	TARGETS	*parents;		/* used by make1() for completion */
 	char	*cmds;			/* type-punned command list */
+
+    char* failed;
 } ;
 
 RULE 	*bindrule( char *rulename, module* );
