@@ -1308,31 +1308,31 @@ rule is-link-compatible ( feature : value1 : value2 )
 # find-compatible-subvariant main-target : toolset variant : dependent-simple-properties
 rule find-compatible-subvariant ( main-target : toolset variant : dependent-simple-properties * )
 {
-	# calculate the subvariant only of what is requested
-	local BUILD = $(variant)
-		[ intersection
-			[ multiply-property-sets [ select-gristed $(BUILD) ] ] :
-			$(dependent-simple-properties) ] ;
-	local subvariant = [ expand-target-subvariants $(main-target) : $(variant) : $(toolset) : BUILD ] ;
+    # calculate the subvariant only of what is requested
+    local BUILD = $(variant)
+        [ intersection
+            [ multiply-property-sets [ select-gristed $(BUILD) ] ] :
+            $(dependent-simple-properties) ] ;
+    local subvariant = [ expand-target-subvariants $(main-target) : $(variant) : $(toolset) : BUILD ] ;
 
-	local sv-target = ;
-	local sv-properties = ;
-	local sv-toolset = ;
-	local sv-variant = ;
-	split-target-subvariant sv-target sv-properties sv-toolset sv-variant : $(subvariant) ;
-	local sv-overrides =
-		[ difference $(dependent-simple-properties) : [ select-gristed $(sv-properties) ] ] ;
+    local sv-target = ;
+    local sv-properties = ;
+    local sv-toolset = ;
+    local sv-variant = ;
+    split-target-subvariant sv-target sv-properties sv-toolset sv-variant : $(subvariant) ;
+    local sv-overrides =
+        [ difference $(dependent-simple-properties) : [ select-gristed $(sv-properties) ] ] ;
 
-	# check to make sure we can link against the subvariant
-	for local sv-override in $(sv-overrides)
-	{
-		local sv-required = [ get-values $(sv-override:G) : $(sv-properties) ] ;
-		if ! [ is-link-compatible $(sv-override:G) : $(sv-override:G=) : $(sv-required) ]
-		{
-			EXIT $(main-target): required property $(sv-override:G)$(sv-required)
-				incompatible with $(sv-override) ;
-		}
-	}
+    # check to make sure we can link against the subvariant
+    for local sv-override in $(sv-overrides)
+    {
+        local sv-required = [ get-values $(sv-override:G) : $(sv-properties) ] ;
+        if ! [ is-link-compatible $(sv-override:G) : $(sv-override:G=) : $(sv-required) ]
+        {
+            EXIT $(main-target): required property $(sv-override:G)$(sv-required)
+                incompatible with $(sv-override) ;
+        }
+    }
 
     return $(sv-properties) ;
 }
@@ -1747,8 +1747,64 @@ rule with-command-file ( rule-name targets * : sources * )
     return result ;
 }
 
-gTAG(prefix) = "" ;
-gTAG(postfix) = "" ;
+TAG(prefix) = "" ;
+TAG(postfix) = "" ;
+
+# GIVEN:
+#
+# A target subvariant, the subvariant info, and a set of rename tags.
+#
+# RESUT:
+#
+# Uses the rename tags, and the global TAG map, to append a tag to the
+# target basename. The new subvariant target is returned. The tag for
+# the target is composed from the subvariant info and the corresponding
+# entry in the tags. This creates the tag in the order as given by the
+# subvariant info.
+#
+# EXAMPLE:
+#
+# [ rename-target <gcc/debug>libtest.so : gcc debug : <tag><gcc>_gcc <tag><debug>_debug ]
+#
+# RETURNS:
+#
+# <gcc/debug>libtest_gcc_debug.so
+#
+rule rename-target ( target : subvariant * : tags * )
+{
+    local tag-values = ;
+    for local tag in $(tags)
+    {
+        local tag-tokens = [ SUBST $(tag:G=) (<)(.*)(>)(.*) $2 $4 ] ;
+        tag-values += $(tag-tokens[2]:G=$(tag-tokens[1])) ;
+    }
+
+    local tag-text = "" ;
+
+    # the prefix of the tag...
+    #
+    local prefix-tag = [ get-values <prefix> : $(tag-values) $(TAG(prefix):G=prefix) ] ;
+    tag-text = $(prefix-tag[1]) ;
+
+    # the subvariant tags...
+    #
+    for local sv in $(subvariant)
+    {
+        local sv-tag = [ get-values <$(sv)> : $(tag-values) $(TAG($(sv)):G=$(sv)) ] ;
+        if $(sv-tag)
+        {
+            tag-text = $(tag-text)$(sv-tag[1]) ;
+        }
+    }
+
+    # the postfix of the tag...
+    #
+    local postfix-tag = [ get-values <postfix> : $(tag-values) $(TAG(postfix):G=postfix) ] ;
+    tag-text = $(tag-text)$(postfix-tag[1]) ;
+
+    local renamed-target = $(target:B=$(target:B)$(tag-text)) ;
+    return $(renamed-target) ;
+}
 
 rule grist-targets ( targets + : subdir-tokens * )
 {
@@ -1799,22 +1855,16 @@ rule stage ( name : sources + : requirements * : local-build * )
         [ select-gristed $(local-build) ] ;
     local source-local-build =
         [ select-ungristed $(local-build) ] ;
+    local tags =
+        [ get-properties <tag> : $(requirements) ] ;
 
     # Supress the regular build of this target
     local gSUPPRESS_FAKE_TARGETS =  [ get-values <suppress> : $(stage-local-build) ] ;
 
-    # Localize with the supplied tags
-    local tag-value ;
-    for local tag in [ get-properties <tag> : $(requirements) ]
-    {
-        local tag-tokens = [ SUBST $(tag:G=) (<)(.*)(>)(.*) $2 $4 ] ;
-        tag-value($(stage-id)!$(tag-tokens[1])) = $(tag-tokens[2]) ;
-    }
-
     local stage-dir = $(name:G=) ;
     local files = [ select-ungristed $(sources) ] ;
     local file-mode ;
-    local file-tag ;
+    local file-tagged ;
 
     for local source in [ expand-source-names [ select-gristed $(sources) ] ]
     {
@@ -1841,23 +1891,13 @@ rule stage ( name : sources + : requirements * : local-build * )
 
             local target-subvariant =
                 [ subvariant-target $(s-target) : $(s-properties) : $(s-toolset) $(s-variant) ] ;
+            
+            local renamed-target =
+                [ rename-target $(target-subvariant) : [ split-path $(s-properties[1]) ] : $(tags) ] ;
 
             files += $(target-subvariant) ;
             file-mode($(target-subvariant)) = $($(gTARGET_TYPE($(s-target)))MODE) ;
-            local tag-text = "" ;
-            {
-                local subvariant = [ split-path $(s-properties[1]) ] ;
-                if $(tag-value($(stage-id)!prefix)) { tag-text = $(tag-value($(stage-id)!prefix)) ; }
-                else { if $(gTAG(prefix)) { tag-text = $(gTAG(prefix)) ; } }
-                for v in $(subvariant)
-                {
-                    if $(tag-value($(stage-id)!$(v)))) { tag-text = $(tag-text)$(tag-value($(stage-id)!$(v))) ; }
-                    else { if $(gTAG($(v))) { tag-text = $(tag-text)$(gTAG($(v))) ; } }
-                }
-                if $(tag-value($(stage-id)!postfix)) { tag-text = $(tag-text)$(tag-value($(stage-id)!postfix)) ; }
-                else { if $(gTAG(postfix)) { tag-text = $(tag-text)$(gTAG(postfix)) ; } }
-            }
-            file-tag($(target-subvariant)) = $(tag-text) ;
+            file-tagged($(target-subvariant)) = $(renamed-target) ;
         }
     }
 
@@ -1865,7 +1905,7 @@ rule stage ( name : sources + : requirements * : local-build * )
     for local file in $(files)
     {
         local destination-file = $(file:D=) ;
-        if $(file:G) { destination-file = $(file:G=:D=:B=$(file:B)$(file-tag($(file)))) ; }
+        if $(file:G) { destination-file = $(file-tagged($(file)):G=:D=) ; }
         destination-file =
             [ grist-targets $(destination-file) : [ split-path $(stage-dir) ] ] ;
         destination-files += $(destination-file) ;
