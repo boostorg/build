@@ -510,6 +510,18 @@ class file-target : abstract-file-target
             # Make sure the path exists.
             DEPENDS $(target) : $(path) ;
             common.MkDir $(path) ;
+
+            # It's possible that the target name includes a directory
+            # too, for example when installing headers. Create that
+            # directory.
+            if $(target:D)
+            {
+                local d = $(target:D) ;
+                d = $(d:R=$(path)) ;
+                DEPENDS $(target) : $(d) ;
+
+                common.MkDir $(d) ;
+            }            
         }
         else
         {
