@@ -4,13 +4,14 @@
 <html>
   <head>
     <meta name="generator" content=
-    "HTML Tidy for Linux/x86 (vers 1st March 2002), see www.w3.org">
+    "HTML Tidy for Linux/x86 (vers 1st April 2002), see www.w3.org">
     <!--tidy options: -i -wrap 78 -->
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
     <link rel="stylesheet" type="text/css" href="../../boost.css">
 
     <title>Boost.Build v2 user manual</title>
-<style type="text/css">
+
+    <style type="text/css">
         hr { color: black }
         p.revision { text-align: right; font-style: italic }
         pre.code { margin-left: 2em } 
@@ -21,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-</style>
+    </style>
   </head>
   <!-- Things yet to document:
-                                - build request, build request expansion and directly requested targets
-                                - conditional properties
-                              -->
+                                  - build request, build request expansion and directly requested targets
+                                  - conditional properties
+                                -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -606,13 +607,13 @@ boost-build /path/to/boost.build ;
     may not contain the '<tt>&gt;</tt>' character.</p>
 
     <div class="alert">
-      The last two prohibited characters might well be present in defines.
       And what about dash?
     </div>
 
     <p>Each feature in a build configuration has one or more associated
-    <em>value</em>s. Feature values may not contain the '<tt>&lt;</tt>',
-    '<tt>:</tt>', or '<tt>=</tt>' characters.</p>
+    <em>value</em>s. Feature values for non-free features may not contain the
+    '<tt>&lt;</tt>', '<tt>:</tt>', or '<tt>=</tt>' characters. Feature values
+    for free features may not contain the '<tt>&lt;</tt>' character.</p>
 
     <p>A <em>property</em> is a (feature,value) pair, expressed as
     &lt;feature&gt;value.</p>

@@ -185,7 +185,7 @@ local rule convert-command-line-element ( e : feature-space )
     local parts = [ regex.split $(e) "/" ] ;
     for local p in $(parts) 
     {
-        local m = [ MATCH "(.*)=(.*)" : $(p) ] ;
+        local m = [ MATCH "([^=]*)=(.*)" : $(p) ] ;
         local lresult ;
         if $(m) 
         {
