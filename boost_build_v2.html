@@ -31,7 +31,7 @@
     <hr>
 
     <div class="alert">
-      This is preliminary version intended to document everything
+      This is a preliminary version intended to document everything
       implemeneted but not yet ready for any practical use.
     </div>
     <br>
@@ -66,24 +66,46 @@
 
     <h4>Definition</h4>
 
-    <p>A <em>feature</em> is a normalized (toolset-independent) description
-    of an individual build parameter, such as whether inlining is
-    enabled.</p>
+    <p>A <em>feature</em> is a normalized (toolset-independent) aspect of a
+    build configuration, such as whether inlining is enabled.</p>
 
-    <p>A <em>property</em> is a (feature, value) pair. Each features is
-    described by a name and the set of attributes from the following
-    list:</p>
+    <p>A <em>feature value</em> is a specific available setting for a
+    feature.</p>
+
+    <p>A <em>property</em> is a (feature,value) pair, expressed as
+    &lt;feature&gt;value.</p>
+
+    <p>A <em>subfeature</em> is a feature which only exists in the presence
+    of its parent, and whose identity can be derived (in the context of its
+    parent) from the name of its value.</p>
+
+    <p>A <em>value-string</em> is a string of the form
+    <tt>value-subvalue1-subvalue2...-subvalueN</tt>, where <tt>value</tt> is
+    a feature value and <tt>subvalue1...subvalueN</tt> are values of related
+    subfeatures. For example, by using value-string properties
+    &lt;toolset&gt;gcc &lt;toolset-version&gt;3.0.1, can be expressed more
+    conscicely, as &lt;toolset&gt;gcc-3.0.1.</p>
+
+    <p>A set of properties is called, naturally, <em>property set</em>. For
+    example, <tt>&lt;toolset&gt;gcc &lt;runtime-link&gt;static</tt>.
+    Sometimes it's better to represent a property set without spaces. In that
+    case <em>property path</em> is used, which consists of all properties,
+    joined with slashes. To continue with example, property path
+    representation would be
+    <tt>&lt;toolset&gt;gcc/&lt;runtime-link&gt;static</tt> .</p>
+
+    <p>Each feature can have any of the following attributes:</p>
 
     <ul>
       <li>
         <em>incidental</em> 
 
-        <p>Incidental features do not affect build products at all. Warning
-        level is one example. As a consequence, the build system doesn't try
-        to avoid confusing targets with different values of incident
-        properties.</p>
+        <p>Incidental features are assumed not affect build products at all.
+        Warning level is one example. As a consequence, the build system
+        doesn't try to avoid confusing targets with different values of
+        incidental properties.</p>
 
-        <p>Features which are not incident are assumed to affect build
+        <p>Features which are not incidental are assumed to affect build
         products, therefore they are put in different directories as
         described in <a href="#target_paths">target paths</a> below.</p>
       </li>
@@ -99,14 +121,14 @@
       </li>
 
       <li>
-        <em>free-valued</em> 
+        <em>free</em> 
 
-        <p>Usually, each feature takes takes a single value from a fixed set.
-        In particular, this means that only one value can be used when
-        building a single target. When a feature is free-valued, it can have
-        several values at a time and each value can be an arbitrary string.
-        For example, it is possible to have several preprocessor symbols
-        defined simultaneously:</p>
+        <p>Usually, each feature takes a single value from a fixed set. In
+        particular, this means that only one value can be used when building
+        a single target. When a feature is free, it can have several values
+        at a time and each value can be an arbitrary string. For example, it
+        is possible to have several preprocessor symbols defined
+        simultaneously:</p>
 <pre>
         &lt;define&gt;NDEBUG=1 &lt;define&gt;HAS_CONFIG_H=1
 </pre>
@@ -125,7 +147,7 @@
       <li>
         <em>symmetric</em> 
 
-        <p>A symmetric feature's default value, is not automatically included
+        <p>A symmetric feature's default value is not automatically included
         in <a href="#variants">build variants</a>. Normally a feature only
         generates a subvariant directory when its value differs from the
         value specified by the build variant, leading to an assymmetric
@@ -137,7 +159,7 @@
       <li>
         <em>path</em> 
 
-        <p>The value of path features specifies a path. The path is treated
+        <p>The value of a path feature specifies a path. The path is treated
         as relative to the directory of Jamfile where path feature is used
         and is translated appropriately by the build system when the build is
         invoked from a different directory</p>
@@ -146,19 +168,19 @@
       <li>
         <em>implicit</em> 
 
-        <p>features whose values alone identify the feature. For example, a
-        user is not required to write "&lt;toolset&gt;", but can simply write
-        "gcc". Implicit feature names also don't appear in variant paths,
-        although the values do. Thus: bin/gcc/... as opposed to
-        bin/toolset-gcc/.... There should typically be only a few such
+        <p>Values of implicit features alone identify the feature. For
+        example, a user is not required to write "&lt;toolset&gt;", but can
+        simply write "gcc". Implicit feature names also don't appear in
+        variant paths, although the values do. Thus: bin/gcc/... as opposed
+        to bin/toolset-gcc/.... There should typically be only a few such
         features, to avoid possible name clashes.</p>
       </li>
 
       <li>
         <em>composite</em> 
 
-        <p>features which actually correspond to groups of properties. For
-        example, a build variant is a composite feature. When generating
+        <p>Composite features actually correspond to groups of properties.
+        For example, a build variant is a composite feature. When generating
         targets from a set of build properties, composite features are
         recursively expanded and /added/ to the build property set, so rules
         can find them if neccessary. Non-composite non-free features override
@@ -172,14 +194,6 @@
       </li>
 
       <li>
-        <em>executed</em> 
-
-        <div class="alert">
-          Do we need it?
-        </div>
-      </li>
-
-      <li>
         <em>dependency</em> 
 
         <div class="alert">
@@ -188,21 +202,28 @@
       </li>
     </ul>
 
-    <p>TODO: give a name and describe the property set joined with slashes. I
-    use the term "property path" somewhere below.</p>
+    <p>TODO: document active features..</p>
 
-    <h4 id="link_compatibility">Link compatible and imcompatible
+    <h4 id="link_compatibility">Link compatible and incompatible
     properties</h4>
 
-    <p>It is possible that build system tries to generate a target with a
-    certain set of properties but is is only possible to obtain a target with
-    somewhat different property set. It is needed to know if the actual
-    property set can be used instead of the property set that was needed. At
-    this moment we use a simple approach to answering that question. Two
-    property sets are called <em>link-compatible</em> when targets with those
-    property sets can be used interchangably. In turn, two property sets are
-    link compatible when there's no link-incompatible feature which has
-    different values in those property sets.</p>
+    <p>When the build system tries to generate a target (such as library
+    dependency) matching a given build request, it may find that an exact
+    match isn't possible &mdash; for example, the target may impose additonal
+    build requirements. We need to determine whether a buildable version of
+    that target can actually be used.</p>
+
+    <p>In general, there are many possible situations: a libary which is
+    dependency of a main target and should be linked into it, target which is
+    directly requested on the command line, or build executable which is used
+    in the build process itself. At this moment we use a simple approach.</p>
+
+    <p>Two property sets are called <em>link-compatible</em> when targets
+    with those property sets can be used interchangably. In turn, two
+    property sets are link compatible when there's no link-incompatible
+    feature which has different values in those property sets. Whenever
+    requested and actual properties are link-compatible, it's OK. Otherwise,
+    it's an error.</p>
 
     <h4>Definition of property refinement</h4>
 
@@ -219,7 +240,7 @@
       set</li>
 
       <li>If the original property set includes property with a different
-      value of non free-valued feature, that property is removed.</li>
+      value of non free feature, that property is removed.</li>
     </ol>
 
     <h3><a name="initialization">Initialization</a></h3>
@@ -252,12 +273,17 @@
 
     <h3><a name="command_line">Command line</a></h3>
 
-    <p>Boost.Build extends Jam's command line in two ways. First, command
-    line arguments can be used not only to specify targets to build, but also
-    to specify build variants or arbitrary build request. Second, there are
-    additional command line options.</p>
+    <p>The comamnd line may contain:</p>
 
-    <h4>Command line arguments</h4>
+    <ul>
+      <li>Jam options,</li>
+
+      <li>Boost.Build <a href="#command_line_options">options</a>,</li>
+
+      <li>Command line arguments</li>
+    </ul>
+
+    <h4 id="command_line_arguments">Command line arguments</h4>
     Command line arguments specify targets and build request using the
     following rules. 
 
@@ -361,10 +387,10 @@
 
     <p>For each project, there are several attributes.</p>
 
-    <p><em>Project id</em> is used to denote the project from other project.
-    Each project id is a hierarchical path, such as "boost/thread". When
-    project-id need to be referred from other projects there are two
-    alternatives:</p>
+    <p><em>Project id</em> is a short way to denote a project, as opposed to
+    the Jamfile's pathname. It is a hierarchical path, unrelated to
+    filesystem, such as "boost/thread". There are two ways to refer to a
+    project using project-id:</p>
 
     <ul>
       <li>Use absolute proejct-id, which starts with "/", for example
@@ -373,11 +399,8 @@
       <li>Use relative project-id, which is appended to the project-id of the
       project where it is used.</li>
     </ul>
-    <br>
-     <br>
-     
 
-    <p><em>Source location</em> specifies directory where sources for the
+    <p><em>Source location</em> specifies the directory where sources for the
     project are located.</p>
 
     <p><em>Project requirements</em> are requirements that apply to all the
@@ -499,11 +522,11 @@
     like list of source and requirement.</p>
 
     <p>It is possible to have different list of sources for different
-    toolsets, therefore it is possible to invoce main target rules several
+    toolsets, therefore it is possible to invoke main target rules several
     times for a single main target. For example:</p>
 <pre>
-    exe a.exe : a_gcc.cpp : &lt;toolset&gt; ;
-    exe a.exe : a.cpp ;
+    exe a : a_gcc.cpp : &lt;toolset&gt; ;
+    exe a : a.cpp ;
 </pre>
     Each call to the 'exe' rule defines a new <em>main target
     alternative</em> for the main target <tt>a.exe</tt>. In this case, the
@@ -513,8 +536,8 @@
 
     <h4>Target identifiers and references</h4>
 
-    <p>Target identifier is used to denote a target. It is described by the
-    following grammar:</p>
+    <p><em>Target identifier</em> is used to denote a target. It is described
+    by the following grammar:</p>
 <pre>
     target-id -&gt; project-reference local-target-name
     project-reference -&gt; [jamfile-location] [ "@" [project-id] ]
@@ -546,7 +569,7 @@
     After that, the target given by <tt>local-target-name</tt> in the found
     project is used. 
 
-    <p>Target reference is used to specify a source target, and may
+    <p><em>Target reference</em> is used to specify a source target, and may
     additionally specify desired properties for that target. It has this
     syntax:</p>
 <pre>
@@ -557,9 +580,9 @@
 <pre>
     exe compiler : compiler.cpp libs/cmdline/&lt;optimization&gt;space ;
 </pre>
-    would cause the version of <tt>cmdline</tt> library, optimized to space,
+    would cause the version of <tt>cmdline</tt> library, optimized for space,
     to be linked in even if the <tt>compile</tt> executable is build with
-    speed optimization. 
+    optimization for speed. 
 
     <h5>Ambiguity resolution</h5>
 
@@ -568,7 +591,7 @@
     pathname, it is checked if there's a jamfile in the specified path. If
     there is one, it is loaded and if the specified target is declared by
     that project it is used. Otherwise, we just treat the target reference as
-    file name.</p>
+    a file name.</p>
 
     <h4>Target paths</h4>
 
@@ -580,17 +603,18 @@
       <li>All targets are placed under directory corresponding to the project
       where they are defined.</li>
 
-      <li>Each non free-valued, non incident property cause an additional
-      element to be added to the target path. That element has the form
+      <li>Each non free, non incidental property cause an additional element
+      to be added to the target path. That element has the form
       <tt>&lt;feature-name&gt;-&lt;feature-value&gt;</tt> for ordinary
       features and <tt>&lt;feature-value&gt;</tt> for implicit ones. [Note
       about composite features].</li>
 
-      <li>If the set of free-valued properties is different from the set of
-      free valued properties for the project to which the target belong, a
-      part of the form <tt>main_target-&lt;name&gt;</tt> is added to the
-      target path. <b>Note:</b>It would be nice to track free-valued features
-      also, but this appears to be complex and not extremely needed.</li>
+      <li>If the set of free, non incidental properties is different from the
+      set of free, non incidental properties for the project in which the
+      main target that uses the target is defined, a part of the form
+      <tt>main_target-&lt;name&gt;</tt> is added to the target path.
+      <b>Note:</b>It would be nice to completely track free features also,
+      but this appears to be complex and not extremely needed.</li>
     </ol>
 
     <p>For example, we might have these paths:</p>
@@ -603,15 +627,17 @@
     <h3><a name="build_process">Build process</a></h3>
 
     <p>The build works in this way. On startup, the project in the current
-    directory is read. As the result a tree of projects is constructed. After
-    that, the build request is constructed from the command line. Then, the
-    steps are:</p>
+    directory is read. In turn, it may request building of other projects,
+    which will be loaded recursively. Parent projects are also loaded to
+    inherit some of their properties. As the result, a tree of projects is
+    constructed. After that, the build request is constructed from the
+    command line. Then, the steps are:</p>
 
     <ol>
-      <li>The project in the current dir is passed the build request. If the
-      build request does not satisfy the project's requirements, a warning is
-      issued and the build of the project is skipped. Otherwise, the process
-      is repeated recusrively for all subprojects.</li>
+      <li>All of the projects to be build are passed the build request. If
+      the build request does not satisfy the project's requirements, a
+      warning is issued and the build of the project is skipped. Projects
+      mentioned in <tt>build-project</tt> rule will still be build.</li>
 
       <li>
         An attempts to make all the main targets in the project is performed.
@@ -645,7 +671,7 @@
     therefore converted to jam's dependency graph which is then build.</p>
     <hr>
 
-    <p class="revision">Last modified: Aug 5, 2002</p>
+    <p class="revision">Last modified: Aug 12, 2002</p>
 
     <p>&copy; Copyright Vladimir Prus 2002. Permission to copy, use, modify,
     sell and distribute this document is granted provided this copyright
