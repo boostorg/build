@@ -900,6 +900,8 @@ else if $(UNIX)
     CCFLAGS     ?= ;
     C++FLAGS    ?= $(CCFLAGS) ;
     CHMOD       ?= chmod ;
+    CHGRP       ?= chgrp ;
+    CHOWN       ?= chown ;
     LEX         ?= lex ;
     LINKFLAGS   ?= $(CCFLAGS) ;
     LINKLIBS    ?= ;
@@ -932,6 +934,7 @@ else if $(UNIX)
     FORTRAN     ?= f77 ;
     FORTRANFLAGS ?= ;
     HDRS        ?= ;
+    INSTALLGRIST ?= installed ;
     JAMFILE     ?= Jamfile ;
     JAMRULES    ?= Jamrules ;
     LEX         ?= ;
@@ -1152,30 +1155,44 @@ rule HdrRule
 
 rule InstallInto
 {
+    # InstallInto dir : sources ;
+
     local i t ;
 
-    t = $(>:G=installed) ;
+    t = $(>:G=$(INSTALLGRIST)) ;
 
-    DEPENDS install : $(t) ;
-    DEPENDS $(t) : $(>) ;
+    # Arrange for jam install
+    # Arrange for jam uninstall
+    # sources are in SEARCH_SOURCE
+    # targets are in dir
+
+    Depends install : $(t) ;
+    Clean uninstall : $(t) ;
     SEARCH on $(>) = $(SEARCH_SOURCE) ;
     MakeLocate $(t) : $(<) ;
 
-    # Arrange for jam uninstall
-
-    Clean uninstall : $(t) ;
+    # For each source, make gristed target name
+    # and Install, Chmod, Chown, and Chgrp
 
     for i in $(>)
     {
-        Install $(i:G=installed) : $(i) ;
-    }
+        local tt = $(i:G=$(INSTALLGRIST)) ;
 
-    Chmod $(t) ;
+        Depends $(tt) : $(i) ;
+        Install $(tt) : $(i) ;
+        Chmod $(tt) ;
 
-    if $(UNIX)
-    {
-        if $(OWNER) { Chown $(t) ; OWNER on $(t) = $(OWNER) ; }
-        if $(GROUP) { Chgrp $(t) ; GROUP on $(t) = $(GROUP) ; }
+        if $(OWNER) && $(CHOWN) 
+        { 
+        Chown $(tt) ;
+        OWNER on $(tt) = $(OWNER) ;
+        }
+
+        if $(GROUP) && $(CHGRP) 
+        { 
+        Chgrp $(tt) ;
+        GROUP on $(tt) = $(GROUP) ;
+        }
     }
 }
 
@@ -1953,7 +1970,7 @@ actions Cc
 
 actions Chgrp
 {
-    chgrp $(GROUP) $(<)
+    $(CHGRP) $(GROUP) $(<)
 }
 
 actions Chmod1
@@ -1963,7 +1980,7 @@ actions Chmod1
 
 actions Chown
 {
-    chown $(OWNER) $(<)
+    $(CHOWN) $(OWNER) $(<)
 }
 
 actions piecemeal together existing Clean
