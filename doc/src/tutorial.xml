@@ -161,11 +161,14 @@ exe hello
         &quot;free&quot; feautures like <code>&lt;include&gt;</code>
         <footnote>See <xref
         linkend="bbv2.reference.features.attributes"/></footnote>,
-        augments) the target requirements.  However, when a
+        augments) the target requirements.  
+<!--
+However, when a
         contradiction of a target's requrements involves certain
         <firstterm>link-incompatible</firstterm> features, the target
         will be skipped.  See <xref linkend=
         "bbv2.reference.variants.compat"/> for more information.
+-->
       </para>
 
     </section>
@@ -495,7 +498,7 @@ lib l : l.cpp : &lt;link&gt;static ;
           <para>
             What if library can be both static and shared, but when
             using it in specific executable, you want it static?
-            <link linkend="bbv2.advanced.targets.references">Target
+            <link linkend="bbv2.reference.targets.references">Target
               references</link> are here to help:
 
 <programlisting>
@@ -643,8 +646,8 @@ lib zlib : : &lt;name&gt;z_d &lt;variant&gt;debug ;
       version of zlib, but for other libraries this is quite reasonable.
     </para>
 
-    <para>More advanced use of prebuilt target is described in <ulink
-        url="doc/recipes.html#site_config_targets">recipes</ulink>.</para>
+    <para>More advanced use of prebuilt target is described in <link
+        linkend="bbv2.recipies.site-config">a FAQ entry</link>.</para>
 
   </section>
 
