@@ -10,6 +10,10 @@ import types
 import time
 import tempfile
 
+# Compute an executable suffix for tests to use
+exe_suffix = ''
+if os.environ.get('OS','').lower().startswith('windows'):
+    exe_suffix = '.exe'
 #
 # FIXME: this is copy-pasted from TestSCons.py
 # Should be moved to TestCmd.py?
@@ -246,6 +250,7 @@ class Tester(TestCmd.TestCmd):
                         self.unexpected_difference.added_files.remove(name)
                 except:
                         print "File %s not added as expected" % (name,)
+                        os.system('ls -lR')
                         self.fail_test(1)
 
     def ignore_addition(self, wildcard):
@@ -259,6 +264,7 @@ class Tester(TestCmd.TestCmd):
                         self.unexpected_difference.removed_files.remove(name)
                 except:
                         print "File %s not removed as expected" % (name,)
+                        os.system('ls -lR')
                         self.fail_test(1)
 
     def ignore_removal(self, wildcard):
@@ -272,6 +278,7 @@ class Tester(TestCmd.TestCmd):
                         self.unexpected_difference.modified_files.remove(name)
                 except:
                         print "File %s not modified as expected" % (name,)
+                        os.system('ls -lR')
                         self.fail_test(1)
 
     def ignore_modification(self, wildcard):
@@ -285,6 +292,7 @@ class Tester(TestCmd.TestCmd):
                         self.unexpected_difference.touched_files.remove(name)
                 except:
                         print "File %s not touched as expected" % (name,)
+                        os.system('ls -lR')
                         self.fail_test(1)
 
 
@@ -427,6 +435,11 @@ class List:
         for f in self:
             for s in other:
                 result.l.append(f + s)
+        return result
+
+    def __add__(self, other):
+        result = List()
+        result.l = self.l[:] + other.l[:]
         return result
 
 # quickie tests. Should use doctest instead.
