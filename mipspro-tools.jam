@@ -167,7 +167,7 @@ actions mipspro-Link-action bind NEEDLIBS
         "$(NEEDLIBS)" \
         "-L$(LIBPATH)" \
         "-L$(STDLIBPATH)" \
-        "-l$(FINDLIBS)"
+        "-l$(FINDLIBS)" -lm
 }
 
 #### Cc #####
