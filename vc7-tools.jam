@@ -6,7 +6,7 @@ set-as-singleton VC7_ROOT ;
 if ! $(MSVCDir)
 {
     ProgramFiles ?= $(PROGRAMFILES) ;
-    VC7_ROOT ?= "$(ProgramFiles)\\Microsoft Visual Studio .NET\\VC7" ;
+    VC7_ROOT ?= $(ProgramFiles:J=" ")"\\Microsoft Visual Studio .NET\\VC7" ;
     VC_TOOL_PATH = "$(VC7_ROOT)"\\bin\\ ;
     VC_SETUP = "CALL \"$(VC_TOOL_PATH)VCVARS32.BAT\" >nul" ;
 }

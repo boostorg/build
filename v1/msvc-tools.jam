@@ -36,7 +36,7 @@ if ! $(MSVCDir)
     # Otherwise, guess a standard installation directory
 
     ProgramFiles ?= $(PROGRAMFILES) ;
-    MSVC_ROOT ?= "$(ProgramFiles)\\Microsoft Visual Studio\\VC98" ;
+    MSVC_ROOT ?= $(ProgramFiles:J=" ")"\\Microsoft Visual Studio\\VC98" ;
     
     # Reconstitutes paths containing spaces
     MSVC_ROOT = $(MSVC_ROOT:J=" ") ;
