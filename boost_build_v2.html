@@ -35,7 +35,7 @@
       implemeneted but not yet ready for any practical use.
     </div>
     <br>
-    <br>
+     <br>
      
     <hr>
 
@@ -76,9 +76,9 @@
 
     <ul>
       <li>
-        <em>incident</em> 
+        <em>incidental</em> 
 
-        <p>Incident features do not affect build products at all. Warning
+        <p>Incidental features do not affect build products at all. Warning
         level is one example. As a consequence, the build system doesn't try
         to avoid confusing targets with different values of incident
         properties.</p>
@@ -91,21 +91,27 @@
       <li>
         <em>propagated</em> 
 
-        <p>Features of this kind are propagated to depencies. That is, if a
-        main target is build with particular value of a propagated feature,
-        the build systems attempts to build all the source targets with the
-        same value of that feature.</p>
+        <p>Features of this kind are propagated to dependencies. That is, if
+        a main target is build with a particular value of a propagated
+        feature, and depends on some other main targets, the build systems
+        attempts to use subvariants of those main targets with the same value
+        of the feature.</p>
       </li>
 
       <li>
         <em>free-valued</em> 
 
-        <p>Usually, each feature takes values from a fixed set. In addition,
-        only one value can be used to build a single target. When a feature
-        is free-valued, it can have several values at a time and each value
-        can be arbitrary string. For example, it is possible to have several
-        preprocessor symbols defined at the same time, and each value can be
-        any string.</p>
+        <p>Usually, each feature takes takes a single value from a fixed set.
+        In particular, this means that only one value can be used when
+        building a single target. When a feature is free-valued, it can have
+        several values at a time and each value can be an arbitrary string.
+        For example, it is possible to have several preprocessor symbols
+        defined simultaneously:</p>
+<pre>
+        &lt;define&gt;NDEBUG=1 &lt;define&gt;HAS_CONFIG_H=1
+</pre>
+        <br>
+        <br>
       </li>
 
       <li>
@@ -119,24 +125,22 @@
       <li>
         <em>symmetric</em> 
 
-        <p>There exists so called <em>build variants</em>, which are major
-        predefined sets of properties. Ordinary, features without explictly
-        specified value in a given variant are given their default value.
-        [Otherwise, we'd have to specify value of each features]. Symmetric
-        features differs by the fact that they are not included in build
-        variants.</p>
-
-        <div class="alert">
-          Need to explain why they are called "symmetric"
-        </div>
+        <p>A symmetric feature's default value, is not automatically included
+        in <a href="#variants">build variants</a>. Normally a feature only
+        generates a subvariant directory when its value differs from the
+        value specified by the build variant, leading to an assymmetric
+        subvariant directory structure for certain values of the feature. A
+        symmetric feature, when relevant to the toolset, always generates a
+        corresponding subvariant directory.</p>
       </li>
 
       <li>
         <em>path</em> 
 
         <p>The value of path features specifies a path. The path is treated
-        as relative to the directory of Jamfile where path feature is
-        used.</p>
+        as relative to the directory of Jamfile where path feature is used
+        and is translated appropriately by the build system when the build is
+        invoked from a different directory</p>
       </li>
 
       <li>
@@ -168,7 +172,7 @@
       </li>
 
       <li>
-        <em>executed</em>
+        <em>executed</em> 
 
         <div class="alert">
           Do we need it?
@@ -176,7 +180,7 @@
       </li>
 
       <li>
-        <em>dependency</em>
+        <em>dependency</em> 
 
         <div class="alert">
           Do we need it?
@@ -187,14 +191,15 @@
     <p>TODO: give a name and describe the property set joined with slashes. I
     use the term "property path" somewhere below.</p>
 
-    <h4>Link compatible and imcompatible properties</h4>
+    <h4 id="link_compatibility">Link compatible and imcompatible
+    properties</h4>
 
     <p>It is possible that build system tries to generate a target with a
     certain set of properties but is is only possible to obtain a target with
     somewhat different property set. It is needed to know if the actual
     property set can be used instead of the property set that was needed. At
     this moment we use a simple approach to answering that question. Two
-    property sets are called <em>link-compatible</em> when targets with that
+    property sets are called <em>link-compatible</em> when targets with those
     property sets can be used interchangably. In turn, two property sets are
     link compatible when there's no link-incompatible feature which has
     different values in those property sets.</p>
@@ -640,7 +645,7 @@
     therefore converted to jam's dependency graph which is then build.</p>
     <hr>
 
-    <p class="revision">Last modified: July 16, 2002</p>
+    <p class="revision">Last modified: Aug 5, 2002</p>
 
     <p>&copy; Copyright Vladimir Prus 2002. Permission to copy, use, modify,
     sell and distribute this document is granted provided this copyright
