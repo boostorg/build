@@ -2506,6 +2506,7 @@ rule common-variant-tag ( toolset variant : properties * )
         case *borland* : toolset-tag += bcb ;
         case *como* : toolset-tag += como ;
         case *cwpro8* : toolset-tag += cw8 ;
+        case *cwpro9* : toolset-tag += cw9 ;
         case *darwin* : toolset-tag += ;
         case *edg* : toolset-tag += edg ;
         case *gcc* : toolset-tag += gcc ;
