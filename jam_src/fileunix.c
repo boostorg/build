@@ -182,7 +182,13 @@ file_time(
 	if( stat( filename, &statbuf ) < 0 )
 	    return -1;
 
-	*time = statbuf.st_mtime;
+    /* Technically, existing files can have 0 as statbuf.st_mtime 
+       --- in particular, the /cygdrive directory under cygwin. However, 
+       though all the code jam assumes that timestamp of 0 means
+       "does not exist" and will try to create the "missing" target, causing
+       problems. Work around this problem by chanding 0 to 1.
+    */
+	*time = statbuf.st_mtime ? statbuf.st_mtime : 1 ;
 	return 0;
 }
 
