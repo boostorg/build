@@ -603,7 +603,18 @@ local rule ensure-type ( targets * )
 }
 
     
-local rule find-viable-generators ( target-type : properties * )
+# Returns generators which can be used to construct target of specified type
+# with specified properties. Uses the following algorithm:
+# - iterates over requested target-type and all it's bases (in the order returned bt
+#   type.all-bases.
+# - for each type find all generators that generate that type and which requirements
+#   are satisfied by properties. If 'sallow-composing' is not given, ignores all
+#   composing generators.
+# - if the set of generators is not empty, returns that set.
+#
+# Note: this algorithm explicitly ignores generators for base classes if there's
+# at least one generator for requested target-type.
+local rule find-viable-generators ( target-type : properties * : allow-composing ? )
 {
     # Select generators that can create the required target type.
     local viable-generators = ;
@@ -618,7 +629,7 @@ local rule find-viable-generators ( target-type : properties * )
         {
             # Avoid trying the same generator twice on different levels.
             if ! $(g) in $(.active-generators) 
-              && ! ( [ is-a $(g) : composing-generator ] && $(.had-composing-generator) )
+              && ! ( [ is-a $(g) : composing-generator ] && ! $(allow-composing) )
               {           
                   if [ $(g).requirements ] in $(properties) 
                   {
@@ -636,7 +647,7 @@ local rule find-viable-generators ( target-type : properties * )
 }
 
 # currently unused. Sorry for the cruft. Delete at will
-local rule find-viable-generators.new ( target-type : properties * )
+local rule find-viable-generators.new ( target-type : properties * : disallow-composing ? )
 {
     # Select generators that can create the required target type.
     local viable-generators = ;
@@ -654,7 +665,7 @@ local rule find-viable-generators.new ( target-type : properties * )
             generators.dout [ indent ] " ...checking" [ $(g).id ] ;
             # Avoid trying the same generator twice on different levels.
             if ! $(g) in $(.active-generators) 
-              && ! ( [ is-a $(g) : composing-generator ] && $(.had-composing-generator) )
+              && ! ( [ is-a $(g) : composing-generator ] && $(.disallow-composing) )
               {           
                   local requirements = [ $(g).requirements ] ;
                   generators.dout [ indent ] " ...requirements:" $(requirements) ;
@@ -735,8 +746,6 @@ local rule select-dependency-graph ( options )
 # *possible* ingridients -- i.e. it is not required to consume
 # them all. If 'multiple' is true, the rule is allowed to return
 # several targets of 'target-type'.          
-# If 'allow-composing-generators' is set, will consider composing generators
-# even if a composing generators was already used up the call stack.
 #
 #
 # Returns a list of target. When this invocation is first instance of
@@ -744,7 +753,15 @@ local rule select-dependency-graph ( options )
 # otherwise, returns also unused sources and additionally generated
 # targets.    
 rule construct ( project name ? : target-type multiple ? : properties * : sources + 
-                 : allow-composing-generators ? )
+    : allow-composing ?  # Allows to use composing generators for constructing this
+                         # target. This will be typically set when creating main targets,
+                         # and unset when called recursively from 'run' method of 
+                         # standard generators. Therefore, composing generators will
+                         # be tried for main targets, but not for any intermediate.
+                         # It prevents things like infinite recursion (LIB <- LIB <- ..).
+                         # Generator may pass non-empty value if finding composing
+                         # generator is reuiqred, see builtin.lib-generator for example.
+    )
 {
     local use-requirements ;
     if (.construct-stack)
@@ -774,12 +791,6 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
         generators.dout [ indent ] "    from" [ $(s).str ] ;
     }
     generators.dout [ indent ] "    properties:" $(properties) ;        
-
-    local .had-composing-generator = $(.had-composing-generator) ;
-    if $(allow-composing-generators)
-    {
-        .had-composing-generator = ;
-    }
                
     local result ;
     
@@ -819,8 +830,9 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
             }
         }    
     } else {
-                       
-        viable-generators = [ find-viable-generators $(target-type) : $(properties) ] ;
+                                   
+        viable-generators = [ find-viable-generators $(target-type) : $(properties) 
+                              : $(allow-composing) ] ;
                     
         #Don't do any error reporting there, just return empty string.
         #Possibly, we can have a switch which would turn output of such 
@@ -837,16 +849,9 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
 
         for local g in $(viable-generators)
         {
-            #This variables will be restored on exit from this scope.
-            local .had-composing-generator ;
+            # This variable will be restored on exit from this scope.
             local .active-generators = $(g) $(.active-generators) ;
-            
-            if [ is-a $(g) : composing-generator ] 
-            {
-                generators.dout "Had composing generator set to true" ;
-                .had-composing-generator = true ;
-            }
-                                    
+                                                
             local r = [ try-one-generator $(project) $(name) : $(g) $(multiple) : $(target-type) :
                         $(properties) : $(sources) ] ;
             
