@@ -460,10 +460,12 @@ declare-build-succeed-test RUN_PYD : TEST_PYD ;
 #
 # pass --python-test-all on the command-line to force rebuilding
 rule boost-python-runtest (
-  target : python-script sources + : requirements * : local-build * : args * )
+  target : sources + : requirements * : local-build * : args * )
 {
     local gRUN_TEST_ARGS = $(args) ;
-    local gRUN_TEST_INPUT_FILES = [ FGristFiles $(python-script) ] ;
+    local pyfiles = [ MATCH ^(.*[.]py)$ : $(sources) ] ;
+    sources = [ difference $(sources) : $(pyfiles) ] ;
+    local gRUN_TEST_INPUT_FILES = [ FGristFiles $(pyfiles) ] ;
 
     # tell Jam that the python script is relative to this directory
     SEARCH on $(gRUN_TEST_INPUT_FILES) = $(SEARCH_SOURCE) ;
