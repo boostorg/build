@@ -1,1 +1,1 @@
-boost-build ../boost-root/tools/build ;
+boost-build ../boost-root/build ;
