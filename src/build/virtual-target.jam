@@ -613,8 +613,6 @@ rule action ( targets + : sources * : action-name + : property-set ? )
             # be passed to 'set-target-variables'
             toolset.set-target-variables $(self.action-name[1]) $(actual-targets) :
               $(properties) ;
-
-            ECHO $(self.action-name) ;
             
             modules.call-locally $(self.action-name) 
               $(actual-targets)
