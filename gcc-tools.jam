@@ -159,12 +159,25 @@ if $(NO_GNU_LN)
 }
 else
 {
+ if $(DLLVERSION)
+ {
   actions gcc-Link-action bind NEEDLIBS
   {
     $(SHELL_SET)LD_LIBRARY_PATH=$(RUN_LD_LIBRARY_PATH)
     $(SHELL_EXPORT)LD_LIBRARY_PATH
-    $(GCC_BIN_DIRECTORY)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,. -Wl,-soname,$(<[1]:D=).$(DLLVERSION)
+    $(GCC_BIN_DIRECTORY)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1]).$(DLLVERSION)" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,. -Wl,-soname,$(<[1]:D=).$(DLLVERSION)
+    $(LN) -fs $(<[1]:D=).$(DLLVERSION) $(<)
   }
+ }
+ else
+ {
+  actions gcc-Link-action bind NEEDLIBS
+  {
+    $(SHELL_SET)LD_LIBRARY_PATH=$(RUN_LD_LIBRARY_PATH)
+    $(SHELL_EXPORT)LD_LIBRARY_PATH
+    $(GCC_BIN_DIRECTORY)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,.
+  }
+ }
 }
 
 actions gcc-dllwrap bind NEEDLIBS
