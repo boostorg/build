@@ -30,6 +30,8 @@ feature.subfeature toolset msvc : vendor
   # to be seen, though ;-)
   ;
 
+RM =  [ modules.peek common : RM ] ;
+
 # Initialize the toolset for a specific version. As the result, path to
 # compiler and, possible, program names are set up, and will be used when
 # that version of compiler is requested. For example, you might have::
@@ -291,6 +293,26 @@ flags msvc.link FINDLIBS_SA <find-shared-library> ;
 flags msvc.link LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
 
 
+# Declare action for creating static libraries
+# If library exists, remove it before adding files. See
+# http://article.gmane.org/gmane.comp.lib.boost.build/4241    
+# for rationale.
+rule archive ( targets + : sources * : properties * )    
+{
+    common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;             
+}
+actions archive 
+{    
+    $(RM) "$(<[1])"
+    $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(<[2])"
+}
+
+rule link ( targets + : sources * : properties * )
+{
+    common.response-file $(targets) : $(sources) : $(targets[2]) 
+      : $(properties) ;
+}
+        
 # incremental linking a DLL causes no end of problems: if the
 # actual exports don't change, the import .lib file is never
 # updated. Therefore, the .lib is always out-of-date and gets
@@ -298,15 +320,8 @@ flags msvc.link LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
 # such a great idea in general, but in this case I'm sure we
 # don't want it.
 
-# Declare action for creating static libraries
 if [ os.name ] in NT
 {        
-    rule link ( targets + : sources * : properties * )
-    {
-        common.response-file $(targets) : $(sources) : $(targets[2]) 
-          : $(properties) ;
-    }
-        
     rule link.dll ( targets + : sources * : properties * )
     {
         common.response-file $(targets) : $(sources) : $(targets[3]) : $(properties) ;
@@ -318,43 +333,16 @@ if [ os.name ] in NT
         common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;
     }
 
-    # If library exists, remove it before adding files. See
-    # http://article.gmane.org/gmane.comp.lib.boost.build/4241    
-    # for rationale.
-    actions archive 
-    {    
-        if exist "$(<[1])" DEL "$(<[1])"
-        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(<[2])"
-    }
 }
 else # CYGWIN
 {
-    rule link ( targets + : sources * : properties * )
-    {
-        common.response-file $(targets) : $(sources) : $(targets[2]) 
-          : $(properties) ;
-    }   
-    
     rule link.dll ( targets + : sources + : properties * )
     {
         common.response-file $(targets) : $(sources) : $(targets[3]) : $(properties) ;        
         .cygpath = "cygpath -d " ;
         DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
     }
-    
-    rule archive ( targets + : sources * : properties * )    
-    {
-        common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;                
-    }
 
-    actions archive
-    {
-        _bbv2_out_="$(<)"
-        if test -f "$_bbv2_out_" ; then
-            _bbv2_existing_="$(<:W)"
-        fi
-        $(.LD) /lib /NOLOGO "/out:$(<:W)" $_bbv2_existing_ @"$(>:W)"
-    }
 }
 
 actions link bind DEF_FILE
