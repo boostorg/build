@@ -717,7 +717,7 @@ rule from-file ( file : project )
     else
     {
         local name = [ path.make $(file:S=) ] ;
-        local type = [ type.type $(file:S) ] ;
+        local type = [ type.type $(file) ] ;
         local result ;
         if ! $(type)
         {

@@ -27,7 +27,7 @@ class prebuilt-file-generator : generator
     {
         local properties = [ $(property-set).raw ] ;
         local filename = [ feature.get-values <file> : $(properties) ] ;
-        local type = [ type.type $(filename:S) ] ;
+        local type = [ type.type $(filename) ] ;
         if ! $(type) 
         {
             errors.error "Unknown type for prebuilt target " $(name) in $(project) ;

@@ -29,7 +29,7 @@ class make-target-class : basic-target
         
     rule construct ( source-targets * : property-set )
     {
-        local t = [ new file-target $(self.name:S=) : [ type.type $(self.name:S) ]
+        local t = [ new file-target $(self.name:S=) : [ type.type $(self.name) ]
                     : $(self.project) ] ;
         $(t).suffix [ regex.match .(.*) : $(self.name:S) ] ;
         local a = [ new action $(t) : $(source-targets) : $(self.make-rule) 

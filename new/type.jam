@@ -209,12 +209,21 @@ rule generated-target-suffix ( type : properties * )
     return $(result) ;
 }
 
-# Returns file type given its suffix. The 'suffix' parameter should include 
-# the dot.
-rule type ( suffix ) 
+# Returns file type given it's name. If there are several dots in filename,
+# tries each suffix. E.g. for name of "file.so.1.2" suffixes "2", "1", and 
+# "so"  will be tried.
+rule type ( filename ) 
 {
-    return $(.type$(suffix)) ;        
+    local type ;
+    while ! $(type) && $(filename:S) 
+    {
+        local suffix = $(filename:S) ;
+        type = $(.type$(suffix)) ;
+        filename = $(filename:S=) ;
+    }
+    return $(type) ;
 }
+
 
 
 rule main-target-rule ( name : sources * : requirements * : default-build * 
