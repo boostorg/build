@@ -16,6 +16,8 @@ t.expect_addition("bin/gcc/debug/main-target-e/e" + exe_suffix)
 
 # Both 'a' and 'b' include "a.h" and should be updated
 t.touch("a.h")
+t.run_build_system()
+
 t.expect_touch("bin/gcc/debug/a" + exe_suffix)
 t.expect_touch("bin/gcc/debug/a.o")
 t.expect_touch("bin/gcc/debug/b" + exe_suffix)
