@@ -17,6 +17,7 @@
 # include "execcmd.h"
 # include <errno.h>
 # include <assert.h>
+# include <ctype.h>
 
 # ifdef USE_EXECNT
 
@@ -122,15 +123,11 @@ string_to_args( const char*  string, int*  pcount )
   *pcount = 0;  
 
   /* do not copy trailing newlines, if any */  
+  while ( total > 0 )
   {
-    int  i;
-    
-    for ( i = total-1; i > 0; i-- )
-    {
-      if ( string[i] != '\n' && string[i] != '\r' )
-        break;
-      total --;
-    }
+      if ( !isspace( string[total - 1] ) )
+          break;
+      --total;
   }
   
   /* first of all, copy the input string */
@@ -670,7 +667,7 @@ execcmd(
         printf("Executing command");
         while(*argp != 0)
         {
-            printf(" %s", *argp);
+            printf(" [%s]", *argp);
             argp++;
         }
         printf("\n");
