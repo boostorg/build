@@ -157,6 +157,7 @@ class project-target : abstract-target
     import print ;
     import property-set ;
     import set : difference : set.difference ;
+    import sequence ;
     import "class" : new ;
         
     rule __init__ ( name : project : requirements * : default-build * )
@@ -179,7 +180,7 @@ class project-target : abstract-target
             usage-requirements = [ $(usage-requirements).add $(g[1]) ] ;
             targets += $(g[2-]) ;
         }
-        return $(usage-requirements) $(targets) ;        
+        return $(usage-requirements) [ sequence.unique $(targets) ] ;        
     }
         
     # Computes and returns a list of abstract-target instances which
@@ -308,7 +309,7 @@ class main-target : abstract-target
 {
     import errors : error ;
     import assert ;
-    import sequence ;
+    import sequence ;    
     import print ;
     import build-request feature property-set ;
     import targets : start-building end-building ;
@@ -484,7 +485,7 @@ class main-target : abstract-target
             result += $(r[2-]) ;
         }
         end-building $(__name__) ;
-        return $(usage-requirements) $(result) ;                
+        return $(usage-requirements) [ sequence.unique $(result) ] ;                
     }
         
     # Generates the main target with the given property set
