@@ -15,7 +15,7 @@ if [ os.name ] = NT
 }
 else
 {
-	modules.poek : RM : rm ;
+	modules.poke : RM : rm ;
 }
 
 rule MkDir
