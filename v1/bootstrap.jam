@@ -23,8 +23,8 @@ if $(JAM_VERSION) && $(JAM_VERSION:J="") >= 030101
     for local e in $(ARGV[2-])
     {
         if ! [ MATCH "^(-).*" : $(e) ]
-	{
-	    UPDATE $(e) ;
-	}	    
+        {
+            UPDATE $(e) ;
+        }
     }
 }
