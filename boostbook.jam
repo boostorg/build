@@ -56,12 +56,6 @@ rule xslt-dir ( target : source stylesheet : properties * : dirname )
     flags += --stringparam $(namevalue[1]) $(namevalue[2]) ;
   }
 
-  # Make sure we create this path.
-  # TBD: this is NOT correct, but it works for now...
-  LOCATE on $(target) = $(dirname) ;
-  DEPENDS $(target) : $(dirname) ;
-  common.MkDir $(dirname) ;
-
   STYLESHEET on $(target) = $(stylesheet) ;
   FLAGS on $(target) = $(flags) ;
   DIRECTORY on $(target) = $(dirname) ;
@@ -189,6 +183,7 @@ rule boostbook-target-class ( name : project : sources * : requirements *
                               : DOCBOOK : $(property-set) : $(i) ] ;
         local target = [ generators.construct $(self.project) $(manifest)
                          : $(type) : $(property-set) : $(base-target) ] ;
+	$(target).set-path $(format) ;
         targets += $(target) ;
       }
     }
@@ -268,3 +263,4 @@ rule xinclude-scanner ( includes * )
 class xinclude-scanner : scanner ;
 scanner.register xinclude-scanner ;
 type.set-scanner XML : xinclude-scanner ;
+
