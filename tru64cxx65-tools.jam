@@ -73,7 +73,7 @@ rule Cc-action
 
 actions tru64cxx65-Cc-action
 {
-   cc -std1 -msg_display_number -msg-disable 186,450,1115,1133 -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+   cc -std1 -msg_display_number -msg-disable 186,450,1115 -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -82,9 +82,11 @@ rule C++-action
    tru64cxx65-C++-action $(<) : $(>) ;
 }
 
+# Note: DON'T disable warning 1133 -- the compiler is buggy and you
+# really can't ignore this one!
 actions tru64cxx65-C++-action
 {
-   cxx -c -std strict_ansi -msg_display_number -msg_disable 186,450,1115,1133 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+   cxx -c -std strict_ansi -msg_display_number -msg_disable 186,450,1115 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
