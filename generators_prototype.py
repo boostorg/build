@@ -76,6 +76,9 @@ class Generator(object):
         >>> Generator('cpp','obj').match(TargetTypeGroup('cpp',12))
         []
         """
+        if self in group.generators:
+            return None
+        
         for i in range(len(self.signature)):
             e = self.signature[i]
             if e[0] == group.target_type:
@@ -223,6 +226,10 @@ class TargetTypeGroup(object):
         self.id = TargetTypeGroup.instances
         self.ambiguous = reduce(lambda x,y: x or y.ambiguous and 1,
                                 parents, None)
+        
+        self.generators = { generator : 1 } # it doesn't hurt to store None here
+        ignored = [ self.generators.update(p.generators) for p in parents ]
+        
         self.__constituents = None
         self.__extra_targets = None
         
@@ -360,7 +367,7 @@ def _string_multiset(s):
     return x
 
 
-def parent_sets(chosen, signature, all_groups):
+def parent_sets(chosen, signature, all_groups, generator):
     """Given an already-chosen tuple of TargetTypeGroups and a signature
     of the groups left to choose, generates all mutually-compatible
     combinations of groups starting with chosen
@@ -373,7 +380,7 @@ def parent_sets(chosen, signature, all_groups):
     ... }
     >>> signature = (('y',0,'*'),('z',1,'1'))
     >>> chosen = (groups['x'][0],)
-    >>> [ x for x in parent_sets(chosen, signature, groups) ]
+    >>> [ x for x in parent_sets(chosen, signature, groups, Generator('x',('y*', 'z'))) ]
     [(1.x(#0$1), 1.z(#3$1)), (1.x(#0$1), 1.y(#1$1), 1.z(#3$1)), (1.x(#0$1), 2.y(#2$1), 1.z(#3$1))]
     """
     if len(signature) == 0:
@@ -388,16 +395,20 @@ def parent_sets(chosen, signature, all_groups):
         t, min, max = signature[0]
         
         if min == 0:
-            for s in parent_sets(chosen, signature[1:], all_groups):
+            for s in parent_sets(chosen, signature[1:], all_groups, generator):
                 yield s
             
         for g in all_groups[t]:
+
+            # can only use a generator once in any path
+            if generator in g.generators:
+                continue
             
             if (g.size >= min and g.size <= max and
                 g.all_compatible(chosen)): 
                 
                 for s in parent_sets(
-                    chosen + (g,), signature[1:], all_groups
+                    chosen + (g,), signature[1:], all_groups, generator
                     ):
                     yield s
         
@@ -539,7 +550,7 @@ def optimal_graphs(target_type, source_types, generators):
             
             # for all sets of parents which match the generator and
             # include g
-            for s in parent_sets((g,), match, all_groups):
+            for s in parent_sets((g,), match, all_groups, generator):
 
                 # Create the products of running this generator with
                 # the given parent set
