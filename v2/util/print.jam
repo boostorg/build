@@ -150,7 +150,7 @@ rule lines (
     : indent ? # Optional indentation prepended to each line after the first one.
     )
 {
-    text ?= " " ;
+    text ?= "" ;
     indent ?= "" ;
     if $(output-type) = plain
     {
@@ -178,10 +178,17 @@ rule text (
 {
     if $(output-target) = console
     {
-        while $(strings)
+        if ! $(strings)
         {
-            ECHO $(strings[1]) ;
-            strings = $(strings[2-]) ;
+            ECHO ;
+        }
+        else
+        {
+            while $(strings)
+            {
+                ECHO $(strings[1]) ;
+                strings = $(strings[2-]) ;
+            }
         }
     }
     else if $(output-target)
