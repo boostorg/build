@@ -159,7 +159,7 @@ if $(NO_GNU_LN)
 }
 else
 {
- if $(DLLVERSION)
+ if $(DLLVERSION) && $(UNIX)
  {
   actions gcc-Link-action bind NEEDLIBS
   {
