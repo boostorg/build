@@ -74,7 +74,7 @@ t.expect_addition("bin/r-f.test/$toolset/debug/r-f.test")
 
 # Make sure args are handled.
 t.expect_content("bin/r.test/$toolset/debug/r.output",
-                 "foo\nbar\n")
+                 "foo\nbar\n\nEXIT STATUS: 0\n")
 
 # Test that input file is handled as well.
 t.write("r.cpp", """
@@ -105,7 +105,7 @@ run-fail r-f.cpp ;
 
 t.run_build_system("hardcode-dll-paths=true")
 t.expect_content("bin/r.test/$toolset/debug/r.output",
-                 "test input")
+                 "test input\nEXIT STATUS: 0\n")
 
 # Make sure test failures are detected. Reverse expectation and see
 # if .test files are created or not.
