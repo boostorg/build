@@ -3,6 +3,7 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
+import modules ;
 import sequence ;
 import regex ;
 import errors : error ;
@@ -16,8 +17,8 @@ import errors : error ;
 #   of slash only.
 #
 
-os = $(OS) ;
-if $(UNIX) {
+os = [ modules.peek : OS ] ;
+if [ modules.peek : UNIX ] {
     os = UNIX ;
 }
 
