@@ -163,14 +163,14 @@ if $(cw-version) in 8.0 9.0
     flags cw C++FLAGS : -iso_templates on ;
     
     # The runtime libraries
-    flags cwpro8 CFLAGS <runtime-link>static/<threading>single/<runtime-build>release : -runtime ss ;
-    flags cwpro8 CFLAGS <runtime-link>static/<threading>single/<runtime-build>debug : -runtime ssd ;
+    flags cw CFLAGS <runtime-link>static/<threading>single/<runtime-build>release : -runtime ss ;
+    flags cw CFLAGS <runtime-link>static/<threading>single/<runtime-build>debug : -runtime ssd ;
     
-    flags cwpro8 CFLAGS <runtime-link>static/<threading>multi/<runtime-build>release : -runtime sm ;
-    flags cwpro8 CFLAGS <runtime-link>static/<threading>multi/<runtime-build>debug : -runtime smd ;
+    flags cw CFLAGS <runtime-link>static/<threading>multi/<runtime-build>release : -runtime sm ;
+    flags cw CFLAGS <runtime-link>static/<threading>multi/<runtime-build>debug : -runtime smd ;
     
-    flags cwpro8 CFLAGS <runtime-link>dynamic/<runtime-build>release : -runtime dm ;
-    flags cwpro8 CFLAGS <runtime-link>dynamic/<runtime-build>debug : -runtime dmd ;
+    flags cw CFLAGS <runtime-link>dynamic/<runtime-build>release : -runtime dm ;
+    flags cw CFLAGS <runtime-link>dynamic/<runtime-build>debug : -runtime dmd ;
 }
 if $(NT) && $(cw-version) in 6.0 7.0 8.0
 {
