@@ -20,7 +20,6 @@ import feature ;
 import property-set ;
 import build-request ;
 import errors : error ;
-import project-roots ;
 import "class" : new ;
 
 import builtin ;
@@ -73,11 +72,6 @@ if --version in [ modules.peek : ARGV ]
 # any chance of been seen. Otherwise, we won't be able to refer to
 # subprojects using target ids.
 current-project = [ project.target [ project.load "." ] ] ;
-
-if [ MATCH (--dump-projects) : [ modules.peek : ARGV ] ]
-{
-    project-roots.print ;
-}
 
 if ! [ feature.values <toolset> ] 
 {

@@ -39,5 +39,30 @@ t.write("Jamfile", "")
 
 t.run_build_system()
 
+t.write("Jamfile", """
+# This tests that rule 'hello' will be imported
+# to children unlocalized, and will still access
+# variables in this Jamfile
+x = 10 ;
+constant FOO : foo ;
+rule hello ( ) { ECHO "Hello $(x)" ; }
+""")
+
+t.write("d/Jamfile", """
+ECHO "d: $(FOO)" ;
+constant BAR : bar ;
+""")
+
+t.write("d/d2/Jamfile", """
+ECHO "d2: $(FOO)" ;
+ECHO "d2: $(BAR)" ;
+hello ;
+""")
+
+t.run_build_system(subdir="d/d2", stdout="""d: foo
+d2: foo
+d2: bar
+Hello 10
+""")
 
 t.cleanup()

@@ -170,13 +170,20 @@ class project-target : abstract-target
     import "class" : new ;
     import errors ;
         
-    rule __init__ ( name : project-module : requirements * : default-build * )
+    rule __init__ ( name : project-module parent-project ?
+        : requirements * : default-build * )
     {    
         abstract-target.__init__ $(name) : $(__name__) ;
         
         self.project-module = $(project-module) ;
+        self.location = [ project.attribute $(project-module) location ] ;
         self.requirements = $(requirements) ;
         self.default-build = $(default-build) ;
+        
+        if $(parent-project)
+        {            
+            inherit $(parent-project) ;
+        }        
     }
 
     # This is needed only by the 'make' rule. Need to find the
@@ -195,9 +202,14 @@ class project-target : abstract-target
     # Generates all possible targets contained in this project.
     rule generate ( property-set * )
     {
+        if --debug-targets in [ modules.peek : ARGV ]
+        {
+            ECHO "Building project" [ name ] " ('$(__name__)') with" [ $(property-set).raw ] ;
+        }
+                
         local usage-requirements = [ property-set.empty ] ;
         local targets ;
-        
+                
         for local t in [ targets-to-build ] 
         {
             local g = [ $(t).generate $(property-set) ] ;
@@ -302,6 +314,68 @@ class project-target : abstract-target
             $(target).add-alternative $(a) ;            
         }    
     }                            
+    
+    # Accessor, add a constant.
+    rule add-constant (
+        name # Variable name of the constant.
+        : value # Value of the constant.
+        : type ? # Optional type of value.
+        )
+    {
+        switch $(type)
+        {
+            case path :
+                value = [ path.root [ path.make $(value) ] $(self.location) ] ;
+                # Now make the value absolute path
+                value = [ path.root $(value) [ path.pwd ] ] ;
+                # Constants should be in platform-native form
+                value = [ path.native $(value) ] ;
+        }
+        if ! $(name) in $(self.constants)
+        {
+            self.constants += $(name) ;
+        }
+        self.constant.$(name) = $(value) ;
+        # Inject the constant in the scope of project-root module
+        modules.poke $(self.project-module) : $(name) : $(value) ;
+    }
+    
+    rule inherit ( parent )
+    {
+        for local c in [ modules.peek $(parent) : self.constants ] 
+        {
+            # No need to pass the type. Path constants were converted to
+            # absolute paths already by parent.
+            add-constant $(c) 
+              : [ modules.peek $(parent) : self.constant.$(c) ] ;
+        }       
+
+        # Import rules from parent 
+        local this-module = [ project-module ] ;
+        local parent-module = [ $(parent).project-module ] ;
+        # Don't import rules which comes from 'project-rules', they
+        # must be imported localized.
+        local user-rules = [ set.difference 
+            [ RULENAMES $(parent-module) ] :
+            [ RULENAMES project-rules ] ] ;
+        IMPORT $(parent-module) : $(user-rules) : $(this-module) : $(user-rules) ;
+        EXPORT $(this-module) : $(user-rules) ;
+    }
+    
+    
+    # Intern the constants from this project into the specified module.
+    #
+    rule intern-constants (
+        target-module # The module to intern into.
+        )
+    {
+        ECHO "Injecting constants to " $(target-module) ;
+        for local c in $(self.constants)
+        {
+            modules.poke $(target-module) : $(c) : $(self.constant.$(c)) ;
+        }
+    }
+
 }
 
 

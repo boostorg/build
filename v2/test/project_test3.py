@@ -10,9 +10,9 @@ t = Tester(translate_suffixes=0)
 t.set_tree("project-test3")
 os.remove("project-root.jam")
 t.run_build_system(status=1, stdout=
-"""Failed to find the project root for directory '.'.
-Did not find a project-root.jam file there or in any of its parent directories.
-Please consult the documentation at 'http://www.boost.org'.
+"""error: Could not find parent for project at '.'
+error: Did not find Jamfile or project-root.jam in any parent directory.
+
 """)
 
 t.set_tree("project-test3")
