@@ -10,9 +10,113 @@ rule construct ( module-name )
 {
 }
 
-module
+# Default patterns to search for the Jamfiles to use for build
+# declarations.
+#
+JAMFILE ?= [Jj]amfile [Jj]amfile.jam ;
+
+# Load a Jamfile at the given directory. Will attempt to load
+# the file as indicated by the JAMFILE patterns. Also the project-root.jam
+# corresponding to the Jamfile is also loaded. We return the
+# name of the Jamfile we loaded, which is the module for the Jamfile.
+#
+rule load-jamfile ( dir )
 {
-    JAMFILE ?= Jamfile ;
-    modules.load Jamfile : $(JAMFILE) : . ;
-    build-system.construct $(JAMFILE) ;
+    # See if the Jamfile is where it should be.
+    #
+    local jamfile-to-load = [ glob $(dir) : $(JAMFILE) ] ;
+    
+    # Could not find it, error.
+    #
+    if ! $(jamfile-to-load)
+    {
+        EXIT
+            "Unable to load Jamfile. Could not find a Jamfile in"
+            "this directory:" $(dir)"." "Attempted to find it with"
+            "this pattern:" $(JAMFILE)"."
+            "Please consult the documentation at 'http://www.boost.org'." ;
+    }
+    
+    # Multiple Jamfiles found in the same place. Warn about this.
+    # And ensure we use only one of them.
+    #
+    if $(jamfile-to-load[2-])
+    {
+        ECHO
+            "WARNING: Found multiple Jamfiles at this '"$(dir)"' location!"
+            "Loading the first one: '"$(jamfile-to-load[1]:D=)"'." ;
+    }
+    jamfile-to-load = $(jamfile-to-load[1]) ;
+    
+    # Load the project-root, and find out what the project root is
+    # for this Jamfile so we can correctly scope it.
+    #
+    local project-root-location = [ load-project-root $(dir) ] ;
+    
+    # Now load the Jamfile in the project-root module context.
+    #
+    modules.load project-root.$(project-root-location)
+        : $(jamfile-to-load:D=) : $(jamfile-to-load:D)
+        : Jamfile.$(jamfile-to-load) ;
+    
+    # Return the Jamfile's filename/module.
+    #
+    return $(jamfile-to-load) ;
 }
+
+# Load the project-root file for the given directory. The directory can
+# be either the project-root itself, or any subdirectory. Fails if it can't
+# find the project-root. We return the project-root location.
+#
+rule load-project-root ( dir )
+{
+    # Find the project-root.jam corresponding to this directory.
+    #
+    local project-root-to-load = [ find-to-root $(dir) : project-root.jam ] ;
+    
+    # No project-root file found.
+    #
+    if ! $(project-root-to-load)
+    {
+        EXIT
+            "Failed to find the project root for:" $(dir)"." "Did not"
+            "find a project-root.jam file there or in any of its parent"
+            "directories."
+            "Please consult the documentation at 'http://www.boost.org'." ;
+    }
+    
+    # Load it within a module specifically for the project root.
+    # The module system handles checking for multiple includes.
+    #
+    modules.load project-root.$(project-root-to-load:D)
+        : $(project-root-to-load:D=) : $(project-root-to-load:D) ;
+    
+    # Give local access to the project-root rule. NOTE, we don't use
+    # modules.import because it causes a circular dependency for this
+    # when used in loading the initial project-root.
+    #
+    IMPORT build-system : project-root
+        : project-root.$(project-root-to-load:D) : project-root ;
+    
+    # Remember the plain path of the project-root.
+    #
+    modules.poke project-root.$(project-root-to-load:D)
+        : project-root-location : $(project-root-to-load:D) ;
+    
+    # Return the location we just loaded.
+    #
+    return $(project-root-to-load:D) ;
+}
+
+# Returns the project-root for the calling context. This hides the
+# internals of maintenance of project-root values. This is imported
+# into all project-root modules to ease use.
+#
+rule project-root ( )
+{
+    return [ modules.peek [ CALLER_MODULE ] : project-root-location ] ;
+}
+
+# Load the first Jamfile, and build it.
+#
+construct [ load-jamfile [ PWD ] ] ;
