@@ -9,6 +9,9 @@ import modules ;
 import builtin ;
 import make ;
 
+import site-config ;
+import user-config ;
+
 current-project = [ project.load "."  ] ;
 build-request = [ build-request.from-command-line [ modules.peek : ARGV ] ] ;
 
