@@ -16,6 +16,8 @@ import property ;
 import generators ;
 import boostbook ;
 
+feature.feature recursive : off on ;
+feature.feature pattern : : free ;
 type.register DOXYGEN_XML : doxygen ; # Doxygen XML output
 
 generators.register-standard doxygen.xml-to-boostbook : DOXYGEN_XML : XML ;
@@ -43,6 +45,18 @@ rule name ( )
 
 rule extract-xml ( target : sources * : properties * )
 {
+  local recursive = [ feature.get-values <recursive> : $(properties) ] ;
+
+  if $(recursive) = "on"
+  {
+    RECURSIVE on $(target) = YES ;
+  }
+  else
+  {
+    RECURSIVE on $(target) = NO ;
+  }
+
+  PATTERNS on $(target) = [ feature.get-values <pattern> : $(properties) ] ;
   NAME on $(target) = [ name ] ;  
   doxygen-action $(<) : $(>) ;
 }
@@ -54,7 +68,9 @@ actions doxygen-action
   echo "GENERATE_LATEX = NO" >> $(<:S=.doxyfile)
   echo "GENERATE_XML   = YES" >> $(<:S=.doxyfile)
   echo "INPUT          = $(>) " >> $(<:S=.doxyfile)
-  echo "MONOLITHIC_XML_FILE = $(<)" >> $(<:S=.doxyfile)
+  echo "MONOLITHIC_XML_FILE = $(<)" >> $(<:S=.doxyfile) 
+  echo "RECURSIVE      = $(RECURSIVE) " >> $(<:S=.doxyfile)
+  echo "FILE_PATTERNS  = $(PATTERNS) " >> $(<:S=.doxyfile) 
   $(NAME:E=doxygen) $(<:S=.doxyfile) ;
 }
 
