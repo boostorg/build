@@ -107,8 +107,16 @@ rule identity ( list * )
 
     rule shift1 ( dummy ) { }
 
+    rule my_module.not_really ( ) { return something ; }
+
+    IMPORT my_module : : identity : id ;
     module my_module
     {
+        # assert-equal operates in its own module, so call id in here and use
+        # identity later.
+        local f = [ id x y z ] ;
+        assert-equal x y z : identity $(f) ;
+        
         module local w y ;
         module local x2 x3 z = 1 2 3 ;
 
@@ -133,7 +141,11 @@ rule identity ( list * )
         {
             return $($(symbol)) ;
         }
+        local rule not_really ( ) { return nothing ; }
     }
+    
+    # show that not_really was actually a local definition
+    assert-equal something : my_module.not_really ;
     
     my_module.shift1 ;
     y = $(y[2-]) ;
@@ -175,18 +187,22 @@ rule identity ( list * )
     shift2 ;
     y = $(y[2-]) ;
     assert-equal $(x) : identity $(y) ;
-
-    IMPORT my_module : : identity : id ;
-    module my_module {
-        local f = [ id x y z ] ;
-        assert-equal $(f) : x y z ;
-    }
 }
 
 #
-# test CALLER_MODULE
+# test CALLER_MODULE and backtrace
 #
 {
+    rule backtrace ( )
+    {
+        local bt = [ BACKTRACE ] ;
+        bt = $(bt[5-]) ;
+        while $(bt)
+        {
+            ECHO $(bt[1]):$(bt[2]): "in" $(bt[4]) ;
+            bt = $(bt[5-]) ;
+        }
+    }
     module module1
     {
         rule f ( )
@@ -203,6 +219,7 @@ rule identity ( list * )
         {
             local m = [ CALLER_MODULE ] ;
             assert-equal module1 : identity $(m) ;
+            backtrace ;
         }
     }
     module1.f ;
