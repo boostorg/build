@@ -168,6 +168,8 @@ flags gcc CFLAGS <profiling>on : -pg ;
 flags gcc LINKFLAGS <profiling>on : -pg ;
 
 flags gcc C++FLAGS <rtti>off : -fno-rtti ;
+flags gcc C++FLAGS <vtable-thunks>on : -fvtable-thunks ;
+flags gcc C++FLAGS <vtable-thunks>off : -fvtable-thunks=0 ;
 
 flags gcc CFLAGS <cflags> ;
 flags gcc C++FLAGS <cxxflags> ;
