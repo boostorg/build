@@ -354,7 +354,7 @@ if [ os.name ] in NT
     actions archive 
     {    
         if exist "$(<[1])" set _$(<[1]:B)_="$(<[1])"
-        $(.LD) /lib /out:"$(<[1])" %_$(<[1]:B)_% @"$(<[2])"
+        $(.LD) /lib /NOLOGO /out:"$(<[1])" %_$(<[1]:B)_% @"$(<[2])"
     }
 }
 else # CYGWIN
@@ -383,18 +383,18 @@ else # CYGWIN
         if test -f "$_bbv2_out_" ; then
             _bbv2_existing_="$(<:W)"
         fi
-        $(.LD) /lib "/out:$(<:W)" $_bbv2_existing_ @"$(>:W)"
+        $(.LD) /lib /NOLOGO "/out:$(<:W)" $_bbv2_existing_ @"$(>:W)"
     }
 }
 
 actions link bind DEF_FILE
 {
-    $(.LD) -nologo $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(<[2]:W)"
+    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(<[2]:W)"
 }
 
 actions link.dll bind DEF_FILE
 {
-    $(.LD) -nologo $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"$(<[3]:W)"
+    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"$(<[3]:W)"
 }
 
         
