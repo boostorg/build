@@ -45,14 +45,20 @@ if $(NT)
       <debug-python><define>_DEBUG
       <gcc><*><define>SIZEOF_LONG=4
       <gcc><*><define>USE_DL_IMPORT
+      <gcc><*><find-library>python$(PYTHON_VERSION).dll 
       ;
+    
+    GCC_PYTHON_ROOT ?= $(CYGWIN_ROOT)/usr/local ;
+    GCC_PYTHON_ROOT ?= /usr/local ;
 }
 else if $(UNIX)
 {
     PYTHON_VERSION ?= 1.5 ;
+    PYTHON_ROOT ?= /usr/local ;
+    GCC_PYTHON_ROOT = $(PYTHON_ROOT) ;
     PYTHON_PROPERTIES ?=
-      <include>/usr/include/python$(PYTHON_VERSION)
-        <library-path>/usr/local/lib/python$(PYTHON_VERSION)/config 
+      <include>$(PYTHON_ROOT)/include/python$(PYTHON_VERSION)
+        <library-path>$(PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config 
           <find-library>python$(PYTHON_VERSION)
       ;
 }
@@ -99,10 +105,8 @@ rule select-python-library ( toolset variant : properties * )
 
 PYTHON_PROPERTIES
   += 
-    <gcc><*><find-library>python$(PYTHON_VERSION).dll 
-      <gcc><*><library-path>/usr/local/lib/python$(PYTHON_VERSION)/config
-      <gcc><*><include>/usr/local/include/python$(PYTHON_VERSION)
-        <gcc><*><include>/usr/include/python$(PYTHON_VERSION)
+      <gcc><*><library-path>$(GCC_PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config
+      <gcc><*><include>$(GCC_PYTHON_ROOT)/include/python$(PYTHON_VERSION)
         <include>$(BOOST_ROOT)
           select-python-library
           # These two compilers pick up implicit directions from #pragmas
@@ -119,7 +123,7 @@ rule add-cygwin-python-run-path ( module )
     local d = $(GCC_ROOT_DIRECTORY) ;
     while $(d:D) != $(d)
     {
-        gRUN_PATH($(module)) += $(d)/usr/local/lib/python$(PYTHON_VERSION)/config ;
+        gRUN_PATH($(module)) += $(GCC_PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config ;
 
         d = $(d:D) ;
     }
@@ -271,28 +275,44 @@ rule python-runtest-aux ( target : sources + )
     # choose the right python executable
     local python = $(PYTHON) ;
     local splitpath = $(SPLITPATH) ;
+    
+    # compute the PYTHONPATH environment variable that will allow the test to
+    # find all of the modules on which it depends.
+    local pythonpath =
+      $(gLOCATE($(>[1])))                     # location of python test file
+          $(gRUN_PATH($(target)))                 # location of module dependencies
+          [ join-path $(TOP) libs python test ]   # location of doctest
+          $(>:D)                                  # directory of python driver file(s)
+          $(PYTHONPATH)                           # base PYTHONPATH from environment
+          ;
+    
     if $(NT) && ( $(gCURRENT_TOOLSET) = gcc )
     {
         python = python$(PYTHON_VERSION)$(SUFEXE) ;
-        SEARCH on $(python) = $(RUN_PATH) $(CYGWIN_ROOT)/usr/local/bin ;
+        SEARCH on $(python) = [ join-path [ split-path $(GCC_PYTHON_ROOT)/bin ] ] $(RUN_PATH) ;
         # Fix up path splitter for cygwin.
         splitpath = ":" ;
+        
+        local pp ;
+        for local p in $(pythonpath)
+        {
+            # if already rooted...
+            if $(p:R=xx) = $(p)
+            {
+                p = [ split-path $(p) ] ;
+                p = [ join-path /cygdrive [ SUBST $(p[1]) ^(.).* $1 ] $(p[2-]) ] ;
+            }
+            pp += $(p) ;
+        }
+        pythonpath = $(pp:T) ;
     }
     else if <define>BOOST_DEBUG_PYTHON in $(gBUILD_PROPERTIES) && $(NT)
     {
         python = $(PYTHON_D) ;
     }
     
-    # compute the PYTHONPATH environment variable that will allow the test to
-    # find all of the modules on which it depends.
-    PYTHONPATH on $(target) = [ join
-        $(gLOCATE($(>[1])))                     # location of python test file
-        $(gRUN_PATH($(target)))                      # location of module dependencies
-        [ join-path $(TOP) libs python test ]   # location of doctest
-        $(>:D)                                  # directory of python driver file(s)
-        $(PYTHONPATH)                           # base PYTHONPATH from environment
-        : $(splitpath) ] ;                      # platform path separator
-
+    PYTHONPATH on $(target) = [ join $(pythonpath) : $(splitpath) ] ;
+    
     # set the path so that DLLs linked into extension modules will be
     # found
     PATH on $(target) = [ join
