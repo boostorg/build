@@ -50,7 +50,7 @@ flags gcc STDLIBPATH : $(GCC_STDLIB_DIRECTORY) ;
 if ! $(NT) # The compiler complains about -fPIC on NT
 {
     flags gcc CFLAGS <shared-linkable>true : -fPIC ;
-    flags gcc LINKFLAGS <shared-linkable>true : -fPIC -Wl,-Bsymbolic ;
+    flags gcc LINKFLAGS <shared-linkable>true : -fPIC ;
 }
 
 
@@ -76,6 +76,7 @@ rule Link-action
     # proved to be neccessary with some versions of Cygwin.
     IMPLIB_COMMAND on $(<) = "-Wl,--export-all-symbols -Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__ -Wl,--out-implib," ;
     DEPENDS $(<) : $(NEEDLIBS) ;
+    gRUN_LD_LIBRARY_PATH($(<)) += $(GCC_STDLIB_DIRECTORY) ;
     if $(<[2]) && $(NT) && ( -mno-cygwin in $(gBUILD_PROPERTIES:G=) )
     {
         gcc-dllwrap $(<) : $(>) ;
