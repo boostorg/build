@@ -17,7 +17,7 @@ project
 exe a : a.cpp ;
 build-project src ;    
 """)
-t.write("a.cpp", "int main() { retrun 0; }\n")
+t.write("a.cpp", "int main() { return 0; }\n")
 
 t.write("src/Jamfile", "exe b : b.cpp ; ")
 t.write("src/b.cpp", "int main() { return 0; }\n")
