@@ -381,9 +381,16 @@ yacc ?= [ GLOB $(PATH) : bison bison.exe ] ;
 yacc = $(yacc[1]) ;
 switch $(yacc:D=:S=)
 {
-    case bison : yacc += -y -d --yacc ; # -t -l -v ;
+    case bison : yacc += -d --yacc ; # -t -l -v ;
     case yacc  : yacc += -d ;
 }
+
+if $(debug)
+{
+    yacc += -t -v ;
+}
+yacc += $(YACCFLAGS) ;
+
 rule .yacc
 {
     DEPENDS $(<) : $(>) ;
