@@ -9,4 +9,4 @@
 
 project main ;
 
-exe test_a : main.cpp ../liba/liba @/libx ;
+exe test_a : main.cpp ../liba//liba /libx ;

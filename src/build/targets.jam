@@ -577,63 +577,6 @@ if "--quiet" in [ modules.peek : ARGV ]
 }
 
 
-# Given an 'id' for a target, return an instance of 'abstract-target' or 
-# 'virtual-target' that corresponds to it. 
-# The project referred to by id is loaded if it is not already loaded.
-rule find-old ( id : current-location )
-{
-    local target ;    
-    # Find if this is project
-    local project-module = [ project.find $(id) : $(current-location) ] ;
-    if $(project-module)
-    {
-        target = [ project.target $(project-module) ] ;
-    }
-    else
-    {
-        # Split 'id' into project and target.
-        
-        local split = [ MATCH ((@?)(.*/)*)([^/]*) : $(id) ] ;
-        local project-name = [ remove-trailing-slash $(split[1]) ] ;
-        local has-project-id = $(split[2]) ;
-        local target-name = $(split[4]) ;
-        
-        local project-module = [ project.find $(project-name) : $(current-location) ] ;            
-        
-        if $(project-module) {
-            local project-target = [ project.target $(project-module) ] ;
-            if [ $(project-target).has-main-target $(target-name) ] 
-            {
-                target = [ $(project-target).main-target $(target-name) ] ;
-            }
-        } 
-        else if $(has-project-id)
-        {            
-            # This error checking should be moved somewhere.
-            errors.error
-              The target id \"$(id)\", specified by project at \"$(current-location)\"
-                is invalid (missing 'use-project'?) ;
-        }
-        
-        # Ok, this must be a file
-        if ! $(target)
-        {
-            local project-module = [ project.module-name $(current-location) ] ;
-            target = [ virtual-target.from-file $(id) : $(project-module) ] ;
-        }        
-    }    
-    
-    if ! $(.quiet) && $(target) && ! $(.issued-deprecation-warning)
-    {
-        .issued-deprecation-warning = true ;
-        ECHO "warning: target id '$(id)' uses deprecated syntax," ;
-        ECHO "warning: which may be removed in a future version." ;
-        ECHO "warning: reference is made from project at '$(current-location)'" ;
-    }
-        
-    return $(target) ;
-}
-
 rule find ( id : current-location )
 {
     local target ;    
@@ -687,16 +630,11 @@ rule find ( id : current-location )
             }        
         }
     }
-    
-    
+        
     if ! $(target)
     {
-        target = [ find-old $(id) : $(current-location) ] ;
-    }
-    
-    if ! $(target)
-    {
-        error.error "Unable to resolve target-id $(id)" ;
+        errors.error "Unable to resolve target-id $(id)" : 
+          "Reference was made from project at '$(current-location)'" ;
     }        
     return $(target) ;
 }

@@ -80,7 +80,7 @@ t.run_build_system("--clean")
 
 
 # Test that use requirement on project work
-t.write("Jamfile", "exe a : a.cpp lib/b ;")
+t.write("Jamfile", "exe a : a.cpp lib//b ;")
 
 t.write(
     "lib/Jamfile", 
@@ -106,7 +106,7 @@ t.run_build_system()
 
 # Test that use requirements are inherited correctly
 
-t.write("Jamfile", "exe a : a.cpp lib/1/b ;")
+t.write("Jamfile", "exe a : a.cpp lib/1//b ;")
 
 t.write(
     "a.cpp", 
@@ -202,7 +202,7 @@ t.run_build_system("--clean")
 t.write(
     "Jamfile",
 """
-    exe a : a.cpp lib1/c ;
+    exe a : a.cpp lib1//c ;
 """)
 
 t.write(
@@ -210,7 +210,7 @@ t.write(
 """
     project
     : requirements <link>shared:<define>SHARED_C
-    : usage-requirements <library>../lib2/b <link>shared:<define>SHARED_C
+    : usage-requirements <library>../lib2//b <link>shared:<define>SHARED_C
     ;
     
     lib c : c.cpp ;    
@@ -244,7 +244,7 @@ t.rm(".")
 t.write(
     "Jamfile", 
 """ 
-lib main : main.cpp : : : <library>libs/lib1 ; 
+lib main : main.cpp : : : <library>libs//lib1 ; 
 exe hello : hello.cpp main : ;
 """)
 

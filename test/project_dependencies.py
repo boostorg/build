@@ -20,7 +20,7 @@ void foo() {}\n
 """)
 t.write("src/Jamfile", """
 project
-    : requirements <library>../lib/lib1
+    : requirements <library>../lib//lib1
     ;
     
 exe a : a.cpp ;

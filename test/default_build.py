@@ -60,7 +60,7 @@ t.write("Jamfile", """
 """)
 
 t.write("a/Jamfile", """
-    exe a : a.cpp ../b/b ;
+    exe a : a.cpp ../b//b ;
 """)
 t.write("a/a.cpp", """
 #ifdef _WIN32
