@@ -43,5 +43,5 @@ expected_output="""Projects structure dump
 
 """
 
-t.run_build_system("-sBOOST_BUILD_PATH=../new -fproject-test1.jam", stdout=expected_output)
+t.run_build_system("--build-system=project-test1", stdout=expected_output)
 t.pass_test()
