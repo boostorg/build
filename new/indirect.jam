@@ -46,7 +46,10 @@ rule make-qualified ( rulename bound-args * : frames ? )
     else
     {
         frames ?= 1 ;
-        local module-context = [ MATCH ^(.*)\\..* : $(rulename) ] ;
+        # Take the first dot-separated element as module name.
+        # This disallows module names with dots, but allows rule names
+        # with dots.
+        local module-context = [ MATCH ^([^.]*)\\..* : $(rulename) ] ;
         module-context ?= [ CALLER_MODULE $(frames) ] ;
         return [ make $(rulename) $(bound-args) : $(module-context) ] ;
     }
