@@ -26,7 +26,9 @@ suffixes = {}
 def prepare_suffix_map(toolset):
     global windows, suffixes    
     suffixes = {'.exe': '', '.dll': '.so', '.lib': '.a', '.obj': '.o'}
-    if os.environ.get('OS','').lower().startswith('windows'):
+    if os.environ.get('OS','').lower().startswith('windows') or \
+       os.__dict__.has_key('uname') and \
+       os.uname()[0].lower().startswith('cygwin'):
         windows = 1
         suffixes = {}
         if toolset in ["gcc"]:
