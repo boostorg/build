@@ -675,8 +675,8 @@ rule base-to-derived-type-conversion ( targets * : target-types +
 
 
 
-rule try-one-generator ( project name ? : generator multiple ? : 
-    target-types + : property-set : sources * )
+local rule try-one-generator ( project name ? : generator multiple ? : 
+    target-type : property-set : sources * )
 {
     local targets =
       [ $(generator).run $(project) $(name)
@@ -690,7 +690,7 @@ rule try-one-generator ( project name ? : generator multiple ? :
     # Generated target of other types.
     local extra ;
 
-    base-to-derived-type-conversion $(targets) : $(target-types) 
+    base-to-derived-type-conversion $(targets) : $(target-type) 
         : result extra ;
             
     # Now try to convert extra targets 
@@ -703,7 +703,10 @@ rule try-one-generator ( project name ? : generator multiple ? :
         for local e in $(extra) 
         {
             local try2 = [ construct-types $(project) $(name) 
-                       : $(target-types) : : $(property-set) : $(e) ] ;
+                                         : $(target-type)
+                                         :
+                                         : $(property-set)
+                                         : $(e) ] ;
     
             result += $(try2) ;
         }    
