@@ -90,4 +90,15 @@ t.expect_addition([ "bin/gcc/release/threading-single/a.exe",
 		    "bin/gcc/release/optimization-off/threading-single/a.exe", 
 		    "bin/gcc/release/optimization-off/threading-single/a.obj"])
 
+t.run_build_system(extra_args='clean')
+t.expect_removal(["bin/gcc/debug/threading-single/a.obj",
+                 "bin/gcc/debug/threading-single/a.exe",
+                 "lib/bin/gcc/debug/threading-single/b.obj",
+                 "lib/bin/gcc/debug/threading-single/m.exe",
+                 "lib2/bin/gcc/debug/threading-single/c.obj",
+                 "lib2/bin/gcc/debug/threading-single/d.obj",
+                 "lib2/bin/gcc/debug/threading-single/l.exe",
+                 "lib3/bin/gcc/debug/threading-single/f.obj",
+                  ])
+
 t.cleanup()
