@@ -3,6 +3,7 @@ import targets ;
 import assert ;
 
 project.load project-test1 ;
+import project-root ;
 
 project-root.print ;
 
