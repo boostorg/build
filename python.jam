@@ -1,7 +1,10 @@
 if ! $(gPYTHON_INCLUDED)
 {
 gPYTHON_INCLUDED = true ;
-    
+
+SEARCH on testing.jam = $(BOOST_BUILD_PATH) ;
+include testing.jam ;
+
 # Do some OS-specific setup
 if $(NT)
 {
@@ -22,11 +25,6 @@ PYTHON_VERSION_NODOT
 PYTHON_VERSION_NODOT = $(PYTHON_VERSION_NODOT:J=) ;
 
 local RUN_PATH = $(RUN_PATH) ;
-
-# Decide which toolsets should be treated like an ordinary (unix) GCC installation
-gcc-compilers = [ MATCH ^(gcc.*)$ : $(TOOLS) ] ;
-mingw-compilers = [ MATCH ^(mingw.*)$ : $(TOOLS) ] ;
-gcc-compilers = [ difference $(gcc-compilers) : gcc-nocygwin ] ;
 
 if $(NT) || ( $(UNIX) && $(OS) = CYGWIN )
 {
@@ -76,16 +74,6 @@ if $(NT)
     
     PYTHON_LIB_PATH ?= $(PYTHON_ROOT)/libs [ GLOB $(PYTHON_ROOT) : PCbuild ] ;
 
-    # Locate Python libraries. In the case of MSVC the libraries are
-    # found implicitly, and GCC/MINGW will use -lpython<version> to
-    # find it, but other compilers may need an explicit pointer on the
-    # command line.
-    PYTHON_LIB ?= <python-library@>python$(PYTHON_VERSION_NODOT).lib ;
-    SEARCH on $(PYTHON_LIB) = $(PYTHON_LIB_PATH) ;
-
-    PYTHON_D_LIB ?= <python-library@>python$(PYTHON_VERSION_NODOT)_d.lib ;
-    SEARCH on $(PYTHON_D_LIB) = $(PYTHON_LIB_PATH) ;
-
     PYTHON_INCLUDES ?= $(PYTHON_ROOT)/include ;
 }
 else if $(UNIX)
@@ -120,15 +108,32 @@ SEARCH on $(PYTHON) = $(PYTHON_ROOT)/PCbuild $(PYTHON_ROOT)/bin $(PYTHON_ROOT) $
 PYTHON_D ?= $(PYTHON:S=)_d$(PYTHON:S) ;
 SEARCH on $(PYTHON_D) =  $(PYTHON_ROOT)/PCbuild $(PYTHON_ROOT)/bin $(PYTHON_ROOT) $(RUN_PATH) ;
 
-CYGWIN_PYTHON ?= <executable@>python$(CYGWIN_PYTHON_VERSION).exe ;
-SEARCH on $(CYGWIN_PYTHON) =  $(CYGWIN_PYTHON_ROOT)/bin $(PYTHON_ROOT)/bin $(RUN_PATH) ;
+CYGWIN_ROOT ?= c:/cygwin ;
+{
+    local cyg = $(CYGWIN_ROOT) "" ;
+    
+    for d in "" _D
+    {
+        local debug = $(d)EBUG ;
 
-# And the debugging version
-PYTHON_D ?= $(PYTHON:S=)_d$(PYTHON:S) ;
-SEARCH on $(PYTHON_D) =  $(PYTHON_ROOT)/PCbuild $(PYTHON_ROOT)/bin $(PYTHON_ROOT) $(RUN_PATH) ;
+        # select target description variable
+        local var = CYGWIN_PYTHON$(d) ; 
+        
+        # assign default target name
+        $(var) ?= <executable@>python$(CYGWIN_PYTHON$(debug)_VERSION).exe ;
 
-CYGWIN_PYTHON_D ?= <executable@>python$(CYGWIN_PYTHON_DEBUG_VERSION).exe ;
-SEARCH on $(CYGWIN_PYTHON_D) =  $(CYGWIN_PYTHON_DEBUG_ROOT)/bin $(PYTHON_ROOT)/bin $(RUN_PATH) ;
+        # choose the appropriate root directory/ies to search for the target
+        local r = $(CYGWIN_PYTHON$(debug)_ROOT) ;
+        switch $(r)
+        {
+            case [/\\]* : # in case of unix-style path
+              r = $(CYGWIN_ROOT)$(r) $(r) ; # re-root for windows
+        }
+        
+        # set up search path
+        SEARCH on $($(var)) = $(r)/bin $(PYTHON_ROOT)/bin $(RUN_PATH) ;
+    }
+}
 
 # select-python-library
 #
@@ -140,16 +145,7 @@ rule select-python-library ( toolset variant : properties * )
 {
     if $(PYTHON_WINDOWS) 
     {
-        if $(toolset) in $(mingw-compilers)
-        {
-            local lib = python$(PYTHON_VERSION_NODOT) ;
-            if <define>BOOST_DEBUG_PYTHON in $(properties)
-            {
-                lib = python$(PYTHON_VERSION_NODOT)_d ;
-            }
-            properties += <find-library>$(lib) ;
-        }
-        else if $(toolset) in $(gcc-compilers)
+        if $(toolset) in $(gcc-compilers)
         {
             if <define>BOOST_DEBUG_PYTHON in $(properties)
             {
@@ -166,12 +162,14 @@ rule select-python-library ( toolset variant : properties * )
             
             if $(toolset) != msvc  # msvc compilers auto-find the python library
             {
-                local lib = $(PYTHON_LIB) ;
+                properties += <library-path>$(PYTHON_LIB_PATH) ;
+                
+                local lib = python$(PYTHON_VERSION_NODOT) ;
                 if <define>BOOST_DEBUG_PYTHON in $(properties)
                 {
-                    lib = $(PYTHON_D_LIB) ;
+                    lib = python$(PYTHON_VERSION_NODOT)_d ;
                 }
-                properties += <library-file>$(lib) ;
+                properties += <find-library>$(lib) ;
             } 
         }
     }
@@ -241,14 +239,14 @@ BOOST_PYTHON_V2_PROPERTIES
 # that the Python DLL can be found.
 rule add-cygwin-python-run-path ( module )
 {
-        if <define>BOOST_DEBUG_PYTHON in $(gBUILD_PROPERTIES)
-        {
-            gRUN_LD_LIBRARY_PATH($(module)) += $(CYGWIN_PYTHON_DEBUG_DLL_PATH) ;
-        }
-        else
-        {
-            gRUN_LD_LIBRARY_PATH($(module)) += $(CYGWIN_PYTHON_DLL_PATH) ;
-        }
+    if <define>BOOST_DEBUG_PYTHON in $(gBUILD_PROPERTIES)
+    {
+        gRUN_LD_LIBRARY_PATH($(module)) += $(CYGWIN_PYTHON_DEBUG_DLL_PATH) ;
+    }
+    else
+    {
+        gRUN_LD_LIBRARY_PATH($(module)) += $(CYGWIN_PYTHON_DLL_PATH) ;
+    }
 }
 
 # This is the generator function for Python modules. It deals with the

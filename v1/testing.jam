@@ -6,6 +6,10 @@ if ! $(.testing.jam-included)
 {
 .testing.jam-included = "}" ; # The brace makes emacs indentation happy
       
+# Decide which toolsets should be treated like an ordinary (unix) GCC installation
+gcc-compilers = [ MATCH ^(gcc.*)$ : $(TOOLS) ] ;
+mingw-compilers = [ MATCH ^(mingw.*)$ ^(gcc-nocygwin.*) : $(TOOLS) ] ;
+gcc-compilers = [ difference $(gcc-compilers) : $(mingw-compilers) ] ;
 
 local rule get-var-value ( name + )
 {
@@ -336,10 +340,17 @@ rule capture-run-output1 ( target : executable )
     }
     
     p = $(gRUN_LD_LIBRARY_PATH($(executable))) ;
-    if $(NT)
+    if $(NT) 
     {
     	RUN_LD_LIBRARY_PATH on $(target) = ;
         LD_LIBRARY_PATH_VAR on $(target) = ;
+        if $(gCURRENT_TOOLSET) in $(gcc-compilers)
+        {
+            on $(target)
+            {
+                RUN_PATH = [ unique $(p) $(CYGWIN_ROOT)/$(p) $(RUN_PATH) ] ;
+            }
+        }
     }
     else if $(p)
     {
