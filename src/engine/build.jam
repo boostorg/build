@@ -105,7 +105,7 @@ toolset mipspro cc : "-o " : -D
 toolset msvc cl : /Fe : -D
     : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
     : /nologo /MLd /DEBUG /Z7 /Od /Ob0
-    : $(toolset-root)lib\\kernel32.lib ;
+    : $(MSSdk)\\lib\\kernel32.lib ;
 ## Sun Workshop 6 C++
 toolset sunpro CC : "-o " : -D
     : -s -fast -O4
@@ -122,7 +122,7 @@ toolset vacpp xlc : "-o " : -D
 toolset vc7 cl : /Fe : -D
     : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
     : /nologo /MLd /DEBUG /Z7 /Od /Ob0
-    : $(toolset-root)lib\\kernel32.lib ;
+    : $(MSSdk)\\lib\\kernel32.lib ;
 
 # First set the build commands and options according to the
 # preset toolset.
@@ -237,6 +237,8 @@ rule .clean
 }
 if $(NT) { actions piecemeal together existing .rm {    del /F /Q $(>) } }
 if $(UNIX) { actions piecemeal together existing .rm {    rm -f $(>) } }
+if $(NT) { --chmod+w = "attrib -r " ; }
+if $(UNIX) { --chmod+w = "chmod +w " ; }
 
 rule .mkdir
 {
@@ -251,6 +253,7 @@ rule .exe
     local exe = $(<) ;
     if $(NT) || ( $(UNIX) && $(OS) = CYGWIN ) { exe = $(exe:S=.exe) ; }
     LOCATE on $(exe) = $(locate-target) ;
+    DEPENDS all : $(exe) ;
     DEPENDS $(exe) : $(>) ;
     DEPENDS $(exe) : $(locate-target) ;
     .mkdir $(locate-target) ;
@@ -262,6 +265,7 @@ actions .cc {    $(--cc) $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def)$(-
 
 rule .link
 {
+    DEPENDS all : $(<) ;
     DEPENDS $(<) : $(>) ;
     .clean $(<) ;
 }
@@ -272,15 +276,14 @@ if $(UNIX) { actions .link {    ln -f $(>) $(<) } }
 rule .yyacc
 {
     local exe = [ .exe yyacc : yyacc.c ] ;
+    DEPENDS all : $(<) ;
     DEPENDS $(<) : $(exe) $(>) ;
     LEAVES $(<) ;
-    if $(NT) { chmod on $(<) = "attrib -r " ; }
-    if $(UNIX) { chmod on $(<) = "chmod +w " ; }
     yyacc.exe on $(<) = $(exe:R=$(locate-target)) ;
 }
 actions .yyacc
-{    $(chmod)$(<[1])
-    $(chmod)$(<[2])
+{    $(--chmod+w)$(<[1])
+    $(--chmod+w)$(<[2])
     $(yyacc.exe) $(<) $(>) }
 .yyacc jamgram.y jamgramtab.h : jamgram.yy ;
 
@@ -316,12 +319,10 @@ rule .mkjambase
     local exe = [ .exe mkjambase : mkjambase.c ] ;
     DEPENDS $(<) : $(exe) $(>) ;
     LEAVES $(<) ;
-    if $(NT) { chmod on $(<) = "attrib -r " ; }
-    if $(UNIX) { chmod on $(<) = "chmod +w " ; }
     mkjambase.exe on $(<) = $(exe:R=$(locate-target)) ;
 }
 actions .mkjambase
-{    $(chmod)$(<)
+{    $(--chmod+w)$(<)
     $(mkjambase.exe) $(<) $(>) }
 .mkjambase jambase.c : Jambase ;
 
@@ -358,7 +359,7 @@ dist.bin =
     bjam jam mkjambase yyacc
     ;
 dist.bin =
-    $(dist.bin:S=$(bjam.exe:S):R=$(locate-target))
+    $(dist.bin:S=$(bjam.exe:S))
     ;
 
 if $(NT)
