@@ -4,13 +4,14 @@
 <html>
   <head>
     <meta name="generator" content=
-    "HTML Tidy for Linux/x86 (vers 1st March 2002), see www.w3.org">
+    "HTML Tidy for Windows (vers 1st August 2002), see www.w3.org">
     <!--tidy options: -i -wrap 78 -->
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
     <link rel="stylesheet" type="text/css" href="../../boost.css">
 
     <title>Boost.Build v2 user manual</title>
-<style type="text/css">
+
+    <style type="text/css">
         hr { color: black }
         p.revision { text-align: right; font-style: italic }
         pre.code { margin-left: 2em } 
@@ -20,12 +21,12 @@
         br.clear { clear: left }
         div.alert { color: red }
         table { align: center; border: thin; }
-</style>
+    </style>
   </head>
   <!-- Things yet to document:
-              - build request, build request expansion and directly requested targets
-              - conditional properties
-            -->
+                - build request, build request expansion and directly requested targets
+                - conditional properties
+              -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -459,15 +460,18 @@ boost-build /path/to/boost.build ;
 
     <p>A <em>subfeature</em> is a feature which only exists in the presence
     of its parent feature, and whose identity can be derived (in the context
-    of its parent) from its value.</p>
+    of its parent) from its value. A subfeature's parent can never be another
+    subfeature. Thus, features and their subfeatures form a two-level
+    hierarchy.</p>
 
-    <p>A <em>value-string</em> is a string of the form
+    <p>A <em>value-string</em> for a feature <b>F</b> is a string of the form
     <tt>value-subvalue1-subvalue2</tt>...<tt>-subvalueN</tt>, where
-    <tt>value</tt> is a feature value and
-    <tt>subvalue1</tt>...<tt>subvalueN</tt> are values of related
-    subfeatures. For example, the properties <tt>&lt;toolset&gt;gcc
-    &lt;toolset-version&gt;3.0.1</tt> can be expressed more conscisely using
-    a value-string, as <tt>&lt;toolset&gt;gcc-3.0.1</tt>.</p>
+    <tt>value</tt> is a legal value for <b>F</b> and
+    <tt>subvalue1</tt>...<tt>subvalueN</tt> are legal values of some of
+    <b>F</b>'s subfeatures. For example, the properties
+    <tt>&lt;toolset&gt;gcc &lt;toolset-version&gt;3.0.1</tt> can be expressed
+    more conscisely using a value-string, as
+    <tt>&lt;toolset&gt;gcc-3.0.1</tt>.</p>
 
     <p>A <em>property set</em> is a set of properties (i.e. a collection
     without dublicates), for instance: <tt>&lt;toolset&gt;gcc
@@ -614,7 +618,7 @@ boost-build /path/to/boost.build ;
 
     <p>TODO: document active features..</p>
 
-    <h4><a name="#feature_declaration">Feature Declaration</a></h4>
+    <h4><a name="feature_declaration">Feature Declaration</a></h4>
     The low-level feature declaration interface is the <tt>feature</tt> rule
     from the <tt>feature</tt> module: 
 <pre>
@@ -624,7 +628,7 @@ rule feature ( name : allowed-values * : attributes * )
     provide high-level rules which define features in terms of valid and
     useful combinations of attributes. 
 
-    <h3><a name="#variants">Build Variants</a></h3>
+    <h3><a name="variants">Build Variants</a></h3>
     A build variant, or (simply variant) is a special kind of composite
     feature which automatically incorporates the default values of features
     that . Typically you'll want at least two separate variants: one for
