@@ -76,20 +76,20 @@ rule less ( a b )
     }
 }
 
-# For all elements of 'list' which do not have a suffix,
+# For all elements of 'list' which do not already have 'suffix',
 # add 'suffix'.
 rule apply-default-suffix ( suffix : list * )
 {
     local result ;
     for local i in $(list)
     {
-        if $(i:S)
+        if $(i:S) = $(suffix)
         {
             result += $(i) ;
         }
         else
         {
-            result += $(i:S=$(suffix)) ;
+            result += $(i)$(suffix) ;
         }        
     }
     return $(result) ;    
@@ -134,7 +134,7 @@ local rule __test__ ( )
     assert.false equal 1 2 ;
     assert.result "not sure" : equal [ new test-class__ ] 1 ;
     
-    assert.result foo.lib foo.a : apply-default-suffix .lib : foo foo.a ;
+    assert.result foo.lib foo.lib : apply-default-suffix .lib : foo.lib foo.lib ;
 }
 
 
