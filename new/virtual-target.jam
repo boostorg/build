@@ -729,8 +729,10 @@ rule register ( target )
 }
 
 # Traverses the dependency graph of 'target' and return all targets that will
-# be created before this one is created.
-rule traverse ( target )
+# be created before this one is created. If root of some dependency graph is
+# found during traversal, it's either included or not, dependencing of the
+# value of 'include-roots'. In either case, sources of root are not traversed.
+rule traverse ( target : include-roots ? : include-sources ? )
 {
     local result ;
     if [ $(target).action ]
@@ -743,10 +745,18 @@ rule traverse ( target )
         {
             if ! [ $(t).root ]
             {
-                result += [ traverse $(t) ] ;
+                result += [ traverse $(t) : $(include-roots) : $(include-sources) ] ;
             }
+            else if $(include-roots)
+            {
+                result += $(t) ;
+            }            
         }
     }
+    else if $(include-sources)
+    {
+        result = $(target) ;
+    }    
     return $(result) ;
 }
 

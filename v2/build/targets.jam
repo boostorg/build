@@ -569,7 +569,9 @@ rule basic-target ( name : project
                 local source-targets = [ generate-sources $(rproperties) ] ;                
                 
                 self.generated.$(property-set) = 
-                  [ construct $(source-targets) : $(rproperties) ] ;                             
+                  [ construct $(source-targets) : $(rproperties) ] ;
+                check-for-unused-sources 
+                  $(self.generated.$(property-set)) : $(source-targets) ;
                 
                 # Apply use requirement of this target to all generated
                 # virtual targets.
@@ -591,6 +593,27 @@ rule basic-target ( name : project
         }                
         return $(self.generated.$(property-set)) ;
     }
+    
+    # Check that 'result' makes use of all the 'sources'. If not,
+    # issues a warning.
+    local rule check-for-unused-sources ( result + : sources * )
+    {
+        local used-sources ;
+        for local r in $(result)
+        {
+            used-sources += [ virtual-target.traverse $(r) : include-roots : 1 ] ; #: includes-sources ] ;
+        }
+               
+        for local s in $(sources)
+        {
+            if ! $(s) in $(used-sources)
+            {
+                errors.warning "Unused source target" [ $(s).str ] 
+                  : "Main target is " [ full-name ] ;
+            }
+        }        
+    }
+    
         
     # Constructs the virtual targets for this abstract targets and
     # the dependecy graph. Returns the list of virtual targets.

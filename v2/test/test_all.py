@@ -83,6 +83,7 @@ tests = [ "project_test1",
           "make_rule",
           "alias",
           "alternatives",
+          "unused",
 	  ]
 
 if os.name == 'posix':
