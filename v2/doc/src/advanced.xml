@@ -89,13 +89,13 @@ using &lt;tool-name&gt; ;
 <programlisting>
 bjam --help &lt;tool-name&gt;.init         
 </programlisting>
-      on the command line. However, for all compilers the meaning of two first
-      parameters is the same: version and invocation command.
+      on the command line. However, for all compilers the meaning of the first
+      three parameters is the same: version, invocation command and options.
     </para>
 
     <para>The "version" parameter identifies the compiler, in case you have
     several. It can have any form you like, but it's recommended that you use
-    numeric identifier, like &quot;7.1&quot;. The "invocation command"
+    a numeric identifier, like &quot;7.1&quot;. The "invocation command"
     parameter is the command which must be executed to run the compiler. This
     might be just compiler name, or a name with a path in it. Here are some
     examples. 
@@ -127,6 +127,20 @@ using gcc ;
 using gcc : 3.4 : g++-3.4 ;
 </programlisting>
       because the first "using" does not specify the version. 
+    </para>
+
+    <para>The <code>options</code> parameter is used to fine-tune the
+      configuration. All compilers allow to pass four option, intentionally
+      similiar in spelling to builtin features: <code>cflags</code>,
+      <code>cxxflags</code>, <code>compileflags</code> and
+      <code>linkflags</code>. They specify additional options which will be
+      always passed to the corresponding tools. The <code>cflags</code> option
+      applies only to the C compiler, the <code>cxxflags</code> option applies
+      only to the C++ compiler and the <code>compileflags</code> options
+      applies to both. For example, to use 64 bit mode with gcc you can use:
+<programlisting>
+using gcc : 3.4 : : &lt;compileflags&gt;-m64 &lt;linkflags&gt;-m64 ;
+</programlisting>
     </para>
                 
     </section>

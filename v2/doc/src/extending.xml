@@ -245,19 +245,37 @@ actions inline-file
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
 generators.register-composing mex.mex : CPP LIB : MEX ;
 </programlisting>
-        The first generators takes a <emph>single</emph> source of type
+        The first generators takes a <emphasis>single</emphasis> source of type
         <code>VERBATIM</code> and produces a result. The second generator
         takes any number of sources, which can have either the
         <code>CPP</code> or the <code>LIB</code> type. Composing generators
-        are typically used for generating top-levle target type. For example,
+        are typically used for generating top-level target type. For example,
         the first generator invoked when building an <code>exe</code> target
         is a composing generator corresponding to the proper linker.
       </para>
 
+      <para>You should also know about two specific function for registering
+        generators: <code>generators.register-c-compiler</code> and
+        <code>generators.register-linker</code>. The first sets up header
+        dependecy scanning for C files, and the seconds handles various
+        complexities like searched libraries. For that reason, you should always
+        use those functions when adding support for compilers and linkers.
+      </para>
+
+      <para>(Need a note about UNIX)</para>
+
+      <bridgehead>Custom generator classes</bridgehead>
+      
+      <para></para>
+
+ 
+    </section>
+
+    <section id="bbv2.extending.features">
+      <title>Features</title>
       <para>
-        Often, the command line used when invoking a tool should depend on the
-        properties. The simplest mechanism is the <code>toolset.flags</code>
-        rule. Consider an example:
+        Often, we need to control the options passed the invoked tools. This 
+        is done with features. Consider an example:
 <programlisting>
 # Declare a new feature
 import feature : feature ;
@@ -278,7 +296,167 @@ actions inline-file
         You'd need to consult online help (--help) to find all the features of
         the <code>toolset.flags</code> rule.
       </para>
+
+      <para>
+        There are two approaches: using a generic
+        feature which is passed to the tool, and using a more specific feature
+        which is translated to a specific options. For example, with a C++
+        compiler it's possible to pass either <code>&lt;cxxflags&gt;-O3</code>
+        or <code>&lt;optimization&gt;speed</code>. A generic feature is
+        almost always should be defined, to provide a "back door" for the
+        user. Specific features, however, are preferred for a couple of
+        reasons:
+
+        <itemizedlist>
+          <listitem>
+            <para>For a specific feature, you will be able to build
+            your project with two different settings of the feature. If you
+            pass compiler options, Boost.Build assumes you know what you are
+            doing, and would not care about the options.
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>If a feature makes sense for more than one tool, using
+              feature will make your Jamfiles more portable, as opposed to 
+              passing specific flags.              
+            </para>
+          </listitem>
+        </itemizedlist>
+      </para>
+
+        
+      <para>Adding a feature requires three steps:
+
+        <orderedlist>
+          <listitem><para>Declaring a feature. For that, the "feature.feature" rule is used. You
+              should have to decide on the set of feature attributes:
+
+              <itemizedlist>
+                <listitem><para>if feature has several values, and
+                    significally affects build, make it "propagated", so that
+                    whole project is build with the same value by
+                    default</para></listitem> 
+
+                <listitem><para>if a feature does not have a fixed list of
+                    values, it must be "free".</para></listitem>
+
+                <listitem><para>if feature is used to refer to a path, it must
+                be "path".</para></listitem>
+        
+                <listitem><para>if feature is used to refer to some target, it
+                must be "dependency".</para></listitem>
+              </itemizedlist>
+              </para>
+          </listitem>
+              
+
+          <listitem><para>Converting the feature value into variable. To use
+              feature in build action, it must be converted into a variable,
+              acessible in build action. This is accomplished by
+              "toolset.flags" rule.</para></listitem>
+
       
+          <listitem><para>Using the variable. The variable set in step 2 can
+              be used in build action to form command parameters or
+              files.</para></listitem>
+
+        </orderedlist>
+      </para>
+
+      <para>Here's an another example.
+        Let's see how we can make a feature which refers to a target. For example,
+        when linking dynamic libraries on windows, one sometimes needs to specific
+        "DEF file", telling what functions should be exported. It would be nice to
+        use this file like this:
+<programlisting>
+        lib a : a.cpp : &lt;def-file&gt;a.def ;
+</programlisting>
+        Actually, this feature is already supported, but anyway...
+      </para>
+
+      <orderedlist>
+        <listitem>
+          <para>Since the feature refers to a target, it must be "dependency".
+<programlisting>
+feature def-file : : free dependency ;
+</programlisting>
+            </para></listitem>
+
+        <listitem><para>One of the toolsets which cares about DEF files is
+msvc. The following line should be added to it.
+
+<programlisting>
+flags msvc.link DEF_FILE &lt;def-file&gt; ;
+</programlisting>
+            </para></listitem>
+
+        <listitem><para>Since the DEF_FILE variable is not used by the
+msvc.link action, we need to modify it to be:
+
+<programlisting>
+actions link bind DEF_FILE
+{
+    $(.LD) .... /DEF:$(DEF_FILE) ....
+}
+</programlisting>
+            </para>
+          
+          
+          <para> Note the "bind DEF_FILE" part. It tells bjam that DEF_FILE
+            refers to a file, otherwise the variable will contain internal
+            target name, which is not likely to make sense for the linker.
+          </para>
+
+          <para>
+            We've almost done, but should stop for a small workaround. Add the following
+            code to msvc.jam
+
+<programlisting>
+rule link
+{
+    DEPENDS $(&lt;) : [ on $(&lt;) return $(DEF_FILE) ] ;
+}
+</programlisting>
+
+            This is needed to accomodate some bug in bjam, which hopefully
+            will be fixed one day.</para></listitem>
+
+      </orderedlist>
+
+      <bridgehead>Variants and composite features.</bridgehead>
+
+      <para>Sometimes you want to create a shorcut for some set of
+        features. For example, <code>release</code> is a value of the
+        <code>variant</code> and is a shortcut for
+        a set of features.
+      </para>.
+
+      <para>It is possible to define your build variants. For example:
+<programlisting>
+variant crazy : &lt;optimization&gt;speed &lt;inlining&gt;off
+                &lt;debug-symbols&gt;on &lt;profiling&gt;on ;
+</programlisting>
+        will define a new variant with the specified set of properties. You
+        can also extend an existing variant:
+<programlisting>
+variant super_release : release : &lt;define&gt;USE_ASM ;
+</programlisting>
+        In this case, <code>super_release</code> will expand to all properties
+        specified by <code>release</code>, and the additional one you've specified.
+      </para>
+
+      <para>You are not restricted to using the <code>variant</code> feature
+      only. Here's example which defines a brand new feature:
+<programlisting>
+feature parallelism : mpi fake none : composite link-incompatible ;
+feature.compose &lt;parallelism&gt;mpi : &lt;library&gt;/mpi//mpi/&lt;parallelism&gt;none ;
+feature.compose &lt;parallelism&gt;fake : &lt;library&gt;/mpi//fake/&lt;parallelism&gt;none ;
+</programlisting>
+        This will allow you to specify value of feature
+        <code>parallelism</code>, which will expand to link to the necessary
+        library. 
+      </para>
      
   </section>
   
