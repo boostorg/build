@@ -150,10 +150,7 @@ class generator
                                     
         # Note that 'transform' here, is the same as 'for_each'.
         sequence.transform type.validate : $(self.source-types) ;
-        if $(self.target-types) != *
-        {        
-            sequence.transform type.validate : $(self.target-types) ;
-        }
+        sequence.transform type.validate : $(self.target-types) ;
     }
                             
     ############## End of constructor #################
@@ -650,7 +647,7 @@ rule register ( g )
 # Rationale: the instance is returned so that it's possible to first register
 # a generator and then call 'run' method on that generator, bypassing all
 # generator selection.
-rule register-standard ( id : source-types + : target-types + : requirements * )
+rule register-standard ( id : source-types * : target-types + : requirements * )
 
 {
     local g = [ new generator $(id) : $(source-types) : $(target-types)
