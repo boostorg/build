@@ -52,7 +52,14 @@ rule section (
             local paragraph = ;
             while $(description) && $(description[1]) = "" { description = $(description[2-]) ; }
             while $(description) && $(description[1]) != "" { paragraph += $(description[1]) ; description = $(description[2-]) ; }
-            lines [ split-at-words " " $(paragraph) ] : "  " ;
+            if [ MATCH "^(::).*" : $(paragraph) ]
+            {
+                lines [ MATCH "^::(.*)" : $(paragraph) ] : "  " "  " ;
+            }
+            else
+            {
+                lines [ split-at-words " " $(paragraph) ] : "  " ;
+            }
             lines ;
         }
     }
@@ -151,13 +158,15 @@ rule split-at-words (
 rule lines (
     text * # The lines of text.
     : indent ? # Optional indentation prepended to each line after the first one.
+    outdent ? # Optional indentation to prepend to the first line.
     )
 {
     text ?= "" ;
     indent ?= "" ;
+    outdent ?= "" ;
     if $(output-type) = plain
     {
-        text $(text[1]) $(indent)$(text[2-]) ;
+        text $(outdent)$(text[1]) $(indent)$(text[2-]) ;
     }
     else if $(output-type) = html
     {
