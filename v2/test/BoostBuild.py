@@ -19,15 +19,18 @@ def get_toolset():
     return toolset or 'gcc'
 
 windows = 0
+suffixes = {}
 
 # Prepare the map of suffixes
-suffixes = {'.exe': '', '.dll': '.so', '.lib': '.a', '.obj': '.o'}
-if os.environ.get('OS','').lower().startswith('windows'):
-    windows = 1
-    suffixes = {}
-    if get_toolset() in ["gcc"]:
-        suffixes['.lib'] = '.a' # static libs have '.a' suffix with mingw...
-        suffixes['.obj'] = '.o'
+def prepare_suffix_map(toolset):
+    suffixes = {'.exe': '', '.dll': '.so', '.lib': '.a', '.obj': '.o'}
+    if os.environ.get('OS','').lower().startswith('windows'):
+        global windows, suffixes
+        windows = 1
+        suffixes = {}
+        if toolset in ["gcc"]:
+            suffixes['.lib'] = '.a' # static libs have '.a' suffix with mingw...
+            suffixes['.obj'] = '.o'
         
     
     
@@ -73,6 +76,8 @@ class Tester(TestCmd.TestCmd):
 
         if pass_toolset:
             arguments = self.toolset + " " + arguments
+
+        prepare_suffix_map(pass_toolset and 'gcc' or self.toolset)
 
         jam_build_dir = ""
         if os.name == 'nt':
