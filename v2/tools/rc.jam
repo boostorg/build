@@ -35,7 +35,7 @@ rule resource-compile ( target : sources * : properties * )
 
 actions quietly resource-compile-nt
 {
-    rc /i "$(>:D)" /fo "$(<)" "$(>)"
+    rc /i "$(>:D)" /i "$(<:D)" /fo "$(<)" "$(>)"
 }
 
 actions quietly resource-compile-cygwin
