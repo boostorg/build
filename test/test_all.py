@@ -84,6 +84,7 @@ tests = [ "project_test1",
           "alias",
           "alternatives",
           "unused",
+          "default_features",
 	  ]
 
 if os.name == 'posix':

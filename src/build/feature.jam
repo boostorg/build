@@ -710,7 +710,13 @@ rule add-defaults ( properties * )
                 but \"$(v)\" appears to be the value of an un-expanded implicit feature ;
         }
     }
-    local missing = [ set.difference $(.all-features) : $(properties:G) ] ;
+    # We don't add default for elements with ":" inside. This catches:
+    # 1. Conditional properties --- we don't want <variant>debug:<define>DEBUG
+    #    to be takes as specified value for <variant>
+    # 2. Free properties with ":" in values. We don't care, since free properties
+    #    don't have defaults.
+    local xproperties = [ MATCH "^([^:]+)$" : $(properties) ] ;
+    local missing = [ set.difference $(.all-features) : $(xproperties:G) ] ;
     return $(properties) [ defaults $(missing) ] ;
 }
 
@@ -884,9 +890,9 @@ local rule __test__ ( )
           : defaults <runtime-link> <define> <optimization>
           ;
 
-        assert.result <runtime-link>static <define>foobar <optimization>on <toolset>gcc <variant>debug 
-                      <stdlib>native <dummy>dummy1
-          : add-defaults <runtime-link>static <define>foobar <optimization>on
+        assert.result <runtime-link>static <define>foobar <optimization>on <toolset>gcc:<define>FOO
+          <toolset>gcc <variant>debug <stdlib>native <dummy>dummy1
+          : add-defaults <runtime-link>static <define>foobar <optimization>on <toolset>gcc:<define>FOO
           ;
         
         assert.result  <toolset>gcc <define>foo <stdlib>stlport <magic>3 <include>/path/to/stlport <define>MAGIC=3
