@@ -47,7 +47,7 @@ rule unit-test ( target-name : sources * : requirements * )
 {
     # TODO: what to do with default build?
     targets.main-target-alternative 
-      $(target-name) [ CALLER_MODULE ] unit-test-target-class : 2 : 3 
+      $(target-name) [ CALLER_MODULE ] unit-test-target-class : 2 : : 3 
         : $(sources) : $(requirements) : $(default-build) ;
 }
 

@@ -782,6 +782,17 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
 
     if ! $(.construct-stack) # This is first invocation in stack
     {
+        # Make roots of dependency graph depent on all 'dependency' features.
+        local dp = [ property.take dependency : $(properties) ] ;
+                       
+        if $(dp)
+        {      
+            for local t in $(result)
+            {
+                $(t).depends $(dp:G=) ;
+            }
+        }
+                                
         local result2 ;
         for local t in $(result)
         {

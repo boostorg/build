@@ -166,7 +166,7 @@ rule virtual-target ( name : type ? : project
 
             self.made.$(name) = true ;
             
-            for local i in $(dependencies) {
+            for local i in $(self.dependencies) {
                 DEPENDS $(name) : [ $(i).actualize ] ;
             }
             BINDRULE on $(name) = virtual-target.remember-binding ;
@@ -562,6 +562,18 @@ local rule subvariant-dg ( main-target : properties * : virtual-targets * )
     self.properties = $(properties) ;
     self.virtual-targets = $(virtual-targets) ;
 
+    # Pre-compose the list of other dependency graphs, on which this one
+    # depends
+    for local t in $(virtual-targets)
+    {
+        for local d in [ $(t).dependencies ] 
+        {
+            self.other-dg += [ $(d).dg ] ;
+        }        
+    }
+    self.other-dg = [ sequence.unique $(self.other-dg) ] ;
+    
+
     rule all-target-directories ( )
     {
         local result ;
@@ -569,8 +581,12 @@ local rule subvariant-dg ( main-target : properties * : virtual-targets * )
         {
             result = [ sequence.merge $(result) : [ $(t).path ] ] ;
         }
+        for local d in $(self.other-dg)
+        {
+            result += [ $(d).all-target-directories ] ;
+        }        
         return $(result) ;                
-    }    
+    }       
 }
 
 class subvariant-dg ;

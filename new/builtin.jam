@@ -22,6 +22,8 @@ feature rtti : on off : link-incompatible propagated ;
 feature debug-symbols : on off : propagated ;
 feature define : : free ;
 feature "include" : : free path ;
+feature dependency : : free dependency ;
+feature library : : free dependency ;
 
 feature variant : : implicit composite propagated ;
 
