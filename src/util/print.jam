@@ -218,7 +218,8 @@ rule lines (
 # Output text directly to the current target.
 #
 rule text (
-    strings * # The strings of text to output.
+    strings *     # The strings of text to output.
+    : overwrite ? # true to overwrite the output (if it is a file)
     )
 {
     if $(output-target) = console
@@ -243,11 +244,20 @@ rule text (
         {
             local line-v = $(output-target).line.$($(output-target).line) ;
             local echo-string = [ regex.split $(strings[1]) "\"" ] ;
-            echo-string = $(echo-string:J="''") ;
+            echo-string = $(echo-string:J="\\\"") ;
             $(line-v) on $(output-target) = $(echo-string) ;
             NOCARE $(line-v) ;
             NOTFILE $(line-v) ;
-            text-action $(output-target) : $(line-v) ;
+            if $(overwrite) = "true" 
+            {
+              overwrite = false ;
+              ALWAYS $(output-target) ;
+              text-overwrite-action $(output-target) : $(line-v) ;
+            }
+            else
+            {            
+              text-action $(output-target) : $(line-v) ;
+            }
             strings = $(strings[2-]) ;
             $(output-target).line = [ numbers.increment $($(output-target).line) ] ;
         }
@@ -267,6 +277,12 @@ rule wrapped-text ( text + )
 actions quietly text-action
 {
     echo "$($(>))" >> $(<)
+}
+
+# Writes a single line to target file (overwriting or creating the
+# file as necessary)
+actions quietly text-overwrite-action {
+    echo "$($(>))" > $(<)
 }
 
 local rule __test__ ( )
