@@ -7,6 +7,7 @@
     "HTML Tidy for Linux/x86 (vers 1st March 2002), see www.w3.org">
     <!--tidy options: -i -wrap 78 -->
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <link rel="stylesheet" type="text/css" href="../../boost.css">
 
     <title>Boost.Build v2 user manual</title>
 <style type="text/css">
@@ -31,8 +32,9 @@
     <hr>
 
     <div class="alert">
-      This is a preliminary version intended to document everything
-      implemeneted but not yet ready for any practical use.
+      This preliminary reference is intended to document everything
+      currently implemeneted, but is not yet ready for any practical
+      use.
     </div>
     <br>
      <br>
@@ -45,6 +47,17 @@
       <dd>
         <dl class="page-index">
           <dt><a href="#features_properties">Features and properties</a></dt>
+
+          <dd>
+             <dl class="page-index">
+               <dt><a href="#features_defined">Defintions</a>
+               <dt><a href="#feature_attributes">Feature Attributes</a>
+               <dt><a href="#feature_declaration">Feature Declaration</a>
+             </dl>
+             
+          <dt><a href="#variants">Build Variants</a></dt>
+
+          <dt><a href="#subfeatures">Subfeatures</a></dt>
 
           <dt><a href="#initialization">Initialization</a></dt>
 
@@ -64,100 +77,123 @@
 
     <h3><a name="features_properties">Features and properties</a></h3>
 
-    <h4>Definition</h4>
+    <h4><a name="features_defined">Definitions</a></h4>
 
-    <p>A <em>feature</em> is a normalized (toolset-independent) aspect of a
-    build configuration, such as whether inlining is enabled.</p>
+    <p>A <em>feature</em> is a normalized (toolset-independent) aspect
+    of a build configuration, such as whether inlining is
+    enabled. Feature names may not contain the '<tt>&gt;</tt>'
+    character.</p>
 
-    <p>A <em>feature value</em> is a specific available setting for a
-    feature.</p>
+    <p>Each feature in a build configuration has one or more
+    associated <em>value</em>s. Feature values may not contain the
+    '<tt>&lt;</tt>', '<tt>:</tt>', or '<tt>=</tt>' characters.</p>
 
     <p>A <em>property</em> is a (feature,value) pair, expressed as
     &lt;feature&gt;value.</p>
 
-    <p>A <em>subfeature</em> is a feature which only exists in the presence
-    of its parent, and whose identity can be derived (in the context of its
-    parent) from the name of its value.</p>
+    <p>A <em>subfeature</em> is a feature which only exists in the
+    presence of its parent feature, and whose identity can be derived
+    (in the context of its parent) from its value.</p>
 
     <p>A <em>value-string</em> is a string of the form
-    <tt>value-subvalue1-subvalue2...-subvalueN</tt>, where <tt>value</tt> is
-    a feature value and <tt>subvalue1...subvalueN</tt> are values of related
-    subfeatures. For example, by using value-string properties
-    &lt;toolset&gt;gcc &lt;toolset-version&gt;3.0.1, can be expressed more
-    conscicely, as &lt;toolset&gt;gcc-3.0.1.</p>
+    <tt>value-subvalue1-subvalue2</tt>...<tt>-subvalueN</tt>, where <tt>value</tt> is
+    a feature value and <tt>subvalue1</tt>...<tt>subvalueN</tt> are values of related
+    subfeatures. For example, the properties
+    <tt>&lt;toolset&gt;gcc &lt;toolset-version&gt;3.0.1</tt> can be
+    expressed more conscisely using a value-string, as
+    <tt>&lt;toolset&gt;gcc-3.0.1</tt>.</p>
 
-    <p>A set of properties is called, naturally, <em>property set</em>. For
-    example, <tt>&lt;toolset&gt;gcc &lt;runtime-link&gt;static</tt>.
-    Sometimes it's better to represent a property set without spaces. In that
-    case <em>property path</em> is used, which consists of all properties,
-    joined with slashes. To continue with example, property path
-    representation would be
-    <tt>&lt;toolset&gt;gcc/&lt;runtime-link&gt;static</tt> .</p>
+    <p>A <em>property set</em> is a set of properties where no property appears twice, for 
+    instance: <tt>&lt;toolset&gt;gcc &lt;runtime-link&gt;static</tt>.
 
-    <p>Each feature can have any of the following attributes:</p>
+    <p>
 
+    A <em>property path</em> is a property set whose elements have
+    been joined into a single string separated by slashes.  A property
+    path representation of the previous example would be
+    <tt>&lt;toolset&gt;gcc/&lt;runtime-link&gt;static</tt>.
+
+    <p>A <em>build specification</em> is a property set which fully
+    describes the set of features used to build a target.
+
+    <h4><a name="feature_attributes">Feature Attributes</a></h4>
+
+    <p>Each feature has a collection of zero or more of the following
+    attributes. Feature attributes are low-level descriptions of how
+    the build system should interpret a feature's values when they
+    appear in a build request. We also refer to the attributes of
+    properties, so that a <i>incidental</i> property, for example, is
+    one whose feature is has the <i>incidental</i> attribute.
+    
     <ul>
       <li>
         <em>incidental</em> 
 
-        <p>Incidental features are assumed not affect build products at all.
-        Warning level is one example. As a consequence, the build system
-        doesn't try to avoid confusing targets with different values of
-        incidental properties.</p>
+        <p>Incidental features are assumed not to affect build
+        products at all.  As a consequence, the build system may use
+        the same file for targets whose build specification differs
+        only in incidental features. A feature which controls a
+        compiler's warning level is one example of a likely incidental
+        feature.</p>
 
-        <p>Features which are not incidental are assumed to affect build
-        products, therefore they are put in different directories as
-        described in <a href="#target_paths">target paths</a> below.</p>
+        <p>Non-incidental features are assumed to affect build
+        products, so the files for targets whose build specification
+        differs in non-incidental features are placed in different
+        directories as described in <a href="#target_paths">target
+        paths</a> below.</p>
       </li>
 
       <li>
         <em>propagated</em> 
 
-        <p>Features of this kind are propagated to dependencies. That is, if
-        a <a href="#main_target">main target</a> is build with a particular
-        value of a propagated feature, and depends on some other main
-        targets, the build systems attempts to use subvariants of those main
-        targets with the same value of the feature. For instance, when an
-        optimized exectuable is requested, one usually wants it to be linked
-        with optimized libraries. Thus, the &lt;optimization&gt; feature is
+        <p>Features of this kind are propagated to dependencies. That
+        is, if a <a href="#main_target">main target</a> is built using
+        a propagated property, the build systems attempts to use the
+        same property when building any of its dependencies as part of
+        that main target. For instance, when an optimized exectuable
+        is requested, one usually wants it to be linked with optimized
+        libraries. Thus, the <tt>&lt;optimization&gt;</tt> feature is
         propagated.</p>
       </li>
 
       <li>
         <em>free</em> 
 
-        <p>Usually, each feature takes a single value from a fixed set. In
-        particular, this means that only one value can be used when building
-        a single target. When a feature is free, it can have several values
-        at a time and each value can be an arbitrary string. For example, it
-        is possible to have several preprocessor symbols defined
-        simultaneously:</p>
+        <p>Most features have a finite set of allowed values, and can
+        only take on a single value from that set in a given build
+        specification. Free features, on the other hand, can have
+        several values at a time and each value can be an arbitrary
+        string. For example, it is possible to have several
+        preprocessor symbols defined simultaneously:</p>
 <pre>
-        &lt;define&gt;NDEBUG=1 &lt;define&gt;HAS_CONFIG_H=1
+&lt;define&gt;NDEBUG=1 &lt;define&gt;HAS_CONFIG_H=1
 </pre>
-        <br>
         <br>
       </li>
 
       <li>
         <em>optional</em> 
 
-        <p>An optional feature is not required to have a value during build.
-        When a value of non-optional non-free feature is not specified, it is
-        always given the default value &mdash; which is the first value
-        listed in the feature's declaration.</p>
+        <p>An optional feature is a feature which is not required to
+        appear in a build specification. Every non-optional non-free
+        feature has a default value which is used when a value for the
+        feature is not otherwise specified, either in a target's
+        requirements or in the user's build request. [A feature's
+        default value is given by the first value listed in the
+        feature's declaration. -- move this elsewhere - dwa]</p>
       </li>
 
       <li>
         <em>symmetric</em> 
 
-        <p>A symmetric feature's default value is not automatically included
-        in <a href="#variants">build variants</a>. Normally a feature only
-        generates a subvariant directory when its value differs from the
-        value specified by the build variant, leading to an assymmetric
-        subvariant directory structure for certain values of the feature. A
-        symmetric feature, when relevant to the toolset, always generates a
-        corresponding subvariant directory.</p>
+        <p>A symmetric feature's default value is not automatically
+        included in <a href="#variants">build variants</a>. Normally a
+        feature only generates a subvariant directory when its value
+        differs from the value specified by the build variant, leading
+        to an assymmetric subvariant directory structure for certain
+        values of the feature. A symmetric feature, when relevant to
+        the toolset, always generates a corresponding subvariant
+        directory.</p>
       </li>
 
       <li>
@@ -206,8 +242,36 @@
         </div>
       </li>
     </ul>
-
+    
     <p>TODO: document active features..</p>
+
+    <h4><a name="#feature_declaration">Feature Declaration</a></h4>
+
+    The low-level feature declaration interface is the
+    <tt>feature</tt> rule from the <tt>feature</tt> module:
+
+<pre>
+rule feature ( name : allowed-values * : attributes * )
+</pre>
+
+    A feature's allowed-values may be extended wit
+
+    The build system will provide high-level rules which define
+    features in terms of valid and useful combinations of attributes.
+
+    <h3><a name="#variants">Build Variants</a></h3>
+
+    A build variant, or (simply variant) is a special kind of
+    composite feature which automatically incorporates the default
+    values of features that  . Typically you'll want at least two separate variants:
+    one for debugging, and one for your release code.
+ 
+[ Volodya says: &quot;Yea, we'd need to mention that it's a composite feature and describe how 
+they are declared, in pacticular that default values of non-optional 
+features are incorporated into build variant automagically. Also, do we 
+wan't some variant inheritance/extension/templates. I don't remember how 
+it works in V1, so can't document this for V2.&quot;. Will clean up soon -DWA ]
+
 
     <h4 id="link_compatibility">Link compatible and incompatible
     properties</h4>
