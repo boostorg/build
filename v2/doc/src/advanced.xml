@@ -683,7 +683,8 @@ speed.
       library in sources of other library works in all cases.</para>
     </listitem></varlistentry>
 
-    <varlistentry><term><literal>alias</literal></term>
+    <varlistentry id="bbv2.advanced.builtins.targets.alias">
+          <term><literal>alias</literal></term>
 
     <listitem>
       <simpara>
@@ -767,18 +768,29 @@ speed.
       <literal>static</literal></para>
     </listitem></varlistentry>
 
-    <varlistentry><term><literal>library</literal></term>
+    <varlistentry><term><literal>source</literal></term>
 
     <listitem>
       <simpara>
-        For exe and lib main targets, the &lt;library&gt;X feature
-    is equvivalent to putting X in the list of sources. The feature
-    is sometimes more convenient: you can put &lt;library&gt;X in
+        Tthe &lt;source&gt;X feature has the same effect on building a target
+        as putting X in the list of sources. The feature
+    is sometimes more convenient: you can put &lt;source&gt;X in
     the requirements for a project and it will be linked to all
     executables.
       </simpara>
     </listitem>
     </varlistentry>
+
+    <varlistentry><term><literal>library</literal></term>
+
+    <listitem>
+      <simpara>
+         This feature is equivalent to the &lt;source&gt; feature, and exists
+         for backward compatibility reasons.
+      </simpara>
+    </listitem>
+    </varlistentry>
+
 
     <varlistentry><term><literal>use</literal></term>
 
@@ -829,3 +841,11 @@ speed.
     </section>
   </chapter>
 
+<!--
+     Local Variables:
+     mode: xml
+     sgml-indent-data: t     
+     sgml-parent-document: ("userman.xml" "chapter")
+     sgml-set-face: t
+     End:
+-->

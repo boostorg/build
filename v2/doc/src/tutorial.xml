@@ -331,15 +331,15 @@ exe app : app.cpp core ;
 
   <para>Sometimes, you want all applications in some project to link
   to a certain library. Putting the library in sources of all
-  targets is possible, but verbose. You can do better by using
-  &lt;library&gt; property. For example, if "/boost/filesystem//fs"
+  targets is possible, but verbose. You can do better by using the
+  &lt;source&gt; property. For example, if "/boost/filesystem//fs"
   should be linked to all applications in your project, you can add
-  &lt;library&gt;/boost/filesystem//fs to requirements of the
+  &lt;source&gt;/boost/filesystem//fs to requirements of the
   project, like this:</para>
 
 <programlisting>
 project 
-   : requirements &lt;library&gt;/boost/filesystem//fs
+   : requirements &lt;source&gt;/boost/filesystem//fs
    ;   
 </programlisting>
     </section>
@@ -434,14 +434,57 @@ exe e1 : e1.cpp lib1 ;
 exe e10 : e10.cpp lib1 ;
 </programlisting>
 
-(Note, that the "alias" target type is not yet implemented,
-but it's quite simple to do. I bet it's waiting for you to do it
-;-))
+Note that the <link linkend="bbv2.advanced.builtins.targets.alias">alias</link> 
+rule is specifically used for rename a reference to a target and possibly
+change the properties.
+
             </para>
           </listitem>
         </orderedlist>
       </para>
     </section>
+
+  <section id="bbv2.tutorial.conditions">
+    <title>Conditions and alternatives</title>
+
+    <para>As we've just figured out, properties can significally affect the
+      way targets are built. The processing of the &lt;link&gt; feature is
+      built in the build system, and is quite complex. But there is a couple
+      of mechanisms which allow ordinary users to do different things 
+      depending on properties.
+    </para>
+
+    <para>The first mechanism is called <firstterm>conditinal
+        requirement</firstterm>. For example, you might want to set specific
+      defines when the library is build as shared, or you have your own define
+      to be used in relese mode. Here's a piece of Jamfile.
+<programlisting>
+lib network : network.cpp 
+    : &lt;link&gt;shared:&lt;define&gt;NEWORK_LIB_SHARED 
+      &lt;variant&gt;release:&lt;define&gt;EXTRA_FAST
+    ;
+</programlisting>
+      This will have exactly the effect we wanted: whenever &lt;link&gt;shared
+      is in properties, &lt;define&gt;NEWORK_LIB_SHARED will be in properties
+      as well.
+    </para>
+
+    <para>
+      Sometimes different variant of a target are so different, that
+      describing them using conditional requirements would be hard. Imagine
+      that a library has different sources on two two supported toolsets, and
+      dummy implementation for all the other toolset. We can express this
+      situation using <firstterm>target alternatives</firstterm>:
+<programlisting>
+lib demangler : dummy_demangler.cpp ;
+lib demangler : demangler_gcc.cpp : &lt;toolset&gt;gcc ;
+lib demangler : demangler_msvc.cpp : &lt;toolset&gt;msvc ;
+</programlisting>
+      The proper alternative will be automatically selected. 
+    </para>
+    
+    </section>
+
 
     <section id="bbv2.tutorial.prebuilt">
       <title>Prebuilt targets</title>
@@ -514,3 +557,11 @@ version of zlib, but for other libraries this is quite reasonable.
 
 </chapter>
 
+<!--
+     Local Variables:
+     mode: xml
+     sgml-indent-data: t     
+     sgml-parent-document: ("userman.xml" "chapter")
+     sgml-set-face: t
+     End:
+-->
