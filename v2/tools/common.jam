@@ -20,6 +20,24 @@ else
     CP = cp ;
 }
 
+nl = "
+" ;
+
+# Returns the command needed to set shell variable on the
+# current platform.
+rule variable-setting-command ( variable value )
+{
+    if [ modules.peek : NT ]
+    {
+        return "set $(variable)=$(value)$(nl)" ;
+    }
+    else
+    {
+        return "$(variable)=$(value)" ;
+    }
+}
+
+
 rule MkDir
 {
     # If dir exists, don't update it
