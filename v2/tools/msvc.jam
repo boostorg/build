@@ -73,9 +73,11 @@ rule init (
     
     local condition = [ common.check-init-parameters msvc : 
         version $(version) ] ;
-    
+
+    # If version is specified, we try to search first in default paths,
+    # and only then in PATH.
     command = [ common.get-invocation-command msvc : cl.exe : $(command)
-      : [ default-paths $(version) ] ] ;
+      : [ default-paths $(version) ] : $(version) ] ;
         
     if $(command)
     {        

@@ -109,13 +109,14 @@ rule check-init-parameters ( toolset : * )
 # to find the tool using it's name, the PATH, and additional path.
 # This rule returns the command to be used when invoking the tool. If we can't
 # find the tool, a warning is issued.
+# If 'path-last' is specified, path is checked after 'additional-paths'.
 rule get-invocation-command ( 
-    toolset : tool : user-provided-command * : additional-paths * )
+    toolset : tool : user-provided-command * : additional-paths * : path-last ? )
 {
     local command ;
     if ! $(user-provided-command)
     {
-        command = [ common.find-tool $(tool) : $(additional-paths) ] ;
+        command = [ common.find-tool $(tool) : $(additional-paths) : path-last ] ;
         if ! $(command)
         {
             ECHO "warning: toolset $(toolset) initialization: can't find tool $(tool)" ;
@@ -161,16 +162,33 @@ rule get-absolute-tool-path ( command )
 # If found in additional paths, returns full name. If there are several possibilities,
 # returns them all.
 # Otherwise, returns empty string.
-rule find-tool ( name : additional-paths * )
+# If 'path-last' is specified, path is checked after 'additional-paths'.
+rule find-tool ( name : additional-paths * : path-last ? )
 {
-    local m = [ GLOB [ modules.peek : PATH Path path ] : $(name) $(name).exe ] ;
+    local m ;
+    if $(path-last)
+    {        
+        m = [ path.glob $(additional-paths) : $(name) $(name).exe ] ;    
+    }
+    else
+    {
+        m = [ GLOB [ modules.peek : PATH Path path ] : $(name) $(name).exe ] ;
+    }
+        
     if $(m)
     {
         return $(name) ;
     } 
     else 
     {        
-        return [ path.glob $(additional-paths) : $(name) $(name).exe ] ;    
+        if $(path-last)
+        {
+            return [ GLOB [ modules.peek : PATH Path path ] : $(name) $(name).exe ] ;
+        }
+        else
+        {            
+            return [ path.glob $(additional-paths) : $(name) $(name).exe ] ;    
+        }        
     }    
 }
 
