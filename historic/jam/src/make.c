@@ -264,7 +264,18 @@ make0(
 
 	if( t->binding == T_BIND_UNBOUND && !( t->flags & T_FLAG_NOTFILE ) )
 	{
-            t->boundname = search( t->name, &t->time );
+            char* another_target;
+            t->boundname = search( t->name, &t->time, &another_target );
+            /* If it was detected that this target refers to an already
+               existing and bound one, we add include dependency, so that
+               every target which depends on us will depend on that other 
+               target. */
+            if( another_target )
+            {
+                t->deps[T_DEPS_INCLUDES] = targetlist( t->deps[T_DEPS_INCLUDES],
+                                              list_new( L0, another_target ) );
+            }
+        
 	    t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
 	}
 

@@ -80,7 +80,9 @@ cache_name(void)
 	    TARGET *t = bindtarget( hcachevar->string );
 
 	    pushsettings( t->settings );
-	    t->boundname = search( t->name, &t->time );
+        /* Don't expect cache file to be generated, so pass 0
+           as third argument to search. */
+	    t->boundname = search( t->name, &t->time, 0 );
 	    popsettings( t->settings );
 
 	    if (hcachevar) {
