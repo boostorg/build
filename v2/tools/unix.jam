@@ -86,7 +86,7 @@ class unix-archive-generator : archive-generator
         local result = [ archive-generator.run $(project) $(name) : $(property-set)
           : $(sources) : $(multiple) ] ;
         
-        unix.set-library-order $(sources) : $(property-set) : $(result[2-]) ;
+        unix.set-library-order $(sources) : $(property-set) : $(result) ;
         
         return $(result) ;
 
@@ -112,7 +112,7 @@ class unix-searched-lib-generator : searched-lib-generator
         local result = [ searched-lib-generator.run $(project) $(name) 
           : $(property-set) : $(sources) : $(multiple) ] ;
         
-        unix.set-library-order $(sources) : $(property-set) : $(result[2-]) ;
+        unix.set-library-order $(sources) : $(property-set) : $(result) ;
         
         return $(result) ;
     }    
@@ -178,7 +178,7 @@ actions prebuilt {
 .order = [ new order ] ;
 
 rule set-library-order-aux ( from * : to * )
-{
+{        
     for local f in $(from)
     {
         for local t in $(to)
@@ -194,7 +194,7 @@ rule set-library-order-aux ( from * : to * )
 rule set-library-order ( sources * : property-set : result * )
 {
     local used-libraries ;
-    local deps = [ $(property-set).dependency ] ;
+    local deps = [ $(property-set).dependency ] ;        
     for local l in $(sources) $(deps:G=)        
     {
         if [ $(l).type ] && [ type.is-derived [ $(l).type ] LIB ]

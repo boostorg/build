@@ -367,7 +367,7 @@ rule lib ( names + : sources * : requirements * : default-build *
         if $(names[2])
         {
             errors.user-error "When several names are given to the 'lib' rule" :
-              "it's not allows to specify sources or requirements. " ;
+              "it's not allowed to specify sources or requirements. " ;
         }
                 
         local name = $(names[1]) ;
@@ -422,19 +422,9 @@ class searched-lib-generator : generator
             #    lib png : z : <name>png ; 
             # the 'z' target should be returned, so that apps linking to
             # 'png' will link to 'z', too.
-            return [ extra-usage-requirements $(property-set) ] [ virtual-target.register $(t) ] $(sources) ;
+            return [ virtual-target.register $(t) ] $(sources) ;
         }
-    }
-    
-    rule extra-usage-requirements ( property-set )
-    {
-        # Add the value of <search> as <library-path>
-        # usage requirement.
-        local search = [ $(property-set).get <search> ] ;
-        search = $(search:G=<library-path>) ;
-        return [ property-set.create $(search) ] ;
-    }
-    
+    }        
 }
 
 generators.register [ new searched-lib-generator ] ;
@@ -534,6 +524,17 @@ class linking-generator : generator
     {   
         sources += [ $(property-set).get <library>  ] ;        
         
+        # Add <library-path> properties for all searched libraries
+        local extra ;
+        for local s in $(sources)
+        {
+            if [ $(s).type ] = SEARCHED_LIB
+            {
+                local search = [ $(s).search ] ;
+                extra += <library-path>$(search) ;
+            }
+        }
+                   
         if [ $(property-set).get <hardcode-dll-paths> ] = true
          && [ type.is-derived $(self.target-types[1]) EXE ] 
         {
@@ -555,12 +556,13 @@ class linking-generator : generator
                 }                
             }
                           
-            if $(xdll-path)
-            {
-                property-set = [ $(property-set).add-raw $(xdll-path:G=<dll-path>) ] ;
-            }            
-
+            extra += <dll-path>$(xdll-path) ;
         }
+        
+        if $(extra)
+        {
+            property-set = [ $(property-set).add-raw $(extra) ] ;
+        }            
                         
         local result = [ generator.run $(project) $(name) : $(property-set)
           : $(sources) : $(multiple) ] ;
@@ -676,20 +678,8 @@ class archive-generator : generator
         
         local result = [ generator.run $(project) $(name) : $(property-set)
           : $(sources) : $(multiple) ] ;
-        
-        # Compute additional usage requirements.
-        # For static linkinking any source libraries are no linked in but are bypassed.
-        # We also must pass the <library-path> usage requirements we've got from those
-        # sources, so that dependents can find them.
-        
-        # Just pass all <library-path> properties. We might pass
-        # <library-path> properties which did not come from dependencies, but
-        # were specified in requirements, but I don't think that's a problem.
-        local values = [ $(property-set).get <library-path> ] ;
-        local usage-requirements = [ property-set.create $(values:G=<library-path>) ] ;
-        
-        return $(usage-requirements) $(result) ;
-
+             
+        return $(result) ;
     }    
 }
 
