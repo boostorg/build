@@ -25,6 +25,7 @@ local RUN_PATH = $(RUN_PATH) ;
 
 # Decide which toolsets should be treated like an ordinary (unix) GCC installation
 gcc-compilers = [ MATCH ^(gcc.*)$ : $(TOOLS) ] ;
+mingw-compilers = [ MATCH ^(mingw.*)$ : $(TOOLS) ] ;
 gcc-compilers = [ difference $(gcc-compilers) : gcc-nocygwin ] ;
 
 if $(NT)
@@ -106,7 +107,7 @@ rule select-python-library ( toolset variant : properties * )
 {
     if $(NT) 
     {
-        if $(toolset) = mingw
+        if $(toolset) in $(mingw-compilers)
         {
             local lib = python$(PYTHON_VERSION_NODOT) ;
             if <define>BOOST_DEBUG_PYTHON in $(properties)
@@ -296,7 +297,7 @@ gIS_DEPENDENCY(PYD) = TRUE ;
 # Declare a python extension.
 rule extension ( name : sources + : requirements * : default-BUILD * )
 {
-    requirements += $(PYTHON_PROPERTIES) ;
+    requirements += $(BOOST_PYTHON_V2_PROPERTIES) ;
     
 
     declare-local-target $(name) : $(sources) : $(requirements) : $(default-BUILD) : PYD ;
@@ -317,7 +318,7 @@ rule boost-python-runtest (
     local gPYTHON_TEST_ARGS = $(args) $(PYTHON_TEST_ARGS) ;
 
     # declare the two subsidiary tests.
-    declare-local-target $(<) : $(>) : $(PYTHON_PROPERTIES) : $(4) : PYTHON_TEST ;
+    declare-local-target $(<) : $(>) : $(BOOST_PYTHON_V2_PROPERTIES) : $(4) : PYTHON_TEST ;
     declare-local-target $(<) : $(>) : $(PYTHON_PROPERTIES) : $(4) <suppress>true : PYTHON_RUNTEST ;
 }
 
