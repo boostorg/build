@@ -79,8 +79,8 @@ rule escape ( string : symbols : escape-symbol )
   return $(result) ;
 }
 
-# Replaces occurances of a string in a given string. Returns the
-# new string.
+# Replaces occurances of a match string in a given string. Returns the
+# new string. The match string can be a regex expression.
 #
 rule replace (
     string # The string to modify.
