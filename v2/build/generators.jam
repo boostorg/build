@@ -927,7 +927,7 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
     {
         generators.dout [ indent ] "    from" [ $(s).str ] ;
     }
-    generators.dout [ indent ] "    properties:" $(properties) ;        
+    generators.dout [ indent ] "    properties:" [ $(property-set).raw ] ;        
                
     local result = [ construct-with-caching $(project) $(name)  
       : $(target-type) $(multiple) : $(property-set) : $(sources) ] ;
