@@ -17,4 +17,18 @@ t.write("auxilliary/1", "")
 t.run_build_system()
 t.expect_addition(["dist/a.dll", "dist/a.h", "dist/1"])
 
+# Test the <location> property
+t.write("Jamfile", """
+lib a : a.cpp ;
+stage dist : a 
+    : <variant>debug:<location>ds <variant>release:<location>rs
+    ;
+""")
+
+t.run_build_system()
+t.expect_addition("ds/a.dll")
+
+t.run_build_system("release")
+t.expect_addition("rs/a.dll")
+
 t.cleanup()

@@ -18,8 +18,16 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
     basic-target.__init__ $(name-and-dir) : $(project) : $(sources) : $(requirements) 
                           : $(default-build) ;
     
-    rule construct ( source-targets * : properties * )
+    rule construct ( source-targets * : property-set )
     {
+        local location = [ feature.get-values <location> : 
+            [ $(property-set).raw ] ] ;
+        if ! $(location)
+        {
+            location = [ project.path-relative-to-project-location $(self.name)
+              $(self.project) ] ;
+        }
+                
         local result ;
         for local i in $(source-targets)
         {
@@ -28,9 +36,10 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
               : $(self.project) ] ;
             local a = [ new action $(i2) : $(i) : common.copy ] ;
             $(i2).action $(a) ;
-            
-            $(i2).set-path [ project.path-relative-to-project-location 
-                $(self.name) $(self.project) ] ;
+
+            # FIXME: Since we can have <location> property, it might be better
+            # to use it to distinguish staged copies with different locations.
+            $(i2).set-path $(location) ;
             result += $(i2) ;
         }
         return $(result) ;
@@ -39,15 +48,17 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
 
 class stage-target-class : basic-target ;
 
-rule stage ( directory : sources * : requirements * : default-build * )
+# Declares a stage target. When build, it will construct all sources
+# and place in one directory. The directory can be specified in requirements
+# with 'location' property. If not specified, the directory name will be
+# the same as target name, relative to the project where the target 
+# is declared.
+rule stage ( name : sources * : requirements * : default-build * )
 {
-    # FIXME: for now, just use directory as target name. We really
-    # need to implement unnamed main targets.
-    
     local project = [ CALLER_MODULE ] ;
     
     targets.main-target-alternative
-      [ new stage-target-class $(directory) : $(project) : $(sources)
+      [ new stage-target-class $(name) : $(project) : $(sources)
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
         : [ targets.main-target-default-build $(default-build) : $(project) ] 
       ] ;
