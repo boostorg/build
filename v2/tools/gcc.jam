@@ -327,6 +327,10 @@ else if [ modules.peek : UNIX ]
         {
         # gcc on HP-UX does not support multi-threading, don't set anything here
         }
+    case Darwin :
+        {
+        # Darwin has no threading options, don't set anything here.
+        }
     case * :
         {
         flags gcc OPTIONS <threading>multi : -pthread ;
