@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# Clean up
+# Grab jam_src
+cp -r ../jam_src .
 
+# Clean up
 rm -rf examples
 # This one is not fully finished
 rm -rf examples-v2/versioned
