@@ -155,6 +155,22 @@ PYTHON_PROPERTIES
               <intel-win32><*><library-path>$(PYTHON_LIB_PATH)
               ;
 
+{
+    local gcc-release-properties
+      = <optimization>speed <cxxflags>-fomit-frame-pointer
+      <inlining>on <cxxflags>-foptimize-sibling-calls
+      ;
+    PYTHON_PROPERTIES += <gcc><release>$(gcc-release-properties) ;
+}
+
+BOOST_PYTHON_V2_PROPERTIES 
+  = $(PYTHON_PROPERTIES)
+    <metrowerks><*><cxxflags>"-inline deferred" 
+    <cxx><*><include>$(BOOST_ROOT)/boost/compatibility/cpp_c_headers
+      <define>BOOST_PYTHON_DYNAMIC_LIB
+      <define>BOOST_PYTHON_V2
+      ;
+
 # Extends the RUN_PATH assignment for targets built under Cygwin so
 # that the Python DLL can be found.
 rule add-cygwin-python-run-path ( module )
