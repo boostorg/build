@@ -146,7 +146,14 @@ rule virtual-target ( name  # Name of this target -- specifies the name of
     {
         errors.error "method should be defined in derived classes" ;
     }
-
+    
+    # Returns the path to this target, if it corresponds to a file,
+    # and empty list otherwise.
+    rule path ( )
+    {
+        errors.error "method should be defined in derived classes" ;        
+    }
+    
     # Return that actual target name that should be used
     # (for the case where no scanner is involved)
     rule actual-name ( )
