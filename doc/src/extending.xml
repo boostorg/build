@@ -840,7 +840,7 @@ using yfc : 3.4 ;
             version. This can lead to building twice with the same version.
             <!-- That would not be so terrible, and is much less harmful
                  than this restriction, IMO.  It makes site-config
-                 harder to maintain than neccessary. -->
+                 harder to maintain than necessary. -->
             </para></listitem>
 
         <listitem><para>If possible, <code>init</code> must be callable

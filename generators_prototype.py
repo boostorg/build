@@ -558,7 +558,7 @@ def optimal_graphs(target_type, source_groups, generators):
                 # the given parent set
                 siblings = ()
                 for t,n in generator.targets_.items():
-                    # Unary generators run as many times as neccessary
+                    # Unary generators run as many times as necessary
                     # to consume the group
                     if (generator.unary):
                         n *= g.size

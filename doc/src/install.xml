@@ -47,7 +47,7 @@ All paths are given relative to
           a prebuilt executable</ulink></emphasis> from SourceForge.
           If a prebuilt executable is not provided for your platform
           or you are using Boost's sources in an unreleased state, it
-          may be neccessary to <ulink
+          may be necessary to <ulink
           url= "../../tools/build/jam_src/index.html#building_bjam">build <command>bjam</command>
           from sources</ulink> included in the Boost source tree.
         </simpara>
@@ -80,7 +80,7 @@ All paths are given relative to
           system.  Open the
           <filename>user-config.jam</filename> file in the Boost.Build
           root directory and follow the instructions there to describe
-          your toolsets and libraries, and, if neccessary, where they
+          your toolsets and libraries, and, if necessary, where they
           are located.
         </simpara>
       </listitem>

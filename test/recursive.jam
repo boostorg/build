@@ -7,7 +7,7 @@
 ##############################################################
 # Rules and actions that test Jam by invoking it recursively #
 #                                                            #
-# This is neccessary for testing anything that requires Jam  #
+# This is necessary for testing anything that requires Jam   #
 # to execute build actions whose results must be checked,    #
 # and anything which exits Jam with a failure code (e.g. a   #
 # failed assertion).                                         #
