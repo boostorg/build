@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                                                            </style>
+                                                                </style>
   </head>
   <!-- Things yet to document:
-                                                              - build request, build request expansion and directly requested targets
-                                                              - conditional properties
-                                                            -->
+                                                                - build request, build request expansion and directly requested targets
+                                                                - conditional properties
+                                                              -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -126,6 +126,8 @@
                 <dt><a href="#command_line">Command line</a></dt>
 
                 <dt><a href="#build_process">Build process</a></dt>
+
+                <dt><a href="#generated_headers">Generated headers</a></dt>
               </dl>
             </dd>
           </dl>
@@ -177,12 +179,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>examples-v2</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                                                                                   it somewhere. 
-                                                                                    
-                                                                                      <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                                                                                      into one of the locations where it can be found (given in <a href=
-                                                                                      "#config_files_location">this table</a>). This prevent you from
-                                                                                      accidentally overwriting your config when updating.</p> -->
+                                                                                         it somewhere. 
+                                                                                          
+                                                                                            <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                                                                                            into one of the locations where it can be found (given in <a href=
+                                                                                            "#config_files_location">this table</a>). This prevent you from
+                                                                                            accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -1027,17 +1029,17 @@ boost-build /path/to/boost.build ;
 
       <li>It allows to have main target names with slashes. 
       <!-- The motivation for which is:
-                                                So, to summarize:
-                                                1. The project which extract tarfile may extract all possible kinds of 
-                                                targets, and it's reasonable to use them directly from other project.
-                                                2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
-                                                maintainability, and therefore, must use main target name which contains 
-                                                slashes?
-                                                3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
-                                                option, because you should not change existing tree 
+                                                      So, to summarize:
+                                                      1. The project which extract tarfile may extract all possible kinds of 
+                                                      targets, and it's reasonable to use them directly from other project.
+                                                      2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
+                                                      maintainability, and therefore, must use main target name which contains 
+                                                      slashes?
+                                                      3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
+                                                      option, because you should not change existing tree 
 
-                                                That makes good rationale for why main target must contain names.
-                                                 -->
+                                                      That makes good rationale for why main target must contain names.
+                                                       -->
       </li>
     </ul>
 
@@ -1674,6 +1676,35 @@ borland/runtime-link=static,dynamic
         </ol>
       </li>
     </ul>
+
+    <h3 id="generated_headers">Generated headers</h3>
+
+    <p>Usually, Boost.Build handles implicit dependendies completely
+    automatically. For example, for C++ files, all <tt>#include</tt>
+    statements are found and handled. The only aspect where user help might
+    be needed is implicit dependency on generated files.</p>
+
+    <p>By default, Boost.Build handles such dependencies within one main
+    target. For example, assume that main target "app" has two sources,
+    "app.cpp" and "parser.y". The latter source is converted into "parser.c"
+    and "parser.h". Then, if "app.cpp" includes "parser.h", Boost.Build will
+    detect this dependency. Moreover, since "parser.h" will be generated into
+    a build directory, the path to that directory will automatically added to
+    include path.</p>
+
+    <p>Making this mechanism work across main target boundaries is possible,
+    but imposes certain overhead. For that reason, if there's implicit
+    dependency on files from other main targets, the <tt><a href=
+    "">&lt;implicit-dependency&gt;</a></tt> feature must be used, for
+    example:</p>
+<pre>
+    lib parser : parser.y ;
+    exe app : app.cpp : &lt;implicit-dependency&gt;parser ;
+   
+</pre>
+    The above example tells the build system that when scanning all sources
+    of "app" for implicit-dependencies, it should consider targets from
+    "parser" as potential dependencies. 
 
     <h3 id="generators">Generators</h3>
 
