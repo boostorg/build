@@ -448,12 +448,8 @@ if $(NT)
     LINK        ?= $(CC) ;
     LINKFLAGS   ?= $(CCFLAGS) ;
     LINKLIBS    ?= 
-                #$(VISUALC16)\\lib\\advapi32.lib
-                #$(VISUALC16)\\lib\\libcmt.lib
-                $(VISUALC16)\\lib\\mlibce.lib
-                #$(VISUALC16)\\lib\\slibce.lib
-                $(VISUALC16)\\lib\\oldnames.lib
-                #$(VISUALC16)\\lib\\kernel32.lib 
+                \"$(VISUALC16)\\lib\\mlibce.lib\"
+                \"$(VISUALC16)\\lib\\oldnames.lib\"
                 ;
     LINKLIBS    ?= ;
     NOARSCAN    ?= true ;
@@ -473,12 +469,12 @@ if $(NT)
     C++FLAGS    ?= $(CCFLAGS) ;
     LINK        ?= link /nologo ;
     LINKFLAGS   ?= "" ;
-    LINKLIBS    ?= $(VISUALC)\\lib\\advapi32.lib
+    LINKLIBS    ?= \"$(VISUALC)\\lib\\advapi32.lib\"
                    # $(VISUALC)\\lib\\libc.lib
                    # $(VISUALC)\\lib\\oldnames.lib
-                   $(VISUALC)\\lib\\gdi32.lib
-                   $(VISUALC)\\lib\\user32.lib
-                   $(VISUALC)\\lib\\kernel32.lib ;
+                   \"$(VISUALC)\\lib\\gdi32.lib\"
+                   \"$(VISUALC)\\lib\\user32.lib\"
+                   \"$(VISUALC)\\lib\\kernel32.lib\" ;
     OPTIM       ?= "" ;
     STDHDRS     ?= $(VISUALC)\\include ;
     UNDEFFLAG   ?= "/u _" ;
