@@ -24,6 +24,7 @@ flags metrowerks C++FLAGS <cxxflags> ;
 flags metrowerks DEFINES <define> ;
 flags metrowerks UNDEFS <undef> ;
 flags metrowerks HDRS <include> ;
+flags metrowerks STDHDRS <sysinclude> ;
 
 flags metrowerks CFLAGS <debug-symbols>on : -g ;
 flags metrowerks LINKFLAGS <debug-symbols>on : -g ;
@@ -100,7 +101,7 @@ rule Cc-action
 actions metrowerks-Cc-action
 {
     $(METROWERKS_SETUP)
-    mwcc -maxerrors 20 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -nowraplines $(CFLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    mwcc -maxerrors 20 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -nowraplines $(CFLAGS)  -I"$(HDRS)" -I- -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -112,7 +113,7 @@ rule C++-action
 actions metrowerks-C++-action
 {
     $(METROWERKS_SETUP)
-    mwcc  -maxerrors 20 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -DNOMINMAX -nowraplines -lang c++ $(CFLAGS) $(C++FLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    mwcc  -maxerrors 20 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -DNOMINMAX -nowraplines -lang c++ $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I- -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
