@@ -51,13 +51,8 @@ generators.register-standard boostbook.docbook-to-fo : DOCBOOK : FO ;
 #     DOCBOOK_DTD_DIR From the environment (if available). Otherwise, we let
 #     the XML processor load the DTD remotely.
 #
-#   boostbook-xsl-dir: The BoostBook XSL stylesheet directory. If not provided,
-#     we use $(BOOST_ROOT)/tools/boostbook/xsl (the default location).
-#
-#   boostbook-dtd-dir: The BoostBook DTD directory. If not provided, we use
-#     $(BOOST_ROOT)/tools/boostbook/dtd (the default location).
-rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-xsl-dir ? 
-            : boostbook-dtd-dir ? )
+#   xsltproc: The xsltproc executable
+rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : xsltproc ? )
 {
   if ! $(docbook-xsl-dir)
   {
@@ -69,17 +64,15 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-xsl-dir ?
     docbook-dtd-dir = [ modules.peek : DOCBOOK_DTD_DIR ] ;
   }
 
-  if ! $(boostbook-xsl-dir)
+  if ! $(xsltproc)
   {
-    boostbook-xsl-dir = [ modules.peek : BOOST_ROOT ] ;
-    boostbook-xsl-dir = $(boostbook-xsl-dir)/tools/boostbook/xsl ;
+    xsltroc = [ modules.peek : XSLTPROC ] ;
   }
 
-  if ! $(boostbook-dtd-dir)
-  {
-    boostbook-dtd-dir = [ modules.peek : BOOST_ROOT ] ;
-    boostbook-dtd-dir = $(boostbook-dtd-dir)/tools/boostbook/dtd ;
-  }
+  boostbook-xsl-dir = [ modules.peek : BOOST_ROOT ] ;
+  boostbook-xsl-dir = $(boostbook-xsl-dir)/tools/boostbook/xsl ;
+  boostbook-dtd-dir = [ modules.peek : BOOST_ROOT ] ;
+  boostbook-dtd-dir = $(boostbook-dtd-dir)/tools/boostbook/dtd ;
 
   if ! $(.initialized) 
   {
@@ -87,7 +80,8 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-xsl-dir ?
     .docbook-xsl-dir = $(docbook-xsl-dir) ;
     .docbook-dtd-dir = $(docbook-dtd-dir) ;  
     .boostbook-xsl-dir = $(boostbook-xsl-dir) ;
-    .boostbook-dtd-dir = $(boostbook-dtd-dir) ;  
+    .boostbook-dtd-dir = $(boostbook-dtd-dir) ;
+    .xsltproc = $(xsltproc) ;
   }
 }
 
@@ -107,6 +101,7 @@ rule xslt ( target : source stylesheet : properties * )
 
   STYLESHEET on $(target) = $(stylesheet) ;
   FLAGS on $(target) = $(flags) ;
+  NAME on $(target) = $(.xsltproc) ;
   xslt-xsltproc $(target) : $(source) ;
 }
 
@@ -122,6 +117,7 @@ rule xslt-dir ( target : source stylesheet : properties * : dirname )
   STYLESHEET on $(target) = $(stylesheet) ;
   FLAGS on $(target) = $(flags) ;
   DIRECTORY on $(target) = $(dirname) ;
+  NAME on $(target) = $(.xsltproc) ;
   xslt-xsltproc-dir $(target) : $(source) ;
 }
 
@@ -308,14 +304,31 @@ rule boostbook ( target-name : sources * : requirements * : default-build * )
     ] ;
 }
 
-actions xslt-xsltproc
+if [ modules.peek : NT ]
 {
-  XML_CATALOG_FILES=catalog.xml xsltproc $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
-}
+  actions xslt-xsltproc
+  {
+    set XML_CATALOG_FILES=catalog.xml
+    $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
+  }
 
-actions xslt-xsltproc-dir
+  actions xslt-xsltproc-dir
+  {
+    set XML_CATALOG_FILES=catalog.xml
+    $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
+  }
+}
+else
 {
-  XML_CATALOG_FILES=catalog.xml xsltproc $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
+  actions xslt-xsltproc
+  {
+    XML_CATALOG_FILES=catalog.xml $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
+  }
+
+  actions xslt-xsltproc-dir
+  {
+    XML_CATALOG_FILES=catalog.xml $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
+  }
 }
 
 #############################################################################
