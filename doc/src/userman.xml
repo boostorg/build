@@ -3,7 +3,7 @@
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd">
 
 <part xmlns:xi="http://www.w3.org/2001/XInclude"
-      id="bbv2" last-revision="$Date$">
+      id="bbv2" last-revision="$Date$" status="draft">
 
   <title>Boost.Build v2 User Manual</title>
 

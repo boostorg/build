@@ -499,16 +499,19 @@ exe b : [ glob *.cpp ] ;  # all .cpp files in this directory are sources
 <programlisting>
 lib helper : helper.cpp ;
 exe a : a.cpp helper ;
-exe b : b.cpp ..//utils ;
-exe c : c.cpp /boost/program_options//program_opions ;
+exe b : b.cpp ..//utils ;<!-- It's unclear at this point whether that's a directory path or project ID.  Clarify -->
+exe c : c.cpp /boost/program_options//program_options ;
 </programlisting>
-        The first exe uses the library defined in the same project. The
-        second one uses some target (most likely library) defined by Jamfile
-        one level higher. Finally, the third target uses some <ulink
-          url="http://boost.org">C++ Boost</ulink> library, using the
-        symbolic name to refer to it. More information about it can be found
-        in <link linkend="bbv2.tutorial.libs">tutorial</link> and in 
-        <link linkend="bbv2.reference.ids">target id reference</link>.          
+        The first exe uses the library defined in the same
+        project. The second one uses some target (most likely library)
+        defined by Jamfile one level higher. Finally, the third target
+        uses some <ulink url="http://boost.org">C++ Boost</ulink>
+        library, referring to it by its absolute symbolic name. More
+        information about it <!-- What is "it?"  Used here, "it" must
+        refer to "some C++ Boost library" or "its absolute symbolic
+        name -->can be found in <xref
+        linkend="bbv2.tutorial.libs"/> and <xref
+        linkend="bbv2.reference.ids"/>.
       </para>
 
 <!--
@@ -524,8 +527,10 @@ exe c : c.cpp /boost/program_options//program_opions ;
 <programlisting>
 exe hello : hello.cpp : &lt;include&gt;/opt/boost &lt;define&gt;MY_DEBUG ;
 </programlisting>
-        In special circumstances, other properties can be used, for example if
-        a library does not work if it's shared, or a file can't be compiled
+        In special circumstances, 
+        <!-- What sort of "special circumstances?"  This is vague and unclear -->
+        other properties can be used, for example if
+        a library can only be built statically, or a file can't be compiled
         with optimization due to a compiler bug, one can use
 <programlisting>
 lib util : util.cpp : &lt;link&gt;static ;
@@ -533,61 +538,93 @@ obj main : main.cpp : &lt;optimization&gt;off ;
 </programlisting>                
       </para>
 
-      <para>Sometimes, requirements are necessary only for a specific
-        compiler, or build variant. The 
-        <link linkend="bbv2.reference.variants.propcond">conditional
-        properties</link> can be used in that case:
+      <para>Sometimes requirements are necessary only for a specific
+      compiler or build variant.  <link
+      linkend="bbv2.reference.variants.propcond">Conditional
+      properties</link> can be used in that case: 
+      <!-- This phrasing is a bit awkward.  Hasn't this been covered
+           more thoroughly in the tutorial? -->
 <programlisting>
 lib util : util.cpp : &lt;toolset&gt;msvc:&lt;link&gt;static ;
 </programlisting>
-        In means when whenever <code>&lt;toolset&gt;msvc</code> property is
+        <!-- "In means when whenever" is nonsense -->
+        Whenever <code>&lt;toolset&gt;msvc</code> property is
         in build properties, the <code>&lt;link&gt;static</code> property will
-        be included as well. The conditional requirements can be "chained":
+        be included as well. Conditional requirements can be &#x201C;chained&#x201D;:
 <programlisting>
 lib util : util.cpp : &lt;toolset&gt;msvc:&lt;link&gt;static 
                       &lt;link&gt;static:&lt;define&gt;STATIC_LINK ;
 </programlisting>
-        will set of static link and the <code>STATIC_LINK</code> define on the
+        will set of static link
+        <!-- ??? Even if you remove "of," what does it mean to "set static link?" -->
+        and the <code>STATIC_LINK</code> define on the
         <code>msvc</code> toolset.
+        <!-- really, on the **toolset** ?? I don't think so!-->
       </para>
 
-      <para>The default-build attribute is
-        a set of properties that should be used if build request does not
-        specify a value. For example:
+      <para>The <varname>default-build</varname> parameter
+      <!-- You can't say "attribute" here because you use it with an
+           entirely different meaning in the next section! -->
+      is a set of properties to be used if the build request does
+      not otherwise specify a value for features in the set. For example:
 <programlisting>
 exe hello : hello.cpp : : &lt;threading&gt;multi ;
 </programlisting>
-        would build the target in multi-threaded mode, unless the user
-        explicitly requests single-threaded version. The difference between
+        would build a multi-threaded target in unless the user
+        explicitly requests a single-threaded version. The difference between
         requirements and default-build is that requirements cannot be
-        overriden in any way.
+        overriden in any way.<!-- Is that still true?  I thought
+        requirements could be overridden by explicit request as
+        propagated from dependents -->
       </para>
 
-      <para>A target of the same name can be declared several times. In that
-        case is declaration is called an
-        <firstterm>alternative</firstterm>. When the target is build, one of
-        the alternatives will be selected and use. Alternatives need not be
-        defined by the same main target rule. The following is OK:
+      <para>A target of the same name can be declared several times,  in which
+        case each declaration is called an
+        <firstterm>alternative</firstterm>. When the target is built, one of
+        the alternatives will be selected and used.  Alternatives need not be
+        defined by the same main target rule.  For example,
 <programlisting>
-lib helpers : helpers.hpp ;
-alias helpers : helpers.lib : &lt;toolset&gt;msvc ;
+lib helpers : helpers.hpp ;                 # a header-only library
+alias helpers : helpers.lib : &lt;toolset&gt;msvc ; # except on msvc
 </programlisting>
+<!-- Above, is "helpers.lib" a target reference or a file reference?
+     If the former, how does the extension get added?  If the latter,
+     is it a realistic case?  What about:
+
+  obj helpers : helpers.cpp
+  lib helpers : helpers.cpp msvc_helper.cpp : <toolset>msvc ;
+
+??
+ -->
       </para>
 
-      <para>Building of the same main target can differ greatly from
-        platform to platform. For example, you might have different list
+      <para>The actual commands used to build any given main target can differ greatly from
+        platform to platform. For example, you might have different lists
         of sources for different compilers, or different options for those
         compilers. Two approaches to this are explained in the 
         <link linkend="bbv2.tutorial.conditions">tutorial</link>.
+        <!-- Doing an inferior job of covering this material here is
+             bad.  This chapter should be merged with the tutorial.
+
+             Also, AFAICT only one approach is explained in the
+             referenced section.  Another approach that might have
+             been covered would be to combine the <source> property,
+             which is covered in a different section of the tutorial,
+             with conditional properties. -->
       </para>
 
       <para>Sometimes a main target is really needed only by some other main
         target. For example, a rule that declares a test-suite uses a main
-        target that represent test, but those main targets are rarely needed
-        by themself.</para>
+        target 
+        <!-- how can a rule "use a main target??" -->
+        that represent test, but those main targets are rarely needed
+        by themselves.
+        <!-- what does that mean??  This is completely opaque to me.
+             IMO this whole paragraph should be dropped -->
+      </para>
 
-      <para>It is possible to declare target inline, i.e. the "sources"
-        parameter may include call to other main rules. For example:</para>
+      <para>It is possible to declare a target inline, i.e. the "sources"
+        parameter may include calls to other main rules. For example:</para>
 
 <programlisting>
 exe hello : hello.cpp 
@@ -596,10 +633,17 @@ exe hello : hello.cpp
 
       <para>
         Will cause "helpers.cpp" to be always compiled without
-        optimization. It's possible to request main targets declared
-        inline, but since they are considered local, they are renamed to
-        "parent-main-target_name..main-target-name". In the example above,
-        to build only helpers, one should run "bjam hello..helpers".
+        optimization. 
+        <!-- This bit was unintelligible until I reread it about 10 times
+
+        It's possible to request main targets declared inline, but
+        since they are considered local, they are renamed to
+        "parent-main-target_name..main-target-name"
+        -->
+        When referring to an inline main target, its declared name
+        must be prefixed by its parent target's name and two dots. In
+        the example above, to build only helpers, one should run
+        <code>bjam hello..helpers</code>.
       </para>
 
     </section>
@@ -607,22 +651,27 @@ exe hello : hello.cpp
     <section id="bbv2.advanced.projects">
       <title>Projects</title>
 
-      <para>As mentioned before, targets are grouped into projects, and each
-        Jamfile is a separate project. Projects are useful because it allows
-        to group related targets together, define properties common to all
-        those targets, and assign a symbolic name to the project, allowing to
-        easily refer to the targets in the project. Two last goals are
-        accompished with the "project" rule.
+      <para>As mentioned before, targets are grouped into projects,
+      and each Jamfile is a separate project. Projects are useful
+      because they allow us to group related targets together, define
+      properties common to all those targets, and assign a symbolic
+      name to the project that can be used in referring to its
+      targets. 
       </para>
 
-      <para>The rule has this syntax
+      <para>Projects are named using the
+      <functionname>project</functionname> rule, which has the
+      following syntax:
 <programlisting>
-project id : &lt;attributes&gt; ;
+project <replaceable>id</replaceable> : <replaceable>attributes</replaceable> ;
 </programlisting>
-        Here, attributes is a sequence of (attribute-name,
-        attribute-value) pairs. The list of attribute names along with its
-        handling is also shown in the table below. For example, it is
-        possible to write:
+        Here, <replaceable>attributes</replaceable> is a sequence of
+        rule arguments, each of which begins with an attribute-name
+        and is followed by any number of build properties.  <!--
+        Previous description was completely wrong and confusing -->
+        The list
+        of attribute names along with its handling is also shown in
+        the table below. For example, it is possible to write:
 <programlisting>
 project tennis 
     : requirements &lt;threading&gt;multi 
@@ -717,9 +766,11 @@ project tennis
                 
                 <entry><literal>build-dir</literal></entry>
                 
-                <entry>If parent has a build dir set, the value of it, joined
-                  with the relative path from parent to the current project.
-                  Otherwise, empty</entry>
+                <entry>Empty if the parent has no build directory set.
+                Otherwise, the parent's build directory with with the
+                relative path from parent to the current project
+                appended to it.
+                </entry>
                 
                 <entry>Sets to the passed value, interpreted as relative to the
                   project's location.</entry>
@@ -729,46 +780,53 @@ project tennis
         </table>
         </para>
 
-      <para>Besides setting attributes and defining main targets, 
-        projects can invoke a number of <link
-        linkend="bbv2.advanced.other-rules">rules</link>,
-        in particular the <code>constant</code> and <code>path-constant</code>
-        which defines constants for all child projects. Project can also
-        contain definitions of custom rules. 
+      <para>Besides defining projects and main targets,
+      <filename>Jamfile</filename>s commonly invoke utility rules such
+      as <functionname>constant</functionname> and
+      <functionname>path-constant</functionname>, which define
+      Boost.Jam variables that are automatically defined in all child
+      projects.  See <xref linkend="bbv2.advanced.other-rules"/> for a
+      complete description of these utility rules.
+      <filename>Jamfile</filename>s are regular Boost.Jam source
+      files, so naturally they can contain any kind of Boost.Jam code,
+      including rule definitions.
+      <!-- I improved that sentence, but I don't think it belongs
+           here.  I suggest you strike it. -->
       </para>
 
-      <para>Each project inherits attributes, constants and rules from the
-        parent project -- the project in the nearest parent
-        directory. However, the top-level Jamfile should not inherit
-        anything. To indicate that, you'd need to use a different name:
-        <code>Jamroot</code>. When loading a project, Boost.Build
-        looks for both <code>Jamroot</code> and <code>Jamfile</code>,
-        and they are handled indentically, except that if file is called
-        <code>Jamroot</code>, search for parent project is not performed.
+      <para>Each subproject inherits attributes, constants and rules
+      from its parent project (the project in the nearest parent
+      directory).  The top-level project is declared in a file called
+      <filename>Jamroot</filename> rather than
+      <filename>Jamfile</filename>.  When loading a project,
+      Boost.Build looks for both <filename>Jamroot</filename> and
+      <code>Jamfile</code>.  They are handled indentically, except
+      that if the file is called <filename>Jamroot</filename>, the
+      search for a parent project is not performed.
       </para>
 
-      <para>An important note about parent/child Jamfiles is that parents are
-        always loaded before children. Consequently, every definitions made in
-        parents are always available to children. The loading order of any
-        other projects is not defined. Even if one project refers to another
-        via <link
-        linkend="bbv2.advanced.projects.relationships.useprojectrule">use-project</link>,
-        or via target reference, no specific order should be assumed.
+      <para>Even when building in a subproject directory, parent
+      project files are always loaded before those of their
+      subprojects, so that every definition made in a parent project
+      is always available to its children. The loading order of any
+      other projects is unspecified.  Even if one project refers to
+      another via <link
+      linkend="bbv2.advanced.projects.relationships.useprojectrule"><functionname>use-project</functionname></link>,
+      or a target reference, no specific order should be assumed.
       </para>
 
       <note>
-        <para>The root project must use a different name because Boost.Build
-          must decide if parent must be loaded before reading the project. If
-          we first loaded a project and then decide if parent should be
-          loaded, the definitions made by parent, especially constants, won't
-          be available to the child.
+        <para>Giving the root project the special name
+        &#x201C;<filename>Jamroot</filename>&#x201D; ensures that
+        Boost.Build won't misinterpret a directory above it that
+        happens to contain a <filename>Jamfile</filename> as the project root.
+        <!-- The logic of the previous reasoning didn't hang together -->
         </para>          
       </note>
 
     </section>
 
     
-
     <section id="bbv2.advanced.other-rules">
       <title>Additional Jamfile rules</title>
 
