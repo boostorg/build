@@ -1,6 +1,7 @@
 import type ;
 import generators ;
 import os ;
+import print ;
 
 type.register FOO : foo ;
 
@@ -22,8 +23,9 @@ rule foo ( targets * : sources * : properties * )
     .decl1 on $(<) = $(.decl:E="echo //") ;
     
     # Further files must be touched also; NT doesn't have a touch command
-    .decl2 on $(<) = "
-    echo '#include <z.h>' > " ;
+    local i = [ print.echo-cmd "#include <z.h>" ] ;
+    .decl2 on $(<) = "      
+    $(i) > " ;
 }
 
 actions foo
