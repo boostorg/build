@@ -131,7 +131,7 @@ local rule add-flag ( rule-or-module :
 
 # Returns the first element of 'property-sets' which is a subset of
 # 'properties', or an empty list if no such element exists.
-local rule find-property-subset ( property-sets * : properties * )
+rule find-property-subset ( property-sets * : properties * )
 {
     local result ;
     for local s in $(property-sets)
