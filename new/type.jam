@@ -1,0 +1,111 @@
+#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+#  Deals with target type declaration and defines target class which supports
+#  typed targets.
+
+import feature ;
+import targets ;
+import generators : * ;
+import class : class new ;
+
+
+feature.feature target-type : : composite optional ;
+feature.feature base-target-type : : composite optional ;
+feature.feature main-target-type : : optional incidental ;
+
+# Registers a target type, possible derived from a 'base-type'. 
+# If 'suffix' is provided, it is associated with this target type.
+# If 'main' is given, a rule with the same name as the target type
+# and signature
+#     rule target-type ( name : sources * : requirements * : default-build )
+# will be added to the global scope.
+rule register ( type : suffix ? : base-type ? : main ? ) 
+{
+    if $(type) in $(.types)
+    {
+        error "Type $(type) is already registered." ;
+    }
+    else
+    {
+        .types += $(type) ;
+        .suffix.$(type) = $(suffix) ;
+        .type.$(suffix) = $(type) ;
+        feature.extend target-type : $(type) ;
+        feature.compose <target-type>$(type) : $(base-type:G=<base-target-type>) ;
+        feature.compose <base-target-type>$(type) : $(base-type:G=<base-target-type>) ;            
+        
+        if $(main)
+        {            
+            IMPORT $(__name__) : main-target-rule : : $(type:L) ;
+        }        
+    }
+}
+
+# Returns suffix to the 'type'.
+rule suffix ( type )
+{
+    return $(.suffix.$(type)) ;
+}
+
+# Creates a virtual target with approariate name and type from 'file'.
+# TODO: passing project with all virtual targets starts to be annoying.
+rule from-file ( file : project )
+{
+    local name = $(file:S=) ;
+    local type = $(.type$(file:S)) ;    
+    if ! $(type)
+    {
+        warning "cannot determine type for file $(file)" ;
+        return [ new virtual-target $(file) :  : $(project) ] ;            
+    }
+    else
+    {      
+        return [ new virtual-target $(name) : $(type) : $(project) ] ;    
+    }    
+}
+
+
+rule typed-target ( name : project : type 
+    : sources * : requirements * : default-build * )
+{
+    ECHO "Typed target: type is " $(type) ;
+    basic-target.__init__ $(name) : $(project) 
+      : $(sources) : $(requirements) : $(defailt-build) ;
+    
+    self.type = $(type) ;
+    
+    rule construct ( source-targets * : properties * )
+    {
+        local r = [ generators.construct-dbg $(self.project) $(self.name) : $(self.type) 
+          : $(properties) <main-target-type>$(self.type) : $(source-targets) ] ;
+        return [ $(r).get-at 1 ] [ $(r).get-at 2 ] ;
+    }            
+}
+                    
+class typed-target : basic-target ;
+
+rule main-target-rule ( name : sources * : requirements * : default-build ? )
+{
+    # First find requuired target type, which is equal to the name used to
+    # invoke us.
+    local bt = [ BACKTRACE 1 ] ;
+    local type = $(bt[4]) ;
+    
+    targets.main-target-alternative $(name) [ CALLER_MODULE ] typed-target : 3 : 4
+      : $(type:U) : $(sources) : $(requirements) : $(default-build)
+        ;    
+}
+
+rule construct-dbg-x ( target-types + : properties * : source-files  + )
+{
+    local sources ;
+    for local s in $(source-files)
+    {
+        sources += [ from-file $(s) : "some project" ] ;
+    }
+    return [ construct-dbg "result" : $(target-types) : $(properties) :
+      $(sources) ] ;
+}

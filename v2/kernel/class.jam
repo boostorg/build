@@ -461,7 +461,10 @@ rule __test__ ( )
         assert.true is-derived derived3 : myclass ;
         
         assert.false is-derived myclass : derived1 ;
-        
+ 
+        assert.true is-instance $(a) ;
+        assert.false is-instance bar ;
+       
         assert.true is-a $(a) : myclass ;
         assert.true is-a $(c) : derived2 ;
         assert.true is-a $(d) : myclass ;

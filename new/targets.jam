@@ -309,12 +309,16 @@ rule basic-target ( name : project
                         else 
                         {
                             # Just a source file
-                            source-targets +=
-                                [ new virtual-target $(s) : $(self.project) ] ;
+                            # Todo: should use "type.from-file"
+                            # FIXME: break an import cycle in a rude way
+                            import type ;
+             source-targets +=
+                                [ new virtual-target $(s) : : $(self.project) ] ;                            
+#                            source-targets += [ type.from-file $(s) : $(self.project) ] ;
                         }
                     }
                     self.generated.$(property-path) = 
-                        [ construct $(source-targets) : $(rproperties) ] ;                                                                                                                                        
+                        [ construct $(source-targets) : $(rproperties) ] ;                             
                 } 
                 else
                 {
@@ -425,14 +429,13 @@ rule main-target-alternative ( target-name project class-name
           : $(a4) : $(a5) : $(a6) : $(a7) : $(a8) : $(a9) ] ;
 }
 
-
-
 # Class which represents a virtual target
-rule virtual-target ( name : project 
+rule virtual-target ( name : type ? : project 
                       : subvariant * # Property sets which define this subvariant
                      )
 {
     self.name = $(name) ;
+    self.type = $(type) ;
     self.subvariant = $(subvariant) ;
     self.project = $(project) ;
 
@@ -445,6 +448,9 @@ rule virtual-target ( name : project
 
     # Name of the target
     rule name ( ) { return $(self.name) ; }
+    
+    rule type ( ) { return $(self.type) ; }
+    
 
     # Property set that distinguished different variants of a target.
     # May be a subset of the property set that is used for building.
@@ -519,6 +525,45 @@ rule virtual-target ( name : project
         }
         return $(self.actual-name) ;
     }
+    
+    rule str ( )
+    {        
+        local action = [ action ] ;
+        local filename = [ sequence.join $(self.name) "."  $(self.type) ] ;
+        if $(action) 
+        {
+            local sources = [ $(action).sources ] ;
+            
+            local ss ;
+            for local s in $(sources)
+            {
+                ss += [ $(s).str ] ;
+            }
+                                    
+            local name =  [ $(action).action_name ] ;
+            return "{" $(name)-$(filename) $(ss) "}" ;
+        }
+        else
+        {
+            return "{" $(filename) "}" ;
+        }
+    }    
+
+    rule less ( a )
+    {
+        if [ str ] < [ $(a).str ] 
+        {
+            return true ;
+        }
+    }
+
+    rule equal ( a )
+    {
+        if [ str ] = [ $(a).str ]
+        {
+            return true ;
+        }
+    }        
 
 # private:
     rule actual-name ( )
@@ -535,7 +580,14 @@ rule virtual-target ( name : project
             if ! $(self.subvariant) {
                grist = $(location-grist) ;
             }
-            self.actual-name = <$(grist)>$(self.name) ;
+            if $(self.type)
+            {                
+              self.actual-name = [ sequence.join <$(grist)>$(self.name) [ type.suffix $(self.type) ] : "." ] ;
+            }
+            else
+            {
+                self.actual-name = <$(grist)>$(self.name) ;
+            }                        
         }
         return $(self.actual-name) ;
     }
@@ -578,24 +630,30 @@ rule action ( targets + : sources * : action_name : properties * )
     # Generates actual build instructions.
     rule actualize ( )
     {
-        local actual_targets ;
-        for local i in [ targets ]
+        if ! $(self.actualized)
         {
-            actual_targets += [ $(i).actualize ] ;
-        }
+            self.actualized = true ;
+            
+            local actual_targets ;
+            for local i in [ targets ]
+            {
+                actual_targets += [ $(i).actualize ] ;
+            }
 
-        local actual_sources ;
-        for local i in [ sources ]
-        {
-            actual_sources += [ $(i).actualize ] ;
-        }
+            local actual_sources ;
+            for local i in [ sources ]
+            {
+                actual_sources += [ $(i).actualize ] ;
+            }
 
-        DEPENDS $(actual_targets) : $(actual_sources) ;
+            DEPENDS $(actual_targets) : $(actual_sources) ;
 
-        $(self.action_name)
-            $(actual_targets) : $(actual_sources) : [ properties ] ;
-    }
+            $(self.action_name)
+              $(actual_targets) : $(actual_sources) : [ properties ] ;
+        }        
+    }    
 }
 class action ;
+
 
 
