@@ -31,6 +31,10 @@ rule compile ( target : sources * : property-set * )
         {
             options += -I$(p:G=) ;
         }        
+    else if $(p:G) = <cxxflags>
+    {
+        options += $(p:G=) ;
+    }
     }
     OPTIONS on $(target) = $(options) ;
 }
@@ -59,11 +63,17 @@ local rule link-options ( target : sources * : property-set * )
         {
             findlibs += -l$(p:G=) ;
         }        
+        else if $(p:G) = <library-file>
+        {
+            libs += $(p:G=) ;
+        }        
         else if $(p:G) = <library>
         {
             libs += [ $(p:G=).actualize ] ;
         }        
     }
+    
+    DEPENDS $(target) : $(LIBS) ;
     
     OPTIONS on $(target) = $(options) ;
     LIBS on $(target) = $(libs) ;
