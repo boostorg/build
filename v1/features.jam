@@ -39,6 +39,7 @@ path-feature sysinclude ; # <sysinclude>/fu/man/chu
 free-feature arflags ;
 free-feature dllversion ; # <dllversion>1.27.0 (for use with soname-ing)
 free-feature tag ;
+free-feature version ;
 
 # Can the target participate in a shared library?
 feature shared-linkable : false true ;
