@@ -116,4 +116,10 @@ actions ln-UNIX
     ln -f -s '$(PATH_TO_TOP)/$(>)' '$(<)'
 }
 
+# there is a way to do this; it's a dummy rule for now
+actions ln-NT
+{
+    echo "NT symlinks not supported yet"
+}
+
 IMPORT $(__name__) : symlink : : symlink ;
