@@ -135,6 +135,13 @@ rule select-python-library ( toolset variant : properties * )
             properties += <library-file>$(lib) ;
         } 
     }
+    if $(OS) = MACOSX && $(toolset) = darwin
+    {
+        properties = [ replace $(properties) : <shared-link>dynamic <shared-link>bundle ] ;
+        properties +=
+            <bundle-loader>$(PYTHON_ROOT)/bin/python$(PYTHON_VERSION)
+            ;
+    }
     return $(properties) ;
 }
 
