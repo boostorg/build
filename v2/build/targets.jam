@@ -941,11 +941,15 @@ class basic-target : abstract-target
                 
                 generate-dependencies $(self.sources) : $(rproperties)
                   : source-targets usage-requirements ;
-                
+                                                
                 rproperties = [ property-set.create $(properties) 
                   $(usage-requirements) ] ;
                 usage-requirements = [ property-set.create $(usage-requirements) ] ;
-
+                
+                local libs = [ $(rproperties).get <library> ] ;
+                libs += [ $(rproperties).get <source> ] ;
+                source-targets += $(libs:G=) ;
+                                                
                 local tagged-name = [ tag-name $(self.name) : $(rproperties) ] ;
 
                 local original-name = $(self.name) ;

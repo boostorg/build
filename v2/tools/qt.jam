@@ -66,17 +66,31 @@ rule init ( prefix ? )
                         
             rule run ( project name ? : properties * : sources + :  multiple ? )
             {
-                # Construct CPP as usual
-                local result = [ generator.run $(project) $(name) 
-                  : $(properties) : $(sources) : $(multiple) ] ;
-                # If OK, add "UIC_H" target to the returned list
-                if $(result)
-                {
-                    local action = [ $(result[1]).action ] ;
-                    local sources = [ $(action).sources ] ;
-                    result += $(sources[2]) ;
+                # Consider this:
+                #    obj test : test_a.cpp : <optimization>off ;
+                #
+                # This generator will somehow be called in this case, and,
+                # will fail -- which is okay. However, if there are <library>
+                # properties they will be converted to sources, so the size of 
+                # 'sources' will be more than 1. In this case, the base generator
+                # will just crash -- and that's not good. Just use a quick test
+                # here.
+                                
+                local result ;
+                if ! $(sources[2])
+                {    
+                    # Construct CPP as usual
+                    result = [ generator.run $(project) $(name) 
+                      : $(properties) : $(sources) : $(multiple) ] ;
+                    # If OK, add "UIC_H" target to the returned list
+                    if $(result)
+                    {
+                        local action = [ $(result[1]).action ] ;
+                        local sources = [ $(action).sources ] ;
+                        result += $(sources[2]) ;
+                    }
                 }
-            
+                            
                 return $(result) ;
             }               
         }
