@@ -106,6 +106,13 @@ class Tester(TestCmd.TestCmd):
             verbosity = ['-d+2']
 
         program_list = []
+
+        # try for the debug version if it's lying around
+        if os.path.exists(
+            os.path.join('..', 'jam_src', jam_build_dir + '.debug')
+        ):
+            jam_build_dir += '.debug'
+            
         program_list.append(os.path.join('..', 'jam_src', jam_build_dir, executable))
         program_list.append('-sBOOST_BUILD_PATH=' + boost_build_path)
         if verbosity:
@@ -194,8 +201,8 @@ class Tester(TestCmd.TestCmd):
         if not type(names) == types.ListType:
             names = [names]
 
-	# Avoid attempts to remove current dir
-	os.chdir(self.original_workdir)
+        # Avoid attempts to remove current dir
+        os.chdir(self.original_workdir)
         for name in names:
             n = self.native_file_name(name)
             if os.path.isdir(n):
@@ -215,6 +222,12 @@ class Tester(TestCmd.TestCmd):
         content = string.replace(content, "$toolset", self.toolset)
         self.write(name, content)
                                                         
+    def dump_stdio(self):
+        print "STDOUT ============"
+        print self.stdout()
+        print "STDERR ============"
+        print self.stderr()
+                    
     #
     #   FIXME: Large portion copied from TestSCons.py, should be moved?
     #
@@ -226,9 +239,9 @@ class Tester(TestCmd.TestCmd):
 
         if match is None:
             match = self.match
-	    	    
-	if pass_toolset is None:
-	    pass_toolset = self.pass_toolset	    
+
+        if pass_toolset is None:
+            pass_toolset = self.pass_toolset        
 
         try:
             kw['program'] = []
@@ -240,10 +253,7 @@ class Tester(TestCmd.TestCmd):
             kw['chdir'] = subdir
             apply(TestCmd.TestCmd.run, [self], kw)
         except:
-            print "STDOUT ============"
-            print self.stdout()
-            print "STDERR ============"
-            print self.stderr()
+            self.dump_stdio()
             raise
 
         if status != None and _failed(self, status):
@@ -254,10 +264,6 @@ class Tester(TestCmd.TestCmd):
             print '"%s" returned %d%s' % (
                 kw['program'], _status(self), expect)
 
-            print "STDOUT ============"
-            print self.stdout()
-            print "STDERR ============"
-            print self.stderr()
             self.fail_test(1)
 
         if not stdout is None and not match(self.stdout(), stdout):
@@ -270,7 +276,7 @@ class Tester(TestCmd.TestCmd):
                 print "STDERR ==================="
                 print stderr
             self.maybe_do_diff(self.stdout(), stdout)
-            self.fail_test(1)
+            self.fail_test(1, dump_stdio = 0)
 
         if not stderr is None and not match(self.stderr(), stderr):
             print "STDOUT ==================="
@@ -280,7 +286,7 @@ class Tester(TestCmd.TestCmd):
             print "Actual STDERR ============"
             print self.stderr()
             self.maybe_do_diff(self.stderr(), stderr)
-            self.fail_test(1)
+            self.fail_test(1, dump_stdio = 0)
 
         self.tree = build_tree(self.workdir)
         self.difference = trees_difference(self.previous_tree, self.tree)
@@ -300,11 +306,15 @@ class Tester(TestCmd.TestCmd):
         else:
             return result
     
-    def fail_test(self, condition, *args):
-	# If test failed, print the difference
-        if condition and hasattr(self, 'difference'):
+    def fail_test(self, condition, dump_stdio = 1, *args):
+        # If test failed, print the difference        
+        if condition and hasattr(self, 'difference'):            
             print '-------- all changes caused by last build command ----------'
             self.difference.pprint()
+            
+        if condition and dump_stdio:
+            self.dump_stdio()
+            
         TestCmd.TestCmd.fail_test(self, condition, *args)
         
     # A number of methods below check expectations with actual difference
@@ -402,6 +412,10 @@ class Tester(TestCmd.TestCmd):
         if windows:
             self.ignore('*.pdb')
             self.ignore('*.rsp')
+
+        # debug builds of bjam built with gcc produce this profiling data
+        self.ignore('gmon.out')
+        self.ignore('*/gmon.out')
             
         if not self.unexpected_difference.empty():
            print 'FAILED'
