@@ -18,6 +18,9 @@ output-target = console ;
 # The current output type. Defaults to plain.
 output-type = plain ;
 
+# Whitespace.
+.whitespace = [ string.whitespace ] ;
+
 # Set the target and type of output to generate. This sets both
 # the destination output and the type of docs to generate to that
 # output. The target can be either a file or "console" for echoing
@@ -77,15 +80,19 @@ rule section (
     while $(description)
     {
         local paragraph = ;
-        while $(description) && $(description[1]) = "" { description = $(description[2-]) ; }
+        while $(description) && [ string.is-whitespace $(description[1]) ] { description = $(description[2-]) ; }
         if $(pre)
         {
-            pre = ;
-            while $(description) && ( $(description[1]) = "" || [ MATCH "^([ ])" : $(description[1]) ] )
+            while $(description) && (
+                $(pre) = " $(description[1])" ||
+                ( $(pre) < [ string.chars [ MATCH "^([$(.whitespace)]*)" : " $(description[1])" ] ] )
+                )
                 { paragraph += $(description[1]) ; description = $(description[2-]) ; }
+            while [ string.is-whitespace $(paragraph[-1]) ] { paragraph = $(paragraph[1--2]) ; }
+            pre = ;
             if $(output-type) = plain
             {
-                lines $(paragraph) : "  " "  " ;
+                lines $(paragraph) "" : "  " "  " ;
             }
             else if $(output-type) = html
             {
@@ -96,17 +103,17 @@ rule section (
         }
         else
         {
-            while $(description) && $(description[1]) != ""
+            while $(description) && ! [ string.is-whitespace $(description[1]) ]
                 { paragraph += $(description[1]) ; description = $(description[2-]) ; }
             if $(paragraph[1]) = :: && ! $(paragraph[2])
             {
-                pre = yes ;
+                pre = " " ;
             }
             if $(paragraph[1]) = ::
             {
                 if $(output-type) = plain
                 {
-                    lines $(paragraph[2-]) : "  " "  " ;
+                    lines $(paragraph[2-]) "" : "  " "  " ;
                     lines ;
                 }
                 else if $(output-type) = html
@@ -123,7 +130,7 @@ rule section (
                 p = [ MATCH "(.*)($(pws))($(p[2]))$" :  $(paragraph[-1]) ] ;
                 if $(p[3]) = ::
                 {
-                    pre = yes ;
+                    pre = [ string.chars [ MATCH "^([$(.whitespace)]*)" : " $(p[1])" ] ] ;
                     if ! $(p[2]) || $(p[2]) = "" { paragraph = $(paragraph[1--2]) $(p[1]): ; }
                     else { paragraph = $(paragraph[1--2]) $(p[1]) ; }
                     if $(output-type) = plain
