@@ -10,7 +10,7 @@
 #  - actual -- the targets in Jam sense.
 #  The first two kinds are handled by this module.
 
-#  Each target is an instanse of some class derived from 'target' class.
+#  Each target is an instance of some class derived from 'target' class.
 
 import sequence ;
 import class : class ;
@@ -20,19 +20,19 @@ import property ;
 #  Base target class.
 rule target ( )
 {
-    __dependencies__ = ;
+    self.dependencies = ;
 
     # Adds new depencies for this target
     rule depends ( d + )
     {
         d = [ sequence.insertion-sort $(d) ] ;
-        __dependencies__ = [ sequence.merge $(__dependencies__) $(d) ] ;
+        self.dependencies = [ sequence.merge $(self.dependencies) : $(d) ] ;
     }
 
     # Retrives the list of dependencies
     rule dependencies ( )
     {
-        return $(__dependencies__) ;
+        return $(self.dependencies) ;
     }
 
     # Generates build instruction for the target and the specified build
@@ -45,28 +45,26 @@ rule target ( )
         }
     }
 }
-
-class.class target ;
+class target ;
 
 #  Project target class (derived from 'target')
 rule project-target ( requirements * : default-build * )
 {
-    __requirements__ = $(requirements) ;
-    __default-build__ = $(default-build) ;
+    self.requirements = $(requirements) ;
+    self.default-build = $(default-build) ;
 
     target.__init__ ;
 }
-
-class.class project-target : target ;
+class project-target : target ;
 
 #  Concrete target (derived from 'target')
 rule typed-target ( name : type : sources * : requirements * : default-build * )
 {
-    __name__ = $(name) ;
-    __type__ = $(type) ;
-    __sources__ = $(sources) ;
-    __requirements__ = $(requirements) ;
-    __default-build__ = $(default-build) ;
+    self.name = $(name) ;
+    self.type = $(type) ;
+    self.sources = $(sources) ;
+    self.requirements = $(requirements) ;
+    self.default-build = $(default-build) ;
 
     target.__init__ ;
 
@@ -78,9 +76,7 @@ rule typed-target ( name : type : sources * : requirements * : default-build * )
     }
 }
 
-class.class typed-target : target ;
-
- __targets__ = ;
+class typed-target : target ;
 
 #
 #  Returns the target instance for the specified jamfile-location and target
@@ -88,9 +84,12 @@ class.class typed-target : target ;
 #
 rule abstract-target-name ( jamfile-location : target-in-jamfile ? )
 {
-    if $(target-in-jamfile)  {
+    if $(target-in-jamfile)
+    {
         return target@$(jamfile-location)@$(target-in-jamfile) ;
-    } else {
+    }
+    else
+    {
         return target@$(jamfile-location) ;
     }
 }
@@ -108,38 +107,40 @@ rule create-abstract-project-target ( jamfile-location )
 # Class which represents a virtual target
 rule virtual-target ( name : subvariant : project )
 {
-     __name__ = $(name) ;
-    __subvariant__ = $(subvariant) ;
-    __project__ = $(project) ;
+    self.name = $(name) ;
+    self.subvariant = $(subvariant) ;
+    self.project = $(project) ;
 
-    __includes__  = ;
-    __dependencies__ = ;
-    __action__ = ;
+    self.includes  = ;
+    self.dependencies = ;
+    self.action = ;
 
-    __actual-name__  = 0 ;
+    self.actual-name  = 0 ;
 
 
     # Name of the target
-    rule name ( ) { return $(__name__) ; }
+    rule name ( ) { return $(self.name) ; }
+    
     # Property set that distinguished different variants of a target.
     # May be a subset of the property set that is used for building.
     # Determines the location of target, in an unspecified way.
-    rule subvariant ( ) { return $(__subvariant__) ; }
+    rule subvariant ( ) { return $(self.subvariant) ; }
+    
     # Project where this target was declared
-    rule project ( ) { return $(__project__) ; }
+    rule project ( ) { return $(self.project) ; }
 
-    rule includes ( ) { return $(__includes__) ; }
+    rule includes ( ) { return $(self.includes) ; }
     rule add_includes ( i + )
     {
-        __includes__ = [ sequence.merge $(__includes__)
-                            [ sequence.insertion-sort $(i) ] ] ;
+        self.includes = [ sequence.merge $(self.includes)
+                            : [ sequence.insertion-sort $(i) ] ] ;
     }
 
-    rule dependencies ( ) { return $(__dependencies__) ; }
+    rule dependencies ( ) { return $(self.dependencies) ; }
     rule depends ( d + )
     {
-        __dependencies__ = [ sequence.merge $(__dependencies__)
-                               [ sequence.insertion-sort $(d) ] ] ;
+        self.dependencies = [ sequence.merge $(self.dependencies)
+                               : [ sequence.insertion-sort $(d) ] ] ;
     }
 
     # If 'a' is supplied, sets action to 'a'.
@@ -147,9 +148,9 @@ rule virtual-target ( name : subvariant : project )
     rule action ( a ? )
     {
         if $(a) {
-            __action__ = $(a) ;
+            self.action = $(a) ;
         }
-        return $(__action__) ;
+        return $(self.action) ;
     }
 
     # Generates all the actual targets and build instructions needed to build
@@ -160,12 +161,12 @@ rule virtual-target ( name : subvariant : project )
     # only because some other file in set is out-of-date.
     rule actualize ( )
     {
-        ECHO "Actualizing target $(__name__)" ;
-        if ! $(__actual-name__) {
+        ECHO "Actualizing target $(self.name)" ;
+        if ! $(self.actual-name) {
 
-            __actual-name__ = [ actual-name ] ;
+            self.actual-name = [ actual-name ] ;
             for local i in $(dependencies) {
-                Depends $(name) : [ $(i).actualize ] ;
+                DEPENDS $(name) : [ $(i).actualize ] ;
             }
             for local i in $(includes) {
                 Includes $(name) : [ $(i).actualize ] ;
@@ -173,34 +174,34 @@ rule virtual-target ( name : subvariant : project )
             local a = [ action ] ;
             if $(a) {
                 $(a).actualize ;
-                local path = [ os.path.join [ $(__project__).location ] "bin" ] ;
+                local path = [ os.path.join [ $(self.project).location ] "bin" ] ;
                 path = [ os.path.native $(path) ] ;
-                MakeLocate $(__actual-name__) : $(path) ;
+                MakeLocate $(self.actual-name) : $(path) ;
 
             } else {
-                SEARCH on $(__actual-name__) =
-                    [ os.path.native [ $(__project__).source-location ] ] ;
+                SEARCH on $(self.actual-name) =
+                    [ os.path.native [ $(self.project).source-location ] ] ;
             }
         }
-        return $(__actual-name__) ;
+        return $(self.actual-name) ;
     }
 
 # private:
     rule actual-name ( )
     {
-        if ! $(__actual-name__) {
-            local project-location = [ $(__project__).location ] ;
+        if ! $(self.actual-name)
+        {
+            local project-location = [ $(self.project).location ] ;
             local location-grist =
                 [ sequence.join [ regex.split $(project-location) "/" ] : "!" ] ;
             local property-grist =
-                [ property.path-representation $(__subvariant__) ] ;
+                [ property.path-representation $(self.subvariant) ] ;
             local grist = $(location-grist)/$(property-grist) ;
-            __actual-name__ = <$(grist)>$(__name__) ;
+            self.actual-name = <$(grist)>$(self.name) ;
         }
-        return $(__actual-name__) ;
+        return $(self.actual-name) ;
     }
 }
-
 class virtual-target ;
 
 # Class which represents an action.
@@ -211,45 +212,52 @@ class virtual-target ;
 # not establish dependency relationship, but should do everything else.
 rule action ( targets + : sources * : action_name : properties )
 {
-    __targets__ = $(targets) ;
-    __sources__ = $(sources) ;
-    __action_name__ = $(action_name) ;
-    __properties__ = $(properties) ;
+    self.targets = $(targets) ;
+    self.sources = $(sources) ;
+    self.action_name = $(action_name) ;
+    self.properties = $(properties) ;
 
     rule targets ( )
     {
-        return $(__targets__) ;
+        return $(self.targets) ;
     }
+    
     rule sources ( )
     {
-        return $(__sources__) ;
+        return $(self.sources) ;
     }
+    
     rule action_name ( )
     {
-        return $(__action_name__) ;
+        return $(self.action_name) ;
     }
+    
     rule properties ( )
     {
-        return $(__properties__) ;
+        return $(self.properties) ;
     }
 
     # Generates actual build instructions.
     rule actualize ( )
     {
         local actual_targets ;
-        for local i in [ targets ] {
+        for local i in [ targets ]
+        {
             actual_targets += [ $(i).actualize ] ;
         }
+        
         local actual_sources ;
-        for local i in [ sources ] {
+        for local i in [ sources ]
+        {
             actual_sources += [ $(i).actualize ] ;
         }
-        Depends $(actual_targets) : $(actual_sources) ;
-        $(__action_name__)
+        
+        DEPENDS $(actual_targets) : $(actual_sources) ;
+        
+        $(self.action_name)
             $(actual_targets) : $(actual_sources) : [ properties ] ;
     }
 }
-
-class.class action ;
+class action ;
 
 
