@@ -27,7 +27,7 @@ toolset borland bcc32 : -e -n : /D : -WC -w- -q -IC:\\Borland\\BCC55\\Include -L
 ## Comeau C/C++ 4.x
 toolset como como : "-o " : -D ;
 ## MacOSX Darwin, using GCC 2.9.x, 3.x
-toolset darwin cc :  "-o " : -D : -s -O3 ;
+toolset darwin cc :  "-o " : -D : -Wl,-x -O3 ;
 ## GCC 2.x, 3.x
 toolset gcc gcc : "-o " : -D : -s -O3 ;
 ## GCC 2.x, 3.x on CYGWIN but without cygwin1.dll
@@ -293,7 +293,7 @@ if $(UNIX)
 {
     actions .pack {    tar zcf "$(<)" "$(>)" }
     actions .zip  {    gzip -c9 "$(>)" > "$(<)" }
-    actions .cp   {    cp -af "$(>)" "$(<)" }
+    actions .cp   {    cp -Rpf "$(>)" "$(<)" }
 }
 
 # The single binary, compressed.
