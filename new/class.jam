@@ -137,6 +137,7 @@ rule class (
     }
     
     classes += $(name) ;
+    IMPORT class : typecheck : .typecheck : [$(name)] ;
     
     # Each class is assigned a new module which acts as a namespace
     # for its rules and normal instance variables.
@@ -284,9 +285,18 @@ rule is-a (
     : type # The type to test for.
     )
 {
-    if [ MATCH "(object\\()[^@]+\\)@.*" : $(instance) ]
+    if [ is-instance $(instance) ]
     {
         return [ class.is-derived [ modules.peek $(instance) : __class__ ] : $(type) ] ;
+    }
+}
+
+local rule typecheck ( x )
+{
+    local class-name = [ MATCH "^\\[(.*)\\]$" : [ BACKTRACE 1 ] ] ;
+    if ! [ is-a $(x) : $(class-name) ]
+    {
+        return "Expected an instance of "$(class-name)" but got \""$(x)"\" for argument" ;
     }
 }
 
@@ -395,6 +405,14 @@ rule __test__ ( )
         }
         class derived2 : myclass ;
         
+        local rule derived2a ( )
+        {
+            derived2.__init__ ;
+        }
+        class derived2a : derived2 ;
+        
+        local rule expect_derived2 ( [derived2] x ) { }
+            
         local rule bad_subclass ( )
         {
             # fails to call base class __init__ function
@@ -405,6 +423,27 @@ rule __test__ ( )
         local b = [ new derived1 4 ] ;
         local c = [ new derived2 ] ;
         local d = [ new derived2 ] ;
+        local e = [ new derived2a ] ;
+        
+        expect_derived2 $(d) ;
+        expect_derived2 $(e) ;
+        
+        # argument checking is set up to call exit(1) directly on
+        # failure, and we can't hijack that with try, so we'd better
+        # not do this test by default.  We could fix this by having
+        # errors look up and invoke the EXIT rule instead; EXIT can be
+        # hijacked ;-)
+        if --fail-typecheck in [ modules.peek : ARGV ]
+        {
+            try ;
+            {
+                expect_derived2 $(a) ;
+            }
+            catch
+              "Expected an instance of derived2 but got" instead
+              ;
+        }
+        
         
         try ;
         {

@@ -581,6 +581,91 @@ static void argument_error( char* message, RULE* rule, FRAME* frame, LIST* arg )
     exit(1);
 }
 
+/* define delimiters for type check elements in argument lists (and
+ * return type specifications, eventually)
+ */
+# define TYPE_OPEN_DELIM '['
+# define TYPE_CLOSE_DELIM ']'
+
+/* is_type_name - true iff the given string represents a type check
+ * specification
+ */
+static int
+is_type_name( char* s )
+{
+    return s[0] == TYPE_OPEN_DELIM
+        && s[strlen(s) - 1] == TYPE_CLOSE_DELIM;
+}
+
+/*
+ * arg_modifier - if the next element of formal is a single character,
+ * return that; return 0 otherwise.  Used to extract "*+?" modifiers
+ * from argument lists.
+ */
+static char
+arg_modifier( LIST* formal )
+{
+    if ( formal->next )
+    {
+        char *next = formal->next->string;
+        if ( next && next[0] != 0 && next[1] == 0 )
+            return next[0];
+    }
+    return 0;
+}
+
+/*
+ * type_check - checks that each element of values satisfies the
+ * requirements of type_name.
+ *
+ *      caller   - the frame of the rule calling the rule whose
+ *                 arguments are being checked
+ *
+ *      called   - the rule being called
+ *
+ *      arg_name - a list element containing the name of the argument
+ *                 being checked
+ */
+static void
+type_check( char* type_name, LIST *values, FRAME* caller, RULE* called, LIST* arg_name )
+{
+    static module *typecheck = 0;
+
+    /* if nothing to check, bail now */
+    if ( !values || !type_name )
+        return;
+
+    if ( !typecheck )
+        typecheck = bindmodule(".typecheck");
+
+    /* if the checking rule can't be found, also bail */
+    {
+        RULE checker_, *checker = &checker_;
+
+        checker->name = type_name;
+        if ( !hashcheck( typecheck->rules, (HASHDATA**)&checker ) )
+            return;
+    }
+    
+    while ( values != 0 )
+    {
+        LIST *error;
+        FRAME frame[1];
+        frame_init( frame );
+        frame->module = typecheck;
+        frame->prev = caller;
+        
+        /* Prepare the argument list */
+        lol_add( frame->args, list_new( L0, values->string ) );
+        error = evaluate_rule( type_name, frame );
+        
+        if ( error )
+            argument_error( error->string, called, caller, arg_name );
+        
+        frame_free( frame );
+		values = values->next;
+    }
+}
 
 /*
  * collect_arguments() - local argument checking and collection
@@ -601,54 +686,64 @@ collect_arguments( RULE* rule, FRAME* frame )
         int n;
         for ( n = 0; n < max ; ++n )
         {
-            LIST *formal = lol_get( all_formal, n );
             LIST *actual = lol_get( all_actual, n );
+            char *type_name = 0;
             
-            while ( formal )
+            LIST *formal;
+            for ( formal = lol_get( all_formal, n ); formal; formal = formal->next )
             {
                 char* name = formal->string;
-                char modifier = 0;
-                LIST* value = 0;
 
-                /* Stop now if a variable number of arguments are specified */
-                if ( name[0] == '*' && name[1] == 0 )
-                    return locals;
-                
-                if ( formal->next )
+                if ( is_type_name(name) )
                 {
-                    char *next = formal->next->string;
-                    if ( next && next[0] != 0 && next[1] == 0 )
-                        modifier = next[0];
-                }
-                
-                if ( !actual && modifier != '?' && modifier != '*' )
-                {
-                    argument_error( "missing argument", rule, frame, formal );
-                }
+                    if ( type_name )
+                        argument_error( "missing argument name before type name:", rule, frame, formal );
+                    
+                    if ( !formal->next )
+                        argument_error( "missing argument name after type name:", rule, frame, formal );
 
-                switch ( modifier )
+                    type_name = formal->string;
+                }
+                else
                 {
-                case '+':
-                case '*':
-                    value = list_copy( 0, actual );
-                    actual = 0;
-                    /* skip an extra element for the modifier */
-                    formal = formal->next; 
-                    break;
-                case '?':
-                    /* skip an extra element for the modifier */
-                    formal = formal->next; 
-                    /* fall through */
-                default:
-                    if ( actual ) /* in case actual is missing */
+                    LIST* value = 0;
+                    char modifier;
+                    LIST* arg_name = formal; /* hold the argument name for type checking */
+                    
+                    /* Stop now if a variable number of arguments are specified */
+                    if ( name[0] == '*' && name[1] == 0 )
+                        return locals;
+
+                    modifier = arg_modifier( formal );
+                
+                    if ( !actual && modifier != '?' && modifier != '*' )
+                        argument_error( "missing argument", rule, frame, formal );
+
+                    switch ( modifier )
                     {
-                        value = list_new( 0, actual->string );
-                        actual = actual->next;
+                    case '+':
+                    case '*':
+                        value = list_copy( 0, actual );
+                        actual = 0;
+                        /* skip an extra element for the modifier */
+                        formal = formal->next; 
+                        break;
+                    case '?':
+                        /* skip an extra element for the modifier */
+                        formal = formal->next; 
+                        /* fall through */
+                    default:
+                        if ( actual ) /* in case actual is missing */
+                        {
+                            value = list_new( 0, actual->string );
+                            actual = actual->next;
+                        }
                     }
-                }
                 
-                locals = addsettings( locals, 0, name, value );
-                formal = formal->next;
+                    locals = addsettings( locals, 0, name, value );
+                    type_check( type_name, value, frame, rule, arg_name );
+                    type_name = 0;
+                }
             }
             
             if ( actual )
