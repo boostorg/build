@@ -567,7 +567,10 @@ rule .hdr.scan
 .scan [ GLOB . : *.c ] ;
 
 # Distribution making from here on out.
+dist.license =
+    [ GLOB . : LICENSE ] [ GLOB [ .path .. .. .. ] : LICENSE ] ;
 dist.docs =
+    $(dist.license[1])
     index.html
     Porting
     Jam.html
@@ -646,10 +649,26 @@ rule .binary
 # Package some file.
 rule .package ( dst-dir : src-files + )
 {
-    local src-dirs = ;
-    for local s in $(src-files:D) { if ! $(s) in $(src-dirs) && ! $(s) = "" { src-dirs += $(s) ; } }
-    local dst-files = $(src-files:R=$(dst-dir)) ;
-    local dst-dirs = $(src-dirs:R=$(dst-dir)) ;
+    local src-dirs ;
+    local dst-files ;
+    local dst-dirs ;
+    for local src-path in $(src-files)
+    {
+        local src-dir = $(src-path:D) ;
+        if ! $(src-dir) in $(src-dirs) &&
+            ! $(src-dir) = "" &&
+            ! $(src-dir:D=) != ".."
+        {
+            src-dirs += $(src-dir) ;
+            dst-dirs += $(src-dir:R=$(dst-dir)) ;
+        }
+        local src-file = $(src-path) ;
+        if $(src-dir:D=) = ".."
+        {
+            src-file = $(src-file:D=) ;
+        }
+        dst-files += $(src-file:R=$(dst-dir)) ;
+    }
     
     local pack = ;
     if $(NT) { pack = $(dst-dir).zip ; }
@@ -658,12 +677,19 @@ rule .package ( dst-dir : src-files + )
     DEPENDS dist : $(pack) ;
     DEPENDS $(pack) : $(dst-files) ;
     
-    for local src-file in $(src-files)
+    for local src-path in $(src-files)
     {
+        local src-dir = $(src-path:D) ;
+        local src-file = $(src-path) ;
+        if $(src-dir:D=) = ".."
+        {
+            src-file = $(src-file:D=) ;
+        }
         local dst-file = $(src-file:R=$(dst-dir)) ;
-        DEPENDS $(dst-file) : $(src-file) $(dst-file:D) ;
+        DEPENDS $(dst-file) : $(src-path) $(dst-file:D) ;
         .mkdir $(dst-file:D) ;
-        .cp. $(dst-file) : $(src-file) ;
+        
+        .cp. $(dst-file) : $(src-path) ;
         .clean $(dst-file) ;
     }
     
@@ -701,7 +727,6 @@ rule .rpm ( name : source )
     .clean $(name).$(rpm-arch).rpm $(name).src.rpm ;
 }
 actions .rpm. {
-    export BOOST_JAM_DOCS="$(docs)"
     export BOOST_JAM_TOOLSET="$(toolset)"
     $(rpm-tool[1]) -ta $(target-opt)$(arch) $(>) | tee rpm.out
     cp `grep -e '^Wrote:' rpm.out | sed 's/^Wrote: //'` .
