@@ -15,7 +15,7 @@ toolset.register sun ;
 feature.subfeature toolset sun : version ;
 
 # Installation root to use for versionless toolset
-.root = "" ;
+.root = "/opt/SUNWspro/bin/" ;
 
 rule init ( version ? : root ? )
 {
