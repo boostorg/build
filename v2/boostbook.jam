@@ -18,11 +18,13 @@ import property ;
 import property-set ;
 import regex ;
 import scanner ;
+import make ;
 
 feature.feature xsl:param : : free ;
 feature.feature format : html onehtml man pdf ps docbook fo 
-  : incidental implicit composite ;
+  : incidental implicit composite propagated ;
 
+type.register DTDXML : dtdxml ;
 type.register XML : xml ;
 type.register DOCBOOK : docbook ; 
 type.register HTML : html ;
@@ -36,6 +38,7 @@ type.register MANPAGES ;
 # Generates handle -> * rules a bit strangely, so don't try to use them for now
 #generators.register-standard boostbook.xslt : XML XSLT : * ;
 
+generators.register-standard boostbook.dtdxml-to-boostbook : DTDXML : XML ;
 generators.register-standard boostbook.boostbook-to-docbook : XML : DOCBOOK ;
 generators.register-standard boostbook.docbook-to-onehtml : DOCBOOK : HTML ;
 generators.register-standard boostbook.docbook-to-htmldir : DOCBOOK : HTMLDIR ;
@@ -119,6 +122,12 @@ rule xslt-dir ( target : source stylesheet : properties * : dirname )
   DIRECTORY on $(target) = $(dirname) ;
   NAME on $(target) = $(.xsltproc) ;
   xslt-xsltproc-dir $(target) : $(source) ;
+}
+
+rule dtdxml-to-boostbook ( target : source : properties * )
+{
+  xslt $(target) : $(source) "$(.boostbook-xsl-dir)/dtd/dtd2boostbook.xsl" 
+                 : $(properties) ;
 }
 
 rule boostbook-to-docbook ( target : source : properties * )
@@ -207,6 +216,8 @@ rule xml-catalog-action ( target : property-set ? : catalog-entries * )
 
       print.output $(actual) ;
       print.text $(text) : true ;
+
+      ALWAYS $(actual) ;
     }
   }
 }
@@ -369,3 +380,23 @@ rule xinclude-scanner ( includes * )
 class xinclude-scanner : scanner ;
 scanner.register xinclude-scanner ;
 type.set-scanner XML : xinclude-scanner ;
+
+#############################################################################
+# Testsuite handling
+#############################################################################
+rule testsuite-to-jamfiles ( target : source : properties * )
+{
+  ECHO $(target) ;
+  local boost_root = [ modules.peek : BOOST_ROOT ] ;
+  xslt $(target) : $(source) "$(.boostbook-xsl-dir)/testing/Jamfile.xsl" 
+                 : $(properties) <xsl:param>boost.root=$(boost_root) 
+                 ;
+}
+
+rule testsuite ( target-name : source : requirements * )
+{
+  local project = [ CALLER_MODULE ] ;
+
+  make $(target-name) : $(source) : boostbook.testsuite-to-jamfiles
+                      : $(requirements) : $(project) ;
+}
