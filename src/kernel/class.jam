@@ -144,7 +144,7 @@ rule is-derived ( class : bases + )
 rule is-instance ( value # The value to check 
      )
 {
-    return [ MATCH "(object\\()[^@]+\\)@.*" : $(value) ] ;        
+    return [ MATCH "^(object\\()[^@]+\\)@.*" : $(value) ] ;        
 }
 
 # Check if the given value is of the given type.
