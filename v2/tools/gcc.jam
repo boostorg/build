@@ -257,6 +257,11 @@ rule init-link-flags ( toolset linker condition )
 rule link ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;    
+    # Serialize execution of the 'link' action, since
+    # running N links in parallel is just slower.
+    # For now, serialize only gcc links, it might be a good
+    # idea to serialize all links.
+    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
 }
 
 actions link bind LIBRARIES
@@ -291,6 +296,7 @@ actions piecemeal archive
 rule link.dll ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;    
+    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
 }
 
 # Differ from 'link' above only by -shared.
