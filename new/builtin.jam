@@ -421,16 +421,24 @@ rule link-action ( targets + : sources * : action-name : properties * )
             # command line, when it's needed.
             else if [ type.is-derived [ $(s).type ] LIB ] 
             {
-                extra += <library>$(s) ;
-                if $(hardcore-rpath)
-                {                    
-                    rpaths += [ path.root [ $(s).path ] $(pwd) ] ;
-                }                
+                extra += <library>$(s) ;        
+            }            
+        }        
+        
+        properties += $(extra) ;
+        if $(hardcore-rpath)
+        {                    
+            for local p in $(properties)
+            {
+                if $(p:G) = <library> 
+                {
+                    rpaths += [ path.root [ $(p:G=).path ] $(pwd) ] ;
+                }
             }            
             rpaths = [ sequence.unique $(rpaths) ] ;
-            extra += <dll-path>$(rpaths) ;
-        }        
-        return $(properties) $(extra) ;
+            properties += <dll-path>$(rpaths) ;            
+        }                        
+        return $(properties) ;        
     }
     
     
