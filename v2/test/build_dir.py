@@ -3,7 +3,7 @@
 # Test that we can change build directory using 
 # the 'build-dir' project attribute.
 
-from BoostBuild import Tester
+from BoostBuild import Tester, exe_suffix
 t = Tester()
 
 
@@ -24,8 +24,8 @@ t.write("b.cpp", "int main() {}")
 
 t.run_build_system()
 
-t.expect_addition(["build/bin/gcc/debug/a",
-		   "build/src/bin/gcc/debug/b"])
+t.expect_addition(["build/bin/gcc/debug/a" + exe_suffix,
+		   "build/src/bin/gcc/debug/b" + exe_suffix])
 		   
 # Test that project can override build dir
 t.write("Jamfile", """
@@ -41,7 +41,7 @@ exe b : b.cpp ;
 """)
 
 t.run_build_system()
-t.expect_addition(["bin/gcc/debug/a",
-		   "src/build/bin/gcc/debug/b"])
+t.expect_addition(["bin/gcc/debug/a" + exe_suffix,
+		   "src/build/bin/gcc/debug/b" + exe_suffix])
 		   
 t.cleanup()		   
