@@ -470,7 +470,8 @@ rule file-target (
             local ptarget = [ project.target $(plocation) ] ;
             local ref-ps = [ $(ptarget).reference-properties [ $(self.dg).properties-ps ] ] ;
 
-            if [ $(ps).free ] != [ $(ref-ps).free ]
+            if [ $(ps).free ] != [ $(ref-ps).free ] 
+              || [ $(ps).dependency ] != [ $(ref-ps).dependency ] 
             {
                 return [ $(main-target).name ] ;
             }            
