@@ -113,7 +113,7 @@ tests = [ "project_test1",
           "composite",
           "library_chain",
           "unit_test",
-	  ]
+          ]
 
 if os.name == 'posix':
     tests.append("symlink")

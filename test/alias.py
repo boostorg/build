@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-
 from BoostBuild import Tester, List
 t = Tester()
 
@@ -46,7 +45,7 @@ t.expect_addition("bin/$toolset/debug/hello.exe")
 
 # Regression test.
 # Check if usage requirements are propagated via "alias"
-		   
+           
 t.write("l.cpp", """ 
 void
 #if defined(_WIN32)

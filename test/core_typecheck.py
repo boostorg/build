@@ -11,11 +11,11 @@ module .typecheck
 {
     rule [path] ( x )
     {
-	if ! [ MATCH "^(::)" : $(x) ] 
-	{
-	    ECHO "Error: $(x) is not a path" ;
-	    return true ;
-	}
+        if ! [ MATCH "^(::)" : $(x) ] 
+        {
+            ECHO "Error: $(x) is not a path" ;
+            return true ;
+        }
     }
 }
 
