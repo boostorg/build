@@ -63,7 +63,7 @@ rule Cc-action
 
 actions msvc-Cc-action
 {
-    $(MSVC_TOOL_PATH)cl /Zm200 -nologo -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -Fo"$(<)" "$(>)"
+    $(MSVC_TOOL_PATH)cl /Zm400 -nologo -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -Fo"$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -74,7 +74,7 @@ rule C++-action
 
 actions msvc-C++-action
 {
-    $(MSVC_TOOL_PATH)cl /Zm200 -nologo -GX -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -Fo"$(<)" -Tp"$(>)"
+    $(MSVC_TOOL_PATH)cl /Zm400 -nologo -GX -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -Fo"$(<)" -Tp"$(>)"
 }
 
 #### Archive ####
