@@ -403,6 +403,48 @@ rule main-target ( name : project )
 
 class main-target : abstract-target ;
 
+# Given an 'id' for a target, return an instance of 'abstract-target' that
+# corresponds to it. If there's no such target, returns empty string.
+# The project referred to by id is loaded if it is not already loaded.
+rule find ( id : current-location )
+{
+    local target ;
+    # Find if this is project
+    local project-module = [ find $(id) : $(current-location) ] ;
+    if $(project-module)
+    {
+        target = [ project.target $(project-module) ] ;
+    }
+    else
+    {
+        # Split 'id' into project and target.
+        
+        local split = [ MATCH ((@?)(.*/)*)([^/]*) : $(id) ] ;
+        local project-name = [ remove-trailing-slash $(split[1]) ] ;
+        local has-project-id = $(split[2]) ;
+        local target-name = $(split[4]) ;
+        
+        local project-module = [ find $(project-name) : $(current-location) ] ;
+               
+        if $(project-module) {
+            local project-target = [ project.target $(project-module) ] ;
+            if [ $(project-target).has-main-target $(target-name) ] 
+            {
+                target = [ $(project-target).main-target $(target-name) ] ;
+            }
+        } 
+        else if $(has-project-id)
+        {            
+            # This error checking should be moved somewhere.
+            errors.error
+              The target id \"$(id)\", specified by project at \"$(current-location)\"
+                is invalid (missing 'use-project'?) ;
+        }
+    }    
+    return $(target) ;
+}
+
+
 # Attempts to generate the target given by target
 # reference. Either returns all the virtual targets
 # generated (possible none), or string "@main target not found"
@@ -424,7 +466,7 @@ rule generate ( target-reference # Target reference
 
     # Check if such target exists
     local main-target = 
-      [ project.find-target $(id) : [ project.attribute $(project) location ] ] ;
+      [ find $(id) : [ project.attribute $(project) location ] ] ;
         
     if $(main-target) {
         # Take properties which should be propagated and refine them
@@ -461,10 +503,10 @@ rule generate-dependencies ( property-set : project : generation-ps )
     for local p in [ $(property-set).dependency ] 
     {
         local g = [ targets.generate $(p:TG=) : $(project) : $(generation-ps) ] ;
-        if ! $(g) 
-        {
-            errors.error "cannot generate dependency " $(p) ;
-        }
+        #if ! $(g) 
+        #{
+        #    errors.error "cannot generate dependency " $(p) ;
+        #}
         xproperties += $(p:G)$(g) ;
     }
     local r = [ property-set.create 
@@ -594,7 +636,7 @@ rule basic-target ( name : project
         for local e in $(targets-or-properties)
         {
             result += [ $(e:G=).usage-requirements ] ;
-        }                      
+        }              
         return $(result) ;
     }
     

@@ -110,7 +110,7 @@ t.run_build_system("clean lib/b.obj")
 t.expect_removal("lib/bin/$toolset/debug/b.obj")
 t.expect_nothing_more()
 
-t.run_build_system("release lib2@helper/e.obj @/lib3/f.obj")
+t.run_build_system("release lib2/helper/e.obj @/lib3/f.obj")
 t.expect_addition("lib2/helper/bin/$toolset/release/e.obj")
 t.expect_addition("lib3/bin/$toolset/release/f.obj")
 t.expect_nothing_more()

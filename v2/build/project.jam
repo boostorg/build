@@ -46,6 +46,7 @@ import project-roots ;
 import print ;
 import class : class new ;
 import errors ;
+import assert ;
 import property-set ;
 
 #
@@ -64,7 +65,6 @@ rule load ( jamfile-location )
     if ! $(jamfile-location) in $(.project-locations)
     {      
         .project-locations += $(jamfile-location) ; 
-
         
         load-jamfile $(jamfile-location) ;
                 
@@ -97,100 +97,72 @@ rule act-as-jamfile ( module : location )
 
 
 #   Returns the project module, given its id.
-#   Projects can be referred using path@project-id notation. In it, 'path'
-#   selects jamfile location relatively to 'current-location' and 'project-id'
-#   names project relatively to the selected jamfile.
-#   Rooted 'project-id' is possible:
-#   "@/boost" will refer to the top-level project called "boost".
-#
+#   Projects can be referred using @project-id notation. 
+#   Where <project-id> is a path. When this path is not absolute, it's relative
+#   to the project in 'current-location'.
 rule lookup ( id : current-location )
 {
-    local split = [ MATCH (.*)@(.*) : $(id)  ] ;
-    local location = $(split[1]) ;
-    # A jam quirk: if there's no part before "@", 'location' will be empty
-    # string, and ?= won't change it.
-    if $(location)
+    local split = [ MATCH ^(@)(.*) : $(id)  ] ;
+    if ! $(split)
     {
-        location =
-            [ path.root $(location) $(current-location) ] ;
+        error "Project id '$(id)' is invalid" ;
     }
-    else
-    {
-        location = $(current-location) ;
-    }
-
+    
     local project-id = $(split[2]) ;
+    
+    local location = $(current-location) ; 
 
     if [ path.is-rooted $(project-id) ]
     {
         return $($(project-id).jamfile-module) ;
     }
-    else
+    else 
     {
-        if ! $(location)
+        # Find the project module for this location
+        assert.in $(location) : $(.project-locations) ;        
+        local module-name = [ module-name $(location) ] ;
+
+        if ! $(project-id)
         {
-            error Jamfile location must be specified for relative project-id $(id) ;
+            return $(module-name) ;
         }
-
-        if $(location) in $(.project-locations) 
+        else 
         {
-            local module-name = [ module-name $(location) ] ;
-
-            if $(module-name) 
-            {                
-                if ! $(project-id)
-                {
-                    return $(module-name) ;
-                }
-                else 
-                {
-                    local base-id = [ attribute $(module-name) id ] ;
-                    
-                    if ! $(base-id)
-                    {
-                        error "Project in $(location) has no project id" ;
-                    }
-                    else
-                    {
-                        local rooted-id = $(base-id)/$(project-id) ;
-                        return $($(rooted-id).jamfile-module) ;
-                    }
-                }     
+            local base-id = [ attribute $(module-name) id ] ;
+            
+            if ! $(base-id)
+            {
+                error "Project in $(location) has no project id" ;
             }
+            else
+            {
+                local rooted-id = $(base-id)/$(project-id) ;
+                return $($(rooted-id).jamfile-module) ;
+            }                 
         }        
     }
 }
 
-# Returns a project module given its id. If target cannot be
-# found, loads the project at project at location specified by 
-# target-id and tries again.
-rule lookup-with-load ( id : current-location )
+# Given 'name' which can be project-id or plain directory name,
+# return project module corresponding to that id or directory.
+# Returns nothing of project is not found.
+rule find ( name : current-location )
 {
-    local project-module = [ lookup $(id) : $(current-location) ] ;    
-    if ! $(project-module)
+    local project-module ;
+    if [ MATCH (@) : $(name) ]
+    {     
+        project-module = [ lookup $(name) : $(current-location) ] ;
+    }
+    else
     {
-        # Try to load the project at the specified location
-        location = [ MATCH (.*)@(.*) : $(id) ] ;
-        if ! $(location)
-        {
-            location = "." ;
-        }        
-        location = [ path.root $(location[1]) $(current-location) ] ;
+        local location = [ path.root $(name) $(current-location) ] ;
         if [ find-jamfile $(location) ]
         {
-            load $(location) ;
-            # If there's project-id relative to the 'location' the
-            # jamfile at 'location' should made those available somehow.
-            project-module = [ lookup $(id) : $(current-location) ] ;
-        }                        
-        else
-        {
-            location = ;
-        }
+            project-module = [ load $(location) ] ;
+        }        
     }
     return $(project-module) ;
 }
-
 
 
 # Helper for 'find-target'
@@ -199,81 +171,6 @@ local rule remove-trailing-slash ( string )
     local stripped = [ MATCH (.*)/$ : $(string) ] ;
     stripped ?= $(string) ;
     return $(stripped) ;
-}
-
-# Given an 'id' for a target, return an instance of 'abstract-target' that
-# corresponds to it. If there's no such target, returns empty string.
-# The project referred to by id is loaded if it is not already loaded.
-rule find-target ( id : current-location )
-{
-    # Find the project first          
-    local project-id ;
-    local target-id ;
-    local explicit ;
-    if [ MATCH (.*)@(.*) : $(id)  ] 
-    {
-        explicit = 1 ;
-        # Take the last "/" separated component after "@" as target id.
-        local split = [ MATCH (.*@(.*/)*)([^/]*) : $(id) ] ;
-        project-id = [ remove-trailing-slash $(split[1]) ] ;
-        target-id = $(split[3]) ;
-    }
-    else
-    {
-        # This is not @-id. Treat it as path -- the last "/" separated component
-        # is target id, everything else denote project location.
-        local split = [ MATCH ((.*/)*)([^/]*) : $(id) ] ;
-        if $(split[1]) 
-        {
-            project-id = [ remove-trailing-slash $(split[1]) ] ;
-            project-id = $(project-id)@ ;        
-        }
-        else
-        {
-                project-id = @ ;
-        }
-        target-id = $(split[3]) ;
-    }
-
-    # Handle the case where id refers to a project. We just try to 
-    # pass it through lookup-with-load and if it succedes, we return
-    # the project.
-
-    local project-module ;
-    if [ MATCH (@) : $(id) ]
-    {
-        project-module = [ lookup-with-load $(id) : $(current-location) ] ;
-    }
-    else
-    {
-        # When id has no "@" and we're looking for a project, treat id
-        # as path.
-        project-module = [ lookup-with-load $(id)@ : $(current-location) ] ;
-    }
-
-    if $(project-module)
-    {
-        return [ project.target $(project-module) ] ;
-    }
-    else 
-    {
-        # Now treat 'id' as referring to a main target
-        project-module = [ lookup-with-load $(project-id) : $(current-location) ] ;
-
-        if $(project-module) {
-            local project-target = [ project.target $(project-module) ] ;
-            if [ $(project-target).has-main-target $(target-id) ] 
-            {
-                return [ $(project-target).main-target $(target-id) ] ;
-            }
-        } 
-        else if $(explicit)
-        {
-            errors.error
-              The target id \"$(id)\", specified by project at \"$(current-location)\"
-                is invalid (missing 'use-project'?) ;
-        }
-    }    
 }
 
 #
