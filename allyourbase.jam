@@ -1382,8 +1382,9 @@ rule split-path
 
 # The new jam executable has slightly different SUBST behavior which we need to
 # account for.
-if $(NEW_BOOST_JAM) {
+if $(JAM_VERSION[1]) >= 03 {
 
+SEARCH on new-split.jam = $(BOOST_BUILD_PATH) ;
 include new-split.jam ; # this is temporary.
 
 } else {

@@ -99,11 +99,13 @@ rule identity ( list * )
 }
 
 #
-# test modules
+# test module primitives
 #
 {
-    local x = a b c d e ;
-    local y = c d e ;
+    local x = a b c d e f g h i j ;
+    local y = $(x[3-]) ;
+
+    rule shift1 ( dummy ) { }
 
     module my_module
     {
@@ -149,7 +151,53 @@ rule identity ( list * )
     assert-equal $(x) : identity $(y) ;
 
     # Prove that the module's rule is not exposed to the world at large without
-    # qualification. This is expected to produce an "unknown rule" warning.
-    shift1 ;
+    # qualification
+    shift1 nothing ;
     assert-equal $(x) : identity $(y) ;
+
+    IMPORT : my_module : shift1 shift2 : shifty ;
+
+    shifty ;
+    y = $(y[2-]) ;
+    assert-equal $(x) : identity $(y) ;
+
+    shift2 ;
+    y = $(y[2-]) ;
+    assert-equal $(x) : identity $(y) ;
+
+
+    IMPORT : my_module ;
+
+    shift1 ;
+    y = $(y[2-]) ;
+    assert-equal $(x) : identity $(y) ;
+
+    shift2 ;
+    y = $(y[2-]) ;
+    assert-equal $(x) : identity $(y) ;
+}
+
+#
+# test CALLER_MODULE
+#
+{
+    module module1
+    {
+        rule f ( )
+        {
+            local m = [ CALLER_MODULE ] ;
+            assert-equal : identity $(m) ;
+            module2.f ;
+        }
+
+    }
+    module module2
+    {
+        rule f ( )
+        {
+            local m = [ CALLER_MODULE ] ;
+            assert-equal module1 : identity $(m) ;
+        }
+    }
+    module1.f ;
 }
