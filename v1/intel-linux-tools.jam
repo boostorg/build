@@ -148,7 +148,7 @@ rule Link-action
 actions intel-linux-Link-action bind NEEDLIBS NEEDIMPS
 {
     $(INTEL_LINUX_SETUP)
-    icc $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" $(NEEDLIBS) -l$(FINDLIBS) "$(IMPLIB_FLAGS)$(NEEDIMPS)" "-Qoption,link,-soname,$(<[1]:D=)$(SOTAG)"
+    icc $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" $(NEEDLIBS) $(NEEDLIBS) -l$(FINDLIBS) "$(IMPLIB_FLAGS)$(NEEDIMPS)" "-Qoption,link,-soname,$(<[1]:D=)$(SOTAG)"
     $(ACTION_1)$(LN)$(SPACE)-fs$(SPACE)"$(<[1]:D=)$(OUTTAG)"$(SPACE)"$(<[1])"
 }
 
