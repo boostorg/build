@@ -410,7 +410,7 @@ else
 
 actions execute-test bind INPUT_FILES output-file
 {
-    $(PATH_SETUP:E=)$(>) $(ARGS) "$(INPUT_FILES)" > $(output-file) 2>&1
+    $(PATH_SETUP)$(>) $(ARGS) "$(INPUT_FILES)" > $(output-file) 2>&1
     $(SET_STATUS)
     $(RUN_OUTPUT_NL) >> $(output-file)
     echo EXIT STATUS: $(STATUS) >> $(output-file)
