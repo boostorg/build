@@ -73,10 +73,8 @@ class Tester(TestCmd.TestCmd):
         self.translate_suffixes = translate_suffixes
 
         self.toolset = get_toolset()
-
-        if pass_toolset:
-            arguments = self.toolset + " " + arguments
-
+        self.pass_toolset = pass_toolset
+        
         prepare_suffix_map(pass_toolset and self.toolset or 'gcc')
 
         jam_build_dir = ""
@@ -209,15 +207,21 @@ class Tester(TestCmd.TestCmd):
     #
     def run_build_system(
         self, extra_args='', subdir='', stdout = None, stderr = '',
-        status = 0, match = None, **kw):
+        status = 0, match = None, pass_toolset = None, **kw):
 
         self.previous_tree = build_tree(self.workdir)
 
         if match is None:
             match = self.match
+	    	    
+	if pass_toolset is None:
+	    pass_toolset = self.pass_toolset	    
 
         try:
-            kw['program'] = self.program + ' ' + extra_args
+            if pass_toolset:
+                kw['program'] = self.program + ' ' + self.toolset + ' ' + extra_args                                
+            else:
+                kw['program'] = self.program + ' ' + extra_args                
             kw['chdir'] = subdir
             apply(TestCmd.TestCmd.run, [self], kw)
         except:
@@ -461,7 +465,7 @@ class Tester(TestCmd.TestCmd):
         if type(names) == types.StringType:
                 names = [names]
         r = map(self.adjust_suffix, names)
-        r = map(lambda x: string.replace(x, "$toolset", self.toolset), r)
+        r = map(lambda x, t=self.toolset: string.replace(x, "$toolset", t), r)
         return r
 
     def native_file_name(self, name):
@@ -486,7 +490,7 @@ class List:
             self.l.append(string.replace(e, '\001', ' '))
 
     def __len__(self):
-        return len(l)
+        return len(self.l)
 
     def __getitem__(self, key):
         return self.l[key]

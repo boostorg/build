@@ -19,6 +19,19 @@ t.write("a.cpp", "int main() { return 0; }\n")
 t.run_build_system("release")
 t.expect_addition("bin/$toolset/release/a.exe")
 
+# Test that everything works ok even with default
+# build.
+
+t.write("Jamfile", """
+
+exe a : a_empty.cpp : <variant>release ;
+exe a : a.cpp : <variant>debug ;
+""")
+
+t.run_build_system(pass_toolset=0)
+t.expect_addition("bin/$toolset/debug/a.exe")
+
+
 # Test that only properties which are in build request
 # matters when selection alternative. IOW, alternative
 # with <variant>release is better than one with
