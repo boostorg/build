@@ -2448,14 +2448,14 @@ rule target-path-of ( target-ref )
     return $(path:G=$(grist)) ;
 }
 
-# Common rules for generating a single stage tag based on the
+# Common rules for generating a single tag based on the
 # variant, build properties, and the toolset used to build.
 # To use place this rule name in the requirementes section of
 # a stage target.
 #
 # The tag is constructed as such:
 #
-#   [-<toolset-tag>][-<thread-tag>][-<runtime-tag>]
+#   [-<toolset-tag>][-<thread-tag>][-<runtime-tag>][-<version-tag>]
 #
 #   <toolset-tag> maps to an abbreviated name of the toolset
 #   and when possible and applicable the version of the toolset.
@@ -2470,10 +2470,9 @@ rule target-path-of ( target-ref )
 #       "p" when building with stlport libraries
 #       "n" when building with stlport and using native iostreams
 #
-# The tag added is a <tag><prefix> to allow for additional tags
-# in the stage. For example the version tag.
+# The tag added is a <tag><prefix> to allow for additional tags.
 #
-rule common-stage-tag ( toolset variant : properties * )
+rule common-variant-tag ( toolset variant : properties * )
 {
     local tags = ;
     
@@ -2525,9 +2524,15 @@ rule common-stage-tag ( toolset variant : properties * )
     }
     toolset-tag += [ MATCH "[-]([0123456789]+).([0123456789]*)" : $(toolset) ] ;
     
+    local version-number = [ get-values <version> : $(properties) ] ;
+    version-number ?= $(BOOST_VERSION) ;
+    local version-tag = [ MATCH "^([^.]+).([^.]+)" : $(version-number[1]) ] ;
+    version-tag = $(version-tag:J="_") ;
+    
     tags += $(toolset-tag:J=) ;
     tags += $(thread-tag:J=) ;
     tags += $(runtime-tag:J=) ;
+    tags += $(version-tag) ;
     
     if $(tags)
     {
@@ -2683,19 +2688,7 @@ rule install-sources ( type )
     return $(gINSTALL_SOURCES($(type))) ;
 }
 
-# Returns requirements for building libraries with the common
-# naming conventions. To use add a call in the requirements section
-# of the target(s):
-#
-#   [ common-names ]
-#
-rule common-names (
-    version-number ? # Version number for name tag, defaults to $(BOOST_VERSION)
-    )
+rule common-names ( )
 {
-    version-number ?= $(BOOST_VERSION) ;
-    local version-tag = [ MATCH "^([^.]+).([^.]+)" : $(version-number) ] ;
-    version-tag = $(version-tag:J="_") ;
-    
-    return common-stage-tag <tag><postfix>-$(version-tag) ;
+    return common-variant-tag ;
 }
