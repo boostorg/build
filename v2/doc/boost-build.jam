@@ -14,13 +14,11 @@ IMPORT modules : import : : import ;
 #
 import modules ;
 
-import doc ;
-import project ;
-
 # Check to see if the user is asking for help as soon as possible.
 # This is first action, so that we can interrupt the regular build
 # process if they are asking for help.
 #
+import doc ;
 if [ doc.help ]
 {
     # Do nothing, the doc system will generate the appropriate
@@ -33,6 +31,12 @@ else
 {
     # No help requested, go ahead and load and build the users
     # project.
-    import build-system ;
-    project.load [ PWD ] ;
+    
+    # Allow users to override the build system file from the
+    # command-line (mostly for testing)
+    local build-system = [ MATCH --build-system=(.*) : $(ARGV) ] ;
+    build-system ?= build-system ;
+    
+    # Use last element in case of multiple command-line options
+    import $(build-system[-2]) ;
 }
