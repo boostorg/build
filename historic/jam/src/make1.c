@@ -441,7 +441,8 @@ make1c( state *pState )
 
 	if( cmd && pState->t->status == EXEC_CMD_OK )
 	{
-		if( DEBUG_MAKEQ || ! ( cmd->rule->actions->flags & RULE_QUIETLY ) )
+		if( DEBUG_MAKEQ || 
+            ! ( cmd->rule->actions->flags & RULE_QUIETLY ) && DEBUG_MAKE)
 	    {
 		printf( "%s ", cmd->rule->name );
 		list_print( lol_get( &cmd->args, 0 ) );
