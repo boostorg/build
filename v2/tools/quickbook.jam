@@ -112,6 +112,7 @@ import feature ;
 import generators ;
 import os ;
 import path ;
+import regex ;
 import toolset ;
 import type ;
 
@@ -187,12 +188,7 @@ class quickbook-binary-generator : generator
                 search-dirs += $(boost-build-path)/../.. ;
             }
 
-            local quickbook-dir ;
-
-            for local dir in $(search-dirs)
-            {
-                quickbook-dir += [ path.glob $(dir) : quickbook ] ;
-            }
+            local quickbook-dir = [ path.glob $(search-dirs) : quickbook ] ;
 
             # If the QuickBook source directory was found, mark its main target
             # as a dependency for the current project. Otherwise, try to find
@@ -379,7 +375,7 @@ local rule programs-extensions ( )
 
     if [ os.name ] in NT
     {
-        path-ext = [ split-word ";" : [ modules.peek : PATHEXT ] ] ;
+        path-ext = [ regex.split [ modules.peek : PATHEXT ] ";" ] ;
         # Set up a default set of executable extensions if none are available.
         if ! $(path-ext)
         {
@@ -404,26 +400,5 @@ local rule exclude-directories ( paths * )
     }
 
     return $(return-paths) ;
-}
-
-# This rule separates a variables into its components by splitting words at
-# every occurrence of a separator-character
-local rule split-word ( separator-characters : path-extensions * )
-{
-    local return-value ;
-
-    for local extension in [ MATCH "([^$(separator-characters)]*);?(.+)?" : $(path-extensions) ]
-    {
-        if [ MATCH "($(separator-characters))" : $(extension) ] 
-        {
-            return-value += [ split-word $(separator-characters) : $(extension) ] ;
-        }
-        else
-        {
-            return-value += $(extension) ;
-        }
-    }
-
-    return $(return-value) ;
 }
 
