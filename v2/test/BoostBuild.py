@@ -115,15 +115,15 @@ class Tester(TestCmd.TestCmd):
             print "STDERR ============"
             print self.stderr()
             raise
-        
-        if _failed(self, status):
+
+        if status != None and _failed(self, status):
             expect = ''
             if status != 0:
                 expect = " (expected %d)" % status
-                
+
             print '"%s %s" returned %d%s' % (
                 self.program, extra_args, _status(self), expect)
-            
+
             print "STDOUT ============"
             print self.stdout()
             print "STDERR ============"
