@@ -438,7 +438,7 @@ rule generator (
         }                 
         # Assign an action for each target
         local action = [ action-class ] ;
-        local a = [ new $(action) $(targets) : $(sources) : $(self.id) : 
+        local a = [ xnew $(action) $(targets) : $(sources) : $(self.id) : 
                     $(property-set) ] ;
         for local t in $(targets)
         {

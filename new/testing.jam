@@ -30,7 +30,7 @@ rule unit-test-target-class ( name : project : sources * : requirements *
         local timestamp = [ xnew file-target $(self.name) : : $(self.project) ] ;
         $(timestamp).suffix "passed" ;
 
-        local a = [ new action $(timestamp) : $(exe) : testing.run : 
+        local a = [ xnew action $(timestamp) : $(exe) : testing.run : 
                [ $(exe-action).properties-ps ] ] ;
         $(timestamp).action $(a) ;
         return $(timestamp) ;

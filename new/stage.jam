@@ -87,7 +87,7 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
                 
                 i2 = [ xnew file-target $(n:D=) : [ $(i).type ] 
                   : $(self.project) ] ;
-                local a = [ new action $(i2) : $(i) : common.copy ] ;
+                local a = [ xnew action $(i2) : $(i) : common.copy ] ;
                 $(i2).suffix [ $(i).suffix ] ;
                 $(i2).action $(a) ;
             }
@@ -141,7 +141,7 @@ rule stage-exe-generator
         # stage can affect the relinking details.
         local ps = [ $(action).properties-ps ] ;
         local new-ps = [ $(ps).add [ property-set.create [ $(property-set).free ] ] ] ;
-        local cloned-action = [ new $(action-class) $(cloned-target) : 
+        local cloned-action = [ xnew $(action-class) $(cloned-target) : 
           [ $(action).sources ] : [ $(action).action-name ] : $(new-ps) ] ;
         
         $(cloned-target).action $(cloned-action) ;

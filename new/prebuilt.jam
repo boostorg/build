@@ -35,7 +35,7 @@ rule prebuilt-file-generator
         # Since we already have file, specify suffix explicitly.
         $(t).suffix [ regex.match .(.*) : $(filename:S) ] ;
                                
-        $(t).action [ new null-action $(t) : $(property-set) ] ;
+        $(t).action [ xnew null-action $(t) : $(property-set) ] ;
         
         $(t).suffix [ MATCH .(.*) : $(name:S) ] ;
         return $(t) ;            

@@ -28,7 +28,7 @@ rule make-target-class ( name : project : sources * : requirements *
         local t = [ xnew file-target $(self.name:S=) : [ type.type $(self.name:S) ]
                     : $(self.project) ] ;
         $(t).suffix [ regex.match .(.*) : $(self.name:S) ] ;
-        local a = [ new action $(t) : $(source-targets) : $(self.make-rule) 
+        local a = [ xnew action $(t) : $(source-targets) : $(self.make-rule) 
                     : $(property-set) ] ;
         $(t).action $(a) ;
         return [ virtual-target.register $(t) ] ;

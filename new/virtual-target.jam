@@ -312,14 +312,14 @@ xclass abstract-file-target : virtual-target
         if $(action)
         {
             local sources = [ $(action).sources ] ;
+            
+            local action-name =  [ $(action).action-name ] ;            
 
-            local ss ;
+            local ss ;            
             for local s in $(sources)
             {
                 ss += [ $(s).str ] ;
             }
-
-            local action-name =  [ $(action).action-name ] ;
             
             return "{" $(action-name)-$(name-dot-type) $(ss) "}" ;
         }
@@ -549,26 +549,29 @@ IMPORT virtual-target : remember-binding : : virtual-target.remember-binding ;
 #     rule action-name ( targets + : sources * : properties * )
 # Targets and sources are passed as actual jam targets. The rule may
 # not establish dependency relationship, but should do everything else.
-rule action ( targets + : sources * : action-name + : property-set ? )
+xclass action 
 {
-    import type toolset property-set indirect ;
+    import type toolset property-set indirect class ;
     
-    self.targets = $(targets) ;
-    self.sources = $(sources) ;
-    
-    self.action-name = [ indirect.make-qualified $(action-name) ] ;
-    
-    if ! $(property-set) 
-    {
-        property-set = [ property-set.empty ] ;
-    }
-        
-    if ! [ class.is-instance $(property-set) ]
+    rule __init__ ( targets + : sources * : action-name + : property-set ? )
     {        
-        errors.error "Property set instance required" ;
-    }
+        self.targets = $(targets) ;
+        self.sources = $(sources) ;
     
-    self.properties = $(property-set) ;
+        self.action-name = [ indirect.make-qualified $(action-name) ] ;
+        
+        if ! $(property-set) 
+        {
+            property-set = [ property-set.empty ] ;
+        }
+        
+        if ! [ class.is-instance $(property-set) ]
+        {        
+            errors.error "Property set instance required" ;
+        }
+        
+        self.properties = $(property-set) ;
+    }        
     
     rule targets ( )
     {
@@ -670,16 +673,18 @@ rule action ( targets + : sources * : action-name + : property-set ? )
         self.targets = $(targets) ;
     }
 }
-class action ;
 
 # Action class which does nothing --- it produces the targets with
 # specific properties out of nowhere. It's needed to distinguish virtual
 # targets with different properties that are known to exist, and have no 
 # actions which create them.
-rule null-action ( targets + : property-set ? )
+xclass null-action : action 
 {
-    action.__init__ $(targets) : : .no-action : $(property-set) ;
-    
+    rule __init__ ( targets + : property-set ? )
+    {
+        action.__init__ $(targets) : : .no-action : $(property-set) ;
+    }
+        
     rule actualize ( )
     {
         if ! $(self.actualized)
@@ -693,8 +698,6 @@ rule null-action ( targets + : property-set ? )
         }        
     }
 }
-
-class null-action : action ;
 
 
 # Creates a virtual target with approariate name and type from 'file'.
@@ -912,7 +915,7 @@ local rule clone-action-template ( action from cloned-from : new-source )
     local action-class = [ modules.peek $(action) : __class__ ] ;
 
     local ps = [ $(action).properties-ps ] ;
-    local cloned = [ new $(action-class) [ $(action).targets ] : $(sources)
+    local cloned = [ xnew $(action-class) [ $(action).targets ] : $(sources)
                      : [ $(action).action-name ] : $(ps) ] ;
 
     return $(cloned) ;
