@@ -417,7 +417,7 @@ rule run-test ( type-to-test run-target : sources * )
     
     capture-run-output $(run-target) : $(executable) : $(debugger) ;
 
-    if ! ( --preserve-test-targets in $(ARGV) )
+    if ! ( --preserve-test-targets in $(ARGV) ) && ! [ MATCH ^--debugger=(.*) : $(ARGV) ]
     {
         RmTemps $(run-target) : $(targets-to-test) ;
     }
