@@ -714,7 +714,7 @@ rule split ( property-set )
 }
 
 # Appends a rule to the list of rules assigned to the given feature or property.
-# That rules will be in extending property sets by the 'run-actions' rule. 
+# That rules will be used in extending property sets by the 'run-actions' rule. 
 # The rule should accept single argument -- a property, and return a set of additional 
 # properties to be added. Property should be specified in the usual way:
 # <feature>value, and feature should be specified as <feature>.

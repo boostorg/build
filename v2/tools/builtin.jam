@@ -50,6 +50,8 @@ feature find-static-library : : free ;
 feature library-path : : free path ;
 feature library-file : : free path ;
 
+feature uses : : free ;
+
 feature name : : free ;
 feature search : : free path ;
 
