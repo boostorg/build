@@ -28,6 +28,11 @@ rule Jam
         redirect on $(jam-cmd) = "/dev/null" ;
     }
 
+    if $(VERBOSE)
+    {
+        redirect on $(jam-cmd) = ;
+    }
+
     invoke-Jam "$(jam-cmd)" ;
     
     if $(>)
@@ -38,6 +43,12 @@ rule Jam
         ALWAYS "$(output-target)" ;
         DEPENDS all : "$(output-target)" ;
         Expect-in-output "$(output-target)" ;
+        
+        if $(VERBOSE)
+        {
+            if $(NT) { VERBOSE on $(output-target) = "type " ; }
+            else { VERBOSE on $(output-target) = "cat " ; }
+        }
     }
     return $(jam-cmd) ;
 }
@@ -70,7 +81,7 @@ rule invoke-Jam
 actions invoke-Jam
 {
     echo $(PREFIX) $(<:G=) > $(gBOOST_TEST_JAMFILE)
-    jam -f../Jambase -sJAMFILE=$(gBOOST_TEST_JAMFILE) >$(redirect)
+    jam -f../Jambase -sJAMFILE=$(gBOOST_TEST_JAMFILE)  $(JAMARGS) >$(redirect)
     $(REMOVE) $(gBOOST_TEST_JAMFILE)
 }
 
@@ -81,6 +92,7 @@ if $(NT)
     # Explicitly get the NT find command in case someone has another find in their path.
     actions quietly Expect-in-output
     {
+        $(VERBOSE)scratch-output.txt ;
         $(SystemRoot)\System32\find /C "$(<:G=)" scratch-output.txt >nul
     }
 }
@@ -90,6 +102,7 @@ else
     # a regular expression. Is there a simpler find?
     actions quietly Expect-in-output
     {
+        $(VERBOSE)scratch-output.txt ;
         grep "$(<:G=)" scratch-output.txt
     }
 }
