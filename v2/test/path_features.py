@@ -57,7 +57,7 @@ t.write("x/include/h1.hpp", "\n")
 t.write("x/include2/h2.hpp", "\n")
 
 t.run_build_system()
-t.expect_addition("x/bin/$toolset/debug/main-target-m/m.exe")
+t.expect_addition("x/bin/$toolset/debug/m.exe")
 
 
 

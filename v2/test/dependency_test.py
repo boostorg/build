@@ -8,7 +8,7 @@ t.set_tree("dependency-test")
 t.run_build_system()
 # Check that main target 'c' was able to find 'x.h' from
 # 'a's dependency graph
-t.expect_addition("bin/$toolset/debug/main-target-c/c.exe")
+t.expect_addition("bin/$toolset/debug/c.exe")
 
 # Check handling of first level includes.
 

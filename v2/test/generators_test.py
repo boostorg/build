@@ -17,15 +17,8 @@ t.expect_addition(
         + "y.cpp y.obj e.marked.cpp e.positions e.target.cpp e.obj "))
     )
 ok = 0
-# Target names differ on toolsets.
-#print t.unexpected_difference.added_files
-#print t.adjust_names("bin/$toolset/debug/main-target-a/a.exe")
-if t.adjust_names("bin/$toolset/debug/main-target-a/a.exe")[0] in t.unexpected_difference.added_files:
-    ok = 1
-elif t.adjust_names("bin/$toolset/debug/a.exe")[0] in t.unexpected_difference.added_files:
-    ok = 1
 
-t.fail_test(ok != 1)    
+t.expect_addition("bin/$toolset/debug/a.exe")
 
 t.expect_addition(["lib/bin/$toolset/debug/c.obj",
                    "lib/bin/$toolset/debug/auxilliary.lib",

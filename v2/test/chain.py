@@ -49,9 +49,7 @@ t.write("a.cpp", "")
 t.write("dummy.cpp", "// msvc needs at least one object file\n")
 
 t.run_build_system()
-n = t.adjust_names("bin/$toolset/debug/main-target-a/a.exe")[0]
-n2 = t.adjust_names("bin/$toolset/debug/a.exe")[0]
-added = t.unexpected_difference.added_files
-t.fail_test(not (n in added) and not (n2 in added))
+
+t.expect_addition("bin/$toolset/debug/a.exe")
 
 t.cleanup()

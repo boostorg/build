@@ -29,8 +29,8 @@ t.expect_content("lib/bin/$toolset/debug/optimization-speed/b.obj",
 lib/b.cpp
 """)
 
-t.expect_addition("bin/$toolset/debug/main-target-b.exe/b.exe")
-t.expect_content("bin/$toolset/debug/main-target-b.exe/b.exe",
+t.expect_addition("bin/$toolset/debug/b.exe")
+t.expect_content("bin/$toolset/debug/b.exe",
 "$toolset/debug/define-MACROS/include-everything\n" +
 "bin/$toolset/debug/a.obj\n"
 )

@@ -29,23 +29,23 @@ __declspec (dllexport) void x () {}
 """)
 
 file_list = \
-List("bin/$toolset/debug/main-target-a/a_ds.exe") + \
-List("bin/$toolset/debug/main-target-b/b_ds.dll") + \
+List("bin/$toolset/debug/a_ds.exe") + \
+List("bin/$toolset/debug/b_ds.dll") + \
 List("c/a_ds.exe") + \
-List("bin/$toolset/release/main-target-a/a_rs.exe") + \
-List("bin/$toolset/release/main-target-b/b_rs.dll") + \
+List("bin/$toolset/release/a_rs.exe") + \
+List("bin/$toolset/release/b_rs.dll") + \
 List("c/a_rs.exe") + \
-List("bin/$toolset/profile/main-target-a/a_ps.exe") + \
-List("bin/$toolset/profile/main-target-b/b_ps.dll") + \
+List("bin/$toolset/profile/a_ps.exe") + \
+List("bin/$toolset/profile/b_ps.dll") + \
 List("c/a_ps.exe") + \
-List("bin/$toolset/debug/link-static/main-target-a/a_dt.exe") + \
-List("bin/$toolset/debug/link-static/main-target-b/b_dt.lib") + \
+List("bin/$toolset/debug/link-static/a_dt.exe") + \
+List("bin/$toolset/debug/link-static/b_dt.lib") + \
 List("c/a_dt.exe") + \
-List("bin/$toolset/release/link-static/main-target-a/a_rt.exe") + \
-List("bin/$toolset/release/link-static/main-target-b/b_rt.lib") + \
+List("bin/$toolset/release/link-static/a_rt.exe") + \
+List("bin/$toolset/release/link-static/b_rt.lib") + \
 List("c/a_rt.exe") + \
-List("bin/$toolset/profile/link-static/main-target-a/a_pt.exe") + \
-List("bin/$toolset/profile/link-static/main-target-b/b_pt.lib") + \
+List("bin/$toolset/profile/link-static/a_pt.exe") + \
+List("bin/$toolset/profile/link-static/b_pt.lib") + \
 List("c/a_pt.exe") \
 
 variants = "debug release profile link=static,shared"

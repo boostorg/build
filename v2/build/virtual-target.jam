@@ -279,20 +279,7 @@ class abstract-file-target : virtual-target
             $(self.action).actualize ;
         }
     }
-    
-    # Returns the name of main target this virtual target is specific
-    # to.  
-    #
-    # Ordinarily, it's assumed that any grist on the actual Jam target
-    # and target path is determined by project, base properties,
-    # target name and type.  Derived classes may return a non-empty
-    # string to indicate that the target is specific to the given main
-    # target.
-    rule specific-main-target ( )
-    {
-        return "" ;
-    }
-      
+          
     # Return a human-readable representation of this target
     #
     # If this target has an action, that's:
@@ -374,11 +361,6 @@ class abstract-file-target : virtual-target
             {
                 grist = $(grist)@$(self.path)@ ;
             }            
-            local smt = [ specific-main-target ] ;
-            if $(smt)
-            {
-                grist = $(grist)/main-target-$(smt) ;                
-            }
 
             local name = [ path.native $(self.name) ] ;
             if $(self.suffix)
@@ -460,28 +442,6 @@ class file-target : abstract-file-target
               [ path.native [ project.attribute $(self.project) source-location ] ] ;
         }        
     }
-
-    # If free properties of this target's actions are equal to reference properties on
-    # project, returns empty string. Otherwise, returns the name of main target to
-    # which this target belong.
-    rule specific-main-target ( )
-    {
-        if $(self.action)
-        {
-            local ps = [ $(self.action).properties-ps ] ;
-            
-            local main-target = [ $(self.dg).main-target ] ;
-            local project = [ $(main-target).project ] ;
-            local ptarget = [ project.target $(project) ] ;
-            local ref-ps = [ $(ptarget).reference-properties [ $(self.dg).properties-ps ] ] ;
-
-            if [ $(ps).free ] != [ $(ref-ps).free ] 
-              || [ $(ps).dependency ] != [ $(ref-ps).dependency ] 
-            {
-                return [ $(main-target).name ] ;
-            }            
-        }        
-    }
     
     # Returns the directory for this target
     rule path ( )
@@ -494,12 +454,10 @@ class file-target : abstract-file-target
                 build-dir = [ project.attribute $(self.project) location ] ;
             }
 
-            local smt = [ specific-main-target ] ;
             local path = [ path.join
                             $(build-dir)
                              bin
                              [ $(self.action).path ]
-                             main-target-$(smt) 
                          ] ;
 
             # Store the computed path, so that it's not recomputed

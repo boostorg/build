@@ -50,13 +50,13 @@ t.write("project-root.jam", "")
 
 # First test that when outcomes are expected, all .test files are created.
 t.run_build_system(stderr=None, status=None)
-t.expect_addition("bin/c.test/$toolset/debug/main-target-c/c.test")
-t.expect_addition("bin/c-f.test/$toolset/debug/main-target-c-f/c-f.test")
-t.expect_addition("bin/r.test/$toolset/debug/main-target-r/r.test")
-t.expect_addition("bin/r-f.test/$toolset/debug/main-target-r-f/r-f.test")
+t.expect_addition("bin/c.test/$toolset/debug/c.test")
+t.expect_addition("bin/c-f.test/$toolset/debug/c-f.test")
+t.expect_addition("bin/r.test/$toolset/debug/r.test")
+t.expect_addition("bin/r-f.test/$toolset/debug/r-f.test")
 
 # Make sure args are handled.
-t.expect_content("bin/r.test/$toolset/debug/main-target-r/r.output",
+t.expect_content("bin/r.test/$toolset/debug/r.output",
                  "foo\nbar\n")
 
 # Test that input file is handled as well.
@@ -87,7 +87,7 @@ run-fail r-f.cpp ;
 """)
 
 t.run_build_system()
-t.expect_content("bin/r.test/$toolset/debug/main-target-r/r.output",
+t.expect_content("bin/r.test/$toolset/debug/r.output",
                  "test input")
 
 # Make sure test failures are detected. Reverse expectation and see
@@ -105,9 +105,9 @@ run r-f.cpp ;
 t.touch(List("c.cpp c-f.cpp r.cpp r-f.cpp"))
 
 t.run_build_system(stderr=None, status=1)
-t.expect_removal("bin/c.test/$toolset/debug/main-target-c/c.test")
-t.expect_removal("bin/c-f.test/$toolset/debug/main-target-c-f/c-f.test")
-t.expect_removal("bin/r.test/$toolset/debug/main-target-r/r.test")
-t.expect_removal("bin/r-f.test/$toolset/debug/main-target-r-f/r-f.test")
+t.expect_removal("bin/c.test/$toolset/debug/c.test")
+t.expect_removal("bin/c-f.test/$toolset/debug/c-f.test")
+t.expect_removal("bin/r.test/$toolset/debug/r.test")
+t.expect_removal("bin/r-f.test/$toolset/debug/r-f.test")
 
 t.cleanup()
