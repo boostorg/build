@@ -172,7 +172,7 @@ int file_is_file(char* filename)
 	if( stat( filename, &statbuf ) < 0 )
 	    return -1;
 
-    if (statbuf.st_mode & _S_IFREG) 
+    if (statbuf.st_mode & S_IFREG) 
         return 1;
     else
         return 0;    
