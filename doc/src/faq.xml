@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE chapter PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
-  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd">
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+     "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd">
 
   <chapter id="bbv2.faq">
     <title>Frequently Asked Questions</title>
@@ -78,5 +78,41 @@ exe a : a_obj ;
    </para>
 
     </section>
+
+    <section>
+      <title>
+      Accessing environment variables
+      </title>
+
+    <para>    
+      Many users would like to use environment variables in Jamfiles, for
+      example, to control location of external libraries. In many cases you
+      better declare those external libraries in the site-config.jam file, as
+      documented in the <link linkend="bbv2.recipies.site-config">recipes
+      section</link>. However, if the users already have the environment variables set
+      up, it's not convenient to ask them to set up site-config.jam files as
+      well, and using environment variables might be reasonable.
+    </para>
+
+    <para>In Boost.Build V2, each Jamfile is a separate namespace, and the
+    variables defined in environment is imported into the global
+    namespace. Therefore, to access environment variable from Jamfile, you'd
+    need the following code:
+<programlisting>
+import modules ;
+local path = [ modules.peek : SOME_LIBRARY_PATH ] ;
+exe a : a.cpp : &lt;include&gt;$(SOME_LIBRARY_PATH) ;
+</programlisting>
+    </para>
+</section>
+
     
   </chapter>
+<!--
+     Local Variables:
+     mode: xml
+     sgml-indent-data: t     
+     sgml-parent-document: ("userman.xml" "chapter")
+     sgml-set-face: t
+     End:
+-->
