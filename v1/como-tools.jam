@@ -16,6 +16,7 @@
 # COMO_STDLIB_PATH - path to built libcomo object, defaults to $(COMO_PATH)/libcomo
 
 # Keep using COMO_BASE for backward compatibility
+set-as-singleton COMO_BASE ;
 COMO_BASE ?= $(COMO_PATH) ;
 
 # compute directories for invoking como
