@@ -175,7 +175,7 @@ rule main-target ( name : project )
         else
         {
             # Find the alternative with the longest set of non-free requirements
-            local r = [ range 1 : [ $(alternatives).size ] ] [ $(alternatives).size ] ;
+            local r = [ $(alternatives).indices ] ;
 
             # First compute the length of requirements sets
             local req-length ;
