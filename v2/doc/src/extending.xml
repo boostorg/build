@@ -676,12 +676,16 @@ variant super_release : release : &lt;define&gt;USE_ASM ;
       </para>
 
       <para>You are not restricted to using the <code>variant</code> feature
-      only. Here's example that defines a brand new feature:
+      only. 
+      <!-- What do you mean by that?  How is defining a new feature related to what came before? -->
+      Here's example that defines a brand new feature:
 <programlisting>
 feature parallelism : mpi fake none : composite link-incompatible ;
 feature.compose &lt;parallelism&gt;mpi : &lt;library&gt;/mpi//mpi/&lt;parallelism&gt;none ;
 feature.compose &lt;parallelism&gt;fake : &lt;library&gt;/mpi//fake/&lt;parallelism&gt;none ;
 </programlisting>
+<!-- The use of the <library>/mpi//mpi/<parallelism>none construct
+     above is at best confusing and unexplained -->
         This will allow you to specify value of feature
         <code>parallelism</code>, which will expand to link to the necessary
         library. 
@@ -692,18 +696,25 @@ feature.compose &lt;parallelism&gt;fake : &lt;library&gt;/mpi//fake/&lt;parallel
   <section id="bbv2.extending.rules">
     <title>Main target rules</title>
     <para>
-      A main target rule is what creates a top-level target, for example "exe"
-      or "lib". It's quite likely that you'll want to declare your own and
-      there are two ways to do this.
+      A main target rule (e.g “<functionname>exe</functionname>”
+      Or “<functionname>lib</functionname>”) creates a top-level target. It's quite likely that you'll want to declare your own and
+      there are two ways to do that.
+      <!-- Why did "that" get changed to "this" above? -->
     </para>
 
     <para id="bbv2.extending.rules.main-type">The first way applies when
-      your target rule should just produce a target of specific type. Then, a
+<!-- This is not a "way of defining a main target rule."  Rephrase this and the previous sentence. -->
+      your target rule should just produce a target of specific type. In that case, a
       rule is already defined for you! When you define a new type, Boost.Build
       automatically defines a corresponding rule. The name of the rule is
       obtained from the name of the type, by downcasing all letters and
-      replacing underscores with dashes. For example, if you create a module
-      "obfuscate.jam" containing:
+      replacing underscores with dashes. 
+      <!-- This strikes me as needless complexity, and confusing.  Why
+           do we have the uppercase-underscore convention for target
+           types?  If we just dropped that, the rule names could be
+           the same as the type names. -->
+      For example, if you create a module
+      <filename>obfuscate.jam</filename> containing:
 
 <programlisting>
 import type ;
@@ -716,22 +727,22 @@ generators.register-standard obfuscate.file : CPP : OBFUSCATED_CPP ;
       in Jamfiles, which will convert source to the OBFUSCATED_CPP type.
     </para>
     
-    <para>The second way is to write a wrapper rule that will redirect to
-      any of the existing rules. For example, you have only one library per
-      directory and want all cpp files in the directory to be compiled. You
+    <para>The second way is to write a wrapper rule that calls
+      any of the existing rules. For example, suppose you have only one library per
+      directory and want all cpp files in the directory to be compiled into that library. You
       can achieve this effect with:
 <programlisting>
 lib codegen : [ glob *.cpp ] ;
 </programlisting>
-      but what if you want to make it even simple. Then, you add the following
-      definition to the project-root.jam file:
+      but if you want to make it even simpler, you could add the following
+      definition to the <filename>project-root.jam</filename> file:
 <programlisting>
 rule glib ( name : extra-sources * : requirements * )
 {
     lib $(name) : [ glob *.cpp ] $(extra-sources) : $(requirements) ;
 }
 </programlisting>
-which would allow to reduce Jamfile to
+which would allow you to reduce the Jamfile to
 <programlisting>
 glib codegen ;
 </programlisting>
@@ -742,7 +753,7 @@ glib codegen ;
       type, the logic of building can be rather compiler. 
       <!-- "compiler" is not an adjective.  The logic can't be "rather
            compiler."  What you might mean here is completely
-           mysterious -->
+           mysterious to me -->
       For example, the
       <code>boostbook</code> module declares a target type
       <code>BOOSTBOOK_MAIN</code> and a custom generator for that type,
