@@ -287,7 +287,11 @@ rule generator (
             multiple = ;
         }
         
-        # We don't run composing generators which are not given a name.
+        # We don't run composing generators if no name is specified. The reason
+        # is that composing generator combines several targets, which can have
+        # different names, and it cannot decide which name to give for produced
+        # target. Therefore, the name must be passed.
+        #
         # This in effect, means that composing generators are runnable only
         # at top-level of transofrmation graph, or if name is passed explicitly.
         # Thus, we dissallow composing generators in the middle. For example, the
