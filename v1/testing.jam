@@ -13,8 +13,6 @@ gcc-compilers = [ difference $(gcc-compilers) : $(mingw-compilers) ] ;
 
 local rule get-var-value ( name + )
 {
-#    ECHO $(name) ;
- #   ECHO $($(name)) ;
     return $($(name)) ;
 }
 
@@ -99,8 +97,8 @@ local rule dump-test ( )
         if $(files)
         {
             # make relative to the project root instead of "."
-            local file = $(files[1]:R=$(SUBDIR_TOKENS:J=/)) ;
-            
+            local file = $(files[1]:R=$(gINVOCATION_SUBDIR_TOKENS:J=/)) ;
+
             # try to undo absolute paths
             source-files += [ relative-path  $(file) ] ;
         }
