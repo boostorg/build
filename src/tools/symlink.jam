@@ -113,7 +113,7 @@ rule ln
 
 actions ln-UNIX
 {
-    ln -s $(PATH_TO_TOP)/'$(>)' '$(<)'
+    ln -s '$(PATH_TO_TOP)/$(>)' '$(<)'
 }
 
 IMPORT $(__name__) : symlink : : symlink ;
