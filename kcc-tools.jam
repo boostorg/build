@@ -1,0 +1,59 @@
+# (C) Copyright Jeremy Siek 2001. Permission to copy, use, modify, sell
+# and distribute this software is granted provided this copyright notice
+# appears in all copies. This software is provided "as is" without
+# express or implied warranty, and with no claim as to its suitability
+# for any purpose.
+
+# This file is /NOT/ up-to-date; please use other toolset description
+# files as examples.
+
+kcc.bin-directory = [ conditional $(kcc.root-directory) : $(kcc.root-directory)$(SLASH)bin$(SLASH) : " " ] ;
+detect-build-tools kcc : "KCC" ;
+
+#### Link ####
+
+rule Link-action
+{
+    kcc-Link-action $(<) : $(>) ;
+}
+
+actions kcc-Link-action bind NEEDLIBS
+{
+    $(kcc.bin-directory)KCC $(LINKFLAGS) -o "$(<)" $(UNDEFS) -L$(STDLIBPATH) $(NEEDLIBS) "$(>)"
+}
+
+#### Cc #####
+
+rule Cc-action
+{
+    kcc-Cc-action $(<) : $(>) ;
+}
+
+actions kcc-Cc-action
+{
+    $(kcc.bin-directory)KCC -c $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+}
+
+#### C++ ####
+rule C++-action
+{
+    kcc-C++-action $(<) : $(>) ;
+}
+
+actions kcc-C++-action
+{
+    $(kcc.bin-directory)KCC -c $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+}
+
+
+#### Archive ####
+rule Archive-action
+{
+    kcc-Archive-action $(<) : $(>) ;
+}
+
+actions updated together piecemeal kcc-Archive-action
+{
+    KCC -g -o "$(<)" "$(>)"
+}
+

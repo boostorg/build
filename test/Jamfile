@@ -1,0 +1,36 @@
+# establish a project root right here in the test directory, so that we can test
+# things independently of the boost jambase, etc.
+project-root ; 
+
+include jam-fail.jam ;
+include assert-equal.jam ;
+
+#######################################
+# Some example expected failure tests #
+#######################################
+
+# This command always exits with a failure.
+Jam-fail "EXIT error ;" ;
+
+# This should fail to fail
+Jam-fail
+     "include jam-fail.jam ; Jam-fail \"# this innocuous Jamfile should fail to fail\" ;"
+      ;
+
+check-arguments goodbye 1 : z ;
+check-arguments hello 1-2 3 1-4 : a b : y z z : w ;
+
+DOLLAR = "\$" ;
+Jam-fail "check-arguments hello 1-2 3 1-4 : a b : c d e f : w ;"
+    : "rule 'hello' expects 3 elements in $(DOLLAR)(2), got arguments ( a b : c d e f : w ) instead."
+    ;
+    
+Jam-fail "check-arguments goodbye 1 : z x ;"
+    : "rule 'goodbye' expects 1 elements in $(DOLLAR)(1), got arguments ( z x ) instead."
+    ;
+
+Jam-fail "include assert_equal.jam ; assert-equal fubar : ECHO checking that assertions fail ;"
+    : "ASSERTION FAILURE"
+    ;
+    
+assert-equal : ECHO checking that assertions succeed ;

@@ -1,0 +1,111 @@
+# (C) Copyright David Abrahams 2001. Permission to copy, use,
+# modify, sell and distribute this software is granted provided this
+# copyright notice appears in all copies. This software is provided
+# "as is" without express or implied warranty, and with no claim as
+# to its suitability for any purpose.
+
+# compute directories for invoking GCC
+GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)bin ;
+GCC_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if GCC_ROOT_DIRECTORY not set
+GCC_INCLUDE_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)include ;
+GCC_STDLIB_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)lib ;
+
+flags gcc LINKFLAGS <runtime-link>static : -static ;
+flags gcc CFLAGS <debug-symbols>on : -g ;
+flags gcc LINKFLAGS <debug-symbols>on : -g ;
+flags gcc CFLAGS <optimization>off : -O0 ;
+flags gcc CFLAGS <optimization>speed : -O4 ;
+
+# Other optimizations we might want for GCC
+# -fforce-mem -fomit-frame-pointer
+# -foptimize-sibling-calls -finline-functions -ffast-math -finline-limit=10000
+
+flags gcc CFLAGS <optimization>space : -O2 ;
+flags gcc CFLAGS <inlining>off : -fno-inline ;
+flags gcc CFLAGS <inlining>on : -Wno-inline ;
+flags gcc CFLAGS <inlining>full : -finline-functions -Wno-inline ;
+
+flags gcc CFLAGS <profiling>on : -pg ;
+flags gcc LINKFLAGS <profiling>on : -pg ;
+
+flags gcc DEFINES <define> ;
+flags gcc UNDEFS <undef> ;
+flags gcc HDRS <include> ;
+
+flags gcc STDHDRS : $(GCC_INCLUDE_DIRECTORY) ;
+flags gcc STDLIBPATH : $(GCC_STDLIB_DIRECTORY) ;
+
+flags gcc CFLAGS <shared-linkable>true : -fPIC ;
+flags gcc LINKFLAGS <shared-linkable>true : -fPIC ;
+
+if $(BETOOLS)
+{
+    flags gcc LINKFLAGS <target-type>DLL : -nostart ;
+}
+else
+{
+    flags gcc LINKFLAGS <target-type>DLL : -shared ;
+}
+
+flags gcc LIBPATH <library-path> ;
+flags gcc NEEDLIBS <library-file> ;
+flags gcc FINDLIBS <find-library> ;
+
+#### Link ####
+
+rule Link-action
+{
+    # This will appear before the import library name when building a DLL, but
+    # will be "multiplied away" otherwise. The --exclude-symbols directive
+    # proved to be neccessary with some versions of Cygwin.
+    IMPLIB_COMMAND on $(<) = "-Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__ -Wl,--out-implib," ;
+    # IMPLIB_COMMAND on $(<) = "-Wl,--out-implib," ;
+    gcc-Link-action $(<) : $(>) ;
+}
+
+# for gcc, we repeat all libraries so that dependencies are always resolved
+actions gcc-Link-action bind NEEDLIBS
+{
+    $(GCC_BIN_DIRECTORY)g++ $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+}
+
+# older actions
+#    $(GCC_BIN_DIRECTORY)dlltool -e $(<[1]:S=:D=:G=) -l "$(<[2])" "$(>)"
+#    $(GCC_BIN_DIRECTORY)g++ $(LINKFLAGS) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -o "$(<[1])"
+
+
+#### Cc #####
+
+rule Cc-action
+{
+    gcc-Cc-action $(<) : $(>) ;
+}
+
+actions gcc-Cc-action
+{
+    $(GCC_BIN_DIRECTORY)gcc -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+}
+
+#### C++ ####
+rule C++-action
+{
+    gcc-C++-action $(<) : $(>) ;
+}
+
+actions gcc-C++-action
+{
+    $(GCC_BIN_DIRECTORY)g++ -c -Wall -ftemplate-depth-50 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+}
+
+#### Archive ####
+
+rule Archive-action
+{
+    gcc-Archive-action $(<) : $(>) ;
+}
+
+actions updated together piecemeal gcc-Archive-action
+{
+    ar ru "$(<)" "$(>)"
+}
+
