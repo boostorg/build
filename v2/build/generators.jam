@@ -46,6 +46,7 @@ import utility : str equal ;
 import set sequence ;
 import assert ;
 import virtual-target ;
+import property-set ;
 
 if "--debug-generators" in [ modules.peek : ARGV ] 
 {    
@@ -84,7 +85,8 @@ local rule decrease-indent ( )
 # regardless of their order.
 rule normalize-target-list ( targets )
 {
-    $(targets).sort ;                   
+    local v = [ $(targets).get ] ;
+    $(targets).set $(v[1]) [ sequence.insertion-sort $(v[2-]) : utility.less ] ;
 }
 
 # Creates a generator
@@ -478,7 +480,8 @@ class generator
             # its best to convert everything to the required type.
             # There's no need to rerun it on targets of different types.
                 
-            for local t in $(transformed)
+            # NOTE: ignoring usage requirements
+            for local t in $(transformed[2-])
             {
                 if [ $(t).type ] in $(missing-types)
                 {
@@ -696,7 +699,7 @@ rule base-to-derived-type-conversion ( targets * : target-types +
 }
 
 
-
+# Returns usage requirements + list of created targets
 local rule try-one-generator ( project name ? : generator multiple ? : 
     target-type : property-set : sources * )
 {
@@ -711,7 +714,18 @@ local rule try-one-generator ( project name ? : generator multiple ? :
     local result ;
     # Generated target of other types.
     local extra ;
-
+    
+    local usage-requirements ;
+    if $(targets) && [ class.is-a $(targets[1]) : property-set ]
+    {
+        usage-requirements = $(targets[1]) ;
+        targets = $(targets[2-]) ;
+    }
+    else
+    {
+        usage-requirements = [ property-set.empty ] ;
+    }
+    
     base-to-derived-type-conversion $(targets) : $(target-type) 
         : result extra ;
             
@@ -729,8 +743,8 @@ local rule try-one-generator ( project name ? : generator multiple ? :
                                          :
                                          : $(property-set)
                                          : $(e) ] ;
-    
-            result += $(try2) ;
+            usage-requirements = [ $(usage-requirements).add $(try2[1]) ] ;
+            result += $(try2[2-]) ;
         }    
     }
     else
@@ -739,6 +753,10 @@ local rule try-one-generator ( project name ? : generator multiple ? :
     }
     generators.dout [ indent ] "  generator" [ $(generator).id ] " spawned " ;
     generators.dout [ indent ] " " $(result) -- $(extra2) ; 
+    if $(targets)
+    {
+        result = $(usage-requirements) $(result) ;
+    }    
     return $(result) $(extra2) ;                     
 }
 
@@ -747,13 +765,15 @@ rule construct-types ( project name ? : target-types + : multiple ? :
 {
     local result ;
     local matched-types ; 
+    local usage-requirements = [ property-set.empty ] ;
     for local t in $(target-types)
     {
         local r = [ construct $(project) $(name) : $(t) $(multiple) : $(property-set) :
           $(sources) ] ;
         if $(r)
         {
-            result += $(r) ;
+            usage-requirements = [ $(usage-requirements).add $(r[1]) ] ;
+            result += $(r[2-]) ;
             matched-types += $(t) ;
         }
     }
@@ -767,11 +787,11 @@ rule construct-types ( project name ? : target-types + : multiple ? :
     # imply that, contrary to the behaviour.
     if $(result)
     {
-        return $(result) ;
+        return $(usage-requirements) $(result) ;
     }
     else
     {
-        return $(sources) ;
+        return $(usage-requirements) $(sources) ;
     }
 }
 
@@ -887,7 +907,8 @@ local rule select-dependency-graph ( options )
         for local r in [ $(options).get ] 
         {
             normalize-target-list $(r) ;
-            generators.dout $(r) ;
+            local v = [ $(r).get ] ;
+            generators.dout $(v[2-]) ;
         }
         
         # One note why we can compare object names directly,
@@ -897,10 +918,14 @@ local rule select-dependency-graph ( options )
         # So, two elements can only be equivalent, if they are just
         # the same object.       
         local f = [ $(options).at 1 ] ;
+        f = [ $(f).get ] ;
+        f = $(f[2-]) ;
         local mismatch ;
-        for local r in [ $(results).get ] 
+        for local r in [ $(options).get ] 
         {
-            if [ $(r).get ] != [ $(f).get ] 
+            local v = [ $(r).get ] ;
+            v = $(v[2-]) ;
+            if $(f) != $(v)
             {
                 mismatch = true ;
             }
@@ -908,7 +933,8 @@ local rule select-dependency-graph ( options )
 
         if ! $(mismatch)
         {
-            return [ $(f).get ] ;
+            local v = [ $(options).at 1 ] ;
+            return [ $(v).get ] ;
         }
         else 
         {                        
@@ -954,8 +980,9 @@ local rule construct-with-caching (
         # Substitute the real source name in the transformation template.
         if $(cresult)
         {                
+            result += $(cresult[1]) ;
             generators.dout [ indent ] "*** putting to cache?" ;
-            for local c in $(cresult)
+            for local c in $(cresult[2-])
             {
                 generators.dout [ indent ] "*** cloning " $(c) ;                
                 local cc = [ virtual-target.clone-template $(c) : $(t) : $(project) ] ;
@@ -1075,11 +1102,17 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
         result += $(intermediate) ;
     }
     
+    if $(result)
+    {                
+        assert.true class.is-a $(result[1]) : property-set ;
+    }
+    
+    
     # For all targets of 'allowed-type', reset the 'intermediate' attribute.
     if ! $(.construct-stack) && $(allowed-type) != * # This is first invocation in stack
     {
         local result2 ;
-        for local t in $(result)
+        for local t in $(result[2-])
         {
             local type = [ $(t).type ] ;    
             # Return only targets of the requested type, unless 'return-all'

@@ -110,7 +110,7 @@ generators.register-linker cw.link.dll
    : <toolset>cw
    ;
 
-generators.register-composing cw.archive
+generators.register-archiver cw.archive
    : OBJ
    : STATIC_LIB RSP
    : <toolset>cw

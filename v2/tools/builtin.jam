@@ -261,8 +261,8 @@ declare-type : SHARED_LIB : so : LIB : main ;
 
 declare-type : SEARCHED_LIB : : LIB : main ;
 
-declare-type NT CYGWIN : EXE : exe : : ;
-declare-type : EXE : : : ;
+declare-type NT CYGWIN : EXE : exe : : main ;
+declare-type : EXE : : : main ;
 
 declare-type : PYTHON_EXTENSION : : SHARED_LIB : main ;
 # We can't give "dll" suffix to PYTHON_EXTENSION, because
@@ -338,21 +338,18 @@ type.register H : h ;
 type.register HPP : hpp : H ;
 type.register C : c ;
 
-class lib-target-class : basic-target
+# The generator class for libraries (target type LIB). Depending on properties it will
+# request building of the approapriate specific type -- SHARED_LIB, STATIC_LIB or 
+# SHARED_LIB.
+class lib-generator : generator
 {
-    import generators : construct : generators.construct ;    
-    import type ;
-    import path ;
-    
-    rule __init__ ( name : project 
-        : sources * : requirements * : default-build * : usage-requirements * )
-    {    
-        basic-target.__init__ $(name) : $(project) 
-          : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;        
+    rule __init__ ( * : * )
+    {
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
-                
-    rule construct ( source-targets * : property-set )
-    {        
+    
+    rule run ( project name ? : property-set : sources * : multiple ? )
+    {
         local properties = [ $(property-set).raw ] ;
         # Determine the needed target type
         local actual-type ;
@@ -375,67 +372,17 @@ class lib-target-class : basic-target
         }
         property-set = [ $(property-set).add-raw <main-target-type>LIB ] ;
         # Construct the target.
-        return [ generators.construct $(self.project) $(self.name) : $(actual-type) 
-                : $(property-set) : $(source-targets) : LIB ] ;        
-    }            
-    
-    rule compute-usage-requirements ( subvariant )
-    {
-        local rproperties = [ $(subvariant).build-properties ] ;
-        local created-targets = [ $(subvariant).created-targets ] ;  
-        local result = [ basic-target.compute-usage-requirements $(subvariant) ] ;
-        
-        # For lib targets with <search>, add the value of <search> as <library-path>
-        # usage requirement.
-        local search = [ $(rproperties).get <search> ] ;
-        if $(search)
-        {
-            result = [ $(result).add [ 
-              property-set.create $(search:G=<library-path>) ] ] ;            
-        }
-        
-        # Add appropricate <xdll-path> usage requirements.
-        local raw = [ $(rproperties).raw ] ;
-        if <link>shared in $(raw)
-        {
-            local paths ;
-            local pwd = [ path.pwd ] ;
-            for local t in $(created-targets)
-            {
-                if [ type.is-derived [ $(t).type ] SHARED_LIB ] 
-                {
-                    paths += [ path.root [ path.make [ $(t).path ] ] $(pwd) ] ;
-                }                                
-            }       
-            if $(paths)
-            {
-                result = [ $(result).add 
-                  [ property-set.create $(paths:G=<xdll-path>) ] ] ;
-            }                                    
-        }
-        
-        # Pass <xdll-path> features that we've got from sources.
-        local u = [ $(subvariant).sources-usage-requirements ] ;
-        local values = [ $(u).get <xdll-path> ] ;
-        result = [ $(result).add-raw $(values:G=<xdll-path>) ] ;
-        
-        # For libraries that we've failed to consume, we need to 
-        # pass <library-path> usage requirements, if any.
-        # We look at all generated target, and if they are created in different
-        # subvariant, we add usage requirements.
-        for local t in [ $(subvariant).created-targets ]
-        {
-            local s = [ $(t).creating-subvariant ] ;
-            if $(s) != $(subvariant)
-            {
-                result = [ $(result).add [ $(s).usage-requirements ] ] ;
-            }            
-        }
-                                        
-        return $(result) ;
-    }            
+        return [ generators.construct $(project) $(name) : $(actual-type) 
+                : $(property-set) : $(sources) : LIB ] ;        
+    }    
 }
 
+generators.register [ new lib-generator builtin.lib-generator : : LIB ] ;
+
+# The implementation of the 'lib' rule. Beyond standard syntax that rule allows
+# simplified:
+#    lib a b c ;
+# so we need to write code to handle that syntax. 
 rule lib ( names + : sources * : requirements * : default-build * 
     : usage-requirements * )
 {
@@ -452,7 +399,7 @@ rule lib ( names + : sources * : requirements * : default-build *
         {    
             result += [ 
             targets.main-target-alternative
-              [ new lib-target-class $(name) : $(project) 
+              [ new typed-target $(name) : $(project) : LIB 
                 : 
                 : [ targets.main-target-requirements $(requirements) <name>$(name)  :
                     $(project) ] 
@@ -471,7 +418,7 @@ rule lib ( names + : sources * : requirements * : default-build *
                 
         local name = $(names[1]) ;
         result = [ targets.main-target-alternative
-          [ new lib-target-class $(name) : $(project) 
+          [ new typed-target $(name) : $(project) : LIB
             : [ targets.main-target-sources $(sources) : $(name) ] 
             : [ targets.main-target-requirements $(requirements) : $(project) ] 
             : [ targets.main-target-default-build $(default-build) : $(project) ]
@@ -482,73 +429,10 @@ rule lib ( names + : sources * : requirements * : default-build *
 }
 IMPORT $(__name__) : lib : : lib ;
 
-
-class exe-target-class : typed-target
-{
-    import type ;
-    
-    rule __init__ ( name : project
-        : sources * : requirements * : default-build * : usage-requirements * )
-    {    
-        typed-target.__init__ $(name) : $(project) : EXE 
-          : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;        
-    }
-                
-    rule compute-usage-requirements ( subvariant )
-    {
-        local result = [ typed-target.compute-usage-requirements $(subvariant) ] ;
-        local p = [ $(subvariant).build-properties ] ;
-        
-        local xdll-paths = [ $(p).get <xdll-path> ] ;
-        if $(xdll-paths)
-        {
-            result = [  $(result).add-raw $(xdll-paths:G=<xdll-path>) ] ;
-        }                            
-        
-        return $(result) ;
-    }
-    
-    rule check-for-unused-sources ( result * : sources * )
-    {
-        # For exes, we typically don't consume ignore DLL on windows.
-        # We also handle searched libraries via special properties
-        # on actions, so should not check for search libraries.
-        # As the result, we don't check for unused LIB sources
-        # at all.
-                
-        local sources-to-check ;
-        for local s in $(sources)
-        {
-            if ! [ type.is-derived [ $(s).type ] LIB ]
-            {
-                sources-to-check += $(s) ;
-            }            
-        }
-        basic-target.check-for-unused-sources $(result) : $(sources-to-check) ;
-    }
-}
-
-rule exe ( name : sources * : requirements * : default-build * 
-    : usage-requirements * )
-{
-    local project = [ project.current ] ;
-        
-    # This is a circular module dependency, so it must be imported here
-    import targets ;
-    targets.main-target-alternative
-      [ new exe-target-class $(name) : $(project) 
-        : [ targets.main-target-sources $(sources) : $(name) ] 
-        : [ targets.main-target-requirements $(requirements) : $(project) ] 
-        : [ targets.main-target-default-build $(default-build) : $(project) ]
-        : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-      ] ;
-}
-IMPORT $(__name__) : exe : : exe ;
-
-
-
 class searched-lib-generator : generator
 {
+    import property-set ;
+    
     rule __init__ ( )
     {
         # The requirements cause the generators to be tried *only* when we're building
@@ -584,9 +468,19 @@ class searched-lib-generator : generator
             #    lib png : z : <name>png ; 
             # the 'z' target should be returned, so that apps linking to
             # 'png' will link to 'z', too.
-            return [ virtual-target.register $(t) ] $(sources) ;
+            return [ extra-usage-requirements $(property-set) ] [ virtual-target.register $(t) ] $(sources) ;
         }
     }
+    
+    rule extra-usage-requirements ( property-set )
+    {
+        # Add the value of <search> as <library-path>
+        # usage requirement.
+        local search = [ $(property-set).get <search> ] ;
+        search = $(search:G=<library-path>) ;
+        return [ property-set.create $(search) ] ;
+    }
+    
 }
 
 generators.register [ new searched-lib-generator ] ;
@@ -609,9 +503,6 @@ generators.register
   [ new prebuilt-lib-generator builtin.prebuilt : : LIB : <file> ] ;
 
     
-
-
-
 class compile-action : action 
 {
     import sequence ;
@@ -620,7 +511,7 @@ class compile-action : action
     {
         action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
     }
-    
+   
     
     # For all virtual targets for the same dependency graph as self, 
     # i.e. which belong to the same main target, add their directories
@@ -664,6 +555,7 @@ rule register-c-compiler ( id : source-types + : target-types + :
 # register all generators as "generator.some-rule", not with "some-module.some-rule".)
 IMPORT $(__name__) : register-c-compiler : : generators.register-c-compiler ;
 
+# The generator class for handling EXE and SHARED_LIB creation.
 class linking-generator : generator
 {
     import property-set ;
@@ -719,9 +611,48 @@ class linking-generator : generator
         local result = [ generator.run $(project) $(name) : $(property-set)
           : $(sources) : $(multiple) ] ;
         
-        return $(result) ;
+        return [ extra-usage-requirements $(result) : $(property-set) ] $(result) ;
     }
     
+    rule extra-usage-requirements ( created-targets * : property-set )
+    {           
+        local result = [ property-set.empty ] ;        
+        local extra ;
+                        
+        # Add appropricate <xdll-path> usage requirements.
+        local raw = [ $(property-set).raw ] ;
+        if <link>shared in $(raw)
+        {
+            local paths ;
+            local pwd = [ path.pwd ] ;
+            for local t in $(created-targets)
+            {
+                if [ type.is-derived [ $(t).type ] SHARED_LIB ] 
+                {
+                    paths += [ path.root [ path.make [ $(t).path ] ] $(pwd) ] ;
+                }                                
+            }       
+            extra += $(paths:G=<xdll-path>) ;
+        }
+        
+        # We need to pass <xdll-path> features that we've got from sources,
+        # because if shared library is built, exe which uses it must know paths
+        # to other shared libraries this one depends on, to be able to find them
+        # all at runtime.
+                        
+        # Just pass all features in property-set, it's theorically possible
+        # that we'll propagate <xdll-path> features explicitly specified by
+        # the user, but then the user's to blaim for using internal feature.                
+        local values = [ $(property-set).get <xdll-path> ] ;
+        extra += $(values:G=<xdll-path>) ;
+        
+        if $(extra)
+        {
+            result = [ property-set.create $(extra) ] ;
+        }
+        return $(result) ;
+    }
+        
     rule generated-targets ( sources + : property-set : project name ? )
     {
         local sources2 ;     # sources to pass to inherited rule
@@ -772,7 +703,51 @@ rule register-linker ( id composing ? : source-types + : target-types + :
     generators.register $(g) ;
 }
 
-IMPORT $(__name__) : register-linker : : generators.register-linker ;
+# The generator class for handling STATIC_LIB creation.
+class archive-generator : generator
+{
+    import property-set ; 
+
+    rule __init__ ( id composing ? : source-types + : target-types + : 
+        requirements * )
+    {
+        composing ?= true ;
+        generator.__init__ $(id) $(composing) : $(source-types) : $(target-types) :
+          $(requirements) ;
+    }
+        
+    rule run ( project name ? : property-set : sources + :  multiple ? )
+    {                                
+        local result = [ generator.run $(project) $(name) : $(property-set)
+          : $(sources) : $(multiple) ] ;
+        
+        # Compute additional usage requirements.
+        # For static linkinking any source libraries are no linked in but are bypassed.
+        # We also must pass the <library-path> usage requirements we've got from those
+        # sources, so that dependents can find them.
+        
+        # Just pass all <library-path> properties. We might pass
+        # <library-path> properties which did not come from dependencies, but
+        # were specified in requirements, but I don't think that's a problem.
+        local values = [ $(property-set).get <library-path> ] ;
+        local usage-requirements = [ property-set.create $(values:G=<library-path>) ] ;
+        
+        return $(usage-requirements) $(result) ;
+
+    }    
+}
+
+rule register-archiver ( id composing ? : source-types + : target-types + :
+                            requirements * )
+{
+    local g = [ new archive-generator $(id) $(composing) : $(source-types) 
+                : $(target-types) : $(requirements) ] ;
+    generators.register $(g) ;
+}
+
+
+IMPORT $(__name__) : register-linker register-archiver 
+  : : generators.register-linker generators.register-archiver ;
 
 declare-type : RSP : rsp ;
 

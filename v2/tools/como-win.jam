@@ -46,7 +46,7 @@ generators.register-linker como-win.link
   : <toolset>como <toolset-como:platform>win ;  
 # Note that status of shared libraries support is not clear, so we don't
 # define the link.dll generator.
-generators.register-composing como-winc.archive 
+generators.register-archiver como-winc.archive 
   : OBJ : STATIC_LIB RSP
   : <toolset>como <toolset-como:platform>win ;  
 

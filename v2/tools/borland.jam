@@ -48,7 +48,7 @@ type.register BORLAND.TDS : tds ;
 generators.register-linker borland.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE RSP : <toolset>borland ;
 generators.register-linker borland.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB RSP : <toolset>borland ;
 
-generators.register-composing borland.archive : OBJ : STATIC_LIB : <toolset>borland ;
+generators.register-archiver borland.archive : OBJ : STATIC_LIB : <toolset>borland ;
 generators.register-c-compiler borland.compile.c++ : CPP : OBJ : <toolset>borland ;
 generators.register-c-compiler borland.compile.c : C : OBJ : <toolset>borland ;
 
