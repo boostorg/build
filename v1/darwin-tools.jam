@@ -211,7 +211,7 @@ rule C++-action
 
 actions darwin-C++-action
 {
-    $(.GCC_BIN_DIR)$(.GXX) -c -ftemplate-depth-120 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -F$(FRAMEWORKS:D) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.GCC_BIN_DIR)$(.GXX) -c -ftemplate-depth-256 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -F$(FRAMEWORKS:D) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
