@@ -2567,8 +2567,8 @@ rule import ( modules + )
         if $(d)
         {
             # Normalize the path relative to the invocation directory.
-            local p = [ simplify-path-tokens [ split-path $(d:R=$(SUBDIR)) ] ] $(n) ;
-            n = $(p:J=$(SLASH)) ;
+            n = [ root-paths $(n) : $(d:R=$(SUBDIR)) ] ;
+            n = [ root-paths $(n) : [ PWD ] ] ;
             search = ; # no searching; the path was specified.
         }
         
