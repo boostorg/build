@@ -58,10 +58,12 @@ Developer visible changes:
 
     - Generator priorities are gone, explicit overrides are used.
     - 'Active' features were removed
+    - Support for VMS paths was added.
 
 Thanks to Christopher Currie, Pedro Ferreira, Philipp Frauenfelder,
-Andre Hentz, Jurgen Hunold, Toon Knapen, Alexey Pakhunov, Brock Peabody,
-Michael Stevens and Zbynek Winkler who contributed code to this release.
+Andre Hentz, Jurgen Hunold, Toon Knapen, Johan Nilsson, Alexey Pakhunov, 
+Brock Peabody, Michael Stevens and Zbynek Winkler who contributed 
+code to this release.
  
 
 Milestone 9.1 (Nov 6, 2003)
