@@ -295,7 +295,26 @@ rule main-target ( name : project )
         return $(best) ;
     }
     
-
+    
+    rule apply-default-build ( property-set )
+    {      
+        local result ;
+        if ! [ $(property-set).raw ] 
+        {
+            properties = [ build-request.expand $(self.default-build) ] ;
+            
+            for local p in $(properties)
+            {
+                result += [ property-set.create [ feature.split $(p) ] ] ;
+            }
+        }
+        else
+        {
+            result = $(property-set) ;
+        }
+        return $(result) ;
+    }
+        
     # Select an alternative for this main target, by finding all alternatives
     # which requirements are satisfied by 'properties' and picking the one with
     # longest requirements set.
@@ -309,21 +328,13 @@ rule main-target ( name : project )
             property-set = $(ep) ;
         }
         
-        if ! [ $(property-set).raw ] 
+        local all-property-sets = [ apply-default-build $(property-set) ] ;
+        local result ;
+        for local p in $(all-property-sets)
         {
-            properties = [ build-request.expand $(self.default-build) ] ;
-            
-            local result = ;
-            for local p in $(properties)
-            {
-                result += [ generate-really [ property-set.create [ feature.split $(p) ] ] ] ;
-            }
-            return $(result) ;
+            result += [ generate-really $(p) ] ;
         }
-        else
-        {
-            generate-really $(property-set) ;
-        }
+        return $(result) ;
     }
         
     local rule generate-really ( property-set )
