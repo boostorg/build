@@ -8,6 +8,13 @@
 set-as-singleton MINGW_ROOT_DIRECTORY MINGW_BIN_DIRECTORY MINGW_INCLUDE_DIRECTORY MINGW_STDLIB_DIRECTORY ;
 
 # compute directories for invoking MINGW
+
+# Get these variable set on the targets so that we can re-use the
+# build actions for other toolsets using this one as a base.
+flags mingw MINGW_BIN_DIRECTORY ;
+flags mingw MINGW_INCLUDE_DIRECTORY ;
+flags mingw MINGW_STDLIB_DIRECTORY ;
+
 MINGW_BIN_DIRECTORY ?= $(MINGW_ROOT_DIRECTORY)$(SLASH)bin$(SLASH) ;
 MINGW_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if MINGW_ROOT_DIRECTORY not set
 MINGW_INCLUDE_DIRECTORY ?= $(MINGW_ROOT_DIRECTORY)$(SLASH)include ;
