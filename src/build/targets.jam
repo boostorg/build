@@ -1112,14 +1112,9 @@ class basic-target : abstract-target
                 # we link to two library which have the same <library> in
                 # usage requirements.
                 source-targets = [ sequence.unique $(source-targets) ] ;
-                                                
-                # Compute the real name for generated targets, using
-                # the <tag> feature.
-                local tagged-name = [ 
-                  targets.tag-name $(self.name) : $(rproperties) ] ;
-               
+                                                               
                 local result = 
-                  [ construct $(tagged-name) : 
+                  [ construct $(self.name) : 
                     $(source-targets) : $(rproperties) ] ;
                 
                 local gur = $(result[1]) ;
