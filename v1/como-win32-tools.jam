@@ -51,7 +51,7 @@ if ! $(COMO_PATH_SETUP) # do this once
     COMO_BACKEND_SETUP ?= "call "\"$(COMO_BACKEND_PATH)\\..\\Common7\\Tools\\vsvars32"\" >nul" ;
     COMO_BASE_SETUP ?= "set \"COMO_BASE=$(COMO_BASE)\"" ;
     COMO_PATH_SETUP ?= "" ;
-    COMO_CMD = $(COMO_BIN_DIRECTORY)como --$(COMO_BACKEND) ;
+    COMO_CMD = \"$(COMO_BIN_DIRECTORY)como\" --$(COMO_BACKEND) ;
 }
 
 
