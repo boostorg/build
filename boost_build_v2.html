@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                    </style>
+                            </style>
   </head>
   <!-- Things yet to document:
-                                          - build request, build request expansion and directly requested targets
-                                          - conditional properties
-                                        -->
+                                              - build request, build request expansion and directly requested targets
+                                              - conditional properties
+                                            -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -138,12 +138,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>examples-v2</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                       it somewhere. 
-                        
-                          <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                          into one of the locations where it can be found (given in <a href=
-                          "#config_files_location">this table</a>). This prevent you from
-                          accidentally overwriting your config when updating.</p> -->
+                                   it somewhere. 
+                                    
+                                      <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                                      into one of the locations where it can be found (given in <a href=
+                                      "#config_files_location">this table</a>). This prevent you from
+                                      accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -1164,6 +1164,42 @@ borland/runtime-link=static,dynamic
     organized in a hierarchical structure, so each project may have a single
     parent project and a number of subprojects.</p>
 
+    <p>The exact name of file that describes project is configurable. By
+    default, it's <tt>Jamfile</tt>, but can be changed by setting global
+    variables <tt>JAMFILE</tt>, for example in <tt>boost-build.jam</tt> file.
+    The value of the variable is a list of regex patterns that are used when
+    searching for Jamfile in a directory.</p>
+
+    <p>There are three things that can be put in Jamfile: declarations of
+    main targets, calls to a number of predefined rules, and arbitrary user
+    code. The predefined rules are listed below:</p>
+
+    <table>
+      <tr>
+        <th>Rule</th>
+
+        <th>Semantic</th>
+      </tr>
+
+      <tr>
+        <td><a href="#project_rule">project</a></td>
+
+        <td>Define project attributes.</td>
+      </tr>
+
+      <tr>
+        <td><a href="#use-project_rule">use-project</a></td>
+
+        <td>Make another project known.</td>
+      </tr>
+
+      <tr>
+        <td><a href="#build-project_rule">build-project</a></td>
+
+        <td>Build another project when this one is built.</td>
+      </tr>
+    </table>
+
     <p>Each project is also associated with <em>project root</em>. That's a
     root for a tree of projects, which specifies some global properties.</p>
 
@@ -1181,6 +1217,14 @@ borland/runtime-link=static,dynamic
       <li>declare constants, via the <tt>constant</tt> and
       <tt>path-constant</tt> rules.</li>
     </ul>
+
+    <p>To facilitate declaration of simple projects, Jamfile and project-root
+    can be merged together. To achieve this effect, the project root file
+    should call the <tt>project</tt> rule. The semantic is precisely the same
+    as if the call was made in Jamfile, except that project-root.jam will
+    start serve as Jamfile. The Jamfile in the directory of project-root.jam
+    will be ignored, and project-root.jam will be able to declare main
+    targets as usual.</p>
 
     <h4>Project attributes</h4>
 
@@ -1200,9 +1244,9 @@ borland/runtime-link=static,dynamic
     <p><em>Default build</em> is the build request that should be used when
     no build request is specified explicitly.</p>
 
-    <p>The default values for those attributes are given in the table below.
-    In order to affect them, Jamfile may call the <tt>project</tt> rule. The
-    rule has this syntax:</p>
+    <p id="project_rule">The default values for those attributes are given in
+    the table below. In order to affect them, Jamfile may call the
+    <tt>project</tt> rule. The rule has this syntax:</p>
 <pre>
     project id : &lt;attributes&gt; ;
    
@@ -1294,18 +1338,18 @@ borland/runtime-link=static,dynamic
     is assumed to define the parent project. The parent-child relationship
     affects only attribute values for the child project.</p>
 
-    <p>Second is build relationship. Some project may request to recursively
-    build other projects. Those project need not be child projects. The
-    <tt>build-project</tt> rule is used for that:</p>
+    <p id="build-project_rule">Second is build relationship. Some project may
+    request to recursively build other projects. Those project need not be
+    child projects. The <tt>build-project</tt> rule is used for that:</p>
 <pre>
     build-project src ;   
 </pre>
 
-    <p>The third kind is the 'use' relationship. In means that one project
-    uses targets from another. It is possible to just refer to target in
-    other projects using target id. However, if target id uses project id, it
-    is required that the project id is known. The <tt>use-project</tt> rule
-    is employed to guarantee that.</p>
+    <p id="use-project_rule">The third kind is the 'use' relationship. In
+    means that one project uses targets from another. It is possible to just
+    refer to target in other projects using target id. However, if target id
+    uses project id, it is required that the project id is known. The
+    <tt>use-project</tt> rule is employed to guarantee that.</p>
 <pre>
     use-project ( id : location )
    
