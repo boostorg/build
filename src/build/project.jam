@@ -41,7 +41,6 @@ import numbers ;
 import path ;
 import sequence ;
 import errors : error ;
-import project-roots ;
 
 import print ;
 import "class" : new ;
@@ -57,9 +56,11 @@ import property-set ;
 #
 rule load ( jamfile-location )
 {   
-    # Load project root, first. It might decide to act as Jamfile.
-    project-roots.load $(jamfile-location) ;
-        
+    if --debug-loading in [ modules.peek : ARGV ]
+    {
+        ECHO "Loading Jamfile at" '$(jamfile-location)' ;
+    }    
+            
     local module-name = [ module-name $(jamfile-location) ] ;            
     # If Jamfile is already loaded, don't try again.
     if ! $(module-name) in $(.jamfile-modules)
@@ -91,6 +92,22 @@ rule load ( jamfile-location )
         }        
     }                
     return $(module-name) ;        
+}
+
+# Loads parent of Jamfile at 'location'. Issues an error if nothing is found.
+rule load-parent ( location )
+{
+    local found = [ path.glob-in-parents $(location) : 
+      project-root.jam $(JAMFILE) ] ;
+    
+    if ! $(found)
+    {
+        ECHO "error: Could not find parent for project at '$(location)'" ;
+        ECHO "error: Did not find Jamfile or project-root.jam in any parent directory." ;
+        EXIT ;
+    }
+    
+    return [ load $(found[1]:D) ] ;    
 }
 
 # Makes the specified 'module' act as if it were a regularly loaded Jamfile 
@@ -138,7 +155,7 @@ rule find ( name : current-location )
         project-module = [ module-name $(location) ] ;
         if ! $(project-module) in $(.jamfile-modules) 
         {
-            if [ find-jamfile $(location) ]
+            if [ find-jamfile $(location) : no-error ]
             {
                 project-module = [ load $(location) ] ;            
             }        
@@ -184,6 +201,7 @@ JAMFILE ?= [Jj]amfile.v2 [Jj]amfile [Jj]amfile.jam ;
 local rule find-jamfile (
     dir # The directory(s) to look for a Jamfile.
     parent-root ? # Optional flag indicating to search for the parent Jamfile.
+    : no-errors ?
     )
 {
     # Glob for all the possible Jamfiles according to the match pattern.
@@ -194,7 +212,7 @@ local rule find-jamfile (
         if ! $(.parent-jamfile.$(dir))
         {     
             .parent-jamfile.$(dir) = 
-              [ path.glob-in-parents $(dir) : $(JAMFILE) : $(parent-root) ] ;            
+              [ path.glob-in-parents $(dir) : $(JAMFILE)  ] ;            
         }        
         jamfile-glob = $(.parent-jamfile.$(dir)) ;                            
     }
@@ -207,33 +225,8 @@ local rule find-jamfile (
         jamfile-glob = $(.jamfile.$(dir)) ;
         
     }
-
-    return $(jamfile-glob) ;
-}
-
-# Load a Jamfile at the given directory. Returns nothing.
-# Will attempt to load the file as indicated by the JAMFILE patterns. 
-# Effect of calling this rule twice with the same 'dir' is underfined.
-
-local rule load-jamfile (
-    dir # The directory of the project Jamfile.
-    )
-{
-    # See if the Jamfile is where it should be.
-    #
-    local jamfile-to-load = [ find-jamfile $(dir) ] ;
-
-    # Could not find it, error.
-    #
-    if ! $(jamfile-to-load)
-    {
-        errors.error
-            "Unable to load Jamfile." :
-            "Could not find a Jamfile in directory '$(dir)'". : 
-            "Attempted to find it with pattern '"$(JAMFILE:J=" ")"'." :
-            "Please consult the documentation at 'http://www.boost.org'." ;
-    }
-
+    
+    local jamfile-to-load = $(jamfile-glob) ;
     # Multiple Jamfiles found in the same place. Warn about this.
     # And ensure we use only one of them.
     # As a temporary convenience measure, if there's Jamfile.v2 amount
@@ -250,20 +243,52 @@ local rule load-jamfile (
         else
         {                    
             ECHO
-              "WARNING: Found multiple Jamfiles at this '"$(dir)"' location!"
+              "warning: Found multiple Jamfiles at '"$(dir)"'!"
                 "Loading the first one: '" [ path.basename $(jamfile-to-load[1]) ]  "'." ;
         }
                     
         jamfile-to-load = $(jamfile-to-load[1]) ;
+    }    
+    
+    # Could not find it, error.
+    #
+    if ! $(no-errors) && ! $(jamfile-to-load)
+    {
+        errors.error
+            "Unable to load Jamfile." :
+            "Could not find a Jamfile in directory '$(dir)'". : 
+            "Attempted to find it with pattern '"$(JAMFILE:J=" ")"'." :
+            "Please consult the documentation at 'http://www.boost.org'." ;
     }
+
+    return $(jamfile-to-load) ;
+}
+
+# Load a Jamfile at the given directory. Returns nothing.
+# Will attempt to load the file as indicated by the JAMFILE patterns. 
+# Effect of calling this rule twice with the same 'dir' is underfined.
+
+local rule load-jamfile (
+    dir # The directory of the project Jamfile.
+    )
+{
+    # See if the Jamfile is where it should be.
+    #
+    local jamfile-to-load = [ path.glob $(dir) : project-root.jam ] ;
+    if ! $(jamfile-to-load)
+    {
+        jamfile-to-load = [ find-jamfile $(dir) ] ;
+    }
+    
     
     # The module of the jamfile.
     #
     local jamfile-module = [ module-name  [ path.parent $(jamfile-to-load) ] ] ;
 
     # Initialize the jamfile module before loading.
-    #
-    initialize $(jamfile-module) : [ path.parent $(jamfile-to-load) ] ;
+    #    
+    initialize $(jamfile-module) : [ path.parent $(jamfile-to-load) ] 
+      : $(jamfile-to-load:BS) ;
 
     # Now load the Jamfile in it's own context.
     # Initialization might have load parent Jamfiles, which might have
@@ -271,11 +296,31 @@ local rule load-jamfile (
     # sure it's not loaded already.
     if ! $(jamfile-module) in $(.jamfile-modules)
     {           
-        .jamfile-modules += $(jamfile-module) ;
+        .jamfile-modules += $(jamfile-module) ;        
         modules.load $(jamfile-module) :  [ path.native $(jamfile-to-load) ] : . ;
+        if $(jamfile-to-load:BS) = project-root.jam
+        {
+            jamfile = [ find-jamfile $(dir) : no-errors ] ;
+            # project-root.jam might have loaded some modules which used 
+            # project.initialize, and clobbered .current-project
+            .current-project = [ target $(module-name) ] $(.current-project) ;            
+            if $(jamfile)
+            {                
+                load-aux $(jamfile-module) : $(jamfile) ;
+            }            
+        }        
     }
     .current-project = $(.current-project[2-]) ;
 }
+
+rule load-aux ( module-name : file )
+{
+    module $(module-name)
+    {
+        include $(2) ;
+    }    
+}
+
 
 # Initialize the module for a project. 
 #
@@ -283,8 +328,14 @@ rule initialize (
     module-name # The name of the project module.
     : location ? # The location (directory) of the project to initialize.
                  # If not specified, stanalone project will be initialized.               
+    : basename ? 
     )
 {
+    if --debug-loading in [ modules.peek : ARGV ]
+    {
+        ECHO "Initializing project '$(module-name)'" ;
+    }
+
     # TODO: need to consider if standalone projects can do anything but defining
     # prebuilt targets. If so, we need to give more sensible "location", so that
     # source paths are correct.
@@ -316,63 +367,67 @@ rule initialize (
     # if the project is not standalone.
     if $(location)
     {       
-        # Make sure we've loaded the project-root corresponding to this
-        # Jamfile.
-        #
-        local project-root-object = [ project-roots.load $(location) ] ;
-        local project-root = [ $(project-root-object).get-location ] ;
-        
-        $(attributes).set project-root : $(project-root-object) : exact ;
-
-        local parent = [ find-jamfile $(location) $(project-root) ] ;
-        local parent-module = ;
-        if $(parent)
+        local parent-module ;
+        if $(basename) != project-root.jam
         {
-            parent-module = [ load [ path.parent $(parent[1]) ] ] ;
+            parent-module = [ load-parent $(location) ] ;
+            inherit-attributes $(module-name) : $(parent-module) ;
         }
-        
-        inherit-attributes $(module-name) : $(project-root-object) : $(parent-module) ;
+                        
+        local parent ;
+        if $(parent-module)
+        {
+            parent = [ target $(parent-module) ] ;
+        }
+
+        if ! $(.target.$(module-name))
+        {
+            .target.$(module-name) = [ new project-target $(module-name)               
+             : $(module-name) $(parent)
+           : [ attribute $(module-name) requirements ] ] ;
+            
+            if --debug-loading in [ modules.peek : ARGV ]
+            {
+                ECHO "Assigned project target" $(.target.$(module-name)) 
+                  "to '$(module-name)'" ;
+            }
+            
+            
+        }                
     }    
     
     .current-project = [ target $(module-name) ] $(.current-project) ;
 }
 
 # Make 'project-module' inherit attributes of project root and parent module.
-rule inherit-attributes ( project-module : project-root : parent-module ? )
+rule inherit-attributes ( project-module : parent-module )
 {
-    # Register with the project root. This will inject project-root
-    # constants and do some other initialization.
-    $(project-root).register-project $(project-module) ;
-
-    if $(parent-module)
-    {
-        local attributes = $($(project-module).attributes) ;        
-        local pattributes = [ attributes $(parent-module) ] ;
-        $(attributes).set parent : [ path.parent 
-            [ path.make [ modules.binding $(parent-module) ] ] ] ;
-        $(attributes).set default-build 
-            : [ $(pattributes).get default-build ] ;
-        $(attributes).set requirements
-            : [ $(pattributes).get requirements ] : exact ;
-        $(attributes).set usage-requirements
-            : [ $(pattributes).get usage-requirements ] : exact ;
-        local parent-build-dir = [ $(pattributes).get build-dir ] ;
-        if $(parent-build-dir)
-        {            
-            # Have to compute relative path from parent dir to our dir
-            # Convert both paths to absolute, since we cannot
-            # find relative path from ".." to "."
-            
-            local location = [ attribute $(project-module) location ] ;
-            local parent-location = [ attribute $(parent-module) location ] ;
-            
-            local pwd = [ path.pwd ] ;
-            local parent-dir = [ path.root $(parent-location) $(pwd) ] ;
-            local our-dir = [ path.root $(location) $(pwd) ] ;
-            $(attributes).set build-dir : [ path.join $(parent-build-dir) 
-                  [ path.relative $(our-dir) $(parent-dir) ] ] : exact ;
-        }        
-    }            
+    local attributes = $($(project-module).attributes) ;        
+    local pattributes = [ attributes $(parent-module) ] ;
+    $(attributes).set parent : [ path.parent 
+        [ path.make [ modules.binding $(parent-module) ] ] ] ;
+    $(attributes).set default-build 
+      : [ $(pattributes).get default-build ] ;
+    $(attributes).set requirements
+      : [ $(pattributes).get requirements ] : exact ;
+    $(attributes).set usage-requirements
+      : [ $(pattributes).get usage-requirements ] : exact ;
+    local parent-build-dir = [ $(pattributes).get build-dir ] ;
+    if $(parent-build-dir)
+    {            
+        # Have to compute relative path from parent dir to our dir
+        # Convert both paths to absolute, since we cannot
+        # find relative path from ".." to "."
+        
+        local location = [ attribute $(project-module) location ] ;
+        local parent-location = [ attribute $(parent-module) location ] ;
+        
+        local pwd = [ path.pwd ] ;
+        local parent-dir = [ path.root $(parent-location) $(pwd) ] ;
+        local our-dir = [ path.root $(location) $(pwd) ] ;
+        $(attributes).set build-dir : [ path.join $(parent-build-dir) 
+          [ path.relative $(our-dir) $(parent-dir) ] ] : exact ;
+    }        
 }
 
 
@@ -566,6 +621,10 @@ rule use ( id : location )
 # This module defines rules common to all projects
 module project-rules
 {
+    # Make toolset.using accessible in project context
+    import toolset : using ;
+    EXPORT project-rules : using ;
+    
     rule project ( id ? : options * : * )
     {
         import project ;
@@ -588,6 +647,35 @@ module project-rules
             }
         }
     }
+    
+    # Declare and set a project global constant. Project global constants are
+    # normal variables but should not be changed. They are applied to every
+    # child Jamfile.
+    #
+    rule constant (
+        name # Variable name of the constant.
+        : value # Value of the constant.
+        )
+    {
+        import project ;
+        local p = [ project.target $(__name__) ] ;
+        $(p).add-constant $(name) : $(value) ;        
+    }
+    
+    # Declare and set a project global constant, whose value is a path. The
+    # path is adjusted to be relative to the invocation directory. The given
+    # value path is taken to be either absolute, or relative to this project
+    # root.  
+    rule path-constant (
+        name # Variable name of the constant.
+        : value # Value of the constant.
+        )
+    {
+        import project ;
+        local p = [ project.target $(__name__) ] ;
+        $(p).add-constant $(name) : $(value) : path ;
+    }
+
 
     rule use-project ( id : where )
     {
