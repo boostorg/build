@@ -4,6 +4,9 @@ Jam "include check-bindrule.jam ;"
     : "found: file-to-bind at subdir1$(SLASH)file-to-bind"
     ;
 
+include check-arguments.jam ;
+#    ;
+
 if $(NT)
 {
     # if this one fails, you don't have the line length patch
