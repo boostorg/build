@@ -19,24 +19,25 @@ Please consult the documentation at 'http://www.boost.org'.
 t.set_tree("project-test3")
 t.run_build_system()
 
-t.expect_addition("bin/debug/a.obj")
-t.expect_content("bin/debug/a.obj",
-"""debug
+t.expect_addition("bin/gcc/debug/threading-single/a.obj")
+t.expect_content("bin/gcc/debug/threading-single/a.obj",
+"""gcc/debug/threading-single
 a.cpp
 """)
 
-t.expect_addition("bin/debug/a.exe")
-t.expect_content("bin/debug/a.exe",
-"""debug
-bin/debug/a.obj
+t.expect_addition("bin/gcc/debug/threading-single/a.exe")
+t.expect_content("bin/gcc/debug/threading-single/a.exe",
+"""gcc/debug/threading-single
+bin/gcc/debug/threading-single/a.obj
 """)
 
 t.touch("a.cpp")
 t.run_build_system()
-t.expect_touch(["bin/debug/a.obj", "bin/debug/a.exe"])
+t.expect_touch(["bin/gcc/debug/threading-single/a.obj", "bin/gcc/debug/threading-single/a.exe"])
 
 
 t.run_build_system(extra_args="release optimization=off,on")
-t.expect_addition(["bin/release/a.exe", "bin/release/a.obj", 
-		    "bin/release/optimization-off/a.exe", 
-		    "bin/release/optimization-off/a.obj"])
+t.expect_addition([ "bin/gcc/release/threading-single/a.exe", 
+		    "bin/gcc/release/threading-single/a.obj", 
+		    "bin/gcc/release/optimization-off/threading-single/a.exe", 
+		    "bin/gcc/release/optimization-off/threading-single/a.obj"])
