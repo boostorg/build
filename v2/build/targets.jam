@@ -582,7 +582,6 @@ rule find ( id : project )
     local target-part = $(split[2]) ;
     if ! $(split)
     {
-        project-part = . ;
         target-part = $(id) ;
     }
         
@@ -591,7 +590,18 @@ rule find ( id : project )
     
     # The project used for finding main targets and for providing base directory
     # for file paths.
-    local base-project = [ project.find $(project-part) : $(current-location) ] ;
+    local base-project ;
+    if $(project-part) 
+    {
+        base-project = [ project.find $(project-part) : $(current-location) ] ;
+    }
+    else
+    {
+        # No project part in id. Resolve references relatively to the referring
+        # project.
+        base-project = $(project) ;
+    }
+    
     
     # Interpret target-part as project-id
     if ! $(have-project-reference)
