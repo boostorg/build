@@ -68,6 +68,7 @@ gTARGET_TYPE_REQUIREMENTS(DLL) = <shared-linkable>true ;
 
 ##### Variant definitions ####
 COMMON_PROPERTIES ?= 
+    <vtable-thunks>default
     <struct-alignment>auto
     <eh-model>default
     <threading>single
