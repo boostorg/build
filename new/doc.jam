@@ -20,57 +20,46 @@ not-modules = boost-build bootstrap site-config test user-config ;
 
 # The type of output to genetare.
 # "console" is formated text echoed to the console (the default);
-# "text" is formated text appended to a help.txt file;
-# "html" is HTLM output to a file.
+# "text" is formated text appended to the output file;
+# "html" is HTLM output to the file.
 #
 help-output = console ;
 
+# The file to output documentation to when generating "text" or "html"
+# help. This is without extension as the extension is determined by the
+# type of output.
+#
+help-output-file = help ;
+
+# Wether to include local rules in help output.
+#
+.option.show-locals ?= ;
+
+# When showing documentation for a module, wether to also generate
+# automatically the detailed docs for each item in the module.
+#
+.option.detailed ?= ;
+
+# Generate debug output as the help is generated and modules
+# are parsed.
+#
+.option.debug ?= ;
+
 # Handle --help options, displaying or generating instructions and
-# documentation. If this does generate any help it exits after doing
-# so, to prevent any build actions from occuring.
+# documentation. This return "true" to indicate that it did some
+# help to tell the caller to prevent the regular build actions
+# from occuring.
 #
 rule help ( )
 {
-    local args = [ modules.peek : ARGV ] ;
+    local args = [ class.new vector [ modules.peek : ARGV ] ] ;
     local did-help = ;
-    for local arg in $(args[2-])
+    local command = [ $(args).front ] ; $(args).pop-front ;
+    while $(command)
     {
-        local help = ;
-        local sub-help = ;
-        if $(arg) = --help
+        switch $(command)
         {
-            help = _top_ ;
-        }
-        else
-        {
-            if [ MATCH --help-[^\\.]*([\\.\\=]) : $(arg) ]
-            {
-                help = [ MATCH --help-([^\\.\\=]*) : $(arg) ] ;
-                sub-help = [ MATCH --help-[^\\.\\=]*[\\.\\=](.*) : $(arg) ] ;
-            }
-            else
-            {
-                help = [ MATCH --help-(.*) : $(arg) ] ;
-            }
-        }
-        if $(help) = output
-        {
-            help-output = $(sub-help) ;
-            did-help = true ; help = ;
-        }
-        if $(help) = enable
-        {
-            if ! $(sub-help) in $(self.options) { self.options += $(sub-help) ; }
-            did-help = true ; help = ;
-        }
-        if $(help) = disable
-        {
-            #> if $(sub-help) in $(self.options) { self.options += $(sub-help) ; }
-            #> did-help = true ; help = ;
-        }
-        # All modules?
-        if $(help) && $(help) = "all"
-        {
+            case --help-all :
             local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
             path-to-modules ?= . ;
             local modules-to-list =
@@ -80,39 +69,111 @@ rule help ( )
                         [ GLOB $(path-to-modules) : $(not-modules)\\.jam ] ] ] ;
             do-scan $(modules-to-list[1--2]) ;
             do-scan $(modules-to-list[-1]) : print-help-all ;
-            did-help = true ; help = ;
-        }
-        if ! $(sub-help)
-        {
-            # Any help.
-            if $(help) && $(help) = _top_
+            did-help = true ;
+            
+            case --help-enable-* :
+            local option = [ MATCH --help-enable-(.*) : $(command) ] ; option = $(option:L) ;
+            .option.$(option) = enabled ;
+            did-help = true ;
+            
+            case --help-disable-* :
+            local option = [ MATCH --help-disable-(.*) : $(command) ] ; option = $(option:L) ;
+            .option.$(option) = ;
+            did-help = true ;
+            
+            case --help-output :
+            help-output = [ $(args).front ] ; $(args).pop-front ;
+            did-help = true ;
+            
+            case --help-output-file :
+            help-output-file = [ $(args).front ] ; $(args).pop-front ;
+            did-help = true ;
+            
+            case --help-options :
+            local doc-module-spec = [ split-symbol doc ] ;
+            do-scan $(doc-module-spec[1]) : print-help-options ;
+            did-help = true ;
+            
+            case --help :
+            local spec = ;
+            if ! [ MATCH --(.*) : [ $(args).front ] ]
+            {
+                spec = [ $(args).front ] ; $(args).pop-front ;
+            }
+            if $(spec)
+            {
+                local spec-parts = [ split-symbol $(spec) ] ;
+                if $(spec-parts)
+                {
+                    if $(spec-parts[2])
+                    {
+                        do-scan $(spec-parts[1]) : print-help-rules $(spec-parts[2]) ;
+                        do-scan $(spec-parts[1]) : print-help-variables $(spec-parts[2]) ;
+                    }
+                    else
+                    {
+                        do-scan $(spec-parts[1]) : print-help-module ;
+                    }
+                }
+                else
+                {
+                    EXIT "Unrecognized help option '"$(command)" "$(spec)"'." ;
+                }
+            }
+            else
             {
                 print-help-top ;
-                did-help = true ; help = ;
             }
+            did-help = true ;
         }
-        # Is it a module?
-        local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
-        path-to-modules ?= . ;
-        local module-path = [ GLOB $(path-to-modules) : $(help)\\.jam ] ;
-        if $(help) && $(module-path) && $(sub-help)
-        {
-            do-scan $(module-path[1]) : print-help-rules $(sub-help) ;
-            do-scan $(module-path[1]) : print-help-variables $(sub-help) ;
-            did-help = true ; help = ;
-        }
-        if $(help) && $(module-path)
-        {
-            do-scan $(module-path[1]) : print-help-module ;
-            did-help = true ; help = ;
-        }
-        # Unrecognized.
-        if $(help)
-        {
-            EXIT "Unrecognized help option '"$(arg)"'." ;
-        }
+        command = [ $(args).front ] ; $(args).pop-front ;
     }
     return $(did-help) ;
+}
+
+# Split a reference to a symbol into module and symbol parts.
+#
+local rule split-symbol (
+    symbol # The symbol to split.
+    )
+{
+    local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
+    path-to-modules ?= . ;
+    local module-name = $(symbol) ;
+    local symbol-name = ;
+    local result = ;
+    while ! $(result)
+    {
+        local module-path = [ GLOB $(path-to-modules) : $(module-name)\\.jam ] ;
+        if $(module-path)
+        {
+            result = $(module-path) $(symbol-name) ;
+        }
+        else
+        {
+            if ! $(module-name:S)
+            {
+                result = - ;
+            }
+            else
+            {
+                local next-symbol-part = [ MATCH ^.(.*) : $(module-name:S) ] ;
+                if $(symbol-name)
+                {
+                    symbol-name = $(next-symbol-part).$(symbol-name) ;
+                }
+                else
+                {
+                    symbol-name = $(next-symbol-part) ;
+                }
+                module-name = $(module-name:B) ;
+            }
+        }
+    }
+    if $(result) != -
+    {
+        return $(result) ;
+    }
 }
 
 # Extracts the brief comment from a complete comment. The brief
@@ -264,7 +325,45 @@ local rule print-help-top ( )
     print.list-start ;
     print.list-item --help; This help message. ;
     print.list-item --help-all; Brief information on available modules. ;
+    print.list-item --help-options; Options for controlling the help display. ;
+    print.list-item --help-output <type>; The type of output to genetare.
+        '"console" is formated text echoed to the console (the default);'
+        '"text" is formated text appended to the output file;'
+        '"html" is HTLM output to the file.' ;
+    print.list-item --help-output-file <file>; The file to output the documentation. ;
     print.list-end ;
+}
+
+# Generates description of options controlling the help system.
+# This automatically reads the options as all variables in the doc
+# module of the form ".option.*".
+#
+local rule print-help-options (
+    module-name # The doc module.
+    )
+{
+    print.section "Help Options"
+        These are all the options available for enabling or disabling
+        to control the help system in various ways. Options can be enabled
+        or disabled with '"--help-enable-<option>"', and "'--help-disable-<option>'"
+        respectively.
+        ;
+    local options-to-list = [ MATCH ^[.]option[.](.*) : $($(module-name).variables) ] ;
+    if $(options-to-list)
+    {
+        print.list-start ;
+        for local option in $(options-to-list)
+        {
+            local def = disabled ;
+            if $($(module-name)..option.$(option).default) != "(empty)"
+            {
+                def = enabled ;
+            }
+            print.list-item $(option): $($(module-name)..option.$(option).docs)
+                Default is $(def). ;
+        }
+        print.list-end ;
+    }
 }
 
 # Generate brief documentation for all the known items in the section
@@ -288,7 +387,7 @@ local rule print-help-module-section (
             {
                 show = yes ;
             }
-            if show-locals in $(self.options)
+            if $(.option.show-locals)
             {
                 show = yes ;
             }
@@ -309,7 +408,7 @@ local rule print-help-all (
     )
 {
     print.section "Modules"
-        "These are all the known modules. Use --help-<module> to get more"
+        "These are all the known modules. Use --help <module> to get more"
         "detailed information."
         ;
     if $(documented-modules)
@@ -336,14 +435,14 @@ local rule print-help-module (
     
     # Print out the documented rules.
     print-help-module-section $(module-name) rules : "Module '$(module-name)' rules"
-        Use --help-$(module-name).<rule-name> to get more information. ;
+        Use --help $(module-name).<rule-name> to get more information. ;
     
     # Print out the documented variables.
     print-help-module-section $(module-name) variables : "Module '$(module-name)' variables"
-        Use --help-$(module-name).<variable-name> to get more information. ;
+        Use --help $(module-name).<variable-name> to get more information. ;
     
     # Print out all the same information but indetailed form.
-    if detailed in $(self.options)
+    if $(.option.detailed)
     {
         print-help-rules $(module-name) ;
         print-help-variables $(module-name) ;
@@ -363,18 +462,21 @@ local rule print-help-rules (
         # Print out the given rules.
         for local rule-name in $(name)
         {
-            local signature = $($(module-name).$(rule-name).signature:J=" ") ;
-            signature ?= "" ;
-            print.section "Rule '$(module-name).$(rule-name) ( $(signature) )'"
-                $($(module-name).$(rule-name).docs) ;
-            if $($(module-name).$(rule-name).args)
+            if $(.option.show-locals) || ! $($(module-name).$(rule-name).is-local)
             {
-                print.list-start ;
-                for local arg-name in $($(module-name).$(rule-name).args)
+                local signature = $($(module-name).$(rule-name).signature:J=" ") ;
+                signature ?= "" ;
+                print.section "Rule '$(module-name).$(rule-name) ( $(signature) )'"
+                    $($(module-name).$(rule-name).docs) ;
+                if $($(module-name).$(rule-name).args)
                 {
-                    print.list-item $(arg-name): $($(module-name).$(rule-name).$(arg-name).docs) ;
+                    print.list-start ;
+                    for local arg-name in $($(module-name).$(rule-name).args)
+                    {
+                        print.list-item $(arg-name): $($(module-name).$(rule-name).$(arg-name).docs) ;
+                    }
+                    print.list-end ;
                 }
-                print.list-end ;
             }
         }
     }
@@ -415,8 +517,6 @@ local rule print-help-variables (
 local rule __test__
 {
 }
-
-self.options = ;
 
 ws = "	 " ;
 
@@ -637,7 +737,7 @@ rule scan-module (
     : text * # The text in the file, one item per line.
     )
 {
-    if debug in $(self.options) { ECHO "HELP:" scanning module target '$(target)' ; }
+    if $(.option.debug) { ECHO "HELP:" scanning module target '$(target)' ; }
     local module-name = $(.module<$(target)>.name) ;
     local module-documented = ;
     local comment-block = ;
@@ -649,7 +749,7 @@ rule scan-module (
     {
         comment-block = [ extract-comment text ] ;
         syntax-block = [ extract-syntax text ] ;
-        if debug in $(self.options)
+        if $(.option.debug)
         {
             ECHO "HELP:" comment block; '$(comment-block)' ;
             ECHO "HELP:" syntax block; '$(syntax-block)' ;
@@ -706,9 +806,6 @@ local rule do-scan (
         ALWAYS $(module-name).scan ;
         INCLUDES $(module-name).scan : $(module-file) ;
         targets += $(module-name).scan ;
-        #> ALWAYS $(module-name).txt ;
-        #> DEPENDS $(module-name).txt : $(module-name).scan ;
-        #> targets += $(module-name).txt ;
     }
     if $(help-output) = console
     {
@@ -716,9 +813,16 @@ local rule do-scan (
     }
     if $(help-output) = text
     {
-        print.output help.txt ;
-        ALWAYS help.txt ;
-        DEPENDS help.txt : $(targets) ;
-        DEPENDS all : help.txt ;
+        print.output $(help-output-file).txt plain ;
+        ALWAYS $(help-output-file).txt ;
+        DEPENDS $(help-output-file).txt : $(targets) ;
+        DEPENDS all : $(help-output-file).txt ;
+    }
+    if $(help-output) = html
+    {
+        print.output $(help-output-file).html html ;
+        ALWAYS $(help-output-file).html ;
+        DEPENDS $(help-output-file).html : $(targets) ;
+        DEPENDS all : $(help-output-file).html ;
     }
 }
