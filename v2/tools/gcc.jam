@@ -134,7 +134,7 @@ actions link.dll bind LIBRARIES
 
 if [ os.on-windows ] 
 {
-    flags gcc CFLAGS <threading>multi : -mthreads ;
+    flags gcc OPTIONS <threading>multi : -mthreads ;
 }
 else if [ modules.peek : UNIX ] 
 {
@@ -142,8 +142,7 @@ else if [ modules.peek : UNIX ]
     {
     case SunOS* :
         {
-        flags gcc CFLAGS <threading>multi : -pthreads ;
-        flags gcc LINKFLAGS <threading>multi : -pthreads ;
+        flags gcc OPTIONS <threading>multi : -pthreads ;
         flags gcc FINDLIBS <threading>multi : rt ;
         }
     case BeOS :
@@ -152,8 +151,7 @@ else if [ modules.peek : UNIX ]
         }
     case *BSD :
         {
-        flags gcc CFLAGS <threading>multi : -pthread ;
-        flags gcc LINKFLAGS <threading>multi : -pthread ;
+        flags gcc OPTIONS <threading>multi : -pthread ;
         # there is no -lrt on BSD
         }
     case IRIX :
@@ -166,8 +164,7 @@ else if [ modules.peek : UNIX ]
         }
     case * :
         {
-        flags gcc CFLAGS <threading>multi : -pthread ;
-        flags gcc LINKFLAGS <threading>multi : -pthread ;
+        flags gcc OPTIONS <threading>multi : -pthread ;
         flags gcc FINDLIBS <threading>multi : rt ;
         }
     }
