@@ -204,7 +204,19 @@ local gtk_includes = [ RUN_COMMAND gtk-config ] ;
 
   </section>
 
+  <section>
+    <title>How to get the project-root location?
+    </title>
 
+    <para>You might want to use the location of the project-root in your
+      Jamfiles. To do it, you'd need to declare path constant in your
+      project-root.jam:
+<programlisting>
+path-constant TOP : . ;
+</programlisting>
+      After that, the <code>TOP</code> variable can be used in every Jamfile.
+    </para>
+  </section>
     
   </chapter>
 <!--
