@@ -910,7 +910,8 @@ lib a : a.cpp : &lt;use&gt;b : : &lt;library&gt;b ;
 <programlisting>
 alias core : im reader writer ;
 </programlisting>
-        The sources are returned without any modification.
+        will build the sources and return the generated source targets
+        without modification. 
       </para>
 
       <para>
@@ -927,7 +928,25 @@ alias core : im reader writer ;
 alias boost_thread : /boost/thread//boost_thread : &lt;link&gt;static ;
 </programlisting>
         and use only the <code>boost_thread</code> alias in your Jamfiles.
-      </para>               
+      </para>              
+
+      <para>
+        It is also allowed to specify usage requirements for the
+        <code>alias</code> target. If you write the following:
+<programlisting>
+alias header_only_library : : : :  &lt;include&gt;/usr/include/header_only_library ; 
+</programlisting>
+        then using <code>header_only_library</code> in sources will only add an
+        include path. Also note that when there are some sources, their usage
+        requirements are propagated, too. For example:
+<programlisting>
+lib lib : lib.cpp : : : &lt;include&gt;. ;
+alias lib_alias ;
+exe main : main.cpp lib_alias ;
+</programlisting>
+        will compile <filename>main.cpp</filename> with the additional include.
+      </para>
+ 
     </section>
 
 
