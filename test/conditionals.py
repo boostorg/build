@@ -10,19 +10,19 @@ t = Tester()
 
 t.write("project-root.jam", "import gcc ;")
 t.write("a.cpp", """
-#ifdef SHARED
+#ifdef STATIC
 int main() {}
 #endif
 """)
-t.write("Jamfile", "exe a : a.cpp : <shared>true:<define>SHARED ;")
-t.run_build_system("shared=true")
-t.expect_addition("bin/gcc/debug/shared-true/main-target-a/a")
+t.write("Jamfile", "exe a : a.cpp : <link>static:<define>STATIC ;")
+t.run_build_system("link=static")
+t.expect_addition("bin/gcc/debug/link-static/main-target-a/a")
 
 t.write("Jamfile", """
-project : requirements <shared>true:<define>SHARED ;
+project : requirements <link>static:<define>STATIC ;
 exe a : a.cpp ;
 """)
-t.run_build_system("shared=true")
-t.expect_addition("bin/gcc/debug/shared-true/a")
+t.run_build_system("link=static")
+t.expect_addition("bin/gcc/debug/link-static/a")
 
 t.cleanup()

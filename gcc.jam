@@ -33,9 +33,9 @@ rule init ( a1 * : a2 * : a3 * )
 }
 
 # Declare generators
-generators.register-composing gcc.link : LIB OBJ : EXE : <toolset>gcc ;
+generators.register-linker gcc.link : LIB OBJ : EXE : <toolset>gcc ;
 generators.register-composing gcc.archive : OBJ : STATIC_LIB : <toolset>gcc ;
-generators.register-composing gcc.link-dll : OBJ : SHARED_LIB : <toolset>gcc ;
+generators.register-linker gcc.link-dll : OBJ : SHARED_LIB : <toolset>gcc ;
 generators.register-c-compiler gcc.compile : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile : C : OBJ : <toolset>gcc ;
 
@@ -55,13 +55,21 @@ actions compile
 # Declare flags and action for linking
 toolset.flags gcc.link OPTIONS <debug-symbols>on : -g ;
 toolset.flags gcc.link LINKPATH <library-path> ;
-toolset.flags gcc.link FINDLIBS <find-library> ;
-toolset.flags gcc.link LIBRARIES <library-file> ;
+toolset.flags gcc.link FINDLIBS-ST <find-static-library> ;
+toolset.flags gcc.link FINDLIBS-SA <find-shared-library> ;
 toolset.flags gcc.link LIBRARIES <library> ;
+toolset.flags gcc.link LINK-RUNTIME <link-runtime>static : static ;
+toolset.flags gcc.link LINK-RUNTIME <link-runtime>shared : dynamic ;
+
+
+rule link ( targets * : sources * : properties * )
+{
+    ECHO "PROPS = " $(properties) ;
+}
 
 actions link bind LIBRARIES
 {
-    $(NAME:E=g++) $(OPTIONS) -L$(LINKPATH) -o $(<) $(>) $(LIBRARIES) -l$(FINDLIBS)
+    $(NAME:E=g++) $(OPTIONS) -L$(LINKPATH) -o $(<) $(>) $(LIBRARIES) -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) $(LIBRARIES) -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
 }
 
 # Declare action for creating static libraries
@@ -73,11 +81,14 @@ actions archive
 # Declare flags and action for linking shared libraries
 toolset.flags gcc.link-dll OPTIONS <debug-symbols>on : -g ;
 toolset.flags gcc.link-dll LINKPATH <library-path> ;
-toolset.flags gcc.link-dll FINDLIBS <find-library> ;
-toolset.flags gcc.link-dll LIBRARIES <library-file> ;
+toolset.flags gcc.link-dll FINDLIBS-ST <find-static-library> ;
+toolset.flags gcc.link-dll FINDLIBS-SA <find-shared-library> ;
 toolset.flags gcc.link-dll LIBRARIES <library> ;
+toolset.flags gcc.link-dll LINK-RUNTIME <link-runtime>static : static ;
+toolset.flags gcc.link-dll LINK-RUNTIME <link-runtime>shared : dynamic ;
 
-actions link-dll bind LIBS
+
+actions link-dll bind LIBRARIES
 {
-    $(NAME:E=g++) $(OPTIONS) -o $(<) -Wl,-soname,$(<[1]:D=) -shared $(>) $(LIBS) $(FINDLIBS)
+    $(NAME:E=g++) $(OPTIONS) -o $(<) -Wl,-soname,$(<[1]:D=) -shared $(>)  $(LIBRARIES) -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) $(LIBRARIES) -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
 }

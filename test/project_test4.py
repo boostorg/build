@@ -45,9 +45,9 @@ t.run_build_system("--no-error-backtrace", stdout=expected, status=None)
 
 t.copy("lib/Jamfile3", "lib/Jamfile")
 
-expected="""warning: skipped build of lib/b.obj with properties <toolset>gcc
-<shared>false <optimization>on <threading>single <rtti>on <debug-symbols>on
-<variant>debug
+expected="""warning: skipped build of lib/b.obj with properties <toolset>gcc <link>shared
+<link-runtime>shared <optimization>on <threading>single <rtti>on
+<debug-symbols>on <variant>debug
 don't know how to make <.>lib/b.obj/<optimization>on
 ...skipped <./gcc/debug>a.exe for lack of <.>lib/b.obj/<optimization>on...
 """

@@ -92,7 +92,7 @@ rule generator (
       id # identifies the generator - should be name of the rule which
      # sets up build actions
     
-    : source-types +  # types that this generator can handle
+    : source-types *  # types that this generator can handle
     
     : target-types-and-names +   
       # types the generator will create and, optionally, names for
@@ -457,6 +457,7 @@ rule register ( g )
     {            
         .generators.$(t) += $(g) ;
     }
+    
 }
     
 
@@ -486,7 +487,7 @@ rule register-composing ( id : source-types + : target-types + : requirements * 
 
 
 rule try-one-generator ( project name ? : generator multiple ? : 
-    target-types + : properties * : sources + )
+    target-types + : properties * : sources * )
 {
     generators.dout [ indent ] "  trying generator" [ $(generator).id ] 
       "for" $(target-types:J=" ") "(" $(multiple) ")" ;
@@ -752,7 +753,7 @@ local rule select-dependency-graph ( options )
 # 'construct' in stack, returns only targets of requested 'target-type',
 # otherwise, returns also unused sources and additionally generated
 # targets.    
-rule construct ( project name ? : target-type multiple ? : properties * : sources + 
+rule construct ( project name ? : target-type multiple ? : properties * : sources * 
     : allow-composing ?  # Allows to use composing generators for constructing this
                          # target. This will be typically set when creating main targets,
                          # and unset when called recursively from 'run' method of 

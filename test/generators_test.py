@@ -19,10 +19,10 @@ t.expect_addition(["lib/bin/gcc/debug/c.o",
 
 t.run_build_system(subdir='lib')
 
-t.expect_addition(["lib/bin/gcc/debug/auxilliary2.a"])
+t.expect_addition(["lib/bin/gcc/debug/auxilliary2.so"])
 
-t.run_build_system(subdir='lib', extra_args="shared=true")
+t.run_build_system(subdir='lib', extra_args="link=static")
 
-t.expect_addition(["lib/bin/gcc/debug/shared-true/auxilliary2.so"])
+t.expect_addition(["lib/bin/gcc/debug/link-static/auxilliary2.a"])
 
 t.cleanup()
