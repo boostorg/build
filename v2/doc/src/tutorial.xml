@@ -235,7 +235,7 @@ top/
 
       the project root is <filename>top/</filename>.  Because there is
       no <filename>Jamfile</filename> in
-      <filename>top/lib/</filename>, the projects in
+      <filename>top/util/</filename>, the projects in
       <filename>top/src/</filename> and
       <filename>top/util/foo/</filename> are immediate children of the
       root project.
@@ -550,7 +550,7 @@ exe e10 : e10.cpp foo ;
     <para>The first mechanism is called <firstterm>conditinal
         requirement</firstterm>. For example, you might want to set specific
       defines when the library is build as shared, or you have your own define
-      to be used in relese mode. Here's a piece of Jamfile.
+      to be used in release mode. Here's a piece of Jamfile.
 <programlisting>
 lib network : network.cpp 
     : &lt;link&gt;shared:&lt;define&gt;NEWORK_LIB_SHARED 
@@ -565,7 +565,7 @@ lib network : network.cpp
     <para>
       Sometimes different variant of a target are so different, that
       describing them using conditional requirements would be hard. Imagine
-      that a library has different sources on two two supported toolsets, and
+      that a library has different sources on two supported toolsets, and
       dummy implementation for all the other toolset. We can express this
       situation using <firstterm>target alternatives</firstterm>:
 <programlisting>
@@ -609,7 +609,7 @@ lib lib2
       If "app" binary should use "lib2", we can write:
 
 <programlisting>
-exe app : app.cpp /util/foo//lib2 ../util/lib2//lib2 ;
+exe app : app.cpp ../util/lib2//lib2 ;
 </programlisting>
 
       If we build release version of "app", then it will be linked
@@ -643,7 +643,7 @@ lib zlib : : &lt;name&gt;z_d &lt;variant&gt;debug ;
       version of zlib, but for other libraries this is quite reasonable.
     </para>
 
-    <para>More advanced use of prebuilt target is descibed in <ulink
+    <para>More advanced use of prebuilt target is described in <ulink
         url="doc/recipes.html#site_config_targets">recipes</ulink>.</para>
 
   </section>

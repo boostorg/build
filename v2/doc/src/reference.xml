@@ -46,7 +46,7 @@
   <literal>&lt;toolset&gt;gcc-3.0.1</literal>.</para>
 
   <para>A <emphasis>property set</emphasis> is a set of properties (i.e. a
-  collection without dublicates), for instance:
+  collection without duplicates), for instance:
   <literal>&lt;toolset&gt;gcc &lt;runtime-link&gt;static</literal>.</para>
 
   <para>A <emphasis>property path</emphasis> is a property set whose elements have
@@ -525,7 +525,7 @@ part should have the either the form
 <emphasis>feature-name</emphasis>=<emphasis>feature-value1</emphasis>[","<emphasis>feature-valueN</emphasis>]*   
 </programlisting>
 
-or, in case of implict feature
+or, in case of implicit feature
 
 <programlisting>
 <emphasis>feature-value1</emphasis>[","<emphasis>feature-valueN</emphasis>;]*   
@@ -611,7 +611,7 @@ linked binaries would be created.
       <row>
         <entry><literal>--no-error-backtrace</literal></entry>
 
-        <entry>Don't print backtrace on errors. Primary usefull for
+        <entry>Don't print backtrace on errors. Primary useful for
         testing.</entry>
       </row>
 
