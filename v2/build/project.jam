@@ -64,8 +64,6 @@ rule load ( jamfile-location )
     # If Jamfile is already loaded, don't try again.
     if ! $(module-name) in $(.jamfile-modules)
     {      
-        .jamfile-modules += $(module-name) ; 
-        
         load-jamfile $(jamfile-location) ;
                 
         for local p in [ attribute $(module-name) projects-to-build ]
@@ -246,10 +244,17 @@ local rule load-jamfile (
     # Initialize the jamfile module before loading.
     #
     initialize $(jamfile-module) : [ path.parent $(jamfile-to-load) ] ;
-    
+
     # Now load the Jamfile in it's own context.
-    #
-    modules.load $(jamfile-module) :  [ path.native $(jamfile-to-load) ] : . ;
+    # Initialization might have load parent Jamfiles, which might have
+    # loaded the current Jamfile with use-project. Do a final check to make
+    # sure it's not loaded already.
+    if ! $(jamfile-module) in $(.jamfile-modules)
+    {           
+        .jamfile-modules += $(jamfile-module) ;
+        modules.load $(jamfile-module) :  [ path.native $(jamfile-to-load) ] : . ;
+    }
+    
 }
 
 # Initialize the module for a project. 
