@@ -94,31 +94,6 @@ local rule x-product ( property-sets * )
     # otherwise return empty
 }
 
-# 
-# Returns the result of 'expand-no-defaults' after appying feature default to it.
-#
-rule expand ( property-sets * )
-{
-    local expanded = [ expand-no-defaults $(property-sets) : $(feature-space) ] ;
-    
-    expanded ?= "" ;
-    
-    local result ;
-    for local p in $(expanded) 
-    {
-        p = [ feature.split $(p) ] ;
-        
-        if ! $(p)
-        {
-            p = ;
-        }
-        
-        p = [ feature.add-defaults $(p) ] ;
-        result += $(p:J=/) ;
-    }
-    return $(result) ;
-}
-
 # Returns true if 'v' is either implicit value, or
 # the part before the first '-' symbol is implicit value
 local rule looks-like-implicit-value ( v )
@@ -244,24 +219,12 @@ rule __test__ ( )
       : build-request.expand-no-defaults
       ;
 
-    assert.result <toolset>gcc/<variant>debug/<inlining>on/<stdlib>native/<runtime-link>dynamic
-      : build-request.expand
-      ;
-
     assert.result
       <toolset>gcc/<toolset-gcc:version>3.0.1/<stdlib>stlport/<variant>debug
       <toolset>msvc/<stdlib>stlport/<variant>debug
       <toolset>msvc/<variant>debug 
 
       : build-request.expand-no-defaults gcc-3.0.1/stlport msvc/stlport msvc debug
-      ;
-
-    assert.result
-      <toolset>gcc/<toolset-gcc:version>3.0.1/<stdlib>stlport/<variant>debug/<inlining>on/<runtime-link>dynamic
-      <toolset>msvc/<stdlib>stlport/<variant>debug/<inlining>on/<runtime-link>dynamic
-      <toolset>msvc/<variant>debug/<inlining>on/<stdlib>native/<runtime-link>dynamic
-
-      : build-request.expand gcc-3.0.1/stlport msvc/stlport msvc debug
       ;
 
     assert.result
