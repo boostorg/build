@@ -362,7 +362,7 @@ actions execute-test bind INPUT_FILES output-file
     $(SHELL_EXPORT)$(PATH_VAR)
     $(SHELL_SET)LD_LIBRARY_PATH=$(RUN_LD_LIBRARY_PATH:J=$(SPLITPATH))
     $(SHELL_EXPORT)$(LD_LIBRARY_PATH_VAR)
-    $(>)  $(ARGS) $(INPUT_FILES) > $(output-file) 2>&1 && $(CP) $(output-file) $(<) $(VERBOSE_CAT)$(<)$(RUN_OUTPUT_FOOTER) || ( $(RUN_OUTPUT_HEADER) $(CATENATE) $(output-file) $(RUN_OUTPUT_FOOTER) && exit 1 )
+    $(>)  $(ARGS) "$(INPUT_FILES)" > $(output-file) 2>&1 && $(CP) $(output-file) $(<) $(VERBOSE_CAT)$(<)$(RUN_OUTPUT_FOOTER) || ( $(RUN_OUTPUT_HEADER) $(CATENATE) $(output-file) $(RUN_OUTPUT_FOOTER) && exit 1 )
 }
 
 
