@@ -2340,6 +2340,16 @@ rule common-stage-tag ( toolset variant : properties * )
 {
     local tags = ;
 
+    local thread-tag = ;
+    if <threading>multi in $(properties) { thread-tag = mt ; }
+    
+    local runtime-tag = ;
+    if <runtime-link>static in $(properties) { runtime-tag += s ; }
+    if <runtime-build>debug in $(properties) { runtime-tag += g ; }
+    if [ MATCH .*(debug-python).* : $(variant) ] { runtime-tag += y ; }
+    else { if [ MATCH .*(debug).* : $(variant) ] { runtime-tag += d ; } }
+    if [ MATCH .*(stlport).* : $(toolset) ] { runtime-tag += p ; }
+    
     local toolset-tag = ;
     switch $(toolset)
     {
@@ -2356,25 +2366,24 @@ rule common-stage-tag ( toolset variant : properties * )
         case *metrowerks* : toolset-tag += cw ;
         case *mingw* : toolset-tag += mgw ;
         case *mipspro* : toolset-tag += mp ;
-        case *msvc* : toolset-tag += vc6 ;
+        case *msvc* : 
+        { 
+        	toolset-tag += vc6 ;
+		    if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
+        }
         case *sunpro* : toolset-tag += sw ;
         case *tru64cxx* : toolset-tag += tru ;
         case *vacpp* : toolset-tag += xlc ;
-        case *vc7* : toolset-tag += vc ;
+        case *vc7* : 
+        { 
+        	toolset-tag += vc ;
+		    if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
+        }
     }
     toolset-tag += [ MATCH "[-c]([0123456789]+).([0123456789]*)" : $(toolset) ] ;
+  
     tags += $(toolset-tag:J=) ;
-    
-    local thread-tag = ;
-    if <threading>multi in $(properties) { thread-tag = mt ; }
     tags += $(thread-tag:J=) ;
-    
-    local runtime-tag = ;
-    if <runtime-link>static in $(properties) { runtime-tag += s ; }
-    if <runtime-build>debug in $(properties) { runtime-tag += g ; }
-    if [ MATCH .*(debug-python).* : $(variant) ] { runtime-tag += y ; }
-    else { if [ MATCH .*(debug).* : $(variant) ] { runtime-tag += d ; } }
-    if [ MATCH .*(stlport).* : $(toolset) ] { runtime-tag += p ; }
     tags += $(runtime-tag:J=) ;
     
     if $(tags)
@@ -2455,4 +2464,5 @@ rule std::facet-support ( toolset variant : subvariant-path properties * )
         : $(toolset) : $(subvariant-path) $(properties)
           ] ;
 }
+
 
