@@ -244,8 +244,6 @@ class stage-target-class : basic-target
         
         return $(found) ;
     }
-    
-    
 }
 
 # Create a target named 'name' in the current project
@@ -264,19 +262,20 @@ rule copy-file ( name ? : project : source : extra-properties )
       : $(project) ] ;
     local a = [ $(source).action ] ;
     local new-a ;
+    local p = [ property-set.empty ] ;
     if $(a)
     {            
-        local p = [ $(a).properties ] ;
-        # Copy the properties of original target. They, in particular
-        # can affect the suffix of the target.
-        new-a = [ new action $(targets) : $(source) : common.copy : 
-          [ $(p).add-raw [ $(extra-properties).free ] ] ] ;
+        p = [ $(a).properties ] ;
     }
-    else
-    {
-        new-a = [ new action $(targets) : $(source) : common.copy :
-          [ property-set.create [ $(extra-properties).free ] ] ] ;
-    }                                
+    
+
+    # Copy the properties of original target. They, in particular
+    # can affect the suffix of the target.
+    new-a = [ new action $(targets) : $(source) : common.copy : 
+      [ $(p).add-raw [ $(extra-properties).free ]                       
+                     [ $(extra-properties).dependency ]
+      ] ] ;
+    
     $(targets).suffix [ $(source).suffix ] ;
     $(targets).action $(new-a) ;
     
@@ -310,7 +309,7 @@ rule relink-file ( project : property-set : source )
     {
         ps-raw = [ property.change $(ps-raw) : <dll-path> ] ;
     }
-    ps-raw = $(ps-raw) [ $(property-set).free ] ;
+    ps-raw = $(ps-raw) [ $(property-set).free ] [ $(property-set).dependency ] ;
     local new-ps = [ property-set.create $(ps-raw) ] ;
     
     local cloned-action = [ virtual-target.clone-action $(action) : $(project) :

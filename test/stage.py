@@ -155,6 +155,17 @@ t.run_build_system()
 t.expect_addition("dist/l3.dll")
 t.expect_nothing("dist/l2.dll")
 
+# Check if <dependency> on 'stage' works.
+t.rm(".")
+t.write("Jamroot", """
+stage a1 : a1.txt : <location>dist ;
+stage a2 : a2.txt : <location>dist <dependency>a1 ;
+""")
+t.write("a1.txt", "")
+t.write("a2.txt", "")
+t.run_build_system("a2")
+t.expect_addition(["dist/a1.txt", "dist/a2.txt"])
+
 
 
 t.cleanup()
