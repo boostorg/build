@@ -251,7 +251,6 @@ rule text (
             if $(overwrite) = "true" 
             {
               overwrite = false ;
-              ALWAYS $(output-target) ;
               text-overwrite-action $(output-target) : $(line-v) ;
             }
             else
