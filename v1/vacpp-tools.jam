@@ -9,12 +9,13 @@
 # Jam tools information for :
 # IBM VisualAge C++ compiler
 #   version 5.0
+#   version 6.0
 #
 # These settings are created and tested with VisualAge running on
-# IBM/Aix 3.4. They should also work for VisualAge
-# on Windows NT, OS/2 and AS/400.
-#
-# Current settings tested and working on VisualAge-5/AIX.
+# IBM/Aix 4.3.3.0. They should also work for VisualAge on Windows NT,
+# OS/2 and AS/400.
+
+VA_BIN = "" ;
 
 flags vacpp CC  <threading>single : xlc   ;
 flags vacpp CC  <threading>multi : xlc_r ;
@@ -86,7 +87,7 @@ rule Link-action
 # for xlc, we repeat all libraries so that dependencies are always resolved
 actions xlc-Link-action bind NEEDLIBS
 {
-    $(CXX) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -bdynamic
+    $(CXX:R=$(VA_BIN)) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -bdynamic
 }
 
 #### Cc #####
@@ -98,7 +99,7 @@ rule Cc-action
 
 actions xlc-Cc-action
 {
-    $(CC) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(CC:R=$(VA_BIN)) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -109,7 +110,7 @@ rule C++-action
 
 actions xlc-C++-action
 {
-    $(CXX) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(CXX:R=$(VA_BIN)) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
