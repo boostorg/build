@@ -32,3 +32,5 @@ import use_requirements
 import conditionals
 import stage
 import prebuilt
+import project_dependencies
+

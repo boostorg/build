@@ -176,6 +176,27 @@ rule project-target ( name : project : requirements * : default-build * )
             return true ;
         } 
     }
+    
+    # Returns the properties which would be used to a main
+    # target in this project, if generation with
+    # 'properties' is requested, and that main targets 
+    # does not have any requirements of its own.
+    rule reference-properties ( properties * )
+    {
+        # Note that free properties can appear on 'properties' only
+        # from direct build request, because free properties are not
+        # allowed to be propagated.
+                
+        # ### Don't know why we stick 'properties' at the end of 'ref'
+        local ref = [ project.attribute $(self.project) requirements ]
+                    $(properties) ;
+        ref = [ property.refine $(properties) : $(ref) ] ;
+        ref = [ property.evaluate-conditionals $(ref) ] ;
+        ref = [ property.take free : [ property.remove incidental : $(ref) ] ] ;
+        ref = [ targets.generate-dependencies $(ref) : $(self.project) ] ;
+        return $(ref) ;
+    }
+    
 }
 class project-target : abstract-target ;
 
@@ -284,15 +305,10 @@ rule main-target ( name : project )
         # non-incidental properties are not equal to project's, plus
         # those in build request
         
-        # Note that free properties can appear on 'properties' only
-        # from direct build request, because free properties are not
-        # allowed to be propagated.
-        local ref = [ project.attribute $(self.project) requirements ]
-                    $(properties) ;
-        ref = [ property.refine $(properties) : $(ref) ] ;
-        ref = [ property.evaluate-conditionals $(ref) ] ;
-        ref = [ property.take free : [ property.remove incidental : $(ref) ] ] ;
-        
+        local plocation = [ project.attribute $(self.project) location ] ;
+        local ptarget = [ project.target $(plocation) ] ;
+        local ref = [ $(ptarget).reference-properties $(properties) ] ;
+                  
         # Mark all targets in result as roots
         for local t in $(result)
         {
@@ -328,6 +344,73 @@ rule main-target ( name : project )
 }
 
 class main-target : abstract-target ;
+
+# Attempts to generate the target given by target
+# reference.
+rule generate ( target-reference # Target reference
+    : project                    # Project where the reference is made
+    : properties *               # Properties of the main target that 
+                                 # makes the reference
+   )
+{
+    # Separate target name from properties override
+    local split = [ MATCH "^([^<]*)(/(<.*))?$" : $(target-reference) ] ;
+    local id = $(split[1]) ;
+    local sproperties = ;
+    if $(split[3])
+    {
+        sproperties = [ property.make [ feature.split $(split[3]) ] ] ;
+        sproperties = [ feature.expand-composites $(sproperties) ] ;
+    }
+
+    # Check if such target exists
+    local main-target = 
+      [ project.find-target $(id) : [ project.attribute $(project) location ] ] ;
+        
+    if $(main-target) {
+        # Take properties which should be propagated and refine them
+        # with source-specific requirements.
+        local propagated = [ property.take propagated : $(properties) ] ;
+        local rproperties = [ property.refine $(propagated) : $(sproperties) ] ;
+        if $(rproperties[1]) = "@error"
+        {
+            errors.error
+              "When building" [ full-name ] " with properties " $(properties) :
+                "Invalid properties specified for " $(source) ":"
+                  $(rproperties[2-]) ;
+        }
+        return [ $(main-target).generate $(rproperties) ] ;        
+    }    
+}
+
+# Returns a list of properties, where all dependency properties are
+# replaced as follows:
+# - the value of dependency property is treated as target reference,
+#   which is generated with 'properties'
+# - the created virtual target's become replace the property value,
+#    for example <library>a/b might become 
+#    <library>object(virtual-target)@1
+# In addition, use requirements for all created virtual targets
+# are added to the properties.
+rule generate-dependencies ( properties * : project )
+{
+    local xproperties ;
+    for local p in $(properties)
+    {
+        if dependency in [ feature.attributes $(p:G) ]
+        {
+            local g = [ targets.generate $(p:G=) : $(project) : $(properties) ] ;
+            xproperties += $(p:G)$(g) [ $(g).use-requirements ] ;
+        }
+        else
+        {
+            xproperties += $(p) ;
+        }                        
+    }
+    return $(xproperties) ;
+}
+
+
 
 # Implements the most standard way of constructing main target
 # alternative from sources. Allows sources to be either file or
@@ -397,27 +480,17 @@ rule basic-target ( name : project
                     # requirements may also code from dependencies. However, when they
                     # come from dependencies, the value is not target id, but rather
                     # virtual target names, so generators.construct can use them.
-                    
-                    local xproperties ;
-                    for local p in $(rproperties)
-                    {
-                        if dependency in [ feature.attributes $(p:G) ]
-                        {
-                            local g = [ generate-source $(p:G=) : $(rproperties) ] ;
-                            xproperties += $(p:G)$(g) [ $(g).use-requirements ] ;
-                        }
-                        else
-                        {
-                            xproperties += $(p) ;
-                        }                        
-                    }
-                    
+
+                    local xproperties = 
+                      [ targets.generate-dependencies $(rproperties) : $(self.project) ] ;
+
 
                     local source-targets ;
                     for local s in $(self.sources)
                     {
                         # Try treating this source as reference to main target
-                        local more-targets = [ generate-source $(s) : $(properties) ] ;
+                        local more-targets = 
+                          [ targets.generate $(s) : $(self.project) : $(properties) ] ;
                         if $(more-targets)
                         {
                             source-targets += $(more-targets) ;
@@ -455,40 +528,6 @@ rule basic-target ( name : project
                 }       
             }                
             return $(self.generated.$(property-path)) ;
-        }
-    }
-
-    # Given a source specification, generates virtual targets for that source.
-    # If the source does not correspond to any main target, returns nothing.
-    rule generate-source ( source : properties * )
-    {
-        # Separate target name from properties override
-        local split = [ MATCH "^([^<]*)(/(<.*))?$" : $(source) ] ;
-        local id = $(split[1]) ;
-        local sproperties = ;
-        if $(split[3])
-        {
-            sproperties = [ property.make [ feature.split $(split[3]) ] ] ;
-            sproperties = [ feature.expand-composites $(sproperties) ] ;
-        }
-
-        # Check if such target exists
-        local main-target = 
-            [ project.find-target $(id) : [ project.attribute $(self.project) location ] ] ;
-        
-        if $(main-target) {
-            # Take properties which should be propagated and refine them
-            # with source-specific requirements.
-            local propagated = [ property.take propagated : $(properties) ] ;
-            local rproperties = [ property.refine $(propagated) : $(sproperties) ] ;
-            if $(rproperties[1]) = "@error"
-            {
-                error
-                    "When building" [ full-name ] " with properties " $(properties)
-                    "Invalid properties specified for " $(source) ":"
-                    $(rproperties[2-]) ;
-            }
-            return [ $(main-target).generate $(rproperties) ] ;        
         }
     }
         
