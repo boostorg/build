@@ -1,0 +1,578 @@
+#  (C) Copyright 2002, Rene Rivera. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+rule document-module ( docs + )
+{
+	local module-name = [ CALLER_MODULE ] ;
+	module-name ?= * ;
+
+	$(module-name).brief = [ MATCH "([^\\.]*\\.)" : $(docs:J=" ") ] ;
+	$(module-name).docs = $(docs) ;
+
+	documented-modules += $(module-name) ;
+}
+
+rule document-rule ( name : docs + )
+{
+	local module-name = [ CALLER_MODULE ] ;
+	module-name ?= * ;
+
+	$(module-name).$(name).brief = [ MATCH "([^\\.]*\\.)" : $(docs:J=" ") ] ;
+	$(module-name).$(name).docs = $(docs) ;
+
+	$(module-name).rules += $(name) ;
+}
+
+rule document-variable ( name : docs + )
+{
+	local module-name = [ CALLER_MODULE ] ;
+	module-name ?= * ;
+
+	$(module-name).$(name).brief = [ MATCH "([^\\.]*\\.)" : $(docs:J=" ") ] ;
+	$(module-name).$(name).docs = $(docs) ;
+
+	$(module-name).variables += $(name) ;
+}
+
+# We can now document ourselves :-)
+#
+document-module
+	"Documentation system, handles --help requests."
+	"It defines rules that attach documentation to modules, rules, and variables."
+	;
+
+document-rule document-module :
+	"Specifies the documentation for the current module."
+	
+	<argument>docs
+		"The documentation for the module."
+	;
+
+document-rule document-rule :
+	"Specifies the documentation for a rule in the current module."
+	"If called in the global module, this documents a global rule."
+	
+	<argument>name
+		"The name of the rule."
+	<argument>docs
+		"The documentation for the rule."
+	;
+
+document-rule document-variable :
+	"Specifies the documentation for a variable in the current module."
+	"If called in the global module, the global variable is documented."
+	
+	<argument>name
+		"The name of the variable."
+	<argument>docs
+		"The documentation for the variable."
+	;
+
+document-rule do-help :
+	"Handle --help options, displaying or generating instructions and"
+	"documentation. If this does generate any help it exits after doing"
+	"so, to prevent any build actions from occuring."
+	;
+rule do-help ( )
+{
+	local args = [ modules.peek : ARGV ] ;
+	local did-help = ;
+	for local arg in $(args[2-])
+	{
+		local module-name = ;
+		local help = ;
+		if $(arg) = --help
+		{
+			help = _any_ ;
+		}
+		else
+		{
+			if [ MATCH --help-[^\\.]*(\\.) : $(arg) ]
+			{
+				module-name = [ MATCH --help-([^\\.]*) : $(arg) ] ;
+				help = [ MATCH --help-[^\\.]*\\.(.*) : $(arg) ] ;
+			}
+			else
+			{
+				help = [ MATCH --help-(.*) : $(arg) ] ;
+			}
+		}
+		if ! $(module-name)
+		{
+			# Any help.
+			if $(help) && $(help) = _any_
+			{
+				print-help-any ;
+				did-help = true ;
+				help = ;
+			}
+			# Only modules?
+			if $(help) && $(help) = modules
+			{
+				print-help-modules ;
+				did-help = true ;
+				help = ;
+			}
+			# Global rules?
+			if $(help) && $(help) = rules
+			{
+				print-help-rules ;
+				did-help = true ;
+				help = ;
+			}
+			# Global vars?
+			if $(help) && $(help) = variables
+			{
+				print-help-variables ;
+				did-help = true ;
+				help = ;
+			}
+		}
+		# Is it a variable?
+		if $(help) && $(help) in $($(module-name).variables)
+		{
+			print-help-variables $(module-name) : $(help) ;
+			did-help = true ;
+			help = ;
+		}
+		# Is it a rule?
+		if $(help) && $(help) in [ RULENAMES $(module-name) ]
+		{
+			print-help-rules $(module-name) : $(help) ;
+			did-help = true ;
+			help = ;
+		}
+		# Is it a module?
+		if $(help) && [ glob [ modules.peek : BOOST_BUILD_PATH ] : $(help)\\.jam ]
+		{
+			print-help-modules $(help) ;
+			did-help = true ;
+			help = ;
+		}
+		# Unrecognized.
+		if $(help)
+		{
+			EXIT "Unrecognized help option '"$(arg)"'." ;
+		}
+	}
+	if $(did-help)
+	{
+		EXIT
+			"For more information consult the documentation at"
+			"'http://www.boost.org'." ;
+	}
+}
+
+document-rule print-help-any :
+	"Generates a general description of the documentation and help system."
+	;
+rule print-help-any ( )
+{
+	print-section "Available help"
+		"These are the available options for obtaining documentation."
+		"Some options have additional instructions on how to get more"
+		"detailed information."
+		;
+	print-list-start ;
+	print-list-item --help; "This help message." ;
+	print-list-item --help-modules; "Brief information on available modules." ;
+	print-list-item --help-rules; "Brief information on global rules." ;
+	print-list-item --help-variables; "Brief information on global variables." ;
+	print-list-end ;
+}
+
+document-variable not-modules :
+	"List of possible modules, but which really aren't."
+	
+	<default-value>
+		"boost-build"
+	;
+not-modules = boost-build ;
+
+document-rule print-help-modules :
+	"Generate documentation for a set modules. For modules that are given"
+	"basic information about the module is generated. If no modules are given"
+	"it attempts to list all known modules, and a brief description of each."
+	
+	<argument>modules
+		"The modules to generate docs for. Can be none."
+	;
+rule print-help-modules ( modules * )
+{
+	if $(modules)
+	{
+		# Print doc for specific modules.
+		#
+		for local module-name in $(modules)
+		{
+			# Make sure we have the docs for the module.
+			modules.load $(module-name) ;
+			
+			# Print the docs.
+			print-section "'"$(module-name)"'" $($(module-name).docs) ;
+			
+			# Print out the documented rules.
+			if $($(module-name).rules)
+			{
+				print-section "Rules"
+					"Use --help-"$(module-name)".<rule-name> to get more information." ;
+				print-list-start ;
+				for local rule-name in $($(module-name).rules)
+				{
+					print-list-item "'"$(rule-name)"'; " $($(module-name).$(rule-name).brief) ;
+				}
+				print-list-end ;
+			}
+			
+			# Print out the documented variables.
+			if $($(module-name).variables)
+			{
+				print-section "Variables"
+					"Use --help-"$(module-name)".<variable-name> to get more information." ;
+				print-list-start ;
+				for local variable-name in $($(module-name).variables)
+				{
+					print-list-item "'"$(variable-name)"'; " $($(module-name).$(variable-name).brief) ;
+				}
+				print-list-end ;
+			}
+		}
+	}
+	else
+	{
+		# No specific modules to doc, try to load and list them all.
+		#
+		print-section "Modules"
+			"These are all the known modules. Use --help-<module> to get more"
+			"detailed information."
+			;
+		local modules-to-list =
+			[ glob [ modules.peek : BOOST_BUILD_PATH ] : *.jam ] ;
+		if $(modules-to-list)
+		{
+			print-list-start ;
+			for local module-name in $(modules-to-list:B)
+			{
+				if ! $(module-name) in $(not-modules)
+				{
+					# Make sure we have the docs for the module.
+					modules.load $(module-name) ;
+					
+					# The brief docs for each module.
+					print-list-item "'"$(module-name)"';" $($(module-name).brief) ;
+				}
+			}
+			print-list-end ;
+		}
+	}
+}
+
+document-rule extract-next-doc-item :
+	"Extract the next document item from the given variable. The variable"
+	"is changed to no longer contain that next item which is returned as"
+	"the result. The next item is considered anything up to, but not"
+	"including, the next gristed element."
+	
+	<argument>var
+		"The name of the variable to extract from."
+	;
+rule extract-next-doc-item ( var )
+{
+	local doc-item = $($(var)[1]) ;
+	$(var) = $($(var)[2-]) ;
+	while $($(var)) && ! $($(var)[1]:G)
+	{
+		doc-item += $($(var)[1]) ;
+		$(var) = $($(var)[2-]) ;
+	}
+	return $(doc-item) ;
+}
+
+document-rule print-help-rules :
+	"Generate documentation for a set of rules, either in a module or global."
+	"If no module is given, the given rules of the global scope are documented."
+	
+	<argument>module
+		"The module of the rules. Optional."
+	<argument>name
+		"The rules to describe. Optional."
+	;
+rule print-help-rules ( module ? : name * )
+{
+	if $(module)
+	{
+		# Make sure we have the docs for the module.
+		modules.load $(module) ;
+		
+		if $(name)
+		{
+			# Print out the given rules.
+			for local rule-name in $(name)
+			{
+				local docs = $($(module).$(rule-name).docs) ;
+				print-section "'"$(module).$(rule-name)"'"
+					[ extract-next-doc-item docs ] ;
+				if $(docs)
+				{
+					print-list-start ;
+					while $(docs)
+					{
+						local doc-item = [ extract-next-doc-item docs ] ;
+						if $(doc-item[1]:G) = <argument>
+						{
+							print-list-item $(doc-item[1]:G=)";" $(doc-item[2-]) ;
+						}
+					}
+					print-list-end ;
+				}
+			}
+		}
+	}
+	else
+	{
+		if $(name)
+		{
+			# Print out the given global rules.
+			for local rule-name in $(name)
+			{
+				local docs = $(*.$(rule-name).docs) ;
+				print-section "'"$(rule-name)"'"
+					[ extract-next-doc-item docs ] ;
+				if $(docs)
+				{
+					print-list-start ;
+					while $(docs)
+					{
+						local doc-item = [ extract-next-doc-item docs ] ;
+						if $(doc-item[1]:G) = <argument>
+						{
+							print-list-item $(doc-item[1]:G=)";" $(doc-item[2-]) ;
+						}
+					}
+					print-list-end ;
+				}
+			}
+		}
+		else
+		{
+			if $(*.rules)
+			{
+				# Print out all the known global rules.
+				print-section "Global rules"
+					"These are all the documented global rules. Use --help-<rule-name>"
+					"to obtain more detailed information." ;
+				print-list-start ;
+				for local rule-name in $(*.rules)
+				{
+					print-list-item "'"$(rule-name)"';" $(*.$(rule-name).brief) ;
+				}
+				print-list-end ;
+			}
+		}
+	}
+}
+
+document-rule print-help-variables :
+	"Generate documentation for a set of variables, either in a module or global."
+	"If no module is given, the given variables of the global scope are documented."
+	
+	<argument>module
+		"The module of the variables. Optional."
+	<argument>name
+		"The variables to describe. Optional."
+	;
+rule print-help-variables ( module ? : name * )
+{
+	if $(module)
+	{
+		# Make sure we have the docs for the module.
+		modules.load $(module) ;
+		
+		if $(name)
+		{
+			# Print out the given variables.
+			for local variable-name in $(name)
+			{
+				local docs = $($(module).$(variable-name).docs) ;
+				print-section "'"$(module).$(variable-name)"'"
+					[ extract-next-doc-item docs ] ;
+				if $(docs)
+				{
+					print-list-start ;
+					while $(docs)
+					{
+						local doc-item = [ extract-next-doc-item docs ] ;
+						if $(doc-item[1]:G) = <default-value>
+						{
+							print-list-item "default value;" $(doc-item[2]) ;
+						}
+					}
+					print-list-end ;
+				}
+			}
+		}
+	}
+	else
+	{
+		if $(name)
+		{
+			# Print out the given global variables.
+			for local variable-name in $(name)
+			{
+				local docs = $(*.$(variable-name).docs) ;
+				print-section "'"$(variable-name)"'"
+					[ extract-next-doc-item docs ] ;
+				if $(docs)
+				{
+					print-list-start ;
+					while $(docs)
+					{
+						local doc-item = [ extract-next-doc-item docs ] ;
+						if $(doc-item[1]:G) = <default-value>
+						{
+							print-list-item "default value;" $(doc-item[2]) ;
+						}
+					}
+					print-list-end ;
+				}
+			}
+		}
+		else
+		{
+			if $(*.variables)
+			{
+				# Print out all the known global variables.
+				print-section "Global variables"
+					"These are all the documented global variables. Use --help-<variable-name>"
+					"to obtain more detailed information." ;
+				print-list-start ;
+				for local variable-name in $(*.variables)
+				{
+					print-list-item "'"$(variable-name)"';" $(*.$(variable-name).brief) ;
+				}
+				print-list-end ;
+			}
+		}
+	}
+}
+
+document-rule print-section :
+	"Generate a section with a description. The type of output can be"
+	"controlled by the value of the 'output-type' variable. If not set"
+	"it defaults to 'console' indicating immediate display to the console."
+	"Other possible values are: 'html-file'."
+	
+	<argument>name
+		"The name of the section."
+	<argument>description
+		"A number of description lines."
+	;
+rule print-section ( name description * )
+{
+	local output = $(output-type) ;
+	output ?= console ;
+	if $(output) = console
+	{
+		ECHO $(name): ;
+		ECHO ;
+		if $(description)
+		{
+			echo-with-wordwrap " " $(description) : "  " ;
+			ECHO ;
+		}
+	}
+}
+
+document-rule print-list-start :
+	"Generate the start of a list of items. The type of output can be"
+	"controlled by the value of the 'output-type' variable. If not set"
+	"it defaults to 'console' indicating immediate display to the console."
+	"Other possible values are: 'html-file'."
+	;
+rule print-list-start ( )
+{
+	local output = $(output-type) ;
+	output ?= console ;
+	if $(output) = console
+	{
+	}
+}
+
+document-rule print-list-item :
+	"Generate an item in a list. The type of output can be"
+	"controlled by the value of the 'output-type' variable. If not set"
+	"it defaults to 'console' indicating immediate display to the console."
+	"Other possible values are: 'html-file'."
+	
+	<argument>item
+		"The item to list."
+	;
+rule print-list-item ( item + )
+{
+	local output = $(output-type) ;
+	output ?= console ;
+	if $(output) = console
+	{
+		echo-with-wordwrap "*" $(item) : "  " ;
+	}
+}
+
+document-rule print-list-end :
+	"Generate the end of a list of items. The type of output can be"
+	"controlled by the value of the 'output-type' variable. If not set"
+	"it defaults to 'console' indicating immediate display to the console."
+	"Other possible values are: 'html-file'."
+	;
+rule print-list-end ( )
+{
+	local output = $(output-type) ;
+	output ?= console ;
+	if $(output) = console
+	{
+		ECHO ;
+	}
+}
+
+document-rule echo-with-wordwrap :
+	"Echo to console the given text word-wrapping to a 78 character margin."
+	
+	<argument>text
+		"The text to echo."
+	<argument>indent
+		"An optional indentation applied to wrapped lines."
+		;
+rule echo-with-wordwrap ( text + : indent ? )
+{
+	text = $(text:J=" ") ;
+	indent ?= "" ;
+	local char-match =
+		".?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?" ;
+	while $(text)
+	{
+		local s = "" ;
+		local t = "" ;
+		s = [ MATCH "^($(char-match)).*" : $(text) ] ;
+		s += [ MATCH "^$(char-match)(.*)" : $(text) ] ;
+		if $(s[2])
+		{
+			t = [ MATCH "^(.*)[\\ ][^\\ ]*$" : $(s[1]) ] ;
+			t += [ MATCH "^.*[\\ ]([^\\ ]*)$" : $(s[1]) ] ;
+		}
+		else
+		{
+			t = $(s) ;
+		}
+		if ! $(t[2])
+		{
+			t += "" ;
+		}
+		text = $(indent)$(t[2])$(s[2]) ;
+		ECHO $(t[1]) ;
+	}
+}
+
+rule __test__
+{
+}
