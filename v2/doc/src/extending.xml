@@ -2,7 +2,7 @@
 <!DOCTYPE appendix PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd">
 
-  <appendix id="bbv2.extender">
+  <chapter id="bbv2.extender">
     <title>Extender Manual</title>
 
     <section id="bbv2.extender.intro">
@@ -265,8 +265,127 @@ generators.register-composing mex.mex : CPP LIB : MEX ;
       <para>(Need a note about UNIX)</para>
 
       <bridgehead>Custom generator classes</bridgehead>
+
+      <para>The standard generators allows you to specify source and target
+        types, action, and a set of flags. If you need anything more complex,
+        you need to create a new generator class with your own logic. Then,
+        you have to create an instance of that class and register it. Here's
+        an example how you can create your own generator class:
+<programlisting>
+class custom-generator : generator
+{
+    rule __init__ ( * : * )
+    {
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+}
+
+generators.register 
+  [ new custom-generator verbatim.inline-file : VERBATIM : CPP ] ;
+</programlisting>
+        This generator will work exactly like the
+        <code>verbatim.inline-file</code> generator we've defined above, but
+        it's possible to customize the behaviour by overriding methods of the
+        <code>generator</code> class.
+      </para>
+
+      <para>There are two methods of interest. The <code>run</code> methods is
+        responsible for overall process - it takes a number of source targets,
+        converts them the the right types, and creates the result. The
+        <code>generated-targets</code> method is called when all sources are
+        converted to the right types to actually create the result.
+      </para>
+
+      <para>The <code>generated-target</code> method can be overrided when you
+        want to add additional properties to the generated targets or use
+        additional sources. For example (which is real), you have a tool for
+        analysing programs, which should be given a name of executable and the
+        list of all sources. Naturally, you don't want to list all source
+        files manually. Here's how the <code>generated-target</code> method
+        can find the list of sources automatically:
+<programlisting>
+class itrace-generator : generator {
+....
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        local leafs ;
+        local temp = [ virtual-target.traverse $(sources[1]) : : include-sources ] ;
+        for local t in $(temp)
+        {
+            if ! [ $(t).action ]
+            {
+                leafs += $(t) ;
+            }
+        }
+        return [ generator.generated-targets $(sources) $(leafs)
+          : $(property-set) : $(project) $(name) ] ;
+    }
+}
+generators.register [ new itrace-generator nm.itrace : EXE : ITRACE ] ;
+</programlisting>
+        The <code>generated-targets</code> rule will be called with a single
+        source target of type <literal>EXE</literal>. The call to the
+        <code>virtual-target.traverse</code> will return all targets the
+        executable depends on, and we further find files which are not
+        produced from anything. The found targets are added to the sources.
+      </para>
       
-      <para></para>
+      <para>The <code>run</code> method can be overriden to completely
+        customize the way generator works. In particular, the conversion of
+        sources to the desired types can be completely customized. Here's
+        another real example. Tests for the Boost Python library usually
+        consist of two parts: a Python program and a C++ file. The C++ file is
+        compiled to Python extension which is loaded by the Python
+        program. But in the likely case that both files have the same name,
+        the created Python extension must be renamed. Otherwise, Python
+        program will import itself, not the extension. Here's how it can be
+        done:
+<programlisting>
+rule run ( project name ? : property-set : sources * : multiple ? )
+{       
+    local python ;
+    for local s in $(sources)
+    {
+        if [ $(s).type ] = PY
+        {
+            python = $(s) ;
+        }
+    }
+    
+    local libs ;
+    for local s in $(sources)
+    {
+        if [ type.is-derived [ $(s).type ] LIB ]
+        {
+            libs += $(s) ;
+        }
+    }
+    
+    local new-sources ;
+    for local s in $(sources)
+    {
+        if [ type.is-derived [ $(s).type ] CPP ] 
+        {
+            local name = [ $(s).name ] ;
+            if $(name) = [ $(python).name ] 
+            {
+                name = $(name)_ext ;
+            }                                
+            new-sources += [ generators.construct $(project) $(name) :
+              PYTHON_EXTENSION : $(property-set) : $(s) $(libs) ] ;
+        }
+    }
+        
+    result = [ construct-result $(python) $(new-sources) : $(project) $(name) 
+                 : $(property-set) ] ;        
+}    
+</programlisting>        
+        First, we separate all source into python files, libraries and C++
+        sources. For each C++ source we create a separate Python extension by
+        calling <code>generators.construct</code> and passing the C++ source
+        and the libraries. At this point, we also change the extension's name,
+        if necessary.        
+      </para>
 
  
     </section>
@@ -280,10 +399,13 @@ generators.register-composing mex.mex : CPP LIB : MEX ;
 # Declare a new feature
 import feature : feature ;
 feature verbatim-options : : free ;
+
 # Cause the value of the 'verbatim-options' feature to be
 # available as 'OPTIONS' variable inside verbatim.inline-file
 import toolset : flags ;
 flags verbatim.inline-file OPTIONS &lt;verbatim-options&gt; ;
+
+# Use the "OPTIONS" variable
 actions inline-file
 {
     "./inline-file.py" $(OPTIONS) $(&lt;) $(&gt;)
@@ -325,7 +447,8 @@ actions inline-file
         </itemizedlist>
       </para>
 
-        
+       
+      <bridgehead>Steps for adding a feauture</bridgehead>
       <para>Adding a feature requires three steps:
 
         <orderedlist>
@@ -363,6 +486,8 @@ actions inline-file
 
         </orderedlist>
       </para>
+
+      <bridgehead>Another example</bridgehead>
 
       <para>Here's an another example.
         Let's see how we can make a feature which refers to a target. For example,
@@ -428,9 +553,8 @@ rule link
 
       <para>Sometimes you want to create a shorcut for some set of
         features. For example, <code>release</code> is a value of the
-        <code>variant</code> and is a shortcut for
-        a set of features.
-      </para>.
+        <code>variant</code> and is a shortcut for a set of features.
+        </para>.
 
       <para>It is possible to define your build variants. For example:
 <programlisting>
@@ -518,7 +642,87 @@ generators.register-standard obfuscate.file : CPP : OBFUSCATED_CPP ;
 
   </section>
 
-  </appendix>
+  <section id="bbv2.extending.toolset_modules">
+
+    <title>Toolset modules</title>
+
+    <para>If your extensions will be used only on one project, they can be
+      placed in a separate <filename>.jam</filename> file which will be
+      imported by your <filename>project-root.jam</filename>. If the
+      extensions will be used on many projects, the users will thank you for 
+      a finishing touch.
+    </para>
+
+    <para>The standard way to use a tool in Boost.Build is the
+      <code>using</code> rule. To make it work, you module should provide an
+      <code>init</code> rule. The rule will be called with the same parameters
+      which were passed to the <code>using</code> rule. The set of allowed
+      parameters is determined by you. For example, you can allow the user to
+      specify paths, tool version, or tool options.
+    </para>
+
+    <para>Here are some guidelines which help to make Boost.Build more
+      consistent:
+      <itemizedlist>
+        <listitem><para>The <code>init</code> rule should never fail. Even if
+          user provided a wrong path, you should emit a warning and go
+          on. Configuration may be shared between different machines, and
+          wrong values on one machine can be OK on another.
+          </para></listitem>
+
+        <listitem><para>Prefer specifying command to be executed to specifying
+            path. First of all, this gives more control: it's possible to
+            specify
+<programlisting>
+/usr/bin/g++-snapshot
+time g++
+</programlisting>
+            as the command. Second, while some tools have a logical
+            "installation root", it better if user don't have to remember if
+            a specific tool requires a full command or a path.            
+          </para></listitem>
+
+        <listitem><para>Check for multiple initialization. A user can try to
+            initialize the module several times. You need to check for this
+            and decide what to do. Typically, unless you support several
+            versions of a tool, duplicate initialization is a user error. If
+            tool version can be specified during initialization, make sure the
+            version is either always specified, or never specified (in which
+            case the tool is initialied only once). For example, if you allow:
+<programlisting>
+using yfc ;
+using yfc : 3.3 ;
+using yfc : 3.4 ;
+</programlisting>
+            Then it's not clear if the first initialization corresponds to
+            version 3.3 of the tool, version 3.4 of the tool, or some other
+            version. This can lead to building twice with the same version.
+            </para></listitem>
+
+        <listitem><para>If possible, the <code>init</code> must be callable
+          with no parameters. In which case, it should try to autodetect all
+          the necessary information, for example, by looking for a tool in
+          <envar>PATH</envar> or in common installation locations. Often this
+          is possible and allows the user to simply write:
+<programlisting>
+using yfc ;
+</programlisting>
+          </para></listitem>
+
+        <listitem><para>Consider using facilities in the
+          <code>tools/common</code> module. You can take a look at how
+          <code>tools/gcc.jam</code> uses that module in the <code>init</code> rule.
+          </para></listitem>
+
+      </itemizedlist>
+    </para>
+
+
+      
+
+  </section>
+
+  </chapter>
 
 <!--
      Local Variables:
