@@ -116,7 +116,7 @@ rule get-invocation-command (
     local command ;
     if ! $(user-provided-command)
     {
-        command = [ common.find-tool $(tool) : $(additional-paths) : path-last ] ;
+        command = [ common.find-tool $(tool) : $(additional-paths) : $(path-last) ] ;
         if ! $(command)
         {
             ECHO "warning: toolset $(toolset) initialization: can't find tool $(tool)" ;
@@ -165,30 +165,33 @@ rule get-absolute-tool-path ( command )
 # If 'path-last' is specified, path is checked after 'additional-paths'.
 rule find-tool ( name : additional-paths * : path-last ? )
 {
-    local m ;
+    local path = [ sequence.transform path.make : [ modules.peek : PATH Path path ] ] ;
+    local match = [ path.glob $(path) : $(name) $(name).exe ] ;
+    local additional-match = [ path.glob $(additional-paths) : $(name) $(name).exe ] ;              
+
+    local result ;
     if $(path-last)
-    {        
-        m = [ path.glob $(additional-paths) : $(name) $(name).exe ] ;    
+    {
+        result = $(additional-match) ;
+        if ! $(result) && $(match)
+        {
+            result = $(name) ;
+        }
     }
     else
     {
-        m = [ GLOB [ modules.peek : PATH Path path ] : $(name) $(name).exe ] ;
-    }
-        
-    if $(m)
-    {
-        return $(name) ;
-    } 
-    else 
-    {        
-        if $(path-last)
+        if $(match)
         {
-            return [ GLOB [ modules.peek : PATH Path path ] : $(name) $(name).exe ] ;
+            result = $(name) ;
         }
         else
-        {            
-            return [ path.glob $(additional-paths) : $(name) $(name).exe ] ;    
-        }        
+        {
+            result = $(additional-match) ;
+        }
+    }
+    if $(result)
+    {        
+        return [ path.native $(result[1]) ] ;
     }    
 }
 
