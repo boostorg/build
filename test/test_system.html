@@ -13,6 +13,7 @@
         hr { color: black }
         p.revision { text-align: right; font-style: italic }
         pre.code { margin-left: 2em } 
+        pre.example { margin-left: 2em; border: solid black thin } 
         pre.output { margin-left: 2em }
         img.banner { border: 0; float: left }
         h1 { text-align: right }
@@ -30,7 +31,9 @@
     <hr>
 
     <dl class="page-index">
-      <dt><a href="#sec-intro">Introduction and examples</a></dt>
+      <dt><a href="#sec-intro">Introduction for users</a></dt>
+
+      <dt><a href="#sec-developers">Introduction for developers</a></dt>
 
       <dd>
         <dl class="page-index">
@@ -81,19 +84,81 @@
     </dl>
     <hr>
 
-    <h2><a name="sec-intro">Introduction and examples</a></h2>
+    <h2><a name="sec-intro">Introduction for users</a></h2>
 
-    <p>The testing system for Boost.Build is derived from the
-    <tt>TestCmd</tt> Python module used for testing the <a href=
-    "http://www.scons.org">Scons</a> build tools. The changes are very few,
-    and I hope that some of them may be adopted by <tt>TestCmd</tt> in
-    future.</p>
+    <p>The testing system for Boost.Build is a small set of Python modules
+    and scripts for automatically testing user-obversable behaviour. It uses
+    components from testing systems of <a href=
+    "http://www.scons.org">Scons</a> and <a href=
+    "http://subversion.tigris.org">Subverion</a>, together with some
+    additional functionality.</p>
 
-    <p>Unfortunately, there are not documentation for <tt>TestCmd</tt>, apart
-    from the comments in code, so the most essential base methods will be
-    described here.</p>
+    <p>To run the tests you'd need:</p>
 
-    <p>The basic steps of testing a build system behaviour are:</p>
+    <ol>
+      <li>Get the source tree of Boost.Build (located at <tt>tools/build</tt>
+      in Boost)</li>
+
+      <li>Have <a href="http://www.python.org">Python</a> installed. Version
+      2.1 is known to work.</li>
+
+      <li>Build Boost.Jam. See <a href=
+      "../jam_src/index.html">$boost_build_root/jam_src/index.html</a> for
+      instructions.</li>
+
+      <li>Configure at least one toolset. You can edit
+      <tt>site-config.jam</tt> or <tt>user-config.jam</tt> to add new
+      toolsets. Or you can create file <tt>test-config.jam</tt> in
+      <tt>$boost_build_root/test</tt> directory. In this case,
+      <tt>site-config.jam</tt> and <tt>user-config.jam</tt> will be ignored
+      for testing.</li>
+    </ol>
+
+    <p>When all is done, you can run the tests with</p>
+<pre class="code">
+python test_all.py
+</pre>
+
+    <p>which will use the default toolset, or you can specify toolset on the
+    command line, for example:</p>
+<pre class="code">
+python test_all.py borland
+</pre>
+
+    <p>If everything's OK, you'll see a list of passed tests. Otherwise, a
+    failure will be reported.</p>
+
+    <p>It is possible to run a specific test, for example:</p>
+<pre class="code">
+python generators_test.py
+</pre>
+
+    <h2><a name="sec-developers">Introduction for developers</a></h2>
+
+    <p>It is suggested that every new functionality come together with tests,
+    and that bugfixes are accompanied by tests. There's no need to say that
+    tests are good, but two points are extremely important:</p>
+
+    <ul>
+      <li>For an interpreted language like Jam, without any static checks,
+      testing is simply the only sefeguard we can have.</li>
+
+      <li>Good tests allow to change internal design much more safely, and we
+      didn't nailed everything down yet.</li>
+    </ul>
+
+    <p>Adding a new test is simple:</p>
+
+    <ol>
+      <li>Go to <tt>$boost_build_root/test/test_all.py</tt> and add new test
+      name to the list at the end of file. Suppose the test name is
+      "hello".</li>
+
+      <li>Add a new python module, in this example "hello.py", to do actual
+      testing.</li>
+    </ol>
+
+    <p>The module, in general will perform these basic actions:</p>
 
     <ol>
       <li>Setting the initial working directory state</li>
@@ -112,50 +177,48 @@
 
       <li>Adding, removing or touching files, or changing their content and
       then repeating the previous step, until satisfied.</li>
+
+      <li>Cleaning up</li>
     </ol>
 
-    <p>Prior to using the test system, make sure you have checked out the
-    Boost CVS and have successfully build Jam -- which means that
-    <tt>bjam</tt> executable is available.</p>
-
-    <p>For example, suppose that you've placed under
-    <tt>tools/build/test</tt> a file <tt>test1.py</tt> and a subdirectory
-    <tt>test1</tt> with files <tt>foo.cpp</tt>, <tt>Jamfile</tt> and
-    <tt>Jamrules</tt>. A definition of function <tt>main</tt> is the only
-    content of <tt>foo.cpp</tt>, <tt>Jamfile</tt> builds an executable
-    <tt>foo</tt> from <tt>foo.cpp</tt> and <tt>Jamrules</tt> is empty.
-    Finally, <tt>test1.py</tt> contains:</p>
-<pre class="code">
+    <p>The "hello.py" module might contain:</p>
+<pre class="example">
 from BoostBuild import Tester, List
 
 # Create a temporary working directory
 t = Tester()
 
-# Make content of the working directory equal to the content of the 'test1' directory.
-t.set_tree('test1')
+# Create the needed files
+t.write("project-root.jam", "")
+t.write("Jamfile", """
+exe hello : hello.cpp ;
+""")
+t.write("hello.cpp", """
+int main()
+{
+    return 0;
+}
 
-# Invoke 'bjam -sTOOLS=borland' and record which changes were made
-t.run_build_system("-sTOOLS=borland")
+""")
+
+t.run_build_system()
+
 # First, create a list of three pathnames
-file_list = List("bin/foo/borland/debug/runtime-link-dynamic/foo") * List(".exe .obj")
+file_list = List("bin/$toolset/debug/") * List("hello.exe hello.obj")
 # Second, assert that those files were added as result of the last build system invocation.
 t.expect_addition(file_list)
 
 # Invoke the build system once again
 t.run_build_system("clean")
 # Check if the files added previously were removed.
-t.expect_removal(t.mul("bin/foo/borland/debug/runtime-link-dynamic/foo", [".exe", ".obj", ".tds"]))
+t.expect_removal(file_list)
+
+# Remove temporary directories
+t.cleanup()
 </pre>
 
-    <p>This is all needed for a minimal test (and to find a bug in the
-    borland toolset!). Running the <tt>test1.py</tt> gives the following
-    output:</p>
-<pre class="output">
-File bin/foo/borland/debug/runtime-link-dynamic/foo.tds not removed as expected
-FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
-        at line 144 of TestBoostBuild.py (expect_removal)
-        from line 12 of test1.py
-</pre>
+    <p>The <tt>test</tt> directory contains a file "template.py" which can be
+    used as a start for your own tests.</p>
 
     <p>Overview of the most important methods of class
     <tt>TestBoostBuild</tt> follows.</p>
@@ -168,10 +231,12 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
 
     <ul>
       <li><tt>set_tree</tt> -- sets the content of the working directory to
-      be equal to the content of the specified directory.</li>
+      be equal to the content of the specified directory. This method is
+      preferrable when directory tree for testing is large.</li>
 
-      <li><tt>write</tt> -- sets the content of file in a working
-      directory</li>
+      <li><tt>write</tt> -- sets the content of file in a working directory.
+      This is optimal if you want to create a directory tree with 3-4 small
+      files.</li>
 
       <li><tt>touch</tt> -- changes the modification times of a file</li>
     </ul>
@@ -219,7 +284,7 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     directory is preserved, its name will be printed to the standard
     output.</p>
 
-    <h2><a name="sec-reference">Reference documentation</a></h2>
+    <h2 id="sec-reference">Reference documentation</h2>
 
     <p>The test system is composed of class <tt>Tester</tt>, derived form
     <tt>TestCmd.TestCmd</tt>, and helper class <tt>List</tt>. The methods of
@@ -373,10 +438,13 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
 
       <li>expect_modification</li>
 
-      <li>expect_touch</li>
-
       <li>expect_nothing</li>
     </ul>
+
+    <p>Note that <tt>expect_modification</tt> is used to check that a either
+    file content or timestamp has changed. The rationale is that some
+    compilers change content even if sources does not change, and it's easier
+    to have a method which checks for both content and time changes.</p>
 
     <p>There's also a member <tt>expect_nothing_more</tt>, which checks that
     all the changes are either expected or ignored, in other words that
@@ -471,13 +539,13 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
 </pre>
     <hr>
 
-    <p class="revision">Last modified: May 5, 2002</p>
+    <p class="revision">Last modified: Mar 3, 2003</p>
 
-    <p>&copy; Copyright Vladimir Prus 2002. Permission to copy, use, modify,
-    sell and distribute this document is granted provided this copyright
-    notice appears in all copies. This document is provided ``as is'' without
-    express or implied warranty, and with no claim as to its suitability for
-    any purpose.</p>
+    <p>&copy; Copyright Vladimir Prus 2002, 2003. Permission to copy, use,
+    modify, sell and distribute this document is granted provided this
+    copyright notice appears in all copies. This document is provided ``as
+    is'' without express or implied warranty, and with no claim as to its
+    suitability for any purpose.</p>
   </body>
 </html>
 
