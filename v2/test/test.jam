@@ -5,11 +5,11 @@ module modules { include <module@>modules.jam ; }
 IMPORT modules : import : : import ;
 import modules ; # The modules module can tolerate being included twice
 
-#import string ;
-#import numbers ;
+import string ;
+import numbers ;
 import sequence ;
-#import class ;
-#import os ;
-##import os.path ;
-#import feature ;
-#import build-request ;
+import class ;
+import os ;
+import os.path ;
+import feature ;
+import build-request ;
