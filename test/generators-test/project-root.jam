@@ -38,8 +38,6 @@ type.register POSITIONS : positions ;
 type.register NM.TARGET.CPP : target.cpp : CPP ;
 type.register NM_EXE : : EXE : main ;
 
-# Should inherit generators from base class?
-generators.register-composing gcc.link : OBJ : NM_EXE : <toolset>gcc ;
 generators.register-standard nm.target-source : CPP_MARKED : NM.TARGET.CPP ;
 generators.register-standard nm.cpp-mark : CPP : CPP_MARKED POSITIONS ;
     
