@@ -17,6 +17,7 @@
 # include "hash.h"
 # include "strings.h"
 # include "pwd.h"
+# include "pathsys.h"
 
 /*
  * builtins.c - builtin jam rules
@@ -32,6 +33,7 @@
  *	builtin_exit() - EXIT rule
  *	builtin_flags() - NOCARE, NOTFILE, TEMPORARY rule
  *	builtin_glob() - GLOB rule
+ *	builtin_match() - MATCH rule
  *
  * 01/10/01 (seiwald) - split from compile.c
  */
@@ -284,13 +286,24 @@ builtin_glob_back(
 {
 	struct globbing *globbing = (struct globbing *)closure;
 	LIST		*l;
+	PATHNAME	f;
+	string          buf[1];
+
+	/* Null out directory for matching. */
+	/* We wish we had file_dirscan() pass up a PATHNAME. */
+
+	path_parse( file, &f );
+	f.f_dir.len = 0;
+        string_new( buf );
+	path_build( &f, buf, 0 );
 
 	for( l = globbing->patterns; l; l = l->next )
-	    if( !glob( l->string, file ) )
+	    if( !glob( l->string, buf->value ) )
 	{
 	    globbing->results = list_new( globbing->results, newstr( file ) );
 	    break;
 	}
+        string_free( buf );
 }
 
 LIST *
@@ -321,48 +334,48 @@ builtin_match(
 	PARSE	*parse,
 	FRAME	*frame )
 {
-	LIST *l = lol_get( frame->args, 0 );
-	LIST *r = lol_get( frame->args, 1 );
+	LIST *l, *r;
 	LIST *result = 0;
-	regexp *re;
+        extern regexp* regex_compile( char* );
+        
+        string buf[1];
+        string_new(buf);
 
-	/* No pattern or string?  No results. */
+	/* For each pattern */
 
-	if( !l || !r )
-	    return L0;
-
-	/* Just use first arg of each list. */
-
-	re = regcomp( l->string );
-
-	if( regexec( re, r->string ) )
+	for( l = lol_get( frame->args, 0 ); l; l = l->next )
 	{
-	    int i, top;
-            string buf[1];
-            string_new(buf);
+            /* Result is cached and intentionally never freed */
+	    regexp *re = regex_compile( l->string );
 
-	    /* Find highest parameter */
+	    /* For each string to match against */
+            for( r = lol_get( frame->args, 1 ); r; r = r->next )
+            {
+                if( regexec( re, r->string ) )
+                {
+                    int i, top;
 
-	    for( top = NSUBEXP; top-- > 1; )
-		if( re->startp[top] != re->endp[top] )
-		    break;
+                    /* Find highest parameter */
 
-	    /* And add all parameters up to highest onto list. */
-	    /* Must have parameters to have results! */
+                    for( top = NSUBEXP; top-- > 1; )
+                        if( re->startp[top] )
+                            break;
 
-	    for( i = 1; i <= top; i++ )
-	    {
-                string_append_range( buf, re->startp[i], re->endp[i] );
-		result = list_new( result, newstr( buf->value ) );
-                string_truncate( buf, 0 );
-	    }
-            
-            string_free( buf );
-	}
+                    /* And add all parameters up to highest onto list. */
+                    /* Must have parameters to have results! */
 
-	free( (char *)re );
+                    for( i = 1; i <= top; i++ )
+                    {
+                        string_append_range( buf, re->startp[i], re->endp[i] );
+                        result = list_new( result, newstr( buf->value ) );
+                        string_truncate( buf, 0 );
+                    }
+                }
+            }
+        }
 
-	return result;
+        string_free( buf );
+        return result;
 }
 
 LIST *
