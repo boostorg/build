@@ -33,6 +33,7 @@
 # include <time.h>
 # include <assert.h>
 # include <string.h>
+# include <stdarg.h>
 
 /*
  * compile.c - compile parsed jam statements
@@ -1029,6 +1030,43 @@ evaluate_rule(
 
     if( DEBUG_COMPILE )
         debug_compile( -1, 0, frame);
+
+    return result;
+}
+
+/*
+ * Call the given rule with the specified parameters.
+ * The parameters should be of LIST* and end with NULL pointer.
+ * This differs from the 'evaluate_rule' in that frame
+ * for called rule is prepared in 'call_rule'.
+ *
+ * This function is usefull when builtin rule (in C) wants to
+ * call another rule, which might be implemented in Jam.
+ */
+LIST *call_rule( char *rulename, FRAME* caller_frame, ...)
+{
+    va_list va;
+    LIST *result;
+
+    FRAME       inner[1];
+    frame_init( inner );
+    inner->prev = caller_frame;
+    inner->module = caller_frame->module;
+    inner->procedure = 0;
+
+    va_start(va, caller_frame);    
+    for(;;)
+    {
+        LIST* l = va_arg(va, LIST*);
+        if (!l)
+            break;
+        lol_add(inner->args, l);
+    }
+    va_end(va);
+                
+    result = evaluate_rule(rulename, inner);    
+
+    frame_free(inner);
 
     return result;
 }
