@@ -22,8 +22,10 @@ subfeature stdlib stlport : iostream : hostios : optional propagated ;
 # STLport debug allocation
 #subfeature stdlib stlport : debug-alloc : off on ;
 
-
-rule init ( headers : libraries ? )
+# Initialize stlport support. 
+rule init ( headers       # Location of header files
+            : libraries ? # Location of libraries
+	  )
 {
     .headers = $(headers) ;
     .libraries = $(libraries) ;
