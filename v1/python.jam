@@ -82,6 +82,9 @@ if $(NT)
     PYTHON_LIB_PATH ?= $(PYTHON_ROOT)/libs [ GLOB $(PYTHON_ROOT) : PCbuild ] ;
 
     PYTHON_INCLUDES ?= $(PYTHON_ROOT)/include ;
+    
+    PYTHON_DLL ?= [ GLOB $(PATH) $(Path) : python$(PYTHON_VERSION_NODOT).dll ] ;
+    PYTHON_DEBUG_DLL ?= [ GLOB $(PATH) $(Path) : python$(PYTHON_VERSION_NODOT)_d.dll ] ;
 }
 else if $(UNIX) && $(OS) = MACOSX
 {
@@ -202,6 +205,15 @@ rule select-python-library ( toolset variant : properties * )
             {
                 properties += <library-path>$(CYGWIN_PYTHON_LIB_PATH) <find-library>python$(CYGWIN_PYTHON_VERSION).dll ;
             }
+        }
+        else if [ MATCH .*(mingw).* : $(toolset) ]
+        {
+            local lib = $(PYTHON_DLL) ;
+            if <define>BOOST_DEBUG_PYTHON in $(properties)
+            {
+                lib = $(PYTHON_DEBUG_DLL) ;
+            }
+            properties += <library-file>$(lib) ;
         }
         else 
         {
