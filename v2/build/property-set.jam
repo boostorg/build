@@ -309,7 +309,19 @@ class property-set
     # Returns all values of 'feature'.
     rule get ( feature )
     {
-        return [ feature.get-values $(feature) : $(self.raw) ] ;
+        if ! $(self.map-built)
+        {
+            # For each feature, create member var and assign all
+            # values to it. Since all regular member vars start with
+            # 'self', there will be no conflicts between names.
+            self.map-built = true ;
+            for local v in $(self.raw)
+            {
+                $(v:G) += $(v:G=) ;
+            }            
+        }
+        
+        return $($(feature)) ;
     }
     
 }
