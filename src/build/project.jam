@@ -393,7 +393,9 @@ class project-attributes
         else if $(attribute) = "requirements" 
         {
             specification = [ property.translate-paths $(specification)
-                              : $(self.location) ] ;
+                              : $(self.location) ] ;            
+            specification = 
+              [ property.expand-subfeatures-in-conditions $(specification) ] ;                
             specification = [ property.make $(specification) ] ;            
             result = [ property-set.create $(specification) ] ;            
             
