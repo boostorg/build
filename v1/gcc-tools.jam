@@ -346,6 +346,10 @@ flags gcc .AR : [ GLOB $(GCC_BIN_DIRECTORY) $(PATH) : ar ar.exe ] ;
 # prevent the merging of debug symbols (which happens to be n^2 slow)
 flags gcc .OBJCOPY : [ GLOB $(GCC_BIN_DIRECTORY) $(PATH) : objcopy ] ;
 flags gcc OBJCOPY_FLAGS <debug-symbols>on : "--set-section-flags .debug_str=contents,debug" ;
+if ! $(on-windows)
+{
+    flags gcc .SET_EXIT : "set -e" ;
+}
 
 #### Link ####
 
@@ -427,7 +431,7 @@ rule Cc-action
 
 actions gcc-Cc-action
 {
-    set -e
+    $(.SET_EXIT)
     $(.GCC[1]:R=$(GCC_BIN_DIR)) $(.GCC[2-]) -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I$(_)"$(STDHDRS)" -o "$(<)" "$(>)"
     $(.OBJCOPY[1])$(_)$(OBJCOPY_FLAGS)$(_)"$(<)"
 }
@@ -441,7 +445,7 @@ rule C++-action
 
 actions gcc-C++-action
 {
-    set -e
+    $(.SET_EXIT)
     $(.GXX[1]:R=$(GCC_BIN_DIR)) $(.GXX[2-]) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I$(_)"$(STDHDRS)" -o "$(<)" "$(>)"
     $(.OBJCOPY[1])$(_)$(OBJCOPY_FLAGS)$(_)"$(<)"
 }
