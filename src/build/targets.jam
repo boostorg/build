@@ -581,54 +581,51 @@ rule find ( id : current-location )
 {
     local target ;    
     
-    if ! [ MATCH (@) : $(id) ]
-    {        
-        local split = [ MATCH (.*)//(.*) : $(id) ] ;
+    local split = [ MATCH (.*)//(.*) : $(id) ] ;
     
-        local project-part = $(split[1]) ;
-        local target-part = $(split[2]) ;
-        if ! $(split)
-        {
-            project-part = . ;
-            target-part = $(id) ;
-        }
+    local project-part = $(split[1]) ;
+    local target-part = $(split[2]) ;
+    if ! $(split)
+    {
+        project-part = . ;
+        target-part = $(id) ;
+    }
         
-        # Make a more convenient name
-        local have-project-reference = $(split) ;
-        
-        # The project used for finding main targets and for providing base directory
-        # for file paths.
-        local base-project = [ project.find $(project-part) : $(current-location) ] ;
-                
-        # Interpret target-part as project-id
-        if ! $(have-project-reference)
-        {   
-            local project-module = [ project.find $(target-part) : $(current-location) ] ;
-            if $(project-module)
-            {
-                target = [ project.target $(project-module) ] ;
-            }        
-        }
-                
-        # Interpret target-name as name of main target
-        if ! $(target) && $(base-project)
+    # Make a more convenient name
+    local have-project-reference = $(split) ;
+    
+    # The project used for finding main targets and for providing base directory
+    # for file paths.
+    local base-project = [ project.find $(project-part) : $(current-location) ] ;
+    
+    # Interpret target-part as project-id
+    if ! $(have-project-reference)
+    {   
+        local project-module = [ project.find $(target-part) : $(current-location) ] ;
+        if $(project-module)
         {
-            local project-target = [ project.target $(base-project) ] ;        
-            if [ $(project-target).has-main-target $(target-part) ] 
-            {
-                target = [ $(project-target).main-target $(target-part) ] ;
-            }
-        }
-            
-        if ! $(target) && ! $(have-project-reference) && $(base-project)
+            target = [ project.target $(project-module) ] ;
+        }        
+    }
+    
+    # Interpret target-name as name of main target
+    if ! $(target) && $(base-project)
+    {
+        local project-target = [ project.target $(base-project) ] ;        
+        if [ $(project-target).has-main-target $(target-part) ] 
         {
-            local location = [ path.root $(target-part)
-                [ project.attribute $(base-project) source-location ] ] ;
-            if [ GLOB $(location:D) : $(location:D=) ] 
-            {
-                target = [ virtual-target.from-file $(target-part) : $(base-project) ] ;
-            }        
+            target = [ $(project-target).main-target $(target-part) ] ;
         }
+    }
+    
+    if ! $(target) && ! $(have-project-reference) && $(base-project)
+    {
+        local location = [ path.root $(target-part)
+          [ project.attribute $(base-project) source-location ] ] ;
+        if [ path.glob $(location:D) : $(location:D=) ] 
+        {
+            target = [ virtual-target.from-file $(target-part) : $(base-project) ] ;
+        }        
     }
         
     if ! $(target)
