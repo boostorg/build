@@ -1,4 +1,4 @@
-# (C) Copyright Toon Knapen 2002
+# (C) Copyright Toon Knapen 2002, David Abrahams 2002
 # Permission to copy, use,
 # modify, sell and distribute this software is granted provided this
 # copyright notice appears in all copies. This software is provided
@@ -7,16 +7,16 @@
 
 #
 # Jam tools information for :
-# HP/UX aCC
+# HP-UX aCC compiler
 #
 
-flags acc CC  <threading>single : cc   ;
-flags acc CC  <threading>multi : cc ;
+set-as-singleton acc.root-directory ;
+acc.bin-directory = $(acc.root-directory)$(SLASH)bin$(SLASH) ;
+acc.bin-directory ?= " " ;
 
-flags acc CXX <threading>single : aCC ;
-flags acc CXX <threading>multi : aCC ;
 
-flags acc C++FLAGS : -AA -ext ;
+flags acc CC : cc   ;
+flags acc CXX  : aCC   ;
 
 flags acc CFLAGS <optimization>off : ;
 flags acc CFLAGS <optimization>default : -O ;
@@ -26,6 +26,7 @@ flags acc CFLAGS <optimization>space : -O2 ;
 flags acc CFLAGS <inlining>off : ;
 flags acc CFLAGS <inlining>on : ;
 flags acc CFLAGS <inlining>full : ;
+flags acc CFLAGS <threading>multi : -mt ;
 
 flags acc C++FLAGS <exception-handling>off : ;
 flags acc C++FLAGS <exception-handling>on : ;
@@ -33,12 +34,17 @@ flags acc C++FLAGS <exception-handling>on : ;
 flags acc C++FLAGS <rtti>off : ;
 flags acc C++FLAGS <rtti>on : ;
 
-flags acc LINKFLAGS <runtime-link>static : ;
+flags acc LINKFLAGS <runtime-link>static : -llibstd_v2.a ;
+flags acc LINKFLAGS <runtime-link>shared : -llibstd_v2.sl ;
+
 # We want the full path to the sources in the debug symbols because otherwise
 # the debugger won't find the sources when we use boost.build.
-flags acc CFLAGS <debug-symbols>on : ;
+flags acc CFLAGS <debug-symbols>on : -g ;
 flags acc LINKFLAGS <debug-symbols>on : -g ;
 flags acc LINKFLAGS <debug-symbols>off : -s ;
+flags acc LINKFLAGS <threading>multi : -mt ;
+
+flags acc CFLAGS <shared-linkable>true : +Z ;
 
 flags acc CFLAGS <profiling>on : -pg ;
 flags acc LINKFLAGS <profiling>on : -pg ;
@@ -56,6 +62,9 @@ flags acc LIBPATH <library-path> ;
 flags acc NEEDLIBS <library-file> ;
 flags acc FINDLIBS <find-library> ;
 
+# BOOST_COMPATIBILITY ?= $(BOOST_ROOT)$(SLASH)boost$(SLASH)compatibility$(SLASH)cpp_c_headers ;
+# flags tru64cxx STDHDRS : $(BOOST_COMPATIBILITY) ;
+
 if ! $(ARFLAGS)
 {
     flags acc ARFLAGS : "" ;
@@ -68,22 +77,21 @@ rule Link-action
     aCC-Link-action $(<) : $(>) ;
 }
 
-# for aCC, we repeat all libraries so that dependencies are always resolved
 actions aCC-Link-action bind NEEDLIBS
 {
-    $(CXX) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) 
+    $(acc.bin-directory)$(CXX) $(LINKFLAGS) -AA -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
 }
 
 #### Cc #####
 
 rule Cc-action
 {
-    aCC-Cc-action $(<) : $(>) ;
+    acc-Cc-action $(<) : $(>) ;
 }
 
-actions aCC-Cc-action
+actions acc-Cc-action
 {
-    $(CC) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(acc.bin-directory)$(CC) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -94,17 +102,17 @@ rule C++-action
 
 actions aCC-C++-action
 {
-    $(CXX) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(acc.bin-directory)$(CXX) -AA -c +W823  -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
 
 rule Archive-action
 {
-    aCC-Archive-action $(<) : $(>) ;
+    acc-Archive-action $(<) : $(>) ;
 }
 
-actions updated together piecemeal aCC-Archive-action
+actions updated together piecemeal acc-Archive-action
 {
     ar ru$(ARFLAGS) "$(<)" "$(>)"
 }
