@@ -101,7 +101,7 @@ class order
     rule eliminate-unused-constraits ( objects * )
     {
         local result ;
-        for local c in $(.constraits)
+        for local c in $(.constraints)
         {
             local m = [ MATCH (.*)--(.*) : $(c) ] ;
             if $(m[1]) in $(objects) && $(m[2]) in $(objects)
