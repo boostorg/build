@@ -1527,24 +1527,33 @@ IMPORT m1 : m2 : r1 x : r2 y ; # imports m2.r1 as r2 and m2.x as y into m1
         
         <blockquote>
 <pre>
-rule CALLER_MODULE ( )
+rule CALLER_MODULE ( levels ? )
 </pre>
         </blockquote>
         <tt>CALLER_MODULE</tt> returns the name of the module scope
-        enclosing the call to its caller. If the scope belongs to the global
+        enclosing the call to its caller (if levels is supplied, it is
+        interpreted as an integer number of additional levels of call stack to
+        traverse to locate the module). If the scope belongs to the global
         module, or if no such module exists, returns the empty list. For
-        example, the following prints &quot;{Y}&quot;:
+        example, the following prints &quot;{Y} {X}&quot;:
 
         <blockquote>
 <pre>
 module X {
     rule get-caller { return [ CALLER_MODULE ] ; }
+    rule get-caller's-caller { return [ CALLER_MODULE 1 ] ; }
+
+    rule call-Y { return Y.call-X2 ; }
+
 }
 module Y {
-    rule call-X { X.get-caller ; }
+    rule call-X { return X.get-caller ; }
+    rule call-X2 { return X.get-caller's-caller ; }
 }
-callers = [ X.get-caller ] [ Y.call-X ] ;
+
+callers = [ X.get-caller ] [ Y.call-X ] [ X.call-Y ] ;
 ECHO {$(callers)} ;
+
 </pre>
         Like the <a href="#module_declaration">module declaration syntax</a> and
         the <a href="#IMPORT_rule"><tt>IMPORT</tt></a> rule, this rule is a
