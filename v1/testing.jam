@@ -288,6 +288,7 @@ rule run-test ( type-to-test run-target : sources * )
     
     if $(sources)
     {
+        declare-basic-target $(targets-to-test) : $(sources) : : : $(type-to-test) ;
         $(gGENERATOR_FUNCTION($(type-to-test))) $(targets-to-test) : $(sources) ;
     }
     
