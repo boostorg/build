@@ -265,62 +265,6 @@ type.register CPP : cpp cxx cc ;
 
 import stage ;
 
-#
-# Response files - 
-#
-# Because of line-length limitations in the Windows NT command-shell,
-# we use the "response file" feature of many toolsets, which allow us
-# to write sources into a file and insert the file into the
-# command-line.
-#
-
-# response-file generation is broken up into two phases, the first of
-# which overwrites any existing file and the second of which appends
-# to the file, piecemeal, so that no command-line is too long.
-rule response-file ( target : sources * : properties * )
-{
-    # Add libraries from <library> property to the list of sources.
-    local libraries ;
-    for local p in $(properties)
-    {
-        if $(p:G) = <library-file> && 
-          ! [ type.is-derived [ $(p:G=).type ] SHARED_LIB ] 
-        {
-            libraries += $(p:G=) ;
-        }          
-    }
-    # Get real jam targets
-    local xlibraries ;
-    for local l in $(libraries)
-    {
-        xlibraries += [ $(l).actualize ] ;
-    }
-    
-    sources += $(xlibraries) ; 
-    
-    response-file-1 $(target) : $(sources[1]) ;
-    if $(sources[2-])
-    {
-        response-file-2 $(target) : $(sources[2-]) ;
-    }
-    print.output $(target) ;
-    print.text [ utility.apply-default-suffix .lib :
-        [ on $(target)
-          return "$(LIBRARY_OPTION)$(FINDLIBS_ST)"
-            "$(LIBRARY_OPTION)$(FINDLIBS_SA)"
-        ] ] ;
-}
-
-actions quietly response-file-1
-{
-    echo "$(>)" > "$(<)"
-}
-
-actions quietly piecemeal response-file-2
-{
-    echo "$(>)" >> "$(<)"
-}
-#####
 
 class c-scanner : scanner 
 {
@@ -504,7 +448,7 @@ class exe-target-class : typed-target
     }
                 
     rule construct ( source-targets * : property-set )
-    {        
+    {                
         local libs = [ $(property-set).get <library> ] ;
         source-targets += $(libs:G=) ;
         
@@ -786,11 +730,6 @@ rule register-linker ( id composing ? : source-types + : target-types + :
 
 IMPORT $(__name__) : register-linker : : generators.register-linker ;
 
-
 declare-type : RSP : rsp ;
-flags builtin.response-file FINDLIBS_ST <find-static-library> ;
-flags builtin.response-file FINDLIBS_SA <find-shared-library> ;
-flags builtin.response-file LIBRARY_PATH <library-path> ;
-register-linker builtin.response-file : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : RSP ;
 
 

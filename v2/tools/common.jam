@@ -8,6 +8,9 @@
 
 import os ;
 import modules ;
+import utility ;
+import print ;
+import type ;
 
 if [ os.name ] = NT
 {
@@ -148,4 +151,65 @@ actions copy
     $(CP) "$(>)" "$(<)"
 }
 
+# Cause creation of response file, containing the sources in 'sources'
+# All the targets in 'targets' will depend on response file, and response
+# file will be created before the targets are built.
+rule response-file ( targets + : sources * : the-response-file : properties * )
+{
+    # Manufacture a fake target for response file.
+    # If response file is in targets, we're in trouble.
+    # The actions for response file are already generated, and bjam thinks it's 
+    # created. So setting dependency on response file will not help to create
+    # it before other targets. So, we need another target.
+    
+    local g = [ utility.ungrist $(the-response-file:G) ] ;
+    local rsp = $(the-response-file:G=$(g)-rsp) ;
+    LOCATE on $(rsp) = [ on $(the-response-file) return $(LOCATE) ] ;    
+    DEPENDS $(targets) : $(rsp) ;
+        
+    # Add libraries from <library> property to the list of sources.
+    local libraries ;
+    for local p in $(properties)
+    {
+        if $(p:G) = <library-file> && 
+          ! [ type.is-derived [ $(p:G=).type ] SHARED_LIB ] 
+        {
+            libraries += $(p:G=) ;
+        }          
+    }
+    # Get real jam targets
+    local xlibraries ;
+    for local l in $(libraries)
+    {
+        xlibraries += [ $(l).actualize ] ;
+    }
+    
+    sources += $(xlibraries) ; 
+       
+    response-file-1 $(rsp) : $(sources[1]) ;
+    if $(sources[2-])
+    {
+        response-file-2 $(rsp) : $(sources[2-]) ;
+    }
+    
+    print.output $(rsp) ;
+    print.text [ utility.apply-default-suffix .lib :
+        [ on $(targets[1])
+          return "$(LIBRARY_OPTION)$(FINDLIBS_ST)"
+            "$(LIBRARY_OPTION)$(FINDLIBS_SA)"
+        ] ] ;    
+}
+
+# response-file generation is broken up into two phases, the first of
+# which overwrites any existing file and the second of which appends
+# to the file, piecemeal, so that no command-line is too long.
+actions quietly response-file-1
+{
+    echo "$(>)" > "$(<)"
+}
+
+actions quietly piecemeal response-file-2
+{
+    echo "$(>)" >> "$(<)"
+}
 

@@ -1037,7 +1037,7 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
         
     .construct-stack = $(.construct-stack[2-]) ;
 
-    if ! $(.construct-stack) # This is first invocation in stack
+    if ! $(.construct-stack) && $(allowed-type) != * # This is first invocation in stack
     {
         local result2 ;
         for local t in $(result)

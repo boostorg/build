@@ -14,6 +14,7 @@ import os ;
 import toolset : flags ;
 import feature ;
 import type ;
+import common ;
 
 toolset.register borland ;
 
@@ -72,8 +73,9 @@ type.register BORLAND.TDS : tds ;
 
 # Declare generators
 
-generators.register-linker borland.link "" : RSP : EXE : <toolset>borland ;
-generators.register-linker borland.link "" : RSP : SHARED_LIB IMPORT_LIB : <toolset>borland ;
+generators.register-linker borland.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE RSP : <toolset>borland ;
+generators.register-linker borland.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB RSP : <toolset>borland ;
+
 generators.register-composing borland.archive : OBJ : STATIC_LIB : <toolset>borland ;
 generators.register-c-compiler borland.compile.c++ : CPP : OBJ : <toolset>borland ;
 generators.register-c-compiler borland.compile.c : C : OBJ : <toolset>borland ;
@@ -151,16 +153,16 @@ actions compile.c
 # Declare flags and action for linking
 toolset.flags borland.link OPTIONS <debug-symbols>on : -v ;
 toolset.flags borland.link LIBRARY_PATH <library-path> ;
-toolset.flags borland.link FINDLIBS-ST <find-static-library> ;
-toolset.flags borland.link FINDLIBS-SA <find-shared-library> ;
+toolset.flags borland.link FINDLIBS_ST <find-static-library> ;
+toolset.flags borland.link FINDLIBS_SA <find-shared-library> ;
 toolset.flags borland.link LIBRARIES <library-file> ;
 toolset.flags borland.link LIBRARIES <library> ;
 
 flags borland.link OPTIONS <linkflags> ;
 flags borland.link OPTIONS <link>shared : -tWD ;
 
-flags builtin.response-file LIBRARY_PATH_OPTION <toolset>borland : -L : unchecked ;
-flags builtin.response-file LIBRARY_OPTION <toolset>borland : "" : unchecked ;
+flags borland.link LIBRARY_PATH_OPTION <toolset>borland : -L : unchecked ;
+flags borland.link LIBRARY_OPTION <toolset>borland : "" : unchecked ;
 
 
 
@@ -181,13 +183,6 @@ actions updated together piecemeal archive
 
 if [ os.name ] = CYGWIN
 {
-    rule link
-    {
-        if ! $(<[2])
-        {
-            NEED_IMPLIB on $(<) = ;
-        }
-    }
     .set-path = "cmd /S /C set \"PATH=" ;
     .old-path = ";%PATH%\" \"&&\"" ;
 
@@ -217,8 +212,25 @@ else
       " ;
 }
 
+
+rule link ( targets + : sources * : properties * )
+{
+    common.response-file $(targets) : $(sources) : $(targets[2]) 
+      : $(properties) ;
+}   
+
 actions link bind LIBRARIES
 {
-    $(.set-path)$(.root:W)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(>:W)"
-    $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)"$(<[2]:W)" $(NEED_IMPLIB)"$(<[1]:W)"
+    $(.set-path)$(.root:W)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(<[2]:W)"
+}
+
+rule link.dll ( targets + : sources * : properties * )
+{
+    common.response-file $(targets) : $(sources) : $(targets[3]) : $(properties) ;    
+}
+
+actions link.dll bind LIBRARIES
+{
+    $(.set-path)$(.root:W)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(<[3]:W)"
+    "$(.root)implib" "$(<[2]:W)" "$(<[1]:W)"
 }
