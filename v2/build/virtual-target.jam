@@ -937,7 +937,7 @@ class subvariant-dg
 
         # Pre-compose the list of other dependency graphs, on which this one
         # depends
-        local deps = [ $(actual-properties).dependency ] ;
+        local deps = [ $(actual-properties).get implicit-dependency ] ;
         for local d in $(deps)
         {
             self.other-dg += [ $(d:G=).dg ] ;
@@ -972,6 +972,19 @@ class subvariant-dg
         return $(self.properties) ;
     }
     
+    # Returns a list of properties which contain implicit includes,
+    # needed to handle dependencies of generated headers.
+    # The name of feature is given by 'feature', this is typically 'include'.
+    # The values of feature are all target directories of this dependency graph,
+    # plus target directories of all dependency graphs referred to by
+    # <implicit-dependency> property
+    rule implicit-includes ( feature )
+    {
+        local target-paths = [ all-target-directories ] ;    
+        target-paths = [ sequence.unique $(target-paths) ] ;
+        return $(target-paths:G=$(feature)) ;        
+    }
+        
     rule all-target-directories ( )
     {
         if ! $(self.target-directories)

@@ -9,8 +9,6 @@ t.run_build_system()
 # Check that main target 'c' was able to find 'x.h' from
 # 'a's dependency graph
 t.expect_addition("bin/$toolset/debug/main-target-c/c.exe")
-# Check that main target 'e' was able to find 'y.h'
-t.expect_addition("bin/$toolset/debug/main-target-e/e.exe")
 
 # Check handling of first level includes.
 

@@ -54,6 +54,7 @@ feature archiveflags : : free ;
 feature version : : free ;
 
 feature dependency : : free dependency ;
+feature implicit-dependency : : free dependency ;
 feature library : : free dependency ;
 feature find-shared-library : : free ;
 feature find-static-library : : free ;
@@ -503,14 +504,9 @@ class compile-action : action
     # i.e. which belong to the same main target, add their directories
     # to include path.
     rule adjust-properties ( properties * )
-    {
+    {        
         local dg = [ $(self.targets[1]).dg ] ;
-        local target-paths = [ $(dg).all-target-directories ] ;    
-        target-paths = [ sequence.unique $(target-paths) ] ;
-        # Note that target-paths here are already relative to invocation
-        # directory, and can be used as-is.
-        
-        return $(properties) $(target-paths:G=include) ;
+        return $(properties) [ $(dg).implicit-includes "include" ] ;
     }    
 }
 

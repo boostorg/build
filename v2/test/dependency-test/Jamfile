@@ -13,21 +13,9 @@ exe b
     
 # Because of <define>, c.cpp will be compiled to different
 # directory than everything for main target "a". Therefore
-# without <dependency>, it won't find "x.h", which is part
+# without <implicit-dependency>, it won't find "x.h", which is part
 # of "a"'s dependency graph.
 exe c
     : c.cpp 
-    : <define>FOO <dependency>a
+    : <define>FOO <implicit-dependency>a
     ;    
-  
-# Try the same as above, only when other target is specified
-# not as dependency, but as source
- 
-lib d 
-    : y.foo 
-    ;
-    
-exe e
-    : e.cpp d
-    : <define>FOO 
-    ;
