@@ -243,6 +243,7 @@ rule Link-PYD
     gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) ;
     if $(UNIX) 
     {
+        RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) $(RUN_LD_LIBRARY_PATH) : $(SPLITPATH) ] ;
         gRUN_LD_LIBRARY_PATH($(<)) += $(gLOCATE($(<[1]))) ;
     }
     Link-action $(<) : $(>) : PYD ;
