@@ -7,6 +7,8 @@ t = Tester()
 
 t.set_tree('prebuilt')
 
+t.expand_toolset("ext/project-root.jam")
+t.expand_toolset("project-root.jam")
 # First, build the external project
 t.run_build_system("debug release", subdir="ext")
 

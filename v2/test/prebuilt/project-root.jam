@@ -1,2 +1,2 @@
 
-import gcc ;
+import $toolset ;

@@ -17,6 +17,11 @@ if [ modules.peek : OS ] in CYGWIN NT
       dll-suffix = lib ;
    }
 }
+if $toolset = darwin
+{
+   dll-suffix = dylib ;
+}
+
 
 
 project ext ;

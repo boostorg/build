@@ -11,6 +11,7 @@ import errors : error ;
 import property ;
 import path ;
 import generators ;
+import set : difference ;
 
 .flag-no = 1 ;
 
@@ -288,29 +289,38 @@ rule inherit-generators ( toolset : base )
     }    
 }
 
-rule inherit-flags ( toolset : base )
+# properties listed in prohibited-properties won't
+# be inherited. Note that <debug-symbols>on and
+# <debug-symbols>off are two different properties
+rule inherit-flags ( toolset : base : prohibited-properties * )
 {
     for local f in $(.module-flags.$(base))
     {        
         local rule-or-module = $(.rule-or-module.$(f)) ; 
-        local rule_ = [ MATCH "[^.]*\.(.*)" : $(rule-or-module) ] ;
-        local new-rule-or-module ;
-        if $(rule_)
+        if [ set.difference
+                $(.$(rule-or-module).condition.$(f)) :
+                $(prohibited-properties)
+           ]
         {
-            new-rule-or-module = $(toolset).$(rule_) ;
-        }
-        else
-        {
-            new-rule-or-module = $(toolset) ;
-        }
+            local rule_ = [ MATCH "[^.]*\.(.*)" : $(rule-or-module) ] ;
+            local new-rule-or-module ;
+            if $(rule_)
+            {
+                new-rule-or-module = $(toolset).$(rule_) ;
+            }
+            else
+            {
+                new-rule-or-module = $(toolset) ;
+            }
                                         
-        add-flag
-           $(new-rule-or-module)
-           : $(.$(rule-or-module).match-type.$(f))
-           : $(.$(rule-or-module).variable.$(f)) 
-           : $(.$(rule-or-module).condition.$(f))              
-           : $(.$(rule-or-module).values.$(f))
-           ;
+            add-flag
+               $(new-rule-or-module)
+               : $(.$(rule-or-module).match-type.$(f))
+               : $(.$(rule-or-module).variable.$(f)) 
+               : $(.$(rule-or-module).condition.$(f))              
+               : $(.$(rule-or-module).values.$(f))
+               ;
+        }
     }            
 }
 
