@@ -1,14 +1,17 @@
-#######################################################################
-# Rules and actions for testing the build system's response to errors #
-#######################################################################
+##############################################################
+# Rules and actions that test Jam by invoking it recursively #
+##############################################################
 
-# Jam-fail string : optional-expected-output
+# Jam string : optional-expected-output
 #
 # Creates a fake target, always built, which succeeds in building if
-# interpreting the given string causes an error. If optional-expected-output is
+# Invoking a Jamfile containing the given string succeeds. If optional-expected-output is
 # supplied, creates another fake target which succeeds in building if
-# optional-expected-output is in the Jam error messages.
-rule Jam-fail
+# optional-expected-output is in the Jam output.
+#
+# RETURNS: the target name of the Jam command.
+#
+rule Jam
 {
     local jam-cmd = "$(<:G=jam_command)" ;
     
@@ -16,9 +19,17 @@ rule Jam-fail
     ALWAYS "$(jam-cmd)" ;
     DEPENDS all : "$(jam-cmd)" ;
 
-    redirect on $(jam-cmd) = "nul" ;
-    Jam-expect-failure $(jam-cmd) ;
+    if ($NT)
+    {
+        redirect on $(jam-cmd) = "nul" ;
+    }
+    else if $(UNIX)
+    {
+        redirect on $(jam-cmd) = "/dev/null" ;
+    }
 
+    invoke-Jam "$(jam-cmd)" ;
+    
     if $(>)
     {
         redirect on $(jam-cmd) = "scratch-output.txt" ;
@@ -28,22 +39,39 @@ rule Jam-fail
         DEPENDS all : "$(output-target)" ;
         Expect-in-output "$(output-target)" ;
     }
+    return $(jam-cmd) ;
 }
 
-BOOST_TEST_JAMFILE ?= expected-failure.jam ;
+# Jam-fail string
+rule Jam-fail
+{
+    FAIL_EXPECTED [ Jam $(<) : $(>) ] ;
+}
 
-# Jam-fail-action
+
+# The temporary jamfile we write is called "temp.jam". If the user has set
+# BOOST_BUILD_ROOT, it will be built there.
+gBOOST_TEST_JAMFILE = temp.jam ;
+LOCATE on gBOOST_TEST_JAMFILE ?= $(BOOST_BUILD_ROOT) ;
+
+# invoke-Jam
 #
 # Will run Jam on a temporary Jamfile which contains the string in $(<:G=) and
 # redirect the results into a temporary files called scratch-output.txt.
-rule Jam-expect-failure
+rule invoke-Jam
 {
-    FAIL_EXPECTED $(<) ;
+    PREFIX on $(<) = "actions unbuilt { } unbuilt all ;" ;
+    if $(NT)
+    {
+        REMOVE on $(<) = $(SystemRoot)\System32\find ;
+    }
+    REMOVE on $(<) ?= rm ;
 }
-actions Jam-expect-failure
+actions invoke-Jam
 {
-    echo actions unbuilt { } unbuilt all ; $(<:G=) > expected-failure.jam
-    jam -f../Jambase -sJAMFILE=expected-failure.jam >$(redirect)
+    echo $(PREFIX) $(<:G=) > $(gBOOST_TEST_JAMFILE)
+    jam -f../Jambase -sJAMFILE=$(gBOOST_TEST_JAMFILE) >$(redirect)
+    $(REMOVE) $(gBOOST_TEST_JAMFILE)
 }
 
 # These actions expect to find the ungristed part of $(<) in scratch-output.txt
