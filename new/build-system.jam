@@ -14,6 +14,11 @@ import site-config ;
 import user-config ;
 
 current-project = [ project.load "."  ] ;
+if [ MATCH (--dump-projects) : [ modules.peek : ARGV ] ]
+{
+    project-root.print ;
+}
+
 build-request = [ build-request.from-command-line [ modules.peek : ARGV ] ] ;
 
 targets = [ $(build-request).get-at 1 ] ;
