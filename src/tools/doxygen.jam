@@ -22,6 +22,7 @@ import project ;
 
 feature.feature doxygen:param : : free ;
 feature.feature prefix : : free ;
+feature.feature reftitle : : free ;
 
 type.register DOXYFILE : doxyfile ; # Doxygen input file
 type.register DOXYGEN_XML_MULTIFILE : : XML ; # Doxygen XML multi-file output
@@ -145,6 +146,10 @@ rule xml-to-boostbook ( target : source : properties * )
   for local prefix in [ feature.get-values <prefix> : $(properties) ]
   {
     xslt-properties += "<xsl:param>boost.doxygen.header.prefix=$(prefix)" ;
+  }
+  for local title in [ feature.get-values <reftitle> : $(properties) ]
+  {
+    xslt-properties += "<xsl:param>boost.doxygen.reftitle=\"$(title)\"" ;
   }
 
   xslt $(target) : $(source) $(d2b-xsl) : $(xslt-properties) ;
