@@ -12,9 +12,5 @@ include <jam-module>boost-base.jam ;
 # Now include the user's Jamfile.
 #
 {
-    if $(JAMFILE) && ! $(gINCLUDED($(JAMFILE)))
-    {
-        gINCLUDED($(JAMFILE)) = TRUE ;
-        include $(JAMFILE) ;
-    }
+    load-jamfiles $(JAMFILE) ;
 }
