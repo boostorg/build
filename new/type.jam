@@ -164,11 +164,15 @@ rule set-generated-target-suffix ( type : properties * : suffix )
 }    
 
 # Change the suffix previously registered for this type/properties 
-# combination.
+# combination. If suffix is not yet specified, sets it.
 rule change-generated-target-suffix ( type : properties * : suffix )
 {        
     properties = <target-type>$(type) $(properties) ;    
-    $(.suffixes).find-replace $(properties) : $(suffix) ;
+    local prev = [ $(.suffixes).find-replace $(properties) : $(suffix) ] ;
+    if ! $(prev)
+    {
+        set-generated-target-suffix $(type) : $(properties) : $(suffix) ;
+    }    
 }
 
 
