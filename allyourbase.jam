@@ -1750,25 +1750,10 @@ rule FGristSourceFiles
 # join values... : [separator]
 #
 # Pastes values together into a single list element, separated by an optional separator.
-rule join
+rule join ( values * : sep ? )
 {
-    # Puts the variables together, removing spaces.
-
-    local _t _r ;
-
-    _r = $(<[1]) ;
-
-    local sep = $(>) ;
-    if ! $(sep)
-    {
-        sep = "" ;
-    }
-    for _t in $(<[2-])
-    {
-        _r = $(_r)$(sep)$(_t) ;
-    }
-
-    return $(_r) ;
+    sep ?= "" ;
+    return $(values:J=$(sep)) ;
 }
 
 # Given $(<), the tokens comprising a relative path from D1 to a subdirectory
