@@ -19,6 +19,7 @@
 # include "pwd.h"
 # include "pathsys.h"
 # include "make.h"
+# include "hdrmacro.h"
 # include <ctype.h>
 
 /*
@@ -503,8 +504,8 @@ builtin_hdrmacro(
 /* helper function for builtin_rulenames(), below */
 static void add_rule_name( void* r_, void* result_ )
 {
-    RULE* r = r_;
-    LIST** result = result_;
+    RULE* r = (RULE*)r_;
+    LIST** result = (LIST**)result_;
 
     if ( r->exported )
         *result = list_new( *result, copystr( r->name ) );
@@ -517,7 +518,7 @@ builtin_rulenames(
 {
     LIST *arg0 = lol_get( frame->args, 0 );
     LIST *result = L0;
-    module* source_module = bindmodule( arg0 ? arg0->string : 0 );
+    module_t* source_module = bindmodule( arg0 ? arg0->string : 0 );
 
     if ( source_module->rules )
         hashenumerate( source_module->rules, add_rule_name, &result );
@@ -536,7 +537,7 @@ builtin_rulenames(
  */
 static void add_hash_key( void* np, void* result_ )
 {
-    LIST** result = result_;
+    LIST** result = (LIST**)result_;
 
     *result = list_new( *result, copystr( *(char**)np ) );
 }
@@ -548,7 +549,7 @@ builtin_varnames(
 {
     LIST *arg0 = lol_get( frame->args, 0 );
     LIST *result = L0;
-    module* source_module = bindmodule( arg0 ? arg0->string : 0 );
+    module_t* source_module = bindmodule( arg0 ? arg0->string : 0 );
 
     if ( source_module->variables )
         hashenumerate( source_module->variables, add_hash_key, &result );
@@ -567,7 +568,7 @@ builtin_delete_module(
 {
     LIST *arg0 = lol_get( frame->args, 0 );
     LIST *result = L0;
-    module* source_module = bindmodule( arg0 ? arg0->string : 0 );
+    module_t* source_module = bindmodule( arg0 ? arg0->string : 0 );
 
     delete_module( source_module );
     return result;
@@ -608,8 +609,8 @@ builtin_import(
     LIST *target_rules = lol_get( frame->args, 3 );
     LIST *localize = lol_get( frame->args, 4 );
 
-    module* target_module = bindmodule( target_module_list ? target_module_list->string : 0 );
-    module* source_module = bindmodule( source_module_list ? source_module_list->string : 0 );
+    module_t* target_module = bindmodule( target_module_list ? target_module_list->string : 0 );
+    module_t* source_module = bindmodule( source_module_list ? source_module_list->string : 0 );
     
     LIST *source_name, *target_name;
             
@@ -666,7 +667,7 @@ builtin_export(
     LIST *module_list = lol_get( frame->args, 0 );
     LIST *rules = lol_get( frame->args, 1 );
 
-    module* m = bindmodule( module_list ? module_list->string : 0 );
+    module_t* m = bindmodule( module_list ? module_list->string : 0 );
     
             
     for ( ; rules; rules = list_next( rules ) )

@@ -55,12 +55,17 @@
 # include "assert.h"
 # include "variable.h"
 # include "rules.h"
+# include "headers.h"
 
 # include "search.h"
 # include "newstr.h"
 # include "make.h"
 # include "command.h"
 # include "execcmd.h"
+
+#if defined(sun) || defined(__sun)
+#include <unistd.h> /* for unlink */
+#endif
 
 static CMD *make1cmds( TARGET *t );
 static LIST *make1list( LIST *l, TARGETS *targets, int flags );
@@ -733,9 +738,9 @@ make1d(state *pState)
  *                   target with those from the new module and target
  */
 static void swap_settings(
-    module** current_module
+    module_t** current_module
     , TARGET** current_target
-    , module* new_module
+    , module_t* new_module
     , TARGET* new_target)
 {
     if (new_module == root_module())
@@ -779,7 +784,7 @@ make1cmds( TARGET *t )
 	CMD *cmds = 0;
 	LIST *shell = 0;
         
-        module *settings_module = 0;
+        module_t *settings_module = 0;
         TARGET *settings_target = 0;
         
 	/* Step through actions */

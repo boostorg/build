@@ -18,7 +18,7 @@ struct frame
 {
     FRAME* prev;
     LOL args[1];
-    module* module;
+    module_t* module;
     PARSE* procedure;
     char*  rulename;
 };

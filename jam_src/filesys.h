@@ -19,11 +19,15 @@
 #ifndef FILESYS_DWA20011025_H
 # define FILESYS_DWA20011025_H
 
+# include "pathsys.h"
+
 typedef void (*scanback)( void *closure, char *file, int found, time_t t );
 
 void file_dirscan( char *dir, scanback func, void *closure );
 void file_archscan( char *arch, scanback func, void *closure );
 
 int file_time( char *filename, time_t *time );
+
+void file_build1(PATHNAME *f, string* file) ;
 
 #endif

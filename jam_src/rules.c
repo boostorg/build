@@ -15,6 +15,7 @@
 # include "search.h"
 # include "lists.h"
 # include "pathsys.h"
+# include "timestamp.h"
 
 /*  This file is ALSO:
  *  (C) Copyright David Abrahams 2001. Permission to copy, use,
@@ -68,7 +69,7 @@ static struct hash *located_targets = 0;
  * target_module.
  */
 static RULE *
-enter_rule( char *rulename, module *target_module )
+enter_rule( char *rulename, module_t *target_module )
 {
     RULE rule, *r = &rule;
 
@@ -93,7 +94,7 @@ enter_rule( char *rulename, module *target_module )
  * src_module.
  */
 static RULE *
-define_rule( module *src_module, char *rulename, module *target_module )
+define_rule( module_t *src_module, char *rulename, module_t *target_module )
 {
     RULE *r = enter_rule( rulename, target_module );
 
@@ -550,7 +551,7 @@ donerules()
  */
 argument_list* args_new()
 {
-    argument_list* r = malloc( sizeof(argument_list) );
+    argument_list* r = (argument_list*)malloc( sizeof(argument_list) );
     r->reference_count = 0;
     lol_init(r->data);
     return r;
@@ -657,7 +658,7 @@ static RULE* global_rule( RULE* r )
  * true, the rule is exported to the global module as
  * modulename.rulename.
  */
-RULE* new_rule_body( module* m, char* rulename, argument_list* args, PARSE* procedure, int exported )
+RULE* new_rule_body( module_t* m, char* rulename, argument_list* args, PARSE* procedure, int exported )
 {
     RULE* local = define_rule( m, rulename, m );
     local->exported = exported;
@@ -687,7 +688,7 @@ static void set_rule_actions( RULE* rule, rule_actions* actions )
 
 static rule_actions* actions_new( char* command, LIST* bindlist, int flags )
 {
-    rule_actions* result = malloc(sizeof(rule_actions));
+    rule_actions* result = (rule_actions*)malloc(sizeof(rule_actions));
     result->command = copystr( command );
     result->bindlist = bindlist;
     result->flags = flags;
@@ -695,7 +696,7 @@ static rule_actions* actions_new( char* command, LIST* bindlist, int flags )
     return result;
 }
 
-RULE* new_rule_actions( module* m, char* rulename, char* command, LIST* bindlist, int flags )
+RULE* new_rule_actions( module_t* m, char* rulename, char* command, LIST* bindlist, int flags )
 {
     RULE* local = define_rule( m, rulename, m );
     RULE* global = global_rule( local );
@@ -704,7 +705,7 @@ RULE* new_rule_actions( module* m, char* rulename, char* command, LIST* bindlist
     return local;
 }
 
-RULE *bindrule( char *rulename, module* m )
+RULE *bindrule( char *rulename, module_t* m )
 {
     RULE rule, *r = &rule;
     r->name = rulename;
@@ -715,7 +716,7 @@ RULE *bindrule( char *rulename, module* m )
         return enter_rule( rulename, root_module() );
 }
 
-RULE* import_rule( RULE* source, module* m, char* name )
+RULE* import_rule( RULE* source, module_t* m, char* name )
 {
     RULE* dest = define_rule( source->module, name, m );
     set_rule_body( dest, source->arguments, source->procedure );

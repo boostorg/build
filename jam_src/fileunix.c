@@ -24,6 +24,10 @@
 
 # ifdef USE_FILEUNIX
 
+#if defined(sun) || defined(__sun)
+# include <unistd.h> // needed for read and close prototype
+#endif
+
 # if defined( OS_SEQUENT ) || \
      defined( OS_DGUX ) || \
      defined( OS_SCO ) || \

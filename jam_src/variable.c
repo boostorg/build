@@ -375,7 +375,7 @@ var_dump(
  */
 static void delete_var_( void* xvar, void* data )
 {
-    VARIABLE *v = xvar;
+    VARIABLE *v = (VARIABLE*)xvar;
     freestr( v->symbol );
     list_free( v-> value );
 }

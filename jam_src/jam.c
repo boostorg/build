@@ -122,6 +122,7 @@
 # include "timestamp.h"
 # include "make.h"
 # include "strings.h"
+# include "expand.h"
 
 /* Macintosh is "special" */
 
