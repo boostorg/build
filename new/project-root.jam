@@ -152,10 +152,7 @@ rule project-root-object (
         switch $(type)
         {
             case path :
-            if ! [ path.is-rooted $(value) ]
-            {
-                value = [ path.join [ regex.split $(self.location)/$(value) "/" ] ] ;
-            }
+                value = [ path.root [ path.native $(value) ] $(self.location) ] ;
         }
         if ! $(name) in $(self.constants)
         {

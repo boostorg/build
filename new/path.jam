@@ -197,14 +197,21 @@ local rule join-imp ( elements + )
 #
 rule join ( elements + )
 {
-    for local e in $(elements[2-])
+    if ! $(elements[2]) 
     {
-        if [ is-rooted $(e) ]
-        {
-            error only first element may be rooted ;
-        }
+        return $(elements[1]) ;
     }
-    return [ join-imp $(elements) ] ;
+    else
+    {        
+        for local e in $(elements[2-])
+        {
+            if [ is-rooted $(e) ]
+            {
+                error only first element may be rooted ;
+            }
+        }
+        return [ join-imp $(elements) ] ;
+    }    
 }
 
 
@@ -301,7 +308,7 @@ rule make-NT ( native )
         tokens = $(tokens[1--2]) ; # discard the empty element
     }
 
-    result = [ sequence.join $(tokens) : "/" ] ;
+    result = [ path.join $(tokens) ] ;
 
     if [ regex.match "(^.:)" : $(native)  ]
     {
@@ -319,7 +326,7 @@ rule native-NT ( path )
 
 rule make-UNIX ( native )
 {
-    return $(native) ;
+    return [ path.join [ regex.split $(native) "/" ] ] ;
 }
 
 rule native-UNIX ( path )
@@ -366,6 +373,7 @@ rule __test__ ( ) {
     assert.result ".." : reverse "foo" ;
     assert.result "../../.." : reverse "foo/bar/giz" ;
 
+    assert.result "foo" : join "foo" ;
     assert.result "/foo" : join "/" "foo" ;
     assert.result "foo/bar" : join "foo" "bar" ;
     assert.result "foo/bar" : join "foo/giz" "../bar" ;
@@ -404,8 +412,10 @@ rule __test__ ( ) {
 
     assert.result "foo/bar/giz" : make "foo/bar/giz" ;
     assert.result "foo/bar/giz" : make "foo\\bar\\giz" ;
+    assert.result "foo" : make "foo/." ;
+    assert.result "foo" : make "foo/bar/.." ;
     assert.result "/D:/My Documents" : make "D:\\My Documents" ;
-    assert.result "/c:/boost/tools/build/test/../new/project.jam" : make "c:\\boost\\tools\\build\\test\\..\\new\\project.jam" ;
+    assert.result "/c:/boost/tools/build/new/project.jam" : make "c:\\boost\\tools\\build\\test\\..\\new\\project.jam" ;
 
     assert.result "foo\\bar\\giz" : native "foo/bar/giz" ;
     assert.result "foo" : native "foo" ;
@@ -414,6 +424,11 @@ rule __test__ ( ) {
     local os = UNIX ;
 
     assert.result "foo/bar/giz" : make "foo/bar/giz" ;
+    assert.result "/sub1" : make "/sub1/." ;
+    assert.result "/sub1" : make "/sub1/sub2/.." ;    
+    assert.result "sub1" : make "sub1/." ;
+    assert.result "sub1" : make "sub1/sub2/.." ;
     assert.result "/foo/bar" : native "/foo/bar" ;
+
 
 }
