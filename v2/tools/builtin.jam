@@ -632,6 +632,11 @@ class compile-action : action
     }    
 }
 
+# Declare a special compiler generator.
+# The only thing it does is changing the type used to represent
+# 'action' in the constructed dependency graph to 'compile-action'.
+# That class in turn adds additional include paths to handle a case
+# when a source file includes headers which are generated themselfs.
 class C-compiling-generator : generator
 {
     rule __init__ ( id : source-types + : target-types + :
