@@ -376,8 +376,7 @@ rule boost-python-runtest (
   target : python-script sources + : requirements * : local-build * : args * )
 {
     # tell Jam that the python script is relative to this directory
-    SEARCH on $(python-script) = $(SEARCH_SOURCE) ;
-    
+    SEARCH on [ FGristFiles $(python-script) ] = $(SEARCH_SOURCE) ;
 
     # The user can add additional arguments in PYTHON_TEST_ARGS.
     local gPYTHON_TEST_ARGS = $(args) $(PYTHON_TEST_ARGS) ;
