@@ -1147,7 +1147,15 @@ stage dist : hello
            ;
 </programlisting>
         will find all targets that <code>hello</code> depends on, and install
-        all of the which are either executables or libraries.
+        all of the which are either executables or libraries. More
+        specifically, for each target, other targets which were specified as
+        sources or as dependency properties, will be recursively found.  One
+        exception is that targets referred with the <link
+        linkend="bbv2.builtin.features.use"><code>use</code></link> feature
+        are not considered, because that feature is typically used to refer to
+        header-only libraries.
+        If the set of target types is specified, only targets of that type
+        will be installed, otherwise, all found target will be installed.
       </para>
         
     </section>
@@ -1258,7 +1266,8 @@ unit-test helpers_test : helpers_test.cpp helpers ;
       </varlistentry>
       
       
-      <varlistentry><term><literal>use</literal></term>
+      <varlistentry><term><anchor id="bbv2.builtin.features.use"/>
+          <literal>use</literal></term>
         
         <listitem>
           <simpara>
