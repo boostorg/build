@@ -1363,6 +1363,33 @@ rule top-relative-tokens
     return [ simplify-path-tokens $(SUBDIR_TOKENS) [ split-path $(<) ] ] ;
 }
 
+.project-root-tokens = [ split-path $(.boost-build-file:D) ] ;
+
+# try to make a potentially absolute path relative to the project
+# root.  Only works for paths below the project root right now; others
+# will remain absolute.
+rule relative-path ( path )
+{
+    local path-tokens = [ split-path $(path) ] ;
+    
+    # try to strip the project root
+    local r = $(.project-root-tokens) ;
+    local p = $(path-tokens) ;
+    while $(r) && ( $(r[1]) = $(p[1]) )
+    {
+        p = $(p[2-]) ;
+        r = $(r[2-]) ;
+    }
+    
+    # if successful, use the stripped project root
+    if ! $(r)
+    {
+        path-tokens = $(p) ;
+    }
+    
+    return [ tokens-to-simple-path  $(path-tokens) ] ;
+}
+
 # dependent-include target-path...
 #
 # For each target-path, ensure that the appropriate Jamfile has been

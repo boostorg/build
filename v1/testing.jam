@@ -48,28 +48,8 @@ rule boost-test ( sources + : target-type : requirements * : test-name ? : defau
             
             if ( --dump-tests in $(ARGV) ) 
             {
-                local srcs = [ on $(result) get-var-value source-files ] ;
-                local source-files ;
-                for local s in $(srcs)
-                {
-                    source-files += [ 
-                      SEARCH_FOR_TARGET $(s:G=)
-                        : [ on $(s) get-var-value LOCATE SEARCH ]
-                    ] ;
-                }
-
-                # Extract values of the <test-info> feature
-                local dump-test-info = [ get-values <test-info> : $(requirements) ] ;
-                
-                # Format them into a single string of quoted strings
-                dump-test-info = \"$(dump-test-info:J=\"\ \")\" ;
-                
-                ECHO boost-test($(target-type)) \"$(test-name)\" 
-                  [$(dump-test-info)]
-                    ":" \"$(source-files)\"
-                     ;
+                dump-test ;
             }
-
         }
         
         Clean clean : $(result) ;
@@ -87,6 +67,54 @@ rule boost-test ( sources + : target-type : requirements * : test-name ? : defau
         return $(result) ;
     }
 }
+
+
+
+
+# Helper for boost-test above.  Uses dynamic scoping to access
+# boost-test's locals.
+local rule dump-test ( )
+{
+    local srcs = [ on $(result) get-var-value source-files ] ;
+    
+    # locate each source file
+    local source-files ;
+    for local s in $(srcs)
+    {
+        # find out where to look for the file
+        local paths = [ on $(s) get-var-value LOCATE SEARCH ] ;
+        
+        s = $(s:G=) ; # strip grist
+        
+        # build all the potential full paths of the file
+        local full-paths = $(s:R=$(paths)) ;
+        
+        # look there
+        local files = [ GLOB $(full-paths:D) : $(s:D=) ] ;
+        
+        if $(files)
+        {
+            # make relative to the project root instead of "."
+            local file = $(files[1]:R=$(SUBDIR_TOKENS:J=/) ;
+            
+            # try to undo absolute paths
+            source-files += [ relative-path  $(file)) ] ;
+        }
+    }
+
+    # Extract values of the <test-info> feature
+    local dump-test-info = [ get-values <test-info> : $(requirements) ] ;
+    
+    # Format them into a single string of quoted strings
+    dump-test-info = \"$(dump-test-info:J=\"\ \")\" ;
+    
+    ECHO boost-test($(target-type)) \"$(test-name)\" 
+      [$(dump-test-info)]
+        ":" \"$(source-files)\"
+          ;
+    
+}
+
 
 #######
 
