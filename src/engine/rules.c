@@ -550,7 +550,7 @@ void actions_free(rule_actions* a)
 /*
  * set_rule_body() - set the argument list and procedure of the given rule
  */
-void set_rule_body( RULE* rule, argument_list* args, PARSE* procedure )
+static void set_rule_body( RULE* rule, argument_list* args, PARSE* procedure )
 {
     if ( args )
         args_refer( args );
