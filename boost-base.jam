@@ -2293,7 +2293,6 @@ rule target-id-of ( target )
     return $(target-id) ;
 }
 
-<<<<<<< boost-base.jam
 # Common rules for generating a single stage tag based on the
 # variant, build properties, and the toolset used to build.
 # To use place this rule name in the requirementes section of
