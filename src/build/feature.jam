@@ -300,7 +300,15 @@ rule expand-subfeatures (
     local result ;
     for local p in $(properties)
     {
-        result += [ expand-subfeatures-aux $(p:G) : $(p:G=) ] ;
+        # Don't expand subfeatures in subfeatures
+        if ! [ MATCH "(:)" : $(p:G) ]
+        {            
+            result += [ expand-subfeatures-aux $(p:G) : $(p:G=) ] ;
+        }
+        else
+        {
+            result += $(p) ;
+        }        
     }
     return $(result) ;
 }
