@@ -13,7 +13,7 @@ rm -rf example/versioned
 rm -rf example/make
 
 # Remove unnecessary top-level files
-find . -maxdepth 1 -type f | egrep -v "roll.sh|bootstrap.jam|build-system.jam|boost_build_v2.html|c++boost.gif|index_v2.html|hacking.txt|site-config.jam|user-config.jam" | xargs rm -f
+find . -maxdepth 1 -type f | egrep -v "roll.sh|bootstrap.jam|build-system.jam|boost_build_v2.html|boost.png|index_v2.html|hacking.txt|site-config.jam|user-config.jam" | xargs rm -f
 
 # Prepare some more files.
 mv index_v2.html index.html
