@@ -23,7 +23,7 @@ rule make-target-class ( name : project : sources * : requirements *
     rule construct ( source-targets * : properties * )
     {
         local t = [ new virtual-target $(self.name:S=) : [ type.type $(self.name:S) ]
-                    : $(self.project) : [ property.remove free incidental : $(properties) ] ] ;
+                    : $(self.project) ] ;
         $(t).suffix [ regex.match .(.*) : $(self.name:S) ] ;
         local a = [ new action $(t) : $(source-targets) : $(self.make-rule) 
                     : $(properties) ] ;

@@ -12,13 +12,10 @@ import class : class new ;
 import type ;
 
 # Class which represents a virtual target
-rule virtual-target ( name : type ? : project 
-                      : subvariant * # Property sets which define this subvariant
-                     )
+rule virtual-target ( name : type ? : project )
 {
     self.name = $(name) ;
-    self.type = $(type) ;
-    self.subvariant = [ property.remove free incidental : $(subvariant) ] ;
+    self.type = $(type) ;    
     self.project = $(project) ;
 
     self.includes  = ;
@@ -47,7 +44,7 @@ rule virtual-target ( name : type ? : project
     # Property set that distinguishes different variants of a target.
     # May be a subset of the property set that is used for building.
     # Determines the location of target, in an unspecified way.
-    rule subvariant ( ) { return $(self.subvariant) ; }
+    #rule subvariant ( ) { return $(self.subvariant) ; }
 
     # Project where this target was declared
     rule project ( ) { return $(self.project) ; }
@@ -234,17 +231,27 @@ rule virtual-target ( name : type ? : project
     rule actual-name ( )
     {
         if ! $(self.actual-name)
-        {
+        {            
             local project-location = [ project.attribute $(self.project) location ] ;
             local location-grist =
                 [ sequence.join [ regex.split $(project-location) "/" ] : "!" ] ;
-            local property-grist =
-                [ property.as-path $(self.subvariant) ] ;
+            local grist ;       
+            if $(self.action)
+            {
+                local p = [ property.remove free incidental : [ $(self.action).properties ] ] ;
+                local property-grist = [ property.as-path $(p) ] ;
+                grist = $(location-grist)/$(property-grist) ;
+            }       
+            #local property-grist =
+            #    [ property.as-path $(self.subvariant) ] ;
             # Set empty value to avoid eating adjacent text
-            local grist = $(location-grist)/$(property-grist) ;
-            if ! $(self.subvariant) {
-               grist = $(location-grist) ;
+            #local grist = $(location-grist)/$(property-grist) ;
+            #if ! $(self.subvariant) {
+            if ! $(grist)
+            {
+                grist = $(location-grist) ;
             }
+
             if $(self.suffix)
             {
                 self.actual-name = [ sequence.join <$(grist)>$(self.name) 
@@ -266,9 +273,12 @@ rule virtual-target ( name : type ? : project
     # Returns the directory for this target
     rule path ( )
     {
-        local path = [ path.join [ project.attribute $(self.project) location ] 
-          "bin" [ property.as-path [ subvariant ] ] 
-            $(self.extra-path) ] ;
+        local path = [ path.join 
+                         [ project.attribute $(self.project) location ] 
+                         [ $(self.action).path ] 
+                         $(self.extra-path)                           
+                     ] ;
+                
         return [ path.native $(path) ] ;
      }
     
@@ -355,6 +365,17 @@ rule action ( targets + : sources * : action-name : properties * )
               $(actual-targets) : $(actual-sources) : $(properties) ;
         }        
     }    
+
+    rule path ( )
+    {
+        local subvariant = [ property.remove free incidental : $(self.properties) ] ;
+        local pp = [ property.as-path $(subvariant) ] ;
+        return bin/$(pp) ;
+        #local path = [ path.join [ project.attribute $(self.project) location ] 
+        #  "bin" [ property.as-path $(subvariant) ] 
+        #    $(self.extra-path) ] ;
+    }
+    
     
     # Determined real properties when trying building with 'properties'.
     # This is last chance to fix properties, for example to adjust includes
@@ -413,7 +434,7 @@ rule from-file ( file : project )
 rule register ( target )
 {
     local signature = [ sequence.join 
-        [ $(target).project ] [ $(target).name ] [ $(target).type ] [ $(target).subvariant ] : - ] ;
+        [ $(target).project ] [ $(target).name ] [ $(target).type ] : - ] ;
     local result ;
     for local t in $(.cache.$(signature))
     {
@@ -502,7 +523,7 @@ rule clone-template ( target dont-recurse ? : new-source )
     else 
     {
         local cloned = [ new virtual-target $(new-name) : [ $(target).type ] :
-          [ $(new-source).project ] : [ $(target).subvariant ] ] ;    
+          [ $(new-source).project ] ] ;    
     
         if ! $(dont-recurse) && [ $(target).action ]
         {
