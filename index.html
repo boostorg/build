@@ -35,12 +35,17 @@ Boost Libraries</h1>
       outside of Boost.</td>
   </tr>
 </table>
-<h2>Introduction</h2>
+<p><a href="#Introduction">Introduction</a><br>
+<a href="#Preliminaries">Preliminaries</a><br>
+<a href="#Building">Building Boost Libraries</a><br>
+<a href="#Moretools">More on using the tools</a><br>
+<a href="#Tools">Tools available</a></p>
+<h2><a name="Introduction">Introduction</a></h2>
 <p>These instructions explain how to accomplish common tasks using <b>Boost.Build</b>,
 the Boost Build System.</p>
 <p>For tasks not covered here, see the full <a href="build_system.htm">build
 system documentation</a>.</p>
-<h2>Preliminaries</h2>
+<h2><a name="Preliminaries">Preliminaries</a></h2>
 <ul>
   <li><a href="../../more/download.html">Download Boost</a>, and unpack the full
     directory structure into some root directory.</li>
@@ -57,10 +62,11 @@ system documentation</a>.</p>
 </blockquote>
 <ul>
   <li>Set any environmental variables required to run your compiler and related
-    tools from the command line. Verify your command line compiler is working if
-    you don't use it regularly.</li>
+    tools from the command line. (It might be a good idea to verify your command line compiler is working if
+    you don't use it regularly.) If you don't want to clutter your environment,
+    see <a href="#Moretools">More on using the tools</a> for alternatives.</li>
 </ul>
-<h2>Building Boost Libraries</h2>
+<h2><a name="Building">Building</a> Boost Libraries</h2>
 <p>Using your operating system's command line interpreter, execute the following
 steps.&nbsp; The sample commands given will work for both UNIX and Windows.</p>
 <ul>
@@ -83,7 +89,25 @@ steps.&nbsp; The sample commands given will work for both UNIX and Windows.</p>
     metrowerks</code><code>&quot;</code></p>
   </blockquote>
 </blockquote>
-<h2><a name="Tools">Tools</a></h2>
+<h2><a name="Moretools">More on using the tools</a></h2>
+<p>The build system's toolsets are designed to work in either of two ways:</p>
+<ol>
+  <li>The user sets up all of the environment for each toolset he wants to use,
+    in the normal way. For example, for Microsoft VC++, ...vc98/bin is in the
+    path, vcvars32.bat or equivalent has been invoked, etc. For Metrowerks
+    CodeWarrior, cwenv.bat or equivalent has been called and ...Other Metrowerks
+    Tools/Command Line Tools is in the path.<br>
+    <br>
+  </li>
+  <li>The user doesn't want his environment cluttered with this junk and wants
+    to avoid the many other things done by the vendor's script files. Instead,
+    he or she sets variables which point to the toolset installation directories
+    (possibly in the Jamrules, or a user-setup.jam file invoked by the Jamrules).
+    These variables are used by the build system to locate the tools and invoke
+    the necessary setup. They are described in the comments in each toolset's
+    .jam file.</li>
+</ol>
+<h2><a name="Tools">Tools</a> available</h2>
 <table border="1" cellpadding="5">
   <tr>
     <td><b>TOOLS Name</b></td>
@@ -94,12 +118,21 @@ steps.&nbsp; The sample commands given will work for both UNIX and Windows.</p>
     <td>Borland command line compiler tools</td>
   </tr>
   <tr>
+    <td>como</td>
+    <td>Comeau command line compiler tools</td>
+  </tr>
+  <tr>
     <td><code>gcc</code></td>
     <td>GNU GCC command line compiler tools</td>
   </tr>
   <tr>
     <td><code>gcc-stlport</code></td>
     <td>GNU GCC command line compiler tools, using the STLport library</td>
+  </tr>
+  <tr>
+    <td>intel-win32</td>
+    <td>Intel command line compiler tools, in the Win32 environment using the
+      Microsoft library</td>
   </tr>
   <tr>
     <td><code>kcc</code></td>
@@ -122,11 +155,12 @@ steps.&nbsp; The sample commands given will work for both UNIX and Windows.</p>
 the compiler.</p>
 <p>Additional tools can be supplied by adding an appropriate xxxx-tools.jam file
 to the tools/build subdirectory, where xxxx is the name of the tool being
-added..</p>
+added.&nbsp; If you write an additional toolset file, please submit it to Boost
+so others may benefit from your work.</p>
 <hr>
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->30 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34343" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->24 September, 2001<!--webbot bot="Timestamp" endspan i-checksum="39337" -->
 </p>
-<p>Written by Beman Dawes</p>
+<p>© Copyright 2001 Beman Dawes</p>
 <p>&nbsp;</p>
 
 </body>
