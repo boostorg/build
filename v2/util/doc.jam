@@ -251,7 +251,7 @@ local rule print-help-top ( )
     print.list-item --help-output <type>; The type of output to genetare.
         '"console" is formated text echoed to the console (the default);'
         '"text" is formated text appended to the output file;'
-        '"html" is HTLM output to the file.' ;
+        '"html" is HTML output to the file.' ;
     print.list-item --help-output-file <file>; The file to output the documentation. ;
     print.list-end ;
 }
