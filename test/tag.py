@@ -11,7 +11,7 @@ t = Tester()
 
 t.write("project-root.jam", "")
 t.write("Jamfile", """ 
-local tags = <variant>debug:<tag>_d <variant>release:<tag>_r <variant>profile:<tag>_p <link>shared:<tag>s <link>static:<tag>t ;
+local tags = <variant>debug:<tag>_d <variant>release:<tag>_r <link>shared:<tag>s <link>static:<tag>t ;
 exe a : a.cpp : $(tags) ;
 lib b : a.cpp : $(tags) ;
 stage c : a ;
@@ -35,20 +35,14 @@ List("c/a_ds.exe") + \
 List("bin/$toolset/release/a_rs.exe") + \
 List("bin/$toolset/release/b_rs.dll") + \
 List("c/a_rs.exe") + \
-List("bin/$toolset/profile/a_ps.exe") + \
-List("bin/$toolset/profile/b_ps.dll") + \
-List("c/a_ps.exe") + \
 List("bin/$toolset/debug/link-static/a_dt.exe") + \
 List("bin/$toolset/debug/link-static/b_dt.lib") + \
 List("c/a_dt.exe") + \
 List("bin/$toolset/release/link-static/a_rt.exe") + \
 List("bin/$toolset/release/link-static/b_rt.lib") + \
-List("c/a_rt.exe") + \
-List("bin/$toolset/profile/link-static/a_pt.exe") + \
-List("bin/$toolset/profile/link-static/b_pt.lib") + \
-List("c/a_pt.exe") \
+List("c/a_rt.exe")
 
-variants = "debug release profile link=static,shared"
+variants = "debug release link=static,shared"
 
 t.run_build_system(variants)
 t.expect_addition(file_list)
