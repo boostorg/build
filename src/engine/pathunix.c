@@ -272,9 +272,9 @@ path_parent( PATHNAME *f )
 #include <windows.h>
 #include <tchar.h>
 
-#ifndef INVALID_FILE_ATTRIBUTES
+/* The definition of this in winnt.h is not ANSI-C compatible. */
+#undef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
-#endif
 
 
 DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
