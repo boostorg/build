@@ -7,6 +7,7 @@
 #  This module defines rules to handle generation of PDF and PostScript files
 #  from XSL Formatting Objects via Apache FOP
 
+import os ;
 import generators ;
 
 generators.register-standard fop.fo-to-print : FO : PDF ;
@@ -31,7 +32,20 @@ rule fo-to-print ( target : source : properties * )
 {
   JAVA_HOME on $(target) = $(.java-home) ;
   FOP_DIR on $(target) = $(.fop-dir) ;
-  fop $(target) : $(source) ;
+  if [ os.on-windows ]
+  {
+    fop-nt $(target) : $(source) ;
+  }
+  else
+  {
+    fop $(target) : $(source) ;
+  }
+}
+
+actions fop-nt
+{
+  set JAVA_HOME=$(JAVA_HOME)
+  $(FOP_DIR)/fop.bat $(>) $(<)
 }
 
 actions fop
