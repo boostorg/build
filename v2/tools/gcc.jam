@@ -191,7 +191,7 @@ rule link ( targets * : sources * : properties * )
 
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA)  
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) 
 }
 
 # Declare action for creating static libraries
@@ -215,7 +215,7 @@ rule link.dll ( targets * : sources * : properties * )
 # Differ from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" $(HAVE_SONAME)-Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA)  
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" $(HAVE_SONAME)-Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS)  
 }
 
 # Set up threading support. It's somewhat contrived, so perform it at the end,
