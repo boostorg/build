@@ -107,7 +107,7 @@ tests = [ "project_test1",
 if os.name == 'posix':
     tests.append("symlink")
 
-if 'QTDIR' in os.environ:
+if os.environ.has_key('QTDIR'):
     tests.append("railsys")
 else:
     print 'skipping railsys test since QTDIR environment variable is unset'
