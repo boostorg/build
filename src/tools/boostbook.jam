@@ -308,11 +308,13 @@ class boostbook-generator : generator
         
         if $(manifest)
         {
+            # Create DOCBOOK file from BOOSTBOOK sources.
             local base-target = [ generators.construct $(project) 
               : DOCBOOK : $(property-set) : $(sources) ] ;
             base-target = $(base-target[2]) ;
             $(base-target).depends $(catalog) ;
             
+            # Generate HTML/PDF/PS from DOCBOOK.
             local target = [ generators.construct $(project) $(manifest)
               : $(type) : $(property-set) : $(base-target) ] ;
             $(target[2]).set-path $(format) ;
