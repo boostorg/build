@@ -177,7 +177,8 @@ rule validate ( property : feature-space ?  )
 }
 
 # Makes a property set from 'specification', converting implicit values into 
-# full properties
+# full properties.
+# TODO: Might want to use 'feature-space' here as well as in other rules.
 rule make ( specification * )
 {
     local result ;
@@ -194,6 +195,22 @@ rule make ( specification * )
         else
         {
             error "'$(e)' is not a valid for property specification" ;
+        }
+    }
+    return $(result) ;
+}
+
+# Returns a property sets which include all the elements in 'properties',
+# except for free properties.
+rule remove-free ( properties * : feature-space ? )
+{
+    feature-space ?= feature ;
+    local result ;
+    for local e in $(properties)
+    {
+        if ! free in [ $(feature-space).attributes $(e:G) ] 
+        {
+            result += $(e) ;
         }
     }
     return $(result) ;
@@ -271,5 +288,8 @@ local rule __test__ ( )
         validate value : $(test-space) ;
     catch "Invalid property 'value': 'value' is not a value of implicit feature." ;
            
+
+    assert.result <toolset>gcc <rtti>on 
+        : remove-free <toolset>gcc <define>foo <rtti>on : $(test-space) ;
 }
 
