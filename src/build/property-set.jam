@@ -5,6 +5,7 @@
 
 import class : class new ;
 import feature ;
+import property ;
 import sequence ;
 
 # Class for storing a set of properties.
@@ -180,6 +181,17 @@ rule create ( raw-properties * )
     }
     return $(.ps.$(key)) ;    
 }
+
+# Creates new 'property-set' instances after checking
+# that all properties are valid and converting incidental
+# properties into gristed form.
+rule create-with-validation ( raw-properties * )
+{
+    property.validate $(raw-properties) ;
+    
+    return [ create [ property.make $(raw-properties) ] ] ;
+}
+
 
 # Returns property-set with empty set of properties.
 rule empty ( )
