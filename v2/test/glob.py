@@ -45,5 +45,22 @@ t.rm("d2/d/bin")
 t.run_build_system(subdir="d2/d")
 t.expect_addition("d2/d/bin/$toolset/debug/l.dll")
 
+# Test that when 'source-location' is explicitly-specified
+# glob works relatively to source location
+t.rm("d1")
+
+t.write("d1/src/a.cpp", """ 
+int main() { return 0; }
+
+""")
+
+t.write("d1/Jamfile", """
+project : source-location src ;
+exe a : [ glob *.cpp ] ../d2/d//l ; 
+""")
+
+t.run_build_system(subdir="d1")
+t.expect_addition("d1/bin/$toolset/debug/a.exe")
+
 
 t.cleanup()

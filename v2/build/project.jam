@@ -600,7 +600,7 @@ module project-rules
         import path ;
         import project ;
         
-        local location = [ project.attribute $(__name__) location ] ;
+        local location = [ project.attribute $(__name__) source-location ] ;
         local all-paths = [ path.glob $(location) : $(wildcards) ] ;
         return $(all-paths:D="") ;
     }        
