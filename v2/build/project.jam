@@ -470,6 +470,10 @@ rule project-attributes ( location )
                 self.usage-requirements = [ property-set.create $(t) ] ;
             }                        
         }        
+        else if $(attribute) = "default-build"
+        {
+            self.default-build = [ property.make $(specification) ] ;
+        }        
         else if $(attribute) = "source-location"
         { 
             self.source-location = [ path.root $(specification) $(self.location) ] ;
