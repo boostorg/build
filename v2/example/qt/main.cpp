@@ -33,13 +33,13 @@ MyWidget::MyWidget( QWidget *parent, const char *name )
 
     LCDRange *previous = 0;
     for( int r = 0 ; r < 4 ; r++ ) {
-	for( int c = 0 ; c < 4 ; c++ ) {
-	    LCDRange* lr = new LCDRange( grid );
-	    if ( previous )
-		connect( lr, SIGNAL(valueChanged(int)),
-			 previous, SLOT(setValue(int)) );
-	    previous = lr;
-	}
+    for( int c = 0 ; c < 4 ; c++ ) {
+        LCDRange* lr = new LCDRange( grid );
+        if ( previous )
+        connect( lr, SIGNAL(valueChanged(int)),
+             previous, SLOT(setValue(int)) );
+        previous = lr;
+    }
     }
 }
 

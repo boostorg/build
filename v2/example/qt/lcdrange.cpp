@@ -17,9 +17,9 @@ LCDRange::LCDRange( QWidget *parent, const char *name )
     slider->setRange( 0, 99 );
     slider->setValue( 0 );
     connect( slider, SIGNAL(valueChanged(int)),
-	     lcd, SLOT(display(int)) );
+         lcd, SLOT(display(int)) );
     connect( slider, SIGNAL(valueChanged(int)),
-	     SIGNAL(valueChanged(int)) );
+         SIGNAL(valueChanged(int)) );
 }
 
 int LCDRange::value() const

@@ -1,6 +1,7 @@
 
 import gcc ;
 import toolset ;
+import kylix ;
 
 # Tell that QT should be used. QTDIR will give installation
 # prefix. 
