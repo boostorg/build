@@ -85,7 +85,7 @@ rule init (
     
     if ! $(path) 
     {   
-        setup = [ locate $(version) : $(vendor) ] ;
+        setup = [ locate $(setup) : $(version) : $(vendor) ] ;
     }
     else
     {
@@ -145,7 +145,7 @@ rule init (
 # to it. If path is not found, issues an error.
 # If there are several possibilities, returns arbitrary one, after issuing a
 # warning message.
-local rule locate ( version ? : vendor ? )
+local rule locate ( setup : version ? : vendor ? )
 {
     local possible-paths ;
 
@@ -196,7 +196,7 @@ local rule locate ( version ? : vendor ? )
     possible-paths += [ modules.peek : PATH Path path ] ;
     
     # Search now
-    local setup = [ GLOB $(possible-paths) : vcvars32.bat ] ;                        
+    local setup = [ GLOB $(possible-paths) : $(setup) ] ;                        
     # Try to avoid reporting ambiguity when there's several occurences
     # of the same path, probably differing by case.
     setup = [ unique $(setup:L) ] ;
