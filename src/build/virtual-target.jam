@@ -379,7 +379,7 @@ class abstract-file-target : virtual-target
         local path = [ path ] ;
         if $(path)
         {
-            # The target will be generated to a know path. Just use the path
+            # The target will be generated to a known path. Just use the path
             # for identification, since path is as unique as it can get.
             return p$(path) ;            
         }

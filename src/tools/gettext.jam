@@ -89,7 +89,7 @@ rule update ( name : existing-translation sources + : requirements * )
     local project = [ project.current ] ;
     
     targets.main-target-alternative
-      [ new update-translations-class $(name) : $(project) : 
+      [ new typed-target $(name) : $(project) : gettext.UPDATE :
         $(existing-translation) $(sources)
         : [ targets.main-target-requirements $(requirements) : $(project) ]        
       ] ;
@@ -104,6 +104,8 @@ type.register gettext.catalog : mo : : main ;
 # Intermediate type produce by extracting translations from
 # sources.
 type.register gettext.POT : pot ; 
+# Pseudo type used to invoke update-translations generator
+type.register gettext.UPDATE ;
 
 # Identifies the keyword that should be used when scanning sources.
 # Default: i18n
@@ -114,62 +116,72 @@ feature gettext.types : : free ;
 
 generators.register-standard gettext.compile : gettext.PO : gettext.catalog ;
 
-class update-translations-class : basic-target
+class update-translations-generator : generator
 {
     import regex : split ;
+    import property-set ;
    
-    rule __init__ ( name : project : sources * : requirements )
+    rule __init__ ( * : * )
     {
-        basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements) 
-          : $(default-build) ;
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
-            
-    rule construct ( source-targets * : property-set )
+
+    # The rule should be called with at least two sources. The first source
+    # is the translation (.po) file to update. The remaining sources are targets
+    # which should be scanned for new messages. All sources files for those targets
+    # will be found and passed to the 'xgettext' utility, which extracts the
+    # messages for localization. Those messages will be merged to the .po file.
+    rule run ( project name ? : property-set : sources * : multiple ? )
     {
         local types = [ $(property-set).get <gettext.types> ] ;
         types ?= "C CPP" ;
         types = [ regex.split $(types) " " ] ;
         property-set = [ property-set.empty ] ;
 
-        if ! $(.constructed)
-        {            
-            # First deterime the list of sources that must be scanned to 
-            # messages.
-            local all-sources ;
-            for local s in $(source-targets[2-])
-            {
-                all-sources += [ virtual-target.traverse $(s) : : include-sources ] ;
-            }
-            local right-sources ;
-            for local s in $(all-sources)
-            {
-                if [ $(s).type ] in $(types)
-                {
-                    right-sources += $(s) ;
-                }                
-            }
-            
-            if $(right-sources)
-            {                                                                                        
-                local new-messages = [ new file-target $(self.name) : gettext.POT : $(self.project) ] ;
-                local extract = 
-                  [ new action $(new-messages) : $(right-sources) : gettext.extract ] ;
-                $(new-messages).action $(extract) ;
-                
-                local r = [ new notfile-target $(self.name) : $(self.project) ] ;
-                local a = [ new action $(r) : $(source-targets[1]) $(new-messages) 
-                  : gettext.update-po-dispatch ] ;
-                $(r).action $(a) ;
-                .constructed = [ virtual-target.register $(r) ] ;
-            }
-            else
-            {
-                errors.error "No source could be scanned by gettext tools" ;
-            }            
+        # First deterime the list of sources that must be scanned for 
+        # messages.
+        local all-sources ;
+        # CONSIDER: I'm not sure if the logic should be the same as for 'stage':
+        # i.e. following dependency properties as well.
+        for local s in $(sources[2-])
+        {
+            all-sources += [ virtual-target.traverse $(s) : : include-sources ] ;
         }
+        local right-sources ;
+        for local s in $(all-sources)
+        {
+            if [ $(s).type ] in $(types)
+            {
+                right-sources += $(s) ;
+            }                
+        }
+            
+        local .constructed ;
+        if $(right-sources)
+        {                                              
+            # Create the POT file, which will contain list of messages extracted
+            # from the sources.
+            local new-messages = [ new file-target $(name) : gettext.POT : $(project) ] ;
+            local extract = 
+              [ new action $(new-messages) : $(right-sources) : gettext.extract ] ;
+            $(new-messages).action $(extract) ;
+                
+            # Create a notfile target which will update the existing translation file
+            # with new messages.
+            local r = [ new notfile-target $(name) : $(project) ] ;
+            local a = [ new action $(r) : $(sources[1]) $(new-messages) 
+              : gettext.update-po-dispatch ] ;
+            $(r).action $(a) ;
+                .constructed = [ virtual-target.register $(r) ] ;
+        }
+        else
+        {
+            errors.error "No source could be scanned by gettext tools" ;
+        }            
         return $(.constructed) ;                
     }        
 }
+generators.register [ new update-translations-generator gettext.update : : gettext.UPDATE ] ;
 
 flags gettext.extract KEYWORD <gettext.keyword> ;
 actions extract
