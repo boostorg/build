@@ -33,7 +33,7 @@ if $(NT)
     # Reconstitute any paths split due to embedded spaces.
     PYTHON_ROOT = $(PYTHON_ROOT:J=" ") ;
     
-    PYTHON_LIB_PATH ?= $(PYTHON_ROOT)/libs $(PYTHON_ROOT)/PCBuild ;
+    PYTHON_LIB_PATH ?= $(PYTHON_ROOT)/libs [ GLOB $(PYTHON_ROOT) : PCbuild ] ;
     PYTHON_STDLIB_PATH ?= $(PYTHON_ROOT)/Lib ;
 
     # Locate Python libraries. In the case of MSVC the libraries are
@@ -89,11 +89,11 @@ else if $(UNIX)
 
 # Locate the python executable
 PYTHON ?= <executable@>python$(SUFEXE) ;
-SEARCH on $(PYTHON) = $(PYTHON_ROOT)  $(PYTHON_ROOT)/bin $(PYTHON_ROOT)/PCBuild $(RUN_PATH) ;
+SEARCH on $(PYTHON) = $(PYTHON_ROOT)  $(PYTHON_ROOT)/bin $(PYTHON_ROOT)/PCbuild $(RUN_PATH) ;
 
 # And the debugging version
 PYTHON_D ?= $(PYTHON:S=)_d$(PYTHON:S) ;
-SEARCH on $(PYTHON_D) = $(PYTHON_ROOT) $(PYTHON_ROOT)/bin $(PYTHON_ROOT)/PCBuild $(RUN_PATH) ;
+SEARCH on $(PYTHON_D) = $(PYTHON_ROOT) $(PYTHON_ROOT)/bin $(PYTHON_ROOT)/PCbuild $(RUN_PATH) ;
 
 # select-python-library
 #
@@ -136,6 +136,11 @@ rule select-python-library ( toolset variant : properties * )
     return $(properties) ;
 }
 
+if $(NT)
+{
+    python-nt-sysinclude = [ GLOB $(PYTHON_ROOT) : PC ] ;
+}
+
 rule select-python-includes ( toolset variant : properties * )
 {
     if $(toolset) in $(gcc-compilers)
@@ -151,7 +156,7 @@ rule select-python-includes ( toolset variant : properties * )
     {
       properties +=
           <sysinclude>$(PYTHON_ROOT)/include
-            <sysinclude>$(PYTHON_ROOT)/PC # in case the user is using a source installation
+            <sysinclude>$(python-nt-sysinclude) # in case the user is using a source installation
               <debug-python><define>_DEBUG
               ;
     }
