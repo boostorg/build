@@ -27,6 +27,8 @@ rule resource-compile ( target : sources * : properties * )
             create-empty-object $(target) : $(sources[1]) ;
         case "SOLARIS" :
             create-empty-object $(target) : $(sources[1]) ;
+        case "LINUX" :
+            create-empty-object $(target) : $(sources[1]) ;
         case "*" :
             errors.error "Cannot process RC files for OS=$(OS)" ;
     }
