@@ -140,7 +140,6 @@ struct _target {
 # define	T_FLAG_LEAVES	0x0010	/* LEAVES applied */
 # define	T_FLAG_NOUPDATE	0x0020	/* NOUPDATE applied */
 # define	T_FLAG_VISITED  0x0040    /* CWM: Used in debugging */
-# define T_FLAG_INTERNAL 0x0080    /* internal INCLUDES node */
 
 /* this flag was added to support a new builtin rule named "RMBAD" */
 /* it is used to force removal of outdated targets whose dependencies
@@ -154,6 +153,11 @@ struct _target {
 /* runs from a Jamfile..                                                    */
 /*                                                                          */
 # define        T_FLAG_FAIL_EXPECTED  0x0100  /* FAIL_EXPECTED applied */
+
+# define T_FLAG_INTERNAL 0x0200    /* internal INCLUDES node */
+
+
+
 #ifdef OPT_SEMAPHORE
 # define 	T_MAKE_SEMAPHORE 5 /* Special target type for semaphores */
 #endif
