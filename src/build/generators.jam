@@ -256,14 +256,15 @@ class generator
     # Returns another generator which differers from $(self) in
     # - id
     # - value to <toolset> feature in properties
-    rule clone ( new-id : new-toolset-name )
+    rule clone ( new-id : new-toolset-properties + )
     {
-        return [ new $(__class__) $(new-id)
+        return [ new $(__class__) $(new-id) $(self.composing)
                  : $(self.source-types)
                  : $(self.target-types-and-names) 
-                 : [ property.change $(self.requirements) 
-                     : <toolset> $(new-toolset-name)
-                   ]
+                 # Note: this does not remove any subfeatures of <toolset>
+                 # which might cause problems
+                 : [ property.change $(self.requirements) : <toolset> ]
+                   $(new-toolset-properties)
                ] ;
     }
     
