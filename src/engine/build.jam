@@ -97,6 +97,7 @@ toolset kylix bc++ : -o : -D
 ## Metrowerks CodeWarrior 8.x
 {
     local mwcc = ; if $(NT) { mwcc = mwcc ; } else { mwcc = mwc$(OSPLAT:L) ; }
+    mwcc ?= mwcc ;
     toolset metrowerks $(mwcc) : "-o " : -D
         : -subsystem console -runtime staticsingle -opt full -inline auto -inline level=8
         : -subsystem console -runtime staticsingle -O0 -inline off ;
