@@ -297,16 +297,23 @@ rule main-target ( name : project )
     
     
     rule apply-default-build ( property-set )
-    {      
+    {           
         local result ;
         if ! [ $(property-set).raw ] 
         {
-            properties = [ build-request.expand $(self.default-build) ] ;
+            properties = [ build-request.expand-no-defaults $(self.default-build) ] ;
             
-            for local p in $(properties)
-            {
-                result += [ property-set.create [ feature.split $(p) ] ] ;
+            if $(properties)
+            {                
+                for local p in $(properties)
+                {
+                    result += [ property-set.create [ feature.split $(p) ] ] ;
+                }
             }
+            else
+            {
+                result = [ property-set.empty ] ;
+            }            
         }
         else
         {
@@ -332,9 +339,9 @@ rule main-target ( name : project )
         local result ;
         for local p in $(all-property-sets)
         {
-            result += [ generate-really $(p) ] ;
+            result += [ generate-really [ $(p).add-defaults ] ] ;
         }
-        return $(result) ;
+        return $(result) ;                
     }
         
     local rule generate-really ( property-set )
@@ -527,10 +534,6 @@ rule basic-target ( name : project
             # come from dependencies, the value is not target id, but rather
             # virtual target names, so generators.construct can use them.
             
-            # defaults should be added as soon as possible. For example, conditionals
-            # might have "<variant>debug:..." and won't work if defaults are not 
-            # applied.
-            rproperties = [ $(rproperties).add-defaults ] ;   
             rproperties = [ $(rproperties).evaluate-conditionals ] ;
             
             rproperties = 
