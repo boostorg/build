@@ -75,8 +75,8 @@ rule headers-to-doxyfile ( target : sources * : properties * )
   # Translate <doxygen:param> into command line flags.  
   for local param in [ feature.get-values <doxygen:param> : $(properties) ]
   {
-    local namevalue = [ regex.split $(param) "=" ] ;
-    text += "$(namevalue[1])=$(namevalue[2])" ;
+    local namevalue = [ regex.match ([^=]*)=(.*) : $(param) ] ;
+    text += "$(namevalue[1]) = $(namevalue[2])" ;
   }
  
   local headers = "" ;
