@@ -249,6 +249,11 @@ rule build-test ( test-file-generator test-file + : sources + : requirements * )
 
     # Generate the test file
     $(test-file-generator) $(test-file) : $(dependency) ;
+
+    if $(RUN_ALL_TESTS)
+    {
+        ALWAYS $(test-file) ;
+    }
 }
 
 ### Rules for testing whether a file compiles ###
@@ -297,11 +302,6 @@ rule run-test ( target : sources + : requirements * )
     INPUT_FILES on $(target) = $(gRUN_TEST_INPUT_FILES) ;
     ARGS on $(target) = $(gRUN_TEST_ARGS) ;
     capture-run-output $(target) : $(executable) ;
-    
-    if $(RUN_ALL_TESTS)
-    {
-        ALWAYS $(target) ;
-    }
 }
 
 # The rule is just used for argument checking
