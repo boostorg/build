@@ -5,7 +5,10 @@
 
 1. Run
 
-   cvs -d :pserver:anonymous@cvs.boost.sourceforge.net:/cvsroot/boost co -P -d  boost-build boost/tools/build
+   cvs -d :ext:<your_user_name>@cvs.boost.sourceforge.net:/cvsroot/boost co -P -d  boost-build boost/tools/build
+
+   Note: it turns out that anonymous CVS access uses some backup server, which
+   is not up-to-date.
 
 2. Go to "boost-build" directory.
 
