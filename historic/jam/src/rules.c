@@ -82,6 +82,9 @@ enter_rule( char *rulename, module_t *target_module )
         r->arguments = 0;
         r->exported = 0;
         r->module = target_module;
+#ifdef HAVE_PYTHON
+        r->python_function = 0;
+#endif
     }
     return r;
 }

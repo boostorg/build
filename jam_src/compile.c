@@ -889,6 +889,106 @@ void profile_dump()
     }
 }
 
+static int python_instance_number = 0;
+
+RULE *
+enter_rule( char *rulename, module_t *target_module );
+
+#ifdef HAVE_PYTHON
+static LIST*
+call_python_function(RULE* r, FRAME* frame)
+{
+    LIST* result = 0;
+    PyObject* arguments = PyTuple_New(frame->args->count);
+    int i ;
+    PyObject* py_result;
+
+    for(i = 0; i < frame->args->count; ++i)
+    {
+        PyObject* arg = PyList_New(0);
+        LIST* l = lol_get( frame->args, i);
+
+        for(; l; l = l->next)
+        {
+            PyObject* v = PyString_FromString(l->string);
+            /* Steals reference to 'v' */
+            PyList_Append(arg, v);            
+        }
+        /* Steals reference to 'arg' */
+        PyTuple_SetItem(arguments, i, arg);
+    }
+
+    py_result = PyObject_CallObject(r->python_function, arguments);
+    Py_DECREF(arguments);
+    if (py_result != NULL) {
+        
+        if (PyList_Check(py_result)) {
+            int size = PyList_Size(py_result);
+            int i;
+            for(i = 0; i < size; ++i)
+            {
+                PyObject* item = PyList_GetItem(py_result, i);
+                if (PyString_Check(item))
+                {
+                    result = list_new(result, 
+                                      newstr(PyString_AsString(item)));
+                }
+                else
+                {
+                    fprintf(stderr, "Non-string object returned by Python call\n");
+                }
+            }
+        }
+        else if (PyInstance_Check(py_result))
+        {
+            static char instance_name[1000];
+            static char imported_method_name[1000];
+            module_t* m;
+            PyObject* method;
+            PyObject* method_name = PyString_FromString("foo");
+            RULE* r;
+
+            fprintf(stderr, "Got instance!\n");
+
+            snprintf(instance_name, 1000,
+                     "pyinstance%d", python_instance_number);
+            snprintf(imported_method_name, 1000,
+                     "pyinstance%d.foo", python_instance_number);
+            ++python_instance_number;
+            
+            m = bindmodule(instance_name);
+
+            /* This is expected to get bound method. */
+            method = PyObject_GetAttr(py_result, method_name);
+            
+            r = bindrule( imported_method_name, root_module() );
+
+            r->python_function = method;
+
+            result = list_new(0, newstr(instance_name));    
+
+            Py_DECREF(method_name);
+        }
+        else if (py_result == Py_None)
+        {
+            result = L0;
+        }
+        else
+        {
+            fprintf(stderr, "Non-list object returned by Python call\n");
+        }
+
+        Py_DECREF(py_result);
+    }
+    else {
+        PyErr_Print();
+        fprintf(stderr,"Call failed\n");
+    }
+    
+    return result;
+}
+#endif
+
 /*
  * evaluate_rule() - execute a rule invocation
  */
@@ -924,6 +1024,13 @@ evaluate_rule(
 
     rulename = l->string;
     rule = bindrule( l->string, frame->module );
+
+#ifdef HAVE_PYTHON
+    if (rule->python_function)
+    {
+        return call_python_function(rule, frame);
+    }
+#endif
 
     /* drop the rule name */
     l = list_pop_front( l );

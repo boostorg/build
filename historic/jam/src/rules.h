@@ -87,6 +87,9 @@ struct _rule {
                                 * appear in the global module and be
                                 * automatically imported into other modules
                                 */
+#ifdef HAVE_PYTHON
+    PyObject* python_function;
+#endif    
 };
 
 /* ACTIONS - a chain of ACTIONs */
