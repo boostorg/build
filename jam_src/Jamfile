@@ -67,6 +67,7 @@ else 		{ code = execunix.c fileunix.c pathunix.c ; }
 # Perforce public depot.
 LOCAL_DEFINES += OPT_HEADER_CACHE_EXT ;
 LOCAL_DEFINES += OPT_GRAPH_DEBUG_EXT ;
+LOCAL_DEFINES += OPT_SEMAPHORE ;
 
 # Improvements developed locally.
 

@@ -52,6 +52,7 @@
 
 # include "lists.h"
 # include "parse.h"
+# include "assert.h"
 # include "variable.h"
 # include "rules.h"
 
@@ -262,6 +263,7 @@ make1( TARGET *t )
 static void
 make1a( state *pState)
 {
+    TARGET* t = pState->t;
 	TARGETS	*c;
 	int i;
 
@@ -293,7 +295,6 @@ make1a( state *pState)
 
 	pState->t->asynccnt = 1;
 
-	/* Recurse on our dependents, manipulating progress to guard */
 	/* against circular dependency. */
 
 	pState->t->progress = T_MAKE_ONSTACK;
@@ -329,6 +330,7 @@ static void make1atail(state *pState)
 static void
 make1b( state *pState )
 {
+    TARGET      *t = pState->t;
     TARGETS     *c;
     int         i;
     char        *failed = "dependents";
@@ -341,6 +343,24 @@ make1b( state *pState )
 		pop_state(&state_stack);
 		return;
 	}
+    
+    /* Try to aquire a semaphore. If it's locked, wait until the target
+       that locked it is build and signals completition. */
+#ifdef OPT_SEMAPHORE
+	if( t->semaphore && t->semaphore->asynccnt )
+	{
+        /* Append 't' to the list of targets waiting on semaphore. */
+	    t->semaphore->parents = targetentry( t->semaphore->parents, t );
+	    t->asynccnt++;
+
+	    if( DEBUG_EXECCMD )
+		printf( "SEM: %s is busy, delaying launch of %s\n",
+			t->semaphore->name, t->name);
+		pop_state(&state_stack);
+	    return;
+	}
+#endif
+
 
     /* Now ready to build target 't'... if dependents built ok. */
 
@@ -394,6 +414,7 @@ make1b( state *pState )
         case T_FATE_MISSING:
         case T_FATE_OUTDATED:
         case T_FATE_UPDATE:
+
             /* Set "on target" vars, build actions, unset vars */
             /* Set "progress" so that make1c() counts this target among */
             /* the successes/failures. */
@@ -419,6 +440,21 @@ make1b( state *pState )
 		/* (because of dependency failures or because no commands need to */
 		/* be run) the chain will be empty and make1c() will directly */
 		/* signal the completion of target. */
+
+	/* Recurse on our dependents, manipulating progress to guard */
+
+#ifdef OPT_SEMAPHORE
+	/* If there is a semaphore, indicate that its in use */
+	if( pState->t->semaphore )
+	{
+	    ++(pState->t->semaphore->asynccnt);
+
+	    if( DEBUG_EXECCMD )
+		printf( "SEM: %s now used by %s\n", pState->t->semaphore->name,
+		       pState->t->name );
+	}
+#endif
+
 	pState->curstate = T_STATE_MAKE1C;
 }
 
@@ -506,12 +542,42 @@ make1c( state *pState )
 
 			for( c = t->parents; c; c = c->next )
 				push_state(&temp_stack, c->target, NULL, T_STATE_MAKE1B);
+
+#ifdef OPT_SEMAPHORE
+	    /* If there is a semaphore, its now free */
+	    if( t->semaphore )
+	    {
+		assert( t->semaphore->asynccnt == 1 );
+		--(t->semaphore->asynccnt);
+
+		if( DEBUG_EXECCMD )
+		    printf( "SEM: %s is now free\n", t->semaphore->name);
+
+		/* If anything is waiting, notify the next target. There's no
+            point in notifying all waiting targets, since they'll be
+            serialized again. */
+		if( t->semaphore->parents )
+		{
+		    TARGETS *first = t->semaphore->parents;
+		    if( first->next )
+			first->next->tail = first->tail;
+		    t->semaphore->parents = first->next;
+
+		    if( DEBUG_EXECCMD )
+			printf( "SEM: placing %s on stack\n", first->target->name);
+            push_state(&temp_stack, first->target, NULL, T_STATE_MAKE1B);
+		    free( first );
+		}
+	    }
+#endif
+
 		
 			/* must pop state before pushing any more */
 			pop_state(&state_stack);
 		
 			/* using stacks reverses the order of execution. Reverse it back */
 			push_stack_on_stack(&state_stack, &temp_stack);
+
 		}
 	}
 }

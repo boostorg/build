@@ -76,6 +76,7 @@
           </dd>
           <dt><a href="#UPDATE">The <tt>UPDATE</tt> rule and changes to
           command line handling</a></dt>
+          <dt><a href="#semaphores">Semaphores</a></dt>
         </dl>
       </dd>
       <dt><a href="#jam_fundamentals">Jam Fundamentals</a></dt>
@@ -760,6 +761,29 @@ rule UPDATE ( targets * )
     <p>The rule causes the specified targets to be updated. If no target was
     specified with the <tt>UPDATE</tt> rule, the "all" target will be
     implicitly updated.</p>
+
+    <h3 id="semaphores">Semaphores</h3>
+
+    <p>It is sometimes desirable to disallow parallel execution of 
+    some actions. For example:
+    <ul>
+    <li>Old versions of <tt>yacc</tt> use files with fixed names. So,
+    running two yacc actions is dangerous.
+    <li>One might want to perform parallel compiling, but not do parallel
+    linking, because linking is i/o bound and only gets slower.
+    </ul>
+    Craig McPeeters has extended Perforce Jam to solve such problems, and that
+    extension was integrated in Boost.Jam.
+
+    <p>Any target can be assigned a <em>semaphore</em>, by setting a variable
+    called <tt>SEMAPHORE</tt> on that target. The value of the variable is
+    the semaphore name. It must be different from names of any declared
+    target, but is arbitrary otherwise.
+
+    <p>The semantic of semaphores is that in a group of targets which 
+    have the same semaphore, only one can be updated at the moment,
+    regardless of &quot;-j&quot; option.
+ 
     <h2><a name="jam_fundamentals">Jam Fundamentals</a></h2>
     <p>This section is derived from the official Jam documentation and from
     my experience using it and reading the Jambase rules. I repeat the

@@ -153,11 +153,18 @@ struct _target {
 /* runs from a Jamfile..                                                    */
 /*                                                                          */
 # define        T_FLAG_FAIL_EXPECTED  0x0100  /* FAIL_EXPECTED applied */
+#ifdef OPT_SEMAPHORE
+# define 	T_MAKE_SEMAPHORE 5 /* Special target type for semaphores */
+#endif
+
 
 	char	binding;		/* how target relates to real file */
 
 # define 	T_BIND_UNBOUND	0	/* a disembodied name */
 # define 	T_BIND_MISSING	1	/* couldn't find real file */
+#ifdef OPT_SEMAPHORE
+	TARGET  *semaphore;		/* used in serialization */
+#endif
 # define 	T_BIND_PARENTS	2	/* using parent's timestamp */
 # define 	T_BIND_EXISTS	3	/* real file, timestamp valid */
 
