@@ -294,8 +294,7 @@ local rule load-jamfile (
 
         # Now load the Jamfile in it's own context.
         #
-        modules.load $(jamfile-module)
-            : $(jamfile-to-load:D=) : $(jamfile-to-load:D) ;
+        modules.load $(jamfile-module) : $(jamfile-to-load) : . ;
 
         # Indicate we loaded the Jamfile.
         #
