@@ -550,8 +550,9 @@ class generator
     
     # Converts several files to consumable types.
     rule convert-multiple-sources-to-consumable-types
-      ( project : property-set : sources * : consumed-var bypassed-var )
+      ( project : property-set : sources * : consumed-var bypassed-var : multiple ? )
     {
+        multiple ?= * ;
         # We process each source one-by-one, trying to convert it to
         # a usable type.
         local failed ;
@@ -561,7 +562,7 @@ class generator
             local _b ;
             # TODO: need to check for failure on each source.
             convert-to-consumable-types $(project) : $(property-set)
-              : $(sources[1]) : * : true : _c _b ;
+              : $(sources[1]) : $(multiple) : true : _c _b ;
             if ! $(_c)
             {
                 generators.dout [ indent ] " failed to convert " [ $(sources[1]).str ] ;
