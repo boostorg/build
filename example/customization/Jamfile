@@ -1,2 +1,3 @@
 
-exe codegen : codegen.cpp class.verbatim usage.verbatim ;
+exe codegen : codegen.cpp class.verbatim usage.verbatim 
+    t1.verbatim ;
