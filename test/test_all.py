@@ -19,3 +19,4 @@ import project_test1
 import project_test3
 import project_test4
 import generators_test
+import dependency_test

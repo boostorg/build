@@ -214,8 +214,15 @@ rule main-target ( name : project )
         local pr = [ property.take free : [ property.remove incidental : 
                        [ project.attribute $(self.project) requirements ] ] ] ;
 
-        for local v in $(result)
+        # Process all vtargets that will be created if this main target
+        # is created.
+        local all-targets = 
+            [ sequence.transform virtual-target.traverse : $(result) ] ; 
+        local dg = [ new subvariant-dg "FIXME" : "FIXME" : $(all-targets) ] ;
+        for local v in $(all-targets)          
         {
+            $(v).dg $(dg) ;
+
             local action = [ $(v).action ] ;
             if $(action) 
             {
