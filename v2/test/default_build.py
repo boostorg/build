@@ -13,6 +13,19 @@ t.run_build_system()
 t.expect_addition("bin/$toolset/debug/a.exe")
 t.expect_addition("bin/$toolset/release/a.exe")
 
+# Test that we can declare default build only in the first
+# alternative
+t.write("Jamfile", """
+exe a : a.cpp : : debug release ;
+exe a : b.cpp : : debug release ;
+""")
+expected="""error: default build can be specified only in first alternative
+main target is  ./a
+
+"""
+t.run_build_system("--no-error-backtrace", status=1, stdout=expected)
+
+
 # Now try a harder example: default build which contains <define>
 # should cause <define> to be present when "b" is compiled.
 # This happens only of "build-project b" is placed first.

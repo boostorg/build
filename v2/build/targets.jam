@@ -246,6 +246,16 @@ rule main-target ( name : project )
     # Add a new alternative for this target
     rule add-alternative ( target )
     {
+        local d = [ $(target).default-build ] ;
+        if $(self.alternatives) && $(d)
+        {
+            errors.error "default build can be specified only in first alternative" 
+              : "main target is " [ full-name ] ;
+        }        
+        else
+        {
+            self.default-build = $(d) ;
+        }        
         self.alternatives += $(target) ;
     }
 
@@ -299,6 +309,25 @@ rule main-target ( name : project )
             property-set = $(ep) ;
         }
         
+        if ! [ $(property-set).raw ] 
+        {
+            properties = [ build-request.expand $(self.default-build) ] ;
+            
+            local result = ;
+            for local p in $(properties)
+            {
+                result += [ generate-really [ property-set.create [ feature.split $(p) ] ] ] ;
+            }
+            return $(result) ;
+        }
+        else
+        {
+            generate-really $(property-set) ;
+        }
+    }
+        
+    local rule generate-really ( property-set )
+    {        
         local best-alternatives = [ select-alternatives $(property-set) ] ;
         if ! $(best-alternatives)
         {
@@ -442,7 +471,14 @@ rule basic-target ( name : project
     {
         errors.error "gristed element in sources for" [ full-name ] ;
     }
-
+    
+    
+    
+    rule default-build ( )
+    {
+        return $(self.default-build) ;
+    }
+    
     # Returns a number which estimates this targets's suitability for
     # building with the given 'property-set'. Among several alternatives
     # for a main target, the one with greatest match-rank will be used
@@ -461,102 +497,78 @@ rule basic-target ( name : project
         }        
     }
         
-    # Applies default-build if 'properties' are empty or 
-    # have only single <toolset> element.
     # Generates sources. Calls 'construct'
     # This method should not be overriden.
-    #
     rule generate ( property-set )
     {
-        if ! [ $(property-set).raw ] 
+        if ! $(self.generated.$(property-set)) 
         {
-            # CONSIDER: I'm really not sure if this is correct...
-            # FIXME: as in 'build-system' we stick default toolset
-            properties = [ build-request.expand $(self.default-build) ] ;
+            local rproperties = [ $(property-set).refine $(self.requirements) ] ;
             
-            local result = ;
-            for local p in $(properties)
+            if $(rproperties[1]) != "@error"                    
             {
-                result += [ generate [ property-set.create [ feature.split $(p) ] ] ] ;
-            }
-            return $(result) ;
-        } else {
-
-            
-            property-path = [ property.as-path [ $(property-set).base ] ] ;
-            if ! $(property-path) 
-            {
-                property-path = X ;
-            }
-            if ! $(self.generated.$(property-path)) 
-            {
-                local rproperties = [ $(property-set).refine $(self.requirements) ] ;
-                                
-                if $(rproperties[1]) != "@error"                    
-                {
-                    # TODO: issue a warning when requirements change properties, but
-                    # link-compatibility is still not broken.
-                    
-                    # Generate dependency requirements. Here, we generate only 
-                    # denepdency requirements specified for this targets. Dependency
-                    # requirements may also code from dependencies. However, when they
-                    # come from dependencies, the value is not target id, but rather
-                    # virtual target names, so generators.construct can use them.
-                    
-                    rproperties = [ $(rproperties).evaluate-conditionals ] ;
-
-                    local xproperties = 
-                      [ targets.generate-dependencies $(rproperties) : $(self.project) 
-                        : $(rproperties) ] ;
-
-
-                    local source-targets ;
-                    for local s in $(self.sources)
-                    {
-                        # Try treating this source as reference to main target
-                        local more-targets = 
-                          [ targets.generate $(s) : $(self.project) : $(property-set) ] ;
-                        if $(more-targets)
-                        {
-                            source-targets += $(more-targets) ;
-                        }
-                        else 
-                        {
-                            # Just a source file
-                            source-targets += [ virtual-target.from-file $(s) : $(self.project) ] ;                            
-                        }
-                    } 
+                # TODO: issue a warning when requirements change properties, but
+                # link-compatibility is still not broken.
                 
-                    # TODO: this line might cause target's properties to be
-                    # unqual to project's reference properties. As the
-                    # result, we create per-target bin directory while
-                    # it's not really needed.
-                                        
-                    xproperties = [ $(xproperties).run-actions ] ;
-                               
-                    self.generated.$(property-path) = 
-                        [ construct $(source-targets) : $(xproperties) ] ;                             
-                    
-                    # Apply use requirement of this target to all generated
-                    # virtual targets.
-                    local xusage-requirements = 
-                      [ targets.generate-dependencies 
-                          $(self.usage-requirements) 
-                        : $(self.project) : $(rproperties) ] ;
-                    xusage-requirements = [ $(xusage-requirements).raw ] ;
-                    
-                    for local e in $(self.generated.$(property-path))                    
-                    {
-                        $(e).set-usage-requirements $(xusage-requirements) ;
-                    }                    
-                } 
-                else
+                # Generate dependency requirements. Here, we generate only 
+                # denepdency requirements specified for this targets. Dependency
+                # requirements may also code from dependencies. However, when they
+                # come from dependencies, the value is not target id, but rather
+                # virtual target names, so generators.construct can use them.
+                
+                rproperties = [ $(rproperties).evaluate-conditionals ] ;
+                
+                local xproperties = 
+                  [ targets.generate-dependencies $(rproperties) : $(self.project) 
+                    : $(rproperties) ] ;
+                
+                
+                local source-targets ;
+                for local s in $(self.sources)
                 {
-                    self.generated.$(property-path) = $(rproperties) ;
-                }       
-            }                
-            return $(self.generated.$(property-path)) ;
-        }
+                    # Try treating this source as reference to main target
+                    local more-targets = 
+                      [ targets.generate $(s) : $(self.project) : $(property-set) ] ;
+                    if $(more-targets)
+                    {
+                        source-targets += $(more-targets) ;
+                    }
+                    else 
+                    {
+                        # Just a source file
+                        source-targets += [ virtual-target.from-file $(s) : $(self.project) ] ;                            
+                    }
+                } 
+                
+                # TODO: this line might cause target's properties to be
+                # unqual to project's reference properties. As the
+                # result, we create per-target bin directory while
+                # it's not really needed.
+                
+                xproperties = [ $(xproperties).run-actions ] ;
+                
+                self.generated.$(property-set) = 
+                  [ construct $(source-targets) : $(xproperties) ] ;                             
+                
+                # Apply use requirement of this target to all generated
+                # virtual targets.
+                local xusage-requirements = 
+                  [ targets.generate-dependencies 
+                      $(self.usage-requirements) 
+                        : $(self.project) : $(rproperties) ] ;
+                xusage-requirements = [ $(xusage-requirements).raw ] ;
+                
+                for local e in $(self.generated.$(property-set))                    
+                {
+                    $(e).set-usage-requirements $(xusage-requirements) ;
+                }                    
+            } 
+            else
+            {
+                self.generated.$(property-set) = $(rproperties) ;
+            }       
+        }                
+        return $(self.generated.$(property-set)) ;
     }
         
     # Constructs the virtual targets for this abstract targets and
