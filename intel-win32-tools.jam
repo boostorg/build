@@ -29,8 +29,6 @@ INTEL_BASE_MSVC_TOOLSET ?= msvc ;
 
 extends-toolset $(INTEL_BASE_MSVC_TOOLSET) ;
 
-flags intel-win32 RUN_PATH : "$(INTEL_PATH)"\\Bin ;
-
 VC_TOOL_PATH = $(INTEL_TOOL_PATH) ;
 VC_STDLIB_PATH = "$(INTEL_PATH)"\\Bin ;
 VC_COMPILER = icl ;
