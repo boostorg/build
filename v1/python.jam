@@ -219,6 +219,10 @@ rule Link-PYD
     }
     
     gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) ;
+    if $(UNIX) 
+    {
+        gRUN_LD_LIBRARY_PATH($(<)) += $(gLOCATE($(<[1]))) ;
+    }
     Link-action $(<) : $(>) : PYD ;
 }
 
@@ -287,6 +291,8 @@ actions python-test-target bind PYTHON
 {
     $(SHELL_SET)PATH=$(PATH)
     $(SHELL_EXPORT)PATH
+    $(SHELL_SET)LD_LIBRARY_PATH=$(LD_LIBRARY_PATH)
+    $(SHELL_EXPORT)LD_LIBRARY_PATH
     $(SHELL_SET)PYTHONPATH=$(PYTHONPATH)
     $(SHELL_EXPORT)PYTHONPATH
     $(PYTHON_LAUNCH) $(PYTHON) $(PYTHON_ARGS) "$(>)" $(ARGS) > "$(<)"
@@ -305,6 +311,8 @@ actions python-runtest-target bind PYTHON
 {
     $(SHELL_SET)PATH=$(PATH)
     $(SHELL_EXPORT)PATH
+    $(SHELL_SET)LD_LIBRARY_PATH=$(LD_LIBRARY_PATH)
+    $(SHELL_EXPORT)LD_LIBRARY_PATH
     $(SHELL_SET)PYTHONPATH=$(PYTHONPATH)
     $(SHELL_EXPORT)PYTHONPATH
     $(PYTHON_LAUNCH) $(PYTHON) $(PYTHON_ARGS) "$(>)" $(ARGS)
@@ -378,6 +386,10 @@ rule python-runtest-aux ( target : sources + )
         $(gRUN_PATH($(target)))                      # location of module dependencies
         $(>:D)                                  # directory of python driver file(s)
         $(PATH)                                 # base PATH from environment
+        : $(SPLITPATH) ] ;                      # platform path separator
+
+    LD_LIBRARY_PATH on $(target) = [ join
+        $(gRUN_LD_LIBRARY_PATH($(target)))      # location of module dependencies
         : $(SPLITPATH) ] ;                      # platform path separator
 
     PYTHON on $(target) = $(python) ;
