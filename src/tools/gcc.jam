@@ -28,7 +28,7 @@ type.set-generated-target-suffix STATIC_LIB : <toolset>gcc : a ;
 # Initializes the gcc toolset
 # The name parameter specifies the name used to invoke the compiler, and
 # can be absolute.
-rule init ( version ? : command ? )
+rule init ( version ? : command * )
 {
     local condition = [ common.check-init-parameters gcc : version $(version) ] ;
     

@@ -21,7 +21,7 @@ feature.compose <stdlib>sun-stlport
     : <cxxflags>-library=stlport4 <linkflags>-library=stlport4
     ;
 
-rule init ( version ? : command ? )
+rule init ( version ? : command * )
 {
     local condition = [ 
       common.check-init-parameters sun : version $(version) ] ;

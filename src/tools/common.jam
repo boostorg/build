@@ -110,7 +110,7 @@ rule check-init-parameters ( toolset : * )
 # This rule returns the command to be used when invoking the tool. If we can't
 # find the tool, a warning is issued.
 rule get-invocation-command ( 
-    toolset : tool : user-provided-command ? : additional-paths * )
+    toolset : tool : user-provided-command * : additional-paths * )
 {
     local command ;
     if ! $(user-provided-command)
@@ -119,7 +119,7 @@ rule get-invocation-command (
     }
     else
     {
-        command = [ common.check-tool $(user-provided-command) ] ;
+        command = [ common.check-tool $(user-provided-command) ] ;        
     }
     if ! $(command)
     {
@@ -132,7 +132,7 @@ rule get-invocation-command (
     return $(command) ;
 }
 
-# Given an invocation command returned by 'get-invocation-command',
+# Given an invocation command,
 # return the absolute path to the command. This works even if commnad
 # has not path element and is present in PATH.
 rule get-absolute-tool-path ( command )
@@ -172,20 +172,21 @@ rule find-tool ( name : additional-paths * )
 # If command is not an absolute path, checks if it can be found in 'path'.
 # If comand is absolute path, check that it exists. Returns 'command'
 # if ok and empty string otherwise.
-rule check-tool ( command )
+rule check-tool ( xcommand + )
 {
+    local command = $(xcommand[1]) ;
     if $(command:D)
     {
         if [ path.exists $(command) ]
         {
-            return $(command) ;
+            return $(xcommand) ;
         }        
     }
     else
     {
         if [ GLOB [ modules.peek : PATH Path path ] : $(command) ]
         {
-            return $(command) ;
+            return $(xcommand) ;
         }        
     }        
 }
