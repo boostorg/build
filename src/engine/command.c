@@ -25,6 +25,7 @@
 
 # include "command.h"
 # include <limits.h>
+# include <string.h>
 
 /*
  * cmd_new() - return a new CMD or 0 if too many args
@@ -39,7 +40,7 @@ cmd_new(
 {
     CMD *cmd = (CMD *)malloc( sizeof( CMD ) );
     /* lift line-length limitation entirely when JAMSHELL is just "%" */
-    int expand_line = ( shell && !strcmp(shell->string,"%") && !list_next(shell) );
+    int no_limit = ( shell && !strcmp(shell->string,"%") && !list_next(shell) );
     int max_line = MAXLINE;
     int allocated = -1;
 
@@ -65,14 +66,27 @@ cmd_new(
         
         max_line = max_line * 2;
     }
-    while( expand_line && allocated < 0 && max_line < INT_MAX / 2 );
-    
-    /* Bail if the result won't fit in MAXLINE */
-    /* We don't free targets/sources/shell if bailing. */
-    if( allocated < 0 )
+    while( allocated < 0 && max_line < INT_MAX / 2 );
+
+    if ( !no_limit )
     {
-        cmd_free( cmd );
-        cmd = 0;
+        /* Bail if the result won't fit in MAXLINE */
+        char *s = cmd->buf;
+        while ( *s )
+        {
+            size_t l = strcspn( s, "\n" );
+            
+            if ( l > MAXLINE )
+            {
+                /* We don't free targets/sources/shell if bailing. */
+                cmd_free( cmd );
+                return 0;
+            }
+            
+            s += l;
+            if ( *s )
+                ++s;
+        }
     }
 
     return cmd;
