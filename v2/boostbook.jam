@@ -1,0 +1,96 @@
+import class : class new ;
+import targets ;
+import feature ;
+import generators ;
+import property ;
+import property-set ;
+import regex ;
+
+feature.feature xsl:param : : free ;
+feature.feature format : html-single docbook : incidental implicit composite ;
+
+type.register XML : xml ;
+type.register DOCBOOK : docbook ; 
+type.register HTML : html ;
+
+type.register XSLT : xsl ;
+#generators.register-standard boostbook.xslt : XML XSLT : * ;
+
+generators.register-standard boostbook.boostbook-to-docbook : XML : DOCBOOK ;
+generators.register-standard boostbook.docbook-to-html-single 
+  : DOCBOOK : HTML ;
+
+rule xslt ( target : source stylesheet : properties * )
+{ 
+  local flags ;
+  for local param in [ feature.get-values <xsl:param> : $(properties) ]
+  {
+    local namevalue = [ regex.split $(param) "=" ] ;
+    flags += --stringparam $(namevalue[1]) $(namevalue[2]) ;
+  }
+
+  STYLESHEET on $(target) = $(stylesheet) ;
+  FLAGS on $(target) = $(flags) ;
+  xslt-xsltproc $(target) : $(source) ;
+}
+
+rule boostbook-to-docbook ( target : source : properties * )
+{
+  local dir = [ modules.peek : BOOST_ROOT ] ;
+  xslt $(target) : $(source) "$(dir)/docbook.xsl" : $(properties) ;
+}
+
+rule docbook-to-html-single ( target : source : properties * )
+{
+  local dir = [ modules.peek : BOOST_ROOT ] ;
+  xslt $(target) : $(source) "$(dir)/html-single.xsl" : $(properties) ;
+}
+
+rule boostbook-target-class ( name : project : sources * : requirements * 
+                              : default-build * )
+{
+  basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements)
+                         : $(default-build) ;
+
+  rule construct ( source-targets * : property-set )
+  {
+    local properties = [ $(property-set).raw ] ;
+
+    local format = [ feature.get-values <format> : $(properties) ] ;
+    local targets ;
+
+    local type = none ;
+
+    switch $(format) 
+    {
+      case docbook : type = DOCBOOK ;
+      case html-single : type = HTML ;
+    }
+
+    for local i in $(source-targets) 
+    {
+      targets += [ generators.construct ($self.project) : $(type) 
+                   : $(property-set) : $(i) ] ;
+    }
+
+    return $(targets) ;
+  }
+}
+
+class boostbook-target-class : basic-target ;
+
+rule boostbook ( target-name : source : requirements * : default-build * )
+{ 
+  local project = [ CALLER_MODULE ] ;
+  targets.main-target-alternative 
+    [ new boostbook-target-class $(target-name) : $(project) : $(source) 
+        : [ targets.main-target-requirements $(requirements) : $(project) ]
+        : [ targets.main-target-default-build $(default-build) : $(project) ] 
+    ] ;
+}
+
+actions xslt-xsltproc
+{
+  XML_CATALOG_FILES=catalog.xml xsltproc $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
+}
+
