@@ -154,22 +154,40 @@ rule find ( name : current-location )
         project-module = [ lookup $(name) : $(current-location) ] ;
     }
     else
-    {
-        local location = [ path.root $(name) $(current-location) ] ;
-        # If no project is registered for the given location, try to
-        # load it. First see if we have Jamfile. If not we might have project
-        # root, willing to act as Jamfile. In that case, project-root
-        # must be placed o
-        if $(location) in $(.project-location) ||
-          [ find-jamfile $(location) ] && [ load $(location) ] ||
-          [ path.parent [ project-roots.find-project-root $(location) ] ] = $(location) 
-            && [ project-roots.load $(location) ]
-        {
-            # We've managed to find or load project. Returns the module
-            # name
-            project-module = [ module-name $(location) ] ;
+    {                
+        # Try interpreting name as project id which does not have '@'
+        # prefix.
+        if [ path.is-rooted $(name) ]
+        {            
+            project-module = [ find @$(name) : $(current-location) ] ;
+        }            
+                
+        if ! $(project-module)
+        {            
+            local location = [ path.root $(name) $(current-location) ] ;
+            # If no project is registered for the given location, try to
+            # load it. First see if we have Jamfile. If not we might have project
+            # root, willing to act as Jamfile. In that case, project-root
+            # must be placed in the directory referred by id.
+            
+            local root-location = 
+              [ project-roots.find-project-root $(location) ] ;
+            if $(root-location)
+            {
+                root-location = [ path.parent $(root-location) ] ;
+            }
+                        
+            if $(location) in $(.project-location) ||
+              [ find-jamfile $(location) ] && [ load $(location) ] ||
+               $(root-location) = $(location) && [ project-roots.load $(location) ]
+                  {
+                      # We've managed to find or load project. Returns the module
+                      # name
+                      project-module = [ module-name $(location) ] ;
+                  }
         }
     }
+    
     return $(project-module) ;
 }
 
