@@ -1,10 +1,13 @@
-#~ Copyright 2004 Rene Rivera.
+#~ Copyright 2004-2005 Rene Rivera.
 #~ Distributed under the Boost Software License, Version 1.0.
 #~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # The following #// line will be used by the regression test table generation
 # program as the column heading for HTML tables. Must not include version number.
 #//<a href="http://www.metrowerks.com/MW/Develop/Desktop/default.htm">Metrowerks<br>CodeWarrior</a>
+
+# For adding framwork libraries; like <framework>Python, <framework>Carbon, etc.
+free-feature framework ;
 
 # singleton variables...
 set-as-singleton CW_ROOT CWFOLDER CWFolder ;
@@ -38,6 +41,10 @@ flags cw LIBPATH <library-path> ;
 flags cw NEEDLIBS <library-file> ;
 flags cw FINDLIBS <find-library> ;
 flags cw PREFIX <prefix> ;
+if $(JAMUNAME) = Darwin
+{
+    flags cw FRAMEWORKS <framework> ;
+}
 
 flags cw cw-errors <errors> ;
 flags cw cw-warnings <warnings> ;
@@ -238,9 +245,16 @@ flags cw CW_PREFIX : "-prefix " ;
 # CodeWarrior has it's own set of standard headers, so ignore the default.
 flags cw STDHDRS : ;
 
+# For MacOSX carbon framework seems to be required for correct linking.
+if $(JAMUNAME) = Darwin
+{
+    flags cw FRAMEWORKS : Carbon ;
+}
+
 #### Link ####
 rule Link-action
 {
+    _ on $(<) = " " ;
     # We can't have the mixture of the same libs going in NEEDLIBS and FINDLIBS.
     # So remove the extras from FINDLIBS.
     FINDLIBS on $(<) =
@@ -263,7 +277,7 @@ actions cw-Link@-action
     $(CW_SETUP)
     $(CW_CLEAR_ERROR)
     $(CW_LINK_SETUP)$(STDLIBS:J=;)
-    mwld $(FLAGS) $(LINKFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" $(CW_IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" @"$(>)" "$(FINDLIBS)$(SUFLIB)"
+    mwld $(FLAGS) $(LINKFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -framework$(_)$(FRAMEWORKS) $(CW_IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" @"$(>)" "$(FINDLIBS)$(SUFLIB)"
 }
 
 actions cw-Link-action
@@ -271,7 +285,7 @@ actions cw-Link-action
     $(CW_SETUP)
     $(CW_CLEAR_ERROR)
     $(CW_LINK_SETUP)$(STDLIBS:J=;)
-    mwld $(FLAGS) $(LINKFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" $(CW_IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" "$(>)" "$(FINDLIBS)$(SUFLIB)"
+    mwld $(FLAGS) $(LINKFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -framework$(_)$(FRAMEWORKS) $(CW_IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" "$(>)" "$(FINDLIBS)$(SUFLIB)"
 }
 
 #### Cc #####
