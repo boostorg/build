@@ -617,7 +617,7 @@ class action
                 actual-targets += [ $(i).actualize ] ;
             }
 
-            actualize-sources [ sources ] ;
+            actualize-sources [ sources ] : $(properties) ;
 
             DEPENDS $(actual-targets) : $(self.actual-sources) $(self.dependency-only-sources) ;
 
@@ -640,7 +640,7 @@ class action
     # Helper for 'actualize-sources'.
     # For each passed source, actualizes it with the appropriate scanner.
     # Returns the actualized virtual targets.
-    rule actualize-source-type ( sources * )
+    rule actualize-source-type ( sources * : property-set )
     {
         local result = ;
         for local i in $(sources)
@@ -649,7 +649,7 @@ class action
             if [ $(i).type ]
             {
                 scanner =
-                  [ type.get-scanner [ $(i).type ] : $(properties) ] ;
+                  [ type.get-scanner [ $(i).type ] : $(property-set) ] ;
             }
             result += [ $(i).actualize $(scanner) ] ;
         }
@@ -665,12 +665,14 @@ class action
     #
     # New values will be *appended* to the variables. They may be non-empty,
     # if caller wants it.
-    rule actualize-sources ( sources * )
+    rule actualize-sources ( sources * : property-set )
     {
         local dependencies = [ $(self.properties).get <dependency> ] ;
                 
-        self.dependency-only-sources += [ actualize-source-type $(dependencies) ] ;
-        self.actual-sources += [ actualize-source-type $(sources) ] ;
+        self.dependency-only-sources += [ 
+          actualize-source-type $(dependencies) : $(property-set) ] ;
+        self.actual-sources += [ 
+          actualize-source-type $(sources) : $(property-set) ] ;
     }
 
     rule path ( )
