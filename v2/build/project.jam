@@ -606,11 +606,14 @@ module project-rules
         $(attributes).set projects-to-build : $(now) $(dir) ;
     }
     
-    rule explicit ( target-name )
+    rule explicit ( target-names * )
     {
         import project ;
         local t = [ project.target $(__name__) ] ;
-        $(t).mark-target-as-explicit $(target-name) ;
+        for local n in $(target-names)
+        {            
+            $(t).mark-target-as-explicit $(n) ;
+        }        
     }    
 }
 
