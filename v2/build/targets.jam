@@ -133,9 +133,10 @@ rule project-target ( name : project : requirements * : default-build * )
                 local t = [ main-target $(name) ] ;
                 result += [ $(t).generate $(properties) ] ;
             }
+            local self-location = [ project.attribute $(self.project) location ] ;
             for local pn in [ project.attribute $(self.project) projects-to-build ]
             {
-                local p = [ project.module-name $(pn) ] ;
+                local p = [ project.module-name [ path.join $(self-location) $(pn) ] ] ;
                 local t = [ project.target [ project.attribute $(p) location ] ] ;
                 result += [ $(t).generate $(properties) ] ;
             }
@@ -420,9 +421,23 @@ rule basic-target ( name : project
                     }                    
                     self.generated.$(property-path) = 
                         [ construct $(source-targets) : $(xproperties) ] ;                             
+                    local xuse-requirements ;
+                    for local p in $(self.use-requirements)
+                    {
+                        if dependency in [ feature.attributes $(p:G) ]
+                        {
+                            local g = [ generate-source $(p:G=) : $(rproperties) ] ;
+                            xuse-requirements += $(p:G)$(g) [ $(g).use-requirements ] ;
+                        }
+                        else
+                        {
+                            xuse-requirements += $(p) ;
+                        }                                                
+                    }
+                    
                     for local e in $(self.generated.$(property-path))                    
                     {
-                        $(e).set-use-requirements $(self.use-requirements) ;
+                        $(e).set-use-requirements $(xuse-requirements) ;
                     }                    
                 } 
                 else
