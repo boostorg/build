@@ -90,4 +90,4 @@ t.expect_addition([ "bin/gcc/release/threading-single/a.exe",
 		    "bin/gcc/release/optimization-off/threading-single/a.exe", 
 		    "bin/gcc/release/optimization-off/threading-single/a.obj"])
 
-os.chdir(t.original_workdir)
+t.cleanup()

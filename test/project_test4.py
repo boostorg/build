@@ -76,4 +76,4 @@ t.expect_content("bin/gcc/debug/threading-single/a.exe",
 "bin/gcc/debug/threading-single/a_gcc.obj\n"
 )
 
-os.chdir(t.original_workdir)
+t.cleanup()
