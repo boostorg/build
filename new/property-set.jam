@@ -21,6 +21,10 @@ import sequence ;
 #
 local rule property-set ( raw-properties * )
 {
+    import feature ;
+    import property-set ;
+    import property ;
+    
     self.raw = $(raw-properties) ;
     
     for local p in $(raw-properties)
@@ -177,10 +181,13 @@ rule create ( raw-properties * )
     return $(.ps.$(key)) ;    
 }
 
-.empty = [ create ] ;
-
 # Returns property-set with empty set of properties.
 rule empty ( )
 {
+    if ! $(.empty)
+    {
+      .empty = [ create ] ;
+    }
+    
     return $(.empty) ;
 }

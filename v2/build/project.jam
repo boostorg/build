@@ -16,12 +16,12 @@ import modules : peek poke ;
 import numbers ;
 import path ;
 import sequence ;
-import targets ;
 import errors : error ;
 import project-root ;
 import print ;
 import class : class new ;
 import errors ;
+import property-set ;
 
 #
 #   Loads jamfile at the given location. After loading, project global
@@ -415,6 +415,11 @@ rule register-id ( id : location )
 # "requirements", "default-build", "source-location" and "projects-to-build".
 rule project-attributes ( location )
 {
+    import property ;
+    import property-set ;
+    import errors ;
+    import path ;
+    
     self.location = $(location) ;
 
     # Set the named attribute from the specification given by the user.
@@ -589,11 +594,14 @@ rule use ( id : location )
 }
 
 # This module defines rules common to all projects
-module project-rules {
+module project-rules
+{
 
     rule project ( id ? : option1 * : option2 * : option3 * )
     {
         import project ;
+        import path ;
+        
         local attributes = [ project.attributes $(__name__) ] ;
         if $(id) 
         {
@@ -619,6 +627,7 @@ module project-rules {
     rule use-project ( id : where )
     {
         import project ;
+        import path ;
         local attributes = [ project.attributes $(__name__) ] ;
         project.use $(id) : [ path.root 
             [ path.make $(where) ] [ $(attributes).get location ] ] ;

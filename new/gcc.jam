@@ -8,6 +8,7 @@ import property ;
 import generators ;
 import os ;
 import type ;
+import feature ;
 
 feature.extend toolset : gcc ;
 feature.subfeature toolset gcc : version : : optional propagated link-incompatible ;

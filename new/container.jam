@@ -6,9 +6,6 @@
 # Various container classes.
 
 import class : * ;
-import sequence ;
-import utility ;
-
 
 # Base for container objects. This lets us construct recursive structures.
 # That is containers with containers in them, specifically so we can tell
@@ -46,6 +43,8 @@ rule vector (
     )
 {
     import numbers : range ;
+    import utility ;
+    import sequence ;
 
     node.__init__ ;
     self.value = $(values) ;
@@ -246,6 +245,7 @@ module class@vector
 local rule __test__ ( )
 {
     import assert ;
+    import class : new ;
     
     local l = [ new vector ] ;
     assert.result 0 : $(l).size ;

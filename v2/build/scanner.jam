@@ -27,7 +27,7 @@
 #  way, instead of relying on just target type.
 
 import class : class new ;
-import property ;
+import property virtual-target ;
 
 #  Base scanner class. 
 rule scanner ( )
@@ -116,6 +116,9 @@ rule hdrrule ( target : matches * )
     local scanner = [ on $(target) return $(SCANNER) ] ;
     $(scanner).process $(target) : $(matches) ;
 }
+# hdrrule must be available at global scope so that it can be invoked
+# by header scanning
+IMPORT scanner : hdrrule : : scanner.hdrrule ;
 
 
 

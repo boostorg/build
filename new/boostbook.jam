@@ -19,6 +19,7 @@ import property-set ;
 import regex ;
 import scanner ;
 import make ;
+import type ;
 
 feature.feature xsl:param : : free ;
 feature.feature format : html onehtml man pdf ps docbook fo tests

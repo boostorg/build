@@ -9,11 +9,12 @@ import feature ;
 import numbers ;
 import errors : error ;
 import property ;
+import path ;
 
 .flag-no = 1 ;
 
 # Initializes an additional toolset-like module.
-# First load 'toolset-module' and then calls it's 'init'
+# First load 'toolset-module' and then calls its 'init'
 # rule with trailing arguments
 rule using ( toolset-module : * )
 {

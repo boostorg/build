@@ -24,12 +24,16 @@ import class : class new ;
 import property ;
 import errors : error ;
 import type : type ;
+import type ;
 import regex ;
+import generators ;
 
 rule stage-target-class ( name-and-dir : project : sources * : requirements * : default-build * )
 {
     basic-target.__init__ $(name-and-dir) : $(project) : $(sources) : $(requirements) 
                           : $(default-build) ;
+    
+    import feature project type errors generators ;
     
     rule construct ( source-targets * : property-set )
     {
@@ -92,6 +96,7 @@ type.register STAGED_EXE : : EXE ;
 rule stage-exe-generator
 {
     generator.__init__ stage-exe : EXE : STAGED_EXE ;
+    import type property-set modules ;
     
     rule run ( project name ? : property-set : source : multiple ? )
     {

@@ -6,16 +6,9 @@
 # Defines the "symlink" special target. 'symlink' targets make symbolic links
 # to the sources.
 
-import numbers ;
-import targets ;
-import virtual-target ;
-import class ;
-import property ;
-import modules ;
-import os ;
-import feature ;
+import targets modules path class os feature ;
 
-count = 0 ;
+.count = 0 ;
 
 feature.feature symlink-location : project-relative build-relative : incidental ;
 
@@ -27,9 +20,11 @@ rule symlink-targets (
     : sources *
     )
 {
+    import numbers modules class property project ;
+    
     # Generate a fake name for now. Need unnamed targets eventually.
-    local c = [ modules.peek symlink : count ] ;
-    modules.poke symlink : count : [ numbers.increment $(c) ] ;
+    local c = [ modules.peek symlink : .count ] ;
+    modules.poke symlink : .count : [ numbers.increment $(c) ] ;
     local fake-name = symlink#$(c) ;
     
     basic-target.__init__ $(fake-name) : $(project) : $(sources) ;

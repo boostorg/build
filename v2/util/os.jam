@@ -16,6 +16,7 @@ import regex ;
 
 rule __test__
 {
+    import assert ;
     rule identity ( args * ) { return $(args) ; }
 
     if ! ( --quiet in [ modules.peek : ARGV ] )

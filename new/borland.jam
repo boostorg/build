@@ -11,6 +11,8 @@ import property ;
 import generators ;
 import os ;
 import toolset : flags ;
+import feature ;
+import type ;
 
 toolset.register borland ;
 

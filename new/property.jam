@@ -8,7 +8,11 @@ import utility : ungrist ;
 import sequence : unique ;
 import errors : error ;
 import class : class ;
-
+import feature ;
+import regex ;
+import sequence ;
+import set ;
+import path ;
 
 # Refines 'properties' by overriding any elements for which a different
 # value is specified in 'requirements'. If the resulting property set
@@ -17,10 +21,8 @@ import class : class ;
 # On success, returns properties. On error, returns a list which first
 # element is "@error" and the other elements compose the explanation
 # string.
-rule refine ( properties * : requirements * : feature-space ? )
+rule refine ( properties * : requirements * )
 {
-    feature-space ?= feature ;
-
     local result ;
     local error ;
     
@@ -38,7 +40,7 @@ rule refine ( properties * : requirements * : feature-space ? )
     for local p in $(properties)
     {
         # No processing for free properties
-        if free in [ $(feature-space).attributes $(p:G) ]
+        if free in [ feature.attributes $(p:G) ]
         {
             result += $(p) ;
         }
@@ -50,7 +52,7 @@ rule refine ( properties * : requirements * : feature-space ? )
                 local value = $(p:G=) ;
                 if $(value) != $(required-value)
                 {
-                    if link-incompatible in [ $(feature-space).attributes $(p:G) ]
+                    if link-incompatible in [ feature.attributes $(p:G) ]
                     {
                         error = @error link-incompatible properties $(p) and
                                 $(p:G)$(required-value) ;
@@ -134,7 +136,7 @@ rule evaluate-conditionals ( properties * )
 # Helper for as-path, below. Orders properties with the implicit ones
 # first, and within the two sections in alphabetical order of feature
 # name.
-local rule path-order ( feature-space x y )
+local rule path-order ( x y )
 {
     if $(y:G) && ! $(x:G)
     {
@@ -148,8 +150,8 @@ local rule path-order ( feature-space x y )
     {
         if ! $(x:G)
         {
-            x = [ $(feature-space).expand-subfeatures $(x) ] ;
-            y = [ $(feature-space).expand-subfeatures $(y) ] ;
+            x = [ feature.expand-subfeatures $(x) ] ;
+            y = [ feature.expand-subfeatures $(y) ] ;
         }
         
         if $(x[1]) < $(y[1])
@@ -160,19 +162,17 @@ local rule path-order ( feature-space x y )
 }
 
 # Returns a path which represents the given expanded property set.
-rule as-path ( properties * : feature-space ? )
+rule as-path ( properties * )
 {
-    feature-space ?= feature ;
-    
-    local entry = .result.$(properties:J=-).$(feature-space) ;
+    local entry = .result.$(properties:J=-) ;
     
     if ! $($(entry))
     {
         # trim redundancy
-        properties = [ $(feature-space).minimize $(properties) ] ;
+        properties = [ feature.minimize $(properties) ] ;
     
         # sort according to path-order
-        properties = [ sequence.insertion-sort $(properties) : path-order $(feature-space) ] ;
+        properties = [ sequence.insertion-sort $(properties) : path-order ] ;
     
         local components ;
         for local p in $(properties)
@@ -195,22 +195,21 @@ rule as-path ( properties * : feature-space ? )
 }
 
 # Exit with error if property is not valid.
-local rule validate1 ( property : feature-space ?  )
+local rule validate1 ( property )
 {
-    feature-space ?= feature ;
     local msg ;
     if $(property:G)
     {
         local feature = [ ungrist $(property:G) ] ; # Ungrist for better error messages
         local value = $(property:G=) ;
 
-        if ! [ $(feature-space).valid $(feature) ]
+        if ! [ feature.valid $(feature) ]
         {
             msg = "unknown feature '$(feature)'" ;
         }
-        else if $(value) && ! free in [ $(feature-space).attributes $(feature) ] 
+        else if $(value) && ! free in [ feature.attributes $(feature) ] 
         {
-            $(feature-space).validate-value-string $(feature) $(value) ;
+            feature.validate-value-string $(feature) $(value) ;
         } 
         else if ! $(value)
         {
@@ -219,8 +218,8 @@ local rule validate1 ( property : feature-space ?  )
     }
     else
     {
-        local feature = [ $(feature-space).implied-feature $(property) ] ;
-        $(feature-space).validate-value-string $(feature) $(property) ;
+        local feature = [ feature.implied-feature $(property) ] ;
+        feature.validate-value-string $(feature) $(property) ;
     }
     if $(msg) 
     {
@@ -228,25 +227,24 @@ local rule validate1 ( property : feature-space ?  )
     }
 }
 
-rule validate ( properties * : feature-space ? )
+rule validate ( properties * )
 {
     for local p in $(properties)
     {
-        validate1 $(p) : $(feature-space) ;
+        validate1 $(p) ;
     }
 }
 
-rule validate-property-sets ( property-sets * : feature-space ? )
+rule validate-property-sets ( property-sets * )
 {
     for local s in $(property-sets)
     {
-        validate [ feature.split $(s) ] : $(feature-space) ;
+        validate [ feature.split $(s) ] ;
     }
 }
 
 # Makes a property set from 'specification', converting implicit values into 
 # full properties.
-# TODO: Might want to use 'feature-space' here as well as in other rules.
 rule make ( specification * )
 {
     local result ;
@@ -271,13 +269,12 @@ rule make ( specification * )
 
 # Returns a property sets which include all the elements in 'properties' that
 # do not have attributes listed in 'attributes'. 
-rule remove ( attributes + : properties * : feature-space ? )
+rule remove ( attributes + : properties * )
 {
-    feature-space ?= feature ;
     local result ;
     for local e in $(properties)
     {
-        if ! [ set.intersection $(attributes) : [ $(feature-space).attributes $(e:G) ] ]
+        if ! [ set.intersection $(attributes) : [ feature.attributes $(e:G) ] ]
         {
             result += $(e) ;
         }
@@ -287,13 +284,12 @@ rule remove ( attributes + : properties * : feature-space ? )
 
 # Returns a property set which include all properties in 'properties' that have
 # any of 'attributes'.
-rule take ( attributes + : properties * : feature-space ? )
+rule take ( attributes + : properties * )
 {
-    feature-space ?= feature ;
     local result ;
     for local e in $(properties)
     {
-        if [ set.intersection $(attributes) : [ $(feature-space).attributes $(e:G) ] ]
+        if [ set.intersection $(attributes) : [ feature.attributes $(e:G) ] ]
         {
             result += $(e) ;
         }
@@ -392,6 +388,10 @@ rule translate-paths ( properties * : path )
 # mapping
 rule property-map ( )
 {
+    import numbers ;
+    import sequence ;
+    import errors : error ;
+    
     self.next-flag = 1 ;
 
     # Associate 'value' with 'properties'
@@ -434,7 +434,7 @@ rule property-map ( )
             $(matches) : $(match-ranks) ] ;
         if $(best[2])
         {
-            errors.error "Ambiguous key" ;
+            error "Ambiguous key" ;
         }        
         local original = $(self.value.$(best)) ;
         if $(value)
@@ -450,29 +450,30 @@ class property-map ;
 
 local rule __test__ ( )
 {
-    import class : new ;
     import errors : try catch ;
+    import feature ;
+    import feature : feature subfeature compose ;
+    
+    # local rules must be explicitly re-imported
+    import property : path-order ;
+    
+    feature.prepare-test property-test-temp ;
 
-    local test-space = [ new feature-space ] ;
+    feature toolset : gcc : implicit ;
+    subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
+      3.0 3.0.1 3.0.2 : optional ;
+    feature define : : free ;
+    feature runtime-link : dynamic static : symmetric link-incompatible ;
+    feature optimization : on off ;
+    feature variant : debug release : implicit composite ;
+    feature rtti : on off : link-incompatible ;
 
-    module $(test-space)
-    {
-        import assert ;
+    compose <variant>debug : <define>_DEBUG <optimization>off ;
+    compose <variant>release : <define>NDEBUG <optimization>on ;
 
-        feature toolset : gcc : implicit ;
-        subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
-          3.0 3.0.1 3.0.2 : optional ;
-        feature define : : free ;
-        feature runtime-link : dynamic static : symmetric link-incompatible ;
-        feature optimization : on off ;
-        feature variant : debug release : implicit composite ;
-        feature rtti : on off : link-incompatible ;
-
-        compose <variant>debug : <define>_DEBUG <optimization>off ;
-        compose <variant>release : <define>NDEBUG <optimization>on ;
-
-    }
-
+    import assert ;
+    import class : new ;
+    
     validate gcc gcc-3.0.1 : $(test-space) ;
     validate <toolset>gcc  <toolset>gcc-3.0.1 : $(test-space) ;
     
@@ -587,6 +588,7 @@ local rule __test__ ( )
     assert.result <toolset>gcc,<toolset-gcc:version>3.0 <define>FOO
       : split-conditional <toolset>gcc,<toolset-gcc:version>3.0:<define>FOO
       ;
-
+    
+    feature.finish-test property-test-temp ;
 }
 
