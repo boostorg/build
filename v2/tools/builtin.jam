@@ -606,6 +606,9 @@ IMPORT $(__name__) : register-c-compiler : : generators.register-c-compiler ;
 class linking-generator : generator
 {
     import property-set ;
+    import type ;
+    import path ;
+    import project ;
     
     rule __init__ ( id 
         composing ? : # Specify if generator is composing. The generator will be
@@ -625,10 +628,27 @@ class linking-generator : generator
         if [ $(property-set).get <hardcode-dll-paths> ] = true
         {
             local xdll-path = [ $(property-set).get <xdll-path> ] ;
+            # It's possible that we have libraries in sources which did not came
+            # from 'lib' target. For example, libraries which are specified
+            # just as filenames as sources. We don't have xdll-path properties
+            # for such target, but still need to add proper dll-path properties.
+            for local s in $(sources)
+            {
+                if [ type.is-derived [ $(s).type ] SHARED_LIB ] && ! [ $(s).action ] 
+                {
+                    # Unfortunately, we don't have a good way to find the path
+                    # to a file, so use this nasty approach.
+                    local location = [ path.root [ $(s).name ]
+                      [ project.attribute [ $(s).project ] source-location ] ] ;                   
+                    xdll-path += [ path.parent $(location) ] ;
+                }                
+            }
+                          
             if $(xdll-path)
             {
                 property-set = [ $(property-set).add-raw $(xdll-path:G=<dll-path>) ] ;
             }            
+
         }
                         
         local result = [ generator.run $(project) $(name) : $(property-set)
