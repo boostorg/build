@@ -660,7 +660,17 @@ module project-rules
         import modules ;
         import project ;
         
-        project._using $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;    
+        # The module referred by 'using' can be placed in
+        # the same directory as Jamfile, and the user
+        # will expect the module to be found even though
+        # the directory is not in BOOST_BUILD_PATH.
+        # So temporary change the search path.
+        local x = [ modules.peek : BOOST_BUILD_PATH ] ;
+        local caller = [ modules.binding $(__name__) ] ;
+        modules.poke : BOOST_BUILD_PATH : $(caller:D) $(x) ;
+        project._using $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+        modules.poke : BOOST_BUILD_PATH : $(x) ;
+        
         # The above might have clobbered .current-project
         # Restore the the right value.
         modules.poke project : .current-project 

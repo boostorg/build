@@ -128,6 +128,7 @@ tests = [ "rebuilds",
           "library_property",
           "load_order",
           "wrong_project",
+          "using",
           ]
 
 if os.name == 'posix':
