@@ -22,6 +22,7 @@
 # include "hdrmacro.h"
 # include "compile.h"
 # include "native.h"
+# include "variable.h"
 # include <ctype.h>
 
 /*
@@ -287,8 +288,14 @@ load_builtins()
                         builtin_check_if_file, 0, args );
       }
 
-
-
+#ifdef HAVE_PYTHON
+      {
+          char * args[] = { "python-module", ":", "function", ":", 
+                            "jam-module", ":", "rule-name", 0 };
+          bind_builtin( "PYTHON_IMPORT_RULE",
+              builtin_python_import_rule, 0, args );
+      }
+#endif
 
 # ifdef OS_NT
       {
@@ -1238,6 +1245,92 @@ LIST *builtin_check_if_file( PARSE *parse, FRAME *frame )
 }
 
 
+#ifdef HAVE_PYTHON
+
+LIST *builtin_python_import_rule( PARSE *parse, FRAME *frame )
+{
+    static int first_time = 1;
+   char* python_module = lol_get( frame->args, 0 )->string;        
+   char* python_function = lol_get( frame->args, 1 )->string;        
+   char* jam_module = lol_get( frame->args, 2 )->string;        
+   char* jam_rule = lol_get( frame->args, 3 )->string;        
+
+   PyObject *pName, *pModule, *pDict, *pFunc;
+
+   if (first_time)
+   {
+       /* At the first invocation, we add the value of the
+          global EXTRA_PYTHONPATH to the sys.path Python
+          variable.
+       */
+       LIST* extra = 0;
+       module_t* outer_module = frame->module;
+
+       first_time = 0;
+
+       if ( outer_module != root_module())
+       {
+           exit_module( outer_module );
+           enter_module( root_module());
+       }
+    
+       extra = var_get("EXTRA_PYTHONPATH");
+    
+       if ( outer_module != root_module())
+       {
+            exit_module( root_module());
+            enter_module( outer_module );
+       }
+
+       for(; extra; extra = extra->next)
+       {
+           string buf[1];
+           string_new(buf);
+           string_append(buf, "import sys\nsys.path.append(\"");
+           string_append(buf, extra->string);
+           string_append(buf, "\")\n");
+           PyRun_SimpleString(buf->value);   
+           string_free(buf);               
+       }       
+   }
+
+
+   pName = PyString_FromString(python_module);
+   
+   pModule = PyImport_Import(pName);
+   Py_DECREF(pName);
+
+   if (pModule != NULL) {
+        pDict = PyModule_GetDict(pModule);
+        pFunc = PyDict_GetItemString(pDict, python_function);
+
+        if (pFunc && PyCallable_Check(pFunc)) {
+
+            module_t* m = bindmodule(jam_module);
+            RULE* r = bindrule( jam_rule, m );
+
+            /* Make pFunc owned */
+            Py_INCREF(pFunc);
+
+            r->python_function = pFunc;
+        }
+        else {
+            if (PyErr_Occurred())
+                PyErr_Print();
+            fprintf(stderr, "Cannot find function \"%s\"\n", python_function);
+        }
+        Py_DECREF(pModule);
+    }
+    else {
+        PyErr_Print();
+        fprintf(stderr, "Failed to load \"%s\"\n", python_module);
+    }
+   return L0;
+
+}
+
+#endif
+
 void lol_build( LOL* lol, char** elements )
 {
     LIST* l = L0;
@@ -1261,3 +1354,92 @@ void lol_build( LOL* lol, char** elements )
         lol_add( lol, l );
 }
 
+#ifdef HAVE_PYTHON
+
+/** Calls the bjam rule specified by name passed in 'args'.
+    The name is looked up in context of bjam's 'python_interface'
+    module. Returns the list of string retured by the rule.
+*/
+PyObject*
+bjam_call(PyObject* self, PyObject* args)
+{
+    FRAME       inner[1];
+    LIST    *result;
+    PARSE   *p;
+    char*  rulename;
+    
+    /* Build up the list of arg lists */
+
+    frame_init( inner );
+    inner->prev = 0;
+    inner->prev_user = 0;
+    inner->module = bindmodule("python_interface");
+    inner->procedure = 0;
+
+    /* Extract the rule name and arguments from 'args' */
+
+    /* PyTuple_GetItem returns borrowed reference */
+    rulename = PyString_AsString(PyTuple_GetItem(args, 0));
+    {
+        int i = 1;
+        int size = PyTuple_Size(args);
+        for( ; i < size; ++i) {
+            PyObject* a = PyTuple_GetItem(args, i);
+            if (PyString_Check(a))
+            {
+                lol_add(inner->args, 
+                        list_new(0, newstr(PyString_AsString(a))));
+            }
+            else if (PySequence_Check(a))
+            {
+                LIST* l = 0;
+                int s = PySequence_Size(a);
+                int i = 0;
+                for(; i < s; ++i)
+                {
+                    /* PySequence_GetItem returns new reference. */
+                    PyObject* e = PySequence_GetItem(a, i);
+                    l = list_new(l, newstr(PyString_AsString(e)));
+                    Py_DECREF(e);
+                }
+                lol_add(inner->args, l);
+            }                
+        }
+    }
+
+    result = evaluate_rule( rulename, inner );
+
+    frame_free( inner );
+}
+
+/** Accepts three arguments: module name, rule name and Python callable.
+
+    Creates bjam rule with the specified name in the specified module,
+    which will invoke the Python callable.
+*/
+PyObject*
+bjam_import_rule(PyObject* self, PyObject* args)
+{
+    char* module;
+    char* rule;
+    PyObject* func;
+    module_t* m;
+    RULE* r;
+
+    if (!PyArg_ParseTuple(args, "ssO:import_rule", &module, &rule, &func))
+        return NULL;
+    
+    if (!PyCallable_Check(func))
+        return NULL;
+    
+    m = bindmodule(module);
+    r = bindrule(rule, m);
+
+    /* Make pFunc owned */
+    Py_INCREF(func);
+
+    r->python_function = func;
+    return Py_None;
+}
+
+#endif

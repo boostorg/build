@@ -17,6 +17,11 @@ VERSION = 3$(.)1$(.)10 ;
 RELEASE = 1 ;
 LICENSE = 1_0 ;
 
+HAVE_PYTHON = 0 ;
+PYTHON_INCUDES = /usr/include/python2.3 ;
+PYTHON_LIB = -lpython2.3 ;
+
+
 # Generate development debug binaries?
 if --debug in $(ARGV)
 {
@@ -325,6 +330,16 @@ if $(VMS)
     --defs += VMS ;
 }
 --defs += YYSTACKSIZE=5000 ;
+
+if $(HAVE_PYTHON) = 1
+{
+    --defs += HAVE_PYTHON ;
+    --flags += -I$(PYTHON_INCUDES) ;
+    --flags += -Wno-long-long ;
+    --libs += $(PYTHON_LIB) ;
+}
+
+
 
 # The basic symbolic targets...
 NOTFILE all clean dist ;

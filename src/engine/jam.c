@@ -196,6 +196,14 @@ static void run_unit_tests()
 }
 #endif
 
+#ifdef HAVE_PYTHON
+    extern PyObject*
+    bjam_call(PyObject *self, PyObject *args);
+ 
+    extern PyObject*
+    bjam_import_rule(PyObject* self, PyObject* args);
+#endif
+
 int  main( int argc, char **argv, char **arg_environ )
 {
     int		n;
@@ -210,6 +218,23 @@ int  main( int argc, char **argv, char **arg_environ )
 # ifdef OS_MAC
     InitGraf(&qd.thePort);
 # endif
+
+#ifdef HAVE_PYTHON
+    Py_Initialize();
+
+    {
+        static PyMethodDef BjamMethods[] = {
+            {"call", bjam_call, METH_VARARGS,
+             "Call the specified bjam rule."},
+            {"import_rule", bjam_import_rule, METH_VARARGS,
+             "Imports Python callable to bjam."},
+            {NULL, NULL, 0, NULL}
+        };
+
+        Py_InitModule("bjam", BjamMethods);
+    }
+
+#endif
 
     argc--, argv++;
 
@@ -462,6 +487,11 @@ int  main( int argc, char **argv, char **arg_environ )
 
     if( globs.cmdout )
         fclose( globs.cmdout );
+
+#ifdef HAVE_PYTHON
+    Py_Finalize();
+#endif
+
 
     return status ? EXITBAD : EXITOK;
 }
