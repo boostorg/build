@@ -45,6 +45,9 @@ feature library-file : : free path ;
 feature name : : free ;
 feature search : : free path ;
 
+feature dll-path : : free path ;
+feature hardcode-dll-paths : false true : incidental propagated ;
+
 feature variant : : implicit composite propagated symmetric ;
 
 # Declares a new variant.
@@ -387,7 +390,14 @@ rule link-action ( targets + : sources * : action-name : properties * )
     action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
 
     rule adjust-properties ( properties * )
-    {
+    {        
+        local hardcore-rpath ;
+        local rpaths ;
+        if <hardcode-dll-paths>true in $(properties)
+        {
+            hardcore-rpath = true ;
+        }        
+        local pwd = [ path.pwd ] ;
         local extra ;
         for local s in $(self.sources)
         {
@@ -412,9 +422,14 @@ rule link-action ( targets + : sources * : action-name : properties * )
             else if [ type.is-derived [ $(s).type ] LIB ] 
             {
                 extra += <library>$(s) ;
+                if $(hardcore-rpath)
+                {                    
+                    rpaths += [ path.root [ $(s).path ] $(pwd) ] ;
+                }                
             }            
+            rpaths = [ sequence.unique $(rpaths) ] ;
+            extra += <dll-path>$(rpaths) ;
         }        
-        ECHO "EXtra is " $(extra) ;
         return $(properties) $(extra) ;
     }
     
