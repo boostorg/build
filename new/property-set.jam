@@ -1,0 +1,163 @@
+#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+import class : class new ;
+import feature ;
+import sequence ;
+
+local rule property-set ( raw-properties * )
+{
+    self.raw = $(raw-properties) ;
+    
+    for local p in $(raw-properties)
+    {
+        local att = [ feature.attributes $(p:G) ] ;
+        if incidental in $(att)
+        {
+            self.incidental += $(p) ;
+        }
+        else if free in $(att)
+        {
+            if dependency in $(att)
+            {
+                self.dependency += $(p) ;
+            }
+            else
+            {
+                self.free += $(p) ;
+            }            
+        }
+        else 
+        {
+            self.base += $(p) ;
+        }
+        
+        if propagated in $(att)
+        {
+            self.propagated += $(p) ;
+        }                        
+    }
+    
+    
+    
+    rule raw ( )
+    {
+        return $(self.raw) ;
+    }
+    
+    rule base ( )
+    {
+        return $(self.base) ;
+    }
+    
+    
+    rule free ( )
+    {
+        return $(self.free) ;
+    }
+    
+    
+    rule dependency ( )
+    {
+        return $(self.dependency) ;
+    }
+    
+    
+    rule incidental ( )
+    {
+        return $(self.incidental) ;
+    }
+    
+    rule refine ( ps )
+    {
+        if ! $(self.refined.$(ps))
+        {
+            local r = [ property.refine $(self.raw) : [ $(ps).raw ] ] ; 
+            if $(r[1]) != "@error"
+            {
+                self.refined.$(ps) = [ property-set.create $(r) ] ; 
+            }
+            else
+            {
+                self.refined.$(ps) = $(r) ;
+            }
+        }
+        return $(self.refined.$(ps)) ;
+    }
+    
+    rule evaluate-conditionals ( )
+    {
+        if ! $(self.evaluated)
+        {
+            self.evaluated = [ property-set.create 
+                [ property.evaluate-conditionals $(self.raw) ] ] ;
+        }
+        return $(self.evaluated) ;        
+    }
+    
+    rule propagated ( )
+    {
+        if ! $(self.propagated-ps)
+        {
+            self.propagated-ps = [ property-set.create $(self.propagated) ] ;
+        }
+        return $(self.propagated-ps) ;
+    }                   
+    
+    rule run-actions ( )
+    {
+        if ! $(self.run)
+        {
+            self.run = [ property-set.create [ feature.run-actions $(self.raw) ] ] ;
+        }
+        return $(self.run) ;
+    }
+    
+    rule as-path ( )
+    {
+        if ! $(self.as-path)
+        {
+            self.as-path = [ property.as-path $(self.base) ] ;
+        }        
+        return $(self.as-path) ;
+    }        
+    
+    rule add ( ps )
+    {
+        if ! $(self.added.$(ps))        
+        {
+            self.added.$(ps) = [ property-set.create $(self.raw) [ $(ps).raw ] ] ;
+        }
+        return $(self.added.$(ps)) ;
+    }            
+}
+
+class property-set ;
+
+rule create ( raw-properties * )
+{
+# If we uncomment this one, we'll end up with paths like    
+#    bin/gcc/debug/toolset-version-3.2/hello
+#    raw-properties = [ sequence.unique 
+#        [ sequence.insertion-sort $(raw-properties) ] ] ;
+    
+    raw-properties = [ sequence.unique 
+        $(raw-properties) ] ;
+         
+    local key = $(raw-properties:J=-:E=) ;
+    
+    if ! $(.ps.$(key)) 
+    {
+        .ps.$(key) = [ new property-set $(raw-properties) ] ;
+    }
+    return $(.ps.$(key)) ;    
+}
+
+.empty = [ create ] ;
+
+rule empty ( )
+{
+    return $(.empty) ;
+}
