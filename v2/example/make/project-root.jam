@@ -1,9 +1,2 @@
 
-import modules ;
-
-# Temporary workaround.
-local location = [ project-root get-location ] ;
-local new_path = [ modules.peek : BOOST_BUILD_PATH ] $(location) ;
-modules.poke : BOOST_BUILD_PATH : $(new_path) ;
-
 import gcc ;

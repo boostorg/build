@@ -161,7 +161,14 @@ rule record-binding ( module-target : binding )
 # elements as rules-opt.
 rule import ( module-name : rules-opt * : rename-opt * )
 {
-    load $(module-name) ;
+    local caller = [ CALLER_MODULE ] ;
+    local caller-location ; 
+    if $(caller)
+    {
+        caller-location = [ binding $(caller) ] ;
+    }
+        
+    load $(module-name) : : $(caller-location:D) [ modules.peek : BOOST_BUILD_PATH ] ;
     
     local source-names = $(rules-opt) ;
     if $(rules-opt) = *
