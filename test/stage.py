@@ -175,6 +175,14 @@ t.write("d/a1.txt", "")
 t.run_build_system()
 t.expect_addition("a1.txt")
 
+# Test that relative paths of sources can be preserved
+t.rm(".")
+t.write("Jamroot", """
+install dist : a/b/c.h : <preserve-path>on ;
+""")
+t.write("a/b/c.h", "")
+t.run_build_system()
+t.expect_addition("dist/a/b/c.h")
 
 
 t.cleanup()

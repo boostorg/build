@@ -21,6 +21,7 @@ import virtual-target ;
 
 feature.feature <install-dependencies> : off on : incidental ;
 feature.feature <install-type> : : free incidental ;
+feature.feature <preserve-path> : off on : incidental ;
 feature.feature <so-version> : : free incidental ;
 
 class install-target-class : basic-target
@@ -81,6 +82,9 @@ class install-target-class : basic-target
         
         local d = [ $(build-property-set).get <location> ] ;
         ps-raw += $(d:G=<location>) ;
+        
+        local d = [ $(build-property-set).get <preserve-path> ] ;
+        ps-raw += $(d:G=<preserve-path>) ;
         
         if $(ps-raw)
         {
@@ -238,12 +242,21 @@ class install-target-class : basic-target
 # be placed.
 rule copy-file ( project : source : properties )
 {   
+    local targets ;
     local name = [ $(source).name ] ;
                
     new-a = [ new action $(source) : common.copy : $(properties) ] ;    
-    targets = [ new file-target $(name:D=) exact : [ $(source).type ] 
-      : $(project) : $(new-a) ] ;
-    
+    if [ $(properties).get <preserve-path> ] = "on"
+    {        
+        targets = [ new file-target $(name) exact : [ $(source).type ] 
+          : $(project) : $(new-a) ] ;
+    }        
+    else
+    {
+        targets = [ new file-target $(name:D=) exact : [ $(source).type ] 
+          : $(project) : $(new-a) ] ;
+    }
+            
     return $(targets) ;
 }
 
@@ -361,6 +374,7 @@ rule install ( name : sources * : requirements * : default-build * )
     
     if <name> in $(requirements:G)
     {
+        ECHO "NAME IS " $(name) ;
         errors.user-error 
           "The <name> property is not allowed for the 'install' rule" ;
     }
