@@ -36,6 +36,26 @@ t.expect_content("bin/gcc/debug/threading-single/main-target-b.exe/b.exe",
 )
 
 
+t.copy("lib/Jamfile2", "lib/Jamfile")
+
+expected="""Requirements for project at 'lib' conflict with parent's.
+Explanation:  link-incompatible properties <threading>single and
+<threading>multi
+
+"""
+t.run_build_system(stdout=expected, status=None)
+
+t.copy("lib/Jamfile3", "lib/Jamfile")
+
+expected="""Cannot satisfy request to build lib/b.obj with properties  <toolset>gcc
+<optimization>on <threading>single <rtti>on <variant>debug
+No viable alternative found.
+
+"""
+
+t.run_build_system(stdout=expected, status=None)
+
+
 
 # We don't yet make targets depend on Jamfile, so need to start from scratch
 t.set_tree("project-test4")
