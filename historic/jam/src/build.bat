@@ -16,12 +16,12 @@ if "%1" == "metrowerks" goto Set_Metrowerks
 if "%1" == "msvc" goto Set_MSVC_Defaut
 if "%1" == "vc7" goto Set_MSVC7_Defaut
 if "%1" == "borland" goto Set_Borland
-ECHO "###"
-ECHO "### Unknown toolset:" %1
-ECHO "###"
-ECHO "### You can specify the toolset as the argument, i.e.:"
-ECHO "###     .\build.bat msvc"
-ECHO "###"
+ECHO ###
+ECHO ### Unknown toolset: %1
+ECHO ###
+ECHO ### You can specify the toolset as the argument, i.e.:
+ECHO ###     .\build.bat msvc
+ECHO ###
 goto Finish
 
 REM Try and guess the toolset to bootstrap the build with...
@@ -43,15 +43,15 @@ goto Finish
 :Set_Metrowerks
 set BOOST_JAM_TOOLSET=metrowerks
 set BOOST_JAM_CC=mwcc -runtime staticsingle -O -DNT
-set BOOST_JAM_OPT_JAM=-o bootstrap.%JAM_TOOLSET%\jam0.exe
-set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%JAM_TOOLSET%\mkjambase0.exe
+set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
+set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
 goto Build
 
 :Set_MSVC
 if EXIST "%MSVCDir%\VC7\bin" (set BOOST_JAM_TOOLSET=vc7) else (set BOOST_JAM_TOOLSET=msvc)
 set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG %MSVCDIR%\lib\kernel32.lib
-set BOOST_JAM_OPT_JAM=/Febootstrap.%JAM_TOOLSET%\jam0
-set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%JAM_TOOLSET%\mkjambase0
+set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
+set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
 goto Build
 
 :Set_MSVC_Default
@@ -97,7 +97,7 @@ md bootstrap.%BOOST_JAM_TOOLSET%
 @if NOT EXIST ".\bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe" goto Finish
 ".\bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe" jambase.c Jambase
 :Build_BJAM
-%BOOST_JAM_CC% %BOOST_JAM_OPT% %BJAM_SOURCES%
+%BOOST_JAM_CC% %BOOST_JAM_OPT_JAM% %BJAM_SOURCES%
 @if NOT EXIST ".\bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe" goto Finish
 .\bootstrap.%BOOST_JAM_TOOLSET%\jam0 -f build.jam -sBOOST_JAM_TOOLSET=%BOOST_JAM_TOOLSET%
 
