@@ -53,11 +53,13 @@ if "--debug-generators" in [ modules.peek : ARGV ]
 }
 
 # Outputs a debug message if generators debugging is on.
-local rule generators.dout 
+# Each element of 'message' is checked to see if it's class instance.
+# If so, instead of the value, the result of 'str' call is output.
+local rule generators.dout ( message * )
 {
     if $(.debug)
-    {
-        ECHO $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;        
+    {                
+        ECHO [ sequence.transform utility.str : $(message) ] ;
     }    
 }
 
@@ -348,8 +350,7 @@ class generator
                 
         if $(result)
         {
-           local v = [ class.new vector $(result) ] ;
-           generators.dout [ indent ] "  SUCCESS: " [ $(v).str ] ;
+           generators.dout [ indent ] "  SUCCESS: " $(result) ;
         }
         else
         {
@@ -383,8 +384,7 @@ class generator
         }
         else
         {
-            local v = [ class.new vector $(consumed) ] ;
-            generators.dout [ indent ] "alt2 : consumed is" [ $(v).str ] ;
+            generators.dout [ indent ] "alt2 : consumed is" $(consumed) ;
             if $(consumed) 
             {
                 result += [ generated-targets $(consumed) : $(property-set) 
@@ -755,10 +755,8 @@ local rule try-one-generator ( project name ? : generator multiple ? :
     {
         extra2 = $(extra) ;
     }
-    local rr = [ new vector [ new vector $(result) ] 
-      [ new vector $(extra2) ] ] ;         
     generators.dout [ indent ] "  generator" [ $(generator).id ] " spawned " ;
-    generators.dout [ indent ] " " [ $(rr).str ] ;
+    generators.dout [ indent ] " " $(result) -- $(extra2) ; 
     return $(result) $(extra2) ;                     
 }
 
@@ -881,7 +879,7 @@ local rule select-dependency-graph ( options )
         for local r in [ $(options).get ] 
         {
             normalize-target-list $(r) ;
-            generators.dout [ $(r).str ] ;
+            generators.dout $(r) ;
         }
         
         local f = [ $(options).at 1 ] ;
@@ -946,8 +944,8 @@ local rule construct-with-caching (
             for local c in $(cresult)
             {
                 local cc = [ virtual-target.clone-template $(c) : $(t) ] ;
-                generators.dout [ indent ] "*** cloning " [ $(c).str ] ;
-                generators.dout [ indent ] "*** cloned" $(cc) --- [ $(cc).str ] ;
+                generators.dout [ indent ] "*** cloning " $(c) ;
+                generators.dout [ indent ] "*** cloned" $(cc) --- $(cc) ;
                 result += $(cc) ;
             }
         }    
@@ -1022,7 +1020,7 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
     
     for local s in $(sources)
     {
-        generators.dout [ indent ] "    from" [ $(s).str ] ;
+        generators.dout [ indent ] "    from" $(s) ;
     }
     generators.dout [ indent ] "    properties:" [ $(property-set).raw ] ;        
                
