@@ -179,6 +179,7 @@ generators.register [ new gcc-linking-generator gcc.link.dll : LIB OBJ : SHARED_
     : <toolset>gcc ] ;
 
 generators.override gcc.prebuilt : builtin.prebuilt ;
+generators.override gcc.searched-lib-generator : searched-lib-generator ;
 
 
 
