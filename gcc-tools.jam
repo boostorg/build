@@ -88,7 +88,6 @@ else if $(UNIX)
         flags gcc CFLAGS <threading>multi : -pthreads ;
         flags gcc LINKFLAGS <threading>multi : -pthreads ;
         flags gcc FINDLIBS <threading>multi : rt ;
-        G++_SYSINCLUDE_FLAG = -I ; # Sun G++ seems to have a problem with -isystem
         NO_GNU_LN = true ; # sun seems not to use the GNU linker with gcc
         }
     case BeOS :
@@ -102,7 +101,6 @@ else if $(UNIX)
         # There is no gcc/g++, we need to use cc/c++ instead:
         GCC ?= cc ;
         GXX ?= c++ ;
-        G++_SYSINCLUDE_FLAG = -I ;
         }
     case * :
         {
@@ -112,7 +110,6 @@ else if $(UNIX)
         }
     }
 }
-G++_SYSINCLUDE_FLAG ?= -isystem ;
 
 # Set architecture/instruction-set options.
 #
@@ -355,7 +352,7 @@ rule Cc-action
 
 actions gcc-Cc-action
 {
-    $(GCC_BIN_DIRECTORY)$(GCC) -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -isystem$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(GCC_BIN_DIRECTORY)$(GCC) -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -367,7 +364,7 @@ rule C++-action
 
 actions gcc-C++-action
 {
-    $(GCC_BIN_DIRECTORY)$(GXX) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" $(G++_SYSINCLUDE_FLAG)$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(GCC_BIN_DIRECTORY)$(GXX) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
