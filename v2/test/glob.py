@@ -27,6 +27,10 @@ exe a : [ glob *.cpp ] ../d2/d//l ;
 """)
 
 t.write("d2/d/l.cpp", """ 
+#if defined(_WIN32)
+__declspec(dllexport)
+void force_import_lib_creation() {}
+#endif
 """)
 
 t.write("d2/d/Jamfile", """ 
