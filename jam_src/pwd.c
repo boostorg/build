@@ -10,7 +10,10 @@
 #include <direct.h>
 #define PATH_MAX _MAX_PATH
 #else
-#include <unistd.h>
+#include <limits.h>
+#if defined(__COMO__)
+     #include <linux/limits.h>
+#endif
 #endif
 
 
