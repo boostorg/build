@@ -4,7 +4,7 @@
 **
 ****************************************************************/
 
-#include "lcdrange.qpp"
+#include "lcdrange.h"
 
 #include <qslider.h>
 #include <qlcdnumber.h>
