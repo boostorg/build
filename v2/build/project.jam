@@ -14,7 +14,7 @@
 
 import modules : peek poke ;
 import numbers ;
-import os.path ;
+import path ;
 import sequence ;
 import targets ;
 import errors : error ;
@@ -38,7 +38,7 @@ rule load ( jamfile-location )
 
         for local p in [ attribute $(module-name) projects-to-build ]
         {
-            load [ os.path.join $(jamfile-location) $(p) ] ;
+            load [ path.join $(jamfile-location) $(p) ] ;
         }
     }
     return $(module-name) ;
@@ -61,7 +61,7 @@ rule lookup ( id : current-location )
     if $(location)
     {
         location =
-            [ os.path.root $(location) $(current-location) ] ;
+            [ path.root $(location) $(current-location) ] ;
     }
     else
     {
@@ -70,7 +70,7 @@ rule lookup ( id : current-location )
 
     local project-id = $(split[2]) ;
 
-    if [ os.path.is-rooted $(project-id) ]
+    if [ path.is-rooted $(project-id) ]
     {
         return $($(project-id).jamfile-location) ;
     }
@@ -218,11 +218,11 @@ local rule find-jamfile (
     if $(parent-root)
     {
         jamfile-glob =
-            [ os.path.glob-in-parents $(dir) : $(JAMFILE) : $(parent-root) ] ;
+            [ path.glob-in-parents $(dir) : $(JAMFILE) : $(parent-root) ] ;
     }
     else
     {
-        jamfile-glob = [ os.path.glob $(dir) : $(JAMFILE) ] ;
+        jamfile-glob = [ path.glob $(dir) : $(JAMFILE) ] ;
     }
 
     return $(jamfile-glob) ;
@@ -254,7 +254,7 @@ local rule load-jamfile (
 
     # The module of the jamfile.
     #
-    local jamfile-module = [ module-name  [ os.path.parent $(jamfile-to-load[1]) ] ] ;
+    local jamfile-module = [ module-name  [ path.parent $(jamfile-to-load[1]) ] ] ;
 
     # Don't even bother with the rest if we know the file is already loaded.
     #
@@ -267,7 +267,7 @@ local rule load-jamfile (
         {
             ECHO
                 "WARNING: Found multiple Jamfiles at this '"$(dir)"' location!"
-                "Loading the first one: '" [ os.path.basename $(jamfile-to-load[1]) ]  "'." ;
+                "Loading the first one: '" [ path.basename $(jamfile-to-load[1]) ]  "'." ;
         }
 
         jamfile-to-load = $(jamfile-to-load[1]) ;
@@ -283,7 +283,7 @@ local rule load-jamfile (
 
         # Now load the Jamfile in it's own context.
         #
-        modules.load $(jamfile-module) :  [ os.path.native $(jamfile-to-load) ] : . ;
+        modules.load $(jamfile-module) :  [ path.native $(jamfile-to-load) ] : . ;
 
         # Indicate we loaded the Jamfile.
         #
@@ -309,7 +309,7 @@ local rule initialize (
     module $(module-name)
     {          
     }    
-    $(module-name).attributes = [ new project-attributes [ os.path.parent $(jamfile) ] ] ;
+    $(module-name).attributes = [ new project-attributes [ path.parent $(jamfile) ] ] ;
     local attributes = $($(module-name).attributes) ;
 
     # Import rules common to all project modules from project-rules module,
@@ -319,14 +319,14 @@ local rule initialize (
     # Make sure we've loaded the project-root corresponding to this
     # Jamfile.
     #
-    local project-root-module = [ project-root.load [ os.path.parent $(jamfile) ] ] ;
+    local project-root-module = [ project-root.load [ path.parent $(jamfile) ] ] ;
     local project-root = [ $(project-root-module).project-root get-location ] ;
 
-    local parent = [ find-jamfile [ os.path.parent $(jamfile) ] $(project-root) ] ;
+    local parent = [ find-jamfile [ path.parent $(jamfile) ] $(project-root) ] ;
     local parent-module = ;
     if $(parent)
     {
-        parent-module = [ load [ os.path.parent $(parent[1]) ] ] ;
+        parent-module = [ load [ path.parent $(parent[1]) ] ] ;
     }
 
     $(attributes).set source-location : $(jamfile-location) : exact ;
@@ -337,7 +337,7 @@ local rule initialize (
     if $(parent-module)
     {
         local pattributes = [ attributes $(parent-module) ] ;
-        $(attributes).set parent : [ os.path.parent $(parent) ] ;
+        $(attributes).set parent : [ path.parent $(parent) ] ;
         $(attributes).set default-build 
             : [ $(pattributes).get default-build ] ;
         $(attributes).set requirements
@@ -395,7 +395,7 @@ rule project-attributes ( location )
         }
         else if $(attribute) = "source-location"
         { 
-            self.source-location = [ os.path.join $(self.location) $(specification) ] ;
+            self.source-location = [ path.join $(self.location) $(specification) ] ;
         }            
         else if ! $(attribute) in "id" "default-build" "location" "source-location"
            "project-root" "project-root-module" "parent" "projects-to-build" 
@@ -490,7 +490,7 @@ module project-rules {
         local attributes = [ project.attributes $(__name__) ] ;
         if $(id) 
         {
-           id = [ os.path.root $(id) / ] ;
+           id = [ path.root $(id) / ] ;
            project.register-id $(id) : [ $(attributes).get location ] ;
            $(attributes).set id : $(id) ;
         }
@@ -513,7 +513,7 @@ module project-rules {
     {
         import project ;
         local attributes = [ project.attributes $(__name__) ] ;
-        project.use $(id) : [ os.path.root $(where) [ $(attributes).get location ] ] ;
+        project.use $(id) : [ path.root $(where) [ $(attributes).get location ] ] ;
     }
 
     rule build-project ( dir )

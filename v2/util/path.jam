@@ -276,11 +276,11 @@ rule all-parents ( path : upper_limit ? : cwd ? )
 rule glob-in-parents ( dir : patterns + : upper-limit ? )
 {
     local result ;
-    local parent-dirs = [ os.path.all-parents $(dir) : $(upper-limit) ] ;
+    local parent-dirs = [ all-parents $(dir) : $(upper-limit) ] ;
 
     while $(parent-dirs) && ! $(result)
     {
-        result = [ os.path.glob $(parent-dirs[1]) : $(patterns) ] ;
+        result = [ glob $(parent-dirs[1]) : $(patterns) ] ;
         parent-dirs = $(parent-dirs[2-]) ;
     }
     return $(result) ;    
