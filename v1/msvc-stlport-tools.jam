@@ -49,12 +49,13 @@ STDLIBPATH = ;
 # STLport iostreams or native iostreams
 feature stlport-iostream : off on ;
 
-STLPORT_VERSION = 4.5.3 ;
-STLPORT_VERSIONS = 4.5 4.0 ;
+STLPORT_VERSION ?= 4.5.3 ;
+STLPORT_VERSIONS ?= 4.6 4.5 4.0 ;
 # major versions of STLport
 feature stlport-version : $(STLPORT_VERSION) $(STLPORT_VERSIONS) ;
 
 feature stlport-cstd-namespace : std global ;
+
 
 #############################################################################
 
@@ -66,7 +67,9 @@ feature stlport-cstd-namespace : std global ;
 #
 rule get-stlport-root
 {
-    local version = [ get-values <stlport-version> : $(gBUILD_PROPERTIES) ] ;
+    local version ;
+    version ?= [ get-values <stlport-version> : $(gBUILD_PROPERTIES) ] ;
+    version ?= $(STLPORT_VERSION) ;
 
     local path ;
     path ?= $(STLPORT_$(version)_PATH) ;
@@ -108,7 +111,7 @@ flags msvc-stlport VC_STDLIB_PATH <stlport-iostream>on : [ join [ get-stlport-ro
 flags msvc-stlport STDLIBPATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)lib ] ;
 
 
-flags msvc-stlport STLPORT_VERSION <stlport-version> ;
+flags msvc-stlport STLPORT_VERSION_FLAG <stlport-version> :  ;
 
 # special flags for STLport 4.0
 {
