@@ -20,6 +20,7 @@
 # include "pathsys.h"
 # include "make.h"
 # include "hdrmacro.h"
+# include "compile.h"
 # include <ctype.h>
 
 /*
@@ -430,7 +431,6 @@ builtin_match(
 {
 	LIST *l, *r;
 	LIST *result = 0;
-        extern regexp* regex_compile( char* );
         
         string buf[1];
         string_new(buf);
