@@ -25,6 +25,7 @@ feature define : : free ;
 feature "include" : : free path ;
 feature dependency : : free dependency ;
 feature library : : free dependency ;
+feature library-path : : free path ;
 
 feature variant : : implicit composite propagated ;
 
