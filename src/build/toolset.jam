@@ -300,7 +300,7 @@ rule inherit-flags ( toolset : base : prohibited-properties * )
         if [ set.difference
                 $(.$(rule-or-module).condition.$(f)) :
                 $(prohibited-properties)
-           ]
+           ] || ! $(.$(rule-or-module).condition.$(f))
         {
             local rule_ = [ MATCH "[^.]*\.(.*)" : $(rule-or-module) ] ;
             local new-rule-or-module ;
@@ -315,7 +315,6 @@ rule inherit-flags ( toolset : base : prohibited-properties * )
                                         
             add-flag
                $(new-rule-or-module)
-               : $(.$(rule-or-module).match-type.$(f))
                : $(.$(rule-or-module).variable.$(f)) 
                : $(.$(rule-or-module).condition.$(f))              
                : $(.$(rule-or-module).values.$(f))
