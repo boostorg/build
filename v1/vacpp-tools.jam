@@ -4,6 +4,15 @@
 # "as is" without express or implied warranty, and with no claim as
 # to its suitability for any purpose.
 
+#
+# Jam tools information for :
+# IBM VisualAge C++ compiler
+#   version 5.0
+#
+# These settings are created and tested with VisualAge running on
+# IBM/Aix 3.4. They should also work for VisualAge
+# on Windows NT, OS/2 and AS/400.
+
 flags xlc LINKFLAGS <runtime-link>static : -bstatic ;
 flags xlc CFLAGS <debug-symbols>on : -g ;
 flags xlc LINKFLAGS <debug-symbols>on : -g ;
