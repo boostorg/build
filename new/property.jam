@@ -224,6 +224,17 @@ rule validate ( property : feature-space ?  )
     }
 }
 
+rule validate-property-sets ( property-sets * : feature-space ? )
+{
+    for local s in $(property-sets)
+    {
+        for local p in [ feature.split $(s) ]
+        {
+            validate $(p) ;
+        }
+    }
+}
+
 # Makes a property set from 'specification', converting implicit values into 
 # full properties.
 # TODO: Might want to use 'feature-space' here as well as in other rules.
