@@ -248,20 +248,8 @@ local rule find-jamfile (
     local jamfile-glob = ;
     if $(parent-root)
     {
-        if $(parent-root) != $(dir) {
-            # 'find-to-root' does not handle relative paths gracefully,
-            # so use os.path module
-
-            local parent-dirs = [ os.path.all-parents $(dir) : $(parent-root) ] ;
-            # Remove dir and add parent-root to the list of searched dirs
-            parent-dirs = $(parent-dirs[2-]) $(parent-root) ;
-
-            while $(parent-dirs) && ! $(jamfile-glob)
-            {
-                jamfile-glob = [ os.path.glob $(parent-dirs[1]) : $(JAMFILE) ] ;
-                parent-dirs = $(parent-dirs[2-]) ;
-            }
-        }
+        jamfile-glob =
+            [ os.path.glob-in-parents $(dir) : $(JAMFILE) : $(parent-root) ] ;
     }
     else
     {
