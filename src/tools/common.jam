@@ -280,7 +280,7 @@ rule path-variable-setting-command ( variable : values * : exported ? )
         local sep = ":" ;
         if $(exported)
         {                       
-            result = export $(variable)=$(values:J=$(sep)) ;            
+            result = $(variable)=$(values:J=$(sep));export $(variable) ;
         }
         else
         {
