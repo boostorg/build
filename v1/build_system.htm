@@ -145,6 +145,10 @@
 
         <li><a href="#external_project">Using External Projects</a></li>
 
+        <li><a href="#requirement_rules">Requirement Rules</a></li>
+
+        <li><a href="#install_descriptions">Install Descriptions</a></li>
+
         <li><a href="#feature_description">Feature Descriptions</a></li>
 
         <li><a href="#variant_description">Variant Descriptions</a></li>
@@ -1068,6 +1072,131 @@ project boost : /home/dave/boost-cvs ;
 </pre>
   </blockquote>in your target's list of sources.
 
+  <h3><a name="requirement_rules">Requirement Rules</a></h3>
+
+  <p>Target requirements support the use of auxiliary rules to allow for more
+  complex descitions about the requirements. If specified, by using the name
+  of a rule in the requirements, the rule is called with the signature: <tt>(
+  toolset variant : subvariant-path properties * )</tt> and should return the
+  modified set of properties. There are a number of built-in rules for some
+  common tasks that Boost uses, and you can use:</p>
+
+  <blockquote>
+    <table border="1" summary="Built In Requirement Rules">
+      <tr>
+        <th>Rule</th>
+
+        <th>Effects</th>
+      </tr>
+
+      <tr>
+        <td><tt>std::locale-support</tt></td>
+
+        <td>Ensures that locale support is available for the target. For
+        example some toolsets, like CodeWarrior, locale support is only
+        available on specific platforms using a static runtime.</td>
+      </tr>
+
+      <tr>
+        <td><tt>std::facet-support</tt></td>
+
+        <td>Ensures that facet support is available for the target.</td>
+      </tr>
+
+      <tr>
+        <td><tt>common-variant-tag</tt></td>
+
+        <td>
+          <p>Adds a constructed prefix tag to the target to conform to the
+          Boost common naming conventions for libraries. The tag is
+          constructed as:</p>
+
+          <blockquote>
+            [-&lt;toolset-tag&gt;][-&lt;thread-tag&gt;][-&lt;runtime-tag&gt;][-&lt;version-tag&gt;]
+          </blockquote>
+
+          <ul>
+            <li>&lt;toolset-tag&gt; maps to an abbreviated name of the
+            toolset and when possible, and applicable, the version of the
+            toolset.</li>
+
+            <li>&lt;thread-tag&gt; "mt" when multi-threading is enabled.</li>
+
+            <li>&lt;runtime-tag&gt; adds these single letter tags:<br>
+            &nbsp;&nbsp;"s" when static linking to runtime<br>
+            &nbsp;&nbsp;"g" when linking to debug runtime<br>
+            &nbsp;&nbsp;"y" when building debug-python variants<br>
+            &nbsp;&nbsp;"d" when building debug variants<br>
+            &nbsp;&nbsp;"p" when building with stlport libraries<br>
+            &nbsp;&nbsp;"n" when building with stlport and using native
+            iostreams</li>
+
+            <li>&lt;version-tag&gt; adds "major_minor" from a
+            <tt>&lt;version&gt;</tt> property. Defaults to using
+            $(BOOST_VERSION) if no version property is present.</li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+  </blockquote>
+
+  <h3><a name="install_descriptions">Install Descriptions</a></h3>
+
+  <p>Installable files and tergets are described with:</p>
+
+  <blockquote>
+    <pre>
+install <i>name</i> <i>type</i> : <i>sources</i>... : [<i>options</i>]... ;
+</pre>
+  </blockquote>
+
+  <p>Install descriptions define files and targets that can be installed by
+  use of a <tt>stage</tt> target.</p>
+
+  <ul>
+    <li><i>name</i> specifies the name to group the given files and targets
+    as a collective entity. Multiple <tt>install</tt> descriptions can use
+    the same name, in which case they are all collected into a single
+    group.<br>
+    <br></li>
+
+    <li><i>type</i> indicates the type of files specified by the
+    <tt>install</tt>. This is used to later install files from different
+    groups but with the same type.<br>
+    <br></li>
+
+    <li><i>sources</i> can list both generated targets like
+    <tt>&lt;exe&gt;test_exe</tt> and individual files, but not template
+    targets.<br>
+    <br></li>
+
+    <li><i>options</i> additional options, currently none defined.<br></li>
+  </ul>
+
+  <p>Install descriptions are meant to be used by <tt>stage</tt> targets to
+  collect the various sources of many install descriptions into one or more
+  destination directories. For this there are two rules that help in getting
+  the sources specified:</p>
+
+  <ul>
+    <li><tt>install-subinclude <i>jamfiles</i>... :
+    [<i>options</i>]...</tt><br>
+    <br>
+    Includes the listed Jamfiles to read in the install descriptions.
+    Multiple <tt>&lt;exclude&gt;<i>name</i></tt> options can be used to
+    exclude the named groups of install descriptions from getting
+    defined.<br>
+    <br></li>
+
+    <li><tt>install-source <i>type</i></tt><br>
+    <br>
+    Returns the list of sources and targets specified by the install for the
+    given type. The returned list can be used as the sources for a
+    <tt>stage</tt> target which would place all the sources into that
+    stage.<br>
+    <br></li>
+  </ul>
+
   <h3><a name="feature_description">Feature Descriptions</a></h3>
 
   <p>Features are described by stating the feature type (simple features are
@@ -1410,9 +1539,9 @@ flags msvc HDRS &lt;include&gt; ;
 
   <p>Revised 
   <!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan
-                                        -->8 September, 2003 
+                                              -->8 September, 2003 
   <!--webbot bot="Timestamp" endspan i-checksum="13972"
-                                        --></p>
+                                              --></p>
 
   <p>Copyright &copy; Dave Abrahams 2001.</p>
 
