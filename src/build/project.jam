@@ -1,0 +1,351 @@
+#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+#   Each (sub)project is represented by a module with name Jamfile@jamfile-path.
+#   The module interface is:
+#
+#       rule location ( )
+#       rule id ( )
+#       rule project-root ( )
+#       rule parent ( )
+#       rule requirements ( )
+#       rule default-build ( )
+#       rule source-location ( )
+
+#       rule subprojects ( )  XXX currently 'subincludes' -- should rename.
+#
+#   Targets defined in Jamfile, as well as target representing the entire
+#   Jamfile will be available using facilities in the 'targets' module.
+#
+#   By the time jamfile is included, the jamfile module will have certain
+#   local rules defined, intended to make writing jamfiles less cumbersome.
+#   By default, only project.project rule is available; more rules can be
+#   declared using project.add_jamfile_rule below.
+
+#
+#   Loads jamfile at the given location. Certain rule will be imported in the
+#   jamfile module, to ease describing targets. After loading, project global
+#   file and jamfile needed by the loaded one will be loaded recursively.
+#
+rule load ( jamfile-location ) { }
+
+#
+#   Appends the given rules to the list of rules that will be implicitly
+#   imported in any jamfile module. Rules must be unqualified.#
+#
+rule add_jamfile_rules ( rules + ) { }
+
+#
+#   Projects can be referred using path@project-id notation. In it, 'path'
+#   selects jamfile location and 'project-id' names project relatively to
+#   the selected jamfile. Rooted 'project-id' is possible:
+#   "@/boost" will refer to the top-level project called "boost".
+#   If part after "@" is not rooted, then part before "@" must be present.
+#   This rules returns the name of project module given its id.
+rule lookup ( id ) { }
+
+
+# Interface description end.
+###########################################################################
+
+import modules : poke ;
+import numbers ;
+import os.path ;
+import sequence ;
+import targets ;
+import errors : error ;
+
+
+jamfile-rules = project.project ;
+
+
+rule load ( jamfile-location )
+{
+    local module-name = Jamfile@$(jamfile-location) ;
+
+    if ! $(jamfile-location) in $(projects) {
+
+        projects += $(jamfile-location) ;
+
+#       ECHO "project.load $(jamfile-location)" ;
+
+        local project-root = [ locate-project-root $(jamfile-location) ] ;
+
+ #       ECHO "project root found in $(project-root)" ;
+
+        modules.load project-root@$(project-root) : project-root.jam : $(project-root) ;
+
+
+        local parent = [ locate-parent $(jamfile-location) : $(project-root) ] ;
+
+#       ECHO "parent found in $(parent)" ;
+
+        if $(parent) != $(jamfile-location) {
+            load $(parent) ;
+        }
+
+
+
+        module $(module-name) {
+            import project : project ;
+        }
+
+        # Import rules common to all project modules from project-rules module,
+        # define at the end of this file.
+        # (Should be use classes instead?)
+
+        IMPORT project-rules : [ RULENAMES project-rules ]
+            : $(module-name) : [ RULENAMES project-rules ] : localize ;
+        EXPORT $(module-name) : [ RULENAMES project-rules ] ;
+        for local r in [ RULENAMES $(module-name) ] {
+            IMPORT $(module-name) : $(r) : : $(module-name).$(r) ;
+        }
+
+        modules.poke $(module-name) : __jamfile-location__ : $(jamfile-location) ;
+        modules.poke $(module-name) : __source-location__ : $(jamfile-location) ;
+        modules.poke $(module-name) : __project-root__ : $(project-root) ;
+        modules.poke $(module-name) : __parent__ : $(parent) ;
+        if $(parent) != $(jamfile-location) {
+            modules.poke $(module-name) : __default-build__ : [ Jamfile@$(parent).default-build ] ;
+            modules.poke $(module-name) : __requirements__ : [ Jamfile@$(parent).requirements ] ;
+        } else {
+            modules.poke $(module-name) : __default-build__ : debug ;
+        }
+
+        modules.load $(module-name) : Jamfile : $(jamfile-location) ;
+
+        for local subinclude in [ $(module-name).subincludes ] {
+            load [ os.path.join $(jamfile-location) $(subinclude) ] ;
+        }
+    }
+    return $(module-name) ;
+}
+
+
+
+rule lookup ( id )
+{
+    local split = [ MATCH (.*)@(.*) : $(id)  ] ;
+    local location = $(split[1]) ;
+    local project-id = $(split[2]) ;
+
+    if [ os.path.is_rooted $(project-id) ] {
+        return $(id-2-jamfile-location($(project-id))) ;
+    } else {
+        if $(location) {
+            local module-name = [ module-name $(location) ] ;
+            local base-id = [ $(module-name).id ] ;
+            if $(base-id) {
+                local rooted-id = $(base-id)/$(project-id) ;
+                return $(id-2-jamfile-location($(rooted-id))) ;
+            } else {
+                error "Project in $(location) has no project id" ;
+            }
+        } else {
+            error "Jamfile location must be specified for relative project-id" ;
+        }
+    }
+}
+
+rule project ( id ? : option1 * : option2 * : option3 * )
+{
+#   ECHO "Declared project '$(id)'" ;
+
+    local caller = [ CALLER_MODULE ] ;
+    id-2-jamfile-location($(id)) = [ $(caller).location ] ;
+
+    poke $(caller) : __id__ : $(id) ;
+
+    module [ CALLER_MODULE ] {
+
+        import targets ;
+
+        targets.create-abstract-project-target [ location ] ;
+    }
+    if $(option1) {
+        assign-option [ CALLER_MODULE ] : $(option1) ;
+    }
+    if $(option2) {
+        assign-option [ CALLER_MODULE ] : $(option2) ;
+    }
+    if $(option3) {
+        assign-option [ CALLER_MODULE ] : $(option3) ;
+    }
+}
+
+rule assign-option ( module : option + )
+{
+    local first = $(option[1]) ;
+    local tail = $(option[2-]) ;
+
+    switch $(first) {
+    case "requirements" :
+        poke $(module) : __requirements__ : $(tail) ;
+    case "default-build" :
+         poke $(module) : __default-build__ : $(tail) ;
+    case "source-location" :
+         poke $(module) : __source-location__
+              : [ os.path.join [ $(module).location ] $(tail) ] ;
+    case * :
+         error "Invalid project option" ;
+    }
+}
+
+
+dummy_module_number = 0 ;
+
+# Does an upward directory crawl to find a file.
+# As a side effect, loads that file as a module with auto-generated name.
+# The side effect should be eliminated once glob builtin is available.
+rule upward-crawl ( directory : file : upper_limit ? )
+{
+    local parents = [ os.path.all_parents
+                      [ os.path.join $(directory) file ] : $(upper_limit) ] ;
+
+#   ECHO "Parents are:" ;
+#   ECHO $(parents) ;
+
+    local found ;
+    while $(parents) && ! $(found) {
+        found = [ GLOB [ os.path.native $(parents[1]) ] : $(file) ] ;
+ #       ECHO "Search in $(parents[1]) gives $(found)" ;
+        parents = $(parents[2-]) ;
+    }
+    if ! $(found) {
+        error "Unable to locate file $(file), starting from $(directory)" ;
+    } else {
+        return [ os.path.make $(found) ] ;
+    }
+}
+
+# Locates a file called project-root.jam in parent dirs and returns
+# the directory where it is found
+rule locate-project-root ( jamfile-location )
+{
+    local result = [ upward-crawl $(jamfile-location) : project-root.jam ] ;
+
+    if ! $(result) {
+        EXIT "Unable to locate project root for Jamfile in $(jamfile-location)" ;
+    } else {
+        return [ os.path.parent [ os.path.make $(result) ] ] ;
+    }
+}
+
+# Locates a file called Jamfile in parent dirs, stopping search at
+# 'upper_limit'
+rule locate-parent ( jamfile-location : upper_limit )
+{
+    if $(jamfile-location) = $(upper_limit) {
+        return $(jamfile-location) ;
+    } else {
+        local result = [ upward-crawl
+                         [ os.path.parent $(jamfile-location) ]
+                         : Jamfile : $(upper_limit) ] ;
+
+        if ! $(result) {
+            EXIT "Unable to locate parent Jamfile for $(jamfile-location)" ;
+        } else {
+            return [ os.path.parent [ os.path.make $(result) ] ] ;
+        }
+    }
+}
+
+#
+# Returns the name of module corresponding to 'jamfile-location'.
+#
+rule module-name ( jamfile-location )
+{
+    return Jamfile@$(jamfile-location) ;
+}
+
+#
+# Output a human readable description of the project structure.
+#
+rule dump ( )
+{
+    # Sort projects so that output is independent of order. It is
+    # needed to allow tests to works despite possible change in
+    # project inclusion order.
+    local projects = $(projects) ;
+    projects = [ sequence.insertion-sort $(projects) ] ;
+
+    ECHO "Projects structure dump" ;
+    ECHO "" ;
+    for local i in $(projects) {
+        ECHO "    Location: $(i)" ;
+        local module-name = [ module-name $(i) ] ;
+        local id = [ $(module-name).id ] ;
+        id ?= "(none)" ;
+        ECHO "    Project id: $(id)" ;
+        ECHO "" ;
+
+        local project-root = [ $(module-name).project-root ] ;
+        local parent = [ $(module-name).parent ] ;
+        local requirements = [ $(module-name).requirements ] ;
+        local default-build = [ $(module-name).default-build ] ;
+        local source-location = [ $(module-name).source-location ] ;
+        local subincludes = [ $(module-name).subincludes ] ;
+        subincludes = [ sequence.insertion-sort $(subincludes) ] ;
+        ECHO "        Project root: $(project-root)" ;
+        ECHO "        Parent project: $(parent)" ;
+        ECHO "        Requirements:" $(requirements) ;
+        ECHO "        Default build:" $(default-build) ;
+        ECHO "        Source location:" $(source-location) ;
+        ECHO "        Subincludes:" $(subincludes) ;
+
+        ECHO "" ;
+    }
+}
+
+# This module defines rules common to all projects
+module project-rules {
+
+    rule location ( )
+    {
+        return $(__jamfile-location__) ;
+    }
+
+    rule id ( )
+    {
+        return $(__id__) ;
+    }
+
+    rule project-root ( )
+    {
+        return $(__project-root__) ;
+    }
+
+    rule parent ( )
+    {
+        return $(__parent__) ;
+    }
+
+    rule requirements ( )
+    {
+        return $(__requirements__) ;
+    }
+
+    rule default-build ( )
+    {
+        return $(__default-build__) ;
+    }
+
+    rule source-location ( )
+    {
+        return $(__source-location__) ;
+    }
+
+    rule subinclude ( jamfile-location )
+    {
+        __subincludes__ += $(jamfile-location) ;
+    }
+
+    rule subincludes ( )
+    {
+        return $(__subincludes__) ;
+    }
+}
+
+
