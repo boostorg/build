@@ -414,6 +414,23 @@ class lib-target-class : basic-target
         return $(result) ;
     }
     
+    rule check-for-unused-sources ( result * : sources * )
+    {
+        # For library targets, it's okay to bypass input sources of
+        # type LIB: with <link>static we can't consume library.
+        
+        local sources-to-check ;
+        for local s in $(sources)
+        {
+            if ! [ type.is-derived [ $(s).type ] LIB ]
+            {
+                sources-to-check += $(s) ;
+            }            
+        }
+        basic-target.check-for-unused-sources $(result) : $(sources-to-check) ;
+    }
+    
+    
 }
 
 rule lib ( name : sources * : requirements * : default-build * 
