@@ -1,0 +1,150 @@
+#  Copyright (C) 2002, Rene Rivera. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+# Various container classes.
+
+import class : * ;
+import sequence ;
+
+
+# Base for container objects. This lets us construct recursive structures.
+# That is containers with containers in them, specifically so we can tell
+# literal values from node values.
+#
+rule node (
+    value ? # Optional value to set node to initially.
+    )
+{
+    self.value = $(value) ;
+    
+    rule set ( value ? )
+    {
+        self.value = $(value) ;
+    }
+    
+    rule get ( )
+    {
+        return $(self.value) ;
+    }
+}
+class node ;
+
+# A simple list. Interface mimics the C++ std::list.
+#
+rule list (
+    values * # Initial contents of list.
+    )
+{
+    node.__init__ ;
+    self.value = $(values) ;
+    
+    rule front ( )
+    {
+        return $(self.value[1]) ;
+    }
+    
+    rule back ( )
+    {
+        return $(self.value[-1]) ;
+    }
+    
+    rule at ( index )
+    {
+        return $(self.value[$(index)]) ;
+    }
+    
+    rule push-front ( value )
+    {
+        self.value = $(value) $(self.value) ;
+    }
+    
+    rule pop-front ( )
+    {
+        self.value = $(self.value[2-]) ;
+    }
+    
+    rule push-back ( value )
+    {
+        self.value += $(value) ;
+    }
+    
+    rule pop-back ( )
+    {
+        self.value = $(self.value[1--2]) ;
+    }
+    
+    rule insert ( index : value )
+    {
+        local left = $(self.value[1-$(index)]) ;
+        left = $(left[1--2]) ;
+        local right = $(self.value[$(index)-]) ;
+        self.value = $(left) $(value) $(right) ;
+    }
+    
+    rule erase ( start end ? )
+    {
+        end ?= $(start) ;
+        local left = $(self.value[1-$(start)]) ;
+        left = $(left[1--2]) ;
+        local right = $(self.value[$(end)-]) ;
+        right = $(right[2-]) ;
+        self.value = $(left) $(right) ;
+    }
+    
+    rule clear ( )
+    {
+        self.value = ;
+    }
+    
+    rule size ( )
+    {
+        return [ sequence.length $(self.value) ] ;
+    }
+    
+    rule empty ( )
+    {
+        if ! $(self.value)
+        {
+            return true ;
+        }
+    }
+}
+class list : node ;
+
+local rule __test__ ( )
+{
+    import assert ;
+    
+    local l = [ new list ] ;
+    assert.result 0 : $(l).size ;
+    $(l).push-back b ;
+    $(l).push-front a ;
+    assert.result a : $(l).front ;
+    assert.result b : $(l).back ;
+    $(l).insert 2 : d ;
+    $(l).insert 2 : c ;
+    $(l).insert 4 : f ;
+    $(l).insert 4 : e ;
+    $(l).pop-back ;
+    assert.result 5 : $(l).size ;
+    assert.result d : $(l).at 3 ;
+    $(l).pop-front ;
+    assert.result c : $(l).front ;
+    assert.false $(l).empty ;
+    $(l).erase 3 4 ;
+    assert.result 2 : $(l).size ;
+    
+    local l2 = [ new list q w e r t y ] ;
+    assert.result 6 : $(l2).size ;
+    $(l).push-back $(l2) ;
+    assert.result 3 : $(l).size ;
+    local l2-alias = [ $(l).back ] ;
+    assert.result e : $(l2-alias).at 3 ;
+    $(l).clear ;
+    assert.true $(l).empty ;
+    assert.false $(l2-alias).empty ;
+    $(l2).pop-back ;
+    assert.result t : $(l2-alias).back ;
+}
