@@ -15,6 +15,21 @@ if --debug in $(ARGV)
     debug = true ;
 }
 
+# An explicit root for the toolset? (trim spaces)
+toolset-root = [ MATCH --toolset-root=(.*) : $(ARGV) ] ;
+{
+    local t = [ MATCH "[ ]*(.*)" : $(toolset-root:J=" ") ] ;
+    toolset-root = ;
+    while $(t)
+    {
+        t = [ MATCH "([^ ]+)([ ]*)(.*)" : $(t) ] ;
+        toolset-root += $(t[1]) ;
+        if $(t[3]) { toolset-root += $(t[2]) ; }
+        t = $(t[3]) ;
+    }
+    toolset-root = $(toolset-root:J="") ;
+}
+
 # Configure the implemented toolsets. These are minimal
 # commands and options to compile the full Jam. When
 # adding new toolsets make sure to add them to the
@@ -37,8 +52,8 @@ rule toolset ( name command : opt.out + : opt.define + : release-flags * : debug
 }
 ## Borland C++ 5.5.x
 toolset borland bcc32 : -e -n : /D
-    : -WC -w- -q -IC:\\Borland\\BCC55\\Include -LC:\\Borland\\BCC55\\Lib -O2 -vi -w-inl
-    : -WC -w- -q -IC:\\Borland\\BCC55\\Include -LC:\\Borland\\BCC55\\Lib -v -Od -vi- ;
+    : -WC -w- -q "-I$(toolset-root)Include" "-L$(toolset-root)Lib" -O2 -vi -w-inl
+    : -WC -w- -q "-I$(toolset-root)Include" "-L$(toolset-root)Lib" -v -Od -vi- ;
 ## Comeau C/C++ 4.x
 toolset como como : "-o " : -D
     : --inlining
@@ -90,7 +105,7 @@ toolset mipspro cc : "-o " : -D
 toolset msvc cl : /Fe : -D
     : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
     : /nologo /MLd /DEBUG /Z7 /Od /Ob0
-    : $(MSVCDir)\\lib\\kernel32.lib ;
+    : $(toolset-root)lib\\kernel32.lib ;
 ## Sun Workshop 6 C++
 toolset sunpro CC : "-o " : -D
     : -s -fast -O4
@@ -107,7 +122,7 @@ toolset vacpp xlc : "-o " : -D
 toolset vc7 cl : /Fe : -D
     : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
     : /nologo /MLd /DEBUG /Z7 /Od /Ob0
-    : $(MSVCDir)\\lib\\kernel32.lib ;
+    : $(toolset-root)lib\\kernel32.lib ;
 
 # First set the build commands and options according to the
 # preset toolset.
@@ -256,7 +271,6 @@ if $(UNIX) { actions .link {    ln -f $(>) $(<) } }
 rule .yyacc
 {
     DEPENDS $(<) : $(>) ;
-    .clean $(<) ;
 }
 actions .yyacc {    ./yyacc $(<) $(>) }
 
@@ -271,7 +285,6 @@ switch $(yacc:D=:S=)
 rule .yacc
 {
     DEPENDS $(<) : $(>) ;
-    .clean $(<) ;
 }
 if $(NT) { actions .yacc
 {    $(yacc) $(>)
@@ -298,7 +311,6 @@ rule exe.mkjambase
     if $(NT) { chmod on $(<) = "attrib -r " ; }
     if $(UNIX) { chmod on $(<) = "chmod +w " ; }
     mkjambase.exe on $(<) = $(exe:R=$(locate-target)) ;
-    .clean $(<) ;
 }
 actions exe.mkjambase
 {    $(chmod)$(<)
