@@ -364,20 +364,27 @@ rule generate ( target-reference # Target reference
 # Returns a list of properties, where all dependency properties are
 # replaced as follows:
 # - the value of dependency property is treated as target reference,
-#   which is generated with 'properties'
+#   which is generated with 'properties' + 'extra-properties'
 # - the created virtual target's become replace the property value,
 #    for example <library>a/b might become 
 #    <library>object(virtual-target)@1
 # In addition, use requirements for all created virtual targets
 # are added to the properties.
-rule generate-dependencies ( properties * : project )
+#
+# The purpose of 'extra-properties' is to be able to replace dependency
+# features only in certain set of properties, which does not include
+# all build properties. A concrete example is when we process use properties.
+# Dependency features must be replaced using full build properties of target,
+# but we don't want to add build properties to use requirements.
+rule generate-dependencies ( properties * : project : extra-properties * )
 {
     local xproperties ;
     for local p in $(properties)
     {
         if dependency in [ feature.attributes $(p:G) ]
         {
-            local g = [ targets.generate $(p:G=) : $(project) : $(properties) ] ;
+            local g = [ targets.generate $(p:G=) : $(project) 
+              : $(properties) $(extra-properties) ] ;
             xproperties += $(p:G)$(g) [ $(g).use-requirements ] ;
         }
         else
@@ -487,7 +494,7 @@ rule basic-target ( name : project
                     # virtual targets.
                     local xuse-requirements = 
                       [ targets.generate-dependencies $(self.use-requirements) 
-                        : $(self.project) ] ;
+                        : $(self.project) : $(rproperties) ] ;
                     
                     for local e in $(self.generated.$(property-path))                    
                     {
