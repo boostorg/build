@@ -175,8 +175,11 @@ rule main-from-objects ( targets * : objects * : type )
     DEPENDS $(targets) : $(objects) ;
     
     # locate and attach the extra files generated
-    MakeLocate $(extra-files) : $(LOCATE_TARGET) ;
-    DEPENDS $(targets) : $(extra-files) ;
+    if $(extra-files)
+    {
+        MakeLocate $(extra-files) : $(LOCATE_TARGET) ;
+        DEPENDS $(targets) : $(extra-files) ;
+    }
     
     gFILES($(targets[1])) = $(targets) $(extra-files) ;
 }
