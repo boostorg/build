@@ -1287,25 +1287,24 @@ rule SubDir
     # If $(TOP)/Jamrules hasn't been included, do so.
     #
 
+    if $(PROJECT)
+    {
+        gINCLUDED($(gTOP)) = $(gINCLUDED($(PROJECT).TOP)) ;
+    }
     if ! $(gINCLUDED($(gTOP)))
     {
         # Gated entry.
 
         gINCLUDED($(gTOP)) = TRUE ;
-
-        # File is $(TOPRULES) or $(TOP)/Jamrules.
-
-        _r = $($(gTOP)RULES) ;
-
-        if ! $(_r)
+        if $(PROJECT)
         {
-            _r = $(JAMRULES:R=$($(gTOP))) ;
+            gINCLUDED($(PROJECT).TOP) = TRUE ;
         }
 
         # Include it.
 
         project-root ;
-        include $(_r) ;
+        include $(JAMRULES:R=$($(gTOP))) ;
     }
 
     # Get path to current directory from root using SubDir.

@@ -1423,22 +1423,13 @@ rule dependent-include
             local gIN_LIB_INCLUDE = TRUE ;
             
             #
-            local gINCLUDED($(gTOP)) = $(gINCLUDED($(gTOP))) ;
             local [ protect-subproject ] ;
             local .project-name-and-subdir = [ enter-subproject $(.project-path) ] ;
             local .project-name = $(.project-name-and-subdir[1]) ;
             local .project-subdir = $(.project-name-and-subdir[2]) ;
             local .jamfile-path = [ root-paths $(JAMFILE) : [ root-paths $(.project-subdir) : $(TOP) ] ] ;
             
-            if $(.project-name)
-            {
-                gINCLUDED($(gTOP)) = $(gINCLUDED($(.project-name):TOP)) ;
-            }
             load-jamfiles $(.jamfile-path) ;
-            if $(.project-name)
-            {
-                gINCLUDED($(.project-name):TOP) = gINCLUDED($(gTOP)) ;
-            }
         }
     }
 }
@@ -1457,7 +1448,6 @@ rule enter-subproject ( project-path )
     TOP = $(.TOP) ;
     TOP_TOKENS = $(.TOP_TOKENS) ;
     gTOP = $(.gTOP) ;
-    gINCLUDED($(.gTOP)) = $(gINCLUDED($(.gTOP))) ;
     PROJECT = $(.PROJECT) ;
     
     local project-name = [ MATCH "^@([^/]+)" : $(project-path) ] ;
@@ -1468,15 +1458,19 @@ rule enter-subproject ( project-path )
     
     if $(project-name)
     {
-        project-top =
-            [ split-path $(gPROJECT($(project-name))) ]
-            [ split-path [ relative-path $(project-subdir) ] ]
-            [ split-path [ FSubDir [ split-path [ relative-path $(project-subdir) ] ] ] ] ;
+        project-top = [ split-path $(gPROJECT($(project-name))) ] ;
+        if $(project-subdir)
+        {
+            project-top +=
+                [ split-path [ relative-path $(project-subdir) ] ]
+                [ split-path [ FSubDir [ split-path [ relative-path $(project-subdir) ] ] ] ] ;
+        }
         TOP = [ join-path $(project-top) ] ;
         TOP_TOKENS = $(project-top) ;
         gTOP = TOP ;
         PROJECT = $(project-name) ;
     }
+    project-subdir ?= . ;
     
     subproject $(project-subdir) ;
     
