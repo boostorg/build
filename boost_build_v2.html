@@ -22,6 +22,10 @@
         table { align: center; border: thin; }
 </style>
   </head>
+  <!-- Things yet to document:
+      - build request, build request expansion and directly requested targets
+      - conditional properties
+    -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -32,9 +36,8 @@
     <hr>
 
     <div class="alert">
-      This preliminary reference is intended to document everything
-      currently implemeneted, but is not yet ready for any practical
-      use.
+      This preliminary reference is intended to document everything currently
+      implemeneted, but is not yet ready for any practical use.
     </div>
     <br>
      <br>
@@ -46,15 +49,20 @@
 
       <dd>
         <dl class="page-index">
+          <dt><a href="#overview">Overview</a></dt>
+
           <dt><a href="#features_properties">Features and properties</a></dt>
 
           <dd>
-             <dl class="page-index">
-               <dt><a href="#features_defined">Defintions</a>
-               <dt><a href="#feature_attributes">Feature Attributes</a>
-               <dt><a href="#feature_declaration">Feature Declaration</a>
-             </dl>
-             
+            <dl class="page-index">
+              <dt><a href="#features_defined">Defintions</a></dt>
+
+              <dt><a href="#feature_attributes">Feature Attributes</a></dt>
+
+              <dt><a href="#feature_declaration">Feature Declaration</a></dt>
+            </dl>
+          </dd>
+
           <dt><a href="#variants">Build Variants</a></dt>
 
           <dt><a href="#subfeatures">Subfeatures</a></dt>
@@ -73,85 +81,161 @@
     </dl>
     <hr>
 
+    <h2 id="installation">Installation</h2>
+    When using package management or installers, Boost.Build is ready to work
+    instantly. In other case, two steps are required: 
+
+    <ol>
+      <li>Place the Boost.Jam binary, called "bjam", somewhere in your
+      <tt>PATH</tt>.</li>
+
+      <li>
+        Specify the location of Boost.Build files. You can either set
+        environmental variable <tt>BOOST_BUILD_PATH</tt>, or create, at the
+        top of your project, a file called <tt>boost-build.jam</tt>, with a
+        single line: 
+<pre>
+boost-build /path/to/boost.build ;
+</pre>
+        The directory "examples" in the distribution already has this file,
+        so you can build projects there and add new without doing anything.
+      </li>
+    </ol>
+
+    <p>To verify your installation, you can use <tt>bjam --version</tt> at
+    the command line.</p>
+
     <h2><a name="sec-reference">Reference</a></h2>
+    This section will document mostly high-level view of Boost.Build,
+    mentioning appropriate modules and rules. The on-line help system must be
+    used to obtain low-level documentation (see the <a href=
+    "#help_option">help option</a>). 
+
+    <h3 id="overview">Overview</h3>
+    The most fundemental entity in Boost.Build is <em>main target</em>. This
+    is object that user want to construct from sources and keep up to date
+    with regard to those sources. Typical examples of main targets are
+    executable files and libraries. Main targets are grouped in
+    <em>projects</em>. They main purpose is organization: related targets can
+    be places in one project, then can be build together, or share some
+    definitions. Main targets and project are described mostly in declarative
+    fashion. To make some use of them, user issues <a href=
+    "#build_request">build request</a>, which specifies what targets user
+    wants to build, and what properties are desirable. Build request is not
+    necessary explicit. Invoking the build system without parameters will
+    build the project in current directory with defauly properties. The
+    <em>properties</em> describe various aspects of constructed objects. For
+    portability, they are specified in a normalized form, for example 
+<pre>
+&lt;optimization&gt;full &lt;inlining&gt;off
+</pre>
+    Depending on used compiler, this will be translated into appropriate
+    flags. Construction of each main target begins with finding properties
+    for <em>this</em> main target. They are found by processing both build
+    request, and <em>target requirements</em>, which give properties needed
+    for the target to build. For example, a given main target might require
+    certian defines, or will not work unless compiled in multithreaded mode.
+    The process of finding properties for main target is described in <a
+    href="#property_refinement">property refinement</a>. After then,
+    dependencies (i.e. other main targets) are build recursively. Build
+    request for dependencies is not always equal to those of dependent
+    &mdash; certain properties are dropped and user can explicitly specify
+    desired properties for dependencies. See <a href=
+    "#propagated_features">propagated features</a> and <a href=
+    "#target_reference">target reference</a> for details. When dependencies
+    are constructed, the dependency graph for this main target and for this
+    property set is created, which describes which files need to be created,
+    on which other files they depend and what actions are needed to construct
+    those files. There's more that one method, and user can define new ones,
+    but usually, this involves <em>generators</em> and <em>target type</em>.
+    Target type is just a way to classify targets. For example, there are
+    builtin types <tt>EXE</tt>, <tt>OBJ</tt> and <tt>CPP</tt>. <a href=
+    "#generators">Generators</a> are objects that know how to convert between
+    different target type. When a main target of a given type must be
+    created, all generators for that type, which can handle needed
+    properties, are found. Each is passed the list of sources, and either
+    fails, or returns a dependency graph. If a generator cannot produce
+    desired type from given sources, it may try to recursively construct
+    types that it can handle from type is was passed. This allows to try all
+    possible transformations. When all generators are tried, a dependency
+    graph is selected. Finally, the dependency graph is passed to underlying
+    Boost.Jam program, which runs all actions needed to bring all main
+    targets up-to date. At this step, implicit dependencies are also scanned
+    and accounted for, as described <a href="#dependency_scanning">here</a>. 
 
     <h3><a name="features_properties">Features and properties</a></h3>
 
     <h4><a name="features_defined">Definitions</a></h4>
 
-    <p>A <em>feature</em> is a normalized (toolset-independent) aspect
-    of a build configuration, such as whether inlining is
-    enabled. Feature names may not contain the '<tt>&gt;</tt>'
-    character.</p>
+    <p>A <em>feature</em> is a normalized (toolset-independent) aspect of a
+    build configuration, such as whether inlining is enabled. Feature names
+    may not contain the '<tt>&gt;</tt>' character.</p>
 
-    <p>Each feature in a build configuration has one or more
-    associated <em>value</em>s. Feature values may not contain the
-    '<tt>&lt;</tt>', '<tt>:</tt>', or '<tt>=</tt>' characters.</p>
+    <p>Each feature in a build configuration has one or more associated
+    <em>value</em>s. Feature values may not contain the '<tt>&lt;</tt>',
+    '<tt>:</tt>', or '<tt>=</tt>' characters.</p>
 
     <p>A <em>property</em> is a (feature,value) pair, expressed as
     &lt;feature&gt;value.</p>
 
-    <p>A <em>subfeature</em> is a feature which only exists in the
-    presence of its parent feature, and whose identity can be derived
-    (in the context of its parent) from its value.</p>
+    <p>A <em>subfeature</em> is a feature which only exists in the presence
+    of its parent feature, and whose identity can be derived (in the context
+    of its parent) from its value.</p>
 
     <p>A <em>value-string</em> is a string of the form
-    <tt>value-subvalue1-subvalue2</tt>...<tt>-subvalueN</tt>, where <tt>value</tt> is
-    a feature value and <tt>subvalue1</tt>...<tt>subvalueN</tt> are values of related
-    subfeatures. For example, the properties
-    <tt>&lt;toolset&gt;gcc &lt;toolset-version&gt;3.0.1</tt> can be
-    expressed more conscisely using a value-string, as
-    <tt>&lt;toolset&gt;gcc-3.0.1</tt>.</p>
+    <tt>value-subvalue1-subvalue2</tt>...<tt>-subvalueN</tt>, where
+    <tt>value</tt> is a feature value and
+    <tt>subvalue1</tt>...<tt>subvalueN</tt> are values of related
+    subfeatures. For example, the properties <tt>&lt;toolset&gt;gcc
+    &lt;toolset-version&gt;3.0.1</tt> can be expressed more conscisely using
+    a value-string, as <tt>&lt;toolset&gt;gcc-3.0.1</tt>.</p>
 
-    <p>A <em>property set</em> is a set of properties where no property appears twice, for 
-    instance: <tt>&lt;toolset&gt;gcc &lt;runtime-link&gt;static</tt>.
+    <p>A <em>property set</em> is a set of properties where no property
+    appears twice, for instance: <tt>&lt;toolset&gt;gcc
+    &lt;runtime-link&gt;static</tt>.</p>
 
-    <p>
+    <p>A <em>property path</em> is a property set whose elements have been
+    joined into a single string separated by slashes. A property path
+    representation of the previous example would be
+    <tt>&lt;toolset&gt;gcc/&lt;runtime-link&gt;static</tt>.</p>
 
-    A <em>property path</em> is a property set whose elements have
-    been joined into a single string separated by slashes.  A property
-    path representation of the previous example would be
-    <tt>&lt;toolset&gt;gcc/&lt;runtime-link&gt;static</tt>.
-
-    <p>A <em>build specification</em> is a property set which fully
-    describes the set of features used to build a target.
+    <p>A <em>build specification</em> is a property set which fully describes
+    the set of features used to build a target.</p>
 
     <h4><a name="feature_attributes">Feature Attributes</a></h4>
 
     <p>Each feature has a collection of zero or more of the following
-    attributes. Feature attributes are low-level descriptions of how
-    the build system should interpret a feature's values when they
-    appear in a build request. We also refer to the attributes of
-    properties, so that a <i>incidental</i> property, for example, is
-    one whose feature is has the <i>incidental</i> attribute.
-    
+    attributes. Feature attributes are low-level descriptions of how the
+    build system should interpret a feature's values when they appear in a
+    build request. We also refer to the attributes of properties, so that a
+    <i>incidental</i> property, for example, is one whose feature is has the
+    <i>incidental</i> attribute.</p>
+
     <ul>
       <li>
         <em>incidental</em> 
 
-        <p>Incidental features are assumed not to affect build
-        products at all.  As a consequence, the build system may use
-        the same file for targets whose build specification differs
-        only in incidental features. A feature which controls a
-        compiler's warning level is one example of a likely incidental
-        feature.</p>
+        <p>Incidental features are assumed not to affect build products at
+        all. As a consequence, the build system may use the same file for
+        targets whose build specification differs only in incidental
+        features. A feature which controls a compiler's warning level is one
+        example of a likely incidental feature.</p>
 
-        <p>Non-incidental features are assumed to affect build
-        products, so the files for targets whose build specification
-        differs in non-incidental features are placed in different
-        directories as described in <a href="#target_paths">target
-        paths</a> below.</p>
+        <p>Non-incidental features are assumed to affect build products, so
+        the files for targets whose build specification differs in
+        non-incidental features are placed in different directories as
+        described in <a href="#target_paths">target paths</a> below.</p>
       </li>
 
       <li>
         <em>propagated</em> 
 
-        <p>Features of this kind are propagated to dependencies. That
-        is, if a <a href="#main_target">main target</a> is built using
-        a propagated property, the build systems attempts to use the
-        same property when building any of its dependencies as part of
-        that main target. For instance, when an optimized exectuable
-        is requested, one usually wants it to be linked with optimized
+        <p id="propagated_features">Features of this kind are propagated to
+        dependencies. That is, if a <a href="#main_target">main target</a> is
+        built using a propagated property, the build systems attempts to use
+        the same property when building any of its dependencies as part of
+        that main target. For instance, when an optimized exectuable is
+        requested, one usually wants it to be linked with optimized
         libraries. Thus, the <tt>&lt;optimization&gt;</tt> feature is
         propagated.</p>
       </li>
@@ -159,12 +243,12 @@
       <li>
         <em>free</em> 
 
-        <p>Most features have a finite set of allowed values, and can
-        only take on a single value from that set in a given build
-        specification. Free features, on the other hand, can have
-        several values at a time and each value can be an arbitrary
-        string. For example, it is possible to have several
-        preprocessor symbols defined simultaneously:</p>
+        <p>Most features have a finite set of allowed values, and can only
+        take on a single value from that set in a given build specification.
+        Free features, on the other hand, can have several values at a time
+        and each value can be an arbitrary string. For example, it is
+        possible to have several preprocessor symbols defined
+        simultaneously:</p>
 <pre>
 &lt;define&gt;NDEBUG=1 &lt;define&gt;HAS_CONFIG_H=1
 </pre>
@@ -174,26 +258,25 @@
       <li>
         <em>optional</em> 
 
-        <p>An optional feature is a feature which is not required to
-        appear in a build specification. Every non-optional non-free
-        feature has a default value which is used when a value for the
-        feature is not otherwise specified, either in a target's
-        requirements or in the user's build request. [A feature's
-        default value is given by the first value listed in the
-        feature's declaration. -- move this elsewhere - dwa]</p>
+        <p>An optional feature is a feature which is not required to appear
+        in a build specification. Every non-optional non-free feature has a
+        default value which is used when a value for the feature is not
+        otherwise specified, either in a target's requirements or in the
+        user's build request. [A feature's default value is given by the
+        first value listed in the feature's declaration. -- move this
+        elsewhere - dwa]</p>
       </li>
 
       <li>
         <em>symmetric</em> 
 
-        <p>A symmetric feature's default value is not automatically
-        included in <a href="#variants">build variants</a>. Normally a
-        feature only generates a subvariant directory when its value
-        differs from the value specified by the build variant, leading
-        to an assymmetric subvariant directory structure for certain
-        values of the feature. A symmetric feature, when relevant to
-        the toolset, always generates a corresponding subvariant
-        directory.</p>
+        <p>A symmetric feature's default value is not automatically included
+        in <a href="#variants">build variants</a>. Normally a feature only
+        generates a subvariant directory when its value differs from the
+        value specified by the build variant, leading to an assymmetric
+        subvariant directory structure for certain values of the feature. A
+        symmetric feature, when relevant to the toolset, always generates a
+        corresponding subvariant directory.</p>
       </li>
 
       <li>
@@ -242,36 +325,29 @@
         </div>
       </li>
     </ul>
-    
+
     <p>TODO: document active features..</p>
 
     <h4><a name="#feature_declaration">Feature Declaration</a></h4>
-
-    The low-level feature declaration interface is the
-    <tt>feature</tt> rule from the <tt>feature</tt> module:
-
+    The low-level feature declaration interface is the <tt>feature</tt> rule
+    from the <tt>feature</tt> module: 
 <pre>
 rule feature ( name : allowed-values * : attributes * )
 </pre>
-
-    A feature's allowed-values may be extended wit
-
-    The build system will provide high-level rules which define
-    features in terms of valid and useful combinations of attributes.
+    A feature's allowed-values may be extended wit The build system will
+    provide high-level rules which define features in terms of valid and
+    useful combinations of attributes. 
 
     <h3><a name="#variants">Build Variants</a></h3>
-
-    A build variant, or (simply variant) is a special kind of
-    composite feature which automatically incorporates the default
-    values of features that  . Typically you'll want at least two separate variants:
-    one for debugging, and one for your release code.
- 
-[ Volodya says: &quot;Yea, we'd need to mention that it's a composite feature and describe how 
-they are declared, in pacticular that default values of non-optional 
-features are incorporated into build variant automagically. Also, do we 
-wan't some variant inheritance/extension/templates. I don't remember how 
-it works in V1, so can't document this for V2.&quot;. Will clean up soon -DWA ]
-
+    A build variant, or (simply variant) is a special kind of composite
+    feature which automatically incorporates the default values of features
+    that . Typically you'll want at least two separate variants: one for
+    debugging, and one for your release code. [ Volodya says: "Yea, we'd need
+    to mention that it's a composite feature and describe how they are
+    declared, in pacticular that default values of non-optional features are
+    incorporated into build variant automagically. Also, do we wan't some
+    variant inheritance/extension/templates. I don't remember how it works in
+    V1, so can't document this for V2.". Will clean up soon -DWA ] 
 
     <h4 id="link_compatibility">Link compatible and incompatible
     properties</h4>
@@ -302,7 +378,7 @@ it works in V1, so can't document this for V2.&quot;. Will clean up soon -DWA ]
     requested and actual properties are link-compatible, it's OK. Otherwise,
     it's an error.</p>
 
-    <h4>Definition of property refinement</h4>
+    <h4 id="property_refinement">Definition of property refinement</h4>
 
     <p>When a target with certain properties is requested, and that target
     requires some set of properties, it is needed to find the set of
@@ -319,6 +395,22 @@ it works in V1, so can't document this for V2.&quot;. Will clean up soon -DWA ]
       <li>If the original property set includes property with a different
       value of non free feature, that property is removed.</li>
     </ol>
+
+    <h4 id="conditional_properties">Conditional properties</h4>
+
+    <p>Sometime it's desirable to apply certain requirements only for
+    specific combination of other properties. For example, one of compilers
+    that you use issues a poinless warning that you want to suppress by
+    passing a command line option to it. You would not want to pass that
+    option to other compilers. Condititional properties allow to do that.
+    Their systax is:</p>
+<pre>
+( property ( "," property ) ":" property
+</pre>
+    For example, the problem above would be solved by: 
+<pre>
+exe hello : hello.cpp : &lt;toolset&gt;yfc:&lt;cxxflags&gt;-disable-pointless-warning ;
+</pre>
 
     <h3><a name="initialization">Initialization</a></h3>
 
@@ -366,7 +458,9 @@ it works in V1, so can't document this for V2.&quot;. Will clean up soon -DWA ]
       <li>An argument which does not contain slashes or the "=" symbol is
       either a value of an implicit feature, or target to be built. It is
       taken to be value of a feature if appropriate feature exists.
-      Otherwise, it is considered a <a href="#target_id">target id</a>.</li>
+      Otherwise, it is considered a <a href="#target_id">target id</a>.
+      Special target name "clean" has the same effect as "--clean"
+      option.</li>
 
       <li>
         An argument with either slashes or the "=" symbol specifies a number
@@ -431,6 +525,27 @@ borland/runtime-link=static,dynamic
 
       <tbody>
         <tr>
+          <td><tt>--version</tt></td>
+
+          <td>Prints information on Boost.Build and Boost.Jam versions.</td>
+        </tr>
+
+        <tr id="help_option">
+          <td><tt>--help</tt></td>
+
+          <td>Access to the online help system. This prints general
+          information on how to use the help system with additional --help*
+          options.</td>
+        </tr>
+
+        <tr>
+          <td><tt>--clean</tt></td>
+
+          <td>Removes everything instead of building. Unlike <tt>clean</tt>
+          target in make, it is possible to clean one some targets.</td>
+        </tr>
+
+        <tr>
           <td><tt>--debug</tt></td>
 
           <td>Enables internal checks.</td>
@@ -440,14 +555,6 @@ borland/runtime-link=static,dynamic
           <td><tt>--dump-projects</tt></td>
 
           <td>Cause the project structure to be output.</td>
-        </tr>
-
-        <tr>
-          <td><tt>--help</tt></td>
-
-          <td>Access to the online help system. This prints general
-          information on how to use the help system with additional --help*
-          options.</td>
         </tr>
       </tbody>
     </table>
@@ -590,12 +697,33 @@ borland/runtime-link=static,dynamic
 
     <h3><a name="targets">Targets</a></h3>
 
+    <p>There are two user-visible kinds of targets in Boost.Build. First are
+    "abstract" &mdash; they correspond to things declared by user, for
+    example, projects and executable files. The primary thing about abstract
+    target is that it's possible to request them to be build with a
+    particular values of some properties. Each combination of properties may
+    possible yield different set of real file, so abstract target do not have
+    a direct correspondence with files.</p>
+
+    <p>File targets, on the contary, are associated with concrete files.
+    Dependency graphs for abstract targets with specific properties are
+    constructed from file targets. User has no was to create file targets,
+    however it can specify rules that detect file type for sources, and also
+    rules for transforming between file targets of different types. That
+    information is used in constructing dependency graph, as desribed in the
+    <a href="#generators">next section</a>. <b>Note:</b>File targets are not
+    the same as targets in Jam sense; the latter are created from file
+    targets at the latest possible moment. <b>Note:</b>"File target" is a
+    proposed name for what we call virtual targets. It it more understandable
+    by users, but has one problem: virtual targets can potentially be
+    "phony", and not correspond to any file.</p>
+
     <h4>Main targets and main target alternatives</h4>
 
     <p id="main_target"><em>Main target</em> is a named entity which can be
     build, for example a named executable file. To declare a main target,
     user invokes some of the <a href="#main_target_rules">main target
-    rules</a>, passing it things like list of source and requirement.</p>
+    rules</a>, passing it things like list of sources and requirements.</p>
 
     <p>It is possible to have different list of sources for different
     toolsets, therefore it is possible to invoke main target rules several
@@ -645,9 +773,9 @@ borland/runtime-link=static,dynamic
     After that, the target given by <tt>local-target-name</tt> in the found
     project is used. 
 
-    <p><em>Target reference</em> is used to specify a source target, and may
-    additionally specify desired properties for that target. It has this
-    syntax:</p>
+    <p id="target_reference"><em>Target reference</em> is used to specify a
+    source target, and may additionally specify desired properties for that
+    target. It has this syntax:</p>
 <pre>
     target-reference -&gt; target-id [ "/" requested-properties ]
     requested-properties -&gt; property-path
@@ -668,6 +796,22 @@ borland/runtime-link=static,dynamic
     there is one, it is loaded and if the specified target is declared by
     that project it is used. Otherwise, we just treat the target reference as
     a file name.</p>
+
+    <h4>File targets</h4>
+    As described above, file targets corresponds to files that Boost.Build
+    manages. User's may be concerned about file targets in three ways: when
+    declaring file target types, when declaring transformations between
+    types, and when determining where file target will be placed. File
+    targets can also be connected with actions, that determine how the target
+    is created. Both file targets and actions are implemented in the
+    <tt>virtual-target</tt> module. 
+
+    <h5>Types</h5>
+    A file target can be given a file, which determines what transformations
+    can be applied to the file. The <tt>type.register</tt> rule declares new
+    types. File type can also be assigned a scanner, which is used to find
+    implicit dependencies. See <a href="#dependency_scanning">dependency
+    scanning</a> below. 
 
     <h4>Target paths</h4>
 
@@ -700,24 +844,30 @@ borland/runtime-link=static,dynamic
    
 </pre>
 
+    <h3 id="build_request">Build request</h3>
+
     <h3><a name="build_process">Build process</a></h3>
 
-    <p>The build works in this way. On startup, the project in the current
-    directory is read. In turn, it may request building of other projects,
-    which will be loaded recursively. Parent projects are also loaded to
-    inherit some of their properties. As the result, a tree of projects is
-    constructed. After that, the build request is constructed from the
-    command line. Then, the steps are:</p>
+    <p>Given a list of targets ids and a build request, building goes this
+    way. First, for each id we obtain the abstract targets corresponding to
+    it. This also loads all necessary projects. If no target id is given,
+    project in the current directory is used. Build request is expanded, and
+    for each resulting property set, the <tt>generate</tt> method of all
+    targets is called, which yields a list of virtual targets. After that all
+    virtual targets are actualized, and target "all" is set to depend on all
+    created actual targets. Lastly, depending on whether <tt>--clean</tt>
+    option was given, either target "all" or target "clean" is updated.
+    Generation of virtual target from abstract one is performed as
+    follows:</p>
 
-    <ol>
-      <li>All of the projects to be build are passed the build request. If
-      the build request does not satisfy the project's requirements, a
-      warning is issued and the build of the project is skipped. Projects
-      mentioned in <tt>build-project</tt> rule will still be build.</li>
+    <ul>
+      <li>For project targets, all of main targets are generated with the
+      same properties. Then all projects referred via "build-project" are
+      generated as well. If it's not possible to refine requested properties
+      with project requirements, the project is skipped.</li>
 
       <li>
-        An attempts to make all the main targets in the project is performed.
-        For each main target: 
+        For main target, steps are: 
 
         <ol>
           <li>All main target alternatives which requirements are satisfied
@@ -735,16 +885,234 @@ borland/runtime-link=static,dynamic
           <li>Each target reference in the source list are recursively
           constructed.</li>
 
-          <li>The dependency graph for the target is constructed by running
-          so called matching process, using generated source targets and
-          ordinary sources.</li>
+          <li>Properties are refined with alternative's requirements, and
+          active features in the resulting set are executed.</li>
+
+          <li>Conditional properties are evaluated.</li>
+
+          <li>The dependency graph for the target is constructed in a way
+          which depends on the kind of main target, typically using
+          generators.</li>
         </ol>
       </li>
+    </ul>
+
+    <h3 id="generators">Generators</h3>
+
+    <p>To construct a main target with given properties from sources, it is
+    required to create a dependency graph for that main target, which will
+    also include actions to be run. The algorithm for creating the dependency
+    graph is described here.</p>
+
+    <p>The fundamental concept is <em>generator</em>. If encapsulates the
+    notion of build tool and is capable to converting a set of input targets
+    into a set of output targets, with some properties. Generator matches a
+    build tool as closely as possible: it works only when the tool can work
+    with requested properties (for example, msvc compiler can't work when
+    requested toolset is gcc), and should produce exactly the same targets as
+    the tool (for example, if Borland's linker produces additional files with
+    debug information, generator should also).</p>
+
+    <p>Given a set of generators, the fundamental operation is to construct a
+    target of a given type, with given properties, from a set of targets.
+    That operation is performed by rule <tt>generators.construct</tt> and the
+    used algorithm is described below.</p>
+
+    <h4>Selecting and ranking viable generators</h4>
+
+    <p>Each generator, in addition to target types that it can produce, have
+    attribute that affects its applicability in particular sitiation. Those
+    attributes are:</p>
+
+    <ol>
+      <li>Required properties, which are properties absolutely necessary for
+      the generator to work. For example, generator encapsulating the gcc
+      compiler would have &lt;toolset&gt;gcc as required property.</li>
+
+      <li>Optional properties, which increase the generators suitability for
+      a particual build.</li>
+    </ol>
+    Generator's required and optional properties may not include either free
+    or incidental properties. (Allowing this would greatly complicate caching
+    targets). 
+
+    <p>When trying to construct a target, the first step is to select all
+    possible generators for the requested target type, which required
+    properties are a subset of requested properties. Generators which were
+    already selected up the call stack are excluded. In addition, if any
+    composing generators were selected up the call stack, all other composing
+    generators are ignored (TODO: define composing generators). The found
+    generators assigned a rank, which is the number of optional properties
+    present in requested properties. Finally, generators with highest rank
+    are selected for futher processing.</p>
+
+    <h4>Running generators</h4>
+
+    <p>When generators are selected, each is run to produce a list of created
+    targets. This list might include targets which are not of requested
+    types, because generators create the same targets as some tool, and
+    tool's behaviour is fixed. (Note: should specify that in some cases we
+    actually want extra targets). If generator fails, it returns an empty
+    list. Generator is free to call 'construct' again, to convert sources to
+    the types it can handle. It also can pass modified properties to
+    'constuct'. However, a generator is not allowed to modify any propagated
+    properties, otherwise when actually consuming properties we might
+    discover that the set of propagated properties is different from what was
+    used for building sources.</p>
+
+    <p>For all targets which are not of requested types, we try to convert
+    them to requested type, using a second call to <tt>construct</tt>. This
+    is done in order to support transformation sequences where single source
+    file expands to several later. See <a href=
+    "http://groups.yahoo.com/group/jamboost/message/1667">this message</a>
+    for details.</p>
+
+    <h4>Selecting dependency graph</h4>
+    After all generators are run, it is necessary to decide which of
+    successfull invocation will be taken as final result. At the moment, this
+    is not done. Instead, it is checked whether all successfull generator
+    invocation returned the same target list. Error is issued otherwise. 
+
+    <h4>Property adjustment</h4>
+
+    <p>Because target location is determined by the build system, it is
+    sometimes necessary to adjust properties, in order to not break actions.
+    For example, if there's an action which generates a header, say
+    "a_parser.h", and a source file "a.cpp" which includes that file, we must
+    make everything work as if a_parser.h is generated in the same directory
+    where it would be generated without any subvariants.</p>
+
+    <p>Correct property adjustment can be done only after all targets are
+    created, so the approach taken is:</p>
+
+    <ol>
+      <li>When dependency graph is constructed, each action can be assigned a
+      rule for property adjustment.</li>
+
+      <li>When virtual target is actualized, that rule is run and return the
+      final set of properties. At this stage it can use information of all
+      created virtual targets.</li>
     </ol>
 
-    <p>The dependency graph constructed for each target is build of so called
-    "virtual targets", which do not yet correspond to jam's targets. It is
-    therefore converted to jam's dependency graph which is then build.</p>
+    <p>In case of quoted includes, no adjustment can give 100% correct
+    results. If target dirs are not changed by build system, quoted includes
+    are searched in "." and then in include path, while angle includes are
+    searched only in include path. When target dirs are changed, we'd want to
+    make quoted includes to be search in "." then in additional dirs and then
+    in the include path and make angle includes be searched in include path,
+    probably with additional paths added at some position. Unless, include
+    path already has "." as the first element, this is not possible. So,
+    either generated headers should not be included with quotes, or first
+    element of include path should be ".", which essentially erases the
+    difference between quoted and angle includes. <b>Note:</b> there only way
+    to get "." as include path into compiler command line is via verbatim
+    compiler option. In all other case, Boost.Build will convert "." into
+    directory where it occurs.</p>
+
+    <h4>Transformations cache</h4>
+    Under certain conditions, an attempt is made to cache results of
+    transformation search. First, the sources are replaced with targets with
+    special name and the found target list is stored. Later, when properties,
+    requested type, and source type are the same, the store target list is
+    retrieved and cloned, with appropriate change in names. 
+
+    <h4 id="dependency_scanning">Dependency scanning</h4>
+
+    <p>Dependency scanning is the process of finding implicit dependencies
+    due to "include" statements and similar things. It has to take into
+    account two things:</p>
+
+    <ul>
+      <li>Whether includes in a particular file need to be taken into account
+      depends on actions that use that file. For example, if the action is
+      "copy file", then includes should be ignored. Another example is when a
+      file is compiled with two different include paths on different
+      toolsets.</li>
+
+      <li>It is possible to include generated header. In which case, it may
+      not yet exist at the time when we scan dependencies.</li>
+    </ul>
+
+    <p>Dependency scanning is implemented by objects called scanners. See
+    documentation for the "scanner" module to detail.</p>
+
+    <p>Regarding the first problem, we really have no choice. We can't treat
+    the same actual target differently depending on from where it is used.
+    Therefore, when handling of includes differers depending on actions, we
+    have to duplicate targets and assign different properties to it.</p>
+
+    <p>For the reason, when actualizing a virtual target we optionally pass
+    the needed scanner to the "virtual-target.actualize" method. When no
+    scanner is passed, a new actual target is created, with it's dependencies
+    and updating actions set accordingly. When a particular scanner is
+    specified, a new actual target is created. That target will depend on
+    target created without scanner. In effect, this will allow to use
+    different scanners for the same file.</p>
+
+    <h5>Generated headers</h5>
+    Let me explain what I find the right semantic, first without any
+    subvariants. We have a target "a.cpp" which includes "a_parser.h", we
+    have to search through all include directories, checking: 
+
+    <ol>
+      <li>If there's such file there, or</li>
+
+      <li>If there's a target of the same name, bound to that dir via
+      LOCATE_TARGET.</li>
+    </ol>
+    Jam allows to do 1 via SEARCH variable, but that's not enough. Why can't
+    we do simpler: first check if there's target of the same name? I.e.
+    including of "a_parser.h" will already pick generated "a_parser.h",
+    regardless of search paths? Hmm... just because there's no reason to
+    assume that. For example, one can have an action which generated some
+    "dummy" header, for system which don't have the native one. Naturally, we
+    don't want to depend on that generated headers. To implement proposed
+    semantic we'd need a new builtin. We can do this in Jam code, but really,
+    this belongs to core. Using GLOB and jam code would just duplicate
+    existing binding functionality and be inefficient. New builtin will
+    accept a name of new target and a list of directories. It will perform
+    the search as explained above and return either the name of exising
+    target that it found, or create a new target with that name that it was
+    passed. So, we'd write something like 
+
+    <blockquote>
+<pre>
+    INCLUDES $(&lt;) : [ SEARCH_FOR_TARGET $(&gt;) : $(SEARCH_PATH) ] ;
+</pre>
+    </blockquote>
+    What shall we do when using subvariants. For user, subvariants must be
+    more or less transparent. If without subvariant a header was generated to
+    a certain directory, everything must work. Suppose that file a.cpp
+    belongs to a dependency graph of main target a. Include paths are 
+
+    <blockquote>
+<pre>
+     "/usr/include" "/home/t" "."
+</pre>
+    </blockquote>
+    We start by finding all places where headers that are part of a's
+    dependency graph are generated. We insert those places to the include
+    paths, immediately after ".". For example, we might end with: 
+
+    <blockquote>
+<pre>
+     "/usr/include" "/home/t" "." "build"
+</pre>
+    </blockquote>
+    As a result: 
+
+    <ol>
+      <li>File "a.cpp" will be correctly compiled. Note that it's already
+      necessary to adjust paths to ensure this. We'll have to add target
+      paths for all generated headers, because determining the exact set of
+      additional include path for each source -- i.e the set of headers that
+      it uses --- will be hard.</li>
+
+      <li>With the proposed SEARCH_FOR_TARGET rule, dependency on generated
+      header will work magically --- it would find the "a_parser.h" target
+      bound via LOCATE_TARGET to "build" and we'll call INCLUDE on that found
+      target, instread of creating a completely unrelated one.</li>
+    </ol>
     <hr>
 
     <p class="revision">Last modified: Aug 15, 2002</p>
