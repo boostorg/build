@@ -148,13 +148,14 @@ rule load (
                         ECHO testing module $(m)... ;
                     }
                     
+                    # Import m's rules into __test-$(m)__ for easy access
+                    IMPORT $(m) : [ RULENAMES $(m) ] : __test-$(m)__ : [ RULENAMES $(m) ] ;
+                    
                     # execute the module's __test__ rule in its own module to
                     # eliminate the inadvertent effects of testing
                     # module dependencies (such as assert) on the module itself.
                     IMPORT $(m) : __test__ : __test-$(m)__ : __test__ : LOCALIZE ;
                     
-                    # Import the rest of m's rules into __test-$(m)__ for easy access
-                    IMPORT $(m) : [ RULENAMES $(m) ] : __test-$(m)__ : [ RULENAMES $(m) ] ;
                     module __test-$(m)__
                     {
                         # set up the name of the module we're testing
