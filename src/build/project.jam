@@ -290,10 +290,10 @@ rule initialize (
         # Make sure we've loaded the project-root corresponding to this
         # Jamfile.
         #
-        local project-root-module = [ project-roots.load $(location) ] ;
-        local project-root = [ $(project-root-module).project-root get-location ] ;
+        local project-root-object = [ project-roots.load $(location) ] ;
+        local project-root = [ $(project-root-object).get-location ] ;
         
-        $(attributes).set project-root-module : $(project-root-module) : exact ;
+        $(attributes).set project-root : $(project-root-object) : exact ;
 
         local parent = [ find-jamfile $(location) $(project-root) ] ;
         local parent-module = ;
@@ -302,18 +302,18 @@ rule initialize (
             parent-module = [ load [ path.parent $(parent[1]) ] ] ;
         }
         
-        inherit-attributes $(module-name) : $(project-root-module) : $(parent-module) ;
+        inherit-attributes $(module-name) : $(project-root-object) : $(parent-module) ;
     }    
     
     .current-project = [ target $(module-name) ] ;
 }
 
 # Make 'project-module' inherit attributes of project root and parent module.
-rule inherit-attributes ( project-module : project-root-module : parent-module ? )
+rule inherit-attributes ( project-module : project-root : parent-module ? )
 {
     # Register with the project root. This will inject project-root
     # constants and do some other initialization.
-    $(project-root-module).project-root register-project $(project-module) ;
+    $(project-root).register-project $(project-module) ;
 
     if $(parent-module)
     {

@@ -37,13 +37,14 @@ rule load (
 
     local module-name = project-root<$(location)> ;
 
+    local root ;
     # Only bother with the rest if the project-root isn't loaded yet.
     #
     if ! [ modules.peek $(module-name) : .project-root ]
     {
         # Create the project-root, and remember it.
         #
-        local root = [ class.new project-root-object $(location) ] ;
+        root = [ class.new project-root-object $(location) ] ;
         modules.poke $(module-name) : .project-root : $(root) ;
         .roots += $(root) ;
         
@@ -51,10 +52,15 @@ rule load (
         #
         $(root).initialize ;
     }
+    else
+    {
+        root = [ modules.peek $(module-name) : .project-root ] ;
+    }
+    
 
     # Return the module for the project.
     #
-    return $(module-name) ;
+    return $(root) ;
 }
 
 # Finds the location of project root for a directory.
@@ -357,8 +363,8 @@ module project-context
     {
         import project ;
         local attributes = [ project.attributes $(__name__) ] ;
-        local project-root-module = [ $(attributes).get project-root-module ] ;
-        return [ $(project-root-module).project-root
-            $(method) $(args) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ] ;
+        local project-root = [ $(attributes).get project-root ] ;
+        return [ $(project-root).$(method) 
+          $(args) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ] ;
     }
 }
