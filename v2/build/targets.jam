@@ -1,0 +1,318 @@
+#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+#  There are three kinds of targets:
+#  - "abstract" -- given by user in jamfiles, and project targets,
+#  - "virtual" -- part of possible transformation sequence, with defined
+#     properties,
+#  - actual -- the targets in Jam sense.
+#  The first two kinds are handled by this module.
+
+#  Each target is an instanse of some class derived from 'target' class.
+
+#  Note: classes will be actually declared in the implementation section.
+#  Declaring them here will cause incomplete ctor declarations to be used.
+
+#  Base target class.
+rule target ( )
+{
+    # Adds new depencies for this target
+    rule depends ( d + ) { }
+    # Retrives the list of dependencies
+    rule dependencies ( ) { }
+    # Generates build instruction for the target and the specified build
+    # request. If 'build-request' is omitted, default build is performed,
+    # if appropriate
+    rule generate ( build-request * ) { }
+}
+
+#  Project target class (derived from 'target')
+rule project-target ( requirements * : default-build * )
+{
+
+}
+
+#  Concrete target (derived from 'target')
+rule typed-target ( name : type : sources * : requirements * : default-build * )
+{
+}
+
+
+#
+#  Returns the target instance for the specified jamfile-location and target
+#  pair. If 'jamfile-location' is not yet known, loads Jamfile there.
+#
+rule abstract-target-name ( jamfile-location : target-in-jamfile ? )
+
+#
+#   Creates project target at the specified location
+#
+rule create-abstract-project-target ( jamfile-location )
+
+
+
+# Class which represents a virtual target
+rule virtual-target ( name : subvariant : project )
+{
+    # Name of the target
+    rule name ( ) { }
+    # Property set that distinguishes different variants of a target.
+    # May be a subset of the property set that is used for building.
+    # Determines the location of target, in an unspecified way.
+    rule subvariant ( ) { }
+    # Project where this target was declared
+    rule project ( ) { }
+
+    rule includes ( ) { }
+    rule add_includes ( i + ) { }
+
+    rule dependencies ( ) { }
+    rule depends ( d + ) { }
+
+    # If 'a' is supplied, sets action to 'a'.
+    # Returns the action currently set.
+    rule action ( a ? ) { }
+
+    # Generates all the actual targets and build instructions needed to build
+    # this target. Returns the actual target name. Can be called several times.
+    # Does no processing for other targets that 'action' will generate.
+    # Rationale: we might need only one file from the set created by an
+    # action, and there's no need to run the action if the file is up-to-date,
+    # only because some other file in set is out-of-date.
+    rule actualize ( ) { }
+}
+
+# Class which represents an action.
+# Both 'targets' and 'sources' should list instances of 'virtual-target'.
+# Action name should name a rule with this prototype
+#     rule action_name ( targets + : sources * : properties * )
+# Targets and sources are passed as actual jam targets. The rule may
+# not establish dependency relationship, but should do everything else.
+rule action ( targets + : sources * : action_name : properties * )
+{
+    rule targets ( ) { }
+    rule sources ( ) { }
+    rule action_name ( ) { }
+    rule properties ( ) { }
+    # Generates actual build instructions.
+    rule actualize ( ) { }
+}
+
+
+
+
+# Interface description end.
+###########################################################################
+
+import sequence ;
+import class : class ;
+import regex ;
+import property ;
+
+rule target ( )
+{
+    __dependencies__ = ;
+
+    rule depends ( d + )
+    {
+        d = [ sequence.insertion-sort $(d) ] ;
+        __dependencies__ = [ sequence.merge $(__dependencies__) $(d) ] ;
+    }
+
+    rule dependencies ( )
+    {
+        return $(__dependencies__) ;
+    }
+
+    rule generate ( build-request * )
+    {
+        for local d in [ dependencies ] {
+            $(d).generate $(build-request) ;
+        }
+    }
+}
+
+class.class target ;
+
+rule project-target ( requirements * : default-build * )
+{
+    __requirements__ = $(requirements) ;
+    __default-build__ = $(default-build) ;
+
+    target.__init__ ;
+}
+
+class.class project-target : target ;
+
+rule typed-target ( name : type : sources * : requirements * : default-build * )
+{
+    __name__ = $(name) ;
+    __type__ = $(type) ;
+    __sources__ = $(sources) ;
+    __requirements__ = $(requirements) ;
+    __default-build__ = $(default-build) ;
+
+    target.__init__ ;
+
+    rule generate ( build-request * )
+    {
+        ECHO "Generating typed target $(__name__)" ;
+        # How one can call derived rule?
+        # class@target.generate $(build-request) ;
+    }
+}
+
+class.class typed-target : target ;
+
+ __targets__ = ;
+
+rule abstract-target-name ( jamfile-location : target-in-jamfile ? )
+{
+    if $(target-in-jamfile)  {
+        return target@$(jamfile-location)@$(target-in-jamfile) ;
+    } else {
+        return target@$(jamfile-location) ;
+    }
+}
+
+rule create-abstract-project-target ( jamfile-location )
+{
+    local target = [ abstract-target-name $(jamfile-location) ] ;
+    class.instance $(target) : project-target ;
+}
+
+# Class which represents a virtual target
+rule virtual-target ( name : subvariant : project )
+{
+     __name__ = $(name) ;
+    __subvariant__ = $(subvariant) ;
+    __project__ = $(project) ;
+
+    __includes__  = ;
+    __dependencies__ = ;
+    __action__ = ;
+
+    __actual-name__  = 0 ;
+
+
+    # Name of the target
+    rule name ( ) { return $(__name__) ; }
+    # Property set that distinguished different variants of a target.
+    # May be a subset of the property set that is used for building.
+    # Determines the location of target, in an unspecified way.
+    rule subvariant ( ) { return $(__subvariant__) ; }
+    # Project where this target was declared
+    rule project ( ) { return $(__project__) ; }
+
+    rule includes ( ) { return $(__includes__) ; }
+    rule add_includes ( i + )
+    {
+        __includes__ = [ sequence.merge $(__includes__)
+                            [ sequence.insertion-sort $(i) ] ] ;
+    }
+
+    rule dependencies ( ) { return $(__dependencies__) ; }
+    rule depends ( d + )
+    {
+        __dependencies__ = [ sequence.merge $(__dependencies__)
+                               [ sequence.insertion-sort $(d) ] ] ;
+    }
+
+    rule action ( a ? )
+    {
+        if $(a) {
+            __action__ = $(a) ;
+        }
+        return $(__action__) ;
+    }
+
+    rule actualize ( )
+    {
+        ECHO "Actualizing target $(__name__)" ;
+        if ! $(__actual-name__) {
+
+            __actual-name__ = [ actual-name ] ;
+            for local i in $(dependencies) {
+                Depends $(name) : [ $(i).actualize ] ;
+            }
+            for local i in $(includes) {
+                Includes $(name) : [ $(i).actualize ] ;
+            }
+            local a = [ action ] ;
+            if $(a) {
+                $(a).actualize ;
+                local path = [ os.path.join [ $(__project__).location ] "bin" ] ;
+                path = [ os.path.native $(path) ] ;
+                MakeLocate $(__actual-name__) : $(path) ;
+
+            } else {
+                SEARCH on $(__actual-name__) =
+                    [ os.path.native [ $(__project__).source-location ] ] ;
+            }
+        }
+        return $(__actual-name__) ;
+    }
+
+# private:
+    rule actual-name ( )
+    {
+        if ! $(__actual-name__) {
+            local project-location = [ $(__project__).location ] ;
+            local location-grist =
+                [ sequence.join [ regex.split $(project-location) "/" ] : "!" ] ;
+            local property-grist =
+                [ property.path-representation $(__subvariant__) ] ;
+            local grist = $(location-grist)/$(property-grist) ;
+            __actual-name__ = <$(grist)>$(__name__) ;
+        }
+        return $(__actual-name__) ;
+    }
+}
+
+class virtual-target ;
+
+rule action ( targets + : sources * : action_name : properties )
+{
+    __targets__ = $(targets) ;
+    __sources__ = $(sources) ;
+    __action_name__ = $(action_name) ;
+    __properties__ = $(properties) ;
+
+    rule targets ( )
+    {
+        return $(__targets__) ;
+    }
+    rule sources ( )
+    {
+        return $(__sources__) ;
+    }
+    rule action_name ( )
+    {
+        return $(__action_name__) ;
+    }
+    rule properties ( )
+    {
+        return $(__properties__) ;
+    }
+
+    rule actualize ( )
+    {
+        local actual_targets ;
+        for local i in [ targets ] {
+            actual_targets += [ $(i).actualize ] ;
+        }
+        local actual_sources ;
+        for local i in [ sources ] {
+            actual_sources += [ $(i).actualize ] ;
+        }
+        Depends $(actual_targets) : $(actual_sources) ;
+        $(__action_name__)
+            $(actual_targets) : $(actual_sources) : [ properties ] ;
+    }
+}
+
+class.class action ;
+
+

@@ -172,7 +172,7 @@ rule all_parents ( path : upper_limit ? : cwd ? )
         upper_limit = / ;
     } else {
         if ! [ is_rooted $(upper_limit) ] {
-            upper_limit = [ root_relative_path $(upper_limit) $(PWD) ] ;
+            upper_limit = [ root_relative_path $(upper_limit) $(cwd) ] ;
         }
     }
 
@@ -224,7 +224,7 @@ rule make-UNIX ( native )
     return $(native) ;
 }
 
-rule native-UNIX ( path ) 
+rule native-UNIX ( path )
 {
     return $(path) ;
 }
@@ -287,9 +287,9 @@ rule __test__ ( ) {
     assert.result "foo\\bar\\giz" : native "foo/bar/giz" ;
     assert.result "foo" : native "foo" ;
     assert.result "D:\\My Documents\\Work" : native "/D:/My Documents/Work" ;
-    
+
     local os = UNIX ;
-    
+
     assert.result "foo/bar/giz" : make "foo/bar/giz" ;
     assert.result "/foo/bar" : native "/foo/bar" ;
 
