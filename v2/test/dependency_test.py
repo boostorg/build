@@ -64,4 +64,9 @@ t.touch("x.foo")
 t.run_build_system()
 t.expect_touch("bin/$toolset/debug/a.obj")
 
+# Check that generated headers are scanned for dependencies as well
+t.touch("src1/z.h")
+t.run_build_system()
+t.expect_touch("bin/$toolset/debug/a.obj")
+
 t.cleanup()
