@@ -99,10 +99,11 @@ rule catenate-output-on-failure ( test-file : dependency )
 if $(NT)
 {
     CATENATE1 = "if exist \"" ;
-    CATENATE2 = "\" ( type \"" ;
+    CATENATE2 = "\" ( ECHO *** output file follows ***
+type \"" ;
     CATENATE3 = "\"
-ECHO ****************************************************** )" ;
-    
+ECHO *** end of output file *** )" ;
+
     actions failed-test-file bind output-file source-files
     {
         echo "$(source-files)" > $(<:S=.test)
@@ -110,9 +111,9 @@ ECHO ****************************************************** )" ;
           if EXIST "$(<:S=.success)". del /f/q "$(<:S=.success)".
           echo "failed" > "$(<:S=.failure)"
             
+          $(CATENATE1)$(output-file)$(CATENATE2)$(output-file)$(CATENATE3)
           echo *
           echo ***************** failed above test: $(<:B:S=) ********************
-          $(CATENATE1)$(output-file)$(CATENATE2)$(output-file)$(CATENATE3)
           echo *
         ) ELSE (
           if EXIST "$(<:S=.failure)". del /f/q "$(<:S=.failure)".
@@ -130,9 +131,9 @@ ECHO ****************************************************** )" ;
           if EXIST "$(<:S=.success)". del /f/q "$(<:S=.success)".
           echo failed > "$(<:S=.failure)"
             
+          $(CATENATE1)$(output-file)$(CATENATE2)$(output-file)$(CATENATE3)
           echo *
           echo ***************** failed above test: $(<:B:S=) ********************
-          $(CATENATE1)$(output-file)$(CATENATE2)$(output-file)$(CATENATE3)
           echo *
         )
     }
@@ -142,8 +143,9 @@ else
     CATENATE = "cat " ;
     CATENATE1 = "if [ -f \"" ;
     CATENATE2 = "\" ] ; then
+      echo *** output file follows ***
       cat \"" ;
-    CATENATE3 = "\" ; echo ******************************************************
+    CATENATE3 = "\" ; echo *** end of output file ***
       fi" ;
     
     actions failed-test-file bind output-file source-files
@@ -154,9 +156,9 @@ else
                 $(RM) "$(<:S=.success)"
           fi
           echo "failed" > $(<:S=.failure)
+          $(CATENATE1)$(output-file)$(CATENATE2)$(output-file)$(CATENATE3)
           echo "*"
           echo "***************** failed above test: $(<:B:S=) ********************"
-          $(CATENATE1)$(output-file)$(CATENATE2)$(output-file)$(CATENATE3)
           echo "*"
         else
           if [ -f "$(<:S=.failure)" ] ; then
@@ -179,9 +181,9 @@ else
                 $(RM) "$(<:S=.success)" 
           fi
           echo "failed" > "$(<:S=.failure)"
+          $(CATENATE1)$(output-file)$(CATENATE2)$(output-file)$(CATENATE3)
           echo "*"
           echo "***************** failed above test: $(<:B:S=) ********************"
-          $(CATENATE1)$(output-file)$(CATENATE2)$(output-file)$(CATENATE3)
           echo "*"
         fi
     }
