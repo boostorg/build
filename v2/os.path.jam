@@ -7,16 +7,19 @@ import sequence ;
 import regex ;
 import errors : error ;
 
-#    All path manipulations are done with 'normilized' representation. A path
-#    may be either
-#    - '.', or
-#    - ['/'] [ ( '..' '/' )*  (token '/')* token ]
-#    In plain english, path can be rooted, '..' elements are allowed only
-#    at the beginning, and it never ends in slash, except for path containg
-#    of slash only.
+#   All path manipulations are done with 'normilized' representation. A path
+#   may be either
+#   - '.', or
+#   - ['/'] [ ( '..' '/' )*  (token '/')* token ]
+#   In plain english, path can be rooted, '..' elements are allowed only
+#   at the beginning, and it never ends in slash, except for path containg
+#   of slash only.
 #
 
 os = $(OS) ;
+if $(os) = LINIX {
+    os = UNIX ;
+}
 
 #
 #    Converts the native path into normalized form.
@@ -47,7 +50,7 @@ rule is_rooted ( path )
 #
 rule has_parent ( path )
 {
-    if ( $(path) != . && $(path) != / ) {
+    if $(path) != / {
         return 1 ;
     } else {
         return ;
@@ -60,17 +63,29 @@ rule has_parent ( path )
 rule parent ( path )
 {
     if [ has_parent $(path) ] {
-        # Strip everything at the end of path up to and including first last
-        # slash
-        local result = [ SUBST $(path) "((.*)/)?[^/]+" $2 ] ;
-        if ! $(result) {
-            if [ is_rooted $(path) ] {
-                result = / ;
+
+        if $(path) = . {
+            return .. ;
+        } else {
+
+            # Strip everything at the end of path up to and including
+            # the last slash
+            local result = [ SUBST $(path) "((.*)/)?([^/]+)" $2 $3 ] ;
+
+            # Did we strip what we shouldn't?
+            if $(result[2]) = ".." {
+                return $(path)/.. ;
             } else {
-                result = . ;
+                if ! $(result[1]) {
+                    if [ is_rooted $(path) ] {
+                        result = / ;
+                    } else {
+                        result = . ;
+                    }
+                }
+                return $(result[1]) ;
             }
         }
-        return $(result) ;
     } else {
         error "Path '$(path)' has no parent" ;
     }
@@ -110,12 +125,18 @@ rule join ( path1 path2 )
         if $(parts[1]) {
 
             local up_tokens = [ regex.split $(parts[1]) "/" ] ;
-            for local i in $(up_tokens[--2]) {
+            for local i in $(up_tokens[1--2]) {
                 path1 = [ parent $(path1) ] ;
             }
         }
 
-        return $(path1)/$(parts[2]) ;
+        if $(path1) = . {
+            return $(parts[2]) ;
+        } else if $(path1) = / {
+            return /$(parts[2]) ;
+        } else {
+            return $(path1)/$(parts[2]) ;
+        }
     }
 }
 
@@ -132,9 +153,49 @@ rule root_relative_path ( path root )
 }
 
 #
-#    Implementation
+#   Find out the absolute name of path and returns the list of all the parents,
+#   starting with the immediate one. Parents are returned as relative names.
+#   If 'upper_limit' is specified, directories above it will be pruned.
 #
-rule make-nt ( native )
+rule all_parents ( path : upper_limit ? : cwd ? )
+{
+    cwd ?= [ PWD ] ;
+    local rpath ;
+    if ! [ is_rooted $(path) ] {
+        rpath = [ root_relative_path $(path) $(cwd) ] ;
+    } else {
+        rpath = $(path) ;
+    }
+
+    if ! $(upper_limit) {
+        upper_limit = / ;
+    } else {
+        if ! [ is_rooted $(upper_limit) ] {
+            upper_limit = [ root_relative_path $(upper_limit) $(PWD) ] ;
+        }
+    }
+
+    # Leave only directory names below 'upper_limits'
+    # Assure pruned_path[2] will have no leading '/'
+    local pruned_path = [ SUBST $(rpath) "($(upper_limit))/*(.*)" $1 $2 ] ;
+    if ! $(pruned_path) {
+        error "$(upper_limit) is not prefix of $(path)" ;
+    }
+
+    local tokens = [ regex.split $(pruned_path[2]) "/" ] ;
+
+    local result ;
+    for local i in $(tokens) {
+        path = [ parent $(path) ] ;
+        result += $(path) ;
+    }
+    return $(result) ;
+}
+
+#
+#   Implementation
+#
+rule make-NT ( native )
 {
     local tokens = [ regex.split $(native) "[/\\]" ] ;
     local result ;
@@ -150,9 +211,21 @@ rule make-nt ( native )
     return $(result) ;
 }
 
-rule native-nt ( path )
+rule native-NT ( path )
 {
-    return [ SUBST $(path) "^/?(.*)" $1 ] ;
+    local result = [ SUBST $(path) "^/?(.*)" $1 ] ;
+    result = [ sequence.join [ regex.split $(result) "/" ] : "\\" ] ;
+    return $(result) ;
+}
+
+rule make-UNIX ( native )
+{
+    return $(native) ;
+}
+
+rule native-UNIX ( path ) 
+{
+    return $(path) ;
 }
 
 
@@ -171,12 +244,16 @@ rule __test__ ( ) {
 
     assert.true has_parent "foo" ;
     assert.true has_parent "foo/bar" ;
-    assert.result : has_parent "." ;
+    assert.true has_parent "." ;
     assert.result : has_parent "/" ;
 
     assert.result "." : parent "foo" ;
     assert.result "/" : parent "/foo" ;
     assert.result "foo/bar" : parent "foo/bar/giz" ;
+    assert.result ".." : parent "." ;
+    assert.result ".." : parent "../foo" ;
+    assert.result "../../foo" : parent "../../foo/bar" ;
+
 
     assert.result "." : reverse "." ;
     assert.result ".." : reverse "foo" ;
@@ -186,15 +263,33 @@ rule __test__ ( ) {
     assert.result "foo/bar" : join "foo" "bar" ;
     assert.result "foo/bar" : join "foo/giz" "../bar" ;
     assert.result "foo/giz" : join "foo/bar/baz" "../../giz" ;
+    assert.result ".." : join "." ".." ;
+    assert.result ".." : join "foo" "../.." ;
+    assert.result "../.." : join "../foo" "../.." ;
+    assert.result "/foo" : join "/bar" "../foo" ;
 
-    local os = nt ;
+    local CWD = "/home/ghost/build" ;
+    assert.result . .. ../.. ../../..  : all_parents "Jamfile" : "" : $(CWD) ;
+    assert.result foo . .. ../.. ../../.. : all_parents "foo/Jamfile" : "" : $(CWD) ;
+    assert.result ../Work .. ../.. ../../.. : all_parents "../Work/Jamfile" : "" : $(CWD) ;
+
+    local CWD = "/home/ghost" ;
+    assert.result . .. : all_parents "Jamfile" : "/home" : $(CWD) ;
+    assert.result . : all_parents "Jamfile" : "/home/ghost" : $(CWD) ;
+
+    local os = NT ;
 
     assert.result "foo/bar/giz" : make "foo/bar/giz" ;
     assert.result "foo/bar/giz" : make "foo\\bar\\giz" ;
     assert.result "/D:/My Documents" : make "D:\\My Documents" ;
 
-    assert.result "foo/bar/giz" : native "foo/bar/giz" ;
+    assert.result "foo\\bar\\giz" : native "foo/bar/giz" ;
     assert.result "foo" : native "foo" ;
-    assert.result "D://My Documents/Work" : native "/D://My Documents/Work" ;
+    assert.result "D:\\My Documents\\Work" : native "/D:/My Documents/Work" ;
+    
+    local os = UNIX ;
+    
+    assert.result "foo/bar/giz" : make "foo/bar/giz" ;
+    assert.result "/foo/bar" : native "/foo/bar" ;
 
 }
