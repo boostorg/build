@@ -809,7 +809,22 @@ project-root ;
 </pre>
         </blockquote>
         When multiple values are specified, it causes <i>all</i> the implied
-        configurations to be built by default.
+        configurations to be built by default. It is also possible to prevent
+        any default builds from occuring on this target by using <code>&lt;suppress&gt;true</code>
+        . This suppresses any local targets, either implicit or explicit, from building.
+        But, this does not prevent implied targets as required by a dependency by
+        another target to this one from being built. This is usefull, for example,
+        for defining a set of libraries generically and having them built only when
+        another target like an exe is built. Such use might look like:
+        <blockquote>
+<pre>
+lib basic : basic.cpp : : &lt;suppress&gt;true ;<br><br>exe test : test.cpp &lt;lib&gt;basic ;<br>
+</pre>
+        </blockquote>
+        With that the <tt>basic</tt> library will only be built when the <tt>test</tt>
+        executable is built, and only the variations required by the executable
+        will be built.<br>
+      </li>
     </ul>
 
     <p><b>NOTE:</b> for simple features in both <i><a href=
@@ -838,6 +853,7 @@ exe foo : foo.cpp src/bar.cpp &lt;lib&gt;../bazlib/baz
       &lt;gcc&gt;&lt;*&gt;&lt;optimization&gt;off
       &lt;gcc&gt;&lt;release&gt;&lt;optimization&gt;space
       &lt;threading&gt;multi
+      &lt;sysinclude&gt;/usr/local/foolib/include
     
     ## <a href="#default_build">default-BUILD</a> ##
     : debug release
@@ -866,6 +882,8 @@ exe foo : foo.cpp src/bar.cpp &lt;lib&gt;../bazlib/baz
       <li>...GCC <tt>release</tt> builds require optimization for space.
 
       <li>Requires multithread support on compilers where it's relevant.
+
+      <li>Adds <tt>/usr/local/foolib/include</tt> to the <tt>#include &lt;*&gt;</tt> path
     </ul>
 
     <p>The <a href="#default_build">default-BUILD</a> section:
@@ -896,8 +914,22 @@ variant <i>name</i> : [&lt;<i>toolset-name</i>&gt;]&lt;<i>feature</i>&gt;value..
     </blockquote>
     The <tt>variant</tt> rule specifies the list of properties comprising a
     variant. Properties may be optionally qualified with a toolset name, which
-    specifies that the property applies only to that toolset. Examples can be
-    found in <a href="features.jam">features.jam</a>. 
+    specifies that the property applies only to that toolset. One or
+    more parent variants may be specified to inherit the properties  from those
+    parent(s). For inherited properties precedence is given on a left to right
+    order, making the immediate properties override those in the parent(s). This
+    can be used to great effect for describing global properties that are shared
+    amongst various variants, and therefore targets. For example:
+    <blockquote>
+<pre>
+variant my-globals : &lt;rtti&gt;off ;
+
+variant my-debug : my-globals debug ;
+
+variant mym-release : my-globals releaase ;
+</pre>
+    </blockquote>
+    More examples can be found in <a href="features.jam">features.jam</a>. 
 
     <h3><a name="toolset_description">Toolset Description Files</a></h3>
 

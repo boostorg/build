@@ -62,6 +62,8 @@ flags borland C++FLAGS <cxxflags> ;
 flags borland DEFINES <define> ;
 flags borland UNDEFS <undef> ;
 flags borland HDRS <include> ;
+flags borland STDHDRS <sysinclude> ;
+flags borland LINKFLAGS <linkflags> ;
 
 flags borland STDHDRS : $(BCCROOT)$(SLASH)include ;
 flags borland STDLIBPATH : $(BCCROOT)$(SLASH)lib ;

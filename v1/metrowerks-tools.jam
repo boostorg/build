@@ -25,6 +25,7 @@ flags metrowerks DEFINES <define> ;
 flags metrowerks UNDEFS <undef> ;
 flags metrowerks HDRS <include> ;
 flags metrowerks STDHDRS <sysinclude> ;
+flags metrowerks LINKFLAGS <linkflags> ;
 
 flags metrowerks CFLAGS <debug-symbols>on : -g ;
 flags metrowerks LINKFLAGS <debug-symbols>on : -g ;

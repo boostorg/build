@@ -1051,6 +1051,10 @@ rule declare-local-target
         "$(gTARGET_TYPE($(target-id)))" "$(5)" ;
     }
     
+    # Supress the regular build of this target
+    local suppress = [ get-values <suppress> : $(4) ] ;
+    local gSUPPRESS_FAKE_TARGETS = $(suppress[1]) ;
+    
     # Just gather information if we are including a library's Jamfile for a
     # dependent target. Don't generate build instructions here.
     if ! $(gIN_LIB_INCLUDE)
@@ -1468,17 +1472,7 @@ gGENERATOR_FUNCTION(LIB) = library-file ;
 # Declare a statically-linked library target.
 rule lib
 {
-    local suppress = [ get-values <suppress> : $(4) ] ;
-    if $(suppress)
-    {
-    	local gSUPPRESS_FAKE_TARGETS = $(suppress[1]) ;
-        declare-local-target $(<) : $(2) : $(3) :
-            [ difference $(4) : [ get-properties <suppress> : $(4) ] ] : LIB ;
-    }
-    else
-    {
-        declare-local-target $(<) : $(2) : $(3) : $(4) : LIB ;
-    }
+    declare-local-target $(<) : $(2) : $(3) : $(4) : LIB ;
 }
 
 # unit-test target : sources : requirements : local-build

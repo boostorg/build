@@ -5,7 +5,7 @@
 # to its suitability for any purpose.
 
 # compute directories for invoking GCC
-local SPACE = " " ;
+SPACE ?= " " ;
 GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)bin$(SLASH) ;
 GCC_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if GCC_ROOT_DIRECTORY not set
 GCC_INCLUDE_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)include ;
@@ -43,6 +43,7 @@ flags gcc DEFINES <define> ;
 flags gcc UNDEFS <undef> ;
 flags gcc HDRS <include> ;
 flags gcc STDHDRS <sysinclude> ;
+flags gcc LINKFLAGS <linkflags> ;
 
 flags gcc STDHDRS : $(GCC_INCLUDE_DIRECTORY) ;
 flags gcc STDLIBPATH : $(GCC_STDLIB_DIRECTORY) ;

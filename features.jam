@@ -25,6 +25,7 @@ feature exception-handling : on off ;
 feature rtti : on off ;
 
 free-feature cflags ;
+free-feature linkflags ;
 free-feature cxxflags ;
 free-feature define ; # <define>PYTHON=foo
 free-feature undef ; # <undef>PYTHON=foo

@@ -65,6 +65,9 @@ flags intel-linux LIBPATH <library-path> ;
 flags intel-linux NEEDLIBS <library-file> ;
 flags intel-linux FINDLIBS <find-library> ;
 
+flags intel-linux STDHDRS <sysinclude> ;
+flags intel-linux LINKFLAGS <linkflags> ;
+
 #### Cc ####
 
 rule Cc-action

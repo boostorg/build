@@ -26,6 +26,8 @@ flags kcc C++FLAGS <cxxflags> ;
 flags kcc DEFINES <define> ;
 flags kcc UNDEFS <undef> ;
 flags kcc HDRS <include> ;
+flags kcc STDHDRS <sysinclude> ;
+flags kcc LINKFLAGS <linkflags> ;
 
 flags kcc LIBPATH <library-path> ;
 flags kcc NEEDLIBS <library-file> ;

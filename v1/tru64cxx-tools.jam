@@ -37,6 +37,8 @@ flags tru64cxx C++FLAGS <cxxflags> ;
 flags tru64cxx DEFINES <define> ;
 flags tru64cxx UNDEFS <undef> ;
 flags tru64cxx HDRS <include> ;
+flags tru64cxx STDHDRS <sysinclude> ;
+flags tru64cxx LINKFLAGS <linkflags> ;
 
 # Vincenzo
 BOOST_COMPATIBILITY ?= $(BOOST_ROOT)$(SLASH)boost$(SLASH)compatibility$(SLASH)cpp_c_headers ;

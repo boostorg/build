@@ -31,6 +31,8 @@ flags xlc C++FLAGS <cxxflags> ;
 flags xlc DEFINES <define> ;
 flags xlc UNDEFS <undef> ;
 flags xlc HDRS <include> ;
+flags xlc STDHDRS <sysinclude> ;
+flags xlc LINKFLAGS <linkflags> ;
 
 #### Link ####
 

@@ -43,6 +43,8 @@ flags como C++FLAGS <cxxflags> ;
 flags como DEFINES <define> ;
 flags como UNDEFS <undef> ;
 flags como HDRS <include> ;
+flags como STDHDRS <sysinclude> ;
+flags como LINKFLAGS <linkflags> ;
 
 flags como STDHDRS : $(COMO_INCLUDE_PATH) ;
 flags como STDLIBPATH : $(COMO_STDLIB_PATH)$(SLASH) ;

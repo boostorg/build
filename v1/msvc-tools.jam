@@ -51,6 +51,8 @@ flags msvc C++FLAGS <cxxflags> ;
 flags msvc DEFINES <define> ;
 flags msvc UNDEFS <undef> ;
 flags msvc HDRS <include> ;
+flags msvc STDHDRS <sysinclude> ;
+flags msvc LINKFLAGS <linkflags> ;
 
 flags msvc STDHDRS : $(MSVCDir)$(SLASH)include ;
 flags msvc STDLIBPATH : $(MSVCDir)$(SLASH)lib ;

@@ -41,6 +41,8 @@ flags mipspro C++FLAGS <cxxflags> ;
 flags mipspro LIBPATH <library-path> ;
 flags mipspro NEEDLIBS <library-file> ;
 flags mipspro FINDLIBS <find-library> ;
+flags mipspro STDHDRS <sysinclude> ;
+flags mipspro LINKFLAGS <linkflags> ;
 
 #### Link (for C++) ####
 
