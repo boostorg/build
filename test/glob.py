@@ -62,5 +62,30 @@ exe a : [ glob *.cpp ] ../d2/d//l ;
 t.run_build_system(subdir="d1")
 t.expect_addition("d1/bin/$toolset/debug/a.exe")
 
+# Test that wildcards can include directories
+t.rm("d1")
+
+t.write("d1/src/foo/a.cpp", """
+void bar();
+int main() { bar(); return 0; }
+
+""")
+
+t.write("d1/src/bar/b.cpp", """
+void bar() {}
+
+""")
+
+
+t.write("d1/Jamfile", """
+project : source-location src ;
+exe a : [ glob foo/*.cpp bar/*.cpp ] ../d2/d//l ; 
+""")
+
+t.run_build_system(subdir="d1")
+t.expect_addition("d1/bin/$toolset/debug/a.exe")
+
+
+
 
 t.cleanup()

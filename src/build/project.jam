@@ -601,8 +601,29 @@ module project-rules
         import project ;
         
         local location = [ project.attribute $(__name__) source-location ] ;
-        local all-paths = [ path.glob $(location) : $(wildcards) ] ;
-        return $(all-paths:D="") ;
+
+        local all-paths ;
+        if ! $(wildcards:D)
+        {
+            # No directory in any wildcard -- the simplest case.
+            all-paths = [ path.glob $(location) : $(wildcards) ] ;
+            all-paths = $(all-paths:D="") ;
+        } 
+        else
+        {
+            for local w in $(wildcards)
+            {
+                local l = [ path.join $(location) $(w:D) ] ;
+                local paths = [ path.glob $(l) : $(w:D="") ] ;                
+                for local p in $(paths)
+                {
+                    all-paths += [ path.relative $(p) $(location) ] ;
+                }                
+            }
+            
+        }
+
+        return $(all-paths) ;                
     }        
 }
 
