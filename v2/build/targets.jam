@@ -49,9 +49,10 @@
 # | project-target       |            | main-target |                | basic-target |  
 # +======================+ 1        * +=============+  alternatives  +==============+  
 # | generate(properties) |o-----------+ generate    |<>------------->| generate     |  
-# | main-target          |            +-------------+                +------+-------+  
-# | reference-properties |                                                  |          
-# +----------------------+                                                  ^          
+# | main-target          |            +-------------+                | construct = 0|
+# | reference-properties |                                           +--------------+  
+# +----------------------+                                                  |          
+#                                                                           ^          
 #                                                                          / \         
 #                                                                         +-+-+        
 #                                                                           |          
