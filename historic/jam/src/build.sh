@@ -8,7 +8,7 @@
 # Reset the toolset.
 BOOST_JAM_TOOLSET=
 
-function echo_run ()
+function echo_run
 {
     echo "$@"
     "$@"
@@ -17,7 +17,7 @@ function echo_run ()
         exit $r
     fi
 }
-function error_exit()
+function error_exit
 {
     echo "###"
     echo "###" "$@"
@@ -29,18 +29,18 @@ function error_exit()
     echo "###"
     exit 1
 }
-function test_path ()
+function test_path
 {
     hash $1 2>/dev/null
 }
-function test_uname ()
+function test_uname
 {
     if test_path uname; then
         test `uname` = $*
     fi
 }
 # Try and guess the toolset to bootstrap the build with...
-function Guess_Toolset ()
+function Guess_Toolset
 {
     if test_uname Darwin ; then BOOST_JAM_TOOLSET=darwin
     elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
