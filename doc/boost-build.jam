@@ -3,40 +3,36 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-# Bootstrap the doc system. doing this first makes it possible to document
-# in all the modules. And import the basic doc rules, to make them easily
-# available.
-#
-SEARCH on <module@>doc.jam = $(BOOST_BUILD_PATH) ;
-module doc { include <module@>doc.jam ; }
-IMPORT doc
-    : document-module document-rule document-variable :
-    : document-module document-rule document-variable ;
-
 # Bootstrap the module system. And bring the import rule into the global module.
 #
 SEARCH on <module@>modules.jam = $(BOOST_BUILD_PATH) ;
 module modules { include <module@>modules.jam ; }
 IMPORT modules : import : : import ;
 
-# Re-load the doc system, to clean up things. Both doc and modules
-# can handle getting included twice.
-#
-import doc ;
-
 # Reload the modules, to clean up things. The modules module can tolerate
 # being included twice.
 #
 import modules ;
 
+import doc ;
+import project ;
+
 # Check to see if the user is asking for help as soon as possible.
 # This is first action, so that we can interrupt the regular build
 # process if they are asking for help.
 #
-doc.do-help ;
-
-import build-system ;
-
-# Load the first Jamfile, and build it.
-#
-build-system.construct [ build-system.load-jamfile [ PWD ] ] ;
+if [ doc.help ]
+{
+    # Do nothing, the doc system will generate the appropriate
+    # targets that prints out the documentation.
+    # To do this we need to fake the build system loading so the
+    # Jambase doesn't error.
+    module build-system { rule __placeholder__ ( ) { } }
+}
+else
+{
+    # No help requested, go ahead and load and build the users
+    # project.
+    import build-system ;
+    project.load [ PWD ] ;
+}
