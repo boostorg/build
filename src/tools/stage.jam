@@ -189,6 +189,10 @@ class stage-target-class : basic-target
     {        
     }
     
+    rule check-for-link-compatibility ( * : * )
+    {
+    }
+        
     # Returns true iff 'type' is subtype of some element of 'types-to-include'.
     local rule include-type ( type : types-to-include * )
     {
