@@ -470,13 +470,15 @@ if $(NT) { actions .yacc. {
         rename y.tab$(<[2]:S) $(<[2])
     ) else set _error_ =
 } }
-if $(UNIX) { actions .move. {
-    if `"$(yacc)" $(>)` ; then
+if $(UNIX) { actions .yacc. {
+    if ` "$(yacc)" $(>) ` ; then
         mv -f y.tab$(<[1]:S) $(<[1])
         mv -f y.tab$(<[2]:S) $(<[2])
+    else
+        exit 1
     fi
 } }
-if $(VMS) { actions .move. {
+if $(VMS) { actions .yacc. {
     IF "$(yacc)" $(>)
     THEN
         RENAME y_tab$(<[1]:S) $(<[1])
