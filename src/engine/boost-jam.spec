@@ -2,13 +2,13 @@ Name: boost-jam
 Version: 3.1.3
 Summary: Build tool
 Release: 1
-Source: boost-jam-%{version}.tar.bz2
+Source: %{name}-%{version}.tgz
 
 License: GPL
 Group: Development/Tools
 URL: http://www.boost.org
 Packager: Vladimir Prus <ghost@cs.msu.su>
-BuildRoot: /var/tmp/boost-jam-%{version}.root
+BuildRoot: /var/tmp/%{name}-%{version}.root
 
 %description
 Boost Jam is a build tool based on FTJam, which in turn is based on 
@@ -22,26 +22,26 @@ Authors:
 	Boost Jam    : David Abrahams
 
 %prep
-%setup -n boost-jam-%{version}
+%setup -n %{name}-%{version}
 
 %build
-YACC="" LOCATE_TARGET=bin make
+YACC="" LOCATE_TARGET=bin ./build.sh
 
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT%{_bindir}
-mkdir -p $RPM_BUILD_ROOT%{_docdir}/boost-jam
-install -m 755 bin/jam $RPM_BUILD_ROOT%{_bindir}/jam
-ln -sf jam $RPM_BUILD_ROOT%{_bindir}/bjam
-install -m 644 Jam.html Jambase.html Jamfile.html README RELNOTES INSTALL \
-        $RPM_BUILD_ROOT%{_docdir}/boost-jam
+mkdir -p $RPM_BUILD_ROOT%{_docdir}/boost-jam-%{version}
+install -m 755 bin/bjam $RPM_BUILD_ROOT%{_bindir}/bjam-%{version}
+ln -sf bjam-%{version} $RPM_BUILD_ROOT%{_bindir}/bjam
+ln -sf bjam-%{version} $RPM_BUILD_ROOT%{_bindir}/jam
+install -m 644 $BOOST_JAM_DOCS $RPM_BUILD_ROOT%{_docdir}/boost-jam-%{version}
 
 find $RPM_BUILD_ROOT -name CVS -type d -depth -exec rm -r {} \;
 
 %files
 %defattr(-,root,root)
 %attr(755,root,root) /usr/bin/*
-%doc %{_docdir}/boost-jam
+%doc %{_docdir}/boost-jam-%{version}
 
 
 %clean
