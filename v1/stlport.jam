@@ -85,11 +85,14 @@ STLPORT_INCLUDE_DIRECTORY ?= stlport ;
 STLPORT_LIB_DIRECTORY ?= lib ;
 
 # Clear out the STD paths so that the real toolset doesn't include
-# anything but the STLport as the STD.
+# anything but the STLport as the STD. But also set the STDLIBPATH to
+# include the compiler libs afterwards as STLport still relies on the
+# rest of the runtime.
+local .stdlibpath = $(STDLIBPATH) ;
 STDHDRS = ;
 STDLIBPATH = ;
 flags $(CURR_TOOLSET) STDHDRS : [ join [ get-stlport-root ] $(SLASH)$(STLPORT_INCLUDE_DIRECTORY) ] ;
-flags $(CURR_TOOLSET) STDLIBPATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)$(STLPORT_LIB_DIRECTORY) ] ;
+flags $(CURR_TOOLSET) STDLIBPATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)$(STLPORT_LIB_DIRECTORY) ] $(.stdlibpath) ;
 
 flags $(CURR_TOOLSET) DEFINES <stlport-iostream>off : _STLP_NO_OWN_IOSTREAMS=1 _STLP_HAS_NO_NEW_IOSTREAMS=1 ;
 flags $(CURR_TOOLSET) DEFINES <stlport-extensions>off : _STLP_NO_EXTENSIONS=1 ;
