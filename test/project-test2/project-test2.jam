@@ -8,9 +8,9 @@ import property ;
 
 feature toolset : : implicit ;
 feature optimization : off space speed ;
-feature runtime-link : dynamic static : link-incompatible ;
+feature runtime-link : dynamic static : link-incompatible optional ;
 feature rtti : on off : link-incompatible ;
-feature threading : single multi : link-incompatible ;
+feature threading : single multi : link-incompatible optional ;
 feature "include" : : free path ;
 feature variant : debug release : implicit composite ;
 
