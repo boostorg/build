@@ -480,7 +480,7 @@ rule .rpm ( name : source )
 actions .rpm-build
 {    export BOOST_JAM_DOCS="$(docs)"
     export BOOST_JAM_TOOLSET="$(toolset)"
-    rpm -ta --target $(arch) $(>) | tee rpm.out
+    rpm -ta --target=$(arch) $(>) | tee rpm.out
     cp `grep -e '^Wrote:' rpm.out | sed 's/^Wrote: //'` .
     rm -f rpm.out }
 
