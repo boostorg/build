@@ -91,8 +91,10 @@ tests = [ "project_test1",
 	  "absolute_sources",
 	  ]
 
-if os.name == 'posix' and not os.uname()[0].startswith('CYGWIN'):
+if os.name == 'posix':
     tests.append("symlink")
-    tests.append("railsys") # Actually, needs QT
+    
+    if not os.uname()[0].startswith('CYGWIN'):
+        tests.append("railsys") # Actually, needs QT
 
 run_tests(critical_tests, tests)
