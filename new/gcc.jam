@@ -3,6 +3,7 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
+import toolset : flags ;
 import property ;
 import generators ;
 import os ;
@@ -33,7 +34,7 @@ rule init ( a1 * : a2 * : a3 * )
         
         feature.extend-subfeature toolset gcc : version : $(version) ;
             
-        toolset.flags gcc NAME <toolset>gcc-$(version) : $(name) ;
+        flags gcc NAME <toolset>gcc-$(version) : $(name) ;
         
         # TODO: set path accordingly.
     }    
@@ -48,11 +49,18 @@ generators.register-c-compiler gcc.compile : C : OBJ : <toolset>gcc ;
 
 
 # Declare flags and action for compilation
-toolset.flags gcc.compile OPTIONS <optimization>on : -O2 ;
-toolset.flags gcc.compile OPTIONS <debug-symbols>on : -g ;
-toolset.flags gcc.compile OPTIONS <cxxflags> ;
-toolset.flags gcc.compile DEFINES <define> ;
-toolset.flags gcc.compile INCLUDES <include> ;
+flags gcc.compile OPTIONS <optimization>off : -O0 ;
+flags gcc.compile OPTIONS <optimization>speed : -O3 ;
+flags gcc.compile OPTIONS <optimization>space : -Os ;
+
+flags gcc.compile OPTIONS <inlining>off : -fno-inline ;
+flags gcc.compile OPTIONS <inlining>on : -Wno-inline ;
+flags gcc.compile OPTIONS <inlining>full : -finline-functions -Wno-inline ;
+
+flags gcc.compile OPTIONS <debug-symbols>on : -g ;
+flags gcc.compile OPTIONS <cxxflags> ;
+flags gcc.compile DEFINES <define> ;
+flags gcc.compile INCLUDES <include> ;
 
 actions compile
 {
@@ -60,15 +68,15 @@ actions compile
 }
 
 # Declare flags and action for linking
-toolset.flags gcc.link OPTIONS <debug-symbols>on : -g ;
-toolset.flags gcc.link OPTIONS <linkflags> ;
-toolset.flags gcc.link LINKPATH <library-path> ;
-toolset.flags gcc.link FINDLIBS-ST <find-static-library> ;
-toolset.flags gcc.link FINDLIBS-SA <find-shared-library> ;
-toolset.flags gcc.link LIBRARIES <library> ;
-toolset.flags gcc.link LINK-RUNTIME <link-runtime>static : static ;
-toolset.flags gcc.link LINK-RUNTIME <link-runtime>shared : dynamic ;
-toolset.flags gcc.link-dll RPATH <dll-path> ;
+flags gcc.link OPTIONS <debug-symbols>on : -g ;
+flags gcc.link OPTIONS <linkflags> ;
+flags gcc.link LINKPATH <library-path> ;
+flags gcc.link FINDLIBS-ST <find-static-library> ;
+flags gcc.link FINDLIBS-SA <find-shared-library> ;
+flags gcc.link LIBRARIES <library> ;
+flags gcc.link LINK-RUNTIME <link-runtime>static : static ;
+flags gcc.link LINK-RUNTIME <link-runtime>shared : dynamic ;
+flags gcc.link-dll RPATH <dll-path> ;
 
 
 rule link ( targets * : sources * : properties * )
@@ -88,15 +96,15 @@ actions archive
 }
 
 # Declare flags and action for linking shared libraries
-toolset.flags gcc.link-dll OPTIONS <debug-symbols>on : -g ;
-toolset.flags gcc.link-dll OPTIONS <linkflags> ;
-toolset.flags gcc.link-dll LINKPATH <library-path> ;
-toolset.flags gcc.link-dll FINDLIBS-ST <find-static-library> ;
-toolset.flags gcc.link-dll FINDLIBS-SA <find-shared-library> ;
-toolset.flags gcc.link-dll LIBRARIES <library> ;
-toolset.flags gcc.link-dll LINK-RUNTIME <link-runtime>static : static ;
-toolset.flags gcc.link-dll LINK-RUNTIME <link-runtime>shared : dynamic ;
-toolset.flags gcc.link RPATH <dll-path> ;
+flags gcc.link-dll OPTIONS <debug-symbols>on : -g ;
+flags gcc.link-dll OPTIONS <linkflags> ;
+flags gcc.link-dll LINKPATH <library-path> ;
+flags gcc.link-dll FINDLIBS-ST <find-static-library> ;
+flags gcc.link-dll FINDLIBS-SA <find-shared-library> ;
+flags gcc.link-dll LIBRARIES <library> ;
+flags gcc.link-dll LINK-RUNTIME <link-runtime>static : static ;
+flags gcc.link-dll LINK-RUNTIME <link-runtime>shared : dynamic ;
+flags gcc.link RPATH <dll-path> ;
 
 rule link-dll ( targets * : sources * : properties * )
 {

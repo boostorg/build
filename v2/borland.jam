@@ -31,7 +31,8 @@ generators.register-c-compiler borland.compile : C : OBJ : <toolset>borland ;
 
 
 # Declare flags and action for compilation
-toolset.flags borland.compile OPTIONS <optimization>on : -O2 ;
+toolset.flags borland.compile OPTIONS <optimization>speed : -O2 ;
+toolset.flags borland.compile OPTIONS <optimization>space : -O1 ;
 toolset.flags borland.compile OPTIONS <debug-symbols>on : -v ;
 toolset.flags borland.compile OPTIONS <cxxflags> ;
 toolset.flags borland.compile DEFINES <define> ;

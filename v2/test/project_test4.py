@@ -20,12 +20,12 @@ a.cpp
 t.expect_addition("bin/gcc/debug/a.exe")
 t.expect_content("bin/gcc/debug/a.exe",
 "gcc/debug/include-everything\n" +
-"bin/gcc/debug/a.obj lib/bin/gcc/debug/optimization-on/b.obj\n"
+"bin/gcc/debug/a.obj lib/bin/gcc/debug/optimization-speed/b.obj\n"
 )
 
-t.expect_addition("lib/bin/gcc/debug/optimization-on/b.obj")
-t.expect_content("lib/bin/gcc/debug/optimization-on/b.obj",
-"""gcc/debug/include-everything/optimization-on
+t.expect_addition("lib/bin/gcc/debug/optimization-speed/b.obj")
+t.expect_content("lib/bin/gcc/debug/optimization-speed/b.obj",
+"""gcc/debug/include-everything/optimization-speed
 lib/b.cpp
 """)
 
@@ -80,7 +80,7 @@ t.fail_test(find(t.stdout(), expected) != 0)
 #t.expect_content("bin/gcc/debug/a.exe",
 #"gcc/debug\n" +
 #"bin/gcc/debug/a.obj " +
-#"lib/bin/gcc/debug/optimization-on/b.obj " +
+#"lib/bin/gcc/debug/optimization-speed/b.obj " +
 #"bin/gcc/debug/a_gcc.obj\n"
 #)
 

@@ -96,7 +96,7 @@ local rule register-suffixes ( suffixes + : type )
         }
         else if $(.type.$(s)) != type 
         {
-            errors.error "Attempting to specify type for suffix $(suffix)" 
+            errors.error Attempting to specify type for suffix \"$(s)\" 
               : "Old type $(.type.$(s)), New type $(type)" ;
         }
     }            

@@ -2,7 +2,7 @@
 
 # Test the 'symlink' rule
 
-from BoostBuild import Tester, dll_suffix
+from BoostBuild import Tester, exe_suffix, List
 import os
 t = Tester()
 
@@ -25,7 +25,7 @@ int main()
 """)
 
 t.run_build_system()
-t.expect_addition(['hello_debug', 'hello_release', 'links/hello_release'])
+t.expect_addition(List('hello_debug hello_release links/hello_release') * exe_suffix)
 
 
 t.cleanup()

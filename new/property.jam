@@ -188,7 +188,7 @@ rule as-path ( properties * : feature-space ? )
 }
 
 # Exit with error if property is not valid.
-rule validate ( property : feature-space ?  )
+local rule validate1 ( property : feature-space ?  )
 {
     feature-space ?= feature ;
     local msg ;
@@ -221,14 +221,19 @@ rule validate ( property : feature-space ?  )
     }
 }
 
+rule validate ( properties * : feature-space ? )
+{
+    for local p in $(properties)
+    {
+        validate1 $(p) : $(feature-space) ;
+    }
+}
+
 rule validate-property-sets ( property-sets * : feature-space ? )
 {
     for local s in $(property-sets)
     {
-        for local p in [ feature.split $(s) ]
-        {
-            validate $(p) ;
-        }
+        validate [ feature.split $(s) ] : $(feature-space) ;
     }
 }
 
@@ -433,10 +438,8 @@ local rule __test__ ( )
 
     }
 
-    validate gcc : $(test-space) ;
-    validate gcc-3.0.1 : $(test-space) ;
-    validate <toolset>gcc : $(test-space) ;
-    validate <toolset>gcc-3.0.1 : $(test-space) ;
+    validate gcc gcc-3.0.1 : $(test-space) ;
+    validate <toolset>gcc  <toolset>gcc-3.0.1 : $(test-space) ;
     
     assert.result <toolset>gcc <rtti>off <define>FOO
         : refine <toolset>gcc <rtti>off

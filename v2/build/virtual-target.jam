@@ -350,6 +350,7 @@ rule abstract-file-target ( name
                 local ps = [ $(self.action).properties-ps ] ;     
                 local property-grist = [ $(ps).as-path ] ;
                 grist = $(location-grist)/$(property-grist) ;
+                properties = [ $(ps).raw ] ;
             }
             if ! $(grist)
             {
