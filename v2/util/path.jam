@@ -374,7 +374,7 @@ rule make-UNIX ( native )
     # VP: I have no idea now 'native' can be empty here! But it can!
     if $(native) = ""
     {
-        return "." ;
+        errors.error "Empty path passed to 'make-UNIX'" ;
     }
     else
     {        
