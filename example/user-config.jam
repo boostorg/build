@@ -37,10 +37,10 @@ import toolset : using ;
 #  Configure, specifying location of STLPort headers. 
 #  Libraries must be either not needed, or available to
 #  the compiler by default
-#  using stlport : /usr/include/stlport ;
+#  using stlport : : /usr/include/stlport ;
 
 #  Configure, specifying locatioh of both headers and libraries
-#  using stlport : /usr/include/stlport : /usr/lib ;
+#  using stlport : : /usr/include/stlport : /usr/lib ;
 
 
 #  QT configuration
