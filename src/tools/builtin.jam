@@ -16,7 +16,7 @@ import virtual-target ;
 import os ;
 import stage ;
 import prebuilt ;
-import toolset ;
+import toolset : flags ;
 import errors : error ;
 import symlink ;
 
@@ -31,11 +31,15 @@ feature stdlib : native : propagated link-incompatible ;
 
 feature link : shared static : propagated ;
 feature link-runtime : shared static : propagated ;
+feature runtime-debugging : off on : propagated ;
 
 
-feature optimization : off on : propagated ;
+feature optimization : off speed space : propagated ;
+feature inlining : off on full : propagated ;
+
 feature threading : single multi : link-incompatible propagated ;
 feature rtti : on off : link-incompatible propagated ;
+feature exception-handling : on off : propagated ;
 feature debug-symbols : on off : propagated ;
 feature define : : free ;
 feature "include" : : free path ;
@@ -115,6 +119,7 @@ rule variant ( name           # Name of the variant
         
         inherited += $(.explicit-properties.$(p)) ;
     }
+    property.validate $(explicit-properties) ;
     explicit-properties = [ property.refine $(inherited) : $(explicit-properties) ] ;
     
     # Record explicitly specified properties for this variant
@@ -127,8 +132,8 @@ rule variant ( name           # Name of the variant
 }
 IMPORT $(__name__) : variant : : variant ;
 
-variant debug : <optimization>off <debug-symbols>on ;
-variant release : <optimization>on <debug-symbols>off ;
+variant debug : <optimization>off <debug-symbols>on <inlining>off ;
+variant release : <optimization>speed <debug-symbols>off <inlining>full ;
 
 rule searched-lib-target ( name     
                   : project 
@@ -184,12 +189,18 @@ local rule declare-type ( os * : type : suffixes * : base-type ? : main ? )
     }
 }
 
-   
+#
+# Common target types.
+#
+
 declare-type NT : OBJ : obj : : main ;
 declare-type : OBJ : o : : main ;
 
 declare-type NT : STATIC_LIB : lib : LIB : main ;
 declare-type : STATIC_LIB : a : LIB : main ;
+
+declare-type NT : IMPORT_LIB : : STATIC_LIB : main ;
+type.set-generated-target-suffix IMPORT_LIB : : lib ;
 
 declare-type NT CYGWIN : SHARED_LIB : dll : LIB : main ;
 declare-type : SHARED_LIB : so : LIB : main ;
@@ -209,6 +220,49 @@ type.set-generated-target-suffix PYTHON_EXTENSION : <os>NT : so ;
 type.set-generated-target-suffix PYTHON_EXTENSION : <os>CYGWIN : dll ;
 
 type.register CPP : cpp cxx ;
+
+#
+# Response files - 
+#
+# Because of line-length limitations in the Windows NT command-shell,
+# we use the "response file" feature of many toolsets, which allow us
+# to write sources into a file and insert the file into the
+# command-line.
+#
+
+declare-type NT : RSP : rsp ;
+if [ os.name ] = NT  # must be conditional; we'll error on other OSes
+{
+    generators.register-composing builtin.response-file : RSP : OBJ STATIC_LIB IMPORT_LIB ;
+}
+
+
+flags builtin.response-file LIBRARIES <library> ;
+
+# response-file generation is broken up into two phases, the first of
+# which overwrites any existing file and the second of which appends
+# to the file, piecemeal, so that no command-line is too long.
+rule response-file ( target : sources * )
+{
+    sources += [ on $(target) return $(LIBRARIES) ] ;
+    
+    response-file-1 $(target) : $(sources[1]) ;
+    if $(sources[2-])
+    {
+        response-file-2 $(target) : $(sources[2]) ;
+    }
+}
+
+actions quietly response-file-1
+{
+    echo "$(>)" > "$(<)"
+}
+
+actions quietly piecemeal response-file-2
+{
+    echo "$(>)" >> "$(<)"
+}
+#####
 
 rule c-scanner ( includes * )
 {

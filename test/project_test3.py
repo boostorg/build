@@ -83,7 +83,7 @@ t.expect_touch(["bin/gcc/debug/a.obj",
                 "lib2/bin/gcc/debug/l.exe"])
 
 
-t.run_build_system(extra_args="release optimization=off,on")
+t.run_build_system(extra_args="release optimization=off,speed")
 t.expect_addition([ "bin/gcc/release/a.exe", 
 		    "bin/gcc/release/a.obj", 
 		    "bin/gcc/release/optimization-off/a.exe", 
