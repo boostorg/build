@@ -45,7 +45,7 @@ flags msvc STDHDRS : $(MSVCDir)$(SLASH)include ;
 flags msvc STDLIBPATH : $(MSVCDir)$(SLASH)lib ;
 flags msvc LIBPATH <library-path> ;
 flags msvc NEEDLIBS <library-file> ;
-flags msvc NEEDLIBS <find-library> ;
+flags msvc FINDLIBS <find-library> ;
 flags msvc LINKFLAGS <target-type>DLL : /DLL ;
 
 #### Link ####
@@ -60,7 +60,7 @@ rule Link-action
         msvc-Link-action $(<) : $(command-file) ;
 
         list-files $(command-file) : $(>) ;
-        DEPENDS $(<[1]) : $(command-file) ;
+        DEPENDS $(<) : $(command-file) ;
         RmTemps $(<[1]) : $(command-file) ;
     }
     else
@@ -72,7 +72,7 @@ rule Link-action
 
 actions together msvc-Link-action bind NEEDLIBS
 {
-    $(MSVC_TOOL_PATH)link /nologo $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(NEEDLIBS)" $(COMMAND)"$(>)"
+    $(MSVC_TOOL_PATH)link /nologo $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(NEEDLIBS)" "$(FINDLIBS)" $(COMMAND)"$(>)"
 }
 
 #### Cc #####

@@ -43,7 +43,7 @@ flags como UNDEFS <undef> ;
 flags como HDRS <include> ;
 
 flags como STDHDRS : $(COMO_INCLUDE_PATH) ;
-flags como STDLIBPATH : $(COMO_STDLIB_PATH) ;
+flags como STDLIBPATH : $(COMO_STDLIB_PATH)$(SLASH) ;
 
 flags como LIBPATH <library-path> ;
 flags como NEEDLIBS <library-file> ;
@@ -64,7 +64,7 @@ actions como-Link-action bind NEEDLIBS
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    $(COMO_BIN_DIRECTORY)como $(LINKFLAGS) -o "$(<[1])" "$(>)" "$(NEEDLIBS)"  $(COMO_STDLIB_PATH)\libcomo.lib
+    $(COMO_BIN_DIRECTORY)como $(LINKFLAGS) -o "$(<[1])" "$(>)" "$(NEEDLIBS)" "$(FINDLIBS)" "$(STDLIB_PATH)libcomo.lib"
 }
 
 

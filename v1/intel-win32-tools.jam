@@ -47,7 +47,7 @@ flags intel-win32 STDHDRS : $(INTEL_PATH)$(SLASH)include ;
 flags intel-win32 STDLIBPATH : $(INTEL_PATH)$(SLASH)lib ;
 flags intel-win32 LIBPATH <library-path> ;
 flags intel-win32 NEEDLIBS <library-file> ;
-flags intel-win32 NEEDLIBS <find-library> ;
+flags intel-win32 FINDLIBS <find-library> ;
 flags intel-win32 LINKFLAGS <target-type>DLL : /DLL ;
 
 #### Link ####
@@ -59,7 +59,7 @@ rule Link-action
 
 actions intel-win32-Link-action bind NEEDLIBS 
 {
-    $(INTEL_TOOL_PATH)xilink /nologo $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" $(UNDEFS) /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(NEEDLIBS)" "$(>)"
+    $(INTEL_TOOL_PATH)xilink /nologo $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" $(UNDEFS) /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(NEEDLIBS)" "$(FINDLIBS)" "$(>)"
 }
 
 #### Cc #####
