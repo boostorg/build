@@ -73,6 +73,7 @@ import property ;
 import errors ;
 import common ;
 import property-set ;
+import utility : ungrist ;
 
 
 # Base class for all abstract targets.
@@ -540,7 +541,10 @@ rule basic-target ( name : project
         return $(rproperties) ;
     }
 
-    # Generate all sources for this target
+    # Generate all sources for this target. For each source, the return value will
+    # contain a list of virtual targets generated from the source, followed by 
+    # <@>source-name element. 
+    # IOW, virtual targets which come from different sources are separated    
     local rule generate-sources ( property-set )
     {      
         local source-targets ;
@@ -560,6 +564,7 @@ rule basic-target ( name : project
                 source-targets += 
                   [ virtual-target.from-file $(s) : $(self.project) ] ;                            
             }
+            source-targets += <@>$(s) ;
         } 
         return $(source-targets) ;
     }
@@ -591,8 +596,16 @@ rule basic-target ( name : project
                   [ targets.generate-dependencies $(rproperties) : $(self.project) 
                     : $(rproperties) ] ;
                                             
-                local source-targets = [ generate-sources $(rproperties) ] ;                
-            
+                local source-target-groups = [ generate-sources $(rproperties) ] ;
+                local source-targets = ;
+                for local s in $(source-target-groups)
+                {
+                    if $(s:G) != <@>
+                    {                        
+                        source-targets += $(s) ;
+                    }
+                }
+                            
                 local usage-requirements = 
                   [ get-usage-requirements $(source-targets)  
                     [ $(rproperties).dependency ] 
@@ -604,7 +617,7 @@ rule basic-target ( name : project
                 local result = 
                   [ construct $(source-targets) : $(rproperties) ] ;
                 check-for-unused-sources 
-                  $(result) : $(source-targets) ;
+                  $(result) : $(source-target-groups) ;
 
 
                 set-usage-requirements $(result) : $(rproperties) ;
@@ -670,7 +683,7 @@ rule basic-target ( name : project
     #    alias platform-sources ;
     #    alias platform-sources : a.cpp : <os>NT ;
     # result will be empty in the first case.
-    local rule check-for-unused-sources ( result * : sources * )
+    local rule check-for-unused-sources ( result * : source-groups * )
     {
         local used-sources ;
         for local r in $(result)
@@ -678,13 +691,24 @@ rule basic-target ( name : project
             used-sources += [ virtual-target.traverse $(r) : include-roots : 1 ] ; #: includes-sources ] ;
         }
                
-        for local s in $(sources)
+        local group ;
+        for local s in $(source-groups)
         {
-            if ! $(s) in $(used-sources)
+            if $(s:G) != <@>
             {
-                errors.warning "Unused source target" [ $(s).str ] 
-                  : "Main target is " [ full-name ] ;
+                group += $(s) ;
             }
+            else
+            {
+                # We've collected a group of targets that originates from single
+                # dependency main target, and must check that at least one of them
+                # is used.
+                if ! [ set.intersection $(group) : $(used-sources) ] 
+                {
+                    errors.warning "Unused source" $(s:G=) "in main target" [ full-name ] ;                    
+                }
+                group = ;
+            }                        
         }        
     }
     
