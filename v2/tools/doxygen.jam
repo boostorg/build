@@ -20,6 +20,8 @@ import regex ;
 import stage ;
 import project ;
 
+import xsltproc ;
+
 feature.feature doxygen:param : : free ;
 feature.feature prefix : : free ;
 feature.feature reftitle : : free ;
@@ -124,12 +126,12 @@ rule run ( target : source : properties * )
 rule collect ( target : source : properties * )
 {
   local collect-xsl-dir = [ path.native 
-	                    [ path.join [ boostbook.xsl-dir ] doxygen collect ] 
+                        [ path.join [ boostbook.xsl-dir ] doxygen collect ] 
                           ] ;
   local collect-path = [ path.join [ path.pwd ] xml ] ;
   local real-source = [ path.native xml/index.xml ] ;
   NOTFILE $(real-source) ;
-  xslt $(target) : $(real-source) $(collect-xsl-dir:S=.xsl) 
+  xsltproc.xslt $(target) : $(real-source) $(collect-xsl-dir:S=.xsl) 
                  : <xsl:param>doxygen.xml.path=$(collect-path)
                  ;
 }
@@ -139,8 +141,8 @@ rule xml-to-boostbook ( target : source : properties * )
 {
   local xsl-dir = [ boostbook.xsl-dir ] ;
   local d2b-xsl = [ path.native 
-	              [ path.join [ boostbook.xsl-dir ] doxygen 
-	                doxygen2boostbook.xsl ] ] ;
+                  [ path.join [ boostbook.xsl-dir ] doxygen 
+                    doxygen2boostbook.xsl ] ] ;
 
   local xslt-properties = $(properties) ;
   for local prefix in [ feature.get-values <prefix> : $(properties) ]
@@ -152,7 +154,7 @@ rule xml-to-boostbook ( target : source : properties * )
     xslt-properties += "<xsl:param>boost.doxygen.reftitle=\"$(title)\"" ;
   }
 
-  xslt $(target) : $(source) $(d2b-xsl) : $(xslt-properties) ;
+  xsltproc.xslt $(target) : $(source) $(d2b-xsl) : $(xslt-properties) ;
 }
 
 # User-level rule to generate BoostBook XML from a set of headers via Doxygen. 
