@@ -469,7 +469,7 @@ ALWAYS clean uninstall ;
 # targets in dependee subprojects from being added to the type-target's dependencies.
 rule type-DEPENDS # type-target : targets...
 {
-    if ! $(gIN_LIB_INCLUDE)
+    if ! $(gSUPPRESS_FAKE_TARGETS) && ! $(gIN_LIB_INCLUDE)
     {
         DEPENDS $(<) : $(>) ;
     }
@@ -1240,6 +1240,7 @@ rule strip-grist
 
 # dwa 6/4/01 - added for boost
 # Breaks $(<) into path components
+# This could certainly be improved now that we have David Turner's regular expression features.
 #
 # split-path <foo>bar/<bee>baz/mumble  => <foo>bar <bee>baz mumble 
 rule split-path
