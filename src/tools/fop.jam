@@ -31,14 +31,9 @@ rule init ( fop-command ? : java-home ? : java ? )
     {
         .initialized = true ;
         .FOP_COMMAND = $(fop-command) ;
-        if $(java-home) 
-        {            
-            .FOP_SETUP = [ common.variable-setting-command JAVA_HOME $(java-home) ] ;
-        } 
-        else
-        {
-            .FOP_SETUP = [ common.variable-setting-command JAVACMD $(java) ] ;
-        }
+        # What is the meaning of this logic?  Needs more comments!!  --DWA
+        java-home ?= $(java) ;
+        .FOP_SETUP = [ common.variable-setting-command JAVA_HOME : $(java-home) ] ;
     }
     
     # Make sure the fop command is executed from within the directory where it's located.
@@ -74,8 +69,8 @@ local rule find-by-absolute-path ( target )
         
         # Translate cygwin paths to Windows iff the user is running on
         # cygwin but using a Windows FOP.  We detect a Windows FOP by
-        # looking to see if FOP_COMMAND starts with a drive letter.
-        if [ os.name ] = CYGWIN && [ MATCH ^([A-Za-z]:[/\\\\]).* : $(.FOP_COMMAND) ]
+        # looking to see if FOP_COMMAND ends with ".bat"
+        if [ os.name ] = CYGWIN && [ MATCH .*\\.([Bb][Aa][Tt])$ : $(.FOP_COMMAND) ]
         {
             absolute-dir = "`cygpath --windows '$(absolute-dir)'`" ;
         }
