@@ -226,13 +226,22 @@ using gcc : 3.4 : : &lt;compileflags&gt;-m64 &lt;linkflags&gt;-m64 ;
     <section id="bbv2.advanced.overview">
       <title>Overview</title>
 
-      <para>Jamfiles are the thing that is most important to the user,
-      bacause they declare the targets that should be built. Jamfiles are
-      also used for organizing targets -- each Jamfile is a separate project,
-      which can be built independently from the other projects.</para>
+      <para><filename>Jamfile</filename>s are the thing that is most important to the user,
+      <!-- Semantics-free, and wrong.  Many things are more important to the user -->
+      bacause they declare the targets that should be built. 
+      <!-- The reader already knows that -->
+      <filename>Jamfile</filename>s are also used for organizing targets&#x2014;
+      <!-- Practically redundant with "Jamfiles... declare targets" -->
+      each Jamfile is a separate project
+      <!-- Okay, there's some content! -->
+      that can be built independently from the other projects.
+      <!-- :( Practically redundant with "each Jamfile is a separate project." -->
+      </para>
 
-      <para>Jamfile mostly contain calls to Boost.Build functions, which do
+      <para><filename>Jamfile</filename>s mostly contain calls to Boost.Build functions that do
         all the work, specifically:
+        <!-- it's too late to start saying "functions."  You have to
+             use "rules" everwhere or it will just get confusing. -->
         <itemizedlist>
           <listitem>
             <para><link linkend="bbv2.advanced.targets">declare main
@@ -245,11 +254,22 @@ using gcc : 3.4 : : &lt;compileflags&gt;-m64 &lt;linkflags&gt;-m64 ;
           </listitem>
           <listitem>
             <para><link linkend="bbv2.advanced.other-rules">do various other
-            things</link></para>            
+            things</link></para> 
+            <!-- Semantics-free again. -->
           </listitem>
         </itemizedlist>
       </para>
 
+      <!-- Don't expect those links to do anything useful, even for
+           someone reading the HTML.  A list of items where all of the
+           *real* content is only available through links is often
+           worse than nothing.  Have you ever tried to read NG
+           postings by Alexander Terekhov? The whole list is pretty
+           useless.  Consider scratching or rewriting the entire section. -->
+
+      <!-- That's a *lot* of flotsam below.  If it's not good enough
+           to go in the output users see, just delete it. -->
+      <!-- ======================================================== -->
 <!--
       <para>The most fundemental entity in Boost.Build is <emphasis>main
           target</emphasis>. This is object that user want to construct from
@@ -290,8 +310,11 @@ using gcc : 3.4 : : &lt;compileflags&gt;-m64 &lt;linkflags&gt;-m64 ;
   finally issues command to create needed files, automatically
   converting properties into appropricate command line options.</para>
 -->
+      <!-- ======================================================== -->
     </section>
 
+      <!-- Delete this flotsam too! -->
+      <!-- ======================================================== -->
 <!--
     <section id="bbv2.advanced.roadmap">
       <title>Your first project and roadmap</title>
@@ -362,98 +385,117 @@ boost-build /path/to/boost.build ;
       <title>Main targets</title>
 
       <para id="bbv2.advanced.targets.main">
-        <emphasis>Main target</emphasis> is a user-defined named
-        entity that can be built, for example a named executable file.
-        Declaring a main target is usually done using one of <link linkend=
-          "bbv2.advanced.builtins.targets">main target functions</link>.  The
-        user can also declare <link linkend="bbv2.extending.rules"> custom
-        main target function</link>.</para>
+        A <firstterm>Main target</firstterm> is a user-defined named
+        entity that can be built, for example an <!-- a named --> executable file.
+        <!-- We already said it was named in the very same sentence.
+             Is there even such a thing as an unnamed executable?? -->
+        Declaring a main target is usually done using one of the main
+        target rules described in <xref linkend=
+        "bbv2.advanced.builtins.targets"/>.  The user can also declare
+        custom main target rules as shown in <xref
+        linkend="bbv2.extending.rules"/>.
+</para>
       
-      <para>Most main targets rules in Boost.Build use similiar
-        syntax:</para>
+      <para>Most main target rules in Boost.Build can be invoked with
+      a common syntax:</para>
+
+      <!-- I think we maybe ought to be talking about a common
+           _signature_ here, having already explained Boost.Jam function
+           signatures at the beginning of this chapter.  Then we could show 
+           ( main-target-name : sources * : requirements * : default-build * : usage-requirements * )
+           instead.  More precise.
+
+           Also, I suggest replacing "default-build" by "default-properties" everywhere.
+      -->
 
 <anchor id="bbv2.main-target-rule-syntax"/>
 <programlisting>
-function-name main-target-name 
-    : sources 
-    : requirements 
-    : default-build 
-    : usage-requirements 
+<replaceable>rule-name</replaceable> <replaceable>main-target-name</replaceable>
+    : <replaceable>sources...</replaceable>
+    : <replaceable>requirements...</replaceable> 
+    : <replaceable>default-build...</replaceable>
+    : <replaceable>usage-requirements...</replaceable>
     ;
 </programlisting>
 
       <itemizedlist>
         <listitem>
           <simpara>
-            "main-target-name" is the name used to request the target
-            on command line and to use it from other main targets. Main
-            target name may contain alphanumeric characters and symbols '-'
-            and '_';
+            <parameter>main-target-name</parameter> is the name used
+            to request the target on command line and to use it from
+            other main targets. A main target name may contain
+            alphanumeric characters, dashes
+            (&#x2018;<code>-</code>&#x2019;), and underscores
+            (&#x2018;<code>_</code>&#x2019;).
           </simpara>
         </listitem>
         
         <listitem>
           <simpara>
-            "sources" is the list of source files and other main
+            <parameter>sources</parameter> is the list of source files and other main
             targets that must be combined. 
           </simpara>
         </listitem>
         
         <listitem>
           <simpara>
-            "requirements" is the list of properties that must always
+            <parameter>requirements</parameter> is the list of properties that must always
             be present when this main target is built.
           </simpara>
         </listitem>
         
         <listitem>
           <simpara>
-            "default-build" is the list of properties that will be used
+            <parameter>default-build</parameter> is the list of properties that will be used
             unless some other value of the same feature is already
-            specified.
+            specified, e.g. on the command line or by propogation from a dependent target.
           </simpara>
         </listitem>
         
         <listitem>
           <simpara>
-            "usage-requirements" is the list of properties that will be
-            propagated to all main targets that use this one, i.e. to all
+            <parameter>usage-requirements</parameter> is the list of properties that will be
+            propagated to all main targets that use this one, i.e. to all its
             dependents.
           </simpara>
         </listitem>
       </itemizedlist>
 
-      <para>Note that the actual requirements, default-build and
-        usage-requirements attributes for a target are obtained by combining
-        the explicitly specified one with those specified for the project
-        where a target is declared.
-      </para>
       <para>          
-        Some main target rules have shorter list of parameters, and
-        you should consult their documentation for details.
+        Some main target rules have a shorter list of parameters;
+        consult their documentation for details.
+      </para>
+      <para>Note that the actual requirements, default-build and
+      usage-requirements attributes for a target are obtained by
+      combining the explicitly specified ones with those specified for
+      the project where a target is declared.
+      <!-- Need an xref here to the place where the combination is
+           described in detail -->
       </para>
       
-      <para>The list of sources specifies what should be processed to get
-        the resulting targets. Most of the time, it's just a list of
-        files. Sometimes, you'd want to use all files with the same
-        extension as sources, in which case you can use the "glob"
-        rule. Here are two examples:
+      <para>The list of sources specifies what should be processed to
+      get the resulting targets. Most of the time, it's just a list of
+      files. Sometimes, you'll want to automatically construct the
+      list of source files rather than having to spell it out
+      manually, in which case you can use the
+      <functionname>glob</functionname> rule. Here are two examples:
 <programlisting>
-exe a : a.cpp ;
-exe b : [ glob *.cpp ] ;
+exe a : a.cpp ;           # a.cpp is the only source file
+exe b : [ glob *.cpp ] ;  # all .cpp files in this directory are sources 
 </programlisting>
         Unless you specify a files with absolute path, the name is
         considered relative to the source directory -- which is typically
-        the same as directory when Jamfile is located, but can be changed as
-        described <link linkend=
-          "bbv2.advanced.projects.attributes.projectrule">here</link>
+        the directory where the Jamfile is located, but can be changed as
+        described in <xref linkend=
+          "bbv2.advanced.projects.attributes.projectrule"/>.
       </para>
       
       <para>
-        The list of sources can also reference other main targets. The
-        targets in the same project can be referred by using the name, and
-        targets in other project need to specify directory or a symbolic
-        name of the other project. For example:
+        The list of sources can also refer to other main targets.
+        Targets in the same project can be referred to by name, while
+        targets in other projects need to <!-- targets don't "specify"
+        anything -->be qualified with<!----> a directory or a symbolic
+        project name. For example:
 <programlisting>
 lib helper : helper.cpp ;
 exe a : a.cpp helper ;
