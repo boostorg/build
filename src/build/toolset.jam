@@ -209,12 +209,15 @@ rule set-target-variables ( rule-or-module targets + : properties * )
         }
     }
     
-    # recurse for any module-specific flags
-    local module_ = [ MATCH ^(.+)\\..* : $(rule-or-module) ] ;
-    if $(module_)
+    # strip away last dot separated part and recurse.
+    local next = [ MATCH ^(.+)\\.([^\\.])* : $(rule-or-module) ] ;
+    if $(next)
     {
-        set-target-variables $(module_) $(targets) : $(properties) ;
-        
+        set-target-variables $(next) $(targets) : $(properties) ;        
+    }
+    else
+    {
+        # If there's no next dot-separated element, we've got the module name.
         # Allow a rule-based hook for more-sophisticated setting
         # of build options than flags allows.
         if prepare-target in [ RULENAMES $(module_) ]
@@ -225,6 +228,7 @@ rule set-target-variables ( rule-or-module targets + : properties * )
             }
         }
     }
+    
 }
 
 .toolsets += $(toolset) ;

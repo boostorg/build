@@ -46,6 +46,7 @@ feature exception-handling : on off : propagated ;
 feature debug-symbols : on off : propagated ;
 feature define : : free ;
 feature "include" : : free path ;
+feature cflags : : free ;
 feature cxxflags : : free ;
 feature linkflags : : free ;
 feature version : : free ;
