@@ -24,9 +24,9 @@
 </style>
   </head>
   <!-- Things yet to document:
-                      - build request, build request expansion and directly requested targets
-                      - conditional properties
-                    -->
+                          - build request, build request expansion and directly requested targets
+                          - conditional properties
+                        -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -1006,9 +1006,22 @@ borland/runtime-link=static,dynamic
 
         <td><tt>default-build</tt></td>
 
-        <td>TODO</td>
+        <td>none</td>
 
         <td>Sets to the passed value</td>
+      </tr>
+
+      <tr>
+        <td>Build directory</td>
+
+        <td><tt>build-dir</tt></td>
+
+        <td>If parent has a build dir set, the value of it, joined with the
+        relative path from parent to the current project. Otherwise,
+        empty</td>
+
+        <td>Sets to the passed value, interpreted as relative to the
+        project's location.</td>
       </tr>
     </table>
 

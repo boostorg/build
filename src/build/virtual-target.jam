@@ -373,11 +373,7 @@ rule file-target (
         else if $(self.action)
         {
             # This is a derived file.
-            local path = [ path.native [ path.join 
-                                        [ project.attribute $(self.project) location ] 
-                                        [ $(self.action).path ] 
-                                         $(self.extra-path)                           
-                                       ] ] ;
+            local path = [ path ] ;
             LOCATE on $(target) = $(path) ;
             
             # Make sure the path exists.
@@ -418,20 +414,25 @@ rule file-target (
      }
      
     # Returns the directory for this target
-    # ### This partly DUPLICATES functionality of actualize-location
-    # above. Seems like subvariant-dg.all-target-paths is the only method 
-    # which needs it. Will clean it up when cleaning subvariant.
     rule path ( )
     {
-        compute-extra-path ;
         if $(self.path)
         {
             return $(self.path) ;
         }
         else
         {            
+            compute-extra-path ;
+            
+            local build-dir = [ project.attribute $(self.project) build-dir ] ;
+            if ! $(build-dir)
+            {
+                build-dir = [ project.attribute $(self.project) location ] ;
+            }                    
+            
             local path = [ path.join 
-                             [ project.attribute $(self.project) location ] 
+                            $(build-dir)
+                             bin  
                              [ $(self.action).path ] 
                              $(self.extra-path)                           
                          ] ;
@@ -547,10 +548,7 @@ rule action ( targets + : sources * : action-name : properties * )
     {
         local subvariant = [ property.remove free incidental : $(self.properties) ] ;
         local pp = [ property.as-path $(subvariant) ] ;
-        return bin/$(pp) ;
-        #local path = [ path.join [ project.attribute $(self.project) location ] 
-        #  "bin" [ property.as-path $(subvariant) ] 
-        #    $(self.extra-path) ] ;
+        return $(pp) ;
     }
     
     

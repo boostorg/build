@@ -296,6 +296,38 @@ rule glob-in-parents ( dir : patterns + : upper-limit ? )
     return $(result) ;    
 }
 
+#
+# Assuming 'child' is a subdirectory of 'parent', return the relative
+# path from 'parent' to 'child'
+#
+rule relative ( child parent )
+{
+    if $(parent) = "." 
+    {
+        return $(child) ;
+    }
+    else 
+    {       
+        local split1 = [ regex.split $(parent) / ] ;
+        local split2 = [ regex.split $(child) / ] ;
+    
+        while $(split1)
+        {
+            if $(split1[1]) = $(split2[1])
+            {
+                split1 = $(split1[2-]) ;
+                split2 = $(split2[2-]) ;
+            }
+            else
+            {
+                errors.error $(child) is not a subdir of $(parent) ;
+            }                
+        }    
+        return [ join $(split2) ] ;    
+    }    
+}
+
+
 
 rule make-NT ( native )
 {
@@ -407,6 +439,9 @@ rule __test__ ( ) {
     local CWD = "/home/ghost" ;
     assert.result . .. : all-parents "Jamfile" : "/home" : $(CWD) ;
     assert.result . : all-parents "Jamfile" : "/home/ghost" : $(CWD) ;
+    
+    assert.result "c/d" : relative "a/b/c/d" "a/b" ;
+    assert.result "foo" : relative "foo" "." ;
 
     local os = NT ;
 

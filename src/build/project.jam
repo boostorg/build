@@ -382,6 +382,14 @@ local rule initialize (
             : [ $(pattributes).get requirements ] : exact ;
         $(attributes).set use-requirements
             : [ $(pattributes).get use-requirements ] : exact ;
+        local parent-build-dir = [ $(pattributes).get build-dir ] ;
+        if $(parent-build-dir)
+        {            
+            local parent-dir = [ path.parent $(parent) ] ;
+            local our-dir = [ path.parent $(jamfile) ] ;
+            $(attributes).set build-dir : [ path.join $(parent-build-dir) 
+                  [ path.relative $(our-dir) $(parent-dir) ] ] : exact ;
+        }        
     }
 }
 
@@ -441,8 +449,12 @@ rule project-attributes ( location )
         }        
         else if $(attribute) = "source-location"
         { 
-            self.source-location = [ path.join $(self.location) $(specification) ] ;
+            self.source-location = [ path.root $(specification) $(self.location) ] ;
         }            
+        else if $(attribute) = "build-dir"
+        {
+            self.build-dir = [ path.root $(specification) $(self.location) ] ;
+        }        
         else if ! $(attribute) in "id" "default-build" "location" "source-location"
            "project-root" "project-root-module" "parent" "projects-to-build" 
         {
