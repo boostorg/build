@@ -324,13 +324,14 @@ class boostbook-generator : generator
         {
             local base-target = [ generators.construct $(project) 
               : DOCBOOK : $(property-set) : $(sources) ] ;
+            base-target = $(base-target[2]) ;
             $(base-target).depends $(catalog) ;
             
             local target = [ generators.construct $(project) $(manifest)
               : $(type) : $(property-set) : $(base-target) ] ;
-            $(target).set-path $(format) ;
+            $(target[2]).set-path $(format) ;
             
-            targets += $(target) ;
+            targets += $(target[2]) ;
         }
         else {
             local target = [ generators.construct $(project)
@@ -342,8 +343,8 @@ class boostbook-generator : generator
             }
             else 
             {
-                $(target).depends $(catalog) ;
-                targets += $(target) ;
+                $(target[2]).depends $(catalog) ;
+                targets += $(target[2]) ;
             }
         }
         
