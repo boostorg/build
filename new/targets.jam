@@ -316,7 +316,7 @@ rule main-target ( name : project )
         local specified-features = $(raw:G) ;
         
         local defaults-to-apply ;
-        for local d in $(self.default-build)
+        for local d in [ $(self.default-build).raw ] 
         {
             if ! $(d:G) in $(specified-features)
             {
@@ -482,7 +482,8 @@ rule generate-dependencies ( property-set : project : generation-ps )
 # other main target and handles generation of those dependency
 # targets.
 rule basic-target ( name : project
-                    : sources * : requirements * : default-build * : usage-requirements * )
+                    : sources * : requirements * : 
+                      [property-set] default-build * : usage-requirements * )
 {        
     abstract-target.__init__ $(name) : $(project) ;
     
@@ -810,14 +811,16 @@ rule main-target-default-build (
   : project       # Project where the main target is to be declared
      )
 {
+    local result ;
     if $(specification)
     {
-        return $(specification) ;
+        result = $(specification) ;
     }
     else
     {
-        return [ project.attribute $(project) default-build ] ;        
+        result = [ project.attribute $(project) default-build ] ;
     }    
+    return [ property-set.create-with-validation $(result) ] ;
 }         
 
 # Registers the specified target as a main target alternatives.
