@@ -197,6 +197,15 @@ rule values ( feature )
     return $($(feature).values) ;
 }
 
+# returns true iff 'value' is a value of an implicit feature
+rule is-implicit-value ( value )
+{
+    if $(value) in $(.all-implicit-values) 
+    {
+        return true ;
+    }
+}
+
 # return the implicit feature associated with the given implicit value.
 rule implied-feature ( implicit-value )
 {

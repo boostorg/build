@@ -4,13 +4,40 @@
 #  warranty, and with no claim as to its suitability for any purpose.
 import project ;
 import sequence ;
+import modules ;
 
 import builtin ;
 import make ;
 
 current-project = [ project.load "."  ] ;
+build-request = [ build-request.from-command-line [ modules.peek : ARGV ] ] ;
+
+targets = ;
+properties = ;
+
+while $(build-request[1]) != @
+{
+    targets += $(build-request[1]) ;
+    build-request = $(build-request[2-]) ;
+}
+properties = $(build-request[2-]) ;
+expanded = [ build-request.expand $(properties) ] ;
+
+
 root-target = [ $(current-project).target ] ;
-virtual-targets = [ $(root-target).generate ] ;
+virtual-targets = ;
+
+if $(expanded) 
+{
+    for local p in $(expanded)
+    {
+        virtual-targets += [ $(root-target).generate [ feature.split $(p) ] ] ;
+    }
+}
+else
+{
+    virtual-targets = [ $(root-target).generate ] ;
+}
 
 
 actual-targets = ;
@@ -19,5 +46,8 @@ for t in $(virtual-targets)
     actual-targets += [ $(t).actualize ] ;
 }
 DEPENDS all : $(actual-targets) ;
+
+# If there are any targets in the command line, cause them to be updated
+UPDATE $(targets) ;
 
 
