@@ -222,7 +222,7 @@ declare-type : OBJ : o : : main ;
 declare-type NT CYGWIN : STATIC_LIB : lib : LIB : main ;
 declare-type : STATIC_LIB : a : LIB : main ;
 
-declare-type NT CYGWIN : IMPORT_LIB : : STATIC_LIB : main ;
+declare-type : IMPORT_LIB : : STATIC_LIB : main ;
 type.set-generated-target-suffix IMPORT_LIB : : lib ;
 
 declare-type NT CYGWIN : SHARED_LIB : dll : LIB : main ;
@@ -663,12 +663,11 @@ rule register-linker ( id composing ? : source-types + : target-types + :
 
 IMPORT $(__name__) : register-linker : : generators.register-linker ;
 
-declare-type NT CYGWIN : RSP : rsp ;
-if [ os.name ] in NT CYGWIN # must be conditional; we'll error on other OSes
-{
-    flags builtin.response-file FINDLIBS_ST <find-static-library> ;
-    flags builtin.response-file FINDLIBS_SA <find-shared-library> ;
-    flags builtin.response-file LIBRARY_PATH <library-path> ;
-    builtin.register-linker builtin.response-file : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : RSP ;
-}
+
+declare-type : RSP : rsp ;
+flags builtin.response-file FINDLIBS_ST <find-static-library> ;
+flags builtin.response-file FINDLIBS_SA <find-shared-library> ;
+flags builtin.response-file LIBRARY_PATH <library-path> ;
+builtin.register-linker builtin.response-file : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : RSP ;
+
 
