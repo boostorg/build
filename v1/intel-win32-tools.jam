@@ -82,7 +82,14 @@ else
           ;
     }
     
-    C++FLAGS += /Q$(INTEL_BASE_MSVC_TOOLSET) ;
+    if $(INTEL_BASE_MSVC_TOOLSET) = vc7
+    {
+        C++FLAGS += /Qvc7 ;
+    }
+    else
+    {
+        C++FLAGS += /Qvc7.1 ;
+    }
 }
 
 # remove any duplicates caused by the additions above
