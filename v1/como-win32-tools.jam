@@ -93,7 +93,7 @@ actions como-Link-action bind NEEDLIBS
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    como --no_version --no_prelink_verbose $(LINKFLAGS) -o "$(<[1]:S=)" "$(>)" "$(NEEDLIBS)" "$(FINDLIBS:S=.lib)"
+    $(COMO_BIN_DIRECTORY)como --no_version --no_prelink_verbose $(LINKFLAGS) -o "$(<[1]:S=)" "$(>)" "$(NEEDLIBS)" "$(FINDLIBS:S=.lib)"
 }
 
 
@@ -113,7 +113,7 @@ actions como-Cc-action
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    como -c --c99 -e5 --no_version --display_error_number --diag_suppress=9,21,161,748,940,962 -U$(UNDEFS) -D$(DEFINES) $(WARN) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<:D=)" "$(>)"
+    $(COMO_BIN_DIRECTORY)como -c --c99 -e5 --no_version --display_error_number --diag_suppress=9,21,161,748,940,962 -U$(UNDEFS) -D$(DEFINES) $(WARN) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<:D=)" "$(>)"
 }
 
 #### C++ ####
@@ -131,7 +131,7 @@ actions como-C++-action
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    como -c -e5 --no_version --no_prelink_verbose --display_error_number --long_long --diag_suppress=9,21,161,748,940,962 -D__STL_LONG_LONG -U$(UNDEFS) -D$(DEFINES) $(WARN) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(COMO_BIN_DIRECTORY)como -c -e5 --no_version --no_prelink_verbose --display_error_number --long_long --diag_suppress=9,21,161,748,940,962 -D__STL_LONG_LONG -U$(UNDEFS) -D$(DEFINES) $(WARN) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
@@ -148,7 +148,7 @@ actions updated together piecemeal como-Archive-action
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    como --no_version --no_prelink_verbose --prelink_object @"$(>)"
+    $(COMO_BIN_DIRECTORY)como --no_version --no_prelink_verbose --prelink_object @"$(>)"
     lib $(ARFLAGS) /nologo /out:"$(<:S=.lib)" @"$(>)"
 }
 
