@@ -366,7 +366,7 @@ rule main-target ( name : project )
     }
         
     local rule generate-really ( property-set )
-    {        
+    {    
         local best-alternatives = [ select-alternatives $(property-set) ] ;
         if ! $(best-alternatives)
         {

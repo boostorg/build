@@ -164,13 +164,8 @@ class property-set ;
 # or returns an already existing ones.
 rule create ( raw-properties * )
 {
-# If we uncomment this one, we'll end up with paths like    
-#    bin/gcc/debug/toolset-version-3.2/hello
-#    raw-properties = [ sequence.unique 
-#        [ sequence.insertion-sort $(raw-properties) ] ] ;
-    
     raw-properties = [ sequence.unique 
-        $(raw-properties) ] ;
+        [ sequence.insertion-sort $(raw-properties) ] ] ;
          
     local key = $(raw-properties:J=-:E=) ;
     
