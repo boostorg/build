@@ -59,6 +59,10 @@ toolset acc cc : "-o " : -D
 toolset borland bcc32 : -e -n : /D
     : -WC -w- -q "-I$(toolset-root)Include" "-L$(toolset-root)Lib" -O2 -vi -w-inl
     : -WC -w- -q "-I$(toolset-root)Include" "-L$(toolset-root)Lib" -v -Od -vi- ;
+## Generic Unix cc
+toolset cc cc : "-o " : -D
+    : -s -O
+    : -g ;
 ## Comeau C/C++ 4.x
 toolset como como : "-o " : -D
     : --inlining

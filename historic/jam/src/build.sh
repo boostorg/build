@@ -29,7 +29,12 @@ error_exit ()
     echo "### You can specify the toolset as the argument, i.e.:"
     echo "###     ./build.sh gcc"
     echo "###"
-    echo "### Toolsets supported by this script are: acc, como, darwin, gcc, intel-linux, kcc, kylix, mipspro, sunpro, tru64cxx, vacpp"
+    echo "### Toolsets supported by this script are:"
+    echo "###     acc, como, darwin, gcc, intel-linux, kcc, kylix, mipspro,"
+    echo "###     sunpro, tru64cxx, vacpp"
+    echo "### A special toolset; cc, is available which is used as a fallback"
+    echo "### when a more specific toolset is not available and the cc command"
+    echo "### detected."
     echo "###"
     exit 1
 }
@@ -62,6 +67,8 @@ Guess_Toolset ()
     elif test_path KCC ; then BOOST_JAM_TOOLSET=kcc
     elif test_path bc++ ; then BOOST_JAM_TOOLSET=kylix
     elif test_path aCC ; then BOOST_JAM_TOOLSET=acc
+    # Test for "cc" as the default fallback.
+    elif test_path cc ; then BOOST_JAM_TOOLSET=cc
     fi
     if test "$BOOST_JAM_TOOLSET" = "" ; then
         error_exit "Could not find a suitable toolset."
@@ -127,6 +134,10 @@ case $BOOST_JAM_TOOLSET in
     ;;
     
     acc)
+    BOOST_JAM_CC=cc
+    ;;
+    
+    cc)
     BOOST_JAM_CC=cc
     ;;
    
