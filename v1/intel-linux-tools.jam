@@ -83,7 +83,7 @@ flags intel-linux DLLVERSION <dllversion> ;
 DLLVERSION = $(DLLVERSION[1]) ;
 DLLVERSION ?= $(BOOST_VERSION) ;
 
-flags inttel-linux TARGET_TYPE <target-type> ;
+flags intel-linux TARGET_TYPE <target-type> ;
 
 #### Cc ####
 
