@@ -117,7 +117,7 @@ toolset mipspro cc : "-o " : -D
 toolset msvc cl : /Fe : -D
     : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
     : /nologo /MLd /DEBUG /Z7 /Od /Ob0
-    : /LIBPATH:$(LIB:J=" ") kernel32.lib ;
+    : kernel32.lib ;
 ## Sun Workshop 6 C++
 toolset sunpro CC : "-o " : -D
     : -s -fast -O4
@@ -134,7 +134,7 @@ toolset vacpp xlc : "-o " : -D
 toolset vc7 cl : /Fe : -D
     : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
     : /nologo /MLd /DEBUG /Z7 /Od /Ob0
-    : /LIBPATH:$(LIB:J=" ") kernel32.lib ;
+    : kernel32.lib ;
 ## VMS/OpenVMS DEC C
 toolset vms cc : /OBJECT= : /DEFINE=
     : /STANDARD=VAXC

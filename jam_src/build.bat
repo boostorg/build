@@ -188,7 +188,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
 if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
         set PATH=%PATH%;%BOOST_JAM_TOOLSET_ROOT%bin)
-    set BOOST_JAM_CC="%BOOST_JAM_TOOLSET_ROOT%bin\cl.exe" /nologo /GZ /Zi /ML -DNT -DYYDEBUG /LIBPATH:"%LIB%" kernel32.lib
+    set BOOST_JAM_CC="%BOOST_JAM_TOOLSET_ROOT%bin\cl.exe" /nologo /GZ /Zi /ML -DNT -DYYDEBUG kernel32.lib
     set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
     set BOOST_JAM_OPT_YYACC=/Febootstrap.%BOOST_JAM_TOOLSET%\yyacc0
@@ -203,7 +203,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
 if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
         set PATH=%PATH%;%BOOST_JAM_TOOLSET_ROOT%bin)
-    set BOOST_JAM_CC="%BOOST_JAM_TOOLSET_ROOT%bin\cl.exe" /nologo /GZ /Zi /ML -DNT -DYYDEBUG /LIBPATH:"%LIB%" kernel32.lib
+    set BOOST_JAM_CC="%BOOST_JAM_TOOLSET_ROOT%bin\cl.exe" /nologo /GZ /Zi /ML -DNT -DYYDEBUG kernel32.lib
     set BOOST_JAM_OPT_JAM=/Febootstrap.%BOOST_JAM_TOOLSET%\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap.%BOOST_JAM_TOOLSET%\mkjambase0
     set BOOST_JAM_OPT_YYACC=/Febootstrap.%BOOST_JAM_TOOLSET%\yyacc0
