@@ -453,10 +453,18 @@ rule project-attributes ( location )
         }
         else if $(attribute) = "usage-requirements"
         {
-            local non-free = [ property.remove free : $(specification) ] ;
+            local unconditional ;
+            for local p in $(specification)
+            {
+                local split = [ property.split-conditional $(p) ] ;
+                split ?= nothing $(p) ;
+                unconditional += $(split[2]) ;
+            }
+            
+            local non-free = [ property.remove free : $(unconditional) ] ;
             if $(non-free)
             {
-                errors.error "usage-requirements" $($(real-pos2)) "have non-free properties" $(non-free) ;
+                errors.error "usage-requirements" $(specification) "have non-free properties" $(non-free) ;
             }            
             local t = [ property.translate-paths $(specification)
                                       : $(self.location) ] ;
