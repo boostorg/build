@@ -2,7 +2,7 @@
 
 # Test that we can use already built sources
 
-from BoostBuild import Tester
+from BoostBuild import Tester, exe_suffix
 t = Tester()
 
 t.set_tree('prebuilt')
@@ -20,7 +20,7 @@ t.copy("ext/Jamfile2", "ext/Jamfile")
 # libraries are used.
 
 t.run_build_system("debug release")
-t.expect_addition("bin/gcc/debug/main-target-hello/hello")
-t.expect_addition("bin/gcc/release/main-target-hello/hello")
+t.expect_addition("bin/gcc/debug/main-target-hello/hello" + exe_suffix)
+t.expect_addition("bin/gcc/release/main-target-hello/hello" + exe_suffix)
 
 t.cleanup()

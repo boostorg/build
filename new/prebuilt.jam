@@ -25,6 +25,10 @@ rule prebuilt-file-generator
     {
         local name = [ feature.get-values <file> : $(properties) ] ;
         local type = [ type.type $(name:S) ] ;
+        if ! $(type) 
+        {
+            errors.error "Unknown type for prebuilt target " $(name) in $(project) ;
+        }
         
         local pl = [ project.attribute $(project) location ] ;
         local path = [ path.root [ path.native $(name:D) ] $(pl) ] ;
