@@ -128,17 +128,39 @@ type.register VERBATIM : verbatim ;
         are the name of new type and the list of extensions associated with
         it. A file with an extension from the list will have the given target
         type. In the case where a target of the declared type is generated
-        from other sources, the first specified extension will be used. This
-        behaviour can be changed using the
-        <code>type.set-generated-target-suffix</code> rule.
+        from other sources, the first specified extension will be used. 
       </para>
 
-      <para>
-        Something about 'main' types.
-      </para>
+    <para>Sometimes you want to change the suffix used for generated targets
+      depending on build properties, such as toolset. For example, some compiler
+      uses extension <literal>elf</literal> for executable files. You can use the
+      <code>type.set-generated-target-suffix</code> rule:
+<programlisting>
+type.set-generated-target-suffix EXE : &lt;toolset&gt;elf : elf ;
+</programlisting>
+    </para>
 
-      <para>Something about base types.
-      </para>
+    <para>A new target type can be inherited from an existing one. 
+<programlisting>
+type.register PLUGIN : : SHARED_LIB ;
+</programlisting>
+      The above code defines a new type derived from
+      <code>SHARED_LIB</code>. Initially, the new type inherits all the
+      properties of the base type - in particular generators and suffix.
+      Typically, you'll change the new type in some way. For example, using
+      <code>type.set-generated-target-suffix</code> you can set the suffix for
+      the new type. Or you can write special generator for the new type. For
+      example, it can generate additional metainformation for plugin.
+      In either way, the <code>PLUGIN</code> type can be used whenever
+      <code>SHARED_LIB</code> can. For example, you can directly link plugins
+      to an application.
+    </para>
+
+    <para>A type can be defined as "main", in which case Boost.Build will
+      automatically declare a main target rule for building targets of that
+      type. More details can be found <link
+      linkend="bbv2.extending.rules.main-type">later</link>.
+    </para>
 
       <section id="bbv2.extending.scanners">
         <title>Scanners</title>
@@ -184,7 +206,6 @@ type.set-scanner VERBATIM : verbatim-scanner ;
         </para>
 
       </section>
-
 
   </section>
   
@@ -636,10 +657,11 @@ glib codegen ;
 </programlisting>
     </para>
 
-    <para>The second approach is suitable when your target rule should just
-      produce a target of specific type. Then, when declaring a type you
-      should tell Boost.Build that a main target rule should be created.
-      For example, if you create a module "obfuscate.jam" containing:
+    <para id="bbv2.extending.rules.main-type">The second approach is suitable
+      when your target rule should just produce a target of specific
+      type. Then, when declaring a type you should tell Boost.Build that a
+      main target rule should be created.  For example, if you create a module
+      "obfuscate.jam" containing:
 
 <programlisting>
 import type ;
