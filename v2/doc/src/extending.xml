@@ -103,7 +103,7 @@ and linked it.
 
       <para>In the subsequent sections, we will extend this example, and review
         all the mechanisms in detail. The complete code is available in <ulink url=
-          "../../../tools/build/v2/example/customization">example/customization</ulink>
+          "../../tools/build/v2/example/customization">example/customization</ulink>
         directory.
       </para>
 
