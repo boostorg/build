@@ -20,7 +20,7 @@ import toolset : using ;
 #  using gcc ;
 
 #  Configure specific gcc version, giving alternative name to use
-#  using gcc : 3.2 g++-3.2 ;
+#  using gcc : 3.2 : g++-3.2 ;
 
 #  MSVC configuration
 
