@@ -545,13 +545,12 @@ class file-reference : abstract-target
                [ virtual-target.from-file $(self.name) : $(self.project) ] ;        
     }    
 
-    rule location ( )
+    # Returns true if the referred file really exists;
+    rule exists ( )
     {
-        # FIXME: use of glob seems like a horribly inefficient way
-        # to lookup a file.
         local location = [ path.root $(self.name)
-          [ project.attribute $(self.project) source-location ] ] ;
-        return [ path.glob $(location:D) : $(location:D=) ] ;
+          [ project.attribute $(self.project) source-location ] ] ;        
+        return [ path.exists $(location) ] ;
     }    
 }
 
@@ -615,7 +614,7 @@ rule find ( id : current-location )
     if ! $(target) && ! $(have-project-reference) && $(base-project)
     {
         target = [ new file-reference $(target-part) : $(base-project) ] ;        
-        if ! [ $(target).location ]
+        if ! [ $(target).exists ]
         {
             # File actually does not exist.
             # Reset 'target' so that an error is issued.
