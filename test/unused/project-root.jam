@@ -36,7 +36,7 @@ class test-target-class : basic-target
         }        
     }
     
-    rule compute-usage-requirements ( rproperties )
+    rule compute-usage-requirements ( rproperties : targets * )
     {
         return [ property-set.create <define>FOO ] ;
     }

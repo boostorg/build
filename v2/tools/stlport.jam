@@ -129,7 +129,7 @@ class stlport-target-class : basic-target
         
     }
     
-    rule compute-usage-requirements ( rproperties )
+    rule compute-usage-requirements ( rproperties : targets * )
     {
         local usage-requirements ;
         usage-requirements += 

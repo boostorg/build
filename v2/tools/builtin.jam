@@ -387,12 +387,14 @@ type.register C : c ;
 class lib-target-class : basic-target
 {
     import generators : construct : generators.construct ;    
+    import type ;
+    import path ;
     
     rule __init__ ( name : project 
         : sources * : requirements * : default-build * : usage-requirements * )
     {    
         basic-target.__init__ $(name) : $(project) 
-          : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;
+          : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;        
     }
                 
     rule construct ( source-targets * : property-set )
@@ -418,15 +420,40 @@ class lib-target-class : basic-target
                 : $(property-set) : $(source-targets) : LIB ] ;        
     }            
     
-    rule compute-usage-requirements ( rproperties )
+    rule compute-usage-requirements ( rproperties : created-targets )
     {
         local result = [ basic-target.compute-usage-requirements $(rproperties) ] ;
+        
+        # For lib targets with <search>, add the value of <search> as <library-path>
+        # usage requirement.
         local search = [ $(rproperties).get <search> ] ;
         if $(search)
         {
             result = [ $(result).add [ 
               property-set.create $(search:G=<library-path>) ] ] ;            
         }
+        
+        # If <hardcode-dll-paths> is true, add appropricate <dll-path> usage
+        # requirements.
+        local raw = [ $(rproperties).raw ] ;
+        if <link>shared in $(raw) && <hardcode-dll-paths>true in $(raw)
+        {
+            local paths ;
+            local pwd = [ path.pwd ] ;
+            for local t in $(created-targets)
+            {
+                if [ type.is-derived [ $(t).type ] SHARED_LIB ] 
+                {
+                    paths += [ path.root [ $(t).path ] $(pwd) ] ;
+                }                                
+            }       
+            if $(paths)
+            {
+                result = [ $(result).add 
+                  [ property-set.create $(paths:G=<dll-path>) ] ] ;
+            }            
+        }
+                
         return $(result) ;
     }
     
@@ -579,13 +606,7 @@ class link-action : action
                 properties2 += $(p) ;
             }            
         }
-        
-        local hardcore-rpath ;
-        if <hardcode-dll-paths>true in $(properties)
-        {
-            hardcore-rpath = true ;
-        }        
-                
+                        
         # Add needed properties
         local pwd = [ path.pwd ] ;
         local rpaths ;
@@ -608,21 +629,11 @@ class link-action : action
                 }         
             } 
             else 
-            {
-                if $(hardcore-rpath) && 
-                  [ type.is-derived [ $(s).type ] SHARED_LIB ] 
-                {
-                    rpaths += [ path.root [ $(s).path ] $(pwd) ] ;
-                }                
+            {       
                 properties2 += <library>$(s) ;        
             }            
         }        
         
-        if $(hardcore-rpath)
-        {                    
-            rpaths = [ sequence.unique $(rpaths) ] ;
-            properties2 += <dll-path>$(rpaths) ;            
-        }       
         return $(properties2) ;        
     }
     

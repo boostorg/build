@@ -947,7 +947,7 @@ class basic-target : abstract-target
                 create-subvariant-dg $(result) : $(property-set) : $(rproperties) ;
 
                 self.generated.$(property-set) = 
-                  [ compute-usage-requirements $(rproperties) ]
+                  [ compute-usage-requirements $(rproperties) : $(result) ]
                   $(result) ;
 
                 self.name = $(original-name) ;
@@ -963,7 +963,7 @@ class basic-target : abstract-target
     # Given the set of generated targets, and refined build 
     # properties, determines and sets appripriate usage requirements
     # on those targets.
-    rule compute-usage-requirements ( rproperties )
+    rule compute-usage-requirements ( rproperties : created-targets * )
     {
         xusage-requirements = [ $(self.usage-requirements).evaluate-conditionals 
           $(rproperties) ] ;                
