@@ -14,6 +14,8 @@
 set-as-singleton INTEL_PATH ;
 
 INTEL_VERSION ?= $(INTEL_LINUX_VERSION) ;  # For backwards compatibility
+INTEL_CC ?= icc ;
+INTEL_CXX ?= icpc ;
 
 # Attempt to look in the PATH if no variables have been set up.
 if ! $(INTEL_VERSION) && ! $(INTEL_PATH)
@@ -22,7 +24,7 @@ if ! $(INTEL_VERSION) && ! $(INTEL_PATH)
     INTEL_PATH ?= $(paths[0]) ;
 }
 
-INTEL_VERSION ?= 70 ;
+INTEL_VERSION ?= 80 ;
 
 # In case the path is unspecified, try to deduce it from the version
 if $(INTEL_VERSION) in 50 60 70
@@ -82,6 +84,7 @@ flags intel-linux LINKFLAGS <runtime-link>static : -static ;
 
 # required libraries
 flags intel-linux FINDLIBS : rt ;
+flags intel-linux FINDLIBS <runtime-link>static : pthread ;
 
 
 #### standard settings ####
@@ -97,7 +100,7 @@ flags intel-linux LIBPATH <library-path> ;
 flags intel-linux NEEDLIBS <library-file> ;
 flags intel-linux FINDLIBS <find-library> ;
 
-flags intel-linux SYSHDRS <sysinclude> ;
+flags intel-linux STDHDRS <sysinclude> ;
 flags intel-linux LINKFLAGS <linkflags> ;
 
 flags intel-linux ARFLAGS <arflags> ;
@@ -123,7 +126,7 @@ rule Cc-action
 actions intel-linux-Cc-action
 {
     $(INTEL_LINUX_SETUP)
-    icc -c -w1 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
+    $(INTEL_CC) -c -w1 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -136,7 +139,7 @@ rule C++-action
 actions intel-linux-C++-action
 {
     $(INTEL_LINUX_SETUP)
-    icc -c -w1 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
+    $(INTEL_CXX) -c -w1 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
@@ -179,7 +182,9 @@ rule Link-action
 actions intel-linux-Link-action bind NEEDLIBS NEEDIMPS
 {
     $(INTEL_LINUX_SETUP)
-    icc $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" $(NEEDLIBS) $(NEEDLIBS) -l$(FINDLIBS) "$(IMPLIB_FLAGS)$(NEEDIMPS)" "-Qoption,link,-soname,$(<[1]:D=)$(SOTAG)"
+    $(INTEL_CXX) $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" $(NEEDLIBS) $(NEEDLIBS) -l$(FINDLIBS) "$(IMPLIB_FLAGS)$(NEEDIMPS)" "-Qoption,link,-soname,$(<[1]:D=)$(SOTAG)"
     $(ACTION_1)$(LN)$(SPACE)-fs$(SPACE)"$(<[1]:D=)$(OUTTAG)"$(SPACE)"$(<[1])"
 }
+
+
 
