@@ -82,7 +82,7 @@ feature library-file : : free dependency ;
 
 feature name : : free ;
 feature tag : : free ;
-feature search : : free path ;
+feature search : : free path order-sensitive ;
 feature location : : free path ;
 
 feature dll-path : : free path ;
