@@ -1722,7 +1722,7 @@ rule with-command-file ( rule-name targets * : sources * )
 {
     # create a command-file target and place it where the first target
     # will be built
-    local command-file = $(<[2]:S=.CMD) ;
+    local command-file = $(targets[1]:S=.CMD) ;
     LOCATE on $(command-file) = $(gLOCATE($(targets[1]))) ;
     build-command-file $(command-file) : $(sources) ;
 
@@ -1731,7 +1731,8 @@ rule with-command-file ( rule-name targets * : sources * )
     local result = [ $(rule-name) $(targets) : $(command-file) ] ;
 
     # clean up afterwards
-    remove-command-file $(targets) : $(command-file) ;
+    # Can't really do this until <find-library> arguments are accounted for.
+    # remove-command-file $(targets) : $(command-file) ;
     return result ;
 }
 
