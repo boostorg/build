@@ -324,13 +324,10 @@ rule main-target ( name : project )
 
 class main-target : abstract-target ;
 
-# Provides default implementation for building source targets and
-# similar activities.
-# Sources may be either files, or target ids. The former have the form
-# location@project-id/target-id, or
-# location@project-id/target-id/<feature1>foo
-# The second variant specifies additional properties that should be used
-# when building the target.
+# Implements the most standard way of constructing main target
+# alternative from sources. Allows sources to be either file or
+# other main target and handles generation of those dependency
+# targets.
 rule basic-target ( name : project
                     : sources * : requirements * : default-build * : use-requirements * )
 {
@@ -343,6 +340,14 @@ rule basic-target ( name : project
     self.requirements = $(requirements) ;
     self.default-build = $(default-build) ;
     self.use-requirements = $(use-requirements) ;
+
+    if $(sources:G)
+    {
+        print.wrapped-text "error: gristed element in sources for " 
+          [ full-name ] ;
+        EXIT ;
+    }
+    
 
     # Applies default-build if 'properties' are empty or 
     # have only single <toolset> element.
@@ -383,6 +388,27 @@ rule basic-target ( name : project
                 {
                     # TODO: issue a warning when requirements change properties, but
                     # link-compatibility is still not broken.
+                    
+                    # Generate dependency requirements. Here, we generate only 
+                    # denepdency requirements specified for this targets. Dependency
+                    # requirements may also code from dependencies. However, when they
+                    # come from dependencies, the value is not target id, but rather
+                    # virtual target names, so generators.construct can use them.
+                    
+                    local xproperties ;
+                    for local p in $(rproperties)
+                    {
+                        if dependency in [ feature.attributes $(p:G) ]
+                        {
+                            local g = [ generate-source $(p:G=) : $(properties) ] ;
+                            xproperties += $(p:G)$(g) ;
+                        }
+                        else
+                        {
+                            xproperties += $(p) ;
+                        }                        
+                    }
+                    
 
                     local source-targets ;
                     for local s in $(self.sources)
@@ -400,7 +426,7 @@ rule basic-target ( name : project
                         }
                     }                    
                     self.generated.$(property-path) = 
-                        [ construct $(source-targets) : $(rproperties) ] ;                             
+                        [ construct $(source-targets) : $(xproperties) ] ;                             
                     for local e in $(self.generated.$(property-path))                    
                     {
                         $(e).set-use-requirements $(self.use-requirements) ;
@@ -508,7 +534,7 @@ rule main-target-alternative ( target-name project class-name
         }
         else
         {
-            a$(real-pos) = $(requirements) $(use-requirements) ;
+            a$(real-pos) = $(requirements) ;
         }                        
         a$(real-pos2) = $(use-requirements) ;        
     }

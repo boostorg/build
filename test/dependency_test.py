@@ -6,9 +6,9 @@ t = Tester()
 
 t.set_tree("dependency-test")
 t.run_build_system()
-# Do not bother checking for created files now.
-
-
+# Check that main target 'c' was able to find 'x.h' from
+# 'a's dependency graph
+t.expect_addition("bin/gcc/debug/main-target-c/c")
 
 # Check handling of first level includes.
 
@@ -20,6 +20,7 @@ t.expect_touch("bin/gcc/debug/a")
 t.expect_touch("bin/gcc/debug/a.o")
 t.expect_touch("bin/gcc/debug/b")
 t.expect_touch("bin/gcc/debug/b.o")
+t.expect_touch("bin/gcc/debug/main-target-c/c")
 t.expect_nothing_more()
 
 # Only 'a' include <a.h> and should be updated
@@ -28,6 +29,7 @@ t.run_build_system()
 
 t.expect_touch("bin/gcc/debug/a")
 t.expect_touch("bin/gcc/debug/a.o")
+t.expect_touch("bin/gcc/debug/main-target-c/c")
 t.expect_nothing_more()
 
 # "src/a.h" includes "b.h" (in the same dir)
@@ -35,6 +37,7 @@ t.touch("src1/b.h")
 t.run_build_system()
 t.expect_touch("bin/gcc/debug/a")
 t.expect_touch("bin/gcc/debug/a.o")
+t.expect_touch("bin/gcc/debug/main-target-c/c")
 t.expect_nothing_more()
 
 t.touch("b.h")
