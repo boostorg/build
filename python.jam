@@ -245,7 +245,7 @@ rule Link-PYD
     gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) ;
     if $(UNIX) 
     {
-        RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) $(RUN_LD_LIBRARY_PATH) : $(SPLITPATH) ] ;
+        RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
         gRUN_LD_LIBRARY_PATH($(<)) += $(gLOCATE($(<[1]))) ;
     }
     Link-action $(<) : $(>) : PYD ;
@@ -316,11 +316,17 @@ rule python-test-target ( test-target : sources + )
     MakeLocate $(test-target) : $(LOCATE_TARGET) ;
     MakeLocate $(test-target) : $(LOCATE_TARGET) ;
 }
+
+if $(UNIX)
+{
+    gAPPEND_LD_LIBRARY_PATH = ":$LD_LIBRARY_PATH" ;
+}
+
 actions python-test-target bind PYTHON
 {
     $(SHELL_SET)PATH=$(PATH)
     $(SHELL_EXPORT)PATH
-    $(SHELL_SET)LD_LIBRARY_PATH=$(LD_LIBRARY_PATH)
+    $(SHELL_SET)LD_LIBRARY_PATH=$(LD_LIBRARY_PATH)$(gAPPEND_LD_LIBRARY_PATH)
     $(SHELL_EXPORT)LD_LIBRARY_PATH
     $(SHELL_SET)PYTHONPATH=$(PYTHONPATH)
     $(SHELL_EXPORT)PYTHONPATH
@@ -340,7 +346,7 @@ actions python-runtest-target bind PYTHON
 {
     $(SHELL_SET)PATH=$(PATH)
     $(SHELL_EXPORT)PATH
-    $(SHELL_SET)LD_LIBRARY_PATH=$(LD_LIBRARY_PATH)
+    $(SHELL_SET)LD_LIBRARY_PATH=$(LD_LIBRARY_PATH)$(gAPPEND_LD_LIBRARY_PATH)
     $(SHELL_EXPORT)LD_LIBRARY_PATH
     $(SHELL_SET)PYTHONPATH=$(PYTHONPATH)
     $(SHELL_EXPORT)PYTHONPATH
