@@ -17,21 +17,19 @@ Boost Libraries</h1>
 <table border="1" cellpadding="5" width="656">
   <tr>
     <td width="638"><font size="5" color="#FF0000"><b>Read This First!</b></font>
-      <p>Boost.Build is currently in preliminary form.&nbsp; Some features are
+      <p>Boost.Build is not mature yet.&nbsp; Some features are
       missing or incomplete. Instructions for accomplishing basic tasks (this
       page) are rudimentary.&nbsp; But enough functionality is working well to
-      make providing Boost.Build worthwhile.&nbsp; The important bits-and-pieces
-      are all there - what is left to do is some of the relatively minor glue to
+      make using Boost.Build worthwhile.&nbsp; The important bits-and-pieces
+      are all there - what's left is some of the relatively minor glue to
       make the system smooth and easy to use.</p>
       <p>Don't expect building a full Boost object library for any random
       compiler to work yet.&nbsp; If there isn't a jam configuration file for
       your favorite compiler, consider contributing one. Secondary tasks like
       copying libraries to installation specific directories are also weak.</p>
-      <p>Do expect building object libraries for some of the individual Boost
-      libraries like Python and Regex Libraries to show lots of signs of life.</p>
       <p>Note that the underlying Jam build engine is mature software, and has
       been widely used for many years.&nbsp; The FTJam and Boost specific
-      extensions are well on their way to being stable, and have begun to attract interest and use
+      extensions are well on their way to becoming stable, and have begun to attract interest and use
       outside of Boost.</td>
   </tr>
 </table>
@@ -45,6 +43,10 @@ Boost Libraries</h1>
 the Boost Build System.</p>
 <p>For tasks not covered here, see the full <a href="build_system.htm">build
 system documentation</a>.</p>
+<p>Note that many Boost libraries are implemented entirely within their headers,
+and so can be used without building object libraries.&nbsp; Libraries that do
+require building object libraries first include the Boost Python, Regular
+Expression, and Thread libraries.</p>
 <h2><a name="Preliminaries">Preliminaries</a></h2>
 <ul>
   <li><a href="../../more/download.html">Download Boost</a>, and unpack the full
@@ -158,7 +160,7 @@ to the tools/build subdirectory, where xxxx is the name of the tool being
 added.&nbsp; If you write an additional toolset file, please submit it to Boost
 so others may benefit from your work.</p>
 <hr>
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->24 September, 2001<!--webbot bot="Timestamp" endspan i-checksum="39337" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->02 November, 2001<!--webbot bot="Timestamp" endspan i-checksum="39353" -->
 </p>
 <p>© Copyright 2001 Beman Dawes</p>
 <p>&nbsp;</p>
