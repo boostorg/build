@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 
 #ifndef NDEBUG
@@ -183,3 +184,4 @@ void string_unit_test()
     
 }
 #endif
+
