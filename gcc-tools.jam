@@ -5,11 +5,11 @@
 # to its suitability for any purpose.
 
 # compute directories for invoking GCC
+local SPACE = " " ;
 GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)bin$(SLASH) ;
 GCC_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if GCC_ROOT_DIRECTORY not set
 GCC_INCLUDE_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)include ;
 GCC_STDLIB_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)lib ;
-local SPACE ?= " " ;
 
 flags gcc LINKFLAGS <runtime-link>static : -static ;
 flags gcc CFLAGS <debug-symbols>on : -g ;

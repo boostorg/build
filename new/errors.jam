@@ -25,7 +25,8 @@ rule backtrace ( skip-frames messages * : * )
     local args = messages 2 3 4 5 6 7 8 9 ;
     while $(bt)
     {
-        ECHO $(bt[1]):$(bt[2]): "in" $(bt[4]) ;
+        local m = [ SUBST $(bt[3]) ^(.+)\\.$ $1 ] ;
+        ECHO $(bt[1]):$(bt[2]): "in" $(bt[4]) "from module" $(m) ;
         
         # the first time through, print each argument on a separate
         # line
@@ -128,7 +129,7 @@ rule lol->list ( * )
         {
             result += ":" ;
         }
-        result += \"$(n)\" ;
+        result += \"$($(n))\" ;
     }
     return $(result) ;
 }
