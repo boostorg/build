@@ -21,6 +21,25 @@ t.run_build_system()
 
 t.run_build_system("--clean")
 
+# Test that use requirements on main target work, when they are referred using
+# 'dependency' features.
+t.write("project-root.jam", "import gcc ;")
+t.write("Jamfile", """
+    lib b : b.cpp : : : <define>FOO ;
+    exe a : a.cpp : <dependency>b ;
+""")
+t.write("b.cpp", "void foo() {}")
+t.write("a.cpp", """
+#ifdef FOO
+int main() {}
+#endif
+""")
+
+t.run_build_system()
+
+t.run_build_system("--clean")
+
+
 # Test that use requirement on project work
 t.write("Jamfile", "exe a : a.cpp lib/b ;")
 t.write("lib/Jamfile", """
