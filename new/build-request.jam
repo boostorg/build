@@ -307,7 +307,7 @@ rule __test__ ( )
         try ;
             build-request.from-command-line bjam gcc/debug runtime-link=dynamic/static 
                 : $(test-space) ;
-        catch "Invalid property 'static': 'static' is not a value of implicit feature." ;
+        catch \"static\" is not a value of an implicit feature ;
 
 
         r = [ build-request.from-command-line bjam -d2 --debug debug target 
