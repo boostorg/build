@@ -312,7 +312,8 @@ module project-root-context
     {
         import project ;
         import path ;
-        project.use $(id) : [ path.root $(location) [ project-root get-location ] ] ;
+        project.use $(id) : [ path.root 
+            [ path.make $(location) ] [ project-root get-location ] ] ;
     }
 }
 

@@ -608,7 +608,8 @@ module project-rules {
     {
         import project ;
         local attributes = [ project.attributes $(__name__) ] ;
-        project.use $(id) : [ path.root $(where) [ $(attributes).get location ] ] ;
+        project.use $(id) : [ path.root 
+            [ path.make $(where) ] [ $(attributes).get location ] ] ;
     }
 
     rule build-project ( dir )
