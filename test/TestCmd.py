@@ -106,7 +106,7 @@ def fail_test(self = None, condition = 1, function = None, skip = 0):
     sep = " "
     if not self is None:
         if self.program:
-            of = " of " + self.program
+            of = " of " + join(self.program, " ")
             sep = "\n\t"
         if self.description:
             desc = " [" + self.description + "]"
@@ -352,8 +352,8 @@ class TestCmd:
     def program_set(self, program):
         """Set the executable program or script to be tested.
         """
-        if program and not os.path.isabs(program):
-            program = os.path.join(self._cwd, program)
+        if program and program[0] and not os.path.isabs(program[0]):
+            program[0] = os.path.join(self._cwd, program[0])
         self.program = program
 
     def read(self, file, mode = 'rb'):
@@ -389,21 +389,21 @@ class TestCmd:
             if self.verbose:
                 sys.stderr.write("chdir(" + chdir + ")\n")
             os.chdir(chdir)
-        cmd = None
-        if program:
-            if not os.path.isabs(program):
-                program = os.path.join(self._cwd, program)
-            cmd = program
-            if interpreter:
-                cmd = interpreter + " " + cmd
+        cmd = []
+        if program and program[0]:
+            if not os.path.isabs(program[0]):
+                program[0] = os.path.join(self._cwd, program[0])
+            cmd += program
+        #    if interpreter:
+        #        cmd = interpreter + " " + cmd
         else:
-            cmd = self.program
-            if self.interpreter:
-                cmd =  self.interpreter + " " + cmd
+            cmd += self.program
+        #    if self.interpreter:
+        #        cmd =  self.interpreter + " " + cmd
         if arguments:
-            cmd = cmd + " " + arguments
+            cmd += arguments.split(" ")
         if self.verbose:
-            sys.stderr.write(cmd + "\n")
+            sys.stderr.write(join(cmd, " ") + "\n")
         try:
             p = popen2.Popen3(cmd, 1)
         except AttributeError:
