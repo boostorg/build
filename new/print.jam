@@ -436,7 +436,7 @@ else
         if $(string) || $(string) != ""
         {
             local escaped = [ regex.escape $(string) : "\\\"" : "\\" ] ;
-            return "\"$(escaped)\"" ;
+            return "echo \"$(escaped)\"" ;
         }
         else
         {
