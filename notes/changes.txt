@@ -1,0 +1,158 @@
+
+Milestone 10 ()
+
+Changes in this release:
+
+    Many toolsets were added: Intel, Metrowerks, Comeau, aCC, vacpp.
+    Documentation was converted to BoostBook and improved.
+    Performance was improved.
+ 
+    - Toolsets initialization syntax is much more uniform. Compiler and linker
+      flags can now be specified.
+    - The algorithm for computing build properties was improved. Conditional
+      requirements can be chained, and a number of bugs were fixed.
+    - Specific order of properties can be specified.
+    - The main target rules can be called from everywhere, not necessary from
+      Jamfile.
+    - Check for "unused sources" removed.
+    - The <library> feature affects only linking now.
+    - The <file> feature now works only for libraries.
+    - Simpler syntax for "searched" libraries was added.
+    - New <dependency> feature.
+    
+
+    Unix: 
+        The right order of static libraries on Unix is automatically
+        computed. 
+        The <hardcode-dll-paths> feature is the default.
+    gcc: 
+         The -fPIC option is passed when creating shared libraries. 
+         Problems with distcc were solved.
+    Sun:         
+         It's now possible to use the sun linker (as opposed to gnu), and
+         to compile C files.
+    Darwin:
+         Shared libraries are now supported.
+    MSVC: Before resource files compilation, the setup script is invoked.
+          Options deprecated in 8.0 are not longer used.
+
+
+The following bugs were fixed:
+
+    - The <unit-test> rule did not handle the <library> property (!!!!!!)
+    - Don't add "bin" to the build directory explicitly specified by the user.
+    - Allow <include-type> to select staged targets,
+      even with <traverse-dependencies>off.
+    - Includes for the form '# include <whatever>" did not work.
+    - (Qt) Add paths to all dependent libs to uic command
+      line, which helps if the UI files uses plugins.
+    - Using <toolset-msvc:version>xxx in requirements was broken.
+    - Error message printed when target can be found is much more clear.
+    - Inline targets in sources of 'stage' did not work.
+    - Don't produce 'independent target' warnings on Windows
+    - (gcc) The <link-runtime>static did not work.
+    - (gcc) Suppress warnings from the 'ar' tool on some systems.
+    - (gcc) Don't try to set soname on NT.
+
+Developer visible changes:
+
+    - Generator priorities are gone, explicit overrides are used.
+    - 'Active' features were removed
+
+Thanks to Christopher Currie, Pedro Ferreira, Philipp Frauenfelder,
+Andre Hentz, Jurgen Hunold, Toon Knapen, Alexey Pakhunov, Brock Peabody,
+Michael Stevens and Zbynek Winkler who contributed code to this release.
+ 
+
+Milestone 9.1 (Nov 6, 2003)
+
+The following bugs were fixed:
+
+    - The 'unit-test' rule used to ignore <library> properties.
+    - The gcc toolset used to ignore <threading> property.
+
+Milestone 9 (Nov 6, 2003)
+
+Changes in this release
+
+    - Putting library in sources of other library now works even for static
+      linking, which makes expressing library->library dependency much
+      simpler.
+    - Performance was considerably improved.      
+    - Regression testing framework now works on windows.
+    - The "alias" rule can have usage requirements and passes on usage
+      requirements of sources.
+    - The "stage" rule can traverse dependencies.
+    - Support for "def files" was implemented.
+    - Targets paths are now shorter.
+    - Darwin toolset was improved.
+
+The following bugs were fixed:
+
+    - It was not possible to specify empty suffix for a target type derived
+      from other type.
+    - The stage rules used to generate incorrect suffix in some cases.
+    - It was possible to load Jamfile twice. 
+    - The 'use-project' rule was broken when referring to a child project.
+    - Use of composite properties in requirements did not work.
+
+Developer visible changes:
+
+    - New CALC builtin, which considerable improves performance.
+    - Source layout was reorganized.
+    - Handling of response file was simplified.
+
+Thanks to Pedro Ferreira, Kirill Lapshin, Andre Hentz, Paul Lin, 
+Jurgen Hunold, Christopher Currie, and Brock Peabody, who contributed to 
+this release.
+
+Milestone 8 (Oct 15, 2003)
+
+Changes in this release:
+ 
+    - A regression testing framework was implemented.
+    - New <implicit-dependency> feature was added for better handling 
+      of dependencies to generated headers.
+    - The link-compatibility checks not longer cause projects to be skipped,
+      and issue warning, not error, for main targets.    
+    - Algorithm for selecting main target alternative was improved.
+    - The <dependency> feature was renamed to <use>.
+    - Project root constants were made available in project root itself.
+
+The following bugs were fixed:
+
+    - failure to recognize shared libraries with version as such
+    - the 'path-constant' rule was mishandling absolute paths on Windows.
+
+
+Milestone 7 (Sep 11, 2003)
+
+Changes in this release:
+
+    - Performance was improved.
+    - Support for Sun and Darwin toolsets was added.    
+    - <tag> feature, which changes the name of target depending of build
+      variant, was implemented.
+    - Old-style targets-ids are no longer supported.
+    - New 'glob' rule allows to easily perform wildcard matching in Jamfile.
+    - Improve bison/flex support to understand C++.
+
+The following bugs were fixed:
+
+    - bogus error on use of project default-build attribute with several
+      main target alternatives.
+    - broken toolset inheritance
+    - hard error after skipping a target due to incompatible requirements
+    - incorrect behaviour of a generator when producing several targets of 
+      the same type
+    - errors on use of the 'project-root' rule in Jamfile context
+    - inability to require specific compiler version for a main target.    
+    - incorrect behaviour of "bjam msvc" when msvc is configured with explicit
+      version.
+    
+Thanks to Christopher Currie, Pedro Ferreira and Michael Stevens, who
+contributed to this release.
+
+
+    
+
