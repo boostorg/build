@@ -36,9 +36,10 @@ rule make-target-class ( name : project : sources * : requirements *
 
 class make-target-class : basic-target ;
 
-rule make ( target-name : sources * : generating-rule + : requirements * )
+rule make ( target-name : sources * : generating-rule + : requirements * 
+            : caller ? )
 {
-    local caller = [ CALLER_MODULE ] ;
+    caller ?= [ CALLER_MODULE ] ;
     local rules = [ RULENAMES $(caller) ] ;
     if $(generating-rule[1]) in $(rules)
     {
