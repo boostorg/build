@@ -21,15 +21,18 @@ feature.compose <stdlib>sun-stlport
     : <cxxflags>-library=stlport4 <linkflags>-library=stlport4
     ;
 
-rule init ( version ? : command * )
+rule init ( version ? : command * ) 
 {
     local condition = [ 
       common.check-init-parameters sun : version $(version) ] ;
     
     command = [ common.get-invocation-command sun : CC 
         : $(command) : "/opt/SUNWspro/bin" ] ;
+    
+    command_c = $(command[1--2]) $(command[-1]:B=cc) ;
 
     toolset.flags sun CONFIG_COMMAND $(condition) : $(command) ;
+    toolset.flags sun CONFIG_C_COMMAND $(condition) : $(command_c) ;
 }
 
 # Declare generators
@@ -52,7 +55,7 @@ flags sun.compile INCLUDES <include> ;
 
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_C_COMMAND)" $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.c++
