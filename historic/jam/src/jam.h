@@ -359,6 +359,11 @@
 # define OSMINOR "OS=UNIXWARE"
 # define OS_UNIXWARE
 # endif
+# ifdef __OpenBSD__
+# define OSMINOR "OS=OPENBSD"
+# define OS_OPENBSD
+# define unix
+# endif
 # ifndef OSMINOR
 # define OSMINOR "OS=UNKNOWN"
 # endif
@@ -393,7 +398,8 @@
      !defined(OS_MACHTEN) && \
      !defined(OS_MACOSX) && \
      !defined(OS_RHAPSODY) && \
-     !defined(OS_MVS)
+     !defined(OS_MVS) && \
+     !defined(OS_OPENBSD)
 # include <malloc.h>
 # endif
 
