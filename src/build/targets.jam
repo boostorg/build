@@ -266,7 +266,7 @@ rule basic-target ( name : project
         local sproperties = ;
         if $(split[2])
         {
-            sproperties = [ feature.split $(split[2]) ] ;
+            sproperties = [ property.make [ feature.split $(split[2]) ] ] ;
         }
 
         # Check if such target exists
