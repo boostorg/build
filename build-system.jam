@@ -157,8 +157,9 @@ if $(expanded)
     for local p in $(expanded)
     {
         for local t in $(targets)
-        {            
-            virtual-targets += [ $(t).generate $(p) ] ;
+        {   
+            local g = [ $(t).generate $(p) ] ;
+            virtual-targets += $(g[2-]) ;
         }        
     }
 }
@@ -166,7 +167,8 @@ else
 {
     for local t in $(targets)
     {        
-        virtual-targets += [ $(t).generate [ property-set.empty ] ] ;
+        local g = [ $(t).generate [ property-set.empty ] ] ;
+        virtual-targets += $(g[2-]) ;
     }    
 }
 
