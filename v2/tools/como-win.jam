@@ -31,18 +31,8 @@ rule init ( version ? : command * : options * )
     
     command = [ common.get-invocation-command como-win : como.exe :
         $(command) ] ;    
-
-    flags como-win CONFIG_COMMAND $(condition) : $(command) ;
-    local compiler-options = [ feature.get-values <cflags> : $(options) ] ;
-    if $(compiler-options)    
-    {        
-        flags como-win.compile OPTIONS $(condition) : $(compiler-options) ;
-    }
-    local linker-options = [ feature.get-values <cflags> : $(options) ] ;
-    if $(linker-options)
-    {        
-        flags como-win.link OPTIONS $(condition) : $(linker-options) ;
-    }    
+    
+    common.handle-options como-win : $(condition) : $(command) : $(options) ;
 }
 
 generators.register-c-compiler como-win.compile.c++ : CPP : OBJ 

@@ -46,13 +46,9 @@ rule init ( version ? : command * : options * )
     local condition = [ common.check-init-parameters gcc : version $(version) ] ;
     
     local command = [ common.get-invocation-command gcc : g++ : $(command) ] ;
-    
-    flags gcc CONFIG_COMMAND $(condition) : $(command) ;
-    flags gcc.compile OPTIONS $(condition)
-                     : [ feature.get-values <cxxflags> : $(options) ] ;
-    flags gcc.link OPTIONS $(condition)
-                     : [ feature.get-values <linkflags> : $(options) ] ;
 
+    common.handle-options gcc : $(condition) : $(command) : $(options) ;
+    
     local linker = [ feature.get-values <linker-type> : $(options) ] ;
     if ! $(linker) {
         linker = gnu ;

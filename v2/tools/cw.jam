@@ -11,7 +11,7 @@ import os ;
 import type ;
 import toolset : flags ;
 import errors : error ;
-import feature : feature ;
+import feature : feature get-values ;
 import path ;
 import sequence : unique ;
 import common ;
@@ -23,27 +23,32 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 feature.extend toolset : cw ;
 
-rule init ( version ? : command * : setup ? compiler ? linker ? )
+rule init ( version ? : command * : options * )
 {
    # TODO: fix the $(command[1]) = $(compiler) issue
+    
+    setup = [ get-values <setup> : $(options) ] ;
+    setup    ?= cwenv.bat ;
+    compiler = [ get-values <compiler> : $(options) ] ;
+    compiler ?= mwcc ;
+    linker = [ get-values <linker> : $(options) ] ;
+    linker   ?= mwld ;
 
-   setup    ?= cwenv.bat ;
-   compiler ?= mwcc ;
-   linker   ?= mwld ;
+    local condition = [ common.check-init-parameters cw :
+        version $(version) ] ;
 
-   local condition = [ common.check-init-parameters cw :
-      version $(version) ] ;
-
-   command = [ common.get-invocation-command cw : mwcc.exe : $(command) :
+    command = [ common.get-invocation-command cw : mwcc.exe : $(command) :
       [ default-paths $(version) ] ] ;
+    
+    common.handle-options cw : $(condition) : $(command) : $(options) ;
 
-   if $(command)
-   {
-      command = [ common.get-absolute-tool-path $(command[-1]) ] ;
-   }
-   local root = $(command) ;
+    if $(command)
+    {
+        command = [ common.get-absolute-tool-path $(command[-1]) ] ;
+    }
+    local root = $(command) ;
 
-   setup = $(root)\\$(setup) ;
+    setup = $(root)\\$(setup) ;
 
    # map the batch file in setup so it can be executed
 

@@ -9,7 +9,7 @@ import os ;
 import type ;
 import toolset : flags ;
 import errors : error ;
-import feature : feature ;
+import feature : feature get-values ;
 import path ;
 import sequence : unique ;
 import common ;
@@ -64,13 +64,19 @@ rule init (
    #              be searched    
    # 
    #       - if compiler is not found in default locations, PATH will be searched.    
-    : setup ? compiler ? linker ? resource-compiler ? )
+    : options * 
+   # options can include <setup>, <compiler>, <linker> and <resource-compiler>
+)
 {    
     # setup will be used iff a path has been specified.  If setup is
     # not specified, vcvars32.bat will be used instead.
+    setup = [ get-values <setup> : $(options) ] ;
     setup ?= vcvars32.bat ;    
+    compiler = [ get-values <compiler> : $(options) ] ;
     compiler ?= cl ;
+    linker = [ get-values <linker> : $(options) ] ;
     linker ?= link ;
+    resource-compiler = [ get-values <resource-compiler> : $(options) ] ;
     resource-compiler ?= rc ;
     
     local condition = [ common.check-init-parameters msvc : 
@@ -80,6 +86,8 @@ rule init (
     # and only then in PATH.
     command = [ common.get-invocation-command msvc : cl.exe : $(command)
       : [ default-paths $(version) ] : $(version) ] ;
+    
+    common.handle-options msvc : $(condition) : $(command) : $(options) ;
         
     if $(command)
     {        

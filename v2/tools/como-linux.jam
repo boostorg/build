@@ -26,7 +26,7 @@ generators.register-c-compiler como-linux.compile.c++ : CPP : OBJ
 generators.register-c-compiler como-linux.compile.c : C : OBJ
   : <toolset>como <toolset-como:platform>linux ;
 
-rule init ( version ? : command * )
+rule init ( version ? : command * : options * )
 {
     local condition = [ common.check-init-parameters como-linux
         : version $(version) ] ;
@@ -34,7 +34,7 @@ rule init ( version ? : command * )
     command = [ common.get-invocation-command como-linux : como 
         : $(command) ] ;
     
-    flags como-linux CONFIG_COMMAND $(condition) : $(command) ;
+    common.handle-options como-linux : $(condition) : $(command) : $(options) ;
 }
 
 flags como-linux C++FLAGS <exception-handling>off : --no_exceptions ;

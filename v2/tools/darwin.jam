@@ -23,12 +23,12 @@ toolset.inherit-rules darwin : gcc ;
 flags darwin.link ST_OPTIONS <debug-symbols>off : -s ;
 
 # No additional initialization should be necessary
-rule init ( version ? : command * )
+rule init ( version ? : command * : options * )
 {
     local condition = [ common.check-init-parameters darwin : version $(version) ] ;    
     local command = [ common.get-invocation-command darwin : g++ : $(command) ] ;
     
-    flags darwin CONFIG_COMMAND $(condition) : $(command) ;    
+    common.handle-options darwin : $(condition) : $(command) : $(options) ;
 }
 
 # Darwin has a different shared library suffix

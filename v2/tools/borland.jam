@@ -12,13 +12,13 @@ import property ;
 import generators ;
 import os ;
 import toolset : flags ;
-import feature ;
+import feature : get-values ;
 import type ;
 import common ;
 
 toolset.register borland ;
 
-rule init ( version ? : command * )
+rule init ( version ? : command * : options * )
 {
     local condition = [ common.check-init-parameters borland :
         version $(version) ] ;
@@ -26,15 +26,17 @@ rule init ( version ? : command * )
     local command = [ common.get-invocation-command borland : bcc32.exe 
         : $(command) ] ;
      
+    common.handle-options borland : $(condition) : $(command) : $(options) ;    
+    
     if $(command)
     {
         command = [ common.get-absolute-tool-path $(command[-1]) ] ;
     }   
     root = $(command:D) ;    
     
-    toolset.flags borland.compile STDHDRS $(condition) : $(root)/include/ ;
-    toolset.flags borland.link STDLIBPATH $(condition) : $(root)/lib ;
-    toolset.flags borland .root $(condition) : $(root)/bin/ ;
+    flags borland.compile STDHDRS $(condition) : $(root)/include/ ;
+    flags borland.link STDLIBPATH $(condition) : $(root)/lib ;
+    flags borland .root $(condition) : $(root)/bin/ ;    
 }
 
 
@@ -110,13 +112,13 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 
 actions compile.c++
 {
-    "$(.root)bcc32" -j5 -g255 -q -c -P -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    $(CONFIG_COMMAND) -j5 -g255 -q -c -P -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 # For C, we don't pass -P flag
 actions compile.c
 {
-    "$(.root)bcc32" -j5 -g255 -q -c -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    $(CONFIG_COMMAND) -j5 -g255 -q -c -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 
@@ -191,7 +193,7 @@ rule link ( targets + : sources * : properties * )
 
 actions link bind LIBRARIES
 {
-    $(.set-path)$(.root:W)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(<[2]:W)"
+    $(.set-path)$(.root:W)$(.old-path) $(CONFIG_COMMAND) -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(<[2]:W)"
 }
 
 rule link.dll ( targets + : sources * : properties * )
@@ -201,6 +203,6 @@ rule link.dll ( targets + : sources * : properties * )
 
 actions link.dll bind LIBRARIES
 {
-    $(.set-path)$(.root:W)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(<[3]:W)"
+    $(.set-path)$(.root:W)$(.old-path) $(CONFIG_COMMAND) -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(<[3]:W)"
     "$(.root)implib" "$(<[2]:W)" "$(<[1]:W)"
 }
