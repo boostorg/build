@@ -15,6 +15,7 @@ import feature ;
 import "class" : new ;
 import set ;
 import common ;
+import errors ;
 
 feature.extend toolset : gcc ;
 
@@ -31,18 +32,32 @@ type.set-generated-target-suffix OBJ : <toolset>gcc : o ;
 type.set-generated-target-suffix STATIC_LIB : <toolset>gcc : a ;
 
 
-# Initializes the gcc toolset
-# The name parameter specifies the name used to invoke the compiler, and
-# can be absolute.
-rule init ( version ? : command * : compiler-options * : linker-options * )
+# Initializes the gcc toolset for the given version.
+# If necessary, command may be used to specify where the compiler
+# is located.
+# The parameter 'options' is a space-delimited list of options, each
+# one being specified as <option-name>option-value. Valid option names
+# are: cxxflags, linkflags and linker-type. Accepted values for linker-type
+# are gnu and sun, gnu being the default.
+# Example:
+#   using gcc : 3.4 : : <cxxflags>foo <linkflags>bar <linker-type>sun ;
+rule init ( version ? : command * : options * )
 {
     local condition = [ common.check-init-parameters gcc : version $(version) ] ;
     
     local command = [ common.get-invocation-command gcc : g++ : $(command) ] ;
     
     flags gcc CONFIG_COMMAND $(condition) : $(command) ;
-    flags gcc.compile OPTIONS $(condition) : $(compiler-options) ;
-    flags gcc.link OPTIONS $(condition) : $(linker-options) ;
+    flags gcc.compile OPTIONS $(condition)
+                     : [ feature.get-values <cxxflags> : $(options) ] ;
+    flags gcc.link OPTIONS $(condition)
+                     : [ feature.get-values <linkflags> : $(options) ] ;
+
+    local linker = [ feature.get-values <linker-type> : $(options) ] ;
+    if ! $(linker) {
+        linker = gnu ;
+    }
+    init-link-flags $(linker) ;
 }
 
 if [ os.name ] = NT
@@ -171,34 +186,61 @@ generators.override gcc.prebuilt : builtin.prebuilt ;
 
 
 
-# Declare flags and action for linking
-flags gcc.link OPTIONS <debug-symbols>on : -g ;
-# Strip the binary when no debugging is needed.
-# We use --strip-all flag as opposed to -s since icc
-# (intel's compiler) is generally option-compatible with
-# and inherits from gcc toolset, but does not support -s
-flags gcc.link OPTIONS <debug-symbols>off : -Wl,--strip-all ;
-flags gcc.link OPTIONS <profiling>on : -pg ;
-flags gcc.link OPTIONS <linkflags> ;
-flags gcc.link LINKPATH <library-path> ;
-flags gcc.link FINDLIBS-ST <find-static-library> ;
-flags gcc.link FINDLIBS-SA <find-shared-library> ;
-flags gcc.link LIBRARIES <library-file> ;
-# For <link-runtime>static we made sure there are no dynamic libraries 
-# in the link
-flags gcc.link OPTIONS <link-runtime>static : -static ;
-flags gcc.link RPATH <dll-path> ;
-flags gcc.link RPATH_LINK <xdll-path> ;
+# Declare flags for linking
+# The parameter linker can be either gnu or sun
+rule init-link-flags ( linker )
+{
+    # First, the common flags
+    flags gcc.link OPTIONS <debug-symbols>on : -g ;
+    flags gcc.link OPTIONS <profiling>on : -pg ;
+    flags gcc.link OPTIONS <linkflags> ;
+    flags gcc.link LINKPATH <library-path> ;
+    flags gcc.link FINDLIBS-ST <find-static-library> ;
+    flags gcc.link FINDLIBS-SA <find-shared-library> ;
+    flags gcc.link LIBRARIES <library-file> ;
 
-# This permits shared libraries with non-PIC code on Solaris
-# VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll,
-# the following is not needed. Whether -fPIC should be hardcoded,
-# is a separate question.
-#if [ os.name ] = SOLARIS
-#{
-#    flags gcc.link OPTIONS <link>shared : -mimpure-text ;
-#}
+    # For <link-runtime>static we made sure there are no dynamic libraries 
+    # in the link
+    flags gcc.link OPTIONS <link-runtime>static : -static ;
 
+    # Now, the vendor specific flags
+    switch $(linker)
+    {
+    case gnu :
+        {
+        # Strip the binary when no debugging is needed.
+        # We use --strip-all flag as opposed to -s since icc
+        # (intel's compiler) is generally option-compatible with
+        # and inherits from gcc toolset, but does not support -s
+        flags gcc.link OPTIONS <debug-symbols>off : -Wl,--strip-all ;
+        flags gcc.link RPATH <dll-path> ;
+        flags gcc.link RPATH_LINK <xdll-path> ;
+        }
+    case sun :
+        {
+        flags gcc.link OPTIONS <debug-symbols>off : -Wl,-s ;
+        flags gcc.link RPATH <dll-path> ;
+        # <xdll-path> is ignored. Is this correct? AH 2004/10/16
+
+        # This permits shared libraries with non-PIC code on Solaris
+        # VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll,
+        # the following is not needed. Whether -fPIC should be hardcoded,
+        # is a separate question.
+        # AH, 2004/10/16: it is still necessary because some tests link
+        # against static libraries that were compiled without PIC.
+        flags gcc.link OPTIONS <link>shared : -mimpure-text ;
+        }
+    case * :
+        {
+            errors.user-error
+            "gcc initialization: invalid linker '$(linker)'" :
+            "The value '$(linker)' specified for <linker> is not recognized." :
+            "Possible values are 'sun', 'gnu'" ;
+        }
+    }
+}
+
+# Declare actions for linking
 rule link ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;    

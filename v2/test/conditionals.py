@@ -37,6 +37,9 @@ lib l : l.cpp : : : <link>static:<define>STATIC ;
 exe a : a.cpp l ;
 """)
 t.write("l.cpp", "")
+t.write("l.cpp", """
+int i;
+""")
 
 t.rm("bin")
 t.run_build_system("link=static")
