@@ -13,6 +13,7 @@ import errors ;
 import targets ;
 import feature ;
 import generators ;
+import print ;
 import property ;
 import property-set ;
 import regex ;
@@ -166,12 +167,15 @@ rule xml-catalog-action ( target : property-set ? : catalog-entries * )
     {
       self.actualized = true ;
       local actual = [ $(self.targets[1]).actualize ] ; 
-      local text = "<?xml version=\\\"1.0\\\"?>" ;
+      local text = "<?xml version=\"1.0\"?>" ;
 
-      local rewrites ;
-       
+      text += "<!DOCTYPE catalog " ;
+      text += "  PUBLIC \"-//OASIS/DTD Entity Resolution XML Catalog V1.0//EN\"" ;
+      text += "  \"http://www.oasis-open.org/committees/entity/release/1.0/catalog.dtd\">" ;
+      text += "<catalog xmlns=\"urn:oasis:names:tc:entity:xmlns:xml:catalog\">" ;
+ 
       # BoostBook DTD catalog entry
-      rewrites += "<rewriteURI uriStartString=\\\"http://www.boost.org/tools/boostbook/dtd/\\\" rewritePrefix=\\\"$(self.boostbook-dtd-dir)/\\\"/>" ;
+      text += "  <rewriteURI uriStartString=\"http://www.boost.org/tools/boostbook/dtd/\" rewritePrefix=\"$(self.boostbook-dtd-dir)/\"/>" ;
 
       if ! $(self.docbook-xsl-dir) 
       {
@@ -185,7 +189,7 @@ rule xml-catalog-action ( target : property-set ? : catalog-entries * )
       }
       else 
       {
-        rewrites += "<rewriteURI uriStartString=\\\"http://docbook.sourceforge.net/release/xsl/current/\\\" rewritePrefix=\\\"$(self.docbook-xsl-dir)/\\\"/>" ;
+        text += "  <rewriteURI uriStartString=\"http://docbook.sourceforge.net/release/xsl/current/\" rewritePrefix=\"$(self.docbook-xsl-dir)/\"/>" ;
       }
 
       if ! $(self.docbook-dtd-dir)
@@ -200,28 +204,18 @@ rule xml-catalog-action ( target : property-set ? : catalog-entries * )
       }
       else 
       {
-        rewrites += "<rewriteURI uriStartString=\\\"http://www.oasis-open.org/docbook/xml/4.2/\\\" rewritePrefix=\\\"$(self.docbook-dtd-dir)/\\\"/>" ;
+        text += "  <rewriteURI uriStartString=\"http://www.oasis-open.org/docbook/xml/4.2/\" rewritePrefix=\"$(self.docbook-dtd-dir)/\"/>" ;
       }
 
-      REWRITES on $(actual) = $(rewrites) ;
-      ALWAYS $(actual) ;
-      boostbook.write-xml-catalog $(actual) ;
+      text += "</catalog>" ;
+
+      print.output $(actual) ;
+      print.text $(text) : true ;
     }
   }
 }
 
 class xml-catalog-action : action ;
-
-actions quietly write-xml-catalog
-{
-  echo "<?xml version=\"1.0\"?>" > $(<) ;
-  echo "<!DOCTYPE catalog " >> $(<) ;
-  echo "  PUBLIC \"-//OASIS/DTD Entity Resolution XML Catalog V1.0//EN\"" >> $(<) ;
-  echo "  \"http://www.oasis-open.org/committees/entity/release/1.0/catalog.dtd\">" >> $(<) ;
-  echo "<catalog xmlns=\"urn:oasis:names:tc:entity:xmlns:xml:catalog\">" >> $(<) ;
-  echo "$(REWRITES)" >> $(<) ;
-  echo "</catalog>" >> $(<) ;
-}
 
 rule boostbook-target-class ( name : project : sources * : requirements * 
                               : default-build * : catalog-entries * )
@@ -324,6 +318,9 @@ actions xslt-xsltproc-dir
   XML_CATALOG_FILES=catalog.xml xsltproc $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
 }
 
+#############################################################################
+# Dependency scanners
+#############################################################################
 # XInclude scanner. Mostly stolen from c-scanner :)
 # Note that this assumes an "xi" prefix for XIncludes. This isn't always the
 # case for XML documents, but we'll assume it's true for anything we encounter.
@@ -359,4 +356,3 @@ rule xinclude-scanner ( includes * )
 class xinclude-scanner : scanner ;
 scanner.register xinclude-scanner ;
 type.set-scanner XML : xinclude-scanner ;
-
