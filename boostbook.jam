@@ -229,7 +229,7 @@ rule boostbook-target-class ( name : project : sources * : requirements *
   basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements)
                          : $(default-build) ;
   self.catalog-entries = $(catalog-entries) ;
-  
+
   rule construct ( source-targets * : property-set )
   {
     local path = [ project.attribute $(self.project) location ] ;
@@ -267,37 +267,31 @@ rule boostbook-target-class ( name : project : sources * : requirements *
       case pdf     : type = PDF ;
       case ps      : type = PS ;
     }
-
+ 
     if $(manifest)
     {
-      for local i in $(source-targets) 
-      {
-        local base-target = [ generators.construct $(self.project) 
-                              : DOCBOOK : $(property-set) : $(i) ] ;
-        $(base-target).depends $(catalog) ;
+      local base-target = [ generators.construct $(self.project) 
+                            : DOCBOOK : $(property-set) : $(source-targets) ] ;
+      $(base-target).depends $(catalog) ;
 
-        local target = [ generators.construct $(self.project) $(manifest)
-                         : $(type) : $(property-set) : $(base-target) ] ;
-	$(target).set-path $(format) ;
+      local target = [ generators.construct $(self.project) $(manifest)
+                       : $(type) : $(property-set) : $(base-target) ] ;
+      $(target).set-path $(format) ;
 
-        targets += $(target) ;
-      }
+      targets += $(target) ;
     }
     else {
-      for local i in $(source-targets) 
-      {
-        local target = [ generators.construct $(self.project)
-                         : $(type) : $(property-set) : $(i) ] ;
+      local target = [ generators.construct $(self.project)
+                       : $(type) : $(property-set) : $(source-targets) ] ;
 
-        if ! $(target)
-        {
-          errors.error "Cannot build documentation type '$(format)'" ;
-        }
-        else 
-        {
-          $(target).depends $(catalog) ;
-          targets += $(target) ;
-        }
+      if ! $(target)
+      {
+        errors.error "Cannot build documentation type '$(format)'" ;
+      }
+      else 
+      {
+        $(target).depends $(catalog) ;
+        targets += $(target) ;
       }
     }
 
@@ -307,12 +301,12 @@ rule boostbook-target-class ( name : project : sources * : requirements *
 
 class boostbook-target-class : basic-target ;
 
-rule boostbook ( target-name : source : requirements * : default-build * )
+rule boostbook ( target-name : sources * : requirements * : default-build * )
 { 
   local project = [ CALLER_MODULE ] ;
  
   targets.main-target-alternative 
-    [ new boostbook-target-class $(target-name) : $(project) : $(source) 
+    [ new boostbook-target-class $(target-name) : $(project) : $(sources) 
         : [ targets.main-target-requirements $(requirements) : $(project) ]
         : [ targets.main-target-default-build $(default-build) : $(project) ] 
         : <docbook-xsl>$(.docbook-xsl-dir) <docbook-dtd>$(.docbook-dtd-dir)
