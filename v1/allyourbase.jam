@@ -412,6 +412,10 @@ else if $(UNIX)
     SHELL_EXPORT    ?= "export " ;
     SHELL_SET       ?= "" ;
     gSHELL_LIBPATH  ?= LD_LIBRARY_PATH ;
+    BINDIR          ?= /usr/local/bin ;
+    LIBDIR          ?= /usr/local/lib ;
+    MANDIR          ?= /usr/local/man ;
+    STDHDRS         ?= /usr/include ;
 }
     
 #
@@ -422,7 +426,7 @@ AR              ?= ar ru ;
 AS              ?= as ;
 ASFLAGS         ?= ;
 AWK             ?= awk ;
-BINDIR          ?= /usr/local/bin ;
+BINDIR          ?= ;
 CLONE           ?= $(CP) ;
 CLONE           ?= cp -fp ;
 CP              ?= cp -f ;
@@ -438,9 +442,9 @@ HDRS            ?= ;
 JAMFILE         ?= Jamfile ;
 JAMRULES        ?= Jamrules ;
 LEX             ?= ;
-LIBDIR          ?= /usr/local/lib ;
+LIBDIR          ?= ;
 LN              ?= ln ;
-MANDIR          ?= /usr/local/man ;
+MANDIR          ?= ;
 MKDIR           ?= mkdir ;
 MV              ?= mv -f ;
 OPTIM           ?= ;
@@ -454,7 +458,7 @@ SHELL_EXPORT    ?= ;
 SHELL_SET       ?= "" ;
 SLASH           ?= / ;
 SPLITPATH       ?= ":" ; # dwa -- added missing SPLITPATH
-STDHDRS         ?= /usr/include ;
+STDHDRS         ?= ;
 SUFEXE          ?= "" ;
 SUFDLL          ?= .so ;
 SUFLIB          ?= .a ;
@@ -717,10 +721,24 @@ rule HdrRule
     local s = $(angle-includes) $(quoted-includes) ;
 
     INCLUDES $(<) : $(s) ;
-    SEARCH on $(angle-includes) = $(HDRSEARCH)  ;
-    SEARCH on $(quoted-includes) = $(gBINDING($(<)):D) $(HDRSEARCH)  ;
     NOCARE $(s) ;
 
+    # This is equivalent to doing a SEARCH for the headers. It's
+    # done this way to get around the inability of Jam to distinguish
+    # files from directories. That would cause problems of false
+    # updates when a directory has the same name as a header. The
+    # HdrSearchAndLocate does the search manually and sets LOCATE
+    # only if it find a file, ignoring directories.
+
+    for local angle-include in $(angle-includes)
+    {
+        HdrSearchAndLocate $(angle-include) : $(HDRSEARCH) ;
+    }
+    for local quoted-include in $(quoted-includes)
+    {
+        HdrSearchAndLocate $(quoted-include) : $(gBINDING($(<)):D) $(HDRSEARCH) ;
+    }
+    
     BINDRULE on $(s) = remember-binding ;
 
     # Propagate on $(<) to $(>)
@@ -729,6 +747,35 @@ rule HdrRule
     HDRSCAN on $(s) = $(HDRSCAN) ;
     HDRRULE on $(s) = $(HDRRULE) ;
     HDRGRIST on $(s) = $(HDRGRIST) ;
+}
+rule HdrSearchAndLocate ( header : search * )
+{
+    if ! $(gBINDING($(header)))
+    {
+        local header-glob = [ GLOB "$(search:G=)" : $(header:G=) ] ;
+        local header-locate = ;
+        for local bound-path in $(header-glob)
+        {
+            if ! $(header-locate)
+            {
+                if ! [ GLOB "$(bound-path)" : * ]
+                {
+                    header-locate = $(bound-path) ;
+                }
+            }
+        }
+        if $(header-locate)
+        {
+            LOCATE on $(header) = $(header-locate:D) ;
+            gBINDING($(header)) = $(header-locate) ;
+        }
+        else
+        {
+            NOUPDATE $(header) ;
+            LOCATE on $(header) = $(DOT) ;
+            gBINDING($(header)) = $(header:G=:R=$(DOT)) ;
+        }
+    }
 }
 
 # dwa 6/4/01 - modified for boost

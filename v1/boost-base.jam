@@ -1923,7 +1923,7 @@ rule subvariant-target ( main-target : subvariant-id build-properties * : toolse
     # headers should be identified specific to the target, since search paths
     # may differ for different subvariants. The same header name or relative
     # path may refer to different files.
-    local HDRGRIST = [ join $(SOURCE_GRIST) $(HDRS) $(STDHDRS) : "#" ] ;
+    local HDRGRIST = [ join $(SOURCE_GRIST) $(STDHDRS) $(SYSHDRS) $(HDRS) "" : "#" ] ;
     
     # transfer target variables to the target file.
     set-target-variables $(target-files) ;
