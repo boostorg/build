@@ -10,7 +10,13 @@ import property ;
 
 feature.feature bison.prefix : : free ;
 type.register Y : y ;
+type.register YY : yy ;
 generators.register-standard bison.bison : Y : C H ;
+generators.register-standard bison.bison : YY : CPP H ;
+
+rule init ( )
+{
+}
 
 rule bison ( dst dst_header : src : properties * )
 {

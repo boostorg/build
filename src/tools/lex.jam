@@ -8,11 +8,16 @@ import generators ;
 import feature ;
 import property ;
 
+
 feature.feature flex.prefix : : free ;
-
 type.register LEX : l ;
-
+type.register LEX++ : ll ;
 generators.register-standard lex.lex : LEX : C ;
+generators.register-standard lex.lex : LEX++ : CPP ;
+
+rule init ( )
+{
+}
 
 rule lex ( target : source : properties * )
 {   
