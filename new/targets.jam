@@ -180,10 +180,14 @@ rule project-target ( name : project : requirements * : default-build * )
         else 
         {            
             local result ;
+            local explicit-targets = [ project.attribute $(self.project) explicit-targets ] ;
             for local name in $(self.main-targets)
             {
-                local t = [ main-target $(name) ] ;
-                result += [ $(t).generate $(property-set) ] ;
+                if ! $(name) in $(explicit-targets)
+                {                    
+                    local t = [ main-target $(name) ] ;
+                    result += [ $(t).generate $(property-set) ] ;
+                }                
             }
             local self-location = [ project.attribute $(self.project) location ] ;
             for local pn in [ project.attribute $(self.project) projects-to-build ]
