@@ -10,3 +10,4 @@ cvs -d :ext:vladimir_prus@cvs.sourceforge.net:/cvsroot/boost co -P -d  boost-bui
 cd boost-build/v2
 ./roll.sh
 cd ..
+scp boost-build.zip boost-build.tar.bz2 vladimir_prus@shell.sf.net:/home/groups/b/bo/boost/htdocs/boost-build2
