@@ -1220,6 +1220,8 @@ rule expand-target-names ( targets + : target-type )
 #
 # declares a subproject-local target of the given name and target-type. This is
 # all top-level rules which declare targets should eventually go through here.
+#
+# RETURNS: the a list of target names for the files built by the target.
 rule declare-local-target ( target : sources * : requirements * : default-build * : target-type )
 {
     # We expand out the name of the target and sources
