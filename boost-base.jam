@@ -1614,6 +1614,9 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
 
     if [ get-values <$(STATIC_TYPES)> <$(SHARED_TYPES)> : $(gTARGET_DEPS($(target))) ]
     {
+        # include each jamfile describing a dependee target.
+        dependent-include [ get-values <$(STATIC_TYPES)> <$(SHARED_TYPES)> : $(gTARGET_DEPS($(target))) ] ;
+
         local libs dlls ;
         {
             # Protect target variables against modification while lib dependencies
