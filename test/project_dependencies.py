@@ -5,7 +5,7 @@
 # cause every main target in the project to
 # be generated in it's own subdirectory.
 
-from BoostBuild import Tester
+from BoostBuild import Tester, exe_suffix
 
 t = Tester()
 
@@ -30,8 +30,8 @@ t.copy("src/a.cpp", "src/b.cpp")
 t.run_build_system()
 
 # Test that there's no "main-target-a" part.
-t.expect_addition(["src/bin/gcc/debug/a", 
-                  "src/bin/gcc/debug/b"])
+t.expect_addition(["src/bin/gcc/debug/a" + exe_suffix, 
+                  "src/bin/gcc/debug/b" + exe_suffix])
 
 
 t.cleanup()
