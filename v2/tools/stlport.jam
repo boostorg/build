@@ -145,7 +145,10 @@ class stlport-target-class : basic-target
             return [ generators.construct $(self.project) $(name) : SEARCHED_LIB 
               : $(property-set) ] ;
         }
-        
+        else
+        {
+            return [ property-set.empty ] ;
+        }                
     }
     
     rule compute-usage-requirements ( subvariant )
