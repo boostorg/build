@@ -21,7 +21,7 @@ rule load (
     # Find the project-root.jam corresponding to this directory.
     #
     local project-root-to-load = [ find-to-root $(dir) : project-root.jam ] ;
-    
+
     # No project-root file found.
     #
     if ! $(project-root-to-load)
@@ -32,29 +32,32 @@ rule load (
             "directories."
             "Please consult the documentation at 'http://www.boost.org'." ;
     }
-    
-    local project-root-module = project-root<$(project-root-to-load:D)> ;
-    
+
+    local project-root-location = [ os.path.make $(project-root-to-load) ] ;
+    local project-root-dir = [ os.path.parent $(project-root-location) ] ;
+    local project-root-module = project-root<$(project-root-dir)> ;
+
     # Only bother with the rest if the project-root isn't loaded yet.
     #
     if ! [ modules.binding $(project-root-module) ]
     {
         # Give the new module all the rules from project-root-context
         modules.clone-rules project-root-context $(project-root-module) ;
-        
+
         # Remember the project-root, and some info about it.
         #
         .project-root += $(project-root-module) ;
         modules.poke $(project-root-module) : .module : $(project-root-module) ;
-        modules.poke $(project-root-module) : .location : $(project-root-to-load:D) ;
-        
+        modules.poke $(project-root-module) : .location : $(project-root-dir) ;
+
         # Load it within a module specifically for the project root.
         # The module system handles checking for multiple includes.
         #
         modules.load $(project-root-module)
-            : $(project-root-to-load:D=) : $(project-root-to-load:D) ;
+            : [ os.path.basename $(project-root-location) ]
+            : $(project-root-dir) ;
     }
-    
+
     # Return the module for the project.
     #
     return $(project-root-module) ;
@@ -66,7 +69,7 @@ rule print ( )
 {
     import sequence ;
     import print ;
-    
+
     print.section "Project Roots" ;
     local project-roots = [ sequence.insertion-sort $(.project-root) ] ;
     for local project-root in $(projects-roots)
@@ -124,7 +127,7 @@ rule register-project (
 }
 
 # Declare and set a project global constant. Project global constants are
-# normal variables but should not be changed. They are applied to each 
+# normal variables but should not be changed. They are applied to each
 # Jamfile that is loaded under it's corresponding project-root.
 #
 rule constant (
@@ -157,7 +160,7 @@ rule print ( )
 {
     import sequence ;
     import print ;
-    
+
     print.section "'"$(.location)"'" Module for project-root is "'"$(.module)"'" ;
     if $(.constants)
     {
