@@ -480,12 +480,14 @@ class file-target : abstract-file-target
                 local build-dir = [ project.attribute $(self.project) build-dir ] ;
                 if ! $(build-dir)
                 {
-                    build-dir = [ project.attribute $(self.project) location ] ;
+                    build-dir = [ path.join 
+                        [ project.attribute $(self.project) location ]
+                        bin
+                    ] ;
                 }
                 
                 local path = [ path.join
                     $(build-dir)
-                      bin
                       [ $(self.action).path ]
                 ] ;
                 
