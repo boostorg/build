@@ -404,7 +404,21 @@ rule boost-python-runtest (
 
     # The user can add additional arguments in PYTHON_TEST_ARGS.
     local gPYTHON_TEST_ARGS = $(args) $(PYTHON_TEST_ARGS) ;
-    return [ boost-test $(sources) : RUN_PYD : $(requirements) : $(target) : $(local-build) ] ;
+    
+    #
+    # Stick the names of the python script and source files used in
+    # testing into $(source-files) on the main target.  This is kind
+    # of a hack, because boost-test will be returning the name of the
+    # main target, but unfortunatedly dump-tests runs during the
+    # evaluation of boost-test and not during the build phase :(
+    #
+    local main-target = [ FGristFiles [ expand-target-names $(target) : RUN_PYD ] ] ;
+    source-files on $(main-target) = $(gRUN_TEST_INPUT_FILES) ;
+    
+    local dependencies = [ FGristFiles [ expand-source-names $(sources) ] ] ;
+    source-files on $(main-target) += $(gTARGET_SOURCES($(dependencies))) ;
+      
+    local result = [ boost-test $(sources) : RUN_PYD : $(requirements) : $(target) : $(local-build) ] ;
 }
 
 rule boost-python-test ( name : sources + : requirements * : default-BUILD * )
