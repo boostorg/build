@@ -2368,8 +2368,10 @@ rule stage ( name : sources + : requirements * : local-build * )
                     s-subdir = $(arch:J=-) ;
                 }
                 
+                local source-build-rule = [ MATCH "[`]([^`]+)[`]" : $(source-build[2]) ] ;
                 if  ( $(s-toolset) = $(source-build[1]) || $(source-build[1]) = * ) &&
-                    ( $(s-variant) = $(source-build[2]) || $(source-build[2]) = * )
+                        ( $(s-variant) = $(source-build[2]) || $(source-build[2]) = * ) ||
+                    $(source-build-rule) && [ $(source-build-rule) $(s-toolset) $(s-variant) ]
                 {
 
                     local target-subvariant = ;
@@ -2512,7 +2514,14 @@ rule stage ( name : sources + : requirements * : local-build * )
 #
 rule target-id-of ( target-ref )
 {
-    local path = [ directory-of $(target-ref:G=) ] ;
+    local grist = $(target-ref:G) ;
+    local target = $(target-ref:G=) ;
+    while $(target:G)
+    {
+        grist += $(target:G) ;
+        target = $(target:G=) ;
+    }
+    local path = [ directory-of $(target) ] ;
     if ! [ MATCH "^(@)" : $(path) ]
     {
         path = [ join @$(PROJECT) [ simplify-path-tokens [ top-relative-tokens $(path) ] ] : / ] ;
@@ -2525,7 +2534,7 @@ rule target-id-of ( target-ref )
     }
     project-name ?= $(PROJECT) ;
     local SOURCE_GRIST = [ FGrist @$(project-name) [ simplify-path-tokens $(tokens) ] ] ;
-    local target-id = [ FGristFiles $(target-ref:D=:G=) ] ;
+    local target-id = [ FGristFiles $(target:D=) ] ;
     return $(target-id) ;
 }
 
@@ -2533,14 +2542,24 @@ rule target-id-of ( target-ref )
 #
 rule target-path-of ( target-ref )
 {
-    local path = [ directory-of $(target-ref:G=) ] ;
+    local grist = $(target-ref:G) ;
+    local target = $(target-ref:G=) ;
+    while $(target:G)
+    {
+        grist += $(target:G) ;
+        target = $(target:G=) ;
+    }
+    local path = [ directory-of $(target) ] ;
     if ! [ MATCH "^(@)" : $(path) ]
     {
         path = [ join @$(PROJECT) [ simplify-path-tokens [ top-relative-tokens $(path) ] ] : / ] ;
     }
-    local grist = $(target-ref:G) ;
-    path = $(path)/$(target-ref:D=:G=) ;
-    return $(path:G=$(grist)) ;
+    path = $(path)/$(target:D=) ;
+    if $(grist)
+    {
+        path = $(grist:J="")$(path) ;
+    }
+    return $(path) ;
 }
 
 # Common rules for generating a single tag based on the
