@@ -26,7 +26,7 @@ flags vacpp C++FLAGS : -qnotempinc ;
 
 # The following is needed to get rid of most of the annoying linker warnings
 # about duplicated symbols when you use templates.
-flags vacpp C++FLAGS : -qstaticinline -qfuncsect ;
+flags vacpp C++FLAGS : -qfuncsect ;
 
 # This tells the linker not to link unneeded object files from static
 # libraries. Please note that this means that a static constructor
