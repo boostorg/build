@@ -219,6 +219,9 @@
                   Output</a></li>
                 </ul>
               </li>
+
+              <li><a href="#UPDATE">The <tt>UPDATE</tt> rule and changes to
+              command line handling</a></li>
             </ul>
           </li>
 
@@ -2041,6 +2044,23 @@ rule BACKTRACE ( )
         McPheeters</a>.</li>
       </ul>
     </blockquote>
+
+    <h4><a name="UPDATE">The <tt>UPDATE</tt> rule and changes to command line
+    handling</a></h4>
+
+    <p>Classic jam treats any non-option element of command line as a name of
+    target to be updated. This prevented more sophisticated handling of
+    command line and was disabled. Instead of it, a new <tt>UPDATE</tt>
+    builtin rule was added:</p>
+
+    <blockquote>
+<pre>
+rule UPDATE ( targets * )
+</pre>
+    </blockquote>
+    The rule causes the specified targets to be updated. If no target was
+    specified with the <tt>UPDATE</tt> rule, the "all" target will be
+    implicitly updated. 
 
     <h3><a name="target_names">Target Names</a></h3>
 
