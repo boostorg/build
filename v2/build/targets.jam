@@ -1008,9 +1008,9 @@ class basic-target : abstract-target
                   $(usage-requirements) ] ;
                 usage-requirements = [ property-set.create $(usage-requirements) ] ;
                 
-                local libs = [ $(rproperties).get <library> ] ;
-                libs += [ $(rproperties).get <source> ] ;
-                source-targets += $(libs:G=) ;
+                local extra = [ $(rproperties).get <source> ] ;                
+                extra += [ extra-sources $(rproperties) ] ;                
+                source-targets += $(extra:G=) ;
                 # We might get duplicate sources, for example if
                 # we link to two library which have the same <library> in
                 # usage requirements.
@@ -1125,6 +1125,13 @@ class basic-target : abstract-target
     {
         errors.error "method should be defined in derived classes" ;
     }
+    
+    # Returns extra targets which must be added to the list of sources
+    # used for building. Mainly, a hook for <library> property.
+    rule extra-sources ( property-set )
+    {        
+    }
+    
 }
 
 class typed-target : basic-target

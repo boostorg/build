@@ -123,6 +123,7 @@ tests = [ "project_test1",
           "expansion",
           "wrapper",
           "duplicate",
+          "library_property",
           #"ordered_properties",
           ]
 
