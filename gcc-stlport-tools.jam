@@ -34,6 +34,9 @@ STLPORT_LIB_DIRECTORY ?= lib ;
     flags gcc-stlport STDLIBPATH
       : $(STLPORT_ROOT)$(SLASH)$(STLPORT_LIB_DIRECTORY) $(save-gcc-STDLIBPATH)
         ;
+    
+    # Make sure that STLPort libraries get added to the LD_LIBRARY_PATH
+    GCC_STDLIB_DIRECTORY += $(STLPORT_ROOT)$(SLASH)$(STLPORT_LIB_DIRECTORY) ;
 }
 
 flags gcc-stlport DEFINES <runtime-build>debug : _STLP_DEBUG ;
