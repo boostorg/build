@@ -254,48 +254,33 @@ gGENERATOR_FUNCTION(RUN_TEST) = run-test ;
 SUFRUN_TEST = .run ;
 rule run-test ( run-target : sources + : requirements * )
 {
-    local top-target = $(target) ;
-    local target = $(run-target) ;
-    local executable = $(target:S=$(SUFEXE)) ; 
+    if $(requirements) != $(EmPTY-vAriable)
+    {
+        ECHO non-empty requirements! ;
+    }
     
-    local parent = $(target:S=.test) ;
+    local executable = $(run-target:S=$(SUFEXE)) ; 
+    local parent = $(run-target:S=.test) ;
+    local main-target = $(gTARGET_SUBVARIANT($(parent))) ;
+    
     # Move important data from the test target to the executable
     gRUN_LD_LIBRARY_PATH($(executable)) = $(gRUN_LD_LIBRARY_PATH($(parent))) ;
     gRUN_PATH($(executable)) = $(gRUN_PATH($(parent))) ;
     
     set-target-variables $(executable) ;
-    local depends = $(gTARGET_DEPS($(top-target))) ;
-    local libs dlls ;
-    {
-        # Protect target variables against modification while lib dependencies
-        # are built. They will be made empty here, and restored when this scope exits
-        local $(gTARGET_VARIABLES) ;
-
-        # extract the simple properties from dependent-properties
-        local simple-properties = $(gBUILD_PROPERTIES) ;
-        segregate-free-properties simple-properties ;
-
-        # generate library build instructions
-        local BUILD = $(BUILD) ;
-        BUILD ?= $(gTARGET_DEFAULT_BUILD($(target))) ;
-        libs = [ link-libraries [ get-values <$(STATIC_TYPES)> : $(depends) ]
-                : $(toolset) $(variant) : $(simple-properties) ] ;
-        dlls = [ link-libraries [ get-values <$(SHARED_TYPES)> : $(depends) ]
-                : $(toolset) $(variant) : $(simple-properties) ] ;
-    }
-    depend-on-libraries $(executable) : $(libs) ;
-    depend-on-dlls $(executable) : $(dlls) ;
+    generate-dependencies $(main-target) : $(executable) ;
+    
     executable-file $(executable) : $(sources) : $(requirements) ;
     
     # The .test file goes with the other subvariant targets
     # normalization is a hack to get the slashes going the right way on Windoze
     local LOCATE_TARGET = [ FDirName [ split-path $(LOCATE_TARGET) ] ] ;
-    MakeLocate $(target) : $(LOCATE_TARGET) ;
+    MakeLocate $(run-target) : $(LOCATE_TARGET) ;
     
-    DEPENDS $(target) : $(executable) $(gRUN_TEST_INPUT_FILES) ;
-    INPUT_FILES on $(target) = $(gRUN_TEST_INPUT_FILES) ;
-    ARGS on $(target) = $(gRUN_TEST_ARGS) ;
-    capture-run-output $(target) : $(executable) ;
+    DEPENDS $(run-target) : $(executable) $(gRUN_TEST_INPUT_FILES) ;
+    INPUT_FILES on $(run-target) = $(gRUN_TEST_INPUT_FILES) ;
+    ARGS on $(run-target) = $(gRUN_TEST_ARGS) ;
+    capture-run-output $(run-target) : $(executable) ;
 }
 
 # The rule is just used for argument checking

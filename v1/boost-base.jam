@@ -1650,11 +1650,9 @@ else
   gIMPORT_SUFFIX(LIB) = .a ;
 }
 
-# depend-on-libraries target-files : library-targets
-rule depend-on-libraries
+# Helper
+rule depend-on-libraries ( targets + : libs * )
 {
-    NEEDLIBS = [ unique $(NEEDLIBS) $(>) ] ;
-    NEEDLIBS on $(<) = [ on $(<) return [ unique $(NEEDLIBS) $(>) ] ] ;
     LIBPATH on $(<) += [ unique $(gLOCATE($(>))) ] ;
     DEPENDS $(<) : $(>) ;
     # To run these targets, we need everything needed to run the libraries
@@ -1662,7 +1660,14 @@ rule depend-on-libraries
     gRUN_LD_LIBRARY_PATH($(<)) = [ unique $(gRUN_LD_LIBRARY_PATH($(<))) $(gRUN_LD_LIBRARY_PATH($(>))) ] ;
 }
 
-rule depend-on-dlls ( targets + : dlls-and-import-libs * )
+rule depend-on-static ( targets + : static-libs * )
+{
+    NEEDLIBS = [ unique $(NEEDLIBS) $(>) ] ;
+    NEEDLIBS on $(<) = [ on $(<) return [ unique $(NEEDLIBS) $(>) ] ] ;
+    depend-on-libraries $(targets) : $(static-libs) ;
+}
+
+rule depend-on-shared ( targets + : dlls-and-import-libs * )
 {
     local linkable ;
     
@@ -1678,12 +1683,9 @@ rule depend-on-dlls ( targets + : dlls-and-import-libs * )
         }
     }
 
-    LIBPATH on $(<) += [ unique $(gLOCATE($(>))) ] ;
     FINDLIBS on $(<) += [ unique $(gTARGET_BASENAME($(gTARGET_SUBVARIANT($(>))))) ] ;
-    DEPENDS $(<) : $(>) ;
-    # To run these targets, we need everything needed to run the libraries
-    gRUN_PATH($(<)) = [ unique $(gRUN_PATH($(<))) $(gRUN_PATH($(>))) ] ;
-    gRUN_LD_LIBRARY_PATH($(<)) = [ unique $(gRUN_LD_LIBRARY_PATH($(<))) $(gRUN_LD_LIBRARY_PATH($(>))) ] ;
+    
+    depend-on-libraries $(targets) : $(dlls-and-import-libs) ;
 }
 
 # Given build properties, returns the normalised version of the <tag> features for
@@ -1707,21 +1709,51 @@ rule get-tag-features ( variant : build-properties * )
     return $(result) ;
 }
 
-# Given target, a main target name gristed with $(SOURCE_GRIST), generate build
+rule generate-dependencies ( main-target : subvariant-targets + )
+{
+    local dependencies = $(gTARGET_DEPS($(main-target))) ;
+    {
+        # Protect target variables against modification while lib dependencies
+        # are built. They will be made empty here, and restored when this scope exits
+        local $(gTARGET_VARIABLES) ;
+
+        # extract the simple properties from dependent-properties
+        local p = $(gBUILD_PROPERTIES) ;
+        segregate-free-properties p ;
+
+        # generate library build instructions
+        local BUILD = $(BUILD) ;
+        BUILD ?= $(gTARGET_DEFAULT_BUILD($(main-target))) ;
+        
+        for t in static shared
+        {
+            local lib-main-targets = [ get-values <$($(t:U)_TYPES)> : $(dependencies) ] ;
+            
+            local lib-targets
+              = [ link-libraries $(lib-main-targets)
+                  : $(gCURRENT_TOOLSET) $(variant) : $(p)
+                ] ;
+            local r = depend-on-$(t) ;
+            $(r) $(subvariant-targets) : $(lib-targets) ;
+        }
+    }
+}
+
+# Given main-target, a main target name gristed with $(SOURCE_GRIST), generate build
 # instructions for a subvariant target using the given toolset, variant, etc.
 #
 # RETURNS: the a list of target names for the files built by the subvariant. If
-# the target is a library, the first filename is the one that should be linked
+# the main-target is a library, the first filename is the one that should be linked
 # into a dependent target.
-rule subvariant-target ( target : subvariant-id build-properties * : toolset variant )
+rule subvariant-target ( main-target : subvariant-id build-properties * : toolset variant )
 {
   # SOURCE_GRIST identifies the subproject directory; TARGET_GRIST will identify
   # the target and subvariant, since unique versions of files will be built for
   # that combination.
   local property-tags = [ get-tag-features $(variant) : $(build-properties) ] ;
-  local tags = [ get-properties <tag> : $(gIMPOSED_REQUIREMENTS($(target))) ] $(property-tags) ;
-  local TARGET_GRIST = [ join-path $(SOURCE_GRIST) $(target:G=) $(subvariant-id) ] ;
-  local subvariant = $(target:G=$(TARGET_GRIST)) ;
+  local tags = [ get-properties <tag> : $(gIMPOSED_REQUIREMENTS($(main-target))) ] $(property-tags) ;
+  local TARGET_GRIST = [ join-path $(SOURCE_GRIST) $(main-target:G=) $(subvariant-id) ] ;
+  local subvariant = $(main-target:G=$(TARGET_GRIST)) ;
 
   # Keep track of the generated targets.
   if ! $(TARGET_GRIST) in $(gDECLARED_TARGETS)
@@ -1730,10 +1762,10 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
   }
 
   # Make sure we know how to generate these types of targets.
-  local target-type = $(gTARGET_TYPE($(target))) ;
+  local target-type = $(gTARGET_TYPE($(main-target))) ;
   if ! $(target-type)
   {
-      EXIT unknown target type for $(target) ;
+      EXIT unknown target type for $(main-target) ;
   }
   
   gTARGET_TYPE($(subvariant)) = $(target-type) ;
@@ -1741,12 +1773,12 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
   # LOCATE_TARGET affects where built targets are generated. We move it
   # relative to the default location based on the subvariant 
   local LOCATE_TARGET
-    = [ join-path $(LOCATE_TARGET) $(target:G=) $(subvariant-id) ] ;
+    = [ join-path $(LOCATE_TARGET) $(main-target:G=) $(subvariant-id) ] ;
 
   # The renamed base name of the target. Only considers the tags defined directly
   # on the target.
-  gTARGET_BASENAME($(target)) =
-    [ rename-target $(gTARGET_NAME($(target))) : [ split-path [ ungrist $(subvariant:G) ] ] : $(property-tags) ] ;
+  gTARGET_BASENAME($(main-target)) =
+    [ rename-target $(gTARGET_NAME($(main-target))) : [ split-path [ ungrist $(subvariant:G) ] ] : $(property-tags) ] ;
 
   # First order names have the suffix, if any according to the platform.
   local target-files = [ FAppendSuffix $(subvariant) : $(SUF$(target-type)) ] ;
@@ -1763,20 +1795,20 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
 
   # Do nothing if we already have the build instructions for the specific
   # target files of this subvariant target.
-  if ! $(target-files) in $(gTARGET_FILES($(target)))
+  if ! $(target-files) in $(gTARGET_FILES($(main-target)))
   {
-    gTARGET_SUBVARIANT($(target-files)) = $(target) ;
+    gTARGET_SUBVARIANT($(target-files)) = $(main-target) ;
     
     ###gTARGET_FILES($(subvariant)) = $(target-files) ;
-    gTARGET_FILES($(target)) += $(target-files) ;
+    gTARGET_FILES($(main-target)) += $(target-files) ;
 
     # Remember the path from the build root to the subvariant directory
     gSUBVARIANT_PATH($(subvariant)) = $(subvariant-id) ;
     
     # Add target suppression if <suppress> was in the requirements
-    local gSUPPRESS_FAKE_TARGETS = [ get-values <suppress> : $(gTARGET_REQUIREMENTS($(target))) ] $(gSUPPRESS_FAKE_TARGETS) ;
+    local gSUPPRESS_FAKE_TARGETS = [ get-values <suppress> : $(gTARGET_REQUIREMENTS($(main-target))) ] $(gSUPPRESS_FAKE_TARGETS) ;
 
-    declare-fake-targets $(target) : $(target-files) ;
+    declare-fake-targets $(main-target) : $(target-files) ;
 
     # set up gBUILD_PROPERTIES for include-tools (below)
     local gBUILD_PROPERTIES = $(build-properties) ;
@@ -1794,37 +1826,21 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
     # transfer target variables to the target file.
     set-target-variables $(target-files) ;
 
-    if [ get-values <$(STATIC_TYPES)> <$(SHARED_TYPES)> : $(gTARGET_DEPS($(target))) ]
+    local dependencies
+        = [ get-values <$(STATIC_TYPES)> <$(SHARED_TYPES)> 
+          : $(gTARGET_DEPS($(main-target)))
+        ] ;
+      
+    if $(dependencies)
     {
         # include each jamfile describing a dependee target.
-        dependent-include [ get-values <$(STATIC_TYPES)> <$(SHARED_TYPES)> : $(gTARGET_DEPS($(target))) ] ;
-
-        local libs dlls ;
-        {
-            # Protect target variables against modification while lib dependencies
-            # are built. They will be made empty here, and restored when this scope exits
-            local $(gTARGET_VARIABLES) ;
-
-            # extract the simple properties from dependent-properties
-            local simple-properties = $(gBUILD_PROPERTIES) ;
-            segregate-free-properties simple-properties ;
-
-            # generate library build instructions
-            local BUILD = $(BUILD) ;
-            BUILD ?= $(gTARGET_DEFAULT_BUILD($(target))) ;
-            libs = [ link-libraries [ get-values <$(STATIC_TYPES)> : $(gTARGET_DEPS($(target))) ]
-                    : $(toolset) $(variant) : $(simple-properties) ] ;
-            dlls = [ link-libraries [ get-values <$(SHARED_TYPES)> : $(gTARGET_DEPS($(target))) ]
-                    : $(toolset) $(variant) : $(simple-properties) ] ;
-        }
-        depend-on-libraries $(target-files) : $(libs) ;
-        depend-on-dlls $(target-files) : $(dlls) ;
+        dependent-include $(dependencies) ;
+        generate-dependencies $(main-target) : $(target-files) ;
     }
     
-    # dispatch to the appropriate declaration function. Here we are using an
-    # FTJam-only feature (thanks, David Turner!)
-    local ignored = [ $(gGENERATOR_FUNCTION($(target-type))) $(target-files)
-                        : $(gTARGET_SOURCES($(target))) ] ;
+    local generator = $(gGENERATOR_FUNCTION($(target-type))) ;
+    local sources = $(gTARGET_SOURCES($(main-target))) ;
+    $(generator) $(target-files) : $(sources) ;
                         
     $(gTARGET_VARIABLES) = ; # Be sure that we don't mask bugs with lingering target variables
   }
@@ -2131,7 +2147,7 @@ rule rename-target ( target + : subvariant * : tags * )
     tag-text = $(tag-text)$(postfix-tag[1]) ;
 
     local renamed-target = ;
-    for t in $(target)
+    for local t in $(target)
     {
         local B-S = [ MATCH ([^\\.]*)(.*) : $(t:G=) ] ;
         local B = $(B-S[1]) ; B ?= "" ;
