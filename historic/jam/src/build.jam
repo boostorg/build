@@ -268,12 +268,23 @@ rule .link
 if $(NT) { actions .link {    copy $(>) $(<) } }
 if $(UNIX) { actions .link {    ln -f $(>) $(<) } }
 
+# Generate the grammar tokens table, and the real yacc grammar.
 rule .yyacc
 {
-    DEPENDS $(<) : $(>) ;
+    local exe = [ .exe yyacc : yyacc.c ] ;
+    DEPENDS $(<) : $(exe) $(>) ;
+    LEAVES $(<) ;
+    if $(NT) { chmod on $(<) = "attrib -r " ; }
+    if $(UNIX) { chmod on $(<) = "chmod +w " ; }
+    yyacc.exe on $(<) = $(exe:R=$(locate-target)) ;
 }
-actions .yyacc {    ./yyacc $(<) $(>) }
+actions .yyacc
+{    $(chmod)$(<[1])
+    $(chmod)$(<[2])
+    $(yyacc.exe) $(<) $(>) }
+.yyacc jamgram.y jamgramtab.h : jamgram.yy ;
 
+# How to build the grammar.
 yacc ?= [ GLOB $(PATH) : yacc yacc.exe ] ;
 yacc ?= [ GLOB $(PATH) : bison bison.exe ] ;
 yacc = $(yacc[1]) ;
@@ -294,16 +305,13 @@ if $(UNIX) { actions .yacc
 {    $(yacc) $(>)
     mv -f y.tab.c $(<[1]:S=.c)
     mv -f y.tab.h $(<[1]:S=.h) } }
-
-# How to build the grammar.
 if $(yacc)
 {
-    .yyacc jamgram.y jamgramtab.h : jamgram.yy ;
     .yacc jamgram.c jamgram.h : jamgram.y ;
 }
 
 # How to build the compiled in jambase.
-rule exe.mkjambase
+rule .mkjambase
 {
     local exe = [ .exe mkjambase : mkjambase.c ] ;
     DEPENDS $(<) : $(exe) $(>) ;
@@ -312,13 +320,13 @@ rule exe.mkjambase
     if $(UNIX) { chmod on $(<) = "chmod +w " ; }
     mkjambase.exe on $(<) = $(exe:R=$(locate-target)) ;
 }
-actions exe.mkjambase
+actions .mkjambase
 {    $(chmod)$(<)
     $(mkjambase.exe) $(<) $(>) }
-exe.mkjambase jambase.c : Jambase ;
+.mkjambase jambase.c : Jambase ;
 
 # How to build Jam.
-rule exe.jam
+rule .jam
 {
     $(>).exe = [ .exe $(>) : $(jam.source) ] ;
     $(<).exe = $(<:S=$($(>).exe:S)) ;
@@ -327,11 +335,12 @@ rule exe.jam
     
     DEPENDS all : $($(>).exe) $($(<).exe) ;
 }
-exe.jam bjam : jam ;
+.jam bjam : jam ;
 
 # Distribution making from here on out.
 dist.docs =
-    Porting README RELNOTES
+    readme.html
+    Porting RELNOTES
     Jam.html Jambase.html Jamfile.html
     ;
 dist.source =
@@ -341,12 +350,12 @@ dist.source = $(dist.source:D=)
     $(dist.docs)
     build.jam build.bat build.sh
     Jambase Jamfile
-    yyacc jamgram.y jamgram.yy
+    jamgram.y jamgram.yy
     debian/changelog debian/control debian/copyright debian/jam.man.sgml debian/rules
     boost-jam.spec
     ;
 dist.bin =
-    bjam jam mkjambase
+    bjam jam mkjambase yyacc
     ;
 dist.bin =
     $(dist.bin:S=$(bjam.exe:S):R=$(locate-target))
@@ -443,6 +452,7 @@ rule .rpm ( name : source )
 }
 actions .rpm-build
 {    export BOOST_JAM_DOCS="$(docs)"
+    export BOOST_JAM_TOOLSET="$(toolset)"
     rpm -ta --target $(arch) $(>) | tee rpm.out
     cp `grep -e '^Wrote:' rpm.out | sed 's/^Wrote: //'` .
     rm -f rpm.out }
