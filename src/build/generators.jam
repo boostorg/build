@@ -944,7 +944,7 @@ local rule construct-with-caching (
             generators.dout [ indent ] "*** putting to cache?" ;
             for local c in $(cresult)
             {
-                local cc = [ virtual-target.clone-template $(c) : $(t) ] ;
+                local cc = [ virtual-target.clone-template $(c) : $(t) : $(project) ] ;
                 generators.dout [ indent ] "*** cloning " $(c) ;
                 generators.dout [ indent ] "*** cloned" $(cc) --- $(cc) ;
                 result += $(cc) ;
