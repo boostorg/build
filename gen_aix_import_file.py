@@ -91,11 +91,12 @@ impfile.write("#!" + LIBTARGET + "\n")
 expfile = open(EXPFILENAME, 'r')
 symbol = expfile.readline()
 while symbol:
-    if maxlinelength:
-        symbol = symbol[:maxlinelength]
-    if symbol[-1] != '\n':
-        symbol += '\n'
-    impfile.write(symbol)
+    if len(symbol) <= maxlinelength:
+        if symbol[-1] != '\n':
+            symbol += '\n'
+        impfile.write(symbol)
+    else:
+        print 'skipping', str(len(symbol)) + '-character symbol:',str(symbol)
     symbol = expfile.readline()
 impfile.close()
 expfile.close()

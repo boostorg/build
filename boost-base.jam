@@ -160,7 +160,7 @@ rule template-modifier ( target : source )
 # generate instructions to build the given "main" target from the given object
 # files given in the 2nd parameter. The 3rd parameter should be EXE for an
 # executable, or DLL for a shared library.
-rule main-from-objects
+rule main-from-objects ( targets * : objects * : type )
 {
     # make compiled sources a dependency of target
 
@@ -168,8 +168,8 @@ rule main-from-objects
 
     Clean clean : $(<) ;
 
-    MODE on $(<) = $($(3)MODE) ;
-    local link-function = Link-$(3) ;
+    MODE on $(<) = $($(type)MODE) ;
+    local link-function = Link-$(type) ;
     local ignored = [ $(link-function) $(<) : $(>) : $(3) ] ;
     Chmod $(<[1]) ;
     DEPENDS $(<) : $(>) ;
@@ -179,32 +179,38 @@ rule Link-EXE
 {
     # N.B. By the time this rule is invoked, we had better have gRUN_PATH completely set.
     Link-action $(<) : $(>) : EXE ;
-    RUN_PATH on $(<) = [ join $(gRUN_PATH($(<))) : $(SPLITPATH) ] ;
+    RUN_PATH on $(<) = [ join [ unique $(gRUN_PATH($(<))) ] : $(SPLITPATH) ] ;
     if $(UNIX) 
     {
-        RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) $(RUN_LD_LIBRARY_PATH) : $(SPLITPATH) ] ;
+        RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
     }
 }
 
 rule Link-DLL
 {
-    gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) ;
+    gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) $(TOOLSET_LIB_PATH) ;
     if $(UNIX) 
     {
-        RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) $(RUN_LD_LIBRARY_PATH) : $(SPLITPATH) ] ;
+        RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
         gRUN_LD_LIBRARY_PATH($(<)) += $(gLOCATE($(<[1]))) ;
+
+        if $(OS) = AIX
+        {
+            Aix-Implib-Action $(<) : $(>) ;
+        }
     }
     
-    if $(OS) = AIX
-    {
-        Aix-Implib-Action $(<) : $(>) ;
-    }
     Link-action $(<) : $(>) : DLL ;
+}
+
+rule Aix-Implib-Action
+{
+    SPACE on $(<) = " " ;
 }
 
 actions Aix-Implib-Action bind import-generator-script
 {
-    "$(BOOST_ROOT)/tools/build/gen_aix_import_file.py" $(<[1]:BD=) $(>:D=) "-directory=$(<[1]:D)" -verbose=1
+    "$(BOOST_ROOT)/tools/build/gen_aix_import_file.py" $(<[1]:BD=) $(>:D=) -optldflags="$(LINKFLAGS:J=$(SPACE))" "-directory=$(<[1]:D)" -verbose=1
 }
 
 # store the shell's PATH again, just in case someone uses PATH.
@@ -213,7 +219,7 @@ actions Aix-Implib-Action bind import-generator-script
 RUN_PATH ?= $(PATH) ;
 if $(UNIX)
 {
-    RUN_LD_LIBRARY_PATH ?= $(LD_LIBRARY_PATH) ;
+    RUN_LD_LIBRARY_PATH ?= $($(gSHELL_LIBPATH)) ;
 } 
 if $(NT)
 {
@@ -225,9 +231,11 @@ if $(NT)
 PATH = $(RUN_PATH) ;
 if $(UNIX)
 {
-    LD_LIBRARY_PATH = $(RUN_LD_LIBRARY_PATH) ;
+    $(gSHELL_LIBPATH) = $(RUN_LD_LIBRARY_PATH) ;
 } 
 
+DOLLAR = "$" ;
+  
 # A simple action to run an executable target
 if $(UNIX) 
 {
@@ -235,8 +243,8 @@ if $(UNIX)
     {
         $(SHELL_SET)PATH=$(RUN_PATH):$PATH
         $(SHELL_EXPORT)PATH
-        $(SHELL_SET)LD_LIBRARY_PATH=$(RUN_LD_LIBRARY_PATH)
-        $(SHELL_EXPORT)LD_LIBRARY_PATH
+        $(SHELL_SET)$(gSHELL_LIBPATH)=$(RUN_LD_LIBRARY_PATH):$$(gSHELL_LIBPATH)
+        $(SHELL_EXPORT)$(gSHELL_LIBPATH)
         $(<) $(COMMAND-LINE)
     }
 }
@@ -669,9 +677,9 @@ rule include-tools
 
         # clear any lingering target variables that may have been declared
         $(gTARGET_VARIABLES) = ;
-        gTARGET_VARIABLES = NEEDLIBS ; # start over from the beginning
+        gTARGET_VARIABLES = NEEDLIBS NEEDIMPS ; # start over from the beginning
+        gTOOLSET_LIB_PATH = ;
     }
-
     
     {
         local gIN_INCLUDE_TOOLS = true ;
@@ -1430,7 +1438,7 @@ rule find-compatible-subvariant ( main-target : toolset variant : dependent-simp
 #
 # For each target specified in libs, generate build instructions
 # for a subvariant that can be linked with a dependent target with
-# dependent-properties, returning a list of the linkable targets.
+# dependent-properties, returning a list of all generated targets.
 rule link-libraries
 {
   local lib-path result ;
@@ -1448,14 +1456,7 @@ rule link-libraries
     local lib-subvariant = [ find-compatible-subvariant $(lib-target) : $(>) : $(3) ] ;
 
     # Generate build instructions for the library target
-    local lib-files
-        = [ subvariant-target $(lib-target) : $(lib-subvariant) : $(>) ] ;
-
-    # Add the name of the linkable product to the result.
-    local type = $(gTARGET_TYPE($(lib-target))) ;
-    local index = $(gLINKABLE_PRODUCT_INDEX($(type))) ;
-    index ?= 1 ;
-    result += $(lib-files[$(index)]) ;
+    result += [ subvariant-target $(lib-target) : $(lib-subvariant) : $(>) ] ;
   }
   return $(result) ;
 }
@@ -1536,15 +1537,24 @@ rule depend-on-libraries
     gRUN_LD_LIBRARY_PATH($(<)) = [ unique $(gRUN_LD_LIBRARY_PATH($(<))) $(gRUN_LD_LIBRARY_PATH($(>))) ] ;
 }
 
-rule depend-on-dlls
+rule depend-on-dlls ( targets + : dlls-and-import-libs * )
 {
-    if $(DLL_AS_LIB)
+    local linkable ;
+    
+    # collect the linkable elements of the source libs into the appropriate variables
+    for local f in $(dlls-and-import-libs)
     {
-        NEEDLIBS += $(>) ;
-        NEEDLIBS on $(<) += $(>) ;
+        local v = $(gLINK_VARIABLE($(f:S))) ;
+        $(v) += $(f) ;
+        $(v) on $(targets) += $(f) ;
+        if $(v)
+        {
+            linkable += $(f) ;
+        }
     }
-    LIBPATH on $(<) += $(gLOCATE($(>))) ;
-    FINDLIBS on $(<) += $(gTARGET_NAME($(gTARGET_SUBVARIANT($(>))))) ; # $(gTARGET_SUBVARIANT($(>)):G=) ;
+
+    LIBPATH on $(<) += [ unique $(gLOCATE($(>))) ] ;
+    FINDLIBS on $(<) += [ unique $(gTARGET_NAME($(gTARGET_SUBVARIANT($(>))))) ] ;
     DEPENDS $(<) : $(>) ;
     # To run these targets, we need everything needed to run the libraries
     gRUN_PATH($(<)) = [ unique $(gRUN_PATH($(<))) $(gRUN_PATH($(>))) ] ;

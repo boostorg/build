@@ -96,7 +96,7 @@ rule Link-action
 # $(BCC_TOOL_PATH) to the path
 if $(NT)
 {
-actions borland-Link-action bind NEEDLIBS
+actions borland-Link-action 
 {
     set PATH=$(BCC_TOOL_PATH);%PATH%
     "$(BCC_TOOL_PATH)bcc32" -v -q $(LINKFLAGS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)" $(FINDLIBS:S=.lib)
@@ -104,7 +104,7 @@ actions borland-Link-action bind NEEDLIBS
 }
 else
 {
-actions borland-Link-action bind NEEDLIBS
+actions borland-Link-action
 {
     export PATH=$(BCC_TOOL_PATH):$PATH
     "$(BCC_TOOL_PATH)bcc32" -v -q $(LINKFLAGS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)" $(FINDLIBS:S=.lib)

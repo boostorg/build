@@ -49,9 +49,9 @@ rule Link-action
 }
 
 # for xlc, we repeat all libraries so that dependencies are always resolved
-actions xlc-Link-action bind NEEDLIBS
+actions xlc-Link-action bind NEEDLIBS NEEDIMPS
 {
-    xlC -qrtti $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    xlC -qrtti $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" "$(IMPLIB_FLAGS)$(NEEDIMPS)" -l$(FINDLIBS)
 }
 
 #### Cc #####

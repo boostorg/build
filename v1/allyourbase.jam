@@ -178,7 +178,8 @@ if $(NT)
     SUFOBJ          ?= .obj ;
     SUFEXE          ?= .exe ;
     SUFDLL          ?= .dll .lib ;
-    gLINKABLE_PRODUCT_INDEX(DLL) = 2 ; # (the .lib is the ones to link)
+    gLINK_VARIABLE(.dll) = ;             # dlls are NOT linked to directly
+    gLINK_VARIABLE(.lib) = NEEDLIBS ;    # instead, users link to import libs
     PREDLL          ?= "" ;
     NOARSCAN        ?= true ;
     SHELL_EXPORT    ?= ;
@@ -191,8 +192,6 @@ if $(NT)
     YACCFILES       ?= y.tab ;
     YACC_OUTPUT     ?= --output= ;
     LEX_OUTPUT      ?= -o ;
-    
-    DLL_AS_LIB ?= true ;
 }
 else if $(OS2)
 {
@@ -315,10 +314,12 @@ else if $(UNIX)
     switch $(OS)
     {
     case AIX :
-        DLL_AS_LIB      ?= true ;
+        IMPLIB_FLAGS    ?= -bI: ;
         SUFDLL          ?= .so .imp ;
-        gLINKABLE_PRODUCT_INDEX(DLL) = 1 ; # (the .so is the one to link)
-
+        gLINK_VARIABLE(.so) = NEEDLIBS ;  # shared libs should be added to the list of libs needed
+        gLINK_VARIABLE(.imp) = NEEDIMPS ; # import libs are handled separately.
+        gSHELL_LIBPATH = LIBPATH ;
+        
     case AMIGA :
         YACC            ?= bison -y ;
 
@@ -390,7 +391,7 @@ else if $(UNIX)
         RELOCATE        ?= true ;
 
     case OSF :
-        DLL_AS_LIB      ?= true ;
+        gLINK_VARIABLE(.so) = NEEDLIBS ; # shared objects should be added to the list of libs needed
     }
 
     # UNIX defaults
@@ -403,6 +404,7 @@ else if $(UNIX)
     YACCFLAGS       ?= -d ;
     SHELL_EXPORT    ?= "export " ;
     SHELL_SET       ?= "" ;
+    gSHELL_LIBPATH  ?= LD_LIBRARY_PATH ;
 }
     
 #
@@ -454,7 +456,6 @@ UNDEFFLAG       ?= "-u _" ;
 YACC            ?= ;
 YACCFILES       ?= ;
 YACCFLAGS       ?= ;
-DLL_AS_LIB      ?= ;
 
 HDRPATTERN = 
         "^[     ]*#[    ]*include[      ]*([<\"][^\">]*[\">]).*$" ;
@@ -1387,39 +1388,44 @@ rule strip-grist
 # split-path <foo>bar/<bee>baz/mumble  => <foo>bar <bee>baz mumble 
 rule split-path
 {
-    local result ;
-    local parent = $(<:P) ;
-    if $(NT)
-    {
-        switch $(<:G=)
-        {
-        # It turns out that to match a backslash, you need a /quadruple/ slash
-        # in the case clause!
-        case *\\\\*:* : # continue splitting
-        case *:\\\\*\\\\* :  # continue splitting
-        case *:/*\\\\* :  # continue splitting
-        case *:\\\\*/* :  # continue splitting
-        case *:/*/* :  # continue splitting
-        case *:/* : result = $(<) ;
-        case *:\\\\* : result = $(<) ;
-        case *: : result = $(<) ;
-        }
-    }
+    local result = $(gSPLIT-PATH.$(<)) ;
 
-    if ( ! $(<:B) ) && ( $(<) != $(DOT) ) # handle the case where $(<) is all grist.
+    if ! $(result)
     {
-        result ?= $(<:G) ;
-    }
-    else if ( ! $(parent:G=) )
-    {
-        result ?= $(<) ;
-    }
-    else
-    {
-        local p = [ split-path $(parent) ] ;
-        local b = [ strip-grist $(<) ] ;
-        p += $(b:D=) ; # can't use :B here because it destroys . and ..
-        result ?= $(p) ;
+        local parent = $(<:P) ;
+        if $(NT)
+        {
+            switch $(<:G=)
+            {
+                # It turns out that to match a backslash, you need a /quadruple/ slash
+                # in the case clause!
+                case *\\\\*:* : # continue splitting
+                  case *:\\\\*\\\\* :  # continue splitting
+                  case *:/*\\\\* :  # continue splitting
+                  case *:\\\\*/* :  # continue splitting
+                  case *:/*/* :  # continue splitting
+                  case *:/* : result = $(<) ;
+                case *:\\\\* : result = $(<) ;
+                case *: : result = $(<) ;
+            }
+        }
+
+        if ( ! $(<:B) ) && ( $(<) != $(DOT) ) # handle the case where $(<) is all grist.
+        {
+            result ?= $(<:G) ;
+        }
+        else if ( ! $(parent:G=) )
+        {
+            result ?= $(<) ;
+        }
+        else
+        {
+            local p = [ split-path $(parent) ] ;
+            local b = [ strip-grist $(<) ] ;
+            p += $(b:D=) ; # can't use :B here because it destroys . and ..
+            result ?= $(p) ;
+        }
+        gSPLIT-PATH.$(<) = $(result) ;
     }
     return $(result) ;
 }

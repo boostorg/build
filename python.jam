@@ -79,6 +79,12 @@ else if $(UNIX)
     {
         PYTHON_PROPERTIES += <*><*><linkflags>"-expect_unresolved 'Py*' -expect_unresolved '_Py*'" ;
     }
+    else if $(OS) = AIX
+    {
+        PYTHON_PROPERTIES 
+          += <*><*><linkflags>"-bI:$(PYTHON_LIB_PATH)/python.exp"
+            <*><*><find-library>pthreads ;
+    }
 }
 
 # Locate the python executable
@@ -255,6 +261,13 @@ rule Link-PYD
     {
         RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
         gRUN_LD_LIBRARY_PATH($(<)) += $(gLOCATE($(<[1]))) ;
+        
+        if $(OS) = AIX
+        {
+            # explicitly designate the exported init<module> function
+            LINKFLAGS on $(<) += "-e init$(<[1]:B)" ; 
+            Aix-Implib-Action $(<) : $(>) ;
+        }
     }
     Link-action $(<) : $(>) : PYD ;
 }
@@ -324,15 +337,20 @@ rule python-test-target ( test-target : sources + )
 
 if $(UNIX)
 {
-    gAPPEND_LD_LIBRARY_PATH = ":$LD_LIBRARY_PATH" ;
+    gAPPEND_LD_LIBRARY_PATH = ":$"$(gSHELL_LIBPATH) ;
+    gAPPEND_PATH = ":$"PATH ;
+}
+else if $(NT)
+{
+    gAPPEND_PATH =  ";%PATH%" ;
 }
 
 actions python-test-target bind PYTHON
 {
-    $(SHELL_SET)PATH=$(PATH)
+    $(SHELL_SET)PATH=$(run.path)$(gAPPEND_PATH)
     $(SHELL_EXPORT)PATH
-    $(SHELL_SET)LD_LIBRARY_PATH=$(LD_LIBRARY_PATH)$(gAPPEND_LD_LIBRARY_PATH)
-    $(SHELL_EXPORT)LD_LIBRARY_PATH
+    $(SHELL_SET)$(gSHELL_LIBPATH)=$(run.library_path)$(gAPPEND_LD_LIBRARY_PATH)
+    $(SHELL_EXPORT)$(gSHELL_LIBPATH)
     $(SHELL_SET)PYTHONPATH=$(PYTHONPATH)
     $(SHELL_EXPORT)PYTHONPATH
     $(PYTHON_LAUNCH) $(PYTHON) $(PYTHON_ARGS) "$(>)" $(ARGS) 2>&1 "$(<)" || $(CATENATE) "$(<)"
@@ -349,10 +367,10 @@ rule python-runtest-target ( test-target : sources + )
 }
 actions python-runtest-target bind PYTHON
 {
-    $(SHELL_SET)PATH=$(PATH)
+    $(SHELL_SET)PATH=$(run.path)$(gAPPEND_PATH)
     $(SHELL_EXPORT)PATH
-    $(SHELL_SET)LD_LIBRARY_PATH=$(LD_LIBRARY_PATH)$(gAPPEND_LD_LIBRARY_PATH)
-    $(SHELL_EXPORT)LD_LIBRARY_PATH
+    $(SHELL_SET)$(gSHELL_LIBPATH)=$(run.library_path)$(gAPPEND_LD_LIBRARY_PATH)
+    $(SHELL_EXPORT)$(gSHELL_LIBPATH)
     $(SHELL_SET)PYTHONPATH=$(PYTHONPATH)
     $(SHELL_EXPORT)PYTHONPATH
     $(PYTHON_LAUNCH) $(PYTHON) $(PYTHON_ARGS) "$(>)" $(ARGS)
@@ -424,15 +442,13 @@ rule python-runtest-aux ( target : sources + )
     
     # set the path so that DLLs linked into extension modules will be
     # found
-    PATH on $(target) = [ join
-        $(gRUN_PATH($(target)))                      # location of module dependencies
+    run.path on $(target) = [ join
+        $(gRUN_PATH($(target)))                 # location of module dependencies
         $(>:D)                                  # directory of python driver file(s)
-        $(PATH)                                 # base PATH from environment
         : $(SPLITPATH) ] ;                      # platform path separator
 
-    LD_LIBRARY_PATH on $(target) = [ join
-        $(gRUN_LD_LIBRARY_PATH($(target)))      # location of module dependencies
-        : $(SPLITPATH) ] ;                      # platform path separator
+    run.library_path on $(target) 
+        = $(gRUN_LD_LIBRARY_PATH($(target)):J=$(SPLITPATH)) ;
 
     PYTHON on $(target) = $(python) ;
     DEPENDS $(target) : $(python) ;

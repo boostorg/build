@@ -18,11 +18,11 @@
     # tests, and seems to be unneeded for the regression tests, but it
     # is a slight hack.
     local root = [ get-stlport-root ] ;
-    if ! $(root)/lib in $(PATH)
+    if ! $(root)/lib in $(TOOLSET_LIB_PATH)
     {
         # Stick it at the front of the path because Windows only seems
         # to be willing to look so far, then quits!
-        PATH = $(root)/lib $(PATH) ;
+        TOOLSET_LIB_PATH = $(root)/lib $(TOOLSET_LIB_PATH) ;
     }
 }
  

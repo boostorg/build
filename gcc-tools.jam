@@ -245,7 +245,7 @@ rule Link-action
     # will be "multiplied away" otherwise. The --exclude-symbols directive
     # proved to be neccessary with some versions of Cygwin.
     IMPLIB_COMMAND on $(<) = "-Wl,--export-all-symbols -Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__ -Wl,--out-implib," ;
-    DEPENDS $(<) : $(NEEDLIBS) ;
+    DEPENDS $(<) : $(NEEDLIBS) $(NEEDIMPS) ;
     gRUN_LD_LIBRARY_PATH($(<)) += $(GCC_STDLIB_DIRECTORY) ;
     if $(<[2]) && $(NT) && ( -mno-cygwin in $(gBUILD_PROPERTIES:G=) )
     {
@@ -258,17 +258,17 @@ rule Link-action
 }
 
 # for gcc, we repeat all libraries so that dependencies are always resolved
-actions gcc-Link-action bind NEEDLIBS
+actions gcc-Link-action bind NEEDLIBS NEEDIMPS
 {
-    $(SHELL_SET)LD_LIBRARY_PATH=$(RUN_LD_LIBRARY_PATH)
-    $(SHELL_EXPORT)LD_LIBRARY_PATH
-    $(GCC_BIN_DIRECTORY)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(LNOPT)-Wl,-rpath-link,.$(SPACE)"-Wl,-soname,$(<[1]:D=)$(SOTAG)"
+    $(SHELL_SET)$(gSHELL_LIBPATH)=$(RUN_LD_LIBRARY_PATH)
+    $(SHELL_EXPORT)$(gSHELL_LIBPATH)
+    $(GCC_BIN_DIRECTORY)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" "$(IMPLIB_FLAGS)$(NEEDIMPS)" -l$(FINDLIBS) $(LNOPT)-Wl,-rpath-link,.$(SPACE)"-Wl,-soname,$(<[1]:D=)$(SOTAG)"
     $(ACTION_1)$(LN)$(SPACE)-fs$(SPACE)"$(<[1]:D=)$(OUTTAG)"$(SPACE)"$(<[1])"
 }
 
-actions gcc-dllwrap bind NEEDLIBS
+actions gcc-dllwrap bind NEEDLIBS NEEDIMPS
 {
-    dllwrap --dllname $(<[1]) -o foo.pyd $(>) -s --entry _DllMain@12 --target=i386-mingw32 -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,. $(LINKFLAGS)     
+    dllwrap --dllname $(<[1]) -o foo.pyd $(>) -s --entry _DllMain@12 --target=i386-mingw32 -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" "$(IMPLIB_FLAGS)$(NEEDIMPS)" -l$(FINDLIBS) -Wl,-rpath-link,. $(LINKFLAGS)     
 }
 
 #### Cc #####
