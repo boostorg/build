@@ -29,6 +29,11 @@ rule virtual-target ( name : type ? : project )
     rule name ( ) { return $(self.name) ; }
     
     rule type ( ) { return $(self.type) ; }
+    rule set-type ( type ) 
+    {
+        self.type = $(type) ;
+    }     
+    
     
     # Sets the suffix. When generating target name, it will be used in preference to
     # the suffix that is associated with 'type'

@@ -481,10 +481,27 @@ rule try-one-generator ( project name ? : generator multiple ? :
         {
             result += $(t) ;
         }
-        else
+        else 
         {
-            extra += $(t) ;
-        }
+            # We might have asked for a type 'D', but found only generator for
+            # a type 'B', where 'D' is derived from 'B'. In this case, the 
+            # generation succeeds, but we should change type of the generated target.
+            
+            local at = [ $(t).type ] ;
+            local found ;
+            for local tt in $(target-types)
+            {
+                if ! $(found) && [ type.is-derived $(tt) $(at) ] 
+                {
+                    $(t).set-type $(tt) ;
+                    result += $(t) ;
+                }                
+            }            
+            if ! $(found)
+            {
+                extra += $(t) ;                
+            }            
+        }        
     }
 
     v = [ new vector $(extra) ] ;
@@ -565,9 +582,7 @@ local rule find-viable-generators ( target-type : properties * )
     local generator-rank = ;
 
     import type ;
-    #VP: the following breaks the NM transformation test.
-    #local t = [ type.all-bases $(target-type) ] ;
-    local t = $(target-type) ;
+    local t = [ type.all-bases $(target-type) ] ;
     
     while $(t[1])
     {
