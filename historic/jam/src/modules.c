@@ -50,6 +50,7 @@ module_t* bindmodule( char* name )
         m->name = newstr( m->name );
         m->variables = 0;
         m->rules = 0;
+        m->imported_modules = 0;
     }
     string_free( &s );
     return m;

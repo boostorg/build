@@ -168,7 +168,7 @@ rule project-target ( name : project : requirements * : default-build * )
     import path ;
     import print ;
     import property-set ;
-    IMPORT targets : set.difference : $(__name__) : set.difference ;
+    import set : difference : set.difference ;
     
     abstract-target.__init__ $(name) : $(project) ;
 

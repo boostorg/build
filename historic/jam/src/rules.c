@@ -705,15 +705,59 @@ RULE* new_rule_actions( module_t* m, char* rulename, char* command, LIST* bindli
     return local;
 }
 
-RULE *bindrule( char *rulename, module_t* m )
+/* Looks for a rule in the specified module, and returns it, if found.
+   First checks if the rule is present in the module's rule table.
+   Second, if name of the rule is in the form name1.name2 and name1 is in 
+   the list of imported modules, look in module 'name1' for rule 'name2'.
+*/
+RULE *lookup_rule( char *rulename, module_t *m, int local_only )
 {
-    RULE rule, *r = &rule;
+    RULE rule, *r = &rule, *result = 0;
+    module_t* original_module = m;
     r->name = rulename;
-    
-    if ( m->rules && hashcheck( m->rules, (HASHDATA **)&r ) )
-        return r;
-    else
-        return enter_rule( rulename, root_module() );
+
+    if (m->rules && hashcheck( m->rules, (HASHDATA **)&r ) )
+        result = r;
+    else if (!local_only && m->imported_modules) {
+        /* Try splitting the name into module and rule. */
+        char *p = strchr(r->name, '.') ;
+        if (p) {
+            *p = '\0';
+            /* Now, r->name keeps the module name, and p+1 keeps the rule name. */
+            if (hashcheck( m->imported_modules, (HASHDATA **)&r))
+            {
+                result = lookup_rule(p+1, bindmodule(rulename), 1);
+            }
+            *p = '.';
+        }        
+    }
+
+    if (result)
+    {
+        if (local_only && !result->exported)
+            result = 0;
+    }
+
+    return result;
+        
+}
+
+
+RULE *bindrule( char *rulename, module_t* m)
+{
+    RULE *result;
+
+    result = lookup_rule(rulename, m, 0);
+    if (!result)
+        result = lookup_rule(rulename, root_module(), 0);
+    /* We've only one caller, 'evaluate_rule', which will complain about 
+       calling underfined rule. We could issue the error
+       here, but we don't have necessary information, such as frame.
+    */
+    if (!result)
+        result = enter_rule( rulename, root_module() );
+
+    return result;
 }
 
 RULE* import_rule( RULE* source, module_t* m, char* name )
