@@ -325,8 +325,9 @@ rule searched-lib-generator ( )
 {
     generator.__init__ searched-lib-generator : : SEARCHED_LIB ;    
 
-    rule run ( project name ? : properties * : sources * )
+    rule run ( project name ? : property-set : sources * )      
     {
+        local properties = [ $(property-set).raw ] ;        
         local shared ;
         if <link>shared in $(properties)
         {
