@@ -70,8 +70,8 @@ flags msvc LINKFLAGS <debug-symbols>on : /DEBUG ;
 flags msvc LINKFLAGS <debug-symbols>on/<runtime-build>release : /OPT:REF,ICF ;
 
 flags msvc CFLAGS <optimization>off : /Od ;
-flags msvc CFLAGS <optimization>speed : /O2 ;
-flags msvc CFLAGS <optimization>space : /O1 ;
+flags msvc CFLAGS <optimization>speed : /Ogity /O2 /Gs ;
+flags msvc CFLAGS <optimization>space : /Ogisy /O1 /Gs ;
 flags msvc CFLAGS <inlining>off : /Ob0 ;
 flags msvc CFLAGS <inlining>on : /Ob1 ;
 flags msvc CFLAGS <inline>full : /Ob2 ;
