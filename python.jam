@@ -262,6 +262,7 @@ PYDMODE = $(DLLMODE) ;
 SHARED_TYPES += PYD ;
 
 gTARGET_TYPE_ID(pyd) = PYD ;
+gIS_DEPENDENCY(PYD) = TRUE ;
 
 # Declare a python extension.
 rule extension ( name : sources + : requirements * : default-BUILD * )

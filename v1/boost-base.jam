@@ -1593,7 +1593,7 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
     # transfer target variables to the target file.
     set-target-variables $(target-files) ;
 
-    if [ get-values <LIB> <DLL> : $(gTARGET_DEPS($(target))) ]
+    if [ get-values <LIB> <$(SHARED_TYPES)> : $(gTARGET_DEPS($(target))) ]
     {
         local libs dlls ;
         {
@@ -1610,7 +1610,7 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
             BUILD ?= $(gTARGET_DEFAULT_BUILD($(target))) ;
             libs = [ link-libraries [ get-values <LIB> : $(gTARGET_DEPS($(target))) ]
                     : $(toolset) $(variant) : $(simple-properties) ] ;
-            dlls = [ link-libraries [ get-values <DLL> : $(gTARGET_DEPS($(target))) ]
+            dlls = [ link-libraries [ get-values <$(SHARED_TYPES)> : $(gTARGET_DEPS($(target))) ]
                     : $(toolset) $(variant) : $(simple-properties) ] ;
         }
         depend-on-libraries $(target-files) : $(libs) ;
