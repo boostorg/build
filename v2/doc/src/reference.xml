@@ -608,6 +608,8 @@ rule explicit ( target-name )
 
   <section id="bbv2.reference.definitions">
 
+    <title>Definitions</title>
+
     <section id="bbv2.reference.features">
       <title>Features and properties</title>
 
@@ -958,6 +960,13 @@ rule feature ( name : allowed-values * : attributes * )
 
 <programlisting>
 exe hello : hello.cpp : &lt;toolset&gt;yfc:&lt;cxxflags&gt;-disable-pointless-warning ;
+</programlisting>
+      </para>
+
+      <para>The syntax also allows several properties in the condition, for
+        example:
+<programlisting>
+exe hello : hello.cpp : &lt;os&gt;NT,&lt;toolset&gt;gcc:&lt;link&gt;static ;
 </programlisting>
       </para>
 
