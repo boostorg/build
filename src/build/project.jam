@@ -621,8 +621,8 @@ module project-rules {
 local rule __test__ ( )
 {
     import assert ;
-    assert.equal foo/bar : remove-trailing-slash foo/bar/ ;
-    assert.equal foo/bar : remove-trailing-slash foo/bar ;
-    assert.equal foo : remove-trailing-slash foo/ ;
-    assert.equal foo : remove-trailing-slash foo ;
+    assert.result foo/bar : remove-trailing-slash foo/bar/ ;
+    assert.result foo/bar : remove-trailing-slash foo/bar ;
+    assert.result foo : remove-trailing-slash foo/ ;
+    assert.result foo : remove-trailing-slash foo ;
 }
