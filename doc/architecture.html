@@ -21,12 +21,12 @@
         br.clear { clear: left }
         div.alert { color: red }
         table { align: center; border: thin; }     
-           </style>
+               </style>
   </head>
   <!-- Things yet to document:
-         - build request, build request expansion and directly requested targets
-         - conditional properties
-       -->
+           - build request, build request expansion and directly requested targets
+           - conditional properties
+         -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -71,60 +71,101 @@
 
     <h2 id="dependency_scanning">Dependency scanning</h2>
 
-    <p>Dependency scanning is the process of finding implicit dependencies
-    due to "include" statements and similar things. It has to take into
-    account two things:</p>
+    <p>Dependency scanning is the process of finding implicit dependencies,
+    like "#include" statements in C++. The requirements for right dependency
+    scanning mechanism are:</p>
 
     <ul>
-      <li>Whether includes in a particular file need to be taken into account
-      depends on actions that use that file. For example, if the action is
-      "copy file", then includes should be ignored. Another example is when a
-      file is compiled with two different include paths on different
-      toolsets.</li>
+      <li>Support for different scanning algorithm. C++ and XML have quite
+      different syntax for includes and rules for looking up included
+      files.</li>
 
-      <li>It is possible to include generated header. In which case, it may
-      not yet exist at the time when we scan dependencies.</li>
+      <li>Ability to scan the same file several times. For example, single
+      C++ file can be compiled with different include paths.</li>
+
+      <li>Proper detection of dependencies on generated files.</li>
+
+      <li>Proper detection of dependencies from generated file.</li>
     </ul>
 
-    <p>Dependency scanning is implemented by objects called scanners. See
-    documentation for the "scanner" module to detail.</p>
+    <h3>Support for different scanning algorithm</h3>
 
-    <p>Regarding the first problem, we really have no choice. We can't treat
-    the same actual target differently depending on from where it is used.
-    Therefore, when handling of includes differers depending on actions, we
-    have to duplicate targets and assign different properties to it.</p>
+    <p>Different scanning algorithm are encapsulated by objects called
+    "scanners". Please see the documentation for "scanner" module for more
+    details.</p>
 
-    <p>For the reason, when actualizing a virtual target we optionally pass
-    the needed scanner to the "virtual-target.actualize" method. When no
-    scanner is passed, a new actual target is created, with it's dependencies
-    and updating actions set accordingly. When a particular scanner is
-    specified, a new actual target is created. That target will depend on
-    target created without scanner. In effect, this will allow to use
-    different scanners for the same file.</p>
+    <h3>Ability to scan the same file several times</h3>
 
-    <h3>Generated sources</h3>
-    Let me explain what I find the right semantic, first without any
-    subvariants. We have a target "a.cpp" which includes "a_parser.h", we
-    have to search through all include directories, checking: 
+    <p>As said above, it's possible to compile C++ file twice, with different
+    include path. Therefore, include dependencies for those compilation can
+    be different. The problem is that bjam does not allow several scans of
+    the same target.</p>
+
+    <p>The solution in Boost.Build is straigtforward. When a virtual target
+    is converted to bjam target (via <tt>virtual-target.actualize</tt>
+    method), we specify the scanner object to be used. The actualize method
+    will create different bjam targets for different scanners.</p>
+
+    <p>All targets with specific scanner are made dependent on target without
+    scanner, which target is always created. This is done in case target is
+    updated. The updating action will specify target without scanner and
+    output, and we need targets with scanner to be updated as well.</p>
+
+    <p>For example, assume that "a.cpp" is compiled by two compilers with
+    different include path. It's also copied into some install location. In
+    turn, it's produced from "a.verbatim". The dependency graph will look
+    like:</p>
+<pre>
+    a.o (&lt;toolset&gt;gcc)  &lt;--(compile)-- a.cpp (scanner1) ----+
+    a.o (&lt;toolset&gt;msvc) &lt;--(compile)-- a.cpp (scanner2) ----|
+    a.cpp (installed copy)    &lt;--(copy) ----------------------- a.cpp (no scanner)
+                                                                     ^
+                                                                     |
+                           a.verbose --------------------------------+
+   
+</pre>
+
+    <h3>Proper detection of dependencies on generated files.</h3>
+
+    <p>This requirement breaks down to the following ones.</p>
 
     <ol>
-      <li>If there's such file there, or</li>
+      <li>If when compiling "a.cpp" there's include of "a.h", the "dir"
+      directory is in include path, and a target called "a.h" will be
+      generated to "dir", then bjam should discover the include, and create
+      "a.h" before compiling "a.cpp".</li>
 
-      <li>If there's a target of the same name, bound to that dir via LOCATE
-      variable.</li>
+      <li>Since almost always Boost.Build generates targets to a "bin"
+      directory, it should be supported as well. I.e. in the scanario above,
+      Jamfile in "dir" might create a main target, which generates "a.h". The
+      file will be generated to "dir/bin" directory, but we still have to
+      recornize the dependency.</li>
     </ol>
-    Jam allows to do 1 via SEARCH variable, but that's not enough. Why can't
-    we do simpler: first check if there's target of the same name? I.e.
-    including of "a_parser.h" will already pick generated "a_parser.h",
-    regardless of search paths? Hmm... just because there's no reason to
-    assume that. For example, one can have an action which generated some
-    "dummy" header, for system which don't have the native one. Naturally, we
-    don't want to depend on that generated headers. To implement proposed
-    semantic we'd need builtin support. 
 
-    <p>There are two design choices. Suppose we have files a.cpp and b.cpp,
-    and each one includes header.h, generated by some action. Dependency
-    graph created by classic jam would look like:</p>
+    <p>The first requirement means that when determining what "a.h" means,
+    when found in "a.cpp", we have to iterate over all directories in include
+    paths, checking for each one:</p>
+
+    <ol>
+      <li>If there's file "a.h" in that directory, or</li>
+
+      <li>If there's a target called "a.h", which will be generated to that
+      directory.</li>
+    </ol>
+
+    <p>Classic Jam has built-in facilities for point (1) above, but that's
+    not enough. It's hard to implement the right semantic without builtin
+    support. For example, we could try to check if there's targer called
+    "a.h" somewhere in dependency graph, and add a dependency to it. The
+    problem is that without search in include path, the semantic may be
+    incorrect. For example, one can have an action which generated some
+    "dummy" header, for system which don't have the native one. Naturally, we
+    don't want to depend on that generated header on platforms where native
+    one is included.</p>
+
+    <p>There are two design choices for builtin support. Suppose we have
+    files a.cpp and b.cpp, and each one includes header.h, generated by some
+    action. Dependency graph created by classic jam would look like:</p>
 <pre>
     a.cpp -----&gt; &lt;scanner1&gt;header.h  [search path: d1, d2, d3]
 
@@ -158,18 +199,49 @@
                               |
     b.cpp -----&gt; &lt;scanner2&gt;header.h [ search path: d1, d2, d4]
 </pre>
-    The first alternative was use for some time. The problem however is: what
-    include paths should be used when scanning header.h? Originally, two
-    different sets of include paths were used. The second alternative does
-    not have this problem, so it's implemented now. 
+    The first alternative was used for some time. The problem however is:
+    what include paths should be used when scanning header.h? The second
+    alternative was suggested by Matt Armstrong. It has similiar effect: add
+    targets which depend on &lt;scanner1&gt;header.h will also depend on
+    &lt;d2&gt;header.h. But now we have two different target with two
+    different scanners, and those targets can be scanned independently. The
+    problem of first alternative is avoided, so the second alternative is
+    implemented now. 
 
-    <h3>Includes between generated sources</h3>
+    <p>The second sub-requirements is that targets generated to "bin"
+    directory are handled as well. Boost.Build implements semi-automatic
+    approach. When compiling C++ files the process is:</p>
+
+    <ol>
+      <li>The main target to which compiled file belongs is found.</li>
+
+      <li>All other main targets that the found one depends on are found.
+      Those include main target which are used as sources, or present as
+      values of "dependency" features.</li>
+
+      <li>All directories where files belonging to those main target will be
+      generated are added to the include path.</li>
+    </ol>
+
+    <p>After this is done, dependencies are found by the approach explained
+    previously.</p>
+
+    <p>Note that if a target uses generated headers from other main target,
+    that main target should be explicitly specified as dependency property.
+    It would be better to lift this requirement, but it seems not very
+    problematic in practice.</p>
+
+    <p>For target types other than C++, adding of include paths must be
+    implemented anew.</p>
+
+    <h3>Proper detection of dependencies from generated files</h3>
 
     <p>Suppose file "a.cpp" includes "a.h" and both are generated by some
-    action. Initially, neither file exists, so when classic jam constructs
-    dependency graph, the include is not found. As the result, jam might
-    attempt to compile a.cpp before creating a.h, and compilation will
-    fail.</p>
+    action. Note that classic jam has two stages. In first stage dependency
+    graph graph is build and actions which should be run are determined. In
+    second stage the actions are executed. Initially, neither file exists, so
+    the include is not found. As the result, jam might attempt to compile
+    a.cpp before creating a.h, and compilation will fail.</p>
 
     <p>The solution in Boost.Jam is to perform additional dependency scans
     after targets are updated. This break separation between build stages in
@@ -189,53 +261,43 @@
         B --/         C-includes   ---&gt; D
 
 </pre>
-    Both A and B have dependency on C and C-includes (the latter is not
-    shown). Say during building we've tried to create A, then tried to create
-    C and successfully created C. The B node wasn't seen yet. The C target is
-    rescanned, which creates new internal node. If we had those includes from
-    the start, we'd add this node to the list of A dependencies and B
-    dependencies. As it stands, we need to add it now. 
+    Both A and B have dependency on C and C-includes (the latter dependency
+    is not shown). Say during building we've tried to create A, then tried to
+    create C and successfully created C. 
 
-    <p>We determine what should be done with C-includes-2, add C-includes-2
-    to A's dependencies, and build the target. Unfortunately, we cannot do
-    the same with B, since we don't know that B is parent of C until we visit
-    B. So we add a special flag to C telling that it was rescanned. When we
-    process B, we'll add new dependency node to B's dependencies. this point
-    of time the target is requested by some parents. So parents were not yet
-    visited. Both visited and unvisited parents have What shall we do when
-    using subvariants. For user, subvariants must be more or less
-    transparent. If without subvariant a header was generated to a certain
-    directory, everything must work. Suppose that file a.cpp belongs to a
-    dependency graph of main target a. Include paths are</p>
+    <p>In that case, the set of includes in C might well have changed. We do
+    not bother to detect precisely which includes were added or removed.
+    Instead we create another internal node C-includes-2. Then we determine
+    what actions should be run to update the target. In fact this mean that
+    we perform logic of first stage while already executing stage.</p>
 
-    <blockquote>
+    <p>After actions for C-includes-2 are determined, we add C-includes-2 to
+    the list of A's dependents, and stage 2 proceeds as usual. Unfortunately,
+    we can't do the same with target B, since when it's not visited, C target
+    does not know B depends on it. So, we add a flag to C which tells and it
+    was rescanned. When visiting B target, the flag is notices and
+    C-includes-2 will be added to the list of B's dependencies.</p>
+
+    <p>Note also that internal nodes are sometimes updated too. Consider this
+    dependency graph:</p>
 <pre>
-     "/usr/include" "/home/t" "."
+       a.o ---&gt; a.cpp
+                   a.cpp-includes --&gt;  a.h (scanned)
+                                          a.h-includes ------&gt; a.h (generated)
+                                                                        |
+                                                                        |
+                   a.pro &lt;-------------------------------------------+                                                                              
 </pre>
-    </blockquote>
-    We start by finding all places where headers that are part of a's
-    dependency graph are generated. We insert those places to the include
-    paths, immediately after ".". For example, we might end with: 
 
-    <blockquote>
-<pre>
-     "/usr/include" "/home/t" "." "build"
-</pre>
-    </blockquote>
-    As a result: 
+    <p>Here, out handling of generated headers come into play. Say that a.h
+    exists but is out of date with respect to "a.pro", then "a.h (generated)"
+    and "a.h-includes" will be marking for updating, but "a.h (scanned)"
+    won't be marked. We have to rescan "a.h" file after it's created, but
+    since "a.h (generated)" has no scanner associated with it, it's only
+    possible to rescan "a.h" after "a.h-includes" target was updated.</p>
 
-    <ol>
-      <li>File "a.cpp" will be correctly compiled. Note that it's already
-      necessary to adjust paths to ensure this. We'll have to add target
-      paths for all generated headers, because determining the exact set of
-      additional include path for each source -- i.e the set of headers that
-      it uses --- will be hard.</li>
-
-      <li>With the proposed SEARCH_FOR_TARGET rule, dependency on generated
-      header will work magically --- it would find the "a_parser.h" target
-      bound via LOCATE_TARGET to "build" and we'll call INCLUDE on that found
-      target, instread of creating a completely unrelated one.</li>
-    </ol>
+    <p>Tbe above consideration lead to decision that we'll rescan a target
+    whenever it's updated, no matter if this target is internal or not.</p>
 
     <div class="alert">
       The remainder of this document is not indended to be read at all. This
