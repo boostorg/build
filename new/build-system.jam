@@ -5,11 +5,12 @@
 
 # this rule will be used to generate build instructions for the
 # given module (Jamfile) once its declarations have been read.
+
 rule construct ( module-name )
 {
 }
 
 JAMFILE ?= Jamfile ;
-import $(JAMFILE) ;
+modules.load Jamfile : $(JAMFILE) ;
 
 construct $(JAMFILE) ;
