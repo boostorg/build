@@ -194,15 +194,6 @@ rule Link-DLL
         gRUN_LD_LIBRARY_PATH($(<)) += $(gLOCATE($(<[1]))) ;
     }
     Link-action $(<) : $(>) : DLL ;
-    if $(DLLVERSION)
-    {
-        local f = $(<).$(DLLVERSION) ;
-        MakeLocate $(f) : $(LOCATE_TARGET) ;
-        Clean clean : $(f) ;
-        MODE on $(f) = $($(3)MODE) ;
-        DEPENDS $(f) : $(<) ;
-        HardLink $(f) : $(<) ;
-    }
 }
 
 # store the shell's PATH again, just in case someone uses PATH.
