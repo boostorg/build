@@ -3,14 +3,17 @@
 #include "newstr.h"
 #include "pathsys.h"
 
-#ifdef NT
+#include <limits.h>
+
+// MinGW on windows declares PATH_MAX in limits.h
+#if defined(NT) && ! defined(__GNUC__)
 #include <direct.h>
 #define PATH_MAX _MAX_PATH
 #else
 #include <unistd.h>
 #endif
 
-#include <limits.h>
+
 
 LIST*
 pwd(void)
