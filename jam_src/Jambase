@@ -101,12 +101,9 @@ if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
     # boost-build.jam is expected to invoke the "boost-build" rule to
     # load the Boost.Build files.
     
-    local search-path = $(BOOST_BUILD_PATH) $(BOOST_ROOT) ;
-    
     local boost-build-files =
         [ find-to-root [ PWD ] : boost-build.jam ]
-        # Another temporary measure so Jam works with Boost.Build v1
-        [ GLOB $(search-path) : boost-build.jam ] ;
+          ;
     
     .boost-build-file = $(boost-build-files[1]) ;
     
@@ -114,44 +111,59 @@ if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
     #
     if ! $(.boost-build-file)
     {
-        ECHO "Unable to load Boost.Build: could not find \"boost-build.jam\"" ;
-        ECHO --------------------------------------------------------------- ;
-        
-        if ! [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
+        # A temporary measure so Jam works with Boost.Build v1 and
+        # earlier Boost releases: try to just include boost-build.jam from tools/build.
+        BOOST_BUILD_PATH += $(BOOST_ROOT)/tools/build ;
+        boost-build-files = [ GLOB $(BOOST_BUILD_PATH) : boost-build.jam ] ;
+        .boost-build-file = $(boost-build-files) ;
+        if $(.boost-build-file)
         {
-            ECHO "BOOST_ROOT must be set, either in the environment, or " ;
-            ECHO "on the command-line with -sBOOST_ROOT=..., to the root" ;
-            ECHO "of the boost installation." ;
-            ECHO ;
+            include $(.boost-build-file) ;
         }
+        else
+        {
+            ECHO "Unable to load Boost.Build: could not find \"boost-build.jam\"" ;
+            ECHO --------------------------------------------------------------- ;
+            
+            if ! [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
+            {
+                ECHO "BOOST_ROOT must be set, either in the environment, or " ;
+                ECHO "on the command-line with -sBOOST_ROOT=..., to the root" ;
+                ECHO "of the boost installation." ;
+                ECHO ;
+            }
 
-        ECHO "Attempted search from" [ PWD ] "up to the root" ;
-        ECHO "and in these directories from BOOST_BUILD_PATH and BOOST_ROOT: "$(search-path:J=", ")"." ;
-        EXIT "Please consult the documentation at 'http://www.boost.org'." ;
+            ECHO "Attempted search from" [ PWD ] "up to the root" ;
+            ECHO "and in these directories from BOOST_BUILD_PATH and BOOST_ROOT: "$(search-path:J=", ")"." ;
+            EXIT "Please consult the documentation at 'http://www.boost.org'." ;
+        }
     }
-    
-    # Now load the boost-build.jam to get the build system loaded. This
-    # incidentaly loads the users jamfile and attempts to build targets.
-    #
-    # We also set it up so we can tell wether we are loading the new V2
-    # system or the the old V1 system.
-    #
-    include $(.boost-build-file) ;
-    
-    # Check that, at minimum, the bootstrap file was found.
-    #
-    if ! $(.bootstrap-file)
+    else
     {
-        ECHO "Unable to load Boost.Build" ;
-        ECHO -------------------------- ;
-        ECHO "\"$(.boost-build-file)\" was found by searching from" [ PWD ] "up to the root" ;
-        ECHO "and in these directories from BOOST_BUILD_PATH and BOOST_ROOT: "$(search-path:J=", ")"." ;
-        ECHO ;
-        ECHO "However, it failed to call the \"boost-build\" rule to indicate" ;
-        ECHO "the location of the build system." ;
-        ECHO ;
-        EXIT "Please consult the documentation at 'http://www.boost.org'." ;
+        # Now load the boost-build.jam to get the build system loaded. This
+        # incidentaly loads the users jamfile and attempts to build targets.
+        #
+        # We also set it up so we can tell wether we are loading the new V2
+        # system or the the old V1 system.
+        #
+        include $(.boost-build-file) ;
+        
+        # Check that, at minimum, the bootstrap file was found.
+        #
+        if ! $(.bootstrap-file)
+        {
+            ECHO "Unable to load Boost.Build" ;
+            ECHO -------------------------- ;
+            ECHO "\"$(.boost-build-file)\" was found by searching from" [ PWD ] "up to the root" ;
+            ECHO "and in these directories from BOOST_BUILD_PATH and BOOST_ROOT: "$(search-path:J=", ")"." ;
+            ECHO ;
+            ECHO "However, it failed to call the \"boost-build\" rule to indicate" ;
+            ECHO "the location of the build system." ;
+            ECHO ;
+            EXIT "Please consult the documentation at 'http://www.boost.org'." ;
+        }
     }
+    
 }
 else
 {
