@@ -11,7 +11,7 @@ import toolset : flags ;
 import errors : error ;
 import feature : feature ;
 
-feature user-interface : console gui wince native auto ;
+feature user-interface : console gui wince native auto : propagated ;
 
 feature.extend toolset : msvc ;
 
