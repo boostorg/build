@@ -1,0 +1,17 @@
+#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+#  Defines standard features and rules.
+
+import feature : feature compose ;
+
+feature toolset : gcc : implicit ;
+feature optimization : off on ;
+
+feature variant : debug release : implicit composite ;
+compose <variant>debug : <optimization>off ;
+compose <variant>release : <optimization>on ;
+
+

@@ -1,0 +1,47 @@
+#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+#  This module defines the 'make' rule and associated class, derived from
+#  'basic-target'.  
+
+import targets ;
+import class : class new ;
+
+rule make-target-class ( name : project : sources * : requirements * 
+                         : make-rule + : default-build )
+{
+    basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements) 
+                          : $(default-build) ;
+    self.make-rule = $(make-rule) ;    
+    
+    rule construct ( source-targets * : properties * )
+    {
+        local t = [ new virtual-target $(self.name)
+                    : $(self.project) : $(properties) ] ;
+        local a = [ new action $(t) : $(source-targets) : $(self.make-rule) 
+                    : $(properties) ] ;
+        $(t).action $(a) ;
+        return $(t) ;    
+    }   
+}
+
+class make-target-class : basic-target ;
+
+rule make ( target-name : sources * : generating-rule : requirements * )
+{
+    local project = [ CALLER_MODULE ] ;
+    local ptarget = [ $(project).target ] ;
+    local default-build = [ $(project).default-build ] ;
+
+    local target = [ $(ptarget).main-target $(target-name) ] ;
+
+    $(target).add-variant
+        [ new make-target-class $(target-name) : $(project) : $(sources) : $(requirements) 
+          : $(generating-rule) : $(default-build) ] ;
+}
+
+IMPORT $(__name__) : make : : make ;
+
+
