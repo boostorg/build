@@ -14,9 +14,6 @@ import generators ;
 import type ;
 import set ;
 
-
-feature.extend toolset : gcc ;
-
 class unix-linking-generator : linking-generator
 {
     import property-set ;
