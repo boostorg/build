@@ -27,9 +27,9 @@ flags darwin FRAMEWORKS <framework> ;
 flags darwin DLLVERSION <dllversion> ;
 
 ARFLAGS ?= "" ;
-FRAMEWORKS += System ;
 DLLVERSION = $(DLLVERSION[1]) ;
 DLLVERSION ?= $(BOOST_VERSION) ;
+CFLAGS += -Wno-long-double ;
 
 flags darwin LINKFLAGS <runtime-link>static : -static-libgcc ;
 flags darwin CFLAGS <debug-symbols>on : -g ;
