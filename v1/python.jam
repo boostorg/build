@@ -67,11 +67,11 @@ else if $(UNIX)
 
 # Locate the python executable
 PYTHON ?= <executable@>python$(SUFEXE) ;
-SEARCH on $(PYTHON) = $(PYTHON_ROOT)/bin $(RUN_PATH) ;
+SEARCH on $(PYTHON) = $(PYTHON_ROOT)  $(PYTHON_ROOT)/bin $(PYTHON_ROOT)/PCBuild $(RUN_PATH) ;
 
 # And the debugging version
 PYTHON_D ?= $(PYTHON:S=)_d$(PYTHON:S) ;
-SEARCH on $(PYTHON_D) = $(RUN_PATH) ;
+SEARCH on $(PYTHON_D) = $(PYTHON_ROOT) $(PYTHON_ROOT)/bin $(PYTHON_ROOT)/PCBuild $(RUN_PATH) ;
 
 # select-python-library
 #
