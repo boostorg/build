@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                                                                            </style>
+                                                                                </style>
   </head>
   <!-- Things yet to document:
-                                                                      - build request, build request expansion and directly requested targets
-                                                                      - conditional properties
-                                                                    -->
+                                                                        - build request, build request expansion and directly requested targets
+                                                                        - conditional properties
+                                                                      -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -208,12 +208,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>example</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                                                                                                           it somewhere. 
-                                                                                                            
-                                                                                                              <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                                                                                                              into one of the locations where it can be found (given in <a href=
-                                                                                                              "#config_files_location">this table</a>). This prevent you from
-                                                                                                              accidentally overwriting your config when updating.</p> -->
+                                                                                                                 it somewhere. 
+                                                                                                                  
+                                                                                                                    <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                                                                                                                    into one of the locations where it can be found (given in <a href=
+                                                                                                                    "#config_files_location">this table</a>). This prevent you from
+                                                                                                                    accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -473,47 +473,37 @@ boost-build /path/to/boost.build ;
     <p>The previous example was simple. Often, there are long chains of
     dependencies between libraries. The main application is a thin wrapper on
     top of library with core logic, which uses library of utility functions,
-    which uses boost filesystem library. Looks like successfull linking of
-    main application requires something like:</p>
+    which uses boost filesystem library. Expressing these dependencies is
+    straightforward:</p>
 <pre>
-    lib utils : utils.cpp ; # Uses Boost.Filesystem
-    lib core : core.cpp ;   # Uses 'utils'
-    exe app : app.cpp core utils /boost/filesystem//fs ;
-   
-</pre>
-    This works, but each application should, in effect, explicitly specify
-    all libraries that it uses, either directly or indirectly. This is
-    troublesome: when the 'utils' library starts using another libraries, you
-    have to adjust list of sources for all applications. Jamfiles become
-    unstable. 
-
-    <p>Usage requirements can help again. There's a builtin dependency
-    feature &lt;library&gt;. When found in properties for executable, it
-    causes a library, identified by the feature's value, to be linked into
-    executable. Seems like the effect is the same as when library is
-    specified in sources. But the feature allows us to write:</p>
-<pre>
-    lib utils : utils.cpp : : : &lt;library&gt;/boost/filesystem//fs ;
-    lib core : core.cpp : : : &lt;library&gt;utils ;
+    lib utils : utils.cpp /boost/filesystem//fs ;   
+    lib core : core.cpp utils ;
     exe app : app.cpp core ;
-   
 </pre>
 
-    <p>The application uses "core", which has &lt;library&gt;utils in usage
-    requirements, so that property will added to build properties for "app".
-    As the result, "utils" will be linked to "app" &mdash; automatically.
-    Likewise, "/boost/filesystem//fs" will be linked in without any
-    effort.</p>
+    <p>So, what's the reason to even mention this case? First, because it's a
+    bit more complex that it seems. When using shared linking, libraries are
+    build just as written, and everything will work. However, what happens
+    with static linking? It's not possible to include another library in
+    static library. Boost.Build solves this problem by returning back library
+    targets which appear as sources for static libraries. In this case, if
+    everything is built statically, the "app" target will link not only
+    "core" library, but also "utils" and "/boost/filesystem//fs".</p>
 
-    <p>The &lt;library&gt; property can be used in more ways. For example, if
-    "/boost/filesystem//fs" should be linked to all applications in your
-    project, you can add &lt;library&gt;/boost/filesystem//fs to requirements
-    of the project, like this:</p>
+    <p>So, the net result is that the above code will work for both static
+    linking and for shared linking.</p>
+
+    <p>Sometimes, you want all applications in some project to link to a
+    certain library. Putting the library in sources of all targets is
+    possible, but verbose. You can do better by using &lt;library&gt;
+    property. For example, if "/boost/filesystem//fs" should be linked to all
+    applications in your project, you can add
+    &lt;library&gt;/boost/filesystem//fs to requirements of the project, like
+    this:</p>
 <pre>
     project 
        : requirements &lt;library&gt;/boost/filesystem//fs
-       ;
-   
+       ;   
 </pre>
 
     <h3 id="static_shared">Static and shared libaries</h3>
@@ -1068,17 +1058,17 @@ boost-build /path/to/boost.build ;
 
       <li>It allows to have main target names with slashes. 
       <!-- The motivation for which is:
-                                                                        So, to summarize:
-                                                                        1. The project which extract tarfile may extract all possible kinds of 
-                                                                        targets, and it's reasonable to use them directly from other project.
-                                                                        2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
-                                                                        maintainability, and therefore, must use main target name which contains 
-                                                                        slashes?
-                                                                        3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
-                                                                        option, because you should not change existing tree 
+                                                                              So, to summarize:
+                                                                              1. The project which extract tarfile may extract all possible kinds of 
+                                                                              targets, and it's reasonable to use them directly from other project.
+                                                                              2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
+                                                                              maintainability, and therefore, must use main target name which contains 
+                                                                              slashes?
+                                                                              3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
+                                                                              option, because you should not change existing tree 
 
-                                                                        That makes good rationale for why main target must contain names.
-                                                                         -->
+                                                                              That makes good rationale for why main target must contain names.
+                                                                               -->
       </li>
     </ul>
 
