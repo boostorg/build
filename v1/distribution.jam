@@ -15,12 +15,33 @@
 # SEARCH on <module@>distribution.jam = $(BOOST_BUILD_PATH) ;
 # module distribution { include <module@>distribution.jam ; }
 #
-# version-header boost/version.hpp : Boost 1.27 "//  (C) Copyright Boost.org 1999." ;
+# distribution.version-header boost/version.hpp
+#     : Boost 1.27
+#     "//  boost version.hpp header file  -------------------------------------------//"
+#     ""
+#     "//  (C) Copyright boost.org 1999. Permission to copy, use, modify, sell"
+#     "//  and distribute this software is granted provided this copyright"
+#     "//  notice appears in all copies. This software is provided \"as is\" without"
+#     "//  express or implied warranty, and with no claim as to its suitability for"
+#     "//  any purpose."
+#     ""
+#     "//  See http://www.boost.org for most recent version including documentation."
+#     ;
 #
 # PRODUCES:
 #
 # [boost/version.hpp]
-# //  (C) Copyright Boost.org 1999.
+# 
+# //  boost version.hpp header file  -------------------------------------------//
+# 
+# //  (C) Copyright boost.org 1999. Permission to copy, use, modify, sell
+# //  and distribute this software is granted provided this copyright
+# //  notice appears in all copies. This software is provided "as is" without
+# //  express or implied warranty, and with no claim as to its suitability for
+# //  any purpose.
+# 
+# //  See http://www.boost.org for most recent version including documentation.
+# 
 # #ifndef BOOST_VERSION_DEF
 # #define BOOST_VERSION_DEF
 # #define BOOST_VERSION_STRING  "Boost 1.27"
@@ -35,13 +56,15 @@
 # [When at the root of the project.]
 # $shell> jam dist
 #
-rule version-header ( target : name version comment-text ? )
+rule version-header ( target : name version comment-text * )
 {
     local target-dir =
         [ tokens-to-simple-path [ top-relative-tokens [ directory-of $(target) ] ] ] ;
     local target-id =
-        [ get-normalized-target-id $(target) ] ;
+        [ target-id-of $(target) ] ;
 
+    # Translat the name & version into the various version info definitions.
+    #
     local s = " " ;
     local target-suffix = [ SUBST $(target:S) .(.*) $1 ] ;
     local target-tag = [ join  [ split-path $(target-dir) ] $(target:B) $(target-suffix) : "_" ] ;
@@ -68,47 +91,74 @@ rule version-header ( target : name version comment-text ? )
         case *   : version-id = $(version-id)00 ;
     }
 
+    # Set Jam variables to the version info definitions for use in things like
+    # sonaming, etc.
+    #
     $(name:U)_VERSION ?= $(version) ;
     $(name:U)_VERSION_MAJOR ?= $(version-parts[1]) ;
     $(name:U)_VERSION_MINOR ?= $(version-parts[2]) ;
     $(name:U)_VERSION_SUBMINOR ?= $(version-parts[3]) ;
     $(name:U)_VERSION_STRING ?= $(name)$(s)$(version) ;
 
-    TARGET_TAG on $(target-id) =
-        $(target-tag) ;
-    VERSION($(name-tag)) on $(target-id) =
-        "$(name) $(version)"
-        $(version-parts[1]) $(version-parts[2]) $(version-parts[3])
-        $(version-id) ;
-    if $(comment-text)
+    # Generate instructions to build the header file, but only if not in
+    # dependency stage.
+    #
+    if ! $(gIN_LIB_INCLUDE)
     {
-        COMMENT_TEXT on $(target-id) = $(comment-text) ;
+        TARGET_TAG on $(target-id) =
+            $(target-tag) ;
+        VERSION($(name-tag)) on $(target-id) =
+            "$(name) $(version)"
+            $(version-parts[1]) $(version-parts[2]) $(version-parts[3])
+            $(version-id) ;
+        NOCARE $(name-tag) ;
+        NOTFILE $(name-tag) ;
+        MODE on $(target-id) = $(FILEMODE) ;
+        ALWAYS $(target-id) ;
+
+        MakeLocate $(target-id) : $(target-dir) ;
+        Clean dist-clean : $(target-id) ;
+        version-header-create $(target-id) ;
+        local comment-line-tag = COMMENT_TEXT_ ;
+        for local comment-line in $(comment-text)
+        {
+            comment-line-tag = $(comment-line-tag)% ;
+            NOCARE $(comment-line-tag) ;
+            NOTFILE $(comment-line-tag) ;
+            $(comment-line-tag) on $(target-id) = $(comment-line) ;
+            version-header-comment $(target-id) : $(comment-line-tag) ;
+        }
+        version-header-def $(target-id) : $(name-tag) ;
     }
-    NOCARE $(name-tag) ;
-    NOTFILE $(name-tag) ;
-    MODE on $(target-id) = $(FILEMODE) ;
 
-    MakeLocate $(target-id) : $($(gTOP)) ;
-    ALWAYS $(target-id) ;
-
-    Clean dist-clean : $(target-id) ;
-    version-header-create $(target-id) ;
-    version-header-append $(target-id) : $(name-tag) ;
-
+    # Add the header to the top-level "dist" target.
+    #
     if $($(gTOP)) = "."
     {
         declare-fake-targets dist : $(target-id) ;
     }
 }
 
+# Creates initial empty version header, with correct permissions.
+#
 actions together version-header-create
 {
-    echo '$(COMMENT_TEXT)' > $(<)
+    echo > $(<)
     $(CHMOD) $(MODE) $(<)
 }
 
-actions version-header-append
+# Append a single comment line to the header.
+#
+actions version-header-comment
 {
+    echo '$($(>))' >> $(<)
+}
+
+# Append the version info definitions of a single module to the header.
+#
+actions version-header-def
+{
+    echo >> $(<)
     echo '#ifndef $(>)_VERSION_DEF' >> $(<)
     echo '#define $(>)_VERSION_DEF' >> $(<)
     echo '#define $(>)_VERSION_STRING "$(VERSION($(>))[1])"' >> $(<)
@@ -117,14 +167,4 @@ actions version-header-append
     echo '#define $(>)_VERSION_SUBMINOR $(VERSION($(>))[4])' >> $(<)
     echo '#define $(>)_VERSION $(VERSION($(>))[5])' >> $(<)
     echo "#endif" >> $(<)
-}
-
-local rule get-normalized-target-id ( target )
-{
-    local target-dir =
-        [ tokens-to-simple-path [ top-relative-tokens [ directory-of $(target) ] ] ] ;
-
-    local SOURCE_GRIST = ;
-    local target-id = [ FGristFiles $(target-dir)/$(target:D=:G=) ] ;
-    return $(target-id) ;
 }
