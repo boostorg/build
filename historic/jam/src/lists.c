@@ -172,8 +172,12 @@ LIST *  list_pop_front( LIST *l )
 void
 list_print( LIST *l )
 {
-	for( ; l; l = list_next( l ) )
-	    printf( "%s ", l->string );
+        LIST *p = 0; 
+        for( ; l; p = l, l = list_next( l ) )
+            if ( p ) 
+                printf( "%s ", p->string );
+        if ( p )
+            printf( "%s", p->string );                
 }
 
 /*
