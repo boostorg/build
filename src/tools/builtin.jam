@@ -347,9 +347,6 @@ class lib-target-class : basic-target
                 
     rule construct ( source-targets * : property-set )
     {        
-        local libs = [ $(property-set).get <library> ] ;
-        source-targets += $(libs:G=) ;
-                
         local properties = [ $(property-set).raw ] ;
         # Determine the needed target type
         local actual-type ;
@@ -460,14 +457,6 @@ class exe-target-class : typed-target
           : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;        
     }
                 
-    rule construct ( source-targets * : property-set )
-    {                
-        local libs = [ $(property-set).get <library> ] ;
-        source-targets += $(libs:G=) ;
-        
-        return [ typed-target.construct $(source-targets) : $(property-set) ] ;
-    }            
-    
     rule compute-usage-requirements ( subvariant )
     {
         local result = [ typed-target.compute-usage-requirements $(subvariant) ] ;
@@ -644,6 +633,9 @@ class linking-generator : generator
         
     rule run ( project name ? : property-set : sources + :  multiple ? )
     {   
+        local libs = [ $(property-set).get <library> ] ;
+        sources += $(libs:G=) ;
+                
         local result = [ generator.run $(project) $(name) : $(property-set)
           : $(sources) : $(multiple) ] ;
         

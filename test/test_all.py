@@ -112,6 +112,7 @@ tests = [ "project_test1",
           "regression",
           "composite",
           "library_chain",
+          "unit_test",
 	  ]
 
 if os.name == 'posix':
