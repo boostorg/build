@@ -258,8 +258,6 @@ rule copy-file ( name ? : project : source : extra-properties )
         n = $(name) ;
     }
         
-    targets = [ new file-target $(n:D=) : [ $(source).type ] 
-      : $(project) ] ;
     local a = [ $(source).action ] ;
     local new-a ;
     local p = [ property-set.empty ] ;
@@ -271,13 +269,16 @@ rule copy-file ( name ? : project : source : extra-properties )
 
     # Copy the properties of original target. They, in particular
     # can affect the suffix of the target.
-    new-a = [ new action $(targets) : $(source) : common.copy : 
+    new-a = [ new action $(source) : common.copy : 
       [ $(p).add-raw [ $(extra-properties).free ]                       
                      [ $(extra-properties).dependency ]
       ] ] ;
     
-    $(targets).suffix [ $(source).suffix ] ;
-    $(targets).action $(new-a) ;
+    # FIXME!!!!!!!1
+    #$(targets).suffix [ $(source).suffix ] ;
+    
+    targets = [ new file-target $(n:D=) exact : [ $(source).type ] 
+      : $(project) : $(new-a) ] ;
     
     return $(targets) ;
 }
@@ -289,7 +290,6 @@ rule symlink-lib ( suffix : project : source : extra-properties )
       new file-target $(n:D=) : [ $(source).type ] : $(project) ] ;
     local a = [ new action $(targets) : $(source) : symlink.ln :
       $(extra-properties) ] ;
-    $(targets).suffix $(suffix) ;
     $(targets).action $(a) ;
     return $(targets) ;
 }
@@ -373,19 +373,19 @@ class stage-shared-lib-generator : generator
               [ stage.relink-file $(project) : $(property-set) : $(source) ] ;
             
             
-            local so-version = [ $(property-set).get <so-version> ] ;
-            if $(so-version)
-            {                            
-                local existing-suffix = [ $(relinked).suffix ] ;            
-                $(relinked).suffix $(existing-suffix).$(so-version) ;
-                
-                relinked += [ stage.symlink-lib $(existing-suffix) : $(project) :
-                  $(relinked[1]) : $(property-set) ] ;
-                
-                local major = [ MATCH ([0123456789])[.].* : $(so-version) ] ;
-                relinked += [ stage.symlink-lib $(existing-suffix).$(major) 
-                  : $(project) : $(relinked[1]) : $(property-set) ] ;
-            }
+#            local so-version = [ $(property-set).get <so-version> ] ;
+#            if $(so-version)
+#            {                            
+#                local existing-suffix = [ $(relinked).suffix ] ;            
+#                $(relinked).suffix $(existing-suffix).$(so-version) ;
+#                
+#                relinked += [ stage.symlink-lib $(existing-suffix) : $(project) :
+#                  $(relinked[1]) : $(property-set) ] ;
+#                
+#                local major = [ MATCH ([0123456789])[.].* : $(so-version) ] ;
+#                relinked += [ stage.symlink-lib $(existing-suffix).$(major) 
+#                  : $(project) : $(relinked[1]) : $(property-set) ] ;
+#            }
             
             # Break into private member of 'virtual-target' and change
             # the name.

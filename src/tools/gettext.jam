@@ -161,18 +161,17 @@ class update-translations-generator : generator
         {                                              
             # Create the POT file, which will contain list of messages extracted
             # from the sources.
-            local new-messages = [ new file-target $(name) : gettext.POT : $(project) ] ;
             local extract = 
-              [ new action $(new-messages) : $(right-sources) : gettext.extract ] ;
-            $(new-messages).action $(extract) ;
+              [ new action $(right-sources) : gettext.extract ] ;
+            local new-messages = [ new file-target $(name) : gettext.POT 
+              : $(project) : $(extract) ] ;
                 
             # Create a notfile target which will update the existing translation file
             # with new messages.
-            local r = [ new notfile-target $(name) : $(project) ] ;
             local a = [ new action $(r) : $(sources[1]) $(new-messages) 
               : gettext.update-po-dispatch ] ;
-            $(r).action $(a) ;
-                .constructed = [ virtual-target.register $(r) ] ;
+            local r = [ new notfile-target $(name) : $(project) : $(a) ] ;            
+            .constructed = [ virtual-target.register $(r) ] ;
         }
         else
         {

@@ -201,49 +201,39 @@ class virtual-target
 class abstract-file-target : virtual-target
 {
     import project regex sequence path type ;
+    import property-set ;
     
-    rule __init__ ( name
-        : type ?  # Optional type for this target
-                  : project
+    rule __init__ ( 
+         name     # Name for this target
+        exact ?   # If non-empty, the name is exactly the name
+                  # created file should have. Otherwise, the '__init__'
+                  # method will add suffix obtained from 'type' by
+                  # calling 'type.generated-target-suffix'.
+        : type ?  # The type of this target.
+        : project
+        : action ?
     )
     {
         virtual-target.__init__ $(name) : $(project) ;
             
         self.type = $(type) ;
-        self.action = ;
+        self.action = $(action) ;
+        if $(action)
+        {         
+            $(action).add-targets $(__name__) ;
+
+            if $(self.type) && ! $(exact)              
+            {                
+                _apply-suffix $(name) ;
+            }            
+        }        
     }
     
     rule type ( ) { return $(self.type) ; }
     rule set-type ( type )
     {
         self.type = $(type) ;
-    }
-
-    # Sets the suffix. When generating target name, it will be used in preference to
-    # the suffix that is associated with 'type'
-    rule suffix ( suffix ? )
-    {
-        if $(suffix)
-        {
-            self.suffix = $(suffix) ;
-        }
-        else if ! $(self.suffix)
-        {
-            if $(self.type)
-            {
-                # CONSIDER: is it ever possible that self.action is not defined?
-                # It theory, only possible for source files with no
-                # suffix at all.
-                if $(self.action)
-                {
-                    local ps = [ $(self.action).properties ] ;                
-                    self.suffix = [ type.generated-target-suffix $(self.type) :
-                      $(ps) ] ;            
-                }                
-            }            
-        }
-        
-        return $(self.suffix) ;
+        _apply-suffix [ utility.basename $(self.name) ] ;
     }
 
     # Sets the path. When generating target name, it will override any path
@@ -255,12 +245,8 @@ class abstract-file-target : virtual-target
 
     # If 'a' is supplied, sets action to 'a'.
     # Returns the action currently set.
-    rule action ( a ? )
+    rule action ( )
     {
-        if $(a)
-        {
-            self.action = $(a) ;
-        }
         return $(self.action) ;
     }
 
@@ -376,8 +362,8 @@ class abstract-file-target : virtual-target
         if ! $(self.actual-name)
         {            
             local grist = [ grist ] ;
-            
-            local basename = [ actual-basename ] ;
+
+            local basename = [ path.native $(self.name) ] ;
             self.actual-name = <$(grist)>$(basename) ;
             
         }
@@ -421,25 +407,18 @@ class abstract-file-target : virtual-target
                         
             return l$(location-grist) ;
         }                
-    }
-        
-    # Helper to actual-name, above. Compute the 'basename' of the filename
-    # of the actual created file.
-    rule actual-basename ( )
+    }            
+
+    rule _apply-suffix ( specified-name )
     {
-        local name = [ path.native $(self.name) ] ;
-        local suffix = [ suffix ] ;
+        suffix = [ type.generated-target-suffix $(self.type) :
+          [ $(self.action).properties ] ] ;
         if $(suffix)
-        {
-            return $(name).$(suffix) ;        
-        }
-        else
-        {
-            return $(name) ;
-        }                               
+        {                    
+            self.name = $(specified-name).$(suffix) ;
+        }                
     }
     
-
 }
 
 # File target with explicitly known location.
@@ -462,12 +441,14 @@ class file-target : abstract-file-target
     import errors ;
     
     rule __init__ (
-      name
+      name exact ?
         : type ?  # Optional type for this target
         : project
+        : action ?
     )
     {
-        abstract-file-target.__init__ $(name) : $(type) : $(project) ;   
+        abstract-file-target.__init__ $(name) $(exact) : $(type) : $(project) 
+          : $(action) ;   
     }
         
     rule actualize-location ( target )
@@ -546,11 +527,10 @@ class notfile-target : abstract-file-target
 # not establish dependency relationship, but should do everything else.
 class action 
 {
-    import type toolset property-set indirect class path ;
+    import type toolset property-set indirect class path assert ;
     
-    rule __init__ ( targets + : sources * : action-name + : property-set ? )
+    rule __init__ ( sources * : action-name + : property-set ? )
     {        
-        self.targets = $(targets) ;
         self.sources = $(sources) ;
     
         self.action-name = [ indirect.make-qualified $(action-name) ] ;
@@ -568,6 +548,11 @@ class action
         self.properties = $(property-set) ;
     }        
     
+    rule add-targets ( targets * )
+    {
+        self.targets += $(targets) ;
+    }
+        
     rule targets ( )
     {
         return $(self.targets) ;
@@ -670,12 +655,6 @@ class action
     {
         return $(property-set) ;
     }
-
-
-    rule set-targets ( targets * )
-    {
-        self.targets = $(targets) ;
-    }
 }
 
 # Action class which does nothing --- it produces the targets with
@@ -684,9 +663,9 @@ class action
 # actions which create them.
 class null-action : action 
 {
-    rule __init__ ( targets + : property-set ? )
+    rule __init__ ( property-set ? )
     {
-        action.__init__ $(targets) : : .no-action : $(property-set) ;
+        action.__init__  : .no-action : $(property-set) ;
     }
         
     rule actualize ( )
@@ -725,7 +704,7 @@ rule from-file ( file : project )
     }
     else
     {
-        local name = [ path.make $(file:S=) ] ;
+        local name = [ path.make $(file) ] ;
         local type = [ type.type $(file) ] ;
         local result ;
         if ! $(type)
@@ -736,7 +715,6 @@ rule from-file ( file : project )
         else
         {
             local v = [ new file-target $(name) : $(type) : $(project) ] ;
-            $(v).suffix [ MATCH ^.(.*)$ : $(file:S) ] ;
             result = $(v) ;
         }
         .files.$(path) = $(result) ;
@@ -751,7 +729,7 @@ rule from-file ( file : project )
 rule register ( target )
 {
     local signature = [ sequence.join
-        [ $(target).actual-name ] : - ] ;    
+        [ $(target).name ] : - ] ;    
             
     local result ;
     for local t in $(.cache.$(signature))
@@ -878,13 +856,17 @@ rule clone-action ( action : new-project : new-action-name ? : new-properties ? 
     {
         new-properties = [ $(action).properties ] ;
     }
-                    
+
+    local action-class = [ modules.peek $(action) : __class__ ] ;
+    local cloned-action = [ class.new $(action-class)  
+      [ $(action).sources ] : $(new-action-name) : $(new-properties) ] ;
+                        
     local cloned-targets ;
     for local target in [ $(action).targets ]
     {
         local n = [ $(target).name ] ;
         local cloned-target = [ class.new file-target $(n:D=) : [ $(target).type ] 
-          : $(new-project) ] ;
+          : $(new-project) : $(cloned-action) ] ;
         local d = [ $(target).dependencies ] ;
         if $(d)
         {            
@@ -895,18 +877,7 @@ rule clone-action ( action : new-project : new-action-name ? : new-properties ? 
         
         cloned-targets += $(cloned-target) ;
     }        
-        
-    local action-class = [ modules.peek $(action) : __class__ ] ;
-    
-    local cloned-action = [ class.new $(action-class) $(cloned-targets) : 
-      [ $(action).sources ] : $(new-action-name) : $(new-properties) ] ;
-    
-    for local cloned-target in $(cloned-targets)
-    {        
-        $(cloned-target).action $(cloned-action) ;
-    }
-    
-    
+                    
     return $(cloned-action) ;        
 }
 

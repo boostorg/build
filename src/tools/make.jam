@@ -30,12 +30,10 @@ class make-target-class : basic-target
         
     rule construct ( name : source-targets * : property-set )
     {
-        local t = [ new file-target $(self.name:S=) : [ type.type $(self.name) ]
-                    : $(self.project) ] ;
-        $(t).suffix [ regex.match .(.*) : $(self.name:S) ] ;
-        local a = [ new action $(t) : $(source-targets) : $(self.make-rule) 
+        local a = [ new action $(source-targets) : $(self.make-rule) 
                     : $(property-set) ] ;
-        $(t).action $(a) ;
+        local t = [ new file-target $(self.name) : [ type.type $(self.name) ]
+                    : $(self.project) : $(a) ] ;        
         return [ property-set.empty ] [ virtual-target.register $(t) ] ;
     }   
 }
