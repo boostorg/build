@@ -149,8 +149,9 @@ rule select-python-includes ( toolset variant : properties * )
 PYTHON_PROPERTIES += 
         <$(gcc-compilers)><*><find-library>util
         <include>$(BOOST_ROOT)
-          select-python-library
-          ;
+          <stlport-iostream>on
+            select-python-library
+            ;
 
 if $(NT)
 {
