@@ -71,14 +71,14 @@ rule extract-xml ( target : sources * : properties * )
 
 actions doxygen-action
 {
-  $(NAME:E=doxygen) -g doxyfile
+  "$(NAME:E=doxygen)" -g doxyfile
   echo "GENERATE_HTML  = NO" >> doxyfile
   echo "GENERATE_LATEX = NO" >> doxyfile
   echo "GENERATE_XML   = YES" >> doxyfile
   echo "INPUT          = $(>) " >> doxyfile
   echo "RECURSIVE      = $(RECURSIVE) " >> doxyfile
   echo "FILE_PATTERNS  = $(PATTERNS) " >> doxyfile 
-  $(NAME:E=doxygen) doxyfile ;
+  "$(NAME:E=doxygen)" doxyfile ;
 }
 
 rule xml-to-boostbook ( target : source : properties * )

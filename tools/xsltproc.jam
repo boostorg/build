@@ -75,12 +75,12 @@ rule xslt-dir ( target : source stylesheet : properties * : dirname )
 
 actions xslt-xsltproc
 {
-  $(CATALOG) $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
+  $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET)" "$(>)"
 }
 
 actions xslt-xsltproc-dir
 {
-  $(CATALOG) $(NAME:E=xsltproc) $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
+  $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(DIRECTORY)/" "$(STYLESHEET)" "$(>)"
 }
 
 IMPORT $(__name__) : xslt : : xslt ;
