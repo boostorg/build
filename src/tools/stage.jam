@@ -146,6 +146,12 @@ class stage-target-class : basic-target
         local result ;
         for local i in $(source-targets)
         {
+            # Intermediate targets are those with "unrequested" types.
+            # For example, given "exe a : a.cpp" we can end with RSP
+            # target on windows, and it will be marked as "intermediate".
+            # By default, we don't install such targets.
+            # If specific list of installable types is given, we don't
+            # care if target is intermediate or not.
             if ! [ $(i).intermediate ] && [ $(i).type ] != SEARCHED_LIB
             {
                 local staged-targets ;
