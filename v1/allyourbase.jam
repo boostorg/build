@@ -1025,7 +1025,7 @@ rule Object
     # different from $(SEARCH_SOURCE).
 
     # Use unique to clean up confusing duplicates a bit
-    HDRS on $(<) = [ unique $(LOCATE_SOURCE) $(SEARCH_SOURCE) $(HDRS) ] ;
+    HDRS on $(<) = [ unique $(LOCATE_SOURCE) $(HDRS) ] ;
 
     # Set STDHDRS on the object so that multi-compiler builds will search for
     # headers in the right places. 
