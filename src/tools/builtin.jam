@@ -467,6 +467,8 @@ IMPORT $(__name__) : lib : : lib ;
 
 class exe-target-class : typed-target
 {
+    import type ;
+    
     rule __init__ ( name : project
         : sources * : requirements * : default-build * : usage-requirements * )
     {    
@@ -487,6 +489,26 @@ class exe-target-class : typed-target
         
         return $(result) ;
     }
+    
+    rule check-for-unused-sources ( result * : sources * )
+    {
+        # For exes, we typically don't consume ignore DLL on windows.
+        # We also handle searched libraries via special properties
+        # on actions, so should not check for search libraries.
+        # As the result, we don't check for unused LIB sources
+        # at all.
+                
+        local sources-to-check ;
+        for local s in $(sources)
+        {
+            if ! [ type.is-derived [ $(s).type ] LIB ]
+            {
+                sources-to-check += $(s) ;
+            }            
+        }
+        basic-target.check-for-unused-sources $(result) : $(sources-to-check) ;
+    }
+    
     
 }
 
