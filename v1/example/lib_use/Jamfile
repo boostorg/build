@@ -1,0 +1,18 @@
+subproject tools/build/examples/lib_use ;
+
+lib simple
+	:
+		simple_lib.cpp
+	:
+	:
+		debug <threading>single/multi
+	;
+
+exe simple
+	:
+		simple.cpp
+		<lib>simple
+	:
+		<threading>multi
+	:
+	;
