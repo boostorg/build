@@ -257,19 +257,19 @@ class TestCmd:
             return
         if condition is None:
             condition = self.condition
-        #print "cleanup(" + condition + "):  ", self._preserve
         if self._preserve[condition]:
             for dir in self._dirlist:
                 print "Preserved directory", dir
-            return
-        os.chdir(self._cwd)
-        self.workdir = None
-        list = self._dirlist[:]
+        else:
+            list = self._dirlist[:]
+            list.reverse()
+            for dir in list:
+                self.writable(dir, 1)
+                shutil.rmtree(dir, ignore_errors = 1)
+                
         self._dirlist = []
-        list.reverse()
-        for dir in list:
-            self.writable(dir, 1)
-            shutil.rmtree(dir, ignore_errors = 1)
+        self.workdir = None
+        os.chdir(self._cwd)            
         try:
             global _Cleanup
             _Cleanup.remove(self)

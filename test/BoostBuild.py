@@ -67,6 +67,15 @@ class Tester(TestCmd.TestCmd):
 
         os.chdir(self.workdir)
 
+    def cleanup(self):
+        try:
+            TestCmd.TestCmd.cleanup(self)
+            os.chdir(self.original_workdir)
+        except AttributeError:
+            # Whe this is called during by TestCmd.TestCmd.__del__ we can have both
+            # 'TestCmd' and 'os' unavailable in our scope. Do nothing in this case.
+            pass
+            
     #
     # Methods that change working directory's content
     #
