@@ -47,20 +47,46 @@ rule section (
     {
         lines [ split-at-words $(name): ] ;
         lines ;
+        local pre = ;
         while $(description)
         {
             local paragraph = ;
             while $(description) && $(description[1]) = "" { description = $(description[2-]) ; }
-            while $(description) && $(description[1]) != "" { paragraph += $(description[1]) ; description = $(description[2-]) ; }
-            if [ MATCH "^(::).*" : $(paragraph) ]
+            if $(pre)
             {
-                lines [ MATCH "^::(.*)" : $(paragraph) ] : "  " "  " ;
+                pre = ;
+                while $(description) && ( $(description[1]) = "" || [ MATCH "^([ ])" : $(description[1]) ] )
+                    { paragraph += $(description[1]) ; description = $(description[2-]) ; }
+                lines $(paragraph) : "  " "  " ;
             }
             else
             {
-                lines [ split-at-words " " $(paragraph) ] : "  " ;
+                while $(description) && $(description[1]) != ""
+                    { paragraph += $(description[1]) ; description = $(description[2-]) ; }
+                if $(paragraph[1]) = :: && ! $(paragraph[2])
+                {
+                    pre = yes ;
+                }
+                if $(paragraph[1]) = ::
+                {
+                    lines $(paragraph[2-]) : "  " "  " ;
+                    lines ;
+                }
+                else if [ MATCH "(::)$" : $(paragraph[-1]) ]
+                {
+                    pre = yes ;
+                    local p = [ MATCH "(.*)([	 ]*)(::)$" : $(paragraph[-1]) ] ;
+                    if $(p[2]) && $(p[2]) != "" { paragraph = $(paragraph[1--2]) $(p[1]): ; }
+                    else { paragraph = $(paragraph[1--2]) $(p[1]) ; }
+                    lines [ split-at-words " " $(paragraph) ] : "  " ;
+                    lines ;
+                }
+                else
+                {
+                    lines [ split-at-words " " $(paragraph) ] : "  " ;
+                    lines ;
+                }
             }
-            lines ;
         }
     }
 }

@@ -305,8 +305,8 @@ local rule set-argument-doc (
 {
     module-name ?= * ;
 
-    $(module-name).$(rule-name).$(name).qualifier = $(qualifier) ;
-    $(module-name).$(rule-name).$(name).docs = $(docs) ;
+    $(module-name).$(rule-name).args.$(name).qualifier = $(qualifier) ;
+    $(module-name).$(rule-name).args.$(name).docs = $(docs) ;
 
     if ! $(name) in $($(module-name).$(rule-name).args)
     {
@@ -503,7 +503,7 @@ local rule print-help-rules (
                     print.list-start ;
                     for local arg-name in $($(module-name).$(rule-name).args)
                     {
-                        print.list-item $(arg-name): $($(module-name).$(rule-name).$(arg-name).docs) ;
+                        print.list-item $(arg-name): $($(module-name).$(rule-name).args.$(arg-name).docs) ;
                     }
                     print.list-end ;
                 }
@@ -537,7 +537,7 @@ local rule print-help-classes (
                     print.list-start ;
                     for local arg-name in $($(module-name).$(class-name).args)
                     {
-                        print.list-item $(arg-name): $($(module-name).$(class-name).$(arg-name).docs) ;
+                        print.list-item $(arg-name): $($(module-name).$(class-name).args.$(arg-name).docs) ;
                     }
                     print.list-end ;
                 }
@@ -596,11 +596,14 @@ local rule extract-comment (
 {
     local comment = ;
     local line = $($(var)[1]) ;
-    while [ MATCH "^[$(ws)]*(#)" : $(line) ] && $($(var))
+    local l = [ MATCH "^[$(ws)]*(#)(.*)$" : $(line) ] ;
+    while $(l[1]) && $($(var))
     {
-        comment += [ MATCH "^[$(ws)]*#[$(ws)]*(.*)$" : $(line) ] ;
+        if $(l[2]) { comment += [ MATCH "^[$(ws)](.*)$" : $(l[2]) ] ; }
+        else { comment += "" ; }
         $(var) = $($(var)[2-]) ;
         line = $($(var)[1]) ;
+        l = [ MATCH "^[$(ws)]*(#)(.*)$" : $(line) ] ;
     }
     return $(comment) ;
 }

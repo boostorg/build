@@ -7,51 +7,51 @@
 #
 # Classes are defined by creating a rule of the same name to act as
 # the "constructor", which in turn sets instance attributes and
-# defines rules:
+# defines rules::
 #
-#::    rule myclass ( arg1 )          # constructor
-#::    {
-#::        self.attribute = $(arg1) ;
-#::
-#::        rule method1 ( )           # method
-#::        {
-#::            return [ method2 ] ;
-#::        }
-#::
-#::        rule method2 ( )           # method
-#::        {
-#::            return $(self.attribute) ;
-#::        }
-#::    }
-#::    class myclass ;                # establish myclass as a class
+#     rule myclass ( arg1 )          # constructor
+#     {
+#         self.attribute = $(arg1) ;
 #
-# New instance modules are created by invoking [ new <class> <args...> ]:
+#         rule method1 ( )           # method
+#         {
+#             return [ method2 ] ;
+#         }
 #
-#::    local x = [ new myclass foo ] ;        # x is a new myclass object
-#::    assert.result foo : [ $(x).method1 ] ; # $(x).method1 returns "foo"
+#         rule method2 ( )           # method
+#         {
+#             return $(self.attribute) ;
+#         }
+#     }
+#     class myclass ;                # establish myclass as a class
+#
+# New instance modules are created by invoking [ new <class> <args...> ]::
+#
+#     local x = [ new myclass foo ] ;        # x is a new myclass object
+#     assert.result foo : [ $(x).method1 ] ; # $(x).method1 returns "foo"
 #
 # To write a derived class, you must:
 #
 #   1. call the constructors of all base classes as <base>.__init__ from
 #      the derived class' constructor rule
 #
-#   2. add the base classes to the derived class declaration.
+#   2. add the base classes to the derived class declaration. ::
 #
-#::    rule derived ( arg )
-#::    {
-#::         myclass.__init__ $(arg) ;  # call base __init__
-#::         rule method2 ( )           # method override
-#::         {
-#::             return $(self.attribute)XXX ;
-#::         }
-#::     }
-#::     class derived : myclass ;
+#     rule derived ( arg )
+#     {
+#          myclass.__init__ $(arg) ;  # call base __init__
+#          rule method2 ( )           # method override
+#          {
+#              return $(self.attribute)XXX ;
+#          }
+#     }
+#     class derived : myclass ;
 #
 # All methods operate virtually, replacing behavior in the base
-# classes. For example:
+# classes. For example::
 #
-#::    local y = [ new derived foo ] ;           # y is a new derived object
-#::    assert.result fooXXX : [ $(y).method1 ] ; # $(y).method1 returns "foo"
+#     local y = [ new derived foo ] ;           # y is a new derived object
+#     assert.result fooXXX : [ $(y).method1 ] ; # $(y).method1 returns "foo"
 #
 # Each class instance is its own core Jam module. All instance
 # attributes and methods are accessible without additional
