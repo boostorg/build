@@ -2,6 +2,8 @@
 
 <html>
   <head>
+    <meta name="generator" content=
+    "HTML Tidy for Cygwin (vers 1st April 2002), see www.w3.org">
     <meta name="generator" content="Microsoft FrontPage 5.0">
     <meta http-equiv="Content-Type" content=
     "text/html; charset=windows-1252">
@@ -130,6 +132,8 @@
               <li><a href="#jamfile_example">Example</a></li>
             </ul>
           </li>
+
+          <li><a href="#external_project">Using External Projects</a>
 
           <li><a href="#feature_description">Feature Descriptions</a></li>
 
@@ -271,9 +275,10 @@ bjam "-sBUILD=debug release"
       </tr>
 
       <tr>
-        <td><code>bjam &quot;-sBUILD=&lt;define&gt;BOOST_POSIX&quot;</code></td>
+        <td><code>bjam "-sBUILD=&lt;define&gt;BOOST_POSIX"</code></td>
 
-        <td>build all, with the macro BOOST_POSIX defined for all compilers</td>
+        <td>build all, with the macro BOOST_POSIX defined for all
+        compilers</td>
       </tr>
     </table>
 
@@ -752,8 +757,8 @@ exe my_target : my_source1.cpp my_source2.c ;
       </tr>
     </table>
 
-    <h3><a name="#subproject_jamfiles">SubProject Jamfiles</a></h3>
     This section describes how to write a Jamfile for a subproject. 
+    <h3><a name="subproject_jamfiles">SubProject Jamfiles</a></h3>
 
     <h4><a name="subproject_rule">The <tt>subproject</tt> rule</a></h4>
 
@@ -816,24 +821,45 @@ project-root ;
       <br>
       </li>
 
-      <li><i>sources</i> is a list of paths to source files and dependency
-      targets. A dependency target path is preceded by
-      <tt>&lt;template&gt;</tt>, <tt>&lt;lib&gt;</tt>, <tt>&lt;dll&gt;</tt>,
-      or <tt>&lt;exe&gt;</tt>, and the final path component specifies the
-      name of a main target in a Jamfile located in the directory given by
-      the initial path components. Paths may be absolute or relative. The
-      type of dependency is also used to decide how to link to it when
-      needed. Specifying a <tt>&lt;lib&gt;</tt> indicates the use of static
-      linking, as opposed to specifying a <tt>&lt;dll&gt;</tt> which uses
-      dynamic linking. For example in Unix static linking will be done
-      directly, and dynamic linking with the common "<tt>-l</tt>" liker flag
-      and use of <tt>LD_LIBRARY_PATH</tt>.<br>
-      <br>
-       <b>NOTE:</b> It is important to match up the type of source dependency
-      with the same type the dependency is built as. Trying to specify a
-      source dependency of <tt>&lt;lib&gt;</tt> when the target is defined as
-      a <tt>&lt;dll&gt;</tt> will cause an error.<br>
-      <br>
+      <li>
+        <i>sources</i> is a list of paths to source files and
+        dependency targets. <a name="dependency">The</a> syntax for
+        dependency targets is described by the following grammar:
+
+        <blockquote>
+<pre>
+<i>dependency-target</i> -&gt; <i>type-tag</i> <i>location</i> <b>target-name</b>
+
+<i>type-tag</i> -&gt; "&lt;template&gt;" | "&lt;lib&gt;" | "&lt;dll&gt;" | "&lt;exe&gt;"
+
+<i>location</i> -&gt; ( @<b>project-id</b>/ )? <i>relative-path</i>
+
+<i>relative-path</i> -&gt; ( <b>path-element</b>/ ) *
+</pre>
+        </blockquote>
+        The <i>location</i> specifies the location of a Jamfile in which a
+        dependency target called <code><b>target-name</b></code> can be
+        found, declared with the given <i>type-tag</i>. If
+        <code>@<b>project-id</b></code> is specified, the
+        <i>relative-path</i> is interpreted with respect to the root
+        directory of the <a href="#external_project">specified
+        project</a>. Otherwise, it is interpreted with respect to the
+        directory of the current Jamfile.
+
+        <p>The dependency's <i>type-tag</i> is also used to decide how to
+        link to it when needed. <tt>&lt;lib&gt;</tt> targets are linked
+        statically and <tt>&lt;dll&gt;</tt> targets are linked dynamically.
+        On Unix platforms dynamic linking will use (the appropriate platform
+        equivalent of) <tt>LD_LIBRARY_PATH</tt> and the "<tt>-l</tt>" linker
+        flag to avoid creating executables which expect to find dynamic
+        libraries in particular locations in the filesystem.</p>
+
+        <p><b>NOTE:</b> It is important to match the <i>type-tag</i>
+        dependency with the type of the dependency target. Trying to specify
+        a <i>type-tag</i> of <tt>&lt;lib&gt;</tt> when the target is defined
+        as a <tt>&lt;dll&gt;</tt> will cause an error.<br>
+        <br>
+        </p>
       </li>
 
       <li>
@@ -950,7 +976,8 @@ exe test : test.cpp &lt;lib&gt;basic ;<br>
         main targets. But one additional type of requirement is possible:
         <tt>&lt;tag&gt;</tt>... A tag specifies how to "augment" the names of
         the copied files. This is needed to distinguish the various files if
-        you're collecting different builds of the same targets. The syntax is: 
+        you're collecting different builds of the same targets. The syntax
+        is: 
 
         <blockquote>
 <pre>
@@ -1045,6 +1072,31 @@ exe fop : &lt;template&gt;executable fop.cpp ;
       statically- and dynamically-linked subvariants of the debug
       variant.</li>
     </ul>
+
+    <h3><a name="external_project">Using External Projects</a></h3>
+
+    To use dependencies such as libraries from another project tree,
+    first use the <code>project</code> rule to declare a project id
+    and location for the external project.  Then add the appropriate
+    external dependency target specification to your program's list of
+    sources. For example, if you are developing a program which uses
+    the Boost.Threads library, you might write
+
+<blockquote>
+<pre>
+project boost : /home/dave/boost-cvs ;
+</pre>
+</blockquote>
+
+    in your <a href="#jamrules">Jamrules</a> file, and place
+
+<blockquote>
+<pre>
+<dll>@boost/libs/thread/build/boost_thread
+</pre>
+</blockquote>
+
+    in your target's list of sources.
 
     <h3><a name="feature_description">Feature Descriptions</a></h3>
 
@@ -1293,10 +1345,10 @@ flags msvc HDRS &lt;include&gt; ;
     </ul>
 
     <p>Please note that the build system commonly takes advantage of <a href=
-    "jam_src/Jam.html#bindingmods">Jam's
-    Dynamic Scoping feature</a> (see the <tt>local</tt> command in the "Flow
-    of Control" section below the link target) to temporarily "change" a
-    global variable by declaring a <tt>local</tt> of the same name.</p>
+    "jam_src/Jam.html#bindingmods">Jam's Dynamic Scoping feature</a> (see the
+    <tt>local</tt> command in the "Flow of Control" section below the link
+    target) to temporarily "change" a global variable by declaring a
+    <tt>local</tt> of the same name.</p>
 
     <p>Many of the variables that are used to configure how Boost.Build works
     internally are listed <a href="variables.html">here</a> with brief
@@ -1407,9 +1459,9 @@ flags msvc HDRS &lt;include&gt; ;
 
     <p>Revised 
     <!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan
-                                -->1 July, 2003 
+                                    -->8 September, 2003 
     <!--webbot bot="Timestamp" endspan i-checksum="13972"
-                                -->
+                                    -->
     </p>
   </body>
 </html>
