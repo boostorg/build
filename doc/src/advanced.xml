@@ -767,14 +767,14 @@ exe hello : hello.cpp some_library.lib /some_project//library
 
       <tip>
         <para>         
-          On Windows, if an application which uses dynamic libraries, and both
+          On Windows, if an application uses dynamic libraries, and both
           the application and the libraries are built by Boost.Build, its not
           possible to immediately run the application, because the
           <literal>PATH</literal> environment variable should include the path
           to the libraries. It means you have to either add the paths
           manually, or place the application and the libraries to the same
-          directory, for example using the <link
-          linked="bbv2.builtin.stage">stage</link> rule.
+          directory, for example using the <link linkend="bbv2.builtins.stage">
+            stage</link> rule.
       </para>
       </tip>
     </section>
@@ -949,8 +949,7 @@ exe main : main.cpp lib_alias ;
  
     </section>
 
-
-    <section>
+    <section id="bbv2.builtins.stage">
       <title>Installing</title>
 
       <para>For installing the built target you should use the
