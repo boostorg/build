@@ -177,9 +177,9 @@ rule project-target ( name : project : requirements * : default-build * )
         } 
     }
     
-    # Returns the properties which would be used to a main
+    # Returns the properties which would be used for a main
     # target in this project, if generation with
-    # 'properties' is requested, and that main targets 
+    # 'properties' is requested, and that main target 
     # does not have any requirements of its own.
     rule reference-properties ( properties * )
     {
@@ -187,9 +187,7 @@ rule project-target ( name : project : requirements * : default-build * )
         # from direct build request, because free properties are not
         # allowed to be propagated.
                 
-        # ### Don't know why we stick 'properties' at the end of 'ref'
-        local ref = [ project.attribute $(self.project) requirements ]
-                    $(properties) ;
+        local ref = [ project.attribute $(self.project) requirements ] ;
         ref = [ property.refine $(properties) : $(ref) ] ;
         ref = [ property.evaluate-conditionals $(ref) ] ;
         ref = [ property.take free : [ property.remove incidental : $(ref) ] ] ;
@@ -300,14 +298,6 @@ rule main-target ( name : project )
                 error "Ambiguous alternatives for main target" [ full-name ]  ;
             }                    
         } 
-
-        # Add additional subvariant element for the targets which free,
-        # non-incidental properties are not equal to project's, plus
-        # those in build request
-        
-        local plocation = [ project.attribute $(self.project) location ] ;
-        local ptarget = [ project.target $(plocation) ] ;
-        local ref = [ $(ptarget).reference-properties $(properties) ] ;
                   
         # Mark all targets in result as roots
         for local t in $(result)
@@ -319,22 +309,10 @@ rule main-target ( name : project )
         # is created.
         local all-targets = 
             [ sequence.transform virtual-target.traverse : $(result) ] ; 
-        local dg = [ new subvariant-dg "FIXME" : "FIXME" : $(all-targets) ] ;
+        local dg = [ new subvariant-dg $(__name__) : $(properties) : $(all-targets) ] ;
         for local v in $(all-targets)          
         {
-            $(v).dg $(dg) ;
-
-            local action = [ $(v).action ] ;
-            if $(action) 
-            {
-                local properties = [ property.take free : [ property.remove incidental : 
-                                        [ $(action).properties  ] ] ] ;
-        
-                if $(properties) != $(ref)
-                {
-                    $(v).extra-path [ sequence.join main-target- $(self.name) ] ;
-                }
-            }
+            $(v).dg $(dg) ;            
         }                
 
         # Now return virtual targets for the only alternative
@@ -500,9 +478,13 @@ rule basic-target ( name : project
                             # Just a source file
                             source-targets += [ virtual-target.from-file $(s) : $(self.project) ] ;                            
                         }
-                    }                    
+                    } 
+                    
                     self.generated.$(property-path) = 
                         [ construct $(source-targets) : $(xproperties) ] ;                             
+                    
+                    # Apply use requirement of this target to all generated
+                    # virtual targets.
                     local xuse-requirements ;
                     for local p in $(self.use-requirements)
                     {
