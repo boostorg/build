@@ -1207,17 +1207,87 @@ rule project-root ( )
     {
         project-location = [ PWD ] ;
     }
-    local name = $(project-location:B) ;
+    local name ;
+    name = $(PROJECT($(project-location))) ;
+    name ?= $(project-location:B) ;
     PROJECT = $(name) ;
     gPROJECT($(name)) = $(project-location) ;
     SubDir TOP ;
 }
 
+# grafik.
 #
+# Declare either your own project, or an external project.
 #
-rule project ( name : location )
+rule project ( name : location ? )
 {
-    gPROJECT($(name)) = [ root-paths $(location) : $(.boost-build-file:D) ] ;
+    if ! $(location)
+    {
+        gPROJECT($(name)) = $(gPROJECT($(PROJECT))) ;
+        PROJECT($(gPROJECT($(name)))) = $(name) ;
+        PROJECT = $(name) ;
+    }
+    else
+    {
+        gPROJECT($(name)) = [ root-paths $(location) : [ root-paths $($(gTOP)) : [ PWD ] ] ] ;
+        local [ protect-subproject ] ;
+        enter-subproject @$(name) ;
+    }
+}
+
+# grafik.
+#
+# Returns the set of vars to localize to prevent changes from
+# affecting the current project. Also remembers the current values
+# to use by enter-subproject to set the defaults for the new vars.
+#
+rule protect-subproject ( )
+{
+    .TOP = $(TOP) ;
+    .TOP_TOKENS = $(TOP_TOKENS) ;
+    .gTOP = $(gTOP) ;
+    .PROJECT = $(PROJECT) ;
+    return TOP TOP_TOKENS gTOP PROJECT [ protect-subdir ] ;
+}
+
+# grafik.
+#
+# Sets up the environment as if the context is another project in
+# preparation to include the external projects targets. This also
+# works for refering to the current project.
+#
+rule enter-subproject ( project-path )
+{
+    TOP = $(.TOP) ;
+    TOP_TOKENS = $(.TOP_TOKENS) ;
+    gTOP = $(.gTOP) ;
+    PROJECT = $(.PROJECT) ;
+    
+    local project-name = [ MATCH "^@([^/\\]+)" : $(project-path) ] ;
+    project-name ?= $(PROJECT) ;
+    project-name ?= "" ;
+    local project-subdir = [ MATCH "^@[^/\\]+[/\\](.*)" : $(project-path) ] ;
+    local project-top ;
+    
+    if $(project-name)
+    {
+        project-top = [ split-path $(gPROJECT($(project-name))) ] ;
+        if $(project-subdir)
+        {
+            project-top +=
+                [ split-path [ relative-path $(project-subdir) ] ]
+                [ split-path [ FSubDir [ split-path [ relative-path $(project-subdir) ] ] ] ] ;
+        }
+        TOP = [ join-path $(project-top) ] ;
+        TOP_TOKENS = $(project-top) ;
+        gTOP = TOP ;
+        PROJECT = $(project-name) ;
+    }
+    project-subdir ?= . ;
+    
+    subproject $(project-subdir) ;
+    
+    return $(project-name) $(project-subdir) ;
 }
 
 # dwa 6/7/01 - added for boost
@@ -1287,24 +1357,17 @@ rule SubDir
     # If $(TOP)/Jamrules hasn't been included, do so.
     #
 
-    if $(PROJECT)
-    {
-        gINCLUDED($(gTOP)) = $(gINCLUDED($(PROJECT).TOP)) ;
-    }
-    if ! $(gINCLUDED($(gTOP)))
+    local top = [ root-paths $($(gTOP)) : [ PWD ] ] ;
+    if ! $(gINCLUDED($(JAMRULES:R=$(top))))
     {
         # Gated entry.
 
-        gINCLUDED($(gTOP)) = TRUE ;
-        if $(PROJECT)
-        {
-            gINCLUDED($(PROJECT).TOP) = TRUE ;
-        }
+        gINCLUDED($(JAMRULES:R=$(top))) = TRUE ;
 
         # Include it.
 
         project-root ;
-        include $(JAMRULES:R=$($(gTOP))) ;
+        include $(JAMRULES:R=$(top)) ;
     }
 
     # Get path to current directory from root using SubDir.
@@ -1359,7 +1422,7 @@ rule in-invocation-subdir
 # invoke SubDir temporarily and then restore them, declare
 #       local $(gSUBDIR_GLOBALS) ;
 gSUBDIR_GLOBALS = SUBDIR SUBDIR_TOKENS SEARCH_SOURCE LOCATE_SOURCE LOCATE_TARGET
-    SOURCE_GRIST RELATIVE_SUBDIR RELATIVE_SUBDIR_TOKENS PROJECT ; 
+    SOURCE_GRIST RELATIVE_SUBDIR RELATIVE_SUBDIR_TOKENS ; 
 
 
 rule protect-subdir
