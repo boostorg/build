@@ -9,7 +9,7 @@
 extends-toolset msvc ;
 
 CURR_TOOLSET = msvc-stlport ;
-STLPORT_LIB_BASE_NAME = stlport_vc60 ;
+STLPORT_LIB_BASE_NAME = stlport_vc6 ;
 
 # bring in the STLPort configuration
 SEARCH on stlport.jam = $(BOOST_BUILD_PATH) ;
