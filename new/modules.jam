@@ -108,22 +108,3 @@ rule import ( module-name : rules-opt * : rename-opt * )
     IMPORT $(module-name) : $(source-names) : [ CALLER_MODULE ] : $(target-names) ;
 }
 
-# Returns the module-local value of a variable.
-rule peek ( module-name variable )
-{
-    module $(module-name)
-    {
-        return $($(variable)) ;
-    }
-}
-
-local rule __test__ ( )
-{
-    import assert ;
-
-    module modules.__test__
-    {
-        module local foo = bar ;
-    }
-    assert.result bar :  peek modules.__test__ foo ;
-}
