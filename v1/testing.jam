@@ -357,31 +357,27 @@ rule run-test ( type-to-test run-target : sources * )
     {
         verbose-test = 0 ;
     }
-    if $(nt-cygwin) || ! $(NT) ## b-sh
+    
+    VERBOSE_TEST on $(run-target) = $(verbose-test) ;
+    if $(NT)
     {
-        SET_STATUS on $(run-target) = "status=$?" ;
-        SET_VERBOSE_OPTION on $(run-target) = "verbose=$(verbose-test)" ;
-        SET_VERBOSE on $(run-target) = "verbose=0" ;
-        RUN_OUTPUT_NL on $(run-target) = "echo" ;
-        RUN_OUTPUT_STATUS on $(run-target) = "echo EXIT STATUS: $status" ;
-        IF_STATUS_0 on $(run-target) = "if test $status -eq 0 ; then" ;
-        IF_STATUS_NOT_0 on $(run-target) = "if test $status -ne 0 ; then" ;
-        IF_VERBOSE on $(run-target) = "if test $verbose -eq 0 ; then" ;
-        IF_END on $(run-target) = "fi" ;
-        EXIT_STATUS on $(run-target) = "exit $status" ;
-    }
-    else ## $(NT)
-    {
+        STATUS on $(run-target) = %status% ;
         SET_STATUS on $(run-target) = "set status=%ERRORLEVEL%" ;
-        SET_VERBOSE_OPTION on $(run-target) = "set verbose=$(verbose-test)" ;
-        SET_VERBOSE on $(run-target) = "set verbose=0" ;
         RUN_OUTPUT_NL on $(run-target) = "echo." ;
-        RUN_OUTPUT_STATUS on $(run-target) = "echo EXIT STATUS: %status%" ;
-        IF_STATUS_0 on $(run-target) = "if %status% EQU 0 (" ;
-        IF_STATUS_NOT_0 on $(run-target) = "if %status% NEQ 0 (" ;
-        IF_VERBOSE on $(run-target) = "if %verbose% EQU 0 (" ;
-        IF_END on $(run-target) = ")" ;
-        EXIT_STATUS on $(run-target) = "exit %status%" ;
+        STATUS_0 on $(run-target) = "%status% EQU 0 (" ;
+        STATUS_NOT_0 on $(run-target) = "%status% NEQ 0 (" ;
+        VERBOSE on $(run-target) = "%verbose% EQU 0 (" ;
+        ENDIF on $(run-target) = ")" ;
+    }
+    else
+    {
+        STATUS on $(run-target) = "$status" ;
+        SET_STATUS on $(run-target) = "status=$?" ;
+        RUN_OUTPUT_NL on $(run-target) = "echo" ;
+        STATUS_0 on $(run-target) = "test $status -eq 0 ; then" ;
+        STATUS_NOT_0 on $(run-target) = "test $status -ne 0 ; then" ;
+        VERBOSE on $(run-target) = "test $verbose -eq 0 ; then" ;
+        ENDIF on $(run-target) = "fi" ;
     }
     
     capture-run-output $(run-target) : $(executable) ;
@@ -412,28 +408,25 @@ else
     CATENATE = cat ;
 }
 
-RUN_OUTPUT_HEADER = "echo ====== BEGIN OUTPUT ======" ;
-RUN_OUTPUT_FOOTER = "echo ====== END OUTPUT ======" ;
-
 actions execute-test bind INPUT_FILES output-file
 {
     $(PATH_SETUP:E=)$(>) $(ARGS) "$(INPUT_FILES)" > $(output-file) 2>&1
     $(SET_STATUS)
     $(RUN_OUTPUT_NL) >> $(output-file)
-    $(RUN_OUTPUT_STATUS) >> $(output-file)
-    $(IF_STATUS_0)
+    echo EXIT STATUS: $(STATUS) >> $(output-file)
+    if $(STATUS_0)
         $(CP) $(output-file) $(<)
-    $(IF_END)
-    $(SET_VERBOSE_OPTION)
-    $(IF_STATUS_NOT_0)
-        $(SET_VERBOSE)
-    $(IF_END)
-    $(IF_VERBOSE)
-        $(RUN_OUTPUT_HEADER)
+    $(ENDIF)
+    $(SHELL_SET)verbose=$(VERBOSE_TEST)
+    if $(STATUS_NOT_0)
+        $(SHELL_SET)verbose=0
+    $(ENDIF)
+    if $(VERBOSE)
+        echo ====== BEGIN OUTPUT ======
         $(CATENATE) $(output-file)
-        $(RUN_OUTPUT_FOOTER)
-    $(IF_END)
-    $(EXIT_STATUS)
+        echo ====== END OUTPUT ======
+    $(ENDIF)
+    exit $(STATUS)
 }
 
 
