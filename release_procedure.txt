@@ -3,6 +3,9 @@
 
 [ Must be done from a Unix shell ]
 
+0. Make sure that "bjam --version" output is correct. Check the download
+   locations in "index_v2.html".
+  
 1. Run
 
    cvs -d :ext:<your_user_name>@cvs.boost.sourceforge.net:/cvsroot/boost co -P -d  boost-build boost/tools/build
