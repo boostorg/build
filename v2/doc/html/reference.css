@@ -1,0 +1,76 @@
+th
+{
+   font-weight:      bold;
+   text-align:       center;
+}
+
+.title
+{
+   font-weight:   bold;
+   font-size:     2pc;
+   font-family:   Times New Roman;
+   margin-bottom: 1pc;
+   text-align:    center;
+}
+
+.toc
+{
+   margin-left:   5%;
+   margin-right:  5%;
+   margin-bottom: 0pc;
+   width:         50%;
+}
+
+.programlisting
+{
+   margin-left: 3pc;
+   width:       50%;
+}
+
+.computeroutput
+{
+   font-family: Lucida Console;
+   font-size:   80%;
+}
+
+.table
+{
+   text-align:    center;
+   margin-bottom: 1pc;
+}
+
+@media screen
+{
+   a{ color: blue; }
+
+   th, .title
+   {
+      background-color: lightskyblue;
+   }
+
+   .section-title
+   {
+      background-color: #EEE;
+   }
+
+   .programlisting
+   {
+      background-color: #EED;
+      border:           0.1em ridge cyan;
+      padding:          1pc;
+   }
+
+   .toc
+   {
+      border:           0.2em ridge lightcoral;
+      padding:          0.5pc;
+      background-color: #DDD;
+   }
+}
+
+@media print
+{
+   a{ color: black; }
+}
+
+
