@@ -137,7 +137,9 @@ rule virtual-target ( name  # Name of this target -- specifies the name of
 class virtual-target ;
 
 
-# Target which correspond to a file.
+# Target which correspond to a file. The exact mapping for file
+# is not yet specified in this class. (TODO: Actually, the class name
+# could be better...)
 #
 # May be a source file (when no action is specified), or
 # derived file (otherwise).
@@ -146,19 +148,7 @@ class virtual-target ;
 # properties of action (for derived files), and the value
 # passed to 'extra-grist'.
 #
-# The file path is determined as
-#    - value passed to the 'set-path' method, if any
-#    - for derived files, project's build dir, joined with components
-#      that describe action's properties. If the free properties
-#      are not equal to the project's reference properties
-#      an element with name of main target is added.
-#    - for source files, project's source dir
-#
-# The file suffix is
-#     - the value passed to the 'suffix' method, if any, or
-#     - the suffix which correspond to the target's type.
-#
-rule file-target ( name  
+rule abstract-file-target ( name  
                   : type ?  # Optional type for this target
                   : project 
     )
@@ -258,43 +248,7 @@ rule file-target ( name
             common.Clean clean : $(name) ;            
         }
     }
-    
-    rule actualize-location ( target )
-    {
-        compute-extra-path ;
-        if $(self.path)
-        {
-            LOCATE on $(target) = $(self.path) ;
-            # Make sure the path exists. Do this only
-            # for derived files.
-            if $(self.action)
-            {                
-                DEPENDS $(target) : $(self.path) ;            
-                common.MkDir $(self.path) ;            
-            }            
-        }
-        else if $(self.action)
-        {
-            # This is a derived file.
-            local path = [ path.native [ path.join 
-                                        [ project.attribute $(self.project) location ] 
-                                        [ $(self.action).path ] 
-                                         $(self.extra-path)                           
-                                       ] ] ;
-            LOCATE on $(target) = $(path) ;
-            
-            # Make sure the path exists.
-            DEPENDS $(target) : $(path) ;            
-            common.MkDir $(path) ;
-        }
-        else
-        {
-            # This is a source file.
-            SEARCH on $(target) = 
-              [ path.native [ project.attribute $(self.project) source-location ] ] ;
-        }                           
-    }
-                
+                    
     rule str ( )
     {        
         local action = [ action ] ;
@@ -377,6 +331,92 @@ rule file-target ( name
         return $(self.actual-name) ;
     }
     
+}
+class abstract-file-target : virtual-target ;
+
+# File target with explicitly known location.
+#
+# The file path is determined as
+#    - value passed to the 'set-path' method, if any
+#    - for derived files, project's build dir, joined with components
+#      that describe action's properties. If the free properties
+#      are not equal to the project's reference properties
+#      an element with name of main target is added.
+#    - for source files, project's source dir
+#
+# The file suffix is
+#     - the value passed to the 'suffix' method, if any, or
+#     - the suffix which correspond to the target's type.
+#
+rule file-target (
+                    name  
+                  : type ?  # Optional type for this target
+                  : project 
+    )
+{
+    abstract-file-target.__init__ $(name) : $(type) : $(project) ;
+
+    rule actualize-location ( target )
+    {
+        compute-extra-path ;
+        if $(self.path)
+        {
+            LOCATE on $(target) = $(self.path) ;
+            # Make sure the path exists. Do this only
+            # for derived files.
+            if $(self.action)
+            {                
+                DEPENDS $(target) : $(self.path) ;            
+                common.MkDir $(self.path) ;            
+            }            
+        }
+        else if $(self.action)
+        {
+            # This is a derived file.
+            local path = [ path.native [ path.join 
+                                        [ project.attribute $(self.project) location ] 
+                                        [ $(self.action).path ] 
+                                         $(self.extra-path)                           
+                                       ] ] ;
+            LOCATE on $(target) = $(path) ;
+            
+            # Make sure the path exists.
+            DEPENDS $(target) : $(path) ;            
+            common.MkDir $(path) ;
+        }
+        else
+        {
+            # This is a source file.
+            SEARCH on $(target) = 
+              [ path.native [ project.attribute $(self.project) source-location ] ] ;
+        }                           
+    }
+    
+     rule compute-extra-path ( )
+     {
+         if $(self.action) 
+         {
+             local properties = [ property.take free : [ property.remove incidental : 
+                 [ $(self.action).properties  ] ] ] ;
+             
+             local main-target = [ $(self.dg).main-target ] ;
+             local project = [ $(main-target).project ] ;
+             local plocation = [ project.attribute $(project) location ] ;
+             local ptarget = [ project.target $(plocation) ] ;
+             local ref = [ $(ptarget).reference-properties [ $(self.dg).properties ] ] ;
+             
+             properties = [ sequence.insertion-sort 
+                            [ sequence.unique $(properties) ] ] ;
+             ref = [ sequence.insertion-sort
+                     [ sequence.unique $(ref) ] ] ;
+             
+             if $(properties) != $(ref)
+             {
+                 self.extra-path = [ sequence.join main-target- [ $(main-target).name ] ] ;
+             }
+         }
+     }
+     
     # Returns the directory for this target
     # ### This partly DUPLICATES functionality of actualize-location
     # above. Seems like subvariant-dg.all-target-paths is the only method 
@@ -398,30 +438,13 @@ rule file-target ( name
                 
             return [ path.native $(path) ] ;
         }        
-     }    
-     
-     rule compute-extra-path ( )
-     {
-         if $(self.action) 
-         {
-             local properties = [ property.take free : [ property.remove incidental : 
-                 [ $(self.action).properties  ] ] ] ;
-             
-             local main-target = [ $(self.dg).main-target ] ;
-             local project = [ $(main-target).project ] ;
-             local plocation = [ project.attribute $(project) location ] ;
-             local ptarget = [ project.target $(plocation) ] ;
-             local ref = [ $(ptarget).reference-properties [ $(self.dg).properties ] ] ;
-             
-             if $(properties) != $(ref)
-             {
-                 self.extra-path = [ sequence.join main-target- [ $(main-target).name ] ] ;
-             }
-         }
-     }
-     
+     }                   
+        
 }
-class file-target : virtual-target ;
+
+class file-target : abstract-file-target ;
+    
+
 
 # Returns the binding for the given actual target.
 # CONSIDER: not sure this rule belongs here.
@@ -479,34 +502,47 @@ rule action ( targets + : sources * : action-name : properties * )
 
             local properties = [ adjust-properties [ properties ] ] ;
             
+            
             local actual-targets ;
             for local i in [ targets ]
             {
                 actual-targets += [ $(i).actualize ] ;
             }
+                 
+            actualize-sources [ sources ] ;
+            
+            DEPENDS $(actual-targets) : $(self.actual-sources) $(self.dependency-only-sources) ;
 
-            local actual-sources ;
-            for local i in [ sources ]
-            {                
-                local scanner ;
-                if [ $(i).type ]
-                {                    
-                    scanner = 
-                      [ type.get-scanner [ $(i).type ] : $(properties) ] ;
-                }                
-                actual-sources += [ $(i).actualize $(scanner) ] ;
-             }
- 
-             DEPENDS $(actual-targets) : $(actual-sources) ;            
-
-             toolset.set-target-variables $(self.action-name) $(actual-targets[0]) :
-               $(properties) ;
+            toolset.set-target-variables $(self.action-name) $(actual-targets[0]) :
+              $(properties) ;
              
             $(self.action-name)
-              $(actual-targets) : $(actual-sources) : $(properties) ;
+              $(actual-targets) : $(self.actual-sources) : $(properties) ;
         }        
     }    
 
+    # Creates actual jam targets for sources. Initialized two member
+    # variables:.
+    # 'self.actual-sources' -- sources which are passed to updating action
+    # 'self.dependency-only-sources' -- sources which are made dependencies, but
+    # are not used otherwise.
+    #
+    # New values will be *appended* to the variables. They may be non-empty,
+    # if caller wants it.
+    rule actualize-sources ( sources * )
+    {                    
+        for local i in $(sources)
+        {                
+            local scanner ;
+            if [ $(i).type ]
+            {                    
+                scanner = 
+                  [ type.get-scanner [ $(i).type ] : $(properties) ] ;
+            }                
+            self.actual-sources += [ $(i).actualize $(scanner) ] ;
+        }        
+    }
+    
     rule path ( )
     {
         local subvariant = [ property.remove free incidental : $(self.properties) ] ;

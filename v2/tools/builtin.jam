@@ -21,7 +21,10 @@ import errors : error ;
 import symlink ;
 
 feature toolset : : implicit propagated link-incompatible symmetric ;
-feature shared : false true : propagated ;
+feature link : shared static : propagated ;
+feature link-runtime : shared static : propagated ;
+
+
 feature optimization : off on : propagated ;
 feature threading : single multi : link-incompatible propagated ;
 feature rtti : on off : link-incompatible propagated ;
@@ -33,9 +36,13 @@ feature version : : free ;
 
 feature dependency : : free dependency ;
 feature library : : free dependency ;
-feature find-library : : free ;
+feature find-shared-library : : free ;
+feature find-static-library : : free ;
 feature library-path : : free path ;
 feature library-file : : free path ;
+
+feature name : : free ;
+feature search : : free path ;
 
 feature variant : : implicit composite propagated symmetric ;
 
@@ -121,6 +128,45 @@ IMPORT $(__name__) : variant : : variant ;
 variant debug : <optimization>off <debug-symbols>on ;
 variant release : <optimization>on <debug-symbols>off ;
 
+rule searched-lib-target ( name     
+                  : project 
+                  : shared ?                                
+                  : real-name ?
+                  : search *                 
+    )
+{
+    abstract-file-target.__init__ $(name) : SEARCHED_LIB : $(project) ;
+    
+    self.shared = $(shared) ;
+    self.real-name = $(real-name) ;
+    self.real-name ?= $(name) ;
+    self.search = $(search) ;
+    
+    rule shared ( )
+    {
+        return $(self.shared) ;
+    }
+    
+    rule real-name ( ) 
+    {
+        return $(self.real-name) ;
+    }
+    
+    rule search ( )
+    {
+        return $(self.search) ;
+    }
+        
+    rule actualize-location ( target )
+    {
+        NOTFILE $(target) ;
+    }    
+}    
+
+
+class searched-lib-target : abstract-file-target ;
+
+
 type.register LIB : : : main ;
 
 # register the given type on the specified OSes, or on remaining OSes
@@ -145,6 +191,8 @@ declare-type : STATIC_LIB : a : LIB : main ;
 
 declare-type NT : SHARED_LIB : dll : LIB : main ;
 declare-type : SHARED_LIB : so : LIB : main ;
+
+declare-type : SEARCHED_LIB : : LIB : main ;
 
 declare-type NT CYGWIN : EXE : exe : : main ;
 declare-type : EXE : : : main ;
@@ -238,11 +286,15 @@ rule lib-generator ( )
 {
     composing-generator.__init__ lib-generator : unknown-source-type : LIB : <main-target-type>LIB ;
     
-    rule run ( project name ? : properties * : sources + )
+    rule run ( project name ? : properties * : sources * )
     {
         # Determine the needed target type
         local actual-type ;
-        if <shared>true in $(properties)
+        if <search> in $(properties:G) || <name> in $(properties:G)
+        {
+            actual-type = SEARCHED_LIB ;
+        }
+        else if <link>shared in $(properties)
         {
             actual-type = SHARED_LIB ;
         }
@@ -260,6 +312,30 @@ rule lib-generator ( )
 class lib-generator : composing-generator ;
 
 generators.register [ new lib-generator ] ;
+
+rule searched-lib-generator ( )
+{
+    generator.__init__ searched-lib-generator : : SEARCHED_LIB ;    
+
+    rule run ( project name ? : properties * : sources * )
+    {
+        local shared ;
+        if <link>shared in $(properties)
+        {
+            shared = true ;
+        }        
+        return [ new searched-lib-target $(name) : $(project) : $(shared)
+                    : [ feature.get-values <name> : $(properties) ] 
+                    : [ feature.get-values <search> : $(properties) ] 
+               ] ;
+    }
+}
+
+class searched-lib-generator : generator ;
+
+generators.register [ new searched-lib-generator ] ;
+
+
 
 rule compile-action ( targets + : sources * : action-name : properties * )
 {
@@ -304,6 +380,92 @@ rule register-c-compiler ( id : source-types + : target-types + :
 # FIXME: this is ugly, should find a better way (we'd want client code to
 # register all generators as "generator.some-rule", not with "some-module.some-rule".)
 IMPORT $(__name__) : register-c-compiler : : generators.register-c-compiler ;
+
+rule link-action ( targets + : sources * : action-name : properties * )
+{
+    action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
+
+    rule adjust-properties ( properties * )
+    {
+        local extra ;
+        for local s in $(self.sources)
+        {
+            if [ class.is-a $(s) : searched-lib-target ]
+            {
+                local name = [ $(s).real-name ] ;
+                if [ $(s).shared ] 
+                {                    
+                    extra += <find-shared-library>$(name) ;
+                }
+                else
+                {
+                    extra += <find-static-library>$(name) ;
+                }         
+                local search = [ $(s).search ] ;
+                extra += <library-path>$(search) ;
+            } 
+            # We also move orginary libs form sources to
+            # "library" property. This allows us to
+            # easily repeat all the list of libs on
+            # command line, when it's needed.
+            else if [ type.is-derived [ $(s).type ] LIB ] 
+            {
+                extra += <library>$(s) ;
+            }            
+        }        
+        ECHO "EXtra is " $(extra) ;
+        return $(properties) $(extra) ;
+    }
+    
+    
+    rule actualize-sources ( sources * )
+    {
+        local real-sources ; 
+        for local s in $(sources) 
+        {
+            if ! [ type.is-derived [ $(s).type ] LIB ] 
+            {
+                real-sources += $(s) ;
+            }   
+            else
+            {
+                self.dependency-only-sources += [ $(s).actualize ] ;
+            }            
+        }
+        
+        action.actualize-sources $(real-sources) ;
+    }    
+} 
+
+class link-action : action ;
+
+
+rule linking-generator ( id : source-types + : target-types + : 
+                         requirements * )
+{
+    composing-generator.__init__ $(id) : $(source-types) : $(target-types) :
+                       $(requirements) ;
+
+    rule action-class ( )
+    {
+        return link-action ;
+    }
+}                             
+
+class linking-generator : composing-generator ;
+
+
+rule register-linker ( id : source-types + : target-types + :
+                            requirements * )
+{
+    local g = [ new linking-generator $(id) : $(source-types) 
+                : $(target-types) : $(requirements) ] ;
+    generators.register $(g) ;
+}
+
+IMPORT $(__name__) : register-linker : : generators.register-linker ;
+
+
 
 
 

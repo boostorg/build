@@ -14,6 +14,6 @@ t.write("a.cpp", "")
 t.write("a.h", "")
 
 t.run_build_system()
-t.expect_addition(["dist/a.a", "dist/a.h"])
+t.expect_addition(["dist/a.so", "dist/a.h"])
 
 t.cleanup()
