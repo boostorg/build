@@ -425,8 +425,11 @@ subinclude foo/bar/baz <font color="#7F7F7F">foo/bar/...</font> ;
 
   <p>The <b>build system installation directory</b> is a directory containing
   Jam files describing compilers and build variants. The installation
-  directory can be specified implicitly by setting the variable
-  <tt>BOOST_BUILD_PATH</tt>. This lists a set of directories to search for
+  directory can be specified in a file called <tt>boost-build.jam</tt> in the
+  project root directory. This file should contain a line 
+  <tt>boost-build $path-to-installation-dir</tt>. If no such file is
+  available the environment variable 
+  <tt>BOOST_BUILD_PATH</tt> will be used. This lists a set of directories to search for
   the files comprising the build system. If the installation directory is not
   specified, it is the same as the project root, and
   <tt>BOOST_BUILD_PATH</tt> is set to include that directory.</p>
