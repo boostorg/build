@@ -4,14 +4,13 @@
 <html>
   <head>
     <meta name="generator" content=
-    "HTML Tidy for Windows (vers 1st August 2002), see www.w3.org">
+    "HTML Tidy for Linux/x86 (vers 1st March 2002), see www.w3.org">
     <!--tidy options: -i -wrap 78 -->
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
     <link rel="stylesheet" type="text/css" href="../../boost.css">
 
     <title>Boost.Build v2 user manual</title>
-
-    <style type="text/css">
+<style type="text/css">
         hr { color: black }
         p.revision { text-align: right; font-style: italic }
         pre.code { margin-left: 2em } 
@@ -21,12 +20,13 @@
         br.clear { clear: left }
         div.alert { color: red }
         table { align: center; border: thin; }
-        </style>
+        
+</style>
   </head>
   <!-- Things yet to document:
-                  - build request, build request expansion and directly requested targets
-                  - conditional properties
-                -->
+                    - build request, build request expansion and directly requested targets
+                    - conditional properties
+                  -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -739,6 +739,51 @@ exe hello : hello.cpp : &lt;toolset&gt;yfc:&lt;cxxflags&gt;-disable-pointless-wa
 </pre>
     In this case, running bjam anywhere in the project tree will
     automatically find the build system. 
+
+    <p>The default "bootstrap.jam", after loading some standard definitions,
+    loads two files, which can be provided/customised by user:
+    "site-config.jam" and "user-config.jam".</p>
+
+    <p>Locations where those files a search are summarized below:</p>
+
+    <table align="center" summary="search paths for configuration files">
+      <caption>
+        search paths for configuration files
+      </caption>
+
+      <tr>
+        <td>
+        </td>
+
+        <td>site-config.jam</td>
+
+        <td>user-config.jam</td>
+      </tr>
+
+      <tr>
+        <td>Linux</td>
+
+        <td>/etc<br>
+        $HOME<br>
+        $BOOST_BUILD_PATH</td>
+
+        <td>$HOME<br>
+        $BOOST_BUILD_PATH</td>
+      </tr>
+
+      <tr>
+        <td>Windows</td>
+
+        <td>$SystemRoot<br>
+        $HOME<br>
+        $BOOST_BUILD_PATH</td>
+
+        <td>$HOME<br>
+        $BOOST_BUILD_PATH</td>
+      </tr>
+    </table>
+    Boost.Build comes with default versions of those files, which can serve
+    as templates for customized versions. 
 
     <h3><a name="command_line">Command line</a></h3>
 
