@@ -1,0 +1,41 @@
+
+import type ;
+import generators ;
+import print ;
+import virtual-target ;
+import class : class new ;
+import modules ;
+
+
+type.register X : x ;
+
+rule test-target-class ( name : project )
+{
+    basic-target.__init__ $(name) : $(project) ;
+    
+    rule construct ( source-targets * : property-set )
+    {
+        if [ modules.peek : GENERATE_ONLY_UNUSABLE ] 
+        {
+            return [ virtual-target.from-file b.x : $(self.project) ] 
+              ;             
+        }
+        else
+        {            
+            return [ virtual-target.from-file b.x : $(self.project) ] 
+                   [ virtual-target.from-file b.cpp : $(self.project) ] 
+              ; 
+        }        
+    }
+}
+class test-target-class : basic-target ;
+
+rule make-b-main-target
+{
+    local project = [ CALLER_MODULE ] ;    
+    
+    targets.main-target-alternative 
+      [ new test-target-class b : $(project) ] ;
+}
+
+IMPORT $(__name__) : make-b-main-target : : make-b-main-target ;
