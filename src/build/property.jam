@@ -145,7 +145,7 @@ local rule path-order ( feature-space x y )
             y = [ $(feature-space).expand-subfeatures $(y) ] ;
         }
         
-        if $(x[0]) < $(y[0])
+        if $(x[1]) < $(y[1])
         {
             return true ;
         }
@@ -441,6 +441,13 @@ local rule __test__ ( )
     validate gcc gcc-3.0.1 : $(test-space) ;
     validate <toolset>gcc  <toolset>gcc-3.0.1 : $(test-space) ;
     
+    assert.true path-order $(test-space) debug <define>foo ;
+    assert.false path-order $(test-space) <define>foo debug ;
+    assert.true path-order $(test-space) gcc debug ;
+    assert.false path-order $(test-space) debug gcc ;
+    assert.true path-order $(test-space) <optimization>on <rtti>on ;
+    assert.false path-order $(test-space) <rtti>on <optimization>on ;
+      
     assert.result <toolset>gcc <rtti>off <define>FOO
         : refine <toolset>gcc <rtti>off
         : <define>FOO
