@@ -6,6 +6,7 @@
 import feature ;
 import utility : ungrist ;
 import sequence : unique ;
+import errors : error ;
 
 # Refines 'properties' by overriding any elements for which a different
 # value is specified in 'requirements'. If the resulting property set
@@ -132,15 +133,52 @@ rule as-path ( properties * : feature-space ? )
     return $(components:J=/) ;
 }
 
+# Exit with error if property is not valid.
+rule validate ( property : feature-space ?  )
+{
+    feature-space ?= feature ;
+    local msg ;
+    if $(property:G)
+    {
+        local feature = [ ungrist $(property:G) ] ; # Ungrist for better error messages
+        local value = $(property:G=) ;
+
+        if ! [ $(feature-space).valid $(feature) ]
+        {
+            msg = "unknown feature '$(feature)'" ;
+        }
+        else if $(value) && ! $(value) in [ $(feature-space).values $(feature) ]
+                && ! free in [ $(feature-space).attributes $(feature) ] 
+        {
+            msg = "value '"$(value:J=" ")"' is not valid for feature'"$(feature)' ;
+        } 
+        else if ! $(value)
+        {
+            msg = "No value specified for feature '$(feature)'" ; 
+        }
+    }
+    else
+    {
+        if ! [ $(feature-space).is-implicit-value $(property) ]
+        {
+            msg = '$(property:J=" ")' "is not a value of implicit feature" ;        
+        }
+    }
+    if $(msg) 
+    {
+        error "Invalid property "'$(property:J=" ")'": "$(msg:J=" "). ;
+    }
+}
+
 local rule __test__ ( )
 {
     import class : new ;
+    import errors : try catch ;
 
     local test-space = [ new feature-space ] ;
 
     module $(test-space)
     {
-        import errors : try catch ;
         import assert ;
 
         feature toolset : gcc : implicit ;
@@ -186,5 +224,23 @@ local rule __test__ ( )
             : $(test-space) ] ;
     assert.equal $(r[1]) : "@error" ;
 
+    try ;
+        validate <feature>value : $(test-space) ;
+    catch "Invalid property '<feature>value': unknown feature 'feature'." ;
+
+    try ;
+        validate <rtti>default : $(test-space) ;
+    catch "Invalid property '<rtti>default': value 'default' is not valid for feature'rtti'." ;
+    
+    validate <define>WHATEVER : $(test-space) ;
+
+    try ;
+        validate <rtti> : $(test-space) ;
+    catch "Invalid property '<rtti>': No value specified for feature 'rtti'." ;
+
+    try ;
+        validate value : $(test-space) ;
+    catch "Invalid property 'value': 'value' is not a value of implicit feature." ;
+           
 }
 
