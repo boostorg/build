@@ -348,30 +348,14 @@ rule c-scanner ( includes * )
        
         angle = $(angle:G=$(g)) ;
         quoted = $(quoted:G=$(g2)) ;
-
-        for local i in $(angle)
-        {            
-            local i2 = [ SEARCH_FOR_TARGET $(i) : $(self.includes:G=) ] ;
-            INCLUDES $(target) : $(i2) ;
-            if $(i2) = $(i)
-            {
-                NOCARE $(i) ;
-                SEARCH on $(i) = $(self.includes:G=) ;
-            }
-        }
         
-        for local i in $(quoted)
-        {
-            local path = $(b) $(self.includes:G=) ;
-            local i2 = [ SEARCH_FOR_TARGET $(i) : $(path) ] ;
-            INCLUDES $(target) : $(i2) ;
-            if $(i2) = $(i)
-            {
-                NOCARE $(i) ;
-                SEARCH on $(i) = $(path) ;
-            }
-        }
+        local all = $(angle) $(quoted) ;
 
+        INCLUDES $(target) : $(all) ;
+        NOCARE $(all) ;
+        SEARCH on $(angle) = $(self.includes:G=) ;
+        SEARCH on $(quoted) = $(b) $(self.includes:G=) ;
+        
         BINDRULE on $(angle) $(quoted) = virtual-target.remember-binding ;
 
         # Just propagate current scanner to includes, in a hope
