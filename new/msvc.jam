@@ -73,7 +73,8 @@ rule init ( version ? : path ? : vendor ? : setup ? compiler ? linker ? )
         }
         
         compiler = $(compiler) ;
-        if ! [ GLOB $(path)\\bin $(env-PATH) : $(compiler:E=CL).exe ]
+
+        if ! [ GLOB [ path.native [ path.join $(path) "bin" ] ] $(env-PATH) : $(compiler:E=CL).EXE ]
         {
             error toolset msvc $(vendor) $(version) initialization: :
               couldn't find compiler \"$(compiler:E=CL)\" in PATH or "known default"
@@ -183,14 +184,14 @@ flags builtin.response-file LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
 # don't want it.
 .implib = "/INCREMENTAL:NO /IMPLIB:" ;
 
-actions link
-{
-    $(.LD) $(LINKFLAGS) /out:"$(<[1])" $(.implib)"$(<[2])" /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @"$(>)"
-}
-
 # Declare action for creating static libraries
 if [ os.name ] in NT
-{
+{    
+    actions link
+    {
+        $(.LD) $(LINKFLAGS) /out:"$(<[1])" $(.implib)"$(<[2])" /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @"$(>)"
+    }
+        
     actions archive 
     {
         if exist "$(<)" set _$(<:B)_="$(<)"
@@ -199,10 +200,24 @@ if [ os.name ] in NT
 }
 else # CYGWIN
 {
-    actions archive 
+    # this only works for Bourne-compatible shells
+    actions link
     {
-        # this only works for Bourne-compatible shells
-        if test -f "$(<)" ; then set _$(<:B)_="$(<)" ; fi
-        $(.LD) /lib /out:"$(<)" $_$(<:B)_ @"$(>)"
+        _bbv2_in_=`cygpath -d $(>)`
+        _bbv2_out1_=`cygpath -d $(<[1]:D)`\\$(<[1]:D=)
+        if test "x$(<[2]:E=)x" != "xx" ; then
+            _bbv2_out2_="$(.implib)"`cygpath -d $(<[2]:E=.:D)`
+        fi
+        $(.LD) $(LINKFLAGS) /out:$_bbv2_out1_ ${_bbv2_out2_}\\$(<[2]:D=) /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @$_bbv2_in_
+    }
+
+    actions archive
+    {
+        _bbv2_in_=`cygpath -d $(>)`
+        _bbv2_out_=`cygpath -d $(<:D)`\\$(<:D=)
+        if test -f $_bbv2_out_ ; then
+            _$(<:B)_=$_bbv2_out_
+        fi
+        $(.LD) /lib /out:$_bbv2_out_ $_$(<:B)_ @$_bbv2_in_
     }
 }
