@@ -3,15 +3,15 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
+import regex ;
 rule chars ( string )
 {
     local result ;
     while $(string)
     {
-        local s = [ SUBST $(string) (.?)(.?)(.?)(.?)(.?)(.?)(.?)(.?)(.*)
-                        $9 $1 $2 $3 $4 $5 $6 $7 $8 ] ;
-        string = $(s[1]) ;
-        result += $(s[2-]) ;
+        local s = [ MATCH (.?)(.?)(.?)(.?)(.?)(.?)(.?)(.?)(.*) : $(string) ] ;
+        string = $(s[9]) ;
+        result += $(s[1-8]) ;
     }
     
     # trim off empty strings
