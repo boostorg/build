@@ -8,6 +8,8 @@
 # Reset the toolset.
 BOOST_JAM_TOOLSET=
 
+# Run a command, and echo before doing so. Also checks the exit
+# status and quits if there was an error.
 function echo_run
 {
     echo "$@"
@@ -17,6 +19,8 @@ function echo_run
         exit $r
     fi
 }
+
+# Print an error message, and exit with a status of 1.
 function error_exit
 {
     echo "###"
@@ -25,30 +29,38 @@ function error_exit
     echo "### You can specify the toolset as the argument, i.e.:"
     echo "###     ./build.sh gcc"
     echo "###"
-    echo "### Toolsets supported by this script are: como, darwin, gcc, intel-linux, kcc, vacpp"
+    echo "### Toolsets supported by this script are: como, darwin, gcc, intel-linux, kcc, kylix, mipspro, sunpro, tru64cxx, vacpp"
     echo "###"
     exit 1
 }
+
+# Check that a command is in the PATH.
 function test_path
 {
     hash $1 2>/dev/null
 }
+
+# Check that the OS name, as returned by "uname", is as given.
 function test_uname
 {
     if test_path uname; then
         test `uname` = $*
     fi
 }
+
 # Try and guess the toolset to bootstrap the build with...
 function Guess_Toolset
 {
     if test_uname Darwin ; then BOOST_JAM_TOOLSET=darwin
     elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
     elif test_path icc ; then BOOST_JAM_TOOLSET=intel-linux
-    elif test -e /opt/intel/compiler50/ia32/bin/iccvars.sh ; then BOOST_JAM_TOOLSET=intel-linux
+    elif test -e /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
+        BOOST_JAM_TOOLSET=intel-linux
+        BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
     elif test_path xlc ; then BOOST_JAM_TOOLSET=vacpp
     elif test_path como ; then BOOST_JAM_TOOLSET=como
     elif test_path KCC ; then BOOST_JAM_TOOLSET=kcc
+    elif test_path bc++ ; then BOOST_JAM_TOOLSET=kylix
     fi
     if test "$BOOST_JAM_TOOLSET" = "" ; then
         error_exit "Could not find a suitable toolset."
@@ -78,7 +90,10 @@ case $BOOST_JAM_TOOLSET in
     
     intel-linux)
     if test -e /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
-        . /opt/intel/compiler50/ia32/bin/iccvars.sh
+        BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
+    fi
+    if test -e ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh ; then
+        . ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh
     fi
     BOOST_JAM_CC=icc
     BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
@@ -87,8 +102,8 @@ case $BOOST_JAM_TOOLSET in
     
     vacpp)
     BOOST_JAM_CC=xlc
-    BOOST_JAM_OPT_JAM="-qstrict -o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-qstrict -o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
+    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
+    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     como)
@@ -103,6 +118,30 @@ case $BOOST_JAM_TOOLSET in
     BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
+    kylix)
+    BOOST_JAM_CC=bc++
+    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
+    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
+    ;;
+    
+    mipspro)
+    BOOST_JAM_CC=cc
+    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
+    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
+    ;;
+    
+    sunpro)
+    BOOST_JAM_CC=CC
+    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
+    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
+    ;;
+    
+    tru64cxx)
+    BOOST_JAM_CC=cc
+    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
+    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
+    ;;
+   
     *)
     error_exit "Unknown toolset: $BOOST_JAM_TOOLSET"
     ;;
@@ -142,5 +181,5 @@ if test ! -e jambase.c ; then
 fi
 echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_JAM} ${BJAM_SOURCES}
 if test -x "./bootstrap.$BOOST_JAM_TOOLSET/jam0" ; then
-    echo_run ./bootstrap.$BOOST_JAM_TOOLSET/jam0 -f build.jam --toolset=$BOOST_JAM_TOOLSET "$@"
+    echo_run ./bootstrap.$BOOST_JAM_TOOLSET/jam0 -f build.jam --toolset=$BOOST_JAM_TOOLSET "--toolset-root=$BOOST_JAM_TOOLSET_ROOT" "$@"
 fi
