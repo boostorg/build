@@ -183,7 +183,7 @@ rule Cc-action
 
 actions darwin-Cc-action
 {
-    $(.GCC_BIN_DIR)$(.GCC) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -F$(FRAMEWORKS:D) -framework$(_)$(FRAMEWORKS:D=) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.GCC_BIN_DIR)$(.GCC) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -F$(FRAMEWORKS:D) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -195,7 +195,7 @@ rule C++-action
 
 actions darwin-C++-action
 {
-    $(.GCC_BIN_DIR)$(.GXX) -c -ftemplate-depth-120 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -F$(FRAMEWORKS:D) -framework$(_)$(FRAMEWORKS:D=) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(.GCC_BIN_DIR)$(.GXX) -c -ftemplate-depth-120 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -F$(FRAMEWORKS:D) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
