@@ -90,7 +90,8 @@ static int evaluate_if( PARSE *parse, FRAME *frame );
 
 static void backtrace_line( FRAME* frame );
 static void backtrace( FRAME* frame );
-static void frame_info( FRAME* frame, char** file, int* line );
+static void get_source_line( PARSE*, char** file, int* line );
+static void print_source_line( PARSE* );
 
 static LIST *builtin_depends( PARSE *parse, FRAME *frame );
 static LIST *builtin_echo( PARSE *parse, FRAME *frame );
@@ -661,6 +662,8 @@ static void argument_error( char* message, RULE* rule, FRAME* frame, LIST* arg )
     printf( ")\n* called with: ( " );
     lol_print( actual );
     printf( ")\n* %s %s\n", message, arg ? arg->string : "" );
+    print_source_line( rule->procedure );
+    printf( "see definition of rule '%s' being called\n", rule->name );
     backtrace( frame->prev );
     exit(1);
 }
@@ -844,7 +847,9 @@ evaluate_rule(
 
     if ( !l )
     {
+        backtrace_line( frame->prev );
         printf( "warning: rulename %s expands to empty string\n", rulename );
+        backtrace( frame->prev );
         return result;
     }
 
@@ -1445,14 +1450,14 @@ builtin_export(
 }
 
 /*  Retrieve the file and line number that should be indicated for a
- *  given frame in debug output or an error backtrace
+ *  given procedure in debug output or an error backtrace
  */
-static void frame_info( FRAME* frame, char** file, int* line )
+static void get_source_line( PARSE* procedure, char** file, int* line )
 {
-    if ( frame->procedure )
+    if ( procedure )
     {
-        char* f = frame->procedure->file;
-        int l = frame->procedure->line;
+        char* f = procedure->file;
+        int l = procedure->line;
         if ( !strcmp( f, "+" ) )
         {
             f = "jambase.c";
@@ -1468,17 +1473,23 @@ static void frame_info( FRAME* frame, char** file, int* line )
     }
 }
 
-/* Print a single line of error backtrace for the given frame */
-static void backtrace_line( FRAME *frame )
+static void print_source_line( PARSE* p )
 {
     char* file;
     int line;
 
-    frame_info( frame, &file, &line );
+    get_source_line( p, &file, &line );
     if ( line < 0 )
-        printf( "(builtin): in %s\n", frame->rulename );
+        printf( "(builtin):" );
     else
-        printf( "%s:%d: in %s\n", file, line, frame->rulename );
+        printf( "%s:%d:", file, line);
+}
+
+/* Print a single line of error backtrace for the given frame */
+static void backtrace_line( FRAME *frame )
+{
+    print_source_line( frame->procedure );
+    printf( " in %s\n", frame->rulename );
 }
 
 /*  Print the entire backtrace from the given frame to the Jambase
@@ -1505,7 +1516,7 @@ static LIST *builtin_backtrace( PARSE *parse, FRAME *frame )
         char* file;
         int line;
         char buf[32];
-        frame_info( frame, &file, &line );
+        get_source_line( frame->procedure, &file, &line );
         sprintf( buf, "%d", line );
         result = list_new( result, newstr( file ) );
         result = list_new( result, newstr( buf ) );
@@ -1579,11 +1590,8 @@ debug_compile( int which, char *s, FRAME* frame )
         i -= 35;
       }
 
-      frame_info( frame, &file, &line );
-      if ( line >= 0 )
-          printf( "%s:%d:%*.*s ", file, line, i, i, indent );
-      else
-          printf( "(builtin)%*.*s ", i, i, indent );
+      print_source_line( frame->procedure );
+      printf( "%*.*s ", i, i, indent );
     }
 
     if( s )
