@@ -176,7 +176,7 @@ rule log10 ( number )
             }
             else
             {
-                return [ sequence.length $(chars[2-]) ] ;
+                return [ sequence.length $(chars) ] ;
             }
         }
     }
