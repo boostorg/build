@@ -21,6 +21,7 @@ import symlink ;
 import alias ;
 import property ;
 import print ;
+import utility ;
 
 # This feature is used to determine which OS we're on.
 # In future, this may become <target-os> and <host-os>
@@ -298,10 +299,11 @@ rule response-file ( target : sources * : properties * )
         response-file-2 $(target) : $(sources[2-]) ;
     }
     print.output $(target) ;
-    print.text [ on $(target)
-                 return "$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)"
-                        "$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)"
-               ] : : suffix ;
+    print.text [ utility.apply-default-suffix .lib :
+        [ on $(target)
+          return "$(LIBRARY_OPTION)$(FINDLIBS_ST)"
+            "$(LIBRARY_OPTION)$(FINDLIBS_SA)"
+        ] ] ;
 }
 
 actions quietly response-file-1

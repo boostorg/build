@@ -306,7 +306,6 @@ flags msvc LINKFLAGS <main-target-type>LIB/<link>shared : /DLL ;
 
 toolset.flags msvc.link USER_LINKFLAGS <linkflags> ;
 toolset.flags msvc.link LINKPATH <library-path> ;
-toolset.flags msvc.link FINDLIBS <find-static-library> <find-shared-library> ;
 
 flags builtin.response-file LIBRARY_PATH_OPTION <toolset>msvc : /LIBPATH: : unchecked ;
 flags builtin.response-file LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
@@ -353,6 +352,6 @@ else # CYGWIN
 
 actions link
 {
-    $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" $(.implib)"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @"$(>:W)"
+    $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" $(.implib)"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(>:W)"
 }
         
