@@ -38,7 +38,8 @@ class Tester(TestCmd.TestCmd):
     executable to invoke. Set this to "jam" to test Boost.Build v1
     behavior.
     """
-    def __init__(self, arguments="", executable = 'bjam', match = TestCmd.match_exact):
+    def __init__(self, arguments="", executable = 'bjam', match =
+                 TestCmd.match_exact, boost_build_path = None):
 
         self.original_workdir = os.getcwd()
 
@@ -50,12 +51,14 @@ class Tester(TestCmd.TestCmd):
         else:
             raise "Don't know directory where jam is build for this system"
 
+        if boost_build_path is None:
+            boost_build_path = os.path.join(self.original_workdir, "..", "new")
+            
         TestCmd.TestCmd.__init__(
             self
             , program=os.path.join(
                 '..', 'jam_src', jam_build_dir, executable)
-#              + ' -sBOOST_BUILD_PATH='
-#              + os.path.join(self.original_workdir, "..", "new")
+              +  ' -sBOOST_BUILD_PATH=' + boost_build_path
               + ' -d0 --debug --quiet'
               + ' ' + arguments
             , match=match

@@ -103,7 +103,7 @@ if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
     local boost-build-files =
         [ find-to-root [ PWD ] : boost-build.jam ]
         # Another temporary measure so Jam works with Boost.Build v1
-        [ GLOB $(BOOST_ROOT) : boost-build.jam ] ;
+        [ GLOB $(BOOST_BUILD_PATH) $(BOOST_ROOT) : boost-build.jam ] ;
     
     .boost-build-file = $(boost-build-files[1]) ;
     
