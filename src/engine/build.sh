@@ -103,9 +103,9 @@ case "$1" in
     ?*) BOOST_JAM_TOOLSET=$1 ; shift ;;
     *) Guess_Toolset ;;
 esac
-BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
-BOOST_JAM_OPT_YYACC="-o bootstrap.$BOOST_JAM_TOOLSET/yyacc0"
+BOOST_JAM_OPT_JAM="-o bootstrap/jam0"
+BOOST_JAM_OPT_MKJAMBASE="-o bootstrap/mkjambase0"
+BOOST_JAM_OPT_YYACC="-o bootstrap/yyacc0"
 case $BOOST_JAM_TOOLSET in
     gcc)
     BOOST_JAM_CC=gcc
@@ -196,12 +196,12 @@ BJAM_SOURCES="\
  modules/path.c modules/regex.c modules/property-set.c\
  modules/sequence.c modules/order.c"
 
-echo_run rm -rf bootstrap.$BOOST_JAM_TOOLSET
-echo_run mkdir bootstrap.$BOOST_JAM_TOOLSET
+echo_run rm -rf bootstrap
+echo_run mkdir bootstrap
 if test ! -r jamgram.y -o ! -r jamgramtab.h ; then
     echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_YYACC} ${YYACC_SOURCES}
-    if test -x "./bootstrap.$BOOST_JAM_TOOLSET/yyacc0" ; then
-        echo_run ./bootstrap.$BOOST_JAM_TOOLSET/yyacc0 jamgram.y jamgramtab.h jamgram.yy
+    if test -x "./bootstrap/yyacc0" ; then
+        echo_run ./bootstrap/yyacc0 jamgram.y jamgramtab.h jamgram.yy
     fi
 fi
 if test ! -r jamgram.c -o ! -r jamgram.h ; then
@@ -214,12 +214,12 @@ if test ! -r jamgram.c -o ! -r jamgram.h ; then
 fi
 if test ! -r jambase.c ; then
     echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_MKJAMBASE} ${MKJAMBASE_SOURCES}
-    if test -x "./bootstrap.$BOOST_JAM_TOOLSET/mkjambase0" ; then
-        echo_run ./bootstrap.$BOOST_JAM_TOOLSET/mkjambase0 jambase.c Jambase
+    if test -x "./bootstrap/mkjambase0" ; then
+        echo_run ./bootstrap/mkjambase0 jambase.c Jambase
     fi
 fi
 echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_JAM} ${BJAM_SOURCES}
-if test -x "./bootstrap.$BOOST_JAM_TOOLSET/jam0" ; then
-    echo_run ./bootstrap.$BOOST_JAM_TOOLSET/jam0 -f build.jam --toolset=$BOOST_JAM_TOOLSET "--toolset-root=$BOOST_JAM_TOOLSET_ROOT" clean
-    echo_run ./bootstrap.$BOOST_JAM_TOOLSET/jam0 -f build.jam --toolset=$BOOST_JAM_TOOLSET "--toolset-root=$BOOST_JAM_TOOLSET_ROOT" "$@"
+if test -x "./bootstrap/jam0" ; then
+    echo_run ./bootstrap/jam0 -f build.jam --toolset=$BOOST_JAM_TOOLSET "--toolset-root=$BOOST_JAM_TOOLSET_ROOT" clean
+    echo_run ./bootstrap/jam0 -f build.jam --toolset=$BOOST_JAM_TOOLSET "--toolset-root=$BOOST_JAM_TOOLSET_ROOT" "$@"
 fi
