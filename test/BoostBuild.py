@@ -458,10 +458,14 @@ class Tester(TestCmd.TestCmd):
 
     def expect_content(self, name, content, exact=0):
         name = self.adjust_names(name)[0]
-        if exact:
-            actual = self.read(name)
-        else:
-            actual = string.replace(self.read_and_strip(name), "\\", "/")
+        try:
+            if exact:
+                actual = self.read(name)
+            else:
+                actual = string.replace(self.read_and_strip(name), "\\", "/")
+        except IOError:
+            print "Note: could not open file", name
+            self.fail_test(1)
 
         content = string.replace(content, "$toolset", self.toolset)
 
