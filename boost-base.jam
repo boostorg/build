@@ -2266,14 +2266,20 @@ rule stage ( name : sources + : requirements * : local-build * )
     # Don't expose fake targets when suppressing default builds.
     # But honor requirement to expose sources through given <target>.
     #
-    if $(gSUPPRESS_FAKE_TARGETS)
+    if ! $(fake-target)
     {
-        if $(fake-target) { declare-fake-targets $(fake-target) : $(files) ; }
+        declare-fake-targets $(stage-id) : $(destination-files) ;
     }
     else
     {
-        declare-fake-targets $(stage-id) : $(destination-files) ;
-        if $(fake-target) { declare-fake-targets $(fake-target) : $(stage-id) ; }
+        if $(gSUPPRESS_FAKE_TARGETS)
+        {
+            declare-fake-targets $(fake-target) : $(files) ;
+        }
+        else
+        {
+            declare-fake-targets $(fake-target) : $(destination-files) ;
+        }
     }
 
     Clean clean : $(destination-files) ;
