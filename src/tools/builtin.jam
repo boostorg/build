@@ -575,6 +575,30 @@ rule linking-generator ( id composing ? : source-types + : target-types + :
     composing ?= true ;
     generator.__init__ $(id) $(composing) : $(source-types) : $(target-types) :
                        $(requirements) ;
+    
+    rule run ( project name ? : property-set : sources + :  multiple ? )
+    {   
+        local result = [ generator.run $(project) $(name) : $(property-set)
+          : $(sources) : $(multiple) ] ;
+        
+        if $(result)
+        {
+            # Explicitly set dependency on all <library> features.
+
+            local libs = [ feature.get-values <library> : 
+                [ $(property-set).raw ] ] ;
+
+            if $(libs)
+            {
+                for local t in $(result)
+                {
+                    $(t).depends $(libs:G=) ;
+                }
+            }            
+        }
+        return $(result) ;
+    }
+    
 
     rule action-class ( )
     {

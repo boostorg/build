@@ -384,23 +384,7 @@ rule main-target ( name : project )
         else
         {
             local result = [ $(best-alternatives).generate $(property-set) ] ;
-                                       
-            # Mark all targets in result as roots
-            for local t in $(result)
-            {
-                $(t).root true ;
-            }
-        
-            # Process all vtargets that will be created if this main target
-            # is created.
-            local all-targets = 
-              [ sequence.transform virtual-target.traverse : $(result) ] ; 
-            local dg = [ new subvariant-dg $(__name__) : $(property-set) : $(all-targets) ] ;
-            for local v in $(all-targets)          
-            {
-                $(v).dg $(dg) ;            
-            }                
-
+                        
             # Now return virtual targets for the only alternative
             return $(result) ;
         }        
@@ -607,10 +591,20 @@ rule basic-target ( name : project
             {                                
                 local source-targets = [ generate-sources $(rproperties) ] ;                
                 
-                self.generated.$(property-set) = 
+                # Grab usage requirements from source targets
+                local usage-requirements ;
+                for local e in $(source-targets)
+                {
+                    usage-requirements += [ $(e).usage-requirements ] ;
+                }                      
+                rproperties = [ $(rproperties).add 
+                  [ property-set.create $(usage-requirements) ] ] ;
+
+               
+                local result = 
                   [ construct $(source-targets) : $(rproperties) ] ;
                 check-for-unused-sources 
-                  $(self.generated.$(property-set)) : $(source-targets) ;
+                  $(result) : $(source-targets) ;
                 
                 # Apply use requirement of this target to all generated
                 # virtual targets.
@@ -620,10 +614,24 @@ rule basic-target ( name : project
                         : $(self.project) : $(rproperties) ] ;
                 xusage-requirements = [ $(xusage-requirements).raw ] ;
                 
-                for local e in $(self.generated.$(property-set))                    
+                for local e in $(result)                    
                 {
                     $(e).set-usage-requirements $(xusage-requirements) ;
+                    $(e).root true ;
                 }                    
+        
+                # Process all vtargets that will be created if this main target
+                # is created.
+                local all-targets = 
+                  [ sequence.transform virtual-target.traverse : $(result) ] ; 
+                local dg = [ new subvariant-dg $(__name__) : $(property-set) 
+                  : $(rproperties) : $(all-targets) ] ;
+                for local v in $(all-targets)          
+                {
+                    $(v).dg $(dg) ;            
+                }                
+
+                self.generated.$(property-set) = $(result) ;
             } 
             else
             {
