@@ -4,12 +4,13 @@
 <html>
   <head>
     <meta name="generator" content=
-    "HTML Tidy for Linux/x86 (vers 1st March 2002), see www.w3.org">
+    "HTML Tidy for Linux/x86 (vers 1st April 2002), see www.w3.org">
     <!--tidy options: -i -wrap 78 -->
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 
     <title>A testing system for Boost.Build</title>
-<style type="text/css">
+
+    <style type="text/css">
         hr { color: black }
         p.revision { text-align: right; font-style: italic }
         pre.code { margin-left: 2em } 
@@ -19,7 +20,7 @@
         h1 { text-align: right }
         br.clear { clear: left }
         div.attention { color: red }
-</style>
+    </style>
   </head>
 
   <body>
@@ -276,13 +277,10 @@ t.cleanup()
     <tt>pass_test</tt> and <tt>fail_test</tt> are used to explicitly give the
     test outcome.</p>
 
-    <p>Typically, after test termination, the working directory is erased. If
-    is possible to prevent it by setting environmental variables
-    <tt>PRESERVE</tt>, <tt>PRESERVE_PASS</tt> and <tt>PRESERVE_FAIL</tt>.
-    Non-zero value of the first makes the working directory preserved in all
-    cases, while the other variables apply only to specific outcomes. When a
-    directory is preserved, its name will be printed to the standard
-    output.</p>
+    <p>Typically, after test termination, the working directory is erased. To
+    debug a failed test, you should add "--preserve" option when invoking
+    test. On failure, the working directory will be copied to "failed_test"
+    directory in the current dir.</p>
 
     <h2 id="sec-reference">Reference documentation</h2>
 

@@ -219,9 +219,10 @@ class Tester(TestCmd.TestCmd):
                                                         
     def dump_stdio(self):
         print "STDOUT ============"
-        print self.stdout()
+        print self.stdout()    
         print "STDERR ============"
         print self.stderr()
+        print "END ==============="
                     
     #
     #   FIXME: Large portion copied from TestSCons.py, should be moved?
@@ -309,7 +310,18 @@ class Tester(TestCmd.TestCmd):
             
         if condition and dump_stdio:
             self.dump_stdio()
-            
+
+        if '--preserve' in sys.argv:
+            print 
+            print "*** Copying the state of working dir into 'failed_test' ***"
+            print 
+            path = os.path.join(self.original_workdir, "failed_test")
+            if os.path.isdir(path):
+                shutil.rmtree(path, ignore_errors=0)
+            elif os.path.exists(path):
+                raise "The path " + path + " already exists and is not directory";
+            shutil.copytree(self.workdir, path)
+                        
         TestCmd.TestCmd.fail_test(self, condition, *args)
         
     # A number of methods below check expectations with actual difference
