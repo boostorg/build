@@ -3,6 +3,7 @@
 # Test main target alternatives.
 
 from BoostBuild import Tester
+from string import find
 t = Tester()
 
 
@@ -84,10 +85,8 @@ t.write("Jamfile", """
 exe a : a_empty.cpp ;
 exe a : a.cpp ;
 """)
-expected="""error: skipped build of ./a with properties <debug-store>object <debug-symbols>on <exception-handling>on <hardcode-dll-paths>false <inlining>off <link-runtime>shared <link>shared <optimization>off <os>LINUX <profiling>off <rtti>on <runtime-debugging>on <stdlib>native <symlink-location>project-relative <threading>single <toolset>gcc <user-interface>console <variant>debug because no best-matching alternative could be found
-
-"""
-t.run_build_system("--no-error-backtrace", status=1, stdout=expected)
+t.run_build_system("--no-error-backtrace", status=1)
+t.fail_test(find(t.stdout(), "because no best-matching alternative could be found") == -1)
 
 # Another ambiguity test: two matches properties in one alternative are
 # neither better nor worse than a single one in another alternative.
@@ -95,11 +94,9 @@ t.write("Jamfile", """
 exe a : a_empty.cpp : <optimization>off <profiling>off ;
 exe a : a.cpp : <debug-symbols>on ;
 """)
-expected="""error: skipped build of ./a with properties <debug-store>object <debug-symbols>on <exception-handling>on <hardcode-dll-paths>false <inlining>off <link-runtime>shared <link>shared <optimization>off <os>LINUX <profiling>off <rtti>on <runtime-debugging>on <stdlib>native <symlink-location>project-relative <threading>single <toolset>gcc <user-interface>console <variant>debug because no best-matching alternative could be found
 
-"""
-t.run_build_system("--no-error-backtrace", status=1, stdout=expected)
-
+t.run_build_system("--no-error-backtrace", status=1)
+t.fail_test(find(t.stdout(), "because no best-matching alternative could be found") == -1)
 
 
 
