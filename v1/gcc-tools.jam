@@ -121,7 +121,6 @@ else if $(UNIX)
         # There is no gcc/g++, we need to use cc/c++ instead:
         .GCC ?= cc ;
         .GXX ?= c++ ;
-        flags gcc CFLAGS : -Wno-long-double ;
         }
     case *BSD :
         {
