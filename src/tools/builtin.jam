@@ -331,6 +331,16 @@ rule searched-lib-generator ( )
         {
             shared = true ;
         }        
+        # It might seem that, as we ignore all properties, searched-lib-targets
+        # with different properties can be confused. This is not true.
+        # searched-lib-target is pretty special. Although it's actualized into
+        # some real Jam target as all virtual targets, that Jam target is unused.
+        # Instead, the link-action class specially processes such targets, adding
+        # appropriate <find-*-library> properties. So, if one searched lib is build
+        # with two different properties, we'll get two different virtual targets.
+        # The library names will be correctly set, although both virtual targets will
+        # correspond to one Jam target.
+        
         return [ new searched-lib-target $(name) : $(project) : $(shared)
                     : [ feature.get-values <name> : $(properties) ] 
                     : [ feature.get-values <search> : $(properties) ] 
