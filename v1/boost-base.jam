@@ -1375,10 +1375,18 @@ rule is-link-compatible ( feature : value1 : value2 )
 rule find-compatible-subvariant ( main-target : toolset variant : dependent-simple-properties * )
 {
     # calculate the subvariant only of what is requested
-    local BUILD = $(variant)
-        [ intersection
-            [ multiply-property-sets [ select-gristed $(BUILD) ] ] :
-            $(dependent-simple-properties) ] ;
+    # the subvariant requested...
+    local sv-request =
+        [ multiply-property-sets
+            [ get-properties $(BUILD:G) : $(dependent-simple-properties) ] ] ;
+    # the available build requests...
+    local build-requests =
+        [ multiply-property-sets [ select-gristed $(BUILD) ] ] ;
+    # the build requst we want to build...
+    local sv-build =
+        [ split-path [ intersection $(sv-request) : $(build-requests) ] ] ;
+    local BUILD = $(variant) $(sv-build) ;
+    # the full subvariant to build...
     local subvariant = [ expand-target-subvariants $(main-target) : $(variant) : $(toolset) ] ;
 
     local sv-target = ;
