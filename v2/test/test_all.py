@@ -141,4 +141,9 @@ if os.environ.has_key('QTDIR'):
 else:
     print 'skipping railsys test since QTDIR environment variable is unset'
 
+if "--extras" in sys.argv:
+    tests.append("boostbook")
+else:
+    print 'Note: skipping extra tests'
+
 run_tests(critical_tests, tests)
