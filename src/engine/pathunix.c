@@ -16,6 +16,7 @@
 # include "pathsys.h"
 # include "strings.h"
 # include "newstr.h"
+# include "filesys.h"
 
 # ifdef USE_PATHUNIX
 

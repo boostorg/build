@@ -223,7 +223,7 @@ struct _target {
 RULE 	*bindrule( char *rulename, module_t* );
 
 RULE*   import_rule( RULE* source, module_t* m, char* name );
-RULE*   new_rule_body( module_t* m, char* rulename, argument_list* args, PARSE* procedure, int export );
+RULE*   new_rule_body( module_t* m, char* rulename, argument_list* args, PARSE* procedure, int exprt );
 RULE*   new_rule_actions( module_t* m, char* rulename, char* command, LIST* bindlist, int flags );
 TARGET  *bindtarget( const char *targetname );
 TARGET *copytarget( const TARGET *t );

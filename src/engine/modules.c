@@ -17,7 +17,7 @@
 
 static struct hash* module_hash = 0;
 
-static char* new_module_str( module* m, char* suffix )
+static char* new_module_str( module_t* m, char* suffix )
 {
     char* result;
     string s;
@@ -28,13 +28,13 @@ static char* new_module_str( module* m, char* suffix )
     return result;
 }
 
-module* bindmodule( char* name )
+module_t* bindmodule( char* name )
 {
     string s;
-    module m_, *m = &m_;
+    module_t m_, *m = &m_;
 
     if( !module_hash )
-        module_hash = hashinit( sizeof( module ), "modules" );
+        module_hash = hashinit( sizeof( module_t ), "modules" );
 
     string_new( &s );
     if (name)
@@ -58,7 +58,7 @@ module* bindmodule( char* name )
 /*
  * demand_rules() - Get the module's "rules" hash on demand
  */
-struct hash* demand_rules( module* m )
+struct hash* demand_rules( module_t* m )
 {
     if ( !m->rules )
         m->rules = hashinit( sizeof( RULE ), new_module_str( m, "rules" ) );
@@ -73,7 +73,7 @@ static void delete_rule_( void* xrule, void* data )
     rule_free( (RULE*)xrule );
 }
 
-void delete_module( module* m )
+void delete_module( module_t* m )
 {
     /* clear out all the rules */
     if ( m->rules )
@@ -92,20 +92,20 @@ void delete_module( module* m )
     }
 }
 
-module* root_module()
+module_t* root_module()
 {
-    static module* root = 0;
+    static module_t* root = 0;
     if ( !root )
         root = bindmodule(0);
     return root;
 }
 
-void enter_module( module* m )
+void enter_module( module_t* m )
 {
     var_hash_swap( &m->variables );
 }
 
-void exit_module( module* m )
+void exit_module( module_t* m )
 {
     var_hash_swap( &m->variables );
 }

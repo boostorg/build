@@ -27,6 +27,7 @@
 # include "hash.h"
 # include "modules.h"
 # include "strings.h"
+# include "builtins.h"
 
 # include <time.h>
 # include <assert.h>
@@ -390,7 +391,7 @@ compile_module(
     LIST* module_name = parse_evaluate( p->left, frame );
     LIST* result;
 
-    module* outer_module = frame->module;
+    module_t* outer_module = frame->module;
     frame->module = module_name ? bindmodule( module_name->string ) : root_module();
 
     if ( outer_module != frame->module )
@@ -631,7 +632,7 @@ arg_modifier( LIST* formal )
 static void
 type_check( char* type_name, LIST *values, FRAME* caller, RULE* called, LIST* arg_name )
 {
-    static module *typecheck = 0;
+    static module_t *typecheck = 0;
 
     /* if nothing to check, bail now */
     if ( !values || !type_name )
@@ -841,7 +842,7 @@ static void profile_exit(profile_frame* frame)
 
 static void dump_profile_entry(void* p_, void* ignored)
 {
-    profile_info* p = p_;
+    profile_info* p = (profile_info*)p_;
     printf("%10d %10d %10d %s\n", p->cumulative, p->net, p->num_entries, p->name);
 }
 
@@ -866,7 +867,7 @@ evaluate_rule(
     LIST      *result = L0;
     RULE          *rule;
     profile_frame prof[1];
-    module    *prev_module = frame->module;
+    module_t    *prev_module = frame->module;
     
     LIST      *l;
     {
