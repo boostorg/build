@@ -756,9 +756,9 @@ glib codegen ;
            mysterious to me -->
       For example, the
       <code>boostbook</code> module declares a target type
-      <code>BOOSTBOOK_MAIN</code> and a custom generator for that type,
-      which implements pretty complex logic. You can use that as example if
-      your main target rule is non-trivial.
+      <code>BOOSTBOOK_MAIN</code> and a custom generator for that
+      type. You can use that as example if your main target rule is
+      non-trivial.
     </para>
          
   </section>
@@ -770,44 +770,64 @@ glib codegen ;
     <para>If your extensions will be used only on one project, they can be
       placed in a separate <filename>.jam</filename> file that will be
       imported by your <filename>project-root.jam</filename>. If the
-      extensions will be used on many projects, the users will thank you for 
+      extensions will be used on many projects, users will thank you for 
       a finishing touch.
     </para>
 
-    <para>The standard way to use a tool in Boost.Build is the
-      <code>using</code> rule. To make it work, you module should provide an
-      <code>init</code> rule. The rule will be called with the same parameters
-      that were passed to the <code>using</code> rule. The set of allowed
-      parameters is determined by you. For example, you can allow the user to
-      specify paths, tool version, or tool options.
+    <para>The <code>using</code> rule provides a standard mechanism
+    for loading and configuring extensions.  To make it work, your module
+    <!-- "module" hasn't been defined yet.  Furthermore you haven't
+         said anything about where that module file must be
+         placed. -->
+    should provide an <code>init</code> rule. The rule will be called
+    with the same parameters that were passed to the
+    <code>using</code> rule. The set of allowed parameters is
+    determined by you. For example, you can allow the user to specify
+    paths, tool versions, and other options.
+    <!-- But it's not entirely arbitrary.  We have a standard
+         parameter order which you should describe here for
+         context. -->
     </para>
 
     <para>Here are some guidelines that help to make Boost.Build more
       consistent:
       <itemizedlist>
         <listitem><para>The <code>init</code> rule should never fail. Even if
-          user provided a wrong path, you should emit a warning and go
+          the user provided an incorrect path, you should emit a warning and go
           on. Configuration may be shared between different machines, and
           wrong values on one machine can be OK on another.
+          <!-- So why shouldn't init fail on machines where it's wrong?? -->
           </para></listitem>
 
-        <listitem><para>Prefer specifying command to be executed to specifying
-            path. First of all, this gives more control: it's possible to
-            specify
+        <listitem><para>Prefer specifying the command to be executed
+        to specifying the tool's installation path. First of all, this
+        gives more control: it's possible to specify
 <programlisting>
 /usr/bin/g++-snapshot
 time g++
+<!-- Is this meant to be a single command?  If not, insert "or" -->
 </programlisting>
             as the command. Second, while some tools have a logical
-            "installation root", it better if user don't have to remember if
-            a specific tool requires a full command or a path.            
+            "installation root", it's better if user doesn't have to remember whether
+            a specific tool requires a full command or a path.
+            <!-- But many tools are really collections: e.g. a
+                 compiler, a linker, and others.  The idea that the
+                 "command to invoke" has any significance may be
+                 completely bogus.  Plus if you want to allow "time
+                 /usr/bin/g++" the toolset may need to somehow parse
+                 the command and find the path when it needs to invoke
+                 some related executable.  And in that case, will the
+                 command be ignored?  This scheme doesn't scale and
+                 should be fixed. -->
           </para></listitem>
 
         <listitem><para>Check for multiple initialization. A user can try to
             initialize the module several times. You need to check for this
             and decide what to do. Typically, unless you support several
-            versions of a tool, duplicate initialization is a user error. If
-            tool version can be specified during initialization, make sure the
+            versions of a tool, duplicate initialization is a user error. 
+            <!-- Why should that be typical? -->
+            If the
+            tool's version can be specified during initialization, make sure the
             version is either always specified, or never specified (in which
             case the tool is initialied only once). For example, if you allow:
 <programlisting>
@@ -818,9 +838,12 @@ using yfc : 3.4 ;
             Then it's not clear if the first initialization corresponds to
             version 3.3 of the tool, version 3.4 of the tool, or some other
             version. This can lead to building twice with the same version.
+            <!-- That would not be so terrible, and is much less harmful
+                 than this restriction, IMO.  It makes site-config
+                 harder to maintain than neccessary. -->
             </para></listitem>
 
-        <listitem><para>If possible, the <code>init</code> must be callable
+        <listitem><para>If possible, <code>init</code> must be callable
           with no parameters. In which case, it should try to autodetect all
           the necessary information, for example, by looking for a tool in
           <envar>PATH</envar> or in common installation locations. Often this
