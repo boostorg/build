@@ -145,9 +145,10 @@ rule project-target ( name : project : requirements * : default-build * )
             local t = [ main-target $(name) ] ;
             result += [ $(t).direct-build-request $(property-set) ] ;
         }
+        local self-location = [ project.attribute $(self.project) location ] ;
         for local pn in [ project.attribute $(self.project) projects-to-build ]
         {
-            local p = [ project.module-name $(pn) ] ;
+            local p = [ project.module-name [ path.join $(self-location) $(pn) ] ] ;
             local t = [ project.target [ project.attribute $(p) location ] ] ;
             result += [ $(t).direct-build-request $(property-set) ] ;
         }            
