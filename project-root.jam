@@ -261,6 +261,10 @@ class.class project-root-object ;
 #
 module project-root-context
 {
+    # Make toolset.using accessible in project-root.
+    import toolset : using ;
+    EXPORT project-root-context : using ;
+    
     # Access to project root object and shortcut for it's methods. The
     # optional argument is a shortcut to execute the given method on the
     # object. This saves the hasle of creating local vars to call on the
