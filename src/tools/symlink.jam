@@ -16,7 +16,7 @@ feature.feature symlink-location : project-relative build-relative : incidental 
 #
 class symlink-targets : basic-target
 {
-    import numbers modules class property project ;
+    import numbers modules class property project path ;
     
     rule __init__ (
       project
@@ -64,8 +64,7 @@ class symlink-targets : basic-target
             # location, instead of placing it in the build directory.
             if [ property.select <symlink-location> : [ $(property-set).raw ] ] = <symlink-location>project-relative
             {
-                $(vt).set-path [ project.path-relative-to-project-location 
-                    $(s:D) $(self.project) ] ;
+                $(vt).set-path [ path.root $(s:D) [ $(self.project).get location ] ] ;
             }
             
             self.virtual-targets += $(vt) ;

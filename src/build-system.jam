@@ -72,7 +72,7 @@ if --version in [ modules.peek : ARGV ]
 # We always load project in "." so that 'use-project' directives has
 # any chance of been seen. Otherwise, we won't be able to refer to
 # subprojects using target ids.
-current-project = [ project.load "." ] ;
+current-project = [ project.target [ project.load "." ] ] ;
 
 if [ MATCH (--dump-projects) : [ modules.peek : ARGV ] ]
 {

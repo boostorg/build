@@ -45,17 +45,18 @@ rule make ( target-name : sources * : generating-rule + : requirements *
             : caller ? )
 {
     caller ?= [ project.current ] ;
-    local rules = [ RULENAMES $(caller) ] ;
+    caller-module = [ $(caller).project-module ] ;
+    local rules = [ RULENAMES $(caller-module) ] ;
     if $(generating-rule[1]) in $(rules)
     {
         # This is local rule, make it global
-        local n = $(caller).$(generating-rule[1]) ;
-        IMPORT $(caller) : $(generating-rule[1]) : : $(n) ;
+        local n = $(caller-module).$(generating-rule[1]) ;
+        IMPORT $(caller-module) : $(generating-rule[1]) : : $(n) ;
         generating-rule = $(n) $(generating-rule[2-]) ;
     }
     
    targets.main-target-alternative
-     [ new make-target-class $(target-name) : $(caller) 
+     [ new make-target-class $(target-name) : $(caller)
        : [ targets.main-target-sources $(sources) : $(target-name) ] 
        : [ targets.main-target-requirements $(requirements) : $(caller) ] 
        : $(generating-rule) 

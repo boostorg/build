@@ -78,23 +78,25 @@ import feature ;
 import virtual-target ;
 import path ;
 import set ;
+import assert ;
 
 # Base class for all abstract targets.
 class abstract-target 
 {
-    import project ;    
-    
+    import project assert "class" ;    
+        
     rule __init__ ( name      # name of the target in Jamfile
-        : project # the project module where the target is declared
+        : project-target             # the project target to which this one belongs
     )
     {        
+        assert.true class.is-a $(project-target) : project-target ;
         # Note: it might seem that we don't need either name or project at all.
         # However, there are places where we really need it. One example is error
         # messages which should name problematic targets. Another is setting correct
         # paths for sources and generated files.
         
         self.name = $(name) ;
-        self.project = $(project) ;
+        self.project = $(project-target) ;
     }    
     
     # Returns the name of this target.
@@ -112,7 +114,7 @@ class abstract-target
     # Returns a user-readable name for this target.
     rule full-name ( )
     {
-        local location = [ project.attribute $(self.project) location ] ;
+        local location = [ $(self.project).get location ] ;
         return $(location)/$(self.name) ;
     }
         
@@ -160,13 +162,27 @@ class project-target : abstract-target
     import sequence ;
     import "class" : new ;
         
-    rule __init__ ( name : project : requirements * : default-build * )
+    rule __init__ ( name : project-module : requirements * : default-build * )
     {    
-        abstract-target.__init__ $(name) : $(project) ;
+        abstract-target.__init__ $(name) : $(__name__) ;
         
+        self.project-module = $(project-module) ;
         self.requirements = $(requirements) ;
         self.default-build = $(default-build) ;
     }
+
+    # This is needed only by the 'make' rule. Need to find the
+    # way to make 'make' work without this method.
+    rule project-module ( )
+    {
+        return $(self.project-module) ;
+    }
+        
+    rule get ( attribute )    
+    {
+        return [ project.attribute $(self.project-module) $(attribute) ] ;
+    }
+    
     
     # Generates all possible targets contained in this project.
     rule generate ( property-set * )
@@ -204,8 +220,8 @@ class project-target : abstract-target
         }
 
         # Collect all projects referenced via "projects-to-build" attribute.
-        local self-location = [ project.attribute $(self.project) location ] ;
-        for local pn in [ project.attribute $(self.project) projects-to-build ]
+        local self-location = [ get location ] ;
+        for local pn in [ get projects-to-build ]
         {
             local p = [ project.module-name [ path.join $(self-location) $(pn) ] ] ;
             result += [ project.target $(p) ] ;
@@ -561,7 +577,7 @@ class file-reference : abstract-target
     rule exists ( )
     {
         local location = [ path.root $(self.name)
-          [ project.attribute $(self.project) source-location ] ] ;        
+          [ $(self.project).get source-location ] ] ;        
         return [ path.exists [ path.native $(location) ] ] ;
     }    
 }
@@ -575,7 +591,7 @@ if "--quiet" in [ modules.peek : ARGV ]
 
 rule find ( id : project )
 {
-    local current-location = [ project.attribute $(project) location ] ;
+    local current-location = [ $(project).get location ] ;
     local target ;    
     
     local split = [ MATCH (.*)//(.*) : $(id) ] ;
@@ -595,7 +611,8 @@ rule find ( id : project )
     local base-project ;
     if $(project-part) 
     {
-        base-project = [ project.find $(project-part) : $(current-location) ] ;
+        base-project = [ project.target 
+          [ project.find $(project-part) : $(current-location) ] ] ;
     }
     else
     {
@@ -618,10 +635,9 @@ rule find ( id : project )
     # Interpret target-name as name of main target
     if ! $(target) && $(base-project)
     {
-        local project-target = [ project.target $(base-project) ] ;        
-        if [ $(project-target).has-main-target $(target-part) ] 
+        if [ $(base-project).has-main-target $(target-part) ] 
         {
-            target = [ $(project-target).main-target $(target-part) ] ;
+            target = [ $(base-project).main-target $(target-part) ] ;
         }
     }
     
@@ -1157,12 +1173,12 @@ rule main-target-requirements (
   : project       # Project where the main target is to be declared
       )
 {
-    local loc = [ project.attribute $(project) location ] ;
+    local loc = [ $(project).get location ] ;
     local requirements = [ property.translate-paths $(specification) : $(loc) ] ; 
     local requirements = 
       [ property.expand-subfeatures-in-conditions $(requirements) ] ;
     local requirements = [ property-set.create $(requirements) ] ;
-    local project-requirements = [ project.attribute $(project) requirements ] ;
+    local project-requirements = [ $(project).get requirements ] ;
     requirements = [ $(project-requirements).refine $(requirements) ] ;    
     if $(requirements[1]) = "@error" 
     {
@@ -1180,8 +1196,8 @@ rule main-target-usage-requirements (
   : project       # Project where the main target is to be declared
      )
 {
-    local loc = [ project.attribute $(project) location ] ;         
-    local project-usage-requirements = [ project.attribute $(project) usage-requirements ] ;
+    local loc = [ $(project).get location ] ;         
+    local project-usage-requirements = [ $(project).get usage-requirements ] ;
         
     local usage-requirements = [ property-set.create 
         [ property.translate-paths $(specification) : $(loc) ] ] ;
@@ -1204,7 +1220,7 @@ rule main-target-default-build (
     }
     else
     {
-        result = [ project.attribute $(project) default-build ] ;
+        result = [ $(project).get default-build ] ;
     }    
     return [ property-set.create-with-validation $(result) ] ;
 }         
@@ -1213,7 +1229,7 @@ rule main-target-default-build (
 # Returns 'target'.
 rule main-target-alternative ( target ) 
 {               
-    local ptarget = [ project.target [ $(target).project ] ] ;
+    local ptarget = [ $(target).project ] ;
     
     $(ptarget).add-alternative $(target) ;
     return $(target) ;

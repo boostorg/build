@@ -63,7 +63,7 @@ feature.feature <include-type> : : free incidental ;
 
 class stage-target-class : basic-target
 {
-    import feature project type errors generators ;    
+    import feature project type errors generators path ;    
     import "class" : new ;
     
     rule __init__ ( name-and-dir : project : sources * : requirements * : default-build * )
@@ -78,8 +78,7 @@ class stage-target-class : basic-target
         local loc = [ $(property-set).get <location> ] ;
         if ! $(loc)
         {
-            loc = [ project.path-relative-to-project-location $(self.name)
-              $(self.project) ] ;
+            loc = [ path.root $(self.name) [ $(self.project).get location ] ] ;
 
             property-set = [ $(property-set).add-raw $(loc:G=<location>) ] ;
         }
