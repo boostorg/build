@@ -1874,21 +1874,22 @@ rule template ( target : sources * : requirements * : default-build * )
     declare-local-target $(target) : $(sources) : $(requirements) : $(default-build) : TEMPLATE ;
 }
 
-# unit-test target : sources : requirements : local-build
-#
 # Declare an executable target, to be run by tests.
-rule unit-test
+rule unit-test ( target +  : sources + : requirements * : default-build * : cmd-line * )
 {
-    
-    local files = [ exe $(<) : $(2) : $(3) : $(4) ] ;
-    type-DEPENDS test : $(files) ;
-    
-    COMMAND-LINE on $(files) = $(5) ;
-    
-    for local file in $(files)
+    if ! $(.testing.jam-included)
     {
-        Run $(file) ;
+        SEARCH on testing.jam = $(BOOST_BUILD_PATH) ;
+        include testing.jam ;
     }
+    
+    run $(sources)
+      : $(cmd-line)
+      : # input-files
+      : $(requirements)
+      : $(target)
+      : $(default-build)
+        ;
 }
 
 # Used to build command files from a list of sources.

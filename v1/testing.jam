@@ -20,7 +20,7 @@ local rule get-var-value ( name + )
 # type should be a target type (e.g. OBJ, DLL, LIB, EXE)
 #
 # RETURNS the name(s) of the generated test target(s).
-rule boost-test ( sources + : target-type : requirements * : test-name ? )
+rule boost-test ( sources + : target-type : requirements * : test-name ? : default-build * )
 {
     if ! $(gIN_LIB_INCLUDE) # No need to execute this code twice
     {
@@ -36,8 +36,8 @@ rule boost-test ( sources + : target-type : requirements * : test-name ? )
               declare-local-target $(test-name)
                 : $(sources)
                   : $(requirements) <sysinclude>$(BOOST_ROOT)
-                    :             # default build
-                    : $(target-type)
+                    : $(default-build)
+                      : $(target-type)
             ] ;
             
             if $(result) in $(.all-boost-tests)
@@ -337,12 +337,12 @@ actions execute-test bind INPUT_FILES output-file
 
 declare-build-fail-test RUN_FAIL : RUN_TEST ;
 declare-build-succeed-test RUN : RUN_TEST ;
-rule run ( sources + : args * : input-files * : requirements * : name ? )
+rule run ( sources + : args * : input-files * : requirements * : name ? : default-build * )
 {
     local gRUN_TEST_ARGS = $(args) ;
     local gRUN_TEST_INPUT_FILES = $(input-files) ;
     SEARCH on $(input-files) = $(LOCATE_SOURCE) ;
-    return [ boost-test $(sources) : RUN : $(requirements) : $(name) ] ;
+    return [ boost-test $(sources) : RUN : $(requirements) : $(name) : $(default-build) ] ;
 }
 
 rule run-fail ( sources + : args * : input-files * : requirements * : name ? )
