@@ -95,7 +95,7 @@ load_builtins()
                     builtin_exit, 0, 0 ) ) );
 
     {
-        char * args[] = { "directories", "*", ":", "patterns", "*", ":", "downcase-filenames", "?", 0 };
+        char * args[] = { "directories", "*", ":", "patterns", "*", ":", "case-insensitive", "?", 0 };
         duplicate_rule(
             "Glob" ,
             bind_builtin( "GLOB" , builtin_glob, 0, args )
@@ -291,9 +291,17 @@ builtin_flags(
 struct globbing {
     LIST    *patterns;
     LIST    *results;
-    LIST    *downcase;
+    LIST    *case_insensitive;
 } ;
 
+static void downcase_inplace( char* p )
+{
+    for ( ; *p; ++p )
+    {
+        *p = tolower(*p);
+    }
+}
+    
 static void
 builtin_glob_back(
     void    *closure,
@@ -314,22 +322,38 @@ builtin_glob_back(
     string_new( buf );
     path_build( &f, buf, 0 );
 
-    if (globbing->downcase)
-    {
-        char* p;
-        for ( p = buf->value; *p; ++p )
-        {
-            *p = tolower(*p);
-        }
-    }
+    if (globbing->case_insensitive)
+        downcase_inplace( buf->value );
 
     for( l = globbing->patterns; l; l = l->next )
+    {
         if( !glob( l->string, buf->value ) )
         {
             globbing->results = list_new( globbing->results, newstr( file ) );
             break;
         }
+    }
+    
     string_free( buf );
+}
+
+static LIST* downcase_list( LIST *in )
+{
+    LIST* result = 0;
+    
+    string s[1];
+    string_new( s );
+        
+    while (in)
+    {
+        string_copy( s, in->string );
+        downcase_inplace( s->value );
+        result = list_append( result, list_new( 0, newstr( s->value ) ) );
+        in = in->next;
+    }
+    
+    string_free( s );
+    return result;
 }
 
 LIST *
@@ -345,16 +369,25 @@ builtin_glob(
     globbing.results = L0;
     globbing.patterns = r;
     
-    globbing.downcase
+    globbing.case_insensitive
 # if defined( OS_NT ) || defined( OS_CYGWIN )
-       = l;  /* always downcase filenames if any files can be found */
+       = l;  /* always case-insensitive if any files can be found */
 # else 
-       = lol_get( frame->args, 2 ); /* conditionally downcase filenames */
+       = lol_get( frame->args, 2 );
 # endif
+
+    if ( globbing.case_insensitive )
+    {
+        globbing.patterns = downcase_list( r );
+    }
     
     for( ; l; l = list_next( l ) )
         file_dirscan( l->string, builtin_glob_back, &globbing );
 
+    if ( globbing.case_insensitive )
+    {
+        list_free( globbing.patterns );
+    }
     return globbing.results;
 }
 

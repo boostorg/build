@@ -57,16 +57,16 @@ rule init ( version ? path ? : vendor ? : setup ? compiler ? linker ? )
         # look for the setup program in both the system PATH and in
         # its default installation location based on version
         local env-PATH = [ modules.peek : PATH ] ;
-        local PATH-setup =  [ GLOB $(env-PATH) : $(setup:L) ] ;
-        local default-setup =  [ GLOB $(default-path)\\bin : $(setup:L) ] ;
+        local PATH-setup =  [ GLOB $(env-PATH) : $(setup) ] ;
+        local default-setup =  [ GLOB $(default-path)\\bin : $(setup) ] ;
         
         if $(default-setup) && $(PATH-setup) != $(default-setup)
         {
             path = $(default-path) ;
         }
         
-        compiler = $(compiler:L) ;
-        if ! [ GLOB $(path)\\bin $(env-PATH) : $(compiler:E=cl).exe ]
+        compiler = $(compiler) ;
+        if ! [ GLOB $(path)\\bin $(env-PATH) : $(compiler:E=CL).exe ]
         {
             error $(condition) initialization: :
               couldn't find compiler \"$(compiler:E=CL)\" in PATH or "known default"
@@ -83,14 +83,14 @@ rule init ( version ? path ? : vendor ? : setup ? compiler ? linker ? )
     prefix ?= \"$(path)\\BIN\\\" ;
     prefix ?= "" ;
     compiler ?= cl ;
-    linker ?= link ;
+    linker ?= LINK ;
     
     flags msvc.compile .CC $(condition) : $(prefix)$(compiler) ;
     flags msvc.link .LD $(condition) : $(prefix)$(linker) ;
 }
 
 .CC = cl ;
-.LD = link ;
+.LD = LINK ;
 
 # Declare generators
 

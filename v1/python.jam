@@ -35,7 +35,7 @@ if $(NT)
     # Reconstitute any paths split due to embedded spaces.
     PYTHON_ROOT = $(PYTHON_ROOT:J=" ") ;
     
-    PYTHON_LIB_PATH ?= $(PYTHON_ROOT)/libs [ GLOB $(PYTHON_ROOT) : PCbuild ] ;
+    PYTHON_LIB_PATH ?= $(PYTHON_ROOT)/libs [ GLOB $(PYTHON_ROOT) : pcbuild ] ;
     PYTHON_STDLIB_PATH ?= $(PYTHON_ROOT)/Lib ;
 
     # Locate Python libraries. In the case of MSVC the libraries are
@@ -151,7 +151,7 @@ rule select-python-library ( toolset variant : properties * )
 
 if $(NT)
 {
-    python-nt-sysinclude = [ GLOB $(PYTHON_ROOT) : PC ] ;
+    python-nt-sysinclude = [ GLOB $(PYTHON_ROOT) : pc ] ;
 }
 
 rule select-python-includes ( toolset variant : properties * )
@@ -170,8 +170,16 @@ rule select-python-includes ( toolset variant : properties * )
       properties +=
           <sysinclude>$(PYTHON_ROOT)/include
             <sysinclude>$(python-nt-sysinclude) # in case the user is using a source installation
-              <debug-python><define>_DEBUG
               ;
+        
+        if ( $(toolset) = cwpro8 ) && ( $(variant) = debug-python )
+        {
+            properties = [ difference $(properties) : <define>_DEBUG ] ;  #it warns about redefinition otherwise.
+        }
+        else
+        {
+            properties += <debug-python><define>_DEBUG ;
+        }
     }
     return $(properties) ;
 }

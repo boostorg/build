@@ -887,19 +887,22 @@ rule ungrist-properties
 #
 # attach global build tool settings to the given file-target, so that they can be
 # used in build actions.
-rule set-target-variables # file-target
+rule set-target-variables ( targets * )
 {
     local s ;
     for s in $(gTARGET_VARIABLES)
     {
-        $(s) on $(<) = $($(s)) ;
+        $(s) on $(targets) = $($(s)) ;
 
         # set up dependencies if the target is a "top-level" target
         if ( $(s) in $(gDEPENDENCY_VARIABLES($(gCURRENT_TOOLSET))) ) && $(gTARGET_TYPE($(<)))
         {
-            DEPENDS $(<) : $($(s)) ;
+            DEPENDS $(targets) : $($(s)) ;
         }
     }
+    local libpath = [ get-properties <library-path> : $(gBUILD_PROPERTIES) ] ;
+    gRUN_PATH($(targets)) += $(libpath:G=) ;
+    gRUN_LD_LIBRARY_PATH($(targets)) += $(libpath:G=) ;
 }
 
 # fixup-path-properties properties...
