@@ -161,11 +161,13 @@ if $(UNIX)
     case SunOS* :
         {
         NO_GNU_LN = true ; # sun seems not to use the GNU linker with gcc
+        flags gcc OBJCOPY_FLAGS <debug-symbols>on : "--set-section-flags .debug_str=contents" ;
         }
     case Linux :
         {
         RPATH_LINK = -Wl,-rpath-link, ;
         SONAME = -Wl,-soname, ;
+        flags gcc OBJCOPY_FLAGS <debug-symbols>on : "--set-section-flags .debug_str=contents,debug" ;
         }
     case OpenBSD :
         {
@@ -352,7 +354,7 @@ flags gcc .AR : [ GLOB $(GCC_BIN_DIRECTORY) $(PATH) : ar ar.exe ] ;
 # used to manipulate the object files produced by GCC to
 # prevent the merging of debug symbols (which happens to be n^2 slow)
 flags gcc .OBJCOPY : [ GLOB $(GCC_BIN_DIRECTORY) $(PATH) : objcopy ] ;
-flags gcc OBJCOPY_FLAGS <debug-symbols>on : "--set-section-flags .debug_str=contents,debug" ;
+
 if ! $(on-windows)
 {
     flags gcc .SET_EXIT : "set -e" ;
