@@ -967,6 +967,10 @@ rule Object
     type-DEPENDS obj : $(<) ;
     set-target-variables $(<) ;
     
+    # Make it possible to compile a given source file by giving its
+    # object file name as a target.
+    type-DEPENDS $(<:G=) : $(<) ; 
+    
     # locate object and search for source, if wanted
 
     Clean clean : $(<) ;
