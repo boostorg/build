@@ -75,17 +75,16 @@ case "$1" in
     ?*) BOOST_JAM_TOOLSET=$1 ; shift ;;
     *) Guess_Toolset ;;
 esac
+BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
+BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
+BOOST_JAM_OPT_YYACC="-o bootstrap.$BOOST_JAM_TOOLSET/yyacc0"
 case $BOOST_JAM_TOOLSET in
     gcc)
     BOOST_JAM_CC=gcc
-    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     darwin)
     BOOST_JAM_CC=cc
-    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     intel-linux)
@@ -96,50 +95,34 @@ case $BOOST_JAM_TOOLSET in
         . ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh
     fi
     BOOST_JAM_CC=icc
-    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     vacpp)
     BOOST_JAM_CC=xlc
-    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     como)
     BOOST_JAM_CC=como
-    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     kcc)
     BOOST_JAM_CC=KCC
-    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     kylix)
     BOOST_JAM_CC=bc++
-    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     mipspro)
     BOOST_JAM_CC=cc
-    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     sunpro)
     BOOST_JAM_CC=CC
-    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
     
     tru64cxx)
     BOOST_JAM_CC=cc
-    BOOST_JAM_OPT_JAM="-o bootstrap.$BOOST_JAM_TOOLSET/jam0"
-    BOOST_JAM_OPT_MKJAMBASE="-o bootstrap.$BOOST_JAM_TOOLSET/mkjambase0"
     ;;
    
     *)
@@ -151,6 +134,7 @@ echo "###"
 echo "### Using '$BOOST_JAM_TOOLSET' toolset."
 echo "###"
 
+YYACC_SOURCES="yyacc.c"
 MKJAMBASE_SOURCES="mkjambase.c"
 BJAM_SOURCES="\
  command.c compile.c execnt.c execunix.c execvms.c expand.c\
@@ -163,7 +147,10 @@ BJAM_SOURCES="\
 echo_run rm -rf bootstrap.$BOOST_JAM_TOOLSET
 echo_run mkdir bootstrap.$BOOST_JAM_TOOLSET
 if test ! -e jamgram.y -o ! -e jamgramtab.h ; then
-    echo_run /bin/sh ./yyacc jamgram.y jamgramtab.h jamgram.yy
+    echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_YYACC} ${YYACC_SOURCES}
+    if test -x "./bootstrap.$BOOST_JAM_TOOLSET/yyacc0" ; then
+        echo_run ./bootstrap.$BOOST_JAM_TOOLSET/yyacc0 jamgram.y jamgramtab.h jamgram.yy
+    fi
 fi
 if test ! -e jamgram.c -o ! -e jamgram.h ; then
     if test_path yacc ; then YACC="yacc -d"
