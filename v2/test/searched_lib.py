@@ -30,6 +30,19 @@ else:
     t.copy("lib/bin/$toolset/debug/test_lib.dll", "lib/libtest_lib.dll")
 
 
+# Test that the simplest usage of searched library works.
+t.write('project-root.jam', '')
+t.write('Jamfile', """
+exe main : main.cpp test_lib ;
+lib test_lib : : <name>test_lib <search>lib ;
+""")
+t.write("main.cpp", """
+void foo();
+int main() { foo(); return 0; }
+""")
+t.run_build_system()
+t.expect_addition("bin/$toolset/debug/main-target-main/main.exe")
+t.rm("bin/$toolset/debug/main-target-main/main.exe")
 
 # A regression test: <library>property referring to
 # searched-lib was mishandled. As the result, we were
@@ -41,13 +54,7 @@ else:
 # This problem shows up when searched libs are in usage
 # requirements.
 
-t.write('project-root.jam', 'import gcc ;')
 t.write('Jamfile', 'exe main : main.cpp d/d2/a ;')
-t.write("main.cpp", """
-void foo();
-int main() { foo(); return 0; }
-""")
-
 t.write('d/d2/Jamfile', """
 lib test_lib : : <name>test_lib <search>../../lib ;
 lib a : a.cpp : : : <library>test_lib ;

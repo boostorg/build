@@ -163,6 +163,12 @@ local rule property-set ( raw-properties * )
         return $(self.added.$(ps)) ;
     }            
     
+    rule add-raw ( properties * )
+    {
+        return [ add [ property-set.create $(properties) ] ] ;
+    }            
+
+    
     # Returns all values of 'feature'.
     rule get ( feature )
     {
