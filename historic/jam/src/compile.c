@@ -786,6 +786,12 @@ evaluate_rule(
     rulename = l->string;
     rule = bindrule( l->string, frame->module );
 
+    /* drop the rule name */
+    l = list_pop_front( l );
+
+    /* tack the rest of the expansion onto the front of the first argument */
+    frame->args->list[0] = list_append( l, lol_get( frame->args, 0 ) );
+
     if ( DEBUG_COMPILE )
     {
         /* Try hard to indicate in which module the rule is going to execute */
@@ -815,13 +821,7 @@ evaluate_rule(
         exit_module( prev_module );
         enter_module( rule->module );
     }
-
-    /* drop the rule name */
-    l = list_pop_front( l );
-    
-    /* tack the rest of the expansion onto the front of the first argument */
-    frame->args->list[0] = list_append( l, lol_get( frame->args, 0 ) );
-    
+        
     /* record current rule name in frame */
     if ( rule->procedure )
     {
