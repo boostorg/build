@@ -21,12 +21,12 @@
         br.clear { clear: left }
         div.alert { color: red }
         table { align: center; border: thin; }
-    </style>
+        </style>
   </head>
   <!-- Things yet to document:
-                - build request, build request expansion and directly requested targets
-                - conditional properties
-              -->
+                  - build request, build request expansion and directly requested targets
+                  - conditional properties
+                -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -73,6 +73,8 @@
           <dd>
             <dl class="page-index">
               <dt><a href="#features_defined">Defintions</a></dt>
+
+              <dt><a href="#property_validity">Property Validity</a></dt>
 
               <dt><a href="#feature_attributes">Feature Attributes</a></dt>
 
@@ -485,6 +487,16 @@ boost-build /path/to/boost.build ;
     <p>A <em>build specification</em> is a property set which fully describes
     the set of features used to build a target.</p>
 
+    <h4><a name="property_validity">Property Validity</a></h4>
+    For <a href="#free">free</a> features, all values are valid. For all
+    other features, the valid values are explicitly specified, and the build
+    system will report an error for the use of an invalid feature-value.
+    Subproperty validity may be restricted so that certain values are valid
+    only in the presence of certain other subproperties. For example, it is
+    possible to specify that the <code>&lt;gcc-target&gt;mingw</code>
+    property is only valid in the presence of
+    <code>&lt;gcc-version&gt;2.95.2</code>. 
+
     <h4><a name="feature_attributes">Feature Attributes</a></h4>
 
     <p>Each feature has a collection of zero or more of the following
@@ -524,7 +536,7 @@ boost-build /path/to/boost.build ;
       </li>
 
       <li>
-        <em>free</em> 
+        <em><a name="free">free</a></em> 
 
         <p>Most features have a finite set of allowed values, and can only
         take on a single value from that set in a given build specification.
