@@ -50,9 +50,24 @@ rule list (
         return $(self.value[-1]) ;
     }
     
-    rule at ( index )
+    rule at ( index : * )
     {
-        return $(self.value[$(index)]) ;
+        local r = $(self.value[$(index)]) ;
+        if $(2)
+        {
+            r = [ $(r).at $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ] ;
+        }
+        return $(r) ;
+    }
+    
+    rule get-at ( index : * )
+    {
+        local r = $(self.value[$(index)]) ;
+        if $(2)
+        {
+            r = [ $(r).at $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ] ;
+        }
+        return [ $(r).get ] ;
     }
     
     rule push-front ( value )
@@ -147,4 +162,13 @@ local rule __test__ ( )
     assert.false $(l2-alias).empty ;
     $(l2).pop-back ;
     assert.result t : $(l2-alias).back ;
+    
+    local l3 = [ new list ] ;
+    $(l3).push-back [ new list 1 2 3 4 5 ] ;
+    $(l3).push-back [ new list a b c ] ;
+    $(l3).push-back [ new list [ new list x y z ] [ new list 7 8 9 ] ] ;
+    assert.result 1 : $(l3).at 1 : 1 ;
+    assert.result b : $(l3).at 2 : 2 ;
+    assert.result a b c : $(l3).get-at 2 ;
+    assert.result 7 8 9 : $(l3).get-at 3 : 2 ;
 }
