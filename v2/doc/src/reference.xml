@@ -801,12 +801,15 @@ rule explicit ( target-name )
               components of composite features in a build property set.</para>
           </listitem>
 
+<!-- I no longer think link-incompatbile properties are a good idea, so
+     hide them from the docs.
           <listitem>
             <para><emphasis>link-incompatible</emphasis></para>
 
             <para>See <link linkend=
                 "bbv2.reference.variants.compat">below</link>.</para>
           </listitem>
+-->
 
           <listitem>
             <para><emphasis>dependency</emphasis></para>

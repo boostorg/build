@@ -297,10 +297,9 @@ boost-build /path/to/boost.build ;
         <emphasis>Main target</emphasis> is a user-defined named
         entity which can be build, for example a named executable file.
         Declaring a main target is usually done using one of <link linkend=
-          "bbv2.advanced.builtins.targets">main target functions</link>.
-        The user can also declare <ulink url=
-          "doc/extending.html#main_target_rules">custom main target
-          function</ulink>.</para>
+          "bbv2.advanced.builtins.targets">main target functions</link>.  The
+        user can also declare <link linkend="bbv2.extending.rules"> custom
+        main target function</link>.</para>
       
       <para>Most main targets rules in Boost.Build use similiar
         syntax:</para>
@@ -426,7 +425,7 @@ obj main : main.cpp : &lt;optimization&gt;off ;
 
       <para>Sometimes, requirements are necessary only for a specific
         compiler, or build variant. The 
-        <link linkend="v2.reference.variants.propcond">conditional
+        <link linkend="bbv2.reference.variants.propcond">conditional
         properties</link> can be used in that case:
 <programlisting>
 lib util : util.cpp : &lt;toolset&gt;msvc:&lt;link&gt;static ;
