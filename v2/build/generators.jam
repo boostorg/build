@@ -162,8 +162,20 @@ rule generator (
     }
 
     # Tries to invoke this generator on the given sources. Returns a
-    # list of generated targets.
-    rule run ( project name ? : properties * : sources + : multiple ? ) 
+    # list of generated targets (instances of 'virtual-target').
+    rule run ( project  # Project for which the targets are generated
+               name ?   # Determines the name of 'name' attribute for 
+                        # all generated targets. See 'generated-targets' method.
+               : properties * # Desired properties for generated targets.
+               : sources + :  # Source targets.
+               multiple ? # Allows the rule to run generator several times and return
+                          # multiple targets of the same type. When this argument is not
+                          # given, 'run' will return the list of targets, which is equal
+                          # in size to the list of target types, and where type of
+                          # each target is the same as the corresponding element of
+                          # target type list. Non-empty value allows to return several
+                          # such target lists, joined together.
+             )
     {
         generators.dout [ indent ] "  generator" $(self.id) ;
         generators.dout [ indent ] "  multiple:" $(mutliple) ;
@@ -281,9 +293,25 @@ rule generator (
     }
     
     # Constructs targets that are created after consuming 'sources'.
-    # If 'name' is specified, then all generated target will have that name.
-    # When 'sources' have more than one element, 'name' must be specified,
-    # or all source should have the same name.
+    # The result will be the list of virtual-target, which the same length
+    # as 'target-types' attribute and with corresponding types.
+    # 
+    # When 'name' is empty, all source targets must have the same value of 
+    # the 'name' attribute, which will be used instead of the 'name' argument.
+    #
+    # The value of 'name' attribute for each generated target will be equal to
+    # the 'name' parameter if there's no name pattern for this type. Otherwise,
+    # the '%' symbol in the name pattern will be replaced with the 'name' parameter 
+    # to obtain the 'name' attribute.
+    #
+    # For example, if targets types are T1 and T2(with name pattern "%_x"), suffixes
+    # for T1 and T2 are .t1 and t2, and source if foo.z, then created files would
+    # be "foo.t1" and "foo_x.t2". The 'name' attribute actually determined the
+    # basename of a file.
+    #
+    # Note that this pattern mechanism has nothing to do with implicit patterns
+    # in make. It's a way to produce target which name is different for name of 
+    # source.
     rule generated-targets ( sources + : properties * : project name ? )
     {
         if ! $(name)
