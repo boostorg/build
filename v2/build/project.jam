@@ -710,32 +710,28 @@ module project-rules
         
         local location = [ project.attribute $(__name__) source-location ] ;
 
-        local all-paths ;
-        if ! $(wildcards:D)
+        local result ;
+        local paths = [ path.glob $(location) : $(wildcards) ] ;   
+        if $(wildcards:D)
         {
-            # No directory in any wildcard -- the simplest case.
-            all-paths = [ path.glob $(location) : $(wildcards) ] ;
-            all-paths = $(all-paths:D="") ;
-        } 
-        else
-        {
-            for local w in $(wildcards)
+            # The paths we've found are relative to current directory,
+            # but the names specified in sources list are assumed to
+            # be relative to source directory of the corresponding
+            # prject. So, just make the name absolute.
+            for local p in $(paths)
             {
-                local l = [ path.join $(location) $(w:D) ] ;
-                local paths = [ path.glob $(l) : $(w:D="") ] ;                
-                # The paths we've found are relative to current directory,
-                # but the names specified in sources list are assumed to
-                # be relative to source directory of the corresponding
-                # prject. So, just make the name absolute.
-                for local p in $(paths)
-                {
-                    all-paths += [ path.root $(p) [ path.pwd ] ] ;
-                }                
-            }
-            
+                result += [ path.root $(p) [ path.pwd ] ] ;
+            }                
+        }
+        else 
+        {
+            # There were not directory in wildcard, so the files are all
+            # in the source directory of the project. Just drop the
+            # directory, instead of making paths absolute.
+            result = $(paths:D="") ;
         }
 
-        return $(all-paths) ;                
+        return $(result) ;                
     }        
 }
 
