@@ -3,7 +3,7 @@
 # Test that default build clause actually has any effect.
 
 from BoostBuild import Tester
-t = Tester(pass_toolset=0)
+t = Tester()
 
 t.write("project-root.jam", "import gcc ;")
 t.write("Jamfile", "exe a : a.cpp : : debug release ;")
@@ -12,6 +12,12 @@ t.write("a.cpp", "int main() { return 0; }\n")
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug/a.exe")
 t.expect_addition("bin/$toolset/release/a.exe")
+
+# Now check that we can specify explicit build request and
+# default-build will be combined with it
+t.run_build_system("optimization=space")
+t.expect_addition("bin/$toolset/debug/optimization-space/a.exe")
+t.expect_addition("bin/$toolset/release/optimization-space/a.exe")
 
 # Test that we can declare default build only in the first
 # alternative

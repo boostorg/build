@@ -298,10 +298,30 @@ rule main-target ( name : project )
     
     rule apply-default-build ( property-set )
     {           
-        local result ;
-        if ! [ $(property-set).raw ] 
+        # 1. First, see what properties from default-build
+        # are already present in property-set. 
+        
+        local raw = [ $(property-set).raw ] ;
+        local specified-features = $(raw:G) ;
+        
+        local defaults-to-apply ;
+        for local d in $(self.default-build)
         {
-            properties = [ build-request.expand-no-defaults $(self.default-build) ] ;
+            if ! $(d:G) in $(specified-features)
+            {
+                defaults-to-apply += $(d) ; 
+            }            
+        }
+        
+        # 2. If there's any defaults to be applied, form the new
+        # build request. Pass it throw 'expand-no-defaults', since
+        # default-build might contain "release debug", which will
+        # result in two property-sets.
+        local result ;
+        if $(defaults-to-apply)
+        {
+            properties = [ build-request.expand-no-defaults 
+                $(raw) $(defaults-to-apply) ] ;
             
             if $(properties)
             {                
@@ -314,6 +334,7 @@ rule main-target ( name : project )
             {
                 result = [ property-set.empty ] ;
             }            
+            
         }
         else
         {
