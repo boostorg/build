@@ -21,7 +21,15 @@
 # include "newstr.h"
 # include "compile.h"
 # include "strings.h"
+# include "hash.h"
 # include <string.h>
+
+typedef struct _binding {
+    char* binding;
+    char* target;
+} BINDING;
+
+static struct hash *explicit_bindings = 0;
 
 void call_bind_rule(
     char* target_,
@@ -65,18 +73,41 @@ void call_bind_rule(
 
 /*
  * search.c - find a target along $(SEARCH) or $(LOCATE) 
+ * First, check if LOCATE is set. If so, use it to determine
+ * the location of target and return, regardless of whether anything
+ * exists on that location.
+ *
+ * Second, examine all directories in SEARCH. If there's file already
+ * or there's another target with the same name which was placed
+ * to this location via LOCATE setting, stop and return the location. 
+ * In case of previous target, return it's name via the third argument.
+ *
+ * This bevahiour allow to handle dependency on generated files. If
+ * caller does not expect that target is generated, 0 can be passed as
+ * the third argument.
  */
 
 char *
 search( 
-	char	*target,
- 	time_t	*time )
+    char *target,
+    time_t *time,
+    char **another_target
+)
 {
 	PATHNAME f[1];
     LIST    *varlist;
     string    buf[1];
     int     found = 0;
+    /* Will be set to 1 if target location is specified via LOCATE. */
+    int     explicitly_located = 0;
     char    *boundname = 0;
+
+    if( another_target )
+        *another_target = 0;
+
+    if (! explicit_bindings )
+        explicit_bindings = hashinit( sizeof(BINDING), 
+                                     "explicitly specified locations");
 
     string_new( buf );
     /* Parse the filename */
@@ -96,6 +127,8 @@ search(
         if( DEBUG_SEARCH )
             printf( "locate %s: %s\n", target, buf->value );
 
+        explicitly_located = 1;
+
         timestamp( buf->value, time );
         found = 1;
     }
@@ -103,6 +136,8 @@ search(
     {
         while( varlist )
         {
+            BINDING b, *ba = &b;
+
             f->f_root.ptr = varlist->string;
             f->f_root.len = strlen( varlist->string );
 
@@ -114,7 +149,19 @@ search(
 
             timestamp( buf->value, time );
 
-            if( *time )
+            b.binding = buf->value;
+            
+            if( hashcheck( explicit_bindings, (HASHDATA**)&ba ) )
+            {
+                if( DEBUG_SEARCH )
+                    printf(" search %s: found explicitly located target %s\n", 
+                           target, ba->target);
+                if( another_target )
+                    *another_target = ba->target;
+                found = 1;
+                break;                
+            }
+            else if( *time )
             {
                 found = 1;
                 break;
@@ -144,6 +191,15 @@ search(
 
     boundname = newstr( buf->value );
     string_free( buf );
+
+    if (explicitly_located)
+    {
+        BINDING b = {boundname, target}, *ba = &b;
+        /* CONSIDER: we probably should issue a warning is another file
+           is explicitly bound to the same location. This might break
+           compatibility, though. */
+        hashenter(explicit_bindings, (HASHDATA**)&ba);
+    }
         
     /* prepare a call to BINDRULE if the variable is set */
     call_bind_rule( target, boundname );

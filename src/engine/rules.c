@@ -152,29 +152,18 @@ static void bind_explicitly_located_target(void* xtarget, void* data)
     TARGET* t = (TARGET*)xtarget;
     if (! (t->flags & T_FLAG_NOTFILE) )
     {
-        /* Check if there's a setting for LOCATE_TARGET */
+        /* Check if there's a setting for LOCATE */
         SETTINGS* s = t->settings;
         for(; s ; s = s->next)
         {            
             if (strcmp(s->symbol, "LOCATE") == 0) 
             {
                 pushsettings(t->settings);
-                t->boundname = search( t->name, &t->time );
-                t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
+                /* We're binding a target with explicit LOCATE. So
+                   third argument is of now use: nothing will be returned
+                   through it. */
+                t->boundname = search( t->name, &t->time, 0 );
                 popsettings(t->settings);
-
-                {
-                    LOCATED_TARGET lt, *lta = &lt;
-                    lt.file_name = t->boundname;
-                    lt.target = t;
-                    if (!located_targets)
-                        located_targets = hashinit( sizeof(LOCATED_TARGET),
-                                                    "located targets" );
-
-                    /* TODO: should check if we've entered the item or not. */
-                    hashenter(located_targets, (HASHDATA **)&lta);
-                }
-
                 break;
             }
         }

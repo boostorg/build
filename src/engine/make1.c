@@ -956,7 +956,7 @@ make1bind(
 	    printf( "warning: using independent target %s\n", t->name );
 
 	pushsettings( t->settings );
-	t->boundname = search( t->name, &t->time );
+	t->boundname = search( t->name, &t->time, 0 );
 	t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
 	popsettings( t->settings );
 }
