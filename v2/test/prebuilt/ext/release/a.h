@@ -8,4 +8,7 @@
 //  http://www.boost.org
 // 
 
+#ifdef _WIN32
+__declspec(dllimport)
+#endif
 void release();

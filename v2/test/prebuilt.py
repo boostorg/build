@@ -13,6 +13,7 @@ t.run_build_system("debug release", subdir="ext")
 # Then pretend that we don't have the sources for the external project,
 # and can only use compiled binaries
 t.copy("ext/Jamfile2", "ext/Jamfile")
+t.expand_toolset("ext/Jamfile")
 
 # Now check that we can build the main project, and that
 # correct prebuilt file is picked, depending of variant.

@@ -5,7 +5,7 @@
 from BoostBuild import Tester
 from string import find
 
-t = Tester(pass_toolset=0)
+t = Tester(pass_toolset=1)
 
 t.write("project-root.jam", "")
 t.write("Jamfile", """
@@ -39,24 +39,11 @@ exe a : dir/hello1.cpp ;
 exe b : dir/hello1.cpp/<hardcode-dll-paths>true ; 
 """)
 
-t.write("project-root.jam", """ 
-import gcc ;
-
-rule copy-file ( targets * : sources * : * )
-{
-    copy-file-action $(targets) : $(sources) ;
-}
-
-actions copy-file-action
-{
-    cp $(>) $(<)
-}
-
-IMPORT $(__name__) : copy-file : : copy-file ; 
-""")
+t.write("project-root.jam", "")
 
 t.write("dir/Jamfile", """ 
-make hello1.cpp : hello.cpp : copy-file ;
+import common ;
+make hello1.cpp : hello.cpp : common.copy ;
 
 """)
 
@@ -67,6 +54,6 @@ int main()
 }
 """)
 t.run_build_system("-d2")
-t.fail_test(t.stdout().count("copy-file") != 1)
+t.fail_test(t.stdout().count("common.copy") != 1)
 
 t.cleanup()

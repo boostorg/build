@@ -48,8 +48,11 @@ t.write("a/Jamfile", """
     exe a : a.cpp ../b/b ;
 """)
 t.write("a/a.cpp", """
+#ifdef _WIN32
+__declspec(dllimport)
+#endif
 void foo();
-int main() { foo(); }
+int main() { foo(); return 0; }
 """)
 
 t.write("b/Jamfile", """
@@ -57,6 +60,9 @@ t.write("b/Jamfile", """
 """)
 t.write("b/b.cpp", """
 #ifdef FOO
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
 void foo() {}
 #endif
 """)

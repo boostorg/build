@@ -28,7 +28,7 @@ exe a : a_empty.cpp : <variant>release ;
 exe a : a.cpp : <variant>debug ;
 """)
 
-t.run_build_system(pass_toolset=0)
+t.run_build_system()
 t.expect_addition("bin/$toolset/debug/a.exe")
 
 

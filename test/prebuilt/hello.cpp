@@ -17,4 +17,5 @@ int main()
     #else
     debug();
     #endif
+    return 0;
 }

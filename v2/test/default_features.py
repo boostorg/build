@@ -25,6 +25,9 @@ t.write("Jamfile", """
 exe hello : hello.cpp d/l ;
 """)
 t.write("hello.cpp", """
+#ifdef _WIN32
+__declspec(dllimport)
+#endif
 void foo();
 int main()
 {
@@ -38,6 +41,9 @@ t.write("d/Jamfile", """
 lib l : l.cpp : <foo>on:<define>FOO ;
 """)
 t.write("l.cpp", """
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
 #ifdef FOO
 void foo() {}
 #endif

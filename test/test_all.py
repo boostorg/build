@@ -85,11 +85,11 @@ tests = [ "project_test1",
           "alternatives",
           "unused",
           "default_features",
-          "railsys",
           "print",
 	  ]
 
 if os.name == 'posix':
     tests.append("symlink")
+    tests.append("railsys") # Actually, needs QT
 
 run_tests(critical_tests, tests)
