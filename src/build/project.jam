@@ -279,7 +279,7 @@ local rule load-jamfile (
         # Setup, by coordinating with project-root.
         #
         local project-root-module = [ attribute $(jamfile-module) project-root-module ] ;
-        $(project-root-module).register-project $(jamfile-module) ;
+        $(project-root-module).project-root register-project $(jamfile-module) ;
 
         # Now load the Jamfile in it's own context.
         #
@@ -320,7 +320,7 @@ local rule initialize (
     # Jamfile.
     #
     local project-root-module = [ project-root.load [ os.path.parent $(jamfile) ] ] ;
-    local project-root = [ $(project-root-module).location ] ;
+    local project-root = [ $(project-root-module).project-root get-location ] ;
 
     local parent = [ find-jamfile [ os.path.parent $(jamfile) ] $(project-root) ] ;
     local parent-module = ;
@@ -465,6 +465,22 @@ rule target ( location )
     return $(.target.$(location)) ;    
 }
 
+# Use/load a project.
+rule use ( id : location )
+{
+    local project-module = [ project.load $(location) ] ;
+    local declared-id = [ project.attribute $(project-module) id ] ;
+
+    if ! $(declared-id)
+    {
+        error "project loaded by 'use-project' has no project-id." ;
+    }
+    if $(declared-id) != $(id)
+    {
+        error "project-id of a project differs from passed to 'use-project'" ;
+    }
+}
+
 # This module defines rules common to all projects
 module project-rules {
 
@@ -497,19 +513,7 @@ module project-rules {
     {
         import project ;
         local attributes = [ project.attributes $(__name__) ] ;
-
-        local used-location = [ os.path.root $(where) [ $(attributes).get location ] ] ;
-        local project-module = [ project.load $(used-location) ] ;
-        local declared-id = [ project.attribute $(project-module) id ] ;
-
-        if ! $(declared-id)
-        {
-            error "project loaded by 'use-project' has no project-id." ;
-        }
-        if $(declared-id) != $(id)
-        {
-            error "project-id of a project differs from passed to 'use-project'" ;
-        }
+        project.use $(id) : [ os.path.root $(where) [ $(attributes).get location ] ] ;
     }
 
     rule build-project ( dir )
