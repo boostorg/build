@@ -18,6 +18,14 @@
 # 
 #  will cause 'hello_world' to be relinked to the new location, and <dll-path>
 #  property will be added when relinking.
+#
+#  Two properties specifically control 'stage' rule.
+# 
+#  - <location> tells where to put targets. If not specified, directory
+#    with the same name as stage name will be used.
+#  
+#  - <name> tells the new name of the staged target. In this case, only
+#    one target can be specified in sources.
 
 import targets ;
 import class : class new ;
