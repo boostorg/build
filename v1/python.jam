@@ -137,10 +137,13 @@ rule select-python-library ( toolset variant : properties * )
     }
     if $(OS) = MACOSX && $(toolset) = darwin
     {
-        properties = [ replace $(properties) : <shared-link>dynamic <shared-link>bundle ] ;
-        properties +=
-            <bundle-loader>$(PYTHON_ROOT)/bin/python$(PYTHON_VERSION)
-            ;
+        if <target-type>PYD in $(properties)
+        {
+            properties +=
+                <bundle-loader>$(PYTHON_ROOT)/bin/python$(PYTHON_VERSION)
+                ;
+        }
+        properties += <framework>Python ;
     }
     return $(properties) ;
 }
@@ -289,6 +292,10 @@ gGENERATOR_FUNCTION(PYD) = python-files ;
 if $(NT)
 {
     SUFPYD = .pyd $(SUFDLL[2-]) ;
+}
+else if $(OS) = MACOSX
+{
+    SUFPYD = .so $(SUFDLL[2-]) ;
 }
 else
 {
