@@ -15,7 +15,7 @@ rule chars ( string )
     }
     
     # trim off empty strings
-    while $(result[1]) && ! $(result[-2])
+    while $(result[1]) && ! $(result[-1])
     {
         result = $(result[1--2]) ;
     }
