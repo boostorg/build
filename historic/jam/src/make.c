@@ -30,6 +30,7 @@
  *
  * Internal routines:
  * 	make0() - bind and scan everything to make a TARGET
+ * 	make0sort() - reorder TARGETS chain by their time (newest to oldest)
  *
  * 12/26/93 (seiwald) - allow NOTIME targets to be expanded via $(<), $(>)
  * 01/04/94 (seiwald) - print all targets, bounded, when tracing commands
@@ -44,6 +45,8 @@
  * 08/22/95 (seiwald) - NOUPDATE targets immune to anyhow (-a) flag.
  * 09/06/00 (seiwald) - NOCARE affects targets with sources/actions.
  * 03/02/01 (seiwald) - reverse NOCARE change.
+ * 03/14/02 (seiwald) - TEMPORARY targets no longer take on parents age
+ * 03/16/02 (seiwald) - support for -g (reorder builds by source time)
  */
 
 # include "jam.h"
@@ -72,8 +75,10 @@ typedef struct {
 	int	made;
 } COUNTS ;
 
-static void make0( TARGET *t, int pbinding, time_t ptime, 
-		int depth, COUNTS *counts, int anyhow );
+static void make0( TARGET *t, time_t ptime, int depth, 
+		COUNTS *counts, int anyhow );
+
+static TARGETS *make0sort( TARGETS *c );
 
 #define OPT_GRAPH_DEBUG_EXT
         
@@ -126,7 +131,7 @@ make(
 	{
 	    TARGET *t = bindtarget( targets[i] );
 
-	    make0( t, T_BIND_UNBOUND, (time_t)0, 0, counts, anyhow );
+	    make0( t, (time_t)0, 0, counts, anyhow );
 	}
         
 #ifdef OPT_GRAPH_DEBUG_EXT
@@ -177,7 +182,6 @@ make(
 static void
 make0( 
 	TARGET	*t,
-	int	pbinding,	/* parent target's binding */
 	time_t	ptime,		/* parent target's timestamp */
 	int	depth,		/* for display purposes */
 	COUNTS	*counts,	/* for reporting */
@@ -238,13 +242,10 @@ make0(
 	    t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
 	}
 
-	/* If temp file doesn't exist, use parent */
+	/* If temp file doesn't exist but parent does, use parent */
 
 	if( t->binding == T_BIND_MISSING && t->flags & T_FLAG_TEMP && ptime )
-	{
-	    t->time = ptime;
-	    t->binding = t->time ? T_BIND_PARENTS : T_BIND_MISSING;
-	}
+	    t->binding = T_BIND_PARENTS;
 
 	/* Step 2c: If its a file, search for headers. */
 
@@ -293,7 +294,11 @@ make0(
 
 	for( c = t->deps[ T_DEPS_DEPENDS ]; c; c = c->next )
 	{
-	    make0( c->target, t->binding, t->time, depth + 1, counts, anyhow );
+	    /* Pass our time or our parent's time down. */
+
+	    int time = t->binding == T_BIND_PARENTS ? ptime : t->time;
+
+	    make0( c->target, time, depth + 1, counts, anyhow );
 	    leaf = max( leaf, c->target->leaf );
 	    leaf = max( leaf, c->target->hleaf );
 
@@ -335,10 +340,9 @@ make0(
 		If children changed, make target.
 		If target missing, make it.
 		If children newer, make target.
-		If temp's children newer, make temp.
+		If temp's children newer than parent, make temp.
 		If deliberately touched, make it.
 		If up-to-date temp file present, use it.
-		If target exists but parent not, mark target newer.
 		If target newer than parent, mark target newer.
 		Don't propagate child's "newer" status.
 	*/
@@ -359,7 +363,7 @@ make0(
 	{
 	    fate = T_FATE_OUTDATED;
 	}
-	else if( t->binding == T_BIND_PARENTS && last > t->time )
+	else if( t->binding == T_BIND_PARENTS && last > ptime )
 	{
 	    fate = T_FATE_OUTDATED;
 	}
@@ -375,11 +379,7 @@ make0(
 	{
 	    fate = T_FATE_ISTMP;
 	}
-	else if( t->binding == T_BIND_EXISTS && pbinding == T_BIND_MISSING )
-	{
-	    fate = T_FATE_NEWER;
-	}
-	else if( t->binding == T_BIND_EXISTS && ptime && t->time > ptime )
+	else if( t->binding == T_BIND_EXISTS && t->time > ptime )
 	{
 	    fate = T_FATE_NEWER;
 	}
@@ -417,6 +417,11 @@ make0(
 	t->leaf = leaf ? leaf : t->time ;
 	t->fate = fate;
 
+	/* Step 3e: sort dependents by their update time. */
+
+	if( globs.newestfirst )
+	    t->deps[ T_DEPS_DEPENDS ] = make0sort( t->deps[ T_DEPS_DEPENDS ] );
+
 	/*
 	 * Step 4: Recursively make0() headers.
 	 */
@@ -429,7 +434,7 @@ make0(
 
 	for( c = t->deps[ T_DEPS_INCLUDES ]; c; c = c->next )
 	{
-	    make0( c->target, pbinding, ptime, depth + 1, counts, anyhow );
+	    make0( c->target, ptime, depth + 1, counts, anyhow );
 	    hlast = max( hlast, c->target->time );
 	    hlast = max( hlast, c->target->htime );
 	    hleaf = max( hleaf, c->target->leaf );
@@ -470,7 +475,6 @@ make0(
 		flag, target_fate[ t->fate ], 
 		spaces( depth ), t->name );
 }
-
 
 #ifdef OPT_GRAPH_DEBUG_EXT
 
@@ -564,3 +568,46 @@ dependGraphOutput( TARGET *t, int depth )
 }
 
 #endif
+/*
+ * make0sort() - reorder TARGETS chain by their time (newest to oldest)
+ */
+
+static TARGETS *
+make0sort( TARGETS *chain )
+{
+	TARGETS *result = 0;
+
+	/* We walk chain, taking each item and inserting it on the */
+	/* sorted result, with newest items at the front.  This involves */
+	/* updating each TARGETS' c->next and c->tail.  Note that we */
+	/* make c->tail a valid prev pointer for every entry.  Normally, */
+	/* it is only valid at the head, where prev == tail.  Note also */
+	/* that while tail is a loop, next ends at the end of the chain. */
+
+	/* Walk current target list */
+
+	while( chain )
+	{
+	    TARGETS *c = chain;
+	    TARGETS *s = result;
+
+	    chain = chain->next;
+
+	    /* Find point s in result for c */
+
+	    while( s && s->target->time > c->target->time )
+		s = s->next;
+
+	    /* Insert c in front of s (might be 0). */
+	    /* Don't even think of deciphering this. */
+
+	    c->next = s;			/* good even if s = 0 */
+	    if( result == s ) result = c;	/* new head of chain? */
+	    if( !s ) s = result;		/* wrap to ensure a next */
+	    if( result != c ) s->tail->next = c; /* not head? be prev's next */
+	    c->tail = s->tail;			/* take on next's prev */
+	    s->tail = c;			/* make next's prev us */
+	}
+
+	return result;
+}

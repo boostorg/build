@@ -1,44 +1,27 @@
-<<<<<<< variant A
-Release notes for FTJam 2.3.5 (previous release was named "20010626")
-
-0. Bugs fixed since 20010626:
-
-    DEBUG OUTPUT FORMATTING: indentation was "wrapped" when too many levels
-    were reached, making debugging extremly difficult
-
-1. Release info:
-
-    FTJam 2.3.5 (based on Jam 2.3.2)
-    July 30, 2001
-    VERSION 2.3.5
-    PATCHLEVEL 3
-
-2. Compatibility
-
-   FTJam 2.3.5 is upward compatible with Jam 2.3 and 2.2
-   Only a few new builtin rules were added, and some small bugs fixed
-   
-3. Changes since 20010626:
-
-   Added a new builtin named FAIL_EXPECTED. It is used to invert the result
-   of a given action. Used by the Boost.Build sub-system.
-
-============================================================================
-============================================================================
-   
-
->>>>>>> variant B
-Release notes for Jam/MR [UNRELEASED]
+Release notes for Jam/MR 2.4
 (aka Jam - make(1) redux)
 
-*** Note: These Release notes represent work in progress,
-*** not a completed release!
+0.  Changes between 2.4rc1 and 2.4rc2:
 
-1.  Release info: (TENTATIVE)
+    THESE NOTES WILL BE REMOVED WITH THE FINAL 2.4 RELEASE, SINCE THEY
+    REFER EXCLUSIVELY TO ADJUSTMENTS IN BEHAVIORS NEW BETWEEN 2.3 and
+    2.4:
 
-	Jam/MR 2.4 (TENTATIVE, IN PROGRESS!)
-	Month, dd, 2002
-	VERSION 2.4 (TENTATIVE, IN PROGRESS!)
+	Make MATCH generate empty strings for () subexpressions that
+	match nothing, rather than generating nothing at all.
+	Thanks to David Abrahams.
+
+	GLOB now applies the pattern to the directory-less filename,
+	rather than the whole path. Thanks to Niklaus Giger.
+
+	Make Match rule do productized results, rather than
+	using just $(1[1]) as pattern and $(2[1]) as the string.
+
+1.  Release info:
+
+	Jam/MR 2.4
+	March, 21, 2002
+	VERSION 2.4
 
 2.  Compatibility
 
@@ -69,11 +52,20 @@ Release notes for Jam/MR [UNRELEASED]
 
 	New :E=value modifier provides default value if variable unset.
 
-	New :J=joinval modifier concatentates list elements into single
+	New :J=joinval modifier concatenates list elements into single
 		element, separated by joinval.
 
 	\ can now be used to escape a space (or any single whitespace
 	character), so that you don't have to resort to quotes. 
+
+	New 'Match regexp : string' rule matches regexp against string
+	and returns list of results.
+
+	Rules can now be invoked indirectly, through variable names.
+	If the variable expands to an empty list, no rule is run.
+	If the variable expands to multiple entries, each rule is
+	run with the same arguments.  The result of the rule invocation
+	is the concatenation of the results of the rules invoked.
 
 	'Echo' and 'Exit' now have aliases 'echo' and 'exit', since it
 	is really hard to tell that these are built-in rules and not
@@ -98,7 +90,25 @@ Release notes for Jam/MR [UNRELEASED]
 	Jambase has been compacted by applying the new E: and J:
 	expansion modifiers.
 
-3.3.  Jam internal code changes
+	New SoftLink rule, courtesy of David Lindes.  It currently
+	assumes you can pass a -s flag to $(LN).
+
+3.3   'jam' Changes (See Jam.html)
+
+	Added '-q' (quit quick) option; jam will exit promptly (as if it
+	received an interrupt), as soon as any target fails.
+
+	Added experimental '-g' (build newest sources first) option:
+	all things being equal, normally targets are simply built in
+	the order they appear in the Jamfiles.  With this flag, targets
+	with the newest sources are built first.   From an idea by Arnt
+	Gulbrandsen.  Undocumented (outside this note).
+
+3.4.  Jam internal code changes
+
+	jamgram.yy now defines YYMAXDEPTH to 10000, what it is on 
+	FreeBSD, for older yaccs that left it at 150 or so.  This is
+	needed for the right-recursion now used in the grammar.
 
 	Optimize rule compilation, with right-recursion instead of left.
 
@@ -113,6 +123,16 @@ Release notes for Jam/MR [UNRELEASED]
 	essentially the same but returns a LIST.
 
 4.  Fixed bugs
+
+	Missing TEMPORARY targets with multiple parents no longer spoil one
+	parent's time with another.  The parents' time is used for comparison
+	with dependents, but no longer taken on as the target's own time.
+
+	'actions updated', not 'actions together', now protects targets
+	from being deleted on failed/interrupted updates.
+
+	Fixed broken $(v[1-]), which always returned an empty expansion.
+	Thanks to Ian Godin <ian@sgrail.com>.
 
 	Defining a rule within another rule, and invoking the enclosing
 	rule more than once, would result in giving the first rule a
@@ -133,16 +153,26 @@ Release notes for Jam/MR [UNRELEASED]
         filename.
 
 	Four rules makeCommon, makeGrist, makeString, makeSubDir from
-	jam 2.2 missing in 2.3 have been readded, with apologies to
+	jam 2.2 missing in 2.3 have been re-added, with apologies to
 	dtb@cisco.com.
 
 	Return status more likely to be correct when using -d0, now that 
 	targets are could as being built even with no debugging output.
 	Thanks to Miklos Fazekas <boga@mac.com>.
 
+	yyacc now suffixes all terminals it defines with _t, so that they
+	don't conflict with other symbols (like RULE with the typedef
+	in rules.h).  Thanks to Michael Allard.
+
+	InstallInto now handles multiple sources properly, rather than
+	acting as if each installed target depended on all sources to
+	be installed.  $(INSTALLGRIST) is now the default grist for
+	installed targets, rather than the hardcoded 'installed'.  Thanks
+	to Stephen Goodson.
+
 5.  Porting
 
-	[MACINTOSH] Paths are now downshifted (interally) so as to
+	[MACINTOSH] Paths are now downshifted (internally) so as to
 	handle its case insensitivity.  Thanks to Miklos Fazekas
 	<boga@mac.com>.
 
@@ -174,11 +204,14 @@ Release notes for Jam/MR [UNRELEASED]
         [NT] Add entry for DevStudio when the settings are already in the
         system environment.
 
+        [NT] default $(MV) to "move /y" in Jambase.
+
+	[MINGW] Mingw port by Max Blagai.
+
 ===============================================================================
 ===============================================================================
 
 
-####### Ancestor
 ======= end
 Release notes for Jam/MR 2.3
 (aka Jam - make(1) redux)

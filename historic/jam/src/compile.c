@@ -37,6 +37,7 @@
  * External routines:
  *
  *  compile_append() - append list results of two statements
+ *	compile_eval() - evaluate if to determine which leg to compile
  *  compile_foreach() - compile the "for x in y" statement
  *  compile_if() - compile 'if' rule
  *  compile_while() - compile 'while' rule
@@ -52,10 +53,10 @@
  *  compile_setexec() - support for `actions` - save execution string 
  *  compile_settings() - compile the "on =" (set variable on exec) statement
  *  compile_switch() - compile 'switch' rule
+ *
  * Internal routines:
  *
  *  debug_compile() - printf with indent to show rule expansion.
- *
  *  evaluate_rule() - execute a rule invocation
  *
  *  builtin_depends() - DEPENDS/INCLUDES rule
@@ -156,10 +157,23 @@ compile_eval(
 	PARSE	*parse,
 	FRAME	*frame )
 {
-	LIST *ll = parse_evaluate( parse->left, frame );
-	LIST *lr = parse->right ? parse_evaluate( parse->right, frame ) : 0;
-	LIST *s, *t;
+	LIST *ll, *lr, *s, *t;
 	int status = 0;
+
+	/* Short circuit lr eval for &&, ||, and 'in' */
+
+	ll = parse_evaluate( parse->left, frame );
+	lr = 0;
+
+	switch( parse->num )
+	{
+	case EXPR_AND: 
+	case EXPR_IN: 	if( ll ) goto eval; break;
+	case EXPR_OR: 	if( !ll ) goto eval; break;
+	default: eval: 	lr = parse_evaluate( parse->right, frame );
+	}
+
+	/* Now eval */
 
 	switch( parse->num )
 	{
@@ -168,23 +182,11 @@ compile_eval(
 		break;
 
 	case EXPR_AND:
-                if ( ll )
-                {
-                    if ( parse->third ) lr = parse_evaluate( parse->third, frame );
-                    if ( lr ) status = 1;
-                }
+		if( ll && lr ) status = 1;
 		break;
 
 	case EXPR_OR:
-                if ( ll )
-                {
-                    status = 1;
-                }
-                else
-                {
-                    if ( parse->third ) lr = parse_evaluate( parse->third, frame );
-                    if ( lr ) status = 1;
-                }
+		if( ll || lr ) status = 1;
 		break;
 
 	case EXPR_IN:

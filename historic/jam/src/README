@@ -1,18 +1,10 @@
-This is the FreeType version of Jam. For more information, please see
-  http://www.freetype.org/jam/index.html
-
-The complete and detailed list of changes is available at:
-  http://www.freetype.org/jam/changes.html
-
-------------------------------------------------------------------------------
-
 Jam/MR (aka "jam - make(1) redux") 
 
     /+\
     +\	Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
     \+/
 
-    This is Release 2.3 of Jam/MR, a make-like program.
+    This is Release 2.4 of Jam/MR, a make-like program.
 
     License is hereby granted to use this software and distribute it
     freely, as long as this copyright notice is retained and modifications 
@@ -149,6 +141,8 @@ March, 1995 - release 2.0
 February, 1996 - release 2.1
 November, 1997 - release 2.2
 December, 2000 - release 2.3
+March, 2002 - release 2.4
+
 
 Christopher Seiwald
 

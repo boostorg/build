@@ -17,7 +17,7 @@
 <DT> <P> <H2> USAGE </H2> <DD>
 
 <PRE>
-jam [ -a ] [ -n ] [ -v ] 
+jam [ -a ] [ -n ] [ -v ] [ -q ]
     [ -d <I>debug</I> ] 
     [ -f <I>jambase</I> ] 
     [ -j <I>jobs</I> ] 
@@ -104,6 +104,10 @@ jam [ -a ] [ -n ] [ -v ]
 	    <TR><TD VALIGN=TOP><CODE> -o <I>file</I></CODE>
 	    <TD> Write the updating actions to the specified file instead
 	    of running them (or outputting them, as on the Mac).
+
+	    <TR><TD VALIGN=TOP><CODE> -q </CODE>
+	    <TD> Quit quickly (as if an interrupt was received)
+	    as soon as any target fails.
 
 	    <TR><TD VALIGN=TOP><CODE> -s <I>var</I>=<I>value</I></CODE>
 	    <TD> Set the variable <I>var</I> to <I>value</I>, overriding
@@ -385,6 +389,39 @@ jam [ -a ] [ -n ] [ -v ]
 
 	<P>
 
+	Rule invokation may be indirected through a variable:
+
+	<P><TABLE WIDTH=75% ALIGN=CENTER><TR><TD><DL>
+
+	    <P> <DT> <CODE>
+	    $(<I>var</I>) <I>field1</I> : <I>field2</I> : <I>...</I> 
+	    : <I>fieldN</I> ;
+	    </CODE>
+
+	    <P> <DT> <CODE>
+	    on <I>target</I> $(<I>var</I>) <I>field1</I> : <I>field2</I> : <I>...</I> 
+	    : <I>fieldN</I> ;
+	    </CODE>
+
+	    <P> <DT> <CODE>
+	    [ $(<I>var</I>) <I>field1</I> : <I>field2</I> : <I>...</I>
+	
+            : <I>fieldN</I> ] <br>
+	    [  on <I>target</I> $(<I>var</I>) <I>field1</I> : <I>field2</I> : <I>...</I>
+            : <I>fieldN</I> ] <br>
+
+	    </CODE>
+
+	</DL></TABLE>
+
+ 	The variable's value names the rule (or rules) to be invoked.
+	A rule is invoked for each element in the list of
+	<TT>$(<I>var</I>)</TT>'s values. The fields
+	<I>field1</I> : <I>field2</I> : <I>...</I> are passed as
+	arguments for each invokation. For the <TT> [ ... ] </TT> forms,
+	the return value is the concatenation of the return values for
+	all of the invokations.
+
 	<A NAME="actionmods">
 	<P> <H4> Action Modifiers </H4>
 	</A>
@@ -598,12 +635,33 @@ jam [ -a ] [ -n ] [ -v ]
 	GLOB <i>directories</I> : <I>patterns</I>
 	</CODE>
 
-	<DD>  Using the same wildcards as for the patterns in the
-        <A HREF="#switch">switch</A> statement).
-        It is invoked by being used as an argument to a rule invocation
-        inside of `[ ]`. For example: "FILES = [ GLOB dir1 dir2 : *.c *.h ]"
-        will set the value of A to the list of C source and header files in
-        dir1 or dir2.
+	<DD>  Using the same wildcards as for the patterns in the <A
+	HREF="#switch">switch</A> statement).  It is invoked by being
+	used as an argument to a rule invocation inside of `[ ]`. For
+	example: "<TT>FILES = [ GLOB dir1 dir2 : *.c *.h ]</TT>" sets
+	A to the list of C source and header files in dir1 or dir2.
+	The resulting filenames are the full pathnames, including the
+	directory, but the pattern is applied only to the file name
+	without the directory.
+
+	</DL></TABLE>
+
+	<P>
+
+	The MATCH rule does pattern matching.
+
+	<P><TABLE WIDTH=75% ALIGN=CENTER><TR><TD><DL>
+
+	<P><DT><CODE>
+	MATCH <i>regexps</I> : <I>list</I>
+	</CODE>
+
+	<DD> Matches the <b>egrep</b>(1) style regular expressions
+	<I>regexps</I> against the strings in <I>list</I>.  The result
+	is the concatenation of matching <tt>()</tt> subexpressions for
+	each string in <I>list</I>, and for each regular expression in    
+	<I>regexps</I>.  Only useful within the <tt>[ ]</tt> construct,
+	to change the result into a list.
 
 	</DL></TABLE>
 
@@ -1283,15 +1341,9 @@ jam [ -a ] [ -n ] [ -v ]
         <BR>
         Comments to <A HREF="mailto:info@perforce.com">info@perforce.com</A>
         <BR>
-        Last updated: December 31, 2000
+        Last updated: April 1, 2002
 	<BR>
-<<<<<<< variant A
 	$Id$
->>>>>>> variant B
-	$Id$
-####### Ancestor
-	$Id$
-======= end
 
 </BODY> 
 </HTML>
