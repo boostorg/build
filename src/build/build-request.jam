@@ -10,7 +10,7 @@ import feature ;
 import property ;
 import numbers ;
 import container ;
-import class : new ;
+import class : class new ;
 
 # Transform property-set by applying f to each component property.
 local rule apply-to-property-set ( f property-set )
@@ -221,6 +221,40 @@ local rule convert-command-line-element ( e : feature-space )
     
     return $(result) ;
 }
+
+# Class which is responsible for adjusting properties for targets
+# which are both directly requested, and requested from other main
+# targets.
+rule directly-requested-properties-adjuster
+{
+    rule add-requested-property-set ( property-set )
+    {        
+        local base = [ $(property-set).base ] ;
+        local ep = $(self.direct-request.$(base:J=-)) ;
+        if $(ep) && $(ep) != $(properties) 
+        {            
+            error "Conflicting direct build requests" $(ep) "and" $(properties) ;
+        }
+        else
+        {
+            self.direct-request.$(base:J=-) = $(property-set) ;
+        }                
+    }        
+    
+    rule adjust ( property-set )
+    {
+        local base = [ $(property-set).base ] ;
+        local ep = $(self.direct-request.$(base:J=-)) ;
+        if $(ep) 
+        {
+            property-set = $(ep) ;
+        }
+        return $(property-set) ;
+    }    
+}
+
+class directly-requested-properties-adjuster ;
+
 
 rule __test__ ( )
 {
