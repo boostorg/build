@@ -7,6 +7,7 @@ import modules ;
 import feature ;
 import errors ;
 import type ;
+import class : class new ;
 
 # Initialized the QT support module. The 'prefix' parameter 
 # tells where QT is installed. When not given, environmental
@@ -33,6 +34,42 @@ rule init ( prefix ? )
     feature.action <uses>qt : qt.add-properties ;            
            
     generators.register-standard qt.moc : H : CPP(moc_%) : <uses>qt ;    
+    
+    type.register UI : ui ;
+    type.register UIC_H : : H ;
+    type.set-generated-target-suffix UIC_H : : h ;
+    
+    generators.register-standard qt.uic-h : UI : UIC_H : <uses>qt ;
+    
+    # The following generator is used to convert UI files to CPP
+    # It creates UIC_H from UI, and constructs CPP from UI/UIC_H
+    # In addition, it also returns UIC_H target, so that it can bee
+    # mocced.
+    rule qt.uic-cpp-generator 
+    {
+        generator.__init__ qt.uic-cpp : UI UIC_H : CPP : <uses>qt ;
+        
+        rule run ( project name ? : properties * : sources + :  multiple ? )
+        {
+            # Construct CPP as usual
+            local result = [ generator.run $(project) $(name) 
+              : $(properties) : $(sources) : $(multiple) ] ;
+            # If OK, add "UIC_H" target to the returned list
+            if $(result)
+            {
+                local action = [ $(result[1]).action ] ;
+                local sources = [ $(action).sources ] ;
+                result += $(sources[2]) ;
+            }
+            
+            return $(result) ;
+        }               
+    }
+    
+    class qt.uic-cpp-generator : generator ; 
+    generators.register [ new qt.uic-cpp-generator ] ;
+        
+    #generators.register-standard qt.uic-cpp : UI UIC_H : CPP : <uses>qt ;
 }
 
 rule qt.add-properties ( property )
@@ -46,6 +83,18 @@ rule qt.add-properties ( property )
 actions moc 
 {
     $(QTDIR)/bin/moc -f $(>) -o $(<)
+}
+
+actions uic-h
+{
+    $(QTDIR)/bin/uic $(>) -o $(<)
+}
+
+# The second target is uic-generated header name. It's placed in
+# build dir, but we want to include it using only basename.
+actions uic-cpp
+{
+    $(QTDIR)/bin/uic $(>[1]) -i $(>[2]:D=) -o $(<)
 }
 
 
