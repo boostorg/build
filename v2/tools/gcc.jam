@@ -216,7 +216,9 @@ rule init-link-flags ( linker )
         {
         flags gcc.link OPTIONS <debug-symbols>off : -Wl,-s ;
         flags gcc.link RPATH <dll-path> ;
-        # <xdll-path> is ignored. Is this correct? AH 2004/10/16
+        # Solaris linker does not have a separate -rpath-link, but
+        # allows to use -L for the same purpose.
+        flags gcc.link LINKPATH <xdll-path> ;
 
         # This permits shared libraries with non-PIC code on Solaris
         # VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll,
