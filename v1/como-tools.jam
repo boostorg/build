@@ -54,7 +54,7 @@ rule Link-action
 # for como, we repeat all libraries so that dependencies are always resolved
 actions como-Link-action bind NEEDLIBS
 {
-    $(COMO) $(LINKFLAGS) -o "$(<[1])" "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS) -l"$(FINDLIBS)"
+    $(COMO) $(LINKFLAGS) -o "$(<[1])" "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l"$(FINDLIBS)"
 }
 
 
