@@ -117,21 +117,10 @@ rule find ( name : current-location )
         # root, willing to act as Jamfile. In that case, project-root
         # must be placed in the directory referred by id.
         
-        local root-location = 
-          [ project-roots.find-project-root $(location) ] ;
-        if $(root-location)
+        if [ find-jamfile $(location) ]
         {
-            root-location = [ path.parent $(root-location) ] ;
-        }
-        
-            if $(location) in $(.project-location) ||
-              [ find-jamfile $(location) ] && [ load $(location) ] ||
-                $(root-location) = $(location) && [ project-roots.load $(location) ]
-                {
-                    # We've managed to find or load project. Returns the module
-                    # name
-                    project-module = [ module-name $(location) ] ;
-                }
+            project-module = [ load $(location) ] ;
+        }        
     }
     
     return $(project-module) ;
@@ -176,12 +165,21 @@ local rule find-jamfile (
     local jamfile-glob = ;
     if $(parent-root)
     {
-        jamfile-glob =
-            [ path.glob-in-parents $(dir) : $(JAMFILE) : $(parent-root) ] ;
+        if ! $(.parent-jamfile.$(dir))
+        {     
+            .parent-jamfile.$(dir) = 
+              [ path.glob-in-parents $(dir) : $(JAMFILE) : $(parent-root) ] ;            
+        }        
+        jamfile-glob = $(.parent-jamfile.$(dir)) ;                            
     }
     else
     {
-        jamfile-glob = [ path.glob $(dir) : $(JAMFILE) ] ;
+        if ! $(.jamfile.$(dir))
+        {            
+            .jamfile.$(dir) = [ path.glob $(dir) : $(JAMFILE) ] ;         
+        }   
+        jamfile-glob = $(.jamfile.$(dir)) ;
+        
     }
 
     return $(jamfile-glob) ;

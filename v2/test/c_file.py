@@ -10,7 +10,8 @@ from BoostBuild import Tester, List
 
 t = Tester()
 
-t.write("project-root.jam", """
+t.write("project-root.jam", "")
+t.write("Jamfile", """
 project ;
 
 exe hello : hello.cpp a.c ;

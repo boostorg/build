@@ -10,7 +10,8 @@ from BoostBuild import Tester, List
 # Test that free property inside 
 t = Tester()
 
-t.write("project-root.jam", """
+t.write("project-root.jam", "")
+t.write("Jamfile", """
 project ;
 
 variant debug-AA : debug : <define>AA ;

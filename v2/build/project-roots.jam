@@ -300,19 +300,7 @@ module project-root-context
             return $(.project-root) ;
         }
     }
-    
-    # First, makes this project-root.jam module acts as project, which, in
-    # particular means that project-context rules will be imported in the
-    # current module. 
-    # Second, invokes 'project' again --- this time it will be rule
-    # from project-context.
-    rule project ( * : * )
-    {
-        import project ;
-        project.act-as-jamfile $(__name__) : [ project-root get-location ] ;
-        project $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
-    }
-        
+            
     # Declare and set a project global constant. Project global constants are
     # normal variables but should not be changed. They are applied to each
     # Jamfile that is loaded under it's corresponding project-root.
