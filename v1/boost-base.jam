@@ -179,7 +179,7 @@ rule Link-EXE
 {
     # N.B. By the time this rule is invoked, we had better have gRUN_PATH completely set.
     Link-action $(<) : $(>) : EXE ;
-    RUN_PATH on $(<) = [ join [ unique $(gRUN_PATH($(<))) ] : $(SPLITPATH) ] ;
+    RUN_PATH on $(<) = [ join [ unique $(gRUN_PATH($(<))) $(gTOOLSET_LIB_PATH) ] : $(SPLITPATH) ] ;
     if $(UNIX) 
     {
         RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
@@ -188,7 +188,7 @@ rule Link-EXE
 
 rule Link-DLL
 {
-    gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) $(TOOLSET_LIB_PATH) ;
+    gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) $(gTOOLSET_LIB_PATH) ;
     if $(UNIX) 
     {
         RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
