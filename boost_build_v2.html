@@ -24,9 +24,9 @@
 </style>
   </head>
   <!-- Things yet to document:
-                              - build request, build request expansion and directly requested targets
-                              - conditional properties
-                            -->
+                                - build request, build request expansion and directly requested targets
+                                - conditional properties
+                              -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -57,6 +57,8 @@
           <dt><a href="#hierarchy">Project hierarchy</a></dt>
 
           <dt><a href="#using_libraries">Using libraries</a></dt>
+
+          <dt><a href="#library_dependencies">Library dependencies</a></dt>
 
           <dt><a href="#static_shared">Static and shared libraries</a></dt>
 
@@ -211,12 +213,13 @@ boost-build /path/to/boost.build ;
     always be present. This leads to a question: what if user explictly
     requested single-threading. The answer is that requirement can affect
     build properties only to a certain degree: the requested and actual
-    properties must be link-compatible. See <a href="#link_compatibility">link
-    compatibility</a> below. If they are not link compatible, the bulding of
-    the target is skipped. Previously, we've added "hello2" target. Seems
-    like we have to specify the same requirements for it, which results in
-    duplication. But there's a better way. Each project (i.e. each Jamfile),
-    can specify a set of attributes, including requirements: 
+    properties must be link-compatible. See <a href=
+    "#link_compatibility">link compatibility</a> below. If they are not link
+    compatible, the bulding of the target is skipped. Previously, we've added
+    "hello2" target. Seems like we have to specify the same requirements for
+    it, which results in duplication. But there's a better way. Each project
+    (i.e. each Jamfile), can specify a set of attributes, including
+    requirements: 
 <pre>
    project 
        : requirements &lt;include&gt;/home/ghost/Work/boost &lt;threading&gt;multi 
@@ -287,9 +290,11 @@ boost-build /path/to/boost.build ;
 <pre>
      exe app : app.cpp ../lib/lib1/lib1 ;
 </pre>
-    When linking the "app" binary, the needed library will be used. But what
-    is meant by "needed"? For example, we can request to build "app" with
-    properties 
+    While "app.cpp" is a regular source file, "../lib/lib1/lib1" is a
+    reference to another target, here, library "lib1" declared in Jamfile at
+    "../lib/lib1". When linking the "app" binary, the needed version of the
+    library will be built and linked in. But what is meant by "needed"? For
+    example, we can request to build "app" with properties 
 <pre>
     &lt;optimization&gt;full &lt;cxxflags&gt;-w-8080
 </pre>
@@ -313,15 +318,17 @@ boost-build /path/to/boost.build ;
 </pre>
     Usage requirements are requirements which are applied to dependents. In
     this case, &lt;include&gt; will be applied to all targets which use
-    "lib1". You'd need to specify usage requirements only once, and programs
-    which use "lib1" don't have to care about include paths any longer. Or
-    course, the path will be interpreted relatively to "lib/lib1" and will be
-    adjusted according to the <tt>bjam</tt>s invocation directory. For
-    example, if building from project root, the final compiler's command line
-    will contain <tt>-Ilib/lib1</tt>. The second problem is that we hardcode
-    the path to library's Jamfile. Imagine it's hardcoded in 20 different
-    places and we change the directory layout. The solution is to use project
-    ids. First, we assign a project id to Jamfile in lib/lib1: 
+    "lib1" &mdash; i.e. targets which have "lib1" either in sources or in
+    dependency properties. You'd need to specify usage requirements only
+    once, and programs which use "lib1" don't have to care about include
+    paths any longer. Or course, the path will be interpreted relatively to
+    "lib/lib1" and will be adjusted according to the <tt>bjam</tt>s
+    invocation directory. For example, if building from project root, the
+    final compiler's command line will contain <tt>-Ilib/lib1</tt>. The
+    second problem is that we hardcode the path to library's Jamfile. Imagine
+    it's hardcoded in 20 different places and we change the directory layout.
+    The solution is to use project ids &mdash; symbolic names, not tied to
+    directory layout. First, we assign a project id to Jamfile in lib/lib1: 
 <pre>
     project lib1
         : usage-requirements &lt;include&gt;.
@@ -331,16 +338,66 @@ boost-build /path/to/boost.build ;
 <pre>
     exe app : app.cpp @/lib1/lib1 ;
 </pre>
-    This way, users of "lib1" do not depend on its location, only on id,
-    which is supposedly stable. The only thing left, it to make sure that
-    src/Jamfile knows the project id that it uses. We add to [top]/Jamfile
-    the following line: 
+    The "@/lib1/lib1" syntax is used to refer to target "lib1" in project
+    with global id "@/lib1" (the slash is used to specify global id). This
+    way, users of "lib1" do not depend on its location, only on id, which is
+    supposedly stable. The only thing left, it to make sure that src/Jamfile
+    knows the project id that it uses. We add to [top]/Jamfile the following
+    line: 
 <pre>
     use-project /lib1 : lib/lib1 ;
 </pre>
     Now, all projects can refer to "lib1" using the symbolic name. If the
     library is moved somewhere, only a single line in the top-level Jamfile
     should be changed. 
+
+    <h3 id="library_dependencies">Library dependencies</h3>
+
+    <p>The previous example was simple. Often, there are long chains of
+    dependencies between libraries. The main application is a thin wrapper on
+    top of library with core logic, which uses library of utility functions,
+    which uses boost filesystem library. Looks like successfull linking of
+    main application requires something like:</p>
+<pre>
+    lib utils : utils.cpp ; # Uses Boost.Filesystem
+    lib core : core.cpp ;   # Uses 'utils'
+    exe app : app.cpp core utils @/boost/filesystem/fs ;
+   
+</pre>
+    This works, but each application should, in effect, explicitly specify
+    all libraries that it uses, either directly or indirectly. This is
+    troublesome: when the 'utils' library starts using another libraries, you
+    have to adjust list of sources for all applications. Jamfiles become
+    unstable. 
+
+    <p>Usage requirements can help again. There's a builtin dependency
+    feature &lt;library&gt;. When found in properties for executable, it
+    causes a library, identified by the feature's value, to be linked into
+    executable. Seems like the effect is the same as when library is
+    specified in sources. But the feature allows us to write:</p>
+<pre>
+    lib utils : utils.cpp : : : &lt;library&gt;@/boost/filesystem/fs ;
+    lib core : core.cpp : : : &lt;library&gt;utils ;
+    exe app : app.cpp core ;
+   
+</pre>
+
+    <p>The application uses "core", which has &lt;library&gt;utils in usage
+    requirements, so that property will added to build properties for "app".
+    As the result, "utils" will be linked to "app" &mdash; automatically.
+    Likewise, "@/boost/filesystem/fs" will be linked in without any
+    effort.</p>
+
+    <p>The &lt;library&gt; property can be used in more ways. For example, if
+    "@/boost/filesystem/fs" should be linked to all applications in your
+    project, you can add &lt;library&gt;@/boost/filesystem/fs to requirements
+    of the project, like this:</p>
+<pre>
+    project 
+       : requirements &lt;library&gt;@/boost/filesystem/fs
+       ;
+   
+</pre>
 
     <h3 id="static_shared">Static and shared libaries</h3>
     While the previous section explained how to create and use libraries, it
@@ -387,7 +444,7 @@ boost-build /path/to/boost.build ;
       <li>
         What if library can be both static and shared, but when using it in
         specific executable, you want it static? <a href=
-        "target_reference">Target references</a> are here to help: 
+        "#target_reference">Target references</a> are here to help: 
 <pre>
     exe important : main.cpp helpers/&lt;link&gt;static ;
    
@@ -887,7 +944,7 @@ exe hello : hello.cpp : &lt;toolset&gt;yfc:&lt;cxxflags&gt;-disable-pointless-wa
 
     <h3><a name="command_line">Command line</a></h3>
 
-    <p>The comamnd line may contain:</p>
+    <p>The command line may contain:</p>
 
     <ul>
       <li>Jam options,</li>
