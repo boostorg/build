@@ -152,10 +152,10 @@ rule set-scanner ( type : scanner )
 }
 
 # Returns a scanner instance appropriate to 'type' and 'properties'.
-rule get-scanner ( type : properties * )
+rule get-scanner ( type : property-set )
 {
     if $(.scanner.$(type)) {
-        return [ scanner.get $(.scanner.$(type)) : $(properties) ] ;
+        return [ scanner.get $(.scanner.$(type)) : [ $(property-set).raw ] ] ;
     }    
 }
 
