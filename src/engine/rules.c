@@ -134,12 +134,13 @@ bindtarget( const char *targetname )
 	if( !targethash )
 	    targethash = hashinit( sizeof( TARGET ), "targets" );
 
-	t->name = targetname;
+    /* Perforce added const everywhere. No time to merge that change. */
+	t->name = (char*)targetname;
 
 	if( hashenter( targethash, (HASHDATA **)&t ) )
 	{
 	    memset( (char *)t, '\0', sizeof( *t ) );
-	    t->name = newstr( targetname );	/* never freed */
+	    t->name = newstr( (char*)targetname );	/* never freed */
 	    t->boundname = t->name;		/* default for T_FLAG_NOTFILE */
 	}
 
