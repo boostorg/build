@@ -20,11 +20,12 @@ rule load (
 {
     # Find the project-root.jam corresponding to this directory.
     #
-    local project-root-to-load = [ find-to-root $(dir) : project-root.jam ] ;
+    local location = [ os.path.parent
+         [ os.path.make [ find-to-root $(dir) : project-root.jam ] ] ] ;
 
     # No project-root file found.
     #
-    if ! $(project-root-to-load)
+    if ! $(location)
     {
         EXIT
             "Failed to find the project root for:" $(dir)"." "Did not"
@@ -33,9 +34,7 @@ rule load (
             "Please consult the documentation at 'http://www.boost.org'." ;
     }
 
-    local project-root-location = [ os.path.make $(project-root-to-load) ] ;
-    local project-root-dir = [ os.path.parent $(project-root-location) ] ;
-    local project-root-module = project-root<$(project-root-dir)> ;
+    local project-root-module = project-root<$(location)> ;
 
     # Only bother with the rest if the project-root isn't loaded yet.
     #
@@ -48,14 +47,14 @@ rule load (
         #
         .project-root += $(project-root-module) ;
         modules.poke $(project-root-module) : .module : $(project-root-module) ;
-        modules.poke $(project-root-module) : .location : $(project-root-dir) ;
+        modules.poke $(project-root-module) : .location : $(location) ;
 
         # Load it within a module specifically for the project root.
         # The module system handles checking for multiple includes.
         #
         modules.load $(project-root-module)
-            : [ os.path.basename $(project-root-location) ]
-            : $(project-root-dir) ;
+            : project-root.jam : [ os.path.native $(location) ] ;
+
     }
 
     # Return the module for the project.
