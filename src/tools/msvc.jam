@@ -128,12 +128,13 @@ rule init (
     local prefix = $(setup) ;
 
     
+    local condition ;
     if $(version)
     {
         vendor = $(vendor)- ;
         vendor ?= "" ;
     
-        local condition  = -$(vendor)$(version) ;
+        condition  = -$(vendor)$(version) ;
         condition ?= "" ;
         condition = <toolset>msvc$(condition) ;
 
@@ -157,9 +158,9 @@ rule init (
     # The following options work only for 7* versions. It means
     # that if the user has not specified a version he gets 6.0 compatible
     # behavious (i.e. a bit buggy)
-    if [ MATCH ^(7|[^7].*) : $(version) ] 
+    if [ MATCH ^(7\..*) : $(version) ] 
     {
-        flags msvc.compile CFLAGS : /Zc:forScope /Zc:wchar_t ;
+        flags msvc.compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
     }
     
 }
