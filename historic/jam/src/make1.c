@@ -206,7 +206,13 @@ make1b( TARGET *t )
     if( t->status == EXEC_CMD_FAIL && t->actions )
     {
         ++counts->skipped;
-        printf( "...skipped %s for lack of %s...\n", t->name, failed );
+        if ( ( t->flags & ( T_FLAG_RMOLD | T_FLAG_NOTFILE ) ) == T_FLAG_RMOLD )
+        {
+            if( !unlink( t->boundname ) )
+                printf( "...removing outdated %s\n", t->boundname );
+        }
+        else
+            printf( "...skipped %s for lack of %s...\n", t->name, failed );
     }
 
     if( t->status == EXEC_CMD_OK )
@@ -359,6 +365,7 @@ make1d(
 	/* status and signal our completion so make1c() can run the next */
 	/* command.  On interrupts, we bail heavily. */
 
+# if 0 /* apparently not needed */
         if ( t->flags & T_FLAG_FAIL_EXPECTED )
         {
           /* invert execution result when FAIL_EXPECTED was applied */
@@ -370,6 +377,7 @@ make1d(
               ;
           }
         }
+# endif 
         
 	if( status == EXEC_CMD_FAIL && ( cmd->rule->actions->flags & RULE_IGNORE ) )
 	    status = EXEC_CMD_OK;
