@@ -39,7 +39,7 @@ Projects:
 '/boost-build-test-project-1':
 
 * Parent project: (none)
-* Requirements: <threading>multi <include>/home/ghost/local/include
+* Requirements: <include>/home/ghost/local/include <threading>multi
 * Default build:
 * Source location: %(root-dir)s
 * Projects to build: dir dir2
@@ -47,7 +47,7 @@ Projects:
 '/boost-build-test-project-1/dir':
 
 * Parent project: %(root-dir)s
-* Requirements: <threading>multi <include>/home/ghost/local/include
+* Requirements: <include>/home/ghost/local/include <threading>multi
 * Default build: <variant>release
 * Source location: %(root-dir-prefix)sdir/src
 * Projects to build:
