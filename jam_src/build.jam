@@ -52,9 +52,8 @@ rule toolset ( name command : opt.out + : opt.define + : release-flags * : debug
 }
 ## HP-UX aCC compiler
 toolset acc cc : "-o " : -D
-    : -s -O3
-    : -g -pg
-    : -llibstd_v2.sl ;
+    : -Ae -s -O3
+    : -Ae -g -pg ;
 ## Borland C++ 5.5.x
 toolset borland bcc32 : -e -n : /D
     : -WC -w- -q "-I$(toolset-root)Include" "-L$(toolset-root)Lib" -O2 -vi -w-inl
