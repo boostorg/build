@@ -16,6 +16,7 @@ echo -e "boost-build new ;\n" > boost-build.jam
 # Make packages
 find . -name CVS | xargs rm -rf
 rm roll.sh
+chmod a+x jam_src/build.bat
 cd .. && zip -r boost-build.zip boost-build && tar --bzip2 -cf boost-build.tar.bz2 boost-build
 cd boost-build
 
