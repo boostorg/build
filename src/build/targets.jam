@@ -972,8 +972,6 @@ class basic-target : abstract-target
                 
                 local result = 
                   [ construct $(source-targets) : $(rproperties) ] ;
-                check-for-unused-sources 
-                  $(result) : $(source-targets) ;
 
                 local s = [ create-subvariant $(result) : $(property-set) : $(source-targets)
                   : $(rproperties) : $(usage-requirements) ] ;
@@ -1038,49 +1036,7 @@ class basic-target : abstract-target
         }                        
         return $(s) ;
     }
-    
-        
-    # Check that each source virtual target which is not marked as intermediate
-    # is present dependency graph of 'result'. 
-    # If this is not the case, issues a warning.
-    # Sources which are directly presentin result are not considered used, and 
-    # a warning will be issued for them as well.
-    #
-    # Note that 'result' *can* be empty. For
-    # example, in this use case:
-    #    alias platform-sources ;
-    #    alias platform-sources : a.cpp : <os>NT ;
-    # result will be empty in the first case.
-    local rule check-for-unused-sources ( result * : sources * )
-    {
-        local isources ;
-        for local i in $(sources)
-        {
-            if ! [ $(i).intermediate ] 
-            {
-                isources += $(i) ;
-            }
-        }
-        sources = $(isources) ;
-        
-        local used-sources ;
-        for local r in $(result)
-        {
-            used-sources += [ virtual-target.traverse $(r) : include-roots : 1 ] ;
-        }
-        # Consider sources which are bypassed as unused
-        used-sources = [ set.difference $(used-sources) : $(result) ] ;
-        
-        local unused = [ set.difference $(sources) : $(used-sources) ] ;
-        if $(unused)
-        {
-            for local u in $(unused)
-            {               
-                errors.warning "Unused source" [ $(u).str ] "in main target" [ full-name ] ;
-            }                            
-        }                                                       
-    }
-    
+               
     # Checks if 'targets' are link-compatible with 'build-request' and
     # issues a warning if that's not the case.
     local rule check-for-link-compatibility ( targets * : build-request )
