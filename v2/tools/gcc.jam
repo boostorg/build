@@ -117,12 +117,15 @@ class gcc-linking-generator : linking-generator
 class gcc-archive-generator : generator
 {
     import gcc ; 
-    
-    rule __init__ ( )
+
+    rule __init__ ( id composing ? : source-types + : target-types + : 
+        requirements * )
     {
-        generator.__init__ gcc.archive composing : OBJ : STATIC_LIB : <toolset>gcc ;
+        composing ?= true ;
+        generator.__init__ $(id) $(composing) : $(source-types) : $(target-types) :
+          $(requirements) ;
     }
-    
+        
     rule run ( project name ? : property-set : sources + :  multiple ? )
     {
         local used-libraries ;
@@ -161,7 +164,8 @@ class gcc-archive-generator : generator
 generators.register [ new gcc-linking-generator gcc.link : LIB OBJ : EXE 
     : <toolset>gcc ] ;
 
-generators.register [ new gcc-archive-generator ] ;
+generators.register [ new gcc-archive-generator gcc.archive : OBJ : STATIC_LIB 
+    : <toolset>gcc ] ;
 
 generators.register [ new gcc-linking-generator gcc.link.dll : LIB OBJ : SHARED_LIB 
     : <toolset>gcc ] ;
