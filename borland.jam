@@ -145,22 +145,47 @@ flags builtin.response-file LIBRARY_OPTION <toolset>borland : -l : unchecked ;
 # specifying $(BCC_TOOL_PATH)bcc32 doesn't help. You need to add
 # $(BCC_TOOL_PATH) to the path
 # The NEED_IMPLIB variable controls whether we need to invoke implib.
-if [ os.name ] = NT
+
+if [ os.name ] = CYGWIN
 {
+    .cygpath = "cygpath -w " ;
+    rule link
+    {
+        if ! $(<[2])
+        {
+            NEED_IMPLIB on $(<) = ;
+        }
+    }
+
+    .set-path = "cmd /S /C set \"PATH=" ;
+    .old-path = ";%PATH%\" \"&&\"" ;
+
     actions link bind LIBRARIES
     {
-        set PATH=$(.root);%PATH%
-        "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)"
-        $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)$(<[2]) $(NEED_IMPLIB)$(<[1])        
+        $(.set-path)$(.root)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"`$(.cygpath)$(<[1]:D)`\\$(<[1]:D=)" @"`$(.cygpath)$(>:D)`\\$(>:D=)"
+        $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)"`$(.cygpath)$(<[2]:D)`\\$(<[2]:D=)" $(NEED_IMPLIB)"`$(.cygpath)$(<[1]:D)`\\$(<[1]:D=)"
     }
 }
 else
 {
+    if [ os.name ] = NT
+    {
+        .set-path = "set \"PATH=" ;
+        .old-path = ";%PATH%\"
+          " ;
+    }
+    else
+    {
+        .set-path = "PATH=\"" ;
+        .old-path = "\":$PATH
+                     export PATH
+                    " ;
+    }
+    
     actions link bind LIBRARIES
     {
-        export PATH=$(.root):$PATH
-        "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)"
-        $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)$(<[2]) $(NEED_IMPLIB)$(<[1])                  
+        $(.set-path)$(.root)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)"
+        $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)$(<[2]) $(NEED_IMPLIB)$(<[1])        
     }
 }
 

@@ -83,6 +83,9 @@ class Tester(TestCmd.TestCmd):
         elif os.name == 'posix':
             if os.uname()[0].lower().startswith('cygwin'):
                 jam_build_dir = "bin.cygwinx86"
+                if 'TMP' in os.environ and os.environ['TMP'].find('~') != -1:
+                    print 'Setting $TMP to /tmp to get around problem with short path names'
+                    os.environ['TMP'] = '/tmp'
             else:
                 jam_build_dir = "bin.linuxx86"
         else:

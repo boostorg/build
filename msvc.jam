@@ -92,8 +92,7 @@ rule init ( version ? : path ? : vendor ? : setup ? compiler ? linker ? )
     }
     else
     {
-        setup = "cmd '"$(setup)" && " ;
-        .close-quote = "'" ;
+        setup = "cmd /S /C "$(setup)" \"&&\" " ;
     }
     
     flags msvc SETUP $(condition) : $(setup:E="") ;
@@ -160,7 +159,7 @@ flags msvc WHATEVER <toolset-msvc:version> ;
 
 actions compile
 {
-    $(.CC) /Zm800 -nologo -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<)" "$(>)" $(.close-quote)
+    $(.CC) /Zm800 -nologo -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<)" "$(>)"
 }
 
 # Declare flags and action for linking
@@ -193,11 +192,12 @@ flags builtin.response-file LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
 # rebuilt every time. I'm not sure that incremental linking is
 # such a great idea in general, but in this case I'm sure we
 # don't want it.
-.implib = "/INCREMENTAL:NO /IMPLIB:" ;
 
 # Declare action for creating static libraries
 if [ os.name ] in NT
 {    
+    .implib = "/INCREMENTAL:NO /IMPLIB:" ;
+    
     actions link
     {
         $(.LD) $(LINKFLAGS) /out:"$(<[1])" $(.implib)"$(<[2])" /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @"$(>)"
@@ -211,24 +211,27 @@ if [ os.name ] in NT
 }
 else # CYGWIN
 {
-    # this only works for Bourne-compatible shells
+    rule link ( target implib ? : sources + : properties * )
+    {
+        if $(implib)
+        {
+            .implib on $(<) = "/INCREMENTAL:NO /IMPLIB:" ;
+        }
+        .cygpath = "cygpath -d " ;
+    }
+
     actions link
     {
-        _bbv2_in_=`cygpath -d $(>)`
-        _bbv2_out1_=`cygpath -d $(<[1]:D)`\\$(<[1]:D=)
-        if test "x$(<[2]:E=)x" != "xx" ; then
-            _bbv2_out2_="$(.implib)"`cygpath -d $(<[2]:E=.:D)`
-        fi
-        $(.LD) $(LINKFLAGS) /out:$_bbv2_out1_ ${_bbv2_out2_}\\$(<[2]:D=) /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @$_bbv2_in_ $(.close-quote)
+        $(.LD) $(LINKFLAGS) /out:"`$(.cygpath)$(<[1]:D)`/$(<[1]:D=)" $(.implib)"`$(.cygpath)$(<[2]:D)`/$(<[2]:D=)" /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @`$(.cygpath)$(>)` ;
     }
 
     actions archive
     {
-        _bbv2_in_=`cygpath -d $(>)`
-        _bbv2_out_=`cygpath -d $(<:D)`\\$(<:D=)
-        if test -f $_bbv2_out_ ; then
-            _$(<:B)_=$_bbv2_out_
+        _bbv2_out_="`$(.cygpath)$(<:D)`/$(<:D=)"
+        if test -f "$_bbv2_out_" ; then
+            _bbv2_existing_="\"$_bbv2_out_\""
         fi
-        $(.LD) /lib /out:$_bbv2_out_ $_$(<:B)_ @$_bbv2_in_ $(.close-quote)
+        $(.LD) /lib "/out:$_bbv2_out_" $_bbv2_existing_ @`$(.cygpath)$(>)`
     }
+
 }
