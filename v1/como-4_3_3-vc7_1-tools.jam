@@ -10,9 +10,9 @@
 #//<a href="http://www.comeaucomputing.com/">Comeau<br>C++</a>
 
 {
-    include-tools vc7.1 ;
+    include-tools vc-7_1 ;
     local COMO_BACKEND = "vc71" ;
     local COMO_BACKEND_PATH = $(VC71_ROOT) ;
 
-    extends-toolset como-win32-4.3.3-vc7 ;
+    extends-toolset como-win32-4_3_3-vc7 ;
 }

@@ -33,8 +33,3 @@ VC_PDB_NAME = vc80 ;
 # The following #// line will be used by the regression test table generation
 # program as the column heading for HTML tables. Must not include version number.
 #//<a href="http://msdn.microsoft.com/vstudio/whidbey/default.aspx">Micro-<br>soft<br>VC++</a>
-
-
-
-
-

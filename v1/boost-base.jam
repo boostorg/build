@@ -74,7 +74,7 @@
 
 if $(NT)
 {
-    TOOLS ?= vc7.1 ;
+    TOOLS ?= vc-7_1 ;
 }
 else
 {
@@ -2607,10 +2607,10 @@ rule common-variant-tag ( toolset variant : properties * )
             case sunpro* : toolset-tag += sw ;
             case tru64cxx* : toolset-tag += tru ;
             case vacpp* : toolset-tag += xlc ;
-            case vc[678][.]* :
+            case vc[-][678][-]* :
             {
                 toolset-tag += vc ;
-                toolset-tag += [ MATCH "vc([678])[.]([0123456789]*)" : $(toolset) ] ;
+                toolset-tag += [ MATCH "vc[-]([678])[-]([0123456789]*)" : $(toolset) ] ;
             }
             case vc[678]* :
             {
@@ -2620,7 +2620,7 @@ rule common-variant-tag ( toolset variant : properties * )
             case * :
             toolset-tag += [ MATCH "^([^-]*)" : $(toolset) ] ;
         }
-        toolset-tag += [ MATCH "[-]([0123456789]+).([0123456789]*)" : $(toolset) ] ;
+        toolset-tag += [ MATCH "[-]([0123456789]+)[-]([0123456789]*)" : $(toolset) ] ;
     }
     
     local version-tag = ;
@@ -2628,7 +2628,7 @@ rule common-variant-tag ( toolset variant : properties * )
     {
         local version-number = [ get-values <version> : $(properties) ] ;
         version-number ?= $(BOOST_VERSION) ;
-        version-tag = [ MATCH "^([^.]+).([^.]+)" : $(version-number[1]) ] ;
+        version-tag = [ MATCH "^([^-]+)[-]([^-]+)" : $(version-number[1]) ] ;
         version-tag = $(version-tag:J="_") ;
     }
     
