@@ -746,6 +746,10 @@ execwait()
 	    exit( EXITBAD );
 	}
 
+	/* Clear the temp file */
+    if ( cmdtab[i].tempfile )
+        unlink( cmdtab[ i ].tempfile );
+
 	/* Drive the completion */
 
 	if( !--cmdsrunning )
