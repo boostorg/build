@@ -500,15 +500,14 @@ class file-target : abstract-file-target
                 local p = [ $(self.action).properties ] ;                
                 local path = [ $(p).target-path ] ;
                 
-                if $(path[1]) = "."
+                if $(path[2]) = true
                 {        
                     # Indicates that the path is relative to
                     # build dir.
-                    path = [ path.root $(path[2]) 
-                      [ $(self.project).build-dir ] ] ;
+                    path = [ path.join [ $(self.project).build-dir ]
+                       $(path[1]) ] ;
                 }
-                
-                
+                                
                 # Store the computed path, so that it's not recomputed
                 # any more
                 self.path = [ path.native $(path) ] ;

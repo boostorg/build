@@ -166,6 +166,15 @@ t.write("a2.txt", "")
 t.run_build_system("a2")
 t.expect_addition(["dist/a1.txt", "dist/a2.txt"])
 
+# Regression test: check if <location>. works
+t.rm(".")
+t.write("Jamroot", """
+stage a1 : d/a1.txt : <location>. ;
+""")
+t.write("d/a1.txt", "")
+t.run_build_system()
+t.expect_addition("a1.txt")
+
 
 
 t.cleanup()
