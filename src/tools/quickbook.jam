@@ -195,7 +195,12 @@ class quickbook-binary-generator : generator
                     if [ $(target).type ] = EXE
                     {
                         quickbook-binary = 
-                            [ path.join [ $(target).path ] [ $(target).name ] ] ;
+                            [ path.native 
+                                [ path.join
+                                    [ $(target).path ]
+                                    [ $(target).name ]
+                                ]
+                            ] ;
                     }
                 }
             }
