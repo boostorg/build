@@ -352,15 +352,19 @@ int  main( int argc, char **argv, char **arg_environ )
     }
 # endif /* unix */
 
+    /* load up environment variables */
+
+    var_defines( use_environ );
+
 	/*
 	 * Jam defined variables OS, OSPLAT
+     * We load them after environment, so that
+     * setting OS in environment does not 
+     * change Jam notion of the current platform.
 	 */
 
     var_defines( othersyms );
 
-    /* load up environment variables */
-
-    var_defines( use_environ );
 
     /* Load up variables set on command line. */
 
