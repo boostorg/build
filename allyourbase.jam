@@ -184,7 +184,7 @@ if $(NT)
     
     # dwa 6/4/01 - removed compiler determination for boost
     # added some yacc/lex stuff, assuming cygwin for now.
-    LEX = flex -d ;
+    LEX = flex ;
     YACC = bison -t -d -l -v ;
     YACCFILES       = y.tab ;
     YACC_OUTPUT     = --output= ;
