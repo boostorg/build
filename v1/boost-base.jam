@@ -1357,7 +1357,3 @@ rule unit-test
     }
 }
 
-if ! ( NDEBUG in $(TEST) )
-{
-    include $(BOOST_BUILD_INSTALLATION)$(SLASH)unit-tests.jam ;
-}
