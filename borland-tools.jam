@@ -36,13 +36,25 @@ flags borland CFLAGS <inlining>full : -vi -w-inl ;
 # build the options common to the link and C/C++ command-lines
 {
     local bcc-common-flags ;
+    
+    # this section sets up the target type (threading, 
+    # RTL, and console/GUI options).  The order in which
+    # these options appear is generally important, as some 
+    # (such as -tWR) can have unexpected side effects.
 
-    flags borland bcc-common-flags <runtime-link>dynamic : -tWR ;
     
     local target-type = [ get-values <target-type> : $(gBUILD_PROPERTIES) ] ;
     if ! $(target-type) || ! ( $(target-type) in $(SHARED_TYPES) )
     {
         flags borland bcc-common-flags <user-interface>console : -tWC ;
+        # -tWR sets -tW as well, so we turn it off here and then turn it 
+        # on again later if we need it:
+        flags borland bcc-common-flags <runtime-link>dynamic : -tWR -tWC ;
+        flags borland bcc-common-flags <user-interface>gui : -tW ;
+    }
+    else
+    {
+        flags borland bcc-common-flags <runtime-link>dynamic : -tWR ;
     }
     
     flags borland bcc-common-flags <target-type>$(SHARED_TYPES) : -tWD ;
@@ -125,7 +137,7 @@ rule Cc-action
 
 actions borland-Cc-action
 {
-    "$(BCC_TOOL_PATH)bcc32" -j5 -q -c -w -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(BCC_TOOL_PATH)bcc32" -j5 -q -c -w -a8 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -134,9 +146,24 @@ rule C++-action
     borland-C++-action $(<) : $(>) ;
 }
 
+#
+# for C++ compiles the following options are turned on by default:
+#
+# -j5    stops after 5 errors
+# -q     no banner
+# -c     compile to object
+# -P     C++ code regardless of file extention
+# -w     turns on all warnings
+# -Ve    zero sized empty base classes, this option is on in the IDE by default 
+#        and effects binary compatibility.
+# -Vx    zero sized empty members, this option is on in the IDE by default 
+#        and effects binary compatibility.
+# -a8    8 byte alignment, this option is on in the IDE by default 
+#        and effects binary compatibility.
+#
 actions borland-C++-action
 {
-    "$(BCC_TOOL_PATH)bcc32" -j5  -q -c -P -w -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(BCC_TOOL_PATH)bcc32" -j5 -q -c -P -w -Ve -Vx -a8 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 #### Archive ####
@@ -149,6 +176,8 @@ actions updated together piecemeal borland-Archive-action
 {
     "$(BCC_TOOL_PATH)tlib" /P64 /u /a /C /$(ARFLAGS) "$(<)" +-"$(>)"
 }
+
+
 
 
 
