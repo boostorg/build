@@ -4,6 +4,7 @@
 #  warranty, and with no claim as to its suitability for any purpose.
 
 import class : is-instance ;
+import errors ;
 
 rule ungrist ( names * )
 {
@@ -13,8 +14,7 @@ rule ungrist ( names * )
         local stripped = [ MATCH ^<(.*)>$ : $(name) ] ;
         if ! $(stripped)
         {
-            ECHO *** error: in ungrist $(names) ;
-            EXIT *** $(name) is not of the form <.*> ;
+            errors.error "in ungrist" $(names) : $(name) is not of the form <.*> ;
         }
         result += $(stripped) ;
     }
