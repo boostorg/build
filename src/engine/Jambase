@@ -721,6 +721,9 @@ else if $(UNIX)
     RELOCATE    ?= true ;
 
     case HPUX :
+    YACC        = ;
+    CFLAGS      += -Ae ;
+    CCFLAGS     += -Ae ;
     RANLIB      ?= "" ;
 
     case INTERIX :
