@@ -75,8 +75,9 @@ assert_equal [ is-subset a b c : c a b d ] : true ;
 assert_equal [ is-subset a b z : c a b d ] : ;
 
 # split-path
-assert_equal [ split-path <a>b$(SLASH)c$(SLASH)<d>e ] : <a>b c <d>e ;
-assert_equal [ split-path <a>$(SLASH)<d>$(SLASH)<e> ] : <a> <d> <e> ;
+assert_equal [ split-path b/c.d/.f/g./h.i ] : b c.d .f g. h.i ;
+assert_equal [ split-path <a>b/c/<d>e ] : <a>b c <d>e ;
+assert_equal [ split-path <a>/<d>/<e> ] : <a> <d> <e> ;
 assert_equal [ split-path <a> ] : <a> ;
 assert_equal [ split-path x ] : x ;
 assert_equal [ split-path $(DOT) ] : $(DOT) ;
