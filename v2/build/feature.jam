@@ -611,13 +611,16 @@ local rule in-features ( feature-set-var property )
 
 # Given an expanded property set, eliminate all redundancy: properties
 # which are elements of other (composite) properties in the set will
-# be eliminated, implicit properties will be expressed without feature
+# be eliminated. Non-symmetric properties equal to default values will be
+# eliminated, unless the override a value from some composite property.
+# Implicit properties will be expressed without feature
 # grist, and sub-property values will be expressed as elements joined
 # to the corresponding main property.
 rule minimize ( properties * )
 {
     # remove properties implied by composite features
     local x = $(properties) ;
+    local components ;
     for local p in $(properties)
     {
         if ! $(p:G)
@@ -625,9 +628,10 @@ rule minimize ( properties * )
             error minimize requires an expanded property set, but \"$(p)\"
               appears to be the value of an un-expanded implicit feature ;
         }
+        components += $($(p).components:G) ;
         x = [ set.difference $(x) : $($(p).components) ] ;
     }
-    
+        
     # handle subfeatures and implicit features
     local result ;
     while $(x)
@@ -641,29 +645,43 @@ rule minimize ( properties * )
             p = $(p:G="") ;
         }
         
-        # locate all subproperties of f in the property set
-        local subproperties ;
-        local subfeatures = $($(f).subfeatures) ;
-        if $(subfeatures)
+        # eliminate properties which value is equal to feature's default
+        # and which are not symmetric
+        if $(p) = [ defaults $(f) ] && ! symmetric in [ attributes $(f) ]
+          # If the feature is not specified in any of composite ones,
+          # then removing it is OK, because adding defaults would bring that
+          # feature back --- there's 1-1 correspondence between minimized
+          # and full property set.
+          && ! $(f:G) in $(components)
         {
-            local f_ = [ utility.ungrist $(f) ] ;
-            subfeatures = [ grist $(f_)-$(subfeatures) ] ;
-            subproperties = [ sequence.filter in-features subfeatures : $(x) ] ;
-        }
-        
-        if $(subproperties)
-        {
-            # reconstitute the joined property name
-            local sorted = [ sequence.insertion-sort $(subproperties) ] ;
-            result += $(p)-$(sorted:G="":J=-) ;
-              
-            x = [ set.difference $(x[2-]) : $(subproperties) ] ;
-        }
-        else
-        {
-            result += $(p) ;
             x = $(x[2-]) ;
         }
+        else
+        {                    
+            # locate all subproperties of f in the property set
+            local subproperties ;
+            local subfeatures = $($(f).subfeatures) ;
+            if $(subfeatures)
+            {
+                local f_ = [ utility.ungrist $(f) ] ;
+                subfeatures = [ grist $(f_)-$(subfeatures) ] ;
+                subproperties = [ sequence.filter in-features subfeatures : $(x) ] ;
+            }
+            
+            if $(subproperties)
+            {
+                # reconstitute the joined property name
+                local sorted = [ sequence.insertion-sort $(subproperties) ] ;
+                result += $(p)-$(sorted:G="":J=-) ;
+                
+                x = [ set.difference $(x[2-]) : $(subproperties) ] ;
+            }
+            else
+            {
+                result += $(p) ;
+                x = $(x[2-]) ;
+            }
+        }        
     }
     return $(result) ;
 }
@@ -866,9 +884,13 @@ local rule __test__ ( )
         
 
         assert.result gcc-3.0.1 debug <optimization>on
-          : minimize [ expand gcc-3.0.1 debug <optimization>on ]
+          : minimize [ expand gcc-3.0.1 debug <optimization>on <stdlib>native ]
           ;
         
+        assert.result gcc-3.0.1 debug <runtime-link>dynamic
+          : minimize [ expand gcc-3.0.1 debug <optimization>off <runtime-link>dynamic ]
+          ;
+                
         assert.result gcc-3.0.1 debug
           : minimize [ expand gcc-3.0.1 debug <optimization>off ]
           ;

@@ -121,21 +121,9 @@ rule variant ( name           # Name of the variant
     # We do this after inheriting parents' properties, so that
     # they affect other variants, derived from this one.
     .explicit-properties.$(name) = $(explicit-properties) ;
-       
-    local fool-properties = [ feature.add-defaults $(explicit-properties) ] ;
-    
-    # Eliminate all symmetric features.    
-    local full-properties2 ;
-    for local p in $(fool-properties)
-    {
-        if ! symmetric in [ feature.attributes $(p:G) ]
-        {
-            full-properties2 += $(p) ;
-        }        
-    }
-        
+           
     feature.extend variant : $(name) ;
-    feature.compose <variant>$(name) : $(full-properties2) ;    
+    feature.compose <variant>$(name) : $(explicit-properties) ;    
 }
 IMPORT $(__name__) : variant : : variant ;
 
