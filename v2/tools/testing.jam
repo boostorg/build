@@ -72,7 +72,7 @@ type.register UNIT_TEST : passed : TEST ;
 # we need extra convenience: default name of main target, so write
 # our own versions.
 
-# Helper rule. Create a test target, using basename of first source of no
+# Helper rule. Create a test target, using basename of first source if no
 # target name is explicitly passed. Remembers the created target in
 # a global variable.
 rule make-test ( target-type : sources + : requirements * : target-name ? )
