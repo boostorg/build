@@ -8,6 +8,8 @@
  * variable.h - handle jam multi-element variables
  */
 
+struct hash;
+
 void 	var_defines( char **e );
 int 	var_string( char *in, char *out, int outsize, LOL *lol );
 LIST * 	var_get( char *symbol );
