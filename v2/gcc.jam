@@ -54,6 +54,7 @@ actions compile
 
 # Declare flags and action for linking
 toolset.flags gcc.link OPTIONS <debug-symbols>on : -g ;
+toolset.flags gcc.link OPTIONS <linkflags> ;
 toolset.flags gcc.link LINKPATH <library-path> ;
 toolset.flags gcc.link FINDLIBS-ST <find-static-library> ;
 toolset.flags gcc.link FINDLIBS-SA <find-shared-library> ;
@@ -80,6 +81,7 @@ actions archive
 
 # Declare flags and action for linking shared libraries
 toolset.flags gcc.link-dll OPTIONS <debug-symbols>on : -g ;
+toolset.flags gcc.link-dll OPTIONS <linkflags> ;
 toolset.flags gcc.link-dll LINKPATH <library-path> ;
 toolset.flags gcc.link-dll FINDLIBS-ST <find-static-library> ;
 toolset.flags gcc.link-dll FINDLIBS-SA <find-shared-library> ;
