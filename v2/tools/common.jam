@@ -37,7 +37,24 @@ rule variable-setting-command ( variable value )
     }
 }
 
+# Return a command which can create a file. If 'r' is result of invocation,
+# then 
+#   r foobar
+# will create foobar with unspecified content. What happens if file already 
+# exists is unspecified.
+rule file-creation-command ( )
+{
+    if [ modules.peek : NT ]
+    {
+        return "echo. > " ;
+    }
+    else
+    {
+        return "touch " ;
+    }
+}
 
+        
 rule MkDir
 {
     # If dir exists, don't update it
