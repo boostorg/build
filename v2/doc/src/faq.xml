@@ -304,7 +304,7 @@ stage installed : application : &lt;dll-path&gt;/usr/lib/snake
     <para>Which approach is best depends on your situation. If the libraries
       are relatively standalone and can be used by third party applications,
       they should be installed in the system location. If you have lots of
-      libraries which can be used only by our application, it makes sense to
+      libraries which can be used only by your application, it makes sense to
       install it to a nonstandard directory and add an explicit path, like the
       example above shows. Please also note that guidelines for different
       systems differ in this respect. The Debian guidelines prohibit any
