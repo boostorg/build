@@ -15,13 +15,13 @@ flags gcc LINKFLAGS <runtime-link>static : -static ;
 flags gcc CFLAGS <debug-symbols>on : -g ;
 flags gcc LINKFLAGS <debug-symbols>on : -g ;
 flags gcc CFLAGS <optimization>off : -O0 ;
-flags gcc CFLAGS <optimization>speed : -O4 ;
+flags gcc CFLAGS <optimization>speed : -O3 ;
 
 # Other optimizations we might want for GCC
 # -fforce-mem -fomit-frame-pointer
 # -foptimize-sibling-calls -finline-functions -ffast-math -finline-limit=10000
 
-flags gcc CFLAGS <optimization>space : -O2 ;
+flags gcc CFLAGS <optimization>space : -Os ;
 flags gcc CFLAGS <inlining>off : -fno-inline ;
 flags gcc CFLAGS <inlining>on : -Wno-inline ;
 flags gcc CFLAGS <inlining>full : -finline-functions -Wno-inline ;
