@@ -125,7 +125,7 @@ actions como-C++-action
 
 rule Archive-action
 {
-    como-Archive-action $(<) : $(>) ;
+    with-command-file como-Archive-action $(<) : $(>) ;
 }
 
 actions updated together piecemeal como-Archive-action
@@ -135,7 +135,7 @@ actions updated together piecemeal como-Archive-action
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    $(COMO_BIN_DIRECTORY)como --no_version --no_prelink_verbose --prelink_object $(>)
-    lib $(ARFLAGS) /nologo /out:"$(<:S=.lib)" $(>)
+    $(COMO_BIN_DIRECTORY)como --no_version --no_prelink_verbose --prelink_object @"$(>)"
+    lib $(ARFLAGS) /nologo /out:"$(<:S=.lib)" @"$(>)"
 }
 
