@@ -734,7 +734,21 @@ rule minimize ( properties * )
 }
 
 # Given a set of properties, add default values for features not
-# represented in the set.
+# represented in the set. 
+# Note: if there's there's ordinary feature F1 and composite feature
+# F2, which includes some value for F1, and both feature have default values,
+# then the default value of F1 will be added, not the value in F2. This might
+# not be right idea: consider
+#
+#   feature variant : debug ... ;
+#        <variant>debug : .... <runtime-debugging>on
+#   feature <runtime-debugging> : off on ;
+#   
+#   Here, when adding default for an empty property set, we'll get
+#
+#     <variant>debug <runtime_debugging>off
+#  
+#   and that's kind of strange.
 rule add-defaults ( properties * )
 {
     for local v in $(properties:G=)
