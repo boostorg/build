@@ -10,7 +10,7 @@ BOOST_JAM_TOOLSET=
 
 # Run a command, and echo before doing so. Also checks the exit
 # status and quits if there was an error.
-function echo_run
+echo_run ()
 {
     echo "$@"
     "$@"
@@ -21,7 +21,7 @@ function echo_run
 }
 
 # Print an error message, and exit with a status of 1.
-function error_exit
+error_exit ()
 {
     echo "###"
     echo "###" "$@"
@@ -29,19 +29,19 @@ function error_exit
     echo "### You can specify the toolset as the argument, i.e.:"
     echo "###     ./build.sh gcc"
     echo "###"
-    echo "### Toolsets supported by this script are: como, darwin, gcc, intel-linux, kcc, kylix, mipspro, sunpro, tru64cxx, vacpp"
+    echo "### Toolsets supported by this script are: acc, como, darwin, gcc, intel-linux, kcc, kylix, mipspro, sunpro, tru64cxx, vacpp"
     echo "###"
     exit 1
 }
 
 # Check that a command is in the PATH.
-function test_path
+test_path ()
 {
     hash $1 2>/dev/null
 }
 
 # Check that the OS name, as returned by "uname", is as given.
-function test_uname
+test_uname ()
 {
     if test_path uname; then
         test `uname` = $*
@@ -49,7 +49,7 @@ function test_uname
 }
 
 # Try and guess the toolset to bootstrap the build with...
-function Guess_Toolset
+Guess_Toolset ()
 {
     if test_uname Darwin ; then BOOST_JAM_TOOLSET=darwin
     elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
@@ -61,6 +61,7 @@ function Guess_Toolset
     elif test_path como ; then BOOST_JAM_TOOLSET=como
     elif test_path KCC ; then BOOST_JAM_TOOLSET=kcc
     elif test_path bc++ ; then BOOST_JAM_TOOLSET=kylix
+    elif test_path aCC ; then BOOST_JAM_TOOLSET=acc
     fi
     if test "$BOOST_JAM_TOOLSET" = "" ; then
         error_exit "Could not find a suitable toolset."
@@ -122,6 +123,10 @@ case $BOOST_JAM_TOOLSET in
     ;;
     
     tru64cxx)
+    BOOST_JAM_CC=cc
+    ;;
+    
+    acc)
     BOOST_JAM_CC=cc
     ;;
    
