@@ -1091,17 +1091,19 @@ class subvariant
     # Returns all targets referenced by this subvariant,
     # either directly or indirectly, and 
     # either as sources, or as dependency properties.
+    # Targets referred with dependency property are returned a properties,
+    # not targets.
     rule all-referenced-targets ( )
     {
         # Find directly referenced targets.
         local deps = [ $(self.build-properties).dependency ] ;
-        local all-targets = $(self.sources) $(deps:G=) ;
+        local all-targets = $(self.sources) $(deps) ;
         
         # Find other subvariants.
         local r ;
         for local t in $(all-targets)
         {            
-            r += [ $(t).creating-subvariant ] ;
+            r += [ $(t:G=).creating-subvariant ] ;
         }
         r = [ sequence.unique $(r) ] ;
         for local s in $(r) 

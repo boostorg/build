@@ -138,6 +138,24 @@ t.run_build_system()
 t.expect_addition("dist/a.exe")
 t.expect_addition("dist/l.dll")
 
+# Check that <use> properties are ignored the traversing
+# target for staging.
+t.copy("l.cpp", "l2.cpp")
+t.copy("l.cpp", "l3.cpp")
+t.write("Jamfile", """
+lib l2 : l2.cpp ;
+lib l3 : l3.cpp ;
+lib l : l.cpp : <use>l2 <dependency>l3 ;
+exe a : a.cpp l ;
+stage dist : a : <traverse-dependencies>on <include-type>EXE <include-type>LIB ; 
+""")
+
+t.rm("dist")
+t.run_build_system()
+t.expect_addition("dist/l3.dll")
+t.expect_nothing("dist/l2.dll")
+
+
 
 t.cleanup()
 
