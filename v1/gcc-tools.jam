@@ -222,6 +222,7 @@ flags gcc CFLAGS $(.ARCH)/<instruction-set>tsc701 : -mcpu=tsc701 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>v9 : -mcpu=v9 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>ultrasparc : -mcpu=ultrasparc ;
 flags gcc CFLAGS $(.ARCH)/<address-model>64 : -m64 ;
+flags gcc LINKFLAGS $(.ARCH)/<address-model>64 : -m64 ;
 # RS/6000 & PowerPC
 .ARCH = <architecture>power <architecture>native ;
 flags gcc CFLAGS <architecture>power/<instruction-set>default : -mcpu=power ;
