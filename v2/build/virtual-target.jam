@@ -81,7 +81,18 @@ rule virtual-target ( name : type ? : project
         return $(self.root) ;
     }
     
-
+    # Gets 'use' requirements. 
+    rule use-requirements ( )
+    {
+        return $(self.use-requirements) ;
+    }
+    
+    # Sets 'use' requirements
+    rule set-use-requirements ( requirements * )
+    {
+        self.use-requirements = $(requirements) ;
+    }
+            
     # Sets the dependency graph this target is part of.
     # 'dg' is an instance of 'subvariant-dg' class.
     rule dg ( dg ? )

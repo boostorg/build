@@ -34,6 +34,7 @@ import regex ;
 import property ;
 import errors ;
 import common ;
+import errors ;
 
 
 # Base class for all abstract targets.
@@ -331,7 +332,7 @@ class main-target : abstract-target ;
 # The second variant specifies additional properties that should be used
 # when building the target.
 rule basic-target ( name : project
-                    : sources * : requirements * : default-build * )
+                    : sources * : requirements * : default-build * : use-requirements * )
 {
     import build-request ;
     import virtual-target ;
@@ -341,6 +342,7 @@ rule basic-target ( name : project
     self.sources = $(sources) ;
     self.requirements = $(requirements) ;
     self.default-build = $(default-build) ;
+    self.use-requirements = $(use-requirements) ;
 
     # Applies default-build if 'properties' are empty or 
     # have only single <toolset> element.
@@ -396,9 +398,13 @@ rule basic-target ( name : project
                             # Just a source file
                             source-targets += [ virtual-target.from-file $(s) : $(self.project) ] ;                            
                         }
-                    }
+                    }                    
                     self.generated.$(property-path) = 
                         [ construct $(source-targets) : $(rproperties) ] ;                             
+                    for local e in $(self.generated.$(property-path))                    
+                    {
+                        $(e).set-use-requirements $(self.use-requirements) ;
+                    }                    
                 } 
                 else
                 {
@@ -460,14 +466,14 @@ rule basic-target ( name : project
 
 class basic-target : abstract-target ;
 
-.args = 4 5 6 7 8 9 ;
+.args = 5 6 7 8 9 ;
 
 # Creates a main target alternative of type 'class-name'. The ctor will be
 # passed 'target-name', 'project' and all trailing arguments.
 # If 'requirements-pos' and 'default-build-pos' are specified, the corresponding
 # trailing arguments will be specially processed.
 rule main-target-alternative ( target-name project class-name 
-        : requirements-pos ? : default-build-pos ?
+        : requirements-pos ? : use-requirements-pos ? : default-build-pos ?
         : * )
 {
     for local i in $(.args) 
@@ -478,10 +484,22 @@ rule main-target-alternative ( target-name project class-name
     if $(requirements-pos)
     {
         local real-pos = $(.args[$(requirements-pos)]) ;
+        local real-pos2 = $(.args[$(use-requirements-pos)]) ;
         local project-requirements = [ project.attribute $(project) requirements ] ;
+        local project-use-requirements = [ project.attribute $(project) use-requirements ] ;
 
         local loc = [ project.attribute $(project) location ] ;
-        local requirements = [ property.translate-paths $($(real-pos)) : $(loc) ] ; 
+        local requirements = 
+            [ property.translate-paths $($(real-pos)) : $(loc) ] ; 
+        # Should have only free properties
+        if [ property.remove free : $($(real-pos2)) ]
+        {
+            errors.error "use-requirements" $($(real-pos2)) "have non-free properties" ;
+        }
+        
+        local use-requirements = 
+            [ property.translate-paths $($(real-pos2)) : $(loc) ] ;           
+        use-requirements += $(project-use-requirements) ;
         
         requirements = [ property.refine $(project-requirements) : $(requirements) ] ;
         if $(requirements[1]) = "@error" 
@@ -490,8 +508,9 @@ rule main-target-alternative ( target-name project class-name
         }
         else
         {
-            a$(real-pos) = $(requirements) ;
+            a$(real-pos) = $(requirements) $(use-requirements) ;
         }                        
+        a$(real-pos2) = $(use-requirements) ;        
     }
     
     if $(default-build-pos)
@@ -509,15 +528,15 @@ rule main-target-alternative ( target-name project class-name
 
     $(target).add-alternative
         [ new $(class-name) $(target-name) : $(project) 
-          : $(a4) : $(a5) : $(a6) : $(a7) : $(a8) : $(a9) ] ;
+          : $(a5) : $(a6) : $(a7) : $(a8) : $(a9) ] ;
 }
 
 
 rule typed-target ( name : project : type 
-    : sources * : requirements * : default-build * )
+    : sources * : requirements * : default-build * : use-requirements * )
 {
     basic-target.__init__ $(name) : $(project) 
-      : $(sources) : $(requirements) : $(default-build) ;
+      : $(sources) : $(requirements) : $(default-build) : $(use-requirements) ;
     
     self.type = $(type) ;
     

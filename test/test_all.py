@@ -28,3 +28,5 @@ import no_type
 import chain
 import default_build
 import main_properties
+import use_requirements
+

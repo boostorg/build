@@ -102,15 +102,16 @@ rule type ( suffix )
 }
 
 
-rule main-target-rule ( name : sources * : requirements * : default-build * )
+rule main-target-rule ( name : sources * : requirements * : default-build * 
+                        : use-requirements * )
 {
     # First find requuired target type, which is equal to the name used to
     # invoke us.
     local bt = [ BACKTRACE 1 ] ;
     local type = $(bt[4]) ;
     
-    targets.main-target-alternative $(name) [ CALLER_MODULE ] typed-target : 3 : 4
-      : $(type:U) : $(sources) : $(requirements) : $(default-build)
+    targets.main-target-alternative $(name) [ CALLER_MODULE ] typed-target : 3 : 5 : 4
+      : $(type:U) : $(sources) : $(requirements) : $(default-build) : $(use-requirements)
         ;    
 }
 

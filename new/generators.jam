@@ -624,10 +624,17 @@ local rule select-dependency-graph ( options )
 rule construct ( project name ? : target-type multiple ? : properties * : sources + 
                  : allow-composing-generators ? )
 {
+    local use-requirements ;
     if (.construct-stack)
     {
         ensure-type $(sources) ;
+        for local e in $(sources)
+        {
+            use-requirements += [ $(e).use-requirements ] ;
+        }               
     }
+    properties += $(use-requirements) ;
+    properties = [ sequence.unique $(properties) ] ;
     
     .construct-stack += 1 ;
 

@@ -381,6 +381,8 @@ local rule initialize (
             : [ $(pattributes).get default-build ] ;
         $(attributes).set requirements
             : [ $(pattributes).get requirements ] : exact ;
+        $(attributes).set use-requirements
+            : [ $(pattributes).get use-requirements ] : exact ;
     }
 }
 
@@ -430,6 +432,15 @@ rule project-attributes ( location )
                 self.requirements = $(result) ;
             }
         }
+        else if $(attribute) = "use-requirements"
+        {
+            if [ property.remove free : $(specification) ]
+            {
+                errors.error "use-requirements" $($(real-pos2)) "have non-free properties" ;
+            }            
+            self.use-requirements += [ property.translate-paths $(specification)
+                                      : $(self.location) ] ;
+        }        
         else if $(attribute) = "source-location"
         { 
             self.source-location = [ path.join $(self.location) $(specification) ] ;
