@@ -17,9 +17,9 @@ VERSION = 3$(.)1$(.)10 ;
 RELEASE = 1 ;
 LICENSE = 1_0 ;
 
-HAVE_PYTHON = 1 ;
-PYTHON_INCUDES = ; # /System/Library/Frameworks/Python.framework/Headers ;
-PYTHON_LIB = -framework python ;
+HAVE_PYTHON = 0 ;
+PYTHON_INCUDES = /usr/include/python2.3 ;
+PYTHON_LIB = -lpython2.3 ;
 
 
 # Generate development debug binaries?
