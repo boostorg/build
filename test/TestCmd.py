@@ -113,6 +113,7 @@ def fail_test(self = None, condition = 1, function = None, skip = 0):
             sep = "\n\t"
 
     at = _caller(traceback.extract_stack(), skip)
+
     sys.stderr.write("FAILED test" + of + desc + sep + at)
 
     sys.exit(1)
@@ -415,7 +416,7 @@ class TestCmd:
                     tochild.write(stdin)
             tochild.close()
             self._stdout.append(fromchild.read())
-            self._stderr.append(childerr.read())
+            self._stderr.append(childerr.read())                
             fromchild.close()
             self.status = childerr.close()
             if not self.status:
@@ -433,6 +434,11 @@ class TestCmd:
             self._stdout.append(p.fromchild.read())
             self._stderr.append(p.childerr.read())
             self.status = p.wait()
+            
+        if self.verbose:
+            sys.stdout.write(self._stdout[-1])
+            sys.stderr.write(self._stderr[-1])
+            
         if chdir:
             os.chdir(oldcwd)
 

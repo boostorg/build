@@ -70,6 +70,7 @@ class Tester(TestCmd.TestCmd):
 
         verbosity = ' -d0 --quiet '
         if '--verbose' in sys.argv:
+            keywords['verbose'] = 1
             verbosity = ' -d+2 '
 
         TestCmd.TestCmd.__init__(
@@ -231,6 +232,7 @@ class Tester(TestCmd.TestCmd):
         self.difference = trees_difference(self.previous_tree, self.tree)
         self.difference.ignore_directories()
         self.unexpected_difference = copy.deepcopy(self.difference)
+        self.difference.pprint()
 
         self.last_build_time = time.time()
 
@@ -400,7 +402,7 @@ class Tester(TestCmd.TestCmd):
         while int(time.time()) == int(self.last_build_time):
             time.sleep(0.1)
 
-
+            
 class List:
 
     def __init__(self, s=""):
