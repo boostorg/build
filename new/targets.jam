@@ -374,11 +374,13 @@ rule main-target ( name : project )
     rule add-alternative ( target )
     {
         local d = [ $(target).default-build ] ;
-        if $(self.alternatives) && [ $(d).raw ]
+        if $(self.alternatives) && ( $(self.default-build) != $(d) )
         {
-            errors.error "default build can be specified only in first alternative" 
-              : "main target is " [ full-name ] ;
-        }        
+            errors.error "default build must be identical in all alternatives"
+              : "main target is" [ full-name ]
+              : "with" [ $(d).raw ]
+              : "differing from previous default build" [ $(self.default-build).raw ] ;
+        }
         else
         {
             self.default-build = $(d) ;

@@ -26,17 +26,25 @@ t.run_build_system("optimization=space")
 t.expect_addition("bin/$toolset/debug/optimization-space/a.exe")
 t.expect_addition("bin/$toolset/release/optimization-space/a.exe")
 
-# Test that we can declare default build only in the first
-# alternative
+# Test that default-build must be identical in all alternatives. Error case.
 t.write("Jamfile", """
-exe a : a.cpp : : debug release ;
-exe a : b.cpp : : debug release ;
+exe a : a.cpp : : debug ;
+exe a : b.cpp : : ;
 """)
-expected="""error: default build can be specified only in first alternative
-main target is  ./a
+expected="""error: default build must be identical in all alternatives
+main target is ./a
+with
+differing from previous default build <variant>debug
 
 """
-t.run_build_system("--no-error-backtrace", status=1, stdout=expected)
+t.run_build_system("-n --no-error-backtrace", status=1, stdout=expected)
+
+# Test that default-build must be identical in all alternatives. No Error case, empty default build.
+t.write("Jamfile", """
+exe a : a.cpp : <variant>debug ;
+exe a : b.cpp : <variant>release ;
+""")
+t.run_build_system("-n --no-error-backtrace", status=0)
 
 
 # Now try a harder example: default build which contains <define>
