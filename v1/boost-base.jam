@@ -105,7 +105,11 @@ rule dll-files
     type-DEPENDS dll : $(<) ;
     
     # Set up the import library dependency on Windows
-    INCLUDES $(<[1]) : $(<[2-]) ;
+    if $(<[2])
+    {
+        INCLUDES $(<[1]) : $(<[2-]) ;
+        INCLUDES $(<[2-]) : $(<[1]) ;
+    }
     main-from-objects $(<) : [ Objects $(>) ] : DLL ;
 }
 
