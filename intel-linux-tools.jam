@@ -56,6 +56,10 @@ flags intel-linux LINKFLAGS <target-type>$(SHARED_TYPES) : -shared ;
 # library linking
 flags intel-linux LINKFLAGS <runtime-link>static : -static ;
 
+# required libraries
+flags intel-linux FINDLIBS : rt ;
+
+
 #### standard settings ####
 
 flags intel-linux UNDEFS <undef> ;
