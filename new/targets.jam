@@ -262,6 +262,28 @@ rule main-target ( name : project )
             self.direct-request.$(base:J=-) = $(property-set) ;
         }                
     }
+
+    local rule select-alternatives ( property-set )
+    {
+        local viable ; # alternatives that may be used
+        local ranks ;  # ranks for viable alternatives
+        for local v in $(self.alternatives)
+        {
+            # For now, alternative should be derived from 'basic-target'.
+            # We'll see if this restriction if reasonable.
+            assert.equal [ is-a $(v) : basic-target ] : true ;                            
+            local m = [ $(v).match-rank $(property-set) ] ;
+            
+            if $(m)
+            {
+                viable += $(v) ;
+                ranks += $(m) ;
+            }
+        }
+                                                                    
+        local best = [ sequence.select-highest-ranked $(viable) : $(ranks) ] ;
+        return $(best) ;
+    }
     
 
     # Select an alternative for this main target, by finding all alternatives
@@ -277,83 +299,42 @@ rule main-target ( name : project )
             property-set = $(ep) ;
         }
         
-        # Try to generate all the alternatives.
-        local alternatives = [ new vector ] ;
-
-        for local v in $(self.alternatives)
-        {
-            local vtargets = [ $(v).generate $(property-set) ] ;
-            if $(vtargets) && $(vtargets[1]) != "@error"
-            {
-                $(alternatives).push-back [ new vector $(v) $(vtargets) ] ;
-            }
-        }
-        if [ $(alternatives).empty ]
+        local best-alternatives = [ select-alternatives $(property-set) ] ;
+        if ! $(best-alternatives)
         {
             # TODO: probably, should explain, for each alternative, 
             # why it can't be build.
             print.wrapped-text 
                 "warning: skipped build of" [ full-name ]
-                "with properties" [ $(property-set).raw ]  ;
-        } else {            
-        local result ;
-        if [ $(alternatives).size ] = 1 
-        {  
-            result = [ $(alternatives).get-at 1 ] ;
-            result = $(result[2-]) ;
+                "with properties" [ $(property-set).raw ]  ;            
         }
+        else if $(best-alternatives[2])
+        {
+            # TODO: again, a better error message in in order.
+            errors.error "Ambiguous alternatives for main target" [ full-name ]  ;            
+        }        
         else
         {
-            # Find the alternative with the longest set of non-free and 
-            # non-indicental requirements and are in 'properties'
-            local r = [ $(alternatives).indices ] ;
-
-            # First compute the length of requirements sets
-            local req-length ;
-            for local p in $(r) 
+            local result = [ $(best-alternatives).generate $(property-set) ] ;
+                                       
+            # Mark all targets in result as roots
+            for local t in $(result)
             {
-                local target = [ $(alternatives).at $(p) : 1 ] ;
-                # FIXME: in general, 'abstract-target' derivatives might not
-                # have 'requirements' method. 
-                # assert.equal [ is-a $(target) : basic-target ] : true ;
-                local req = [ $(target).requirements ] ;
-                req = [ $(req).base ] ;
-                req-length += [ sequence.length 
-                    [ set.intersection $(req) : [ $(property-set).raw ] ] ] ;
+                $(t).root true ;
             }
-                        
-            local best = [ sequence.select-highest-ranked $(r) : $(req-length) ] ;
-                        
-            if ! $(best[2]) 
-            {                
-                local index = $(best[1]) ;
-                result = [ $(alternatives).get-at $(index) ] ;
-                result = $(result[2-]) ;
-            } 
-            else
-            {
-                error "Ambiguous alternatives for main target" [ full-name ]  ;
-            }                    
-        } 
-                  
-        # Mark all targets in result as roots
-        for local t in $(result)
-        {
-            $(t).root true ;
-        }
         
-        # Process all vtargets that will be created if this main target
-        # is created.
-        local all-targets = 
-            [ sequence.transform virtual-target.traverse : $(result) ] ; 
-        local dg = [ new subvariant-dg $(__name__) : $(property-set) : $(all-targets) ] ;
-        for local v in $(all-targets)          
-        {
-            $(v).dg $(dg) ;            
-        }                
+            # Process all vtargets that will be created if this main target
+            # is created.
+            local all-targets = 
+              [ sequence.transform virtual-target.traverse : $(result) ] ; 
+            local dg = [ new subvariant-dg $(__name__) : $(property-set) : $(all-targets) ] ;
+            for local v in $(all-targets)          
+            {
+                $(v).dg $(dg) ;            
+            }                
 
-        # Now return virtual targets for the only alternative
-        return $(result) ;
+            # Now return virtual targets for the only alternative
+            return $(result) ;
         }        
     }
 }
@@ -461,8 +442,25 @@ rule basic-target ( name : project
     {
         errors.error "gristed element in sources for" [ full-name ] ;
     }
-    
 
+    # Returns a number which estimates this targets's suitability for
+    # building with the given 'property-set'. Among several alternatives
+    # for a main target, the one with greatest match-rank will be used
+    # to do actual generation
+    rule match-rank ( property-set )
+    {    
+        # First check if our requirements can be satisfied.
+        local rproperties = [ $(property-set).refine $(self.requirements) ] ;        
+        if $(rproperties[1]) != "@error"
+        {            
+            # Returns the number of properties common to requirements
+            # and build request.
+            return [ sequence.length [ set.intersection 
+                [ $(self.requirements).base ] :
+                  [ $(property-set).raw ] ] ] ;
+        }        
+    }
+        
     # Applies default-build if 'properties' are empty or 
     # have only single <toolset> element.
     # Generates sources. Calls 'construct'

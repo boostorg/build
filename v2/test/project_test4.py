@@ -40,6 +40,7 @@ t.copy("lib/Jamfile2", "lib/Jamfile")
 
 expected="""error: Requirements for project at 'lib' conflict with parent's.
 Explanation:  link-incompatible properties <threading>single and <threading>multi
+
 """
 t.run_build_system("--no-error-backtrace", stdout=expected, status=None)
 
