@@ -135,12 +135,17 @@ rule generator (
     }
     
 
-    # CONSIDER: what is the purpose of this code? The comment to rev 1.16
-    # where it appears, only says:
-    #     "Attempt to handle derived target types"
+    # Add the bases of the target types to our optional properties.
+    # Since optional properties improve a generator's match-rank, a
+    # generator which requires only a base target type will not be as
+    # good a match as a generator which requires one of its derived
+    # target types (and thus has the base type as an optional
+    # property).
     self.optional-properties
       = [ feature.expand <base-target-type>$(self.target-types) ]
           ;
+    
+    ############## End of constructor #################
     
     rule id ( )
     {
@@ -179,34 +184,48 @@ rule generator (
         return $(self.optional-properties) ;
     }
     
-    # Returns a number telling how good generator's properties match
-    # the passed properties, or empty list if generator can't be run
-    # at all.
-    rule match-rank ( property-set )
+    # Returns a number telling how well generator's properties match
+    # the passed properties, or an empty list if the generator can't
+    # be run at all.
+    rule match-rank ( property-set-to-match )
     {
-        # See if generator's requirements are satisfied by 'properties'.
-        # Treat feature name in requirements (i.e. grist-only element),
-        # as matching any value of feature.
-        local raw = [ requirements ] ;
-        local requirements ;
-        local features ;                  
-        for local r in $(raw)
+        # See if generator's requirements are satisfied by
+        # 'properties'.  Treat a feature name in requirements
+        # (i.e. grist-only element), as matching any value of the
+        # feature.
+        local all-requirements = [ requirements ] ;
+        
+        local property-requirements feature-requirements ;
+        for local r in $(all-requirements)
         {
             if $(r:G=)
             {
-                requirements += $(r) ;
+                property-requirements += $(r) ;
             }
             else
             {
-                features += $(r) ;
+                feature-requirements += $(r) ;
             }                      
         }
 
-        local properties = [ $(property-set).raw ] ;
-        if $(requirements) in $(properties) && $(features) in $(properties:G)
+        local properties-to-match = [ $(property-set-to-match).raw ] ;
+        if $(property-requirements) in $(properties-to-match) 
+           && $(feature-requirements) in $(properties-to-match:G)
         {
-            return [ sequence.length [ set.intersection 
-                [ optional-properties ] : $(properties) ] ] ;
+            # We're only used to rank matches based on the number of
+            # optional properties that appear in the property set.  
+            
+            # That seemed a little weak to me, so I changed it: now we
+            # account for the number of properties and features that
+            # were matched as well.  -- dwa 5/6/2003
+            return 
+              [ sequence.length
+                  $(all-requirements)
+                  [ set.intersection 
+                      [ optional-properties ] 
+                    : $(properties-to-match)
+                  ]
+              ] ;
         }            
     }
         
@@ -215,11 +234,13 @@ rule generator (
     # - value to <toolset> feature in properties
     rule clone ( new-id : new-toolset-name )
     {
-        return [ new $(__class__) $(new-id) : $(self.source-types)
+        return [ new $(__class__) $(new-id)
+                 : $(self.source-types)
                  : $(self.target-types-and-names) 
                  : [ property.change $(self.requirements) 
-                   : toolset $(new-toolset-name) ]
-             ] ;
+                     : toolset $(new-toolset-name)
+                   ]
+               ] ;
     }
     
     # Tries to invoke this generator on the given sources. Returns a
@@ -228,8 +249,8 @@ rule generator (
                name ?   # Determines the name of 'name' attribute for 
                         # all generated targets. See 'generated-targets' method.
                : property-set # Desired properties for generated targets.
-               : sources + :  # Source targets.
-               multiple ? # Allows the rule to run generator several times and return
+               : sources +  # Source targets.
+               : multiple ? # Allows the rule to run generator several times and return
                           # multiple targets of the same type. When this argument is not
                           # given, 'run' will return the list of targets, which is equal
                           # in size to the list of target types, and where type of
@@ -238,6 +259,10 @@ rule generator (
                           # such target lists, joined together.
              )
     {
+        # multiple = true ; # The tests seem to tolerate this; will
+                          # remove the parameter altogether in the
+                          # next revision to see what I learn -- DWA 2003/5/6
+        
         generators.dout [ indent ] "  generator" $(self.id) ;
         generators.dout [ indent ] "  multiple:" $(mutliple) ;
         generators.dout [ indent ] "  composing:" $(self.composing) ;        
@@ -246,7 +271,7 @@ rule generator (
         {
             errors.error "Unsupported source/source-type combination" ;
         }
-                                
+
         if $(self.source-types[2])
         {
             multiple = ;
@@ -653,8 +678,12 @@ rule base-to-derived-type-conversion ( targets * : target-types +
 rule try-one-generator ( project name ? : generator multiple ? : 
     target-types + : property-set : sources * )
 {
-    local targets = [ $(generator).run $(project) $(name) : $(property-set) : $(sources)
-      : $(multiple) ] ;
+    local targets =
+      [ $(generator).run $(project) $(name)
+                       : $(property-set)
+                       : $(sources)
+                       : $(multiple)
+      ] ;
 
     # Generated targets that are of required types
     local result ;
