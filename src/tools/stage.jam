@@ -105,7 +105,7 @@ class stage-target-class : basic-target
             if $(t) && [ type.registered STAGED_$(t) ]
             {
                 i2 = [ generators.construct $(self.project) : STAGED_$(t) :
-                      $(property-set) : $(i) ] ;
+                      $(property-set) : $(i) : * ] ;
                 if ! $(i2)
                 {                    
                     errors.error "Unable to generate staged version of " [ $(i).str ] ;
@@ -139,8 +139,12 @@ class stage-target-class : basic-target
             
             # FIXME: Since we can have <location> property, it might be better
             # to use it to distinguish staged copies with different locations.
-            $(i2).set-path $(location) ;
-            result += [ virtual-target.register $(i2) ] ;
+            for t in $(i2)
+            {                
+                $(t).set-path $(location) ;
+                result += [ virtual-target.register $(t) ] ;                
+            }            
+
         }
         return $(result) ;
     }   
@@ -227,7 +231,9 @@ class stage-exe-generator : generator
         
         local cloned-action = [ virtual-target.clone-action $(action) : $(project) :
           "" : $(new-ps) ] ;
-        return [ $(cloned-action).targets ] ;                        
+        local result = [ $(cloned-action).targets ] ;                        
+        return $(result) ;
+        
     }    
 }
 

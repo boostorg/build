@@ -12,6 +12,7 @@ import errors : error ;
 import feature : feature ;
 import path ;
 import sequence : unique ;
+import common ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
@@ -246,10 +247,10 @@ local rule locate ( setup : version ? : vendor ? )
 # is it possible to combine these?
 # make the generators non-composing, so that they don't convert each source
 # into separate rsp file.
-generators.register-linker msvc.link "" : RSP : EXE : <toolset>msvc ;
-generators.register-linker msvc.link "" : RSP : SHARED_LIB IMPORT_LIB : <toolset>msvc ;
+generators.register-linker msvc.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE RSP : <toolset>msvc ;
+generators.register-linker msvc.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB RSP : <toolset>msvc ;
 
-generators.register-standard msvc.archive : RSP : STATIC_LIB : <toolset>msvc ;
+generators.register-composing msvc.archive : OBJ : STATIC_LIB RSP : <toolset>msvc ;
 generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
 generators.register-c-compiler msvc.compile.c : C : OBJ : <toolset>msvc ;
 
@@ -317,8 +318,10 @@ flags msvc LINKFLAGS <main-target-type>LIB/<link>shared : /DLL ;
 toolset.flags msvc.link USER_LINKFLAGS <linkflags> ;
 toolset.flags msvc.link LINKPATH <library-path> ;
 
-flags builtin.response-file LIBRARY_PATH_OPTION <toolset>msvc : /LIBPATH: : unchecked ;
-flags builtin.response-file LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
+
+flags msvc.link FINDLIBS_ST <find-static-library> ;
+flags msvc.link FINDLIBS_SA <find-shared-library> ;
+flags msvc.link LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
 
 
 # incremental linking a DLL causes no end of problems: if the
@@ -330,31 +333,48 @@ flags builtin.response-file LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
 
 # Declare action for creating static libraries
 if [ os.name ] in NT
-{    
-    .implib = "/INCREMENTAL:NO /IMPLIB:" ;
-    
-    rule link
+{        
+    rule link ( targets + : sources * : properties * )
     {
+        common.response-file $(targets) : $(sources) : $(targets[2]) 
+          : $(properties) ;
+    }
+        
+    rule link.dll ( targets + : sources * : properties * )
+    {
+        common.response-file $(targets) : $(sources) : $(targets[3]) : $(properties) ;
         DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
     }
-
-    actions archive 
+    
+    rule archive ( targets + : sources * : properties * )    
     {
-        if exist "$(<)" set _$(<:B)_="$(<)"
-        $(.LD) /lib /out:"$(<)" %_$(<:B)_% @"$(>)"
+        common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;                
+    }
+    
+    actions archive 
+    {    
+        if exist "$(<[1])" set _$(<[1]:B)_="$(<[1])"
+        $(.LD) /lib /out:"$(<[1])" %_$(<[1]:B)_% @"$(<[2])"
     }
 }
 else # CYGWIN
 {
-    rule link ( target implib ? : sources + : properties * )
+    rule link ( targets + : sources * : properties * )
     {
-        if $(implib)
-        {
-            .implib on $(<) = "/INCREMENTAL:NO /IMPLIB:" ;
-        }
+        common.response-file $(targets) : $(sources) : $(targets[2]) 
+          : $(properties) ;
+    }   
+    
+    rule link.dll ( targets + : sources + : properties * )
+    {
+        common.response-file $(targets) : $(sources) : $(targets[3]) : $(properties) ;        
         .cygpath = "cygpath -d " ;
-
         DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
+    }
+    
+    rule archive ( targets + : sources * : properties * )    
+    {
+        common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;                
     }
 
     actions archive
@@ -369,6 +389,12 @@ else # CYGWIN
 
 actions link bind DEF_FILE
 {
-    $(.LD) -nologo $(LINKFLAGS) /out:"$(<[1]:W)" $(.implib)"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"$(>:W)"
+    $(.LD) -nologo $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"$(<[2]:W)"
 }
+
+actions link.dll bind DEF_FILE
+{
+    $(.LD) -nologo $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(<[3]:W)"
+}
+
         
