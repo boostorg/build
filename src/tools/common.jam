@@ -11,13 +11,13 @@ import modules ;
 
 if [ os.name ] = NT
 {
-    modules.poke : RM : del /f ;
-    modules.poke : CP : copy ;
+    RM = del /f ;
+    CP = copy ;
 }
 else
 {
-    modules.poke : RM : rm ;
-    modules.poke : CP : cp ;
+    RM = rm ;
+    CP = cp ;
 }
 
 rule MkDir
