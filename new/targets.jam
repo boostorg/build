@@ -491,7 +491,7 @@ rule find-old ( id : current-location )
         .issued-deprecation-warning = true ;
         ECHO "warning: target id '$(id)' uses deprecated syntax," ;
         ECHO "warning: which may be removed in a future version." ;
-        ECHO "warning: reference is made from $(current-location)" ;
+        ECHO "warning: reference is made from project at '$(current-location)'" ;
     }
         
     return $(target) ;
