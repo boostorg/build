@@ -90,9 +90,14 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? )
         ECHO "notice: Boost.Book: searching XSLS/DTD in" ;
         ECHO "notice:" [ sequence.transform path.native : $(search-dirs) ] ;
     }    
-    local boostbook-xsl-dir = [ path.glob $(search-dirs) : xsl ] ;
-    local boostbook-dtd-dir = [ path.glob $(search-dirs) : dtd ] ;
-
+    local boostbook-xsl-dir ;
+    for local dir in $(search-dirs) {
+        boostbook-xsl-dir += [ path.glob $(dir) : xsl ] ;
+    }
+    local boostbook-dtd-dir ; 
+    for local dir in $(search-dirs) {
+        boostbook-dtd-dir += [ path.glob $(dir) : dtd ] ;
+    }
     .boostbook-xsl-dir = [ path.make $(boostbook-xsl-dir[1]) ] ;
     .boostbook-dtd-dir = [ path.make $(boostbook-dtd-dir[1]) ] ;
     
