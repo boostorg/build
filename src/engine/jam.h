@@ -43,8 +43,6 @@
 
 # ifdef VMS
 
-int unlink( char *f ); 	/* In filevms.c */
-
 # include <types.h>
 # include <file.h>
 # include <stat.h>
@@ -54,6 +52,7 @@ int unlink( char *f ); 	/* In filevms.c */
 # include <signal.h>
 # include <string.h>
 # include <time.h>
+# include <unistd.h>
 # include <unixlib.h>
 
 # define OSMINOR "OS=VMS"
