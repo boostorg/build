@@ -5,11 +5,14 @@ import project-root ;
 
 project.load "." ;
 
+import standalone-project ;
+
 project-root.print ;
 
 assert.result Jamfile<dir2> : project.lookup @/cool-library : "." ;
 assert.result Jamfile<dir>  : project.lookup dir@ : "." ;
 assert.result Jamfile<dir>  : project.lookup @dir : "." ;
+assert.result standalone-project : project.lookup @/teeest : "." ;
 
 NOTFILE all ;
 
