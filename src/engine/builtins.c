@@ -933,6 +933,7 @@ LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
     char* current;  /* Working pointer. */  
     int dotdots = 0; /* Number of '..' elements seen and not processed yet. */
     int rooted = arg1->string[0] == '/';
+    char* result;
 
     /* Make a copy of input: we should not change it. */
     string_new(in);
@@ -998,7 +999,7 @@ LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
             string_push_back(out, *current);
 
     
-    char* result = newstr(out->size ? out->value : (rooted ? "/" : "."));
+    result = newstr(out->size ? out->value : (rooted ? "/" : "."));
     string_free(in);
     string_free(out);
 
