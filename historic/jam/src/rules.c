@@ -166,7 +166,8 @@ static void bind_explicitly_located_target(void* xtarget, void* data)
 
 void bind_explicitly_located_targets()
 {
-    hashenumerate(targethash, bind_explicitly_located_target, (void*)0);
+    if (targethash)
+        hashenumerate(targethash, bind_explicitly_located_target, (void*)0);
 }
 
 /* TODO: this is probably not a good idea to use functions in other modules like
