@@ -30,7 +30,7 @@ rule init ( version ? :  command * : options * )
     local condition = [ common.check-init-parameters intel-linux
         : version $(version) ] ;
     
-    command = [ common.get-invocation-command intel-linux : icc 
+    command = [ common.get-invocation-command intel-linux : icpc 
         : $(command) : /opt/intel_cc_80/bin ] ;
                 
     common.handle-options intel-linux : $(condition) : $(command) : $(options) ;
