@@ -78,6 +78,7 @@
           command line handling</a></dt>
         </dl>
       </dd>
+      <dt><a href="#jam_fundamentals">Jam Fundamentals</a></dt>
     </dl>
     <h2><a name="introduction"></a>Introduction</h2>
     <p>Boost.Jam (BJam) &nbsp;is a build tool based on FTJam, which in turn
@@ -759,6 +760,126 @@ rule UPDATE ( targets * )
     <p>The rule causes the specified targets to be updated. If no target was
     specified with the <tt>UPDATE</tt> rule, the "all" target will be
     implicitly updated.</p>
+    <h2><a name="jam_fundamentals">Jam Fundamentals</a></h2>
+    <p>This section is derived from the official Jam documentation and from
+    my experience using it and reading the Jambase rules. I repeat the
+    information here mostly because it is essential to understanding and
+    using Jam, but is not consolidated in a single place. Some of it is
+    missing from the official documentation altogether. I hope it will be
+    useful to anyone wishing to become familiar with Jam and the Boost build
+    system.</p>
+    <p>&middot; Jam ``<b>rules</b>'' are actually simple procedural entities.
+    Think of them as functions. Arguments are separated by colons.</p>
+    <p>&middot; A Jam <b>target</b> is an abstract entity identified by an
+    arbitrary string. The build-in <tt>DEPENDS</tt> rule creates a link in
+    the dependency graph between the named targets.</p>
+    <p>&middot; Note that the documentation for the built-in <tt>INCLUDES</tt>
+    rule is incorrect: <tt>INCLUDES&nbsp;targets1&nbsp;:&nbsp;targets2</tt>
+    causes everything that depends on a member of <i>targets1</i> to depend
+    on all members of <i>targets2</i>. It does this in an odd way, by tacking
+    <i>targets2</i> onto a special tail section in the dependency list of
+    everything in <i>targets1</i>. It seems to be OK to create circular
+    dependencies this way; in fact, it appears to be the ``right thing to
+    do'' when a single build action produces both <i>targets1</i> and
+    <i>targets2</i>.</p>
+    <p>&middot; When a rule is invoked, if there are <b><tt>actions</tt></b>
+    declared with the same name as the rule, the <tt>actions</tt> are added
+    to the updating actions for the target identified by the rule's first
+    argument. It is actually possible to invoke an undeclared rule if
+    corresponding actions are declared: the rule is treated as empty.</p>
+    <p>&middot; <a name="binding">Targets</a> (other than <tt>NOTFILE</tt>
+    targets) are associated with paths in the file system through a process
+    called <a href="./Jam.html#binding">binding</a>. Binding is a process of
+    searching for a file with the same name as the target (sans grist), based
+    on the settings of the <a href="#target_specific">target-specific</a>
+    <tt>SEARCH</tt> and <tt>LOCATE</tt> variables.</p>
+    <p>&middot; <a name="target_specific">In addition to</a> local and global
+    variables, jam allows you to set a variable <tt><b>on</b></tt> a target.
+    Target-specific variable values can usually not be read, and take effect
+    <i>only</i> in the following contexts:</p>
+    <ul>
+      <li>In updating <tt>actions</tt>, variable values are first looked up
+      <tt><b>on</b></tt> the target named by the first argument (the target
+      being updated). Because Jam builds its entire dependency tree before
+      executing <tt>actions</tt>, Jam rules make target-specific variable
+      settings as a way of supplying parameters to the corresponding
+      <tt>actions</tt>.</li>
+      <li>Binding is controlled <i>entirely</i> by the target-specific
+      setting of the <tt>SEARCH</tt> and <tt>LOCATE</tt> variables, as
+      described <a href="./Jam.html#search">here</a>.</li>
+      <li>In the special rule used for <a href="./Jam.html#hdrscan">header
+      file scanning</a>, variable values are first looked up
+      <tt><b>on</b></tt> the target named by the rule's first argument (the
+      source file being scanned).</li>
+    </ul>
+    <p>&middot; The ``<b>bound value</b>'' of a variable is the path associated
+    with the target named by the variable. In build <tt>actions</tt>, the
+    first two arguments are automatically replaced with their bound values.
+    Target-specific variables can be selectively replaced by their bound
+    values using the <a href="./Jam.html#actionmods">bind</a> action
+    modifier.</p>
+    <p>&middot; Note that the term ``binding'' as used in the Jam documentation
+    indicates a phase of processing that includes three sub-phases:
+    <i>binding</i> (yes!), update determination, and header file scanning.
+    The repetition of the term ``binding'' can lead to some confusion. In
+    particular, the <a href="./Jam.html#bindingmods">Modifying Binding</a>
+    section in the Jam documentation should probably be titled ``Modifying
+    Update Determination''.</p>
+    <p>&middot; ``Grist'' is just a string prefix of the form
+    <tt>&lt;</tt><i>characters</i><tt>&gt;</tt>. It is used in Jam to create
+    unique target names based on simpler names. For example, the file name
+    ``<tt>test.exe</tt>'' may be used by targets in separate subprojects, or
+    for the debug and release variants of the ``same'' abstract target. Each
+    distinct target bound to a file called ``<tt>test.exe</tt>'' has its own
+    unique grist prefix. The Boost build system also takes full advantage of
+    Jam's ability to divide strings on grist boundaries, sometimes
+    concatenating multiple gristed elements at the beginning of a string.
+    Grist is used instead of identifying targets with absolute paths for two
+    reasons:</p>
+    <ol summary="">
+      <li>The location of targets cannot always be derived solely from what
+      the user puts in a Jamfile, but sometimes depends also on the <a href=
+      "#binding">binding</a> process. Some mechanism to distinctly identify
+      targets with the same name is still needed.</li>
+      <li>Grist allows us to use a uniform abstract identifier for each built
+      target, regardless of target file location (as allowed by setting
+      <tt>ALL_LOCATE_TARGET</tt>.</li>
+    </ol>
+    <p>When grist is extracted from a name with
+    <tt>$(</tt><i>var</i><tt>:G)</tt>, the result includes the leading and
+    trailing angle brackets. When grist is added to a name with
+    <tt>$(</tt><i>var</i><tt>:G=</tt><i>expr</i><tt>)</tt>, existing grist is
+    first stripped. Then, if <i>expr</i> is non-empty, leading <tt>&lt;</tt>s
+    and trailing <tt>&gt;</tt>s are added if necessary to form an expression
+    of the form <tt>&lt;</tt><i>expr2</i><tt>&gt;</tt>;
+    <tt>&lt;</tt><i>expr2</i><tt>&gt;</tt> is then prepended.</p>
+    <p>&middot; <a name="variable_splitting">When Jam</a> is invoked it imports
+    all environment variable settings into corresponding Jam variables,
+    followed by all command-line (<tt>-s...</tt>) variable settings.
+    Variables whose name ends in <tt>PATH</tt>, <tt>Path</tt>, or
+    <tt>path</tt> are split into string lists on OS-specific path-list
+    separator boundaries (e.g. "<tt>:</tt>" for UNIX and "<tt>;</tt>" for
+    Windows). All other variables are split on space ("<tt>&nbsp;</tt>")
+    boundaries. Boost Jam modifies that behavior by allowing variables to be
+    <a href="#variable_quoting">quoted</a>.</p>
+    <p>&middot; A variable whose value is an empty list <i>or</i> which consists
+    entirely of empty strings has a negative logical value. Thus, for
+    example, code like the following allows a sensible non-empty default
+    which can easily be overridden by the user:</p>
+<pre>
+MESSAGE ?= starting jam... ;
+if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
+</pre>
+    <p>If the user wants a specific message, he invokes jam with
+    <tt>"-sMESSAGE=</tt><i>message&nbsp;text</i><tt>"</tt>. If he wants no
+    message, he invokes jam with <tt>-sMESSAGE=</tt> and nothing at all is
+    printed.</p>
+    <p>Please also read <a href="./Jam.html">The Jam language reference</a>
+    for the additional details, and the <a href="./RELNOTES">Jam release
+    notes</a> for a brief description of recent, but <b>fundamental changes
+    to the Jam language</b> without which you will probably not understand
+    any of the build system code. In particular, note that the
+    <tt>return</tt> statement does not affect control flow.</p>
     <hr>
     <p>Revised 
     <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
