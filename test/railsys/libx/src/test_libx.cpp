@@ -8,6 +8,7 @@
 // with no claim as to its suitability for any purpose.
 
 
+#define LIBX_SOURCE
 #include <libx/test_libx.h>
 
 TestLibX::TestLibX()
