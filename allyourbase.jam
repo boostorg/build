@@ -180,15 +180,16 @@ if $(NT)
     SUFDLL          ?= .dll .lib ;
     gLINKABLE_PRODUCT_INDEX(DLL) = 2 ; # (the .lib is the ones to link)
     NOARSCAN        ?= true ;
-    SHELL_EXPORT    ?= "set " ;
+    SHELL_EXPORT    ?= ;
+    SHELL_SET       ?= "set " ;
     
     # dwa 6/4/01 - removed compiler determination for boost
     # added some yacc/lex stuff, assuming cygwin for now.
-    LEX = flex ;
-    YACC = bison -t -d -l -v ;
-    YACCFILES       = y.tab ;
-    YACC_OUTPUT     = --output= ;
-    LEX_OUTPUT     = -o ;
+    LEX             ?= flex ;
+    YACC            ?= bison -t -d -l -v ;
+    YACCFILES       ?= y.tab ;
+    YACC_OUTPUT     ?= --output= ;
+    LEX_OUTPUT      ?= -o ;
     # YACC_FIX_LINES = sed '/simple/d ; # fix up #line directives for metrowerks
 }
 else if $(OS2)
@@ -395,6 +396,7 @@ else if $(UNIX)
     YACCFILES       ?= y.tab ;
     YACCFLAGS       ?= -d ;
     SHELL_EXPORT    ?= "export " ;
+    SHELL_SET       ?= "" ;
 }
     
 #
@@ -431,7 +433,8 @@ RSH             ?= rsh ;
 SED             ?= sed ;
 SHELLHEADER     ?= "#!/bin/sh" ;
 SHELLMODE       ?= 755 ;
-SHELL_EXPORT    ?= "" ;
+SHELL_EXPORT    ?= ;
+SHELL_SET       ?= "" ;
 SLASH           ?= / ;
 SPLITPATH       ?= ":" ; # dwa -- added missing SPLITPATH
 STDHDRS         ?= /usr/include ;
@@ -453,7 +456,7 @@ OSFULL = $(OS)$(OSVER)$(OSPLAT) $(OS)$(OSPLAT) $(OS)$(OSVER) $(OS) ;
 #
 
 # dwa 6/17/01 - added test
-DEPENDS all : shell files lib dll exe obj test ;
+DEPENDS all : shell files lib dll exe obj ;
 DEPENDS all shell files lib dll exe obj test : first ;
 NOTFILE all first shell files lib dll exe obj dirs clean uninstall test ;
 ALWAYS clean uninstall ;
@@ -888,19 +891,26 @@ rule MakeLocate
         
         # We add directory-grist here so that implicitly-created directory
         # target names don't collide with user-specified targets.
-        Depends $(<) : $(>[1]:G=directory-grist) ;
-        MkDir $(>[1]:G=directory-grist) ;
+        Depends $(<) : [ MkDir $(>[1]:G=directory-grist) ] ;
     }
 }
 
+# now returns the created directory target -- dwa
 rule MkDir
 {
     # If dir exists, don't update it
     # Do this even for $(DOT).
 
-    NOUPDATE $(<) ;
+    local dir = $(<) ;
+    if $(NT)
+    {
+        # make sure slashes all go the right way
+        dir = [ FDirName [ split-path $(dir) ] ] ;
+    }
+    
+    NOUPDATE $(dir) ;
 
-    if $(<) != $(DOT) && ! $($(<)-mkdir) 
+    if $(dir) != $(DOT) && ! $($(dir)-mkdir) 
     {
         local s ;
 
@@ -908,14 +918,14 @@ rule MkDir
         # MkDir1 has the actions 
         # Arrange for jam dirs
 
-        $(<)-mkdir = true ;
-        MkDir1 $(<) ;
-        Depends dirs : $(<) ;
+        $(dir)-mkdir = true ;
+        MkDir1 $(dir) ;
+        Depends dirs : $(dir) ;
 
         # Recursively make parent directories.
-        # $(<:P) = $(<)'s parent, & we recurse until root
+        # $(dir:P) = $(dir)'s parent, & we recurse until root
 
-        s = $(<:P) ;
+        s = $(dir:P) ;
 
         if $(NT)
         {
@@ -926,9 +936,9 @@ rule MkDir
             }
         }
 
-        if $(s) && $(s) != $(<)
+        if $(s) && $(s) != $(dir)
         {
-            Depends $(<) : $(s) ;
+            Depends $(dir) : $(s) ;
             MkDir $(s) ;
         }
         else if $(s)
@@ -937,6 +947,7 @@ rule MkDir
         }
 
     }
+    return $(dir) ;
 }
 
 # dwa 6/4/01 - modified for boost
@@ -1118,6 +1129,23 @@ rule subinclude
     }
 }
 
+# dwa 10/6/01 - added for boost
+#
+# path-global variable-name : path... ;
+#
+# if $(variable-name) is unset, sets variable-name to path...
+# variable-name will be adjusted on a per-subproject basis to refer to the same path.
+rule path-global
+{
+    $(<) ?= $(>) ;
+    gPATH_GLOBAL_VALUE($(<)) = $($(<)) ;
+    
+    if ! ( $(<) in $(gPATH_GLOBALS) )
+    {
+        gPATH_GLOBALS += $(<) ;
+    }
+}
+
 # dwa 6/4/01 - modified for boost
 rule SubDir
 {
@@ -1155,19 +1183,19 @@ rule SubDir
     # If $(TOP)/Jamrules hasn't been included, do so.
     #
 
-    if ! $(gINCLUDED($(<[1])))
+    if ! $(gINCLUDED($(gTOP)))
     {
         # Gated entry.
 
-        gINCLUDED($(<[1])) = TRUE ;
+        gINCLUDED($(gTOP)) = TRUE ;
 
         # File is $(TOPRULES) or $(TOP)/Jamrules.
 
-        _r = $($(<[1])RULES) ;
+        _r = $($(gTOP)RULES) ;
 
         if ! $(_r)
         {
-            _r = $(JAMRULES:R=$($(<[1]))) ;
+            _r = $(JAMRULES:R=$($(gTOP))) ;
         }
 
         # Include it.
@@ -1175,7 +1203,7 @@ rule SubDir
         include $(_r) ;
 
         # determine where toolset specifications and boost-base can be found. 
-        BOOST_BUILD_INSTALLATION ?= $($(<[1])) ;
+        BOOST_BUILD_INSTALLATION ?= $($(gTOP)) ;
 
         # and include boost-base
         include [ join-path $(BOOST_BUILD_INSTALLATION) boost-base.jam ] ;
@@ -1188,17 +1216,18 @@ rule SubDir
     # This allows us to determine whether we're in the directory where jam was
     # invoked from so that we can make locally named targets
     gINVOCATION_SUBDIR_TOKENS ?= $(SUBDIR_TOKENS) ;
+    gINVOCATION_SUBDIR_TOKENS ?= $(DOT) ;
 
     # SUBDIR is the path from the invocation directory to the subproject
     # directory.
-    SUBDIR = [ FDirName [ simplify-path-tokens $($(<[1])_TOKENS)  $(SUBDIR_TOKENS) ] ] ;
+    SUBDIR = [ tokens-to-simple-path $($(gTOP)_TOKENS)  $(SUBDIR_TOKENS) ] ;
 
     SEARCH_SOURCE = $(SUBDIR) ;
 
     # This will strip off any leading dot on SUBDIR_TOKENS
     local nodot_subdir = [ simplify-path-tokens $(SUBDIR_TOKENS) ] ;
 
-    ALL_LOCATE_TARGET ?= $($(<[1])) ;
+    ALL_LOCATE_TARGET ?= $($(gTOP)) ;
     LOCATE_SOURCE = [ FDirName $(ALL_LOCATE_TARGET) $(nodot_subdir) ] ;
     LOCATE_TARGET = $(LOCATE_SOURCE) ;
     
@@ -1211,15 +1240,84 @@ rule SubDir
 
     # This variable holds the path from the directory of Jam's invocation to the
     # directory of the current subproject.
-    RELATIVE_SUBDIR_TOKENS = [ simplify-path-tokens $($(<[1])_TOKENS) $(SUBDIR_TOKENS) : $(DOT) ] ;
+    RELATIVE_SUBDIR_TOKENS = [ simplify-path-tokens $($(gTOP)_TOKENS) $(SUBDIR_TOKENS) : $(DOT) ] ;
     RELATIVE_SUBDIR = [ join-path $(RELATIVE_SUBDIR_TOKENS) ] ;
+
+    adjust-path-globals ;
 }
+
+rule in-invocation-subdir
+{
+    local subdir-tokens = $(SUBDIR-TOKENS) ;
+    subdir-tokens ?= $(DOT) ;
+    if $(subdir-tokens) = $(gINVOCATION_SUBDIR_TOKENS)
+    {
+        return true ;
+    }
+}
+
 # These are the global variables that get set up by SubDir. If you need to
 # invoke SubDir temporarily and then restore them, declare
 #       local $(gSUBDIR_GLOBALS) ;
 gSUBDIR_GLOBALS = SUBDIR SUBDIR_TOKENS SEARCH_SOURCE LOCATE_SOURCE LOCATE_TARGET
     SOURCE_GRIST RELATIVE_SUBDIR RELATIVE_SUBDIR_TOKENS ; 
 
+
+rule protect-subdir
+{
+    return $(gSUBDIR_GLOBALS) $(gPATH_GLOBALS) ;
+}
+
+# prepends root to any unrooted elements of paths, and simplifies
+rule root-paths # paths... : root
+{
+    local path result ;
+    for path in $(<)
+    {
+        local rooted = $(path:R=$(>)) ;
+        if $(rooted) != $(path)
+        {
+            path = [ tokens-to-simple-path [ split-path $(rooted) ] ] ;
+            path = $(path:G=$(rooted:G)) ;
+        }
+        result += $(path) ;
+    }
+    return $(result) ;
+}
+
+# Adjust all path globals so that they are relative to the current subproject.
+rule adjust-path-globals
+{
+    # compute path tokens from current subproject to root
+    local tokens-to-root = [ split-path [ FSubDir $(SUBDIR_TOKENS) ] ] ;
+    
+    # compute path tokens from current subproject to invocation
+    # directory. $(DOT) is added just in case we're building from the project
+    # root
+    local tokens-to-invocation
+        = $(tokens-to-root) $(gINVOCATION_SUBDIR_TOKENS) ;
+         
+    local variable ;
+    for variable in $(gPATH_GLOBALS)
+    {
+        local paths = $(gPATH_GLOBAL_VALUE($(variable))) ;
+        $(variable) = ;
+        local path ;
+        for path in $(paths)
+        {
+            # is path already rooted?
+            if $(path:R=x) = $(path)
+            {
+                $(variable) += $(path) ;
+            }
+            else
+            {
+                local tokens = $(tokens-to-invocation) [ split-path $(path) ] ;
+                $(variable) += [ tokens-to-simple-path $(tokens) ] ;
+            }
+        }
+    }
+}
 
 # dwa 6/4/01 - added for boost
 # strip-grist value
@@ -1388,6 +1486,10 @@ rule simplify-path-tokens
     return $(result) ;
 }
 
+rule tokens-to-simple-path
+{
+    return [ FDirName [ simplify-path-tokens  $(<) ] ] ;
+}
 
 rule SubDirCcFlags
 {
@@ -1420,6 +1522,9 @@ rule SubInclude
 
     _s = [ FDirName $(<[2-]) ] ;
 
+    # protect variables from being permanently set by SubDir invocations
+    # in included files.
+    local [ protect-subdir ] ;
     include $(JAMFILE:D=$(_s):R=$($(<[1]))) ;
 }
 

@@ -98,14 +98,31 @@ rule report-argument-error # rule-name length argnum : $(1) : $(2) : $(3) : $(4)
         ") instead." ;
 }
 
-rule check-arguments # rule-name max-lengths... : $(1) : $(2) : $(3) : $(4)...
+# check-arguments rule-name lengths... : $(1) : $(2) : $(3) : $(4)...
+#
+
+# Check that arguments of the correct size are supplied to a rule
+# invocation. Each element of lengths should either be a single nonnegative
+# integer or a range of nonnegative integers (e.g. 2-4), which specifies the
+# allowed length of each argument. The following arguments to check-arguments
+# should be the arguments passed to the invoking rule, in order. It is useful to
+# pass one more argument than the invoking rule expects, so that extra arguments
+# may be detected.
+rule check-arguments # 
 {
+    # The name of the invoking rule, for error reporting
     local rule-name = $(<[1]) ;
+
+    # The allowed lengths of each argument list
     local lengths = $(<[2-]) ;
+
+    # Keeps track of which argument we're looking at.
     local argnums = 1 2 3 4 5 6 7 8 ;
 
+    # Iterate through each allowed length
     for length in $(lengths)
     {
+        # set maximum and minimum 
         local maximum minimum = $($(argnums[2])[$(length)-]) ;
         switch $(length)
         {
@@ -321,4 +338,11 @@ rule project-root
 if $(JAMFILE)
 {
     include $(JAMFILE) ;
+
+    # Call any post-jamfile hooks
+    local hook ;
+    for hook in $(gPOST_JAMFILE_HOOKS)
+    {
+        local ignored = [ $(hook) ] ;
+    }
 }

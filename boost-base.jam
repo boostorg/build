@@ -723,9 +723,9 @@ rule fixup-path-properties
 {
     local path-properties = [ get-properties $(gPATH_FEATURES) : $(<) ] ;
     local non-path = [ difference $(<) : $(path-properties) ] ;    
-    if $(RELATIVE_SUBDIR) && ! $(path-properties:R)
+    if $(RELATIVE_SUBDIR)
     {
-        path-properties = $(path-properties:R=$(RELATIVE_SUBDIR)) ;
+        path-properties = [ root-paths $(path-properties) : $(RELATIVE_SUBDIR) ] ;
     }
     return $(path-properties) $(non-path) ;
 }
@@ -1001,15 +1001,14 @@ rule dependent-include
         # rule to find it.
         
         local jamfile-path
-            = [ join-path
-                [ simplify-path-tokens
-                  $(RELATIVE_SUBDIR_TOKENS) [ directory-of $(target) ] $(JAMFILE) ] ] ;
+            = [ tokens-to-simple-path
+                  $(RELATIVE_SUBDIR_TOKENS) [ directory-of $(target) ] $(JAMFILE) ] ;
                   
         if ! $(gINCLUDED($(jamfile-path)))
         {
             # protect variables from being permanently set by SubDir invocations
             # in included files.
-            local $(gSUBDIR_GLOBALS) ;
+            local [ protect-subdir ] ;
 
             # this stack allows us to avoid making dependee libraries part of
             # the "type" targets, e.g. all, exe, obj. See rule type-DEPENDS.
@@ -1107,7 +1106,7 @@ rule link-libraries
     local new-subdir = TOP [ top-relative-tokens [ directory-of $(lib-path) ] ] ;
     
     # protect global variables from being permanently set by SubDir
-    local $(gSUBDIR_GLOBALS) ;
+    local [ protect-subdir ] ;
 
     # Enter the dependee subproject
     SubDir $(new-subdir) ;
@@ -1166,7 +1165,7 @@ rule declare-fake-targets
     # The following checks that we're in the subdirectory of Jam's invocation
     # so that we can arrange for ungristed target names to be built from the
     # command-line.
-    if ( $(SUBDIR_TOKENS) = $(gINVOCATION_SUBDIR_TOKENS) )
+    if [ in-invocation-subdir ]
     {
         DEPENDS $(<:G=) : $(<) ; # allows $(<:G=) to be used to build all variants
         NOTFILE $(<:G=) ;
