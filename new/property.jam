@@ -356,6 +356,8 @@ rule split-conditional ( property )
 
 
 # Interpret all path properties in 'properties' as relative to 'path'
+# The property values are assumed to be in system-specific form, and
+# will be translated into normalized form.
 rule translate-paths ( properties * : path )
 {
     local result ;
@@ -371,7 +373,7 @@ rule translate-paths ( properties * : path )
                 
         if path in [ feature.attributes $(p:G) ] 
         {
-            local t = [ path.root $(p:TG=) $(path) ] ;
+            local t = [ path.root [ path.make $(p:TG=) ] $(path) ] ;
             result += $(condition)$(t:TG=$(p:G)) ;
         }
         else
