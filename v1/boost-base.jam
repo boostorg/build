@@ -1770,7 +1770,7 @@ TAG(postfix) = "" ;
 #
 # <gcc/debug>libtest_gcc_debug.so
 #
-rule rename-target ( target : subvariant * : tags * )
+rule rename-target ( target + : subvariant * : tags * )
 {
     local tag-values = ;
     for local tag in $(tags)
