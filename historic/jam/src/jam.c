@@ -376,6 +376,13 @@ int  main( int argc, char **argv, char **arg_environ )
 
 	load_builtins();
 
+    /* Add the targets in the command line to update list */
+
+    for ( n = 0; n < argc; ++n )
+    {
+        mark_target_for_updating(argv[n]);
+    }
+
     /* Parse ruleset */
 
     {

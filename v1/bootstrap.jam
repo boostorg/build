@@ -18,7 +18,7 @@ include <jam-module>boost-base.jam ;
 #
 # Cause the targets specified in the command line to be updated
 #
-if $(JAM_VERSION) && $(JAM_VERSION:J="") >= 030101
+if $(JAM_VERSION) && $(JAM_VERSION:J="") >= 030101 &&  $(JAM_VERSION:J="") < 030104
 {
     for local e in $(ARGV[2-])
     {

@@ -21,3 +21,7 @@ void mark_target_for_updating(char *target);
  * Returns the list of all the target previously passed to 'mark_target_for_updating'.
  */
 LIST *targets_to_update();
+/*
+ * Cleasr/unmarks all targets that are currently marked for update.
+ */
+void clear_targets_to_update();

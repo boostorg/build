@@ -6,7 +6,7 @@
 
 # Info about what we are building.
 NAME = boost-jam ;
-VERSION = 3.1.3 ;
+VERSION = 3.1.4 ;
 RELEASE = 1 ;
 
 # Generate development debug binaries?
@@ -466,17 +466,4 @@ actions .rpm-build
 if $(rpm-tool)
 {
     .rpm $(NAME)-$(VERSION)-$(RELEASE) : $(NAME)-$(VERSION).tgz ;
-}
-
-
-# Update any targets in the specified commandline.
-local e-- = ;
-for local e in $(ARGV[2-])
-{
-    if ! [ MATCH "^(-).*" : $(e) ] && $(e--) != "-f"
-    {
-        # This is not an option, so it is a target name.
-        UPDATE $(e) ;
-    }
-    e-- = $(e) ;
 }
