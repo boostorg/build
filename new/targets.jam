@@ -160,7 +160,7 @@ rule project-target ( name : project : requirements * : default-build * )
         for local pn in [ project.attribute $(self.project) projects-to-build ]
         {
             local p = [ project.module-name [ path.join $(self-location) $(pn) ] ] ;
-            local t = [ project.target [ project.attribute $(p) location ] ] ;
+            local t = [ project.target $(p) ] ;
             $(t).set-property-adjuster $(property-adjuster) ;
         }            
     }
@@ -200,7 +200,7 @@ rule project-target ( name : project : requirements * : default-build * )
             for local pn in [ project.attribute $(self.project) projects-to-build ]
             {
                 local p = [ project.module-name [ path.join $(self-location) $(pn) ] ] ;
-                local t = [ project.target [ project.attribute $(p) location ] ] ;
+                local t = [ project.target $(p) ] ;
                 result += [ $(t).generate $(property-set) ] ;
             }
             return $(result) ;
@@ -833,8 +833,7 @@ rule main-target-default-build (
 # the main target.
 rule main-target-alternative ( target ) 
 {               
-    local location = [ project.attribute [ $(target).project ] location ] ;
-    local ptarget = [ project.target $(location) ] ;
+    local ptarget = [ project.target [ $(target).project ] ] ;
     local mtarget = [ $(ptarget).main-target [ $(target).name ] ] ;
 
     $(mtarget).add-alternative $(target) ;

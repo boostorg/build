@@ -125,7 +125,7 @@ for local id in $(target-ids)
 
 if ! $(targets)
 {
-    targets += [ project.target "." ] ; 
+    targets += [ project.target [ project.module-name "." ] ] ; 
 }
 
 virtual-targets = ;

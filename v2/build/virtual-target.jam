@@ -476,8 +476,7 @@ rule file-target (
             
             local main-target = [ $(self.dg).main-target ] ;
             local project = [ $(main-target).project ] ;
-            local plocation = [ project.attribute $(project) location ] ;
-            local ptarget = [ project.target $(plocation) ] ;
+            local ptarget = [ project.target $(project) ] ;
             local ref-ps = [ $(ptarget).reference-properties [ $(self.dg).properties-ps ] ] ;
 
             if [ $(ps).free ] != [ $(ref-ps).free ] 
