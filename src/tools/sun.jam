@@ -15,6 +15,11 @@ feature.extend toolset : sun ;
 toolset.inherit  sun : unix ;
 feature.subfeature toolset sun : version ;
 
+feature.extend stdlib : sun-stlport ;
+feature.compose <stdlib>sun-stlport
+    : <cxxflags>-library=stlport4 <linkflags>-library=stlport4
+    ;
+
 # Installation root to use for versionless toolset
 .root = "/opt/SUNWspro/bin/" ;
 
@@ -89,7 +94,7 @@ flags sun.link OPTIONS <linkflags> ;
 flags sun.link LINKPATH <library-path> ;
 flags sun.link FINDLIBS-ST <find-static-library> ;
 flags sun.link FINDLIBS-SA <find-shared-library> ;
-flags sun.link LIBRARIES <library> ;
+flags sun.link LIBRARIES <library-file> ;
 flags sun.link LINK-RUNTIME <link-runtime>static : static ;
 flags sun.link LINK-RUNTIME <link-runtime>shared : dynamic ;
 flags sun.link RPATH <dll-path> ;
