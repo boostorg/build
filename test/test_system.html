@@ -103,12 +103,17 @@
       then repeating the previous step, until satisfied.</li>
     </ol>
 
-    <p>For example, suppose that the current working directory contains the a
-    file <tt>test1.py</tt> and a subdirectory <tt>test1</tt> with files
-    <tt>foo.cpp</tt>, <tt>Jamfile</tt> and <tt>Jamrules</tt>. A definition of
-    function <tt>main</tt> is the only content of <tt>foo.cpp</tt>,
-    <tt>Jamfile</tt> builds an executable <tt>foo</tt> from <tt>foo.cpp</tt>
-    and <tt>Jamrules</tt> is empty. Finally, <tt>test1.py</tt> contains:</p>
+    <p>Prior to using the test system, make sure you have checked out the
+    Boost CVS and have successfully build Jam -- which means that
+    <tt>bjam</tt> executable is available.</p>
+
+    <p>For example, suppose that you've placed under
+    <tt>tools/build/test</tt> a file <tt>test1.py</tt> and a subdirectory
+    <tt>test1</tt> with files <tt>foo.cpp</tt>, <tt>Jamfile</tt> and
+    <tt>Jamrules</tt>. A definition of function <tt>main</tt> is the only
+    content of <tt>foo.cpp</tt>, <tt>Jamfile</tt> builds an executable
+    <tt>foo</tt> from <tt>foo.cpp</tt> and <tt>Jamrules</tt> is empty.
+    Finally, <tt>test1.py</tt> contains:</p>
 <pre class="code">
 from BoostBuild import Tester, List
 
@@ -248,7 +253,10 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
       <li>Stores the state of the working directory in
       <tt>self.previous_tree</tt>.</li>
 
-      <li>Invokes the build system, passing <tt>extra_args</tt> to it.</li>
+      <li>Invokes the <tt>bjam</tt> executable, passing <tt>extra_args</tt>
+      to it. The binary should be located under
+      <tt>&lt;test_invocation_dir&gt;/../jam_src/bin.&lt;platform&gt;</tt>.
+      This is to make sure tests use the version of jam build from CVS.</li>
 
       <li>Compares the stdout, stderr and exit status of build system
       invocation with values to appropriate parameters, if they are not

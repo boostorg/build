@@ -36,8 +36,16 @@ class Tester(TestCmd.TestCmd):
 
         self.original_workdir = os.getcwd()
 
+        jam_build_dir = ""
+        if os.name == 'nt':
+            jam_build_dir = "bin.ntx86"
+        elif os.name == 'posix':
+            jam_build_dir = "bin.linuxx86"
+        else:
+            raise "Don't know directory where jam is build for this system"
+
         TestCmd.TestCmd.__init__(self,
-                                 program='/home/ghost/build/boost-cvs/tools/build/jam_src/bin.linuxx86/bjam -d0',
+                                 program=os.path.join('..', 'jam_src', jam_build_dir, 'bjam') + ' -d0',
                                  match=TestCmd.match_exact,
                                  workdir='')
 
