@@ -60,6 +60,7 @@ else if $(UNIX)
       <include>$(PYTHON_ROOT)/include/python$(PYTHON_VERSION)
         <library-path>$(PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config 
           <find-library>python$(PYTHON_VERSION)
+            <cxx><*><cflags>"-expect_unresolved 'Py*' -expect_unresolved '_Py*'"
       ;
 }
 
