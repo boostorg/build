@@ -27,7 +27,7 @@ rule load-jamfile ( dir )
 {
     # See if the Jamfile is where it should be.
     #
-    local jamfile-to-load = [ glob $(dir) : $(JAMFILE) ] ;
+    local jamfile-to-load = [ GLOB $(dir) : $(JAMFILE) ] ;
     
     # Could not find it, error.
     #

@@ -156,7 +156,7 @@ rule do-help ( )
         # Is it a module?
         local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
         path-to-modules ?= . ;
-        if $(help) && [ glob $(path-to-modules) : $(help)\\.jam ]
+        if $(help) && [ GLOB $(path-to-modules) : $(help)\\.jam ]
         {
             print-help-modules $(help) ;
             did-help = true ;
@@ -260,7 +260,7 @@ rule print-help-modules ( modules * )
             "detailed information."
             ;
         local modules-to-list =
-            [ glob [ modules.peek : BOOST_BUILD_PATH ] : *.jam ] ;
+            [ GLOB [ modules.peek : BOOST_BUILD_PATH ] : *.jam ] ;
         if $(modules-to-list)
         {
             print-list-start ;
@@ -558,29 +558,34 @@ rule echo-with-wordwrap ( text + : indent ? )
 {
     text = $(text:J=" ") ;
     indent ?= "" ;
+    local use-indent = "" ;
     local char-match =
         ".?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?.?" ;
     while $(text)
     {
         local s = "" ;
         local t = "" ;
-        s = [ MATCH "^($(char-match)).*" : $(text) ] ;
-        s += [ MATCH "^$(char-match)(.*)" : $(text) ] ;
+        # divide s into the first 78 characters and the rest
+        s = [ MATCH "^($(char-match))(.*)" : $(text) ] ;
+        
         if $(s[2])
         {
-            t = [ MATCH "^(.*)[\\ ][^\\ ]*$" : $(s[1]) ] ;
-            t += [ MATCH "^.*[\\ ]([^\\ ]*)$" : $(s[1]) ] ;
+            # split the first half at a space
+            t = [ MATCH "^(.*)[\\ ]([^\\ ]*)$" : $(s[1]) ] ;
         }
         else
         {
             t = $(s) ;
         }
+        
         if ! $(t[2])
         {
             t += "" ;
         }
-        text = $(indent)$(t[2])$(s[2]) ;
-        ECHO $(t[1]) ;
+        
+        text = $(t[2])$(s[2]) ;
+        ECHO $(use-indent)$(t[1]) ;
+        use-indent = $(indent) ;
     }
 }
 
