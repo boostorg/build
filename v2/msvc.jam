@@ -171,7 +171,7 @@ local rule locate ( version ? : vendor ? )
     # of the same path, probably differing by case.
     setup = [ unique $(setup:L) ] ;
     
-    if $(setup[2])
+    if $(setup[2]) && ! ( --quiet in [ modules.peek : ARGV ] )
     {
         ECHO warning: toolset msvc $(vendor) $(version) initialization: ;
         ECHO "warning: several msvc installations found." ;
