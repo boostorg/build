@@ -1321,9 +1321,10 @@ rule find-compatible-subvariant ( main-target : toolset variant : dependent-simp
         if $(f) in $(requirements:G)
         {
             local required-value
-                = [ get-values $(f) : $(override-properties) ] ;
+                = [ split-path [ get-values $(f) : $(override-properties) ] ] ;
 
-            if ! [ is-link-compatible $(f) : $(required-value) : $(p:G=) ]
+            if ( ! $(p:G=) in $(required-value) ) &&
+                ( ! [ is-link-compatible $(f) : $(required-value) : $(p:G=) ] )
             {
                 EXIT $(main-target): required property $(f)$(required-value)
                     incompatible with requested $(p) ;
