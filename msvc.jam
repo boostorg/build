@@ -1,4 +1,8 @@
-
+# Copyright David Abrahams 2003. Permission to copy, use,
+# modify, sell and distribute this software is granted provided this
+# copyright notice appears in all copies. This software is provided
+# "as is" without express or implied warranty, and with no claim as
+# to its suitability for any purpose.
 import property ;
 import generators ;
 import os ;
@@ -15,7 +19,7 @@ feature.subfeature toolset msvc : vendor
   # to be seen, though ;-)
   ;
 
-feature.subfeature toolset msvc : vcversion
+feature.subfeature toolset msvc : version
   : # 6 7 7.1 # known subvalues
   : optional propagated implicit
   
@@ -26,7 +30,7 @@ feature.subfeature toolset msvc : vcversion
 # Initialize the toolset
 rule init ( version ? path ? : vendor ? : setup ? compiler ? linker ? )
 {
-    feature.extend-subfeature toolset msvc : vcversion : $(version) ;
+    feature.extend-subfeature toolset msvc : version : $(version) ;
     
     if $(vendor) && ( $(vendor) != intel )
     {
