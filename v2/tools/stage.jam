@@ -31,7 +31,6 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
             
             $(i2).set-path [ project.path-relative-to-project-location 
                 $(self.name) $(self.project) ] ;
-            $(i2).extra-grist stage-$(self.name) ;
             result += $(i2) ;
         }
         return $(result) ;

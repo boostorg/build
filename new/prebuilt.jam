@@ -36,14 +36,9 @@ rule prebuilt-file-generator
         
         local t = [ new file-target $(name:S=:D=) : $(type) : $(project) ] ;
         $(t).set-path $(path) ;
-        # TODO: have no idea how handle this. Specifically,
-        # we need to distinguish between virtual targets with different
-        # properties. In this case, there are no properties, because
-        # they are stored in action, and we don't have any action.
-        # Therefore, we encode properties via 'extra-grist', which is ugly.
-        # Maybe, we should just introduce 'do-nothing-action', which only
-        # keps properties.
-        $(t).extra-grist [ $(property-set).as-path ] ;
+                               
+        $(t).action [ new null-action $(t) : $(property-set) ] ;
+        
         $(t).suffix [ MATCH .(.*) : $(name:S) ] ;
         return $(t) ;            
         

@@ -104,13 +104,6 @@ rule virtual-target ( name  # Name of this target -- specifies the name of
     # If scanner is not specified, then actual target is returned.
     rule actualize ( scanner ? )
     {
-        # ### This comment is probably out-of-date. Ignore for now.
-        # When we have explicitly specified target, we need to create a
-        # target and associate scanner with it.
-        # There may be many different scanners, but there's only one
-        # generating action. Therefore, generating action actualizes this
-        # target without any scanner. Actual target with scanners will
-        # depend on actual target without scanner.
         local actual-name = [ actualize-no-scanner ] ;
 
         if ! $(scanner)
@@ -195,9 +188,8 @@ class virtual-target ;
 # derived file (otherwise).
 #
 # The target's grist is concatenation of project's location,
-# properties of action (for derived files), and the value
-# passed to 'extra-grist'.
-#
+# properties of action (for derived files), and, optionally,
+# value identifying the main target.
 rule abstract-file-target ( name
                   : type ?  # Optional type for this target
                   : project
@@ -275,12 +267,6 @@ rule abstract-file-target ( name
             self.dg = $(dg) ;
         }
         return $(self.dg) ;
-    }
-
-    # Specifies an extra grist to be added to the target name.
-    rule extra-grist ( g )
-    {
-        self.extra-grist = $(g) ;
     }
 
     rule actualize-action ( target )
@@ -369,14 +355,13 @@ rule abstract-file-target ( name
             {
                 grist = $(location-grist) ;
             }
+            # Adding this to grist looks ugly. It's still here for the 
+            # same of 'symlink' rule -- got to consider what to do
+            # about it.
             if $(self.path)
             {
                 grist = $(grist)@$(self.path)@ ;
             }            
-            if $(self.extra-grist)
-            {
-                grist = $(grist)/$(self.extra-grist) ;
-            }
             local smt = [ specific-main-target ] ;
             if $(smt)
             {
@@ -459,6 +444,9 @@ rule file-target (
         }        
     }
 
+    # If free properties of this target's actions are equal to reference properties on
+    # project, returns empty string. Otherwise, returns the name of main target to
+    # which this target belong.
     rule specific-main-target ( )
     {
         if $(self.action)
@@ -641,6 +629,32 @@ rule action ( targets + : sources * : action-name : property-set ? )
     }
 }
 class action ;
+
+# Action class which does nothing --- it produces the targets with
+# specific properties out of nowhere. It's needed to distinguish virtual
+# targets with different properties that are known to exist, and have no 
+# actions which create them.
+rule null-action ( targets + : property-set ? )
+{
+    action.__init__ $(targets) : : no-action : $(property-set) ;
+    
+    rule actualize ( )
+    {
+        if ! $(self.actualized)
+        {
+            self.actualized = true ;
+
+            local actual-targets ;
+            for local i in [ targets ]
+            {
+                actual-targets += [ $(i).actualize ] ;
+            }
+        }        
+    }
+}
+
+class null-action : action ;
+
 
 # Creates a virtual target with approariate name and type from 'file'.
 # If a target with that name in that project was already created, returns that already
