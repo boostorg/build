@@ -18,53 +18,20 @@ import common ;
 
 toolset.register borland ;
 
-feature.subfeature toolset borland : version ;
-
-# Installation root to use for versionless toolset
-.root = "" ;
-STDHDRS = ;
-STDLIBPATH = ;
-
-
-rule init ( version ? : root ? )
+rule init ( version ? : command ? )
 {
-    # If version is not provided, change the global variable
-    # It would probably be better to introduce 'unspecified' version
-    # and set flags on <toolset>borland-unspecified, but, 
-    # default values are not applied to subfeatures.
-    if ! $(version) 
-    {
-        if ! $(root)
-        {
-            # versionless and rootless, we assume the user has bcc in the path
-            # so we try and find it, and set up the paths accordingly
-            import regex ;
-            import modules ;
-            local bcc = [ GLOB [ modules.peek : Path ] [ modules.peek : PATH ] : bcc32.exe ] ;
-            root = $(bcc[1]:D) ; root = $(root:P) ;
-        }
-        if $(root)
-        {
-            toolset.flags borland.compile STDHDRS <toolset>borland : $(root)/include/ ;
-            toolset.flags borland.link STDLIBPATH <toolset>borland : $(root)/lib ;
-            toolset.flags borland .root <toolset>borland : $(root)/bin/ ;
-        }
-    }
-    else
-    {
-        feature.extend-subfeature toolset borland : version : $(version) ;
-        local condition = <toolset>borland-$(version) ;
-
-        toolset.flags borland.compile STDHDRS $(condition) : $(root)/include/ ;
-        toolset.flags borland.link STDLIBPATH $(condition) : $(root)/lib/ ;        
-
-        root = $(root)/bin/ ;
-        root ?= "" ;        
-        toolset.flags borland .root $(condition) : $(root) ;
-    }
-    # strange that this return is needed, because if absent the
-    # unversioned/unrooted case doesn't work at all
-    return ;
+    local condition = [ common.check-init-parameters borland :
+        version $(version) ] ;
+    
+    local command = [ common.get-invocation-command borland : bcc32.exe 
+        : $(command) ] ;
+    
+    local root = [ common.get-absolute-tool-path $(command) ] ;
+    root = $(root:D) ;
+    
+    toolset.flags borland.compile STDHDRS $(condition) : $(root)/include/ ;
+    toolset.flags borland.link STDLIBPATH $(condition) : $(root)/lib ;
+    toolset.flags borland .root $(condition) : $(root)/bin/ ;
 }
 
 

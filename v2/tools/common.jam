@@ -129,6 +129,23 @@ rule get-invocation-command (
     return $(command) ;
 }
 
+# Given an invocation command returned by 'get-invocation-command',
+# return the absolute path to the command. This works even if commnad
+# has not path element and is present in PATH.
+rule get-absolute-tool-path ( command )
+{
+    if $(command:D)
+    {
+        return $(command:D) ;
+    }
+    else
+    {
+        local m = [ GLOB [ modules.peek : PATH Path path ] : $(command) $(command).exe ] ;
+        return $(m[1]:D) ;
+    }    
+}
+
+
 
 # Attempts to find tool (binary) named 'name' in PATH and in 'additiona-paths'.
 # If found in path, returns 'name'.
@@ -137,14 +154,14 @@ rule get-invocation-command (
 # Otherwise, returns empty string.
 rule find-tool ( name : additional-paths * )
 {
-    local m = [ GLOB [ modules.peek : PATH Path path ] : $(name) ] ;
+    local m = [ GLOB [ modules.peek : PATH Path path ] : $(name) $(name).exe ] ;
     if $(m)
     {
         return $(name) ;
     } 
     else 
     {        
-        return [ path.glob $(additional-paths) : $(name) ] ;    
+        return [ path.glob $(additional-paths) : $(name) $(name).exe ] ;    
     }    
 }
 
