@@ -147,8 +147,6 @@ rule assign-option ( module : option + )
 }
 
 
-dummy_module_number = 0 ;
-
 #
 # Returns the name of module corresponding to 'jamfile-location'.
 #

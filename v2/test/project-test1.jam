@@ -6,6 +6,17 @@ module modules { include <module@>modules.jam ; }
 IMPORT modules : import : : import ;
 import modules ; # The modules module can tolerate being included twice
 
+rule find-to-root ( dir : patterns + )
+{
+    local globs = [ GLOB $(dir) : $(patterns) ] ;
+    while ! $(globs) && $(dir:P) != $(dir)
+    {
+        dir = $(dir:P) ;
+        globs = [ GLOB $(dir) : $(patterns) ] ;
+    }
+    return $(globs) ;
+}
+
 
 import project ;
 import targets ;
