@@ -55,7 +55,7 @@ project stlport ;
 feature.extend stdlib : stlport ;
 feature.compose <stdlib>stlport : <library>/stlport//stlport ;
 
-subfeature stdlib stlport : version : : optional propagated link-incompatible ;
+subfeature stdlib stlport : version : : optional propagated ;
 
 # STLport iostreams or native iostreams
 subfeature stdlib stlport : iostream : hostios : optional propagated  ;
