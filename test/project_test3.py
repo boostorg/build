@@ -14,7 +14,7 @@ t.expect_addition("bin/a.obj")
 t.expect_content("bin/a.obj",
 """debug
 a.cpp
-"""
+""")
 
 t.expect_addition("bin/a.exe")
 t.expect_content("bin/a.exe",
