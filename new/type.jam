@@ -229,7 +229,7 @@ rule main-target-rule ( name : sources * : requirements * : default-build *
     # CALLER_MODULE is Jamfile module, which is used to denote 
     # a project.
     local project = [ CALLER_MODULE ] ;
-    
+        
     # This is a circular module dependency, so it must be imported here
     import targets ;
     targets.main-target-alternative

@@ -455,8 +455,8 @@ rule find ( id : current-location )
         local has-project-id = $(split[2]) ;
         local target-name = $(split[4]) ;
         
-        local project-module = [ project.find $(project-name) : $(current-location) ] ;
-               
+        local project-module = [ project.find $(project-name) : $(current-location) ] ;            
+        
         if $(project-module) {
             local project-target = [ project.target $(project-module) ] ;
             if [ $(project-target).has-main-target $(target-name) ] 
