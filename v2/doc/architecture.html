@@ -21,12 +21,12 @@
         br.clear { clear: left }
         div.alert { color: red }
         table { align: center; border: thin; }     
-       </style>
+           </style>
   </head>
   <!-- Things yet to document:
-       - build request, build request expansion and directly requested targets
-       - conditional properties
-     -->
+         - build request, build request expansion and directly requested targets
+         - conditional properties
+       -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -36,10 +36,38 @@
     </h1>
     <hr>
 
+    <div class="alert">
+      <p>This document is work-in progress. Don't expect much from it
+      yet.</p>
+    </div>
+
     <dl class="page-index">
       <dt><a href="#dependencies">Dependency scanning</a></dt>
     </dl>
     <hr>
+
+    <h2><a name="targets">Targets</a></h2>
+
+    <p>There are two user-visible kinds of targets in Boost.Build. First are
+    "abstract" &mdash; they correspond to things declared by user, for
+    example, projects and executable files. The primary thing about abstract
+    target is that it's possible to request them to be build with a
+    particular values of some properties. Each combination of properties may
+    possible yield different set of real file, so abstract target do not have
+    a direct correspondence with files.</p>
+
+    <p>File targets, on the contary, are associated with concrete files.
+    Dependency graphs for abstract targets with specific properties are
+    constructed from file targets. User has no was to create file targets,
+    however it can specify rules that detect file type for sources, and also
+    rules for transforming between file targets of different types. That
+    information is used in constructing dependency graph, as desribed in the
+    <a href="#generators">next section</a>. <b>Note:</b>File targets are not
+    the same as targets in Jam sense; the latter are created from file
+    targets at the latest possible moment. <b>Note:</b>"File target" is a
+    proposed name for what we call virtual targets. It it more understandable
+    by users, but has one problem: virtual targets can potentially be
+    "phony", and not correspond to any file.</p>
 
     <h2 id="dependency_scanning">Dependency scanning</h2>
 
@@ -208,6 +236,58 @@
       bound via LOCATE_TARGET to "build" and we'll call INCLUDE on that found
       target, instread of creating a completely unrelated one.</li>
     </ol>
+
+    <div class="alert">
+      The remainder of this document is not indended to be read at all. This
+      will be rearranged in future.
+    </div>
+
+    <h4>File targets</h4>
+    As described above, file targets corresponds to files that Boost.Build
+    manages. User's may be concerned about file targets in three ways: when
+    declaring file target types, when declaring transformations between
+    types, and when determining where file target will be placed. File
+    targets can also be connected with actions, that determine how the target
+    is created. Both file targets and actions are implemented in the
+    <tt>virtual-target</tt> module. 
+
+    <h5>Types</h5>
+    A file target can be given a file, which determines what transformations
+    can be applied to the file. The <tt>type.register</tt> rule declares new
+    types. File type can also be assigned a scanner, which is used to find
+    implicit dependencies. See <a href="#dependency_scanning">dependency
+    scanning</a> below. 
+
+    <h4>Target paths</h4>
+
+    <p>To distinguish targets build with different properties, they are put
+    in different directories. Rules for determining target paths are given
+    below:</p>
+
+    <ol>
+      <li>All targets are placed under directory corresponding to the project
+      where they are defined.</li>
+
+      <li>Each non free, non incidental property cause an additional element
+      to be added to the target path. That element has the form
+      <tt>&lt;feature-name&gt;-&lt;feature-value&gt;</tt> for ordinary
+      features and <tt>&lt;feature-value&gt;</tt> for implicit ones. [Note
+      about composite features].</li>
+
+      <li>If the set of free, non incidental properties is different from the
+      set of free, non incidental properties for the project in which the
+      main target that uses the target is defined, a part of the form
+      <tt>main_target-&lt;name&gt;</tt> is added to the target path.
+      <b>Note:</b>It would be nice to completely track free features also,
+      but this appears to be complex and not extremely needed.</li>
+    </ol>
+
+    <p>For example, we might have these paths:</p>
+<pre>
+    debug/optimization-off
+    debug/main-target-a
+   
+</pre>
     <hr>
 
     <p class="revision">Last modified: June 30, 2003</p>
