@@ -200,44 +200,7 @@ local rule normalize-raw-paths ( paths * )
     local result ;
     for p in $(paths:T)
     {
-        local elements ; # the simplified path elements
-        local dotdots ;  # a stack of .. elements we've seen
-        
-        # consume the last path element in p until there's nothing
-        # left
-        while $(p)
-        {
-            local split = [ MATCH ^(.+)/(.*)$ : $(p) ] ;
-            
-            if ! $(split) 
-            {   # no further slashes; prepend the last element
-                elements = $(p) $(elements) ;
-            }
-            else if $(split[2]) = .
-            {                   # ignore the identity directory
-            }
-            else if $(split[2]) = ..
-            {                   # prepare to absorb the next named element
-                dotdots += .. ; # push parent onto stack
-            }
-            else if $(dotdots)
-            {                              # absorb a named element
-                dotdots = $(dotdots[2-]) ; # pop parent off stack
-            }
-            else if $(split[2]) # if the element was empty, ignore it
-            {                   # to drop a trailing slash
-                elements = $(split[2]) $(elements) ;
-            }
-            # drop the last element of p
-            p = $(split[1]) ;
-        }
-        
-        # prepend any unused parent directories
-        elements = $(dotdots) $(elements) ;
-        # If everything cancelled out, it's the identity directory.
-        elements ?= . ;
-        
-        result += $(elements:J=/) ;
+        result += [ NORMALIZE_PATH $(p) ] ;
     }
     return $(result) ;
 }
@@ -355,10 +318,12 @@ local rule __test__ ( )
     assert.result . : normalize-raw-paths . ;
     assert.result .. : normalize-raw-paths .. ;
     assert.result ../.. : normalize-raw-paths ../.. ;
+    assert.result .. : normalize-raw-paths ./.. ;
     assert.result / / : normalize-raw-paths / \\ ;
     assert.result a : normalize-raw-paths a ;
     assert.result a : normalize-raw-paths a/ ;
     assert.result /a : normalize-raw-paths /a/ ;
+    assert.result / : normalize-raw-paths /a/.. ;
 }
 
 

@@ -239,6 +239,12 @@ load_builtins()
           bind_builtin( "SORT",
                         builtin_sort, 0, args );
       }
+
+      {
+          char * args[] = { "path", 0 };
+          bind_builtin( "NORMALIZE_PATH",
+                        builtin_normalize_path, 0, args );
+      }
 }
 
 /*
@@ -910,6 +916,96 @@ builtin_sort( PARSE *parse, FRAME *frame )
 
     return list_sort(arg1);
 }
+
+LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
+{
+    LIST* arg1 = lol_get( frame->args, 0 );
+
+    /* First, we iterate over all '/'-separated elements, starting from
+       the end of string. If we see '..', we remove previous path elements.
+       If we see '.', we remove it.
+       The removal is done by putting '\1' in the string. After all the string
+       is processed, we do a second pass, removing '\1' characters.
+    */
+    
+    string in[1], out[1], tmp[1];
+    char* end;      /* Last character of the part of string still to be processed. */
+    char* current;  /* Working pointer. */  
+    int dotdots = 0; /* Number of '..' elements seen and not processed yet. */
+    int rooted = arg1->string[0] == '/';
+
+    /* Make a copy of input: we should not change it. */
+    string_new(in);
+    if (!rooted)
+        string_push_back(in, '/');
+    string_append(in, arg1->string);
+    
+
+    end = in->value + in->size - 1;
+    current = end;
+    
+    for(;end >= in->value;) {
+        /* Set 'current' to the next occurence of '/', which always exists. */
+        for(current = end; *current != '/'; --current)
+            ;
+        
+        if (current == end && current != in->value) {
+            /* Found a trailing slash. Remove it. */
+            *current = '\1';
+        } else if (current == end && *(current+1) == '/') {
+            /* Found duplicated slash. Remove it. */
+            *current = '\1';
+        } else if (end - current == 1 && strncmp(current, "/.", 2) == 0) {
+            /* Found '/.'. Drop them all. */
+            *current = '\1';
+            *(current+1) = '\1';                   
+        } else if (end - current == 2 && strncmp(current, "/..", 3) == 0) {
+            /* Found '/..' */                
+            *current = '\1';
+            *(current+1) = '\1';                   
+            *(current+2) = '\1';                   
+            ++dotdots;
+        } else if (dotdots) {
+            char* p = current;
+            memset(current, '\1', end-current+1);
+            --dotdots;
+        }                 
+        end = current-1;
+    }
+
+
+    string_new(tmp);
+    while(dotdots--)
+        string_append(tmp, "/..");
+    string_append(tmp, in->value);
+    string_copy(in, tmp->value);
+    string_free(tmp);
+        
+       
+    string_new(out);
+    /* The resulting path is either empty or has '/' as the first significant
+       element. If the original path was not rooted, we need to drop first '/'. 
+       If the original path was rooted, and we've got empty path, need to add '/'
+    */
+    if (!rooted) {
+        current = strchr(in->value, '/');
+        if (current)
+            *current = '\1';
+    } 
+       
+    for (current = in->value; *current; ++current)
+        if (*current != '\1')
+            string_push_back(out, *current);
+
+    
+    char* result = newstr(out->size ? out->value : (rooted ? "/" : "."));
+    string_free(in);
+    string_free(out);
+
+    return list_new(0, result);
+
+}
+
 
 
 static void lol_build( LOL* lol, char** elements )
