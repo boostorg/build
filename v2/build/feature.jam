@@ -388,11 +388,17 @@ rule extend ( feature-or-property subfeature ? : values * )
     }
 }
 
-# subfeature
-#
-# subfeature toolset gcc-2.95.2 target-platform : aix linux mac cygwin
-#
-rule subfeature ( feature value-string ? : subfeature : subvalues * : attributes * )
+# Declares a subfeature
+rule subfeature ( 
+  feature        # Root feature that is not a subfeature
+  value-string ? # A value-string specifying which feature or
+                 # subfeature values this subfeature is specific to,
+                 # if any
+    
+  : subfeature   # The name of the subfeature being declared
+  : subvalues *  # The allowed values of this subfeature
+  : attributes * # The attributes of the subfeature
+)
 {
     feature = [ grist $(feature) ] ;
     validate-feature $(feature) ;
