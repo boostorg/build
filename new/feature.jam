@@ -274,7 +274,7 @@ local rule expand-subfeatures-aux ( feature ? : value )
     for local subvalue in $(components[2-])
     {
         local subfeature = [ implied-subfeature $(feature) $(subvalue) : $(value) ] ;
-        local f = [ SUBST $(feature) ^<(.*)>$ $1 ] ;
+        local f = [ MATCH ^<(.*)>$ : $(feature) ] ;
         result += $(subvalue:G=$(f)-$(subfeature)) ;
     }
     

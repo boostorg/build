@@ -42,7 +42,7 @@ rule native ( path )
 #
 rule is_rooted ( path )
 {
-    return [ SUBST $(path) "^(/)" $1 ] ;
+    return [ MATCH "^(/)" : $(path) ] ;
 }
 
 #
@@ -70,7 +70,7 @@ rule parent ( path )
 
             # Strip everything at the end of path up to and including
             # the last slash
-            local result = [ SUBST $(path) "((.*)/)?([^/]+)" $2 $3 ] ;
+            local result = [ regex.match "((.*)/)?([^/]+)" : $(path) : 2 3 ] ;
 
             # Did we strip what we shouldn't?
             if $(result[2]) = ".." {
@@ -120,7 +120,7 @@ rule join ( path1 path2 )
         return /$(path2) ;
     } else {
 
-        local parts = [ SUBST $(path2) "((\.\./)*)(.*)" $1 $3 ] ;
+        local parts = [ regex.match "((\.\./)*)(.*)" : $(path2) : 1 3 ] ;
 
         if $(parts[1]) {
 
@@ -177,7 +177,7 @@ rule all_parents ( path : upper_limit ? : cwd ? )
 
     # Leave only directory names below 'upper_limits'
     # Assure pruned_path[2] will have no leading '/'
-    local pruned_path = [ SUBST $(rpath) "($(upper_limit))/*(.*)" $1 $2 ] ;
+    local pruned_path = [ regex.match "($(upper_limit))/*(.*)" :  $(rpath) : 1 2 ] ;
     if ! $(pruned_path) {
         error "$(upper_limit) is not prefix of $(path)" ;
     }
@@ -205,7 +205,7 @@ rule make-NT ( native )
     } else {
         result = [ sequence.join $(tokens[--2]) : "/" ] ;
     }
-    if [ SUBST $(native) "(^.:)" $(1) ] {
+    if [ regex.match "(^.:)" : $(native)  ] {
         result = /$(result) ;
     }
     return $(result) ;
@@ -213,7 +213,7 @@ rule make-NT ( native )
 
 rule native-NT ( path )
 {
-    local result = [ SUBST $(path) "^/?(.*)" $1 ] ;
+    local result = [ MATCH "^/?(.*)" : $(path) ] ;
     result = [ sequence.join [ regex.split $(result) "/" ] : "\\" ] ;
     return $(result) ;
 }

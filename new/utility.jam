@@ -8,7 +8,7 @@ rule ungrist ( names * )
     local result ;
     for local name in $(names)
     {
-        local stripped = [ SUBST $(name) ^<(.*)>$ $1 ] ;
+        local stripped = [ MATCH ^<(.*)>$ : $(name) ] ;
         if ! $(stripped)
         {
             ECHO *** error: in ungrist $(names) ;
