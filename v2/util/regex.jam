@@ -42,22 +42,29 @@ rule match ( pattern : string : indices * )
 }
 
 # Matches all elements of 'list' agains the 'pattern' 
-# and returns a list of first paranthethised groups of 
-# all successfull matches. 
-rule transform ( list * : pattern )
+# and returns a list of the elements indicated by indices of 
+# all successfull matches. If 'indices' is omitted returns
+# a list of first paranthethised groups of all successfull
+# matches.
+#
+rule transform ( list * : pattern : indices * )
 {
+    indices ?= 1 ;
     local result ;
     for local e in $(list)
     {
         local m = [ MATCH $(pattern) : $(e) ] ;
         if $(m)
         {
-            result += $(m[1]) ;
+            result += $(m[$(indices)]) ;
         }        
     }
     return $(result) ;
 }
-NATIVE_RULE regex : transform ;
+
+# Commented out because of 'indices' parameter of 'transform' rule.
+#
+#NATIVE_RULE regex : transform ;
 
 # Escapes all of the characters in symbols using the escape symbol
 # escape-symbol for the given string, and returns the escaped string
@@ -106,6 +113,24 @@ rule replace (
     return $(result) ;
 }
 
+# Replaces occurances of a match string in a given list of strings. 
+# Returns the list of new strings. The match string can be a regex 
+# expression.
+#
+# list        - the list of strings to modify.
+# match       - the search expression.
+# replacement - the string to replace with.
+#
+rule replace-list ( list * : match : replacement )
+{
+    local result ;
+    for local e in $(list)
+    {
+        result += [ replace $(e) $(match) $(replacement) ] ;
+    }
+    return $(result) ;
+}
+
 rule __test__ ( )
 {
     import assert ;
@@ -129,6 +154,9 @@ rule __test__ ( )
     assert.result a.h c.h 
       : transform <a.h> \"b.h\" <c.h> :  <(.*)> ;
 
+    assert.result a.h "" b.h c.h 
+      : transform <a.h> \"b.h\" <c.h> :  <([^>]*)>|\"([^\"]*)\" : 1 2 ;
+
     assert.result "^<?xml version=\"1.0\"^>"
       : escape "<?xml version=\"1.0\">" : "&|()<>^" : "^" ;
     
@@ -139,4 +167,6 @@ rule __test__ ( )
     assert.result "&nbsp;string&nbsp;string" : replace " string string" " " "&nbsp;" ;
     assert.result "string&nbsp;&nbsp;string" : replace "string  string" " " "&nbsp;" ;
     assert.result "-" : replace "&" "&" "-" ;
+
+    assert.result "-" "a-b" : replace-list "&" "a&b" : "&" : "-" ;
 }
