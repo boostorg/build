@@ -14,6 +14,7 @@
 
 # include "jam.h"
 # include "filesys.h"
+# include "pathsys.h"
 # include "strings.h"
 
 # ifdef OS_NT
@@ -56,9 +57,10 @@
 void
 file_dirscan( 
 	char *dir,
-	void (*func)( char *file, int status, time_t t ) )
+	scanback func,
+	void *closure )
 {
-    FILENAME f;
+    PATHNAME f;
     string filespec[1];
     string filename[1];
     long handle;
@@ -77,9 +79,9 @@ file_dirscan(
     /* Special case \ or d:\ : enter it */
  
     if( f.f_dir.len == 1 && f.f_dir.ptr[0] == '\\' )
-        (*func)( dir, 0 /* not stat()'ed */, (time_t)0 );
+        (*func)( closure, dir, 0 /* not stat()'ed */, (time_t)0 );
     else if( f.f_dir.len == 3 && f.f_dir.ptr[1] == ':' )
-        (*func)( dir, 0 /* not stat()'ed */, (time_t)0 );
+        (*func)( closure, dir, 0 /* not stat()'ed */, (time_t)0 );
 
     /* Now enter contents of directory */
 
@@ -106,9 +108,9 @@ file_dirscan(
         f.f_base.len = strlen( finfo->ff_name );
 
         string_truncate( filename, 0 );
-        file_build( &f, filename );
+        path_build( &f, filename );
 
-        (*func)( filename->value, 1 /* stat()'ed */, time_write );
+        (*func)( closure, filename->value, 1 /* stat()'ed */, time_write );
 
         ret = findnext( finfo );
     }
@@ -128,9 +130,9 @@ file_dirscan(
         f.f_base.len = strlen( finfo->name );
 
         string_truncate( filename, 0 );
-        file_build( &f, filename, 0 );
+        path_build( &f, filename, 0 );
 
-        (*func)( filename->value, 1 /* stat()'ed */, finfo->time_write );
+        (*func)( closure, filename->value, 1 /* stat()'ed */, finfo->time_write );
  
         ret = _findnext( handle, finfo );
     }
@@ -189,7 +191,8 @@ struct ar_hdr {
 void
 file_archscan(
 	char *archive,
-	void (*func)( char *file, int status, time_t t ) )
+	scanback func,
+	void *closure )
 {
 	struct ar_hdr ar_hdr;
 	char *string_table = 0;
@@ -271,7 +274,7 @@ file_archscan(
 		name = c + 1;
 
 	    sprintf( buf, "%s(%.*s)", archive, endname - name, name );
-	    (*func)( buf, 1 /* time valid */, (time_t)lar_date );
+	    (*func)( closure, buf, 1 /* time valid */, (time_t)lar_date );
 
 	    offset += SARHDR + lar_size;
 	    lseek( fd, offset, 0 );

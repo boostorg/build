@@ -1,3 +1,4 @@
+<<<<<<< variant A
 Release notes for FTJam 2.3.5 (previous release was named "20010626")
 
 0. Bugs fixed since 20010626:
@@ -26,6 +27,159 @@ Release notes for FTJam 2.3.5 (previous release was named "20010626")
 ============================================================================
    
 
+>>>>>>> variant B
+Release notes for Jam/MR [UNRELEASED]
+(aka Jam - make(1) redux)
+
+*** Note: These Release notes represent work in progress,
+*** not a completed release!
+
+1.  Release info: (TENTATIVE)
+
+	Jam/MR 2.4 (TENTATIVE, IN PROGRESS!)
+	Month, dd, 2002
+	VERSION 2.4 (TENTATIVE, IN PROGRESS!)
+
+2.  Compatibility
+
+	Jam 2.4 is upward compatible with Jam 2.3
+
+	The Jam 2.4 language is a superset of the 2.3 language;
+	Jamfiles, Jambase, and other rulesets used in 2.3 can be used
+	with the 2.4 language support.
+
+3.  Changes since 2.3.
+
+3.1.  Changes to Jam Language
+
+	The mechanism for calling rules that return values - "[ rule
+	args ...]", (and 'return' in the rule body), is now a
+	documented part of the language.
+
+	Add "on <target> <rulename> <field1> ..." syntax, to invoke a
+	rule under the influence of a target's specific variables.
+
+        Add "[ on targ rule ... ]" to call a rule returning a value,
+        under the influence of a target's specific variables.
+
+	New 'Glob' builtin that returns a list of files in a list of
+	directories, given a list of patterns.
+
+	New 'while expr { block }' construct.
+
+	New :E=value modifier provides default value if variable unset.
+
+	New :J=joinval modifier concatentates list elements into single
+		element, separated by joinval.
+
+	\ can now be used to escape a space (or any single whitespace
+	character), so that you don't have to resort to quotes. 
+
+	'Echo' and 'Exit' now have aliases 'echo' and 'exit', since it
+	is really hard to tell that these are built-in rules and not
+	part of the language, like 'include'.  Real rules continue to
+	start with a capital.
+
+3.2.  Jambase Changes
+
+	Support for YACCGEN, the suffix used on generated yacc output.
+
+        Fix ups to have jam and p4 build with borland C 5.5,
+        and minor win98 jam support for jam clean
+
+	SubDirHdrs now takes directory names in the same format as
+	SubInclude : one directory element per word.
+
+	More portable support for specifying includes and #defines:
+	New ASHDRS, CCHDRS, CCDEFS, DEFINES, ObjectDefines, FQuote,
+	FIncludes, FDefines.  Ordering of cc and c++ flags grossly
+	rearranged.
+
+	Jambase has been compacted by applying the new E: and J:
+	expansion modifiers.
+
+3.3.  Jam internal code changes
+
+	Optimize rule compilation, with right-recursion instead of left.
+
+        Split jam's built-in rules out to builtins.c from compile.c,
+        so that compile.c only deals with the language.
+
+        Split jam's pathsys.h from filesys.h, since they are really
+        two different pieces.
+
+	evaluate_if(), which evaluated the condition tree for 'if' and
+	returned an int, has been replaced with compile_eval(), which does
+	essentially the same but returns a LIST.
+
+4.  Fixed bugs
+
+	Defining a rule within another rule, and invoking the enclosing
+	rule more than once, would result in giving the first rule a
+	null definition.  Fixed.
+
+	$(d:P) now works properly on the mac, climbing up directories.
+	Thanks to Miklos Fazekas <boga@mac.com>.
+
+        No longer (sometimes) treat \ as a directory separator on
+        UNIX.  It isn't supposed to be, but was due to bungled ifdefs.
+        
+        Applying just :U or :D (or :E, :J) mods no longer causes the
+        variable value to be treated as a filename (parsed and rebuilt
+        using the OS specific pathsys routines). Previously, if _any_
+        mods were present then the value was parsed and rebuilt as if
+        a filename, and that could in certain cases munge the value.
+        Only the file modifiers (:GDBSM) treat the value as a
+        filename.
+
+	Four rules makeCommon, makeGrist, makeString, makeSubDir from
+	jam 2.2 missing in 2.3 have been readded, with apologies to
+	dtb@cisco.com.
+
+	Return status more likely to be correct when using -d0, now that 
+	targets are could as being built even with no debugging output.
+	Thanks to Miklos Fazekas <boga@mac.com>.
+
+5.  Porting
+
+	[MACINTOSH] Paths are now downshifted (interally) so as to
+	handle its case insensitivity.  Thanks to Miklos Fazekas
+	<boga@mac.com>.
+
+        [NT] MS changed the macro for the IA64 Windows NT 64bit
+        compiler.
+
+	[CYGWIN] Cygwin jam porting: dance around bison and yyacc.
+	Use bison's -y flag to use yacc's output file naming
+	conventions, and don't use yyacc on systems whose SUFEXE is
+	set.
+
+	[VMS] The Jambase itself was not formatting the CCHDRS and
+        CCDEFS properly: on VMS they can't be appended to, because
+        multiple /define or /include directives don't work.  Instead
+        now CCHDRS and CCDEFS is reformatted from HDRS and DEFINES
+        anytime those latter two change.  This requires the recent
+        change to jam to allow access to target-specific variables
+        when setting other variables.
+
+        [VMS] Remove exception call when file_dirscan() can't, for
+        some reason, scan a directory.  Use a better set of #ifdefs to
+        determine if we're on a vax, rather than relying on the C
+        compiler being a specific version: we're able to build with
+        the C++ compiler now.
+
+	[VMS] Port new jam to run with just cxx compiler.
+        (The C compiler being a extra-cost item).
+
+        [NT] Add entry for DevStudio when the settings are already in the
+        system environment.
+
+===============================================================================
+===============================================================================
+
+
+####### Ancestor
+======= end
 Release notes for Jam/MR 2.3
 (aka Jam - make(1) redux)
 
@@ -233,7 +387,7 @@ Release Notes for Jam 2.2
 	Documentation rewritten; HTML versions supplied.
 
 
-3.1 Changes to Jam Language (See Jamlang.html)
+3.1 Changes to Jam Language 
 
 	Rules may now have more fields than just $(<) and $(>).
 

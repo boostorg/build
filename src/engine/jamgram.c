@@ -13,7 +13,7 @@ yyrcsid[] = "$FreeBSD: src/usr.bin/yacc/skeleton.c,v 1.28 2000/01/17 02:04:06 bd
 #define YYRECOVERING() (yyerrflag!=0)
 static int yygrowstack();
 #define YYPREFIX "yy"
-#line 94 "jamgram.y"
+#line 99 "jamgram.y"
 #include "jam.h"
 
 #include "lists.h"
@@ -27,6 +27,8 @@ static int yygrowstack();
 # define S0 (char *)0
 
 # define pappend( l,r )    	parse_make( compile_append,l,r,P0,S0,S0,0 )
+# define peval( c,l,r )	parse_make( compile_eval,l,r,P0,S0,S0,c )
+# define pshortcircuiteval( c,l,r )	parse_make( compile_eval,l,P0,r,S0,S0,c )
 # define pfor( s,l,r,x )    	parse_make( compile_foreach,l,r,P0,s,S0,x )
 # define pif( l,r,t )	  	parse_make( compile_if,l,r,t,S0,S0,0 )
 # define pwhile( l,r )	  	parse_make( compile_while,l,r,P0,S0,S0,0 )
@@ -35,6 +37,7 @@ static int yygrowstack();
 # define plocal( l,r,t )  	parse_make( compile_local,l,r,t,S0,S0,0 )
 # define pmodule( l,r )	  	parse_make( compile_module,l,r,P0,S0,S0,0 )
 # define pnull()	  	parse_make( compile_null,P0,P0,P0,S0,S0,0 )
+# define pon( l,r )	  	parse_make( compile_on,l,r,P0,S0,S0,0 )
 # define prule( s,p )     	parse_make( compile_rule,p,P0,P0,s,S0,0 )
 # define prules( l,r )	  	parse_make( compile_rules,l,r,P0,S0,S0,0 )
 # define pset( l,r,a )          parse_make( compile_set,l,r,P0,S0,S0,a )
@@ -45,203 +48,211 @@ static int yygrowstack();
 # define pswitch( l,r )   	parse_make( compile_switch,l,r,P0,S0,S0,0 )
 
 # define pnode( l,r )    	parse_make( F0,l,r,P0,S0,S0,0 )
-# define pcnode( c,l,r )	parse_make( F0,l,r,P0,S0,S0,c )
 # define psnode( s,l )     	parse_make( F0,l,P0,P0,s,S0,0 )
 
-#line 52 "y.tab.c"
+#line 54 "y.tab.c"
 #define YYERRCODE 256
 #define _BANG 257
 #define _BANG_EQUALS 258
-#define _AMPERAMPER 259
-#define _LPAREN 260
-#define _RPAREN 261
-#define _PLUS_EQUALS 262
-#define _COLON 263
-#define _SEMIC 264
-#define _LANGLE 265
-#define _LANGLE_EQUALS 266
-#define _EQUALS 267
-#define _RANGLE 268
-#define _RANGLE_EQUALS 269
-#define _QUESTION_EQUALS 270
-#define _LBRACKET 271
-#define _RBRACKET 272
-#define ACTIONS 273
-#define BIND 274
-#define CASE 275
-#define DEFAULT 276
-#define ELSE 277
-#define EXISTING 278
-#define FOR 279
-#define IF 280
-#define IGNORE 281
-#define IN 282
-#define INCLUDE 283
-#define LOCAL 284
-#define MODULE 285
-#define ON 286
-#define PIECEMEAL 287
-#define QUIETLY 288
-#define RETURN 289
-#define RULE 290
-#define SWITCH 291
-#define TOGETHER 292
-#define UPDATED 293
-#define WHILE 294
-#define _LBRACE 295
-#define _BARBAR 296
-#define _RBRACE 297
-#define ARG 298
-#define STRING 299
+#define _AMPER 259
+#define _AMPERAMPER 260
+#define _LPAREN 261
+#define _RPAREN 262
+#define _PLUS_EQUALS 263
+#define _COLON 264
+#define _SEMIC 265
+#define _LANGLE 266
+#define _LANGLE_EQUALS 267
+#define _EQUALS 268
+#define _RANGLE 269
+#define _RANGLE_EQUALS 270
+#define _QUESTION_EQUALS 271
+#define _LBRACKET 272
+#define _RBRACKET 273
+#define ACTIONS 274
+#define BIND 275
+#define CASE 276
+#define DEFAULT 277
+#define ELSE 278
+#define EXISTING 279
+#define FOR 280
+#define IF 281
+#define IGNORE 282
+#define IN 283
+#define INCLUDE 284
+#define LOCAL 285
+#define MODULE 286
+#define ON 287
+#define PIECEMEAL 288
+#define QUIETLY 289
+#define RETURN 290
+#define RULE 291
+#define SWITCH 292
+#define TOGETHER 293
+#define UPDATED 294
+#define WHILE 295
+#define _LBRACE 296
+#define _BAR 297
+#define _BARBAR 298
+#define _RBRACE 299
+#define ARG 300
+#define STRING 301
 const short yylhs[] = {                                        -1,
     0,    0,    2,    2,    1,    1,    1,    3,    6,    6,
     7,    7,    9,    9,    4,    4,    4,    4,    4,    4,
-    4,    4,    4,    4,    4,    4,    4,    4,   16,   17,
-    4,   11,   11,   11,   11,   13,   13,   13,   13,   13,
-   13,   13,   13,   13,   13,   13,   13,   12,   12,   18,
-    8,    8,    5,   19,   19,   10,   10,   14,   14,   20,
-   20,   20,   20,   20,   20,   15,   15,
+    4,    4,    4,    4,    4,    4,    4,    4,    4,   16,
+   17,    4,   11,   11,   11,   11,   13,   13,   13,   13,
+   13,   13,   13,   13,   13,   13,   13,   13,   13,   13,
+   12,   12,   18,    8,    8,    5,   19,   19,   10,   21,
+   10,   20,   20,   20,   14,   14,   22,   22,   22,   22,
+   22,   22,   15,   15,
 };
 const short yylen[] = {                                         2,
     0,    1,    1,    1,    1,    2,    5,    0,    2,    1,
     3,    0,    1,    0,    3,    3,    3,    4,    5,    6,
-    3,    8,    5,    5,    5,    5,    7,    5,    0,    0,
-    9,    1,    1,    1,    2,    1,    3,    3,    3,    3,
-    3,    3,    3,    2,    3,    3,    3,    0,    2,    4,
-    1,    3,    1,    0,    2,    1,    4,    0,    2,    1,
-    1,    1,    1,    1,    1,    0,    2,
+    3,    8,    5,    5,    5,    5,    7,    5,    3,    0,
+    0,    9,    1,    1,    1,    2,    1,    3,    3,    3,
+    3,    3,    3,    3,    3,    3,    3,    3,    2,    3,
+    0,    2,    4,    1,    3,    1,    0,    2,    1,    0,
+    4,    2,    4,    4,    0,    2,    1,    1,    1,    1,
+    1,    1,    0,    2,
 };
 const short yydefred[] = {                                      0,
-    0,   58,    0,    0,   54,    0,    0,   54,   54,    0,
-    0,    0,    0,    2,    0,    0,    0,   54,    0,   13,
-    0,    0,    0,   56,    0,    0,    0,    0,    0,   54,
-    0,    0,    0,    0,    4,    0,    3,    0,    0,    6,
-    0,   33,   32,   34,    0,   54,   54,    0,   65,   62,
-   64,   63,   61,   60,    0,   59,    0,   44,    0,    0,
-    0,    0,    0,    0,    0,   54,    0,    0,    0,   16,
-   55,   54,   10,    0,    0,    0,   21,    0,    0,   15,
-   54,   17,    0,   35,    0,    0,   57,   54,    0,   54,
-   47,   38,   39,   40,   37,   41,   42,   43,   45,    0,
-    0,    9,    0,    0,    0,    0,    0,    0,    0,   52,
-   54,    0,   54,   18,   67,   29,    0,    0,    7,   19,
-   25,    0,   23,   49,   26,    0,   28,    0,    0,    0,
-    0,    0,   11,   20,   30,    0,   27,   50,    0,   22,
-   31,
+   60,   65,    0,    0,   57,    0,    0,    0,   57,   57,
+    0,    0,    0,    0,    2,    0,    0,    0,    0,    0,
+   13,    0,    0,    0,   59,    0,    0,    0,    0,    0,
+   57,    0,    0,    0,    0,    0,    4,    0,    3,    0,
+    0,    6,    0,   34,   33,   35,    0,   57,   57,    0,
+   57,    0,   72,   69,   71,   70,   68,   67,    0,   66,
+    0,   49,    0,    0,    0,    0,    0,    0,    0,   57,
+    0,    0,    0,    0,    0,   16,   58,   57,   10,    0,
+    0,    0,   29,   21,    0,    0,   15,   57,   17,    0,
+   36,    0,    0,    0,   62,   61,   57,    0,   57,   50,
+   39,   40,   41,   38,   42,   43,   48,   44,   45,    0,
+    0,    0,    9,    0,    0,    0,    0,    0,    0,    0,
+   55,   57,    0,   57,   18,   57,   57,   74,   30,    0,
+    0,    7,   19,   25,    0,   23,   52,   26,    0,   28,
+    0,   64,   63,    0,    0,    0,    0,   11,   20,   31,
+    0,   27,   53,    0,   22,   32,
 };
-const short yydgoto[] = {                                      13,
-   35,   36,   37,   15,   38,   74,  112,   39,   16,   17,
-   47,  107,   26,   19,   89,  129,  139,  108,   28,   56,
+const short yydgoto[] = {                                      14,
+   37,   38,   39,   16,   40,   80,  123,   41,   17,   18,
+   49,  118,   27,   20,   98,  144,  154,  119,   29,   52,
+   19,   60,
 };
-const short yysindex[] = {                                   -120,
- -282,    0, -267, -234,    0,    0, -259,    0,    0, -234,
- -120,    0,    0,    0, -120, -261,  -83,    0, -131,    0,
- -236, -234, -234,    0,  -69, -250, -181, -244, -188,    0,
- -210, -175, -204, -209,    0, -205,    0, -157, -154,    0,
- -184,    0,    0,    0, -152,    0,    0, -156,    0,    0,
-    0,    0,    0,    0, -153,    0, -158,    0, -185, -244,
- -244, -244, -244, -244, -244,    0, -234, -120, -234,    0,
-    0,    0,    0, -135, -188, -120,    0, -144, -120,    0,
-    0,    0, -128,    0, -150, -124,    0,    0, -149,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0, -155,
- -118,    0, -120, -110, -139, -143, -125, -144, -114,    0,
-    0, -103,    0,    0,    0,    0, -129, -104,    0,    0,
-    0,  -78,    0,    0,    0,  -71,    0,  -70,  -98, -120,
- -103, -120,    0,    0,    0,  -95,    0,    0,  -93,    0,
-    0,
+const short yysindex[] = {                                    -88,
+    0,    0, -269, -248,    0,    0, -257, -229,    0,    0,
+ -248,  -88,    0,    0,    0,  -88, -254, -160, -267,  -44,
+    0, -258, -248, -248,    0,  -36, -212, -219, -229, -200,
+    0, -222,  -71, -188, -215, -209,    0, -203,    0, -166,
+ -155,    0, -201,    0,    0,    0, -168,    0,    0, -229,
+    0, -152,    0,    0,    0,    0,    0,    0, -170,    0,
+ -159,    0, -153, -229, -229, -229, -229, -229, -229,    0,
+ -248, -248,  -88, -248, -248,    0,    0,    0,    0, -140,
+ -200,  -88,    0,    0, -146,  -88,    0,    0,    0, -135,
+    0,  -20, -124, -245,    0,    0,    0, -147,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,    0, -141,
+ -165, -165,    0,  -88, -105, -137, -148, -136, -146, -133,
+    0,    0,  -71,    0,    0,    0,    0,    0,    0, -132,
+ -109,    0,    0,    0,  -94,    0,    0,    0,  -87,    0,
+  -84,    0,    0, -112,  -88,  -71,  -88,    0,    0,    0,
+ -108,    0,    0, -104,    0,    0,
 };
 const short yyrindex[] = {                                      7,
-    0,    0,  -92,    0,    0, -162, -201,    0,    0,    0,
- -275, -163,    0,    0,    3,    0,    0,    0,    0,    0,
-    0,    0,    0,    0, -229,    0,    0, -223,  -59,    0,
-    0,    0,    0,    0,    0,    0,    0, -142,    0,    0,
+    0,    0, -110,    0,    0, -115, -238,    0,    0,    0,
+    0, -198, -149,    0,    0,    3,    0,    0,    0,    0,
+    0,    0,    0,    0,    0, -237,    0,    0, -233,  -60,
+    0,    0,  -97,    0,    0,    0,    0,    0,    0,  -45,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,  -88,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0, -275,    0,    0,
-    0,    0,    0,    0,  -59, -275,    0,  -89, -275,    0,
-    0,    0, -146,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,  -96,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
- -253,    0,    4,    0,    0,    0,    0,  -89,    0,    0,
-    0,  -81,    0,    0,    0,    0,    0,    1,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0, -275,
-  -81, -194,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,
+    0,    0, -198,    0,    0,    0,    0,    0,    0,    0,
+  -60, -198,    0,    0,  -93, -198,    0,    0,    0, -113,
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+ -150, -142,    0,    4,    0,    0,    0,    0,  -93,    0,
+    0,    0,  -97,    0,    0,    0,    0,    0,    0,    0,
+    1,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,    0,    0, -198,  -97, -111,    0,    0,    0,
+    0,    0,    0,    0,    0,    0,
 };
 const short yygindex[] = {                                      0,
-   75,  -48,  -27,  -43,    5,  135,    0,  -13,  208,   -4,
-  127,  106,   11,    0,    0,    0,    0,    0,    0,    0,
+   41,  -65,  -25,  -33,    5,  130,    0,  -49,  215,   68,
+  131,  107,   -5,    0,    0,    0,    0,    0,    0,    0,
+    0,    0,
 };
-#define YYTABLESIZE 301
-const short yytable[] = {                                      25,
-   24,   73,    5,    8,   48,   25,    1,   46,   67,   27,
-   29,   31,   32,   33,   14,   18,   20,   25,   25,  100,
-   34,    8,   22,   71,   30,   23,    1,  105,   41,   36,
-  109,   36,   58,   59,   75,   53,    1,   53,   53,   53,
-   53,   46,   46,   53,   68,   69,   53,   73,   53,   67,
-   85,   86,   53,   24,  119,   92,   93,   94,   95,   96,
-   97,   57,   25,   24,   25,   36,   36,  110,  127,   54,
-   98,   53,   53,   67,   14,   91,  102,   99,   72,  101,
-    8,  136,   70,  138,   76,   79,   69,  137,   77,   40,
-   78,   80,  115,   54,  117,   14,   54,  126,   56,   54,
-   54,   54,    8,   56,   54,   81,   56,   54,   54,   82,
-   69,   42,   56,   83,   84,   87,   43,  128,   51,   44,
-   88,   51,   56,   90,   12,   45,   12,   13,  103,   51,
-  106,  111,   12,   12,   54,   54,   12,   12,   12,  114,
-   67,  118,   12,   12,   12,  116,   49,   12,   12,   50,
-    1,   12,    2,  120,  122,   51,   52,  121,    3,    4,
-   53,   54,    5,    6,    7,  130,   55,    1,    8,    2,
-    9,  123,  131,   10,   11,    3,    4,   12,   42,    5,
-   20,    7,  125,   43,  132,    8,   44,    9,   60,  133,
-   10,   11,   45,  134,   12,   61,   62,   63,   64,   65,
-  135,  140,   46,  141,    8,   14,   66,   48,   14,  104,
-   21,  113,   66,  124,    0,    0,    0,    0,    0,    0,
+#define YYTABLESIZE 303
+const short yytable[] = {                                      83,
+   24,   95,    5,    8,   79,   36,    1,  110,   23,   28,
+   30,   32,   24,   34,   35,   21,  116,   62,   63,   50,
+  120,   37,   37,    1,   37,   56,   56,   31,   56,   56,
+   56,   56,   51,   57,   56,   81,   43,   56,  121,   56,
+   15,   61,    1,   56,  126,   76,   71,   72,  132,   71,
+   72,   25,   92,   93,  127,   79,   42,   57,   37,   37,
+   37,   57,   56,   56,   56,  108,  109,   78,  111,  112,
+   25,   26,  139,   82,  107,   33,   84,  143,   26,  151,
+   85,  153,  113,   73,   74,   75,   86,   74,   75,  140,
+   26,   26,   14,   71,   72,   87,   77,   88,   90,   91,
+    8,  128,   44,  130,   97,   71,   72,   45,  100,   89,
+   46,   46,  152,   59,   57,   57,   47,   94,   59,   47,
+   96,   59,   57,   99,  114,  122,   48,   59,  141,  117,
+  142,  101,  102,  103,  104,  105,  106,   59,   26,   26,
+  125,   26,   26,   74,   75,   46,   46,   46,  129,   57,
+   57,  135,   57,   47,   47,   47,   57,  131,   12,  133,
+   12,  134,  136,  145,    8,  138,   12,   12,  146,  147,
+   12,   12,   12,   12,  148,   13,   12,   12,   12,   14,
+  149,   12,   12,    1,   57,    2,   12,    8,  150,   14,
+  155,    3,    4,   14,  156,    5,    6,    7,    8,   73,
+    1,    9,    2,   10,    8,   51,   11,   12,    3,    4,
+  115,   13,    5,   21,    7,    8,   54,   22,    9,   54,
+   10,   64,  124,   11,   12,  137,    0,   54,   13,   65,
+   66,   67,   68,   69,   53,    0,    0,   54,    0,    0,
+    0,    0,   44,   55,   56,    0,   70,   45,   57,   58,
+   46,    0,    0,    0,    0,   59,   47,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,   24,    0,   24,    0,   24,    0,    5,    8,   24,
-   24,    0,    0,   24,   24,   24,    0,    0,    0,   24,
-   24,   24,   14,   14,   24,   24,   14,   24,   24,    5,
-    8,
+    0,    0,   24,    0,   24,    0,   24,    0,    5,    8,
+   24,   24,    0,    0,   24,   24,   24,   24,    0,    0,
+   24,   24,   24,   14,   14,   24,   24,   14,    0,   24,
+   24,    5,    8,
 };
-const short yycheck[] = {                                       4,
-    0,   29,    0,    0,   18,   10,    0,  261,  259,    5,
-    6,    7,    8,    9,  290,  298,  284,   22,   23,   68,
-   10,  297,  257,   28,  284,  260,  271,   76,  290,  259,
-   79,  261,   22,   23,   30,  259,  271,  261,  262,  263,
-  264,  295,  296,  267,  295,  296,  270,   75,  272,  259,
-   46,   47,  276,  298,  103,   60,   61,   62,   63,   64,
-   65,  298,   67,  298,   69,  295,  296,   81,  112,  271,
-   66,  295,  296,  259,    0,  261,   72,   67,  267,   69,
-  275,  130,  264,  132,  295,  295,  296,  131,  264,   15,
-  295,  297,   88,  295,   90,  290,  298,  111,  262,  263,
-  264,  264,  297,  267,  267,  263,  270,  271,  271,  264,
-  296,  262,  276,  298,  267,  272,  267,  113,  261,  270,
-  274,  264,  286,  282,  271,  276,  273,  290,  264,  272,
-  275,  260,  279,  280,  298,  298,  283,  284,  285,  264,
-  259,  297,  289,  290,  291,  295,  278,  294,  295,  281,
-  271,  298,  273,  264,  298,  287,  288,  297,  279,  280,
-  292,  293,  283,  284,  285,  295,  298,  271,  289,  273,
-  291,  297,  277,  294,  295,  279,  280,  298,  262,  283,
-  284,  285,  297,  267,  263,  289,  270,  291,  258,  261,
-  294,  295,  276,  264,  298,  265,  266,  267,  268,  269,
-  299,  297,  286,  297,  264,  298,  295,  297,  290,   75,
-    3,   85,  282,  108,   -1,   -1,   -1,   -1,   -1,   -1,
+const short yycheck[] = {                                      33,
+    0,   51,    0,    0,   30,   11,    0,   73,  257,    5,
+    6,    7,  261,    9,   10,  285,   82,   23,   24,  287,
+   86,  259,  260,  272,  262,  259,  260,  285,  262,  263,
+  264,  265,  300,  272,  268,   31,  291,  271,   88,  273,
+    0,  300,  272,  277,  290,  265,  259,  260,  114,  259,
+  260,  300,   48,   49,  300,   81,   16,  296,  296,  297,
+  298,  300,  296,  297,  298,   71,   72,  268,   74,   75,
+  300,    4,  122,  296,   70,    8,  265,  127,   11,  145,
+  296,  147,   78,  296,  297,  298,  296,  297,  298,  123,
+   23,   24,  291,  259,  260,  299,   29,  264,  300,  268,
+  299,   97,  263,   99,  275,  259,  260,  268,  262,  265,
+  271,  262,  146,  263,  264,  265,  277,   50,  268,  262,
+  273,  271,  272,  283,  265,  261,  287,  277,  124,  276,
+  126,   64,   65,   66,   67,   68,   69,  287,   71,   72,
+  265,   74,   75,  297,  298,  296,  297,  298,  296,  265,
+  300,  300,  268,  296,  297,  298,  272,  299,  272,  265,
+  274,  299,  299,  296,  276,  299,  280,  281,  278,  264,
+  284,  285,  286,  287,  262,  291,  290,  291,  292,  291,
+  265,  295,  296,  272,  300,  274,  300,  299,  301,  300,
+  299,  280,  281,  291,  299,  284,  285,  286,  287,  296,
+  272,  290,  274,  292,  265,  299,  295,  296,  280,  281,
+   81,  300,  284,  285,  286,  287,  262,    3,  290,  265,
+  292,  258,   92,  295,  296,  119,   -1,  273,  300,  266,
+  267,  268,  269,  270,  279,   -1,   -1,  282,   -1,   -1,
+   -1,   -1,  263,  288,  289,   -1,  283,  268,  293,  294,
+  271,   -1,   -1,   -1,   -1,  300,  277,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,  271,   -1,  273,   -1,  275,   -1,  275,  275,  279,
-  280,   -1,   -1,  283,  284,  285,   -1,   -1,   -1,  289,
-  290,  291,  290,  290,  294,  295,  290,  297,  298,  297,
-  297,
+   -1,   -1,  272,   -1,  274,   -1,  276,   -1,  276,  276,
+  280,  281,   -1,   -1,  284,  285,  286,  287,   -1,   -1,
+  290,  291,  292,  291,  291,  295,  296,  291,   -1,  299,
+  300,  299,  299,
 };
-#define YYFINAL 13
+#define YYFINAL 14
 #ifndef YYDEBUG
 #define YYDEBUG 0
 #endif
-#define YYMAXTOKEN 299
+#define YYMAXTOKEN 301
 #if YYDEBUG
 const char * const yyname[] = {
 "end-of-file",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -250,13 +261,13 @@ const char * const yyname[] = {
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"_BANG","_BANG_EQUALS",
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"_BANG","_BANG_EQUALS","_AMPER",
 "_AMPERAMPER","_LPAREN","_RPAREN","_PLUS_EQUALS","_COLON","_SEMIC","_LANGLE",
 "_LANGLE_EQUALS","_EQUALS","_RANGLE","_RANGLE_EQUALS","_QUESTION_EQUALS",
 "_LBRACKET","_RBRACKET","ACTIONS","BIND","CASE","DEFAULT","ELSE","EXISTING",
 "FOR","IF","IGNORE","IN","INCLUDE","LOCAL","MODULE","ON","PIECEMEAL","QUIETLY",
-"RETURN","RULE","SWITCH","TOGETHER","UPDATED","WHILE","_LBRACE","_BARBAR",
-"_RBRACE","ARG","STRING",
+"RETURN","RULE","SWITCH","TOGETHER","UPDATED","WHILE","_LBRACE","_BAR",
+"_BARBAR","_RBRACE","ARG","STRING",
 };
 const char * const yyrule[] = {
 "$accept : run",
@@ -283,11 +294,12 @@ const char * const yyrule[] = {
 "rule : RETURN list _SEMIC",
 "rule : FOR local_opt ARG IN list _LBRACE block _RBRACE",
 "rule : SWITCH list _LBRACE cases _RBRACE",
-"rule : IF cond _LBRACE block _RBRACE",
+"rule : IF expr _LBRACE block _RBRACE",
 "rule : MODULE list _LBRACE block _RBRACE",
-"rule : WHILE cond _LBRACE block _RBRACE",
-"rule : IF cond _LBRACE block _RBRACE ELSE rule",
+"rule : WHILE expr _LBRACE block _RBRACE",
+"rule : IF expr _LBRACE block _RBRACE ELSE rule",
 "rule : local_opt RULE ARG arglist_opt rule",
+"rule : ON arg rule",
 "$$1 :",
 "$$2 :",
 "rule : ACTIONS eflags ARG bindlist _LBRACE $$1 STRING $$2 _RBRACE",
@@ -295,18 +307,20 @@ const char * const yyrule[] = {
 "assign : _PLUS_EQUALS",
 "assign : _QUESTION_EQUALS",
 "assign : DEFAULT _EQUALS",
-"cond : arg",
-"cond : arg _EQUALS arg",
-"cond : arg _BANG_EQUALS arg",
-"cond : arg _LANGLE arg",
-"cond : arg _LANGLE_EQUALS arg",
-"cond : arg _RANGLE arg",
-"cond : arg _RANGLE_EQUALS arg",
-"cond : arg IN list",
-"cond : _BANG cond",
-"cond : cond _AMPERAMPER cond",
-"cond : cond _BARBAR cond",
-"cond : _LPAREN cond _RPAREN",
+"expr : arg",
+"expr : arg _EQUALS arg",
+"expr : arg _BANG_EQUALS arg",
+"expr : arg _LANGLE arg",
+"expr : arg _LANGLE_EQUALS arg",
+"expr : arg _RANGLE arg",
+"expr : arg _RANGLE_EQUALS arg",
+"expr : expr _AMPER expr",
+"expr : expr _AMPERAMPER expr",
+"expr : expr _BAR expr",
+"expr : expr _BARBAR expr",
+"expr : arg IN list",
+"expr : _BANG expr",
+"expr : _LPAREN expr _RPAREN",
 "cases :",
 "cases : case cases",
 "case : CASE ARG _COLON block",
@@ -316,7 +330,11 @@ const char * const yyrule[] = {
 "listp :",
 "listp : listp arg",
 "arg : ARG",
-"arg : _LBRACKET ARG lol _RBRACKET",
+"$$3 :",
+"arg : _LBRACKET $$3 func _RBRACKET",
+"func : ARG lol",
+"func : ON arg ARG lol",
+"func : ON arg RETURN list",
 "eflags :",
 "eflags : eflags eflag",
 "eflag : UPDATED",
@@ -554,270 +572,298 @@ yyreduce:
     switch (yyn)
     {
 case 2:
-#line 135 "jamgram.y"
+#line 142 "jamgram.y"
 { parse_save( yyvsp[0].parse ); }
 break;
 case 3:
-#line 146 "jamgram.y"
+#line 153 "jamgram.y"
 { yyval.parse = yyvsp[0].parse; }
 break;
 case 4:
-#line 148 "jamgram.y"
+#line 155 "jamgram.y"
 { yyval.parse = yyvsp[0].parse; }
 break;
 case 5:
-#line 152 "jamgram.y"
+#line 159 "jamgram.y"
 { yyval.parse = yyvsp[0].parse; }
 break;
 case 6:
-#line 154 "jamgram.y"
+#line 161 "jamgram.y"
 { yyval.parse = prules( yyvsp[-1].parse, yyvsp[0].parse ); }
 break;
 case 7:
-#line 156 "jamgram.y"
+#line 163 "jamgram.y"
 { yyval.parse = plocal( yyvsp[-3].parse, yyvsp[-2].parse, yyvsp[0].parse ); }
 break;
 case 8:
-#line 160 "jamgram.y"
+#line 167 "jamgram.y"
 { yyval.parse = pnull(); }
 break;
 case 9:
-#line 164 "jamgram.y"
+#line 171 "jamgram.y"
 { yyval.parse = yyvsp[0].parse; yyval.number = ASSIGN_SET; }
 break;
 case 10:
-#line 166 "jamgram.y"
+#line 173 "jamgram.y"
 { yyval.parse = yyvsp[0].parse; yyval.number = ASSIGN_APPEND; }
 break;
 case 11:
-#line 170 "jamgram.y"
+#line 177 "jamgram.y"
 { yyval.parse = yyvsp[-1].parse; }
 break;
 case 12:
-#line 172 "jamgram.y"
+#line 179 "jamgram.y"
 { yyval.parse = P0; }
 break;
 case 13:
-#line 176 "jamgram.y"
+#line 183 "jamgram.y"
 { yyval.number = 1; }
 break;
 case 14:
-#line 178 "jamgram.y"
+#line 185 "jamgram.y"
 { yyval.number = 0; }
 break;
 case 15:
-#line 182 "jamgram.y"
+#line 189 "jamgram.y"
 { yyval.parse = yyvsp[-1].parse; }
 break;
 case 16:
-#line 184 "jamgram.y"
+#line 191 "jamgram.y"
 { yyval.parse = pincl( yyvsp[-1].parse ); }
 break;
 case 17:
-#line 186 "jamgram.y"
+#line 193 "jamgram.y"
 { yyval.parse = prule( yyvsp[-2].string, yyvsp[-1].parse ); }
 break;
 case 18:
-#line 188 "jamgram.y"
+#line 195 "jamgram.y"
 { yyval.parse = pset( yyvsp[-3].parse, yyvsp[-1].parse, yyvsp[-2].number ); }
 break;
 case 19:
-#line 190 "jamgram.y"
+#line 197 "jamgram.y"
 { yyval.parse = psetmodule( yyvsp[-2].parse, yyvsp[-1].parse, yyvsp[-1].number ); }
 break;
 case 20:
-#line 192 "jamgram.y"
+#line 199 "jamgram.y"
 { yyval.parse = pset1( yyvsp[-5].parse, yyvsp[-3].parse, yyvsp[-1].parse, yyvsp[-2].number ); }
 break;
 case 21:
-#line 194 "jamgram.y"
+#line 201 "jamgram.y"
 { yyval.parse = yyvsp[-1].parse; }
 break;
 case 22:
-#line 196 "jamgram.y"
+#line 203 "jamgram.y"
 { yyval.parse = pfor( yyvsp[-5].string, yyvsp[-3].parse, yyvsp[-1].parse, yyvsp[-6].number ); }
 break;
 case 23:
-#line 198 "jamgram.y"
+#line 205 "jamgram.y"
 { yyval.parse = pswitch( yyvsp[-3].parse, yyvsp[-1].parse ); }
 break;
 case 24:
-#line 200 "jamgram.y"
+#line 207 "jamgram.y"
 { yyval.parse = pif( yyvsp[-3].parse, yyvsp[-1].parse, pnull() ); }
 break;
 case 25:
-#line 202 "jamgram.y"
+#line 209 "jamgram.y"
 { yyval.parse = pmodule( yyvsp[-3].parse, yyvsp[-1].parse ); }
 break;
 case 26:
-#line 204 "jamgram.y"
+#line 211 "jamgram.y"
 { yyval.parse = pwhile( yyvsp[-3].parse, yyvsp[-1].parse ); }
 break;
 case 27:
-#line 206 "jamgram.y"
+#line 213 "jamgram.y"
 { yyval.parse = pif( yyvsp[-5].parse, yyvsp[-3].parse, yyvsp[0].parse ); }
 break;
 case 28:
-#line 208 "jamgram.y"
+#line 215 "jamgram.y"
 { yyval.parse = psetc( yyvsp[-2].string, yyvsp[0].parse, yyvsp[-1].parse, yyvsp[-4].number ); }
 break;
 case 29:
-#line 210 "jamgram.y"
-{ yymode( SCAN_STRING ); }
+#line 217 "jamgram.y"
+{ yyval.parse = pon( yyvsp[-1].parse, yyvsp[0].parse ); }
 break;
 case 30:
-#line 212 "jamgram.y"
-{ yymode( SCAN_NORMAL ); }
+#line 219 "jamgram.y"
+{ yymode( SCAN_STRING ); }
 break;
 case 31:
-#line 214 "jamgram.y"
-{ yyval.parse = psete( yyvsp[-6].string,yyvsp[-5].parse,yyvsp[-2].string,yyvsp[-7].number ); }
+#line 221 "jamgram.y"
+{ yymode( SCAN_NORMAL ); }
 break;
 case 32:
-#line 222 "jamgram.y"
-{ yyval.number = ASSIGN_SET; }
+#line 223 "jamgram.y"
+{ yyval.parse = psete( yyvsp[-6].string,yyvsp[-5].parse,yyvsp[-2].string,yyvsp[-7].number ); }
 break;
 case 33:
-#line 224 "jamgram.y"
-{ yyval.number = ASSIGN_APPEND; }
+#line 231 "jamgram.y"
+{ yyval.number = ASSIGN_SET; }
 break;
 case 34:
-#line 226 "jamgram.y"
-{ yyval.number = ASSIGN_DEFAULT; }
+#line 233 "jamgram.y"
+{ yyval.number = ASSIGN_APPEND; }
 break;
 case 35:
-#line 228 "jamgram.y"
+#line 235 "jamgram.y"
 { yyval.number = ASSIGN_DEFAULT; }
 break;
 case 36:
-#line 236 "jamgram.y"
-{ yyval.parse = pcnode( COND_EXISTS, yyvsp[0].parse, pnull() ); }
+#line 237 "jamgram.y"
+{ yyval.number = ASSIGN_DEFAULT; }
 break;
 case 37:
-#line 238 "jamgram.y"
-{ yyval.parse = pcnode( COND_EQUALS, yyvsp[-2].parse, yyvsp[0].parse ); }
+#line 244 "jamgram.y"
+{ yyval.parse = peval( EXPR_EXISTS, yyvsp[0].parse, pnull() ); }
 break;
 case 38:
-#line 240 "jamgram.y"
-{ yyval.parse = pcnode( COND_NOTEQ, yyvsp[-2].parse, yyvsp[0].parse ); }
+#line 246 "jamgram.y"
+{ yyval.parse = peval( EXPR_EQUALS, yyvsp[-2].parse, yyvsp[0].parse ); }
 break;
 case 39:
-#line 242 "jamgram.y"
-{ yyval.parse = pcnode( COND_LESS, yyvsp[-2].parse, yyvsp[0].parse ); }
+#line 248 "jamgram.y"
+{ yyval.parse = peval( EXPR_NOTEQ, yyvsp[-2].parse, yyvsp[0].parse ); }
 break;
 case 40:
-#line 244 "jamgram.y"
-{ yyval.parse = pcnode( COND_LESSEQ, yyvsp[-2].parse, yyvsp[0].parse ); }
+#line 250 "jamgram.y"
+{ yyval.parse = peval( EXPR_LESS, yyvsp[-2].parse, yyvsp[0].parse ); }
 break;
 case 41:
-#line 246 "jamgram.y"
-{ yyval.parse = pcnode( COND_MORE, yyvsp[-2].parse, yyvsp[0].parse ); }
+#line 252 "jamgram.y"
+{ yyval.parse = peval( EXPR_LESSEQ, yyvsp[-2].parse, yyvsp[0].parse ); }
 break;
 case 42:
-#line 248 "jamgram.y"
-{ yyval.parse = pcnode( COND_MOREEQ, yyvsp[-2].parse, yyvsp[0].parse ); }
+#line 254 "jamgram.y"
+{ yyval.parse = peval( EXPR_MORE, yyvsp[-2].parse, yyvsp[0].parse ); }
 break;
 case 43:
-#line 250 "jamgram.y"
-{ yyval.parse = pcnode( COND_IN, yyvsp[-2].parse, yyvsp[0].parse ); }
+#line 256 "jamgram.y"
+{ yyval.parse = peval( EXPR_MOREEQ, yyvsp[-2].parse, yyvsp[0].parse ); }
 break;
 case 44:
-#line 252 "jamgram.y"
-{ yyval.parse = pcnode( COND_NOT, yyvsp[0].parse, P0 ); }
+#line 258 "jamgram.y"
+{ yyval.parse = peval( EXPR_AND, yyvsp[-2].parse, yyvsp[0].parse ); }
 break;
 case 45:
-#line 254 "jamgram.y"
-{ yyval.parse = pcnode( COND_AND, yyvsp[-2].parse, yyvsp[0].parse ); }
+#line 260 "jamgram.y"
+{ yyval.parse = pshortcircuiteval( EXPR_AND, yyvsp[-2].parse, yyvsp[0].parse ); }
 break;
 case 46:
-#line 256 "jamgram.y"
-{ yyval.parse = pcnode( COND_OR, yyvsp[-2].parse, yyvsp[0].parse ); }
+#line 262 "jamgram.y"
+{ yyval.parse = peval( EXPR_OR, yyvsp[-2].parse, yyvsp[0].parse ); }
 break;
 case 47:
-#line 258 "jamgram.y"
-{ yyval.parse = yyvsp[-1].parse; }
+#line 264 "jamgram.y"
+{ yyval.parse = pshortcircuiteval( EXPR_OR, yyvsp[-2].parse, yyvsp[0].parse ); }
 break;
 case 48:
-#line 268 "jamgram.y"
-{ yyval.parse = P0; }
+#line 266 "jamgram.y"
+{ yyval.parse = peval( EXPR_IN, yyvsp[-2].parse, yyvsp[0].parse ); }
 break;
 case 49:
-#line 270 "jamgram.y"
-{ yyval.parse = pnode( yyvsp[-1].parse, yyvsp[0].parse ); }
+#line 268 "jamgram.y"
+{ yyval.parse = peval( EXPR_NOT, yyvsp[0].parse, pnull() ); }
 break;
 case 50:
-#line 274 "jamgram.y"
-{ yyval.parse = psnode( yyvsp[-2].string, yyvsp[0].parse ); }
+#line 270 "jamgram.y"
+{ yyval.parse = yyvsp[-1].parse; }
 break;
 case 51:
-#line 283 "jamgram.y"
-{ yyval.parse = pnode( P0, yyvsp[0].parse ); }
+#line 281 "jamgram.y"
+{ yyval.parse = P0; }
 break;
 case 52:
-#line 285 "jamgram.y"
-{ yyval.parse = pnode( yyvsp[0].parse, yyvsp[-2].parse ); }
+#line 283 "jamgram.y"
+{ yyval.parse = pnode( yyvsp[-1].parse, yyvsp[0].parse ); }
 break;
 case 53:
-#line 295 "jamgram.y"
-{ yyval.parse = yyvsp[0].parse; yymode( SCAN_NORMAL ); }
+#line 287 "jamgram.y"
+{ yyval.parse = psnode( yyvsp[-2].string, yyvsp[0].parse ); }
 break;
 case 54:
-#line 299 "jamgram.y"
-{ yyval.parse = pnull(); yymode( SCAN_PUNCT ); }
+#line 296 "jamgram.y"
+{ yyval.parse = pnode( P0, yyvsp[0].parse ); }
 break;
 case 55:
-#line 301 "jamgram.y"
-{ yyval.parse = pappend( yyvsp[-1].parse, yyvsp[0].parse ); }
+#line 298 "jamgram.y"
+{ yyval.parse = pnode( yyvsp[0].parse, yyvsp[-2].parse ); }
 break;
 case 56:
-#line 305 "jamgram.y"
-{ yyval.parse = plist( yyvsp[0].string ); }
+#line 308 "jamgram.y"
+{ yyval.parse = yyvsp[0].parse; yymode( SCAN_NORMAL ); }
 break;
 case 57:
-#line 307 "jamgram.y"
-{ yyval.parse = prule( yyvsp[-2].string, yyvsp[-1].parse ); }
+#line 312 "jamgram.y"
+{ yyval.parse = pnull(); yymode( SCAN_PUNCT ); }
 break;
 case 58:
-#line 317 "jamgram.y"
-{ yyval.number = 0; }
+#line 314 "jamgram.y"
+{ yyval.parse = pappend( yyvsp[-1].parse, yyvsp[0].parse ); }
 break;
 case 59:
-#line 319 "jamgram.y"
-{ yyval.number = yyvsp[-1].number | yyvsp[0].number; }
+#line 318 "jamgram.y"
+{ yyval.parse = plist( yyvsp[0].string ); }
 break;
 case 60:
-#line 323 "jamgram.y"
-{ yyval.number = EXEC_UPDATED; }
+#line 319 "jamgram.y"
+{ yymode( SCAN_NORMAL ); }
 break;
 case 61:
-#line 325 "jamgram.y"
-{ yyval.number = EXEC_TOGETHER; }
+#line 320 "jamgram.y"
+{ yyval.parse = yyvsp[-1].parse; }
 break;
 case 62:
-#line 327 "jamgram.y"
-{ yyval.number = EXEC_IGNORE; }
+#line 329 "jamgram.y"
+{ yyval.parse = prule( yyvsp[-1].string, yyvsp[0].parse ); }
 break;
 case 63:
-#line 329 "jamgram.y"
-{ yyval.number = EXEC_QUIETLY; }
+#line 331 "jamgram.y"
+{ yyval.parse = pon( yyvsp[-2].parse, prule( yyvsp[-1].string, yyvsp[0].parse ) ); }
 break;
 case 64:
-#line 331 "jamgram.y"
-{ yyval.number = EXEC_PIECEMEAL; }
+#line 333 "jamgram.y"
+{ yyval.parse = pon( yyvsp[-2].parse, yyvsp[0].parse ); }
 break;
 case 65:
-#line 333 "jamgram.y"
-{ yyval.number = EXEC_EXISTING; }
+#line 343 "jamgram.y"
+{ yyval.number = 0; }
 break;
 case 66:
-#line 342 "jamgram.y"
-{ yyval.parse = pnull(); }
+#line 345 "jamgram.y"
+{ yyval.number = yyvsp[-1].number | yyvsp[0].number; }
 break;
 case 67:
-#line 344 "jamgram.y"
+#line 349 "jamgram.y"
+{ yyval.number = EXEC_UPDATED; }
+break;
+case 68:
+#line 351 "jamgram.y"
+{ yyval.number = EXEC_TOGETHER; }
+break;
+case 69:
+#line 353 "jamgram.y"
+{ yyval.number = EXEC_IGNORE; }
+break;
+case 70:
+#line 355 "jamgram.y"
+{ yyval.number = EXEC_QUIETLY; }
+break;
+case 71:
+#line 357 "jamgram.y"
+{ yyval.number = EXEC_PIECEMEAL; }
+break;
+case 72:
+#line 359 "jamgram.y"
+{ yyval.number = EXEC_EXISTING; }
+break;
+case 73:
+#line 368 "jamgram.y"
+{ yyval.parse = pnull(); }
+break;
+case 74:
+#line 370 "jamgram.y"
 { yyval.parse = yyvsp[0].parse; }
 break;
-#line 821 "y.tab.c"
+#line 867 "y.tab.c"
     }
     yyssp -= yym;
     yystate = *yyssp;

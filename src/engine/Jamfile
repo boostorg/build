@@ -116,7 +116,8 @@ Library         libjam.a :
 		    command.c compile.c $(code) expand.c glob.c
 		    hash.c headers.c hdrmacro.c lists.c make.c make1.c newstr.c
 		    option.c parse.c regexp.c rules.c scan.c search.c subst.c
-		    timestamp.c variable.c modules.c strings.c filesys.c ;
+		    timestamp.c variable.c modules.c strings.c filesys.c 
+		    builtins.c ;
  
 
 if $(BINDIR) 	{ InstallBin $(BINDIR) : jam ; }

@@ -1,5 +1,5 @@
 /*
- * Copyright 1993, 1995 Christopher Seiwald.
+ * Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
  *
  * This file is part of Jam - see jam.c for Copyright information.
  */
@@ -251,10 +251,9 @@ yylex()
 	else
 	{
 	    char *b = buf;
-	    int inquote = 0;
-	    int literal = 0;
-	    int hasquote = 0;
 	    struct keyword *k;
+	    int inquote = 0;
+	    int notkeyword;
 		
 	    /* Eat white space */
 
@@ -281,22 +280,44 @@ yylex()
         yylval.file = incp->fname;
         yylval.line = incp->line;
         
+	    /* While scanning the word, disqualify it for (expensive) */
+	    /* keyword lookup when we can: $anything, "anything", \anything */
+
+	    notkeyword = c == '$';
+
 	    /* look for white space to delimit word */
 	    /* "'s get stripped but preserve white space */
+	    /* \ protects next character */
 
-	    while( b < buf + sizeof( buf ) )
+	    while( 
+		c != EOF &&
+		b < buf + sizeof( buf ) &&
+		( inquote || !isspace( c ) ) )
 	    {
-		if( literal )
-		    *b++ = c, literal = 0;
-		else if( c == '\\' )
-		    literal++;
-		else if( c == '"' )
-		    inquote = !inquote, hasquote++;
-		else
+		if( c == '"' )
+		{
+		    /* begin or end " */
+		    inquote = !inquote;
+		    notkeyword = 1;
+		}
+		else if( c != '\\' )
+		{
+		    /* normal char */
 		    *b++ = c;
-
-		if( ( c = yychar() ) == EOF || !inquote && isspace( c ) )
+		}
+		else if( ( c = yychar()) != EOF )
+	    {
+		    /* \c */
+		    *b++ = c;
+		    notkeyword = 1;
+		}
+		else
+		{
+		    /* \EOF */
 		    break;
+		}
+
+		c = yychar();
 	    }
 
 	    /* Check obvious errors. */
@@ -319,15 +340,13 @@ yylex()
 		yyprev();
 
 	    /* scan token table */
-	    /* don't scan if it's "anything", $anything, */
-	    /* or an alphabetic when were looking for punctuation */
+	    /* don't scan if it's obviously not a keyword or if its */
+	    /* an alphabetic when were looking for punctuation */
 
 	    *b = 0;
 	    yylval.type = ARG;
 
-	    if( !hasquote && 
-		*buf != '$' && 
-		!( isalpha( *buf ) && scanmode == SCAN_PUNCT ) )
+	    if( !notkeyword && !( isalpha( *buf ) && scanmode == SCAN_PUNCT ) )
 	    {
 		for( k = keywords; k->word; k++ )
 		    if( *buf == *k->word && !strcmp( k->word, buf ) )
