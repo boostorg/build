@@ -5,9 +5,9 @@
 
 # First of all, check the jam version
 
-if $(JAM_VERSION:J="") < 030103
+if $(JAM_VERSION:J="") < 030105
 {
-    ECHO "error: Boost.Jam version 3.1.3 or later required" ;
+    ECHO "error: Boost.Jam version 3.1.5 or later required" ;
     EXIT ;
 } 
 
