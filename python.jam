@@ -22,6 +22,8 @@ PYTHON_VERSION_NODOT
 
 local RUN_PATH = $(RUN_PATH) ;
 
+gcc-compilers = gcc gcc-stlport ;
+
 if $(NT)
 {
     PYTHON_ROOT ?= c:/tools/python ;
@@ -44,9 +46,8 @@ if $(NT)
       select-python-includes
       <runtime-link>dynamic
       <include>$(BOOST_ROOT)
-      <gcc><*><define>SIZEOF_LONG=4
-      <gcc><*><define>USE_DL_IMPORT
-      <gcc><*><find-library>python$(PYTHON_VERSION).dll 
+      <$(gcc-compilers)><*><define>USE_DL_IMPORT
+      <$(gcc-compilers)><*><find-library>python$(PYTHON_VERSION).dll 
       ;
     
     GCC_PYTHON_ROOT ?= $(CYGWIN_ROOT)/usr/local ;
@@ -101,7 +102,7 @@ rule select-python-library ( toolset variant : properties * )
             }
             properties += <find-library>$(lib) ;
         }
-        else if $(toolset) = gcc
+        else if $(toolset) in $(gcc-compilers)
         {
             local python-root = $(GCC_PYTHON_ROOT) ;
             if <define>BOOST_DEBUG_PYTHON in $(properties)
@@ -125,7 +126,7 @@ rule select-python-library ( toolset variant : properties * )
 
 rule select-python-includes ( toolset variant : properties * )
 {
-    if $(toolset) = gcc
+    if $(toolset) in $(gcc-compilers)
     {
         local python-root = $(GCC_PYTHON_ROOT) ;
         if <define>BOOST_DEBUG_PYTHON in $(properties)
@@ -146,7 +147,7 @@ rule select-python-includes ( toolset variant : properties * )
 }
 
 PYTHON_PROPERTIES += 
-        <gcc><*><find-library>util
+        <$(gcc-compilers)><*><find-library>util
         <include>$(BOOST_ROOT)
           select-python-library
           ;
@@ -165,7 +166,7 @@ if $(NT)
       <inlining>on <cxxflags>-foptimize-sibling-calls
       ;
     
-    PYTHON_PROPERTIES += <gcc><release>$(gcc-release-properties) ;
+    PYTHON_PROPERTIES += <$(gcc-compilers)><release>$(gcc-release-properties) ;
 }
 
 BOOST_PYTHON_V2_PROPERTIES 
@@ -202,7 +203,7 @@ rule python-files ( module implib ? : sources * )
 {
     dll-files $(module) $(implib) : $(sources) : PYD ;
 
-    if ( $(gCURRENT_TOOLSET) = gcc )
+    if $(gCURRENT_TOOLSET) in $(gcc-compilers)
     {
         if $(NT)
         {
@@ -225,7 +226,7 @@ if $(NT)
     {
         # Cygwin python is only happy if compiled modules have a .dll
         # extension
-        if $(toolset) = gcc
+        if $(toolset) in $(gcc-compilers)
         {
             pyd = $(pyd:S=.dll) ;
         }
@@ -387,7 +388,7 @@ rule python-runtest-aux ( target : sources + )
           $(PYTHONPATH)                           # base PYTHONPATH from environment
           ;
     
-    if $(NT) && ( $(gCURRENT_TOOLSET) = gcc )
+    if $(NT) && ( $(gCURRENT_TOOLSET) in $(gcc-compilers) )
     {
         python = python$(PYTHON_VERSION)$(SUFEXE) ;
         local python-root = $(GCC_PYTHON_ROOT) ;
