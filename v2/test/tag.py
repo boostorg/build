@@ -11,9 +11,40 @@ t = Tester()
 
 t.write("project-root.jam", "")
 t.write("Jamfile", """ 
-local tags = <variant>debug:<tag>_d <variant>release:<tag>_r <link>shared:<tag>s <link>static:<tag>t ;
-exe a : a.cpp : $(tags) ;
-lib b : a.cpp : $(tags) ;
+import virtual-target ;
+rule tag ( name : type ? : property-set )
+{
+    local tags ;
+    local v = [ $(property-set).get <variant> ] ;
+    if $(v) = debug
+    {
+        tags += d ;
+    }
+    else if $(v) = release
+    {
+	tags += r ;
+    }
+    
+    local l = [ $(property-set).get <link> ] ;
+    if $(l) = shared
+    {
+	tags += s ;
+    }
+    else if $(l) = static
+    {
+	tags += t ;
+    }
+    
+    if $(tags)
+    {
+	return [ virtual-target.add-suffix $(name)_$(tags:J="") 
+ 	    : $(type) : $(property-set) ] ;
+    }
+    
+}
+
+exe a : a.cpp : <tag>@$(__name__).tag ;
+lib b : a.cpp : <tag>@$(__name__).tag ;
 stage c : a ;
 """)
 

@@ -93,16 +93,50 @@ class stage-target-class : basic-target
         
         return $(property-set) ;
     }
-        
-    # Constructs the targets of types for which a type exists
-    # with the form STAGED_*.
-    rule construct-special-targets ( name : property-set : source : type )
+            
+    # Takes a target that is installed and property set which is
+    # used when installing.
+    rule adjust-properties ( target : build-property-set )
     {
-        local targets = [ generators.construct $(self.project) $(name) : $(type) :
-            $(property-set) : $(source) : * ] ;
-
-        return $(targets[2-]) ;
+        local ps-raw ;
+        local a = [ $(target).action ] ;       
+        if $(a)
+        {
+            local ps = [ $(a).properties ] ;
+            ps-raw = [ $(ps).raw ] ;
+                        
+            # Unless <hardcode-dll-paths>true is in properties, which can
+            # happen only if the user has explicitly requested it, nuke all
+            # <dll-path> properties                                  
+            if [ $(property-set).get <hardcode-dll-paths> ] != true
+            {
+                ps-raw = [ property.change $(ps-raw) : <dll-path> ] ;
+            }
+            
+            # If any <dll-path> properties were specified for installing,
+            # add them.
+            ps-raw += [ $(build-property-set).get <dll-path> ] ;
+        }
+        
+        # Remove the <tag> feature on original targets.
+        ps-raw = [ property.change $(ps-raw) : <tag> ] ;
+        
+        local d = [ $(build-property-set).get <dependency> ] ;
+        ps-raw += $(d:G=<dependency>) ;
+        
+        local d = [ $(build-property-set).get <location> ] ;
+        ps-raw += $(d:G=<location>) ;
+        
+        if $(ps-raw)
+        {
+            return [ property-set.create $(ps-raw) ]  ;
+        }        
+        else
+        {
+            return [ property-set.empty ] ;
+        }        
     }
+    
         
     rule construct ( name : source-targets * : property-set )
     {        
@@ -116,27 +150,22 @@ class stage-target-class : basic-target
         {            
             local staged-targets ;
                         
-            local properties = [ property-set.empty ] ;
-            local a = [ $(i).action ] ;                    
-            if $(a)
-            {
-                properties = [ $(a).properties ] ;
-            }
-            properties = [ $(properties).add-raw 
-              [ $(property-set).free ] ] ;
-            
-            name = [ targets.tag-name [ $(i).name ] : $(properties) ] ;
+            local new-properties = 
+              [ adjust-properties $(i) : $(property-set) ] ;
                         
             # See if something special should be done when staging this
             # type. It is indicated by presense of special "staged" type            
             local t = [ $(i).type ] ;            
             if $(t) && [ type.registered STAGED_$(t) ]
             {
-                staged-targets = [ construct-special-targets $(name) : $(property-set) : $(i) : STAGED_$(t) ] ;
+                local targets = [ generators.construct $(self.project) $(name) : 
+                  STAGED_$(t) : $(new-properties) : $(i) : * ] ;
+                staged-targets += $(targets[2-]) ;                                
             }
             else             
             {                
-                staged-targets = [ stage.copy-file $(name) : $(self.project) : $(i) : $(property-set) ] ;
+                staged-targets = [ stage.copy-file $(self.project) 
+                  : $(i) : $(new-properties) ] ;
             }
             
             if ! $(staged-targets)
@@ -163,8 +192,7 @@ class stage-target-class : basic-target
         # Traverse the dependencies, if needed.
         if [ $(property-set).get <traverse-dependencies> ] = "on"
         {
-            source-targets = [ collect-targets $(source-targets) 
-              : [ $(property-set).get <include-type> ] ] ;
+            source-targets = [ collect-targets $(source-targets) ] ;
         }
         
         # Filter the target types, if needed
@@ -203,7 +231,8 @@ class stage-target-class : basic-target
         return $(result) ;
     }
     
-    rule collect-targets ( targets * : types-to-include * )
+    # CONSIDER: figure out why we can't use virtual-target.traverse here.
+    rule collect-targets ( targets * )
     {
         # Find subvariants
         local s ;        
@@ -246,81 +275,40 @@ class stage-target-class : basic-target
     }            
 }
 
-# Create a target named 'name' in the current project
-# which will be created by copying of 'source'
-rule copy-file ( name ? : project : source : extra-properties )
+# Creates a copy of target 'source'. The 'properties' object should
+# have a <location> property which specifies where the target must
+# be placed.
+rule copy-file ( project : source : properties )
 {   
-    local n = [ $(source).name ] ;
-    # Not sure what it does. Tests seem to tolerate removal of
-    # this code. 
-    if $(name)
-    {
-        n = $(name) ;
-    }
-        
-    local a = [ $(source).action ] ;
-    local new-a ;
-    local p = [ property-set.empty ] ;
-    if $(a)
-    {            
-        p = [ $(a).properties ] ;
-    }
-    
-
-    # Copy the properties of original target. They, in particular
-    # can affect the suffix of the target.
-    new-a = [ new action $(source) : common.copy : 
-      [ $(p).add-raw [ $(extra-properties).free ]                       
-                     [ $(extra-properties).dependency ]
-      ] ] ;
-    
-    # FIXME!!!!!!!1
-    #$(targets).suffix [ $(source).suffix ] ;
-    
-    targets = [ new file-target $(n:D=) exact : [ $(source).type ] 
+    local name = [ $(source).name ] ;
+           
+    new-a = [ new action $(source) : common.copy : $(properties) ] ;    
+    targets = [ new file-target $(name:D=) exact : [ $(source).type ] 
       : $(project) : $(new-a) ] ;
     
     return $(targets) ;
 }
 
-rule symlink-lib ( suffix : project : source : extra-properties )
-{
-    local n = [ $(source).name ] ;
-    local targets = [ 
-      new file-target $(n:D=) : [ $(source).type ] : $(project) ] ;
-    local a = [ new action $(targets) : $(source) : symlink.ln :
-      $(extra-properties) ] ;
-    $(targets).action $(a) ;
-    return $(targets) ;
-}
+#rule symlink-lib ( suffix : project : source : extra-properties )
+#{
+#    local n = [ $(source).name ] ;
+#    local targets = [ 
+#     new file-target $(n:D=) : [ $(source).type ] : $(project) ] ;
+#    local a = [ new action $(targets) : $(source) : symlink.ln :
+#      $(extra-properties) ] ;
+#    $(targets).action $(a) ;
+#    return $(targets) ;
+#}
 
-
-rule relink-file ( project : property-set : source ) 
-{
+rule relink-file ( project : source : property-set  ) 
+{                                
     local action = [ $(source).action ] ;
-                       
-    # stage can affect the relinking details.
-    local ps = [ $(action).properties ] ;
-    local ps-raw = [ $(ps).raw ] ;
-    # Unless <hardcode-dll-paths>true is in properties, which can
-    # happen only if the user has explicitly requested it, nuke all
-    # <dll-path> properties.
-    if [ $(property-set).get <hardcode-dll-paths> ] != true
-    {
-        ps-raw = [ property.change $(ps-raw) : <dll-path> ] ;
-    }
-    ps-raw = $(ps-raw) [ $(property-set).free ] [ $(property-set).dependency ] ;
-    local new-ps = [ property-set.create $(ps-raw) ] ;
-    
     local cloned-action = [ virtual-target.clone-action $(action) : $(project) :
-      "" : $(new-ps) ] ;
+      "" : $(property-set) ] ;
     local result = [ $(cloned-action).targets ] ;                        
     
     return $(result) ;
 }
-
-
-
 
 # Declare staged version of the EXE type. Generator for this type will
 # cause relinking to the new location.
@@ -337,77 +325,11 @@ class stage-exe-generator : generator
     
     rule run ( project name ? : property-set : source : multiple ? )
     {
-        return [ stage.relink-file $(project) : $(property-set) : $(source) ] ;
+        return [ stage.relink-file $(project) : $(source) : $(property-set) ] ;
     }    
 }
 
 generators.register [ new stage-exe-generator ] ;
-
-type.register STAGED_SHARED_LIB : : SHARED_LIB ;
-
-class stage-shared-lib-generator : generator
-{
-    import type property-set modules stage ;    
-       
-    rule __init__ ( )
-    {
-        generator.__init__ stage-lib : SHARED_LIB : STAGED_SHARED_LIB ;
-    }
-    
-    rule run ( project name ? : property-set : source : multiple ? )
-    {
-        local name-changed ;
-        if [ $(property-set).get <so-version> ]
-        {
-            name-changed = true ;
-        }
-        if $(name) != [ $(source).name ]
-        {
-            name-changed = true ;
-        }
-        
-        if $(name-changed) && [ modules.peek : UNIX ] 
-        {
-            # Need to change the name of the target and relink
-            local relinked = 
-              [ stage.relink-file $(project) : $(property-set) : $(source) ] ;
-            
-            
-#            local so-version = [ $(property-set).get <so-version> ] ;
-#            if $(so-version)
-#            {                            
-#                local existing-suffix = [ $(relinked).suffix ] ;            
-#                $(relinked).suffix $(existing-suffix).$(so-version) ;
-#                
-#                relinked += [ stage.symlink-lib $(existing-suffix) : $(project) :
-#                  $(relinked[1]) : $(property-set) ] ;
-#                
-#                local major = [ MATCH ([0123456789])[.].* : $(so-version) ] ;
-#                relinked += [ stage.symlink-lib $(existing-suffix).$(major) 
-#                  : $(project) : $(relinked[1]) : $(property-set) ] ;
-#            }
-            
-            # Break into private member of 'virtual-target' and change
-            # the name.
-            for r in $(relinked) 
-            {               
-                modules.poke $(r) : self.name : $(name) ;
-            }
-            
-            return $(relinked) ;
-        }
-        else
-        {            
-            return [ stage.copy-file $(name) : $(project) 
-              : $(source) : $(property-set) ] ;
-        }        
-    }    
-}
-
-generators.register [ new stage-shared-lib-generator ] ;
-
-
-
 
 # Declares a stage target. When build, it will construct all sources
 # and place in one directory. The directory can be specified in requirements
@@ -425,7 +347,18 @@ rule stage ( name : sources * : requirements * : default-build * )
     {
         requirements += <hardcode-dll-paths>false ;
     }        
-   
+    
+    if <name> in $(requirements:G)
+    {
+        errors.user-error 
+          "The <name> property is not allowed for the 'install' rule" ;
+    }
+    if <tag> in $(requirements:G)
+    {
+        errors.user-error 
+          "The <tag> property is not allowed for the 'install' rule" ;
+    }
+           
     targets.main-target-alternative
       [ new stage-target-class $(name) : $(project) 
         : [ targets.main-target-sources $(sources) : $(name) ]

@@ -9,7 +9,7 @@
 #  if particular target should be created at all.
 
 import "class" : new ;
-import path property-set utility sequence errors set ;
+import path property-set utility sequence errors set type ;
 
 #                       +--------------------------+
 #                       | virtual-target           |
@@ -202,6 +202,7 @@ class abstract-file-target : virtual-target
 {
     import project regex sequence path type ;
     import property-set ;
+    import indirect ;
     
     rule __init__ ( 
          name     # Name for this target
@@ -224,7 +225,7 @@ class abstract-file-target : virtual-target
 
             if $(self.type) && ! $(exact)              
             {                
-                _apply-suffix $(name) ;
+                _adjust-name $(name) ;
             }            
         }        
     }
@@ -233,7 +234,7 @@ class abstract-file-target : virtual-target
     rule set-type ( type )
     {
         self.type = $(type) ;
-        _apply-suffix [ utility.basename $(self.name) ] ;
+        _adjust-name [ utility.basename $(self.name) ] ;
     }
 
     # Sets the path. When generating target name, it will override any path
@@ -409,17 +410,61 @@ class abstract-file-target : virtual-target
         }                
     }            
 
-    rule _apply-suffix ( specified-name )
+    rule _adjust-name ( specified-name )
     {
-        suffix = [ type.generated-target-suffix $(self.type) :
-          [ $(self.action).properties ] ] ;
-        if $(suffix)
-        {                    
-            self.name = $(specified-name).$(suffix) ;
-        }                
+        local ps = [ $(self.action).properties ] ;
+        local tag = [ $(ps).get <tag> ] ;
+
+        if $(tag)
+        {
+            local rule-name = [ MATCH ^@(.*) : $(tag) ] ;
+            if $(rule-name)
+            {
+                if $(tag[2])
+                {
+                    errors.error "<tag>@rulename is present but is not the only <tag> feature" ;
+                }
+                
+                # The rule name is not necessary imported in this module,
+                # so we need to use the 'indirect' module to correctly call
+                # it.
+                local indirect-rule = [ indirect.make-qualified $(rule-name) ] ;                
+                self.name = [ indirect.call $(indirect-rule) $(specified-name) :
+                  $(self.type) :  $(ps) ] ;
+            }
+            else
+            {
+                errors.error 
+                  "The value of the <tag> feature must be '@rule-nane'" ;
+            }
+        }
+        
+        # If there's no tag or the tag rule returned nothing.
+        if ! $(tag) || ! $(self.name)
+        {                            
+            self.name = [ virtual-target.add-suffix
+                $(specified-name) : $(self.type) 
+                  : [ $(self.action).properties ] ] ;
+        }    
     }
     
 }
+
+# Appends the suffix appropriate to 'type/property-set' combination
+# to the specified name and returns the result.
+rule add-suffix ( specified-name : type ? : property-set )
+{
+    suffix = [ type.generated-target-suffix $(type) : $(property-set) ] ;
+    if $(suffix)
+    {                    
+        return $(specified-name).$(suffix) ;
+    }            
+    else
+    {
+        return $(specified-name) ;
+    }                
+}
+
 
 # File target with explicitly known location.
 #

@@ -314,26 +314,20 @@ local rule load-jamfile (
     .current-project = $(.current-project[2-]) ;
 }
 
-if USER_MODULE in [ RULENAMES ]
-{    
-    rule load-aux ( module-name : file )
-    {
-        USER_MODULE $(module-name) ;
-        module $(module-name)
-        {
-            include $(2) ;
-        }    
-    }
-}
-else
+
+rule load-aux ( module-name : file )
 {
-    rule load-aux ( module-name : file )
-    {    
-        module $(module-name)
-        {
-            include $(2) ;
-        }    
+    if USER_MODULE in [ RULENAMES ]
+    {            
+        USER_MODULE $(module-name) ;
     }
+    
+    module $(module-name)
+    {
+        include $(2) ;
+        local rules = [ RULENAMES $(1) ] ;
+        IMPORT $(1) : $(rules) : $(1) : $(1).$(rules) ;
+    }    
 }
 
 
