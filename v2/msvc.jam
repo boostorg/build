@@ -49,23 +49,24 @@ rule init ( version ? path ? : vendor ? : setup ? compiler ? linker ? )
     {
         local v = [ MATCH ^(6|[^6].*) : $(version) ] ;
         local version-6-path = "c:\\Program Files\\Microsoft Visual Studio\\VC98" ;
-        local version-7.0-path = "c:\\Program Files\\Microsoft Visual Studio .NET\\VC7" ;
+        local version-7-path = "c:\\Program Files\\Microsoft Visual Studio .NET\\VC7" ;
+        local version-7.0-path = $(version-7-path) ;
         local version-7.1-path = "c:\\Program Files\\Microsoft Visual Studio .NET 2003\\VC7" ;
         local default-path = $(version-$(v)-path) ;
         
         # look for the setup program in both the system PATH and in
         # its default installation location based on version
         local env-PATH = [ modules.peek : PATH ] ;
-        local PATH-setup =  [ GLOB $(env-PATH) : $(setup) $(setup:U) ] ;
-        local default-setup =  [ GLOB $(default-path)\\bin : $(setup) $(setup:U) ] ;
+        local PATH-setup =  [ GLOB $(env-PATH) : $(setup:L) ] ;
+        local default-setup =  [ GLOB $(default-path)\\bin : $(setup:L) ] ;
         
         if $(default-setup) && $(PATH-setup) != $(default-setup)
         {
             path = $(default-path) ;
         }
         
-        compiler = $(compiler:U) ;
-        if ! [ GLOB $(path)\\bin $(env-PATH) : $(compiler:E=CL).EXE $(compiler:E=cl).exe ]
+        compiler = $(compiler:L) ;
+        if ! [ GLOB $(path)\\bin $(env-PATH) : $(compiler:E=cl).exe ]
         {
             error $(condition) initialization: :
               couldn't find compiler \"$(compiler:E=CL)\" in PATH or "known default"
