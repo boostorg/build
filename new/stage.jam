@@ -75,7 +75,7 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
             # FIXME: Since we can have <location> property, it might be better
             # to use it to distinguish staged copies with different locations.
             $(i2).set-path $(location) ;
-            result += $(i2) ;
+            result += [ virtual-target.register $(i2) ] ;
         }
         return $(result) ;
     }   

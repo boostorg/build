@@ -30,6 +30,20 @@ t.write("auxilliary/1", "")
 t.run_build_system()
 t.expect_addition(["dist/a.dll", "dist/a.h", "dist/1"])
 
+
+# Regression test: the following was causing the "duplicate target name"
+# error.
+t.write(
+    "Jamfile", 
+"""
+project : requirements <hardcode-dll-paths>true ;
+lib a : a.cpp ;
+stage dist : a a.h auxilliary/1 ;
+alias dist-alias : dist ;
+""")
+t.run_build_system()
+
+
 # Test the <location> property
 t.write("Jamfile", """
 lib a : a.cpp ;
