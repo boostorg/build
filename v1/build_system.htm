@@ -127,6 +127,7 @@
             <a href="#core_extensions">Core Jam Extensions</a> 
 
             <ul>
+              <li><a href="#variable_quoting">Command-line and Environment Variable Quoting</a>
               <li><a href="#jambase_replacement">Jambase Replacement</a>
               <li><a href="#rule_indirection">Rule Indirection</a>
               <li><a href="#argument_lists">Argument Lists</a>
@@ -180,20 +181,17 @@
     <h3><a name="installing_jam">Installing Boost Jam</a></h3>
 
     <ul>
-      <li><a href="http://freetype.sourceforge.net/jam/index.html#where">This
-      page</a> describes how and where to get FTJam sources.
+      <li>The Boost Jam sources are located in the <tt>tools/build/jam_src</tt>
+      subdirectory of the Boost installation.
 
       <li>The <a href="http://public.perforce.com/public/jam/src/README">Jam
       README</a> contains basic installation instructions.
 
-      <li>If you are installing on Windows NT, please read <a href=
-      "http://frankenrouter.perforce.com/lists/jamming/msg00474.html">this
-      note</a>. You may need to use the ``<tt>SUBST</tt> hack'' described at
-      the bottom of the message to bootstrap Jam. Also, when defining the
-      <tt>MSVCNT</tt>, <tt>BCCROOT</tt>, etc. environment variables as
-      described in the <a href=
-      "http://public.perforce.com/public/jam/src/README">Jam README</a>, please
-      remember that they are case-sensitive.
+      <li>If you are installing on Windows, the make process may prompt you to
+      set some environment variables, and stop. Don't be alarmed; just follow
+      the instructions and start over. Please keep in mind that thses variable
+      settings are case-sensitive. The variable settings necessary for
+      bootstrapping Jam are not needed once it has been built.
 
       <li>Note that the supplied Makefile may require editing for your
       platform; see the <a href=
@@ -204,14 +202,14 @@
 
     <h3><a name="initiating">Initiating a Build</a></h3>
 
-    <p>Currently, the build system must be invoked with the
-    <tt>-f<i>allyourbase-path</i></tt> option, where <i>allyourbase-path</i> is
-    the path to the <tt><a href="allyourbase.jam">allyourbase.jam</a></tt> file
-    supplied in this directory. When the system matures, this file may be
-    compiled directly into Jam as the <tt>Jambase</tt> or we will find another
-    way to make sure the <tt>-f</tt> option is no longer needed. The
-    environment variables necessary for bootstrapping Jam are not needed once
-    it has been built.
+    <p>The easiest way to get going is to set the <tt>BOOST_ROOT</tt>
+    environment variable to point at the Boost installation directory, though
+    you can also set <tt>BOOST_ROOT</tt> on the command-line, using
+    <tt>-s...</tt>. You can use the <tt>TOOLS</tt> variable to indicate which
+    toolset(s) to build with, and the <tt>BUILD</tt> variable to describe how
+    you want things built. In most cases it should be sufficient to invoke Jam
+    with no variable settings. The following examples all assume that
+    <tt>BOOST_ROOT</tt> has been set in the environment.
 
     <p>Here are some sample Boost Jam invocations:
 
@@ -224,7 +222,7 @@
       <tr>
         <td>
 <pre>
-jam -f<i>allyourbase-path</i> -sTOOLS=gcc my_target
+jam -sTOOLS=gcc my_target
 </pre>
 
         <td>default (debug) <tt><a href="#build">BUILD</a></tt> of
@@ -239,7 +237,7 @@ jam -f<i>allyourbase-path</i> -sTOOLS=gcc my_target
         <td>
 <pre>
 set TOOLS=msvc
-jam -f<i>allyourbase-path</i>
+jam
 </pre>
 
         <td>Set an NT environment variable to always build with MSVC<br>
@@ -248,7 +246,7 @@ jam -f<i>allyourbase-path</i>
       <tr>
         <td>
 <pre>
-jam -f<i>allyourbase-path</i> -sBUILD=release
+jam -sBUILD=release
 </pre>
 
         <td>release build <tt>all</tt> with default <tt><a href=
@@ -256,7 +254,7 @@ jam -f<i>allyourbase-path</i> -sBUILD=release
          
 
       <tr>
-        <td><pre>jam -f<i>allyourbase-path</i> -sBUILD=&quot;debug release&quot;</pre> 
+        <td><pre>jam -sBUILD=&quot;debug release&quot;</pre> 
 
         <td>debug and release build <tt>all</tt>.
     </table>
@@ -1051,6 +1049,7 @@ flags msvc HDRS &lt;include&gt; ;
     <p>
 
     <ul>
+
       <li>
         Jam ``<b>rules</b>'' are actually simple procedural entities. Think of
         them as functions. Arguments are separated by colons. 
@@ -1066,9 +1065,14 @@ flags msvc HDRS &lt;include&gt; ;
 
       <li>
         Note that the documentation for the built-in <tt>INCLUDES</tt> rule is
-        incorrect: <tt>INCLUDES targets1 : targets2 </tt> causes everything
-        that depends on a member of <i>targets1</i> to depend on all members of
-        <i>targets2</i>. 
+        incorrect: <tt>INCLUDES&nbsp;targets1&nbsp;:&nbsp;targets2</tt> causes
+        everything that depends on a member of <i>targets1</i> to depend on all
+        members of <i>targets2</i>. It does this in an odd way, by tacking
+        <i>targets2</i> onto a special tail section in the dependency list of
+        everything in <i>targets1</i>. It seems to be OK to create circular
+        dependencies this way; in fact, it appears to be the ``right thing to
+        do'' when a single build action produces both <i>targets1</i> and
+        <i>targets2</i>.
 
         <p>
 
@@ -1177,6 +1181,39 @@ flags msvc HDRS &lt;include&gt; ;
         <tt>&lt;</tt>s and trailing <tt>&gt;</tt>s are added if neccessary to
         form an expression of the form <tt>&lt;</tt><i>expr2</i><tt>&gt;</tt>;
         <tt>&lt;</tt><i>expr2</i><tt>&gt;</tt> is then prepended.
+
+        <p>
+
+      <li>
+        <a name="variable_splitting">When Jam</a> is invoked it imports all
+        environment variable settings into corresponding Jam variables, followed
+        by all command-line (<tt>-s...</tt>) variable settings. Variables whose
+        name ends in <tt>PATH</tt>, <tt>Path</tt>, or <tt>path</tt> are split
+        into string lists on OS-specific path-list separator boundaries
+        (e.g. &quot;<tt>:</tt>&quot; for Unix and &quot;<tt>;</tt>&quot; for
+        Windows). All other variables are split on space
+        (&quot;<tt>&nbsp;</tt>&quot;) boundaries. Boost Jam modifies that
+        behavior by allowing variables to be <a
+        href="#variable_quoting">quoted</a>.
+
+        <p>
+
+      <li>
+        A variable whose value is an empty list <i>or</i> which consists
+        entirely of empty strings has a negative logical value. Thus, for
+        example, code like the following allows a sensible non-empty default
+        which can easily be overridden by the user:
+<blockquote><pre>
+MESSAGE ?= starting jam... ;
+if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
+</pre></blockquote>
+        If the user wants a specific message, he invokes jam with
+        <tt>&quot;-sMESSAGE=</tt><i>message&nbsp;text</i><tt>&quot;</tt>. If he
+        wants no message, he invokes jam with <tt>-sMESSAGE=</tt> and nothing at
+        all is printed.
+
+        <p>
+
     </ul>
 
     <p>Please also read <a href=
@@ -1195,6 +1232,21 @@ flags msvc HDRS &lt;include&gt; ;
     complexity of a large system such as Boost.Build.
 
     <blockquote>
+
+      <h4><a name="variable_quoting">Command-line and Environment Variable Quoting</h4>
+
+      <p>Classic Jam had an <a href="#variable_splitting">odd behavior</a> with
+      respect to command-line variable ( <tt>-s...</tt>) and environment
+      variable settings which made it impossible to define an arbitrary variable
+      with spaces in the value. Boost Jam remedies that by treating all such
+      settings as a single string if they are surrounded by double-quotes. Uses
+      of this feature can look interesting, since shells require quotes to keep
+      characters separated by whitespace from being treated as separate
+      arguments:
+<blockquote><pre>
+jam -sMSVCNT=&quot;\&quot;C:\Program Files\Microsoft Visual C++\VC98\&quot;&quot; ...
+</pre></blockquote>
+
       <h4><a name="jambase_replacement">Jambase Replacement</a></h4>
 
       <p>New logic has been added to allow the built-in Jambase to be replaced
