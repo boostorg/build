@@ -30,7 +30,8 @@ t.expect_content("bin/gcc/debug/threading-single/a.exe",
 "gcc/debug/threading-single\n" +
 "bin/gcc/debug/threading-single/a.obj lib/bin/gcc/debug/threading-single/b.obj " +
 "lib2/bin/gcc/debug/threading-single/c.obj lib2/bin/gcc/debug/threading-single/d.obj " +
-"lib2/helper/bin/gcc/debug/threading-single/e.obj\n"
+"lib2/helper/bin/gcc/debug/threading-single/e.obj " +
+"lib3/bin/gcc/debug/threading-single/f.obj\n"
 )
 
 t.expect_addition("lib/bin/gcc/debug/threading-single/b.obj")
@@ -69,6 +70,12 @@ t.expect_content("lib2/helper/bin/gcc/debug/threading-single/e.obj",
 lib2/helper/e.cpp
 """)
 
+t.expect_addition("lib3/bin/gcc/debug/threading-single/f.obj")
+t.expect_content("lib3/bin/gcc/debug/threading-single/f.obj",
+"""gcc/debug/threading-single
+lib3/f.cpp
+""")
+                 
 
 t.touch("a.cpp")
 t.run_build_system()
