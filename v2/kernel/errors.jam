@@ -6,7 +6,7 @@
 # Print a stack backtrace leading to this rule's caller. Each
 # argument represents a line of output to be printed after the first
 # line of the backtrace.
-rule backtrace ( skip-frames messages * : * )
+rule backtrace ( skip-frames prefix messages * : * )
 {
     local frame-skips = 5 9 13 17 21 25 29 33 37 41 45 49 53 57 61 65 69 73 77 81 ;
     local drop-elements = $(frame-skips[$(skip-frames)]) ;
@@ -26,15 +26,27 @@ rule backtrace ( skip-frames messages * : * )
     while $(bt)
     {
         local m = [ MATCH ^(.+)\\.$ : $(bt[3]) ] ;
-        ECHO $(bt[1]):$(bt[2]): "in" $(bt[4]) "from module" $(m) ;
+        local user-modules = ([Jj]amfile(.jam|.v2)|user-config.jam|site-config.jam|project-root.jam) ;
         
+        if $(.user-modules-only) 
+        {
+            if [ MATCH $(user-modules) : $(bt[1]:D=) ] 
+            {                
+                ECHO "$(prefix) at $(bt[1]):$(bt[2]) " ;
+            }            
+        }        
+        else          
+        {            
+            ECHO $(bt[1]):$(bt[2]): "in" $(bt[4]) "from module" $(m) ;
+        }
+                
         # the first time through, print each argument on a separate
         # line
         for local n in $(args)
         {
             if $($(n))-is-not-empty
             {
-                ECHO $($(n)) ;
+                ECHO $(prefix) $($(n)) ;
             }
         }
         args = ; # kill args so that this never happens again
@@ -145,6 +157,14 @@ rule error ( messages * : * )
         error-skip-frames 3 $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }    
 }
+
+# Same as 'error', but the generated backtrace will include only user files.
+rule user-error ( messages * : * )
+{
+    .user-modules-only = 1 ;
+    error-skip-frames 3 $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+}
+
 
 # Print a warning message with a stack backtrace and exit.
 rule warning
