@@ -86,10 +86,14 @@ class Tester(TestCmd.TestCmd):
                 if 'TMP' in os.environ and os.environ['TMP'].find('~') != -1:
                     print 'Setting $TMP to /tmp to get around problem with short path names'
                     os.environ['TMP'] = '/tmp'
-            else:
+            elif os.uname()[0] == 'Linux':
                 jam_build_dir = "bin.linuxx86"
+            elif os.uname()[0] == 'SunOS':
+                jam_build_dir = "bin.solaris"
+            else:
+                raise "Don't know directory where jam is build for this system: " + os.name + "/" + os.uname()[0]
         else:
-            raise "Don't know directory where jam is build for this system"
+            raise "Don't know directory where jam is build for this system: " + os.name
 
         if boost_build_path is None:
             boost_build_path = self.original_workdir
