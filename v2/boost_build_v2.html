@@ -724,7 +724,7 @@ boost-build /path/to/boost.build ;
     different compilers. Therefore it is possible to invoke main target rules
     several times for a single main target. For example:</p>
 <pre>
-    exe a : a_gcc.cpp : &lt;toolset&gt; ;
+    exe a : a_gcc.cpp : &lt;toolset&gt;gcc ;
     exe a : a.cpp ;
 </pre>
     Each call to the 'exe' rule defines a new <em>main target
