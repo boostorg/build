@@ -222,6 +222,10 @@ local rule find-jamfile (
     # Normalize the paths of each file found.
     #
     local jamfile-found = ;
+    if $(parent-root)
+    {
+        parent-root = [ os.path.make $(parent-root) ] ;
+    }
     for local jamfile in $(jamfile-glob)
     {
         local normalized = [ os.path.make $(jamfile) ] ;
@@ -231,7 +235,7 @@ local rule find-jamfile (
         # Filter out if the found file is above the target parent root.
         if $(parent-root)
         {
-            if ! [ MATCH "$(parent-root)\\$(SLASH)(.*)" : $(normalized) ]
+            if ! [ MATCH "$(parent-root)\\/(.*)" : $(normalized) ]
             {
                 normalized = ;
             }
