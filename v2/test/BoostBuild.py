@@ -205,6 +205,12 @@ class Tester(TestCmd.TestCmd):
         if not os.path.exists(self.workdir):
             os.mkdir(self.workdir)
         os.chdir(self.workdir)
+
+    def expand_toolset(self, name):
+        """Expands $toolset in the given file to tested toolset"""
+        content = self.read(name)
+        content = string.replace(content, "$toolset", self.toolset)
+        self.write(name, content)
                                                         
     #
     #   FIXME: Large portion copied from TestSCons.py, should be moved?
