@@ -621,10 +621,14 @@ rule link-action ( targets + : sources * : action-name : properties * )
 class link-action : action ;
 
 
-rule linking-generator ( id composing ? : source-types + : target-types + : 
+rule linking-generator ( id 
+    composing ? : # Specify if generator is composing. The generator will be
+                  # composing if non-empty string is passed, or parameter is
+                  # not given. To make generator non-composing, pass empty
+                  # string ("")
+    source-types + : target-types + : 
                          requirements * )
 {
-    # If composing is not specified, set it to true, which is "false" in Jam.
     composing ?= true ;
     generator.__init__ $(id) $(composing) : $(source-types) : $(target-types) :
                        $(requirements) ;
