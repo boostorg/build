@@ -551,7 +551,7 @@ IMPORT virtual-target : remember-binding : : virtual-target.remember-binding ;
 # not establish dependency relationship, but should do everything else.
 class action 
 {
-    import type toolset property-set indirect class ;
+    import type toolset property-set indirect class path ;
     
     rule __init__ ( targets + : sources * : action-name + : property-set ? )
     {        
@@ -655,6 +655,16 @@ class action
     rule path ( )
     {
         local p = [ $(self.properties).as-path ] ;
+        # Really, an ugly hack. Boost regression test system requires
+        # specific target paths, and it seems that changing it to handle
+        # other directory layout is really hard. For that reason,
+        # we teach V2 to do the things regression system requires.
+        # The value o '<location-prefix>' is predended to the path.
+        local prefix = [ $(self.properties).get <location-prefix> ] ;
+        if $(prefix)
+        {
+            p = [ path.join $(prefix) $(p) ] ;
+        }        
         return $(p) ;
     }
 
