@@ -50,14 +50,14 @@ static void string_reserve_internal( string* self, size_t capacity )
 {
     if ( self->value == self->opt )
     {
-        self->value = malloc( capacity + JAM_STRING_MAGIC_SIZE );
+        self->value = (char*)malloc( capacity + JAM_STRING_MAGIC_SIZE );
         self->value[0] = 0;
         strncat( self->value, self->opt, sizeof(self->opt) );
         assert( strlen( self->value ) <= self->capacity ); /* This is a regression test */
     }
     else
     {
-        self->value = realloc( self->value, capacity + JAM_STRING_MAGIC_SIZE );
+        self->value = (char*)realloc( self->value, capacity + JAM_STRING_MAGIC_SIZE );
     }
 #ifndef NDEBUG
     memcpy( self->value + capacity, self->magic, JAM_STRING_MAGIC_SIZE );
