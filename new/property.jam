@@ -340,6 +340,20 @@ rule change ( properties * : feature value )
     return $(result) ;
 }
 
+# If 'property' is conditional property, returns
+# condition and the property, e.g
+# <variant>debug,<toolset>gcc:<inlining>full will become
+# <variant>debug,<toolset>gcc <inlining>full.
+# Otherwise, returns empty string.
+rule split-conditional ( property )
+{
+    local m = [ MATCH "(.+):<(.+)" : $(property) ] ;
+    if $(m)
+    {
+        return $(m[1]) <$(m[2]) ;
+    }    
+}
+
 
 # Interpret all path properties in 'properties' as relative to 'path'
 rule translate-paths ( properties * : path )
@@ -347,14 +361,22 @@ rule translate-paths ( properties * : path )
     local result ;
     for local p in $(properties)
     {
+        local split = [ split-conditional $(p) ] ;
+        local condition = "" ; 
+        if $(split)
+        {
+            condition = $(split[1]): ;
+            p = $(split[2]) ;
+        }
+                
         if path in [ feature.attributes $(p:G) ] 
         {
             local t = [ path.root $(p:TG=) $(path) ] ;
-            result += $(t:TG=$(p:G)) ;
+            result += $(condition)$(t:TG=$(p:G)) ;
         }
         else
         {
-            result += $(p) ;
+            result += $(condition)$(p) ;
         }        
     }
     return $(result) ;
@@ -544,6 +566,21 @@ local rule __test__ ( )
     try ;
         $(pm).find <toolset>gcc <os>NT <os>CYGWIN ;
     catch "Ambiguous key" ;
+
+    # Test ordinary properties 
+    assert.result 
+      : split-conditional <toolset>gcc 
+      ;
+    
+    # Test properties with ":"
+    assert.result
+      : split-conditional <define>FOO=A::B
+      ;
+    
+    # Test conditional feature
+    assert.result <toolset>gcc,<toolset-gcc:version>3.0 <define>FOO
+      : split-conditional <toolset>gcc,<toolset-gcc:version>3.0:<define>FOO
+      ;
 
 }
 
