@@ -1,5 +1,5 @@
 /*
- * Copyright 1993, 1995 Christopher Seiwald.
+ * Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
  *
  * This file is part of Jam - see jam.c for Copyright information.
  */
@@ -14,6 +14,7 @@
 
 # include "jam.h"
 # include "filesys.h"
+# include "pathsys.h"
 
 # ifdef OS_VMS
 
@@ -52,24 +53,40 @@
 #include <starlet.h>
 
 /* Supply missing prototypes for lbr$-routines*/
-int lbr$close();
-int lbr$get_index();
-int lbr$ini_control();
-int lbr$open();
-int lbr$set_module();
 
-/*
- * unlink() - remove a file
- */
+extern "C" { 
 
-#if __CRTL_VER < 70000000
+int lbr$set_module( 
+	void **,
+	unsigned long *,
+	struct dsc$descriptor_s *,
+	unsigned short *, 
+	void * );
 
-unlink( char *f )
-{
-	remove( f );
+int lbr$open( void **,
+	struct dsc$descriptor_s *,
+	void *,
+	void *, 
+	void *,
+	void *,
+	void * );
+
+int lbr$ini_control(
+	void **,
+	unsigned long *,
+	unsigned long *,
+	void * );
+
+int lbr$get_index(
+	void **,
+	unsigned long *,
+	int (*func)( struct dsc$descriptor_s *, unsigned long *),
+	void * );
+
+int lbr$close(
+	void ** );
+
 }
-
-#endif
 
 static void
 file_cvttime( 
@@ -91,7 +108,8 @@ file_cvttime(
 void
 file_dirscan( 
 	char *dir,
-	void (*func)( char *file, int status, time_t t ) )
+	scanback func,
+	void	*closure )
 {
 
     struct FAB xfab;
@@ -102,7 +120,7 @@ file_dirscan(
     string filename2[1];
     char dirname[256];
     register int status;
-    FILENAME f;
+    PATHNAME f;
 
     memset( (char *)&f, '\0', sizeof( f ) );
 
@@ -145,15 +163,15 @@ file_dirscan(
 
     if( !strcmp( dir, "[000000]" ) )
     {
-	(*func)( "[000000]", 1 /* time valid */, 1 /* old but true */ );
+	(*func)( closure, "[000000]", 1 /* time valid */, 1 /* old but true */ );
     }
 
     /* Add bogus directory for [] */
 
     if( !strcmp( dir, "[]" ) )
     {
-	(*func)( "[]", 1 /* time valid */, 1 /* old but true */ );
-	(*func)( "[-]", 1 /* time valid */, 1 /* old but true */ );
+	(*func)( closure, "[]", 1 /* time valid */, 1 /* old but true */ );
+	(*func)( closure, "[-]", 1 /* time valid */, 1 /* old but true */ );
     }
 
     string_new( filename2 );
@@ -199,7 +217,7 @@ file_dirscan(
 	}
 
         string_truncate( filename2, 0 );
-	file_build( &f, filename2, 0 );
+	path_build( &f, filename2, 0 );
 
 	/*
 	if( DEBUG_SEARCH )
@@ -210,12 +228,9 @@ file_dirscan(
 		    filename2);
 	*/
 
-	(*func)( filename2->value, 1 /* time valid */, time );
+	(*func)( closure, filename2->value, 1 /* time valid */, time );
     }
     string_free( filename2 );
-
-    if ( status != RMS$_NMF && status != RMS$_FNF )
-	lib$signal( xfab.fab$l_sts, xfab.fab$l_stv );
 }    
 
 int
@@ -229,7 +244,8 @@ file_time(
 }
 
 static char *VMS_archive = 0;
-static void (*VMS_func)( char *file, int status, time_t t ) = 0;
+static scanback VMS_func;
+static void *VMS_closure;
 static void *context;
 
 static int
@@ -254,6 +270,7 @@ file_archmember(
     bufdsc.dsc$w_length = sizeof( filename );
     status = lbr$set_module( &context, rfa, &bufdsc,
 			     &bufdsc.dsc$w_length, NULL );
+
     if ( !(status & 1) )
 	return ( 1 );
 
@@ -268,7 +285,7 @@ file_archmember(
 
     sprintf( buf, "%s(%s.obj)", VMS_archive, filename );
 
-    (*VMS_func)( buf, 1 /* time valid */, (time_t)library_date );
+    (*VMS_func)( VMS_closure, buf, 1 /* time valid */, (time_t)library_date );
 
     return ( 1 );
 }
@@ -276,7 +293,8 @@ file_archmember(
 void
 file_archscan(
 	char *archive,
-	void (*func)( char *file, int status, time_t t ) )
+	scanback func,
+	void	*closure )
 {
     static struct dsc$descriptor_s library =
 		  {0, DSC$K_DTYPE_T, DSC$K_CLASS_S, NULL};
@@ -289,6 +307,7 @@ file_archscan(
 
     VMS_archive = archive;
     VMS_func = func;
+    VMS_closure = closure;
 
     status = lbr$ini_control( &context, &lfunc, &typ, NULL );
     if ( !( status & 1 ) )

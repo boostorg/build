@@ -248,7 +248,8 @@ jam [ -a ] [ -n ] [ -v ]
 	with two exceptions: double quotes (") can enclose whitespace
 	to embed it into a token, and everything between the matching
 	curly braces ({}) in the definition of a  rule action is treated
-	as a single string.  A backslash (\) can escape a double quote.
+	as a single string.  A backslash (\) can escape a double quote,
+	or any single whitespace character.
 
 	<P>
 
@@ -299,6 +300,17 @@ jam [ -a ] [ -n ] [ -v ]
 
 	<P>
 
+	Rules can return values, which can be expanded into a list with
+        "[ <i>rule</i> <i>args</i> ... ]". A rule's value is the value
+	of its last statement, though only the following statements
+	have values: 'if' (value of the leg chosen), 'switch' (value of the case
+	chosen), set (value of the resulting variable), and 'return' (value
+        of its arguments). Note that 'return' doesn't actually cause a
+        return, i.e., is a no-op unless it is the last statement
+        of the last block executed within rule body.
+
+	<P>
+
 	The <b>jam</b> statements for defining and invoking rules are
 	as follows:
 
@@ -325,15 +337,33 @@ jam [ -a ] [ -n ] [ -v ]
 
 	    <DD> Invoke a rule.
 
+	    <P> <DT> <CODE>
+	    on <I>target</I> <I>rulename field1</I> : <I>field2</I> : <I>...</I> 
+	    : <I>fieldN</I> ;
+	    </CODE>
+
+	    <DD> Invoke a rule under the influence of <I>target</I>'s specific
+            variables..
+
+	    <P> <DT> <CODE>
+	    [ <I>rulename field1</I> : <I>field2</I> : <I>...</I>
+            : <I>fieldN</I> ] <br>
+	    [  on <I>target</I> <I>rulename field1</I> : <I>field2</I> : <I>...</I>
+            : <I>fieldN</I> ] <br>
+
+	    </CODE>
+
+	    <DD> Used as an argument, expands to the return value of the rule invoked.
+
 	</DL></TABLE>
 
 	<P>
 
 	A rule is invoked with values in <I>field1</I> through
 	<I>fieldN</I>.  They may be referenced in the procedure's
-	<I>statements</I> as $(1) through $(<I>N</I>), and the first
-	two only may be referenced in the action's <I>commands</I> as
-	$(1) and $(2).  $(&lt;) and $(&gt;) are synonymous with $(1)
+	<I>statements</I> as $(1) through $(<I>N</I>) (9 max), and the
+	first two only may be referenced in the action's <I>commands</I>
+	as $(1) and $(2).  $(&lt;) and $(&gt;) are synonymous with $(1)
 	and $(2).
 
 	<P>
@@ -396,7 +426,7 @@ jam [ -a ] [ -n ] [ -v ]
 <DT> <P> <H3> Built-in Rules </H3> <DD>
 
 	<P>
-	<B>Jam</b> has ten built-in rules, all of which are pure
+	<B>Jam</b> has eleven built-in rules, all of which are pure
 	procedure rules without updating actions.  They are in
 	three groups:  the first builds the dependency graph;
 	the second modifies it; and the third are just utility
@@ -421,8 +451,8 @@ jam [ -a ] [ -n ] [ -v ]
 	INCLUDES <I>targets1</I> : <I>targets2</I> ;
 	</CODE>
 
-	<DD> Builds a sibling dependency: makes each of <I>targets2</I>
-	depend on anything upon which each of <I>targets1</I> depends.
+	<DD> Builds a sibling dependency: makes any target that depends
+	on any of <I>targets1</I> also depend on each of <I>targets2</I>.
 	This reflects the dependencies that arise when one source file
 	includes another:  the object built from the source file depends
 	both on the original and included source file,  but the two
@@ -435,7 +465,7 @@ jam [ -a ] [ -n ] [ -v ]
 
 	<P>
 
-	"foo.h" depends on "foo.c" and "foo.h" in this example.
+	"foo.o" depends on "foo.c" and "foo.h" in this example.
 
 	</DL></TABLE>
 
@@ -550,6 +580,31 @@ jam [ -a ] [ -n ] [ -v ]
 	<DD> Blurts out the message <i>args</I> to stdout and then exits
 	with a failure status.
 
+	<P>
+
+	"Echo", "echo", "Exit", and "exit" are accepted as aliases for ECHO
+	and EXIT, since it is hard to tell that these are built-in
+	rules and not part of the language, like "include".
+
+	</DL></TABLE>
+
+	<P>
+
+	The GLOB rule does filename globbing.
+
+	<P><TABLE WIDTH=75% ALIGN=CENTER><TR><TD><DL>
+
+	<P><DT><CODE>
+	GLOB <i>directories</I> : <I>patterns</I>
+	</CODE>
+
+	<DD>  Using the same wildcards as for the patterns in the
+        <A HREF="#switch">switch</A> statement).
+        It is invoked by being used as an argument to a rule invocation
+        inside of `[ ]`. For example: "FILES = [ GLOB dir1 dir2 : *.c *.h ]"
+        will set the value of A to the list of C source and header files in
+        dir1 or dir2.
+
 	</DL></TABLE>
 
 <DT> <P> <H3> Flow-of-Control </H3> <DD>
@@ -570,7 +625,9 @@ jam [ -a ] [ -n ] [ -v ]
 	    <i>list</i>, setting the variable <i>var</i> to the element
 	    value.
 
+	    <A name=if>
 	    <P><DT><CODE>
+	    </A>
 
 		if <I>cond</I> { <I>statements</I> } 
 		<BR> [ else <I>statements</I> ]
@@ -654,7 +711,21 @@ jam [ -a ] [ -n ] [ -v ]
 
 	    <P><DT> <CODE>
 
+		return <I>values</I> ; 
+
+	    </CODE>
+
+	    <P><DD> Within a rule body, the return statement sets the return
+            value for an invocation of the rule. It does <i>not</i> cause the
+            rule to return; a rule's value is actually the value of the
+            last statement executed, so a return should be the
+	    last statement executed before the rule "naturally" returns.
+
+	    <P><DT> <CODE>
+
+		<A NAME="switch">
 		switch <I>value</I> 
+		</A>
 		<BR> { 
 		<BR> case <I>pattern1</I> : <I>statements</I> ; 
 		<BR> case <I>pattern2</I> : <I>statements</I> ; 
@@ -677,9 +748,22 @@ jam [ -a ] [ -n ] [ -v ]
 		<TD> match zero or more characters </TD>
 		<TR><TD><CODE> [<i>chars</i>] </CODE></TD>
 		<TD> match any single character in <i>chars</i> </TD>
+		<TR><TD><CODE> [^<i>chars</i>] </CODE></TD>
+		<TD> match any single character not in <i>chars</i> </TD>
+		<TR><TD><CODE> \<i>x</i> </CODE></TD>
+		<TD> match <i>x</i> (escapes the other wildcards)</i> </TD>
 
 	    </TABLE>
 
+	    <P><DT> <CODE>
+
+		while <I>cond</I> { <I>statements</I> }
+
+	    </CODE>
+
+	    <P><DD> Repeatedly execute <I>statements</I> while <I>cond</I>
+	    remains true upon entry. (See the description of <I>cond</I>
+	    expression syntax under <a href="#if">if</a>, above).
 	</DL></TABLE>
 
 <DT> <P> <H3> Variables </H3> <DD>
@@ -875,6 +959,13 @@ jam [ -a ] [ -n ] [ -v ]
 	    <TR><TD><CODE> :R=<I>root</I> </CODE>
 	    <TD>Prepend <I>root</I> to the whole file name,  if not
 	    already rooted.
+
+	    <TR><TD><CODE> :E=<I>value</I> </CODE>
+	    <TD>Assign <I>value</I> to the variable if it is unset.
+
+	    <TR><TD><CODE> :J=<I>joinval</I> </CODE>
+	    <TD>Concatentate list elements into single
+            element, separated by <I>joinval</I>.
 
 	</TABLE>
 
@@ -1188,13 +1279,19 @@ jam [ -a ] [ -n ] [ -v ]
 
 	<P>
 
-        Copyright 1997, 2000 Perforce Software, Inc.
+        Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
         <BR>
         Comments to <A HREF="mailto:info@perforce.com">info@perforce.com</A>
         <BR>
         Last updated: December 31, 2000
 	<BR>
+<<<<<<< variant A
 	$Id$
+>>>>>>> variant B
+	$Id$
+####### Ancestor
+	$Id$
+======= end
 
 </BODY> 
 </HTML>

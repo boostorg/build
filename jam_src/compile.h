@@ -28,11 +28,13 @@ void compile_builtins();
 LIST *compile_append( PARSE *parse, FRAME *frame );
 LIST *compile_foreach( PARSE *parse, FRAME *frame );
 LIST *compile_if( PARSE *parse, FRAME *frame );
+LIST *compile_eval( PARSE *parse, FRAME *args );
 LIST *compile_include( PARSE *parse, FRAME *frame );
 LIST *compile_list( PARSE *parse, FRAME *frame );
 LIST *compile_local( PARSE *parse, FRAME *frame );
 LIST *compile_module( PARSE *parse, FRAME *frame );
 LIST *compile_null( PARSE *parse, FRAME *frame );
+LIST *compile_on( PARSE *parse, FRAME *frame );
 LIST *compile_rule( PARSE *parse, FRAME *frame );
 LIST *compile_rules( PARSE *parse, FRAME *frame );
 LIST *compile_set( PARSE *parse, FRAME *frame );
@@ -66,18 +68,18 @@ void profile_dump();
 
 /* Conditions for compile_if() */
 
-# define COND_NOT	0	/* ! cond */
-# define COND_AND	1	/* cond && cond */
-# define COND_OR	2	/* cond || cond */
+# define EXPR_NOT	0	/* ! cond */
+# define EXPR_AND	1	/* cond && cond */
+# define EXPR_OR	2	/* cond || cond */
 
-# define COND_EXISTS	3	/* arg */
-# define COND_EQUALS	4	/* arg = arg */
-# define COND_NOTEQ	5	/* arg != arg */
-# define COND_LESS	6	/* arg < arg  */
-# define COND_LESSEQ	7	/* arg <= arg */
-# define COND_MORE	8	/* arg > arg  */
-# define COND_MOREEQ	9	/* arg >= arg */
-# define COND_IN	10	/* arg in arg */
+# define EXPR_EXISTS	3	/* arg */
+# define EXPR_EQUALS	4	/* arg = arg */
+# define EXPR_NOTEQ	5	/* arg != arg */
+# define EXPR_LESS	6	/* arg < arg  */
+# define EXPR_LESSEQ	7	/* arg <= arg */
+# define EXPR_MORE	8	/* arg > arg  */
+# define EXPR_MOREEQ	9	/* arg >= arg */
+# define EXPR_IN	10	/* arg in arg */
 
 #endif // COMPILE_DWA20011022_H
 

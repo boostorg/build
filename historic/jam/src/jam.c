@@ -1,6 +1,6 @@
 /*
  * /+\
- * +\	Copyright 1993, 2000 Christopher Seiwald.
+ * +\	Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
  * \+/
  *
  * This file is part of jam.
@@ -23,7 +23,7 @@
 /*
  * jam.c - make redux
  *
- * See Jam.html and Jamlang.html for usage information.
+ * See Jam.html for usage information.
  *
  * These comments document the code.
  *
@@ -38,14 +38,18 @@
  *       /   |    \              \
  *      /    |     \             |
  *  scan     |     compile      make
- *   |       |    /    \       / |  \
- *   |       |   /      \     /  |   \
- *   |       |  /        \   /   |    \
- * jambase parse         rules  search make1
- *                               |	|   \
- *                               |	|    \
- *                               |	|     \
- *                           timestamp command execute
+ *   |       |    /  | \       / |  \
+ *   |       |   /   |  \     /  |   \
+ *   |       |  /    |   \   /   |    \
+ * jambase parse     |   rules  search make1
+ *                   |           |      |   \
+ *                   |           |      |    \
+ *                   |           |      |     \
+ *               builtins    timestamp command execute
+ *                               |
+ *                               |
+ *                               |
+ *                             filesys
  *
  *
  * The support routines are called by all of the above, but themselves
@@ -55,7 +59,7 @@
  *                      /  |   |   |
  *                     /   |   |   |
  *                    /    |   |   |
- *                 lists   |   |   filesys
+ *                 lists   |   |   pathsys
  *                    \    |   |
  *                     \   |   |
  *                      \  |   |
@@ -67,15 +71,13 @@
  *
  * Roughly, the modules are:
  *
+ *	builtins.c - jam's built-in rules
  *	command.c - maintain lists of commands
  *	compile.c - compile parsed jam statements
  *	execunix.c - execute a shell script on UNIX
  *	execvms.c - execute a shell script, ala VMS
  *	expand.c - expand a buffer, given variable values
- *	fileunix.c - manipulate file names and scan directories on UNIX
- *	filevms.c - manipulate file names and scan directories on VMS
- *  fileos2.c - manipulate file names and scan directories on OS/2
- *  filent.c - manipulate file names and scan directories on Windows
+ *	file*.c - scan directories and archives on *
  *	hash.c - simple in-memory hashing routines 
  *  hdrmacro.c - handle header file parsing for filename macro definitions
  *	headers.c - handle #includes in source files
@@ -87,6 +89,8 @@
  *	newstr.c - string manipulation routines
  *	option.c - command line option processing
  *	parse.c - make and destroy parse trees as driven by the parser
+ *	path*.c - manipulate file names on *
+ *	hash.c - simple in-memory hashing routines 
  *	regexp.c - Henry Spencer's regexp
  *	rules.c - access to RULEs, TARGETs, and ACTIONs
  *	scan.c - the jam yacc scanner
@@ -98,6 +102,7 @@
  * 02/08/95 (seiwald) - -n implies -d2.
  * 02/22/95 (seiwald) - -v for version info.
  * 09/11/00 (seiwald) - PATCHLEVEL folded into VERSION.
+ * 01/10/01 (seiwald) - pathsys.h split from filesys.h
  */
 
 # include "jam.h"
@@ -110,6 +115,7 @@
 # include "parse.h"
 # include "variable.h"
 # include "compile.h"
+# include "builtins.h"
 # include "rules.h"
 # include "newstr.h"
 # include "scan.h"
@@ -226,9 +232,9 @@ int  main( int argc, char **argv, char **arg_environ )
         printf( "Boost.Jam  " );
         printf( "Version %s.  ", VERSION );
         printf( "%s.\n", OSMINOR );
-        printf( "    Copyright 1993, 2000 Christopher Seiwald.\n" );
-        printf( "    Copyright 2001 David Turner.\n" );
-        printf( "    Copyright 2001 David Abrahams.\n" );
+	   printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.  \n" );
+        printf( "   Copyright 2001 David Turner.\n" );
+        printf( "   Copyright 2001 David Abrahams.\n" );
 
         return EXITOK;
     }
@@ -343,10 +349,9 @@ int  main( int argc, char **argv, char **arg_environ )
         var_defines( symv );
     }
 
-    /* Initialize builtins */
+	/* Initialize built-in rules */
 
-
-    compile_builtins();
+	load_builtins();
 
     /* Parse ruleset */
 

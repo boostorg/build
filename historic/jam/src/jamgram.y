@@ -1,5 +1,6 @@
 %token _BANG
 %token _BANG_EQUALS
+%token _AMPER
 %token _AMPERAMPER
 %token _LPAREN
 %token _RPAREN
@@ -37,6 +38,7 @@
 %token UPDATED
 %token WHILE
 %token _LBRACE
+%token _BAR
 %token _BARBAR
 %token _RBRACE
 /*
@@ -86,9 +88,12 @@
 
 %token ARG STRING
 
-%left _BARBAR
-%left _AMPERAMPER
+%left _BARBAR _BAR
+%left _AMPERAMPER _AMPER
+%left _EQUALS _BANG_EQUALS IN
+%left _LANGLE _LANGLE_EQUALS _RANGLE _RANGLE_EQUALS
 %left _BANG
+
 
 %{
 #include "jam.h"
@@ -104,6 +109,8 @@
 # define S0 (char *)0
 
 # define pappend( l,r )    	parse_make( compile_append,l,r,P0,S0,S0,0 )
+# define peval( c,l,r )	parse_make( compile_eval,l,r,P0,S0,S0,c )
+# define pshortcircuiteval( c,l,r )	parse_make( compile_eval,l,P0,r,S0,S0,c )
 # define pfor( s,l,r,x )    	parse_make( compile_foreach,l,r,P0,s,S0,x )
 # define pif( l,r,t )	  	parse_make( compile_if,l,r,t,S0,S0,0 )
 # define pwhile( l,r )	  	parse_make( compile_while,l,r,P0,S0,S0,0 )
@@ -112,6 +119,7 @@
 # define plocal( l,r,t )  	parse_make( compile_local,l,r,t,S0,S0,0 )
 # define pmodule( l,r )	  	parse_make( compile_module,l,r,P0,S0,S0,0 )
 # define pnull()	  	parse_make( compile_null,P0,P0,P0,S0,S0,0 )
+# define pon( l,r )	  	parse_make( compile_on,l,r,P0,S0,S0,0 )
 # define prule( s,p )     	parse_make( compile_rule,p,P0,P0,s,S0,0 )
 # define prules( l,r )	  	parse_make( compile_rules,l,r,P0,S0,S0,0 )
 # define pset( l,r,a )          parse_make( compile_set,l,r,P0,S0,S0,a )
@@ -122,7 +130,6 @@
 # define pswitch( l,r )   	parse_make( compile_switch,l,r,P0,S0,S0,0 )
 
 # define pnode( l,r )    	parse_make( F0,l,r,P0,S0,S0,0 )
-# define pcnode( c,l,r )	parse_make( F0,l,r,P0,S0,S0,c )
 # define psnode( s,l )     	parse_make( F0,l,P0,P0,s,S0,0 )
 
 %}
@@ -196,16 +203,18 @@ rule	: _LBRACE block _RBRACE
 		{ $$.parse = pfor( $3.string, $5.parse, $7.parse, $2.number ); }
 	| SWITCH list _LBRACE cases _RBRACE
 		{ $$.parse = pswitch( $2.parse, $4.parse ); }
-	| IF cond _LBRACE block _RBRACE 
+	| IF expr _LBRACE block _RBRACE 
 		{ $$.parse = pif( $2.parse, $4.parse, pnull() ); }
 	| MODULE list _LBRACE block _RBRACE 
 		{ $$.parse = pmodule( $2.parse, $4.parse ); }
-	| WHILE cond _LBRACE block _RBRACE 
+	| WHILE expr _LBRACE block _RBRACE 
 		{ $$.parse = pwhile( $2.parse, $4.parse ); }
-	| IF cond _LBRACE block _RBRACE ELSE rule
+	| IF expr _LBRACE block _RBRACE ELSE rule
 		{ $$.parse = pif( $2.parse, $4.parse, $7.parse ); }
-        | local_opt RULE ARG arglist_opt rule
+     | local_opt RULE ARG arglist_opt rule
 		{ $$.parse = psetc( $3.string, $5.parse, $4.parse, $1.number ); }
+	| ON arg rule
+		{ $$.parse = pon( $2.parse, $3.parse ); }
 	| ACTIONS eflags ARG bindlist _LBRACE
 		{ yymode( SCAN_STRING ); }
 	  STRING 
@@ -229,34 +238,38 @@ assign	: _EQUALS
 	;
 
 /*
- * cond - a conditional for 'if'
+ * expr - an expression for if
  */
-
-cond	: arg 
-		{ $$.parse = pcnode( COND_EXISTS, $1.parse, pnull() ); }
+expr	: arg 
+		{ $$.parse = peval( EXPR_EXISTS, $1.parse, pnull() ); }
 	| arg _EQUALS arg 
-		{ $$.parse = pcnode( COND_EQUALS, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_EQUALS, $1.parse, $3.parse ); }
 	| arg _BANG_EQUALS arg
-		{ $$.parse = pcnode( COND_NOTEQ, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_NOTEQ, $1.parse, $3.parse ); }
 	| arg _LANGLE arg
-		{ $$.parse = pcnode( COND_LESS, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_LESS, $1.parse, $3.parse ); }
 	| arg _LANGLE_EQUALS arg 
-		{ $$.parse = pcnode( COND_LESSEQ, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_LESSEQ, $1.parse, $3.parse ); }
 	| arg _RANGLE arg 
-		{ $$.parse = pcnode( COND_MORE, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_MORE, $1.parse, $3.parse ); }
 	| arg _RANGLE_EQUALS arg 
-		{ $$.parse = pcnode( COND_MOREEQ, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_MOREEQ, $1.parse, $3.parse ); }
+	| expr _AMPER expr 
+		{ $$.parse = peval( EXPR_AND, $1.parse, $3.parse ); }
+	| expr _AMPERAMPER expr 
+		{ $$.parse = pshortcircuiteval( EXPR_AND, $1.parse, $3.parse ); }
+	| expr _BAR expr
+		{ $$.parse = peval( EXPR_OR, $1.parse, $3.parse ); }
+	| expr _BARBAR expr
+		{ $$.parse = pshortcircuiteval( EXPR_OR, $1.parse, $3.parse ); }
 	| arg IN list
-		{ $$.parse = pcnode( COND_IN, $1.parse, $3.parse ); }
-	| _BANG cond
-		{ $$.parse = pcnode( COND_NOT, $2.parse, P0 ); }
-	| cond _AMPERAMPER cond 
-		{ $$.parse = pcnode( COND_AND, $1.parse, $3.parse ); }
-	| cond _BARBAR cond
-		{ $$.parse = pcnode( COND_OR, $1.parse, $3.parse ); }
-	| _LPAREN cond _RPAREN
+		{ $$.parse = peval( EXPR_IN, $1.parse, $3.parse ); }
+	| _BANG expr
+		{ $$.parse = peval( EXPR_NOT, $2.parse, pnull() ); }
+	| _LPAREN expr _RPAREN
 		{ $$.parse = $2.parse; }
 	;
+
 
 /*
  * cases - action elements inside a 'switch'
@@ -303,8 +316,21 @@ listp	: /* empty */
 
 arg	: ARG 
 		{ $$.parse = plist( $1.string ); }
-	| _LBRACKET ARG lol _RBRACKET
-		{ $$.parse = prule( $2.string, $3.parse ); }
+	| _LBRACKET { yymode( SCAN_NORMAL ); } func _RBRACKET
+		{ $$.parse = $3.parse; }
+	;
+
+/*
+ * func - a function call (inside [])
+ * This needs to be split cleanly out of 'rule'
+ */
+
+func	: ARG lol
+		{ $$.parse = prule( $1.string, $2.parse ); }
+	| ON arg ARG lol
+		{ $$.parse = pon( $2.parse, prule( $3.string, $4.parse ) ); }
+	| ON arg RETURN list 
+		{ $$.parse = pon( $2.parse, $4.parse ); }
 	;
 
 

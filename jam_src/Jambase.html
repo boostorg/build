@@ -80,14 +80,30 @@ Jambase Rules
               clean is not a dependency of all, and must be built
               explicitly for targets to be removed.
 </BLOCKQUOTE>
+       <B>FDefines</B> <I>defines</I> ; <BLOCKQUOTE>
+              Expands a list of definitions into a list of compiler
+              (or preprocessor) switches (such as
+               -D<I>symbol</I>=<I>val</I> on Unix)
+              to pass the definitions.
+</BLOCKQUOTE>
        <B>File</B> <I>target</I> : <I>source</I> ;
 <BLOCKQUOTE>
               Copies <I>source</I> into <I>target.</I>
+</BLOCKQUOTE>
+       <B>FIncludes</B> <I>dirs</I> ; <BLOCKQUOTE>
+              Expands a list of directories into a list of compiler
+              (or preprocessor) switches (such as -I<I>dir</I> on Unix)
+              to add the directories to the header inclusion search path.
 </BLOCKQUOTE>
        <B>Fortran</B> <I>obj.o</I> : <I>source.f</I> ;
 <BLOCKQUOTE>
               Compile the Fortran source file  <I>source.f.</I>   Called
               by the Object rule.
+</BLOCKQUOTE>
+       <B>FQuote</B> <I>files</I> ; <BLOCKQUOTE>
+              Returns each of <I>files</I> suitably quoted so as to hide shell
+              metacharacters (such as whitespace and filename matching wildcards)
+              from the shell.
 </BLOCKQUOTE>
 <P>
 	<B>GenFile</B> <I>target</I> : <I>image</I> <I>sources</I> ;
@@ -221,6 +237,10 @@ Jambase Rules
 	      value  of $(CCFLAGS) or $(C++FLAGS) when compiling <I>source.</I>
 	      Any file  suffix on <I>source</I> is ignored.
 </BLOCKQUOTE>
+       <B>ObjectDefines</B> <I>object</I> : <I>defines</I> ; <BLOCKQUOTE>
+              Adds preprocessor symbol definitions to the (gristed)
+              target-specific $(CCDEFS) for the <I>object</i>.
+</BLOCKQUOTE>              	      
        <B>ObjectHdrs</B> <I>source</I> : <I>dirs</I> ; <BLOCKQUOTE>
 	      Add  <I>dirs</I>  to  the source-specific value of
 	      $(HDRS) when scanning and compiling <I>source.</I>
@@ -265,10 +285,11 @@ Jambase Rules
 	Adds <I>flags</I> to the compiler flags for source files
 	in SubDir's directory.
 </BLOCKQUOTE>
-	<B>SubDirHdrs</B> <I>paths</I> ;
+	<B>SubDirHdrs</B> <I>d1 ... dn</I> ;
 <BLOCKQUOTE>
-	Adds <I>paths</I> to the header search paths for source files
-	in SubDir's directory.
+	Adds the path <I>d1/.../dn/</I> to the header search paths for
+	source files in SubDir's directory. <I>d1</I> through <I>dn</I>
+	are elements of a directory path.
 </BLOCKQUOTE>
 	<B>SubInclude</B> <I>VAR d1 ... dn</I> ;
 <BLOCKQUOTE>
@@ -464,6 +485,17 @@ Jambase Variables
 
 <BLOCKQUOTE>
 	      On Macintosh, the root of the Code Warrior Pro 5 directory.
+</BLOCKQUOTE>
+
+       DEFINES
+
+<BLOCKQUOTE>
+	      Preprocessor symbol definitions for Cc and C++ rule targets.
+	      The Cc and C++ rules set target-specific $(CCDEFS)
+	      values on their targets, based on $(DEFINES). (The
+	      "indirection" here is required to support compilers,
+	      like VMS, with baroque command line syntax for
+	      setting symbols).
 </BLOCKQUOTE>
 
        DOT
@@ -866,16 +898,28 @@ Jambase Variables
               The yacc(1) command flags.
 </BLOCKQUOTE>
 
+       YACCGEN
+
+<BLOCKQUOTE>
+              The suffix used on generated yacc(1) output.
+</BLOCKQUOTE>
+
 <P>
 <HR>
 <A HREF="#TOP">Back to top.</A>
 <P>
-	Copyright 1997, 2000 Perforce Software, Inc.
+	Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
 	<BR>
 	Comments to <A HREF="mailto:info@perforce.com">info@perforce.com</A>
 	<BR>
 	Last updated: Dec 31, 2000
 	<BR>
+<<<<<<< variant A
 	$Id$
+>>>>>>> variant B
+	$Id$
+####### Ancestor
+	$Id$
+======= end
 </BODY>
 </HTML>

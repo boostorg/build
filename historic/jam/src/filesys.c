@@ -1,10 +1,10 @@
 # include "jam.h"
-# include "filesys.h"
+# include "pathsys.h"
 # include "strings.h"
 
 void
 file_build1(
-    FILENAME *f,
+    PATHNAME *f,
     string* file)
 {
     if( DEBUG_SEARCH )

@@ -1,5 +1,6 @@
 	{ "!", _BANG },
 	{ "!=", _BANG_EQUALS },
+	{ "&", _AMPER },
 	{ "&&", _AMPERAMPER },
 	{ "(", _LPAREN },
 	{ ")", _RPAREN },
@@ -37,5 +38,6 @@
 	{ "updated", UPDATED },
 	{ "while", WHILE },
 	{ "{", _LBRACE },
+	{ "|", _BAR },
 	{ "||", _BARBAR },
 	{ "}", _RBRACE },

@@ -9,7 +9,7 @@ The complete and detailed list of changes is available at:
 Jam/MR (aka "jam - make(1) redux") 
 
     /+\
-    +\	Copyright 1993, 2000 Christopher Seiwald.
+    +\	Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
     \+/
 
     This is Release 2.3 of Jam/MR, a make-like program.
@@ -53,13 +53,11 @@ FEATURES
 
 INFORMATION GUIDE
 
-    Jam.html		jam command usage
+    Jam.html		jam and language reference.
 
     Jambase.html	Reference for the Jambase boilerplate file.
 
     Jamfile.html	Easy reading on creating a Jamfile and using jam.
-
-    Jamlang.html	The Jam language description.
 
     RELNOTES		Release 2.3 release notes.
 

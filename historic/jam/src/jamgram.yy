@@ -45,9 +45,12 @@
 
 %token ARG STRING
 
-%left `||`
-%left `&&`
+%left `||` `|`
+%left `&&` `&`
+%left `=` `!=` `in`
+%left `<` `<=` `>` `>=`
 %left `!`
+
 
 %{
 #include "jam.h"
@@ -63,6 +66,8 @@
 # define S0 (char *)0
 
 # define pappend( l,r )    	parse_make( compile_append,l,r,P0,S0,S0,0 )
+# define peval( c,l,r )	parse_make( compile_eval,l,r,P0,S0,S0,c )
+# define pshortcircuiteval( c,l,r )	parse_make( compile_eval,l,P0,r,S0,S0,c )
 # define pfor( s,l,r,x )    	parse_make( compile_foreach,l,r,P0,s,S0,x )
 # define pif( l,r,t )	  	parse_make( compile_if,l,r,t,S0,S0,0 )
 # define pwhile( l,r )	  	parse_make( compile_while,l,r,P0,S0,S0,0 )
@@ -71,6 +76,7 @@
 # define plocal( l,r,t )  	parse_make( compile_local,l,r,t,S0,S0,0 )
 # define pmodule( l,r )	  	parse_make( compile_module,l,r,P0,S0,S0,0 )
 # define pnull()	  	parse_make( compile_null,P0,P0,P0,S0,S0,0 )
+# define pon( l,r )	  	parse_make( compile_on,l,r,P0,S0,S0,0 )
 # define prule( s,p )     	parse_make( compile_rule,p,P0,P0,s,S0,0 )
 # define prules( l,r )	  	parse_make( compile_rules,l,r,P0,S0,S0,0 )
 # define pset( l,r,a )          parse_make( compile_set,l,r,P0,S0,S0,a )
@@ -81,7 +87,6 @@
 # define pswitch( l,r )   	parse_make( compile_switch,l,r,P0,S0,S0,0 )
 
 # define pnode( l,r )    	parse_make( F0,l,r,P0,S0,S0,0 )
-# define pcnode( c,l,r )	parse_make( F0,l,r,P0,S0,S0,c )
 # define psnode( s,l )     	parse_make( F0,l,P0,P0,s,S0,0 )
 
 %}
@@ -155,16 +160,18 @@ rule	: `{` block `}`
 		{ $$.parse = pfor( $3.string, $5.parse, $7.parse, $2.number ); }
 	| `switch` list `{` cases `}`
 		{ $$.parse = pswitch( $2.parse, $4.parse ); }
-	| `if` cond `{` block `}` 
+	| `if` expr `{` block `}` 
 		{ $$.parse = pif( $2.parse, $4.parse, pnull() ); }
 	| `module` list `{` block `}` 
 		{ $$.parse = pmodule( $2.parse, $4.parse ); }
-	| `while` cond `{` block `}` 
+	| `while` expr `{` block `}` 
 		{ $$.parse = pwhile( $2.parse, $4.parse ); }
-	| `if` cond `{` block `}` `else` rule
+	| `if` expr `{` block `}` `else` rule
 		{ $$.parse = pif( $2.parse, $4.parse, $7.parse ); }
-        | local_opt `rule` ARG arglist_opt rule
+     | local_opt `rule` ARG arglist_opt rule
 		{ $$.parse = psetc( $3.string, $5.parse, $4.parse, $1.number ); }
+	| `on` arg rule
+		{ $$.parse = pon( $2.parse, $3.parse ); }
 	| `actions` eflags ARG bindlist `{`
 		{ yymode( SCAN_STRING ); }
 	  STRING 
@@ -188,34 +195,38 @@ assign	: `=`
 	;
 
 /*
- * cond - a conditional for 'if'
+ * expr - an expression for if
  */
-
-cond	: arg 
-		{ $$.parse = pcnode( COND_EXISTS, $1.parse, pnull() ); }
+expr	: arg 
+		{ $$.parse = peval( EXPR_EXISTS, $1.parse, pnull() ); }
 	| arg `=` arg 
-		{ $$.parse = pcnode( COND_EQUALS, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_EQUALS, $1.parse, $3.parse ); }
 	| arg `!=` arg
-		{ $$.parse = pcnode( COND_NOTEQ, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_NOTEQ, $1.parse, $3.parse ); }
 	| arg `<` arg
-		{ $$.parse = pcnode( COND_LESS, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_LESS, $1.parse, $3.parse ); }
 	| arg `<=` arg 
-		{ $$.parse = pcnode( COND_LESSEQ, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_LESSEQ, $1.parse, $3.parse ); }
 	| arg `>` arg 
-		{ $$.parse = pcnode( COND_MORE, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_MORE, $1.parse, $3.parse ); }
 	| arg `>=` arg 
-		{ $$.parse = pcnode( COND_MOREEQ, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_MOREEQ, $1.parse, $3.parse ); }
+	| expr `&` expr 
+		{ $$.parse = peval( EXPR_AND, $1.parse, $3.parse ); }
+	| expr `&&` expr 
+		{ $$.parse = pshortcircuiteval( EXPR_AND, $1.parse, $3.parse ); }
+	| expr `|` expr
+		{ $$.parse = peval( EXPR_OR, $1.parse, $3.parse ); }
+	| expr `||` expr
+		{ $$.parse = pshortcircuiteval( EXPR_OR, $1.parse, $3.parse ); }
 	| arg `in` list
-		{ $$.parse = pcnode( COND_IN, $1.parse, $3.parse ); }
-	| `!` cond
-		{ $$.parse = pcnode( COND_NOT, $2.parse, P0 ); }
-	| cond `&&` cond 
-		{ $$.parse = pcnode( COND_AND, $1.parse, $3.parse ); }
-	| cond `||` cond
-		{ $$.parse = pcnode( COND_OR, $1.parse, $3.parse ); }
-	| `(` cond `)`
+		{ $$.parse = peval( EXPR_IN, $1.parse, $3.parse ); }
+	| `!` expr
+		{ $$.parse = peval( EXPR_NOT, $2.parse, pnull() ); }
+	| `(` expr `)`
 		{ $$.parse = $2.parse; }
 	;
+
 
 /*
  * cases - action elements inside a 'switch'
@@ -262,8 +273,21 @@ listp	: /* empty */
 
 arg	: ARG 
 		{ $$.parse = plist( $1.string ); }
-	| `[` ARG lol `]`
-		{ $$.parse = prule( $2.string, $3.parse ); }
+	| `[` { yymode( SCAN_NORMAL ); } func `]`
+		{ $$.parse = $3.parse; }
+	;
+
+/*
+ * func - a function call (inside [])
+ * This needs to be split cleanly out of 'rule'
+ */
+
+func	: ARG lol
+		{ $$.parse = prule( $1.string, $2.parse ); }
+	| `on` arg ARG lol
+		{ $$.parse = pon( $2.parse, prule( $3.string, $4.parse ) ); }
+	| `on` arg `return` list 
+		{ $$.parse = pon( $2.parse, $4.parse ); }
 	;
 
 
