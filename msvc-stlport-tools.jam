@@ -100,15 +100,22 @@ flags msvc-stlport STDHDRS : [ join [ get-stlport-root ] $(SLASH)stlport ] ;
 flags msvc-stlport VC_STDLIB_PATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)lib ] ;
 flags msvc-stlport STDLIBPATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)lib ] ;
 
-# special flags for STLport 4.x
 
 flags msvc-stlport STLPORT_VERSION <stlport-version> ;
 
-flags msvc-stlport DEFINES <stlport-iostream>off : __STL_NO_SGI_IOSTREAMS=1 ;
-flags msvc-stlport DEFINES <stlport-cstd-namespace>std : _STLP_DO_IMPORT_CSTD_FUNCTIONS=1 ;
-flags msvc-stlport UNDEFS <stlport-iostream>on : __STL_NO_SGI_IOSTREAMS ;
+# special flags for STLport 4.0
+{
+    local stl = _STLP ;
+    if <stlport-version>4.0 in $(gBUILD_PROPERTIES)
+    {
+        stl = __STL ;
+    }
 
-flags msvc-stlport DEFINES <runtime-build>debug : __STL_DEBUG=1 __STL_DEBUG_UNINITIALIZED=1 ;
+    flags msvc-stlport DEFINES <stlport-iostream>off : $(stl)_NO_SGI_IOSTREAMS=1 ;
+    flags msvc-stlport DEFINES <stlport-cstd-namespace>std : $(stl)_DO_IMPORT_CSTD_FUNCTIONS=1 ;
+    flags msvc-stlport UNDEFS <stlport-iostream>on : $(stl)_NO_SGI_IOSTREAMS ;
+    flags msvc-stlport DEFINES <runtime-build>debug : $(stl)_DEBUG=1 $(stl)_DEBUG_UNINITIALIZED=1 ;
+}
 
 # Append the old values for STDHDRS and STDLIBPATH
 
