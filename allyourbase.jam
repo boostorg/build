@@ -1773,9 +1773,17 @@ rule join-path
     }
     else
     {
-        _s = $(<[1]) ; 
+        _s = $(<[1]) ;
+        _r = $(<[2-]) ;
 
-        for _i in $(<[2-])
+        # Jam doesn't handle the root directory properly
+        if $(_s) in / $(SLASH)
+        {
+            _s = $(_s)$(_r[1]) ;
+            _r = $(_r[2-]) ;
+        }
+        
+        for _i in $(_r)
         {
             _s = $(_i:R=$(_s)) ;
         }
