@@ -286,17 +286,17 @@ DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
     DWORD pos=0, prev_pos=0;
     DWORD len=_tcslen(lpszShortPath);
 
-    // Is the string valid?
+    /* Is the string valid? */
     if (!lpszShortPath) {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;  
     }
 
-    // Is the path valid?
+    /* Is the path valid? */
     if (GetFileAttributes(lpszShortPath)==INVALID_FILE_ATTRIBUTES)
         return 0;
 
-    // Convert "/" to "\"
+    /* Convert "/" to "\" */
     for (i=0;i<len;++i) {
         if (lpszShortPath[i]==_T('/')) 
             path[i]=_T('\\');
@@ -304,7 +304,7 @@ DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
             path[i]=lpszShortPath[i];
     }
 
-    // UNC path?
+    /* UNC path? */
     if (path[0]==_T('\\') && path[1]==_T('\\')) {
         pos=2;
         for (i=0;i<2;++i) {
@@ -313,7 +313,7 @@ DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
             ++pos;
         }
         _tcsncpy(ret,path,pos-1);
-    } // Drive letter?
+    } /* Drive letter? */
     else if (path[1]==_T(':')) {
         if (path[2]==_T('\\'))
             pos=3;
@@ -325,7 +325,7 @@ DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
         _tcsncpy(ret,path,2);
     }
     
-    // Expand the path for each subpath, and strip trailing backslashes
+    /* Expand the path for each subpath, and strip trailing backslashes */
     for (prev_pos = pos-1;pos<=len;++pos) {
         if (path[pos]==_T('\\') || (path[pos]==_T('\0') &&
                                     path[pos-1]!=_T('\\'))) {
@@ -335,20 +335,20 @@ DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
             char* new_element;
             path[pos]=_T('\0');
 
-            // the path[prev_pos+1]... path[pos] range is the part of
-            // path we're handling right now. We need to find long
-            // name for that element and add it.
+            /* the path[prev_pos+1]... path[pos] range is the part of
+               path we're handling right now. We need to find long
+               name for that element and add it. */
             new_element = path + prev_pos + 1;
 
-            // First add separator, but only if there's something in result already.
+            /* First add separator, but only if there's something in result already. */
             if (ret[0] != _T('\0'))
             {
                 _tcscat(ret,_T("\\"));
             }
 
-            // If it's ".." element, we need to append it, not
-            // the name in parent that FindFirstFile will return.
-            // Same goes for "."
+            /* If it's ".." element, we need to append it, not
+               the name in parent that FindFirstFile will return.
+               Same goes for "." */
             
             if (new_element[0] == _T('.') && new_element[1] == _T('\0') ||
                 new_element[0] == _T('.') && new_element[1] == _T('.') 
