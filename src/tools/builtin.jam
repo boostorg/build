@@ -645,7 +645,14 @@ class linking-generator : generator
             {
                 for local t in $(result)
                 {
-                    $(t).depends $(libs:G=) ;
+                    # The 'if' statement handles the case where
+                    # one of the targets created by <library> is not
+                    # consumed and is part of result. DLLs on windows
+                    # are an example.
+                    if $(libs:G=) != $(t)
+                    {                        
+                        $(t).depends $(libs:G=) ;
+                    }                    
                 }
             }            
         }
