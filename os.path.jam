@@ -122,10 +122,19 @@ rule reverse ( path )
 }
 
 #
-#    Contanenates two paths together. The second one cannot be rooted.
+# Auxillary rule: does all the semantic of 'join', except for error cheching.
+# The error checking is separated because this rule is recursive, and I don't
+# like the idea of checking the same input over and over.
 #
-rule join ( path1 path2 )
+local rule join-imp ( elements + )
 {
+    local path1 = $(elements[1]) ;
+    local path2 = $(elements[2]) ;
+
+    if $(elements[3-])
+    {
+        path2 = [ join $(elements[2-]) ] ;
+    }
     if $(path1) = .
     {
         return $(path2) ;
@@ -133,6 +142,10 @@ rule join ( path1 path2 )
     else if $(path1) = /
     {
         return /$(path2) ;
+    }
+    else if $(path2) = .
+    {
+    return $(path1) ;
     }
     else
     {
@@ -163,9 +176,26 @@ rule join ( path1 path2 )
 }
 
 #
+#    Contanenates the passed path elements. Generates an error if
+#    any element other than the first one is rooted.
+#
+rule join ( elements + )
+{
+    for local e in $(elements[2-])
+    {
+        if [ is-rooted $(e) ]
+        {
+            error only first element may be rooted ;
+        }
+    }
+    return [ join-imp $(elements) ] ;
+}
+
+
+#
 #    If 'path' is relative, it is rooted at 'root'. Otherwise, it's unchanged.
 #
-rule root-relative-path ( path root )
+rule root ( path root )
 {
     if [ is-rooted $(path) ] {
         return $(path) ;
@@ -200,7 +230,7 @@ rule all-parents ( path : upper_limit ? : cwd ? )
     cwd ?= [ pwd ] ;
     local rpath ;
     if ! [ is-rooted $(path) ] {
-        rpath = [ root-relative-path $(path) $(cwd) ] ;
+        rpath = [ root $(path) $(cwd) ] ;
     } else {
         rpath = $(path) ;
     }
@@ -209,7 +239,7 @@ rule all-parents ( path : upper_limit ? : cwd ? )
         upper_limit = / ;
     } else {
         if ! [ is-rooted $(upper_limit) ] {
-            upper_limit = [ root-relative-path $(upper_limit) $(cwd) ] ;
+            upper_limit = [ root $(upper_limit) $(cwd) ] ;
         }
     }
 
@@ -276,6 +306,7 @@ rule __test__ ( ) {
 
 
     import assert ;
+    import errors : try catch ;
 
     assert.true is-rooted "/" ;
     assert.true is-rooted "/foo" ;
@@ -316,6 +347,17 @@ rule __test__ ( ) {
     assert.result ".." : join "foo" "../.." ;
     assert.result "../.." : join "../foo" "../.." ;
     assert.result "/foo" : join "/bar" "../foo" ;
+    assert.result "foo/giz" : join "foo/giz" "." ;
+
+    assert.result "foo/bar/giz" : join "foo" "bar" "giz" ;
+    assert.result "giz" : join "foo" ".." "giz" ;
+    assert.result "foo/giz" : join "foo" "." "giz" ;
+
+    try ;
+    {
+        join "a" "/b" ;
+    }
+    catch only first element may be rooted ;
 
     local CWD = "/home/ghost/build" ;
     assert.result . .. ../.. ../../..  : all-parents "Jamfile" : "" : $(CWD) ;
