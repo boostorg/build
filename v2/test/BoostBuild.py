@@ -102,13 +102,25 @@ class Tester(TestCmd.TestCmd):
 
         program_list = []
 
+        # Find there jam_src is located.
         # try for the debug version if it's lying around
-        if os.path.exists(
-            os.path.join('../..', 'jam_src', jam_build_dir + '.debug')
-        ):
-            jam_build_dir += '.debug'
+
+        dirs = [os.path.join('../../jam_src', jam_build_dir + '.debug'),
+                os.path.join('../../jam_src', jam_build_dir),
+                os.path.join('../jam_src', jam_build_dir + '.debug'),
+                os.path.join('../jam_src', jam_build_dir),
+                ]
+
+        for d in dirs:
+            if os.path.exists(d):
+                jam_build_dir = d
+                break
+        else:
+            print "Cannot find built Boost.Jam"
+            exit(1)                                    
+        
             
-        program_list.append(os.path.join('../..', 'jam_src', jam_build_dir, executable))
+        program_list.append(os.path.join(jam_build_dir, executable))
         program_list.append('-sBOOST_BUILD_PATH=' + boost_build_path)
         if verbosity:
             program_list += verbosity
