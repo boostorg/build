@@ -907,17 +907,10 @@ local rule construct-without-caching (
 # targets.    
 rule construct ( project name ? : target-type multiple ? : property-set * : sources * )
 {
-    local usage-requirements ;
     if (.construct-stack)
     {
         ensure-type $(sources) ;
-        for local e in $(sources)
-        {
-            usage-requirements += [ $(e).usage-requirements ] ;
-        }               
     }
-    property-set = [ $(property-set).add 
-      [ property-set.create $(usage-requirements) ] ] ;
     
     .construct-stack += 1 ;
 
@@ -950,17 +943,6 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
 
     if ! $(.construct-stack) # This is first invocation in stack
     {
-        # Make roots of dependency graph depend on all 'dependency' features.
-        local dp = [ $(property-set).dependency ] ;
-                               
-        if $(dp)
-        {      
-            for local t in $(result)
-            {
-                $(t).depends $(dp:G=) ;
-            }
-        }
-                                
         local result2 ;
         for local t in $(result)
         {

@@ -865,20 +865,24 @@ local rule clone-action-template ( action from cloned-from : new-source )
 
 local rule subvariant-dg ( main-target # The instance of main-target class
     : property-set                     # Properties requested for this target
+    : actual-properties                # Actual used properties
     : virtual-targets * )
 {
     self.main-target = $(main-target) ;
     self.properties = $(property-set) ;
+    self.actual-properties = $(actual-properties) ;
     self.virtual-targets = $(virtual-targets) ;
 
     # Pre-compose the list of other dependency graphs, on which this one
     # depends
+    local deps = [ $(actual-properties).dependency ] ;
+    for local d in $(deps)
+    {
+        self.other-dg += [ $(d:G=).dg ] ;
+    }
+    
     for local t in $(virtual-targets)
     {
-        for local d in [ $(t).dependencies ]
-        {
-            self.other-dg += [ $(d).dg ] ;
-        }
         local a = [ $(t).action ] ;
         if $(a)
         {
@@ -891,8 +895,9 @@ local rule subvariant-dg ( main-target # The instance of main-target class
             }
         }
     }
+        
     self.other-dg = [ sequence.unique $(self.other-dg) ] ;
-   
+               
     rule main-target ( )
     {
         return $(self.main-target) ;
