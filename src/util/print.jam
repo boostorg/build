@@ -45,7 +45,7 @@ rule section (
 {
     if $(output-type) = plain
     {
-        lines $(name): ;
+        lines [ split-at-words $(name): ] ;
         lines ;
         while $(description)
         {
