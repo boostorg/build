@@ -13,6 +13,7 @@ import "class" : new ;
 import generators ;
 import type ;
 import set ;
+import order ;
 
 class unix-linking-generator : linking-generator
 {
