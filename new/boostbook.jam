@@ -9,6 +9,7 @@
 
 import class : class new ;
 import common ;
+import errors ;
 import targets ;
 import feature ;
 import generators ;
@@ -39,8 +40,6 @@ generators.register-standard boostbook.docbook-to-onehtml : DOCBOOK : HTML ;
 generators.register-standard boostbook.docbook-to-htmldir : DOCBOOK : HTMLDIR ;
 generators.register-standard boostbook.docbook-to-manpages : DOCBOOK : MANPAGES ;
 generators.register-standard boostbook.docbook-to-fo : DOCBOOK : FO ;
-generators.register-standard boostbook.fo-to-print : FO : PDF ;
-generators.register-standard boostbook.fo-to-print : FO : PS ;
 
 # Initialize BoostBook support. The parameters are:
 #   docbook-xsl-dir: The DocBook XSL stylesheet directory. If not provided,
@@ -144,18 +143,6 @@ rule docbook-to-manpages ( target : source : properties * )
 rule docbook-to-fo ( target : source : properties * )
 {
   xslt $(target) : $(source) "$(.boostbook-xsl-dir)/fo.xsl" : $(properties) ;
-}
-
-rule fo-to-print ( target : source : properties * )
-{
-  JAVA_HOME on $(target) = [ modules.peek : JAVA_HOME ] ;
-  FOP_DIR on $(target) = [ modules.peek : FOP_DIR ] ;
-  fop $(target) : $(source) ;
-}
-
-actions fop
-{
-  JAVA_HOME=$(JAVA_HOME) $(FOP_DIR)/fop.sh $(>) $(<)
 }
 
 rule xml-catalog-action ( target : property-set ? : catalog-entries * )
@@ -297,8 +284,16 @@ rule boostbook-target-class ( name : project : sources * : requirements *
       {
         local target = [ generators.construct $(self.project)
                          : $(type) : $(property-set) : $(i) ] ;
-        $(target).depends $(catalog) ;
-        targets += $(target) ;
+
+        if ! $(target)
+        {
+          errors.error "Cannot build documentation type '$(format)'" ;
+        }
+        else 
+        {
+          $(target).depends $(catalog) ;
+          targets += $(target) ;
+        }
       }
     }
 
