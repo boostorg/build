@@ -446,6 +446,8 @@ class TestCmd:
         elif run < 0:
             run = len(self._stderr) + run
         run = run - 1
+        if (run < 0):
+            return ''
         return self._stderr[run]
 
     def stdout(self, run = None):
@@ -460,6 +462,8 @@ class TestCmd:
         elif run < 0:
             run = len(self._stdout) + run
         run = run - 1
+        if (run < 0):
+            return ''
         return self._stdout[run]
 
     def subdir(self, *subdirs):
