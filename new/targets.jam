@@ -496,59 +496,80 @@ rule basic-target ( name : project
                   [ $(property-set).raw ] ] ] ;
         }        
     }
-        
-    # Generates sources. Calls 'construct'
-    # This method should not be overriden.
+
+    # Determine and return properties which should be used for
+    # building when given 'build-request'. This includes refining
+    # build request with requirements, evaluating conditionals,
+    # generating depenendecies and running actions for features.
+    local rule final-properties ( build-request )
+    {
+        local rproperties = [ $(build-request).refine $(self.requirements) ] ;
+            
+        if $(rproperties[1]) != "@error"                    
+        {
+            # TODO: issue a warning when requirements change properties, but
+            # link-compatibility is still not broken.
+            
+            # Generate dependency requirements. Here, we generate only 
+            # denepdency requirements specified for this targets. Dependency
+            # requirements may also code from dependencies. However, when they
+            # come from dependencies, the value is not target id, but rather
+            # virtual target names, so generators.construct can use them.
+            
+            rproperties = [ $(rproperties).evaluate-conditionals ] ;
+            
+            rproperties = 
+              [ targets.generate-dependencies $(rproperties) : $(self.project) 
+                : $(rproperties) ] ;
+            
+            # TODO: this line might cause target's properties to be
+            # unqual to project's reference properties. As the
+            # result, we create per-target bin directory while
+            # it's not really needed.
+            
+            rproperties = [ $(rproperties).run-actions ] ;                
+        }
+        return $(rproperties) ;
+    }
+
+    # Generate all sources for this target
+    local rule generate-sources ( property-set )
+    {      
+        local source-targets ;
+        for local s in $(self.sources)
+        {
+            # Try treating this source as reference to main target
+            local more-targets = 
+              [ targets.generate $(s) : $(self.project) 
+                : $(property-set) ] ;
+            if $(more-targets)
+            {
+                source-targets += $(more-targets) ;
+            }
+            else 
+            {
+                # Just a source file
+                source-targets += 
+                  [ virtual-target.from-file $(s) : $(self.project) ] ;                            
+            }
+        } 
+        return $(source-targets) ;
+    }
+
+    # Determines final build properties, generates sources,
+    # and calls 'construct'. This method should not be
+    # overridden.
     rule generate ( property-set )
     {
         if ! $(self.generated.$(property-set)) 
-        {
-            local rproperties = [ $(property-set).refine $(self.requirements) ] ;
-            
+        { 
+            local rproperties = [ final-properties $(property-set) ] ;
             if $(rproperties[1]) != "@error"                    
-            {
-                # TODO: issue a warning when requirements change properties, but
-                # link-compatibility is still not broken.
-                
-                # Generate dependency requirements. Here, we generate only 
-                # denepdency requirements specified for this targets. Dependency
-                # requirements may also code from dependencies. However, when they
-                # come from dependencies, the value is not target id, but rather
-                # virtual target names, so generators.construct can use them.
-                
-                rproperties = [ $(rproperties).evaluate-conditionals ] ;
-                
-                local xproperties = 
-                  [ targets.generate-dependencies $(rproperties) : $(self.project) 
-                    : $(rproperties) ] ;
-                
-                
-                local source-targets ;
-                for local s in $(self.sources)
-                {
-                    # Try treating this source as reference to main target
-                    local more-targets = 
-                      [ targets.generate $(s) : $(self.project) : $(property-set) ] ;
-                    if $(more-targets)
-                    {
-                        source-targets += $(more-targets) ;
-                    }
-                    else 
-                    {
-                        # Just a source file
-                        source-targets += [ virtual-target.from-file $(s) : $(self.project) ] ;                            
-                    }
-                } 
-                
-                # TODO: this line might cause target's properties to be
-                # unqual to project's reference properties. As the
-                # result, we create per-target bin directory while
-                # it's not really needed.
-                
-                xproperties = [ $(xproperties).run-actions ] ;
+            {                                
+                local source-targets = [ generate-sources $(rproperties) ] ;                
                 
                 self.generated.$(property-set) = 
-                  [ construct $(source-targets) : $(xproperties) ] ;                             
+                  [ construct $(source-targets) : $(rproperties) ] ;                             
                 
                 # Apply use requirement of this target to all generated
                 # virtual targets.
@@ -577,12 +598,6 @@ rule basic-target ( name : project
     rule construct ( source-targets * : properties * )
     {
         errors.error "method should be defined in derived classes" ;
-    }
-
-    # Returns the requirements for this target
-    rule requirements ( )
-    {
-        return $(self.requirements) ;
     }
 }
 
