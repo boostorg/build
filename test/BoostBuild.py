@@ -288,6 +288,7 @@ class Tester(TestCmd.TestCmd):
     def fail_test(self, condition, *args):
 	# If test failed, print the difference
         if condition and hasattr(self, 'difference'):
+            print '-------- all changes caused by last build command ----------'
             self.difference.pprint()
         TestCmd.TestCmd.fail_test(self, condition, *args)
         
@@ -388,7 +389,8 @@ class Tester(TestCmd.TestCmd):
             self.ignore('*.rsp')
             
         if not self.unexpected_difference.empty():
-           print "Expected nothing more, but got the following:"
+           print 'FAILED'
+           print '------- The following changes were unexpected ------- '
            self.unexpected_difference.pprint()
            self.fail_test(1)       
 
