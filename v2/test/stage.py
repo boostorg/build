@@ -89,4 +89,25 @@ t.run_build_system(subdir="d")
 t.expect_addition("dist/a.exe")
 
 
+# Check that 'stage' does not incorrectly reset target suffixes.
+t.write("a.cpp", """ 
+int main() {} 
+""")
+
+t.write("project-root.jam", """ 
+import type ;
+type.register MYEXE : : EXE : main ;
+type.set-generated-target-suffix MYEXE : <optimization>off : myexe ; 
+""")
+
+# Since <optimization>off is in properties when 'a' is built, and staged,
+# it's suffix should be "myexe".
+t.write("Jamfile", """ 
+stage dist : a ;
+myexe a : a.cpp ; 
+""")
+
+t.run_build_system()
+t.expect_addition("dist/a.myexe")
+
 t.cleanup()
