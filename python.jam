@@ -145,23 +145,26 @@ rule select-python-includes ( toolset variant : properties * )
     return $(properties) ;
 }
 
-PYTHON_PROPERTIES
-  += 
-  <gcc><*><find-library>util
+PYTHON_PROPERTIES += 
+        <gcc><*><find-library>util
         <include>$(BOOST_ROOT)
           select-python-library
-          # These two compilers pick up implicit directions from #pragmas
-          # to look for those libraries.
-          <mingw><*><library-path>$(PYTHON_LIB_PATH)
-            <msvc><*><library-path>$(PYTHON_LIB_PATH)
-              <intel-win32><*><library-path>$(PYTHON_LIB_PATH)
-              ;
+          ;
 
+if $(NT)
+{
+    # Most Windows compilers pick up implicit directions from #pragmas
+    # to look for those libraries.
+    PYTHON_PROPERTIES += <library-path>$(PYTHON_LIB_PATH) ;
+}
+
+# Set gcc-specific release build properties
 {
     local gcc-release-properties
       = <optimization>speed <cxxflags>-fomit-frame-pointer
       <inlining>on <cxxflags>-foptimize-sibling-calls
       ;
+    
     PYTHON_PROPERTIES += <gcc><release>$(gcc-release-properties) ;
 }
 
