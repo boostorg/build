@@ -101,19 +101,185 @@ The verbatim files will be automatically converted into C++
 and linked it.
   </para>
 
-  <para>The complete code is available in <ulink url=
-  "../../example/customization">example/customization</ulink>
-  directory.</para>
+      <para>In the subsequent sections, we will extend this example, and review
+        all the mechanisms in detail. The complete code is available in <ulink url=
+          "../../example/customization">example/customization</ulink>
+        directory.
+      </para>
 
   </section>
   <section id="bbv2.extending.targets">
     <title>Target types</title>
-    <para/>
+      <para>The first thing we did in the <link
+          linkend="bbv2.extender.intro">intruduction</link> was declaring a
+      new target type:
+<programlisting>
+import type ;
+type.register VERBATIM : verbatim ;
+</programlisting>
+        The type is the most important property of a target. Boost.Build can
+        automatically generate necessary build actions only because you
+        specify the desired type (using the different main target rules), and
+        because Boost.Build can guess the type of sources from their
+        extensions.        
+      </para>
+
+      <para>The first two parameters for the <code>type.register</code> rule
+        are the name of new type and the list of extensions associated with
+        it. A file with an extension from the list will have the given target
+        type. In the case where a target of the declared type is generated
+        from other sources, the first specified extension will be used. This
+        behaviour can be changed using the
+        <code>type.set-generated-target-suffix</code> rule.
+      </para>
+
+      <para>
+        Something about 'main' types.
+      </para>
+
+      <para>Something about base types.
+      </para>
+
+      <section id="bbv2.extending.scanners">
+        <title>Scanners</title>
+        <para>
+          Sometimes, a file can refer to other files via some include
+          mechanism. To make Boost.Build track dependencies to the included
+          files, you need to provide a scanner. The primary limitation is that
+          only one scanner can be assigned to a target type.
+        </para>
+
+        <para>First, we need to declare a new class for the scanner:
+<programlisting>
+class verbatim-scanner : common-scanner
+{
+    rule pattern ( )
+    {
+        return "//###include[ ]*\"([^\"]*)\"" ;
+    }
+}
+</programlisting>         
+          All the complex logic is in the <code>common-scanner</code> class,
+          and you only need to override the method which returns the regular
+          expression to be used for scanning. The paranthethis in the regular
+          expression indicate which part of the string is the name of the
+          included file. 
+        </para>
+
+        <para>After that, we need to register our scanner class:
+<programlisting>
+scanner.register verbatim-scanner : include ;
+</programlisting>
+            The value of the second parameter, in this case
+            <code>include</code>, specifies which properties contain the list
+            of paths which should be searched for the included files.
+         </para>
+
+        <para>Finally, we assign the new scaner to the <code>VERBATIM</code>
+        target type:
+<programlisting>
+type.set-scanner VERBATIM : verbatim-scanner ;
+</programlisting>
+          That's enough for scanning include dependencies.
+        </para>
+
+      </section>
+
+
   </section>
   
   <section id="bbv2.extending.tools">
-    <title>Tools</title>
-      <para/>
+    <title>Tools and generators</title>
+      <para>
+        This section will describe how Boost.Build can be extended to support
+        new tools.
+      </para>
+
+      <para>For each additional tool, a Boost.Build object called generator
+        must be created. That object has specific types of targets which it
+        accepts an produces. Using that information, Boost.Build is able
+        to automatically invoke the generator. For example, if you declare a
+        generator which takes a target of the type <literal>D</literal> and
+        produces a target of the type <literal>OBJ</literal>, when placing a
+        file with extention <literal>.d</literal> in a list of sources will
+        cause Boost.Build to invoke your generator, and then to link the
+        resulting object file into an application. (Of course, this requires
+        that you specify that the <literal>.d</literal> extension corresponds
+        to the <literal>D</literal> type.)
+      </para>
+
+      <para>Each generator should be an instance of a class derived from the
+        <code>generator</code> class. In the simplest case, you don't need to
+        create a derived class, but simply create an instance of the
+        <code>generator</code> class. Let's review the example we've seen in the
+        <link linkend="bbv2.extender.intro">introduction</link>.
+<programlisting>
+import generators ;
+generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
+actions inline-file
+{
+    "./inline-file.py" $(&lt;) $(&gt;)
+}
+</programlisting>
+      </para>
+
+      <para>We declare a standard generator, specifying its id, the source type
+        and the target type. When invoked, the generator will create a target
+        of type <literal>CPP</literal> which will have the source target of
+        type <literal>VERBATIM</literal> as the only source. But what command
+        will be used to actually generate the file? In bjam, actions are
+        specified using named "actions" blocks and the name of the action
+        block should be specified when creating targets. By convention,
+        generators use the same name of the action block as their own id. So,
+        in above example, the "inline-file" actions block will be use to
+        convert the source into the target.
+      </para>
+
+      <para>
+        There are two primary kinds of generators: standard and composing,
+        which are registered with the
+        <code>generators.register-standard</code> and the
+        <code>generators.register-composing</code> rules, respectively. For
+        example:
+<programlisting>
+generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
+generators.register-composing mex.mex : CPP LIB : MEX ;
+</programlisting>
+        The first generators takes a <emph>single</emph> source of type
+        <code>VERBATIM</code> and produces a result. The second generator
+        takes any number of sources, which can have either the
+        <code>CPP</code> or the <code>LIB</code> type. Composing generators
+        are typically used for generating top-levle target type. For example,
+        the first generator invoked when building an <code>exe</code> target
+        is a composing generator corresponding to the proper linker.
+      </para>
+
+      <para>
+        Often, the command line used when invoking a tool should depend on the
+        properties. The simplest mechanism is the <code>toolset.flags</code>
+        rule. Consider an example:
+<programlisting>
+# Declare a new feature
+import feature : feature ;
+feature verbatim-options : : free ;
+# Cause the value of the 'verbatim-options' feature to be
+# available as 'OPTIONS' variable inside verbatim.inline-file
+import toolset : flags ;
+flags verbatim.inline-file OPTIONS &lt;verbatim-options&gt; ;
+actions inline-file
+{
+    "./inline-file.py" $(OPTIONS) $(&lt;) $(&gt;)
+}
+</programlisting>
+        We first define a new feature. Then, the <code>flags</code> invocation
+        says that whenever verbatin.inline-file action is run, the value of
+        the <code>verbatim-options</code> feature will be added to the
+        <code>OPTIONS</code> variable, an can be used inside the action body.
+        You'd need to consult online help (--help) to find all the features of
+        the <code>toolset.flags</code> rule.
+      </para>
+      
+     
   </section>
   
   <section id="bbv2.extending.rules">
@@ -174,10 +340,6 @@ generators.register-standard obfuscate.file : CPP : OBFUSCATED_CPP ;
 
   </section>
 
-    <section id="bbv2.extending.scanners">
-      <title>Scanners</title>
-      <para/>
-    </section>
   </appendix>
 
 <!--
