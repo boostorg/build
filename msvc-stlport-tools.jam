@@ -84,8 +84,8 @@ rule get-stlport-root
         ECHO ;
         ECHO STLPORT_VERSIONS - Alternate versions of STLport available on this machine. Defaults to \"4.5 4.0\". ;
         ECHO ;
-        ECHO "Note that STLPort iostreams are /not/ in use by default. To enable them, you must place"
-        ECHO "        <stlport-iostream>on in your BUILD variable or in target requirements."
+        ECHO "Note that STLPort iostreams are /not/ in use by default. To enable them, you must place" ;
+        ECHO "        <stlport-iostream>on in your BUILD variable or in target requirements." ;
         EXIT ;
     }
 
