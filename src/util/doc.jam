@@ -964,7 +964,6 @@ rule scan-module (
             module-documented = true ;
         }
     }
-    #> print.output $(module-name).txt ;
     for local action in $(.module<$(target)>.actions)
     {
         local action-rule = [ $(action).front ] ; $(action).pop-front ;
