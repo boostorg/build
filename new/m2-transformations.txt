@@ -31,17 +31,22 @@ EXE <------- OBJ* <-------- foo.cpp
 
 (Transofrmation sequence I need)
 
-EST.EXE <---- OBJ* <----- TARGET.CPP <------ MARKED.CPP <----- foo.cpp
-               ^            
-               |
-EST.DATA, EST.CPP <------ {EST.DATA, EST.POSITION}*     
-                            ^              ^
-                            |              |
-                            |              O---------------------O
-                            |                                    |-- foo.cpp
-                           NM.ASM <-- TARGET.CPP <--- MARKED.CPP-O
-                           
+EST.EXE <---- OBJ* <----------------------------------------- CPP
+               ^
+               |  
+               +--------------------- CPP <---+-------------- ASM
+               |                              |
+               +- CPP <------ STATIC_DATA* <--+
+               |  STATIC_DATA       ^
+               |                    | 
+               |                    |       
+               |                   ASM <--- TCPP <----------  ECPP
+               +--------------------------- CPP  <-+
 
+Note: all STATIC_DATA files produced from sources are linked together
+to create one CPP and one STATIC_DATA file. 
+
+                           
 (MSVC transformation seqeuence, thanks to Markus Schöpflin)
 
 The project consists of a static library (build with cl and not using
