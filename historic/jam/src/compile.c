@@ -843,7 +843,6 @@ evaluate_rule(
     module    *prev_module = frame->module;
     
     LIST*  l = var_expand( L0, rulename, rulename+strlen(rulename), frame->args, 0 );
-    LIST*  more_args = L0;
 
     if ( !l )
     {
@@ -1576,9 +1575,6 @@ debug_compile( int which, char *s, FRAME* frame )
     static int level = 0;
     static char indent[36] = ">>>>|>>>>|>>>>|>>>>|>>>>|>>>>|>>>>|";
 
-    char* file;
-    int line;
-    
     if ( which >= 0 )
     {
       int i;

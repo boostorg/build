@@ -72,7 +72,6 @@ macro_headers( TARGET *t )
     static regexp *re = 0;
     FILE	*f;
     char	buf[ 1024 ];
-    int	i;
     
     if ( DEBUG_HEADER )
         printf( "macro header scan for %s\n", t->name );
