@@ -12,6 +12,7 @@
 # include "rules.h"
 # include "filesys.h"
 # include "newstr.h"
+# include "regexp.h"
 # include "frames.h"
 # include "hash.h"
 # include "strings.h"
@@ -100,6 +101,10 @@ load_builtins()
     duplicate_rule( "Leaves" ,
       bind_builtin( "LEAVES" ,
                     builtin_flags, T_FLAG_LEAVES, 0 ) );
+
+    duplicate_rule( "Match" ,
+      bind_builtin( "MATCH" ,
+                    builtin_match, 0, 0 ) );
 
     duplicate_rule( "NoCare" ,
       bind_builtin( "NOCARE" ,
@@ -305,6 +310,58 @@ builtin_glob(
 	    file_dirscan( l->string, builtin_glob_back, &globbing );
 
 	return globbing.results;
+}
+
+/*
+ * builtin_match() - MATCH rule, regexp matching
+ */
+
+LIST *
+builtin_match(
+	PARSE	*parse,
+	FRAME	*frame )
+{
+	LIST *l = lol_get( frame->args, 0 );
+	LIST *r = lol_get( frame->args, 1 );
+	LIST *result = 0;
+	regexp *re;
+
+	/* No pattern or string?  No results. */
+
+	if( !l || !r )
+	    return L0;
+
+	/* Just use first arg of each list. */
+
+	re = regcomp( l->string );
+
+	if( regexec( re, r->string ) )
+	{
+	    int i, top;
+            string buf[1];
+            string_new(buf);
+
+	    /* Find highest parameter */
+
+	    for( top = NSUBEXP; top-- > 1; )
+		if( re->startp[top] != re->endp[top] )
+		    break;
+
+	    /* And add all parameters up to highest onto list. */
+	    /* Must have parameters to have results! */
+
+	    for( i = 1; i <= top; i++ )
+	    {
+                string_append_range( buf, re->startp[i], re->endp[i] );
+		result = list_new( result, newstr( buf->value ) );
+	    }
+            
+            string_free( buf );
+	}
+
+	free( (char *)re );
+
+	return result;
 }
 
 LIST *

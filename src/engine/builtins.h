@@ -21,6 +21,7 @@ LIST *builtin_exit( PARSE *parse, FRAME *args );
 LIST *builtin_flags( PARSE *parse, FRAME *args );
 LIST *builtin_glob( PARSE *parse, FRAME *args );
 LIST *builtin_subst( PARSE  *parse, FRAME *args );
+LIST *builtin_match( PARSE *parse, FRAME *args );
 LIST *builtin_hdrmacro( PARSE *parse, FRAME *args );
 LIST *builtin_rulenames( PARSE *parse, FRAME *args );
 LIST *builtin_import( PARSE *parse, FRAME *args );
