@@ -10,6 +10,7 @@ import type ;
 import toolset : flags ;
 import errors : error ;
 import feature : feature ;
+import path ;
 import sequence : unique ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]

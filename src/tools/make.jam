@@ -17,6 +17,8 @@ import property-set ;
 rule make-target-class ( name : project : sources * : requirements * 
                          : make-rule + : default-build * )
 {
+    import type regex virtual-target ;
+    
     basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements) 
                           : $(default-build) ;
        
@@ -33,7 +35,6 @@ rule make-target-class ( name : project : sources * : requirements *
         return [ virtual-target.register $(t) ] ;
     }   
 }
-
 class make-target-class : basic-target ;
 
 rule make ( target-name : sources * : generating-rule + : requirements * 

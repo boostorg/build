@@ -11,6 +11,8 @@ import generators : * ;
 import class : class new ;
 import errors ;
 import property ;
+import scanner ;
+import targets ;
 
 # The feature is optional so that it never implicitly added.
 # It's used only for internal purposes, and in all cases we

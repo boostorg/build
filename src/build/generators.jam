@@ -44,7 +44,9 @@ import class : class new is-a ;
 import container : vector ;
 import numbers : range ;
 import utility : str equal ;
-import set ;
+import set sequence ;
+import assert ;
+import virtual-target ;
 
 if "--debug-generators" in [ modules.peek : ARGV ] 
 {    
@@ -113,7 +115,10 @@ rule generator (
     import utility : equal ;
     import feature ;
     import errors : error ;
-
+    import sequence ;
+    import type ;
+    import virtual-target ;
+    
     self.id = $(id) ;
     self.composing = $(composing) ;
     self.source-types = $(source-types) ;

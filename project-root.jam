@@ -92,6 +92,9 @@ rule project-root-object (
     location # The root location.
     )
 {
+    import path ;
+    import set ;
+    
     # The module name of the project-root.
     self.module = project-root<$(location)> ;
     

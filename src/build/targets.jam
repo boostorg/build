@@ -73,14 +73,16 @@ import property ;
 import errors ;
 import common ;
 import property-set ;
-import utility : ungrist ;
-
+import project ;
+import feature ;
 
 # Base class for all abstract targets.
 rule abstract-target ( name      # name of the target in Jamfile
                        : project # the project module where the target is declared
                      )
 {
+    import project ;
+    
     # Note: it might seem that we don't need either name or project at all.
     # However, there are places where we really need it. One example is error
     # messages which should name problematic targets. Another is setting correct
@@ -138,6 +140,10 @@ class abstract-target ;
 #  Project target class (derived from 'abstract-target')
 rule project-target ( name : project : requirements * : default-build * )
 {
+    import project targets ;
+    import path ;
+    import print ;
+    
     abstract-target.__init__ $(name) : $(project) ;
 
     self.requirements = $(requirements) ;
@@ -248,11 +254,15 @@ class project-target : abstract-target ;
 # A named top-level target in Jamfile
 rule main-target ( name : project )
 {
-    import errors : error ;
-    import numbers : range ;
-
     abstract-target.__init__ $(name) : $(project) ;
 
+    import errors : error ;
+    import assert ;
+    import numbers : range ;
+    import sequence ;
+    import print ;
+    import build-request feature property-set ;
+    
     # Add a new alternative for this target
     rule add-alternative ( target )
     {
@@ -474,10 +484,12 @@ rule generate-dependencies ( property-set : project : generation-ps )
 rule basic-target ( name : project
                     : sources * : requirements * : default-build * : usage-requirements * )
 {        
-    import build-request ;
-    import virtual-target ;
-
     abstract-target.__init__ $(name) : $(project) ;
+    
+    import build-request ;
+    import virtual-target targets ;
+    import property-set ;
+    import set sequence errors ;
 
     self.sources = $(sources) ;
     if ! $(requirements) {
@@ -730,6 +742,8 @@ rule typed-target ( name : project : type
     basic-target.__init__ $(name) : $(project) 
       : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;
     
+    import generators ;
+    
     self.type = $(type) ;
     
     rule construct ( source-targets * : property-set )
@@ -747,7 +761,6 @@ rule typed-target ( name : project : type
         return $(r) ;
     }            
 }
-                    
 class typed-target : basic-target ;
 
 # Returns the requirement to use when declaring a main target,

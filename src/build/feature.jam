@@ -5,34 +5,73 @@
 
 import class : * ;
 
-# A feature-space is a class to facilitate testing. We want to be able
-# to make and populate instances of a feature-space for testing
-# purposes without intruding on the default feature-space
-local rule feature-space ( )
-{
 import errors : error lol->list ;
 import sequence ;
 import regex ;
 import set ;
 import utility ;
+import modules ;
 
-.all-attributes =
+local rule setup ( )
+{
+    .all-attributes =
 
-    implicit 
-    executed 
-    composite
-    optional 
-    symmetric
-    free      
-    incidental  
-    path  
-    dependency  
-    propagated 
-    link-incompatible
-  ;
+      implicit 
+      executed 
+      composite
+      optional 
+      symmetric
+      free      
+      incidental  
+      path  
+      dependency  
+      propagated 
+      link-incompatible
+      ;
 
-.all-features = ;
-.all-implicit-values = ;
+    .all-features = ;
+    .all-implicit-values = ;
+}
+setup ;
+
+# prepare a fresh space to test in by moving all global variable
+# settings into the given temporary module and erasing them here.
+rule prepare-test ( temp-module )
+{
+    DELETE_MODULE $(temp-module) ;
+    
+    # transfer globals to temp-module
+    for local v in [ VARNAMES feature ]
+    {
+        if [ MATCH (\\.) : $(v) ]
+        {
+            modules.poke $(temp-module) : $(v) : $($(v)) ;
+            $(v) = ;
+        }
+    }
+    setup ;
+}
+
+# clear out all global variables and recover all variables from the
+# given temporary module
+rule finish-test ( temp-module )
+{
+    # clear globals
+    for local v in [ VARNAMES feature ]
+    {
+        if [ MATCH (\\.) : $(v) ]
+        {
+            $(v) = ;
+        }
+    }
+    
+    for local v in [ VARNAMES $(temp-module) ]
+    {
+        $(v) = [ modules.peek $(temp-module) : $(v) ] ;
+    }
+    DELETE_MODULE $(temp-module) ;
+}
+
 
 # Transform features by bracketing any elements which aren't already
 # bracketed by "<>"
@@ -79,7 +118,7 @@ rule feature (
     {
         error $(error)
           : "in" feature declaration:
-          : feature [ errors.lol->list $(1) : $(2) : $(3) ] ;
+          : feature [ lol->list $(1) : $(2) : $(3) ] ;
     }
 
     $(name).values ?= ;
@@ -808,17 +847,8 @@ rule split ( property-set )
 # <feature>value, and feature should be specified as <feature>.
 rule action ( property-or-feature : rule-name )
 {
-    # Is the name in global scope
-    if ! $(rule-name) in [ RULENAMES ]
-    {
-        # No, should be in caller's scope
-        local caller = [ CALLER_MODULE ] ;
-        if ! $(rule-name) in [ RULENAMES $(caller) ]
-        {
-            error "invalid rule name" ;
-        }        
-        rule-name = $(caller).$(rule-name) ;
-    }
+    local caller = [ CALLER_MODULE ] ;
+    rule-name = $(caller).$(rule-name) ;
     
     .rules.$(property-or-feature) += $(rule-name) ;
 }
@@ -841,224 +871,219 @@ rule run-actions ( properties * )
         }
         for local r in $(rules)
         {
-            added += [ $(r) $(e) : $(properties) ] ;
+            added += [ modules.call-locally $(r) $(e) : $(properties) ] ;
         }
     }
     return $(properties) $(added) ;            
 }
 
-}
-class feature-space ;
-
-# Tricky: makes this module into an instance of feature-space so that
-# normally users work with the global feature-space without having to
-# be aware that it's a class instance.
-instance feature : feature-space ;
-
 # tests of module feature
 local rule __test__ ( )
 {
-    local test-space = [ new feature-space ] ;
+    # use a fresh copy of the feature module
+    prepare-test feature-test-temp ;
 
-    module $(test-space)
+    # This is a local rule and so must be explicitly reimported into
+    # the testing module
+    import feature : extend-feature validate-feature ; 
+    
+    import errors : try catch ;
+    import assert ;
+
+    feature toolset : gcc : implicit ;
+    feature define : : free ;
+    feature runtime-link : dynamic static : symmetric ;
+    feature optimization : on off ;
+    feature variant : debug release : implicit composite ;
+    feature stdlib : native stlport ;
+    feature magic : : free ;
+
+    compose <variant>debug : <define>_DEBUG <optimization>off ;
+    compose <variant>release : <define>NDEBUG <optimization>on ;
+
+    extend-feature toolset : msvc metrowerks ;
+    subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
+      3.0 3.0.1 3.0.2 : optional ;
+
+    local rule handle-stlport ( property : properties * )
     {
-        import errors : try catch ;
-        import assert ;
-
-        feature toolset : gcc : implicit ;
-        feature define : : free ;
-        feature runtime-link : dynamic static : symmetric ;
-        feature optimization : on off ;
-        feature variant : debug release : implicit composite ;
-        feature stdlib : native stlport ;
-        feature magic : : free ;
-
-        compose <variant>debug : <define>_DEBUG <optimization>off ;
-        compose <variant>release : <define>NDEBUG <optimization>on ;
-
-        extend-feature toolset : msvc metrowerks ;
-        subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
-          3.0 3.0.1 3.0.2 : optional ;
-        
-        rule handle-stlport ( property : properties * )
-        {
-            return <include>/path/to/stlport ;
-        }
-        
-        rule handle-magic ( property : properties * )
-        {
-            return <define>MAGIC=$(property:G=) ;
-        }
-        
-        rule handle-magic2 ( property : properties * )
-        {
-            return <define>MAGIC=BIG_MAGIC ;
-        }
-        
-        rule handle-magic3 ( property : properties * )
-        {
-            return <define>MAGIC=VERY_BIG_MAGIC ;
-        }
-
-        
-                
-        action <stdlib>stlport : handle-stlport ;
-        action <magic> : handle-magic ;
-        action <magic>17 : handle-magic2 ;
-        action <magic>17 : handle-magic3 ;
-        
-        assert.result <toolset>gcc <toolset-gcc:version>3.0.1
-          : expand-subfeatures <toolset>gcc-3.0.1 ;
-
-        assert.result <define>foo=x-y
-          : expand-subfeatures <define>foo=x-y ;
-
-        assert.result <toolset>gcc <toolset-gcc:version>3.0.1
-          : expand-subfeatures gcc-3.0.1 ;
-
-        feature dummy : dummy1 dummy2 ;
-        subfeature dummy : subdummy : x y z : optional ;
-
-        assert.result a c e
-          : get-values x : <x>a <y>b <x>c <y>d <x>e ;
-
-        assert.result <toolset>gcc <toolset-gcc:version>3.0.1
-          <variant>debug <define>_DEBUG <optimization>on
-          : expand gcc-3.0.1 debug <optimization>on
-          ;
-
-        assert.result <variant>debug <define>_DEBUG <optimization>on
-          : expand debug <optimization>on
-          ;
-        
-        assert.result <optimization>on <variant>debug <define>_DEBUG 
-          : expand <optimization>on debug 
-          ;
-                
-        assert.result <runtime-link>dynamic <optimization>on
-          : defaults <runtime-link> <define> <optimization>
-          ;
-
-        assert.result <runtime-link>static <define>foobar <optimization>on <toolset>gcc:<define>FOO
-          <toolset>gcc <variant>debug <stdlib>native <dummy>dummy1
-          : add-defaults <runtime-link>static <define>foobar <optimization>on <toolset>gcc:<define>FOO
-          ;
-        
-        assert.result  <toolset>gcc <define>foo <stdlib>stlport <magic>3 <include>/path/to/stlport <define>MAGIC=3
-          : run-actions <toolset>gcc <define>foo <stdlib>stlport <magic>3
-          ;
-        
-        assert.result <magic>17 <define>MAGIC=BIG_MAGIC <define>MAGIC=VERY_BIG_MAGIC
-          : run-actions <magic>17 
-          ;
-        
-
-        assert.result gcc-3.0.1 debug <optimization>on
-          : minimize [ expand gcc-3.0.1 debug <optimization>on <stdlib>native ]
-          ;
-        
-        assert.result gcc-3.0.1 debug <runtime-link>dynamic
-          : minimize [ expand gcc-3.0.1 debug <optimization>off <runtime-link>dynamic ]
-          ;
-                
-        assert.result gcc-3.0.1 debug
-          : minimize [ expand gcc-3.0.1 debug <optimization>off ]
-          ;
-        
-        assert.result debug <optimization>on
-          : minimize [ expand debug <optimization>on ]
-          ;
-
-        assert.result gcc-3.0
-          : minimize <toolset>gcc <toolset-gcc:version>3.0 
-          ;
-                
-        assert.result gcc-3.0
-          : minimize <toolset-gcc:version>3.0 <toolset>gcc
-          ;
-        
-        assert.result <x>y/z <a>b/c <d>e/f
-          : split <x>y/z/<a>b/c/<d>e/f
-          ;
-
-        assert.result <x>y/z <a>b/c <d>e/f
-          : split <x>y\\z\\<a>b\\c\\<d>e\\f
-          ;
-
-        assert.result a b c <d>e/f/g <h>i/j/k
-          : split a/b/c/<d>e/f/g/<h>i/j/k
-          ;
-
-        assert.result a b c <d>e/f/g <h>i/j/k
-          : split a\\b\\c\\<d>e\\f\\g\\<h>i\\j\\k
-          ;
-
-        # test error checking
-
-        try ;
-        {
-            expand release <optimization>off <optimization>on ;
-        }
-        catch explicitly-specified values of non-free feature <optimization> conflict ;
-
-        try ;
-        {
-            validate-feature foobar ;
-        }
-        catch unknown feature ;
-
-        validate-value-string <toolset> gcc ;
-        validate-value-string <toolset> gcc-3.0.1 ;
-        
-        try ;
-        {
-            validate-value-string <toolset> digital_mars ;
-        }
-        catch \"digital_mars\" is not a known value of <toolset> ;
-        
-        try ;
-        {
-            feature foobar : : baz ;
-        }
-        catch unknown attributes: baz ;
-
-        feature feature1 ;
-        try ;
-        {
-            feature feature1 ;
-        }
-        catch feature already defined: ;
-
-        try ;
-        {
-            feature feature2 : : free implicit ;
-        }
-        catch free features cannot also be implicit ;
-
-        try ;
-        {
-            feature feature3 : : free propagated ;
-        }
-        catch free features cannot be propagated ;
-
-        try ;
-        {
-            implied-feature lackluster ;
-        }
-        catch \"lackluster\" is not a value of an implicit feature ;
-
-        try ;
-        {
-            implied-subfeature toolset 3.0.1 ;
-        }
-        catch \"3.0.1\" is not a known subfeature value of
-          feature <toolset> ;
-
-        try ;
-        {
-            implied-subfeature toolset not-a-version : gcc ;
-        }
-        catch \"not-a-version\" is not a known subfeature value of
-          feature <toolset> ;
+        return <include>/path/to/stlport ;
     }
+
+    local rule handle-magic ( property : properties * )
+    {
+        return <define>MAGIC=$(property:G=) ;
+    }
+
+    local rule handle-magic2 ( property : properties * )
+    {
+        return <define>MAGIC=BIG_MAGIC ;
+    }
+
+    local rule handle-magic3 ( property : properties * )
+    {
+        return <define>MAGIC=VERY_BIG_MAGIC ;
+    }
+
+    action <stdlib>stlport : handle-stlport ;
+    action <magic> : handle-magic ;
+    action <magic>17 : handle-magic2 ;
+    action <magic>17 : handle-magic3 ;
+
+    assert.result <toolset>gcc <toolset-gcc:version>3.0.1
+      : expand-subfeatures <toolset>gcc-3.0.1 ;
+
+    assert.result <define>foo=x-y
+      : expand-subfeatures <define>foo=x-y ;
+
+    assert.result <toolset>gcc <toolset-gcc:version>3.0.1
+      : expand-subfeatures gcc-3.0.1 ;
+
+    feature dummy : dummy1 dummy2 ;
+    subfeature dummy : subdummy : x y z : optional ;
+
+    assert.result a c e
+      : get-values x : <x>a <y>b <x>c <y>d <x>e ;
+
+    assert.result <toolset>gcc <toolset-gcc:version>3.0.1
+      <variant>debug <define>_DEBUG <optimization>on
+      : expand gcc-3.0.1 debug <optimization>on
+      ;
+
+    assert.result <variant>debug <define>_DEBUG <optimization>on
+      : expand debug <optimization>on
+      ;
+
+    assert.result <optimization>on <variant>debug <define>_DEBUG 
+      : expand <optimization>on debug 
+      ;
+
+    assert.result <runtime-link>dynamic <optimization>on
+      : defaults <runtime-link> <define> <optimization>
+      ;
+
+    assert.result <runtime-link>static <define>foobar <optimization>on <toolset>gcc:<define>FOO
+      <toolset>gcc <variant>debug <stdlib>native <dummy>dummy1
+      : add-defaults <runtime-link>static <define>foobar <optimization>on <toolset>gcc:<define>FOO
+      ;
+
+    assert.result  <toolset>gcc <define>foo <stdlib>stlport <magic>3 <include>/path/to/stlport <define>MAGIC=3
+      : run-actions <toolset>gcc <define>foo <stdlib>stlport <magic>3
+      ;
+
+    assert.result <magic>17 <define>MAGIC=BIG_MAGIC <define>MAGIC=VERY_BIG_MAGIC
+      : run-actions <magic>17 
+      ;
+
+
+    assert.result gcc-3.0.1 debug <optimization>on
+      : minimize [ expand gcc-3.0.1 debug <optimization>on <stdlib>native ]
+      ;
+
+    assert.result gcc-3.0.1 debug <runtime-link>dynamic
+      : minimize [ expand gcc-3.0.1 debug <optimization>off <runtime-link>dynamic ]
+      ;
+
+    assert.result gcc-3.0.1 debug
+      : minimize [ expand gcc-3.0.1 debug <optimization>off ]
+      ;
+
+    assert.result debug <optimization>on
+      : minimize [ expand debug <optimization>on ]
+      ;
+
+    assert.result gcc-3.0
+      : minimize <toolset>gcc <toolset-gcc:version>3.0 
+      ;
+
+    assert.result gcc-3.0
+      : minimize <toolset-gcc:version>3.0 <toolset>gcc
+      ;
+
+    assert.result <x>y/z <a>b/c <d>e/f
+      : split <x>y/z/<a>b/c/<d>e/f
+      ;
+
+    assert.result <x>y/z <a>b/c <d>e/f
+      : split <x>y\\z\\<a>b\\c\\<d>e\\f
+      ;
+
+    assert.result a b c <d>e/f/g <h>i/j/k
+      : split a/b/c/<d>e/f/g/<h>i/j/k
+      ;
+
+    assert.result a b c <d>e/f/g <h>i/j/k
+      : split a\\b\\c\\<d>e\\f\\g\\<h>i\\j\\k
+      ;
+
+    # test error checking
+
+    try ;
+    {
+        expand release <optimization>off <optimization>on ;
+    }
+    catch explicitly-specified values of non-free feature <optimization> conflict ;
+
+    try ;
+    {
+        validate-feature foobar ;
+    }
+    catch unknown feature ;
+
+    validate-value-string <toolset> gcc ;
+    validate-value-string <toolset> gcc-3.0.1 ;
+
+    try ;
+    {
+        validate-value-string <toolset> digital_mars ;
+    }
+    catch \"digital_mars\" is not a known value of <toolset> ;
+
+    try ;
+    {
+        feature foobar : : baz ;
+    }
+    catch unknown attributes: baz ;
+
+    feature feature1 ;
+    try ;
+    {
+        feature feature1 ;
+    }
+    catch feature already defined: ;
+
+    try ;
+    {
+        feature feature2 : : free implicit ;
+    }
+    catch free features cannot also be implicit ;
+
+    try ;
+    {
+        feature feature3 : : free propagated ;
+    }
+    catch free features cannot be propagated ;
+
+    try ;
+    {
+        implied-feature lackluster ;
+    }
+    catch \"lackluster\" is not a value of an implicit feature ;
+
+    try ;
+    {
+        implied-subfeature toolset 3.0.1 ;
+    }
+    catch \"3.0.1\" is not a known subfeature value of
+      feature <toolset> ;
+
+    try ;
+    {
+        implied-subfeature toolset not-a-version : gcc ;
+    }
+    catch \"not-a-version\" is not a known subfeature value of
+      feature <toolset> ;
+
+    # leave a clean copy of the features module behind
+    finish-test feature-test-temp ;
 }

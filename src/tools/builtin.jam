@@ -8,6 +8,8 @@
 import class : class new ;
 
 import feature : feature compose ;
+import toolset : flags ;
+import errors : error ;
 import type ;
 import scanner ;
 import generators ;
@@ -15,10 +17,10 @@ import regex ;
 import virtual-target ;
 import os ;
 import prebuilt ;
-import toolset : flags ;
-import errors : error ;
 import symlink ;
 import alias ;
+import property ;
+import print ;
 
 # This feature is used to determine which OS we're on.
 # In future, this may become <target-os> and <host-os>
@@ -147,11 +149,12 @@ variant release : <optimization>speed <debug-symbols>off <inlining>full <runtime
 # not propagated, we can't just add it to 'release'. And we cannot make
 # <define> propagated, because (i) free features cannot be propagated and
 # (ii) this is dangerous.
-rule builtin.handle-ndebug ( property : properties * )
+rule handle-ndebug ( property : properties * )
 {
     return <define>NDEBUG ;
 }
-feature.action <optimization>speed : builtin.handle-ndebug ;
+
+feature.action <optimization>speed : handle-ndebug ;
 
 
 rule searched-lib-target ( name     
@@ -306,6 +309,8 @@ actions quietly piecemeal response-file-2
 rule c-scanner ( includes * )
 {
     scanner.__init__ ;
+    
+    import regex virtual-target path scanner ;
     self.includes = $(includes) ;
 
     rule pattern ( )
@@ -457,6 +462,7 @@ generators.register [ new searched-lib-generator ] ;
 rule compile-action ( targets + : sources * : action-name : properties * )
 {
     action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
+    import sequence ;
     
     # For all virtual targets for the same dependency graph as self, 
     # i.e. which belong to the same main target, add their directories
@@ -505,7 +511,8 @@ IMPORT $(__name__) : register-c-compiler : : generators.register-c-compiler ;
 rule link-action ( targets + : sources * : action-name : properties * )
 {
     action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
-
+    import path ;
+    
     # Find all libraries in sources, and <library> properties
     # For each source/property-value, which is instance of searched-lib-target,
     # add appropriate <find-shared-library> or <find-static-library> property.
@@ -668,6 +675,6 @@ declare-type : RSP : rsp ;
 flags builtin.response-file FINDLIBS_ST <find-static-library> ;
 flags builtin.response-file FINDLIBS_SA <find-shared-library> ;
 flags builtin.response-file LIBRARY_PATH <library-path> ;
-builtin.register-linker builtin.response-file : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : RSP ;
+register-linker builtin.response-file : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : RSP ;
 
 

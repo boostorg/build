@@ -9,9 +9,7 @@
 #  if particular target should be created at all.
 
 import class : class new ;
-import type ;
-import property-set ;
-import utility ;
+import path property-set utility sequence errors ;
 
 #                       +--------------------------+
 #                       | virtual-target           |
@@ -69,6 +67,8 @@ rule virtual-target ( name  # Name of this target -- specifies the name of
                   : project # Project to which this target belongs
     )
 {
+    import virtual-target utility scanner ;
+    
     self.name = $(name) ;
     self.project = $(project) ;
     self.dependencies = ;
@@ -92,7 +92,7 @@ rule virtual-target ( name  # Name of this target -- specifies the name of
         return $(self.dependencies) ;
     }
 
-    # Generates all the actual targets and set ups build actions for
+    # Generates all the actual targets and sets up build actions for
     # this target.
     #
     # If 'scanner' is specified, creates an additional target
@@ -134,7 +134,7 @@ rule virtual-target ( name  # Name of this target -- specifies the name of
 
 # private: (overridables)
 
-    # Sets up build actions for 'target'. Should call appriate rules
+    # Sets up build actions for 'target'. Should call appropriate rules
     # and set target variables.
     rule actualize-action ( target )
     {
@@ -205,6 +205,7 @@ rule abstract-file-target ( name
     )
 {
     virtual-target.__init__ $(name) : $(project) ;
+    import project regex sequence path type ;
 
     self.type = $(type) ;
     self.action = ;
@@ -431,7 +432,8 @@ rule file-target (
     )
 {
     abstract-file-target.__init__ $(name) : $(type) : $(project) ;
-
+    import common ;
+    
     rule actualize-location ( target )
     {
         if $(self.path)
@@ -530,7 +532,9 @@ rule remember-binding ( target : bound-path )
 {
     .binding.$(target) = $(bound-path) ;
 }
-
+# virtual-target.remember-binding must be available in the global
+# module in order to be invoked by the builtin binding process.
+IMPORT virtual-target : remember-binding : : virtual-target.remember-binding ;
 
 # Class which represents an action.
 # Both 'targets' and 'sources' should list instances of 'virtual-target'.
@@ -540,9 +544,17 @@ rule remember-binding ( target : bound-path )
 # not establish dependency relationship, but should do everything else.
 rule action ( targets + : sources * : action-name + : property-set ? )
 {
+    import type toolset property-set ;
+    
     self.targets = $(targets) ;
     self.sources = $(sources) ;
     self.action-name = $(action-name) ;
+    
+    if ! [ MATCH (\\.) : $(action-name[1]) ]
+    {
+        local caller = [ CALLER_MODULE ] ;
+        self.action-name = $(caller).$(action-name[1]) $(action-name[2-]) ;
+    }
     
     if ! $(property-set) 
     {
@@ -602,8 +614,14 @@ rule action ( targets + : sources * : action-name + : property-set ? )
             toolset.set-target-variables $(self.action-name[1]) $(actual-targets) :
               $(properties) ;
 
-            $(self.action-name)
-              $(actual-targets) : $(self.actual-sources) : $(properties) ;
+            ECHO $(self.action-name) ;
+            
+            modules.call-locally $(self.action-name) 
+              $(actual-targets)
+              : $(self.actual-sources)
+                : $(properties)
+                  ;
+            
             # Since we set up creating action here, we also set up
             # action for cleaning up
             common.Clean clean : $(actual-targets) ;
@@ -688,6 +706,8 @@ class null-action : action ;
 # TODO: passing project with all virtual targets starts to be annoying.
 rule from-file ( file : project )
 {
+    import type ; # had to do this here to break a circular dependency
+    
     if $(.files.$(file).$(project))
     {
         return $(.files.$(file).$(project)) ;
@@ -904,6 +924,8 @@ local rule subvariant-dg ( main-target # The instance of main-target class
     : actual-properties                # Actual used properties
     : virtual-targets * )
 {
+    import sequence ;
+    
     self.main-target = $(main-target) ;
     self.properties = $(property-set) ;
     self.actual-properties = $(actual-properties) ;

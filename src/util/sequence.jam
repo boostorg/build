@@ -5,6 +5,7 @@
 
 import assert ;
 import numbers ; 
+import modules ;
 
 # Note that algorithms in this module execute largely in the caller's
 # module namespace, so that local rules can be used as function
@@ -225,7 +226,9 @@ local rule __test__ ( )
     # use a unique module so we can test the use of local rules.
     module sequence.__test__
     {
-
+        import assert ;
+        import sequence ;
+        
         local rule is-even ( n )
         {
             if $(n) in 0 2 4 6 8

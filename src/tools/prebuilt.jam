@@ -6,21 +6,18 @@
 #  This module defines a special generator, which handles targets with
 #  <file> property. It allows to use prebuilt targets.
 
-import targets ;
 import class : class new ;
-import property ;
-import errors : error ;
-import type : type ;
-import regex ;
-import feature ;
 import generators ; 
+import feature : feature ;
 
-feature.feature file : : free path ;
+feature file : : free path ;
 
 rule prebuilt-file-generator 
 {
     generator.__init__ prebuilt-file-generator : : * : <file> ;    
-
+    
+    import feature type errors path ;
+    
     rule run ( project name ? : property-set : sources * )
     {
         local properties = [ $(property-set).raw ] ;
