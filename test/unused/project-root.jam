@@ -3,7 +3,7 @@ import type ;
 import generators ;
 import print ;
 import virtual-target ;
-import class : xnew ;
+import class : new ;
 import modules ;
 import targets ;
 
@@ -47,7 +47,7 @@ rule make-b-main-target
     local project = [ CALLER_MODULE ] ;    
     
     targets.main-target-alternative 
-      [ xnew test-target-class b : $(project) ] ;
+      [ new test-target-class b : $(project) ] ;
 }
 
 IMPORT $(__name__) : make-b-main-target : : make-b-main-target ;

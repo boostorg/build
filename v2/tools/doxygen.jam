@@ -9,7 +9,7 @@
 #  version of Doxygen that can output a single XML file instead of a
 #  set of XML files.
 
-import class : xnew ;
+import class : new ;
 import targets ;
 import feature ;
 import property ;
@@ -103,8 +103,8 @@ xclass doxygen-xml-target-class : basic-target
   rule construct ( source-targets * : property-set )
   {
     local target = 
-       [ xnew file-target $(self.name) : DOXYGEN_XML : $(self.project) ] ;
-    local a = [ xnew action $(target) : $(source-targets) : doxygen.extract-xml 
+       [ new file-target $(self.name) : DOXYGEN_XML : $(self.project) ] ;
+    local a = [ new action $(target) : $(source-targets) : doxygen.extract-xml 
                 : $(property-set) ] ;
     $(target).action $(a) ;
 
@@ -116,7 +116,7 @@ rule doxygen ( target-name : sources * : requirements * : default-build * )
 {
   local project = [ CALLER_MODULE ] ;
   targets.main-target-alternative
-    [ xnew doxygen-xml-target-class $(target-name) : $(project) : $(sources)
+    [ new doxygen-xml-target-class $(target-name) : $(project) : $(sources)
         : [ targets.main-target-requirements $(requirements) : $(project) ]
         : [ targets.main-target-default-build $(default-build) : $(project) ]
     ] ;

@@ -171,7 +171,7 @@ xclass project-target : abstract-target
     import print ;
     import property-set ;
     import set : difference : set.difference ;
-    import class : xnew ;
+    import class : new ;
         
     rule __init__ ( name : project : requirements * : default-build * )
     {    
@@ -303,7 +303,7 @@ xclass project-target : abstract-target
             if ! $(target)
             {
                 self.main-target.$(name) = 
-                  [ xnew main-target $(name) : $(self.project) ] ;
+                  [ new main-target $(name) : $(self.project) ] ;
                 self.main-targets += $(name) ;
                 target = $(self.main-target.$(name)) ;
             }
@@ -772,7 +772,7 @@ xclass basic-target : abstract-target
     import virtual-target targets ;
     import property-set ;
     import set sequence errors ;
-    import class : xnew ;
+    import class : new ;
         
     rule __init__ ( name : project
         : sources * : requirements * : 
@@ -983,7 +983,7 @@ xclass basic-target : abstract-target
         # is created.
         local all-targets = 
           [ sequence.transform virtual-target.traverse : $(targets) ] ; 
-        local dg = [ xnew subvariant-dg $(__name__) : $(build-request) 
+        local dg = [ new subvariant-dg $(__name__) : $(build-request) 
           : $(rproperties) : $(all-targets) ] ;
         for local v in $(all-targets)          
         {

@@ -8,7 +8,7 @@
 
 import feature ;
 import generators : * ;
-import class : xnew ;
+import class : new ;
 import errors ;
 import property ;
 import scanner ;
@@ -28,7 +28,7 @@ feature.feature base-target-type : : composite optional free ;
 # feature.feature main-target-type : : composite optional incidental ;
 
 # Store suffixes for generated targets
-.suffixes = [ xnew property-map ] ;
+.suffixes = [ new property-map ] ;
 
 # Registers a target type, possible derived from a 'base-type'. 
 # If 'suffixes' are provided, they given all the suffixes that mean a file is of 'type'.
@@ -234,7 +234,7 @@ rule main-target-rule ( name : sources * : requirements * : default-build *
     import targets ;
     return [
       targets.main-target-alternative
-      [ xnew typed-target $(name) : $(project) : $(.main-target-type.$(rulename))
+      [ new typed-target $(name) : $(project) : $(.main-target-type.$(rulename))
         : [ targets.main-target-sources $(sources) : $(name) ] 
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
         : [ targets.main-target-default-build $(default-build) : $(project) ]

@@ -40,7 +40,7 @@
 #  'construct' rule has a parameter, telling if multiple targets can be returned. If
 #  the parameter is false, conversion of extra targets is not performed.
 
-import class : is-a xnew ;
+import class : is-a new ;
 import container ;
 import numbers : range ;
 import utility : str equal ;
@@ -99,7 +99,7 @@ xclass generator
     import sequence ;
     import type ;
     import virtual-target ;
-    import class : xnew ;
+    import class : new ;
    
     EXPORT class@generator : indent increase-indent decrease-indent generators.dout ;
     
@@ -252,7 +252,7 @@ xclass generator
     # - value to <toolset> feature in properties
     rule clone ( new-id : new-toolset-name )
     {
-        return [ xnew $(__class__) $(new-id)
+        return [ new $(__class__) $(new-id)
                  : $(self.source-types)
                  : $(self.target-types-and-names) 
                  : [ property.change $(self.requirements) 
@@ -344,7 +344,7 @@ xclass generator
                 
         if $(result)
         {
-           local v = [ class.xnew vector $(result) ] ;
+           local v = [ class.new vector $(result) ] ;
            generators.dout [ indent ] "  SUCCESS: " [ $(v).str ] ;
         }
         else
@@ -379,7 +379,7 @@ xclass generator
         }
         else
         {
-            local v = [ class.xnew vector $(consumed) ] ;
+            local v = [ class.new vector $(consumed) ] ;
             generators.dout [ indent ] "alt2 : consumed is" [ $(v).str ] ;
             if $(consumed) 
             {
@@ -442,11 +442,11 @@ xclass generator
                 generated-name = $(name) ;
             }
             
-            targets += [ class.xnew file-target $(generated-name) : $(t) : $(project) ] ;
+            targets += [ class.new file-target $(generated-name) : $(t) : $(project) ] ;
         }                 
         # Assign an action for each target
         local action = [ action-class ] ;
-        local a = [ class.xnew $(action) $(targets) : $(sources) : $(self.id) : 
+        local a = [ class.new $(action) $(targets) : $(sources) : $(self.id) : 
                     $(property-set) ] ;
         for local t in $(targets)
         {
@@ -628,7 +628,7 @@ rule register ( g )
 # Creates new instance of the 'generator' class and registers it.
 rule register-standard ( id : source-types + : target-types + : requirements * )
 {
-    local g = [ xnew generator $(id) : $(source-types) : $(target-types)
+    local g = [ new generator $(id) : $(source-types) : $(target-types)
       : $(requirements) ] ;
     register $(g) ;
 }
@@ -637,7 +637,7 @@ rule register-standard ( id : source-types + : target-types + : requirements * )
 # registers it.
 rule register-composing ( id : source-types + : target-types + : requirements * )
 {
-    local g = [ xnew generator $(id) true : $(source-types) 
+    local g = [ new generator $(id) true : $(source-types) 
                 : $(target-types) : $(requirements) ] ;
     register $(g) ;
 }
@@ -735,8 +735,8 @@ local rule try-one-generator ( project name ? : generator multiple ? :
     {
         extra2 = $(extra) ;
     }
-    local rr = [ xnew vector [ xnew vector $(result) ] 
-      [ xnew vector $(extra2) ] ] ;         
+    local rr = [ new vector [ new vector $(result) ] 
+      [ new vector $(extra2) ] ] ;         
     generators.dout [ indent ] "  generator" [ $(generator).id ] " spawned " ;
     generators.dout [ indent ] " " [ $(rr).str ] ;
     return $(result) $(extra2) ;                     
@@ -913,7 +913,7 @@ local rule construct-with-caching (
         }
         else 
         {                            
-            local ut = [ xnew file-target % : [ $(t).type ] : "no project" ] ;            
+            local ut = [ new file-target % : [ $(t).type ] : "no project" ] ;            
             cresult = [ construct $(project) : $(target-type) $(multiple) 
               : $(property-set) : $(ut) ] ;
             .transformation.cache.$(signature) = $(cresult) ;                
@@ -942,7 +942,7 @@ local rule construct-without-caching (
 {
     viable-generators = [ find-viable-generators $(target-type) : $(property-set) ] ;
                     
-    local results = [ xnew vector ] ;
+    local results = [ new vector ] ;
     
     generators.dout [ indent ] "*** " [ sequence.length $(viable-generators) ] 
       " viable generators" ;
@@ -957,7 +957,7 @@ local rule construct-without-caching (
         
         if $(r)
         {
-            $(results).push-back [ xnew vector $(r) ] ;
+            $(results).push-back [ new vector $(r) ] ;
         }
     }
     

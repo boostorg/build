@@ -1,5 +1,5 @@
 
-import class : xnew ;
+import class : new ;
 
 import lex ;
 import qt ;
@@ -80,7 +80,7 @@ xclass nm::target::cpp-obj-generator : generator
     }                
 }
 
-generators.register [ xnew nm::target::cpp-obj-generator ] ;
+generators.register [ new nm::target::cpp-obj-generator ] ;
 #}
 
 

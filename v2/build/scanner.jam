@@ -26,7 +26,7 @@
 #  actual targets. However, actions can also create scanners in a special
 #  way, instead of relying on just target type.
 
-import class : xnew ;
+import class : new ;
 import property virtual-target ;
 
 #  Base scanner class. 
@@ -76,7 +76,7 @@ rule get ( scanner-class : properties * )
     }    
     if ! $(scanner.$(scanner-class).$(r:J=-))
     {
-        scanner.$(scanner-class).$(r:J=-) = [ xnew $(scanner-class) $(r) ] ;
+        scanner.$(scanner-class).$(r:J=-) = [ new $(scanner-class) $(r) ] ;
     }
     return $(scanner.$(scanner-class).$(r:J=-)) ;    
 }

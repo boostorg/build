@@ -6,7 +6,7 @@
 #  This module defines a special generator, which handles targets with
 #  <file> property. It allows to use prebuilt targets.
 
-import class : xnew ;
+import class : new ;
 import generators ; 
 import feature : feature ;
 
@@ -16,7 +16,7 @@ xclass prebuilt-file-generator : generator
 {    
     import feature type errors path ;
     import regex : match ;
-    import class : xnew ;
+    import class : new ;
         
     rule __init__ ( )
     {        
@@ -33,13 +33,13 @@ xclass prebuilt-file-generator : generator
             errors.error "Unknown type for prebuilt target " $(name) in $(project) ;
         }
         
-        local t = [ xnew file-target $(filename:S=:D=) : $(type) : $(project) ] ;
+        local t = [ new file-target $(filename:S=:D=) : $(type) : $(project) ] ;
         $(t).set-path [ path.parent $(filename) ] ;
         # By default, Boost.Build determines the suffix of file from its type.
         # Since we already have file, specify suffix explicitly.
         $(t).suffix [ regex.match .(.*) : $(filename:S) ] ;
                                
-        $(t).action [ xnew null-action $(t) : $(property-set) ] ;
+        $(t).action [ new null-action $(t) : $(property-set) ] ;
         
         $(t).suffix [ MATCH .(.*) : $(name:S) ] ;
         return $(t) ;            
@@ -47,7 +47,7 @@ xclass prebuilt-file-generator : generator
     }
 }
 
-generators.register [ xnew prebuilt-file-generator ] ;
+generators.register [ new prebuilt-file-generator ] ;
 
 
 

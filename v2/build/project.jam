@@ -44,7 +44,7 @@ import errors : error ;
 import project-roots ;
 
 import print ;
-import class : xnew ;
+import class : new ;
 import errors ;
 import assert ;
 import property-set ;
@@ -301,7 +301,7 @@ rule initialize (
     module $(module-name)
     {          
     }    
-    $(module-name).attributes = [ xnew project-attributes $(location) ] ;
+    $(module-name).attributes = [ new project-attributes $(location) ] ;
     local attributes = $($(module-name).attributes) ;
     
     $(attributes).set source-location : $(location) : exact ;    
@@ -524,7 +524,7 @@ rule target ( project-module )
 {
     if ! $(.target.$(project-module))
     {
-        .target.$(project-module) = [ xnew project-target $(project-module) 
+        .target.$(project-module) = [ new project-target $(project-module) 
           : $(project-module) 
            : [ attribute $(project-module) requirements ] ] ;
     }

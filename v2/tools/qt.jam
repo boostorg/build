@@ -7,7 +7,7 @@ import modules ;
 import feature ;
 import errors ;
 import type ;
-import class : xnew ;
+import class : new ;
 import generators ;
 import project ;
 
@@ -83,7 +83,7 @@ rule init ( prefix ? )
             }               
         }
     
-        generators.register [ xnew qt::uic-cpp-generator ] ;
+        generators.register [ new qt::uic-cpp-generator ] ;
         
         # Finally, declare prebuilt target for QT library.
         local usage-requirements = 

@@ -43,7 +43,7 @@ rule load (
     {
         # Create the project-root, and remember it.
         #
-        local root = [ class.xnew project-root-object $(location) ] ;
+        local root = [ class.new project-root-object $(location) ] ;
         modules.poke $(module-name) : .project-root : $(root) ;
         .roots += $(root) ;
         

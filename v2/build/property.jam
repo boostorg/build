@@ -471,7 +471,7 @@ local rule __test__ ( )
     compose <variant>release : <define>NDEBUG <optimization>on ;
 
     import assert ;
-    import class : xnew ;
+    import class : new ;
     
     validate gcc gcc-3.0.1 : $(test-space) ;
     validate <toolset>gcc  <toolset>gcc-3.0.1 : $(test-space) ;
@@ -558,7 +558,7 @@ local rule __test__ ( )
     assert.result <toolset>kylix <include>a 
         : change <toolset>gcc <include>a : toolset kylix ;
 
-    pm = [ xnew property-map ] ;
+    pm = [ new property-map ] ;
     $(pm).insert <toolset>gcc : o ;
     $(pm).insert <toolset>gcc <os>NT : obj ;
     $(pm).insert <toolset>gcc <os>CYGWIN : obj ;

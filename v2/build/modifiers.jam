@@ -13,7 +13,7 @@ import modules ;
 import feature ;
 import errors ;
 import type ;
-import class : xnew ;
+import class : new ;
 import generators : generator ;
 import property ;
 import virtual-target ;
@@ -118,7 +118,7 @@ rule modifier (
         new-name ?= [ $(target).name ] ;
         new-type ?= [ $(target).type ] ;
         new-project ?= [ $(target).project ] ;
-        local result = [ xnew file-target $(new-name) : $(new-type) : $(new-project) ] ;
+        local result = [ new file-target $(new-name) : $(new-type) : $(new-project) ] ;
         
         if [ $(target).dependencies ] { $(result).depends [ $(target).dependencies ] ; }
         $(result).suffix [ $(target).suffix ] ;

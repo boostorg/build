@@ -28,7 +28,7 @@
 #    one target can be specified in sources.
 
 import targets ;
-import class : xnew ;
+import class : new ;
 import property ;
 import errors : error ;
 import type : type ;
@@ -39,7 +39,7 @@ import generators ;
 xclass stage-target-class : basic-target
 {
     import feature project type errors generators ;    
-    import class : xnew ;
+    import class : new ;
     
     rule __init__ ( name-and-dir : project : sources * : requirements * : default-build * )
     {
@@ -89,9 +89,9 @@ xclass stage-target-class : basic-target
                     n = $(name) ;
                 }
                 
-                i2 = [ xnew file-target $(n:D=) : [ $(i).type ] 
+                i2 = [ new file-target $(n:D=) : [ $(i).type ] 
                   : $(self.project) ] ;
-                local a = [ xnew action $(i2) : $(i) : common.copy ] ;
+                local a = [ new action $(i2) : $(i) : common.copy ] ;
                 $(i2).suffix [ $(i).suffix ] ;
                 $(i2).action $(a) ;
             }
@@ -129,7 +129,7 @@ xclass stage-exe-generator : generator
         # FIXME: this must become some rule in virtual-target module
         # we're cloning the target and action.        
         local n = [ $(source).name ] ;
-        local cloned-target = [ class.xnew file-target $(n:D=) : [ $(source).type ] 
+        local cloned-target = [ class.new file-target $(n:D=) : [ $(source).type ] 
                   : $(project) ] ;
         local d = [ $(source).dependencies ] ;
         if $(d)
@@ -147,7 +147,7 @@ xclass stage-exe-generator : generator
         # stage can affect the relinking details.
         local ps = [ $(action).properties-ps ] ;
         local new-ps = [ $(ps).add [ property-set.create [ $(property-set).free ] ] ] ;
-        local cloned-action = [ class.xnew $(action-class) $(cloned-target) : 
+        local cloned-action = [ class.new $(action-class) $(cloned-target) : 
           [ $(action).sources ] : [ $(action).action-name ] : $(new-ps) ] ;
         
         $(cloned-target).action $(cloned-action) ;
@@ -156,7 +156,7 @@ xclass stage-exe-generator : generator
     }    
 }
 
-generators.register [ xnew stage-exe-generator ] ;
+generators.register [ new stage-exe-generator ] ;
 
 
 
@@ -170,7 +170,7 @@ rule stage ( name : sources * : requirements * : default-build * )
     local project = [ CALLER_MODULE ] ;
     
     targets.main-target-alternative
-      [ xnew stage-target-class $(name) : $(project) : $(sources)
+      [ new stage-target-class $(name) : $(project) : $(sources)
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
         : [ targets.main-target-default-build $(default-build) : $(project) ] 
       ] ;

@@ -5,7 +5,7 @@
 
 #  Defines standard features and rules.
 
-import class : xnew ;
+import class : new ;
 
 import feature : feature compose ;
 import toolset : flags ;
@@ -438,7 +438,7 @@ rule lib ( name : sources * : requirements * : default-build *
     # This is a circular module dependency, so it must be imported here
     import targets ;
     targets.main-target-alternative
-      [ xnew lib-target-class $(name) : $(project) 
+      [ new lib-target-class $(name) : $(project) 
         : [ targets.main-target-sources $(sources) : $(name) ] 
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
         : [ targets.main-target-default-build $(default-build) : $(project) ]
@@ -473,19 +473,19 @@ xclass searched-lib-generator : generator
                 shared = true ;
             }        
             
-            local t = [ xnew searched-lib-target $(name) : $(project) : $(shared)
+            local t = [ new searched-lib-target $(name) : $(project) : $(shared)
                             : [ feature.get-values <name> : $(properties) ]
                             : [ feature.get-values <search> : $(properties) ]
                       ] ;
             # attach an action and properties to the target
-            a = [ xnew null-action $(t) : $(property-set) ] ;
+            a = [ new null-action $(t) : $(property-set) ] ;
             $(t).action $(a) ;
             return [ virtual-target.register $(t) ] ;
         }
     }
 }
 
-generators.register [ xnew searched-lib-generator ] ;
+generators.register [ new searched-lib-generator ] ;
 
 
 xclass compile-action : action 
@@ -531,7 +531,7 @@ xclass C-compiling-generator : generator
 rule register-c-compiler ( id : source-types + : target-types + :
                             requirements * )
 {
-    local g = [ xnew C-compiling-generator $(id) : $(source-types) 
+    local g = [ new C-compiling-generator $(id) : $(source-types) 
                 : $(target-types) : $(requirements) ] ;
     generators.register $(g) ;
 }
@@ -700,7 +700,7 @@ xclass linking-generator : generator
 rule register-linker ( id composing ? : source-types + : target-types + :
                             requirements * )
 {
-    local g = [ xnew linking-generator $(id) $(composing) : $(source-types) 
+    local g = [ new linking-generator $(id) $(composing) : $(source-types) 
                 : $(target-types) : $(requirements) ] ;
     generators.register $(g) ;
 }

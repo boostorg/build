@@ -3,7 +3,7 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-import class : xnew ;
+import class : new ;
 import feature ;
 import property ;
 import sequence ;
@@ -202,7 +202,7 @@ rule create ( raw-properties * )
     
     if ! $(.ps.$(key)) 
     {
-        .ps.$(key) = [ xnew property-set $(raw-properties) ] ;
+        .ps.$(key) = [ new property-set $(raw-properties) ] ;
     }
     return $(.ps.$(key)) ;    
 }

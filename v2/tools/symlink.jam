@@ -57,8 +57,8 @@ xclass symlink-targets : basic-target
         for local t in $(source-targets)
         {
             local s = $(self.targets[$(i)]) ;
-            local vt = [ class.xnew file-target $(s:D=) : [ $(t).type ] : $(self.project) ] ;
-            $(vt).action [ class.xnew action $(vt) : $(t) : symlink.ln : $(property-set) ] ;
+            local vt = [ class.new file-target $(s:D=) : [ $(t).type ] : $(self.project) ] ;
+            $(vt).action [ class.new action $(vt) : $(t) : symlink.ln : $(property-set) ] ;
             
             # Place the symlink in the directory relative to the project
             # location, instead of placing it in the build directory.
@@ -97,7 +97,7 @@ rule symlink (
     local project = [ CALLER_MODULE ] ;
     
     return [ targets.main-target-alternative
-        [ class.xnew symlink-targets $(project) : $(targets) : 
+        [ class.new symlink-targets $(project) : $(targets) : 
           # Note: inline targets are not supported for symlink, intentionally,
           # since it's used to linking existing non-local targets.
           $(sources) ] ] ;
