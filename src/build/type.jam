@@ -107,7 +107,7 @@ rule type-from-rule-name ( main-target-name )
 # Specifies that targets with suffix from 'suffixes' has the type 'type'. 
 # If different type is already specified for any of syffixes,
 # issues an error.
-local rule register-suffixes ( suffixes + : type )
+rule register-suffixes ( suffixes + : type )
 {
     for local s in $(suffixes)
     {        
