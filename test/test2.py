@@ -11,7 +11,6 @@ t.run_build_system("-sBOOST_BUILD_PATH=" + t.original_workdir + "/..")
 file_list = 'bin/foo/gcc/debug/runtime-link-dynamic/' * List("foo foo.o")
 t.expect_addition(file_list)
 
-sleep(2)
 
 t.write("foo.cpp", "int main(int, char**) {}\n")
 t.run_build_system("-d2 -sBOOST_BUILD_PATH=" + t.original_workdir + "/..")

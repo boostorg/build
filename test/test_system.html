@@ -186,7 +186,7 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     call <tt>ignore("*.obj")</tt> will just remove every files with ".obj"
     extension from <tt>unexpected_difference</tt>.</p>
 
-    <p>When test has finished with expectations and ingoring, the member
+    <p>When test has finished with expectations and ignoring, the member
     <tt>unexpected_difference</tt> will contain the list of all changes not
     yet accounted for. It is possible to assure that this list is empty by
     calling <tt>expect_nothing_more</tt> member function.</p>
@@ -233,7 +233,7 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     <p><b>Effects:</b></p>
 
     <p>Writes the specified content to the file given by <tt>name</tt> under
-    the temporary working directory. If the file aready exists, it is
+    the temporary working directory. If the file already exists, it is
     overwritten. Any required directories are automatically created.</p>
 
     <h3><a name="method-touch">Method <tt>touch(self, names)</tt></a></h3>
@@ -241,17 +241,21 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     <p><b>Effects:</b></p>
 
     <p>Sets the access and modification times for all files in <tt>names</tt>
-    to the current time. All the elements <tt>names</tt> should be relative
-    paths.</p>
+    to the current time. All the elements in <tt>names</tt> should be
+    relative paths.</p>
 
     <h3><a name="method-run_build_system">Method <tt>run_build_system(self,
-    extra_args='', stdout=None, stderr='', status=0, **kw)</tt></a></h3>
+    subdir='', extra_args='', stdout=None, stderr='', status=0,
+    **kw)</tt></a></h3>
 
     <p><b>Effects:</b></p>
 
     <ol>
       <li>Stores the state of the working directory in
       <tt>self.previous_tree</tt>.</li>
+
+      <li>Changes to <tt>subdir</tt>, if it is specified. If it is not
+      absolute path, it is relative to the working dir.</li>
 
       <li>Invokes the <tt>bjam</tt> executable, passing <tt>extra_args</tt>
       to it. The binary should be located under
@@ -294,8 +298,8 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     <p>Each method accepts a list of names. Those names are always
     unix-style, even on other systems.</p>
 
-    <p><b>Note:</b>The <tt>mul</tt> member might be usefull to create lists
-    of names.</p>
+    <p><b>Note:</b>The <tt>List</tt> helper class might be useful to create
+    lists of names.</p>
 
     <p><b>Note:</b>The file content can be examined using
     <tt>TestCmd.read</tt> function.</p>
@@ -307,9 +311,11 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
 
       <li>expect_removal</li>
 
-      <li>expect_modificatio</li>
+      <li>expect_modification</li>
 
       <li>expect_touch</li>
+
+      <li>expect_nothing</li>
     </ul>
 
     <p>There's also a member <tt>expect_nothing_more</tt>, which checks that
@@ -335,7 +341,7 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
       <li>ignore_touch(self, wilcard)</li>
     </ul>
 
-    <p>The method <tt>ignore(self, wildcard)</tt> ingores all the changes
+    <p>The method <tt>ignore(self, wildcard)</tt> ignores all the changes
     made to files that match a wildcard.</p>
 
     <h3><a name="class-list">Helper class <tt>List</tt></a></h3>
@@ -344,7 +350,7 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     <h4>Method <tt>__init__(self, string)</tt></h4>
 
     <p><b>Effects:</b>Splits the string on unescaped spaces and tabs. The
-    split components can futher be retrived using standard sequence
+    split components can further be retrieved using standard sequence
     access.</p>
 
     <h4>Method <tt>__mul__(self, other)</tt></h4>
@@ -353,9 +359,13 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     all possible concatenations of two string, first of which is from
     <tt>self</tt>, and second of which is from <tt>other</tt>.</p>
 
+    <p>The class also defines <tt>__str__</tt> and <tt>__repr__</tt> methods.
+    Finally, there's <tt>__coerce__</tt> method which allows to convert
+    strings to instances of <tt>List</tt>.</p>
+
     <p><b>Example:</b></p>
 <pre>
-    l = List("a b") * List("c d")
+    l = "a b" * List("c d")
     for e in l:
         print e        
    
@@ -371,7 +381,7 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
 </pre>
     <hr>
 
-    <p class="revision">Last modified: April 4, 2002</p>
+    <p class="revision">Last modified: April 18, 2002</p>
 
     <p>&copy; Copyright Vladimir Prus 2002. Permission to copy, use, modify,
     sell and distribute this document is granted provided this copyright
