@@ -168,7 +168,9 @@ if $(NT)
 {
     local gcc-release-properties
       = <optimization>speed <cxxflags>-fomit-frame-pointer
-      <inlining>on <cxxflags>-foptimize-sibling-calls
+      <inlining>on
+      # GCC 2.95.4, which ships with Debian, chokes on this.
+      # <cxxflags>-foptimize-sibling-calls 
       ;
     
     PYTHON_PROPERTIES += <$(gcc-compilers)><release>$(gcc-release-properties) ;
