@@ -20,36 +20,6 @@
 #   Targets defined in Jamfile, as well as target representing the entire
 #   Jamfile will be available using facilities in the 'targets' module.
 #
-#   By the time jamfile is included, the jamfile module will have certain
-#   local rules defined, intended to make writing jamfiles less cumbersome.
-#   By default, only project.project rule is available; more rules can be
-#   declared using project.add_jamfile_rule below.
-
-#
-#   Loads jamfile at the given location. Certain rule will be imported in the
-#   jamfile module, to ease describing targets. After loading, project global
-#   file and jamfile needed by the loaded one will be loaded recursively.
-#
-rule load ( jamfile-location ) { }
-
-#
-#   Appends the given rules to the list of rules that will be implicitly
-#   imported in any jamfile module. Rules must be unqualified.#
-#
-rule add_jamfile_rules ( rules + ) { }
-
-#
-#   Projects can be referred using path@project-id notation. In it, 'path'
-#   selects jamfile location and 'project-id' names project relatively to
-#   the selected jamfile. Rooted 'project-id' is possible:
-#   "@/boost" will refer to the top-level project called "boost".
-#   If part after "@" is not rooted, then part before "@" must be present.
-#   This rules returns the name of project module given its id.
-rule lookup ( id ) { }
-
-
-# Interface description end.
-###########################################################################
 
 import modules : poke ;
 import numbers ;
@@ -60,9 +30,10 @@ import errors : error ;
 import project-root ;
 
 
-jamfile-rules = project.project ;
-
-
+#
+#   Loads jamfile at the given location. After loading, project global
+#   file and jamfile needed by the loaded one will be loaded recursively.
+#
 rule load ( jamfile-location )
 {
     local loaded = ;
@@ -78,6 +49,14 @@ rule load ( jamfile-location )
     return $(module-name) ;
 }
 
+#
+#   Returns the name of project module given its id.
+#   Projects can be referred using path@project-id notation. In it, 'path'
+#   selects jamfile location and 'project-id' names project relatively to
+#   the selected jamfile. Rooted 'project-id' is possible:
+#   "@/boost" will refer to the top-level project called "boost".
+#   If part after "@" is not rooted, then part before "@" must be present.
+#
 rule lookup ( id )
 {
     local split = [ MATCH (.*)@(.*) : $(id)  ] ;
@@ -221,7 +200,7 @@ local rule find-jamfile (
     {
         jamfile-glob = [ GLOB $(dir) : $(JAMFILE) ] ;
     }
-    
+
     # Normalize the paths of each file found.
     #
     local jamfile-found = ;
@@ -235,7 +214,7 @@ local rule find-jamfile (
             normalized =
                 [ os.path.native [ os.path.root_relative_path $(jamfile) $(root-path) ] ] ;
         }
-        
+
         # Filter out if the found file is above the target parent root.
         if $(parent-root)
         {
@@ -244,10 +223,10 @@ local rule find-jamfile (
                 normalized = ;
             }
         }
-        
+
         jamfile-found += $(normalized) ;
     }
-    
+
     return $(jamfile-found) ;
 }
 
@@ -263,7 +242,7 @@ local rule load-jamfile (
     # See if the Jamfile is where it should be.
     #
     local jamfile-to-load = [ find-jamfile $(dir) ] ;
-    
+
     # Could not find it, error.
     #
     if ! $(jamfile-to-load)
@@ -274,11 +253,11 @@ local rule load-jamfile (
             "this pattern:" $(JAMFILE)"."
             "Please consult the documentation at 'http://www.boost.org'." ;
     }
-    
+
     # The module of the jamfile.
     #
     local jamfile-module = Jamfile<$(jamfile-to-load[1]:D)> ;
-    
+
     # Don't even bother with the rest if we know the file is already loaded.
     #
     if ! [ modules.binding $(jamfile-module) ]
@@ -293,21 +272,21 @@ local rule load-jamfile (
                 "Loading the first one: '"$(jamfile-to-load[1]:D=)"'." ;
         }
         jamfile-to-load = $(jamfile-to-load[1]) ;
-        
+
         # Initialize the jamfile module before loading.
         #
         initialize $(jamfile-module) : $(jamfile-to-load) ;
-        
+
         # Setup, by coordinating with project-root.
         #
         local project-root-module = [ $(jamfile-module).project-root-module ] ;
         $(project-root-module).register-project $(jamfile-module) ;
-        
+
         # Now load the Jamfile in it's own context.
         #
         modules.load $(jamfile-module)
             : $(jamfile-to-load:D=) : $(jamfile-to-load:D) ;
-        
+
         # Indicate we loaded the Jamfile.
         #
         if $(loaded-var)
@@ -315,7 +294,7 @@ local rule load-jamfile (
             $(loaded-var) = true ;
         }
     }
-    
+
     # Return the Jamfile's filename/module.
     #
     return $(jamfile-module) ;
@@ -424,7 +403,7 @@ module project-rules {
     {
         import sequence ;
         import print ;
-        
+
         print.section "'"$(__id__)"'" ;
         print.list-start ;
         print.list-item "Project root:" [ project-root ] ;
