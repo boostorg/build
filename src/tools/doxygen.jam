@@ -26,7 +26,7 @@ type.register DOXYFILE : doxyfile ; # Doxygen input file
 type.register DOXYGEN_XML_MULTIFILE : : XML ; # Doxygen XML multi-file output
 type.register DOXYGEN_XML : doxygen : XML ; # Doxygen XML output
 
-generators.register-standard doxygen.headers-to-doxyfile : H HPP : DOXYFILE ; 
+generators.register-composing doxygen.headers-to-doxyfile : H HPP : DOXYFILE ; 
 generators.register-standard doxygen.run : DOXYFILE : DOXYGEN_XML_MULTIFILE ;
 generators.register-standard doxygen.collect : DOXYGEN_XML_MULTIFILE : DOXYGEN_XML ;
 generators.register-standard doxygen.xml-to-boostbook : DOXYGEN_XML : BOOSTBOOK ;
@@ -78,11 +78,17 @@ rule headers-to-doxyfile ( target : sources * : properties * )
     local namevalue = [ regex.split $(param) "=" ] ;
     text += "$(namevalue[1])=$(namevalue[2])" ;
   }
+ 
+  local headers = "" ;
+  for local source in $(sources:G=)
+  {
+    headers = "$(headers) $(source)" ;
+  }
 
   text += "GENERATE_HTML = NO" ;
   text += "GENERATE_LATEX = NO" ;
   text += "GENERATE_XML = YES" ;
-  text += "INPUT = $(sources:G=) " ;
+  text += "INPUT = $(headers) " ;
   print.output $(target) plain ;
   print.text $(text) : true ;
 }
