@@ -6,13 +6,15 @@
 
 # This file is /NOT/ up-to-date; please use other toolset description
 # files as examples.
+#
+# I've tried to bring it up-to-date. -jsiek
 
 
 
 flags kcc CFLAGS <debug-symbols>on : -g ;
 flags kcc LINKFLAGS <debug-symbols>on : -g ;
 flags kcc CFLAGS <optimization>off : +K0 ;
-flags kcc CFLAGS <optimization>speed : +K3 ;
+flags kcc CFLAGS <optimization>speed : +K2 ;
 
 flags kcc CFLAGS <optimization>space : ;
 flags kcc CFLAGS <inlining>off : ;
