@@ -63,8 +63,8 @@ type.register BORLAND.TDS : tds ;
 generators.register-linker borland.link "" : RSP : EXE : <toolset>borland ;
 generators.register-linker borland.link "" : RSP : SHARED_LIB IMPORT_LIB : <toolset>borland ;
 generators.register-composing borland.archive : OBJ : STATIC_LIB : <toolset>borland ;
-generators.register-c-compiler borland.compile : CPP : OBJ : <toolset>borland ;
-generators.register-c-compiler borland.compile : C : OBJ : <toolset>borland ;
+generators.register-c-compiler borland.compile.c++ : CPP : OBJ : <toolset>borland ;
+generators.register-c-compiler borland.compile.c : C : OBJ : <toolset>borland ;
 
 
 # Declare flags 
@@ -126,10 +126,17 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 # -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
 
 
-actions compile
+actions compile.c++
 {
     "$(.root)bcc32" -j5 -g255 -q -c -P -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
+
+# For C, we don't pass -P flag
+actions compile.c
+{
+    "$(.root)bcc32" -j5 -g255 -q -c -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+}
+
 
 # Declare flags and action for linking
 toolset.flags borland.link OPTIONS <debug-symbols>on : -v ;
