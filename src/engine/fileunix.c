@@ -236,8 +236,13 @@ file_archscan(
 	if( DEBUG_BINDSCAN )
 	    printf( "scan archive %s\n", archive );
 
-	while( read( fd, &ar_hdr, SARHDR ) == SARHDR &&
-	       !memcmp( ar_hdr.ar_fmag, ARFMAG, SARFMAG ) )
+	while( read( fd, &ar_hdr, SARHDR ) == SARHDR
+	       && ! ( memcmp( ar_hdr.ar_fmag, ARFMAG, SARFMAG )
+#ifdef ARFZMAG
+		      /* OSF also has a compressed format */
+		      && memcmp( ar_hdr.ar_fmag, ARFZMAG, SARFMAG )
+#endif
+	      ) )
 	{
 	    char    lar_name_[257];
             char*   lar_name = lar_name_ + 1;
