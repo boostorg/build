@@ -306,7 +306,7 @@ local rule load-jamfile (
             .current-project = [ target $(module-name) ] $(.current-project) ;            
             if $(jamfile)
             {                
-                load-aux $(jamfile-module) : $(jamfile) ;
+                load-aux $(jamfile-module) : [ path.native $(jamfile) ] ;
             }            
         }        
     }

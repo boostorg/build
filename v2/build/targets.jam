@@ -298,7 +298,7 @@ class project-target : abstract-target
 
     # Find and return the target with the specified id, treated
     # relative to self.
-    rule find ( id )
+    rule find ( id : no-error ? )
     {
         local result ;    
         local project = $(self.project) ;
@@ -307,7 +307,8 @@ class project-target : abstract-target
         local split = [ MATCH (.*)//(.*) : $(id) ] ;        
         local project-part = $(split[1]) ;
         local target-part = $(split[2]) ;
-                
+
+        local extra-error-message ;
         if $(project-part)
         {
             # There's explicit project part in id. Looks up the
@@ -316,8 +317,12 @@ class project-target : abstract-target
             if $(pm)
             {
                 project-target = [ project.target $(pm) ] ;                
-                result = [ $(project-target).find $(target-part) ] ;
-            }                        
+                result = [ $(project-target).find $(target-part) : no-error ] ;
+            }                      
+            else
+            {
+                extra-error-message = "error: could not find project '$(project-part)'" ;
+            }            
         }
         else
         {            
@@ -348,12 +353,13 @@ class project-target : abstract-target
             }
         }
                 
-        if ! $(result)
+        if ! $(result) && ! $(no-error)
         {
             ECHO "error: Unable to find file or target named" ;
             ECHO "error:     '$(id)'" ;
             ECHO "error: referred from project at" ;
             ECHO "error:     '$(current-location)'" ;
+            ECHO $(extra-error-message) ;
             EXIT ;
         }        
         return $(result) ;
@@ -433,7 +439,6 @@ class project-target : abstract-target
         target-module # The module to intern into.
         )
     {
-        ECHO "Injecting constants to " $(target-module) ;
         for local c in $(self.constants)
         {
             modules.poke $(target-module) : $(c) : $(self.constant.$(c)) ;
