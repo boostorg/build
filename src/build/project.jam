@@ -85,25 +85,28 @@ rule lookup ( id : current-location )
         {
             local module-name = [ module-name $(location) ] ;
 
-            if ! $(project-id)
-            {
-                return [ attribute $(module-name) location ] ;
+            if $(module-name) 
+            {                
+                if ! $(project-id)
+                {
+                    return [ attribute $(module-name) location ] ;
+                }
+                else 
+                {
+                    local base-id = [ attribute $(module-name) id ] ;
+                    
+                    if ! $(base-id)
+                    {
+                        error "Project in $(location) has no project id" ;
+                    }
+                    else
+                    {
+                        local rooted-id = $(base-id)/$(project-id) ;
+                        return $($(rooted-id).jamfile-location) ;
+                    }
+                }     
             }
-            else 
-            {
-                local base-id = [ attribute $(module-name) id ] ;
-
-                if ! $(base-id)
-                {
-                    error "Project in $(location) has no project id" ;
-                }
-                else
-                {
-                    local rooted-id = $(base-id)/$(project-id) ;
-                    return $($(rooted-id).jamfile-location) ;
-                }
-           }     
-        }
+        }        
     }
 }
 
