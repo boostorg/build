@@ -1,7 +1,10 @@
-#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
-#  distribute this software is granted provided this copyright notice appears in
-#  all copies. This software is provided "as is" without express or implied
-#  warranty, and with no claim as to its suitability for any purpose.
+#  Copyright (c) 2001 David Abrahams.
+#  Copyright (c) 2002-2003 Rene Rivera.
+#  Copyright (c) 2002-2003 Vladimir Prus.
+#
+#  Use, modification and distribution is subject to the Boost Software
+#  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
+#  http://www.boost.org/LICENSE_1_0.txt)
 
 import toolset : flags ;
 import property ;
@@ -65,8 +68,6 @@ flags gcc.compile OPTIONS <inlining>off : -fno-inline ;
 flags gcc.compile OPTIONS <inlining>on : -Wno-inline ;
 flags gcc.compile OPTIONS <inlining>full : -finline-functions -Wno-inline ;
 
-flags gcc.compile OPTIONS <threading>multi : -pthread ;
-
 flags gcc.compile OPTIONS <debug-symbols>on : -g ;
 flags gcc.compile OPTIONS <profiling>on : -pg ;
 
@@ -127,3 +128,48 @@ actions link.dll bind LIBRARIES
 {
     $(NAME:E=g++) $(OPTIONS) -L"$(LINKPATH)" -Wl,-rpath$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-soname,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
 }
+
+# Set up threading support. It's somewhat contrived, so perform it at the end,
+# to avoid cluttering other code.
+
+if [ os.on-windows ] 
+{
+    flags gcc CFLAGS <threading>multi : -mthreads ;
+}
+else if [ modules.peek : UNIX ] 
+{
+    switch [ modules.peek : JAMUNAME ]
+    {
+    case SunOS* :
+        {
+        flags gcc CFLAGS <threading>multi : -pthreads ;
+        flags gcc LINKFLAGS <threading>multi : -pthreads ;
+        flags gcc FINDLIBS <threading>multi : rt ;
+        }
+    case BeOS :
+        {
+        # BeOS has no threading options, don't set anything here.
+        }
+    case *BSD :
+        {
+        flags gcc CFLAGS <threading>multi : -pthread ;
+        flags gcc LINKFLAGS <threading>multi : -pthread ;
+        # there is no -lrt on BSD
+        }
+    case IRIX :
+        {
+        # gcc on IRIX does not support multi-threading, don't set anything here.
+        }
+    case HP_UX :
+        {
+        # gcc on HP-UX does not support multi-threading, don't set anything here
+        }
+    case * :
+        {
+        flags gcc CFLAGS <threading>multi : -pthread ;
+        flags gcc LINKFLAGS <threading>multi : -pthread ;
+        flags gcc FINDLIBS <threading>multi : rt ;
+        }
+    }
+}
+

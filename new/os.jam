@@ -12,6 +12,29 @@ rule name { return $(name) ; }
 rule platform { return $(platform) ; }
 rule version { return $(version) ; }
 
+# Returns true if running on windows, whether in cygwin or not.
+rule on-windows 
+{
+    local result ;
+    if [ modules.peek : NT ] 
+    {
+        result = true ;
+    }
+    else if [ modules.peek : UNIX ] 
+    {
+        switch [ modules.peek : JAMUNAME ] 
+        {
+            case CYGWIN* :
+            {
+                result = true ;
+            }
+        }
+    }
+    return $(result) ;
+}
+
+     
+
 import regex ;
 
 rule __test__
