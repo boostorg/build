@@ -478,6 +478,9 @@ rule find ( id : current-location )
 
 # Attempts to generate the target given by target reference, which
 # can refer both to a main target or to a file.
+# Returns a list consisting of
+# - usage requirements
+# - generated virtual targets, if any
 rule generate-from-reference 
    ( target-reference            # Target reference
     : project                    # Project where the reference is made
@@ -526,14 +529,15 @@ rule generate-from-reference
     }    
 }
 
-# Returns new property set which inclues all properties from
+# Returns two property sets.
+# The second one inclues all properties from
 # 'property-set', except that all dependency properties are
 # generated with 'generation-ps', and the obtained virtual targets
 # are added as the values of original features.
-#
 # For example, <library>a/b might become <library>object(virtual-target)@1
-# In addition, usage requirements for all created virtual targets
-# are added to the created property set.
+#
+# The first one include all usage requirements propagated from generated
+# targets
 rule generate-dependencies ( property-set : project : generation-ps )
 {
     local usage-requirements = [ property-set.empty ] ;
@@ -638,7 +642,9 @@ rule basic-target ( name : project
     # Generate all sources for this target. For each source, the return value will
     # contain a list of virtual targets generated from the source, followed by 
     # <@>source-name element. 
-    # IOW, virtual targets which come from different sources are separated    
+    # IOW, virtual targets which come from different sources are separated 
+    # The first element in return value is always property-set with usage requirements
+    # of all generated targets.
     local rule generate-sources ( property-set )
     {      
         local usage-requirements = [ property-set.empty ] ;
