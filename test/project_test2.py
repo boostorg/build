@@ -50,6 +50,5 @@ Explanation: link-incompatible properties <rtti>on and <rtti>off
 
 t.run_build_system(stdout=expected, status=None)
 
-
-t.pass_test()
+t.cleanup()
 

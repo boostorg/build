@@ -74,4 +74,4 @@ expected = (expected_output1 + expected_output3 + expected_output2) % \
 os.chdir("project-test1")
 t.run_build_system(stdout=expected)
 
-t.pass_test()
+t.cleanup()

@@ -21,7 +21,7 @@ SLASH ?= / ;
 
 # Glob for patterns in the directories starting from the given
 # start directory, up to and including the root of the file-system.
-# We stop globing as soon as we find at least one match.
+# We stop globbing as soon as we find at least one match.
 #
 rule find-to-root ( dir : patterns + )
 {
@@ -34,101 +34,120 @@ rule find-to-root ( dir : patterns + )
     return $(globs) ;
 }
 
-# This rule can be invoked from an optional boost-build.jam file
-# to both indicate where to find the build system files, and to load
-# them. The path indicated is relative to the location of the
-# boost-build.jam file.
+# This global will hold the location of the user's boost-build.jam file.
+.boost-build-file = ;
+
+# This global will hold the location of the build system bootstrap file.
+.bootstrap-file = ;
+
+# Remember the value of $(BOOST_BUILD_PATH) supplied to us by the user.
+BOOST_BUILD_PATH.user-value = $(BOOST_BUILD_PATH) ;
+
+# This rule can be invoked from an optional user's boost-build.jam
+# file to both indicate where to find the build system files, and to
+# load them. The path indicated is relative to the location of the
+# boost-build.jam file. 
 #
 rule boost-build ( dir ? )
 {
-    # Add the given directory to the path so we can hopefully find the
-    # build system.
-    #
-    if $(dir)
+    if $(.bootstrap-file)
     {
-        BOOST_BUILD_PATH = $(dir:R=$(file-location.boost-build.jam)) $(BOOST_BUILD_PATH) ;
+        EXIT "Error: Illegal attempt to re-bootstrap the build system by invoking" ;
+        ECHO ;
+        ECHO "   'boost-build" $(dir) ";'" ;
+        ECHO ;
+        EXIT "Please consult the documentation at 'http://www.boost.org'." ;
     }
     
-    # Try to find the build system bootstrap file 'boost-build.jam'.
+    # Add the given directory to the path so we can find the build
+    # system. If dir is empty, has no effect.
+    #
+    BOOST_BUILD_PATH = $(dir:R=$(.boost-build-file:D)) $(BOOST_BUILD_PATH) ;
+    
+    # Try to find the build system bootstrap file 'bootstrap.jam'.
     #
     local bootstrap-file =
-        [ GLOB $(BOOST_BUILD_PATH) : boost-build.jam ] ;
+        [ GLOB $(BOOST_BUILD_PATH) : bootstrap.jam ] ;
+    .bootstrap-file = $(bootstrap-file[1]) ;
     
-    # There is no boost-build.jam we can find, exit with an error, and information.
+    # There is no boost-build.jam we can find, exit with an error
     #
-    if ! $(bootstrap-file)
+    if ! $(.bootstrap-file)
     {
-        EXIT
-            "Unable to load Boost.Build, could not find build system files."
-            "There is an initial bootstrap file which attempted to load the build system,"
-            "with this call: 'boost-build" $(dir) ";' but we were unable to find the secondary"
-            "bootstrap file to load."
-            "Attempted search in these directories from BOOST_BUILD_PATH: "$(BOOST_BUILD_PATH:J=", ")"."
-            "Please consult the documentation at 'http://www.boost.org'." ;
+        ECHO "Unable to load Boost.Build: could not find build system." ;
+        ECHO --------------------------------------------------------- ;
+        ECHO "$(.boost-build-file) attempted to load the build system by invoking" ;
+        ECHO ;
+        ECHO "   'boost-build" $(dir) ";'" ;
+        ECHO ;
+        ECHO "but we were unable to find \"bootstrap.jam\" in the specified directory" ;
+        ECHO "or in BOOST_BUILD_PATH (searching "$(BOOST_BUILD_PATH:J=", ")")." ;
+        ECHO ;
+        EXIT "Please consult the documentation at 'http://www.boost.org'." ;
     }
     
     # Load the build system, now that we know where to start from.
     #
-    include $(bootstrap-file[1]) ;
+    include $(.bootstrap-file) ;
 }
 
-# Record the path of an included file. This is used here to find out wether
-# the V1 build system was loaded.
-#
-rule record-file-location ( file : location )
-{
-    file-location.$(file:G=) = $(location) ;
-}
 
 if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
   || $(BOOST_ROOT)    # A temporary measure so Jam works with Boost.Build v1
 {
-    # Another temporary measure so Jam works with Boost.Build v1
-    BOOST_BUILD_PATH ?= $(BOOST_ROOT)/tools/build ;
-    
     # We attempt to load "boost-build.jam" by searching from the current invocation directory
-    # up to the root of the file-system and in the paths specified by BOOST_BUILD_PATH.
-    # Within this, one invokes the "boost-build" rule to indicate where the Boost.Build
-    # files are to load them.
+    # up to the root of the file-system.
     #
-    local boost-build-file =
+    # boost-build.jam is expected to invoke the "boost-build" rule to
+    # load the Boost.Build files.
+    local boost-build-files =
         [ find-to-root [ PWD ] : boost-build.jam ]
-        [ GLOB $(BOOST_BUILD_PATH) : boost-build.jam ] ;
+        # Another temporary measure so Jam works with Boost.Build v1
+        [ GLOB $(BOOST_ROOT) : boost-build.jam ] ;
+    
+    .boost-build-file = $(boost-build-files[1]) ;
     
     # There is no boost-build.jam we can find, exit with an error, and information.
     #
-    if ! $(boost-build-file)
+    if ! $(.boost-build-file)
     {
-        EXIT
-            "Unable to load Boost.Build, could not find 'boost-build.jam'."
-            "Attempted search from" [ PWD ] "up to the root."
-            "And in these directories from BOOST_BUILD_PATH: "$(BOOST_BUILD_PATH:J=", ")"."
-            "Please consult the documentation at 'http://www.boost.org'." ;
+        ECHO "Unable to load Boost.Build: could not find \"boost-build.jam\"" ;
+        ECHO --------------------------------------------------------------- ;
+        
+        if ! [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
+        {
+            ECHO "BOOST_ROOT must be set, either in the environment, or " ;
+            ECHO "on the command-line with -sBOOST_ROOT=..., to the root" ;
+            ECHO "of the boost installation." ;
+            ECHO ;
+        }
+
+        ECHO "Attempted search from" [ PWD ] "up to the root" ;
+        ECHO "and in these directories from BOOST_BUILD_PATH: "$(BOOST_BUILD_PATH:J=", ")"." ;
+        EXIT "Please consult the documentation at 'http://www.boost.org'." ;
     }
     
     # Now load the boost-build.jam to get the build system loaded. This
     # incidentaly loads the users jamfile and attempts to build targets.
+    #
     # We also set it up so we can tell wether we are loading the new V2
-    # system or the the old V1 syste.
+    # system or the the old V1 system.
     #
-    BINDRULE on <jam-module>boost-base.jam = record-file-location ;
-    file-location.boost-build.jam = $(boost-build-file[1]:D) ;
-    include $(boost-build-file[1]) ;
+    include $(.boost-build-file) ;
     
-    # Check that, at minimum, the build system loaded.
+    # Check that, at minimum, the bootstrap file was found.
     #
-    if ! [ RULENAMES build-system ] && ! $(file-location.boost-base.jam)
+    if ! $(.bootstrap-file)
     {
-        EXIT
-            "Unable to load Boost.Build, it seems that the build system files"
-            "were located, but the build system is not defined."
-            "Attempted to use, as the bootstrap, this file:"
-            $(file-location.boost-build.jam)$(SLASH)boost-build.jam.
-            "This means that even though that file was loaded it either failed"
-            "to directly load the build system files, or it failed to specify"
-            "where to find and load the files by calling the 'build-system [path] ;'"
-            "rule."
-            "Please consult the documentation at 'http://www.boost.org'." ;
+        ECHO "Unable to load Boost.Build" ;
+        ECHO -------------------------- ;
+        ECHO "\"$(.boost-build-file)\" was found by searching from" [ PWD ] "up to the root" ;
+        ECHO "and in these directories from BOOST_BUILD_PATH: "$(BOOST_BUILD_PATH:J=", ")"." ;
+        ECHO ;
+        ECHO "However, it failed to call the \"boost-build\" rule to indicate" ;
+        ECHO "the location of the build system." ;
+        ECHO ;
+        EXIT "Please consult the documentation at 'http://www.boost.org'." ;
     }
 }
 else
@@ -284,7 +303,6 @@ else
 #
 # OS specific variable settings
 #
-
 if $(NT)
 {
     # the list of supported toolsets on Windows NT and Windows 95/98
@@ -305,6 +323,7 @@ if $(NT)
       
       for t in $(SUPPORTED_TOOLSETS)
       {
+        $(t) = $($(t):J=" ") ; # reconstitute paths with spaces in them
         if $(t) = $(JAM_TOOLSET) { TOOLSET = $(t) ; }
       }
       
@@ -327,17 +346,22 @@ if $(NT)
       if $(BCCROOT)
       {
         TOOLSET  = BORLANDC ;
-        BORLANDC = $(BCCROOT) ;
+        BORLANDC = $(BCCROOT:J=" ") ;
       }
       else if $(MSVC)
       {
         TOOLSET   = VISUALC16 ;
-        VISUALC16 = $(MSVC) ;
+        VISUALC16 = $(MSVC:J=" ") ;
       }
       else if $(MSVCNT)
       {
         TOOLSET = VISUALC ;
-        VISUALC = $(MSVCNT) ;
+        VISUALC = $(MSVCNT:J=" ") ;
+      }
+      else if $(MSVCDir)
+      {
+        TOOLSET = VISUALC ;
+        VISUALC = $(MSVCDir:J=" ") ;
       }
       else if $(MINGW)
       {
@@ -345,8 +369,12 @@ if $(NT)
       }
       else
       {
-        ECHO  "Jam cannot be run because you didn't indicate which compilation toolset" ;
-        ECHO  "to use. To do so, follow these simple instructions:" ;
+        ECHO  "Jam cannot be run because, either:" ;
+        ECHO  "   a. You didn't set BOOST_ROOT to indicate the root of your" ;
+        ECHO  "      Boost installation." ;
+        ECHO  "   b. You are trying to use stock Jam but didn't indicate which" ;
+        ECHO  "      compilation toolset to use. To do so, follow these simple" ;
+        ECHO  "      instructions:" ;
         ECHO  ;
         ECHO  "  - define one of the following environment variable, with the" ;
         ECHO  "    appropriate value according to this list:" ;
@@ -366,16 +394,6 @@ if $(NT)
         ECHO  ;
         ECHO  "  e.g.:  set VISUALC=C:\\Visual6" ;
         ECHO  "         set JAM_TOOLSET=VISUALC" ;
-        ECHO  ;
-        ECHO  "  - if your toolset's installation path contains spaces, surround" ;
-        ECHO  "    it with TWO SETS of quotes:" ;
-        ECHO  ;
-        ECHO  "    e.g.: set VISUALC=\"\"C:\\Program Files\\Microsoft Visual C++\\VC98\"\"" ;
-        ECHO  ;
-        ECHO  "    The outer quotes will prevent Jam from splitting its elements," ;
-        ECHO  "    and the inner quotes will keep the path as a single argument on" ;
-        ECHO  "    the build command line." ;
-        ECHO  ;
         EXIT  ;
       }
     }
@@ -566,6 +584,7 @@ else if $(OS2)
       
       for t in $(SUPPORTED_TOOLSETS)
       {
+        $(t) = $($(t):J=" ") ; # reconstitute paths with spaces in them
         if $(t) = $(JAM_TOOLSET) { TOOLSET = $(t) ; }
       }
 
@@ -587,7 +606,7 @@ else if $(OS2)
     {
       if $(watcom)
       {
-        WATCOM   = $(watcom) ;
+        WATCOM   = $(watcom:J=" ") ;
         TOOLSET  = WATCOM ;
       }
       else

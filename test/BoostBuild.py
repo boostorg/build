@@ -32,8 +32,13 @@ elif os.name == 'nt':
         return self.status
 
 class Tester(TestCmd.TestCmd):
+    """Class for testing Boost.Build.
 
-    def __init__(self, arguments=""):
+    Optional argument `executable` indicates the name of the
+    executable to invoke. Set this to "jam" to test Boost.Build v1
+    behavior.
+    """
+    def __init__(self, arguments="", executable = 'bjam', match = TestCmd.match_exact):
 
         self.original_workdir = os.getcwd()
 
@@ -48,12 +53,12 @@ class Tester(TestCmd.TestCmd):
         TestCmd.TestCmd.__init__(
             self
             , program=os.path.join(
-                '..', 'jam_src', jam_build_dir, 'bjam')
-              + ' -sBOOST_BUILD_PATH='
-              + os.path.join(self.original_workdir, "..", "new")
+                '..', 'jam_src', jam_build_dir, executable)
+#              + ' -sBOOST_BUILD_PATH='
+#              + os.path.join(self.original_workdir, "..", "new")
               + ' -d0 --debug --quiet'
               + ' ' + arguments
-            , match=TestCmd.match_exact
+            , match=match
             , workdir='')
 
         os.chdir(self.workdir)
@@ -102,8 +107,14 @@ class Tester(TestCmd.TestCmd):
     #
     #   FIXME: Large portion copied from TestSCons.py, should be moved?
     #
-    def run_build_system(self, extra_args='', subdir='', stdout = None, stderr = '', status = 0, **kw):
+    def run_build_system(
+        self, extra_args='', subdir='', stdout = None, stderr = '',
+        status = 0, match = None, **kw):
+        
         self.previous_tree = build_tree(self.workdir)
+
+        if match is None:
+            match = self.match
 
         try:
             kw['program'] = self.program + ' ' + extra_args
@@ -129,7 +140,8 @@ class Tester(TestCmd.TestCmd):
             print "STDERR ============"
             print self.stderr()
             self.fail_test(1)
-        if not stdout is None and not self.match(self.stdout(), stdout):
+            
+        if not stdout is None and not match(self.stdout(), stdout):
             print "Expected STDOUT =========="
             print stdout
             print "Actual STDOUT ============"
@@ -139,7 +151,8 @@ class Tester(TestCmd.TestCmd):
                 print "STDERR ==================="
                 print stderr
             self.fail_test(1)
-        if not stderr is None and not self.match(self.stderr(), stderr):
+            
+        if not stderr is None and not match(self.stderr(), stderr):
             print "STDOUT ==================="
             print self.stdout()
             print "Expected STDERR =========="
