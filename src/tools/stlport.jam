@@ -35,7 +35,7 @@
 
 import feature : feature subfeature ;
 import project ;
-import class : xnew ;
+import class : new ;
 import targets ;
 import property-set ; 
 
@@ -168,7 +168,7 @@ rule stlport-target ( headers ? : libraries ? : requirements * )
     local project = [ CALLER_MODULE ] ;
     
     targets.main-target-alternative
-      [ xnew stlport-target-class  $(project) : $(headers) : $(libraries)        
+      [ new stlport-target-class  $(project) : $(headers) : $(libraries)        
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
       ] ;
 }

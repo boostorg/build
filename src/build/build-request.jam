@@ -10,7 +10,7 @@ import feature ;
 import property ;
 import numbers ;
 import container ;
-import class : xnew ;
+import class : new ;
 import string ;
 
 # Transform property-set by applying f to each component property.
@@ -168,7 +168,7 @@ rule from-command-line ( command-line * )
             }
         }
     }
-    return [ xnew vector [ xnew vector $(targets) ] [ xnew vector $(properties) ] ] ;
+    return [ new vector [ new vector $(targets) ] [ new vector $(properties) ] ] ;
 }
 
 # Converts one element of command line build request specification into
@@ -252,12 +252,12 @@ local rule convert-command-line-element ( e )
 xclass directly-requested-properties-adjuster
 {    
     import property-set ;
-    import class : xnew ;
+    import class : new ;
     
     rule __init__ ( )
     {            
         self.empty-request-requirements = ;
-        self.all-requests = [ xnew property-map ] ;
+        self.all-requests = [ new property-map ] ;
     }        
             
     rule add-requested-property-set ( property-set )

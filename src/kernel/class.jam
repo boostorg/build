@@ -79,7 +79,7 @@ rule xinit ( instance : class )
 }
 
 
-rule xnew ( class args * : * )
+rule new ( class args * : * )
 {
     .next-instance.$(class) ?= 1 ;
     local id = object($(class))@$(.next-instance.$(class)) ;
@@ -324,12 +324,12 @@ local rule __test__ ( )
 
     local rule expect_derived2 ( [derived2] x ) { }
 
-    local a = [ xnew myclass 3 4 5 : 4 5 ] ;
-    local b = [ xnew derived1 4 ] ;
-    local b2 = [ xnew derived1 4 ] ;
-    local c = [ xnew derived2 ] ;
-    local d = [ xnew derived2 ] ;
-    local e = [ xnew derived2a ] ;
+    local a = [ new myclass 3 4 5 : 4 5 ] ;
+    local b = [ new derived1 4 ] ;
+    local b2 = [ new derived1 4 ] ;
+    local c = [ new derived2 ] ;
+    local d = [ new derived2 ] ;
+    local e = [ new derived2a ] ;
 
     expect_derived2 $(d) ;
     expect_derived2 $(e) ;

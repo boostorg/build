@@ -47,7 +47,7 @@
 import targets ;
 import property-set ;
 import virtual-target ;
-import class : xnew ;
+import class : new ;
 import project ;
 import type ;
 import generators ;
@@ -89,7 +89,7 @@ rule update ( name : existing-translation sources + : requirements * )
     local project = [ CALLER_MODULE ] ;
     
     targets.main-target-alternative
-      [ xnew update-translations-class $(name) : $(project) : 
+      [ new update-translations-class $(name) : $(project) : 
         $(existing-translation) $(sources)
         : [ targets.main-target-requirements $(requirements) : $(project) ]        
       ] ;
@@ -152,13 +152,13 @@ xclass update-translations-class : basic-target
             
             if $(right-sources)
             {                                                                                        
-                local new-messages = [ xnew file-target $(self.name) : gettext.POT : $(self.project) ] ;
+                local new-messages = [ new file-target $(self.name) : gettext.POT : $(self.project) ] ;
                 local extract = 
-                  [ xnew action $(new-messages) : $(right-sources) : gettext.extract ] ;
+                  [ new action $(new-messages) : $(right-sources) : gettext.extract ] ;
                 $(new-messages).action $(extract) ;
                 
-                local r = [ xnew notfile-target $(self.name) : $(self.project) ] ;
-                local a = [ xnew action $(r) : $(source-targets[1]) $(new-messages) 
+                local r = [ new notfile-target $(self.name) : $(self.project) ] ;
+                local a = [ new action $(r) : $(source-targets[1]) $(new-messages) 
                   : gettext.update-po-dispatch ] ;
                 $(r).action $(a) ;
                 .constructed = [ virtual-target.register $(r) ] ;

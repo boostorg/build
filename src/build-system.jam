@@ -20,7 +20,7 @@ import feature ;
 import property-set ;
 import build-request ;
 import errors : error ;
-import class : xnew ;
+import class : new ;
 
 import builtin ;
 import make ;
@@ -143,7 +143,7 @@ virtual-targets = ;
 
 if $(expanded) 
 {        
-    local dr-adjuster = [ xnew directly-requested-properties-adjuster ] ;    
+    local dr-adjuster = [ new directly-requested-properties-adjuster ] ;    
     for local p in $(expanded)
     {
         $(dr-adjuster).add-requested-property-set $(p) ;

@@ -872,7 +872,7 @@ local rule do-scan (
         .module<$(module-file)>.name = $(module-name) ;
         if $(action)
         {
-            .module<$(module-file)>.actions += [ class.xnew vector $(action) ] ;
+            .module<$(module-file)>.actions += [ class.new vector $(action) ] ;
         }
         HDRSCAN on $(module-file) = "^(.*).$" ;
         HDRRULE on $(module-file) = doc.scan-module ;

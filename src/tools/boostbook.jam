@@ -250,8 +250,8 @@ xclass boostbook-target-class : basic-target
   rule construct ( source-targets * : property-set )
   {
     local path = [ project.attribute $(self.project) location ] ;
-    local catalog = [ xnew file-target catalog : XML : $(self.project) ] ;
-    $(catalog).action [ xnew xml-catalog-action $(catalog) : $(property-set) 
+    local catalog = [ new file-target catalog : XML : $(self.project) ] ;
+    $(catalog).action [ new xml-catalog-action $(catalog) : $(property-set) 
                                                : $(self.catalog-entries) ] ;
 
     $(catalog).set-path $(path) ;
@@ -322,7 +322,7 @@ rule boostbook ( target-name : sources * : requirements * : default-build * )
   local project = [ CALLER_MODULE ] ;
  
   targets.main-target-alternative 
-    [ xnew boostbook-target-class $(target-name) : $(project) 
+    [ new boostbook-target-class $(target-name) : $(project) 
         : [ targets.main-target-sources $(sources) : $(target-name) ] 
         : [ targets.main-target-requirements $(requirements) : $(project) ]
         : [ targets.main-target-default-build $(default-build) : $(project) ] 

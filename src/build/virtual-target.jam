@@ -8,7 +8,7 @@
 #  when searching for possible transormation sequences, when it's not known
 #  if particular target should be created at all.
 
-import class : xnew ;
+import class : new ;
 import path property-set utility sequence errors ;
 
 #                       +--------------------------+
@@ -722,11 +722,11 @@ rule from-file ( file : project )
         if ! $(type)
         {
             # warning "cannot determine type for file $(file)" ;
-            result = [ xnew file-target $(file) :  : $(project) ] ;
+            result = [ new file-target $(file) :  : $(project) ] ;
         }
         else
         {
-            local v = [ xnew file-target $(name) : $(type) : $(project) ] ;
+            local v = [ new file-target $(name) : $(type) : $(project) ] ;
             $(v).suffix [ MATCH ^.(.*)$ : $(file:S) ] ;
             result = $(v) ;
         }
@@ -865,7 +865,7 @@ rule clone-template ( target dont-recurse ? : new-source )
     }
     else
     {
-        local cloned = [ xnew file-target $(new-name) : [ $(target).type ] :
+        local cloned = [ new file-target $(new-name) : [ $(target).type ] :
           [ $(new-source).project ] ] ;
 
         if ! $(dont-recurse) && [ $(target).action ]
@@ -915,7 +915,7 @@ local rule clone-action-template ( action from cloned-from : new-source )
     local action-class = [ modules.peek $(action) : __class__ ] ;
 
     local ps = [ $(action).properties-ps ] ;
-    local cloned = [ xnew $(action-class) [ $(action).targets ] : $(sources)
+    local cloned = [ new $(action-class) [ $(action).targets ] : $(sources)
                      : [ $(action).action-name ] : $(ps) ] ;
 
     return $(cloned) ;
