@@ -664,6 +664,8 @@ dependGraphOutput( TARGET *t, int depth )
 	break;
       case T_FATE_ISTMP:
 	printf( "  %s       : Up to date temp file\n", spaces(depth) );
+      case T_FATE_NEEDTMP:
+	printf( "  %s       : Temporary file, to be updated\n", spaces(depth) );
 	break;
       case T_FATE_TOUCHED:
         printf( "  %s       : Been touched, updating it\n", spaces(depth) );
@@ -699,8 +701,12 @@ dependGraphOutput( TARGET *t, int depth )
 
     for( c = t->depends; c; c = c->next )
     {
-	printf( "  %s       : Depends on %s (%s)\n", spaces(depth),
+	printf( "  %s       : Depends on %s (%s)", spaces(depth),
 	       target_name(c->target), target_fate[ c->target->fate ] );
+    if (c->target->time == t->time)
+        printf( " (max time)");
+    printf("\n");
+    
     }
 
 
