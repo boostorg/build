@@ -9,16 +9,16 @@ if $(NT)
     # add a digit to each of 100 strings and multiply by 10
     1000x10chars = $(ten)$(100x9chars) ;
 
-    400x10chars = $(ten[1-4])$(100x9chars) ;
-
-    text on test = $(1000x10chars) $(1000x10chars) ;
-    JAMSHELL on test = % ;
-
     actions do_echo
     {
     echo $(text)
     }
-    do_echo test ;
-    DEPENDS all : test ;
-}
 
+    400x10chars = $(ten[1-4])$(100x9chars) ;
+
+    text on foo = $(400x10chars) 40$(10x8chars[1-9]) 01234 ;
+    text on foo = $(1000x10chars) $(1000x10chars) ;
+    JAMSHELL on foo = % ;
+
+    do_echo foo ;
+}
