@@ -156,7 +156,7 @@ rule Cc-action
 actions vc-Cc
 {
     $(VC_SETUP)
-    "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm400 -nologo -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" "$(>)"
+    "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm800 -nologo -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -169,7 +169,7 @@ rule C++-action
 actions vc-C++
 {
     $(VC_SETUP)
-    "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm400 -nologo -GX -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" -Tp"$(>)"
+    "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm800 -nologo -GX -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" -Tp"$(>)"
 }
 
 #### Archive ####
