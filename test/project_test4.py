@@ -35,33 +35,25 @@ t.expect_content("bin/$toolset/debug/main-target-b.exe/b.exe",
 "bin/$toolset/debug/a.obj\n"
 )
 
+# TODO: restore this test when we have new notion of link-compatibility
+#t.copy("lib/Jamfile3", "lib/Jamfile")
 
-t.copy("lib/Jamfile2", "lib/Jamfile")
-
-expected="""error: Requirements for project at 'lib' conflict with parent's.
-Explanation:  link-incompatible properties <threading>single and <threading>multi
-
-"""
-t.run_build_system("--no-error-backtrace", stdout=expected, status=None)
-
-t.copy("lib/Jamfile3", "lib/Jamfile")
-
-t.run_build_system(status=None)
-t.fail_test(find(t.stdout(), "warning: skipped build of lib/b.obj with properties") \
-            != 0)
+#t.run_build_system(status=None)
+#t.fail_test(find(t.stdout(), "warning: skipped build of lib/b.obj with properties") \
+#            != 0)
 
 # Check that project can be skipped as well
-t.copy("Jamfile4", "Jamfile")
+#t.copy("Jamfile4", "Jamfile")
 
-expected="warning: skipping build of project at lib2 due to unsatisfied requirements."
-t.run_build_system("rtti=on")
-t.fail_test(find(t.stdout(), expected) != 0)
+#expected="warning: skipping build of project at lib2 due to unsatisfied requirements."
+#t.run_build_system("rtti=on")
+#t.fail_test(find(t.stdout(), expected) != 0)
 
-t.copy("lib2/Jamfile2", "lib2/Jamfile")
+#t.copy("lib2/Jamfile2", "lib2/Jamfile")
 
-expected="warning: skipping build of project /mylib at lib2 due to unsatisfied\nrequirements."
-t.run_build_system("rtti=on")
-t.fail_test(find(t.stdout(), expected) != 0)
+#expected="warning: skipping build of project /mylib at lib2 due to unsatisfied\nrequirements."
+#t.run_build_system("rtti=on")
+#t.fail_test(find(t.stdout(), expected) != 0)
 
 # We don't yet make targets depend on Jamfile, so need to start from scratch
 # The following test is disabled, because of problems related to

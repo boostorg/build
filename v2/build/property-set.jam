@@ -25,6 +25,7 @@ class property-set
     import feature ;
     import property-set ;
     import property ;
+    import set ;
             
     rule __init__ ( raw-properties * )
     {        
@@ -57,6 +58,10 @@ class property-set
             {
                 self.propagated += $(p) ;
             }                        
+            if link-incompatible in $(att)
+            {
+                self.link-incompatible += $(p) ;
+            }                                
         }
     }
     
@@ -139,6 +144,17 @@ class property-set
         return $(self.propagated-ps) ;
     }                   
     
+    rule link-incompatible ( )
+    {
+        if ! $(self.link-incompatible-ps)
+        {
+            self.link-incompatible-ps = 
+              [ property-set.create $(self.link-incompatible) ] ;
+        }
+        return $(self.link-incompatible-ps) ;
+    }
+    
+    
     rule run-actions ( )
     {
         if ! $(self.run)
@@ -181,6 +197,32 @@ class property-set
     {
         return [ add [ property-set.create $(properties) ] ] ;
     }            
+    
+    rule link-incompatible-with ( ps )
+    {
+        if ! $(.li.$(ps))
+        {
+            local li1 = [ $(__name__).link-incompatible ] ;
+            local li2 = [ $(ps).link-incompatible ] ;            
+            if [ set.equal $(li1) : $(li2) ] 
+            {
+                .li.$(ps) = false ;
+            }
+            else
+            {
+                .li.$(ps) = true ;
+            }            
+        }    
+        if $(.li.$(ps)) = true
+        {
+            return true ;
+        }
+        else
+        {
+            return ;
+        }                
+    }
+    
 
     
     # Returns all values of 'feature'.
