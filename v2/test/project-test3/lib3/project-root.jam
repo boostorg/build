@@ -1,4 +1,6 @@
 
+use-project /lib2/helper : ../lib2/helper ;
+
 import property ;
 
 rule mfc-compile ( target : sources * : property-set * )
