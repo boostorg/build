@@ -209,7 +209,7 @@ bjam -sTOOLS=gcc my_target
       <tr>
         <td>
 <pre>
-bjam -sTOOLS="msvc gcc"
+bjam "-sTOOLS=msvc gcc"
 </pre>
         </td>
 
@@ -242,7 +242,7 @@ bjam "-sBUILD=release &lt;debug-symbols&gt;on"
       <tr>
         <td>
 <pre>
-bjam -sBUILD="debug release"
+bjam "-sBUILD=debug release"
 </pre>
         </td>
 
@@ -251,7 +251,7 @@ bjam -sBUILD="debug release"
 
       <tr>
         <td><code>set TOOLS=msvc<br>
-         bjam -sBUILD="&lt;cxxflags&gt;/G6"<br>
+         bjam "-sBUILD=&lt;cxxflags&gt;-G6"<br>
          &nbsp;</code></td>
 
         <td>Set an NT environment variable to always build with MSVC<br>
@@ -261,7 +261,7 @@ bjam -sBUILD="debug release"
 
       <tr>
         <td><code>set TOOLS=msvc gcc<br>
-         bjam -sBUILD="&lt;msvc&gt;&lt;*&gt;&lt;cxxflags&gt;/G6"<br>
+         bjam "-sBUILD=&lt;msvc&gt;&lt;*&gt;&lt;cxxflags&gt;-G6"<br>
          &nbsp;</code></td>
 
         <td>Set an NT environment variable to always build with MSVC and
@@ -1407,7 +1407,7 @@ flags msvc HDRS &lt;include&gt; ;
 
     <p>Revised 
     <!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan
-                                -->27 April, 2003 
+                                -->1 July, 2003 
     <!--webbot bot="Timestamp" endspan i-checksum="13972"
                                 -->
     </p>
