@@ -1389,54 +1389,34 @@ rule split-path
     return $(result) ;
 }
 
-# The new jam executable has slightly different SUBST behavior which we need to
-# account for.
-if $(JAM_VERSION[1]) >= 03 {
-
-SEARCH on new-split.jam = $(BOOST_BUILD_PATH) ;
-include new-split.jam ; # this is temporary.
-
-rule split-path
+rule split ( string separator )
 {
-    return [ SUBST $(<[1]) "^([/$(SLASH)]+).*" $1 ] # rooting slash(es), if any
-           [ split $(<) "[/$(SLASH)]" ]            # the rest.
-           ;
+    local result ;
+    local s = $(string) ;
+    
+    while $(s)
+    {
+        local match = [ SUBST $(s) ^(.*)$(separator)(.*) $1 $2 ] ;
+        
+        local tail = $(match[2]) ;
+        tail ?= $(s) ;
+
+        result = $(tail) $(result) ;
+        s = $(match[1]) ;
+    }
+    return $(result) ;
 }
 
-} else {
-
-rule split # string pattern
+rule split-path ( path )
 {
-    local source = $(<[1]) ;
-    local divider = $(<[2]) ;
-    local pattern = "^(.*)("$(divider)")(.*)" ;
-
-    # SUBST rule is weird. When there's no match it returns the original string.
-    local match = [ SUBST $(source) $(pattern) $1$2$3xxx ] ;
-    if ( $(match) = $(source) )
+    if ! $(gSPLIT_PATH_CACHE($(path)))
     {
-        return $(source) ;
+        gSPLIT_PATH_CACHE($(path)) =
+          [ SUBST $(path) "^([/$(SLASH)]+).*" $1 ] # rooting slash(es), if any
+            [ split $(path) "[/$(SLASH)]" ]        # the rest.
+              ;
     }
-    else
-    {
-        local head = [ SUBST $(source) $(pattern) $1 ] ;
-        local tail = [ SUBST $(source) $(pattern) $3 ] ;
-        return [ split $(head) $(divider) ] $(tail) ;
-    }
-}
-
-rule split-path
-{
-    local unmatched = [ SUBST $(<[1]) "^([/$(SLASH)]+).*" $2 ] ;
-    local root ;
-    if ! $(unmatched)
-    {
-        root = [ SUBST $(<[1]) "^([/$(SLASH)]+).*" $1 ] ;
-    }
-    return $(root) [ split $(<) "[/$(SLASH)]" ]
-           ;
-}
-
+    return $(gSPLIT_PATH_CACHE($(path))) ;
 }
 
 # dwa 6/4/01 - added for boost
