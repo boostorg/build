@@ -5,6 +5,7 @@ import generators ;
 import property ;
 import property-set ;
 import regex ;
+import scanner ;
 
 feature.feature xsl:param : : free ;
 feature.feature format : html-single docbook : incidental implicit composite ;
@@ -37,13 +38,13 @@ rule xslt ( target : source stylesheet : properties * )
 rule boostbook-to-docbook ( target : source : properties * )
 {
   local dir = [ modules.peek : BOOST_ROOT ] ;
-  xslt $(target) : $(source) "$(dir)/docbook.xsl" : $(properties) ;
+  xslt $(target) : $(source) "$(dir)/tools/boostbook/xsl/docbook.xsl" : $(properties) ;
 }
 
 rule docbook-to-html-single ( target : source : properties * )
 {
   local dir = [ modules.peek : BOOST_ROOT ] ;
-  xslt $(target) : $(source) "$(dir)/html-single.xsl" : $(properties) ;
+  xslt $(target) : $(source) "$(dir)/tools/boostbook/xsl/html-single.xsl" : $(properties) ;
 }
 
 rule boostbook-target-class ( name : project : sources * : requirements * 
@@ -94,3 +95,36 @@ actions xslt-xsltproc
   XML_CATALOG_FILES=catalog.xml xsltproc $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
 }
 
+# Mostly stolen from c-scanner :)
+rule xinclude-scanner ( includes * )
+{
+  scanner.__init__ ;
+
+  rule pattern ( )
+  {
+    return "xi:include[ ]*href=\"([^\"]*)\"" ;
+  }
+
+  rule process ( target : matches * )
+  {
+    local target_path = [ path.native [ path.parent [ path.make
+                          [ virtual-target.binding $(target) ] ] ] ] ;
+
+    for local i in $(matches) 
+    {
+      local i2 = [ SEARCH_FOR_TARGET $(i) : $(target_path) ] ;
+      INCLUDES $(target) : $(i2) ;
+    }
+
+    BINDRULE on $(matches) = virtual-target.remember-binding ;
+
+    for local j in $(matches)
+    {
+      scanner.install $(__name__) : $(j) : $(target) ; 
+    }
+  }
+}
+
+class xinclude-scanner : scanner ;
+scanner.register xinclude-scanner ;
+type.set-scanner XML : xinclude-scanner ;
