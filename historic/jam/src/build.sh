@@ -80,7 +80,7 @@ Guess_Toolset ()
     elif test_path bc++ ; then BOOST_JAM_TOOLSET=kylix
     elif test_path aCC ; then BOOST_JAM_TOOLSET=acc
     elif test_uname HP-UX ; then BOOST_JAM_TOOLSET=acc
-    elif test -r /opt/SUNWspro/bin/CC ; then
+    elif test -r /opt/SUNWspro/bin/cc ; then
         BOOST_JAM_TOOLSET=sunpro
         BOOST_JAM_TOOLSET_ROOT=/opt/SUNWspro/
     # Test for "cc" as the default fallback.
@@ -149,13 +149,13 @@ case $BOOST_JAM_TOOLSET in
     ;;
     
     sunpro)
-    if test -r /opt/SUNWspro/bin/CC ; then
+    if test -r /opt/SUNWspro/bin/cc ; then
         BOOST_JAM_TOOLSET_ROOT=/opt/SUNWspro/
     fi
-    if test -r $BOOST_JAM_TOOLSET_ROOTbin/CC ; then
+    if test -r $BOOST_JAM_TOOLSET_ROOTbin/cc ; then
         export PATH=$BOOST_JAM_TOOLSET_ROOTbin:$PATH
     fi
-    BOOST_JAM_CC=CC
+    BOOST_JAM_CC=cc
     ;;
     
     tru64cxx)
