@@ -12,6 +12,7 @@
 
 import feature ;
 import regex ;
+import sequence ;
 import common ;
 
 feature.feature xsl:param : : free ;
@@ -49,6 +50,24 @@ rule compute-xslt-flags ( target : properties * )
     flags += --path $(path:G=) ;
   }
         
+  # Take care of implicit dependencies
+  local other-deps ;
+  for local dep in [ feature.get-values <implicit-dependency> : $(properties) ]
+  {
+    other-deps += [ $(dep:G=).creating-subvariant ] ;
+  }
+
+  local implicit-target-directories ;
+  for local dep in [ sequence.unique $(other-deps) ]
+  {
+    implicit-target-directories += [ $(dep).all-target-directories ] ;
+  }
+
+  for local dir in $(implicit-target-directories)
+  {
+    flags += --path $(dir) ;
+  }
+
   return $(flags) ;
 }
 
