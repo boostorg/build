@@ -313,6 +313,7 @@ rule capture-run-output ( target : executable + )
     INCLUDES $(target) : $(target:S=.output) ;
     MakeLocate $(test-file:S=.failure) : $(LOCATE_TARGET) ;
     MakeLocate $(test-file:S=.output) : $(LOCATE_TARGET) ;
+    Clean clean $(test-file:S=.output) ;
     capture-run-output1 $(target) : $(executable) ;
 }
 
