@@ -279,7 +279,7 @@ rule inherit-rules ( toolset : base )
 local rule __test__ ( )
 {
     import assert ;
-    local p = <c>1 <d>2 <e>3 ;
-    assert.result <c>1 <d>2 : find-property-subset <a>0/<b>0/<c>1/<d>2/<e>5 <a>9 : $(p) ;
+    local p = <b>0 <c>1 <d>2 <e>3 <f>4 ;
+    assert.result <c>1/<d>2/<e>3 : find-property-subset <c>1/<d>2/<e>3 <a>0/<b>0/<c>1 <d>2/<e>5 <a>9 : $(p) ;
     assert.result : find-property-subset <a>0/<b>0/<c>9/<d>9/<e>5 <a>9 : $(p) ;
 }
