@@ -217,6 +217,21 @@ path-constant TOP : . ;
       After that, the <code>TOP</code> variable can be used in every Jamfile.
     </para>
   </section>
+
+  <section>
+    <title>How to change compilation flags for one file?
+    </title>
+
+    <para>If one file must be compiled with special options, you need to
+      explicitly declare an <code>obj</code> target for that file and then use
+      that target in your <code>exe</code> or <code>lib</code> target:
+<programlisting>
+exe a : a.cpp b ;
+obj b : b.cpp : &lt;cflags&gt;-g ;
+</programlisting>
+    </para>
+  </section>
+
     
   </chapter>
 <!--
