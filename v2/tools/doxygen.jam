@@ -26,7 +26,7 @@ feature.feature reftitle : : free ;
 
 type.register DOXYFILE : doxyfile ; # Doxygen input file
 type.register DOXYGEN_XML_MULTIFILE : : XML ; # Doxygen XML multi-file output
-type.register DOXYGEN_XML : doxygen : XML : main ; # Doxygen XML output
+type.register DOXYGEN_XML : doxygen : XML ; # Doxygen XML output
 
 # Initialize the Doxygen module. Parameters are:
 #   name: the name of the 'doxygen' executable. If not specified, the name

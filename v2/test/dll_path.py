@@ -45,7 +45,7 @@ import "class" : new ;
 
 rule init ( ) 
 { 
-    type.register PATH_LIST : pathlist : : main ;
+    type.register PATH_LIST : pathlist ;
     
     class dll-paths-list-generator : generator 
     {

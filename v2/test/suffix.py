@@ -34,7 +34,7 @@ import generators ;
 import common ;
 
 type.register First : first : ;
-type.register Second : "" : First : main ;
+type.register Second : "" : First ;
 
 generators.register-standard $(__name__).second : CPP : Second ;
 
