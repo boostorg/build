@@ -27,7 +27,7 @@ rule prebuilt-target-class ( name : project : type file : requirements * : use-r
         local path = [ path.root [ path.native $(self.file:D) ] $(pl) ] ;
         
         # CONSIDER: refine properties?
-        local t = [ new virtual-target $(self.file:S=:D=) : $(self.type)
+        local t = [ new file-target $(self.file:S=:D=) : $(self.type)
           : $(self.project) ] ;
         $(t).set-use-requirements $(self.use-requirements) ;
         $(t).set-path $(path) ;

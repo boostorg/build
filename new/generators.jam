@@ -344,7 +344,7 @@ rule generator (
                 generated-name = $(name) ;
             }
             
-            targets += [ new virtual-target $(generated-name) : $(t) : $(project) ] ;
+            targets += [ new file-target $(generated-name) : $(t) : $(project) ] ;
         }                 
         # Assign an action for each target
         local action = [ action-class ] ;
@@ -812,7 +812,7 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
         }
         else 
         {                            
-            local ut = [ new virtual-target % : [ $(t).type ] : "no project" ] ;            
+            local ut = [ new file-target % : [ $(t).type ] : "no project" ] ;            
             cresult = [ construct $(project) : $(target-type) $(multiple) : $(properties) : $(ut) ] ;
             .transformation.cache.$(signature) = $(cresult) ;                
         }
