@@ -597,40 +597,6 @@ rule register-c-compiler ( id : source-types + : target-types + :
 # register all generators as "generator.some-rule", not with "some-module.some-rule".)
 IMPORT $(__name__) : register-c-compiler : : generators.register-c-compiler ;
 
-class link-action : action
-{
-    import path ;
-    import sequence ;
-    
-    rule __init__ ( targets + : sources * : action-name : properties * )
-    {            
-        action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
-    }
-        
-    # Filters out all sources which are of LIB type and actualizes the remaining
-    # sources by calling base method.
-    rule actualize-sources ( sources * )
-    {
-        local real-sources ; 
-        for local s in $(sources) 
-        {
-            if ! [ type.is-derived [ $(s).type ] LIB ] ||
-               ! [ class.is-a $(s) : searched-lib-target ]
-
-            {
-                real-sources += $(s) ;
-            }   
-            else
-            {
-                self.dependency-only-sources += [ $(s).actualize ] ;
-            }            
-        }
-        
-        action.actualize-sources $(real-sources) ;
-    }    
-} 
-
-
 class linking-generator : generator
 {
     import property-set ;
@@ -700,27 +666,10 @@ class linking-generator : generator
             }
         }
         
-        # Sorry, still pass 'sources', which includes library targets.
-        # We need to set dependency on libraries, which is currently done
-        # by 'actualize-sources' above, via some secret hook. We need a better
-        # mechanism, but until it's implemented, need to pass all sources.
-        local spawn = [ generator.generated-targets $(sources)
+        local spawn = [ generator.generated-targets $(sources2)
           : [ property-set.create $(properties2) ] : $(project) $(name) ] ;
         
-        # And we'll also get warning about unused sources :-(
-        #if $(libraries)
-        #{                
-        #    for local s in $(spawn)
-        #    {
-        #        $(s).depends $(libraries) ;
-        #    }        
-        #}        
         return $(spawn) ;
-    }
-        
-    rule action-class ( )
-    {
-        return link-action ;
     }
 }                             
 
