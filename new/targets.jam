@@ -11,37 +11,42 @@
 #   search for the best transformation sequence, and some of them can be
 #   later 'actualized'.
 #
-#   Actual targets are all derived from 'abstract-target' class. First
+#   Actual targets are all derived from 'abstract-target' class. The first
 #   abstract target is 'project-target', which is created for each
-#   Jamfile, and can be obtained by rule 'target' in Jamfile's module.
+#   Jamfile, and can be obtained by the 'target' rule in the Jamfile's module.
 #   (see project.jam). Project targets keep a list of 'main-target' instances.
-#   Main target is what is explicitly defined in Jamfile. It is possible
-#   to have several definition for a main target, for example to have
-#   different list of sources on different platforms. So, main targets
-#   keep a list of variants -- i.e. instances of 'abstract-target' class.
-#   Precise type of variant can be anything  -- each rule that declares
-#   main targets can do anything.
+#   A main target is what the user explicitly defines in a Jamfile. It is
+#   possible to have several definitions for a main target, for example to have
+#   different lists of sources for different platforms. So, main targets
+#   keep a list of variants, which are instances of 'abstract-target'.
 #
-#   However, we'll use only targets derived from 'basic-target' class,
-#   which will provide some default behaviour. Now, there's only one
-#   class, 'make-target', which will be create by 'make' rule.
+#   Each variant is an instance of 'abstract-target'. When a main target
+#   subvariant is defined by some rule, that rule will decide what class to
+#   use, create an instance of that class and add it to the list of variants
+#   for the main target.
+#
+#   Rules supplied by the build system will use only targets derived
+#   from 'basic-target' class, which will provide some default behaviour.
+#   There will be two classes derived from it, 'make-target', created by the
+#   'make' rule, and 'typed-target', created by rules such as 'exe' and 'dll'.
 
 
 import sequence ;
 import class : class ;
 import regex ;
 import property ;
+import errors ;
 
 # Base class for all abstract targets.
-# local-name: name of the target in Jamfile
-# project: the project module where the target is declared
-#
-# Note: it might seem that we don't need either name or project at all.
-# However, there are places where we really need it. One example is error
-# messages which should name problematic targets. Another is setting correct
-# paths for sources and generated files.
-rule abstract-target ( local-name : project )
+rule abstract-target ( name      # name of the target in Jamfile
+                       : project # the project module where the target is declared
+                     )
 {
+    # Note: it might seem that we don't need either name or project at all.
+    # However, there are places where we really need it. One example is error
+    # messages which should name problematic targets. Another is setting correct
+    # paths for sources and generated files.
+
     self.local-name = $(local-name) ;
     self.project = $(project) ;
 
@@ -61,7 +66,7 @@ rule abstract-target ( local-name : project )
     # this method of error reporting? 'is-error'?)
     rule generate ( properties * )
     {
-        # Yes, it is empty.
+        errors.error "method should be defined in derived classes" ;
     }
 }
 class abstract-target ;
@@ -96,13 +101,13 @@ rule project-target ( local-name : project : requirements * : default-build * )
     # Creates the instance if needed.
     rule main-target ( name )
     {
-        if ! $(self.main-target<$(name)>)
+        if ! $(self.main-target.$(name))
         {
             self.main-targets += $(name) ;
-            self.main-target<$(name)> =
+            self.main-target.$(name) =
                 [ new main-target $(self.local-name) : $(self.project) ] ;
         }
-        return $(self.main-target<$(name)>) ;
+        return $(self.main-target.$(name)) ;
     }
 
 }
@@ -212,7 +217,7 @@ rule basic-target ( name : project
             if [ MATCH .*@.* $(s) ]
             {
                 # Reference to other main target
-                source-targets += [ recurse $(s) $(properties) ] ;
+                source-targets += [ generate-source $(s) $(properties) ] ;
             }
             else
             {
@@ -225,7 +230,7 @@ rule basic-target ( name : project
     }
 
     # Given a source specification, generates virtual targets for that source.
-    rule recurse ( source : properties * )
+    rule generate-source ( source : properties * )
     {
         # Separate target name from properties override
         local split = [ feature.split $(source) ] ;
