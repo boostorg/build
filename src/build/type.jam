@@ -53,6 +53,7 @@ rule register ( type : suffixes * : base-type ? )
     {
         .types += $(type) ;
         .bases.$(type) = $(base-type) ;
+        .derived.$(base-type) += $(type) ;        
 
         if $(suffixes)-not-empty
         {            
@@ -170,6 +171,17 @@ rule all-bases ( type )
     }
     return $(result) ;
 }
+
+rule all-derived ( type )
+{
+    local result = $(type) ;
+    for local d in $(.derived.$(type))
+    {
+        result += [ all-derived $(d) ] ;
+    }
+    return $(result) ;      
+}
+
 
 # Returns true if 'type' has 'base' as its direct or
 # indirect base.
