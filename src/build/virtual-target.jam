@@ -716,10 +716,15 @@ class null-action : action
 rule from-file ( file : project )
 {
     import type ; # had to do this here to break a circular dependency
-    
-    if $(.files.$(file).$(project))
+
+    # Check if we've created a target corresponding to this file.
+    local source-location = [ $(project).get source-location ] ;
+    local path = [ path.root [ path.root [ path.make $(file) ] $(source-location) ] 
+      [ path.pwd ] ] ;
+                
+    if $(.files.$(path))
     {
-        return $(.files.$(file).$(project)) ;
+        return $(.files.$(path)) ;
     }
     else
     {
@@ -737,7 +742,7 @@ rule from-file ( file : project )
             $(v).suffix [ MATCH ^.(.*)$ : $(file:S) ] ;
             result = $(v) ;
         }
-        .files.$(file).$(project) = $(result) ;
+        .files.$(path) = $(result) ;
         return $(result) ;
     }
 }
@@ -749,7 +754,8 @@ rule from-file ( file : project )
 rule register ( target )
 {
     local signature = [ sequence.join
-        [ $(target).project ] [ $(target).name ] [ $(target).type ] : - ] ;
+        [ $(target).actual-name ] : - ] ;    
+            
     local result ;
     for local t in $(.cache.$(signature))
     {
@@ -779,9 +785,10 @@ rule register ( target )
             }                        
         }
     }
+    
     if ! $(result)
     {
-        .cache.$(signature) += $(target) ;
+        .cache.$(signature) += $(target) ;     
         result = $(target) ;
     }
 
@@ -924,7 +931,7 @@ rule clone-action ( action : new-project : new-action-name ? : new-properties ? 
 #
 # The 'new-project' parameter tells what project should be assigned
 # for newly created non-source targets.
-rule clone-template ( target dont-recurse ? : new-source : new-project )
+rule clone-template ( target dont-recurse ? : new-source : new-project : dont-register ? )
 {
     local name = [ $(new-source).name ] ;
     local old-name = [ $(target).name ] ;
@@ -963,7 +970,13 @@ rule clone-template ( target dont-recurse ? : new-source : new-project )
                 if $(t) != $(target)
                 {
                     cloned-targets +=
-                      [ clone-template $(t) dont-recurse : $(new-source) : $(new-project) ] ;
+                      [ clone-template $(t) dont-recurse : $(new-source) : $(new-project) 
+                        # We don't want to pass new targets vis 'register' util we've
+                        # finished building them -- i.e. until we assign the action.
+                        # It might seem registering this not-yet ready target is
+                        # harmless, but in fact the 'register' logic expects than
+                        # registered target is never changed later.
+                        : dont-register ] ;
                 }
             }
             local cloned-targets2 ;
@@ -974,12 +987,16 @@ rule clone-template ( target dont-recurse ? : new-source : new-project )
                 cloned-targets2 += [ register $(t) ] ;
 
             }
+            
             $(cloned-action).set-targets $(cloned-targets2) ;
             cloned = $(cloned-targets2[1]) ;
         }
         else
         {
-            cloned = [ register $(cloned) ] ;
+            if ! $(dont-register)
+            {                
+                cloned = [ register $(cloned) ] ;
+            }            
         }
         return $(cloned) ;
     }
