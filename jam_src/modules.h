@@ -21,5 +21,5 @@ void bind_module_var( module*, char* name );
 void enter_module( module* );
 void exit_module( module* );
 
-#endif // MODULES_DWA10182001_H
+#endif
 

@@ -80,5 +80,5 @@ void profile_dump();
 # define EXPR_MOREEQ	9	/* arg >= arg */
 # define EXPR_IN	10	/* arg in arg */
 
-#endif // COMPILE_DWA20011022_H
+#endif
 

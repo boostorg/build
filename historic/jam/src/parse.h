@@ -57,5 +57,5 @@ void    parse_refer( PARSE *p );
 void    parse_free( PARSE *p );
 LIST*   parse_evaluate( PARSE *p, FRAME* frame );
 
-#endif // PARSE_DWA20011020_H
+#endif
 

@@ -54,4 +54,4 @@ void path_build1( PATHNAME *f, string *file );
 void path_parse( char *file, PATHNAME *f );
 void path_parent( PATHNAME *f );
 
-#endif // PATHSYS_VP_20020211_H
+#endif

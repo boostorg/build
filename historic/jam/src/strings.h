@@ -26,5 +26,5 @@ void string_pop_back( string* );
 char string_back( string* );
 void string_unit_test();
 
-#endif // STRINGS_DWA20011024_H
+#endif
 

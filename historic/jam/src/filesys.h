@@ -26,4 +26,4 @@ void file_archscan( char *arch, scanback func, void *closure );
 
 int file_time( char *filename, time_t *time );
 
-#endif // FILESYS_DWA20011025_H
+#endif
