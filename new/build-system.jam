@@ -3,4 +3,21 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 import project ;
-project.load "." ;
+import sequence ;
+
+import builtin ;
+import make ;
+
+current-project = [ project.load "."  ] ;
+root-target = [ $(current-project).target ] ;
+virtual-targets = [ $(root-target).generate ] ;
+
+
+actual-targets = ;
+for t in $(virtual-targets)
+{
+    actual-targets += [ $(t).actualize ] ;
+}
+DEPENDS all : $(actual-targets) ;
+
+

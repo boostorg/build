@@ -105,11 +105,19 @@ rule project-target ( name : project : requirements * : default-build * )
         {
             self.main-targets += $(name) ;
             self.main-target.$(name) =
-                [ new main-target $(self.name) : $(self.project) ] ;
+                [ new main-target $(name) : $(self.project) ] ;
         }
         return $(self.main-target.$(name)) ;
     }
 
+    # Tells if a main target with the specified name exists.
+    rule has-main-target ( name )
+    {
+        if $(self.main-target.$(name)) 
+        {
+            return true ;
+        } 
+    }
 }
 class project-target : abstract-target ;
 
@@ -168,6 +176,8 @@ class main-target : abstract-target ;
 rule basic-target ( name : project
                     : sources * : requirements * : default-build * )
 {
+    import build-request ;
+
     abstract-target.__init__ $(name) : $(project) ;
 
     self.sources = $(sources) ;
@@ -189,46 +199,60 @@ rule basic-target ( name : project
         {
             # CONSIDER: I'm really not sure if this is correct...
             properties = [ build-request.expand $(self.default-build) ] ;
+            local result = ;
             for local p in $(properties)
             {
-                generate [ feature.split $(p) ] ;
+                result += [ generate [ feature.split $(p) ] ] ;
             }
-        }
+            return $(result) ;
+        } else {
 
-        local rproperties =
-            [ property.refine $(properties) : $(self.requirements) ] ;
-        if $(rproperties[1]) = "@error"
-        {
-            print.wrapped-text
-                "Cannot satisfy request to build" [ full-name ]
-                "with properties " $(properties) ;
-            print.wrapped-text
-                "Explanation:" $(rproperties[2-]) ;
-            EXIT ;
-        }
-        # TODO: issue a warning when requirements change properties, but
-        # link-compatibility is still not broken.
+            property-path = [ property.as-path $(properties) ] ;
+            if ! $(property-path) 
+            {
+                property-path = X ;
+            }
+            if ! $(self.generated.$(property-path)) 
+            {
+                local rproperties =
+                    [ property.refine $(properties) : $(self.requirements) ] ;
+                if $(rproperties[1]) = "@error"
+                {
+                    print.wrapped-text
+                        "Cannot satisfy request to build" [ full-name ]
+                        "with properties " $(properties) ;
+                    print.wrapped-text
+                        "Explanation:" $(rproperties[2-]) ;
+                    EXIT ;
+                 }
+                 # TODO: issue a warning when requirements change properties, but
+                 # link-compatibility is still not broken.
 
-        local source-targets ;
-        for local s in $(self.sources)
-        {
-            # This assumes property list never contain "@".
-            if [ MATCH .*@.* $(s) ]
-            {
-                # Reference to other main target
-                source-targets += [ generate-source $(s) $(properties) ] ;
-            }
-            else
-            {
-                # Just a source file
-                source-targets +=
-                    [ new virtual-target $(self.name) : $(self.project) ] ;
-            }
+                 local source-targets ;
+                 for local s in $(self.sources)
+                 {
+                    # Try treating this source as reference to main target
+                    local more-targets = [ generate-source $(s) : $(properties) ] ;
+                    if $(more-targets)
+                    {
+                        source-targets += $(more-targets) ;
+                    }
+                    else 
+                    {
+                        # Just a source file
+                        source-targets +=
+                            [ new virtual-target $(s) : $(self.project) ] ;
+                    }
+                }
+                self.generated.$(property-path) = 
+                    [ construct $(source-targets) : $(properties) ] ;                                                                                                                                        
+            }                
+            return $(self.generated.$(property-path)) ;
         }
-        return [ construct $(source-targets) : $(properties) ] ;
     }
 
     # Given a source specification, generates virtual targets for that source.
+    # If the source does not correspond to any main target, returns nothing.
     rule generate-source ( source : properties * )
     {
         # Separate target name from properties override
@@ -236,19 +260,21 @@ rule basic-target ( name : project
         local id = $(split[1]) ;
         local sproperties = $(split[2-]) ;
 
-        # Apply source-specific properties
-        local rproperties = [ property.refine $(properties) : $(sproperties) ] ;
-        if $(rproperties[1]) = "@error"
-        {
-            error
-                "When building" [ full-name ] " with properties " $(properties)
-                "Invalid properties specified for " $(source) ":"
-                $(rproperties[2-]) ;
+        # Check is such target exists
+        local main-target = [ project.find-target $(id) : [ $(self.project).location ] ] ;
+        
+        if $(main-target) {
+            # Apply source-specific properties
+            local rproperties = [ property.refine $(properties) : $(sproperties) ] ;
+            if $(rproperties[1]) = "@error"
+            {
+                error
+                    "When building" [ full-name ] " with properties " $(properties)
+                    "Invalid properties specified for " $(source) ":"
+                    $(rproperties[2-]) ;
+            }
+            return [ $(main-target).generate $(rproperties) ] ;        
         }
-
-        # Try to generate source
-        local target = [ project.find-target $(id) ] ;
-        return [ $(target).generate $(rproperties) ] ;
     }
 
     # Constructs the virtual targets for this abstract targets and
@@ -256,6 +282,7 @@ rule basic-target ( name : project
     # Should be overrided in derived classes.
     rule construct ( source-targets * : properties * )
     {
+        errors.error "method should be defined in derived classes" ;
     }
 
 }
@@ -264,7 +291,9 @@ class basic-target : abstract-target ;
 
 
 # Class which represents a virtual target
-rule virtual-target ( name : project : subvariant * )
+rule virtual-target ( name : project 
+                      : subvariant * # Property sets which define this subvariant
+                     )
 {
     self.name = $(name) ;
     self.subvariant = $(subvariant) ;
@@ -320,7 +349,6 @@ rule virtual-target ( name : project : subvariant * )
     # only because some other file in set is out-of-date.
     rule actualize ( )
     {
-        ECHO "Actualizing target $(self.name)" ;
         if ! $(self.actual-name) {
 
             self.actual-name = [ actual-name ] ;
@@ -335,8 +363,10 @@ rule virtual-target ( name : project : subvariant * )
                 $(a).actualize ;
                 local path = [ os.path.join [ $(self.project).location ] "bin" ] ;
                 path = [ os.path.native $(path) ] ;
-                MakeLocate $(self.actual-name) : $(path) ;
-
+                LOCATE on $(self.actual-name) = $(path) ;
+                DEPENDS $(self.actual-name) : $(path) ;
+                utility.MkDir $(path) ;
+                utility.Clean clean : $(self.actual-name) ;
             } else {
                 SEARCH on $(self.actual-name) =
                     [ os.path.native [ $(self.project).source-location ] ] ;
@@ -355,10 +385,13 @@ rule virtual-target ( name : project : subvariant * )
                 [ sequence.join [ regex.split $(project-location) "/" ] : "!" ] ;
             local property-grist =
                 [ property.as-path $(self.subvariant) ] ;
+            # Set empty value to avoid eating adjacent text
             local grist = $(location-grist)/$(property-grist) ;
+            if ! $(self.subvariant) {
+               grist = $(location-grist) ;
+            }
             self.actual-name = <$(grist)>$(self.name) ;
         }
-        ECHO "Actual name will be " $(self.actual-name) ;
         return $(self.actual-name) ;
     }
 }

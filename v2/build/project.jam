@@ -54,7 +54,7 @@ rule load ( jamfile-location )
 }
 
 #
-#   Returns the name of project module given its id.
+#   Returns the project location given its id.
 #   Projects can be referred using path@project-id notation. In it, 'path'
 #   selects jamfile location relatively to 'current-location' and 'project-id'
 #   names project relatively to the selected jamfile.
@@ -91,30 +91,75 @@ rule lookup ( id : current-location )
         }
 
         local module-name = [ module-name $(location) ] ;
-        local base-id = [ $(module-name).id ] ;
 
-        if ! $(base-id)
+        if ! $(project-id)
         {
-            error "Project in $(location) has no project id" ;
+            return [ $(module-name).location ] ;
         }
+        else 
+        {
+            local base-id = [ $(module-name).id ] ;
 
-        if $(project-id)
-        {
-            local rooted-id = $(base-id)/$(project-id) ;
-            return $($(rooted-id).jamfile-location) ;
-        }
-        else
-        {
-            return $($(base-id).jamfile-location) ;
-        }
+            if ! $(base-id)
+            {
+                error "Project in $(location) has no project id" ;
+            }
+            else
+            {
+                local rooted-id = $(base-id)/$(project-id) ;
+                return $($(rooted-id).jamfile-location) ;
+            }
+       }     
     }
 }
 
 # Given an 'id' for a target, return an instance of 'main-target' that
-# corresponds to it.
+# corresponds to it. If there's no such main-target, returns empty string.
 rule find-target ( id : current-location )
 {
-    error "Not yet implemented" ;
+    # Find the project first          
+    local project-id ;
+    local target-id ;
+    local explicit ;
+    if [ MATCH (.*)@(.*) : $(id)  ] 
+    {
+        explicit = 1 ;
+        # Take the last "/" separated component after "@" as target id.
+        local split = [ MATCH (.*@(.*/)*)([^/]*) : $(id) ] ;
+        project-id = $(split[1]) ;
+        target-id = $(split[3]) ;
+    }
+    else
+    {
+        # This is not @-id. Treat it as path -- the last "/" separated component
+        # is target id, everything else denote project location.
+        local split = [ MATCH ((.*/)*)([^/]*) : $(id) ] ;
+        if $(split[1]) 
+        {
+                project-id = $(split[1])@ ;        
+        }
+        else
+        {
+                project-id = @ ;
+        }
+        target-id = $(split[3]) ;
+    }
+    local location = [ lookup $(project-id) : $(current-location) ] ;
+    if $(location) {
+        local project-module = [ module-name $(location) ] ;
+        local project-target = [ $(project-module).target ] ;
+        if [ $(project-target).has-main-target $(target-id) ] 
+        {
+            return [ $(project-target).main-target $(target-id) ] ;
+        }
+    } 
+    else if $(explicit)
+    {
+        print.wrapped-text 
+            "The target id" $(id) " specified by project at" $(current-location)
+            "is invalid" ;
+        EXIT ;
+    }
 }
 
 rule project ( id ? : option1 * : option2 * : option3 * )
@@ -401,7 +446,7 @@ module project-rules {
         import class : new ;
         if ! $(__target__)
         {
-            __target__ = [ new project-target "<project>" : $(__name__) ] ;
+            __target__ = [ new project-target $(__name__) : $(__name__) ] ;
         }
         return $(__target__) ;
     }
