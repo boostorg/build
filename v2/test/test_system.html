@@ -60,6 +60,9 @@
 
           <dt><a href="#method-read">Method <tt>read</tt></a></dt>
 
+          <dt><a href="#method-read_and_strip">Method
+          <tt>read_and_strip</tt></a></dt>
+
           <dt><a href="#methods-expectations">Methods for declaring
           expectations</a></dt>
 
@@ -204,8 +207,8 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     This is true on all platforms. In some contexts, a list of files is
     allowed. In that case any object with sequence interface is allowed.</p>
 
-    <h3><a name="method-__init__">Method <tt>__init__(self,
-    arguments='', executable='bjam')</tt></a></h3>
+    <h3><a name="method-__init__">Method <tt>__init__(self, arguments='',
+    executable='bjam')</tt></a></h3>
 
     <p><b>Effects:</b></p>
 
@@ -214,12 +217,11 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
       <tt>original_workdir</tt>.</li>
 
       <li>Determines the location of executable (<code>bjam</code> by
-      default) and build system files, assuming that the current
-      directory is <tt>tools/build/test</tt>. Formulates jam
-      invocation command, which will include explicit setting for
-      <tt>BOOST_BUILD_PATH</tt> variable and arguments passed to this
-      methods, if any. This command will be used by subsequent
-      invocation of <a href=
+      default) and build system files, assuming that the current directory is
+      <tt>tools/build/test</tt>. Formulates jam invocation command, which
+      will include explicit setting for <tt>BOOST_BUILD_PATH</tt> variable
+      and arguments passed to this methods, if any. This command will be used
+      by subsequent invocation of <a href=
       "#method-run_build_system"><tt>run_build_system</tt></a>. Finally,
       initializes the base class.</li>
 
@@ -261,9 +263,8 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     to the current time. All the elements in <tt>names</tt> should be
     relative paths.</p>
 
-    <h3><a name="method-run_build_system">Method
-    <tt>run_build_system(self, subdir='', extra_args='', stdout=None,
-    stderr='', status=0,
+    <h3><a name="method-run_build_system">Method <tt>run_build_system(self,
+    subdir='', extra_args='', stdout=None, stderr='', status=0,
     **kw)</tt></a></h3>
 
     <p><b>Effects:</b></p>
@@ -305,6 +306,21 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     <p>Read the specified file and returns it content. Raises an exception is
     the file is absent.</p>
 
+    <h3><a name="method-read_and_strip">Method <tt>read_and_strip(self,
+    name)</tt></a></h3>
+
+    <p><b>Effects:</b></p>
+
+    <p>Read the specified file and returns it content, after removing
+    trailing whitespace from every line. Raises an exception is the file is
+    absent.</p>
+
+    <p><b>Rationale:</b></p>
+
+    <p>Althought this method is questionable, there are a lot of cases when
+    jam or shells it uses insert spaces. It seems that introducing this
+    method is much simpler than dealing with all those cases.</p>
+
     <h3><a name="methods-expectations">Methods for declaring
     expectations</a></h3>
 
@@ -339,6 +355,22 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     <p>There's also a member <tt>expect_nothing_more</tt>, which checks that
     all the changes are either expected or ignored, in other words that
     <tt>unexpected_difference</tt> is empty by now.</p>
+
+    <p>Lastly, there's a method to compare file content with expected
+    content:</p>
+    <tt>expect_content(self, name, content, exact=0)</tt> 
+
+    <p>The method fails the test if the content of file identified by 'name'
+    is different from 'content'. If 'exact' is true, the file content is used
+    as-is, otherwise, two transformations are applied:</p>
+
+    <ul>
+      <li>The <tt>read_and_strip</tt> method is used to read the file, which
+      removes trailing whitespace</li>
+
+      <li>Each backslash in the file content is converted to forward
+      slash.</li>
+    </ul>
 
     <h3><a name="methods-ignoring">Methods for ignoring changes</a></h3>
 

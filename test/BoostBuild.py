@@ -175,7 +175,16 @@ class Tester(TestCmd.TestCmd):
         self.last_build_time = time.time()
 
     def read(self, name):
-        return open(self.native_file_name(name), "rb").read()
+        return open(self.native_file_name(name), "r").read()
+
+    def read_and_strip(self, name):
+        lines = open(self.native_file_name(name), "r").readlines()
+        result = string.join(map(string.rstrip, lines), "\n")
+        if lines and lines[-1][-1] == '\n':
+            return result + '\n'
+        else:
+            return result
+    
 
     # A number of methods below check expectations with actual difference
     # between directory trees before and after build.
@@ -264,6 +273,18 @@ class Tester(TestCmd.TestCmd):
         if not self.unexpected_difference.empty():
                 self.fail_test(1)
 
+    def expect_content(self, name, content, exact=0):
+        if exact:
+            actual = self.read(name)
+        else:
+            actual = string.replace(self.read_and_strip(name), "\\", "/")
+
+        if actual != content:
+            print "Expected:\n"
+            print content
+            print "Got:\n"
+            print actual
+            self.fail_test(1)
 
     # Helpers
     def mul(self, *arguments):
