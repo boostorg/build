@@ -512,7 +512,7 @@ local rule scan-rule (
             {
                 scope-level += "{" ;
             }
-            else if [ MATCH "^[^\\}]*([\\}])$"  : $(syntax-block) ]
+            else if [ MATCH "^[^\\}]*([\\}])[$(ws)]*$"  : $(syntax-block) ]
             {
                 scope-level = $(scope-level[2-]) ;
             }
@@ -620,7 +620,7 @@ rule scan-module (
     : text * # The text in the file, one item per line.
     )
 {
-    #> ECHO -!- $(target) ;
+    if debug in $(self.options) { ECHO "HELP:" scanning module target '$(target)' ; }
     local module-name = $(.module<$(target)>.name) ;
     local module-documented = ;
     local comment-block = ;
@@ -631,9 +631,12 @@ rule scan-module (
     while $(text)
     {
         comment-block = [ extract-comment text ] ;
-        #> ECHO "##" '$(comment-block)' ;
         syntax-block = [ extract-syntax text ] ;
-        #> ECHO "<>" '$(syntax-block)' ;
+        if debug in $(self.options)
+        {
+            ECHO "HELP:" comment block; '$(comment-block)' ;
+            ECHO "HELP:" syntax block; '$(syntax-block)' ;
+        }
         if [ scan-rule $(syntax-block) : text ]
         {
         }
