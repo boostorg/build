@@ -11,10 +11,19 @@
 import modules ;
 import print ;
 import set ;
+import container ;
+import class ;
 
 # List of possible modules, but which really aren't.
 #
-not-modules = boost-build test ;
+not-modules = boost-build bootstrap site-config test user-config ;
+
+# The type of output to genetare.
+# "console" is formated text echoed to the console (the default);
+# "text" is formated text appended to a help.txt file;
+# "html" is HTLM output to a file.
+#
+help-output = console ;
 
 # Handle --help options, displaying or generating instructions and
 # documentation. If this does generate any help it exits after doing
@@ -26,38 +35,50 @@ rule help ( )
     local did-help = ;
     for local arg in $(args[2-])
     {
-        local module-name = ;
         local help = ;
+        local sub-help = ;
         if $(arg) = --help
         {
-            help = _any_ ;
+            help = _top_ ;
         }
         else
         {
             if [ MATCH --help-[^\\.]*(\\.) : $(arg) ]
             {
-                module-name = [ MATCH --help-([^\\.]*) : $(arg) ] ;
-                help = [ MATCH --help-[^\\.]*\\.(.*) : $(arg) ] ;
+                help = [ MATCH --help-([^\\.]*) : $(arg) ] ;
+                sub-help = [ MATCH --help-[^\\.]*\\.(.*) : $(arg) ] ;
             }
             else
             {
                 help = [ MATCH --help-(.*) : $(arg) ] ;
             }
         }
-        #> ECHO module-name={$(module-name)} - help={$(help)} ;
-        if ! $(module-name)
+        if $(help) = output
+        {
+            help-output = $(sub-help) ;
+            did-help = true ;
+            help = ;
+        }
+        if ! $(sub-help)
         {
             # Any help.
-            if $(help) && $(help) = _any_
+            if $(help) && $(help) = _top_
             {
-                print-help-any ;
+                print-help-top ;
                 did-help = true ;
                 help = ;
             }
-            # Only modules?
-            if $(help) && $(help) = "module"
+            # All modules?
+            if $(help) && $(help) = "all"
             {
-                print-help-modules ;
+                local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
+                path-to-modules ?= . ;
+                local modules-to-list =
+                    [ set.difference
+                        [ GLOB $(path-to-modules) : *\\.jam ] :
+                        [ GLOB $(path-to-modules) : $(not-modules)\\.jam ] ] ;
+                do-scan $(modules-to-list[1--2]) ;
+                do-scan $(modules-to-list[-1]) : print-help-all ;
                 did-help = true ;
                 help = ;
             }
@@ -66,6 +87,13 @@ rule help ( )
         local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
         path-to-modules ?= . ;
         local module-path = [ GLOB $(path-to-modules) : $(help)\\.jam ] ;
+        if $(help) && $(module-path) && $(sub-help)
+        {
+            do-scan $(module-path[1]) : print-help-rules $(sub-help) ;
+            do-scan $(module-path[1]) : print-help-variables $(sub-help) ;
+            did-help = true ;
+            help = ;
+        }
         if $(help) && $(module-path)
         {
             do-scan $(module-path[1]) : print-help-module ;
@@ -78,12 +106,6 @@ rule help ( )
             EXIT "Unrecognized help option '"$(arg)"'." ;
         }
     }
-    #> if $(did-help)
-    #> {
-        #> EXIT
-            #> "For more information consult the documentation at"
-            #> "'http://www.boost.org'." ;
-    #> }
     return $(did-help) ;
 }
 
@@ -91,7 +113,7 @@ rule help ( )
 # comment is the first sentence.
 #
 local rule brief-comment (
-    docs + # The comment documentation.
+    docs * # The comment documentation.
     )
 {
     local d = $(docs:J=" ") ;
@@ -112,7 +134,7 @@ local rule brief-comment (
 #
 local rule set-module-doc (
     module-name ? # The name of the module to document.
-    : docs + # The documentation for the module.
+    : docs * # The documentation for the module.
     )
 {
     module-name ?= * ;
@@ -130,7 +152,7 @@ local rule set-module-doc (
 #
 local rule set-module-copyright (
     module-name ? # The name of the module to document.
-    : copyright + # The copyright for the module.
+    : copyright * # The copyright for the module.
     )
 {
     module-name ?= * ;
@@ -150,7 +172,7 @@ local rule set-module-copyright (
 local rule set-rule-doc (
     name # The name of the rule.
     module-name ? # The name of the module to document.
-    : docs + # The documentation for the rule.
+    : docs * # The documentation for the rule.
     )
 {
     module-name ?= * ;
@@ -164,18 +186,54 @@ local rule set-rule-doc (
     }
 }
 
+# Set the argument call signature of a rule.
+#
+local rule set-rule-arguments-signature (
+    name # The name of the rule.
+    module-name ? # The name of the module to document.
+    : signature * # The arguments signature.
+    )
+{
+    module-name ?= * ;
+
+    $(module-name).$(name).signature = $(signature) ;
+}
+
+# Specifies the documentation for an argument of a rule.
+#
+local rule set-argument-doc (
+    name # The name of the argument.
+    qualifier # Argument syntax qualifier, "*", "+", etc.
+    rule-name # The name of the rule.
+    module-name ? # THe optional name of the module.
+    : docs * # The documentation.
+    )
+{
+    module-name ?= * ;
+
+    $(module-name).$(rule-name).$(name).qualifier = $(qualifier) ;
+    $(module-name).$(rule-name).$(name).docs = $(docs) ;
+
+    if ! $(name) in $($(module-name).$(rule-name).args)
+    {
+        $(module-name).$(rule-name).args += $(name) ;
+    }
+}
+
 # Specifies the documentation for a variable in the current module.
 # If called in the global module, the global variable is documented.
 #
 local rule set-variable-doc (
     name # The name of the variable.
-    module-name ? # THe name of the module to document.
-    : docs + # The documentation for the variable.
+    default # The default initial value.
+    module-name ? # The name of the module to document.
+    : docs * # The documentation for the variable.
     )
 {
     module-name ?= * ;
 
     $(module-name).$(name).brief = [ brief-comment $(docs) ] ;
+    $(module-name).$(name).default = $(default) ;
     $(module-name).$(name).docs = $(docs) ;
 
     if ! $(name) in $($(module-name).variables)
@@ -186,7 +244,7 @@ local rule set-variable-doc (
 
 # Generates a general description of the documentation and help system.
 #
-local rule print-help-any ( )
+local rule print-help-top ( )
 {
     print.section "Available Help"
         These are the available options for obtaining documentation.
@@ -195,15 +253,18 @@ local rule print-help-any ( )
         ;
     print.list-start ;
     print.list-item --help; This help message. ;
-    print.list-item --help-modules; Brief information on available modules. ;
+    print.list-item --help-all; Brief information on available modules. ;
     print.list-end ;
 }
 
+# Generate brief documentation for all the known items in the section
+# for a module. Possible sections are: "rules", and "variables".
+#
 local rule print-help-module-section (
-    module
-    section
-    : section-head
-    section-description *
+    module # The module name.
+    section # rules or variables.
+    : section-head # The title of the section.
+    section-description * # The detailed description of the section.
     )
 {
     if $($(module).$(section))
@@ -221,24 +282,19 @@ local rule print-help-module-section (
 # Generate documentation for possible modules. We attempt to list all known
 # modules, and a brief description of each.
 #
-local rule print-help-modules ( )
+local rule print-help-all (
+    ignored # Usually the module name, but is ignored here.
+    )
 {
     print.section "Modules"
         "These are all the known modules. Use --help-<module> to get more"
         "detailed information."
         ;
-    local modules-to-list =
-        [ set.difference
-            [ GLOB [ modules.peek : BOOST_BUILD_PATH ] : *.jam ]
-            : $(not-modules) ] ;
-    if $(modules-to-list)
+    if $(documented-modules)
     {
         print.list-start ;
-        for local module-name in $(modules-to-list:B)
+        for local module-name in $(documented-modules)
         {
-            # Make sure we have the docs for the module.
-            modules.load $(module-name) ;
-            
             # The brief docs for each module.
             print.list-item "'"$(module-name)"';" $($(module-name).brief) ;
         }
@@ -297,19 +353,14 @@ local rule print-help-rules (
         # Print out the given rules.
         for local rule-name in $(name)
         {
-            local docs = $($(module).$(rule-name).docs) ;
-            print.section "'"$(module).$(rule-name)"'"
-                [ extract-next-doc-item docs ] ;
-            if $(docs)
+            print.section "'"$(module-name).$(rule-name)"'" $($(module-name).$(rule-name).docs)
+                Call with "(" $($(module-name).$(rule-name).signature) ")" ;
+            if $($(module-name).$(rule-name).args)
             {
                 print.list-start ;
-                while $(docs)
+                for local arg-name in $($(module-name).$(rule-name).args)
                 {
-                    local doc-item = [ extract-next-doc-item docs ] ;
-                    if $(doc-item[1]:G) = <argument>
-                    {
-                        print.list-item $(doc-item[1]:G=)";" $(doc-item[2-]) ;
-                    }
+                    print.list-item $(arg-name)";" $($(module-name).$(rule-name).$(arg-name).docs) ;
                 }
                 print.list-end ;
             }
@@ -330,20 +381,11 @@ local rule print-help-variables (
         # Print out the given variables.
         for local variable-name in $(name)
         {
-            local docs = $($(module).$(variable-name).docs) ;
-            print.section "'"$(module).$(variable-name)"'"
-                [ extract-next-doc-item docs ] ;
-            if $(docs)
+            print.section "'"$(module-name).$(variable-name)"'" $($(module-name).$(variable-name).docs) ;
+            if $($(module-name).$(variable-name).default)
             {
                 print.list-start ;
-                while $(docs)
-                {
-                    local doc-item = [ extract-next-doc-item docs ] ;
-                    if $(doc-item[1]:G) = <default-value>
-                    {
-                        print.list-item "default value;" $(doc-item[2]) ;
-                    }
-                }
+                print.list-item "default value;" $($(module-name).$(variable-name).default) ;
                 print.list-end ;
             }
         }
@@ -356,7 +398,11 @@ local rule __test__
 
 ws = "	 " ;
 
-local rule extract-comment ( var )
+# Extract the text from a block of comments.
+#
+local rule extract-comment (
+    var # The name of the variable to extract from.
+    )
 {
     local comment = ;
     local line = $($(var)[1]) ;
@@ -369,7 +415,11 @@ local rule extract-comment ( var )
     return $(comment) ;
 }
 
-local rule extract-syntax ( var )
+# Extract s single line of Jam syntax, ignoring any comments.
+#
+local rule extract-syntax (
+    var # The name of the variable to extract from.
+    )
 {
     local syntax = ;
     local line = $($(var)[1]) ;
@@ -386,33 +436,200 @@ local rule extract-syntax ( var )
     return $(syntax) ;
 }
 
-rule scan-module ( target : text * )
+# Extract the next token, this is either a single Jam construct
+# or a comment as a single token.
+#
+local rule extract-token (
+    var # The name of the variable to extract from.
+    )
 {
-    #> ECHO -**- scan-module "(" $(1)... ")" ;
+    local parts = ;
+    while ! $(parts)
+    {
+        parts = [ MATCH "^[$(ws)]*([^$(ws)]+)[$(ws)]*(.*)" : $($(var)[1]) ] ;
+        if ! $(parts)
+        {
+            $(var) = $($(var)[2-]) ;
+        }
+    }
+    local token = ;
+    if [ MATCH "^(#)" : $(parts[1]) ]
+    {
+        token = $(parts:J=" ") ;
+        $(var) = $($(var)[2-]) ;
+    }
+    else
+    {
+        token = $(parts[1]) ;
+        $(var) = $(parts[2-]:J=" ") $($(var)[2-]) ;
+    }
+    return $(token) ;
+}
+
+# Scan for a rule declaration as the next item in the variable.
+#
+local rule scan-rule (
+    syntax ? # The first part of the text which contains the rule declaration.
+    : var # The name of the variable to extract from.
+    )
+{
+    local rule-parts =
+        [ MATCH "^[$(ws)]*(rule|local[$(ws)]*rule)[$(ws)]+([^$(ws)]+)[$(ws)]*(.*)" : $(syntax:J=" ") ] ;
+    if $(rule-parts[1])
+    {
+        # mark as doc for rule.
+        local rule-name = $(rule-parts[2]) ;
+        if $(scope-name)
+        {
+            rule-name = $(scope-name).$(rule-name) ;
+        }
+        local is-local = [ MATCH "^(local).*" : $(rule-parts[1]) ] ;
+        if $(comment-block)
+        {
+            set-rule-doc $(rule-name) $(module-name) : $(comment-block) ;
+        }
+        # parse args of rule.
+        $(var) = $(rule-parts[3-]) $($(var)) ;
+        set-rule-arguments-signature $(rule-name) $(module-name) : [ scan-rule-arguments $(var) ] ;
+        # scan within this rules scope.
+        local scope-level = [ extract-token $(var) ] ;
+        local scope-name = $(rule-name) ;
+        while $(scope-level)
+        {
+            local comment-block = [ extract-comment $(var) ] ;
+            local syntax-block = [ extract-syntax $(var) ] ;
+            if [ scan-rule $(syntax-block) : $(var) ]
+            {
+            }
+            else if [ MATCH "^(\\{)" : $(syntax-block) ]
+            {
+                scope-level += "{" ;
+            }
+            else if [ MATCH "^[^\\}]*([\\}])$"  : $(syntax-block) ]
+            {
+                scope-level = $(scope-level[2-]) ;
+            }
+            #> else if $(syntax-block)
+            #> {
+                #> $(var) = $(syntax-block) $($(var)) ;
+                #> local token = [ extract-token $(var) ] ;
+                #> if $(token) = "{"
+                #> {
+                    #> scope-level += "{" ;
+                #> }
+                #> else if $(token) = "}"
+                #> {
+                    #> scope-level = $(scope-level[2-]) ;
+                #> }
+            #> }
+        }
+        
+        return true ;
+    }
+}
+
+# Scan the arguments of a rule.
+#
+local rule scan-rule-arguments (
+    var # The name of the variable to extract from.
+    )
+{
+    local arg-syntax = ;
+    local token = [ extract-token $(var) ] ;
+    while $(token) != "(" && $(token) != "{"
+    {
+        token = [ extract-token $(var) ] ;
+    }
+    if $(token) != "{"
+    {
+        token = [ extract-token $(var) ] ;
+    }
+    local arg-signature = ;
+    while $(token) != ")" && $(token) != "{"
+    {
+        local arg-name = ;
+        local arg-qualifier = " " ;
+        local arg-doc = ;
+        if $(token) = ":"
+        {
+            arg-signature += $(token) ;
+            token = [ extract-token $(var) ] ;
+        }
+        arg-name = $(token) ;
+        arg-signature += $(token) ;
+        token = [ extract-token $(var) ] ;
+        if [ MATCH "^([\\*\\+\\?])" : $(token) ]
+        {
+            arg-qualifier = $(token) ;
+            arg-signature += $(token) ;
+            token = [ extract-token $(var) ] ;
+        }
+        if $(token) = ":"
+        {
+            arg-signature += $(token) ;
+            token = [ extract-token $(var) ] ;
+        }
+        if [ MATCH "^(#)" : $(token) ]
+        {
+            $(var) = $(token) $($(var)) ;
+            arg-doc = [ extract-comment $(var) ] ;
+            token = [ extract-token $(var) ] ;
+        }
+        set-argument-doc $(arg-name) $(arg-qualifier) $(rule-name) $(module-name) : $(arg-doc) ;
+    }
+    while $(token) != "{"
+    {
+        token = [ extract-token $(var) ] ;
+    }
+    $(var) = "{" $($(var)) ;
+    return $(arg-signature) ;
+}
+
+# Scan for a variable declaration.
+local rule scan-variable (
+    syntax ? # The first part of the text which contains the variable declaration.
+    : var # The name of the variable to extract from.
+    )
+{
+    # [1] = name, [2] = value(s)
+    local var-parts =
+        [ MATCH "^[$(ws)]*([^$(ws)]+)[$(ws)]+\\=[$(ws)]+([^\\;]*)\\;" : $(syntax) ] ;
+    if $(var-parts)
+    {
+        set-variable-doc $(var-parts[1]) "$(var-parts[2-])" $(module-name) : $(comment-block) ;
+        return true ;
+    }
+}
+
+# Scan a module file for documentation comments. This also
+# invokes any actions assigned to the module. The actions
+# are the rules that do the actual output of the documentation.
+# This rue is invoked as the header scan rule for the module file.
+#
+rule scan-module (
+    target # The module file.
+    : text * # The text in the file, one item per line.
+    )
+{
+    #> ECHO -!- $(target) ;
     local module-name = $(.module<$(target)>.name) ;
-    #> ECHO "    " module ==> $(module-name) ;
     local module-documented = ;
     local comment-block = ;
     local syntax-block = ;
+    # This is a hack because we can't get the line of a file if it
+    # happens to not have a new-line termination.
+    text += "}" ;
     while $(text)
     {
         comment-block = [ extract-comment text ] ;
         #> ECHO "##" '$(comment-block)' ;
         syntax-block = [ extract-syntax text ] ;
         #> ECHO "<>" '$(syntax-block)' ;
-        local rule-parts =
-            [ MATCH "^[$(ws)]*(rule|local[$(ws)]*rule)[$(ws)]+([^$(ws)]+)[$(ws)]*(.*)" : $(syntax-block:J=" ") ] ;
-        if $(rule-parts[2])
+        if [ scan-rule $(syntax-block) : text ]
         {
-            # mark as doc for rule.
-            local rule-name = $(rule-parts[2]) ;
-            local is-local = [ MATCH "^(local).*" : $(rule-parts[1]) ] ;
-            if $(comment-block)
-            {
-                set-rule-doc $(rule-name) $(module-name) : $(comment-block) ; #<is-local>$(is-local) ;
-            }
-            # parse args of rule.
-            #> ECHO [] |$(rule-parts)| ;
+        }
+        else if [ scan-variable $(syntax-block) : text ]
+        {
         }
         else if [ MATCH .*([cC]opyright).* : $(comment-block:J=" ") ]
         {
@@ -429,20 +646,31 @@ rule scan-module ( target : text * )
     #> print.output $(module-name).txt ;
     for local action in $(.module<$(target)>.actions)
     {
-        local ignored = [ $(action) $(module-name) : $(.module<$(target).action<$(action)>.arg) ] ;
+        local action-rule = [ $(action).front ] ; $(action).pop-front ;
+        local action-args = [ $(action).get ] ;
+        local ignored = [ $(action-rule) $(module-name) : $(action-args) ] ;
     }
 }
 
-local rule do-scan ( modules + : action arg ? )
+# Add a scan action to perform to generate the help documentation.
+# The action rule is passed the name of the module as the first argument.
+# The second argument(s) are optional and passed directly as specified
+# here.
+#
+local rule do-scan (
+    modules + # The modules to scan and perform the action on.
+    : action * # The action rule, plus the secondary arguments to pass to the action rule.
+    )
 {
-    #> ECHO === $(modules) ;
     local targets = ;
     for local module-file in $(modules)
     {
-        local module-name = $(module-path:B) ;
+        local module-name = $(module-file:B) ;
         .module<$(module-file)>.name = $(module-name) ;
-        .module<$(module-file)>.actions += $(action) ;
-        .module<$(module-file)>.action<$(action)>.arg = $(arg) ;
+        if $(action)
+        {
+            .module<$(module-file)>.actions += [ class.new vector $(action) ] ;
+        }
         HDRSCAN on $(module-file) = "^(.*).$" ;
         HDRRULE on $(module-file) = doc.scan-module ;
         NOTFILE $(module-name).scan ;
@@ -453,5 +681,15 @@ local rule do-scan ( modules + : action arg ? )
         #> DEPENDS $(module-name).txt : $(module-name).scan ;
         #> targets += $(module-name).txt ;
     }
-    DEPENDS all : $(targets) ;
+    if $(help-output) = console
+    {
+        DEPENDS all : $(targets) ;
+    }
+    if $(help-output) = text
+    {
+        print.output help.txt ;
+        ALWAYS help.txt ;
+        DEPENDS help.txt : $(targets) ;
+        DEPENDS all : help.txt ;
+    }
 }
