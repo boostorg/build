@@ -141,6 +141,10 @@ rule Link-EXE
     # N.B. By the time this rule is invoked, we had better have gRUN_PATH completely set.
     Link-action $(<) : $(>) : EXE ;
     RUN_PATH on $(<) = [ join $(gRUN_PATH($(<))) $(RUN_PATH) : $(SPLITPATH) ] ;
+    if $(UNIX) 
+    {
+    	RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) $(RUN_LD_LIBRARY_PATH) : $(SPLITPATH) ] ;
+    }
 }
 
 rule Link-DLL
@@ -152,6 +156,10 @@ rule Link-DLL
     }
     
     gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) ;
+    if $(UNIX) 
+    {
+        gRUN_LD_LIBRARY_PATH($(<)) += $(gLOCATE($(<[1]))) ;
+    }
     Link-action $(<) : $(>) : DLL ;
 }
 
@@ -159,6 +167,10 @@ rule Link-DLL
 # This also allows the user to customize the base path for running built
 # products from the command-line
 RUN_PATH ?= $(PATH) ;
+if $(UNIX)
+{
+    RUN_LD_LIBRARY_PATH ?= $(LD_LIBRARY_PATH) ;
+} 
 if $(NT)
 {
     # Try some other likely spellings
@@ -167,13 +179,31 @@ if $(NT)
 }
 # Now set this, just in case someone tries to use it.
 PATH = $(RUN_PATH) ;
+if $(UNIX)
+{
+    LD_LIBRARY_PATH = $(RUN_LD_LIBRARY_PATH) ;
+} 
 
 # A simple action to run an executable target
-actions Run
+if $(UNIX) 
 {
-    $(SHELL_SET)PATH=$(RUN_PATH)
-    $(SHELL_EXPORT)PATH
-    $(<) $(COMMAND-LINE)
+    actions Run
+    {
+        $(SHELL_SET)PATH=$(RUN_PATH)
+        $(SHELL_EXPORT)PATH
+        $(SHELL_SET)LD_LIBRARY_PATH=$(RUN_LD_LIBRARY_PATH)
+        $(SHELL_EXPORT)LD_LIBRARY_PATH
+        $(<) $(COMMAND-LINE)
+    }
+}
+else
+{
+    actions Run
+    {
+        $(SHELL_SET)PATH=$(RUN_PATH)
+        $(SHELL_EXPORT)PATH
+        $(<) $(COMMAND-LINE)
+    }
 }
 
 # bubble variable-name
