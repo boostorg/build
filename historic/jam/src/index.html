@@ -5,7 +5,7 @@
   <meta name="generator" content=
   "HTML Tidy for Linux/x86 (vers 1st September 2003), see www.w3.org">
   <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
-  <link rel="stylesheet" type="text/css" href="../../../../boost.css">
+  <link rel="stylesheet" type="text/css" href="../../../boost.css">
 
   <title>Boost.Jam</title>
   <meta name="author" content="Rene Rivera">
@@ -120,21 +120,24 @@
 
         <dt><a href="#semaphores">Semaphores</a></dt>
 
-        <dt><a href="#semaphores">The W32_GETREG rule</a></dt>
+        <dt><a href="#w32_getreg">The W32_GETREG rule</a></dt>
+
+        <dt><a href="#ISFILE_rule">The <tt>ISFILE</tt> rule</a></dt>
       </dl>
     </dd>
 
     <dt><a href="#jam_fundamentals">Jam Fundamentals</a></dt>
   </dl>
 
-  <h2><a name="introduction"></a>Introduction</h2>
+  <h2><a name="introduction" id="introduction"></a>Introduction</h2>
 
   <p>Boost.Jam (BJam) &nbsp;is a build tool based on FTJam, which in turn is
   based on Perforce Jam. It contains significant improvements made to
   facilitate its use in the Boost Build System, but should be backward
   compatible with Perforce Jam.</p>
 
-  <p>This is version 3.1.10 of BJam and is based on version 2.4 of Jam/MR:</p>
+  <p>This is version 3.1.10 of BJam and is based on version 2.4 of
+  Jam/MR:</p>
   <pre>
 /+\
 +\  Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
@@ -146,7 +149,7 @@ are clearly marked.
 ALL WARRANTIES ARE HEREBY DISCLAIMED.
 </pre>
 
-  <h2><a name="features"></a>Features</h2>
+  <h2><a name="features" id="features"></a>Features</h2>
 
   <p>Jam is a make(1) replacement that makes building simple things simple
   and building complicated things manageable.</p>
@@ -176,7 +179,7 @@ Main smail : main.c map.c resolve.c deliver.c
   <p>Jam isn't under the blinkin GNU copyright, so you can incorporate it
   into commercial products.</p>
 
-  <h2><a name="contents"></a>Contents</h2>
+  <h2><a name="contents" id="contents"></a>Contents</h2>
 
   <table cellpadding="2" cellspacing="2" border="0" summary=
   "Contents of Jam documents.">
@@ -193,7 +196,7 @@ Main smail : main.c map.c resolve.c deliver.c
     </tr>
   </table>
 
-  <h2><a name="building_bjam"></a>Building Boost.Jam</h2>
+  <h2><a name="building_bjam" id="building_bjam"></a>Building Boost.Jam</h2>
 
   <p>Installing BJam after building it is simply a matter of copying the
   generated executables someplace in your <tt>PATH</tt>. For building the
@@ -446,14 +449,15 @@ sh ./build.sh
   as appropriate for distribution in the platform, or remove all the built
   executables and objects.</p>
 
-  <h2><a name="core_extensions">Core Jam Extensions</a></h2>
+  <h2><a name="core_extensions" id="core_extensions">Core Jam
+  Extensions</a></h2>
 
   <p>A number of enhancements have been made to the core language of Classic
   Jam. These changes were aimed primarily at making it easier to manage the
   complexity of a large system such as Boost.Build.</p>
 
-  <h3><a name="variable_quoting"></a>Command-line and Environment Variable
-  Quoting</h3>
+  <h3><a name="variable_quoting" id="variable_quoting"></a>Command-line and
+  Environment Variable Quoting</h3>
 
   <p>Classic Jam had an <a href="#variable_splitting">odd behavior</a> with
   respect to command-line variable ( <tt>-s...</tt>) and environment variable
@@ -476,7 +480,8 @@ jam -sMSVCNT="\"\"C:\Program Files\Microsoft Visual C++\VC98\"\"" ...
 set MSVCNT=""C:\Program Files\Microsoft Visual C++\VC98\""
 </pre>
 
-  <h3><a name="jambase_replacement">Startup Behavior</a></h3>
+  <h3><a name="jambase_replacement" id="jambase_replacement">Startup
+  Behavior</a></h3>
 
   <p>The Boost.Build v2 initialization behavior has been implemented. This
   behavior only applies when the executable being invoked is called
@@ -512,7 +517,8 @@ set MSVCNT=""C:\Program Files\Microsoft Visual C++\VC98\""
     message and exit.</li>
   </ol>
 
-  <h3><a name="rule_indirection">Rule Indirection</a></h3>
+  <h3><a name="rule_indirection" id="rule_indirection">Rule
+  Indirection</a></h3>
 
   <p>Boost Jam allows you to call a rule whose name is held in a variable or
   computed as the result of an expression:</p>
@@ -545,7 +551,7 @@ rule equal ( x y )
 ECHO [ filter 1 2 3 4 5 4 3 : equal 3 ] ; # prints "3 3"
 </pre>
 
-  <h3><a name="argument_lists">Argument lists</a></h3>
+  <h3><a name="argument_lists" id="argument_lists">Argument lists</a></h3>
 
   <p>You can now describe the arguments accepted by a rule, and refer to them
   by name within the rule. For example, the following prints ``I'm sorry,
@@ -612,7 +618,7 @@ report I 2 : sorry : Joe Dave Pete ;
   readability of your rules, however, and are <b>strongly recommended</b> for
   any new Jam code you write.</p>
 
-  <h3><a name="module_support">Module Support</a></h3>
+  <h3><a name="module_support" id="module_support">Module Support</a></h3>
 
   <p>Boost Jam introduces support for modules, which provide some rudimentary
   namespace protection for rules and variables. A new keyword,
@@ -621,7 +627,8 @@ report I 2 : sorry : Joe Dave Pete ;
   operations needed to write Jam rules which provide a more elegant module
   interface.</p>
 
-  <h4><a name="module_declaration">Declaration</a></h4>
+  <h4><a name="module_declaration" id=
+  "module_declaration">Declaration</a></h4>
   <pre>
 module <i>expression</i> { ... }
 </pre>
@@ -651,7 +658,7 @@ module your_module
 }
 </pre>
 
-  <h4><a name="module_locals">Variable Scope</a></h4>
+  <h4><a name="module_locals" id="module_locals">Variable Scope</a></h4>
 
   <p>Each module has its own set of dynamically nested variable scopes. When
   execution passes from module A to module B, all the variable bindings from
@@ -696,7 +703,7 @@ rule peek ( module-name ? : variables + )
 module scope is entered, argument bindings become unavailable. That explains
 the use of "<code>$(&gt;)</code>" in the <code>peek</code> rule above.
 
-  <h4><a name="local_rules">Local Rules</a></h4>
+  <h4><a name="local_rules" id="local_rules">Local Rules</a></h4>
   <pre>
 local rule <i>rulename...</i>
 </pre>
@@ -708,7 +715,8 @@ local rule <i>rulename...</i>
 [ RULENAMES <i>module-name</i> ]
 </pre>
 
-  <h4><a name="RULENAMES_rule">The <tt>RULENAMES</tt> Rule</a></h4>
+  <h4><a name="RULENAMES_rule" id="RULENAMES_rule">The <tt>RULENAMES</tt>
+  Rule</a></h4>
   <pre>
 rule RULENAMES ( module ? )
 </pre>
@@ -717,7 +725,8 @@ rule RULENAMES ( module ? )
   If <tt>module</tt> is omitted, the names of all non-local rules in the
   global module are returned.</p>
 
-  <h4><a name="VARNAMES_rule">The <tt>VARNAMES</tt> Rule</a></h4>
+  <h4><a name="VARNAMES_rule" id="VARNAMES_rule">The <tt>VARNAMES</tt>
+  Rule</a></h4>
   <pre>
 rule VARNAMES ( module ? )
 </pre>
@@ -728,7 +737,8 @@ rule VARNAMES ( module ? )
   variables in rules from the call stack which have not returned at the time
   of the <code>VARNAMES</code> invocation.</p>
 
-  <h4><a name="IMPORT_rule">The <tt>IMPORT</tt> Rule</a></h4>
+  <h4><a name="IMPORT_rule" id="IMPORT_rule">The <tt>IMPORT</tt>
+  Rule</a></h4>
 
   <p><tt>IMPORT</tt> allows rule name aliasing across modules:</p>
   <pre>
@@ -752,7 +762,8 @@ IMPORT m1 : rule1 : m2 : m1-rule1 ;
 IMPORT m1 : [ RULENAMES m1 ] : m2 : [ RULENAMES m1 ] ;
 </pre>
 
-  <h4><a name="EXPORT_rule">The <tt>EXPORT</tt> Rule</a></h4>
+  <h4><a name="EXPORT_rule" id="EXPORT_rule">The <tt>EXPORT</tt>
+  Rule</a></h4>
 
   <p><tt>EXPORT</tt> allows rule name aliasing across modules:</p>
   <pre>
@@ -772,7 +783,8 @@ EXPORT X : r ;
 IMPORT X : r : : r ; # OK.
 </pre>
 
-  <h4><a name="CALLER_MODULE_rule">The <tt>CALLER_MODULE</tt> Rule</a></h4>
+  <h4><a name="CALLER_MODULE_rule" id="CALLER_MODULE_rule">The
+  <tt>CALLER_MODULE</tt> Rule</a></h4>
   <pre>
 rule CALLER_MODULE ( levels ? )
 </pre>
@@ -797,7 +809,8 @@ callers = [ X.get-caller ] [ Y.call-X ] [ X.call-Y ] ;
 ECHO {$(callers)} ;
 </pre>
 
-  <h4><a name="DELETE_MODULE_rule">The <tt>DELETE_MODULE</tt> Rule</a></h4>
+  <h4><a name="DELETE_MODULE_rule" id="DELETE_MODULE_rule">The
+  <tt>DELETE_MODULE</tt> Rule</a></h4>
   <pre>
 rule DELETE_MODULE ( module ? )
 </pre>
@@ -812,7 +825,8 @@ rule DELETE_MODULE ( module ? )
   variables which are shadowed by locals will not be destroyed, so the
   results can be really unpredictable.</p>
 
-  <h3><a name="local_foreach">Local For Loop Variables</a></h3>
+  <h3><a name="local_foreach" id="local_foreach">Local For Loop
+  Variables</a></h3>
 
   <p>Boost Jam allows you to declare a local <tt>for</tt> loop control
   variable right in the loop:</p>
@@ -826,7 +840,8 @@ for <b>local</b> y in $(x)
 ECHO $(y) ;     # prints "4 5 6"
 </pre>
 
-  <h4><a name="negative_indexing">Negative Indexing</a></h4>
+  <h4><a name="negative_indexing" id="negative_indexing">Negative
+  Indexing</a></h4>
 
   <p>Classic Jam supplies 1-based list indexing, and slicing on a closed
   (inclusive) range:</p>
@@ -850,7 +865,8 @@ ECHO $(x[2--2]) ;        # prints "2 3 4"
   use of ``<tt>-</tt>'' as the range separator make this feature a bit
   clumsier than it would otherwise need to be, but it does work.</p>
 
-  <h4><a name="cygwin_support">Support for Cygwin</a></h4>
+  <h4><a name="cygwin_support" id="cygwin_support">Support for
+  Cygwin</a></h4>
 
   <p>When invoking Windows-based tools from <a href=
   "www.cygwin.com">Cygwin</a> it can be important to pass them true
@@ -865,7 +881,7 @@ x = /cygdrive/c/Program Files/Borland ;
 ECHO $(x:W) ; # prints "c:\Program Files\Borland" on Cygwin
 </pre>
 
-  <h4><a name="BINDRULE">Target Binding Detection</a></h4>
+  <h4><a name="BINDRULE" id="BINDRULE">Target Binding Detection</a></h4>
 
   <p>Whenever a target is <a href="#binding">bound</a> to a location in the
   filesystem, Boost Jam will look for a variable called <tt>BINDRULE</tt>
@@ -882,7 +898,8 @@ rule bind-rule ( target : path )
   containing the file doing the <tt>#include</tt> directive.
   <tt>$(BINDRULE)</tt> can be used to make a record of that directory.</p>
 
-  <h4><a name="FAIL_EXPECTED">Return Code Inversion</a></h4>
+  <h4><a name="FAIL_EXPECTED" id="FAIL_EXPECTED">Return Code
+  Inversion</a></h4>
 
   <p>For handling targets whose build actions are expected to fail (e.g. when
   testing that assertions or compile-time type checkin work properly), Boost
@@ -892,7 +909,7 @@ rule bind-rule ( target : path )
   fails, building of dependent targets continues as though it succeeded. If
   it succeeds, dependent targets are skipped.</p>
 
-  <h4><a name="NOCARE">Ignoring Return Codes</a></h4>
+  <h4><a name="NOCARE" id="NOCARE">Ignoring Return Codes</a></h4>
 
   <p>Perforce Jam supplied a <tt>NOCARE</tt> rule which is typically used for
   header files to indicate that if they are not found, the dependent targets
@@ -900,7 +917,7 @@ rule bind-rule ( target : path )
   targets with build actions: if their build actions exit with a nonzero
   return code, dependent targets will still be built.</p>
 
-  <h4><a name="RMOLD">Removing Outdated Targets</a></h4>
+  <h4><a name="RMOLD" id="RMOLD">Removing Outdated Targets</a></h4>
   <pre>
 rule RMOLD ( targets * )
 </pre>
@@ -911,7 +928,7 @@ rule RMOLD ( targets * )
   causes its arguments to be removed if any of their dependencies fail to
   build.</p>
 
-  <h3><a name="SUBST_rule">The <tt>SUBST</tt> Rule</a></h3>
+  <h3><a name="SUBST_rule" id="SUBST_rule">The <tt>SUBST</tt> Rule</a></h3>
 
   <p><b>Note:</b> the <code>SUBST</code> rule is deprecated in favor of
   Perforce Jam's built-in <code>MATCH</code> rule, which has been rolled into
@@ -944,16 +961,19 @@ ECHO [ SUBST xyz (.)(.)(.) [$1] ($2) {$3} ] ;
     string.</li>
   </ul>
 
-  <h3><a name="JAM_VERSION">The <tt>JAM_VERSION</tt> global variable</a></h3>
+  <h3><a name="JAM_VERSION" id="JAM_VERSION">The <tt>JAM_VERSION</tt> global
+  variable</a></h3>
 
   <p>A predefined global variable with two elements indicates the version
   number of Boost Jam. Boost Jam versions start at <tt>"03" "00"</tt>.
   Earlier versions of Jam do not automatically define
   <tt>JAM_VERSION</tt>.</p>
 
-  <h3><a name="debugging_support">Debugging Support</a></h3>
+  <h3><a name="debugging_support" id="debugging_support">Debugging
+  Support</a></h3>
 
-  <h4><a name="BACKTRACE_rule">The BACKTRACE rule</a></h4>
+  <h4><a name="BACKTRACE_rule" id="BACKTRACE_rule">The BACKTRACE
+  rule</a></h4>
   <pre>
 rule BACKTRACE ( )
 </pre>
@@ -965,23 +985,23 @@ rule BACKTRACE ( )
   <p>The <tt>-d</tt> command-line option admits new arguments:</p>
 
   <ul>
-    <li><tt>-d+10</tt> - enables <a name="profiling"><b>profiling</b></a> of
-    rule invocations. When Jam exits, it dumps all rules invoked, their gross
-    and net times in platform-dependent units, and the number of times the
-    rule was invoked.</li>
+    <li><tt>-d+10</tt> - enables <a name="profiling" id=
+    "profiling"><b>profiling</b></a> of rule invocations. When Jam exits, it
+    dumps all rules invoked, their gross and net times in platform-dependent
+    units, and the number of times the rule was invoked.</li>
 
-    <li><tt>-d+11</tt> - enables <a name="parse_debugging"><b>parser
-    debugging</b></a>, if Jam has been compiled with the "--debug" option to
-    the parser generator named by $(YACC).</li>
+    <li><tt>-d+11</tt> - enables <a name="parse_debugging" id=
+    "parse_debugging"><b>parser debugging</b></a>, if Jam has been compiled
+    with the "--debug" option to the parser generator named by $(YACC).</li>
 
-    <li><tt>-d+12</tt> - enables <a name="dependency_graph"><b>dependency
-    graph output</b></a> . This feature was ``stolen'' from a version of Jam
-    modified by <a href="mailto:cmcpheeters@aw.sgi.com">Craig
-    McPheeters</a>.</li>
+    <li><tt>-d+12</tt> - enables <a name="dependency_graph" id=
+    "dependency_graph"><b>dependency graph output</b></a> . This feature was
+    ``stolen'' from a version of Jam modified by <a href=
+    "mailto:cmcpheeters@aw.sgi.com">Craig McPheeters</a>.</li>
   </ul>
 
-  <h3><a name="UPDATE">The <tt>UPDATE</tt> rule and changes to command line
-  handling</a></h3>
+  <h3><a name="UPDATE" id="UPDATE">The <tt>UPDATE</tt> rule and changes to
+  command line handling</a></h3>
 
   <p>Classic jam treats any non-option element of command line as a name of
   target to be updated. This prevented more sophisticated handling of command
@@ -1027,43 +1047,53 @@ UPDATE $(previous-updates) a-new-target ;
   option.</p>
 
   <h3 id="w32_getreg">The W32_GETREG rule</h3>
-<pre>
+  <pre>
     rule W32_GETREG ( path : data ? )
 </pre>
 
-<p>    
-    Defined only for win32 platform. It reads the registry of Windows.
-    'path' is the location of the information, and 'data' is
-    the name of the value which we want to get. If 'data' is omitted,
-    the default value of 'path' will be returned. The 'path' value
-    must conform to MS key path format and must be prefixed with
-    one of the predefined root keys. As usual,
+  <p>Defined only for win32 platform. It reads the registry of Windows.
+  'path' is the location of the information, and 'data' is the name of the
+  value which we want to get. If 'data' is omitted, the default value of
+  'path' will be returned. The 'path' value must conform to MS key path
+  format and must be prefixed with one of the predefined root keys. As
+  usual,</p>
 
-<ul>    
-    <li>'HKLM' is equivalent to 'HKEY_LOCAL_MACHINE'.
-    <li>'HKCU' is equivalent to 'HKEY_CURRENT_USER'.
-    <li>'HKCR' is equivalent to 'HKEY_CLASSES_ROOT'.
-</ul>    
-    
-<p>    
-    Other predefined root keys are not supported.    
-<p>    
-    Currently supported data types : 'REG_DWORD', 'REG_SZ',
-    'REG_EXPAND_SZ', 'REG_MULTI_SZ'. The data with 'REG_DWORD' type
-    will be turned into a string, 'REG_MULTI_SZ' into a list of strings,
-    and for those with 'REG_EXPAND_SZ' type environment variables
-    in it will be replaced with their defined values.
-    The data with 'REG_SZ' type and other unsupported types
-    will be put into a string without modification. If it can't
-    receive the value of the data, it just return an empty list.
-    For example,
+  <ul>
+    <li>'HKLM' is equivalent to 'HKEY_LOCAL_MACHINE'.</li>
 
-<pre>
+    <li>'HKCU' is equivalent to 'HKEY_CURRENT_USER'.</li>
+
+    <li>'HKCR' is equivalent to 'HKEY_CLASSES_ROOT'.</li>
+  </ul>
+
+  <p>Other predefined root keys are not supported.</p>
+
+  <p>Currently supported data types : 'REG_DWORD', 'REG_SZ', 'REG_EXPAND_SZ',
+  'REG_MULTI_SZ'. The data with 'REG_DWORD' type will be turned into a
+  string, 'REG_MULTI_SZ' into a list of strings, and for those with
+  'REG_EXPAND_SZ' type environment variables in it will be replaced with
+  their defined values. The data with 'REG_SZ' type and other unsupported
+  types will be put into a string without modification. If it can't receive
+  the value of the data, it just return an empty list. For example,</p>
+  <pre>
     local PSDK-location =
     [ PROFILE HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\MicrosoftSDK\\Directories : "Install Dir" ] ;
 </pre>
 
-  <h2><a name="jam_fundamentals">Jam Fundamentals</a></h2>
+  <h4><a name="ISFILE_rule" id="ISFILE_rule">The <tt>ISFILE</tt>
+  Rule</a></h4>
+  <pre>
+rule ISFILE ( targets * )
+</pre>
+
+  <p><tt>ISFILE</tt> marks targets as required to be files. This changes the
+  way <b>jam</b> searches for the target such that it ignores mathes for file
+  system items that are not file, like directories. This makes it possible to
+  avoid <code>#include "exception"</code> matching if one happens to have a
+  directory named <i>exception</i> in the header search path.</p>
+
+  <h2><a name="jam_fundamentals" id="jam_fundamentals">Jam
+  Fundamentals</a></h2>
 
   <p>This section is derived from the official Jam documentation and from my
   experience using it and reading the Jambase rules. I repeat the information
@@ -1094,17 +1124,18 @@ UPDATE $(previous-updates) a-new-target ;
   argument. It is actually possible to invoke an undeclared rule if
   corresponding actions are declared: the rule is treated as empty.</p>
 
-  <p>&middot; <a name="binding">Targets</a> (other than <tt>NOTFILE</tt>
-  targets) are associated with paths in the file system through a process
-  called <a href="./Jam.html#binding">binding</a>. Binding is a process of
-  searching for a file with the same name as the target (sans grist), based
-  on the settings of the <a href="#target_specific">target-specific</a>
-  <tt>SEARCH</tt> and <tt>LOCATE</tt> variables.</p>
+  <p>&middot; <a name="binding" id="binding">Targets</a> (other than
+  <tt>NOTFILE</tt> targets) are associated with paths in the file system
+  through a process called <a href="./Jam.html#binding">binding</a>. Binding
+  is a process of searching for a file with the same name as the target (sans
+  grist), based on the settings of the <a href=
+  "#target_specific">target-specific</a> <tt>SEARCH</tt> and <tt>LOCATE</tt>
+  variables.</p>
 
-  <p>&middot; <a name="target_specific">In addition to</a> local and global
-  variables, jam allows you to set a variable <tt><b>on</b></tt> a target.
-  Target-specific variable values can usually not be read, and take effect
-  <i>only</i> in the following contexts:</p>
+  <p>&middot; <a name="target_specific" id="target_specific">In addition
+  to</a> local and global variables, jam allows you to set a variable
+  <tt><b>on</b></tt> a target. Target-specific variable values can usually
+  not be read, and take effect <i>only</i> in the following contexts:</p>
 
   <ul>
     <li>In updating <tt>actions</tt>, variable values are first looked up
@@ -1170,14 +1201,15 @@ UPDATE $(previous-updates) a-new-target ;
   the form <tt>&lt;</tt><i>expr2</i><tt>&gt;</tt>;
   <tt>&lt;</tt><i>expr2</i><tt>&gt;</tt> is then prepended.</p>
 
-  <p>&middot; <a name="variable_splitting">When Jam</a> is invoked it imports
-  all environment variable settings into corresponding Jam variables,
-  followed by all command-line (<tt>-s...</tt>) variable settings. Variables
-  whose name ends in <tt>PATH</tt>, <tt>Path</tt>, or <tt>path</tt> are split
-  into string lists on OS-specific path-list separator boundaries (e.g.
-  "<tt>:</tt>" for UNIX and "<tt>;</tt>" for Windows). All other variables
-  are split on space (" ") boundaries. Boost Jam modifies that behavior by
-  allowing variables to be <a href="#variable_quoting">quoted</a>.</p>
+  <p>&middot; <a name="variable_splitting" id="variable_splitting">When
+  Jam</a> is invoked it imports all environment variable settings into
+  corresponding Jam variables, followed by all command-line (<tt>-s...</tt>)
+  variable settings. Variables whose name ends in <tt>PATH</tt>,
+  <tt>Path</tt>, or <tt>path</tt> are split into string lists on OS-specific
+  path-list separator boundaries (e.g. "<tt>:</tt>" for UNIX and "<tt>;</tt>"
+  for Windows). All other variables are split on space (" ") boundaries.
+  Boost Jam modifies that behavior by allowing variables to be <a href=
+  "#variable_quoting">quoted</a>.</p>
 
   <p>&middot; A variable whose value is an empty list <i>or</i> which
   consists entirely of empty strings has a negative logical value. Thus, for
@@ -1208,13 +1240,13 @@ if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
 
   <p>Revised 
   <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-   18 November, 2003 
+   18 November, 2004 
   <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
 
   <p>Copyright 2003-2004 Rene Rivera, David Abrahams, Vladimir Prus.</p>
 
-  <p>Distributed under the Boost Software License, Version 1.0.
-  (See accompanying file LICENSE_1_0.txt or <a href="http://www.boost.org/LICENSE_1_0.txt">
-  http://www.boost.org/LICENSE_1_0.txt)</a></p>
+  <p>Distributed under the Boost Software License, Version 1.0. (See
+  accompanying file LICENSE_1_0.txt or <a href=
+  "http://www.boost.org/LICENSE_1_0.txt">http://www.boost.org/LICENSE_1_0.txt)</a></p>
 </body>
 </html>

@@ -156,6 +156,10 @@ struct _target {
 
 # define T_FLAG_INTERNAL 0x0200    /* internal INCLUDES node */
 
+/*  Indicates that the target must be a file. This prevents matching non-files,
+    like directories, when a target is searched. */
+#define     T_FLAG_ISFILE   0x0400
+
 
 
 #ifdef OPT_SEMAPHORE
