@@ -141,7 +141,7 @@ rule Cc-action
 
 actions borland-Cc-action
 {
-    "$(BCC_TOOL_PATH)bcc32" -j5 -q -c -w -a8 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(BCC_TOOL_PATH)bcc32" -j5 -g255 -q -c -w -a8 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -154,6 +154,7 @@ rule C++-action
 # for C++ compiles the following options are turned on by default:
 #
 # -j5    stops after 5 errors
+# -g255  allow an unlimited number of warnings
 # -q     no banner
 # -c     compile to object
 # -P     C++ code regardless of file extention
@@ -167,7 +168,7 @@ rule C++-action
 #
 actions borland-C++-action
 {
-    "$(BCC_TOOL_PATH)bcc32" -j5 -q -c -P -w -Ve -Vx -a8 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(BCC_TOOL_PATH)bcc32" -j5 -g255 -q -c -P -w -Ve -Vx -a8 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 #### Archive ####
@@ -180,6 +181,7 @@ actions updated together piecemeal borland-Archive-action
 {
     "$(BCC_TOOL_PATH)tlib" /P64 /u /a /C /$(ARFLAGS) "$(<)" +-"$(>)"
 }
+
 
 
 
