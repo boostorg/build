@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                                                        </style>
+                                                            </style>
   </head>
   <!-- Things yet to document:
-                                                            - build request, build request expansion and directly requested targets
-                                                            - conditional properties
-                                                          -->
+                                                              - build request, build request expansion and directly requested targets
+                                                              - conditional properties
+                                                            -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -177,12 +177,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>examples-v2</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                                                                             it somewhere. 
-                                                                              
-                                                                                <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                                                                                into one of the locations where it can be found (given in <a href=
-                                                                                "#config_files_location">this table</a>). This prevent you from
-                                                                                accidentally overwriting your config when updating.</p> -->
+                                                                                   it somewhere. 
+                                                                                    
+                                                                                      <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                                                                                      into one of the locations where it can be found (given in <a href=
+                                                                                      "#config_files_location">this table</a>). This prevent you from
+                                                                                      accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -708,7 +708,10 @@ boost-build /path/to/boost.build ;
       may contain alphanumeric characters and symbols '-' and '_';</li>
 
       <li>"sources" is the list of source files and other main targets that
-      must be combined.</li>
+      must be combined. If source file is specified using relative path, it's
+      considered to be relative to the source directory of the project where
+      the path is used. See the <a href="#project_rule">project</a> rule for
+      information how to change source directory.</li>
 
       <li>"requirements" is the list of properties that must always be
       present when this main target is built.</li>
@@ -813,6 +816,13 @@ boost-build /path/to/boost.build ;
 
         <td>States that the target should be built only by explicit
         request.</td>
+      </tr>
+
+      <tr>
+        <td>glob</td>
+
+        <td>Takes a list of wildcards, and returns the list of files which
+        match any of the wildcards.</td>
       </tr>
     </table>
 
@@ -978,12 +988,8 @@ boost-build /path/to/boost.build ;
 
     <h3 id="target_id">Target identifiers and references</h3>
 
-    <p><em>Target identifier</em> is used to denote a target. There are two
-    syntaxes for it. First is the preferred one, described below. The second
-    is older syntax, which is retained to backward compatibility reasons, but
-    will be removed in a future release. It is not documented</p>
-
-    <p>The current syntax is</p>
+    <p><em>Target identifier</em> is used to denote a target. The syntax
+    is:</p>
 <pre>
     target-id -&gt; (project-id | target-name | file-name )
                   | (project-id | directory-name) "//" target-name   
@@ -1021,17 +1027,17 @@ boost-build /path/to/boost.build ;
 
       <li>It allows to have main target names with slashes. 
       <!-- The motivation for which is:
-                                          So, to summarize:
-                                          1. The project which extract tarfile may extract all possible kinds of 
-                                          targets, and it's reasonable to use them directly from other project.
-                                          2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
-                                          maintainability, and therefore, must use main target name which contains 
-                                          slashes?
-                                          3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
-                                          option, because you should not change existing tree 
+                                                So, to summarize:
+                                                1. The project which extract tarfile may extract all possible kinds of 
+                                                targets, and it's reasonable to use them directly from other project.
+                                                2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
+                                                maintainability, and therefore, must use main target name which contains 
+                                                slashes?
+                                                3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
+                                                option, because you should not change existing tree 
 
-                                          That makes good rationale for why main target must contain names.
-                                           -->
+                                                That makes good rationale for why main target must contain names.
+                                                 -->
       </li>
     </ul>
 
