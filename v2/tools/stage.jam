@@ -155,7 +155,7 @@ class stage-target-class : basic-target
         local s ;        
         for local t in $(targets)
         {
-            s += [ $(t).dg ] ;
+            s += [ $(t).creating-subvariant ] ;
         }
         s = [ sequence.unique $(s) ] ;
         
