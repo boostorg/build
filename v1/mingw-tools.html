@@ -91,11 +91,16 @@
       <td>&nbsp;</td>
     </tr>
   </table>
+  <p><b>Caution</b>: It appears that none of these paths must contain any 
+	spaces, otherwise <b>spurious</b> file not found errors can result (last 
+	reproduced with GCC3.3.1). To work around this limitation, either install 
+	the MinGW under a path that does not contain spaces or use 8.3 names. For 
+	example, if MinGW is installed in C:\Program Files\Dev-Cpp, <code>&quot;-sMINGW_ROOT_DIRECTORY=C:\Progra~1\Dev-Cpp&quot;</code> 
+	should be specified on the bjam command line.</p>
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-   14 May, 2002 <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->04 November, 2004<!--webbot bot="Timestamp" endspan i-checksum="39360" --></p>
 
   <p>Copyright &copy; Dave Abrahams 2002.</p>
 
