@@ -13,7 +13,6 @@ import os ;
 import type ;
 import feature ;
 import "class" : new ;
-import order ;
 import set ;
 
 feature.extend toolset : gcc ;
