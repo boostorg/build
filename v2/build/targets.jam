@@ -485,19 +485,9 @@ rule basic-target ( name : project
                     
                     # Apply use requirement of this target to all generated
                     # virtual targets.
-                    local xuse-requirements ;
-                    for local p in $(self.use-requirements)
-                    {
-                        if dependency in [ feature.attributes $(p:G) ]
-                        {
-                            local g = [ generate-source $(p:G=) : $(rproperties) ] ;
-                            xuse-requirements += $(p:G)$(g) [ $(g).use-requirements ] ;
-                        }
-                        else
-                        {
-                            xuse-requirements += $(p) ;
-                        }                                                
-                    }
+                    local xuse-requirements = 
+                      [ targets.generate-dependencies $(self.use-requirements) 
+                        : $(self.project) ] ;
                     
                     for local e in $(self.generated.$(property-path))                    
                     {
