@@ -220,6 +220,12 @@ yylex()
 		    *b++ = c;
 
 		    c = yychar();
+
+                    /* turn trailing "\r\n" sequences into plain "\n"
+                     * for Cygwin
+                     */
+                    if (c == '\n' && b[-1] == '\r')
+                        --b;
 	    }
 
 	    /* We ate the ending brace -- regurgitate it. */
