@@ -903,23 +903,31 @@ rule set-target-variables ( targets * )
 # directory.
 rule fixup-path-properties ( properties * : subproject-directory ? )
 {
-    if $(subproject-directory)
+    local result ;
+    
+    for local p in $(properties)
     {
-        local result ;
-        for local p in $(properties)
+        if $(p:G) in $(gPATH_FEATURES)
         {
-            if $(p:G) in $(gPATH_FEATURES)
+            # If the path property value is project-relative, re-root
+            # it appropriately for that project
+            local parse-project = [ MATCH ^@([^/$(SLASH)]+)[/$(SLASH)]?(.*) : $(p:G=) ] ;
+            if $(parse-project)
             {
-                result += [ root-paths $(p) : $(subproject-directory) ] ;
+                local project = $(parse-project[1]) ;
+                local subproject = $(parse-project[2]) ;
+                p = [ root-paths $(subproject:G=$(p:G)) : $(gPROJECT($(project))) ] ;
             }
-            else
+            else if $(subproject-directory)  # re-root it relative to this directory
             {
-                result += $(p) ;
+                p = [ root-paths $(p) : $(subproject-directory) ] ;
             }
         }
-        properties = $(result) ;
+        
+        result += $(p) ;
     }
-    return $(properties) ;
+    
+    return $(result) ;
 }
 
 # remove-incompatible-builds requirements... : build-request... : target-name

@@ -36,7 +36,7 @@ if $(PYTHON_WINDOWS)
     PYTHON_PROPERTIES ?=
       select-nt-python-includes
       <runtime-link>dynamic
-      <sysinclude>$(BOOST_ROOT)
+      <sysinclude>@boost
       <$(gcc-compilers)><*><define>USE_DL_IMPORT
       ;
     
@@ -267,7 +267,7 @@ rule select-nt-python-includes ( toolset variant : properties * )
 }
 
 PYTHON_PROPERTIES += 
-        <sysinclude>$(BOOST_ROOT)
+        <sysinclude>@boost
           <stlport-iostream>on
             select-python-library
             ;
@@ -276,7 +276,7 @@ BOOST_PYTHON_V2_PROPERTIES
   = $(PYTHON_PROPERTIES)
     <metrowerks><*><cxxflags>"-inline deferred" 
       <cwpro8><*><cxxflags>"-inline deferred"  # added for internal testing purposes
-        <cxx><*><sysinclude>$(BOOST_ROOT)/boost/compatibility/cpp_c_headers
+        <cxx><*><sysinclude>@boost/boost/compatibility/cpp_c_headers
          <define>BOOST_PYTHON_DYNAMIC_LIB
       ;
 
