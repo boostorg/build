@@ -948,11 +948,13 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
         local result2 ;
         for local t in $(result)
         {
-            local type = [ $(t).type ] ;                
+            local type = [ $(t).type ] ; 
+            assert.nonempty-variable type ;
+            assert.nonempty-variable target-type ;
             if $(type) = $(target-type) || [ type.is-derived $(type) $(target-type) ]
-              {
+            {
                   result2 += $(t) ;
-              }
+            }
         }                
         return $(result2) ;
     } 
