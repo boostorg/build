@@ -96,5 +96,5 @@ rule Archive-action
 
 actions updated together piecemeal mipspro-Archive-action
 {
-    "$(MIPSPRO_BIN_DIRECTORY)/ar" ru$(ARFLAGS) "$(<:T)" "$(>:T)"
+    "$(MIPSPRO_BIN_DIRECTORY)/CC" -ar $(CFLAGS) $(C++FLAGS) -o "$(<:T)" "$(>:T)"
 }
