@@ -45,13 +45,15 @@ actions compile
 # Declare flags and action for linking
 toolset.flags borland.link OPTIONS <debug-symbols>on : -v ;
 toolset.flags borland.link LINKPATH <library-path> ;
-toolset.flags borland.link FINDLIBS <find-library> ;
+toolset.flags borland.link FINDLIBS-ST <find-static-library> ;
+toolset.flags borland.link FINDLIBS-SA <find-shared-library> ;
 toolset.flags borland.link LIBRARIES <library-file> ;
 toolset.flags borland.link LIBRARIES <library> ;
+toolset.flags gcc.link-dll LINKPATH <library-path> ;
 
 actions link bind LIBRARIES
 {
-    $(LINKER_NAME) $(OPTIONS) -q -L$(LINKPATH) -e$(<[1]) $(>) $(LIBRARIES) -l$(FINDLIBS)
+    $(LINKER_NAME) $(OPTIONS) -q -L$(LINKPATH) -e$(<[1]) $(>) $(LIBRARIES) $(FINDLIBS-ST).lib lib$(FINDLIBS-SA).dll
 }
 
 # Declare action for archives

@@ -14,3 +14,9 @@ toolset.inherit kylix : borland ;
 COMPILER_NAME = bc++ ;
 LINKER_NAME = bc++ ;
 
+actions link bind LIBRARIES
+{
+    $(LINKER_NAME) $(OPTIONS) -q -L$(LINKPATH) -e$(<[1]) $(>) $(LIBRARIES) lib$(FINDLIBS-ST).a lib$(FINDLIBS-SA).so
+}
+
+

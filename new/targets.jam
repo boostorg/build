@@ -445,7 +445,7 @@ rule generate-dependencies ( properties * : project : extra-properties * )
 # targets.
 rule basic-target ( name : project
                     : sources * : requirements * : default-build * : usage-requirements * )
-{
+{        
     import build-request ;
     import virtual-target ;
 
