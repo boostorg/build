@@ -98,7 +98,7 @@ local rule dump-test ( )
             local file = $(files[1]:R=$(SUBDIR_TOKENS:J=/) ;
             
             # try to undo absolute paths
-            source-files += [ relative-path  $(file)) ] ;
+            source-files += [ relative-path  $(file) ] ;
         }
     }
 
