@@ -123,12 +123,12 @@ rule dll-files ( module implib ? : sources * : target-type ? )
     main-from-objects $(<) : [ Objects $(>) ] : $(target-type) ;
 }
 
-# basis: modifier function
+# template: modifier function
 #
-# The target specs are modified by adding those previously specified in a basis source.
+# The target specs are modified by adding those previously specified in a template source.
 # Any specs containing paths are rerooted to correctly reference the dependee locations.
 #
-rule basis-modifier ( target : source )
+rule template-modifier ( target : source )
 {
     # Make sure it's defined.
     #
@@ -1725,16 +1725,16 @@ rule lib ( target : sources + : requirements * : default-build * )
     declare-local-target $(target) : $(sources) : $(requirements) : $(default-build) : LIB ;
 }
 
-# Declare a base target for other targets. This is a modifier only. It
+# Declare a template target for other targets. This is a modifier only. It
 # Adds the specs specified here to any other target it's a dependee of.
 #
-gTARGET_TYPE_ID(basis) = BASIS ;
-gMODIFIER_FUNCTION(BASIS) = basis-modifier ;
-gIS_DEPENDENCY(BASIS) = TRUE ;
-gNO_TARGET_TYPE_REQUIREMENT(BASIS) = TRUE ;
-rule basis ( target : sources * : requirements * : default-build * )
+gTARGET_TYPE_ID(template) = TEMPLATE ;
+gMODIFIER_FUNCTION(TEMPLATE) = template-modifier ;
+gIS_DEPENDENCY(TEMPLATE) = TRUE ;
+gNO_TARGET_TYPE_REQUIREMENT(TEMPLATE) = TRUE ;
+rule template ( target : sources * : requirements * : default-build * )
 {
-    declare-local-target $(target) : $(sources) : $(requirements) : $(default-build) : BASIS ;
+    declare-local-target $(target) : $(sources) : $(requirements) : $(default-build) : TEMPLATE ;
 }
 
 # unit-test target : sources : requirements : local-build
