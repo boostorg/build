@@ -14,43 +14,43 @@
 
 ECCP ?= eccp ;
 
-flags eccp C++FLAGS <exception-handling>off : --no_exceptions ;
-flags eccp C++FLAGS <exception-handling>on : --exceptions ;
+flags edg C++FLAGS <exception-handling>off : --no_exceptions ;
+flags edg C++FLAGS <exception-handling>on : --exceptions ;
 
-flags eccp CFLAGS <inlining>off : --no_inlining ;
-flags eccp CFLAGS <inlining>on <inlining>full : --inlining ;
+flags edg CFLAGS <inlining>off : --no_inlining ;
+flags edg CFLAGS <inlining>on <inlining>full : --inlining ;
 
-flags eccp CFLAGS <optimization>off : -O0 ;
-flags eccp CFLAGS <optimization>speed : -O3 ;
-flags eccp CFLAGS <optimization>size : -Os ;
+flags edg CFLAGS <optimization>off : -O0 ;
+flags edg CFLAGS <optimization>speed : -O3 ;
+flags edg CFLAGS <optimization>size : -Os ;
 
-flags eccp CFLAGS <shared-linkable>true : --pic ;
-flags eccp CFLAGS <debug-symbols>on : -g ;
-flags eccp LINKFLAGS <debug-symbols>on : -g ;
-flags eccp CFLAGS <profiling>on : -pg ;
-flags eccp LINKFLAGS <profiling>on : -pg ;
+flags edg CFLAGS <shared-linkable>true : --pic ;
+flags edg CFLAGS <debug-symbols>on : -g ;
+flags edg LINKFLAGS <debug-symbols>on : -g ;
+flags edg CFLAGS <profiling>on : -pg ;
+flags edg LINKFLAGS <profiling>on : -pg ;
 
-flags eccp CFLAGS <cflags> ;
-flags eccp C++FLAGS <cxxflags> ;
-flags eccp DEFINES <define> ;
-flags eccp UNDEFS <undef> ;
-flags eccp HDRS <include> ;
-flags eccp STDHDRS <sysinclude> ;
-flags eccp LINKFLAGS <linkflags> ;
-flags eccp ARFLAGS <arflags> ;
+flags edg CFLAGS <cflags> ;
+flags edg C++FLAGS <cxxflags> ;
+flags edg DEFINES <define> ;
+flags edg UNDEFS <undef> ;
+flags edg HDRS <include> ;
+flags edg STDHDRS <sysinclude> ;
+flags edg LINKFLAGS <linkflags> ;
+flags edg ARFLAGS <arflags> ;
 
-flags eccp LIBPATH <library-path> ;
-flags eccp NEEDLIBS <library-file> ;
-flags eccp FINDLIBS <find-library> ;
+flags edg LIBPATH <library-path> ;
+flags edg NEEDLIBS <library-file> ;
+flags edg FINDLIBS <find-library> ;
 
 #### Link ####
 
 rule Link-action
 {
-    eccp-Link-action $(<) : $(>) ;
+    edg-Link-action $(<) : $(>) ;
 }
 
-actions eccp-Link-action bind NEEDLIBS
+actions edg-Link-action bind NEEDLIBS
 {
     $(ECCP) $(LINKFLAGS) -tused -o "$(<[1])" "$(>)" "$(NEEDLIBS)" "$(FINDLIBS:S=.so)"
 }
@@ -60,10 +60,10 @@ actions eccp-Link-action bind NEEDLIBS
 
 rule Cc-action
 {
-    eccp-Cc-action $(<) : $(>) ;
+    edg-Cc-action $(<) : $(>) ;
 }
 
-actions eccp-Cc-action
+actions edg-Cc-action
 {
     $(ECCP) -c --c99 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
@@ -71,10 +71,10 @@ actions eccp-Cc-action
 #### C++ ####
 rule C++-action
 {
-    eccp-C++-action $(<) : $(>) ;
+    edg-C++-action $(<) : $(>) ;
 }
 
-actions eccp-C++-action
+actions edg-C++-action
 {
     $(ECCP) -tused -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)"  -o "$(<)" "$(>)"
 }
@@ -83,10 +83,10 @@ actions eccp-C++-action
 
 rule Archive-action
 {
-    eccp-Archive-action $(<) : $(>) ;
+    edg-Archive-action $(<) : $(>) ;
 }
 
-actions updated together piecemeal eccp-Archive-action
+actions updated together piecemeal edg-Archive-action
 {
     ar rc $(<) $(>)
 }
