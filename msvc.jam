@@ -14,22 +14,26 @@ feature.extend toolset : msvc ;
 
 feature.subfeature toolset msvc : vendor
   : intel
-  : optional propagated
+  : propagated optional
   # intel and msvc supposedly have link-compatible objects... remains
   # to be seen, though ;-)
   ;
 
-feature.subfeature toolset msvc : version
-  : # 6 7 7.1 # known subvalues
-  : optional propagated implicit
+ feature.subfeature toolset msvc : version
+    : # 6 7 7.1 # known subvalues
+    : propagated implicit
+    
+    # versions of msvc are link-compatible
+    # link-incompatible  
+    ;
   
-  # versions of msvc are link-compatible
-  # link-incompatible  
-  ;
+.version-configured =  ;
+.versionless-configured =  ;
 
 # Initialize the toolset
-rule init ( version ? path ? : vendor ? : setup ? compiler ? linker ? )
+rule init ( version ? : path ? : vendor ? : setup ? compiler ? linker ? )
 {
+    version ?= unspecified ;
     feature.extend-subfeature toolset msvc : version : $(version) ;
     
     if $(vendor) && ( $(vendor) != intel )
@@ -39,7 +43,9 @@ rule init ( version ? path ? : vendor ? : setup ? compiler ? linker ? )
     vendor = $(vendor)- ;
     vendor ?= "" ;
     
-    local condition  = <toolset>msvc-$(vendor)$(version) ;
+    local condition  = -$(vendor)$(version) ;
+    condition ?= "" ;
+    condition = <toolset>msvc$(condition) ;
     
     # setup will be used iff a path has been specified.  If setup is
     # not specified, vcvars32.bat will be used instead.
@@ -56,7 +62,7 @@ rule init ( version ? path ? : vendor ? : setup ? compiler ? linker ? )
         
         # look for the setup program in both the system PATH and in
         # its default installation location based on version
-        local env-PATH = [ modules.peek : PATH ] ;
+        local env-PATH = [ modules.peek : PATH Path path ] ;
         local PATH-setup =  [ GLOB $(env-PATH) : $(setup) ] ;
         local default-setup =  [ GLOB $(default-path)\\bin : $(setup) ] ;
         
@@ -68,9 +74,10 @@ rule init ( version ? path ? : vendor ? : setup ? compiler ? linker ? )
         compiler = $(compiler) ;
         if ! [ GLOB $(path)\\bin $(env-PATH) : $(compiler:E=CL).exe ]
         {
-            error $(condition) initialization: :
+            error toolset msvc $(vendor) $(version) initialization: :
               couldn't find compiler \"$(compiler:E=CL)\" in PATH or "known default"
-                installation location \"$(default-path)\\BIN\" ;
+                installation location \"$(default-path)\\BIN\" 
+                  : PATH= \"$(env-PATH)\" ;
         }
     }
     
@@ -135,6 +142,8 @@ flags msvc.compile PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;  # 
 flags msvc.compile DEFINES <define> ;
 flags msvc.compile UNDEFS <undef> ;
 flags msvc.compile INCLUDES <include> ;
+
+flags msvc WHATEVER <toolset-msvc:version> ;
 
 actions compile
 {

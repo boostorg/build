@@ -85,8 +85,9 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
         property.validate-property-sets $(condition) ;
         if ! $(values)
         {
-            error empty value set used with property-set match criterion:
-              : $(condition) ;
+            # I don't think I like this test anymore.
+#             error empty value set used with property-set match criterion:
+#               : \"$(condition)\" ;
         }
         condition = [ normalize-condition $(condition) ] ;
     }
@@ -101,7 +102,9 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
     else
     {
         match-type += unconditional ;
-        if ! $(values)
+        
+        # I don't like this condition anymore
+        if ! $(values)-is-nonempty
         {
             error empty value set used with unconditional match criterion ;
         }
