@@ -80,15 +80,24 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? )
       .docbook-dtd-dir = [ path.make $(docbook-dtd-dir) ] ;
     }
    
-    local boost-root = [ path.make [ modules.peek : BOOST_ROOT ] ] ;
+    local boost-root =  [ modules.peek : BOOST_ROOT ] ;
+    if $(boost-root)
+    {
+        boost-root = [ path.make $(boost-root) ] ;
+    }    
     local boost-build-root = [
         sequence.transform path.make : [ modules.peek : BOOST_BUILD_PATH ]
     ] ; 
     local search-dirs = [ path.join $(boost-root) tools boostbook ] 
-                        $(boost-build-root)/../boostbook ;
+                        $(boost-build-root)/../../boostbook ;
     local native-search-dirs = [
         sequence.transform path.native : $(search-dirs)
     ] ;
+    if --debug-configuration in [ modules.peek : ARGV ] 
+    {
+        ECHO "notice: Boost.Book: searching XSLS/DTD in" ;
+        ECHO "notice:" $(native-search-dirs) ;
+    }    
     local boostbook-xsl-dir = [ GLOB $(native-search-dirs) : xsl ] ;
     local boostbook-dtd-dir = [ GLOB $(native-search-dirs) : dtd ] ;
 
