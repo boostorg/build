@@ -23,7 +23,7 @@ flags acc CFLAGS <optimization>default : -O ;
 flags acc CFLAGS <optimization>speed : -O3 ;
 flags acc CFLAGS <optimization>space : -O2 ;
 
-flags acc CFLAGS <inlining>off : ;
+flags acc CFLAGS <inlining>off : +d ;
 flags acc CFLAGS <inlining>on : ;
 flags acc CFLAGS <inlining>full : ;
 flags acc CFLAGS <threading>multi : -mt ;
@@ -37,6 +37,7 @@ flags acc C++FLAGS <rtti>on : ;
 flags acc LINKFLAGS <runtime-link>static : -llibstd_v2.a ;
 flags acc LINKFLAGS <runtime-link>shared : -llibstd_v2.sl ;
 
+
 # We want the full path to the sources in the debug symbols because otherwise
 # the debugger won't find the sources when we use boost.build.
 flags acc CFLAGS <debug-symbols>on : -g ;
@@ -45,6 +46,9 @@ flags acc LINKFLAGS <debug-symbols>off : -s ;
 flags acc LINKFLAGS <threading>multi : -mt ;
 
 flags acc CFLAGS <shared-linkable>true : +Z ;
+flags acc CFLAGS <target-type>$(SHARED_TYPES) : +z ;
+flags acc CFLAGS <warnings>off : -w ;
+flags acc LINKFLAGS <target-type>$(SHARED_TYPES) : -b ;
 
 flags acc CFLAGS <profiling>on : -pg ;
 flags acc LINKFLAGS <profiling>on : -pg ;
