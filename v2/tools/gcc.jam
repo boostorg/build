@@ -59,6 +59,7 @@ flags gcc.compile OPTIONS <inlining>full : -finline-functions -Wno-inline ;
 
 flags gcc.compile OPTIONS <debug-symbols>on : -g ;
 flags gcc.compile OPTIONS <profiling>on : -pg ;
+flags gcc.compile OPTIONS <link>shared/<main-target-type>LIB : -fPIC ;
 
 flags gcc.compile OPTIONS <cflags> ;
 flags gcc.compile.c++ OPTIONS <cxxflags> ;
@@ -165,10 +166,13 @@ flags gcc.link RPATH <dll-path> ;
 flags gcc.link RPATH_LINK <xdll-path> ;
 
 # This permits shared libraries with non-PIC code on Solaris
-if [ os.name ] = SOLARIS
-{
-    flags gcc.link OPTIONS <link>shared : -mimpure-text ;
-}
+# VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll,
+# the following is not needed. Whether -fPIC should be hardcoded,
+# is a separate question.
+#if [ os.name ] = SOLARIS
+#{
+#    flags gcc.link OPTIONS <link>shared : -mimpure-text ;
+#}
 
 rule link ( targets * : sources * : properties * )
 {
