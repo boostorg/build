@@ -18,7 +18,7 @@ rule virtual-target ( name : type ? : project
 {
     self.name = $(name) ;
     self.type = $(type) ;
-    self.subvariant = $(subvariant) ;
+    self.subvariant = [ property.remove free incidental : $(subvariant) ] ;
     self.project = $(project) ;
 
     self.includes  = ;
@@ -70,12 +70,24 @@ rule virtual-target ( name : type ? : project
     # Returns the action currently set.
     rule action ( a ? )
     {
-        if $(a) {
+        if $(a) 
+        {
             self.action = $(a) ;
         }
         return $(self.action) ;
     }
 
+    # Sets the dependency graph this target is part of.
+    # 'dg' is an instance of 'subvariant-dg' class.
+    rule dg ( dg ? )
+    {
+        if $(dg)
+        {
+            self.dg = $(dg) ;
+        }
+        return $(self.dg) ;
+    }
+    
     # Specified an extra element to be added to the target path.
     rule extra-path ( p ) 
     {
@@ -102,10 +114,7 @@ rule virtual-target ( name : type ? : project
             local a = [ action ] ;
             if $(a) {
                 $(a).actualize ;
-                local path = [ path.join [ project.attribute $(self.project) location ] 
-                               "bin" [ property.as-path [ subvariant ] ] 
-                               $(self.extra-path) ] ;
-                path = [ path.native $(path) ] ;
+                local path = [ path ] ;
                 LOCATE on $(self.actual-name) = $(path) ;
                 DEPENDS $(self.actual-name) : $(path) ;
                 common.MkDir $(path) ;
@@ -189,6 +198,16 @@ rule virtual-target ( name : type ? : project
         }
         return $(self.actual-name) ;
     }
+    
+    # Returns the directory for this target
+    rule path ( )
+    {
+        local path = [ path.join [ project.attribute $(self.project) location ] 
+          "bin" [ property.as-path [ subvariant ] ] 
+            $(self.extra-path) ] ;
+        return [ path.native $(path) ] ;
+     }
+    
 }
 class virtual-target ;
 
@@ -249,7 +268,7 @@ rule action ( targets + : sources * : action-name : properties * )
             DEPENDS $(actual-targets) : $(actual-sources) ;
 
             $(self.action-name)
-              $(actual-targets) : $(actual-sources) : [ properties ] ;
+              $(actual-targets) : $(actual-sources) : $(properties) ;
         }        
     }    
     
@@ -259,7 +278,7 @@ rule action ( targets + : sources * : action-name : properties * )
     # its argument.
     rule adjust-properties ( properties * )
     {
-        return $(property) ;
+        return $(properties) ;
     }
     
     
@@ -339,6 +358,26 @@ rule register ( target )
     return $(result) ;
 }
 
+# Traverses the dependency graph of 'target' and return all targets that will
+# be created before this one is created.
+rule traverse ( target )
+{
+    local result ;
+    if [ $(target).action ]
+    {
+        local action = [ $(target).action ] ;
+        # This includes 'target' as well
+        result += [ $(action).targets ] ;
+
+        for local t in [ $(action).sources ] 
+        {
+            result += [ traverse $(t) ] ;
+        }        
+    }
+    return $(result) ;
+}
+
+
 # Clones a virtual target, copying all fields that can be set in ctor, setting
 # project of new targets to 'project'. 
 # If 'dont-recurse' is not set, clones action as well, which causes cloning
@@ -415,3 +454,23 @@ local rule clone-action-template ( action from cloned-from project name type suf
     
     return $(cloned) ;    
 }
+
+local rule subvariant-dg ( main-target : properties * : virtual-targets * )
+{
+    self.main-target = $(main-target) ;
+    self.properties = $(properties) ;
+    self.virtual-targets = $(virtual-targets) ;
+
+    rule all-target-directories ( )
+    {
+        local result ;
+        for local t in $(self.virtual-targets) 
+        {
+            result = [ sequence.merge $(result) : [ $(t).path ] ] ;
+        }
+        return $(result) ;                
+    }    
+}
+
+class subvariant-dg ;
+
