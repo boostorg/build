@@ -115,7 +115,8 @@ class stage-target-class : basic-target
             
             # If any <dll-path> properties were specified for installing,
             # add them.
-            ps-raw += [ $(build-property-set).get <dll-path> ] ;
+            local l = [ $(build-property-set).get <dll-path> ] ;
+            ps-raw += $(l:G=<dll-path>) ;
         }
         
         # Remove the <tag> feature on original targets.
