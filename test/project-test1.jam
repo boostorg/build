@@ -21,7 +21,7 @@ IMPORT $(__name__) : exe : : exe ;
 
 project.load project-test1 ;
 
-project.dump ;
+project-root.print ;
 
 assert.result project-test1/dir2 : project.lookup @/cool-library : "." ;
 assert.result project-test1/dir2 : project.lookup project-test1@/cool-library : "." ;
