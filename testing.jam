@@ -304,7 +304,7 @@ rule capture-run-output ( target : executable + )
     gTEST_OUTPUT_FILE($(target)) = $(target:S=.output) ;
     INCLUDES $(target) : $(target:S=.output) ;
     MakeLocate $(test-file:S=.output) : $(LOCATE_TARGET) ;
-    Clean clean $(test-file:S=.output) ;
+    Clean clean : $(test-file:S=.output) ;
     capture-run-output1 $(target) : $(executable) ;
 }
 
