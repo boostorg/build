@@ -31,10 +31,10 @@ FRAMEWORKS += System ;
 DLLVERSION = $(DLLVERSION[1]) ;
 DLLVERSION ?= $(BOOST_VERSION) ;
 
-flags darwin LINKFLAGS <runtime-link>static : -static ;
+flags darwin LINKFLAGS <runtime-link>static : -static-libgcc ;
 flags darwin CFLAGS <debug-symbols>on : -g ;
 flags darwin LINKFLAGS <debug-symbols>on : -g ;
-flags darwin LINKFLAGS <debug-symbols>off : -s ;
+flags darwin LINKFLAGS <debug-symbols>off : -Wl,-x ;
 flags darwin CFLAGS <optimization>off : -O0 ;
 flags darwin CFLAGS <optimization>speed : -O3 ;
 flags darwin CFLAGS <optimization>space : -Os ;
@@ -47,7 +47,8 @@ flags darwin C++FLAGS <rtti>off : -fno-rtti ;
 flags darwin C++FLAGS <vtable-thunks>on : -fvtable-thunks ;
 flags darwin C++FLAGS <vtable-thunks>off : -fvtable-thunks=0 ;
 flags darwin CFLAGS <shared-linkable>true : -fno-common ;
-flags darwin LINKFLAGS <target-type>$(SHARED_TYPES) : -bundle -undefined warning -flat_namespace ;
+flags darwin LINKFLAGS <target-type>$(SHARED_TYPES) :
+    -nostartfiles -Wl,-dylib -Wl,-ldylib1.o -Wl,-undefined,warning -Wl,-flat_namespace ;
 
 
 #### Link ####
@@ -57,7 +58,7 @@ rule Link-action
     _ on $(<) = " " ;
     if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES)
     {
-        DLLFLAGS on $(<) = "-compatability_version $(DLLVERSION) -current_version $(DLLVERSION)" ;
+        DLLFLAGS on $(<) = "-Wl,-dylib_compatibility_version,$(DLLVERSION) -W,l-dylib_current_version,$(DLLVERSION)" ;
     }
     else
     {
@@ -84,7 +85,7 @@ rule Cc-action
 
 actions darwin-Cc-action
 {
-    cc -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -isystem$(_)"$(STDHDRS)" -o "$(<)" "$(>)"
+    cc -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -96,7 +97,7 @@ rule C++-action
 
 actions darwin-C++-action
 {
-    c++ -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -isystem$(_)"$(STDHDRS)" -o "$(<)" "$(>)"
+    c++ -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
@@ -108,5 +109,5 @@ rule Archive-action
 
 actions updated together piecemeal darwin-Archive-action
 {
-    c++ -r $(ARFLAGS) -o "$(<:T)" "$(>:T)"
+    ar -r -s $(ARFLAGS) "$(<:T)" "$(>:T)"
 }

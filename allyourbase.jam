@@ -357,9 +357,9 @@ else if $(UNIX)
 
     case MACOSX :
         MANDIR          ?= /usr/local/share/man ;
-        RANLIB          ?= "" ;
         SUFDLL          ?= .dylib ;
         gSHELL_LIBPATH  ?= DYLD_LIBRARY_PATH ;
+        NOARSCAN        ?= true ;
 
     case NCR :
         RANLIB          ?= "" ;
