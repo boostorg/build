@@ -119,5 +119,5 @@ if ! $(dont-build)
     build-system ?= build-system ;
 
     # Use last element in case of multiple command-line options
-    import $(build-system[-2]) ;
+    import $(build-system[-1]) ;
 }
