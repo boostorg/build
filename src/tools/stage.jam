@@ -283,6 +283,19 @@ rule copy-file ( name ? : project : source : extra-properties )
     return $(targets) ;
 }
 
+rule symlink-lib ( suffix : project : source : extra-properties )
+{
+    local n = [ $(source).name ] ;
+    local targets = [ 
+      new file-target $(n:D=) : [ $(source).type ] : $(project) ] ;
+    local a = [ new action $(targets) : $(source) : symlink.ln :
+      $(extra-properties) ] ;
+    $(targets).suffix $(suffix) ;
+    $(targets).action $(a) ;
+    return $(targets) ;
+}
+
+
 rule relink-file ( project : property-set : source ) 
 {
     local action = [ $(source).action ] ;
@@ -359,13 +372,29 @@ class stage-shared-lib-generator : generator
             # Need to change the name of the target and relink
             local relinked = 
               [ stage.relink-file $(project) : $(property-set) : $(source) ] ;
-            local so-version = [ $(property-set).get <so-version> ] ;
             
-            local existing-suffix = [ $(relinked).suffix ] ;            
-            $(relinked).suffix $(existing-suffix).$(so-version) ;
+            
+            local so-version = [ $(property-set).get <so-version> ] ;
+            if $(so-version)
+            {                            
+                local existing-suffix = [ $(relinked).suffix ] ;            
+                $(relinked).suffix $(existing-suffix).$(so-version) ;
+                
+                relinked += [ stage.symlink-lib $(existing-suffix) : $(project) :
+                  $(relinked[1]) : $(property-set) ] ;
+                
+                local major = [ MATCH ([0123456789])[.].* : $(so-version) ] ;
+                relinked += [ stage.symlink-lib $(existing-suffix).$(major) 
+                  : $(project) : $(relinked[1]) : $(property-set) ] ;
+            }
+            
             # Break into private member of 'virtual-target' and change
             # the name.
-            modules.poke $(relinked) : self.name : $(name) ;
+            for r in $(relinked) 
+            {               
+                modules.poke $(r) : self.name : $(name) ;
+            }
+            
             return $(relinked) ;
         }
         else
