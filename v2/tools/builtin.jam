@@ -25,9 +25,10 @@ compose <variant>debug : <optimization>off <rtti>on <debug-symbols>on ;
 compose <variant>release : <optimization>on <rtti>on <debug-symbols>off ;
 
 type.register EXE : : : main ;
-type.register STATIC-LIB : a : : main ;
-type.register SHARED-LIB : so : : main ;
 type.register LIB : : : main ;
+type.register STATIC-LIB : a : LIB : main ;
+type.register SHARED-LIB : so : LIB : main ;
+
 type.register CPP : cpp cxx ;
 type.register H : h ;
 type.register C : c ;
