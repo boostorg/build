@@ -327,6 +327,30 @@ rule relative ( child parent )
     }    
 }
 
+# Returns the minimal path to path2 that is relative path1.
+#
+rule relative-to ( path1 path2 )
+{
+    local root_1 = [ regex.split [ reverse $(path1) ] / ] ;
+    local split1 = [ regex.split $(path1) / ] ;
+    local split2 = [ regex.split $(path2) / ] ;
+
+    while $(split1) && $(root_1)
+    {
+        if $(split1[1]) = $(split2[1])
+        {
+            root_1 = $(root_1[2-]) ;
+            split1 = $(split1[2-]) ;
+            split2 = $(split2[2-]) ;
+        }
+        else
+        {
+            split1 = ;
+        }
+    }
+    return [ join . $(root_1) $(split2) ] ;
+}
+
 
 
 rule make-NT ( native )
