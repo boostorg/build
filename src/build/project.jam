@@ -380,8 +380,12 @@ local rule initialize (
         local parent-build-dir = [ $(pattributes).get build-dir ] ;
         if $(parent-build-dir)
         {            
-            local parent-dir = [ path.parent $(parent) ] ;
-            local our-dir = [ path.parent $(jamfile) ] ;
+            # Have to compute relative path from parent dir to our dir
+            # Convert both paths to absolute, since we cannot
+            # find relative path from ".." to "."
+            local pwd = [ path.pwd ] ;
+            local parent-dir = [ path.root [ path.parent $(parent) ] $(pwd) ] ;
+            local our-dir = [ path.root [ path.parent $(jamfile) ] $(pwd) ] ;
             $(attributes).set build-dir : [ path.join $(parent-build-dir) 
                   [ path.relative $(our-dir) $(parent-dir) ] ] : exact ;
         }        
@@ -424,7 +428,7 @@ rule project-attributes ( location )
         {
             specification = [ property.translate-paths $(specification)
                               : $(self.location) ] ;
-            specification = [ property.make $(specification) ] ;
+            specification = [ property.make $(specification) ] ;            
             result = [ property-set.create $(specification) ] ;            
             
             # If we have inherited properties, need to refine them with the
