@@ -76,6 +76,12 @@ if ! $(ARFLAGS)
     flags intel-linux ARFLAGS : "" ;
 }
 
+flags intel-linux DLLVERSION <dllversion> ;
+DLLVERSION = $(DLLVERSION[1]) ;
+DLLVERSION ?= $(BOOST_VERSION) ;
+
+flags inttel-linux TARGET_TYPE <target-type> ;
+
 #### Cc ####
 
 rule Cc-action
@@ -119,6 +125,19 @@ actions updated together piecemeal intel-linux-Archive-action
 rule Link-action
 {
     gRUN_LD_LIBRARY_PATH($(<)) += $(INTEL_LINUX_RUN_LD_LIBRARY_PATH) ;
+    SPACE on $(<) = " " ;
+    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES)
+    {
+        OUTTAG on $(<) = ".$(DLLVERSION)" ;
+        SOTAG on $(<) = ".$(DLLVERSION)" ;
+        ACTION_1 on $(<) = "" ;
+    }
+    else
+    {
+        OUTTAG on $(<) = "" ;
+        SOTAG on $(<) = ;
+        ACTION_1 on $(<) = ;
+    }
     intel-linux-Link-action $(<) : $(>) ;
 }
 
@@ -126,6 +145,7 @@ rule Link-action
 actions intel-linux-Link-action bind NEEDLIBS
 {
     $(INTEL_LINUX_SETUP)
-    icc $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" -l$(FINDLIBS) "$(NEEDLIBS)" "$(NEEDLIBS)"
+    icc $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" -l$(FINDLIBS) "$(NEEDLIBS)" "$(NEEDLIBS)" "-Qoption,link,-soname,$(<[1]:D=)$(SOTAG)"
+    $(ACTION_1)$(LN)$(SPACE)-fs$(SPACE)"$(<[1]:D=)$(OUTTAG)"$(SPACE)"$(<[1])"
 }
 
