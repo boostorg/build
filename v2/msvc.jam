@@ -9,6 +9,9 @@ import os ;
 import type ;
 import toolset : flags ;
 import errors : error ;
+import feature : feature ;
+
+feature user-interface : console gui wince native auto ;
 
 feature.extend toolset : msvc ;
 
@@ -157,11 +160,11 @@ flags msvc.link LINKFLAGS <debug-symbols>on : /DEBUG ;
 # to enable them manually for release builds with debug symbols.
 flags msvc LINKFLAGS <debug-symbols>on/<runtime-debugging>off : /OPT:REF,ICF ;
 
-# flags msvc LINKFLAGS <user-interface>console : /subsystem:console ;
-# flags msvc LINKFLAGS <user-interface>gui : /subsystem:windows ;
-# flags msvc LINKFLAGS <user-interface>wince : /subsystem:windowsce ;
-# flags msvc LINKFLAGS <user-interface>native : /subsystem:native ;
-# flags msvc LINKFLAGS <user-interface>auto : /subsystem:posix ;
+flags msvc LINKFLAGS <user-interface>console : /subsystem:console ;
+flags msvc LINKFLAGS <user-interface>gui : /subsystem:windows ;
+flags msvc LINKFLAGS <user-interface>wince : /subsystem:windowsce ;
+flags msvc LINKFLAGS <user-interface>native : /subsystem:native ;
+flags msvc LINKFLAGS <user-interface>auto : /subsystem:posix ;
 
 flags msvc NEEDLIBS <library-file> ;
 flags msvc LINKFLAGS <main-target-type>LIB/<link>shared : /DLL ;
