@@ -3,6 +3,63 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
+# Polymorphic class system built on top of core Jam facilities.
+#
+# Classes are defined by creating a rule of the same name to act as
+# the "constructor", which in turn sets instance attributes and
+# defines rules:
+#
+#    rule myclass ( arg1 )          # constructor
+#    {
+#        self.attribute = $(arg1) ;
+#
+#        rule method1 ( )           # method
+#        {
+#            return [ method2 ] ;
+#        }
+#
+#        rule method2 ( )           # method
+#        {
+#            return $(self.attribute) ;
+#        }
+#    }
+#    class myclass ;                # establish myclass as a class
+#
+# New instance modules are created by invoking [ new <class> <args...> ]:
+#
+#    local x = [ new myclass foo ] ;        # x is a new myclass object
+#    assert.result foo : [ $(x).method1 ] ; # $(x).method1 returns "foo"
+#
+# To write a derived class, you must:
+#
+#   1. call the constructors of all base classes as <base>.__init__ from
+#      the derived class' constructor rule
+#
+#   2. add the base classes to the derived class declaration.
+#
+#    rule derived ( arg )
+#    {
+#         myclass.__init__ $(arg) ;  # call base __init__
+#         rule method2 ( )           # method override
+#         {
+#             return $(self.attribute)XXX ;
+#         }
+#     }
+#     class derived : myclass ;
+#
+# All methods operate virtually, replacing behavior in the base
+# classes. For example:
+#
+#    local y = [ new derived foo ] ;           # y is a new derived object
+#    assert.result fooXXX : [ $(y).method1 ] ; # $(y).method1 returns "foo"
+#
+# Each class instance is its own core Jam module. All instance
+# attributes and methods are accessible without additional
+# qualification from within the class instance, and it has no
+# unqualified access to any other names other than those defined or
+# imported by the class' constructor or methods. By convention,
+# attribute names are prefixed with "self.".
+
 import numbers ;
 import errors : * ;
 import set ;
@@ -16,7 +73,8 @@ classes = ;
 # under the name <class-name>.__init__ for the most-derived class and
 # all of its bases. It extracts <class-name> by inspecting the
 # backtrace and uses that to call the user-defined intitialization
-# function.
+# function. The rule is imported *localized*, so it operates in the
+# namespace of the instance.
 local rule __init__ (
   * # all arguments are forwarded directly to the user-defined
     # initialization function.
@@ -25,23 +83,37 @@ local rule __init__ (
     # pull the name of the class being initialized from the backtrace
     local bt = [ BACKTRACE ] ;
     local class = [ MATCH ^(.*)[.]__init__$ : $(bt[4]) ] ;
-    
     assert.nonempty-variable class ;
     
-    # The calling module is the instance names
+    # set the __class__
+    __class__ ?= $(class) ;
+    
+    # The calling module is the instance name
     local instance = [ CALLER_MODULE ] ;
     
-    # call the class rule that was defined by the user, from within the instance module
-    module $(instance)
+    # call the class rule that was defined by the user
+    # This defines all of the class' member rules
     {
-        # This invocation defines all of the class' member rules within the instance
+        local class = $(class) ; # protect this from being set by 
         $(class).$(class) $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
     
+    # Make sure all of the base classes have been initialized
+    for local b in [ modules.peek class@$(class) : __bases__ ]
+    {
+        if ! $($(b).__init__.called)
+        {
+            errors.error $(class).$(class) failed to call base class constructor $(b).__init__ ;
+        }
+    }
     # Make all the class' member rules available as qualified names
     # within the instance
     local rules = [ RULENAMES $(instance) ] ;
     IMPORT $(instance) : $(rules) : $(instance) : $(class).$(rules) ;
+    
+    
+    # note that the class' init function has been called
+    $(class).__init__.called = true ;
 }
 
 # Declare a class. The caller should have defined a (local) rule
@@ -202,6 +274,7 @@ rule __test__ ( )
     {
         import class : * ;
         import assert ;
+        import errors : * ;
         
         # This will be the construction function for a class called
         # 'myclass'
@@ -251,6 +324,11 @@ rule __test__ ( )
                     return ;
                 }
             }
+            
+            rule get-class ( )
+            {
+                return $(__class__) ;
+            }
         }
         class myclass ;
         
@@ -275,7 +353,6 @@ rule __test__ ( )
                 return $(z) ;
             }
         }
-        
         class derived1 : myclass ;
         
         local rule derived2 ( )
@@ -294,13 +371,32 @@ rule __test__ ( )
                  return [ myclass.get-x ] ;
              }
         }
-        
         class derived2 : myclass ;
+        
+        local rule bad_subclass ( )
+        {
+            # fails to call base class __init__ function
+        }
+        class bad_subclass : myclass ;
         
         local a = [ new myclass 3 4 5 : 4 5 ] ;
         local b = [ new derived1 4 ] ;
         local c = [ new derived2 ] ;
         local d = [ new derived2 ] ;
+        
+        try ;
+        {
+            new bad_subclass ;
+        }
+        catch
+          bad_subclass.bad_subclass failed to call base class constructor myclass.__init__
+          ;
+        
+        try ;
+        {
+            class bad_subclass ;
+        }
+        catch bad_subclass has already been declared ;
         
         assert.result 3 4 5 : $(a).get-x ;
         assert.result 4 5 : $(a).get-y ;
@@ -313,6 +409,11 @@ rule __test__ ( )
         assert.result derived1.g : $(b).f ;
         assert.result derived2.g : $(c).f ;
         assert.result derived2.g : $(d).f ;
+        
+        # Check that the __class__  attribute is getting properly set.
+        assert.result myclass : $(a).get-class ;
+        assert.result derived1 : $(b).get-class ;
+        
         $(a).set-x a.x ;
         $(b).set-x b.x ;
         $(c).set-x c.x ;
