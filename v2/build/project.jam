@@ -278,10 +278,10 @@ local rule load-jamfile (
     #
     if ! $(jamfile-to-load)
     {
-        EXIT
-            "Unable to load Jamfile. Could not find a Jamfile in"
-            "this directory:" $(dir)"." "Attempted to find it with"
-            "this pattern:" $(JAMFILE)"."
+        errors.error
+            "Unable to load Jamfile." :
+            "Could not find a Jamfile in directory '$(dir)'". : 
+            "Attempted to find it with pattern '"$(JAMFILE:J=" ")"'." :
             "Please consult the documentation at 'http://www.boost.org'." ;
     }
 
