@@ -1176,9 +1176,9 @@ rule SubDir
 
         # determine where toolset specifications and boost-base can be found. 
         BOOST_BUILD_INSTALLATION ?= $($(<[1])) ;
-        BOOST_BASE_DIR ?= $($(<[1])) ;
+
         # and include boost-base
-        include [ join-path $(BOOST_BASE_DIR) boost-base.jam ] ;
+        include [ join-path $(BOOST_BUILD_INSTALLATION) boost-base.jam ] ;
     }
 
     # Get path to current directory from root using SubDir.

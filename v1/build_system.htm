@@ -17,8 +17,8 @@
     <h2><a name="synopsis">Synopsis</a></h2>
 
     <p>Boost.Build is a system for large project software construction built on
-    <a href="http://www.perforce.com/jam/jam.html">Jam/MR</a>, an open-source
-    make replacement. Key features are:
+        <a href="http://freetype.sourceforge.net/jam/index.html">FTJam</a>,
+        an open-source make replacement<a href="#1">[1]</a>. Key features are:
 
     <ul>
       <li>A simple target description language
@@ -46,6 +46,7 @@
       <ul>
         <li><a href="#installing_jam">Installing Jam</a>
         <li><a href="#initiating">Initiating a Build</a>
+        <li><a href="#setting_variables">Setting Jam Variables</a>
         <li><a href="#example_jamfile">An Example Jamfile</a>
         <li><a href="#support_files">Support Files</a>
       </ul>
@@ -105,30 +106,44 @@
           <li><a href="#requirements">Requirements</a>
         </ul>
 
+      <li><a href="#footnotes">Footnotes</a>
     </ul>
 
     <h2><a name="getting_started">Getting Started</a></h2>
 
-    <h3><a name="installing_jam">Installing Jam</a></h3>
-    Jam can be found at <a href=
-    "http://www.perforce.com/jam/jam.html">http://www.perforce.com/jam/jam.html</a>.
-    If you are installing on Windows NT, please read <a href=
-    "http://frankenrouter.perforce.com/lists/jamming/msg00474.html">this
-    note</a>. You may need to use the ``<tt>SUBST</tt> hack'' described at the
-    bottom of the message to bootstrap Jam. Also, when defining the
-    <tt>MSVCNT</tt>, <tt>BCCROOT</tt>, etc. environment variables described <a
-    href="http://public.perforce.com/public/jam/src/README">here</a>, please
-    remember that they are case-sensitive. 
+    <h3><a name="installing_jam">Installing FTJam</a></h3>
+    
+    <ul>
+      <li><a href="http://freetype.sourceforge.net/jam/index.html#where">This
+      page</a> describes how and where to get FTJam sources.
+
+      <li>The <a href="http://public.perforce.com/public/jam/src/README">Jam
+      README</a> contains basic installation instructions. 
+
+      <li>If you are installing on Windows NT, please read <a href=
+          "http://frankenrouter.perforce.com/lists/jamming/msg00474.html">this
+          note</a>. You may need to use the ``<tt>SUBST</tt> hack'' described at
+          the bottom of the message to bootstrap Jam. Also, when defining the
+          <tt>MSVCNT</tt>, <tt>BCCROOT</tt>, etc. environment variables as
+          described in the <a href="http://public.perforce.com/public/jam/src/README">Jam
+          README</a>, please remember that they are case-sensitive.
+
+      <li>Note that the supplied Makefile may require editing for your
+          platform; see the <a href="http://public.perforce.com/public/jam/src/README">Jam
+          README</a> for details. The Makefile is used for bootstrapping Jam; it builds Jam
+          into a subdirectory called <tt>bin.</tt><i>platform</i>.
+    </ul>
 
     <h3><a name="initiating">Initiating a Build</a></h3>
 
     <p>Currently, the build system must be invoked with the
     <tt>-f<i>allyourbase-path</i></tt> option, where <i>allyourbase-path</i> is
     the path to the <tt><a href="allyourbase.jam">allyourbase.jam</a></tt> file
-    supplied in this directory. When the system matures, this file will be
-    compiled directly into Jam as the <tt>Jambase</tt>, and the <tt>-f</tt>
-    option will no longer be needed. The environment variables neccessary for
-    bootstrapping Jam are not needed once it has been built.
+    supplied in this directory. When the system matures, this file may be
+    compiled directly into Jam as the <tt>Jambase</tt> or we will find another
+    way to make sure the <tt>-f</tt> option is no longer needed. The environment
+    variables neccessary for bootstrapping Jam are not needed once it has been
+    built.
 
     <p>Here are some sample Boost Jam invocations:
 
@@ -139,39 +154,63 @@
         <th>Effects
 
       <tr>
-        <td><tt>jam -f<i>allyourbase-path</i> -sTOOLS=gcc my_target</tt> 
+        <td><pre>jam -f<i>allyourbase-path</i> -sTOOLS=gcc my_target</pre> 
 
-        <td>default (debug) <tt>BUILD</tt> of <tt>my_target</tt>with GCC
+        <td>default (debug) <tt><a href="#build">BUILD</a></tt> of <tt>my_target</tt>with GCC
 
       <tr>
-        <td><tt>jam -f<i>allyourbase-path</i> -sTOOLS="msvc gcc"</tt> 
+        <td><pre>jam -f<i>allyourbase-path</i> -sTOOLS="msvc gcc"</pre> 
 
         <td>default-build <tt>all</tt> with msvc and gcc
 
       <tr>
-        <td><tt>set TOOLS=msvc<br>
-         jam -f<i>allyourbase-path</i></tt> 
+        <td><pre>set TOOLS=msvc
+jam -f<i>allyourbase-path</i></pre>
 
         <td>Set an NT environment variable to always build with MSVC<br>
         default-build <tt>all</tt>.
 
       <tr>
-        <td><tt>jam -f<i>allyourbase-path</i> -sBUILD=release</tt> 
+        <td><pre>jam -f<i>allyourbase-path</i> -sBUILD=release</pre> 
 
-        <td>release build <tt>all</tt> with default <tt>TOOLS</tt>:<br>
+        <td>release build <tt>all</tt> with default <tt><a href="#tools">TOOLS</a></tt>:<br>
          
 
       <tr>
-        <td><tt>jam -f<i>allyourbase-path</i> -sBUILD="debug release"</tt> 
+        <td><pre>jam -f<i>allyourbase-path</i> -sBUILD="debug release"</pre> 
 
         <td>debug and release build <tt>all</tt>.
     </table>
 
+    <h3><a name="setting_variables">Setting Jam Variables</a></h3>
+
+      <p>The &quot;<tt>-s</tt>&quot; options in the command lines above are
+      passing variable settings to the build system. There are actually three ways to do
+      that:
+
+      <ul>
+      <li>Jam picks up variable settings from your environment by default, so
+      you can set them there:
+<blockquote><pre>
+&gt; <a href="#build">BUILD</a>=&quot;debug release&quot;  <i># assuming Unix</i>
+&gt; export <a href="#build">BUILD</a>
+&gt; jam ...
+</pre></blockquote>
+        This approach can be OK for quick-and-dirty tests, but environment variable
+      settings tend to be unstable and non-uniform across users and machines, so
+      it's best not to rely on the environment much.
+      <li>Explicitly on the command-line, with the &quot;<tt>-s</tt>&quot;
+      option.
+      <li>Directly in Jam code. A project's <a href="#jamrules">Jamrules</a> file is a convenient place
+      to make global settings.
+      </ul>
+
     <h3><a name="example_jamfile">An Example Jamfile</a></h3>
 
     Here is an example of a simple subproject Jamfile. In this example, it is
-    assumed that the user has set <tt>BOOST_PARENT_DIRECTORY</tt>, either as an
-    environment variable, on the command-line or in the project's <tt><a href="#jamrules">Jamrules</a></tt> file:
+    assumed that the user has set <tt>BOOST_ROOT</tt>, either as an environment
+    variable, on the command-line or in the project's <tt><a
+    href="#jamrules">Jamrules</a></tt> file:
 
     <blockquote>
 <pre>
@@ -187,7 +226,7 @@ lib baz : baz1.cpp baz2.cpp # C++ sources
 # An executable called 'test'
 exe test : &lt;lib&gt;baz # use the 'baz' library
            baz_test.cpp   # C++ source
-         : &lt;include&gt;$(BOOST_PARENT_DIRECTORY)
+         : &lt;include&gt;$(BOOST_ROOT)
     ;
 </pre>
     </blockquote>
@@ -208,25 +247,25 @@ subinclude foo/bar/baz <font color="#7f7f7f">foo/bar/...</font> ;
     <h3><a name="support_files">Support Files</a></h3>
 
     <p>To use the build system, the following must be located in your project's
-    root directory, or in directories given by the path variables indicated
-    below. The build system comes with a <a href="Jamfile">sample project</a>
-    rooted in this directory which you can use as an example.
+    root directory, or in a directory specified in the <tt>BOOST_BUILD_INSTALLATION</tt>
+    variable. It is usually convenient to specify the
+    <tt>BOOST_BUILD_INSTALLATION</tt> in your project's <a
+    href="#jamrules">Jamrules</a> file. The <a href="../../Jamrules">Boost
+    Jamrules</a> file shows an example.
 
-    <table border="1" summary="" Support Files="">
-    <tr><th>Filename(s) <th>Optional Path Variable <th>Meaning
+    <table border="1" summary="Support Files">
+    <tr><th>Filename(s)  <th>Meaning
 
-
-    <tr><td><i>toolset</i><tt>-tools.jam</tt> <td><tt>BOOST_BUILD_INSTALLATION</tt>
+    <tr><td><i>toolset</i><tt>-tools.jam</tt> 
     <td>Feature-to-command-line mapping for <i>toolset</i>.
 
-
-    <tr><td><tt>features.jam</tt> <td><tt>BOOST_BUILD_INSTALLATION</tt> <td>Abstract toolset
+    <tr><td><tt>features.jam</tt>  <td>Abstract toolset
     feature descriptions.
 
-    <tr><td><tt>boost-base.jam</tt> <td><tt>BOOST_BASE_DIR</tt> <td>Boost build
+    <tr><td><tt>boost-base.jam</tt> <td>Boost build
     system-specific rule definitions.
 
-    <tr><td><tt>unit-tests.jam</tt> <td><tt>BOOST_BASE_DIR</tt> <td>Unit tests
+    <tr><td><tt>unit-tests.jam</tt> <td>Unit tests
     and assertions for boost Jam code.
 
     </table>
@@ -243,7 +282,7 @@ subinclude foo/bar/baz <font color="#7f7f7f">foo/bar/...</font> ;
 
     <h3><a name="project_subproject">Projects and Subprojects</a></h3>
 
-    <p>A <b>project</b> is a source directory tree containing a
+    <p>A <b>project</b> is a source directory tree containing at least one
     <tt>Jamfile</tt>. The root directory of the project is known as the
     <b>project root</b>. <a name="jamrules">The</a> root directory of a project may contain a
     <tt>Jamrules</tt> file, which contains project-specific Jam code. If the
@@ -279,10 +318,12 @@ subinclude foo/bar/baz <font color="#7f7f7f">foo/bar/...</font> ;
       directory can be customized by changing the <tt>BIN_DIRECTORY</tt>
       variable.
 
-      <li>If the variable <tt>ALL_LOCATE_TARGET</tt> is set, it specifies an
-      alternate build directory tree whose structure mirrors that of the
-      project. In this case, built targets of a subproject are generated into
-      the corresponding directory of the build directory tree.
+      <li><a name="all_locate_target">If the variable <tt>ALL_LOCATE_TARGET</tt>
+      is set</a>, it specifies an alternate build directory tree whose structure
+      mirrors that of the project. In this case, built targets of a subproject
+      are generated into the corresponding directory of the build directory
+      tree.
+
     </ul>
 
     For each main target, there is a corresponding location in the build
@@ -312,19 +353,32 @@ subinclude foo/bar/baz <font color="#7f7f7f">foo/bar/...</font> ;
       <tt>NDEBUG</tt> and <tt>BOOST_RELEASE_BUILD</tt>. Free features are
       assumed not to affect link compatibility.
       
-      <li><b>Path features</b> are free features whose values may describe paths
-      relative to the subproject (such as linked libraries or <tt>#include</tt>
-      search directories). These may need special treatment.
+      <li><b>Path features</b> are free features whose values describe paths
+      which may be relative to the subproject (such as linked libraries or <tt>#include</tt>
+      search directories). The build system treats the values of these features
+      specially to ensure that they are interpreted relative to the subproject
+      directory regardless of the directory where Jam was invoked.
+
+      <li><b>Dependency features</b> are path features whose values describe a
+      dependency of built targets. For example, an external library might be
+      specified with a dependency-feature: if the library is updated, the target
+      will be updated also. The <tt>&lt;library-file&gt;</tt> feature works this
+      way <a href="#2">[2]</a>. 
+
     </ol>
 
     <p>A feature-value pair is known as a <b>build property</b>, or simply
-    <b>property</b>. The prefixes <i>simple</i>, <i>free</i>, and <i>path</i>
-    apply to properties in an analogous way to features.
+    <b>property</b>. The prefixes <i>simple</i>, <i>free</i>, <i>path</i>, and
+    <i>dependency</i> apply to properties in an analogous way to features.
 
     <h3><a name="variants">Build Variants</a></h3>
 
     <p>A build variant, or simply <b>variant</b> is a named set of build
-    properties describing how targets should be built. Built
+    properties describing how targets should be built. Typically you'll want at
+    least two separate variants: one for debugging, and one for your release
+    code.
+
+    <p>Built
     targets for distinct build variants and toolsets are generated in separate
     parts of the build directory tree, known as the <b>variant
     directories</b>. For example, a (sub)project with main targets <tt>foo</tt>
@@ -442,9 +496,9 @@ subinclude foo/bar/baz <font color="#7f7f7f">foo/bar/...</font> ;
 
     <p>When a main target depends on the product of a second main target (as
     when an executable depends on and links to a static library), each build
-    configuration of the dependent target is depends on the <i>same</i> build
-    of the dependee. Because only simple features participate in build
-    identity, the dependent and dependee targets may have completely different
+    configuration of the dependent target is depends on the <i>corresponding</i> build
+    of the dependency. Because only simple features participate in build
+    identity, the dependent and dependency targets may have completely different
     free features. This puts the onus on the user for ensuring
     link-compatibility when certain free properties are used. For example, when
     <tt>assert()</tt> is used in header files, the preprocessor symbol
@@ -494,6 +548,46 @@ exe my_target : my_source1.cpp my_source2.c ;
 
          <h4><a name="user_globals">Global Variables</a></h4>
 
+         <p>This is a partial list of global variables that can be set on the
+         command-line. Of course you are free to write your own Jam rules which
+         interpret other variables from the command-line.  This list just
+         details some of the variables used by the build system itself. Note
+         also that if you don't like the default values you can override them in
+         your project's <tt><a href="#jamrules">Jamrules</a></tt> file.
+
+    <table border="1" summary="User Globals">
+    <tr><th>Variable <!--  <th>Meaning --> <th>Default <th>Example <th>Notes
+
+    <tr><td rowspan="2"><tt><a name="tools">TOOLS</a></tt> <!--  <td rowspan="2">Toolsets to build with --> <td rowspan="2">Platform-dependent
+        <td><tt>-sTOOLS=&quot;gcc&nbsp;msvc&quot;</tt> <td>build with gcc and msvc
+        <tr><td><tt>-sTOOLS=gcc</tt> <td>build with gcc
+
+    <tr><td rowspan="4"><tt><a name="build">BUILD</a></tt> <!--  <td rowspan="4">Build configuration (see -->
+<!--      <a href="#default_build">here</a>). -->
+    <td rowspan="4"><tt>debug</tt>
+
+         <td><tt>-sBUILD=release</tt> <td>build the <tt>release</tt> variant
+
+         <tr><td><tt>-sBUILD=&quot;debug release&quot;</tt> <td>build both
+        <tt>debug</tt> and <tt>release</tt> variants
+
+         <tr><td><tt>-sBUILD=&quot;&lt;optimization&gt;speed&quot;</tt> <td>build a
+        subvariant of the default variant (<tt>debug</tt>) with optimization for speed.
+
+         <tr><td><tt>-sBUILD=&quot;debug release &lt;runtime-link&gt;static/dynamic&quot;</tt> <td>build
+        subvariants of the debug and release variants that link to the runtime
+        both statically and dynamically.
+
+    <tr><td><tt>ALL_LOCATE_TARGET</tt>
+<!--      <td>Alternate location for built targets (see <a -->
+<!--      href="#all_locate_target">here</a>) -->
+    <td><i>empty</i>
+    <td><tt>-sALL_LOCATE_TARGET=~/build</tt>
+    <td>Generate all build results in the <tt>build</tt> subdirectory of the
+    user's home directory (Unix).
+
+    </table>
+
     <h3><a name="#subproject_jamfiles">SubProject Jamfiles</a></h3>
     This section describes how to write a Jamfile for a subproject. 
 
@@ -511,7 +605,11 @@ subproject <i>path-from-top</i> ;
 
     <p>The <tt>subproject</tt> rule tells the build system where to place built
     targets from the subproject in case <tt>ALL_LOCATE_TARGET</tt> is used to
-    specify the build directory tree.
+    specify the build directory tree. If there is a Jamfile in the project root
+    directory, you should use the <tt>project-root</tt> rule instead:
+<blockquote><pre>
+project-root ;
+</pre></blockquote>
 
     <h4><a name="main_targets">Describing Main Targets</a></h4>
 
@@ -520,22 +618,29 @@ subproject <i>path-from-top</i> ;
     <blockquote>
 <pre>
 <i>target-type</i> <i>name</i> : <i>sources</i>
-    [ : <i>requirements</i> [ : <i>default-BUILD</i> ] ] ;
+    [ : <i>requirements</i> [ : <i><a href="#default_build">default-BUILD</a></i> ] ] ;
 </pre>
     </blockquote>
 
     <ul>
-      <li><i>target-type</i> may be one of <tt>exe</tt>, <tt>lib</tt>,
-      <tt>dll</tt>, or <tt>python</tt>. <br>
-      <br>
+
+      <li><i>target-type</i> may be one of <tt>exe</tt>, <tt>lib</tt>, or
+      <tt>dll</tt>. These are actually names of Jam rules. Additional main
+      target rules are possible; see <tt><a
+      href="../../status/Jamfile">status/Jamfile</a></tt> or <tt><a
+      href="../../libs/python/build/Jamfile">libs/python/build/Jamfile</a></tt>
+      for examples.
+
+      <br><br>
+      
 
 
       <li><i>name</i> specifies the name of the main target <br>
       <br>
 
 
-      <li><i>sources</i> is a list of paths to source files and dependee
-      targets. A dependee target path is preceded by <tt>&lt;target:&gt;</tt>,
+      <li><i>sources</i> is a list of paths to source files and dependency
+      targets. A dependency target path is preceded by <tt>&lt;lib&gt;</tt>,
       and the final path component specifies the name of a main target in a
       Jamfile located in the directory given by the inital path components.
       Paths may be absolute or relative. <br>
@@ -543,9 +648,9 @@ subproject <i>path-from-top</i> ;
 
 
       <li>
-        <i>requirements</i> specifies the build properties intrinsic to the
-        target. Requirements are given as sets of optionally-<b>qualified build
-        properties</b>: 
+        <i><a name="target_requirements">requirements</a></i> specifies the
+        build properties intrinsic to the target. Requirements are given as sets
+        of optionally-<b>qualified build properties</b>:
 
         <blockquote>
 <pre>
@@ -565,10 +670,10 @@ subproject <i>path-from-top</i> ;
         <br>
 
       <li>
-        <i>default-BUILD</i> specifies the configurations that should be built
-        if the <tt>BUILD</tt> variable is not otherwise specified. Any elements
+        <i><a name="default_build">default-BUILD</a></i> specifies the configurations that should be built
+        if the <tt><a href="#build">BUILD</a></tt> variable is not otherwise specified. Any elements
         not beginning with ``<tt>&lt;</tt>...<tt>&gt;</tt>'' refer to build
-        variants. Other elements use the same syntax as the requirements
+        variants. Other elements use the same syntax as the <a href="#target_requirements">requirements</a>
         described above, except that multiple values may be specified for a
         simple feature by separating them with a slash, forming (qualified)
         <b>multi-valued properties</b>:
@@ -582,8 +687,8 @@ subproject <i>path-from-top</i> ;
         configurations to be built by default.
     </ul>
 
-    <p><b>NOTE:</b> for simple features in both <i>requirements</i> and
-    <i>default-BUILD</i>, more-specific qualification overrides less-specific.
+    <p><b>NOTE:</b> for simple features in both <i><a href="#target_requirements">requirements</a></i> and
+    <i><a href="#default_build">default-BUILD</a></i>, more-specific qualification overrides less-specific.
 
     <h4><a name="jamfile_example">Example</a></h4>
 
@@ -597,7 +702,7 @@ subproject <i>path-from-top</i> ;
     <blockquote>
 <pre>
 exe foo : foo.cpp src/bar.cpp &lt;lib&gt;../bazlib/baz
-    ## Requirements ##
+    ## <a href="#target_requirements">Requirements</a> ##
     : &lt;include&gt;../bazlib/include 
       &lt;define&gt;BUILDING_FOO=1
       &lt;release&gt;&lt;define&gt;FOO_RELEASE
@@ -607,14 +712,14 @@ exe foo : foo.cpp src/bar.cpp &lt;lib&gt;../bazlib/baz
       &lt;gcc&gt;&lt;release&gt;&lt;optimization&gt;space
       &lt;threading&gt;multi
     
-    ## default-BUILD ##
+    ## <a href="#default_build">default-BUILD</a> ##
     : debug release
       &lt;debug&gt;&lt;runtime-link&gt;static/dynamic
     ;
 </pre>
     </blockquote>
 
-    <p>The requirements section:
+    <p>The <a href="#target_requirements">requirements</a> section:
 
     <ul>
       <li>Adds <tt>../bazlib/include</tt> to the <tt>#include</tt> path
@@ -636,7 +741,7 @@ exe foo : foo.cpp src/bar.cpp &lt;lib&gt;../bazlib/baz
       <li>Requires multithread support on compilers where it's relevant.
     </ul>
 
-    <p>The default-BUILD section:
+    <p>The <a href="#default_build">default-BUILD</a> section:
 
     <ul>
       <li>specifies that <tt>debug</tt> and <tt>release</tt> base variants are
@@ -648,7 +753,22 @@ exe foo : foo.cpp src/bar.cpp &lt;lib&gt;../bazlib/baz
 
     <h3><a name="feature_description">Feature Descriptions</a></h3>
 
+    <p> Features are described by stating the feature type (simple features are
+    specified with &quot;<tt>feature</tt>&quot;), followed by the feature
+    name. An optional second argument can be used to list the permissible values
+    of the feature. Examples can be found in <a href="features.jam">features.jam</a>.
+    
     <h3><a name="variant_description">Variant Descriptions</a></h3>
+
+    <p>Variants are described with the following syntax:
+<blockquote><pre>
+variant <i>name</i> : [&lt;<i>toolset-name</i>&gt;]&lt;<i>feature</i>&gt;value... ;
+</pre></blockquote>
+
+        The <tt>variant</tt> rule specifies the list of properties comprising a
+        variant. Properties may be optionally qualified with a toolset name,
+        which specifies that the property applies only to that toolset. Examples
+        can be found in <a href="features.jam">features.jam</a>.
 
     <h3><a name="toolset_description">Toolset Description Files</a></h3>
 
@@ -770,10 +890,10 @@ flags msvc CFLAGS &lt;optimization&gt;off : /Od ;
 
     <blockquote>
 <pre>
-flags msvc CFLAGS &lt;runtime-build&gt;release/&lt;runtime-link&gt;dynamic/&lt;threading&gt;multi : /MD ;
+flags msvc CFLAGS &lt;runtime-build&gt;release/&lt;runtime-link&gt;dynamic : /MD ;
 </pre>
     </blockquote>
-    we add <tt>/MD</tt> to the CFLAGS variable when all of the specified
+    we add <tt>/MD</tt> to the CFLAGS variable when both of the specified
     conditions are satisfied. We could grab all of the values of the free
     feature <tt>&lt;include&gt;</tt> in the <tt>HDRS</tt> variable as follows: 
 
@@ -840,7 +960,7 @@ flags msvc HDRS &lt;include&gt; ;
      
       <li>In the special rule used for <a
           href="http://public.perforce.com/public/jam/src/Jam.html#hdrscan">header
-          file scanning</a>, variables values are first looked up <tt>on</tt> the target
+          file scanning</a>, variable values are first looked up <tt>on</tt> the target
           named by the rule's first argument (the source file being
           scanned).
     </ul>
@@ -1067,6 +1187,19 @@ flags msvc HDRS &lt;include&gt; ;
       <li>It should be possible to build targets into a directory unrelated to
       the source directories (they may be read-only)
     </ul>
+
+   <h2><a name="footnotes">Footnotes</a></h2>
+
+   <a name="1">[1]</a> FTJam is a variant of <a
+   href="http://www.perforce.com/jam/jam.html">Jam/MR</a>. It is hoped that
+   crucial features we rely on from FTJam will eventually be incorportated into
+   the official Jam release.
+
+   <p><a name="2">[2]</a>Note: right now, a dependency feature of a main target makes
+      <b>all</b> resulting built targets dependent, including intermediate
+      targets. That means that if an exectuable is dependent on an external
+      library, and that library changes, all the sources comprising the
+      executable will be recompiled as well. This behavior should probably be fixed.
 
 <hr>
     <p>&copy; Copyright David Abrahams 2001. Permission to copy, use, modify,

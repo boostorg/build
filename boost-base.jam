@@ -1359,5 +1359,5 @@ rule unit-test
 
 if ! ( NDEBUG in $(TEST) )
 {
-    include $(BOOST_BASE_DIR)$(SLASH)unit-tests.jam ;
+    include $(BOOST_BUILD_INSTALLATION)$(SLASH)unit-tests.jam ;
 }

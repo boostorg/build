@@ -24,8 +24,14 @@ flags msvc CFLAGS <inline>full : /Ob2 ;
 flags msvc CFLAGS <exception-handling>on : /GX ;
 flags msvc CFLAGS <rtti>on : /GR ;
 
-flags msvc CFLAGS <runtime-build>release/<runtime-link>dynamic/<threading>multi : /MD ;
-flags msvc CFLAGS <runtime-build>debug/<runtime-link>dynamic/<threading>multi : /MDd ;
+# Note that these two options actually imply multithreading support on MSVC
+# because there is no single-threaded dynamic runtime library. Specifying
+# <threading>multi would be a bad idea, though, because no option would be
+# matched when the build uses the default settings of <runtime-link>dynamic
+# and <threading>single.
+flags msvc CFLAGS <runtime-build>release/<runtime-link>dynamic : /MD ;
+flags msvc CFLAGS <runtime-build>debug/<runtime-link>dynamic : /MDd ;
+
 flags msvc CFLAGS <runtime-build>release/<runtime-link>static/<threading>single : /ML ;
 flags msvc CFLAGS <runtime-build>debug/<runtime-link>static/<threading>single : /MLd ;
 flags msvc CFLAGS <runtime-build>release/<runtime-link>static/<threading>multi : /MT ;
