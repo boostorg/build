@@ -197,8 +197,7 @@
 
       <tr>
         <td>
-<pre>
-bjam -sTOOLS=gcc my_target
+<pre>bjam -sTOOLS=gcc my_target
 </pre>
         </td>
 
@@ -208,8 +207,7 @@ bjam -sTOOLS=gcc my_target
 
       <tr>
         <td>
-<pre>
-bjam -sTOOLS="msvc gcc"
+<pre>bjam -sTOOLS="msvc gcc"
 </pre>
         </td>
 
@@ -218,8 +216,7 @@ bjam -sTOOLS="msvc gcc"
 
       <tr>
         <td>
-<pre>
-set TOOLS=msvc
+<pre>set TOOLS=msvc
 bjam
 </pre>
         </td>
@@ -230,8 +227,7 @@ bjam
 
       <tr>
         <td>
-<pre>
-bjam "-sBUILD=release &lt;debug-symbols&gt;on"
+<pre>bjam "-sBUILD=release &lt;debug-symbols&gt;on"
 </pre>
         </td>
 
@@ -241,8 +237,7 @@ bjam "-sBUILD=release &lt;debug-symbols&gt;on"
 
       <tr>
         <td>
-<pre>
-bjam -sBUILD="debug release"
+<pre>bjam -sBUILD="debug release"
 </pre>
         </td>
 
@@ -267,7 +262,13 @@ bjam -sBUILD="debug release"
         <td>Set an NT environment variable to always build with MSVC and
         GCC<br>
          default-build <tt>all</tt>, adding a MSVC-specific compiler command
-        line switch</td>
+        line switch.</td>
+      </tr>
+
+      <tr>
+        <td><code>bjam &quot;-sBUILD=&lt;define&gt;BOOST_POSIX&quot;</code></td>
+
+        <td>build all, with the macro BOOST_POSIX defined for all compilers.</td>
       </tr>
     </table>
 
@@ -283,8 +284,7 @@ bjam -sBUILD="debug release"
         you can set them there: 
 
         <blockquote>
-<pre>
-&gt; <a href="#build">BUILD</a>="debug release"  <i># assuming Unix</i>
+<pre>&gt; <a href="#build">BUILD</a>="debug release"  <i># assuming Unix</i>
 &gt; export <a href="#build">BUILD</a>
 &gt; bjam ...
 </pre>
@@ -307,8 +307,7 @@ bjam -sBUILD="debug release"
     href="#jamrules">Jamrules</a></tt> file: 
 
     <blockquote>
-<pre>
-subproject foo/bar/baz ; # path to here from project root
+<pre>subproject foo/bar/baz ; # path to here from project root
 
 # A static library called 'baz'
 lib baz : baz1.cpp baz2.cpp # C++ sources
@@ -330,8 +329,7 @@ exe test : &lt;lib&gt;baz # use the 'baz' library
     add a Jamfile at the root:</p>
 
     <blockquote>
-<pre>
-project-root ; # declare this to be the project root directory
+<pre>project-root ; # declare this to be the project root directory
 # Read subproject Jamfiles
 subinclude foo/bar/baz <font color="#7F7F7F">foo/bar/...</font> ;
 <font color="#7F7F7F">subinclude a/b/c ...</font> ; # more subincludes
@@ -495,8 +493,7 @@ subinclude foo/bar/baz <font color="#7F7F7F">foo/bar/...</font> ;
     structure (target directories in <b>bold</b>).</p>
 
     <blockquote>
-<pre>
- bin
+<pre> bin
  +-foo  <font color="#7F7F7F">&lt;--- foo's build root</font>
  | +-gcc
  | | +-<b>debug</b>
@@ -537,8 +534,7 @@ subinclude foo/bar/baz <font color="#7F7F7F">foo/bar/...</font> ;
         fragment of the target tree might look like: 
 
         <blockquote>
-<pre>
- bin
+<pre> bin
  +-foo  <font color="#7F7F7F">&lt;--- foo's build root</font>
  | +-msvc
  | | +-debug
@@ -560,8 +556,7 @@ subinclude foo/bar/baz <font color="#7F7F7F">foo/bar/...</font> ;
         subvariant directories in the example above would be generated: 
 
         <blockquote>
-<pre>
- bin
+<pre> bin
  +-foo  <font color="#7F7F7F">&lt;--- foo's build root</font>
  | +-msvc
  | | +-debug
@@ -584,8 +579,7 @@ subinclude foo/bar/baz <font color="#7F7F7F">foo/bar/...</font> ;
     following structure for a DLL:</p>
 
     <blockquote>
-<pre>
- bin
+<pre> bin
  +-foo  <font color="#7F7F7F">&lt;--- foo's build root</font>
  | +-msvc
  | | +-debug
@@ -642,8 +636,7 @@ subinclude foo/bar/baz <font color="#7F7F7F">foo/bar/...</font> ;
     declares:</p>
 
     <blockquote>
-<pre>
-exe my_target : my_source1.cpp my_source2.c ;
+<pre>exe my_target : my_source1.cpp my_source2.c ;
 </pre>
     </blockquote>
     and you invoke Jam with <tt>-sBUILD="debug release"&nbsp;my_target</tt>,
@@ -756,8 +749,7 @@ exe my_target : my_source1.cpp my_source2.c ;
     relative to the top of the project tree:</p>
 
     <blockquote>
-<pre>
-subproject <i>path-from-top</i> ;
+<pre>subproject <i>path-from-top</i> ;
 </pre>
     </blockquote>
 
@@ -768,8 +760,7 @@ subproject <i>path-from-top</i> ;
     instead:</p>
 
     <blockquote>
-<pre>
-project-root ;
+<pre>project-root ;
 </pre>
     </blockquote>
 
@@ -778,8 +769,7 @@ project-root ;
     <p>A main target is described using the following syntax:</p>
 
     <blockquote>
-<pre>
-<i>target-type</i> <i>name</i> : <i>sources</i>
+<pre><i>target-type</i> <i>name</i> : <i>sources</i>
     [ : <i>requirements</i> [ : <i><a href=
 "#default_build">default-BUILD</a></i> ] ] ;
 </pre>
@@ -836,8 +826,7 @@ project-root ;
         sets of optionally-<b>qualified build properties</b>: 
 
         <blockquote>
-<pre>
-[[&lt;<i>compiler</i>&gt;]&lt;<i>variant</i>&gt;]&lt;<i>feature</i>&gt;<i>value</i>
+<pre>[[&lt;<i>compiler</i>&gt;]&lt;<i>variant</i>&gt;]&lt;<i>feature</i>&gt;<i>value</i>
 </pre>
         </blockquote>
         <tt>&lt;<i>compiler</i>&gt;</tt> and <tt>&lt;<i>variant</i>&gt;</tt>,
@@ -865,8 +854,7 @@ project-root ;
         properties</b>: 
 
         <blockquote>
-<pre>
-[[&lt;<i>compiler</i>&gt;]&lt;<i>variant</i>&gt;]&lt;<i>feature</i>&gt;<i>value1</i>[/<i>value2</i>...]
+<pre>[[&lt;<i>compiler</i>&gt;]&lt;<i>variant</i>&gt;]&lt;<i>feature</i>&gt;<i>value1</i>[/<i>value2</i>...]
 </pre>
         </blockquote>
         When multiple values are specified, it causes <i>all</i> the implied
@@ -880,8 +868,7 @@ project-root ;
         when another target like an exe is built. Such use might look like: 
 
         <blockquote>
-<pre>
-lib basic : basic.cpp : : &lt;suppress&gt;true ;<br>
+<pre>lib basic : basic.cpp : : &lt;suppress&gt;true ;<br>
 <br>
 exe test : test.cpp &lt;lib&gt;basic ;<br>
 </pre>
@@ -947,8 +934,7 @@ exe test : test.cpp &lt;lib&gt;basic ;<br>
         your collecting different builds of the same targets. The syntax is: 
 
         <blockquote>
-<pre>
-&lt;tag&gt;&lt;<i>feature|variant</i>&gt;<i>value</i>
+<pre>&lt;tag&gt;&lt;<i>feature|variant</i>&gt;<i>value</i>
 </pre>
         </blockquote>
         <br>
@@ -977,8 +963,7 @@ exe test : test.cpp &lt;lib&gt;basic ;<br>
     in <tt>../bazlib/Jamfile</tt>.</p>
 
     <blockquote>
-<pre>
-template base : 
+<pre>template base : 
     ## <a href="#target_requirements">Requirements</a> ##
     : &lt;include&gt;../bazlib/include 
       &lt;define&gt;BUILDING_FOO=1
@@ -1053,8 +1038,7 @@ exe fop : &lt;template&gt;executable fop.cpp ;
     <p>Variants are described with the following syntax:</p>
 
     <blockquote>
-<pre>
-variant <i>name</i> : [&lt;<i>toolset-name</i>&gt;]&lt;<i>feature</i>&gt;value... ;
+<pre>variant <i>name</i> : [&lt;<i>toolset-name</i>&gt;]&lt;<i>feature</i>&gt;value... ;
 </pre>
     </blockquote>
     The <tt>variant</tt> rule specifies the list of properties comprising a
@@ -1068,8 +1052,7 @@ variant <i>name</i> : [&lt;<i>toolset-name</i>&gt;]&lt;<i>feature</i>&gt;value..
     targets. For example: 
 
     <blockquote>
-<pre>
-variant my-globals : &lt;rtti&gt;off ;
+<pre>variant my-globals : &lt;rtti&gt;off ;
 
 variant my-debug : my-globals debug ;
 
@@ -1108,8 +1091,7 @@ variant my-release : my-globals release ;
         is uniquely defined for the toolset. For example, 
 
         <blockquote>
-<pre>
-rule C++-action
+<pre>rule C++-action
 {
     msvc-C++-action $(&lt;) : $(&gt;) ;
 }
@@ -1143,8 +1125,7 @@ actions msvc-C++-action
         actions. The <tt>flags</tt> rule is used as follows: 
 
         <blockquote>
-<pre>
-flags <i>toolset variable condition</i> [: <i>value</i>...]
+<pre>flags <i>toolset variable condition</i> [: <i>value</i>...]
 </pre>
         </blockquote>
         The parameters are: 
@@ -1194,8 +1175,7 @@ flags <i>toolset variable condition</i> [: <i>value</i>...]
     to specify how optimization can be turned off for MSVC:</p>
 
     <blockquote>
-<pre>
-flags msvc CFLAGS &lt;optimization&gt;off : /Od ;
+<pre>flags msvc CFLAGS &lt;optimization&gt;off : /Od ;
 </pre>
     </blockquote>
     It says that the string <tt>/Od</tt> should be added to the global
@@ -1205,8 +1185,7 @@ flags msvc CFLAGS &lt;optimization&gt;off : /Od ;
     <p>Similarly, in the following example,</p>
 
     <blockquote>
-<pre>
-flags msvc CFLAGS &lt;runtime-build&gt;release/&lt;runtime-link&gt;dynamic : /MD ;
+<pre>flags msvc CFLAGS &lt;runtime-build&gt;release/&lt;runtime-link&gt;dynamic : /MD ;
 </pre>
     </blockquote>
     we add <tt>/MD</tt> to the CFLAGS variable when both of the specified
@@ -1215,8 +1194,7 @@ flags msvc CFLAGS &lt;runtime-build&gt;release/&lt;runtime-link&gt;dynamic : /MD
     follows: 
 
     <blockquote>
-<pre>
-flags msvc HDRS &lt;include&gt; ;
+<pre>flags msvc HDRS &lt;include&gt; ;
 </pre>
     </blockquote>
 
@@ -1279,8 +1257,7 @@ flags msvc HDRS &lt;include&gt; ;
         values: 
 
         <blockquote>
-<pre>
-    ECHO $(gFUBAR($(x),$(y))) ;
+<pre>    ECHO $(gFUBAR($(x),$(y))) ;
 </pre>
         </blockquote>
       </li>
@@ -1401,10 +1378,8 @@ flags msvc HDRS &lt;include&gt; ;
 
     <p>Revised 
     <!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan
-                                -->24 May, 2002 
-    <!--webbot bot="Timestamp" endspan i-checksum="13972"
+                                -->11 January, 2003<!--webbot bot="Timestamp" endspan i-checksum="38567"
                                 -->
     </p>
   </body>
 </html>
-
