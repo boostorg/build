@@ -460,9 +460,17 @@ class lib-target-class : basic-target
             {
                 result = [ $(result).add 
                   [ property-set.create $(paths:G=<dll-path>) ] ] ;
-            }            
+            }                                    
         }
-                
+        
+        # Pass <dll-path> features that we've got from sources.
+        if <hardcode-dll-paths>true in $(raw)
+        {
+            local u = [ $(subvariant).sources-usage-requirements ] ;
+            local values = [ $(u).get <dll-path> ] ;
+            result = [ $(result).add-raw $(values:G=<dll-path>) ] ;
+        }
+                        
         return $(result) ;
     }
     

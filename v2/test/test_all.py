@@ -108,6 +108,7 @@ tests = [ "project_test1",
           "glob",
           "project_root_constants",
           "double_loading",
+          "dll_path",
 	  ]
 
 if os.name == 'posix':
