@@ -6,6 +6,10 @@
 # "as is" without express or implied warranty, and with no claim as
 # to its suitability for any purpose.
 
+# The following #// line will be used by the regression test table generation
+# program as the column heading for HTML tables. Must not include version number.
+#//<a href="http://developer.intel.com/software/products/compilers/">Intel<br>C++</a>
+
 # compute INTEL tool path. You can either use the environment variable
 # setup that comes with the Intel compiler, or you can set the
 # INTEL_PATH or INTELC (in order to respect FTJam setup) environment

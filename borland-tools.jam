@@ -4,6 +4,10 @@
 # "as is" without express or implied warranty, and with no claim as
 # to its suitability for any purpose.
 
+# The following #// line will be used by the regression test table generation
+# program as the column heading for HTML tables. Must not include version number.
+#//<a href="http://www.borland.com/bcppbuilder/freecompiler/">Borland</a>
+
 # Borland tool definitions.
 #
 # Please note that wide-character support is currently disabled for Borland in

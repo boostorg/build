@@ -15,6 +15,10 @@
 # from the command-line is sufficiently complex to make using the borland
 # approach impractical.
 
+# The following #// line will be used by the regression test table generation
+# program as the column heading for HTML tables. Must not include version number.
+#//<a href="http://www.metrowerks.com/products/windows/">Metrowerks<br>CodeWarrior</a>
+
 # Get these variable set on the targets so that we can re-use the
 # build actions for other toolsets using this one as a base.
 flags metrowerks METROWERKS_SETUP ;

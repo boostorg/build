@@ -4,6 +4,10 @@
 # "as is" without express or implied warranty, and with no claim as
 # to its suitability for any purpose.
 
+# The following #// line will be used by the regression test table generation
+# program as the column heading for HTML tables. Must not include version number.
+#//<a href="http://gcc.gnu.org/">GNU<br>GCC</a>
+
 # compute directories for invoking GCC
 SPACE ?= " " ;
 GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)bin$(SLASH) ;

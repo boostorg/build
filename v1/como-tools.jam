@@ -4,6 +4,9 @@
 # "as is" without express or implied warranty, and with no claim as
 # to its suitability for any purpose.
 
+# The following #// line will be used by the regression test table generation
+# program as the column heading for HTML tables. Must not include version number.
+#//<a href="http://www.comeaucomputing.com/">Comeau<br>C++</a>
 
 # compute directories for invoking como
 if ! $(COMO_PATH_SETUP) # do this once

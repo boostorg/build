@@ -26,6 +26,10 @@
 # automatically; there's no need to specify them manually.
 #
 
+# The following #// line will be used by the regression test table generation
+# program as the column heading for HTML tables. Must not include version number.
+#//<a href="http://msdn.microsoft.com/vstudio/default.asp">Microsoft<br>VC++</a><br><a href="http://www.stlport.org/">STLport</a>
+
 # this is simply an extension to the msvc toolset. 
 extends-toolset msvc ;
 
