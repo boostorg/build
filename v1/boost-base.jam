@@ -1268,9 +1268,8 @@ rule expand-target-names ( targets + : target-type )
 # RETURNS: the a list of target names for the files built by the target.
 rule declare-local-target ( target : sources * : requirements * : default-build * : target-type )
 {
-    # We expand out the name of the target and sources
+    # We expand out the name of the target
     local x-target = [ expand-target-names $(target) : $(target-type) ] ;
-    local x-sources = [ expand-source-names $(sources) ] ;
 
     # We add SOURCE_GRIST the base target name here because we're referring the
     # abstract  target which generates all of the actual builds. We need a way to
@@ -1282,6 +1281,45 @@ rule declare-local-target ( target : sources * : requirements * : default-build 
         EXIT No target type given for "$(x-target)" ;
     }
 
+    # Define the specifications of the target.
+    gTARGET_NAME($(target-id)) = $(target) ;
+
+    # Declare the basic target.
+    declare-basic-target $(target-id) : $(sources) : $(requirements) : $(default-build) : $(target-type) ;
+
+    # Generate build instructions, but only if the target has a generator.
+    #
+    if $(gGENERATOR_FUNCTION($(gTARGET_TYPE($(target-id)))))
+    {
+        # Supress the regular build of this target
+        local suppress = [ get-values <suppress> : $(default-build) ] ;
+        local gSUPPRESS_FAKE_TARGETS = $(suppress[1]) ;
+
+        declare-fake-targets $(target) : $(target-id) ;
+
+        # Just gather information if we are including a library's Jamfile for a
+        # dependent target. Don't generate build instructions here.
+        if ! $(gIN_LIB_INCLUDE)
+        {
+            main-target $(target-id) : $(gTARGET_DEFAULT_BUILD($(target-id))) ;
+        }
+    }
+
+    return $(gTARGET_FILES($(target-id))) ;
+}
+
+# declare-basic-target target-id : sources : requirements : local-BUILD : target-type
+#
+# Declares a basic target for the given target-id and target-type.
+# All target generation should go through here to ensure all vars are set
+# for the targets.
+#
+# WARNING: This only declares, no build instructions are generated here.
+rule declare-basic-target ( target-id : sources * : requirements * : default-build * : target-type )
+{
+    # We expand out the name of the sources
+    local x-sources = [ expand-source-names $(sources) ] ;
+
     # Define the specifications of the target, but only if we haven't already.
     #
     if ! $(gTARGET_TYPE($(target-id)))
@@ -1289,7 +1327,6 @@ rule declare-local-target ( target : sources * : requirements * : default-build 
         # Save basic information about the target.
         #
         gTARGET_TYPE($(target-id)) = $(target-type) ;
-        gTARGET_NAME($(target-id)) = $(target) ;
 
         # Add the specified requirements to any requirements given by the target
         # type, and the corresponding <target-type> property.
@@ -1345,26 +1382,6 @@ rule declare-local-target ( target : sources * : requirements * : default-build 
         EXIT conflicting target types for "$(x-target)":
         "$(gTARGET_TYPE($(target-id)))" "$(target-type)" ;
     }
-
-    # Generate build instructions, but only if the target has a generator.
-    #
-    if $(gGENERATOR_FUNCTION($(gTARGET_TYPE($(target-id)))))
-    {
-        # Supress the regular build of this target
-        local suppress = [ get-values <suppress> : $(default-build) ] ;
-        local gSUPPRESS_FAKE_TARGETS = $(suppress[1]) ;
-
-        declare-fake-targets $(target) : $(target-id) ;
-
-        # Just gather information if we are including a library's Jamfile for a
-        # dependent target. Don't generate build instructions here.
-        if ! $(gIN_LIB_INCLUDE)
-        {
-            main-target $(target-id) : $(gTARGET_DEFAULT_BUILD($(target-id))) ;
-        }
-    }
-
-    return $(gTARGET_FILES($(target-id))) ;
 }
 
 # directory-of files...
@@ -1803,8 +1820,11 @@ rule subvariant-target ( main-target : subvariant-id build-properties * : toolse
 
   # The renamed base name of the target. Only considers the tags defined directly
   # on the target.
-  gTARGET_BASENAME($(main-target)) =
-    [ rename-target $(gTARGET_NAME($(main-target))) : [ split-path [ ungrist $(subvariant:G) ] ] : $(property-tags) ] ;
+  if $(gTARGET_NAME($(main-target)))
+  {
+    gTARGET_BASENAME($(main-target)) =
+      [ rename-target $(gTARGET_NAME($(main-target))) : [ split-path [ ungrist $(subvariant:G) ] ] : $(property-tags) ] ;
+  }
 
   # First order names have the suffix, if any according to the platform.
   local target-files = [ FAppendSuffix $(subvariant) : $(SUF$(target-type)) ] ;
