@@ -55,7 +55,11 @@ class nm::target::cpp-obj-generator : generator
         
     rule optional-properties ( )
     {
-        return <main-target-type>NM_EXE ;
+	# A hack to boost this generator's priority.
+        # See issue BB76 for explanations.
+        return <main-target-type>NM_EXE
+               <main-target-type>NM_EXE
+        ;
     }
 
     # Consider: it it OK to ignore all other generated targets except for the first?
