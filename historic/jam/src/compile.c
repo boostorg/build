@@ -1127,6 +1127,8 @@ debug_compile( int which, char *s, FRAME* frame )
     {
       int i;
       
+      print_source_line( frame->procedure );
+      
       i = (level+1)*2;
       while ( i > 35 )
       {
@@ -1134,7 +1136,6 @@ debug_compile( int which, char *s, FRAME* frame )
         i -= 35;
       }
 
-      print_source_line( frame->procedure );
       printf( "%*.*s ", i, i, indent );
     }
 
