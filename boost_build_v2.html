@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                                                </style>
+                                                    </style>
   </head>
   <!-- Things yet to document:
-                                                        - build request, build request expansion and directly requested targets
-                                                        - conditional properties
-                                                      -->
+                                                          - build request, build request expansion and directly requested targets
+                                                          - conditional properties
+                                                        -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -37,71 +37,111 @@
     </h1>
     <hr>
 
-    <dl class="page-index">
-      <dt><a href="#sec-tutorial">Tutorial</a></dt>
+    <table border="0" width="100%">
+      <tr>
+        <th align="left">This document</th>
 
-      <dd>
-        <dl class="page-index">
-          <dt><a href="#hello">Hello, world</a></dt>
+        <th align="left">Other documents</th>
+      </tr>
 
-          <dt><a href="#properties">Properties</a></dt>
+      <tr>
+        <td>
+          <dl class="page-index">
+            <dt><a href="#sec-tutorial">Tutorial</a></dt>
 
-          <dt><a href="#hierarchy">Project hierarchy</a></dt>
+            <dd>
+              <dl class="page-index">
+                <dt><a href="#hello">Hello, world</a></dt>
 
-          <dt><a href="#using_libraries">Using libraries</a></dt>
+                <dt><a href="#properties">Properties</a></dt>
 
-          <dt><a href="#library_dependencies">Library dependencies</a></dt>
+                <dt><a href="#hierarchy">Project hierarchy</a></dt>
 
-          <dt><a href="#static_shared">Static and shared libraries</a></dt>
+                <dt><a href="#using_libraries">Using libraries</a></dt>
 
-          <dt><a href="#prebuilt_targets">Prebuilt targets</a></dt>
-        </dl>
-      </dd>
+                <dt><a href="#library_dependencies">Library
+                dependencies</a></dt>
 
-      <dt><a href="#sec-reference">Reference documentation</a></dt>
+                <dt><a href="#static_shared">Static and shared
+                libraries</a></dt>
 
-      <dd>
-        <dl class="page-index">
-          <dt><a href="#overview">Overview</a></dt>
+                <dt><a href="#prebuilt_targets">Prebuilt targets</a></dt>
+              </dl>
+            </dd>
 
-          <dt><a href="#builins">Builtin facilities</a></dt>
+            <dt><a href="#sec-reference">Reference documentation</a></dt>
 
-          <dd>
-            <dl class="page-index">
-              <dt><a href="#builtins_features">Features</a></dt>
-            </dl>
-          </dd>
+            <dd>
+              <dl class="page-index">
+                <dt><a href="#overview">Overview</a></dt>
 
-          <dt><a href="#features_properties">Features and properties</a></dt>
+                <dt><a href="#main_targets">Main targets</a></dt>
 
-          <dd>
-            <dl class="page-index">
-              <dt><a href="#features_defined">Defintions</a></dt>
+                <dt><a href="#projects">Projects</a></dt>
 
-              <dt><a href="#property_validity">Property Validity</a></dt>
+                <dt><a href="#target_id">Target identifiers and
+                references</a></dt>
 
-              <dt><a href="#feature_attributes">Feature Attributes</a></dt>
+                <dt><a href="#builtins">Builtin facilities</a></dt>
 
-              <dt><a href="#feature_declaration">Feature Declaration</a></dt>
-            </dl>
-          </dd>
+                <dd>
+                  <dl class="page-index">
+                    <dt><a href="#builtins_main_targets">Main
+                    targets</a></dt>
 
-          <dt><a href="#variants">Build Variants</a></dt>
+                    <dt><a href="#builtins_features">Features</a></dt>
+                  </dl>
+                </dd>
+              </dl>
+            </dd>
 
-          <dt><a href="#subfeatures">Subfeatures</a></dt>
+            <dt><a href="#sec-detailed-reference">Detailed reference</a></dt>
 
-          <dt><a href="#initialization">Initialization</a></dt>
+            <dd>
+              <dl class="page-index">
+                <dt><a href="#features_properties">Features and
+                properties</a></dt>
 
-          <dt><a href="#command_line">Command line</a></dt>
+                <dd>
+                  <dl class="page-index">
+                    <dt><a href="#features_defined">Defintions</a></dt>
 
-          <dt><a href="#projects">Projects</a></dt>
+                    <dt><a href="#property_validity">Property
+                    Validity</a></dt>
 
-          <dt><a href="#targets">Targets</a></dt>
+                    <dt><a href="#feature_attributes">Feature
+                    Attributes</a></dt>
 
-          <dt><a href="#build_process">Build process</a></dt>
-        </dl>
-      </dd>
-    </dl>
+                    <dt><a href="#feature_declaration">Feature
+                    Declaration</a></dt>
+                  </dl>
+                </dd>
+
+                <dt><a href="#variants">Build Variants</a></dt>
+
+                <dt><a href="#subfeatures">Subfeatures</a></dt>
+
+                <dt><a href="#initialization">Initialization</a></dt>
+
+                <dt><a href="#command_line">Command line</a></dt>
+
+                <dt><a href="#build_process">Build process</a></dt>
+              </dl>
+            </dd>
+          </dl>
+        </td>
+
+        <td valign="top">
+          <dl class="page-index">
+            <dt><a href="doc/extending.html">Extender manual</a></dt>
+
+            <dt><a href="doc/recipes.html">Recipes</a></dt>
+
+            <dt><a href="doc/architecture.html">Architecture</a></dt>
+          </dl>
+        </td>
+      </tr>
+    </table>
     <hr>
 
     <h2 id="installation">Installation</h2>
@@ -138,12 +178,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>examples-v2</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                                                                 it somewhere. 
-                                                                  
-                                                                    <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                                                                    into one of the locations where it can be found (given in <a href=
-                                                                    "#config_files_location">this table</a>). This prevent you from
-                                                                    accidentally overwriting your config when updating.</p> -->
+                                                                       it somewhere. 
+                                                                        
+                                                                          <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                                                                          into one of the locations where it can be found (given in <a href=
+                                                                          "#config_files_location">this table</a>). This prevent you from
+                                                                          accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -638,7 +678,406 @@ boost-build /path/to/boost.build ;
     date. At this step, implicit dependencies are also scanned and accounted
     for, as described <a href="#dependency_scanning">here</a>.</p>
 
+    <h3 id="main_targets">Main targets</h3>
+
+    <p id="main_target"><em>Main target</em> is a user-defined named entity
+    which can be build, for example a named executable file. Declaring a main
+    target is usually done using one of <a href="#builtins_main_targets">main
+    target rules</a>. The user can also declare <a href=
+    "doc/extending.html#main_target_rules">custom main target rules</a>.</p>
+
+    <p>Most main targets rules in Boost.Build use similiar syntax:</p>
+<pre>
+    rule-name main-target-name 
+        : sources 
+        : requirements 
+        : default-build 
+        : usage-requirements 
+        ;
+   
+</pre>
+
+    <ul>
+      <li>"main-target-name" is the name used to request the target on
+      command line and to use it from other main targets. Main target name
+      may contain alphanumeric characters and symbols '-' and '_';</li>
+
+      <li>"sources" is the list of source files and other main targets that
+      must be combined.</li>
+
+      <li>"requirements" is the list of properties that must always be
+      present when this main target is built.</li>
+
+      <li>"default-build" is the list of properties that will be used unless
+      some other value of the same feature is already specified.</li>
+
+      <li>"usage-requirements" is the list of properties that will be
+      propagated to all main targets that use this one, i.e. to all
+      dependedents.</li>
+    </ul>
+
+    <p>Some main target rules have shorter list of parameters, and you should
+    consult their documentation for details.</p>
+
+    <p>Building of the same main target can differ greatly from platform to
+    platform. For example, you might have different list of sources for
+    different compilers. Therefore it is possible to invoke main target rules
+    several times for a single main target. For example:</p>
+<pre>
+    exe a : a_gcc.cpp : &lt;toolset&gt; ;
+    exe a : a.cpp ;
+</pre>
+    Each call to the 'exe' rule defines a new <em>main target
+    alternative</em> for the main target <tt>a</tt>. In this case, the first
+    alternative will be used for the <tt>gcc</tt> toolset, while the second
+    alternative will be used in other cases. TODO: document the exact
+    selection method under "Build process" below. 
+
+    <p>Sometime a main target is really needed only by some other main
+    target. E.g. a rule that declared test-suite uses a main target that
+    represent test, but those main targets are rarely needed by themself.</p>
+
+    <p>It possible to declare target inline, i.e. the "sources" parameter may
+    include call to other main rules. For example:</p>
+<pre>
+    exe hello : hello.cpp 
+       [ obj helpers : helpers.cpp : &lt;optimization&gt;off ] ;
+   
+</pre>
+    Will cause "helpers.cpp" to be always compiled without optimization. It's
+    possible to request main targets declared inline, but since they are
+    considered local, they are renamed to
+    "parent-main-target_name..main-target-name". In the example above, to
+    build only helpers, one should run "bjam hello..helpers". 
+
+    <h3 id="projects">Projects</h3>
+
+    <p>Boost.Build considers every software it build as organized into
+    <em>projects</em> &mdash; modules which declare targets. Projects are
+    organized in a hierarchical structure, so each project may have a single
+    parent project and a number of subprojects.</p>
+
+    <p>Most often, projects are created as result of loading <em>Jamfile</em>
+    &mdash; files which are specially meant to describe projects. Boost.Build
+    will implicitly load Jamfile in the invocation directory, and all
+    Jamfiles referred by the first one, creating the hierarchy of
+    projects.</p>
+
+    <p>The exact name of file that describes project is configurable. By
+    default, it's <tt>Jamfile</tt>, but can be changed by setting global
+    variables <tt>JAMFILE</tt>, for example in <tt>boost-build.jam</tt> file.
+    The value of the variable is a list of regex patterns that are used when
+    searching for Jamfile in a directory.</p>
+
+    <p>Every Boost.Build modules can decide to act as project and be able to
+    declare targets. For example, the <tt>site-config.jam</tt> module can
+    declare libraries available on a given host, as described <a href=
+    "doc/recipes.html#site_config_targets">here</a>.</p>
+
+    <p>There are three things that can be put in Jamfile: declarations of
+    main targets, calls to a number of predefined rules, and arbitrary user
+    code. The predefined rules are listed below:</p>
+
+    <table>
+      <tr>
+        <th>Rule</th>
+
+        <th>Semantic</th>
+      </tr>
+
+      <tr>
+        <td><a href="#project_rule">project</a></td>
+
+        <td>Define project attributes.</td>
+      </tr>
+
+      <tr>
+        <td><a href="#use-project_rule">use-project</a></td>
+
+        <td>Make another project known.</td>
+      </tr>
+
+      <tr>
+        <td><a href="#build-project_rule">build-project</a></td>
+
+        <td>Build another project when this one is built.</td>
+      </tr>
+
+      <tr>
+        <td><a href="#explicit_rule">explicit</a></td>
+
+        <td>States that the target should be built only by explicit
+        request.</td>
+      </tr>
+    </table>
+
+    <p>Each project is also associated with <em>project root</em>. That's a
+    root for a tree of projects, which specifies some global properties.</p>
+
+    <h4>Project root</h4>
+    Project root for a projects is the nearest parent directory which
+    contains a file called <tt>project-root.jam</tt>. That file defines
+    certain properties which apply to all projects under project root. It
+    can: 
+
+    <ul>
+      <li>configure toolsets, via call to <tt>toolset.using</tt></li>
+
+      <li>refer to other projects, via the <tt>use-project</tt> rule</li>
+
+      <li>declare constants, via the <tt>constant</tt> and
+      <tt>path-constant</tt> rules.</li>
+    </ul>
+
+    <p>To facilitate declaration of simple projects, Jamfile and project-root
+    can be merged together. To achieve this effect, the project root file
+    should call the <tt>project</tt> rule. The semantic is precisely the same
+    as if the call was made in Jamfile, except that project-root.jam will
+    start serve as Jamfile. The Jamfile in the directory of project-root.jam
+    will be ignored, and project-root.jam will be able to declare main
+    targets as usual.</p>
+
+    <h4>Project attributes</h4>
+
+    <p>For each project, there are several attributes.</p>
+
+    <p><em>Project id</em> is a short way to denote a project, as opposed to
+    the Jamfile's pathname. It is a hierarchical path, unrelated to
+    filesystem, such as "boost/thread". <a href="#target_id">Target
+    references</a> make use of project ids to specify a target.</p>
+
+    <p><em>Source location</em> specifies the directory where sources for the
+    project are located.</p>
+
+    <p><em>Project requirements</em> are requirements that apply to all the
+    targets in the projects as well as all subprojects.</p>
+
+    <p><em>Default build</em> is the build request that should be used when
+    no build request is specified explicitly.</p>
+
+    <p id="project_rule">The default values for those attributes are given in
+    the table below. In order to affect them, Jamfile may call the
+    <tt>project</tt> rule. The rule has this syntax:</p>
+<pre>
+    project id : &lt;attributes&gt; ;
+   
+</pre>
+    Here, attributes is a sequence of (attribute-name, attribute-value)
+    pairs. The list of attribute names along with its handling is also shown
+    in the table below. For example, it it possible to write: 
+<pre>
+    project tennis 
+        : requirements &lt;threading&gt;multi 
+        : default-build release
+        ;
+   
+</pre>
+
+    <table>
+      <tr>
+        <th>Attribute</th>
+
+        <th>Name for the 'project' rule</th>
+
+        <th>Default value</th>
+
+        <th>Handling by the 'project' rule</th>
+      </tr>
+
+      <tr>
+        <td>Project id</td>
+
+        <td>none</td>
+
+        <td>none</td>
+
+        <td>Assigned from the first parameter of the 'project' rule. It is
+        assumed to denote absolute project id.</td>
+      </tr>
+
+      <tr>
+        <td>Source location</td>
+
+        <td><tt>source-location</tt></td>
+
+        <td>The location of jamfile for the project</td>
+
+        <td>Sets to the passed value</td>
+      </tr>
+
+      <tr>
+        <td>Requirements</td>
+
+        <td><tt>requirements</tt></td>
+
+        <td>The parent's requirements</td>
+
+        <td>The parent's requirements are refined with the passed requirement
+        and the result is used as the project requirements.</td>
+      </tr>
+
+      <tr>
+        <td>Default build</td>
+
+        <td><tt>default-build</tt></td>
+
+        <td>none</td>
+
+        <td>Sets to the passed value</td>
+      </tr>
+
+      <tr>
+        <td>Build directory</td>
+
+        <td><tt>build-dir</tt></td>
+
+        <td>If parent has a build dir set, the value of it, joined with the
+        relative path from parent to the current project. Otherwise,
+        empty</td>
+
+        <td>Sets to the passed value, interpreted as relative to the
+        project's location.</td>
+      </tr>
+    </table>
+
+    <h4>Project relationship</h4>
+
+    <p>There are three kinds of project relationships.</p>
+
+    <p>First is parent-child. This relationship is established implicitly:
+    parent directories of a project are searched, and the first found Jamfile
+    is assumed to define the parent project. The parent-child relationship
+    affects only attribute values for the child project.</p>
+
+    <p id="build-project_rule">Second is build relationship. Some project may
+    request to recursively build other projects. Those project need not be
+    child projects. The <tt>build-project</tt> rule is used for that:</p>
+<pre>
+    build-project src ;   
+</pre>
+
+    <p id="use-project_rule">The third kind is the 'use' relationship. In
+    means that one project uses targets from another. It is possible to just
+    refer to target in other projects using target id. However, if target id
+    uses project id, it is required that the project id is known. The
+    <tt>use-project</tt> rule is employed to guarantee that.</p>
+<pre>
+    use-project ( id : location )
+   
+</pre>
+    It loads the project at the specified location, which makes its project
+    id available in the project which invokes the rule. It is required that
+    the <tt>id</tt> parameter passed to the <tt>use-project</tt> rule be
+    equal to the id that the loaded project declared. At this moment, the
+    <tt>id</tt> paremeter should be absolute project id. 
+
+    <h3 id="target_id">Target identifiers and references</h3>
+
+    <p><em>Target identifier</em> is used to denote a target. There are two
+    syntaxes for it. First is the preferred one, described below. The second
+    is older syntax, which is retained to backward compatibility reasons, but
+    will be removed in a future release. It is not documented</p>
+
+    <p>The current syntax is</p>
+<pre>
+    target-id -&gt; (project-id | target-name | file-name )
+                  | (project-id | directory-name) "//" target-name   
+    project-id -&gt; path
+    target-name -&gt; path
+    file-name -&gt; path
+    directory-name -&gt; path                  
+</pre>
+    This grammar allows some elements to be recognized as either 
+
+    <ul>
+      <li>project id (at this point, all project ids start with slash).</li>
+
+      <li>name of target declared in current Jamfile (note that target names
+      may include slash).</li>
+
+      <li>a regular file, denoted by absolute name or name relative to
+      project's sources location.</li>
+    </ul>
+    To determine the real meaning a check is made if project-id by the
+    specified name exists, and then if main target of that name exists. For
+    example, valid target ids might be: 
+<pre>
+    a                                    -- target in current project
+    lib/b.cpp                            -- regular file
+    /boost/thread                        -- project "/boost/thread"
+    /home/ghost/build/lr_library//parser -- target in specific project
+</pre>
+
+    <p><b>Rationale:</b>Target is separated from project by special separator
+    (not just slash), because:</p>
+
+    <ul>
+      <li>It emphasises that projects and targets are different things.</li>
+
+      <li>It allows to have main target names with slashes. 
+      <!-- The motivation for which is:
+                                    So, to summarize:
+                                    1. The project which extract tarfile may extract all possible kinds of 
+                                    targets, and it's reasonable to use them directly from other project.
+                                    2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
+                                    maintainability, and therefore, must use main target name which contains 
+                                    slashes?
+                                    3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
+                                    option, because you should not change existing tree 
+
+                                    That makes good rationale for why main target must contain names.
+                                     -->
+      </li>
+    </ul>
+
+    <p id="target_reference"><em>Target reference</em> is used to specify a
+    source target, and may additionally specify desired properties for that
+    target. It has this syntax:</p>
+<pre>
+    target-reference -&gt; target-id [ "/" requested-properties ]
+    requested-properties -&gt; property-path
+</pre>
+    For example, 
+<pre>
+    exe compiler : compiler.cpp libs/cmdline/&lt;optimization&gt;space ;
+</pre>
+    would cause the version of <tt>cmdline</tt> library, optimized for space,
+    to be linked in even if the <tt>compiler</tt> executable is build with
+    optimization for speed. 
+
     <h3 id="builtins">Builtin facilities</h3>
+
+    <h4 id="builtins_main_targets">Main targets</h4>
+
+    <dl>
+      <dt><tt>exe</tt></dt>
+
+      <dd>Creates a regular executable file.</dd>
+
+      <dt><tt>lib</tt></dt>
+
+      <dd>Creates a library file. Depending on the value of &lt;link&gt;
+      feature the library will be either static or shared.</dd>
+
+      <dt><tt>alias</tt></dt>
+
+      <dd>Builds all the source targets and returns them unmodified. Please
+      run "bjam --help alias" for more details.</dd>
+
+      <dt><tt>stage</tt></dt>
+
+      <dd>Copies a number of targets to a single directory. The primary
+      purpose is installing binaries. Please run "bjam --help stage" for more
+      details.</dd>
+
+      <dt><tt>unit-test</tt> (from module "testing")</dt>
+
+      <dd>Creates an executable file and runs it. Build won't succeed unless
+      the executable runs successfully. The rule is usefull for creating test
+      program which should be rerun whenever any dependency changes. 
+      <!-- make? -->
+      </dd>
+    </dl>
 
     <h4 id="builtins_features">Features</h4>
 
@@ -674,6 +1113,8 @@ boost-build /path/to/boost.build ;
         don't have any specific expectation in this point.</p>
       </dd>
     </dl>
+
+    <h2 id="sec-detailed-reference">Detailed reference</h2>
 
     <h3><a name="features_properties">Features and properties</a></h3>
 
@@ -1159,391 +1600,6 @@ borland/runtime-link=static,dynamic
       </tbody>
     </table>
 
-    <h3><a name="projects">Projects</a></h3>
-
-    <p>Boost.Build considers every software it build as organized into
-    <em>projects</em> &mdash; modules which declare targets. Projects are
-    organized in a hierarchical structure, so each project may have a single
-    parent project and a number of subprojects.</p>
-
-    <p>Most often, projects are created as result of loading <em>Jamfile</em>
-    &mdash; files which are specially meant to describe projects. Boost.Build
-    will implicitly load Jamfile in the invocation directory, and all
-    Jamfiles referred by the first one, creating the hierarchy of
-    projects.</p>
-
-    <p>The exact name of file that describes project is configurable. By
-    default, it's <tt>Jamfile</tt>, but can be changed by setting global
-    variables <tt>JAMFILE</tt>, for example in <tt>boost-build.jam</tt> file.
-    The value of the variable is a list of regex patterns that are used when
-    searching for Jamfile in a directory.</p>
-
-    <p>Every Boost.Build modules can decide to act as project and be able to
-    declare targets. For example, the <tt>site-config.jam</tt> module can
-    declare libraries available on a given host, as described <a href=
-    "doc/recipes.html#site_config_targets">here</a>.</p>
-
-    <p>There are three things that can be put in Jamfile: declarations of
-    main targets, calls to a number of predefined rules, and arbitrary user
-    code. The predefined rules are listed below:</p>
-
-    <table>
-      <tr>
-        <th>Rule</th>
-
-        <th>Semantic</th>
-      </tr>
-
-      <tr>
-        <td><a href="#project_rule">project</a></td>
-
-        <td>Define project attributes.</td>
-      </tr>
-
-      <tr>
-        <td><a href="#use-project_rule">use-project</a></td>
-
-        <td>Make another project known.</td>
-      </tr>
-
-      <tr>
-        <td><a href="#build-project_rule">build-project</a></td>
-
-        <td>Build another project when this one is built.</td>
-      </tr>
-
-      <tr>
-        <td><a href="#explicit_rule">explicit</a></td>
-
-        <td>States that the target should be built only by explicit
-        request.</td>
-      </tr>
-    </table>
-
-    <p>Each project is also associated with <em>project root</em>. That's a
-    root for a tree of projects, which specifies some global properties.</p>
-
-    <h4>Project root</h4>
-    Project root for a projects is the nearest parent directory which
-    contains a file called <tt>project-root.jam</tt>. That file defines
-    certain properties which apply to all projects under project root. It
-    can: 
-
-    <ul>
-      <li>configure toolsets, via call to <tt>toolset.using</tt></li>
-
-      <li>refer to other projects, via the <tt>use-project</tt> rule</li>
-
-      <li>declare constants, via the <tt>constant</tt> and
-      <tt>path-constant</tt> rules.</li>
-    </ul>
-
-    <p>To facilitate declaration of simple projects, Jamfile and project-root
-    can be merged together. To achieve this effect, the project root file
-    should call the <tt>project</tt> rule. The semantic is precisely the same
-    as if the call was made in Jamfile, except that project-root.jam will
-    start serve as Jamfile. The Jamfile in the directory of project-root.jam
-    will be ignored, and project-root.jam will be able to declare main
-    targets as usual.</p>
-
-    <h4>Project attributes</h4>
-
-    <p>For each project, there are several attributes.</p>
-
-    <p><em>Project id</em> is a short way to denote a project, as opposed to
-    the Jamfile's pathname. It is a hierarchical path, unrelated to
-    filesystem, such as "boost/thread". <a href="#target_id">Target
-    references</a> make use of project ids to specify a target.</p>
-
-    <p><em>Source location</em> specifies the directory where sources for the
-    project are located.</p>
-
-    <p><em>Project requirements</em> are requirements that apply to all the
-    targets in the projects as well as all subprojects.</p>
-
-    <p><em>Default build</em> is the build request that should be used when
-    no build request is specified explicitly.</p>
-
-    <p id="project_rule">The default values for those attributes are given in
-    the table below. In order to affect them, Jamfile may call the
-    <tt>project</tt> rule. The rule has this syntax:</p>
-<pre>
-    project id : &lt;attributes&gt; ;
-   
-</pre>
-    Here, attributes is a sequence of (attribute-name, attribute-value)
-    pairs. The list of attribute names along with its handling is also shown
-    in the table below. For example, it it possible to write: 
-<pre>
-    project tennis 
-        : requirements &lt;threading&gt;multi 
-        : default-build release
-        ;
-   
-</pre>
-
-    <table>
-      <tr>
-        <th>Attribute</th>
-
-        <th>Name for the 'project' rule</th>
-
-        <th>Default value</th>
-
-        <th>Handling by the 'project' rule</th>
-      </tr>
-
-      <tr>
-        <td>Project id</td>
-
-        <td>none</td>
-
-        <td>none</td>
-
-        <td>Assigned from the first parameter of the 'project' rule. It is
-        assumed to denote absolute project id.</td>
-      </tr>
-
-      <tr>
-        <td>Source location</td>
-
-        <td><tt>source-location</tt></td>
-
-        <td>The location of jamfile for the project</td>
-
-        <td>Sets to the passed value</td>
-      </tr>
-
-      <tr>
-        <td>Requirements</td>
-
-        <td><tt>requirements</tt></td>
-
-        <td>The parent's requirements</td>
-
-        <td>The parent's requirements are refined with the passed requirement
-        and the result is used as the project requirements.</td>
-      </tr>
-
-      <tr>
-        <td>Default build</td>
-
-        <td><tt>default-build</tt></td>
-
-        <td>none</td>
-
-        <td>Sets to the passed value</td>
-      </tr>
-
-      <tr>
-        <td>Build directory</td>
-
-        <td><tt>build-dir</tt></td>
-
-        <td>If parent has a build dir set, the value of it, joined with the
-        relative path from parent to the current project. Otherwise,
-        empty</td>
-
-        <td>Sets to the passed value, interpreted as relative to the
-        project's location.</td>
-      </tr>
-    </table>
-
-    <h4>Project relationship</h4>
-
-    <p>There are three kinds of project relationships.</p>
-
-    <p>First is parent-child. This relationship is established implicitly:
-    parent directories of a project are searched, and the first found Jamfile
-    is assumed to define the parent project. The parent-child relationship
-    affects only attribute values for the child project.</p>
-
-    <p id="build-project_rule">Second is build relationship. Some project may
-    request to recursively build other projects. Those project need not be
-    child projects. The <tt>build-project</tt> rule is used for that:</p>
-<pre>
-    build-project src ;   
-</pre>
-
-    <p id="use-project_rule">The third kind is the 'use' relationship. In
-    means that one project uses targets from another. It is possible to just
-    refer to target in other projects using target id. However, if target id
-    uses project id, it is required that the project id is known. The
-    <tt>use-project</tt> rule is employed to guarantee that.</p>
-<pre>
-    use-project ( id : location )
-   
-</pre>
-    It loads the project at the specified location, which makes its project
-    id available in the project which invokes the rule. It is required that
-    the <tt>id</tt> parameter passed to the <tt>use-project</tt> rule be
-    equal to the id that the loaded project declared. At this moment, the
-    <tt>id</tt> paremeter should be absolute project id. 
-
-    <h3><a name="targets">Targets</a></h3>
-
-    <p>There are two user-visible kinds of targets in Boost.Build. First are
-    "abstract" &mdash; they correspond to things declared by user, for
-    example, projects and executable files. The primary thing about abstract
-    target is that it's possible to request them to be build with a
-    particular values of some properties. Each combination of properties may
-    possible yield different set of real file, so abstract target do not have
-    a direct correspondence with files.</p>
-
-    <p>File targets, on the contary, are associated with concrete files.
-    Dependency graphs for abstract targets with specific properties are
-    constructed from file targets. User has no was to create file targets,
-    however it can specify rules that detect file type for sources, and also
-    rules for transforming between file targets of different types. That
-    information is used in constructing dependency graph, as desribed in the
-    <a href="#generators">next section</a>. <b>Note:</b>File targets are not
-    the same as targets in Jam sense; the latter are created from file
-    targets at the latest possible moment. <b>Note:</b>"File target" is a
-    proposed name for what we call virtual targets. It it more understandable
-    by users, but has one problem: virtual targets can potentially be
-    "phony", and not correspond to any file.</p>
-
-    <h4>Main targets and main target alternatives</h4>
-
-    <p id="main_target"><em>Main target</em> is a named entity which can be
-    build, for example a named executable file. To declare a main target,
-    user invokes some of the <a href="#main_target_rules">main target
-    rules</a>, passing it things like list of sources and requirements.</p>
-
-    <p>It is possible to have different list of sources for different
-    toolsets, therefore it is possible to invoke main target rules several
-    times for a single main target. For example:</p>
-<pre>
-    exe a : a_gcc.cpp : &lt;toolset&gt; ;
-    exe a : a.cpp ;
-</pre>
-    Each call to the 'exe' rule defines a new <em>main target
-    alternative</em> for the main target <tt>a.exe</tt>. In this case, the
-    first alternative will be used for the <tt>gcc</tt> toolset, while the
-    second alternative will be used in other cases. TODO: document the exact
-    selection method under "Build process" below. 
-
-    <h4 id="target_id">Target identifiers and references</h4>
-
-    <p><em>Target identifier</em> is used to denote a target. There are two
-    syntaxes for it. First is the preferred one, described below. The second
-    is older syntax, which is retained to backward compatibility reasons, but
-    will be removed in a future release. It is not documented</p>
-
-    <p>The current syntax is</p>
-<pre>
-    target-id -&gt; (project-id | target-name | file-name )
-                  | (project-id | directory-name) "//" target-name   
-    project-id -&gt; path
-    target-name -&gt; path
-    file-name -&gt; path
-    directory-name -&gt; path                  
-</pre>
-    This grammar allows some elements to be recognized as either 
-
-    <ul>
-      <li>project id (at this point, all project ids start with slash).</li>
-
-      <li>name of target declared in current Jamfile (note that target names
-      may include slash).</li>
-
-      <li>a regular file, denoted by absolute name or name relative to
-      project's sources location.</li>
-    </ul>
-    To determine the real meaning a check is made if project-id by the
-    specified name exists, and then if main target of that name exists. For
-    example, valid target ids might be: 
-<pre>
-    a                                    -- target in current project
-    lib/b.cpp                            -- regular file
-    /boost/thread                        -- project "/boost/thread"
-    /home/ghost/build/lr_library//parser -- target in specific project
-</pre>
-
-    <p><b>Rationale:</b>Target is separated from project by special separator
-    (not just slash), because:</p>
-
-    <ul>
-      <li>It emphasises that projects and targets are different things.</li>
-
-      <li>It allows to have main target names with slashes. 
-      <!-- The motivation for which is:
-                              So, to summarize:
-                              1. The project which extract tarfile may extract all possible kinds of 
-                              targets, and it's reasonable to use them directly from other project.
-                              2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
-                              maintainability, and therefore, must use main target name which contains 
-                              slashes?
-                              3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
-                              option, because you should not change existing tree 
-
-                              That makes good rationale for why main target must contain names.
-                               -->
-      </li>
-    </ul>
-
-    <p id="target_reference"><em>Target reference</em> is used to specify a
-    source target, and may additionally specify desired properties for that
-    target. It has this syntax:</p>
-<pre>
-    target-reference -&gt; target-id [ "/" requested-properties ]
-    requested-properties -&gt; property-path
-</pre>
-    For example, 
-<pre>
-    exe compiler : compiler.cpp libs/cmdline/&lt;optimization&gt;space ;
-</pre>
-    would cause the version of <tt>cmdline</tt> library, optimized for space,
-    to be linked in even if the <tt>compiler</tt> executable is build with
-    optimization for speed. 
-
-    <h4>File targets</h4>
-    As described above, file targets corresponds to files that Boost.Build
-    manages. User's may be concerned about file targets in three ways: when
-    declaring file target types, when declaring transformations between
-    types, and when determining where file target will be placed. File
-    targets can also be connected with actions, that determine how the target
-    is created. Both file targets and actions are implemented in the
-    <tt>virtual-target</tt> module. 
-
-    <h5>Types</h5>
-    A file target can be given a file, which determines what transformations
-    can be applied to the file. The <tt>type.register</tt> rule declares new
-    types. File type can also be assigned a scanner, which is used to find
-    implicit dependencies. See <a href="#dependency_scanning">dependency
-    scanning</a> below. 
-
-    <h4>Target paths</h4>
-
-    <p>To distinguish targets build with different properties, they are put
-    in different directories. Rules for determining target paths are given
-    below:</p>
-
-    <ol>
-      <li>All targets are placed under directory corresponding to the project
-      where they are defined.</li>
-
-      <li>Each non free, non incidental property cause an additional element
-      to be added to the target path. That element has the form
-      <tt>&lt;feature-name&gt;-&lt;feature-value&gt;</tt> for ordinary
-      features and <tt>&lt;feature-value&gt;</tt> for implicit ones. [Note
-      about composite features].</li>
-
-      <li>If the set of free, non incidental properties is different from the
-      set of free, non incidental properties for the project in which the
-      main target that uses the target is defined, a part of the form
-      <tt>main_target-&lt;name&gt;</tt> is added to the target path.
-      <b>Note:</b>It would be nice to completely track free features also,
-      but this appears to be complex and not extremely needed.</li>
-    </ol>
-
-    <p>For example, we might have these paths:</p>
-<pre>
-    debug/optimization-off
-    debug/main-target-a
-   
-</pre>
-
     <h3 id="build_request">Build request</h3>
 
     <h3><a name="build_process">Build process</a></h3>
@@ -1728,7 +1784,7 @@ borland/runtime-link=static,dynamic
     retrieved and cloned, with appropriate change in names. 
     <hr>
 
-    <p class="revision">Last modified: June 16, 2003</p>
+    <p class="revision">Last modified: Jule 3, 2003</p>
 
     <p>&copy; Copyright Vladimir Prus 2002-2003. Permission to copy, use,
     modify, sell and distribute this document is granted provided this
