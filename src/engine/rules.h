@@ -226,5 +226,5 @@ void    args_free( argument_list* );
 void actions_refer(rule_actions*);
 void actions_free(rule_actions*);
 
-#endif // RULES_DWA_20011020_H
+#endif
 
