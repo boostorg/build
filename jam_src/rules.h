@@ -141,12 +141,11 @@ struct _target {
 # define	T_FLAG_NOUPDATE	0x20	/* NOUPDATE applied */
 # define	T_FLAG_VISITED  0x40    /* CWM: Used in debugging */
 
-/* this flag was added to support a new builting rule named "FAIL_EXPECTED" */
-/* it is used to indicate that the result of running a given action should  */
-/* be inverted (i.e. ok <=> fail). This is useful to launch certain test    */
-/* runs from a Jamfile..                                                    */
-/*                                                                          */
-# define        T_FLAG_FAIL_EXPECTED  0x80    /* FAIL_EXPECTED applied */
+/* this flag was added to support a new builtin rule named "RMBAD" */
+/* it is used to force removal of outdated targets whose dependencies
+ * fail to build  */
+    
+# define        T_FLAG_RMOLD    0x80    /* RMBAD applied */
 
 	char	binding;		/* how target relates to real file */
 
