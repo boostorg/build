@@ -60,6 +60,31 @@ rule register ( scanner-class : relevant-properties * )
     .relevant-properties.$(scanner-class) = $(relevant-properties) ;
 }
 
+# Common scanner class, which can be used when there's only one
+# kind of includes (unlike C, where "" and <> includes have different
+# search paths).
+class common-scanner : scanner 
+{
+    import scanner ;
+    rule __init__ ( includes * )
+    {
+        scanner.__init__ ;
+        self.includes = $(includes) ;
+    }
+            
+    rule process ( target : matches * : binding )
+    {
+        local target_path = [ NORMALIZE_PATH $(binding:D) ] ;
+
+        NOCARE $(matches) ;
+        INCLUDES $(target) : $(matches) ;
+        SEARCH on $(matches) = $(target_path) $(self.includes:G=) ;
+    
+        scanner.propagate $(__name__) : $(matches) : $(target) ;     
+    }
+}
+
+
 # Returns an instance of previously registered scanner,
 # with the specified properties.
 rule get ( scanner-class : properties * ) 
