@@ -638,8 +638,9 @@ class linking-generator : generator
                 {
                     # Unfortunately, we don't have a good way to find the path
                     # to a file, so use this nasty approach.
+                    local p = [ $(s).project ] ;
                     local location = [ path.root [ $(s).name ]
-                      [ project.attribute [ $(s).project ] source-location ] ] ;                   
+                      [ $(p).get source-location ] ] ;
                     xdll-path += [ path.parent $(location) ] ;
                 }                
             }

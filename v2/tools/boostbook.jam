@@ -278,7 +278,7 @@ class boostbook-target-class : basic-target
     
   rule construct ( source-targets * : property-set )
   {
-    local path = [ project.attribute $(self.project) location ] ;
+    local path = [ $(self.project).get location ] ;
     local catalog = [ new file-target catalog : XML : $(self.project) ] ;
     $(catalog).action [ new xml-catalog-action $(catalog) : $(property-set) 
                                                : $(self.catalog-entries) ] ;
