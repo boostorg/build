@@ -1067,6 +1067,25 @@ rule split-path-at-grist
     return $(result) $(last) ;
 }
 
+#
+# GIVEN:
+#
+# A set of dependency sources with grist to indicate the types
+# (<dll>*, <lib>*, etc)
+#
+# RESULT:
+#
+# Will use the type, basename, and SUF*/PRE* to expand the name
+# of the sources to their fully specific target name.
+#
+# EXAMPLE:
+#
+# [ expand-source-names <lib>test <dll>test <exe>test README.txt <pyd>test ]
+#
+# RETURNS:
+#
+# <lib>libtest.a <dll>libtest.so <exe>test.app README.TXT <pyd>test.so
+#
 rule expand-source-names ( sources + )
 {
     local x-sources = ;
@@ -1079,8 +1098,8 @@ rule expand-source-names ( sources + )
             local p = "" ; if $(source:B=:S=:G=) { p = "/" ; }
             local prefix = "" ;
             local suffix = "" ;
-            if $(PRE$(type)) { prefix = $(PRE$(type)) ; }
-            if $(SUF$(type)) { suffix = $(SUF$(type)) ; }
+            if $(PRE$(type)[1]) { prefix = $(PRE$(type)[1]) ; }
+            if $(SUF$(type)[1]) { suffix = $(SUF$(type)[1]) ; }
             x-sources += $(source:B=:S=)$(p)$(prefix)$(source:B:S=)$(suffix) ;
         }
         else
@@ -1091,6 +1110,25 @@ rule expand-source-names ( sources + )
     return $(x-sources) ;
 }
 
+#
+# GIVEN:
+#
+# A set of targets and a single target type for all the targets
+# (DLL, LIB, etc.)
+#
+# RESULT:
+#
+# Will use the type, basename, and SUF*/PRE* to expand the name
+# of the targets to their fully specific target name.
+#
+# EXAMPLE:
+#
+# [ expand-targets-names foo bar : DLL ]
+#
+# RETURNS:
+#
+# libfoo.a libbar.so
+#
 rule expand-target-names ( targets + : target-type )
 {
     local x-targets = ;
@@ -1098,8 +1136,8 @@ rule expand-target-names ( targets + : target-type )
     {
         local prefix = "" ;
         local suffix = "" ;
-        if $(PRE$(target-type)) { prefix = $(PRE$(target-type)) ; }
-        if $(SUF$(target-type)) { suffix = $(SUF$(target-type)) ; }
+        if $(PRE$(target-type)[1]) { prefix = $(PRE$(target-type)[1]) ; }
+        if $(SUF$(target-type)[1]) { suffix = $(SUF$(target-type)[1]) ; }
         x-targets += $(prefix)$(target)$(suffix) ;
     }
     return $(x-targets) ;
@@ -1799,7 +1837,7 @@ rule stage ( name : sources + : requirements * : local-build * )
                     file-mode($(target-subvariant)) = $($(gTARGET_TYPE($(target-id)))MODE) ;
                     local tag-text = "" ;
                     {
-                        local subvariant = [ split-path [ SUBST $(target-subvariant:G) (<)(.*)(>) $2 ] ] ;
+                        local subvariant = [ split-path [ SUBST $(target-subvariant[1]:G) (<)(.*)(>) $2 ] ] ;
                         subvariant = $(subvariant[3-]) ;
                         if $(tag-value($(stage-id)!prefix)) { tag-text = $(tag-value($(stage-id)!prefix)) ; }
                         else { if $(gTAG(prefix)) { tag-text = $(gTAG(prefix)) ; } }
