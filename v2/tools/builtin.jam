@@ -612,7 +612,9 @@ class link-action : action
         local real-sources ; 
         for local s in $(sources) 
         {
-            if ! [ type.is-derived [ $(s).type ] LIB ] 
+            if ! [ type.is-derived [ $(s).type ] LIB ] ||
+               ! [ class.is-a $(s) : searched-lib-target ]
+
             {
                 real-sources += $(s) ;
             }   
@@ -671,27 +673,14 @@ class linking-generator : generator
         local properties2 ;  # properties to pass to inherited rule
         local libraries ;    # sources which are libraries
         
-        # Separate 'sources' into 'libraries' and 'sources2'.
-        # It is needed because library sources need special treatment.
+        # Searched libraries are not passed as argument to linker
+        # but via some option. So, we pass them to the action
+        # via property. 
+        properties2 = [ $(property-set).raw ] ;
         for local s in $(sources)
         {
-            if [ type.is-derived [ $(s).type ] LIB ] 
-            {
-                libraries += $(s) ;
-            }            
-            else
-            {
-                sources2 += $(s) ;
-            }            
-        }
-
-        # For all library source, add necessary property. Depending on
-        # target type, it's either <library-file>, <find-shared-library>
-        # or <find-static-library>.
-        properties2 = [ $(property-set).raw ] ;        
-        for local s in $(libraries)
-        {
-            if [ class.is-a $(s) : searched-lib-target ]
+            if [ type.is-derived [ $(s).type ] LIB ] &&
+               [ class.is-a $(s) : searched-lib-target ]
             {
                 local name = [ $(s).real-name ] ;
                 if [ $(s).shared ] 
@@ -701,13 +690,13 @@ class linking-generator : generator
                 else
                 {
                     properties2 += <find-static-library>$(name) ;
-                }         
-            } 
-            else 
-            {      
-                properties2 += <library-file>$(s) ;        
-            }            
-        }                
+                }                         
+            }
+            else
+            {
+                sources2 += $(s) ;
+            }
+        }
         
         # Sorry, still pass 'sources', which includes library targets.
         # We need to set dependency on libraries, which is currently done

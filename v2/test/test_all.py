@@ -121,6 +121,7 @@ tests = [ "project_test1",
           "library_chain",
           "unit_test",
           "standalone",
+          "library_order",
           ]
 
 if os.name == 'posix':
