@@ -3,9 +3,11 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
+import modules ;
+import os.path ;
+
 # this rule will be used to generate build instructions for the
 # given module (Jamfile) once its declarations have been read.
-
 rule construct ( module-name )
 {
 }
@@ -13,8 +15,6 @@ rule construct ( module-name )
 # Default patterns to search for the Jamfiles to use for build
 # declarations.
 #
-import modules ;
-
 JAMFILE = [ modules.peek : JAMFILE ] ;
 JAMFILE ?= [Jj]amfile [Jj]amfile.jam ;
 
@@ -50,21 +50,36 @@ rule load-jamfile ( dir )
             "Loading the first one: '"$(jamfile-to-load[1]:D=)"'." ;
     }
     jamfile-to-load = $(jamfile-to-load[1]) ;
+    if ! [ os.path.is_rooted $(jamfile-to-load) ]
+    {
+        local root-path =
+            [ os.path.parent [ os.path.make [ modules.binding [ CALLER_MODULE ] ] ] ] ;
+        jamfile-to-load =
+            [ os.path.native [ os.path.root_relative_path $(jamfile-to-load) $(root-path) ] ] ;
+    }
     
     # Load the project-root, and find out what the project root is
     # for this Jamfile so we can correctly scope it.
     #
-    local project-root-location = [ load-project-root $(dir) ] ;
+    local project-root-module = [ load-project-root $(jamfile-to-load:D) ] ;
+    
+    # Setup variable and rule for access to project-root location in
+    # Jamfile.
+    #
+    modules.poke $(jamfile-module)
+        : project-root-module : $(project-root-module) ;
+    IMPORT build-system : project-root
+        : $(jamfile-module) : project-root : LOCALIZE ;
     
     # Now load the Jamfile in the project-root module context.
     #
-    modules.load project-root.$(project-root-location)
-        : $(jamfile-to-load:D=) : $(jamfile-to-load:D)
-        : Jamfile.$(jamfile-to-load) ;
+    local jamfile-module = Jamfile<$(jamfile-to-load:D)> ;
+    modules.load $(jamfile-module)
+        : $(jamfile-to-load:D=) : $(jamfile-to-load:D) ;
     
     # Return the Jamfile's filename/module.
     #
-    return $(jamfile-to-load) ;
+    return $(jamfile-module) ;
 }
 
 # Load the project-root file for the given directory. The directory can
@@ -91,24 +106,13 @@ rule load-project-root ( dir )
     # Load it within a module specifically for the project root.
     # The module system handles checking for multiple includes.
     #
-    modules.load project-root.$(project-root-to-load:D)
+    local project-root-module = project-root<$(project-root-to-load:D)> ;
+    modules.load $(project-root-module)
         : $(project-root-to-load:D=) : $(project-root-to-load:D) ;
     
-    # Give local access to the project-root rule. NOTE, we don't use
-    # modules.import because it causes a circular dependency for this
-    # when used in loading the initial project-root.
+    # Return the module for the project.
     #
-    IMPORT build-system : project-root
-        : project-root.$(project-root-to-load:D) : project-root ;
-    
-    # Remember the plain path of the project-root.
-    #
-    modules.poke project-root.$(project-root-to-load:D)
-        : project-root-location : $(project-root-to-load:D) ;
-    
-    # Return the location we just loaded.
-    #
-    return $(project-root-to-load:D) ;
+    return $(project-root-module) ;
 }
 
 # Returns the project-root for the calling context. This hides the
@@ -117,9 +121,6 @@ rule load-project-root ( dir )
 #
 rule project-root ( )
 {
-    return [ modules.peek [ CALLER_MODULE ] : project-root-location ] ;
+    local project-root-binding = [ modules.binding $(project-root-module) ] ;
+    return $(project-root-binding:D) ;
 }
-
-# Load the first Jamfile, and build it.
-#
-construct [ load-jamfile [ PWD ] ] ;
