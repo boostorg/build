@@ -16,7 +16,9 @@ import "class" : new ;
 import order ;
 import set ;
 
-feature.extend toolset : gcc ;
+#feature.extend toolset : gcc ;
+
+toolset.inherit gcc : unix ;
 feature.subfeature toolset gcc : version : : optional propagated link-incompatible ;
 
 # Make the "o" suffix used for gcc toolset on all
@@ -53,96 +55,6 @@ if [ os.name ] = NT
     # .bat files, thus avoiding command-line length limitations
     JAMSHELL = % ;  
 }
-
-# Special linking generator for gcc which handles order requirements on
-# the command line.
-class gcc-linking-generator : linking-generator
-{
-    import property-set ;
-    import type ;
-    import gcc ;
-    
-    rule __init__ ( id 
-        composing ? : # Specify if generator is composing. The generator will be
-        # composing if non-empty string is passed, or parameter is
-        # not given. To make generator non-composing, pass empty
-        # string ("")
-        source-types + : target-types + : 
-        requirements * )
-    {
-        composing ?= true ;
-        generator.__init__ $(id) $(composing) : $(source-types) : $(target-types) :
-          $(requirements) ;
-    }
-    
-    rule run ( project name ? : property-set : sources + :  multiple ? )
-    {   
-        local result = [ linking-generator.run $(project) $(name) : $(property-set)
-          : $(sources) : $(multiple) ] ;
-        
-        gcc.set-library-order $(sources) : $(property-set) : $(result) ;
-                                
-        return $(result) ;
-    }
-    
-    rule generated-targets ( sources + : property-set : project name ? )
-    {
-        local sources2 ;
-        local libraries ;
-        for local l in $(sources)
-        {
-            if [ type.is-derived [ $(l).type ] LIB ]
-            {
-                libraries += $(l) ;
-            }
-            else
-            {
-                sources2 += $(l) ;
-            }            
-        }
-        
-        sources = $(sources2) [ gcc.order-libraries $(libraries) ] ;
-        
-        return [ linking-generator.generated-targets $(sources) : $(property-set)
-          : $(project) $(name) ] ;
-    }
-    
-} 
-
-class gcc-archive-generator : generator
-{
-    import gcc ; 
-
-    rule __init__ ( id composing ? : source-types + : target-types + : 
-        requirements * )
-    {
-        composing ?= true ;
-        generator.__init__ $(id) $(composing) : $(source-types) : $(target-types) :
-          $(requirements) ;
-    }
-        
-    rule run ( project name ? : property-set : sources + :  multiple ? )
-    {                                
-        local result = [ generator.run $(project) $(name) : $(property-set)
-          : $(sources) : $(multiple) ] ;
-        
-        gcc.set-library-order $(sources) : $(property-set) : $(result) ;
-        
-        return $(result) ;
-
-    }    
-}
-
-
-# Declare generators
-generators.register [ new gcc-linking-generator gcc.link : LIB OBJ : EXE 
-    : <toolset>gcc ] ;
-
-generators.register [ new gcc-archive-generator gcc.archive : OBJ : STATIC_LIB 
-    : <toolset>gcc ] ;
-
-generators.register [ new gcc-linking-generator gcc.link.dll : LIB OBJ : SHARED_LIB 
-    : <toolset>gcc ] ;
 
 generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c : C : OBJ : <toolset>gcc ;
@@ -281,51 +193,3 @@ else if [ modules.peek : UNIX ]
     }
 }
 
-.order = [ new order ] ;
-
-rule set-library-order-aux ( from * : to * )
-{
-    for local f in $(from)
-    {
-        for local t in $(to)
-        {            
-            if $(f) != $(t)
-            {                
-                $(.order).add-pair $(f) $(t) ;
-            }            
-        }        
-    }    
-}
-
-rule set-library-order ( sources * : property-set : result * )
-{
-    local used-libraries ;
-    local deps = [ $(property-set).dependency ] ;
-    for local l in $(sources) $(deps:G=)        
-    {
-        if [ $(l).type ] && [ type.is-derived [ $(l).type ] LIB ]
-        {
-            used-libraries += $(l) ;
-        }
-    }
-
-    local created-libraries ;
-    for local l in $(result)
-    {
-        if [ $(l).type ] && [ type.is-derived [ $(l).type ] LIB ] 
-        {
-            created-libraries += $(l) ;
-        }            
-    }
-    
-    created-libraries = [ set.difference $(created-libraries) : $(used-libraries) ] ;
-    set-library-order-aux $(created-libraries) : $(used-libraries) ;
-}
-
-
-
-
-rule order-libraries ( libraries * )
-{
-    return [ $(.order).order $(libraries) ] ;
-}

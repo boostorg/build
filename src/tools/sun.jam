@@ -11,7 +11,7 @@ import toolset : flags ;
 import feature ;
 import type ;
 
-toolset.register sun ;
+toolset.inherit  sun : unix ;
 feature.subfeature toolset sun : version ;
 
 # Installation root to use for versionless toolset
@@ -53,9 +53,6 @@ rule init ( version ? : root ? )
 # Declare generators
 generators.register-c-compiler sun.compile.c : C : OBJ : <toolset>sun ;
 generators.register-c-compiler sun.compile.c++ : CPP : OBJ : <toolset>sun ;
-generators.register-composing sun.archive : OBJ : STATIC_LIB : <toolset>sun ;
-generators.register-linker sun.link.dll : LIB OBJ : SHARED_LIB : <toolset>sun ;
-generators.register-linker sun.link : LIB OBJ : EXE : <toolset>sun ;
 
 # Declare flags and actions for compilation
 flags sun.compile OPTIONS <debug-symbols>on : -g ;
