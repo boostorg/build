@@ -712,7 +712,7 @@ module project-rules
     #
     rule constant (
         name # Variable name of the constant.
-        : value # Value of the constant.
+        : value + # Value of the constant.
         )
     {
         import project ;
@@ -726,7 +726,7 @@ module project-rules
     # root.  
     rule path-constant (
         name # Variable name of the constant.
-        : value # Value of the constant.
+        : value + # Value of the constant.
         )
     {
         import project ;
