@@ -8,6 +8,8 @@ import set ;
 import regex ;
 import feature ;
 import numbers ;
+import container ;
+import class : new ;
 
 # Transform property-set by applying f to each component property.
 local rule apply-to-property-set ( f property-set )
@@ -96,8 +98,9 @@ local rule x-product ( property-sets * : feature-space )
 
 # Takes the command line tokens (such as taken from ARGV rule) and constructs
 # build request from it.
-# Returns the list of targets specified in the command line, and requested
-# build properties. The target and the property lists are separated with "@". 
+# Returns a list of two lists (where "list" means container.jam's "list"). 
+# First is the list of targets specified in the command line, and second is
+# the list of requested build properties. 
 rule from-command-line ( command-line * : feature-space ? )
 {
     local targets ;
@@ -123,7 +126,7 @@ rule from-command-line ( command-line * : feature-space ? )
             }
         }
     }
-    return $(targets) @ $(properties) ;
+    return [ new list [ new list $(targets) ] [ new list $(properties) ] ] ;
 }
 
 # Converts one element of command line build request specification into
@@ -220,35 +223,36 @@ local rule __test__ ( )
           : build-request.expand <include>a/b/c gcc-3.0.1/stlport msvc/stlport msvc debug  <include>x/y/z
           : $(test-space) ;
 
-        assert.result
-            @ debug <runtime-link>dynamic
-            : build-request.from-command-line bjam debug runtime-link=dynamic 
-                : $(test-space) ;
+        local r ;
 
-        assert.result
-            @ gcc/debug <runtime-link>dynamic/static
-            : build-request.from-command-line bjam gcc/debug runtime-link=dynamic/static 
-                : $(test-space) ;
+        r = [ build-request.from-command-line bjam debug runtime-link=dynamic 
+                : $(test-space) ] ;              
+        assert.equal [ $(r).get-at 1 ] : ;
+        assert.equal [ $(r).get-at 2 ] : debug <runtime-link>dynamic ;
 
-        assert.result
-            target @ debug <runtime-link>dynamic
-            : build-request.from-command-line bjam -d2 --debug debug target 
+        r = [ build-request.from-command-line bjam gcc/debug runtime-link=dynamic/static 
+                : $(test-space) ] ;
+        assert.equal [ $(r).get-at 1 ] : ;
+        assert.equal [ $(r).get-at 2 ] : gcc/debug <runtime-link>dynamic/static ;
+
+        r = [ build-request.from-command-line bjam -d2 --debug debug target 
                runtime-link=dynamic
-                : $(test-space) ;
-
-        assert.result
-            @ debug <runtime-link>dynamic <runtime-link>static
-            : build-request.from-command-line bjam debug  
+                : $(test-space) ] ;
+        assert.equal [ $(r).get-at 1 ] : target ;
+        assert.equal [ $(r).get-at 2 ] : debug <runtime-link>dynamic ;
+                
+        r = [ build-request.from-command-line bjam debug  
                runtime-link=dynamic,static
-                : $(test-space) ;
+                : $(test-space) ] ;
+        assert.equal [ $(r).get-at 1 ] : ;
+        assert.equal [ $(r).get-at 2 ] : debug <runtime-link>dynamic <runtime-link>static ;
 
-        assert.result
-            @ debug gcc/<runtime-link>dynamic gcc/<runtime-link>static
-            : build-request.from-command-line bjam debug  
+        r = [ build-request.from-command-line bjam debug  
                gcc/runtime-link=dynamic,static
-                : $(test-space) ;
-
-
+                : $(test-space)  ] ;
+        assert.equal [ $(r).get-at 1 ] : ;
+        assert.equal [ $(r).get-at 2 ] : debug gcc/<runtime-link>dynamic 
+                     gcc/<runtime-link>static ;
     }
 }
 
