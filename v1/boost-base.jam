@@ -1562,6 +1562,7 @@ rule find-compatible-subvariant ( main-target : toolset variant : dependent-simp
         [ intersection $(sv-request) : $(build-requests) ] ;
         sv-build ?= "" ;
     local BUILD = $(variant) [ split-path $(sv-build) ] ;
+    local gTARGET_DEFAULT_BUILD($(main-target)) = ;
     # the full subvariant to build...
     local subvariant = [ expand-target-subvariants $(main-target) : $(variant) : $(toolset) ] ;
 
@@ -1569,6 +1570,9 @@ rule find-compatible-subvariant ( main-target : toolset variant : dependent-simp
     split-target-subvariant sv-target sv-properties sv-toolset sv-variant : $(subvariant) ;
     local sv-overrides =
         [ difference $(dependent-simple-properties) : [ select-gristed $(sv-properties) ] ] ;
+    sv-overrides +=
+        [ get-properties
+            [ difference $(dependent-simple-properties:G) : $(sv-overrides:G) ] : $(sv-properties) ] ;
 
     if ! $(gTARGET_TYPE($(main-target)))
     {
@@ -1583,7 +1587,8 @@ rule find-compatible-subvariant ( main-target : toolset variant : dependent-simp
     for local sv-override in $(override-conflicts)
     {
         local sv-required = [ get-values $(sv-override:G) : $(sv-properties) ] ;
-        if ! [ is-link-compatible $(sv-override:G) : $(sv-override:G=) : $(sv-required) ]
+        if $(sv-override:G=) != $(sv-required) &&
+            ! [ is-link-compatible $(sv-override:G) : $(sv-override:G=) : $(sv-required) ]
         {
             EXIT $(main-target): required property $(sv-override:G)$(sv-required)
                 incompatible with $(sv-override) ;
