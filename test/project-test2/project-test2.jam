@@ -49,13 +49,14 @@ actions touch-file
 
 rule main-target ( name : requirements * )
 {
-    local project = [ CALLER_MODULE ] ;
-    local ptarget = [ $(project).target ] ;
+    local project-module = [ CALLER_MODULE ] ;
+    local location = [ project.attribute $(project-module) location ] ;
+    local ptarget = [ project.target $(location) ] ;
 
     local target = [ $(ptarget).main-target $(name) ] ;
 
     $(target).add-alternative
-        [ new main-target-class $(name) : $(project) : $(requirements) ] ;
+        [ new main-target-class $(name) : $(project-module) : $(requirements) ] ;
 }
 
 IMPORT $(__name__) : main-target : : main-target ;
@@ -125,7 +126,7 @@ actions MkDir1
 IMPORT $(__name__) : MakeLocate MkDir : : MakeLocate MkDir ;
 
 root = [ project.load "." ] ;
-root-target = [ $(root).target ] ;
+root-target = [ project.target "." ] ;
 
 expanded = [ feature.split [ build-request.expand debug <rtti>on ] ] ;
 local targets = [ $(root-target).generate $(expanded) ] ;

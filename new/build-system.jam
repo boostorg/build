@@ -6,6 +6,7 @@ import project ;
 import sequence ;
 import modules ;
 import feature ;
+import build-request ;
 
 import builtin ;
 import make ;
@@ -26,7 +27,7 @@ properties = [ $(build-request).get-at 2 ] ;
 expanded = [ build-request.expand $(properties) ] ;
 
 
-root-target = [ $(current-project).target ] ;
+root-target = [ project.target "." ] ;
 virtual-targets = ;
 
 if $(expanded) 

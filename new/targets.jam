@@ -55,7 +55,7 @@ rule abstract-target ( name      # name of the target in Jamfile
     # Returns a user-readable name for this target.
     rule full-name ( )
     {
-        local location = [ $(self.project).location ] ;
+        local location = [ project.attribute $(self.project) location ] ;
         return $(location)/$(self.name) ;
     }
 
@@ -90,10 +90,10 @@ rule project-target ( name : project : requirements * : default-build * )
             local t = [ main-target $(name) ] ;
             result += [ $(t).generate $(properties) ] ;
         }
-        for local pn in [ $(self.project).subprojects ]
+        for local pn in [ project.attribute $(self.project) subprojects ]
         {
             local p = [ project.module-name $(pn) ] ;
-            local t = [ $(p).target ] ;
+            local t = [ project.target [ project.attribute $(p) location ] ] ;
             result += [ $(t).generate $(properties) ] ;
         }
         return $(result) ;
@@ -269,8 +269,9 @@ rule basic-target ( name : project
             sproperties = [ feature.split $(split[2]) ] ;
         }
 
-        # Check is such target exists
-        local main-target = [ project.find-target $(id) : [ $(self.project).location ] ] ;
+        # Check if such target exists
+        local main-target = 
+            [ project.find-target $(id) : [ project.attribute $(self.project) location ] ] ;
         
         if $(main-target) {
             # Apply source-specific properties
@@ -371,7 +372,7 @@ rule virtual-target ( name : project
             if $(a) {
                 $(a).actualize ;
                 local subvariant = [ $(a).properties ] ;
-                local path = [ os.path.join [ $(self.project).location ] 
+                local path = [ os.path.join [ project.attribute $(self.project) location ] 
                                "bin" [ property.as-path $(subvariant) ]  ] ;
                 path = [ os.path.native $(path) ] ;
                 LOCATE on $(self.actual-name) = $(path) ;
@@ -380,7 +381,7 @@ rule virtual-target ( name : project
                 utility.Clean clean : $(self.actual-name) ;
             } else {
                 SEARCH on $(self.actual-name) =
-                    [ os.path.native [ $(self.project).source-location ] ] ;
+                    [ os.path.native [ project.attribute $(self.project) source-location ] ] ;
             }
         }
         return $(self.actual-name) ;
@@ -391,7 +392,7 @@ rule virtual-target ( name : project
     {
         if ! $(self.actual-name)
         {
-            local project-location = [ $(self.project).location ] ;
+            local project-location = [ project.attribute $(self.project) location ] ;
             local location-grist =
                 [ sequence.join [ regex.split $(project-location) "/" ] : "!" ] ;
             local property-grist =
