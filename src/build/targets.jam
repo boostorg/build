@@ -433,7 +433,7 @@ rule typed-target ( name : project : type
     {
         local r = [ generators.construct-dbg $(self.project) $(self.name) : $(self.type) 
           : $(properties) <main-target-type>$(self.type) : $(source-targets) ] ;
-        return [ $(r).get-at 1 ] [ $(r).get-at 2 ] ;
+        return $(r) ;
     }            
 }
                     
