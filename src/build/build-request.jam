@@ -94,6 +94,72 @@ local rule x-product ( property-sets * : feature-space )
     # otherwise return empty
 }
 
+# Takes the command line tokens (such as taken from ARGV rule) and constructs
+# build request from it.
+# Returns the list of targets specified in the command line, and requested
+# build properties. The target and the property lists are separated with "@". 
+rule from-command-line ( command-line * : feature-space ? )
+{
+    local targets ;
+    local properties ;
+    feature-space ?= feature ;
+
+    command-line = $(command-line[2-]) ;
+    for local e in $(command-line)
+    {
+        if ! [ MATCH "^(-).*" : $(e) ] 
+        {
+            # Build request spec either contains slashes, or has "=" in it, 
+            # or is the name of an implicit property.
+            local fs = feature-space ;
+            if [ MATCH "(.*/.*)" : $(e) ] || [ MATCH "(.*=.*)" : $(e) ] ||
+               [ $(feature-space).is-implicit-value $(e) ] 
+            {
+                properties += [ convert-command-line-element $(e) ] ;
+            }
+            else
+            {
+                targets += $(e) ;
+            }
+        }
+    }
+    return $(targets) @ $(properties) ;
+}
+
+# Converts one element of command line build request specification into
+# internal form.
+local rule convert-command-line-element ( e )
+{
+    local result ;
+    local parts = [ regex.split $(e) "/" ] ;
+    for local p in $(parts) 
+    {
+        local m = [ MATCH "(.*)=(.*)" : $(p) ] ;
+        local lresult ;
+        if $(m) 
+        {
+            local feature = $(m[1]) ;
+            local values = [ regex.split $(m[2]) "," ] ;            
+            lresult = <$(feature)>$(values) ;            
+        }
+        else
+        {
+            lresult = $(p) ;
+        }
+
+        if ! $(result) 
+        {
+            result = $(lresult) ;
+        }
+        else
+        {
+            result = $(result)/$(lresult) ;
+        }
+    }  
+    
+    return $(result) ;
+}
+
 local rule __test__ ( )
 {
     import assert ;
@@ -153,6 +219,36 @@ local rule __test__ ( )
           
           : build-request.expand <include>a/b/c gcc-3.0.1/stlport msvc/stlport msvc debug  <include>x/y/z
           : $(test-space) ;
+
+        assert.result
+            @ debug <runtime-link>dynamic
+            : build-request.from-command-line bjam debug runtime-link=dynamic 
+                : $(test-space) ;
+
+        assert.result
+            @ gcc/debug <runtime-link>dynamic/static
+            : build-request.from-command-line bjam gcc/debug runtime-link=dynamic/static 
+                : $(test-space) ;
+
+        assert.result
+            target @ debug <runtime-link>dynamic
+            : build-request.from-command-line bjam -d2 --debug debug target 
+               runtime-link=dynamic
+                : $(test-space) ;
+
+        assert.result
+            @ debug <runtime-link>dynamic <runtime-link>static
+            : build-request.from-command-line bjam debug  
+               runtime-link=dynamic,static
+                : $(test-space) ;
+
+        assert.result
+            @ debug gcc/<runtime-link>dynamic gcc/<runtime-link>static
+            : build-request.from-command-line bjam debug  
+               gcc/runtime-link=dynamic,static
+                : $(test-space) ;
+
+
     }
 }
 

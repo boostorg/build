@@ -348,7 +348,7 @@ rule virtual-target ( name : project
     # action, and there's no need to run the action if the file is up-to-date,
     # only because some other file in set is out-of-date.
     rule actualize ( )
-    {
+    {        
         if ! $(self.actual-name) {
 
             self.actual-name = [ actual-name ] ;
@@ -361,7 +361,8 @@ rule virtual-target ( name : project
             local a = [ action ] ;
             if $(a) {
                 $(a).actualize ;
-                local path = [ os.path.join [ $(self.project).location ] "bin" ] ;
+                local path = [ os.path.join [ $(self.project).location ] 
+                               "bin" [ property.as-path [ subvariant ] ]  ] ;
                 path = [ os.path.native $(path) ] ;
                 LOCATE on $(self.actual-name) = $(path) ;
                 DEPENDS $(self.actual-name) : $(path) ;
