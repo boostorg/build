@@ -58,6 +58,9 @@ feature.subfeature toolset msvc : vendor
 #
 # When invoking tools, we'll first run vcvars32.bat from the configured path and
 # then cl/link, without path.   
+#
+# Note: for free VC7.1 tools, we don't correctly find vcvars32.bar when user
+# explicitly provides a path.
 rule init ( 
   version ? # the msvc version which is being configured. When omitted
             # the tools invoked when no explicit version is given will be configured.
@@ -189,7 +192,13 @@ local rule locate ( setup : version ? : vendor ? )
             version-7.1-path = [ path.join $(version-7.1-path) "VC7" ] ;
             version-7.1-path = [ path.native $(version-7.1-path) ] ;
         }
-    
+        
+        local VCToolkitInstallDir = [ modules.peek : VCToolkitInstallDir ] ;
+        if $(VCToolkitInstallDir)
+        {
+            version-7.1-path = [ path.make "$(VCToolkitInstallDir:J= )" ] ;
+        }
+           
         if $(version)
         {
             local v = [ MATCH ^(6|[^6].*) : $(version) ] ;
@@ -200,7 +209,8 @@ local rule locate ( setup : version ? : vendor ? )
             possible-paths += $(version-7.1-path) $(version-7.0-path) $(version-6-path) ;
         }
         # The vccars32.bat is actually in "bin" directory.
-        possible-paths = $(possible-paths)\\bin ;
+        # (except for free VC7.1 tools)
+        possible-paths = $(possible-paths)\\bin $(possible-paths) ;
     }
         
     # Append PATH
