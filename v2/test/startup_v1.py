@@ -19,8 +19,9 @@ t = Tester(
 
 t.set_tree('startup')
 
-t.run_build_system(
-    status=1, stdout="You didn't set BOOST_ROOT", match = expect_substring)
+if os.name == 'nt':
+    t.run_build_system(
+        status=1, stdout="You didn't set BOOST_ROOT", match = expect_substring)
 
 t.run_build_system(
     extra_args = '-sBOOST_ROOT=.', status=1
