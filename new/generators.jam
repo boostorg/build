@@ -521,6 +521,20 @@ rule construct-types ( project name ? : target-types + : multiple ? :
         return $(source) ;
     }
 }
+
+# Ensures all 'targets' have types. If this is not so, exists with 
+# error.
+local rule ensure-type ( targets * )
+{
+    for local t in $(targets)
+    {
+        if ! [ $(t).type ]
+        {
+            errors.error "target" [ $(t).str ] "has no type" ;
+        }        
+    }    
+}
+
     
 local rule find-viable-generators ( target-type : properties * )
 {
@@ -610,6 +624,11 @@ local rule select-dependency-graph ( options )
 rule construct ( project name ? : target-type multiple ? : properties * : sources + 
                  : allow-composing-generators ? )
 {
+    if (.construct-stack)
+    {
+        ensure-type $(sources) ;
+    }
+    
     .construct-stack += 1 ;
 
     increase-indent ;
@@ -663,8 +682,7 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
             generators.dout [ indent ] "*** putting to cache?" ;
             for local c in $(cresult)
             {
-                local cc = [ virtual-target.clone-template $(c) : $(project) [ $(t).name ] 
-                    [ $(t).type ] [ $(t).suffix ] ] ;
+                local cc = [ virtual-target.clone-template $(c) : $(t) ] ;
                 generators.dout [ indent ] "*** cloning " [ $(c).str ] ;
                 generators.dout [ indent ] "*** cloned" $(cc) --- [ $(cc).str ] ;
                 result += $(cc) ;

@@ -10,6 +10,8 @@ import targets ;
 import class : class new ;
 import property ;
 import errors : error ;
+import type : type ;
+import regex ;
 
 rule make-target-class ( name : project : sources * : requirements * 
                          : make-rule + : default-build )
@@ -20,8 +22,9 @@ rule make-target-class ( name : project : sources * : requirements *
     
     rule construct ( source-targets * : properties * )
     {
-        local t = [ new virtual-target $(self.name) :
+        local t = [ new virtual-target $(self.name:S=) : [ type.type $(self.name:S) ]
                     : $(self.project) : [ property.remove free incidental : $(properties) ] ] ;
+        $(t).suffix [ regex.match .(.*) : $(self.name:S) ] ;
         local a = [ new action $(t) : $(source-targets) : $(self.make-rule) 
                     : $(properties) ] ;
         $(t).action $(a) ;

@@ -4,9 +4,9 @@
 #  warranty, and with no claim as to its suitability for any purpose.
 
 #  Implements virtual targets, which correspond to actual files created during
-#  build, but are not yet target in Jam sense. They are needed, for example,
+#  build, but are not yet targets in Jam sense. They are needed, for example,
 #  when searching for possible transormation sequences, when it's not known
-#  if particular target should be create at all.
+#  if particular target should be created at all.
 
 import class : class new ;
 import type ;
@@ -44,7 +44,7 @@ rule virtual-target ( name : type ? : project
         return $(self.suffix) ;
     }
         
-    # Property set that distinguished different variants of a target.
+    # Property set that distinguishes different variants of a target.
     # May be a subset of the property set that is used for building.
     # Determines the location of target, in an unspecified way.
     rule subvariant ( ) { return $(self.subvariant) ; }
@@ -439,14 +439,21 @@ rule traverse ( target )
 }
 
 
-# Clones a virtual target, copying all fields that can be set in ctor, setting
-# project of new targets to 'project'. 
-# If 'dont-recurse' is not set, clones action as well, which causes cloning
-# of every target and action accessing from 'target'.
-# Parameters 'project', 'name', 'type' and 'suffix' specify the lonely
-# source target that should be substituted into the template.
-rule clone-template ( target dont-recurse ? : project name type suffix )
+# Clones a dependency graph template, given one of its root,
+# and a new source target to instantinate the template with.
+#
+# If 'target's name is "%" and type is equal to 'new-source's
+# return 'new-source', otherwise created a new target:
+#  - if there "%" in target's name, its replaced with 'new-target's 
+#  - project for new target is the same as for 'new-target'
+#  - other attributes are copied
+#
+# If 'dont-resurse' is not set, clones action, which results in
+# cloning of other targets, and, ultimately, cloning of the
+# entire dependency graph.
+rule clone-template ( target dont-recurse ? : new-source )
 {
+    local name = [ $(new-source).name ] ;
     local old-name = [ $(target).name ] ;
     local new-name = $(old-name) ;
     local m = [ MATCH (.*)(%)(.*) : $(old-name) ] ;
@@ -462,57 +469,57 @@ rule clone-template ( target dont-recurse ? : project name type suffix )
         }        
     }
     
-    
-    local cloned = [ new virtual-target $(new-name) : [ $(target).type ] :
-                                $(project) : [ $(target).subvariant ] ] ;    
-    
-    if ! $(dont-recurse) && [ $(target).action ]
+    if $(old-name) = % && [ $(target).type ] = [ $(new-source).type ]
     {
-        local cloned-action = [ clone-action-template [ $(target).action ] $(target) $(cloned) $(project) $(name) 
-          $(type) $(suffix)
-        ] ;
+        return $(new-source) ;
+    }
+    else 
+    {
+        local cloned = [ new virtual-target $(new-name) : [ $(target).type ] :
+          [ $(new-source).project ] : [ $(target).subvariant ] ] ;    
+    
+        if ! $(dont-recurse) && [ $(target).action ]
+        {
+            local cloned-action = [ clone-action-template 
+                [ $(target).action ] $(target) $(cloned) : $(new-source) ] ;
         
-        cloned-targets = $(cloned) ;
-        for t in [ $(cloned-action).targets ]
-        {
-            if $(t) != $(target)
+            cloned-targets = $(cloned) ;
+            for t in [ $(cloned-action).targets ]
             {
-                cloned-targets += [ clone-template $(t) dont-recurse : $(project) $(name) $(type) $(suffix) ] ;
-            }                
-        }   
-        local cloned-targets2 ;
-        for local t in $(cloned-targets)
-        {
-            $(t).action $(cloned-action) ;
-            
-            cloned-targets2 += [ register $(t) ] ;
-            
+                if $(t) != $(target)
+                {
+                    cloned-targets += 
+                      [ clone-template $(t) dont-recurse : $(new-source) ] ;
+                }                
+            }   
+            local cloned-targets2 ;
+            for local t in $(cloned-targets)
+            {
+                $(t).action $(cloned-action) ;
+                
+                cloned-targets2 += [ register $(t) ] ;
+                
+            }
+            $(cloned-action).set-targets $(cloned-targets2) ;            
+            cloned = $(cloned-targets2[1]) ;
         }
-        $(cloned-action).set-targets $(cloned-targets2) ;            
-        cloned = $(cloned-targets2[1]) ;
-    }
-    else
-    {
-        cloned = [ register $(cloned) ] ;
-    }
-    
-    if $(old-name) = % && ! [ $(cloned).action ] && [ $(cloned).type ] = $(type)
-    {
-        $(cloned).suffix $(suffix) ;
-    }
-    
-    return $(cloned) ;
+        else
+        {
+            cloned = [ register $(cloned) ] ;
+        }
+        return $(cloned) ;    
+    }    
 }
 
 # Clones an action template: helper for clone-template above.
-local rule clone-action-template ( action from cloned-from project name type suffix )
+local rule clone-action-template ( action from cloned-from : new-source )
 {
     local targets ;
     local sources ; 
     
     for local t in [ $(action).sources ]
     {
-        sources += [ clone-template $(t) : $(project) $(name) $(type) $(suffix) ] ; 
+        sources += [ clone-template $(t) : $(new-source) ] ; 
     }
     
     local action-class = [ modules.peek $(action) : __class__ ] ;
