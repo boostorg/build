@@ -1249,7 +1249,18 @@ if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
       characters separated by whitespace from being treated as separate
       arguments:
 <blockquote><pre>
-jam -sMSVCNT=&quot;\&quot;C:\Program Files\Microsoft Visual C++\VC98\&quot;&quot; ...
+jam -sMSVCNT=&quot;\&quot;\&quot;C:\Program Files\Microsoft Visual C++\VC98\&quot;\&quot;&quot; ...
+</pre></blockquote>
+
+      The outer quote is for the shell. The middle quote is for Jam,
+      to tell it to take everything within those quotes literally, and
+      the inner quotes are for the shell again when paths are passed
+      as arguments to build actions. Under NT, it looks a lot more
+      sane to use environment variables before invoking jam when you
+      have to do this sort of quoting:
+
+<blockquote><pre>
+set MSVCNT=&quot;&quot;C:\Program Files\Microsoft Visual C++\VC98\&quot;&quot;
 </pre></blockquote>
 
       <h4><a name="jambase_replacement">Jambase Replacement</a></h4>
