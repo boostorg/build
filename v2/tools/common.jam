@@ -166,7 +166,7 @@ rule get-absolute-tool-path ( command )
 # If 'path-last' is specified, path is checked after 'additional-paths'.
 rule find-tool ( name : additional-paths * : path-last ? )
 {
-    local path = [ sequence.transform path.make : [ modules.peek : PATH Path path ] ] ;
+    local path = [ path.programs-path ] ;
     local match = [ path.glob $(path) : $(name) $(name).exe ] ;
     local additional-match = [ path.glob $(additional-paths) : $(name) $(name).exe ] ;              
 
