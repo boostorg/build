@@ -250,7 +250,7 @@ rule Link-action
     gRUN_PATH($(<)) += $(CW_RUN_PATH) ;
     if $(NT)
     {
-        with-command-file cw-Link-action $(<) : $(>) $(NEEDLIBS) ;
+        with-command-file cw-Link@-action $(<) : $(>) $(NEEDLIBS) ;
     }
     else
     {
@@ -258,12 +258,20 @@ rule Link-action
     }
 }
 
-actions cw-Link-action
+actions cw-Link@-action
 {
     $(CW_SETUP)
     $(CW_CLEAR_ERROR)
     $(CW_LINK_SETUP)$(STDLIBS:J=;)
     mwld $(FLAGS) $(LINKFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" $(CW_IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" @"$(>)" "$(FINDLIBS)$(SUFLIB)"
+}
+
+actions cw-Link-action
+{
+    $(CW_SETUP)
+    $(CW_CLEAR_ERROR)
+    $(CW_LINK_SETUP)$(STDLIBS:J=;)
+    mwld $(FLAGS) $(LINKFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" $(CW_IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" "$(>)" "$(FINDLIBS)$(SUFLIB)"
 }
 
 #### Cc #####
