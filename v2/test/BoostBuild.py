@@ -112,6 +112,20 @@ class Tester(TestCmd.TestCmd):
             pass
         open(self.native_file_name(file), "wb").write(content)
 
+    def rename(self, old, new):
+        try:
+            os.makedirs(os.path.dirname(new))
+        except:
+            pass
+        
+        try:
+            os.remove(new)
+        except:
+            pass
+        
+        os.rename(old, new)
+        self.touch(new);
+
     def copy(self, src, dst):
         self.wait_for_time_change()
         self.write(dst, self.read(src))
