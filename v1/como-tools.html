@@ -33,11 +33,12 @@
   <p>Boost.Build's como and como-win32 toolsets support the <a href=
   "http://www.comeaucomputing.com">Comeau Computing</a> C/C++ Compiler.</p>
 
-  <h2>Configuration Variables</h2>The como and como-win32 toolsets respond to
+  <h2>Configuration Variables</h2><p>The como and como-win32 toolsets respond to
   the following variables which can be set in the environment or configured
   on the jam command-line using
   <code>-s<i>VARIABLE_NAME</i>=</code><i>value</i>:
-
+  </p>
+  
   <table border="1" summary="settings">
     <tr>
       <th>Variable Name</th>
@@ -101,20 +102,31 @@
     </tr>
 
     <tr>
+      <td><code>COMO_BACKEND</code></td>
+
+      <td>Backend abbreviation, e.g. <code>vc7</code>, <code>bcc</code>, <code>dig</code>, etc.</td>
+
+      <td><code>vc7</code></td>
+
+      <td><code>como-win32</code> toolset only.</td>
+    </tr>
+
+    <tr>
       <td><code>COMO_BACKEND_PATH</code></td>
 
       <td>Path to backend compiler.</td>
 
       <td><code>$(VC7_TOOLS)</code></td>
 
-      <td>como-win32 toolset only.</td>
+      <td><code>como-win32</code> toolset only.</td>
     </tr>
+
   </table>
   <hr>
 
   <p>Revised 
   <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-   29 July, 2003 
+   31 July, 2004 
   <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
 
   <p>Copyright &copy; Dave Abrahams 2002.</p>

@@ -1,6 +1,9 @@
 # (C) Copyright David Abrahams 2001.
-# Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (C) Copyright MetaCommunications, Inc. 2004.
+
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 # The following #// line will be used by the regression test table generation
 # program as the column heading for HTML tables. Must not include version number.
@@ -16,21 +19,12 @@ free-feature no-warn ;
 # COMO_BIN_PATH - path to como executable, defaults to $(COMO_PATH)/bin/
 # COMO_INCLUDE_PATH - path to libcomo headers, defaults to $(COMO_PATH)/libcomo
 # COMO_STDLIB_PATH - path to built libcomo object, defaults to $(COMO_PATH)/libcomo
+# COMO_BACKEND - backend abbreviation, e.g. "vc71", "bcc", "dig", etc. Defaults to "vc7"
 # COMO_BACKEND_PATH - path to backend compiler root directory, defaults to $(VC7_ROOT)
 
 # Keep using COMO_BASE for backward compatibility
-set-as-singleton COMO_BASE ;
+set-as-singleton COMO_BASE COMO_BIN_PATH COMO_INCLUDE_PATH COMO_STDLIB_PATH COMO_BACKEND COMO_BACKEND_PATH ;
 COMO_BASE ?= $(COMO_PATH) ;
-
-flags como-win32 COMO_BIN_DIRECTORY ;
-flags como-win32 COMO_INCLUDE_PATH ;
-flags como-win32 COMO_STDLIB_PATH ;
-flags como-win32 COMO_BACKEND_SETUP ;
-flags como-win32 COMO_BACKEND_PATH ;
-flags como-win32 COMO_BACKEND_INCLUDE_SETUP ;
-flags como-win32 COMO_BACKEND_LIB_SETUP ;
-flags como-win32 COMO_PATH_SETUP ;
-flags como-win32 COMO_BASE_SETUP ;
 
 # compute directories for invoking como
 if ! $(COMO_PATH_SETUP) # do this once
@@ -49,6 +43,7 @@ if ! $(COMO_PATH_SETUP) # do this once
     COMO_BACKEND_SETUP = $(COMO_BACKEND_SETUP) ;
     newline = "
 " ;
+    COMO_BACKEND ?= "vc7" ;
     COMO_BACKEND_PATH ?= $(VC7_ROOT) ;
     COMO_BACKEND_INCLUDE_SETUP ?= "set \"COMO_MS_INCLUDE="$(COMO_BACKEND_PATH)"/include\"" ;
     COMO_BACKEND_LIB_SETUP ?= "set \"LIB="$(COMO_STDLIB_PATH)";%LIB%\"" ;
@@ -56,7 +51,9 @@ if ! $(COMO_PATH_SETUP) # do this once
     COMO_BACKEND_SETUP ?= "call "\"$(COMO_BACKEND_PATH)\\..\\Common7\\Tools\\vsvars32"\" >nul" ;
     COMO_BASE_SETUP ?= "set \"COMO_BASE=$(COMO_BASE)\"" ;
     COMO_PATH_SETUP ?= "" ;
+    COMO_CMD = $(COMO_BIN_DIRECTORY)como --$(COMO_BACKEND) ;
 }
+
 
 flags como-win32 C++FLAGS <exception-handling>off : --no_exceptions ;
 flags como-win32 C++FLAGS <exception-handling>on : --exceptions ;
@@ -101,7 +98,7 @@ actions como-Link-action bind NEEDLIBS
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    $(COMO_BIN_DIRECTORY)como --vc7 --no_version --no_prelink_verbose $(LINKFLAGS) -o "$(<[1]:S=)" @"$(>)" "$(NEEDLIBS)" "$(FINDLIBS:S=.lib)"
+    $(COMO_CMD) --no_version --no_prelink_verbose $(LINKFLAGS) -o "$(<[1]:S=)" @"$(>)" "$(NEEDLIBS)" "$(FINDLIBS:S=.lib)"
 }
 
 
@@ -121,7 +118,7 @@ actions como-Cc-action
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    $(COMO_BIN_DIRECTORY)como --vc7 -c --c99 -e5 --no_version --display_error_number --diag_suppress=9,21,161,748,940,962 -U$(UNDEFS) -D$(DEFINES) $(WARN) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<:D=)" "$(>)"
+    $(COMO_CMD) -c --c99 -e5 --no_version --display_error_number --diag_suppress=9,21,161,748,940,962 -U$(UNDEFS) -D$(DEFINES) $(WARN) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<:D=)" "$(>)"
 }
 
 #### C++ ####
@@ -139,7 +136,7 @@ actions como-C++-action
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    $(COMO_BIN_DIRECTORY)como --vc7 -c -e5 --no_version --no_prelink_verbose --display_error_number --long_long --diag_suppress=9,21,161,748,940,962 -D__STL_LONG_LONG -U$(UNDEFS) -D$(DEFINES) $(WARN) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(COMO_CMD) -c -e5 --no_version --no_prelink_verbose --display_error_number --long_long --diag_suppress=9,21,161,748,940,962 -D__STL_LONG_LONG -U$(UNDEFS) -D$(DEFINES) $(WARN) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
@@ -156,7 +153,7 @@ actions updated together piecemeal como-Archive-action
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    $(COMO_BIN_DIRECTORY)como --vc7 --no_version --no_prelink_verbose --prelink_object @"$(>)"
+    $(COMO_CMD) --no_version --no_prelink_verbose --prelink_object @"$(>)"
     lib $(ARFLAGS) /nologo /out:"$(<:S=.lib)" @"$(>)"
 }
 
