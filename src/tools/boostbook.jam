@@ -374,10 +374,7 @@ class xinclude-scanner : scanner
     
     BINDRULE on $(matches) = virtual-target.remember-binding ;
 
-    for local j in $(matches)
-    {
-      scanner.install $(__name__) : $(j) : $(target) ; 
-    }
+    scanner.propagate $(__name__) : $(matches) : $(target) ;     
   }
 }
 

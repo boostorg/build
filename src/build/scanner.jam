@@ -82,36 +82,31 @@ rule get ( scanner-class : properties * )
 }
 
 
-# Installs the specified scanner on 'target'. If 'vtarget' is given
-# it means installation is result of actualizing 'vtarget'. Otherwise
-# installation is due to including of 'target' from 'including-target' 
-# which must be specified.
-rule install ( scanner : target vtarget ? : including-target ? )
+# Installs the specified scanner on actual target 'target'. 
+rule install ( scanner : target 
+    vtarget # virtual target from which 'target' was actualized
+)
 {
     HDRSCAN on $(target) = [ $(scanner).pattern ] ;
     SCANNER on $(target) = $(scanner) ;
     HDRRULE on $(target) = scanner.hdrrule ;
-    if $(vtarget) && $(including-target) 
-      || ! $(vtarget) && ! $(including-target)
-    {
-        error "precondition failed" ;
-    }
-    if $(vtarget)
-    {
-        # scanner reflects difference in properties affecting
-        # binding of 'target', which will be known when processing
-        # includes for it, will give information on how to
-        # interpret quoted includes.
-        HDRGRIST on $(target) = $(scanner) ;
-    }
-    else 
-    {
-        local hg = [ on $(including-target) return $(HDRGRIST) ] ;
-        local b = [ virtual-target.binding $(including-target) ] ;
-        HDRGRIST on $(target) = $(hg) ;
-            
-    }            
+    
+    # scanner reflects difference in properties affecting    
+    # binding of 'target', which will be known when processing
+    # includes for it, will give information on how to
+    # interpret quoted includes.
+    HDRGRIST on $(target) = $(scanner) ;
 }
+
+# Propagate scanner setting from 'including-target' to 'targets'.
+rule propagate ( scanner : targets * : including-target )
+{
+    HDRSCAN on $(targets) = [ on $(including-target) return $(HDRSCAN) ] ;
+    SCANNER on $(targets) = $(scanner) ;
+    HDRRULE on $(targets) = scanner.hdrrule ;
+    HDRGRIST on $(targets) = [ on $(including-target) return $(HDRGRIST) ] ;
+}
+
 
 rule hdrrule ( target : matches * )
 {
