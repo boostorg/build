@@ -54,4 +54,13 @@ void path_build1( PATHNAME *f, string *file );
 void path_parse( char *file, PATHNAME *f );
 void path_parent( PATHNAME *f );
 
+#ifdef NT
+
+/** Returns newstr-allocated string with long equivivalent of 'short_name'.
+    If none exists -- i.e. 'short_path' is already long path, it's returned
+    unaltered. */
+char* short_path_to_long_path(char* short_path);
+
+#endif
+
 #endif

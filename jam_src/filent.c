@@ -67,6 +67,8 @@ file_dirscan(
     int ret;
     struct _finddata_t finfo[1];
 
+    dir = short_path_to_long_path( dir );
+	
     /* First enter directory itself */
 
     memset( (char *)&f, '\0', sizeof( f ) );
