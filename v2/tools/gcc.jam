@@ -14,6 +14,7 @@ import type ;
 import feature ;
 import "class" : new ;
 import order ;
+import set ;
 
 feature.extend toolset : gcc ;
 feature.subfeature toolset gcc : version : : optional propagated link-incompatible ;
@@ -76,37 +77,31 @@ class gcc-linking-generator : linking-generator
     
     rule run ( project name ? : property-set : sources + :  multiple ? )
     {   
-        local used-libraries ;
-        local deps = [ $(property-set).dependency ] ;
-        for local l in $(sources) $(deps:G=)        
-        {
-            if [ $(l).type ] && [ type.is-derived [ $(l).type ] LIB ]
-            {
-                used-libraries += $(l) ;
-            }
-        }
-                                
         local result = [ linking-generator.run $(project) $(name) : $(property-set)
           : $(sources) : $(multiple) ] ;
         
-        local created-libraries ;
-        for local l in $(result)
-        {
-            if [ type.is-derived [ $(l).type ] LIB ] 
-            {
-                created-libraries += $(l) ;
-            }            
-        }
-
-        created-libraries = [ set.difference $(created-libraries) : $(used-libraries) ] ;
-        gcc.set-library-order $(created-libraries) : $(used-libraries) ;
-                
+        gcc.set-library-order $(sources) : $(property-set) : $(result) ;
+                                
         return $(result) ;
     }
     
     rule generated-targets ( sources + : property-set : project name ? )
     {
-        sources = [ gcc.order-libraries $(sources) ] ;
+        local sources2 ;
+        local libraries ;
+        for local l in $(sources)
+        {
+            if [ type.is-derived [ $(l).type ] LIB ]
+            {
+                libraries += $(l) ;
+            }
+            else
+            {
+                sources2 += $(l) ;
+            }            
+        }
+        
+        sources = $(sources2) [ gcc.order-libraries $(libraries) ] ;
         
         return [ linking-generator.generated-targets $(sources) : $(property-set)
           : $(project) $(name) ] ;
@@ -127,33 +122,12 @@ class gcc-archive-generator : generator
     }
         
     rule run ( project name ? : property-set : sources + :  multiple ? )
-    {
-        local used-libraries ;
-        local deps = [ $(property-set).dependency ] ;
-        for local l in $(sources) $(deps:G=)        
-        {
-            if [ type.is-derived [ $(l).type ] LIB ]
-            {
-                used-libraries += $(l) ;
-            }
-        }
-                                
+    {                                
         local result = [ generator.run $(project) $(name) : $(property-set)
           : $(sources) : $(multiple) ] ;
         
-        local created-libraries ;
-        for local l in $(result)
-        {
-            if [ type.is-derived [ $(l).type ] LIB ] 
-            {
-                created-libraries += $(l) ;
-            }            
-        }
-
-        created-libraries = [ set.difference $(created-libraries) : $(used-libraries) ] ;
-
-        gcc.set-library-order $(created-libraries) : $(used-libraries) ;
-                
+        gcc.set-library-order $(sources) : $(property-set) : $(result) ;
+        
         return $(result) ;
 
     }    
@@ -309,7 +283,7 @@ else if [ modules.peek : UNIX ]
 
 .order = [ new order ] ;
 
-rule set-library-order ( from * : to * )
+rule set-library-order-aux ( from * : to * )
 {
     for local f in $(from)
     {
@@ -322,6 +296,34 @@ rule set-library-order ( from * : to * )
         }        
     }    
 }
+
+rule set-library-order ( sources * : property-set : result * )
+{
+    local used-libraries ;
+    local deps = [ $(property-set).dependency ] ;
+    for local l in $(sources) $(deps:G=)        
+    {
+        if [ $(l).type ] && [ type.is-derived [ $(l).type ] LIB ]
+        {
+            used-libraries += $(l) ;
+        }
+    }
+
+    local created-libraries ;
+    for local l in $(result)
+    {
+        if [ $(l).type ] && [ type.is-derived [ $(l).type ] LIB ] 
+        {
+            created-libraries += $(l) ;
+        }            
+    }
+    
+    created-libraries = [ set.difference $(created-libraries) : $(used-libraries) ] ;
+    set-library-order-aux $(created-libraries) : $(used-libraries) ;
+}
+
+
+
 
 rule order-libraries ( libraries * )
 {
