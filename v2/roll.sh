@@ -8,7 +8,7 @@ rm -rf examples-v2/versioned
 # This one is too low-level and misleading
 rm -rf examples-v2/make
 
-find . -maxdepth 1 -type f | egrep -v "roll.sh|boost_build_v2.html|c++boost.gif|index_v2.html|hacking.txt" | xargs rm -f
+find . -maxdepth 1 -type f | egrep -v "roll.sh|build-system.jam|boost_build_v2.html|c++boost.gif|index_v2.html|hacking.txt" | xargs rm -f
 
 # Prepare some more files.
 mv index_v2.html index.html
