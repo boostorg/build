@@ -90,10 +90,13 @@ rule stlport-target-class ( project : headers ? : libraries ? : requirements * )
         # debug setting.
         local raw = [ $(property-set).raw ] ;
         local hostios = [ feature.get-values <stdlib-stlport:iostream> : $(raw) ] ;
+        local toolset = [ feature.get-values <toolset> : $(raw) ] ;
+
         
-        if ! $(hostios)
+        # We don't need libraries if host istreams are used. For
+        # msvc, automatic library selection will be used.
+        if ! $(hostios) && $(toolset) != msvc
         {            
-            local toolset = [ feature.get-values <toolset> : $(raw) ] ;
             local debug = [ feature.get-values <runtime-debugging> : $(raw) ] ;
             
             local name = stlport ;
@@ -158,7 +161,7 @@ rule stlport-target ( headers ? : libraries ? : requirements * )
 # Initialize stlport support. 
 rule init ( version ? :
             headers       # Location of header files
-            : libraries ? # Location of libraries
+            libraries ? # Location of libraries
          )
 {
     feature.extend-subfeature stdlib stlport : version : $(version) ;
