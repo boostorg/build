@@ -37,7 +37,7 @@
     </listitem>
   </orderedlist>
 
-  <para>It's quite easy to archive. You write special verbatim files,
+  <para>It's quite easy to achieve. You write special verbatim files,
   which are just C++, except that the very first line of the file
   gives a name of variable that should be generated. A simple tool
   is created which takes verbatim file and creates a cpp file with
@@ -419,40 +419,55 @@ actions inline-file
         the <code>toolset.flags</code> rule.
       </para>
 
-      <para>
-        There are two ways to control a tool using features. The
-        first is to declare a "generic" feature, which value is passed to the
-        tool without modification. For example, the value of the
-        <code>cxxflags</code> feature ends up in the compiler's command
-        line. Such a generic feature allows the user to get full control and
-        should be always provided when you write a tool.
-      </para>
+    <para>
+      Although you can define any set of features and interpret their values
+      in any way, Boost.Build suggests the following coding standard for
+      designing features.
+    </para>
 
-      <para>The second approach is to declare a more specific feature, 
-        which is directly translated to specific options. For example, 
-        the <code>&lt;optimization&gt;speed</code> property might add
-        <literal>-O3</literal> to the compiler's command line. Specific
-        features are preferred over generic for a couple of reasons:
+    <para>Most features should have a fixed set of values, which is portable
+      (tool neutral) across the class of tools they are designed to work
+      with. The user does not have to adjust the values for a exact tool.  For
+      example, <code>&lt;optimization&gt;speed</code> has the same meaning for
+      all C++ compilers and the user does not have to worry about the exact
+      options which are passed to the compiler's command line.
+    </para>
 
-        <itemizedlist>
-          <listitem>
-            <para>For a specific feature, you will be able to build
-            your project with two different settings of the feature. If you
-            pass compiler options, Boost.Build assumes you know what you are
-            doing, and would not care about the options.
-            </para>
-          </listitem>
-
-          <listitem>
-            <para>If a feature makes sense for more than one tool, using
-              feature will make your Jamfiles more portable, as opposed to 
-              passing specific flags.              
-            </para>
-          </listitem>
-        </itemizedlist>
-      </para>
-
-       
+    <para>
+      Besides such portable features there are special 'raw' features which
+      allow the user to pass any value to the command line parameters for a
+      particular tool, if so desired. For example, the
+      <code>&lt;cxxflags&gt;</code> feature allows to pass any command line
+      options to a C++ compiler. The <code>&lt;include&gt;</code> feature
+      allows to pass any value to the <code>-I</code> and the interpretation
+      is tool-specific. (There an <link
+      linkend="bbv2.faq.external">example</link> of very smart usage of that
+      feature).  Of course one should always strive to use the portable
+      features but these should still be provided as a backdoor just to make
+      sure Boost.Build does not take away any control from the user. 
+    </para>
+   
+    <para>
+      Some of the reasons why portable features are better are:
+      <itemizedlist>
+        <listitem>
+          <para>Since a portable feature have a fixed set of value, you will
+            be able to build your project with two different settings of the
+            feature. Boost.Build will automatically use two different
+            directories for produced files. If you pass raw compiler options,
+            Boost.Build assumes you know what you are doing, and would not
+            care about what options are passed.
+          </para>
+        </listitem>
+        
+        <listitem>
+          <para>Unlike "raw" features, you don't need to use specific
+            compiler flags in Jamfile, and it will more likely work on other systems.
+          </para>
+        </listitem>
+      </itemizedlist>
+    </para>
+           
       <bridgehead>Steps for adding a feauture</bridgehead>
       <para>Adding a feature requires three steps:
 

@@ -176,7 +176,7 @@ exe viewer : viewer png z ;
 
   </section>
 
-  <section>
+  <section id="bbv2.faq.external">
     <title>Can I get output of external program as a variable in a Jamfile?
     </title>
 
