@@ -2511,7 +2511,11 @@ rule common-variant-tag ( toolset variant : properties * )
         case *edg* : toolset-tag += edg ;
         case *gcc* : toolset-tag += gcc ;
         case *intel-linux* : toolset-tag += il ;
-        case *intel-win32* : toolset-tag += iw ;
+        case *intel-win32* :
+        {
+            toolset-tag += iw ;
+            if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
+        }
         case *kcc* : toolset-tag += kcc ;
         case *kylix* : toolset-tag += bck ;
         case *metrowerks* : toolset-tag += cw ;
