@@ -313,10 +313,11 @@ rule text (
     }
     else if $(output-target)
     {
+        local rule get-locate ( ) { return $(LOCATE) ; }
         $(output-target).line ?= 0 ;
         DEPENDS $(output-target) : $(output-target:G=body) ;
         ALWAYS $(output-target:G=body) ;
-        NOTFILE $(output-target:G=body) ;
+        LOCATE on $(output-target:G=body) = [ on $(output-target) get-locate ] ;
         while $(strings)
         {
             local line-v = $(output-target).line.$($(output-target).line) ;
