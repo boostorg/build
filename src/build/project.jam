@@ -141,14 +141,9 @@ rule lookup-with-load ( id : current-location )
 # Helper for 'find-target'
 local rule remove-trailing-slash ( string )
 {
-    if [ MATCH (.*/) : $(string) ]
-    {
-        return [ MATCH (.*)/ : $(string) ] ;
-    }
-    else
-    {
-        return $(string) ;
-    }
+    local stripped = [ MATCH (.*)/$ : $(string) ] ;
+    stripped ?= $(string) ;
+    return $(stripped) ;
 }
 
 # Given an 'id' for a target, return an instance of 'abstract-target' that
@@ -220,8 +215,8 @@ rule find-target ( id : current-location )
         else if $(explicit)
         {
             errors.error
-              "The target id" $(id) ",specified by project at" $(current-location)
-                "is invalid (missing 'use-project'?)" ;
+              The target id \"$(id)\", specified by project at \"$(current-location)\"
+                is invalid (missing 'use-project'?) ;
         }
     }    
 }
@@ -545,7 +540,7 @@ rule use ( id : location )
     }
     if $(declared-id) != $(id)
     {
-        error "project-id of a project differs from passed to 'use-project'" ;
+        error project \"$(declared-id)\" at \"$(location)\" redeclared with id \"$(id)\". ;
     }
 }
 
@@ -595,3 +590,11 @@ module project-rules {
 }
 
 
+local rule __test__ ( )
+{
+    import assert ;
+    assert.equal foo/bar : remove-trailing-slash foo/bar/ ;
+    assert.equal foo/bar : remove-trailing-slash foo/bar ;
+    assert.equal foo : remove-trailing-slash foo/ ;
+    assert.equal foo : remove-trailing-slash foo ;
+}
