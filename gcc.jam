@@ -11,37 +11,18 @@ generators.register-c-compiler gcc.compile : C : OBJ : <toolset>gcc ;
 
 
 rule compile ( target : sources * : property-set * )
-{
-    local options ;
-    for local p in $(property-set)
-    {
-        if $(p) = <optimization>on 
-        {
-            options += -O2 ;
-        }
-        else if $(p) = <debug-symbols>on 
-        {
-            options += -g ;
-        }
-        else if $(p:G) = <define>
-        {
-            options += -D$(p:G=) ;
-        }    
-        else if $(p:G) = <include>
-        {
-            options += -I$(p:G=) ;
-        }        
-    else if $(p:G) = <cxxflags>
-    {
-        options += $(p:G=) ;
-    }
-    }
-    OPTIONS on $(target) = $(options) ;
+{ 
 }
+
+toolset.flags gcc.compile OPTIONS <optimization>on : -O2 ;
+toolset.flags gcc.compile OPTIONS <debug-symbols>on : -g ;
+toolset.flags gcc.compile OPTIONS <cxxflags> ;
+toolset.flags gcc.compile DEFINES <define> ;
+toolset.flags gcc.compile INCLUDES <include> ;
 
 actions compile
 {
-    g++ -ftemplate-depth-100 $(OPTIONS) -c -o $(<) $(>) 
+    g++ -ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I$(INCLUDES) -c -o $(<) $(>) 
 }
 
 local rule link-options ( target : sources * : property-set * )

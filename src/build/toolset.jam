@@ -1,0 +1,64 @@
+#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+#  Support for toolset definition.
+
+import feature ;
+import numbers ;
+
+.flag-no = 1 ;
+
+rule flags ( rule-or-module variable-name condition * : values * )
+{
+    .$(rule-or-module).flags += $(.flag-no) ;
+      
+    .$(rule-or-module).variable.$(.flag-no) += $(variable-name) ;
+    .$(rule-or-module).condition.$(.flag-no) += $(condition) ;    
+    .$(rule-or-module).values.$(.flag-no) += $(values) ;
+    
+    .flag-no = [ numbers.increment $(.flag-no) ] ;
+}
+
+
+rule set-target-variables ( rule-or-module target : properties * )
+{
+    for local f in $(.$(rule-or-module).flags) 
+    {
+        local variable = $(.$(rule-or-module).variable.$(f)) ;
+        local condition = $(.$(rule-or-module).condition.$(f)) ;
+        local values = $(.$(rule-or-module).values.$(f)) ;
+        local result ;
+        local found ;
+                
+        for local c in $(condition) 
+        {
+            local requirements = [ feature.split $(c) ] ;            
+                        
+            if $(requirements:G=)
+            {
+                
+                if ! $(found) && $(requirements) in $(properties)
+                {
+                    result += $(values) ;
+                    found = 1 ;
+                }                
+            }
+            else
+            {
+                for local r in $(requirements)
+                {                    
+                    result += [ feature.get-values $(r) : $(properties) ] ;
+                }                
+            }
+        }
+        if ! $(condition)
+        {
+            result = $(values) ;
+        }
+
+        $(variable) on $(target) += $(result) ;
+    }
+}
+

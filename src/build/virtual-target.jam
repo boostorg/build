@@ -393,6 +393,9 @@ rule action ( targets + : sources * : action-name : properties * )
  
              DEPENDS $(actual-targets) : $(actual-sources) ;            
 
+             toolset.set-target-variables $(self.action-name) $(actual-targets[0]) :
+               $(properties) ;
+             
             $(self.action-name)
               $(actual-targets) : $(actual-sources) : $(properties) ;
         }        
