@@ -264,15 +264,6 @@ declare-type : SEARCHED_LIB : : LIB ;
 declare-type NT CYGWIN : EXE : exe ;
 declare-type : EXE ;
 
-declare-type : PYTHON_EXTENSION : : SHARED_LIB ;
-# We can't give "dll" suffix to PYTHON_EXTENSION, because
-# we would not know what "a.dll" is: python extenstion or
-# ordinary library. Therefore, we specify only suffixes
-# used for generation of targets.
-type.set-generated-target-suffix PYTHON_EXTENSION : : so ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <os>NT : so ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <os>CYGWIN : dll ;
-
 type.register CPP : cpp cxx cc ;
 
 import stage ;
