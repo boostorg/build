@@ -23,6 +23,8 @@ flags vacpp CC  <threading>multi : xlc_r ;
 flags vacpp CXX <threading>single : xlC   ;
 flags vacpp CXX <threading>multi : xlC_r ;
 
+# This disables the automatic generation of separate include files for
+# template functions and class declarations.
 flags vacpp C++FLAGS : -qnotempinc ;
 
 # The following is needed to get rid of most of the annoying linker warnings
@@ -97,9 +99,10 @@ rule Cc-action
     xlc-Cc-action $(<) : $(>) ;
 }
 
+# Always allow C++ comments in C source files!
 actions xlc-Cc-action
 {
-    $(CC:R=$(VA_BIN)) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(CC:R=$(VA_BIN)) -qcpluscmt -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
