@@ -20,13 +20,13 @@ rule unit-test-target-class ( name : project : sources * : requirements *
         local result = 
           [ typed-target.construct $(source-targets) : $(properties) ] ;
         local exe = $(result[1]) ;
-	local exe-action = [ $(exe).action ] ;
+    local exe-action = [ $(exe).action ] ;
         local timestamp = [ new virtual-target $(self.name) : : $(self.project) 
                             ] ;
         $(timestamp).suffix "passed" ;
 
         local a = [ new action $(timestamp) : $(exe) : testing.run : 
-	           [ $(exe-action).properties ] ] ;
+               [ $(exe-action).properties ] ] ;
         $(timestamp).action $(a) ;
         return $(timestamp) ;
     }   
@@ -47,10 +47,14 @@ actions run
 
 rule unit-test ( target-name : sources * : requirements * )
 {
+    local project = [ CALLER_MODULE ] ;
+            
     # TODO: what to do with default build?
     targets.main-target-alternative 
-      $(target-name) [ CALLER_MODULE ] unit-test-target-class : 2 : : 3 
-        : $(sources) : $(requirements) : $(default-build) ;
+      [ new unit-test-target-class $(target-name) : $(project) : $(sources)
+        : [ targets.main-target-requirements $(requirements) : $(project) ]
+        : [ targets.main-target-default-build $(default-build) : $(project) ]
+      ] ;
 }
 
 IMPORT $(__name__) : unit-test : : unit-test ;

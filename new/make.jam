@@ -36,9 +36,6 @@ class make-target-class : basic-target ;
 
 rule make ( target-name : sources * : generating-rule : requirements * )
 {
-    # Default build is not specified: 'main-target-alternative' will take
-    # care of it.
-    
     local caller = [ CALLER_MODULE ] ;
     local rules = [ RULENAMES $(caller) ] ;
     if $(generating-rule) in $(rules)
@@ -49,9 +46,14 @@ rule make ( target-name : sources * : generating-rule : requirements * )
         generating-rule = $(n) ;
     }
     
-    targets.main-target-alternative 
-      $(target-name) [ CALLER_MODULE ] make-target-class : 2 : : 4 
-        : $(sources) : $(requirements) : $(generating-rule) : $(default-build) ;
+   targets.main-target-alternative
+     [ new make-target-class $(target-name) : $(caller) : $(sources) :
+         [ targets.main-target-requirements $(requirements) : $(caller) ] :
+          $(generating-rule) :
+          :
+         [ targets.main-target-default-build : $(caller) ] 
+     ] ;
+         
 }
 
 IMPORT $(__name__) : make : : make ;

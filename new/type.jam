@@ -139,8 +139,17 @@ rule main-target-rule ( name : sources * : requirements * : default-build *
     local bt = [ BACKTRACE 1 ] ;
     local rulename = $(bt[4]) ;
     
-    targets.main-target-alternative $(name) [ CALLER_MODULE ] typed-target : 3 : 5 : 4
-      : $(.main-target-type.$(rulename)) : $(sources) : $(requirements) : $(default-build) : $(use-requirements)
-        ;    
+    # This rule may be only called from Jamfile, and therefore, 
+    # CALLER_MODULE is Jamfile module, which is used to denote 
+    # a project.
+    local project = [ CALLER_MODULE ] ;
+    
+    targets.main-target-alternative
+      [ new typed-target $(name) : $(project) : $(.main-target-type.$(rulename))
+        : $(sources)
+        : [ targets.main-target-requirements $(requirements) : $(project) ] 
+        : [ targets.main-target-default-build $(default-build) : $(project) ]
+        : [ targets.main-target-use-requirements $(use-requirements) : $(project) ]
+      ] ;
 }
 

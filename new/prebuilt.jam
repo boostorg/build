@@ -46,9 +46,15 @@ class prebuilt-target-class : abstract-target ;
 
 rule prebuilt ( type target-name : file : requirements * : use-requirements * )
 {
-    targets.main-target-alternative 
-      $(target-name) [ CALLER_MODULE ] prebuilt-target-class : 2 : 3 :  
-        : $(type) $(file) : $(requirements) : $(use-requirements) ;
+    local project = [ CALLER_MODULE ] ;
+    
+    targets.main-target-alternative
+      [ new prebuilt-target-class $(target-name) : $(project) :
+        $(type) $(file)
+        : [ targets.main-target-requirements $(requirements) : $(project) ] 
+        : [ targets.main-target-use-requirements $(use-requirements) : $(project) ] 
+      ] ;
+
 }
 
 IMPORT $(__name__) : prebuilt : : prebuilt ;
