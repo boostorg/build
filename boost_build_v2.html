@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                                        </style>
+                                            </style>
   </head>
   <!-- Things yet to document:
-                                                    - build request, build request expansion and directly requested targets
-                                                    - conditional properties
-                                                  -->
+                                                      - build request, build request expansion and directly requested targets
+                                                      - conditional properties
+                                                    -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -138,12 +138,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>examples-v2</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                                                     it somewhere. 
-                                                      
-                                                        <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                                                        into one of the locations where it can be found (given in <a href=
-                                                        "#config_files_location">this table</a>). This prevent you from
-                                                        accidentally overwriting your config when updating.</p> -->
+                                                           it somewhere. 
+                                                            
+                                                              <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                                                              into one of the locations where it can be found (given in <a href=
+                                                              "#config_files_location">this table</a>). This prevent you from
+                                                              accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -1461,17 +1461,17 @@ borland/runtime-link=static,dynamic
 
       <li>It allows to have main target names with slashes. 
       <!-- The motivation for which is:
-                  So, to summarize:
-                  1. The project which extract tarfile may extract all possible kinds of 
-                  targets, and it's reasonable to use them directly from other project.
-                  2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
-                  maintainability, and therefore, must use main target name which contains 
-                  slashes?
-                  3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
-                  option, because you should not change existing tree 
+                        So, to summarize:
+                        1. The project which extract tarfile may extract all possible kinds of 
+                        targets, and it's reasonable to use them directly from other project.
+                        2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
+                        maintainability, and therefore, must use main target name which contains 
+                        slashes?
+                        3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
+                        option, because you should not change existing tree 
 
-                  That makes good rationale for why main target must contain names.
-                   -->
+                        That makes good rationale for why main target must contain names.
+                         -->
       </li>
     </ul>
 
@@ -1708,104 +1708,6 @@ borland/runtime-link=static,dynamic
     special name and the found target list is stored. Later, when properties,
     requested type, and source type are the same, the store target list is
     retrieved and cloned, with appropriate change in names. 
-
-    <h4 id="dependency_scanning">Dependency scanning</h4>
-
-    <p>Dependency scanning is the process of finding implicit dependencies
-    due to "include" statements and similar things. It has to take into
-    account two things:</p>
-
-    <ul>
-      <li>Whether includes in a particular file need to be taken into account
-      depends on actions that use that file. For example, if the action is
-      "copy file", then includes should be ignored. Another example is when a
-      file is compiled with two different include paths on different
-      toolsets.</li>
-
-      <li>It is possible to include generated header. In which case, it may
-      not yet exist at the time when we scan dependencies.</li>
-    </ul>
-
-    <p>Dependency scanning is implemented by objects called scanners. See
-    documentation for the "scanner" module to detail.</p>
-
-    <p>Regarding the first problem, we really have no choice. We can't treat
-    the same actual target differently depending on from where it is used.
-    Therefore, when handling of includes differers depending on actions, we
-    have to duplicate targets and assign different properties to it.</p>
-
-    <p>For the reason, when actualizing a virtual target we optionally pass
-    the needed scanner to the "virtual-target.actualize" method. When no
-    scanner is passed, a new actual target is created, with it's dependencies
-    and updating actions set accordingly. When a particular scanner is
-    specified, a new actual target is created. That target will depend on
-    target created without scanner. In effect, this will allow to use
-    different scanners for the same file.</p>
-
-    <h5>Generated headers</h5>
-    Let me explain what I find the right semantic, first without any
-    subvariants. We have a target "a.cpp" which includes "a_parser.h", we
-    have to search through all include directories, checking: 
-
-    <ol>
-      <li>If there's such file there, or</li>
-
-      <li>If there's a target of the same name, bound to that dir via
-      LOCATE_TARGET.</li>
-    </ol>
-    Jam allows to do 1 via SEARCH variable, but that's not enough. Why can't
-    we do simpler: first check if there's target of the same name? I.e.
-    including of "a_parser.h" will already pick generated "a_parser.h",
-    regardless of search paths? Hmm... just because there's no reason to
-    assume that. For example, one can have an action which generated some
-    "dummy" header, for system which don't have the native one. Naturally, we
-    don't want to depend on that generated headers. To implement proposed
-    semantic we'd need a new builtin. We can do this in Jam code, but really,
-    this belongs to core. Using GLOB and jam code would just duplicate
-    existing binding functionality and be inefficient. New builtin will
-    accept a name of new target and a list of directories. It will perform
-    the search as explained above and return either the name of exising
-    target that it found, or create a new target with that name that it was
-    passed. So, we'd write something like 
-
-    <blockquote>
-<pre>
-    INCLUDES $(&lt;) : [ SEARCH_FOR_TARGET $(&gt;) : $(SEARCH_PATH) ] ;
-</pre>
-    </blockquote>
-    What shall we do when using subvariants. For user, subvariants must be
-    more or less transparent. If without subvariant a header was generated to
-    a certain directory, everything must work. Suppose that file a.cpp
-    belongs to a dependency graph of main target a. Include paths are 
-
-    <blockquote>
-<pre>
-     "/usr/include" "/home/t" "."
-</pre>
-    </blockquote>
-    We start by finding all places where headers that are part of a's
-    dependency graph are generated. We insert those places to the include
-    paths, immediately after ".". For example, we might end with: 
-
-    <blockquote>
-<pre>
-     "/usr/include" "/home/t" "." "build"
-</pre>
-    </blockquote>
-    As a result: 
-
-    <ol>
-      <li>File "a.cpp" will be correctly compiled. Note that it's already
-      necessary to adjust paths to ensure this. We'll have to add target
-      paths for all generated headers, because determining the exact set of
-      additional include path for each source -- i.e the set of headers that
-      it uses --- will be hard.</li>
-
-      <li>With the proposed SEARCH_FOR_TARGET rule, dependency on generated
-      header will work magically --- it would find the "a_parser.h" target
-      bound via LOCATE_TARGET to "build" and we'll call INCLUDE on that found
-      target, instread of creating a completely unrelated one.</li>
-    </ol>
     <hr>
 
     <p class="revision">Last modified: June 16, 2003</p>
