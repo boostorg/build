@@ -161,6 +161,7 @@ class project-target : abstract-target
     import set : difference : set.difference ;
     import sequence ;
     import "class" : new ;
+    import errors ;
         
     rule __init__ ( name : project-module : requirements * : default-build * )
     {    
@@ -244,7 +245,8 @@ class project-target : abstract-target
     {
         if $(self.built-main-targets)
         {
-            errors.error "add-alternative called when main targets are already created." ;
+            errors.error "add-alternative called when main targets are already created." 
+              : "in project" [ full-name ] ;
         }        
         self.alternatives += $(target-instance) ;
     }
