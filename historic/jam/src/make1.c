@@ -558,27 +558,28 @@ make1c( state *pState )
                 t->status == EXEC_CMD_OK &&
                 !t->rescanned) {
 
+                TARGET *target_to_rescan = t;
                 SETTINGS *s;               
 
-                t->rescanned = 1;
+                target_to_rescan->rescanned = 1;
 
-                if (t->flags & T_FLAG_INTERNAL) {
-                    t = t->original_target;                    
+                if (target_to_rescan->flags & T_FLAG_INTERNAL) {
+                    target_to_rescan = t->original_target;                    
                 }
 
                 /* Clean current includes */
-                if (t->includes) {
-                    t->includes = 0;
+                if (target_to_rescan->includes) {
+                    target_to_rescan->includes = 0;
                 }
 
-                s = copysettings( t->settings );
+                s = copysettings( target_to_rescan->settings );
                 pushsettings( s );
-                headers(t);
+                headers(target_to_rescan);
                 popsettings( s );
                 freesettings( s );
 
-                if (t->includes) {
-                    t->includes->rescanned = 1;
+                if (target_to_rescan->includes) {
+                    target_to_rescan->includes->rescanned = 1;
                     /* Tricky. The parents were already processed, but they
                        did not seen the internal node, because it was just 
                        created. We need to make the calls to make1a that would
@@ -589,13 +590,13 @@ make1c( state *pState )
                        otherwise the parent will be considered built before this
                        make1a processing is even started.
                     */
-                    make0(t->includes, t->parents->target, 0, 0, 0);
-                    for( c = t->parents; c; c = c->next) {
+                    make0(target_to_rescan->includes, target_to_rescan->parents->target, 0, 0, 0);
+                    for( c = target_to_rescan->parents; c; c = c->next) {
                         c->target->depends = targetentry( c->target->depends, 
-                                                          t->includes );
+                                                          target_to_rescan->includes );
                     }
                     /* Will be processed below. */
-                    additional_includes = t->includes;
+                    additional_includes = target_to_rescan->includes;
                 }                
             }
 
@@ -604,7 +605,6 @@ make1c( state *pState )
                     push_state(&temp_stack, additional_includes, c->target, T_STATE_MAKE1A);
                     
                 }
-
 
 			for( c = t->parents; c; c = c->next ) {
 				push_state(&temp_stack, c->target, NULL, T_STATE_MAKE1B);
