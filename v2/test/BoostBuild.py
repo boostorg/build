@@ -247,7 +247,8 @@ class Tester(TestCmd.TestCmd):
             return result
     
     def fail_test(self, *args, **kw):
-        self.difference.pprint()
+        if hasattr(self, 'difference'):
+            self.difference.pprint()
         TestCmd.fail_test(self, *args, **kw)
         
     # A number of methods below check expectations with actual difference
