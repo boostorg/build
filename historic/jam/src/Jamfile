@@ -154,7 +154,8 @@ Library         libjam.a :
 		    builtins.c pwd.c ;
  
 
-if $(BINDIR) 	{ InstallBin $(BINDIR) : jam ; }
+if $(BINDIR) 	{ InstallBin $(BINDIR) : jam bjam$(SUFEXE) ; }
+if $(DOCDIR)    { InstallFile $(DOCDIR) : README RELNOTES Jam.html Jamfile.html Jambase.html ; }
 
 #
 # Distribution making from here on out.
