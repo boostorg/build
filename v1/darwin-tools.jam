@@ -16,6 +16,9 @@ free-feature bundle-loader ;
 # Controll generation of compiler warnings.
 feature warnings : on off ;
 
+# Type of shared object to create.
+feature link-format : default dynamic bundle ;
+
 # compute directories for invoking GCC
 #
 # The gcc toolset can be user-configured using the following
@@ -119,7 +122,14 @@ flags darwin CFLAGS <shared-linkable>true : -fPIC ;
 flags darwin CFLAGS <warnings>on : -Wall ;
 flags darwin CFLAGS <warnings>off : -w ;
 
+flags darwin LINK_FORMAT <target-type>$(SHARED_TYPES)/<link-format>bundle : bundle ;
+flags darwin LINK_FORMAT <target-type>$(SHARED_TYPES)/<link-format>dynamic : dynamic ;
 if $(BUNDLE_LOADER)
+{
+    flags darwin LINK_FORMAT <target-type>$(SHARED_TYPES) : bundle ;
+}
+
+if $(LINK_FORMAT) = bundle
 {
     flags darwin LINKFLAGS <target-type>$(SHARED_TYPES) :
         -bundle ;
@@ -137,7 +147,7 @@ rule Link-action
 {
     _ on $(<) = " " ;
     DEPENDS $(<) : $(NEEDLIBS) $(NEEDIMPS) ;
-    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && ! $(BUNDLE_LOADER)
+    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && $(LINK_FORMAT) != bundle
     {
         DLLFLAGS on $(<) = ;
         #~ DLLFLAGS on $(<) =
