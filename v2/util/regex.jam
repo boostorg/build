@@ -58,6 +58,26 @@ rule transform ( list * : pattern )
     return $(result) ;
 }
 
+# Escapes all of the characters in symbols using the escape symbol
+# escape-symbol for the given string, and returns the escaped string
+rule escape ( string : symbols : escape-symbol )
+{
+  local result = "" ;
+  local m = 1 ;
+  while $(m)
+  {
+    m = [ MATCH ^([^$(symbols)]*)([$(symbols)])(.*) : $(string) ] ;
+    if $(m)
+    {
+      m += "" ;  # Supposedly a bug fix; borrowed from regex.split
+      result = "$(result)$(m[1])$(escape-symbol)$(m[2])" ;
+      string = $(m[3]) ;
+    }
+  }
+  string ?= "" ;
+  result = "$(result)$(string)" ;
+  return $(result) ;
+}
 
 rule __test__ ( )
 {
@@ -81,4 +101,10 @@ rule __test__ ( )
 
     assert.result a.h c.h 
       : transform <a.h> \"b.h\" <c.h> :  <(.*)> ;
+
+    assert.result "^<?xml version=\"1.0\"^>"
+      : escape "<?xml version=\"1.0\">" : "&|()<>^" : "^" ;
+    
+    assert.result "<?xml version=\\\"1.0\\\">"
+      : escape "<?xml version=\"1.0\">" : "\\\"" : "\\" ;
 }

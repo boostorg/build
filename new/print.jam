@@ -243,8 +243,7 @@ rule text (
         while $(strings)
         {
             local line-v = $(output-target).line.$($(output-target).line) ;
-            local echo-string = [ regex.split $(strings[1]) "\"" ] ;
-            echo-string = $(echo-string:J="\\\"") ;
+            local echo-string = [ escape $(strings[1]) ] ;
             $(line-v) on $(output-target) = $(echo-string) ;
             NOCARE $(line-v) ;
             NOTFILE $(line-v) ;
@@ -275,13 +274,29 @@ rule wrapped-text ( text + )
 #
 actions quietly text-action
 {
-    echo "$($(>))" >> $(<)
+    echo $($(>)) >> $(<)
 }
 
 # Writes a single line to target file (overwriting or creating the
 # file as necessary)
 actions quietly text-overwrite-action {
-    echo "$($(>))" > $(<)
+    echo $($(>)) > $(<)
+}
+
+if [ modules.peek : NT ]
+{
+  rule escape ( string )
+  {
+    return [ regex.escape $(string) : "&|()<>^" : "^" ] ;
+  }
+}
+else
+{
+  rule escape ( string )
+  {
+    local escaped = [ regex.escape $(string) : "\\\"" : "\\" ] ;
+    return "\"$(escaped)\"" ;
+  }
 }
 
 local rule __test__ ( )
