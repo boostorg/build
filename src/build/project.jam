@@ -616,14 +616,18 @@ rule use ( id : location )
     local saved-project = $(.current-project) ;
     local project-module = [ project.load $(location) ] ;
     local declared-id = [ project.attribute $(project-module) id ] ;
-
-    if ! $(declared-id)
+       
+    if ! $(declared-id) || $(declared-id) != $(id)
     {
-        error "project loaded by 'use-project' has no project-id." ;
-    }
-    if $(declared-id) != $(id)
-    {
-        error project \"$(declared-id)\" at \"$(location)\" redeclared with id \"$(id)\". ;
+        # The project at 'location' either have no id or
+        # that id is not equal to the 'id' parameter.
+        if $($(id).jamfile-module) 
+          && $($(id).jamfile-module) != $(project-module)
+        {
+            errors.user-error 
+              "Attempt to redeclare already existing project id" ;
+        }                  
+        $(id).jamfile-module = $(project-module) ;
     }
     .current-project = $(saved-project) ;
 }
