@@ -276,7 +276,7 @@ rule capture-output ( target : source : properties * )
     DEPENDS $(target) : [ on $(target) return $(INPUT_FILES) ] ;
     
     # For testing, we need to make sure that all dynamic libraries needed by
-    # the test are found. So, we collect all paths from dendency libraries
+    # the test are found. So, we collect all paths from dependency libraries
     # (via xdll-path property) and add whatever explicit dll-path user has
     # specified. The resulting paths are added to environment on each test
     # invocation.
@@ -295,7 +295,7 @@ rule capture-output ( target : source : properties * )
         {
             PATH_SETUP on $(target) = 
               [ common.path-variable-setting-command LD_LIBRARY_PATH :
-                  $(dll-paths) %PATH% : exported ] ;
+                  $(dll-paths) $LD_LIBRARY_PATH : exported ] ;
         }        
     }        
 }
