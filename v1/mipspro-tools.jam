@@ -61,6 +61,7 @@ flags mipspro LINKFLAGS <debug-symbols>off : -s ;
 flags mipspro FINDLIBS : m ;
 
 flags mipspro DEFINES <threading>multi : _SGI_MP_SOURCE ;
+flags mipspro FINDLIBS <threading>multi : pthread ;
 
 flags mipspro CFLAGS : -nostdinc
                        -LANG:std -OPT:Olimit=0 -OPT:IEEE_NaN_inf=ON -no_auto_include
