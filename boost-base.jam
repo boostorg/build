@@ -2009,41 +2009,54 @@ rule stage ( name : sources + : requirements * : local-build * )
 
     # For each source, collect its information, and possibly generate it.
     #
-    for local source in [ expand-source-names [ select-gristed $(sources) ] ]
+    for local source in $(sources)
     {
-        local gIN_LIB_INCLUDE = TRUE ;
+        source = [ split-qualified-property $(source) ] ;
+        local source-build = [ MATCH "^<([^>]*)>" : $(source[1-2]) ] ;
+        source = [ expand-source-names $(source[3]) ] ;
 
-        local target = $(source:D=:G=) ;
-        local target-id = [ target-id-of $(source) ] ;
-        local target-subdir = [ simplify-path-tokens [ top-relative-tokens [ directory-of $(source) ] ] ] ;
-
-        dependent-include $(source:G=) ;
-        local subvariants = [ expand-target-subvariants $(target-id) : $(local-build) : $(TOOLS) ] ;
-
-        for local subvariant in $(subvariants)
+        if $(source:G)
         {
-            local s-target = ;
-            local s-properties = ;
-            local s-toolset = ;
-            local s-variant = ;
-            split-target-subvariant s-target s-properties s-toolset s-variant : $(subvariant) ;
+            local gIN_LIB_INCLUDE = TRUE ;
 
-            local target-subvariant = ;
+            local target = $(source:D=:G=) ;
+            local target-id = [ target-id-of $(source) ] ;
+            local target-subdir = [ simplify-path-tokens [ top-relative-tokens [ directory-of $(source) ] ] ] ;
+
+            dependent-include $(source:G=) ;
+            local subvariants = [ expand-target-subvariants $(target-id) : $(local-build) : $(TOOLS) ] ;
+
+            for local subvariant in $(subvariants)
             {
-                local [ protect-subdir ] ;
-                SubDir TOP $(target-subdir) ;
-                target-subvariant =
-                    [ subvariant-target $(s-target) : $(s-properties) : $(s-toolset) $(s-variant) ] ;
-            }
+                local s-target = ;
+                local s-properties = ;
+                local s-toolset = ;
+                local s-variant = ;
+                split-target-subvariant s-target s-properties s-toolset s-variant : $(subvariant) ;
 
-            for local sv in $(target-subvariant)
-            {
-                local renamed-target =
-                    [ rename-target $(sv) : [ split-path $(s-properties[1]) ] : $(tags) ] ;
+                if  ( $(s-toolset) = $(source-build[1]) || $(source-build[1]) = * ) &&
+                    ( $(s-variant) = $(source-build[2]) || $(source-build[2]) = * )
+                {
 
-                files += $(sv) ;
-                file-mode($(sv)) = $($(gTARGET_TYPE($(s-target)))MODE) ;
-                file-tagged($(sv)) = $(renamed-target) ;
+                    local target-subvariant = ;
+                    {
+                        local [ protect-subdir ] ;
+                        SubDir TOP $(target-subdir) ;
+                        target-subvariant =
+                            [ subvariant-target $(s-target) : $(s-properties) : $(s-toolset) $(s-variant) ] ;
+                    }
+
+                    for local sv in $(target-subvariant)
+                    {
+                        local renamed-target =
+                            [ rename-target $(sv) : [ split-path $(s-properties[1]) ] : $(tags) ] ;
+
+                        files += $(sv) ;
+                        file-mode($(sv)) = $($(gTARGET_TYPE($(s-target)))MODE) ;
+                        file-tagged($(sv)) = $(renamed-target) ;
+                    }
+
+                }
             }
         }
     }
