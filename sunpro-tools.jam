@@ -37,7 +37,6 @@ flags sunpro CFLAGS <optimization>space : -O2 -xspace ;
 flags sunpro C++FLAGS <inlining>off : +d ;
 
 flags sunpro CFLAGS <threading>multi : -mt ;
-flags sunpro LINKFLAGS <threading>multi : -lrt ;
 
 flags sunpro C++FLAGS <rtti>on  : -features=rtti ;
 flags sunpro C++FLAGS <rtti>off : -features=no%rtti ;
@@ -54,6 +53,9 @@ flags sunpro CFLAGS $(.ARCH)/<instruction-set>v9 : -xarch=v9 ;
 flags sunpro CFLAGS $(.ARCH)/<instruction-set>supersparc : -xarch=v8 -xchip=super ;
 flags sunpro CFLAGS $(.ARCH)/<instruction-set>hypersparc : -xarch=v8 -xchip=hyper ;
 flags sunpro CFLAGS $(.ARCH)/<instruction-set>ultrasparc : -xarch=v8plus -xchip=ultra ;
+
+# The POSIX real-time library is always needed (nanosleep, clock_gettime etc.)
+flags sunpro FINDLIBS : rt ;
 
 flags sunpro CFLAGS <cflags> ;
 flags sunpro C++FLAGS <cxxflags> ;
