@@ -29,7 +29,7 @@ IMPORT modules : import : : import ;
     local subdirs = 
       kernel        # only the most-intrinsic modules: modules, errors
       util          # low-level substrate: string/number handling, etc.
-      core          # essential elements of the build system architecture
+      build         # essential elements of the build system architecture
       tools         # toolsets for handling specific build jobs and targets.
       
       new           # until we get everything sorted out, there is
