@@ -86,7 +86,7 @@ rule C++-action
 # really can't ignore this one!
 actions tru64cxx65-C++-action
 {
-   cxx -ptr "$(<[1]:D)" -noimplicit_include -c -std strict_ansi -msg_display_number -msg_disable 186,450,1115 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+   cxx -ptr "$(<[1]:D)" -noimplicit_include -c -std strict_ansi -nopure_cname -msg_display_number -msg_disable 186,450,1115 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
