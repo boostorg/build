@@ -17,7 +17,7 @@ import toolset : using ;
 #  GCC configuration
 
 #  Configure gcc (default version)
-#  using gcc ;
+using gcc ;
 
 #  Configure specific gcc version, giving alternative name to use
 #  using gcc : 3.2 g++-3.2 ;

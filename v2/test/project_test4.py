@@ -38,10 +38,11 @@ t.expect_content("bin/$toolset/debug/b.exe",
 
 t.copy("lib/Jamfile3", "lib/Jamfile")
 
-t.run_build_system(status=None)
-t.fail_test(find(t.stdout(),
-"""warning: targets produced from b.obj are link incompatible
-warning: with main target a.exe""") !=-0)
+# Link-compatibility check for rtti is disabled...
+#t.run_build_system(status=None)
+#t.fail_test(find(t.stdout(),
+#"""warning: targets produced from b.obj are link incompatible
+#warning: with main target a.exe""") !=-0)
 
 # Test that if we specified composite property in target reference,
 # everything works OK.
