@@ -13,6 +13,7 @@
 
 flags kcc CFLAGS <debug-symbols>on : -g ;
 flags kcc LINKFLAGS <debug-symbols>on : -g ;
+flags gcc LINKFLAGS <debug-symbols>off : -s ;
 flags kcc CFLAGS <optimization>off : +K0 ;
 flags kcc CFLAGS <optimization>speed : +K2 ;
 

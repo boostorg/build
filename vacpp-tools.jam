@@ -16,6 +16,7 @@
 flags vacpp LINKFLAGS <runtime-link>static : -bstatic ;
 flags vacpp CFLAGS <debug-symbols>on : -g ;
 flags vacpp LINKFLAGS <debug-symbols>on : -g ;
+flags vacpp LINKFLAGS <debug-symbols>off : -s ;
 flags vacpp CFLAGS <optimization>off : -qNOOPTimize ;
 flags vacpp CFLAGS <optimization>speed : -O5 ;
 

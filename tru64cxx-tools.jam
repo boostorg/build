@@ -14,7 +14,7 @@
 # flags cxx LINKFLAGS <runtime-link>static : -bstatic ;
 flags cxx CFLAGS <debug-symbols>on : -g ;
 flags tru64cxx LINKFLAGS <debug-symbols>on : -g ;
-flags tru64cxx LINKFLAGS <debug-symbols>on : -g ;
+flags tru64cxx LINKFLAGS <debug-symbols>off : -s ;
 flags tru64cxx LINKFLAGS <target-type>$(SHARED_TYPES) : -shared ;
 flags tru64cxx CFLAGS <optimization>off : -O0 ;
 flags tru64cxx CFLAGS <optimization>speed/<inlining>on : -O5 -inline speed ;
