@@ -12,6 +12,8 @@ import generators ;
 import os ;
 import type ;
 import feature ;
+import "class" : new ;
+import order ;
 
 feature.extend toolset : gcc ;
 feature.subfeature toolset gcc : version : : optional propagated link-incompatible ;
@@ -51,10 +53,119 @@ if [ os.name ] = NT
     JAMSHELL = % ;  
 }
 
+# Special linking generator for gcc which handles order requirements on
+# the command line.
+class gcc-linking-generator : linking-generator
+{
+    import property-set ;
+    import type ;
+    import gcc ;
+    
+    rule __init__ ( id 
+        composing ? : # Specify if generator is composing. The generator will be
+        # composing if non-empty string is passed, or parameter is
+        # not given. To make generator non-composing, pass empty
+        # string ("")
+        source-types + : target-types + : 
+        requirements * )
+    {
+        composing ?= true ;
+        generator.__init__ $(id) $(composing) : $(source-types) : $(target-types) :
+          $(requirements) ;
+    }
+    
+    rule run ( project name ? : property-set : sources + :  multiple ? )
+    {   
+        local used-libraries ;
+        local deps = [ $(property-set).dependency ] ;
+        for local l in $(sources) $(deps:G=)        
+        {
+            if [ $(l).type ] && [ type.is-derived [ $(l).type ] LIB ]
+            {
+                used-libraries += $(l) ;
+            }
+        }
+                                
+        local result = [ linking-generator.run $(project) $(name) : $(property-set)
+          : $(sources) : $(multiple) ] ;
+        
+        local created-libraries ;
+        for local l in $(result)
+        {
+            if [ type.is-derived [ $(l).type ] LIB ] 
+            {
+                created-libraries += $(l) ;
+            }            
+        }
+
+        created-libraries = [ set.difference $(created-libraries) : $(used-libraries) ] ;
+        gcc.set-library-order $(created-libraries) : $(used-libraries) ;
+                
+        return $(result) ;
+    }
+    
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        sources = [ gcc.order-libraries $(sources) ] ;
+        
+        return [ linking-generator.generated-targets $(sources) : $(property-set)
+          : $(project) $(name) ] ;
+    }
+    
+} 
+
+class gcc-archive-generator : generator
+{
+    import gcc ; 
+    
+    rule __init__ ( )
+    {
+        generator.__init__ gcc.archive composing : OBJ : STATIC_LIB : <toolset>gcc ;
+    }
+    
+    rule run ( project name ? : property-set : sources + :  multiple ? )
+    {
+        local used-libraries ;
+        local deps = [ $(property-set).dependency ] ;
+        for local l in $(sources) $(deps:G=)        
+        {
+            if [ type.is-derived [ $(l).type ] LIB ]
+            {
+                used-libraries += $(l) ;
+            }
+        }
+                                
+        local result = [ generator.run $(project) $(name) : $(property-set)
+          : $(sources) : $(multiple) ] ;
+        
+        local created-libraries ;
+        for local l in $(result)
+        {
+            if [ type.is-derived [ $(l).type ] LIB ] 
+            {
+                created-libraries += $(l) ;
+            }            
+        }
+
+        created-libraries = [ set.difference $(created-libraries) : $(used-libraries) ] ;
+
+        gcc.set-library-order $(created-libraries) : $(used-libraries) ;
+                
+        return $(result) ;
+
+    }    
+}
+
+
 # Declare generators
-generators.register-linker gcc.link : LIB OBJ : EXE : <toolset>gcc ;
-generators.register-composing gcc.archive : OBJ : STATIC_LIB : <toolset>gcc ;
-generators.register-linker gcc.link.dll : LIB OBJ : SHARED_LIB : <toolset>gcc ;
+generators.register [ new gcc-linking-generator gcc.link : LIB OBJ : EXE 
+    : <toolset>gcc ] ;
+
+generators.register [ new gcc-archive-generator ] ;
+
+generators.register [ new gcc-linking-generator gcc.link.dll : LIB OBJ : SHARED_LIB 
+    : <toolset>gcc ] ;
+
 generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c : C : OBJ : <toolset>gcc ;
 
@@ -130,7 +241,7 @@ rule link ( targets * : sources * : properties * )
 
 actions link bind LIBRARIES
 {
-    $(NAME:E=g++) $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
+    $(NAME:E=g++) $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
 }
 
 # Declare action for creating static libraries
@@ -192,3 +303,23 @@ else if [ modules.peek : UNIX ]
     }
 }
 
+.order = [ new order ] ;
+
+rule set-library-order ( from * : to * )
+{
+    for local f in $(from)
+    {
+        for local t in $(to)
+        {            
+            if $(f) != $(t)
+            {                
+                $(.order).add-pair $(f) $(t) ;
+            }            
+        }        
+    }    
+}
+
+rule order-libraries ( libraries * )
+{
+    return [ $(.order).order $(libraries) ] ;
+}
