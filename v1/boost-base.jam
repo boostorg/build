@@ -827,24 +827,67 @@ rule fixup-path-properties
     return $(path-properties) $(non-path) ;
 }
 
-# report-any-incompatible-properties requirements... : build-request... : target-name
+# remove-incompatible-builds requirements... : build-request... : target-name
 #
 # If any element of requirements has the same grist but a different ungristed
 # part as any element of build-request, exits with an error report about target-name
-rule report-any-incompatible-properties
+rule remove-incompatible-builds ( requirements * : build-request * : target-name + )
 {
     local all-properties = [ unique $(<) $(>) ] ;
     local all-features = $(all-properties:G) ;
     local unique-features = [ unique $(all-features) ] ;
     if $(all-features) != $(unique-features)
     {
-        EXIT "Error:" "$(3):" "target requirements conflict for requested build {" $(<) $(>) "}" ;
+        local result ;
+        local skip ;
+        for local p in $(build-request)
+        {
+            # if a feature of the build request is also in the
+            # requirements, but with differing value(s)
+            if ( $(p:G) in $(requirements:G) )
+              && ! ( $(p) in $(requirements) )
+            {
+                # decide what to do.
+                local value = [ get-values $(p:G) : $(requirements) ] ;
+                if $(value[2])
+                {
+                    EXIT Unexpectedly found multiple build requests
+                          for feature $(p:G) with values $(values) ;
+                }
+                
+                local requested = [ split-path $(p:G=) ] ;
+                if $(requested[2])
+                {
+                    local skipped = [ difference $(requested) : $(value) ] ;
+                    
+                    ECHO $(target-name) requires $(p:G)$(value),
+                        skipping requested build configuration(s) $(p:G)$(skipped). ;
+                    
+                    result += $(p:G)$(value) ;
+                }
+                else
+                {
+                    ECHO skipping $(target-name) due to incompatible
+                        build requirements $(p:G)$(value). ;
+                    skip = true ;
+                }
+            }
+            else
+            {
+                result += $(p) ;
+            }
+        }
+        
+        if $(skip)
+        {
+            build-request = SKIP ;
+        }
+        else
+        {
+            build-request = result ;
+        }
     }
-}
-if report-any-incompatible-properties in $(TEST)
-{
-    report-any-incompatible-properties <foo>bar <baz>mumble : <b>c <foo>bar : my-target ;
-    report-any-incompatible-properties <foo>bat <baz>mumble <baz>buz <d>f : <b>c <foo>bar : my-target ;
+    return $(build-request) ;
 }
 
 # multiply-property-sets [<feature>value1[/value2...] ]...
@@ -954,41 +997,45 @@ rule expand-build-request
 
     # Check for conflicts
     report-free-property-conflicts $(free-properties) : $(<[3]) ;
-    report-any-incompatible-properties $(requirements) : $(build-request) : $(<[3]) ;
+    build-request = [ remove-incompatible-builds $(requirements)
+      : $(build-request) : $(<[3]) ] ;
 
-    # Get  the base variant for the toolset. Includes free features
-    local base-properties = $(gBASE_PROPERTIES($(toolset),$(variant))) ;
+    if $(build-request) != SKIP
+    {
+        # Get  the base variant for the toolset. Includes free features
+        local base-properties = $(gBASE_PROPERTIES($(toolset),$(variant))) ;
 
-    # Which properties will override settings in the base variant?
-    local override-properties = [ unique $(requirements) $(build-request) ] ;
-    segregate-overrides override-properties : base-properties ;
+        # Which properties will override settings in the base variant?
+        local override-properties = [ unique $(requirements) $(build-request) ] ;
+        segregate-overrides override-properties : base-properties ;
 
-    # Which features will pick up a default value because they are not in
-    # the base variant or in the overrides?
-    local relevant_features = [ relevant-features $(toolset) ] ;
-    local defaulted-features = [ difference $(relevant_features)
-                                : $(override-properties:G) $(base-properties:G) ] ;
-    local defaulted-properties = [ feature-default $(defaulted-features) ] ;
-    # VP: defaulted-properties have the form <feature>value and there's 1 value.
-    # Hence, each element of defaulted-properties will be part of each
-    # component of override-sets and will be a part of each property-set 
-    # returned. By segregating them, the result is changed in only one
-    # way: free properties does not show up in target path.
-    local defaulted-free-properties = [ segregate-free-properties defaulted-properties ] ;
+        # Which features will pick up a default value because they are not in
+        # the base variant or in the overrides?
+        local relevant_features = [ relevant-features $(toolset) ] ;
+        local defaulted-features = [ difference $(relevant_features)
+                                    : $(override-properties:G) $(base-properties:G) ] ;
+        local defaulted-properties = [ feature-default $(defaulted-features) ] ;
+        # VP: defaulted-properties have the form <feature>value and there's 1 value.
+        # Hence, each element of defaulted-properties will be part of each
+        # component of override-sets and will be a part of each property-set 
+        # returned. By segregating them, the result is changed in only one
+        # way: free properties does not show up in target path.
+        local defaulted-free-properties = [ segregate-free-properties defaulted-properties ] ;
 
 
-    # form override property sets of the form (property1[/property2...] )+,
-    # sorted in feature order. These represent the properties of subvariants
-    # that differ from the base variant 
-    local override-sets
-        = [ multiply-property-sets $(override-properties) $(defaulted-properties) ] ;
+        # form override property sets of the form (property1[/property2...] )+,
+        # sorted in feature order. These represent the properties of subvariants
+        # that differ from the base variant 
+        local override-sets
+            = [ multiply-property-sets $(override-properties) $(defaulted-properties) ] ;
 
-    # return path-property-sets corresponding to each (sub)variant build
-    # described.
-    return [ make-path-property-sets $(toolset)$(SLASH)$(variant)
-                : [ fixup-path-properties $(base-properties) $(free-properties) 
-                  $(defaulted-free-properties) ]
-                : $(override-sets) ] ;
+        # return path-property-sets corresponding to each (sub)variant build
+        # described.
+        return [ make-path-property-sets $(toolset)$(SLASH)$(variant)
+                    : [ fixup-path-properties $(base-properties) $(free-properties) 
+                      $(defaulted-free-properties) ]
+                    : $(override-sets) ] ;
+    }
 }
 
 # split-path-at-grist path
