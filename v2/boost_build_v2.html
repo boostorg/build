@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                                                                        </style>
+                                                                            </style>
   </head>
   <!-- Things yet to document:
-                                                                    - build request, build request expansion and directly requested targets
-                                                                    - conditional properties
-                                                                  -->
+                                                                      - build request, build request expansion and directly requested targets
+                                                                      - conditional properties
+                                                                    -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -74,6 +74,9 @@
             <dd>
               <dl class="page-index">
                 <dt><a href="#overview">Overview</a></dt>
+
+                <dt><a href="#first_project">Your first project and
+                roadmap</a></dt>
 
                 <dt><a href="#main_targets">Main targets</a></dt>
 
@@ -153,6 +156,25 @@
     </table>
     <hr>
 
+    <h2>How to use this document</h2>
+
+    <p>If you've just found out about Boost.Build V2 and want to know if it
+    will work for you, start with <a href="#sec-tutorial">tutorial</a>. You
+    can continue with the <a href="#sec-reference">reference</a>. When you're
+    ready to try Boost.Build in practice, go to <a href=
+    "#installation">installation</a>.</p>
+
+    <p>If you are about to use Boost.Build on your project, or already using
+    it and have a problem, look at the <a href=
+    "#sec-reference">reference</a>.</p>
+
+    <p>If you're trying to build a project which uses Boost.Build, look at <a
+    href="#installation">installation</a> and then read about <a href=
+    "#command_line">command line</a>.</p>
+
+    <p>Finally, if nothing applies to you, write to our mailing list, telling
+    what information you'd like to know.</p>
+
     <h2 id="installation">Installation</h2>
     Assuming you're installing Boost.Build from released source distribution,
     the following steps are needed. All paths are given relatively to
@@ -186,12 +208,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>examples-v2</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                                                                                                     it somewhere. 
-                                                                                                      
-                                                                                                        <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                                                                                                        into one of the locations where it can be found (given in <a href=
-                                                                                                        "#config_files_location">this table</a>). This prevent you from
-                                                                                                        accidentally overwriting your config when updating.</p> -->
+                                                                                                           it somewhere. 
+                                                                                                            
+                                                                                                              <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                                                                                                              into one of the locations where it can be found (given in <a href=
+                                                                                                              "#config_files_location">this table</a>). This prevent you from
+                                                                                                              accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -635,74 +657,84 @@ boost-build /path/to/boost.build ;
     organization: related targets placed in one project, can then be built
     together, or share some definitions.</p>
 
-    <p>Main targets and projects are described mostly in declarative fashion.
-    (TODO: what "declarative fashion" means to a user?) 
-    <!-- &quot;making use&quot; is very vague -->
-     To make some use of them, user issues <a href="#build_request">build
-    request</a>, which specifies what targets user wants to build, and what
-    properties are desirable. Build request is not necessary explicit.
-    Invoking the build system without parameters will build the project in
-    current directory with default properties.</p>
+    <p>Main targets and projects are created as the result of reading one or
+    several Jamfiles. Each Jamfile is a file written in Boost.Jam interpreted
+    language, and typically contains calls to functions provided by
+    Boost.Build, which create main targets of needed type, declare project
+    attributes and access other projects. The full list of functions provided
+    by Boost.Build is described <a href="builtins">below</a>. Of course, user
+    can create his own functions, or it can directly access Boost.Build
+    internals from Jamfile, if builtin facilities are not sufficient.</p>
 
-    <p>The <em>properties</em> describe various aspects of constructed
-    objects. For portability, they are specified in a normalized form, for
-    example</p>
+    <p>Each main target, or project can be built in a number of ways, say
+    with optimization or without. We'll call such entities "metatargets". To
+    make Boost.Build produce any real targets, user issues <a href=
+    "#build_request">build request</a>, which specifies metatargets to be
+    built, and properties to be used.</p>
+
+    <p>The <em>properties</em> are just (name,value) pairs that describe
+    various aspects of constructed objects, for example:</p>
 <pre>
 &lt;optimization&gt;full &lt;inlining&gt;off
 </pre>
-    Depending on the compiler used, this will be translated into appropriate
-    flags. 
 
-    <p>Construction of each main target begins with finding properties for
-    <em>this</em> main target. They are found by processing both build
-    request, and <em>target requirements</em>, which give properties needed
-    for the target to build. For example, a given main target might require
-    certian defines, or will not work unless compiled in multithreaded mode.
-    The process of finding properties for main target is described in <a
-    href="#property_refinement">property refinement</a>.</p>
+    <p>Given the built request, Boost.Build figures out the targets needed
+    for requested metatargets with requested properties, how they can be
+    created, and whether exising files can be reused. It finally issues
+    command to create needed files, automatically converting properties into
+    appropricate command line options.</p>
 
-    <p>After that, dependencies (i.e. other main targets) are build
-    recursively. Build request for dependencies is not always equal to those
-    of dependent &mdash; certain properties are dropped and user can
-    explicitly specify desired properties for dependencies. See <a href=
-    "#propagated_features">propagated features</a> and <a href=
-    "#target_reference">target reference</a> for details.</p>
+    <h3 id="first_project">Your first project and roadmap</h3>
 
-    <p>When dependencies are constructed, the dependency graph for this main
-    target and for this property set is created, which describes which files
-    need to be created, on which other files they depend and what actions are
-    needed to construct those files. There's more that one method, and user
-    can define new ones, but usually, this involves <em>generators</em> and
-    <em>target types</em>.</p>
+    <p>Creating your first project requires three steps:</p>
 
-    <p>Target type is just a way to classify targets. For example, there are
-    builtin types <tt>EXE</tt>, <tt>OBJ</tt> and <tt>CPP</tt>. <a href=
-    "#generators">Generators</a> are objects that know how to convert between
-    different target type. When a target of a given type must be created, all
-    generators for that type, which can handle needed properties, are found.
-    Each is passed the list of sources, and either fails, or returns a
-    dependency graph. If a generator cannot produce desired type from given
-    sources, it may try to recursively construct types that it can handle
-    from the types is was passed. This allows to try all possible
-    transformations. When all generators are tried, a dependency graph is
-    selected.</p>
+    <ol>
+      <li>Create an empty file called "Jamfile"</li>
 
-    <p>Finally, the dependency graph is passed to underlying Boost.Jam
-    program, which runs all actions needed to bring all main targets up-to
-    date. At this step, implicit dependencies are also scanned and accounted
-    for, as described <a href="#dependency_scanning">here</a>.</p>
+      <li>Create an empty file called "project-root.jam"</li>
+
+      <li>
+        Either set your <tt>BOOST_BUILD_PATH</tt> environment variant to
+        Boost.Build root, or create a "boost-build.jam" file with the
+        following content: 
+<pre>
+boost-build /path/to/boost.build ;
+</pre>
+      </li>
+    </ol>
+
+    <p>After that, you can run the "bjam" command in the directory where
+    you've created the files. Surely, it won't do anything, but it will run
+    without error, at least. Your next steps might be:</p>
+
+    <ol>
+      <li>Adding new main targets to the "Jamfile" file. The basic syntax for
+      declaring a main target is described <a href="#main_targets">below</a>,
+      and all builtin functions for declaring main targets are <a href=
+      "#builtins_main_targets">listed</a>.</li>
+
+      <li>Creating subprojects. Create a directory, put new Jamfile there,
+      and move some main targets to that Jamfile, or declare new ones. The <a
+      href="#projects">projects reference</a> will help with this part.</li>
+
+      <li>Customizing Boost.Build for your needs. You might have additional
+      tools you want to run, or just want different extension for some file.
+      The <a href="doc/extending.html">extender manual</a> is waiting for
+      you.</li>
+    </ol>
 
     <h3 id="main_targets">Main targets</h3>
 
     <p id="main_target"><em>Main target</em> is a user-defined named entity
     which can be build, for example a named executable file. Declaring a main
     target is usually done using one of <a href="#builtins_main_targets">main
-    target rules</a>. The user can also declare <a href=
-    "doc/extending.html#main_target_rules">custom main target rules</a>.</p>
+    target functions</a>. The user can also declare <a href=
+    "doc/extending.html#main_target_rules">custom main target
+    function</a>.</p>
 
     <p>Most main targets rules in Boost.Build use similiar syntax:</p>
 <pre>
-    rule-name main-target-name 
+    function-name main-target-name 
         : sources 
         : requirements 
         : default-build 
@@ -1036,17 +1068,17 @@ boost-build /path/to/boost.build ;
 
       <li>It allows to have main target names with slashes. 
       <!-- The motivation for which is:
-                                                                  So, to summarize:
-                                                                  1. The project which extract tarfile may extract all possible kinds of 
-                                                                  targets, and it's reasonable to use them directly from other project.
-                                                                  2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
-                                                                  maintainability, and therefore, must use main target name which contains 
-                                                                  slashes?
-                                                                  3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
-                                                                  option, because you should not change existing tree 
+                                                                        So, to summarize:
+                                                                        1. The project which extract tarfile may extract all possible kinds of 
+                                                                        targets, and it's reasonable to use them directly from other project.
+                                                                        2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
+                                                                        maintainability, and therefore, must use main target name which contains 
+                                                                        slashes?
+                                                                        3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
+                                                                        option, because you should not change existing tree 
 
-                                                                  That makes good rationale for why main target must contain names.
-                                                                   -->
+                                                                        That makes good rationale for why main target must contain names.
+                                                                         -->
       </li>
     </ul>
 
@@ -1072,12 +1104,25 @@ boost-build /path/to/boost.build ;
     <dl>
       <dt><tt>exe</tt></dt>
 
-      <dd>Creates a regular executable file.</dd>
+      <dd>Creates a regular executable file. Sources must be either object
+      files or libraries, and sources of different types will be converted to
+      accepted types automatically.</dd>
 
       <dt><tt>lib</tt></dt>
 
-      <dd>Creates a library file. Depending on the value of &lt;link&gt;
-      feature the library will be either static or shared.</dd>
+      <dd>
+        <p>Creates a library file. Depending on the value of &lt;link&gt;
+        feature the library will be either static or shared. Like with "exe",
+        sources will be converted either to objects or libraries.</p>
+
+        <p>The handling of libraries in sources depends on whether linking is
+        static or shared. For shared linking, libraries will be linked in.
+        For static linking the library sources will not be linked in, since
+        it's not possible, and will be passed on. Other main target which
+        depend on this one will see those libraries and link to it.
+        Therefore, putting library in sources of other library works in all
+        cases.</p>
+      </dd>
 
       <dt><tt>alias</tt></dt>
 
@@ -1131,6 +1176,53 @@ boost-build /path/to/boost.build ;
         <p><b>Rationale:</b> Runtime debugging is on in debug build so suit
         expectations of people used various IDEs. It's assumed other folks
         don't have any specific expectation in this point.</p>
+      </dd>
+
+      <dt><tt>link</tt></dt>
+
+      <dd>
+        Feature which controls how libraries are built. 
+
+        <p><b>Allowed values:</b> <tt>shared</tt>, <tt>static</tt></p>
+      </dd>
+
+      <dt><tt>library</tt></dt>
+
+      <dd>For exe and lib main targets, the &lt;library&gt;X feature is
+      equvivalent to putting X in the list of sources. The feature is
+      sometimes more convenient: you can put &lt;library&gt;X in the
+      requirements for a project and it will be linked to all
+      executables.</dd>
+
+      <dt><tt>use</tt></dt>
+
+      <dd>Causes the target referenced by the value of this feature to be
+      constructed and adds it's usage requirements to build properties. The
+      constructed targets are not used in any other way. The primary use case
+      is when you use some library and want it's usage requirements (such as
+      include paths) to be applied, but don't want to link to the
+      library.</dd>
+
+      <dt><tt>dll-path</tt></dt>
+
+      <dd>Specify a path where dynamic libraries should be found at where
+      executable or shared library is run. This feature directly affects
+      binaries with the gcc compiler, allowing them to pick specific
+      libraries, and ignoring all environment settings. On other toolsets,
+      the binary still requires proper environment settings to be run.
+      However, Boost.Build tools which run executables will notice dll-path
+      settings and create this environment automatically.</dd>
+
+      <dt><tt>hardcode-dll-paths</tt></dt>
+
+      <dd>
+        Controls automatic generation of dll-path properties. 
+
+        <p><b>Allowed values:</b> <tt>off</tt>, <tt>on</tt> When this
+        property is on, usage requirements for each library will include
+        additional dll-path propertry, with the path the the generated
+        library file. This allows to run executables without placing all the
+        dependent libraries to a single location.</p>
       </dd>
     </dl>
 
@@ -1628,6 +1720,45 @@ borland/runtime-link=static,dynamic
     <h3 id="build_request">Build request</h3>
 
     <h3><a name="build_process">Build process</a></h3>
+
+    <p>Construction of each main target begins with finding properties for
+    <em>this</em> main target. They are found by processing both build
+    request, and <em>target requirements</em>, which give properties needed
+    for the target to build. For example, a given main target might require
+    certian defines, or will not work unless compiled in multithreaded mode.
+    The process of finding properties for main target is described in <a
+    href="#property_refinement">property refinement</a>.</p>
+
+    <p>After that, dependencies (i.e. other main targets) are build
+    recursively. Build request for dependencies is not always equal to those
+    of dependent &mdash; certain properties are dropped and user can
+    explicitly specify desired properties for dependencies. See <a href=
+    "#propagated_features">propagated features</a> and <a href=
+    "#target_reference">target reference</a> for details.</p>
+
+    <p>When dependencies are constructed, the dependency graph for this main
+    target and for this property set is created, which describes which files
+    need to be created, on which other files they depend and what actions are
+    needed to construct those files. There's more that one method, and user
+    can define new ones, but usually, this involves <em>generators</em> and
+    <em>target types</em>.</p>
+
+    <p>Target type is just a way to classify targets. For example, there are
+    builtin types <tt>EXE</tt>, <tt>OBJ</tt> and <tt>CPP</tt>. <a href=
+    "#generators">Generators</a> are objects that know how to convert between
+    different target type. When a target of a given type must be created, all
+    generators for that type, which can handle needed properties, are found.
+    Each is passed the list of sources, and either fails, or returns a
+    dependency graph. If a generator cannot produce desired type from given
+    sources, it may try to recursively construct types that it can handle
+    from the types is was passed. This allows to try all possible
+    transformations. When all generators are tried, a dependency graph is
+    selected.</p>
+
+    <p>Finally, the dependency graph is passed to underlying Boost.Jam
+    program, which runs all actions needed to bring all main targets up-to
+    date. At this step, implicit dependencies are also scanned and accounted
+    for, as described <a href="#dependency_scanning">here</a>.</p>
 
     <p>Given a list of targets ids and a build request, building goes this
     way. First, for each id we obtain the abstract targets corresponding to
