@@ -62,10 +62,10 @@ rule nm.target.cpp-obj-generator
     rule run ( project name ? : properties * : source : multiple ? ) 
     {
         if [ $(source).type ] = CPP {    
-            local converted = [ generators.construct-dbg $(project) : NM.TARGET.CPP : $(properties) : $(source) ] ;
+            local converted = [ generators.construct $(project) : NM.TARGET.CPP : $(properties) : $(source) ] ;
         if $(converted[1])
             {            
-                local result = [ generators.construct-dbg $(project) : OBJ : $(properties) : $(converted[1]) ] ;
+                local result = [ generators.construct $(project) : OBJ : $(properties) : $(converted[1]) ] ;
                 return $(result) ;
             }
             else

@@ -128,7 +128,7 @@ rule lib-generator ( )
         {
             actual-type = STATIC-LIB ;
         }
-        return [ generators.construct-dbg $(project) $(name) : $(actual-type) : $(properties)
+        return [ generators.construct $(project) $(name) : $(actual-type) : $(properties)
           : $(sources) : allow-composing-generators ] ;
     }
 }
