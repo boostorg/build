@@ -11,10 +11,22 @@ import time
 import tempfile
 import sys
 
+def get_toolset():
+    if (len(sys.argv) > 1):
+        return sys.argv[1]
+    else:
+        return "gcc"
+
+
 # Prepare the map of suffixes
-suffixes = {'.exe': '', '.dll': '.so', '.lib': '.a'}
+suffixes = {'.exe': '', '.dll': '.so', '.lib': '.a', '.obj': '.o'}
 if os.environ.get('OS','').lower().startswith('windows'):
-    suffixes = {'.lib': '.a'} # static libs have '.a' suffix with mingw...
+    suffixes = {}
+    if get_toolset() in ["gcc"]:
+        suffixes['.lib'] = '.a' # static libs have '.a' suffix with mingw...
+        suffixes['.obj'] = '.o'
+        
+    
     
 #
 # FIXME: this is copy-pasted from TestSCons.py
@@ -47,12 +59,17 @@ class Tester(TestCmd.TestCmd):
     """
     def __init__(self, arguments="", executable = 'bjam', match =
                  TestCmd.match_exact, boost_build_path = None,
-                 translate_suffixes = 1,
+                 translate_suffixes = 1, pass_toolset = 1,
                  **keywords):
 
         self.original_workdir = os.getcwd()
         self.last_build_time = 0
         self.translate_suffixes = translate_suffixes
+
+        self.toolset = get_toolset()
+
+        if pass_toolset:
+            arguments = self.toolset + " " + arguments
 
         jam_build_dir = ""
         if os.name == 'nt':
@@ -353,10 +370,13 @@ class Tester(TestCmd.TestCmd):
            self.fail_test(1)       
 
     def expect_content(self, name, content, exact=0):
+        name = self.adjust_names(name)[0]
         if exact:
             actual = self.read(name)
         else:
             actual = string.replace(self.read_and_strip(name), "\\", "/")
+
+        content = string.replace(content, "$toolset", self.toolset)
 
         if actual != content:
             print "Expected:\n"
@@ -428,10 +448,12 @@ class Tester(TestCmd.TestCmd):
     def adjust_names(self, names):
         if type(names) == types.StringType:
                 names = [names]
-        return map(self.adjust_suffix, names)
+        r = map(self.adjust_suffix, names)
+        r = map(lambda x: string.replace(x, "$toolset", self.toolset), r)
+        return r
 
     def native_file_name(self, name):
-        name = self.adjust_suffix(name)
+        name = self.adjust_names(name)[0]
         elements = string.split(name, "/")
         return os.path.normpath(apply(os.path.join, [self.workdir]+elements))
 

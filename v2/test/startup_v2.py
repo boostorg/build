@@ -11,6 +11,7 @@ def match_re(actual,expected):
 t = Tester(
     match= match_re
     , boost_build_path=''
+    , pass_toolset=0
     )
 
 t.set_tree('startup')

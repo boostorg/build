@@ -20,7 +20,7 @@ t.copy("ext/Jamfile2", "ext/Jamfile")
 # libraries are used.
 
 t.run_build_system("debug release")
-t.expect_addition("bin/gcc/debug/main-target-hello/hello.exe")
-t.expect_addition("bin/gcc/release/main-target-hello/hello.exe")
+t.expect_addition("bin/$toolset/debug/main-target-hello/hello.exe")
+t.expect_addition("bin/$toolset/release/main-target-hello/hello.exe")
 
 t.cleanup()

@@ -3,15 +3,15 @@
 # Test that default build clause actually has any effect.
 
 from BoostBuild import Tester
-t = Tester()
+t = Tester(pass_toolset=0)
 
 t.write("project-root.jam", "import gcc ;")
 t.write("Jamfile", "exe a : a.cpp : : debug release ;")
 t.write("a.cpp", "int main() {}\n")
 
 t.run_build_system()
-t.expect_addition("bin/gcc/debug/a.exe")
-t.expect_addition("bin/gcc/release/a.exe")
+t.expect_addition("bin/$toolset/debug/a.exe")
+t.expect_addition("bin/$toolset/release/a.exe")
 
 # Now try a harder example: default build which contains <define>
 # should cause <define> to be present when "b" is compiled.

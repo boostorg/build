@@ -30,7 +30,7 @@ t.copy("src/a.cpp", "src/b.cpp")
 t.run_build_system()
 
 # Test that there's no "main-target-a" part.
-t.expect_addition("src/bin/gcc/debug/" * List("a.exe b.exe"))
+t.expect_addition("src/bin/$toolset/debug/" * List("a.exe b.exe"))
 
 
 t.cleanup()

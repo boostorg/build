@@ -11,28 +11,28 @@ t.set_tree("project-test4")
 
 t.run_build_system()
 
-t.expect_addition("bin/gcc/debug/a.obj")
-t.expect_content("bin/gcc/debug/a.obj",
+t.expect_addition("bin/$toolset/debug/a.obj")
+t.expect_content("bin/$toolset/debug/a.obj",
 """gcc/debug/include-everything
 a.cpp
 """)
 
-t.expect_addition("bin/gcc/debug/a.exe")
-t.expect_content("bin/gcc/debug/a.exe",
+t.expect_addition("bin/$toolset/debug/a.exe")
+t.expect_content("bin/$toolset/debug/a.exe",
 "gcc/debug/include-everything\n" +
-"bin/gcc/debug/a.obj lib/bin/gcc/debug/optimization-speed/b.obj\n"
+"bin/$toolset/debug/a.obj lib/bin/$toolset/debug/optimization-speed/b.obj\n"
 )
 
-t.expect_addition("lib/bin/gcc/debug/optimization-speed/b.obj")
-t.expect_content("lib/bin/gcc/debug/optimization-speed/b.obj",
+t.expect_addition("lib/bin/$toolset/debug/optimization-speed/b.obj")
+t.expect_content("lib/bin/$toolset/debug/optimization-speed/b.obj",
 """gcc/debug/include-everything/optimization-speed
 lib/b.cpp
 """)
 
-t.expect_addition("bin/gcc/debug/main-target-b.exe/b.exe")
-t.expect_content("bin/gcc/debug/main-target-b.exe/b.exe",
+t.expect_addition("bin/$toolset/debug/main-target-b.exe/b.exe")
+t.expect_content("bin/$toolset/debug/main-target-b.exe/b.exe",
 "gcc/debug/define-MACROS/include-everything\n" +
-"bin/gcc/debug/a.obj\n"
+"bin/$toolset/debug/a.obj\n"
 )
 
 
@@ -71,17 +71,17 @@ t.fail_test(find(t.stdout(), expected) != 0)
 
 #t.run_build_system()
 
-#t.expect_addition("bin/gcc/debug/a_gcc.obj")
-#t.expect_content("bin/gcc/debug/a_gcc.obj",
+#t.expect_addition("bin/$toolset/debug/a_gcc.obj")
+#t.expect_content("bin/$toolset/debug/a_gcc.obj",
 #"""gcc/debug
 #a_gcc.cpp
 #""")
 
-#t.expect_content("bin/gcc/debug/a.exe",
+#t.expect_content("bin/$toolset/debug/a.exe",
 #"gcc/debug\n" +
-#"bin/gcc/debug/a.obj " +
-#"lib/bin/gcc/debug/optimization-speed/b.obj " +
-#"bin/gcc/debug/a_gcc.obj\n"
+#"bin/$toolset/debug/a.obj " +
+#"lib/bin/$toolset/debug/optimization-speed/b.obj " +
+#"bin/$toolset/debug/a_gcc.obj\n"
 #)
 
 # Test that if we specified composite property in target reference,
@@ -92,11 +92,11 @@ t.copy("Jamfile5", "Jamfile")
 
 t.run_build_system()
 
-t.expect_addition("lib/bin/gcc/release/b.obj")
+t.expect_addition("lib/bin/$toolset/release/b.obj")
 
-t.expect_content("bin/gcc/debug/a.exe",
+t.expect_content("bin/$toolset/debug/a.exe",
 "gcc/debug/include-everything\n" +
-"bin/gcc/debug/a.obj lib/bin/gcc/release/b.obj\n"
+"bin/$toolset/debug/a.obj lib/bin/$toolset/release/b.obj\n"
 )
 
 

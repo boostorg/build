@@ -5,7 +5,7 @@
 from BoostBuild import Tester
 from string import find
 
-t = Tester()
+t = Tester(pass_toolset=0)
 
 t.write("project-root.jam", "")
 t.write("Jamfile", """

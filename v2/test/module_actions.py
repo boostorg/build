@@ -7,7 +7,7 @@ import re
 spaces_re = re.compile("\ \ +")
 trailing_spaces_re = re.compile("\ +\n")
 
-t = Tester()
+t = Tester(pass_toolset=0)
 
 t.set_tree('module-actions')
 

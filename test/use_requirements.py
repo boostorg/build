@@ -162,6 +162,6 @@ void foo() {}
 """)
 
 t.run_build_system("link=static")
-t.expect_addition("libs/bin/gcc/debug/link-static/a_d.o")
+t.expect_addition("libs/bin/$toolset/debug/link-static/a_d.o")
 
 t.cleanup()

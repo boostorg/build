@@ -13,9 +13,9 @@ t.write("lib/Jamfile", "lib test_lib : test_lib.cpp ;")
 t.write("lib/test_lib.cpp", "void foo() {}\n");
 
 t.run_build_system(subdir="lib")
-t.expect_addition("lib/bin/gcc/debug/test_lib.dll")
+t.expect_addition("lib/bin/$toolset/debug/test_lib.dll")
 
-t.copy("lib/bin/gcc/debug/test_lib.dll", "lib/libtest_lib.dll")
+t.copy("lib/bin/$toolset/debug/test_lib.dll", "lib/libtest_lib.dll")
 
 
 # A regression test: <library>property referring to
