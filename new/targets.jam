@@ -163,16 +163,12 @@ rule project-target ( name : project : requirements * : default-build * )
         if $(xproperties[1]) = "@error"
         {
             local id = [ project.attribute $(self.project) id ] ;
-            if $(id) 
-            {                
-                print.wrapped-text "warning: skipping build of project" $(id)
-                  "at" [ project.attribute $(self.project) location ] ;
-            }
-            else
-            {
-                print.wrapped-text "warning: skipping build of project at"
-                  [ project.attribute $(self.project) location ] ;
-            }            
+            print.wrapped-text "warning: skipping build of project $(id:E=) at"
+              [ project.attribute $(self.project) location ] 
+               "due to unsatisfied requirements." ;
+            print.wrapped-text "warning: explanation: " $(xproperties[2-]) ;
+            print.wrapped-text "warning: build-request: " $(properties) ;
+            print.wrapped-text "warning: requirements: " $(self.requirements) ;
         }
         else 
         {            

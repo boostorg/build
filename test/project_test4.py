@@ -52,16 +52,15 @@ t.fail_test(find(t.stdout(), "warning: skipped build of lib/b.obj with propertie
 # Check that project can be skipped as well
 t.copy("Jamfile4", "Jamfile")
 
-expected="""warning: skipping build of project at lib2
-"""
-t.run_build_system("rtti=on", stdout=expected, status=None)
+expected="warning: skipping build of project at lib2 due to unsatisfied requirements."
+t.run_build_system("rtti=on")
+t.fail_test(find(t.stdout(), expected) != 0)
 
 t.copy("lib2/Jamfile2", "lib2/Jamfile")
 
-expected="""warning: skipping build of project /mylib at lib2
-"""
-
-t.run_build_system("rtti=on", stdout=expected, status=None)
+expected="warning: skipping build of project /mylib at lib2 due to unsatisfied\nrequirements."
+t.run_build_system("rtti=on")
+t.fail_test(find(t.stdout(), expected) != 0)
 
 # We don't yet make targets depend on Jamfile, so need to start from scratch
 # The following test is disabled, because of problems related to
