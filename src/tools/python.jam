@@ -4,12 +4,25 @@
 # http://www.boost.org/LICENSE_1_0.txt)
 
 # Support for Python and the the Boost.Python library.
+#
+# This module defines
+#
+# - a project 'python' with a target 'python' in it, that corresponds
+#   to the python library
+#
+# - a main target rule 'python-extension' which can be used
+#   to build a python extension.
+#
+# Extensions that use Boost.Python must explicitly link to it.
 
 # Known problems: 
 # - the directory where extension is generated is different from V2
 # - the ext + py -> pyd_run_output generator is declared to take 
 #   SHARED_LIB, not PYTHON_EXTENSION. That's because we reuse 
 #   'lib-target-class', which creates SHARED_LIB explicitly.
+
+
+
 
 import type ;
 import testing ;
@@ -48,15 +61,32 @@ rule init-unix ( version ? : root : includes ? : libraries ? )
     includes ?= $(root)/include/python$(version) ;
     libraries ?= $(root)/lib/python$(version)/config ;
 
-    alias python : 
+    if --debug-configuration in [ modules.peek : ARGV ]
+    {
+        ECHO "notice: Python include path is" $(includes) ;
+        ECHO "notice: Python library path is" $(libraries) ;
+    }
+    
+
+
+    # On Linux, we don't want to link either Boost.Python or
+    # Python extensions to libpython, so that when extensions
+    # loaded in the interpreter, the symbols in the interpreter
+    # are used. If we linked to libpython, we'd get duplicate
+    # symbols. So declare two targets -- one for headers and another
+    # for library.          
+    alias python_for_extensions
+                 : 
                  :
                  :
                  : <include>$(includes) 
-                 # On Linux, we don't want to link either Boost.Python or
-                 # Python extensions to libpython, so that when extensions
-                 # loaded in the interpreter, the symbols in the interpreter
-                 # are used. If we linked to libpython, we'd get duplicate
-                 # symbols.
+                 ;
+    
+    alias python
+                 : 
+                 :
+                 :
+                 : <include>$(includes) 
                    <library-path>$(libraries)
                    <find-shared-library>python$(version)
                  ;
@@ -69,6 +99,9 @@ rule init-unix ( version ? : root : includes ? : libraries ? )
 #          <default>python-intel-use-gcc-stdlib
 #          python-static-multithread
 #      ;
+    
+# TODO: need to figure out when the following code is needed:
+# for builtin extensions only or in some other cases too.
     
 #    if [ modules.peek $(OS) ] = OSF
 #    {
@@ -110,16 +143,13 @@ rule init-mac ( version : root : includes ? : libraries ? )
       : 
       : <include>$(includes)
       ;  
-
-    # TODO: handle the following V1 code
-    #if $(OS) = MACOSX && $(toolset) = darwin
-    #{
-    #    if <target-type>PYD in $(properties)
-    #    {
-    #        properties += <link-format>bundle ;
-    #    }
-    #    properties += <framework>$(PYTHON_FRAMEWORK) ;
-    #}
+    
+    alias python
+      :
+      : <os>MACOSXX <toolset>darwin
+      :
+      : <framework>$(PYTHON_FRAMEWORK)
+      ;  
 }
 
 rule init-nt ( version : root : includes ? : libraries ? : cygwin-condition ? )
@@ -233,7 +263,20 @@ type.set-generated-target-suffix PYTHON_EXTENSION : <os>CYGWIN : dll ;
 rule python-extension ( name : sources * : requirements * : default-build * : 
                         usage-requirements * )
 {
-    requirements += $(BOOST_PYTHON_V2_PROPERTIES) ;
+    requirements += <use>/python//python_for_extensions ;
+        
+    # TODO: handle the following V1 code
+    #if $(OS) = MACOSX && $(toolset) = darwin
+    #{
+    #    if <target-type>PYD in $(properties)
+    #    {
+    #        properties += <link-format>bundle ;
+    #    }
+    #    properties += <framework>$(PYTHON_FRAMEWORK) ;
+    #}    
+    
+    # TODO: handle
+    # python-intel-use-gcc-stdlib
     
        
 #        <metrowerks><*><cxxflags>"-inline deferred" 
@@ -270,7 +313,7 @@ rule python-extension ( name : sources * : requirements * : default-build * :
 #          python-static-multithread
     
     
-    
+    local project = [ project.current ] ;
 
     
     targets.main-target-alternative
@@ -281,6 +324,8 @@ rule python-extension ( name : sources * : requirements * : default-build * :
       ] ;
 }                            
 
+IMPORT python : python-extension : : python-extension ;
+
 # Support for testing
 type.register PY : py ;
 type.register RUN_PYD_OUTPUT ;
@@ -289,6 +334,8 @@ type.register RUN_PYD : : TEST ;
 
 class python-test-generator : generator
 {
+    import set ;
+    
     rule __init__ ( * : * )
     {
         generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
@@ -306,10 +353,20 @@ class python-test-generator : generator
             }
         }
         
+        local extensions ;
+        for local s in $(sources)
+        {
+            if [ $(s).type ] = PYTHON_EXTENSION
+            {
+                extensions += $(s) ;
+            }
+        }
+                
         local libs ;
         for local s in $(sources)
         {
-            if [ type.is-derived [ $(s).type ] LIB ]
+            if [ type.is-derived [ $(s).type ] LIB ] 
+              && ! $(s) in $(extensions)
             {
                 libs += $(s) ;
             }
@@ -320,8 +377,8 @@ class python-test-generator : generator
         {
             if [ type.is-derived [ $(s).type ] CPP ] 
             {
-                local name = [ $(s).name ] ;
-                if $(name) = [ $(python).name ] 
+                local name = [ utility.basename [ $(s).name ] ] ;
+                if $(name) = [ utility.basename [ $(python).name ] ]
                 {
                     name = $(name)_ext ;
                 }          
@@ -332,9 +389,10 @@ class python-test-generator : generator
                 new-sources += $(extension[2-]) ;
             }
         }
+
             
-        result = [ construct-result $(python) $(new-sources) : $(project) $(name) 
-                     : $(property-set) ] ;        
+        result = [ construct-result $(python) $(extensions) $(new-sources) 
+          : $(project) $(name) : $(property-set) ] ;        
     }    
 }
 
@@ -352,11 +410,12 @@ rule capture-output ( target : sources * : properties * )
     LAUNCHER on $(target) = PYTHONPATH=$(PYTHONPATH) "python" ;
 }
 
-rule bpl-test ( sources + : requirements * : target-name ? )
+rule bpl-test ( name : sources * : requirements * )
 {        
+    sources ?= $(name).py $(name).cpp ;
     return [ testing.make-test 
         run-pyd : $(sources) /boost/python//boost_python
-          : $(requirements) : $(target-name) ] ;
+          : $(requirements) : $(name) ] ;
 }
 
 IMPORT $(__name__) : bpl-test : : bpl-test ;
