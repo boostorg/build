@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <head>
 
-    <meta name="generator" content="HTML Tidy, see www.w3.org">
+    <meta name="generator" content="Microsoft FrontPage 5.0">
     <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
 
     <title>Boost Build System</title>
@@ -206,7 +206,7 @@
 
     <h3><a name="initiating">Initiating a Build</a></h3>
 
-    <p>Boost.Build responds to several global variable settins. The
+    <p>Boost.Build responds to several global variable settings. The
     easiest way to get going is usually to use environment variables,
     though you can also set them on the command-line, using
     <tt>-s</tt><i>VARIABLE_NAME</i><tt>=</tt><i>value</i>.  In
@@ -227,8 +227,7 @@
 
       <tr>
         <td>
-<pre>
-bjam -sTOOLS=gcc my_target
+<pre>bjam -sTOOLS=gcc my_target
 </pre>
 
         <td>default (debug) <tt><a href="#build">BUILD</a></tt> of
@@ -242,8 +241,7 @@ bjam -sTOOLS=gcc my_target
 
       <tr>
         <td>
-<pre>
-set TOOLS=msvc
+<pre>set TOOLS=msvc
 bjam
 </pre>
 
@@ -252,8 +250,7 @@ bjam
 
       <tr>
         <td>
-<pre>
-bjam &quot;-sBUILD=release &lt;debug-symbols&gt;on&quot;
+<pre>bjam &quot;-sBUILD=release &lt;debug-symbols&gt;on&quot;
 </pre>
 
         <td>release build with debug symbols of <tt>all</tt> using
@@ -265,7 +262,12 @@ bjam &quot;-sBUILD=release &lt;debug-symbols&gt;on&quot;
         <td><pre>bjam -sBUILD=&quot;debug release&quot;</pre> 
 
         <td>debug and release build <tt>all</tt>.
-    </table>
+             
+
+      <tr>
+        <td><code>bjam -sTOOLS=&quot;msvc&quot; -sBUILD=&quot;&lt;cxxflags&gt;/G6&quot;<br>
+&nbsp;</code><td>default-build <tt>all</tt> with msvc, adding a compiler 
+        specific command line switch</table>
 
     <h3><a name="setting_variables">Setting Jam Variables</a></h3>
 
@@ -276,8 +278,7 @@ bjam &quot;-sBUILD=release &lt;debug-symbols&gt;on&quot;
       <ul>
       <li>Jam picks up variable settings from your environment by default, so
       you can set them there:
-<blockquote><pre>
-&gt; <a href="#build">BUILD</a>=&quot;debug release&quot;  <i># assuming Unix</i>
+<blockquote><pre>&gt; <a href="#build">BUILD</a>=&quot;debug release&quot;  <i># assuming Unix</i>
 &gt; export <a href="#build">BUILD</a>
 &gt; bjam ...
 </pre></blockquote>
@@ -297,8 +298,7 @@ bjam &quot;-sBUILD=release &lt;debug-symbols&gt;on&quot;
     "#jamrules">Jamrules</a></tt> file: 
 
     <blockquote>
-<pre>
-subproject foo/bar/baz ; # path to here from project root
+<pre>subproject foo/bar/baz ; # path to here from project root
 
 # A static library called 'baz'
 lib baz : baz1.cpp baz2.cpp # C++ sources
@@ -320,8 +320,7 @@ exe test : &lt;lib&gt;baz # use the 'baz' library
     add a Jamfile at the root:
 
     <blockquote>
-<pre>
-project-root ; # declare this to be the project root directory
+<pre>project-root ; # declare this to be the project root directory
 # Read subproject Jamfiles
 subinclude foo/bar/baz <font color="#7f7f7f">foo/bar/...</font> ;
 <font color="#7f7f7f">subinclude a/b/c ...</font> ; # more subincludes
@@ -477,8 +476,7 @@ invocations.
     directories in <b>bold</b>).
 
     <blockquote>
-<pre>
- bin
+<pre> bin
  +-foo  <font color="#7f7f7f">&lt;--- foo's build root</font>
  | +-gcc
  | | +-<b>debug</b>
@@ -519,8 +517,7 @@ invocations.
         tree might look like: 
 
         <blockquote>
-<pre>
- bin
+<pre> bin
  +-foo  <font color="#7f7f7f">&lt;--- foo's build root</font>
  | +-msvc
  | | +-debug
@@ -541,8 +538,7 @@ invocations.
         subvariant directories in the example above would be generated: 
 
         <blockquote>
-<pre>
- bin
+<pre> bin
  +-foo  <font color="#7f7f7f">&lt;--- foo's build root</font>
  | +-msvc
  | | +-debug
@@ -564,8 +560,7 @@ invocations.
     for a DLL:
 
     <blockquote>
-    <pre>
- bin
+    <pre> bin
  +-foo  <font color="#7f7f7f">&lt;--- foo's build root</font>
  | +-msvc
  | | +-debug
@@ -620,8 +615,7 @@ invocations.
     if your subproject declares:
 
     <blockquote>
-<pre>
-exe my_target : my_source1.cpp my_source2.c ;
+<pre>exe my_target : my_source1.cpp my_source2.c ;
 </pre>
     </blockquote>
     and you invoke Jam with <tt>-sBUILD="debug release" my_target</tt>, you
@@ -722,8 +716,7 @@ exe my_target : my_source1.cpp my_source2.c ;
     to the top of the project tree:
 
     <blockquote>
-<pre>
-subproject <i>path-from-top</i> ;
+<pre>subproject <i>path-from-top</i> ;
 </pre>
     </blockquote>
 
@@ -733,8 +726,7 @@ subproject <i>path-from-top</i> ;
     directory, you should use the <tt>project-root</tt> rule instead:
 
     <blockquote>
-<pre>
-project-root ;
+<pre>project-root ;
 </pre>
     </blockquote>
 
@@ -743,8 +735,7 @@ project-root ;
     <p>A main target is described using the following syntax:
 
     <blockquote>
-<pre>
-<i>target-type</i> <i>name</i> : <i>sources</i>
+<pre><i>target-type</i> <i>name</i> : <i>sources</i>
     [ : <i>requirements</i> [ : <i><a href=
 "#default_build">default-BUILD</a></i> ] ] ;
 </pre>
@@ -791,8 +782,7 @@ project-root ;
         properties intrinsic to the target. Requirements are given as sets of 
         optionally-<b>qualified build properties</b>: 
         <blockquote> 
-<pre>
-[[&lt;<i>compiler</i>&gt;]&lt;<i>variant</i>&gt;]&lt;<i>feature</i>&gt;<i>value</i>
+<pre>[[&lt;<i>compiler</i>&gt;]&lt;<i>variant</i>&gt;]&lt;<i>feature</i>&gt;<i>value</i>
 </pre>
         </blockquote>
         <tt>&lt;<i>compiler</i>&gt;</tt> and <tt>&lt;<i>variant</i>&gt;</tt>, 
@@ -813,8 +803,7 @@ project-root ;
         values may be specified for a simple feature by separating them with a 
         slash, forming (qualified) <b>multi-valued properties</b>: 
         <blockquote> 
-<pre>
-[[&lt;<i>compiler</i>&gt;]&lt;<i>variant</i>&gt;]&lt;<i>feature</i>&gt;<i>value1</i>[/<i>value2</i>...]
+<pre>[[&lt;<i>compiler</i>&gt;]&lt;<i>variant</i>&gt;]&lt;<i>feature</i>&gt;<i>value1</i>[/<i>value2</i>...]
 </pre>
         </blockquote>
         When multiple values are specified, it causes <i>all</i> the implied configurations 
@@ -827,8 +816,7 @@ project-root ;
         built only when another target like an exe is built. Such use might look 
         like: 
         <blockquote> 
-<pre>
-lib basic : basic.cpp : : &lt;suppress&gt;true ;<br><br>exe test : test.cpp &lt;lib&gt;basic ;<br>
+<pre>lib basic : basic.cpp : : &lt;suppress&gt;true ;<br><br>exe test : test.cpp &lt;lib&gt;basic ;<br>
 </pre>
         </blockquote>
         With that the <tt>basic</tt> library will only be built when the <tt>test</tt> 
@@ -881,8 +869,7 @@ lib basic : basic.cpp : : &lt;suppress&gt;true ;<br><br>exe test : test.cpp &lt;
         This is needed to distinguish the various files if your collecting different 
         builds of the same targets. The syntax is: 
         <blockquote> 
-<pre>
-&lt;tag&gt;&lt;<i>feature|variant</i>&gt;<i>value</i>
+<pre>&lt;tag&gt;&lt;<i>feature|variant</i>&gt;<i>value</i>
 </pre>
         </blockquote>
         <br>
@@ -907,8 +894,7 @@ lib basic : basic.cpp : : &lt;suppress&gt;true ;<br><br>exe test : test.cpp &lt;
     <tt>baz</tt> as described in <tt>../bazlib/Jamfile</tt>.
 
     <blockquote>
-<pre>
-template base : 
+<pre>template base : 
     ## <a href="#target_requirements">Requirements</a> ##
     : &lt;include&gt;../bazlib/include 
       &lt;define&gt;BUILDING_FOO=1
@@ -979,8 +965,7 @@ exe fop : &lt;template&gt;executable fop.cpp ;
     <p>Variants are described with the following syntax:
 
     <blockquote>
-<pre>
-variant <i>name</i> : [&lt;<i>toolset-name</i>&gt;]&lt;<i>feature</i>&gt;value... ;
+<pre>variant <i>name</i> : [&lt;<i>toolset-name</i>&gt;]&lt;<i>feature</i>&gt;value... ;
 </pre>
     </blockquote>
     The <tt>variant</tt> rule specifies the list of properties comprising a
@@ -992,8 +977,7 @@ variant <i>name</i> : [&lt;<i>toolset-name</i>&gt;]&lt;<i>feature</i>&gt;value..
     can be used to great effect for describing global properties that are shared
     amongst various variants, and therefore targets. For example:
     <blockquote>
-    <pre>
-variant my-globals : &lt;rtti&gt;off ;
+    <pre>variant my-globals : &lt;rtti&gt;off ;
 
 variant my-debug : my-globals debug ;
 
@@ -1030,8 +1014,7 @@ variant my-release : my-globals release ;
         is uniquely defined for the toolset. For example, 
 
         <blockquote>
-<pre>
-rule C++-action
+<pre>rule C++-action
 {
     msvc-C++-action $(&lt;) : $(&gt;) ;
 }
@@ -1066,8 +1049,7 @@ actions msvc-C++-action
         <tt>flags</tt> rule is used as follows: 
 
         <blockquote>
-<pre>
-flags <i>toolset variable condition</i> [: <i>value</i>...]
+<pre>flags <i>toolset variable condition</i> [: <i>value</i>...]
 </pre>
         </blockquote>
         The parameters are: 
@@ -1115,8 +1097,7 @@ flags <i>toolset variable condition</i> [: <i>value</i>...]
     to specify how optimization can be turned off for MSVC:
 
     <blockquote>
-<pre>
-flags msvc CFLAGS &lt;optimization&gt;off : /Od ;
+<pre>flags msvc CFLAGS &lt;optimization&gt;off : /Od ;
 </pre>
     </blockquote>
     It says that the string <tt>/Od</tt> should be added to the global <tt>CFLAGS</tt> 
@@ -1125,8 +1106,7 @@ variable whenever a build configuration includes the property <tt>&lt;optimizati
 <p>Similarly, in the following example,
 
     <blockquote>
-<pre>
-flags msvc CFLAGS &lt;runtime-build&gt;release/&lt;runtime-link&gt;dynamic : /MD ;
+<pre>flags msvc CFLAGS &lt;runtime-build&gt;release/&lt;runtime-link&gt;dynamic : /MD ;
 </pre>
     </blockquote>
     we add <tt>/MD</tt> to the CFLAGS variable when both of the specified
@@ -1134,8 +1114,7 @@ flags msvc CFLAGS &lt;runtime-build&gt;release/&lt;runtime-link&gt;dynamic : /MD
     feature <tt>&lt;include&gt;</tt> in the <tt>HDRS</tt> variable as follows: 
 
     <blockquote>
-<pre>
-flags msvc HDRS &lt;include&gt; ;
+<pre>flags msvc HDRS &lt;include&gt; ;
 </pre>
     </blockquote>
 
@@ -1308,8 +1287,7 @@ flags msvc HDRS &lt;include&gt; ;
         entirely of empty strings has a negative logical value. Thus, for
         example, code like the following allows a sensible non-empty default
         which can easily be overridden by the user:
-<blockquote><pre>
-MESSAGE ?= starting jam... ;
+<blockquote><pre>MESSAGE ?= starting jam... ;
 if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
 </pre></blockquote>
         If the user wants a specific message, he invokes jam with
@@ -1348,8 +1326,7 @@ if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
       of this feature can look interesting, since shells require quotes to keep
       characters separated by whitespace from being treated as separate
       arguments:
-<blockquote><pre>
-jam -sMSVCNT=&quot;\&quot;\&quot;C:\Program Files\Microsoft Visual C++\VC98\&quot;\&quot;&quot; ...
+<blockquote><pre>jam -sMSVCNT=&quot;\&quot;\&quot;C:\Program Files\Microsoft Visual C++\VC98\&quot;\&quot;&quot; ...
 </pre></blockquote>
 
       The outer quote is for the shell. The middle quote is for Jam,
@@ -1359,8 +1336,7 @@ jam -sMSVCNT=&quot;\&quot;\&quot;C:\Program Files\Microsoft Visual C++\VC98\&quo
       sane to use environment variables before invoking jam when you
       have to do this sort of quoting:
 
-<blockquote><pre>
-set MSVCNT=&quot;&quot;C:\Program Files\Microsoft Visual C++\VC98\&quot;&quot;
+<blockquote><pre>set MSVCNT=&quot;&quot;C:\Program Files\Microsoft Visual C++\VC98\&quot;&quot;
 </pre></blockquote>
 
       <h4><a name="jambase_replacement">Startup Behavior</a></h4>
@@ -1400,8 +1376,7 @@ initialization is complete.
 
       <p>Boost Jam allows you to call a rule whose name is held in a variable or
       computed as the result of an expression:
-<blockquote><pre>
-x = foo ;
+<blockquote><pre>x = foo ;
 rule foobar { ECHO foobar ; }   # a trivial rule
 $(x)bar ;                       # invokes foobar
 
@@ -1411,8 +1386,7 @@ $(x)bar ;                       # invokes foobar
       list item, everything after the first item becomes part of the
       first argument. This allows a crude form of argument binding:
 
-<blockquote><pre>
-# return the elements of sequence for which predicate returns non-nil
+<blockquote><pre># return the elements of sequence for which predicate returns non-nil
 rule filter ( sequence * : predicate + )
 {
     local result ;
@@ -1441,8 +1415,7 @@ ECHO [ filter 1 2 3 4 5 4 3 : equal 3 ] ; # prints "3 3"
       sorry, Dave'' to the console:
 
       <blockquote>
-<pre>
-rule report ( pronoun index ? : state : names + )
+<pre>rule report ( pronoun index ? : state : names + )
 {
     local he.suffix she.suffix it.suffix = s ;
     local I.suffix = m ;
@@ -1487,8 +1460,7 @@ report I 2 : sorry : Joe Dave Pete ;
       cause Jam to exit with an error code:
 
       <blockquote>
-<pre>
-### argument error
+<pre>### argument error
 # rule report ( pronoun index ?  : state  : names + )
 # called with: ( I 2 foo  : sorry  : Joe Dave Pete )
 # extra argument foo
@@ -1528,8 +1500,7 @@ report I 2 : sorry : Joe Dave Pete ;
         qualification:
 
         <blockquote>
-<pre>
-<b>module my_module
+<pre><b>module my_module
 {</b>
     rule salute ( x ) { ECHO $(x), world ; }
     rule greet ( ) { salute hello ; }
@@ -1543,8 +1514,7 @@ my_module.salute</b> goodbye ;
         work across modules: 
 
         <blockquote>
-<pre>
-module your_module
+<pre>module your_module
 {
     rule bedtime ( ) { <b>my_module.salute</b> goodnight ; }
 }
@@ -1560,8 +1530,7 @@ module your_module
         the variable bindings from A become unavailable, and are
         replaced by the bindings that belong to B. This applies
         equally to local and global variables:
-<pre>
-<blockquote>
+<pre><blockquote>
 module A
 {
     x = 1 ;
@@ -1592,8 +1561,7 @@ module B
         entering that module:
 
         <blockquote>
-<pre>
-rule peek ( module-name ? : variables + )
+<pre>rule peek ( module-name ? : variables + )
 {
     module $(module-name)
     {
@@ -1625,8 +1593,7 @@ rule peek ( module-name ? : variables + )
         <h5><a name="RULENAMES_rule">The <tt>RULENAMES</tt> Rule</a></h5>
         
         <blockquote>
-<pre>
-rule RULENAMES ( module ? )
+<pre>rule RULENAMES ( module ? )
 </pre>
         </blockquote>
         Returns a list of the names of all non-local rules in the given module. 
@@ -1637,8 +1604,7 @@ rule RULENAMES ( module ? )
         <tt>IMPORT</tt> allows rule name aliasing across modules:
 
         <blockquote>
-<pre>
-rule IMPORT (  source_module ? : source_rules *
+<pre>rule IMPORT (  source_module ? : source_rules *
                 : target_module ? : target_rules * )
 </pre>
         </blockquote>
@@ -1652,8 +1618,7 @@ rule IMPORT (  source_module ? : source_rules *
  number of items than <tt>target_rules</tt>, an error is issued. For example,
 
         <blockquote>
-<pre>
-# import m1.rule1 into m2 as local rule m1-rule1.
+<pre># import m1.rule1 into m2 as local rule m1-rule1.
 IMPORT m1 : rule1 : m2 : m1-rule1 ;
 
 # import all non-local rules from m1 into m2
@@ -1666,16 +1631,14 @@ IMPORT m1 : [ RULENAMES m1 ] : m2 : [ RULENAMES m1 ] ;
         <tt>EXPORT</tt> allows rule name aliasing across modules:
 
         <blockquote>
-<pre>
-rule EXPORT ( module ? : rules * )
+<pre>rule EXPORT ( module ? : rules * )
 </pre>
         </blockquote>
  The <tt>EXPORT</tt> rule marks <tt>rules</tt> from the <tt>source_module</tt> as non-local
  (and thus exportable). If an element of <tt>rules</tt> does not name a
  rule in <tt>module</tt>, an error is issued. For example,
         <blockquote>
-<pre>
-module X {
+<pre>module X {
   local rule r { ECHO X.r ; }
 }
 IMPORT X : r : : r ; # error - r is local in X
@@ -1687,8 +1650,7 @@ IMPORT X : r : : r ; # OK.
         <h5><a name="CALLER_MODULE_rule">The <tt>CALLER_MODULE</tt> Rule</a></h5>
         
         <blockquote>
-<pre>
-rule CALLER_MODULE ( levels ? )
+<pre>rule CALLER_MODULE ( levels ? )
 </pre>
         </blockquote>
         <tt>CALLER_MODULE</tt> returns the name of the module scope
@@ -1699,8 +1661,7 @@ rule CALLER_MODULE ( levels ? )
         example, the following prints &quot;{Y} {X}&quot;:
 
         <blockquote>
-<pre>
-module X {
+<pre>module X {
     rule get-caller { return [ CALLER_MODULE ] ; }
     rule get-caller's-caller { return [ CALLER_MODULE 1 ] ; }
 
@@ -1724,8 +1685,7 @@ ECHO {$(callers)} ;
 
       <p>Boost Jam allows you to declare a local <tt>for</tt> loop control
       variable right in the loop:
-<blockquote><pre>
-x = 1 2 3 ;
+<blockquote><pre>x = 1 2 3 ;
 y = 4 5 6 ;
 for <b>local</b> y in $(x)
 {
@@ -1738,8 +1698,7 @@ ECHO $(y) ;     # prints &quot;4 5 6&quot;
       
       Classic Jam supplies 1-based list indexing, and slicing on a closed
       (inclusive) range:
-<blockquote><pre>
-x = 1 2 3 4 5 ;
+<blockquote><pre>x = 1 2 3 4 5 ;
 ECHO $(x[3]) ;   # prints &quot;3&quot;
 ECHO $(x[2-4]) ; # prints &quot;2 3 4&quot;
 ECHO $(x[2-]) ;  # prints &quot;2 3 4 5&quot;
@@ -1748,8 +1707,7 @@ ECHO $(x[2-]) ;  # prints &quot;2 3 4 5&quot;
       Boost Jam adds Python-style negative indexing to access locations relative
       to the <i>end</i> of the list.
 
-<blockquote><pre>
-ECHO $(x[-1]) $(x[-3]) ; # prints &quot;5 3&quot;
+<blockquote><pre>ECHO $(x[-1]) $(x[-3]) ; # prints &quot;5 3&quot;
 ECHO $(x[-3--1]) ;       # prints &quot;3 4 5&quot;
 ECHO $(x[-3-4]) ;        # prints &quot;3 4&quot;
 ECHO $(x[2--2]) ;        # prints &quot;2 3 4&quot;       
@@ -1769,8 +1727,7 @@ ECHO $(x[2--2]) ;        # prints &quot;2 3 4&quot;
       name of the target and the path it is being bound to. The signature of the
       rule named by <tt>$(BINDRULE[1])</tt> should match the following:
 
-<blockquote><pre>
-rule bind-rule ( target : path )
+<blockquote><pre>rule bind-rule ( target : path )
 </pre></blockquote>
 
       This facility is useful for correct header file scanning, since many
@@ -1800,8 +1757,7 @@ rule bind-rule ( target : path )
 
       <h4><a name="RMOLD">Removing Outdated Targets</a></h4>
 <blockquote>
-<pre>
-rule RMOLD ( targets * )
+<pre>rule RMOLD ( targets * )
 </pre>
 </blockquote>
 
@@ -1829,8 +1785,7 @@ rule RMOLD ( targets * )
           for <tt>SUBST</tt> is: 
 
           <blockquote>
-<pre>
-SUBST ( source pattern replacements + )
+<pre>SUBST ( source pattern replacements + )
 </pre>
           </blockquote>
           The return value is the concatenated results of applying each element
@@ -1838,8 +1793,7 @@ SUBST ( source pattern replacements + )
           print ``<tt>[x] (y) {z}</tt>'': 
 
           <blockquote>
-<pre>
-ECHO [ SUBST xyz (.)(.)(.) [$1] ($2) {$3} ] ;
+<pre>ECHO [ SUBST xyz (.)(.)(.) [$1] ($2) {$3} ] ;
 </pre>
           </blockquote>
 
@@ -1865,8 +1819,7 @@ ECHO [ SUBST xyz (.)(.)(.) [$1] ($2) {$3} ] ;
 
     <h5><a name="BACKTRACE_rule">The BACKTRACE rule</a></h5>
 
-<blockquote><pre>
-rule BACKTRACE ( )
+<blockquote><pre>rule BACKTRACE ( )
 </pre></blockquote>
 
         Returns a list of quadruples: <i>filename line module
@@ -1947,8 +1900,7 @@ rule BACKTRACE ( )
     comma-separated argument list, are used internally to achieve a kind of
     indirection by concatenating variable values:
     
-<blockquote><pre>
-    ECHO $(gFUBAR($(x),$(y))) ;
+<blockquote><pre>    ECHO $(gFUBAR($(x),$(y))) ;
 </pre>
         </blockquote>
     </ul>
@@ -2065,8 +2017,6 @@ features we rely on will eventually be incorporated back into the Jam/MR release
 
     <p>Revised 
     <!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan
-                        -->11 November, 2001 
-    <!--webbot bot="Timestamp" endspan i-checksum="21080"
+                        -->24 May, 2002<!--webbot bot="Timestamp" endspan i-checksum="13972"
                         -->
 </body>
-
