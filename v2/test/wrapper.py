@@ -41,7 +41,7 @@ IMPORT $(__name__) : my-test : : my-test ;
 """)
 
 t.run_build_system()
-t.expect_addition("bin/test.test/$toolset/debug/test.run")
+t.expect_addition("bin/$toolset/debug/test.passed")
 
 t.cleanup()
 
