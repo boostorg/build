@@ -219,7 +219,7 @@ class Tester(TestCmd.TestCmd):
 
         try:
             if pass_toolset:
-                kw['program'] = self.program + ' ' + self.toolset + ' ' + extra_args                                
+                kw['program'] = self.program + ' ' + extra_args + ' ' + self.toolset    
             else:
                 kw['program'] = self.program + ' ' + extra_args                
             kw['chdir'] = subdir
