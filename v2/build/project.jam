@@ -94,11 +94,12 @@ rule load ( jamfile-location )
     return $(module-name) ;        
 }
 
+JAMROOT = project-root.jam Jamroot jamroot Jamroot.jam jamroot.jam ;
 # Loads parent of Jamfile at 'location'. Issues an error if nothing is found.
 rule load-parent ( location )
 {
     local found = [ path.glob-in-parents $(location) : 
-      project-root.jam $(JAMFILE) ] ;
+      $(JAMROOT) $(JAMFILE) ] ;
     
     if ! $(found)
     {
@@ -274,7 +275,7 @@ local rule load-jamfile (
 {
     # See if the Jamfile is where it should be.
     #
-    local jamfile-to-load = [ path.glob $(dir) : project-root.jam ] ;
+    local jamfile-to-load = [ path.glob $(dir) : $(JAMROOT) ] ;
     if ! $(jamfile-to-load)
     {
         jamfile-to-load = [ find-jamfile $(dir) ] ;
@@ -298,7 +299,7 @@ local rule load-jamfile (
     {           
         .jamfile-modules += $(jamfile-module) ;        
         modules.load $(jamfile-module) :  [ path.native $(jamfile-to-load) ] : . ;
-        if $(jamfile-to-load:BS) = project-root.jam
+        if $(jamfile-to-load:BS) in $(JAMROOT)
         {
             jamfile = [ find-jamfile $(dir) : no-errors ] ;
             # project-root.jam might have loaded some modules which used 
@@ -368,7 +369,7 @@ rule initialize (
     if $(location)
     {       
         local parent-module ;
-        if $(basename) != project-root.jam
+        if ! $(basename) in $(JAMROOT)
         {
             parent-module = [ load-parent $(location) ] ;
             inherit-attributes $(module-name) : $(parent-module) ;
