@@ -94,9 +94,12 @@ rule check-init-parameters ( toolset : * )
                 message += "$(p[1]) = $(p[2]:E=<unspecified>)" ;
             }            
         }
-        errors.user-error $(message[1]) : $(message[2]) : $(message[3]) : $(message[4]) ;
+        message += "previous initialization at $(.init-loc.$(sig))" ;
+        errors.user-error $(message[1]) : $(message[2]) : $(message[3]) : $(message[4])
+        : $(message[5]) : $(message[6]) : $(message[7]) : $(message[8]) ;
     }                
     .all-signatures += $(sig) ;
+    .init-loc.$(sig) = [ errors.nearest-user-location ] ;
     
     return $(condition) ;
 }
