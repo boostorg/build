@@ -203,7 +203,7 @@ class xml-catalog-action : action
 
     rule __init__ ( target : property-set ? )
     {
-        action.__init__ $(target) : : generate-xml-catalog : $(property-set) ;
+        action.__init__ $(target) : generate-xml-catalog : $(property-set) ;
     }
     
   rule actualize ( )
