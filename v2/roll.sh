@@ -24,6 +24,7 @@ touch doc/project-root.jam
 export BOOST_ROOT=/home/ghost/Work/boost-rc
 cd doc
 bjam --v2
+rm -rf bin
 cd ..
 
 # Make packages
