@@ -1,49 +1,132 @@
-#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
-#  distribute this software is granted provided this copyright notice appears in
-#  all copies. This software is provided "as is" without express or implied
-#  warranty, and with no claim as to its suitability for any purpose.
+# (C) Copyright David Abrahams 2001. 
+# (C) Copyright Vladimir Prus 2003.
+# Permission to copy, use, modify, sell and distribute this software 
+# is granted provided this copyright notice appears in all copies. This 
+# software is provided "as is" without express or implied warranty, and 
+# with no claim as to its suitability for any purpose.
 
 #  Support for the Borland's command line compiler
 
 import property ;
 import generators ;
 import os ;
-import toolset ;
+import toolset : flags ;
 
 toolset.register borland ;
 
-COMPILER_NAME = bcc32 ;
-LINKER_NAME = bcc32 ;
+feature.subfeature toolset borland : version ;
+
+# Installation root to use for versionless toolset
+.root = "" ;
+STDHDRS = "" ;
+STDLIBPATH = "" ;
+
+
+rule init ( version ? : root ? )
+{
+    # If version is not provided, change the global variable
+    # It would probably be better to introduce 'unspecified' version
+    # and set flags on <toolset>borland-unspecified, but, 
+    # default values are not applied to subfeatures.
+    if ! $(version) 
+    {
+        if $(root)
+        {
+            .root = $(root)/bin/ ;
+            STDHDRS = $(root)/include/ ;
+            STDLIBPATH = $(root)/lib ;
+        }
+    }
+    else
+    {
+        feature.extend-subfeature toolset borland : version : $(version) ;
+        local condition = <toolset>borland-$(version) ;
+
+        toolset.flags borland.compile STDHDRS $(condition) : $(root)/include/ ;
+        toolset.flags borland.link STDLIBPATH $(condition) : $(root)/lib/ ;        
+
+        root = $(root)/bin/ ;
+        root ?= "" ;        
+        toolset.flags borland .root $(condition) : $(root) ;
+        
+    }                   
+}
 
 
 # A borland-specific target type
 type.register BORLAND.TDS : tds ;
 
 # Declare generators
-generators.register-composing borland.link : LIB OBJ : EXE BORLAND.TDS : <toolset>borland ;
-generators.register-composing borland.link : LIB OBJ : SHARED_LIB BORLAND.TDS : <toolset>borland ;
+
+generators.register-linker borland.link "" : RSP : EXE : <toolset>borland ;
+generators.register-linker borland.link "" : RSP : SHARED_LIB IMPORT_LIB : <toolset>borland ;
 generators.register-composing borland.archive : OBJ : STATIC_LIB : <toolset>borland ;
-
-#Don't support dll for now.
-#generators.register-composing borland.link-dll : OBJ : SHARED_LIB : <toolset>borland ;
-
 generators.register-c-compiler borland.compile : CPP : OBJ : <toolset>borland ;
 generators.register-c-compiler borland.compile : C : OBJ : <toolset>borland ;
 
 
-# Declare flags and action for compilation
-toolset.flags borland.compile OPTIONS <optimization>speed : -O2 ;
-toolset.flags borland.compile OPTIONS <optimization>space : -O1 ;
-toolset.flags borland.compile OPTIONS <debug-symbols>on : -v ;
-toolset.flags borland.compile OPTIONS <cxxflags> ;
-toolset.flags borland.compile DEFINES <define> ;
-toolset.flags borland.compile INCLUDES <include> ;
+# Declare flags 
 
-toolset.flags borland.link OPTIONS <link>shared : -tWD ;
+flags borland.compile OPTIONS <debug-symbols>on : -v ;
+flags borland.link OPTIONS <debug-symbols>on : -v ;
+
+flags borland.compile OPTIONS <optimization>off : -Od ;
+flags borland.compile OPTIONS <optimization>speed : -O2 ;
+flags borland.compile OPTIONS <optimization>space : -O1 ;
+
+flags borland CFLAGS <inlining>off : -vi- ;
+flags borland CFLAGS <inlining>on : -vi -w-inl ;
+flags borland CFLAGS <inlining>full : -vi -w-inl ;
+
+
+# Deal with various runtime configs...
+
+# This should be not for DLL
+flags borland OPTIONS <user-interface>console : -tWC ;
+
+# -tWR sets -tW as well, so we turn it off here and then turn it 
+# on again later if we need it:
+flags borland OPTIONS <link-runtime>shared : -tWR -tWC ;
+flags borland OPTIONS <user-interface>gui : -tW ;
+
+flags borland OPTIONS <main-target-type>LIB/<link>shared : -tWD ;
+# Hmm.. not sure what's going on here.
+flags borland OPTIONS : -WM- ;
+flags borland OPTIONS <threading>multi : -tWM ;
+
+
+
+flags borland.compile OPTIONS <cxxflags> ;
+flags borland.compile DEFINES <define> ;
+flags borland.compile INCLUDES <include> ;
+
+flags borland.link OPTIONS <link>shared : -tWD ;
+
+flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
+
+#
+# for C++ compiles the following options are turned on by default:
+#
+# -j5    stops after 5 errors
+# -g255  allow an unlimited number of warnings
+# -q     no banner
+# -c     compile to object
+# -P     C++ code regardless of file extention
+# -w     turns on all warnings
+# -Ve    zero sized empty base classes, this option is on in the IDE by default 
+#        and effects binary compatibility.
+# -Vx    zero sized empty members, this option is on in the IDE by default 
+#        and effects binary compatibility.
+# -a8    8 byte alignment, this option is on in the IDE by default 
+#        and effects binary compatibility.
+#
+
+# -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
+
 
 actions compile
 {
-    $(COMPILER_NAME) $(OPTIONS) -q -P -D$(DEFINES) -I$(INCLUDES) -c -o"$(<)" "$(>)"
+    "$(.root)bcc32" -j5 -g255 -q -c -P -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 # Declare flags and action for linking
@@ -54,13 +137,35 @@ toolset.flags borland.link FINDLIBS-SA <find-shared-library> ;
 toolset.flags borland.link LIBRARIES <library-file> ;
 toolset.flags borland.link LIBRARIES <library> ;
 
-actions link bind LIBRARIES
+
+# bcc32 needs to have ilink32 in the path in order to invoke it, so explicitly
+# specifying $(BCC_TOOL_PATH)bcc32 doesn't help. You need to add
+# $(BCC_TOOL_PATH) to the path
+# The NEED_IMPLIB variable controls whether we need to invoke implib.
+if [ os.name ] = NT
 {
-    $(LINKER_NAME) $(OPTIONS) -q -L$(LINKPATH) -e"$(<[1])" "$(>)" $(LIBRARIES) $(FINDLIBS-ST).lib lib$(FINDLIBS-SA).dll
+    actions link bind LIBRARIES
+    {
+        set PATH=$(.root);%PATH%
+        "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)" $(FINDLIBS:S=.lib)
+        $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)$(<[2]) $(NEED_IMPLIB)$(<[1])        
+    }
+}
+else
+{
+    actions link bind LIBRARIES
+    {
+        export PATH=$(.root):$PATH
+        "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)" $(FINDLIBS:S=.lib)
+        $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)$(<[2]) $(NEED_IMPLIB)$(<[1])                  
+    }
 }
 
-# Declare action for archives
-actions archive
+
+# Declare action for archives. We don't you response file
+# since it's hard to get "+-" there.
+# CONSIDER: don't know what 'together' is for...
+actions updated together piecemeal archive
 { 
-    tlib /P256 /u /a /C "$(<)" +-"$(>)"
+    "$(.root)tlib" /P256 /u /a /C "$(<)" +-"$(>)"
 }
