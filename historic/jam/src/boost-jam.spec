@@ -1,10 +1,10 @@
 Name: boost-jam
-Version: 3.1.9
+Version: 3.1.10
 Summary: Build tool
 Release: 1
 Source: %{name}-%{version}.tgz
 
-License: Boost Software License
+License: Boost Software License, Version 1.0
 Group: Development/Tools
 URL: http://www.boost.org
 Packager: Rene Rivera <grafik@redshift-software.com>
@@ -31,11 +31,11 @@ Copyright:
     ALL WARRANTIES ARE HEREBY DISCLAIMED.
 
 Also:
-    Copyright (C) David Abrahams 2001-2003.
+    Copyright 2001-2004 David Abrahams.
+    Copyright 2002-2004 Rene Rivera.
     
-    Use, modification and distribution is subject to the
-    Boost Software License, Version 1.0. (See accompanying file
-    LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+    Distributed under the Boost Software License, Version 1.0.
+    (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 %prep
 %setup -n %{name}-%{version}

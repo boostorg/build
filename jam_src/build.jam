@@ -1,7 +1,6 @@
-#~ Copyright (C) Rene Rivera, 2002-2003.
-#~ Use, modification and distribution is subject to the
-#~ Boost Software License, Version 1.0. (See accompanying file
-#~ LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+#~ Copyright 2002-2004 Rene Rivera.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Platform related specifics.
 if $(NT) { rule .path { return "$(<:J=\\)" ; } }
@@ -14,7 +13,7 @@ else { . = "." ; }
 
 # Info about what we are building.
 NAME = boost-jam ;
-VERSION = 3$(.)1$(.)9 ;
+VERSION = 3$(.)1$(.)10 ;
 RELEASE = 1 ;
 LICENSE = 1_0 ;
 
@@ -405,16 +404,16 @@ rule .exe
     return $(exe) ;
 }
 if ! $(--def[2]) { actions .cc. {
-    $(--cc) $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def)$(--defs) $(--flags) "$(--libs)" $(>)
+    "$(--cc)" $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def)$(--defs) $(--flags) "$(--libs)" $(>)
 } }
 else { actions .cc. {
-    $(--cc) $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def[1])$(--defs:J=$(--def[2]))$(--def[3]) $(--flags) "$(--libs)" $(>)
+    "$(--cc)" $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def[1])$(--defs:J=$(--def[2]))$(--def[3]) $(--flags) "$(--libs)" $(>)
 } }
 if $(VMS) { actions .ld. {
-    $(--link) $(--link-bin)$(<:D=) $(--link-dir)$(<:D) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>J=", ")
+    "$(--link)" $(--link-bin)$(<:D=) $(--link-dir)$(<:D) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>J=", ")
 } }
 else { actions .ld. {
-    $(--link) $(--link-bin)$(<:D=) $(--link-dir)$(<:D) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>)
+    "$(--link)" $(--link-bin)$(<:D=) $(--link-dir)$(<:D) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>)
 } }
 
 rule .link
@@ -463,7 +462,7 @@ rule .yyacc
 actions .yyacc. {
     $(--chmod+w)$(<[1])
     $(--chmod+w)$(<[2])
-    $(yyacc.exe) $(<) $(>)
+    "$(yyacc.exe)" $(<) $(>)
 }
 if $(grammar)
 {
@@ -582,7 +581,10 @@ rule .hdr.scan
 
 # Distribution making from here on out.
 dist.license =
-    [ GLOB . : LICENSE_$(LICENSE).txt ] [ GLOB [ .path .. .. .. ] : LICENSE_$(LICENSE).txt ] ;
+    #~ [ GLOB . : LICENSE_$(LICENSE).txt ] [ GLOB [ .path .. .. .. ] : LICENSE_$(LICENSE).txt ] ;
+    [ GLOB . : LICENSE_$(LICENSE).txt ]
+    [ GLOB [ .path .. .. .. ] : LICENSE_$(LICENSE).txt ]
+    [ GLOB [ .path .. boost ] : LICENSE_$(LICENSE).txt ] ;
 dist.docs =
     $(dist.license[1])
     index.html
@@ -611,9 +613,10 @@ dist.source = $(dist.source:D=)
     boost-jam.spec
     ;
 dist.bin =
-    bjam jam mkjambase yyacc
+    bjam
     ;
 dist.bin =
+    $(dist.license[1])
     $(dist.bin:S=$(bjam.exe:S))
     ;
 
@@ -669,21 +672,13 @@ rule .binary
 # Package some file.
 rule .package ( dst-dir : src-files + )
 {
-    local src-dirs ;
     local dst-files ;
-    local dst-dirs ;
     for local src-path in $(src-files)
     {
-        local src-dir = $(src-path:D) ;
-        if ! $(src-dir) in $(src-dirs) &&
-            ! $(src-dir) = "" &&
-            ! $(src-dir:D=) != ".."
-        {
-            src-dirs += $(src-dir) ;
-            dst-dirs += $(src-dir:R=$(dst-dir)) ;
-        }
+        local src-subdir = $(src-path:D) ;
         local src-file = $(src-path) ;
-        if $(src-dir:D=) = ".."
+        while $(src-subdir:D) { src-subdir = $(src-subdir:D) ; }
+        if $(src-subdir) = ".."
         {
             src-file = $(src-file:D=) ;
         }
@@ -697,15 +692,11 @@ rule .package ( dst-dir : src-files + )
     DEPENDS dist : $(pack) ;
     DEPENDS $(pack) : $(dst-files) ;
     
+    local dst-files-queue = $(dst-files) ;
     for local src-path in $(src-files)
     {
-        local src-dir = $(src-path:D) ;
-        local src-file = $(src-path) ;
-        if $(src-dir:D=) = ".."
-        {
-            src-file = $(src-file:D=) ;
-        }
-        local dst-file = $(src-file:R=$(dst-dir)) ;
+        local dst-file = $(dst-files-queue[1]) ;
+        dst-files-queue = $(dst-files-queue[2-]) ;
         DEPENDS $(dst-file) : $(src-path) $(dst-file:D) ;
         .mkdir $(dst-file:D) ;
         
@@ -757,7 +748,7 @@ actions .rpm. {
 # distribution build not requested.
 if dist in $(ARGV)
 {
-    .binary bjam ;
+    #~ .binary bjam ;
     .package $(NAME)-$(VERSION) : $(dist.source) ;
     .package $(NAME)-$(VERSION)-$(RELEASE)-$(platform) : $(dist.bin) ;
     if $(rpm-tool)

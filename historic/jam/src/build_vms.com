@@ -1,8 +1,6 @@
-$ ! Copyright (C) Rene Rivera, Johan Nilsson, 2002-2003.
-$ ! 
-$ ! Use, modification and distribution is subject to the
-$ ! Boost Software License, Version 1.0. (See accompanying file
-$ ! LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+$ ! Copyright 2002-2003 Rene Rivera, Johan Nilsson.
+$ ! Distributed under the Boost Software License, Version 1.0.
+$ ! (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 $ ! 
 $ ! bootstrap build script for Jam
 $ ! 

@@ -13,11 +13,9 @@
  */
 
 /*  This file is ALSO:
- *  (C) Copyright David Abrahams 2001. Permission to copy, use,
- *  modify, sell and distribute this software is granted provided this
- *  copyright notice appears in all copies. This software is provided
- *  "as is" without express or implied warranty, and with no claim as
- *  to its suitability for any purpose.
+ *  Copyright 2001-2004 David Abrahams.
+ *  Distributed under the Boost Software License, Version 1.0.
+ *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  */
 
 /*
@@ -245,7 +243,8 @@ int  main( int argc, char **argv, char **arg_environ )
         printf( "Version %s. %s.\n", VERSION, OSMINOR );
 	   printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.  \n" );
         printf( "   Copyright 2001 David Turner.\n" );
-        printf( "   Copyright 2001-2002 David Abrahams.\n" );
+        printf( "   Copyright 2001-2004 David Abrahams.\n" );
+        printf( "   Copyright 2002-2004 Rene Rivera.\n" );
 
         return EXITOK;
     }
@@ -323,7 +322,7 @@ int  main( int argc, char **argv, char **arg_environ )
     {
    /* Pleace don't change the following line. The 'bump_version.py' script
        expect a specific format of it. */
-    char  *major_version = "03", *minor_version = "01", *changenum = "09";
+    char  *major_version = "03", *minor_version = "01", *changenum = "10";
     var_set( "JAM_VERSION",
              list_new( list_new( list_new( L0, newstr( major_version ) ), 
                                  newstr( minor_version ) ), 

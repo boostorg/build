@@ -1,9 +1,8 @@
 #!/bin/sh
 
-#~ Copyright (C) Rene Rivera, 2002-2003.
-#~ Use, modification and distribution is subject to the
-#~ Boost Software License, Version 1.0. (See accompanying file
-#~ LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+#~ Copyright 2002-2003 Rene Rivera.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Reset the toolset.
 BOOST_JAM_TOOLSET=
