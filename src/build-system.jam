@@ -61,6 +61,12 @@ if ! $(test-config) && ! --ignore-config in [ modules.peek : ARGV ]
     }
 }
 
+if USER_MODULE in [ RULENAMES ]
+{
+    USER_MODULE site-config user-config ;
+}
+
+
 
 if --version in [ modules.peek : ARGV ]
 {
