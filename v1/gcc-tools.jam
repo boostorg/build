@@ -221,6 +221,7 @@ flags gcc CFLAGS $(.ARCH)/<instruction-set>sparclet : -mcpu=sparclet ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>tsc701 : -mcpu=tsc701 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>v9 : -mcpu=v9 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>ultrasparc : -mcpu=ultrasparc ;
+flags gcc CFLAGS $(.ARCH)/<address-model>64 : -m64 ;
 # RS/6000 & PowerPC
 .ARCH = <architecture>power <architecture>native ;
 flags gcc CFLAGS <architecture>power/<instruction-set>default : -mcpu=power ;
@@ -250,6 +251,7 @@ flags gcc CFLAGS $(.ARCH)/<instruction-set>821 : -mcpu=821 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>823 : -mcpu=823 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>860 : -mcpu=860 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>power-common : -mcpu=common ;
+flags gcc CFLAGS $(.ARCH)/<address-model>64 : -mpowerpc64 ;
 # MIPS-1-2-3-4
 flags gcc MIPS <architecture>mips1 <architecture>mips2 <architecture>mips3 <architecture>mips4 : TRUE ;
 flags gcc MIPS
