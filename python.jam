@@ -114,7 +114,8 @@ CYGWIN_ROOT ?= c:/cygwin ;
     
     for d in "" _D
     {
-        local debug = $(d)EBUG ;
+        local d_D = _DEBUG ;
+        local debug = $(d$(d)) ; # "" or _DEBUG
 
         # select target description variable
         local var = CYGWIN_PYTHON$(d) ; 
