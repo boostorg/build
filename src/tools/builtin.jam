@@ -252,7 +252,7 @@ rule response-file ( target : sources * : properties * )
     response-file-1 $(target) : $(sources[1]) ;
     if $(sources[2-])
     {
-        response-file-2 $(target) : $(sources[2]) ;
+        response-file-2 $(target) : $(sources[2-]) ;
     }
 }
 
