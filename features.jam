@@ -39,6 +39,7 @@ path-feature sysinclude ; # <sysinclude>/fu/man/chu
 feature shared-linkable : false true ;
 
 gLINK_COMPATIBLE = <shared-linkable>true <target-type> ;
+gALWAYS_RELEVANT = <target-type> ;
 
 ##### Requirements by target type #####
 gTARGET_TYPE_REQUIREMENTS(DLL) = <shared-linkable>true ;
