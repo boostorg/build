@@ -155,14 +155,6 @@ class gcc-linking-generator : unix-linking-generator
     }    
 }
 
-generators.register [ new gcc-linking-generator gcc.link : LIB OBJ : EXE 
-    : <toolset>gcc ] ;
-
-generators.register [ new gcc-linking-generator gcc.link.dll : LIB OBJ : SHARED_LIB 
-    : <toolset>gcc ] ;
-
-
-
 
 # Declare flags and action for linking
 flags gcc.link OPTIONS <debug-symbols>on : -g ;
