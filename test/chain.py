@@ -15,7 +15,7 @@ t.write("Jamfile", r'''
 rule create ( dst : src * : properties * )
 {
     # hack to echo a space under NT
-    setup on $(dst) = "set x=int main(){}" ;
+    setup on $(dst) = "set x=int main(){ return 0; }" ;
 }
 
 import modules ;
@@ -31,7 +31,7 @@ else
 {
     actions create 
     {
-        echo "int main(){}" > $(<)
+        echo "int main(){ return 0; }" > $(<)
     }
 }
 
