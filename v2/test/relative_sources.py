@@ -7,7 +7,7 @@ t = Tester()
 
 t.write("project-root.jam", "import gcc ;")
 t.write("Jamfile", "exe a : src/a.cpp ;")
-t.write("src/a.cpp", "int main() {}")
+t.write("src/a.cpp", "int main() {}\n")
 
 t.run_build_system()
 

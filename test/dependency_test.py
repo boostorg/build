@@ -29,7 +29,7 @@ t.expect_nothing_more()
 t.touch("src1/a.h")
 t.run_build_system()
 
-t.expect_touch("bin/gcc/debug/a")
+t.expect_touch("bin/gcc/debug/a" + exe_suffix)
 t.expect_touch("bin/gcc/debug/a.o")
 t.expect_touch("bin/gcc/debug/main-target-c/c" + exe_suffix)
 t.expect_nothing_more()
