@@ -15,7 +15,7 @@ import regex ;
 import feature ;
 import generators ; 
 
-feature.feature file : : free ;
+feature.feature file : : free path ;
 
 rule prebuilt-file-generator 
 {
@@ -24,18 +24,15 @@ rule prebuilt-file-generator
     rule run ( project name ? : property-set : sources * )
     {
         local properties = [ $(property-set).raw ] ;
-        local name = [ feature.get-values <file> : $(properties) ] ;
-        local type = [ type.type $(name:S) ] ;
+        local filename = [ feature.get-values <file> : $(properties) ] ;
+        local type = [ type.type $(filename:S) ] ;
         if ! $(type) 
         {
             errors.error "Unknown type for prebuilt target " $(name) in $(project) ;
         }
         
-        local pl = [ project.attribute $(project) location ] ;
-        local path = [ path.root [ path.native $(name:D) ] $(pl) ] ;
-        
-        local t = [ new file-target $(name:S=:D=) : $(type) : $(project) ] ;
-        $(t).set-path $(path) ;
+        local t = [ new file-target $(filename:S=:D=) : $(type) : $(project) ] ;
+        $(t).set-path [ path.parent $(filename) ] ;
                                
         $(t).action [ new null-action $(t) : $(property-set) ] ;
         
