@@ -311,7 +311,7 @@ if [ os.name ] = NT
     STATUS_NOT_0 = "%status% NEQ 0 (" ;
     VERBOSE = "%verbose% EQU 1 (" ;
     ENDIF = ")" ;
-    SHELL_SET = "set" ;
+    SHELL_SET = "set " ;
     
     CATENATE = type ;
     CP = copy ;
