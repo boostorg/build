@@ -63,6 +63,7 @@ feature library-file : : free path ;
 feature uses : : free ;
 
 feature name : : free ;
+feature tag : : free ;
 feature search : : free path ;
 feature location : : free path ;
 

@@ -860,6 +860,27 @@ rule basic-target ( name : project
         return $(usage-requirements) $(source-targets) ;
     }
 
+    #
+    # Allows the user to tag the name of the target, according to properties.
+    #
+    rule tag-name ( name : property-set )
+    {
+        local properties = [ $(property-set).raw ] ;
+
+        local tagged-name = $(name) ;
+
+        if <tag> in $(properties:G)
+        {
+            local tags = [ $(property-set).get <tag> ] ;
+            for local tag in $(tags)
+            {
+                tagged-name = $(tagged-name)$(tag) ;
+            }
+        }
+
+        return $(tagged-name) ;
+    }
+    
     # Determines final build properties, generates sources,
     # and calls 'construct'. This method should not be
     # overridden.
@@ -895,6 +916,11 @@ rule basic-target ( name : project
                             
                 rproperties = [ $(rproperties).add $(usage-requirements) ] ;
 
+                local tagged-name = [ tag-name $(self.name) : $(rproperties) ] ;
+
+                local original-name = $(self.name) ;
+                self.name = $(tagged-name) ;
+                
                 local result = 
                   [ construct $(source-targets) : $(rproperties) ] ;
                 check-for-unused-sources 
@@ -905,6 +931,8 @@ rule basic-target ( name : project
                 self.generated.$(property-set) = 
                   [ compute-usage-requirements $(rproperties) ]
                   $(result) ;
+
+                self.name = $(original-name) ;
             } 
             else
             {
