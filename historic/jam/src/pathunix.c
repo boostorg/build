@@ -171,8 +171,11 @@ static char as_path_delim( char c )
  * instead of unconditionally appending PATH_DELIM we check the
  * past-the-end character of the previous path element.  If it is in
  * path_delims, we append that, and only append PATH_DELIM as a last
- * resort.  This relies on the assumption that all strings are zero
- * terminated, so a past-the-end character will always be available.
+ * resort.  This heuristic is based on the fact that PATHNAME objects
+ * are usually the result of calling path_parse, which leaves the
+ * original slashes in the past-the-end position. Correctness depends
+ * on the assumption that all strings are zero terminated, so a
+ * past-the-end character will always be available.
  *
  * As an attendant patch, we had to ensure that backslashes are used
  * explicitly in timestamp.c
