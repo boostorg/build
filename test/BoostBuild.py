@@ -529,10 +529,16 @@ class Tester(TestCmd.TestCmd):
 class List:
 
     def __init__(self, s=""):
-        # Have to handle espaced spaces correctly
-        s = string.replace(s, "\ ", '\001')
-        self.l = []
-        for e in string.split(s):
+        elements = []
+        if isinstance(s, type("")):          
+            # Have to handle espaced spaces correctly
+            s = string.replace(s, "\ ", '\001')
+            elements = string.split(s)
+        else:
+            elements = s;
+            
+        self.l = []            
+        for e in elements:
             self.l.append(string.replace(e, '\001', ' '))
 
     def __len__(self):
@@ -547,12 +553,6 @@ class List:
     def __delitem__(self, key):
         del self.l[key]
 
-    def __coerce__(self, other):
-        if isinstance(other, type("")):
-            return (self,List(other))
-        else:
-            return None
-
     def __str__(self):
         return str(self.l)
 
@@ -561,12 +561,19 @@ class List:
                  + repr(string.join(self.l, ' '))
                  + ')')
 
-    def __mul__(self, other):
+    def __mul__(self, other):        
         result = List()
+        if not isinstance(other, List):
+            other = List(other)
         for f in self:
             for s in other:
                 result.l.append(f + s)
         return result
+
+    def __rmul__(self, other):
+        if not isinstance(other, List):
+            other = List(other)        
+        return List.__mul__(other, self)
 
     def __add__(self, other):
         result = List()
