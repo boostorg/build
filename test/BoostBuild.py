@@ -45,10 +45,13 @@ class Tester(TestCmd.TestCmd):
         else:
             raise "Don't know directory where jam is build for this system"
 
-        TestCmd.TestCmd.__init__(self,
-                                 program=os.path.join('..', 'jam_src', jam_build_dir, 'bjam') + ' -d0',
-                                 match=TestCmd.match_exact,
-                                 workdir='')
+        TestCmd.TestCmd.__init__(
+            self
+            , program=os.path.join(
+                '..', 'jam_src', jam_build_dir, 'bjam')
+              + ' -d0 --debug --quiet'
+            , match=TestCmd.match_exact
+            , workdir='')
 
         os.chdir(self.workdir)
 
