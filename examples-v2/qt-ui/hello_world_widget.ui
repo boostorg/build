@@ -1,0 +1,55 @@
+<!DOCTYPE UI><UI version="3.0" stdsetdef="1">
+<class>HelloWorldWidget</class>
+<widget class="QWidget">
+    <property name="name">
+        <cstring>HelloWorldWidget</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>124</width>
+            <height>63</height>
+        </rect>
+    </property>
+    <property name="caption">
+        <string>Hello World!</string>
+    </property>
+    <widget class="QLabel">
+        <property name="name">
+            <cstring>TextLabel2</cstring>
+        </property>
+        <property name="geometry">
+            <rect>
+                <x>11</x>
+                <y>11</y>
+                <width>102</width>
+                <height>16</height>
+            </rect>
+        </property>
+        <property name="text">
+            <string>Hello World!</string>
+        </property>
+        <property name="alignment">
+            <set>AlignCenter</set>
+        </property>
+    </widget>
+    <widget class="QPushButton">
+        <property name="name">
+            <cstring>OkButton</cstring>
+        </property>
+        <property name="geometry">
+            <rect>
+                <x>10</x>
+                <y>40</y>
+                <width>101</width>
+                <height>21</height>
+            </rect>
+        </property>
+        <property name="text">
+            <string>OK</string>
+        </property>
+    </widget>
+</widget>
+<layoutdefaults spacing="6" margin="11"/>
+</UI>
