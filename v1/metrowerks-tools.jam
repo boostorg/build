@@ -19,6 +19,9 @@
 # program as the column heading for HTML tables. Must not include version number.
 #//<a href="http://www.metrowerks.com/products/windows/">Metro-<br>werks<br>Code-<br>Warrior</a>
 
+# singleton variables...
+set-as-singleton METROWERKS_ROOT METROWERKS_INCLUDE_ROOT CWFOLDER ;
+
 # Get these variable set on the targets so that we can re-use the
 # build actions for other toolsets using this one as a base.
 flags metrowerks METROWERKS_SETUP ;
@@ -67,8 +70,7 @@ flags metrowerks NEEDLIBS <library-file> ;
 flags metrowerks FINDLIBS <find-library> ;
 
 # How will we find metrowerks standard headers?
-# If the user specified METROWERKS_INCLUDE_ROOT, use that
-# Otherwise, if he specified METROWERKS_ROOT, use that
+# If the user specified METROWERKS_ROOT, use that
 # Otherwise, look at the "standard" environment variable CWFOLDER
 METROWERKS_INCLUDE_ROOT = $(METROWERKS_ROOT) ;
 METROWERKS_INCLUDE_ROOT ?= $(CWFOLDER) ;

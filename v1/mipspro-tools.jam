@@ -1,5 +1,8 @@
 # This file was originally based on gcc-tools.jam by David Abrahams.
 
+# singleton variables...
+set-as-singleton MIPSPRO_ROOT_DIRECTORY MIPSPRO_BIN_DIRECTORY MIPSPRO_INCLUDE_DIRECTORY MIPSPRO_C++INCLUDE_DIRECTORY MIPSPRO_STDLIB_DIRECTORY ;
+
 # compute directories for invoking MIPSPRO
 MIPSPRO_ROOT_DIRECTORY ?= "/usr" ;
 MIPSPRO_BIN_DIRECTORY ?= "$(MIPSPRO_ROOT_DIRECTORY)/bin" ;

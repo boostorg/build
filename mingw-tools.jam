@@ -4,6 +4,9 @@
 # "as is" without express or implied warranty, and with no claim as
 # to its suitability for any purpose.
 
+# singleton variables...
+set-as-singleton MINGW_ROOT_DIRECTORY MINGW_BIN_DIRECTORY MINGW_INCLUDE_DIRECTORY MINGW_STDLIB_DIRECTORY ;
+
 # compute directories for invoking MINGW
 MINGW_BIN_DIRECTORY ?= $(MINGW_ROOT_DIRECTORY)$(SLASH)bin$(SLASH) ;
 MINGW_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if MINGW_ROOT_DIRECTORY not set

@@ -1,5 +1,8 @@
 extends-toolset msvc ;
 
+# singleton variables...
+set-as-singleton VC7_ROOT ;
+
 if ! $(MSVCDir)
 {
     VC7_ROOT ?= "C:\\Program Files\\Microsoft Visual Studio .NET\\VC7" ;

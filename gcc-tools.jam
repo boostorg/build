@@ -43,6 +43,9 @@
 #       Similar to GXX, the name by which gcc is invoked for "C"
 #       language targets.
 
+# singleton variables...
+set-as-singleton GCC_ROOT_DIRECTORY GCC_BIN_DIRECTORY GCC_INCLUDE_DIRECTORY GCC_STDLIB_DIRECTORY ;
+
 GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/bin/ ;
 GCC_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if GCC_ROOT_DIRECTORY not set
 GCC_INCLUDE_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/include ;

@@ -7,6 +7,9 @@
 # this is simply an extension to the gcc toolset. 
 extends-toolset gcc ;
 
+# singleton variables...
+set-as-singleton STLPORT_INCLUDE_DIRECTORY STLPORT_LIB_DIRECTORY STLPORT_ROOT ;
+
 if $(NT)
 {
     GCC_STLPORT_LIB_ID = cygwin ;
