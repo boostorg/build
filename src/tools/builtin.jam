@@ -358,6 +358,9 @@ rule compile-action ( targets + : sources * : action-name : properties * )
 {
     action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
     
+    # For all virtual targets for the same dependency graph as self, 
+    # i.e. which belong to the same main target, add their directories
+    # to include path.
     rule adjust-properties ( properties * )
     {
         local dg = [ $(self.targets[1]).dg ] ;
@@ -402,6 +405,11 @@ rule link-action ( targets + : sources * : action-name : properties * )
 {
     action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
 
+    # For all sources which are instances searched-lib-targets, add
+    # appropriate <find-shared-library> or <find-static-library> propertry
+    # For all library sources, add <library> property with that source.
+    # If <hardcode-dll-paths>true is in properties, for each library source
+    # add <dll-path> property with the absolute path to that library.
     rule adjust-properties ( properties * )
     {        
         local hardcore-rpath ;
@@ -454,7 +462,9 @@ rule link-action ( targets + : sources * : action-name : properties * )
         return $(properties) ;        
     }
     
-    
+    # Filters out all sources which are of LIB type and actualizes the remaining
+    # sources by calling base method.
+    # Library sources are handled by "adjust-properties" above.
     rule actualize-sources ( sources * )
     {
         local real-sources ; 
