@@ -151,7 +151,6 @@ rule is-implicit-value ( value-string )
         
         for local subvalue in $(v[2-])
         {
-            ECHO subvalue= \"$(subvalue)\" ;
             if ! [ find-implied-subfeature $(feature) $(subvalue) : $(v[1]) ]
             {
                 failed = true ;
