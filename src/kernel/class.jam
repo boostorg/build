@@ -81,7 +81,7 @@ local rule __init__ (
 )
 {
     # pull the name of the class being initialized from the backtrace
-    local bt = [ BACKTRACE ] ;
+    local bt = [ BACKTRACE 1 ] ;
     local class = [ MATCH ^(.*)[.]__init__$ : $(bt[4]) ] ;
     assert.nonempty-variable class ;
     
@@ -187,7 +187,7 @@ rule instance ( name : class args * : * )
     {
         # always bring in the rules defined from this module, so that
         # users can easily call "inherit", for example.
-        import class : * ;
+        import class : * ;        
         
         # import all of the rules from the class into the instance,
         # using the optional localize parameter so that they execute
