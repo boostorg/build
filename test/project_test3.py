@@ -19,86 +19,86 @@ Please consult the documentation at 'http://www.boost.org'.
 t.set_tree("project-test3")
 t.run_build_system()
 
-t.expect_addition("bin/gcc/debug/shared-false/threading-single/a.obj")
-t.expect_content("bin/gcc/debug/shared-false/threading-single/a.obj",
-"""gcc/debug/shared-false/threading-single
+t.expect_addition("bin/gcc/debug/a.obj")
+t.expect_content("bin/gcc/debug/a.obj",
+"""gcc/debug
 a.cpp
 """)
 
-t.expect_addition("bin/gcc/debug/shared-false/threading-single/a.exe")
-t.expect_content("bin/gcc/debug/shared-false/threading-single/a.exe",
-"gcc/debug/shared-false/threading-single\n" +
-"bin/gcc/debug/shared-false/threading-single/a.obj lib/bin/gcc/debug/shared-false/threading-single/b.obj " +
-"lib2/bin/gcc/debug/shared-false/threading-single/c.obj lib2/bin/gcc/debug/shared-false/threading-single/d.obj " +
-"lib2/helper/bin/gcc/debug/shared-false/threading-single/e.obj " +
-"lib3/bin/gcc/debug/shared-false/threading-single/f.obj\n"
+t.expect_addition("bin/gcc/debug/a.exe")
+t.expect_content("bin/gcc/debug/a.exe",
+"gcc/debug\n" +
+"bin/gcc/debug/a.obj lib/bin/gcc/debug/b.obj " +
+"lib2/bin/gcc/debug/c.obj lib2/bin/gcc/debug/d.obj " +
+"lib2/helper/bin/gcc/debug/e.obj " +
+"lib3/bin/gcc/debug/f.obj\n"
 )
 
-t.expect_addition("lib/bin/gcc/debug/shared-false/threading-single/b.obj")
-t.expect_content("lib/bin/gcc/debug/shared-false/threading-single/b.obj",
-"""gcc/debug/shared-false/threading-single
+t.expect_addition("lib/bin/gcc/debug/b.obj")
+t.expect_content("lib/bin/gcc/debug/b.obj",
+"""gcc/debug
 lib/b.cpp
 """)
 
-t.expect_addition("lib/bin/gcc/debug/shared-false/threading-single/m.exe")
-t.expect_content("lib/bin/gcc/debug/shared-false/threading-single/m.exe",
-"""gcc/debug/shared-false/threading-single
-lib/bin/gcc/debug/shared-false/threading-single/b.obj lib2/bin/gcc/debug/shared-false/threading-single/c.obj
+t.expect_addition("lib/bin/gcc/debug/m.exe")
+t.expect_content("lib/bin/gcc/debug/m.exe",
+"""gcc/debug
+lib/bin/gcc/debug/b.obj lib2/bin/gcc/debug/c.obj
 """)
 
-t.expect_addition("lib2/bin/gcc/debug/shared-false/threading-single/c.obj")
-t.expect_content("lib2/bin/gcc/debug/shared-false/threading-single/c.obj",
-"""gcc/debug/shared-false/threading-single
+t.expect_addition("lib2/bin/gcc/debug/c.obj")
+t.expect_content("lib2/bin/gcc/debug/c.obj",
+"""gcc/debug
 lib2/c.cpp
 """)
 
-t.expect_addition("lib2/bin/gcc/debug/shared-false/threading-single/d.obj")
-t.expect_content("lib2/bin/gcc/debug/shared-false/threading-single/d.obj",
-"""gcc/debug/shared-false/threading-single
+t.expect_addition("lib2/bin/gcc/debug/d.obj")
+t.expect_content("lib2/bin/gcc/debug/d.obj",
+"""gcc/debug
 lib2/d.cpp
 """)
 
-t.expect_addition("lib2/bin/gcc/debug/shared-false/threading-single/l.exe")
-t.expect_content("lib2/bin/gcc/debug/shared-false/threading-single/l.exe",
-"""gcc/debug/shared-false/threading-single
-lib2/bin/gcc/debug/shared-false/threading-single/c.obj bin/gcc/debug/shared-false/threading-single/a.obj
+t.expect_addition("lib2/bin/gcc/debug/l.exe")
+t.expect_content("lib2/bin/gcc/debug/l.exe",
+"""gcc/debug
+lib2/bin/gcc/debug/c.obj bin/gcc/debug/a.obj
 """)
 
-t.expect_addition("lib2/helper/bin/gcc/debug/shared-false/threading-single/e.obj")
-t.expect_content("lib2/helper/bin/gcc/debug/shared-false/threading-single/e.obj",
-"""gcc/debug/shared-false/threading-single
+t.expect_addition("lib2/helper/bin/gcc/debug/e.obj")
+t.expect_content("lib2/helper/bin/gcc/debug/e.obj",
+"""gcc/debug
 lib2/helper/e.cpp
 """)
 
-t.expect_addition("lib3/bin/gcc/debug/shared-false/threading-single/f.obj")
-t.expect_content("lib3/bin/gcc/debug/shared-false/threading-single/f.obj",
-"""gcc/debug/shared-false/threading-single
-lib3/f.cpp lib2/helper/bin/gcc/debug/shared-false/threading-single/e.obj
+t.expect_addition("lib3/bin/gcc/debug/f.obj")
+t.expect_content("lib3/bin/gcc/debug/f.obj",
+"""gcc/debug
+lib3/f.cpp lib2/helper/bin/gcc/debug/e.obj
 """)
                  
 
 t.touch("a.cpp")
 t.run_build_system()
-t.expect_touch(["bin/gcc/debug/shared-false/threading-single/a.obj",
-                "bin/gcc/debug/shared-false/threading-single/a.exe",
-                "lib2/bin/gcc/debug/shared-false/threading-single/l.exe"])
+t.expect_touch(["bin/gcc/debug/a.obj",
+                "bin/gcc/debug/a.exe",
+                "lib2/bin/gcc/debug/l.exe"])
 
 
 t.run_build_system(extra_args="release optimization=off,on")
-t.expect_addition([ "bin/gcc/release/shared-false/threading-single/a.exe", 
-		    "bin/gcc/release/shared-false/threading-single/a.obj", 
-		    "bin/gcc/release/optimization-off/shared-false/threading-single/a.exe", 
-		    "bin/gcc/release/optimization-off/shared-false/threading-single/a.obj"])
+t.expect_addition([ "bin/gcc/release/a.exe", 
+		    "bin/gcc/release/a.obj", 
+		    "bin/gcc/release/optimization-off/a.exe", 
+		    "bin/gcc/release/optimization-off/a.obj"])
 
 t.run_build_system(extra_args='clean')
-t.expect_removal(["bin/gcc/debug/shared-false/threading-single/a.obj",
-                 "bin/gcc/debug/shared-false/threading-single/a.exe",
-                 "lib/bin/gcc/debug/shared-false/threading-single/b.obj",
-                 "lib/bin/gcc/debug/shared-false/threading-single/m.exe",
-                 "lib2/bin/gcc/debug/shared-false/threading-single/c.obj",
-                 "lib2/bin/gcc/debug/shared-false/threading-single/d.obj",
-                 "lib2/bin/gcc/debug/shared-false/threading-single/l.exe",
-                 "lib3/bin/gcc/debug/shared-false/threading-single/f.obj",
+t.expect_removal(["bin/gcc/debug/a.obj",
+                 "bin/gcc/debug/a.exe",
+                 "lib/bin/gcc/debug/b.obj",
+                 "lib/bin/gcc/debug/m.exe",
+                 "lib2/bin/gcc/debug/c.obj",
+                 "lib2/bin/gcc/debug/d.obj",
+                 "lib2/bin/gcc/debug/l.exe",
+                 "lib3/bin/gcc/debug/f.obj",
                   ])
 
 t.cleanup()
