@@ -97,7 +97,9 @@ static LIST *builtin_echo( PARSE *parse, FRAME *frame );
 static LIST *builtin_exit( PARSE *parse, FRAME *frame );
 static LIST *builtin_flags( PARSE *parse, FRAME *frame );
 static LIST *builtin_hdrmacro( PARSE *parse, FRAME *frame );
+static LIST *builtin_rulenames( PARSE *parse, FRAME *frame );
 static LIST *builtin_import( PARSE *parse, FRAME *frame );
+static LIST *builtin_export( PARSE *parse, FRAME *frame );
 static LIST *builtin_caller_module( PARSE *parse, FRAME *frame );
 static LIST *builtin_backtrace( PARSE *parse, FRAME *frame );
 
@@ -154,7 +156,6 @@ static void lol_build( LOL* lol, char** elements )
 static RULE* bind_builtin( char* name, LIST*(*f)(PARSE*, FRAME*), int flags, char** args )
 {
     argument_list* arg_list = 0;
-    RULE* builtin_rule;
     
     if ( args )
     {
@@ -204,15 +205,33 @@ compile_builtins()
     
     {
         char* args[] = {
-            "target_module", "?"
-            , ":", "source_module", "?"
-            , ":", "rule_names", "*"
-            , ":", "target_names", "*", 0
+            "module", "?", 0
+        };
+        
+        bind_builtin( "RULENAMES", builtin_rulenames, 0, args );
+    }
+
+    {
+        char* args[] = {
+            "source_module", "?"
+            , ":", "source_rules", "*"
+            , ":", "target_module", "?"
+            , ":", "target_rules", "*", 0
         };
         
         bind_builtin( "IMPORT", builtin_import, 0, args );
     }
 
+
+    {
+        char* args[] = {
+            "module", "?"
+            , ":", "rules", "*", 0
+        };
+        
+        bind_builtin( "EXPORT", builtin_export, 0, args );
+    }
+    
     {
         char* args[] = { "levels", "?", 0 };
         bind_builtin( "CALLER_MODULE", builtin_caller_module, 0, args );
@@ -636,7 +655,7 @@ static void argument_error( char* message, RULE* rule, FRAME* frame, LIST* arg )
     LOL* actual = frame->args;
     assert( frame->procedure != 0 );
     backtrace_line( frame->prev );
-    printf( "*** argument error\n* rule %s ( ", frame->procedure->file, frame->procedure->line, frame->rulename );
+    printf( "*** argument error\n* rule %s ( ", frame->rulename );
     lol_print( rule->arguments->data );
     printf( ")\n* called with: ( " );
     lol_print( actual );
@@ -667,11 +686,17 @@ collect_arguments( RULE* rule, FRAME* frame )
         {
             LIST *formal = lol_get( all_formal, n );
             LIST *actual = lol_get( all_actual, n );
+            
             while ( formal )
             {
                 char* name = formal->string;
                 char modifier = 0;
                 LIST* value = 0;
+
+                /* Stop now if a variable number of arguments are specified */
+                if ( name[0] == '*' && name[1] == 0 )
+                    return locals;
+                
                 if ( formal->next )
                 {
                     char *next = formal->next->string;
@@ -814,6 +839,7 @@ evaluate_rule(
     module    *prev_module = frame->module;
     
     LIST*  l = var_expand( L0, rulename, rulename+strlen(rulename), frame->args, 0 );
+    LIST*  more_args = L0;
 
     if ( !l )
     {
@@ -840,7 +866,11 @@ evaluate_rule(
         enter_module( rule->procedure->module );
     }
 
-    list_free( l );
+    /* drop the rule name */
+    l = list_pop_front( l );
+    
+    /* tack the rest of the expansion onto the front of the first argument */
+    frame->args->list[0] = list_append( l, lol_get( frame->args, 0 ) );
     
     /* record current rule name in frame */
     if ( rule->procedure )
@@ -993,13 +1023,21 @@ compile_set_module(
     LIST    *nt = parse_evaluate( parse->left, frame );
     LIST    *ns = parse_evaluate( parse->right, frame );
     LIST    *l;
+    int setflag;
+    char    *trace;
 
+    switch( parse->num )
+    {
+    case ASSIGN_SET:    setflag = VAR_SET; trace = "="; break;
+    default:        setflag = VAR_APPEND; trace = ""; break;
+    }
+    
     if( DEBUG_COMPILE )
     {
         debug_compile( 0, "set module", frame);
         printf( "(%s)", frame->module->name );
         list_print( nt );
-        printf( " = " );
+        printf( " %s ", trace );
         list_print( ns );
         printf( "\n" );
     }
@@ -1010,7 +1048,7 @@ compile_set_module(
     for( l = nt; l; l = list_next( l ) )
     {
         bind_module_var( frame->module, l->string );
-        var_set( l->string, list_copy( L0, ns ), VAR_SET );
+        var_set( l->string, list_copy( L0, ns ), setflag );
     }
 
     list_free( nt );
@@ -1275,81 +1313,128 @@ builtin_hdrmacro(
   return L0;
 }
 
-
-/*
- * builtin_import() - IMPORT ( TARGET_MODULE ? : SOURCE_MODULE ? : RULE_NAMES * : TARGET_NAMES * )
+/*  builtin_rulenames() - RULENAMES ( MODULE ? )
  *
- * The IMPORT rule imports rules from the SOURCE_MODULE into the
- * TARGET_MODULE. If either SOURCE_MODULE or TARGET_MODULE is not supplied, it
- * refers to the root module. If any RULE_NAMES are supplied, they specify which
- * rules from the SOURCE_MODULE to import, otherwise all rules are imported. The
- * rules are given the names in TARGET_NAMES; if not enough TARGET_NAMES are
- * supplied, the excess rules are given the names in RULE_NAMES. If RULE_NAMES
- * is not supplied, TARGET_NAMES is ignored.
+ *  Returns a list of the non-local rule names in the given MODULE. If
+ *  MODULE is not supplied, returns the list of rule names in the
+ *  global module.
  */
 
-struct import_data
-{
-    module* target_module;
-    LIST* target_names;
-};
-typedef struct import_data import_data;
-
-static void import_rule1( void* r_, void* data_ )
+/* helper function for builtin_rulenames(), below */
+static void add_rule_name( void* r_, void* result_ )
 {
     RULE* r = r_;
-    import_data* data = data_;
-    
-    char* target_name = data->target_names ? data->target_names->string : r->name;
-    if (data->target_names)
-        data->target_names = list_next(data->target_names);
+    LIST** result = result_;
 
     if ( !r->local_only )
-        import_rule( r, data->target_module, target_name );
+        *result = list_new( *result, copystr( r->name ) );
 }
 
 static LIST *
-builtin_import(
+builtin_rulenames(
     PARSE   *parse,
     FRAME *frame )
 {
-    LIST *target_module_name = lol_get( frame->args, 0 );
-    LIST *source_module_name = lol_get( frame->args, 1 );
-    LIST *rule_names = lol_get( frame->args, 2 );
-    LIST *target_names = lol_get( frame->args, 3 );
+    LIST *arg0 = lol_get( frame->args, 0 );
+    LIST *result = L0;
+    module* source_module = bindmodule( arg0 ? arg0->string : 0 );
 
-    module* target_module = bindmodule( target_module_name ? target_module_name->string : 0 );
-    module* source_module = bindmodule( source_module_name ? source_module_name->string : 0 );
+    hashenumerate( source_module->rules, add_rule_name, &result );
+    return result;
+}
+
+static void unknown_rule( FRAME *frame, char* key, char *module_name, char *rule_name )
+{
+    backtrace_line( frame->prev );
+    printf( "%s error: rule \"%s\" unknown in module \"%s\"\n", key, rule_name, module_name );
+    backtrace( frame->prev );
+    exit(1);
     
-    if ( rule_names == 0 )
-    {
-        import_data data;
-        data.target_module = target_module;
-        data.target_names = target_names;
-        hashenumerate( source_module->rules, import_rule1, &data );
-    }
-    else
-    {
-        LIST *old_name, *target_name;
+}
+
+/*
+ * builtin_import() - IMPORT ( SOURCE_MODULE ? : SOURCE_RULES * : TARGET_MODULE ? : TARGET_RULES * )
+ *
+ * The IMPORT rule imports rules from the SOURCE_MODULE into the
+ * TARGET_MODULE as local rules. If either SOURCE_MODULE or
+ * TARGET_MODULE is not supplied, it refers to the global
+ * module. SOURCE_RULES specifies which rules from the SOURCE_MODULE
+ * to import; TARGET_RULES specifies the names to give those rules in
+ * TARGET_MODULE. If SOURCE_RULES contains a name which doesn't
+ * correspond to a rule in SOURCE_MODULE, or if it contains a
+ * different number of items than TARGET_RULES, an error is issued.
+ * 
+ */
+static LIST *
+builtin_import(
+    PARSE *parse,
+    FRAME *frame )
+{
+    LIST *source_module_list = lol_get( frame->args, 0 );
+    LIST *source_rules = lol_get( frame->args, 1 );
+    LIST *target_module_list = lol_get( frame->args, 2 );
+    LIST *target_rules = lol_get( frame->args, 3 );
+
+    module* target_module = bindmodule( target_module_list ? target_module_list->string : 0 );
+    module* source_module = bindmodule( source_module_list ? source_module_list->string : 0 );
+    
+    LIST *source_name, *target_name;
             
-        for ( old_name = rule_names, target_name = target_names;
-              old_name;
-              old_name = list_next( old_name )
-                  , target_name = list_next( target_name ) )
-        {
-            RULE r_, *r = &r_;
-            r_.name = old_name->string;
+    for ( source_name = source_rules, target_name = target_rules;
+          source_name && target_name;
+          source_name = list_next( source_name )
+          , target_name = list_next( target_name ) )
+    {
+        RULE r_, *r = &r_, *imported;
+        r_.name = source_name->string;
                 
-            if ( !target_name )
-                target_name = old_name;
-
-            if ( hashcheck( source_module->rules, (HASHDATA**)&r ) )
-            {
-                import_rule( r, target_module, target_name->string );
-            }
-        }
+        if ( !hashcheck( source_module->rules, (HASHDATA**)&r ) )
+            unknown_rule( frame, "IMPORT", source_module->name, r_.name );
+        
+        imported = import_rule( r, target_module, target_name->string );
+        imported->local_only = 1;
+    }
+    
+    if ( source_name || target_name )
+    {
+        backtrace_line( frame->prev );
+        printf( "import error: length of source and target rule name lists don't match" );
+        backtrace( frame->prev );
+        exit(1);
     }
 
+    return L0;
+}
+
+
+/*
+ * builtin_export() - EXPORT ( MODULE ? : RULES * )
+ *
+ * The EXPORT rule marks RULES from the SOURCE_MODULE as non-local
+ * (and thus exportable). If an element of RULES does not name a rule
+ * in MODULE, an error is issued.
+ */
+static LIST *
+builtin_export(
+    PARSE *parse,
+    FRAME *frame )
+{
+    LIST *module_list = lol_get( frame->args, 0 );
+    LIST *rules = lol_get( frame->args, 1 );
+
+    module* m = bindmodule( module_list ? module_list->string : 0 );
+    
+            
+    for ( ; rules; rules = list_next( rules ) )
+    {
+        RULE r_, *r = &r_;
+        r_.name = rules->string;
+                
+        if ( !hashcheck( m->rules, (HASHDATA**)&r ) )
+            unknown_rule( frame, "EXPORT", m->name, r_.name );
+        
+        r->local_only = 0;
+    }
     return L0;
 }
 
@@ -1439,8 +1524,6 @@ static LIST *builtin_caller_module( PARSE *parse, FRAME *frame )
 {
     LIST* levels_arg = lol_get( frame->args, 0 );
     int levels = levels_arg ? atoi( levels_arg->string ) : 0 ;
-    char buffer[4096] = "";
-    int len;
 
     int i;
     for (i = 0; i < levels + 2 && frame->prev; ++i)

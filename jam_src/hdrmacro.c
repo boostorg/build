@@ -69,7 +69,6 @@ static struct hash*   header_macros_hash = 0;
 void
 macro_headers( TARGET *t )
 {
-    LIST	*hdrrule;
     static regexp *re = 0;
     FILE	*f;
     char	buf[ 1024 ];

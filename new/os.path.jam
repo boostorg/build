@@ -3,7 +3,28 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
+if $(NT)
+{
+    module local slash = \\ ;
+}
+else
+{
+    module local slash = / ;
+}
+
 rule split ( path )
 {
-    
+    return [ SUBST $(<[1]) "^([/$(SLASH)]+).*" $1 ] # rooting slash(es), if any
+           [ split $(<) "[/$(SLASH)]" ]            # the rest.
+           ;
+}
+
+rule join ( elements * )
+{
+    local slashes = $(slash) / ;
+    local result prev = $(elements[1]) ;
+    for local e in $(elements[2-])
+    {`
+        if ! ( $(prev) in $(slashes) ) && 
+    }
 }

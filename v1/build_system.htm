@@ -138,7 +138,10 @@
                 <ul>
                   <li><a href="#module_declaration">Declaration</a>
                   <li><a href="#module_locals">Local Variables</a>
+                  <li><a href="#local_rules">Local Rules</a>
+                  <li><a href="#RULENAMES_rule">The <tt>RULENAMES</tt> rule</a>
                   <li><a href="#IMPORT_rule">The <tt>IMPORT</tt> rule</a>
+                  <li><a href="#EXPORT_rule">The <tt>EXPORT</tt> rule</a>
                   <li><a href="#CALLER_MODULE_rule">The <tt>CALLER_MODULE</tt> rule</a>
                 </ul>
 
@@ -154,8 +157,10 @@
                 <a href="#debugging_support">Debugging Support</a> 
 
                 <ul>
+                  <li><a href="#BACKTRACE_rule">The BACKTRACE rule</a>
                   <li><a href="#profiling">Profiling</a>
                   <li><a href="#parse_debugging">Parser Debugging</a>
+                  <li><a href="#dependency_graph">Dependency Graph Output</a>
                 </ul>
             </ul>
 
@@ -1312,8 +1317,35 @@ rule foobar { ECHO foobar ; }   # a trivial rule
 $(x)bar ;                       # invokes foobar
 
 </pre></blockquote>
+      
+      Furthermore, if the first expression expands to more than one
+      list item, everything after the first item becomes part of the
+      first argument. This allows a crude form of argument binding:
 
-      <h4><a name="argument_lists">Argument lists</a></h4>
+<blockquote><pre>
+# return the elements of sequence for which predicate returns non-nil
+rule filter ( sequence * : predicate + )
+{
+    local result ;
+    for local x in $(sequence)
+    {
+        if [ $(predicate) $(x) ] { result += $(x); }
+    }
+    return $(result);
+}
+
+# true iff x == y
+rule equal ( x y )
+{
+    if $(x) = $(y) { return true; }
+}
+
+# bind 3 to the first argument of equal
+ECHO [ filter 1 2 3 4 5 4 3 : equal 3 ] ; # prints "3 3"
+
+</pre></blockquote>
+
+<h4><a name="argument_lists">Argument lists</a></h4>
 
       <p>You can now describe the arguments accepted by a rule, and refer to
       them by name within the rule. For example, the following prints ``I'm
@@ -1350,7 +1382,11 @@ report I 2 : sorry : Joe Dave Pete ;
         <tr>
           <td><tt>*</tt> 
 
-          <td>Bind to zero or more unbound elements of the actual argument.
+          <td>Bind to zero or more unbound elements of the actual
+          argument. When ``<tt>*</tt>'' appears where an argument name
+          is expected, any number of additional arguments are
+          accepted. This feature can be used to implement
+          &quot;varargs&quot; rules.
 
         <tr>
           <td><tt>+</tt> 
@@ -1358,7 +1394,7 @@ report I 2 : sorry : Joe Dave Pete ;
           <td>Bind to one or more unbound elements of the actual argument.
       </table>
 
-      <p>The acutal and formal arguments are checked for inconsistencies, which
+      <p>The actual and formal arguments are checked for inconsistencies, which
       cause Jam to exit with an error code:
 
       <blockquote>
@@ -1382,8 +1418,11 @@ report I 2 : sorry : Joe Dave Pete ;
       <h4><a name="module_support">Module Support</a></h4>
 
       <p>Boost Jam introduces support for modules, which provide some
-      rudimentary namespace protection for rules and variables. A new keyword, 
-      ``<tt>module</tt>'' was also introduced.
+      rudimentary namespace protection for rules and variables. A new
+      keyword, ``<tt>module</tt>'' was also introduced. The features
+      described in this section are <i>primitives</i>, meaning that
+      they are meant to provide the operations needed to write Jam
+      rules which provide a more elegant module interface.
 
       <p>
 
@@ -1422,13 +1461,6 @@ module your_module
 }
 </pre>
         </blockquote>
-
-        <p>Note that, like the <a
-        href="#IMPORT_rule"><tt>IMPORT</tt></a> and <a
-        href="#CALLER_MODULE_rule"><tt>CALLER_MODULE</tt></a> rules, module
-        declaration is really a <i>primitive</i>, and is best used through a
-        wrapper interface which implements a system of module files using the
-        built-in <tt>INCLUDE</tt> rule.
 
         <p>
 
@@ -1493,35 +1525,81 @@ ECHO [ <b>M.get</b> x ] ;  # prints "a b c"
 </pre>
         </blockquote>
 
+        <h5><a name="local_rules">Local Rules</a></h5>
+
+        <blockquote>
+              <tt>local&nbsp;rule</tt>&nbsp;<i>rulename...</i>
+        </blockquote>
+
+        <p>The rule is declared locally to the current module. It is
+        not entered in the global module with qualification, and its
+        name will not appear in the result of
+        <blockquote>
+        <tt>[&nbsp;RULENAMES</tt>&nbsp;<i>module-name</i><tt>&nbsp;]</tt>.
+        </blockquote>
+                
+        <h5><a name="RULENAMES_rule">The <tt>RULENAMES</tt> Rule</a></h5>
+        
+        <blockquote>
+<pre>
+rule RULENAMES ( module ? )
+</pre>
+        </blockquote>
+        Returns a list of the names of all non-local rules in the
+        given module. If <tt>module</tt> is ommitted, the names of all
+        non-local rules in the global module are returned.
+
         <h5><a name="IMPORT_rule">The <tt>IMPORT</tt> Rule</a></h5>
         
         <tt>IMPORT</tt> allows rule name aliasing across modules:
 
         <blockquote>
 <pre>
-rule IMPORT ( target_module ? : source_module ?
-                : rule_names * : target_names * )
+rule IMPORT (  source_module ? : source_rules *
+                : target_module ? : target_rules * )
 </pre>
         </blockquote>
-        Rules are copied from the <tt>source_module</tt> into the
-        <tt>target_module</tt>. If either module name is missing, the global
-        module is used in its place. If any <tt>rule_names</tt> are supplied,
-        they specify which rules from the <tt>source_module</tt> to import;
-        otherwise all rules are imported. The rules are given the names in
-        <tt>target_names</tt>; if not enough <tt>target_names</tt> are supplied,
-        the excess rules are given the same names as they had in
-        <tt>source_module</tt>. For example,
+ The <tt>IMPORT</tt> rule copies rules from the <tt>source_module</tt> into the
+ <tt>target_module</tt> as <tt>local</tt> rules. If either <tt>source_module</tt> or
+ <tt>target_module</tt> is not supplied, it refers to the global
+ module. <tt>source_rules</tt> specifies which rules from the <tt>source_module</tt> to
+ import; <tt>TARGET_RULES</tt> specifies the names to give those rules in
+ <tt>target_module</tt>. If <tt>source_rules</tt> contains a name which doesn't
+ correspond to a rule in <tt>source_module</tt>, or if it contains a different
+ number of items than <tt>target_rules</tt>, an error is issued. For example,
 
         <blockquote>
 <pre>
-IMPORT m1 : m2 ;               # imports all rules from m2 into m1
-IMPORT    : m2 : my-rule ;     # imports m2.my-rule into the global module
-IMPORT m1 : m2 : r1 x : r2 y ; # imports m2.r1 as r2 and m2.x as y into m1
+# import m1.rule1 into m2 as local rule m1-rule1.
+IMPORT m1 : rule1 : m2 : m1-rule1 ;
+
+# import all non-local rules from m1 into m2
+IMPORT m1 : [ RULENAMES m1 ] : m2 : [ RULENAMES m1 ] ;
 </pre>
         </blockquote>
-        Like the <a href="#module_declaration">module declaration syntax</a> and
-        the <a href="#CALLER_MODULE_rule"><tt>CALLER_MODULE</tt></a> rule, this
-        rule is a <i>primitive</i>, and is probably best wrapped in a Jam rule.
+
+        <h5><a name="EXPORT_rule">The <tt>EXPORT</tt> Rule</a></h5>
+        
+        <tt>EXPORT</tt> allows rule name aliasing across modules:
+
+        <blockquote>
+<pre>
+rule EXPORT ( module ? : rules * )
+</pre>
+        </blockquote>
+ The <tt>EXPORT</tt> rule marks <tt>rules</tt> from the <tt>source_module</tt> as non-local
+ (and thus exportable). If an element of <tt>rules</tt> does not name a
+ rule in <tt>module</tt>, an error is issued. For example,
+        <blockquote>
+<pre>
+module X {
+  local rule r { ECHO X.r ; }
+}
+IMPORT X : r : : r ; # error - r is local in X
+EXPORT X : r ;
+IMPORT X : r : : r ; # OK.
+</pre>
+        </blockquote>
 
         <h5><a name="CALLER_MODULE_rule">The <tt>CALLER_MODULE</tt> Rule</a></h5>
         
@@ -1555,10 +1633,6 @@ callers = [ X.get-caller ] [ Y.call-X ] [ X.call-Y ] ;
 ECHO {$(callers)} ;
 
 </pre>
-        Like the <a href="#module_declaration">module declaration syntax</a> and
-        the <a href="#IMPORT_rule"><tt>IMPORT</tt></a> rule, this rule is a
-        <i>primitive</i>, and is probably best wrapped in a Jam rule.
-
         </blockquote>
 
       </blockquote>
@@ -1717,6 +1791,17 @@ ECHO [ SUBST xyz (.)(.)(.) [$1] ($2) {$3} ] ;
 
     <h4><a name="debugging_support">Debugging Support</a></h4>
 
+    <h5><a name="BACKTRACE_rule">The BACKTRACE rule</a></h5>
+
+<blockquote><pre>
+rule BACKTRACE ( )
+</pre></blockquote>
+
+        Returns a list of quadruples: <i>filename line module
+        rulename</i>..., describing each shallower level of the call
+        stack. This rule can be used to generate useful diagnostic
+        messages from Jam rules.
+
     <p>The <tt>-d</tt> command-line option admits new arguments:
 
     <ul>
@@ -1728,6 +1813,13 @@ ECHO [ SUBST xyz (.)(.)(.) [$1] ($2) {$3} ] ;
          <li> <tt>-d+11</tt> - enables <a name="parse_debugging"><b>parser
         debugging</b></a>, if Jam has been compiled with the &quot;--debug&quot;
         option to the parser generator named by $(YACC).
+
+         <li> <tt>-d+12</tt> - enables <a
+        name="dependency_graph"><b>dependency graph output
+        </b></a>. This feature was ``stolen'' from a version of Jam
+        modified by <a href="mailto:cmcpheeters@aw.sgi.com">Craig
+        McPheeters</a>.
+
     </ul>
 
     </blockquote>

@@ -10,8 +10,11 @@
 
 include recursive.jam ;
 
-# A prefix for all of the jam code we're going to test
+# Prefixes for all of the jam code we're going to test
 local ECHO_ARGS = "include echo_args.jam ; echo_args "
+   ;
+
+local ECHO_VARARGS = "include echo_args.jam ; echo_varargs "
    ;
 
 # Check that it will find missing arguments
@@ -52,3 +55,19 @@ Jam $(ECHO_ARGS)"1 : 2 : 3 4 ;"
     : "a= 1 b= c= : d= 2 : e= 3 4" ;
 Jam $(ECHO_ARGS)"1 : 2 : 3 4 5 ;"
     : "a= 1 b= c= : d= 2 : e= 3 4 5" ;
+
+#
+# Check varargs
+#
+Jam $(ECHO_VARARGS)"1 : 2 : 3 4 5 ;"
+    : "a= 1 b= c= : d= 2 : e= 3 4 5" ;
+Jam $(ECHO_VARARGS)"1 : 2 : 3 4 5 : 6 ;"
+    : "a= 1 b= c= : d= 2 : e= 3 4 5 : rest= 6" ;
+Jam $(ECHO_VARARGS)"1 : 2 : 3 4 5 : 6 7 ;"
+    : "a= 1 b= c= : d= 2 : e= 3 4 5 : rest= 6 7" ;
+Jam $(ECHO_VARARGS)"1 : 2 : 3 4 5 : 6 7 : 8 ;"
+    : "a= 1 b= c= : d= 2 : e= 3 4 5 : rest= 6 7 : 8" ;
+Jam $(ECHO_VARARGS)"1 : 2 : 3 4 5 : 6 7 : 8 : 9 ;"
+    : "a= 1 b= c= : d= 2 : e= 3 4 5 : rest= 6 7 : 8 : 9" ;
+
+
