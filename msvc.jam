@@ -151,16 +151,23 @@ flags msvc LINKFLAGS <debug-symbols>on/<runtime-debugging>off : /OPT:REF,ICF ;
 # flags msvc LINKFLAGS <user-interface>auto : /subsystem:posix ;
 
 flags msvc NEEDLIBS <library-file> ;
-flags msvc LINKFLAGS <target-type>SHARED_LIB : /DLL ;
+flags msvc LINKFLAGS <main-target-type>LIB/<link>shared : /DLL ;
 
-toolset.flags msvc.link OPTIONS <debug-symbols>on : -g ;
-toolset.flags msvc.link OPTIONS <linkflags> ;
+toolset.flags msvc.link USER_LINKFLAGS <linkflags> ;
 toolset.flags msvc.link LINKPATH <library-path> ;
 toolset.flags msvc.link FINDLIBS <find-static-library> <find-shared-library> ;
 
+# incremental linking a DLL causes no end of problems: if the
+# actual exports don't change, the import .lib file is never
+# updated. Therefore, the .lib is always out-of-date and gets
+# rebuilt every time. I'm not sure that incremental linking is
+# such a great idea in general, but in this case I'm sure we
+# don't want it.
+.implib = "/INCREMENTAL:NO /IMPLIB:" ;
+
 actions link
 {
-    $(.LD) /nologo $(NOINCREMENTAL) $(LINKFLAGS) /out:"$(<[1])" /IMPLIB:"$(<[2])" /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" @"$(>)"
+    $(.LD) /nologo $(LINKFLAGS) /out:"$(<[1])" $(.implib)"$(<[2])" /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @"$(>)"
 }
 
 # Declare action for creating static libraries
