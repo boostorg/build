@@ -6,6 +6,7 @@
 import generators ;
 import feature ;
 import type ;
+import property ;
 
 feature.feature bison.prefix : : free ;
 type.register Y : y ;
