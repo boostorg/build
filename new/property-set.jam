@@ -162,6 +162,13 @@ local rule property-set ( raw-properties * )
         }
         return $(self.added.$(ps)) ;
     }            
+    
+    # Returns all values of 'feature'.
+    rule get ( feature )
+    {
+        return [ feature.get-values $(feature) : $(self.raw) ] ;
+    }
+    
 }
 
 class property-set ;

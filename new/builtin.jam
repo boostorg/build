@@ -29,7 +29,7 @@ feature os : $(os) : propagated link-incompatible ;
 
 feature toolset : : implicit propagated link-incompatible symmetric ;
 
-feature stdlib : native : propagated link-incompatible ;
+feature stdlib : native : propagated link-incompatible composite ;
 
 feature link : shared static : propagated ;
 feature link-runtime : shared static : propagated ;
