@@ -54,7 +54,9 @@
 
 /* Supply missing prototypes for lbr$-routines*/
 
+#ifdef __cplusplus
 extern "C" { 
+#endif /* __cplusplus */
 
 int lbr$set_module( 
 	void **,
@@ -86,7 +88,9 @@ int lbr$get_index(
 int lbr$close(
 	void ** );
 
+#ifdef __cplusplus
 }
+#endif /* __cplusplus */
 
 static void
 file_cvttime( 
