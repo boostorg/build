@@ -35,21 +35,21 @@ flags borland CFLAGS <inlining>full : -vi -w-inl ;
 
     if [ get-values <target-type> : $(gBUILD_PROPERTIES) ] != DLL
     {
-        flags borland USER-INTERFACE <user-interface>console : C ;
+        flags borland USER-INTERFACE <user-interface>console : -tWC ;
     }
     
-    flags borland TARGET-TYPE <target-type>DLL : D ;
-    flags borland THREADING <threading>multi : M ;
-    flags borland RUNTIME-LINK <runtime-link>dynamic : R ;
+    flags borland TARGET-TYPE <target-type>DLL : -tWD ;
+    flags borland THREADING <threading>multi : -tWM ;
+    flags borland RUNTIME-LINK <runtime-link>dynamic : -tWR ;
 
     $(flag-vars) ?= "" ;
 
     flags borland LINKFLAGS :
-      -t$(USER-INTERFACE)$(TARGET-TYPE)$(RUNTIME-LINK)$(THREADING)
+      $(USER-INTERFACE) $(TARGET-TYPE) $(RUNTIME-LINK) $(THREADING)
         ;
     
     flags borland CFLAGS :
-      -t$(USER-INTERFACE)$(TARGET-TYPE)$(RUNTIME-LINK)$(THREADING)
+      $(USER-INTERFACE) $(TARGET-TYPE) $(RUNTIME-LINK) $(THREADING)
         ;
 }
 
@@ -131,3 +131,4 @@ actions updated together piecemeal borland-Archive-action
 {
     $(BCC_TOOL_PATH)tlib /P32 /u /a /C "$(<)" +-"$(>)"
 }
+
