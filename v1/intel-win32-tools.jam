@@ -63,8 +63,15 @@ if $(version) >= 7
 # tell the compiler about the base toolset.
 if $(INTEL_BASE_MSVC_TOOLSET) = msvc
 {
-    C++FLAGS += /Qvc6 ;
-    # no wchar_t support in vc6 dinkum library.
+    C++FLAGS += 
+      # Emulate VC6
+      /Qvc6
+      
+      # no wchar_t support in vc6 dinkum library.  Furthermore, in vc6
+      # compatibility-mode, wchar_t is not a distinct type from unsigned
+      # short
+      -DBOOST_NO_INTRINSIC_WCHAR_T
+      ; 
 }
 else
 {
