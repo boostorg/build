@@ -52,9 +52,6 @@ void foo() {}
 
 t.run_build_system()
 
-n = t.adjust_names("bin/$toolset/debug/main-target-hello/hello.exe")[0]
-n2 = t.adjust_names("bin/$toolset/debug/hello.exe")[0]
-added = t.unexpected_difference.added_files
-t.fail_test(not (n in added) and not (n2 in added))
+t.expect_addition("bin/$toolset/debug/hello.exe")
 
 t.cleanup()

@@ -39,10 +39,7 @@ lib l : [ glob *.cpp ] ;
 
 t.run_build_system(subdir="d1")
 
-n = t.adjust_names("d1/bin/$toolset/debug/main-target-a/a.exe")[0]
-n2 = t.adjust_names("d1/bin/$toolset/debug/a.exe")[0]
-added = t.unexpected_difference.added_files
-t.fail_test(not (n in added) and not (n2 in added))
+t.expect_addition("d1/bin/$toolset/debug/a.exe")
 
 t.rm("d2/d/bin")
 t.run_build_system(subdir="d2/d")

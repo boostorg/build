@@ -50,8 +50,8 @@
 # +======================+ 1        * +=============+  alternatives  +==============+  
 # | generate(properties) |o-----------+ generate    |<>------------->| generate     |  
 # | main-target          |            +-------------+                | construct = 0|
-# | reference-properties |                                           +--------------+  
-# +----------------------+                                                  |          
+# +----------------------+                                           +--------------+  
+#                                                                           |          
 #                                                                           ^          
 #                                                                          / \         
 #                                                                         +-+-+        
@@ -143,10 +143,6 @@ class abstract-target
 #  This class these responsibilities:
 #  - maintaining a list of main target in this project and
 #    building it
-#  - computing 'reference-properties' which would be used for building
-#    a main target in this project, if that main target has no requirements,
-#    or default build of its own. TODO: the code which implements this
-#    is duplication of main-target logic. Need to merge.
 #
 #  Main targets are constructed in two stages:
 #  - When Jamfile is read, a number of calls to 'add-alternative' is made.
@@ -279,30 +275,7 @@ class project-target : abstract-target
             
             $(target).add-alternative $(a) ;            
         }    
-    }
-                        
-    # Returns the properties which would be used for a main
-    # target in this project, if generation with
-    # 'properties' is requested, and that main target 
-    # does not have any requirements of its own.
-    rule reference-properties ( property-set )
-    {
-        if ! $(self.ref-props.$(property-set))
-        {            
-            local ref = [ project.attribute $(self.project) requirements ] ;
-            local eref = [ $(ref).evaluate-conditionals $(property-set) ] ;
-            local ps = [ $(property-set).refine $(eref) ] ;
-            ps = [ $(ps).run-actions ] ;                            
-            
-            ps = [ targets.generate-dependencies $(ps) : $(self.project) : $(ps) ] ;
-            # Exclude the usage-requirements propagated from dependencies.
-            # This used to be that way, and while I refactor, I'll keep the
-            # old semantic --- which probably is bogus.
-            self.ref-props.$(property-set) = $(ps[2-]) ;
-        }
-        return $(self.ref-props.$(property-set)) ;        
-    }    
-    
+    }                            
 }
 
 

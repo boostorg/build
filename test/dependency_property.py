@@ -11,6 +11,7 @@
 # targets used to be placed to the same location.
 
 from BoostBuild import Tester, List
+from string import find
 
 
 t = Tester()
@@ -35,9 +36,7 @@ __declspec(dllexport)
 void foo() {}
 """)
 
-t.run_build_system()
-
-t.expect_addition("bin/$toolset/debug/hello.obj")
-t.expect_addition("bin/$toolset/debug/main-target-hello2/hello.obj")
+t.run_build_system("--no-error-backtrace", status=1)
+t.fail_test(find(t.stdout(), "Duplicate name of actual target") == -1)
 
 t.cleanup()

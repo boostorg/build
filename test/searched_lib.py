@@ -41,8 +41,8 @@ void foo();
 int main() { foo(); return 0; }
 """)
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/main-target-main/main.exe")
-t.rm("bin/$toolset/debug/main-target-main/main.exe")
+t.expect_addition("bin/$toolset/debug/main.exe")
+t.rm("bin/$toolset/debug/main.exe")
 
 # A regression test: <library>property referring to
 # searched-lib was mishandled. As the result, we were
