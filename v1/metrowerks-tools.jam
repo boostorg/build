@@ -27,8 +27,8 @@ flags metrowerks LINKFLAGS <debug-symbols>on : -g ;
 
 flags metrowerks LINKFLAGS <target-type>DLL : -shared ;
 flags metrowerks CFLAGS <optimization>off : -O0 ;
-flags metrowerks CFLAGS <optimization>speed : -O4,p ;
-flags metrowerks CFLAGS <optimization>space : -O4,s ;
+flags metrowerks CFLAGS <optimization>speed : -O4,p -opt intrinsics ;
+flags metrowerks CFLAGS <optimization>space : -opt full ;
 flags metrowerks CFLAGS <inlining>off : -inline off ;
 flags metrowerks CFLAGS <inlining>on : -inline on ;
 flags metrowerks CFLAGS <inlining>full : -inline auto -inline level=8 ;
