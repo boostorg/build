@@ -494,7 +494,12 @@ builtin_import(
     if ( source_name || target_name )
     {
         backtrace_line( frame->prev );
-        printf( "import error: length of source and target rule name lists don't match" );
+        printf( "import error: length of source and target rule name lists don't match!\n" );
+        printf( "    source: " );
+        list_print( source_rules );
+        printf( "\n    target: " );
+        list_print( target_rules );
+        printf( "\n" );
         backtrace( frame->prev );
         exit(1);
     }
