@@ -51,7 +51,7 @@ GCC_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if GCC_ROOT_DIRECTORY not s
 GCC_STDLIB_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/lib ;
 
 # Make sure this gets set "on" the target
-flags gcc GCC_BIN_DIRECTORY : $(GCC_BIN_DIRECTORY) ;
+flags gcc GCC_BIN_DIR : $(GCC_BIN_DIRECTORY) ;
 
 flags gcc LINKFLAGS <runtime-link>static : -static ;
 flags gcc CFLAGS <debug-symbols>on : -g ;
@@ -333,7 +333,7 @@ actions gcc-Link-action bind NEEDLIBS NEEDIMPS
 {
     $(SHELL_SET)$(gSHELL_LIBPATH)=$(RUN_LD_LIBRARY_PATH)
     $(SHELL_EXPORT)$(gSHELL_LIBPATH)
-    $(GCC_BIN_DIRECTORY)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" "$(IMPLIB_FLAGS)$(NEEDIMPS)" -l$(FINDLIBS) $(LNOPT)-Wl,-rpath-link,.$(SPACE)"-Wl,-soname,$(<[1]:D=)$(SOTAG)"
+    $(GCC_BIN_DIR)$(GXX) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" "$(IMPLIB_FLAGS)$(NEEDIMPS)" -l$(FINDLIBS) $(LNOPT)-Wl,-rpath-link,.$(SPACE)"-Wl,-soname,$(<[1]:D=)$(SOTAG)"
     $(ACTION_1)$(LN)$(SPACE)-fs$(SPACE)"$(<[1]:D=)$(OUTTAG)"$(SPACE)"$(<[1])"
 }
 
@@ -352,7 +352,7 @@ rule Cc-action
 
 actions gcc-Cc-action
 {
-    $(GCC_BIN_DIRECTORY)$(GCC) -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(GCC_BIN_DIR)$(GCC) -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -364,7 +364,7 @@ rule C++-action
 
 actions gcc-C++-action
 {
-    $(GCC_BIN_DIRECTORY)$(GXX) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(GCC_BIN_DIR)$(GXX) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
