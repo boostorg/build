@@ -30,6 +30,13 @@ if ! $(MSVCDir)
 }
 else
 {
+    # This hack reconstitutes paths containing spaces as long as
+    # they don't contain any consecutive spaces.
+    while $(MSVCDir[2]) 
+    {
+        MSVCDir = $(MSVCDir[1])" "$(MSVCDir[2]) $(MSVCDir[3-]) ;
+    }
+    
     VC_TOOL_PATH ?= "" ; # Don't clobber adjoining text if MSVCDir is already set
 }
 
