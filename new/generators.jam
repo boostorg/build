@@ -134,7 +134,10 @@ rule generator (
         sequence.transform type.validate : $(self.target-types) ;
     }
     
-        
+
+    # CONSIDER: what is the purpose of this code? The comment to rev 1.16
+    # where it appears, only says:
+    #     "Attempt to handle derived target types"
     self.optional-properties
       = [ feature.expand <base-target-type>$(self.target-types) ]
           ;
@@ -249,6 +252,22 @@ rule generator (
             multiple = ;
         }
         
+        # We don't run composing generators which are not given a name.
+        # This in effect, means that composing generators are runnable only
+        # at top-level of transofrmation graph, or if name is passed explicitly.
+        # Thus, we dissallow composing generators in the middle. For example, the
+        # transofrmation CPP -> OBJ -> STATIC_LIB -> RSP -> EXE won't be allowed 
+        # (the OBJ -> STATIC_LIB generator is composing)
+        if ! $(self.composing) || $(name)
+        {            
+            run-really $(project) $(name) : $(property-set) : $(sources) : $(multiple) ;
+        }        
+    }
+    
+    
+    rule run-really ( project name ? : property-set : sources + : multiple ? )
+    {
+                
         # Targets that this generator will consume directly.
         local consumed = ;
         # Targets that can't be consumed and will be returned as-is.
