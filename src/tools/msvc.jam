@@ -389,12 +389,12 @@ else # CYGWIN
 
 actions link bind DEF_FILE
 {
-    $(.LD) -nologo $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"$(<[2]:W)"
+    $(.LD) -nologo $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(<[2]:W)"
 }
 
 actions link.dll bind DEF_FILE
 {
-    $(.LD) -nologo $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(<[3]:W)"
+    $(.LD) -nologo $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"$(<[3]:W)"
 }
 
         
