@@ -8,6 +8,12 @@
 import targets ;
 import class : class new ;
 import property ;
+import feature ;
+import toolset ;
+
+# The feature which controls the name of program used to
+# lanch test programs. 
+feature.feature testing.launcher : : optional free ;
 
 rule unit-test-target-class ( name : project : sources * : requirements * 
                          : default-build * )
@@ -34,13 +40,12 @@ rule unit-test-target-class ( name : project : sources * : requirements *
 
 class unit-test-target-class : typed-target ;
 
-rule run 
-{    
-}
+toolset.flags testing.run LAUNCHER <testing.launcher> ;
+
 
 actions run 
 {
-    $(>) && touch $(<)
+    $(LAUNCHER) $(>) && touch $(<)
 }
 
 
