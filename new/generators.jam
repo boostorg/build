@@ -347,7 +347,17 @@ rule composing-generator ( id : source-types + : target-types + :
         {
             s = $(sources[1]) ;
             generators.dout [ indent ] "type is " [ $(s).type ] ;            
-            if [ $(s).type ] in $(self.source-types)
+            local consumable ;
+            local ast = [ $(s).type ] ;
+            for local st in $(self.source-types)
+            {
+                if $(ast) = $(st) || [ type.is-derived $(ast) $(st) ] 
+                {
+                    consumable = true ;
+                }                
+            }
+            
+            if $(consumable)
             {
                 generators.dout [ indent ] "directly consuming " [ $(s).str ] ;
                 consumed += $(s) ;

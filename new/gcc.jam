@@ -2,7 +2,7 @@
 import property ;
 import generators ;
 
-generators.register-composing gcc.link : STATIC-LIB OBJ : EXE : <toolset>gcc ;
+generators.register-composing gcc.link : LIB OBJ : EXE : <toolset>gcc ;
 generators.register-composing gcc.archive : OBJ : STATIC-LIB : <toolset>gcc ;
 generators.register-composing gcc.link-dll : OBJ : SHARED-LIB : <toolset>gcc ;
 generators.register-c-compiler gcc.compile : CPP : OBJ : <toolset>gcc ;
