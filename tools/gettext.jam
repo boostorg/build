@@ -18,7 +18,7 @@
 #    
 #    gettext.update update-russian : russian.po a.cpp my_app ;
 # 
-#  - Create the initial translation file by running
+#  - Create the initial translation file by running::
 #
 #    bjam update-russian
 #
