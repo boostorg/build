@@ -3,23 +3,6 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-# Glossary
-#
-# feature      -  a normalized aspect of a build configuration
-#
-# value        -  a specific available setting for a feature
-#
-# property     -  a feature-value pair, expressed ase <feature>value
-#
-# subfeature   -  a feature which only exists in the presence of its
-#                 parent, and whose identity can be derived (in the
-#                 context of its parent) from the name of its value
-#
-# value-string - a string of the form value-subvalue1-subvalue2...
-#                -subvalueN, where value is a feature value and
-#                subvalue1...subvalueN are values of related
-#                subfeatures.
-
 import class : * ;
 
 # A feature-space is a class to facilitate testing. We want to be able
@@ -35,66 +18,17 @@ import utility ;
 
 .all-attributes =
 
-    implicit    # features whose values alone identify the
-                # feature. For example, a user is not required to
-                # write "<toolset>gcc", but can simply write
-                # "gcc". Implicit feature names also don't appear in
-                # variant paths, although the values do. Thus:
-                # bin/gcc/... as opposed to bin/toolset-gcc/.... There
-                # should typically be only a few such features, to
-                # avoid possible name clashes.
-
-    executed    # the feature corresponds to the name of a module
-                # containing an execute rule, used to actually prepare
-                # the build. For example, the toolset feature would be
-                # executed.
-
-
-    composite   # features which actually correspond to groups of
-                # properties. For example, a build variant is a
-                # composite feature. When generating targets from a
-                # set of build properties, composite features are
-                # recursively expanded and /added/ to the build
-                # property set, so rules can find them if
-                # neccessary. Non-composite non-free features override
-                # components of composite features in a build property
-                # set.
-
-
-    optional    # An optional feature is allowed to have no value at
-                # all in a particular build. Normal non-free features
-                # are always given the first of their values if no
-                # value is otherwise specified.
-
-
-    symmetric   # A symmetric feature has no default value, and is
-        # therefore not automatically included in all
-        # variants. A symmetric feature, when relevant to the
-        # toolset, always generates a corresponding subvariant
-        # directory.
-
-    free
-      
+    implicit 
+    executed 
+    composite
+    optional 
+    symmetric
+    free      
     incidental  
-
-    path        # the (free) feature's value describes a path which
-        # might be given relative to the directory of the
-        # Jamfile.
-
-    dependency  # the value of the (free) feature specifies a
-        # dependency of the target.
-
-    propagated  # when used in a build request, the (free) feature is
-        # propagated to top-level targets which are
-        # dependencies of the requested build. Propagated
-        # features would be most useful for settings such as
-        # warning levels, output message style, etc., which
-        # don't affect the built products at all.
-
-
-    link-incompatible # targets with different values of this feature
-                      # cannot be linked together under any circumstances.
-
+    path  
+    dependency  
+    propagated 
+    link-incompatible
   ;
 
 .all-features = ;
