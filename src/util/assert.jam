@@ -61,7 +61,31 @@ rule true ( rule-name args * : * )
     if ! $(result__)
     {
         error-skip-frames 3 assertion failure: expecting true result from
-            "[" $(rule-name) \"$(args)\" "]" ;
+          "[" $(rule-name) 
+          [ lol->list $(args) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ]
+            "]" ;
+    }
+}
+
+# assert that the result of calling RULE-NAME on the given arguments
+# has a false logical value (is either an empty list or all empty
+# strings).
+rule false ( rule-name args * : * )
+{
+    local result__ ;
+    module [ CALLER_MODULE ]
+    {
+        result__ = [ 
+          $(rule-name) $(args) : $(2) $(3) : $(4)
+            : $(5) : $(6) : $(7) : $(8) : $(9) ] ;
+    }
+
+    if $(result__)
+    {
+        error-skip-frames 3 assertion failure: expecting false result from
+          "[" $(rule-name) 
+          [ lol->list $(args) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ]
+            "]" : got [ lol->list $(result__) ] instead  ;
     }
 }
 
