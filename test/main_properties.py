@@ -22,5 +22,21 @@ t.write("b.cpp", "void foo() {}\n")
 t.run_build_system()
 t.expect_addition("bin/gcc/debug/main-target-b/b.o")
 
+# This tests another bug: when source file was used by two main targets,
+# one without any requirements and another with free requirements, it 
+# was compiled twice with to the same locaiton. 
+
+t.write("Jamfile", """
+exe a : a.cpp ;
+exe b : a.cpp : <define>FOO ;
+""")
+t.write("a.cpp", """
+int main() {}
+""")
+
+t.rm("bin")
+t.run_build_system()
+t.expect_addition(["bin/gcc/debug/a.o", "bin/gcc/debug/main-target-b/a.o"])
+
 
 t.cleanup()
