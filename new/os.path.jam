@@ -160,7 +160,7 @@ rule root_relative_path ( path root )
 #
 rule all_parents ( path : upper_limit ? : cwd ? )
 {
-    cwd ?= [ PWD ] ;
+    cwd ?= [ make [ PWD ] ] ;
     local rpath ;
     if ! [ is_rooted $(path) ] {
         rpath = [ root_relative_path $(path) $(cwd) ] ;
