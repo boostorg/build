@@ -87,6 +87,11 @@ if ! $(ARFLAGS)
     flags xlc ARFLAGS : "" ;
 }
 
+# Clear the STDHDRS variable which contains /usr/include. Vacpp does not like
+# that this sys directory is included (vacpp related headers are in
+# /usr/vacpp/include)
+STDHDRS = ;
+
 #### Link ####
 
 rule Link-action
