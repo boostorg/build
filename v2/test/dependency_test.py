@@ -19,9 +19,9 @@ t.touch("a.h")
 t.run_build_system()
 
 t.expect_touch("bin/$toolset/debug/a.exe")
-t.expect_touch("bin/$toolset/debug/a.o")
+t.expect_touch("bin/$toolset/debug/a.obj")
 t.expect_touch("bin/$toolset/debug/b.exe")
-t.expect_touch("bin/$toolset/debug/b.o")
+t.expect_touch("bin/$toolset/debug/b.obj")
 t.expect_touch("bin/$toolset/debug/main-target-c/c.exe")
 t.expect_nothing_more()
 
@@ -30,7 +30,7 @@ t.touch("src1/a.h")
 t.run_build_system()
 
 t.expect_touch("bin/$toolset/debug/a.exe")
-t.expect_touch("bin/$toolset/debug/a.o")
+t.expect_touch("bin/$toolset/debug/a.obj")
 t.expect_touch("bin/$toolset/debug/main-target-c/c.exe")
 t.expect_nothing_more()
 
@@ -38,7 +38,7 @@ t.expect_nothing_more()
 t.touch("src1/b.h")
 t.run_build_system()
 t.expect_touch("bin/$toolset/debug/a.exe")
-t.expect_touch("bin/$toolset/debug/a.o")
+t.expect_touch("bin/$toolset/debug/a.obj")
 t.expect_touch("bin/$toolset/debug/main-target-c/c.exe")
 t.expect_nothing_more()
 
@@ -58,6 +58,6 @@ t.expect_nothing_more()
 # support, this check will be implemented later.
 t.touch("x.foo")
 t.run_build_system()
-t.expect_touch("bin/$toolset/debug/a.o")
+t.expect_touch("bin/$toolset/debug/a.obj")
 
 t.cleanup()
