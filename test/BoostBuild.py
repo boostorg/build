@@ -296,7 +296,7 @@ class Tester(TestCmd.TestCmd):
                         self.fail_test(1)
 
     def ignore_addition(self, wildcard):
-        ignore_elements(self.unexpected_difference.added_files, wildcard)
+        self.ignore_elements(self.unexpected_difference.added_files, wildcard)
 
     def expect_removal(self, names):
         for name in self.adjust_names(names):
@@ -307,7 +307,7 @@ class Tester(TestCmd.TestCmd):
                         self.fail_test(1)
 
     def ignore_removal(self, wildcard):
-        ignore_elements(self.unexpected_difference.removed_files, wildcard)
+        self.ignore_elements(self.unexpected_difference.removed_files, wildcard)
 
     def expect_modification(self, names):
         for name in self.adjust_names(names):
@@ -318,7 +318,7 @@ class Tester(TestCmd.TestCmd):
                         self.fail_test(1)
 
     def ignore_modification(self, wildcard):
-        ignore_elements(self.unexpected_difference.modified_files, wildcard)
+        self.ignore_elements(self.unexpected_difference.modified_files, wildcard)
 
     def expect_touch(self, names):
         
@@ -346,13 +346,13 @@ class Tester(TestCmd.TestCmd):
 
 
     def ignore_touch(self, wildcard):
-        ignore_elements(self.unexpected_difference.touched_files, wildcard)
+        self.ignore_elements(self.unexpected_difference.touched_files, wildcard)
 
     def ignore(self, wildcard):
-        ignore_elements(self.unexpected_difference.added_files, wildcard)
-        ignore_elements(self.unexpected_difference.removed_files, wildcard)
-        ignore_elements(self.unexpected_difference.modified_files, wildcard)
-        ignore_elements(self.unexpected_difference.touched_files, wildcard)
+        self.ignore_elements(self.unexpected_difference.added_files, wildcard)
+        self.ignore_elements(self.unexpected_difference.removed_files, wildcard)
+        self.ignore_elements(self.unexpected_difference.modified_files, wildcard)
+        self.ignore_elements(self.unexpected_difference.touched_files, wildcard)
 
     def expect_nothing(self, names):
         for name in self.adjust_names(names):
@@ -429,10 +429,9 @@ class Tester(TestCmd.TestCmd):
 
 
     # Internal methods
-    def ignore_elements(list, wildcard):
+    def ignore_elements(self, list, wildcard):
         """Removes in-place, element of 'list' that match the given wildcard."""
-        w = fnmatch.translate(wildcard)
-        list[:] = filter(lambda x, w=w: not w(x), list)
+        list[:] = filter(lambda x, w=wildcard: not fnmatch.fnmatch(x, w), list)
 
     def adjust_suffix(self, name):
         if not self.translate_suffixes:
