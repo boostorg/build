@@ -219,6 +219,7 @@ class abstract-file-target : virtual-target
             
         self.type = $(type) ;
         self.action = $(action) ;
+        self.exact-name = $(exact) ;
         if $(action)
         {         
             $(action).add-targets $(__name__) ;
@@ -234,7 +235,10 @@ class abstract-file-target : virtual-target
     rule set-type ( type )
     {
         self.type = $(type) ;
-        _adjust-name [ utility.basename $(self.name) ] ;
+        if ! $(self.exact-name)
+        {            
+            _adjust-name [ utility.basename $(self.name) ] ;
+        }        
     }
 
     # Sets the path. When generating target name, it will override any path
@@ -411,8 +415,17 @@ class abstract-file-target : virtual-target
     }            
 
     rule _adjust-name ( specified-name )
-    {
-        local ps = [ $(self.action).properties ] ;
+    {        
+        local ps ;
+        if $(self.action) 
+        {
+            ps = [ $(self.action).properties ] ;
+        }
+        else
+        {
+            ps = [ property-set.empty ] ;
+        }
+        
         local tag = [ $(ps).get <tag> ] ;
 
         if $(tag)
@@ -443,8 +456,7 @@ class abstract-file-target : virtual-target
         if ! $(tag) || ! $(self.name)
         {                            
             self.name = [ virtual-target.add-suffix
-                $(specified-name) : $(self.type) 
-                  : [ $(self.action).properties ] ] ;
+                $(specified-name) : $(self.type) : $(ps) ] ;
         }    
     }
     
