@@ -11,7 +11,7 @@ use-project /extlib : extlib ;
 
 # Construct a target 'a' from a list of sources using the specified rule.
 make a 
-    : 	a.o  # Use a target declared in this Jamfile
+    :   a.o  # Use a target declared in this Jamfile
     lib/b.o  # Use a target from other Jamfile
     @/extlib/c.o  # Refer to a library by project-id
 
