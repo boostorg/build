@@ -440,7 +440,11 @@ if $(NT)
 }
 SUFEXE ?= "" ;
 
-yacc ?= [ GLOB $(PATH) : yacc$(SUFEXE) ] ;
+# On some systems yacc is insufficient to build the grammar.
+if ! ( $(OS) in SOLARIS SUNOS )
+{
+    yacc ?= [ GLOB $(PATH) : yacc$(SUFEXE) ] ;
+}
 yacc ?= [ GLOB $(PATH) : bison$(SUFEXE) ] ;
 yacc ?= [ GLOB "C:\\Program Files\\GnuWin32\\bin" : bison$(SUFEXE) ] ;
 yacc = $(yacc[1]) ;
