@@ -12,7 +12,7 @@ import utility : ungrist ;
 # On success, returns properties. On error, returns a list which first
 # element is "@error" and the other elements compose the explanation
 # string.
-rule refine-properties ( properties * : requirements * : feature-space ? )
+rule refine ( properties * : requirements * : feature-space ? )
 {
     feature-space ?= feature ;
 
@@ -103,18 +103,18 @@ local rule __test__ ( )
     }
 
     assert.result <toolset>gcc <rtti>off <define>FOO
-        : refine-properties <toolset>gcc <rtti>off
+        : refine <toolset>gcc <rtti>off
         : <define>FOO
         : $(test-space)
         ;
 
     assert.result <toolset>gcc <optimization>on
-        : refine-properties <toolset>gcc <optimization>off
+        : refine <toolset>gcc <optimization>off
         : <optimization>on
         : $(test-space)
         ;
 
-    r = [ refine-properties <toolset>gcc <rtti>off
+    r = [ refine <toolset>gcc <rtti>off
             : <rtti>on
             : $(test-space) ] ;
     assert.equal $(r[1]) : "@error" ;
