@@ -215,6 +215,18 @@ load_builtins()
           bind_builtin( "SEARCH_FOR_TARGET",
                         builtin_search_for_target, 0, args );
       }
+
+      {
+          char * args[] = { "modules_to_import", "+", ":", "target_module", "?", 0 };
+          bind_builtin( "IMPORT_MODULE",
+                        builtin_import_module, 0, args );
+      }
+
+      {
+          char * args[] = { "module", "?", 0 };
+          bind_builtin( "IMPORTED_MODULES",
+                        builtin_imported_modules, 0, args );
+      }
 }
 
 /*
@@ -845,6 +857,47 @@ builtin_search_for_target( PARSE *parse, FRAME *frame )
     TARGET* t = search_for_target( arg1->string, arg2 );
     return list_new( L0, t->name );
 }
+
+LIST *builtin_import_module( PARSE *parse, FRAME *frame )
+{
+    LIST* arg1 = lol_get( frame->args, 0 );
+    LIST* arg2 = lol_get( frame->args, 1 );
+
+    module_t* m = arg2 ? bindmodule(arg2->string) : root_module();
+ 
+    for(;arg1; arg1 = arg1->next) {
+        
+        char* s = arg1->string;
+        char** ss = &s;
+        if (!m->imported_modules)
+            m->imported_modules = hashinit( sizeof(char*), "imported");
+        
+        hashenter(m->imported_modules, (HASHDATA**)&ss);
+    }
+
+    return L0;
+}
+
+static void add_module_name( void* r_, void* result_ )
+{
+    char** r = (char**)r_;
+    LIST** result = (LIST**)result_;
+
+    *result = list_new( *result, copystr( *r ) );
+}
+
+
+LIST *builtin_imported_modules( PARSE *parse, FRAME *frame )
+{
+    LIST *arg0 = lol_get( frame->args, 0 );
+    LIST *result = L0;
+    module_t* source_module = bindmodule( arg0 ? arg0->string : 0 );
+
+    if ( source_module->rules )
+        hashenumerate( source_module->imported_modules, add_module_name, &result );
+    return result;
+}
+
 
 static void lol_build( LOL* lol, char** elements )
 {

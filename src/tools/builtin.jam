@@ -386,7 +386,7 @@ rule lib-target-class ( name : project
     basic-target.__init__ $(name) : $(project) 
       : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;
     
-    IMPORT builtin : generators.construct : $(__name__) : generators.construct ;
+    import generators : construct : generators.construct ;
             
     rule construct ( source-targets * : property-set )
     {        

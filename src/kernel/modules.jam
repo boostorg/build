@@ -296,16 +296,14 @@ rule import ( module-names + : rules-opt * : rename-opt * )
             load $(m) : : $(search) ;
         }
         
-        local all-rules = [ RULENAMES $(m) ] ;
-    
-        # import all the rules with qualification
-        IMPORT $(m) : $(all-rules) : $(caller) : $(m).$(all-rules) ;
-    
+        IMPORT_MODULE $(m) : $(caller) ;
+                    
         if $(rules-opt)
         {
             local source-names ;
             if $(rules-opt) = *
             {
+                local all-rules = [ RULENAMES $(m) ] ;
                 source-names = $(all-rules) ;
             }
             else
