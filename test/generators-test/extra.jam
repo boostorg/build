@@ -1,4 +1,16 @@
 
+import type ;
+import generators ;
+
+type.register WHL : whl ;
+type.register DLP : dlp ;
+type.register WHL-LR0 : lr0 ;
+type.register WD : wd ;
+
+generators.register-standard extra.whale : WHL : CPP WHL-LR0 ;
+generators.register-standard extra.dolphin : DLP : CPP ;
+generators.register-standard extra.wd : WD : WHL(%_parser) DLP(%_lexer) ;
+
 rule whale ( targets * : sources * : properties * )
 {
 }

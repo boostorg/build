@@ -519,7 +519,7 @@ class composing-generator : generator ;
             # Avoid trying the same generator twice on different levels.
             if ! $(g) in $(.active-generators) 
               && ! ( [ is-a $(g) : composing-generator ] && $(.had-composing-generator) )
-            {                
+            {           
                 if [ $(g).requirements ] in $(properties) 
                 {
                     viable-generators += $(g) ;
@@ -584,11 +584,15 @@ class composing-generator : generator ;
     # *possible* ingridients -- i.e. it is not required to consume
     # them all. If 'multiple' is true, the rule is allowed to return
     # several targets of 'target-type'.          
+    # If 'allow-composing-generators' is set, will consider composing generators
+    # even if a composing generators was already used up the call stack.
+    #
     #
     # Returns a vector of two vectors. The first contains targets of 
     # requested types. The second contains all unused sources and
-    # additionally generated targets.
-    rule construct-dbg ( project name ? : target-type multiple ? : properties * : sources + )
+    # additionally generated targets.    
+    rule construct-dbg ( project name ? : target-type multiple ? : properties * : sources + 
+                         : allow-composing-generators ? )
     {
         increase-indent ;
         generators.dout [ indent ] "*** construct" $(target-type) ;
@@ -604,6 +608,12 @@ class composing-generator : generator ;
         
         generators.dout [ indent ] "*** level:" $(level) ;
         
+        local .had-composing-generator = $(.had-composing-generator) ;
+        if $(allow-composing-generators)
+        {
+            .had-composing-generator = ;
+        }
+               
         local result ;
         
         # TODO: should probably use a better logic to decide when to activate 
@@ -643,11 +653,11 @@ class composing-generator : generator ;
                 }
             }    
         } else {
-            
-                
-        viable-generators = [ find-viable-generators $(target-type) : $(properties) ] ;
         
-        
+
+               
+            viable-generators = [ find-viable-generators $(target-type) : $(properties) ] ;
+                    
         #Don't do any error reporting there, just return empty string.
         #Possibly, we can have a switch which would turn output of such 
         #messages.

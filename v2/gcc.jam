@@ -1,5 +1,13 @@
 
 import property ;
+import generators ;
+
+generators.register-composing gcc.link : STATIC-LIB OBJ : EXE : <toolset>gcc ;
+generators.register-composing gcc.archive : OBJ : STATIC-LIB : <toolset>gcc ;
+generators.register-composing gcc.link-dll : OBJ : SHARED-LIB : <toolset>gcc ;
+generators.register-standard gcc.compile : CPP : OBJ : <toolset>gcc ;
+generators.register-standard gcc.compile : C : OBJ : <toolset>gcc ;
+
 
 rule compile ( target : sources * : property-set * )
 {
@@ -48,5 +56,14 @@ rule archive ( target : sources * : property-set * )
 
 actions archive 
 {
-	ar ur $(<) $(>)
+    ar ur $(<) $(>)
+}
+
+rule link-dll ( target : sources * : property-set * )
+{
+}
+
+actions link-dll
+{
+    gcc -o $(<) -shared $(>)
 }

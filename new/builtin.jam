@@ -5,9 +5,14 @@
 
 #  Defines standard features and rules.
 
+import class : class new ;
+
 import feature : feature compose ;
+import type ;
+import generators ;
 
 feature toolset : gcc : implicit propagated ;
+feature shared : false true : propagated ;
 feature optimization : off on : propagated ;
 feature threading : single multi : link-incompatible propagated ;
 feature rtti : on off : link-incompatible propagated ;
@@ -18,5 +23,38 @@ feature "include" : : free ;
 feature variant : debug release : implicit composite propagated ;
 compose <variant>debug : <optimization>off <rtti>on <debug-symbols>on ;
 compose <variant>release : <optimization>on <rtti>on <debug-symbols>off ;
+
+type.register EXE : : : main ;
+type.register STATIC-LIB : a : : main ;
+type.register SHARED-LIB : so : : main ;
+type.register LIB : : : main ;
+type.register CPP : cpp cxx ;
+type.register H : h ;
+type.register C : c ;
+type.register OBJ : o ;
+
+rule lib-generator ( ) 
+{
+    composing-generator.__init__ lib-generator : unknown-source-type : LIB ;
+    
+    rule run ( project name ? : properties * : sources + )
+    {
+        local actual-type ;
+        if <shared>true in $(properties)
+        {
+            actual-type = SHARED-LIB ;
+        }
+        else 
+        {
+            actual-type = STATIC-LIB ;
+        }
+        return [ generators.construct-dbg $(project) $(name) : $(actual-type) : $(properties)
+          : $(sources) : allow-composing-generators ] ;
+    }
+}
+
+class lib-generator : composing-generator ;
+
+generators.register [ new lib-generator ] ;
 
 

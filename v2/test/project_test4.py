@@ -11,28 +11,28 @@ t.set_tree("project-test4")
 
 t.run_build_system()
 
-t.expect_addition("bin/gcc/debug/threading-single/a.obj")
-t.expect_content("bin/gcc/debug/threading-single/a.obj",
-"""gcc/debug/include-everything/threading-single
+t.expect_addition("bin/gcc/debug/shared-false/threading-single/a.obj")
+t.expect_content("bin/gcc/debug/shared-false/threading-single/a.obj",
+"""gcc/debug/include-everything/shared-false/threading-single
 a.cpp
 """)
 
-t.expect_addition("bin/gcc/debug/threading-single/a.exe")
-t.expect_content("bin/gcc/debug/threading-single/a.exe",
-"gcc/debug/include-everything/threading-single\n" +
-"bin/gcc/debug/threading-single/a.obj lib/bin/gcc/debug/optimization-on/threading-single/b.obj\n"
+t.expect_addition("bin/gcc/debug/shared-false/threading-single/a.exe")
+t.expect_content("bin/gcc/debug/shared-false/threading-single/a.exe",
+"gcc/debug/include-everything/shared-false/threading-single\n" +
+"bin/gcc/debug/shared-false/threading-single/a.obj lib/bin/gcc/debug/optimization-on/shared-false/threading-single/b.obj\n"
 )
 
-t.expect_addition("lib/bin/gcc/debug/optimization-on/threading-single/b.obj")
-t.expect_content("lib/bin/gcc/debug/optimization-on/threading-single/b.obj",
-"""gcc/debug/include-everything/optimization-on/threading-single
+t.expect_addition("lib/bin/gcc/debug/optimization-on/shared-false/threading-single/b.obj")
+t.expect_content("lib/bin/gcc/debug/optimization-on/shared-false/threading-single/b.obj",
+"""gcc/debug/include-everything/optimization-on/shared-false/threading-single
 lib/b.cpp
 """)
 
-t.expect_addition("bin/gcc/debug/threading-single/main-target-b.exe/b.exe")
-t.expect_content("bin/gcc/debug/threading-single/main-target-b.exe/b.exe",
-"gcc/debug/define-MACROS/include-everything/threading-single\n" +
-"bin/gcc/debug/threading-single/a.obj\n"
+t.expect_addition("bin/gcc/debug/shared-false/threading-single/main-target-b.exe/b.exe")
+t.expect_content("bin/gcc/debug/shared-false/threading-single/main-target-b.exe/b.exe",
+"gcc/debug/define-MACROS/include-everything/shared-false/threading-single\n" +
+"bin/gcc/debug/shared-false/threading-single/a.obj\n"
 )
 
 
@@ -48,7 +48,8 @@ t.run_build_system(stdout=expected, status=None)
 t.copy("lib/Jamfile3", "lib/Jamfile")
 
 expected="""Cannot satisfy request to build lib/b.obj with properties  <toolset>gcc
-<optimization>on <threading>single <rtti>on <debug-symbols>on <variant>debug
+<shared>false <optimization>on <threading>single <rtti>on <debug-symbols>on
+<variant>debug
 No viable alternative found.
 
 """
@@ -63,17 +64,17 @@ t.copy("Jamfile2", "Jamfile")
 
 t.run_build_system()
 
-t.expect_addition("bin/gcc/debug/threading-single/a_gcc.obj")
-t.expect_content("bin/gcc/debug/threading-single/a_gcc.obj",
-"""gcc/debug/threading-single
+t.expect_addition("bin/gcc/debug/shared-false/threading-single/a_gcc.obj")
+t.expect_content("bin/gcc/debug/shared-false/threading-single/a_gcc.obj",
+"""gcc/debug/shared-false/threading-single
 a_gcc.cpp
 """)
 
-t.expect_content("bin/gcc/debug/threading-single/a.exe",
-"gcc/debug/threading-single\n" +
-"bin/gcc/debug/threading-single/a.obj " +
-"lib/bin/gcc/debug/optimization-on/threading-single/b.obj " +
-"bin/gcc/debug/threading-single/a_gcc.obj\n"
+t.expect_content("bin/gcc/debug/shared-false/threading-single/a.exe",
+"gcc/debug/shared-false/threading-single\n" +
+"bin/gcc/debug/shared-false/threading-single/a.obj " +
+"lib/bin/gcc/debug/optimization-on/shared-false/threading-single/b.obj " +
+"bin/gcc/debug/shared-false/threading-single/a_gcc.obj\n"
 )
 
 t.cleanup()

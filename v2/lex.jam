@@ -1,0 +1,16 @@
+
+import type ;
+import generators ;
+
+type.register LEX : l ;
+
+generators.register-standard lex.lex : LEX : C ;
+
+rule lex ( target : source : properties * )
+{   
+}
+
+actions lex 
+{
+    flex -o$(<) $(>)
+}

@@ -8,17 +8,6 @@ import extra ;
 
 import type ;
 
-type.register EXE : : : main ;
-type.register LIB : : : main ;
-type.register CPP : cpp cxx ;
-type.register C : c ;
-type.register OBJ : o ;
-type.register LEX : l ;
-type.register WHL : whl ;
-type.register DLP : dlp ;
-type.register WHL-LR0 : lr0 ;
-type.register WD : wd ;
-type.register H : h ;
 type.register UI : ui ;
 type.register UIC-H : h ;
 
@@ -28,15 +17,6 @@ type.register X_PRO : x_pro ;
 
 import generators ;
 
-generators.register-composing gcc.link : LIB OBJ : EXE : <toolset>gcc ;
-generators.register-composing gcc.archive : OBJ : LIB : <toolset>gcc ;
-generators.register-standard gcc.compile : CPP : OBJ : <toolset>gcc ;
-generators.register-standard gcc.compile : C : OBJ : <toolset>gcc ;
-generators.register-standard lex.lex : LEX : C ;
-
-generators.register-standard extra.whale : WHL : CPP WHL-LR0 ;
-generators.register-standard extra.dolphin : DLP : CPP ;
-generators.register-standard extra.wd : WD : WHL(%_parser) DLP(%_lexer) ;
 generators.register-standard qt.uic : UI UIC-H : CPP ;
 generators.register-standard qt.uic-h : UI : UIC-H ;
 
@@ -83,7 +63,7 @@ rule nm.target.cpp-obj-generator
     {
         if [ $(source).type ] = CPP {    
             local converted = [ generators.construct-dbg $(project) : NM.TARGET.CPP : $(properties) : $(source) ] ;
-	    if $(converted[1])
+        if $(converted[1])
             {            
                 local result = [ generators.construct-dbg $(project) : OBJ : $(properties) : $(converted[1]) ] ;
                 return $(result) ;

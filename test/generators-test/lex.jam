@@ -1,9 +1,0 @@
-
-rule lex ( target : source : properties * )
-{	
-}
-
-actions lex 
-{
-	flex -o$(<) $(>)
-}
