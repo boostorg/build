@@ -1,8 +1,0 @@
-
-exe a : a.cpp b.cxx c.ui d.wd x.l y.x_pro lib/auxilliary ;
-# This should not cause second compilation of a.cpp 
-exe f : a.cpp b.cxx lib/auxilliary ;
-
-#exe a : a.cpp b.cpp c.ui d.wd x.l y.x_pro ;
-
-nm_exe e : e.cpp ;
