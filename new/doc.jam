@@ -53,6 +53,17 @@ help-output-file = help ;
 #
 rule help ( )
 {
+    if ! $(.did-help)
+    {
+        .did-help = [ help-options ] ;
+    }
+}
+
+# Temporary so that the option parsing can be guarded to execute once
+# until some of this is moved to help.jam options file.
+#
+local rule help-options ( )
+{
     local args = [ class.new vector [ modules.peek : ARGV ] ] ;
     local did-help = ;
     local command = [ $(args).front ] ; $(args).pop-front ;
