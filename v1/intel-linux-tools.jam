@@ -68,6 +68,13 @@ flags intel-linux FINDLIBS <find-library> ;
 flags intel-linux STDHDRS <sysinclude> ;
 flags intel-linux LINKFLAGS <linkflags> ;
 
+flags intel-linux ARFLAGS <arflags> ;
+
+if ! $(ARFLAGS)
+{
+    flags intel-linux ARFLAGS : "" ;
+}
+
 #### Cc ####
 
 rule Cc-action
@@ -103,7 +110,7 @@ rule Archive-action
 
 actions updated together piecemeal intel-linux-Archive-action
 {
-    ar ru "$(<)" "$(>)"
+    ar ru$(ARFLAGS) "$(<)" "$(>)"
 }
 
 #### Link ####

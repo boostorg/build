@@ -26,6 +26,7 @@ flags metrowerks UNDEFS <undef> ;
 flags metrowerks HDRS <include> ;
 flags metrowerks STDHDRS <sysinclude> ;
 flags metrowerks LINKFLAGS <linkflags> ;
+flags metrowerks ARFLAGS <arflags> ;
 
 flags metrowerks CFLAGS <debug-symbols>on : -g ;
 flags metrowerks LINKFLAGS <debug-symbols>on : -g ;
@@ -126,6 +127,6 @@ rule Archive-action
 actions together metrowerks-Archive-action
 {
     $(METROWERKS_SETUP)
-    mwld -library -o "$(<)" @"$(>)"
+    mwld -library $(ARFLAGS) -o "$(<)" @"$(>)"
 }
 

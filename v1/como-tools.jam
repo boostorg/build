@@ -47,6 +47,7 @@ flags como UNDEFS <undef> ;
 flags como HDRS <include> ;
 flags como STDHDRS <sysinclude> ;
 flags como LINKFLAGS <linkflags> ;
+flags como ARFLAGS <arflags> ;
 
 flags como STDHDRS : $(COMO_INCLUDE_PATH) ;
 flags como STDLIB_PATH : $(COMO_STDLIB_PATH)$(SLASH) ;
@@ -123,7 +124,7 @@ actions updated together piecemeal como-Archive-action
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    $(COMO_BIN_DIRECTORY)como -o "$(<:S=)" $(>)
+    $(COMO_BIN_DIRECTORY)como $(ARFLAGS) -o "$(<:S=)" $(>)
     REM if exist "$(<)" set _$(<:B)_="$(<)"
     REM $(MSVC_TOOL_PATH)link /lib /out:"$(<)" %_$(<:B)_% "$(>)"
 }

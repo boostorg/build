@@ -43,6 +43,12 @@ flags mipspro NEEDLIBS <library-file> ;
 flags mipspro FINDLIBS <find-library> ;
 flags mipspro STDHDRS <sysinclude> ;
 flags mipspro LINKFLAGS <linkflags> ;
+flags mipspro ARFLAGS <arflags> ;
+
+if ! $(ARFLAGS)
+{
+    flags mipspro ARFLAGS : "" ;
+}
 
 #### Link (for C++) ####
 
@@ -90,5 +96,5 @@ rule Archive-action
 
 actions updated together piecemeal mipspro-Archive-action
 {
-    "$(MIPSPRO_BIN_DIRECTORY)/ar" ru "$(<:T)" "$(>:T)"
+    "$(MIPSPRO_BIN_DIRECTORY)/ar" ru$(ARFLAGS) "$(<:T)" "$(>:T)"
 }

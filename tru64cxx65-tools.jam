@@ -38,6 +38,12 @@ flags tru64cxx65 UNDEFS <undef> ;
 flags tru64cxx65 HDRS <include> ;
 flags tru64cxx65 STDHDRS <sysinclude> ;
 flags tru64cxx65 LINKFLAGS <linkflags> ;
+flags tru64cxx65 ARFLAGS <arflags> ;
+
+if ! $(ARFLAGS)
+{
+    flags tru64cxx65 ARFLAGS : "" ;
+}
 
 #### Link ####
 
@@ -90,7 +96,7 @@ rule Archive-action
 actions updated together piecemeal tru64cxx65-Archive-action
 {
   rm -f $(<)
-  ar r $(<) $(>) cxx_repository/*
+  ar r$(ARFLAGS) $(<) $(>) cxx_repository/*
 }
 
 

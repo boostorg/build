@@ -53,6 +53,7 @@ flags msvc UNDEFS <undef> ;
 flags msvc HDRS <include> ;
 flags msvc STDHDRS <sysinclude> ;
 flags msvc LINKFLAGS <linkflags> ;
+flags msvc ARFLAGS <arflags> ;
 
 flags msvc STDHDRS : $(MSVCDir)$(SLASH)include ;
 flags msvc STDLIBPATH : $(MSVCDir)$(SLASH)lib ;
@@ -119,6 +120,6 @@ actions updated together piecemeal msvc-Archive-action
 {
     $(MSVC_SETUP)
     if exist "$(<)" set _$(<:B)_="$(<)"
-    $(MSVC_TOOL_PATH)link /lib /out:"$(<)" %_$(<:B)_% @"$(>)"
+    $(MSVC_TOOL_PATH)link /lib $(ARFLAGS) /out:"$(<)" %_$(<:B)_% @"$(>)"
 }
 

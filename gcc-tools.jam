@@ -44,9 +44,15 @@ flags gcc UNDEFS <undef> ;
 flags gcc HDRS <include> ;
 flags gcc STDHDRS <sysinclude> ;
 flags gcc LINKFLAGS <linkflags> ;
+flags gcc ARFLAGS <arflags> ;
 
 flags gcc STDHDRS : $(GCC_INCLUDE_DIRECTORY) ;
 flags gcc STDLIBPATH : $(GCC_STDLIB_DIRECTORY) ;
+
+if ! $(ARFLAGS)
+{
+    flags gcc ARFLAGS : "" ;
+}
 
 if ! $(NT) # The compiler complains about -fPIC on NT
 {
@@ -131,6 +137,6 @@ rule Archive-action
 
 actions updated together piecemeal gcc-Archive-action
 {
-    ar ru "$(<:T)" "$(>:T)"
+    ar ru$(ARFLAGS) "$(<:T)" "$(>:T)"
 }
 

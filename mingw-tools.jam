@@ -65,6 +65,6 @@ rule Archive-action
 
 actions updated together piecemeal mingw-Archive-action
 {
-    ar ru "$(<:T)" "$(>:T)"
+    ar ru$(ARFLAGS) "$(<:T)" "$(>:T)"
 }
 

@@ -28,6 +28,7 @@ flags kcc UNDEFS <undef> ;
 flags kcc HDRS <include> ;
 flags kcc STDHDRS <sysinclude> ;
 flags kcc LINKFLAGS <linkflags> ;
+flags kcc ARFLAGS <arflags> ;
 
 flags kcc LIBPATH <library-path> ;
 flags kcc NEEDLIBS <library-file> ;
@@ -81,6 +82,6 @@ rule Archive-action
 
 actions updated together piecemeal kcc-Archive-action
 {
-    KCC -g -o "$(<)" "$(>)"
+    KCC -g $(ARFLAGS) -o "$(<)" "$(>)"
 }
 

@@ -33,6 +33,12 @@ flags xlc UNDEFS <undef> ;
 flags xlc HDRS <include> ;
 flags xlc STDHDRS <sysinclude> ;
 flags xlc LINKFLAGS <linkflags> ;
+flags xlc ARFLAGS <arflags> ;
+
+if ! $(ARFLAGS)
+{
+    flags xlc ARFLAGS : "" ;
+}
 
 #### Link ####
 
@@ -79,6 +85,6 @@ rule Archive-action
 
 actions updated together piecemeal xlc-Archive-action
 {
-    ar ru "$(<)" "$(>)"
+    ar ru$(ARFLAGS) "$(<)" "$(>)"
 }
 

@@ -57,6 +57,7 @@ flags borland UNDEFS <undef> ;
 flags borland HDRS <include> ;
 flags borland STDHDRS <sysinclude> ;
 flags borland LINKFLAGS <linkflags> ;
+flags borland ARFLAGS <arflags> ;
 
 flags borland STDHDRS : $(BCCROOT)$(SLASH)include ;
 flags borland STDLIBPATH : $(BCCROOT)$(SLASH)lib ;
@@ -128,7 +129,7 @@ rule Archive-action
 
 actions updated together piecemeal borland-Archive-action
 {
-    $(BCC_TOOL_PATH)tlib /P64 /u /a /C "$(<)" +-"$(>)"
+    $(BCC_TOOL_PATH)tlib /P64 /u /a /C $(ARFLAGS) "$(<)" +-"$(>)"
 }
 
 

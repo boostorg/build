@@ -39,6 +39,12 @@ flags tru64cxx UNDEFS <undef> ;
 flags tru64cxx HDRS <include> ;
 flags tru64cxx STDHDRS <sysinclude> ;
 flags tru64cxx LINKFLAGS <linkflags> ;
+flags tru64cxx ARFLAGS <arflags> ;
+
+if ! $(ARFLAGS)
+{
+    flags tru64cxx ARFLAGS : "" ;
+}
 
 # Vincenzo
 BOOST_COMPATIBILITY ?= $(BOOST_ROOT)$(SLASH)boost$(SLASH)compatibility$(SLASH)cpp_c_headers ;
@@ -95,7 +101,7 @@ rule Archive-action
 actions updated together piecemeal tru64cxx-Archive-action
 {
   rm -f $(<)
-  ar r $(<) $(>) cxx_repository/*
+  ar r$(ARFLAGS) $(<) $(>) cxx_repository/*
 }
 
 

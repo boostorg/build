@@ -34,6 +34,7 @@ path-feature library-path ;
 dependency-feature library-file ;
 free-feature find-library ;
 path-feature sysinclude ; # <sysinclude>/fu/man/chu
+free-feature arflags ;
 
 # Can the target participate in a shared library?
 feature shared-linkable : false true ;

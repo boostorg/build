@@ -75,6 +75,6 @@ rule Archive-action
 actions updated together piecemeal intel-win32-Archive-action
 {
     if exist "$(<)" set _$(<:B)_="$(<)"
-    $(INTEL_TOOL_PATH)xilink /lib /out:"$(<)" %_$(<:B)_% "$(>)"
+    $(INTEL_TOOL_PATH)xilink $(ARFLAGS) /lib /out:"$(<)" %_$(<:B)_% "$(>)"
 }
 
