@@ -9,6 +9,7 @@ import feature : feature compose ;
 
 feature toolset : gcc : implicit ;
 feature optimization : off on ;
+feature threading : single multi ;
 
 feature variant : debug release : implicit composite ;
 compose <variant>debug : <optimization>off ;

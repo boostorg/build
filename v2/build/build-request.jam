@@ -96,6 +96,25 @@ local rule x-product ( property-sets * : feature-space )
     # otherwise return empty
 }
 
+# 
+# Returns the result of 'expand' after appying feature default to it.
+#
+rule expand-with-defaults ( property-sets * : feature-space ? )
+{
+    feature-space ?= feature ;
+    local expanded = [ expand $(property-sets) : $(feature-space) ] ;
+    local result = ;
+    
+    for local p in $(expanded) 
+    {
+        p = [ $(feature-space).split $(p) ] ;
+        p = [ $(feature-space).add-defaults $(p) ] ;
+        result += $(p:J=/) ;
+    }
+    return $(result) ;
+}
+
+
 # Takes the command line tokens (such as taken from ARGV rule) and constructs
 # build request from it.
 # Returns a vector of two vectors (where "vector" means container.jam's "vector"). 
