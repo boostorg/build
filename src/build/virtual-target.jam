@@ -1081,9 +1081,26 @@ class subvariant
     # <$(feature)>path-to-that-target.
     rule implicit-includes ( feature : target-type ? )
     {
-        local target-paths = [ all-target-directories $(target-type) ] ;    
-        target-paths = [ sequence.unique $(target-paths) ] ;
-        return $(target-paths:G=$(feature)) ;        
+        local key = ii$(feature)-$(target-type:E="") ;
+        if ! $($(key))-is-nonempty
+        {
+            local target-paths = [ all-target-directories $(target-type) ] ;    
+            target-paths = [ sequence.unique $(target-paths) ] ;
+            local result = $(target-paths:G=$(feature)) ;
+            if ! $(result)
+            {
+                result = "" ;
+            }            
+            $(key) = $(result) ;
+        }
+        if $($(key)) = ""
+        {
+            return ;
+        }
+        else
+        {
+            return $($(key)) ;
+        }        
     }
         
     rule all-target-directories ( target-type ? )
@@ -1096,7 +1113,7 @@ class subvariant
     }
     
     rule compute-target-directories ( target-type ? )
-    {        
+    {   
         local result ;
         for local t in $(self.created-targets)
         {
