@@ -295,6 +295,70 @@ class project-target : abstract-target
             return true ;
         } 
     }
+
+    # Find and return the target with the specified id, treated
+    # relative to self.
+    rule find ( id )
+    {
+        local result ;    
+        local project = $(self.project) ;
+        local current-location = [ get location ] ;
+        
+        local split = [ MATCH (.*)//(.*) : $(id) ] ;        
+        local project-part = $(split[1]) ;
+        local target-part = $(split[2]) ;
+                
+        if $(project-part)
+        {
+            # There's explicit project part in id. Looks up the
+            # project and pass the request to it.
+            local pm = [ project.find $(project-part) : $(current-location) ] ;
+            if $(pm)
+            {
+                project-target = [ project.target $(pm) ] ;                
+                result = [ $(project-target).find $(target-part) ] ;
+            }                        
+        }
+        else
+        {            
+            # Interpret id as project-id
+            local project-module = [ project.find $(id) : $(current-location) ] ;
+            if $(project-module)
+            {
+                result = [ project.target $(project-module) ] ;
+            }        
+
+            
+            # Interpret target-name as name of main target
+            if ! $(result)
+            {
+                result = [ main-target $(id) ] ;
+            }
+
+            # Interpret as filename            
+            if ! $(result)
+            {
+                result = [ new file-reference [ path.make $(id) ] : $(project) ] ;        
+                if ! [ $(result).exists ]
+                {
+                    # File actually does not exist.
+                    # Reset 'target' so that an error is issued.
+                    result = ;
+                }                
+            }
+        }
+                
+        if ! $(result)
+        {
+            ECHO "error: Unable to find file or target named" ;
+            ECHO "error:     '$(id)'" ;
+            ECHO "error: referred from project at" ;
+            ECHO "error:     '$(current-location)'" ;
+            EXIT ;
+        }        
+        return $(result) ;
+    }
+
     
     rule build-main-targets ( )
     {
@@ -679,90 +743,6 @@ if "--quiet" in [ modules.peek : ARGV ]
 }
 
 
-rule find ( id : project )
-{
-    local current-location = [ $(project).get location ] ;
-    local target ;    
-    
-    local split = [ MATCH (.*)//(.*) : $(id) ] ;
-    
-    local project-part = $(split[1]) ;
-    local target-part = $(split[2]) ;
-    if ! $(split)
-    {
-        target-part = $(id) ;
-    }
-        
-    # Make a more convenient name
-    local have-project-reference = $(split) ;
-    
-    # The project used for finding main targets and for providing base directory
-    # for file paths.
-    local base-project ;
-    if $(project-part) 
-    {
-        local pm = [ project.find $(project-part) : $(current-location) ] ;
-        # If we can't find a project, it means project part is invalid.
-        # Don't assign any value to base-project, the below code will eventually
-        # return empty result.
-        if $(pm)
-        {                  
-            base-project = [ project.target $(pm) ] ;
-        }        
-    }
-    else
-    {
-        # No project part in id. Resolve references relatively to the referring
-        # project.
-        base-project = $(project) ;
-    }
-    
-    
-    # Interpret target-part as project-id
-    if ! $(have-project-reference)
-    {   
-        local project-module = [ project.find $(target-part) : $(current-location) ] ;
-        if $(project-module)
-        {
-            target = [ project.target $(project-module) ] ;
-        }        
-    }
-    
-    # Interpret target-name as name of main target
-    if ! $(target) && $(base-project)
-    {
-        if [ $(base-project).has-main-target $(target-part) ] 
-        {
-            target = [ $(base-project).main-target $(target-part) ] ;
-        }
-    }
-    
-    if ! $(target) && ! $(have-project-reference)
-    {
-        target = [ new file-reference [ path.make $(target-part) ] : $(project) ] ;        
-        if ! [ $(target).exists ]
-        {
-            # File actually does not exist.
-            # Reset 'target' so that an error is issued.
-            target = ;
-        }                
-    }
-        
-    if ! $(target)
-    {
-        ECHO "error: Unable to find file or target named" ;
-        ECHO "error:     '$(id)'" ;
-        ECHO "error: referred from project at" ;
-        ECHO "error:     '$(current-location)'" ;
-        EXIT ;
-        
-        
-        errors.error "Unable to resolve target-id $(id)" : 
-          "Reference was made from project at '$(current-location)'" ;
-    }        
-    return $(target) ;
-}
-
 # Given a target-reference, made in context of 'project',
 # returns the abstract-target instance that is referred to, as well
 # as properties explicitly specified for this reference.
@@ -779,8 +759,7 @@ rule resolve-reference ( target-reference : project )
     }
 
     # Find the target
-    local target = 
-      [ find $(id) :  $(project) ] ;
+    local target = [ $(project).find $(id) ] ;
     
     # Do a sanity check
     if $(sproperties) && [ class.is-a $(target) : file-reference ] 

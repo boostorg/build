@@ -117,7 +117,7 @@ for local id in $(target-ids)
     }
     else
     {
-        local t = [ targets.find $(id) : $(current-project) ] ;
+        local t = [ $(current-project).find $(id) ] ;
         if ! $(t)
         {
             error target $(id) does not exist ;
