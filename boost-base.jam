@@ -1261,18 +1261,14 @@ rule dependent-include
             = [ tokens-to-simple-path
                   $(RELATIVE_SUBDIR_TOKENS) [ split-path [ directory-of $(target) ] ] $(JAMFILE) ] ;
                   
-        if ! $(gINCLUDED($(jamfile-path)))
         {
             # protect variables from being permanently set by SubDir invocations
             # in included files.
             local [ protect-subdir ] ;
 
-            # this stack allows us to avoid making dependee libraries part of
-            # the "type" targets, e.g. all, exe, obj. See rule type-DEPENDS.
-            local gIN_LIB_INCLUDE = 1 ;
-            
-            gINCLUDED($(jamfile-path)) = TRUE ;
-            include $(jamfile-path) ;
+            # load the file as a dependent.
+            local gIN_LIB_INCLUDE = TRUE ;
+            load-jamfiles $(jamfile-path) ;
         }
     }
 }

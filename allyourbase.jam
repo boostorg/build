@@ -1551,10 +1551,42 @@ rule SubInclude
     local jamfile-path
         = [ tokens-to-simple-path
             [ split-path $(JAMFILE:D=$(_s):R=$($(<[1]))) ] ] ;
-    if ! $(gINCLUDED($(jamfile-path)))
+    load-jamfiles $(jamfile-path) ;
+}
+
+# Load a user's Jamfile(s).
+#
+rule load-jamfiles ( jamfiles * )
+{
+    # First we load the Jamfiles without generation of main targets so that
+    # dependencies are preloaded. Then we reload the files with target
+    # generation enabled.
+    
+    local jamfile ;
+    local as-dependant = $(gIN_LIB_INCLUDE) ;
+    local gIN_LIB_INCLUDE ;
+    
+    gIN_LIB_INCLUDE = TRUE ;
+    for jamfile-path in $(jamfiles)
     {
-        gINCLUDED($(jamfile-path)) = TRUE ;
-        include $(jamfile-path) ;
+        if ! $(gINCLUDED_AS_DEPENDANT($(jamfile-path)))
+        {
+            gINCLUDED_AS_DEPENDANT($(jamfile-path)) = TRUE ;
+            include $(jamfile-path) ;
+        }
+    }
+    
+    if ! $(as-dependant)
+    {
+        gIN_LIB_INCLUDE = ;
+        for jamfile-path in $(jamfiles)
+        {
+            if ! $(gINCLUDED($(jamfile-path)))
+            {
+                gINCLUDED(#(jamfile-path)) = TRUE ;
+                include $(jamfile-path) ;
+            }
+        }
     }
 }
 
