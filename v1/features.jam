@@ -66,6 +66,10 @@ feature exception-handling : on off ;
 # Enable/disable C++ runtime type information.
 feature rtti : on off ;
 
+# Set the feature to "no" in order to skip the build of this target.
+# Useful to disable known non-working compilers or variants.
+feature build : yes no ;
+
 # ??.
 feature stdlib : "default" gcc stlport ;
 
