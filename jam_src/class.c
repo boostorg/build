@@ -78,7 +78,10 @@ static void import_base_rule(void* r_, void* d_)
 static void import_base_rules(module_t* class, char* base)
 {
     module_t* base_module = bindmodule(class_module_name(base));
-    struct import_base_data d = { base, base_module, class };
+    struct import_base_data d;
+    d.base_name = base;
+    d.base_module = base_module;
+    d.class_module = class;
 
     if (base_module->rules)
         hashenumerate(base_module->rules, import_base_rule, &d);
