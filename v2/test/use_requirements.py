@@ -124,4 +124,44 @@ t.copy("b.cpp", "lib2/b.cpp")
 
 t.run_build_system()
 
+# Test that dependency feature in use requirements are build
+# with the correct properties
+t.rm(".")
+
+t.write("Jamfile", """ 
+lib main : main.cpp : : : <library>libs/lib1 ; 
+exe hello : hello.cpp main ;
+""")
+
+t.write("main.cpp", """ 
+void foo();
+
+int main() { foo(); return 0; } 
+""")
+
+t.write("hello.cpp", "")
+
+t.write("project-root.jam", """ 
+import gcc ; 
+""")
+
+t.write("libs/a.cpp", """ 
+void foo() {} 
+""")
+
+# This library should be build with the same properties as
+# 'main'. There were a bug when they were generated with 
+# empty properties, and there were ambiguity between variants.
+t.write("libs/Jamfile", """ 
+lib lib1 : a_d.cpp : <variant>debug ;
+lib lib1 : a.cpp : <variant>release ; 
+""")
+
+t.write("libs/a_d.cpp", """ 
+void foo() {} 
+""")
+
+t.run_build_system()
+t.expect_addition("libs/bin/gcc/debug/a_d.o")
+
 t.cleanup()

@@ -106,11 +106,12 @@ class Tester(TestCmd.TestCmd):
 
     def write(self, file, content):
         self.wait_for_time_change()
+        nfile = self.native_file_name(file)
         try:
-            os.makedirs(os.path.dirname(file))
-        except:
+            os.makedirs(os.path.dirname(nfile))
+        except Exception, e:
             pass
-        open(self.native_file_name(file), "wb").write(content)
+        open(nfile, "wb").write(content)
 
     def rename(self, old, new):
         try:
@@ -137,7 +138,22 @@ class Tester(TestCmd.TestCmd):
         for name in names:
                 os.utime(self.native_file_name(name), None)
 
+    def rm(self, names):
+        self.wait_for_time_change()
+        if not type(names) == types.ListType:
+            names = [names]
+        for name in names:
+            n = self.native_file_name(name)
+            if os.path.isdir(n):
+                shutil.rmtree(n, ignore_errors=0)
+            else:
+                os.unlink(n)
 
+        # Create working dir root again, in case
+        # we've removed it
+        os.mkdir(self.workdir)
+        os.chdir(self.workdir)
+                                                        
     #
     #   FIXME: Large portion copied from TestSCons.py, should be moved?
     #
@@ -362,7 +378,7 @@ class Tester(TestCmd.TestCmd):
 
     def native_file_name(self, name):
         elements = string.split(name, "/")
-        return apply(os.path.join, [self.workdir]+elements)
+        return os.path.normpath(apply(os.path.join, [self.workdir]+elements))
 
     # Wait while time is no longer equal to the time last "run_build_system"
     # call finished.
