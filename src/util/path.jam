@@ -21,8 +21,17 @@ import errors : error ;
 
 
 os = [ modules.peek : OS ] ;
-if [ modules.peek : UNIX ] {
-    os = UNIX ;
+if [ modules.peek : UNIX ] 
+{    
+    local uname = [ modules.peek : JAMUNAME ] ;
+    switch $(uname)
+    {
+        case CYGWIN* :
+          os = CYGWIN ;
+        
+        case * :
+          os = UNIX ;
+    }        
 }
 
 #
@@ -404,7 +413,20 @@ rule native-UNIX ( path )
     return $(path) ;
 }
 
+rule make-CYGWIN ( path )
+{
+    return [ make-NT $(path) ] ;
+}
 
+rule native-CYGWIN ( path )
+{
+    local result = $(path) ;
+    if [ regex.match "(^/.:)" : $(path)  ] # win absolute
+    {
+        result = [ MATCH "^/?(.*)" : $(path) ] ; # remove leading '/'
+    }
+    return [ native-UNIX $(result) ] ;
+}
 
 rule __test__ ( ) {
 
