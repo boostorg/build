@@ -6,8 +6,8 @@
 
 # Info about what we are building.
 NAME = boost-jam ;
-VERSION = 3.1.4 ;
-RELEASE = 2 ;
+VERSION = 3.1.5 ;
+RELEASE = 1 ;
 
 # Generate development debug binaries?
 if --debug in $(ARGV)
@@ -188,38 +188,40 @@ if $(tool.$(toolset).link.cc)
     --link-libs = $(tool.$(toolset).link.linklibs) ;
 }
 
+# Platform related specifics.
+if $(NT) { rule .path { return "$(<:J=\\)" ; } }
+else if $(OS2) { rule .path { return "$(<:J=\\)" ; } }
+else if $(VMS) { rule .path { return "[.$(<:J=/)]" ; } }
+else if $(MAC) { rule .path { return ":$(<:J=\:)" ; } }
+else { rule .path { return "$(<:J=/)" ; } }
+if $(VMS) { . = "_" ; }
+else { . = "." ; }
+
 # Put executables in platform-specific subdirectory.
 locate-target = $(LOCATE_TARGET) ;
 if $(VMS)
 {
-    locate-target ?= [.bin_vms] ;
+    locate-target ?= [ .path bin$(.)vms ] ;
     platform = vms ;
 }
 else if $(MAC)
 {
-    locate-target ?= :bin.$(OS:L)$(OSPLAT:L) ;
+    locate-target ?= [ .path bin$(.)$(OS:L)$(OSPLAT:L) ] ;
     platform = $(OS:L)$(OSPLAT:L) ;
 }
 else if $(OSPLAT)
 {
-    locate-target ?= bin.$(OS:L)$(OSPLAT:L) ;
+    locate-target ?= [ .path bin$(.)$(OS:L)$(OSPLAT:L) ] ;
     platform = $(OS:L)$(OSPLAT:L) ;
 }
 else
 {
-    locate-target ?= bin.$(OS:L) ;
+    locate-target ?= [ .path bin$(.)$(OS:L) ] ;
     platform = $(OS:L) ;
 }
 if $(debug)
 {
-    if $(VMS)
-    {
-        locate-target = $(locate-target)_debug ;
-    }
-    else
-    {
-        locate-target = $(locate-target).debug ;
-    }
+    locate-target = $(locate-target)$(.)debug ;
 }
 
 # We have some different files for UNIX, VMS, and NT.
@@ -288,24 +290,42 @@ ALWAYS clean ;
 # Utility rules and actions...
 rule .clean
 {
-    .rm clean : $(<) ;
+    .rm. clean : $(<) ;
 }
-if $(NT) { actions piecemeal together existing .rm {    del /F /Q $(>) } }
-if $(UNIX) { actions piecemeal together existing .rm {    rm -f $(>) } }
-if $(VMS) { actions piecemeal together existing .rm {    DELETE $(>[--2]:J=";*, ") $(>[-1]);* } }
-if $(NT) { --chmod+w = "attrib -r " ; }
-if $(UNIX) { --chmod+w = "chmod +w " ; }
-if $(VMS) { --chmod+w = "SET FILE/PROT=(S:RWED) " ; }
+if $(NT) { actions piecemeal together existing .rm. {
+    del /F /Q $(>)
+} }
+if $(UNIX) { actions piecemeal together existing .rm. {
+    rm -f $(>)
+} }
+if $(VMS) { actions piecemeal together existing .rm. {
+    DELETE $(>[--2]:J=";*, ") $(>[-1]);*
+} }
+if $(NT) {
+    --chmod+w = "attrib -r " ;
+}
+if $(UNIX) {
+    --chmod+w = "chmod +w " ;
+}
+if $(VMS) {
+    --chmod+w = "SET FILE/PROT=(S:RWED) " ;
+}
 
 rule .mkdir
 {
     NOUPDATE $(<) ;
     if $(<:P) { DEPENDS $(<) : $(<:P) ; .mkdir $(<:P) ; }
-    if ! $(md<$(<)>) { .md $(<) ; md<$(<)> = - ; }
+    if ! $(md<$(<)>) { .mkdir. $(<) ; md<$(<)> = - ; }
 }
-if $(NT) { actions .md {    md $(<) } }
-if $(UNIX) { actions .md {    mkdir $(<) } }
-if $(VMS) { actions .md {    CREATE/DIR $(<J=", ") } }
+if $(NT) { actions .mkdir. {
+    md $(<)
+} }
+if $(UNIX) { actions .mkdir. {
+    mkdir $(<)
+} }
+if $(VMS) { actions .mkdir. {
+    CREATE/DIR $(<J=", ")
+} }
 
 rule .exe
 {
@@ -323,56 +343,81 @@ rule .exe
             DEPENDS $(exe) : $(o) ;
             DEPENDS $(o) : $(s) ;
             DEPENDS $(o) : $(locate-target) ;
-            .cc $(o) : $(s) ;
+            .cc. $(o) : $(s) ;
             .clean $(o) ;
         }
         DEPENDS $(exe) : $(>:S=.o) ;
         DEPENDS $(exe) : $(locate-target) ;
-        .ld $(exe) : $(>:S=.o) ;
+        .ld. $(exe) : $(>:S=.o) ;
         .clean $(exe) ;
     }
     else
     {
         DEPENDS $(exe) : $(>) ;
         DEPENDS $(exe) : $(locate-target) ;
-        .cc $(exe) : $(>) ;
+        .cc. $(exe) : $(>) ;
         .clean $(exe) ;
     }
     return $(exe) ;
 }
-actions .cc {    $(--cc) $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def)$(--defs) $(--flags) "$(--libs)" $(>) }
-if $(VMS)
-{
-    actions .ld {    $(--link) $(--link-bin)$(<:D=) $(--link-dir)$(<:D) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>J=", ") }
+actions .cc. {
+    $(--cc) $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def)$(--defs) $(--flags) "$(--libs)" $(>)
 }
-else
-{
-    actions .ld {    $(--link) $(--link-bin)$(<:D=) $(--link-dir)$(<:D) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>) }
-}
+if $(VMS) { actions .ld. {
+    $(--link) $(--link-bin)$(<:D=) $(--link-dir)$(<:D) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>J=", ")
+} }
+else { actions .ld. {
+    $(--link) $(--link-bin)$(<:D=) $(--link-dir)$(<:D) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>)
+} }
 
 rule .link
 {
     DEPENDS all : $(<) ;
     DEPENDS $(<) : $(>) ;
+    .link. $(<) : $(>) ;
     .clean $(<) ;
 }
-if $(NT) { actions .link {    copy $(>) $(<) } }
-if $(UNIX) { actions .link {    ln -f $(>) $(<) } }
-if $(VMS) { actions .link {    COPY/REPLACE $(>) $(<) } }
+if $(NT) { actions .link. {
+    copy $(>) $(<)
+} }
+if $(UNIX) { actions .link. {
+    ln -f $(>) $(<)
+} }
+if $(VMS) { actions .link. {
+    COPY/REPLACE $(>) $(<)
+} }
+
+rule .move
+{
+    DEPENDS $(<) : $(>) ;
+    .move. $(<) : $(>) ;
+}
+if $(NT) { actions .move. {
+    del /f $(<)
+    rename $(>) $(<)
+} }
+if $(UNIX) { actions .move. {
+    mv -f $(>) $(<)
+} }
+if $(VMS) { actions .move. {
+    RENAME $(>) $(<)
+} }
 
 # Generate the grammar tokens table, and the real yacc grammar.
 rule .yyacc
 {
     local exe = [ .exe yyacc : yyacc.c ] ;
-    DEPENDS all : $(<) ;
+    NOUPDATE $(exe) ;
     DEPENDS $(<) : $(exe) $(>) ;
     LEAVES $(<) ;
     yyacc.exe on $(<) = $(exe:R=$(locate-target)) ;
+    .yyacc. $(<) : $(>) ;
 }
-actions .yyacc
-{    $(--chmod+w)$(<[1])
+actions .yyacc. {
+    $(--chmod+w)$(<[1])
     $(--chmod+w)$(<[2])
-    $(yyacc.exe) $(<) $(>) }
+    $(yyacc.exe) $(<) $(>)
+}
 .yyacc jamgram.y jamgramtab.h : jamgram.yy ;
 
 # How to build the grammar.
@@ -387,13 +432,13 @@ SUFEXE ?= "" ;
 
 yacc ?= [ GLOB $(PATH) : yacc$(SUFEXE) ] ;
 yacc ?= [ GLOB $(PATH) : bison$(SUFEXE) ] ;
+yacc ?= [ GLOB "C:\\Program Files\\GnuWin32\\bin" : bison$(SUFEXE) ] ;
 yacc = $(yacc[1]) ;
 switch $(yacc:D=:S=)
 {
-    case bison : yacc += -d --yacc ; # -t -l -v ;
+    case bison : yacc += -d --yacc ;
     case yacc  : yacc += -d ;
 }
-
 if $(debug) && $(yacc)
 {
     yacc += -t -v ;
@@ -402,21 +447,18 @@ yacc += $(YACCFLAGS) ;
 
 rule .yacc
 {
-    DEPENDS $(<) : $(>) ;
+    DEPENDS y.tab.c y.tab.h : $(>) ;
+    DEPENDS y.tab.h : y.tab.c ;
+    TEMPORARY y.tab.c y.tab.h ;
+    DEPENDS $(<[1]) : y.tab.c ;
+    DEPENDS $(<[2]) : y.tab.h ;
+    .yacc. y.tab.c y.tab.h : $(>) ;
+    .move $(<[1]) : y.tab.c ;
+    .move $(<[2]) : y.tab.h ;
 }
-if $(NT) { actions .yacc
-{    $(yacc) $(>)
-    del /f $(<[1]:S=.c) $(<[1]:S=.h)
-    rename y.tab.c $(<[1]:S=.c)
-    rename y.tab.h $(<[1]:S=.h) } }
-if $(UNIX) { actions .yacc
-{    $(yacc) $(>)
-    mv -f y.tab.c $(<[1]:S=.c)
-    mv -f y.tab.h $(<[1]:S=.h) } }
-if $(VMS) { actions .yacc
-{    $(yacc) $(>)
-    RENAME y_tab.c $(<[1]:S=.c)
-    RENAME -f y_tab.h $(<[1]:S=.h) } }
+actions .yacc. {
+    "$(yacc)" $(>)
+}
 if $(yacc)
 {
     .yacc jamgram.c jamgram.h : jamgram.y ;
@@ -429,10 +471,12 @@ rule .mkjambase
     DEPENDS $(<) : $(exe) $(>) ;
     LEAVES $(<) ;
     mkjambase.exe on $(<) = $(exe:R=$(locate-target)) ;
+    .mkjambase. $(<) : $(>) ;
 }
-actions .mkjambase
-{    $(--chmod+w)$(<)
-    $(mkjambase.exe) $(<) $(>) }
+actions .mkjambase. {
+    $(--chmod+w)$(<)
+    $(mkjambase.exe) $(<) $(>)
+}
 .mkjambase jambase.c : Jambase ;
 
 # How to build Jam.
@@ -447,11 +491,26 @@ rule .jam
 }
 .jam bjam : jam ;
 
+# Scan sources for header dependencies.
+rule .scan
+{
+    HDRRULE on $(<:D=) = .hdr.scan ;
+    HDRSCAN on $(<:D=) = "^[     ]*#[    ]*include[  ]*[<\"]([^\">]*)[\">].*$" ;
+}
+rule .hdr.scan
+{
+    local hdrs = [ GLOB . : $(>:D=) ] ;
+    INCLUDES $(<:D=) : $(hdrs:D=) ;
+    HDRRULE on $(>:D=) = .hdr.scan ;
+    HDRSCAN on $(>:D=) = "^[     ]*#[    ]*include[  ]*[<\"]([^\">]*)[\">].*$" ;
+}
+.scan [ GLOB . : *.c ] ;
+
 # Distribution making from here on out.
 dist.docs =
     index.html
-    Porting RELNOTES
-    Jam.html Jambase.html Jamfile.html
+    Porting
+    Jam.html
     ;
 dist.source =
     [ GLOB . : *.c *.h ]
@@ -459,9 +518,13 @@ dist.source =
 dist.source = $(dist.source:D=)
     $(dist.docs)
     build.jam build.bat build.sh build_vms.com
-    Jambase Jamfile
+    Jambase
     jamgram.y jamgram.yy
-    debian/changelog debian/control debian/copyright debian/jam.man.sgml debian/rules
+    [ .path debian changelog ]
+    [ .path debian control ]
+    [ .path debian copyright ]
+    [ .path debian jam.man.sgml ]
+    [ .path debian rules ]
     boost-jam.spec
     ;
 dist.bin =
@@ -473,23 +536,38 @@ dist.bin =
 
 if $(NT)
 {
-if [ GLOB "C:\\Program Files\\7-ZIP" : "7zn.exe" ]
-{
-    actions piecemeal .pack {    "C:\Program Files\7-ZIP\7zn.exe" a -r -tzip "$(<)" "$(>)" }
-    actions piecemeal .zip  {    "C:\Program Files\7-ZIP\7zn.exe" a -r -tzip "$(<)" "$(>)" }
-}
-else
-{
-    actions piecemeal .pack {    zip -9r "$(<)" "$(>)" }
-    actions piecemeal .zip  {    zip -9r "$(<)" "$(>)" }
-}
-    actions piecemeal .cp   {    copy /Y "$(>)" "$(<)" }
+    if [ GLOB "C:\\Program Files\\7-ZIP" : "7zn.exe" ] {
+        actions piecemeal .pack. {
+    "C:\Program Files\7-ZIP\7zn.exe" a -r -tzip "$(<)" "$(>)"
+        }
+        actions piecemeal .zip. {
+    "C:\Program Files\7-ZIP\7zn.exe" a -r -tzip "$(<)" "$(>)"
+        }
+    }
+    else
+    {
+        actions piecemeal .pack. {
+    zip -9r "$(<)" "$(>)"
+        }
+        actions piecemeal .zip. {
+    zip -9r "$(<)" "$(>)"
+        }
+    }
+    actions piecemeal .cp. {
+    copy /Y "$(>)" "$(<)"
+    }
 }
 if $(UNIX)
 {
-    actions .pack {    tar zcf "$(<)" "$(>)" }
-    actions .zip  {    gzip -c9 "$(>)" > "$(<)" }
-    actions .cp   {    cp -Rpf "$(>)" "$(<)" }
+    actions .pack. {
+    tar zcf "$(<)" "$(>)"
+    }
+    actions .zip. {
+    gzip -c9 "$(>)" > "$(<)"
+    }
+    actions .cp. {
+    cp -Rpf "$(>)" "$(<)"
+    }
 }
 
 # The single binary, compressed.
@@ -502,8 +580,8 @@ rule .binary
     DEPENDS $(zip) : $($(<).exe) ;
     DEPENDS dist : $(zip) ;
     #~ LOCATE on $(zip) = $(locate-target) ;
-    if $(NT) { .zip $(zip) : $($(<).exe) ; }
-    if $(UNIX) { .pack $(zip) : $($(<).exe) ; }
+    if $(NT) { .zip. $(zip) : $($(<).exe) ; }
+    if $(UNIX) { .pack. $(zip) : $($(<).exe) ; }
     .clean $(zip) ;
 }
 
@@ -527,11 +605,11 @@ rule .package ( dst-dir : src-files + )
         local dst-file = $(src-file:R=$(dst-dir)) ;
         DEPENDS $(dst-file) : $(src-file) $(dst-file:D) ;
         .mkdir $(dst-file:D) ;
-        .cp $(dst-file) : $(src-file) ;
+        .cp. $(dst-file) : $(src-file) ;
         .clean $(dst-file) ;
     }
-
-    .pack $(pack) : $(dst-files) ;
+    
+    .pack. $(pack) : $(dst-files) ;
     .clean $(pack) ;
 }
 
@@ -561,15 +639,16 @@ rule .rpm ( name : source )
     arch on $(target) = $(rpm-arch) ;
     if $(rpm-arch) = ppc { target-opt on $(target) = --target= ; }
     else { target-opt on $(target) = "--target " ; }
-    .rpm-build $(target) : $(source) ;
+    .rpm. $(target) : $(source) ;
     .clean $(name).$(rpm-arch).rpm $(name).src.rpm ;
 }
-actions .rpm-build
-{    export BOOST_JAM_DOCS="$(docs)"
+actions .rpm. {
+    export BOOST_JAM_DOCS="$(docs)"
     export BOOST_JAM_TOOLSET="$(toolset)"
     rpm -ta $(target-opt)$(arch) $(>) | tee rpm.out
     cp `grep -e '^Wrote:' rpm.out | sed 's/^Wrote: //'` .
-    rm -f rpm.out }
+    rm -f rpm.out
+}
 
 # The distribution targets.
 .binary bjam ;
