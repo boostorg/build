@@ -154,7 +154,7 @@ CYGWIN_ROOT ?= c:/cygwin ;
             
             # Version number element of executable name
             local exe-version = $($(var-base)_VERSION) ;
-            if $(NT) && ! $(cyg) { exe-version = "" ; }
+            if $(NT) && ! $(cyg) { exe-version = $(d:L) ; }
             
             # assign default target name
             local executable = $(cyg)PYTHON$(d) ;
