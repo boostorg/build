@@ -819,7 +819,7 @@ local rule ensure-type ( targets * )
 #
 # Note: this algorithm explicitly ignores generators for base classes if there's
 # at least one generator for requested target-type.
-local rule find-viable-generators ( target-type : property-set )
+local rule find-viable-generators-aux ( target-type : property-set )
 {
     # Select generators that can create the required target type.
     local viable-generators = ;
@@ -841,19 +841,47 @@ local rule find-viable-generators ( target-type : property-set )
         {
             generators.dout [ indent ] "trying generator" [ $(g).id ] "(" [ $(g).source-types ] -> [ $(g).target-types ] ")" ;
             
-            # Avoid trying the same generator twice on different levels.
-            if ! $(g) in $(.active-generators) 
-            {       
-                local m = [ $(g).match-rank $(property-set) ] ;
-                if $(m) 
-                {
-                    generators.dout [ indent ] "  is viable" ;
-                    viable-generators += $(g) ;
-                    t = ;
-                }                                    
-            }            
+            local m = [ $(g).match-rank $(property-set) ] ;
+            if $(m) 
+            {
+                generators.dout [ indent ] "  is viable" ;
+                viable-generators += $(g) ;
+                t = ;
+            }                                    
         }
         t = $(t[2-]) ;
+    }
+                            
+    return $(viable-generators) ;
+}
+
+local rule find-viable-generators ( target-type : property-set )
+{
+    local key = $(target-type).$(property-set) ;
+    local l = $(.fv.$(key)) ;
+    if ! $(l)
+    {
+        l = [ find-viable-generators-aux $(target-type) : $(property-set) ] ;
+        if ! $(l)
+        {
+            l = none ;
+        }        
+        .fv.$(key) = $(l) ;
+    }
+    
+    if $(l) = none
+    {
+        l = ;
+    }
+                    
+    local viable-generators ;
+    for local g in $(l)
+    {
+        # Avoid trying the same generator twice on different levels.        
+        if ! $(g) in $(.active-generators) 
+        {
+            viable-generators += $(g) ;
+        }        
     }
     
     # Generators which override 'all'.
@@ -882,9 +910,10 @@ local rule find-viable-generators ( target-type : property-set )
             result += $(g) ;
         }        
     }
-                        
+        
     return $(result) ;
-}
+}    
+
     
 # Given a vector of vectors, of of them represents results of running some 
 # generator, returns the 'best' result, it it exists. Otherwise, exit with
