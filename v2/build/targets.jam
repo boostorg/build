@@ -449,18 +449,24 @@ class project-target : abstract-target
     # Accessor, add a constant.
     rule add-constant (
         name # Variable name of the constant.
-        : value # Value of the constant.
+        : value + # Value of the constant.
         : type ? # Optional type of value.
         )
     {
         switch $(type)
         {
             case path :
-                value = [ path.root [ path.make $(value) ] $(self.location) ] ;
+              local r ;
+              for local v in $(value)
+              {                  
+                v = [ path.root [ path.make $(v) ] $(self.location) ] ;
                 # Now make the value absolute path
-                value = [ path.root $(value) [ path.pwd ] ] ;
+                v = [ path.root $(v) [ path.pwd ] ] ;
                 # Constants should be in platform-native form
-                value = [ path.native $(value) ] ;
+                v = [ path.native $(v) ] ;
+                r += $(v) ;
+              }                  
+              value = $(r) ;
         }
         if ! $(name) in $(self.constants)
         {
