@@ -347,7 +347,7 @@ type.register C : c ;
 # "shared" feature.
 rule lib-generator ( ) 
 {
-    composing-generator.__init__ lib-generator : : LIB : <main-target-type>LIB ;
+    generator.__init__ lib-generator true : : LIB : <main-target-type>LIB ;
     
     rule run ( project name ? : property-set : sources * )
     {
@@ -372,7 +372,7 @@ rule lib-generator ( )
     }
 }
 
-class lib-generator : composing-generator ;
+class lib-generator : generator ;
 
 generators.register [ new lib-generator ] ;
 
@@ -567,10 +567,12 @@ rule link-action ( targets + : sources * : action-name : properties * )
 class link-action : action ;
 
 
-rule linking-generator ( id : source-types + : target-types + : 
+rule linking-generator ( id composing ? : source-types + : target-types + : 
                          requirements * )
 {
-    composing-generator.__init__ $(id) : $(source-types) : $(target-types) :
+    # If composing is not specified, set it to true, which is "false" in Jam.
+    composing ?= true ;
+    generator.__init__ $(id) $(composing) : $(source-types) : $(target-types) :
                        $(requirements) ;
 
     rule action-class ( )
@@ -579,13 +581,13 @@ rule linking-generator ( id : source-types + : target-types + :
     }
 }                             
 
-class linking-generator : composing-generator ;
+class linking-generator : generator ;
 
 
-rule register-linker ( id : source-types + : target-types + :
+rule register-linker ( id composing ? : source-types + : target-types + :
                             requirements * )
 {
-    local g = [ new linking-generator $(id) : $(source-types) 
+    local g = [ new linking-generator $(id) $(composing) : $(source-types) 
                 : $(target-types) : $(requirements) ] ;
     generators.register $(g) ;
 }
