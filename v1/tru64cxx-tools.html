@@ -3,7 +3,8 @@
 <html>
 <head>
   <meta name="generator" content=
-  "HTML Tidy for Linux/x86 (vers 1st September 2003), see www.w3.org">
+  "HTML Tidy for Linux/x86 (vers 1st August 2004), see www.w3.org">
+  <meta name="generator" content="Microsoft FrontPage 4.0">
   <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
   <link rel="stylesheet" type="text/css" href="../../../boost.css">
 
@@ -36,14 +37,24 @@
   this compiler. The <code>tru64cxx</code> supports versions prior to 6.5.
   And the <code>tru64cxx65</code> supports versions from 6.5 onward.</p>
 
+  <p>Please note that the toolset <code>tru64cxx65</code> uses <i>ansi</i> as
+  the default object model which is different from the default object model
+  of the compiler. This choice has been made because of limitations in the
+  <i>arm</i> object model which is the default object model used by the
+  compiler. If you need to use the old object model, you can do so by
+  explicitly specifying <code>"-sBUILD=&lt;object-model&gt;arm"</code> on the
+  command line when building the boost libraries. For further information on
+  this topic, please refer to the <code>-model</code> option in the
+  <code>cxx</code> manual page.</p>
+
   <h2>Configuration Variables</h2>There currently are no user configurable
   variables used for these toolsets. This requires that the tools be
   available in the executable path.
   <hr>
 
   <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-   14 May, 2002 <!--webbot bot="Timestamp" endspan i-checksum="39359" --></p>
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->26
+  August, 2004 <!--webbot bot="Timestamp" endspan i-CheckSum="34546" --></p>
 
   <p>Copyright &copy; Dave Abrahams 2002.</p>
 

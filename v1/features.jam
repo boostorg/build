@@ -173,6 +173,20 @@ feature instruction-set :
     r2000 r3000 r3900 r4000 r4100 r4300 r4400 r4600 r4650 r5000 r6000 r8000 orion
     ;
 
+# The object model the compiler uses when compiling C++ code. Currently only
+# relevant for Compaq C++ V6.3 and newer.
+feature object-model :
+    # Use the default object model which works best for boost. This most
+    # probably should be 'ansi' in all cases.
+    default
+    # Explicitly select the 'arm' object model. Used for backward compatible
+    # binaries.
+    arm
+    # Explicitly select the 'ansi' object model. Used to support the complete
+    # standard.
+    ansi
+    ;
+
 gLINK_COMPATIBLE = <shared-linkable>true <target-type> <inlining> ;
 
 gALWAYS_RELEVANT = <target-type> <tag> <default> <build> ;
@@ -194,6 +208,7 @@ variant common :
     <architecture>native
     <instruction-set>default
     <profiling>off
+    <object-model>default
     ;
 
 variant debug : common :

@@ -45,6 +45,18 @@ flags tru64cxx65 CFLAGS <inlining>off : -inline none ;
 flags tru64cxx65 CFLAGS <profiling>on : -pg ;
 flags tru64cxx65 LINKFLAGS <profiling>on : -pg ;
 
+# Selection of the object model. This flag is needed on both the C++ compiler
+# and linker command line.
+#
+flags tru64cxx65 C++FLAGS <object-model>arm : -model arm ;
+flags tru64cxx65 C++FLAGS <object-model>ansi : -model ansi ;
+flags tru64cxx65 C++FLAGS <object-model>default : -model ansi ;
+#
+flags tru64cxx65 LINKFLAGS <object-model>arm : -model arm ;
+flags tru64cxx65 LINKFLAGS <object-model>ansi : -model ansi ;
+flags tru64cxx65 LINKFLAGS <object-model>default : -model ansi ;
+#
+
 flags tru64cxx65 CFLAGS <cflags> ;
 flags tru64cxx65 C++FLAGS <cxxflags> ;
 flags tru64cxx65 DEFINES <define> ;
