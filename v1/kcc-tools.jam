@@ -13,7 +13,7 @@
 
 flags kcc CFLAGS <debug-symbols>on : -g ;
 flags kcc LINKFLAGS <debug-symbols>on : -g ;
-flags gcc LINKFLAGS <debug-symbols>off : -s ;
+flags kcc LINKFLAGS <debug-symbols>off : -s ;
 flags kcc CFLAGS <optimization>off : +K0 ;
 flags kcc CFLAGS <optimization>speed : +K2 ;
 
@@ -36,8 +36,9 @@ flags kcc NEEDLIBS <library-file> ;
 flags kcc FINDLIBS <find-library> ;
 
 
-kcc.bin-directory = [ conditional $(kcc.root-directory) : $(kcc.root-directory)$(SLASH)bin$(SLASH) : " " ] ;
-detect-build-tools kcc : "KCC" ;
+set-as-singleton kcc.root-directory ;
+kcc.bin-directory = $(kcc.root-directory)$(SLASH)bin$(SLASH) ;
+kcc.bin-directory ?= " " ;
 
 #### Link ####
 
@@ -83,6 +84,6 @@ rule Archive-action
 
 actions updated together piecemeal kcc-Archive-action
 {
-    KCC -g $(ARFLAGS) -o "$(<)" "$(>)"
+    $(kcc.bin-directory)KCC -g $(ARFLAGS) -o "$(<)" "$(>)"
 }
 
