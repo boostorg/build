@@ -412,7 +412,9 @@ int  main( int argc, char **argv, char **arg_environ )
     {
         LIST* targets = targets_to_update();
         if ( !targets )
-            make( 1, &all, anyhow );
+        {
+            status |= make( 1, &all, anyhow );
+        }
         else 
         {
             int targets_count = list_length(targets);
