@@ -23,3 +23,4 @@ void enter_module( module* );
 void exit_module( module* );
 
 #endif // MODULES_DWA10182001_H
+

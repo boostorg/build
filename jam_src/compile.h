@@ -80,3 +80,4 @@ void profile_dump();
 # define COND_IN	10	/* arg in arg */
 
 #endif // COMPILE_DWA20011022_H
+
