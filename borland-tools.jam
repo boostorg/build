@@ -14,6 +14,9 @@
 # features.jam, pending someone taking the time to figure out how to get the
 # appropriate libraries into the link command line.
 
+# BCCROOT is the install location of the borland tools.
+set-as-singleton BCCROOT ;
+
 # compute Borland tool path
 # You can either put the borland bin directory in your PATH, or you can set
 # BCCROOT to point at the borland installation directory
