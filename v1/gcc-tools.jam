@@ -26,10 +26,33 @@ flags gcc CFLAGS <inlining>off : -fno-inline ;
 flags gcc CFLAGS <inlining>on : -Wno-inline ;
 flags gcc CFLAGS <inlining>full : -finline-functions -Wno-inline ;
 
-if $(UNIX)
+#
+# set threading options for various platforms:
+#
+if $(NT)
 {
-    flags gcc CFLAGS <threading>multi : -pthread ;
-    flags gcc LINKFLAGS <threading>multi : -pthread ;
+    flags gcc CFLAGS <threading>multi : -mthreads ;
+}
+else if $(UNIX)
+{
+    switch $(JAMUNAME)
+    {
+    case CYGWIN* :
+        {
+        flags gcc CFLAGS <threading>multi : -mthreads ;
+        }
+    case SunOS* :
+        {
+        flags gcc CFLAGS <threading>multi : -pthreads ;
+        flags gcc LINKFLAGS <threading>multi : -pthreads ;
+        flags gcc FINDLIBS <threading>multi : rt ;
+        }
+    case * :
+        {
+        flags gcc CFLAGS <threading>multi : -pthread ;
+        flags gcc LINKFLAGS <threading>multi : -pthread ;
+        }
+    }
 }
 
 flags gcc CFLAGS <profiling>on : -pg ;
@@ -150,4 +173,6 @@ actions updated together piecemeal gcc-Archive-action
 {
     ar ru$(ARFLAGS) "$(<:T)" "$(>:T)"
 }
+
+
 
