@@ -2,10 +2,11 @@
 
 # Clean up
 
-cvs up -dP
 rm -rf examples
 # This one is not fully finished
 rm -rf examples-v2/versioned
+# This one is too low-level and misleading
+rm -rf examples-v2/make
 
 find . -maxdepth 1 -type f | egrep -v "roll.sh|boost_build_v2.html|c++boost.gif|index_v2.html|hacking.txt" | xargs rm -f
 

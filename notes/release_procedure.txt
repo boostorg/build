@@ -5,7 +5,7 @@
 
 1. Run
 
-   cvs -d :pserver:anonymous@cvs.boost.sourceforge.net:/cvsroot/boost co -d  boost-build boost/tools/build
+   cvs -d :pserver:anonymous@cvs.boost.sourceforge.net:/cvsroot/boost co -P -d  boost-build boost/tools/build
 
 2. Go to "boost-build" directory.
 
