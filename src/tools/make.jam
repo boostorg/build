@@ -36,16 +36,16 @@ rule make-target-class ( name : project : sources * : requirements *
 
 class make-target-class : basic-target ;
 
-rule make ( target-name : sources * : generating-rule : requirements * )
+rule make ( target-name : sources * : generating-rule + : requirements * )
 {
     local caller = [ CALLER_MODULE ] ;
     local rules = [ RULENAMES $(caller) ] ;
-    if $(generating-rule) in $(rules)
+    if $(generating-rule[1]) in $(rules)
     {
         # This is local rule, make it global
-        local n = $(caller).$(generating-rule) ;
-        IMPORT $(caller) : $(generating-rule) : : $(n) ;
-        generating-rule = $(n) ;
+        local n = $(caller).$(generating-rule[1]) ;
+        IMPORT $(caller) : $(generating-rule[1]) : : $(n) ;
+        generating-rule = $(n) $(generating-rule[2-]) ;
     }
     
    targets.main-target-alternative

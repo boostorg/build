@@ -75,7 +75,8 @@ tests = [ "project_test1",
           "prebuilt",
           "project_dependencies",
           "build_dir",
-          "searched_lib"]
+          "searched_lib",
+          "make_rule"]
 
 if os.name == 'posix':
     tests.append("symlink")

@@ -519,7 +519,7 @@ rule remember-binding ( target : bound-path )
 #     rule action-name ( targets + : sources * : properties * )
 # Targets and sources are passed as actual jam targets. The rule may
 # not establish dependency relationship, but should do everything else.
-rule action ( targets + : sources * : action-name : property-set ? )
+rule action ( targets + : sources * : action-name + : property-set ? )
 {
     self.targets = $(targets) ;
     self.sources = $(sources) ;
@@ -578,7 +578,9 @@ rule action ( targets + : sources * : action-name : property-set ? )
 
             DEPENDS $(actual-targets) : $(self.actual-sources) $(self.dependency-only-sources) ;
 
-            toolset.set-target-variables $(self.action-name) $(actual-targets[0]) :
+            # Action name can include additional argument to rule, which should not
+            # be passed to 'set-target-variables'
+            toolset.set-target-variables $(self.action-name[1]) $(actual-targets[0]) :
               $(properties) ;
 
             $(self.action-name)
