@@ -5,6 +5,7 @@ import print ;
 import virtual-target ;
 import class : class new ;
 import modules ;
+import targets ;
 
 
 type.register X : x ;
