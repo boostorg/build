@@ -1078,9 +1078,10 @@ exe fop : &lt;template&gt;executable fop.cpp ;
     To use dependencies such as libraries from another project tree,
     first use the <code>project</code> rule to declare a project id
     and location for the external project.  Then add the appropriate
-    external dependency target specification to your program's list of
-    sources. For example, if you are developing a program which uses
-    the Boost.Threads library, you might write
+    external <a href="#dependency">dependency target specification</a>
+    to your program's list of sources. For example, if you are
+    developing a program which uses the Boost.Threads library, you
+    might write
 
 <blockquote>
 <pre>
