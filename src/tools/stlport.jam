@@ -53,7 +53,7 @@ project stlport ;
 # Solution 3: Use optional subfeature with only one value.
 
 feature.extend stdlib : stlport ;
-feature.compose <stdlib>stlport : <library>@/stlport/stlport ;
+feature.compose <stdlib>stlport : <library>/stlport//stlport ;
 
 subfeature stdlib stlport : version : : optional propagated link-incompatible ;
 
