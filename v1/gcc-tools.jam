@@ -467,7 +467,7 @@ rule C++-action
 actions gcc-C++-action
 {
     $(.SET_EXIT)
-    "$(.GXX[1]:R=$(GCC_BIN_DIR))" $(.GXX[2-]) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I$(_)"$(STDHDRS)" -o "$(<)" "$(>)"
+    "$(.GXX[1]:R=$(GCC_BIN_DIR))" $(.GXX[2-]) -c -Wall -ftemplate-depth-255 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I$(_)"$(STDHDRS)" -o "$(<)" "$(>)"
     "$(.OBJCOPY[1])"$(_)$(OBJCOPY_FLAGS)$(_)"$(<)"
 }
 
