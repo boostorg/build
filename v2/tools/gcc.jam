@@ -99,6 +99,51 @@ actions compile.c
     "$(CONFIG_COMMAND)" $(LANG) -Wall $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
+# The class which check that we don't try to use
+# the <link-runtime>static property while creating or using shared library,
+# since it's not supported by gcc/libc.
+class gcc-linking-generator : unix-linking-generator
+{
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        if <link-runtime>static in [ $(property-set).raw ] 
+        {
+            local m ;
+            if [ id ] = "gcc.link.dll"
+            {
+                m = "on gcc, DLL can't be build with <link-runtime>static" ;
+            }         
+            if ! $(m) {                
+                for local s in $(sources)
+                {
+                    local type = [ $(s).type ] ;
+                    if $(type) &&  [ type.is-derived $(type) SHARED_LIB ] 
+                    {
+                        m = "on gcc, using DLLS together with the <link-runtime>static options is not possible " ;
+                    }                
+                }                
+            }
+            if $(m)
+            {
+                errors.user-error $(m) :
+                  "it's suggested to use <link-runtime>static together with the <link>static" ;
+            }
+            
+        }
+                        
+        return [ unix-linking-generator.generated-targets 
+            $(sources) : $(property-set) : $(property-set) $(name) ] ;
+    }    
+}
+
+generators.register [ new gcc-linking-generator gcc.link : LIB OBJ : EXE 
+    : <toolset>gcc ] ;
+
+generators.register [ new gcc-linking-generator gcc.link.dll : LIB OBJ : SHARED_LIB 
+    : <toolset>gcc ] ;
+
+
+
 
 # Declare flags and action for linking
 flags gcc.link OPTIONS <debug-symbols>on : -g ;
@@ -113,8 +158,9 @@ flags gcc.link LINKPATH <library-path> ;
 flags gcc.link FINDLIBS-ST <find-static-library> ;
 flags gcc.link FINDLIBS-SA <find-shared-library> ;
 flags gcc.link LIBRARIES <library-file> ;
-flags gcc.link LINK-RUNTIME <link-runtime>static : static ;
-flags gcc.link LINK-RUNTIME <link-runtime>shared : dynamic ;
+# For <link-runtime>static we made sure there are no dynamic libraries 
+# in the link
+flags gcc.link OPTIONS <link-runtime>static : -static ;
 flags gcc.link RPATH <dll-path> ;
 flags gcc.link RPATH_LINK <xdll-path> ;
 
@@ -131,7 +177,7 @@ rule link ( targets * : sources * : properties * )
 
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
+    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA)  
 }
 
 # Declare action for creating static libraries
@@ -149,7 +195,7 @@ rule link.dll ( targets * : sources * : properties * )
 # Differ from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
+    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA)  
 }
 
 # Set up threading support. It's somewhat contrived, so perform it at the end,
