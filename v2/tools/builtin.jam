@@ -336,8 +336,10 @@ rule c-scanner ( includes * )
 
         # CONSIDER: the new scoping rule seem to defeat "on target" variables.
         local g = [ on $(target) return $(HDRGRIST) ] ;  
-        local b = [ path.native [ path.parent [ path.make
-                      [ virtual-target.binding $(target) ] ] ] ] ;
+        local b = [ virtual-target.binding $(target) ] ;
+        # Note that we don't need path.parent here, since the
+        # result will be directly handle to bjam build engine.
+        b = $(b:D) ;
 
         # Attach binding of including file to included targets.
         # When target is directly created from virtual target
