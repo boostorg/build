@@ -65,7 +65,8 @@ feature instruction-set :
     # Default should probably always be the lowest common denominator.
     default
     # x86 and compatible
-    i386 i486 i586 i686 pentium pentiumpro k6 athlon
+    i386 i486 i586 i686 pentium pentium-mmx pentiumpro pentium2 pentium3 pentium4
+    k6 k6-2 k6-3 athlon athlon-tbird athlon-4 athlon-xp athlon-mp
     # Sparc
     v7 cypress v8 supersparc sparclite hypersparc sparclite86x
     f930 f934 sparclet tsc701 v9 ultrasparc
