@@ -130,29 +130,31 @@ boost-build build-system ;
         <itemizedlist>
           <listitem>
             <simpara>
-              An argument that does not contain slashes or the "="
-              symbol is either a value of an implicit feature, or target to
-              be built. It is taken to be value of a feature if appropriate
+              An argument that does not contain slashes or the <code>=</code>
+              symbol is either a value of an implicit feature or of a target to
+              be built. It is taken to be value of a feature if an appropriate
               feature exists. Otherwise, it is considered a <link linkend=
-                "bbv2.reference.ids">target id</link>. Special target name "clean"
-              has the same effect as "--clean" option.
+                "bbv2.reference.ids">target id</link>. Building the
+              special target name “clean” has the same effect as
+              using the <code>--clean</code> option.
             </simpara>
           </listitem>
 
           <listitem>
             <para>
-              An argument with either slashes or the "=" symbol specifies
-              a number of <link linkend="bbv2.reference.buildreq">build
-                request</link>
-              elements. In the simplest form, it's just a set of properties,
-              separated by slashes, which become a single build request
-              element, for example:
+              An argument containing either slashes or
+              the <code>=</code> symbol specifies a number of build
+              request elements (see <xref
+              linkend="bbv2.reference.buildreq">). In its simplest
+              form, it's just a set of properties, separated by
+              slashes, which become a single build request element,
+              for example:
 
 <programlisting>
 borland/&lt;runtime-link&gt;static
 </programlisting>
 
-              More complex form is used to save typing. For example,
+              A more complex form can be used to save typing. For example,
               instead of
 
 <programlisting>
@@ -168,24 +170,28 @@ borland/runtime-link=static,dynamic
               Exactly, the conversion from argument to build request
               elements is performed by (1) splitting the argument at each slash,
               (2) converting each split part into a set of properties and (3)
-              taking all possible combination of the property sets. Each split
+              taking all possible combinations
+                <!-- Be specific.  Do you mean the cross-product? -->
+              of the property sets. Each split
               part should have the either the form
 
 <programlisting>
 <emphasis>feature-name</emphasis>=<emphasis>feature-value1</emphasis>[","<emphasis>feature-valueN</emphasis>]*   
 </programlisting>
 
-              or, in case of implicit feature
+              or, in case of implicit features
 
 <programlisting>
 <emphasis>feature-value1</emphasis>[","<emphasis>feature-valueN</emphasis>;]*   
 </programlisting>
 
-              and will be converted into property set
+              will be converted into the property set
 
 <programlisting>
 &lt;feature-name&gt;feature-value1 .... &lt;feature-name&gt;feature-valueN
 </programlisting>
+
+<!-- There's absolutely no explanation of how arguments are combined.  Fix that. -->
 
             </para>
           </listitem>
