@@ -44,6 +44,18 @@ rule peek ( module-name ? : variables + )
     }
 }
 
+# Call the given rule locally in the given module. Use this for rules
+# which accept rule names as arguments, so that the passed rule may be
+# invoked in the context of the rule's caller (for example, if the
+# rule accesses module globals or is a local rule).
+rule call-in ( module-name ? : rule-name args * : * )
+{
+    module $(module-name)
+    {
+        return [ $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ] ;
+    }
+}
+
 # load the indicated module if it is not already loaded.
 rule load ( module-name : filename ? : search * )
 {
