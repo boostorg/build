@@ -2139,9 +2139,10 @@ rule stage ( name : sources + : requirements * : local-build * )
     if $(tree-root) { tree-root = [ split-path $(tree-root) ] ; }
     local locate = [ get-values <locate> : $(requirements) ] ;
     if $(locate) { locate = [ split-path $(locate) ] ; }
+    local fake-target = [ get-values <target> : $(requirements) ] ;
 
     # Supress the regular build of this target
-    local gSUPPRESS_FAKE_TARGETS =  [ get-values <suppress> : $(local-build) ] ;
+    local gSUPPRESS_FAKE_TARGETS = [ get-values <suppress> : $(local-build) ] ;
 
     local stage-dir = $(name:G=) ;
     local files = [ select-ungristed $(sources) ] ;
@@ -2261,7 +2262,19 @@ rule stage ( name : sources + : requirements * : local-build * )
             declare-fake-targets $(target:J=/) : $(destination-file) ;
         }
     }
-    declare-fake-targets $(stage-id) : $(destination-files) ;
+
+    # Don't expose fake targets when suppressing default builds.
+    # But honor requirement to expose sources through given <target>.
+    #
+    if $(gSUPPRESS_FAKE_TARGETS)
+    {
+        if $(fake-target) { declare-fake-targets $(fake-target) : $(files) ; }
+    }
+    else
+    {
+        declare-fake-targets $(stage-id) : $(destination-files) ;
+        if $(fake-target) { declare-fake-targets $(fake-target) : $(stage-id) ; }
+    }
 
     Clean clean : $(destination-files) ;
 
@@ -2310,6 +2323,7 @@ rule target-id-of ( target )
 #   <runtime-tag> adds these single letter tags:
 #       "s" when static linking to runtime
 #       "g" when linking to debug runtime
+#       "y" when building debug-python variants
 #       "d" when building debug variants
 #       "p" when building with stlport libraries
 #
@@ -2352,7 +2366,8 @@ rule common-stage-tag ( toolset variant : properties * )
     local runtime-tag = ;
     if <runtime-link>static in $(properties) { runtime-tag += s ; }
     if <runtime-build>debug in $(properties) { runtime-tag += g ; }
-    if [ MATCH .*(debug).* : $(variant) ] { runtime-tag += d ; }
+    if [ MATCH .*(debug-python).* : $(variant) ] { runtime-tag += y ; }
+    else { if [ MATCH .*(debug).* : $(variant) ] { runtime-tag += d ; } }
     if [ MATCH .*(stlport).* : $(toolset) ] { runtime-tag += p ; }
     tags += $(runtime-tag:J=) ;
     
