@@ -90,8 +90,9 @@ rule refine ( properties * : requirements * : feature-space ? )
 }
 
 # Removes all conditional properties which conditions are not met
-# For those with met conditions, removes the condition.
-rule evaluate-conditionals ( properties * )
+# For those with met conditions, removes the condition. Properies
+# in conditions are looked up in 'context'
+rule evaluate-conditionals-in-context ( properties * : context * )
 {
     local base ;
     local conditionals ;
@@ -115,13 +116,19 @@ rule evaluate-conditionals ( properties * )
         # Split condition into individual properties
         local c = [ regex.split $(s[1]) "," ] ;
         # Evaluate condition
-        if $(c) in $(base)
+        if $(c) in $(context)
         {
             result += $(s[2]) ;
         }                
     }
     return $(result) ;    
 }
+
+rule evaluate-conditionals ( properties * )
+{
+    return [ evaluate-conditionals-in-context $(properties) : $(properties) ] ;
+}
+
 
 
 # Helper for as-path, below. Orders properties with the implicit ones
