@@ -10,6 +10,5 @@
 {
     extends-toolset intel-win32-stlport ;
     feature stlport-iostream : on off ;
-    C++FLAGS = [ difference $(C++FLAGS) : /Qmsvc-stlport ] ;
     DEFINES = [ difference $(DEFINES) : _STLP_NO_SGI_IOSTREAMS=1 ] ;
 }

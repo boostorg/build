@@ -59,37 +59,33 @@ if $(version) >= 7
 }
 
 # tell the compiler about the base toolset.
+if [ MATCH (vc-7_1).* : $(INTEL_BASE_MSVC_TOOLSET) ]
+{
+    C++FLAGS += /Qvc7.1 ;
+}
+else if [ MATCH (vc7).* : $(INTEL_BASE_MSVC_TOOLSET) ]
+{
+    C++FLAGS += /Qvc7 ;
+}
+else if [ MATCH (msvc).* : $(INTEL_BASE_MSVC_TOOLSET) ]
+{
+    C++FLAGS += /Qvc6 ;
+}
+
 if $(INTEL_BASE_MSVC_TOOLSET) = msvc
 {
-    C++FLAGS += 
-      # Emulate VC6
-      /Qvc6
-      
-      # no wchar_t support in vc6 dinkum library.  Furthermore, in vc6
-      # compatibility-mode, wchar_t is not a distinct type from unsigned
-      # short
-      -DBOOST_NO_INTRINSIC_WCHAR_T
-      ; 
+    # no wchar_t support in vc6 dinkum library.  Furthermore, in vc6
+    # compatibility-mode, wchar_t is not a distinct type from unsigned
+    # short
+    C++FLAGS += -DBOOST_NO_INTRINSIC_WCHAR_T ; 
 }
-else
+else if $(version) > 5
 {
-    if $(version) > 5
-    {
-        # Add support for wchar_t
-        C++FLAGS += /Zc:wchar_t
-          # Tell the dinkumware library about it.
-          -D_NATIVE_WCHAR_T_DEFINED
-          ;
-    }
-    
-    if $(INTEL_BASE_MSVC_TOOLSET) = vc7
-    {
-        C++FLAGS += /Qvc7 ;
-    }
-    else
-    {
-        C++FLAGS += /Qvc7.1 ;
-    }
+    # Add support for wchar_t
+    C++FLAGS += /Zc:wchar_t
+        # Tell the dinkumware library about it.
+        -D_NATIVE_WCHAR_T_DEFINED
+        ;
 }
 
 # remove any duplicates caused by the additions above
