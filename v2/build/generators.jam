@@ -1081,15 +1081,12 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
         local result2 ;
         for local t in $(result)
         {
-            local type = [ $(t).type ] ; 
-            assert.nonempty-variable type ;
-            assert.nonempty-variable target-type ;
-            
+            local type = [ $(t).type ] ;    
             # Return only targets of the requested type, unless 'return-all'
             # is specified. If we don't do this, then all targets calling
             # 'construct' will get unused target returned, which will break
             # checking for unused sources a bit harder.
-            if $(type) = $(target-type) || [ type.is-derived $(type) $(allowed-type) ]
+            if $(type) && ( $(type) = $(target-type) || [ type.is-derived $(type) $(allowed-type) ] )
             {
                 $(t).set-intermediate ;
             }
