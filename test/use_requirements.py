@@ -126,7 +126,7 @@ int main() { foo(); }
 t.write("c.cpp",
 """
 #ifdef _WIN32
-int __declspec(dllexport) must_export_something();
+int __declspec(dllexport) must_export_something;
 #endif
 """)
 
@@ -145,7 +145,11 @@ t.write("lib1/Jamfile", """
         ;
     lib c : c.cpp ;    
 """)
-t.write("lib1/c.cpp", "")
+t.write("lib1/c.cpp", """
+#ifdef _WIN32
+int __declspec(dllexport) must_export_something;
+#endif
+""")
 
 t.write("lib2/Jamfile", """
     lib b : b.cpp : : : <define>FOO ;
