@@ -32,7 +32,6 @@ type.register DTDXML : dtdxml ;
 type.register XML : xml ;
 type.register BOOSTBOOK : boostbook : XML ;
 type.register DOCBOOK : docbook : XML ; 
-type.register HTML : html ;
 type.register FO : fo : XML ;
 type.register PDF : pdf ;
 type.register PS : ps ;
