@@ -11,18 +11,20 @@
 #   search for the best transformation sequence, and some of them can be
 #   later 'actualized'.
 #
-#   Actual targets are all derived from 'abstract-target' class. The first
-#   abstract target is 'project-target', which is created for each
+#   Abstract targets are represented by classes derived from 'abstract-target' class. 
+#   The first abstract target is 'project-target', which is created for each
 #   Jamfile, and can be obtained by the 'target' rule in the Jamfile's module.
-#   (see project.jam). Project targets keep a list of 'main-target' instances.
+#   (see project.jam). 
+#
+#   Project targets keep a list of 'main-target' instances.
 #   A main target is what the user explicitly defines in a Jamfile. It is
 #   possible to have several definitions for a main target, for example to have
 #   different lists of sources for different platforms. So, main targets
-#   keep a list of variants, which are instances of 'abstract-target'.
+#   keep a list of alternatives.
 #
-#   Each variant is an instance of 'abstract-target'. When a main target
+#   Each alternative is an instance of 'abstract-target'. When a main target
 #   subvariant is defined by some rule, that rule will decide what class to
-#   use, create an instance of that class and add it to the list of variants
+#   use, create an instance of that class and add it to the list of alternatives
 #   for the main target.
 #
 #   Rules supplied by the build system will use only targets derived
@@ -128,20 +130,23 @@ rule main-target ( name : project )
 
     abstract-target.__init__ $(name) : $(project) ;
 
-    # Add a new build variant for this target
-    rule add-variant ( target )
+    # Add a new alternative for this target
+    rule add-alternative ( target )
     {
-        self.variants += $(target) ;
+        self.alternatives += $(target) ;
     }
 
-    # Select a variant return virtual targets that it generates
+    # Select an alternative for this main target, by finding all alternatives
+    # which requirements are satisfied by 'properties' and picking the one with
+    # longest requirements set.
+    # Returns the result of calling 'generate' on that alternative.
     rule generate ( properties * )
     {
         # At this stage we just try to generate each variant and if
         # more than one succeeds, consider it as an error.
         local alternatives ;
 
-        for local v in $(self.variants)
+        for local v in $(self.alternatives)
         {
             local vtargets = [ $(v).generate $(properties) ] ;
             if $(vtargets) && $(vtargets[1]) != "@error"
@@ -152,12 +157,12 @@ rule main-target ( name : project )
         if ! $(alternatives)
         {
             # TODO: Should print a name
-            error "No viable variant found for main target" [ full-name ] ;
+            error "No viable alternative found for main target" [ full-name ] ;
         }
         # We have "@" at the end. Another one means two or more alts.
         if "@" in $(alternatives[1--2])
         {
-            error "Ambiguous variants for main target" [ full-name ]  ;
+            error "Ambiguous alternatives for main target" [ full-name ]  ;
         }
         # Now return virtual targets for the only alternative
         return $(alternatives[2--2]) ;
@@ -365,8 +370,9 @@ rule virtual-target ( name : project
             local a = [ action ] ;
             if $(a) {
                 $(a).actualize ;
+                local subvariant = [ $(a).properties ] ;
                 local path = [ os.path.join [ $(self.project).location ] 
-                               "bin" [ property.as-path [ subvariant ] ]  ] ;
+                               "bin" [ property.as-path $(subvariant) ]  ] ;
                 path = [ os.path.native $(path) ] ;
                 LOCATE on $(self.actual-name) = $(path) ;
                 DEPENDS $(self.actual-name) : $(path) ;

@@ -54,7 +54,7 @@ rule main-target ( name : requirements * )
 
     local target = [ $(ptarget).main-target $(name) ] ;
 
-    $(target).add-variant
+    $(target).add-alternative
         [ new main-target-class $(name) : $(project) : $(requirements) ] ;
 }
 
