@@ -64,6 +64,7 @@ VC_STDLIB_PATH = ;
 flags msvc CFLAGS <debug-symbols>on/<debug-store>object : /Z7 ;
 flags msvc CFLAGS <debug-symbols>on/<debug-store>database : /Zi ;
 flags msvc PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;
+flags msvc PDB_LINKFLAG <debug-symbols>on/<debug-store>database : /PDB: ;
 flags msvc LINKFLAGS <debug-symbols>on : /DEBUG ;
 # The linker disables the default optimizations when using /DEBUG. Whe have
 # to enable them manually for release builds with debug symbols.
