@@ -536,7 +536,7 @@ rule get-values ( feature : properties * )
     {
         if $(p:G) = $(feature)
         {
-            result += $(p:G=) ;
+            result += $(p:TG=) ;
         }
     }
     return $(result) ;
