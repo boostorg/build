@@ -44,6 +44,33 @@ t.run_build_system()
 t.ignore("*.tds")
 t.expect_addition("bin/$toolset/debug/hello.exe")
 
-
+# Regression test.
+# Check if usage requirements are propagated via "alias"
 		   
+t.write("l.cpp", """ 
+void
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
+foo() {}
+
+""")
+
+t.write("Jamfile", """ 
+lib l : l.cpp : : : <define>WANT_MAIN ;
+alias la : l ;
+exe main : main.cpp la ; 
+""")
+
+t.write("main.cpp", """ 
+#ifdef WANT_MAIN
+int main() { return 0; }
+#endif
+
+""")
+
+t.write("project-root.jam", "")
+
+t.run_build_system()
+
 t.cleanup()
