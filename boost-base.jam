@@ -2129,8 +2129,6 @@ rule stage ( name : sources + : requirements * : local-build * )
 
     local stage-id =
         [ grist-targets $(name) ] ;
-    local tags =
-        [ get-properties <tag> : $(requirements) ] ;
 
     # Supress the regular build of this target
     local gSUPPRESS_FAKE_TARGETS =  [ get-values <suppress> : $(local-build) ] ;
@@ -2161,7 +2159,7 @@ rule stage ( name : sources + : requirements * : local-build * )
             local target-subdir = [ simplify-path-tokens [ top-relative-tokens [ directory-of $(source) ] ] ] ;
 
             dependent-include $(source:G=) ;
-            local gIMPOSED_REQUIREMENTS($(target-id)) = $(tags) ;
+            local gIMPOSED_REQUIREMENTS($(target-id)) = $(requirements) ;
             local subvariants = [ expand-target-subvariants $(target-id) : $(local-build) : $(TOOLS) ] ;
 
             for local subvariant in $(subvariants)
@@ -2171,7 +2169,7 @@ rule stage ( name : sources + : requirements * : local-build * )
                 local s-toolset = ;
                 local s-variant = ;
                 split-target-subvariant s-target s-properties s-toolset s-variant : $(subvariant) ;
-
+                
                 if  ( $(s-toolset) = $(source-build[1]) || $(source-build[1]) = * ) &&
                     ( $(s-variant) = $(source-build[2]) || $(source-build[2]) = * )
                 {
@@ -2194,7 +2192,7 @@ rule stage ( name : sources + : requirements * : local-build * )
                     for local sv in $(sv-files)
                     {
                         local renamed-target =
-                            [ rename-target $(sv) : [ split-path $(s-properties[1]) ] : ] ; ## $(tags) ] ;
+                            [ rename-target $(sv) : [ split-path $(s-properties[1]) ] : ] ;
 
                         files += $(sv) ;
                         file-mode($(sv)) = $($(gTARGET_TYPE($(s-target)))MODE) ;
