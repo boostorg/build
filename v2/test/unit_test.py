@@ -16,7 +16,7 @@ using testing ;
 """)
 t.write("Jamfile", """
 lib helper : helper.cpp ;
-unit-test test : test.cpp : <source>helper ;
+unit-test test : test.cpp : <library>helper ;
 """)
 t.write("test.cpp", """
 void helper();

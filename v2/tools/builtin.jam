@@ -434,12 +434,6 @@ class lib-target-class : basic-target
                                         
         return $(result) ;
     }            
-    
-    rule extra-sources ( property-set )
-    {
-        return [ $(property-set).get <library>  ] ;
-    }
-    
 }
 
 rule lib ( names + : sources * : requirements * : default-build * 
@@ -532,11 +526,6 @@ class exe-target-class : typed-target
         }
         basic-target.check-for-unused-sources $(result) : $(sources-to-check) ;
     }
-    
-    rule extra-sources ( property-set )
-    {
-        return [ $(property-set).get <library>  ] ;
-    }    
 }
 
 rule exe ( name : sources * : requirements * : default-build * 
@@ -692,6 +681,8 @@ class linking-generator : generator
         
     rule run ( project name ? : property-set : sources + :  multiple ? )
     {   
+        sources += [ $(property-set).get <library>  ] ;        
+        
         if [ $(property-set).get <hardcode-dll-paths> ] = true
          && [ type.is-derived $(self.target-types[1]) EXE ] 
         {
