@@ -598,10 +598,12 @@ local rule scan-variable (
         if $(var-parts[2]) = "?="
         {
             default-value = $(value) ;
+			default-value ?= "(empty)" ;
         }
         else
         {
             initial-value = $(value) ;
+			initial-value ?= "(empty)" ;
         }
         if $(comment-block)
         {
