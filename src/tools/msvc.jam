@@ -30,10 +30,6 @@ feature.subfeature toolset msvc : vendor
   # to be seen, though ;-)
   ;
 
-# Remember whether any versions have been initialized, allowing us to
-# set the first initialized version as the default.
-.initialized = ;
-
 # Initialize the toolset for a specific version. As the result, path to
 # compiler and, possible, program names are set up, and will be used when
 # that version of compiler is requested. For example, you might have::
