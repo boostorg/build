@@ -79,6 +79,32 @@ rule escape ( string : symbols : escape-symbol )
   return $(result) ;
 }
 
+# Replaces occurances of a string in a given string. Returns the
+# new string.
+#
+rule replace (
+    string # The string to modify.
+    match # The characters to replace.
+    replacement # The string to replace with.
+    )
+{
+    local result = "" ;
+    local parts = 1 ;
+    while $(parts)
+    {
+        parts = [ MATCH ^(.*)($(match))(.*) : $(string) ] ;
+        if $(parts)
+        {
+            parts += "" ;
+            result = "$(replacement)$(parts[3])$(result)" ;
+            string = $(parts[1]) ;
+        }
+    }
+    string ?= "" ;
+    result = "$(string)$(result)" ;
+    return $(result) ;
+}
+
 rule __test__ ( )
 {
     import assert ;
@@ -107,4 +133,9 @@ rule __test__ ( )
     
     assert.result "<?xml version=\\\"1.0\\\">"
       : escape "<?xml version=\"1.0\">" : "\\\"" : "\\" ;
+    
+    assert.result "string&nbsp;string&nbsp;" : replace "string string " " " "&nbsp;" ;
+    assert.result "&nbsp;string&nbsp;string" : replace " string string" " " "&nbsp;" ;
+    assert.result "string&nbsp;&nbsp;string" : replace "string  string" " " "&nbsp;" ;
+    assert.result "-" : replace "&" "&" "-" ;
 }
