@@ -792,6 +792,79 @@ local rule select-dependency-graph ( options )
 }
     
 .construct-stack = ;
+
+# Attempt to construct the target by looking at transformation cache.
+local rule construct-with-caching (
+   project name ? : target-type multiple ? : properties * : sources * )
+{     
+    local result ;
+    if ! $(.caching) && ! $(sources[2]) && $(sources[1]) && ! $(name)
+    {
+        local .caching = true ;
+        
+        local t = $(sources[1]) ;            
+            
+        local signature = [ sequence.join [ $(t).type ] $(target-type) $(properties) : - ] ;
+            
+        # Get a transformation template from cache or create it.
+        local cresult ;
+        if $(.transformation.cache.$(signature))
+        {
+            cresult = $(.transformation.cache.$(signature)) ;
+        }
+        else 
+        {                            
+            local ut = [ new file-target % : [ $(t).type ] : "no project" ] ;            
+            cresult = [ construct $(project) : $(target-type) $(multiple) : $(properties) : $(ut) ] ;
+            .transformation.cache.$(signature) = $(cresult) ;                
+        }
+                                    
+        # Substitute the real source name in the transformation template.
+        if $(cresult)
+        {                
+            generators.dout [ indent ] "*** putting to cache?" ;
+            for local c in $(cresult)
+            {
+                local cc = [ virtual-target.clone-template $(c) : $(t) ] ;
+                generators.dout [ indent ] "*** cloning " [ $(c).str ] ;
+                generators.dout [ indent ] "*** cloned" $(cc) --- [ $(cc).str ] ;
+                result += $(cc) ;
+            }
+        }    
+    }
+    return $(result) ;
+}
+
+# Attempts to construct target by finding viable generators, running them
+# and selecting the dependency graph
+local rule construct-without-caching (
+   project name ? : target-type multiple ? : properties * : sources * )
+{
+    viable-generators = [ find-viable-generators $(target-type) : $(properties) 
+      : $(allow-composing) ] ;
+                    
+    local results = [ new vector ] ;
+    
+    generators.dout [ indent ] "*** " [ sequence.length $(viable-generators) ] 
+      " viable generators" ;
+    
+    for local g in $(viable-generators)
+    {
+        # This variable will be restored on exit from this scope.
+        local .active-generators = $(g) $(.active-generators) ;
+        
+        local r = [ try-one-generator $(project) $(name) : $(g) $(multiple) : $(target-type) :
+          $(properties) : $(sources) ] ;
+        
+        if $(r)
+        {
+            $(results).push-back [ new vector $(r) ] ;
+        }
+    }
+    
+    return [ select-dependency-graph $(results) ] ;
+}       
+    
         
 # Attempts to create target of 'target-type' with 'properties'
 # from 'sources'. The 'sources' are treated as a collection of
@@ -844,92 +917,21 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
     }
     generators.dout [ indent ] "    properties:" $(properties) ;        
                
-    local result ;
+    local result = [ construct-with-caching $(project) $(name)  
+      : $(target-type) $(multiple) : $(properties) : $(sources) ] ;
     
-    # TODO: should probably use a better logic to decide when to activate 
-    # caching
-    if ! $(.caching) && ! $(sources[2]) && $(sources[1]) && ! $(name)
-    {
-        local .caching = true ;
-        
-        local t = $(sources[1]) ;            
-            
-        local signature = [ sequence.join [ $(t).type ] $(target-type) $(properties) : - ] ;
-            
-        # Get a transformation template from cache or create it.
-        local cresult ;
-        if $(.transformation.cache.$(signature))
-        {
-            cresult = $(.transformation.cache.$(signature)) ;
-        }
-        else 
-        {                            
-            local ut = [ new file-target % : [ $(t).type ] : "no project" ] ;            
-            cresult = [ construct $(project) : $(target-type) $(multiple) : $(properties) : $(ut) ] ;
-            .transformation.cache.$(signature) = $(cresult) ;                
-        }
-                                    
-        # Substitute the real source name in the transformation template.
-        if $(cresult)
-        {                
-            generators.dout [ indent ] "*** putting to cache?" ;
-            for local c in $(cresult)
-            {
-                local cc = [ virtual-target.clone-template $(c) : $(t) ] ;
-                generators.dout [ indent ] "*** cloning " [ $(c).str ] ;
-                generators.dout [ indent ] "*** cloned" $(cc) --- [ $(cc).str ] ;
-                result += $(cc) ;
-            }
-        }    
-    } else {
-                                   
-        viable-generators = [ find-viable-generators $(target-type) : $(properties) 
-                              : $(allow-composing) ] ;
-                    
-        #Don't do any error reporting there, just return empty string.
-        #Possibly, we can have a switch which would turn output of such 
-        #messages.
-        #if ! $(viable-generators[1])
-        #{
-        #    error "No viable generators found." ;
-        #}
-
-        local results = [ new vector ] ;
-        
-        generators.dout [ indent ] "*** " [ sequence.length $(viable-generators) ] 
-          " viable generators" ;
-
-        for local g in $(viable-generators)
-        {
-            # This variable will be restored on exit from this scope.
-            local .active-generators = $(g) $(.active-generators) ;
-                                                
-            local r = [ try-one-generator $(project) $(name) : $(g) $(multiple) : $(target-type) :
-                        $(properties) : $(sources) ] ;
-            
-            if $(r)
-            {
-                $(results).push-back [ new vector $(r) ] ;
-            }
-        }
-
-        #The same comment as above applies.
-        #if [ $(results).empty ] 
-        #{
-        #    error "No generator could produce desired targets" ;
-        #}
-        
-        result = [ select-dependency-graph $(results) ] ;
+    if ! $(result)  {
+        result = [ construct-without-caching $(project) $(name)  
+      : $(target-type) $(multiple) : $(properties) : $(sources) ] ;
     }
-        
-        
+                
     decrease-indent ;
         
     .construct-stack = $(.construct-stack[2-]) ;
 
     if ! $(.construct-stack) # This is first invocation in stack
     {
-        # Make roots of dependency graph depent on all 'dependency' features.
+        # Make roots of dependency graph depend on all 'dependency' features.
         local dp = [ property.take dependency : $(properties) ] ;
                        
         if $(dp)
