@@ -46,6 +46,7 @@ else if $(UNIX)
         flags gcc CFLAGS <threading>multi : -pthreads ;
         flags gcc LINKFLAGS <threading>multi : -pthreads ;
         flags gcc FINDLIBS <threading>multi : rt ;
+        NO_GNU_LN = true ; # sun seems not to use the GNU linker with gcc
         }
     case * :
         {
@@ -129,9 +130,20 @@ rule Link-action
 }
 
 # for gcc, we repeat all libraries so that dependencies are always resolved
-actions gcc-Link-action bind NEEDLIBS
+if $(NO_GNU_LN)
 {
+  # if we don't have a GNU linker then we can't pass any GNU-ld specific flags:
+  actions gcc-Link-action bind NEEDLIBS
+  {
+    $(GCC_BIN_DIRECTORY)g++ $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+  }
+}
+else
+{
+  actions gcc-Link-action bind NEEDLIBS
+  {
     $(GCC_BIN_DIRECTORY)g++ $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,. -Wl,-soname,$(<[1]:D=).$(DLLVERSION)
+  }
 }
 
 actions gcc-dllwrap bind NEEDLIBS
@@ -173,6 +185,7 @@ actions updated together piecemeal gcc-Archive-action
 {
     ar ru$(ARFLAGS) "$(<:T)" "$(>:T)"
 }
+
 
 
 
