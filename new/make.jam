@@ -33,28 +33,11 @@ class make-target-class : basic-target ;
 
 rule make ( target-name : sources * : generating-rule : requirements * )
 {
-    local project-module = [ CALLER_MODULE ] ;
-    local location = [ project.attribute $(project-module) location ] ;
-    local ptarget = [ project.target $(location) ] ;
-    local default-build = [ project.attribute $(project-module) default-build ] ;
-
-
-    local pr = [ project.attribute $(project-module) requirements ] ;
-
-    # Don't do anything meaningfull on errors. This will be handled when 
-    # we implement target types.
-    requirements = [ property.refine $(pr) : $(requirements) ] ;
-    if $(requirements[1]) = "@error" 
-    {
-        error "Conflicting requirements for target:" $(requirements) ;
-    }
-
-
-    local target = [ $(ptarget).main-target $(target-name) ] ;
-
-    $(target).add-alternative
-        [ new make-target-class $(target-name) : $(project-module) : $(sources) 
-          : $(requirements) : $(generating-rule) : $(default-build) ] ;
+    # Default build is not specified: 'main-target-alternative' will take
+    # care of it.
+    targets.main-target-alternative 
+      $(target-name) [ CALLER_MODULE ] make-target-class : 2 : 4 
+        : $(sources) : $(requirements) : $(generating-rule) : $(default-build) ;
 }
 
 IMPORT $(__name__) : make : : make ;

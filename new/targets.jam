@@ -34,7 +34,7 @@
 
 
 import sequence ;
-import class : class ;
+import class : class new ;
 import regex ;
 import property ;
 import errors ;
@@ -375,6 +375,56 @@ rule basic-target ( name : project
 }
 
 class basic-target : abstract-target ;
+
+.args = 4 5 6 7 8 9 ;
+
+# Creates a main target alternative of type 'class-name'. The ctor will be
+# passed 'target-name', 'project' and all trailing arguments.
+# If 'requirements-pos' and 'default-build-pos' are specified, the corresponding
+# trailing arguments will be specially processed.
+rule main-target-alternative ( target-name project class-name 
+        : requirements-pos ? : default-build-pos ?
+        : * )
+{
+    for local i in $(.args) 
+    {
+        a$(i) = $($(i)) ;
+    }
+       
+    if $(requirements-pos)
+    {
+        local real-pos = $(.args[$(requirements-pos)]) ;
+        local project-requirements = [ project.attribute $(project) requirements ] ;
+        
+        local requirements = [ property.refine $(project-requirements) : $($(real-pos)) ] ;
+        if $(requirements[1]) = "@error" 
+        {
+            error "Conflicting requirements for target:" $(requirements) ;
+        }
+        else
+        {
+            a$(real-pos) = $(requirements) ;
+        }                        
+    }
+    
+    if $(default-build-pos)
+    {
+        local real-pos = $(.args[$(default-build-pos)]) ;
+        if ! $(a$(real-pos))
+        {
+            a$(real-pos) = [ project.attribute $(project) default-build ] ;
+        }        
+    }
+               
+    local location = [ project.attribute $(project) location ] ;
+    local ptarget = [ project.target $(location) ] ;
+    local target = [ $(ptarget).main-target $(target-name) ] ;
+
+    $(target).add-alternative
+        [ new $(class-name) $(target-name) : $(project) 
+          : $(a4) : $(a5) : $(a6) : $(a7) : $(a8) : $(a9) ] ;
+}
+
 
 
 # Class which represents a virtual target
