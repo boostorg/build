@@ -629,7 +629,10 @@ rule include-tools
     include $(BOOST_BUILD_INSTALLATION)$(SLASH)$(<)-tools.jam ;
 
     # Always maintain the list of relevant features as unique
-    gRELEVANT_FEATURES($(<)) = [ unique $(gRELEVANT_FEATURES($(<))) ] ;
+    gRELEVANT_FEATURES($(<)) = [ 
+      unique $(gRELEVANT_FEATURES($(<))) 
+        $(gALWAYS_RELEVANT)
+    ] ;
     
     gINCLUDED($(BOOST_BUILD_INSTALLATION)$(SLASH)$(<)-tools.jam) = true ;
 }
