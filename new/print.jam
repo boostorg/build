@@ -1,4 +1,4 @@
-#  Copyright (C) 2002, Rene Rivera. Permission to copy, use, modify, sell and
+#  Copyright (C) 2002-2003, Rene Rivera. Permission to copy, use, modify, sell and
 #  distribute this software is granted provided this copyright notice appears in
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
@@ -10,6 +10,7 @@
 import modules ;
 import numbers ;
 import string ;
+import regex ;
 
 # The current output target. Defaults to console.
 output-target = console ;
@@ -241,7 +242,9 @@ rule text (
         while $(strings)
         {
             local line-v = $(output-target).line.$($(output-target).line) ;
-            $(line-v) on $(output-target) = $(strings[1]) ;
+            local echo-string = [ regex.split $(strings[1]) "\"" ] ;
+            echo-string = $(echo-string:J="''") ;
+            $(line-v) on $(output-target) = $(echo-string) ;
             NOCARE $(line-v) ;
             NOTFILE $(line-v) ;
             text-action $(output-target) : $(line-v) ;
@@ -263,7 +266,7 @@ rule wrapped-text ( text + )
 #
 actions quietly text-action
 {
-    echo '$($(>))' >> $(<)
+    echo "$($(>))" >> $(<)
 }
 
 local rule __test__ ( )

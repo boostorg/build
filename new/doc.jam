@@ -1,4 +1,4 @@
-# Copyright (C) 2002, Rene Rivera. Permission to copy, use, modify, sell and
+# Copyright (C) 2002-2003, Rene Rivera. Permission to copy, use, modify, sell and
 # distribute this software is granted provided this copyright notice appears in
 # all copies. This software is provided "as is" without express or implied
 # warranty, and with no claim as to its suitability for any purpose.
@@ -129,6 +129,10 @@ rule help ( )
             did-help = true ;
         }
         command = [ $(args).front ] ; $(args).pop-front ;
+    }
+    if $(did-help)
+    {
+        UPDATE all ;
     }
     return $(did-help) ;
 }
@@ -345,11 +349,15 @@ local rule print-help-top ( )
     print.section "Available Help"
         These are the available options for obtaining documentation.
         Some options have additional instructions on how to get more
-        detailed information.
+        detailed information. Multiple options are allowed and
+        sometimes required. For example, the options that configure
+        the help system still require a regular help request option
+        for any output to be generated.
         ;
     print.list-start ;
     print.list-item --help; This help message. ;
     print.list-item --help-all; Brief information on available modules. ;
+    print.list-item --help <module-name>; Get information about a module. ;
     print.list-item --help-options; Options for controlling the help display. ;
     print.list-item --help-output <type>; The type of output to genetare.
         '"console" is formated text echoed to the console (the default);'
