@@ -28,7 +28,7 @@ Boost Libraries</h1>
       your favorite compiler, consider contributing one. Secondary tasks like
       copying libraries to installation specific directories are also weak.</p>
       <p>Note that the underlying Jam build engine is mature software, and has
-      been widely used for many years.&nbsp; The FTJam and Boost specific
+      been widely used for many years.&nbsp; The Boost specific
       extensions are well on their way to becoming stable, and have begun to attract interest and use
       outside of Boost.</td>
   </tr>
@@ -51,16 +51,47 @@ Expression, and Thread libraries.</p>
 <ul>
   <li><a href="../../more/download.html">Download Boost</a>, and unpack the full
     directory structure into some root directory.</li>
-  <li>Download FTJam, and install the binary executable where it will be found
-    when invoked from the command line.</li>
-</ul>
-<blockquote>
+
+    <p>
+    
+  <li>Download FTJam and install the binary executable where it will be found
+    when invoked from the command line.</li><br>
+    
   <ul>
     <li>For easy-to-build source files, see the <a href="http://freetype.sourceforge.net/jam/index.html">FTJam</a>
       site on SourceForge.</li>
+
     <li>For Linux and Win32 pre-built executables, see the <a href="http://sourceforge.net/project/showfiles.php?group_id=3157">ftjam
-      section of the FreeType file list</a>.</li>
+      section of the FreeType file list</a>.
+
+    <li>If there is no pre-built FTJam executable for your platform, don't
+    bother downloading the source.  Instead, read the Jam build instructions and
+    apply them directly to the Boost Jam sources in the
+    <tt>tools/build/jam_src</tt> subdirectory.
   </ul>
+
+  <p>
+
+  <li>If you acquired FTJam in the previous step, go to the tools/build/jam_src
+  subdirectory and invoke
+
+<blockquote><pre>
+jam -sBOOST_ROOT= -sBOOST_BUILD_PATH= -sJAMBASE=
+</pre></blockquote>
+
+which will build a new copy of Jam with the Boost extensions enabled. If FTJam
+complains about a missing toolset variable, follow its directions by adding the
+appropriate settings, e.g.:
+
+<blockquote><pre>
+jam -sBOOST_ROOT= -sBOOST_BUILD_PATH= -sJAMBASE= -sJAM_TOOLSET=VISUALC -sVISUALC=c:/tools/msvc 
+</pre></blockquote>
+
+<li>Replace the FTJam executable with the one in the newly-created
+<tt>bin.</tt><i>platform</i> subdirectory.
+
+</ul>
+<blockquote>
 </blockquote>
 <ul>
   <li>Set any environmental variables required to run your compiler and related
@@ -75,22 +106,25 @@ steps.&nbsp; The sample commands given will work for both UNIX and Windows.</p>
   <li>Change to the Boost root directory.&nbsp; (The directory you unpacked the
     distribution into.&nbsp; Among others, it contain the file c++boost.gif,
     subdirectories boost, libs, more, etc.)</li>
-</ul>
-<blockquote>
   <blockquote>
     <p><code>chdir my_boost</code></p>
   </blockquote>
-</blockquote>
-<ul>
+
+  <p>
+
   <li>Build the Boost libraries for your <a href="#Tools">tools</a>. The example
     is for the GNU and Metrowerks compilers.</li>
-</ul>
-<blockquote>
   <blockquote>
-    <p><code>jam -ftools/build/allyourbase.jam</code><code> -sTOOLS=&quot;</code><code>gcc
-    metrowerks</code><code>&quot;</code></p>
+    <p><code>jam&nbsp;-sBOOST_ROOT=.&nbsp;-sTOOLS=&quot;gcc&nbsp;metrowerks&quot;</code></p>
   </blockquote>
-</blockquote>
+
+  <p>
+
+  <li>If you don't want to specify <code>BOOST_ROOT</code> on the command-line,
+  you can instead set the <code>BOOST_ROOT</code> environment variable (an
+  absolute path is recommended).
+</ul>
+
 <h2><a name="Moretools">More on using the tools</a></h2>
 <p>The build system's toolsets are designed to work in either of two ways:</p>
 <ol>
@@ -149,6 +183,10 @@ steps.&nbsp; The sample commands given will work for both UNIX and Windows.</p>
     <td>Microsoft Visual C++ command line compiler tools</td>
   </tr>
   <tr>
+    <td><code>msvc-stlport</code></td>
+    <td>Microsoft Visual C++ command line compiler tools, using the STLport library</td>
+  </tr>
+  <tr>
     <td>vacpp</td>
     <td>IBM Visual Age C++ command line compiler tools</td>
   </tr>
@@ -160,7 +198,7 @@ to the tools/build subdirectory, where xxxx is the name of the tool being
 added.&nbsp; If you write an additional toolset file, please submit it to Boost
 so others may benefit from your work.</p>
 <hr>
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->02 November, 2001<!--webbot bot="Timestamp" endspan i-checksum="39353" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->08 November, 2001<!--webbot bot="Timestamp" endspan i-checksum="39353" -->
 </p>
 <p>© Copyright 2001 Beman Dawes</p>
 <p>&nbsp;</p>
