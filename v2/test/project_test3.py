@@ -11,20 +11,13 @@ t.set_tree("project-test3")
 t.run_build_system()
 
 t.expect_addition("bin/a.obj")
-
-expected = """debug
+t.expect_content("bin/a.obj",
+"""debug
 a.cpp
 """
 
-if t.read("bin/a.obj") != expected:
-    print '***expected:'
-    print expected
-    print '***got this instead:'
-    print t.read("bin/a.obj")
-    t.fail_test(1)
-
 t.expect_addition("bin/a.exe")
-t.fail_test(t.read("bin/a.exe") !=
+t.expect_content("bin/a.exe",
 """debug
 bin/a.obj
 """)
