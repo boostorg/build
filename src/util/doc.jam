@@ -18,7 +18,7 @@ import class ;
 #
 not-modules = boost-build bootstrap site-config test user-config ;
 
-# The type of output to genetare.
+# The type of output to generate.
 # "console" is formated text echoed to the console (the default);
 # "text" is formated text appended to the output file;
 # "html" is HTLM output to the file.
@@ -31,11 +31,11 @@ help-output = console ;
 #
 help-output-file = help ;
 
-# Wether to include local rules in help output.
+# Whether to include local rules in help output.
 #
 .option.show-locals ?= ;
 
-# When showing documentation for a module, wether to also generate
+# When showing documentation for a module, whether to also generate
 # automatically the detailed docs for each item in the module.
 #
 .option.detailed ?= ;
@@ -239,7 +239,7 @@ local rule set-module-copyright (
 local rule set-rule-doc (
     name # The name of the rule.
     module-name ? # The name of the module to document.
-    is-local ? # Wether the rule is local to the module.
+    is-local ? # Whether the rule is local to the module.
     : docs * # The documentation for the rule.
     )
 {
