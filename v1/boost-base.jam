@@ -2874,10 +2874,13 @@ rule toolset::requirements ( toolset variant : subvariant-path properties * )
         }
     }
     requirements = [ unique $(requirements) ] ;
+    local free-feature-requirements = [ segregate-free-properties properties ] ;
     properties =
         [ sort
             [ difference $(properties) : [ get-properties $(requirements:G) : $(properties) ] ]
             $(requirements)
-            ] ;
+            ]
+        $(free-feature-requirements)
+        ;
     return $(subvariant-path) $(properties) ;
 }
