@@ -303,7 +303,7 @@ make1a( state *pState)
 				push_state(&temp_stack, c->target, pState->t, T_STATE_MAKE1A);
 			}
 
-		// using stacks reverses the order of execution. Reverse it back
+		/* using stacks reverses the order of execution. Reverse it back */
 		push_stack_on_stack(&state_stack, &temp_stack);
 	}
 
@@ -503,10 +503,10 @@ make1c( state *pState )
 			for( c = t->parents; c; c = c->next )
 				push_state(&temp_stack, c->target, NULL, T_STATE_MAKE1B);
 		
-			// must pop state before pushing any more
+			/* must pop state before pushing any more */
 			pop_state(&state_stack);
 		
-			// using stacks reverses the order of execution. Reverse it back
+			/* using stacks reverses the order of execution. Reverse it back */
 			push_stack_on_stack(&state_stack, &temp_stack);
 		}
 	}
