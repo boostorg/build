@@ -39,8 +39,9 @@ rule result ( expected * : rule-name args * : * )
 # assert that the given variable is nonempty.
 rule nonempty-variable ( name )
 {
-    local empty ;
-    if $($(variable)) = $(empty) 
+    local value = [ modules.peek [ CALLER_MODULE ] : $(name) ] ;
+
+    if ! $(value)-is-nonempty
     {
         error-skip-frames 3 assertion failure: expecting non-empty variable $(variable) ;
     }
