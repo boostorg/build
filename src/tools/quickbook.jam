@@ -110,6 +110,7 @@ import boostbook ;
 import "class" : new ;
 import feature ;
 import generators ;
+import os ;
 import path ;
 import toolset ;
 import type ;
@@ -142,8 +143,11 @@ class quickbook-binary-generator : generator
 
     rule run ( project name ? : property-set : sources * : multiple ? )
     {
-        # QuickBook invocation command.
+        # Targets to be built as dependencies for current project.
         local quickbook-binary-target ;
+
+        # Actual invocation command for QuickBook.
+        local quickbook-binary ;
 
         if $(quickbook-command)
         {
@@ -157,6 +161,8 @@ class quickbook-binary-generator : generator
             # Mark $(quickbook-command) as a virtual-target so bjam will not
             # generate it.
             quickbook-binary-target = [ virtual-target.from-file $(command) : $(project) ] ;
+
+            quickbook-binary = $(quickbook-binary-target) ;
         }
         else
         {
@@ -223,6 +229,18 @@ class quickbook-binary-generator : generator
                 # Ignore usage-requirements returned as the first element
                 # of the list.
                 quickbook-binary-target = $(quickbook-binary-target[2-]) ;
+
+                # Some toolsets generate extra targets (e.g. RSP). While we must mark
+                # all of them as dependencies for the current project, we can only use
+                # the EXE target for actual execution of the quickbook-to-boostbook
+                # rule.
+                for local target in $(quickbook-binary-target)
+                {
+                    if [ $(target).type ] = EXE
+                    {
+                        quickbook-binary += $(target) ;
+                    }
+                }
             }
             else
             {
@@ -247,6 +265,7 @@ class quickbook-binary-generator : generator
                 # Marking the QuickBook executable as virtual-target lets bjam pretend
                 # it has been built.
                 quickbook-binary-target = [ virtual-target.from-file [ quickbook.get-quickbook-command ] : $(project) ] ;
+                quickbook-binary = $(quickbook-binary-target) ;
             }
         }
 
@@ -255,7 +274,7 @@ class quickbook-binary-generator : generator
         # quickbook-to-boostbook rule, below.
         property-set = [ $(property-set).add-raw
           <dependency>$(quickbook-binary-target)
-          <quickbook-binary>$(quickbook-binary-target) ] ;
+          <quickbook-binary>$(quickbook-binary) ] ;
 
         return [ generator.run $(project) $(name) : $(property-set) : $(sources) : $(multiple) ] ;
     }
@@ -358,7 +377,7 @@ local rule programs-extensions ( )
 {
     local path-ext ;
 
-    if $(OS) = NT
+    if [ os.name ] in NT
     {
         path-ext = [ split-word ";" : [ modules.peek : PATHEXT ] ] ;
         # Set up a default set of executable extensions if none are available.
