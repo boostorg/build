@@ -89,7 +89,7 @@ tests = [ "project_test1",
 	  "ndebug",
 	  ]
 
-if os.name == 'posix':
+if os.name == 'posix' and not os.uname()[0].startswith('CYGWIN'):
     tests.append("symlink")
     tests.append("railsys") # Actually, needs QT
 
