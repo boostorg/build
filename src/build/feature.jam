@@ -127,8 +127,22 @@ rule feature (
     $(attributes).features += $(name) ;
 
     .all-features += $(name) ;
-    extend $(name) : $(values) ;
+    extend $(name) : $(values) ;    
 }
+
+# set default value of the given feature, overriding any previous
+# default.
+rule set-default ( feature : value )
+{
+    local f = [ grist $(feature) ] ;
+    if ! $(value) in $($(f).values) 
+    {
+        errors.error "The specified default value, '$(value)' is invalid" 
+          : "values values are " $($(f).values) ;
+    }    
+    $(f).default = $(value) ;
+}
+
 
 # return the default property values for the given features.
 rule defaults ( features * )
@@ -142,7 +156,7 @@ rule defaults ( features * )
         }
         else
         {
-            result += $(f)$($(f).values[1]) ;
+            result += $(f)$($(f).default) ;
         }
     }
     return $(result) ;
@@ -369,6 +383,12 @@ local rule extend-feature ( feature : values * )
 
         .all-implicit-values += $(values) ;
     }
+    if ! $($(feature).values)
+    {
+        # This is the first value specified for this feature,
+        # take it as default value
+        $(feature).default = $(values[1]) ;
+    }    
     $(feature).values += $(values) ;
 }
 
@@ -964,6 +984,12 @@ local rule __test__ ( )
       <toolset>gcc <variant>debug <stdlib>native <dummy>dummy1
       : add-defaults <runtime-link>static <define>foobar <optimization>on <toolset>gcc:<define>FOO
       ;
+    
+    set-default <runtime-link> : static ;
+    assert.result <runtime-link>static 
+      : defaults <runtime-link>
+      ;
+      
 
     assert.result  <toolset>gcc <define>foo <stdlib>stlport <magic>3 <include>/path/to/stlport <define>MAGIC=3
       : run-actions <toolset>gcc <define>foo <stdlib>stlport <magic>3
