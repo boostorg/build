@@ -28,14 +28,14 @@ import utility ;
 #                                        |
 #    +---------------------+     +---------+------------+
 #    | action              |     | abstract-file-target |
-#    +=====================|   1 +======================+
+#    +=====================|   * +======================+
 #    | action-name         |  +--| action               |
 #    | properties          |  |  +----------------------+
 #    +---------------------+--+  | actualize-action()   |
 #    | actualize()         |0..1 +-----------+----------+
 #    | path()              |                 |
-#    | adjust-properties() |                 |
-#    | actualize-sources() |                 |
+#    | adjust-properties() | sources         |
+#    | actualize-sources() | targets         |
 #    +------+--------------+                 ^
 #           |                               / \
 #           ^                              +-+-+
