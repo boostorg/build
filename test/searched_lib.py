@@ -1,9 +1,11 @@
 #!/usr/bin/python
 
 # Test usage of searched-libs: one which are found via -l
-# switch to the linker/compiler
+# switch to the linker/compiler. This tests works with gcc
+# only, for the moment, and requires that libz is available.
 
 from BoostBuild import Tester, exe_suffix
+import string
 t = Tester()
 
 # A regression test: <library>property referring to
@@ -31,5 +33,12 @@ t.write('d/d2/a.cpp', """
 
 t.run_build_system()
 
+# Test the <search> properties is respected.
+t.write('Jamfile', """exe main : main.cpp z ;
+lib z : : <name>z <search>PATH_TO_ZLIB ;  
+""")
+
+t.run_build_system(extra_args='-a -n -d2')
+t.fail_test(string.find(t.stdout(), "PATH_TO_ZLIB") == -1)
 
 t.cleanup()
