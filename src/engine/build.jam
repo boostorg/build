@@ -279,15 +279,15 @@ if $(NT)
 {
 if [ GLOB "C:\\Program Files\\7-ZIP" : "7zn.exe" ]
 {
-    actions .pack {    "C:\Program Files\7-ZIP\7zn.exe" a -r -tzip "$(<)" "$(>)" }
-    actions .zip  {    "C:\Program Files\7-ZIP\7zn.exe" a -r -tzip "$(<)" "$(>)" }
+    actions piecemeal .pack {    "C:\Program Files\7-ZIP\7zn.exe" a -r -tzip "$(<)" "$(>)" }
+    actions piecemeal .zip  {    "C:\Program Files\7-ZIP\7zn.exe" a -r -tzip "$(<)" "$(>)" }
 }
 else
 {
-    actions .pack {    zip -9r "$(<)" "$(>)" }
-    actions .zip  {    zip -9r "$(<)" "$(>)" }
+    actions piecemeal .pack {    zip -9r "$(<)" "$(>)" }
+    actions piecemeal .zip  {    zip -9r "$(<)" "$(>)" }
 }
-    actions .cp   {    cp -a "$(>)" "$(<)" }
+    actions piecemeal .cp   {    copy /Y "$(>)" "$(<)" }
 }
 if $(UNIX)
 {
