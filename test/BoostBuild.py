@@ -33,7 +33,7 @@ elif os.name == 'nt':
 
 class Tester(TestCmd.TestCmd):
 
-    def __init__(self):
+    def __init__(self, arguments=""):
 
         self.original_workdir = os.getcwd()
 
@@ -49,7 +49,10 @@ class Tester(TestCmd.TestCmd):
             self
             , program=os.path.join(
                 '..', 'jam_src', jam_build_dir, 'bjam')
+              + ' -sBOOST_BUILD_PATH='
+              + os.path.join(self.original_workdir, "..", "new")
               + ' -d0 --debug --quiet'
+              + ' ' + arguments
             , match=TestCmd.match_exact
             , workdir='')
 
@@ -71,12 +74,23 @@ class Tester(TestCmd.TestCmd):
 
         os.chdir(d)
 
+        def make_writable(unused, dir, entries):
+            for e in entries:
+                name = os.path.join(dir, e)
+                os.chmod(name, os.stat(name)[0] | 0222)
+
+        os.path.walk(".", make_writable, None)
+
+
     def write(self, file, content):
         try:
             os.makedirs(os.path.dirname(file))
         except:
             pass
         open(self.native_file_name(file), "wb").write(content)
+
+    def copy(self, src, dst):
+        self.write(dst, self.read(src))
 
     def touch(self, names):
         if not type(names) == types.ListType:
@@ -143,7 +157,7 @@ class Tester(TestCmd.TestCmd):
         time.sleep(1.1)
 
     def read(self, name):
-        return open(self.native_file_name(name), "wb").read()
+        return open(self.native_file_name(name), "rb").read()
 
     # A number of methods below check expectations with actual difference
     # between directory trees before and after build.
