@@ -7,12 +7,20 @@ import type ;
 import generators ;
 import feature ;
 import property ;
+import print ;
 
 type.register LEX : l ;
 
 generators.register-standard lex.lex : LEX : C ;
 
+rule lex ( targets * : sources * : properties * )
+{
+    print.output $(<) ;
+    # Need to supress SunCC's warning about empty source
+    # file.
+    print.text "void foo() {}" ;
+}
+
 actions lex 
 {
-    touch $(<)    
 }
