@@ -666,8 +666,9 @@ struct profile_info
 {
     char* name;                 /* name of rule being called */
     clock_t cumulative;         /* cumulative time spent in rule */
-    clock_t subrules;           /* time spent in subrules */
+    clock_t net;                /* time spent in rule proper */
     unsigned long num_entries;  /* number of time rule was entered */
+    unsigned long stack_count;  /* number of the times this function is present in stack */
 };
 typedef struct profile_info profile_info;
 
@@ -677,6 +678,7 @@ struct profile_frame
     clock_t overhead;                 /* overhead for profiling in this call */
     clock_t entry_time;               /* time of last entry to rule */
     struct profile_frame* caller;     /* stack frame of caller */
+    clock_t subrules;                 /* time spent in subrules */
 };
 typedef struct profile_frame profile_frame;
 
@@ -694,9 +696,10 @@ static void profile_enter( char* rulename, profile_frame* frame )
     info.name = rulename;
     
     if ( hashenter( profile_hash, (HASHDATA **)&p ) )
-        p->cumulative = p->subrules = p->num_entries = 0;
-    
+        p->cumulative = p->net = p->num_entries = p->stack_count = 0;
+
     ++(p->num_entries);
+    ++(p->stack_count);
     
     frame->info = p;
     
@@ -705,6 +708,7 @@ static void profile_enter( char* rulename, profile_frame* frame )
 
     frame->entry_time = clock();
     frame->overhead = 0;
+    frame->subrules = 0;
 
     /* caller pays for the time it takes to play with the hash table */
     if ( frame->caller )
@@ -715,23 +719,28 @@ static void profile_exit(profile_frame* frame)
 {
     /* cumulative time for this call */
     clock_t t = clock() - frame->entry_time - frame->overhead;
-    frame->info->cumulative += t;
-    
+    /* If this rule is already present on the stack, don't add the time for
+       this instance. */
+    if (frame->info->stack_count == 1)
+        frame->info->cumulative += t;
+    /* Net time does not depend on presense of the same rule in call stack. */
+    frame->info->net += t - frame->subrules;
+        
     if (frame->caller)
     {
         /* caller's cumulative time must account for this overhead */
         frame->caller->overhead += frame->overhead;
-        frame->caller->info->subrules += t;
+        frame->caller->subrules += t;
     }
     /* pop this stack frame */
+    --frame->info->stack_count;
     profile_stack = frame->caller;
 }
 
 static void dump_profile_entry(void* p_, void* ignored)
 {
     profile_info* p = p_;
-    clock_t total = p->cumulative;
-    printf("%10d %10d %10d %s\n", total, total - p->subrules, p->num_entries, p->name);
+    printf("%10d %10d %10d %s\n", p->cumulative, p->net, p->num_entries, p->name);
 }
 
 void profile_dump()
