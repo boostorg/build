@@ -80,7 +80,7 @@ rule record-file-location ( file : location )
     file-location.$(file:G=) = $(location) ;
 }
 
-if [ MATCH .*(bjam).* : $(ARGV[1]:B:L) ]
+if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
   || $(BOOST_ROOT)    # A temporary measure so Jam works with Boost.Build v1
 {
     # Another temporary measure so Jam works with Boost.Build v1

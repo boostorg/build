@@ -40,7 +40,7 @@ char *jambase[] = {
 "{\n",
 "file-location.$(file:G=) = $(location) ;\n",
 "}\n",
-"if [ MATCH .*(bjam).* : $(ARGV[1]:B:L) ]\n",
+"if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]\n",
 "|| $(BOOST_ROOT)    # A temporary measure so Jam works with Boost.Build v1\n",
 "{\n",
 "BOOST_BUILD_PATH ?= $(BOOST_ROOT)/tools/build ;\n",

@@ -574,9 +574,9 @@ static void argument_error( char* message, RULE* rule, FRAME* frame, LIST* arg )
     backtrace_line( frame->prev );
     printf( "*** argument error\n* rule %s ( ", frame->rulename );
     lol_print( rule->arguments->data );
-    printf( ")\n* called with: ( " );
+    printf( " )\n* called with: ( " );
     lol_print( actual );
-    printf( ")\n* %s %s\n", message, arg ? arg->string : "" );
+    printf( " )\n* %s %s\n", message, arg ? arg->string : "" );
     print_source_line( rule->procedure );
     printf( "see definition of rule '%s' being called\n", rule->name );
     backtrace( frame->prev );
