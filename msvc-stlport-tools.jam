@@ -42,8 +42,10 @@ STDLIBPATH = ;
 # STLport iostreams or native iostreams
 feature stlport-iostream : off on ;
 
+STLPORT_VERSION = 4.5.3 ;
+STLPORT_VERSIONS = 4.5 4.0 ;
 # major versions of STLport
-feature stlport-version : 4.0 4.5 ;
+feature stlport-version : $(STLPORT_VERSION) $(STLPORT_VERSIONS) ;
 
 #############################################################################
 
@@ -60,6 +62,27 @@ rule get-stlport-root
     local path ;
     path ?= $(STLPORT_$(version)_PATH) ;
     path ?= $(STLPORT_PATH)$(SLASH)STLport-$(version) ;
+    
+    if $(version) && ! $(path)
+    {
+        local dollar = "$" ;
+        ECHO **** No STLPORT_PATH configured. *** ;
+        ECHO To configure STLPort for use with the msvc-stlport toolset, the following variables can be set: ;
+        ECHO ;
+        ECHO STLPORT_PATH - A directory containing at least one subdirectory of the form /STLPort-<version> ;
+        ECHO "        where STLPort installations can be found." ;
+        ECHO ;
+        ECHO STLPORT_<version>_PATH - The directory where the specific STLPort <version> installation can be ;
+        ECHO "        found, in case there is no central location appropriate for STLPORT_PATH, above, or a" ;
+        ECHO  "        particular version's installation is not located in the usual place." ;
+        ECHO ;
+        ECHO STLPORT_VERSION - The version of STLPort in use by default. Defaults to \"4.5.3\". Other ;
+        ECHO "       values can be selected in parallel setting the build property <stlport-version> to" ;
+        ECHO "       values from the list of $(dollar)(STLPORT_VERSIONS)" ;
+        ECHO ;
+        ECHO STLPORT_VERSIONS - Alternate versions of STLport available on this machine. Defaults to \"4.5 4.0\". ;
+        EXIT ;
+    }
 
     return $(path) ;
 }
@@ -71,19 +94,14 @@ rule get-stlport-root
 flags msvc-stlport STDHDRS : [ join [ get-stlport-root ] $(SLASH)stlport ] ;
 flags msvc-stlport STDLIBPATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)lib ] ;
 
-# special flags for STLport 4.0
+# special flags for STLport 4.x
 
-flags msvc-stlport DEFINES <stlport-version>4.0/<stlport-iostream>off : __STL_NO_SGI_IOSTREAMS=1 ;
-flags msvc-stlport UNDEFS <stlport-version>4.0/<stlport-iostream>on : __STL_NO_SGI_IOSTREAMS ;
+flags msvc-stlport STLPORT_VERSION <stlport-version> ;
 
-flags msvc-stlport DEFINES <stlport-version>4.0/<runtime-build>debug : __STL_DEBUG=1 __STL_DEBUG_UNINITIALIZED=1 ;
+flags msvc-stlport DEFINES <stlport-iostream>off : __STL_NO_SGI_IOSTREAMS=1 ;
+flags msvc-stlport UNDEFS <stlport-iostream>on : __STL_NO_SGI_IOSTREAMS ;
 
-# special flags for STLport 4.5
-
-flags msvc-stlport DEFINES <stlport-version>4.5/<stlport-iostream>off : _STLP_NO_OWN_IOSTREAMS=1 ;
-flags msvc-stlport UNDEFS <stlport-version>4.5/<stlport-iostream>on : _STLP_NO_OWN_IOSTREAMS ;
-
-flags msvc-stlport DEFINES <stlport-version>4.5/<runtime-build>debug : _STLP_DEBUG=1 _STLP_DEBUG_UNINITIALIZED=1 ;
+flags msvc-stlport DEFINES <runtime-build>debug : __STL_DEBUG=1 __STL_DEBUG_UNINITIALIZED=1 ;
 
 # Append the old values for STDHDRS and STDLIBPATH
 
