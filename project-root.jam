@@ -15,7 +15,7 @@ import modules ;
 # find the project-root. We return the project-root module.
 #
 rule load (
-    dir # The directory of the project-root.jam to load.
+    dir # The directory to obtain the project-root for.
     )
 {
     # Find the project-root.jam corresponding to this directory.
@@ -34,32 +34,32 @@ rule load (
             "Please consult the documentation at 'http://www.boost.org'." ;
     }
 
-    local project-root-module = project-root<$(location)> ;
+    local module-name = project-root<$(location)> ;
 
     # Only bother with the rest if the project-root isn't loaded yet.
     #
-    if ! [ modules.binding $(project-root-module) ]
+    if ! [ modules.binding $(module-name) ]
     {
         # Give the new module all the rules from project-root-context
-        modules.clone-rules project-root-context $(project-root-module) ;
+        modules.clone-rules project-root-context $(module-name) ;
 
         # Remember the project-root, and some info about it.
         #
-        .project-root += $(project-root-module) ;
-        modules.poke $(project-root-module) : .module : $(project-root-module) ;
-        modules.poke $(project-root-module) : .location : $(location) ;
+        .project-root += $(module-name) ;
+        modules.poke $(module-name) : .module : $(module-name) ;
+        modules.poke $(module-name) : .location : $(location) ;
 
         # Load it within a module specifically for the project root.
         # The module system handles checking for multiple includes.
         #
-        modules.load $(project-root-module)
+        modules.load $(module-name)
             : project-root.jam : [ os.path.native $(location) ] ;
 
     }
 
     # Return the module for the project.
     #
-    return $(project-root-module) ;
+    return $(module-name) ;
 }
 
 # Print out all the project-roots.
