@@ -276,22 +276,27 @@ if $(NT)
 rule Link-action
 {
     _ on $(<) = " " ;
-    # We can't have the mixture of the same libs going in NEEDLIBS and FINDLIBS.
-    # So remove the extras from FINDLIBS.
-    FINDLIBS on $(<) =
-        [ difference
-            [ on $(<[1]) return $(FINDLIBS) ] :
-            $(gTARGET_BASENAME($(gTARGET_SUBVARIANT($(NEEDLIBS))))) ] ;
     gRUN_PATH($(<)) += $(CW_RUN_PATH) ;
     if $(NT)
     {
+        # We can't have the mixture of the same libs going in NEEDLIBS and FINDLIBS.
+        # So remove the extras from FINDLIBS.
+        local find-libs =
+            [ difference
+                [ on $(<[1]) return $(FINDLIBS) ] :
+                $(gTARGET_BASENAME($(gTARGET_SUBVARIANT($(NEEDLIBS))))) ] ;
+        FINDLIBS on $(<) = $(find-libs)$(SUFLIB) ;
+
         CMD on $(<) = "@" ;
-        with-command-file cw-Link-action $(<) : $(>) $(NEEDLIBS) ;
+        with-command-file cw-Link-action $(<) : $(>) $(NEEDLIBS) $(NEEDIMPS) ;
     }
-    else
+    else if $(OS) = MACOSX
     {
+        local find-libs = [ on $(<[1]) return $(FINDLIBS) ] ;
+        FINDLIBS on $(<) = -l$(find-libs) ;
+
         CMD on $(<) = "" ;
-        cw-Link-action $(<) : $(>) $(NEEDLIBS) ;
+        cw-Link-action $(<) : $(>) $(NEEDLIBS) $(NEEDIMPS) ;
     }
 }
 
@@ -300,7 +305,7 @@ actions cw-Link-action
     $(CW_SETUP)
     $(CW_CLEAR_ERROR)
     $(CW_LINK_SETUP)$(STDLIBS:J=;)
-    $(MWLD) $(FLAGS) $(LINKFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -framework$(_)"$(FRAMEWORKS)" $(CW_IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" $(CMD)"$(>)" "$(FINDLIBS)$(SUFLIB)"
+    $(MWLD) $(FLAGS) $(LINKFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -framework$(_)"$(FRAMEWORKS)" $(CW_IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" $(CMD)"$(>)" "$(FINDLIBS)"
 }
 
 #### Cc #####
@@ -337,11 +342,17 @@ rule Archive-action
     _ on $(<) = " " ;
     if $(NT)
     {
+        local find-libs = [ on $(<[1]) return $(FINDLIBS) ] ;
+        FINDLIBS on $(<) = $(find-libs)$(SUFLIB) ;
+
         CMD on $(<) = "@" ;
         with-command-file cw-Archive-action $(<) : $(>) [ on $(<) return $(NEEDLIBS) ] ;
     }
-    else
+    else if $(OS) = MACOSX
     {
+        local find-libs = [ on $(<[1]) return $(FINDLIBS) ] ;
+        FINDLIBS on $(<) = -l$(find-libs) ;
+
         CMD on $(<) = "" ;
         cw-Archive-action $(<) : $(>) [ on $(<) return $(NEEDLIBS) ] ;
     }
