@@ -29,7 +29,7 @@ feature.feature format : html onehtml man pdf ps docbook fo tests
   : incidental implicit composite ;
 
 type.register DTDXML : dtdxml ;
-type.register XML : xml : : main ;
+type.register XML : xml ;
 type.register BOOSTBOOK : boostbook : XML ;
 type.register DOCBOOK : docbook : XML ; 
 type.register HTML : html ;
