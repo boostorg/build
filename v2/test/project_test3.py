@@ -73,7 +73,7 @@ lib2/helper/e.cpp
 t.expect_addition("lib3/bin/gcc/debug/threading-single/f.obj")
 t.expect_content("lib3/bin/gcc/debug/threading-single/f.obj",
 """gcc/debug/threading-single
-lib3/f.cpp
+lib3/f.cpp lib2/helper/bin/gcc/debug/threading-single/e.obj
 """)
                  
 

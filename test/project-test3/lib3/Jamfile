@@ -1,5 +1,5 @@
 
 project lib3 ;
 
-make f.obj : f.cpp : mfc-compile ;
+make f.obj : f.cpp @/lib2/helper/e.obj : mfc-compile ;
 
