@@ -95,6 +95,10 @@ rule help ( )
             do-scan $(doc-module-spec[1]) : print-help-options ;
             did-help = true ;
             
+            case --help-usage :
+            print-help-usage ;
+            did-help = true ;
+            
             case --help :
             local spec = ;
             if ! [ MATCH --(.*) : [ $(args).front ] ]
@@ -356,6 +360,7 @@ local rule print-help-top ( )
         ;
     print.list-start ;
     print.list-item --help; This help message. ;
+    print.list-item --help-usage; How to invoke '"bjam".' ;
     print.list-item --help-all; Brief information on available modules. ;
     print.list-item --help <module-name>; Get information about a module. ;
     print.list-item --help-options; Options for controlling the help display. ;
@@ -364,6 +369,82 @@ local rule print-help-top ( )
         '"text" is formated text appended to the output file;'
         '"html" is HTLM output to the file.' ;
     print.list-item --help-output-file <file>; The file to output the documentation. ;
+    print.list-end ;
+}
+
+# Generate Jam/Boost.Jam command usage information.
+#
+local rule print-help-usage ( )
+{
+    print.section "Boost.Jam Usage"
+        "bjam [ options... ] targets..."
+        ;
+    print.list-start ;
+    print.list-item -a;
+        Build all targets, even if they are current. ;
+    print.list-item -fx;
+        Read '"x"' as the Jamfile for building instead of searching
+        for the Boost.BUild system. ;
+    print.list-item -jx;
+        Run up to '"x"' commands concurrently. ;
+    print.list-item -n;
+        Do not execute build commands. Instead print out the commands
+        as they would be executed if building. ;
+    print.list-item -ox;
+        Write the build commands to the file '"x"'. ;
+    print.list-item -q;
+        Quit as soon as the build of a target fails. Specifying this prevent the
+        attempt of building as many targets as possible regardless of failures. ;
+    print.list-item -sx=y;
+        Sets a Jam variable '"x"' to the value '"y"', overriding any value that
+        variable would have from the environment. ;
+    print.list-item -tx;
+        Rebuild the target '"x"', even if it is up-to-date. ;
+    print.list-item -v;
+        Display the version of bjam. ;
+    print.list-item --x;
+        Option '"x"' is ignored but considered and option. The option is then
+        available from the '"ARGV"' variable. ;
+    print.list-item -dn;
+        Enables output of diagnostic messages. The debug level '"n"' and all
+        below it are enabled by this option. ;
+    print.list-item -d+n;
+        Enables output of diagnostic messages. Only the output for debug level '"n"'
+        is enabled. ;
+    print.list-end ;
+    print.section "Debug Levels"
+        Each debug level shows a different set of information. Usually with the higher
+        levels producing more verbose information. The following levels are supported:
+        ;
+    print.list-start ;
+    print.list-item 0;
+        Turn off all diagnostic output. Only errors are reported. ;
+    print.list-item 1;
+        Show the actions taken for building targets, as they are executed. ;
+    print.list-item 2;
+        Show "quiet" actions and display all action text, as they are executed. ;
+    print.list-item 3;
+        Show dependency analysis, and target/source timestamps/paths. ;
+    print.list-item 4;
+        Show arguments of shell invocations. ;
+    print.list-item 5;
+        Show rule invocations and variable expansions. ;
+    print.list-item 6;
+        Show directory/header file/archive scans, and attempts at binding to targets. ;
+    print.list-item 7;
+        Show variable settings. ;
+    print.list-item 8;
+        Show variable fetches, variable expansions, and evaluation of '"if"' expressions. ;
+    print.list-item 9;
+        Show variable manipulation, scanner tokens, and memory usage. ;
+    print.list-item 10;
+        Show execution times for rules. ;
+    print.list-item 11;
+        Show parsing progress of Jamfiles. ;
+    print.list-item 12;
+        Show graph for target dependencies. ;
+    print.list-item 13;
+        Show changes in target status (fate). ;
     print.list-end ;
 }
 
@@ -453,6 +534,15 @@ local rule print-help-all (
             print.list-item $(module-name): $($(module-name).brief) ;
         }
         print.list-end ;
+    }
+    # The documentation for each module when details are requested.
+    if $(documented-modules) && $(.option.detailed)
+    {
+        for local module-name in [ sequence.insertion-sort $(documented-modules) ]
+        {
+            # The brief docs for each module.
+            print-help-module $(module-name) ;
+        }
     }
 }
 
@@ -554,6 +644,12 @@ local rule print-help-classes (
             # Print out the documented rules of the class.
             print-help-module-section $(module-name) $(class-name).class-rules : "Class '$(module-name).$(class-name)' rules"
                 Use --help $(module-name).<rule-name> to get more information. ;
+            
+            # Print out all the rules if details are requested.
+            if $(.option.detailed)
+            {
+                print-help-rules $(module-name) : $($(module-name).$(class-name).class-rules) ;
+            }
         }
     }
 }
