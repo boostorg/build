@@ -29,11 +29,21 @@ Cygwin Unix-emulation layer, allowing you to build Windows executables
 which are not dependant on cygwin1.dll.
 </p>
 <p>
-You could achieve the same results by using the mingw version of gcc,
-but the advantage of the Cygwin compiler is that it can build for both
-environments - Unix emulation and Windows native.
-</p>
+You could achieve the same results by using the MinGW version of gcc,
+but the Cygwin compiler has two advantages: 
+<ol>
+<li>It can build for both environments - Unix emulation and Windows
+native - with one compiler.
+<li>You can use the latest versions of GCC.  The latest released
+version of MinGW GCC is 2.95.3, and building MinGW-specific versions
+of GCC 3.0.x has proven to be quite difficult. However, it's
+straightforward under Cygwin. Just be sure to configure with
+<code>--enable-languages=c,c++</code> to disable other languages which
+fail to build properly.
 
+</ol>
+
+</p>
 <h2>Prerequisites</h2>
 
 <p>
