@@ -1,4 +1,4 @@
-include ../../testing.jam ;
+import testing ;
 
 # A number of tests which should succeed
 compile a.cpp ;
