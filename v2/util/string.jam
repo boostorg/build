@@ -34,6 +34,28 @@ rule join ( strings * : separator ? )
     return $(result) ;
 }
 
+# Split a string into whitespace separated words.
+rule words (
+    string # The string to split.
+    : whitespace * # Optional, characters to consider as whitespace.
+    )
+{
+    whitespace = $(whitespace:J="") ;
+    whitespace ?= " 	
+" ;
+    local w = ;
+    while $(string)
+    {
+        string = [ MATCH "^[$(whitespace)]*([^$(whitespace)]*)(.*)" : $(string) ] ;
+        if $(string[1]) && $(string[1]) != ""
+        {
+            w += $(string[1]) ;
+        }
+        string = $(string[2]) ;
+    }
+    return $(w) ;
+}
+
 rule __test__ ( )
 {
     import assert ;
