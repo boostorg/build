@@ -111,6 +111,7 @@ tests = [ "project_test1",
           "dll_path",
           "regression",
           "composite",
+          "library_chain",
 	  ]
 
 if os.name == 'posix':
