@@ -563,6 +563,28 @@ class main-target : abstract-target
     
 }
 
+# Abstract target which refers to a source file.
+# This is artificial creature; it's usefull so that sources to 
+# a target can be represented as list of abstract target instances.
+class file-reference : abstract-target 
+{
+    import virtual-target ;
+    import property-set ;
+    
+    rule __init__ ( file : project )
+    {
+        abstract-target.__init__ $(file) : $(project) ;
+    }
+    
+    rule generate ( properties )
+    {
+        return [ property-set.empty ] 
+               [ virtual-target.from-file $(self.name) : $(self.project) ] ;        
+    }    
+}
+
+
+
 # Helper for 'find', below.
 local rule remove-trailing-slash ( string )
 {
@@ -624,7 +646,7 @@ rule find ( id : current-location )
           [ project.attribute $(base-project) source-location ] ] ;
         if [ path.glob $(location:D) : $(location:D=) ] 
         {
-            target = [ virtual-target.from-file $(target-part) : $(base-project) ] ;
+            target = [ new file-reference $(target-part) : $(base-project) ] ;
         }        
     }
         
@@ -663,35 +685,28 @@ rule generate-from-reference
     # Find the target
     local target = 
       [ find $(id) : [ project.attribute $(project) location ] ] ;
-       
-    # Now, do an ugly thing: if we've got instance of 'abstract-target',
-    # generate it, and if we've got an instance of 'virtual-target', return it
-        
-    if [ class.is-a $(target) : abstract-target ] {
-        # Take properties which should be propagated and refine them
-        # with source-specific requirements.
-        local propagated = [ $(property-set).propagated ] ;
-        local rproperties = [ $(propagated).refine 
-          [ property-set.create $(sproperties) ] ] ;
-        if $(rproperties[1]) = "@error"
-        {
-            errors.error
-              "When building" [ full-name ] " with properties " $(properties) :
-                "Invalid properties specified for " $(source) ":"
-                  $(rproperties[2-]) ;
-        }
-        return [ $(target).generate $(rproperties) ] ;        
-    }  
-    else
+    
+    # Do a sanity check
+    if $(sproperties) && [ class.is-a $(target) : file-reference ] 
     {
-        if $(sproperties)
-        {
-            errors.error 
-              "error: target reference '$(target-reference)' contains properties," :
-              "error: but refers to a file" ;
-        }        
-        return [ property-set.empty ] $(target) ;
-    }    
+        errors.error 
+          "error: target reference '$(target-reference)' contains properties," :
+          "error: but refers to a file" ;
+    }
+           
+    # Take properties which should be propagated and refine them
+    # with source-specific requirements.
+    local propagated = [ $(property-set).propagated ] ;
+    local rproperties = [ $(propagated).refine 
+      [ property-set.create $(sproperties) ] ] ;
+    if $(rproperties[1]) = "@error"
+    {
+        errors.error
+          "When building" [ full-name ] " with properties " $(properties) :
+            "Invalid properties specified for " $(source) ":"
+              $(rproperties[2-]) ;
+    }
+    return [ $(target).generate $(rproperties) ] ;
 }
 
 # Returns two property sets.
