@@ -323,7 +323,7 @@ int  main( int argc, char **argv, char **arg_environ )
     {
    /* Pleace don't change the following line. The 'bump_version.py' script
        expect a specific format of it. */
-    char  *major_version = "03", *minor_version = "01", *changenum = "08";
+    char  *major_version = "03", *minor_version = "01", *changenum = "09";
     var_set( "JAM_VERSION",
              list_new( list_new( list_new( L0, newstr( major_version ) ), 
                                  newstr( minor_version ) ), 
