@@ -155,19 +155,6 @@ if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
 }
 else
 {
-#
-# First, cause the targets specified in the command line to be updated, as
-# Perforce Jam does.
-#
-for local e in $(ARGV[2-]) 
-{
-    if ! [ MATCH "^(-).*" : $(e) ] 
-    {
-        # This is not an option, so it is a target name.
-        UPDATE $(e) ;
-    }
-}
-
 
 #
 # JAMBASE - jam 2.3 ruleset providing make(1)-like functionality

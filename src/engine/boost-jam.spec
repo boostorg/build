@@ -1,5 +1,5 @@
 Name: boost-jam
-Version: 3.1.3
+Version: 3.1.4
 Summary: Build tool
 Release: 1
 Source: %{name}-%{version}.tgz
@@ -18,8 +18,8 @@ with Perforce Jam.
 
 Authors:
     Perforce Jam : Cristopher Seiwald
-    FT Jam       : David Turner
-    Boost Jam    : David Abrahams
+    FT Jam : David Turner
+    Boost Jam : David Abrahams
 
 Copyright:
     /+\

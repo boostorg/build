@@ -18,6 +18,7 @@
 # include "strings.h"
 # include "pwd.h"
 # include "pathsys.h"
+# include "make.h"
 
 /*
  * builtins.c - builtin jam rules
@@ -682,10 +683,12 @@ builtin_pwd( PARSE *parse, FRAME *frame )
 LIST* 
 builtin_update( PARSE *parse, FRAME *frame)
 {
+    LIST* result = list_copy( L0, targets_to_update() );
     LIST* arg1 = lol_get( frame->args, 0 );
+    clear_targets_to_update();
     for ( ; arg1; arg1 = list_next( arg1 ) )
         mark_target_for_updating( newstr(arg1->string) );
-    return L0;
+    return result;
 }
 
 LIST*

@@ -86,7 +86,7 @@
     is based on Perforce Jam. It contains significant improvements made to
     facilitate its use in the Boost Build System, but should be backward
     compatible with Perforce Jam.</p>
-    <p>This is version 3.1.3 of BJam and is based on version 2.4 of
+    <p>This is version 3.1.4 of BJam and is based on version 2.4 of
     Jam/MR:</p>
 <pre>
 /+\
@@ -753,37 +753,40 @@ rule BACKTRACE ( )
     handling</a></h3>
     <p>Classic jam treats any non-option element of command line as a name of
     target to be updated. This prevented more sophisticated handling of
-    command line and was disabled. Instead of it, a new <tt>UPDATE</tt>
-    builtin rule was added:</p>
+    command line. This is now enabled again but with additional changes to
+    the <tt>UPDATE&gt;</tt> rule to allow for the flexibility of changing the
+    list of targets to update. The <tt>UPDATE</tt> builtin rule is:</p>
 <pre>
 rule UPDATE ( targets * )
 </pre>
-    <p>The rule causes the specified targets to be updated. If no target was
-    specified with the <tt>UPDATE</tt> rule, the "all" target will be
-    implicitly updated.</p>
-
+    <p>The rule has two effects: 1. it clears the list of targets to update,
+    and 2. causes the specified targets to be updated. If no target was
+    specified with the <tt>UPDATE</tt> rule, no targets will be updated. To
+    support changing of the update list in more usefull ways, the rule also
+    returns the targets previously in the update list. This makes it possible
+    to add targets as such:</p>
+<pre>
+local previous-updates = [ UPDATE ] ;
+UPDATE $(previous-updates) a-new-target ;
+</pre>
     <h3 id="semaphores">Semaphores</h3>
-
-    <p>It is sometimes desirable to disallow parallel execution of 
-    some actions. For example:
+    <p>It is sometimes desirable to disallow parallel execution of some
+    actions. For example:</p>
     <ul>
-    <li>Old versions of <tt>yacc</tt> use files with fixed names. So,
-    running two yacc actions is dangerous.
-    <li>One might want to perform parallel compiling, but not do parallel
-    linking, because linking is i/o bound and only gets slower.
+      <li>Old versions of <tt>yacc</tt> use files with fixed names. So,
+      running two yacc actions is dangerous.</li>
+      <li>One might want to perform parallel compiling, but not do parallel
+      linking, because linking is i/o bound and only gets slower.</li>
     </ul>
-    Craig McPeeters has extended Perforce Jam to solve such problems, and that
-    extension was integrated in Boost.Jam.
-
+    Craig McPeeters has extended Perforce Jam to solve such problems, and
+    that extension was integrated in Boost.Jam. 
     <p>Any target can be assigned a <em>semaphore</em>, by setting a variable
     called <tt>SEMAPHORE</tt> on that target. The value of the variable is
     the semaphore name. It must be different from names of any declared
-    target, but is arbitrary otherwise.
-
-    <p>The semantic of semaphores is that in a group of targets which 
-    have the same semaphore, only one can be updated at the moment,
-    regardless of &quot;-j&quot; option.
- 
+    target, but is arbitrary otherwise.</p>
+    <p>The semantic of semaphores is that in a group of targets which have
+    the same semaphore, only one can be updated at the moment, regardless of
+    "-j" option.</p>
     <h2><a name="jam_fundamentals">Jam Fundamentals</a></h2>
     <p>This section is derived from the official Jam documentation and from
     my experience using it and reading the Jambase rules. I repeat the
@@ -797,15 +800,15 @@ rule UPDATE ( targets * )
     <p>&middot; A Jam <b>target</b> is an abstract entity identified by an
     arbitrary string. The build-in <tt>DEPENDS</tt> rule creates a link in
     the dependency graph between the named targets.</p>
-    <p>&middot; Note that the documentation for the built-in <tt>INCLUDES</tt>
-    rule is incorrect: <tt>INCLUDES&nbsp;targets1&nbsp;:&nbsp;targets2</tt>
-    causes everything that depends on a member of <i>targets1</i> to depend
-    on all members of <i>targets2</i>. It does this in an odd way, by tacking
-    <i>targets2</i> onto a special tail section in the dependency list of
-    everything in <i>targets1</i>. It seems to be OK to create circular
-    dependencies this way; in fact, it appears to be the ``right thing to
-    do'' when a single build action produces both <i>targets1</i> and
-    <i>targets2</i>.</p>
+    <p>&middot; Note that the documentation for the built-in
+    <tt>INCLUDES</tt> rule is incorrect:
+    <tt>INCLUDES&nbsp;targets1&nbsp;:&nbsp;targets2</tt> causes everything
+    that depends on a member of <i>targets1</i> to depend on all members of
+    <i>targets2</i>. It does this in an odd way, by tacking <i>targets2</i>
+    onto a special tail section in the dependency list of everything in
+    <i>targets1</i>. It seems to be OK to create circular dependencies this
+    way; in fact, it appears to be the ``right thing to do'' when a single
+    build action produces both <i>targets1</i> and <i>targets2</i>.</p>
     <p>&middot; When a rule is invoked, if there are <b><tt>actions</tt></b>
     declared with the same name as the rule, the <tt>actions</tt> are added
     to the updating actions for the target identified by the rule's first
@@ -836,19 +839,19 @@ rule UPDATE ( targets * )
       <tt><b>on</b></tt> the target named by the rule's first argument (the
       source file being scanned).</li>
     </ul>
-    <p>&middot; The ``<b>bound value</b>'' of a variable is the path associated
-    with the target named by the variable. In build <tt>actions</tt>, the
-    first two arguments are automatically replaced with their bound values.
-    Target-specific variables can be selectively replaced by their bound
-    values using the <a href="./Jam.html#actionmods">bind</a> action
-    modifier.</p>
-    <p>&middot; Note that the term ``binding'' as used in the Jam documentation
-    indicates a phase of processing that includes three sub-phases:
-    <i>binding</i> (yes!), update determination, and header file scanning.
-    The repetition of the term ``binding'' can lead to some confusion. In
-    particular, the <a href="./Jam.html#bindingmods">Modifying Binding</a>
-    section in the Jam documentation should probably be titled ``Modifying
-    Update Determination''.</p>
+    <p>&middot; The ``<b>bound value</b>'' of a variable is the path
+    associated with the target named by the variable. In build
+    <tt>actions</tt>, the first two arguments are automatically replaced with
+    their bound values. Target-specific variables can be selectively replaced
+    by their bound values using the <a href="./Jam.html#actionmods">bind</a>
+    action modifier.</p>
+    <p>&middot; Note that the term ``binding'' as used in the Jam
+    documentation indicates a phase of processing that includes three
+    sub-phases: <i>binding</i> (yes!), update determination, and header file
+    scanning. The repetition of the term ``binding'' can lead to some
+    confusion. In particular, the <a href="./Jam.html#bindingmods">Modifying
+    Binding</a> section in the Jam documentation should probably be titled
+    ``Modifying Update Determination''.</p>
     <p>&middot; ``Grist'' is just a string prefix of the form
     <tt>&lt;</tt><i>characters</i><tt>&gt;</tt>. It is used in Jam to create
     unique target names based on simpler names. For example, the file name
@@ -877,18 +880,18 @@ rule UPDATE ( targets * )
     and trailing <tt>&gt;</tt>s are added if necessary to form an expression
     of the form <tt>&lt;</tt><i>expr2</i><tt>&gt;</tt>;
     <tt>&lt;</tt><i>expr2</i><tt>&gt;</tt> is then prepended.</p>
-    <p>&middot; <a name="variable_splitting">When Jam</a> is invoked it imports
-    all environment variable settings into corresponding Jam variables,
-    followed by all command-line (<tt>-s...</tt>) variable settings.
-    Variables whose name ends in <tt>PATH</tt>, <tt>Path</tt>, or
+    <p>&middot; <a name="variable_splitting">When Jam</a> is invoked it
+    imports all environment variable settings into corresponding Jam
+    variables, followed by all command-line (<tt>-s...</tt>) variable
+    settings. Variables whose name ends in <tt>PATH</tt>, <tt>Path</tt>, or
     <tt>path</tt> are split into string lists on OS-specific path-list
     separator boundaries (e.g. "<tt>:</tt>" for UNIX and "<tt>;</tt>" for
     Windows). All other variables are split on space ("<tt>&nbsp;</tt>")
     boundaries. Boost Jam modifies that behavior by allowing variables to be
     <a href="#variable_quoting">quoted</a>.</p>
-    <p>&middot; A variable whose value is an empty list <i>or</i> which consists
-    entirely of empty strings has a negative logical value. Thus, for
-    example, code like the following allows a sensible non-empty default
+    <p>&middot; A variable whose value is an empty list <i>or</i> which
+    consists entirely of empty strings has a negative logical value. Thus,
+    for example, code like the following allows a sensible non-empty default
     which can easily be overridden by the user:</p>
 <pre>
 MESSAGE ?= starting jam... ;
@@ -898,6 +901,13 @@ if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
     <tt>"-sMESSAGE=</tt><i>message&nbsp;text</i><tt>"</tt>. If he wants no
     message, he invokes jam with <tt>-sMESSAGE=</tt> and nothing at all is
     printed.</p>
+    <p>&middot; The parsing of command line options in Jam can be rather
+    unintuitive, with regards to how other Unix programs accept options.
+    There are two variants accepted as valid for an option:</p>
+    <ol summary="">
+      <li><tt>-xvalue</tt>, and</li>
+      <li><tt>-x value</tt>.</li>
+    </ol>
     <p>Please also read <a href="./Jam.html">The Jam language reference</a>
     for the additional details, and the <a href="./RELNOTES">Jam release
     notes</a> for a brief description of recent, but <b>fundamental changes
@@ -907,14 +917,14 @@ if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
     <hr>
     <p>Revised 
     <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-     15 November, 2002 
+     5 January, 2003 
     <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
     </p>
     <p><i>&copy; Copyright <a href="mailto:rrivera@acm.org">Ren&eacute;
-    Rivera</a>, David Abrahams 2002. All Rights Reserved.</i> Permission to
-    copy, use, modify, sell and distribute this document is granted provided
-    this copyright notice appears in all copies. This document is provided
-    "as is" without express or implied warranty, and with no claim as to its
-    suitability for any purpose.</p>
+    Rivera</a>, David Abrahams, Vladimir Prus 2003. All Rights Reserved.</i>
+    Permission to copy, use, modify, sell and distribute this document is
+    granted provided this copyright notice appears in all copies. This
+    document is provided "as is" without express or implied warranty, and
+    with no claim as to its suitability for any purpose.</p>
   </body>
 </html>

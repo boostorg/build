@@ -753,3 +753,9 @@ LIST *targets_to_update()
 {
     return targets_to_update_;
 }
+
+void clear_targets_to_update()
+{
+    list_free(targets_to_update_);
+    targets_to_update_ = 0;
+}
