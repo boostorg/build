@@ -2465,6 +2465,8 @@ rule common-stage-tag ( toolset variant : properties * )
             toolset-tag += vc ;
             if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
         }
+        case * :
+        toolset-tag += [ MATCH "^([^-]*)" : $(toolset) ] ;
     }
     toolset-tag += [ MATCH "[-c]([0123456789]+).([0123456789]*)" : $(toolset) ] ;
     
