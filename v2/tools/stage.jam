@@ -104,7 +104,7 @@ class stage-target-class : basic-target
         return $(targets[2-]) ;
     }
         
-    rule construct ( source-targets * : property-set )
+    rule construct ( name : source-targets * : property-set )
     {        
         local name = [ $(property-set).get <name> ] ;
         if $(name) && $(source-targets[2])

@@ -41,7 +41,7 @@ class alias-target-class : basic-target
           : $(default-build) : $(usage-requirements) ;
     }
         
-    rule construct ( source-targets * : property-set )
+    rule construct ( name : source-targets * : property-set )
     {
         return [ property-set.empty ] $(source-targets) ;
     }   
