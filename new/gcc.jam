@@ -5,8 +5,8 @@ import generators ;
 generators.register-composing gcc.link : STATIC-LIB OBJ : EXE : <toolset>gcc ;
 generators.register-composing gcc.archive : OBJ : STATIC-LIB : <toolset>gcc ;
 generators.register-composing gcc.link-dll : OBJ : SHARED-LIB : <toolset>gcc ;
-generators.register-standard gcc.compile : CPP : OBJ : <toolset>gcc ;
-generators.register-standard gcc.compile : C : OBJ : <toolset>gcc ;
+generators.register-c-compiler gcc.compile : CPP : OBJ : <toolset>gcc ;
+generators.register-c-compiler gcc.compile : C : OBJ : <toolset>gcc ;
 
 
 rule compile ( target : sources * : property-set * )
@@ -25,6 +25,10 @@ rule compile ( target : sources * : property-set * )
         else if $(p:G) = <define>
         {
             options += -D$(p:G=) ;
+        }    
+        else if $(p:G) = <include>
+        {
+            options += -I$(p:G=) ;
         }        
     }
     OPTIONS on $(target) = $(options) ;

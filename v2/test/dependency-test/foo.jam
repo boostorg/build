@@ -1,0 +1,19 @@
+
+
+import type ;
+import generators ;
+
+type.register FOO : foo ;
+
+generators.register-standard foo.foo : FOO : CPP H ;
+
+rule foo ( targets * : sources * : properties * )
+{    
+}
+
+actions foo
+{
+    touch $(<)
+}
+
+

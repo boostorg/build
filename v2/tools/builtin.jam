@@ -10,6 +10,7 @@ import class : class new ;
 import feature : feature compose ;
 import type ;
 import generators ;
+import virtual-target ;
 
 feature toolset : gcc : implicit propagated ;
 feature shared : false true : propagated ;
@@ -57,5 +58,49 @@ rule lib-generator ( )
 class lib-generator : composing-generator ;
 
 generators.register [ new lib-generator ] ;
+
+rule compile-action ( targets + : sources * : action-name : properties * )
+{
+    action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
+    
+    rule adjust-properties ( properties * )
+    {
+        ECHO "Gonna adjust includes for action " $(action) ;
+        return $(properties) ;
+    }    
+}
+
+class compile-action : action ;
+
+rule C-compiling-generator ( id : source-types + : target-types + :
+                             requirements * )
+{
+    generator.__init__ $(id) : $(source-types) : $(target-types) :
+                       $(requirements) ;
+
+    rule action-class ( )
+    {
+        return compile-action ;
+    }
+}
+
+class C-compiling-generator : generator ;
+
+
+rule register-c-compiler ( id : source-types + : target-types + :
+                            requirements * )
+{
+    local g = [ new C-compiling-generator $(id) : $(source-types) 
+                : $(target-types) : $(requirements) ] ;
+    generators.register $(g) ;
+}
+
+# FIXME: this is ugly, should find a better way (we'd want client code to
+# register all generators as "generator.some-rule", not with "some-module.some-rule".)
+IMPORT $(__name__) : register-c-compiler : : generators.register-c-compiler ;
+
+
+
+
 
 
