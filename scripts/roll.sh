@@ -12,7 +12,7 @@ find . -maxdepth 1 -type f | egrep -v "roll.sh|build-system.jam|boost_build_v2.h
 
 # Prepare some more files.
 mv index_v2.html index.html
-echo -e "boost-build new ;\n" > boost-build.jam
+echo -e "boost-build kernel ;\n" > boost-build.jam
 
 # Make packages
 find . -name CVS | xargs rm -rf
