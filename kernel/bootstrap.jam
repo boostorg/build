@@ -51,7 +51,7 @@ import modules ;
 # asking for help.
 for local arg in [ MATCH ^--([^-=].*) : $(ARGV) ]
 {
-    local split = [ MATCH ^([^-=]+([^=]*))(=?)(.*)$ : $(arg) ] ;
+    local split = [ MATCH ^(([^-=]+)[^=]*)(=?)(.*)$ : $(arg) ] ;
     local full-name = $(split[1]) ;
     local prefix = $(split[2]) ;
     local value ;
