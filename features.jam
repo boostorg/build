@@ -40,7 +40,7 @@ free-feature dllversion ; # <dllversion>1.27.0 (for use with soname-ing)
 # Can the target participate in a shared library?
 feature shared-linkable : false true ;
 
-gLINK_COMPATIBLE = <shared-linkable>true <target-type> ;
+gLINK_COMPATIBLE = <shared-linkable>true <target-type> <inlining> ;
 gALWAYS_RELEVANT = <target-type> ;
 
 ##### Requirements by target type #####
