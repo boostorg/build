@@ -55,7 +55,7 @@ if "--debug-generators" in [ modules.peek : ARGV ]
 }
 
 # Outputs a debug message if generators debugging is on.
-rule dout 
+local rule generators.dout 
 {
     if $(.debug)
     {
@@ -64,17 +64,17 @@ rule dout
 }
 
 
-rule indent ( )
+local rule indent ( )
 {
     return $(.indent:J="") ;
 }
 
-rule increase-indent ( )
+local rule increase-indent ( )
 {
     .indent += "    " ;
 }
 
-rule decrase-indent ( )
+local rule decrease-indent ( )
 {
     .indent = $(.indent[2-]) ;
 }
@@ -107,7 +107,7 @@ rule generator (
 {
     import generators ;
     import assert ;
-    import generators : indent increase-indent decrase-indent ;
+    import generators : indent increase-indent decrease-indent generators.dout ;
     import set ;
     import utility : equal ;
     import feature ;
@@ -928,7 +928,7 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
     }
         
         
-    decrase-indent ;
+    decrease-indent ;
         
     .construct-stack = $(.construct-stack[2-]) ;
 
