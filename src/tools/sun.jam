@@ -10,6 +10,7 @@ import os ;
 import toolset : flags ;
 import feature ;
 import type ;
+import common ;
 
 feature.extend toolset : sun ;
 toolset.inherit  sun : unix ;
@@ -20,40 +21,15 @@ feature.compose <stdlib>sun-stlport
     : <cxxflags>-library=stlport4 <linkflags>-library=stlport4
     ;
 
-# Installation root to use for versionless toolset
-.root = "/opt/SUNWspro/bin/" ;
-
-rule init ( version ? : root ? )
+rule init ( version ? : command ? )
 {
-    # If version is not provided, change the global variable
-    if ! $(version)
-    {
-        if ! $(root)
-        {
-            # versionless and rootless, we assume that user has CC
-            # in the path, so we try and find it, and set up the 
-            # paths accordingly
-            import regex ;
-            import modules ;
-            local SUNCC = [ GLOB [ modules.peek : Path ] [ modules.peek : PATH ] : CC ] ;
-            root = $(SUNCC[1]:D) ; root = $(root:P) ;
-        }
-        if $(root)
-        {
-            toolset.flags sun .root <toolset>sun : $(root)/bin/ ;
-        }
-    }
-    else
-    {
-        feature exetend-subfeature toolset sun : version : $(version) ;
-        local condition = <toolset>sun-$(version) ;
-        root = $(root)/bin/ ;
-        root ?= "" ;
-        toolset.flags sun .root $(condition) : $(root) ;
-    }
-    # this return is needed, because if absent the unversion/unrooted
-    # case doesn't work at all
-    return ;
+    local condition = [ 
+      common.check-init-parameters sun : version $(version) ] ;
+    
+    command = [ common.get-invocation-command sun : CC 
+        : $(command) : "/opt/SUNWspro/bin" ] ;
+
+    toolset.flags sun CONFIG_COMMAND $(condition) : $(command) ;
 }
 
 # Declare generators
@@ -76,12 +52,12 @@ flags sun.compile INCLUDES <include> ;
 
 actions compile.c
 {
-    "$(.root)cc" $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.c++
 {
-    "$(.root)CC" $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 # Declare flags and actions for linking
@@ -106,7 +82,7 @@ rule link ( targets * : sources * : properties * )
 
 actions link bind LIBRARIES
 {
-    "$(.root)CC" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
+    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
 }
 
 # Slight mods for dlls
@@ -117,12 +93,12 @@ rule link.dll ( targets * : sources * : properties * )
 
 actions link.dll bind LIBRARIES
 {
-    "$(.root)CC" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" -h$(<[1]:D=) -G "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
+    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" -h$(<[1]:D=) -G "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
 }
 
 # Declare action for creating static libraries
 actions piecemeal archive
 {
-    "$(.root)CC" -xar -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -xar -o "$(<)" "$(>)"
 }
 

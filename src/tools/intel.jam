@@ -13,7 +13,6 @@ import toolset ;
 
 feature.extend toolset : intel ;
 feature.subfeature toolset intel : platform : : propagated link-incompatible ;
-feature.subfeature toolset intel : version : : propagated ;
 
 rule init ( * : * )
 {

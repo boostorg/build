@@ -14,6 +14,7 @@ import common ;
 import errors ;
 
 feature.extend-subfeature toolset intel : platform : linux ;
+
 toolset.inherit-generators intel-linux 
      <toolset>intel <toolset-intel:platform>linux : gcc ;
 toolset.inherit-flags intel-linux : gcc 
@@ -26,25 +27,12 @@ toolset.inherit-rules intel-linux : gcc ;
 #   compile and link options allow you to specify addition command line options for each version
 rule init ( version ? :  name ? : compile_options * : link_options * )
 {
-    common.check-init-parameters intel-linux : version $(version) ;
-    if ! $(name)
-    {
-        name = [ common.find-tool "icc" : /opt/intel_cc_80/bin ] ;
-    }
-    else    
-    {
-        name = [ common.check-tool $(name) ] ;
-    }
-    if ! $(name)
-    {
-        ECHO "warning: intel toolset configuration: could not find compiler " ;
-        ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
-    }
-            
-    local condition = <toolset>intel-linux-$(version) ;
-    condition ?= <toolset>intel-linux ;
+    local condition = [ common.check-init-parameters intel-linux
+        : version $(version) ] ;
     
-    feature.extend-subfeature toolset intel : version : $(version) ;
+    name = [ common.get-invocation-command intel-linux : icc 
+        : $(name) : /opt/intel_cc_80/bin ] ;
+                
     flags intel-linux CONFIG_NAME $(condition) : $(name) ;
     flags intel-linux CONFIG_COMPILE $(condition) : $(compile_options) ;
     flags intel-linux CONFIG_LINK $(condition) : $(link_options) ;
