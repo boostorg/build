@@ -414,7 +414,7 @@ rule run-test ( type-to-test run-target : sources * )
         ENDIF on $(run-target) = "fi" ;
     }
     
-    capture-run-output $(run-target) : $(executable) ;
+    capture-run-output $(run-target) : $(executable) : $(debugger) ;
 
     if ! ( --preserve-test-targets in $(ARGV) )
     {
@@ -423,14 +423,21 @@ rule run-test ( type-to-test run-target : sources * )
 }
 
 # The rule is just used for argument checking
-rule capture-run-output ( target : executable + )
+rule capture-run-output ( target : executable + : debugger ? )
 {
     gTEST_OUTPUT_FILE($(target)) = $(target:S=.output) ;
     INCLUDES $(target) : $(target:S=.output) ;
     MakeLocate $(test-file:S=.output) : $(LOCATE_TARGET) ;
     Clean clean : $(test-file:S=.output) ;
     output-file on $(target) = $(target:S=.output) ;
-    execute-test $(target) : $(executable) ;
+    if $(debugger)
+    {
+        debug-test $(target) : $(executable) ;
+    }
+    else
+    {
+        execute-test $(target) : $(executable) ;
+    }
 
     if --run-all-tests in $(ARGV)
     {
@@ -445,6 +452,11 @@ if $(NT)
 else
 {
     CATENATE = cat ;
+}
+
+actions debug-test bind INPUT_FILES
+{
+    $(PATH_SETUP)$(>) $(ARGS) "$(INPUT_FILES)"
 }
 
 actions execute-test bind INPUT_FILES output-file
