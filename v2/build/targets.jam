@@ -27,6 +27,43 @@
 #   There will be two classes derived from it, 'make-target', created by the
 #   'make' rule, and 'typed-target', created by rules such as 'exe' and 'dll'.
 
+#
+#                         +------------------------+
+#                         |abstract-target         |
+#                         +========================+
+#                         |name                    |
+#                         |project                 |                                   
+#                         |                        |                                   
+#                         |generate(properties) = 0|                                   
+#                         +-----------+------------+                                   
+#                                     |                                                
+#                                     ^                                                
+#                                    / \                                               
+#                                   +-+-+                                              
+#                                     |                                                
+#                                     |                                                
+#            +------------------------+------+------------------------------+          
+#            |                               |                              |          
+#            |                               |                              |          
+# +----------+-----------+            +------+------+                +------+-------+  
+# | project-target       |            | main-target |                | basic-target |  
+# +======================+ 1        * +=============+  alternatives  +==============+  
+# | generate(properties) |o-----------+ generate    |<>------------->| generate     |  
+# | main-target          |            +-------------+                +------+-------+  
+# | reference-properties |                                                  |          
+# +----------------------+                                                  ^          
+#                                                                          / \         
+#                                                                         +-+-+        
+#                                                                           |          
+#                                                                           |          
+#                 ...--+----------------+------------------+----------------+---+      
+#                      |                |                  |                    |      
+#                      |                |                  |                    |      
+#               ... ---+-----+   +------+-------+   +------+------+    +--------+-----+
+#                            |   | typed-target |   | make-target |    | stage-target |
+#                            .   +==============+   +=============+    +==============+
+#                            .   | construct    |   | construct   |    | construct    |
+#                                +--------------+   +-------------+    +--------------+
 
 import sequence ;
 import class : class new ;
