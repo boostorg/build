@@ -196,36 +196,48 @@ class stage-target-class : basic-target
         }
         
         # Filter the target types, if needed
+        for local r in $(source-targets)
+        {
+            local ty = [ $(r).type ] ;        
+            if $(ty)
+            {
+                # Don't stage searched libs.
+                if $(ty) != SEARCHED_LIB
+                {
+                    if $(included-types)
+                    {                        
+                        if [ include-type $(ty) : $(included-types) ]
+                        {
+                            result += $(r) ;
+                        }                                    
+                    }                
+                    else
+                    {
+                        # Intermediate targets are those with 
+                        # "unrequested" types. Unless specific list
+                        # of target types is given, we don't install
+                        # such targets.
+                        if ! [ $(r).intermediate ]
+                        {
+                            result += $(r) ;
+                        }
+                    }   
+                }                
+            }
+            else
+            {
+                result += $(r) ;
+            }
+        }
+        
+
+        
         local included-types = [ $(property-set).get <include-type> ] ;               
         if $(included-types)
         {
-            for local r in $(source-targets)
-            {
-                local ty = [ $(r).type ] ;        
-                if $(ty) && $(ty) != SEARCHED_LIB
-                {
-                    if [ include-type $(ty) : $(included-types) ]                  
-                    {
-                        result += $(r) ;
-                    }                
-                }           
-            }
         }
         else
         {
-            # Intermediate targets are those with "unrequested" types.
-            # For example, given "exe a : a.cpp" we can end with RSP
-            # target on windows, and it will be marked as "intermediate".
-            # By default, we don't install such targets.
-            # If specific list of installable types is given, we don't
-            # care if target is intermediate or not.
-            for local r in $(source-targets)
-            {                
-                if ! [ $(r).intermediate ]
-                {
-                    result += $(r) ;
-                }
-            }            
         }
                 
         return $(result) ;
@@ -371,86 +383,93 @@ IMPORT $(__name__) : stage : : stage ;
 
 rule add-variant-and-compiler ( name : property-set )
 {
-    return [ rename $(name) : $(property-set) ] ;
+    return [ rename $(name) : $(type) : $(property-set) ] ;
 }
 
-rule add-variant ( name : property-set )
+rule add-variant ( name : type ? : property-set )
 {
-    return [ rename $(name) : $(property-set) : unversioned ] ;
+    return [ rename $(name) : $(type) : $(property-set) : unversioned ] ;
 }
 IMPORT $(__name__) : add-variant add-variant-and-compiler
   : : stage.add-variant stage.add-variant-and-compiler ;
 
-rule rename ( name : property-set : unversioned ? )
+rule rename ( name : type ? : property-set : unversioned ? )
 {    
-    local properties = [ $(property-set).raw ] ;
+    if [ type.is-derived $(type) LIB ]
+    {            
+        local properties = [ $(property-set).raw ] ;
     
-    local tags = ;
+        local tags = ;
     
-    local thread-tag ;
-    if <threading>multi in $(properties) { thread-tag = mt ; }
-    
-    local runtime-tag = ;
-    if <link-runtime>static in $(properties) { runtime-tag += s ; }
-    if <runtime-build>debug in $(properties) { runtime-tag += g ; }
-    
-    if <variant>debug-python in $(properties) { runtime-tag += y ; }
-    if <variant>debug in $(properties) { runtime-tag += d ; }
-    if <stdlib>stlport in $(properties) { runtime-tag += p ; }
-    if <stdlib-stlport:iostream>hostios in $(properties) { runtime-tag += n ; }
-    
-    local toolset-tag = ;
-    # 'unversioned' should be a parameter.
-    if ! $(unversioned)
-    {
-        switch [ $(property-set).get <toolset> ]
+        local thread-tag ;
+        if <threading>multi in $(properties) { thread-tag = mt ; }
+        
+        local runtime-tag = ;
+        if <link-runtime>static in $(properties) { runtime-tag += s ; }
+        if <runtime-build>debug in $(properties) { runtime-tag += g ; }
+        
+        if <variant>debug-python in $(properties) { runtime-tag += y ; }
+        if <variant>debug in $(properties) { runtime-tag += d ; }
+        if <stdlib>stlport in $(properties) { runtime-tag += p ; }
+        if <stdlib-stlport:iostream>hostios in $(properties) { runtime-tag += n ; }
+        
+        local toolset-tag = ;
+        # 'unversioned' should be a parameter.
+        if ! $(unversioned)
         {
-            case borland* : toolset-tag += bcb ;
-            case como* : toolset-tag += como ;
-            case cw : toolset-tag += cw ;
-            case darwin* : toolset-tag += ;
-            case edg* : toolset-tag += edg ;
-            case gcc* : toolset-tag += gcc ;
-            case intel-linux* : toolset-tag += il ;
-            case intel-win* : toolset-tag += iw ;
-            case kcc* : toolset-tag += kcc ;
-            case kylix* : toolset-tag += bck ;
-            #case metrowerks* : toolset-tag += cw ;
-            #case mingw* : toolset-tag += mgw ;
-            case mipspro* : toolset-tag += mp ;
-            case msvc* : toolset-tag += vc ;
-            case sun* : toolset-tag += sw ;
-            case tru64cxx* : toolset-tag += tru ;
-            case vacpp* : toolset-tag += xlc ;
+            switch [ $(property-set).get <toolset> ]
+            {
+                case borland* : toolset-tag += bcb ;
+                case como* : toolset-tag += como ;
+                case cw : toolset-tag += cw ;
+                case darwin* : toolset-tag += ;
+                case edg* : toolset-tag += edg ;
+                case gcc* : toolset-tag += gcc ;
+                case intel-linux* : toolset-tag += il ;
+                case intel-win* : toolset-tag += iw ;
+                case kcc* : toolset-tag += kcc ;
+                case kylix* : toolset-tag += bck ;
+                #case metrowerks* : toolset-tag += cw ;
+                #case mingw* : toolset-tag += mgw ;
+                case mipspro* : toolset-tag += mp ;
+                case msvc* : toolset-tag += vc ;
+                case sun* : toolset-tag += sw ;
+                case tru64cxx* : toolset-tag += tru ;
+                case vacpp* : toolset-tag += xlc ;
+            }
+            local version = [ MATCH "<toolset.*version>(.*)" : $(properties) ] ;
+            toolset-tag += $(version) ;
         }
-        local version = [ MATCH "<toolset.*version>(.*)" : $(properties) ] ;
-        toolset-tag += $(version) ;
-    }
 
-    # Note yet clear if this should be added on Linux (where we have
-    # version in soname) and how it should be done on Windows.
-    #local version-tag = ;
-    #if ! $(gUNVERSIONED_VARIANT_TAG)
-    #{
-    #    local version-number = [ get-values <version> : $(properties) ] ;
-    #    version-number ?= $(BOOST_VERSION) ;
-    #    version-tag = [ MATCH "^([^.]+)[.]([^.]+)" : $(version-number[1]) ] ;
-    #    version-tag = $(version-tag:J="_") ;
-    #}
+        # Note yet clear if this should be added on Linux (where we have
+        # version in soname) and how it should be done on Windows.
+        #local version-tag = ;
+        #if ! $(gUNVERSIONED_VARIANT_TAG)
+        #{
+        #    local version-number = [ get-values <version> : $(properties) ] ;
+        #    version-number ?= $(BOOST_VERSION) ;
+        #    version-tag = [ MATCH "^([^.]+)[.]([^.]+)" : $(version-number[1]) ] ;
+        #    version-tag = $(version-tag:J="_") ;
+        #}
     
-    tags += $(toolset-tag:J=) ;
-    tags += $(thread-tag:J=) ;
-    tags += $(runtime-tag:J=) ;
-    #tags += $(version-tag) ;
+        tags += $(toolset-tag:J=) ;
+        tags += $(thread-tag:J=) ;
+        tags += $(runtime-tag:J=) ;
+        #tags += $(version-tag) ;
     
-    if $(tags)
-    {
-        return $(name)-$(tags:J=-) ;
-    }
-    else
-    {
-        return $(name) ;
-    }
+        local result ;
+        
+        if $(tags)
+        {
+            result = $(name)-$(tags:J=-) ;
+        }
+        else
+        {
+            result = $(name) ;
+        }
+        return [ virtual-target.add-suffix $(result) : $(type) 
+          : $(property-set) ] ;
+    }    
 }
 
 
