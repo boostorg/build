@@ -185,10 +185,11 @@ rule Archive-action
     with-command-file vc-Archive $(<) : $(>) ;
 }
 
-actions updated together piecemeal vc-Archive
+actions vc-Archive
 {
     $(VC_SETUP)
     if exist "$(<)" DEL "$(<)"
-    "$(VC_TOOL_PATH)$(VC_LINKER)" /lib $(ARFLAGS) $(PDB_LINKFLAG)"$(VC_PDB_FILE)" /out:"$(<)" %_$(<:B)_% @"$(>)"
+    "$(VC_TOOL_PATH)$(VC_LINKER)" /lib $(ARFLAGS) $(PDB_LINKFLAG)"$(VC_PDB_FILE)" /out:"$(<)" @"$(>)"
 }
+
 
