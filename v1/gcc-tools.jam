@@ -58,7 +58,6 @@ GCC_STDLIB_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/lib ;
 # Make sure this gets set "on" the target
 flags gcc GCC_BIN_DIR : $(GCC_BIN_DIRECTORY) ;
 
-flags gcc CFLAGS : -Wno-long-double ;
 flags gcc LINKFLAGS <runtime-link>static : -static ;
 flags gcc CFLAGS <debug-symbols>on : -g ;
 flags gcc LINKFLAGS <debug-symbols>on : -g ;
@@ -122,6 +121,7 @@ else if $(UNIX)
         # There is no gcc/g++, we need to use cc/c++ instead:
         .GCC ?= cc ;
         .GXX ?= c++ ;
+        flags gcc CFLAGS : -Wno-long-double ;
         }
     case *BSD :
         {
