@@ -21,9 +21,13 @@ MINGW_INCLUDE_DIRECTORY ?= $(MINGW_ROOT_DIRECTORY)$(SLASH)include ;
 MINGW_STDLIB_DIRECTORY ?= $(MINGW_ROOT_DIRECTORY)$(SLASH)lib ;
 
 {
-    local GCC_INCLUDE_DIRECTORY = $(MINGW_INCLUDE_DIRECTORY) ;
-    local GCC_STDLIB_DIRECTORY = $(MINGW_STDLIB_DIRECTORY) ;
+    local GCC_INCLUDE_DIRECTORY = ;
+    local GCC_STDLIB_DIRECTORY = ;
     extends-toolset gcc ;
+    GCC_BIN_DIR = $(MINGW_BIN_DIRECTORY) ;
+    flags mingw STDHDRS : $(MINGW_INCLUDE_DIRECTORY) ;
+    flags mingw STDLIBPATH : $(MINGW_STDLIB_DIRECTORY) ;
+
 }
 
 flags mingw CFLAGS <threading>multi : -mthreads ;

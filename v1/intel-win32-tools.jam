@@ -34,7 +34,10 @@ VC_STDLIB_PATH = "$(INTEL_PATH)"\\Bin ;
 VC_COMPILER = icl ;
 VC_LINKER = xilink ;
 
-C++FLAGS += /Qwn5 /Qwd985 /Qansi_alias ; # reduce number of errors
+C++FLAGS = 
+  [ difference $(C++FLAGS) : /Zc:wchar_t,forScope ] # remove ms-specific options
+  /Qwn5 /Qwd985 /Qansi_alias
+    ; # reduce number of errors
 
 if $(VC_SETUP)
 {
