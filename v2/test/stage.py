@@ -191,6 +191,16 @@ t.write("a/b/c.h", "")
 t.run_build_system()
 t.expect_addition("dist/b/c.h")
 
+t.rm(".")
+t.write("build/Jamroot", """
+install dist : ../a/b/c.h 
+    : <location>../dist <install-source-root>../a ;
+""")
+t.write("a/b/c.h", "")
+t.run_build_system(subdir="build")
+t.expect_addition("dist/b/c.h")
+
+
 
 t.cleanup()
 
