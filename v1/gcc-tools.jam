@@ -322,6 +322,11 @@ rule Link-action
         }
         
         gcc-Link-action $(<) : $(>) ;
+        
+        if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && $(OS) = LINUX && ! $(NO_GNU_LN)
+        {
+            return "$(<[1]).$(DLLVERSION)" ;
+        }
     }
 }
 

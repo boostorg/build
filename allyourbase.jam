@@ -417,6 +417,8 @@ AS              ?= as ;
 ASFLAGS         ?= ;
 AWK             ?= awk ;
 BINDIR          ?= /usr/local/bin ;
+CLONE           ?= $(CP) ;
+CLONE           ?= cp -fdp ;
 CP              ?= cp -f ;
 CRELIB          ?= ;
 DOT             ?= . ;
@@ -632,6 +634,13 @@ rule File
     SEARCH on $(>) = $(SEARCH_SOURCE) ;
     MODE on $(<) = $(FILEMODE) ;
     Chmod $(<) ;
+}
+
+rule FileClone
+{
+    type-DEPENDS files : $(<) ;
+    DEPENDS $(<) : $(>) ;
+    SEARCH on $(>) = $(SEARCH_SOURCE) ;
 }
 
 rule Fortran
@@ -1969,6 +1978,11 @@ actions piecemeal together existing Clean
 actions File
 {
     $(CP) $(>) $(<)
+}
+
+actions FileClone
+{
+    $(CLONE) $(>) $(<)
 }
 
 actions GenFile1

@@ -170,20 +170,28 @@ rule main-from-objects ( targets * : objects * : type )
 
     MODE on $(<) = $($(type)MODE) ;
     local link-function = Link-$(type) ;
-    local ignored = [ $(link-function) $(<) : $(>) : $(3) ] ;
+    local extra-files = [ $(link-function) $(<) : $(>) : $(3) ] ;
     Chmod $(<[1]) ;
     DEPENDS $(<) : $(>) ;
+    
+    # locate and attach the extra files generated
+    MakeLocate $(extra-files) : $(LOCATE_TARGET) ;
+    DEPENDS $(<[2-]) $(extra-files) : $(<[1]) ;
+    
+    gFILES($(<[1])) = $(<) $(extra-files) ;
 }
 
 rule Link-EXE
 {
     # N.B. By the time this rule is invoked, we had better have gRUN_PATH completely set.
-    Link-action $(<) : $(>) : EXE ;
+    local extra-files = [ Link-action $(<) : $(>) : EXE ] ;
     RUN_PATH on $(<) = [ join [ unique $(gRUN_PATH($(<))) $(gTOOLSET_LIB_PATH) ] : $(SPLITPATH) ] ;
     if $(UNIX) 
     {
         RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
     }
+    
+    return $(extra-files) ;
 }
 
 rule Link-DLL
@@ -200,7 +208,7 @@ rule Link-DLL
         }
     }
     
-    Link-action $(<) : $(>) : DLL ;
+    return [ Link-action $(<) : $(>) : DLL ] ;
 }
 
 rule Aix-Implib-Action
@@ -1961,7 +1969,15 @@ rule rename-target ( target + : subvariant * : tags * )
     local postfix-tag = [ get-values <postfix> : $(tag-values) $(TAG(postfix):G=postfix) ] ;
     tag-text = $(tag-text)$(postfix-tag[1]) ;
 
-    local renamed-target = $(target:B=$(target:B)$(tag-text)) ;
+    local renamed-target = ;
+    for t in $(target)
+    {
+        local B-S = [ MATCH ([^\\.]*)(.*) : $(t:G=) ] ;
+        local B = $(B-S[1]) ; B ?= "" ;
+        local S = $(B-S[2]) ; S ?= "" ;
+        local new-name = $(B)$(tag-text)$(S) ; new-name = $(new-name:G=$(t:G)) ;
+        renamed-target += $(new-name) ;
+    }
     return $(renamed-target) ;
 }
 
@@ -2063,7 +2079,14 @@ rule stage ( name : sources + : requirements * : local-build * )
                             [ subvariant-target $(s-target) : $(s-properties) : $(s-toolset) $(s-variant) ] ;
                     }
 
+                    local sv-files = ;
                     for local sv in $(target-subvariant)
+                    {
+                        local files = $(gFILES($(target-subvariant))) ;
+                        files ?= $(target-subvariant) ;
+                        sv-files += $(files) ;
+                    }
+                    for local sv in $(sv-files)
                     {
                         local renamed-target =
                             [ rename-target $(sv) : [ split-path $(s-properties[1]) ] : $(tags) ] ;
@@ -2094,7 +2117,7 @@ rule stage ( name : sources + : requirements * : local-build * )
             if $(file-mode($(file))) { FILEMODE = $(file-mode($(file))) ; }
             MakeLocate $(destination-file) :
                 [ FDirName [ split-path $(LOCATE_TARGET)/$(stage-dir) ] ] ;
-            File $(destination-file) : $(file) ;
+            FileClone $(destination-file) : $(file) ;
         }
     }
     declare-fake-targets $(stage-id) : $(destination-files) ;
