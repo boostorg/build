@@ -20,8 +20,6 @@ import regex ;
 import scanner ;
 import make ;
 
-ECHO "XXX" [ modules.binding boostbook ] ;
-
 feature.feature xsl:param : : free ;
 feature.feature format : html onehtml man pdf ps docbook fo tests
   : incidental implicit composite ;
