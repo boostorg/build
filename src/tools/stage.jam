@@ -126,7 +126,7 @@ class stage-target-class : basic-target
     }
     
     rule construct ( source-targets * : property-set )
-    {
+    {        
         local name = [ $(property-set).get <name> ] ;
         if $(name) && $(source-targets[2])
         {
@@ -278,7 +278,16 @@ class stage-exe-generator : generator
                        
         # stage can affect the relinking details.
         local ps = [ $(action).properties ] ;
-        local new-ps = [ $(ps).add [ property-set.create [ $(property-set).free ] ] ] ;
+        local ps-raw = [ $(ps).raw ] ;
+        # Unless <hardcode-dll-paths>true is in properties, which can
+        # happen only if the user has explicitly requested it, nuke all
+        # <dll-path> properties.
+        if [ $(property-set).get <hardcode-dll-paths> ] != true
+        {
+            ps-raw = [ property.change $(ps-raw) : <dll-path> ] ;
+        }
+        ps-raw = $(ps-raw) [ $(property-set).free ] ;
+        local new-ps = [ property-set.create $(ps-raw) ] ;
         
         local cloned-action = [ virtual-target.clone-action $(action) : $(project) :
           "" : $(new-ps) ] ;
@@ -301,6 +310,14 @@ rule stage ( name : sources * : requirements * : default-build * )
 {
     local project = [ project.current ] ;
     
+    # Unless the user has explicitly asked us to hardcode dll paths, add
+    # <hardcode-dll-paths>false in requirements, to override default
+    # value.
+    if ! <hardcode-dll-paths>true in $(requirements)
+    {
+        requirements += <hardcode-dll-paths>false ;
+    }        
+   
     targets.main-target-alternative
       [ new stage-target-class $(name) : $(project) 
         : [ targets.main-target-sources $(sources) : $(name) ]
