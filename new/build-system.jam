@@ -35,28 +35,17 @@ if [ MATCH (--dump-projects) : [ modules.peek : ARGV ] ]
 build-request = [ build-request.from-command-line [ modules.peek : ARGV ] ] ;
 
 properties = [ $(build-request).get-at 2 ] ;
-# For the time being, just stick toolset to the build request. We'd need to
-# find a way to select default toolset collection and a method to override
-# that from command line
+
 if $(properties) 
 {    
-    if ! <toolset> in $(properties:G)
-    {
-        properties = <toolset>gcc $(properties) ;
-    }    
     expanded = [ build-request.expand $(properties) ] ;
-}
-else
-{
-    # If properties contain only <toolset>, the 'generate' method of
-    # 'abstract-target' will apply its default-build clause.
-    expanded = <toolset>gcc ;
 }
 
 
 local target-ids = [ $(build-request).get-at 1 ] ;
 local targets
 local clean ;
+
 
 if "--clean" in [ modules.peek : ARGV ]
 {
