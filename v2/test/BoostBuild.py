@@ -91,24 +91,28 @@ class Tester(TestCmd.TestCmd):
         if boost_build_path is None:
             boost_build_path = os.path.join(self.original_workdir,
                                             "..", "new")
-            if windows:
+            if os.name == 'nt':
                 boost_build_path += ";" + self.original_workdir
             else:
                 boost_build_path += ":" + self.original_workdir
             
 
-        verbosity = ' -d0 --quiet '
+        verbosity = ['-d0', '--quiet']
         if '--verbose' in sys.argv:
             keywords['verbose'] = 1
-            verbosity = ' -d+2 '
+            verbosity = ['-d+2']
+
+        program_list = []
+        program_list.append(os.path.join('..', 'jam_src', jam_build_dir, executable))
+        program_list.append('-sBOOST_BUILD_PATH=' + boost_build_path)
+        if verbosity:
+            program_list += verbosity
+        if arguments:
+            program_list += arguments.split(" ")
 
         TestCmd.TestCmd.__init__(
             self
-            , program=os.path.join(
-                '..', 'jam_src', jam_build_dir, executable)
-              +  ' -sBOOST_BUILD_PATH=' + boost_build_path
-              + verbosity
-              + arguments
+            , program=program_list
             , match=match
             , workdir=''
             , **keywords)
@@ -218,10 +222,12 @@ class Tester(TestCmd.TestCmd):
 	    pass_toolset = self.pass_toolset	    
 
         try:
+            kw['program'] = []
+            kw['program'] += self.program
+            if extra_args:
+                kw['program'] += extra_args.split(" ")            
             if pass_toolset:
-                kw['program'] = self.program + ' ' + extra_args + ' ' + self.toolset    
-            else:
-                kw['program'] = self.program + ' ' + extra_args                
+                kw['program'].append(self.toolset)
             kw['chdir'] = subdir
             apply(TestCmd.TestCmd.run, [self], kw)
         except:
@@ -236,8 +242,8 @@ class Tester(TestCmd.TestCmd):
             if status != 0:
                 expect = " (expected %d)" % status
 
-            print '"%s %s" returned %d%s' % (
-                self.program, extra_args, _status(self), expect)
+            print '"%s" returned %d%s' % (
+                kw['program'], _status(self), expect)
 
             print "STDOUT ============"
             print self.stdout()
