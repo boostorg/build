@@ -348,7 +348,7 @@ rule capture-run-output1 ( target : executable )
         {
             on $(target)
             {
-                RUN_PATH = [ unique $(p) $(CYGWIN_ROOT)/$(p) $(RUN_PATH) ] ;
+                RUN_PATH = [ unique $(p) $(CYGWIN_ROOT)/$(p) $(RUN_PATH) $(ENV_PATH) ] ;
             }
         }
     }
