@@ -114,6 +114,6 @@ rule Archive-action
 
 actions updated together piecemeal gcc-Archive-action
 {
-    ar ru "$(<)" "$(>)"
+    ar ru "$(<:T)" "$(>:T)"
 }
 
