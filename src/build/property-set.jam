@@ -248,6 +248,7 @@ rule create ( raw-properties * )
     }
     return $(.ps.$(key)) ;    
 }
+NATIVE_RULE property-set : create ;
 
 # Creates new 'property-set' instances after checking
 # that all properties are valid and converting incidental
