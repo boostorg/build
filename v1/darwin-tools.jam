@@ -181,7 +181,7 @@ actions darwin-Link-DyLib-action bind NEEDLIBS NEEDIMPS
 {
     $(SHELL_SET)$(gSHELL_LIBPATH)=$(RUN_LD_LIBRARY_PATH)
     $(SHELL_EXPORT)$(gSHELL_LIBPATH)
-    ld -dynamic -m -r -d -o $(DLLFLAGS) "$(<[1]:S=.lo)" "$(>)" \
+    ld -dynamic -m -r -d $(DLLFLAGS) -o "$(<[1]:S=.lo)" "$(>)" \
     && \
     $(.GCC_BIN_DIR)$(.GXX) $(LINKFLAGS) -o "$(<[1])" "$(<[1]:S=.lo)" \
       -F$(FRAMEWORKS:D) -framework$(_)$(FRAMEWORKS:D=) \
