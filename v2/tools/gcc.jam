@@ -53,7 +53,7 @@ rule init ( version ? : command * : options * )
     if ! $(linker) {
         linker = gnu ;
     }
-    init-link-flags $(linker) ;
+    init-link-flags $(linker) $(condition) ;
 }
 
 if [ os.name ] = NT
@@ -183,23 +183,23 @@ generators.override gcc.prebuilt : builtin.prebuilt ;
 
 
 # Declare flags for linking
+# First, the common flags
+flags gcc.link OPTIONS <debug-symbols>on : -g ;
+flags gcc.link OPTIONS <profiling>on : -pg ;
+flags gcc.link OPTIONS <linkflags> ;
+flags gcc.link LINKPATH <library-path> ;
+flags gcc.link FINDLIBS-ST <find-static-library> ;
+flags gcc.link FINDLIBS-SA <find-shared-library> ;
+flags gcc.link LIBRARIES <library-file> ;
+
+# For <link-runtime>static we made sure there are no dynamic libraries 
+# in the link
+flags gcc.link OPTIONS <link-runtime>static : -static ;
+
+# Now, the vendor specific flags
 # The parameter linker can be either gnu or sun
-rule init-link-flags ( linker )
+rule init-link-flags ( linker condition )
 {
-    # First, the common flags
-    flags gcc.link OPTIONS <debug-symbols>on : -g ;
-    flags gcc.link OPTIONS <profiling>on : -pg ;
-    flags gcc.link OPTIONS <linkflags> ;
-    flags gcc.link LINKPATH <library-path> ;
-    flags gcc.link FINDLIBS-ST <find-static-library> ;
-    flags gcc.link FINDLIBS-SA <find-shared-library> ;
-    flags gcc.link LIBRARIES <library-file> ;
-
-    # For <link-runtime>static we made sure there are no dynamic libraries 
-    # in the link
-    flags gcc.link OPTIONS <link-runtime>static : -static ;
-
-    # Now, the vendor specific flags
     switch $(linker)
     {
     case gnu :
@@ -208,17 +208,17 @@ rule init-link-flags ( linker )
         # We use --strip-all flag as opposed to -s since icc
         # (intel's compiler) is generally option-compatible with
         # and inherits from gcc toolset, but does not support -s
-        flags gcc.link OPTIONS <debug-symbols>off : -Wl,--strip-all ;
-        flags gcc.link RPATH <dll-path> ;
-        flags gcc.link RPATH_LINK <xdll-path> ;
+        flags gcc.link OPTIONS $(condition)/<debug-symbols>off : -Wl,--strip-all ;
+        flags gcc.link RPATH $(condition) : <dll-path> ;
+        flags gcc.link RPATH_LINK $(condition) : <xdll-path> ;
         }
     case sun :
         {
-        flags gcc.link OPTIONS <debug-symbols>off : -Wl,-s ;
-        flags gcc.link RPATH <dll-path> ;
+        flags gcc.link OPTIONS $(condition)/<debug-symbols>off : -Wl,-s ;
+        flags gcc.link RPATH $(condition) : <dll-path> ;
         # Solaris linker does not have a separate -rpath-link, but
         # allows to use -L for the same purpose.
-        flags gcc.link LINKPATH <xdll-path> ;
+        flags gcc.link LINKPATH $(condition) : <xdll-path> ;
 
         # This permits shared libraries with non-PIC code on Solaris
         # VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll,
@@ -226,7 +226,7 @@ rule init-link-flags ( linker )
         # is a separate question.
         # AH, 2004/10/16: it is still necessary because some tests link
         # against static libraries that were compiled without PIC.
-        flags gcc.link OPTIONS <link>shared : -mimpure-text ;
+        flags gcc.link OPTIONS $(condition)/<link>shared : -mimpure-text ;
         }
     case * :
         {
