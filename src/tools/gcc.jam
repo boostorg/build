@@ -14,10 +14,10 @@ import type ;
 import feature ;
 import "class" : new ;
 import set ;
+import common ;
 
 feature.extend toolset : gcc ;
 toolset.inherit gcc : unix ;
-feature.subfeature toolset gcc : version : : optional propagated ;
 
 # Make the "o" suffix used for gcc toolset on all
 # platforms
@@ -26,25 +26,17 @@ type.set-generated-target-suffix STATIC_LIB : <toolset>gcc : a ;
 
 
 # Initializes the gcc toolset
-# Each argument has the form:
-#    version binary-name [path]
-# And specifies the name / path that should be used to invoke
-# the specified gcc version. The default version will be always called
-# with 'g++'.
-rule init ( a1 * : a2 * : a3 * )
+# The name parameter specifies the name used to invoke the compiler, and
+# can be absolute.
+rule init ( version ? name ? )
 {
-    if $(a1)
-    {
-        local version = $(a1[1]) ;
-        local name = $(a1[2]) ;
-        local path = $(a1[3]) ;
+    common.check-init-parameters gcc : version $(version) ;
         
-        feature.extend-subfeature toolset gcc : version : $(version) ;
-            
-        flags gcc NAME <toolset>gcc-$(version) : $(name) ;
-        
-        # TODO: set path accordingly.
-    }    
+    name ?= "gcc" ;
+    
+    local condition = <toolset>gcc-$(version) ;
+    condition ?= <toolset>gcc ;
+    flags gcc CONFIG_NAME $(condition) : $(name) ;
 }
 
 if [ os.name ] = NT
@@ -79,7 +71,7 @@ rule compile.c++
 {
     # Some extensions are compiled as C++ by default. For others, we need
     # to pass -x c++.
-    # We could pass -x c++ but distcc does not work with it.
+    # We could always pass -x c++ but distcc does not work with it.
     if ! $(>:S) in .cc .cp .cxx .cpp .c++ .C
     {
         LANG on $(<) = "-x c++" ;
@@ -89,21 +81,24 @@ rule compile.c++
 
 actions compile.c++
 {
-    "$(NAME:E=g++)" $(LANG) -Wall -ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    "$(CONFIG_NAME)" $(LANG) -Wall -ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 rule compile.c
 {
-    if $(>:S) != .c
-    {
+    # If we use the name g++ then default file suffix -> language mapping
+    # does not work. So have to pass -x option. Maybe, we can work around this
+    # by allowing the user to specify both C and C++ compiler names.
+    #if $(>:S) != .c
+    #{
         LANG on $(<) = "-x c" ;
-    }    
+    #}    
 }
 
 
 actions compile.c
 {
-    "$(NAME:E=gcc)" $(LANG) -Wall $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    "$(CONFIG_NAME)" $(LANG) -Wall $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 
@@ -138,7 +133,7 @@ rule link ( targets * : sources * : properties * )
 
 actions link bind LIBRARIES
 {
-    "$(NAME:E=g++)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
+    "$(CONFIG_NAME)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
 }
 
 # Declare action for creating static libraries
@@ -156,7 +151,7 @@ rule link.dll ( targets * : sources * : properties * )
 # Differ from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
-    "$(NAME:E=g++)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
+    "$(CONFIG_NAME)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) "$(LIBRARIES)" -Wl,-Bdynamic -l$(FINDLIBS-SA) -Wl,-Bstatic -l$(FINDLIBS-ST) -Wl,-B$(LINK-RUNTIME)
 }
 
 # Set up threading support. It's somewhat contrived, so perform it at the end,

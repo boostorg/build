@@ -11,6 +11,74 @@ import modules ;
 import utility ;
 import print ;
 import type ;
+import feature ;
+import errors ;
+
+# The rule checks toolset parameters. Each trailing parameter 
+# should be a pair of parameter name and parameter value.
+# The rule will check that each parameter either has value in
+# each invocation, or has no value in each invocation. Also,
+# the rule will check that the combination of all parameter values is
+# unique in all invocations.
+#
+# Each parameter name corresponds to subfeature. This rule will declare subfeature
+# the first time non-empty parameter value is passed, and will extend it with
+# all the values.
+rule check-init-parameters ( toolset : * )
+{
+    local sig = $(toolset) ;
+    for local index in 2 3 4 5 6 7 8 9
+    {
+        local name = $($(index)[1]) ;
+        local value = $($(index)[2]) ;
+                
+        if $(value)-is-specified 
+        {
+            if $(.had-unspecified-value.$(toolset).$(name))
+            {
+                errors.user-error
+                "$(toolset) initialization: parameter '$(name)' inconsistent" :
+                "no value was specified in earlier initialization" :
+                "an explicit value is specified now" ;
+            }
+            if ! $(.had-value.$(toolset).$(name)) 
+            {
+                feature.subfeature toolset $(toolset) : $(name) : : propagated ;
+                .had-value.$(toolset).$(name) = true ;
+            }
+            feature.extend-subfeature toolset $(toolset) : $(name) : $(value) ;
+        }
+        else
+        {
+            if $(.had-value.$(toolset).$(name))             
+            {
+                errors.user-error                
+                "$(toolset) initialization: parameter '$(name)' inconsistent" :
+                "an explicit value was specified in an earlier initialization" :
+                "no value is specified now" ;           
+            }
+            .had-unspecified-value.$(toolset).$(name) = true ;
+        }
+        sig = $(sig)$(value:E="")- ;
+    }
+    if $(sig) in $(.all-signatures)
+    {
+        local message = 
+          "duplicate initialization of $(toolset) with the following parameters: " ;
+        for local index in 2 3 4 5 6 7 8 9
+        {
+            local p = $($(index)) ;
+            if $(p)
+            {
+                message += "$(p[1]) = $(p[2]:E=<unspecified>)" ;
+            }            
+        }
+        errors.user-error $(message[1]) : $(message[2]) : $(message[3]) : $(message[4]) ;
+    }                
+    .all-signatures += $(sig) ;
+}
+
+
 
 if [ os.name ] = NT
 {
