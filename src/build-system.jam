@@ -20,6 +20,7 @@ import feature ;
 import property-set ;
 import build-request ;
 import errors : error ;
+import project-roots ;
 import "class" : new ;
 
 import builtin ;
