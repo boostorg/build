@@ -21,8 +21,9 @@ rule prebuilt-file-generator
 {
     generator.__init__ prebuilt-file-generator : : * : <file> ;    
 
-    rule run ( project name ? : properties * : sources * )
+    rule run ( project name ? : property-set : sources * )
     {
+        local properties = [ $(property-set).raw ] ;
         local name = [ feature.get-values <file> : $(properties) ] ;
         local type = [ type.type $(name:S) ] ;
         if ! $(type) 
@@ -42,7 +43,7 @@ rule prebuilt-file-generator
         # Therefore, we encode properties via 'extra-grist', which is ugly.
         # Maybe, we should just introduce 'do-nothing-action', which only
         # keps properties.
-        $(t).extra-grist [ property.as-path $(properties) ] ;
+        $(t).extra-grist [ $(property-set).as-path ] ;
         $(t).suffix [ MATCH .(.*) : $(name:S) ] ;
         return $(t) ;            
         
