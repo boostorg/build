@@ -317,10 +317,7 @@ class c-scanner : scanner
 
         # Just propagate current scanner to includes, in a hope
         # that includes do not change scanners. 
-        for local a in $(angle) $(quoted)
-        {            
-            scanner.install $(__name__) : $(a) : $(target) ;
-        }
+        scanner.propagate $(__name__) : $(angle) $(quoted) : $(target) ;
     }        
 }
 
