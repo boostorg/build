@@ -88,7 +88,7 @@ rule invoke-Jam ( command )
 }
 actions invoke-Jam
 {
-    echo "$(PREFIX) $(<:G=)" > $(gBOOST_TEST_JAMFILE)
+    echo $(PREFIX) $(<:G=) > $(gBOOST_TEST_JAMFILE)
     jam -sBOOST_BUILD_PATH=.. -sJAMFILE=$(gBOOST_TEST_JAMFILE)  $(JAMARGS) >$(redirect)
 }
 #     $(REMOVE) $(gBOOST_TEST_JAMFILE)
