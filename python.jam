@@ -76,6 +76,18 @@ if $(NT)
 
     PYTHON_INCLUDES ?= $(PYTHON_ROOT)/include ;
 }
+else if $(UNIX) && $(OS) = MACOSX
+{
+    PYTHON_ROOT ?= /Library/Frameworks/Python.framework/Versions/$(PYTHON_VERSION) ;
+    PYTHON_ROOT = $(PYTHON_ROOT:J=" ") ;
+    PYTHON_INCLUDES ?= $(PYTHON_ROOT)/include/python$(PYTHON_VERSION) ;
+    PYTHON_LIB_PATH ?= $(PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config ;
+
+    PYTHON_PROPERTIES ?=
+      <sysinclude>$(PYTHON_INCLUDES)
+        <library-path>$(PYTHON_LIB_PATH)
+      ;
+}
 else if $(UNIX)
 {
     PYTHON_ROOT ?= /usr/local ;
@@ -178,11 +190,12 @@ rule select-python-library ( toolset variant : properties * )
     {
         if <target-type>PYD in $(properties)
         {
-            properties +=
-                <bundle-loader>$(PYTHON_ROOT)/bin/python$(PYTHON_VERSION)
-                ;
+            properties += <bundle-loader>$(PYTHON_ROOT)/Python ;
         }
-        properties += <framework>Python ;
+        else 
+        {
+            properties += <framework>$(PYTHON_ROOT)/Python ;
+        }
     }
     return $(properties) ;
 }
