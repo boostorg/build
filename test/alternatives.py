@@ -19,6 +19,29 @@ t.write("a.cpp", "int main() { return 0; }\n")
 t.run_build_system("release")
 t.expect_addition("bin/$toolset/release/a.exe")
 
+# Test that alternative selection works for ordinary
+# properties, in particular user-defined.
+t.write("project-root.jam", " ")
+t.write("Jamfile", """
+
+import feature ;
+feature.feature X : off on : propagated ;
+
+exe a : b.cpp ;
+exe a : a.cpp : <X>on ;
+""")
+t.write("b.cpp", "int main() { return 0; }\n")
+
+t.rm("bin")
+
+t.run_build_system()
+t.expect_addition("bin/$toolset/debug/b.obj")
+
+t.run_build_system("X=on")
+t.expect_addition("bin/$toolset/debug/X-on/a.obj")
+
+t.rm("bin")
+
 # Test that everything works ok even with default
 # build.
 
@@ -31,7 +54,6 @@ exe a : a.cpp : <variant>debug ;
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug/a.exe")
 
-
 # Test that only properties which are in build request
 # matters when selection alternative. IOW, alternative
 # with <variant>release is better than one with
@@ -42,7 +64,6 @@ exe a : a_empty.cpp : <variant>debug ;
 exe a : a.cpp : <variant>release ;
 """)
 
-t.rm("bin/$toolset/release/a.exe")
 t.run_build_system("release")
 t.expect_addition("bin/$toolset/release/a.exe")
 
@@ -63,10 +84,24 @@ t.write("Jamfile", """
 exe a : a_empty.cpp ;
 exe a : a.cpp ;
 """)
-expected="""error: Ambiguous alternatives for main target ./a
+expected="""error: skipped build of ./a with properties <debug-store>object <debug-symbols>on <exception-handling>on <hardcode-dll-paths>false <inlining>off <link-runtime>shared <link>shared <optimization>off <os>LINUX <profiling>off <rtti>on <runtime-debugging>on <stdlib>native <symlink-location>project-relative <threading>single <toolset>gcc <user-interface>console <variant>debug because no best-matching alternative could be found
 
 """
 t.run_build_system("--no-error-backtrace", status=1, stdout=expected)
+
+# Another ambiguity test: two matches properties in one alternative are
+# neither better nor worse than a single one in another alternative.
+t.write("Jamfile", """
+exe a : a_empty.cpp : <optimization>off <profiling>off ;
+exe a : a.cpp : <debug-symbols>on ;
+""")
+expected="""error: skipped build of ./a with properties <debug-store>object <debug-symbols>on <exception-handling>on <hardcode-dll-paths>false <inlining>off <link-runtime>shared <link>shared <optimization>off <os>LINUX <profiling>off <rtti>on <runtime-debugging>on <stdlib>native <symlink-location>project-relative <threading>single <toolset>gcc <user-interface>console <variant>debug because no best-matching alternative could be found
+
+"""
+t.run_build_system("--no-error-backtrace", status=1, stdout=expected)
+
+
+
 
 # Test that we can have alternative without sources
 t.write("Jamfile", """
