@@ -18,10 +18,11 @@ import feature ;
 import project ;
 import property-set ;
 import virtual-target ;
+import path ;
 
 feature.feature <install-dependencies> : off on : incidental ;
 feature.feature <install-type> : : free incidental ;
-feature.feature <preserve-path> : off on : incidental ;
+feature.feature <install-source-root> : : free path  ;
 feature.feature <so-version> : : free incidental ;
 
 class install-target-class : basic-target
@@ -83,8 +84,14 @@ class install-target-class : basic-target
         local d = [ $(build-property-set).get <location> ] ;
         ps-raw += $(d:G=<location>) ;
         
-        local d = [ $(build-property-set).get <preserve-path> ] ;
-        ps-raw += $(d:G=<preserve-path>) ;
+        local d = [ $(build-property-set).get <install-source-root> ] ;
+        # Make the path absolute: we'll use it to compute relative
+        # paths and making the path absolute will help.
+        if $(d)
+        {            
+            d = [ path.root $(d) [ path.pwd ] ] ;
+            ps-raw += $(d:G=<install-source-root>) ;
+        }        
         
         if $(ps-raw)
         {
@@ -246,9 +253,21 @@ rule copy-file ( project : source : properties )
     local name = [ $(source).name ] ;
                
     new-a = [ new action $(source) : common.copy : $(properties) ] ;    
-    if [ $(properties).get <preserve-path> ] = "on"
+    local source-root = [ $(properties).get <install-source-root> ] ;
+    if $(source-root) 
     {        
-        targets = [ new file-target $(name) exact : [ $(source).type ] 
+        # Get the real path of the target. We probably need to strip
+        # relative path from the target name at construction...
+        local path = [ $(source).path ] ;
+        path = [ path.join $(path) $(name:D) ] ;
+        # Make the path absolute. Otherwise, it's hard to compute relative
+        # path. The 'source-root' is already absolute, see the
+        # 'adjust-properties' method above.
+        path = [ path.root $(path) [ path.pwd ] ] ;
+
+        relative = [ path.relative-to $(source-root) $(path) ] ;
+        
+        targets = [ new file-target $(name:D=$(relative)) exact : [ $(source).type ] 
           : $(project) : $(new-a) ] ;
     }        
     else
