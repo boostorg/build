@@ -52,6 +52,13 @@ else
       # Add support for wchar_t and correct for loop scoping
       /Zc:wchar_t,forScope
       ;
+    
+    if $(version) = 6
+    {
+        # clue in our config, since we don't seem to be detecting
+        # native wchar_t automatically in this case.
+        C++FLAGS += -D_NATIVE_WCHAR_T_DEFINED ;
+    }
 }
 
 # Add options recognized only by intel7
