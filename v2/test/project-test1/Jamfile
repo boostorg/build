@@ -1,5 +1,5 @@
 project /boost-build-test-project-1
     : requirements <threading>multi <include>/home/ghost/local/include ;
 
-subproject dir2 ;
-subproject dir ;
+build-project dir2 ;
+build-project dir ;

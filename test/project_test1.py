@@ -27,7 +27,7 @@ Projects:
 * Requirements: <include>/home/ghost/build/boost-cvs
 * Default build: debug
 * Source location: %(root-dir-prefix)sdir2
-* Subprojects:
+* Projects to build:
 
 """
 
@@ -44,7 +44,7 @@ Projects:
 * Requirements: <threading>multi <include>/home/ghost/local/include
 * Default build: debug
 * Source location: %(root-dir)s
-* Subprojects: dir dir2
+* Projects to build: dir dir2
 
 '/boost-build-test-project-1/dir':
 
@@ -53,7 +53,7 @@ Projects:
 * Requirements: <threading>multi <include>/home/ghost/local/include
 * Default build: release
 * Source location: %(root-dir-prefix)sdir/src
-* Subprojects:
+* Projects to build:
 
 """
 

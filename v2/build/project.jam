@@ -36,9 +36,9 @@ rule load ( jamfile-location )
     {
         .projects += $(jamfile-location) ;
 
-        for local subproject in [ attribute $(module-name) subprojects ]
+        for local p in [ attribute $(module-name) projects-to-build ]
         {
-            load [ os.path.join $(jamfile-location) $(subproject) ] ;
+            load [ os.path.join $(jamfile-location) $(p) ] ;
         }
     }
     return $(module-name) ;
@@ -358,7 +358,7 @@ rule register-id ( id : location )
 # Class keeping all the attributes of a project.
 #
 # The standard attributes are "id", "location", "project-root", "parent"
-# "requirements", "default-build", "source-location" and "subprojects".
+# "requirements", "default-build", "source-location" and "projects-to-build".
 rule project-attributes ( location )
 {
     self.location = $(location) ;
@@ -398,7 +398,7 @@ rule project-attributes ( location )
             self.source-location = [ os.path.join $(self.location) $(specification) ] ;
         }            
         else if ! $(attribute) in "id" "default-build" "location" "source-location"
-           "project-root" "project-root-module" "parent" "subprojects" 
+           "project-root" "project-root-module" "parent" "projects-to-build" 
         {
             print.wrapped-text "Invalid project attribute '$(attribute)' specified "
                                "for project at '$(self.location)'" ;
@@ -431,7 +431,8 @@ rule project-attributes ( location )
         print.list-item "Requirements:" $(self.requirements) ;
         print.list-item "Default build:" $(self.default-build) ;
         print.list-item "Source location:" $(self.source-location) ;
-        print.list-item "Subprojects:" [ sequence.insertion-sort $(self.subprojects) ] ;
+        print.list-item "Projects to build:" 
+                            [ sequence.insertion-sort $(self.projects-to-build) ] ;
         print.list-end ;
     }
     
@@ -511,13 +512,13 @@ module project-rules {
         }
     }
 
-    rule subproject ( dir )
+    rule build-project ( dir )
     {
         import project ;
         local attributes = [ project.attributes $(__name__) ] ;
 
-        local now = [ $(attributes).get subprojects ] ;
-        $(attributes).set subprojects : $(now) $(dir) ;
+        local now = [ $(attributes).get projects-to-build ] ;
+        $(attributes).set projects-to-build : $(now) $(dir) ;
     }
 }
 

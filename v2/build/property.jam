@@ -190,7 +190,8 @@ rule make ( specification * )
         }
         else if [ feature.is-implicit-value $(e) ]
         {
-            result += [ feature.implied-feature $(e) ] ;      
+            local feature = [ feature.implied-feature $(e) ] ;
+            result += $(feature)$(e) ;      
         }
         else
         {
