@@ -71,13 +71,26 @@ rule Link-action
     # will be "multiplied away" otherwise. The --exclude-symbols directive
     # proved to be neccessary with some versions of Cygwin.
     IMPLIB_COMMAND on $(<) = "-Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__ -Wl,--out-implib," ;
-    gcc-Link-action $(<) : $(>) ;
+    DEPENDS $(<) : $(NEEDLIBS) ;
+    if $(<[2]) && $(NT) && ( -mno-cygwin in $(gBUILD_PROPERTIES:G=) )
+    {
+        gcc-dllwrap $(<) : $(>) ;
+    }
+    else
+    {
+        gcc-Link-action $(<) : $(>) ;
+    }
 }
 
 # for gcc, we repeat all libraries so that dependencies are always resolved
 actions gcc-Link-action bind NEEDLIBS
 {
-    $(GCC_BIN_DIRECTORY)g++ $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,.
+    $(GCC_BIN_DIRECTORY)g++ $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,.
+}
+
+actions gcc-dllwrap bind NEEDLIBS
+{
+    dllwrap --dllname $(<[1]) -o foo.pyd $(>) -s --entry _DllMain@12 --target=i386-mingw32 -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,. $(LINKFLAGS)     
 }
 
 #### Cc #####
