@@ -2,9 +2,8 @@ if ! $(gPYTHON_INCLUDED)
 {
 gPYTHON_INCLUDED = true ;
 
-SEARCH on testing.jam = $(BOOST_BUILD_PATH) ;
-include testing.jam ;
-
+import testing ;
+    
 # Do some OS-specific setup
 if $(NT)
 {
