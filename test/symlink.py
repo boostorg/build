@@ -25,7 +25,7 @@ int main()
 """)
 
 t.run_build_system()
-t.expect_addition(List('hello_debug hello_release.exe links/hello_release'))
+t.expect_addition(List('hello_debug.exe hello_release.exe links/hello_release.exe'))
 
 
 t.cleanup()
