@@ -410,8 +410,9 @@ class Tester(TestCmd.TestCmd):
 
         # not totally sure about this change, but I don't see a good alternative
         if windows:
-            self.ignore('*.pdb')
-            self.ignore('*.rsp')
+            self.ignore('*.ilk') # msvc incremental linking files
+            self.ignore('*.pdb') # msvc program database files
+            self.ignore('*.rsp') # response files
 
         # debug builds of bjam built with gcc produce this profiling data
         self.ignore('gmon.out')

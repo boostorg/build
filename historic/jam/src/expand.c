@@ -6,6 +6,11 @@
 # include "newstr.h"
 # include <assert.h>
 
+# ifdef OS_CYGWIN
+#  include <sys/cygwin.h>
+#  include <windows.h>
+# endif
+
 /*
  * expand.c - expand a buffer, given variable values
  *
@@ -30,7 +35,8 @@ typedef struct {
 	char		filemods;	/* one of the above applied */
 	char		downshift;	/* :L -- downshift result */
 	char		upshift;	     /* :U -- upshift result */
-    char         to_slashes;    /* :T -- convert "\" to "/" */
+    char        to_slashes;    /* :T -- convert "\" to "/" */
+    char        to_windows;    /* :W -- convert cygwin to native paths */
 	PATHPART	empty;		/* :E -- default for empties */
 	PATHPART	join;		/* :J -- join list with char */
 } VAR_EDITS ;
@@ -63,51 +69,51 @@ var_expand(
 	LOL	*lol,
 	int	cancopyin )
 {
-	char out_buf[ MAXSYM ];
+    char out_buf[ MAXSYM ];
     string buf[1];
-    string out1; /* Temporary buffer */
+    string out1[1]; /* Temporary buffer */
     size_t prefix_length;
     char *out;
-	char *inp = in;
-	char *ov;		/* for temp copy of variable in outbuf */
-	int depth;
+    char *inp = in;
+    char *ov;		/* for temp copy of variable in outbuf */
+    int depth;
 
-	if( DEBUG_VAREXP )
-	    printf( "expand '%.*s'\n", end - in, in );
+    if( DEBUG_VAREXP )
+        printf( "expand '%.*s'\n", end - in, in );
 
-	/* This gets alot of cases: $(<) and $(>) */
+    /* This gets alot of cases: $(<) and $(>) */
 
-	if( in[0] == '$' && in[1] == '(' && in[3] == ')' && !in[4] )
-	{
-	    switch( in[2] )
-	    {
-	    case '1':
-	    case '<':
-		return list_copy( l, lol_get( lol, 0 ) );
-
-	    case '2':
-	    case '>':
-		return list_copy( l, lol_get( lol, 1 ) );
-	    }
-	}
-
-	/* Just try simple copy of in to out. */
-
-	while( in < end )
-	    if( *in++ == '$' && *in == '(' ) 
-		goto expand;
-
-	/* No variables expanded - just add copy of input string to list. */
-
-	/* Cancopyin is an optimization: if the input was already a list */
-	/* item, we can use the copystr() to put it on the new list. */
-	/* Otherwise, we use the slower newstr(). */
-
-	if( cancopyin ) 
+    if( in[0] == '$' && in[1] == '(' && in[3] == ')' && !in[4] )
     {
-	    return list_new( l, copystr( inp ) );
+        switch( in[2] )
+        {
+        case '1':
+        case '<':
+            return list_copy( l, lol_get( lol, 0 ) );
+
+        case '2':
+        case '>':
+            return list_copy( l, lol_get( lol, 1 ) );
+        }
     }
-	else
+
+    /* Just try simple copy of in to out. */
+
+    while( in < end )
+        if( *in++ == '$' && *in == '(' ) 
+            goto expand;
+
+    /* No variables expanded - just add copy of input string to list. */
+
+    /* Cancopyin is an optimization: if the input was already a list */
+    /* item, we can use the copystr() to put it on the new list. */
+    /* Otherwise, we use the slower newstr(). */
+
+    if( cancopyin ) 
+    {
+        return list_new( l, copystr( inp ) );
+    }
+    else
     {
         LIST* r;
         string_new( buf );
@@ -118,342 +124,342 @@ var_expand(
         return r;
     }
 
-    expand:
+expand:
     string_new( buf );
     string_append_range( buf, inp, in - 1); /* copy the part before '$'. */
-	/*
-	 * Input so far (ignore blanks):
-	 *
-	 *	stuff-in-outbuf $(variable) remainder
-	 *			 ^	             ^
-	 *			 in		     end
-	 * Output so far:
-	 *
-	 *	stuff-in-outbuf $
-	 *	^	         ^
-	 *	out_buf          out
-	 *
-	 *
-	 * We just copied the $ of $(...), so back up one on the output.
-	 * We now find the matching close paren, copying the variable and
-	 * modifiers between the $( and ) temporarily into out_buf, so that
-	 * we can replace :'s with MAGIC_COLON.  This is necessary to avoid
-	 * being confused by modifier values that are variables containing
-	 * :'s.  Ugly.
-	 */
+    /*
+     * Input so far (ignore blanks):
+     *
+     *	stuff-in-outbuf $(variable) remainder
+     *			 ^	             ^
+     *			 in		     end
+     * Output so far:
+     *
+     *	stuff-in-outbuf $
+     *	^	         ^
+     *	out_buf          out
+     *
+     *
+     * We just copied the $ of $(...), so back up one on the output.
+     * We now find the matching close paren, copying the variable and
+     * modifiers between the $( and ) temporarily into out_buf, so that
+     * we can replace :'s with MAGIC_COLON.  This is necessary to avoid
+     * being confused by modifier values that are variables containing
+     * :'s.  Ugly.
+     */
 
-	depth = 1;
+    depth = 1;
     inp = ++in; /* skip over the '(' */
 
-	while( in < end && depth )
-	{
-	    switch( *in++ )
-	    {
-	    case '(': depth++; break;
-	    case ')': depth--; break;
-	    }
-	}
+    while( in < end && depth )
+    {
+        switch( *in++ )
+        {
+        case '(': depth++; break;
+        case ')': depth--; break;
+        }
+    }
 
-	/*
-	 * Input so far (ignore blanks):
-	 *
-	 *	stuff-in-outbuf $(variable) remainder
-	 *			  ^	   ^         ^
-	 *			  inp      in        end
-         */
-        prefix_length = buf->size;
-        string_append_range( buf, inp, in - 1 );
+    /*
+     * Input so far (ignore blanks):
+     *
+     *	stuff-in-outbuf $(variable) remainder
+     *			  ^	   ^         ^
+     *			  inp      in        end
+     */
+    prefix_length = buf->size;
+    string_append_range( buf, inp, in - 1 );
 
-        out = buf->value + prefix_length;
-	for ( ov = out; ov < buf->value + buf->size; ++ov )
-	{
-	    switch( *ov )
-	    {
-	    case ':': *ov = MAGIC_COLON; break;
-	    case '[': *ov = MAGIC_LEFT; break;
-	    case ']': *ov = MAGIC_RIGHT; break;
-	    }
-	}
+    out = buf->value + prefix_length;
+    for ( ov = out; ov < buf->value + buf->size; ++ov )
+    {
+        switch( *ov )
+        {
+        case ':': *ov = MAGIC_COLON; break;
+        case '[': *ov = MAGIC_LEFT; break;
+        case ']': *ov = MAGIC_RIGHT; break;
+        }
+    }
 
-	/*
-	 * Input so far (ignore blanks):
-	 *
-	 *	stuff-in-outbuf $(variable) remainder
-	 *			            ^        ^
-	 *			            in       end
-	 * Output so far:
-	 *
-	 *	stuff-in-outbuf variable
-	 *	^	        ^       ^
-	 *	out_buf         out	ov
-	 *
-	 * Later we will overwrite 'variable' in out_buf, but we'll be
-	 * done with it by then.  'variable' may be a multi-element list, 
-	 * so may each value for '$(variable element)', and so may 'remainder'.
-	 * Thus we produce a product of three lists.
-	 */
+    /*
+     * Input so far (ignore blanks):
+     *
+     *	stuff-in-outbuf $(variable) remainder
+     *			            ^        ^
+     *			            in       end
+     * Output so far:
+     *
+     *	stuff-in-outbuf variable
+     *	^	        ^       ^
+     *	out_buf         out	ov
+     *
+     * Later we will overwrite 'variable' in out_buf, but we'll be
+     * done with it by then.  'variable' may be a multi-element list, 
+     * so may each value for '$(variable element)', and so may 'remainder'.
+     * Thus we produce a product of three lists.
+     */
 
-	{
-	    LIST *variables = 0;
-	    LIST *remainder = 0;
-	    LIST *vars;
+    {
+        LIST *variables = 0;
+        LIST *remainder = 0;
+        LIST *vars;
 
-	    /* Recursively expand variable name & rest of input */
+        /* Recursively expand variable name & rest of input */
 
-	    if( out < ov )
-		variables = var_expand( L0, out, ov, lol, 0 );
-	    if( in < end )
-		remainder = var_expand( L0, in, end, lol, 0 );
+        if( out < ov )
+            variables = var_expand( L0, out, ov, lol, 0 );
+        if( in < end )
+            remainder = var_expand( L0, in, end, lol, 0 );
 
-	    /* Now produce the result chain */
+        /* Now produce the result chain */
 
-	    /* For each variable name */
+        /* For each variable name */
 
-	    for( vars = variables; vars; vars = list_next( vars ) )
-	    {
-		LIST *value, *evalue = 0;
-		char *colon;
-		char *bracket;
-        string variable;
-        char *varname;
-		int sub1 = 0, sub2 = -1;
-		VAR_EDITS edits;
+        for( vars = variables; vars; vars = list_next( vars ) )
+        {
+            LIST *value, *evalue = 0;
+            char *colon;
+            char *bracket;
+            string variable[1];
+            char *varname;
+            int sub1 = 0, sub2 = -1;
+            VAR_EDITS edits;
 
-		/* Look for a : modifier in the variable name */
-		/* Must copy into varname so we can modify it */
+            /* Look for a : modifier in the variable name */
+            /* Must copy into varname so we can modify it */
 
-		string_copy( &variable, vars->string );
-        varname = variable.value;
+            string_copy( variable, vars->string );
+            varname = variable->value;
 
-		if( colon = strchr( varname, MAGIC_COLON ) )
-		{
-            string_truncate( &variable, colon - varname );
-		    var_edit_parse( colon + 1, &edits );
-		}
+            if( colon = strchr( varname, MAGIC_COLON ) )
+            {
+                string_truncate( variable, colon - varname );
+                var_edit_parse( colon + 1, &edits );
+            }
 
-		/* Look for [x-y] subscripting */
-		/* sub1 and sub2 are x and y. */
+            /* Look for [x-y] subscripting */
+            /* sub1 and sub2 are x and y. */
 
-                if ( bracket = strchr( varname, MAGIC_LEFT ) )
+            if ( bracket = strchr( varname, MAGIC_LEFT ) )
+            {
+                /*
+                ** Make all syntax errors in [] subscripting
+                ** result in the same behavior: silenty return an empty
+                ** expansion (by setting sub2 = 0). Brute force parsing;
+                ** May get moved into yacc someday.
+                */
+
+                char *s = bracket + 1;
+
+                string_truncate( variable, bracket - varname );
+
+                do  /* so we can use "break" */
                 {
-                    /*
-                    ** Make all syntax errors in [] subscripting
-                    ** result in the same behavior: silenty return an empty
-                    ** expansion (by setting sub2 = 0). Brute force parsing;
-                    ** May get moved into yacc someday.
-                    */
-
-                    char *s = bracket + 1;
-
-                    string_truncate( &variable, bracket - varname );
-
-                    do  /* so we can use "break" */
+                    /* Allow negative indexes. */
+                    if (! isdigit( *s ) && ! ( *s == '-') )
                     {
-                        /* Allow negative indexes. */
-                        if (! isdigit( *s ) && ! ( *s == '-') )
-                        {
-                            sub2 = 0;
-                            break;
-                        }
-                        sub1 = atoi(s);
+                        sub2 = 0;
+                        break;
+                    }
+                    sub1 = atoi(s);
 
-                        /* Skip over the first symbol, which is either a digit or dash. */
-                        s++;
-                        while ( isdigit( *s ) ) s++;
+                    /* Skip over the first symbol, which is either a digit or dash. */
+                    s++;
+                    while ( isdigit( *s ) ) s++;
 
-                        if ( *s == MAGIC_RIGHT )
-                        {
-                            sub2 = sub1;
-                            break;
-                        }
+                    if ( *s == MAGIC_RIGHT )
+                    {
+                        sub2 = sub1;
+                        break;
+                    }
 
-                        if ( *s != '-')
-                        {
-                            sub2 = 0;
-                            break;
-                        }
+                    if ( *s != '-')
+                    {
+                        sub2 = 0;
+                        break;
+                    }
 
-                        s++;
+                    s++;
 
-                        if ( *s == MAGIC_RIGHT )
-                        {
-                            sub2 = -1;
-                            break;
-                        }
+                    if ( *s == MAGIC_RIGHT )
+                    {
+                        sub2 = -1;
+                        break;
+                    }
 
-                        if (! isdigit( *s ) && ! ( *s == '-') )
-                        {
-                            sub2 = 0;
-                            break;
-                        }
+                    if (! isdigit( *s ) && ! ( *s == '-') )
+                    {
+                        sub2 = 0;
+                        break;
+                    }
 
-                        /* First, compute the index of the last element. */
-                        sub2 = atoi(s);               
-                        s++;
-                        while ( isdigit( *s ) ) s++;
+                    /* First, compute the index of the last element. */
+                    sub2 = atoi(s);               
+                    s++;
+                    while ( isdigit( *s ) ) s++;
 
-                        if ( *s != MAGIC_RIGHT)
-                            sub2 = 0;
-
-                    } while (0);
-
-                    /*
-                    ** Anything but the end of the string, or the colon
-                    ** introducing a modifier is a syntax error.
-                    */
-
-                    s++;                
-                    if (*s && *s != MAGIC_COLON)
+                    if ( *s != MAGIC_RIGHT)
                         sub2 = 0;
 
-                    *bracket = '\0';
+                } while (0);
+
+                /*
+                ** Anything but the end of the string, or the colon
+                ** introducing a modifier is a syntax error.
+                */
+
+                s++;                
+                if (*s && *s != MAGIC_COLON)
+                    sub2 = 0;
+
+                *bracket = '\0';
+            }
+
+            /* Get variable value, specially handling $(<), $(>), $(n) */
+		
+            if( varname[0] == '<' && !varname[1] )
+                value = lol_get( lol, 0 );
+            else if( varname[0] == '>' && !varname[1] )
+                value = lol_get( lol, 1 );
+            else if( varname[0] >= '1' && varname[0] <= '9' && !varname[1] )
+                value = lol_get( lol, varname[0] - '1' );
+            else 
+                value = var_get( varname );
+
+            /* Handle negitive indexes: part two. */
+            {
+                int length = list_length( value );
+
+                if (sub1 < 0)
+                    sub1 = length + sub1;
+                else
+                    sub1 -= 1;
+
+                if (sub2 < 0)
+                    sub2 = length + 1 + sub2 - sub1;
+                else
+                    sub2 -= sub1;
+                /*
+                ** The "sub2 < 0" test handles the semantic error
+                ** of sub2 < sub1.
+                */
+                if ( sub2 < 0 )
+                    sub2 = 0;
+            }
+
+
+
+            /* The fast path: $(x) - just copy the variable value. */
+            /* This is only an optimization */
+
+            if( out == out_buf && !bracket && !colon && in == end )
+            {
+                string_free( variable );
+                l = list_copy( l, value );
+                continue;
+            }
+
+            /* Handle start subscript */
+
+            while( sub1 > 0 && value )
+                --sub1, value = list_next( value );
+
+            /* Empty w/ :E=default? */
+
+            if( !value && colon && edits.empty.ptr )
+                evalue = value = list_new( L0, newstr( edits.empty.ptr ) );
+
+            /* For each variable value */
+
+            string_new( out1 );
+            for( ; value; value = list_next( value ) )
+            {
+                LIST *rem;
+                size_t postfix_start;
+
+                /* Handle end subscript (length actually) */
+
+                if( sub2 >= 0 && --sub2 < 0 )
+                    break;
+
+                string_truncate( buf, prefix_length );
+
+                /* Apply : mods, if present */
+
+                if( colon && edits.filemods )
+                    var_edit_file( value->string, out1, &edits );
+                else
+                    string_append( out1, value->string );
+
+                if( colon && ( edits.upshift || edits.downshift || edits.to_slashes || edits.to_windows ) )
+                    var_edit_shift( out1, &edits );
+
+                /* Handle :J=joinval */
+                /* If we have more values for this var, just */
+                /* keep appending them (with the join value) */
+                /* rather than creating separate LIST elements. */
+
+                if( colon && edits.join.ptr && 
+                    ( list_next( value ) || list_next( vars ) ) )
+                {
+                    string_append( out1, edits.join.ptr );
+                    continue;
                 }
 
-		/* Get variable value, specially handling $(<), $(>), $(n) */
-		
-		if( varname[0] == '<' && !varname[1] )
-		    value = lol_get( lol, 0 );
-		else if( varname[0] == '>' && !varname[1] )
-		    value = lol_get( lol, 1 );
-		else if( varname[0] >= '1' && varname[0] <= '9' && !varname[1] )
-		    value = lol_get( lol, varname[0] - '1' );
-		else 
-		    value = var_get( varname );
+                string_append( buf, out1->value );
+                string_free( out1 );
+                string_new( out1 );
 
-        /* Handle negitive indexes: part two. */
-        {
-            int length = list_length( value );
+                /* If no remainder, append result to output chain. */
 
-            if (sub1 < 0)
-                sub1 = length + sub1;
-            else
-                sub1 -= 1;
+                if( in == end )
+                {
+                    l = list_new( l, newstr( buf->value ) );
+                    continue;
+                }
 
-            if (sub2 < 0)
-                sub2 = length + 1 + sub2 - sub1;
-            else
-                sub2 -= sub1;
-            /*
-            ** The "sub2 < 0" test handles the semantic error
-            ** of sub2 < sub1.
-            */
-            if ( sub2 < 0 )
-                sub2 = 0;
+                /* For each remainder, append the complete string */
+                /* to the output chain. */
+                /* Remember the end of the variable expansion so */
+                /* we can just tack on each instance of 'remainder' */
+
+                postfix_start = buf->size;
+
+                for( rem = remainder; rem; rem = list_next( rem ) )
+                {
+                    string_truncate( buf, postfix_start );
+                    string_append( buf, rem->string );
+                    l = list_new( l, newstr( buf->value ) );
+                }
+            }
+            string_free( out1 );
+
+            /* Toss used empty */
+
+            if( evalue )
+                list_free( evalue );
+
+            string_free( variable );
         }
 
+        /* variables & remainder were gifts from var_expand */
+        /* and must be freed */
 
+        if( variables )
+            list_free( variables );
+        if( remainder)
+            list_free( remainder );
 
-		/* The fast path: $(x) - just copy the variable value. */
-		/* This is only an optimization */
-
-		if( out == out_buf && !bracket && !colon && in == end )
-		{
-            string_free( &variable );
-		    l = list_copy( l, value );
-		    continue;
-		}
-
-		/* Handle start subscript */
-
-		while( sub1 > 0 && value )
-		    --sub1, value = list_next( value );
-
-		/* Empty w/ :E=default? */
-
-		if( !value && colon && edits.empty.ptr )
-		    evalue = value = list_new( L0, newstr( edits.empty.ptr ) );
-
-		/* For each variable value */
-
-        string_new( &out1 );
-		for( ; value; value = list_next( value ) )
-		{
-		    LIST *rem;
-            size_t postfix_start;
-
-		    /* Handle end subscript (length actually) */
-
-		    if( sub2 >= 0 && --sub2 < 0 )
-			break;
-
-            string_truncate( buf, prefix_length );
-
-		    /* Apply : mods, if present */
-
-		    if( colon && edits.filemods )
-			var_edit_file( value->string, &out1, &edits );
-		    else
-			string_append( &out1, value->string );
-
-		    if( colon && ( edits.upshift || edits.downshift || edits.to_slashes ) )
-			var_edit_shift( &out1, &edits );
-
-		    /* Handle :J=joinval */
-		    /* If we have more values for this var, just */
-		    /* keep appending them (with the join value) */
-		    /* rather than creating separate LIST elements. */
-
-		    if( colon && edits.join.ptr && 
-		      ( list_next( value ) || list_next( vars ) ) )
-		    {
-                string_append( &out1, edits.join.ptr );
-			continue;
-		    }
-
-            string_append( buf, out1.value );
-            string_free( &out1 );
-            string_new( &out1 );
-
-		    /* If no remainder, append result to output chain. */
-
-		    if( in == end )
-		    {
-			l = list_new( l, newstr( buf->value ) );
-			continue;
-		    }
-
-		    /* For each remainder, append the complete string */
-		    /* to the output chain. */
-		    /* Remember the end of the variable expansion so */
-		    /* we can just tack on each instance of 'remainder' */
-
-            postfix_start = buf->size;
-
-		    for( rem = remainder; rem; rem = list_next( rem ) )
-		    {
-                string_truncate( buf, postfix_start );
-                string_append( buf, rem->string );
-			l = list_new( l, newstr( buf->value ) );
-		    }
-		}
-        string_new( &out1 );
-
-		/* Toss used empty */
-
-		if( evalue )
-		    list_free( evalue );
-
-          string_free( &variable );
-	    }
-
-	    /* variables & remainder were gifts from var_expand */
-	    /* and must be freed */
-
-	    if( variables )
-		list_free( variables );
-	    if( remainder)
-		list_free( remainder );
-
-	    if( DEBUG_VAREXP )
-	    {
-		printf( "expanded to " );
-		list_print( l );
-		printf( "\n" );
-	    }
+        if( DEBUG_VAREXP )
+        {
+            printf( "expanded to " );
+            list_print( l );
+            printf( "\n" );
+        }
 
         string_free( buf );
-	    return l;
-	}
+        return l;
+    }
 }
 
 /*
@@ -517,7 +523,8 @@ var_edit_parse(
 	    case 'B': fp = &edits->f.f_base; goto fileval;
 	    case 'S': fp = &edits->f.f_suffix; goto fileval;
 	    case 'M': fp = &edits->f.f_member; goto fileval;
-        case 'T': edits->to_slashes = 1; continue;
+            case 'T': edits->to_slashes = 1; continue;
+            case 'W': edits->to_windows = 1; continue;
 
 	    default: return; /* should complain, but so what... */
 	    }
@@ -644,6 +651,16 @@ var_edit_shift(
             if ( *p == '\\')
                 *p = '/';
         }
+# ifdef OS_CYGWIN
+        if ( edits->to_windows )
+        {
+            char result[MAX_PATH + 1];
+            cygwin_conv_to_win32_path(out->value, result);
+            assert(strlen(result) <= MAX_PATH);
+            string_free( out );
+            string_copy( out, result );
+        }
+# endif
     }
     out->size = p - out->value;
 }
@@ -657,19 +674,33 @@ void var_expand_unit_test()
     LIST *e2;
     char axyb[] = "a$(xy)b";
     char azb[] = "a$($(z))b";
-    
+    char path[] = "$(p:W)";
+        
     lol_init(lol);
     var_set("xy", list_new( list_new( L0, newstr( "x" ) ), newstr( "y" ) ), VAR_SET );
     var_set("z", list_new( L0, newstr( "xy" ) ), VAR_SET );
-    
+    var_set("p", list_new( L0, newstr( "/cygdrive/c/foo/bar" ) ), VAR_SET );
+
     l = var_expand( 0, axyb, axyb + sizeof(axyb) - 1, lol, 0 );
     for ( l2 = l, e2 = expected; l2 && e2; l2 = list_next(l2), e2 = list_next(e2) )
         assert( !strcmp( e2->string, l2->string ) );
+    assert(l2 == 0 && e2 == 0);
     list_free(l);
     
     l = var_expand( 0, azb, azb + sizeof(azb) - 1, lol, 0 );
     for ( l2 = l, e2 = expected; l2 && e2; l2 = list_next(l2), e2 = list_next(e2) )
         assert( !strcmp( e2->string, l2->string ) );
+    assert(l2 == 0 && e2 == 0);
+    list_free(l);
+
+    l = var_expand( 0, path, path + sizeof(path) - 1, lol, 0 );
+    assert(l != 0);
+    assert(list_next(l) == 0);
+# ifdef OS_CYGWIN
+    assert( !strcmp( l->string, "c:\\foo\\bar" ) );
+# else 
+    assert( !strcmp( l->string, "/cygdrive/c/foo/bar" ) );
+# endif   
     list_free(l);
 
     list_free(expected);

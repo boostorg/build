@@ -143,14 +143,23 @@ flags builtin.response-file LIBRARY_PATH_OPTION <toolset>borland : -L : unchecke
 flags builtin.response-file LIBRARY_OPTION <toolset>borland : -l : unchecked ;
 
 
+
 # bcc32 needs to have ilink32 in the path in order to invoke it, so explicitly
 # specifying $(BCC_TOOL_PATH)bcc32 doesn't help. You need to add
 # $(BCC_TOOL_PATH) to the path
 # The NEED_IMPLIB variable controls whether we need to invoke implib.
 
+# Declare action for archives. We don't use response file
+# since it's hard to get "+-" there.
+# CONSIDER: don't know what 'together' is for...
+actions updated together piecemeal archive
+{ 
+    "$(.root)tlib" /P256 /u /a /C "$(<:W)" +-"$(>:W)"
+}
+
+
 if [ os.name ] = CYGWIN
 {
-    .cygpath = "cygpath -w " ;
     rule link
     {
         if ! $(<[2])
@@ -158,15 +167,8 @@ if [ os.name ] = CYGWIN
             NEED_IMPLIB on $(<) = ;
         }
     }
-
     .set-path = "cmd /S /C set \"PATH=" ;
     .old-path = ";%PATH%\" \"&&\"" ;
-
-    actions link bind LIBRARIES
-    {
-        $(.set-path)$(.root)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"`$(.cygpath)$(<[1]:D)`\\$(<[1]:D=)" @"`$(.cygpath)$(>)`"
-        $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)"`$(.cygpath)$(<[2]:D)`\\$(<[2]:D=)" $(NEED_IMPLIB)"`$(.cygpath)$(<[1]:D)`\\$(<[1]:D=)"
-    }
 
     # Couldn't get TLIB to stop being confused about pathnames
     # containing dashes (it seemed to treat them as option separators
@@ -176,39 +178,29 @@ if [ os.name ] = CYGWIN
     # options.
     actions updated together piecemeal archive
     { 
-        echo "\"$(.root)tlib\" /P256 /u /a /C \"`$(.cygpath)$(<:D)`\\$(<:D=)\" +-\"`$(.cygpath)$(>)`\"" > $(<:D)/tlib.bat
+        echo "\"$(.root)tlib\" /P256 /u /a /C \"$(<:W)\" +-\"$(>:W)\"" > $(<:D)/tlib.bat
         chmod +x $(<:D)/tlib.bat && $(<:D)/tlib.bat && rm $(<:D)/tlib.bat ;
     }
 }
+else if [ os.name ] = NT
+{
+    .set-path = "set \"PATH=" ;
+    .old-path = ";%PATH%\"
+      " ;
+}
 else
 {
-    if [ os.name ] = NT
-    {
-        .set-path = "set \"PATH=" ;
-        .old-path = ";%PATH%\"
-          " ;
-    }
-    else
-    {
-        .set-path = "PATH=\"" ;
-        .old-path = "\":$PATH
-                     export PATH
-                    " ;
-    }
-    
-    actions link bind LIBRARIES
-    {
-        $(.set-path)$(.root)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)"
-        $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)$(<[2]) $(NEED_IMPLIB)$(<[1])        
-    }
-
-    # Declare action for archives. We don't use response file
-    # since it's hard to get "+-" there.
-    # CONSIDER: don't know what 'together' is for...
-    actions updated together piecemeal archive
-    { 
-        "$(.root)tlib" /P256 /u /a /C "$(<)" +-"$(>)"
-    }
+    .set-path = "PATH=\"" ;
+    .old-path = "\":$PATH
+      export PATH
+      " ;
 }
+
+actions link bind LIBRARIES
+{
+    $(.set-path)$(.root:W)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(>:W)"
+    $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)"$(<[2]:W)" $(NEED_IMPLIB)"$(<[1]:W)"
+}
+
 
 

@@ -119,9 +119,9 @@ rule init ( version ? : path ? : vendor ? : setup ? compiler ? linker ? )
     }
     else
     {
-        # When version is not specifying, we cannot form any usefull
-        # condition. Since subfeatures don't have default, we can't
-        # stick 'unspecified' as version. Therefore, just set global
+        # When version is not specified, we cannot form any useful
+        # condition. Since subfeatures don't have defaults, we can't
+        # use 'unspecified' as version. Therefore, just set global
         # variables in this module.
         .CC = $(prefix)$(compiler) ;    
         .LD = $(prefix)$(linker) ;
@@ -282,11 +282,6 @@ if [ os.name ] in NT
 {    
     .implib = "/INCREMENTAL:NO /IMPLIB:" ;
     
-    actions link
-    {
-        $(.LD) $(LINKFLAGS) /out:"$(<[1])" $(.implib)"$(<[2])" /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @"$(>)"
-    }
-        
     actions archive 
     {
         if exist "$(<)" set _$(<:B)_="$(<)"
@@ -304,18 +299,18 @@ else # CYGWIN
         .cygpath = "cygpath -d " ;
     }
 
-    actions link
-    {
-        $(.LD) $(LINKFLAGS) /out:"`$(.cygpath)$(<[1]:D)`/$(<[1]:D=)" $(.implib)"`$(.cygpath)$(<[2]:D)`/$(<[2]:D=)" /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @`$(.cygpath)$(>)` ;
-    }
-
     actions archive
     {
-        _bbv2_out_="`$(.cygpath)$(<:D)`/$(<:D=)"
+        _bbv2_out_="$(<)"
         if test -f "$_bbv2_out_" ; then
-            _bbv2_existing_="\"$_bbv2_out_\""
+            _bbv2_existing_="$(<:W)"
         fi
-        $(.LD) /lib "/out:$_bbv2_out_" $_bbv2_existing_ @`$(.cygpath)$(>)`
+        $(.LD) /lib "/out:$(<:W)" $_bbv2_existing_ @"$(>:W)"
     }
-
 }
+
+actions link
+{
+    $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" $(.implib)"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @"$(>:W)"
+}
+        
