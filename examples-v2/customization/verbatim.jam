@@ -1,0 +1,11 @@
+
+import type ;
+type.register VERBATIM : verbatim ;
+
+import generators ;
+generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
+
+actions inline-file 
+{
+    ./inline_file.py $(<) $(>)
+}
