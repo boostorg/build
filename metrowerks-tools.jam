@@ -72,6 +72,7 @@ flags metrowerks STDHDRS : $(METROWERKS_INCLUDE_ROOT)$(SLASH)$(gMETROWERKS_STD_I
 
 rule Link-action
 {
+    gRUN_PATH($(<)) = $(METROWERKS_ROOT)"\Win32-X86 Support\Libraries\Runtime" ;
     IMPLIB_COMMAND on $(<) = "-implib " ; # will be "multiplied away" if not
                                         # needed.
     with-command-file metrowerks-Link-action $(<) : $(>) $(NEEDLIBS) ;

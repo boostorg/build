@@ -27,23 +27,30 @@ flags borland CFLAGS <inlining>on : -vi -w-inl ;
 flags borland CFLAGS <inlining>full : -vi -w-inl ;
 
 # build the link options
-local USER-INTERFACE TARGET-TYPE THREADING RUNTIME-LINK ;
 
-flags borland USER-INTERFACE <user-interface>console : C ;
-flags borland TARGET-TYPE <target-type>DLL : D ;
-flags borland THREADING <threading>multi : M ;
-flags borland RUNTIME-LINK <runtime-link>dynamic : R ;
 
-USER-INTERFACE ?= "" ;
-TARGET-TYPE ?= "" ;
-THREADING ?= "" ;
-RUNTIME-LINK ?= "" ;
+{
+    local flag-vars = USER-INTERFACE TARGET-TYPE THREADING RUNTIME-LINK ;
+    local $(flag-vars) ;
 
-flags borland LINKFLAGS :
-    -t$(USER-INTERFACE)$(TARGET-TYPE)$(THREADING)$(RUNTIME-LINK) ;
+    flags borland USER-INTERFACE <user-interface>console/<target-type>LIB <user-interface>console/<target-type>EXE : C ;
+    flags borland TARGET-TYPE <target-type>DLL : D ;
+    flags borland THREADING <threading>multi : M ;
+    flags borland RUNTIME-LINK <runtime-link>dynamic : R ;
+
+    $(flag-vars) ?= "" ;
+
+    flags borland LINKFLAGS :
+      -tW$(USER-INTERFACE)$(TARGET-TYPE)$(RUNTIME-LINK)$(THREADING)
+#      -tW$($(flag-vars))
+        ;
     
-flags borland CFLAGS :
-    -t$(USER-INTERFACE)$(TARGET-TYPE)$(THREADING)$(RUNTIME-LINK) ;
+    flags borland CFLAGS :
+#      -t$(USER-INTERFACE)$(TARGET-TYPE)$(RUNTIME-LINK)$(THREADING)
+      -tW$($(flag-vars))
+        ;
+}
+
     
 flags borland LINKFLAGS <wide-character-support>on : -WU ;
 flags borland CFLAGS <wide-character-support>on : -WU ;
@@ -64,7 +71,11 @@ flags borland STDLIBPATH : $(BCCROOT)$(SLASH)lib ;
 
 rule Link-action
 {
-    borland-Link-action $(<) : $(>) ;
+    # Make sure that the borland runtime dlls are in the runtime path
+    gRUN_PATH($(<)) += $(BCC_TOOL_PATH) ; 
+    
+    with-command-file borland-Link-action $(<) : $(>) $(NEEDLIBS) ;
+    
     if $(3) = DLL
     {
         borland-IMPLIB-action $(<) : $(>) ;
@@ -77,7 +88,7 @@ rule Link-action
 actions borland-Link-action bind NEEDLIBS
 {
     set PATH=$(BCC_TOOL_PATH);%PATH%
-    $(BCC_TOOL_PATH)bcc32 -q $(LINKFLAGS) -L"$(BCCROOT)$(SLASH)lib" -e"$(<[1])" "$(>)" "$(NEEDLIBS)" 
+    $(BCC_TOOL_PATH)bcc32 -v -q $(LINKFLAGS) -L"$(BCCROOT)$(SLASH)lib" -e"$(<[1])" @"$(>)"
 }
 
 actions borland-IMPLIB-action bind IMPLIB

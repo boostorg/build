@@ -136,8 +136,8 @@ rule main-from-objects
 rule Link-EXE
 {
     # N.B. By the time this rule is invoked, we had better have gRUN_PATH completely set.
-    RUN_PATH on $(<) = [ join $(gRUN_PATH($(<))) $(RUN_PATH) : $(SPLITPATH) ] ;
     Link-action $(<) : $(>) : EXE ;
+    RUN_PATH on $(<) = [ join $(gRUN_PATH($(<))) $(RUN_PATH) : $(SPLITPATH) ] ;
 }
 
 rule Link-DLL
@@ -149,7 +149,6 @@ rule Link-DLL
     }
     
     gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) ;
-    
     Link-action $(<) : $(>) : DLL ;
 }
 
@@ -163,7 +162,7 @@ actions Run
 {
     $(SHELL_SET)PATH=$(RUN_PATH)
     $(SHELL_EXPORT)PATH
-    $(<)
+    $(<) $(COMMAND-LINE)
 }
 
 # bubble variable-name
@@ -1357,11 +1356,12 @@ rule lib
 rule unit-test
 {
     
-    local files = [ exe $(<) : $(2) : $(3) : $(4) : EXE ] ;
+    local files = [ exe $(<) : $(2) : $(3) : $(4) ] ;
     type-DEPENDS test : $(files) ;
-    local file ;
     
-    for file in $(files)
+    COMMAND-LINE on $(files) = $(5) ;
+    
+    for local file in $(files)
     {
         Run $(file) ;
     }
