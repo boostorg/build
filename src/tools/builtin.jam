@@ -607,10 +607,10 @@ class compile-action : action
 class C-compiling-generator : generator
 {
     rule __init__ ( id : source-types + : target-types + :
-        requirements * )
+        requirements * : optional-properties * )
     {
         generator.__init__ $(id) : $(source-types) : $(target-types) :
-          $(requirements) ;
+          $(requirements) : $(optional-properties) ;
     }
         
     rule action-class ( )
@@ -620,10 +620,10 @@ class C-compiling-generator : generator
 }
 
 rule register-c-compiler ( id : source-types + : target-types + :
-                            requirements * )
+                            requirements * : optional-properties * )
 {
     local g = [ new C-compiling-generator $(id) : $(source-types) 
-                : $(target-types) : $(requirements) ] ;
+                : $(target-types) : $(requirements) : $(optional-properties) ] ;
     generators.register $(g) ;
 }
 
