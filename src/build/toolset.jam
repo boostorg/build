@@ -70,7 +70,7 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
         .$(rule-or-module).match-type.$(.flag-no) += feature ;
         if $(values)
         {
-            error non-empty value set used with feature match criterion
+            error non-empty value set used with feature match criterion ;
         }
     }
     else
@@ -141,10 +141,10 @@ rule set-target-variables ( rule-or-module target : properties * )
     }
     
     # recurse for any module-specific flags
-    local module = [ MATCH ^(.+)\\..* : $(rule-or-module) ] ;
-    if $(module)
+    local module_ = [ MATCH ^(.+)\\..* : $(rule-or-module) ] ;
+    if $(module_)
     {
-        set-target-variables ( $(module) $(target) : $(properties) * ) ;
+        set-target-variables $(module_) $(target) : $(properties) ;
     }
 }
 
