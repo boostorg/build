@@ -192,6 +192,8 @@ if $(NT)
     YACCFILES       ?= y.tab ;
     YACC_OUTPUT     ?= --output= ;
     LEX_OUTPUT      ?= -o ;
+    
+    LN              ?= $(CP) ;
 }
 else if $(OS2)
 {
