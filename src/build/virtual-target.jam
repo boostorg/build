@@ -149,8 +149,9 @@ class virtual-target ;
 # The file path is determined as
 #    - value passed to the 'set-path' method, if any
 #    - for derived files, project's build dir, joined with components
-#      that describe action's properties, joined with the value
-#      passed to 'extra-path' method, if any,
+#      that describe action's properties. If the free properties
+#      are not equal to the project's reference properties
+#      an element with name of main target is added.
 #    - for source files, project's source dir
 #
 # The file suffix is
@@ -236,12 +237,6 @@ rule file-target ( name
         return $(self.dg) ;
     }
     
-    # Specified an extra element to be added to the target path.
-    rule extra-path ( p ) 
-    {
-        self.extra-path = $(p) ;
-    }
-    
     # Specifies an extra grist to be added to the target name.
     rule extra-grist ( g )
     {
@@ -266,6 +261,7 @@ rule file-target ( name
     
     rule actualize-location ( target )
     {
+        compute-extra-path ;
         if $(self.path)
         {
             LOCATE on $(target) = $(self.path) ;
@@ -387,6 +383,7 @@ rule file-target ( name
     # which needs it. Will clean it up when cleaning subvariant.
     rule path ( )
     {
+        compute-extra-path ;
         if $(self.path)
         {
             return $(self.path) ;
@@ -402,6 +399,27 @@ rule file-target ( name
             return [ path.native $(path) ] ;
         }        
      }    
+     
+     rule compute-extra-path ( )
+     {
+         if $(self.action) 
+         {
+             local properties = [ property.take free : [ property.remove incidental : 
+                 [ $(self.action).properties  ] ] ] ;
+             
+             local main-target = [ $(self.dg).main-target ] ;
+             local project = [ $(main-target).project ] ;
+             local plocation = [ project.attribute $(project) location ] ;
+             local ptarget = [ project.target $(plocation) ] ;
+             local ref = [ $(ptarget).reference-properties [ $(self.dg).properties ] ] ;
+             
+             if $(properties) != $(ref)
+             {
+                 self.extra-path = [ sequence.join main-target- [ $(main-target).name ] ] ;
+             }
+         }
+     }
+     
 }
 class file-target : virtual-target ;
 
@@ -700,7 +718,9 @@ local rule clone-action-template ( action from cloned-from : new-source )
     return $(cloned) ;    
 }
 
-local rule subvariant-dg ( main-target : properties * : virtual-targets * )
+local rule subvariant-dg ( main-target # The instance of main-target class
+    : properties *                     # Properties requested for this target
+    : virtual-targets * )
 {
     self.main-target = $(main-target) ;
     self.properties = $(properties) ;
@@ -727,8 +747,17 @@ local rule subvariant-dg ( main-target : properties * : virtual-targets * )
         }        
     }
     self.other-dg = [ sequence.unique $(self.other-dg) ] ;
-    
 
+    rule main-target ( )
+    {
+        return $(self.main-target) ;
+    }
+    
+    rule properties ( )
+    {
+        return $(self.properties) ;
+    }
+       
     rule all-target-directories ( )
     {
         local result ;
