@@ -7,30 +7,47 @@
 #  Please see http://article.gmane.org/gmane.comp.lib.boost.build/3389/
 #  for explanation why it's a separate toolset.
 
+import feature : feature ;
 import toolset : flags ;
+import type ;
 
 toolset.register darwin ;
 toolset.inherit darwin : gcc ;
 
+# No additional initialization should be necessary
 rule init ( )
 {
 
 }
 
-flags darwin.link.dll OPTIONS : -Wl,-dynamic -nostartfiles -Wl,-dylib -Wl,-ldylib1.o ;
+# Darwin has a different shared library suffix
+type.set-generated-target-suffix SHARED_LIB : <toolset>darwin : dylib ;
+
+feature framework : : free ;
+
+flags darwin.compile OPTIONS <link>shared : -dynamic ;
+flags darwin.compile OPTIONS : -Wno-long-double -no-cpp-precomp  ;
+flags darwin.compile.c++ OPTIONS : -fcoalesce-templates ;
+
+flags darwin.link FRAMEWORK <framework> ;
+
+# This is flag is useful for debugging the link step
+# uncomment to see what libtool is doing under the hood
+# flags darwin.link.dll OPTIONS : -Wl,-v ;
 
 actions link bind LIBRARIES
 {
-    $(NAME:E=g++) $(OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST)
+    $(NAME:E=g++) $(OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) -framework$(_)$(FRAMEWORK)    
+}
+
+rule link.dll
+{
+    _ on $(<) = " " ;
 }
 
 actions link.dll bind LIBRARIES
 {
-    ld -dynamic -m -r -d -o "$(<:S=.lo)" "$(>)" \
-    && \
-    $(NAME:E=g++) $(OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(<:S=.lo)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) \
-    && \
-    rm -f "$(<:S=.lo)"
+    $(NAME:E=g++) -dynamiclib $(OPTIONS) -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) -framework$(_)$(FRAMEWORK)    
 }
 
 actions piecemeal archive
