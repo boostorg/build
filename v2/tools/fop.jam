@@ -9,46 +9,38 @@
 
 import os ;
 import generators ;
+import common ;
+import errors ; 
 
-generators.register-standard fop.fo-to-print : FO : PDF ;
-generators.register-standard fop.fo-to-print : FO : PS ;
+generators.register-standard fop.render : FO : PDF ;
+generators.register-standard fop.render : FO : PS ;
 
-rule init ( fop-dir ? : java-home ? )
+rule init ( fop-command ? : java-home ? )
 {
-  if ! $(fop-dir)
-  {
-    fop-dir = [ modules.peek : FOP_DIR ] ;
-  }
-
-  if ! $(.initialized)
-  {
-    .initialized = true ;
-    .fop-dir = $(fop-dir) ;
-    .java-home = $(java-home) ;
-  }
+    fop-command = [ common.get-invocation-command fop : fop : $(fop-command) 
+      : [ modules.peek : FOP_DIR ] ] ;
+        
+    if $(.initialized)
+    {
+        if $(FOP_COMMAND) != $(fop-command) || $(JAVA_HOME) != $(java-home)
+        {
+            errors.user-error "fop: reinitialization with different options" ;
+        }        
+    }
+    else
+    {
+        .initialized = true ;
+        FOP_COMMAND = $(fop-command) ;
+        if $(java-home) 
+        {            
+            JAVA_HOME_SETUP = [ common.variable-setting-command JAVA_HOME $(java-home) ] ;
+        }    
+    }
 }
 
-rule fo-to-print ( target : source : properties * )
+actions render
 {
-  JAVA_HOME on $(target) = $(.java-home) ;
-  FOP_DIR on $(target) = $(.fop-dir) ;
-  if [ os.on-windows ]
-  {
-    fop-nt $(target) : $(source) ;
-  }
-  else
-  {
-    fop $(target) : $(source) ;
-  }
+  $(JAVA_HOME_SETUP)
+  $(FOP_COMMAND) $(>) $(<)
 }
 
-actions fop-nt
-{
-  set JAVA_HOME=$(JAVA_HOME)
-  $(FOP_DIR)/fop.bat $(>) $(<)
-}
-
-actions fop
-{
-  JAVA_HOME=$(JAVA_HOME) $(FOP_DIR)/fop.sh $(>) $(<)
-}
