@@ -74,7 +74,7 @@ static char* allocate(size_t n)
             nalloc = STRING_BLOCK;
 
         /* allocate a new block and link into the chain */
-        new_block = malloc( offsetof( strblock, data[nalloc] ) );
+        new_block = malloc( offsetof( strblock, data[0] ) + nalloc * sizeof(new_block->data[0]) );
         if ( new_block == 0 )
             return 0;
         new_block->next = strblock_chain;
