@@ -1,4 +1,5 @@
 import class : class new ;
+import common ;
 import targets ;
 import feature ;
 import generators ;
@@ -8,7 +9,7 @@ import regex ;
 import scanner ;
 
 feature.feature xsl:param : : free ;
-feature.feature format : onehtml pdf ps docbook fo 
+feature.feature format : html onehtml man pdf ps docbook fo 
   : incidental implicit composite ;
 
 type.register XML : xml ;
@@ -18,11 +19,16 @@ type.register FO : fo ;
 type.register PDF : pdf ;
 type.register PS : ps ;
 type.register XSLT : xsl ;
+type.register HTMLDIR ;
+type.register MANPAGES ;
 
+# Generates handle -> * rules a bit strangely, so don't try to use them for now
 #generators.register-standard boostbook.xslt : XML XSLT : * ;
 
 generators.register-standard boostbook.boostbook-to-docbook : XML : DOCBOOK ;
 generators.register-standard boostbook.docbook-to-onehtml : DOCBOOK : HTML ;
+generators.register-standard boostbook.docbook-to-htmldir : DOCBOOK : HTMLDIR ;
+generators.register-standard boostbook.docbook-to-manpages : DOCBOOK : MANPAGES ;
 generators.register-standard boostbook.docbook-to-fo : DOCBOOK : FO ;
 generators.register-standard boostbook.fo-to-print : FO : PDF ;
 generators.register-standard boostbook.fo-to-print : FO : PS ;
@@ -41,6 +47,27 @@ rule xslt ( target : source stylesheet : properties * )
   xslt-xsltproc $(target) : $(source) ;
 }
 
+rule xslt-dir ( target : source stylesheet : properties * : dirname )
+{ 
+  local flags ;
+  for local param in [ feature.get-values <xsl:param> : $(properties) ]
+  {
+    local namevalue = [ regex.split $(param) "=" ] ;
+    flags += --stringparam $(namevalue[1]) $(namevalue[2]) ;
+  }
+
+  # Make sure we create this path.
+  # TBD: this is NOT correct, but it works for now...
+  LOCATE on $(target) = $(dirname) ;
+  DEPENDS $(target) : $(dirname) ;
+  common.MkDir $(dirname) ;
+
+  STYLESHEET on $(target) = $(stylesheet) ;
+  FLAGS on $(target) = $(flags) ;
+  DIRECTORY on $(target) = $(dirname) ;
+  xslt-xsltproc-dir $(target) : $(source) ;
+}
+
 rule boostbook-to-docbook ( target : source : properties * )
 {
   local dir = [ modules.peek : BOOST_ROOT ] ;
@@ -51,6 +78,18 @@ rule docbook-to-onehtml ( target : source : properties * )
 {
   local dir = [ modules.peek : BOOST_ROOT ] ;
   xslt $(target) : $(source) "$(dir)/tools/boostbook/xsl/html-single.xsl" : $(properties) ;
+}
+
+rule docbook-to-htmldir ( target : source : properties * )
+{
+  local dir = [ modules.peek : BOOST_ROOT ] ;
+  xslt-dir $(target) : $(source) "$(dir)/tools/boostbook/xsl/html.xsl" : $(properties) : html ;
+}
+
+rule docbook-to-manpages ( target : source : properties * )
+{
+  local dir = [ modules.peek : BOOST_ROOT ] ;
+  xslt-dir $(target) : $(source) "$(dir)/tools/boostbook/xsl/manpages.xsl" : $(properties) : man ;
 }
 
 rule docbook-to-fo ( target : source : properties * )
@@ -119,22 +158,47 @@ rule boostbook-target-class ( name : project : sources * : requirements *
     local targets = ;
 
     local type = none ;
-
+    local manifest ; 
     switch $(format) 
     {
+      case html    : 
+      {
+        type = HTMLDIR ;
+        manifest = HTML.manifest ;
+      }
+
       case onehtml : type = HTML ;
+ 
+      case man : 
+      {
+        type = MANPAGES ;
+        manifest = man.manifest ;
+      }
+
       case docbook : type = DOCBOOK ;
       case fo      : type = FO ;
       case pdf     : type = PDF ;
       case ps      : type = PS ;
     }
 
-    for local i in $(source-targets) 
+    if $(manifest)
     {
-      local target = [ generators.construct $(self.project)
-                       : $(type) : $(property-set) : $(i) ] ;
-#      $(target).depends $(catalog) ;
-      targets += $(target) ;
+      for local i in $(source-targets) 
+      {
+        local base-target = [ generators.construct $(self.project) 
+                              : DOCBOOK : $(property-set) : $(i) ] ;
+        local target = [ generators.construct $(self.project) $(manifest)
+                         : $(type) : $(property-set) : $(base-target) ] ;
+        targets += $(target) ;
+      }
+    }
+    else {
+      for local i in $(source-targets) 
+      {
+        local target = [ generators.construct $(self.project)
+                         : $(type) : $(property-set) : $(i) ] ;
+        targets += $(target) ;
+      }
     }
 
     return $(targets) ;
@@ -157,6 +221,11 @@ rule boostbook ( target-name : source : requirements * : default-build * )
 actions xslt-xsltproc
 {
   XML_CATALOG_FILES=catalog.xml xsltproc $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
+}
+
+actions xslt-xsltproc-dir
+{
+  XML_CATALOG_FILES=catalog.xml xsltproc $(FLAGS) --xinclude -o $(DIRECTORY)/ $(STYLESHEET) $(>)
 }
 
 #############################################################################
