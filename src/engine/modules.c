@@ -111,3 +111,39 @@ void exit_module( module_t* m )
 {
     var_hash_swap( &m->variables );
 }
+
+void import_module(LIST* module_names, module_t* target_module)
+{ 
+    struct hash* h;
+
+    if (!target_module->imported_modules)
+        target_module->imported_modules = hashinit( sizeof(char*), "imported");
+    h = target_module->imported_modules;
+
+    for(;module_names; module_names = module_names->next) {
+        
+        char* s = module_names->string;
+        char** ss = &s;
+        
+        hashenter(h, (HASHDATA**)&ss);
+    }
+}
+
+static void add_module_name( void* r_, void* result_ )
+{
+    char** r = (char**)r_;
+    LIST** result = (LIST**)result_;
+
+    *result = list_new( *result, copystr( *r ) );
+}
+
+LIST* imported_modules(module_t* module)
+{
+    LIST *result = L0;
+
+    if ( module->rules )
+        hashenumerate( module->imported_modules, add_module_name, &result );
+
+    return result;
+}
+
