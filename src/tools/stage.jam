@@ -3,54 +3,8 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-#  This module defines the 'stage' rule, used to copy a set of targets to
+#  This module defines the 'install' rule, used to copy a set of targets to
 #  a single location
-#
-#  Typical usage:
-#
-#  stage dist : hello_world : <location>/usr/bin ;
-#
-#  The source target will be copied to the specified location. Some targets will
-#  we specially processed. In particular, binaries will be relinked. Free properties
-#  from stage dist will be included to properties used for relinking. For example
-#
-#  stage dist : hello_world : <location>/usr/bin <dll-path>/opt/lib ;
-# 
-#  will cause 'hello_world' to be relinked to the new location, and <dll-path>
-#  property will be added when relinking.
-#
-#  The following properties specifically control 'stage' rule.
-# 
-#  - <location> tells where to put targets. If not specified, directory
-#    with the same name as stage name will be used.
-#  
-#  - <name> tells the new name of the staged target. In this case, only
-#    one target can be specified in sources.
-#
-#  - <so-version> is Unix specific. It causes all staged libraries to have
-#    value of the feature added to the end of name. The libraries will be
-#    relinked during staging, so that 'soname' embedded inside the library
-#    has the version suffix too.
-
-#  The stage rule can also traverse dependencies, for example to install a
-#  program an all required libraries. Two properties affect this.
-#
-#  - <traverse-dependencies>on tells that dependencies should be traversed.
-#    For each target in 'stage' sources, all sources to that target and all
-#    dependency properties are traversed. Sources and dependecy properties of
-#    those target are traversed recursively.
-#
-#  - <include-type>SOME_TYPE tells that targets of SOME_TYPE or a type derived
-#    from SOME_TYPE, should be included.
-#    If no such property is specified, then all found targets will be staged.
-#    Otherwise, only targets with types mentioned in <include-type> property
-#    will be included.
-#    
-#    Example usage::
-#
-#      stage dist : hello_world : 
-#        <traverse-dependencies>on <include-type>EXE <include-type>SHARED_LIB ;
-#
 
 import targets ;
 import "class" : new ;
@@ -65,11 +19,11 @@ import project ;
 import property-set ;
 import virtual-target ;
 
-feature.feature <traverse-dependencies> : off on : incidental ;
-feature.feature <include-type> : : free incidental ;
+feature.feature <install-dependencies> : off on : incidental ;
+feature.feature <install-type> : : free incidental ;
 feature.feature <so-version> : : free incidental ;
 
-class stage-target-class : basic-target
+class install-target-class : basic-target
 {
     import feature project type errors generators path stage ;    
     import "class" : new ;
@@ -191,12 +145,13 @@ class stage-target-class : basic-target
         local result ;
         
         # Traverse the dependencies, if needed.
-        if [ $(property-set).get <traverse-dependencies> ] = "on"
+        if [ $(property-set).get <install-dependencies> ] = "on"
         {
             source-targets = [ collect-targets $(source-targets) ] ;
         }
         
         # Filter the target types, if needed
+        local included-types = [ $(property-set).get <install-type> ] ;                               
         for local r in $(source-targets)
         {
             local ty = [ $(r).type ] ;        
@@ -229,16 +184,6 @@ class stage-target-class : basic-target
             {
                 result += $(r) ;
             }
-        }
-        
-
-        
-        local included-types = [ $(property-set).get <include-type> ] ;               
-        if $(included-types)
-        {
-        }
-        else
-        {
         }
                 
         return $(result) ;
@@ -323,33 +268,40 @@ rule relink-file ( project : source : property-set  )
     return $(result) ;
 }
 
-# Declare staged version of the EXE type. Generator for this type will
+# Declare installed version of the EXE type. Generator for this type will
 # cause relinking to the new location.
-type.register STAGED_EXE : : EXE ;
+type.register INSTALLED_EXE : : EXE ;
 
-class stage-exe-generator : generator
+class installed-exe-generator : generator
 {
     import type property-set modules stage ;
     
     rule __init__ ( )
     {
-        generator.__init__ stage-exe : EXE : STAGED_EXE ;
+        generator.__init__ install-exe : EXE : INSTALLED_EXE ;
     }
     
     rule run ( project name ? : property-set : source : multiple ? )
     {
-        return [ stage.relink-file $(project) : $(source) : $(property-set) ] ;
+        if [ $(property-set).get <os> ] = NT
+        {
+            # Relinking is never needed on NT
+            return [ stage.copy-file $(project) 
+              : $(source) : $(property-set) ] ; 
+        }
+        else 
+        {
+            return [ stage.relink-file $(project) 
+              : $(source) : $(property-set) ] ;            
+        }                
     }    
 }
 
-generators.register [ new stage-exe-generator ] ;
+generators.register [ new installed-exe-generator ] ;
 
-# Declares a stage target. When build, it will construct all sources
-# and place in one directory. The directory can be specified in requirements
-# with 'location' property. If not specified, the directory name will be
-# the same as target name, relative to the project where the target 
-# is declared.
-rule stage ( name : sources * : requirements * : default-build * )
+
+# Main target rule for 'install'
+rule install ( name : sources * : requirements * : default-build * )
 {
     local project = [ project.current ] ;
     
@@ -373,14 +325,15 @@ rule stage ( name : sources * : requirements * : default-build * )
     }
            
     targets.main-target-alternative
-      [ new stage-target-class $(name) : $(project) 
+      [ new install-target-class $(name) : $(project) 
         : [ targets.main-target-sources $(sources) : $(name) ]
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
         : [ targets.main-target-default-build $(default-build) : $(project) ] 
       ] ;
 }
 
-IMPORT $(__name__) : stage : : stage ;
+IMPORT $(__name__) : install : : install ;
+IMPORT $(__name__) : install : : stage ;
 
 rule add-variant-and-compiler ( name : property-set )
 {
@@ -391,8 +344,6 @@ rule add-variant ( name : type ? : property-set )
 {
     return [ rename $(name) : $(type) : $(property-set) : unversioned ] ;
 }
-IMPORT $(__name__) : add-variant add-variant-and-compiler
-  : : stage.add-variant stage.add-variant-and-compiler ;
 
 rule rename ( name : type ? : property-set : unversioned ? )
 {    

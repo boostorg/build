@@ -128,7 +128,7 @@ foo() { }
 t.write("Jamfile", """ 
 lib l : l.cpp ;
 exe a : a.cpp l ;
-stage dist : a : <traverse-dependencies>on <include-type>EXE <include-type>LIB ; 
+stage dist : a : <install-dependencies>on <install-type>EXE <install-type>LIB ; 
 """)
 
 t.write("project-root.jam", "")
@@ -147,7 +147,7 @@ lib l2 : l2.cpp ;
 lib l3 : l3.cpp ;
 lib l : l.cpp : <use>l2 <dependency>l3 ;
 exe a : a.cpp l ;
-stage dist : a : <traverse-dependencies>on <include-type>EXE <include-type>LIB ; 
+stage dist : a : <install-dependencies>on <install-type>EXE <install-type>LIB ; 
 """)
 
 t.rm("dist")

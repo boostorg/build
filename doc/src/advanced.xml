@@ -1399,30 +1399,31 @@ exe main : main.cpp lib_alias ;
       <title>Installing</title>
 
       <para>For installing a built target you should use the
-        <code>stage</code> rule, which follows the <link
+        <code>install</code> rule, which follows the <link
           linkend="bbv2.main-target-rule-syntax">common syntax</link>. For
         example:
 <programlisting>
-stage dist : hello helpers ;
+install dist : hello helpers ;
 </programlisting>
         will cause the targets <code>hello</code> and <code>helpers</code> to
-        be moved to the <filename>dist</filename> directory. <!-- relative to what? --> The directory can
+        be moved to the <filename>dist</filename> directory, relative to
+        Jamfile's directory. The directory can
         be changed with the <code>location</code> property:
 <programlisting>
-stage dist : hello helpers : &lt;location&gt;/usr/bin ;
+install dist : hello helpers : &lt;location&gt;/usr/bin ;
 </programlisting>
         While you can achieve the same effect by changing the target name to
         <filename>/usr/bin</filename>, using the <code>location</code>
-        property is better because it allows you to use a memnonic target name on the
-        command line and in other targets. <!-- do you really need "on the...?" -->
+        property is better, because it allows you to use a memnonic target
+        name.
       </para>
 
       <para>The <code>location</code> property is especially handy when the location
         is not fixed, but depends on build variant or environment variables:
 <programlisting>
-stage dist : hello helpers : &lt;variant&gt;release:&lt;location&gt;dist/release
+install dist : hello helpers : &lt;variant&gt;release:&lt;location&gt;dist/release
                              &lt;variant&gt;debug:&lt;location&gt;dist/debug ;
-stage dist2 : hello helpers : &lt;location&gt;$(DIST) ;
+install dist2 : hello helpers : &lt;location&gt;$(DIST) ;
 </programlisting> 
         See also <link linkend="bbv2.reference.variants.propcond">conditional
           properties</link> and <link linkend="bbv2.faq.envar">environment variables</link>
@@ -1430,18 +1431,13 @@ stage dist2 : hello helpers : &lt;location&gt;$(DIST) ;
       
       <para>
         Specifying the names of all libraries to install can be boring. The
-        <code>stage</code> allows to specify only the top-level executable
+        <code>install</code> allows you to specify only the top-level executable
         targets to install, and automatically install all dependencies:
 <programlisting>
-stage dist : hello 
-           : &lt;traverse-dependencies&gt;on &lt;include-type&gt;EXE
-             &lt;include-type&gt;LIB
+install dist : hello 
+           : &lt;install-dependencies&gt;on &lt;install-type&gt;EXE
+             &lt;install-type&gt;LIB
            ;
-<!-- I dislike the names being used here.  “include” already has a
-     different meaning, and “traverse” is just vague—it isn't clear
-     what happens when those dependencies are traversed.  You could
-     replace both names with “install” and it would be an improvement
-     -->
 </programlisting>
         will find all targets that <code>hello</code> depends on, and install
         all of the which are either executables or libraries. More
@@ -1459,12 +1455,33 @@ stage dist : hello
       rule can be used when targets must be installed into several
       directories:
 <programlisting>
-alias install : install-bin install-lib ;
-stage install-bin : applications : /usr/bin ;
-stage install-lib : helper : /usr/lib ;
+install install : install-bin install-lib ;
+install install-bin : applications : /usr/bin ;
+install install-lib : helper : /usr/lib ;
 </programlisting>
     </para>
-        
+
+    <para>Because the <code>install</code> rule just copies targets, most 
+    free features <footnote><para>see the definition of "free" in <xref
+    linkend="bbv2.reference.features.attributes"/>.</para></footnote>
+    have no effect when used in requirements of the <code>install</code>. 
+    The only two which matter are  
+    <link linkend="bbv2.builtin.features.dependency">
+    <varname>dependency</varname></link> and, on Unix,
+    <varname>dll-path</varname>. 
+    </para>
+
+    <note>
+      <para>
+        (Unix specific). On Unix, executables built with Boost.Build typically
+        contain the list of paths to all used dynamic libraries. For
+        installing, this is not desired, so Boost.Build relinks the executable
+        with an empty list of paths. You can also specify additional paths for
+        installed executables with the <varname>dll-path</varname> feature.
+      </para>
+    </note>
+      
+
     </section>
 
     <section id="bbv2.builtins.testing">
@@ -1581,8 +1598,31 @@ unit-test helpers_test : helpers_test.cpp helpers ;
           </simpara>
         </listitem>
       </varlistentry>
-      
-      
+
+      <varlistentry><term><anchor id="bbv2.builtin.features.dependency"/>
+          <literal>dependency</literal></term>
+        
+        <listitem>
+          <simpara>
+            <!-- vp: I'm just copy-pasting the description of 
+            'use', so that I can document 'stage'. I'll clean things up
+            when I get to editing this part -->
+            Introduces a dependency on the target named by the
+            value of this feature (so it will be brought
+            up-to-date whenever the target being declared is), and
+            adds its usage requirements to the build properties 
+            <!-- Do you really mean "to the requirements?" -->
+            of the target being declared.  The dependency is not used
+            in any other way. The primary use case is when you want
+            the usage requirements (such as <code>#include</code> paths) of some
+            library to be applied, but don't want to link to it.
+            <!-- It's hard to picture why anyone would want to do
+                 that.  Please flesh out this motivation -->
+          </simpara>
+        </listitem>
+      </varlistentry>
+
+            
       <varlistentry><term><anchor id="bbv2.builtin.features.use"/>
           <literal>use</literal></term>
         
