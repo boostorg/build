@@ -61,11 +61,6 @@
 # include "command.h"
 # include "execcmd.h"
 
-static void make1a( TARGET *t, TARGET *parent );
-static void make1b( TARGET *t );
-static void make1c( TARGET *t );
-static void make1d( void *closure, int status );
-
 static CMD *make1cmds( ACTIONS *a0 );
 static LIST *make1list( LIST *l, TARGETS *targets, int flags );
 static SETTINGS *make1settings( LIST *vars );
@@ -81,6 +76,119 @@ static struct {
 } counts[1] ;
 
 /*
+ * Target state - remove recursive calls by just keeping track of state target is in
+ */
+typedef struct _state
+{
+  struct _state *prev; /* previous state on stack */
+  TARGET *t; /* current target */
+  TARGET *parent; /* parent argument necessary for make1a() */
+#define T_STATE_MAKE1A 0 /* make1a() should be called */
+#define T_STATE_MAKE1ATAIL 1 /* make1atail() should be called */
+#define T_STATE_MAKE1B 2 /* make1b() should be called */
+#define T_STATE_MAKE1C 3 /* make1c() should be called */
+#define T_STATE_MAKE1D 4 /* make1d() should be called */
+  int curstate; /* current state */
+  int status;
+} state;
+
+static void make1a( state *pState);
+static void make1atail(state *pState);
+static void make1b( state *pState );
+static void make1c( state *pState );
+static void make1d( state *pState );
+static void make_closure(void *closure, int status);
+
+typedef struct _stack
+{
+	state *stack;
+} stack;
+
+static stack state_stack = { NULL };
+
+static state *state_freelist = NULL;
+
+static state *alloc_state()
+{
+	if(state_freelist != NULL)
+	{
+		state *pState;
+
+		pState = state_freelist;
+		state_freelist = pState->prev;
+		memset(pState, 0, sizeof(state));
+		return pState;
+	}
+	else
+	{
+		return (state *)malloc(sizeof(state));
+	}
+}
+
+static void free_state(state *pState)
+{
+	pState->prev = state_freelist;
+	state_freelist = pState;
+}
+
+static void clear_state_freelist()
+{
+	while(state_freelist != NULL)
+	{
+		state *pState = state_freelist;
+		state_freelist = state_freelist->prev;
+		free(pState);
+	}
+}
+
+static state *current_state(stack *pStack)
+{
+	return pStack->stack;
+}
+
+static void pop_state(stack *pStack)
+{
+	state *pState;
+
+	if(pStack->stack != NULL)
+	{
+		pState = pStack->stack->prev;
+		free_state(pStack->stack);
+		pStack->stack = pState;
+	}
+}
+
+static state *push_state(stack *pStack, TARGET *t, TARGET *parent, int curstate)
+{
+	state *pState;
+
+	pState = alloc_state();
+
+	pState->t = t;
+	pState->parent = parent;
+	pState->prev = pStack->stack;
+	pState->curstate = curstate;
+
+	pStack->stack = pState;
+
+	return pStack->stack;
+}
+
+/* pushes a stack onto another stack, effectively reversing the order */
+static void push_stack_on_stack(stack *pDest, stack *pSrc)
+{
+	while(pSrc->stack != NULL)
+	{
+		state *pState;
+
+		pState = pSrc->stack;
+		pSrc->stack = pSrc->stack->prev;
+		pState->prev = pDest->stack;
+		pDest->stack = pState;
+	}
+}
+
+/*
  * make1() - execute commands to update a TARGET and all its dependents
  */
 
@@ -89,20 +197,47 @@ static int intr = 0;
 int
 make1( TARGET *t )
 {
+	state *pState;
+
 	memset( (char *)counts, 0, sizeof( *counts ) );
 
 	/* Recursively make the target and its dependents */
+	push_state(&state_stack, t, NULL, T_STATE_MAKE1A);
 
-	make1a( t, (TARGET *)0 );
+	do
+	{
+		while((pState = current_state(&state_stack)) != NULL)
+		{
+			switch(pState->curstate)
+			{
+			case T_STATE_MAKE1A:
+				make1a(pState);
+				break;
+			case T_STATE_MAKE1ATAIL:
+				make1atail(pState);
+				break;
+			case T_STATE_MAKE1B:
+				make1b(pState);
+				break;
+			case T_STATE_MAKE1C:
+				make1c(pState);
+				break;
+			case T_STATE_MAKE1D:
+				make1d(pState);
+				break;
+			default:
+				break;
+			}
+		}
+	
 
 	/* Wait for any outstanding commands to finish running. */
+	} while( execwait() );
 
-	while( execwait() )
-	    ;
+	clear_state_freelist();
 
 	/* Talk about it */
-
-	if( DEBUG_MAKE && counts->failed )
+	if( counts->failed )
 	    printf( "...failed updating %d target%s...\n", counts->failed,
 		        counts->failed > 1 ? "s" : "" );
 
@@ -122,9 +257,7 @@ make1( TARGET *t )
  */
 
 static void
-make1a( 
-	TARGET	*t,
-	TARGET	*parent )
+make1a( state *pState)
 {
 	TARGETS	*c;
 	int i;
@@ -133,18 +266,21 @@ make1a(
 	/* or this target is in the make1c() quagmire, arrange for the */
 	/* parent to be notified when this target is built. */
 
-	if( parent )
-	    switch( t->progress )
+	if( pState->parent )
+	    switch( pState->t->progress )
 	{
 	case T_MAKE_INIT:
 	case T_MAKE_ACTIVE:
 	case T_MAKE_RUNNING:
-	    t->parents = targetentry( t->parents, parent );
-	    parent->asynccnt++;
+	    pState->t->parents = targetentry( pState->t->parents, pState->parent );
+	    pState->parent->asynccnt++;
 	}
 
-	if( t->progress != T_MAKE_INIT )
-	    return;
+	if( pState->t->progress != T_MAKE_INIT )
+	{
+		pop_state(&state_stack);
+		return;
+	}
 
 	/* Asynccnt counts the dependents preventing this target from */
 	/* proceeding to make1b() for actual building.  We start off with */
@@ -152,23 +288,35 @@ make1a(
 	/* call all dependents.  This 1 is accounted for when we call */
 	/* make1b() ourselves, below. */
 
-	t->asynccnt = 1;
+	pState->t->asynccnt = 1;
 
 	/* Recurse on our dependents, manipulating progress to guard */
 	/* against circular dependency. */
 
-	t->progress = T_MAKE_ONSTACK;
+	pState->t->progress = T_MAKE_ONSTACK;
 
-	for( i = T_DEPS_DEPENDS; i <= T_DEPS_INCLUDES; i++ )
-	    for( c = t->deps[i]; c && !intr; c = c->next )
-		make1a( c->target, t );
+	{
+		stack temp_stack = { NULL };
+		for( i = T_DEPS_DEPENDS; i <= T_DEPS_INCLUDES; i++ )
+			for( c = pState->t->deps[i]; c && !intr; c = c->next )
+			{
+				push_state(&temp_stack, c->target, pState->t, T_STATE_MAKE1A);
+			}
 
-	t->progress = T_MAKE_ACTIVE;
+		// using stacks reverses the order of execution. Reverse it back
+		push_stack_on_stack(&state_stack, &temp_stack);
+	}
+
+	pState->curstate = T_STATE_MAKE1ATAIL;
+}
+
+static void make1atail(state *pState)
+{
+	pState->t->progress = T_MAKE_ACTIVE;
 
 	/* Now that all dependents have bumped asynccnt, we now allow */
 	/* decrement our reference to asynccnt. */ 
-
-	make1b( t );
+	pState->curstate = T_STATE_MAKE1B;
 }
 
 /*
@@ -176,7 +324,7 @@ make1a(
  */
 
 static void
-make1b( TARGET *t )
+make1b( state *pState )
 {
     TARGETS     *c;
     int         i;
@@ -185,38 +333,41 @@ make1b( TARGET *t )
     /* If any dependents are still outstanding, wait until they */
     /* call make1b() to signal their completion. */
 
-    if( --t->asynccnt )
-        return;
+    if( --(pState->t->asynccnt) )
+	{
+		pop_state(&state_stack);
+		return;
+	}
 
     /* Now ready to build target 't'... if dependents built ok. */
 
     /* Collect status from dependents */
 
     for( i = T_DEPS_DEPENDS; i <= T_DEPS_INCLUDES; i++ )
-        for( c = t->deps[i]; c; c = c->next )
-            if( c->target->status > t->status && !( c->target->flags & T_FLAG_NOCARE ) )
+        for( c = pState->t->deps[i]; c; c = c->next )
+            if( c->target->status > pState->t->status && !( c->target->flags & T_FLAG_NOCARE ) )
             {
                 failed = c->target->name;
-                t->status = c->target->status;
+                pState->t->status = c->target->status;
             }
 
     /* If actions on deps have failed, bail. */
     /* Otherwise, execute all actions to make target */
 
-    if( t->status == EXEC_CMD_FAIL && t->actions )
+    if( pState->t->status == EXEC_CMD_FAIL && pState->t->actions )
     {
         ++counts->skipped;
-        if ( ( t->flags & ( T_FLAG_RMOLD | T_FLAG_NOTFILE ) ) == T_FLAG_RMOLD )
+        if ( ( pState->t->flags & ( T_FLAG_RMOLD | T_FLAG_NOTFILE ) ) == T_FLAG_RMOLD )
         {
-            if( !unlink( t->boundname ) )
-                printf( "...removing outdated %s\n", t->boundname );
+            if( !unlink( pState->t->boundname ) )
+                printf( "...removing outdated %s\n", pState->t->boundname );
         }
         else
-            printf( "...skipped %s for lack of %s...\n", t->name, failed );
+        printf( "...skipped %s for lack of %s...\n", pState->t->name, failed );
     }
 
-    if( t->status == EXEC_CMD_OK )
-        switch( t->fate )
+    if( pState->t->status == EXEC_CMD_OK )
+        switch( pState->t->fate )
         {
         case T_FATE_INIT:
         case T_FATE_MAKING:
@@ -228,12 +379,12 @@ make1b( TARGET *t )
 
         case T_FATE_CANTFIND:
         case T_FATE_CANTMAKE:
-            t->status = EXEC_CMD_FAIL;
+            pState->t->status = EXEC_CMD_FAIL;
             break;
 
         case T_FATE_ISTMP:
             if( DEBUG_MAKE )
-                printf( "...using %s...\n", t->name );
+                printf( "...using %s...\n", pState->t->name );
             break;
 
         case T_FATE_TOUCHED:
@@ -244,29 +395,28 @@ make1b( TARGET *t )
             /* Set "progress" so that make1c() counts this target among */
             /* the successes/failures. */
 
-            if( t->actions )
+            if( pState->t->actions )
             {
                 ++counts->total;
                 if( DEBUG_MAKE && !( counts->total % 100 ) )
                     printf( "...on %dth target...\n", counts->total );
 
-                pushsettings( t->settings );
-                t->cmds = (char *)make1cmds( t->actions );
-                popsettings( t->settings );
+                pushsettings( pState->t->settings );
+                pState->t->cmds = (char *)make1cmds( pState->t->actions );
+                popsettings( pState->t->settings );
 
-                t->progress = T_MAKE_RUNNING;
+                pState->t->progress = T_MAKE_RUNNING;
             }
 
             break;
         }
 
-    /* Call make1c() to begin the execution of the chain of commands */
-    /* needed to build target.  If we're not going to build target */
-    /* (because of dependency failures or because no commands need to */
-    /* be run) the chain will be empty and make1c() will directly */
-    /* signal the completion of target. */
-
-    make1c( t );
+		/* Call make1c() to begin the execution of the chain of commands */
+		/* needed to build target.  If we're not going to build target */
+		/* (because of dependency failures or because no commands need to */
+		/* be run) the chain will be empty and make1c() will directly */
+		/* signal the completion of target. */
+	pState->curstate = T_STATE_MAKE1C;
 }
 
 /*
@@ -274,9 +424,9 @@ make1b( TARGET *t )
  */
 
 static void
-make1c( TARGET *t )
+make1c( state *pState )
 {
-	CMD	*cmd = (CMD *)t->cmds;
+	CMD	*cmd = (CMD *)pState->t->cmds;
 
 	/* If there are (more) commands to run to build this target */
 	/* (and we haven't hit an error running earlier comands) we */
@@ -286,9 +436,8 @@ make1c( TARGET *t )
 	/* from all the actions then report our completion to all the */
 	/* parents. */
 
-	if( cmd && t->status == EXEC_CMD_OK )
+	if( cmd && pState->t->status == EXEC_CMD_OK )
 	{
-	    if( DEBUG_MAKE )
 		if( DEBUG_MAKEQ || ! ( cmd->rule->actions->flags & RULE_QUIETLY ) )
 	    {
 		printf( "%s ", cmd->rule->name );
@@ -304,12 +453,16 @@ make1c( TARGET *t )
 
 	    if( globs.noexec )
 	    {
-		make1d( t, EXEC_CMD_OK );
+			pState->curstate = T_STATE_MAKE1D;
+			pState->status = EXEC_CMD_OK;
 	    } 
 	    else
 	    {
-		fflush( stdout );
-		execcmd( cmd->buf, make1d, t, cmd->shell );
+			TARGET *t = pState->t;
+			fflush( stdout );
+
+			pop_state(&state_stack); /* pop state first because execcmd could push state */
+			execcmd( cmd->buf, make_closure, t, cmd->shell );
 	    }
 	}
 	else
@@ -319,18 +472,18 @@ make1c( TARGET *t )
 
 	    /* Collect status from actions, and distribute it as well */
 
-	    for( actions = t->actions; actions; actions = actions->next )
-		if( actions->action->status > t->status )
-		    t->status = actions->action->status;
+	    for( actions = pState->t->actions; actions; actions = actions->next )
+		if( actions->action->status > pState->t->status )
+		    pState->t->status = actions->action->status;
 
-	    for( actions = t->actions; actions; actions = actions->next )
-		if( t->status > actions->action->status )
-		    actions->action->status = t->status;
+	    for( actions = pState->t->actions; actions; actions = actions->next )
+		if( pState->t->status > actions->action->status )
+		    actions->action->status = pState->t->status;
 
 	    /* Tally success/failure for those we tried to update. */
 
-	    if( t->progress == T_MAKE_RUNNING )
-		switch( t->status )
+	    if( pState->t->progress == T_MAKE_RUNNING )
+		switch( pState->t->status )
 	    {
 	    case EXEC_CMD_OK:
 		++counts->made;
@@ -341,12 +494,27 @@ make1c( TARGET *t )
 	    }
 
 	    /* Tell parents dependent has been built */
+		{
+			stack temp_stack = { NULL };
+			TARGET *t = pState->t;
 
-	    t->progress = T_MAKE_DONE;
+			t->progress = T_MAKE_DONE;
 
-	    for( c = t->parents; c; c = c->next )
-		make1b( c->target );
+			for( c = t->parents; c; c = c->next )
+				push_state(&temp_stack, c->target, NULL, T_STATE_MAKE1B);
+		
+			// must pop state before pushing any more
+			pop_state(&state_stack);
+		
+			// using stacks reverses the order of execution. Reverse it back
+			push_stack_on_stack(&state_stack, &temp_stack);
+		}
 	}
+}
+
+static void make_closure(void *closure, int status)
+{
+	push_state(&state_stack, (TARGET *)closure, NULL, T_STATE_MAKE1D)->status = status;
 }
 
 /*
@@ -354,12 +522,11 @@ make1c( TARGET *t )
  */
 
 static void
-make1d( 
-	void	*closure,
-	int	status )
+make1d(state *pState)
 {
-	TARGET	*t = (TARGET *)closure;
+	TARGET	*t = pState->t;
 	CMD	*cmd = (CMD *)t->cmds;
+	int status = pState->status;
 
 	/* Execcmd() has completed.  All we need to do is fiddle with the */
 	/* status and signal our completion so make1c() can run the next */
@@ -395,6 +562,8 @@ make1d(
 	    printf( "...failed %s ", cmd->rule->name );
 	    list_print( lol_get( &cmd->args, 0 ) );
 	    printf( "...\n" );
+
+	    if( globs.quitquick ) ++intr;
 	}
 
 	if (status == EXEC_CMD_FAIL)
@@ -419,7 +588,7 @@ make1d(
 
 	cmd_free( cmd );
 
-	make1c( t );
+	pState->curstate = T_STATE_MAKE1C;
 }
 
 /*
