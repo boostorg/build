@@ -169,7 +169,8 @@ class Tester(TestCmd.TestCmd):
 
         # Create working dir root again, in case
         # we've removed it
-        os.mkdir(self.workdir)
+        if not os.path.exists(self.workdir):
+            os.mkdir(self.workdir)
         os.chdir(self.workdir)
                                                         
     #
