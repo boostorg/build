@@ -35,7 +35,7 @@ struct _PARSE {
     char    *string1;
     int      num;
     int      refs;
-//    module*  module;
+/*    module*  module; */
     char*    rulename;
     char*    file;
     int      line;
