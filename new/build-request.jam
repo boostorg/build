@@ -260,7 +260,7 @@ rule __test__ ( )
           : $(test-space) ;
         
         assert.result
-          <toolset>gcc/<toolset-version>3.0.1/<stdlib>stlport/<variant>debug
+          <toolset>gcc/<toolset-gcc:version>3.0.1/<stdlib>stlport/<variant>debug
           <toolset>msvc/<stdlib>stlport/<variant>debug
           <toolset>msvc/<variant>debug 
           
@@ -268,7 +268,7 @@ rule __test__ ( )
           : $(test-space) ;
         
         assert.result
-          <toolset>gcc/<toolset-version>3.0.1/<stdlib>stlport/<variant>debug/<inlining>on/<runtime-link>dynamic
+          <toolset>gcc/<toolset-gcc:version>3.0.1/<stdlib>stlport/<variant>debug/<inlining>on/<runtime-link>dynamic
           <toolset>msvc/<stdlib>stlport/<variant>debug/<inlining>on/<runtime-link>dynamic
           <toolset>msvc/<variant>debug/<inlining>on/<stdlib>native/<runtime-link>dynamic
           
@@ -276,7 +276,7 @@ rule __test__ ( )
           : $(test-space) ;
         
         assert.result
-          <toolset>gcc/<toolset-version>3.0.1/<stdlib>stlport/<variant>debug
+          <toolset>gcc/<toolset-gcc:version>3.0.1/<stdlib>stlport/<variant>debug
           <toolset>msvc/<variant>debug 
           <variant>debug/<toolset>msvc/<stdlib>stlport
           
@@ -284,14 +284,14 @@ rule __test__ ( )
           : $(test-space) ;
         
         assert.result
-          <toolset>gcc/<toolset-version>3.0.1/<stdlib>stlport/<variant>debug/<inlining>off
-          <toolset>gcc/<toolset-version>3.0.1/<stdlib>stlport/<variant>release/<inlining>off
+          <toolset>gcc/<toolset-gcc:version>3.0.1/<stdlib>stlport/<variant>debug/<inlining>off
+          <toolset>gcc/<toolset-gcc:version>3.0.1/<stdlib>stlport/<variant>release/<inlining>off
           
           : build-request.expand-no-defaults gcc-3.0.1/stlport debug release <inlining>off
           : $(test-space) ;        
 
         assert.result
-          <include>a/b/c/<toolset>gcc/<toolset-version>3.0.1/<stdlib>stlport/<variant>debug/<include>x/y/z
+          <include>a/b/c/<toolset>gcc/<toolset-gcc:version>3.0.1/<stdlib>stlport/<variant>debug/<include>x/y/z
           <include>a/b/c/<toolset>msvc/<stdlib>stlport/<variant>debug/<include>x/y/z
           <include>a/b/c/<toolset>msvc/<variant>debug/<include>x/y/z 
           

@@ -186,9 +186,7 @@ local rule find-implied-subfeature ( feature subvalue : value-string ? )
         error invalid feature $(feature) ;
     }
 
-    value-string ?= "" ;
-
-    return $($(feature)$(value-string)<>$(subvalue).subfeature) ;
+    return $($(feature)$(value-string:E="")<>$(subvalue).subfeature) ;
 }
 
 # Given a feature and a value of one of its subfeatures, find the name
@@ -383,12 +381,13 @@ rule extend-subfeature (
         validate-value-string $(feature) $(value-string) ;
     }
 
+    local subfeature-name = [ get-subfeature-name $(subfeature) $(value-string) ] ;
+    
     # provide a way to get from the given feature or property and
     # subfeature value to the subfeature name.
-    value-string ?= "" ;
     for local subvalue in $(subvalues)
     {
-        $(feature)$(value-string)<>$(subvalue).subfeature = $(subfeature) ;
+        $(feature)$(value-string:E="")<>$(subvalue).subfeature = $(subfeature-name) ;
     }
 }
 
@@ -446,6 +445,12 @@ rule extend ( feature-or-property subfeature ? : values * )
     }
 }
 
+local rule get-subfeature-name ( subfeature value-string ? )
+{
+    local prefix = $(value-string): ;
+    return $(prefix:E="")$(subfeature) ;
+}
+
 # Declares a subfeature
 rule subfeature ( 
   feature        # Root feature that is not a subfeature
@@ -460,14 +465,20 @@ rule subfeature (
 {
     feature = [ grist $(feature) ] ;
     validate-feature $(feature) ;
-    if $(subfeature) in $($(feature).subfeatures)
+    
+    # Add grist to the subfeature name if a value-string was supplied
+    local value-prefix = $(value-string): ;
+    local subfeature-name = [ get-subfeature-name $(subfeature) $(value-string) ] ;
+    
+    if $(subfeature-name) in $($(feature).subfeatures)
     {
-        error \"$(subfeature)\" already declared as a subfeature of \"$(feature)\" ;
+        error \"$(subfeature)\" already declared as a subfeature of \"$(feature)\" 
+          "specific to "$(value-string) ;
     }
-    $(feature).subfeatures += $(subfeature) ;
+    $(feature).subfeatures += $(subfeature-name) ;
     extend-subfeature $(feature) $(value-string) : $(subfeature) : $(subvalues) ;
     local f = [ utility.ungrist $(feature) ] ;
-    feature $(f)-$(subfeature) : $(subvalues) : $(attributes) ;
+    feature $(f)-$(subfeature-name) : $(subvalues) : $(attributes) ;
 }
 
 # Set the components of the given composite property
@@ -660,7 +671,7 @@ rule minimize ( properties * )
         {                    
             # locate all subproperties of f in the property set
             local subproperties ;
-            local subfeatures = $($(f).subfeatures) ;
+            local subfeatures = $($(f).subfeatures:G=) ;
             if $(subfeatures)
             {
                 local f_ = [ utility.ungrist $(f) ] ;
@@ -840,13 +851,13 @@ local rule __test__ ( )
         action <magic>17 : handle-magic2 ;
         action <magic>17 : handle-magic3 ;
         
-        assert.result <toolset>gcc <toolset-version>3.0.1
+        assert.result <toolset>gcc <toolset-gcc:version>3.0.1
           : expand-subfeatures <toolset>gcc-3.0.1 ;
 
         assert.result <define>foo=x-y
           : expand-subfeatures <define>foo=x-y ;
 
-        assert.result <toolset>gcc <toolset-version>3.0.1
+        assert.result <toolset>gcc <toolset-gcc:version>3.0.1
           : expand-subfeatures gcc-3.0.1 ;
 
         feature dummy : dummy1 dummy2 ;
@@ -855,7 +866,7 @@ local rule __test__ ( )
         assert.result a c e
           : get-values x : <x>a <y>b <x>c <y>d <x>e ;
 
-        assert.result <toolset>gcc <toolset-version>3.0.1
+        assert.result <toolset>gcc <toolset-gcc:version>3.0.1
           <variant>debug <define>_DEBUG <optimization>on
           : expand gcc-3.0.1 debug <optimization>on
           ;
