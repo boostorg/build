@@ -723,3 +723,15 @@ make0sort( TARGETS *chain )
 
 	return result;
 }
+
+static LIST *targets_to_update_ = 0;
+
+void mark_target_for_updating(char *target)
+{
+    targets_to_update_ = list_new( targets_to_update_, target );
+}
+
+LIST *targets_to_update()
+{
+    return targets_to_update_;
+}

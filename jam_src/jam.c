@@ -315,7 +315,8 @@ int  main( int argc, char **argv, char **arg_environ )
     }
 
     var_set( "JAM_VERSION",
-             list_new( list_new( L0, newstr( "03" ) ), newstr( "01" ) ),
+             list_new( list_new( list_new( L0, newstr( "03" ) ), newstr( "01" ) ), 
+                       newstr( "01" ) ),
              VAR_SET );
 
     /* And JAMUNAME */
@@ -404,10 +405,24 @@ int  main( int argc, char **argv, char **arg_environ )
 
     /* Now make target */
 
-    if( !argc )
-        status |= make( 1, &all, anyhow );
-    else
-        status |= make( argc, argv, anyhow );
+    {
+        LIST* targets = targets_to_update();
+        if ( !targets )
+            make( 1, &all, anyhow );
+        else 
+        {
+            int targets_count = list_length(targets);
+            char **targets2 = (char **)malloc(targets_count * sizeof(char *));
+            int n = 0;
+            for ( ; targets; targets = list_next(targets) )
+            {
+                targets2[n++] = targets->string;
+            }
+            status |= make( targets_count, targets2, anyhow );       
+            free(targets);
+        }
+    }
+
 
     if ( DEBUG_PROFILE )
         profile_dump();

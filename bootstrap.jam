@@ -14,3 +14,17 @@ include <jam-module>boost-base.jam ;
 {
     load-jamfiles $(JAMFILE) ;
 }
+
+#
+# Cause the targets specified in the command line to be updated
+#
+if $(JAM_VERSION) && $(JAM_VERSION:J="") >= 030101
+{
+    for local e in $(ARGV)
+    {
+        if ! [ MATCH "^(-).*" : $(e) ]
+	{
+	    UPDATE $(e) ;
+	}	    
+    }
+}
