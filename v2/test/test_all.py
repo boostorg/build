@@ -87,7 +87,7 @@ tests = [ "project_test1",
           "make_rule",
           "alias",
           "alternatives",
-#          "unused",         # failing because nobody checked in a Jamfile!
+          "unused",
           "default_features",
           "print",
           "ndebug",
