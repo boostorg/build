@@ -124,7 +124,7 @@ flags darwin CFLAGS <warnings>off : -w ;
 
 flags darwin LINK_FORMAT <target-type>$(SHARED_TYPES)/<link-format>bundle : bundle ;
 flags darwin LINK_FORMAT <target-type>$(SHARED_TYPES)/<link-format>dynamic : dynamic ;
-if $(BUNDLE_LOADER)
+if $(BUNDLE_LOADER) && ! $(LINK_FORMAT)
 {
     flags darwin LINK_FORMAT <target-type>$(SHARED_TYPES) : bundle ;
 }
@@ -147,7 +147,7 @@ rule Link-action
 {
     _ on $(<) = " " ;
     DEPENDS $(<) : $(NEEDLIBS) $(NEEDIMPS) ;
-    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && $(LINK_FORMAT) != bundle
+    if $(TARGET_TYPE) in $(SHARED_TYPES) && $(LINK_FORMAT) != bundle
     {
         DLLFLAGS on $(<) = ;
         #~ DLLFLAGS on $(<) =
