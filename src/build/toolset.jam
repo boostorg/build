@@ -185,7 +185,14 @@ rule set-target-variables ( rule-or-module target : properties * )
             }
         }
 
-        $(variable) on $(target) += $(result) ;
+        # Without this test, the assignment below would create a
+        # target variable even if $(result) is empty.  That is
+        # undesirable because the empty target variable would mask
+        # module globals intended to be used as defaults.
+        if ! $(result)-is-nonempty
+        {
+            $(variable) on $(target) += $(result) ;
+        }
     }
     
     # recurse for any module-specific flags
