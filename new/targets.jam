@@ -266,6 +266,10 @@ class project-target : abstract-target
     # Add new target alternative
     rule add-alternative ( target-instance )
     {
+        if $(self.built-main-targets)
+        {
+            errors.error "add-alternative called when main targets are already created." ;
+        }        
         self.alternatives += $(target-instance) ;
     }
     
@@ -572,6 +576,7 @@ class file-reference : abstract-target
 {
     import virtual-target ;
     import property-set ;
+    import path ;
     
     rule __init__ ( file : project )
     {
@@ -582,6 +587,15 @@ class file-reference : abstract-target
     {
         return [ property-set.empty ] 
                [ virtual-target.from-file $(self.name) : $(self.project) ] ;        
+    }    
+
+    rule location ( )
+    {
+        # FIXME: use of glob seems like a horribly inefficient way
+        # to lookup a file.
+        local location = [ path.root $(self.name)
+          [ project.attribute $(self.project) source-location ] ] ;
+        return [ path.glob $(location:D) : $(location:D=) ] ;
     }    
 }
 
@@ -644,12 +658,13 @@ rule find ( id : current-location )
     
     if ! $(target) && ! $(have-project-reference) && $(base-project)
     {
-        local location = [ path.root $(target-part)
-          [ project.attribute $(base-project) source-location ] ] ;
-        if [ path.glob $(location:D) : $(location:D=) ] 
+        target = [ new file-reference $(target-part) : $(base-project) ] ;        
+        if ! [ $(target).location ]
         {
-            target = [ new file-reference $(target-part) : $(base-project) ] ;
-        }        
+            # File actually does not exist.
+            # Reset 'target' so that an error is issued.
+            target = ;
+        }                
     }
         
     if ! $(target)
@@ -660,19 +675,10 @@ rule find ( id : current-location )
     return $(target) ;
 }
 
-
-
-# Attempts to generate the target given by target reference, which
-# can refer both to a main target or to a file.
-# Returns a list consisting of
-# - usage requirements
-# - generated virtual targets, if any
-rule generate-from-reference 
-   ( target-reference            # Target reference
-    : project                    # Project where the reference is made
-    : property-set               # Properties of the main target that 
-                                 # makes the reference
-   )
+# Given a target-reference, made in context of 'project',
+# returns the abstract-target instance that is referred to, as well
+# as properties explicitly specified for this reference.
+rule resolve-reference ( target-reference : project )
 {
     # Separate target name from properties override
     local split = [ MATCH "^([^<]*)(/(<.*))?$" : $(target-reference) ] ;
@@ -695,12 +701,31 @@ rule generate-from-reference
           "error: target reference '$(target-reference)' contains properties," :
           "error: but refers to a file" ;
     }
-           
+    return $(target) [ property-set.create $(sproperties) ] ;
+}
+
+
+
+# Attempts to generate the target given by target reference, which
+# can refer both to a main target or to a file.
+# Returns a list consisting of
+# - usage requirements
+# - generated virtual targets, if any
+rule generate-from-reference 
+   ( target-reference            # Target reference
+    : project                    # Project where the reference is made
+    : property-set               # Properties of the main target that 
+                                 # makes the reference
+   )
+{
+    local r = [ resolve-reference $(target-reference) : $(project) ] ;
+    local target = $(r[1]) ;
+    local sproperties = $(r[2]) ;
+    
     # Take properties which should be propagated and refine them
     # with source-specific requirements.
     local propagated = [ $(property-set).propagated ] ;
-    local rproperties = [ $(propagated).refine 
-      [ property-set.create $(sproperties) ] ] ;
+    local rproperties = [ $(propagated).refine $(sproperties) ] ;
     if $(rproperties[1]) = "@error"
     {
         errors.error
@@ -779,7 +804,26 @@ class basic-target : abstract-target
             errors.error "gristed element in sources for" [ full-name ] ;
         }
     }
-                
+    
+    # Returns the list of abstract-targets which are used as sources.
+    # The extra properties specified for sources are not represented.
+    rule sources ( )
+    {
+        if ! $(self.source-targets) {
+            for local s in $(self.sources)
+            {
+                self.source-targets += 
+                  [ targets.resolve-reference $(s) : $(self.project) ] ;
+            }            
+        }    
+        return $(self.source-targets) ;
+    }
+    
+    rule requirements ( )
+    {
+        return $(self.requirements) ;
+    }
+                        
     rule default-build ( )
     {
         return $(self.default-build) ;
@@ -1031,7 +1075,12 @@ class typed-target : basic-target
         
         self.type = $(type) ;
     }
-        
+    
+    rule type ( )
+    {
+        return $(self.type) ;
+    }
+            
     rule construct ( source-targets * : property-set )
     {
         local r = [ generators.construct $(self.project) $(self.name) : $(self.type) 
