@@ -59,9 +59,20 @@ t.write("x/include2/h2.hpp", "\n")
 t.run_build_system()
 t.expect_addition("x/bin/$toolset/debug/m.exe")
 
-
-
-
-
+# Test that "&&" in path features is handled correctly.
+t.rm("bin")
+t.write("Jamfile", "build-project sub ;")
+t.write("sub/Jamfile", """
+exe a : a.cpp : <include>../h1&&../h2 ;
+""")
+t.write("sub/a.cpp", """
+#include <header.h>
+int main() { return OK; }
+""")
+t.write("h2/header.h", """
+const int OK = 0;
+""")
+t.run_build_system()
+t.expect_addition("sub/bin/$toolset/debug/a.exe")        
 
 t.cleanup()
