@@ -405,61 +405,84 @@ rule link-action ( targets + : sources * : action-name : properties * )
 {
     action.__init__ $(targets) : $(sources) : $(action-name) : $(properties) ;
 
-    # For all sources which are instances searched-lib-targets, add
-    # appropriate <find-shared-library> or <find-static-library> propertry
-    # For all library sources, add <library> property with that source.
+    # Find all libraries in sources, and <library> properties
+    # For each source/property-value, which is instance of searched-lib-target,
+    # add appropriate <find-shared-library> or <find-static-library> property.
+    # (replacing the origianal <library> is needed)
+    # Convert library sources into <library> properties.
     # If <hardcode-dll-paths>true is in properties, for each library source
     # add <dll-path> property with the absolute path to that library.
     rule adjust-properties ( properties * )
     {        
+        # Identify all library sources and all <library> properties
+        # Remove that latter from 'properties'
+        
+        local libraries ;
+        for local s in $(self.sources)
+        {
+            if [ type.is-derived [ $(s).type ] LIB ] 
+            {
+                libraries += $(s) ;
+            }            
+        }
+        local properties2 ;
+        for local p in $(properties)
+        {
+            if $(p:G) = <library> 
+            {
+                libraries += $(p:G=) ;
+            }
+            else
+            {
+                properties2 += $(p) ;
+            }            
+        }
+        
         local hardcore-rpath ;
-        local rpaths ;
         if <hardcode-dll-paths>true in $(properties)
         {
             hardcore-rpath = true ;
         }        
+                
+        # Add needed properties
         local pwd = [ path.pwd ] ;
-        local extra ;
-        for local s in $(self.sources)
+        local rpaths ;
+        for local s in $(libraries)
         {
             if [ class.is-a $(s) : searched-lib-target ]
             {
                 local name = [ $(s).real-name ] ;
                 if [ $(s).shared ] 
                 {                    
-                    extra += <find-shared-library>$(name) ;
+                    properties2 += <find-shared-library>$(name) ;
                 }
                 else
                 {
-                    extra += <find-static-library>$(name) ;
+                    properties2 += <find-static-library>$(name) ;
                 }         
                 local search = [ $(s).search ] ;
-                extra += <library-path>$(search) ;
+                if $(hardcore-rpath)
+                {
+                    rpaths += $(search) ;
+                }                
+                properties2 += <library-path>$(search) ;
             } 
-            # We also move orginary libs form sources to
-            # "library" property. This allows us to
-            # easily repeat all the list of libs on
-            # command line, when it's needed.
-            else if [ type.is-derived [ $(s).type ] LIB ] 
+            else 
             {
-                extra += <library>$(s) ;        
+                if $(hardcore-rpath)
+                {
+                    rpaths += [ path.root [ $(s).path ] $(pwd) ] ;
+                }                
+                properties2 += <library>$(s) ;        
             }            
         }        
         
-        properties += $(extra) ;
         if $(hardcore-rpath)
         {                    
-            for local p in $(properties)
-            {
-                if $(p:G) = <library> 
-                {
-                    rpaths += [ path.root [ $(p:G=).path ] $(pwd) ] ;
-                }
-            }            
             rpaths = [ sequence.unique $(rpaths) ] ;
-            properties += <dll-path>$(rpaths) ;            
+            properties2 += <dll-path>$(rpaths) ;            
         }                        
-        return $(properties) ;        
+        return $(properties2) ;        
     }
     
     # Filters out all sources which are of LIB type and actualizes the remaining

@@ -37,4 +37,5 @@ import project_dependencies
 import build_dir
 if os.name == 'posix':
     import symlink
+import searched_lib
 
