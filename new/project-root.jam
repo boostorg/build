@@ -12,6 +12,7 @@ import modules ;
 import path ;
 import class ;
 import set ;
+import regex ;
 
 # Load the project-root file for the given directory. The directory can
 # be either the project-root itself, or any subdirectory. Fails if it can't
@@ -145,8 +146,17 @@ rule project-root-object (
     rule add-constant (
         name # Variable name of the constant.
         : value # Value of the constant.
+        : type ? # Optional type of value.
         )
     {
+        switch $(type)
+        {
+            case path :
+            if ! [ path.is-rooted $(value) ]
+            {
+                value = [ path.join [ regex.split $(self.location)/$(value) "/" ] ] ;
+            }
+        }
         if ! $(name) in $(self.constants)
         {
             self.constants += $(name) ;
@@ -280,6 +290,18 @@ module project-root-context
         )
     {
         project-root add-constant $(name) : $(value) ;
+    }
+    
+    # Declare and set a project global constant, whose value is a path. The
+    # path is adjusted to be relative to the invocation directory. The given
+    # value path is taken to be either absolute, or relative to this project root.
+    #
+    rule path-constant (
+        name # Variable name of the constant.
+        : value # Value of the constant.
+        )
+    {
+        project-root add-constant $(name) : $(value) : path ;
     }
     
     # Load and use a project in this project root.
