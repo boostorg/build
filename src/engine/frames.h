@@ -15,6 +15,9 @@ typedef struct frame FRAME;
 struct frame
 {
     FRAME* prev;
+    /** The nearest enclosing frame for which module->user_module is
+        true. */
+    FRAME* prev_user;
     LOL args[1];
     module_t* module;
     PARSE* procedure;
