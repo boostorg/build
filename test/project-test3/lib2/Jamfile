@@ -1,5 +1,5 @@
 
-project lib2 : requirements <threading>multi ;
+project lib2 ;
 use-project /lib2/helper : helper ;
 
 make c.obj : c.cpp : yfc-compile ;
