@@ -1,12 +1,21 @@
+import modules ;
 
 rule target-source ( targets * : sources * : properties * )
 {
+    if [ modules.peek : NT ]
+    {
+        main on $(<) = "int main() {}" ;
+    }
+    else
+    {
+        main on $(<) = "\"int main() {}\"" ;
+    }
 }
 
 actions target-source
 {
     echo "NM target source consuming " $(>)
-    echo "int main() {}" > $(<)      
+    echo $(main) > $(<)      
 }
 
 rule cpp-mark ( targets * : sources * : properties * )

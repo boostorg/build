@@ -1,2 +1,2 @@
 
-lib aux : c.cpp ;
+lib auxilliary : c.cpp ;
