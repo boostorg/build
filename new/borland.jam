@@ -162,8 +162,20 @@ if [ os.name ] = CYGWIN
 
     actions link bind LIBRARIES
     {
-        $(.set-path)$(.root)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"`$(.cygpath)$(<[1]:D)`\\$(<[1]:D=)" @"`$(.cygpath)$(>:D)`\\$(>:D=)"
+        $(.set-path)$(.root)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"`$(.cygpath)$(<[1]:D)`\\$(<[1]:D=)" @"`$(.cygpath)$(>)`"
         $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)"`$(.cygpath)$(<[2]:D)`\\$(<[2]:D=)" $(NEED_IMPLIB)"`$(.cygpath)$(<[1]:D)`\\$(<[1]:D=)"
+    }
+
+    # Couldn't get TLIB to stop being confused about pathnames
+    # containing dashes (it seemed to treat them as option separators
+    # when passed through from bash), so we explicitly write the
+    # command into a .bat file and execute that.  TLIB is also finicky
+    # about pathname style! Forward slashes, too, are treated as
+    # options.
+    actions updated together piecemeal archive
+    { 
+        echo "\"$(.root)tlib\" /P256 /u /a /C \"`$(.cygpath)$(<:D)`\\$(<:D=)\" +-\"`$(.cygpath)$(>)`\"" > $(<:D)/tlib.bat
+        chmod +x $(<:D)/tlib.bat && $(<:D)/tlib.bat && rm $(<:D)/tlib.bat ;
     }
 }
 else
@@ -187,13 +199,14 @@ else
         $(.set-path)$(.root)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)"
         $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)$(<[2]) $(NEED_IMPLIB)$(<[1])        
     }
+
+    # Declare action for archives. We don't use response file
+    # since it's hard to get "+-" there.
+    # CONSIDER: don't know what 'together' is for...
+    actions updated together piecemeal archive
+    { 
+        "$(.root)tlib" /P256 /u /a /C "$(<)" +-"$(>)"
+    }
 }
 
 
-# Declare action for archives. We don't you response file
-# since it's hard to get "+-" there.
-# CONSIDER: don't know what 'together' is for...
-actions updated together piecemeal archive
-{ 
-    "$(.root)tlib" /P256 /u /a /C "$(<)" +-"$(>)"
-}
