@@ -440,7 +440,6 @@ make1cmds( ACTIONS *a0 )
 	    SETTINGS *boundvars;
 	    LIST    *nt, *ns;
 	    ACTIONS *a1;
-	    CMD	    *cmd;
 	    int	    start, chunk, length;
 
 	    /* Only do rules with commands to execute. */

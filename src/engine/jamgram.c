@@ -73,7 +73,7 @@
 # define prule( s,p )     	parse_make( compile_rule,p,P0,P0,s,S0,0 )
 # define prules( l,r )	  	parse_make( compile_rules,l,r,P0,S0,S0,0 )
 # define pset( l,r,a )          parse_make( compile_set,l,r,P0,S0,S0,a )
-# define psetmodule( l,r ) 	parse_make( compile_set_module,l,r,P0,S0,S0,0 )
+# define psetmodule( l,r,a ) 	parse_make( compile_set_module,l,r,P0,S0,S0,a )
 # define pset1( l,r,t,a )	parse_make( compile_settings,l,r,t,S0,S0,a )
 # define psetc( s,p,a,l )     	parse_make( compile_setcomp,p,a,P0,s,S0,l )
 # define psete( s,l,s1,f ) 	parse_make( compile_setexec,l,P0,P0,s,s1,f )
@@ -836,10 +836,10 @@ case 8:
 { yyval.parse = pnull(); ;
     break;}
 case 9:
-{ yyval.parse = yyvsp[0].parse; ;
+{ yyval.parse = yyvsp[0].parse; yyval.number = ASSIGN_SET; ;
     break;}
 case 10:
-{ yyval.parse = yyvsp[0].parse; ;
+{ yyval.parse = yyvsp[0].parse; yyval.number = ASSIGN_APPEND; ;
     break;}
 case 11:
 { yyval.parse = yyvsp[-1].parse; ;
@@ -866,7 +866,7 @@ case 18:
 { yyval.parse = pset( yyvsp[-3].parse, yyvsp[-1].parse, yyvsp[-2].number ); ;
     break;}
 case 19:
-{ yyval.parse = psetmodule( yyvsp[-2].parse, yyvsp[-1].parse ); ;
+{ yyval.parse = psetmodule( yyvsp[-2].parse, yyvsp[-1].parse, yyvsp[-1].number ); ;
     break;}
 case 20:
 { yyval.parse = pset1( yyvsp[-5].parse, yyvsp[-3].parse, yyvsp[-1].parse, yyvsp[-2].number ); ;

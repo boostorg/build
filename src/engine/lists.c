@@ -150,6 +150,22 @@ list_free( LIST	*head )
 }
 
 /*
+ * list_pop_front() - remove the front element from a list of strings
+ */
+LIST *  list_pop_front( LIST *l )
+{
+    LIST * result = l->next;
+    if( result )
+    {
+        result->tail = l->tail;
+        l->next = L0;
+        l->tail = l;
+    }
+    list_free( l );
+    return result;
+}
+
+/*
  * list_print() - print a list of strings to stdout
  */
 

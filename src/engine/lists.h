@@ -79,6 +79,7 @@ LIST *	list_new( LIST *head, char *string );
 void	list_print( LIST *l );
 int	list_length( LIST *l );
 LIST *	list_sublist( LIST *l, int start, int count );
+LIST *  list_pop_front( LIST *l );
 
 # define list_next( l ) ((l)->next)
 
