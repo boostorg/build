@@ -952,15 +952,14 @@ rule MkDir
     if $(NT)
     {
         # make sure slashes all go the right way
-        dir = [ FDirName [ split-path $(dir) ] ] ;
+        dir = [ split-path $(dir) ] ;
+        dir = $(dir:J=$(SLASH)) ;
     }
     
-    NOUPDATE $(dir) ;
-
-    if $(dir) != $(DOT) && ! $($(dir)-mkdir) 
+    local result = $(dir) ;
+    
+    while $(dir) && ( $(dir) != $(DOT) ) && ! $($(dir)-mkdir) 
     {
-        local s ;
-
         # Cheesy gate to prevent multiple invocations on same dir
         # MkDir1 has the actions 
         # Arrange for jam dirs
@@ -968,11 +967,13 @@ rule MkDir
         $(dir)-mkdir = true ;
         MkDir1 $(dir) ;
         Depends dirs : $(dir) ;
+        NOUPDATE $(dir) ;
+
 
         # Recursively make parent directories.
         # $(dir:P) = $(dir)'s parent, & we recurse until root
 
-        s = $(dir:P) ;
+        local s = $(dir:P) ;
 
         if $(NT)
         {
@@ -986,15 +987,15 @@ rule MkDir
         if $(s) && $(s) != $(dir)
         {
             Depends $(dir) : $(s) ;
-            MkDir $(s) ;
+            dir = $(s) ;
         }
-        else if $(s)
+        else 
         {
-            NOTFILE $(s) ;
+            dir = ; # stop iterating
+            if $(s) { NOTFILE $(s) ; }
         }
-
     }
-    return $(dir) ;
+    return $(result) ;
 }
 
 # dwa 6/4/01 - modified for boost
@@ -1275,6 +1276,7 @@ rule SubDir
     normalized_ALL_LOCATE_TARGET ?= [ join-path $($(gTOP)) $(ALL_LOCATE_TARGET) ] ;
     LOCATE_SOURCE = [ FDirName $(normalized_ALL_LOCATE_TARGET) $(nodot_subdir) ] ;
     LOCATE_TARGET = $(LOCATE_SOURCE) ;
+    HCACHEFILE ?= $(LOCATE_TARGET)/.jamdeps ;
     
     SOURCE_GRIST = [ FGrist $(<[2-]) ] ;
 
