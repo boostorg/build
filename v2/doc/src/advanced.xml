@@ -67,8 +67,8 @@
                tutorial at least should clarify that whitespace is
                significant and we shouldn't get any further than the
                beginning of this document before briefly explaining
-               Jam's data and procedural model and rule
-               signatures. -->
+               Jam's data and procedural model, rule
+               signatures, and Boost.Build modules -->
           </para>
         </listitem>
       </itemizedlist>
@@ -226,11 +226,11 @@ using gcc : 3.4 : : &lt;compileflags&gt;-m64 &lt;linkflags&gt;-m64 ;
     <section id="bbv2.advanced.overview">
       <title>Overview</title>
 
-      <para><filename>Jamfile</filename>s are the thing that is most important to the user,
+      <para>Jamfiles are the thing that is most important to the user,
       <!-- Semantics-free, and wrong.  Many things are more important to the user -->
       bacause they declare the targets that should be built. 
       <!-- The reader already knows that -->
-      <filename>Jamfile</filename>s are also used for organizing targets&#x2014;
+      Jamfiles are also used for organizing targets&#x2014;
       <!-- Practically redundant with "Jamfiles... declare targets" -->
       each Jamfile is a separate project
       <!-- Okay, there's some content! -->
@@ -238,7 +238,7 @@ using gcc : 3.4 : : &lt;compileflags&gt;-m64 &lt;linkflags&gt;-m64 ;
       <!-- :( Practically redundant with "each Jamfile is a separate project." -->
       </para>
 
-      <para><filename>Jamfile</filename>s mostly contain calls to Boost.Build functions that do
+      <para>Jamfiles mostly contain calls to Boost.Build functions that do
         all the work, specifically:
         <!-- it's too late to start saying "functions."  You have to
              use "rules" everwhere or it will just get confusing. -->
@@ -668,7 +668,7 @@ project <replaceable>id</replaceable> : <replaceable>attributes</replaceable> ;
         Here, <replaceable>attributes</replaceable> is a sequence of
         rule arguments, each of which begins with an attribute-name
         and is followed by any number of build properties.  <!--
-        Previous description was completely wrong and confusing -->
+        The previous description was completely wrong and confusing -->
         The list
         of attribute names along with its handling is also shown in
         the table below. For example, it is possible to write:
@@ -780,26 +780,27 @@ project tennis
         </table>
         </para>
 
-      <para>Besides defining projects and main targets,
-      <filename>Jamfile</filename>s commonly invoke utility rules such
-      as <functionname>constant</functionname> and
-      <functionname>path-constant</functionname>, which define
-      Boost.Jam variables that are automatically defined in all child
-      projects.  See <xref linkend="bbv2.advanced.other-rules"/> for a
-      complete description of these utility rules.
-      <filename>Jamfile</filename>s are regular Boost.Jam source
-      files, so naturally they can contain any kind of Boost.Jam code,
+      <para>Besides defining projects and main targets, Jamfiles
+      commonly invoke utility rules such as
+      <functionname>constant</functionname> and
+      <functionname>path-constant</functionname>, which inject a
+      specified Boost.Jam variable setting into this project's Jamfile
+      module and those of all its subprojects.  See <xref
+      linkend="bbv2.advanced.other-rules"/> for a complete description
+      of these utility rules.  Jamfiles are regular Boost.Jam source
+      files and Boost.Build modules, so naturally they can contain any kind of Boost.Jam code,
       including rule definitions.
       <!-- I improved that sentence, but I don't think it belongs
            here.  I suggest you strike it. -->
       </para>
 
       <para>Each subproject inherits attributes, constants and rules
-      from its parent project (the project in the nearest parent
-      directory).  The top-level project is declared in a file called
-      <filename>Jamroot</filename> rather than
+      from its parent project, which is defined by the nearest
+      Jamfile in an ancestor directory above
+      the subproject.  The top-level project is declared in a file
+      called <filename>Jamroot</filename> rather than
       <filename>Jamfile</filename>.  When loading a project,
-      Boost.Build looks for both <filename>Jamroot</filename> and
+      Boost.Build looks for either <filename>Jamroot</filename> or
       <code>Jamfile</code>.  They are handled indentically, except
       that if the file is called <filename>Jamroot</filename>, the
       search for a parent project is not performed.
@@ -818,23 +819,28 @@ project tennis
       <note>
         <para>Giving the root project the special name
         &#x201C;<filename>Jamroot</filename>&#x201D; ensures that
-        Boost.Build won't misinterpret a directory above it that
-        happens to contain a <filename>Jamfile</filename> as the project root.
+        Boost.Build won't misinterpret a directory above it as the
+        project root just because the directory contains a Jamfile.
         <!-- The logic of the previous reasoning didn't hang together -->
         </para>          
       </note>
 
+      <!-- All this redundancy with the tutorial is bad.  The tutorial
+           should just be made into the introductory sections of this
+           document, which should be called the "User Guide."  It's
+           perfectly appropriate to start a user guide with that kind
+           of material. -->
     </section>
 
     
     <section id="bbv2.advanced.other-rules">
-      <title>Additional Jamfile rules</title>
+      <title>Jamfile Utility Rules</title>
 
-      <para>There's a number of other helper rules that can be used in
-      Jamfile, described in the following table. Detailed information for any
-      of the rules can be obtained by running:
+      <para>The following table describes utility rules that can be
+      used in Jamfiles. Detailed information for any of these rules can
+      be obtained by running:
 <screen>
-bjam --help project.rule-name
+bjam --help project.<replaceable>rulename</replaceable>
 </screen>
       </para>
 
@@ -845,7 +851,7 @@ bjam --help project.rule-name
             <row>
               <entry>Rule</entry>
               
-              <entry>Semantic</entry>
+              <entry>Semantics</entry>
             </row>
           </thead>
           
@@ -855,51 +861,53 @@ bjam --help project.rule-name
                   "bbv2.advanced.projects.attributes.projectrule">project</link>
               </entry>
               
-              <entry>Define project attributes.</entry>
+              <entry>Define this project's symbolic ID or attributes.</entry>
             </row>
             
             <row>
               <entry><link linkend=
                   "bbv2.advanced.projects.relationships.useprojectrule">use-project</link></entry>
               
-              <entry>Make another project known.</entry>
+              <entry>Make another project known so that it can be referred to by symbolic ID.</entry>
             </row>
             
             <row>
               <entry><link linkend=
                   "bbv2.advanced.projects.relationships.buildprojectrule">build-project</link></entry>
               
-              <entry>Build another project when this one is built.</entry>
+              <entry>Cause another project to be built when this one is built.</entry>
             </row>
             
             <row>
               <entry><link linkend=
                   "bbv2.reference.buildprocess.explict">explicit</link></entry>
               
-              <entry>States that the target should be built only by explicit
+              <entry>State that a target should be built only by explicit
                 request.</entry>
             </row>
             
             <row>
               <entry>glob</entry>
               
-              <entry>Takes a list of wildcards, and returns the list of files
-                that match any of the wildcards.</entry>
+              <entry>Translate a list of shell-style wildcards into a
+              corresponding list of files.</entry>
             </row>
 
             <row>
               <entry>constant</entry>
               
-              <entry>Defines a constant that can be used in this project and
-                all child projects.</entry>
+              <entry>Injects a variable setting into this project's
+              Jamfile module and those of all its subprojects.</entry>
             </row>
 
             <row>
               <entry>path-constant</entry>
               
-              <entry>Defines a constant that can be used in this project and
-                all child projects. This rule should be used if value is a
-                path relative to the location of the current project.</entry>
+              <entry>Injects a variable set to a path value into
+              this project's Jamfile module and those of all its subprojects.
+              If the value is a relative path it will be adjusted for
+              each subproject so that it refers to the same
+              directory.</entry>
             </row>
 
 
@@ -909,6 +917,7 @@ bjam --help project.rule-name
     </section>
       
 
+<!-- STRIKE ALL FLOTSAM!! -->
 <!--
       <section id="bbv2.advanced.projects.relationships">
         <title>Project relationship</title>
@@ -956,11 +965,12 @@ should be absolute project id.
     </section>
 
 -->
+<!-- STRIKE ALL FLOTSAM!! -->
        
   </section>
   
   <section id="bbv2.advanced.build_process">
-    <title>Build process</title>
+    <title>The Build Process</title>
 
     <para>When you've described your targets, you want Boost.Build to run the
       right tools and create the needed targets. This section will describe
