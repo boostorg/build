@@ -175,6 +175,12 @@ rule identity ( list * )
     shift2 ;
     y = $(y[2-]) ;
     assert-equal $(x) : identity $(y) ;
+
+    IMPORT my_module : : identity : id ;
+    module my_module {
+        local f = [ id x y z ] ;
+        assert-equal $(f) : x y z ;
+    }
 }
 
 #
