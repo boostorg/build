@@ -486,19 +486,15 @@ class State(object):
 
 queue_moves = 0
 
-def optimal_graphs(target_type, source_types, generators):
+def optimal_graphs(target_type, source_groups, generators):
     """A 'simple generator' that produces the sequence of least-cost
-    solutions for consuming all the source types in producing the
-    target type, using the given generators.
+    solutions for producing the
+    target type from a subset of the source_groups, using the given
+    generators.
     """
     # An index from target type to lists of groups with that type.
     all_groups = {}
     
-    # Remember what we started with
-    source_groups = tuple([
-        TargetTypeGroup(i[0],i[1])
-        for i in _string_multiset(source_types).items() ])
-
     # Prime the priority Queue
     q = [ State(g) for g in source_groups ]
     
@@ -514,19 +510,17 @@ def optimal_graphs(target_type, source_types, generators):
         global queue_moves
         queue_moves += 1
 
-        # If we've found a solution and this one is more expensive,
-        # then we've explored all the best solutions.
-        if solution_cost is not None and g.cost > solution_cost:
-            return
-
         global debug
         if debug:
             print '-------'
             print graph(g)
         
-        if g.target_type == target_type and g.consumes(source_groups):
+        if g.target_type == target_type: # and g.consumes(source_groups):
             solution_cost = g.cost
             yield g
+            
+            if g.consumes(source_groups): # Nothing left to find
+                return
         
         # combine with all like groups which are compatible
         for g2 in all_groups.get(g.target_type,()):
@@ -629,7 +623,28 @@ def search(generators, targets, sources):
     
     TargetTypeGroup.instances = 0
     queue_moves = 0
-    for g in optimal_graphs(targets, sources, generators):
+
+    # Remember what we started with
+    source_groups = tuple([
+        TargetTypeGroup(i[0],i[1])
+        for i in _string_multiset(sources).items() ])
+
+    solutions = {}
+    max_consumed = 0
+    
+    for g in optimal_graphs(targets, source_groups, generators):
+
+        if len(g.consumed_sources) > max_consumed:
+            max_consumed = len(g.consumed_sources)
+            
+        g2 = solutions.setdefault(len(g.consumed_sources), g)
+        if g2 is not g:
+            if g2.cost == g.cost:
+                g2.ambiguous = g
+
+    if max_consumed:
+        g = solutions[max_consumed]
+        
         print 80 * '='
         print graph(g)
 
@@ -671,6 +686,9 @@ def test():
     generators += Generator('NM_OBJ*', 'NM_EXE')
 
     search(generators, 'EST_EXE', ('CPP', 'NM_ASM', 'ECPP'))
+    # Try the same search with a source type that can't be consumed.
+    # This will exhaust all transformations before stopping.
+    search(generators, 'EST_EXE', ('CPP', 'NM_ASM', 'ECPP', 'FOO'))
     search(generators, 'NM_EXE', ('CPP'))
 
 def run(args = None):
