@@ -9,7 +9,7 @@
 # versions prefix for stlport library name for example stlport_sunpro
 
 # STLport iostreams or native iostreams
-feature stlport-iostream : on off;
+feature stlport-iostream : on off ;
 
 # STLport extensions
 feature stlport-extensions : on off ;
