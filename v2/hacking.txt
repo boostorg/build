@@ -31,6 +31,8 @@ Additional resources include
 
 BUGS and PATCHES
 
+Both bugs and patches can be send to our mailing list.
+
 When reporting a bug, please try to provide the following information.
 
    - What you did. A minimal reproducible testcase is very much appreciated.
@@ -45,7 +47,8 @@ When submitting a patch, please:
 
   - make a single patch for a single logical change
   - follow the policies and coding conventions below,
-  - set patches in unified diff format,
+  - send patches in unified diff format,
+    (using either "cvs diff -u" or "diff -u")
   - provide a log message together with the patch
 
 The purpose of log message serves to communicate what was changed, and
