@@ -13,6 +13,8 @@ Boost Build system TODO
 
 * Support for warnings
 
+* Add support for invoking debuggers from within the build system.
+
 * Fix the subinclude problem with project-wide variable settings (e.g.
 BOOST_ROOT) that Beman pointed out to me.
 
