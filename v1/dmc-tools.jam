@@ -68,7 +68,7 @@ rule Link-action ( target implib ? : sources + : target-type ? )
 
 actions together dmc-Link-action
 {
-    "$(DMC_BIN_DIR)$(DMC_LINKER)" $(LINKFLAGS) -delexecutable -noi -implib:"$(<[2])" "$(>)" , "$(<[1])" , NUL , user32.lib ernel32.lib "$(FINDLIBS:S=.lib)" , "$(<[2]:B).def"
+    "$(DMC_BIN_DIR)$(DMC_LINKER)" $(LINKFLAGS) -delexecutable -noi -implib:"$(<[2])" "$(>)" , "$(<[1])" , NUL , user32.lib kernel32.lib "$(FINDLIBS:S=.lib)" , "$(<[2]:B).def"
 }
 
 #### Cc #####
