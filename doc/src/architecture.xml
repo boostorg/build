@@ -28,99 +28,171 @@
   <section id="bbv2.arch.build">
     <title>The build layer</title>
 
-    <para>The build layer has just four main parts -- abstract targets,
-      virtual targets, generators and properties. The abstract targets,
-      represented by the "abstract-target" class, correspond to main targets
-      -- which, as you recall, can produce different files depending on
-      properties. Virtual targets, represented by the 'virtual-target' class
-      correspond to real files. The abstract-target class has a method
-      'generate', which is given a set of properties and produces virtual
-      targets for those properties.       
-    </para>
+      <para>The build layer has just four main parts -- metatargets (abstract targets),
+        virtual targets, generators and properties. 
+        <itemizedlist>
+          <listitem><para>Metatargets (see the "targets.jam" module) represent
+              all the user-defined entities which can be built. The "meta" prefix
+              signify that they don't really corrspond to files -- depending of
+              build request, they can produce different set of
+              files. Metatargets are created when Jamfiles are loaded. Each
+              metagarget has a <code>generate</code> method which is given a
+              property set and produces virtual targets for the passed properties.
+            </para></listitem>
+          <listitem><para>Virtual targets (see the "virtual-targets.jam"
+              module) correspond to the atomic things which can be updated --
+              most typically files. 
+            </para></listitem>
+          <listitem><para>Properties are just (name, value) pairs, specified
+              by the user and describing how the targets should be
+              built. Properties are stored using the <code>property-set</code> class.
+              </para></listitem>
+          <listitem><para>Generators are the objects which encapsulate tools
+              -- they can take a list of source virtual targets and produce new
+              virtual targets from them.
+            </para></listitem>
+        </itemizedlist>
+      </para>
 
-    <para>There are several classes derived from "abstract-target". The
-      "main-target" class represents top-level main target, the "project-target"
-      acts like container for all main targets, and "basic-target" class is a
-      base class for all further target types.
-    </para>
+      <para>The build process includes those steps:
+        <orderedlist>
+          <listitem><para>Top-level code calls the <code>generate</code>
+              method of a metatarget with some properties.  </para></listitem>
 
-    <para>Since each main target can have several alternatives, all top-level
-      target objects are just containers, referring to "real" main target
-      classes. The type is that container is "main-target". For example, given:
+
+          <listitem><para>The metatarget combines the requested properties
+              with requirements and passes the result, together with the list
+              of sources, to the <code>generators.construct</code>
+              function</para></listitem> 
+
+          
+          <listitem><para>A generator appropriate for the build properties is
+              selected and its <code>run</code> method is
+              called. The method returns a list of virtual targets
+            </para></listitem>
+
+          <listitem><para>The targets are returned to the top level code. They
+              are converted into bjam targets (via
+              <code>virtual-target.actualize</code>) and passed to bjam for building.
+            </para></listitem>
+        </orderedlist>
+      </para>
+
+      <section id="bbv2.arch.metatargets">
+        <title>Metatargets</title>
+
+        <para>There are several classes derived from "abstract-target". The
+          "main-target" class represents top-level main target, the "project-target"
+          acts like container for all main targets, and "basic-target" class is a
+          base class for all further target types.
+        </para>
+        
+        <para>Since each main target can have several alternatives, all top-level
+          target objects are just containers, referring to "real" main target
+          classes. The type is that container is "main-target". For example, given:
 <programlisting>
 alias a ;
 lib a : a.cpp : &lt;toolset&gt;gcc ;
 </programlisting>
-      we would have one-top level instance of "main-target-class", which will
-      contain one instance of "alias-target-class" and one instance of
-      "lib-target-class". The "generate" method of "main-target" decides
-      which of the alternative should be used, and call "generate" on the
-      corresponding instance.
-</para>
+          we would have one-top level instance of "main-target-class", which will
+          contain one instance of "alias-target-class" and one instance of
+          "lib-target-class". The "generate" method of "main-target" decides
+          which of the alternative should be used, and call "generate" on the
+          corresponding instance.
+        </para>
 
-    <para>Each alternative is a instance of a class derived from
-    "basic-target". The "basic-target.generate" does several things that are
-    always should be done:
-      <itemizedlist>
-        <listitem>
-          <para>Determines what properties should be used for building the
-          target. This includes looking at requested properties, requirements,
-          and usage requirements of all sources.</para>
-        </listitem>
-        <listitem>
-          <para>Builds all sources</para>
-        </listitem>
-        <listitem>
-          <para>Computes the usage requirements which should be passes back.</para>
-        </listitem>
-      </itemizedlist>
-      For the real work of constructing virtual target, a new method
-      "construct" is called.
-    </para>
+        <para>Each alternative is a instance of a class derived from
+          "basic-target". The "basic-target.generate" does several things that are
+          always should be done:
+          <itemizedlist>
+            <listitem>
+              <para>Determines what properties should be used for building the
+                target. This includes looking at requested properties, requirements,
+                and usage requirements of all sources.</para>
+            </listitem>
+            <listitem>
+              <para>Builds all sources</para>
+            </listitem>
+            <listitem>
+              <para>Computes the usage requirements which should be passes back.</para>
+            </listitem>
+          </itemizedlist>
+          For the real work of constructing virtual target, a new method
+          "construct" is called.
+        </para>
 
-    <para>The "construct" method can be implemented in any way by classes
-      derived from "basic-target", but one specific derived class plays the
-      central role -- "typed-target". That class holds the desired type of file
-      to be produces, and calls the generators modules to do the job.
-    </para>
+        <para>The "construct" method can be implemented in any way by classes
+          derived from "basic-target", but one specific derived class plays the
+          central role -- "typed-target". That class holds the desired type of file
+          to be produces, and calls the generators modules to do the job.
+        </para>
 
-    <para>Generators are Boost.Build abstractions for a tool. For example, one
-      can register a generator which converts target of type CPP into target of
-      type OBJ. When run with on a virtual target with CPP type, the generator
-      will construct the virtual target of type OBJ. The "generators" module
-      implements an algorithm, which given a list of sources, the desired type
-      and a list of properties, find all the generators which can perform the conversion.
-    </para>
+        <para>This means that a specific metatarget subclass may avoid using
+          generators at all. However, this is deprecated and we're trying to
+          eliminate all such subsclasses at the moment.
+        </para>
 
-    <para>The virtual targets which are produces by the main targets form a
-      graph. Targets which are produces from other ones refer to an instance of
-      "action" class, which in turn refers to action's sources, which can
-      further refer to actions. The sources, which are not produces from
-      anything, don't refer to any actions.
-    </para>
+        <para>Note that the <filename>build/targets.jam</filename> file contains
+            an UML diagram which might help.</para>
 
-    <para>When all virtual targets are produced, they are "actualized". This
-    means that the real file names are computed, and the commands that should
-    be run are generated. This is done by "virtual-target.actualize" and
-    "action.actualize" methods. The first is conceptually simple, while the
-    second need additional explanation. The commands in bjam are generated in
-    two-stage process. First, a rule with the appropriate name (for example
-    "gcc.compile") is called and is given the names of targets. The rule sets
-    some variables, like "OPTIONS". After that, the command string is taken,
-    and variable are substitutes, so use of OPTIONS inside the command string
-    become the real compile options. 
-    </para>
+      </section>
 
-    <para>Boost.Build added a third stage to simplify things. It's now
-    possible to automatically convert properties to appropriate assignments to
-    variables. For example, &lt;debug-symbols&gt;on would add "-g" to the
-    OPTIONS variable, without requiring to manually add this logic to
-    gcc.compile. This functionality is part of the "toolset" module.
-    </para>
-    
-    <para>When target paths are computed and the commands are set, Boost.Build
-    just gives control to bjam, which controls the execution of
-    commands.</para>
+      <section id="bbv2.arch.virtual">
+        <title>Virtual targets</title>
+
+        <para>Virtual targets correspond to the atomic things which can be
+          updated. Each virtual target can be assigned an updating action --
+          instance of the <code>action</code> class. The action class, in
+          turn, contains a list of source targets, properties, and a name of
+          bjam action block which should be executed.
+        </para>
+
+        <para>We try hard to never create equal instances of the
+          <code>virtual-target</code> class. Each code which creates virtual
+          targets passes them though the <code>virtual-target.register</code>
+          function, which detects if a target with the same name, sources, and
+          properties was created. In that case, existing target is returned.
+        </para>
+        
+        <para>When all virtual targets are produced, they are
+          "actualized". This means that the real file names are computed, and
+          the commands that should be run are generated. This is done by the
+          <code>virtual-target.actualize</code> method and the
+          <code>action.actualize</code> methods. The first is conceptually
+          simple, while the second need additional explanation. The commands
+          in bjam are generated in two-stage process. First, a rule with the
+          appropriate name (for example
+          "gcc.compile") is called and is given the names of targets. The rule
+          sets some variables, like "OPTIONS". After that, the command string
+          is taken, and variable are substitutes, so use of OPTIONS inside the
+          command string become the real compile options.
+        </para>
+
+        <para>Boost.Build added a third stage to simplify things. It's now
+          possible to automatically convert properties to appropriate assignments to
+          variables. For example, &lt;debug-symbols&gt;on would add "-g" to the
+          OPTIONS variable, without requiring to manually add this logic to
+          gcc.compile. This functionality is part of the "toolset" module.
+        </para>
+
+        <para>Note that the <filename>build/virtual-targets.jam</filename> file
+            contains an UML diagram which might help.</para>
+      </section>
+
+      <section id="bbv2.arch.properties">
+        <para>Above, we noted that metatargets are built with a set of
+          properties. That set is represented with the
+          <code>property-set</code> class. An important point is that handling
+          of property sets can get very expensive. For that reason, we make
+          sure that for each set of (name, value) pairs only one
+          <code>property-set</code> instance is created. The
+          <code>property-set</code> uses extensive caching for all operation,
+          so most work is avoided. The <code>property-set.create</code> is the 
+          factory function which should be used to create instances of the
+          <code>property-set</code> class.
+        </para>
+      </section>
+      
         
   </section>
 
