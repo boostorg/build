@@ -179,7 +179,8 @@ rule Archive-action
 
 actions updated together piecemeal borland-Archive-action
 {
-    "$(BCC_TOOL_PATH)tlib" /P64 /u /a /C /$(ARFLAGS) "$(<)" +-"$(>)"
+    IF EXIST "$(<)" DEL "$(<)"
+    "$(BCC_TOOL_PATH)tlib" /P64 /u /a /C /$(ARFLAGS) "$(<)" +"$(>)"
 }
 
 
