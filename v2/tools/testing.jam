@@ -161,6 +161,10 @@ rule dump-test ( target )
 {
     local type = [ $(target).type ] ;
     local name = [ $(target).name ] ;
+    local project = [ $(target).project ] ;
+    local project-root = [ project.attribute $(project) project-root-module ] ;
+    local project-root-location = [ $(project-root).location ] ;
+    
     local sources = [ $(target).sources ] ;
     local source-files ;
     for local s in $(sources)
@@ -170,7 +174,7 @@ rule dump-test ( target )
             source-files += 
               [ path.relative 
                   [ path.root [ $(s).location ] [ path.pwd ] ]
-                    /home/ghost/Work/boost ] ;
+                    $(project-root-location) ] ;
         }                
     }
           

@@ -305,7 +305,7 @@ rule initialize (
         inherit-attributes $(module-name) : $(project-root-module) : $(parent-module) ;
     }    
     
-    .current-project = $(module-name) ;
+    .current-project = [ target $(module-name) ] ;
 }
 
 # Make 'project-module' inherit attributes of project root and parent module.
@@ -512,16 +512,6 @@ rule target ( project-module )
     }
     return $(.target.$(project-module)) ;    
 }
-
-# If 'path' is absolute, returns it.
-# Oherwise, returns the location of 'project', joined
-# with 'path'
-rule path-relative-to-project-location ( path project )
-{
-    local project-location = [ attribute $(project) location ] ;
-    return [ path.root $(path) $(project-location) ] ;
-}
-
 
 # Use/load a project.
 rule use ( id : location )

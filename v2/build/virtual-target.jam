@@ -387,7 +387,7 @@ class abstract-file-target : virtual-target
         {
             # File is either source, which will be searched for, or is not a file at
             # all. Use the location of project for distinguishing.
-            local project-location = [ project.attribute $(self.project) location ] ;
+            local project-location = [ $(self.project).get location ] ;
             local location-grist =
               [ sequence.join [ regex.split $(project-location) "/" ] : "!" ] ;
             
@@ -476,7 +476,7 @@ class file-target : abstract-file-target
         {
             # This is a source file.
             SEARCH on $(target) =
-              [ path.native [ project.attribute $(self.project) source-location ] ] ;
+              [ path.native [ $(self.project).get source-location ] ] ;
         }        
     }
     
@@ -487,11 +487,11 @@ class file-target : abstract-file-target
         {
             if $(self.action)
             {                
-                local build-dir = [ project.attribute $(self.project) build-dir ] ;
+                local build-dir = [ $(self.project).get build-dir ] ;
                 if ! $(build-dir)
                 {
                     build-dir = [ path.join 
-                        [ project.attribute $(self.project) location ]
+                        [ $(self.project).get location ]
                         bin
                     ] ;
                 }
