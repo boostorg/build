@@ -45,8 +45,9 @@ else
   flags metrowerks STDLIBS <runtime-link>dynamic : mwcrtldll.lib;gdi32.lib;user32.lib;kernel32.lib ;
 }
 
+flags metrowerks LIBPATH <library-path> ;
 flags metrowerks NEEDLIBS <library-file> ;
-flags metrowerks NEEDLIBS <find-library> ;
+flags metrowerks FINDLIBS <find-library> ;
 
 # How will we find metrowerks standard headers?
 # If the user specified METROWERKS_INCLUDE_ROOT, use that
@@ -78,7 +79,7 @@ actions metrowerks-Link-action bind NEEDLIBS
 {
     $(METROWERKS_SETUP)
     set MWWinx86LibraryFiles=$(STDLIBS)
-    mwld -export dllexport -nowraplines $(LINKFLAGS) $(IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])"  $(UNDEFS) $(NEEDLIBS) "$(>)"
+    mwld -export dllexport -nowraplines $(LINKFLAGS) -L$(LIBPATH) -L$(STDLIBPATH) $(IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])"  $(UNDEFS) $(NEEDLIBS) "$(>)" -l$(FINDLIBS)
 }
 
 #### Cc #####
@@ -91,7 +92,7 @@ rule Cc-action
 actions metrowerks-Cc-action
 {
     $(METROWERKS_SETUP)
-    mwcc -c -cwd include -U$(UNDEFS) -D$(DEFINES) -nowraplines $(CFLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    mwcc -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -nowraplines $(CFLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -103,7 +104,7 @@ rule C++-action
 actions metrowerks-C++-action
 {
     $(METROWERKS_SETUP)
-    mwcc -c -cwd include -U$(UNDEFS) -D$(DEFINES) -nowraplines -lang c++ $(CFLAGS) $(C++FLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    mwcc -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -DNOMINMAX -nowraplines -lang c++ $(CFLAGS) $(C++FLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####

@@ -94,7 +94,7 @@ rule C++-action
 
 actions gcc-C++-action
 {
-    $(GCC_BIN_DIRECTORY)g++ -c -Wall -ftemplate-depth-50 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(GCC_BIN_DIRECTORY)g++ -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
