@@ -85,6 +85,10 @@ flags borland LIBPATH <library-path> ;
 flags borland NEEDLIBS <library-file> ;
 flags borland FINDLIBS <find-library> ;
 
+# suppress some specific warnings
+
+flags borland C++FLAGS : -w-8001 ;
+
 # For detailed information about borland tools and their command-line switches,
 # see http://www.objectcentral.com/vide/help/videdoc/bcc32.html
 
