@@ -33,7 +33,7 @@ import sequence ;
 import regex ;
 import set ;
     
-module local all-attributes = 
+all-attributes = 
     
     implicit    # features whose values alone identify the
                 # feature. For example, a user is not required to
@@ -90,8 +90,8 @@ module local all-attributes =
         # don't affect the built products at all.
   ;
 
-module local all-features ;
-module local all-implicit-values ;
+all-features = ;
+all-implicit-values = ;
     
 # Transform features by bracketing any elements which aren't already
 # bracketed by "<>"
@@ -101,7 +101,7 @@ local rule grist ( features * )
     return $(empty:G=$(features)) ;
 }
 
-module local empty = "" ;
+empty = "" ;
 
 # declare a new feature with the given name, values, and attributes.
 rule feature ( name : values * : attributes * )
@@ -135,10 +135,9 @@ rule feature ( name : values * : attributes * )
           : feature [ errors.lol->list $(1) : $(2) : $(3) ] ;
     }
 
-    module local $(name).values ;
-    module local $(name).attributes = $(attributes) ;
-    module local $(name).subfeatures = ;
-    module local $(attributes).features ;
+    $(name).values ?= ;
+    $(name).attributes = $(attributes) ;
+    $(name).subfeatures ?= ;
     $(attributes).features += $(name) ;
     
     all-features += $(name) ;
@@ -214,10 +213,6 @@ local rule find-implied-subfeature ( feature subvalue : value-string ? )
     local v
       = subfeature($(feature),$(subvalue)) 
         subfeature($(feature),$(value-string),$(subvalue)) ;
-    
-    # declaring these module local here prevents us from picking up
-    # enclosing definitions.
-    module local $(v) ;
     
     local subfeature = $($(v)) ;
     return $(subfeature[1]) ;
@@ -304,7 +299,6 @@ local rule extend-feature ( feature : values * )
     {
         for local v in $(values)
         {
-            module local $(v).implicit-feature ;
             if $($(v).implicit-feature)
             {
                 error $(v) is already associated with the \"$($(v).implicit-feature)\" feature ;
@@ -361,7 +355,7 @@ rule extend-subfeature ( feature value-string ? : subfeature : subvalues * )
         local v
           = subfeature($(feature),$(value-string),$(subvalue)) 
             subfeature($(feature),$(subvalue)) ;
-        module local $(v[1]) = $(subfeature) ;
+        $(v[1]) = $(subfeature) ;
     }
 }
 
@@ -444,7 +438,7 @@ rule compose ( composite-property : component-properties * )
         error "$(feature)" is not a composite feature ;
     }
     
-    module local $(composite-property).components ;
+    $(composite-property).components ?= ;
     if $($(composite-property).components) 
     {
         error components of "$(composite-property)" already set:

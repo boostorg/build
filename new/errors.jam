@@ -44,8 +44,9 @@ rule backtrace ( skip-frames messages * : * )
     }
 }
 
-module local args = messages 2 3 4 5 6 7 8 9 ;
-module local disabled last-$(args) ;
+args ?= messages 2 3 4 5 6 7 8 9 ;
+disabled ?= ;
+last-$(args) ?= ;
 
 # try-catch --
 #

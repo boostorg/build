@@ -38,7 +38,6 @@ LIST *compile_on( PARSE *parse, FRAME *frame );
 LIST *compile_rule( PARSE *parse, FRAME *frame );
 LIST *compile_rules( PARSE *parse, FRAME *frame );
 LIST *compile_set( PARSE *parse, FRAME *frame );
-LIST *compile_set_module( PARSE *parse, FRAME *frame );
 LIST *compile_setcomp( PARSE *parse, FRAME *frame );
 LIST *compile_setexec( PARSE *parse, FRAME *frame );
 LIST *compile_settings( PARSE *parse, FRAME *frame );

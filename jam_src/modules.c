@@ -47,8 +47,7 @@ module* bindmodule( char* name )
     if ( hashenter( module_hash, (HASHDATA **)&m ) )
     {
         m->name = newstr( m->name );
-        m->local_names = 0;
-        m->locals = 0;
+        m->variables = 0;
         m->rules = hashinit( sizeof( RULE ), new_module_str( m, "rules" ) );
     }
     string_free( &s );
@@ -63,33 +62,12 @@ module* root_module()
     return root;
 }
 
-/*
- * bind_module_var --
- *
- * Add the symbol to the module's list of symbols if it is not already in the
- * module. m is assumed to be the current module and if the symbol is new, any
- * current value is replaced by an empty list until the module is exited.
- *
- */
-void bind_module_var( module* m, char* symbol )
-{
-    char** name = &symbol;
-    
-    if ( !m->local_names )
-        m->local_names = hashinit( sizeof( char* ), new_module_str( m, "variables" ) );
-    
-    if ( hashenter( m->local_names, (HASHDATA **)&name ) )
-    {
-        m->locals = addsettings( m->locals, 0, symbol, var_swap( symbol, 0 ) );
-    }
-}
-
 void enter_module( module* m )
 {
-    pushsettings( m->locals );
+    var_hash_swap( &m->variables );
 }
 
 void exit_module( module* m )
 {
-    popsettings( m->locals );
+    var_hash_swap( &m->variables );
 }

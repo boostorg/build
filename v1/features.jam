@@ -63,6 +63,7 @@ COMMON_PROPERTIES ?=
     # Borland link lines will need work to find the right libraries for unicode
     # support - see borland-tools.jam 
     <borland><wide-character-support>off
+    "<cwpro8><cxxflags>-iso_templates on"
     ;
     
 variant common :

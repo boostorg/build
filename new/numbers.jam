@@ -3,14 +3,14 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-module local digits = 0 1 2 3 4 5 6 7 8 9 ;
-module local powers = 1 ;
-module local zeros = "" ;
-module local natural = $(digits) ;
-module local positive = $(digits[2-]) ;
-module local incr = $(positive[2-]) ;
-module local znatural = $(digits) ;
-module local zero-test = is zero ; # if $(zero-test[$(n)]) == "is" "zero", n == 0
+digits = 0 1 2 3 4 5 6 7 8 9 ;
+powers = 1 ;
+zeros = "" ;
+natural = $(digits) ;
+positive = $(digits[2-]) ;
+incr = $(positive[2-]) ;
+znatural = $(digits) ;
+zero-test = is zero ; # if $(zero-test[$(n)]) == "is" "zero", n == 0
 
 import errors : * ;
 

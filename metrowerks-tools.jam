@@ -15,6 +15,11 @@
 # from the command-line is sufficiently complex to make using the borland
 # approach impractical.
 
+# Get these variable set on the targets so that we can re-use the
+# build actions for other toolsets using this one as a base.
+flags metrowerks METROWERKS_SETUP ;
+flags metrowerks METROWERKS_LINK_SETUP ;
+
 # if METROWERKS_ROOT is unset, this will "multiply away" to nothing.
 METROWERKS_SETUP = "call "\"$(METROWERKS_ROOT)$(SLASH)"Other Metrowerks Tools"$(SLASH)"Command Line Tools"$(SLASH)cwenv.bat\"" -quiet" ;
 METROWERKS_LINK_SETUP = "set MWWinx86LibraryFiles=" ;
@@ -75,8 +80,8 @@ flags metrowerks STDHDRS : $(METROWERKS_INCLUDE_ROOT)$(SLASH)$(gMETROWERKS_STD_I
 
 rule Link-action
 {
-    gRUN_PATH($(<)) += $(METROWERKS_ROOT)"\\Win32-X86 Support\\Libraries\\Runtime" 
-      $(METROWERKS_ROOT)"\\Win32-X86 Support\\Libraries\\Runtime\\Libs\\MSL_ALL-DLLs" ;
+    gRUN_PATH($(<)) += $(METROWERKS_INCLUDE_ROOT)"\\Win32-X86 Support\\Libraries\\Runtime" 
+      $(METROWERKS_INCLUDE_ROOT)"\\Win32-X86 Support\\Libraries\\Runtime\\Libs\\MSL_ALL-DLLs" ;
     
     IMPLIB_COMMAND on $(<) = "-implib " ; # will be "multiplied away" if not
                                         # needed.

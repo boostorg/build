@@ -3,9 +3,9 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-module local name = $(OS) ;
-module local platform = $(OSPLAT) ;
-module local version = $(OSVER) ;
+name = $(OS) ;
+platform = $(OSPLAT) ;
+version = $(OSVER) ;
 
 rule name { return $(name) ; }
 rule platform { return $(platform) ; }

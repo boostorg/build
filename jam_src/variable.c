@@ -21,6 +21,7 @@
 # include "filesys.h"
 # include "newstr.h"
 # include "strings.h"
+# include <stdlib.h>
 
 /*
  * variable.c - handle jam multi-element variables
@@ -63,6 +64,18 @@ static VARIABLE *var_enter( char *symbol );
 static void var_dump( char *symbol, LIST *value, char *what );
 
 
+
+/*
+ * var_hash_swap() - swap all variable settings with those passed
+ *
+ * Used to implement separate settings spaces for modules
+ */
+void var_hash_swap( struct hash** new_vars )
+{
+    struct hash* old = varhash;
+    varhash = *new_vars;
+    *new_vars = old;
+}
 
 /*
  * var_defines() - load a bunch of variable=value settings
@@ -269,7 +282,7 @@ var_set(
 
 	if( DEBUG_VARSET )
 	    var_dump( symbol, value, "set" );
-
+        
 	switch( flag )
 	{
 	case VAR_SET:
