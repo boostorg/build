@@ -234,7 +234,7 @@ actions .md {    mkdir $(<) }
 rule .exe
 {
     local exe = $(<) ;
-    if $(NT) { exe = $(exe:S=.exe) ; }
+    if $(NT) || ( $(UNIX) && $(OS) = CYGWIN ) { exe = $(exe:S=.exe) ; }
     LOCATE on $(exe) = $(locate-target) ;
     DEPENDS $(exe) : $(>) ;
     DEPENDS $(exe) : $(locate-target) ;
