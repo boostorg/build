@@ -427,9 +427,11 @@ class lib-target-class : basic-target
                 : $(property-set) : $(source-targets) : LIB ] ;        
     }            
     
-    rule compute-usage-requirements ( rproperties : created-targets * )
+    rule compute-usage-requirements ( subvariant )
     {
-        local result = [ basic-target.compute-usage-requirements $(rproperties) ] ;
+        local rproperties = [ $(subvariant).build-properties ] ;
+        local created-targets = [ $(subvariant).created-targets ] ;  
+        local result = [ basic-target.compute-usage-requirements $(subvariant) ] ;
         
         # For lib targets with <search>, add the value of <search> as <library-path>
         # usage requirement.

@@ -129,7 +129,7 @@ class stlport-target-class : basic-target
         
     }
     
-    rule compute-usage-requirements ( rproperties : targets * )
+    rule compute-usage-requirements ( subvariant )
     {
         local usage-requirements ;
         usage-requirements += 
@@ -138,6 +138,7 @@ class stlport-target-class : basic-target
              <library-path>$(self.libraries)               
                 ;
             
+        local rproperties = [ $(subvariant).build-properties ] ;
         # CONSIDER: should this "if" sequence be replaced with
         # some use of 'property-map' class?
         if [ $(rproperties).get <runtime-debugging> ] = "on"

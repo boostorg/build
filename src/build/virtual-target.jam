@@ -889,23 +889,25 @@ local rule clone-action-template ( action from cloned-from : new-source )
     return $(cloned) ;
 }
 
-class subvariant-dg 
+class subvariant
 {
     import sequence ;    
     
     rule __init__ ( main-target # The instance of main-target class
         : property-set                     # Properties requested for this target
-        : actual-properties                # Actual used properties
-        : virtual-targets * )
+        : build-properties                 # Actually used properties
+        : sources-usage-requirements       # Properties propagated from sources
+        : created-targets * )              # Top-level created targets
     {        
         self.main-target = $(main-target) ;
         self.properties = $(property-set) ;
-        self.actual-properties = $(actual-properties) ;
-        self.virtual-targets = $(virtual-targets) ;
+        self.build-properties = $(build-properties) ;
+        self.sources-usage-requirements = $(sources-usage-requirements) ;
+        self.created-targets = $(created-targets) ;
 
         # Pre-compose the list of other dependency graphs, on which this one
         # depends
-        local deps = [ $(actual-properties).get implicit-dependency ] ;
+        local deps = [ $(build-properties).get implicit-dependency ] ;
         for local d in $(deps)
         {
             self.other-dg += [ $(d:G=).dg ] ;
@@ -919,12 +921,27 @@ class subvariant-dg
     {
         return $(self.main-target) ;
     }
-
-    rule properties ( )
+    
+    rule created-targets ( ) 
+    {
+        return $(self.created-targets) ;
+    }
+    
+    rule requested-properties ( )
     {
         return $(self.properties) ;
     }
     
+    rule build-properties ( )
+    {
+        return $(self.build-properties) ;
+    }
+        
+    rule sources-usage-requirements ( )
+    {
+        return $(self.sources-usage-requirements) ;
+    }
+        
     # Returns a list of properties which contain implicit includes,
     # needed to handle dependencies of generated headers.
     # The name of feature is given by 'feature', this is typically 'include'.
@@ -950,7 +967,7 @@ class subvariant-dg
     rule compute-target-directories ( )
     {        
         local result ;
-        for local t in $(self.virtual-targets)
+        for local t in $(self.created-targets)
         {
             result = [ sequence.merge $(result) : [ $(t).path ] ] ;
         }
