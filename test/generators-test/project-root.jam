@@ -10,7 +10,7 @@ import type ;
 
 type.register EXE : : : main ;
 type.register LIB : : : main ;
-type.register CPP : cpp ;
+type.register CPP : cpp cxx ;
 type.register C : c ;
 type.register OBJ : o ;
 type.register LEX : l ;
