@@ -38,6 +38,7 @@ free-feature find-library ;
 path-feature sysinclude ; # <sysinclude>/fu/man/chu
 free-feature arflags ;
 free-feature dllversion ; # <dllversion>1.27.0 (for use with soname-ing)
+free-feature tag ;
 
 # Can the target participate in a shared library?
 feature shared-linkable : false true ;
@@ -82,7 +83,7 @@ feature instruction-set :
 
 gLINK_COMPATIBLE = <shared-linkable>true <target-type> <inlining> ;
 
-gALWAYS_RELEVANT = <target-type> ;
+gALWAYS_RELEVANT = <target-type> <tag> ;
 
 ##### Requirements by target type #####
 gTARGET_TYPE_REQUIREMENTS(DLL) = <shared-linkable>true ;

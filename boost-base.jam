@@ -1600,11 +1600,32 @@ rule depend-on-dlls ( targets + : dlls-and-import-libs * )
     }
 
     LIBPATH on $(<) += [ unique $(gLOCATE($(>))) ] ;
-    FINDLIBS on $(<) += [ unique $(gTARGET_NAME($(gTARGET_SUBVARIANT($(>))))) ] ;
+    FINDLIBS on $(<) += [ unique $(gTARGET_BASENAME($(gTARGET_SUBVARIANT($(>))))) ] ;
     DEPENDS $(<) : $(>) ;
     # To run these targets, we need everything needed to run the libraries
     gRUN_PATH($(<)) = [ unique $(gRUN_PATH($(<))) $(gRUN_PATH($(>))) ] ;
     gRUN_LD_LIBRARY_PATH($(<)) = [ unique $(gRUN_LD_LIBRARY_PATH($(<))) $(gRUN_LD_LIBRARY_PATH($(>))) ] ;
+}
+
+# Given build properties, returns the normalised version of the <tag> features for
+# use by rename-targets.
+rule get-tag-features ( variant : build-properties * )
+{
+    local result = ;
+    local tags = [ get-properties <tag> : $(build-properties) ] ;
+    for local tag in $(tags)
+    {
+        tag = $(tag:G=) ;
+        if $(tag:G)
+        {
+            result += <tag>$(tag) ;
+        }
+        else
+        {
+            result += <tag><$(variant)>$(tag) ;
+        }
+    }
+    return $(result) ;
 }
 
 # Given target, a main target name gristed with $(SOURCE_GRIST), generate build
@@ -1618,7 +1639,8 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
   # SOURCE_GRIST identifies the subproject directory; TARGET_GRIST will identify
   # the target and subvariant, since unique versions of files will be built for
   # that combination.
-  local tags = [ get-properties <tag> : $(gIMPOSED_REQUIREMENTS($(target))) ] ;
+  local property-tags = [ get-tag-features $(variant) : $(build-properties) ] ;
+  local tags = [ get-properties <tag> : $(gIMPOSED_REQUIREMENTS($(target))) ] $(property-tags) ;
   local TARGET_GRIST = [ join-path $(SOURCE_GRIST) $(target:G=) $(subvariant-id) ] ;
   local subvariant = $(target:G=$(TARGET_GRIST)) ;
 
@@ -1641,6 +1663,11 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
   # relative to the default location based on the subvariant 
   local LOCATE_TARGET
     = [ join-path $(LOCATE_TARGET) $(BIN_DIRECTORY) $(target:G=) $(subvariant-id) ] ;
+
+  # The renamed base name of the target. Only considers the tags defined directly
+  # on the target.
+  gTARGET_BASENAME($(target)) =
+    [ rename-target $(gTARGET_NAME($(target))) : [ split-path [ ungrist $(subvariant:G) ] ] : $(property-tags) ] ;
 
   # First order names have the suffix, if any according to the platform.
   local target-files = [ FAppendSuffix $(subvariant) : $(SUF$(target-type)) ] ;
@@ -2140,6 +2167,7 @@ rule stage ( name : sources + : requirements * : local-build * )
             MakeLocate $(destination-file) :
                 [ FDirName [ split-path $(LOCATE_TARGET)/$(stage-dir) ] ] ;
             FileClone $(destination-file) : $(file) ;
+            declare-fake-targets $(stage-id)/$(destination-file:G=) : $(destination-file) ;
         }
     }
     declare-fake-targets $(stage-id) : $(destination-files) ;
