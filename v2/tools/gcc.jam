@@ -61,7 +61,18 @@ flags gcc.compile OPTIONS <inlining>full : -finline-functions -Wno-inline ;
 
 flags gcc.compile OPTIONS <debug-symbols>on : -g ;
 flags gcc.compile OPTIONS <profiling>on : -pg ;
-flags gcc.compile OPTIONS <link>shared/<main-target-type>LIB : -fPIC ;
+# On cygwin, gcc generates position independent code by default,
+# and warns if -fPIC is specified. This might not be the right way
+# of checking if we're using cygwin. For example, it's possible 
+# to run cygwin gcc from NT shell, or using crosscompiling.
+# But we'll solve that problem when it's time. In that case
+# we'll just add another parameter to 'init' and move this login
+# inside 'init'.
+if [ os.path ] != CYGWIN
+{        
+    flags gcc.compile OPTIONS <link>shared/<main-target-type>LIB : -fPIC ;
+}    
+
 
 flags gcc.compile OPTIONS <cflags> ;
 flags gcc.compile.c++ OPTIONS <cxxflags> ;
