@@ -37,27 +37,34 @@ feature.subfeature toolset msvc : vendor
   
 # Initialize the toolset for a specific version. As the result, path to
 # compiler and, possible, program names are set up, and will be used when
-# that version of compiler is requested. For example, you might have
+# that version of compiler is requested. For example, you might have::
 #
 #    using msvc : 6.5 : X:/some_dir ;
 #    using msvc : 7.0 : Y:/some_dir ;
 #    using msvc : : Z:/some_dir
+#
 # If you have "msvc-6.5" in build request, the version from X: drive will be used,
 # and if you put only "msvc", then drive "Z:" will be used. Note that it's not possible
 # the specify that by default, version 7.0 must be used --- you should use 'using'
 # without version number for that effect. 
 #    
-# version -- the msvc version which is being configured. When omitted
-#          the tools invoked when no explicit version is given will be configured.
-# path -- the path to root directory of msvc installation. If not specified:
-#       - if version is given, default location for that version will be searched
-#       - if version is not given, default locations for 7.1, 7.0 and 6.* will 
-#              be searched    
-#       - if compiler is not found in default locations, PATH will be searched.    
+# version -- 
+# path -- 
 #
 # When invoking tools, we'll first run vcvars32.bat from the configured path and
 # then cl/link, without path.   
-rule init ( version ? : path ? : vendor ? : setup ? compiler ? linker ? )
+rule init ( 
+  version ? # the msvc version which is being configured. When omitted
+            # the tools invoked when no explicit version is given will be configured.
+    : path ? 
+   # the path to root directory of msvc installation. If not specified:
+   #       - if version is given, default location for that version will be searched
+   # 
+   #       - if version is not given, default locations for 7.1, 7.0 and 6.* will 
+   #              be searched    
+   # 
+   #       - if compiler is not found in default locations, PATH will be searched.    
+    : vendor ? : setup ? compiler ? linker ? )
 {    
     compiler ?= cl ;
     linker ?= link ;
