@@ -733,7 +733,10 @@ rule split ( property-set )
 
 # Appends a rule to the list of rules assigned to the given feature or property.
 # That rules will be used in extending property sets by the 'run-actions' rule. 
-# The rule should accept single argument -- a property, and return a set of additional 
+# The rule should accept two arguments:
+# - the property which is registered
+# - the list of all properties 
+# and return a set of additional 
 # properties to be added. Property should be specified in the usual way:
 # <feature>value, and feature should be specified as <feature>.
 rule action ( property-or-feature : rule-name )
@@ -771,7 +774,7 @@ rule run-actions ( properties * )
         }
         for local r in $(rules)
         {
-            added += [ $(r) $(e) ] ;
+            added += [ $(r) $(e) : $(properties) ] ;
         }
     }
     return $(properties) $(added) ;            
@@ -810,22 +813,22 @@ local rule __test__ ( )
         subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
           3.0 3.0.1 3.0.2 : optional ;
         
-        rule handle-stlport ( property )
+        rule handle-stlport ( property : properties * )
         {
             return <include>/path/to/stlport ;
         }
         
-        rule handle-magic ( property )
+        rule handle-magic ( property : properties * )
         {
             return <define>MAGIC=$(property:G=) ;
         }
         
-        rule handle-magic2 ( property )
+        rule handle-magic2 ( property : properties * )
         {
             return <define>MAGIC=BIG_MAGIC ;
         }
         
-        rule handle-magic3 ( property )
+        rule handle-magic3 ( property : properties * )
         {
             return <define>MAGIC=VERY_BIG_MAGIC ;
         }
