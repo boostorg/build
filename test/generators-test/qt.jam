@@ -1,0 +1,19 @@
+
+rule uic ( target : sources * : properties * )
+{
+}
+
+actions uic 
+{
+    echo "//" $(>) > $(<)
+}
+
+rule uic-h ( target : sources * : properties * )
+{
+}
+
+actions uic-h
+{
+    echo "//" $(>) > $(<)
+}
+
