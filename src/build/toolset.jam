@@ -13,6 +13,7 @@ import path ;
 import generators ;
 import set : difference ;
 import regex ;
+import sequence ;
 
 .flag-no = 1 ;
 
@@ -195,25 +196,30 @@ rule set-target-variables ( rule-or-module targets + : properties * )
                     # and must be actualized
                     result += [ $(p:G=).actualize ] ;
                 }                
-                else if path in $(att)
+                else if path in $(att) || free in $(att)
                 {
-                    result += [ path.native $(p:G=) ] ;
-                }    
-                else if free in $(att)
-                {                   
+                    local values ;
                     # Treat features with && in the value
                     # specially -- each &&-separated element is considered
                     # separate value. This is needed to handle searched
                     # libraries, which must be in specific order.                    
                     if ! [ MATCH (&&) : $(p:G=) ]
                     {
-                        result += $(p:G=) ;
+                        values = $(p:G=) ;
                     }
                     else                      
                     {
-                        result += [ regex.split $(p:G=) "&&" ] ;
+                        values = [ regex.split $(p:G=) "&&" ] ;
                     }
-                }                
+                    if path in $(att)
+                    {                                            
+                        result += [ sequence.transform path.native : $(values) ] ;
+                    }
+                    else
+                    {
+                        result += $(values) ;
+                    }                    
+                }    
                 else 
                 {
                     result += $(p:G=) ;
