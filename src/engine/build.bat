@@ -67,14 +67,29 @@ if NOT "_%MSVCDir%_" == "__" (
     set BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\
     goto :eof)
 setlocal & endlocal
+if EXIST "%ProgramFiles%\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT" (
+    set BOOST_JAM_TOOLSET=msvc
+    set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio\VC98\
+    goto :eof)
+setlocal & endlocal
 if EXIST "C:\Program Files\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT" (
     set BOOST_JAM_TOOLSET=msvc
     set BOOST_JAM_TOOLSET_ROOT=C:\Program Files\Microsoft Visual Studio\VC98\
     goto :eof)
 setlocal & endlocal
+if EXIST "%ProgramFiles%\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" (
+    set BOOST_JAM_TOOLSET=msvc
+    set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual C++\VC98\
+    goto :eof)
+setlocal & endlocal
 if EXIST "C:\Program Files\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" (
     set BOOST_JAM_TOOLSET=msvc
     set BOOST_JAM_TOOLSET_ROOT=C:\Program Files\Microsoft Visual C++\VC98\
+    goto :eof)
+setlocal & endlocal
+if EXIST "%ProgramFiles%\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
+    set BOOST_JAM_TOOLSET=vc7
+    set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET\VC7\
     goto :eof)
 setlocal & endlocal
 if EXIST "C:\Program Files\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
