@@ -67,6 +67,16 @@ if [ MATCH (--dump-projects) : [ modules.peek : ARGV ] ]
     project-root.print ;
 }
 
+if ! [ feature.values toolset ] 
+{
+    ECHO "warning: no toolsets are configured." ;
+    ECHO "warning: you won't be able to build C++ programs." ;
+    ECHO "warning: please consult the documentation." ;
+    ECHO ;
+}
+
+
+
 build-request = [ build-request.from-command-line [ modules.peek : ARGV ] ] ;
 
 properties = [ $(build-request).get-at 2 ] ;
