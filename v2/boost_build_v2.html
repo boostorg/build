@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                                                                </style>
+                                                                    </style>
   </head>
   <!-- Things yet to document:
-                                                                - build request, build request expansion and directly requested targets
-                                                                - conditional properties
-                                                              -->
+                                                                  - build request, build request expansion and directly requested targets
+                                                                  - conditional properties
+                                                                -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -179,12 +179,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>examples-v2</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                                                                                         it somewhere. 
-                                                                                          
-                                                                                            <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                                                                                            into one of the locations where it can be found (given in <a href=
-                                                                                            "#config_files_location">this table</a>). This prevent you from
-                                                                                            accidentally overwriting your config when updating.</p> -->
+                                                                                               it somewhere. 
+                                                                                                
+                                                                                                  <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                                                                                                  into one of the locations where it can be found (given in <a href=
+                                                                                                  "#config_files_location">this table</a>). This prevent you from
+                                                                                                  accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -1029,17 +1029,17 @@ boost-build /path/to/boost.build ;
 
       <li>It allows to have main target names with slashes. 
       <!-- The motivation for which is:
-                                                      So, to summarize:
-                                                      1. The project which extract tarfile may extract all possible kinds of 
-                                                      targets, and it's reasonable to use them directly from other project.
-                                                      2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
-                                                      maintainability, and therefore, must use main target name which contains 
-                                                      slashes?
-                                                      3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
-                                                      option, because you should not change existing tree 
+                                                            So, to summarize:
+                                                            1. The project which extract tarfile may extract all possible kinds of 
+                                                            targets, and it's reasonable to use them directly from other project.
+                                                            2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
+                                                            maintainability, and therefore, must use main target name which contains 
+                                                            slashes?
+                                                            3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
+                                                            option, because you should not change existing tree 
 
-                                                      That makes good rationale for why main target must contain names.
-                                                       -->
+                                                            That makes good rationale for why main target must contain names.
+                                                             -->
       </li>
     </ul>
 
@@ -1352,25 +1352,30 @@ rule feature ( name : allowed-values * : attributes * )
     build requirements. We need to determine whether a buildable version of
     that target can actually be used.</p>
 
-    <p>The build request can originate in many ways: It may come directly
+    <p>The build request can originate in many ways: it may come directly
     from the user's command-line, from a dependency of a main target upon a
     library, or from a dependency of a target upon an executable used to
     build that target, for example. For each way, there are different rules
-    whether we can use a given subvariant or not. However we currently only
-    assume linking and therefore use a simple approach described in the
-    following paragraph.</p>
-
-    <p>In general, there are many possible situations: a libary which is
-    dependency of a main target and should be linked into it, target which is
-    directly requested on the command line, or build executable which is used
-    in the build process itself. At this moment we use a simple approach.</p>
+    whether we can use a given subvariant or not. The current rules are
+    described below.</p>
 
     <p>Two property sets are called <em>link-compatible</em> when targets
     with those property sets can be used interchangably. In turn, two
     property sets are link compatible when there's no link-incompatible
-    feature which has different values in those property sets. Whenever
-    requested and actual properties are link-compatible, it's OK. Otherwise,
-    it's an error.</p>
+    feature which has different values in those property sets.</p>
+
+    <p>When building of a main target is requested from a command line or
+    some project, link-compatibility is not considered. When building is
+    requested by other main target, via sources or dependency properties, the
+    requested and actual property sets must be link-compatible, otherwise a
+    warning is produced.</p>
+
+    <p><b>Rationale:</b>Link-compatibility is not considered when main target
+    is requested by a project, because it causes problems in practice. For
+    example, some parts of a project might be single-threaded, while others
+    &mdash; multi-threaded. They are not link-compatible, but they are not
+    linked, either. So, there's no need to issue error or warning. The errors
+    used to be generated, and only caused problems.</p>
 
     <h4 id="property_refinement">Definition of property refinement</h4>
 
@@ -1659,7 +1664,7 @@ borland/runtime-link=static,dynamic
       </li>
 
       <li>
-        For each selected alternative 
+        For the selected alternative 
 
         <ol>
           <li>Each target reference in the source list are recursively
@@ -1675,6 +1680,10 @@ borland/runtime-link=static,dynamic
           generators.</li>
         </ol>
       </li>
+
+      <li>If, when building sources, the properties on recursively created
+      targets are not link-compatibile with build properties, a warning is
+      issued.</li>
     </ul>
 
     <h3 id="generated_headers">Generated headers</h3>
