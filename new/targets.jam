@@ -34,7 +34,6 @@ import regex ;
 import property ;
 import errors ;
 import common ;
-import errors ;
 
 
 # Base class for all abstract targets.
@@ -337,9 +336,7 @@ rule basic-target ( name : project
 
     if $(sources:G)
     {
-        print.wrapped-text "error: gristed element in sources for " 
-          [ full-name ] ;
-        EXIT ;
+        errors.error "gristed element in sources for" [ full-name ] ;
     }
     
 
@@ -495,7 +492,6 @@ rule basic-target ( name : project
     {
         return $(self.requirements) ;
     }
-
 }
 
 class basic-target : abstract-target ;
@@ -577,11 +573,13 @@ rule typed-target ( name : project : type
     rule construct ( source-targets * : properties * )
     {
         local r = [ generators.construct $(self.project) $(self.name) : $(self.type) 
-          : $(properties) <main-target-type>$(self.type) : $(source-targets) ] ;
+          : $(properties) # [ feature.expand
+              <main-target-type>$(self.type)
+          # ]
+            : $(source-targets) ] ;
         if ! $(r)
         {
-            print.wrapped-text "error: unable to construct" [ full-name ] ;
-            EXIT ;
+            errors.error "unable to construct" [ full-name ] ;
         }
         
         return $(r) ;

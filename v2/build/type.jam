@@ -9,11 +9,14 @@
 import feature ;
 import generators : * ;
 import class : class new ;
-
+import errors ;
 
 feature.feature target-type : : composite optional ;
-feature.feature base-target-type : : composite optional ;
+
+# feature.feature base-target-type : : composite optional ;
 feature.feature main-target-type : : optional incidental ;
+feature.feature base-target-type : : composite optional free ;
+# feature.feature main-target-type : : composite optional incidental ;
 
 # Registers a target type, possible derived from a 'base-type'. 
 # If 'suffixes' are provided, they given all the suffixes that mean a file is of 'type'.
@@ -25,9 +28,17 @@ feature.feature main-target-type : : optional incidental ;
 # will be added to the global scope.
 rule register ( type : suffixes * : base-type ? : main ? ) 
 {
+    # Type names cannot contain hyphens, because when used as
+    # feature-values they will be interpreted as composite features
+    # which need to be decomposed.
+    switch $(type)
+    {
+        case *-* : errors.error "type name \"$(type)\" contains a hyphen" ;
+    }
+    
     if $(type) in $(.types)
     {
-        error "Type $(type) is already registered." ;
+        errors.error "Type $(type) is already registered." ;
     }
     else
     {
@@ -36,13 +47,33 @@ rule register ( type : suffixes * : base-type ? : main ? )
         .suffix.$(type) = $(suffixes[1]) ;
         .type.$(suffixes) = $(type) ;
         feature.extend target-type : $(type) ;
-        feature.compose <target-type>$(type) : $(base-type:G=<base-target-type>) ;
-        feature.compose <base-target-type>$(type) : $(base-type:G=<base-target-type>) ;            
+        
+        feature.compose <target-type>$(type) : $(base-type:G=<base-target-type>) ; 
+        feature.extend base-target-type : $(type) ;
+#        feature.compose <target-type>$(type) : <base-target-type>$(type) ;
+        feature.compose <base-target-type>$(type) : <base-target-type>$(base-type) ;
         
         if $(main)
-        {            
-            IMPORT $(__name__) : main-target-rule : : $(type:L) ;
+        {
+            # Convert the type name to lowercase and convert all
+            # underscores to hyphens to get the main target rule name.
+            import regex ;
+            local n = [ regex.split $(type:L) "_" ] ;
+            n = $(n:J=-) ;
+            .main-target-type.$(n) = $(type) ;
+            
+            IMPORT $(__name__) : main-target-rule : : $(n) ;
+#            feature.compose <main-target-type>$(type) : <base-target-type>$(type) ;
         }        
+    }
+}
+
+# Returns true iff type has been registered.
+rule registered ( type )
+{
+    if $(type) in $(.types)
+    {
+        return true ;
     }
 }
 
@@ -64,29 +95,27 @@ rule get-scanner ( type : properties * )
     }    
 }
 
+# returns  type and all of its bases in order of their distance from type.
+rule all-bases ( type )
+{
+    local result = $(type) ;
+    while $(type)
+    {
+        type = $(.bases.$(type)) ;
+        result += $(type) ;
+    }
+    return $(result) ;
+}
+
 # Returns true if 'type' has 'base' as its direct or
 # indirect base.
 rule is-derived ( type base )
 {
-    if $(base) in $(.bases.$(type)) 
+    if $(base) in [ all-bases $(type) ]
     {
         return true ;
     }
-    else
-    {
-        # CONSIDER: maybe break when 'found' is true
-        local found ;
-        for local e in $(.bases.$(type))
-        {
-            if [ is-derived $(e) $(base) ] 
-            {
-                found = true ;
-            }            
-        }
-        return $(found) ;
-    }        
 }
-
 
 # Returns suffix that should be used when generating target of 'type'.
 rule generated-target-suffix ( type )
@@ -105,13 +134,13 @@ rule type ( suffix )
 rule main-target-rule ( name : sources * : requirements * : default-build * 
                         : use-requirements * )
 {
-    # First find requuired target type, which is equal to the name used to
-    # invoke us.
+    # First find required target type, which is equal to the name used
+    # to invoke us.
     local bt = [ BACKTRACE 1 ] ;
-    local type = $(bt[4]) ;
+    local rulename = $(bt[4]) ;
     
     targets.main-target-alternative $(name) [ CALLER_MODULE ] typed-target : 3 : 5 : 4
-      : $(type:U) : $(sources) : $(requirements) : $(default-build) : $(use-requirements)
+      : $(.main-target-type.$(rulename)) : $(sources) : $(requirements) : $(default-build) : $(use-requirements)
         ;    
 }
 
