@@ -60,6 +60,8 @@ flags como-win32 CFLAGS <debug-symbols>on : /Zi ;
 flags como-win32 CFLAGS <optimization>off : /Od ;
 
 flags como-win32 CFLAGS <cflags> ;
+flags como-win32 CFLAGS : -D_WIN32 ; # make sure that we get the Boost Win32 platform config header.
+flags como-win32 CFLAGS <threading>multi : -D_MT ; # make sure that our config knows that threading is on.
 flags como-win32 C++FLAGS <cxxflags> ;
 flags como-win32 DEFINES <define> ;
 flags como-win32 UNDEFS <undef> ;
