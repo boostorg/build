@@ -57,26 +57,31 @@ rule call-in ( module-name ? : rule-name args * : * )
 }
 
 # load the indicated module if it is not already loaded.
-rule load ( module-name : filename ? : search * )
+rule load ( module-name : filename ? : search * : module-tag ? )
 {
     filename ?= $(module-name).jam ;
-    if ! ( $(module-name) in $(loaded-modules) )
+    module-tag ?= $(module-name) ;
+    if ! ( $(module-tag) in $(loaded-modules) )
     {
-        loaded-modules += $(module-name) ;
-        loading-modules += $(module-name) ;
+        loaded-modules += $(module-tag) ;
+        loading-modules += $(module-tag) ;
         local suppress-test = $(untested[1]) ; # suppress tests until all recursive loads are complete.
-        untested += $(module-name) ; # add the module to the stack of untested modules
+        untested += $(module-tag) ; # add the module to the stack of untested modules
         
-        poke $(module-name) : __name__ : $(module-name) ;
-        poke $(module-name) : __file__ : $(filename) ;
+        poke $(module-tag) : __name__ : $(module-tag) ;
+        poke $(module-tag) : __file__ : $(filename) ;
+        poke $(module-name) : __tag__ : $(module-tag) ;
         
-        module $(module-name)
+        module $(module-tag)
         {
             # Prepare a default behavior, in case no __test__ is defined.
             IMPORT modules : no_test_defined : $(__name__) : __test__ ;
-
+        }
+        module $(module-name)
+        {
             # Add some grist so that the module will have a unique target name
-            local module-target = $(__file__:G=module@) ;
+            local module-target = [ modules.peek $(__tag__) : __file__ ] ;
+            module-target = $(module-target:G=module@) ;
             
             search = $(3) ;
             search ?= [ modules.peek : BOOST_BUILD_PATH ] ;
@@ -104,11 +109,11 @@ rule load ( module-name : filename ? : search * )
             untested = ;
         }
     }
-    else if $(module-name) in $(loading-modules)
+    else if $(module-tag) in $(loading-modules)
     {
-        ECHO loading \"$(module-name)\" ;
+        ECHO loading \"$(module-tag)\" ;
         ECHO circular module loading dependency: ;
-        EXIT $(loading-modules) $(module-name) ;
+        EXIT $(loading-modules) $(module-tag) ;
     }
 }
 
