@@ -65,6 +65,8 @@ flags gcc.compile OPTIONS <inlining>off : -fno-inline ;
 flags gcc.compile OPTIONS <inlining>on : -Wno-inline ;
 flags gcc.compile OPTIONS <inlining>full : -finline-functions -Wno-inline ;
 
+flags gcc.compile OPTIONS <threading>multi : -pthread ;
+
 flags gcc.compile OPTIONS <debug-symbols>on : -g ;
 flags gcc.compile OPTIONS <profiling>on : -pg ;
 
