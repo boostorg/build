@@ -134,7 +134,7 @@ t.write("a.cpp", "")
 t.write("Jamfile", """
 project a : requirements <link-runtime>static ;
 
-lib a : a.cpp l ;
+static-lib a : a.cpp l ;
 lib l : : <name>l_f ;
 """)
 
