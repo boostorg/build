@@ -28,5 +28,45 @@ t.run_build_system()
 t.expect_addition("bin/$toolset/debug/foo.bar")
 t.fail_test(find(t.read("bin/$toolset/debug/foo.bar"), "foobar") == -1)
 
+# Regression test. Make sure that if main target requested two times,
+# and build request differ only in incidental properties, the main target
+# if created only once. The bug was discovered by Kirill Lapshin.
+
+t.write("Jamfile", """ 
+# Make sure that incidental property does not
+# cause second creation of 'hello1.cpp'.
+exe a : dir/hello1.cpp ;
+exe b : dir/hello1.cpp/<hardcode-dll-paths>true ; 
+""")
+
+t.write("project-root.jam", """ 
+import gcc ;
+
+rule copy-file ( targets * : sources * : * )
+{
+    copy-file-action $(targets) : $(sources) ;
+}
+
+actions copy-file-action
+{
+    cp $(>) $(<)
+}
+
+IMPORT $(__name__) : copy-file : : copy-file ; 
+""")
+
+t.write("dir/Jamfile", """ 
+make hello1.cpp : hello.cpp : copy-file ;
+
+""")
+
+t.write("dir/hello.cpp", """
+int main()
+{
+    return 1;
+}
+""")
+t.run_build_system("-d2")
+t.fail_test(t.stdout().count("copy-file") != 1)
 
 t.cleanup()

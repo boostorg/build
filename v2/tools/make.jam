@@ -30,7 +30,7 @@ rule make-target-class ( name : project : sources * : requirements *
         local a = [ new action $(t) : $(source-targets) : $(self.make-rule) 
                     : $(property-set) ] ;
         $(t).action $(a) ;
-        return $(t) ;    
+        return [ virtual-target.register $(t) ] ;
     }   
 }
 
