@@ -90,4 +90,20 @@ t.run_build_system("rtti=on", stdout=expected, status=None)
 #"bin/gcc/debug/a_gcc.obj\n"
 #)
 
+# Test that if we specified composite property in target reference,
+# everything works OK.
+
+t.copy("lib/Jamfile1", "lib/Jamfile")
+t.copy("Jamfile5", "Jamfile")
+
+t.run_build_system()
+
+t.expect_addition("lib/bin/gcc/release/b.obj")
+
+t.expect_content("bin/gcc/debug/a.exe",
+"gcc/debug/include-everything\n" +
+"bin/gcc/debug/a.obj lib/bin/gcc/release/b.obj\n"
+)
+
+
 t.cleanup()
