@@ -6,6 +6,7 @@
 import type ;
 import generators ;
 import feature ;
+import errors ;
 
 type.register RC : rc ;
 
@@ -23,6 +24,8 @@ rule resource-compile ( target : sources * : properties * )
         case "CYGWIN" :
             resource-compile-cygwin $(target) : $(sources[1]) ;
         case "FREEBSD" :
+            create-empty-object $(target) : $(sources[1]) ;
+        case "SOLARIS" :
             create-empty-object $(target) : $(sources[1]) ;
         case "*" :
             errors.error "Cannot process RC files for OS=$(OS)" ;
