@@ -406,14 +406,14 @@ rule generate ( target-reference # Target reference
 # - the created virtual target's become replace the property value,
 #    for example <library>a/b might become 
 #    <library>object(virtual-target)@1
-# In addition, use requirements for all created virtual targets
+# In addition, usage requirements for all created virtual targets
 # are added to the properties.
 #
 # The purpose of 'extra-properties' is to be able to replace dependency
 # features only in certain set of properties, which does not include
 # all build properties. A concrete example is when we process use properties.
 # Dependency features must be replaced using full build properties of target,
-# but we don't want to add build properties to use requirements.
+# but we don't want to add build properties to usage requirements.
 rule generate-dependencies ( properties * : project : extra-properties * )
 {
     local xproperties ;
@@ -427,7 +427,7 @@ rule generate-dependencies ( properties * : project : extra-properties * )
             {
                 errors.error "cannot generate dependency " $(p) ;
             }
-            xproperties += $(p:G)$(g) [ $(g).use-requirements ] ;
+            xproperties += $(p:G)$(g) [ $(g).usage-requirements ] ;
         }
         else
         {
@@ -444,7 +444,7 @@ rule generate-dependencies ( properties * : project : extra-properties * )
 # other main target and handles generation of those dependency
 # targets.
 rule basic-target ( name : project
-                    : sources * : requirements * : default-build * : use-requirements * )
+                    : sources * : requirements * : default-build * : usage-requirements * )
 {
     import build-request ;
     import virtual-target ;
@@ -454,7 +454,7 @@ rule basic-target ( name : project
     self.sources = $(sources) ;
     self.requirements = $(requirements) ;
     self.default-build = $(default-build) ;
-    self.use-requirements = $(use-requirements) ;
+    self.usage-requirements = $(usage-requirements) ;
 
     if $(sources:G)
     {
@@ -534,13 +534,13 @@ rule basic-target ( name : project
                     
                     # Apply use requirement of this target to all generated
                     # virtual targets.
-                    local xuse-requirements = 
-                      [ targets.generate-dependencies $(self.use-requirements) 
+                    local xusage-requirements = 
+                      [ targets.generate-dependencies $(self.usage-requirements) 
                         : $(self.project) : $(rproperties) ] ;
                     
                     for local e in $(self.generated.$(property-path))                    
                     {
-                        $(e).set-use-requirements $(xuse-requirements) ;
+                        $(e).set-usage-requirements $(xusage-requirements) ;
                     }                    
                 } 
                 else
@@ -570,10 +570,10 @@ rule basic-target ( name : project
 class basic-target : abstract-target ;
 
 rule typed-target ( name : project : type 
-    : sources * : requirements * : default-build * : use-requirements * )
+    : sources * : requirements * : default-build * : usage-requirements * )
 {
     basic-target.__init__ $(name) : $(project) 
-      : $(sources) : $(requirements) : $(default-build) : $(use-requirements) ;
+      : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;
     
     self.type = $(type) ;
     
@@ -619,19 +619,19 @@ rule main-target-requirements (
 # Returns the use requirement to use when declaraing a main target,
 # which are obtained by
 # - translating all specified property paths, and
-# - adding project's use requirements
-rule main-target-use-requirements (
+# - adding project's usage requirements
+rule main-target-usage-requirements (
   specification * # Use-properties explicitly specified for a main target
   : project       # Project where the main target is to be declared
      )
 {
     local loc = [ project.attribute $(project) location ] ;         
-    local project-use-requirements = [ project.attribute $(project) use-requirements ] ;
+    local project-usage-requirements = [ project.attribute $(project) usage-requirements ] ;
 
-    local use-requirements = [ property.translate-paths $(specification) : $(loc) ] ;
-    use-requirements += $(project-use-requirements) ;
+    local usage-requirements = [ property.translate-paths $(specification) : $(loc) ] ;
+    usage-requirements += $(project-usage-requirements) ;
 
-    return $(use-requirements) ;
+    return $(usage-requirements) ;
 }
 
 # Return the default build value to use when declaring a main target,

@@ -44,7 +44,7 @@ t.run_build_system("--clean")
 t.write("Jamfile", "exe a : a.cpp lib/b ;")
 t.write("lib/Jamfile", """
 project :
-    use-requirements <define>FOO
+    usage-requirements <define>FOO
     ;
 lib b : b.cpp ;
 """)
@@ -64,13 +64,13 @@ int main() { foo(); }
 
 t.write("lib/Jamfile", """
 project :
-    use-requirements <define>FOO
+    usage-requirements <define>FOO
     ;
 """)
 
 t.write("lib/1/Jamfile", """
 project :
-    use-requirements <define>ZOO
+    usage-requirements <define>ZOO
     ;
 lib b : b.cpp ;
 """)
@@ -111,7 +111,7 @@ t.write("Jamfile", """
 
 t.write("lib1/Jamfile", """
     project
-        : use-requirements <library>../lib2/b 
+        : usage-requirements <library>../lib2/b 
         ;
     lib c : c.cpp ;    
 """)

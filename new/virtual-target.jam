@@ -253,15 +253,15 @@ rule abstract-file-target ( name
     }
 
     # Gets 'use' requirements.
-    rule use-requirements ( )
+    rule usage-requirements ( )
     {
-        return $(self.use-requirements) ;
+        return $(self.usage-requirements) ;
     }
 
     # Sets 'use' requirements
-    rule set-use-requirements ( requirements * )
+    rule set-usage-requirements ( requirements * )
     {
-        self.use-requirements = $(requirements) ;
+        self.usage-requirements = $(requirements) ;
     }
 
     # Sets the dependency graph this target is part of.

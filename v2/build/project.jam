@@ -380,8 +380,8 @@ local rule initialize (
             : [ $(pattributes).get default-build ] ;
         $(attributes).set requirements
             : [ $(pattributes).get requirements ] : exact ;
-        $(attributes).set use-requirements
-            : [ $(pattributes).get use-requirements ] : exact ;
+        $(attributes).set usage-requirements
+            : [ $(pattributes).get usage-requirements ] : exact ;
         local parent-build-dir = [ $(pattributes).get build-dir ] ;
         if $(parent-build-dir)
         {            
@@ -437,14 +437,14 @@ rule project-attributes ( location )
                 self.requirements = $(result) ;
             }
         }
-        else if $(attribute) = "use-requirements"
+        else if $(attribute) = "usage-requirements"
         {
             local non-free = [ property.remove free : $(specification) ] ;
             if $(non-free)
             {
-                errors.error "use-requirements" $($(real-pos2)) "have non-free properties" $(non-free) ;
+                errors.error "usage-requirements" $($(real-pos2)) "have non-free properties" $(non-free) ;
             }            
-            self.use-requirements += [ property.translate-paths $(specification)
+            self.usage-requirements += [ property.translate-paths $(specification)
                                       : $(self.location) ] ;
         }        
         else if $(attribute) = "source-location"

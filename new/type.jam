@@ -179,7 +179,7 @@ rule type ( suffix )
 
 
 rule main-target-rule ( name : sources * : requirements * : default-build * 
-                        : use-requirements * )
+                        : usage-requirements * )
 {
     # First find required target type, which is equal to the name used
     # to invoke us.
@@ -196,7 +196,7 @@ rule main-target-rule ( name : sources * : requirements * : default-build *
         : $(sources)
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
         : [ targets.main-target-default-build $(default-build) : $(project) ]
-        : [ targets.main-target-use-requirements $(use-requirements) : $(project) ]
+        : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
       ] ;
 }
 
