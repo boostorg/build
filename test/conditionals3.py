@@ -28,7 +28,7 @@ int main()
 """)
 
 # Don't check stderr, which can include warning about unused 'c'.
-t.run_build_system(stderr=None)
-t.expect_addition("bin/$toolset/debug/main-target-hello/hello")
+t.run_build_system(stdout=None, stderr=None)
+t.expect_addition("bin/$toolset/debug/main-target-hello/hello.exe")
 
 t.cleanup()
