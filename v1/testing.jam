@@ -347,9 +347,11 @@ rule run-test ( type-to-test run-target : sources * )
         }
     }
     
+    local debugger = [ MATCH ^--debugger=(.*) : $(ARGV) ] ;
+    debugger = $(debugger)" " ;
     local newline = "
     " ;
-    PATH_SETUP on $(run-target) = $(path-setup:J=$(newline))$(newline) ;
+    PATH_SETUP on $(run-target) = $(path-setup:J=$(newline))$(newline)$(debugger:E=) ;
     
     capture-run-output $(run-target) : $(executable) ;
 }
