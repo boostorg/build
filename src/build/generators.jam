@@ -970,7 +970,8 @@ local rule construct-without-caching (
 # 'construct' in stack, returns only targets of requested 'target-type',
 # otherwise, returns also unused sources and additionally generated
 # targets.    
-rule construct ( project name ? : target-type multiple ? : property-set * : sources * )
+rule construct ( project name ? : target-type multiple ? : property-set * : sources * 
+   : return-all ? )
 {
     if (.construct-stack)
     {
@@ -1014,7 +1015,13 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
             local type = [ $(t).type ] ; 
             assert.nonempty-variable type ;
             assert.nonempty-variable target-type ;
-            if $(type) = $(target-type) || [ type.is-derived $(type) $(target-type) ]
+            
+            # Return only targets of the requested type, unless 'return-all'
+            # is specified. If we don't do this, then all targets calling
+            # 'construct' will get unused target returned, which will break
+            # checking for unused sources a bit harder.
+            if $(return-all) || 
+              $(type) = $(target-type) || [ type.is-derived $(type) $(target-type) ]
             {
                   result2 += $(t) ;
             }

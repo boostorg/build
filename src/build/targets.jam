@@ -819,7 +819,7 @@ rule basic-target ( name : project
     # Given the set of generated targets, and refined build 
     # properties, determines and sets appripriate usage requirements
     # on those targets.
-    local rule compute-usage-requirements ( rproperties )
+    rule compute-usage-requirements ( rproperties )
     {
         xusage-requirements = [ $(self.usage-requirements).evaluate-conditionals 
           $(rproperties) ] ;                
@@ -855,8 +855,11 @@ rule basic-target ( name : project
     }
     
         
-    # Check that 'result' makes use of all the 'sources'. If not,
-    # issues a warning. Note that 'result' *can* be empty. For
+    # Check that 'result' makes use of all the 'sources', i.e. Specifically,
+    # that for all specified sources, at least one virtual target is either
+    # present in result directly, or as dependency of some returned virtual
+    # target. If this is not the case, issues a warning. 
+    # Note that 'result' *can* be empty. For
     # example, in this use case:
     #    alias platform-sources ;
     #    alias platform-sources : a.cpp : <os>NT ;
@@ -866,7 +869,7 @@ rule basic-target ( name : project
         local used-sources ;
         for local r in $(result)
         {
-            used-sources += [ virtual-target.traverse $(r) : include-roots : 1 ] ; #: includes-sources ] ;
+            used-sources += [ virtual-target.traverse $(r) : include-roots : 1 ] ;
         }
                
         local group ;
@@ -878,6 +881,7 @@ rule basic-target ( name : project
             }
             else
             {
+                
                 # We've collected a group of targets that originates from single
                 # dependency main target, and must check that at least one of them
                 # is used. If no targets were created for dependency, it's OK.                

@@ -377,15 +377,16 @@ type.set-scanner CPP : c-scanner ;
 type.register H : h hpp ;
 type.register C : c ;
 
-# Generator for 'lib' target, which relays to generators for either
-# "STATIC_LIB" or "SHARED_LIB", depending on the value of 
-# "shared" feature.
-rule lib-generator ( ) 
-{
-    generator.__init__ lib-generator true : : LIB : <main-target-type>LIB ;
+rule lib-target-class ( name : project 
+    : sources * : requirements * : default-build * : usage-requirements * )
+{    
+    basic-target.__init__ $(name) : $(project) 
+      : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;
     
-    rule run ( project name ? : property-set : sources * )
-    {
+    IMPORT builtin : generators.construct : $(__name__) : generators.construct ;
+            
+    rule construct ( source-targets * : property-set )
+    {        
         local properties = [ $(property-set).raw ] ;
         # Determine the needed target type
         local actual-type ;
@@ -401,15 +402,43 @@ rule lib-generator ( )
         {
             actual-type = STATIC_LIB ;
         }
+        property-set = [ $(property-set).add-raw <main-target-type>LIB ] ;
         # Construct the target.
-        return [ generators.construct $(project) $(name) : $(actual-type) 
-                : $(property-set) : $(sources) ] ;
+        return [ generators.construct $(self.project) $(self.name) : $(actual-type) 
+                : $(property-set) : $(source-targets) : return-all ] ;        
+    }            
+    
+    rule compute-usage-requirements ( rproperties )
+    {
+        local result = [ basic-target.compute-usage-requirements $(rproperties) ] ;
+        local search = [ $(rproperties).get <search> ] ;
+        if $(search)
+        {
+            result = [ $(result).add [ 
+              property-set.create $(search:G=<library-path>) ] ] ;            
+        }
+        return $(result) ;
     }
+    
 }
+class lib-target-class : basic-target ;
 
-class lib-generator : generator ;
-
-generators.register [ new lib-generator ] ;
+rule lib ( name : sources * : requirements * : default-build * 
+    : usage-requirements * )
+{
+    local project = [ CALLER_MODULE ] ;
+        
+    # This is a circular module dependency, so it must be imported here
+    import targets ;
+    targets.main-target-alternative
+      [ new lib-target-class $(name) : $(project) 
+        : $(sources)
+        : [ targets.main-target-requirements $(requirements) : $(project) ] 
+        : [ targets.main-target-default-build $(default-build) : $(project) ]
+        : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
+      ] ;
+}
+IMPORT $(__name__) : lib : : lib ;
 
 rule searched-lib-generator ( )
 {
@@ -555,7 +584,6 @@ rule link-action ( targets + : sources * : action-name : properties * )
             if [ class.is-a $(s) : searched-lib-target ]
             {
                 local name = [ $(s).real-name ] ;
-                local search = [ $(s).search ] ;                
                 if [ $(s).shared ] 
                 {                    
                     properties2 += <find-shared-library>$(name) ;
@@ -568,7 +596,6 @@ rule link-action ( targets + : sources * : action-name : properties * )
                 {
                     properties2 += <find-static-library>$(name) ;
                 }         
-                properties2 += <library-path>$(search) ;
             } 
             else 
             {
@@ -585,7 +612,7 @@ rule link-action ( targets + : sources * : action-name : properties * )
         {                    
             rpaths = [ sequence.unique $(rpaths) ] ;
             properties2 += <dll-path>$(rpaths) ;            
-        }                        
+        }       
         return $(properties2) ;        
     }
     
