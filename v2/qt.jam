@@ -23,48 +23,58 @@ rule init ( prefix ? )
               "QT installation prefix not given and QTDIR variable is empty" ;
         }        
     }
-            
-    .prefix = $(prefix) ;
-        
-    feature.extend uses : qt ;
-    feature.action <uses>qt : qt.add-properties ;            
-           
-    generators.register-standard qt.moc : H : CPP(moc_%) : <uses>qt ;    
-    
-    type.register UI : ui ;
-    type.register UIC_H : : H ;
-    
-    generators.register-standard qt.uic-h : UI : UIC_H : <uses>qt ;
-    
-    # The following generator is used to convert UI files to CPP
-    # It creates UIC_H from UI, and constructs CPP from UI/UIC_H
-    # In addition, it also returns UIC_H target, so that it can bee
-    # mocced.
-    rule qt.uic-cpp-generator 
+ 
+    if $(.initialized)
     {
-        generator.__init__ qt.uic-cpp : UI UIC_H : CPP : <uses>qt ;
-        
-        rule run ( project name ? : properties * : sources + :  multiple ? )
+        if $(prefix) != $(.prefix)
         {
-            # Construct CPP as usual
-            local result = [ generator.run $(project) $(name) 
-              : $(properties) : $(sources) : $(multiple) ] ;
-            # If OK, add "UIC_H" target to the returned list
-            if $(result)
-            {
-                local action = [ $(result[1]).action ] ;
-                local sources = [ $(action).sources ] ;
-                result += $(sources[2]) ;
-            }
-            
-            return $(result) ;
-        }               
-    }
-    
-    class qt.uic-cpp-generator : generator ; 
-    generators.register [ new qt.uic-cpp-generator ] ;
+            errors.error 
+              "Attempt the reinitialize QT with different installation prefix" ;
+        }        
+    } 
+    else
+    {            
+        .initialized = true ;
+        .prefix = $(prefix) ;
         
-    #generators.register-standard qt.uic-cpp : UI UIC_H : CPP : <uses>qt ;
+        feature.extend uses : qt ;
+        feature.action <uses>qt : qt.add-properties ;            
+        
+        generators.register-standard qt.moc : H : CPP(moc_%) : <uses>qt ;    
+        
+        type.register UI : ui ;
+        type.register UIC_H : : H ;
+        
+        generators.register-standard qt.uic-h : UI : UIC_H : <uses>qt ;
+        
+        # The following generator is used to convert UI files to CPP
+        # It creates UIC_H from UI, and constructs CPP from UI/UIC_H
+        # In addition, it also returns UIC_H target, so that it can bee
+        # mocced.
+        rule qt.uic-cpp-generator 
+        {
+            generator.__init__ qt.uic-cpp : UI UIC_H : CPP : <uses>qt ;
+            
+            rule run ( project name ? : properties * : sources + :  multiple ? )
+            {
+                # Construct CPP as usual
+                local result = [ generator.run $(project) $(name) 
+                  : $(properties) : $(sources) : $(multiple) ] ;
+                # If OK, add "UIC_H" target to the returned list
+                if $(result)
+                {
+                    local action = [ $(result[1]).action ] ;
+                    local sources = [ $(action).sources ] ;
+                    result += $(sources[2]) ;
+                }
+            
+                return $(result) ;
+            }               
+        }
+    
+        class qt.uic-cpp-generator : generator ; 
+        generators.register [ new qt.uic-cpp-generator ] ;
+    }
 }
 
 rule qt.add-properties ( property : properties * )
@@ -72,11 +82,11 @@ rule qt.add-properties ( property : properties * )
     local lib-name ;
     if <threading>multi in $(properties)
     {
-	lib-name = qt-mt ;
+        lib-name = qt-mt ;
     }
     else
     {
-	lib-name = qt ;
+        lib-name = qt ;
     }
     return <include>$(.prefix)/include <dll-path>$(.prefix)/lib <library-path>$(.prefix)/lib <find-shared-library>$(lib-name) ;
 }
