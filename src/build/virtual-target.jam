@@ -795,7 +795,7 @@ rule register-actual-name ( actual-name : virtual-target )
         local cs1 = [ $(.actual.$(actual-name)).creating-subvariant ] ;
         local cs2 = [ $(virtual-target).creating-subvariant ] ;
         local cmt1 = [ $(cs1).main-target ] ;
-        local cmt2 = [ $(cs1).main-target ] ;
+        local cmt2 = [ $(cs2).main-target ] ;
         
         
         local action1 = [ $(.actual.$(actual-name)).action ] ;
@@ -813,22 +813,13 @@ rule register-actual-name ( actual-name : virtual-target )
             properties-added = [ set.difference $(p2) : $(p1) ] ;
             properties-added ?= "none" ;
         }        
-        if $(properties-added) != "none" || $(properties-removed) != "none"
-        {            
-            errors.error "Duplicate name of actual target:" $(actual-name) 
-              : "previous virtual target" [ $(.actual.$(actual-name)).str ] 
-              : "created from" [ $(cmt1).location ]
-              : "another virtual target" [ $(virtual-target).str ]
-              : "created from" [ $(cmt2).location ]                
-              : "added properties: " $(properties-added) 
-              : "removed properties: " $(properties-removed) ;
-        }
-        else
-        {
-            errors.error "Duplicate name of actual target:" $(actual-name) 
-              : "previous virtual target" [ $(.actual.$(actual-name)).str ] 
-              : "another virtual target" [ $(virtual-target).str ] ;            
-        }        
+        errors.error "Duplicate name of actual target:" $(actual-name) 
+          : "previous virtual target" [ $(.actual.$(actual-name)).str ] 
+          : "created from" [ $(cmt1).location ]
+          : "another virtual target" [ $(virtual-target).str ]
+          : "created from" [ $(cmt2).location ]                
+          : "added properties: " $(properties-added) 
+          : "removed properties: " $(properties-removed) ;
     }
     else
     {
