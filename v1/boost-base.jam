@@ -2129,6 +2129,11 @@ rule stage ( name : sources + : requirements * : local-build * )
 
     local stage-id =
         [ grist-targets $(name) ] ;
+    local arch-subdirs = [ get-values <architecture-subdirs> : $(requirements) ] ;
+    local tree-root = [ get-values <tree-subdirs> : $(requirements) ] ;
+    if $(tree-root) { tree-root = [ split-path $(tree-root) ] ; }
+    local locate = [ get-values <locate> : $(requirements) ] ;
+    if $(locate) { locate = [ split-path $(locate) ] ; }
 
     # Supress the regular build of this target
     local gSUPPRESS_FAKE_TARGETS =  [ get-values <suppress> : $(local-build) ] ;
@@ -2137,6 +2142,7 @@ rule stage ( name : sources + : requirements * : local-build * )
     local files = [ select-ungristed $(sources) ] ;
     local file-mode ;
     local file-tagged ;
+    local file-subdir ;
 
     # Prevent built object from getting deleted so that when targets are linked
     # multiple times they are available.
@@ -2169,6 +2175,17 @@ rule stage ( name : sources + : requirements * : local-build * )
                 local s-toolset = ;
                 local s-variant = ;
                 split-target-subvariant s-target s-properties s-toolset s-variant : $(subvariant) ;
+                local s-subdir ;
+                if $(arch-subdirs)
+                {
+                    local arch = [ get-values <instruction-set> : $(s-properties) ] ;
+                    arch ?= [ get-values <architecture> : $(s-properties) ] ;
+                    arch ?= $(OSPLAT:L) ;
+                    if $(arch) = "default" { arch = $(OSPLAT:L) ; }
+                    arch += [ get-values <address-model> : $(s-properties) ] ;
+                    arch += $(OS:L) ;
+                    s-subdir = $(arch:J=-) ;
+                }
                 
                 if  ( $(s-toolset) = $(source-build[1]) || $(source-build[1]) = * ) &&
                     ( $(s-variant) = $(source-build[2]) || $(source-build[2]) = * )
@@ -2185,10 +2202,11 @@ rule stage ( name : sources + : requirements * : local-build * )
                     local sv-files = ;
                     for local sv in $(target-subvariant)
                     {
-                        local files = $(gFILES($(target-subvariant))) ;
-                        files ?= $(target-subvariant) ;
-                        sv-files += $(files) ;
+                        local sv-file = $(gFILES($(sv))) ;
+                        sv-file ?= $(sv) ;
+                        sv-files += $(sv-file) ;
                     }
+                    sv-files = [ unique $(sv-files) ] ;
                     for local sv in $(sv-files)
                     {
                         local renamed-target =
@@ -2197,6 +2215,7 @@ rule stage ( name : sources + : requirements * : local-build * )
                         files += $(sv) ;
                         file-mode($(sv)) = $($(gTARGET_TYPE($(s-target)))MODE) ;
                         file-tagged($(sv)) = $(renamed-target) ;
+                        file-subdir($(sv)) = $(s-subdir) ;
                     }
 
                 }
@@ -2208,20 +2227,33 @@ rule stage ( name : sources + : requirements * : local-build * )
     # are getting defined in the dependent phase skip the actual instructions.
     #
     local destination-files = ;
+    local locate-target = $(locate) ;
+    locate-target ?= [ split-path $(LOCATE_TARGET) ] ;
     for local file in $(files)
     {
-        local destination-file = $(file:D=) ;
-        if $(file:G) { destination-file = $(file-tagged($(file)):G=:D=) ; }
+        local destination-file ;
+        local destination-subdir ;
+        if $(file:G)
+        {
+            destination-file = $(file-tagged($(file)):G=:D=) ;
+            destination-subdir = $(file-subdir($(file))) ;
+        }
+        else
+        {
+            destination-file = $(file:D=) ;
+            destination-subdir = [ strip-initial $(tree-root) : [ split-path $(file:D) ] ] ;
+        }
         destination-file =
-            [ grist-targets $(destination-file) : [ split-path $(stage-dir) ] ] ;
+            [ grist-targets $(destination-file) : [ split-path $(stage-dir) ] $(destination-subdir) ] ;
         destination-files += $(destination-file) ;
         {
             local FILEMODE = $(FILEMODE) ;
             if $(file-mode($(file))) { FILEMODE = $(file-mode($(file))) ; }
             MakeLocate $(destination-file) :
-                [ FDirName [ split-path $(LOCATE_TARGET)/$(stage-dir) ] ] ;
+                [ FDirName $(locate-target) [ split-path $(stage-dir) ] $(destination-subdir) ] ;
             FileClone $(destination-file) : $(file) ;
-            declare-fake-targets $(stage-id)/$(destination-file:G=) : $(destination-file) ;
+            local target = $(stage-id) $(destination-subdir) $(destination-file:G=) ;
+            declare-fake-targets $(target:J=/) : $(destination-file) ;
         }
     }
     declare-fake-targets $(stage-id) : $(destination-files) ;
@@ -2255,3 +2287,102 @@ rule target-id-of ( target )
         [ FGristFiles $(target:D=:G=) ] ;
     return $(target-id) ;
 }
+
+# Common rules for generating a single stage tag based on the
+# variant, build properties, and the toolset used to build.
+# To use place this rule name in the requirementes section of
+# a stage target.
+#
+# The tag is constructed as such:
+#
+#   [-<toolset-tag>][-<thread-tag>][-<runtime-tag>]
+#
+#   <toolset-tag> maps to an abbreviated name of the toolset
+#   and when possible and applicable the version of the toolset.
+#
+#   <thread-tag> "mt" when multi-threading is enabled.
+#
+#   <runtime-tag> adds these single letter tags:
+#       "s" when static linking to runtime
+#       "g" when linking to debug runtime
+#       "d" when building debug variants
+#       "p" when building with stlport libraries
+#
+# The tag added is a <tag><prefix> to allow for additional tags
+# in the stage. For example the version tag.
+#
+rule common-stage-tag ( toolset variant : properties * )
+{
+    local tags = ;
+
+    local toolset-tag = ;
+    switch $(toolset)
+    {
+        case *borland* : toolset-tag += bcb ;
+        case *como* : toolset-tag += como ;
+        case *cwpro8* : toolset-tag += cw8 ;
+        case *darwin* : toolset-tag += ;
+        case *edg* : toolset-tag += edg ;
+        case *gcc* : toolset-tag += gcc ;
+        case *intel-linux* : toolset-tag += il ;
+        case *intel-win32* : toolset-tag += iw ;
+        case *kcc* : toolset-tag += kcc ;
+        case *kylix* : toolset-tag += bck ;
+        case *metrowerks* : toolset-tag += cw ;
+        case *mingw* : toolset-tag += mgw ;
+        case *mipspro* : toolset-tag += mp ;
+        case *msvc* : toolset-tag += vc6 ;
+        case *sunpro* : toolset-tag += sw ;
+        case *tru64cxx* : toolset-tag += tru ;
+        case *vacpp* : toolset-tag += xlc ;
+        case *vc7* : toolset-tag += vc ;
+    }
+    toolset-tag += [ MATCH "[-c]([0123456789]+).([0123456789]*)" : $(toolset) ] ;
+    tags += $(toolset-tag:J=) ;
+    
+    local thread-tag = ;
+    if <threading>multi in $(properties) { thread-tag = mt ; }
+    tags += $(thread-tag:J=) ;
+    
+    local runtime-tag = ;
+    if <runtime-link>static in $(properties) { runtime-tag += s ; }
+    if <runtime-build>debug in $(properties) { runtime-tag += g ; }
+    if [ MATCH .*(debug).* : $(variant) ] { runtime-tag += d ; }
+    if [ MATCH .*(stlport).* : $(toolset) ] { runtime-tag += p ; }
+    tags += $(runtime-tag:J=) ;
+    
+    if $(tags)
+    {
+        return $(properties) <tag><prefix>-$(tags:J=-) ;
+    }
+    else
+    {
+        return $(properties) ;
+    }
+}
+
+# Recursive version of GLOB. Builds the glob of files while
+# also searching in the subdirectories of the given root.
+#
+rule glob-tree ( root : patterns * )
+{
+    local e ;
+    local f = [ GLOB $(root) : $(patterns) ] ;
+    local files ;
+    for e in $(f)
+    {
+        if $(e:D=) != CVS { files += $(e) ; }
+    }
+    local d = [ difference [ GLOB $(root) : * ] : $(files) ] ;
+    for e in $(d)
+    {
+        if ! ( $(e:D=) in . .. ) { files += [ glob-tree $(e) : $(patterns) ] ; }
+    }
+    return $(files) ;
+}
+
+rule unless ( test ? : no-value * : yes-value * )
+{ if ! $(test) { return $(no-value) ; } else { return $(yes-value) ; } }
+
+rule cond ( test ? : yes-value * : no-value * )
+{ if $(test) { return $(yes-value) ; } else { return $(no-value) ; } }
