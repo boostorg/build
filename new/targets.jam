@@ -469,6 +469,7 @@ rule basic-target ( name : project
         if $(split[3])
         {
             sproperties = [ property.make [ feature.split $(split[3]) ] ] ;
+            sproperties = [ feature.expand-composites $(sproperties) ] ;
         }
 
         # Check if such target exists
