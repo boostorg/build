@@ -129,9 +129,9 @@ toolset kylix bc++ : -o : -D
     local mwcc = ; if $(NT) { mwcc = mwcc ; } else { mwcc = mwc$(OSPLAT:L) ; }
     mwcc ?= mwcc ;
     toolset metrowerks $(mwcc) : "-o " : -D
-        : -subsystem console -runtime staticsingle
-        [ opt --release : -opt full -inline auto -inline level=8 ]
-        [ opt --debug : -O0 -inline off ] ;
+        : -subsystem console -cwd include -ladvapi32.lib
+        [ opt --release : -runtime ss -opt full -inline auto -inline level=8 ]
+        [ opt --debug : -runtime ssd -O0 -inline off ] ;
 }
 ## MINGW GCC
 toolset mingw gcc : "-o " : -D
