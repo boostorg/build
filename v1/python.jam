@@ -18,6 +18,8 @@ PYTHON_VERSION_NODOT
  = [ SUBST $(PYTHON_VERSION) ([0-9]*)\.([0-9]*) $1$2 ]
       ;
 
+local RUN_PATH = $(RUN_PATH) ;
+
 if $(NT)
 {
     PYTHON_ROOT ?= c:/tools/python ;
@@ -57,11 +59,11 @@ else if $(UNIX)
 
 # Locate the python executable
 PYTHON ?= <executable@>python$(SUFEXE) ;
-SEARCH on $(PYTHON) = $(PATH) ;
+SEARCH on $(PYTHON) = $(RUN_PATH) ;
 
 # And the debugging version
 PYTHON_D ?= $(PYTHON:S=)_d$(PYTHON:S) ;
-SEARCH on $(PYTHON_D) = $(PATH) ;
+SEARCH on $(PYTHON_D) = $(RUN_PATH) ;
 
 # select-python-library
 #
@@ -99,7 +101,8 @@ PYTHON_PROPERTIES
   += 
     <gcc><*><find-library>python$(PYTHON_VERSION).dll 
       <gcc><*><library-path>/usr/local/lib/python$(PYTHON_VERSION)/config
-      <gcc><*><include>/usr/include/python$(PYTHON_VERSION)
+      <gcc><*><include>/usr/local/include/python$(PYTHON_VERSION)
+        <gcc><*><include>/usr/include/python$(PYTHON_VERSION)
         <include>$(BOOST_ROOT)
           select-python-library
           # These two compilers pick up implicit directions from #pragmas
@@ -130,46 +133,55 @@ rule python-files ( module implib ? : sources * )
 {
     local actual-module = $(module) ;
     
-    if <define>BOOST_DEBUG_PYTHON in $(gBUILD_PROPERTIES)
-    {
-        # build the actual module name
-        actual-module = $(module:S=)_d$(module:S) ;
-        
-        # be sure not to create a dependency loop
-        if $(actual-module) != $(module)
-        {
-            # now the original module name is just a fake target
-            NOTFILE $(module) ;
-            DEPENDS $(module) : $(actual-module) ;
-            set-target-variables $(actual-module) ;
-        }
-    }
-    
-    dll-files $(actual-module) $(implib) : $(sources) ;
+    dll-files $(actual-module) $(implib) : $(sources) : PYD ;
 
     if $(NT) && ( $(gCURRENT_TOOLSET) = gcc )
     {
         add-cygwin-python-run-path $(<[-1]) ;
     }
-    
-    gRUN_PATH($(module:S=)) = $(gRUN_PATH($(module))) ;
 }
+
+if $(NT)
+{
+    # Adjust the name of Python modules so that they have the _d
+    # suffix when compiled with python debugging enabled.
+    gNAME_ADJUST(PYD) = name-adjust-PYD ;
+
+    rule name-adjust-PYD ( pyd implib ? : properties * : toolset variant )
+    {
+        if <define>BOOST_DEBUG_PYTHON in $(properties)
+        {
+            pyd = $(pyd:S=)_d$(pyd:S) ;
+        }
+        return $(pyd) $(implib) ;
+    }
+}
+
+rule Link-PYD
+{
+    if $(<[2])
+    {
+        MODE on $(<[2]) = $(IMPMODE) ;
+        Chmod $(<[2]) ;
+    }
+    
+    gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) ;
+    Link-action $(<) : $(>) : PYD ;
+}
+
+declare-target-type PYD : <shared-linkable>true ;
+gGENERATOR_FUNCTION(PYD) = python-files ;
+SUFPYD = .pyd $(SUFDLL[2-]) ;
+PYDMODE = $(DLLMODE) ;
+SHARED_TYPES += PYD ;
 
 # Declare a python extension.
 rule extension ( name : sources + : requirements * : default-BUILD * )
 {
     requirements += $(PYTHON_PROPERTIES) ;
     
-    # Temporarily hijack the generator function for DLLs to handle
-    # some python extension-specific things.
-    local gGENERATOR_FUNCTION(DLL) = python-files ;
-    local SUFDLL = .pyd $(SUFDLL[2-]) ;
-    
-    dll $(name) : 
-      $(sources)
-      : $(requirements)
-        : $(default-BUILD)
-          ;
+
+    declare-local-target $(name) : $(sources) : $(requirements) : $(default-BUILD) : PYD ;
 }
 
 # boost-python-runtest target : python-script sources : requirements : local-build : args
@@ -219,7 +231,7 @@ actions python-test-target bind PYTHON
     $(SHELL_EXPORT)PATH
     $(SHELL_SET)PYTHONPATH=$(PYTHONPATH)
     $(SHELL_EXPORT)PYTHONPATH
-    $(PYTHON) "$(>)" $(ARGS) > "$(<)"
+    $(PYTHON_LAUNCH) $(PYTHON) $(PYTHON_ARGS) "$(>)" $(ARGS) > "$(<)"
 }
 
 SUFPYTHON_RUNTEST = .run ;
@@ -236,7 +248,7 @@ actions python-runtest-target bind PYTHON
     $(SHELL_EXPORT)PATH
     $(SHELL_SET)PYTHONPATH=$(PYTHONPATH)
     $(SHELL_EXPORT)PYTHONPATH
-    $(PYTHON) "$(>)" $(ARGS)
+    $(PYTHON_LAUNCH) $(PYTHON) $(PYTHON_ARGS) "$(>)" $(ARGS)
 }
 
 # This is the rule that actually causes the test to run. It is used by
@@ -262,7 +274,7 @@ rule python-runtest-aux ( target : sources + )
     if $(NT) && ( $(gCURRENT_TOOLSET) = gcc )
     {
         python = python$(PYTHON_VERSION)$(SUFEXE) ;
-        SEARCH on $(python) = $(CYGWIN_ROOT)/usr/local/bin ;
+        SEARCH on $(python) = $(RUN_PATH) $(CYGWIN_ROOT)/usr/local/bin ;
         # Fix up path splitter for cygwin.
         splitpath = ":" ;
     }

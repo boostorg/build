@@ -100,7 +100,7 @@ rule executable-file
     main-from-objects $(<) : [ Objects $(>) ] : EXE ;
 }
 
-rule dll-files
+rule dll-files ( module implib ? : sources * : target-type ? )
 {
     type-DEPENDS dll : $(<) ;
     
@@ -110,7 +110,8 @@ rule dll-files
         INCLUDES $(<[1]) : $(<[2-]) ;
         INCLUDES $(<[2-]) : $(<[1]) ;
     }
-    main-from-objects $(<) : [ Objects $(>) ] : DLL ;
+    target-type ?= DLL ;
+    main-from-objects $(<) : [ Objects $(>) ] : $(target-type) ;
 }
 
 # main-from-objects exe-target : obj-target... : ("EXE"|"DLL")
@@ -156,6 +157,14 @@ rule Link-DLL
 # This also allows the user to customize the base path for running built
 # products from the command-line
 RUN_PATH ?= $(PATH) ;
+if $(NT)
+{
+    # Try some other likely spellings
+    RUN_PATH ?= $(Path) ;
+    RUN_PATH ?= $(path) ;
+}
+# Now set this, just in case someone tries to use it.
+PATH = $(RUN_PATH) ;
 
 # A simple action to run an executable target
 actions Run
@@ -1071,10 +1080,10 @@ rule is-link-compatible
 }
 
 # find-compatible-subvariant main-target : toolset variant : dependent-simple-properties
-rule find-compatible-subvariant
+rule find-compatible-subvariant ( main-target : toolset variant : dependent-simple-properties * )
 {
-    local requirements = [ select-properties $(>)
-                            : $(gTARGET_REQUIREMENTS($(<))) ] ;
+    local requirements = [ select-properties $(toolset) $(variant)
+                            : $(gTARGET_REQUIREMENTS($(main-target))) ] ;
                                 
     local free-properties = [ segregate-free-properties requirements ] ;
 
@@ -1083,7 +1092,7 @@ rule find-compatible-subvariant
 
     # add properties from build-request, checking for compatibility
     local p ;
-    for p in [ difference $(3) : $(requirements) ]
+    for p in [ difference $(dependent-simple-properties) : $(requirements) ]
     {
         local f = $(p:G) ;
         if $(f) in $(requirements:G)
@@ -1093,7 +1102,7 @@ rule find-compatible-subvariant
 
             if ! [ is-link-compatible $(f) : $(required-value) : $(p:G=) ]
             {
-                EXIT $(<): required property $(f)$(required-value)
+                EXIT $(main-target): required property $(f)$(required-value)
                     incompatible with requested $(p) ;
             }
         }
@@ -1103,17 +1112,25 @@ rule find-compatible-subvariant
         }
     }
     
-    local base-properties = $(gBASE_PROPERTIES($(>[1]),$(>[2]))) ;
+    local base-properties = $(gBASE_PROPERTIES($(toolset),$(variant))) ;
     segregate-overrides override-properties : base-properties ;
 
+    local all-properties = $(base-properties) $(free-properties) ;
+    
+    local rules = [ select-ungristed $(gTARGET_REQUIREMENTS($(<))) ] ;
+    for local r in $(rules)
+    {
+        all-properties = [ $(r) $(toolset) $(variant) : $(all-properties) ] ;
+    }
+    
     # build the path identifying the subvariant
     local subvariant-id
-            = [ join $(>) # toolset variant
+            = [ join $(toolset) $(variant)
                 [ ungrist-properties [ sort $(override-properties) ] ]
                 : $(SLASH) ] ;
 
     return $(subvariant-id)
-        [ fixup-path-properties $(base-properties) $(free-properties) ]
+        [ fixup-path-properties $(all-properties) ]
         $(override-properties) ;
 }
 
@@ -1226,7 +1243,7 @@ rule depend-on-libraries
     # To run these targets, we need everything needed to run the libraries
     for local dir in $(gRUN_PATH($(>)))
     {
-        if ! $(dir) in $(gRUN_PATH($(<)))
+        if ! ( $(dir) in $(gRUN_PATH($(<))) )
         {
             gRUN_PATH($(<)) += $(dir) ;
         }
@@ -1267,6 +1284,10 @@ rule subvariant-target
       = [ join-path $(LOCATE_TARGET) $(BIN_DIRECTORY) $(<:G=) $(>[1]) ] ;
 
     local target-files = [ FAppendSuffix $(subvariant) : $(SUF$(target-type)) ] ;
+    if $(gNAME_ADJUST($(target-type)))
+    {
+        target-files = [ $(gNAME_ADJUST($(target-type))) $(target-files) : $(2) : $(3) ] ;
+    }
 
     gTARGET_FILES($(subvariant)) = $(target-files) ;
     gTARGET_FILES($(<)) += $(target-files) ;
@@ -1359,6 +1380,8 @@ rule main-target
     }
   }
 }
+
+SHARED_TYPES = DLL ;
 
 gGENERATOR_FUNCTION(EXE) = executable-file ;
 # exe target : sources : requirements : local-build

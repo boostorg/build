@@ -28,7 +28,7 @@ flags metrowerks HDRS <include> ;
 flags metrowerks CFLAGS <debug-symbols>on : -g ;
 flags metrowerks LINKFLAGS <debug-symbols>on : -g ;
 
-flags metrowerks LINKFLAGS <target-type>DLL : -shared ;
+flags metrowerks LINKFLAGS <target-type>$(SHARED_TYPES) : -shared ;
 flags metrowerks CFLAGS <optimization>off : -O0 ;
 flags metrowerks CFLAGS <optimization>speed : -opt full ;
 flags metrowerks CFLAGS <optimization>space : -O4,s intrinsics ;
@@ -75,7 +75,8 @@ rule Link-action
     gRUN_PATH($(<)) += $(METROWERKS_ROOT)"\\Win32-X86 Support\\Libraries\\Runtime" ;
     IMPLIB_COMMAND on $(<) = "-implib " ; # will be "multiplied away" if not
                                         # needed.
-    with-command-file metrowerks-Link-action $(<) : $(>) $(NEEDLIBS) ;
+    with-command-file metrowerks-Link-action $(<) : $(>) $(NEEDLIBS) # $(NEEDLIBS)
+      ;
 }
 
 # Here we set the environment variable MWWinx86LibraryFiles (customize for other

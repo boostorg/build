@@ -43,7 +43,7 @@ flags intel-linux CFLAGS <shared-linkable>true : -KPIC ;
 flags intel-linux LINKFLAGS <shared-linkable>true : -KPIC ;
 
 # dynamic link library
-flags intel-linux LINKFLAGS <target-type>DLL : -shared ;
+flags intel-linux LINKFLAGS <target-type>$(SHARED_TYPES) : -shared ;
 
 # library linking
 flags intel-linux LINKFLAGS <runtime-link>static : -static ;

@@ -57,7 +57,7 @@ flags msvc STDLIBPATH : $(MSVCDir)$(SLASH)lib ;
 flags msvc LIBPATH <library-path> ;
 flags msvc NEEDLIBS <library-file> ;
 flags msvc FINDLIBS <find-library> ;
-flags msvc LINKFLAGS <target-type>DLL : /DLL ;
+flags msvc LINKFLAGS <target-type>$(SHARED_TYPES) : /DLL ;
 
 #### Link ####
 

@@ -52,11 +52,11 @@ if ! $(NT) # The compiler complains about -fPIC on NT
 
 if $(BETOOLS)
 {
-    flags gcc LINKFLAGS <target-type>DLL : -nostart ;
+    flags gcc LINKFLAGS <target-type>DLL <target-type>PYD : -nostart ;
 }
 else
 {
-    flags gcc LINKFLAGS <target-type>DLL : -shared ;
+    flags gcc LINKFLAGS <target-type>DLL <target-type>PYD : -shared ;
 }
 
 flags gcc LIBPATH <library-path> ;

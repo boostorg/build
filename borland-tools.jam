@@ -33,12 +33,12 @@ flags borland CFLAGS <inlining>full : -vi -w-inl ;
     local flag-vars = USER-INTERFACE TARGET-TYPE THREADING RUNTIME-LINK ;
     local $(flag-vars) ;
 
-    if [ get-values <target-type> : $(gBUILD_PROPERTIES) ] != DLL
+    if ! [ get-values <target-type> : $(gBUILD_PROPERTIES) ] in $(SHARED_TYPES)
     {
         flags borland USER-INTERFACE <user-interface>console : -tWC ;
     }
     
-    flags borland TARGET-TYPE <target-type>DLL : -tWD ;
+    flags borland TARGET-TYPE <target-type>$(SHARED_TYPES) : -tWD ;
     flags borland THREADING <threading>multi : -tWM ;
     flags borland RUNTIME-LINK <runtime-link>dynamic : -tWR ;
 
@@ -78,7 +78,7 @@ rule Link-action
     
     with-command-file borland-Link-action $(<) : $(>) $(NEEDLIBS) ;
     
-    if $(3) = DLL
+    if $(3) in $(SHARED_TYPES)
     {
         borland-IMPLIB-action $(<) : $(>) ;
     }
