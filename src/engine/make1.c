@@ -568,7 +568,6 @@ make1c( state *pState )
 
                 /* Clean current includes */
                 if (t->includes) {
-                    freetargets(t->includes->depends);
                     t->includes = 0;
                 }
 
