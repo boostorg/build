@@ -1,0 +1,336 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+  <head>
+    <meta name="generator" content=
+    "HTML Tidy for Linux/x86 (vers 1st March 2002), see www.w3.org">
+    <!--tidy options: -i -wrap 78 -->
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+    <title>A testing system for Boost.Build</title>
+<style type="text/css">
+        hr { color: black }
+        p.revision { text-align: right; font-style: italic }
+        pre.code { margin-left: 2em } 
+        pre.output { margin-left: 2em }
+        img.banner { border: 0; float: left }
+        h1 { text-align: right }
+        br.clear { clear: left }
+</style>
+  </head>
+
+  <body>
+    <p><a href="../../../index.htm"><img class="banner" height="86" width=
+    "277" alt="C++ Boost" src="../../../c++boost.gif"></a></p>
+
+    <h1>A testing system for Boost.Build<br class="clear">
+    </h1>
+    <hr>
+
+    <dl class="page-index">
+      <dt><a href="#sec-intro">Introduction and examples</a></dt>
+
+      <dd>
+        <dl class="page-index">
+          <dt><a href="#sec-intro-changing">Changing the working
+          directory</a></dt>
+
+          <dt><a href="#sec-intro-examining">Examining the working directory
+          and changing it</a></dt>
+        </dl>
+      </dd>
+
+      <dt><a href="#sec-reference">Reference documentation</a></dt>
+
+      <dd>
+        <dl class="page-index">
+          <dt><a href="#method-__init__">Method __init__</a></dt>
+
+          <dt><a href="#method-set_tree">Method <tt>set_tree</tt></a></dt>
+
+          <dt><a href="#method-touch">Method <tt>touch</tt></a></dt>
+
+          <dt><a href="#method-run_build_system">Method
+          <tt>run_build_system</tt></a></dt>
+
+          <dt><a href="#methods-expectations">Methods for declaring
+          expectations</a></dt>
+
+          <dt><a href="#methods-ignoring">Methods for ignoring
+          changes</a></dt>
+
+          <dt><a href="#method-mul">Method <tt>mul</tt></a></dt>
+        </dl>
+      </dd>
+    </dl>
+    <hr>
+
+    <h2><a name="sec-intro">Introduction and examples</a></h2>
+
+    <p>The testing system for Boost.Build is derived from the
+    <tt>TestCmd</tt> Python module used for testing the <a href=
+    "http://www.scons.org">Scons</a> build tools. The changes are very few,
+    and I hope that some of them may be adopted by <tt>TestCmd</tt> in
+    future.</p>
+
+    <p>Unfortunately, there are not documentation for <tt>TestCmd</tt>, apart
+    from the comments in code, so the most essential base methods will be
+    described here.</p>
+
+    <p>The basic steps of testing a build system behaviour are:</p>
+
+    <ol>
+      <li>Setting the initial working directory state</li>
+
+      <li>
+        Running the build system and check: 
+
+        <ol>
+          <li>generated output,</li>
+
+          <li>changes made to the working directory,</li>
+
+          <li>new content of the working directory.</li>
+        </ol>
+      </li>
+
+      <li>Adding, removing or touching files, or changing their content and
+      then repeating the previous step, until satisfied.</li>
+    </ol>
+
+    <p>For example, suppose that the current working directory contains the a
+    file <tt>test1.py</tt> and a subdirectory <tt>test1</tt> with files
+    <tt>foo.cpp</tt>, <tt>Jamfile</tt> and <tt>Jamrules</tt>. A definition of
+    function <tt>main</tt> is the only content of <tt>foo.cpp</tt>,
+    <tt>Jamfile</tt> builds an executable <tt>foo</tt> from <tt>foo.cpp</tt>
+    and <tt>Jamrules</tt> is empty. Finally, <tt>test1.py</tt> contains:</p>
+<pre class="code">
+import BoostBuild
+
+# Create a temporary working directory
+t = BoostBuild.Tester()
+
+# Make content of the working directory equal to the content of the 'test1' directory.
+t.copy_tree('test1')
+
+# Invoke the build system and record which changes were made
+t.run_build_system("-sTOOLS=borland")
+# First, create a list of three filenames with t.mul
+# Second, check if those files were added as result of the last build system invocation.
+t.expect_addition(t.mul("bin/foo/borland/debug/runtime-link-dynamic/foo", [".exe", ".obj", ".tds"]))
+
+# Invoke the build system once again
+t.run_build_system("clean")
+# Check if the files added previously were removed.
+t.expect_removal(t.mul("bin/foo/borland/debug/runtime-link-dynamic/foo", [".exe", ".obj", ".tds"]))
+</pre>
+
+    <p>This is all needed for a minimal test (and to find a bug in the
+    borland toolset!). Running the <tt>test1.py</tt> gives the following
+    output:</p>
+<pre class="output">
+File bin/foo/borland/debug/runtime-link-dynamic/foo.tds not removed as expected
+FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
+        at line 144 of TestBoostBuild.py (expect_removal)
+        from line 12 of test1.py
+</pre>
+
+    <p>Overview of the most important methods of class
+    <tt>TestBoostBuild</tt> follows.</p>
+
+    <h3><a name="sec-intro-changing">Changing the working directory</a></h3>
+
+    <p>The class <tt>TestBoostBuild</tt> creates a temporary directory in its
+    constructor and changes to that directory. It can be modified by calling
+    these methods:</p>
+
+    <ul>
+      <li><tt>set_tree</tt> -- sets the content of the working directory to
+      be equal to the content of the specified directory.</li>
+
+      <li><tt>write</tt> -- sets the content of file in a working
+      directory</li>
+
+      <li><tt>touch</tt> -- changes the modification times of a file</li>
+    </ul>
+
+    <h3><a name="sec-intro-examining">Examining the working directory and
+    changing it</a></h3>
+
+    <p>The method <tt>read</tt>, inherited from the <tt>TestCmd</tt> class,
+    can be used to read any file in the working directory and check its
+    content. <tt>TestBoostBuild</tt> adds another method for tracking
+    changes. Whenever build system is run (via <tt>run_build_system</tt>),
+    the state of working dir before and after running is recorded. In
+    addition, difference between the two states -- i.e. lists of files that
+    were added, removed, modified or touched -- is stored in two member
+    variables, <tt>tree_difference</tt> and
+    <tt>unexpected_difference</tt>.</p>
+
+    <p>After than, the test author may specify that some change is expected,
+    for example, by calling <tt>expect_addition("foo")</tt>. This call will
+    check if the file was indeed added, and if so, will remove its name from
+    the list of added files in <tt>unexpected_difference</tt>.Likewise, it's
+    possible to specify that some changes are not interesting, for example a
+    call <tt>ignore("*.obj")</tt> will just remove every files with ".obj"
+    extension from <tt>unexpected_difference</tt>.</p>
+
+    <p>When test has finished with expectations and ingoring, the member
+    <tt>unexpected_difference</tt> will contain the list of all changes not
+    yet accounted for. It is possible to assure that this list is empty by
+    calling <tt>expect_nothing_more</tt> member function.</p>
+
+    <h2><a name="sec-reference">Reference documentation</a></h2>
+
+    <p>The entire test system is composed of single class
+    <tt>BoostBuild.Tester</tt>, derived form <tt>TestCmd.TestCmd</tt>. The
+    methods defined in <tt>BoostBuild.Tester</tt> are described below.</p>
+
+    <h3><a name="method-__init__">Method <tt>__init__(self)</tt></a></h3>
+
+    <p><b>Effects:</b></p>
+
+    <ol>
+      <li>Remembers the current working directory in member
+      <tt>original_workdir</tt>.</li>
+
+      <li>Invokes the base method <tt>__init__</tt> with appropriate
+      parameters.</li>
+
+      <li>Changes current working dir to the temporary working directory
+      created by the base constructor.</li>
+    </ol>
+
+    <h3><a name="method-set_tree">Method <tt>set_tree(self,
+    tree_location)</tt></a></h3>
+
+    <p><b>Effects:</b></p>
+
+    <p>Replaces the current working dir with content of directory at
+    <tt>tree_location</tt>. If <tt>tree_location</tt> is not absolute
+    pathname, it will be treated as relative to
+    <tt>self.original_workdir</tt>.</p>
+
+    <h3><a name="method-touch">Method <tt>touch(self, names)</tt></a></h3>
+
+    <p><b>Effects:</b></p>
+
+    <p>Sets the access and modification times for all files in <tt>names</tt>
+    to the current time. All the elements <tt>names</tt> should be relative
+    paths.</p>
+
+    <h3><a name="method-run_build_system">Method <tt>run_build_system(self,
+    extra_args='', stdout=None, stderr='', status=0, **kw)</tt></a></h3>
+
+    <p><b>Effects:</b></p>
+
+    <ol>
+      <li>Stores the state of the working directory in
+      <tt>self.previous_tree</tt>.</li>
+
+      <li>Invokes the build system, passing <tt>extra_args</tt> to it.</li>
+
+      <li>Compares the stdout, stderr and exit status of build system
+      invocation with values to appropriate parameters, if they are not
+      <tt>None</tt>. If any difference is found, the test fails.</li>
+
+      <li>
+        <p>Stores the new state of the working directory in
+        <tt>self.tree</tt>. Computes the difference between previous and
+        current trees and store them in variables
+        <tt>self.tree_difference</tt> and
+        <tt>self.unexpected_difference</tt>.</p>
+
+        <p>Both variables are instances of class
+        <tt>tree.Trees_different</tt>, which have four attributes:
+        <tt>added_files</tt>, <tt>removed_files</tt>, <tt>modified_files</tt>
+        and <tt>touched_files</tt>. Each is a list of strings.</p>
+      </li>
+    </ol>
+
+    <h3><a name="methods-expectations">Methods for declaring
+    expectations</a></h3>
+
+    <p>Accordingly to the number of changes kinds that are detected, there
+    are four methods that specify that test author expects a specific change
+    to occur. They check <tt>self.unexpected_difference</tt>, and if the
+    change is present there, it is removed. Otherwise, test fails.</p>
+
+    <p>Each method accepts a list of names. Those names are always
+    unix-style, even on other systems.</p>
+
+    <p><b>Note:</b>The <tt>mul</tt> member might be usefull to create lists
+    of names.</p>
+
+    <p><b>Note:</b>The file content can be examined using
+    <tt>TestCmd.read</tt> function.</p>
+
+    <p>The members are:</p>
+
+    <ul>
+      <li>expect_addition</li>
+
+      <li>expect_removal</li>
+
+      <li>expect_modificatio</li>
+
+      <li>expect_touch</li>
+    </ul>
+
+    <p>There's also a member <tt>expect_nothing_more</tt>, which checks that
+    all the changes are either expected or ignored, in other words that
+    <tt>unexpected_difference</tt> is empty by now.</p>
+
+    <h3><a name="methods-ignoring">Methods for ignoring changes</a></h3>
+
+    <p>There are five methods which ignore changes made to the working tree.
+    They silently remove elements from <tt>self.unexpected_difference</tt>,
+    and don't generate error if element is not found. They accept shell style
+    wildcard.</p>
+
+    <p>The following methods correspond to four kinds of changes:</p>
+
+    <ul>
+      <li>ignore_addition(self, wildcard)</li>
+
+      <li>ignore_removal(self, wildcard)</li>
+
+      <li>ignore_modification(self, wildcard)</li>
+
+      <li>ignore_touch(self, wilcard)</li>
+    </ul>
+
+    <p>The method <tt>ignore(self, wildcard)</tt> ingores all the changes
+    made to files that match a wildcard.</p>
+
+    <h3><a name="method-mul">Method <tt>mul(self, *arguments)</tt></a></h3>
+
+    <p><b>Precondition:</b>Each passed arguments must be either string or a
+    list of strings.</p>
+
+    <p><b>Effects:</b>Returns a list of strings which are formed by taking
+    one string from each passed argument and joining them. The order of
+    strings corresponds to lexicagraphical ordering of sequences of
+    indices.</p>
+
+    <p><b>Example:</b></p>
+<pre>
+    mul("/home/ghost", [".bashrc", ".bash_profile"])
+</pre>
+
+    <p>will return</p>
+<pre>
+   ["/home/ghost/.bashrc", "/home/ghost/.bash_profile"]
+</pre>
+    <hr>
+
+    <p class="revision">Last modified: April 4, 2002</p>
+
+    <p>&copy; Copyright Vladimir Prus 2002. Permission to copy, use, modify,
+    sell and distribute this document is granted provided this copyright
+    notice appears in all copies. This document is provided ``as is'' without
+    express or implied warranty, and with no claim as to its suitability for
+    any purpose.</p>
+  </body>
+</html>
