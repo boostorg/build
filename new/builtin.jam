@@ -141,8 +141,6 @@ rule c-scanner ( includes * )
             }
         }
         
-
-        ECHO "Binding is" [ virtual-target.binding $(target) ] ;
         for local i in $(quoted)
         {
             local path = $(b) $(self.includes:G=) ;
