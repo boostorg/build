@@ -71,6 +71,15 @@ t.run_build_system("link=static")
 t.expect_addition("bin/$toolset/debug/link-static/main.exe")
 t.rm(["bin", "a/bin", "b/bin"])
 
+# Check that <library> works for static linking.
+
+t.write("b/Jamfile", """ 
+lib b : b.cpp : <library>../a//a ; 
+""")
+t.run_build_system("link=static")
+t.expect_addition("bin/$toolset/debug/link-static/main.exe")
+
+t.rm(["bin", "a/bin", "b/bin"])
 t.write("b/Jamfile", """ 
 lib b : b.cpp ../a//a/<link>shared : <link>static ; 
 """)

@@ -718,6 +718,8 @@ class archive-generator : generator
         
     rule run ( project name ? : property-set : sources + :  multiple ? )
     {                                
+        sources += [ $(property-set).get <library>  ] ;                
+        
         local result = [ generator.run $(project) $(name) : $(property-set)
           : $(sources) : $(multiple) ] ;
         
