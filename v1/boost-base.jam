@@ -1384,8 +1384,9 @@ rule find-compatible-subvariant ( main-target : toolset variant : dependent-simp
         [ multiply-property-sets [ select-gristed $(BUILD) ] ] ;
     # the build requst we want to build...
     local sv-build =
-        [ split-path [ intersection $(sv-request) : $(build-requests) ] ] ;
-    local BUILD = $(variant) $(sv-build) ;
+        [ intersection $(sv-request) : $(build-requests) ] ;
+        sv-build ?= "" ;
+    local BUILD = $(variant) [ split-path $(sv-build) ] ;
     # the full subvariant to build...
     local subvariant = [ expand-target-subvariants $(main-target) : $(variant) : $(toolset) ] ;
 
