@@ -10,7 +10,7 @@
 if ! $(IA32ROOT)
 {
     # Compiler version
-    INTEL_LINUX_VERSION ?= "50" ;
+    INTEL_LINUX_VERSION ?= "60" ;
 }
 
 flags intel-linux INTEL_LINUX_VERSION : $(INTEL_LINUX_VERSION) ;
