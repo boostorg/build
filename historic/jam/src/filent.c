@@ -30,6 +30,7 @@
 
 # include <io.h>
 # include <sys/stat.h>
+# include <ctype.h>
 
 /*
  * filent.c - scan directories and archives on NT
@@ -261,10 +262,10 @@ file_archscan(
 		endname = name + sizeof( ar_hdr.ar_name );
 	    }
 
-	    /* strip trailing space, eols, slashes, and backslashes */
+	    /* strip trailing white-space, slashes, and backslashes */
 
 	    while( endname-- > name )
-		if( *endname != ' ' && *endname != '\n' && *endname != '\\' && *endname != '/' )
+		if( !isspace(*endname) && *endname != '\\' && *endname != '/' )
 		    break;
 	    *++endname = 0;
 
