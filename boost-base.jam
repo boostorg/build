@@ -1943,9 +1943,10 @@ rule stage ( name : sources + : requirements * : local-build * )
 
         local target = $(source:D=:G=) ;
         local target-id = [ target-id-of $(source) ] ;
+        local target-subdir = [ simplify-path-tokens [ top-relative-tokens [ directory-of $(source) ] ] ] ;
         local subvariants = [ expand-target-subvariants $(target-id) : $(local-build) : $(TOOLS) ] ;
 
-        dependent-include $(target) ;
+        dependent-include $(source:G=) ;
 
         for local subvariant in $(subvariants)
         {
@@ -1955,8 +1956,13 @@ rule stage ( name : sources + : requirements * : local-build * )
             local s-variant = ;
             split-target-subvariant s-target s-properties s-toolset s-variant : $(subvariant) ;
 
-            local target-subvariant =
-                [ subvariant-target $(s-target) : $(s-properties) : $(s-toolset) $(s-variant) ] ;
+            local target-subvariant = ;
+            {
+                local [ protect-subdir ] ;
+                SubDir TOP $(target-subdir) ;
+                target-subvariant =
+                    [ subvariant-target $(s-target) : $(s-properties) : $(s-toolset) $(s-variant) ] ;
+            }
 
             for local sv in $(target-subvariant)
             {
