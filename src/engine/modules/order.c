@@ -37,7 +37,7 @@ enum colors { white, gray, black };
    adjacent vertices which were not yet visited. After that, 'current_vertex'
    is added to '*result_ptr'.
 */
-int do_ts(int** graph, int current_vertex, int* colors, int** result_ptr)
+void do_ts(int** graph, int current_vertex, int* colors, int** result_ptr)
 {
     int i;
 
