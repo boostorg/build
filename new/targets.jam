@@ -265,7 +265,7 @@ rule main-target ( name : project )
 
     rule set-property-adjuster ( property-adjuster )
     {
-        self.direct-request-property-adjuster = $(property-adjuster) ;
+        self.property-adjuster = $(property-adjuster) ;
     }
 
     local rule select-alternatives ( property-set )
@@ -344,12 +344,6 @@ rule main-target ( name : project )
     # Returns the result of calling 'generate' on that alternative.
     rule generate ( property-set )
     {
-        if $(self.property-adjuster)
-        {
-            property-set = [ $(self.property-adjuster).adjust 
-              $(property-set) ] ;
-        }
-                        
         local all-property-sets = [ apply-default-build $(property-set) ] ;
         local result ;
         for local p in $(all-property-sets)
@@ -361,6 +355,12 @@ rule main-target ( name : project )
         
     local rule generate-really ( property-set )
     {    
+        if $(self.property-adjuster)
+        {
+            property-set = [ $(self.property-adjuster).adjust 
+              $(property-set) ] ;
+        }
+                                                
         local best-alternatives = [ select-alternatives $(property-set) ] ;
         if ! $(best-alternatives)
         {

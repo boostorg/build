@@ -227,29 +227,45 @@ local rule convert-command-line-element ( e : feature-space )
 # targets.
 rule directly-requested-properties-adjuster
 {
+    self.empty-request-requirements = ;
+    self.all-requests = [ new property-map ] ;
     rule add-requested-property-set ( property-set )
     {        
         local base = [ $(property-set).base ] ;
-        local ep = $(self.direct-request.$(base:J=-)) ;
-        if $(ep) && $(ep) != $(properties) 
-        {            
-            error "Conflicting direct build requests" $(ep) "and" $(properties) ;
+        if ! $(base)
+        {
+            self.empty-request-requirements = $(property-set) ;
         }
         else
         {
-            self.direct-request.$(base:J=-) = $(property-set) ;
-        }                
+            $(self.all-requests).insert $(base) : $(property-set) ;
+        }
     }        
     
     rule adjust ( property-set )
     {
         local base = [ $(property-set).base ] ;
-        local ep = $(self.direct-request.$(base:J=-)) ;
-        if $(ep) 
+        local extra ;
+        local result ; 
+                
+        if $(self.empty-request-requirements)
         {
-            property-set = $(ep) ;
+            extra = $(self.empty-request-requirements) ;
         }
-        return $(property-set) ;
+        else
+        {
+            extra = [ $(self.all-requests).find $(base) ] ;
+        }
+        if $(extra)
+        {
+            result = [ $(property-set).add 
+              [ property-set.create [ $(extra).free ] ] ] ;
+        }
+        else
+        {
+            result = $(property-set) ;
+        }
+        return $(result) ;
     }    
 }
 
