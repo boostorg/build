@@ -407,7 +407,7 @@ rule lib-target-class ( name : project
         property-set = [ $(property-set).add-raw <main-target-type>LIB ] ;
         # Construct the target.
         return [ generators.construct $(self.project) $(self.name) : $(actual-type) 
-                : $(property-set) : $(source-targets) : return-all ] ;        
+                : $(property-set) : $(source-targets) : LIB ] ;        
     }            
     
     rule compute-usage-requirements ( rproperties )
