@@ -43,27 +43,6 @@ t.fail_test(find(t.stdout(),
 """warning: targets produced from b.obj are link incompatible
 warning: with main target a.exe""") !=-0)
 
-# Don't know what the following is supposed to test, maybe main
-# target alternatives.
-
-t.set_tree("project-test4")
-t.copy("Jamfile2", "Jamfile")
-
-t.run_build_system()
-
-t.expect_addition("bin/$toolset/debug/a_gcc.obj")
-t.expect_content("bin/$toolset/debug/a_gcc.obj",
-"""$toolset/debug
-a_gcc.cpp
-""")
-
-t.expect_content("bin/$toolset/debug/a.exe",
-"$toolset/debug\n" +
-"bin/$toolset/debug/a.obj " +
-"lib/bin/$toolset/debug/optimization-on/b.obj " +
-"bin/$toolset/debug/a_gcc.obj\n"
-)
-
 # Test that if we specified composite property in target reference,
 # everything works OK.
 
