@@ -1,0 +1,65 @@
+# Copyright David Abrahams 2004. Distributed under the Boost
+# Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+# Support for docutils ReStructuredText processing.
+
+import type ;
+import scanner ;
+import generators ;
+import os ;
+import common ;
+import toolset ;
+import path ;
+
+.initialized = ;
+
+type.register ReST : rst ;
+
+class rst-scanner : common-scanner
+{
+    rule pattern ( )
+    {
+         return "^\\w*\\.\\.\\w+include::\w+(.*)"
+        "^\\w*\\.\\.\\w+image::\w+(.*)"
+        "^\\w*\\.\\.\\w+figure::\w+(.*)"
+        ;
+    }
+}
+
+scanner.register rst-scanner : include ;
+type.set-scanner ReST : rst-scanner ;
+
+generators.register-standard docutils.html : ReST : HTML ;
+
+rule init ( docutils-dir )
+{
+    docutils-dir ?= [ modules.peek : DOCUTILS_DIR ] ;
+
+    if ! $(.initialized)
+    {
+        .initialized = true ;
+        .docutils-dir = $(docutils-dir) ;
+        
+        .setup = [ 
+          common.path-variable-setting-command PYTHONPATH 
+            : $(.docutils-dir) $(.docutils-dir)/extras
+              : exported ] ;
+    }
+}
+
+rule html ( target : source : properties *  )
+{
+    docutils-dir on $(target) = $(.docutils-dir) ;
+}
+
+
+toolset.flags docutils COMMON-FLAGS : <docutils> ;
+toolset.flags docutils HTML-FLAGS : <docutils-html> ;
+  
+actions html
+{
+    $(.setup)
+    python $(docutils-dir)/tools/rst2html.py $(COMMON-FLAGS) $(HTML-FLAGS) $(>) $(<)
+}
+
