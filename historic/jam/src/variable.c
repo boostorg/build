@@ -203,6 +203,12 @@ var_string(
 		*out++ = *in++;
 	    }
 
+        /* Add zero to 'out' so that 'lastword' is correctly zero-terminated. */
+        if (out >= oute)
+            return -1;
+        /* Don't increment, intentionally. */
+        *out= '\0';
+           
 	    /* If a variable encountered, expand it and and embed the */
 	    /* space-separated members of the list in the output. */
 
