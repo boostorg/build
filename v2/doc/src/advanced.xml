@@ -1491,7 +1491,7 @@ unit-test helpers_test : helpers_test.cpp helpers ;
       <para>There are rules for more elaborate testing: <code>compile</code>,
         <code>compile-fail</code>, <code>run</code> and
         <code>run-fail</code>. They are more suitable for automated testing, and
-        are not covered here yet.
+        are not covered here.
       </para>        
     </section>
     
@@ -1505,15 +1505,17 @@ unit-test helpers_test : helpers_test.cpp helpers ;
         
         <listitem>
           <simpara>
-            The feature that combines several low-level features in
-            order to make building most common variants simple.
+            A feature that combines several low-level features, making
+            it easy to request common build configurations.
           </simpara>
           
           <para><emphasis role="bold">Allowed values:</emphasis> <literal>debug</literal>, <literal>release</literal>,
             <literal>profile</literal></para>
+            <!-- It should be noted that these are extensible -->
           
           <para>The value <literal>debug</literal> expands to</para>
           
+          <!-- these are badly formatted when printed; they run off the right edge of the page.  Fix. -->
           <programlisting>
             &lt;optimization&gt;off &lt;debug-symbols&gt;on &lt;inlining&gt;off &lt;runtime-debugging&gt;on
           </programlisting>
@@ -1531,10 +1533,14 @@ unit-test helpers_test : helpers_test.cpp helpers ;
             &lt;profiling&gt;on &lt;debug-symbols&gt;on
           </programlisting>
           
-          <para><emphasis role="bold">Rationale:</emphasis> Runtime debugging is on in debug build
-            to suit expectations of people used various IDEs. It's
-            assumed other folks don't have any specific expectation in
-            this point.</para>
+          <para><emphasis role="bold">Rationale:</emphasis> Runtime
+          debugging is on in debug builds to suit the expectations of
+          people used to various IDEs. 
+          <!-- Define "runtime debugging." Why will those people expect it to be on in debug builds? -->
+          It's assumed other folks don't
+          have any specific expectation in this point.
+          <!-- What is the value of that sentence? -->
+          </para>
         </listitem></varlistentry>
       
       <varlistentry id="bbv2.advanced.builtins.features.link">
@@ -1542,7 +1548,7 @@ unit-test helpers_test : helpers_test.cpp helpers ;
         
         <listitem>
           <simpara>
-            Feature that controls how libraries are built.
+            A feature that controls how libraries are built.
           </simpara>
           
           <para><emphasis role="bold">Allowed values:</emphasis> <literal>shared</literal>,
@@ -1553,11 +1559,15 @@ unit-test helpers_test : helpers_test.cpp helpers ;
         
         <listitem>
           <simpara>
-            Tthe &lt;source&gt;X feature has the same effect on building a target
+            The <code>&lt;source&gt;X</code> feature has the same effect on building a target
             as putting X in the list of sources. The feature
-            is sometimes more convenient: you can put &lt;source&gt;X in
-            the requirements for a project and it will be linked to all
-            executables.
+            is sometimes more convenient:
+            <!-- Than what? You have to say, or don't say "more." -->
+            you can put <code>&lt;source&gt;X</code> in the
+            requirements for a project and <filename>X</filename> will
+            be included as a source in all of the project's main
+            targets.
+            <!-- The previous text was inaccurate -->
           </simpara>
         </listitem>
       </varlistentry>
@@ -1578,12 +1588,17 @@ unit-test helpers_test : helpers_test.cpp helpers ;
         
         <listitem>
           <simpara>
-            Causes the target referenced by the value of this feature
-            to be constructed and adds it's usage requirements to build
-            properties. The constructed targets are not used in any other
-            way. The primary use case is when you use some library and want
-            it's usage requirements (such as include paths) to be applied,
-            but don't want to link to the library.
+            Introduces a dependency on the target named by the
+            value of this feature (so it will be brought
+            up-to-date whenever the target being declared is), and
+            adds its usage requirements to the build properties 
+            <!-- Do you really mean "to the requirements?" -->
+            of the target being declared.  The dependency is not used
+            in any other way. The primary use case is when you want
+            the usage requirements (such as <code>#include</code> paths) of some
+            library to be applied, but don't want to link to it.
+            <!-- It's hard to picture why anyone would want to do
+                 that.  Please flesh out this motivation -->
           </simpara>
         </listitem>
       </varlistentry>
@@ -1592,10 +1607,11 @@ unit-test helpers_test : helpers_test.cpp helpers ;
         
         <listitem>
           <simpara>
-            Specify an additional path where shared libraries should be
-            searched where the executable or shared library is run. This
-            feature only affect Unix compilers. Plase see the <link
-            linkend="bbv2.faq.dll-path">FAQ entry</link> for details.
+            Specify an additional directory where the system should
+            look for shared libraries when the executable or shared
+            library is run. This feature only affects Unix
+            compilers. Plase see <xref linkend="bbv2.faq.dll-path"/>
+            in <xref linkend="bbv2.faq"/> for details.
           </simpara>
         </listitem></varlistentry>
       
@@ -1608,12 +1624,14 @@ unit-test helpers_test : helpers_test.cpp helpers ;
           
           <para><emphasis role="bold">Allowed values:</emphasis>
             <literal>true</literal>, <literal>false</literal>.  This property
-            is specific to Unix systems. If an executable is build with
+            is specific to Unix systems. If an executable is built with
             <code>&lt;hardcode-dll-paths&gt;true</code>, the generated binary
             will contain the list of all the paths to the used shared
             libraries. As the result, the executable can be run without
-            changing system paths to shared libraries, or installing the
-            libraries to system paths. This is very convenient during
+            changing system paths to shared libraries or installing the
+            libraries to system paths. This 
+            <!-- you need an antecedent.  This _what_? -->
+            is very convenient during
             development. Plase see the <link
             linkend="bbv2.faq.dll-path">FAQ entry</link> for details.
             Note that on Mac OSX, the paths are unconditionally hardcoded by
@@ -1644,6 +1662,9 @@ unit-test helpers_test : helpers_test.cpp helpers ;
 
   <section id="bbv2.advanced.differences_to_v1">
     <title>Differences to Boost.Build V1</title>
+    <!-- "Differences to" is the British English usage.  American
+         English is "differences from."  You can use the former but be
+         sure you know what you're doing -->
 
     <para>While Boost.Build V2 is based on the same ideas as Boost.Build V1,
     some of the syntax was changed, and some new important features were
@@ -1652,14 +1673,19 @@ unit-test helpers_test : helpers_test.cpp helpers ;
     <section id="bbv2.advanced.differences_to_v1.configuration">
       <title>Configuration</title>
       
-      <para>In V1, there were two methods to configure a toolset. One is to
-      set some environment variable, or use "-s" command line option to set
-      variable inside BJam. Another method was creating new toolset module,
-      which would set the variables and then invoke basic toolset. Neither
-      method is necessary now, the "using" rule provides a consistent way to
-      initialize toolset, including several versions. See <link
-      linkend="bbv2.advanced.configuration">section on configuraton</link> for
-      details.
+      <para>In V1, there were two methods to configure a toolset. One was to
+      set some environment variable, or use the <option>-s</option> command line option to set
+      a variable inside BJam. 
+      <!-- You can't say "one was ... , or ...."  If you say "One
+           was," you have to say "and the other was."  I suggest "In
+           V1 you could configure a toolset by..., or by ... " -->
+      Another method was to create a new toolset module that would set
+      the variables and then invoke the base toolset. Neither method
+      is necessary now: the <functionname>using</functionname> rule provides a consistent way to
+      initialize a toolset, 
+      <!-- Rephrase the following.  If you can't tell what doesn't work about it, ask. -->
+      including several versions. See <xref
+      linkend="bbv2.advanced.configuration"/> for details.
       </para>
       
     </section>
@@ -1668,25 +1694,29 @@ unit-test helpers_test : helpers_test.cpp helpers ;
       <title>Writing Jamfiles</title>
 
       <para>Probably one of the most important differences in V2 Jamfiles is
-      the project requirements. In V1, if several targets have the same
-      requirements (for example, common include path), it was necessary to
-      manually write that requirements, or use a helper rule. In V2, the
-      common properties can be specified with the "requirements" project
-      attribute, as documented <link linkend="bbv2.advanced.projects">here</link>.
+      the use of project requirements. In V1, if several targets had the same
+      requirements (for example, a common <code>#include</code> path), it was necessary to
+      manually write the requirements or use a helper rule or template target. In V2, the
+      common properties can be specified with the <code>requirements</code> project
+      attribute, as documented in <xref linkend="bbv2.advanced.projects"/>.
       </para>
 
-      <para>The <link linkend="bbv2.tutorial.libs">usage requirements</link>
-      is also important mechanism to simplify Jamfile. If a library requires
-      all clients to use specific includes, or macros when compiling the
-      code that depends on the library, this information can be cleanly
+      <para><link linkend="bbv2.tutorial.libs">Usage requirements</link>
+      also help to simplify Jamfiles. 
+      <!-- Simplify, simplify, simplify!  You could go through the
+           entire document several times and make changes like that
+           one -->
+      If a library requires
+      all clients to use specific <code>#include</code> paths or macros when compiling 
+      code that depends on the library, that information can be cleanly
       represented.</para>
 
-      <para>The difference between "lib" and "dll" targets in V1 is completely
-      eliminated in V2. There's only one target -- "lib", which can create
-      either static or shared library depending on the value of the 
-        <link linkend="bbv2.advanced.builtins.features.link">&lt;link&gt;
-      feature</link>. If your target should be only build in one variant, you
-      can add &lt;link&gt;shared or &lt;link&gt;static to requirements.
+      <para>The difference between <code>lib</code> and <code>dll</code> targets in V1 is completely
+      eliminated in V2. There's only one library target type, <code>lib</code>, which can create
+      either static or shared libraries depending on the value of the 
+        <link linkend="bbv2.advanced.builtins.features.link"><varname>&lt;link&gt;</varname>
+      feature</link>. If your target should be only built in one way<!--"variant" has a different meaning here-->, you
+      can add <code>&lt;link&gt;shared</code> or <code>&lt;link&gt;static</code> to its requirements.
       </para>
 
       <para>The syntax for referring to other targets was changed a bit. While
@@ -1699,9 +1729,9 @@ exe a : a.cpp &lt;lib&gt;../foo/bar ;
 exe a : a.cpp ../foo//bar ;
 </programlisting>
         Note that you don't need to specify the type of other target, but the
-        last element should be separated to double slash, to indicate that
-        you're referring to target "bar" in project "../foo", and not to
-        project "../foo/bar".
+        last element should be separated from the others by a double slash to indicate that
+        you're referring to target <filename>bar</filename> in project <filename>../foo</filename>, and not to
+        project <filename>../foo/bar</filename>.
         </para>
       
                   
@@ -1718,11 +1748,11 @@ bjam -sTOOLS=msvc -sBUILD=release some_target
 <programlisting>
 bjam toolset=msvc variant=release some_target
 </programlisting>
-        or, using shortcuts, just:
+        or, using implicit features, just:
 <programlisting>
 bjam msvc release some_target
 </programlisting>
-      See <link linkend="bbv2.reference.commandline">the reference</link> for
+      See <link linkend="bbv2.reference.commandline">the reference</link> for a
       complete description of the syntax.
       </para>
 
