@@ -135,7 +135,46 @@ path_parse(
 }
 
 /*
+ * path_delims - the string of legal path delimiters
+ */
+static char path_delims[] = {
+    PATH_DELIM,
+#  if PATH_DELIM == '\\'
+    '/',
+#  endif
+    0
+};
+
+/*
+ * is_path_delim() - true iff c is a path delimiter
+ */
+static int is_path_delim( char c )
+{
+    char* p = strchr( path_delims, c );
+    return p && *p;
+}
+
+/*
+ * as_path_delim() - convert c to a path delimiter if it isn't one
+ * already
+ */
+static char as_path_delim( char c )
+{
+    return is_path_delim( c ) ? c : PATH_DELIM;
+}
+
+/*
  * path_build() - build a filename given dir/base/suffix/member
+ *
+ * To avoid changing slash direction on NT when reconstituting paths,
+ * instead of unconditionally appending PATH_DELIM we check the
+ * past-the-end character of the previous path element.  If it is in
+ * path_delims, we append that, and only append PATH_DELIM as a last
+ * resort.  This relies on the assumption that all strings are zero
+ * terminated, so a past-the-end character will always be available.
+ *
+ * As an attendant patch, we had to ensure that backslashes are used
+ * explicitly in timestamp.c
  */
 
 void
@@ -165,7 +204,7 @@ path_build(
 
     {
         string_append_range( file, f->f_root.ptr, f->f_root.ptr + f->f_root.len  );
-        string_push_back( file, PATH_DELIM );
+        string_push_back( file, as_path_delim( f->f_root.ptr[f->f_root.len] ) );
     }
 
     if( f->f_dir.len )
@@ -184,8 +223,8 @@ path_build(
 # if PATH_DELIM == '\\'
         if( !( f->f_dir.len == 3 && f->f_dir.ptr[1] == ':' ) )
 # endif
-            if( !( f->f_dir.len == 1 && f->f_dir.ptr[0] == PATH_DELIM ) )
-                string_push_back( file, PATH_DELIM );
+            if( !( f->f_dir.len == 1 && is_path_delim( f->f_dir.ptr[0] ) ) )
+                string_push_back( file, as_path_delim( f->f_dir.ptr[f->f_dir.len] ) );
     }
 
     if( f->f_base.len )
