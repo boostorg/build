@@ -224,7 +224,7 @@ rule default-paths ( version ? )
 generators.register-linker msvc.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE RSP : <toolset>msvc ;
 generators.register-linker msvc.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB RSP : <toolset>msvc ;
 
-generators.register-composing msvc.archive : OBJ : STATIC_LIB RSP : <toolset>msvc ;
+generators.register-archiver msvc.archive : OBJ : STATIC_LIB RSP : <toolset>msvc ;
 generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
 generators.register-c-compiler msvc.compile.c : C : OBJ : <toolset>msvc ;
 generators.register-standard msvc.compile.rc : RC : OBJ(%_res) : <toolset>msvc ;

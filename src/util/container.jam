@@ -22,7 +22,7 @@ class node
         
     # Set the value of this node, passing nothing will clear it.
     #
-    rule set ( value ? )
+    rule set ( value * )
     {
         self.value = $(value) ;
     }
@@ -214,6 +214,7 @@ class vector : node
 
     # Sorts the vector inplace, calling 'utility.less' for
     # comparisons.
+    # NOTE: this rule is unused at the moment.
     rule sort ( )
     {
         self.value = 

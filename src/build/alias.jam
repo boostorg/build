@@ -30,6 +30,7 @@ import errors : error ;
 import type : type ;
 import regex ;
 import project ;
+import property-set ;
 
 class alias-target-class : basic-target 
 {
@@ -42,7 +43,7 @@ class alias-target-class : basic-target
         
     rule construct ( source-targets * : property-set )
     {
-        return $(source-targets) ;
+        return [ property-set.empty ] $(source-targets) ;
     }   
     
     # This check makes no sense for 'alias', so just

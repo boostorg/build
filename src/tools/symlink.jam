@@ -6,7 +6,7 @@
 # Defines the "symlink" special target. 'symlink' targets make symbolic links
 # to the sources.
 
-import targets modules path class os feature project ;
+import targets modules path class os feature project property-set ;
 
 .count = 0 ;
 
@@ -70,7 +70,7 @@ class symlink-targets : basic-target
             self.virtual-targets += $(vt) ;
             i = [ numbers.increment $(i) ] ;
         }
-        return $(self.virtual-targets) ;
+        return [ property-set.empty ] $(self.virtual-targets) ;
     }
 }
 

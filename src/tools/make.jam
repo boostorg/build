@@ -36,7 +36,7 @@ class make-target-class : basic-target
         local a = [ new action $(t) : $(source-targets) : $(self.make-rule) 
                     : $(property-set) ] ;
         $(t).action $(a) ;
-        return [ virtual-target.register $(t) ] ;
+        return [ property-set.empty ] [ virtual-target.register $(t) ] ;
     }   
 }
 

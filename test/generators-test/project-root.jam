@@ -60,7 +60,7 @@ class nm::target::cpp-obj-generator : generator
             local converted = [ generators.construct $(project) : NM.TARGET.CPP : $(properties) : $(source) ] ;
         if $(converted[1])
             {            
-                local result = [ generators.construct $(project) : OBJ : $(properties) : $(converted[1]) ] ;
+                local result = [ generators.construct $(project) : OBJ : $(properties) : $(converted[2]) ] ;
                 return $(result) ;
             }
             else

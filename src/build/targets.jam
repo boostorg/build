@@ -1022,11 +1022,15 @@ class basic-target : abstract-target
                 
                 local result = 
                   [ construct $(source-targets) : $(rproperties) ] ;
+                
+                local gur = $(result[1]) ;
+                result = $(result[2-]) ;
 
                 local s = [ create-subvariant $(result) : $(property-set) : $(source-targets)
                   : $(rproperties) : $(usage-requirements) ] ;
 
                 local ur = [ compute-usage-requirements $(s) ] ;
+                ur = [ $(ur).add $(gur) ] ;
                 $(s).set-usage-requirements $(ur) ;
                 self.generated.$(property-set) = $(ur) $(result) ;
 
