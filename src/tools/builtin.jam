@@ -84,7 +84,7 @@ feature allow : : free ;
 
 # Windows-specific features
 
-feature user-interface : console gui wince native auto : propagated ;
+feature user-interface : console gui wince native auto ;
 
 feature variant : : implicit composite propagated symmetric ;
 
