@@ -40,7 +40,7 @@ rule Link-action
 actions intel-win32-Link-action bind NEEDLIBS 
 {
     $(MSVC_SETUP)
-    $(INTEL_TOOL_PATH)xilink /nologo $(NOINCREMENTAL) $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /IMPLIB:$(<[2]) /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(FINDLIBS)" @"$(>)"
+    $(INTEL_TOOL_PATH)xilink /nologo $(NOINCREMENTAL) $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /IMPLIB:$(<[2]) /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(FINDLIBS:S=.lib)" @"$(>)"
 }
 
 #### Cc #####

@@ -82,7 +82,7 @@ rule Link-action
 actions together msvc-Link-action bind NEEDLIBS
 {
     $(MSVC_SETUP)
-    $(MSVC_TOOL_PATH)link /nologo $(NOINCREMENTAL) $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /IMPLIB:$(<[2]) /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(FINDLIBS)" @"$(>)"
+    $(MSVC_TOOL_PATH)link /nologo $(NOINCREMENTAL) $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /IMPLIB:$(<[2]) /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(FINDLIBS:S=.lib)" @"$(>)"
 }
 
 #### Cc #####
