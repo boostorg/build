@@ -282,8 +282,13 @@ if $(NT)
         ECHO  "  - define the JAM_TOOLSET environment variable with the *name*" ;
         ECHO  "    of the toolset variable you want to use." ;
         ECHO  ;
-        ECHO  "  e.g.:  set VISUALC=C:\Visual6" ;
+        ECHO  "  e.g.:  set VISUALC=C:\\Visual6" ;
         ECHO  "         set JAM_TOOLSET=VISUALC" ;
+        ECHO  ;
+        ECHO  "  - if your toolset's installation path contains spaces, surround" ;
+        ECHO  "    it with quotes:" ;
+        ECHO  ;
+        ECHO  "    e.g.: set VISUALC=\"C:\\Program Files\\Microsoft Visual C++\\VC98\"" ;
         ECHO  ;
         EXIT  ;
       }
