@@ -40,3 +40,19 @@ CODING CONVENTIONS.
         {
             #
         }
+
+HTML DOCUMENTATION.
+
+    Please pass HTML files though HTML Tidy (http://tidy.sf.net) before
+    comitting. This has to important purposes:
+    - detecting bad HTML
+    - converting files to uniform indentation style, which inverses effect
+      of different editors and makes differences between revisions much
+      smaller and easy for review.
+
+    Alas, the way Tidy indents HTML differs between version. Please use
+    the version awailable at
+
+       http://tidy.sourceforge.net/src/old/tidy_src_020411.tgz
+
+    and "-i -wrap 78" command line parameters.
