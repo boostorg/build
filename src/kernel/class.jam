@@ -213,18 +213,17 @@ rule instance ( name : class args * : * )
     }
 }
 
-# Keeps track of the next unique object name to generate
-next-instance = 1 ;
 
 # create a new uniquely-named instance of the given class, returning
 # its name.
 rule new ( class args * : * )
 {
-    local name = object@$(next-instance) ;
+    .next-instance.$(class) ?= 1 ;
+    local name = object($(class))@$(.next-instance.$(class)) ;
     instance $(name) : $(class) $(args) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     
     # bump the next unique object name
-    next-instance = [ numbers.increment $(next-instance) ] ;
+    .next-instance.$(class) = [ numbers.increment $(.next-instance.$(class)) ] ;
     
     # Return the name of the new instance.
     return $(name) ;
@@ -275,7 +274,7 @@ rule is-derived ( class : bases + )
 rule is-instance ( value # The value to check 
      )
 {
-    return [ MATCH "(object@).*" : $(value) ] ;        
+    return [ MATCH "(object\\()[^@]+\\)@.*" : $(value) ] ;        
 }
 
 # Check if the given value is of the given type.
@@ -285,7 +284,7 @@ rule is-a (
     : type # The type to test for.
     )
 {
-    if [ MATCH "(object@).*" : $(instance) ]
+    if [ MATCH "(object\\()[^@]+\\)@.*" : $(instance) ]
     {
         return [ class.is-derived [ modules.peek $(instance) : __class__ ] : $(type) ] ;
     }
