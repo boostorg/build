@@ -274,6 +274,7 @@ load_builtins()
       /* Initialize builtin modules */
       init_set();
       init_path();
+      init_regex();
 }
 
 /*

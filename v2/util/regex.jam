@@ -57,6 +57,7 @@ rule transform ( list * : pattern )
     }
     return $(result) ;
 }
+NATIVE_RULE regex : transform ;
 
 # Escapes all of the characters in symbols using the escape symbol
 # escape-symbol for the given string, and returns the escaped string
