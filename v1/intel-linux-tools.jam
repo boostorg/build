@@ -24,6 +24,7 @@ INTEL_LINUX_RUN_LD_LIBRARY_PATH = $(INTEL_LINUX_ROOT)"/ia32/lib" ;
 # debugging
 flags intel-linux CFLAGS <debug-symbols>on : -g ;
 flags intel-linux LINKFLAGS <debug-symbols>on : -g ;
+flags intel-linux LINKFLAGS <debug-symbols>off : -Xlinker -s ;
 
 # optimizations
 flags intel-linux CFLAGS <optimization>off : -O0 ;
