@@ -14,12 +14,11 @@ t = Tester()
 
 t.write("project-root.jam", "")
 t.write("Jamfile", """
-project
-    : explicit-targets hello2 
-    ;
 
 exe hello : hello.cpp ;
 exe hello2 : hello.cpp ;
+
+explicit hello2 ;
 """)
 t.write("hello.cpp", """
 int main()

@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                                            </style>
+                                                </style>
   </head>
   <!-- Things yet to document:
-                                                      - build request, build request expansion and directly requested targets
-                                                      - conditional properties
-                                                    -->
+                                                        - build request, build request expansion and directly requested targets
+                                                        - conditional properties
+                                                      -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -138,12 +138,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>examples-v2</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                                                           it somewhere. 
-                                                            
-                                                              <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                                                              into one of the locations where it can be found (given in <a href=
-                                                              "#config_files_location">this table</a>). This prevent you from
-                                                              accidentally overwriting your config when updating.</p> -->
+                                                                 it somewhere. 
+                                                                  
+                                                                    <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                                                                    into one of the locations where it can be found (given in <a href=
+                                                                    "#config_files_location">this table</a>). This prevent you from
+                                                                    accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -1211,6 +1211,13 @@ borland/runtime-link=static,dynamic
 
         <td>Build another project when this one is built.</td>
       </tr>
+
+      <tr>
+        <td><a href="#explicit_rule">explicit</a></td>
+
+        <td>States that the target should be built only by explicit
+        request.</td>
+      </tr>
     </table>
 
     <p>Each project is also associated with <em>project root</em>. That's a
@@ -1461,17 +1468,17 @@ borland/runtime-link=static,dynamic
 
       <li>It allows to have main target names with slashes. 
       <!-- The motivation for which is:
-                        So, to summarize:
-                        1. The project which extract tarfile may extract all possible kinds of 
-                        targets, and it's reasonable to use them directly from other project.
-                        2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
-                        maintainability, and therefore, must use main target name which contains 
-                        slashes?
-                        3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
-                        option, because you should not change existing tree 
+                              So, to summarize:
+                              1. The project which extract tarfile may extract all possible kinds of 
+                              targets, and it's reasonable to use them directly from other project.
+                              2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
+                              maintainability, and therefore, must use main target name which contains 
+                              slashes?
+                              3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
+                              option, because you should not change existing tree 
 
-                        That makes good rationale for why main target must contain names.
-                         -->
+                              That makes good rationale for why main target must contain names.
+                               -->
       </li>
     </ul>
 
@@ -1554,10 +1561,21 @@ borland/runtime-link=static,dynamic
     follows:</p>
 
     <ul>
-      <li>For project targets, all of main targets are generated with the
-      same properties. Then all projects referred via "build-project" are
-      generated as well. If it's not possible to refine requested properties
-      with project requirements, the project is skipped.</li>
+      <li>
+        <p>For project targets, all of main targets are generated with the
+        same properties. Then all projects referred via "build-project" are
+        generated as well. If it's not possible to refine requested
+        properties with project requirements, the project is skipped.</p>
+
+        <p id="explicit_rule">It is possible to disable building of certain
+        target using the <tt>explicit</tt> rule, available in all project
+        modules. The syntax is</p>
+<pre>
+    rule explicit ( target-name )
+</pre>
+        If this rule is invoked on a target, it will be built only when it's
+        explicitly requested on the command line.
+      </li>
 
       <li>
         For main target, steps are: 

@@ -195,18 +195,17 @@ rule project-target ( name : project : requirements * : default-build * )
         }    
         return $(usage-requirements) $(targets) ;        
     }
-    
+        
     # Computes and returns a list of abstract-target instances which
     # must be built when this project is built.
     rule targets-to-build ( )
     {
         local result ;
-
+        
         # Collect all main targets here, except for "explicit" ones.
-        local explicit-targets = [ project.attribute $(self.project) explicit-targets ] ;
         for local name in $(self.main-targets)
         {
-            if ! $(name) in $(explicit-targets)
+            if ! $(name) in $(self.explicit-targets)
             {                    
                 result += [ main-target $(name) ] ;
             }
@@ -223,7 +222,13 @@ rule project-target ( name : project : requirements * : default-build * )
         return $(result) ;
     }
     
-
+    # Add 'target' to the list of targets in this project that should be build
+    # only by explicit request
+    rule mark-target-as-explicit ( target-name )
+    {
+        self.explicit-targets += $(target-name) ;
+    }
+        
     # Returns a 'main-target' class instance corresponding to the 'name'.
     # Creates the instance if needed.
     rule main-target ( name )

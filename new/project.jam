@@ -467,7 +467,7 @@ rule project-attributes ( location )
             self.build-dir = [ path.root $(specification) $(self.location) ] ;
         }        
         else if ! $(attribute) in "id" "default-build" "location" "source-location"
-          "parent" "projects-to-build" "explicit-targets"
+          "parent" "projects-to-build"
         {
             errors.error "Invalid project attribute '$(attribute)' specified "
                                "for project at '$(self.location)'" ;
@@ -605,6 +605,13 @@ module project-rules
         local now = [ $(attributes).get projects-to-build ] ;
         $(attributes).set projects-to-build : $(now) $(dir) ;
     }
+    
+    rule explicit ( target-name )
+    {
+        import project ;
+        local t = [ project.target $(__name__) ] ;
+        $(t).mark-target-as-explicit $(target-name) ;
+    }    
 }
 
 
