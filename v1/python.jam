@@ -59,6 +59,10 @@ if $(PYTHON_WINDOWS)
     CYGWIN_PYTHON_DEBUG_DLL_PATH ?= $(CYGWIN_PYTHON_DEBUG_ROOT)/bin ;
     CYGWIN_PYTHON_DEBUG_LIB_PATH ?= $(CYGWIN_PYTHON_DEBUG_ROOT)/lib/python$(CYGWIN_PYTHON_DEBUG_VERSION)/config ;
 }
+else if $(UNIX) && $(OS) = MACOSX
+{
+    PYTHON_EMBEDDED_LIBRARY = dl util ;
+}
 else
 {
     PYTHON_EMBEDDED_LIBRARY = python$(PYTHON_VERSION) dl util ;
@@ -81,11 +85,10 @@ else if $(UNIX) && $(OS) = MACOSX
     PYTHON_ROOT ?= /Library/Frameworks/Python.framework/Versions/$(PYTHON_VERSION) ;
     PYTHON_ROOT = $(PYTHON_ROOT:J=" ") ;
     PYTHON_INCLUDES ?= $(PYTHON_ROOT)/include/python$(PYTHON_VERSION) ;
-    PYTHON_LIB_PATH ?= $(PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config ;
 
     PYTHON_PROPERTIES ?=
       <sysinclude>$(PYTHON_INCLUDES)
-        <library-path>$(PYTHON_LIB_PATH)
+        <warnings>off
       ;
 }
 else if $(UNIX)
