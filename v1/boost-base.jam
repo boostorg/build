@@ -1412,16 +1412,17 @@ rule find-compatible-subvariant ( main-target : toolset variant : dependent-simp
     # the full subvariant to build...
     local subvariant = [ expand-target-subvariants $(main-target) : $(variant) : $(toolset) ] ;
 
-    local sv-target = ;
-    local sv-properties = ;
-    local sv-toolset = ;
-    local sv-variant = ;
+    local sv-target = ; local sv-properties = ; local sv-toolset = ; local sv-variant = ;
     split-target-subvariant sv-target sv-properties sv-toolset sv-variant : $(subvariant) ;
     local sv-overrides =
         [ difference $(dependent-simple-properties) : [ select-gristed $(sv-properties) ] ] ;
 
     # check to make sure we can link against the subvariant
-    for local sv-override in $(sv-overrides)
+    local target-requirements
+        = [ select-gristed $(gTARGET_REQUIREMENTS($(main-target))) ] ;
+    local override-conflicts
+        = [ get-properties $(target-requirements:G) $(gALWAYS_RELEVANT) : $(sv-overrides) ] ;
+    for local sv-override in $(override-conflicts)
     {
         local sv-required = [ get-values $(sv-override:G) : $(sv-properties) ] ;
         if ! [ is-link-compatible $(sv-override:G) : $(sv-override:G=) : $(sv-required) ]
@@ -1430,6 +1431,18 @@ rule find-compatible-subvariant ( main-target : toolset variant : dependent-simp
                 incompatible with $(sv-override) ;
         }
     }
+
+    # now that we have a mostly (or completely) compatible subvariant do the overrides
+    local gTARGET_REQUIREMENTS($(main-target)) =
+        [ difference
+            $(target-requirements) :
+            [ get-properties [ difference $(sv-overrides:G) : $(gALWAYS_RELEVANT) ] : $(target-requirements) ] ]
+        [ difference
+            $(sv-overrides) :
+            [ get-properties $(gALWAYS_RELEVANT) : $(sv-overrides) ] ]
+        ;
+    subvariant = [ expand-target-subvariants $(sv-target) : $(sv-variant) : $(sv-toolset) ] ;
+    split-target-subvariant sv-target sv-properties sv-toolset sv-variant : $(subvariant) ;
 
     return $(sv-properties) ;
 }
@@ -1671,7 +1684,7 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
 
 # Generate the expanded subvariants of a target.
 #
-rule expand-target-subvariants ( target : local-build * : tools + )
+rule expand-target-subvariants ( target : local-build * : tools + : )
 {
     local BUILD = [ get-BUILD $(local-build) ] ;
     local variants = [ select-ungristed $(BUILD) ] ;
