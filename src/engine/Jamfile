@@ -57,6 +57,25 @@ else 		{ code = execunix.c fileunix.c pathunix.c ; }
 
 # We have to signal jam.h for these
 
+### LOCAL CHANGE
+#
+# The default NT CCFLAGS build jam with nothing but /DNT.
+# We want to optimize it as well.
+#
+
+# Improvements grabbed from //guest/craig_mcpheeters/jam/src/ on the
+# Perforce public depot.
+LOCAL_DEFINES += OPT_HEADER_CACHE_EXT ;
+LOCAL_DEFINES += OPT_GRAPH_DEBUG_EXT ;
+
+# Improvements developed locally.
+
+# Bug fixes
+LOCAL_DEFINES += OPT_FIX_TARGET_VARIABLES_EXT ;
+
+# Improvements
+LOCAL_DEFINES += OPT_IMPROVED_PATIENCE_EXT ;
+
 if $(OS) = NT
 {
   if $(TOOLSET) = MINGW || $(TOOLSET) = LCC 
@@ -68,6 +87,9 @@ if $(OS) = NT
     CCFLAGS += /DNT ;
   }
 }
+CCFLAGS += -D$(LOCAL_DEFINES) -DYYSTACKSIZE=5000 ;
+#
+### LOCAL CHANGE
 
 # Do we know yacc?
 
@@ -126,7 +148,7 @@ GenFile 	jambase.c : mkjambase$(SUFEXE) Jambase ;
 
 Library         libjam.a : 
 		    command.c compile.c $(code) expand.c glob.c
-		    hash.c headers.c hdrmacro.c lists.c make.c make1.c newstr.c
+		    hash.c hcache.c headers.c hdrmacro.c lists.c make.c make1.c newstr.c
 		    option.c parse.c regexp.c rules.c scan.c search.c subst.c
 		    timestamp.c variable.c modules.c strings.c filesys.c 
 		    builtins.c pwd.c ;

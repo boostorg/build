@@ -22,6 +22,10 @@
 # include "hdrmacro.h"
 # include "newstr.h"
 
+#ifdef OPT_HEADER_CACHE_EXT
+# include "hcache.h"
+#endif
+
 /*
  * headers.c - handle #includes in source files
  *
@@ -43,8 +47,9 @@
  *		just to invoke a rule.
  */
 
-static LIST *headers1( LIST *l, char *file, int rec, regexp *re[],
-                       regexp*  re_macros );
+#ifndef OPT_HEADER_CACHE_EXT
+static LIST *headers1( LIST *l, char *file, int rec, regexp *re[]);
+#endif
 
 /*
  * headers() - scan a target for include files and call HDRRULE
@@ -61,15 +66,6 @@ headers( TARGET *t )
     regexp	*re[ MAXINC ];
     int	rec = 0;
         
-    /* the following regexp is used to detect cases where a  */
-    /* file is included through a line line "#include MACRO" */
-    static regexp *re_macros = 0;
-    if ( re_macros == 0 )
-    {
-        re_macros = regex_compile(
-            "^[ 	]*#[ 	]*include[ 	]*([A-Za-z][A-Za-z0-9_]*).*$" );
-    }
-
     if( !( hdrscan = var_get( "HDRSCAN" ) ) || 
         !( hdrrule = var_get( "HDRRULE" ) ) )
         return;
@@ -91,7 +87,11 @@ headers( TARGET *t )
         FRAME	frame[1];
         frame_init( frame );
         lol_add( frame->args, list_new( L0, t->name ) );
-        lol_add( frame->args, headers1( headlist, t->boundname, rec, re, re_macros ) );
+#ifdef OPT_HEADER_CACHE_EXT
+        lol_add( frame->args, hcache( t, rec, re, hdrscan ) );
+#else
+        lol_add( frame->args, headers1( headlist, t->boundname, rec, re ) );
+#endif
 
         if( lol_get( frame->args, 1 ) )
             evaluate_rule( hdrrule->string, frame );
@@ -106,17 +106,38 @@ headers( TARGET *t )
  * headers1() - using regexp, scan a file and build include LIST
  */
 
+#ifdef OPT_HEADER_CACHE_EXT
+LIST *
+#else
 static LIST *
+#endif
 headers1( 
 	LIST	*l,
 	char	*file,
 	int	rec,
-	regexp	*re[],
-        regexp  *re_macros )
+	regexp	*re[] )
 {
 	FILE	*f;
 	char	buf[ 1024 ];
 	int		i;
+        static regexp *re_macros = 0;
+
+        
+#ifdef OPT_IMPROVED_PATIENCE_EXT
+	static int count = 0;
+	++count;
+	if ( ((count == 100) || !( count % 1000 )) && DEBUG_MAKE )
+	    printf("...patience...\n");
+#endif
+        
+        /* the following regexp is used to detect cases where a  */
+        /* file is included through a line line "#include MACRO" */
+        if ( re_macros == 0 )
+        {
+            re_macros = regex_compile(
+                "^[ 	]*#[ 	]*include[ 	]*([A-Za-z][A-Za-z0-9_]*).*$" );
+        }
+
 
 	if( !( f = fopen( file, "r" ) ) )
 	    return l;
