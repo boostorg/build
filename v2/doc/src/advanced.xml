@@ -267,8 +267,7 @@ boost-build /path/to/boost.build ;
       <simpara>
         Customizing Boost.Build for your needs. You might have
     additional tools you want to run, or just want different
-    extension for some file. The <ulink url=
-    "doc/extending.html">extender manual</ulink> is waiting for
+    extension for some file. The <link linkend="bbv2.extending">extender manual</ulink> is waiting for
     you.
       </simpara>
     </listitem>
@@ -291,6 +290,7 @@ boost-build /path/to/boost.build ;
       <para>Most main targets rules in Boost.Build use similiar
         syntax:</para>
 
+<anchor id="bbv2.main-target-rule-syntax"/>
 <programlisting>
 function-name main-target-name 
     : sources 
@@ -700,200 +700,7 @@ should be absolute project id.
     </section>
 
 -->
-   
-    <section id="bbv2.advanced.builtins">
-      <title>Builtin facilities</title>
-
-      <section id="bbv2.advanced.builtins.targets">
-        <title>Main targets</title>
-
-        <variablelist>
-          <varlistentry><term><literal>exe</literal></term>
-            
-            <listitem>
-              <simpara>
-                Creates a regular executable file. Sources must be either
-                object files or libraries, and sources of different types
-                will be converted to accepted types automatically.
-              </simpara>
-            </listitem>
-          </varlistentry>
-          
-          <varlistentry><term><literal>lib</literal></term>
-            
-            <listitem>
-              <para>Creates a library file. Depending on the value of
-                &lt;link&gt; feature the library will be either static or
-                shared. Like with "exe", sources will be converted either to
-                objects or libraries.</para>
-              
-              <para>The handling of libraries in sources depends on whether
-                linking is static or shared. For shared linking, libraries
-                will be linked in. For static linking the library sources
-                will not be linked in, since it's not possible, and will be
-                passed on. Other main target which depend on this one will
-                see those libraries and link to it. Therefore, putting
-                library in sources of other library works in all cases.</para>
-            </listitem></varlistentry>
-          
-          <varlistentry id="bbv2.advanced.builtins.targets.alias">
-            <term><literal>alias</literal></term>
-            
-            <listitem>
-              <simpara>
-                Builds all the source targets and returns them unmodified.
-                Please run "bjam --help alias" for more details.
-              </simpara>
-            </listitem></varlistentry>
-          
-          <varlistentry><term><literal>stage</literal></term>
-            
-            <listitem>
-              <simpara>
-                Copies a number of targets to a single directory. The
-                primary purpose is installing binaries. Please run "bjam --help
-                stage" for more details.
-              </simpara>
-            </listitem></varlistentry>
-          
-          <varlistentry><term><literal>unit-test</literal> (from module "testing")</term>
-            
-            <listitem>
-              <simpara>
-                Creates an executable file and runs it. Build won't succeed
-                unless the executable runs successfully. The rule is usefull
-                for creating test program which should be rerun whenever any
-                dependency changes. <!-- make? -->
-              </simpara>
-            </listitem></varlistentry>
-        </variablelist>
-        
-      </section>
-      
-      <section id="bbv2.advanced.builtins.features">
-        <title>Features</title> 
-        
-        <variablelist>
-          <varlistentry><term><literal>variant</literal></term>
-            
-            <listitem>
-              <simpara>
-                The feature which combines several low-level features in
-                order to make building most common variants simple.
-              </simpara>
-              
-              <para><emphasis role="bold">Allowed values:</emphasis> <literal>debug</literal>, <literal>release</literal>,
-                <literal>profile</literal></para>
-              
-              <para>The value <literal>debug</literal> expands to</para>
-              
-<programlisting>
-&lt;optimization&gt;off &lt;debug-symbols&gt;on &lt;inlining&gt;off &lt;runtime-debugging&gt;on
-</programlisting>
-              
-              <para>The value <literal>release</literal> expands to</para>
-
-<programlisting>
-&lt;optimization&gt;speed &lt;debug-symbols&gt;off &lt;inlining&gt;full &lt;runtime-debugging&gt;off
-</programlisting>
-
-              <para>The value <literal>profile</literal> expands to the same as
-                <literal>release</literal>, plus:</para>
-
-<programlisting>
-&lt;profiling&gt;on &lt;debug-symbols&gt;on
-</programlisting>
-              
-              <para><emphasis role="bold">Rationale:</emphasis> Runtime debugging is on in debug build
-                so suit expectations of people used various IDEs. It's
-                assumed other folks don't have any specific expectation in
-                this point.</para>
-            </listitem></varlistentry>
-          
-          <varlistentry id="bbv2.advanced.builtins.features.link">
-            <term><literal>link</literal></term>
-            
-            <listitem>
-              <simpara>
-                Feature which controls how libraries are built.
-              </simpara>
-
-              <para><emphasis role="bold">Allowed values:</emphasis> <literal>shared</literal>,
-                <literal>static</literal></para>
-            </listitem></varlistentry>
-          
-          <varlistentry><term><literal>source</literal></term>
-            
-            <listitem>
-              <simpara>
-                Tthe &lt;source&gt;X feature has the same effect on building a target
-                as putting X in the list of sources. The feature
-                is sometimes more convenient: you can put &lt;source&gt;X in
-                the requirements for a project and it will be linked to all
-                executables.
-              </simpara>
-            </listitem>
-          </varlistentry>
-          
-          <varlistentry><term><literal>library</literal></term>
-            
-            <listitem>
-              <simpara>
-                This feature is equivalent to the &lt;source&gt; feature, and exists
-                for backward compatibility reasons.
-              </simpara>
-            </listitem>
-          </varlistentry>
-          
-          
-          <varlistentry><term><literal>use</literal></term>
-            
-            <listitem>
-              <simpara>
-                Causes the target referenced by the value of this feature
-                to be constructed and adds it's usage requirements to build
-                properties. The constructed targets are not used in any other
-                way. The primary use case is when you use some library and want
-                it's usage requirements (such as include paths) to be applied,
-                but don't want to link to the library.
-              </simpara>
-            </listitem>
-          </varlistentry>
-          
-          <varlistentry><term><literal>dll-path</literal></term>
-            
-            <listitem>
-              <simpara>
-                Specify a path where dynamic libraries should be found at
-                where executable or shared library is run. This feature
-                directly affects binaries with the gcc compiler, allowing them
-                to pick specific libraries, and ignoring all environment
-                settings. On other toolsets, the binary still requires proper
-                environment settings to be run. However, Boost.Build tools
-                which run executables will notice dll-path settings and create
-                this environment automatically.
-              </simpara>
-            </listitem></varlistentry>
-          
-          <varlistentry><term><literal>hardcode-dll-paths</literal></term>
-            
-            <listitem>
-              <simpara>
-                Controls automatic generation of dll-path properties.
-              </simpara>
-              
-              <para><emphasis role="bold">Allowed values:</emphasis> <literal>off</literal>, <literal>on</literal> When this
-                property is on, usage requirements for each library will
-                include additional dll-path propertry, with the path the the
-                generated library file. This allows to run executables
-                without placing all the dependent libraries to a single
-                location.</para>
-            </listitem></varlistentry>
-        </variablelist>
-        
-      </section>
-    </section>
-    
+       
   </section>
   
   <section id="bbv2.advanced.build_process">
@@ -921,6 +728,354 @@ bjam app1 lib1//lib1 gcc debug optimization=full
     linkend="bbv2.reference.commandline">here</link>.
   </para>
 
+  </section>
+
+  <section id="bbv2.advanced.builtins.targets">
+    <title>Builtin target types</title>
+
+    <section>
+      <title>Programs</title>
+
+      <para>Programs are created using the <code>exe</code> rule, which
+        follows the <link linkend="bbv2.main-target-rule-syntax">common
+          syntax</link>. For example:
+<programlisting>
+exe hello : hello.cpp some_library.lib /some_project//library 
+          : &lt;threading&gt;multi 
+          ;
+</programlisting>
+        This will create an executable file from the sources -- which can
+        include C and C++ files, object files and libraries. Boost.Build will
+        automatically try to convert targets of other types.
+      </para>
+
+      <tip>
+        <para>         
+          On Windows, if an application which uses dynamic libraries, and both
+          the application and the libraries are built by Boost.Build, its not
+          possible to immediately run the application, because the
+          <literal>PATH</literal> environment variable should include the path
+          to the libraries. It means you have to either add the paths
+          manually, or place the application and the libraries to the same
+          directory, for example using the <link
+          linked="bbv2.builtin.stage">stage</link> rule.
+      </para>
+      </tip>
+    </section>
+
+    <section>
+      <title>Libraries</title>
+
+      <para>Libraries are created using the <code>lib</code> rule, which
+        follows the <link linkend="bbv2.main-target-rule-syntax">common
+          syntax</link>. For example:
+<programlisting>
+lib helpers : helpers.cpp : &lt;include&gt;boost : : &lt;include&gt;. ;
+</programlisting>
+      </para>
+
+      <para>In the most common case, the <code>lib</code> creates a library
+        from the specified sources. Depending on the value of
+        &lt;link&gt; feature the library will be either static or
+        shared. There are two other cases. First is when the library is
+        installed somewhere in compiler's search paths, and should be
+        searched by the compiler (typically, using the <option>-l</option>
+        option). The second case is where the library is available as a 
+        prebuilt file and the full path is known.          
+        </para>
+      
+      <para>
+        The syntax for these case is given below:
+<programlisting>
+lib z : : &lt;name&gt;z ;            
+lib compress : : &lt;file&gt;/opt/libs/compress.a ;
+</programlisting>
+        The <code>name</code> property specifies the name which should be
+        passed to the <option>-l</option> option, and the <code>file</code>
+        property specifies the file location.
+      </para>
+      
+      <para>
+        For convenience, the following syntax is allowed:
+<programlisting>
+lib z ;
+lib giu db aux ;
+</programlisting>
+          and is does exactly the same as:
+<programlisting>
+lib z : : &lt;name&gt;z ;            
+lib giu : : &lt;name&gt;gui ;            
+lib db : : &lt;name&gt;db ;            
+lib aux : : &lt;name&gt;aux ;            
+</programlisting>
+      </para>
+          
+      <para>When a library uses another library you should put that another
+        library in the list of sources. This will do the right thing in all
+        cases. For portability, you should specify library dependencies even
+        for searched and prebuilt libraries, othewise, static linking on
+        Unix won't work. For example:
+<programlisting>
+lib z ;
+lib png : z : &lt;name&gt;png ;
+</programlisting>
+        </para>
+
+      <note>
+        <para>When a library (say, <code>a</code>), which has another
+          library, (say, <code>b</code>) is linked dynamically, the <code>b</code>
+          library will be incorporated in <code>a</code>. (If <code>b</code>
+          is dynamic library as well, then <code>a</code> will only refer to
+          it, and don't include any extra code.) When the <code>a</code>
+          library is linked statically, Boost.Build will assure that all
+          executables which link to <code>a</code> will also link to
+          <code>b</code>.
+        </para>
+      </note>
+         
+      <para>One feature of Boost.Build which is very important for libraries
+        is usage requirements. For example, if you write:
+<programlisting>
+lib helpers : helpers.cpp : : : &lt;include&gt;. ;
+</programlisting>
+        then compiler include path for all targets which use
+        <code>helpers</code> will contain the directory where the target is
+        defined.path to "helpers.cpp". So, the user need only to add
+        <code>helpers</code> to the list of sources, and don't bother about
+        other requirements. This allows to greatly simplify Jamfiles.
+      </para>
+
+      <note>
+        <para>If you don't want shared libraries to include all libraries
+          which are specified in sources (especially statically linked ones),
+          you'd need to use the following:
+<programlisting>
+lib b : a.cpp ;
+lib a : a.cpp : &lt;use&gt;b : : &gt;library&gt;b ;
+</programlisting>
+          This specifies that <code>a</code> uses <code>b</code>, and causes
+          all executables which link to <code>a</code> also link to
+          <code>b</code>. In this case, even for shared linking, the
+          <code>a</code> library won't even refer to <code>b</code>.
+        </para>
+      </note>
+          
+    </section>
+
+    <section id="bbv2.builtins.alias">
+      <title>Alias</title>
+
+      <para>The <code>alias</code> rule follows the <link
+          linkend="bbv2.main-target-rule-syntax">common syntax</link>. For
+        example:
+<programlisting>
+alias core : im reader writer ;
+</programlisting>
+        The sources are returned without any modification.
+      </para>
+
+      <para>
+        The <code>alias</code> rule is a convenience tool. If you often build
+        the same group of targets at the same time, you can define the alias
+        to save typing.        
+      </para>
+
+      <para>
+        Another use of the <code>alias</code> rule is to change build
+        properties. For example, if you always want static linking for a
+        specific C++ Boost library, you can write the following:
+<programlisting>
+alias boost_thread : /boost/thread//boost_thread : &lt;link&gt;static ;
+</programlisting>
+        and use only the <code>boost_thread</code> alias in your Jamfiles.
+      </para>               
+    </section>
+
+
+    <section>
+      <title>Installing</title>
+
+      <para>For installing the built target you should use the
+        <code>stage</code> rule follows the <link
+          linkend="bbv2.main-target-rule-syntax">common syntax</link>. For
+        example:
+<programlisting>
+stage dist : hello helpers ;
+</programlisting>
+        will cause the targets <code>hello</code> and <code>helpers</code> to
+        be moved to the <filename>dist</filename> directory. The directory can
+        be changed with the <code>location</code> property:
+<programlisting>
+stage dist : hello helpers : &lt;location&gt;/usr/bin ;
+</programlisting>
+      </para>
+
+      <para>
+        Specifying the names of all libraries to install can be boring. The
+        <code>stage</code> allows to specify only the top-level executable
+        targets to install, and automatically install all dependencies:
+<programlisting>
+stage dist : hello 
+           : &lt;traverse-dependencies&gt;on &lt;include-type&gt;EXE
+             &lt;include-type&gt;LIB
+           ;
+</programlisting>
+        will find all targets that <code>hello</code> depends on, and install
+        all of the which are either executables or libraries.
+      </para>
+        
+    </section>
+
+    <section id="bbv2.builtins.testing">
+
+      <title>Testing</title>
+
+      <para>Boost.Build has convenient support for running unit tests. The
+        simplest way is the <code>unit-test</code> rule, which follows the
+        <link linkend="bbv2.main-target-rule-syntax">common syntax</link>. For
+        example:
+<programlisting>
+unit-test helpers_test : helpers_test.cpp helpers ;
+</programlisting>
+      </para>
+
+      <para>The <code>unit-test</code> rule behaves like the
+        <code>exe</code> rule, but after the executable is created it is
+        run. If the executable returns error, the build system will also
+        return error and will try running the executable on the next
+        invocation until it runs successfully. This behaviour ensures that you
+        can't miss a unit test failure.
+      </para>
+
+      <para>There are rules for more elaborate testing: <code>compile</code>,
+        <code>compile-fail</code>, <code>run</code> and
+        <code>run-fail</code>. They are more suitable for automated testing, and
+        are not covered here yet.
+      </para>        
+    </section>
+    
+  </section>
+  
+  <section id="bbv2.advanced.builtins.features">
+    <title>Builtin features</title> 
+        
+    <variablelist>
+      <varlistentry><term><literal>variant</literal></term>
+        
+        <listitem>
+          <simpara>
+            The feature which combines several low-level features in
+            order to make building most common variants simple.
+          </simpara>
+          
+          <para><emphasis role="bold">Allowed values:</emphasis> <literal>debug</literal>, <literal>release</literal>,
+            <literal>profile</literal></para>
+          
+          <para>The value <literal>debug</literal> expands to</para>
+          
+          <programlisting>
+            &lt;optimization&gt;off &lt;debug-symbols&gt;on &lt;inlining&gt;off &lt;runtime-debugging&gt;on
+          </programlisting>
+          
+          <para>The value <literal>release</literal> expands to</para>
+          
+          <programlisting>
+            &lt;optimization&gt;speed &lt;debug-symbols&gt;off &lt;inlining&gt;full &lt;runtime-debugging&gt;off
+          </programlisting>
+          
+          <para>The value <literal>profile</literal> expands to the same as
+            <literal>release</literal>, plus:</para>
+          
+          <programlisting>
+            &lt;profiling&gt;on &lt;debug-symbols&gt;on
+          </programlisting>
+          
+          <para><emphasis role="bold">Rationale:</emphasis> Runtime debugging is on in debug build
+            so suit expectations of people used various IDEs. It's
+            assumed other folks don't have any specific expectation in
+            this point.</para>
+        </listitem></varlistentry>
+      
+      <varlistentry id="bbv2.advanced.builtins.features.link">
+        <term><literal>link</literal></term>
+        
+        <listitem>
+          <simpara>
+            Feature which controls how libraries are built.
+          </simpara>
+          
+          <para><emphasis role="bold">Allowed values:</emphasis> <literal>shared</literal>,
+            <literal>static</literal></para>
+        </listitem></varlistentry>
+      
+      <varlistentry><term><literal>source</literal></term>
+        
+        <listitem>
+          <simpara>
+            Tthe &lt;source&gt;X feature has the same effect on building a target
+            as putting X in the list of sources. The feature
+            is sometimes more convenient: you can put &lt;source&gt;X in
+            the requirements for a project and it will be linked to all
+            executables.
+          </simpara>
+        </listitem>
+      </varlistentry>
+      
+      <varlistentry><term><literal>library</literal></term>
+        
+        <listitem>
+          <simpara>
+            This feature is equivalent to the &lt;source&gt; feature, and exists
+            for backward compatibility reasons.
+          </simpara>
+        </listitem>
+      </varlistentry>
+      
+      
+      <varlistentry><term><literal>use</literal></term>
+        
+        <listitem>
+          <simpara>
+            Causes the target referenced by the value of this feature
+            to be constructed and adds it's usage requirements to build
+            properties. The constructed targets are not used in any other
+            way. The primary use case is when you use some library and want
+            it's usage requirements (such as include paths) to be applied,
+            but don't want to link to the library.
+          </simpara>
+        </listitem>
+      </varlistentry>
+      
+      <varlistentry><term><literal>dll-path</literal></term>
+        
+        <listitem>
+          <simpara>
+            Specify a path where dynamic libraries should be found at
+            where executable or shared library is run. This feature
+            directly affects binaries with the gcc compiler, allowing them
+            to pick specific libraries, and ignoring all environment
+            settings. On other toolsets, the binary still requires proper
+            environment settings to be run. However, Boost.Build tools
+            which run executables will notice dll-path settings and create
+            this environment automatically.
+          </simpara>
+        </listitem></varlistentry>
+      
+      <varlistentry><term><literal>hardcode-dll-paths</literal></term>
+        
+        <listitem>
+          <simpara>
+            Controls automatic generation of dll-path properties.
+          </simpara>
+          
+          <para><emphasis role="bold">Allowed values:</emphasis> <literal>off</literal>, <literal>on</literal> When this
+            property is on, usage requirements for each library will
+            include additional dll-path propertry, with the path the the
+            generated library file. This allows to run executables
+            without placing all the dependent libraries to a single
+            location.</para>
+        </listitem></varlistentry>
+    </variablelist>
   </section>
 
   <section id="bbv2.advanced.differences_to_v1">

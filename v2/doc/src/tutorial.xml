@@ -293,7 +293,7 @@ build-project src ;
       <firstterm>dependent</firstterm> targets.
     </para>
 
-    <para>To get a feeling for target dependencies, let's continue the
+    <para>To get a feeling of target dependencies, let's continue the
       above example and see how <filename>src/Jamfile</filename> can
       use libraries from <filename>util/foo</filename>.  Assume
       util/foo/Jamfile contains:
@@ -527,7 +527,7 @@ exe e1 : e1.cpp foo ;
 exe e10 : e10.cpp foo ;
 </programlisting>
 
-            Note that the <link linkend="bbv2.advanced.builtins.targets.alias">alias</link> 
+            Note that the <link linkend="bbv2.builtins.alias">alias</link> 
             rule is specifically used for rename a reference to a target and possibly
             change the properties.
 
