@@ -25,7 +25,7 @@ toolset.inherit-rules intel-win : msvc ;
 rule init ( version ? :     # the compiler version
             command ? :     # the command to invoke the compiler itself
             compatibility ? # Compatibility mode: either 'vc6', 'vc7', 'vc7.1'
-                            # or 'native'.
+                            # or 'native'(default).
           )
 {           
     local condition = [  common.check-init-parameters intel-win
@@ -110,6 +110,18 @@ rule init ( version ? :     # the compiler version
     {        
         C++FLAGS += /Q$(base-vc) ;
     }
+    else        
+    {
+        C++FLAGS += 
+          -Qoption,cpp,--arg_dep_lookup
+          -Qoption,cpp,--const_string_literals
+          -Qoption,cpp,--new_for_init
+          -Qoption,cpp,--no_implicit_typename
+          -Qoption,cpp,--no_friend_injection
+          -Qoption,cpp,--no_microsoft_bugs
+          ;
+    }
+    
     flags intel-win CFLAGS $(condition) : $(C++FLAGS) ;
     
 }
