@@ -114,10 +114,11 @@
         <em>propagated</em> 
 
         <p>Features of this kind are propagated to dependencies. That is, if
-        a main target is build with a particular value of a propagated
-        feature, and depends on some other main targets, the build systems
-        attempts to use subvariants of those main targets with the same value
-        of the feature.</p>
+        a <a href="#main_target">main target</a> is build with a particular
+        value of a propagated feature, and depends on some other main
+        targets, the build systems attempts to use subvariants of those main
+        targets with the same value of the feature. For instance, binary
+        compiled with optimization would use optimized libraries.</p>
       </li>
 
       <li>
@@ -140,8 +141,9 @@
         <em>optional</em> 
 
         <p>An optional feature is not required to have a value during build.
-        When a value of non-optional feature is not specified, it is always
-        given the default value.</p>
+        When a value of non-optional non-free feature is not specified, it is
+        always given the default value &mdash; which is the first value
+        listed in the feature's declaration.</p>
       </li>
 
       <li>
@@ -182,9 +184,10 @@
         <p>Composite features actually correspond to groups of properties.
         For example, a build variant is a composite feature. When generating
         targets from a set of build properties, composite features are
-        recursively expanded and /added/ to the build property set, so rules
-        can find them if neccessary. Non-composite non-free features override
-        components of composite features in a build property set.</p>
+        recursively expanded and <em>added</em> to the build property set, so
+        rules can find them if neccessary. Non-composite non-free features
+        override components of composite features in a build property
+        set.</p>
       </li>
 
       <li>
@@ -289,7 +292,7 @@
 
     <ul>
       <li>An argument which does not contain slashes or the "=" symbol is
-      either a value of an implicit feature, or target to be build. It is
+      either a value of an implicit feature, or target to be built. It is
       taken to be value of a feature if appropriate feature exists.
       Otherwise, it is considered target name.</li>
 
@@ -302,15 +305,19 @@
           <li>The argument is split at each slash.</li>
 
           <li>
-            Each component is converted into a set of properties. If
-            component is a value of implicit feature, it is not changed.
-            Otherwise, it should have the form 
+            Each component is converted into a set of properties as follows.
+            If component is a value of implicit feature, the property set
+            fill only include corresponding property, e.g. <tt>gcc</tt> will
+            become <tt>&lt;toolset&gt;gcc</tt>. Otherwise, it should have the
+            form 
 <pre>
-    &lt;feature-name&gt;=&lt;feature-value&gt;[","&lt;feature-value&gt;]*
+    &lt;feature-name&gt;=&lt;feature-value1&gt;[","&lt;feature-valueN&gt;]*
    
 </pre>
-            For each specified value, a propertry with that value and the
-            specified feature name is added to the set.
+            and the property set will be 
+<pre>
+&lt;feature-name&gt;feature-value1 ... &lt;feature-name&gt;feature-valueN
+</pre>
           </li>
 
           <li>Property sets for each of the component are set-theoretically
@@ -334,7 +341,7 @@
 </pre>
     to work. 
 
-    <h4>Command line options</h4>
+    <h4 id="command_line_options">Command line options</h4>
 
     <p>All of the Boost.Build options start with the "--" prefix. They are
     described in the following table.</p>
@@ -378,10 +385,9 @@
     <h3><a name="projects">Projects</a></h3>
 
     <p>Boost.Build considers every software it build as organized into
-    projects, which corresponds to a single Jamfile. The project are
-    organized in a hierarchical structure, so for each project we can talk
-    about parent project, which is always unique and a number of subprojects.
-    (TODO: project root).</p>
+    projects, each of which corresponds to a single Jamfile. Projects are
+    organized in a hierarchical structure, so each project may have a single
+    parent project and a number of subprojects. (TODO: project root).</p>
 
     <h4>Project attributes</h4>
 
@@ -516,10 +522,10 @@
 
     <h4>Main targets and main target alternatives</h4>
 
-    <p><em>Main target</em> is a named entity which can be build, for example
-    a named executable file. To declare a main target, user invokes some of
-    the <a href="#main_target_rules">main target rules</a>, passing it things
-    like list of source and requirement.</p>
+    <p id="main_target"><em>Main target</em> is a named entity which can be
+    build, for example a named executable file. To declare a main target,
+    user invokes some of the <a href="#main_target_rules">main target
+    rules</a>, passing it things like list of source and requirement.</p>
 
     <p>It is possible to have different list of sources for different
     toolsets, therefore it is possible to invoke main target rules several
@@ -671,7 +677,7 @@
     therefore converted to jam's dependency graph which is then build.</p>
     <hr>
 
-    <p class="revision">Last modified: Aug 12, 2002</p>
+    <p class="revision">Last modified: Aug 15, 2002</p>
 
     <p>&copy; Copyright Vladimir Prus 2002. Permission to copy, use, modify,
     sell and distribute this document is granted provided this copyright
