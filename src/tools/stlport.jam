@@ -166,7 +166,7 @@ class stlport-target-class : basic-target
 
 rule stlport-target ( headers ? : libraries ? : requirements * )
 {
-    local project = [ CALLER_MODULE ] ;
+    local project = [ project.current ] ;
     
     targets.main-target-alternative
       [ new stlport-target-class  $(project) : $(headers) : $(libraries)        

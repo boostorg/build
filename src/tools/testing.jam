@@ -79,7 +79,7 @@ rule make-test ( target-type : sources + : requirements * : target-name ? )
 {
     target-name ?= $(sources[1]:D=:S=) ;
 
-    local project = [ CALLER_MODULE 1 ] ;
+    local project = [ project.current ] ;
     # The <location-prefix> forces the build system for generate paths in the form
     # $build_dir/array1.test/gcc/debug
     # This is necessary to allow post-processing tools to work.
