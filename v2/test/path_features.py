@@ -13,7 +13,7 @@ __declspec(dllexport)
 # endif 
 foo() {}
 """)
-t.write("a.h", "")
+t.write("a.h", "\n")
 
 t.write("d/Jamfile", "exe b : b.cpp ..//a ; ")
 t.write("d/b.cpp", """
