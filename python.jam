@@ -159,7 +159,6 @@ rule select-python-includes ( toolset variant : properties * )
 }
 
 PYTHON_PROPERTIES += 
-        <$(gcc-compilers)><*><find-library>util
         <sysinclude>$(BOOST_ROOT)
           <stlport-iostream>on
             select-python-library
