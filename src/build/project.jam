@@ -312,11 +312,6 @@ local rule load-jamfile (
         #
         initialize $(jamfile-module) : $(jamfile-to-load) ;
 
-        # Setup, by coordinating with project-root.
-        #
-        local project-root-module = [ attribute $(jamfile-module) project-root-module ] ;
-        $(project-root-module).project-root register-project $(jamfile-module) ;
-
         # Now load the Jamfile in it's own context.
         #
         modules.load $(jamfile-module) :  [ path.native $(jamfile-to-load) ] : . ;
@@ -349,7 +344,7 @@ local rule initialize (
     local attributes = $($(module-name).attributes) ;
 
     # Import rules common to all project modules from project-rules module,
-    # define at the end of this file.
+    # defined at the end of this file.
     modules.clone-rules project-rules $(module-name) ;
    
     # Make sure we've loaded the project-root corresponding to this
@@ -365,10 +360,11 @@ local rule initialize (
         parent-module = [ load [ path.parent $(parent[1]) ] ] ;
     }
 
+    # Register with the project root. This will inject project-root
+    # constants and do some other initialization.
+    $(project-root-module).project-root register-project $(module-name) ;
+
     $(attributes).set source-location : $(jamfile-location) : exact ;
-    # CONSIDER: seems to me we need either the first or the second of these.
-    $(attributes).set project-root : $(project-root) ;    
-    $(attributes).set project-root-module : $(project-root-module) ;    
 
     if $(parent-module)
     {
@@ -499,8 +495,7 @@ rule project-attributes ( location )
             self.build-dir = [ path.root $(specification) $(self.location) ] ;
         }        
         else if ! $(attribute) in "id" "default-build" "location" "source-location"
-           "project-root" "project-root-module" "parent" "projects-to-build" 
-           "explicit-targets"
+          "parent" "projects-to-build" "explicit-targets"
         {
             errors.error "Invalid project attribute '$(attribute)' specified "
                                "for project at '$(self.location)'" ;
@@ -527,7 +522,6 @@ rule project-attributes ( location )
         local parent = $(self.parent) ; parent ?= (none) ;
         print.section "'"$(id)"'" ;
         print.list-start ;
-        print.list-item "Project root:" $(self.project-root) ;
         print.list-item "Parent project:" $(parent) ;
         print.list-item "Requirements:" [ $(self.requirements).raw ] ;
         print.list-item "Default build:" $(self.default-build) ;
