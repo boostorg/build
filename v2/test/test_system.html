@@ -49,10 +49,14 @@
 
           <dt><a href="#method-set_tree">Method <tt>set_tree</tt></a></dt>
 
+          <dt><a href="#method-write">Method <tt>write</tt></a></dt>
+
           <dt><a href="#method-touch">Method <tt>touch</tt></a></dt>
 
           <dt><a href="#method-run_build_system">Method
           <tt>run_build_system</tt></a></dt>
+
+          <dt><a href="#method-read">Method <tt>read</tt></a></dt>
 
           <dt><a href="#methods-expectations">Methods for declaring
           expectations</a></dt>
@@ -60,7 +64,7 @@
           <dt><a href="#methods-ignoring">Methods for ignoring
           changes</a></dt>
 
-          <dt><a href="#method-mul">Method <tt>mul</tt></a></dt>
+          <dt><a href="#class-list">Helper class <tt>List</tt></a></dt>
         </dl>
       </dd>
     </dl>
@@ -106,19 +110,20 @@
     <tt>Jamfile</tt> builds an executable <tt>foo</tt> from <tt>foo.cpp</tt>
     and <tt>Jamrules</tt> is empty. Finally, <tt>test1.py</tt> contains:</p>
 <pre class="code">
-import BoostBuild
+from BoostBuild import Tester, List
 
 # Create a temporary working directory
-t = BoostBuild.Tester()
+t = Tester()
 
 # Make content of the working directory equal to the content of the 'test1' directory.
-t.copy_tree('test1')
+t.set_tree('test1')
 
-# Invoke the build system and record which changes were made
+# Invoke 'bjam -sTOOLS=borland' and record which changes were made
 t.run_build_system("-sTOOLS=borland")
-# First, create a list of three filenames with t.mul
-# Second, check if those files were added as result of the last build system invocation.
-t.expect_addition(t.mul("bin/foo/borland/debug/runtime-link-dynamic/foo", [".exe", ".obj", ".tds"]))
+# First, create a list of three pathnames
+file_list = List("bin/foo/borland/debug/runtime-link-dynamic/foo") * List(".exe .obj")
+# Second, assert that those files were added as result of the last build system invocation.
+t.expect_addition(file_list)
 
 # Invoke the build system once again
 t.run_build_system("clean")
@@ -183,9 +188,14 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
 
     <h2><a name="sec-reference">Reference documentation</a></h2>
 
-    <p>The entire test system is composed of single class
-    <tt>BoostBuild.Tester</tt>, derived form <tt>TestCmd.TestCmd</tt>. The
-    methods defined in <tt>BoostBuild.Tester</tt> are described below.</p>
+    <p>The test system is composed of class <tt>Tester</tt>, derived form
+    <tt>TestCmd.TestCmd</tt>, and helper class <tt>List</tt>. The methods of
+    <tt>Tester</tt>, and the class <tt>List</tt> are described below.</p>
+
+    <p>The documentation frequently refer to filename. In all cases, files
+    are specified in unix style: a sequence of components, separated by "/".
+    This is true on all platforms. In some contexts, a list of files is
+    allowed. In that case any object with sequence interface is allowed.</p>
 
     <h3><a name="method-__init__">Method <tt>__init__(self)</tt></a></h3>
 
@@ -207,10 +217,19 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
 
     <p><b>Effects:</b></p>
 
-    <p>Replaces the current working dir with content of directory at
-    <tt>tree_location</tt>. If <tt>tree_location</tt> is not absolute
-    pathname, it will be treated as relative to
+    <p>Replaces the content of the current working directory with the content
+    of directory at <tt>tree_location</tt>. If <tt>tree_location</tt> is not
+    absolute pathname, it will be treated as relative to
     <tt>self.original_workdir</tt>.</p>
+
+    <h3><a name="method-write">Method <tt>write(self, name,
+    content)</tt></a></h3>
+
+    <p><b>Effects:</b></p>
+
+    <p>Writes the specified content to the file given by <tt>name</tt> under
+    the temporary working directory. If the file aready exists, it is
+    overwritten. Any required directories are automatically created.</p>
 
     <h3><a name="method-touch">Method <tt>touch(self, names)</tt></a></h3>
 
@@ -248,6 +267,13 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
         and <tt>touched_files</tt>. Each is a list of strings.</p>
       </li>
     </ol>
+
+    <h3><a name="method-read">Method <tt>read(self, name)</tt></a></h3>
+
+    <p><b>Effects:</b></p>
+
+    <p>Read the specified file and returns it content. Raises an exception is
+    the file is absent.</p>
 
     <h3><a name="methods-expectations">Methods for declaring
     expectations</a></h3>
@@ -304,24 +330,36 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     <p>The method <tt>ignore(self, wildcard)</tt> ingores all the changes
     made to files that match a wildcard.</p>
 
-    <h3><a name="method-mul">Method <tt>mul(self, *arguments)</tt></a></h3>
+    <h3><a name="class-list">Helper class <tt>List</tt></a></h3>
+    The class has sequence interface and two additional methods. 
 
-    <p><b>Precondition:</b>Each passed arguments must be either string or a
-    list of strings.</p>
+    <h4>Method <tt>__init__(self, string)</tt></h4>
 
-    <p><b>Effects:</b>Returns a list of strings which are formed by taking
-    one string from each passed argument and joining them. The order of
-    strings corresponds to lexicagraphical ordering of sequences of
-    indices.</p>
+    <p><b>Effects:</b>Splits the string on unescaped spaces and tabs. The
+    split components can futher be retrived using standard sequence
+    access.</p>
+
+    <h4>Method <tt>__mul__(self, other)</tt></h4>
+
+    <p><b>Effects:</b>Returns an <tt>List</tt> instance, which elements are
+    all possible concatenations of two string, first of which is from
+    <tt>self</tt>, and second of which is from <tt>other</tt>.</p>
 
     <p><b>Example:</b></p>
 <pre>
-    mul("/home/ghost", [".bashrc", ".bash_profile"])
+    l = List("a b") * List("c d")
+    for e in l:
+        print e        
+   
 </pre>
 
-    <p>will return</p>
+    <p>will output</p>
 <pre>
-   ["/home/ghost/.bashrc", "/home/ghost/.bash_profile"]
+    ac
+    ad
+    bc
+    bd
+   
 </pre>
     <hr>
 
@@ -334,3 +372,4 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     any purpose.</p>
   </body>
 </html>
+
