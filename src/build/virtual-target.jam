@@ -345,7 +345,7 @@ class abstract-file-target : virtual-target
             local properties ;
             if $(self.action)
             {
-                local ps = [ $(self.action).properties-ps ] ;     
+                local ps = [ $(self.action).properties ] ;     
                 local property-grist = [ $(ps).as-path ] ;
                 grist = $(location-grist)/$(property-grist) ;
                 properties = [ $(ps).raw ] ;
@@ -546,7 +546,7 @@ class action
         return $(self.action-name) ;
     }
 
-    rule properties-ps ( )
+    rule properties ( )
     {
         return $(self.properties) ;
     }
@@ -558,7 +558,7 @@ class action
         {
             self.actualized = true ;
 
-            local ps = [ properties-ps ] ;
+            local ps = [ properties ] ;
             local properties = [ adjust-properties [ $(ps).raw ] ] ;
 
 
@@ -728,8 +728,8 @@ rule register ( target )
                 if $(a1) && $(a2) && [ $(a1).action-name ] = [ $(a2).action-name ] && 
                   [ $(a1).sources ] = [ $(a2).sources ]
                 {
-                    local ps1 = [ $(a1).properties-ps ] ;
-                    local ps2 = [ $(a2).properties-ps ] ;
+                    local ps1 = [ $(a1).properties ] ;
+                    local ps2 = [ $(a2).properties ] ;
                     local p1 = [ $(ps1).base ] [ $(ps1).free ] [ $(ps1).dependency ] ;
                     local p2 = [ $(ps2).base ] [ $(ps2).free ] [ $(ps2).dependency ] ;
                     if $(p1) = $(p2) 
@@ -882,7 +882,7 @@ local rule clone-action-template ( action from cloned-from : new-source )
 
     local action-class = [ modules.peek $(action) : __class__ ] ;
 
-    local ps = [ $(action).properties-ps ] ;
+    local ps = [ $(action).properties ] ;
     local cloned = [ new $(action-class) [ $(action).targets ] : $(sources)
                      : [ $(action).action-name ] : $(ps) ] ;
 
@@ -920,7 +920,7 @@ class subvariant-dg
         return $(self.main-target) ;
     }
 
-    rule properties-ps ( )
+    rule properties ( )
     {
         return $(self.properties) ;
     }

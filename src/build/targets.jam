@@ -1021,7 +1021,7 @@ class basic-target : abstract-target
             local a = [ $(t).action ] ;
             if $(a)
             {
-                local p = [ $(a).properties-ps ] ;
+                local p = [ $(a).properties ] ;
                 if ! $(p) in $(cheched)
                 {
                     if [ $(p).link-incompatible-with $(build-request) ]
