@@ -65,13 +65,15 @@ rule feature (
     {
         error = feature already defined: ;
     }
-    else if implicit in $(attributes)
+    else if implicit in $(attributes) && free in $(attributes)
     {
-        if free in $(attributes)
-        {
-            error = free features cannot also be implicit ;
-        }
+        error = free features cannot also be implicit ;
     }
+    else if free in $(attributes) && propagated in $(attributes)
+    {            
+        error = free features cannot be propagated ;
+    }           
+    
 
     if $(error)
     {
@@ -845,6 +847,12 @@ local rule __test__ ( )
             feature feature2 : : free implicit ;
         }
         catch free features cannot also be implicit ;
+
+        try ;
+        {
+            feature feature3 : : free propagated ;
+        }
+        catch free features cannot be propagated ;
 
         try ;
         {

@@ -56,6 +56,13 @@ rule abstract-target ( name      # name of the target in Jamfile
         return $(location)/$(self.name) ;
     }
 
+    # Adds one more direct build request for this targets. If later generate
+    # is called with the same non-free non-incidental properties as in one
+    # of direct build requests, then that build request is used instead.
+    rule direct-build-request ( properties * )
+    {
+    }
+    
     # Takes properties in split form ("<feature1>foo <feature2>bar").
     # Generates virtual targets for this abstract targets which are matching
     # 'properties' as closely as possible. It 'properties' are not specified,
@@ -78,15 +85,30 @@ rule project-target ( name : project : requirements * : default-build * )
     self.requirements = $(requirements) ;
     self.default-build = $(default-build) ;
 
+    rule direct-build-request ( properties * )
+    {
+        for local name in $(self.main-targets)
+        {
+            local t = [ main-target $(name) ] ;
+            result += [ $(t).direct-build-request $(properties) ] ;
+        }
+        for local pn in [ project.attribute $(self.project) projects-to-build ]
+        {
+            local p = [ project.module-name $(pn) ] ;
+            local t = [ project.target [ project.attribute $(p) location ] ] ;
+            result += [ $(t).direct-build-request $(properties) ] ;
+        }            
+    }
+    
     # Generates all possible targets contained in this project.
     rule generate ( properties * )
     {
         # Project properties are directly imposed on all main targets.
         # However, we'd need to check if this project can be build at
         # all.
-        local properties = 
+        local xproperties = 
           [ property.refine $(properties) : $(self.requirements) ] ;
-        if $(properties[1]) = "@error"
+        if $(xproperties[1]) = "@error"
         {
             local id = [ project.attribute $(self.project) id ] ;
             if $(id) 
@@ -156,12 +178,34 @@ rule main-target ( name : project )
         self.alternatives += $(target) ;
     }
 
+    rule direct-build-request ( properties * )
+    {
+        local base = [ property.remove free incidental : $(properties) ] ;
+        local ep = $(self.direct-request.$(base:J=-)) ;
+        if $(ep) && $(ep) != $(properties) 
+        {
+            error "Conflicting direct build requests" $(ep) "and" $(properties) ;
+        }
+        else
+        {
+            self.direct-request.$(base:J=-) = $(properties) ;
+        }                
+    }
+    
+
     # Select an alternative for this main target, by finding all alternatives
     # which requirements are satisfied by 'properties' and picking the one with
     # longest requirements set.
     # Returns the result of calling 'generate' on that alternative.
     rule generate ( properties * )
     {
+        local base = [ property.remove free incidental : $(properties) ] ;
+        local ep = $(self.direct-request.$(base:J=-)) ;
+        if $(ep) 
+        {
+            properties = $(ep) ;
+        }
+        
         # Try to generate all the alternatives.
         local alternatives = [ new vector ] ;
 
@@ -228,8 +272,16 @@ rule main-target ( name : project )
         } 
 
         # Add additional subvariant element for the targets which free,
-        # non-incidental properties are not equal to project's.
-
+        # non-incidental properties are not equal to project's, plus
+        # those in build request
+        
+        # Note that free properties can appear on 'properties' only
+        # from direct build request, because free properties are not
+        # allowed to be propagated.
+        local ref = [ project.attribute $(self.project) requirements ]
+                    $(properties) ;
+        ref = [ property.take free : [ property.remove incidental : $(ref) ] ] ;
+        
         local pr = [ property.take free : [ property.remove incidental : 
                        [ project.attribute $(self.project) requirements ] ] ] ;
 
@@ -248,7 +300,7 @@ rule main-target ( name : project )
                 local properties = [ property.take free : [ property.remove incidental : 
                                         [ $(action).properties  ] ] ] ;
         
-                if $(properties) != $(pr)
+                if $(properties) != $(ref)
                 {
                     $(v).extra-path [ sequence.join main-target- $(self.name) ] ;
                 }
@@ -305,7 +357,8 @@ rule basic-target ( name : project
             return $(result) ;
         } else {
 
-            property-path = [ property.as-path $(properties) ] ;
+            property-path = [ property.as-path 
+                [ property.remove free incidental : $(properties) ] ] ;
             if ! $(property-path) 
             {
                 property-path = X ;
