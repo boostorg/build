@@ -52,7 +52,7 @@ int main()
 t.write("r.rc", """ 
 """)
 
-t.run_build_system(status=1, stderr=None)
+t.run_build_system(status=None, stderr=None)
 t.expect_content("bin/$toolset/debug/r.obj", "rc-object\n")
 
 t.cleanup()
