@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                </style>
+                    </style>
   </head>
   <!-- Things yet to document:
-                                        - build request, build request expansion and directly requested targets
-                                        - conditional properties
-                                      -->
+                                          - build request, build request expansion and directly requested targets
+                                          - conditional properties
+                                        -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -138,12 +138,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>examples-v2</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                 it somewhere.
-                  
-                    <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                    into one of the locations where it can be found (given in <a href=
-                    "#config_files_location">this table</a>). This prevent you from
-                    accidentally overwriting your config when updating.</p> -->
+                       it somewhere. 
+                        
+                          <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                          into one of the locations where it can be found (given in <a href=
+                          "#config_files_location">this table</a>). This prevent you from
+                          accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -647,7 +647,8 @@ boost-build /path/to/boost.build ;
         The feature which combines several low-level features in order to
         make building most common variants simple. 
 
-        <p><b>Allowed values:</b> <tt>debug</tt>, <tt>release</tt></p>
+        <p><b>Allowed values:</b> <tt>debug</tt>, <tt>release</tt>,
+        <tt>profile</tt></p>
 
         <p>The value <tt>debug</tt> expands to</p>
 <pre>
@@ -658,6 +659,12 @@ boost-build /path/to/boost.build ;
         <p>The value <tt>release</tt> expands to</p>
 <pre>
 &lt;optimization&gt;speed &lt;debug-symbols&gt;off &lt;inlining&gt;full &lt;runtime-debugging&gt;off
+</pre>
+
+        <p>The value <tt>profile</tt> expands to the same as
+        <tt>release</tt>, plus:</p>
+<pre>
+&lt;profiling&gt;on &lt;debug-symbols&gt;on
 </pre>
 
         <p><b>Rationale:</b> Runtime debugging is on in debug build so suit

@@ -37,6 +37,7 @@ feature runtime-debugging : on off : propagated ;
 
 
 feature optimization : off speed space : propagated ;
+feature profiling : off on : propagated ;
 feature inlining : off on full : propagated ;
 
 feature threading : single multi : link-incompatible propagated ;
@@ -142,6 +143,7 @@ IMPORT $(__name__) : variant : : variant ;
 
 variant debug : <optimization>off <debug-symbols>on <inlining>off <runtime-debugging>on ;
 variant release : <optimization>speed <debug-symbols>off <inlining>full <runtime-debugging>off ;
+variant profile : release : <profiling>on <debug-symbols>on ;
 
 # When <optimization>speed is specified, we need to add <define>NDEBUG
 # It is done via 'active' features, because it should be done for

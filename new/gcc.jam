@@ -66,6 +66,8 @@ flags gcc.compile OPTIONS <inlining>on : -Wno-inline ;
 flags gcc.compile OPTIONS <inlining>full : -finline-functions -Wno-inline ;
 
 flags gcc.compile OPTIONS <debug-symbols>on : -g ;
+flags gcc.compile OPTIONS <profiling>on : -pg ;
+
 flags gcc.compile OPTIONS <cxxflags> ;
 flags gcc.compile DEFINES <define> ;
 flags gcc.compile INCLUDES <include> ;
@@ -77,6 +79,7 @@ actions compile
 
 # Declare flags and action for linking
 flags gcc.link OPTIONS <debug-symbols>on : -g ;
+flags gcc.link OPTIONS <profiling>on : -pg ;
 flags gcc.link OPTIONS <linkflags> ;
 flags gcc.link LINKPATH <library-path> ;
 flags gcc.link FINDLIBS-ST <find-static-library> ;
@@ -105,6 +108,7 @@ actions piecemeal archive
 
 # Declare flags and action for linking shared libraries
 flags gcc.link-dll OPTIONS <debug-symbols>on : -g ;
+flags gcc.link-dll OPTIONS <profiling>on : -pg ;
 flags gcc.link-dll OPTIONS <linkflags> ;
 flags gcc.link-dll LINKPATH <library-path> ;
 flags gcc.link-dll FINDLIBS-ST <find-static-library> ;
