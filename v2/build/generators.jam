@@ -40,7 +40,7 @@
 #  'construct' rule has a parameter, telling if multiple targets can be returned. If
 #  the parameter is false, conversion of extra targets is not performed.
 
-import class : class new is-a ;
+import class : class new is-a xnew ;
 import container : vector ;
 import numbers : range ;
 import utility : str equal ;
@@ -434,7 +434,7 @@ rule generator (
                 generated-name = $(name) ;
             }
             
-            targets += [ new file-target $(generated-name) : $(t) : $(project) ] ;
+            targets += [ xnew file-target $(generated-name) : $(t) : $(project) ] ;
         }                 
         # Assign an action for each target
         local action = [ action-class ] ;
@@ -907,7 +907,7 @@ local rule construct-with-caching (
         }
         else 
         {                            
-            local ut = [ new file-target % : [ $(t).type ] : "no project" ] ;            
+            local ut = [ xnew file-target % : [ $(t).type ] : "no project" ] ;            
             cresult = [ construct $(project) : $(target-type) $(multiple) 
               : $(property-set) : $(ut) ] ;
             .transformation.cache.$(signature) = $(cresult) ;                
