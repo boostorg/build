@@ -263,8 +263,9 @@ rule inherit ( toolset : base )
     inherit-rules $(toolset) : $(base) ;
 }
 
-rule inherit-generators ( toolset : base )
+rule inherit-generators ( toolset properties * : base )
 {
+    properties ?= <toolset>$(toolset) ;
     local base-generators = [ generators.generators-for-toolset $(base) ] ;
     for local g in $(base-generators)
     {
@@ -285,7 +286,7 @@ rule inherit-generators ( toolset : base )
         }
         local new-id = $(toolset)$(suffix) ;
 
-        generators.register [ $(g).clone $(new-id) : $(toolset) ] ;
+        generators.register [ $(g).clone $(new-id) : $(properties) ] ;
     }    
 }
 
