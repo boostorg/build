@@ -33,6 +33,7 @@ class property-set
     import property ;
     import set ;
     import path ;
+    import errors ;
             
     rule __init__ ( raw-properties * )
     {        
@@ -40,6 +41,11 @@ class property-set
         
         for local p in $(raw-properties)
         {
+            if ! $(p:G)
+            {
+                errors.error "Invalid property: '$(p)'" ;                                    
+            }
+                        
             local att = [ feature.attributes $(p:G) ] ;        
             # A feature can be both incidental and free,
             # in which case we add it to incidental.
