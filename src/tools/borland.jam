@@ -1,5 +1,6 @@
 # (C) Copyright David Abrahams 2001. 
 # (C) Copyright Vladimir Prus 2003.
+# (C) Copyright Rene Rivera 2003.
 # Permission to copy, use, modify, sell and distribute this software 
 # is granted provided this copyright notice appears in all copies. This 
 # software is provided "as is" without express or implied warranty, and 
@@ -20,8 +21,8 @@ feature.subfeature toolset borland : version ;
 
 # Installation root to use for versionless toolset
 .root = "" ;
-STDHDRS = "" ;
-STDLIBPATH = "" ;
+STDHDRS = ;
+STDLIBPATH = ;
 
 
 rule init ( version ? : root ? )
@@ -32,11 +33,20 @@ rule init ( version ? : root ? )
     # default values are not applied to subfeatures.
     if ! $(version) 
     {
+        if ! $(root)
+        {
+            # versionless and rootless, we assume the user has bcc in the path
+            # so we try and find it, and set up the paths accordingly
+            import regex ;
+            import modules ;
+            local bcc = [ GLOB [ modules.peek : Path ] [ modules.peek : PATH ] : bcc32.exe ] ;
+            root = $(bcc[1]:D) ; root = $(root:P) ;
+        }
         if $(root)
         {
-            .root = $(root)/bin/ ;
-            STDHDRS = $(root)/include/ ;
-            STDLIBPATH = $(root)/lib ;
+            toolset.flags borland.compile STDHDRS <toolset>borland : $(root)/include/ ;
+            toolset.flags borland.link STDLIBPATH <toolset>borland : $(root)/lib ;
+            toolset.flags borland .root <toolset>borland : $(root)/bin/ ;
         }
     }
     else
@@ -50,8 +60,10 @@ rule init ( version ? : root ? )
         root = $(root)/bin/ ;
         root ?= "" ;        
         toolset.flags borland .root $(condition) : $(root) ;
-        
-    }                   
+    }
+    # strange that this return is needed, because if absent the
+    # unversioned/unrooted case doesn't work at all
+    return ;
 }
 
 
@@ -208,6 +220,3 @@ actions link bind LIBRARIES
     $(.set-path)$(.root:W)$(.old-path) "$(.root)bcc32" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(>:W)"
     $(NEED_IMPLIB)"$(.root)implib" $(NEED_IMPLIB)"$(<[2]:W)" $(NEED_IMPLIB)"$(<[1]:W)"
 }
-
-
-
