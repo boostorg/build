@@ -39,14 +39,31 @@ actions compile
     g++ -ftemplate-depth-100 $(OPTIONS) -c -o $(<) $(>) 
 }
 
-rule link ( target : sources * : property-set * )
+local rule link-options ( target : sources * : property-set * )
 {
     local options ;
-    if <debug-symbols>on in $(property-set)
+    for local p in $(property-set)
     {
-        options += -g ;
+        if $(p) = <debug-symbols>on
+        {
+            options += -g ;
+        }
+        else if $(p:G) = <library-path>
+        {
+            options += -L$(p:G=) ;
+        }
+        else if $(p:G) = <library>
+        {
+            options += -l$(p:G=) ;
+        }
     }
+    
     OPTIONS on $(target) = $(options) ;
+}
+
+rule link ( target : sources * : property-set * )
+{
+    link-options $(target) : $(sources) : $(property-set) ;
 }
 
 actions link
@@ -65,9 +82,10 @@ actions archive
 
 rule link-dll ( target : sources * : property-set * )
 {
+    link-options $(target) : $(sources) : $(property-set) ;
 }
 
 actions link-dll
 {
-    gcc -o $(<) -shared $(>)
+    g++  -o $(<) -shared $(>) $(OPTIONS)
 }
