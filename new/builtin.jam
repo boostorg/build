@@ -379,7 +379,8 @@ scanner.register c-scanner : include ;
 type.set-scanner CPP : c-scanner ;
 
 
-type.register H : h hpp ;
+type.register H : h ;
+type.register HPP : hpp : H ;
 type.register C : c ;
 
 class lib-target-class : basic-target

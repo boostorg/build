@@ -12,7 +12,7 @@ feature.feature bison.prefix : : free ;
 type.register Y : y ;
 type.register YY : yy ;
 generators.register-standard bison.bison : Y : C H ;
-generators.register-standard bison.bison : YY : CPP H ;
+generators.register-standard bison.bison : YY : CPP HPP ;
 
 rule init ( )
 {
