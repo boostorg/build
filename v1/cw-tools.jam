@@ -68,7 +68,7 @@ flags cw CFLAGS <eh-model>msvc : -exc ms ;
 flags cw CFLAGS <include-search>directory : "-cwd proj" ;
 flags cw CFLAGS <include-search>source : "-cwd source" ;
 flags cw CFLAGS <include-search>paths : "-cwd explicit" ;
-flags cw CFLAGS <include-search>relative : "-cwd implicit" ;
+flags cw CFLAGS <include-search>relative : "-cwd include" ;
 flags cw C++FLAGS <rtti>off : "-RTTI off" ;
 flags cw C++FLAGS <rtti>on : "-RTTI on" ;
 
