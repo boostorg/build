@@ -301,7 +301,7 @@ class directly-requested-properties-adjuster ;
 
 rule __test__ ( )
 {
-    import assert ;
+    import assert feature ;
     
     feature.prepare-test build-request-test-temp ;
     
