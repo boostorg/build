@@ -227,8 +227,21 @@ path-constant TOP : . ;
       that target in your <code>exe</code> or <code>lib</code> target:
 <programlisting>
 exe a : a.cpp b ;
+obj b : b.cpp : &lt;optimization&gt;off ;
+</programlisting>
+      Of course you can use other properties, for example to specify specific
+      compiler options:
+<programlisting>
+exe a : a.cpp b ;
 obj b : b.cpp : &lt;cflags&gt;-g ;
 </programlisting>
+      You can also use <link linkend="bbv2.tutorial.conditions">conditional
+      properties</link> to a finer control:
+<programlisting>
+exe a : a.cpp b ;
+obj b : b.cpp : &lt;variant&gt;release:&lt;optimization&gt;off ;
+</programlisting>
+
     </para>
   </section>
 
