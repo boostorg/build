@@ -18,7 +18,6 @@ import boostbook ;
 
 type.register DOXYGEN_XML : doxygen ; # Doxygen XML output
 
-generators.register-standard doxygen.extract-xml : H C CPP : DOXYGEN_XML ;
 generators.register-standard doxygen.xml-to-boostbook : DOXYGEN_XML : XML ;
 
 # Initialize the Doxygen module. Parameters are:
@@ -51,10 +50,10 @@ rule extract-xml ( target : sources * : properties * )
 actions doxygen-action
 {
   $(NAME:E=doxygen) -g $(<:S=.doxyfile)
-  echo "GENERATE_HTML = NO " >> $(<:S=.doxyfile)
-  echo "GENERATE_LATEX = NO " >> $(<:S=.doxyfile)
-  echo "GENERATE_XML = YES " >> $(<:S=.doxyfile)
-  echo "INPUT = $(>)" >> $(<:S=.doxyfile)
+  echo "GENERATE_HTML  = NO" >> $(<:S=.doxyfile)
+  echo "GENERATE_LATEX = NO" >> $(<:S=.doxyfile)
+  echo "GENERATE_XML   = YES" >> $(<:S=.doxyfile)
+  echo "INPUT          = $(>) " >> $(<:S=.doxyfile)
   echo "MONOLITHIC_XML_FILE = $(<)" >> $(<:S=.doxyfile)
   $(NAME:E=doxygen) $(<:S=.doxyfile) ;
 }
@@ -67,4 +66,34 @@ rule xml-to-boostbook ( target : source : properties * )
                : $(source) "$(xsl-dir)/doxygen/doxygen2boostbook.xsl" 
                : $(properties) 
                ;
+}
+
+rule doxygen-xml-target-class ( name : project : sources * : requirements *
+                                : default-build * )
+{
+  basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements)
+                        : $(default-build) ;
+  
+  rule construct ( source-targets * : property-set )
+  {
+    local target = 
+       [ virtual-target.from-file $(self.name) : $(self.project) ] ;
+    local a = [ new action $(target) : $(source-targets) : doxygen.extract-xml 
+                : $(property-set) ] ;
+    $(target).action $(a) ;
+
+    return [ virtual-target.register $(target) ] ;
+  }
+}
+
+class doxygen-xml-target-class : basic-target ;
+
+rule doxygen ( target-name : sources * : requirements * : default-build * )
+{
+  local project = [ CALLER_MODULE ] ;
+  targets.main-target-alternative
+    [ new doxygen-xml-target-class $(target-name) : $(project) : $(sources)
+        : [ targets.main-target-requirements $(requirements) : $(project) ]
+        : [ targets.main-target-default-build $(default-build) : $(project) ]
+    ] ;
 }
