@@ -552,7 +552,7 @@ class compile-action : action
     rule adjust-properties ( properties * )
     {        
         local s = [ $(self.targets[1]).creating-subvariant ] ;
-        return $(properties) [ $(s).implicit-includes "include" ] ;
+        return $(properties) [ $(s).implicit-includes "include" : H ] ;
     }    
 }
 
