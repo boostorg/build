@@ -126,7 +126,7 @@ tests = [ "rebuilds",
           "duplicate",
           "library_property",
           "load_order",
-          #"ordered_properties",
+          "wrong_project",
           ]
 
 if os.name == 'posix':

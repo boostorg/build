@@ -1,9 +1,7 @@
 
-import toolset ; 
-
 # Tell that QT should be used. QTDIR will give installation
 # prefix. 
-toolset.using qt ;
+using qt ;
 
 # Not that good, but sufficient for testing
-toolset.using stlport : : /path/to/stlport ;
+using stlport : : /path/to/stlport ;
