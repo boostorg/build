@@ -815,7 +815,6 @@ else if $(UNIX)
     CC          ?= gcc ;
     CCFLAGS     += -D__cygwin__ ;
     LEX         ?= flex ;
-    JAMSHELL    ?= sh -c ;
     RANLIB      ?= "" ;
     SUFEXE      ?= .exe ;
     YACC        ?= "bison -y" ;
@@ -832,7 +831,6 @@ else if $(UNIX)
 
     case INTERIX :
     CC          ?= gcc ;
-    JAMSHELL    ?= sh -c ;
     RANLIB      ?= "" ;
 
     case IRIX :
