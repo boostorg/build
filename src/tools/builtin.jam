@@ -358,37 +358,32 @@ rule lib ( names + : sources * : requirements * : default-build *
     
     # This is a circular module dependency, so it must be imported here
     import targets ;
-
-    local result ;
-    if ! $(sources) && ! $(requirements) 
-      && ! $(default-build) && ! $(usage-requirements)
+    
+    if $(names[2])
     {
-        for local name in $(names)
-        {    
-            result += [ 
-            targets.main-target-alternative
-              [ new typed-target $(name) : $(project) : LIB 
-                : 
-                : [ targets.main-target-requirements $(requirements) <name>$(name)  :
-                    $(project) ] 
-                : [ targets.main-target-default-build $(default-build) : $(project) ]
-                : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-             ] ] ;        
-        }        
-    }
-    else
-    {
-        if $(names[2])
+        if <name> in $(requirements:G)
         {
             errors.user-error "When several names are given to the 'lib' rule" :
-              "it's not allowed to specify sources or requirements. " ;
-        }
-                
-        local name = $(names[1]) ;
-        result = [ targets.main-target-alternative
+              "it's not allowed to specify the <name> feature. " ;
+        }        
+        if $(sources)
+        {
+            errors.user-error "When several names are given to the 'lib' rule" :
+              "it's not allowed to specify sources. " ;
+        }        
+    }
+    
+    for local name in $(names)
+    {    
+        local r = $(requirements) ;
+        if $(names[2])
+        {
+            r += <name>$(name) ;
+        }        
+        result += [ targets.main-target-alternative
           [ new typed-target $(name) : $(project) : LIB
             : [ targets.main-target-sources $(sources) : $(name) ] 
-            : [ targets.main-target-requirements $(requirements) : $(project) ] 
+            : [ targets.main-target-requirements $(r) : $(project) ] 
             : [ targets.main-target-default-build $(default-build) : $(project) ]
             : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
          ] ] ;
