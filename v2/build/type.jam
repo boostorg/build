@@ -51,11 +51,13 @@ rule register ( type : suffixes * : base-type ? : main ? )
 
         if $(suffixes)
         {            
+            # Generated targets of 'type' will use the first of 'suffixes'
+            # (this may be overriden)            
             $(.suffixes).insert <type>$(type) : $(suffixes[1]) ;
+            # Specify mapping from suffixes to type
+            register-suffixes $(suffixes) : $(type) ;
         }
         
-
-        .type.$(suffixes) = $(type) ;
         feature.extend target-type : $(type) ;
         
         feature.compose <target-type>$(type) : $(base-type:G=<base-target-type>) ; 
@@ -77,6 +79,26 @@ rule register ( type : suffixes * : base-type ? : main ? )
         }        
     }
 }
+
+# Specifies that targets with suffix from 'suffixes' has the type 'type'. 
+# If different type is already specified for any of syffixes,
+# issues an error.
+local rule register-suffixes ( suffixes + : type )
+{
+    for local s in $(suffixes)
+    {        
+        if ! $(.type.$(s)) 
+        {
+            .type.$(s) = $(type) ; 
+        }
+        else if $(.type.$(s)) != type 
+        {
+            errors.error "Attempting to specify type for suffix $(suffix)" 
+              : "Old type $(.type.$(s)), New type $(type)" ;
+        }
+    }            
+}
+
 
 # Returns true iff type has been registered.
 rule registered ( type )
@@ -127,10 +149,15 @@ rule is-derived ( type base )
     }
 }
 
-# Sets a target suffix that should be used when
-# generating target of 'type' with the specified
-# properties 
-rule set-generated-target-suffix ( type : properties + : suffix )
+# Sets a target suffix that should be used when generating target 
+# of 'type' with the specified properties. Can be called with
+# empty properties if no suffix for 'type' was specified yet.
+# This does not automatically specify that files 'suffix' have
+# 'type' --- two different types can use the same suffix for
+# generating, but only one type should be auto-detected for
+# a file with that suffix. User should explicitly specify which
+# one.
+rule set-generated-target-suffix ( type : properties * : suffix )
 {
     $(.suffixes).insert <type>$(type) $(properties) : $(suffix) ;
 }

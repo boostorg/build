@@ -9,7 +9,8 @@ import extra ;
 import type ;
 
 type.register UI : ui ;
-type.register UIC_H : h ;
+type.register UIC_H ;
+type.set-generated-target-suffix UIC_H : : h ;
 
 type.register X1 : x1 ;
 type.register X2 : x2  ;
