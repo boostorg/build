@@ -1,0 +1,36 @@
+
+   Boost.Build V2 release procedure.
+
+[ Must be done from a Unix shell ]
+
+0. Make sure that "bjam --version" output is correct. Check the download
+   locations in "index_v2.html".
+  
+1. Run
+
+   cvs -d :ext:<your_user_name>@cvs.boost.sourceforge.net:/cvsroot/boost co -P -d  boost-build boost/tools/build
+
+   Note: it turns out that anonymous CVS access uses some backup server, which
+   is not up-to-date.
+
+2. Go to "boost-build" directory.
+
+3. Run "./roll.sh". This will create "boost-build.zip" and
+   "boost-build.tar.bz2" in parent directory, and also upload
+   new docs to sourceforge.
+
+4. Unpack "boost-build.tar.bz2", and build jam.
+
+5. Go to "test" and copy "test-config.jam.in" to "test-config.jam". Run gcc
+   tests:
+      python test_all.py gcc
+
+6. Build all projects in examples-v2, using the bjam binary created at step 4.
+   Note: "threading=multi" might be needed to build QT examples.
+
+7. Announce the release, etc.
+
+
+
+
+   
