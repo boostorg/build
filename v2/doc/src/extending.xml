@@ -466,6 +466,10 @@ actions inline-file
         <code>OPTIONS</code> variable, an can be used inside the action body.
         You'd need to consult online help (--help) to find all the features of
         the <code>toolset.flags</code> rule.
+        <!-- It's been a while since I wrote these notes, so I don't
+             remember what I meant.  But right here, I wrote "bad" and
+             circled it.  Maybe you can figure out what I meant. ;-)
+             -->
       </para>
 
     <para>
@@ -474,7 +478,7 @@ actions inline-file
       designing features.
     </para>
 
-    <para>Most features should have a fixed set of values, which is portable
+    <para>Most features should have a fixed set of values that is portable
       (tool neutral) across the class of tools they are designed to work
       with. The user does not have to adjust the values for a exact tool.  For
       example, <code>&lt;optimization&gt;speed</code> has the same meaning for
@@ -486,73 +490,80 @@ actions inline-file
       Besides such portable features there are special 'raw' features that
       allow the user to pass any value to the command line parameters for a
       particular tool, if so desired. For example, the
-      <code>&lt;cxxflags&gt;</code> feature allows to pass any command line
+      <code>&lt;cxxflags&gt;</code> feature allows you to pass any command line
       options to a C++ compiler. The <code>&lt;include&gt;</code> feature
-      allows to pass any value to the <code>-I</code> and the interpretation
-      is tool-specific. (There an <link
-      linkend="bbv2.faq.external">example</link> of very smart usage of that
-      feature).  Of course one should always strive to use the portable
-      features but these should still be provided as a backdoor just to make
+      allows you to pass any string preceded by <code>-I</code> and the interpretation
+      is tool-specific. <!-- It's really tool-specific?  That surprises me --> (See <xref
+      linkend="bbv2.faq.external"/> for an example of very smart usage of that
+      feature).  Of course one should always strive to use portable
+      features, but these are still be provided as a backdoor just to make
       sure Boost.Build does not take away any control from the user. 
     </para>
    
     <para>
-      Some of the reasons why portable features are better are:
+      Using portable features is a good idea because:
       <itemizedlist>
         <listitem>
-          <para>Since a portable feature have a fixed set of value, you will
-            be able to build your project with two different settings of the
-            feature. Boost.Build will automatically use two different
-            directories for produced files. If you pass raw compiler options,
-            Boost.Build assumes you know what you are doing, and would not
-            care about what options are passed.
+          <para>When a portable feature is given a fixed set of
+          values, you can build your project with two different
+          settings of the feature and Boost.Build will automatically
+          use two different directories for generated files.
+          Boost.Build does not try to separate targets built with
+          different raw options.
+            <!-- It's a computer program.  It doesn't "care" about options -->
           </para>
         </listitem>
         
         <listitem>
-          <para>Unlike "raw" features, you don't need to use specific
-            compiler flags in Jamfile, and it will more likely work on other systems.
+          <para>Unlike with “raw” features, you don't need to use
+          specific command-line flags in your Jamfile, and it will be
+          more likely to work with other tools.
           </para>
         </listitem>
       </itemizedlist>
     </para>
            
       <bridgehead>Steps for adding a feauture</bridgehead>
+      <!-- This section is redundant with the previous one -->
       <para>Adding a feature requires three steps:
 
         <orderedlist>
           <listitem><para>Declaring a feature. For that, the "feature.feature"
-              rule is used. You should have to decide on the set of <link
+              rule is used. You have to decide on the set of <link
               linkend="bbv2.reference.features.attributes">feature
               attributes</link>:
 
               <itemizedlist>
-                <listitem><para>if feature has several values, and
-                    significally affects build, make it "propagated", so that
-                    whole project is build with the same value by
+                <listitem><para>if a feature has several values<!-- what do you mean by that?? --> and
+                    significally affects the build, make it “propagated,” so that the 
+                    whole project is built with the same value by
                     default</para></listitem> 
 
-                <listitem><para>if a feature does not have a fixed list of
-                    values, it must be "free".</para></listitem>
+                <listitem><para>if a feature does not have a fixed
+                list of values, it must be “free.”  For example, the
+                <code>include</code> feature is a free
+                feature.</para></listitem>
 
-                <listitem><para>if feature is used to refer to a path, it must
-                be "path".</para></listitem>
+                <listitem><para>if a feature is used to refer to a
+                path relative to the Jamfile, it must be a “path”
+                feature.  <code>include</code> is also a path
+                feature.</para></listitem>
         
                 <listitem><para>if feature is used to refer to some target, it
-                must be "dependency".</para></listitem>
+                must be a “dependency” feature. <!-- for example? --></para></listitem>
               </itemizedlist>
               </para>
           </listitem>
               
 
-          <listitem><para>Converting the feature value into variable. To use
-              feature in build action, it must be converted into a variable,
-              accessible in build action. This is accomplished by
-              "toolset.flags" rule.</para></listitem>
+          <listitem><para>Representing the feature value in a
+          target-specific variable. Build actions are command
+          templates modified by Boost.Jam variable expansions.  The
+          <code>toolset.flags</code> rule sets a target-specific
+          variable to the value of a feature.</para></listitem>
 
-      
-          <listitem><para>Using the variable. The variable set in step 2 can
-              be used in build action to form command parameters or
+                <listitem><para>Using the variable. The variable set in step 2 can
+              be used in a build action to form command parameters or
               files.</para></listitem>
 
         </orderedlist>
