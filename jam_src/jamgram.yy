@@ -51,7 +51,6 @@
 %left `<` `<=` `>` `>=`
 %left `!`
 
-
 %{
 #include "jam.h"
 
@@ -60,6 +59,9 @@
 #include "scan.h"
 #include "compile.h"
 #include "newstr.h"
+#include "rules.h"
+
+# define YYMAXDEPTH 10000	/* for OSF and other less endowed yaccs */
 
 # define F0 (LIST *(*)(PARSE *, FRAME *))0
 # define P0 (PARSE *)0
@@ -67,10 +69,8 @@
 
 # define pappend( l,r )    	parse_make( compile_append,l,r,P0,S0,S0,0 )
 # define peval( c,l,r )	parse_make( compile_eval,l,r,P0,S0,S0,c )
-# define pshortcircuiteval( c,l,r )	parse_make( compile_eval,l,P0,r,S0,S0,c )
 # define pfor( s,l,r,x )    	parse_make( compile_foreach,l,r,P0,s,S0,x )
 # define pif( l,r,t )	  	parse_make( compile_if,l,r,t,S0,S0,0 )
-# define pwhile( l,r )	  	parse_make( compile_while,l,r,P0,S0,S0,0 )
 # define pincl( l )       	parse_make( compile_include,l,P0,P0,S0,S0,0 )
 # define plist( s )	  	parse_make( compile_list,P0,P0,P0,s,S0,0 )
 # define plocal( l,r,t )  	parse_make( compile_local,l,r,t,S0,S0,0 )
@@ -84,6 +84,7 @@
 # define psetc( s,p,a,l )     	parse_make( compile_setcomp,p,a,P0,s,S0,l )
 # define psete( s,l,s1,f ) 	parse_make( compile_setexec,l,P0,P0,s,s1,f )
 # define pswitch( l,r )   	parse_make( compile_switch,l,r,P0,S0,S0,0 )
+# define pwhile( l,r )   	parse_make( compile_while,l,r,P0,S0,S0,0 )
 
 # define pnode( l,r )    	parse_make( F0,l,r,P0,S0,S0,0 )
 # define psnode( s,l )     	parse_make( F0,l,P0,P0,s,S0,0 )
@@ -196,26 +197,26 @@ assign	: `=`
  */
 expr	: arg 
 		{ $$.parse = peval( EXPR_EXISTS, $1.parse, pnull() ); }
-	| arg `=` arg 
+	| expr `=` expr 
 		{ $$.parse = peval( EXPR_EQUALS, $1.parse, $3.parse ); }
-	| arg `!=` arg
+	| expr `!=` expr
 		{ $$.parse = peval( EXPR_NOTEQ, $1.parse, $3.parse ); }
-	| arg `<` arg
+	| expr `<` expr
 		{ $$.parse = peval( EXPR_LESS, $1.parse, $3.parse ); }
-	| arg `<=` arg 
+	| expr `<=` expr 
 		{ $$.parse = peval( EXPR_LESSEQ, $1.parse, $3.parse ); }
-	| arg `>` arg 
+	| expr `>` expr 
 		{ $$.parse = peval( EXPR_MORE, $1.parse, $3.parse ); }
-	| arg `>=` arg 
+	| expr `>=` expr 
 		{ $$.parse = peval( EXPR_MOREEQ, $1.parse, $3.parse ); }
 	| expr `&` expr 
 		{ $$.parse = peval( EXPR_AND, $1.parse, $3.parse ); }
 	| expr `&&` expr 
-		{ $$.parse = pshortcircuiteval( EXPR_AND, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_AND, $1.parse, $3.parse ); }
 	| expr `|` expr
 		{ $$.parse = peval( EXPR_OR, $1.parse, $3.parse ); }
 	| expr `||` expr
-		{ $$.parse = pshortcircuiteval( EXPR_OR, $1.parse, $3.parse ); }
+		{ $$.parse = peval( EXPR_OR, $1.parse, $3.parse ); }
 	| arg `in` list
 		{ $$.parse = peval( EXPR_IN, $1.parse, $3.parse ); }
 	| `!` expr
@@ -279,9 +280,9 @@ arg	: ARG
  * This needs to be split cleanly out of 'rule'
  */
 
-func	: ARG lol
+func	: arg lol
 		{ $$.parse = prule( $1.string, $2.parse ); }
-	| `on` arg ARG lol
+	| `on` arg arg lol
 		{ $$.parse = pon( $2.parse, prule( $3.string, $4.parse ) ); }
 	| `on` arg `return` list 
 		{ $$.parse = pon( $2.parse, $4.parse ); }
