@@ -133,13 +133,17 @@ class generator
         
         for local e in $(target-types-and-names)
         {        
+            # Create three parallel lists: one with the list of target types,
+            # and two other with prefixes and postfixes to be added to target 
+            # name. We use parallel lists for prefix and postfix (as opposed
+            # to mapping), because given target type might occur several times,
+            # for example "H H(%_symbols)".
             local m = [ MATCH ([^\\(]*)(\\((.*)%(.*)\\))? : $(e) ] ;
             self.target-types += $(m[1]) ;
-            self.name-pre-post.$(m[1]) = $(m[3]) $(m[4]) ;
+            self.name-prefix += $(m[3]:E="") ;
+            self.name-postfix += $(m[4]:E="") ;
         }
-            
-            
-            
+                                    
         # Note that 'transform' here, is the same as 'for_each'.
         sequence.transform type.validate : $(self.source-types) ;
         if $(self.target-types) != *
@@ -431,17 +435,13 @@ class generator
         
         # Create generated target for each target type.
         local targets ;
+        local pre = $(self.name-prefix) ;
+        local post = $(self.name-postfix) ;
         for local t in $(self.target-types)                 
         {      
-            local generated-name ;
-            if $(self.name-pre-post.$(t))
-            {
-                generated-name = [ sequence.join $(self.name-pre-post.$(t)[1]) $(name) $(self.name-pre-post.$(t)[2]) ] ;
-            }
-            else
-            {
-                generated-name = $(name) ;
-            }
+            local generated-name = $(pre[1])$(name)$(post[1]) ;
+            pre = $(pre[2-]) ;
+            post = $(post[2-]) ;
             
             targets += [ class.new file-target $(generated-name) : $(t) : $(project) ] ;
         }                 
