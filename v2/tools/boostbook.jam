@@ -94,9 +94,14 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? )
         your boost installation.  Searched in:
           : $(search-dirs:J="
 ") ;
-          
-    }
-  }
+    }    
+    # Add trailing slash since some other code 
+    # uses :B modifier to add last element, and fails
+    # without trailing slash. The code really should be fixed,
+    # but not now.
+    .boostbook-xsl-dir = $(.boostbook-xsl-dir)/ ;
+    .boostbook-dtd-dir = $(.boostbook-dtd-dir)/ ;   
+  }    
 }
 
 rule xsl-dir
@@ -220,10 +225,7 @@ rule xml-catalog-action ( target : property-set ? : catalog-entries * )
       text += "</catalog>" ;
 
       print.output $(actual) ;
-      print.text $(text) : true ;
-
-#      ALWAYS $(actual) ;
-      TEMPORARY $(actual) ;
+      print.text $(text) : true ;          
     }
   }
 }
