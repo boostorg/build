@@ -24,6 +24,7 @@ rule class ( name : bases * )
     {
         # This is a record of the class' base classes
         module local __bases__ = $(bases) ;
+        module local __derived__ = ;
         
         # always bring in the rules defined from this module, so that
         # users can easily call "inherit", for example.
@@ -47,6 +48,12 @@ rule class ( name : bases * )
             # ECHO import __init__ from module class@$(base) into class@$(name) as $(base).__init__ ;
             IMPORT class@$(base) : __init__ : class@$(name) : $(base).__init__ ;
             EXPORT class@$(name) : $(base).__init__ ;
+            module class@$(base)
+            {
+                # not using symbolic name "name" here because it might
+                # be a module-local variable
+                __derived__ += $(1) ;
+            }
         }
     }
 }
