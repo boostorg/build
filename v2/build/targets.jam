@@ -414,6 +414,7 @@ class project-target : abstract-target
         {
             if ! $(no-error)
             {
+                local current-location = [ get location ] ;
                 ECHO "error: Unable to find file or target named" ;
                 ECHO "error:     '$(id)'" ;
                 ECHO "error: referred from project at" ;
