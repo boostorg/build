@@ -11,21 +11,35 @@
 # number.
 #//<a href="http://www.intel.com/software/products/compilers/">Intel<br>C++</a>
 
-# Intel root directory set?
-if ! $(IA32ROOT)
+set-as-singleton INTEL_PATH ;
+
+INTEL_VERSION ?= $(INTEL_LINUX_VERSION) ;  # For backwards compatibility
+
+# Attempt to look in the PATH if no variables have been set up.
+if ! $(INTEL_VERSION) && ! $(INTEL_PATH)
 {
-    # Compiler version
-    INTEL_LINUX_VERSION ?= "60" ;
+    local paths = [ MATCH ^(.*/(compiler[567]0/ia32|intel_cc_[0-9]+))/ : [ GLOB $(PATH) : iccvars.sh ] ] ;
+    INTEL_PATH ?= $(paths[0]) ;
 }
 
-flags intel-linux INTEL_LINUX_VERSION : $(INTEL_LINUX_VERSION) ;
+INTEL_VERSION ?= 70 ;
+
+# In case the path is unspecified, try to deduce it from the version
+if $(INTEL_VERSION) in 50 60 70
+{
+    INTEL_PATH ?= /opt/intel/compiler$(INTEL_VERSION)/ia32 ;
+}
+else
+{
+    INTEL_PATH ?= /opt/intel_cc_$(INTEL_VERSION) ;
+}
 
 # Root directory
-flags intel-linux INTEL_LINUX_ROOT : "/opt/intel/compiler"$(INTEL_LINUX_VERSION) ;
+flags intel-linux INTEL_LINUX_ROOT : $(INTEL_PATH) ;
 # Setup script
-flags intel-linux INTEL_LINUX_SETUP : ". "$(INTEL_LINUX_ROOT)"/ia32/bin/iccvars.sh" ;
+flags intel-linux INTEL_LINUX_SETUP : ". "$(INTEL_LINUX_ROOT)"/bin/iccvars.sh" ;
 # Additional DLL directory
-flags intel-linux INTEL_LINUX_RUN_LD_LIBRARY_PATH : $(INTEL_LINUX_ROOT)"/ia32/lib" ;
+flags intel-linux INTEL_LINUX_RUN_LD_LIBRARY_PATH : $(INTEL_LINUX_ROOT)"/lib" ;
 
 #### compiler and linker switches ####
 
