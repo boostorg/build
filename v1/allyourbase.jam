@@ -1393,10 +1393,18 @@ rule SubDir
     # This will strip off any leading dot on SUBDIR_TOKENS
     local nodot_subdir = [ simplify-path-tokens $(SUBDIR_TOKENS) ] ;
 
-    normalized_ALL_LOCATE_TARGET ?= [ join-path $($(gTOP)) $(ALL_LOCATE_TARGET) ] ;
+    if $(ALL_LOCATE_TARGET) && ! $(first_ALL_LOCATE_TARGET)
+    {
+        normalized_ALL_LOCATE_TARGET = [ join-path $($(gTOP)) $(ALL_LOCATE_TARGET) ] ;
+    }
+    else
+    {
+        normalized_ALL_LOCATE_TARGET ?= [ join-path $($(gTOP)) $(ALL_LOCATE_TARGET) ] ;
+    }
+    first_ALL_LOCATE_TARGET ?= $(ALL_LOCATE_TARGET) ;
     LOCATE_SOURCE = [ FDirName $(normalized_ALL_LOCATE_TARGET) $(BIN_DIRECTORY) $(PROJECT) $(nodot_subdir) ] ;
     LOCATE_TARGET = $(LOCATE_SOURCE) ;
-    HCACHEFILE ?= $(LOCATE_TARGET:B=.jamdeps) ;
+    HCACHEFILE = [ FDirName $(normalized_ALL_LOCATE_TARGET) $(BIN_DIRECTORY) .jamdeps ] ;
     
     SOURCE_GRIST = [ FGrist @$(PROJECT) $(SUBDIR_TOKENS) ] ;
 
