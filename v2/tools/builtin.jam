@@ -18,6 +18,7 @@ import prebuilt ;
 import toolset : flags ;
 import errors : error ;
 import symlink ;
+import alias ;
 
 # This feature is used to determine which OS we're on.
 # In future, this may become <target-os> and <host-os>

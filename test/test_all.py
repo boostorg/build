@@ -80,7 +80,8 @@ tests = [ "project_test1",
           "project_dependencies",
           "build_dir",
           "searched_lib",
-          "make_rule"]
+          "make_rule",
+          "alias"]
 
 if os.name == 'posix':
     tests.append("symlink")
