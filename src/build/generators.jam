@@ -706,35 +706,42 @@ rule base-to-derived-type-conversion ( targets * : target-types +
 # of calling itself recusrively on source types.
 local rule viable-source-types-real ( target-type )
 {
-    # Find all generators for 'target-type'. Unlike 'find-viable-generators'
-    # we don't care about property-set
     local generators ;
-
+        
     local t = [ type.all-bases $(target-type) ] ;
-    while $(t[1])
-    {
-        generators += $(.generators.$(t[1])) ;
-        t = $(t[2-]) ;
-    }
-          
-    # Find all source type for those generators
-    local source-types ;
-    for local g in $(generators)
-    {
-        source-types += [ $(g).source-types ] ;
-    }
     
-    local result = $(source-types) ;
-    for local s in $(source-types)
+    local result ;
+    # 't' is the list of types which are not yet processed    
+    while $(t)
     {
-        result += [ viable-source-types $(s) ] ;
-    }
-    local result2 ;
-    for local s in $(result)
-    {
-        result2 += [ type.all-derived $(s) ] ;
-    }    
-    result = [ sequence.unique $(result2) ] ;
+        # Find all generators for current type. 
+        # Unlike 'find-viable-generators' we don't care about property-set.
+        local generators = $(.generators.$(t[1])) ;
+        t = $(t[2-]) ;
+        
+        for local g in $(generators)
+        {
+            for local source-type in [ $(g).source-types ] 
+            {
+                if ! $(source-type) in $(result) 
+                {
+                    # If generator accepts 'source-type' it
+                    # will happily accept any type derived from it
+                    local all = [ type.all-derived $(source-type) ] ;
+                    for local n in $(all)
+                    {
+                        if ! $(n) in $(result)
+                        {                                          
+                            t += $(n) ;
+                            result += $(n) ;
+                        }    
+                    }                    
+                }                
+            }            
+        }        
+    }          
+        
+    result = [ sequence.unique $(result) ] ;
     
     return $(result) ;                
 }
