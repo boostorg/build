@@ -169,6 +169,10 @@ QDGlobals qd;
 #   define  use_environ _environ
 # endif
 
+# if defined( __MWERKS__)
+# define use_environ _environ
+extern char **_environ;
+#endif
 
 # ifndef use_environ
 # define use_environ environ

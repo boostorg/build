@@ -83,7 +83,9 @@ int unlink( char *f ); 	/* In filevms.c */
 # include <stdio.h>
 # include <ctype.h>
 # include <malloc.h>
+# ifndef __MWERKS__
 # include <memory.h>
+#endif
 # include <signal.h>
 # include <string.h>
 # include <time.h>
