@@ -149,7 +149,9 @@ static void bind_explicitly_located_target(void* xtarget, void* data)
                 popsettings(t->settings);
 
                 {
-                    LOCATED_TARGET lt = { t->boundname, t }, *lta = &lt;
+                    LOCATED_TARGET lt, *lta = &lt;
+                    lt.file_name = t->boundname;
+                    lt.target = t;
                     if (!located_targets)
                         located_targets = hashinit( sizeof(LOCATED_TARGET),
                                                     "located targets" );
