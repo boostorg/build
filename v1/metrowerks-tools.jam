@@ -19,6 +19,8 @@
 METROWERKS_SETUP = "call "\"$(METROWERKS_ROOT)$(SLASH)"Other Metrowerks Tools"$(SLASH)"Command Line Tools"$(SLASH)cwenv.bat\"" -quiet" ;
 METROWERKS_LINK_SETUP = "set MWWinx86LibraryFiles=" ;
 
+flags metrowerks CFLAGS <cflags> ;
+flags metrowerks C++FLAGS <cxxflags> ;
 flags metrowerks DEFINES <define> ;
 flags metrowerks UNDEFS <undef> ;
 flags metrowerks HDRS <include> ;

@@ -24,6 +24,8 @@ feature wide-character-support : on off ;
 feature exception-handling : on off ;
 feature rtti : on off ;
 
+free-feature cflags ;
+free-feature cxxflags ;
 free-feature define ; # <define>PYTHON=foo
 free-feature undef ; # <undef>PYTHON=foo
 path-feature "include" ; # <include>../foo/bar/mumble
@@ -61,6 +63,16 @@ variant debug :
     <profiling>off
     <debug-symbols>on
     <runtime-build>debug
+    <optimization>off
+    <inlining>off
+    ;
+
+variant debug-python :
+    $(COMMON_PROPERTIES)
+    <profiling>off
+    <debug-symbols>on
+    <runtime-build>debug
+    <define>BOOST_DEBUG_PYTHON
     <optimization>off
     <inlining>off
     ;

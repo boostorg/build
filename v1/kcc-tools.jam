@@ -21,6 +21,8 @@ flags kcc CFLAGS <inlining>off : ;
 flags kcc CFLAGS <inlining>on : --inline_generated_space_time=10000 --inline_implicit_space_time=10000 --inline_keyword_space_time=10000 ;
 flags kcc CFLAGS <inlining>full :  --inline_auto_space_time=10000 --inline_generated_space_time=10000 --inline_implicit_space_time=10000 --inline_keyword_space_time=10000 ;
 
+flags kcc CFLAGS <cflags> ;
+flags kcc C++FLAGS <cxxflags> ;
 flags kcc DEFINES <define> ;
 flags kcc UNDEFS <undef> ;
 flags kcc HDRS <include> ;

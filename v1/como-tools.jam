@@ -38,6 +38,8 @@ flags como C++FLAGS <exception-handling>on : --exceptions ;
 flags como CFLAGS <inlining>off : --no_inlining ;
 flags como CFLAGS <inlining>on <inlining>full : --inlining ;
 
+flags como CFLAGS <cflags> ;
+flags como C++FLAGS <cxxflags> ;
 flags como DEFINES <define> ;
 flags como UNDEFS <undef> ;
 flags como HDRS <include> ;

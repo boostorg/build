@@ -448,7 +448,7 @@ YACCFILES       ?= ;
 YACCFLAGS       ?= ;
 
 HDRPATTERN = 
-        "^[     ]*#[    ]*include[      ]*[<\"]([^\">]*)[\">].*$" ;
+        "^[     ]*#[    ]*include[      ]*([<\"][^\">]*[\">]).*$" ;
 
 OSFULL = $(OS)$(OSVER)$(OSPLAT) $(OS)$(OSPLAT) $(OS)$(OSVER) $(OS) ;
 #
@@ -635,18 +635,25 @@ rule HdrRule
     # care if we can't actually find the headers (they may have been
     # within ifdefs),
 
+    local angle-includes = [ subst-list $(>) : "<(.+)>" ] ;
+    local quoted-includes = [ subst-list $(>) : "\"(.+)\"" ] ;
+
     local s ;
 
     if $(HDRGRIST) 
     { 
-        s = $(>:G=$(HDRGRIST)) ;
-    } else { 
-        s = $(>) ; 
-    }
+        angle-includes = $(angle-includes:G=$(HDRGRIST)) ;
+        quoted-includes = $(quoted-includes:G=$(HDRGRIST)) ;
+    } 
+
+    local s = $(angle-includes) $(quoted-includes) ;
 
     INCLUDES $(<) : $(s) ;
-    SEARCH on $(s) = $(HDRSEARCH) ;
+    SEARCH on $(angle-includes) = $(HDRSEARCH)  ;
+    SEARCH on $(quoted-includes) = $(gBINDING($(<)):D) $(HDRSEARCH)  ;
     NOCARE $(s) ;
+
+    BINDRULE on $(s) = remember-binding ;
 
     # Propagate on $(<) to $(>)
 
@@ -1227,8 +1234,8 @@ rule SubDir
     # This will strip off any leading dot on SUBDIR_TOKENS
     local nodot_subdir = [ simplify-path-tokens $(SUBDIR_TOKENS) ] ;
 
-    ALL_LOCATE_TARGET ?= $($(gTOP)) ;
-    LOCATE_SOURCE = [ FDirName $(ALL_LOCATE_TARGET) $(nodot_subdir) ] ;
+    normalized_ALL_LOCATE_TARGET ?= [ join-path $($(gTOP)) $(ALL_LOCATE_TARGET) ] ;
+    LOCATE_SOURCE = [ FDirName $(normalized_ALL_LOCATE_TARGET) $(nodot_subdir) ] ;
     LOCATE_TARGET = $(LOCATE_SOURCE) ;
     
     SOURCE_GRIST = [ FGrist $(<[2-]) ] ;
@@ -1485,6 +1492,7 @@ rule simplify-path-tokens
     local reverse-path = [ reverse $(<) ] ;
     local dotdots ;
     local result ;
+    local token ;
     for token in $(reverse-path)
     {
         if $(token) = $(DOT)
@@ -1598,6 +1606,17 @@ rule Yacc
     INCLUDES $(<) : $(_h) ;
 }
 
+rule remember-binding ( target : bound-path ) {
+    gBINDING($(target)) = $(bound-path) ;
+}
+
+rule subst-list ( list + : pattern ) {
+    local result ;
+    for local i in $(list) {
+        result += [ SUBST $(i) $(pattern) "$1" ] ;
+    }
+    return $(result) ;
+}
 
 #
 # Utility rules; no side effects on these

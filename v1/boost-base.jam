@@ -866,6 +866,13 @@ rule expand-build-request
     local defaulted-features = [ difference $(relevant_features)
                                 : $(override-properties:G) $(base-properties:G) ] ;
     local defaulted-properties = [ feature-default $(defaulted-features) ] ;
+    # VP: defaulted-properties have the form <feature>value and there's 1 value.
+    # Hence, each element of defaulted-properties will be part of each
+    # component of override-sets and will be a part of each property-set 
+    # returned. By segregating them, the result is changed in only one
+    # way: free properties does not show up in target path.
+    local defaulted-free-properties = [ segregate-free-properties defaulted-properties ] ;
+
 
     # form override property sets of the form (property1[/property2...] )+,
     # sorted in feature order. These represent the properties of subvariants
@@ -876,7 +883,8 @@ rule expand-build-request
     # return path-property-sets corresponding to each (sub)variant build
     # described.
     return [ make-path-property-sets $(toolset)$(SLASH)$(variant)
-                : [ fixup-path-properties $(base-properties) $(free-properties) ]
+                : [ fixup-path-properties $(base-properties) $(free-properties) 
+    	    $(defaulted-free-properties) ]
                 : $(override-sets) ] ;
 }
 

@@ -37,6 +37,8 @@ flags msvc CFLAGS <runtime-build>debug/<runtime-link>static/<threading>single : 
 flags msvc CFLAGS <runtime-build>release/<runtime-link>static/<threading>multi : /MT ;
 flags msvc CFLAGS <runtime-build>debug/<runtime-link>static/<threading>multi : /MTd ;
 
+flags msvc CFLAGS <cflags> ;
+flags msvc C++FLAGS <cxxflags> ;
 flags msvc DEFINES <define> ;
 flags msvc UNDEFS <undef> ;
 flags msvc HDRS <include> ;
