@@ -200,7 +200,11 @@ if $(NT) && $(cw-version) in 6.0
 # The paths to system and runtime libraries
 if $(NT)
 {
-    flags cw CW_SETUP : "call \"$(cw-root)\\Other Metrowerks Tools\\Command Line Tools\\cwenv.bat\" -quiet" ;
+    # Having CW_SETUP split into two lines is intentional. It is
+    # the only way to get the CMD to correctly clear the values of ERRORLEVEL
+    # which is erronously set by the cwenv.bat from CW-9.
+    flags cw CW_SETUP : "call \"$(cw-root)\\Other Metrowerks Tools\\Command Line Tools\\cwenv.bat\" -quiet
+    set ERRORLEVEL=" ;
     flags cw CW_LINK_SETUP : "set MWWinx86LibraryFiles=" ;
     flags cw CW_IMPLIB_COMMAND : "-implib " ;
     flags cw CW_RUN_PATH :
