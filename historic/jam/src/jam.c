@@ -321,7 +321,7 @@ int  main( int argc, char **argv, char **arg_environ )
 
     var_set( "JAM_VERSION",
              list_new( list_new( list_new( L0, newstr( "03" ) ), newstr( "01" ) ), 
-                       newstr( "07" ) ),
+                       newstr( "08" ) ),
              VAR_SET );
 
     /* And JAMUNAME */
