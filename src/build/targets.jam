@@ -96,8 +96,6 @@ rule project-target ( local-name : project : requirements * : default-build * )
     # Creates the instance if needed.
     rule main-target ( name )
     {
-        # FIXME
-        import class : new ;
         if ! $(self.main-target<$(name)>)
         {
             self.main-targets += $(name) ;
