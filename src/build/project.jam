@@ -216,13 +216,13 @@ local rule find-jamfile (
     local jamfile-found = ;
     for local jamfile in $(jamfile-glob)
     {
-        local normalized = $(jamfile) ;
-        if ! [ os.path.is_rooted $(jamfile) ]
+        local normalized = [ os.path.make $(jamfile) ] ;
+        if ! [ os.path.is_rooted  $(normalized) ]
         {
             local root-path =
                 [ os.path.parent [ os.path.make [ modules.binding [ CALLER_MODULE ] ] ] ] ;
             normalized =
-                [ os.path.native [ os.path.root_relative_path $(jamfile) $(root-path) ] ] ;
+                [ os.path.native [ os.path.root_relative_path $(normalized) $(root-path) ] ] ;
         }
 
         # Filter out if the found file is above the target parent root.
@@ -234,7 +234,10 @@ local rule find-jamfile (
             }
         }
 
-        jamfile-found += $(normalized) ;
+        if $(normalized)
+        {
+            jamfile-found += [ os.path.native $(normalized) ] ;
+        }
     }
 
     return $(jamfile-found) ;
