@@ -25,7 +25,7 @@ align="center" width="277" height="86">Building Boost Libraries</h1>
 
 <p>These instructions explain how to accomplish common tasks
 using <b>Boost.Build</b>, the Boost Build System. The build
-system uses <a href="build_system.htm">Boost.Jam</a>, an
+system uses <a href="jam_src/readme.html">Boost.Jam</a>, an
 extension of the <a href="http://www.perforce.com/jam/jam.html">Perforce
 Jam</a> portable <i>make</i> replacement.</p>
 
@@ -226,12 +226,6 @@ toolset, click its name in the leftmost column. </p>
         C and C++</a></td>
     </tr>
     <tr>
-        <td><a href="mipspro-tools.html"><code>mipspro</code></a></td>
-        <td>SGI <a
-        href="http://www.sgi.com/developers/devtools/languages/mipspro.html">MIPSpro
-        C and C++</a></td>
-    </tr>
-    <tr>
         <td><a href="msvc-tools.html"><code>msvc</code></a></td>
         <td>Microsoft <a
         href="http://msdn.microsoft.com/visualc/">Visual C++</a>
@@ -329,13 +323,9 @@ following platforms:</p>
 distribution, so you can build the Boost.Jam executable yourself:</p>
 
 <ul>
-    <li>For most Unix variants, you can build Boost.Jam by simply
-        invoking <tt>make</tt> in the <tt>tools/build/jam_src</tt>
-        subdirectory of your boost installation. </li>
-    <li><a
-        href="http://public.perforce.com/public/jam/src/README">Build
-        Instructions</a> are the same as for &quot;<a
-        href="http://www.perforce.com/jam/jam.html">Classic Jam</a>&quot;,
+    <li><a href="jam_src/readme.html#installing">Build
+        Instructions</a> are included in the
+        <a href="jam_src/readme.html">Boost.Jam documentation</a>,
         if you need them. </li>
     <li>Your new Boost.Jam executable will be located in a newly-created
         <tt>tools/build/jam_src/bin.</tt><i>platform</i>
@@ -346,10 +336,6 @@ distribution, so you can build the Boost.Jam executable yourself:</p>
         uses the newer simpler build behaviour. But if you need
         the traditional Jam/MR behaviour you can use the <tt>&quot;jam&quot;</tt>
         invocation. </li>
-    <li>If you build Boost.Jam for a new platform using the same
-        boost installation, be sure to first remove all object
-        files, executables, and libraries created by the initial
-        make in the <tt>jam_src</tt> directory. </li>
 </ul>
 
 <p>Windows 9x users should note that the bjam executable will
