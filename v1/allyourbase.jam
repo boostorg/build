@@ -2006,5 +2006,3 @@ actions together Yacc-fix-line-directives
 {
      if $(JAMFILE) { include $(JAMFILE) ; }
 }
-
-# a test
