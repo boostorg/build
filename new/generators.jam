@@ -87,14 +87,22 @@ rule normalize-target-list ( targets )
     $(targets).sort ;                   
 }
 
-# Creates a generator with given properties.
-# 'id' identifies the generator, it should be name of the rule which actually set ups build actions
-# 'source-types' are types that this generator can handle
-# 'target-types-and-names' defines which types generator will create and, optionally, names
-# for created targets. Each element should have the form type["(" name-pattern ")"], for 
-# example, obj(%_x). Name of generated target will be found by replacing % with the name of source,
-# provided explicit name was not specified.
-rule generator ( id : source-types + : target-types-and-names + : requirements *
+# Creates a generator
+rule generator ( 
+      id # identifies the generator - should be name of the rule which
+	 # sets up build actions
+    
+    : source-types +  # types that this generator can handle
+    
+    : target-types-and-names +   
+      # types the generator will create and, optionally, names for
+      # created targets. Each element should have the form
+      #    type["(" name-pattern ")"]
+      # for example, obj(%_x). Name of generated target will be found
+      # by replacing % with the name of source, provided explicit name
+      # was not specified.
+    
+    : requirements *
                 )
 {
     import generators ;
@@ -648,18 +656,19 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
     .construct-stack += 1 ;
 
     increase-indent ;
-    generators.dout [ indent ] "*** construct" $(target-type) ;
-    for local s in $(sources)
-    {
-        generators.dout [ indent ] "*** from" [ $(s).str ] ;
-    }
+    
+    local m ;
     if $(multiple)
     {
-        generators.dout [ indent ] "*** multiple" ;
+        m = "(may return multiple targets)" ;
     }
-    generators.dout [ indent ] "*** properties:" $(properties) ;        
+    generators.dout [ indent ] "*** construct" $(target-type) $(m) ;
     
-    generators.dout [ indent ] "*** level:" $(level) ;
+    for local s in $(sources)
+    {
+        generators.dout [ indent ] "    from" [ $(s).str ] ;
+    }
+    generators.dout [ indent ] "    properties:" $(properties) ;        
     
     local .had-composing-generator = $(.had-composing-generator) ;
     if $(allow-composing-generators)
