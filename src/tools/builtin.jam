@@ -74,7 +74,8 @@ feature use : : free dependency incidental ;
 feature dependency : : free dependency incidental ;
 feature implicit-dependency : : free dependency incidental ;
 
-feature library : : free dependency ;
+feature source : : free dependency incidental ;
+feature library : : free dependency incidental ;
 feature find-shared-library : : free ; #order-sensitive ;
 feature find-static-library : : free ; #order-sensitive ;
 feature library-path : : free path ; #order-sensitive ;
@@ -639,10 +640,6 @@ class linking-generator : generator
         
     rule run ( project name ? : property-set : sources + :  multiple ? )
     {   
-        local libs = [ $(property-set).get <library> ] ;
-        sources += $(libs:G=) ;
-
-        
         if [ $(property-set).get <hardcode-dll-paths> ] = true
         {
             local xdll-path = [ $(property-set).get <xdll-path> ] ;
