@@ -23,9 +23,9 @@
 </style>
   </head>
   <!-- Things yet to document:
-      - build request, build request expansion and directly requested targets
-      - conditional properties
-    -->
+        - build request, build request expansion and directly requested targets
+        - conditional properties
+      -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -112,43 +112,55 @@ boost-build /path/to/boost.build ;
     "#help_option">help option</a>). 
 
     <h3 id="overview">Overview</h3>
-    The most fundemental entity in Boost.Build is <em>main target</em>. This
-    is object that user want to construct from sources and keep up to date
-    with regard to those sources. Typical examples of main targets are
-    executable files and libraries. Main targets are grouped in
-    <em>projects</em>. They main purpose is organization: related targets can
-    be places in one project, then can be build together, or share some
-    definitions. Main targets and project are described mostly in declarative
-    fashion. To make some use of them, user issues <a href=
-    "#build_request">build request</a>, which specifies what targets user
-    wants to build, and what properties are desirable. Build request is not
-    necessary explicit. Invoking the build system without parameters will
-    build the project in current directory with defauly properties. The
-    <em>properties</em> describe various aspects of constructed objects. For
-    portability, they are specified in a normalized form, for example 
+
+    <p>The most fundemental entity in Boost.Build is <em>main target</em>.
+    This is object that user want to construct from sources and keep up to
+    date with regard to those sources. Typical examples of main targets are
+    executable files and libraries.</p>
+
+    <p>Main targets are grouped in <em>projects</em>. They main purpose is
+    organization: related targets can be places in one project, then can be
+    build together, or share some definitions.</p>
+
+    <p>Main targets and project are described mostly in declarative fashion.
+    To make some use of them, user issues <a href="#build_request">build
+    request</a>, which specifies what targets user wants to build, and what
+    properties are desirable. Build request is not necessary explicit.
+    Invoking the build system without parameters will build the project in
+    current directory with defauly properties.</p>
+
+    <p>The <em>properties</em> describe various aspects of constructed
+    objects. For portability, they are specified in a normalized form, for
+    example</p>
 <pre>
 &lt;optimization&gt;full &lt;inlining&gt;off
 </pre>
-    Depending on used compiler, this will be translated into appropriate
-    flags. Construction of each main target begins with finding properties
-    for <em>this</em> main target. They are found by processing both build
+    Depending on the compiler used, this will be translated into appropriate
+    flags. 
+
+    <p>Construction of each main target begins with finding properties for
+    <em>this</em> main target. They are found by processing both build
     request, and <em>target requirements</em>, which give properties needed
     for the target to build. For example, a given main target might require
     certian defines, or will not work unless compiled in multithreaded mode.
     The process of finding properties for main target is described in <a
-    href="#property_refinement">property refinement</a>. After then,
-    dependencies (i.e. other main targets) are build recursively. Build
-    request for dependencies is not always equal to those of dependent
-    &mdash; certain properties are dropped and user can explicitly specify
-    desired properties for dependencies. See <a href=
+    href="#property_refinement">property refinement</a>.</p>
+
+    <p>After that, dependencies (i.e. other main targets) are build
+    recursively. Build request for dependencies is not always equal to those
+    of dependent &mdash; certain properties are dropped and user can
+    explicitly specify desired properties for dependencies. See <a href=
     "#propagated_features">propagated features</a> and <a href=
-    "#target_reference">target reference</a> for details. When dependencies
-    are constructed, the dependency graph for this main target and for this
-    property set is created, which describes which files need to be created,
-    on which other files they depend and what actions are needed to construct
-    those files. There's more that one method, and user can define new ones,
-    but usually, this involves <em>generators</em> and <em>target type</em>.
-    Target type is just a way to classify targets. For example, there are
+    "#target_reference">target reference</a> for details.</p>
+
+    <p>When dependencies are constructed, the dependency graph for this main
+    target and for this property set is created, which describes which files
+    need to be created, on which other files they depend and what actions are
+    needed to construct those files. There's more that one method, and user
+    can define new ones, but usually, this involves <em>generators</em> and
+    <em>target type</em>.</p>
+
+    <p>Target type is just a way to classify targets. For example, there are
     builtin types <tt>EXE</tt>, <tt>OBJ</tt> and <tt>CPP</tt>. <a href=
     "#generators">Generators</a> are objects that know how to convert between
     different target type. When a main target of a given type must be
@@ -158,10 +170,12 @@ boost-build /path/to/boost.build ;
     desired type from given sources, it may try to recursively construct
     types that it can handle from type is was passed. This allows to try all
     possible transformations. When all generators are tried, a dependency
-    graph is selected. Finally, the dependency graph is passed to underlying
-    Boost.Jam program, which runs all actions needed to bring all main
-    targets up-to date. At this step, implicit dependencies are also scanned
-    and accounted for, as described <a href="#dependency_scanning">here</a>. 
+    graph is selected.</p>
+
+    <p>Finally, the dependency graph is passed to underlying Boost.Jam
+    program, which runs all actions needed to bring all main targets up-to
+    date. At this step, implicit dependencies are also scanned and accounted
+    for, as described <a href="#dependency_scanning">here</a>.</p>
 
     <h3><a name="features_properties">Features and properties</a></h3>
 
@@ -1115,7 +1129,7 @@ borland/runtime-link=static,dynamic
     </ol>
     <hr>
 
-    <p class="revision">Last modified: Aug 15, 2002</p>
+    <p class="revision">Last modified: Oct 10, 2002</p>
 
     <p>&copy; Copyright Vladimir Prus 2002. Permission to copy, use, modify,
     sell and distribute this document is granted provided this copyright
