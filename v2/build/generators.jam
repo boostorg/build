@@ -259,27 +259,12 @@ rule generator (
         {            
             result = [ construct-result $(consumed) : $(project) $(name) 
                      : $(property-set) ] ;
+            if $(result)
+            {            
+                result += $(bypassed) ;
+            }
         }
                             
-        if $(result)
-        {
-            # Add to 'result' elements of 'bypassed' that are not in 'consumed'.
-            
-            # Suppose the target type of current generator, X is produced from 
-            # X_1 and X_2, which are produced from Y by one generator.
-            # When creating X_1 from Y, X_2 will be added to 'bypassed'
-            # Likewise, when creating X_2 from Y, X_1 will be added to 'bypassed'
-            # But they are also in 'consumed'. We have to remove them from
-            # bypassed, so that generators up the call stack don't try to convert
-            # them. 
-            
-            # In this particular case, X_1 instance in 'consumed' and X_1 instance
-            # in 'bypassed' will be the same: because they have the same source and
-            # action name, and 'virtual-target.register' won't allow two different
-            # instances. Therefore, it's OK to use 'sequence.difference'.
-            
-            result += [ set.difference $(bypassed) : $(consumed) ] ;
-        }
                 
         if $(result)
         {
@@ -404,36 +389,18 @@ rule generator (
                      # if there's more that one possibility, report an
                      # error 
         : consumed-var # name of variable which recieves all targets which 
-                       # can be consumed
+                       # can be consumed. 
           bypassed-var # name variable which recieves all targets which 
                        # cannot be consumed  
     )
     {        
-        # For each source, type attempt, to convert 'source' to that type.
-        # If 'source' is equal or derived from the required type, just
-        # add it to $(consumed-var). Otherwise, call 'generators.construct'
-        
-        local real-source-type = [ $(source).type ] ;
-
         # We're likely to be passed 'consumed' and 'bypassed'
         # var names. Use "_" to avoid name conflicts.
         local _consumed ;
         local _bypassed ;
         local missing-types ; 
-
-        for local st in $(self.source-types)
-        {
-            # The 'source' if of right type already)
-            if $(real-source-type) = $(st) || 
-              [ type.is-derived $(real-source-type) $(st) ]
-            {
-                _consumed += $(source) ;
-            }
-            else
-            {
-               missing-types += $(st) ;
-            }
-        }
+        
+        consume-directly $(source) : _consumed : missing-types ;
 
         # No need to search for transformation if
         # some source type has consumed source and
@@ -445,8 +412,6 @@ rule generator (
             
         #TODO: we should check that only one source type
         #if create of 'only-one' is true.
-        #TODO: guess we better don't add the same target to
-        # 'bypassed' twice...
         # TODO: consider if consuned/bypassed separation should
         # be done by 'construct-types'.
                     
@@ -472,12 +437,51 @@ rule generator (
                 }
             }               
         }   
+        
+        _consumed = [ sequence.unique $(_consumed) ] ;        
+        _bypassed = [ sequence.unique $(_bypassed) ] ;
+        
+        # remove elements of '_bypassed' that are in '_consumed'
+        
+        # Suppose the target type of current generator, X is produced from 
+        # X_1 and X_2, which are produced from Y by one generator.
+        # When creating X_1 from Y, X_2 will be added to 'bypassed'
+        # Likewise, when creating X_2 from Y, X_1 will be added to 'bypassed'
+        # But they are also in 'consumed'. We have to remove them from
+        # bypassed, so that generators up the call stack don't try to convert
+        # them. 
+            
+        # In this particular case, X_1 instance in 'consumed' and X_1 instance
+        # in 'bypassed' will be the same: because they have the same source and
+        # action name, and 'virtual-target.register' won't allow two different
+        # instances. Therefore, it's OK to use 'set.difference'.
+        
+        _bypassed = [ set.difference $(_bypassed) : $(_consumed) ] ;
+        
                 
         $(consumed-var) += $(_consumed) ;
         $(bypassed-var) += $(_bypassed) ;
     }
     
+    rule consume-directly ( source : consumed-var : missing-types-var )
+    {
+        local real-source-type = [ $(source).type ] ;
 
+        for local st in $(self.source-types)
+        {
+            # The 'source' if of right type already)
+            if $(real-source-type) = $(st) || 
+              [ type.is-derived $(real-source-type) $(st) ]
+            {
+                $(consumed-var) += $(source) ;
+            }
+            else
+            {
+               $(missing-types-var) += $(st) ;
+            }
+        }        
+    }
+    
     
     # Returns the class to be used to actions. Default implementation 
     # returns "action".
@@ -494,36 +498,49 @@ rule composing-generator ( id : source-types * : target-types + :
 {
     generator.__init__ $(id) : $(source-types) : $(target-types) :
                        $(requirements) ;
-
+    
+    # Converts several files to consumable types.
+    rule convert-multiple-sources-to-consumable-types
+      ( project : property-set : sources * : consumed-var bypassed-var )
+    {
+        # We process each source one-by-one, trying to convert it to
+        # a usable type.
+        local failed ;
+        while $(sources) && ! $(failed)
+        {
+            local _c ;
+            local _b ;
+            # TODO: need to check for failure on each source.
+            convert-to-consumable-types $(project) : $(property-set)
+              : $(sources[1]) : * : true : _c _b ;
+            if ! $(_c)
+            {
+                generators.dout [ indent ] " failed to convert " [ $(sources[1]).str ] ;
+                # failed = true ;
+            }
+            $(consumed-var) += $(_c) ;            
+            $(bypassed-var) += $(_b) ;
+            sources = $(sources[2-]) ;
+        }           
+        if $(failed)
+        {
+            $(consumed-var) = ;
+            $(bypassed-var) = ;
+        }        
+    }
+                  
     rule run ( project name ? : property-set : sources + ) 
     {
         generators.dout [ indent ] "  composing generator" $(self.id) ;
 
         local consumed ;
         local bypassed ;
-        local failed ;
-
-        # We process each source one-by-one, trying to convert it to
-        # a usable type.
-        while $(sources) && ! $(failed)
-        {
-            local c ;
-            local b ;
-            # TODO: need to check for failure on each source.
-            convert-to-consumable-types $(project) : $(property-set)
-              : $(sources[1]) : * : true : c b ;
-            if ! $(c)
-            {
-                generators.dout [ indent ] " failed to convert " [ $(sources[1]).str ] ;
-                failed = true ;
-            }
-            consumed += $(c) ;
-            bypassed += $(b) ;
-            sources = $(sources[2-]) ;
-        }                
+        
+        convert-multiple-sources-to-consumable-types $(project)
+          : $(property-set) : $(sources) : consumed bypassed ;
 
         local result ;
-        if ! $(failed) 
+        if $(consumed) 
         {
             generators.dout [ indent ] "  SUCCESS" ;
             result += [ generated-targets $(consumed) : $(property-set) 
