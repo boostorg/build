@@ -63,19 +63,29 @@ rule lookup ( id )
     local location = $(split[1]) ;
     local project-id = $(split[2]) ;
 
-    if [ os.path.is_rooted $(project-id) ] {
-        return $(id-2-jamfile-location($(project-id))) ;
-    } else {
-        if $(location) {
+    if [ os.path.is_rooted $(project-id) ]
+    {
+        return $($(project-id).jamfile-location) ;
+    }
+    else
+    {
+        if $(location)
+        {
             local module-name = [ module-name $(location) ] ;
             local base-id = [ $(module-name).id ] ;
-            if $(base-id) {
+            
+            if $(base-id)
+            {
                 local rooted-id = $(base-id)/$(project-id) ;
-                return $(id-2-jamfile-location($(rooted-id))) ;
-            } else {
+                return $($(rooted-id).jamfile-location) ;
+            }
+            else
+            {
                 error "Project in $(location) has no project id" ;
             }
-        } else {
+        }
+        else
+        {
             error "Jamfile location must be specified for relative project-id" ;
         }
     }
@@ -86,16 +96,16 @@ rule project ( id ? : option1 * : option2 * : option3 * )
 #   ECHO "Declared project '$(id)'" ;
 
     local caller = [ CALLER_MODULE ] ;
-    id-2-jamfile-location($(id)) = [ $(caller).location ] ;
+    $(id).jamfile-location = [ $(caller).location ] ;
 
     poke $(caller) : __id__ : $(id) ;
 
-    module [ CALLER_MODULE ] {
-
+    module [ CALLER_MODULE ]
+    {
         import targets ;
-
         targets.create-abstract-project-target [ location ] ;
     }
+    
     if $(option1) {
         assign-option [ CALLER_MODULE ] : $(option1) ;
     }
