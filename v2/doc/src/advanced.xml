@@ -66,9 +66,10 @@
 
     <para>The Boost.Build configuration is specified in the file
     "user-config.jam". You can edit the one which comes with Boost.Build, or
-    create a copy in your home directory and edit that. The primary function
-    of that file is to declarate which compilers and other tools are
-    available. The simplest syntax to configure a tool is:
+    create a copy in your home directory and edit that. (See the <link
+    linkend="bbv2.reference.init.config">reference</link> for the exact search
+    paths.) The primary function of that file is to declarate which compilers
+    and other tools are available. The simplest syntax to configure a tool is:
 <programlisting>
 using &lt;tool-name&gt; ;        
 </programlisting>
