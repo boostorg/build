@@ -1655,6 +1655,7 @@ rule depend-on-libraries
 {
     NEEDLIBS = [ unique $(NEEDLIBS) $(>) ] ;
     NEEDLIBS on $(<) = [ on $(<) return [ unique $(NEEDLIBS) $(>) ] ] ;
+    LIBPATH on $(<) += [ unique $(gLOCATE($(>))) ] ;
     DEPENDS $(<) : $(>) ;
     # To run these targets, we need everything needed to run the libraries
     gRUN_PATH($(<)) = [ unique $(gRUN_PATH($(<))) $(gRUN_PATH($(>))) ] ;
