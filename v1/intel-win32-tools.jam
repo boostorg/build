@@ -42,7 +42,7 @@ version ?= [ MATCH .*[\\/][Cc][Oo][Mm][Pp][Ii][Ll][Ee][Rr]([0-9])[0-9][\\/].* : 
 C++FLAGS += /Qwn5 /Qwd985 ;
 
 # Enable ADL
-C++FLAGS += -Qoption,c,--arg_dep_lookup ;
+C++FLAGS += -Qoption,c,--arg_dep_lookup ; #"c" works for C++, too
 
 if $(version) <= 5
 {
