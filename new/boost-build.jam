@@ -10,4 +10,9 @@ module modules { include <module@>modules.jam ; }
 IMPORT modules : import : : import ;
 import modules ; # The modules module can tolerate being included twice
 
+# Load the doc system.
+import doc : document-module document-rule document-variable ;
+
 import build-system ;
+
+doc.do-help ;
