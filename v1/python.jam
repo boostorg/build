@@ -469,7 +469,8 @@ rule boost-python-runtest (
     SEARCH on $(gRUN_TEST_INPUT_FILES) = $(SEARCH_SOURCE) ;
 
     # The user can add additional arguments in PYTHON_TEST_ARGS.
-    local gPYTHON_TEST_ARGS = $(args) $(PYTHON_TEST_ARGS) ;
+    local gRUN_TEST_ARGS2 = $(PYTHON_TEST_ARGS) ;
+    gRUN_TEST_ARGS2 ?= -v ;
     
     #
     # Stick the names of the python script and source files used in

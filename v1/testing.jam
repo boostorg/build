@@ -334,6 +334,7 @@ rule run-test ( type-to-test run-target : sources * )
     DEPENDS $(run-target) : $(executable) $(targets-to-test) $(gRUN_TEST_INPUT_FILES) ;
     INPUT_FILES on $(run-target) = $(gRUN_TEST_INPUT_FILES) ;
     ARGS on $(run-target) = $(gRUN_TEST_ARGS) ;
+    ARGS2 on $(run-target) = $(gRUN_TEST_ARGS2) ;
     
     #
     # Prepare path setup
@@ -456,12 +457,12 @@ else
 
 actions debug-test bind INPUT_FILES
 {
-    $(PATH_SETUP)$(>) $(ARGS) "$(INPUT_FILES)"
+    $(PATH_SETUP)$(>) $(ARGS) "$(INPUT_FILES)" $(ARGS2)
 }
 
 actions execute-test bind INPUT_FILES output-file
 {
-    $(PATH_SETUP)$(>) $(ARGS) "$(INPUT_FILES)" > $(output-file) 2>&1
+    $(PATH_SETUP)$(>) $(ARGS) "$(INPUT_FILES)" $(ARGS2) > $(output-file) 2>&1
     $(SET_STATUS)
     $(RUN_OUTPUT_NL) >> $(output-file)
     echo EXIT STATUS: $(STATUS) >> $(output-file)
@@ -483,9 +484,10 @@ actions execute-test bind INPUT_FILES output-file
 
 declare-build-fail-test RUN_FAIL : TEST_EXE ;
 declare-build-succeed-test RUN : TEST_EXE ;
-rule run ( sources + : args * : input-files * : requirements * : name ? : default-build * )
+rule run ( sources + : args * : input-files * : requirements * : name ? : default-build * : args2 * )
 {
     local gRUN_TEST_ARGS = $(args) ;
+    local gRUN_TEST_ARGS2 = $(args2) ;
     local gRUN_TEST_INPUT_FILES = $(input-files) ;
     SEARCH on $(input-files) = $(SEARCH_SOURCE) ;
     return [ boost-test $(sources) : RUN : $(requirements) : $(name) : $(default-build) ] ;
