@@ -421,7 +421,9 @@ t.cleanup()
     separator on all systems. Additionaly, the test system translates
     suffixes appropriately. For the test to be portable, suffixes should use
     Windows convention: <tt>exe</tt> for executables, <tt>dll</tt> for
-    dynamic libraries and <tt>lib</tt> for static libraries.</p>
+    dynamic libraries and <tt>lib</tt> for static libraries. Lastly, the
+    string "$toolset" in file names is replaced by the name of tested
+    toolset.</p>
 
     <p><b>Note:</b> The <tt>List</tt> helper class might be useful to create
     lists of names.</p>
