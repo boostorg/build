@@ -1853,7 +1853,7 @@ rule FAppendSuffix
         {
             if $(_i:S)
             {
-                _o += $(_i) $(_i:S=$(>[2-)) ;
+                _o += $(_i) $(_i:S=$(>[2-])) ;
             }
             else
             {
