@@ -135,7 +135,7 @@ case $BOOST_JAM_TOOLSET in
     ;;
     
     acc)
-    BOOST_JAM_CC=cc -Ae
+    BOOST_JAM_CC="cc -Ae"
     ;;
     
     cc)
