@@ -47,7 +47,7 @@
 import targets ;
 import property-set ;
 import virtual-target ;
-import class : class new ;
+import class : class xnew ;
 import project ;
 import type ;
 import generators ;
@@ -89,7 +89,7 @@ rule update ( name : existing-translation sources + : requirements * )
     local project = [ CALLER_MODULE ] ;
     
     targets.main-target-alternative
-      [ new update-translations-class $(name) : $(project) : 
+      [ xnew update-translations-class $(name) : $(project) : 
         $(existing-translation) $(sources)
         : [ targets.main-target-requirements $(requirements) : $(project) ]        
       ] ;
@@ -115,13 +115,16 @@ feature gettext.types : : free ;
 
 generators.register-standard gettext.compile : gettext.PO : gettext.catalog ;
 
-rule update-translations-class ( name : project : sources * : requirements )
+xclass update-translations-class : basic-target
 {
-    basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements) 
-                              : $(default-build) ;
-    
-    IMPORT gettext : regex.split : $(__name__) : regex.split ;
-
+    import regex : split ;
+   
+    rule __init__ ( name : project : sources * : requirements )
+    {
+        basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements) 
+          : $(default-build) ;
+    }
+            
     rule construct ( source-targets * : property-set )
     {
         local types = [ $(property-set).get <gettext.types> ] ;
@@ -149,13 +152,13 @@ rule update-translations-class ( name : project : sources * : requirements )
             
             if $(right-sources)
             {                                                                                        
-                local new-messages = [ new file-target $(self.name) : gettext.POT : $(self.project) ] ;
+                local new-messages = [ xnew file-target $(self.name) : gettext.POT : $(self.project) ] ;
                 local extract = 
-                  [ new action $(new-messages) : $(right-sources) : gettext.extract ] ;
+                  [ xnew action $(new-messages) : $(right-sources) : gettext.extract ] ;
                 $(new-messages).action $(extract) ;
                 
-                local r = [ new notfile-target $(self.name) : $(self.project) ] ;
-                local a = [ new action $(r) : $(source-targets[1]) $(new-messages) 
+                local r = [ xnew notfile-target $(self.name) : $(self.project) ] ;
+                local a = [ xnew action $(r) : $(source-targets[1]) $(new-messages) 
                   : gettext.update-po-dispatch ] ;
                 $(r).action $(a) ;
                 .constructed = [ virtual-target.register $(r) ] ;
@@ -172,7 +175,6 @@ rule update-translations-class ( name : project : sources * : requirements )
     {        
     }
 }
-class update-translations-class : basic-target ;
 
 flags gettext.extract KEYWORD <gettext.keyword> ;
 actions extract

@@ -301,7 +301,7 @@ rule initialize (
     module $(module-name)
     {          
     }    
-    $(module-name).attributes = [ new project-attributes $(location) ] ;
+    $(module-name).attributes = [ xnew project-attributes $(location) ] ;
     local attributes = $($(module-name).attributes) ;
     
     $(attributes).set source-location : $(location) : exact ;    
@@ -381,20 +381,25 @@ rule register-id ( id : module )
 #
 # The standard attributes are "id", "location", "project-root", "parent"
 # "requirements", "default-build", "source-location" and "projects-to-build".
-rule project-attributes ( location )
+xclass project-attributes 
 {
     import property ;
     import property-set ;
     import errors ;
     import path ;
-    
-    self.location = $(location) ;
-
+    import print ;
+    import sequence ;
+        
+    rule __init__ ( location )
+    {       
+        self.location = $(location) ;
+    }
+            
     # Set the named attribute from the specification given by the user.
     # The value actually set may be different.
     rule set ( attribute : specification * 
-               : exact ? # Sets value from 'specification' without any processing
-               ) 
+        : exact ? # Sets value from 'specification' without any processing
+        ) 
     {
         if $(exact)
         {
@@ -487,9 +492,6 @@ rule project-attributes ( location )
     # Prints the project attributes.
     rule print ( )
     {
-        import sequence ;
-        import print ;
-
         local id = $(self.id) ; id ?= (none) ;
         local parent = $(self.parent) ; parent ?= (none) ;
         print.section "'"$(id)"'" ;
@@ -504,8 +506,6 @@ rule project-attributes ( location )
     }
     
 }
-
-class project-attributes ;
 
 # Returns the project-attribute instance for the specified jamfile module.
 rule attributes ( project )

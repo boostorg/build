@@ -3,7 +3,7 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-import class : class new ;
+import class : class xnew ;
 import feature ;
 import property ;
 import sequence ;
@@ -20,42 +20,46 @@ import sequence ;
 # - several operations, like and refine and as-path are provided. They all use
 #   caching whenever possible.
 #
-local rule property-set ( raw-properties * )
+xclass property-set 
 {
     import feature ;
     import property-set ;
     import property ;
-    
-    self.raw = $(raw-properties) ;
-    
-    for local p in $(raw-properties)
-    {
-        local att = [ feature.attributes $(p:G) ] ;        
-        if incidental in $(att)
-        {
-            self.incidental += $(p) ;
-        }
-        else if free in $(att)
-        {
-            if dependency in $(att)
-            {
-                self.dependency += $(p) ;
-            }
-            else
-            {
-                self.free += $(p) ;
-            }            
-        }
-        else 
-        {
-            self.base += $(p) ;
-        }
+            
+    rule __init__ ( raw-properties * )
+    {        
+        self.raw = $(raw-properties) ;
         
-        if propagated in $(att)
+        for local p in $(raw-properties)
         {
-            self.propagated += $(p) ;
-        }                        
+            local att = [ feature.attributes $(p:G) ] ;        
+            if incidental in $(att)
+            {
+                self.incidental += $(p) ;
+            }
+            else if free in $(att)
+            {
+                if dependency in $(att)
+                {
+                    self.dependency += $(p) ;
+                }
+                else
+                {
+                    self.free += $(p) ;
+                }            
+            }
+            else 
+            {
+                self.base += $(p) ;
+            }
+            
+            if propagated in $(att)
+            {
+                self.propagated += $(p) ;
+            }                        
+        }
     }
+    
     
     # Returns Jam list of stored properties
     rule raw ( )
@@ -187,8 +191,6 @@ local rule property-set ( raw-properties * )
     
 }
 
-class property-set ;
-
 # Creates new 'property-set' instance for the given raw properties,
 # or returns an already existing ones.
 rule create ( raw-properties * )
@@ -200,7 +202,7 @@ rule create ( raw-properties * )
     
     if ! $(.ps.$(key)) 
     {
-        .ps.$(key) = [ new property-set $(raw-properties) ] ;
+        .ps.$(key) = [ xnew property-set $(raw-properties) ] ;
     }
     return $(.ps.$(key)) ;    
 }

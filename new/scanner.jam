@@ -26,12 +26,16 @@
 #  actual targets. However, actions can also create scanners in a special
 #  way, instead of relying on just target type.
 
-import class : class new ;
+import class : class xnew ;
 import property virtual-target ;
 
 #  Base scanner class. 
-rule scanner ( )
+xclass scanner 
 {
+    rule __init__ ( )
+    {
+    }
+    
     # Returns a pattern to use for scanning
     rule pattern ( )
     {
@@ -46,8 +50,6 @@ rule scanner ( )
         error "method must be overriden" ;
     }        
 }
-
-class scanner ;
 
 # Registers a new generator class, specifying a set of 
 # properties relevant to this scanner.  Ctor for that class
@@ -74,7 +76,7 @@ rule get ( scanner-class : properties * )
     }    
     if ! $(scanner.$(scanner-class).$(r:J=-))
     {
-        scanner.$(scanner-class).$(r:J=-) = [ new $(scanner-class) $(r) ] ;
+        scanner.$(scanner-class).$(r:J=-) = [ xnew $(scanner-class) $(r) ] ;
     }
     return $(scanner.$(scanner-class).$(r:J=-)) ;    
 }

@@ -921,42 +921,46 @@ local rule clone-action-template ( action from cloned-from : new-source )
     return $(cloned) ;
 }
 
-local rule subvariant-dg ( main-target # The instance of main-target class
-    : property-set                     # Properties requested for this target
-    : actual-properties                # Actual used properties
-    : virtual-targets * )
+xclass subvariant-dg 
 {
-    import sequence ;
+    import sequence ;    
     
-    self.main-target = $(main-target) ;
-    self.properties = $(property-set) ;
-    self.actual-properties = $(actual-properties) ;
-    self.virtual-targets = $(virtual-targets) ;
+    rule __init__ ( main-target # The instance of main-target class
+        : property-set                     # Properties requested for this target
+        : actual-properties                # Actual used properties
+        : virtual-targets * )
+    {        
+        self.main-target = $(main-target) ;
+        self.properties = $(property-set) ;
+        self.actual-properties = $(actual-properties) ;
+        self.virtual-targets = $(virtual-targets) ;
 
-    # Pre-compose the list of other dependency graphs, on which this one
-    # depends
-    local deps = [ $(actual-properties).dependency ] ;
-    for local d in $(deps)
-    {
-        self.other-dg += [ $(d:G=).dg ] ;
-    }
-    
-    for local t in $(virtual-targets)
-    {
-        local a = [ $(t).action ] ;
-        if $(a)
+        # Pre-compose the list of other dependency graphs, on which this one
+        # depends
+        local deps = [ $(actual-properties).dependency ] ;
+        for local d in $(deps)
         {
-            for local s in [ $(a).sources ]
+            self.other-dg += [ $(d:G=).dg ] ;
+        }
+        
+        for local t in $(virtual-targets)
+        {
+            local a = [ $(t).action ] ;
+            if $(a)
             {
-                if [ $(s).root ]
+                for local s in [ $(a).sources ]
                 {
-                    self.other-dg += [ $(s).dg ] ;
+                    if [ $(s).root ]
+                    {
+                        self.other-dg += [ $(s).dg ] ;
+                    }
                 }
             }
         }
-    }
         
-    self.other-dg = [ sequence.unique $(self.other-dg) ] ;
+        self.other-dg = [ sequence.unique $(self.other-dg) ] ;
+    }
+    
                
     rule main-target ( )
     {
@@ -991,6 +995,4 @@ local rule subvariant-dg ( main-target # The instance of main-target class
         self.target-directories = $(result) ;
     }   
 }
-
-class subvariant-dg ;
 

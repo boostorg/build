@@ -15,8 +15,8 @@ import toolset ;
 # lanch test programs. 
 feature.feature testing.launcher : : optional free ;
 
-xclass unit-test-target-class : basic-target
-{
+xclass unit-test-target-class : typed-target
+{    
     rule __init__ ( name : project : sources * : requirements * 
                          : default-build * )
     {
@@ -39,8 +39,6 @@ xclass unit-test-target-class : basic-target
         return $(timestamp) ;
     }   
 }
-
-class unit-test-target-class : typed-target ;
 
 toolset.flags testing.run LAUNCHER <testing.launcher> ;
 

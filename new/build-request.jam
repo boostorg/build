@@ -249,11 +249,17 @@ local rule convert-command-line-element ( e )
 #
 # will cause a release version of 'b' to be compiled and linked into 'a'. The 
 # release version will be compiled without "define=MACROS".
-rule directly-requested-properties-adjuster
-{
+xclass directly-requested-properties-adjuster
+{    
     import property-set ;
-    self.empty-request-requirements = ;
-    self.all-requests = [ new property-map ] ;
+    import class : xnew ;
+    
+    rule __init__ ( )
+    {            
+        self.empty-request-requirements = ;
+        self.all-requests = [ xnew property-map ] ;
+    }        
+            
     rule add-requested-property-set ( property-set )
     {        
         local base = [ $(property-set).base ] ;
@@ -293,9 +299,6 @@ rule directly-requested-properties-adjuster
         return $(result) ;
     }    
 }
-
-class directly-requested-properties-adjuster ;
-
 
 rule __test__ ( )
 {

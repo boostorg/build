@@ -28,7 +28,7 @@ feature.feature base-target-type : : composite optional free ;
 # feature.feature main-target-type : : composite optional incidental ;
 
 # Store suffixes for generated targets
-.suffixes = [ new property-map ] ;
+.suffixes = [ xnew property-map ] ;
 
 # Registers a target type, possible derived from a 'base-type'. 
 # If 'suffixes' are provided, they given all the suffixes that mean a file is of 'type'.

@@ -9,7 +9,7 @@
 #  version of Doxygen that can output a single XML file instead of a
 #  set of XML files.
 
-import class : class new ;
+import class : xnew ;
 import targets ;
 import feature ;
 import property ;
@@ -90,17 +90,21 @@ rule xml-to-boostbook ( target : source : properties * )
                  ;
 }
 
-rule doxygen-xml-target-class ( name : project : sources * : requirements *
-                                : default-build * )
+xclass doxygen-xml-target-class : basic-target
 {
-  basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements)
-                        : $(default-build) ;
+    rule __init__ ( name : project : sources * : requirements *
+        : default-build * )
+    {
+        basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements)
+          : $(default-build) ;
+    }
+    
   
   rule construct ( source-targets * : property-set )
   {
     local target = 
-       [ new file-target $(self.name) : DOXYGEN_XML : $(self.project) ] ;
-    local a = [ new action $(target) : $(source-targets) : doxygen.extract-xml 
+       [ xnew file-target $(self.name) : DOXYGEN_XML : $(self.project) ] ;
+    local a = [ xnew action $(target) : $(source-targets) : doxygen.extract-xml 
                 : $(property-set) ] ;
     $(target).action $(a) ;
 
@@ -108,13 +112,11 @@ rule doxygen-xml-target-class ( name : project : sources * : requirements *
   }
 }
 
-class doxygen-xml-target-class : basic-target ;
-
 rule doxygen ( target-name : sources * : requirements * : default-build * )
 {
   local project = [ CALLER_MODULE ] ;
   targets.main-target-alternative
-    [ new doxygen-xml-target-class $(target-name) : $(project) : $(sources)
+    [ xnew doxygen-xml-target-class $(target-name) : $(project) : $(sources)
         : [ targets.main-target-requirements $(requirements) : $(project) ]
         : [ targets.main-target-default-build $(default-build) : $(project) ]
     ] ;

@@ -99,13 +99,17 @@ rule apply-default-suffix ( suffix : list * )
 local rule __test__ ( )
 {
     import assert ;
-    import class : class new ;
+    import class : xnew ;
     assert.result foo bar : ungrist <foo> <bar> ;
 
     assert.result 123 : str 123 ;
 
-    local rule test-class__ ( )
+    xclass test-class__ 
     {
+        rule __init__ ( )
+        {            
+        }
+        
         rule str ( )
         {
             return "str-test-class" ;
@@ -121,15 +125,14 @@ local rule __test__ ( )
             return "not sure" ;
         }
     }
-    class test-class__ ;
 
-    assert.result "str-test-class" : str [ new test-class__ ] ;
+    assert.result "str-test-class" : str [ xnew test-class__ ] ;
     assert.true less 1 2 ;
     assert.false less 2 1 ;
-    assert.result "yes, of course!" : less [ new test-class__ ] 1 ;
+    assert.result "yes, of course!" : less [ xnew test-class__ ] 1 ;
     assert.true equal 1 1 ;
     assert.false equal 1 2 ;
-    assert.result "not sure" : equal [ new test-class__ ] 1 ;
+    assert.result "not sure" : equal [ xnew test-class__ ] 1 ;
     
     assert.result foo.lib foo.a : apply-default-suffix .lib : foo foo.a ;
 }
