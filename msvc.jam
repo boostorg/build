@@ -84,7 +84,9 @@ rule init ( version ? : path ? : vendor ? : setup ? compiler ? linker ? )
     {
         # Don't bother with any searches. User has provided a path,
         # and we assume it's correct.
-        setup = $(path)\\$(setup) ;
+        # TODO: actually, it's better to check the path even in this
+        # case.
+        setup = $(path)\\bin\\$(setup) ;
     }
     
     # CONSIDER: What's the point of 'call'. Can we invoke the script directly?
