@@ -86,11 +86,16 @@ rule merge ( s1 * : s2 * : ordered * )
             result__ += $(s1[1]) ;
             s1 = $(s1[2-]) ;
         }
-        else
+        else if [ modules.call-in $(caller) : $(ordered) $(s2[1]) $(s1[1]) ]
         {
             result__ += $(s2[1]) ;
             s2 = $(s2[2-]) ;
         }
+        else 
+        {           
+            s2 = $(s2[2-]) ;
+        }
+        
     }
     result__ += $(s1) ;
     result__ += $(s2) ;
@@ -250,6 +255,7 @@ local rule __test__ ( )
         assert.result 1 2 3 4 5 6 :  sequence.merge 1 3 5 : 2 4 6 ;
         assert.result 6 5 4 3 2 1 :  sequence.merge 5 3 1 : 6 4 2 : test-greater ;
         assert.result 1 2 3 : sequence.merge 1 2 3 : ;
+        assert.result 1 : sequence.merge 1 : 1 ;
 
         assert.result foo-bar-baz : sequence.join foo bar baz : - ;
         assert.result substandard : sequence.join sub stan dard ;
