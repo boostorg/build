@@ -1,0 +1,117 @@
+# Copyright Vladimir Prus 2004.
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt
+# or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+import toolset ;
+import feature ;
+import toolset : flags ;
+import os ;
+
+# This is needed because the rule we import here depend on 'common'
+# That's nasty.
+import common ;
+
+import intel ;
+
+feature.extend-subfeature toolset intel : platform : win ;
+feature.subfeature toolset intel : base-vc ;
+
+import msvc ;
+toolset.inherit-generators intel-win <toolset>intel <toolset-intel:platform>win : msvc ;
+toolset.inherit-flags intel-win : msvc ;
+toolset.inherit-rules intel-win : msvc ;
+
+# Initializes the intel toolset for windows
+rule init ( version :  # version is mandatory
+            setup   :  # patch to the iclvars.bat script
+            base-vc ?  # VC version to emulate: either 'vc6', 'vc7' or 'vc7.1'
+                       # vc6 is used by default
+          )
+{           
+    base-vc ?= vc6 ;
+    feature.extend-subfeature toolset intel : base-vc : $(base-vc) ;
+           
+    feature.extend-subfeature toolset intel : version : $(version) ;    
+                    
+    check-setup $(version) : $(setup) ;
+    
+    setup = "call \""$(setup)"\" > nul " ;
+    
+    if [ os.name ] = NT
+    {
+        setup = $(setup)"
+" ;
+    }
+    else
+    {
+        setup = "cmd /S /C "$(setup)" \"&&\" " ;
+    }
+    
+    local condition = <toolset>intel-win-$(version)-$(base-vc) ;
+    flags intel-win.compile .CC $(condition) : $(setup)icl ; 
+    flags intel-win.link .LD $(condition) : $(setup)xilink ; 
+    flags intel-win.archive .LD $(condition) : $(setup)xilink ;       
+    
+    local m = [ MATCH (.).* : $(version) ] ;
+    local major = $(m[1]) ;
+
+    local C++FLAGS ;
+    # Reduce the number of spurious error messages
+    C++FLAGS += /Qwn5 /Qwd985 ;
+
+    # Enable ADL
+    C++FLAGS += -Qoption,c,--arg_dep_lookup ; #"c" works for C++, too
+
+    if $(major) > 5
+    {
+        C++FLAGS += /Zc:forScope ;  # Add support for correct for loop scoping
+    }
+
+    # Add options recognized only by intel7
+    if $(major) >= 7
+    {
+        C++FLAGS += /Qansi_alias ;
+    }
+    
+    if $(base-vc) = vc6
+    {
+        C++FLAGS += 
+          # Emulate VC6
+          /Qvc6
+      
+          # no wchar_t support in vc6 dinkum library.  Furthermore, in vc6
+          # compatibility-mode, wchar_t is not a distinct type from unsigned
+          # short
+          -DBOOST_NO_INTRINSIC_WCHAR_T
+          ; 
+    }
+    else
+    {
+        if $(major) > 5
+        {
+            # Add support for wchar_t
+            C++FLAGS += /Zc:wchar_t
+              # Tell the dinkumware library about it.
+              -D_NATIVE_WCHAR_T_DEFINED
+              ;
+        }
+    }        
+    if $(base-vc)
+    {        
+        C++FLAGS += /Q$(base-vc) ;
+    }
+    flags intel-win CFLAGS $(condition) : $(C++FLAGS) ;
+    
+}
+
+rule check-setup ( version : setup )
+{
+    if ! [ GLOB $(setup:D) : $(setup:D=) ] 
+    {
+        ECHO warning: toolset intel-win $(version) initialization: ;
+        ECHO warning: couldn't find compiler ;
+    }    
+}
+
+flags intel-win.link LIBRARY_OPTION <toolset>intel : "" ;
