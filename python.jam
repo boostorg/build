@@ -197,7 +197,7 @@ rule select-nt-python-includes ( toolset variant : properties * )
 {
     if $(toolset) in $(gcc-compilers)
     {
-        local d ; 
+        local d = "" ; 
         if <define>BOOST_DEBUG_PYTHON in $(properties)
         {
             d = DEBUG_ ;
