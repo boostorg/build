@@ -27,7 +27,7 @@ exe b : a.cpp ;
     The above snippet requires two different compilations
     of 'a.cpp', which differ only in 'include' property.
     Since the 'include' property is free, Boost.Build
-    can't generate two ojects files into different directories.
+    can't generate two objects files into different directories.
     On the other hand, it's dangerous to compile the file only
     once -- maybe you really want to compile with different
     includes.
@@ -100,7 +100,7 @@ exe a : a_obj ;
     need the following code:
 <programlisting>
 import modules ;
-local path = [ modules.peek : SOME_LIBRARY_PATH ] ;
+local SOME_LIBRARY_PATH = [ modules.peek : SOME_LIBRARY_PATH ] ;
 exe a : a.cpp : &lt;include&gt;$(SOME_LIBRARY_PATH) ;
 </programlisting>
     </para>
@@ -236,7 +236,7 @@ exe a : a.cpp b ;
 obj b : b.cpp : &lt;cflags&gt;-g ;
 </programlisting>
       You can also use <link linkend="bbv2.tutorial.conditions">conditional
-      properties</link> to a finer control:
+      properties</link> for finer control:
 <programlisting>
 exe a : a.cpp b ;
 obj b : b.cpp : &lt;variant&gt;release:&lt;optimization&gt;off ;
