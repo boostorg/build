@@ -542,8 +542,8 @@ class file-reference : abstract-target
     
     rule generate ( properties )
     {
-        return [ property-set.empty ] 
-               [ virtual-target.from-file $(self.name) : $(self.project) ] ;        
+         return [ property-set.empty ] 
+                [ virtual-target.from-file $(self.name) : $(self.project) ] ;        
     }    
 
     # Returns true if the referred file really exists;
@@ -571,8 +571,9 @@ if "--quiet" in [ modules.peek : ARGV ]
 }
 
 
-rule find ( id : current-location )
+rule find ( id : project )
 {
+    local current-location = [ project.attribute $(project) location ] ;
     local target ;    
     
     local split = [ MATCH (.*)//(.*) : $(id) ] ;
@@ -612,9 +613,9 @@ rule find ( id : current-location )
         }
     }
     
-    if ! $(target) && ! $(have-project-reference) && $(base-project)
+    if ! $(target) && ! $(have-project-reference)
     {
-        target = [ new file-reference $(target-part) : $(base-project) ] ;        
+        target = [ new file-reference $(target-part) : $(project) ] ;        
         if ! [ $(target).exists ]
         {
             # File actually does not exist.
@@ -648,7 +649,7 @@ rule resolve-reference ( target-reference : project )
 
     # Find the target
     local target = 
-      [ find $(id) : [ project.attribute $(project) location ] ] ;
+      [ find $(id) :  $(project) ] ;
     
     # Do a sanity check
     if $(sproperties) && [ class.is-a $(target) : file-reference ] 

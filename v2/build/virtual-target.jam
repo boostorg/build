@@ -454,7 +454,7 @@ class file-target : abstract-file-target
         {
             # This is a derived file.
             local path = [ path ] ;
-            LOCATE on $(target) = $(path) ;
+            LOCATE on $(target) = $(path) ;                        
 
             # Make sure the path exists.
             DEPENDS $(target) : $(path) ;
@@ -884,7 +884,10 @@ rule clone-action ( action : new-project : new-action-name ? : new-properties ? 
 # If 'dont-recurse' is not set, clones action, which results in
 # cloning of other targets, and, ultimately, cloning of the
 # entire dependency graph.
-rule clone-template ( target dont-recurse ? : new-source )
+#
+# The 'new-project' parameter tells what project should be assigned
+# for newly created non-source targets.
+rule clone-template ( target dont-recurse ? : new-source : new-project )
 {
     local name = [ $(new-source).name ] ;
     local old-name = [ $(target).name ] ;
@@ -909,12 +912,12 @@ rule clone-template ( target dont-recurse ? : new-source )
     else
     {
         local cloned = [ new file-target $(new-name) : [ $(target).type ] :
-          [ $(new-source).project ] ] ;
+          $(new-project) ] ;
 
         if ! $(dont-recurse) && [ $(target).action ]
         {
             local cloned-action = [ clone-action-template
-                [ $(target).action ] $(target) $(cloned) : $(new-source) ] ;
+                [ $(target).action ] $(target) $(cloned) : $(new-source) : $(new-project) ] ;
 
             cloned-targets = $(cloned) ;
             for t in [ $(cloned-action).targets ]
@@ -922,7 +925,7 @@ rule clone-template ( target dont-recurse ? : new-source )
                 if $(t) != $(target)
                 {
                     cloned-targets +=
-                      [ clone-template $(t) dont-recurse : $(new-source) ] ;
+                      [ clone-template $(t) dont-recurse : $(new-source) : $(new-project) ] ;
                 }
             }
             local cloned-targets2 ;
@@ -945,14 +948,14 @@ rule clone-template ( target dont-recurse ? : new-source )
 }
 
 # Clones an action template: helper for clone-template above.
-local rule clone-action-template ( action from cloned-from : new-source )
+local rule clone-action-template ( action from cloned-from : new-source : new-project )
 {
     local targets ;
     local sources ;
 
     for local t in [ $(action).sources ]
     {
-        sources += [ clone-template $(t) : $(new-source) ] ;
+        sources += [ clone-template $(t) : $(new-source) : $(new-project) ] ;
     }
 
     local action-class = [ modules.peek $(action) : __class__ ] ;
