@@ -613,6 +613,16 @@ module project-rules
             $(t).mark-target-as-explicit $(n) ;
         }        
     }    
+    
+    rule glob ( wildcards + )
+    {
+        import path ;
+        import project ;
+        
+        local location = [ project.attribute $(__name__) location ] ;
+        local all-paths = [ path.glob $(location) : $(wildcards) ] ;
+        return $(all-paths:D="") ;
+    }    
 }
 
 
