@@ -217,15 +217,20 @@ rule generator (
         if $(property-requirements) in $(properties-to-match) 
            && $(feature-requirements) in $(properties-to-match:G)
         {
-            # We're only used to rank matches based on the number of
-            # optional properties that appear in the property set.  
-            
-            # That seemed a little weak to me, so I changed it: now we
-            # account for the number of properties and features that
-            # were matched as well.  -- dwa 5/6/2003
+            # We only count matched optional properties to achive better
+            # orthogonality:
+            # - required properties are what is needed to generators to run
+            # - optional properties are used to resolve ambiguities
+            #
+            # For example, we have two generators
+            # - CPP->OBJ, with required property <toolset>msvc
+            # - RC->OBJ, without required properties
+            #
+            # If we could required properties, then the first one will be
+            # considered more specific, and the second one will never be
+            # tried.
             return 
               [ sequence.length
-                  $(all-requirements)
                   [ set.intersection 
                       [ optional-properties ] 
                     : $(properties-to-match)
