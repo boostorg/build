@@ -799,6 +799,26 @@ lib compress : : &lt;file&gt;/opt/libs/compress.a ;
         be specified several time, or can be omitted -- in which case only
         default compiler paths will be searched.
       </para>
+
+      <para>The difference between using the <code>file</code> feature as
+        opposed to the <code>name</code> name feature together with the
+        <code>search</code> feature is that <code>file</code> is more
+        precise. A specific file will be used. On the other hand, the
+        <code>search</code> feature only adds a library path, and the
+        <code>name</code> feature gives the basic name of the library. The
+        search rules are specific to the linker. For example, given these
+        definition:
+<programlisting>
+lib a : : &lt;variant&gt;release &lt;file&gt;/pool/release/a.so ;
+lib a : : &lt;variant&gt;debug &lt;file&gt;/pool/debug/a.so ;
+lib b : : &lt;variant&gt;release &lt;file&gt;/pool/release/b.so ;
+lib b : : &lt;variant&gt;debug &lt;file&gt;/pool/debug/b.so ;
+</programlisting>
+        It's possible to use release version of <code>a</code> and debug
+        version of <code>b</code>. Had we used the <code>name</code> and
+        <code>search</code> features, the linker would always pick either
+        release or debug versions.
+      </para>
       
       <para>
         For convenience, the following syntax is allowed:
@@ -1055,14 +1075,10 @@ unit-test helpers_test : helpers_test.cpp helpers ;
         
         <listitem>
           <simpara>
-            Specify a path where dynamic libraries should be found at
-            where executable or shared library is run. This feature
-            directly affects binaries with the gcc compiler, allowing them
-            to pick specific libraries, and ignoring all environment
-            settings. On other toolsets, the binary still requires proper
-            environment settings to be run. However, Boost.Build tools
-            which run executables will notice dll-path settings and create
-            this environment automatically.
+            Specify an additional path where shared libraries should be
+            searched where the executable or shared library is run. This
+            feature only affect Unix compilers. Plase see the <link
+            linkend="bbv2.faq.dll-path">FAQ entry</link> for details.
           </simpara>
         </listitem></varlistentry>
       
@@ -1073,12 +1089,17 @@ unit-test helpers_test : helpers_test.cpp helpers ;
             Controls automatic generation of dll-path properties.
           </simpara>
           
-          <para><emphasis role="bold">Allowed values:</emphasis> <literal>off</literal>, <literal>on</literal> When this
-            property is on, usage requirements for each library will
-            include additional dll-path propertry, with the path the the
-            generated library file. This allows to run executables
-            without placing all the dependent libraries to a single
-            location.</para>
+          <para><emphasis role="bold">Allowed values:</emphasis>
+            <literal>true</literal>, <literal>false</literal>.  This property
+            is specific to Unix systems. If an executable is build with
+            <code>&lt;hardcode-dll-paths&gt;true</code>, the generated binary
+            will contain the list of all the paths to the used shared
+            libraries. As the result, the executable can be run without
+            changing system paths to shared libraries, or installing the
+            libraries to system paths. This is very convenient during
+            development. Plase see the <link
+            linkend="bbv2.faq.dll-path">FAQ entry</link> for details.
+          </para>
         </listitem></varlistentry>
     </variablelist>
   </section>
