@@ -53,6 +53,9 @@ flags mipspro LINKFLAGS : -nostdlib ;
 flags mipspro LINKFLAGS <target-type>$(SHARED_TYPES) : -shared ;
 flags mipspro LINKFLAGS <debug-symbols>off : -s ;
 
+# We better link the maths library unconditionally.
+flags mipspro FINDLIBS : m ;
+
 flags mipspro DEFINES <threading>multi : _SGI_MP_SOURCE ;
 
 flags mipspro CFLAGS : -nostdinc
