@@ -163,10 +163,6 @@ compile_eval(
 
 	switch( parse->num )
 	{
-	case EXPR_EXISTS:
-		if( ll && ll->string[0] ) status = 1;
-		break;
-
 	case EXPR_NOT:	
 		if( !ll ) status = 1;
 		break;
@@ -209,6 +205,7 @@ compile_eval(
 
 		break;
 
+	case EXPR_EXISTS:       if( lcmp( ll, L0 ) != 0 ) status = 1; break;
 	case EXPR_EQUALS:	if( lcmp( ll, lr ) == 0 ) status = 1; break;
 	case EXPR_NOTEQ:	if( lcmp( ll, lr ) != 0 ) status = 1; break;
 	case EXPR_LESS:		if( lcmp( ll, lr ) < 0  ) status = 1; break;
