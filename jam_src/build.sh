@@ -63,6 +63,8 @@ test_uname ()
 Guess_Toolset ()
 {
     if test_uname Darwin ; then BOOST_JAM_TOOLSET=darwin
+    elif test_uname IRIX ; then BOOST_JAM_TOOLSET=mipspro
+    elif test_uname IRIX64 ; then BOOST_JAM_TOOLSET=mipspro
     elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
     elif test_path icc ; then BOOST_JAM_TOOLSET=intel-linux
     elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
