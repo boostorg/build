@@ -21,12 +21,12 @@
         br.clear { clear: left }
         div.alert { color: red }
         table { align: center; border: thin; }     
-               </style>
+                   </style>
   </head>
   <!-- Things yet to document:
-           - build request, build request expansion and directly requested targets
-           - conditional properties
-         -->
+             - build request, build request expansion and directly requested targets
+             - conditional properties
+           -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -76,7 +76,7 @@
     scanning mechanism are:</p>
 
     <ul>
-      <li>Support for different scanning algorithm. C++ and XML have quite
+      <li>Support for different scanning algorithms. C++ and XML have quite
       different syntax for includes and rules for looking up included
       files.</li>
 
@@ -88,7 +88,7 @@
       <li>Proper detection of dependencies from generated file.</li>
     </ul>
 
-    <h3>Support for different scanning algorithm</h3>
+    <h3>Support for different scanning algorithms</h3>
 
     <p>Different scanning algorithm are encapsulated by objects called
     "scanners". Please see the documentation for "scanner" module for more
@@ -96,10 +96,10 @@
 
     <h3>Ability to scan the same file several times</h3>
 
-    <p>As said above, it's possible to compile C++ file twice, with different
-    include path. Therefore, include dependencies for those compilation can
-    be different. The problem is that bjam does not allow several scans of
-    the same target.</p>
+    <p>As said above, it's possible to compile a C++ file twice, with
+    different include paths. Therefore, include dependencies for those
+    compilations can be different. The problem is that bjam does not allow
+    several scans of the same target.</p>
 
     <p>The solution in Boost.Build is straigtforward. When a virtual target
     is converted to bjam target (via <tt>virtual-target.actualize</tt>
@@ -107,9 +107,10 @@
     will create different bjam targets for different scanners.</p>
 
     <p>All targets with specific scanner are made dependent on target without
-    scanner, which target is always created. This is done in case target is
-    updated. The updating action will specify target without scanner and
-    output, and we need targets with scanner to be updated as well.</p>
+    scanner, which target is always created. This is done in case the target
+    is updated. The updating action will be associated with target without
+    scanner, but if sources for that action are touched, all targets &mdash;
+    with scanner and without should be considered outdated.</p>
 
     <p>For example, assume that "a.cpp" is compiled by two compilers with
     different include path. It's also copied into some install location. In
