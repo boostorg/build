@@ -232,7 +232,6 @@ class Tester(TestCmd.TestCmd):
         self.difference = trees_difference(self.previous_tree, self.tree)
         self.difference.ignore_directories()
         self.unexpected_difference = copy.deepcopy(self.difference)
-        self.difference.pprint()
 
         self.last_build_time = time.time()
 
@@ -247,7 +246,10 @@ class Tester(TestCmd.TestCmd):
         else:
             return result
     
-
+    def fail_test(self, *args, **kw):
+        self.difference.pprint()
+        TestCmd.fail_test(self, *args, **kw)
+        
     # A number of methods below check expectations with actual difference
     # between directory trees before and after build.
     # All the 'expect*' methods require exact names to be passed.
