@@ -1,0 +1,20 @@
+
+import generators ;
+
+feature.feature bison.prefix : : free ;
+type.register Y : y ;
+generators.register-standard bison.bison : Y : C H ;
+
+rule bison ( dst dst_header : src : properties * )
+{
+    local r = [ property.select bison.prefix : $(properties) ] ;
+    if $(r)
+    {
+	PREFIX_OPT on $(<) = -p $(r:G=) ;
+    }
+}
+
+actions bison 
+{
+    bison $(PREFIX_OPT) -d -o $(<[1]) $(>)
+}

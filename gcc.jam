@@ -36,7 +36,7 @@ rule compile ( target : sources * : property-set * )
 
 actions compile
 {
-    g++ $(OPTIONS) -c -o $(<) $(>) 
+    g++ -ftemplate-depth-100 $(OPTIONS) -c -o $(<) $(>) 
 }
 
 rule link ( target : sources * : property-set * )

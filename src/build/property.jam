@@ -11,6 +11,7 @@ import errors : error ;
 # Refines 'properties' by overriding any elements for which a different
 # value is specified in 'requirements'. If the resulting property set
 # will be link-incompatible with 'properties', it is an error.
+# Conditional requirements are just added without modification.
 # On success, returns properties. On error, returns a list which first
 # element is "@error" and the other elements compose the explanation
 # string.
@@ -20,14 +21,16 @@ rule refine ( properties * : requirements * : feature-space ? )
 
     local result ;
     local error ;
-
-
+    
     # All the elements of requirements should be present in the result
     # Record them so that we can handle 'properties'.
     for local r in $(requirements)
     {
-        # Note: cannot use local here, so take an ugly name
-         __require__$(r:G) = $(r:G=) ;
+        if ! [ MATCH (:) : $(r) ]
+        {            
+            # Note: cannot use local here, so take an ugly name
+            __require__$(r:G) = $(r:G=) ;
+        }        
     }
 
     for local p in $(properties)
@@ -83,6 +86,41 @@ rule refine ( properties * : requirements * : feature-space ? )
         return [ unique $(result) $(requirements) ] ;
     }
 }
+
+# Removes all conditional properties which conditions are not met
+# For those with met conditions, removes the condition.
+rule evaluate-conditionals ( properties * )
+{
+    local base ;
+    local conditionals ;
+    for local p in $(properties)
+    {
+        if [ MATCH (:) : $(p) ]
+        {
+            conditionals += $(p) ;
+        }
+        else
+        {
+            base += $(p) ;
+        }        
+    }
+
+    local result = $(base) ;
+    for local p in $(conditionals)
+    {
+        # Separate condition and property
+        local s = [ MATCH (.*):(.*) : $(p) ] ;
+        # Split condition into individual properties
+        local c = [ regex.split $(s[1]) "," ] ;
+        # Evaluate condition
+        if $(c) in $(base)
+        {
+            result += $(s[2]) ;
+        }                
+    }
+    return $(result) ;    
+}
+
 
 # Helper for as-path, below. Orders properties with the implicit ones
 # first, and within the two sections in alphabetical order of feature
@@ -305,6 +343,16 @@ local rule __test__ ( )
 
     assert.result <toolset>gcc <rtti>off
         : refine <toolset>gcc : <rtti>off : $(test-space)
+        ;
+
+    assert.result <toolset>gcc <rtti>off <rtti>off:<define>FOO
+        : refine <toolset>gcc : <rtti>off <rtti>off:<define>FOO 
+        : $(test-space)
+        ;
+
+    assert.result <toolset>gcc <variant>release <rtti>off <define>MY_RELEASE
+        : evaluate-conditionals <toolset>gcc <variant>release <rtti>off
+          <variant>release,<rtti>off:<define>MY_RELEASE       
         ;
 
     assert.result debug
