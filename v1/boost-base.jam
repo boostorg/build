@@ -2692,3 +2692,7 @@ rule common-names ( )
 {
     return common-variant-tag ;
 }
+rule common-stage-tag ( toolset variant : subvariant-path properties * )
+{
+    return [ common-variant-tag $(toolset) $(variant) : $(subvariant-path) $(properties) ] ;
+}
