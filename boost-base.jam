@@ -118,7 +118,7 @@ rule main-from-objects
 {
     # make compiled sources a dependency of target
 
-	MakeLocate $(<) : $(LOCATE_TARGET) ;
+    MakeLocate $(<) : $(LOCATE_TARGET) ;
 
     Clean clean : $(<) ;
 
@@ -884,7 +884,7 @@ rule expand-build-request
     # described.
     return [ make-path-property-sets $(toolset)$(SLASH)$(variant)
                 : [ fixup-path-properties $(base-properties) $(free-properties) 
-    	    $(defaulted-free-properties) ]
+                  $(defaulted-free-properties) ]
                 : $(override-sets) ] ;
 }
 

@@ -70,8 +70,15 @@ flags metrowerks STDHDRS : $(METROWERKS_INCLUDE_ROOT)$(SLASH)$(gMETROWERKS_STD_I
 
 rule Link-action
 {
-    metrowerks-Link-action $(<) : $(>) ;
     IMPLIB_COMMAND on $(<) = "-implib " ; # will be "multiplied away" if not needed.
+    local command-file = $(<[1]:S=.CMD) ;
+    LOCATE on $(command-file) = $(gLOCATE($(<))) ;
+    COMMAND on $(<) = @ ;
+    metrowerks-Link-action $(<) : $(command-file) ;
+
+    list-files $(command-file) : $(>) ;
+    DEPENDS $(<) : $(command-file) ;
+    RmTemps $(<[1]) : $(command-file) ;
 }
 
 # Here we set the environment variable MWWinx86LibraryFiles (customize for other
@@ -82,7 +89,7 @@ actions metrowerks-Link-action bind NEEDLIBS
 {
     $(METROWERKS_SETUP)
     $(METROWERKS_LINK_SETUP)$(STDLIBS)
-    mwld -export dllexport -nowraplines $(LINKFLAGS) -L$(LIBPATH) -L$(STDLIBPATH) $(IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" "$(NEEDLIBS)" "$(>)" -l$(FINDLIBS)
+    mwld  -maxerrors 20 -maxwarnings 20 -export dllexport -nowraplines $(LINKFLAGS) -L$(LIBPATH) -L$(STDLIBPATH) $(IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])" "$(NEEDLIBS)" $(COMMAND)"$(>)" -l$(FINDLIBS)
 }
 
 #### Cc #####
@@ -95,7 +102,7 @@ rule Cc-action
 actions metrowerks-Cc-action
 {
     $(METROWERKS_SETUP)
-    mwcc -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -nowraplines $(CFLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    mwcc -maxerrors 20 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -nowraplines $(CFLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -107,7 +114,7 @@ rule C++-action
 actions metrowerks-C++-action
 {
     $(METROWERKS_SETUP)
-    mwcc -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -DNOMINMAX -nowraplines -lang c++ $(CFLAGS) $(C++FLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    mwcc  -maxerrors 20 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -DNOMINMAX -nowraplines -lang c++ $(CFLAGS) $(C++FLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####

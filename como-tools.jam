@@ -120,7 +120,7 @@ actions updated together piecemeal como-Archive-action
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
     $(COMO_BIN_DIRECTORY)como -o "$(<:S=)" $(>)
-	REM if exist "$(<)" set _$(<:B)_="$(<)"
-	REM $(MSVC_TOOL_PATH)link /lib /out:"$(<)" %_$(<:B)_% "$(>)"
+    REM if exist "$(<)" set _$(<:B)_="$(<)"
+    REM $(MSVC_TOOL_PATH)link /lib /out:"$(<)" %_$(<:B)_% "$(>)"
 }
 

@@ -9,7 +9,7 @@
 # compute MSVC tool path
 # You can either put the msvc bin directory in your PATH, or you can set
 # MSVCDir to point at the msvc installation directory
-MSVC_TOOL_PATH = $(MSVCDir)$(SLASH)bin$(SLASH) ;
+MSVC_TOOL_PATH ?= $(MSVCDir)$(SLASH)bin$(SLASH) ;
 MSVC_TOOL_PATH ?= "" ; # Don't clobber adjoining text if MSVCDir isn't set
 
 flags msvc CFLAGS <debug-symbols>on : /Zi ;
@@ -54,22 +54,14 @@ flags msvc LINKFLAGS <target-type>DLL : /DLL ;
 
 rule Link-action
 {
-    if $(COMMAND_FILES)
-    {
-        local command-file = $(<[1]:S=.CMD) ;
-        LOCATE on $(command-file) = $(gLOCATE($(<))) ;
-        COMMAND on $(<) = @ ;
-        msvc-Link-action $(<) : $(command-file) ;
+    local command-file = $(<[1]:S=.CMD) ;
+    LOCATE on $(command-file) = $(gLOCATE($(<))) ;
+    COMMAND on $(<) = @ ;
+    msvc-Link-action $(<) : $(command-file) ;
 
-        list-files $(command-file) : $(>) ;
-        DEPENDS $(<) : $(command-file) ;
-        RmTemps $(<[1]) : $(command-file) ;
-    }
-    else
-    {
-        COMMAND on $(<) = "" ;
-        msvc-Link-action $(<) : $(>) ;
-    }
+    list-files $(command-file) : $(>) ;
+    DEPENDS $(<) : $(command-file) ;
+    RmTemps $(<[1]) : $(command-file) ;
 }
 
 actions together msvc-Link-action bind NEEDLIBS
