@@ -241,12 +241,6 @@ if $(NT)
 
 rule Link-PYD
 {
-    if $(<[2])
-    {
-        MODE on $(<[2]) = $(IMPMODE) ;
-        Chmod $(<[2]) ;
-    }
-    
     gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) ;
     if $(UNIX) 
     {

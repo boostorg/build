@@ -188,19 +188,23 @@ rule Link-EXE
 
 rule Link-DLL
 {
-    if $(<[2])
-    {
-        MODE on $(<[2]) = $(IMPMODE) ;
-        Chmod $(<[2]) ;
-    }
-    
     gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) ;
     if $(UNIX) 
     {
         RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) $(RUN_LD_LIBRARY_PATH) : $(SPLITPATH) ] ;
         gRUN_LD_LIBRARY_PATH($(<)) += $(gLOCATE($(<[1]))) ;
     }
+    
+    if $(OS) = AIX
+    {
+        Aix-Implib-Action $(<) : $(>) ;
+    }
     Link-action $(<) : $(>) : DLL ;
+}
+
+actions Aix-Implib-Action bind import-generator-script
+{
+    "$(BOOST_ROOT)/tools/build/gen_aix_import_file.py" $(<[1]:BD=) $(>:D=) "-directory=$(<[1]:D)" -verbose=1
 }
 
 # store the shell's PATH again, just in case someone uses PATH.
