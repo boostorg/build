@@ -2,11 +2,7 @@
 import modules ;
 
 local dll-suffix = so ;
-if [ modules.peek : OS ] in NT
-{
-    dll-suffix = lib ;
-}
-if [ modules.peek : OS ] in CYGWIN 
+if [ modules.peek : OS ] in CYGWIN NT
 {
    if $toolset = gcc
    {
