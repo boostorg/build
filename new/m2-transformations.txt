@@ -29,7 +29,20 @@ EXE <------- OBJ* <-------- foo.cpp
               |
               O------ foo_moc.cpp <------- foo.h
 
-(MSVC transformation sequence, thanks to Markus Schöpflin)
+(Transofrmation sequence I need)
+
+EST.EXE <---- OBJ* <----- TARGET.CPP <------ MARKED.CPP <----- foo.cpp
+               ^            
+               |
+EST.DATA, EST.CPP <------ {EST.DATA, EST.POSITION}*     
+                            ^              ^
+                            |              |
+                            |              O---------------------O
+                            |                                    |-- foo.cpp
+                           NM.ASM <-- TARGET.CPP <--- MARKED.CPP-O
+                           
+
+(MSVC transformation seqeuence, thanks to Markus Schöpflin)
 
 The project consists of a static library (build with cl and not using
 precompiled headers), ressources and more source files (compiled using
@@ -39,8 +52,8 @@ information are build as well. A debug build is assumed.
 
 The picture gets a little more complicated if you're doing COM. :-)
 
-                                                     bscmake                
-stdafx.cpp              stdafx.sbr ---------+-----+------------> project.bsc  
+                                                     bscmake
+stdafx.cpp              stdafx.sbr ---------+-----+------------> project.bsc
 *.h        \    cl                          ^     ^    (7)
             >-------->  stdafx.obj----+     |     |
            /   (1)      project.pch   +----------------+
