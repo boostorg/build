@@ -26,11 +26,6 @@
 # BOOST_ROOT. Use native windows path names and not the
 # /cygdrive/... style.
 #
-# Set NOCYGWIN_THUNKS to 1 in your environment to build with the
-# -fvtable-thunks option to gcc. You'll need to do this if your
-# application uses COM (or DirectX). If you do, you have to compile
-# everything (including STLport) with the same options :-)
-#
 # Set NOCYGWIN_STLPORT_LIB_ID to set the STLport naming
 # convention (default is "mingw32" which looks for libraries
 # named like stlport_mingw32_stldebug.lib)
@@ -54,11 +49,6 @@ NOCYGWIN_STLPORT_LIB_ID ?= mingw32 ;
 flags gcc-nocygwin CFLAGS : -mno-cygwin ;
 flags gcc-nocygwin LINKFLAGS : -mno-cygwin ;
 flags gcc-nocygwin LINKFLAGS <threading>multi : -mthreads ;
-
-if $(NOCYGWIN_THUNKS)
-{
-  flags gcc-nocygwin C++FLAGS : -fvtable-thunks ;
-}
 
 #### Link ####
 
