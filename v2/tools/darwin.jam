@@ -46,14 +46,11 @@ flags darwin.link FRAMEWORK <framework> ;
 # uncomment to see what libtool is doing under the hood
 # flags darwin.link.dll OPTIONS : -Wl,-v ;
 
+_ = " " ;
+
 actions link bind LIBRARIES
 {
     $(CONFIG_COMMAND) $(ST_OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) -framework$(_)$(FRAMEWORK) $(OPTIONS)   
-}
-
-rule link.dll
-{
-    _ on $(<) = " " ;
 }
 
 actions link.dll bind LIBRARIES
