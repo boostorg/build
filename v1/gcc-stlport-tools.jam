@@ -12,11 +12,11 @@ set-as-singleton STLPORT_INCLUDE_DIRECTORY STLPORT_LIB_DIRECTORY STLPORT_ROOT ;
 
 if $(NT)
 {
-    GCC_STLPORT_LIB_ID = cygwin ;
+    GCC_STLPORT_LIB_ID ?= cygwin ;
 }
 else
 {
-    GCC_STLPORT_LIB_ID = gcc ;
+    GCC_STLPORT_LIB_ID ?= gcc ;
 }
 
 STLPORT_INCLUDE_DIRECTORY ?= stlport ;
