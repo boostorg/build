@@ -545,7 +545,11 @@ class linking-generator : generator
                 extra += <library-path>$(search) ;
             }
         }
-                   
+
+        # Hardcode dll paths only when linking executables.
+        # Pros: don't need to relinking libraries when installing.
+        # Cons: "standalone" libraries (plugins, python extensions)
+        # can't hardcode paths to dependent libraries.
         if [ $(property-set).get <hardcode-dll-paths> ] = true
          && [ type.is-derived $(self.target-types[1]) EXE ] 
         {
