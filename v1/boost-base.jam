@@ -508,6 +508,10 @@ rule normalize-properties
     {
         switch $(property)
         {
+            case <*><*><tag>* : result += $(property) ;
+            case <*><tag>* : result += <*>$(property) ;
+            case <tag>* : result += <*><*>$(property) ;
+            
             case <*><*><*><*@*>* : result += $(property) ;
             case <*><*><*@*>* : result += <*>$(property) ;
             case <*><*@*>* : result += <*><*>$(property) ;
