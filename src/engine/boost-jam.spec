@@ -4,10 +4,10 @@ Summary: Build tool
 Release: 1
 Source: %{name}-%{version}.tgz
 
-License: Boost License
+License: Boost Software License
 Group: Development/Tools
 URL: http://www.boost.org
-Packager: Vladimir Prus <ghost@cs.msu.su>
+Packager: Rene Rivera <grafik@redshift-software.com>
 BuildRoot: /var/tmp/%{name}-%{version}.root
 
 %description
@@ -31,8 +31,11 @@ Copyright:
     ALL WARRANTIES ARE HEREBY DISCLAIMED.
 
 Also:
-    (C) Copyright David Abrahams 2001-2003.
-    See accompanying license for terms and conditions of use.
+    Copyright (C) David Abrahams 2001-2003.
+    
+    Use, modification and distribution is subject to the
+    Boost Software License, Version 1.0. (See accompanying file
+    LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 %prep
 %setup -n %{name}-%{version}
@@ -47,7 +50,7 @@ mkdir -p $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
 install -m 755 bin/bjam $RPM_BUILD_ROOT%{_bindir}/bjam-%{version}
 ln -sf bjam-%{version} $RPM_BUILD_ROOT%{_bindir}/bjam
 ln -sf bjam-%{version} $RPM_BUILD_ROOT%{_bindir}/jam
-install -m 644 *.html Porting LICENSE $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
+install -m 644 *.html *.txt Porting $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
 
 find $RPM_BUILD_ROOT -name CVS -type d -depth -exec rm -r {} \;
 
