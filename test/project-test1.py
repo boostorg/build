@@ -15,7 +15,7 @@ expected_output="""Projects structure dump
     Project id: /boost-build-test-project-1
 
         Project root: project-test1
-        Parent project: project-test1
+        Parent project: none
         Requirements: <threading>multi <include>/home/ghost/local/include
         Default build: debug
         Source location: project-test1
@@ -35,7 +35,7 @@ expected_output="""Projects structure dump
     Project id: /cool-library
 
         Project root: project-test1/dir2
-        Parent project: project-test1/dir2
+        Parent project: none
         Requirements: <include>/home/ghost/build/boost-cvs
         Default build: debug
         Source location: project-test1/dir2
