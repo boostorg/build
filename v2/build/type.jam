@@ -58,7 +58,7 @@ rule from-file ( file : project )
     local type = $(.type$(file:S)) ;    
     if ! $(type)
     {
-        warning "cannot determine type for file $(file)" ;
+        # warning "cannot determine type for file $(file)" ;
         return [ new virtual-target $(file) :  : $(project) ] ;            
     }
     else
