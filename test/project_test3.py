@@ -27,13 +27,54 @@ a.cpp
 
 t.expect_addition("bin/gcc/debug/threading-single/a.exe")
 t.expect_content("bin/gcc/debug/threading-single/a.exe",
+"gcc/debug/threading-single\n" +
+"bin/gcc/debug/threading-single/a.obj lib/bin/gcc/debug/threading-single/b.obj " +
+"lib2/bin/gcc/debug/threading-single/c.obj lib2/bin/gcc/debug/threading-single/d.obj " +
+"lib2/helper/bin/gcc/debug/threading-single/e.obj\n"
+)
+
+t.expect_addition("lib/bin/gcc/debug/threading-single/b.obj")
+t.expect_content("lib/bin/gcc/debug/threading-single/b.obj",
 """gcc/debug/threading-single
-bin/gcc/debug/threading-single/a.obj
+lib/b.cpp
 """)
+
+t.expect_addition("lib/bin/gcc/debug/threading-single/m.exe")
+t.expect_content("lib/bin/gcc/debug/threading-single/m.exe",
+"""gcc/debug/threading-single
+lib/bin/gcc/debug/threading-single/b.obj lib2/bin/gcc/debug/threading-single/c.obj
+""")
+
+t.expect_addition("lib2/bin/gcc/debug/threading-single/c.obj")
+t.expect_content("lib2/bin/gcc/debug/threading-single/c.obj",
+"""gcc/debug/threading-single
+lib2/c.cpp
+""")
+
+t.expect_addition("lib2/bin/gcc/debug/threading-single/d.obj")
+t.expect_content("lib2/bin/gcc/debug/threading-single/d.obj",
+"""gcc/debug/threading-single
+lib2/d.cpp
+""")
+
+t.expect_addition("lib2/bin/gcc/debug/threading-single/l.exe")
+t.expect_content("lib2/bin/gcc/debug/threading-single/l.exe",
+"""gcc/debug/threading-single
+lib2/bin/gcc/debug/threading-single/c.obj bin/gcc/debug/threading-single/a.obj
+""")
+
+t.expect_addition("lib2/helper/bin/gcc/debug/threading-single/e.obj")
+t.expect_content("lib2/helper/bin/gcc/debug/threading-single/e.obj",
+"""gcc/debug/threading-single
+lib2/helper/e.cpp
+""")
+
 
 t.touch("a.cpp")
 t.run_build_system()
-t.expect_touch(["bin/gcc/debug/threading-single/a.obj", "bin/gcc/debug/threading-single/a.exe"])
+t.expect_touch(["bin/gcc/debug/threading-single/a.obj",
+                "bin/gcc/debug/threading-single/a.exe",
+                "lib2/bin/gcc/debug/threading-single/l.exe"])
 
 
 t.run_build_system(extra_args="release optimization=off,on")

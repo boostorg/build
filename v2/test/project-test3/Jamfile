@@ -1,3 +1,8 @@
 
-make a.exe : a.obj : yfc-link ;
+use-project /lib2 : lib2 ;
+
+make a.exe : a.obj lib/b.obj @/lib2/c.obj lib2@d.obj lib2@helper/e.obj : yfc-link ;
 make a.obj : a.cpp : yfc-compile ; 
+
+subproject lib2 ;
+subproject lib ;
