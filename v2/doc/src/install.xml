@@ -7,7 +7,18 @@
 
     <para>
       This section describes how to install Boost.Build from a
-      released source distribution. All paths are given relative to
+      released Boost source distribution. 
+      <footnote>
+        <para>Note that packages prepared for
+      Unix/Linux systems usually make their own choices about where to
+      put things and even which parts of Boost to include.  When we
+      say &ldquo;released source distribution&rdquo; we mean a
+      distribution of Boost as released on its SourceForge
+      <ulink url="http://sourceforge.net/project/showfiles.php?group_id=7586">project
+      page</ulink>.
+        </para>
+    </footnote>
+All paths are given relative to
       the <firstterm>Boost.Build v2 root directory</firstterm>, which is 
 
       <!-- the normal location of the document you are reading.
