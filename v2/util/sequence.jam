@@ -14,41 +14,33 @@ import assert ;
 
 # Return the elements e of $(sequence) for which [ $(predicate) e ] is
 # has a non-null value.
-rule filter ( predicate__ + : sequence__ * )
+rule filter ( predicate + : sequence * )
 {
-    # trailing underscores hopefully prevent collisions with module
-    # locals in the caller
-    local result__ ; 
+    local caller = [ CALLER_MODULE ] ;
+    local result ; 
     
-    module [ CALLER_MODULE ]
+    for local e in $(sequence)
     {
-        for local e in $(sequence__)
+        if [ modules.call-in $(caller) : $(predicate) $(e) ]
         {
-            if [ $(predicate__) $(e) ]
-            {
-                result__ += $(e) ;
-            }
+            result += $(e) ;
         }
     }
-    return $(result__) ;
+    return $(result) ;
 }
 
 # return a new sequence consisting of [ $(function) $(e) ] for each
 # element e of $(sequence).
-rule transform ( function__ + : sequence__ * )
+rule transform ( function + : sequence * )
 {
-    # trailing underscores hopefully prevent collisions with module
-    # locals in the caller
-    local result__ ; 
+    local caller = [ CALLER_MODULE ] ;
+    local result ; 
     
-    module [ CALLER_MODULE ]
+    for local e in $(sequence)
     {
-        for local e in $(sequence__)
-        {
-            result__ += [ $(function__) $(e) ] ;
-        }
+        result += [ modules.call-in $(caller) : $(function) $(e) ] ;
     }
-    return $(result__) ;
+    return $(result) ;
 }
 
 
@@ -63,23 +55,21 @@ rule less ( a b )
 # insertion-sort s using the BinaryPredicate ordered.
 rule insertion-sort ( s * : ordered * )
 {
+    local caller = [ CALLER_MODULE ] ;
     ordered ?= sequence.less ;
-    local result__ = $(s[1]) ;
-    module [ CALLER_MODULE ]
+    local result = $(s[1]) ;
+    for local x in $(s[2-])
     {
-        for local x in $(s[2-])
+        local head tail ;
+        tail = $(result) ;
+        while $(tail) && [ modules.call-in $(caller) : $(ordered) $(tail[1]) $(x) ]
         {
-            local head tail ;
-            tail = $(result__) ;
-            while $(tail) && [ $(ordered) $(tail[1]) $(x) ]
-            {
-                head += $(tail[1]) ;
-                tail = $(tail[2-]) ;
-            }
-            result__ = $(head) $(x) $(tail) ;
+            head += $(tail[1]) ;
+            tail = $(tail[2-]) ;
         }
+        result = $(head) $(x) $(tail) ;
     }
-    return $(result__) ;
+    return $(result) ;
 }
 
 # join the elements of s into one long string. If joint is supplied,

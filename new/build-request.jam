@@ -95,6 +95,8 @@ local rule __test__ ( )
     
     module $(test-space)
     {
+        local test-space = [ modules.peek build-request : test-space ] ;
+        
         import build-request ;
 
         feature toolset : gcc msvc : implicit ;

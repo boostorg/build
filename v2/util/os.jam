@@ -3,9 +3,10 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-name = $(OS) ;
-platform = $(OSPLAT) ;
-version = $(OSVER) ;
+import modules ;
+name = [ modules.peek : OS ] ;
+platform = [ modules.peek : OSPLAT ] ;
+version = [ modules.peek : OSVER ] ;
 
 rule name { return $(name) ; }
 rule platform { return $(platform) ; }
