@@ -216,6 +216,21 @@ rule remove-free ( properties * : feature-space ? )
     return $(result) ;
 }
 
+# Returns a property set which include all free properties in 'properties'.
+rule take-free ( properties * : feature-space ? )
+{
+    feature-space ?= feature ;
+    local result ;
+    for local e in $(properties)
+    {
+        if free in [ $(feature-space).attributes $(e:G) ] 
+        {
+            result += $(e) ;
+        }
+    }
+    return $(result) ;
+}
+
 local rule __test__ ( )
 {
     import class : new ;

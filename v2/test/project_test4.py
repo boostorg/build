@@ -13,21 +13,28 @@ t.run_build_system()
 
 t.expect_addition("bin/gcc/debug/threading-single/a.obj")
 t.expect_content("bin/gcc/debug/threading-single/a.obj",
-"""gcc/debug/threading-single
+"""gcc/debug/include-everything/threading-single
 a.cpp
 """)
 
 t.expect_addition("bin/gcc/debug/threading-single/a.exe")
 t.expect_content("bin/gcc/debug/threading-single/a.exe",
-"gcc/debug/threading-single\n" +
+"gcc/debug/include-everything/threading-single\n" +
 "bin/gcc/debug/threading-single/a.obj lib/bin/gcc/debug/optimization-on/threading-single/b.obj\n"
 )
 
 t.expect_addition("lib/bin/gcc/debug/optimization-on/threading-single/b.obj")
 t.expect_content("lib/bin/gcc/debug/optimization-on/threading-single/b.obj",
-"""gcc/debug/optimization-on/threading-single
+"""gcc/debug/include-everything/optimization-on/threading-single
 lib/b.cpp
 """)
+
+t.expect_addition("bin/gcc/debug/threading-single/main-target-b.exe/b.exe")
+t.expect_content("bin/gcc/debug/threading-single/main-target-b.exe/b.exe",
+"gcc/debug/define-MACROS/include-everything/threading-single\n" +
+"bin/gcc/debug/threading-single/a.obj\n"
+)
+
 
 
 # We don't yet make targets depend on Jamfile, so need to start from scratch

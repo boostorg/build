@@ -8,6 +8,7 @@
 
 import targets ;
 import class : class new ;
+import property ;
 
 rule make-target-class ( name : project : sources * : requirements * 
                          : make-rule + : default-build )
@@ -19,7 +20,7 @@ rule make-target-class ( name : project : sources * : requirements *
     rule construct ( source-targets * : properties * )
     {
         local t = [ new virtual-target $(self.name)
-                    : $(self.project) : $(properties) ] ;
+                    : $(self.project) : [ property.remove-free $(properties) ] ] ;
         local a = [ new action $(t) : $(source-targets) : $(self.make-rule) 
                     : $(properties) ] ;
         $(t).action $(a) ;
@@ -35,6 +36,18 @@ rule make ( target-name : sources * : generating-rule : requirements * )
     local location = [ project.attribute $(project-module) location ] ;
     local ptarget = [ project.target $(location) ] ;
     local default-build = [ project.attribute $(project-module) default-build ] ;
+
+
+    local pr = [ project.attribute $(project-module) requirements ] ;
+
+    # Don't do anything meaningfull on errors. This will be handled when 
+    # we implement target types.
+    requirements = [ property.refine $(pr) : $(requirements) ] ;
+    if $(requirements[1]) = "@error" 
+    {
+        error "Conflicting requirements for target:" $(requirements) ;
+    }
+
 
     local target = [ $(ptarget).main-target $(target-name) ] ;
 

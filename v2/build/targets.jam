@@ -211,6 +211,26 @@ rule main-target ( name : project )
             }                    
         } 
 
+        # Add additional subvariant element for the targets which free properties
+        # are not equal to project's.
+
+        local pr = [ property.take-free 
+                       [ project.attribute $(self.project) requirements ] ] ;
+
+        for local v in $(result)
+        {
+            local action = [ $(v).action ] ;
+            if $(action) 
+            {
+                local properties = [ property.take-free [ $(action).properties  ] ] ;
+        
+                if $(properties) != $(pr)
+                {
+                    $(v).extra-path [ sequence.join main-target- $(self.name) ] ;
+                }
+            }
+        }                
+
         # Now return virtual targets for the only alternative
         return $(result) ;
     }
@@ -291,7 +311,7 @@ rule basic-target ( name : project
                         }
                     }
                     self.generated.$(property-path) = 
-                        [ construct $(source-targets) : $(properties) ] ;                                                                                                                                        
+                        [ construct $(source-targets) : $(rproperties) ] ;                                                                                                                                        
                 } 
                 else
                 {
@@ -392,7 +412,7 @@ rule virtual-target ( name : project
         self.dependencies = [ sequence.merge $(self.dependencies)
                                : [ sequence.insertion-sort $(d) ] ] ;
     }
-
+    
     # If 'a' is supplied, sets action to 'a'.
     # Returns the action currently set.
     rule action ( a ? )
@@ -401,6 +421,12 @@ rule virtual-target ( name : project
             self.action = $(a) ;
         }
         return $(self.action) ;
+    }
+
+    # Specified an extra element to be added to the target path.
+    rule extra-path ( p ) 
+    {
+        self.extra-path = $(p) ;
     }
 
     # Generates all the actual targets and build instructions needed to build
@@ -423,9 +449,9 @@ rule virtual-target ( name : project
             local a = [ action ] ;
             if $(a) {
                 $(a).actualize ;
-                local subvariant = [ $(a).properties ] ;
                 local path = [ os.path.join [ project.attribute $(self.project) location ] 
-                               "bin" [ property.as-path $(subvariant) ]  ] ;
+                               "bin" [ property.as-path [ subvariant ] ] 
+                               $(self.extra-path) ] ;
                 path = [ os.path.native $(path) ] ;
                 LOCATE on $(self.actual-name) = $(path) ;
                 DEPENDS $(self.actual-name) : $(path) ;
