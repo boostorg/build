@@ -261,12 +261,12 @@ rule basic-target ( name : project
     rule generate-source ( source : properties * )
     {
         # Separate target name from properties override
-        local split = [ MATCH "([^<]*)(/<.*)?" : $(source) ] ;
+        local split = [ MATCH "^([^<]*)(/(<.*))?$" : $(source) ] ;
         local id = $(split[1]) ;
         local sproperties = ;
-        if $(split[2])
+        if $(split[3])
         {
-            sproperties = [ property.make [ feature.split $(split[2]) ] ] ;
+            sproperties = [ property.make [ feature.split $(split[3]) ] ] ;
         }
 
         # Check if such target exists
