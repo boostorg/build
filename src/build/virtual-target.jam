@@ -609,8 +609,7 @@ class action
             self.actualized = true ;
 
             local ps = [ properties ] ;
-            local properties = [ adjust-properties [ $(ps).raw ] ] ;
-
+            local properties = [ adjust-properties $(ps) ] ;
 
             local actual-targets ;
             for local i in [ targets ]
@@ -629,7 +628,7 @@ class action
                 : $(properties) ;
             
             indirect.call $(self.action-name) 
-              $(actual-targets) : $(self.actual-sources) : $(properties)
+              $(actual-targets) : $(self.actual-sources) : [ $(properties).raw ] 
                 ;
             
             # Since we set up creating action here, we also set up
@@ -694,9 +693,9 @@ class action
     # This is last chance to fix properties, for example to adjust includes
     # to get generated headers correctly. Default implementation returns
     # its argument.
-    rule adjust-properties ( properties * )
+    rule adjust-properties ( property-set )
     {
-        return $(properties) ;
+        return $(property-set) ;
     }
 
 

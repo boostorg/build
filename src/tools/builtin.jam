@@ -460,10 +460,11 @@ class compile-action : action
     # For all virtual targets for the same dependency graph as self, 
     # i.e. which belong to the same main target, add their directories
     # to include path.
-    rule adjust-properties ( properties * )
+    rule adjust-properties ( property-set )
     {        
         local s = [ $(self.targets[1]).creating-subvariant ] ;
-        return $(properties) [ $(s).implicit-includes "include" : H ] ;
+        return [ $(property-set).add-raw 
+          [ $(s).implicit-includes "include" : H ] ] ;
     }    
 }
 

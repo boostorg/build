@@ -194,14 +194,15 @@ rule handle-flag-value ( value * : properties * )
     }
     else
     {
-        result += $(values) ;
+        result += $(value) ;
     }      
     return $(result) ;
 }
 
 
-rule set-target-variables ( rule-or-module targets + : properties * )
+rule set-target-variables ( rule-or-module targets + : property-set )
 { 
+    properties = [ $(property-set).raw ] ;
     for local f in $(.$(rule-or-module).flags) 
     {
         local variable = $(.$(rule-or-module).variable.$(f)) ;
@@ -229,7 +230,7 @@ rule set-target-variables ( rule-or-module targets + : properties * )
     local next = [ MATCH ^(.+)\\.([^\\.])* : $(rule-or-module) ] ;
     if $(next)
     {
-        set-target-variables $(next) $(targets) : $(properties) ;        
+        set-target-variables $(next) $(targets) : $(property-set) ;        
     }    
 }
 
