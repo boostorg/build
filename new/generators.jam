@@ -641,11 +641,16 @@ rule register ( g )
 }
     
 # Creates new instance of the 'generator' class and registers it.
+# Retursn the creates instance.
+# Rationale: the instance is returned so that it's possible to first register
+# a generator and then call 'run' method on that generator, bypassing all
+# generator selection.
 rule register-standard ( id : source-types + : target-types + : requirements * )
 {
     local g = [ new generator $(id) : $(source-types) : $(target-types)
       : $(requirements) ] ;
-    register $(g) ;
+    register $(g) ;   
+    return $(g) ;
 }
 
 # Creates new instance of the 'composing-generator' class and
@@ -655,6 +660,7 @@ rule register-composing ( id : source-types + : target-types + : requirements * 
     local g = [ new generator $(id) true : $(source-types) 
                 : $(target-types) : $(requirements) ] ;
     register $(g) ;
+    return $(g) ;
 }
 
 # Returns all generators which belong to 'toolset', i.e. which
