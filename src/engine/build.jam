@@ -171,10 +171,15 @@ else if $(MAC)
     locate-target ?= :bin.$(OS:L)$(OSPLAT:L) ;
     platform = $(OS:L)$(OSPLAT:L) ;
 }
-else
+else if $(OSPLAT)
 {
     locate-target ?= bin.$(OS:L)$(OSPLAT:L) ;
     platform = $(OS:L)$(OSPLAT:L) ;
+}
+else
+{
+    locate-target ?= bin.$(OS:L) ;
+    platform = $(OS:L) ;
 }
 if $(debug)
 {
