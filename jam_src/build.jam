@@ -376,8 +376,14 @@ actions .yyacc
 .yyacc jamgram.y jamgramtab.h : jamgram.yy ;
 
 # How to build the grammar.
-yacc ?= [ GLOB $(PATH) : yacc yacc.exe ] ;
-yacc ?= [ GLOB $(PATH) : bison bison.exe ] ;
+if $(NT)
+{
+    local SUFEXE = .exe ;
+}
+
+SUFEXE ?= "" ;
+yacc ?= [ GLOB $(PATH) : yacc$(SUFEXE) ] ;
+yacc ?= [ GLOB $(PATH) : bison$(SUFEXE) ] ;
 yacc = $(yacc[1]) ;
 switch $(yacc:D=:S=)
 {
