@@ -93,7 +93,7 @@ rule Link-action
 # for xlc, we repeat all libraries so that dependencies are always resolved
 actions xlc-Link-action bind NEEDLIBS
 {
-    $(VA_CXX_COMPILER:R=$(VA_TOOL_PATH)) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -bdynamic
+    $(VA_CXX_COMPILER:R=$(VA_TOOL_PATH)) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -bdynamic -l$(FINDLIBS)
 }
 
 #### Cc #####
