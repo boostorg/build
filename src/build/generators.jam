@@ -124,6 +124,7 @@ class generator
       # was not specified.
     
     : requirements *
+    : optional-properties *
                 )
     {                    
         self.id = $(id) ;
@@ -131,6 +132,7 @@ class generator
         self.source-types = $(source-types) ;
         self.target-types-and-names = $(target-types-and-names) ;
         self.requirements = $(requirements) ;
+        self.optional-properties = $(optional-properties) ;
         
         for local e in $(target-types-and-names)
         {        
@@ -160,7 +162,7 @@ class generator
         # target types (and thus has the base type as an optional
         # property).
         self.optional-properties
-          = [ feature.expand <base-target-type>$(self.target-types) ]
+          += [ feature.expand <base-target-type>$(self.target-types) ]
             ;
     }
                             
@@ -647,10 +649,11 @@ rule register ( g )
 # Rationale: the instance is returned so that it's possible to first register
 # a generator and then call 'run' method on that generator, bypassing all
 # generator selection.
-rule register-standard ( id : source-types + : target-types + : requirements * )
+rule register-standard ( id : source-types + : target-types + : requirements * 
+   : optional-properties * )
 {
     local g = [ new generator $(id) : $(source-types) : $(target-types)
-      : $(requirements) ] ;
+      : $(requirements) : $(optional-properties) ] ;
     register $(g) ;   
     return $(g) ;
 }
@@ -946,8 +949,8 @@ local rule construct-with-caching (
             generators.dout [ indent ] "*** putting to cache?" ;
             for local c in $(cresult)
             {
+                generators.dout [ indent ] "*** cloning " $(c) ;                
                 local cc = [ virtual-target.clone-template $(c) : $(t) : $(project) ] ;
-                generators.dout [ indent ] "*** cloning " $(c) ;
                 generators.dout [ indent ] "*** cloned" $(cc) --- $(cc) ;
                 result += $(cc) ;
             }
