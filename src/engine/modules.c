@@ -141,7 +141,7 @@ LIST* imported_modules(module_t* module)
 {
     LIST *result = L0;
 
-    if ( module->rules )
+    if ( module->imported_modules )
         hashenumerate( module->imported_modules, add_module_name, &result );
 
     return result;

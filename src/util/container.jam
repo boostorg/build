@@ -11,12 +11,15 @@ import class : * ;
 # That is containers with containers in them, specifically so we can tell
 # literal values from node values.
 #
-rule node (
-    value ? # Optional value to set node to initially.
-    )
+xclass node 
 {
-    self.value = $(value) ;
-    
+    rule __init__ (
+      value ? # Optional value to set node to initially.
+    )
+    {
+        self.value = $(value) ;
+    }
+        
     # Set the value of this node, passing nothing will clear it.
     #
     rule set ( value ? )
@@ -31,23 +34,26 @@ rule node (
         return $(self.value) ;
     }
 }
-class node ;
+
 
 # A simple vector. Interface mimics the C++ std::vector and std::list,
 # with the exception that indices are one (1) based to follow Jam standard.
 #
 # TODO: Possibly add assertion checks.
 #
-rule vector (
-    values * # Initial contents of vector.
-    )
+xclass vector : node 
 {
     import numbers : range ;
     import utility ;
     import sequence ;
-
-    node.__init__ ;
-    self.value = $(values) ;
+        
+    rule __init__ (
+      values * # Initial contents of vector.
+    )
+    {
+        node.__init__ ;
+        self.value = $(values) ;
+    }    
     
     # Get the value of the first element.
     #
@@ -235,19 +241,13 @@ rule vector (
         }
     }
 }
-class vector : node ;
-
-module class@vector
-{
-    import numbers : range ;
-}
 
 local rule __test__ ( )
 {
     import assert ;
-    import class : new ;
+    import class : xnew ;
     
-    local l = [ new vector ] ;
+    local l = [ xnew vector ] ;
     assert.result 0 : $(l).size ;
     assert.result : $(l).indices ;
     assert.result "[" "]" : $(l).str ;
@@ -270,7 +270,7 @@ local rule __test__ ( )
     $(l).erase 3 4 ;
     assert.result 2 : $(l).size ;
     
-    local l2 = [ new vector q w e r t y ] ;
+    local l2 = [ xnew vector q w e r t y ] ;
     assert.result 6 : $(l2).size ;
     $(l).push-back $(l2) ;
     assert.result 3 : $(l).size ;
@@ -282,23 +282,23 @@ local rule __test__ ( )
     $(l2).pop-back ;
     assert.result t : $(l2-alias).back ;
     
-    local l3 = [ new vector ] ;
-    $(l3).push-back [ new vector 1 2 3 4 5 ] ;
-    $(l3).push-back [ new vector a b c ] ;
+    local l3 = [ xnew vector ] ;
+    $(l3).push-back [ xnew vector 1 2 3 4 5 ] ;
+    $(l3).push-back [ xnew vector a b c ] ;
     assert.result "[" "[" 1 2 3 4 5 "]" "[" a b c "]" "]" : $(l3).str ;
-    $(l3).push-back [ new vector [ new vector x y z ] [ new vector 7 8 9 ] ] ;
+    $(l3).push-back [ xnew vector [ xnew vector x y z ] [ xnew vector 7 8 9 ] ] ;
     assert.result 1 : $(l3).at 1 : 1 ;
     assert.result b : $(l3).at 2 : 2 ;
     assert.result a b c : $(l3).get-at 2 ;
     assert.result 7 8 9 : $(l3).get-at 3 : 2 ;
 
-    local l4 = [ new vector 4 3 6 ] ;
+    local l4 = [ xnew vector 4 3 6 ] ;
     $(l4).sort ;
     assert.result 3 4 6 : $(l4).get ;
 
     assert.false $(l4).equal $(l3) ;
-    local l5 = [ new vector 3 4 6 ] ;
+    local l5 = [ xnew vector 3 4 6 ] ;
     assert.true $(l4).equal $(l5) ;
-    local l6 = [ new vector [ new vector 1 2 3 ] ] ;
-    assert.true $(l6).equal [ new vector [ new vector 1 2 3 ] ] ;
+    local l6 = [ xnew vector [ xnew vector 1 2 3 ] ] ;
+    assert.true $(l6).equal [ xnew vector [ xnew vector 1 2 3 ] ] ;
 }

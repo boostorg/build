@@ -5,7 +5,7 @@
 
 #  Defines standard features and rules.
 
-import class : class new ;
+import class : class new xnew ;
 
 import feature : feature compose ;
 import toolset : flags ;
@@ -442,14 +442,17 @@ rule lib ( name : sources * : requirements * : default-build *
 }
 IMPORT $(__name__) : lib : : lib ;
 
-rule searched-lib-generator ( )
+xclass searched-lib-generator : generator
 {
-    # The requirements cause the generators to be tried *only* when we're building
-    # lib target and there's 'search' feature. This seems ugly --- all we want
-    # is make sure searched-lib-generator is not invoced deep in transformation
-    # search.
-    generator.__init__ searched-lib-generator : : SEARCHED_LIB ;
-
+    rule __init__ ( )
+    {
+        # The requirements cause the generators to be tried *only* when we're building
+        # lib target and there's 'search' feature. This seems ugly --- all we want
+        # is make sure searched-lib-generator is not invoced deep in transformation
+        # search.
+        generator.__init__ searched-lib-generator : : SEARCHED_LIB ;
+    }
+    
     rule run ( project name ? : property-set : sources * : multiple ? )
     {
         if $(name)
@@ -477,9 +480,7 @@ rule searched-lib-generator ( )
     }
 }
 
-class searched-lib-generator : generator ;
-
-generators.register [ new searched-lib-generator ] ;
+generators.register [ xnew searched-lib-generator ] ;
 
 
 xclass compile-action : action 
@@ -507,25 +508,25 @@ xclass compile-action : action
     }    
 }
 
-rule C-compiling-generator ( id : source-types + : target-types + :
-                             requirements * )
+xclass C-compiling-generator : generator
 {
-    generator.__init__ $(id) : $(source-types) : $(target-types) :
-                       $(requirements) ;
-    
+    rule __init__ ( id : source-types + : target-types + :
+        requirements * )
+    {
+        generator.__init__ $(id) : $(source-types) : $(target-types) :
+          $(requirements) ;
+    }
+        
     rule action-class ( )
     {
         return compile-action ;
     }
 }
 
-class C-compiling-generator : generator ;
-
-
 rule register-c-compiler ( id : source-types + : target-types + :
                             requirements * )
 {
-    local g = [ new C-compiling-generator $(id) : $(source-types) 
+    local g = [ xnew C-compiling-generator $(id) : $(source-types) 
                 : $(target-types) : $(requirements) ] ;
     generators.register $(g) ;
 }
@@ -646,18 +647,21 @@ xclass link-action : action
 } 
 
 
-rule linking-generator ( id 
-    composing ? : # Specify if generator is composing. The generator will be
-                  # composing if non-empty string is passed, or parameter is
-                  # not given. To make generator non-composing, pass empty
-                  # string ("")
-    source-types + : target-types + : 
-                         requirements * )
+xclass linking-generator : generator
 {
-    composing ?= true ;
-    generator.__init__ $(id) $(composing) : $(source-types) : $(target-types) :
-                       $(requirements) ;
-    
+    rule __init__ ( id 
+        composing ? : # Specify if generator is composing. The generator will be
+        # composing if non-empty string is passed, or parameter is
+        # not given. To make generator non-composing, pass empty
+        # string ("")
+        source-types + : target-types + : 
+        requirements * )
+    {
+        composing ?= true ;
+        generator.__init__ $(id) $(composing) : $(source-types) : $(target-types) :
+          $(requirements) ;
+    }
+        
     rule run ( project name ? : property-set : sources + :  multiple ? )
     {   
         local result = [ generator.run $(project) $(name) : $(property-set)
@@ -688,13 +692,10 @@ rule linking-generator ( id
     }
 }                             
 
-class linking-generator : generator ;
-
-
 rule register-linker ( id composing ? : source-types + : target-types + :
                             requirements * )
 {
-    local g = [ new linking-generator $(id) $(composing) : $(source-types) 
+    local g = [ xnew linking-generator $(id) $(composing) : $(source-types) 
                 : $(target-types) : $(requirements) ] ;
     generators.register $(g) ;
 }
