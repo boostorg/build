@@ -75,12 +75,12 @@ rule boost-test ( sources + : target-type : requirements * : test-name ? : defau
 
 # Helper for boost-test above.  Uses dynamic scoping to access
 # boost-test's locals.
-local rule dump-test ( target : requirements * )
+local rule dump-test ( targets + : requirements * )
 {
-    local srcs = [ on $(target) get-var-value source-files ] ;
+    local srcs = [ on $(targets) get-var-value source-files ] ;
     
     # Pick any source file names off the associated main target as well.
-    srcs += [ on $(gTARGET_SUBVARIANT($(target))) get-var-value source-files ] ;
+    srcs += [ unique [ on $(gTARGET_SUBVARIANT($(targets))) get-var-value source-files ] ] ;
     
     local pwd = [ PWD ] ;
     
