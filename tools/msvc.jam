@@ -352,6 +352,6 @@ else # CYGWIN
 
 actions link
 {
-    $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" $(.implib)"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(>:W)"
+    $(.LD) -nologo $(LINKFLAGS) /out:"$(<[1]:W)" $(.implib)"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(>:W)"
 }
         
