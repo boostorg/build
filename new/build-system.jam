@@ -7,6 +7,7 @@ import sequence ;
 import modules ;
 import feature ;
 import build-request ;
+import errors : error ;
 
 import builtin ;
 import make ;
@@ -63,8 +64,7 @@ for local id in $(target-ids)
         local t = [ project.find-target $(id) : "." ] ;
         if ! $(t)
         {
-            print.wrapped-text "error: target" $(id) "does not exist" ;
-            EXIT ;
+            error target $(id) does not exist ;
         }
         else
         {
