@@ -83,7 +83,7 @@ tests = [ "project_test1",
           "prebuilt",
           "project_dependencies",
           "build_dir",
-#          "searched_lib",   # failing with duplicate name for actual target; I don't know why
+          "searched_lib",
           "make_rule",
           "alias",
           "alternatives",
