@@ -537,7 +537,7 @@ rule composing-generator ( id : source-types * : target-types + :
         }        
     }
                   
-    rule run ( project name ? : property-set : sources + ) 
+    rule run ( project name ? : property-set : sources + : multiple ? ) 
     {
         generators.dout [ indent ] "  composing generator" $(self.id) ;
 
@@ -762,13 +762,23 @@ local rule find-viable-generators ( target-type : property-set : allow-composing
     # quite specific requirements.
     local t = * [ type.all-bases $(target-type) ] ;
     
+    generators.dout  [ indent ] find-viable-generators target-type= $(target-type) 
+      property-set= [ $(property-set).as-path ]
+        $(allow-composing)
+          ;
+    
     while $(t[1])
     {
+        generators.dout  [ indent ] "trying type" $(t[1]) ;
         for local g in $(.generators.$(t[1]))
         {
+            generators.dout [ indent ] "trying generator" [ $(g).source-types ] -> [ $(g).target-types ] ;
+            
+            allow-composing = 1 ;
             # Avoid trying the same generator twice on different levels.
             if ! $(g) in $(.active-generators) 
-              && ! ( [ is-a $(g) : composing-generator ] && ! $(allow-composing) )
+              && ( $(allow-composing) || ! ( [ is-a $(g) : composing-generator ]
+                   ) )
               {       
                   local m = [ $(g).match-rank $(property-set) ] ;
                   if $(m) 
