@@ -11,8 +11,8 @@ import generators ;
 import common ;
 import errors ; 
 
-generators.register-standard fop.render : FO : PDF ;
-generators.register-standard fop.render : FO : PS ;
+generators.register-standard fop.render.pdf : FO : PDF ;
+generators.register-standard fop.render.ps : FO : PS ;
 
 rule init ( fop-command ? : java-home ? : java ? )
 {
@@ -83,13 +83,25 @@ local rule find-by-absolute-path ( target )
     }
 }
 
-rule render ( source : target : properties * )
+rule render.pdf ( source : target : properties * )
 {
     find-by-absolute-path $(source) ;
     find-by-absolute-path $(target) ;
 }
 
-actions render
+rule render.ps ( source : target : properties * )
+{
+    find-by-absolute-path $(source) ;
+    find-by-absolute-path $(target) ;
+}
+
+
+actions render.pdf
 {
   $(.FOP_SETUP) $(.FOP_COMMAND) $(>) $(<)
+}
+
+actions render.ps
+{
+  $(.FOP_SETUP) $(.FOP_COMMAND) $(>) -ps $(<)
 }
