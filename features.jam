@@ -20,7 +20,7 @@ feature optimization : off speed space ;
 feature inlining : off on full ;
 feature debug-symbols : on off : ;
 free-feature debug-store : object database ;
-free-feature user-interface : console gui ;
+free-feature user-interface : console gui ; # windows only, practically
 
 feature wide-character-support : on off ;
 feature exception-handling : on off ;
@@ -93,11 +93,9 @@ COMMON_PROPERTIES ?=
     <struct-alignment>auto
     <eh-model>default
     <threading>single
-    <user-interface>console
     <wide-character-support>on
     <exception-handling>on
     <rtti>on
-    <user-interface>console
     <shared-linkable>false
     
     # Borland link lines will need work to find the right libraries for unicode

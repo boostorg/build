@@ -52,6 +52,12 @@ flags metrowerks CFLAGS <inlining>on : -inline on ;
 flags metrowerks CFLAGS <inlining>full : -inline auto -inline level=8 ;
 flags metrowerks CFLAGS <user-interface>console/<runtime-link>dynamic : -prefix UseDLLPrefix.h ;
 
+flags metrowerks LINKFLAGS <user-interface>console : "-subsystem console" ;
+flags metrowerks LINKFLAGS <user-interface>gui : "-subsystem windows" ;
+flags metrowerks LINKFLAGS <user-interface>wince : "-subsystem wince" ;
+flags metrowerks LINKFLAGS <user-interface>native : "-subsystem native" ;
+flags metrowerks LINKFLAGS <user-interface>auto : "-subsystem auto" ;
+
 flags metrowerks CFLAGS <eh-model>msvc : -exc ms ;
 
 if ! $(BOOST_CODEWARRIOR_6)
