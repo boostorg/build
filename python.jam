@@ -358,8 +358,9 @@ rule extension ( name : sources + : requirements * : default-BUILD * )
 
 # boost-python-runtest target : python-script sources : requirements : local-build : args
 #
-# declare two python module tests: $(<).test which builds when out-of-date, and
-# $(<).run which builds unconditionally.
+# declare a python module test $(<).test which builds when out-of-date
+#
+# pass --python-test-all on the command-line to force rebuilding
 rule boost-python-runtest (
   target : python-script sources + : requirements * : local-build * : args * )
 {
@@ -371,8 +372,7 @@ rule boost-python-runtest (
     local gPYTHON_TEST_ARGS = $(args) $(PYTHON_TEST_ARGS) ;
 
     # declare the two subsidiary tests.
-    declare-local-target $(<) : $(>) : $(BOOST_PYTHON_V2_PROPERTIES) : $(4) : PYTHON_TEST ;
-    declare-local-target $(<) : $(>) : $(PYTHON_PROPERTIES) : $(4) <suppress>true : PYTHON_RUNTEST ;
+    declare-local-target $(<) : $(>) : $(BOOST_PYTHON_PROPERTIES) : $(4) : PYTHON_TEST ;
 }
 
 rule boost-python-test ( name : sources + : requirements * : default-BUILD * )
@@ -380,9 +380,7 @@ rule boost-python-test ( name : sources + : requirements * : default-BUILD * )
     extension $(name) : $(sources) : $(requirements) <suppress>true : $(4) ;
 }
 
-# special rules for two new target types: PYTHON_TEST and PYTHON_RUNTEST.
-# These are identical except that PYTHON_TEST runs the test when out-of-date, and
-# PYTHON_RUNTEST runs the test unconditionally. These are used by boost-python-runtest.
+# special rules for a new target type PYTHON_TEST used by boost-python-runtest.
 SUFPYTHON_TEST = .test ;
 gGENERATOR_FUNCTION(PYTHON_TEST) = python-test-target ;
 rule python-test-target ( test-target : sources + )
@@ -391,7 +389,12 @@ rule python-test-target ( test-target : sources + )
     Clean clean : $(test-target) ; # remove the test-target as part of any clean operation
     type-DEPENDS test : $(test-target) ;
     MakeLocate $(test-target) : $(LOCATE_TARGET) ;
-    MakeLocate $(test-target) : $(LOCATE_TARGET) ;
+    
+    if --python-test-all in $(ARGV)
+    {
+        ALWAYS $(test-target) ;
+        NOTFILE $(test-target) ;
+    }    
 }
 
 if $(UNIX)
@@ -409,37 +412,17 @@ PYTHON_SHELL_LIBPATH ?= $(gSHELL_LIBPATH) ;
 
 actions python-test-target bind PYTHON
 {
-    $(SHELL_SET)PATH=$(run.path)$(gAPPEND_PATH)
+    $(SHELL_SET)PATH="$(run.path)"$(gAPPEND_PATH)
     $(SHELL_EXPORT)PATH
-    $(SHELL_SET)$(PYTHON_SHELL_LIBPATH)=$(run.library_path)$(gAPPEND_LD_LIBRARY_PATH)
+    $(SHELL_SET)$(PYTHON_SHELL_LIBPATH)="$(run.library_path)"$(gAPPEND_LD_LIBRARY_PATH)
     $(SHELL_EXPORT)$(PYTHON_SHELL_LIBPATH)
     $(SHELL_SET)PYTHONPATH=$(PYTHONPATH)
     $(SHELL_EXPORT)PYTHONPATH
-    $(PYTHON_LAUNCH) $(PYTHON) $(PYTHON_ARGS) "$(>)" $(ARGS)
-}
-
-SUFPYTHON_RUNTEST = .run ;
-gGENERATOR_FUNCTION(PYTHON_RUNTEST) = python-runtest-target ;
-rule python-runtest-target ( test-target : sources + )
-{
-    type-DEPENDS runtest : $(test-target) ;
-    python-runtest-aux $(test-target) : $(sources) ;
-    NOTFILE $(test-target) ;
-    ALWAYS $(test-target) ;
-}
-actions python-runtest-target bind PYTHON
-{
-    $(SHELL_SET)PATH=$(run.path)$(gAPPEND_PATH)
-    $(SHELL_EXPORT)PATH
-    $(SHELL_SET)$(PYTHON_SHELL_LIBPATH)=$(run.library_path)$(gAPPEND_LD_LIBRARY_PATH)
-    $(SHELL_EXPORT)$(PYTHON_SHELL_LIBPATH)
-    $(SHELL_SET)PYTHONPATH=$(PYTHONPATH)
-    $(SHELL_EXPORT)PYTHONPATH
-    $(PYTHON_LAUNCH) $(PYTHON) $(PYTHON_ARGS) "$(>)" $(ARGS)
+    "$(PYTHON_LAUNCH)" "$(PYTHON)" "$(PYTHON_ARGS)" "$(>)" "$(ARGS)"
 }
 
 # This is the rule that actually causes the test to run. It is used by
-# bothe python-test-target and python-runtest-target.
+# python-test-target
 rule python-runtest-aux ( target : sources + )
 {
     DEPENDS $(target) : $(>) ;
