@@ -353,11 +353,14 @@ rule abstract-file-target ( name
                 local property-grist = [ property.as-path $(properties) ] ;
                 grist = $(location-grist)/$(property-grist) ;
             }
-
             if ! $(grist)
             {
                 grist = $(location-grist) ;
             }
+            if $(self.path)
+            {
+                grist = $(grist)@$(self.path)@ ;
+            }            
             if $(self.extra-grist)
             {
                 grist = $(grist)/$(self.extra-grist) ;
