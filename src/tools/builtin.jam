@@ -228,17 +228,17 @@ class searched-lib-target : abstract-file-target
     }
 }    
 
-type.register LIB : : : main ;
+type.register LIB ;
 
 # register the given type on the specified OSes, or on remaining OSes
 # if os is not specified.
-local rule declare-type ( os * : type : suffixes * : base-type ? : main ? ) 
+local rule declare-type ( os * : type : suffixes * : base-type ? )
 {
     if ! [ type.registered $(type) ]
     {
         if ( ! $(os) ) || [ os.name ] in $(os)
         {
-            type.register $(type) : $(suffixes) : $(base-type) : $(main) ;
+            type.register $(type) : $(suffixes) : $(base-type) ;
         }
     }
 }
@@ -247,24 +247,24 @@ local rule declare-type ( os * : type : suffixes * : base-type ? : main ? )
 # Common target types.
 #
 
-declare-type NT CYGWIN : OBJ : obj : : main ;
-declare-type : OBJ : o : : main ;
+declare-type NT CYGWIN : OBJ : obj ;
+declare-type : OBJ : o ;
 
-declare-type NT CYGWIN : STATIC_LIB : lib a : LIB : main ;
-declare-type : STATIC_LIB : a : LIB : main ;
+declare-type NT CYGWIN : STATIC_LIB : lib a : LIB ;
+declare-type : STATIC_LIB : a : LIB ;
 
-declare-type : IMPORT_LIB : : STATIC_LIB : main ;
+declare-type : IMPORT_LIB : : STATIC_LIB ;
 type.set-generated-target-suffix IMPORT_LIB : : lib ;
 
-declare-type NT CYGWIN : SHARED_LIB : dll : LIB : main ;
-declare-type : SHARED_LIB : so : LIB : main ;
+declare-type NT CYGWIN : SHARED_LIB : dll : LIB ;
+declare-type : SHARED_LIB : so : LIB ;
 
-declare-type : SEARCHED_LIB : : LIB : main ;
+declare-type : SEARCHED_LIB : : LIB ;
 
-declare-type NT CYGWIN : EXE : exe : : main ;
-declare-type : EXE : : : main ;
+declare-type NT CYGWIN : EXE : exe ;
+declare-type : EXE ;
 
-declare-type : PYTHON_EXTENSION : : SHARED_LIB : main ;
+declare-type : PYTHON_EXTENSION : : SHARED_LIB ;
 # We can't give "dll" suffix to PYTHON_EXTENSION, because
 # we would not know what "a.dll" is: python extenstion or
 # ordinary library. Therefore, we specify only suffixes

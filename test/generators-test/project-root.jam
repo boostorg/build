@@ -36,7 +36,7 @@ import nm ;
 type.register CPP_MARKED : marked.cpp : CPP ;
 type.register POSITIONS : positions ;
 type.register NM.TARGET.CPP : target.cpp : CPP ;
-type.register NM_EXE : : EXE : main ;
+type.register NM_EXE : : EXE ;
 
 generators.register-standard nm.target-source : CPP_MARKED : NM.TARGET.CPP ;
 generators.register-standard nm.cpp-mark : CPP : CPP_MARKED POSITIONS ;

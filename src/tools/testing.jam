@@ -60,12 +60,12 @@ feature.feature testing.input-file : : free dependency ;
 
 # Register target types.
 type.register TEST : test ;
-type.register COMPILE : : TEST : main ;
-type.register COMPILE_FAIL : : TEST : main ;
-type.register RUN_OUTPUT : run : : main ;
-type.register RUN : : TEST : main ;
-type.register RUN_FAIL : : TEST : main ;
-type.register UNIT_TEST : passed : TEST : main ;
+type.register COMPILE : : TEST ;
+type.register COMPILE_FAIL : : TEST ;
+type.register RUN_OUTPUT : run ;
+type.register RUN : : TEST ;
+type.register RUN_FAIL : : TEST ;
+type.register UNIT_TEST : passed : TEST ;
 
 # Declare the rules which create main targets. 
 # While the 'type' module already creates rules with the same names for us,

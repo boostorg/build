@@ -96,7 +96,7 @@ int main() {}
 
 t.write("project-root.jam", """ 
 import type ;
-type.register MYEXE : : EXE : main ;
+type.register MYEXE : : EXE ;
 type.set-generated-target-suffix MYEXE : <optimization>off : myexe ; 
 """)
 

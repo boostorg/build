@@ -35,8 +35,7 @@ feature.feature base-target-type : : composite optional free ;
 # If 'suffixes' are provided, they given all the suffixes that mean a file is of 'type'.
 # Also, the first element gives the suffix to be used when constructing and object of
 # 'type'.
-# The 'main' parameter is ignored for backward compatibility.
-rule register ( type : suffixes * : base-type ? : main ? ) 
+rule register ( type : suffixes * : base-type ? )
 {
     # Type names cannot contain hyphens, because when used as
     # feature-values they will be interpreted as composite features
