@@ -11,7 +11,7 @@ t.set_tree("direct-request-test")
 t.run_build_system(extra_args="define=MACROS")
 
 t.expect_addition("bin/$toolset/debug/" 
-                  * (List("a.o b.o b.dll a.exe")))
+                  * (List("a.obj b.obj b.dll a.exe")))
 		  
 # Regression test: direct build request was not working
 # when there's more than one level of 'build-project'

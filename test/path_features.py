@@ -7,7 +7,11 @@ t.write("project-root.jam", "import gcc ;")
 t.write("Jamfile", "lib a : a.cpp : <include>. ;")
 t.write("a.cpp", """
 #include <a.h>
-void foo() {}
+void
+# ifdef _WIN32
+__declspec(dllexport)
+# endif 
+foo() {}
 """)
 t.write("a.h", "")
 

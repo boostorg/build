@@ -9,5 +9,13 @@
 // 
 
 #ifdef MACROS
-void foo() {}
+void
+# ifdef _WIN32
+__declspec(dllexport)
+# endif 
+foo() {}
 #endif
+
+# ifdef _WIN32
+int __declspec(dllexport) force_implib_creation;
+# endif 

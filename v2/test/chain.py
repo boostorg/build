@@ -37,15 +37,16 @@ else
 
 IMPORT $(__name__) : create : : create ;
 
-exe a : l ;
+exe a : l dummy.cpp ;
 
-# needs to be static lib for Windows - main can't appear in DLL
+# needs to be static lib for Windows - main cannot appear in DLL
 static-lib l : a.cpp b.cpp ;
 
 make b.cpp : : create ;
 
 ''')
 t.write("a.cpp", "")
+t.write("dummy.cpp", "// msvc needs at least one object file\n")
 
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug/a.exe")
