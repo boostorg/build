@@ -293,24 +293,44 @@ flags msvc.link FINDLIBS_SA <find-shared-library> ;
 flags msvc.link LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
 
 
-# Declare action for creating static libraries
-# If library exists, remove it before adding files. See
-# http://article.gmane.org/gmane.comp.lib.boost.build/4241    
-# for rationale.
 rule archive ( targets + : sources * : properties * )    
 {
     common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;             
-}
-actions archive 
-{    
-    $(RM) "$(<[1])"
-    $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(<[2])"
 }
 
 rule link ( targets + : sources * : properties * )
 {
     common.response-file $(targets) : $(sources) : $(targets[2]) 
       : $(properties) ;
+}
+
+rule link.dll ( targets + : sources * : properties * )
+{
+    common.response-file $(targets) : $(sources) : $(targets[3]) : $(properties) ;
+    DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
+}    
+
+# Declare action for creating static libraries
+# If library exists, remove it before adding files. See
+# http://article.gmane.org/gmane.comp.lib.boost.build/4241    
+# for rationale.
+if [ os.name ] in NT
+{    
+    # The 'DEL' command would issue a message to stdout
+    # if the file does not exist, so need a check.
+    actions archive 
+    {  
+        if exist "$(<[1])" DEL "$(<[1])"  
+        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(<[2])"
+    }
+}
+else
+{
+    actions archive 
+    {  
+        $(RM) "$(<[1])"
+        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(<[2])"
+    }
 }
         
 # incremental linking a DLL causes no end of problems: if the
@@ -319,32 +339,6 @@ rule link ( targets + : sources * : properties * )
 # rebuilt every time. I'm not sure that incremental linking is
 # such a great idea in general, but in this case I'm sure we
 # don't want it.
-
-if [ os.name ] in NT
-{        
-    rule link.dll ( targets + : sources * : properties * )
-    {
-        common.response-file $(targets) : $(sources) : $(targets[3]) : $(properties) ;
-        DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
-    }
-    
-    rule archive ( targets + : sources * : properties * )    
-    {
-        common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;
-    }
-
-}
-else # CYGWIN
-{
-    rule link.dll ( targets + : sources + : properties * )
-    {
-        common.response-file $(targets) : $(sources) : $(targets[3]) : $(properties) ;        
-        .cygpath = "cygpath -d " ;
-        DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
-    }
-
-}
-
 actions link bind DEF_FILE
 {
     $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(<[2]:W)"
