@@ -207,7 +207,7 @@ rule select-python-library ( toolset variant : properties * )
     {
         if <target-type>PYD in $(properties)
         {
-            properties = [ replace $(properties) : <link-format>default <link-format>bundle ] ;
+            properties += <bundle-loader>$(PYTHON_ROOT)/Python ;
         }
         properties += <framework>$(PYTHON_FRAMEWORK) ;
     }
