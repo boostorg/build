@@ -8,8 +8,8 @@
 
 LIST *sequence_select_highest_ranked( PARSE *parse, FRAME *frame )
 {
-   // Returns all of 'elements' for which corresponding element in parallel
-   // list 'rank' is equal to the maximum value in 'rank'.
+   /* Returns all of 'elements' for which corresponding element in parallel */
+   /* list 'rank' is equal to the maximum value in 'rank'.                  */
 
     LIST* elements = lol_get( frame->args, 0 );    
     LIST* rank = lol_get( frame->args, 1 );    
