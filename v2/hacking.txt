@@ -50,6 +50,7 @@ When submitting a patch, please:
   - send patches in unified diff format,
     (using either "cvs diff -u" or "diff -u")
   - provide a log message together with the patch
+  - put the patch and the log message as attachment to your email.
 
 The purpose of log message serves to communicate what was changed, and
 *why*. Without a good log message, you might spend a lot of time later,
