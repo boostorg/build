@@ -100,7 +100,7 @@ rule update ( name : existing-translation sources + : requirements * )
 # The human editable source, containing translation.
 type.register gettext.PO : po ; 
 # The machine readable message catalog.
-type.register gettext.catalog : mo : : main ;
+type.register gettext.catalog : mo ;
 # Intermediate type produce by extracting translations from
 # sources.
 type.register gettext.POT : pot ; 
