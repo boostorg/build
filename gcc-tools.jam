@@ -98,7 +98,7 @@ rule Link-action
 # for gcc, we repeat all libraries so that dependencies are always resolved
 actions gcc-Link-action bind NEEDLIBS
 {
-    $(GCC_BIN_DIRECTORY)g++ $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,.
+    $(GCC_BIN_DIRECTORY)g++ $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH:T) -L$(STDLIBPATH:T) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -Wl,-rpath-link,. -Wl,-soname,$(<:D=).$(BOOST_VERSION)
 }
 
 actions gcc-dllwrap bind NEEDLIBS
