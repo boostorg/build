@@ -324,7 +324,17 @@ int use_bat_file(char* command)
     char *p = command;
     
     char inquote = 0;
-    
+
+    p += strspn( p, " \t" );
+
+    /* spawnvp can't handle any paths with spaces or quoted filenames with no directory prefix */
+    if ( *p == '"' )
+    {
+        char* q = p + 1 + strcspn( p + 1, "\" /\\" );
+        if ( *q == '"' || *q == ' ' )
+            return 1;
+    }
+        
     /* Look for newlines and unquoted i/o redirection */
     do
     {
@@ -382,6 +392,10 @@ void execnt_unit_test()
         { "x\n ", 0 },
         { "x\ny", 1 },
         { "x\n\n y", 1 },
+        { "\"x\"", 1 },
+        { "\"x y\"", 1 },
+        { "\"x/y\"", 0 },
+        { "\"x\\y\"", 0 },
         { "echo x > foo.bar", 1 },
         { "echo x < foo.bar", 1 },
         { "echo x \">\" foo.bar", 0 },
@@ -489,6 +503,18 @@ execcmd(
         fclose( f );
 
         string = cmdtab[ slot ].tempfile;
+        
+        if( DEBUG_EXECCMD )
+        {
+            if (shell)
+                printf("using user-specified shell: %s", shell->string);
+            else
+                printf("Executing through .bat file\n");
+        }
+    }
+    else if( DEBUG_EXECCMD )
+    {
+        printf("Executing raw command directly\n");
     }
 
     /* Forumulate argv */

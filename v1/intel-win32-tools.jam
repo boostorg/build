@@ -12,7 +12,6 @@
 # variables to point at the intel-win32 installation directory
 INTEL_PATH ?= $(INTELC) ;
 INTEL_TOOL_PATH ?= "$(INTEL_PATH)"/bin/ ;
-INTEL_TOOL_PATH ?= "" ; # Don't clobber adjoining text if INTELROOT isn't set
 
 # if you have vc6 and vc7 installed, you may want your intel compiler
 # to use the VC7 libraries. In that case, you might set

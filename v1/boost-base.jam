@@ -1554,6 +1554,8 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
         EXIT unknown target type for $(target) ;
     }
     
+    gTARGET_TYPE($(subvariant)) = $(target-type) ;
+    
     # LOCATE_TARGET affects where built targets are generated. We move it
     # relative to the default location based on the subvariant 
     local LOCATE_TARGET
