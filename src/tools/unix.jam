@@ -14,6 +14,7 @@ import generators ;
 import type ;
 import set ;
 import order ;
+import builtin ;
 
 class unix-linking-generator : linking-generator
 {
@@ -92,6 +93,32 @@ class unix-archive-generator : generator
     }    
 }
 
+class unix-searched-lib-generator : searched-lib-generator
+{
+    import unix ;
+    rule __init__ ( * : * )
+    { 
+        generator.__init__ 
+          $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+    
+    rule optional-properties ( )
+    {
+        return $(self.requirements) ;
+    }
+              
+    rule run ( project name ? : property-set : sources * : multiple ? )
+    {
+        local result = [ searched-lib-generator.run $(project) $(name) 
+          : $(property-set) : $(sources) : $(multiple) ] ;
+        
+        unix.set-library-order $(sources) : $(property-set) : $(result) ;
+        
+        return $(result) ;
+    }    
+}
+
+
 
 # Declare generators
 generators.register [ new unix-linking-generator unix.link : LIB OBJ : EXE 
@@ -103,6 +130,9 @@ generators.register [ new unix-archive-generator unix.archive : OBJ : STATIC_LIB
 generators.register [ new unix-linking-generator unix.link.dll : LIB OBJ : SHARED_LIB 
     : <toolset>unix ] ;
 
+generators.register [ new unix-searched-lib-generator 
+   unix.searched-lib-generator : : SEARCHED_LIB : <toolset>unix ] ;
+
 
 # The derived toolset must specify their own actions.
 actions link {
@@ -113,6 +143,10 @@ actions link.dll {
 
 actions archive {    
 }
+
+actions searched-lib-generator {    
+}
+
 
 
 .order = [ new order ] ;
@@ -158,6 +192,7 @@ rule set-library-order ( sources * : property-set : result * )
 
 rule order-libraries ( libraries * )
 {
-    return [ $(.order).order $(libraries) ] ;
+    local r = [ $(.order).order $(libraries) ] ;
+    return $(r) ;
 }
      
