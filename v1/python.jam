@@ -41,7 +41,11 @@ if $(PYTHON_WINDOWS)
       ;
     
     CYGWIN_PYTHON_ROOT ?= /usr ;
-    PYTHON_ROOT ?= $(CYGWIN_PYTHON_ROOT) ;
+    if ! $(NT)
+    {
+        PYTHON_ROOT ?= $(CYGWIN_PYTHON_ROOT) ;
+    }
+    
     if $(CYGWIN_PYTHON_ROOT) = /usr
     {
         CYGWIN_PYTHON_DLL_PATH ?= /bin ;
@@ -129,39 +133,52 @@ else if $(UNIX)
     }
 }
 
-# Locate the python executable
-PYTHON ?= <executable@>python$(SUFEXE) ;
-SEARCH on $(PYTHON) = $(PYTHON_ROOT)/PCbuild $(PYTHON_ROOT)/bin $(PYTHON_ROOT) $(RUN_PATH) ;
-
-# And the debugging version
-PYTHON_D ?= $(PYTHON:S=)_d$(PYTHON:S) ;
-SEARCH on $(PYTHON_D) =  $(PYTHON_ROOT)/PCbuild $(PYTHON_ROOT)/bin $(PYTHON_ROOT) $(RUN_PATH) ;
-
+#
+# Locate the python executable(s)
+#
 CYGWIN_ROOT ?= c:/cygwin ;
 {
-    local cyg = $(CYGWIN_ROOT) "" ;
-    
-    for d in "" _D
+    for local cyg in "" CYGWIN_
     {
-        local d_D = _DEBUG ;
-        local debug = $(d$(d)) ; # "" or _DEBUG
-
-        # select target description variable
-        local var = CYGWIN_PYTHON$(d) ; 
-        
-        # assign default target name
-        $(var) ?= <executable@>python$(CYGWIN_PYTHON$(debug)_VERSION).exe ;
-
-        # choose the appropriate root directory/ies to search for the target
-        local r = $(CYGWIN_PYTHON$(debug)_ROOT) ;
-        switch $(r)
+        for local d in "" _D
         {
-            case [/\\]* : # in case of unix-style path
-              r = $(CYGWIN_ROOT)$(r) $(r) ; # re-root for windows
+            local d_D = _DEBUG ;
+            local debug = $(d$(d)) ; # "" or _DEBUG
+
+            # select base name of variables
+            local var-base = $(cyg)PYTHON$(debug) ; 
+            
+            # Base defaults for the debug build on the non-debug
+            $(var-base)_VERSION ?= $($(cyg)PYTHON_VERSION) ;
+            $(var-base)_ROOT ?= $($(cyg)PYTHON_ROOT) ;
+            
+            # Version number element of executable name
+            local exe-version = $($(var-base)_VERSION) ;
+            if $(NT) && ! $(cyg) { exe-version = "" ; }
+            
+            # assign default target name
+            local executable = $(cyg)PYTHON$(d) ;
+            $(executable) ?= <$(cyg)EXE$(d)@>python$(exe-version)$(SUFEXE) ;
+
+            # choose the appropriate root directory/ies to search for the target
+            local r = $($(var-base)_ROOT) ;
+            if $(NT)
+            {
+                switch $(r)
+                {
+                    case [/\\]* : # in case of unix-style path
+                      r = $(CYGWIN_ROOT)$(r) $(r) ; # re-root for windows
+                }
+            }
+            
+            # set up search path
+            SEARCH on $($(executable))
+              = $(r)/bin           # Standard locations
+                $(r)               # Standard locations
+                $(r)/PCBuild       # In case building from a windows development Python
+                $(RUN_PATH)        # Just look in the path
+                ;
         }
-        
-        # set up search path
-        SEARCH on $($(var)) = $(r)/bin $(PYTHON_ROOT)/bin $(RUN_PATH) ;
     }
 }
 
@@ -322,11 +339,9 @@ if $(NT)
 
 rule Link-PYD
 {
-    gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) ;
     if $(UNIX) 
     {
-        RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
-        gRUN_LD_LIBRARY_PATH($(<)) += $(gLOCATE($(<[1]))) ;
+        LINK_LIBPATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
         
         if $(OS) = AIX
         {
@@ -335,6 +350,7 @@ rule Link-PYD
             Aix-Implib-Action $(<) : $(>) ;
         }
     }
+    gRUN_PYTHONPATH($(<)) += $(gLOCATE($(<[1]))) ;
     .do-link $(<) : $(>) : PYD ;
 }
 
@@ -367,6 +383,11 @@ rule extension ( name : sources + : requirements * : default-BUILD * )
     declare-local-target $(name) : $(sources) : $(requirements) : $(default-BUILD) : PYD ;
 }
 
+gGENERATOR_FUNCTION(TEST_PYD) = run-test PYD  ;
+SUFTEST_PYD = .run ;
+
+declare-build-succeed-test RUN_PYD : TEST_PYD ;
+
 # boost-python-runtest target : python-script sources : requirements : local-build : args
 #
 # declare a python module test $(<).test which builds when out-of-date
@@ -375,14 +396,15 @@ rule extension ( name : sources + : requirements * : default-BUILD * )
 rule boost-python-runtest (
   target : python-script sources + : requirements * : local-build * : args * )
 {
+    local gRUN_TEST_ARGS = $(args) ;
+    local gRUN_TEST_INPUT_FILES = [ FGristFiles $(python-script) ] ;
+
     # tell Jam that the python script is relative to this directory
-    SEARCH on [ FGristFiles $(python-script) ] = $(SEARCH_SOURCE) ;
+    SEARCH on $(gRUN_TEST_INPUT_FILES) = $(SEARCH_SOURCE) ;
 
     # The user can add additional arguments in PYTHON_TEST_ARGS.
     local gPYTHON_TEST_ARGS = $(args) $(PYTHON_TEST_ARGS) ;
-
-    # declare the two subsidiary tests.
-    declare-local-target $(<) : $(>) : $(BOOST_PYTHON_PROPERTIES) : $(4) : PYTHON_TEST ;
+    return [ boost-test $(sources) : RUN_PYD : $(requirements) : $(target) : $(local-build) ] ;
 }
 
 rule boost-python-test ( name : sources + : requirements * : default-BUILD * )
@@ -390,70 +412,11 @@ rule boost-python-test ( name : sources + : requirements * : default-BUILD * )
     extension $(name) : $(sources) : $(requirements) <suppress>true : $(4) ;
 }
 
-# special rules for a new target type PYTHON_TEST used by boost-python-runtest.
-SUFPYTHON_TEST = .test ;
-gGENERATOR_FUNCTION(PYTHON_TEST) = python-test-target ;
-rule python-test-target ( test-target : sources + )
+# Returns the executable to use for testing a Python module
+rule test-executable(PYD) ( target-to-test )
 {
-    python-runtest-aux $(test-target) : $(sources) ;
-    Clean clean : $(test-target) ; # remove the test-target as part of any clean operation
-    type-DEPENDS test : $(test-target) ;
-    MakeLocate $(test-target) : $(LOCATE_TARGET) ;
-    
-    if --python-test-all in $(ARGV)
-    {
-        ALWAYS $(test-target) ;
-        NOTFILE $(test-target) ;
-    }    
-}
-
-if $(NT)
-{
-    PYTHON_SHELL_LIBPATH = LD_LIBRARY_PATH ;
-}
-PYTHON_SHELL_LIBPATH ?= $(gSHELL_LIBPATH) ;
-
-actions python-test-target bind PYTHON
-{
-    $(SHELL_SET)PATH="$(run.path)"$(gAPPEND_PATH)
-    $(SHELL_EXPORT)PATH
-    $(SHELL_SET)$(PYTHON_SHELL_LIBPATH)="$(run.library_path)"$(gAPPEND_LD_LIBRARY_PATH)
-    $(SHELL_EXPORT)$(PYTHON_SHELL_LIBPATH)
-    $(SHELL_SET)PYTHONPATH=$(PYTHONPATH)
-    $(SHELL_EXPORT)PYTHONPATH
-    "$(PYTHON_LAUNCH)" "$(PYTHON)" "$(PYTHON_ARGS)" "$(>)" "$(ARGS)"
-}
-
-# This is the rule that actually causes the test to run. It is used by
-# python-test-target
-rule python-runtest-aux ( target : sources + )
-{
-    DEPENDS $(target) : $(>) ;
-
-    ARGS on $(target) += $(gPYTHON_TEST_ARGS) ;
-    
-    # Some tests need an extra command-line arg if built with
-    # msvc. Checking the target grist is a cheap way to
-    # find out. 
-    switch $(target)
-    {
-        case <*\\\\msvc\\\\*>* : ARGS on $(target) += --broken-auto-ptr ;
-        case <*\\\\intel-win32\\\\*>* : ARGS on $(target) += --broken-auto-ptr ;
-    }
-
     # choose the right python executable
     local python = $(PYTHON) ;
-    local splitpath = $(SPLITPATH) ;
-    
-    # compute the PYTHONPATH environment variable that will allow the test to
-    # find all of the modules on which it depends.
-    local pythonpath =
-      $(gLOCATE($(>[1])))                     # location of python test file
-          $(gRUN_PATH($(target)))                 # location of module dependencies
-          [ join-path $(TOP) libs python test ]   # location of doctest
-          $(>:D)                                  # directory of python driver file(s)
-          $(PYTHONPATH)                           # base PYTHONPATH from environment
-          ;
     
     if $(NT)
     {
@@ -466,20 +429,6 @@ rule python-runtest-aux ( target : sources + )
         if $(gCURRENT_TOOLSET) in $(gcc-compilers)
         {
             python = $(CYGWIN_PYTHON$(d)) ;
-            splitpath = ":" ;
-            
-            local pp ;
-            for local p in $(pythonpath)
-            {
-                # if already rooted...
-                if $(p:R=xx) = $(p)
-                {
-                    p = [ split-path $(p) ] ;
-                    p = [ join-path /cygdrive [ MATCH ^(.).* : $(p[1]) ] $(p[2-]) ] ;
-                }
-                pp += $(p) ;
-            }
-            pythonpath = $(pp:T) ;
         }
         else
         {
@@ -487,27 +436,7 @@ rule python-runtest-aux ( target : sources + )
         }
     }
     
-    # adding the dummy at the end fixes a problem which causes a
-    # trailing space to be added to the last path.
-    PYTHONPATH on $(target) = [ join $(pythonpath) "" : $(splitpath) ] ;
-    
-    # set the path so that DLLs linked into extension modules will be
-    # found
-    run.path on $(target) = [ join
-        $(gRUN_PATH($(target)))                 # location of module dependencies
-        $(>:D)                                  # directory of python driver file(s)
-        : $(SPLITPATH) ] ;                      # platform path separator
-
-    
-    if ( ! $(NT) ) || $(gCURRENT_TOOLSET) in $(gcc-compilers)
-    {
-        run.library_path on $(target) 
-          = $(gRUN_LD_LIBRARY_PATH($(target)):J=$(SPLITPATH)) ;
-    }
-
-    
-    PYTHON on $(target) = $(python) ;
-    DEPENDS $(target) : $(python) ;
+    return $(python) ;
 }
 
 rule check-python-config ( )

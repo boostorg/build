@@ -427,7 +427,7 @@ rule Link-action
 # for gcc, we repeat all libraries so that dependencies are always resolved
 actions gcc-Link-action bind NEEDLIBS NEEDIMPS
 {
-    $(SHELL_SET)$(gSHELL_LIBPATH)=$(RUN_LD_LIBRARY_PATH)$(gAPPEND_LD_LIBRARY_PATH)
+    $(SHELL_SET)$(gSHELL_LIBPATH)=$(LINK_LIBPATH)$(gAPPEND_LD_LIBRARY_PATH)
     $(SHELL_EXPORT)$(gSHELL_LIBPATH)
     $(.GXX[1]:R=$(GCC_BIN_DIR)) $(.GXX[2-]) $(IMPLIB_COMMAND)$(<[2]) $(LINKFLAGS) -o "$(<[1])$(OUTTAG)" -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" "$(IMPLIB_FLAGS)$(NEEDIMPS)" -l$(FINDLIBS) $(LNOPT)$(RPATH_LINK). $(LNOPT)$(SONAME)$(<[1]:D=)$(SOTAG)
     $(ACTION_1)$(LN)$(_)-fs$(_)"$(<[1]:D=)$(OUTTAG)"$(_)"$(<[1])"

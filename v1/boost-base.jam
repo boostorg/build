@@ -94,14 +94,14 @@ rule detect-build-tools
 
 # lib: generator function
 #
-rule library-file
+rule library-file ( target : sources + )
 {
     LibraryFromObjects $(<) : [ Objects $(>) ] ;
 }
 
 # exe: generator function
 #
-rule executable-file
+rule executable-file ( target : sources + )
 {
     type-DEPENDS exe : $(<) ;
     main-from-objects $(<) : [ Objects $(>) ] : EXE ;
@@ -206,7 +206,7 @@ rule Link-EXE
     RUN_PATH on $(<) = [ join [ unique $(gRUN_PATH($(<))) $(gTOOLSET_LIB_PATH) ] : $(SPLITPATH) ] ;
     if $(UNIX) 
     {
-        RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
+        LINK_LIBPATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
     }
     
     return $(extra-files) ;
@@ -214,11 +214,10 @@ rule Link-EXE
 
 rule Link-DLL
 {
-    gRUN_PATH($(<)) += $(gLOCATE($(<[1]))) $(gTOOLSET_LIB_PATH) ;
+    gRUN_LD_LIBRARY_PATH($(<)) += $(gLOCATE($(<[1]))) $(gTOOLSET_LIB_PATH) ;
     if $(UNIX) 
     {
-        RUN_LD_LIBRARY_PATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
-        gRUN_LD_LIBRARY_PATH($(<)) += $(gLOCATE($(<[1]))) ;
+        LINK_LIBPATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
 
         if $(OS) = AIX
         {
@@ -245,7 +244,7 @@ actions Aix-Implib-Action bind import-generator-script
 RUN_PATH ?= $(PATH) ;
 if $(UNIX)
 {
-    RUN_LD_LIBRARY_PATH ?= $($(gSHELL_LIBPATH)) ;
+    LINK_LIBPATH ?= $($(gSHELL_LIBPATH)) ;
     gAPPEND_LD_LIBRARY_PATH = ":$"$(gSHELL_LIBPATH) ;
     gAPPEND_PATH = ":$"PATH ;
 } 
@@ -262,33 +261,11 @@ if $(NT)
 PATH = $(RUN_PATH) ;
 if $(UNIX)
 {
-    $(gSHELL_LIBPATH) = $(RUN_LD_LIBRARY_PATH) ;
+    $(gSHELL_LIBPATH) = $(LINK_LIBPATH) ;
 } 
 
 DOLLAR = "$" ;
   
-# A simple action to run an executable target
-if $(UNIX) 
-{
-    actions Run
-    {
-        $(SHELL_SET)PATH=$(RUN_PATH):$PATH
-        $(SHELL_EXPORT)PATH
-        $(SHELL_SET)$(gSHELL_LIBPATH)=$(RUN_LD_LIBRARY_PATH):$$(gSHELL_LIBPATH)
-        $(SHELL_EXPORT)$(gSHELL_LIBPATH)
-        $(<) $(COMMAND-LINE)
-    }
-}
-else
-{
-    actions Run
-    {
-        $(SHELL_SET)PATH=$(RUN_PATH);%PATH%
-        $(SHELL_EXPORT)PATH
-        $(<) $(COMMAND-LINE)
-    }
-}
-
 # bubble variable-name
 #
 # Helper function for sort, below
@@ -1664,14 +1641,57 @@ else
   gIMPORT_SUFFIX(LIB) = .a ;
 }
 
+#
+# prepare path constants
+#
+{
+    # The names of path variables that are set on targets
+    .run-path-vars = LD_LIBRARY_PATH PATH PYTHONPATH ;
+
+    for local v in $(.run-path-vars)
+    {
+        .shell-var($(v)) = $(v) ;
+    }
+    
+    # Dynamic libraries are actually found on PATH
+    if $(NT) || ( $(UNIX) = $(CYGWIN) )
+    {
+        .shell-var(LD_LIBRARY_PATH) = PATH ;
+    }
+
+    # The names of path variables in the shell
+    .run-path-shell-vars = [ unique $(.shell-var($(.run-path-vars))) ] ;
+    
+    # Record the original value of each shell variable
+    for local v in $(.run-path-shell-vars)
+    {
+        .run-path-shell-var-value($(v)) = $($(v)) ;
+    }
+    
+    if $(NT)
+    {
+        .env-prefix = % ; 
+        .env-suffix = % ;
+    }
+    else
+    {
+        .env-prefix = "$" ;
+        .env-suffix = "" ;
+    }
+}
+
+
+
 # Helper
 rule depend-on-libs ( targets + : libs * )
 {
     LIBPATH on $(<) += [ unique $(gLOCATE($(>))) ] ;
     DEPENDS $(<) : $(>) ;
     # To run these targets, we need everything needed to run the libraries
-    gRUN_PATH($(<)) = [ unique $(gRUN_PATH($(<))) $(gRUN_PATH($(>))) ] ;
-    gRUN_LD_LIBRARY_PATH($(<)) = [ unique $(gRUN_LD_LIBRARY_PATH($(<))) $(gRUN_LD_LIBRARY_PATH($(>))) ] ;
+    for local v in $(.run-path-vars)
+    {
+        gRUN_$(v)($(<)) = [ unique $(gRUN_$(v)($(<))) $(gRUN_$(v)($(>))) ] ;
+    }
 }
 
 rule depend-on-static ( targets + : static-libs * )

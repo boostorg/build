@@ -169,7 +169,7 @@ rule Link-action
 
 actions darwin-Link-action bind NEEDLIBS NEEDIMPS
 {
-    $(SHELL_SET)$(gSHELL_LIBPATH)=$(RUN_LD_LIBRARY_PATH)
+    $(SHELL_SET)$(gSHELL_LIBPATH)=$(LINK_LIBPATH)
     $(SHELL_EXPORT)$(gSHELL_LIBPATH)
     $(.GCC_BIN_DIR)$(.GXX) $(LINKFLAGS) -o "$(<[1])" "$(>)" \
       -F$(FRAMEWORKS:D) -framework$(_)$(FRAMEWORKS:D=) \
@@ -179,7 +179,7 @@ actions darwin-Link-action bind NEEDLIBS NEEDIMPS
 
 actions darwin-Link-DyLib-action bind NEEDLIBS NEEDIMPS
 {
-    $(SHELL_SET)$(gSHELL_LIBPATH)=$(RUN_LD_LIBRARY_PATH)
+    $(SHELL_SET)$(gSHELL_LIBPATH)=$(LINK_LIBPATH)
     $(SHELL_EXPORT)$(gSHELL_LIBPATH)
     ld -dynamic -m -r -d $(DLLFLAGS) -o "$(<[1]:S=.lo)" "$(>)" \
     && \

@@ -5,7 +5,7 @@
 if ! $(.testing.jam-included)
 {
 .testing.jam-included = "}" ; # The brace makes emacs indentation happy
-      
+
 # Decide which toolsets should be treated like an ordinary (unix) GCC installation
 gcc-compilers = [ MATCH ^(gcc.*)$ : $(TOOLS) ] ;
 mingw-compilers = [ MATCH ^(mingw.*)$ ^(gcc-nocygwin.*) : $(TOOLS) ] ;
@@ -187,7 +187,7 @@ rule declare-build-fail-test ( test-type : dependency-type )
 # test-file-generator argument, this is a target generator function
 # for target types declared with declare-build-succeed-test and
 # declare-build-fail-test, above.
-rule build-test ( test-file-generator test-file + : sources + : requirements * )
+rule build-test ( test-file-generator test-file + : sources * : requirements * )
 {
     # Get the target type of the current target out of the build properties
     local target-type = [ get-values <target-type> : $(gBUILD_PROPERTIES) ] ;
@@ -208,8 +208,7 @@ rule build-test ( test-file-generator test-file + : sources + : requirements * )
     RMOLD $(test-file) ;
     
     # Call dependency-type's generator function to attempt the build
-    local ignored = [
-        $(gGENERATOR_FUNCTION($(dependency-type))) $(dependency) : $(sources) : $(requirements) ] ;
+    $(gGENERATOR_FUNCTION($(dependency-type))) $(dependency) : $(sources) : $(requirements) ;
 
     # Generator functions don't handle this job for us; perhaps they should.
     set-target-variables $(dependency) ;
@@ -250,36 +249,104 @@ rule compile-fail ( sources + : requirements * : test-name ? )
 
 ### Rules for testing whether a program runs ###
 
-gGENERATOR_FUNCTION(RUN_TEST) = run-test ;
-SUFRUN_TEST = .run ;
-rule run-test ( run-target : sources + : requirements * )
+gGENERATOR_FUNCTION(TEST_EXE) = run-test EXE  ;
+SUFTEST_EXE = .run ;
+
+rule test-executable(EXE) ( target-to-test )
 {
-    if $(requirements) != $(EmPTY-vAriable)
+    return $(target-to-test) ;
+}
+
+rule nt-paths-to-cygwin ( paths * )
+{
+    local result ;
+    for local p in $(paths)
     {
-        ECHO non-empty requirements! ;
+        # if already rooted...
+        if [ MATCH ^([A-Za-z]:[/\\]) : $(p) ]
+        {
+            p = [ split-path $(p) ] ;
+            p = [ join-path /cygdrive [ MATCH ^(.).* : $(p[1]) ] $(p[2-]) ] ;
+        }
+        result += $(p:T) ;
     }
-    
-    local executable = $(run-target:S=$(SUFEXE)) ; 
+    return $(result) ;
+}
+
+rule run-test ( type-to-test run-target : sources * )
+{
+    local targets-to-test = $(run-target:S=$(SUF$(type-to-test))) ; 
     local parent = $(run-target:S=.test) ;
     local main-target = $(gTARGET_SUBVARIANT($(parent))) ;
     
-    # Move important data from the test target to the executable
-    gRUN_LD_LIBRARY_PATH($(executable)) = $(gRUN_LD_LIBRARY_PATH($(parent))) ;
-    gRUN_PATH($(executable)) = $(gRUN_PATH($(parent))) ;
+    set-target-variables $(targets-to-test) ;
+    generate-dependencies $(main-target) : $(targets-to-test) ;
     
-    set-target-variables $(executable) ;
-    generate-dependencies $(main-target) : $(executable) ;
-    
-    executable-file $(executable) : $(sources) : $(requirements) ;
+    if $(sources)
+    {
+        $(gGENERATOR_FUNCTION($(type-to-test))) $(targets-to-test) : $(sources) ;
+    }
     
     # The .test file goes with the other subvariant targets
     # normalization is a hack to get the slashes going the right way on Windoze
     local LOCATE_TARGET = [ FDirName [ split-path $(LOCATE_TARGET) ] ] ;
     MakeLocate $(run-target) : $(LOCATE_TARGET) ;
     
-    DEPENDS $(run-target) : $(executable) $(gRUN_TEST_INPUT_FILES) ;
+    local executable = [ test-executable($(type-to-test)) $(targets-to-test[1]) ] ;
+    DEPENDS $(run-target) : $(executable) $(targets-to-test) $(gRUN_TEST_INPUT_FILES) ;
     INPUT_FILES on $(run-target) = $(gRUN_TEST_INPUT_FILES) ;
     ARGS on $(run-target) = $(gRUN_TEST_ARGS) ;
+    
+    #
+    # Prepare path setup
+    #
+    local path-sources = $(parent) $(executable) ;  # where do we get paths from?
+    local $(.run-path-shell-vars) ;                 # declare local path variables
+    
+    # initialize path variables from the path-sources
+    for local v in $(.run-path-vars)
+    {
+        local shell-var = $(.shell-var($(v))) ;
+        $(shell-var) = [ unique $($(shell-var)) $(gRUN_$(v)($(path-sources))) ] ;
+    }
+    
+    local nt-cygwin ;
+    if $(NT) && $(gCURRENT_TOOLSET) in $(gcc-compilers)
+    {
+        nt-cygwin = true ;
+    }
+
+    # build up a fragment of shell command
+    local path-setup ;
+    for local shell-var in $(.run-path-shell-vars)
+    {
+        if $($(shell-var))
+        {
+            local dirs = $($(shell-var)) ;
+            local splitpath = $(SPLITPATH) ;
+            
+            # PATH gets translated automatically; the rest must be
+            # cygwin-native when running with Cygwin GCC under NT
+            if $(nt-cygwin) && $(shell-var) != PATH
+            {
+                dirs = [ nt-paths-to-cygwin $(dirs) ] ;
+                splitpath = ":" ;
+            }
+            
+            if $(.run-path-shell-var-value($(shell-var)))
+            {
+                dirs += $(.env-prefix)$(shell-var)$(.env-suffix) ;
+            }
+            
+            path-setup += $(SHELL_SET)$(shell-var)=$(dirs:J=$(splitpath)) ;
+            path-setup += $(SHELL_EXPORT)$(shell-var) ;
+        }
+    }
+    
+    local newline = "
+    " ;
+    PATH_SETUP on $(run-target) = $(path-setup:J=$(newline))$(newline) ;
+    
     capture-run-output $(run-target) : $(executable) ;
 }
 
@@ -290,58 +357,22 @@ rule capture-run-output ( target : executable + )
     INCLUDES $(target) : $(target:S=.output) ;
     MakeLocate $(test-file:S=.output) : $(LOCATE_TARGET) ;
     Clean clean : $(test-file:S=.output) ;
-    capture-run-output1 $(target) : $(executable) ;
+    output-file on $(target) = $(target:S=.output) ;
+    execute-test $(target) : $(executable) ;
+
+    if --run-all-tests in $(ARGV)
+    {
+        ALWAYS $(target) ;
+    }
 }
 
 if $(NT)
 {
-    ENV_PATH = %PATH% ;
     CATENATE = type ;
 }
 else
 {
-    ENV_PATH = $PATH ;
-    ENV_LD_LIBRARY_PATH = $LD_LIBRARY_PATH ;
     CATENATE = cat ;
-}
-
-rule capture-run-output1 ( target : executable )
-{
-    output-file on $(target) = $(target:S=.output) ;
-    
-    # Make sure no confusing output about setting or exporting PATH or
-    # LD_LIBRARY_PATH is seen unless it is actually used.
-    local p = $(gRUN_PATH($(executable))) ;
-    if $(p)
-    {
-        RUN_PATH on $(target) = $(p) $(ENV_PATH) ;
-        PATH_VAR on $(target) = PATH ;
-    }
-    else
-    {
-        RUN_PATH on $(target) = ;
-        PATH_VAR on $(target) = ;
-    }
-    
-    p = $(gRUN_LD_LIBRARY_PATH($(executable))) ;
-    if $(NT) 
-    {
-        RUN_LD_LIBRARY_PATH on $(target) = ;
-        LD_LIBRARY_PATH_VAR on $(target) = ;
-        if $(gCURRENT_TOOLSET) in $(gcc-compilers)
-        {
-            on $(target)
-            {
-                RUN_PATH = [ unique $(p) $(CYGWIN_ROOT)/$(p) $(RUN_PATH) $(ENV_PATH) ] ;
-            }
-        }
-    }
-    else if $(p)
-    {
-        RUN_LD_LIBRARY_PATH on $(target) = $(p) $(ENV_LD_LIBRARY_PATH) ;
-        LD_LIBRARY_PATH_VAR on $(target) = LD_LIBRARY_PATH ;
-    }
-    execute-test $(target) : $(executable) ;
 }
 
 RUN_OUTPUT_HEADER = "echo ====== BEGIN OUTPUT ====== &&" ;
@@ -353,16 +384,12 @@ if --verbose-test in $(ARGV)
 
 actions execute-test bind INPUT_FILES output-file
 {
-    $(SHELL_SET)PATH=$(RUN_PATH:J=$(SPLITPATH))
-    $(SHELL_EXPORT)$(PATH_VAR)
-    $(SHELL_SET)LD_LIBRARY_PATH=$(RUN_LD_LIBRARY_PATH:J=$(SPLITPATH))
-    $(SHELL_EXPORT)$(LD_LIBRARY_PATH_VAR)
-    $(>)  $(ARGS) "$(INPUT_FILES)" > $(output-file) 2>&1 && $(CP) $(output-file) $(<) $(VERBOSE_CAT)$(<)$(RUN_OUTPUT_FOOTER) || ( $(RUN_OUTPUT_HEADER) $(CATENATE) $(output-file) $(RUN_OUTPUT_FOOTER) && exit 1 )
+    $(PATH_SETUP:E=)$(>) $(ARGS) "$(INPUT_FILES)" > $(output-file) 2>&1 && $(CP) $(output-file) $(<) $(VERBOSE_CAT)$(<)$(RUN_OUTPUT_FOOTER) || ( $(RUN_OUTPUT_HEADER) $(CATENATE) $(output-file) $(RUN_OUTPUT_FOOTER) && exit 1 )
 }
 
 
-declare-build-fail-test RUN_FAIL : RUN_TEST ;
-declare-build-succeed-test RUN : RUN_TEST ;
+declare-build-fail-test RUN_FAIL : TEST_EXE ;
+declare-build-succeed-test RUN : TEST_EXE ;
 rule run ( sources + : args * : input-files * : requirements * : name ? : default-build * )
 {
     local gRUN_TEST_ARGS = $(args) ;
