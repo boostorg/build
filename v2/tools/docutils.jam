@@ -43,9 +43,8 @@ rule init ( docutils-dir )
         .docutils-dir = $(docutils-dir) ;
         
         .setup = [ 
-          common.path-variable-setting-command PYTHONPATH 
-            : $(.docutils-dir) $(.docutils-dir)/extras
-              : exported ] ;
+          common.prepend-path-variable-command PYTHONPATH 
+            : $(.docutils-dir) $(.docutils-dir)/extras ] ;
     }
 }
 
