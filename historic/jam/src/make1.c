@@ -208,6 +208,9 @@ make1( TARGET *t )
 	{
 		while((pState = current_state(&state_stack)) != NULL)
 		{
+            if (intr) 
+                pop_state(&state_stack);
+
 			switch(pState->curstate)
 			{
 			case T_STATE_MAKE1A:
