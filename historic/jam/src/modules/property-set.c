@@ -48,6 +48,7 @@ LIST *property_set_create( PARSE *parse, FRAME *frame )
     LIST* val;
     string var[1];
 
+#if 0
     /* Sort all properties which are not order sensitive */
     for(tmp = properties; tmp; tmp = tmp->next) {
         LIST* g = get_grist(tmp->string);
@@ -62,6 +63,9 @@ LIST *property_set_create( PARSE *parse, FRAME *frame )
     
     sorted = list_sort(sorted);
     sorted = list_append(sorted, order_sensitive);
+    unique = list_unique(sorted);
+#endif
+    sorted = list_sort(properties);
     unique = list_unique(sorted);
 
     string_new(var);
