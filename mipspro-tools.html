@@ -1,3 +1,4 @@
+<!-- saved from url=(0022)http://internet.e-mail -->
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
@@ -35,33 +36,39 @@ environment or configured on the jam command-line using
 <tr><th>Variable Name <th>Semantics <th>Default <th>Notes
 
 <tr>
-    <td><code>MIPSPRO_ROOT_DIRECTORY</code>
+    <td><code>MIPSPRO_TOOLROOT_DIRECTORY</code>
     <td>Path to base directory for compiler system.
     <td><code>/usr</code>
     <td>&nbsp;
 
 <tr>
+    <td><code>MIPSPRO_ROOT_DIRECTORY</code>
+    <td>Path to base directory for installed libraries.
+    <td><code>/usr</code>
+    <td>The ABI-dependant and ISA-dependant subdirectory names will
+        automatically be appended. For example, for an n32 and mips3 build,
+        the paths will be
+        <code>
+             $(MIPSPRO_ROOT_DIRECTORY)/lib32/mips3<br>
+             $(MIPSPRO_ROOT_DIRECTORY)/lib32
+        </code>
+
+<tr>
     <td><code>MIPSPRO_BIN_DIRECTORY</code>
     <td>Path to bin directory of compiler excutables.
-    <td><code>$(MIPSPRO_ROOT_DIRECTORY)/bin</code>
+    <td><code>$(MIPSPRO_TOOLROOT_DIRECTORY)/bin</code>
     <td>&nbsp;
 
 <tr>
     <td><code>MIPSPRO_INCLUDE_DIRECTORY</code>
     <td>Path to tool headers.
-    <td><code>$(MIPSPRO_ROOT_DIRECTORY)/include</code>
+    <td><code>$(MIPSPRO_TOOLROOT_DIRECTORY)/include<br>$(MIPSPRO_ROOT_DIRECTORY)/include</code>
     <td>&nbsp;
 
 <tr>
     <td><code>MIPSPRO_C++INCLUDE_DIRECTORY</code>
     <td>Path to C++ specific headers.
     <td><code>$(MIPSPRO_INCLUDE_DIRECTORY)/CC</code>
-    <td>&nbsp;
-
-<tr>
-    <td><code>MIPSPRO_STDLIB_DIRECTORY</code>
-    <td>List of directories containing the standard libraries.
-    <td><code>$(MIPSPRO_ROOT_DIRECTORY)/lib32/mips3<br>$(MIPSPRO_ROOT_DIRECTORY)/lib32</code>
     <td>&nbsp;
 
 </table>
