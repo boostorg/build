@@ -551,7 +551,7 @@ class file-reference : abstract-target
     {
         local location = [ path.root $(self.name)
           [ project.attribute $(self.project) source-location ] ] ;        
-        return [ path.exists $(location) ] ;
+        return [ path.exists [ path.native $(location) ] ] ;
     }    
 }
 
