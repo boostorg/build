@@ -703,33 +703,6 @@ rule generate-from-reference
     return [ $(target).generate $(rproperties) ] ;
 }
 
-# Returns two property sets.
-# The second one inclues all properties from
-# 'property-set', except that all dependency properties are
-# generated with 'generation-ps', and the obtained virtual targets
-# are added as the values of original features.
-# For example, <library>a/b might become <library>object(virtual-target)@1
-#
-# The first one include all usage requirements propagated from generated
-# targets
-rule generate-dependencies ( property-set : project : generation-ps )
-{
-    local usage-requirements = [ property-set.empty ] ;
-    local xproperties ;    
-    for local p in [ $(property-set).dependency ] 
-    {
-        local g = [ targets.generate-from-reference $(p:TG=) : $(project) : $(generation-ps) ] ;
-        usage-requirements = [ $(usage-requirements).add $(g[1]) ] ;
-        xproperties += $(p:G)$(g[2-]) ;
-    }
-    local r = [ property-set.create 
-        $(xproperties)
-        [ $(property-set).non-dependency ] ] ;
-    return $(usage-requirements) $(r) ;
-}
-
-
-
 # Implements the most standard way of constructing main target
 # alternative from sources. Allows sources to be either file or
 # other main target and handles generation of those dependency
@@ -822,32 +795,8 @@ class basic-target : abstract-target
         erequirements = [ $(erequirements).expand-composites ] ;
 
         local rproperties = [ $(build-request).refine $(erequirements) ] ;
-        # TODO: issue a warning when requirements change properties, but
-        # link-compatibility is still not broken.
 
         return $(rproperties) ;
-    }
-
-    # Generate all sources for this target. Returns property-set with 
-    # usage requirements, followed by the list of virtual targets.
-    local rule generate-sources ( property-set )
-    {      
-        local usage-requirements = [ property-set.empty ] ;
-        local source-targets ;
-        for local s in $(self.sources)
-        {
-
-            # Try treating this source as reference to main target
-            local more-targets = 
-              [ targets.generate-from-reference $(s) : $(self.project) 
-                : $(property-set) ] ;
-            check-for-link-compatibility $(more-targets[2-]) : $(property-set) ;
-            
-                        
-            usage-requirements = [ $(usage-requirements).add $(more-targets[1]) ] ;
-            source-targets += $(more-targets[2-]) ;            
-        } 
-        return $(usage-requirements) $(source-targets) ;
     }
 
     #
@@ -871,6 +820,31 @@ class basic-target : abstract-target
         return $(tagged-name) ;
     }
     
+    # Takes a target reference, which might be either target id
+    # or a dependency property, and generates that target using
+    # 'property-set' as build request.
+    #
+    # The results are added to to variable called 'result-var'.
+    # Usage requirements are added variable called 'usage-requirements-var'.
+    rule generate-dependencies ( dependencies * : property-set 
+        : result-var usage-requirements-var )
+    {
+        for local dependency in $(dependencies)
+        {            
+            local grist = $(dependency:G) ;
+            local id = $(dependency:G=) ;
+        
+            local result = 
+              [ targets.generate-from-reference $(id) : $(self.project) 
+                : $(property-set) ] ;
+            check-for-link-compatibility $(result[2-]) : $(property-set) ;
+        
+            $(result-var) += $(result[2-]:G=$(grist)) ;
+            $(usage-requirements-var) += [ $(result[1]).raw ] ;
+        }        
+    }
+    
+    
     # Determines final build properties, generates sources,
     # and calls 'construct'. This method should not be
     # overridden.
@@ -881,23 +855,20 @@ class basic-target : abstract-target
             local rproperties = [ refined-properties $(property-set) ] ;            
             if $(rproperties[1]) != "@error"                    
             {
-                local usage-requirements = [ property-set.empty ] ;
+                local source-targets ;
+                local properties = [ $(rproperties).non-dependency ] ;
+                local usage-requirements ;
                 
-                rproperties = 
-                  [ targets.generate-dependencies $(rproperties) : $(self.project) 
-                    : $(rproperties) ] ;                                
-                usage-requirements = [ $(usage-requirements).add $(rproperties[1]) ] ;
-                rproperties = $(rproperties[2-]) ;
-                local deps = [ $(rproperties).dependency ] ;
-                check-for-link-compatibility $(deps:G=) : $(property-set) ;
-                                            
-                local source-targets = [ generate-sources $(rproperties) ] ;
+                generate-dependencies [ $(rproperties).dependency ]
+                  : $(rproperties) 
+                  : properties usage-requirements ;
                 
-                usage-requirements = 
-                  [ $(usage-requirements).add $(source-targets[1]) ] ;
-                source-targets = $(source-targets[2-]) ;
-                                
-                rproperties = [ $(rproperties).add $(usage-requirements) ] ;
+                generate-dependencies $(self.sources) : $(rproperties)
+                  : source-targets usage-requirements ;
+                
+                rproperties = [ property-set.create $(properties) 
+                  $(usage-requirements) ] ;
+                usage-requirements = [ property-set.create $(usage-requirements) ] ;
 
                 local tagged-name = [ tag-name $(self.name) : $(rproperties) ] ;
 
@@ -935,12 +906,14 @@ class basic-target : abstract-target
         xusage-requirements = [ $(self.usage-requirements).evaluate-conditionals 
           $(rproperties) ] ;                
         
-        local xusage-requirements = 
-          [ targets.generate-dependencies 
-              $(xusage-requirements) 
-                : $(self.project) : $(rproperties) ] ;
-        local recursive-usage-requirements = $(xusage-requirements[1]) ;
-        local result = [ $(recursive-usage-requirements).add $(xusage-requirements[2-]) ] ;        
+        # We generate all dependency properties and add them,
+        # as well as their usage requirements, to result.
+        local extra ;
+        generate-dependencies [ $(xusage-requirements).dependency ] :
+            $(rproperties) : extra extra ;
+                
+        local result = [ property-set.create
+            [ $(xusage-requirements).non-dependency ] $(extra) ] ;
         
         return $(result) ;
     }
