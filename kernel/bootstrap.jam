@@ -40,7 +40,7 @@ IMPORT modules : import : : import ;
       .             # build-system.jam lives here
       
       ;
-    local whereami = $(.bootstrap-file:D) ;
+    local whereami = [ NORMALIZE_PATH $(.bootstrap-file:DT) ] ;
     BOOST_BUILD_PATH += $(whereami:D)/$(subdirs) ;
 }
 
