@@ -2602,10 +2602,15 @@ rule common-variant-tag ( toolset variant : properties * )
             case sunpro* : toolset-tag += sw ;
             case tru64cxx* : toolset-tag += tru ;
             case vacpp* : toolset-tag += xlc ;
-            case vc[678]* :
+            case vc[678][.]* :
             {
                 toolset-tag += vc ;
                 toolset-tag += [ MATCH "vc([678])[.]([0123456789]*)" : $(toolset) ] ;
+            }
+            case vc[678]* :
+            {
+                toolset-tag += vc ;
+                toolset-tag += [ MATCH "vc([678])" : $(toolset) ] ;
             }
             case * :
             toolset-tag += [ MATCH "^([^-]*)" : $(toolset) ] ;
