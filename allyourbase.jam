@@ -315,6 +315,9 @@ else if $(UNIX)
     switch $(OS)
     {
     case AIX :
+        DLL_AS_LIB      ?= true ;
+        SUFDLL          ?= .so .imp ;
+        gLINKABLE_PRODUCT_INDEX(DLL) = 1 ; # (the .so is the one to link)
 
     case AMIGA :
         YACC            ?= bison ;

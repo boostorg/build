@@ -60,11 +60,16 @@ else if $(UNIX)
     PYTHON_ROOT ?= /usr/local ;
     PYTHON_INCLUDES ?= $(PYTHON_ROOT)/include/python$(PYTHON_VERSION) ;
     PYTHON_LIB_PATH ?= $(PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config ;
+
     PYTHON_PROPERTIES ?=
       <include>$(PYTHON_INCLUDES)
         <library-path>$(PYTHON_LIB_PATH)
-            <cxx><*><cflags>"-expect_unresolved 'Py*' -expect_unresolved '_Py*'"
       ;
+    
+    if $(OS) = OSF
+    {
+        PYTHON_PROPERTIES += <*><*><linkflags>"-expect_unresolved 'Py*' -expect_unresolved '_Py*'" ;
+    }
 }
 
 # Locate the python executable
