@@ -2505,8 +2505,16 @@ rule common-variant-tag ( toolset variant : properties * )
     {
         case *borland* : toolset-tag += bcb ;
         case *como* : toolset-tag += como ;
-        case *cwpro8* : toolset-tag += cw8 ;
-        case *cwpro9* : toolset-tag += cw9 ;
+        case *cwpro8* :
+        {
+            toolset-tag += cw8 ;
+            if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
+        }
+        case *cwpro9* :
+        {
+            toolset-tag += cw9 ;
+            if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
+        }
         case *darwin* : toolset-tag += ;
         case *edg* : toolset-tag += edg ;
         case *gcc* : toolset-tag += gcc ;
