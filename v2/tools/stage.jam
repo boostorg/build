@@ -41,7 +41,7 @@
 #    Otherwise, only targets with types mentioned in <include-type> property
 #    will be included.
 #    
-#    Example usage::
+#    Example usage
 #
 #    stage dist : hello_world : 
 #        <traverse-dependencies>on <include-type>EXE <include-type>SHARED_LIB ;
