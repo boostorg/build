@@ -563,7 +563,10 @@ rule include-tools
 {
     gCURRENT_TOOLSET = $(<) ;
 
-    gTARGET_VARIABLES = ;
+    # clear any lingering target variables that may have been declared
+    $(gTARGET_VARIABLES) = ;
+    gTARGET_VARIABLES = ; # start over from the beginning
+    
     gRELEVANT_FEATURES($(<)) = ; # clear relevant feature set
     gDEPENDENCY_VARIABLES($(<)) = ;
 
@@ -1256,8 +1259,8 @@ rule subvariant-target
 
     if $(gTARGET_LIBS($(<)))
     {
-        # protect target variables against modification while
-        # lib dependencies are built.
+        # Protect target variables against modification while lib dependencies
+        # are built. They will be made empty here, and restored when this scope exits
         local $(gTARGET_VARIABLES) ;
         
         # extract the simple properties from dependent-properties
@@ -1273,7 +1276,8 @@ rule subvariant-target
     # FTJam-only feature (thanks, David Turner!)
     local ignored = [ $(gGENERATOR_FUNCTION($(target-type))) $(target-files)
                         : $(gTARGET_SOURCES($(<))) ] ;
-
+                        
+    $(gTARGET_VARIABLES) = ; # Be sure that we don't mask bugs with lingering target variables
   }
   return $(gTARGET_FILES($(subvariant))) ;
 }
@@ -1288,7 +1292,7 @@ rule main-target
   local build-request = [ difference $(BUILD) : $(variants) ] ;
   
   # include each jamfile describing a dependee target.
-  dependent-include $(gTARGET_LIBS($(<)))
+  dependent-include $(gTARGET_LIBS($(<))) ;
   
   local toolset ;
   for toolset in $(TOOLS)
