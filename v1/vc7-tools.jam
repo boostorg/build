@@ -12,8 +12,11 @@ if ! $(MSVCDir)
 }
 VC_PDB_NAME = vc70 ;
 
+feature native-wchar_t : on off ;
+
 flags vc7 CFLAGS : /Op ;
-flags vc7 C++FLAGS : /Zc:wchar_t,forScope ;
+flags vc7 C++FLAGS : /Zc:forScope ;
+flags vc7 C++FLAGS <native-wchar_t>on : /Zc:wchar_t ;
 
 # The following #// line will be used by the regression test table generation
 # program as the column heading for HTML tables. Must not include version number.
