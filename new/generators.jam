@@ -147,7 +147,10 @@ rule generator (
         return $(self.target-types) ;
     }
 
-    # Returns the required properties for this generator.
+    # Returns the required properties for this generator. Properties
+    # in returned set must be present in build properties if this 
+    # generator is to be used. If result has grist-only element,
+    # that build properties must include some value of that feature.
     rule requirements ( )
     {
         return $(self.requirements) ;
@@ -622,17 +625,37 @@ local rule find-viable-generators ( target-type : properties * : allow-composing
     local generator-rank = ;
 
     import type ;
-    local t = [ type.all-bases $(target-type) ] ;
+    # Try all-type generators first. Assume they have
+    # quite specific requirements.
+    local t = * [ type.all-bases $(target-type) ] ;
     
     while $(t[1])
     {
-        for local g in $(.generators.$(t))
+        for local g in $(.generators.$(t[1]))
         {
             # Avoid trying the same generator twice on different levels.
             if ! $(g) in $(.active-generators) 
               && ! ( [ is-a $(g) : composing-generator ] && ! $(allow-composing) )
-              {           
-                  if [ $(g).requirements ] in $(properties) 
+              {       
+                  # See if generator's requirements are satisfied by 'properties'.
+                  # Treat feature name in requirements (i.e. grist-only element),
+                  # as matching any value of feature.
+                  local raw = [ $(g).requirements ] ;
+                  local requirements ;
+                  local features ;                  
+                  for local r in $(raw)
+                  {
+                      if $(r:G=)
+                      {
+                          requirements += $(r) ;
+                      }
+                      else
+                      {
+                          features += $(r) ;
+                      }                      
+                  }
+                                  
+                  if $(requirements) in $(properties) && $(features) in $(properties:G)
                   {
                       viable-generators += $(g) ;
                       generator-rank += [ sequence.length [ set.intersection 

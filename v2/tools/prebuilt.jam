@@ -3,8 +3,8 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-#  This module defines the 'prebuilt' rule, which allows to use targets
-#  created outside of Boost.Build, or for which no source is available..
+#  This module defines a special generator, which handles targets with
+#  <file> property. It allows to use prebuilt targets.
 
 import targets ;
 import class : class new ;
@@ -12,51 +12,42 @@ import property ;
 import errors : error ;
 import type : type ;
 import regex ;
+import feature ;
+import generators ; 
 
-rule prebuilt-target-class ( name : project : type file : requirements * : use-requirements * )
+feature.feature file : : free ;
+
+rule prebuilt-file-generator 
 {
-    abstract-target.__init__ $(name) : $(project) ;
-    self.type = $(type) ;
-    self.file = $(file) ;
-    self.requirements = $(requirements) ;
-    self.use-requirements = $(use-requirements) ;
-    
-    rule generate (  properties * )
+    generator.__init__ prebuilt-file-generator : : * : <file> ;    
+
+    rule run ( project name ? : properties * : sources * )
     {
-        local pl = [ project.attribute $(self.project) location ] ;
-        local path = [ path.root [ path.native $(self.file:D) ] $(pl) ] ;
+        local name = [ feature.get-values <file> : $(properties) ] ;
+        local type = [ type.type $(name:S) ] ;
         
-        # CONSIDER: refine properties?
-        local t = [ new file-target $(self.file:S=:D=) : $(self.type)
-          : $(self.project) ] ;
-        $(t).set-use-requirements $(self.use-requirements) ;
+        local pl = [ project.attribute $(project) location ] ;
+        local path = [ path.root [ path.native $(name:D) ] $(pl) ] ;
+        
+        local t = [ new file-target $(name:S=:D=) : $(type) : $(project) ] ;
         $(t).set-path $(path) ;
-        $(t).extra-grist [ property.as-path $(self.requirements) ] ;
-        $(t).suffix [ MATCH .(.*) : $(self.file:S) ] ;
-        return $(t) ;    
-    }   
-    
-    rule requirements ( )
-    {
-        return $(self.requirements) ;
-    }    
+        # TODO: have no idea how handle this. Specifically,
+        # we need to distinguish between virtual targets with different
+        # properties. In this case, there are no properties, because
+        # they are stored in action, and we don't have any action.
+        # Therefore, we encode properties via 'extra-grist', which is ugly.
+        # Maybe, we should just introduce 'do-nothing-action', which only
+        # keps properties.
+        $(t).extra-grist [ property.as-path $(properties) ] ;
+        $(t).suffix [ MATCH .(.*) : $(name:S) ] ;
+        return $(t) ;            
+        
+    }
 }
 
-class prebuilt-target-class : abstract-target ;
+class prebuilt-file-generator : generator ;
 
-rule prebuilt ( type target-name : file : requirements * : use-requirements * )
-{
-    local project = [ CALLER_MODULE ] ;
-    
-    targets.main-target-alternative
-      [ new prebuilt-target-class $(target-name) : $(project) :
-        $(type) $(file)
-        : [ targets.main-target-requirements $(requirements) : $(project) ] 
-        : [ targets.main-target-use-requirements $(use-requirements) : $(project) ] 
-      ] ;
+generators.register [ new prebuilt-file-generator ] ;
 
-}
-
-IMPORT $(__name__) : prebuilt : : prebuilt ;
 
 

@@ -1,15 +1,15 @@
 
 project ext ;
 
-prebuilt LIB a 
-    :   bin/gcc/debug/a.so
-    :   <variant>debug
-    :   <include>debug
+lib a : 
+    : <file>bin/gcc/debug/a.so <variant>debug
+    :
+    : <include>debug
     ;
     
-prebuilt LIB a
-    :   bin/gcc/release/a.so
-    :	<variant>release
-    :   <include>release
+lib a :
+    : <file>bin/gcc/release/a.so <variant>release
+    :
+    : <include>release
     ;
     

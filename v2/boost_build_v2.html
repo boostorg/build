@@ -24,9 +24,9 @@
 </style>
   </head>
   <!-- Things yet to document:
-                    - build request, build request expansion and directly requested targets
-                    - conditional properties
-                  -->
+                      - build request, build request expansion and directly requested targets
+                      - conditional properties
+                    -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -347,19 +347,21 @@ boost-build /path/to/boost.build ;
     select depending on build properties. Prebuilt targets provide a
     mechanism for that. Jamfile in lib/lib2 can contain: 
 <pre>
-    prebuilt LIB lib2
-       : lib2_release.a
-       : &lt;variant&gt;release
+    lib lib2
+       : 
+       : &lt;file&gt;lib2_release.a &lt;variant&gt;release
        ;
 
     prebuilt LIB lib2
-       : lib2_debug.a
-       : &lt;variant&gt;debug
+       : 
+       : &lt;file&gt;lib2_debug.a &lt;variant&gt;debug
        ;
 </pre>
     This defines two alternatives for target "lib2", and for each one names a
-    prebuilt file. Which alternative is selected depends on properties of
-    dependents. If "app" binary should use "lib2", we can write: 
+    prebuilt file. Naturally, there are no sources. Instead, the &lt;file&gt;
+    feature is used to specify the file name. Which alternative is selected
+    depends on properties of dependents. If "app" binary should use "lib2",
+    we can write: 
 <pre>
     exe app : app.cpp @/lib/lib1/lib2 ../lib/lib2/lib2 ;
 </pre>
@@ -764,22 +766,22 @@ exe hello : hello.cpp : &lt;toolset&gt;yfc:&lt;cxxflags&gt;-disable-pointless-wa
         <td>Linux</td>
 
         <td>/etc<br>
-        $HOME<br>
-        $BOOST_BUILD_PATH</td>
+         $HOME<br>
+         $BOOST_BUILD_PATH</td>
 
         <td>$HOME<br>
-        $BOOST_BUILD_PATH</td>
+         $BOOST_BUILD_PATH</td>
       </tr>
 
       <tr>
         <td>Windows</td>
 
         <td>$SystemRoot<br>
-        $HOME<br>
-        $BOOST_BUILD_PATH</td>
+         $HOME<br>
+         $BOOST_BUILD_PATH</td>
 
         <td>$HOME<br>
-        $BOOST_BUILD_PATH</td>
+         $BOOST_BUILD_PATH</td>
       </tr>
     </table>
     Boost.Build comes with default versions of those files, which can serve
