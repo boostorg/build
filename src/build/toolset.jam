@@ -21,6 +21,23 @@ rule using ( toolset-module : * )
     $(toolset-module).init $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
 }
 
+# Expands subfeatures in each property sets.
+# e.g
+# <toolset>gcc-3.2
+# will be converted to
+# <toolset>gcc/<toolset-version>3.2
+local rule normalize-condition ( property-sets * )
+{
+    local result ;
+    for local p in $(property-sets)
+    {
+        local split = [ feature.split $(p) ] ;
+        local expanded = [ feature.expand-subfeatures [ feature.split $(p) ] ] ;
+        result += $(expanded:J=/) ;
+    }
+    return $(result) ;
+}
+
 
 # Specifies the flags (variables) that must be set on targets under certain
 # conditions, described by arguments.
@@ -30,7 +47,7 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
                               #
                               # If does not contain dot, should be a module name.
                               # The flags will be applied for all rules in that
-                              # module. THIS PART IS NOT IMPLEMENTED YET.
+                              # module.
     
              variable-name    # Variable that should be set on target
              condition * :    # Can specify either
@@ -44,6 +61,9 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
                               # - a set of property sets. If one of those property 
                               #   sets is contained in build properties, 'values'
                               #   will be added to the variable.
+                              #   Implied values are not allowed: "<toolset>gcc" should
+                              #   be used, not just "gcc". Subfeatures, like in
+                              #   "<toolset>gcc-3.2" are allowed.
                               #
                               # - empty. 'values' will be added to the variable 
                               #   unconditionally
@@ -52,7 +72,6 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
     .$(rule-or-module).flags += $(.flag-no) ;
       
     .$(rule-or-module).variable.$(.flag-no) += $(variable-name) ;
-    .$(rule-or-module).condition.$(.flag-no) += $(condition) ;    
     .$(rule-or-module).values.$(.flag-no) += $(values) ;
     
     if $(condition[1]:G=)
@@ -64,6 +83,7 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
             error empty value set used with property-set match criterion:
               : $(condition) ;
         }
+        condition = [ normalize-condition $(condition) ] ;
     }
     else if $(condition)
     {
@@ -78,6 +98,8 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
         .$(rule-or-module).match-type.$(.flag-no) += unconditional ;
         error empty value set used with unconditional match criterion ;
     }
+    
+    .$(rule-or-module).condition.$(.flag-no) += $(condition) ;    
     
     .flag-no = [ numbers.increment $(.flag-no) ] ;
 }
