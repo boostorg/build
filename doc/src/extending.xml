@@ -635,12 +635,12 @@ feature.compose &lt;parallelism&gt;fake : &lt;library&gt;/mpi//fake/&lt;parallel
       there are two ways to do this.
     </para>
 
-    <para id="bbv2.extending.rules.main-type">The first way applies then when
+    <para id="bbv2.extending.rules.main-type">The first way applies when
       your target rule should just produce a target of specific type. Then, a
       rule is already defined for you! When you define a new type, Boost.Build
       automatically defines a corresponding rule. The name of the rule is
       obtained from the name of the type, by downcasing all letters and
-      replacing underscores with slashes. For example, if you create a module
+      replacing underscores with dashes. For example, if you create a module
       "obfuscate.jam" containing:
 
 <programlisting>
