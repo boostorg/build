@@ -214,7 +214,7 @@ rule Package
 	}
 }
 
-VERSION = boost-jam-3.1.1 ;
+VERSION = boost-jam-3.1.2 ;
 RELEASE = 1 ;
 
 actions Tar-Gz
