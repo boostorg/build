@@ -221,6 +221,7 @@ int  main( int argc, char **argv, char **arg_environ )
         printf( "-jx     Run up to x shell commands concurrently.\n" );
         printf( "-n      Don't actually execute the updating actions.\n" );
         printf( "-ox     Write the updating actions to file x.\n" );
+		printf( "-q      Quit quickly as soon as a target fails.\n" );
         printf( "-sx=y   Set variable x=y, overriding environment.\n" );
         printf( "-tx     Rebuild x, even if it is up-to-date.\n" );
         printf( "-v      Print the version of jam and exit.\n" );
@@ -249,6 +250,8 @@ int  main( int argc, char **argv, char **arg_environ )
     if( ( s = getoptval( optv, 'n', 0 ) ) )
         globs.noexec++, globs.debug[2] = 1;
 
+	if( ( s = getoptval( optv, 'q', 0 ) ) )
+ 	    globs.quitquick = 1;
     if( ( s = getoptval( optv, 'a', 0 ) ) )
         anyhow++;
 
