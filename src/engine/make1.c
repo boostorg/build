@@ -562,8 +562,6 @@ make1d(state *pState)
 	    printf( "...failed %s ", cmd->rule->name );
 	    list_print( lol_get( &cmd->args, 0 ) );
 	    printf( "...\n" );
-
-	    if( globs.quitquick ) ++intr;
 	}
 
 	if (status == EXEC_CMD_FAIL)
