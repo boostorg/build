@@ -42,9 +42,9 @@ flags metrowerks CFLAGS <user-interface>console/<runtime-link>dynamic : -prefix 
 
 if $(BOOST_CODEWARRIOR_7)
 {
-  flags metrowerks STDLIBS <runtime-link>static/<runtime-build>release : MSL_C_x86.lib;MSL_Runtime_x86.lib;msl_c++_x86.lib;gdi32.lib;user32.lib;kernel32.lib ;
+    flags metrowerks STDLIBS <runtime-link>static/<runtime-build>release : MSL_C_x86.lib;MSL_Runtime_x86.lib;msl_c++_x86.lib;gdi32.lib;user32.lib;kernel32.lib ;
   flags metrowerks STDLIBS <runtime-link>dynamic/<runtime-build>release : MSL_All-DLL_x86.lib;gdi32.lib;user32.lib;kernel32.lib ;
-  flags metrowerks STDLIBS <runtime-link>static/<runtime-build>debug : MSL_C_x86_D.lib;MSL_Runtime_x86_D.lib;msl_c++_x86_D.lib;gdi32.lib;user32.lib;kernel32.lib ;
+    flags metrowerks STDLIBS <runtime-link>static/<runtime-build>debug : MSL_C_x86_D.lib;MSL_Runtime_x86_D.lib;msl_c++_x86_D.lib;gdi32.lib;user32.lib;kernel32.lib ;
   flags metrowerks STDLIBS <runtime-link>dynamic/<runtime-build>debug : MSL_All-DLL_x86_D.lib;gdi32.lib;user32.lib;kernel32.lib ;
 }
 else
@@ -75,7 +75,9 @@ flags metrowerks STDHDRS : $(METROWERKS_INCLUDE_ROOT)$(SLASH)$(gMETROWERKS_STD_I
 
 rule Link-action
 {
-    gRUN_PATH($(<)) += $(METROWERKS_ROOT)"\\Win32-X86 Support\\Libraries\\Runtime" ;
+    gRUN_PATH($(<)) += $(METROWERKS_ROOT)"\\Win32-X86 Support\\Libraries\\Runtime" 
+      $(METROWERKS_ROOT)"\\Win32-X86 Support\\Libraries\\Runtime\\Libs\\MSL_ALL-DLLs" ;
+    
     IMPLIB_COMMAND on $(<) = "-implib " ; # will be "multiplied away" if not
                                         # needed.
     with-command-file metrowerks-Link-action $(<) : $(>) $(NEEDLIBS) # $(NEEDLIBS)
