@@ -214,7 +214,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_metrowerks_" (
 if "_%BOOST_JAM_TOOLSET%_" == "_metrowerks_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
         set PATH=%BOOST_JAM_TOOLSET_ROOT%Other Metrowerks Tools\Command Line Tools;%PATH%)
-    set BOOST_JAM_CC=mwcc -runtime staticsingle -DNT
+    set BOOST_JAM_CC=mwcc -runtime ss -cwd include -DNT -ladvapi32.lib
     set BOOST_JAM_OPT_JAM=-o bootstrap.%BOOST_JAM_TOOLSET%\jam0.exe
     set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap.%BOOST_JAM_TOOLSET%\mkjambase0.exe
     set BOOST_JAM_OPT_YYACC=-o bootstrap.%BOOST_JAM_TOOLSET%\yyacc0.exe
