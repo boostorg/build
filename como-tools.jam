@@ -29,6 +29,7 @@ flags como CFLAGS <optimization>size : -Os ;
 flags como CFLAGS <debug-symbols>on : -g ;
 flags como LINKFLAGS <debug-symbols>on : -g ;
 
+flags como FINDLIBS : m ;
 flags como FINDLIBS : rt ;
 
 flags como CFLAGS <cflags> ;
