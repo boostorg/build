@@ -11,6 +11,7 @@ import regex ;
 import set ;
 import utility ;
 import modules indirect ;
+import assert : * ;
 
 local rule setup ( )
 {
@@ -694,7 +695,7 @@ rule expand-composites ( properties * )
 # Return true iff f is an ordinary subfeature of the parent-property's
 # feature, or if f is a subfeature fo the parent-property's feature
 # specific to the parent-property's value
-local rule is-subfeature ( parent-property f )
+local rule is-subfeature-of ( parent-property f )
 {
     if subfeature in $($(f).attributes)
     {
@@ -725,9 +726,9 @@ local rule is-subfeature ( parent-property f )
 }
 
 # as above, for subproperties
-local rule is-subproperty ( parent-property p )
+local rule is-subproperty-of ( parent-property p )
 {
-    return [ is-subfeature $(parent-property) $(p:G) ] ;
+    return [ is-subfeature-of $(parent-property) $(p:G) ] ;
 }
 
 # Given a property, return the subset of features consisting of all
@@ -736,13 +737,13 @@ local rule is-subproperty ( parent-property p )
 # property's value.
 local rule select-subfeatures ( parent-property : features * )
 {
-    return [ sequence.filter is-subfeature $(parent-property) : $(features) ] ;
+    return [ sequence.filter is-subfeature-of $(parent-property) : $(features) ] ;
 }
   
 # as above, for subproperties
 local rule select-subproperties ( parent-property : properties * )
 {
-    return [ sequence.filter is-subproperty $(parent-property) : $(properties) ] ;
+    return [ sequence.filter is-subproperty-of $(parent-property) : $(properties) ] ;
 }
 
 # Given a property set which may consist of composite and implicit
@@ -781,11 +782,7 @@ local rule move-subfeatures-to-the-end ( properties * )
     local x2 ;
     for local p in $(properties)
     {
-        # Check if grist contains dash. If it is, this
-        # is possibly subfeature, so move it to the end
-        # FIXME: in general, this may be ordinary feature.
-        local g = $(p:G) ;
-        if [ MATCH "(-)" : $(g) ] 
+        if subfeature in $($(p:G).attributes)
         {
             x2 += $(p) ;
         }
@@ -867,6 +864,48 @@ rule minimize ( properties * )
     return $(result) ;
 }
 
+# Combine all subproperties into their parent properties
+#
+# Requires: for every subproperty, there is a parent property.  All
+# features are explicitly expressed.
+#
+# This rule probably shouldn't be needed, but
+# build-request.expand-no-defaults is being abused for unintended
+# purposes and it needs help
+rule compress-subproperties ( properties * )
+{
+    local all-subs matched-subs result ;
+    
+    for local p in $(properties)
+    {
+        if ! $(p:G)
+        {
+            assert.nonempty-variable p:G ; # expecting fully-gristed properties
+        }
+        
+        
+        if ! subfeature in $($(p:G).attributes)
+        {
+            local subs = [ 
+              sequence.insertion-sort
+                [ sequence.filter is-subproperty-of $(p) : $(properties) ]
+            ] ;
+            
+            matched-subs += $(subs) ;
+
+            local subvalues = -$(subs:G=:J=-) ;
+            subvalues ?= "" ;
+            result += $(p)$(subvalues) ;
+        }
+        else
+        {
+            all-subs += $(p) ;
+        }
+    }
+    assert.result true : set.equal $(all-subs) : $(matched-subs) ;
+    return $(result) ;
+}
+  
 # given an ungristed string, finds the longest prefix which is a
 # top-level feature name followed by a dash, and return a pair
 # consisting of the parts before and after that dash.  More

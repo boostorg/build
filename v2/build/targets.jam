@@ -449,8 +449,26 @@ class main-target : abstract-target
         local result ;
         if $(defaults-to-apply)
         {
-            properties = [ build-request.expand-no-defaults 
-                $(raw) $(defaults-to-apply) ] ;
+            properties = [ 
+              build-request.expand-no-defaults 
+                
+                # We have to compress subproperties here to prevent
+                # property lists like:
+                #
+                #    <toolset>msvc <toolset-msvc:version>7.1 <threading>multi
+                #
+                # from being expanded into:
+                #
+                #    <toolset-msvc:version>7.1/<threading>multi
+                #    <toolset>msvc/<toolset-msvc:version>7.1/<threading>multi
+                #
+                # due to cross-product property combination.  That may
+                # be an indication that
+                # build-request.expand-no-defaults is the wrong rule
+                # to use here.
+                [ feature.compress-subproperties $(raw) ] 
+                  $(defaults-to-apply)
+            ] ;
             
             if $(properties)
             {                
@@ -509,7 +527,9 @@ class main-target : abstract-target
             # why it can't be build.
             print.wrapped-text 
                 "warning: skipped build of" [ full-name ]
-                "with properties" [ $(property-set).raw ]  ;            
+                "with properties" [ $(property-set).raw ]
+                  "because no best-matching alternative could be found"
+                  ; 
         }
         else if $(best-alternatives[2])
         {

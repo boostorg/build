@@ -260,10 +260,6 @@ local rule load-jamfile (
             "Please consult the documentation at 'http://www.boost.org'." ;
     }
 
-    # The module of the jamfile.
-    #
-    local jamfile-module = [ module-name  [ path.parent $(jamfile-to-load[1]) ] ] ;
-
     # Multiple Jamfiles found in the same place. Warn about this.
     # And ensure we use only one of them.
     #
@@ -272,10 +268,14 @@ local rule load-jamfile (
         ECHO
           "WARNING: Found multiple Jamfiles at this '"$(dir)"' location!"
             "Loading the first one: '" [ path.basename $(jamfile-to-load[1]) ]  "'." ;
+        
+        jamfile-to-load = $(jamfile-to-load[1]) ;
     }
     
-    jamfile-to-load = $(jamfile-to-load[1]) ;
-    
+    # The module of the jamfile.
+    #
+    local jamfile-module = [ module-name  [ path.parent $(jamfile-to-load) ] ] ;
+
     # Initialize the jamfile module before loading.
     #
     initialize $(jamfile-module) : [ path.parent $(jamfile-to-load) ] ;
@@ -344,7 +344,7 @@ rule inherit-attributes ( project-module : project-root-module : parent-module ?
     {
         local attributes = $($(project-module).attributes) ;        
         local pattributes = [ attributes $(parent-module) ] ;
-        $(attributes).set parent : [ path.parent $(parent) ] ;
+        $(attributes).set parent : [ path.parent $(parent-module) ] ;
         $(attributes).set default-build 
             : [ $(pattributes).get default-build ] ;
         $(attributes).set requirements
@@ -561,7 +561,7 @@ rule use ( id : location )
 module project-rules
 {
 
-    rule project ( id ? : option1 * : option2 * : option3 * )
+    rule project ( id ? : options * : * )
     {
         import project ;
         import path ;
@@ -574,17 +574,13 @@ module project-rules
            $(attributes).set id : $(id) ;
         }
 
-        if $(option1) 
+        for n in 2 3 4 5 6 7 8 9
         {
-            $(attributes).set $(option1[1]) : $(option1[2-]) ;
-        }
-        if $(option2) 
-        {
-            $(attributes).set $(option2[1]) : $(option2[2-]) ;
-        }
-        if $(option3) 
-        {
-            $(attributes).set $(option3[1]) : $(option3[2-]) ;
+            local option = $($(n)) ;
+            if $(option) 
+            {
+                $(attributes).set $(option[1]) : $(option[2-]) ;
+            }
         }
     }
 
