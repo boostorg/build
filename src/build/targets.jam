@@ -996,6 +996,10 @@ class basic-target : abstract-target
                 local libs = [ $(rproperties).get <library> ] ;
                 libs += [ $(rproperties).get <source> ] ;
                 source-targets += $(libs:G=) ;
+                # We might get duplicate sources, for example if
+                # we link to two library which have the same <library> in
+                # usage requirements.
+                source-targets = [ sequence.unique $(source-targets) ] ;
                                                 
                 local tagged-name = [ tag-name $(self.name) : $(rproperties) ] ;
 
