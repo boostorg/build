@@ -590,8 +590,13 @@ rule register ( g )
     }    
     
     # Update the set of generators for toolset
+    
+    # TODO: should we check that generator with this id
+    # is not already registered. For example, the fop.jam
+    # module intentionally declared two generators with the
+    # same id, so such check will break it.
     local id = [ $(g).id ] ;
-
+        
     # Some generators have multiple periods in their name, so the
     # normal $(id:S=) won't generate the right toolset name.
     # e.g. if id = gcc.compile.c++, then
@@ -885,11 +890,17 @@ local rule select-dependency-graph ( options )
             generators.dout $(r) ;
         }
         
+        # One note why we can compare object names directly,
+        # without using deep copy. All the targets here are
+        # produced by some generators, and generators should
+        # pass the targets they've returned via 'virtual-target.register'.
+        # So, two elements can only be equivalent, if they are just
+        # the same object.       
         local f = [ $(options).at 1 ] ;
         local mismatch ;
         for local r in [ $(results).get ] 
         {
-            if ! [ utility.equal $(r) $(f) ] 
+            if [ $(r).get ] != [ $(f).get ] 
             {
                 mismatch = true ;
             }
