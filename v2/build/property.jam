@@ -29,11 +29,8 @@ rule refine ( properties * : requirements * )
     # Record them so that we can handle 'properties'.
     for local r in $(requirements)
     {
-        if ! [ MATCH (:) : $(r) ]
-        {            
-            # Note: cannot use local here, so take an ugly name
-            __require__$(r:G) = $(r:G=) ;
-        }        
+        # Note: cannot use local here, so take an ugly name
+        __require__$(r:G) = $(r:G=) ;
     }
 
     for local p in $(properties)
