@@ -36,7 +36,7 @@
         <listitem>
           <para>Finally, using build request specified on the command line,
           Boost.Build decides which targets should be built, and how. That
-          information is passes back to Boost.Jam, which takes care of
+          information is passed back to Boost.Jam, which takes care of
           actually running commands.</para>
         </listitem>        
       </orderedlist>
@@ -115,13 +115,13 @@ using gcc : 3.4 : g++-3.4 ;
 using gcc : 3.2 : g++-3.2 ;
 </programlisting>
         Note that in the first call to "using", the compiler found in path
-      will be used, and there's ne need to explicitly specify the command.
+      will be used, and there's no need to explicitly specify the command.
     </para>
 
     <para>As shown above, both "version" and "invocation command" parameters
-    are optional, but there's important restriction: if you configure the same
-    compiler more then once, you must pass the "version" parameter every
-    time. For example, the following is not allowed:
+      are optional, but there's an important restriction: if you configure the
+      same compiler more then once, you must pass the "version" parameter
+      every time. For example, the following is not allowed:
 <programlisting>
 using gcc ;
 using gcc : 3.4 : g++-3.4 ;
@@ -177,7 +177,7 @@ using gcc : 3.4 : : &lt;compileflags&gt;-m64 &lt;linkflags&gt;-m64 ;
 
       <para>In addition to Jamfiles, Boost.Build has another user-editable
         file, project-root.jam, which is mostly usefull to declare constants
-        global to all the projects. It is also describe <link
+        global to all the projects. It is described in more detail <link
         linkend="bbv2.advanced.project-root">below</link>.
       </para>
 
@@ -350,7 +350,7 @@ function-name main-target-name
           <simpara>
             "usage-requirements" is the list of properties that will be
             propagated to all main targets that use this one, i.e. to all
-            dependedents.
+            dependents.
           </simpara>
         </listitem>
       </itemizedlist>
@@ -410,12 +410,12 @@ exe c : c.cpp /boost/program_options//program_opions ;
         <link linkend="bbv2.tutorial.conditions">tutorial</link>.
       </para>
 
-      <para>Sometimes a main target is really needed only by some other
-        main target. E.g. a rule that declares test-suite uses a main
-        target that represent test, but those main targets are rarely
-        needed by themself.</para>
+      <para>Sometimes a main target is really needed only by some other main
+        target. For example, a rule that declares a test-suite uses a main
+        target that represent test, but those main targets are rarely needed
+        by themself.</para>
 
-      <para>It possible to declare target inline, i.e. the "sources"
+      <para>It is possible to declare target inline, i.e. the "sources"
         parameter may include call to other main rules. For example:</para>
 
 <programlisting>
@@ -450,7 +450,7 @@ project id : &lt;attributes&gt; ;
 </programlisting>
         Here, attributes is a sequence of (attribute-name,
         attribute-value) pairs. The list of attribute names along with its
-        handling is also shown in the table below. For example, it it
+        handling is also shown in the table below. For example, it is
         possible to write:
 <programlisting>
 project tennis 
@@ -660,7 +660,7 @@ project tennis
         project-root can be merged together. To achieve this effect, the
         project root file should call the <literal>project</literal> rule. The
         semantic is precisely the same as if the call was made in
-        Jamfile, except that project-root.jam will start serve as
+        Jamfile, except that project-root.jam will start to serve as
         Jamfile. The Jamfile in the directory of project-root.jam will be
         ignored, and project-root.jam will be able to declare main
         targets as usual.</para>
@@ -725,7 +725,7 @@ should be absolute project id.
   </para>
 
   <para>
-    The command line specifies which targets to built and which what
+    The command line specifies which targets to build and with what
     properties. For example:
 <programlisting>
 bjam app1 lib1//lib1 toolset=gcc variant=debug optimization=full
@@ -738,7 +738,7 @@ bjam app1 lib1//lib1 toolset=gcc variant=debug optimization=full
 <programlisting>
 bjam app1 lib1//lib1 gcc debug optimization=full
 </programlisting>
-    The complete syntax which had some additional shortcuts if described <link
+    The complete syntax which has some additional shortcuts if described <link
     linkend="bbv2.reference.commandline">here</link>.
   </para>
 
@@ -838,7 +838,7 @@ lib b : : &lt;variant&gt;debug &lt;file&gt;/pool/debug/b.so ;
         For convenience, the following syntax is allowed:
 <programlisting>
 lib z ;
-lib giu db aux ;
+lib gui db aux ;
 </programlisting>
           and is does exactly the same as:
 <programlisting>
@@ -865,7 +865,7 @@ lib png : z : &lt;name&gt;png ;
           library, (say, <code>b</code>) is linked dynamically, the <code>b</code>
           library will be incorporated in <code>a</code>. (If <code>b</code>
           is dynamic library as well, then <code>a</code> will only refer to
-          it, and don't include any extra code.) When the <code>a</code>
+          it, and not include any extra code.) When the <code>a</code>
           library is linked statically, Boost.Build will assure that all
           executables which link to <code>a</code> will also link to
           <code>b</code>.
@@ -1048,7 +1048,7 @@ unit-test helpers_test : helpers_test.cpp helpers ;
           </programlisting>
           
           <para><emphasis role="bold">Rationale:</emphasis> Runtime debugging is on in debug build
-            so suit expectations of people used various IDEs. It's
+            to suit expectations of people used various IDEs. It's
             assumed other folks don't have any specific expectation in
             this point.</para>
         </listitem></varlistentry>
