@@ -500,7 +500,8 @@ rule basic-target ( name : project
     # Returns a number which estimates this targets's suitability for
     # building with the given 'property-set'. Among several alternatives
     # for a main target, the one with greatest match-rank will be used
-    # to do actual generation
+    # to do actual generation. Return of empty value mean this target
+    # can't be built with the given 'property-set'.
     rule match-rank ( property-set )
     {    
         # First check if our requirements can be satisfied.
@@ -519,7 +520,7 @@ rule basic-target ( name : project
     # building when given 'build-request'. This includes refining
     # build request with requirements, evaluating conditionals,
     # generating depenendecies and running actions for features.
-    local rule final-properties ( build-request )
+    local rule refined-properties ( build-request )
     {
         local rproperties = [ $(build-request).refine $(self.requirements) ] ;
             
@@ -584,7 +585,7 @@ rule basic-target ( name : project
     {
         if ! $(self.generated.$(property-set)) 
         {           
-            local rproperties = [ final-properties $(property-set) ] ;            
+            local rproperties = [ refined-properties $(property-set) ] ;            
             if $(rproperties[1]) != "@error"                    
             {
                 rproperties = 
