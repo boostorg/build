@@ -121,7 +121,7 @@ rule dll-files ( module implib ? : sources * : target-type ? )
     }
     
     target-type ?= DLL ;
-    if [ MATCH CRAY.* : $(JAMUNAME[-1]) ] # no shared libs on cray
+    if [ MATCH ^(CRAY).* : $(JAMUNAME[-1]) ] # no shared libs on cray
     {
         NOTFILE $(<) ;
     }
