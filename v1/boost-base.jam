@@ -2698,10 +2698,8 @@ rule force-NT-static-link ( pattern : toolset : subvariant-path properties * )
 {
     if  $(NT) && [ MATCH $(pattern) : $(toolset) ]
     {
-        properties =
-          [ difference $(properties) : <runtime-link>dynamic ]
-          <runtime-link>static
-          ;
+        properties = [ impose-requirements $(properties) :
+            <runtime-link>static ] ;
     }
 
     return $(subvariant-path) $(properties) ;
@@ -2714,7 +2712,7 @@ rule force-NT-static-link ( pattern : toolset : subvariant-path properties * )
 rule std::locale-support ( toolset variant : subvariant-path properties * )
 {
     return [ 
-      force-NT-static-link .*(metrowerks|cwpro|cw).* 
+      force-NT-static-link .*(cw-8).* 
         : $(toolset) : $(subvariant-path) $(properties)
           ] ;
 }
@@ -2902,7 +2900,13 @@ rule toolset::requirements ( toolset variant : subvariant-path properties * )
             if <runtime-link>dynamic in $(properties) { requirements += <threading>multi ; }
         }
     }
-    requirements = [ unique $(requirements) ] ;
+    return $(subvariant-path) [ impose-requirements $(properties) : $(requirements) ] ;
+}
+
+# Utility, to impose a subset of requirements onto a property set.
+rule impose-requirements ( properties * : requirements * )
+{
+    local requirements = [ unique $(requirements) ] ;
     local free-feature-requirements = [ segregate-free-properties properties ] ;
     properties =
         [ sort
@@ -2911,5 +2915,5 @@ rule toolset::requirements ( toolset variant : subvariant-path properties * )
             ]
         $(free-feature-requirements)
         ;
-    return $(subvariant-path) $(properties) ;
+    return $(properties) ;
 }
