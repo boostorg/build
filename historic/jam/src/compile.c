@@ -1134,8 +1134,8 @@ debug_compile( int which, char *s, FRAME* frame )
         i -= 35;
       }
 
-      print_source_line( frame->procedure );
       printf( "%*.*s ", i, i, indent );
+      print_source_line( frame->procedure );
     }
 
     if( s )
