@@ -47,6 +47,8 @@ STLPORT_VERSIONS = 4.5 4.0 ;
 # major versions of STLport
 feature stlport-version : $(STLPORT_VERSION) $(STLPORT_VERSIONS) ;
 
+feature stlport-cstd-namespace : std global ;
+
 #############################################################################
 
 # Returns a path which is assumed to be the root of the STLport installation.
@@ -81,6 +83,9 @@ rule get-stlport-root
         ECHO "       values from the list of $(dollar)(STLPORT_VERSIONS)" ;
         ECHO ;
         ECHO STLPORT_VERSIONS - Alternate versions of STLport available on this machine. Defaults to \"4.5 4.0\". ;
+        ECHO ;
+        ECHO "Note that STLPort iostreams are /not/ in use by default. To enable them, you must place"
+        ECHO "        <stlport-iostream>on in your BUILD variable or in target requirements."
         EXIT ;
     }
 
@@ -92,6 +97,7 @@ rule get-stlport-root
 # flags which work for any STLport version
 
 flags msvc-stlport STDHDRS : [ join [ get-stlport-root ] $(SLASH)stlport ] ;
+flags msvc-stlport VC_STDLIB_PATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)lib ] ;
 flags msvc-stlport STDLIBPATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)lib ] ;
 
 # special flags for STLport 4.x
@@ -99,6 +105,7 @@ flags msvc-stlport STDLIBPATH <stlport-iostream>on : [ join [ get-stlport-root ]
 flags msvc-stlport STLPORT_VERSION <stlport-version> ;
 
 flags msvc-stlport DEFINES <stlport-iostream>off : __STL_NO_SGI_IOSTREAMS=1 ;
+flags msvc-stlport DEFINES <stlport-cstd-namespace>std : _STLP_DO_IMPORT_CSTD_FUNCTIONS=1 ;
 flags msvc-stlport UNDEFS <stlport-iostream>on : __STL_NO_SGI_IOSTREAMS ;
 
 flags msvc-stlport DEFINES <runtime-build>debug : __STL_DEBUG=1 __STL_DEBUG_UNINITIALIZED=1 ;
