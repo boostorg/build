@@ -493,6 +493,14 @@ rule generator (
 
 class generator ;
 
+# Generator which is able to produce desired target types from arbitrary number
+# of sources, provided they all are of supported times. This is different from
+# ordinary generator, which does maps N sources to M targets, where both N and M
+# are fixed. For example, compiler takes cpp files and produces object. Linker
+# can take any number of objects, and produces one exe.
+#
+# The generator works by attempting to convert each source into one of the
+# allowed target types, and then consuming the result of convertion.
 rule composing-generator ( id : source-types * : target-types + :
                            requirements * )
 {
@@ -560,7 +568,8 @@ class composing-generator : generator ;
 import errors : error ;
 
 .generators = ;
-        
+
+# Registers new generator instance 'g'.
 rule register ( g )
 {
     .generators += $(g) ;
@@ -575,7 +584,7 @@ rule register ( g )
     .generators-for-toolset.$(id:S=) += $(g) ;
 }
     
-
+# Creates new instance of the 'generator' class and registers it.
 rule register-standard ( id : source-types + : target-types + : requirements * )
 {
     local g = [ new generator $(id) : $(source-types) : $(target-types)
@@ -583,6 +592,8 @@ rule register-standard ( id : source-types + : target-types + : requirements * )
     register $(g) ;
 }
 
+# Creates new instance of the 'composing-generator' class and
+# registers it.
 rule register-composing ( id : source-types + : target-types + : requirements * )
 {
     local g = [ new composing-generator $(id) : $(source-types) 
