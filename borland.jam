@@ -21,6 +21,7 @@ type.register BORLAND.TDS : tds ;
 
 # Declare generators
 generators.register-composing borland.link : LIB OBJ : EXE BORLAND.TDS : <toolset>borland ;
+generators.register-composing borland.link : LIB OBJ : SHARED_LIB BORLAND.TDS : <toolset>borland ;
 generators.register-composing borland.archive : OBJ : STATIC_LIB : <toolset>borland ;
 
 #Don't support dll for now.
@@ -37,6 +38,8 @@ toolset.flags borland.compile OPTIONS <debug-symbols>on : -v ;
 toolset.flags borland.compile OPTIONS <cxxflags> ;
 toolset.flags borland.compile DEFINES <define> ;
 toolset.flags borland.compile INCLUDES <include> ;
+
+toolset.flags borland.link OPTIONS <link>shared : -tWD ;
 
 actions compile
 {
