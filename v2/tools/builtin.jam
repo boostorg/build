@@ -280,7 +280,7 @@ class c-scanner : scanner
 
     rule pattern ( )
     {
-        return "#include[ ]*(<(.*)>|\"(.*)\")" ;
+        return "#[ \t]*include[ ]*(<(.*)>|\"(.*)\")" ;
     }
 
     rule process ( target : matches * : binding )
