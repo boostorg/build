@@ -16,6 +16,9 @@ MINGW_STDLIB_DIRECTORY ?= $(MINGW_ROOT_DIRECTORY)$(SLASH)lib ;
     extends-toolset gcc ;
 }
 
+flags mingw CFLAGS <threading>multi : -mthreads ;
+flags mingw LINKFLAGS <threading>multi : -mthreads ;
+
 #### Link ####
 
 rule Link-action
