@@ -24,7 +24,10 @@ build-request = [ build-request.from-command-line [ modules.peek : ARGV ] ] ;
 
 targets = [ $(build-request).get-at 1 ] ;
 properties = [ $(build-request).get-at 2 ] ;
-expanded = [ build-request.expand $(properties) ] ;
+# For the time being, just stick toolset to the build request. We'd need to
+# find a way to select default toolset collection and a method to override
+# that from command line
+expanded = [ build-request.expand $(properties) <toolset>gcc ] ;
 
 
 root-target = [ project.target "." ] ;

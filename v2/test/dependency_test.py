@@ -16,25 +16,25 @@ t.run_build_system()
 t.touch("a.h")
 t.run_build_system()
 
-t.expect_touch("bin/gcc/debug/shared-false/threading-single/a")
-t.expect_touch("bin/gcc/debug/shared-false/threading-single/a.o")
-t.expect_touch("bin/gcc/debug/shared-false/threading-single/b")
-t.expect_touch("bin/gcc/debug/shared-false/threading-single/b.o")
+t.expect_touch("bin/gcc/debug/a")
+t.expect_touch("bin/gcc/debug/a.o")
+t.expect_touch("bin/gcc/debug/b")
+t.expect_touch("bin/gcc/debug/b.o")
 t.expect_nothing_more()
 
 # Only 'a' include <a.h> and should be updated
 t.touch("src1/a.h")
 t.run_build_system()
 
-t.expect_touch("bin/gcc/debug/shared-false/threading-single/a")
-t.expect_touch("bin/gcc/debug/shared-false/threading-single/a.o")
+t.expect_touch("bin/gcc/debug/a")
+t.expect_touch("bin/gcc/debug/a.o")
 t.expect_nothing_more()
 
 # "src/a.h" includes "b.h" (in the same dir)
 t.touch("src1/b.h")
 t.run_build_system()
-t.expect_touch("bin/gcc/debug/shared-false/threading-single/a")
-t.expect_touch("bin/gcc/debug/shared-false/threading-single/a.o")
+t.expect_touch("bin/gcc/debug/a")
+t.expect_touch("bin/gcc/debug/a.o")
 t.expect_nothing_more()
 
 t.touch("b.h")
@@ -47,6 +47,6 @@ t.expect_nothing_more()
 # support, this check will be implemented later.
 t.touch("x.foo")
 t.run_build_system()
-t.expect_touch("bin/gcc/debug/shared-false/threading-single/a.o")
+t.expect_touch("bin/gcc/debug/a.o")
 
 t.cleanup()

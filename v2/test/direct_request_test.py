@@ -10,6 +10,6 @@ t = Tester()
 t.set_tree("direct-request-test")
 t.run_build_system(extra_args="define=MACROS")
 
-t.expect_addition("bin/gcc/debug/shared-false/threading-single/" * List("a.o b.o b.a a"))
+t.expect_addition("bin/gcc/debug/" * List("a.o b.o b.a a"))
 
 t.cleanup()

@@ -272,7 +272,7 @@ rule expand-subfeatures (
 local rule extend-feature ( feature : values * )
 {
     validate-feature $(feature) ;
-    if implicit in $(attributes)
+    if implicit in $($(feature).attributes)
     {
         for local v in $(values)
         {
@@ -685,8 +685,6 @@ rule run-actions ( properties * )
     }
     return $(properties) $(added) ;            
 }
-
-
 
 }
 class feature-space ;

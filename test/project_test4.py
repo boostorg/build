@@ -11,28 +11,28 @@ t.set_tree("project-test4")
 
 t.run_build_system()
 
-t.expect_addition("bin/gcc/debug/shared-false/threading-single/a.obj")
-t.expect_content("bin/gcc/debug/shared-false/threading-single/a.obj",
-"""gcc/debug/include-everything/shared-false/threading-single
+t.expect_addition("bin/gcc/debug/a.obj")
+t.expect_content("bin/gcc/debug/a.obj",
+"""gcc/debug/include-everything
 a.cpp
 """)
 
-t.expect_addition("bin/gcc/debug/shared-false/threading-single/a.exe")
-t.expect_content("bin/gcc/debug/shared-false/threading-single/a.exe",
-"gcc/debug/include-everything/shared-false/threading-single\n" +
-"bin/gcc/debug/shared-false/threading-single/a.obj lib/bin/gcc/debug/optimization-on/shared-false/threading-single/b.obj\n"
+t.expect_addition("bin/gcc/debug/a.exe")
+t.expect_content("bin/gcc/debug/a.exe",
+"gcc/debug/include-everything\n" +
+"bin/gcc/debug/a.obj lib/bin/gcc/debug/optimization-on/b.obj\n"
 )
 
-t.expect_addition("lib/bin/gcc/debug/optimization-on/shared-false/threading-single/b.obj")
-t.expect_content("lib/bin/gcc/debug/optimization-on/shared-false/threading-single/b.obj",
-"""gcc/debug/include-everything/optimization-on/shared-false/threading-single
+t.expect_addition("lib/bin/gcc/debug/optimization-on/b.obj")
+t.expect_content("lib/bin/gcc/debug/optimization-on/b.obj",
+"""gcc/debug/include-everything/optimization-on
 lib/b.cpp
 """)
 
-t.expect_addition("bin/gcc/debug/shared-false/threading-single/main-target-b.exe/b.exe")
-t.expect_content("bin/gcc/debug/shared-false/threading-single/main-target-b.exe/b.exe",
-"gcc/debug/define-MACROS/include-everything/shared-false/threading-single\n" +
-"bin/gcc/debug/shared-false/threading-single/a.obj\n"
+t.expect_addition("bin/gcc/debug/main-target-b.exe/b.exe")
+t.expect_content("bin/gcc/debug/main-target-b.exe/b.exe",
+"gcc/debug/define-MACROS/include-everything\n" +
+"bin/gcc/debug/a.obj\n"
 )
 
 
@@ -51,7 +51,7 @@ expected="""warning: skipped build of lib/b.obj with properties <toolset>gcc
 <shared>false <optimization>on <threading>single <rtti>on <debug-symbols>on
 <variant>debug
 don't know how to make <.>lib/b.obj/<optimization>on
-...skipped <./gcc/debug/shared-false/threading-single>a.exe for lack of <.>lib/b.obj/<optimization>on...
+...skipped <./gcc/debug>a.exe for lack of <.>lib/b.obj/<optimization>on...
 """
 
 t.run_build_system(stdout=expected, status=None)
@@ -76,17 +76,17 @@ t.copy("Jamfile2", "Jamfile")
 
 t.run_build_system()
 
-t.expect_addition("bin/gcc/debug/shared-false/threading-single/a_gcc.obj")
-t.expect_content("bin/gcc/debug/shared-false/threading-single/a_gcc.obj",
-"""gcc/debug/shared-false/threading-single
+t.expect_addition("bin/gcc/debug/a_gcc.obj")
+t.expect_content("bin/gcc/debug/a_gcc.obj",
+"""gcc/debug
 a_gcc.cpp
 """)
 
-t.expect_content("bin/gcc/debug/shared-false/threading-single/a.exe",
-"gcc/debug/shared-false/threading-single\n" +
-"bin/gcc/debug/shared-false/threading-single/a.obj " +
-"lib/bin/gcc/debug/optimization-on/shared-false/threading-single/b.obj " +
-"bin/gcc/debug/shared-false/threading-single/a_gcc.obj\n"
+t.expect_content("bin/gcc/debug/a.exe",
+"gcc/debug\n" +
+"bin/gcc/debug/a.obj " +
+"lib/bin/gcc/debug/optimization-on/b.obj " +
+"bin/gcc/debug/a_gcc.obj\n"
 )
 
 t.cleanup()
