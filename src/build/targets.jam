@@ -342,8 +342,10 @@ rule basic-target ( name : project
             [ project.find-target $(id) : [ project.attribute $(self.project) location ] ] ;
         
         if $(main-target) {
-            # Apply source-specific properties
-            local rproperties = [ property.refine $(properties) : $(sproperties) ] ;
+            # Take properties which should be propagated and refine them
+            # with source-specific requirements.
+            local propagated = [ property.take propagated : $(properties) ] ;
+            local rproperties = [ property.refine $(propagated) : $(sproperties) ] ;
             if $(rproperties[1]) = "@error"
             {
                 error

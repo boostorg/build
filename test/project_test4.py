@@ -48,7 +48,7 @@ t.run_build_system(stdout=expected, status=None)
 t.copy("lib/Jamfile3", "lib/Jamfile")
 
 expected="""Cannot satisfy request to build lib/b.obj with properties  <toolset>gcc
-<optimization>on <threading>single <rtti>on <variant>debug
+<optimization>on <threading>single <rtti>on <debug-symbols>on <variant>debug
 No viable alternative found.
 
 """
