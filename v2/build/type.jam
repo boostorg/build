@@ -32,6 +32,7 @@ rule register ( type : suffixes * : base-type ? : main ? )
     else
     {
         .types += $(type) ;
+        .bases.$(type) = $(base-type) ;
         .suffix.$(type) = $(suffixes[1]) ;
         .type.$(suffixes) = $(type) ;
         feature.extend target-type : $(type) ;
@@ -45,13 +46,38 @@ rule register ( type : suffixes * : base-type ? : main ? )
     }
 }
 
+# Returns true if 'type' has 'base' as its direct or
+# indirect base.
+rule is-derived ( type base )
+{
+    if $(base) in $(.bases.$(type)) 
+    {
+        return true ;
+    }
+    else
+    {
+        # CONSIDER: maybe break when 'found' is true
+        local found ;
+        for local e in $(.bases.$(type))
+        {
+            if [ is-derived $(e) $(base) ] 
+            {
+                found = true ;
+            }            
+        }
+        return $(found) ;
+    }        
+}
+
+
 # Returns suffix that should be used when generating target of 'type'.
 rule generated-target-suffix ( type )
 {
     return $(.suffix.$(type)) ;
 }
 
-# Returns file type given its suffix.
+# Returns file type given its suffix. The 'suffix' parameter should include 
+# the dot.
 rule type ( suffix ) 
 {
     return $(.type$(suffix)) ;        
