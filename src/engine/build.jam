@@ -1,4 +1,4 @@
-# Copyrigt (C) 2002 Rene Rivera.
+# Copyrigt (C) 2002-2003 Rene Rivera.
 # Permission to copy, use, modify, sell and distribute this software
 # is granted provided this copyright notice appears in all copies.
 # This software is provided "as is" without express or implied
@@ -7,7 +7,7 @@
 # Info about what we are building.
 NAME = boost-jam ;
 VERSION = 3.1.4 ;
-RELEASE = 1 ;
+RELEASE = 2 ;
 
 # Generate development debug binaries?
 if --debug in $(ARGV)
@@ -34,21 +34,22 @@ toolset-root = [ MATCH --toolset-root=(.*) : $(ARGV) ] ;
 # commands and options to compile the full Jam. When
 # adding new toolsets make sure to add them to the
 # "known" list also.
-rule toolset ( name command : opt.out + : opt.define + : release-flags * : debug-flags * : linklibs * )
+rule toolset ( name command .type ? : opt.out + : opt.define * : release-flags * : debug-flags * : linklibs * )
 {
-    tool.$(name).cc ?= $(command) ;
-    tool.$(name).opt.out ?= $(opt.out) ;
-    tool.$(name).opt.define ?= $(opt.define) ;
+    .type ?= "" ;
+    tool.$(name)$(.type).cc ?= $(command) ;
+    tool.$(name)$(.type).opt.out ?= $(opt.out) ;
+    tool.$(name)$(.type).opt.define ?= $(opt.define) ;
     if $(debug)
     {
-        tool.$(name).flags ?= $(debug-flags) ;
+        tool.$(name)$(.type).flags ?= $(debug-flags) ;
     }
     else
     {
-        tool.$(name).flags ?= $(release-flags) ;
+        tool.$(name)$(.type).flags ?= $(release-flags) ;
     }
-    tool.$(name).linklibs ?= $(linklibs) ;
-    toolsets += $(name) ;
+    tool.$(name)$(.type).linklibs ?= $(linklibs) ;
+    if ! $(name) in $(toolsets) { toolsets += $(name) ; }
 }
 ## HP-UX aCC compiler
 toolset acc cc : "-o " : -D
@@ -106,8 +107,8 @@ toolset kylix bc++ : -o : -D
 }
 ## MINGW GCC
 toolset mingw gcc : "-o " : -D
-    : -s -O3 -finline-functions -D$(OS)
-    : -g -O0 -fno-inline -pg -D$(OS) ;
+    : -s -O3 -finline-functions
+    : -g -O0 -fno-inline -pg ;
 ## MIPS Pro
 toolset mipspro cc : "-o " : -D
     : -s -O3 -g0 -INLINE:none
@@ -134,6 +135,15 @@ toolset vc7 cl : /Fe : -D
     : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
     : /nologo /MLd /DEBUG /Z7 /Od /Ob0
     : /LIBPATH:$(LIB:J=" ") kernel32.lib ;
+## VMS/OpenVMS DEC C
+toolset vms cc : /OBJECT= : /DEFINE=
+    : /STANDARD=VAXC
+    : /STANDARD=VAXC
+    ;
+toolset vms link .link : /EXECUTABLE= :
+    : /NOMAP
+    : /NOMAP
+    ;
 
 # First set the build commands and options according to the
 # preset toolset.
@@ -160,6 +170,23 @@ else
 --flags = $(tool.$(toolset).flags) ;
 --defs = $(tool.$(toolset).defines) ;
 --libs = $(tool.$(toolset).linklibs) ;
+if $(tool.$(toolset).link.cc)
+{
+    --link = $(tool.$(toolset).link.cc) ;
+    if $(tool.$(toolset).link.opt.out[2])
+    {
+        --link-bin = $(tool.$(toolset).link.opt.out[1]) ;
+        --link-dir = $(tool.$(toolset).link.opt.out[2]) ;
+    }
+    else
+    {
+        --link-out = $(tool.$(toolset).link.opt.out) ;
+    }
+    --link-def = $(tool.$(toolset).link.opt.define) ;
+    --link-flags = $(tool.$(toolset).link.flags) ;
+    --link-defs = $(tool.$(toolset).link.defines) ;
+    --link-libs = $(tool.$(toolset).link.linklibs) ;
+}
 
 # Put executables in platform-specific subdirectory.
 locate-target = $(LOCATE_TARGET) ;
@@ -248,6 +275,10 @@ if ( $(OS) = NT || $(NT) ) && ! NT in $(--defs)
 {
     --defs += NT ;
 }
+if $(VMS)
+{
+    --defs += VMS ;
+}
 --defs += YYSTACKSIZE=5000 ;
 
 # The basic symbolic targets...
@@ -261,8 +292,10 @@ rule .clean
 }
 if $(NT) { actions piecemeal together existing .rm {    del /F /Q $(>) } }
 if $(UNIX) { actions piecemeal together existing .rm {    rm -f $(>) } }
+if $(VMS) { actions piecemeal together existing .rm {    DELETE $(>[--2]:J=";*, ") $(>[-1]);* } }
 if $(NT) { --chmod+w = "attrib -r " ; }
 if $(UNIX) { --chmod+w = "chmod +w " ; }
+if $(VMS) { --chmod+w = "SET FILE/PROT=(S:RWED) " ; }
 
 rule .mkdir
 {
@@ -270,22 +303,52 @@ rule .mkdir
     if $(<:P) { DEPENDS $(<) : $(<:P) ; .mkdir $(<:P) ; }
     if ! $(md<$(<)>) { .md $(<) ; md<$(<)> = - ; }
 }
-actions .md {    mkdir $(<) }
+if $(NT) { actions .md {    md $(<) } }
+if $(UNIX) { actions .md {    mkdir $(<) } }
+if $(VMS) { actions .md {    CREATE/DIR $(<J=", ") } }
 
 rule .exe
 {
     local exe = $(<) ;
-    if $(NT) || ( $(UNIX) && $(OS) = CYGWIN ) { exe = $(exe:S=.exe) ; }
+    if $(NT) || ( $(UNIX) && $(OS) = CYGWIN ) || $(VMS) { exe = $(exe:S=.exe) ; }
     LOCATE on $(exe) = $(locate-target) ;
     DEPENDS all : $(exe) ;
-    DEPENDS $(exe) : $(>) ;
-    DEPENDS $(exe) : $(locate-target) ;
     .mkdir $(locate-target) ;
-    .cc $(exe) : $(>) ;
-    .clean $(exe) ;
+    if $(--link)
+    {
+        for local s in $(>)
+        {
+            local o = $(s:S=.o) ;
+            LOCATE on $(o) = $(locate-target) ;
+            DEPENDS $(exe) : $(o) ;
+            DEPENDS $(o) : $(s) ;
+            DEPENDS $(o) : $(locate-target) ;
+            .cc $(o) : $(s) ;
+            .clean $(o) ;
+        }
+        DEPENDS $(exe) : $(>:S=.o) ;
+        DEPENDS $(exe) : $(locate-target) ;
+        .ld $(exe) : $(>:S=.o) ;
+        .clean $(exe) ;
+    }
+    else
+    {
+        DEPENDS $(exe) : $(>) ;
+        DEPENDS $(exe) : $(locate-target) ;
+        .cc $(exe) : $(>) ;
+        .clean $(exe) ;
+    }
     return $(exe) ;
 }
 actions .cc {    $(--cc) $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def)$(--defs) $(--flags) "$(--libs)" $(>) }
+if $(VMS)
+{
+    actions .ld {    $(--link) $(--link-bin)$(<:D=) $(--link-dir)$(<:D) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>J=", ") }
+}
+else
+{
+    actions .ld {    $(--link) $(--link-bin)$(<:D=) $(--link-dir)$(<:D) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>) }
+}
 
 rule .link
 {
@@ -295,6 +358,7 @@ rule .link
 }
 if $(NT) { actions .link {    copy $(>) $(<) } }
 if $(UNIX) { actions .link {    ln -f $(>) $(<) } }
+if $(VMS) { actions .link {    COPY/REPLACE $(>) $(<) } }
 
 # Generate the grammar tokens table, and the real yacc grammar.
 rule .yyacc
@@ -332,6 +396,10 @@ if $(UNIX) { actions .yacc
 {    $(yacc) $(>)
     mv -f y.tab.c $(<[1]:S=.c)
     mv -f y.tab.h $(<[1]:S=.h) } }
+if $(VMS) { actions .yacc
+{    $(yacc) $(>)
+    RENAME y_tab.c $(<[1]:S=.c)
+    RENAME -f y_tab.h $(<[1]:S=.h) } }
 if $(yacc)
 {
     .yacc jamgram.c jamgram.h : jamgram.y ;
@@ -364,7 +432,7 @@ rule .jam
 
 # Distribution making from here on out.
 dist.docs =
-    readme.html
+    index.html
     Porting RELNOTES
     Jam.html Jambase.html Jamfile.html
     ;
