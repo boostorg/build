@@ -61,6 +61,10 @@ flags borland LINKFLAGS <linkflags> ;
 flags borland STDHDRS : $(BCCROOT)$(SLASH)include ;
 flags borland STDLIBPATH : $(BCCROOT)$(SLASH)lib ;
 
+flags borland LIBPATH <library-path> ;
+flags borland NEEDLIBS <library-file> ;
+flags borland FINDLIBS <find-library> ;
+
 # For detailed information about borland tools and their command-line switches,
 # see http://www.objectcentral.com/vide/help/videdoc/bcc32.html
 
@@ -85,7 +89,7 @@ rule Link-action
 actions borland-Link-action bind NEEDLIBS
 {
     set PATH=$(BCC_TOOL_PATH);%PATH%
-    $(BCC_TOOL_PATH)bcc32 -v -q $(LINKFLAGS) -L"$(BCCROOT)$(SLASH)lib" -e"$(<[1])" @"$(>)"
+    $(BCC_TOOL_PATH)bcc32 -v -q $(LINKFLAGS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)" $(FINDLIBS)
 }
 
 actions borland-IMPLIB-action bind IMPLIB
@@ -102,7 +106,7 @@ rule Cc-action
 
 actions borland-Cc-action
 {
-    $(BCC_TOOL_PATH)bcc32 -q -c -w -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(BCCROOT)$(SLASH)include" -o"$(<)" "$(>)"
+    $(BCC_TOOL_PATH)bcc32 -q -c -w -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -113,7 +117,7 @@ rule C++-action
 
 actions borland-C++-action
 {
-    $(BCC_TOOL_PATH)bcc32 -q -c -P -w -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(BCCROOT)$(SLASH)include" -o"$(<)" "$(>)"
+    $(BCC_TOOL_PATH)bcc32 -q -c -P -w -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 #### Archive ####
