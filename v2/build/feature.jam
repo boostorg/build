@@ -456,7 +456,7 @@ rule extend ( feature-or-property subfeature ? : values * )
 #
 # subfeature toolset gcc-2.95.2 target-platform : aix linux mac cygwin
 #
-rule subfeature ( feature value-string ? : subfeature : subvalues * )
+rule subfeature ( feature value-string ? : subfeature : subvalues * : attributes * )
 {
     feature = [ grist $(feature) ] ;
     validate-feature $(feature) ;
@@ -467,7 +467,7 @@ rule subfeature ( feature value-string ? : subfeature : subvalues * )
     $(feature).subfeatures += $(subfeature) ;
     extend-subfeature $(feature) $(value-string) : $(subfeature) : $(subvalues) ;
     local f = [ utility.ungrist $(feature) ] ;
-    feature $(f)-$(subfeature) : $(subvalues) : optional ;
+    feature $(f)-$(subfeature) : $(subvalues) : $(attributes) ;
 }
 
 # Set the components of the given composite property
@@ -660,7 +660,7 @@ rule add-defaults ( properties * )
         if $(v) in $(properties)
         {
             error add-defaults requires explicitly specified features,
-                but $(v) appears to be the value of an un-expanded implicit feature ;
+                but \"$(v)\" appears to be the value of an un-expanded implicit feature ;
         }
     }
     local missing = [ set.difference $(.all-features) : $(properties:G) ] ;
@@ -725,7 +725,7 @@ local rule __test__ ( )
 
         extend-feature toolset : msvc metrowerks ;
         subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
-          3.0 3.0.1 3.0.2 ;
+          3.0 3.0.1 3.0.2 : optional ;
 
         assert.result <toolset>gcc <toolset-version>3.0.1
           : expand-subfeatures <toolset>gcc-3.0.1 ;
@@ -734,7 +734,7 @@ local rule __test__ ( )
           : expand-subfeatures gcc-3.0.1 ;
 
         feature dummy : dummy1 dummy2 ;
-        subfeature dummy : subdummy : x y z ;
+        subfeature dummy : subdummy : x y z : optional ;
 
         assert.result a c e
           : get-values x : <x>a <y>b <x>c <y>d <x>e ;

@@ -198,7 +198,7 @@ rule basic-target ( name : project
         if ! $(properties)
         {
             # CONSIDER: I'm really not sure if this is correct...
-            properties = [ build-request.expand-with-defaults $(self.default-build) ] ;
+            properties = [ build-request.expand $(self.default-build) ] ;
             local result = ;
             for local p in $(properties)
             {

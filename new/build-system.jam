@@ -18,7 +18,7 @@ build-request = [ build-request.from-command-line [ modules.peek : ARGV ] ] ;
 
 targets = [ $(build-request).get-at 1 ] ;
 properties = [ $(build-request).get-at 2 ] ;
-expanded = [ build-request.expand-with-defaults $(properties) ] ;
+expanded = [ build-request.expand $(properties) ] ;
 
 
 root-target = [ $(current-project).target ] ;
