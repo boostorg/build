@@ -54,6 +54,6 @@ int main()
 }
 """)
 t.run_build_system("-d2")
-t.fail_test(t.stdout().count("common.copy") != 1)
+t.fail_test(t.stdout().count("copy") != 1)
 
 t.cleanup()
