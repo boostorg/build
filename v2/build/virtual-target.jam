@@ -282,15 +282,7 @@ rule abstract-file-target ( name
     {
         if $(self.action)
         {
-            # ### Not sure what this was used for
-            #    if $(name:D)
-            #    {
-            #        errors.error
-            #             "name for constructed target includes directory" ;
-            #    }
-
             $(self.action).actualize ;
-            common.Clean clean : $(name) ;
         }
     }
     
@@ -612,6 +604,9 @@ rule action ( targets + : sources * : action-name + : property-set ? )
 
             $(self.action-name)
               $(actual-targets) : $(self.actual-sources) : $(properties) ;
+            # Since we set up creating action here, we also set up
+            # action for cleaning up
+            common.Clean clean : $(actual-targets) ;
         }
     }
 
