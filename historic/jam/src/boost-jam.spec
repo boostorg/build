@@ -2,7 +2,7 @@ Name: boost-jam
 Version: 3.1.3
 Summary: Build tool
 Release: 1
-Source: boost-jam-%{version}.src.tar.gz
+Source: boost-jam-%{version}.tar.bz2
 
 License: GPL
 Group: Development/Tools

@@ -181,6 +181,7 @@ ALLSOURCE =
     builds/win32-visualc.mk
     builds/win32-borlandc.mk
     builds/win32-gcc.mk
+    boost-jam.spec
     ;
 
 
@@ -217,11 +218,24 @@ rule Package
 VERSION = boost-jam-3.1.3 ;
 RELEASE = 1 ;
 
+switch $(OSPLAT)
+{
+case X86       : RPMARCH ?= i386 ;
+case PPC       : RPMARCH ?= ppc ;
+case AXP       : RPMARCH ?= alpha ;
+# no guaranty for these:
+case IA64      : RPMARCH ?= ia64 ;
+case ARM       : RPMARCH ?= arm ;
+case SPARC     : RPMARCH ?= sparc ;
+case *         : RPMARCH ?= other ;
+}
+
 actions Tar-Gz
 {
   ln -s . $(VERSION)
   tar cvhf $(<) $(VERSION)/$(>)
   rm $(VERSION)
+  rm -f $(<).gz
   gzip -9 $(<)
 }
 
@@ -230,6 +244,7 @@ actions Tar-Bz2
   ln -s . $(VERSION)
   tar cvhf $(<) $(VERSION)/$(>)
   rm $(VERSION)
+  rm -f $(<).bz2
   bzip2 -9 $(<)
 }
 
@@ -260,26 +275,23 @@ rule Rpm
     NOTFILE $(2) ;
     
     local tar = $(2).tar ;
-    local rpm = $(2)-$(3).i386.rpm ;
+    local rpm = $(2)-$(3).$(RPMARCH).rpm ;
     local srpm = $(2)-$(3).src.rpm ;
 
     local result = $(rpm) $(srpm) ;
     DEPENDS $(<) : $(result) ;
     DEPENDS $(result) : $(tar) ;
-    DEPENDS $(result) : boost-jam.spec ;
     
-    tar on $(1) = $(tar).gz ;
-    source on $(1) = $(2).src.tar.gz ;
+    tar on $(1) = $(tar).bz2 ;
     rpm on $(1) = $(rpm) ;
     srpm on $(1) = $(srpm) ;
 }
 
 actions Rpm
 {
-    cp $(tar) /usr/src/redhat/SOURCES/$(source)
-    rpm -ba boost-jam.spec
-    cp /usr/src/redhat/RPMS/i386/$(rpm) .
-    cp /usr/src/redhat/SRPMS/$(srpm) .    
+    rpm -ta --target $(RPMARCH) $(2).tar.bz2 | tee rpm.out
+    cp `grep -e '^Wrote:' rpm.out | sed 's/^Wrote: //'` .
+    rm -f rpm.out
 }
 
 if $(NT)
