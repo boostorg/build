@@ -198,13 +198,13 @@ local rule declare-type ( os * : type : suffixes * : base-type ? : main ? )
 # Common target types.
 #
 
-declare-type NT : OBJ : obj : : main ;
+declare-type NT CYGWIN : OBJ : obj : : main ;
 declare-type : OBJ : o : : main ;
 
-declare-type NT : STATIC_LIB : lib : LIB : main ;
+declare-type NT CYGWIN : STATIC_LIB : lib : LIB : main ;
 declare-type : STATIC_LIB : a : LIB : main ;
 
-declare-type NT : IMPORT_LIB : : STATIC_LIB : main ;
+declare-type NT CYGWIN : IMPORT_LIB : : STATIC_LIB : main ;
 type.set-generated-target-suffix IMPORT_LIB : : lib ;
 
 declare-type NT CYGWIN : SHARED_LIB : dll : LIB : main ;
@@ -639,8 +639,8 @@ rule register-linker ( id composing ? : source-types + : target-types + :
 
 IMPORT $(__name__) : register-linker : : generators.register-linker ;
 
-declare-type NT : RSP : rsp ;
-if [ os.name ] = NT  # must be conditional; we'll error on other OSes
+declare-type NT CYGWIN : RSP : rsp ;
+if [ os.name ] in NT CYGWIN # must be conditional; we'll error on other OSes
 {
     flags builtin.response-file LIBRARY_PATH_OPTION : /LIBPATH: ;
     flags builtin.response-file FINDLIBS_ST <find-static-library> ;

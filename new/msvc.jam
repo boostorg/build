@@ -187,8 +187,20 @@ actions link
 }
 
 # Declare action for creating static libraries
-actions archive 
+if [ os.name ] in NT
 {
-    if exist "$(<)" set _$(<:B)_="$(<)"
-    $(.LD) /lib /out:"$(<)" %_$(<:B)_% @"$(>)"
+    actions archive 
+    {
+        if exist "$(<)" set _$(<:B)_="$(<)"
+        $(.LD) /lib /out:"$(<)" %_$(<:B)_% @"$(>)"
+    }
+}
+else # CYGWIN
+{
+    actions archive 
+    {
+        # this only works for Bourne-compatible shells
+        if test -f "$(<)" ; then set _$(<:B)_="$(<)" ; fi
+        $(.LD) /lib /out:"$(<)" $_$(<:B)_ @"$(>)"
+    }
 }

@@ -3,7 +3,7 @@
 # Test usage of searched-libs: one which are found via -l
 # switch to the linker/compiler. 
 
-from BoostBuild import Tester
+from BoostBuild import Tester, get_toolset
 import string
 import os
 t = Tester()
@@ -24,7 +24,7 @@ t.expect_addition("lib/bin/$toolset/debug/test_lib.dll")
 # Auto adjusting of suffixes does not work, since we need to
 # change dll to lib.
 # 
-if os.name == 'nt':
+if os.name == 'nt' or ( os.uname()[0].lower().startswith('cygwin') and get_toolset() != 'gcc') :
     t.copy("lib/bin/$toolset/debug/test_lib.lib", "lib/test_lib.lib")
 else:
     t.copy("lib/bin/$toolset/debug/test_lib.dll", "lib/libtest_lib.dll")
@@ -79,6 +79,5 @@ lib l : : <name>l_r <variant>release ;
 """)
 
 t.run_build_system("-n")
-
 
 t.cleanup()
