@@ -8,4 +8,4 @@
 //  http://www.boost.org
 // 
 
-int main() {}
+int main() { return 0; }

@@ -31,7 +31,7 @@ t.write("Jamfile", """
 t.write("b.cpp", "void foo() {}\n")
 t.write("a.cpp", """
 #ifdef FOO
-int main() {}
+int main() { return 0; }
 #endif
 """)
 

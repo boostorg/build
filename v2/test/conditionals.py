@@ -11,7 +11,7 @@ t = Tester()
 t.write("project-root.jam", "import gcc ;")
 t.write("a.cpp", """
 #ifdef STATIC
-int main() {}
+int main() {  return 0; }
 #endif
 """)
 t.write("Jamfile", "exe a : a.cpp : <link>static:<define>STATIC ;")

@@ -19,7 +19,7 @@ alias src : s.cpp ;
 exe hello : hello.cpp src ;
 
 """)
-t.write("a.cpp", "int main() {}\n")
+t.write("a.cpp", "int main() { return 0; }\n")
 t.copy("a.cpp", "b.cpp")
 t.copy("a.cpp", "c.cpp")
 t.copy("a.cpp", "hello.cpp")

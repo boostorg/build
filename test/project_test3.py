@@ -20,13 +20,13 @@ t.run_build_system()
 
 t.expect_addition("bin/$toolset/debug/a.obj")
 t.expect_content("bin/$toolset/debug/a.obj",
-"""gcc/debug
+"""$toolset/debug
 a.cpp
 """)
 
 t.expect_addition("bin/$toolset/debug/a.exe")
 t.expect_content("bin/$toolset/debug/a.exe",
-"gcc/debug\n" +
+"$toolset/debug\n" +
 "bin/$toolset/debug/a.obj lib/bin/$toolset/debug/b.obj " +
 "lib2/bin/$toolset/debug/c.obj lib2/bin/$toolset/debug/d.obj " +
 "lib2/helper/bin/$toolset/debug/e.obj " +
@@ -35,43 +35,43 @@ t.expect_content("bin/$toolset/debug/a.exe",
 
 t.expect_addition("lib/bin/$toolset/debug/b.obj")
 t.expect_content("lib/bin/$toolset/debug/b.obj",
-"""gcc/debug
+"""$toolset/debug
 lib/b.cpp
 """)
 
 t.expect_addition("lib/bin/$toolset/debug/m.exe")
 t.expect_content("lib/bin/$toolset/debug/m.exe",
-"""gcc/debug
+"""$toolset/debug
 lib/bin/$toolset/debug/b.obj lib2/bin/$toolset/debug/c.obj
 """)
 
 t.expect_addition("lib2/bin/$toolset/debug/c.obj")
 t.expect_content("lib2/bin/$toolset/debug/c.obj",
-"""gcc/debug
+"""$toolset/debug
 lib2/c.cpp
 """)
 
 t.expect_addition("lib2/bin/$toolset/debug/d.obj")
 t.expect_content("lib2/bin/$toolset/debug/d.obj",
-"""gcc/debug
+"""$toolset/debug
 lib2/d.cpp
 """)
 
 t.expect_addition("lib2/bin/$toolset/debug/l.exe")
 t.expect_content("lib2/bin/$toolset/debug/l.exe",
-"""gcc/debug
+"""$toolset/debug
 lib2/bin/$toolset/debug/c.obj bin/$toolset/debug/a.obj
 """)
 
 t.expect_addition("lib2/helper/bin/$toolset/debug/e.obj")
 t.expect_content("lib2/helper/bin/$toolset/debug/e.obj",
-"""gcc/debug
+"""$toolset/debug
 lib2/helper/e.cpp
 """)
 
 t.expect_addition("lib3/bin/$toolset/debug/f.obj")
 t.expect_content("lib3/bin/$toolset/debug/f.obj",
-"""gcc/debug
+"""$toolset/debug
 lib3/f.cpp lib2/helper/bin/$toolset/debug/e.obj
 """)
                  

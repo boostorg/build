@@ -74,7 +74,7 @@ rule init ( version ? path ? : vendor ? : setup ? compiler ? linker ? )
         }
     }
     
-    setup = "call \""$(path)\\bin\\$(setup)"\" >nul
+    setup = "call \""$(path)\\bin\\$(setup)"\" > nul
 " ;
     flags msvc SETUP $(condition) : $(setup:E="") ;
 
@@ -83,10 +83,11 @@ rule init ( version ? path ? : vendor ? : setup ? compiler ? linker ? )
     prefix ?= \"$(path)\\BIN\\\" ;
     prefix ?= "" ;
     compiler ?= cl ;
-    linker ?= LINK ;
+    linker ?= link ;
     
     flags msvc.compile .CC $(condition) : $(prefix)$(compiler) ;
     flags msvc.link .LD $(condition) : $(prefix)$(linker) ;
+    flags msvc.archive .LD $(condition) : $(prefix)$(linker) ;
 }
 
 .CC = cl ;
@@ -170,12 +171,12 @@ toolset.flags msvc.link FINDLIBS <find-static-library> <find-shared-library> ;
 
 actions link
 {
-    $(.LD) /nologo $(LINKFLAGS) /out:"$(<[1])" $(.implib)"$(<[2])" /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @"$(>)"
+    $(.LD) $(LINKFLAGS) /out:"$(<[1])" $(.implib)"$(<[2])" /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @"$(>)"
 }
 
 # Declare action for creating static libraries
 actions archive 
 {
     if exist "$(<)" set _$(<:B)_="$(<)"
-    $(.LD) /nologo /lib /out:"$(<)" %_$(<:B)_% @"$(>)"
+    $(.LD) /lib /out:"$(<)" %_$(<:B)_% @"$(>)"
 }

@@ -31,7 +31,7 @@ exe a : a.cpp ;
 exe b : a.cpp : <define>FOO ;
 """)
 t.write("a.cpp", """
-int main() {}
+int main() { return 0; }
 """)
 
 t.rm("bin")

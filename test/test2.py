@@ -12,7 +12,7 @@ file_list = 'bin/foo/$toolset/debug/runtime-link-dynamic/' * List("foo foo.o")
 t.expect_addition(file_list)
 
 
-t.write("foo.cpp", "int main(int, char**) {}\n")
+t.write("foo.cpp", "int main(int, char**) { return 0; }\n")
 t.run_build_system("-d2 -sBOOST_BUILD_PATH=" + t.original_workdir + "/..")
 t.expect_touch(file_list)
 t.pass_test()

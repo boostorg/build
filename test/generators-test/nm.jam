@@ -4,11 +4,11 @@ rule target-source ( targets * : sources * : properties * )
 {
     if [ modules.peek : NT ]
     {
-        main on $(<) = "int main() {}" ;
+        main on $(<) = "int main() { return 0; }" ;
     }
     else
     {
-        main on $(<) = "\"int main() {}\"" ;
+        main on $(<) = "\"int main() { return 0; }\"" ;
     }
 }
 
