@@ -68,5 +68,14 @@ expected="""error: Ambiguous alternatives for main target ./a
 """
 t.run_build_system("--no-error-backtrace", status=1, stdout=expected)
 
+# Test that we can have alternative without sources
+t.write("Jamfile", """
+alias specific-sources ;
+alias specific-sources : b.cpp : <os>MAGIC ;
+exe a : a.cpp specific-sources ;
+""")
+t.rm("bin")
+t.run_build_system()
+
 		   
 t.cleanup()		   
