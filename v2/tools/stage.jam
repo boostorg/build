@@ -75,6 +75,12 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
         }
         return $(result) ;
     }   
+    
+    # Don't do nothing.
+    rule check-for-unused-sources ( result * : sources * )
+    {        
+    }
+    
 }
 
 class stage-target-class : basic-target ;
