@@ -253,7 +253,7 @@ type.set-generated-target-suffix PYTHON_EXTENSION : : so ;
 type.set-generated-target-suffix PYTHON_EXTENSION : <os>NT : so ;
 type.set-generated-target-suffix PYTHON_EXTENSION : <os>CYGWIN : dll ;
 
-type.register CPP : cpp cxx ;
+type.register CPP : cpp cxx cc ;
 
 import stage ;
 
