@@ -184,11 +184,16 @@ local rule locate ( version ? : vendor ? )
 
     if ! $(setup)
     {        
-        error toolset msvc $(vendor) $(version) initialization: :
-          couldn't find compiler in $(possible-paths) ;
+        ECHO warning: toolset msvc $(vendor) $(version) initialization: ;
+        ECHO warning: couldn't find compiler ;
+        if $(.debug-configuration)
+        {
+            ECHO warning: looked in $(possible-paths) ;
+        }
+        
     }    
     
-    if $(.debug-configuration)
+    if $(.debug-configuration) && $(setup)
     {
         ECHO "notice: msvc $(version:E=<default version>) $(vendor:E="")" ;
         ECHO "notice: found at \"$(setup:D)\"" ;
