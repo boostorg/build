@@ -230,7 +230,7 @@ local rule declare-type ( os * : type : suffixes * : base-type ? : main ? )
 declare-type NT CYGWIN : OBJ : obj : : main ;
 declare-type : OBJ : o : : main ;
 
-declare-type NT CYGWIN : STATIC_LIB : lib : LIB : main ;
+declare-type NT CYGWIN : STATIC_LIB : lib a : LIB : main ;
 declare-type : STATIC_LIB : a : LIB : main ;
 
 declare-type : IMPORT_LIB : : STATIC_LIB : main ;
