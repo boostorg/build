@@ -51,7 +51,7 @@ Projects:
 * Project root: %(root-dir)s
 * Parent project: %(root-dir)s
 * Requirements: <include>/home/ghost/local/include <threading>multi
-* Default build: release
+* Default build: <variant>release
 * Source location: %(root-dir-prefix)sdir/src
 * Projects to build:
 
