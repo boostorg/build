@@ -31,7 +31,7 @@ def run_tests(critical_tests, other_tests):
         print ("%-25s : " %(i)),
         try:
             __import__(i)
-        except:
+        except SystemExit:
             print "FAILED"
             if failures_count == 0:
                 f = open(os.path.join(invocation_dir, 'test_results.txt'), 'w')
