@@ -31,8 +31,8 @@ type.set-generated-target-suffix STATIC_LIB : <toolset>gcc : a ;
 rule init ( version ? : command ? )
 {
     local condition = [ common.check-init-parameters gcc : version $(version) ] ;
-
-    command ?= "g++" ;
+    
+    local command = [ common.get-invocation-command gcc : g++ : $(command) ] ;
     
     flags gcc CONFIG_COMMAND $(condition) : $(command) ;
 }
