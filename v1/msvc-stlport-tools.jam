@@ -47,7 +47,7 @@ STDHDRS = ;
 STDLIBPATH = ;
 
 # STLport iostreams or native iostreams
-feature stlport-iostream : off on ;
+feature stlport-iostream : on off ;
 
 STLPORT_VERSION ?= 4.5.3 ;
 STLPORT_VERSIONS ?= 4.6 4.5 4.0 ;
