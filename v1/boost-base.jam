@@ -119,8 +119,16 @@ rule dll-files ( module implib ? : sources * : target-type ? )
         INCLUDES $(<[1]) : $(<[2-]) ;
         INCLUDES $(<[2-]) : $(<[1]) ;
     }
+    
     target-type ?= DLL ;
-    main-from-objects $(<) : [ Objects $(>) ] : $(target-type) ;
+    if [ MATCH CRAY.* : $(JAMUNAME[-1]) ] # no shared libs on cray
+    {
+        NOTFILE $(<) ;
+    }
+    else
+    {
+        main-from-objects $(<) : [ Objects $(>) ] : $(target-type) ;
+    }
 }
 
 # template: modifier function
@@ -1876,17 +1884,14 @@ gGENERATOR_FUNCTION(DLL) = dll-files ;
 gIS_DEPENDENCY(DLL) = TRUE ;
 rule dll ( target : sources + : requirements * : default-build * )
 {
-    if $(JAMUNAME[1]) != sn9626 # no shared libs on cray
+    if $(JAMUNAME[1]) = OpenBSD
     {
-        if $(JAMUNAME[1]) = OpenBSD
+        if ! [ get-values <dllversion> : $(requirements) ]
         {
-            if ! [ get-values <dllversion> : $(requirements) ]
-            {
-                requirements += <dllversion>0.0 ;
-            }
+            requirements += <dllversion>0.0 ;
         }
-        declare-local-target $(target) : $(sources) : $(requirements) : $(default-build) : DLL ;
     }
+    declare-local-target $(target) : $(sources) : $(requirements) : $(default-build) : DLL ;
 }
 
 # Declare a statically-linked library target.
