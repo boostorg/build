@@ -18,7 +18,7 @@
  *
  * External functions:
  *
- *    newstr() - return a malloc'ed copy of a string
+ *    newstr() - return a dynamically allocated copy of a string
  *    copystr() - return a copy of a string previously returned by newstr()
  *    freestr() - free a string returned by newstr() or copystr()
  *    donestr() - free string tables
@@ -91,7 +91,7 @@ static char* allocate(size_t n)
 }
 
 /*
- * newstr() - return a malloc'ed copy of a string
+ * newstr() - return a dynamically allocated copy of a string
  */
 
 char *
