@@ -41,11 +41,11 @@ char * copy_string(char * s, int l);
 char * tokenize_string(char * s);
 int cmp_literal(const void * a, const void * b);
 
-struct literal
+typedef struct
 {
     char * string;
     char * token;
-};
+} literal;
 
 int main(int argc, char ** argv)
 {
@@ -65,7 +65,7 @@ int main(int argc, char ** argv)
         if (grammar_source_f == 0) { result = 1; }
         if (result == 0)
         {
-            struct literal literals[1024];
+            literal literals[1024];
             int t = 0;
             char l[2048];
             while (1)
@@ -100,7 +100,7 @@ int main(int argc, char ** argv)
             }
             literals[t].string = 0;
             literals[t].token = 0;
-            qsort(literals,t,sizeof(struct literal),cmp_literal);
+            qsort(literals,t,sizeof(literal),cmp_literal);
             {
                 int p = 1;
                 int i = 1;
@@ -155,9 +155,12 @@ int main(int argc, char ** argv)
                                     char * c2 = strchr(c1+1,'`');
                                     if (c2 != 0)
                                     {
-                                        struct literal key = { copy_string(c1+1,c2-c1-1), 0 };
-                                        struct literal * replacement = (struct literal*)bsearch(
-                                            &key,literals,t,sizeof(struct literal),cmp_literal);
+                                        literal key;
+                                        literal * replacement = 0;
+                                        key.string = copy_string(c1+1,c2-c1-1);
+                                        key.token = 0;
+                                        replacement = (literal*)bsearch(
+                                            &key,literals,t,sizeof(literal),cmp_literal);
                                         *c1 = 0;
                                         fprintf(grammar_output_f,"%s%s",c,replacement->token);
                                         c = c2+1;
@@ -211,6 +214,7 @@ char * copy_string(char * s, int l)
 {
     char * result = (char*)malloc(l+1);
     strncpy(result,s,l);
+    result[l] = 0;
     return result;
 }
 
@@ -261,5 +265,5 @@ char * tokenize_string(char * s)
 
 int cmp_literal(const void * a, const void * b)
 {
-    return strcmp(((const struct literal *)a)->string,((const struct literal *)b)->string);
+    return strcmp(((const literal *)a)->string,((const literal *)b)->string);
 }
