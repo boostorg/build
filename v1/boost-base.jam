@@ -1371,33 +1371,39 @@ rule unit-test
 rule build-command-file ( command : sources * )
 {
     DEPENDS $(command) : $(sources) ;
-    # First empty the file
-    command-file-clear $(command) : $(sources) ;
-    # Then fill it up piecemeal
-    command-file-dump $(command) : $(sources) ;
-}
-
-# command-file-clear: silently remove the target if it exists
-if $(NT)
-{
-    # NT needs special handling because DEL always barks if the file isn't found
-    actions quietly command-file-clear
+    
+    # Check whether there's anything to dump, so that we don't end up
+    # executing a line of the form:
+    #
+    #    echo > file.CMD
+    #
+    # on Windows this writes "echo is on." into the command-file,
+    # which then breaks the link.
+    
+    if $(sources[1])
     {
-        IF EXIST "$(<)" $(RM) "$(<)"
+        # Handle the first target specially, so that the first source file
+        # will clear the command file
+        command-file-dump-1st $(command) : $(sources) ;
+    }    
+    
+    if $(sources[2])
+    {
+        # Then fill the rest up piecemeal
+        command-file-dump-rest $(command) : $(sources) ;
     }
 }
-else
+
+# command-file-dump-1st: dump the first source path into the target
+actions quietly command-file-dump-1st
 {
-    actions quietly command-file-clear
-    {
-        $(RM) "$(<)"
-    }
+    echo "$(>[1])" > "$(<)"
 }
 
-# command-file-dump: dump the source paths into the target
-actions quietly piecemeal command-file-dump
+# command-file-dump: dump the remaining source paths into the target
+actions quietly piecemeal command-file-dump-rest
 {
-    echo "$(>)" >> "$(<)"
+    echo "$(>[2-])" >> "$(<)"
 }
 
 # Clean up the temporary COMMAND-FILE used to build TARGETS.

@@ -9,9 +9,17 @@
 # compute MSVC tool path
 # You can either put the msvc bin directory in your PATH, or you can set
 # MSVCDir to point at the msvc installation directory
-MSVC_TOOL_PATH ?= "$(MSVCDir)"$(SLASH)bin$(SLASH) ;
-MSVC_TOOL_PATH ?= "$(VISUALC)"$(SLASH)bin$(SLASH) ;
-MSVC_TOOL_PATH ?= "" ; # Don't clobber adjoining text if MSVCDir isn't set
+if ! $(MSVCDir)
+{
+    MSVC_ROOT ?= $(VISUALC) ;
+    MSVC_ROOT ?= "C:\\Program Files\\Microsoft Visual C++\\VC98" ;
+    MSVC_TOOL_PATH ?= "$(MSVC_ROOT)"$(SLASH)bin$(SLASH) ;
+    MSVC_SETUP ?= \"$(MSVC_TOOL_PATH)VCVARS32.BAT\" ;
+}
+else
+{
+    MSVC_TOOL_PATH ?= "" ; # Don't clobber adjoining text if MSVCDir is already set
+}
 
 flags msvc CFLAGS <debug-symbols>on : /Zi ;
 flags msvc LINKFLAGS <debug-symbols>on : /DEBUG ;
@@ -70,6 +78,7 @@ rule Link-action
 
 actions together msvc-Link-action bind NEEDLIBS
 {
+    $(MSVC_SETUP)
     $(MSVC_TOOL_PATH)link /nologo $(NOINCREMENTAL) $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(FINDLIBS)" @"$(>)"
 }
 
@@ -82,6 +91,7 @@ rule Cc-action
 
 actions msvc-Cc-action
 {
+    $(MSVC_SETUP)
     $(MSVC_TOOL_PATH)cl /Zm400 -nologo -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -Fo"$(<)" "$(>)"
 }
 
@@ -93,18 +103,20 @@ rule C++-action
 
 actions msvc-C++-action
 {
+    $(MSVC_SETUP)
     $(MSVC_TOOL_PATH)cl /Zm400 -nologo -GX -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -Fo"$(<)" -Tp"$(>)"
 }
 
 #### Archive ####
 rule Archive-action
 {
-    msvc-Archive-action $(<) : $(>) ;
+    with-command-file msvc-Archive-action $(<) : $(>) ;
 }
 
 actions updated together piecemeal msvc-Archive-action
 {
-	if exist "$(<)" set _$(<:B)_="$(<)"
-	$(MSVC_TOOL_PATH)link /lib /out:"$(<)" %_$(<:B)_% "$(>)"
+    $(MSVC_SETUP)
+    if exist "$(<)" set _$(<:B)_="$(<)"
+    $(MSVC_TOOL_PATH)link /lib /out:"$(<)" %_$(<:B)_% @"$(>)"
 }
 

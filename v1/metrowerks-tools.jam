@@ -116,12 +116,12 @@ actions metrowerks-C++-action
 #### Archive ####
 rule Archive-action
 {
-    metrowerks-Archive-action $(<) : $(>) ;
+    with-command-file metrowerks-Archive-action $(<) : $(>) ;
 }
 
-    actions together metrowerks-Archive-action
+actions together metrowerks-Archive-action
 {
     $(METROWERKS_SETUP)
-    mwld -library -o "$(<)" "$(>)"
+    mwld -library -o "$(<)" @"$(>)"
 }
 
