@@ -37,9 +37,21 @@ t.write("d2/d/Jamfile", """
 lib l : [ glob *.cpp ] ; 
 """)
 
-t.run_build_system(subdir="d1")
+t.write("d3/d/Jamfile", """
+exe a : [ glob ../*.cpp ] ;
+""")
+t.write("d3/a.cpp", """
+int main()
+{
+    return 0;
+}
+""")
 
+t.run_build_system(subdir="d1")
 t.expect_addition("d1/bin/$toolset/debug/a.exe")
+
+t.run_build_system(subdir="d3/d")
+t.expect_addition("d3/d/bin/$toolset/debug/a.exe")
 
 t.rm("d2/d/bin")
 t.run_build_system(subdir="d2/d")
