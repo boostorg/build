@@ -1,23 +1,8 @@
 module build-system { rule __dummy { } } # Keep the bogus assertion in Jambase happy
- 
+
 import project ;
 import targets ;
 import assert ;
-
-rule exe ( name : sources )
-{
-    local module-name = [ CALLER_MODULE ] ;
-
-    local project-target =
-        [ targets.abstract-target-name [ $(module-name).location ] ] ;
-
-    local exe-target = [ class.new typed-target $(name) : EXE ] ;
-
-    $(project-target).depends $(exe-target) ;
-
-}
-
-IMPORT $(__name__) : exe : : exe ;
 
 project.load project-test1 ;
 
@@ -30,5 +15,6 @@ assert.result project-test1/dir  : project.lookup @dir : "project-test1" ;
 assert.result project-test1      : project.lookup @ : "project-test1" ;
 
 
-actions unbuilt { } unbuilt all ;
+NOTFILE all ;
+
 
