@@ -8,7 +8,7 @@ import regex ;
 import scanner ;
 
 feature.feature xsl:param : : free ;
-feature.feature format : html-single docbook : incidental implicit composite ;
+feature.feature format : onehtml docbook : incidental implicit composite ;
 
 type.register XML : xml ;
 type.register DOCBOOK : docbook ; 
@@ -18,7 +18,7 @@ type.register XSLT : xsl ;
 #generators.register-standard boostbook.xslt : XML XSLT : * ;
 
 generators.register-standard boostbook.boostbook-to-docbook : XML : DOCBOOK ;
-generators.register-standard boostbook.docbook-to-html-single 
+generators.register-standard boostbook.docbook-to-onehtml 
   : DOCBOOK : HTML ;
 
 rule xslt ( target : source stylesheet : properties * )
@@ -41,7 +41,7 @@ rule boostbook-to-docbook ( target : source : properties * )
   xslt $(target) : $(source) "$(dir)/tools/boostbook/xsl/docbook.xsl" : $(properties) ;
 }
 
-rule docbook-to-html-single ( target : source : properties * )
+rule docbook-to-onehtml ( target : source : properties * )
 {
   local dir = [ modules.peek : BOOST_ROOT ] ;
   xslt $(target) : $(source) "$(dir)/tools/boostbook/xsl/html-single.xsl" : $(properties) ;
@@ -65,7 +65,7 @@ rule boostbook-target-class ( name : project : sources * : requirements *
     switch $(format) 
     {
       case docbook : type = DOCBOOK ;
-      case html-single : type = HTML ;
+      case onehtml : type = HTML ;
     }
 
     for local i in $(source-targets) 
@@ -95,7 +95,9 @@ actions xslt-xsltproc
   XML_CATALOG_FILES=catalog.xml xsltproc $(FLAGS) --xinclude -o $(<) $(STYLESHEET) $(>)
 }
 
-# Mostly stolen from c-scanner :)
+# XInclude scanner. Mostly stolen from c-scanner :)
+# Note that this assumes an "xi" prefix for XIncludes. This isn't always the
+# case for XML documents, but we'll assume it's true for anything we encounter.
 rule xinclude-scanner ( includes * )
 {
   scanner.__init__ ;
