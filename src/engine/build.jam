@@ -15,6 +15,12 @@ if --debug in $(ARGV)
     debug = true ;
 }
 
+# Attempt to generate and/or build the grammar?
+if --grammar in $(ARGV)
+{
+    grammar = true ;
+}
+
 # An explicit root for the toolset? (trim spaces)
 toolset-root = [ MATCH --toolset-root=(.*) : $(ARGV) ] ;
 {
@@ -428,7 +434,10 @@ actions .yyacc. {
     $(--chmod+w)$(<[2])
     $(yyacc.exe) $(<) $(>)
 }
-.yyacc jamgram.y jamgramtab.h : jamgram.yy ;
+if $(grammar)
+{
+    .yyacc jamgram.y jamgramtab.h : jamgram.yy ;
+}
 
 # How to build the grammar.
 if $(NT)
@@ -440,13 +449,9 @@ if $(NT)
 }
 SUFEXE ?= "" ;
 
-# On some systems yacc is insufficient to build the grammar.
-if ! ( $(OS) in SOLARIS SUNOS )
-{
-    yacc ?= [ GLOB $(PATH) : yacc$(SUFEXE) ] ;
-}
+yacc ?= [ GLOB $(PATH) : yacc$(SUFEXE) ] ;
 yacc ?= [ GLOB $(PATH) : bison$(SUFEXE) ] ;
-yacc ?= [ GLOB "C:\\Program Files\\GnuWin32\\bin" : bison$(SUFEXE) ] ;
+yacc ?= [ GLOB "$(ProgramFiles:J= )\\GnuWin32\\bin" "C:\\Program Files\\GnuWin32\\bin" : bison$(SUFEXE) ] ;
 yacc = $(yacc[1]) ;
 switch $(yacc:D=:S=)
 {
@@ -489,7 +494,11 @@ if $(VMS) { actions .yacc. {
         RENAME y_tab$(<[2]:S) $(<[2])
     ENDIF
 } }
-if $(yacc)
+if $(grammar) && ! $(yacc)
+{
+    EXIT "Could not find the 'yacc' tool, and therefore can not build the grammar." ;
+}
+if $(grammar) && $(yacc)
 {
     .yacc jamgram.c jamgram.h : jamgram.y ;
 }
@@ -566,22 +575,20 @@ dist.bin =
 
 if $(NT)
 {
-    if [ GLOB "C:\\Program Files\\7-ZIP" : "7zn.exe" ] {
-        actions piecemeal .pack. {
-    "C:\Program Files\7-ZIP\7zn.exe" a -r -tzip "$(<)" "$(>)"
-        }
-        actions piecemeal .zip. {
-    "C:\Program Files\7-ZIP\7zn.exe" a -r -tzip "$(<)" "$(>)"
-        }
-    }
-    else
+    zip ?= [ GLOB "$(ProgramFiles:J= )\\7-ZIP" "C:\\Program Files\\7-ZIP" : "7zn.exe" ] ;
+    zip ?= [ GLOB $(PATH) : zip.exe ] ;
+    zip ?= zip ;
+    zip = $(zip[1]) ;
+    switch $(zip:D=:S=)
     {
-        actions piecemeal .pack. {
-    zip -9r "$(<)" "$(>)"
-        }
-        actions piecemeal .zip. {
-    zip -9r "$(<)" "$(>)"
-        }
+        case 7zn : zip += a -r -tzip ;
+        case zip  : zip += -9r ;
+    }
+    actions piecemeal .pack. {
+    "$(zip)" "$(<)" "$(>)"
+    }
+    actions piecemeal .zip. {
+    "$(zip)" "$(<)" "$(>)"
     }
     actions piecemeal .cp. {
     copy /Y "$(>)" "$(<)"
