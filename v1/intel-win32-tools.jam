@@ -39,6 +39,19 @@ version ?= [ MATCH .*[\\/][Cc][Oo][Mm][Pp][Ii][Ll][Ee][Rr]([0-9])[0-9][\\/].* : 
 # Reduce the number of spurious error messages
 C++FLAGS += /Qwn5 /Qwd985 ;
 
+# Detect illegal conversions in this program:
+#
+# # include <vector>
+# # include <algorithm>
+# int main()
+# {
+# char* a[20];
+# std::vector<int> v(20);
+# std::copy(v.begin(), v.end(), a);
+# return 0;
+# }
+C++FLAGS += /Qwe556 ;
+
 # Enable ADL
 C++FLAGS += -Qoption,c,--arg_dep_lookup ; #"c" works for C++, too
 
