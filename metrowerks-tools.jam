@@ -17,6 +17,7 @@
 
 # if METROWERKS_ROOT is unset, this will "multiply away" to nothing.
 METROWERKS_SETUP = "call "\"$(METROWERKS_ROOT)$(SLASH)"Other Metrowerks Tools"$(SLASH)"Command Line Tools"$(SLASH)cwenv.bat\"" -quiet" ;
+METROWERKS_LINK_SETUP = "set MWWinx86LibraryFiles=" ;
 
 flags metrowerks DEFINES <define> ;
 flags metrowerks UNDEFS <undef> ;
@@ -78,7 +79,7 @@ rule Link-action
 actions metrowerks-Link-action bind NEEDLIBS
 {
     $(METROWERKS_SETUP)
-    set MWWinx86LibraryFiles=$(STDLIBS)
+    $(METROWERKS_LINK_SETUP)$(STDLIBS)
     mwld -export dllexport -nowraplines $(LINKFLAGS) -L$(LIBPATH) -L$(STDLIBPATH) $(IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])"  $(UNDEFS) $(NEEDLIBS) "$(>)" -l$(FINDLIBS)
 }
 
