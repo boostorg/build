@@ -11,6 +11,7 @@ import os ;
 import common ;
 import toolset ;
 import path ;
+import feature : feature ;
 
 .initialized = ;
 
@@ -54,6 +55,8 @@ rule html ( target : source : properties *  )
 }
 
 
+feature docutils : : free ;
+feature docutils-html : : free ;
 toolset.flags docutils COMMON-FLAGS : <docutils> ;
 toolset.flags docutils HTML-FLAGS : <docutils-html> ;
   
