@@ -38,7 +38,14 @@ flags gcc STDLIBPATH : $(GCC_STDLIB_DIRECTORY) ;
 flags gcc CFLAGS <shared-linkable>true : -fPIC ;
 flags gcc LINKFLAGS <shared-linkable>true : -fPIC ;
 
+if $(BETOOLS)
+{
+flags gcc LINKFLAGS <target-type>DLL : -nostart ;
+}
+else
+{
 flags gcc LINKFLAGS <target-type>DLL : -shared ;
+}
 flags gcc LIBPATH <library-path> ;
 flags gcc NEEDLIBS <library-file> ;
 flags gcc FINDLIBS <find-library> ;
