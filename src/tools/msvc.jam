@@ -153,10 +153,31 @@ local rule locate ( version ? : vendor ? )
     # We know default locations only for msvc, not for alternative vendors
     if ! $(vendor)
     {       
-        local version-6-path = "c:\\Program Files\\Microsoft Visual Studio\\VC98" ;
-        local version-7-path = "c:\\Program Files\\Microsoft Visual Studio .NET\\VC7" ;
+        local ProgramFiles = [ modules.peek : ProgramFiles ] ;
+        if $(ProgramFiles)
+        {
+            ProgramFiles = "$(ProgramFiles:J= )" ;
+        }
+        else
+        {
+            ProgramFiles = "c:\\Program Files" ;
+        }
+
+        local version-6-path = $(ProgramFiles)"\\Microsoft Visual Studio\\VC98" ;
+        local version-7-path = $(ProgramFiles)"\\Microsoft Visual Studio .NET\\VC7" ;
         local version-7.0-path = $(version-7-path) ;
-        local version-7.1-path = "c:\\Program Files\\Microsoft Visual Studio .NET 2003\\VC7" ;
+        local version-7.1-path = $(ProgramFiles)"\\Microsoft Visual Studio .NET 2003\\VC7" ;
+
+        local VS71COMNTOOLS = [ modules.peek : VS71COMNTOOLS ] ;
+        if $(VS71COMNTOOLS)
+        {
+            # VS71COMNTOOLS is set by VS .NET 2003 to <VSDIR>\Common7\Tools
+            version-7.1-path = [ path.make "$(VS71COMNTOOLS:J= )" ] ;
+            version-7.1-path = [ path.parent $(version-7.1-path) ] ;
+            version-7.1-path = [ path.parent $(version-7.1-path) ] ;
+            version-7.1-path = [ path.join $(version-7.1-path) "VC7" ] ;
+            version-7.1-path = [ path.native $(version-7.1-path) ] ;
+        }
     
         if $(version)
         {
