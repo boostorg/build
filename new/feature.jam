@@ -44,26 +44,26 @@ module local all-attributes =
     
 
     symmetric   # A symmetric feature has no default value, and is
-		# therefore not automatically included in all
-		# variants. A symmetric feature, when relevant to the
-		# toolset, always generates a corresponding subvariant
-		# directory.
+        # therefore not automatically included in all
+        # variants. A symmetric feature, when relevant to the
+        # toolset, always generates a corresponding subvariant
+        # directory.
 
     free        # as described in previous documentation
 
     path        # the (free) feature's value describes a path which
-		# might be given relative to the directory of the
-		# Jamfile.
+        # might be given relative to the directory of the
+        # Jamfile.
 
     dependency  # the value of the (free) feature specifies a
-		# dependency of the target.
+        # dependency of the target.
 
     propagated  # when used in a build request, the (free) feature is
-		# propagated to top-level targets which are
-		# dependencies of the requested build. Propagated
-		# features would be most useful for settings such as
-		# warning levels, output message style, etc., which
-		# don't affect the built products at all.
+        # propagated to top-level targets which are
+        # dependencies of the requested build. Propagated
+        # features would be most useful for settings such as
+        # warning levels, output message style, etc., which
+        # don't affect the built products at all.
   ;
 
 module local all-features ;
