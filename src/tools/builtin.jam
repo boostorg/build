@@ -298,10 +298,9 @@ rule response-file ( target : sources * : properties * )
     }
     print.output $(target) ;
     print.text [ on $(target)
-                 return "$(LIBRARY_PATH_OPTION)$(LIBRARY_PATH)"
-                        "$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)"
+                 return "$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)"
                         "$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)"
-               ] ;
+               ] : : suffix ;
 }
 
 actions quietly response-file-1

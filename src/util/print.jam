@@ -317,10 +317,13 @@ rule text (
     else if $(output-target) && $(strings)
     {
         $(output-target).line ?= 0 ;
-        DEPENDS $(output-target) : $(output-target:G=body) ;
-        ALWAYS $(output-target:G=body) ;
-        LOCATE on $(output-target:G=body) = 
-          [ on $(output-target) return $(LOCATE) ] ;
+        if $(prefix-or-suffix) != suffix 
+        {            
+            DEPENDS $(output-target) : $(output-target:G=body) ;
+            ALWAYS $(output-target:G=body) ;
+            LOCATE on $(output-target:G=body) = 
+              [ on $(output-target) return $(LOCATE) ] ;
+        }       
         while $(strings)
         {
             local line-v = $(output-target).line.$($(output-target).line) ;
