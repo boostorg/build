@@ -100,9 +100,11 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
     }
     else
     {
-        # CONSIDER: Why setting match type and calling error?
         match-type += unconditional ;
-        error empty value set used with unconditional match criterion ;
+        if ! $(values)
+        {
+            error empty value set used with unconditional match criterion ;
+        }
     }    
     add-flag $(rule-or-module) : $(match-type) : $(variable-name)
       : $(condition) : $(values) ;
@@ -200,6 +202,16 @@ rule set-target-variables ( rule-or-module target : properties * )
     if $(module_)
     {
         set-target-variables $(module_) $(target) : $(properties) ;
+        
+        # Allow a rule-based hook for more-sophisticated setting
+        # of build options than flags allows.
+        if prepare-target in [ RULENAMES $(module_) ]
+        {
+            module $(module_)
+            {
+                prepare-target [ modules.peek toolset : target ] : [ modules.peek toolset : properties ] ;
+            }
+        }
     }
 }
 
