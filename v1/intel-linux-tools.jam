@@ -136,6 +136,7 @@ actions updated together piecemeal intel-linux-Archive-action
 
 rule Link-action
 {
+    local result ;
     gRUN_LD_LIBRARY_PATH($(<)) += $(INTEL_LINUX_RUN_LD_LIBRARY_PATH) ;
     SPACE on $(<) = " " ;
     if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES)
@@ -143,6 +144,7 @@ rule Link-action
         OUTTAG on $(<) = ".$(DLLVERSION)" ;
         SOTAG on $(<) = ".$(DLLVERSION)" ;
         ACTION_1 on $(<) = "" ;
+        result += "$(<[1]:D=).$(DLLVERSION)" ;
     }
     else
     {
@@ -151,6 +153,7 @@ rule Link-action
         ACTION_1 on $(<) = ;
     }
     intel-linux-Link-action $(<) : $(>) ;
+    return $(result) ;
 }
 
 # for icc, we repeat all libraries so that dependencies are always resolved
