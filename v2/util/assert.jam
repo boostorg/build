@@ -91,3 +91,22 @@ rule false ( rule-name args * : * )
     }
 }
 
+# assert that 'element' is present in 'list'.
+rule "in" ( element : list * )
+{
+    if ! $(element) in $(list)
+    {
+        error-skip-frames 3 assertion failure: expecting $(element) in 
+                          "[" $(list) "]" ;
+    }
+}
+
+# assert that 'element' is not present in 'list'.
+rule not-in ( element : list * )
+{
+    if $(element) in $(list)
+    {
+        error-skip-frames 3 assertion failure: did not expect $(element) in 
+                          "[" $(list) "]" ;
+    }
+}
