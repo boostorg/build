@@ -322,7 +322,9 @@ rule extend-subfeature (
   feature           # The feature whose subfeature is being extended
     
     value-string ?  # If supplied, specifies a specific value of the
-                    # main feature for which the subfeature values are valid
+                    # main feature for which the new subfeature values
+                    # are valid
+    
     : subfeature    # The name of the subfeature
     : subvalues *   # The additional values of the subfeature being defined.
 )
