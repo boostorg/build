@@ -544,17 +544,12 @@ IMPORT virtual-target : remember-binding : : virtual-target.remember-binding ;
 # not establish dependency relationship, but should do everything else.
 rule action ( targets + : sources * : action-name + : property-set ? )
 {
-    import type toolset property-set ;
+    import type toolset property-set indirect ;
     
     self.targets = $(targets) ;
     self.sources = $(sources) ;
-    self.action-name = $(action-name) ;
     
-    if ! [ MATCH (\\.) : $(action-name[1]) ]
-    {
-        local caller = [ CALLER_MODULE ] ;
-        self.action-name = $(caller).$(action-name[1]) $(action-name[2-]) ;
-    }
+    self.action-name = [ indirect.make-qualified $(action-name) ] ;
     
     if ! $(property-set) 
     {
@@ -611,14 +606,13 @@ rule action ( targets + : sources * : action-name + : property-set ? )
 
             # Action name can include additional argument to rule, which should not
             # be passed to 'set-target-variables'
-            toolset.set-target-variables $(self.action-name[1]) $(actual-targets) :
-              $(properties) ;
+            toolset.set-target-variables
+              [ indirect.get-rule $(self.action-name[1]) ] $(actual-targets)
+                : $(properties) ;
             
-            modules.call-locally $(self.action-name) 
-              $(actual-targets)
-              : $(self.actual-sources)
-                : $(properties)
-                  ;
+            indirect.call $(self.action-name) 
+              $(actual-targets) : $(self.actual-sources) : $(properties)
+                ;
             
             # Since we set up creating action here, we also set up
             # action for cleaning up

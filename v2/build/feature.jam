@@ -10,7 +10,7 @@ import sequence ;
 import regex ;
 import set ;
 import utility ;
-import modules ;
+import modules indirect ;
 
 local rule setup ( )
 {
@@ -847,10 +847,7 @@ rule split ( property-set )
 # <feature>value, and feature should be specified as <feature>.
 rule action ( property-or-feature : rule-name )
 {
-    local caller = [ CALLER_MODULE ] ;
-    rule-name = $(caller).$(rule-name) ;
-    
-    .rules.$(property-or-feature) += $(rule-name) ;
+    .rules.$(property-or-feature) += [ indirect.make-qualified $(rule-name) ] ;
 }
 
 # Returns 'properties' augmented with results of calling rule associated with properties.
@@ -871,7 +868,7 @@ rule run-actions ( properties * )
         }
         for local r in $(rules)
         {
-            added += [ modules.call-locally $(r) $(e) : $(properties) ] ;
+            added += [ indirect.call $(r) $(e) : $(properties) ] ;
         }
     }
     return $(properties) $(added) ;            

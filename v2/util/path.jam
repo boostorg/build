@@ -503,7 +503,8 @@ rule __test__ ( ) {
     assert.result "c/d" : relative "a/b/c/d" "a/b" ;
     assert.result "foo" : relative "foo" "." ;
 
-    local os = NT ;
+    local save-os = [ modules.peek path : os ] ;
+    modules.poke path : os : NT ;
 
     assert.result "foo/bar/giz" : make "foo/bar/giz" ;
     assert.result "foo/bar/giz" : make "foo\\bar\\giz" ;
@@ -516,7 +517,7 @@ rule __test__ ( ) {
     assert.result "foo" : native "foo" ;
     assert.result "D:\\My Documents\\Work" : native "/D:/My Documents/Work" ;
 
-    local os = UNIX ;
+    modules.poke path : os : UNIX ;
 
     assert.result "foo/bar/giz" : make "foo/bar/giz" ;
     assert.result "/sub1" : make "/sub1/." ;
@@ -525,5 +526,6 @@ rule __test__ ( ) {
     assert.result "sub1" : make "sub1/sub2/.." ;
     assert.result "/foo/bar" : native "/foo/bar" ;
 
+    modules.poke path : os : $(save-os) ;
 
 }
