@@ -320,7 +320,7 @@ rule text (
     }
     # We ignore empty output because the Windows ECHO command is
     # braindamaged. It doesn't have any facility for echoing a blank line.
-    else if $(output-target) && $(strings)
+    else if $(output-target)
     {
         if ! $($(output-target).did-action)
         {
@@ -343,7 +343,7 @@ rule text (
         }
         if ! $(text-front-section.$(output-target))
         {
-            text-front on $(output-target) = [ escape $(strings[1]) ] ;
+            text-front on $(output-target) = [ echo-cmd $(strings[1]) ] ;
             text-front-section.$(output-target) = $(prefix-body-suffix) ;
             strings = $(strings[2-]) ;
         }
@@ -357,13 +357,13 @@ rule text (
                 text-$(text-front-section.$(output-target)) on $(output-target) =
                     [ on $(output-target) return $(text-front) ]
                     [ on $(output-target) return $(text-$(text-front-section.$(output-target))) ] ;
-                text-front on $(output-target) = [ escape $(strings[1]) ] ;
+                text-front on $(output-target) = [ echo-cmd $(strings[1]) ] ;
                 text-front-section.$(output-target) = $(prefix-body-suffix) ;
                 strings = $(strings[2-]) ;
             }
             while $(strings)
             {
-                text-$(prefix-body-suffix) on $(output-target) += [ escape $(strings[1]) ] ;
+                text-$(prefix-body-suffix) on $(output-target) += [ echo-cmd $(strings[1]) ] ;
                 strings = $(strings[2-]) ;
             }
         }
@@ -408,26 +408,41 @@ rule escape-html (
 #
 actions quietly text-action
 {
-echo$(_)$(text-front)$(_)$(text-redirect-0)$(_)"$(<)"
-echo$(_)$(text-prefix)$(_)$(text-redirect-n)$(_)"$(<)"$(nl)
-echo$(_)$(text-body)$(_)$(text-redirect-n)$(_)"$(<)"$(nl)
-echo$(_)$(text-suffix)$(_)$(text-redirect-n)$(_)"$(<)"$(nl)
+$(text-front)$(_)$(text-redirect-0)$(_)"$(<)"
+$(text-prefix)$(_)$(text-redirect-n)$(_)"$(<)"$(nl)
+$(text-body)$(_)$(text-redirect-n)$(_)"$(<)"$(nl)
+$(text-suffix)$(_)$(text-redirect-n)$(_)"$(<)"$(nl)
 }
 
 if [ modules.peek : NT ]
 {
-  rule escape ( string )
-  {
-    return [ regex.escape $(string) : "&|()<>^" : "^" ] ;
-  }
+    rule echo-cmd ( string ? )
+    {
+        if $(string) || $(string) != ""
+        {
+            local escaped = [ regex.escape $(string) : "&|()<>^" : "^" ] ;
+            return "echo $(escaped)" ;
+        }
+        else
+        {
+            return "echo." ;
+        }
+    }
 }
 else
 {
-  rule escape ( string )
-  {
-    local escaped = [ regex.escape $(string) : "\\\"" : "\\" ] ;
-    return "\"$(escaped)\"" ;
-  }
+    rule echo-cmd ( string ? )
+    {
+        if $(string) || $(string) != ""
+        {
+            local escaped = [ regex.escape $(string) : "\\\"" : "\\" ] ;
+            return "\"$(escaped)\"" ;
+        }
+        else
+        {
+            return "echo" ;
+        }
+    }
 }
 
 local rule __test__ ( )
