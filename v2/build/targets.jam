@@ -627,8 +627,14 @@ rule find ( id : project )
     local base-project ;
     if $(project-part) 
     {
-        base-project = [ project.target 
-          [ project.find $(project-part) : $(current-location) ] ] ;
+        local pm = [ project.find $(project-part) : $(current-location) ] ;
+        # If we can't find a project, it means project part is invalid.
+        # Don't assign any value to base-project, the below code will eventually
+        # return empty result.
+        if $(pm)
+        {                  
+            base-project = [ project.target $(pm) ] ;
+        }        
     }
     else
     {
