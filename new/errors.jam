@@ -46,7 +46,7 @@ rule backtrace ( skip-frames messages * : * )
 
 .args ?= messages 2 3 4 5 6 7 8 9 ;
 .disabled ?= ;
-.last-$(.args) ?= ;
+.last-error-$(.args) ?= ; 
 
 # try-catch --
 #
@@ -60,7 +60,7 @@ rule backtrace ( skip-frames messages * : * )
 rule try ( )
 {
     .disabled += true ;
-    .last-$(.args) = ;
+    .last-error-$(.args) = ;
 }
 
 # stop looking for error messages; generate an error if an argument of
@@ -71,17 +71,24 @@ rule catch ( messages * : * )
     
     import sequence ;
 
-    for local n in $(.args)
+    if ! $(.last-error-$(.args))-is-nonempty
     {
-        if ! $($(n)) in $(.last-$(n))
+        error-skip-frames 3 expected an error, but none occurred ;
+    }
+    else
+    {
+        for local n in $(.args)
         {
-            local v = [ sequence.join $($(n)) : " " ] ;
-            v ?= "" ;
-            local joined = [ sequence.join $(.last-$(n)) : " " ] ;
-            
-            .last-$(.args) = ;
-            error-skip-frames 3 expected \"$(v)\" in argument $(n) of error
-              : got \"$(joined)\" instead ;
+            if ! $($(n)) in $(.last-error-$(n))
+            {
+                local v = [ sequence.join $($(n)) : " " ] ;
+                v ?= "" ;
+                local joined = [ sequence.join $(.last-error-$(n)) : " " ] ;
+
+                .last-error-$(.args) = ;
+                error-skip-frames 3 expected \"$(v)\" in argument $(n) of error
+                  : got \"$(joined)\" instead ;
+            }
         }
     }
 }
@@ -93,11 +100,13 @@ rule error-skip-frames ( skip-frames messages * : * )
         backtrace $(skip-frames) error: $(messages) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
         EXIT ;
     }
-    else if ! $(.last-$(.args))
+    else if ! $(.last-error-$(.args))
     {
         for local n in $(.args)
         {
-            .last-$(n) = $($(n)) ;
+            # Add an extra empty string so that we always have
+            # something in the event of an error
+            .last-error-$(n) = $($(n)) "" ; 
         }
     }
 }
@@ -183,4 +192,15 @@ rule __test__ ( )
         catch an error occurred : nowhere ;
     }
     catch expected \"nowhere\" in argument 2 ;
+    
+    # show that not catching an error where one was expected is an
+    # error
+    try ;
+    {
+        try ;
+        {
+        }
+        catch ;
+    }
+    catch expected an error, but none occurred ;
 }
