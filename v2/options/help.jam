@@ -1,0 +1,26 @@
+# Copyright David Abrahams 2003. Permission to copy, use,
+# modify, sell and distribute this software is granted provided this
+# copyright notice appears in all copies. This software is provided
+# "as is" without express or implied warranty, and with no claim as
+# to its suitability for any purpose.
+
+# This module is the plug-in handler for the --help and --help-.*
+# command-line options
+import doc ;
+import assert ;
+
+
+# Handle options here.  This might just as well be done at module
+# scope, since we don't happen to use the argument values, but I hope
+# that Rene will transplant the help logic here and then it will be
+# useful.
+rule process ( option-name : value ? )
+{
+    assert.result --help : MATCH ^(--help).* : $(option-name) ;
+    if [ doc.help ]
+    {
+        EXIT ;
+    }
+}
+  
+  
