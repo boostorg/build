@@ -526,7 +526,7 @@ class main-target : abstract-target
         if ! $(best-alternatives)
         {
             errors.error
-                "skipped build of" [ full-name ]
+                "failed to build" [ full-name ]
                 "with properties" [ $(property-set).raw ]
                   "because no best-matching alternative could be found"
                   ; 
