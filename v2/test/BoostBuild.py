@@ -104,11 +104,11 @@ class Tester(TestCmd.TestCmd):
 
         # try for the debug version if it's lying around
         if os.path.exists(
-            os.path.join('..', 'jam_src', jam_build_dir + '.debug')
+            os.path.join('../..', 'jam_src', jam_build_dir + '.debug')
         ):
             jam_build_dir += '.debug'
             
-        program_list.append(os.path.join('..', 'jam_src', jam_build_dir, executable))
+        program_list.append(os.path.join('../..', 'jam_src', jam_build_dir, executable))
         program_list.append('-sBOOST_BUILD_PATH=' + boost_build_path)
         if verbosity:
             program_list += verbosity
