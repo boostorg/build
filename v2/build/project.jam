@@ -314,13 +314,28 @@ local rule load-jamfile (
     .current-project = $(.current-project[2-]) ;
 }
 
-rule load-aux ( module-name : file )
-{
-    module $(module-name)
+if USER_MODULE in [ RULENAMES ]
+{    
+    rule load-aux ( module-name : file )
     {
-        include $(2) ;
-    }    
+        USER_MODULE $(module-name) ;
+        module $(module-name)
+        {
+            include $(2) ;
+        }    
+    }
 }
+else
+{
+    rule load-aux ( module-name : file )
+    {    
+        module $(module-name)
+        {
+            include $(2) ;
+        }    
+    }
+}
+
 
 
 # Initialize the module for a project. 

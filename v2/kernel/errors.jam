@@ -17,43 +17,47 @@ rule backtrace ( skip-frames prefix messages * : * )
         drop-elements = 5 ;
     }
     
-    # get the whole backtrace, then drop the initial quadruples
-    # corresponding to the frames that must be skipped.
-    local bt = [ BACKTRACE ] ;
-    bt = $(bt[$(drop-elements)-]) ; 
-    
-    local args = $(.args) ;
-    while $(bt)
+    local args = $(.args) ;    
+    if $(.user-modules-only)
     {
-        local m = [ MATCH ^(.+)\\.$ : $(bt[3]) ] ;
-        local user-modules = ([Jj]amfile(.jam|.v2)|user-config.jam|site-config.jam|project-root.jam) ;
-        
-        if $(.user-modules-only) 
-        {
-            if [ MATCH $(user-modules) : $(bt[1]:D=) ] 
-            {                
-                ECHO "$(prefix) at $(bt[1]):$(bt[2]) " ;
-            }            
-        }        
-        else          
-        {            
-            ECHO $(bt[1]):$(bt[2]): "in" $(bt[4]) "from module" $(m) ;
-        }
-                
-        # the first time through, print each argument on a separate
-        # line
+        local bt = [ nearest-user-location ] ;
+        ECHO "$(prefix) at $(bt) " ;
         for local n in $(args)
-        {
+        {            
             if $($(n))-is-not-empty
             {
                 ECHO $(prefix) $($(n)) ;
             }
-        }
-        args = ; # kill args so that this never happens again
-        
-        # Move on to the next quadruple
-        bt = $(bt[5-]) ;
+        }        
     }
+    else
+    {
+        # get the whole backtrace, then drop the initial quadruples
+        # corresponding to the frames that must be skipped.
+        local bt = [ BACKTRACE ] ;
+        bt = $(bt[$(drop-elements)-]) ; 
+        
+        while $(bt)
+        {
+            local m = [ MATCH ^(.+)\\.$ : $(bt[3]) ] ;
+            ECHO $(bt[1]):$(bt[2]): "in" $(bt[4]) "from module" $(m) ;
+       
+                        
+            # the first time through, print each argument on a separate
+            # line
+            for local n in $(args)
+            {
+                if $($(n))-is-not-empty
+                {
+                    ECHO $(prefix) $($(n)) ;
+                }
+            }
+            args = ; # kill args so that this never happens again
+            
+            # Move on to the next quadruple
+            bt = $(bt[5-]) ;
+        }
+    }    
 }
 
 .args ?= messages 2 3 4 5 6 7 8 9 ;
@@ -214,6 +218,17 @@ rule nearest-user-location ( )
     }
     return $(result) ;
 }
+
+# If optimized rule is available in jam, use it.
+if NEAREST_USER_LOCATION in [ RULENAMES ] 
+{
+    rule nearest-user-location ( )
+    {
+        local r = [ NEAREST_USER_LOCATION ] ;
+        return $(r[1]):$(r[2]) ;
+    }    
+}
+
 
 
 rule __test__ ( )
