@@ -73,7 +73,9 @@ import utility ;
         # toolset, always generates a corresponding subvariant
         # directory.
 
-    free        # as described in previous documentation
+    free
+      
+    incidental  
 
     path        # the (free) feature's value describes a path which
         # might be given relative to the directory of the
@@ -318,8 +320,8 @@ local rule expand-subfeatures-aux (
 #
 rule expand-subfeatures ( 
   properties * # property set with elements of the form
-	       # <feature>value-string or just value-string in the
-	       # case of implicit features.
+           # <feature>value-string or just value-string in the
+           # case of implicit features.
 )
 {
     local result ;

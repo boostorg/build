@@ -21,7 +21,7 @@ rule make-target-class ( name : project : sources * : requirements *
     rule construct ( source-targets * : properties * )
     {
         local t = [ new virtual-target $(self.name)
-                    : $(self.project) : [ property.remove-free $(properties) ] ] ;
+                    : $(self.project) : [ property.remove free incidental : $(properties) ] ] ;
         local a = [ new action $(t) : $(source-targets) : $(self.make-rule) 
                     : $(properties) ] ;
         $(t).action $(a) ;

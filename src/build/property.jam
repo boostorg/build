@@ -201,15 +201,15 @@ rule make ( specification * )
     return $(result) ;
 }
 
-# Returns a property sets which include all the elements in 'properties',
-# except for free properties.
-rule remove-free ( properties * : feature-space ? )
+# Returns a property sets which include all the elements in 'properties' that
+# do not have attributes listed in 'attributes'. 
+rule remove ( attributes + : properties * : feature-space ? )
 {
     feature-space ?= feature ;
     local result ;
     for local e in $(properties)
     {
-        if ! free in [ $(feature-space).attributes $(e:G) ] 
+        if ! [ set.intersection $(attributes) : [ $(feature-space).attributes $(e:G) ] ]
         {
             result += $(e) ;
         }
@@ -217,14 +217,15 @@ rule remove-free ( properties * : feature-space ? )
     return $(result) ;
 }
 
-# Returns a property set which include all free properties in 'properties'.
-rule take-free ( properties * : feature-space ? )
+# Returns a property set which include all properties in 'properties' that have
+# any of 'attributes'.
+rule take ( attributes + : properties * : feature-space ? )
 {
     feature-space ?= feature ;
     local result ;
     for local e in $(properties)
     {
-        if free in [ $(feature-space).attributes $(e:G) ] 
+        if [ set.intersection $(attributes) : [ $(feature-space).attributes $(e:G) ] ]
         {
             result += $(e) ;
         }
@@ -305,7 +306,7 @@ local rule __test__ ( )
     catch "Invalid property 'value': 'value' is not a value of implicit feature." ;
            
 
-    assert.result <toolset>gcc <rtti>on 
-        : remove-free <toolset>gcc <define>foo <rtti>on : $(test-space) ;
+    assert.result <rtti>on 
+        : remove free implicit : <toolset>gcc <define>foo <rtti>on : $(test-space) ;
 }
 
