@@ -1,5 +1,0 @@
-x = a b c ;
-y = d e f ;
-v = x y ;
-$(v) = ;
-ECHO $(x) $(y) ;

@@ -1,5 +1,16 @@
+# (C) Copyright David Abrahams 2001. Permission to copy, use,
+# modify, sell and distribute this software is granted provided this
+# copyright notice appears in all copies. This software is provided
+# "as is" without express or implied warranty, and with no claim as
+# to its suitability for any purpose.
+
+#
+# Jam code for testing the named-argument patch.
+#
+
 include recursive.jam ;
 
+# A prefix for all of the jam code we're going to test
 local ECHO_ARGS = "include echo_args.jam ; echo_args "
    ;
 

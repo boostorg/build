@@ -98,57 +98,6 @@ rule report-argument-error # rule-name length argnum : $(1) : $(2) : $(3) : $(4)
         ") instead." ;
 }
 
-# check-arguments rule-name lengths... : $(1) : $(2) : $(3) : $(4)...
-#
-
-# Check that arguments of the correct size are supplied to a rule
-# invocation. Each element of lengths should either be a single nonnegative
-# integer or a range of nonnegative integers (e.g. 2-4), which specifies the
-# allowed length of each argument. The following arguments to check-arguments
-# should be the arguments passed to the invoking rule, in order. It is useful to
-# pass one more argument than the invoking rule expects, so that extra arguments
-# may be detected.
-rule check-arguments # 
-{
-    # The name of the invoking rule, for error reporting
-    local rule-name = $(<[1]) ;
-
-    # The allowed lengths of each argument list
-    local lengths = $(<[2-]) ;
-
-    # Keeps track of which argument we're looking at.
-    local argnums = 1 2 3 4 5 6 7 8 ;
-
-    # Iterate through each allowed length
-    for length in $(lengths)
-    {
-        # set maximum and minimum 
-        local maximum minimum = $($(argnums[2])[$(length)-]) ;
-        switch $(length)
-        {
-         case *-* :
-            local max = [ SUBST $(length) ".*-([0-9]*)" $1 ] ;
-            maximum = $($(argnums[2])[$(max)-]) ;
-        }
-
-        if ( ! $(minimum) ) || $(maximum[2])
-        {
-            report-argument-error $(rule-name) $(length) $(argnums[1])
-                : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
-                    
-        }
-
-        argnums = $(argnums[2-]) ;
-        lengths = $(lengths[2-]) ;
-    }
-
-    if $($(argnums[2-]))
-    {
-        report-argument-error $(rule-name) ZERO $(argnums[1])
-             : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
-    }
-}
-
 # regex-match string pattern
 #
 # return "true" iff string matches pattern, empty otherwise.

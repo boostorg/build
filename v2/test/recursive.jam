@@ -1,19 +1,27 @@
+# (C) Copyright David Abrahams 2001. Permission to copy, use,
+# modify, sell and distribute this software is granted provided this
+# copyright notice appears in all copies. This software is provided
+# "as is" without express or implied warranty, and with no claim as
+# to its suitability for any purpose.
+
 ##############################################################
 # Rules and actions that test Jam by invoking it recursively #
+#                                                            #
+# This is neccessary for testing anything that requires Jam  #
+# to execute build actions whose results must be checked,    #
+# and anything which exits Jam with a failure code (e.g. a   #
+# failed assertion).                                         #
 ##############################################################
 
-# Jam string : optional-expected-output
-#
-# Creates a fake target, always built, which succeeds in building if
-# Invoking a Jamfile containing the given string succeeds. If optional-expected-output is
+# Creates a fake target, always built, which succeeds in building if Invoking a
+# Jamfile containing the given string succeeds. If optional-expected-output is
 # supplied, creates another fake target which succeeds in building if
 # optional-expected-output is in the Jam output.
 #
 # RETURNS: the target name of the Jam command.
-#
-rule Jam
+rule Jam ( command : expected-output ? )
 {
-    local jam-cmd = "$(<:G=jam_command)" ;
+    local jam-cmd = "$(command:G=jam_command)" ;
     
     NOTFILE "$(jam-cmd)" ;
     ALWAYS "$(jam-cmd)" ;
@@ -35,10 +43,10 @@ rule Jam
 
     invoke-Jam "$(jam-cmd)" ;
     
-    if $(>)
+    if $(expected-output)
     {
         redirect on $(jam-cmd) = "scratch-output.txt" ;
-        local output-target = "$(>:G=$(<))" ;
+        local output-target = "$(expected-output:G=$(command))" ;
         NOTFILE "$(output-target)" ;
         ALWAYS "$(output-target)" ;
         DEPENDS all : "$(output-target)" ;
@@ -53,10 +61,12 @@ rule Jam
     return $(jam-cmd) ;
 }
 
-# Jam-fail string
-rule Jam-fail
+# Just like the "Jam" rule, above, but only succeeds if the Jam command /fails/.
+rule Jam-fail ( command : expected-output ? )
 {
-    FAIL_EXPECTED [ Jam $(<) : $(>) ] ;
+    local target = [ Jam $(command) : $(expected-output) ] ;
+    FAIL_EXPECTED $(target) ;
+    return $(target) ;
 }
 
 
@@ -65,18 +75,17 @@ rule Jam-fail
 gBOOST_TEST_JAMFILE = temp.jam ;
 LOCATE on gBOOST_TEST_JAMFILE ?= $(BOOST_BUILD_ROOT) ;
 
-# invoke-Jam
-#
-# Will run Jam on a temporary Jamfile which contains the string in $(<:G=) and
-# redirect the results into a temporary files called scratch-output.txt.
-rule invoke-Jam
+# Runs Jam on a temporary Jamfile which contains the string in $(command:G=)
+# and redirects the results into a file whose name is given by $(redirect) on
+# command
+rule invoke-Jam ( command )
 {
-    PREFIX on $(<) = "actions unbuilt { } unbuilt all ;" ;
+    PREFIX on $(command) = "actions unbuilt { } unbuilt all ;" ;
     if $(NT)
     {
-        REMOVE on $(<) = $(SystemRoot)\System32\find ;
+        REMOVE on $(command) = $(SystemRoot)\System32\find ;
     }
-    REMOVE on $(<) ?= rm ;
+    REMOVE on $(command) ?= rm ;
 }
 actions invoke-Jam
 {

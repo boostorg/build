@@ -1,7 +1,7 @@
 # This rule establishes a dependency, with no special build actions
-rule do-nothing
+rule do-nothing ( target : source )
 {
-    DEPENDS $(<) : $(>) ;
+    DEPENDS $(target) : $(source) ;
 }
 actions quietly do-nothing
 {
@@ -17,9 +17,9 @@ do-nothing fake-target
 # Set jam up to call our bind-rule
 BINDRULE = bind-rule ;
 
-rule bind-rule
+rule bind-rule ( target : path )
 {
-    ECHO found: $(<) at $(>) ;
+    ECHO found: $(target) at $(path) ;
 }
 
 DEPENDS all : fake-target ;
