@@ -71,6 +71,8 @@ t.run_build_system("--no-error-backtrace", status=1, stdout=expected)
 # Test that we can have alternative without sources
 t.write("Jamfile", """
 alias specific-sources ;
+import feature ;
+feature.extend os : MAGIC ;
 alias specific-sources : b.cpp : <os>MAGIC ;
 exe a : a.cpp specific-sources ;
 """)

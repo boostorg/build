@@ -320,7 +320,8 @@ rule select ( features * : properties * )
     return $(result) ;
 }
 
-# Changes the value of 'feature' to 'value', or adds it.
+# Returns a modified version of properties with all values of the
+# given feature replaced by the given value.
 rule change ( properties * : feature value )
 {
     local result ; 
@@ -335,7 +336,6 @@ rule change ( properties * : feature value )
         {
             result += $(p) ;
         }
-                
     }
     return $(result) ;
 }
@@ -370,7 +370,11 @@ rule translate-paths ( properties * : path )
             condition = $(split[1]): ;
             p = $(split[2]) ;
         }
-                
+
+        # need to do this here to get reasonable error messages for
+        # unrecognized implicit features.
+        validate $(p) ;   
+        
         if path in [ feature.attributes $(p:G) ] 
         {
             local t = [ path.root [ path.make $(p:TG=) ] $(path) ] ;
