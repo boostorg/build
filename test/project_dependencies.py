@@ -12,7 +12,12 @@ t = Tester()
 t.write("project-root.jam", "import gcc ;")
 t.write("Jamfile", "build-project src ;")
 t.write("lib/Jamfile", "lib lib1 : lib1.cpp ;")
-t.write("lib/lib1.cpp", "void foo() {}\n")
+t.write("lib/lib1.cpp", """
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+void foo() {}\n
+""")
 t.write("src/Jamfile", """
 project
     : requirements <library>../lib/lib1
@@ -22,6 +27,9 @@ exe a : a.cpp ;
 exe b : b.cpp ;    
 """)
 t.write("src/a.cpp", """
+#ifdef _WIN32
+__declspec(dllimport)
+#endif
 void foo();
 int main() { foo(); return 0; }
 """)

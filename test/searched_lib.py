@@ -5,17 +5,30 @@
 
 from BoostBuild import Tester
 import string
+import os
 t = Tester()
 
 # To start with, we have to prepate a library to link with
-t.write("lib/project-root.jam", "import gcc ; ")
+t.write("lib/project-root.jam", "")
 t.write("lib/Jamfile", "lib test_lib : test_lib.cpp ;")
-t.write("lib/test_lib.cpp", "void foo() {}\n");
+t.write("lib/test_lib.cpp", """
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+void foo() {}
+""");
 
 t.run_build_system(subdir="lib")
 t.expect_addition("lib/bin/$toolset/debug/test_lib.dll")
 
-t.copy("lib/bin/$toolset/debug/test_lib.dll", "lib/libtest_lib.dll")
+# Auto adjusting of suffixes does not work, since we need to
+# change dll to lib.
+# 
+if os.name == 'nt':
+    t.copy("lib/bin/$toolset/debug/test_lib.lib", "lib/test_lib.lib")
+else:
+    t.copy("lib/bin/$toolset/debug/test_lib.dll", "lib/libtest_lib.dll")
+
 
 
 # A regression test: <library>property referring to
@@ -39,6 +52,9 @@ lib test_lib : : <name>test_lib <search>../../lib ;
 lib a : a.cpp : : : <library>test_lib ;
 """)
 t.write('d/d2/a.cpp', """
+#ifdef _WIN32
+__declspec(dllexport) int force_library_creation_for_a;
+#endif
 """)
 
 t.run_build_system()
