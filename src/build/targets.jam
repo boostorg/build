@@ -115,8 +115,10 @@ rule abstract-target ( name      # name of the target in Jamfile
     # Generates virtual targets for this abstract target, using the specified properties,
     # unless a different value of some feature is required by the target. The properties
     # on returned virtual targets should be link-compatible with the requested ones.
-    # On success, returns a list of virtual targets. If it not possible to build anything, 
-    # issues a warning and returns empty list, or issues an error.
+    #
+    # On success, returns: 
+    # - a property-set with the usage requirements to be applied to dependents
+    # - a list of produced virtual targets, which may be empty.
     #
     # If 'properties' are empty, performs default build of this target, in a way specific
     # to derived class.
@@ -144,6 +146,7 @@ rule project-target ( name : project : requirements * : default-build * )
     import project targets ;
     import path ;
     import print ;
+    import property-set ;
     
     abstract-target.__init__ $(name) : $(project) ;
 
@@ -152,18 +155,10 @@ rule project-target ( name : project : requirements * : default-build * )
 
     rule set-property-adjuster ( property-adjuster )
     {
-        for local name in $(self.main-targets)
-        {
-            local t = [ main-target $(name) ] ;
+        for local t in [ targets-to-build ] 
+        {  
             $(t).set-property-adjuster $(property-adjuster) ;
         }
-        local self-location = [ project.attribute $(self.project) location ] ;
-        for local pn in [ project.attribute $(self.project) projects-to-build ]
-        {
-            local p = [ project.module-name [ path.join $(self-location) $(pn) ] ] ;
-            local t = [ project.target $(p) ] ;
-            $(t).set-property-adjuster $(property-adjuster) ;
-        }            
     }
     
     # Generates all possible targets contained in this project.
@@ -175,6 +170,9 @@ rule project-target ( name : project : requirements * : default-build * )
         
         local xproperties = [ $(property-set).refine $(self.requirements) ] ;
 
+        local usage-requirements = [ property-set.empty ] ;
+        local targets ;
+        
         if $(xproperties[1]) = "@error"
         {
             local id = [ project.attribute $(self.project) id ] ;
@@ -186,27 +184,44 @@ rule project-target ( name : project : requirements * : default-build * )
             print.wrapped-text "warning: requirements: " [ $(self.requirements).raw ] ;
         }
         else 
-        {            
-            local result ;
-            local explicit-targets = [ project.attribute $(self.project) explicit-targets ] ;
-            for local name in $(self.main-targets)
+        {    
+            for local t in [ targets-to-build ] 
             {
-                if ! $(name) in $(explicit-targets)
-                {                    
-                    local t = [ main-target $(name) ] ;
-                    result += [ $(t).generate $(property-set) ] ;
-                }                
+                local g = [ $(t).generate $(property-set) ] ;
+                usage-requirements = [ $(usage-requirements).add $(g[1]) ] ;
+                targets += $(g[2-]) ;
             }
-            local self-location = [ project.attribute $(self.project) location ] ;
-            for local pn in [ project.attribute $(self.project) projects-to-build ]
-            {
-                local p = [ project.module-name [ path.join $(self-location) $(pn) ] ] ;
-                local t = [ project.target $(p) ] ;
-                result += [ $(t).generate $(property-set) ] ;
-            }
-            return $(result) ;
-        }        
+        }    
+        return $(usage-requirements) $(targets) ;        
     }
+    
+    # Computes and returns a list of abstract-target instances which
+    # must be built when this project is built.
+    rule targets-to-build ( )
+    {
+        local result ;
+
+        # Collect all main targets here, except for "explicit" ones.
+        local explicit-targets = [ project.attribute $(self.project) explicit-targets ] ;
+        for local name in $(self.main-targets)
+        {
+            if ! $(name) in $(explicit-targets)
+            {                    
+                result += [ main-target $(name) ] ;
+            }
+        }
+
+        # Collect all projects referenced via "projects-to-build" attribute.
+        local self-location = [ project.attribute $(self.project) location ] ;
+        for local pn in [ project.attribute $(self.project) projects-to-build ]
+        {
+            local p = [ project.module-name [ path.join $(self-location) $(pn) ] ] ;
+            result += [ project.target $(p) ] ;
+        }
+                        
+        return $(result) ;
+    }
+    
 
     # Returns a 'main-target' class instance corresponding to the 'name'.
     # Creates the instance if needed.
@@ -244,7 +259,10 @@ rule project-target ( name : project : requirements * : default-build * )
             ps = [ $(ps).run-actions ] ;                            
             
             ps = [ targets.generate-dependencies $(ps) : $(self.project) : $(ps) ] ;
-            self.ref-props.$(property-set) = $(ps) ;
+            # Exclude the usage-requirements propagated from dependencies.
+            # This used to be that way, and while I refactor, I'll keep the
+            # old semantic --- which probably is bogus.
+            self.ref-props.$(property-set) = $(ps[2-]) ;
         }
         return $(self.ref-props.$(property-set)) ;        
     }    
@@ -362,12 +380,15 @@ rule main-target ( name : project )
     rule generate ( property-set )
     {
         local all-property-sets = [ apply-default-build $(property-set) ] ;
+        local usage-requirements = [ property-set.empty ] ;
         local result ;
         for local p in $(all-property-sets)
         {
-            result += [ generate-really [ $(p).add-defaults ] ] ;
+            local r = [ generate-really [ $(p).add-defaults ] ] ;
+            usage-requirements = [ $(usage-requirements).add $(r[1]) ] ;
+            result += $(r[2-]) ;
         }
-        return $(result) ;                
+        return $(usage-requirements) $(result) ;                
     }
         
     local rule generate-really ( property-set )
@@ -457,7 +478,8 @@ rule find ( id : current-location )
 
 # Attempts to generate the target given by target reference, which
 # can refer both to a main target or to a file.
-rule generate ( target-reference # Target reference
+rule generate-from-reference 
+   ( target-reference            # Target reference
     : project                    # Project where the reference is made
     : property-set               # Properties of the main target that 
                                  # makes the reference
@@ -500,7 +522,7 @@ rule generate ( target-reference # Target reference
               "error: target reference '$(target-reference)' contains properties," :
               "error: but refers to a file" ;
         }        
-        return [ virtual-target.from-file $(id) : $(project) ] ;
+        return [ property-set.empty ] [ virtual-target.from-file $(id) : $(project) ] ;
     }    
 }
 
@@ -514,18 +536,20 @@ rule generate ( target-reference # Target reference
 # are added to the created property set.
 rule generate-dependencies ( property-set : project : generation-ps )
 {
+    local usage-requirements = [ property-set.empty ] ;
     local xproperties ;    
     for local p in [ $(property-set).dependency ] 
     {
-        local g = [ targets.generate $(p:TG=) : $(project) : $(generation-ps) ] ;
-        xproperties += $(p:G)$(g) ;
+        local g = [ targets.generate-from-reference $(p:TG=) : $(project) : $(generation-ps) ] ;
+        usage-requirements = [ $(usage-requirements).add $(g[1]) ] ;
+        xproperties += $(p:G)$(g[2-]) ;
     }
     local r = [ property-set.create 
         [ $(property-set).base ] 
         [ $(property-set).free ] 
           $(xproperties)
         [ $(property-set).incidental ] ] ;
-    return $(r) ;
+    return $(usage-requirements) $(r) ;
 }
 
 
@@ -617,32 +641,22 @@ rule basic-target ( name : project
     # IOW, virtual targets which come from different sources are separated    
     local rule generate-sources ( property-set )
     {      
+        local usage-requirements = [ property-set.empty ] ;
         local source-targets ;
         for local s in $(self.sources)
         {
+
             # Try treating this source as reference to main target
             local more-targets = 
-              [ targets.generate $(s) : $(self.project) 
+              [ targets.generate-from-reference $(s) : $(self.project) 
                 : $(property-set) ] ;
-            
-            source-targets += $(more-targets) ;            
+                        
+            usage-requirements = [ $(usage-requirements).add $(more-targets[1]) ] ;
+            source-targets += $(more-targets[2-]) ;            
             source-targets += <@>$(s) ;
         } 
-        return $(source-targets) ;
+        return $(usage-requirements) $(source-targets) ;
     }
-
-    # Collects and returns usage requirements from all passed
-    # targets or dependency properties
-    local rule get-usage-requirements ( targets-or-properties * )
-    {
-        local result ;
-        for local e in $(targets-or-properties)
-        {
-            result += [ $(e:G=).usage-requirements ] ;
-        }              
-        return $(result) ;
-    }
-    
 
     # Determines final build properties, generates sources,
     # and calls 'construct'. This method should not be
@@ -654,11 +668,20 @@ rule basic-target ( name : project
             local rproperties = [ refined-properties $(property-set) ] ;            
             if $(rproperties[1]) != "@error"                    
             {
+                local usage-requirements = [ property-set.empty ] ;
+                
                 rproperties = 
                   [ targets.generate-dependencies $(rproperties) : $(self.project) 
                     : $(rproperties) ] ;
+                usage-requirements = [ $(usage-requirements).add $(rproperties[1]) ] ;
+                rproperties = $(rproperties[2-]) ;
                                             
                 local source-target-groups = [ generate-sources $(rproperties) ] ;
+                
+                usage-requirements = 
+                  [ $(usage-requirements).add $(source-target-groups[1]) ] ;
+                source-target-groups = $(source-target-groups[2-]) ;
+                                
                 local source-targets = ;
                 for local s in $(source-target-groups)
                 {
@@ -668,24 +691,18 @@ rule basic-target ( name : project
                     }
                 }
                             
-                local usage-requirements = 
-                  [ get-usage-requirements $(source-targets)  
-                    [ $(rproperties).dependency ] 
-                  ] ;
-
-                rproperties = [ $(rproperties).add 
-                  [ property-set.create $(usage-requirements) ] ] ;
+                rproperties = [ $(rproperties).add $(usage-requirements) ] ;
 
                 local result = 
                   [ construct $(source-targets) : $(rproperties) ] ;
                 check-for-unused-sources 
                   $(result) : $(source-target-groups) ;
 
-
-                set-usage-requirements $(result) : $(rproperties) ;
                 create-subvariant-dg $(result) : $(property-set) : $(rproperties) ;
 
-                self.generated.$(property-set) = $(result) ;
+                self.generated.$(property-set) = 
+                  [ compute-usage-requirements $(rproperties) ]
+                  $(result) ;
             } 
             else
             {
@@ -698,24 +715,19 @@ rule basic-target ( name : project
     # Given the set of generated targets, and refined build 
     # properties, determines and sets appripriate usage requirements
     # on those targets.
-    local rule set-usage-requirements ( targets * : rproperties )
+    local rule compute-usage-requirements ( rproperties )
     {
         xusage-requirements = [ $(self.usage-requirements).evaluate-conditionals 
           $(rproperties) ] ;                
-
+        
         local xusage-requirements = 
           [ targets.generate-dependencies 
               $(xusage-requirements) 
                 : $(self.project) : $(rproperties) ] ;
-        local usage-requirements2 = [ get-usage-requirements
-            [ $(xusage-requirements).dependency ] ] ;
-        xusage-requirements = [ $(xusage-requirements).raw ] ;
-        xusage-requirements += $(usage-requirements2) ;
-
-        for local e in $(targets)                    
-        {
-            $(e).set-usage-requirements $(xusage-requirements) ;            
-        }                    
+        local recursive-usage-requirements = $(xusage-requirements[1]) ;
+        local result = [ $(recursive-usage-requirements).add $(xusage-requirements[2-]) ] ;        
+        
+        return $(result) ;
     }
     
     # Creates a new subvariant-dg instances for 'targets'
