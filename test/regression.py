@@ -97,15 +97,20 @@ t.write("Jamfile", """
 import testing ;
 
 compile c.cpp ;
+obj c-obj : c.cpp ;
 compile-fail c-f.cpp ;
 run r.cpp : : dir/input.txt ;
 run-fail r-f.cpp ;
-
+time execution : r ;
+time compilation : c-obj ;
 """)
 
-t.run_build_system("hardcode-dll-paths=false")
+t.run_build_system('hardcode-dll-paths=false')
 t.expect_content("bin/r.test/$toolset/debug/r.output",
                  "test input\nEXIT STATUS: 0\n")
+
+t.expect_addition('bin/$toolset/debug/execution.time')
+t.expect_addition('bin/$toolset/debug/compilation.time')
 
 # Make sure test failures are detected. Reverse expectation and see
 # if .test files are created or not.
@@ -116,7 +121,6 @@ compile-fail c.cpp ;
 compile c-f.cpp ;
 run-fail r.cpp : : dir/input.txt ;
 run r-f.cpp ;
-
 """)
 
 t.touch(List("c.cpp c-f.cpp r.cpp r-f.cpp"))

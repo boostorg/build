@@ -116,7 +116,8 @@ class generator
                   # Ordinary generators pass all sources together to
                   # recusrive generators.construct-types call.
     
-    : source-types *  # types that this generator can handle
+    : source-types *  # types that this generator can handle.  If
+        		      # empty, the generator can consume anything.
     
     : target-types-and-names +   
       # types the generator will create and, optionally, names for
@@ -579,8 +580,12 @@ class generator
     rule consume-directly ( source : consumed-var : missing-types-var )
     {
         local real-source-type = [ $(source).type ] ;
-
-        for local st in $(self.source-types)
+        
+        # If there are no source types, we can consume anything
+        local source-types = $(self.source-types) ;
+        source-types ?= $(real-source-type) ;
+        
+        for local st in $(source-types)
         {
             # The 'source' if of right type already)
             if $(real-source-type) = $(st) || 
