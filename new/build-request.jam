@@ -57,7 +57,7 @@ local rule x-product-aux ( elements + : feature-space )
     local result ;
     local p = [ regex.split $(elements[1]) / ] ;
     local f = [ set.difference $(p:G) [ $(feature-space).free-features ] ] ;
-    
+    local seen ;
     # No conflict with things used at a higher level?
     if ! [ set.intersection $(f) : $(x-product-used) ]
     {
@@ -81,6 +81,8 @@ local rule x-product-aux ( elements + : feature-space )
         {
             elements = ;
         }
+        
+        seen = $(x-product-seen) ;
     }
     
     if $(elements[2])
@@ -90,7 +92,7 @@ local rule x-product-aux ( elements + : feature-space )
     
     # Note that we've seen these features so that higher levels will
     # recurse again without them set.
-    x-product-seen += $(f) ;
+    x-product-seen += $(f) $(seen) ;
     return $(result) ;
 }
 
@@ -127,6 +129,14 @@ local rule __test__ ( )
           <toolset>msvc/<variant>debug 
           
           : build-request.expand gcc-3.0.1/stlport msvc/stlport msvc debug
+          : $(test-space) ;
+        
+        assert.result
+          <toolset>gcc/<toolset-version>3.0.1/<stdlib>stlport/<variant>debug
+          <toolset>msvc/<variant>debug 
+          <variant>debug/<toolset>msvc/<stdlib>stlport
+          
+          : build-request.expand gcc-3.0.1/stlport msvc debug msvc/stlport
           : $(test-space) ;
         
         assert.result
