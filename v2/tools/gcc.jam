@@ -125,6 +125,12 @@ flags gcc.link LINK-RUNTIME <link-runtime>shared : dynamic ;
 flags gcc.link RPATH <dll-path> ;
 flags gcc.link RPATH_LINK <xdll-path> ;
 
+# This permits shared libraries with non-PIC code on Solaris
+if [ os.name ] = SOLARIS
+{
+    flags gcc.link OPTIONS <link>shared : -mimpure-text ;
+}
+
 rule link ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;    
