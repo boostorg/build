@@ -297,10 +297,12 @@ rule abstract-file-target ( name
             local location-grist =
                 [ sequence.join [ regex.split $(project-location) "/" ] : "!" ] ;
             local grist ;       
+
+            local properties ;
             if $(self.action)
             {
-                local p = [ property.remove free incidental : [ $(self.action).properties ] ] ;
-                local property-grist = [ property.as-path $(p) ] ;
+                properties = [ property.remove free incidental : [ $(self.action).properties ] ] ;
+                local property-grist = [ property.as-path $(properties) ] ;
                 grist = $(location-grist)/$(property-grist) ;
             }       
             
@@ -321,7 +323,9 @@ rule abstract-file-target ( name
             else if $(self.type)
             {                
                 self.actual-name = [ sequence.join <$(grist)>$(self.name) 
-                  [ type.generated-target-suffix $(self.type) ] : "." ] ;
+                  [ type.generated-target-suffix $(self.type) :
+                    $(properties)
+                  ] : "." ] ;
             }
             else
             {

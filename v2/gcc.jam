@@ -2,9 +2,15 @@
 import property ;
 import generators ;
 import os ;
+import type ;
 
 feature.extend toolset : gcc ;
 feature.subfeature toolset gcc : version : : optional ;
+
+# Make the "o" suffix used for gcc toolset on all
+# platforms
+type.set-generated-target-suffix OBJ : <toolset>gcc : o ;
+
 
 # Initializes the gcc toolset
 # Each argument has the form:

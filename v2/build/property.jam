@@ -7,6 +7,8 @@ import feature ;
 import utility : ungrist ;
 import sequence : unique ;
 import errors : error ;
+import class : class ;
+
 
 # Refines 'properties' by overriding any elements for which a different
 # value is specified in 'requirements'. If the resulting property set
@@ -312,6 +314,51 @@ rule translate-paths ( properties * : path )
     return $(result) ;
 }
 
+# Class which maintains a property set -> string
+# mapping
+rule property-map ( )
+{
+    self.next-flag = 1 ;
+
+    # Associate 'value' with 'properties'
+    rule insert ( properties + : value )
+    {
+        self.all-flags += $(self.next-flag) ;
+        self.properties.$(self.next-flag) = $(properties) ;
+        self.value.$(self.next-flag) = $(value) ;
+
+        self.next-flag = [ numbers.increment $(self.next-flag) ] ;
+    }
+
+    # Return the value associated with 'properties'
+    # or any subset of it. If more than one
+    # subset has value assigned to it, return the
+    # value for the longest subset, if it's unique.
+    rule find ( properties + )
+    {
+        # First find all matches
+        local matches ;
+        local match-ranks ;
+        for local i in $(self.all-flags)
+        {
+            if $(self.properties.$(i)) in $(properties)
+            {
+                matches += $(i) ;
+                match-ranks += [ sequence.length 
+                    $(self.properties.$(i)) ] ;
+            }
+        }
+        local best = [ sequence.select-highest-ranked 
+            $(matches) : $(match-ranks) ] ;
+        if $(best[2])
+        {
+            errors.error "Ambiguous key" ;
+        }        
+        return $(self.value.$(best)) ;
+    }      
+}
+
+class property-map ;
 
 
 local rule __test__ ( )
@@ -402,5 +449,22 @@ local rule __test__ ( )
 
     assert.result <include>a 
         : select include : <include>a <toolset>gcc ;
+
+
+    pm = [ new property-map ] ;
+    $(pm).insert <toolset>gcc : o ;
+    $(pm).insert <toolset>gcc <os>NT : obj ;
+    $(pm).insert <toolset>gcc <os>CYGWIN : obj ;
+
+    assert.equal o
+      : [ $(pm).find <toolset>gcc ] ;
+
+    assert.equal obj
+      : [ $(pm).find <toolset>gcc <os>NT ] ;
+
+    try ;
+        $(pm).find <toolset>gcc <os>NT <os>CYGWIN ;
+    catch "Ambiguous key" ;
+
 }
 

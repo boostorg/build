@@ -10,6 +10,7 @@ import feature ;
 import generators : * ;
 import class : class new ;
 import errors ;
+import property ;
 
 feature.feature target-type : : composite optional ;
 
@@ -17,6 +18,9 @@ feature.feature target-type : : composite optional ;
 feature.feature main-target-type : : optional incidental ;
 feature.feature base-target-type : : composite optional free ;
 # feature.feature main-target-type : : composite optional incidental ;
+
+# Store suffixes for generated targets
+.suffixes = [ new property-map ] ;
 
 # Registers a target type, possible derived from a 'base-type'. 
 # If 'suffixes' are provided, they given all the suffixes that mean a file is of 'type'.
@@ -44,7 +48,13 @@ rule register ( type : suffixes * : base-type ? : main ? )
     {
         .types += $(type) ;
         .bases.$(type) = $(base-type) ;
-        .suffix.$(type) = $(suffixes[1]) ;
+
+        if $(suffixes)
+        {            
+            $(.suffixes).insert <type>$(type) : $(suffixes[1]) ;
+        }
+        
+
         .type.$(suffixes) = $(type) ;
         feature.extend target-type : $(type) ;
         
@@ -117,10 +127,20 @@ rule is-derived ( type base )
     }
 }
 
-# Returns suffix that should be used when generating target of 'type'.
-rule generated-target-suffix ( type )
+# Sets a target suffix that should be used when
+# generating target of 'type' with the specified
+# properties 
+rule set-generated-target-suffix ( type : properties + : suffix )
 {
-    return $(.suffix.$(type)) ;
+    $(.suffixes).insert <type>$(type) $(properties) : $(suffix) ;
+}
+
+
+# Returns suffix that should be used when generating target of 'type',
+# with the specified properties.
+rule generated-target-suffix ( type : properties * )
+{
+    return [ $(.suffixes).find <type>$(type) $(properties) ] ;
 }
 
 # Returns file type given its suffix. The 'suffix' parameter should include 

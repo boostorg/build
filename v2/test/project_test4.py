@@ -2,7 +2,7 @@
 
 from BoostBuild import Tester
 import os
-from string import strip
+from string import strip, find
 
 t = Tester()
 
@@ -45,14 +45,9 @@ t.run_build_system("--no-error-backtrace", stdout=expected, status=None)
 
 t.copy("lib/Jamfile3", "lib/Jamfile")
 
-expected="""warning: skipped build of lib/b.obj with properties <toolset>gcc <link>shared
-<link-runtime>shared <optimization>on <threading>single <rtti>on
-<debug-symbols>on <hardcode-dll-paths>false <variant>debug
-don't know how to make <.>lib/b.obj/<optimization>on
-...skipped <./gcc/debug>a.exe for lack of <.>lib/b.obj/<optimization>on...
-"""
-
-t.run_build_system(stdout=expected, status=None)
+t.run_build_system(status=None)
+t.fail_test(find(t.stdout(), "warning: skipped build of lib/b.obj with properties") \
+            != 0)
 
 # Check that project can be skipped as well
 t.copy("Jamfile4", "Jamfile")
@@ -70,7 +65,7 @@ t.run_build_system("rtti=on", stdout=expected, status=None)
 
 # We don't yet make targets depend on Jamfile, so need to start from scratch
 # The following test is disabled, because of problems related to
-# issue 634319
+# issue BB10
 
 #t.set_tree("project-test4")
 #t.copy("Jamfile2", "Jamfile")
