@@ -284,6 +284,9 @@ rule generator ( id : source-types + : target-types-and-names + : requirements *
                     error "$(self.id): source targets have different names: cannot determine target name" ;
                 }
             }
+
+            # Names of sources might include directory. We should strip it.
+            name = $(name:D=) ;
         }
         
         # Create generated target for each target type.
