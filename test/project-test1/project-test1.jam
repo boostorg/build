@@ -9,9 +9,7 @@ import standalone-project ;
 
 project-roots.print ;
 
-assert.result Jamfile<dir2> : project.lookup @/cool-library : "." ;
-assert.result Jamfile<dir>  : project.lookup @dir : "." ;
-assert.result standalone-project : project.lookup @/teeest : "." ;
+assert.result standalone-project : project.find /teeest : "." ;
 
 NOTFILE all ;
 
