@@ -313,7 +313,7 @@ path_build(
      *	(none)		(none)
      *	[dir1.dir2]	[dir1]
      *	[dir]		[000000]
-     *	[.dir]		[]
+     *	[.dir]		(none)
      *	[]		[]
      */
 
@@ -324,8 +324,14 @@ path_build(
         {
             if( *p == '.' )
             {
-                string_truncate( file, p - file->value );
-                string_push_back( file, ']' );
+                /* If we've truncated everything and left with '[',
+                   return empty string. */
+                if (p == file->value + 1)
+                    string_truncate( file, 0 );
+                else {
+                    string_truncate( file, p - file->value );
+                    string_push_back( file, ']' );
+                }
                 break;
             }
             else if( *p == '-' )
@@ -341,6 +347,8 @@ path_build(
             {
                 if( p[1] == ']' )
                 {
+                    /* CONSIDER: I don't see any use of this code. We immediately
+                       break, and 'p' is a local variable. */
                     p += 2;
                 }
                 else
