@@ -114,7 +114,7 @@ rule evaluate-conditionals-in-context ( properties * : context * )
     for local p in $(conditionals)
     {
         # Separate condition and property
-        local s = [ MATCH (.*):(.*) : $(p) ] ;
+        local s = [ MATCH ([^:]*):(.*) : $(p) ] ;
         # Split condition into individual properties
         local c = [ regex.split $(s[1]) "," ] ;
         # Evaluate condition
