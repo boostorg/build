@@ -321,7 +321,7 @@ class project-target : abstract-target
 
     # Find and return the target with the specified id, treated
     # relative to self.
-    rule find ( id : no-error ? )
+    rule find-really ( id )
     {
         local result ;    
         local project = $(self.project) ;
@@ -348,45 +348,67 @@ class project-target : abstract-target
             }            
         }
         else
-        {            
-            # Interpret id as project-id
-            local project-module = [ project.find $(id) : $(current-location) ] ;
-            if $(project-module)
+        {   
+            # Interpret as filename            
+            result = [ new file-reference [ path.make $(id) ] : $(project) ] ;        
+            if ! [ $(result).exists ]
             {
-                result = [ project.target $(project-module) ] ;
-            }        
-
+                # File actually does not exist.
+                # Reset 'target' so that an error is issued.
+                result = ;
+            }            
             
             # Interpret target-name as name of main target
             if ! $(result)
             {
                 result = [ main-target $(id) ] ;
             }
-
-            # Interpret as filename            
+            
+            # Interpret id as project-id
             if ! $(result)
-            {
-                result = [ new file-reference [ path.make $(id) ] : $(project) ] ;        
-                if ! [ $(result).exists ]
+            {                
+                local project-module = [ project.find $(id) : $(current-location) ] ;
+                if $(project-module)
                 {
-                    # File actually does not exist.
-                    # Reset 'target' so that an error is issued.
-                    result = ;
-                }                
-            }
+                    result = [ project.target $(project-module) ] ;
+                }                                
+            }            
         }
                 
-        if ! $(result) && ! $(no-error)
-        {
-            ECHO "error: Unable to find file or target named" ;
-            ECHO "error:     '$(id)'" ;
-            ECHO "error: referred from project at" ;
-            ECHO "error:     '$(current-location)'" ;
-            ECHO $(extra-error-message) ;
-            EXIT ;
-        }        
         return $(result) ;
     }
+    
+    rule find ( id : no-error ? )
+    {
+        local v = $(.id.$(id)) ;
+        if ! $(v)
+        {
+            v = [ find-really $(id) ] ;
+            if ! $(v)
+            {
+                v = none ;
+            }
+            .id.$(id) = $(v) ;
+        }
+        
+        if $(v) != none
+        {
+            return $(v) ;
+        }        
+        else
+        {
+            if ! $(no-error)
+            {
+                ECHO "error: Unable to find file or target named" ;
+                ECHO "error:     '$(id)'" ;
+                ECHO "error: referred from project at" ;
+                ECHO "error:     '$(current-location)'" ;
+                ECHO $(extra-error-message) ;
+                EXIT ;
+            }            
+        }        
+    }
+    
 
     
     rule build-main-targets ( )
@@ -753,7 +775,7 @@ class file-reference : abstract-target
     {
         local location = [ path.root $(self.name)
           [ $(self.project).get source-location ] ] ;        
-        return [ path.exists [ path.native $(location) ] ] ;
+        return [ CHECK_IF_FILE [ path.native $(location) ] ] ;
     }    
     
     # Returns the location of target. Needed by 'testing.jam'
