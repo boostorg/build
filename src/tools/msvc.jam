@@ -108,6 +108,29 @@ rule init (
     flags msvc.link .LD $(condition) : $(prefix)$(linker) ;
     flags msvc.archive .LD $(condition) : $(prefix)$(linker) ;
     
+    if ! $(version) 
+    {
+        # Even if version is not explicitly specified, try to detect the version
+        # from the path.
+        if [ MATCH "(Microsoft Visual Studio 8)" : $(command) ]
+        {
+            version = 8.0 ;
+        }                 
+        else if [ MATCH "(\\.NET 2003\\VC7)" : $(command) ] ||
+                [ MATCH "(Microsoft Visual C\\+\\+ Toolkit 2003)" : $(command) ]
+        {
+            version = 7.1 ;
+        }
+        else if [ MATCH "(.NET\\VC7)" : $(command) ]
+        {
+            version = 7.0 ;
+        }
+        else
+        {
+            version = 6.0 ;
+        }                
+    }
+                
     # The following options work only for 7* versions. It means
     # that if the user has not specified a version he gets 6.0 compatible
     # behavious (i.e. a bit buggy)
@@ -116,6 +139,17 @@ rule init (
         flags msvc.compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
     }
     
+    # 8.0 deprecates some of the options
+    if [ MATCH ^(8) : $(version) ]
+    {
+        flags msvc.compile CFLAGS $(condition)/<optimization>speed : /O2 ;
+        flags msvc.compile CFLAGS $(condition)/<optimization>space : /O1 ;
+    }
+    else
+    {        
+        flags msvc.compile CFLAGS $(condition)/<optimization>speed : /Ogity /O2 /Gs ;
+        flags msvc.compile CFLAGS $(condition)/<optimization>space : /Ogisy /O1 /Gs ;        
+    }        
 }
 
 rule default-paths ( version ? )
@@ -136,6 +170,7 @@ rule default-paths ( version ? )
     local version-7-path = $(ProgramFiles)"\\Microsoft Visual Studio .NET\\VC7" ;
     local version-7.0-path = $(version-7-path) ;
     local version-7.1-path = $(ProgramFiles)"\\Microsoft Visual Studio .NET 2003\\VC7" ;
+    local version-8.0-path = $(ProgramFiles)"\\Microsoft Visual Studio 8" ;
     
     local VS71COMNTOOLS = [ modules.peek : VS71COMNTOOLS ] ;
     if $(VS71COMNTOOLS)
@@ -191,12 +226,10 @@ feature.feature debug-store : object database : propagated ;
 flags msvc.compile CFLAGS <debug-symbols>on/<debug-store>object : /Z7 ;
 flags msvc.compile CFLAGS <debug-symbols>on/<debug-store>database : /Zi ;
 flags msvc.compile CFLAGS <optimization>off : /Od ;
-flags msvc.compile CFLAGS <optimization>speed : /Ogity /O2 /Gs ;
-flags msvc.compile CFLAGS <optimization>space : /Ogisy /O1 /Gs ;
 flags msvc.compile CFLAGS <inlining>off : /Ob0 ;
 flags msvc.compile CFLAGS <inlining>on : /Ob1 ;
 flags msvc.compile CFLAGS <inlining>full : /Ob2 ;
-flags msvc.compile CFLAGS <exception-handling>on : /GX ;
+flags msvc.compile CFLAGS <exception-handling>on : /EHsc ;
 flags msvc.compile CFLAGS <rtti>on : /GR ;
 flags msvc.compile CFLAGS <runtime-debugging>off/<link-runtime>shared : /MD ;
 flags msvc.compile CFLAGS <runtime-debugging>on/<link-runtime>shared : /MDd ;
@@ -205,7 +238,7 @@ flags msvc.compile CFLAGS <runtime-debugging>off/<link-runtime>static/<threading
 flags msvc.compile CFLAGS <runtime-debugging>on/<link-runtime>static/<threading>single : /MLd ;
 flags msvc.compile CFLAGS <runtime-debugging>off/<link-runtime>static/<threading>multi : /MT ;
 flags msvc.compile CFLAGS <runtime-debugging>on/<link-runtime>static/<threading>multi : /MTd ;
-flags msvc.compile CFLAGS <base-target-type>CPP : /GX ;
+flags msvc.compile CFLAGS <base-target-type>CPP : /EHsc ;
 
 flags msvc.compile USER_CFLAGS <cflags> : ;
 flags msvc.compile.c++ USER_CFLAGS <cxxflags> : ;
