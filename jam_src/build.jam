@@ -98,7 +98,7 @@ toolset darwin cc :  "-o " : -D
 toolset gcc gcc : "-o " : -D
     :
     [ opt --release : [ opt --symbols : -g : -s ] -O3 -finline-functions ]
-    [ opt --debug : -g -O0 -fno-inline -pg ] ;
+    [ opt --debug : -g -O0 -fno-inline ] ;
 ## GCC 2.x, 3.x on CYGWIN but without cygwin1.dll
 toolset gcc-nocygwin gcc : "-o " : -D
     : -s -O3 -mno-cygwin
@@ -275,7 +275,7 @@ jam.source =
     option.c parse.c regexp.c rules.c
     scan.c search.c subst.c
     timestamp.c variable.c modules.c strings.c filesys.c 
-    builtins.c pwd.c class.c 
+    builtins.c pwd.c class.c native.c modules/set.c
     ;
 if $(NT)
 {

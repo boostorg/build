@@ -52,6 +52,7 @@ module_t* bindmodule( char* name )
         m->rules = 0;
         m->imported_modules = 0;
         m->class_module = 0;
+        m->native_rules = 0;
     }
     string_free( &s );
     return m;

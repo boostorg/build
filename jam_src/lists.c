@@ -274,6 +274,16 @@ list_length( LIST *l )
 	return n;
 }
 
+int     
+list_in(LIST* l, char* value)
+{
+    for(; l; l = l->next)
+        if (strcmp(l->string, value) == 0)
+            return 1;
+    return 0;
+}
+
+
 /*
  * lol_init() - initialize a LOL (list of lists)
  */

@@ -15,6 +15,7 @@ struct module_t
     struct hash* variables;
     struct hash* imported_modules;
     struct module_t* class_module;
+    struct hash* native_rules;
 };
 
 typedef struct module_t module_t ; /* MSVC debugger gets confused unless this is provided */
