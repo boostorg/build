@@ -23,9 +23,9 @@
 </style>
   </head>
   <!-- Things yet to document:
-        - build request, build request expansion and directly requested targets
-        - conditional properties
-      -->
+          - build request, build request expansion and directly requested targets
+          - conditional properties
+        -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -45,6 +45,20 @@
     <hr>
 
     <dl class="page-index">
+      <dt><a href="#sec-tutorial">Tutorial</a></dt>
+
+      <dd>
+        <dl class="page-index">
+          <dt><a href="#hello">Hello, world</a></dt>
+
+          <dt><a href="#properties">Properties</a></dt>
+
+          <dt><a href="#using_libraries">Using libraries</a></dt>
+
+          <dt><a href="#prebuilt_targets">Prebuilt targets</a></dt>
+        </dl>
+      </dd>
+
       <dt><a href="#sec-reference">Reference documentation</a></dt>
 
       <dd>
@@ -104,6 +118,105 @@ boost-build /path/to/boost.build ;
 
     <p>To verify your installation, you can use <tt>bjam --version</tt> at
     the command line.</p>
+
+    <h2><a name="sec-tutorial">Tutorial</a></h2>
+
+    <h3 id="hello">Hello, world</h3>
+    The simplest project that Boost.Build can construct is stored in
+    examples-v2/hello directory. Let's examine Jamfile: 
+<pre>
+   exe hello : hello.cpp ;
+</pre>
+    With this simple setup, you can do some interesting things. First of all,
+    running "bjam" would build binary "hello" from hello.cpp, in debug
+    version. After that, you can run 
+<pre>
+    bjam release 
+</pre>
+    which would create release version of the 'hello' binary. Note that debug
+    and release version would be created in different directories, so they
+    both can be used. Let's extend the example by adding another line to
+    Jamfile: 
+<pre>
+   exe hello2 : hello.cpp ;
+</pre>
+    You can now rebuild both debug and release versions: 
+<pre>
+    bjam debug release
+</pre>
+    You'll see that two versions of "hello2" binary are linked. Of course,
+    hello.cpp won't be recompiled. Now you decide to remove any build
+    products. You do that with the following command 
+<pre>
+   bjam --clean debug release
+</pre>
+    It should be noted that it's possible to create or clean only specific
+    targets. Both following commands are legal and create or clean only files
+    that belonging the the named binary: 
+<pre>
+   bjam hello2
+   bjam --clean hello2.
+</pre>
+
+    <h3 id="properties">Properties</h3>
+
+    <p>Boost.Build attempts to allow building different variants of projects,
+    e.g. for debugging and release, or in single and multithread mode. In
+    order to stay portable, it uses the concept of <em>features</em>, which
+    is abstract aspect of build configuration. <em>Property</em> is just a
+    (feature,value) pair. For example, there's a feature "debug-symbols",
+    which can have a value of "on" or "off". When users asks to build project
+    is a particual value, Boost.Build will pass appropriate flags to the
+    compiler.</p>
+
+    <p>The "release" and "debug" in bjam invocation that we've seen are just
+    are short form of specifying values of feature "variant". There is a lot
+    of builtin features, and it's possible to write something like:</p>
+<pre>
+   bjam release inlining=off debug-symbols=on
+</pre>
+    The first command line element specified the value of feature "variant".
+    The feature is very common and is therefore special &mdash; it's possible
+    to specify only value. Another feature, "inlining" is not special, and
+    you should use 
+<pre>
+   feature-name=feature-value
+</pre>
+    syntax for it. Complete description of features can be found <a href=
+    "features_properties">here</a>. While use may specify arbitrary
+    properties, it's not always possible to use exactly this set for building
+    the projects. For example, to compile a C++ file you need some include
+    paths. It's not reasonable to ask the user to specify this include path
+    with each bjam invocation. For another example, a certain application can
+    only be linked in multithreaded mode. For that reason, every target is
+    allowed to specify <em>requirements</em> -- properties that are required
+    to its building. Consider this example: 
+<pre>
+   exe hello 
+       : hello.cpp
+       : &lt;include&gt;/home/ghost/Work/boost &lt;threading&gt;multi
+</pre>
+    In this case, when hello is build, the two specified properties will be
+    present. This leads to a question: what if user explictly requested
+    single-threading. The answer is that requirement can affect build
+    properties only to a certain degree: the requested and actual properties
+    must be link-compatible. See <a href="link_compatibility">link
+    compatibility</a> below. If they are not link compatible, the bulding of
+    the target is skipped. Previously, we've added "hello2" target. Seems
+    like we have to specify the same requirements for it, which results in
+    duplication. But there's a better way. Each project (i.e. each Jamfile),
+    can specify a set of attributes, including requirements: 
+<pre>
+   project 
+       : requirements &lt;include&gt;/home/ghost/Work/boost &gt;threading&gt;multi 
+       ;
+
+   exe hello : hello.cpp ;
+   exe hello2 : hello.cpp ;
+</pre>
+    The effect would be as if we specified this requirement for both "hello"
+    and "hello2", but there's no duplication. QWERTY: Need to describe
+    project hierarchy here. 
 
     <h2><a name="sec-reference">Reference</a></h2>
     This section will document mostly high-level view of Boost.Build,
