@@ -42,7 +42,6 @@
 
 import "class" : is-a new ;
 import container ;
-import numbers : range ;
 import utility : str equal ;
 import set sequence ;
 import assert ;

@@ -335,7 +335,6 @@ class main-target : abstract-target
 {
     import errors : error ;
     import assert ;
-    import numbers : range ;
     import sequence ;
     import print ;
     import build-request feature property-set ;
