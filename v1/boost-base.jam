@@ -1797,17 +1797,13 @@ rule unit-test
 }
 
 # Used to build command files from a list of sources.
-rule build-command-file ( command : sources * : options * )
+rule build-command-file ( command : sources * )
 {
     # Clean up after ourselves
     Clean clean : $(command) ;
     
-    NOTFILE $(options) ;
-    DEPENDS $(options) $(sources) ;
     DEPENDS $(command) : $(sources) ;
     
-    local contents = $(options) $(sources) ;
-
     # Check whether there's anything to dump, so that we don't end up
     # executing a line of the form:
     #
@@ -1816,17 +1812,17 @@ rule build-command-file ( command : sources * : options * )
     # on Windows this writes "echo is on." into the command-file,
     # which then breaks the link.
     
-    if $(contents[1])
+    if $(sources[1])
     {
         # Handle the first target specially, so that the first source file
         # will clear the command file
-        command-file-dump-1st $(command) : $(contents[1]) ;
+        command-file-dump-1st $(command) : $(sources[1]) ;
     }    
     
-    if $(contents[2])
+    if $(sources[2])
     {
         # Then fill the rest up piecemeal
-        command-file-dump-rest $(command) : $(contents[2-]) ;
+        command-file-dump-rest $(command) : $(sources[2-]) ;
     }
 }
 
@@ -1856,15 +1852,13 @@ actions ignore quietly piecemeal together remove-command-file
 # build TARGETS from SOURCES using a command-file, where RULE-NAME is
 # used to generate the build instructions from the command-file to
 # TARGETS
-# Via options additional command options that are not file targets
-# can be placed in the commandfile.
-rule with-command-file ( rule-name targets + : sources * : options * )
+rule with-command-file ( rule-name targets * : sources * )
 {
     # create a command-file target and place it where the first target
     # will be built
     local command-file = $(targets[1]:S=.CMD) ;
     LOCATE on $(command-file) = $(gLOCATE($(targets[1]))) ;
-    build-command-file $(command-file) : $(sources) : $(options) ;
+    build-command-file $(command-file) : $(sources) ;
 
     # Build the targets from the command-file instead of the sources
     DEPENDS $(targets) : $(command-file) ;
