@@ -49,7 +49,7 @@ rule Cc-action
 
 actions mingw-Cc-action
 {
-    $(MINGW_BIN_DIRECTORY)mingw -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -isystem$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(MINGW_BIN_DIRECTORY)gcc -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -isystem$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -73,6 +73,6 @@ rule Archive-action
 
 actions updated together piecemeal mingw-Archive-action
 {
-    ar ru$(ARFLAGS) "$(<:T)" "$(>:T)"
+    $(MINGW_BIN_DIRECTORY)ar ru$(ARFLAGS) "$(<:T)" "$(>:T)"
 }
 
