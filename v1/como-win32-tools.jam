@@ -84,7 +84,7 @@ actions como-Link-action bind NEEDLIBS
     $(COMO_BACKEND_LIB_SETUP)
     $(COMO_PATH_SETUP)
     $(COMO_BASE_SETUP)
-    $(COMO_BIN_DIRECTORY)como --no_version --no_prelink_verbose $(LINKFLAGS) -o "$(<[1]:S=)" "$(>)" "$(NEEDLIBS)" "$(FINDLIBS:S=.lib)"
+    $(COMO_BIN_DIRECTORY)como --no_version --no_prelink_verbose $(LINKFLAGS) -o "$(<[1]:S=)" "$(>)" "$(NEEDLIBS)" "$(FINDLIBS:S=.lib)" user32.lib
 }
 
 
