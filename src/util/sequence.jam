@@ -57,40 +57,47 @@ rule less ( a b )
 # insertion-sort s using the BinaryPredicate ordered.
 rule insertion-sort ( s * : ordered * )
 {
-    local caller = [ CALLER_MODULE ] ;
-    ordered ?= sequence.less ;
-    local result = $(s[1]) ;
-    if $(ordered) = sequence.less
+    if ! $(ordered)
     {
-        local head tail ;
-        for local x in $(s[2-])
-        {
-            head = ;
-            tail = $(result) ;
-            while $(tail) && ( $(tail[1]) < $(x) )
-            {
-                head += $(tail[1]) ;
-                tail = $(tail[2-]) ;
-            }
-            result = $(head) $(x) $(tail) ;
-        }
+        return [ SORT $(s) ] ;
     }
-    else
-    {
-        for local x in $(s[2-])
+    else 
+    {           
+        local caller = [ CALLER_MODULE ] ;
+        ordered ?= sequence.less ;
+        local result = $(s[1]) ;
+        if $(ordered) = sequence.less
         {
             local head tail ;
-            tail = $(result) ;
-            while $(tail) && [ modules.call-in $(caller) : $(ordered) $(tail[1]) $(x) ]
+            for local x in $(s[2-])
             {
-                head += $(tail[1]) ;
-                tail = $(tail[2-]) ;
+                head = ;
+                tail = $(result) ;
+                while $(tail) && ( $(tail[1]) < $(x) )
+                {
+                    head += $(tail[1]) ;
+                    tail = $(tail[2-]) ;
+                }
+                result = $(head) $(x) $(tail) ;
             }
-            result = $(head) $(x) $(tail) ;
         }
-    }
-    
-    return $(result) ;
+        else
+        {
+            for local x in $(s[2-])
+            {
+                local head tail ;
+                tail = $(result) ;
+                while $(tail) && [ modules.call-in $(caller) : $(ordered) $(tail[1]) $(x) ]
+                {
+                    head += $(tail[1]) ;
+                    tail = $(tail[2-]) ;
+                }
+                result = $(head) $(x) $(tail) ;
+            }
+        }
+        
+        return $(result) ;
+    }    
 }
 
 # merge two ordered sequences using the BinaryPredicate ordered.
