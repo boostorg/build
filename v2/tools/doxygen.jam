@@ -12,7 +12,6 @@ import targets ;
 import feature ;
 import property ;
 import generators ;
-import boostbook ;
 import type ;
 import path ;
 import print ;
