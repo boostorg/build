@@ -8,8 +8,6 @@ t = Tester()
 t.set_tree("generators-test")
 t.run_build_system()
 
-print 'exe_suffix is', exe_suffix
-
 t.expect_addition(
     "bin/gcc/debug/"
     * (
