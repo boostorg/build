@@ -344,7 +344,8 @@ rule xinclude-scanner ( includes * )
   {
     local target_path = [ path.native [ path.parent [ path.make
                           [ virtual-target.binding $(target) ] ] ] ] ;
-      
+
+    NOCARE $(matches) ;
     INCLUDES $(target) : $(matches) ;
     SEARCH on $(matches) = $(target_path) $(self.includes:G=) ;
     
