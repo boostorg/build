@@ -15,6 +15,16 @@ import os ;
 
 import version ;
 
+module site-config 
+{
+    import toolset : using ;
+}
+
+module user-config 
+{
+    import toolset : using ;
+}
+
 local user-path = [ modules.peek : HOME ] [ modules.peek : BOOST_BUILD_PATH ] ;
 if [ os.name ] in NT CYGWIN
 {    

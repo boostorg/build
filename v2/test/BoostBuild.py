@@ -12,8 +12,10 @@ import tempfile
 
 # Compute an executable suffix for tests to use
 exe_suffix = ''
+dll_suffix = '.so'
 if os.environ.get('OS','').lower().startswith('windows'):
     exe_suffix = '.exe'
+    dll_suffix = '.dll'
 #
 # FIXME: this is copy-pasted from TestSCons.py
 # Should be moved to TestCmd.py?

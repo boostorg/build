@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from BoostBuild import Tester, List, exe_suffix
+from BoostBuild import Tester, List, exe_suffix, dll_suffix
 import os
 
 t = Tester()
@@ -26,7 +26,7 @@ t.expect_addition(["lib/bin/gcc/debug/c.o",
 
 t.run_build_system(subdir='lib')
 
-t.expect_addition(["lib/bin/gcc/debug/auxilliary2.so"])
+t.expect_addition(["lib/bin/gcc/debug/auxilliary2" + dll_suffix])
 
 t.run_build_system(subdir='lib', extra_args="link=static")
 

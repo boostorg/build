@@ -26,6 +26,9 @@ local os = [ modules.peek : OS ] ;
 feature os : $(os) : propagated link-incompatible ;
 
 feature toolset : : implicit propagated link-incompatible symmetric ;
+
+feature stdlib : native : propagated link-incompatible ;
+
 feature link : shared static : propagated ;
 feature link-runtime : shared static : propagated ;
 
@@ -195,7 +198,7 @@ local rule declare-type ( os * : type : suffixes * : base-type ? : main ? )
 declare-type NT : OBJ : obj : : main ;
 declare-type : OBJ : o : : main ;
 
-declare-type NT : STATIC_LIB : obj : LIB : main ;
+declare-type NT : STATIC_LIB : a : LIB : main ;
 declare-type : STATIC_LIB : a : LIB : main ;
 
 declare-type NT : SHARED_LIB : dll : LIB : main ;
@@ -493,11 +496,4 @@ rule register-linker ( id : source-types + : target-types + :
 }
 
 IMPORT $(__name__) : register-linker : : generators.register-linker ;
-
-
-
-
-
-
-
 
