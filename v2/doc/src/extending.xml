@@ -193,11 +193,15 @@ class verbatim-scanner : common-scanner
     }
 }
 </programlisting>         
-          All the complex logic is in the <code>common-scanner</code> class,
-          and you only need to override the method that returns the regular
-          expression to be used for scanning. The paranthethis in the regular
-          expression indicate which part of the string is the name of the
-          included file. 
+          All the complex logic is in the <code>common-scanner</code>
+          class, and you only need to override the method that returns
+          the regular expression to be used for scanning. The
+          paranthethis in the regular expression indicate which part
+          of the string is the name of the included file.  Only the
+          first parenthesized group in the regular expression will be
+          recognized; if you can't express everything you want that
+          way, you can return multiple regular expressions, each of
+          which contains a parenthesized group to be matched.
         </para>
 
         <para>After that, we need to register our scanner class:
@@ -205,7 +209,7 @@ class verbatim-scanner : common-scanner
 scanner.register verbatim-scanner : include ;
 </programlisting>
             The value of the second parameter, in this case
-            <code>include</code>, specifies which properties contain the list
+            <code>include</code>, specifies the properties that contain the list
             of paths that should be searched for the included files.
          </para>
 
@@ -246,6 +250,9 @@ type.set-scanner VERBATIM : verbatim-scanner ;
         create a derived class, but simply create an instance of the
         <code>generator</code> class. Let's review the example we've seen in the
         <link linkend="bbv2.extender.intro">introduction</link>.
+        <!-- Is the following supposed to be verbatim.jam?  Tell the
+             user so.  You also need to describe the meanings of $(<)
+             and $(>); this is the first time they're encountered. -->
 <programlisting>
 import generators ;
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
@@ -258,7 +265,7 @@ actions inline-file
 
       <para>We declare a standard generator, specifying its id, the source type
         and the target type. When invoked, the generator will create a target
-        of type <literal>CPP</literal> that will have the source target of
+        of type <literal>CPP</literal> with a source target of
         type <literal>VERBATIM</literal> as the only source. But what command
         will be used to actually generate the file? In bjam, actions are
         specified using named "actions" blocks and the name of the action
@@ -278,7 +285,7 @@ actions inline-file
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
 generators.register-composing mex.mex : CPP LIB : MEX ;
 </programlisting>
-        The first generators takes a <emphasis>single</emphasis> source of type
+        Standard generators take a <emphasis>single</emphasis> source of type
         <code>VERBATIM</code> and produces a result. The second generator
         takes any number of sources, which can have either the
         <code>CPP</code> or the <code>LIB</code> type. Composing generators
@@ -296,7 +303,7 @@ generators.register-composing mex.mex : CPP LIB : MEX ;
       </para>
 
       <para>(Need a note about UNIX)</para>
-
+      <!-- What kind of note?  Either write the note or don't, but remove this dross. -->
       <bridgehead>Custom generator classes</bridgehead>
 
       <para>The standard generators allows you to specify source and target
@@ -688,8 +695,12 @@ glib codegen ;
     </para>
 
     <para>
-      Note that because you can associate custom generator with a target
-      type, the logic of building can be rather compiler. For example, the
+      Note that because you can associate a custom generator with a target
+      type, the logic of building can be rather compiler. 
+      <!-- "compiler" is not an adjective.  The logic can't be "rather
+           compiler."  What you might mean here is completely
+           mysterious -->
+      For example, the
       <code>boostbook</code> module declares a target type
       <code>BOOSTBOOK_MAIN</code> and a custom generator for that type,
       which implements pretty complex logic. You can use that as example if
