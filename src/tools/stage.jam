@@ -91,9 +91,20 @@ class stage-target-class : basic-target
                 
                 i2 = [ new file-target $(n:D=) : [ $(i).type ] 
                   : $(self.project) ] ;
-                local a = [ new action $(i2) : $(i) : common.copy ] ;
+                local a = [ $(i).action ] ;
+                local new-a ;
+                if $(a)
+                {                    
+                    # Copy the properties of original target. They, in particular
+                    # can affect the suffix of the target.
+                    new-a = [ new action $(i2) : $(i) : common.copy : [ $(a).properties-ps ] ] ;
+                }
+                else
+                {
+                    new-a = [ new action $(i2) : $(i) : common.copy ] ;
+                }                                
                 $(i2).suffix [ $(i).suffix ] ;
-                $(i2).action $(a) ;
+                $(i2).action $(new-a) ;
             }
             
             # FIXME: Since we can have <location> property, it might be better
