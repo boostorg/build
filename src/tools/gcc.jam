@@ -76,14 +76,35 @@ flags gcc.compile.c++ OPTIONS <cxxflags> ;
 flags gcc.compile DEFINES <define> ;
 flags gcc.compile INCLUDES <include> ;
 
+rule compile.c++
+{
+    # Some extensions are compiled as C++ by default. For others, we need
+    # to pass -x c++.
+    # We could pass -x c++ but distcc does not work with it.
+    if ! $(>:S) in .cc .cp .cxx .cpp .c++ .C
+    {
+        LANG on $(<) = "-x c++" ;
+    }    
+}
+
+
 actions compile.c++
 {
-    $(NAME:E=g++) -x c++ -Wall -ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    $(NAME:E=g++) $(LANG) -Wall -ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
+
+rule compile.c
+{
+    if $(>:S) != .c
+    {
+        LANG on $(<) = "-x c" ;
+    }    
+}
+
 
 actions compile.c
 {
-    $(NAME:E=gcc) -x c -Wall $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    $(NAME:E=gcc) $(LANG) -Wall $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 
