@@ -309,7 +309,7 @@ if [ os.name ] = NT
     RUN_OUTPUT_NL = "echo." ;
     STATUS_0 = "%status% EQU 0 (" ;
     STATUS_NOT_0 = "%status% NEQ 0 (" ;
-    VERBOSE = "%verbose% EQU 0 (" ;
+    VERBOSE = "%verbose% EQU 1 (" ;
     ENDIF = ")" ;
     SHELL_SET = "set" ;
     
@@ -323,7 +323,7 @@ else
     RUN_OUTPUT_NL = "echo" ;
     STATUS_0 = "test $status -eq 0 ; then" ;
     STATUS_NOT_0 = "test $status -ne 0 ; then" ;
-    VERBOSE = "test $verbose -eq 0 ; then" ;
+    VERBOSE = "test $verbose -eq 1 ; then" ;
     ENDIF = "fi" ;
     SHELL_SET = "" ;
     
