@@ -229,6 +229,7 @@ rule project-target ( name : project : requirements * : default-build * )
             local ref = [ project.attribute $(self.project) requirements ] ;
             local ps = [ $(property-set).refine $(ref) ] ;
             ps = [ $(ps).evaluate-conditionals ] ;
+            ps = [ $(ps).run-actions ] ;                            
             
             ps = [ targets.generate-dependencies $(ps) : $(self.project) : $(ps) ] ;
             self.ref-props.$(property-set) = $(ps) ;
@@ -530,12 +531,6 @@ rule basic-target ( name : project
             # link-compatibility is still not broken.
                         
             rproperties = [ $(rproperties).evaluate-conditionals ] ;
-            
-            # TODO: this line might cause target's properties to be
-            # unqual to project's reference properties. As the
-            # result, we create per-target bin directory while
-            # it's not really needed.
-            
             rproperties = [ $(rproperties).run-actions ] ;                
         }
         return $(rproperties) ;
