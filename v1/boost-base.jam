@@ -1876,14 +1876,17 @@ gGENERATOR_FUNCTION(DLL) = dll-files ;
 gIS_DEPENDENCY(DLL) = TRUE ;
 rule dll ( target : sources + : requirements * : default-build * )
 {
-    if $(JAMUNAME[1]) = OpenBSD
+    if $(JAMUNAME[1]) != sn9626 # no shared libs on cray
     {
-        if ! [ get-values <dllversion> : $(requirements) ]
+        if $(JAMUNAME[1]) = OpenBSD
         {
-            requirements += <dllversion>0.0 ;
+            if ! [ get-values <dllversion> : $(requirements) ]
+            {
+                requirements += <dllversion>0.0 ;
+            }
         }
+        declare-local-target $(target) : $(sources) : $(requirements) : $(default-build) : DLL ;
     }
-    declare-local-target $(target) : $(sources) : $(requirements) : $(default-build) : DLL ;
 }
 
 # Declare a statically-linked library target.
