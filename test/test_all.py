@@ -110,6 +110,7 @@ tests = [ "project_test1",
           "double_loading",
           "dll_path",
           "regression",
+          "composite",
 	  ]
 
 if os.name == 'posix':

@@ -810,9 +810,10 @@ class basic-target : abstract-target
     {
         local erequirements = [ $(self.requirements).evaluate-conditionals
           $(build-request) ] ;
-        
+        erequirements = [ $(erequirements).expand-composites ] ;
+
         local rproperties = [ $(build-request).refine $(erequirements) ] ;
-            
+
         if $(rproperties[1]) != "@error"                    
         {
             # TODO: issue a warning when requirements change properties, but
