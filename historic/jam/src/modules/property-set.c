@@ -43,17 +43,8 @@ LIST *property_set_create( PARSE *parse, FRAME *frame )
     val = var_get(var->value);
     if (val == 0) 
     {          
-        FRAME       inner[1];
-        frame_init( inner );
-        inner->prev = frame;
-        inner->module = frame->module;
-        inner->procedure = 0;
-        
-        lol_add( inner->args, list_append(list_new(0, "property-set"), unique));
-        
-        val = evaluate_rule("new", inner);
-        
-        frame_free(inner);
+        val = call_rule("new", frame, 
+                        list_append(list_new(0, "property-set"), unique), 0);                
         
         var_set(newstr(var->value), list_copy(0, val), VAR_SET);
     }
