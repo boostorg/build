@@ -187,9 +187,15 @@ actions link bind LIBRARIES
 }
 
 # Declare action for creating static libraries
+# The 'r' letter means to replace files in the archive
+# The 'u' letter means only outdated files in the archive
+#   should be replaced.
+# The 'c' letter means suppresses warning in case the archive
+#   does not exists yet. That warning is produced only on
+#   some platforms, for whatever reasons.
 actions piecemeal archive 
 {
-    ar ur "$(<)" "$(>)"
+    ar ruc "$(<)" "$(>)"
 }
 
 
