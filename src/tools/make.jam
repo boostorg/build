@@ -37,7 +37,7 @@ rule make ( target-name : sources * : generating-rule : requirements * )
 
     local target = [ $(ptarget).main-target $(target-name) ] ;
 
-    $(target).add-variant
+    $(target).add-alternative
         [ new make-target-class $(target-name) : $(project) : $(sources) : $(requirements) 
           : $(generating-rule) : $(default-build) ] ;
 }
