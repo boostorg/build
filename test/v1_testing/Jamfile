@@ -2,8 +2,7 @@ TOOLS = $(TOOLS[1]) ;
 project-root ;
 
 # bring in rules for testing
-SEARCH on testing.jam = $(BOOST_BUILD_PATH) ;
-include testing.jam ;
+import testing ;
 
 lib mylib : lib.cpp ;
 
