@@ -37,10 +37,14 @@ STLPORT_LIB_DIRECTORY ?= lib ;
 }
 
 flags gcc-stlport DEFINES <runtime-build>debug : _STLP_DEBUG ;
-flags gcc-stlport FINDLIBS <runtime-link>static/<runtime-build>debug    : stlport_$(GCC_STLPORT_LIB_ID)_stldebug ;
-flags gcc-stlport FINDLIBS <runtime-link>static/<runtime-build>release  : stlport_$(GCC_STLPORT_LIB_ID) ;
-flags gcc-stlport FINDLIBS <runtime-link>dynamic/<runtime-build>debug    : stlport_$(GCC_STLPORT_LIB_ID)_stldebug ;
-flags gcc-stlport FINDLIBS <runtime-link>dynamic/<runtime-build>release  : stlport_$(GCC_STLPORT_LIB_ID) ;
+flags gcc-stlport FINDLIBS <runtime-link>static/<runtime-build>debug
+  : stlport_$(GCC_STLPORT_LIB_ID)_stldebug pthread ;
+flags gcc-stlport FINDLIBS <runtime-link>static/<runtime-build>release
+  : stlport_$(GCC_STLPORT_LIB_ID) pthread ;
+flags gcc-stlport FINDLIBS <runtime-link>dynamic/<runtime-build>debug 
+  : stlport_$(GCC_STLPORT_LIB_ID)_stldebug pthread ;
+flags gcc-stlport FINDLIBS <runtime-link>dynamic/<runtime-build>release 
+  : stlport_$(GCC_STLPORT_LIB_ID) pthread ;
 flags gcc-stlport CFLAGS <runtime-link>dynamic    : -D_STLP_USE_DYNAMIC_LIB ;
 
 
