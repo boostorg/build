@@ -3,6 +3,14 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
+# First of all, check the jam version
+
+if $(JAM_VERSION:J="") < 030103
+{
+    ECHO "error: Boost.Jam version 3.1.3 or later required" ;
+    EXIT ;
+} 
+
 # Bootstrap the module system. And bring the import rule into the global module.
 #
 SEARCH on <module@>modules.jam = $(BOOST_BUILD_PATH) ;
