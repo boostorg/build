@@ -165,6 +165,7 @@ rule generator (
         
         convert-to-consumable-types $(project) $(name) : 
           $(properties) : $(sources) : $(multiple)
+          :
           : consumed bypassed ;
         
         local result ;
@@ -311,6 +312,9 @@ rule generator (
     # used when generator is run.
     rule convert-to-consumable-types ( project name ? : 
         properties * : source : multiple ? 
+        : only-one ? # convert 'source' to only one of source types
+                     # if there's more that one possibility, report an
+                     # error 
         : consumed-var # name of variable which recieves all targets which 
                        # can be consumed
           bypassed-var # name variable which recieves all targets which 
@@ -322,37 +326,68 @@ rule generator (
         # add it to $(consumed-var). Otherwise, call 'generators.construct'
         
         local real-source-type = [ $(source).type ] ;
+
+        # We're likely to be passed 'consumed' and 'bypassed'
+        # var names. Use "_" to avoid name conflicts.
+        local _consumed ;
+        local _bypassed ;
+        local missing-types ; 
+
         for local st in $(self.source-types)
         {
             # The 'source' if of right type already)
             if $(real-source-type) = $(st) || 
               [ type.is-derived $(real-source-type) $(st) ]
             {
-                $(consumed-var) += $(source) ;
+                _consumed += $(source) ;
             }
             else
             {
-                # Attempt to convert 'source' to the right type
-                local transformed = [ generators.construct $(project) $(name) :
-                  $(st) $(multiple) : $(properties) : $(source) ] ;
-                                
-                # Add targets of right type to 'consumed'. Add others to
-                # 'bypassed'. The 'generators.construct' rule has done
-                # its best to convert everything to the required type.
-                # There's no need to rerun it on targets of different types.
-                for local t in $(transformed)
-                {
-                    if [ $(t).type ] = $(st)
-                    {
-                        $(consumed-var) += $(t) ;
-                    }
-                    else
-                    {
-                        $(bypassed-var) += $(t) ;
-                    }
-                }                
+               missing-types += $(st) ;
             }
-        }    
+        }
+
+        # No need to search for transformation if
+        # some source type has consumed source and
+        # no more source types are needed.
+        if $(only-one) && $(_consumed) 
+        {
+            missing-types = ;
+        }
+            
+        #TODO: we should check that only one source type
+        #if create of 'only-one' is true.
+        #TODO: guess we better don't add the same target to
+        # 'bypassed' twice...
+        # TODO: consider if consuned/bypassed separation should
+        # be done by 'construct-types'.
+                    
+        if $(missing-types)
+        {            
+            local transformed = [ generators.construct-types $(project) $(name)
+              : $(missing-types) : $(multiple) : $(properties) : $(source) ] ;
+                                
+            # Add targets of right type to 'consumed'. Add others to
+            # 'bypassed'. The 'generators.construct' rule has done
+            # its best to convert everything to the required type.
+            # There's no need to rerun it on targets of different types.
+                
+            for local t in $(transformed)
+            {
+                if [ $(t).type ] in $(missing-types)
+                {
+                    _consumed += $(t) ;
+                }
+                else
+                {
+                    _bypassed += $(t) ;
+                }
+            }               
+        }   
+        
+        
+        $(consumed-var) += $(_consumed) ;
+        $(bypassed-var) += $(_bypassed) ;
     }
     
 
@@ -385,46 +420,18 @@ rule composing-generator ( id : source-types + : target-types + :
         # a usable type.
         while $(sources) && ! $(failed)
         {
-            s = $(sources[1]) ;
-            generators.dout [ indent ] "type is " [ $(s).type ] ;            
-            local consumable ;
-            local ast = [ $(s).type ] ;
-            for local st in $(self.source-types)
+            local c ;
+            local b ;
+            # TODO: need to check for failure on each source.
+            convert-to-consumable-types $(project) : $(properties)
+              : $(sources[1]) : * : true : c b ;
+            if ! $(c)
             {
-                if $(ast) = $(st) || [ type.is-derived $(ast) $(st) ] 
-                {
-                    consumable = true ;
-                }                
+                generators.dout [ indent ] " failed to convert " [ $(sources[1]).str ] ;
+                failed = true ;
             }
-            
-            if $(consumable)
-            {
-                generators.dout [ indent ] "directly consuming " [ $(s).str ] ;
-                consumed += $(s) ;
-            }
-            else
-            {
-                local r = [ generators.construct-types $(project) : $(self.source-types)
-                            : * : $(properties) : $(s) ] ;
-                if ! $(r[1]) || ! [ $(r[1]).type ] in $(self.source-types)
-                {
-                   failed = true ;
-                }
-                else
-                {
-                    for local t in $(r)
-                    {
-                        if [ $(t).type ] in $(self.source-types)
-                        {
-                            consumed += $(t) ;
-                        }
-                        else
-                        {
-                            bypassed += $(t) ;
-                        }                        
-                    }
-                }
-            }
+            consumed += $(c) ;
+            bypassed += $(b) ;
             sources = $(sources[2-]) ;
         }                
 
@@ -485,30 +492,18 @@ rule register-composing ( id : source-types + : target-types + : requirements * 
 # made.
 .caching = ;
 
-
-rule try-one-generator ( project name ? : generator multiple ? : 
-    target-types + : properties * : sources * )
+# For all t in 'targets':
+# if [ $(t).type ] in $(target-types), add 't' to result
+# if [ $(t).type ] in base type for any of 'target-types', add 't' to result
+# otherwise, add 't' to extra.
+rule base-to-derived-type-conversion ( targets * : target-types +
+    : result-var extra-var )
 {
-    generators.dout [ indent ] "  trying generator" [ $(generator).id ] 
-      "for" $(target-types:J=" ") "(" $(multiple) ")" ;
-            
-    local targets = [ $(generator).run $(project) $(name) : $(properties) : $(sources)
-      : $(multiple) ] ;
-
-    local v = [ new vector $(targets) ] ;
-    generators.dout "-- generator returned" [ $(v).str ] ;
-
-
-    # Generated targets that are of required types
-    local result ;
-    # Generated target of other types.
-    local extra ;
-
     for local t in $(targets) 
     {
         if [ $(t).type ] in $(target-types)
         {
-            result += $(t) ;
+            $(result-var) += $(t) ;
         }
         else 
         {
@@ -523,17 +518,33 @@ rule try-one-generator ( project name ? : generator multiple ? :
                 if ! $(found) && [ type.is-derived $(tt) $(at) ] 
                 {
                     $(t).set-type $(tt) ;
-                    result += $(t) ;
+                    $(result-var) += $(t) ;
                 }                
             }            
             if ! $(found)
             {
-                extra += $(t) ;                
+                $(extra-var) += $(t) ;                
             }            
         }        
-    }
+    }    
+}
 
-    v = [ new vector $(extra) ] ;
+
+
+rule try-one-generator ( project name ? : generator multiple ? : 
+    target-types + : properties * : sources * )
+{
+    local targets = [ $(generator).run $(project) $(name) : $(properties) : $(sources)
+      : $(multiple) ] ;
+
+    # Generated targets that are of required types
+    local result ;
+    # Generated target of other types.
+    local extra ;
+
+    base-to-derived-type-conversion $(targets) : $(target-types) 
+        : result extra ;
+        
     # Now try to convert extra targets 
     # 'construct' will to its best to return only requested
     # target types, so if we receive any extra from that call,
@@ -541,7 +552,6 @@ rule try-one-generator ( project name ? : generator multiple ? :
     local extra2 ;
     if $(multiple) 
     {
-        generators.dout "-- trying to convert extra targets" [ $(v).str ] ;   
         for local e in $(extra) 
         {
             local try2 = [ construct-types $(project) $(name) : $(target-types) : : $(properties)
@@ -549,7 +559,6 @@ rule try-one-generator ( project name ? : generator multiple ? :
     
             result += $(try2) ;
         }    
-        generators.dout "-- done trying to convert extra targets" [ $(v).str ] ;   
     }
     else
     {
@@ -565,24 +574,29 @@ rule try-one-generator ( project name ? : generator multiple ? :
 rule construct-types ( project name ? : target-types + : multiple ? : 
     properties * : source )
 {
-    local results ;
+    local result ;
+    local matched-types ; 
     for local t in $(target-types)
     {
         local r = [ construct $(project) $(name) : $(t) $(multiple) : $(properties) :
           $(source) ] ;
         if $(r)
         {
-            results += [ new vector $(r) ] ;
+            result += $(r) ;
+            matched-types += $(t) ;
         }
     }
-    if $(results[2])
+    # TODO: have to introduce parameter controlling if
+    # several types can be matches and add appropriate
+    # checks 
+
+    # TODO: need to review the documentation for
+    # 'construct' to see if it should return $(source) even
+    # if nothing can be done with it. Currents docs seem to
+    # imply that, contrary to the behaviour.
+    if $(result)
     {
-        error "Situation I can't handle:" $(target-types) -- 
-          [ $(source).str ] ;
-    }
-    if $(results[1])
-    {
-        return [ $(results[1]).get ] ;
+        return $(result) ;
     }
     else
     {
@@ -887,39 +901,6 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
         #{
         #    error "No generator could produce desired targets" ;
         #}
-
-        if ! [ $(results).size ] in 0 1
-        {
-            # We have several alternatives and need to check if they
-            # are the same. 
-            
-            for local r in [ $(results).get ] 
-            {
-                normalize-target-list $(r) ;
-                generators.dout [ $(r).str ] ;
-            }
-
-            local f = [ $(results).at 1 ] ;
-            local mismatch ;
-            for local r in [ $(results).get ] 
-            {
-                if ! [ utility.equal $(r) $(f) ] 
-                {
-                    mismatch = true ;
-                }
-            }
-
-            if ! $(mismatch)
-            {
-                $(results).clear ;
-                $(results).push-back $(f) ;                
-            }
-            else 
-            {    
-                error [ $(results).size ] "possible generations for " $(target-types)
-                  : "generations:" [ $(results).str ] ;
-            }
-        }
         
         result = [ select-dependency-graph $(results) ] ;
     }
