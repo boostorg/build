@@ -28,4 +28,7 @@ t.run_build_system("link-runtime=static", status=1)
 t.fail_test(string.find(t.stdout(),
                         "on gcc, DLL can't be build with <link-runtime>static") == -1)
 
+t.run_build_system("link=static link-runtime=static")
+t.expect_addition("bin/$toolset/debug/link-runtime-static/link-static/hello.lib")
+
 t.cleanup()
