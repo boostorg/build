@@ -303,8 +303,7 @@ rule generator ( id : source-types + : target-types-and-names + : requirements *
                 generated-name = $(name) ;
             }
             
-            targets += [ new virtual-target $(generated-name) : $(t) : $(project) : 
-              [ property.remove incidental : $(properties) ] ] ;
+            targets += [ new virtual-target $(generated-name) : $(t) : $(project) ] ;
         }                 
         # Assign an action for each target
         local action = [ action-class ] ;
