@@ -1068,17 +1068,22 @@ rule Object
 
     # if source is not .c, generate .c with specific rule
 
-    switch $(>:S)
+    # make sure we don't generate the same object twice.
+    if ! $(gGENERATED_TARGET($(<)))
     {
-        case .asm : As $(<) : $(>) ;
-        case .c :   Cc $(<) : $(>) ;
-        case .C :   C++ $(<) : $(>) ;
-        case .cc :  C++ $(<) : $(>) ;
-        case .cpp : C++ $(<) : $(>) ;
-        case .cxx : C++ $(<) : $(>) ;
-        case .f :   Fortran $(<) : $(>) ;
-        case .s :   As $(<) : $(>) ;
-        case * :    UserObject $(<) : $(>) ;
+        switch $(>:S)
+        {
+            case .asm : As $(<) : $(>) ;
+            case .c :   Cc $(<) : $(>) ;
+            case .C :   C++ $(<) : $(>) ;
+            case .cc :  C++ $(<) : $(>) ;
+            case .cpp : C++ $(<) : $(>) ;
+            case .cxx : C++ $(<) : $(>) ;
+            case .f :   Fortran $(<) : $(>) ;
+            case .s :   As $(<) : $(>) ;
+            case * :    UserObject $(<) : $(>) ;
+        }
+        gGENERATED_TARGET($(<)) = true ;
     }
 }
     
@@ -1103,10 +1108,15 @@ rule gen-source # source => object-file-names
     }
     
     local immediate-target = $(<:D=:S=$(suffix):G=$(SOURCE_GRIST)) ;
-    switch $(<:S)
+    # make sure we don't regenerate sources twice.
+    if ! $(gGENERATED_TARGET($(immediate-target)))
     {
-     case .l* : Lex $(immediate-target) : $(<) ; SEARCH on $(<) = $(SEARCH_SOURCE) ;
-     case .y* : Yacc $(immediate-target) : $(<) ; SEARCH on $(<) = $(SEARCH_SOURCE) ;
+        switch $(<:S)
+        {
+         case .l* : Lex $(immediate-target) : $(<) ; SEARCH on $(<) = $(SEARCH_SOURCE) ;
+         case .y* : Yacc $(immediate-target) : $(<) ; SEARCH on $(<) = $(SEARCH_SOURCE) ;
+        }
+        gGENERATED_TARGET($(immediate-target)) = true ;
     }
     return [ Objects $(immediate-target) ] ;
 }
