@@ -274,6 +274,19 @@ rule select-ungristed
     return $(result) ;
 }
 
+rule select-gristed ( list * )
+{
+    local result ;
+    for local x in $(list)
+    {
+        if $(x:G)
+        {
+            result += $(x) ;
+        }
+    }
+    return $(result) ;
+}
+
 # Split a qualified property into 3 elements. 
 #
 # Grammar description of qualified-property :
@@ -357,6 +370,11 @@ rule normalize-properties
     {
         switch $(property)
         {
+            case <*><*><*><*@*>* : result += $(property) ;
+            case <*><*><*@*>* : result += <*>$(property) ;
+            case <*><*@*>* : result += <*><*>$(property) ;
+            case <*@*>* : result += <*><*><*>$(property) ;
+                        
             case <*><*><*>* : result += $(property) ;
             case <*><*>* : result += <*>$(property) ;
             case <*>* : result += <*><*>$(property) ;
@@ -605,10 +623,11 @@ rule relevant-features # name
 
 # variant name : [<toolset>]<feature>value...
 #
-# Delcare a build variant, whose configuration is given by the given (optionally
+# Declare a build variant, whose configuration is given by the given (optionally
 # toolset-qualified) properties.
-rule variant
+rule variant ( name : tool-properties * )
 {
+    gALL_VARIANTS += $(name)
     local toolset ;
     for toolset in $(TOOLS)
     {
@@ -619,26 +638,26 @@ rule variant
         # is neccessary to get the relevant-features correctly set. We supply
         # the variant name as the target name, so that error messages will look
         # coherent.
-        gBASE_PROPERTIES($(toolset),$(<))
-            = [ sort [ select-properties $(toolset) $(toolset) $(<) : $(>) ] ] ;
+        gBASE_PROPERTIES($(toolset),$(name))
+            = [ sort [ select-properties $(toolset) $(toolset) $(name) : $(tool-properties) ] ] ;
     }
 }
 
-# select-properties toolset variant target-name : qualified-properties...
+# select-properties toolset variant target : qualified-properties...
 #
 # Returns
-rule select-properties
+rule select-properties ( toolset variant target ? : qualified-properties * )
 {
-    local relevant_features = [ relevant-features $(<[1]) ] ;
+    local relevant_features = [ relevant-features $(toolset) ] ;
     local normalized = [ normalize-properties $(>) ] ;
 
     # Classify properties by the specificity of their qualification.
     # First, grab those that apply to this toolset, or all toolsets
-    local this_toolset = [ get-values <$(<[1])> : $(normalized) ] ;
+    local this_toolset = [ get-values <$(toolset)> : $(normalized) ] ;
     local all_toolsets = [ get-values <*> : $(normalized) ] ;
     
-    local 0-stars = [ get-values <$(<[2])> : $(this_toolset) ] ;
-    local 1-stars = [ get-values <*> : $(this_toolset) ] [ get-values <$(<[2])> : $(all_toolsets) ] ;
+    local 0-stars = [ get-values <$(variant)> : $(this_toolset) ] ;
+    local 1-stars = [ get-values <*> : $(this_toolset) ] [ get-values <$(variant)> : $(all_toolsets) ] ;
     local 2-stars = [ get-values <*> : $(all_toolsets) ] ;
 
     # Select feature names from the features relevant to the toolset.
@@ -666,7 +685,7 @@ rule select-properties
         if $(r[2]) && ! $(is_free) # Check for conflicting simple-feature requests
         {
             EXIT "Error: Ambiguous properties requested for"
-            $(<[3]) <$(<[1])><$(<[2])> ":" $(f)$(r) ;
+            $(target) <$(toolset)><$(variant)> ":" $(f)$(r) ;
         }
         result += $(f)$(r) ;
     }
@@ -1205,7 +1224,13 @@ rule depend-on-libraries
     NEEDLIBS on $(<) += $(>) ;
     DEPENDS $(<) : $(>) ;
     # To run these targets, we need everything needed to run the libraries
-    gRUN_PATH($(<)) += $(gRUN_PATH($(>))) ;
+    for local dir in $(gRUN_PATH($(>)))
+    {
+        if ! $(dir) in $(gRUN_PATH($(<)))
+        {
+            gRUN_PATH($(<)) += $(dir) ;
+        }
+    }
 }
 
 # subvariant-target target : subvariant-id build-properties : toolset variant
@@ -1231,6 +1256,10 @@ rule subvariant-target
     gDECLARED_TARGETS += $(TARGET_GRIST) ;
 
     local target-type = $(gTARGET_TYPE($(<))) ;
+    if ! $(target-type)
+    {
+        EXIT unknown target type for $(<) ;
+    }
     
     # LOCATE_TARGET affects where built targets are generated. We move it
     # relative to the default location based on the subvariant 
@@ -1309,15 +1338,23 @@ rule main-target
     local v ;
     for v in $(variants)
     {
+      local rules = [ select-ungristed $(gTARGET_REQUIREMENTS($(<))) ] ;
+      local requirements = [ select-gristed $(gTARGET_REQUIREMENTS($(<))) ] ;
+
       local expanded
           = [ expand-build-request $(toolset) $(v) $(<)
-              : $(gTARGET_REQUIREMENTS($(<))) : $(build-request) ] ;
+              : $(requirements) : $(build-request) ] ;
 
-      local x ;
-      for x in $(expanded)
+      for local x in $(expanded)
       {
+          local properties = [ split-path-at-grist $(x) ] ;
+          for local r in $(rules)
+          {
+              properties = [ $(r) $(toolset) $(v) : $(properties) ] ;
+          }
+          
           subvariant-target $(<)
-                : [ split-path-at-grist $(x) ] : $(toolset) $(v) ;
+                : $(properties) : $(toolset) $(v) ;
       }
     }
   }
