@@ -114,7 +114,8 @@ def fail_test(self = None, condition = 1, function = None, skip = 0):
 
     at = _caller(traceback.extract_stack(), skip)
 
-    sys.stderr.write("FAILED test" + of + desc + sep + at)
+    sys.stderr.write("FAILED test" + of + desc + sep + at + """
+in directory: """ + os.getcwd() )
 
     sys.exit(1)
 
