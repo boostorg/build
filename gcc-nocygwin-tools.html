@@ -22,11 +22,16 @@
   </tr>
 </table>
 
+<hr>
+
+<h2>Introduction</h2>
+
 <p>
-This page describes how to build Boost using the -mno-cygwin option of
-the Cygwin gcc compiler. This avoids introducing dependencies on the
-Cygwin Unix-emulation layer, allowing you to build Windows executables
-which are not dependant on cygwin1.dll.
+This page describes the gcc-nocygwin toolset, which builds Boost using
+the -mno-cygwin option of the Cygwin gcc compiler. This avoids
+introducing dependencies on the Cygwin Unix-emulation layer, allowing
+you to build Windows executables which are not dependant on
+cygwin1.dll.
 </p>
 <p>
 You could achieve the same results by using the MinGW version of gcc,
@@ -42,8 +47,50 @@ straightforward under Cygwin. Just be sure to configure with
 fail to build properly.
 
 </ol>
-
 </p>
+
+<h2><a name="configuration">Configuration Variables</a></h2>
+
+<p>
+The gcc toolset responds to the variables shown in the following table,
+which can be set in the environment or configured on the jam
+command-line using <code>-s<i>VARIABLE_NAME</i>=</code><i>value</i>.
+</p>
+<p>
+This toolset is an extension to the gcc-stlport toolset and therefore
+also responds to all of the configuration variables for
+<a href="gcc-stlport-tools.html#configuration">gcc-stlport</a>
+and
+<a href="gcc-tools.html#configuration">gcc</a>
+in addition to those listed below.
+</p>
+
+<table border="1">
+  <tr>
+    <th>Variable Name</th>
+    <th>Semantics</th>
+    <th>Default</th>
+    <th>Notes</th>
+  </tr>
+  <tr>
+    <td>
+      <code>NOCYGWIN_<br>STLPORT_<br>LIB_ID</code>
+    </td>
+    <td>
+      The name used to generate the stlport library names (corresponding
+      to the LIB_BASENAME variable in the STLport make files).
+    </td>
+    <td>
+       mingw32
+    </td>
+    <td>
+      This forms the middle part of the STLport library
+      names, for example libstlport_<b>mingw32</b>_debug.a
+    </td>
+  </tr>
+</table>
+
+
 <h2>Prerequisites</h2>
 
 <p>
@@ -77,53 +124,43 @@ specific nocygwin makefile for Boost jam, it is probably best to
 download the prebuilt executable for Windows.
 </p>
 
-<h2>Building Boost</h2>
+<h2>Building with gcc-nocygwin</h2>
 <p>
-You'll have to set up (at least) the following environment
-variable before starting Boost jam:
+Refer to the <a
+href="gcc-stlport-tools.html#configuration">gcc-stlport</a>
+configuration section for details of the <code>STLPORT_ROOT</code>
+variable, which you'll have to configure (at the very least).  Make
+sure to use Windows-style pathnames and not the /cygdrive/x/... style
+(you're using the Windows native Boost jam, remember).
 </p>
 <p>
-<code>
-STLPORT_ROOT
-</code>
-</p>
-<p>
-Make sure to use Windows-style pathnames and not the
-/cygdrive/x/... style (you're using the Windows native Boost jam,
-remember). Configure additional variables as described <a
-href="../../libs/python/doc/building.html">here</a> if you want to build
-the <a href="../../libs/python/doc/index.html">Boost.Python</a>
+Configure additional variables as described <a
+href="../../libs/python/doc/building.html">here</a> if you want to
+build the <a href="../../libs/python/doc/index.html">Boost.Python</a>
 library, making sure to point it at a <b>Windows</b> installation of
-Python and not a Cygwin one. If your STLport libraries don't have
-names like stlport_mingw32&#8230; you will also need to set the
-environment variable
+Python and not a Cygwin one. At the time of writing, the Python
+example simple_vector.cpp fails to compile in debug mode
+because of an incompatability with the STLport debugging STL
+containers, but everything else should build properly.
+</p>
+<p>
+If your STLport libraries don't have names like stlport_mingw32&#8230;
+you will need to set the environment variable
 <code>NOCYGWIN_STLPORT_LIB_ID</code> to replace the "mingw32" part of
 the library names.
 </p>
 <p>
-Once your environment is right, you can run:
+Once your environment is right, you can
+<a href="build_system.htm#initiating">start</a> the build as for any other
+toolset, using the toolset name "gcc-nocygwin". If you want to
+see exactly what's going on, try supplying jam the <code>-d2</code>
+option to show the raw commands as they execute.
 </p>
 <p>
-<pre>
-jam -sTOOLS=gcc-nocygwin
-</pre>
-
-<p>
-from the Boost root directory, and away goes the build. If you want to
-see exactly what's going on, try supplying jam the <code>-d2</code>
-option to show the raw commands as they execute. At the time of
-writing, the Python example simple_vector.cpp fails to compile in the
-debug variant because of an incompatability with the STLport debugging
-STL containers, but everything else should build properly.
-
-<p>
-You might also like to specify build sub-variants, for example
-vtable-thunks if you're working with COM or DirectX. For example:
-<pre>
-jam -sTOOLS=gcc-nocygwin -sBUILD="release &lt;vtable-thunks&gt;on"
-</pre>
-
-However, if you're messing around with this stuff, make extra sure
+If you work with COM or DirectX, you will want to force gcc to
+generate vtable-thunks by including <code>&lt;vtable-thunks&gt;on</code>
+in the BUILD <a href="build_system.htm#user_globals">global
+variable</a>. If you're messing around with this stuff, make extra sure
 that you build all your libraries (including STLport) with the same
 vtable style.
 
