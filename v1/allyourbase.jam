@@ -2107,7 +2107,7 @@ actions Fortran
 
 actions HardLink
 {
-    $(RM) "$(<)" $(NULL_OUT)
+    $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
     $(LN) "$(>)" "$(<)" $(NULL_OUT)
 }
 
