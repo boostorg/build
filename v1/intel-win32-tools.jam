@@ -48,17 +48,7 @@ if $(version) <= 5
 }
 else
 {
-    C++FLAGS += 
-      # Add support for wchar_t and correct for loop scoping
-      /Zc:wchar_t,forScope
-      ;
-    
-    if $(version) = 6
-    {
-        # clue in our config, since we don't seem to be detecting
-        # native wchar_t automatically in this case.
-        C++FLAGS += -D_NATIVE_WCHAR_T_DEFINED ;
-    }
+    C++FLAGS += /Zc:forScope ;  # Add support for correct for loop scoping
 }
 
 # Add options recognized only by intel7
@@ -66,15 +56,24 @@ if $(version) >= 7
 {
     C++FLAGS += /Qansi_alias ;
 }
-  
-    
+
 # tell the compiler about the base toolset.
 if $(INTEL_BASE_MSVC_TOOLSET) = msvc
 {
     C++FLAGS += /Qvc6 ;
+    # no wchar_t support in vc6 dinkum library.
 }
 else
 {
+    if $(version) > 5
+    {
+        # Add support for wchar_t
+        C++FLAGS += /Zc:wchar_t
+          # Tell the dinkumware library about it.
+          -D_NATIVE_WCHAR_T_DEFINED
+          ;
+    }
+    
     C++FLAGS += /Q$(INTEL_BASE_MSVC_TOOLSET) ;
 }
 
