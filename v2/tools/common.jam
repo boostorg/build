@@ -219,7 +219,21 @@ rule check-tool ( xcommand + )
     }        
 }
 
-
+# returns the location of the "program files" directory on a windows
+# platform
+rule get-program-files-dir ( )
+{
+    local ProgramFiles = [ modules.peek : ProgramFiles ] ;
+    if $(ProgramFiles)
+    {
+        ProgramFiles = "$(ProgramFiles:J= )" ;
+    }
+    else
+    {
+        ProgramFiles = "c:\\Program Files" ;
+    }
+    return $(ProgramFiles) ;
+}
 
 if [ os.name ] = NT
 {
