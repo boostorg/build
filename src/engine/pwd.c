@@ -15,6 +15,7 @@
 #define PATH_MAX _MAX_PATH
 #else
 #include <limits.h>
+#include <unistd.h>
 #if defined(__COMO__)
      #include <linux/limits.h>
 #endif
