@@ -356,9 +356,10 @@ else if $(UNIX)
         RANLIB          ?= "" ;
 
     case MACOSX :
-        AR              ?= libtool -o ;
         MANDIR          ?= /usr/local/share/man ;
         RANLIB          ?= "" ;
+        SUFDLL          ?= .dylib ;
+        gSHELL_LIBPATH  ?= DYLD_LIBRARY_PATH ;
 
     case NCR :
         RANLIB          ?= "" ;
