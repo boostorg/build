@@ -38,6 +38,17 @@ rule make ( target-name : sources * : generating-rule : requirements * )
 {
     # Default build is not specified: 'main-target-alternative' will take
     # care of it.
+    
+    local caller = [ CALLER_MODULE ] ;
+    local rules = [ RULENAMES $(caller) ] ;
+    if $(generating-rule) in $(rules)
+    {
+        # This is local rule, make it global
+        local n = $(caller).$(generating-rule) ;
+        IMPORT $(caller) : $(generating-rule) : : $(n) ;
+        generating-rule = $(n) ;
+    }
+    
     targets.main-target-alternative 
       $(target-name) [ CALLER_MODULE ] make-target-class : 2 : : 4 
         : $(sources) : $(requirements) : $(generating-rule) : $(default-build) ;
