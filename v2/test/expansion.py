@@ -68,5 +68,25 @@ t.expect_addition(["bin/$toolset/debug/a.exe",
                    "bin/$toolset/release/c.exe",
                    ])
 
+t.rm("bin")
+
+# Test for issue BB60
+t.write("test.cpp", """
+#include "header.h"
+int main() { return 0; }
+""")
+t.write("Jamfile", """
+project
+    : requirements <toolset>$toolset:<include>foo
+    ;
+exe test : test.cpp : <toolset>$toolset ;
+""")
+t.expand_toolset("Jamfile")
+t.write("foo/header.h", """
+""")
+t.write("project-root.jam", "")
+t.run_build_system()
+t.expect_addition("bin/$toolset/debug/test.exe")
+
 t.cleanup()
 
