@@ -308,6 +308,7 @@ generators.register-composing mex.mex : CPP LIB : MEX ;
 
       <para>The standard generators allows you to specify source and target
         types, action, and a set of flags. If you need anything more complex,
+        <!-- What sort of flags?  Command-line flags?  What does the system do with them? -->
         you need to create a new generator class with your own logic. Then,
         you have to create an instance of that class and register it. Here's
         an example how you can create your own generator class:
@@ -318,6 +319,7 @@ class custom-generator : generator
     {
         generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
+<!-- What is the point of this __init__ function?? -->
 }
 
 generators.register 
@@ -329,32 +331,34 @@ generators.register
         <code>generator</code> class.
       </para>
 
-      <para>There are two methods of interest. The <code>run</code> methods is
-        responsible for overall process - it takes a number of source targets,
+      <para>There are two methods of interest. The <code>run</code> method is
+        responsible for the overall process - it takes a number of source targets,
         converts them the the right types, and creates the result. The
         <code>generated-targets</code> method is called when all sources are
         converted to the right types to actually create the result.
       </para>
 
-      <para>The <code>generated-target</code> method can be overridden when you
-        want to add additional properties to the generated targets or use
-        additional sources. For example (which is real), you have a tool for
-        analysing programs, which should be given a name of executable and the
-        list of all sources. Naturally, you don't want to list all source
-        files manually. Here's how the <code>generated-target</code> method
-        can find the list of sources automatically:
+      <para>The <code>generated-target</code> <!-- Is it generated-target or generated-targets? -->
+      method can be overridden
+      when you want to add additional properties to the generated
+      targets or use additional sources. For a real-life example,
+      suppose you have a program analysis tool that should be given a
+      name of executable and the list of all sources. Naturally, you
+      don't want to list all source files manually. Here's how the
+      <code>generated-target</code> method can find the list of
+      sources automatically:
 <programlisting>
 class itrace-generator : generator {
 ....
     rule generated-targets ( sources + : property-set : project name ? )
     {
-        local leafs ;
-        local temp = [ virtual-target.traverse $(sources[1]) : : include-sources ] ;
+        local leaves ;
+        local temp = [ virtual-target.traverse $(sources[1]) : : include-sources ] ;<!-- You must explain include-sources! -->
         for local t in $(temp)
         {
-            if ! [ $(t).action ]
+            if ! [ $(t).action<!-- In what namespace is this evaluated? --> ]
             {
-                leafs += $(t) ;
+                leaves += $(t) ;
             }
         }
         return [ generator.generated-targets $(sources) $(leafs)
@@ -363,11 +367,12 @@ class itrace-generator : generator {
 }
 generators.register [ new itrace-generator nm.itrace : EXE : ITRACE ] ;
 </programlisting>
-        The <code>generated-targets</code> rule will be called with a single
-        source target of type <literal>EXE</literal>. The call to the
+        The <code>generated-targets</code> method will be called with a single
+        source target of type <literal>EXE</literal>. The call to 
         <code>virtual-target.traverse</code> will return all targets the
         executable depends on, and we further find files that are not
-        produced from anything. The found targets are added to the sources.
+        produced from anything. <!-- What does "not produced from anything" mean? -->
+        The found targets are added to the sources.
       </para>
       
       <para>The <code>run</code> method can be overriden to completely
@@ -391,7 +396,7 @@ rule run ( project name ? : property-set : sources * : multiple ? )
             python = $(s) ;
         }
     }
-    
+    <!-- This is horrible code.  Use a filter function, or at _least_ consolidate the two loops! -->
     local libs ;
     for local s in $(sources)
     {
@@ -406,10 +411,10 @@ rule run ( project name ? : property-set : sources * : multiple ? )
     {
         if [ type.is-derived [ $(s).type ] CPP ] 
         {
-            local name = [ $(s).name ] ;
+            local name = [ $(s).name ] ;    # get the target's basename
             if $(name) = [ $(python).name ] 
             {
-                name = $(name)_ext ;
+                name = $(name)_ext ;        # rename the target
             }                                
             new-sources += [ generators.construct $(project) $(name) :
               PYTHON_EXTENSION : $(property-set) : $(s) $(libs) ] ;
@@ -420,6 +425,10 @@ rule run ( project name ? : property-set : sources * : multiple ? )
                  : $(property-set) ] ;        
 }    
 </programlisting>        
+        <!-- Why are we doing this with a generator??? It seems
+             insane.  We could just use a nice front-end rule that
+             calls some normal target-creation rules. No? -->
+
         First, we separate all source into python files, libraries and C++
         sources. For each C++ source we create a separate Python extension by
         calling <code>generators.construct</code> and passing the C++ source
@@ -436,14 +445,14 @@ rule run ( project name ? : property-set : sources * : multiple ? )
         Often, we need to control the options passed the invoked tools. This 
         is done with features. Consider an example:
 <programlisting>
-# Declare a new feature
+# Declare a new free feature
 import feature : feature ;
 feature verbatim-options : : free ;
 
 # Cause the value of the 'verbatim-options' feature to be
 # available as 'OPTIONS' variable inside verbatim.inline-file
 import toolset : flags ;
-flags verbatim.inline-file OPTIONS &lt;verbatim-options&gt; ;
+flags verbatim.inline-file OPTIONS &lt;verbatim-options&gt; ;<!-- You must tell the reader what the syntax of the flags rule is -->
 
 # Use the "OPTIONS" variable
 actions inline-file
