@@ -461,6 +461,7 @@ UNDEFFLAG       ?= "-u _" ;
 YACC            ?= ;
 YACCFILES       ?= ;
 YACCFLAGS       ?= ;
+BIN_DIRECTORY   ?= bin ;
 
 HDRPATTERN = 
         "^[     ]*#[    ]*include[      ]*([<\"][^\">]*[\">]).*$" ;
@@ -1188,16 +1189,35 @@ rule Shell
 # Invokes SubDir with a path description
 rule subproject
 {
-   SubDir TOP [ split-path $(<) ] ;
+    SubDir TOP [ split-path $(<) ] ;
 }
 
 # dwa 6/18/01 - added for boost
 # project-root
 #
 # Declares this directory to be the project root.
-rule project-root
+rule project-root ( )
 {
+    local project-location ;
+    if $(gTOP)
+    {
+        project-location = [ root-paths $($(gTOP)) : [ PWD ] ] ;
+    }
+    else
+    {
+        project-location = [ PWD ] ;
+    }
+    local name = $(project-location:B) ;
+    PROJECT = $(name) ;
+    gPROJECT($(name)) = $(project-location) ;
     SubDir TOP ;
+}
+
+#
+#
+rule project ( name : location )
+{
+    gPROJECT($(name)) = [ root-paths $(location) : $(.boost-build-file:D) ] ;
 }
 
 # dwa 6/7/01 - added for boost
@@ -1284,6 +1304,7 @@ rule SubDir
 
         # Include it.
 
+        project-root ;
         include $(_r) ;
     }
 
@@ -1306,11 +1327,11 @@ rule SubDir
     local nodot_subdir = [ simplify-path-tokens $(SUBDIR_TOKENS) ] ;
 
     normalized_ALL_LOCATE_TARGET ?= [ join-path $($(gTOP)) $(ALL_LOCATE_TARGET) ] ;
-    LOCATE_SOURCE = [ FDirName $(normalized_ALL_LOCATE_TARGET) $(nodot_subdir) ] ;
+    LOCATE_SOURCE = [ FDirName $(normalized_ALL_LOCATE_TARGET) $(BIN_DIRECTORY) $(PROJECT) $(nodot_subdir) ] ;
     LOCATE_TARGET = $(LOCATE_SOURCE) ;
-    HCACHEFILE ?= $(LOCATE_TARGET)/.jamdeps ;
+    HCACHEFILE ?= $(LOCATE_TARGET:B=.jamdeps) ;
     
-    SOURCE_GRIST = [ FGrist $(<[2-]) ] ;
+    SOURCE_GRIST = [ FGrist @$(PROJECT) $(SUBDIR_TOKENS) ] ;
 
     # Reset per-directory ccflags, hdrs
 
@@ -1339,7 +1360,7 @@ rule in-invocation-subdir
 # invoke SubDir temporarily and then restore them, declare
 #       local $(gSUBDIR_GLOBALS) ;
 gSUBDIR_GLOBALS = SUBDIR SUBDIR_TOKENS SEARCH_SOURCE LOCATE_SOURCE LOCATE_TARGET
-    SOURCE_GRIST RELATIVE_SUBDIR RELATIVE_SUBDIR_TOKENS ; 
+    SOURCE_GRIST RELATIVE_SUBDIR RELATIVE_SUBDIR_TOKENS PROJECT ; 
 
 
 rule protect-subdir
@@ -1348,17 +1369,14 @@ rule protect-subdir
 }
 
 # prepends root to any unrooted elements of paths, and simplifies
-rule root-paths # paths... : root
+rule root-paths ( paths * : root )
 {
     local path result ;
-    for path in $(<)
+    for path in $(paths)
     {
-        local rooted = $(path:R=$(>)) ;
-        if $(rooted) != $(path)
-        {
-            path = [ tokens-to-simple-path [ split-path $(rooted:G=) ] ] ;
-            path = $(path:G=$(rooted:G)) ;
-        }
+        local rooted = $(path:R=$(root)) ;
+        path = [ tokens-to-simple-path [ split-path $(rooted:G=) ] ] ;
+        path = $(path:G=$(rooted:G)) ;
         result += $(path) ;
     }
     return $(result) ;
@@ -1613,7 +1631,9 @@ rule SubInclude
 
     # protect variables from being permanently set by SubDir invocations
     # in included files.
+    local project = $(PROJECT) ;
     local [ protect-subdir ] ;
+    PROJECT = $(project) ;
     local jamfile-path
         = [ tokens-to-simple-path
             [ split-path $(JAMFILE:D=$(_s):R=$($(<[1]))) ] ] ;
@@ -1649,7 +1669,7 @@ rule load-jamfiles ( jamfiles * )
         {
             if ! $(gINCLUDED($(jamfile-path)))
             {
-                gINCLUDED(#(jamfile-path)) = TRUE ;
+                gINCLUDED($(jamfile-path)) = TRUE ;
                 include $(jamfile-path) ;
             }
         }

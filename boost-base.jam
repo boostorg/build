@@ -1415,24 +1415,72 @@ rule dependent-include
     local target ;
     for target in $(<)
     {
-        # compute the path to the Jamfile containing target. This path must be
-        # relative to the directory of Jam's invocation in order for the include
-        # rule to find it.
-        
-        local jamfile-path
-            = [ tokens-to-simple-path
-                  $(RELATIVE_SUBDIR_TOKENS) [ split-path [ directory-of $(target) ] ] $(JAMFILE) ] ;
-                  
         {
-            # protect variables from being permanently set by SubDir invocations
-            # in included files.
-            local [ protect-subdir ] ;
-
+            local .project-path = [ target-path-of $(target) ] ;
+            .project-path = $(.project-path:D) ;
+            
             # load the file as a dependent.
             local gIN_LIB_INCLUDE = TRUE ;
-            load-jamfiles $(jamfile-path) ;
+            
+            #
+            local gINCLUDED($(gTOP)) = $(gINCLUDED($(gTOP))) ;
+            local [ protect-subproject ] ;
+            local .project-name-and-subdir = [ enter-subproject $(.project-path) ] ;
+            local .project-name = $(.project-name-and-subdir[1]) ;
+            local .project-subdir = $(.project-name-and-subdir[2]) ;
+            local .jamfile-path = [ root-paths $(JAMFILE) : [ root-paths $(.project-subdir) : $(TOP) ] ] ;
+            
+            if $(.project-name)
+            {
+                gINCLUDED($(gTOP)) = $(gINCLUDED($(.project-name):TOP)) ;
+            }
+            load-jamfiles $(.jamfile-path) ;
+            if $(.project-name)
+            {
+                gINCLUDED($(.project-name):TOP) = gINCLUDED($(gTOP)) ;
+            }
         }
     }
+}
+
+rule protect-subproject ( )
+{
+    .TOP = $(TOP) ;
+    .TOP_TOKENS = $(TOP_TOKENS) ;
+    .gTOP = $(gTOP) ;
+    .PROJECT = $(PROJECT) ;
+    return TOP TOP_TOKENS gTOP PROJECT [ protect-subdir ] ;
+}
+
+rule enter-subproject ( project-path )
+{
+    TOP = $(.TOP) ;
+    TOP_TOKENS = $(.TOP_TOKENS) ;
+    gTOP = $(.gTOP) ;
+    gINCLUDED($(.gTOP)) = $(gINCLUDED($(.gTOP))) ;
+    PROJECT = $(.PROJECT) ;
+    
+    local project-name = [ MATCH "^@([^/]+)" : $(project-path) ] ;
+    project-name ?= $(PROJECT) ;
+    project-name ?= "" ;
+    local project-subdir = [ MATCH "^@[^/]+/(.*)" : $(project-path) ] ;
+    local project-top ;
+    
+    if $(project-name)
+    {
+        project-top =
+            [ split-path $(gPROJECT($(project-name))) ]
+            [ split-path [ relative-path $(project-subdir) ] ]
+            [ split-path [ FSubDir [ split-path [ relative-path $(project-subdir) ] ] ] ] ;
+        TOP = [ join-path $(project-top) ] ;
+        TOP_TOKENS = $(project-top) ;
+        gTOP = TOP ;
+        PROJECT = $(project-name) ;
+    }
+    
+    subproject $(project-subdir) ;
+    
+    return $(project-name) $(project-subdir) ;
 }
 
 # segregate-free-properties variable1 variable2...
@@ -1537,16 +1585,13 @@ rule link-libraries ( libs * : toolset variant : dependent-simple-properties * )
   local lib-path result ;
   for lib-path in $(libs)
   {
-    local new-subdir = TOP [ top-relative-tokens [ directory-of $(lib-path) ] ] ;
-    
-    # protect global variables from being permanently set by SubDir
-    local [ protect-subdir ] ;
+    local lib-path = [ target-path-of $(lib-path) ] ;
+    local lib-target = [ target-id-of $(lib-path) ] ;
 
     # Enter the dependee subproject
-    SubDir $(new-subdir) ;
+    local [ protect-subproject ] ;
+    enter-subproject [ directory-of $(lib-path) ] ;
 
-    local lib-target = [ FGristFiles $(lib-path:D=) ] ;
-      
     local lib-subvariant = [ 
       find-compatible-subvariant $(lib-target)
         : $(toolset) $(variant)
@@ -1577,8 +1622,6 @@ rule get-BUILD
   }
   return $(build) ;
 }
-
-BIN_DIRECTORY ?= bin ;
 
 # declare-fake-targets abstract-target : target-file
 #
@@ -1713,7 +1756,7 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
   # LOCATE_TARGET affects where built targets are generated. We move it
   # relative to the default location based on the subvariant 
   local LOCATE_TARGET
-    = [ join-path $(LOCATE_TARGET) $(BIN_DIRECTORY) $(target:G=) $(subvariant-id) ] ;
+    = [ join-path $(LOCATE_TARGET) $(target:G=) $(subvariant-id) ] ;
 
   # The renamed base name of the target. Only considers the tags defined directly
   # on the target.
@@ -2099,11 +2142,11 @@ rule grist-targets ( targets + : subdir-tokens * )
     }
     if ! $(SOURCE_GRIST)
     {
-        return $(targets:G=!$(subdir-grist)) ;
+        return $(targets:G=$(subdir-grist)) ;
     }
     else
     {
-        return $(targets:G=!$(SOURCE_GRIST)$(subdir-grist)) ;
+        return $(targets:G=$(SOURCE_GRIST)$(subdir-grist)) ;
     }
 }
 
@@ -2168,7 +2211,7 @@ rule stage ( name : sources + : requirements * : local-build * )
 
             local target = $(source:D=:G=) ;
             local target-id = [ target-id-of $(source) ] ;
-            local target-subdir = [ simplify-path-tokens [ top-relative-tokens [ directory-of $(source) ] ] ] ;
+            local target-subdir = [ directory-of [ target-path-of $(source) ] ] ;
 
             dependent-include $(source:G=) ;
             local gIMPOSED_REQUIREMENTS($(target-id)) = $(requirements) ;
@@ -2199,8 +2242,8 @@ rule stage ( name : sources + : requirements * : local-build * )
 
                     local target-subvariant = ;
                     {
-                        local [ protect-subdir ] ;
-                        SubDir TOP $(target-subdir) ;
+                        local [ protect-subproject ] ;
+                        enter-subproject $(target-subdir) ;
                         target-subvariant =
                             [ subvariant-target $(s-target) : $(s-properties) : $(s-toolset) $(s-variant) ] ;
                     }
@@ -2234,7 +2277,7 @@ rule stage ( name : sources + : requirements * : local-build * )
     #
     local destination-files = ;
     local locate-target = $(locate) ;
-    locate-target ?= [ split-path $(LOCATE_TARGET) ] ;
+    locate-target ?= [ split-path $(SUBDIR) ] ;
     for local file in $(files)
     {
         local destination-file ;
@@ -2271,7 +2314,7 @@ rule stage ( name : sources + : requirements * : local-build * )
     #
     if ! $(fake-target)
     {
-        declare-fake-targets $(stage-id) : $(destination-files) ;
+        declare-fake-targets $(stage-id:G=) : $(destination-files) ;
     }
     else
     {
@@ -2306,13 +2349,36 @@ rule stage ( name : sources + : requirements * : local-build * )
 #
 # <sub1!sub2>test.dll
 #
-rule target-id-of ( target )
+rule target-id-of ( target-ref )
 {
-    local SOURCE_GRIST =
-        [ FGrist [ simplify-path-tokens [ top-relative-tokens [ directory-of $(target:G=) ] ] ] ] ;
-    local target-id =
-        [ FGristFiles $(target:D=:G=) ] ;
+    local path = [ directory-of $(target-ref:G=) ] ;
+    if ! [ MATCH "^(@)" : $(path) ]
+    {
+        path = [ join @$(PROJECT) [ simplify-path-tokens [ top-relative-tokens $(path) ] ] : / ] ;
+    }
+    local tokens = [ split-path $(path) ] ;
+    local project-name = [ MATCH "^@([^/]+)" : $(tokens[1]) ] ;
+    if $(project-name)
+    {
+        tokens = $(tokens[2-]) ;
+    }
+    project-name ?= $(PROJECT) ;
+    local SOURCE_GRIST = [ FGrist @$(project-name) [ simplify-path-tokens $(tokens) ] ] ;
+    local target-id = [ FGristFiles $(target-ref:D=:G=) ] ;
     return $(target-id) ;
+}
+
+#
+#
+rule target-path-of ( target-ref )
+{
+    local path = [ directory-of $(target-ref:G=) ] ;
+    if ! [ MATCH "^(@)" : $(path) ]
+    {
+        path = [ join @$(PROJECT) [ simplify-path-tokens [ top-relative-tokens $(path) ] ] : / ] ;
+    }
+    path = $(path)/$(target-ref:D=) ;
+    return $(path) ;
 }
 
 # Common rules for generating a single stage tag based on the
@@ -2467,5 +2533,3 @@ rule std::facet-support ( toolset variant : subvariant-path properties * )
         : $(toolset) : $(subvariant-path) $(properties)
           ] ;
 }
-
-
