@@ -1774,7 +1774,7 @@ rule join-path
     else
     {
         _s = $(<[1]) ;
-        _r = $(<[2-]) ;
+        local _r = $(<[2-]) ;
 
         # Jam doesn't handle the root directory properly
         if $(_s) in / $(SLASH)
