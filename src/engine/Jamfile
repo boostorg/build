@@ -163,7 +163,7 @@ rule Package
 	}
 }
 
-VERSION = ftjam-2.3.5 ;
+VERSION = boost-jam-3.0 ;
 
 
 actions Tar-Gz
