@@ -16,13 +16,13 @@ int main() {}
 """)
 t.write("Jamfile", "exe a : a.cpp : <link>static:<define>STATIC ;")
 t.run_build_system("link=static")
-t.expect_addition("bin/gcc/debug/link-static/main-target-a/a.exe")
+t.expect_addition("bin/$toolset/debug/link-static/main-target-a/a.exe")
 
 t.write("Jamfile", """
 project : requirements <link>static:<define>STATIC ;
 exe a : a.cpp ;
 """)
 t.run_build_system("link=static")
-t.expect_addition("bin/gcc/debug/link-static/a.exe")
+t.expect_addition("bin/$toolset/debug/link-static/a.exe")
 
 t.cleanup()

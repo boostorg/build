@@ -24,8 +24,8 @@ t.write("src/b.cpp", "int main() {}\n")
 
 t.run_build_system()
 
-t.expect_addition(["build/bin/gcc/debug/a.exe",
-                   "build/src/bin/gcc/debug/b.exe"])
+t.expect_addition(["build/bin/$toolset/debug/a.exe",
+                   "build/src/bin/$toolset/debug/b.exe"])
 		   
 # Test that building from child projects work
 t.run_build_system(subdir='src')
@@ -45,7 +45,7 @@ exe b : b.cpp ;
 """)
 
 t.run_build_system()
-t.expect_addition(["bin/gcc/debug/a.exe",
-                   "src/build/bin/gcc/debug/b.exe"])
+t.expect_addition(["bin/$toolset/debug/a.exe",
+                   "src/build/bin/$toolset/debug/b.exe"])
 		   
 t.cleanup()		   
