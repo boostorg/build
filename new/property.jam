@@ -301,8 +301,8 @@ rule translate-paths ( properties * : path )
     {
         if path in [ feature.attributes $(p:G) ] 
         {
-            local t = [ path.root $(p:G=) $(path) ] ;
-            result += $(t:G=$(p:G)) ;
+            local t = [ path.root $(p:TG=) $(path) ] ;
+            result += $(t:TG=$(p:G)) ;
         }
         else
         {

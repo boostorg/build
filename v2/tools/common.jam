@@ -6,6 +6,18 @@
 #  Provides actions common to all toolsets, for as making directoies and
 #  removing files.
 
+import os ;
+import modules ;
+
+if [ os.name ] = NT
+{
+	modules.poke : RM : del /f ;
+}
+else
+{
+	modules.poek : RM : rm ;
+}
+
 rule MkDir
 {
     # If dir exists, don't update it
@@ -58,7 +70,7 @@ actions MkDir1
 
 actions piecemeal together existing Clean
 {
-    rm $(>)
+    $(RM) $(>)
 }
 
 rule copy 
