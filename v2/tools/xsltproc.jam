@@ -61,7 +61,7 @@ local rule .xsltproc ( target : source stylesheet : properties * : dirname ? : a
     
     for local catalog in [ feature.get-values <catalog> : $(properties) ]
     {
-        CATALOG = [ common.variable-setting-command XML_CATALOG_FILES : catalog.xml ] ;
+        CATALOG = [ common.variable-setting-command XML_CATALOG_FILES : $(catalog) ] ;
     }
     
     DIRECTORY on $(target) = $(dirname) ;
