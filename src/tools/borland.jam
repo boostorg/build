@@ -25,9 +25,12 @@ rule init ( version ? : command * )
     
     local command = [ common.get-invocation-command borland : bcc32.exe 
         : $(command) ] ;
-    
-    local root = [ common.get-absolute-tool-path $(command[-1]) ] ;
-    root = $(root:D) ;
+     
+    if $(command)
+    {
+        command = [ common.get-absolute-tool-path $(command[-1]) ] ;
+    }   
+    root = $(command:D) ;    
     
     toolset.flags borland.compile STDHDRS $(condition) : $(root)/include/ ;
     toolset.flags borland.link STDLIBPATH $(condition) : $(root)/lib ;
