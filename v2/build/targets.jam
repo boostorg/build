@@ -921,9 +921,9 @@ class basic-target : abstract-target
                 local s = [ create-subvariant $(result) : $(property-set) : $(source-targets)
                   : $(rproperties) : $(usage-requirements) ] ;
 
-                self.generated.$(property-set) = 
-                  [ compute-usage-requirements $(s) ]
-                  $(result) ;
+                local ur = [ compute-usage-requirements $(s) ] ;
+                $(s).set-usage-requirements $(ur) ;
+                self.generated.$(property-set) = $(ur) $(result) ;
 
                 self.name = $(original-name) ;
             } 
@@ -972,7 +972,10 @@ class basic-target : abstract-target
           : $(rproperties) : $(usage-requirements) : $(all-targets) ] ;
         for local v in $(all-targets)          
         {
-            $(v).dg $(dg) ;            
+            if ! [ $(v).dg ]
+            {                
+                $(v).dg $(dg) ;            
+            }            
         }                        
         return $(dg) ;
     }

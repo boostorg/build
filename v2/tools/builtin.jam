@@ -414,7 +414,20 @@ class lib-target-class : basic-target
             local values = [ $(u).get <dll-path> ] ;
             result = [ $(result).add-raw $(values:G=<dll-path>) ] ;
         }
-                        
+        
+        # For libraries that we've failed to consume, we need to 
+        # pass <library-path> usage requirements, if any.
+        # We look at all generated target, and if they are created in different
+        # subvariant, we add usage requirements.
+        for local t in [ $(subvariant).created-targets ]
+        {
+            local s = [ $(t).dg ] ;
+            if $(s) != $(subvariant)
+            {
+                result = [ $(result).add [ $(s).usage-requirements ] ] ;
+            }            
+        }
+                                        
         return $(result) ;
     }
     

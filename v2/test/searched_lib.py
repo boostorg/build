@@ -33,15 +33,37 @@ else:
 # Test that the simplest usage of searched library works.
 t.write('project-root.jam', '')
 t.write('Jamfile', """
-exe main : main.cpp test_lib ;
+exe main : main.cpp helper ;
+lib helper : helper.cpp test_lib ;
 lib test_lib : : <name>test_lib <search>lib ;
 """)
 t.write("main.cpp", """
-void foo();
-int main() { foo(); return 0; }
+void helper();
+int main() { helper(); return 0; }
 """)
-t.run_build_system()
+t.write("helper.cpp", """
+void foo();
+
+void
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
+helper() { foo(); }
+""")
+t.run_build_system(stderr=None) # gcc warns about libraries which are not in -rpath.
 t.expect_addition("bin/$toolset/debug/main.exe")
+t.rm("bin/$toolset/debug/main.exe")
+
+# Now try using searched lib from static lib. Request shared version
+# of searched lib, since we don't have static one handy.
+t.write('Jamfile', """
+exe main : main.cpp helper ;
+lib helper : helper.cpp test_lib/<link>shared : <link>static ;
+lib test_lib : : <name>test_lib <search>lib ;
+""")
+t.run_build_system(stderr=None)
+t.expect_addition("bin/$toolset/debug/main.exe")
+t.expect_addition("bin/$toolset/debug/link-static/helper.lib")
 t.rm("bin/$toolset/debug/main.exe")
 
 # A regression test: <library>property referring to
@@ -55,6 +77,11 @@ t.rm("bin/$toolset/debug/main.exe")
 # requirements.
 
 t.write('Jamfile', 'exe main : main.cpp d/d2//a ;')
+t.write('main.cpp',"""
+void foo();
+int main() { foo(); return 0; }
+
+""")
 t.write('d/d2/Jamfile', """
 lib test_lib : : <name>test_lib <search>../../lib ;
 lib a : a.cpp : : : <library>test_lib ;
