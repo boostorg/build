@@ -10,6 +10,7 @@
 
 import toolset : flags ;
 import feature ;
+import common ;
 
 feature.extend toolset : vacpp ;
 toolset.inherit vacpp : unix ;
@@ -18,18 +19,6 @@ feature.subfeature toolset vacpp : version ;
 # Configures the vacpp toolset. 
 rule init ( version ? : command * : options * )
 {
-    local condition = [ common.check-init-parameters vacpp : version $(version) ] ;
-    local command = [ common.get-invocation-command vacpp : xlc : $(command) ] ;
-
-    common.handle-options acc : $(condition) : $(command) : $(options) ;    
-    
-    if $(command)
-    {        
-        command = [ common.get-absolute-tool-path $(command[-1]) ] ;
-    }
-    local root = $(command:D) ;
-    
-    flags vacpp ROOT $(condition) : $(root) ;    
 }
 
 
@@ -87,6 +76,7 @@ flags vacpp VA_C_COMPILER  <threading>multi : xlc_r ;
 flags vacpp VA_CXX_COMPILER <threading>single : xlC   ;
 flags vacpp VA_CXX_COMPILER <threading>multi : xlC_r ;
 
+ROOT = /usr/vacpp/bin ;
 actions vacpp.link bind NEEDLIBS
 {
     $(ROOT)/$(VA_CXX_COMPILER) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
