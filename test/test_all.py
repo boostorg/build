@@ -122,6 +122,7 @@ tests = [ "project_test1",
           "unit_test",
           "standalone",
           "library_order",
+          "order_sensitive",
           ]
 
 if os.name == 'posix':
