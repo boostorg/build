@@ -27,7 +27,7 @@ t.copy("b_inverse.cpp", "b.cpp")
 t.rm("bin")
 t.run_build_system(extra_args="release define=MACROS")
 
-		  
+
 # Regression test: direct build request was not working
 # when there's more than one level of 'build-project'
 
