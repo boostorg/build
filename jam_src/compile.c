@@ -518,7 +518,6 @@ compile_on(
 
 	    result = parse_evaluate( parse->right, frame );
 
-	    t->boundname = search( t->name, &t->time );
 	    popsettings( t->settings );
 	}
 
