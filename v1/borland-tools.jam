@@ -66,8 +66,8 @@ flags borland CFLAGS <inlining>full : -vi -w-inl ;
 }
 
     
-flags borland LINKFLAGS <wide-character-support>on : -WU ;
-flags borland CFLAGS <wide-character-support>on : -WU ;
+flags borland LINKFLAGS <unicode-application>on : -WU ;
+flags borland CFLAGS <unicode-application>on : -WU ;
 
 flags borland CFLAGS <cflags> ;
 flags borland C++FLAGS <cxxflags> ;

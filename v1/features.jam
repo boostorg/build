@@ -22,7 +22,7 @@ feature debug-symbols : on off : ;
 free-feature debug-store : object database ;
 free-feature user-interface : console gui ; # windows only, practically
 
-feature wide-character-support : on off ;
+feature unicode-application : on off ;
 feature exception-handling : on off ;
 feature rtti : on off ;
 
@@ -94,14 +94,11 @@ COMMON_PROPERTIES ?=
     <struct-alignment>auto
     <eh-model>default
     <threading>single
-    <wide-character-support>on
+    <unicode-application>off
     <exception-handling>on
     <rtti>on
     <shared-linkable>false
     
-    # Borland link lines will need work to find the right libraries for unicode
-    # support - see borland-tools.jam 
-    <borland><wide-character-support>off
     "<cwpro8><cxxflags>-iso_templates on"
     
     <address-model>default
