@@ -44,7 +44,7 @@ import errors : error ;
 import project-roots ;
 
 import print ;
-import class : class new ;
+import class : class new xnew ;
 import errors ;
 import assert ;
 import property-set ;
@@ -524,7 +524,7 @@ rule target ( project-module )
 {
     if ! $(.target.$(project-module))
     {
-        .target.$(project-module) = [ new project-target $(project-module) 
+        .target.$(project-module) = [ xnew project-target $(project-module) 
           : $(project-module) 
            : [ attribute $(project-module) requirements ] ] ;
     }

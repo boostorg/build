@@ -15,12 +15,15 @@ import toolset ;
 # lanch test programs. 
 feature.feature testing.launcher : : optional free ;
 
-rule unit-test-target-class ( name : project : sources * : requirements * 
-                         : default-build * )
+xclass unit-test-target-class : basic-target
 {
-    typed-target.__init__ $(name) : $(project) : EXE : $(sources) 
-      : $(requirements) : $(default-build) ;
-       
+    rule __init__ ( name : project : sources * : requirements * 
+                         : default-build * )
+    {
+        typed-target.__init__ $(name) : $(project) : EXE : $(sources) 
+          : $(requirements) : $(default-build) ;
+    }
+           
     rule construct ( source-targets * : properties * )
     {
         local result = 
@@ -55,7 +58,7 @@ rule unit-test ( target-name : sources * : requirements * )
             
     # TODO: what to do with default build?
     targets.main-target-alternative 
-      [ new unit-test-target-class $(target-name) : $(project) : $(sources)
+      [ xnew unit-test-target-class $(target-name) : $(project) : $(sources)
         : [ targets.main-target-requirements $(requirements) : $(project) ]
         : [ targets.main-target-default-build $(default-build) : $(project) ]
       ] ;

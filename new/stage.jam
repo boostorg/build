@@ -36,13 +36,17 @@ import type ;
 import regex ;
 import generators ;
 
-rule stage-target-class ( name-and-dir : project : sources * : requirements * : default-build * )
+xclass stage-target-class : basic-target
 {
-    basic-target.__init__ $(name-and-dir) : $(project) : $(sources) : $(requirements) 
-                          : $(default-build) ;
+    import feature project type errors generators ;    
+    import class : xnew ;
     
-    import feature project type errors generators ;
-    
+    rule __init__ ( name-and-dir : project : sources * : requirements * : default-build * )
+    {
+        basic-target.__init__ $(name-and-dir) : $(project) : $(sources) : $(requirements) 
+          : $(default-build) ;
+    }
+        
     rule construct ( source-targets * : property-set )
     {
         local name = [ $(property-set).get <name> ] ;
@@ -107,8 +111,6 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
     
 }
 
-class stage-target-class : basic-target ;
-
 # Declare staged version of the EXE type. Generator for this type will
 # cause relinking to the new location.
 type.register STAGED_EXE : : EXE ;
@@ -168,7 +170,7 @@ rule stage ( name : sources * : requirements * : default-build * )
     local project = [ CALLER_MODULE ] ;
     
     targets.main-target-alternative
-      [ new stage-target-class $(name) : $(project) : $(sources)
+      [ xnew stage-target-class $(name) : $(project) : $(sources)
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
         : [ targets.main-target-default-build $(default-build) : $(project) ] 
       ] ;

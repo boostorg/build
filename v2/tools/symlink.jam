@@ -14,39 +14,42 @@ feature.feature symlink-location : project-relative build-relative : incidental 
 
 # The class representing "symlink" targets.
 #
-rule symlink-targets (
-    project
-    : targets *
-    : sources *
-    )
+xclass symlink-targets : basic-target
 {
     import numbers modules class property project ;
     
-    # Generate a fake name for now. Need unnamed targets eventually.
-    local c = [ modules.peek symlink : .count ] ;
-    modules.poke symlink : .count : [ numbers.increment $(c) ] ;
-    local fake-name = symlink#$(c) ;
+    rule __init__ (
+      project
+        : targets *
+        : sources *
+    )
+    {    
+        # Generate a fake name for now. Need unnamed targets eventually.
+        local c = [ modules.peek symlink : .count ] ;
+        modules.poke symlink : .count : [ numbers.increment $(c) ] ;
+        local fake-name = symlink#$(c) ;
     
-    basic-target.__init__ $(fake-name) : $(project) : $(sources) ;
+          basic-target.__init__ $(fake-name) : $(project) : $(sources) ;
     
-    # Remember the targets to map the sources onto. Pad or truncate
-    # to fit the sources given.
-    self.targets = ;
-    for local source in $(sources)
-    {
-        if $(targets)
+        # Remember the targets to map the sources onto. Pad or truncate
+        # to fit the sources given.
+        self.targets = ;
+        for local source in $(sources)
         {
-            self.targets += $(targets[1]) ;
-            targets = $(targets[2-]) ;
+            if $(targets)
+            {
+                self.targets += $(targets[1]) ;
+                targets = $(targets[2-]) ;
+            }
+            else
+            {
+                self.targets += $(source) ;
+            }
         }
-        else
-        {
-            self.targets += $(source) ;
-        }
-    }
     
-    # The virtual targets corresponding to the given targets.
-    self.virtual-targets = ;
+        # The virtual targets corresponding to the given targets.
+        self.virtual-targets = ;
+    }    
     
     rule construct ( source-targets * : property-set )
     {
@@ -71,7 +74,6 @@ rule symlink-targets (
         return $(self.virtual-targets) ;
     }
 }
-class.class symlink-targets : basic-target ;
 
 # Creates a symbolic link from a set of targets to a set of sources.
 # The targets and sources map one to one. The symlinks generated are
@@ -95,7 +97,7 @@ rule symlink (
     local project = [ CALLER_MODULE ] ;
     
     return [ targets.main-target-alternative
-        [ class.new symlink-targets $(project) : $(targets) : 
+        [ class.xnew symlink-targets $(project) : $(targets) : 
           # Note: inline targets are not supported for symlink, intentionally,
           # since it's used to linking existing non-local targets.
           $(sources) ] ] ;

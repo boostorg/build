@@ -8,7 +8,7 @@
 
 import feature ;
 import generators : * ;
-import class : class new ;
+import class : class new xnew ;
 import errors ;
 import property ;
 import scanner ;
@@ -234,7 +234,7 @@ rule main-target-rule ( name : sources * : requirements * : default-build *
     import targets ;
     return [
       targets.main-target-alternative
-      [ new typed-target $(name) : $(project) : $(.main-target-type.$(rulename))
+      [ xnew typed-target $(name) : $(project) : $(.main-target-type.$(rulename))
         : [ targets.main-target-sources $(sources) : $(name) ] 
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
         : [ targets.main-target-default-build $(default-build) : $(project) ]

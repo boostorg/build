@@ -80,19 +80,22 @@ import path ;
 import set ;
 
 # Base class for all abstract targets.
-rule abstract-target ( name      # name of the target in Jamfile
-                       : project # the project module where the target is declared
-                     )
+xclass abstract-target 
 {
-    import project ;
+    import project ;    
     
-    # Note: it might seem that we don't need either name or project at all.
-    # However, there are places where we really need it. One example is error
-    # messages which should name problematic targets. Another is setting correct
-    # paths for sources and generated files.
-
-    self.name = $(name) ;
-    self.project = $(project) ;
+    rule __init__ ( name      # name of the target in Jamfile
+        : project # the project module where the target is declared
+    )
+    {        
+        # Note: it might seem that we don't need either name or project at all.
+        # However, there are places where we really need it. One example is error
+        # messages which should name problematic targets. Another is setting correct
+        # paths for sources and generated files.
+        
+        self.name = $(name) ;
+        self.project = $(project) ;
+    }    
     
     # Returns the name of this target.
     rule name ( )
@@ -144,7 +147,6 @@ rule abstract-target ( name      # name of the target in Jamfile
         self.name = $(new-name) ;
     }        
 }
-class abstract-target ;
 
 #  Project target class (derived from 'abstract-target')
 #
@@ -162,19 +164,23 @@ class abstract-target ;
 #    targets.
 #  - The first time 'main-target' or 'has-main-target' rule is called,
 #    all alternatives are enumerated an main targets are created.
-rule project-target ( name : project : requirements * : default-build * )
+xclass project-target : abstract-target 
 {
     import project targets ;
     import path ;
     import print ;
     import property-set ;
     import set : difference : set.difference ;
+    import class : xnew ;
+        
+    rule __init__ ( name : project : requirements * : default-build * )
+    {    
+        abstract-target.__init__ $(name) : $(project) ;
+        
+        self.requirements = $(requirements) ;
+        self.default-build = $(default-build) ;
+    }
     
-    abstract-target.__init__ $(name) : $(project) ;
-
-    self.requirements = $(requirements) ;
-    self.default-build = $(default-build) ;
-
     rule set-property-adjuster ( property-adjuster )
     {
         for local t in [ targets-to-build ] 
@@ -297,7 +303,7 @@ rule project-target ( name : project : requirements * : default-build * )
             if ! $(target)
             {
                 self.main-target.$(name) = 
-                  [ new main-target $(name) : $(self.project) ] ;
+                  [ xnew main-target $(name) : $(self.project) ] ;
                 self.main-targets += $(name) ;
                 target = $(self.main-target.$(name)) ;
             }
@@ -329,8 +335,6 @@ rule project-target ( name : project : requirements * : default-build * )
     }    
     
 }
-class project-target : abstract-target ;
-
 
 
 # Helper rules to detect cycles in main target references
@@ -358,10 +362,8 @@ local rule end-building ( main-target-instance )
 
 
 # A named top-level target in Jamfile
-rule main-target ( name : project )
+xclass main-target : abstract-target
 {
-    abstract-target.__init__ $(name) : $(project) ;
-
     import errors : error ;
     import assert ;
     import numbers : range ;
@@ -369,6 +371,13 @@ rule main-target ( name : project )
     import print ;
     import build-request feature property-set ;
     import targets : start-building end-building ;
+    import class : is-a ;
+        
+    rule __init__ ( name : project )
+    {
+        abstract-target.__init__ $(name) : $(project) ;
+    }
+    
         
     # Add a new alternative for this target
     rule add-alternative ( target )
@@ -527,8 +536,6 @@ rule main-target ( name : project )
     }
     
 }
-
-class main-target : abstract-target ;
 
 # Helper for 'find', below.
 local rule remove-trailing-slash ( string )
@@ -759,40 +766,42 @@ rule generate-dependencies ( property-set : project : generation-ps )
 # alternative from sources. Allows sources to be either file or
 # other main target and handles generation of those dependency
 # targets.
-rule basic-target ( name : project
-                    : sources * : requirements * : 
-                      [property-set] default-build * : usage-requirements * )
-{        
-    abstract-target.__init__ $(name) : $(project) ;
-    
+xclass basic-target : abstract-target
+{
     import build-request ;
     import virtual-target targets ;
     import property-set ;
     import set sequence errors ;
-
-    self.sources = $(sources) ;
-    if ! $(requirements) {
-        requirements = [ property-set.empty ] ;
-    }    
-    self.requirements = $(requirements) ;
-    if ! $(default-build) 
-    {
-        default-build = [ property-set.empty ] ;
-    }    
-    self.default-build = $(default-build) ;
-    if ! $(usage-requirements)
-    {
-        usage-requirements = [ property-set.empty ] ;
-    }    
-    self.usage-requirements = $(usage-requirements) ;
-
-    if $(sources:G)
-    {
-        errors.error "gristed element in sources for" [ full-name ] ;
+    import class : new xnew ;
+        
+    rule __init__ ( name : project
+        : sources * : requirements * : 
+        default-build * : usage-requirements * )
+    {        
+        abstract-target.__init__ $(name) : $(project) ;
+    
+        self.sources = $(sources) ;
+        if ! $(requirements) {
+            requirements = [ property-set.empty ] ;
+        }    
+        self.requirements = $(requirements) ;
+        if ! $(default-build) 
+        {
+            default-build = [ property-set.empty ] ;
+        }    
+        self.default-build = $(default-build) ;
+        if ! $(usage-requirements)
+        {
+            usage-requirements = [ property-set.empty ] ;
+        }    
+        self.usage-requirements = $(usage-requirements) ;
+        
+        if $(sources:G)
+        {
+            errors.error "gristed element in sources for" [ full-name ] ;
+        }
     }
-    
-    
-    
+                
     rule default-build ( )
     {
         return $(self.default-build) ;
@@ -1032,18 +1041,19 @@ rule basic-target ( name : project
     }
 }
 
-class basic-target : abstract-target ;
-
-rule typed-target ( name : project : type 
-    : sources * : requirements * : default-build * : usage-requirements * )
+xclass typed-target : basic-target
 {
-    basic-target.__init__ $(name) : $(project) 
-      : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;
+    import generators ;    
     
-    import generators ;
-    
-    self.type = $(type) ;
-    
+    rule __init__ ( name : project : type 
+    : sources * : requirements * : default-build * : usage-requirements * )
+    {
+        basic-target.__init__ $(name) : $(project) 
+          : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;
+        
+        self.type = $(type) ;
+    }
+        
     rule construct ( source-targets * : property-set )
     {
         local r = [ generators.construct $(self.project) $(self.name) : $(self.type) 
@@ -1059,7 +1069,6 @@ rule typed-target ( name : project : type
         return $(r) ;
     }            
 }
-class typed-target : basic-target ;
 
 # Return the list of sources to use, if main target rule is invoked
 # with 'sources'. If there are any objects in 'sources', they are treated
