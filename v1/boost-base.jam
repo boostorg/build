@@ -2034,69 +2034,61 @@ rule unit-test ( target +  : sources + : requirements * : default-build * : cmd-
 }
 
 # Used to build command files from a list of sources.
-rule build-command-file ( command : sources * )
+rule build-command-file ( command : sources * : prefix ? line-break ? )
 {
     # Clean up after ourselves
     Clean clean : $(command) ;
     
     DEPENDS $(command) : $(sources) ;
     
+    PREFIX on $(command) = $(prefix:E=) ;
+    
+    local ' _  = "" ;
+    
+    if ! $(NT)
+    {
+        ' = ' ;
+        _ = " " ;
+    }
+        
+    ' on $(command) = $(') ;
+    _ on $(command) = $(_) ;
+    
+    EOL on $(command) = \"$(line-break:E=)$(')$(_)>>$(_)\" ;
+    BOL on $(command) = "\"
+echo $(')$(prefix:E=)\"" ;
+    
     # Check whether there's anything to dump, so that we don't end up
     # executing a line of the form:
     #
-    #    echo > file.CMD
+    #    echo >> file.CMD
     #
     # on Windows this writes "echo is on." into the command-file,
     # which then breaks the link.
     
-    if $(sources[1])
+    if $(sources)
     {
         # Handle the first target specially, so that the first source file
         # will clear the command file
-        command-file-dump-1st $(command) : $(sources[1]) ;
+        command-file-dump $(command) : $(sources) ;
     }    
-    
-    if $(sources[2])
-    {
-        # Then fill the rest up piecemeal
-        command-file-dump-rest $(command) : $(sources[2-]) ;
-    }
 }
 
-# command-file-dump-1st: dump the first source path into the target
+# Quietly delete $(x) if it exists with $(RM1)"$(x)"  
 if $(NT)
 {
-# the windows command shell has the anyoing effect of appending whitespace
-# when redirecting with > and >>
-    actions quietly command-file-dump-1st
-    {
-        echo "$(>)">"$(<)"
-    }
+    RM1 = "IF EXIST " "DEL " ;
 }
 else
 {
-    actions quietly command-file-dump-1st
-    {
-        echo "$(>)" > "$(<)"
-    }
+    RM1 = "$(RM) " ;
 }
 
-# command-file-dump: dump the remaining source paths into the target
-if $(NT)
+# Build the command-file
+actions quietly command-file-dump
 {
-# the windows command shell has the anyoing effect of appending whitespace
-# when redirecting with > and >>
-    actions quietly piecemeal command-file-dump-rest
-    {
-        echo "$(>)">>"$(<)"
-    }
-}
-else
-{
-    actions quietly piecemeal command-file-dump-rest
-    {
-        echo "$(>)" >> "$(<)"
-    }
+    $(RM1)"$(<)"
+    echo $(')$(PREFIX)"$(>:J=$(EOL)$(<)$(BOL))"$(')$(_)>>$(_)$(<)
 }
 
 # Clean up the temporary COMMAND-FILE used to build TARGETS.
@@ -2113,13 +2105,13 @@ actions ignore quietly piecemeal together remove-command-file
 # build TARGETS from SOURCES using a command-file, where RULE-NAME is
 # used to generate the build instructions from the command-file to
 # TARGETS
-rule with-command-file ( rule-name targets * : sources * )
+rule with-command-file ( rule-name targets * : sources * : prefix ? line-break ? )
 {
     # create a command-file target and place it where the first target
     # will be built
     local command-file = $(targets[1]:S=.CMD) ;
     LOCATE on $(command-file) = $(gLOCATE($(targets[1]))) ;
-    build-command-file $(command-file) : $(sources) ;
+    build-command-file $(command-file) : $(sources) : $(prefix) $(line-break) ;
 
     # Build the targets from the command-file instead of the sources
     DEPENDS $(targets) : $(command-file) ;

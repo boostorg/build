@@ -175,14 +175,26 @@ actions borland-C++-action
     "$(BCC_TOOL_PATH)bcc32" -j5 -g255 -q -c -P -w -Ve -Vx -a8 -b- -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
+if ! $(BORLAND_ARCHIVE_LINESEP)
+{
+    if $(NT)
+    {
+        if [ W32_GETREG "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion" : CurrentVersion ]
+        {
+            BORLAND-ARCHIVE-LINESEP = " ^&" ;
+        }
+    }
+    BORLAND-ARCHIVE-LINESEP ?= " &" ;
+}
+
 #### Archive ####
 rule Archive-action
 {
-    borland-Archive-action $(<) : $(>) ;
+    with-command-file borland-Archive-action $(<) : $(>) : + $(BORLAND-ARCHIVE-LINESEP) ;
 }
 
 actions borland-Archive-action
 {
     IF EXIST "$(<)" DEL "$(<)"
-    "$(BCC_TOOL_PATH)tlib" /P64 /u /a /C /$(ARFLAGS) "$(<)" +"$(>)"
+    "$(BCC_TOOL_PATH)tlib" /P64 /u /a /C /$(ARFLAGS) "$(<)" @"$(>)"
 }
