@@ -677,7 +677,7 @@ class action ;
 # actions which create them.
 rule null-action ( targets + : property-set ? )
 {
-    action.__init__ $(targets) : : no-action : $(property-set) ;
+    action.__init__ $(targets) : : .no-action : $(property-set) ;
     
     rule actualize ( )
     {
