@@ -1,0 +1,66 @@
+#  (C) Copyright David Abrahams 2001. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+# Keep a record so that no module is included multiple times
+module local imported-modules ;
+
+# meant to be invoked from 
+rule no_test_defined
+{
+    ECHO warning: no __test__ rule defined in module [ CALLER_MODULE ] ;
+}
+
+# return the binding of the given module
+rule binding ( module )
+{
+    return $($(module).__binding__) ;
+}
+
+# load the indicated module. Any members of rules-opt will be available without
+# qualification in the caller's module. Any members of rename-opt will be taken
+# as the names of the rules in the caller's module, in place of the names they
+# have in the imported module. If rules-opt = '*', all rules from the indicated
+# module are imported into the caller's module.
+rule import ( module-name : rules-opt * : rename-opt * )
+{
+
+    if ! ( $(module-name) in $(imported-modules) )
+    {
+        imported-modules += $(module-name) ;
+        
+        module $(module-name)
+        {
+            IMPORT $(module-name) : modules : no_test_defined : __test__ ;
+
+            local module-target = $(module-name:G=module@:S=.jam) ;
+            
+            SEARCH on $(module-target) = $(BOOST_BUILD_PATH) ;
+            BINDRULE on $(module-target) = modules.record-binding ;
+            include $(module-name:G=module@:S=.jam) ;
+
+            # run the module's test, if any.
+            if $(BOOST_BUILD_TEST)
+            {
+                ECHO testing module $(module-name)... ;
+                local ignored = [ __test__ ] ;
+            }
+        }
+    }
+    if $(rules-opt)
+    {
+        if $(rules-opt) = *
+        {
+            rules-opt = ;
+        }
+        IMPORT [ CALLER_MODULE ]
+           : $(module-name) : $(rules-opt) : $(rename-opt) ;
+    }
+}
+
+rule record-binding ( module-target : binding )
+{
+    module local $(module-target:G=:S=).__binding__ = $(binding) ;
+}
+
