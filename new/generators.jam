@@ -146,12 +146,6 @@ rule generator (
     {
         generators.dout [ indent ] "  generator" $(self.id) ;
         generators.dout [ indent ] "  multiple:" $(mutliple) ;
-
-        # Targets that this generator will consume directly.
-        local consumed = ;
-        # Targets that can't be consumed and will be returned as-is.
-        local bypassed = ;
-        local failed ;
                 
         # Ordinary generators take only one source targets
         if $(sources[2])
@@ -164,61 +158,40 @@ rule generator (
             multiple = ;
         }
         
+        # Targets that this generator will consume directly.
+        local consumed = ;
+        # Targets that can't be consumed and will be returned as-is.
+        local bypassed = ;
+        
         convert-to-consumable-types $(project) $(name) : 
           $(properties) : $(sources) : $(multiple)
           : consumed bypassed ;
-
-        # Construct 'result' by creating dependency graph with 'consumed' as targets.
         
-        local result = ;
-        # If this is 1->1 transformation, apply it to all consumed targets in order.
-        if ! $(self.source-types[2])
-        {
-            generators.dout [ indent ] "alt1" ;
-            for local r in $(consumed)
-            {
-                # CONSIDER: should use relevant properties only?                
-                result += [ generated-targets $(r) : $(properties) : $(project) $(name) ] ; #(targets) ;
-            }
+        local result ;
+        if $(consumed)  
+        {            
+            result = [ construct-result $(consumed) : $(project) $(name) 
+                     : $(properties) ] ;
         }
-        else
-        {
-            local v = [ new vector $(consumed) ] ;
-            generators.dout [ indent ] "alt2 : consumed is" [ $(v).str ] ;
-            if $(consumed) 
-            {
-                result += [ generated-targets $(consumed) : $(properties) : $(project) $(name) ] ;
-            }                        
-        }
-                    
-        # Remove from 'bypassed' elements present in 'consumed'
+                            
         if $(result)
         {
-            # If our type, X is produced from X_1 and X_2, which are produced
-            # from Y by one generator, then, when looking for Y->X_1
-            # tranformation X_2 will be added to bypassed. Therefore the
-            # set difference is needed.
-            # It is obviously reasonable: if a target is consumed here,
-            # no need to return it as bypassed.
-            # TODO: this is rather inefficient to compare targets. We should consider 
-            # if using of 'virtual-target.register' allows us to use a simple string 
-            # comparision of targets, instead of 'equal'.
-
-            for local v in $(bypassed)                
-            {
-                local found = ;
-                for local v2 in $(consumed)
-                {
-                    if [ equal $(v) $(v2) ] 
-                    {
-                        found = true ;
-                    }                        
-                }
-                if ! $(found)
-                {
-                    result += $(v) ;
-                }                    
-            }            
+            # Add to 'result' elements of 'bypassed' that are not in 'consumed'.
+            
+            # Suppose the target type of current generator, X is produced from 
+            # X_1 and X_2, which are produced from Y by one generator.
+            # When creating X_1 from Y, X_2 will be added to 'bypassed'
+            # Likewise, when creating X_2 from Y, X_1 will be added to 'bypassed'
+            # But they are also in 'consumed'. We have to remove them from
+            # bypassed, so that generators up the call stack don't try to convert
+            # them. 
+            
+            # In this particular case, X_1 instance in 'consumed' and X_1 instance
+            # in 'bypassed' will be the same: because they have the same source and
+            # action name, and 'virtual-target.register' won't allow two different
+            # instances. Therefore, it's OK to use 'sequence.difference'.
+            
+            result += [ set.difference $(bypassed) : $(consumed) ] ;
         }
                 
         if $(result)
@@ -233,6 +206,40 @@ rule generator (
         generators.dout ;
         return $(result) ;        
     }
+
+    # Constructs the dependency graph that will be returned by this 
+    # generator
+    rule construct-result ( 
+        consumed + # Already prepared list of consumable targets
+                   # If generator requires several source files will contain 
+                   # exactly len $(self.source-types) targets with matching types
+                   # Otherwise, might contain several targets with the type of 
+                   # $(self.source-types[1])                               
+        : project name ? 
+        : properties *  # Properties to be used for all actions create here
+    )
+    {
+        local result ;
+        # If this is 1->1 transformation, apply it to all consumed targets in order.
+        if ! $(self.source-types[2])
+        {
+            generators.dout [ indent ] "alt1" ;
+            for local r in $(consumed)
+            {                
+                result += [ generated-targets $(r) : $(properties) : $(project) $(name) ] ; #(targets) ;
+            }
+        }
+        else
+        {
+            local v = [ new vector $(consumed) ] ;
+            generators.dout [ indent ] "alt2 : consumed is" [ $(v).str ] ;
+            if $(consumed) 
+            {
+                result += [ generated-targets $(consumed) : $(properties) : $(project) $(name) ] ;
+            }                        
+        }
+        return $(result) ;
+    }   
     
     # Constructs targets that are created after consuming 'sources'.
     # The result will be the list of virtual-target, which the same length
