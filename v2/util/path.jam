@@ -196,6 +196,16 @@ rule glob ( dir : patterns + )
 }
 
 #
+#    Returns true is the specified file exists.
+#
+rule exists ( file )
+{
+    return [ path.glob $(file:D) : $(file:D=) ] ;
+}
+
+
+
+#
 #   Find out the absolute name of path and returns the list of all the parents,
 #   starting with the immediate one. Parents are returned as relative names.
 #   If 'upper_limit' is specified, directories above it will be pruned.
