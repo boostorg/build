@@ -16,6 +16,7 @@
 # include "lists.h"
 # include "execcmd.h"
 # include <errno.h>
+# include <assert.h>
 
 # ifdef USE_EXECNT
 
@@ -216,13 +217,16 @@ process_del( char*  command )
       return 0;
       
     /* ignore toggles/flags */
-    if (*p == '/')
+    while (*p == '/')
     {
       p++;
       while ( *p && isalnum(*p) )
-        p++;
+          p++;
+      while (*p && isspace(*p) )
+          ++p;
     }
-    else
+
+    
     {
       int  in_quote = 0;
       int  wildcard = 0;
@@ -302,6 +306,96 @@ onintr( int disp )
 }
 
 /*
+ * use_bat_file() - return true iff the command demands the use of a
+ * .bat file to run it
+ */
+int use_bat_file(char* command)
+{
+    char *p = command;
+    
+    /* on Windows NT 3.51, the maximal line length is 996 bytes !! */
+    /* while it's much bigger NT 4 and 2k                          */
+    /* Win95 seems to have a similar maximum */
+    int max_line = is_nt_351 ? 996
+        : is_win95 ? 1003
+        : MAXLINE;
+
+    int inquote = 0;
+    
+    /* Look for newlines and unquoted i/o redirection */
+    do
+    {
+        p += strcspn( p, "\n\"<>" );
+
+        switch (*p)
+        {
+        case '\n':
+            /* skip over any following spaces */
+            while( isspace( *p ) )
+                ++p;
+            /* return true iff there is anything significant following
+             * the newline
+             */
+            if (*p)
+                return 1;
+            break;
+            
+        case '"':
+            if (p > command && p[-1] != '\\')
+                inquote = !inquote;
+            ++p;
+            break;
+            
+        case '<':
+        case '>':
+            if (!inquote)
+                return 1;
+            ++p;
+            break;
+        }
+    }
+    while (*p);
+    
+    return p - command >= max_line;
+}
+
+void execnt_unit_test()
+{
+#ifndef NDEBUG
+    /* vc6 preprocessor is broken, so assert with these strings gets
+     * confused. Use a table instead.
+     */
+    typedef struct test { char* command; int result; } test;
+    test tests[] = {
+        { "x", 0 },
+        { "x\n ", 0 },
+        { "x\ny", 1 },
+        { "x\n\n y", 1 },
+        { "echo x > foo.bar", 1 },
+        { "echo x < foo.bar", 1 },
+        { "echo x \">\" foo.bar", 0 },
+        { "echo x \"<\" foo.bar", 0 },
+        { "echo x \\\">\\\" foo.bar", 1 },
+        { "echo x \\\"<\\\" foo.bar", 1 }
+    };
+    int i;
+    for ( i = 0; i < sizeof(tests)/sizeof(*tests); ++i)
+    {
+        assert( use_bat_file( tests[i].command ) == tests[i].result );
+    }
+
+    {
+        char* long_command = malloc(MAXLINE + 10);
+        assert( long_command != 0 );
+        memset( long_command, 'x', MAXLINE + 9 );
+        long_command[MAXLINE + 9] = 0;
+        assert( use_bat_file( long_command ) );
+        free( long_command );
+    }
+#endif 
+}
+
+/*
  * execcmd() - launch an async command execution
  */
 
@@ -314,7 +408,6 @@ execcmd(
 {
     int pid;
     int slot;
-    int max_line;
     int raw_cmd = 0 ;
     char *argv_static[ MAXARGC + 1 ];	/* +1 for NULL */
     char **argv = argv_static;
@@ -369,24 +462,12 @@ execcmd(
     while( isspace( *string ) )
         ++string;
 
-    p = strchr( string, '\n' );
-
-    while( p && isspace( *p ) )
-        ++p;
-
-    /* on Windows NT 3.51, the maximul line length is 996 bytes !! */
-    /* while it's much bigger NT 4 and 2k                          */
-    /* Win95 seems to have a similar maximum */
-    max_line = is_nt_351 ? 996
-        : is_win95 ? 1003
-        : MAXLINE;
-
     /* If multi line, or too long, or JAMSHELL is set, write to bat file. */
     /* Otherwise, exec directly. */
     /* Frankly, if it is a single long line I don't think the */
     /* command interpreter will do any better -- it will fail. */
 
-    if( p && *p || !raw_cmd && strlen( string ) > max_line || shell )
+    if( shell || !raw_cmd && use_bat_file( string ) )
     {
         FILE *f;
 
