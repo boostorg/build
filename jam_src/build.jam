@@ -457,18 +457,32 @@ yacc += $(YACCFLAGS) ;
 
 rule .yacc
 {
-    DEPENDS y.tab.c y.tab.h : $(>) ;
-    DEPENDS y.tab.h : y.tab.c ;
-    TEMPORARY y.tab.c y.tab.h ;
-    DEPENDS $(<[1]) : y.tab.c ;
-    DEPENDS $(<[2]) : y.tab.h ;
-    .yacc. y.tab.c y.tab.h : $(>) ;
-    .move $(<[1]) : y.tab.c ;
-    .move $(<[2]) : y.tab.h ;
+    DEPENDS $(<) : $(>) ;
+    LEAVES $(<) ;
+    .yacc. $(<) : $(>) ;
 }
-actions .yacc. {
+if $(NT) { actions .yacc. {
     "$(yacc)" $(>)
-}
+    if not errorlevel 1 (
+        del /f $(<[1])
+        rename y.tab$(<[1]:S) $(<[1])
+        del /f $(<[2])
+        rename y.tab$(<[2]:S) $(<[2])
+    ) else set _error_ =
+} }
+if $(UNIX) { actions .move. {
+    if `"$(yacc)" $(>)` ; then
+        mv -f y.tab$(<[1]:S) $(<[1])
+        mv -f y.tab$(<[2]:S) $(<[2])
+    fi
+} }
+if $(VMS) { actions .move. {
+    IF "$(yacc)" $(>)
+    THEN
+        RENAME y_tab$(<[1]:S) $(<[1])
+        RENAME y_tab$(<[2]:S) $(<[2])
+    ENDIF
+} }
 if $(yacc)
 {
     .yacc jamgram.c jamgram.h : jamgram.y ;

@@ -62,6 +62,11 @@ if not errorlevel 1 (
     set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\..\
     goto :eof)
 setlocal & endlocal
+if NOT "_%VS71COMNTOOLS%_" == "__" (
+    set BOOST_JAM_TOOLSET=vc7
+    set BOOST_JAM_TOOLSET_ROOT=%VS71COMNTOOLS%\..\..\VC7\
+    goto :eof)
+setlocal & endlocal
 if NOT "_%VCINSTALLDIR%_" == "__" (
     set BOOST_JAM_TOOLSET=vc7
     set BOOST_JAM_TOOLSET_ROOT=%VCINSTALLDIR%\VC7\
@@ -336,7 +341,10 @@ if "_%YACC%_" == "__" (
 if errorlevel 1 goto Finish
 @echo ON
 %YACC% jamgram.y
+@if errorlevel 1 goto Finish
+del /f jamgram.c
 rename y.tab.c jamgram.c
+del /f jamgram.h
 rename y.tab.h jamgram.h
 :Skip_GrammarBuild
 @echo ON
