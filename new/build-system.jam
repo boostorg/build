@@ -12,17 +12,9 @@ import make ;
 current-project = [ project.load "."  ] ;
 build-request = [ build-request.from-command-line [ modules.peek : ARGV ] ] ;
 
-targets = ;
-properties = ;
-
-while $(build-request[1]) != @
-{
-    targets += $(build-request[1]) ;
-    build-request = $(build-request[2-]) ;
-}
-properties = $(build-request[2-]) ;
+targets = [ $(build-request).get-at 1 ] ;
+properties = [ $(build-request).get-at 2 ] ;
 expanded = [ build-request.expand $(properties) ] ;
-
 
 root-target = [ $(current-project).target ] ;
 virtual-targets = ;
