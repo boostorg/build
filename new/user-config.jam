@@ -43,6 +43,7 @@ import toolset : using ;
 #  using qt : /usr/opt/qt ;
 
 #  BoostBook configuration
+using boostbook ;
 #  using boostbook : /home/gregod/Projects/share/docbook-xsl-1.60.1/ 
 #                  : /home/gregod/Projects/share/docbook-dtd-4.2/
 #                  ;
