@@ -65,15 +65,14 @@ rule abstract-target ( name      # name of the target in Jamfile
     }
     
     # Takes properties in split form ("<feature1>foo <feature2>bar").
-    # Generates virtual targets for this abstract target which match
-    # 'properties' as closely as possible. If 'properties' are not specified,
-    # default values are used. If it not possible to build anything because
-    # of some problem returns a list with "@error" as the first element
-    # and explanation in all others. (CONSIDER: need some utilities for
-    # this method of error reporting? 'is-error'?)
+    # Generates virtual targets for this abstract target, using the specified properties,
+    # unless a different value of some feature is required by the target. The properties
+    # on returned virtual targets should be link-compatible with the requested ones.
+    # On success, returns a list of virtual targets. If it not possible to build anything, 
+    # issues a warning and returns empty list, or issues an error.
     #
-    # If 'properties' are empty or consist of lonely <toolset>xxx, 
-    # uses default set(s) of properties.
+    # If 'properties' are empty, performs default build of this target, in a way specific
+    # to derived class.
     rule generate ( properties * )
     {
         errors.error "method should be defined in derived classes" ;
