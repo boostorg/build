@@ -49,7 +49,6 @@ toolset.flags borland.link FINDLIBS-ST <find-static-library> ;
 toolset.flags borland.link FINDLIBS-SA <find-shared-library> ;
 toolset.flags borland.link LIBRARIES <library-file> ;
 toolset.flags borland.link LIBRARIES <library> ;
-toolset.flags gcc.link-dll LINKPATH <library-path> ;
 
 actions link bind LIBRARIES
 {

@@ -48,6 +48,8 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
                               # If does not contain dot, should be a module name.
                               # The flags will be applied for all rules in that
                               # module.
+                              # If module for rule is different from the calling
+                              # module, an error is issued.
     
              variable-name    # Variable that should be set on target
              condition * :    # Can specify either
@@ -69,6 +71,13 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
                               #   unconditionally
              values * )
 {
+    local module_ = [ MATCH "([^.]*).*" : $(rule-or-module) ] ;
+    local caller = [ CALLER_MODULE ] ;
+    if $(module_) != $(caller)
+    {
+        errors.error "Module $(caller) attempted to set flags for module $(module_)" ;
+    }
+        
     local match-type ;   
     if $(condition[1]:G=)
     {
