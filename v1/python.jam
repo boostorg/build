@@ -22,7 +22,9 @@ PYTHON_VERSION_NODOT
 
 local RUN_PATH = $(RUN_PATH) ;
 
-gcc-compilers = gcc gcc-stlport ;
+# Decide which toolsets should be treated like an ordinary (unix) GCC installation
+gcc-compilers = [ MATCH ^(gcc.*)$ : $(TOOLS) ] ;
+gcc-compilers = [ difference $(gcc-compilers) : gcc-nocygwin ] ;
 
 if $(NT)
 {
