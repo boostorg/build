@@ -23,6 +23,8 @@ touch doc/project-root.jam
 export BOOST_ROOT=/home/ghost/Work/boost-rc
 cd doc
 bjam --v2
+bjam --v2 pdf
+cp `find bin -name "*.pdf"` ../..
 rm -rf bin
 cd ..
 
@@ -37,7 +39,7 @@ chmod a+x jam_src/build.bat
 cd .. && zip -r boost-build.zip boost-build && tar --bzip2 -cf boost-build.tar.bz2 boost-build
 cd boost-build
 
-chmod -R u+w
+chmod -R u+w *
 # Upload docs to sourceforge
 perl -pi -e 's%<!-- sf logo -->%<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=7586&amp;type=1" width="88" height="31" border="0" alt="SourceForge.net Logo" align="right"/></a>%' index.html doc/*.html
-scp -r doc example *.html hacking.txt vladimir_prus@shell.sourceforge.net:/home/groups/b/bo/boost/htdocs/boost-build2
+scp -r ../userman.pdf doc example *.html hacking.txt vladimir_prus@shell.sourceforge.net:/home/groups/b/bo/boost/htdocs/boost-build2
