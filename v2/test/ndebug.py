@@ -17,7 +17,7 @@ t = Tester()
 
 t.write("project-root.jam", "")
 t.write("Jamfile", """
-exe hello : hello.cpp lib/lib1 ;
+exe hello : hello.cpp lib//lib1 ;
 """)
 t.write("hello.cpp", """
 #ifdef NDEBUG

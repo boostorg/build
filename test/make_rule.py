@@ -35,8 +35,8 @@ t.fail_test(find(t.read("bin/$toolset/debug/foo.bar"), "foobar") == -1)
 t.write("Jamfile", """ 
 # Make sure that incidental property does not
 # cause second creation of 'hello1.cpp'.
-exe a : dir/hello1.cpp ;
-exe b : dir/hello1.cpp/<hardcode-dll-paths>true ; 
+exe a : dir//hello1.cpp ;
+exe b : dir//hello1.cpp/<hardcode-dll-paths>true ; 
 """)
 
 t.write("project-root.jam", "")

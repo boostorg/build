@@ -22,7 +22,7 @@ feature foo : on off ;
 # Note that '<foo>on' won't be propagated
 # to 'd/l'.
 t.write("Jamfile", """
-exe hello : hello.cpp d/l ;
+exe hello : hello.cpp d//l ;
 """)
 t.write("hello.cpp", """
 #ifdef _WIN32
@@ -40,7 +40,7 @@ int main()
 t.write("d/Jamfile", """
 lib l : l.cpp : <foo>on:<define>FOO ;
 """)
-t.write("l.cpp", """
+t.write("d/l.cpp", """
 #ifdef _WIN32
 __declspec(dllexport)
 #endif

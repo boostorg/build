@@ -15,7 +15,7 @@ foo() {}
 """)
 t.write("a.h", "")
 
-t.write("d/Jamfile", "exe b : b.cpp ../a ; ")
+t.write("d/Jamfile", "exe b : b.cpp ..//a ; ")
 t.write("d/b.cpp", """
     void foo();
     int main() { foo(); }

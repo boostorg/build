@@ -5,5 +5,5 @@ project test
 
 use-project /ext : ext ;
 
-exe hello : hello.cpp @/ext/a ;
+exe hello : hello.cpp /ext//a ;
 

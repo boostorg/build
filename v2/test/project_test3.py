@@ -102,11 +102,11 @@ t.expect_removal(["bin/$toolset/debug/a.obj",
 
 # Now test target ids in command line
 t.set_tree("project-test3")
-t.run_build_system("lib/b.obj")
+t.run_build_system("lib//b.obj")
 t.expect_addition("lib/bin/$toolset/debug/b.obj")
 t.expect_nothing_more()
 
-t.run_build_system("clean lib/b.obj")
+t.run_build_system("clean lib//b.obj")
 t.expect_removal("lib/bin/$toolset/debug/b.obj")
 t.expect_nothing_more()
 
@@ -115,21 +115,18 @@ t.expect_addition("lib/bin/$toolset/debug/b.obj")
 t.expect_nothing_more()
 
 
-t.run_build_system("release lib2/helper/e.obj @/lib3/f.obj")
+t.run_build_system("release lib2/helper//e.obj /lib3//f.obj")
 t.expect_addition("lib2/helper/bin/$toolset/release/e.obj")
 t.expect_addition("lib3/bin/$toolset/release/f.obj")
 t.expect_nothing_more()
 
 # Test project ids in command line work as well
 t.set_tree("project-test3")
-t.run_build_system("@/lib2")
+t.run_build_system("/lib2")
 t.expect_addition("lib2/bin/$toolset/debug/" * List("c.obj d.obj l.exe"))
 t.expect_addition("bin/$toolset/debug/a.obj")
 t.expect_nothing_more()
 
-t.rm("bin/$toolset/debug/a.obj")
-t.run_build_system("/lib2")
-t.expect_addition("bin/$toolset/debug/a.obj")
 
 t.run_build_system("lib")
 t.expect_addition("lib/bin/$toolset/debug/" * List("b.obj m.exe"))

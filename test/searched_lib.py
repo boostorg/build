@@ -54,7 +54,7 @@ t.rm("bin/$toolset/debug/main-target-main/main.exe")
 # This problem shows up when searched libs are in usage
 # requirements.
 
-t.write('Jamfile', 'exe main : main.cpp d/d2/a ;')
+t.write('Jamfile', 'exe main : main.cpp d/d2//a ;')
 t.write('d/d2/Jamfile', """
 lib test_lib : : <name>test_lib <search>../../lib ;
 lib a : a.cpp : : : <library>test_lib ;
