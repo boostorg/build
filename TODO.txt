@@ -6,7 +6,54 @@ to its suitability for any purpose.
 
 Boost Build system TODO
 ===== ===== ====== ====
-Items preceded by ** are complete.
+
+* Make it possible to qualify dependencies just like requirements.
+
+* consider eliminating the need for <*>
+
+* Support for warnings
+
+* Fix the subinclude problem with project-wide variable settings (e.g.
+BOOST_ROOT) that Beman pointed out to me.
+
+* Move test target rules from status/Jamfile into boost-base.jam
+
+* Add requested test targets. I think we need at least the following
+capability:
+1. The ability to run any built executable
+2. Two categories of test targets (call them "test" and "full-test") which
+are not part of "all". These targets will build a ".test" file which depends
+on some executable. The .test file will be regenerated when the executable
+needs to be updated by running the executable with stdout redirected to the
+.test file. full-test will be used for long-running tests.
+
+* Add support for generalized user "CFLAGS", etc.
+
+* Add examples directory back into CVS
+
+* Support for KCC
+
+* Specific support for GCC-3
+
+* Eliminate the need for intermediate dispatching rules (e.g. C++-action) in
+each toolset.
+
+* Restructure internals to make better use of dispatching through variables.
+I'm thinking of the chain of functions which get called to translate sources
+into objects.
+
+* Fix path normalization using regexp replacement. This should make
+ALL_LOCATE_TARGET respond correctly to forward slashes.
+
+* Handle #include "" and #include <> separately. Also, allow toolsets to
+specify their own header search algorithms.
+
+* Allow users to specify a rule name as part of the requirements or
+default-build. Any ungristed element will be taken as the name of a rule to
+be evaluated, and will be replaced with the result of calling it. This will
+allow people to do a few things that the current system doesn't support
+(e.g. Bill's case of needing to add a #define when the code is
+dynamically-linkable).
 
 Implement linking with prebuilt libraries. Should be trivial, except for
     choosing different libraries for different variants. This might require
@@ -20,7 +67,6 @@ Implement <sysinclude> feature for separately searching #include <...> paths?
     search algorithm.
 
 Clean up documentation
-    ** TOC hyperlinks
     describe gristing
     revise free/path feature definition
     
@@ -58,8 +104,6 @@ Additional toolset descriptions
 
 Better support for single-valued free features. GCC needs a default
     ftemplate-depth-NN setting which can be overridden.
-
-** A way to factor toolset commonality, e.g. for STLPort versions of a toolset
 
 === for test system ===
 
