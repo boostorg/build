@@ -506,29 +506,45 @@ rule expand-composites ( properties * )
     # now expand composite features
     for local p in $(properties)
     {
-        for local x in [ expand-composite $(p) ]
+        local expanded = [ expand-composite $(p) ] ;
+        
+        for local x in $(expanded)
         {
             if ! $(x) in $(result)
             {
-                if $(x:G) in $(free.features)
+                local f = $(x:G) ;
+                
+                if $(f) in $(free.features)
                 {
                     result += $(x) ;
                 }
-                else if $(x:G) in $(result:G)
+                else if ! $(x) in $(properties)  # x is the result of expansion
+                {
+                    if ! $(f) in $(explicit-features)  # not explicitly-specified
+                    {
+                        if $(f) in $(result:G)
+                        {
+                            error expansions of composite features result in conflicting 
+                              values for $(f)
+                                : values: [ get-values $(f) : $(result) ] $(x:G=) 
+                                  : one contributing composite property was $(p) ;
+                        }
+                        else
+                        {
+                            result += $(x) ;
+                        }
+                    }
+                }
+                else if $(f) in $(result:G)
                 {
                     error explicitly-specified values of non-free feature
-                      $(x:G) conflict :
-                        values: [ get-values $(x:G) : $(properties) ] ;
+                      $(f) conflict :
+                        values: [ get-values $(f) : $(properties) ] $(x:G=) ;
                 }
-                else if
-                  # if it's not the result of composite expansion
-                  $(x) in $(properties)
-                    # or it is, but it doesn't match any explicitly-specified feature
-                    || ( ! $(x:G) in $(explicit-features) )
+                else
                 {
                     result += $(x) ;
                 }
-            }
         }
     }
     return $(result) ;
@@ -795,11 +811,9 @@ local rule __test__ ( )
           : expand debug <optimization>on
           ;
         
-        # This tests fails. I'm comitting it commented out to not break all
-        # the tests.
-        #assert.result <optimization>on <variant>debug <define>_DEBUG 
-        #  : expand <optimization>on debug 
-        #  ;
+        assert.result <optimization>on <variant>debug <define>_DEBUG 
+          : expand <optimization>on debug 
+          ;
                 
         assert.result <runtime-link>dynamic <optimization>on
           : defaults <runtime-link> <define> <optimization>
