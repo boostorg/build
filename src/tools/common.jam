@@ -116,18 +116,24 @@ rule get-invocation-command (
     if ! $(user-provided-command)
     {
         command = [ common.find-tool $(tool) : $(additional-paths) ] ;
+        if ! $(command)
+        {
+            ECHO "warning: toolset $(toolset) initialization: can't find tool $(tool)" ;
+            ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
+        }        
     }
     else
     {
         command = [ common.check-tool $(user-provided-command) ] ;        
-    }
-    if ! $(command)
-    {
-        ECHO "warning: toolset $(toolset) initialization: can't find tool $(tool)" ;
-        ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
-        # It's possible, in theory, that user-provided command is OK, but we're
-        # not smart enough to understand that. 
-        command = $(user-provided-command) ;
+        if ! $(command)
+        {
+            ECHO "warning: toolset $(toolset) initialization: " ;
+            ECHO "warning: can't find user-provided command '$(user-provided-command:J= )'" ;
+            ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
+            # It's possible, in theory, that user-provided command is OK, but we're
+            # not smart enough to understand that. 
+            command = $(user-provided-command) ;
+        }        
     }
     return $(command) ;
 }
