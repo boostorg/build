@@ -9,10 +9,44 @@
 #//<a href="http://gcc.gnu.org/">GNU<br>GCC</a>
 
 # compute directories for invoking GCC
-GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)bin$(SLASH) ;
+#
+# The gcc toolset can be user-configured using the following
+# variables:
+#
+# GCC_ROOT_DIRECTORY
+#       The directory in which GCC was installed. Defaults to
+#       unset. Usually, there is no need to set this variable at
+#       all. However, if G++ is not in the path it is usually
+#       sufficient to configure this one variable. More fine-grained
+#       configuration is available by setting the following:
+#
+# GCC_BIN_DIRECTORY
+#       the directory prefix used to find the gcc executables. Defaults to
+#       $(GCC_ROOT_DIRECTORY)/bin/, or "" if GCC_ROOT_DIRECTORY is
+#       not set.
+#
+# GCC_INCLUDE_DIRECTORY
+#       the directory in which to find system includes. Defaults to
+#       $(GCC_ROOT_DIRECTORY)/include. 
+#
+# GCC_STDLIB_DIRECTORY
+#       the directory in which to find the standard library
+#       objects associated with this build of gcc. Defaults to
+#       $(GCC_ROOT_DIRECTORY)/lib. 
+#
+# GXX
+#       The name by which g++ is invoked. You can also use this in
+#       lieu of setting the <cxxflags> property to force options such
+#       as "-V3.0.4" into the g++ command line: "-sGXX=g++ -V3.0.4".
+#
+# GCC
+#       Similar to GXX, the name by which gcc is invoked for "C"
+#       language targets.
+
+GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/bin/
 GCC_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if GCC_ROOT_DIRECTORY not set
-GCC_INCLUDE_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)include ;
-GCC_STDLIB_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)$(SLASH)lib ;
+GCC_INCLUDE_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/include ;
+GCC_STDLIB_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/lib ;
 
 flags gcc LINKFLAGS <runtime-link>static : -static ;
 flags gcc CFLAGS <debug-symbols>on : -g ;
