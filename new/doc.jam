@@ -43,10 +43,10 @@ rule help ( )
         }
         else
         {
-            if [ MATCH --help-[^\\.]*(\\.) : $(arg) ]
+            if [ MATCH --help-[^\\.]*([\\.\\=]) : $(arg) ]
             {
-                help = [ MATCH --help-([^\\.]*) : $(arg) ] ;
-                sub-help = [ MATCH --help-[^\\.]*\\.(.*) : $(arg) ] ;
+                help = [ MATCH --help-([^\\.\\=]*) : $(arg) ] ;
+                sub-help = [ MATCH --help-[^\\.\\=]*[\\.\\=](.*) : $(arg) ] ;
             }
             else
             {
@@ -56,8 +56,30 @@ rule help ( )
         if $(help) = output
         {
             help-output = $(sub-help) ;
-            did-help = true ;
-            help = ;
+            did-help = true ; help = ;
+        }
+        if $(help) = enable
+        {
+            if ! $(sub-help) in $(self.options) { self.options += $(sub-help) ; }
+            did-help = true ; help = ;
+        }
+        if $(help) = disable
+        {
+            #> if $(sub-help) in $(self.options) { self.options += $(sub-help) ; }
+            #> did-help = true ; help = ;
+        }
+        # All modules?
+        if $(help) && $(help) = "all"
+        {
+            local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
+            path-to-modules ?= . ;
+            local modules-to-list =
+                [ set.difference
+                    [ GLOB $(path-to-modules) : *\\.jam ] :
+                    [ GLOB $(path-to-modules) : $(not-modules)\\.jam ] ] ;
+            do-scan $(modules-to-list[1--2]) ;
+            do-scan $(modules-to-list[-1]) : print-help-all ;
+            did-help = true ; help = ;
         }
         if ! $(sub-help)
         {
@@ -65,22 +87,7 @@ rule help ( )
             if $(help) && $(help) = _top_
             {
                 print-help-top ;
-                did-help = true ;
-                help = ;
-            }
-            # All modules?
-            if $(help) && $(help) = "all"
-            {
-                local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
-                path-to-modules ?= . ;
-                local modules-to-list =
-                    [ set.difference
-                        [ GLOB $(path-to-modules) : *\\.jam ] :
-                        [ GLOB $(path-to-modules) : $(not-modules)\\.jam ] ] ;
-                do-scan $(modules-to-list[1--2]) ;
-                do-scan $(modules-to-list[-1]) : print-help-all ;
-                did-help = true ;
-                help = ;
+                did-help = true ; help = ;
             }
         }
         # Is it a module?
@@ -91,14 +98,12 @@ rule help ( )
         {
             do-scan $(module-path[1]) : print-help-rules $(sub-help) ;
             do-scan $(module-path[1]) : print-help-variables $(sub-help) ;
-            did-help = true ;
-            help = ;
+            did-help = true ; help = ;
         }
         if $(help) && $(module-path)
         {
             do-scan $(module-path[1]) : print-help-module ;
-            did-help = true ;
-            help = ;
+            did-help = true ; help = ;
         }
         # Unrecognized.
         if $(help)
@@ -225,7 +230,8 @@ local rule set-argument-doc (
 #
 local rule set-variable-doc (
     name # The name of the variable.
-    default # The default initial value.
+    default # The default value.
+    initial # The initial value.
     module-name ? # The name of the module to document.
     : docs * # The documentation for the variable.
     )
@@ -234,6 +240,7 @@ local rule set-variable-doc (
 
     $(module-name).$(name).brief = [ brief-comment $(docs) ] ;
     $(module-name).$(name).default = $(default) ;
+    $(module-name).$(name).initial = $(initial) ;
     $(module-name).$(name).docs = $(docs) ;
 
     if ! $(name) in $($(module-name).variables)
@@ -273,7 +280,7 @@ local rule print-help-module-section (
         print.list-start ;
         for local item in $($(module).$(section))
         {
-            print.list-item '$(item)'; $($(module).$(item).brief) ;
+            print.list-item $(item): $($(module).$(item).brief) ;
         }
         print.list-end ;
     }
@@ -296,7 +303,7 @@ local rule print-help-all (
         for local module-name in $(documented-modules)
         {
             # The brief docs for each module.
-            print.list-item "'"$(module-name)"';" $($(module-name).brief) ;
+            print.list-item $(module-name): $($(module-name).brief) ;
         }
         print.list-end ;
     }
@@ -310,34 +317,22 @@ local rule print-help-module (
     )
 {
     # Print the docs.
-    print.section '$(module-name)' $($(module-name).docs) ;
+    print.section "Module '$(module-name)'" $($(module-name).docs) ;
     
     # Print out the documented rules.
-    print-help-module-section $(module-name) rules : "Rules"
+    print-help-module-section $(module-name) rules : "Module '$(module-name)' rules"
         Use --help-$(module-name).<rule-name> to get more information. ;
     
     # Print out the documented variables.
-    print-help-module-section $(module-name) variables : "Variables"
+    print-help-module-section $(module-name) variables : "Module '$(module-name)' variables"
         Use --help-$(module-name).<variable-name> to get more information. ;
-}
-
-# Extract the next document item from the given variable. The variable
-# is changed to no longer contain that next item which is returned as
-# the result. The next item is considered anything up to, but not
-# including, the next gristed element.
-#
-local rule extract-next-doc-item (
-    var # The name of the variable to extract from.
-    )
-{
-    local doc-item = $($(var)[1]) ;
-    $(var) = $($(var)[2-]) ;
-    while $($(var)) && ! $($(var)[1]:G)
+    
+    # Print out all the same information but indetailed form.
+    if detailed in $(self.options)
     {
-        doc-item += $($(var)[1]) ;
-        $(var) = $($(var)[2-]) ;
+        print-help-rules $(module-name) ;
+        print-help-variables $(module-name) ;
     }
-    return $(doc-item) ;
 }
 
 # Generate documentation for a set of rules in a module.
@@ -353,14 +348,16 @@ local rule print-help-rules (
         # Print out the given rules.
         for local rule-name in $(name)
         {
-            print.section "'"$(module-name).$(rule-name)"'" $($(module-name).$(rule-name).docs)
-                Call with "(" $($(module-name).$(rule-name).signature) ")" ;
+            local signature = $($(module-name).$(rule-name).signature:J=" ") ;
+            signature ?= "" ;
+            print.section "Rule '$(module-name).$(rule-name) ( $(signature) )'"
+                $($(module-name).$(rule-name).docs) ;
             if $($(module-name).$(rule-name).args)
             {
                 print.list-start ;
                 for local arg-name in $($(module-name).$(rule-name).args)
                 {
-                    print.list-item $(arg-name)";" $($(module-name).$(rule-name).$(arg-name).docs) ;
+                    print.list-item $(arg-name): $($(module-name).$(rule-name).$(arg-name).docs) ;
                 }
                 print.list-end ;
             }
@@ -381,11 +378,19 @@ local rule print-help-variables (
         # Print out the given variables.
         for local variable-name in $(name)
         {
-            print.section "'"$(module-name).$(variable-name)"'" $($(module-name).$(variable-name).docs) ;
-            if $($(module-name).$(variable-name).default)
+            print.section "Variable '$(module-name).$(variable-name)'" $($(module-name).$(variable-name).docs) ;
+            if $($(module-name).$(variable-name).default) ||
+                $($(module-name).$(variable-name).initial)
             {
                 print.list-start ;
-                print.list-item "default value;" $($(module-name).$(variable-name).default) ;
+                if $($(module-name).$(variable-name).default)
+                {
+                    print.list-item "default value:" '$($(module-name).$(variable-name).default:J=" ")' ;
+                }
+                if $($(module-name).$(variable-name).initial)
+                {
+                    print.list-item "initial value:" '$($(module-name).$(variable-name).initial:J=" ")' ;
+                }
                 print.list-end ;
             }
         }
@@ -395,6 +400,8 @@ local rule print-help-variables (
 local rule __test__
 {
 }
+
+self.options = ;
 
 ws = "	 " ;
 
@@ -509,19 +516,6 @@ local rule scan-rule (
             {
                 scope-level = $(scope-level[2-]) ;
             }
-            #> else if $(syntax-block)
-            #> {
-                #> $(var) = $(syntax-block) $($(var)) ;
-                #> local token = [ extract-token $(var) ] ;
-                #> if $(token) = "{"
-                #> {
-                    #> scope-level += "{" ;
-                #> }
-                #> else if $(token) = "}"
-                #> {
-                    #> scope-level = $(scope-level[2-]) ;
-                #> }
-            #> }
         }
         
         return true ;
@@ -582,6 +576,7 @@ local rule scan-rule-arguments (
         token = [ extract-token $(var) ] ;
     }
     $(var) = "{" $($(var)) ;
+    arg-signature ?= "" ;
     return $(arg-signature) ;
 }
 
@@ -593,10 +588,24 @@ local rule scan-variable (
 {
     # [1] = name, [2] = value(s)
     local var-parts =
-        [ MATCH "^[$(ws)]*([^$(ws)]+)[$(ws)]+\\=[$(ws)]+([^\\;]*)\\;" : $(syntax) ] ;
+        [ MATCH "^[$(ws)]*([^$(ws)]+)[$(ws)]+([\\?\\=]*)[$(ws)]+([^\\;]*)\\;" : $(syntax) ] ;
     if $(var-parts)
     {
-        set-variable-doc $(var-parts[1]) "$(var-parts[2-])" $(module-name) : $(comment-block) ;
+        local value = [ MATCH "^(.*)[ ]$" : $(var-parts[3-]:J=" ") ] ;
+        local default-value = "" ;
+        local initial-valie = "" ;
+        if $(var-parts[2]) = "?="
+        {
+            default-value = $(value) ;
+        }
+        else
+        {
+            initial-value = $(value) ;
+        }
+        if $(comment-block)
+        {
+            set-variable-doc $(var-parts[1]) $(default-value) $(initial-value) $(module-name) : $(comment-block) ;
+        }
         return true ;
     }
 }
