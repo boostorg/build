@@ -1309,13 +1309,8 @@ rule depend-on-libraries
     NEEDLIBS on $(<) += $(>) ;
     DEPENDS $(<) : $(>) ;
     # To run these targets, we need everything needed to run the libraries
-    for local dir in $(gRUN_PATH($(>)))
-    {
-        if ! ( $(dir) in $(gRUN_PATH($(<))) )
-        {
-            gRUN_PATH($(<)) += $(dir) ;
-        }
-    }
+    gRUN_PATH($(<)) = [ unique $(gRUN_PATH($(<))) $(gRUN_PATH($(>))) ] ;
+    gRUN_LD_LIBRARY_PATH($(<)) = [ unique $(gRUN_LD_LIBRARY_PATH($(<))) $(gRUN_LD_LIBRARY_PATH($(>))) ] ;
 }
 
 # subvariant-target target : subvariant-id build-properties : toolset variant
