@@ -669,10 +669,9 @@ rule null-action ( targets + : property-set ? )
         {
             self.actualized = true ;
 
-            local actual-targets ;
             for local i in [ targets ]
             {
-                actual-targets += [ $(i).actualize ] ;
+                $(i).actualize ;
             }
         }        
     }

@@ -147,14 +147,14 @@ rule project-target ( name : project : requirements * : default-build * )
         for local name in $(self.main-targets)
         {
             local t = [ main-target $(name) ] ;
-            result += [ $(t).set-property-adjuster $(property-adjuster) ] ;
+            $(t).set-property-adjuster $(property-adjuster) ;
         }
         local self-location = [ project.attribute $(self.project) location ] ;
         for local pn in [ project.attribute $(self.project) projects-to-build ]
         {
             local p = [ project.module-name [ path.join $(self-location) $(pn) ] ] ;
             local t = [ project.target [ project.attribute $(p) location ] ] ;
-            result += [ $(t).set-property-adjuster $(property-adjuster) ] ;
+            $(t).set-property-adjuster $(property-adjuster) ;
         }            
     }
     
