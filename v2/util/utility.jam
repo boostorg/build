@@ -95,11 +95,11 @@ rule apply-default-suffix ( suffix : list * )
     return $(result) ;    
 }
 
-# If 'name' contains a dot, returns the part before the first dot.
+# If 'name' contains a dot, returns the part before the last dot.
 # If 'name' contains no dot, returns it unmodified.
 rule basename ( name )
 {    
-    while $(name:S)
+    if $(name:S)
     {
         name = $(name:B) ;
     }
@@ -150,7 +150,7 @@ local rule __test__ ( )
     
     assert.result foo : basename foo ;
     assert.result foo : basename foo.so ;
-    assert.result foo : basename foo.so.1 ;
+    assert.result foo.so : basename foo.so.1 ;
 }
 
 
