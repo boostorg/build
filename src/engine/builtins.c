@@ -275,6 +275,13 @@ load_builtins()
               builtin_nearest_user_location, 0, args );
       }
 
+      {
+          char * args[] = { "file", 0 };
+          bind_builtin( "CHECK_IF_FILE",
+                        builtin_check_if_file, 0, args );
+      }
+
+
 
 
 # ifdef OS_NT
@@ -485,6 +492,16 @@ builtin_glob_back(
 
     path_parse( file, &f );
     f.f_dir.len = 0;
+
+    /* For globbing, we unconditionally ignore current and parent
+       directory items. Since they items always exist, there's not
+       reason why caller of GLOB would want to see them.
+       We could also change file_dirscan, but then paths with embedded
+       "." and ".." won't work anywhere.
+    */
+    if (strcmp(f.f_base.ptr, ".") == 0 || strcmp(f.f_base.ptr, "..") == 0)
+        return;
+
     string_new( buf );
     path_build( &f, buf, 0 );
 
@@ -1168,6 +1185,16 @@ LIST *builtin_nearest_user_location( PARSE *parse, FRAME *frame )
     }
     else
     {
+        return L0;
+    }
+}
+
+LIST *builtin_check_if_file( PARSE *parse, FRAME *frame )
+{
+    LIST* name = lol_get( frame->args, 0 );
+    if (file_is_file(name->string) == 1) {
+        return list_new(0, newstr("true"));
+    } else {
         return L0;
     }
 }
