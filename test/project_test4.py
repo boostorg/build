@@ -35,25 +35,13 @@ t.expect_content("bin/$toolset/debug/main-target-b.exe/b.exe",
 "bin/$toolset/debug/a.obj\n"
 )
 
-# TODO: restore this test when we have new notion of link-compatibility
-#t.copy("lib/Jamfile3", "lib/Jamfile")
 
-#t.run_build_system(status=None)
-#t.fail_test(find(t.stdout(), "warning: skipped build of lib/b.obj with properties") \
-#            != 0)
+t.copy("lib/Jamfile3", "lib/Jamfile")
 
-# Check that project can be skipped as well
-#t.copy("Jamfile4", "Jamfile")
-
-#expected="warning: skipping build of project at lib2 due to unsatisfied requirements."
-#t.run_build_system("rtti=on")
-#t.fail_test(find(t.stdout(), expected) != 0)
-
-#t.copy("lib2/Jamfile2", "lib2/Jamfile")
-
-#expected="warning: skipping build of project /mylib at lib2 due to unsatisfied\nrequirements."
-#t.run_build_system("rtti=on")
-#t.fail_test(find(t.stdout(), expected) != 0)
+t.run_build_system(status=None)
+t.fail_test(find(t.stdout(),
+"""warning: targets produced from b.obj are link incompatible
+warning: with main target a.exe""") !=-0)
 
 # We don't yet make targets depend on Jamfile, so need to start from scratch
 # The following test is disabled, because of problems related to

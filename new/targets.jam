@@ -876,6 +876,8 @@ class basic-target : abstract-target
             local more-targets = 
               [ targets.generate-from-reference $(s) : $(self.project) 
                 : $(property-set) ] ;
+            check-for-link-compatibility $(more-targets[2-]) : $(property-set) ;
+            
                         
             usage-requirements = [ $(usage-requirements).add $(more-targets[1]) ] ;
             source-targets += $(more-targets[2-]) ;            
@@ -919,9 +921,11 @@ class basic-target : abstract-target
                 
                 rproperties = 
                   [ targets.generate-dependencies $(rproperties) : $(self.project) 
-                    : $(rproperties) ] ;
+                    : $(rproperties) ] ;                                
                 usage-requirements = [ $(usage-requirements).add $(rproperties[1]) ] ;
                 rproperties = $(rproperties[2-]) ;
+                local deps = [ $(rproperties).dependency ] ;
+                check-for-link-compatibility $(deps:G=) : $(property-set) ;
                                             
                 local source-target-groups = [ generate-sources $(rproperties) ] ;
                 
@@ -1043,6 +1047,35 @@ class basic-target : abstract-target
             }                        
         }        
     }
+    
+    # Checks if 'targets' are link-compatible with 'build-request' and
+    # issues a warning if that's not the case.
+    local rule check-for-link-compatibility ( targets * : build-request )
+    {
+        local checked ;
+        for local t in $(targets)
+        {
+            local a = [ $(t).action ] ;
+            if $(a)
+            {
+                local p = [ $(a).properties-ps ] ;
+                if ! $(p) in $(cheched)
+                {
+                    if [ $(p).link-incompatible-with $(build-request) ]
+                    {
+                        local dg = [ $(t).dg ] ;
+                        local other-mt = [ $(dg).main-target ] ;
+                        ECHO "warning: targets produced from" [ $(other-mt).name ] 
+                            "are link incompatible" ;
+                        ECHO "warning: with main target" [ name ] ;
+                    }                    
+                }                
+                checked += $(p) ;
+            }            
+        }
+        
+    }
+    
     
         
     # Constructs the virtual targets for this abstract targets and
