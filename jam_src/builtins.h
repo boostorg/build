@@ -42,6 +42,7 @@ LIST *builtin_normalize_path( PARSE *parse, FRAME *frame );
 LIST *builtin_native_rule( PARSE *parse, FRAME *frame );
 LIST *builtin_user_module( PARSE *parse, FRAME *frame );
 LIST *builtin_nearest_user_location( PARSE *parse, FRAME *frame );
+LIST *builtin_check_if_file( PARSE *parse, FRAME *frame );
 
 void backtrace( FRAME *frame );
 

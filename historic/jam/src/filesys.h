@@ -27,5 +27,6 @@ void file_archscan( char *arch, scanback func, void *closure );
 int file_time( char *filename, time_t *time );
 
 void file_build1(PATHNAME *f, string* file) ;
+int file_is_file(char* filename);
 
 #endif

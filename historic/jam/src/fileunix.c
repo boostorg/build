@@ -199,6 +199,20 @@ file_time(
 	return 0;
 }
 
+int file_is_file(char* filename)
+{
+	struct stat statbuf;
+
+	if( stat( filename, &statbuf ) < 0 )
+	    return -1;
+
+    if (S_ISREG(statbuf.st_mode)) 
+        return 1;
+    else
+        return 0;    
+}
+
+
 /*
  * file_archscan() - scan an archive for files
  */
