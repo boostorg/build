@@ -133,9 +133,9 @@ rule range ( start finish ? : step ? )
 rule less ( n1 n2 )
 {
     check $(n1) $(n2) ;
-    # avoid messy 0 case by appending 0
-    local l1 = [ range 2 [ log10 $(n1)0 ] ] ;
-    local l2 = [ range 2 [ log10 $(n2)0 ] ] ;
+    # avoid messy 0 case by appending 1
+    local l1 = [ range 2 [ log10 $(n1)1 ] ] ;
+    local l2 = [ range 2 [ log10 $(n2)1 ] ] ;
     
     # number of digits mismatch?
     if ( $(l1) < $(l2) ) || ( ( $(l1) = $(l2) ) && $(n1) < $(n2) )
@@ -206,8 +206,12 @@ rule __test__ ( )
     assert.result 1 4 7 10 : range 10 : 3 ;
     assert.result 2 4 6 8 10 : range 2 10 : 2 ;
     assert.result 25 50 75 100 : range 25 100 : 25 ;
-      
     
+    assert.true less 1 2 ;
+    assert.true less 1 12 ;
+    assert.true less 1 21 ;
+    assert.false less 0 0 ;
+      
     try ;
     {
         decrement 0 ;
@@ -237,7 +241,7 @@ rule __test__ ( )
         log10 000 ;
     }
     catch can't take log of zero ;
-    
+        
     assert.result 0 : log10 1 ;
     assert.result 0 : log10 9 ;
     assert.result 1 : log10 10 ;
