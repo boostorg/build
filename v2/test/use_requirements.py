@@ -161,7 +161,7 @@ t.write("libs/a_d.cpp", """
 void foo() {} 
 """)
 
-t.run_build_system()
-t.expect_addition("libs/bin/gcc/debug/a_d.o")
+t.run_build_system("link=static")
+t.expect_addition("libs/bin/gcc/debug/link-static/a_d.o")
 
 t.cleanup()
