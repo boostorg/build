@@ -1,0 +1,3 @@
+
+boostbook docs : docs.xml ;
+doxygen autodoc : [ glob *.hpp ] ;
