@@ -1,0 +1,21 @@
+# temporary file to deal with the fact that the old jam can't parse the new
+# constructs.
+
+rule split ( string separator )
+{
+    local result ;
+    local s = $(string) ;
+    
+    while $(s)
+    {
+        local match = [ SUBST $(s) ^(.*)$(separator)(.*) $1 $2 ] ;
+        
+        local tail = $(match[2]) ;
+        tail ?= $(s) ;
+
+        result = $(tail) $(result) ;
+        s = $(match[1]) ;
+    }
+    return $(result) ;
+}
+

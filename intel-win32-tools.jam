@@ -1,0 +1,67 @@
+# Intel Compiler (on Windows, using the Microsoft Standard Library)
+
+# (C) Copyright David Abrahams 2001. Permission to copy, use,
+# modify, sell and distribute this software is granted provided this
+# copyright notice appears in all copies. This software is provided
+# "as is" without express or implied warranty, and with no claim as
+# to its suitability for any purpose.
+
+# Adapted from msvc-tools.jam by Beman Dawes
+
+# compute INTEL tool path
+# You can either put the intel-win32 bin directory in your PATH, or you can set
+# INTELROOT to point at the intel-win32 installation directory
+INTEL_TOOL_PATH ?= "$(INTEL_PATH)"$(SLASH)bin$(SLASH) ;
+ # try the variable that FTJam tells you to set
+INTEL_TOOL_PATH ?= "$(INTELC)"$(SLASH)bin$(SLASH) ;
+INTEL_TOOL_PATH ?= "" ; # Don't clobber adjoining text if INTELROOT isn't set
+
+extends-toolset msvc ;
+
+#### Link ####
+
+rule Link-action
+{
+    with-command-file intel-win32-Link-action $(<) : $(>) $(NEEDLIBS) ;
+}
+
+actions intel-win32-Link-action bind NEEDLIBS 
+{
+    $(INTEL_TOOL_PATH)xilink /nologo $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" $(UNDEFS) /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(FINDLIBS)" @"$(>)"
+}
+
+#### Cc #####
+
+rule Cc-action
+{
+    intel-win32-Cc-action $(<) : $(>) ;
+}
+
+actions intel-win32-Cc-action
+{
+    $(INTEL_TOOL_PATH)icl /Zm400 -nologo -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -Fo"$(<)" "$(>)"
+}
+
+#### C++ ####
+rule C++-action
+{
+    intel-win32-C++-action $(<) : $(>) ;
+}
+
+actions intel-win32-C++-action
+{
+    $(INTEL_TOOL_PATH)icl /Zm400 -nologo -GX -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -Fo"$(<)" -Tp"$(>)"
+}
+
+#### Archive ####
+rule Archive-action
+{
+    intel-win32-Archive-action $(<) : $(>) ;
+}
+
+actions updated together piecemeal intel-win32-Archive-action
+{
+    if exist "$(<)" set _$(<:B)_="$(<)"
+    $(INTEL_TOOL_PATH)xilink /lib /out:"$(<)" %_$(<:B)_% "$(>)"
+}
+

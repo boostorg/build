@@ -1,0 +1,59 @@
+#  (C) Copyright David Abrahams 2001. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
+module local digits = 0 1 2 3 4 5 6 7 8 9 ;
+module local powers = 1 ;
+module local zeros = "" ;
+module local natural = $(digits) ;
+module local znatural = $(digits) ;
+
+local rule extend ( )
+{
+    natural += $(digits[2-])$(znatural) ;
+    znatural = $(digits)$(znatural) ;
+}
+
+rule increment ( number )
+{
+    local r = $(natural[$(number)-]) ;
+    local x = $(r[3]) ;
+    if ( $(x) )
+    {
+        return $(x) ;
+    }
+    else
+    {
+        extend ;
+        return [ increment $(number) ] ;
+    }
+}
+
+rule decrement ( number )
+{
+    local x = $(natural[$(number)]) ;
+    if ( $(x) )
+    {
+        return $(x) ;
+    }
+    else
+    {
+        extend ;
+        return [ decrement $(number) ] ;
+    }
+}
+
+rule __test__ ( )
+{
+    import assert ;
+    assert.result 2 : increment 1 ;
+    assert.result 1 : decrement 2 ;
+    assert.result 50 : increment 49 ;
+    assert.result 49 : decrement 50 ;
+    assert.result 99 : increment 98 ;
+    assert.result 99 : decrement 100 ;
+    assert.result 100 : increment 99 ;
+    assert.result 1000 : increment 999 ;
+    assert.result 999 : decrement 1000 ;
+}
