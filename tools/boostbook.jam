@@ -391,8 +391,8 @@ rule boostbook-to-tests ( target : source : properties * )
 {
   local boost_root = [ modules.peek : BOOST_ROOT ] ;
   local native-path =
-    [ path.native [ path.join $(.boostbook-xsl-dir) testing/ ] ] ;
-  local stylesheet = $(native-path:B=Jamfile:S=.xsl) ;
+    [ path.native [ path.join $(.boostbook-xsl-dir) testing Jamfile ] ] ;
+  local stylesheet = $(native-path:S=.xsl) ;
   xslt $(target) : $(source) $(stylesheet) 
                  : $(properties) <xsl:param>boost.root=$(boost_root) 
                  ;
