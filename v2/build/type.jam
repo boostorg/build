@@ -53,7 +53,7 @@ rule register ( type : suffixes * : base-type ? : main ? )
         {            
             # Generated targets of 'type' will use the first of 'suffixes'
             # (this may be overriden)            
-            $(.suffixes).insert <type>$(type) : $(suffixes[1]) ;
+            $(.suffixes).insert <target-type>$(type) : $(suffixes[1]) ;
             # Specify mapping from suffixes to type
             register-suffixes $(suffixes) : $(type) ;
         }
@@ -159,15 +159,31 @@ rule is-derived ( type base )
 # one.
 rule set-generated-target-suffix ( type : properties * : suffix )
 {
-    $(.suffixes).insert <type>$(type) $(properties) : $(suffix) ;
+    properties = <target-type>$(type) $(properties) ;
+    $(.suffixes).insert $(properties) : $(suffix) ;
+}    
+
+# Change the suffix previously registered for this type/properties 
+# combination.
+rule change-generated-target-suffix ( type : properties * : suffix )
+{        
+    properties = <target-type>$(type) $(properties) ;    
+    $(.suffixes).find-replace $(properties) : $(suffix) ;
 }
 
 
 # Returns suffix that should be used when generating target of 'type',
-# with the specified properties.
+# with the specified properties. If not suffix were specified for
+# 'type', returns suffix for base type, if any.
 rule generated-target-suffix ( type : properties * )
 {
-    return [ $(.suffixes).find <type>$(type) $(properties) ] ;
+    local result ;
+    while $(type) && ! $(result)
+    {
+        result = [ $(.suffixes).find <target-type>$(type) $(properties) ] ;
+        type = $(.bases.$(type)) ;
+    }
+    return $(result) ;
 }
 
 # Returns file type given its suffix. The 'suffix' parameter should include 

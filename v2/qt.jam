@@ -33,7 +33,6 @@ rule init ( prefix ? )
     
     type.register UI : ui ;
     type.register UIC_H : : H ;
-    type.set-generated-target-suffix UIC_H : : h ;
     
     generators.register-standard qt.uic-h : UI : UIC_H : <uses>qt ;
     

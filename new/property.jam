@@ -370,6 +370,14 @@ rule property-map ( )
     # value for the longest subset, if it's unique.
     rule find ( properties + )
     {
+        return [ find-replace $(properties) ] ;
+    }
+    
+    # Find the value associated with 'properties'.
+    # If 'value' parameter is given, replaces the found value
+    # Returns the value that were stored originally.
+    rule find-replace ( properties + : value ? )
+    {
         # First find all matches
         local matches ;
         local match-ranks ;
@@ -388,7 +396,12 @@ rule property-map ( )
         {
             errors.error "Ambiguous key" ;
         }        
-        return $(self.value.$(best)) ;
+        local original = $(self.value.$(best)) ;
+        if $(value)
+        {
+            self.value.$(best) = $(value) ;
+        }        
+        return $(original) ;
     }      
 }
 
