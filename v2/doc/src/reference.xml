@@ -145,7 +145,7 @@ boost-build build-system ;
               An argument containing either slashes or
               the <code>=</code> symbol specifies a number of build
               request elements (see <xref
-              linkend="bbv2.reference.buildreq">). In its simplest
+              linkend="bbv2.reference.buildreq"/>). In its simplest
               form, it's just a set of properties, separated by
               slashes, which become a single build request element,
               for example:
