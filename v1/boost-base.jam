@@ -138,11 +138,8 @@ rule dll-files ( module implib ? : sources * : target-type ? )
 #
 rule template-modifier ( target : source )
 {
-    local source-id ;
-    {
-        local RELATIVE_SUBDIR = [ directory-of $(source:G=) ] ;
-        source-id = [ target-id-of $(source) ] ;
-    }
+    local source-dir = [ directory-of $(source:G=) ] ;
+    local source-id = [ target-id-of $(source) ] ;
     
     # Make sure it's defined.
     #
@@ -154,11 +151,11 @@ rule template-modifier ( target : source )
     # Copy the base specs into the target specs, adjust any paths
     #
     gTARGET_SOURCES($(target)) +=
-        [ root-paths $(gTARGET_SOURCES($(source-id))) : [ directory-of $(source:G=) ] ] ;
+        [ root-paths $(gTARGET_SOURCES($(source-id))) : $(source-dir) ] ;
     gTARGET_DEPS($(target)) +=
-        [ root-paths $(gTARGET_DEPS($(source-id))) : [ directory-of $(source:G=) ] ] ;
+        [ root-paths $(gTARGET_DEPS($(source-id))) : $(source-dir) ] ;
     gTARGET_REQUIREMENTS($(target)) +=
-        [ fixup-path-properties $(gTARGET_REQUIREMENTS($(source-id))) ] ;
+        [ fixup-path-properties $(gTARGET_REQUIREMENTS($(source-id))) : $(source-dir) ] ;
     gTARGET_DEFAULT_BUILD($(target)) +=
         $(gTARGET_DEFAULT_BUILD($(source-id))) ;
 }
@@ -910,19 +907,28 @@ rule set-target-variables ( targets * )
     gRUN_LD_LIBRARY_PATH($(targets)) += $(libpath:G=) ;
 }
 
-# fixup-path-properties properties...
-#
-# For path properties, add a relative path prefix to the value as neccessary to
-# locate the path relative to the current subproject.
-rule fixup-path-properties
+# For path properties, add a relative path prefix to the value as
+# neccessary to locate the path relative to the given subproject
+# directory.
+rule fixup-path-properties ( properties * : subproject-directory ? )
 {
-    local path-properties = [ get-properties $(gPATH_FEATURES) : $(<) ] ;
-    local non-path = [ difference $(<) : $(path-properties) ] ;    
-    if $(RELATIVE_SUBDIR)
+    if $(subproject-directory)
     {
-        path-properties = [ root-paths $(path-properties) : $(RELATIVE_SUBDIR) ] ;
+        local result ;
+        for local p in $(properties)
+        {
+            if $(p:G) in $(gPATH_FEATURES)
+            {
+                result += [ root-paths $(p) : $(subproject-directory) ] ;
+            }
+            else
+            {
+                result += $(p) ;
+            }
+        }
+        properties = $(result) ;
     }
-    return $(path-properties) $(non-path) ;
+    return $(properties) ;
 }
 
 # remove-incompatible-builds requirements... : build-request... : target-name
@@ -1149,10 +1155,16 @@ rule expand-build-request
 
         # return path-property-sets corresponding to each (sub)variant build
         # described.
-        return [ make-path-property-sets $(toolset)$(SLASH)$(variant)
-                    : [ fixup-path-properties $(base-properties) $(free-properties) 
-                      $(defaulted-free-properties) ]
-                    : $(override-sets) ] ;
+        return [ make-path-property-sets 
+                   $(toolset)$(SLASH)$(variant)
+                 : [ fixup-path-properties 
+                         $(base-properties) 
+                         $(free-properties) 
+                         $(defaulted-free-properties) 
+                       : $(RELATIVE_SUBDIR)
+                   ]
+                 : $(override-sets)
+               ] ;
     }
 }
 
