@@ -50,23 +50,23 @@ I. Compiling FT Jam:
   
   a. Windows + Visual C++:
   
-       set VISUALC=/install/path/to/visual/compiler
+       set VISUALC=""/install/path/to/visual/compiler""
        set JAM_TOOLSET=VISUALC
        nmake -f builds\win32-visualc.mk
                            
                            
   b. Windows + Borland C++: (be sure to use the Borland "make" tool)
 
-        set BORLANDC=/install/path/to/borland/compiler
+        set BORLANDC=""/install/path/to/borland/compiler""
         set JAM_TOOLSET=BORLANDC
-        make -fbuilds\win32-visualc.mk   
+        make -f builds\win32-borlandc.mk   
 
 
   c. Windows + Mingw (gcc):
 
-        set BORLANDC=/install/path/to/borland/compiler
-        set JAM_TOOLSET=BORLANDC
-        make -f builds\win32-visualc.mk   
+        set MINGW=""/install/path/to/gcc/compiler""
+        set JAM_TOOLSET=MINGW
+        make -f builds\win32-gcc.mk   
 
 
   WE DO NOT PROVIDE PROJECT FILES FOR ANY SPECIFIC COMPILER/TOOLSET
