@@ -74,9 +74,10 @@ rule help ( )
             local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
             path-to-modules ?= . ;
             local modules-to-list =
-                [ set.difference
-                    [ GLOB $(path-to-modules) : *\\.jam ] :
-                    [ GLOB $(path-to-modules) : $(not-modules)\\.jam ] ] ;
+                [ sequence.insertion-sort
+                    [ set.difference
+                        [ GLOB $(path-to-modules) : *\\.jam ] :
+                        [ GLOB $(path-to-modules) : $(not-modules)\\.jam ] ] ] ;
             do-scan $(modules-to-list[1--2]) ;
             do-scan $(modules-to-list[-1]) : print-help-all ;
             did-help = true ; help = ;
