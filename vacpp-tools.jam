@@ -36,6 +36,10 @@ flags vacpp STDHDRS <sysinclude> ;
 flags vacpp LINKFLAGS <linkflags> ;
 flags vacpp ARFLAGS <arflags> ;
 
+flags gcc LIBPATH <library-path> ;
+flags gcc NEEDLIBS <library-file> ;
+flags gcc FINDLIBS <find-library> ;
+
 if ! $(ARFLAGS)
 {
     flags xlc ARFLAGS : "" ;
