@@ -105,7 +105,7 @@ toolset mipspro cc : "-o " : -D
 toolset msvc cl : /Fe : -D
     : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
     : /nologo /MLd /DEBUG /Z7 /Od /Ob0
-    : $(MSSdk)\\lib\\kernel32.lib ;
+    : /LIBPATH:"$(LIB)" kernel32.lib ;
 ## Sun Workshop 6 C++
 toolset sunpro CC : "-o " : -D
     : -s -fast -O4
@@ -122,7 +122,7 @@ toolset vacpp xlc : "-o " : -D
 toolset vc7 cl : /Fe : -D
     : /nologo /ML /O2 /Ob2 /Gy /GF /GA /GB
     : /nologo /MLd /DEBUG /Z7 /Od /Ob0
-    : $(MSSdk)\\lib\\kernel32.lib ;
+    : /LIBPATH:"$(LIB)" kernel32.lib ;
 
 # First set the build commands and options according to the
 # preset toolset.
