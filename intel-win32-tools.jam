@@ -12,6 +12,8 @@
 # You can either put the intel-win32 bin directory in your PATH, or you can set
 # INTELROOT to point at the intel-win32 installation directory
 INTEL_TOOL_PATH ?= "$(INTEL_PATH)"$(SLASH)bin$(SLASH) ;
+ # try the variable that FTJam tells you to set
+INTEL_TOOL_PATH ?= "$(INTELC)"$(SLASH)bin$(SLASH) ;
 INTEL_TOOL_PATH ?= "" ; # Don't clobber adjoining text if INTELROOT isn't set
 
 extends-toolset msvc ;
