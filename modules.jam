@@ -78,8 +78,9 @@ rule load ( module-name : filename ? : search * )
             # Add some grist so that the module will have a unique target name
             local module-target = $(__file__:G=module@) ;
             
+            search = $(3) ;
             search ?= [ modules.peek : BOOST_BUILD_PATH ] ;
-            SEARCH on $(module-target) = $(3) ;
+            SEARCH on $(module-target) = $(search) ;
             BINDRULE on $(module-target) = modules.record-binding ;
             include $(module-target) ;
         }
