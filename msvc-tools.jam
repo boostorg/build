@@ -36,6 +36,9 @@ if ! $(MSVCDir)
     # Otherwise, guess a standard installation directory
     MSVC_ROOT ?= "C:\\Program Files\\Microsoft Visual C++\\VC98" ;
     
+    # Reconstitutes paths containing spaces
+    MSVC_ROOT = $(MSVC_ROOT:J=" ") ;
+    
     # The tools are provisionallly located in the msvc6 bin
     # directory. This may be overridden by toolsets which extend this
     # one.
