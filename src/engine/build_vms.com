@@ -1,8 +1,6 @@
-$ ! Copyrigt (C) 2002 Rene Rivera, Johan Nilsson
-$ ! Permission to copy, use, modify, sell and distribute this software
-$ ! is granted provided this copyright notice appears in all copies.
-$ ! This software is provided "as is" without express or implied
-$ ! warranty, and with no claim as to its suitability for any purpose.
+$ ! (C) Copyright Rene Rivera, Johan Nilsson, 2002.
+$ !
+$ ! See accompanying license for terms and conditions of use.
 $ ! 
 $ ! bootstrap build script for Jam
 $ ! 

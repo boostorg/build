@@ -1,3 +1,7 @@
+/* (C) Copyright Rene Rivera, 2003.
+**
+** See accompanying license for terms and conditions of use.
+*/
 
 #include <iostream>
 
