@@ -12,6 +12,7 @@ import property ;
 import path ;
 import generators ;
 import set : difference ;
+import regex ;
 
 .flag-no = 1 ;
 
@@ -193,10 +194,25 @@ rule set-target-variables ( rule-or-module targets + : properties * )
                     # the value of a dependency feature is a target
                     # and must be actualized
                     result += [ $(p:G=).actualize ] ;
-                }
+                }                
                 else if path in $(att)
                 {
                     result += [ path.native $(p:G=) ] ;
+                }    
+                else if free in $(att)
+                {                   
+                    # Treat features with && in the value
+                    # specially -- each &&-separated element is considered
+                    # separate value. This is needed to handle searched
+                    # libraries, which must be in specific order.                    
+                    if ! [ MATCH (&&) : $(p:G=) ]
+                    {
+                        result += $(p:G=) ;
+                    }
+                    else                      
+                    {
+                        result += [ regex.split $(p:G=) "&&" ] ;
+                    }
                 }                
                 else 
                 {

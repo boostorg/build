@@ -668,6 +668,8 @@ class linking-generator : generator
         # but via some option. So, we pass them to the action
         # via property. 
         properties2 = [ $(property-set).raw ] ;
+        local fsa ;
+        local fst ;
         for local s in $(sources)
         {
             if [ type.is-derived [ $(s).type ] LIB ] &&
@@ -676,11 +678,11 @@ class linking-generator : generator
                 local name = [ $(s).real-name ] ;
                 if [ $(s).shared ] 
                 {                    
-                    properties2 += <find-shared-library>$(name) ;
+                    fsa +=  $(name) ;
                 }
                 else
                 {
-                    properties2 += <find-static-library>$(name) ;
+                    fst += $(name) ;
                 }                         
             }
             else
@@ -688,7 +690,9 @@ class linking-generator : generator
                 sources2 += $(s) ;
             }
         }
-        
+        properties2 += <find-shared-library>$(fsa:J=&&) 
+                       <find-static-library>$(fst:J=&&) ;
+                
         local spawn = [ generator.generated-targets $(sources2)
           : [ property-set.create $(properties2) ] : $(project) $(name) ] ;
         
