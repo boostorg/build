@@ -50,15 +50,18 @@ if $(NT)
     
     GCC_PYTHON_ROOT ?= $(CYGWIN_ROOT)/usr/local ;
     GCC_PYTHON_ROOT ?= /usr/local ;
+    <gcc><*><library-path>$(GCC_PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config
+    <gcc><*><include>$(GCC_PYTHON_ROOT)/include/python$(PYTHON_VERSION)
 }
 else if $(UNIX)
 {
     PYTHON_VERSION ?= 1.5 ;
     PYTHON_ROOT ?= /usr/local ;
-    GCC_PYTHON_ROOT = $(PYTHON_ROOT) ;
+    PYTHON_INCLUDES ?= $(PYTHON_ROOT)/include/python$(PYTHON_VERSION) ;
+    PYTHON_LIB_PATH ?= <library-path>$(PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config ;
     PYTHON_PROPERTIES ?=
-      <include>$(PYTHON_ROOT)/include/python$(PYTHON_VERSION)
-        <library-path>$(PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config 
+      <include>$(PYTHON_INCLUDES)
+        <library-path>$(PYTHON_LIB_PATH)
           <find-library>python$(PYTHON_VERSION)
             <cxx><*><cflags>"-expect_unresolved 'Py*' -expect_unresolved '_Py*'"
       ;
@@ -66,7 +69,7 @@ else if $(UNIX)
 
 # Locate the python executable
 PYTHON ?= <executable@>python$(SUFEXE) ;
-SEARCH on $(PYTHON) = $(RUN_PATH) ;
+SEARCH on $(PYTHON) = $(PYTHON_ROOT)/bin $(RUN_PATH) ;
 
 # And the debugging version
 PYTHON_D ?= $(PYTHON:S=)_d$(PYTHON:S) ;
@@ -106,8 +109,7 @@ rule select-python-library ( toolset variant : properties * )
 
 PYTHON_PROPERTIES
   += 
-      <gcc><*><library-path>$(GCC_PYTHON_ROOT)/lib/python$(PYTHON_VERSION)/config
-      <gcc><*><include>$(GCC_PYTHON_ROOT)/include/python$(PYTHON_VERSION)
+  <gcc><*><find-library>util
         <include>$(BOOST_ROOT)
           select-python-library
           # These two compilers pick up implicit directions from #pragmas
