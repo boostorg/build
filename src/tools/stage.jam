@@ -359,9 +359,10 @@ class stage-shared-lib-generator : generator
             # Need to change the name of the target and relink
             local relinked = 
               [ stage.relink-file $(project) : $(property-set) : $(source) ] ;
-            # FIXME: use hardcoded .so.
             local so-version = [ $(property-set).get <so-version> ] ;
-            $(relinked).suffix so.$(so-version) ;
+            
+            local existing-suffix = [ $(relinked).suffix ] ;            
+            $(relinked).suffix $(existing-suffix).$(so-version) ;
             # Break into private member of 'virtual-target' and change
             # the name.
             modules.poke $(relinked) : self.name : $(name) ;
