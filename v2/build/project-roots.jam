@@ -170,9 +170,11 @@ class project-root-object
         switch $(type)
         {
             case path :
-                value = [ path.root [ path.native $(value) ] $(self.location) ] ;
+                value = [ path.root [ path.make $(value) ] $(self.location) ] ;
                 # Now make the value absolute path
                 value = [ path.root $(value) [ path.pwd ] ] ;
+                # Constants should be in platform-native form
+                value = [ path.native $(value) ] ;
         }
         if ! $(name) in $(self.constants)
         {
