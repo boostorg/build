@@ -348,13 +348,16 @@ if [ os.name ] in NT
     
     rule archive ( targets + : sources * : properties * )    
     {
-        common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;                
+        common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;
     }
-    
+
+    # If library exists, remove it before adding files. See
+    # http://article.gmane.org/gmane.comp.lib.boost.build/4241    
+    # for rationale.
     actions archive 
     {    
-        if exist "$(<[1])" set _$(<[1]:B)_="$(<[1])"
-        $(.LD) /lib /NOLOGO /out:"$(<[1])" %_$(<[1]:B)_% @"$(<[2])"
+        if exist "$(<[1])" DEL "$(<[1])"
+        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(<[2])"
     }
 }
 else # CYGWIN
