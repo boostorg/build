@@ -179,6 +179,8 @@ class project-root-object
             self.constants += $(name) ;
         }
         self.constant.$(name) = $(value) ;
+        # Inject the constant in the scope of project-root module
+        modules.poke $(self.module) : $(name) : $(value) ;
     }
     
     # Register a project under this project-root. This does any setup

@@ -108,6 +108,7 @@ tests = [ "project_test1",
           "skipping",
           "project_root",
           "glob",
+          "project_root_constants",
 	  ]
 
 if os.name == 'posix':
