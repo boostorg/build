@@ -3,7 +3,7 @@
 #include "newstr.h"
 
 #ifdef NT
-#include <dir.h>
+#include <direct.h>
 #define PATH_MAX _MAX_PATH
 #else
 #include <unistd.h>
