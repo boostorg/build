@@ -2293,6 +2293,7 @@ rule target-id-of ( target )
     return $(target-id) ;
 }
 
+<<<<<<< boost-base.jam
 # Common rules for generating a single stage tag based on the
 # variant, build properties, and the toolset used to build.
 # To use place this rule name in the requirementes section of
@@ -2392,13 +2393,11 @@ rule unless ( test ? : no-value * : yes-value * )
 rule cond ( test ? : yes-value * : no-value * )
 { if $(test) { return $(yes-value) ; } else { return $(no-value) ; } }
 
-# Stick this rule name in your requirements if you are building code
-# which requires locale support.  It handles the metrowerks-specific
-# case that locale support demands the static version of the runtime
-# library.
-rule std::locale-support ( toolset variant : subvariant-path properties * )
+# If the toolset matches the given regex pattern, modify the
+# subvariant-path and properties for static linking
+rule force-NT-static-link ( pattern : toolset : subvariant-path properties * )
 {
-    if [ MATCH .*(metrowerks|cwpro).* : $(toolset) ]
+    if  $(NT) && [ MATCH $(pattern) : $(toolset) ]
     {
         local p = [ MATCH (.*)runtime-link-dynamic(.*) : $(subvariant-path) ] ;
         
@@ -2412,3 +2411,28 @@ rule std::locale-support ( toolset variant : subvariant-path properties * )
 
     return $(subvariant-path) $(properties) ;
 }
+
+# Stick this rule name in your requirements if you are building code
+# which requires locale support.  It handles the metrowerks-specific
+# case that locale support demands the static version of the runtime
+# library.
+rule std::locale-support ( toolset variant : subvariant-path properties * )
+{
+    return [ 
+      force-NT-static-link .*(metrowerks|cwpro).* 
+        : $(toolset) : $(subvariant-path) $(properties)
+          ] ;
+}
+
+# Stick this rule name in your requirements if you are building code
+# which requires facet support.  It handles the intel-win32-specific
+# case that facet support seems to demand the static version of the
+# runtime library.
+rule std::facet-support ( toolset variant : subvariant-path properties * )
+{
+    return [ 
+      force-NT-static-link .*(intel).* 
+        : $(toolset) : $(subvariant-path) $(properties)
+          ] ;
+}
+
