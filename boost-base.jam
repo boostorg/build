@@ -1843,13 +1843,15 @@ rule expand-target-subvariants ( target : local-build * : tools + : )
                 {
                     properties = [ $(r) $(toolset) $(variant) : $(properties) ] ;
                 }
-                properties = [ join $(properties) : $(SLASH) ] ;
+                # the rules may have modified the build request, reconstruct it
+                properties = [ expand-build-request $(toolset) $(variant) $(target)
+                    : $(properties[2-]) : $(build-request) ] ;
                 
                 subvariants += $(target)|$(properties)|$(toolset)|$(variant) ;
             }
         }
     }
-    return $(subvariants) ;
+    return [ unique $(subvariants) ] ;
 }
 
 # Given an expanded subvariant of a terget, sets the various variables accordingly.
@@ -2463,10 +2465,6 @@ rule force-NT-static-link ( pattern : toolset : subvariant-path properties * )
 {
     if  $(NT) && [ MATCH $(pattern) : $(toolset) ]
     {
-        local p = [ MATCH (.*)runtime-link-dynamic(.*) : $(subvariant-path) ] ;
-        
-        subvariant-path = $(p[1])runtime-link-static$(p[2]) ;
-        
         properties =
           [ difference $(properties) : <runtime-link>dynamic ]
           <runtime-link>static
