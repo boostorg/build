@@ -10,7 +10,9 @@ t.set_tree("unused")
 
 t.run_build_system()
 # The second invocation should do nothing, and produce
-# no warning.
+# no warning. The previous invocation might have printed
+# executed actions and other things, so it's not easy
+# to check if warning was issued or not.
 t.run_build_system()
 t.fail_test(t.stdout() != '')
 
