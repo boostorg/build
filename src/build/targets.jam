@@ -528,6 +528,12 @@ rule basic-target ( name : project
                             source-targets += [ virtual-target.from-file $(s) : $(self.project) ] ;                            
                         }
                     } 
+                
+                    # TODO: this line might cause target's properties to be
+                    # unqual to project's reference properties. As the
+                    # result, we create per-target bin directory while
+                    # it's not really needed.
+                    xproperties = [ feature.run-actions $(xproperties) ] ;
                     
                     self.generated.$(property-path) = 
                         [ construct $(source-targets) : $(xproperties) ] ;                             
