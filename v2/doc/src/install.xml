@@ -6,54 +6,81 @@
     <title>Installation</title>
 
     <para>
-      Assuming you're installing Boost.Build from released source
-      distribution, the following steps are needed. All paths are
-      given relatively to Boost.Build root directory, which is the
-      directory with the document you are reading.
+      This section describes how to install Boost.Build from a
+      released source distribution. All paths are given relative to
+      the <firstterm>Boost.Build v2 root directory</firstterm>, which is 
+
+      <!-- the normal location of the document you are reading.
+      Boost.Build is -->
+
+      <!-- That is a lie AFAICT, at least in a Boost distro.  You need
+      to say something that will be true if you want to cover BBv2 as
+      distributed separately -->
+
+      located in the <filename>tools/build/v2</filename> subdirectory
+      of a full <ulink url="http://www.boost.org">Boost</ulink>
+      distribution.
     </para>
 
     <orderedlist>
       <listitem>
         <simpara>
-          Go to "jam_src" directory and build Boost.Jam. Two convenient
-          scripts are provided, "build.sh" (for Unix systems) and
-          "build.bat" (for Windows). Run the appropriate one and
-          Boost.Jam will be built to directory
-          <filename>bin.{platform_name}.</filename>. The <ulink url=
-          "../jam_src/index.html">Boost.Jam documentation</ulink> has
-          more details in case you need them.
+          Boost.Build uses <ulink
+          url= "../jam_src/index.html">Boost.Jam</ulink>, an
+          extension of the <ulink
+          url="http://www.perforce.com/jam/jam.html">Perforce
+          Jam</ulink> portable <command>make</command> replacement. The
+          recommended way to get Boost.Jam is to <emphasis
+          role="bold"><ulink
+          url= "http://sourceforge.net/project/showfiles.php?group_id=7586&amp;package_id=72941">download
+          a prebuilt executable</ulink></emphasis> from SourceForge.
+          If a prebuilt executable is not provided for your platform
+          or you are using Boost's sources in an unreleased state, it
+          may be neccessary to <ulink
+          url= "../../jam_src/index.html#building_bjam">build <command>bjam</command>
+          from sources</ulink> included in the Boost source tree.
         </simpara>
       </listitem>
 
       <listitem>
         <para>
-          Place the Boost.Jam binary, called "bjam" or "bjam.exe",
-          somewhere in your <envar>PATH</envar>. Go to the root
-          directory of Boost.Build and run "bjam --version". You should
-          get 
 
-          <screen>Boost.Build V2 (Milestone N)</screen>
+          To install Boost.Jam, copy the executable,
+          called <command>bjam</command>
+          or <command>bjam.exe</command> to a location accessible in
+          your <envar>PATH</envar>.  Go to the Boost.Build root
+          directory and
+          run <command>bjam <option>--version</option></command>. You
+          should see:
 
-          (where N is the version you've downloaded).
+          <screen>
+            Boost.Build V2 (Milestone N)
+            Boost.Jam xx.xx.xx 
+          </screen>
+
+          where N is the version of Boost.Build you're using.
         </para>
       </listitem>
 
       <listitem>
         <simpara>
-          Configure toolsets to use. Open the
-          <filename>user-config.jam</filename> file and follow
-          instructions there to specify what compiles/libraries you
-          have and where they are located.
+          Configure Boost.Build to recognize the build resources (such
+          as compilers and libraries) you have installed on your
+          system.  Open the
+          <filename>user-config.jam</filename> file in the Boost.Build
+          root directory and follow the instructions there to describe
+          your toolsets and libraries, and, if neccessary, where they
+          are located.
         </simpara>
       </listitem>
 
       <listitem>
         <simpara>
-          You should now be able to go to
-          <filename>example/hello</filename>, and run
+          You should now be able to go to the
+          <filename>example/hello/</filename> directory and run
           <command>bjam</command> there. A simple application will be
-          built. You can also play with other projects in
-          <filename>example</filename>. 
+          built. You can also play with other projects in the
+          <filename>example/</filename> directory. 
     <!-- This part should not go into intoduction docs, but we need to
          place it somewhere. 
 
@@ -69,43 +96,47 @@
     </orderedlist>
 
     <para>
-      If you use Boost distribution, or Boost CVS, the Boost.Build
-      root is located at <filename>$boost_root/tools/build/v2</filename>
-      and the installation steps are the same. However, don't skip
-      the bjam rebuilding step, even if you have a previous version.
-      CVS version of Boost.Build requires CVS version of Boost.Jam.
+      If you are using Boost's CVS state, be sure to
+      rebuild <command>bjam</command> even if you have a previous
+      version.  The CVS version of Boost.Build requires the CVS
+      version of Boost.Jam.
     </para>
 
     <para>
-      When starting a new project which uses Boost.Build, you need
-      to make sure that build system can be found. There are two
-      ways.
+      When <command>bjam</command> is invoked, it always needs to be
+      able to find the Boost.Build root directory, where the
+      interpreted source code of Boost.Build is located.  There are
+      two ways to tell <command>bjam</command> about the root directory:
     </para>
 
     <itemizedlist>
       <listitem>
         <simpara>
-          Set enviromnetal variable <envar>BOOST_BUILD_PATH</envar>
-          to the absolute path to Boost.Build installation directory.
+          Set the environment variable <envar>BOOST_BUILD_PATH</envar>
+          to the absolute path of the Boost.Build root directory.
         </simpara>
       </listitem>
 
       <listitem>
         <para>
-          Create, at the top of your project, a file called
+          At the root directory of your project or in any of its
+          parent directories, create a file called
           <filename>boost-build.jam</filename>, with a single line:
 
 <programlisting>
-boost-build /path/to/boost.build ;
+boost-build <replaceable>/path/to/boost.build</replaceable> ;
 </programlisting>
 
         </para>
       </listitem>
     </itemizedlist>
 
-  <para>If you're trying to use Boost.Build V2 on Boost itself, please
-  note that when building Boost, V1 is used by default. You'd have
-  to add <option>--v2</option> command line option to all "bjam"
-  invocations.</para>
+  <para><emphasis role="bold">N.B.</emphasis>
+  When <command>bjam</command> is invokedfrom anywhere in the Boost
+  directory tree <emphasis>other than</emphasis> the Boost.Build root
+  and its subdirectories, <ulink url="../../tools/build">Boost.Build
+  v1</ulink> is used by default. To overide the default and use
+  Boost.Build v2, you have to add the <option>--v2</option> command
+  line option to all <command>bjam</command> invocations.</para>
 
   </chapter>
