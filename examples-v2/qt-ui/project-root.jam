@@ -8,3 +8,5 @@ toolset.using qt ;
 
 #Alternatively, the prefix can be given as second argument
 #toolset.using qt : /usr/share/qt ;
+
+#type.change-generated-target-suffix H : : hpp ;
