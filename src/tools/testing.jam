@@ -282,7 +282,14 @@ rule capture-output ( target : source : properties * )
     # on them and not LOCATE setting of $(target), as in other case (due to jam bug).
     DEPENDS $(target) : [ on $(target) return $(INPUT_FILES) ] ;
     
+    # For testing, we need to make sure that all dynamic libraries needed by
+    # the test are found. So, we collect all paths from dendency libraries
+    # (via xdll-path property) and add whatever explicit dll-path user has
+    # specified. The resulting paths are added to environment on each test
+    # invocation.
     local dll-paths = [ feature.get-values <dll-path> : $(properties) ] ;
+    dll-paths += [ feature.get-values <xdll-path> : $(properties) ] ;
+    dll-paths = [ sequence.unique $(dll-paths) ] ;
     if $(dll-paths)
     {    
         dll-paths = [ sequence.transform path.native : $(dll-paths) ] ;
