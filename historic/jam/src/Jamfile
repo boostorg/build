@@ -123,8 +123,9 @@ ALLSOURCE =
 	jamgram.y jamgram.yy jamgramtab.h lists.c lists.h make.c make.h
 	make1.c mkjambase.c modules.c newstr.c newstr.h option.c option.h parse.c
 	parse.h patchlevel.h pathmac.c pathunix.c pathvms.c regexp.c regexp.h
-	rules.c rules.h scan.c scan.h search.c search.h strings.c subst.c timestamp.c
-	timestamp.h variable.c variable.h filesys.c filesys.h yyacc
+	rules.c rules.h scan.c scan.h search.c search.h subst.c timestamp.c
+	timestamp.h variable.c variable.h yyacc strings.c modules.h
+	frames.h filesys.c strings.h 
 	INSTALL
 	common.mk
 	builds/win32-visualc.mk
@@ -164,7 +165,7 @@ rule Package
 }
 
 VERSION = boost-jam-3.0 ;
-
+RELEASE = 1 ;
 
 actions Tar-Gz
 {
@@ -202,7 +203,33 @@ actions GZip-Exe
   gzip -9 $(<)
 }
 
+rule Rpm 
+{
+    NOTFILE $(<) ;
+    NOTFILE $(2) ;
+    
+    local tar = $(2).tar ;
+    local rpm = $(2)-$(3).i386.rpm ;
+    local srpm = $(2)-$(3).src.rpm ;
 
+    local result = $(rpm) $(srpm) ;
+    DEPENDS $(<) : $(result) ;
+    DEPENDS $(result) : $(tar) ;
+    DEPENDS $(result) : boost-jam.spec ;
+    
+    tar on $(1) = $(tar).gz ;
+    source on $(1) = $(2).src.tar.gz ;
+    rpm on $(1) = $(rpm) ;
+    srpm on $(1) = $(srpm) ;
+}
+
+actions Rpm
+{
+    cp $(tar) /usr/src/redhat/SOURCES/$(source)
+    rpm -ba boost-jam.spec
+    cp /usr/src/redhat/RPMS/i386/$(rpm) .
+    cp /usr/src/redhat/SRPMS/$(srpm) .    
+}
 
 if $(NT)
 {
@@ -224,4 +251,5 @@ else if $(OS) = LINUX
 
   Package $(VERSION).tar : $(ALLSOURCE) ;
   Package $(VERSION).zip : $(ALLSOURCE) ;
+  Rpm rpm : $(VERSION) : $(RELEASE) ;
 }
