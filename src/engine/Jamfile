@@ -111,6 +111,18 @@ Main		mkjambase : mkjambase.c ;
 Main 		jam : jam.c jambase.c ;
 LinkLibraries 	jam : libjam.a ;
 GenFile 	jambase.c : mkjambase$(SUFEXE) Jambase ;
+{
+    MakeLocate bjam$(SUFEXE) : $(LOCATE_TARGET) ;
+    if $(UNIX)
+    {
+        HardLink bjam$(SUFEXE) : jam$(SUFEXE) ;
+    }
+    else
+    {
+        local FILEMODE = $(EXEMODE) ;
+        File bjam$(SUFEXE) : jam$(SUFEXE) ;
+    }
+}
 
 Library         libjam.a : 
 		    command.c compile.c $(code) expand.c glob.c
@@ -127,24 +139,26 @@ if $(BINDIR) 	{ InstallBin $(BINDIR) : jam ; }
 #
 
 ALLSOURCE =
-	Build.com Build.mpw Jam.html Jambase Jambase.html Jamfile
-	Jamfile.html Makefile Porting README RELNOTES command.c command.h
-	compile.c compile.h execcmd.h execmac.c execunix.c execnt.c execvms.c
-	expand.c expand.h filemac.c filent.c fileos2.c filesys.h fileunix.c
-	filevms.c glob.c hash.c hash.h hdrmacro.c hdrmacro.h headers.c
-	headers.h jam.c jam.h jambase.c jambase.h jamgram.c jamgram.h
-	jamgram.y jamgram.yy jamgramtab.h lists.c lists.h make.c make.h
-	make1.c mkjambase.c modules.c newstr.c newstr.h option.c option.h parse.c
-	parse.h patchlevel.h pathmac.c pathunix.c pathvms.c regexp.c regexp.h
-	rules.c rules.h scan.c scan.h search.c search.h subst.c timestamp.c
-	timestamp.h variable.c variable.h yyacc strings.c modules.h
-	frames.h filesys.c strings.h pwd.c pwd.h
-	INSTALL
-	common.mk
-	builds/win32-visualc.mk
-	builds/win32-borlandc.mk
-	builds/win32-gcc.mk
-	;
+    Build.com Build.mpw Jam.html Jambase Jambase.html Jamfile
+    Jamfile.html Makefile Porting README RELNOTES
+    builtins.c builtins.h command.c command.h compile.c compile.h
+    execcmd.h execmac.c execnt.c execunix.c execvms.c expand.c expand.h
+    filemac.c filent.c fileos2.c filesys.c filesys.h fileunix.c filevms.c
+    frames.c frames.h glob.c hash.c hash.h hdrmacro.c hdrmacro.h headers.c
+    headers.h jambase.c jambase.h jam.c jamgram.c jamgram.h jamgramtab.h
+    jam.h lists.c lists.h make1.c make.c make.h mkjambase.c
+    modules.c modules.h newstr.c newstr.h option.c option.h
+    parse.c parse.h patchlevel.h pathmac.c pathsys.h pathunix.c pathvms.c
+    pwd.c pwd.h regexp.c regexp.h rules.c rules.h scan.c scan.h
+    search.c search.h strings.c strings.h subst.c timestamp.c timestamp.h
+    variable.c variable.h
+    yyacc jamgram.y jamgram.yy
+    INSTALL
+    common.mk
+    builds/win32-visualc.mk
+    builds/win32-borlandc.mk
+    builds/win32-gcc.mk
+    ;
 
 
 rule Binary
@@ -177,7 +191,7 @@ rule Package
 	}
 }
 
-VERSION = boost-jam-3.0 ;
+VERSION = boost-jam-3.1 ;
 RELEASE = 1 ;
 
 actions Tar-Gz
@@ -204,15 +218,16 @@ actions Zip
 
 actions Zip-Exe
 {
-  zip -9j $(<) $(LOCATE_TARGET)\jam.exe
+  zip -9j $(<) $(LOCATE_TARGET)\jam.exe $(LOCATE_TARGET)\bjam.exe
 }
 
 actions GZip-Exe
 {
   ln -s $(LOCATE_TARGET)/jam jam
   strip jam
-  tar chf $(<) jam
-  rm -f jam
+  ln -s jam bjam
+  tar chf $(<) jam bjam
+  rm -f jam bjam
   gzip -9 $(<)
 }
 

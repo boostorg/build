@@ -13,41 +13,123 @@
 # "as is" without express or implied warranty, and with no claim as
 # to its suitability for any purpose.
 
-# The logic for finding the build system:
-#
-# The process is controlled by variables (in decreasing
-# precedence):
-#
-# If JAMBASE is set, it specifies the build system filename
-#
-# Otherwise, if BOOST_BUILD_PATH or BOOST_ROOT is set, the build system filename
-# is boost-build.jam.
-#
-# If the build system filename does not contain a path specification, the build
-# system file is searched for on $(BOOST_BUILD_PATH) then at
-# $(BOOST_ROOT)/tools/build.
-#
-# If neither JAMBASE, BOOST_ROOT, nor BOOST_BUILD_PATH is set, we use the
-# built-in Jambase (this file) and load the user's Jamfile. Perforce Jam has
-# this behavior, and it is used for building Jam itself. Thus, if you rebuild
-# Jam, these variables should be unset.
-if $(BOOST_ROOT)
+if $(NT)
 {
+    SLASH ?= \\ ;
+}
+SLASH ?= / ;
+
+# Glob for patterns in the directories starting from the given
+# start directory, up to and including the root of the file-system.
+# We stop globing as soon as we find at least one match.
+#
+rule find-to-root ( dir : patterns + )
+{
+    local globs = [ GLOB $(dir) : $(patterns) ] ;
+    while ! $(globs) && $(dir:P) != $(dir)
+    {
+        dir = $(dir:P) ;
+        globs = [ GLOB $(dir) : $(patterns) ] ;
+    }
+    return $(globs) ;
+}
+
+# This rule can be invoked from an optional boost-build.jam file
+# to both indicate where to find the build system files, and to load
+# them. The path indicated is relative to the location of the
+# boost-build.jam file.
+#
+rule boost-build ( dir ? )
+{
+    # Add the given directory to the path so we can hopefully find the
+    # build system.
+    #
+    if $(dir)
+    {
+        BOOST_BUILD_PATH = $(dir:R=$(file-location.boost-build.jam)) $(BOOST_BUILD_PATH) ;
+    }
+    
+    # Try to find the build system bootstrap file 'boost-build.jam'.
+    #
+    local bootstrap-file =
+        [ GLOB $(BOOST_BUILD_PATH) : boost-build.jam ] ;
+    
+    # There is no boost-build.jam we can find, exit with an error, and information.
+    #
+    if ! $(bootstrap-file)
+    {
+        EXIT
+            "Unable to load Boost.Build, could not find build system files."
+            "There is an initial bootstrap file which attempted to load the build system,"
+            "with this call: 'boost-build" $(dir) ";' but we were unable to find the secondary"
+            "bootstrap file to load."
+            "Attempted search in these directories from BOOST_BUILD_PATH: "$(BOOST_BUILD_PATH:J=", ")"."
+            "Please consult the documentation at 'http://www.boost.org'." ;
+    }
+    
+    # Load the build system, now that we know where to start from.
+    #
+    include $(bootstrap-file[1]) ;
+}
+
+# Record the path of an included file. This is used here to find out wether
+# the V1 build system was loaded.
+#
+rule record-file-location ( file : location )
+{
+    file-location.$(file:G=) = $(location) ;
+}
+
+if [ MATCH .*(bjam).* : $(ARGV[1]:B:L) ]
+  || $(BOOST_ROOT)    # A temporary measure so Jam works with Boost.Build v1
+{
+    # Another temporary measure so Jam works with Boost.Build v1
     BOOST_BUILD_PATH ?= $(BOOST_ROOT)/tools/build ;
-}
-
-if $(BOOST_BUILD_PATH)
-{
-    JAMBASE ?= boost-build.jam ;
-}
-
-if $(JAMBASE)
-{
-    JAMBASE = $(JAMBASE:G=jam-module) ; # puts the Jambase target in a different
-                                        # namespace from other targets so that
-                                        # it doesn't collide.
-    SEARCH on $(JAMBASE) = $(JAMBASE_PATH) $(BOOST_BUILD_PATH) ;
-    include $(JAMBASE) ;
+    
+    # We attempt to load "boost-build.jam" by searching from the current invocation directory
+    # up to the root of the file-system and in the paths specified by BOOST_BUILD_PATH.
+    # Within this, one invokes the "boost-build" rule to indicate where the Boost.Build
+    # files are to load them.
+    #
+    local boost-build-file =
+        [ find-to-root [ PWD ] : boost-build.jam ]
+        [ GLOB $(BOOST_BUILD_PATH) : boost-build.jam ] ;
+    
+    # There is no boost-build.jam we can find, exit with an error, and information.
+    #
+    if ! $(boost-build-file)
+    {
+        EXIT
+            "Unable to load Boost.Build, could not find 'boost-build.jam'."
+            "Attempted search from" [ PWD ] "up to the root."
+            "And in these directories from BOOST_BUILD_PATH: "$(BOOST_BUILD_PATH:J=", ")"."
+            "Please consult the documentation at 'http://www.boost.org'." ;
+    }
+    
+    # Now load the boost-build.jam to get the build system loaded. This
+    # incidentaly loads the users jamfile and attempts to build targets.
+    # We also set it up so we can tell wether we are loading the new V2
+    # system or the the old V1 syste.
+    #
+    BINDRULE on <jam-module>boost-base.jam = record-file-location ;
+    file-location.boost-build.jam = $(boost-build-file[1]:D) ;
+    include $(boost-build-file[1]) ;
+    
+    # Check that, at minimum, the build system loaded.
+    #
+    if ! [ RULENAMES build-system ] && ! $(file-location.boost-base.jam)
+    {
+        EXIT
+            "Unable to load Boost.Build, it seems that the build system files"
+            "were located, but the build system is not defined."
+            "Attempted to use, as the bootstrap, this file:"
+            $(file-location.boost-build.jam)$(SLASH)boost-build.jam.
+            "This means that even though that file was loaded it either failed"
+            "to directly load the build system files, or it failed to specify"
+            "where to find and load the files by calling the 'build-system [path] ;'"
+            "rule."
+            "Please consult the documentation at 'http://www.boost.org'." ;
+    }
 }
 else
 {
