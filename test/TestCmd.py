@@ -525,28 +525,32 @@ class TestCmd:
         path name.  If the path is a null string (''), a unique
         directory name is created.
         """
-        if (path != None):
-            if path == '':
-                path = tempfile.mktemp()
-            if path != None:
-                os.mkdir(path)
-            self._dirlist.append(path)
-            global _Cleanup
-            try:
-                _Cleanup.index(self)
-            except ValueError:
-                _Cleanup.append(self)
-            # We'd like to set self.workdir like this:
-            #        self.workdir = path
-            # But symlinks in the path will report things
-            # differently from os.getcwd(), so chdir there
-            # and back to fetch the canonical path.
-            cwd = os.getcwd()
-            os.chdir(path)
-            self.workdir = os.getcwd()
-            os.chdir(cwd)
+
+        if os.path.isabs(path):
+            self.workdir = path
         else:
-            self.workdir = None
+            if (path != None):
+                if path == '':
+                    path = tempfile.mktemp()
+                if path != None:
+                    os.mkdir(path)
+                self._dirlist.append(path)
+                global _Cleanup
+                try:
+                    _Cleanup.index(self)
+                except ValueError:
+                    _Cleanup.append(self)
+                # We'd like to set self.workdir like this:
+                #        self.workdir = path
+                # But symlinks in the path will report things
+                # differently from os.getcwd(), so chdir there
+                # and back to fetch the canonical path.
+                cwd = os.getcwd()
+                os.chdir(path)
+                self.workdir = os.getcwd()
+                os.chdir(cwd)
+            else:
+                self.workdir = None
 
     def workpath(self, *args):
         """Returns the absolute path name to a subdirectory or file

@@ -4,13 +4,12 @@
 <html>
   <head>
     <meta name="generator" content=
-    "HTML Tidy for Linux/x86 (vers 1st April 2002), see www.w3.org">
+    "HTML Tidy for Linux/x86 (vers 1st March 2002), see www.w3.org">
     <!--tidy options: -i -wrap 78 -->
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 
     <title>A testing system for Boost.Build</title>
-
-    <style type="text/css">
+<style type="text/css">
         hr { color: black }
         p.revision { text-align: right; font-style: italic }
         pre.code { margin-left: 2em } 
@@ -20,7 +19,8 @@
         h1 { text-align: right }
         br.clear { clear: left }
         div.attention { color: red }
-    </style>
+    
+</style>
   </head>
 
   <body>
@@ -293,8 +293,8 @@ t.cleanup()
     This is true on all platforms. In some contexts, a list of files is
     allowed. In that case any object with sequence interface is allowed.</p>
 
-    <h3><a name="method-__init__">Method <tt>__init__(self, arguments='',
-    executable='bjam')</tt></a></h3>
+    <h3><a name="method-__init__">Method <tt>__init__(self, workdir='',
+    arguments='', executable='bjam')</tt></a></h3>
 
     <p><b>Effects:</b></p>
 
@@ -313,6 +313,9 @@ t.cleanup()
 
       <li>Changes current working dir to the temporary working directory
       created by the base constructor.</li>
+
+      <li>If you want to run a test in a existing directory, pass it to
+      <tt>workdir</tt>.</li>
     </ol>
 
     <h3><a name="method-set_tree">Method <tt>set_tree(self,
@@ -359,8 +362,9 @@ t.cleanup()
       <li>Stores the state of the working directory in
       <tt>self.previous_tree</tt>.</li>
 
-      <li>Changes to <tt>subdir</tt>, if it is specified. If it is not
-      absolute path, it is relative to the working dir.</li>
+      <li>Changes to <tt>subdir</tt>, if it is specified. It is relative to
+      the <tt>original_workdir</tt> or the workdir specified in
+      <tt>__init</tt>.</li>
 
       <li>Invokes the <tt>bjam</tt> executable, passing <tt>extra_args</tt>
       to it. The binary should be located under
@@ -539,13 +543,13 @@ t.cleanup()
 </pre>
     <hr>
 
-    <p class="revision">Last modified: Mar 3, 2003</p>
+    <p class="revision">Last modified: Mar 11, 2005</p>
 
-    <p>&copy; Copyright Vladimir Prus 2002, 2003. Permission to copy, use,
-    modify, sell and distribute this document is granted provided this
-    copyright notice appears in all copies. This document is provided ``as
-    is'' without express or implied warranty, and with no claim as to its
-    suitability for any purpose.</p>
+    <p>&copy; Copyright Vladimir Prus 2002, 2003, 2004, 2005. Permission to
+    copy, use, modify, sell and distribute this document is granted provided
+    this copyright notice appears in all copies. This document is provided
+    ``as is'' without express or implied warranty, and with no claim as to
+    its suitability for any purpose.</p>
   </body>
 </html>
 

@@ -68,13 +68,20 @@ class Tester(TestCmd.TestCmd):
     Optional argument `executable` indicates the name of the
     executable to invoke. Set this to "jam" to test Boost.Build v1
     behavior.
+
+    Optional argument `work_dir` indicates an absolute directory, 
+    where the test will run be run.
     """
     def __init__(self, arguments="", executable = 'bjam', match =
                  TestCmd.match_exact, boost_build_path = None,
                  translate_suffixes = 1, pass_toolset = 1,
+                 workdir = '',
                  **keywords):
 
         self.original_workdir = os.getcwd()
+        if workdir != '' and not os.path.isabs(workdir):
+            raise "Parameter workdir <"+workdir+"> must point to a absolute directory: "
+
         self.last_build_time = 0
         self.translate_suffixes = translate_suffixes
 
@@ -151,7 +158,7 @@ class Tester(TestCmd.TestCmd):
             self
             , program=program_list
             , match=match
-            , workdir=''
+            , workdir = workdir
             , **keywords)
 
         os.chdir(self.workdir)
@@ -260,6 +267,12 @@ class Tester(TestCmd.TestCmd):
     def run_build_system(
         self, extra_args='', subdir='', stdout = None, stderr = '',
         status = 0, match = None, pass_toolset = None, **kw):
+
+        if os.path.isabs(subdir):
+            if stderr:
+                print "You must pass a relative directory to subdir <"+subdir+">."
+            status = 1
+            return
 
         self.previous_tree = build_tree(self.workdir)
 
@@ -560,7 +573,7 @@ class Tester(TestCmd.TestCmd):
     # Wait while time is no longer equal to the time last "run_build_system"
     # call finished.
     def wait_for_time_change(self):
-        while int(time.time()) == int(self.last_build_time):
+        while int(time.time()) < int(self.last_build_time) + 1:
             time.sleep(0.1)
 
             
