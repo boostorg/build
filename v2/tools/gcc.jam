@@ -72,6 +72,11 @@ if [ os.name ] != CYGWIN && [ os.name ] != NT
 {        
     flags gcc.compile OPTIONS <link>shared/<main-target-type>LIB : -fPIC ;
 }    
+if [ os.name ] != NT
+{
+    HAVE_SONAME = "" ;
+}
+
 
 
 flags gcc.compile OPTIONS <cflags> ;
@@ -218,7 +223,7 @@ rule link.dll ( targets * : sources * : properties * )
 # Differ from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA)  
+    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" $(HAVE_SONAME)-Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA)  
 }
 
 # Set up threading support. It's somewhat contrived, so perform it at the end,
