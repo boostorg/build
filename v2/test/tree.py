@@ -30,7 +30,7 @@ class Trees_difference:
 
     def empty(self):
         return (len(self.added_files) == 0 and len(self.removed_files) == 0)\
-                and len(modified_files) == 0 and len(self.touched_files) == 0
+                and len(self.modified_files) == 0 and len(self.touched_files) == 0
 
 def build_tree(dir):
     return svn_tree.build_tree_from_wc(dir, load_props=0, ignore_svn=1)

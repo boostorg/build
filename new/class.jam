@@ -90,6 +90,9 @@ local rule __init__ (
     
     # The calling module is the instance name
     local instance = [ CALLER_MODULE ] ;
+
+    # __name__ will denote the current class, similar to modules.
+    __name__ = $(instance) ;
     
     # call the class rule that was defined by the user
     # This defines all of the class' member rules

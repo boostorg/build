@@ -46,6 +46,24 @@ rule register ( type : suffixes * : base-type ? : main ? )
     }
 }
 
+# Sets a scanner class that will be used for this 'type'.
+rule set-scanner ( type : scanner )
+{
+    if ! $(type) in $(.types)
+    {
+        error "Type" $(type) "is not declared" ;
+    }    
+    .scanner.$(type) = $(scanner) ;
+}
+
+# Returns a scanner instance appropriate to 'type' and 'properties'.
+rule get-scanner ( type : properties * )
+{
+    if $(.scanner.$(type)) {
+        return [ scanner.get $(.scanner.$(type)) : $(properties) ] ;
+    }    
+}
+
 # Returns true if 'type' has 'base' as its direct or
 # indirect base.
 rule is-derived ( type base )

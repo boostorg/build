@@ -52,13 +52,6 @@ rule virtual-target ( name : type ? : project
     # Project where this target was declared
     rule project ( ) { return $(self.project) ; }
 
-    rule includes ( ) { return $(self.includes) ; }
-    rule add_includes ( i + )
-    {
-        self.includes = [ sequence.merge $(self.includes)
-                            : [ sequence.insertion-sort $(i) ] ] ;
-    }
-
     rule dependencies ( ) { return $(self.dependencies) ; }
     rule depends ( d + )
     {
@@ -100,33 +93,76 @@ rule virtual-target ( name : type ? : project
     # Rationale: we might need only one file from the set created by an
     # action, and there's no need to run the action if the file is up-to-date,
     # only because some other file in set is out-of-date.
-    rule actualize ( )
+    rule actualize ( scanner ? )
     {        
-        if ! $(self.actual-name) {
+        # When we have explicitly specified target, we need to create a 
+        # target and associate scanner with it.
+        # There may be many different scanners, but there's only one
+        # generating action. Therefore, generating action actualizes this
+        # target without any scanner. Actual target with scanners will
+        # depend on actual target without scanner. 
+        actualize-no-scanner ; 
 
-            self.actual-name = [ actual-name ] ;
+        local actual-name = [ actual-name ] ;
+
+        if ! $(scanner)
+        {
+            return $(actual-name) ;
+        }
+        else 
+        {
+            local g = [ sequence.join 
+                [ utility.ungrist $(actual-name:G) ] $(scanner) : - ] ;
+            local name = $(actual-name:G=$(g)) ;
+
+
+            if ! $(self.made.$(name)) {
+
+                self.made.$(name) = true ;
+                DEPENDS $(name) : $(actual-name) ;
+                BINDRULE on $(name) = virtual-target.remember-binding ;
+
+                if [ action ] {                
+                    LOCATE on $(name) = [ path ] ;
+                } else {
+                    SEARCH on $(name) = [ path.native 
+                        [ project.attribute $(self.project) source-location ] ] ;
+                }
+
+                scanner.install $(scanner) : $(name) $(__name__) ;
+            }
+            return $(name) ;            
+        }
+    }
+
+    local rule actualize-no-scanner ( )
+    {
+        local name = [ actual-name ] ;
+
+        if ! $(self.made.$(name)) {
+
+            self.made.$(name) = true ;
+            
             for local i in $(dependencies) {
                 DEPENDS $(name) : [ $(i).actualize ] ;
             }
-            for local i in $(includes) {
-                INCLUDES $(name) : [ $(i).actualize ] ;
-            }
+            BINDRULE on $(name) = virtual-target.remember-binding ;
+
             local a = [ action ] ;
             if $(a) {
-                $(a).actualize ;
+                $(a).actualize ;                
                 local path = [ path ] ;
-                LOCATE on $(self.actual-name) = $(path) ;
-                DEPENDS $(self.actual-name) : $(path) ;
+                LOCATE on $(name) = $(path) ;
+                DEPENDS $(name) : $(path) ;
                 common.MkDir $(path) ;
-                common.Clean clean : $(self.actual-name) ;
+                common.Clean clean : $(name) ;
             } else {
-                SEARCH on $(self.actual-name) =
+                SEARCH on $(name) =
                     [ path.native [ project.attribute $(self.project) source-location ] ] ;
             }
-        }
-        return $(self.actual-name) ;
+        }                
     }
-    
+        
     rule str ( )
     {        
         local action = [ action ] ;
@@ -211,6 +247,20 @@ rule virtual-target ( name : type ? : project
 }
 class virtual-target ;
 
+# Returns the binding for the given actual target.
+# CONSIDER: not sure this rule belongs here.
+rule binding ( target )
+{
+    return $(.binding.$(target)) ;
+}
+
+
+rule remember-binding ( target : bound-path )
+{
+    .binding.$(target) = $(bound-path) ;
+}
+
+
 # Class which represents an action.
 # Both 'targets' and 'sources' should list instances of 'virtual-target'.
 # Action name should name a rule with this prototype
@@ -261,11 +311,17 @@ rule action ( targets + : sources * : action-name : properties * )
 
             local actual-sources ;
             for local i in [ sources ]
-            {
-                actual-sources += [ $(i).actualize ] ;
-            }
-
-            DEPENDS $(actual-targets) : $(actual-sources) ;
+            {                
+                local scanner ;
+                if [ $(i).type ]
+                {                    
+                    scanner = 
+                      [ type.get-scanner [ $(i).type ] : $(properties) ] ;
+                }                
+                actual-sources += [ $(i).actualize $(scanner) ] ;
+             }
+ 
+             DEPENDS $(actual-targets) : $(actual-sources) ;            
 
             $(self.action-name)
               $(actual-targets) : $(actual-sources) : $(properties) ;
