@@ -102,14 +102,8 @@ rule merge ( s1 * : s2 * : ordered * )
 # it is used as a separator.
 rule join ( s * : joint ? )
 {
-    local result ;
     joint ?= "" ;
-    for local x in $(s)
-    {
-        result = $(result)$(joint)$(x) ;
-        result ?= $(x) ;
-    }
-    return $(result) ;
+    return $(s:J=$(joint)) ;
 }
 
 # Find the length of any sequence in log(N) time.
