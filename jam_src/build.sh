@@ -42,7 +42,11 @@ error_exit ()
 # Check that a command is in the PATH.
 test_path ()
 {
-    hash $1 2>/dev/null
+    if `whence 2>/dev/null`; then
+        whence $1 2>/dev/null
+    else
+        hash $1 2>/dev/null
+    fi
 }
 
 # Check that the OS name, as returned by "uname", is as given.
