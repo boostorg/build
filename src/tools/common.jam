@@ -11,11 +11,13 @@ import modules ;
 
 if [ os.name ] = NT
 {
-	modules.poke : RM : del /f ;
+    modules.poke : RM : del /f ;
+    modules.poke : CP : copy ;
 }
 else
 {
-	modules.poke : RM : rm ;
+    modules.poke : RM : rm ;
+    modules.poke : CP : cp ;
 }
 
 rule MkDir
@@ -80,7 +82,7 @@ rule copy
 
 actions copy
 {
-    cp $(>) $(<)
+    $(CP) $(>) $(<)
 }
 
 
