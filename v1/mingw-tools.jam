@@ -31,6 +31,10 @@ rule Link-action
     # proved to be neccessary with some versions of Cygwin.
     IMPLIB_COMMAND on $(<) = "-Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__ -Wl,--out-implib," ;
     mingw-Link-action $(<) : $(>) ;
+    # Workaround GCC's lack of command-files and NT's line-length limitation.
+    if $(NT) {
+        JAMSHELL on $(<) = % ;
+    }
 }
 
 # for mingw, we repeat all libraries so that dependencies are always resolved
