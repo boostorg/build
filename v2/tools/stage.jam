@@ -243,11 +243,7 @@ class stage-target-class : basic-target
         }
         
         return $(found) ;
-    }
-            
-    rule check-for-link-compatibility ( * : * )
-    {
-    }
+    }            
 }
 
 # Create a target named 'name' in the current project
