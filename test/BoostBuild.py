@@ -7,6 +7,7 @@ import os
 import shutil
 import string
 import types
+import time
 
 #
 # FIXME: this is copy-pasted from TestSCons.py
@@ -84,11 +85,12 @@ class Tester(TestCmd.TestCmd):
     #
     #   FIXME: Large portion copied from TestSCons.py, should be moved?
     #
-    def run_build_system(self, extra_args='', stdout = None, stderr = '', status = 0, **kw):
+    def run_build_system(self, extra_args='', subdir='', stdout = None, stderr = '', status = 0, **kw):
         self.previous_tree = build_tree(self.workdir)
 
         try:
             kw['program'] = self.program + ' ' + extra_args
+            kw['chdir'] = subdir
             apply(TestCmd.TestCmd.run, [self], kw)
         except:
             print "STDOUT ============"
@@ -126,8 +128,12 @@ class Tester(TestCmd.TestCmd):
             self.fail_test(1)
 
         self.tree = build_tree(self.workdir)
-        self.tree_difference = trees_difference(self.previous_tree, self.tree)
-        self.unexpected_difference = copy.deepcopy(self.tree_difference)
+        self.difference = trees_difference(self.previous_tree, self.tree)
+        self.unexpected_difference = copy.deepcopy(self.difference)
+        # We want to assure that modifications to the working dir will be
+        # detected by jam, so we wait till current time becomes more that
+        # the time when the last target was built.
+        time.sleep(1.1)
 
     def read(self, name):
         return open(self.native_file_name(name), "wb").read()
@@ -196,6 +202,24 @@ class Tester(TestCmd.TestCmd):
         ignore_elements(self.unexpected_difference.removed_files, wildcard)
         ignore_elements(self.unexpected_difference.modified_files, wildcard)
         ignore_elements(self.unexpected_difference.touched_files, wildcard)
+
+    def expect_nothing(self, names):
+        if type(names) == types.StringType:
+            names = [names]
+        for name in names:
+            if name in self.difference.added_files:
+                print "File %s is added, but no action was expected" % (name,)
+                self.fail_test(1)
+            if name in self.difference.removed_files:
+                print "File %s is removed, but no action was expected" % (name,)
+                self.fail_test(1)
+                pass
+            if name in self.difference.modified_files:
+                print "File %s is modified, but no action was expected" % (name,)
+                self.fail_test(1)
+            if name in self.difference.touched_files:
+                print "File %s is touched, but no action was expected" % (name,)
+                self.fail_test(1)
 
     def expect_nothing_more(self):
         if not self.unexpected_difference.empty():
@@ -267,7 +291,7 @@ class List:
         return ( self.__module__ + '.List('
                  + repr(string.join(self.l, ' '))
                  + ')')
-                        
+
     def __mul__(self, other):
         result = List()
         for f in self:
@@ -275,7 +299,7 @@ class List:
                 result.l.append(f + s)
         return result
 
-# quickie tests. Should use doctest instead.    
+# quickie tests. Should use doctest instead.
 if __name__ == '__main__':
     assert str(List("foo bar") * "/baz") == "['foo/baz', 'bar/baz']"
     assert repr("foo/" * List("bar baz")) == "__main__.List('foo/bar foo/baz')"
