@@ -75,13 +75,6 @@ flags metrowerks FINDLIBS <find-library> ;
 METROWERKS_INCLUDE_ROOT = $(METROWERKS_ROOT) ;
 METROWERKS_INCLUDE_ROOT ?= $(CWFOLDER) ;
 
-# This is the list of subdirectories below METROWERKS_INCLUDE_ROOT to search.
-# Might need customization for platforms other than Win32
-gMETROWERKS_STD_INCLUDES = MSL "Win32-X86 Support" MSL$(SLASH)MSL_C$(SLASH)MSL_Common$(SLASH)Include "Win32-X86 Support"$(SLASH)Headers$(SLASH)"Win32 SDK" ;
-
-# Multiply these out to get the STDHDRS settings for metrowerks
-flags metrowerks STDHDRS : $(METROWERKS_INCLUDE_ROOT)$(SLASH)$(gMETROWERKS_STD_INCLUDES) ;
-
 #### Link ####
 
 rule Link-action
@@ -116,7 +109,7 @@ rule Cc-action
 actions metrowerks-Cc-action
 {
     $(METROWERKS_SETUP)
-    mwcc -maxerrors 20 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -nowraplines $(CFLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    mwcc -maxerrors 20 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -nowraplines $(CFLAGS)  -I"$(HDRS)" -I- -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -128,7 +121,7 @@ rule C++-action
 actions metrowerks-C++-action
 {
     $(METROWERKS_SETUP)
-    mwcc  -maxerrors 20 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -DNOMINMAX -nowraplines -lang c++ $(CFLAGS) $(C++FLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    mwcc  -maxerrors 20 -maxwarnings 20 -c -warn on,nounusedexpr,nounused -cwd include -U$(UNDEFS) -D$(DEFINES) -DNOMINMAX -nowraplines -lang c++ $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I- -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####

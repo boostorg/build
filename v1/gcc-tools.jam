@@ -27,7 +27,7 @@
 #
 # GCC_INCLUDE_DIRECTORY
 #       the directory in which to find system includes. Defaults to
-#       $(GCC_ROOT_DIRECTORY)/include. 
+#       empty.
 #
 # GCC_STDLIB_DIRECTORY
 #       the directory in which to find the standard library
@@ -48,7 +48,6 @@ set-as-singleton GCC_ROOT_DIRECTORY GCC_BIN_DIRECTORY GCC_INCLUDE_DIRECTORY GCC_
 
 GCC_BIN_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/bin/ ;
 GCC_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if GCC_ROOT_DIRECTORY not set
-GCC_INCLUDE_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/include ;
 GCC_STDLIB_DIRECTORY ?= $(GCC_ROOT_DIRECTORY)/lib ;
 
 flags gcc LINKFLAGS <runtime-link>static : -static ;
@@ -282,7 +281,7 @@ rule Cc-action
 
 actions gcc-Cc-action
 {
-    $(GCC_BIN_DIRECTORY)$(GCC) -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -isystem$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(GCC_BIN_DIRECTORY)$(GCC) -c -Wall -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I- -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -294,7 +293,7 @@ rule C++-action
 
 actions gcc-C++-action
 {
-    $(GCC_BIN_DIRECTORY)$(GXX) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -isystem$(SPACE)"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(GCC_BIN_DIRECTORY)$(GXX) -c -Wall -ftemplate-depth-100 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I- -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
