@@ -2253,12 +2253,13 @@ rule stage ( name : sources + : requirements * : local-build * )
     local locate = [ get-values <locate> : $(requirements) ] ;
     if $(locate) { locate = [ split-path $(locate) ] ; }
     local fake-target = [ get-values <target> : $(requirements) ] ;
+    local rename-rule = [ get-values <rename> : $(requirements) ] ;
 
     # Supress the regular build of this target
     local gSUPPRESS_FAKE_TARGETS = [ get-values <suppress> : $(local-build) ] ;
 
     local stage-dir = $(name:G=) ;
-    local files = [ select-ungristed $(sources) ] ;
+    local files ;
     local file-mode ;
     local file-tagged ;
     local file-subdir ;
@@ -2328,7 +2329,13 @@ rule stage ( name : sources + : requirements * : local-build * )
                     sv-files = [ unique $(sv-files) ] ;
                     for local sv in $(sv-files)
                     {
-                        local renamed-target =
+                        local renamed-target ;
+                        local split-properties = [ split-path $(s-properties[1]) ] ;
+                        for local rr in $(rename-rule)
+                        {
+                            renamed-target += [ $(rr) $(sv) : $(split-properties) ] ;
+                        }
+                        renamed-target ?=
                             [ rename-target $(sv) : [ split-path $(s-properties[1]) ] : ] ;
 
                         files += $(sv) ;
@@ -2339,6 +2346,18 @@ rule stage ( name : sources + : requirements * : local-build * )
 
                 }
             }
+        }
+        else
+        {
+            local renamed-file ;
+            for local rr in $(rename-rule)
+            {
+                renamed-file += [ $(rr) $(source) ] ;
+            }
+            renamed-file ?= $(source) ;
+            
+            files += $(source) ;
+            file-tagged($(source)) = $(renamed-file) ;
         }
     }
 
@@ -2363,7 +2382,7 @@ rule stage ( name : sources + : requirements * : local-build * )
         }
         else
         {
-            destination-file = $(file:D=) ;
+            destination-file = $(file-tagged($(file)):D=) ;
             if $(tree-root)
             {
                 destination-subdir = [ strip-initial $(tree-root) : [ split-path $(file:D) ] ] ;
@@ -2377,7 +2396,10 @@ rule stage ( name : sources + : requirements * : local-build * )
             if $(file-mode($(file))) { FILEMODE = $(file-mode($(file))) ; }
             MakeLocate $(destination-file) :
                 [ FDirName $(locate-target) [ split-path $(stage-dir) ] $(destination-subdir) ] ;
-            FileClone $(destination-file) : $(file) ;
+            for local df in $(destination-file)
+            {
+                FileClone $(df) : $(file) ;
+            }
             local target = $(stage-id) $(destination-subdir) $(destination-file:G=) ;
             declare-fake-targets $(target:J=/) : $(destination-file) ;
         }
