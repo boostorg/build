@@ -259,6 +259,8 @@ class TestCmd:
             condition = self.condition
         #print "cleanup(" + condition + "):  ", self._preserve
         if self._preserve[condition]:
+            for dir in self._dirlist:
+                print "Preserved directory", dir
             return
         os.chdir(self._cwd)
         self.workdir = None

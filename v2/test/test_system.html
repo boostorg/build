@@ -17,6 +17,7 @@
         img.banner { border: 0; float: left }
         h1 { text-align: right }
         br.clear { clear: left }
+        div.attention { color: red }
 </style>
   </head>
 
@@ -38,6 +39,8 @@
 
           <dt><a href="#sec-intro-examining">Examining the working directory
           and changing it</a></dt>
+
+          <dt><a href="#sec-intro-results">Test result</a></dt>
         </dl>
       </dd>
 
@@ -68,6 +71,9 @@
 
           <dt><a href="#methods-ignoring">Methods for ignoring
           changes</a></dt>
+
+          <dt><a href="#methods-result">Methods for explicitly specifying
+          results</a></dt>
 
           <dt><a href="#class-list">Helper class <tt>List</tt></a></dt>
         </dl>
@@ -195,6 +201,23 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     <tt>unexpected_difference</tt> will contain the list of all changes not
     yet accounted for. It is possible to assure that this list is empty by
     calling <tt>expect_nothing_more</tt> member function.</p>
+
+    <h3><a name="sec-intro-results">Test result</a></h3>
+
+    <p>Any of the <tt>expect*</tt> methods below will fail the test if the
+    expectation is not met. It is also possible to perform manually arbitrary
+    test and explicitly cause the test to either pass or fail. Ordinary
+    filesystem functions can be used to work with the directory tree. Methods
+    <tt>pass_test</tt> and <tt>fail_test</tt> are used to explicitly give the
+    test outcome.</p>
+
+    <p>Typically, after test termination, the working directory is erased. If
+    is possible to prevent it by setting environmental variables
+    <tt>PRESERVE</tt>, <tt>PRESERVE_PASS</tt> and <tt>PRESERVE_FAIL</tt>.
+    Non-zero value of the first makes the working directory preserved in all
+    cases, while the other variables apply only to specific outcomes. When a
+    directory is preserved, its name will be printed to the standard
+    output.</p>
 
     <h2><a name="sec-reference">Reference documentation</a></h2>
 
@@ -393,6 +416,20 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
 
     <p>The method <tt>ignore(self, wildcard)</tt> ignores all the changes
     made to files that match a wildcard.</p>
+
+    <h3><a name="methods-result">Methods for explicitly specifying
+    results</a></h3>
+
+    <h4>Method <tt>pass_test(self, condition=1)</tt></h4>
+
+    <div class="attention">
+      At this moment, the method should not be used.
+    </div>
+
+    <h4>Method <tt>fail_test(self, condition=1)</tt></h4>
+
+    <p><b>Effects:</b> Cause the test to fail if <tt>condition</tt> is
+    true.</p>
 
     <h3><a name="class-list">Helper class <tt>List</tt></a></h3>
     The class has sequence interface and two additional methods. 
