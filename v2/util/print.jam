@@ -428,7 +428,7 @@ if [ modules.peek : NT ]
         if $(string) || $(string) != ""
         {
             local escaped = [ regex.escape $(string) : "&|()<>^" : "^" ] ;
-            return "echo $(escaped)" ;
+            return "echo \"$(escaped)\"" ;
         }
         else
         {
