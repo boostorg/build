@@ -16,6 +16,7 @@
 # include <errno.h>
 # include <assert.h>
 # include <ctype.h>
+# include <time.h>
 
 # ifdef USE_EXECNT
 
@@ -71,7 +72,7 @@ static int  is_win95_defined = 0;
 static struct
 {
 	int	pid; /* on win32, a real process handle */
-	void	(*func)( void *closure, int status );
+	void	(*func)( void *closure, int status, timing_info* );
 	void 	*closure;
 	char	*tempfile;
 
@@ -446,6 +447,65 @@ static const char *getTempDir(void)
     return pTempPath;
 }
 
+/* 64-bit arithmetic helpers */
+
+/* Compute the carry bit from the addition of two 32-bit unsigned numbers */
+#define add_carry_bit(a, b) ( (((a) | (b)) >> 31) & (~((a) + (b)) >> 31) & 0x1 )
+
+/* Compute the high 32 bits of the addition of two 64-bit unsigned numbers, h1l1 and h2l2 */
+#define add_64_hi(h1, l1, h2, l2) ((h1) + (h2) + add_carry_bit(l1, l2))
+
+/* Add two 64-bit unsigned numbers, h1l1 and h2l2 */
+static FILETIME add_64(
+    unsigned long h1, unsigned long l1,
+    unsigned long h2, unsigned long l2)
+{
+    FILETIME result;
+    result.dwLowDateTime = l1 + l2;
+    result.dwHighDateTime = add_64_hi(h1, l1, h2, l2);
+
+    return result;
+}
+
+static FILETIME add_FILETIME(FILETIME t1, FILETIME t2)
+{
+    return add_64(
+        t1.dwHighDateTime, t1.dwLowDateTime
+      , t2.dwHighDateTime, t2.dwLowDateTime);
+}
+static FILETIME negate_FILETIME(FILETIME t)
+{
+    /* 2s complement negation */
+    return add_64(~t.dwHighDateTime, ~t.dwLowDateTime, 0, 1);
+}
+
+/* COnvert a FILETIME to a number of seconds */
+static double filetime_seconds(FILETIME t)
+{
+    return t.dwHighDateTime * (double)(1UL << 31) * 2 + t.dwLowDateTime * 1.0e-7;
+}
+
+static void
+record_times(int pid, timing_info* time)
+{
+    FILETIME creation, exit, kernel, user;
+    if (GetProcessTimes((HANDLE)pid, &creation, &exit, &kernel, &user))
+    {
+        /* Compute the elapsed time */
+#if 0 /* We don't know how to get this number this on Unix */
+        time->elapsed = filetime_seconds(
+            add_FILETIME( exit, negate_FILETIME(creation) )
+        );
+#endif 
+
+        time->system = filetime_seconds(kernel);
+        time->user = filetime_seconds(user);            
+    }
+        
+    CloseHandle((HANDLE)pid);
+}
+    
+
 /*
  * execcmd() - launch an async command execution
  */
@@ -453,7 +513,7 @@ static const char *getTempDir(void)
 void
 execcmd( 
 	char *string,
-	void (*func)( void *closure, int status ),
+	void (*func)( void *closure, int status, timing_info* ),
 	void *closure,
 	LIST *shell )
 {
@@ -613,6 +673,7 @@ execcmd(
         const char**  keyword;
         int           len, spawn = 1;
         int           result;
+        timing_info time = {0,0};
           
         for ( keyword = hard_coded; keyword[0]; keyword++ )
         {
@@ -654,12 +715,13 @@ execcmd(
                 fprintf( stderr, "\n" );
 #endif              
                 result = spawnvp( P_WAIT, args[0], args );
+                record_times(result, &time);
                 free_args( args );
             }
             else
                 result = 1;
         }
-        func( closure, result ? EXEC_CMD_FAIL : EXEC_CMD_OK );
+        func( closure, result ? EXEC_CMD_FAIL : EXEC_CMD_OK, &time );
         return;
     }
 
@@ -718,19 +780,20 @@ execwait()
 	int i;
 	int status, w;
 	int rstat;
+    timing_info time;
 
 	/* Handle naive make1() which doesn't know if cmds are running. */
 
 	if( !cmdsrunning )
 	    return 0;
 
-        if ( is_win95 )
-          return 0;
+    if ( is_win95 )
+        return 0;
           
 	/* Pick up process pid and status */
     
-	while( ( w = wait( &status ) ) == -1 && errno == EINTR )
-		;
+    while( ( w = wait( &status ) ) == -1 && errno == EINTR )
+        ;
 
 	if( w == -1 )
 	{
@@ -751,6 +814,8 @@ execwait()
 	    exit( EXITBAD );
 	}
 
+    record_times(cmdtab[i].pid, &time);
+    
 	/* Clear the temp file */
     if ( cmdtab[i].tempfile )
         unlink( cmdtab[ i ].tempfile );
@@ -774,62 +839,107 @@ execwait()
             free(cmdtab[i].tempfile);
             cmdtab[i].tempfile = NULL;
 	}
-	(*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat );
+	(*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time );
 
 	return 1;
 }
 
 # if !defined( __BORLANDC__ )
 
+/* The possible result codes from check_process_exit, below */
+typedef enum { process_error, process_active, process_finished } process_state;
+
+/* Helper for my_wait() below.  Checks to see whether the process has
+ * exited and if so, records timing information.
+ */
+static process_state
+check_process_exit(
+    HANDLE process         /* The process we're looking at */
+    
+  , int* status            /* Storage for the finished process' exit
+                            * code.  If the process is still active
+                            * this location is left untouched. */
+    
+  , HANDLE* active_handles /* Storage for the process handle if it is
+                            * found to be still active, or NULL.  The
+                            * process is treated as though it is
+                            * complete.  */
+    
+  , int* num_active        /* The current length of active_handles */
+)
+{
+    DWORD exitcode;
+    process_state result;
+
+    /* Try to get the process exit code */
+    if (!GetExitCodeProcess(process, &exitcode))
+    {
+        result = process_error; /* signal an error */
+    }
+    else if (
+        exitcode == STILL_ACTIVE     /* If the process is still active */
+        && active_handles != 0       /* and we've been passed a place to buffer it */
+    )
+    {
+        active_handles[(*num_active)++] = process; /* push it onto the active stack */
+        result = process_active;
+    }
+    else
+    {
+        *status = (int)((exitcode & 0xff) << 8);
+        result = process_finished;
+    }
+    
+    return result;
+}
+
 static int
 my_wait( int *status )
 {
 	int i, num_active = 0;
 	DWORD exitcode, waitcode;
-	static HANDLE *active_handles = 0;
-
-	if (!active_handles)
-	    active_handles = (HANDLE *)malloc(globs.jobs * sizeof(HANDLE) );
+	HANDLE active_handles[MAXJOBS];
 
 	/* first see if any non-waited-for processes are dead,
 	 * and return if so.
 	 */
-	for ( i = 0; i < globs.jobs; i++ ) {
-	    if ( cmdtab[i].pid ) {
-		if ( GetExitCodeProcess((HANDLE)cmdtab[i].pid, &exitcode) ) {
-		    if ( exitcode == STILL_ACTIVE )
-			active_handles[num_active++] = (HANDLE)cmdtab[i].pid;
-		    else {
-			CloseHandle((HANDLE)cmdtab[i].pid);
-			*status = (int)((exitcode & 0xff) << 8);
-			return cmdtab[i].pid;
-		    }
-		}
-		else
-		    goto FAILED;
+	for ( i = 0; i < globs.jobs; i++ )
+    {
+        int pid = cmdtab[i].pid;
+        
+	    if ( pid )
+        {
+            process_state state
+                = check_process_exit((HANDLE)pid, status, active_handles, &num_active);
+            
+            if ( state == process_error )
+                goto FAILED;
+            else if ( state == process_finished )
+                return pid;
 	    }
 	}
 
 	/* if a child exists, wait for it to die */
-	if ( !num_active ) {
+	if ( !num_active )
+    {
 	    errno = ECHILD;
 	    return -1;
 	}
+    
 	waitcode = WaitForMultipleObjects( num_active,
-					   active_handles,
-					   FALSE,
-					   INFINITE );
-	if ( waitcode != WAIT_FAILED ) {
+                                       active_handles,
+                                       FALSE,
+                                       INFINITE );
+	if ( waitcode != WAIT_FAILED )
+    {
 	    if ( waitcode >= WAIT_ABANDONED_0
-		&& waitcode < WAIT_ABANDONED_0 + num_active )
-		i = waitcode - WAIT_ABANDONED_0;
+             && waitcode < WAIT_ABANDONED_0 + num_active )
+            i = waitcode - WAIT_ABANDONED_0;
 	    else
-		i = waitcode - WAIT_OBJECT_0;
-	    if ( GetExitCodeProcess(active_handles[i], &exitcode) ) {
-		CloseHandle(active_handles[i]);
-		*status = (int)((exitcode & 0xff) << 8);
-		return (int)active_handles[i];
-	    }
+            i = waitcode - WAIT_OBJECT_0;
+        
+        if ( check_process_exit(active_handles[i], status, 0, 0) == process_finished )
+            return (int)active_handles[i];
 	}
 
 FAILED:

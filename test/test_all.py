@@ -73,7 +73,9 @@ critical_tests = ["unit_tests", "module_actions", "startup_v1", "startup_v2"]
 critical_tests += ["core_d12", "core_typecheck", "core_delete_module",
                    "core_varnames", "core_import_module"]
 
-tests = [ "project_test3",
+tests = [ "rebuilds",
+          "timedata",
+          "project_test3",
           "project_test4",
           "generators_test",
           "dependency_test",
