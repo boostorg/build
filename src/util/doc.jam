@@ -48,41 +48,41 @@ rule document-variable ( name : docs + )
 # We can now document ourselves :-)
 #
 document-module
-    "Documentation system, handles --help requests."
-    "It defines rules that attach documentation to modules, rules, and variables."
+    Documentation system, handles --help requests.
+    It defines rules that attach documentation to modules, rules, and variables.
     ;
 
 document-rule document-module :
-    "Specifies the documentation for the current module."
+    Specifies the documentation for the current module.
     
     <argument>docs
-        "The documentation for the module."
+        The documentation for the module.
     ;
 
 document-rule document-rule :
-    "Specifies the documentation for a rule in the current module."
-    "If called in the global module, this documents a global rule."
+    Specifies the documentation for a rule in the current module.
+    If called in the global module, this documents a global rule.
     
     <argument>name
-        "The name of the rule."
+        The name of the rule.
     <argument>docs
-        "The documentation for the rule."
+        The documentation for the rule.
     ;
 
 document-rule document-variable :
-    "Specifies the documentation for a variable in the current module."
-    "If called in the global module, the global variable is documented."
+    Specifies the documentation for a variable in the current module.
+    If called in the global module, the global variable is documented.
     
     <argument>name
-        "The name of the variable."
+        The name of the variable.
     <argument>docs
-        "The documentation for the variable."
+        The documentation for the variable.
     ;
 
 document-rule do-help :
-    "Handle --help options, displaying or generating instructions and"
-    "documentation. If this does generate any help it exits after doing"
-    "so, to prevent any build actions from occuring."
+    Handle --help options, displaying or generating instructions and
+    documentation. If this does generate any help it exits after doing
+    so, to prevent any build actions from occuring.
     ;
 rule do-help ( )
 {
@@ -177,7 +177,7 @@ rule do-help ( )
 }
 
 document-rule print-help-any :
-    "Generates a general description of the documentation and help system."
+    Generates a general description of the documentation and help system.
     ;
 rule print-help-any ( )
 {
@@ -195,20 +195,20 @@ rule print-help-any ( )
 }
 
 document-variable not-modules :
-    "List of possible modules, but which really aren't."
+    List of possible modules, but which really aren't.
     
     <default-value>
-        "boost-build"
+        boost-build
     ;
 not-modules = boost-build ;
 
 document-rule print-help-modules :
-    "Generate documentation for a set modules. For modules that are given"
-    "basic information about the module is generated. If no modules are given"
-    "it attempts to list all known modules, and a brief description of each."
+    Generate documentation for a set modules. For modules that are given
+    basic information about the module is generated. If no modules are given
+    it attempts to list all known modules, and a brief description of each.
     
     <argument>modules
-        "The modules to generate docs for. Can be none."
+        Optional list of modules to generate docs for.
     ;
 rule print-help-modules ( modules * )
 {
@@ -281,13 +281,13 @@ rule print-help-modules ( modules * )
 }
 
 document-rule extract-next-doc-item :
-    "Extract the next document item from the given variable. The variable"
-    "is changed to no longer contain that next item which is returned as"
-    "the result. The next item is considered anything up to, but not"
-    "including, the next gristed element."
+    Extract the next document item from the given variable. The variable
+    is changed to no longer contain that next item which is returned as
+    the result. The next item is considered anything up to, but not
+    including, the next gristed element.
     
     <argument>var
-        "The name of the variable to extract from."
+        The name of the variable to extract from.
     ;
 rule extract-next-doc-item ( var )
 {
@@ -302,13 +302,13 @@ rule extract-next-doc-item ( var )
 }
 
 document-rule print-help-rules :
-    "Generate documentation for a set of rules, either in a module or global."
-    "If no module is given, the given rules of the global scope are documented."
+    Generate documentation for a set of rules, either in a module or global.
+    If no module is given, the given rules of the global scope are documented.
     
     <argument>module
-        "The module of the rules. Optional."
+        Optional module of the rules.
     <argument>name
-        "The rules to describe. Optional."
+        Optional list of rules to describe.
     ;
 rule print-help-rules ( module ? : name * )
 {
@@ -386,13 +386,13 @@ rule print-help-rules ( module ? : name * )
 }
 
 document-rule print-help-variables :
-    "Generate documentation for a set of variables, either in a module or global."
-    "If no module is given, the given variables of the global scope are documented."
+    Generate documentation for a set of variables, either in a module or global.
+    If no module is given, the given variables of the global scope are documented.
     
     <argument>module
-        "The module of the variables. Optional."
+        Optional module of the variables.
     <argument>name
-        "The variables to describe. Optional."
+        Optional list of variables to describe.
     ;
 rule print-help-variables ( module ? : name * )
 {
@@ -470,15 +470,15 @@ rule print-help-variables ( module ? : name * )
 }
 
 document-rule print-section :
-    "Generate a section with a description. The type of output can be"
-    "controlled by the value of the 'output-type' variable. If not set"
-    "it defaults to 'console' indicating immediate display to the console."
-    "Other possible values are: 'html-file'."
+    Generate a section with a description. The type of output can be
+    controlled by the value of the 'output-type' variable. If not set
+    it defaults to 'console' indicating immediate display to the console.
+    Other possible values are: 'html-file'.
     
     <argument>name
-        "The name of the section."
+        The name of the section.
     <argument>description
-        "A number of description lines."
+        A number of description lines.
     ;
 rule print-section ( name description * )
 {
@@ -497,10 +497,10 @@ rule print-section ( name description * )
 }
 
 document-rule print-list-start :
-    "Generate the start of a list of items. The type of output can be"
-    "controlled by the value of the 'output-type' variable. If not set"
-    "it defaults to 'console' indicating immediate display to the console."
-    "Other possible values are: 'html-file'."
+    Generate the start of a list of items. The type of output can be
+    controlled by the value of the 'output-type' variable. If not set
+    it defaults to 'console' indicating immediate display to the console.
+    Other possible values are: 'html-file'.
     ;
 rule print-list-start ( )
 {
@@ -512,13 +512,13 @@ rule print-list-start ( )
 }
 
 document-rule print-list-item :
-    "Generate an item in a list. The type of output can be"
-    "controlled by the value of the 'output-type' variable. If not set"
-    "it defaults to 'console' indicating immediate display to the console."
-    "Other possible values are: 'html-file'."
+    Generate an item in a list. The type of output can be
+    controlled by the value of the 'output-type' variable. If not set
+    it defaults to 'console' indicating immediate display to the console.
+    Other possible values are: 'html-file'.
     
     <argument>item
-        "The item to list."
+        The item to list.
     ;
 rule print-list-item ( item + )
 {
@@ -531,10 +531,10 @@ rule print-list-item ( item + )
 }
 
 document-rule print-list-end :
-    "Generate the end of a list of items. The type of output can be"
-    "controlled by the value of the 'output-type' variable. If not set"
-    "it defaults to 'console' indicating immediate display to the console."
-    "Other possible values are: 'html-file'."
+    Generate the end of a list of items. The type of output can be
+    controlled by the value of the 'output-type' variable. If not set
+    it defaults to 'console' indicating immediate display to the console.
+    Other possible values are: 'html-file'.
     ;
 rule print-list-end ( )
 {
@@ -547,12 +547,12 @@ rule print-list-end ( )
 }
 
 document-rule echo-with-wordwrap :
-    "Echo to console the given text word-wrapping to a 78 character margin."
+    Echo to console the given text word-wrapping to a 78 character margin.
     
     <argument>text
-        "The text to echo."
+        The text to echo.
     <argument>indent
-        "An optional indentation applied to wrapped lines."
+        An optional indentation applied to wrapped lines.
         ;
 rule echo-with-wordwrap ( text + : indent ? )
 {
