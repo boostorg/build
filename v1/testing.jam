@@ -29,7 +29,10 @@ local rule get-library-name ( path )
     if $(match1) { return $(match1[0]) ; }
     else if $(match2) { return $(match2[0]) ; }
     else if $(match3) { return "" ; }
-    else { EXIT Cannot extract library name from path $(path) ; }
+    else if --dump-tests in $(ARGV)
+    { 
+        EXIT Cannot extract library name from path $(path) ; 
+    }
 }
 
 # Declares a test target. If name is not supplied, it is taken from the name of
@@ -67,7 +70,7 @@ rule boost-test ( sources + : target-type : requirements * : test-name ? : defau
                 .all-boost-tests += $(result) ;
             }
             
-            if ( --dump-tests in $(ARGV) ) 
+            if --dump-tests in $(ARGV)
             {
                 dump-test $(library) : $(result) : $(requirements) ;
             }
