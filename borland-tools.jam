@@ -92,7 +92,7 @@ if $(NT)
 actions borland-Link-action bind NEEDLIBS
 {
     set PATH=$(BCC_TOOL_PATH);%PATH%
-    $(BCC_TOOL_PATH)bcc32 -v -q $(LINKFLAGS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)" $(FINDLIBS:S=.lib)
+    "$(BCC_TOOL_PATH)bcc32" -v -q $(LINKFLAGS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)" $(FINDLIBS:S=.lib)
 }
 }
 else
@@ -100,7 +100,7 @@ else
 actions borland-Link-action bind NEEDLIBS
 {
     export PATH=$(BCC_TOOL_PATH):$PATH
-    $(BCC_TOOL_PATH)bcc32 -v -q $(LINKFLAGS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)" $(FINDLIBS:S=.lib)
+    "$(BCC_TOOL_PATH)bcc32" -v -q $(LINKFLAGS) -L"$(LIBPATH)" -L"$(STDLIBPATH)" -e"$(<[1])" @"$(>)" $(FINDLIBS:S=.lib)
 }
 }
 
@@ -118,7 +118,7 @@ rule Cc-action
 
 actions borland-Cc-action
 {
-    $(BCC_TOOL_PATH)bcc32 -q -c -w -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(BCC_TOOL_PATH)bcc32" -q -c -w -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -129,7 +129,7 @@ rule C++-action
 
 actions borland-C++-action
 {
-    $(BCC_TOOL_PATH)bcc32 -q -c -P -w -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(BCC_TOOL_PATH)bcc32" -q -c -P -w -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 #### Archive ####
@@ -140,7 +140,7 @@ rule Archive-action
 
 actions updated together piecemeal borland-Archive-action
 {
-    $(BCC_TOOL_PATH)tlib /P64 /u /a /C /$(ARFLAGS) "$(<)" +-"$(>)"
+    "$(BCC_TOOL_PATH)tlib" /P64 /u /a /C /$(ARFLAGS) "$(<)" +-"$(>)"
 }
 
 
