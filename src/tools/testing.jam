@@ -16,17 +16,17 @@
 #                     sources was successfull. Also leaves behing .output file
 #                     with the output from program run.
 #  'run-fail'      -- same as above, but .test file is created if running fails.
-#  'unit-test'     -- same as 'run', except that output is not stored.
 #
-#  In all cases, except for 'unit-test', presense of .test file is an incication that
+#  In all cases, presense of .test file is an incication that
 #  the test passed. For more convenient reporting, you might want to use C++ Boost
 #  regression testing utilities, see
 #  http://www.boost.org/more/regression.html
+#
+#  For historical reason, a 'unit-test' rule is available which
+#  has the same syntax as 'exe' and behaves just like 'run'.
 
 # Things to do:
 #  - Teach compiler_status handle Jamfile.v2.
-#  - Grab RUN_PATH logic from V1 testing.jam
-#  - Implement all the parameters to 'run': args/input_files
 # Notes:
 #  - <no-warn> is not implemented, since in Como-specific, and it's not clear how
 #     to implement it
@@ -65,7 +65,6 @@ type.register COMPILE_FAIL : : TEST : main ;
 type.register RUN_OUTPUT : run : : main ;
 type.register RUN : : TEST : main ;
 type.register RUN_FAIL : : TEST : main ;
-type.register UNIT_TEST : passed : TEST : main ;
 
 # Declare the rules which create main targets. 
 # While the 'type' module already creates rules with the same names for us,
@@ -198,10 +197,6 @@ generators.register-standard testing.expect-failure : RUN_OUTPUT : RUN_FAIL ;
 # Generator which runs an EXE and captures output.
 generators.register-standard testing.capture-output : EXE : RUN_OUTPUT ;
 
-# Generator which creates target if sources runs successfully.
-# Differers from RUN in that run output is not captured.
-generators.register-standard testing.unit-test : EXE : UNIT_TEST ;
-
 # The action rules called by generators.
 
 # Causes the 'target' to exist after bjam invocation if and only if all the 
@@ -255,16 +250,9 @@ actions (failed-as-expected)
     echo failed as expected > $(<)
 }
 
-MAKE_FILE = [ common.file-creation-command ] ;
-
-toolset.flags testing.unit-test LAUNCHER <testing.launcher> ;
-actions unit-test 
-{
-    $(LAUNCHER) $(>) && $(MAKE_FILE) $(<)
-}
-
 toolset.flags testing.capture-output ARG <testing.arg> ;
 toolset.flags testing.capture-output INPUT_FILES <testing.input-file> ;
+toolset.flags testing.capture-output LAUNCHER <testing.launcher> ;
 rule capture-output ( target : source : properties * )
 {
     output-file on $(target) = $(target:S=.output) ;
@@ -332,9 +320,17 @@ if --verbose-test in $(ARGV)
 actions capture-output bind INPUT_FILES output-file
 {
     $(SET_DLL_PATHS)
-    $(>)  $(ARG) "$(INPUT_FILES)" > $(output-file) 2>&1 && $(CP) $(output-file) $(<) $(VERBOSE_CAT)$(<)$(RUN_OUTPUT_FOOTER) || ( $(RUN_OUTPUT_HEADER) $(CATENATE) $(output-file) $(RUN_OUTPUT_FOOTER) && exit 1 )
+    $(LAUNCHER) $(>)  $(ARG) "$(INPUT_FILES)" > $(output-file) 2>&1 && $(CP) $(output-file) $(<) $(VERBOSE_CAT)$(<)$(RUN_OUTPUT_FOOTER) || ( $(RUN_OUTPUT_HEADER) $(CATENATE) $(output-file) $(RUN_OUTPUT_FOOTER) && exit 1 )
 }
 
+rule unit-test ( name : sources * : requirements * : default-build *
+                 : usage-requirements * )
+{
+    return [ run $(sources) : : : $(requirements) : $(name) 
+             : $(default-build) ] ;
+}        
+
 IMPORT $(__name__) : compile compile-fail test-suite run run-fail 
-  : : compile compile-fail test-suite run run-fail  ;
+   unit-test
+  : : compile compile-fail test-suite run run-fail unit-test ;
 
