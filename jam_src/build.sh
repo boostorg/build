@@ -80,6 +80,9 @@ Guess_Toolset ()
     elif test_path bc++ ; then BOOST_JAM_TOOLSET=kylix
     elif test_path aCC ; then BOOST_JAM_TOOLSET=acc
     elif test_uname HP-UX ; then BOOST_JAM_TOOLSET=acc
+    elif test -r /opt/SUNWspro/bin/CC ; then
+        BOOST_JAM_TOOLSET=sunpro
+        BOOST_JAM_TOOLSET_ROOT=/opt/SUNWspro/
     # Test for "cc" as the default fallback.
     elif test_path $CC ; then BOOST_JAM_TOOLSET=cc
     elif test_path cc ; then
@@ -112,7 +115,11 @@ case $BOOST_JAM_TOOLSET in
     ;;
     
     intel-linux)
-    if test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
+    if test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
+        BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler70/ia32/
+    elif test -r /opt/intel/compiler60/ia32/bin/iccvars.sh ; then
+        BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler60/ia32/
+    elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
         BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
     fi
     if test -r ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh ; then
@@ -142,6 +149,12 @@ case $BOOST_JAM_TOOLSET in
     ;;
     
     sunpro)
+    if test -r /opt/SUNWspro/bin/CC ; then
+        BOOST_JAM_TOOLSET_ROOT=/opt/SUNWspro/
+    fi
+    if test -r ${BOOST_JAM_TOOLSET_ROOT}bin/CC ; then
+        export PATH=${BOOST_JAM_TOOLSET_ROOT}bin:${PATH}
+    fi
     BOOST_JAM_CC=CC
     ;;
     
