@@ -191,7 +191,8 @@ if $(NT)
     YACCFILES       ?= y.tab ;
     YACC_OUTPUT     ?= --output= ;
     LEX_OUTPUT      ?= -o ;
-    # YACC_FIX_LINES = sed '/simple/d ; # fix up #line directives for metrowerks
+    
+    DLL_AS_LIB ?= true ;
 }
 else if $(OS2)
 {
