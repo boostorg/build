@@ -67,12 +67,12 @@ rule MkDir
 
 actions MkDir1
 {
-    mkdir $(<)
+    mkdir "$(<)"
 }
 
 actions piecemeal together existing Clean
 {
-    $(RM) $(>)
+    $(RM) "$(>)"
 }
 
 rule copy 
@@ -82,7 +82,7 @@ rule copy
 
 actions copy
 {
-    $(CP) $(>) $(<)
+    $(CP) "$(>)" "$(<)"
 }
 
 
