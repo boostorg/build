@@ -9,49 +9,56 @@
     <title>Hello, world</title>
 
     <para>The simplest project that Boost.Build can construct is
-    stored in example/hello directory. The targets are declared in
-    a file called <filename>Jamfile</filename>, which contains the
-    following:
+    stored in <filename>example/hello/</filename> directory. The
+    project is described by a file
+    called <filename>Jamfile</filename> that contains:
 
 <programlisting>
 exe hello : hello.cpp ;
 </programlisting>
 
       Even with this simple setup, you can do some interesting
-      things. First of all, running "bjam" would build binary "hello"
-      from hello.cpp, in debug version. After that, you can run
+      things. First of all, just invoking <command>bjam</command> will
+      build the debug variant of the <command>hello</command>
+      executable by compiling and
+      linking <filename>hello.cpp</filename>.  Now, to build the
+      release variant of <command>hello</command>, invoke
 
 <screen>
 bjam release
 </screen>
 
-      which would create release version of the 'hello' binary.
-      Note that debug and release version would be created in different
-      directories, so if you want to switch from debug to release
-      version and back, no recompilation is needed. Let's extend the
-      example by adding another line to Jamfile:
+      Note that debug and release variants are created in different
+      directories, so you can switch between variants or even build
+      multiple variants at once, without any unneccessary
+      recompilation. Let's extend the example by adding another line
+      to our project's <filename>Jamfile</filename>:
 
 <programlisting>
 exe hello2 : hello.cpp ;
 </programlisting>
 
-      You can now rebuild both debug and release versions:
+      Now we can build both the debug and release variants of our
+      project:
 
 <screen>
 bjam debug release
 </screen>
 
-      You'll see that two versions of "hello2" binary are linked.
-      Of course, hello.cpp won't be recompiled. Now you decide to remove
-      all build products. You do that with the following command
+      Note that two variants of <command>hello2</command> are linked.
+      Since we have already built both variants
+      of <command>hello</command>, hello.cpp won't be recompiled;
+      instead the existing object files will just be linked into the
+      corresponding variants of <command>hello2</command>. Now 
+      let's remove all the built products:
 
 <screen>
 bjam --clean debug release
 </screen>
 
-      It's also possible to create or clean only specific targets.
-      Both following commands are legal and create or clean only files
-      that belonging the the named binary:
+      It's also possible to build or clean specific targets.  The
+      following two commands, respectively, build or clean only the
+      debug version of <command>hello2</command>.
 
 <screen>
 bjam hello2
@@ -63,67 +70,112 @@ bjam --clean hello2
     <section id="bbv2.tutorial.properties">
       <title>Properties</title>
 
-  <para>Boost.Build attempts to allow building different variants of
-  projects, e.g. for debugging and release, or in single and
-  multithreaded mode. In order to stay portable, it uses the
-  concept of <emphasis>features</emphasis>, which is abstract aspect of
-  build configuration. <emphasis>Property</emphasis> is just a (feature,
-  value) pair. For example, there's a feature "debug-symbols", which can
-  have a value of "on" or "off". When users asks to build project is a
-  particual value, Boost.Build will automatically find the
-  appropriate flags to the used compiler.</para>
+  <para>
+    To portably represent aspects of target configuration such as
+    debug and release variants, or single- and multi-threaded
+    builds, Boost.Build uses <firstterm>features</firstterm> with
+    associated <firstterm>values</firstterm>.  For
+    example, the "debug-symbols" feature can have a value of "on" or
+    "off".  A <firstterm>property</firstterm> is just a (feature,
+    value) pair.  When a user initiates a build, Boost.Build
+    automatically translates the requested properties into appropriate
+    command-line flags for invoking toolset components like compilers
+    and linkers.</para>
 
-  <para>The "release" and "debug" in bjam invocation that we've seen
-  are just are short form of specifying values of feature
-  "variant". There is a lot of builtin features, and it's possible
-  to write something like:</para>
+  <para>There are many built-in features that can be combined to
+  produce arbitrary build configurations.  The following command
+  builds the project's &quot;release&quot; variant with inlining
+  disabled and debug symbols enabled:
 
 <screen>
 bjam release inlining=off debug-symbols=on
 </screen>
+</para>
 
-      <para>
-      The first command line element specified the value of feature
-      "variant". The feature is very common and is therefore special
-      &#x2014; it's possible to specify only value. Another feature,
-      "inlining" is not special, and you should use
+<para>Properties on the command-line are specified with the syntax:
 
 <screen>
-feature-name=feature-value
+<replaceable>feature-name</replaceable>=<replaceable>feature-value</replaceable>
 </screen>
+</para>
 
-      syntax for it. Complete description of features can be found
-      <link linkend="bbv2.reference.features">here</link>. The set of
-      properties specified in the command line constitute
-      <emphasis>build request</emphasis> &#x2014; the desired properties
-      for requested targets, or for the project in the current
-      directory. The actual set of properties used for building is
-      often different. For example, when compiling a program you need
-      some include paths. It's not reasonable to ask the user to specify
-      those paths with each bjam invocation, so must be specified in
-      Jamfile and added to the build request. For another example,
-      certain application can only be linked in multithreaded mode. To
-      support such situations, every target is allowed to specify
-      <emphasis>requirements</emphasis> -- properties that are required
-      to its building. Consider this example:
+<para>The "release" and "debug" that we've seen
+  in <command>bjam</command> invocations are just a shorthand way to
+  specify values of the "variant" feature.  For example, the command
+  above could also have been written this way:
+
+<screen>
+bjam variant=release inlining=off debug-symbols=on
+</screen>
+</para>
+
+<para>  &quot;variant&quot; is so commonly-used that it has been given
+  special status as an <firstterm>implicit</firstterm> feature
+  &#x2014; Boost.Build will deduce the its identity just from the name
+  of one of its values.  
+</para>
+
+<para>
+      A complete description of features can be found
+      <link linkend="bbv2.reference.features">here</link>. 
+</para>
+
+
+    <section id="bbv2.tutorial.properties.requirements">
+      <title>Build Requests and Target Requirements</title>
+
+<para>      
+      The set of properties specified in the command line constitute a
+      <firstterm>build request</firstterm> &#x2014; a description of
+      the desired properties for building the requested targets (or,
+      if no targets were explicitly requested, the project in the
+      current directory).  The <emphasis>actual</emphasis> properties
+      used for building targets is typically a combination of the
+      build request and properties derived from the
+      project's <filename>Jamfile</filename>s.  For example, the
+      locations of <code>#include</code>d header files are normally
+      not specified on the command-line, but described
+      in <filename>Jamfile</filename>s as <firstterm>target
+      requirements</firstterm> and automatically combined with the
+      build request for those targets.  Multithread-enabled
+      compilation is another example of a typical target requirement.
+      The <filename>Jamfile</filename> fragment below illustrates how
+      these requirements might be specified.
+</para>
 
 <programlisting>
 exe hello 
     : hello.cpp
     : &lt;include&gt;/home/ghost/Work/boost &lt;threading&gt;multi
+    ;
 </programlisting>
 
-    In this case, when hello is build, the two specified properties will
-    always be present. This leads to a question: what if user explictly
-    requested single-threading. The answer is that requirement can
-    affect build properties only to a certain degree: the requested and
-    actual properties must be link-compatible. See <xref linkend=
-    "bbv2.reference.variants.compat"/> below. If they are not link
-    compatible, the bulding of the target is skipped. Previously, we've
-    added "hello2" target. Seems like we have to specify the same
-    requirements for it, which results in duplication. But there's a
-    better way. Each project (i.e. each Jamfile), can specify a set of
-    attributes, including requirements:
+<para>    When <filename>hello</filename> is built, the two requirements
+    specified above will normally always be present.  If the build
+    request given on the <command>bjam</command> command-line
+    explictly contradicts a target's requirements, the command-line
+    usually overrides (or, in the case of &quot;free&quot; feautures
+    like <code>&lt;include&gt;</code>, augments) the target
+    requirements.  However, when a contradiction of a target's
+    requrements involves certain
+    <firstterm>link-incompatible</firstterm> features, the target will
+    be skipped.  See <xref linkend=
+    "bbv2.reference.variants.compat"/> for more information.
+</para>
+
+    </section>
+    <section id="bbv2.tutorial.properties.project_attributes">
+      <title>Project Attributes</title>
+
+<para>
+    If we want the same requirements for our other
+    target, <filename>hello2</filename>, we could simply duplicate
+    them.  However, as projects grow, that approach leads to a great
+    deal of repeated boilerplate in Jamfiles.
+    
+    Fortunately, there's a better way. Each project (i.e. each
+    <filename>Jamfile</filename>), can specify a set of attributes,
+    including requirements:
 
 <programlisting>
 project 
@@ -134,9 +186,10 @@ exe hello : hello.cpp ;
 exe hello2 : hello.cpp ;
 </programlisting>
 
-      The effect would be as if we specified this requirement for
-      both "hello" and "hello2".
+      The effect would be as if we specified the same requirement for
+      both <command>hello</command> and <command>hello2</command>.
       </para>
+    </section>
     </section>
 
     <section id="bbv2.tutorial.hierarchy">

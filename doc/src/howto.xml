@@ -26,8 +26,11 @@
     </para>
 
     <para>
-      Finally, if nothing applies to you, write to our mailing list,
-      telling what information you'd like to know.
+      If you have questions, please post them to our <ulink
+      url="../../../../more/mailing_lists.htm#jamboost">mailing
+      list</ulink>, and be sure to indicate in the subject line that
+      you're asking about Boost.Build <emphasis
+      role="bold">V2</emphasis>.
     </para>
 
   </chapter>
