@@ -25,10 +25,11 @@ feature stlport-cstd-namespace : std global ;
 
 CURR_TOOLSET = $(gCURRENT_TOOLSET) ;
 
-STLPORT_VERSION = 4.5.3 ;
-STLPORT_VERSIONS = 4.5 ;
-feature stlport-version : $(STLPORT_VERSION) $(STLPORT_VERSIONS) ;
-flags $(CURR_TOOLSET) STLPORT_VERSION <stlport-version> ;
+# STLport versions
+STLPORT_VERSION ?= 4.6 ;
+STLPORT_VERSIONS ?= 4.6 4.5.3 4.5 ;
+feature stlport-version : [ unique $(STLPORT_VERSION) $(STLPORT_VERSIONS) ] ;
+flags $(CURR_TOOLSET) STLPORT_VERSION_RELEVANT_FEATURE <stlport-version> ;
 
 # singleton variables...
 set-as-singleton STLPORT_INCLUDE_DIRECTORY STLPORT_LIB_DIRECTORY STLPORT_PATH STLPORT_ROOT ;
@@ -44,6 +45,7 @@ set-as-singleton STLPORT_INCLUDE_DIRECTORY STLPORT_LIB_DIRECTORY STLPORT_PATH ST
 rule get-stlport-root
 {
     local version = [ get-values <stlport-version> : $(gBUILD_PROPERTIES) ] ;
+    version ?= $(STLPORT_VERSION) ;
 
     local path ;
     path ?= $(STLPORT_$(version)_PATH) ;
@@ -63,11 +65,11 @@ rule get-stlport-root
         ECHO "        found, in case there is no central location appropriate for STLPORT_PATH, above, or a" ;
         ECHO  "        particular version's installation is not located in the usual place." ;
         ECHO ;
-        ECHO STLPORT_VERSION - The version of STLport in use by default. Defaults to \"4.5.3\". Other ;
+        ECHO STLPORT_VERSION - The version of STLport in use by default. Defaults to \"4.6\". Other ;
         ECHO "       values can be selected in parallel setting the build property <stlport-version> to" ;
         ECHO "       values from the list of $(dollar)(STLPORT_VERSIONS)" ;
         ECHO ;
-        ECHO STLPORT_VERSIONS - Alternate versions of STLport available on this machine. Defaults to \"4.5\". ;
+        ECHO STLPORT_VERSIONS - Alternate versions of STLport available on this machine. Defaults to \"4.6 4.5.3 4.5\". ;
         ECHO ;
         ECHO "Note that STLport iostreams are /not/ in use by default. To enable them, you must place" ;
         ECHO "        <stlport-iostream>on in your BUILD variable or in target requirements." ;
