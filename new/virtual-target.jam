@@ -569,6 +569,17 @@ local rule subvariant-dg ( main-target : properties * : virtual-targets * )
         for local d in [ $(t).dependencies ] 
         {
             self.other-dg += [ $(d).dg ] ;
+        }
+        local a = [ $(t).action ] ;
+        if $(a)
+        {            
+            for local s in [ $(a).sources ]
+            {           
+                if [ $(s).root ] 
+                {                
+                    self.other-dg += [ $(s).dg ] ;
+                }            
+            }        
         }        
     }
     self.other-dg = [ sequence.unique $(self.other-dg) ] ;

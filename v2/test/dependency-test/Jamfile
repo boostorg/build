@@ -19,5 +19,15 @@ exe c
     : c.cpp 
     : <define>FOO <dependency>a
     ;    
+  
+# Try the same as above, only when other target is specified
+# not as dependency, but as source
+ 
+lib d 
+    : y.foo 
+    ;
     
-#DEPENDS tra-ra : <./gcc/debug/shared-false/threading-single>x.h ;
+exe e
+    : e.cpp d
+    : <define>FOO 
+    ;
