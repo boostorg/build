@@ -1,4 +1,0 @@
-rule echo_args ( a b ? c ? : d + : e * )
-{
-   ECHO a= $(a) b= $(b) c= $(c) ":" d= $(d) ":" e= $(e) ;
-}

@@ -1,21 +1,23 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<head>
 
     <meta name="generator" content="HTML Tidy, see www.w3.org">
-    <meta name="generator" content="Microsoft FrontPage 4.0">
     <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
 
     <title>Boost Build System</title>
+</head>
 
-    <img src="../../c++boost.gif" alt="c++boost.gif (8819 bytes)" align=
-    "center" width="277" height="86"> 
+<body bgcolor="#FFFFFF" text="#000000">
+
+    <img src="../../c++boost.gif" alt="c++boost.gif (8819 bytes)" align= "center" width="277" height="86">  
 
     <h1>Boost Build System</h1>
 
     <h2><a name="synopsis">Synopsis</a></h2>
 
     <p>Boost.Build is a system for large project software construction built on
-    <a href="http://freetype.sourceforge.net/jam/index.html">FTJam</a>, an
-    open-source make replacement<a href="#1">[1]</a>. Key features are:
+        <a href="http://freetype.sourceforge.net/jam/index.html">FTJam</a>,
+        an open-source make replacement<a href="#1">[1]</a>. Key features are:
 
     <ul>
       <li>A simple target description language
@@ -228,10 +230,7 @@ jam -f<i>allyourbase-path</i> -sTOOLS=gcc my_target
         <tt>my_target</tt>with GCC
 
       <tr>
-        <td>
-<pre>
-jam -f<i>allyourbase-path</i> -sTOOLS="msvc gcc"
-</pre>
+        <td><pre>jam -f<i>allyourbase-path</i> -sTOOLS=&quot;msvc gcc&quot;</pre> 
 
         <td>default-build <tt>all</tt> with msvc and gcc
 
@@ -256,41 +255,33 @@ jam -f<i>allyourbase-path</i> -sBUILD=release
          
 
       <tr>
-        <td>
-<pre>
-jam -f<i>allyourbase-path</i> -sBUILD="debug release"
-</pre>
+        <td><pre>jam -f<i>allyourbase-path</i> -sBUILD=&quot;debug release&quot;</pre> 
 
         <td>debug and release build <tt>all</tt>.
     </table>
 
     <h3><a name="setting_variables">Setting Jam Variables</a></h3>
 
-    <p>The "<tt>-s</tt>" options in the command lines above are passing
-    variable settings to the build system. There are actually three ways to do
-    that:
+      <p>The &quot;<tt>-s</tt>&quot; options in the command lines above are
+      passing variable settings to the build system. There are actually three ways to do
+      that:
 
-    <ul>
-      <li>
-        Jam picks up variable settings from your environment by default, so you
-        can set them there: 
-
-        <blockquote>
-<pre>
-&gt; <a href="#build">BUILD</a>="debug release"  <i># assuming Unix</i>
+      <ul>
+      <li>Jam picks up variable settings from your environment by default, so
+      you can set them there:
+<blockquote><pre>
+&gt; <a href="#build">BUILD</a>=&quot;debug release&quot;  <i># assuming Unix</i>
 &gt; export <a href="#build">BUILD</a>
 &gt; jam ...
-</pre>
-        </blockquote>
-        This approach can be OK for quick-and-dirty tests, but environment
-        variable settings tend to be unstable and non-uniform across users and
-        machines, so it's best not to rely on the environment much.
-
-      <li>Explicitly on the command-line, with the "<tt>-s</tt>" option.
-
-      <li>Directly in Jam code. A project's <a href="#jamrules">Jamrules</a>
-      file is a convenient place to make global settings.
-    </ul>
+</pre></blockquote>
+        This approach can be OK for quick-and-dirty tests, but environment variable
+      settings tend to be unstable and non-uniform across users and machines, so
+      it's best not to rely on the environment much.
+      <li>Explicitly on the command-line, with the &quot;<tt>-s</tt>&quot;
+      option.
+      <li>Directly in Jam code. A project's <a href="#jamrules">Jamrules</a> file is a convenient place
+      to make global settings.
+      </ul>
 
     <h3><a name="example_jamfile">An Example Jamfile</a></h3>
     Here is an example of a simple subproject Jamfile. In this example, it is
@@ -885,11 +876,11 @@ exe foo : foo.cpp src/bar.cpp &lt;lib&gt;../bazlib/baz
 
     <h3><a name="feature_description">Feature Descriptions</a></h3>
 
-    <p>Features are described by stating the feature type (simple features are
-    specified with "<tt>feature</tt>"), followed by the feature name. An
-    optional second argument can be used to list the permissible values of the
-    feature. Examples can be found in <a href="features.jam">features.jam</a>.
-
+    <p> Features are described by stating the feature type (simple features are
+    specified with &quot;<tt>feature</tt>&quot;), followed by the feature
+    name. An optional second argument can be used to list the permissible values
+    of the feature. Examples can be found in <a href="features.jam">features.jam</a>.
+    
     <h3><a name="variant_description">Variant Descriptions</a></h3>
 
     <p>Variants are described with the following syntax:
@@ -1717,30 +1708,30 @@ ECHO [ SUBST xyz (.)(.)(.) [$1] ($2) {$3} ] ;
     <p>Global variables used in the build system fall into three categories:
 
     <ul>
-      <li>Global variables intended to be set by the user on the command-line
-      or in the environment use <tt>ALL_UPPER_CASE</tt> names.
+    <li> Global variables intended to
+    be set by the user on the command-line or in the environment use
+    <tt>ALL_UPPER_CASE</tt> names.
 
-      <li>Internal global variables begin with a lower-case "g" and continue in
-      upper-case: <tt>gSOME_GLOBAL</tt>
+    <li> Internal global variables begin with a lower-case &quot;g&quot; and
+    continue in upper-case: <tt>gSOME_GLOBAL</tt>
 
-      <li>
-        Global variables of the form:
-        <tt>gBASE_NAME(</tt><i>arguments</i><tt>)</tt>, where <i>arguments</i>
-        is a comma-separated argument list, are used internally to achieve a
-        kind of indirection by concatenating variable values: 
-
-        <blockquote>
-<pre>
+    <li> Global variables of the form:
+    <tt>gBASE_NAME(</tt><i>arguments</i><tt>)</tt>, where <i>arguments</i> is a
+    comma-separated argument list, are used internally to achieve a kind of
+    indirection by concatenating variable values:
+    
+<blockquote><pre>
     ECHO $(gFUBAR($(x),$(y))) ;
 </pre>
         </blockquote>
     </ul>
 
-    <p>Please note that the build system commonly takes advantage of <a href=
-    "http://public.perforce.com/public/jam/src/Jam.html#bindingmods">Jam's
-    Dynamic Scoping feature</a> (see the <tt>local</tt> command in the "Flow of
-    Control" section below the link target) to temporarily "change" a global
-    variable by declaring a <tt>local</tt> of the same name.
+    <p>Please note that the build system commonly takes advantage of <a
+    href="http://public.perforce.com/public/jam/src/Jam.html#bindingmods">Jam's
+    Dynamic Scoping feature</a> (see the <tt>local</tt> command in the
+    &quot;Flow of Control&quot; section below the link target) to temporarily
+    &quot;change&quot; a global variable by declaring a <tt>local</tt> of the
+    same name.
 
     <h3>Variables Associated with SubProject Identity</h3>
 
@@ -1846,5 +1837,5 @@ ECHO [ SUBST xyz (.)(.)(.) [$1] ($2) {$3} ] ;
                         -->29 July, 2001 
     <!--webbot bot="Timestamp" endspan i-checksum="21080"
                         -->
-
+</body>
 

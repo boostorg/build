@@ -39,6 +39,8 @@ flags intel-win32 CFLAGS <runtime-build>debug/<runtime-link>static/<threading>si
 flags intel-win32 CFLAGS <runtime-build>release/<runtime-link>static/<threading>multi : /MT ;
 flags intel-win32 CFLAGS <runtime-build>debug/<runtime-link>static/<threading>multi : /MTd ;
 
+flags intel-win32 CFLAGS <cflags> ;
+flags intel-win32 C++FLAGS <cxxflags> ;
 flags intel-win32 DEFINES <define> ;
 flags intel-win32 UNDEFS <undef> ;
 flags intel-win32 HDRS <include> ;
