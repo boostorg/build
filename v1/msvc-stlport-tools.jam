@@ -68,7 +68,7 @@ feature stlport-cstd-namespace : std global ;
 rule get-stlport-root
 {
     local version ;
-    version ?= [ get-values <stlport-version> : $(gBUILD_PROPERTIES) ] ;
+    version = [ get-values <stlport-version> : $(gBUILD_PROPERTIES) ] ;
     version ?= $(STLPORT_VERSION) ;
 
     local path ;
@@ -111,7 +111,7 @@ flags msvc-stlport VC_STDLIB_PATH <stlport-iostream>on : [ join [ get-stlport-ro
 flags msvc-stlport STDLIBPATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)lib ] ;
 
 
-flags msvc-stlport STLPORT_VERSION_FLAG <stlport-version> :  ;
+flags msvc-stlport THIS_FLAG_IS_UNUSED_BUT_ENSURES_TAG_ISNT_IGNORED <stlport-version> :  ;
 
 # special flags for STLport 4.0
 {
