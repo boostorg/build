@@ -58,6 +58,20 @@ import numbers : range ;
 import utility : str equal ;
 import set ;
 
+if "--debug-generators" in [ modules.peek : ARGV ] 
+{    
+    .debug = true ;
+}
+
+# Outputs a debug message if generators debugging is on.
+rule dout 
+{
+    if $(.debug)
+    {
+        ECHO $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;        
+    }    
+}
+
 
 rule indent ( )
 {
@@ -135,8 +149,8 @@ rule generator ( id : source-types + : target-types + : requirements *
     # list of generated targets.
     rule run ( project name ? : properties * : sources + : multiple ? ) 
     {
-        ECHO [ indent ] "  generator" $(self.id) ;
-        ECHO [ indent ] "  multiple:" $(mutliple) ;
+        generators.dout [ indent ] "  generator" $(self.id) ;
+        generators.dout [ indent ] "  multiple:" $(mutliple) ;
 
         # Targets that this generator will consume directly.
         local consumed ;
@@ -159,7 +173,7 @@ rule generator ( id : source-types + : target-types + : requirements *
         {
             local type = [ $(sources[1]).type ] ;
             local all-types = [ feature.expand-composites <target-type>$(type) ] ;
-            ECHO [ indent ] *** all types $(all-types) ;
+            generators.dout [ indent ] *** all types $(all-types) ;
             if [ set.intersection $(all-types:G=) : $(st) ]
             {
                 consumed += $(sources[1]) ;
@@ -178,7 +192,7 @@ rule generator ( id : source-types + : target-types + : requirements *
         # If this is 1->1 transformation, apply it to all consumed targets in order.
         if ! $(self.source-types[2])
         {
-            ECHO [ indent ] "alt1" ;
+            generators.dout [ indent ] "alt1" ;
             for local r in $(consumed)
             {
                 # CONSIDER: should use relevant properties only?                
@@ -188,7 +202,7 @@ rule generator ( id : source-types + : target-types + : requirements *
         else
         {
             local v = [ new vector $(consumed) ] ;
-            ECHO [ indent ] "alt2 : consumed is" [ $(v).str ] ;
+            generators.dout [ indent ] "alt2 : consumed is" [ $(v).str ] ;
             if $(consumed) 
             {
                 result += [ generated-targets $(consumed) : $(properties) : $(project) $(name) ] ;
@@ -224,13 +238,13 @@ rule generator ( id : source-types + : target-types + : requirements *
         if $(result)
         {
            local v = [ new vector $(result) ] ;
-           ECHO [ indent ] "  SUCCESS: " [ $(v).str ] ;
+           generators.dout [ indent ] "  SUCCESS: " [ $(v).str ] ;
         }
         else
         {
-            ECHO [ indent ] "  FAILURE" ;
+            generators.dout [ indent ] "  FAILURE" ;
         }
-        ECHO ;
+        generators.dout ;
         return $(result) ;        
     }
     
@@ -280,7 +294,7 @@ rule composing-generator ( id : source-types + : target-types + :
 
     rule run ( project name ? : properties * : sources + ) 
     {
-        ECHO [ indent ] "  composing generator" $(self.id) ;
+        generators.dout [ indent ] "  composing generator" $(self.id) ;
 
         local consumed ;
         local bypassed ;
@@ -291,10 +305,10 @@ rule composing-generator ( id : source-types + : target-types + :
         while $(sources) && ! $(failed)
         {
             s = $(sources[1]) ;
-            ECHO [ indent ] "type is " [ $(s).type ] ;            
+            generators.dout [ indent ] "type is " [ $(s).type ] ;            
             if [ $(s).type ] in $(self.source-types)
             {
-                ECHO [ indent ] "directly consuming " [ $(s).str ] ;
+                generators.dout [ indent ] "directly consuming " [ $(s).str ] ;
                 consumed += $(s) ;
             }
             else
@@ -317,13 +331,13 @@ rule composing-generator ( id : source-types + : target-types + :
         local result ;
         if ! $(failed) 
         {
-            ECHO [ indent ] "  SUCCESS" ;
+            generators.dout [ indent ] "  SUCCESS" ;
             result += [ generated-targets $(consumed) : $(properties) : $(project) $(name) ] ;
             result += $(bypassed) ;
         } 
         else
         {
-            ECHO [ indent ] "  FAILURE" ;
+            generators.dout [ indent ] "  FAILURE" ;
         }
         return $(result) ;
     }
@@ -373,14 +387,14 @@ class composing-generator : generator ;
     rule try-one-generator ( project name ? : generator multiple ? : 
          target-types + : properties * : sources + )
     {
-         ECHO [ indent ] "  trying generator" [ $(generator).id ] 
+         generators.dout [ indent ] "  trying generator" [ $(generator).id ] 
               "for" $(target-types:J=" ") "(" $(multiple) ")" ;
             
         local targets = [ $(generator).run $(project) $(name) : $(properties) : $(sources)
           : $(multiple) ] ;
 
         local v = [ new vector $(targets) ] ;
-        ECHO "-- generator returned" [ $(v).str ] ;
+        generators.dout "-- generator returned" [ $(v).str ] ;
 
 
         # Generated targets that are of required types
@@ -408,7 +422,7 @@ class composing-generator : generator ;
         local extra2 ;
         if $(multiple) 
         {
-            ECHO "-- trying to convert extra targets" [ $(v).str ] ;   
+            generators.dout "-- trying to convert extra targets" [ $(v).str ] ;   
             for local e in $(extra) 
             {
                 local try2 = [ construct-dbg-types $(project) $(name) : $(target-types) : : $(properties)
@@ -424,7 +438,7 @@ class composing-generator : generator ;
                     extra2 += $(e) ;
                 }
             }    
-            ECHO "-- done trying to convert extra targets" [ $(v).str ] ;   
+            generators.dout "-- done trying to convert extra targets" [ $(v).str ] ;   
         }
         else
         {
@@ -432,8 +446,8 @@ class composing-generator : generator ;
         }
         local rr = [ new vector [ new vector $(result) ] 
           [ new vector $(extra2) ] ] ;         
-        ECHO [ indent ] "  generator" [ $(generator).id ] " spawned " ;
-        ECHO [ indent ] " " [ $(rr).str ] ;
+        generators.dout [ indent ] "  generator" [ $(generator).id ] " spawned " ;
+        generators.dout [ indent ] " " [ $(rr).str ] ;
         return $(rr) ;                     
     }
 
@@ -478,16 +492,16 @@ class composing-generator : generator ;
     rule construct-dbg ( project name ? : target-type multiple ? : properties * : sources + )
     {
         increase-indent ;
-        ECHO [ indent ] "*** construct" $(target-type) ;
+        generators.dout [ indent ] "*** construct" $(target-type) ;
         for local s in $(sources)
         {
-            ECHO [ indent ] "*** from" [ $(s).str ] ;
+            generators.dout [ indent ] "*** from" [ $(s).str ] ;
         }
         if $(multiple)
         {
-            ECHO [ indent ] "*** multiple" ;
+            generators.dout [ indent ] "*** multiple" ;
         }
-        ECHO [ indent ] "*** properties:" $(properties) ;        
+        generators.dout [ indent ] "*** properties:" $(properties) ;        
 
         # Select generators that can create the required target type.
         local viable-generators = ;
@@ -526,7 +540,7 @@ class composing-generator : generator ;
             local had-composing-generator-save = $(.had-composing-generator) ;
             if [ is-a $(g) : composing-generator ] 
             {
-                ECHO "Had composing generator set to true" ;
+                generators.dout "Had composing generator set to true" ;
                 .had-composing-generator = true ;
             }
                                     
@@ -534,7 +548,7 @@ class composing-generator : generator ;
                         $(properties) : $(sources) ] ;
             
             .active-generators = $(.active-generators[2-]) ;            
-            ECHO "Restoring 'had...' to " $(had-composing-generator-save) ;
+            generators.dout "Restoring 'had...' to " $(had-composing-generator-save) ;
             .had-composing-generator = $(had-composing-generator-save) ;
 
             if [ $(r).get-at 1 ]
@@ -559,7 +573,7 @@ class composing-generator : generator ;
             {
                 normalize-target-list [ $(r).at 1 ] ;
                 normalize-target-list [ $(r).at 2 ] ;
-                ECHO [ $(r).str ] ;
+                generators.dout [ $(r).str ] ;
             }
 
             local f = [ $(results).at 0 ] ;
@@ -590,14 +604,14 @@ class composing-generator : generator ;
             result = [ $(results).at 1 ] ;
             for local c in [ $(result).get-at 1 ] 
             {
-                ECHO [ indent ] "*** constructed" [ $(c).str ] ;
+                generators.dout [ indent ] "*** constructed" [ $(c).str ] ;
             }
             for local c in [ $(result).get-at 2 ]
             {
-                ECHO [ indent ] "*** also got" [ $(c).str ] ;
+                generators.dout [ indent ] "*** also got" [ $(c).str ] ;
             }
 
-            ECHO ;
+            generators.dout ;
         } 
         else
         {
