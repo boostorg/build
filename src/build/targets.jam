@@ -200,7 +200,7 @@ class project-target : abstract-target
         self.location = [ project.attribute $(project-module) location ] ;
         self.requirements = $(requirements) ;
         self.default-build = $(default-build) ;
-        
+                        
         if $(parent-project)
         {            
             inherit $(parent-project) ;
@@ -218,7 +218,22 @@ class project-target : abstract-target
     {
         return [ project.attribute $(self.project-module) $(attribute) ] ;
     }
-    
+
+    rule build-dir ( )
+    {
+        if ! $(self.build-dir)
+        {            
+            self.build-dir = [ get build-dir ] ;
+            if ! $(self.build-dir)
+            {
+                self.build-dir = [ path.join 
+                    [ $(self.project).get location ]
+                      bin
+                ] ;
+            }
+        }
+        return $(self.build-dir) ;
+    }        
     
     # Generates all possible targets contained in this project.
     rule generate ( property-set * )

@@ -32,6 +32,7 @@ class property-set
     import property-set ;
     import property ;
     import set ;
+    import path ;
             
     rule __init__ ( raw-properties * )
     {        
@@ -229,6 +230,40 @@ class property-set
         }        
         return $(self.as-path) ;
     }        
+    
+    rule target-path ( )
+    {
+        if ! $(self.target-path)
+        {    
+            # The <location> feature can be used to explicitly
+            # change the location of generated targetsv
+            local l = [ get <location> ] ;
+            if $(l)
+            {
+                self.target-path = $(l) ;
+            }
+            else
+            {
+                local p = [ as-path ] ;                           
+                # Really, an ugly hack. Boost regression test system requires
+                # specific target paths, and it seems that changing it to handle
+                # other directory layout is really hard. For that reason,
+                # we teach V2 to do the things regression system requires.
+                # The value o '<location-prefix>' is predended to the path.
+                local prefix = [ get <location-prefix> ] ;            
+                if $(prefix)
+                {
+                    self.target-path = "." [ path.join $(prefix) $(p) ] ;
+                }   
+                else
+                {
+                    self.target-path = "." $(p) ;
+                }                
+            }            
+        } 
+        return $(self.target-path) ;
+    }
+    
     
     rule add ( ps )
     {
