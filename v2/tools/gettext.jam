@@ -93,8 +93,7 @@ rule update ( name : existing-translation sources + : requirements * )
         $(existing-translation) $(sources)
         : [ targets.main-target-requirements $(requirements) : $(project) ]        
       ] ;
-    local project-target = [ project.target $(project) ] ;
-    $(project-target).mark-target-as-explicit $(name) ;
+    $(project).mark-target-as-explicit $(name) ;
 }
 
 
