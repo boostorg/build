@@ -99,7 +99,7 @@ local rule dump-test ( )
         if $(files)
         {
             # make relative to the project root instead of "."
-            local file = $(files[1]:R=$(SUBDIR_TOKENS:J=/) ;
+            local file = $(files[1]:R=$(SUBDIR_TOKENS:J=/)) ;
             
             # try to undo absolute paths
             source-files += [ relative-path  $(file) ] ;
@@ -348,7 +348,7 @@ rule capture-run-output1 ( target : executable )
         {
             on $(target)
             {
-                RUN_PATH = [ unique $(p) $(CYGWIN_ROOT)/$(p) $(RUN_PATH) ] ;
+                RUN_PATH = [ unique $(p) $(CYGWIN_ROOT)/$(p) $(RUN_PATH) $(ENV_PATH) ] ;
             }
         }
     }
