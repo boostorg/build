@@ -305,7 +305,7 @@ rule Archive-action
 {
     if $(NT)
     {
-        with-command-file cw-Archive-action $(<) : $(>) [ on $(<) return $(NEEDLIBS) ] ;
+        with-command-file cw-Archive@-action $(<) : $(>) [ on $(<) return $(NEEDLIBS) ] ;
     }
     else
     {
