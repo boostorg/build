@@ -167,6 +167,8 @@ generators.register [ new gcc-linking-generator gcc.link : LIB OBJ : EXE
 generators.register [ new gcc-linking-generator gcc.link.dll : LIB OBJ : SHARED_LIB 
     : <toolset>gcc ] ;
 
+generators.override gcc.prebuilt : builtin.prebuilt ;
+
 
 
 # Declare flags and action for linking
@@ -271,4 +273,3 @@ else if [ modules.peek : UNIX ]
         }
     }
 }
-
