@@ -338,7 +338,7 @@ class Tester(TestCmd.TestCmd):
             # We need to check in both touched and modified files if
             # it's a Windows exe because they sometimes have slight
             # differences even with identical inputs
-            if name.endswith('.exe'):
+            if windows:
                 filesets = [d.modified_files, d.touched_files]
             else:
                 filesets = [d.touched_files]
@@ -381,6 +381,12 @@ class Tester(TestCmd.TestCmd):
                 self.fail_test(1)
 
     def expect_nothing_more(self):
+
+        # not totally sure about this change, but I don't see a good alternative
+        if windows:
+            self.ignore('*.pdb')
+            self.ignore('*.rsp')
+            
         if not self.unexpected_difference.empty():
            print "Expected nothing more, but got the following:"
            self.unexpected_difference.pprint()
