@@ -20,12 +20,16 @@ build-project src ;
 t.write("a.cpp", "int main() {}\n")
 
 t.write("src/Jamfile", "exe b : b.cpp ; ")
-t.write("b.cpp", "int main() {}\n")
+t.write("src/b.cpp", "int main() {}\n")
 
 t.run_build_system()
 
 t.expect_addition(["build/bin/gcc/debug/a" + exe_suffix,
 		   "build/src/bin/gcc/debug/b" + exe_suffix])
+		   
+# Test that building from child projects work
+t.run_build_system(subdir='src')
+t.expect_nothing_more()		   
 		   
 # Test that project can override build dir
 t.write("Jamfile", """
