@@ -212,7 +212,7 @@ rule set-target-variables ( rule-or-module targets + : properties * )
         {
             module $(module_)
             {
-                prepare-target [ modules.peek toolset : target ] : [ modules.peek toolset : properties ] ;
+                prepare-target [ modules.peek toolset : targets ] : [ modules.peek toolset : properties ] ;
             }
         }
     }
