@@ -171,7 +171,14 @@ class stage-target-class : basic-target
 
                 for t in [ select-included $(staged-targets) : $(include-types) ]
                 {
-                    $(t).set-path [ $(property-set).get <location> ] ;
+                    local a = [ $(t).action ] ;
+                    {
+                        for local s in [ $(a).targets ]
+                        {
+                            $(s).set-path [ $(property-set).get <location> ] ;
+                        }                        
+                    }
+                    
                     result += [ virtual-target.register $(t) ] ;          
                 }            
             }            
