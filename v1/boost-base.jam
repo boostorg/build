@@ -1308,53 +1308,13 @@ rule find-compatible-subvariant ( main-target : toolset variant : dependent-simp
     local BUILD = ;
     local subvariants = [ expand-target-subvariants $(main-target) : $(variant) : $(toolset) : BUILD ] ;
 
-    local compatible-subvariant = ;
+    local sv-target = ;
+    local sv-properties = ;
+    local sv-toolset = ;
+    local sv-variant = ;
+    split-target-subvariant sv-target sv-properties sv-toolset sv-variant : $(subvariants[1]) ;
 
-    for local subvariant in $(subvariants)
-    {
-        local target = ;
-        local properties = ;
-        local toolset = ;
-        local variant = ;
-        split-target-subvariant target properties toolset variant : $(subvariant) ;
-
-        local requirements = $(properties[2-]) ;
-        local build-request = [ difference $(dependent-simple-properties) : $(requirements) ] ;
-        
-        local is-subvariant-incompatible = ;
-        for local p in $(build-request)
-        {
-            local f = $(p:G) ;
-            if $(f) in $(requirements:G)
-            {
-                local required-value
-                    = [ split-path [ get-values $(f) : $(requirements) ] ] ;
-
-                if ( ! [ is-link-compatible $(f) : $(required-value) : $(p:G=) ] )
-                {
-                    is-subvariant-incompatible = true ;
-                }
-            }
-        }
-        if ! $(is-subvariant-incompatible)
-        {
-            compatible-subvariant += $(subvariant) ;
-        }
-    }
-
-    if ! $(compatible-subvariant)
-    {
-        EXIT No compatible subvariant found for: $(main-target) ;
-    }
-
-    {
-        local target = ;
-        local properties = ;
-        local toolset = ;
-        local variant = ;
-        split-target-subvariant target properties toolset variant : $(compatible-subvariant[1]) ;
-        return $(properties) ;
-    }
+    return $(sv-properties) ;
 }
 
 # link-libraries libs... : toolset variant : dependent-simple-properties
@@ -1593,7 +1553,6 @@ rule expand-target-subvariants ( target : local-build * : tools + : build-var )
         {
             local rules = [ select-ungristed $(gTARGET_REQUIREMENTS($(target))) ] ;
             local requirements = [ select-gristed $(gTARGET_REQUIREMENTS($(target))) ] ;
-            #ECHO "    " requirements == $(requirements) ;
             
             local expanded
                 = [ expand-build-request $(toolset) $(variant) $(target)
