@@ -83,31 +83,27 @@ rule lookup ( id : current-location )
     }
     else
     {
-        if $(location)
+        if ! $(location)
         {
-            local module-name = [ module-name $(location) ] ;
-            local base-id = [ $(module-name).id ] ;
+            error Jamfile location must be specified for relative project-id $(id) ;
+        }
+        
+        local module-name = [ module-name $(location) ] ;
+        local base-id = [ $(module-name).id ] ;
 
-            if $(base-id)
-            {
-                if $(project-id)
-                {
-                    local rooted-id = $(base-id)/$(project-id) ;
-                    return $($(rooted-id).jamfile-location) ;
-                }
-                else
-                {
-                    return $($(base-id).jamfile-location) ;
-                }
-            }
-            else
-            {
-                error "Project in $(location) has no project id" ;
-            }
+        if ! $(base-id)
+        {
+            error "Project in $(location) has no project id" ;
+        }
+
+        if $(project-id)
+        {
+            local rooted-id = $(base-id)/$(project-id) ;
+            return $($(rooted-id).jamfile-location) ;
         }
         else
         {
-            error "Jamfile location must be specified for relative project-id" ;
+            return $($(base-id).jamfile-location) ;
         }
     }
 }
