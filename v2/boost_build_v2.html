@@ -24,9 +24,9 @@
 </style>
   </head>
   <!-- Things yet to document:
-                            - build request, build request expansion and directly requested targets
-                            - conditional properties
-                          -->
+                              - build request, build request expansion and directly requested targets
+                              - conditional properties
+                            -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -57,6 +57,8 @@
           <dt><a href="#hierarchy">Project hierarchy</a></dt>
 
           <dt><a href="#using_libraries">Using libraries</a></dt>
+
+          <dt><a href="#static_shared">Static and shared libraries</a></dt>
 
           <dt><a href="#prebuilt_targets">Prebuilt targets</a></dt>
         </dl>
@@ -340,6 +342,81 @@ boost-build /path/to/boost.build ;
     library is moved somewhere, only a single line in the top-level Jamfile
     should be changed. 
 
+    <h3 id="static_shared">Static and shared libaries</h3>
+    While the previous section explained how to create and use libraries, it
+    omitted one important detail. Libraries can be either <em>static</em>,
+    which means they are included in executable files which use them, or
+    <em>shared</em> (a.k.a. <em>dynamic</em>), which are only referred to
+    from executables, and must be available at run time. Boost.Build can work
+    with both types. By default, all libraries are shared. This is much more
+    efficient in build time and space. But the need to install all libraries
+    to some location is not always convenient, especially for debug builds.
+    Also, if the installed shared library changes, all application which use
+    it might start to behave differently. 
+
+    <p>Static libraries do not suffer from these problems, but considerably
+    increase the size of application. Before describing static libraries,
+    it's reasonable to give another, quite simple approach. If your project
+    is built with &lt;hardcode-dll-paths&gt;true property, then the
+    application will include the full paths for all shared libraries,
+    eliminating the above problems. Unfortunately, you no longer can move
+    shared library to a different location, which makes this option suitable
+    only for debug builds. Further, only gcc compiler supports this
+    option.</p>
+
+    <p>Building a library statically is easy. You'd need to change the value
+    of &lt;link&gt; feature from it's deafault value <tt>shared</tt>, to
+    <tt>static</tt>. So, to build everything as static libraries, you'd
+    say</p>
+<pre>
+    bjam link=static
+</pre>
+    on the command line. The linking mode can be fine-tuned on per-target
+    basis. 
+
+    <ol>
+      <li>
+        Suppose your library can be only build statically. This is easily
+        achieved using requirements: 
+<pre>
+    lib l : l.cpp : &lt;link&gt;static ;
+   
+</pre>
+      </li>
+
+      <li>
+        What if library can be both static and shared, but when using it in
+        specific executable, you want it static? <a href=
+        "target_reference">Target references</a> are here to help: 
+<pre>
+    exe important : main.cpp helpers/&lt;link&gt;static ;
+   
+</pre>
+      </li>
+
+      <li>
+        What if the library is defined in some other project, which you
+        cannot change. But still, you want static linking to that library in
+        all cases. You can use target references everywhere: 
+<pre>
+    exe e1 : e1.cpp @/other_project/lib1/&lt;link&gt;static ;
+    exe e10 : e10.cpp @/other_project/lib1/&lt;link&gt;static ;
+   
+</pre>
+        but that's far from being convenient. Another way is to introduce a
+        level of indirection: create a local target, which will refer to
+        static version of <tt>lib1</tt>. Here's the solution: 
+<pre>
+    alias lib1 : @/other_project/lib1/&lt;link&gt;static ;
+    exe e1 : e1.cpp lib1 ;
+    exe e10 : e10.cpp lib1 ;
+   
+</pre>
+        (Note, that the "alias" target type is not yet implemented, but it's
+        quite simple to do. I bet it's waiting for you to do it ;-))
+      </li>
+    </ol>
+
     <h3 id="prebuilt_targets">Prebuilt targets</h3>
     We've just learned how to use libraries which are created by Boost.Build.
     But some libraries are not. At the same time, those libraries can have
@@ -352,7 +429,7 @@ boost-build /path/to/boost.build ;
        : &lt;file&gt;lib2_release.a &lt;variant&gt;release
        ;
 
-    prebuilt LIB lib2
+    lib lib2
        : 
        : &lt;file&gt;lib2_debug.a &lt;variant&gt;debug
        ;
@@ -366,7 +443,28 @@ boost-build /path/to/boost.build ;
     exe app : app.cpp @/lib/lib1/lib2 ../lib/lib2/lib2 ;
 </pre>
     If we build release version of "app", then it will be linked with
-    "lib2_release.a", and debug version will use "lib2_debug.a". 
+    "lib2_release.a", and debug version will use "lib2_debug.a". Another
+    important kind of prebuilt targets are system libraries &mdash; more
+    specifically, libraries which are automatically found by the compiler.
+    E.g. gcc uses "-l" switch for that. Such libraries should be declared
+    almost like regular ones: 
+<pre>
+    lib zlib : : &lt;name&gt;z ;
+</pre>
+    We again don't specify any sources, but give a name which should be
+    passed to the compiler. In this example, and for gcc compiler, the "-lz"
+    option will be added. Paths where library should be searched can also be
+    specified: 
+<pre>
+    lib zlib : : &lt;name&gt;z &lt;search&gt;/opt/lib ;
+</pre>
+    And, of course, two variants can be used: 
+<pre>
+    lib zlib : : &lt;name&gt;z &lt;variant&gt;release ;
+    lib zlib : : &lt;name&gt;z_d &lt;variant&gt;debug ;
+</pre>
+    Of course, you'll probably never in your life need debug version of zlib,
+    but for other libraries this is quite reasonable. 
 
     <h2><a name="sec-reference">Reference</a></h2>
     This section will document mostly high-level view of Boost.Build,
@@ -927,7 +1025,25 @@ borland/runtime-link=static,dynamic
     <p>Boost.Build considers every software it build as organized into
     projects, each of which corresponds to a single Jamfile. Projects are
     organized in a hierarchical structure, so each project may have a single
-    parent project and a number of subprojects. (TODO: project root).</p>
+    parent project and a number of subprojects.</p>
+
+    <p>Each project is also associated with <em>project root</em>. That's a
+    root for a tree of projects, which specifies some global properties.</p>
+
+    <h4>Project root</h4>
+    Project root for a projects is the nearest parent directory which
+    contains a file called <tt>project-root.jam</tt>. That file defines
+    certain properties which apply to all projects under project root. It
+    can: 
+
+    <ul>
+      <li>configure toolsets, via call to <tt>toolset.using</tt></li>
+
+      <li>refer to other projects, via the <tt>use-project</tt> rule</li>
+
+      <li>declare constants, via the <tt>constant</tt> and
+      <tt>path-constant</tt> rules.</li>
+    </ul>
 
     <h4>Project attributes</h4>
 
