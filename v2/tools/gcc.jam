@@ -110,7 +110,10 @@ actions compile.c
 # Declare flags and action for linking
 flags gcc.link OPTIONS <debug-symbols>on : -g ;
 # Strip the binary when no debugging is needed.
-flags gcc.link OPTIONS <debug-symbols>off : -s ;
+# We use --strip-all flag as opposed to -s since icc
+# (intel's compiler) is generally option-compatible with
+# and inherits from gcc toolset, but does not support -s
+flags gcc.link OPTIONS <debug-symbols>off : -Wl,--strip-all ;
 flags gcc.link OPTIONS <profiling>on : -pg ;
 flags gcc.link OPTIONS <linkflags> ;
 flags gcc.link LINKPATH <library-path> ;
