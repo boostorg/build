@@ -289,77 +289,40 @@ else
 nl = "
 " ;
 
-# Returns the command needed to set shell variable on the
-# current platform.
-rule variable-setting-command ( variable value )
-{
+# Returns the command needed to set the environment variable on the
+# current platform.  The variable setting persists through all
+# following commands and is visible in the environment seen by
+# subsequently executed commands.  In other words, on Unix systems,
+# the variable is exported, which is consistent with the only possible
+# behavior on Windows systems.
+rule variable-setting-command ( variable : value )
+{    
     if [ os.name ] = NT
     {
         return "set $(variable)=$(value)$(nl)" ;
     }
     else
     {
-        return "$(variable)=$(value)" ;
+        return "$(variable)=$(value)$(nl)export $(variable)$(nl)" ;
     }
 }
 
-# Returns the command needed to set shell variable on the
-# current platform. Each element of values is expected to be a path,
-# elements are joined with os-specific characer which delimits paths in
-# environment variables.
-#
-# Each element of value can have the form '$VARIABLE'. This means that
-# the value of environment variable 'VARIABLE' should be used. For example:
-# 
-#   common.path-variable-setting-command PATH : $PATH foo : exported ;
-#
-# would add 'foo' to the end of 'PATH' variable.
-rule path-variable-setting-command ( variable : values * : exported ? )
+# Returns a command that sets the named shell path variable to the
+# given NATIVE paths to on the current platform.
+rule path-variable-setting-command ( variable : paths * )
 {   
-    local result ;
-    
-    # Handle references to variables.
-    local values2 ;
-    # Create regex. Dollar is in separate variable to avoid
-    # interpreting it as variable access in bjam.
-    d = $ ;
-    # Backslash protects special meaning of '$' in regexps.
-    r = \\$(d)(.*) ;
-    for local v in $(values)
-    {
-        local m = [ MATCH $(r) : $(v) ] ;
-        if $(m) && [ os.name ] = NT 
-        {
-            values2 += %$(m)% ;
-        }          
-        else
-        {            
-            # If there's no match, just add the value
-            # If there's match but we're not on NT, the $VAR syntax
-            # is already OK.
-            values2 += $(v) ;
-        }
-    }
-    values = $(values2) ;
-        
-    if [ os.name ] = NT
-    {
-        result = set $(variable)=$(values:J=";")$(nl) ;                
-    }
-    else
-    {
-        # We can't put ":" directly in :J modifier.
-        local sep = ":" ;
-        if $(exported)
-        {                       
-            result = $(variable)=$(values:J=$(sep));export $(variable) ;
-        }
-        else
-        {
-            result = $(variable)=$(values:J=$(sep)) ;    
-        }                
-    }
-    return $(result:J=" ") ;
+    local sep = [ os.path-separator ] ;
+    return [ variable-setting-command $(variable) : $(paths:J=$(sep)) ] ;
+}
+
+# Returns a command that prepends the given paths to the named path
+# variable on the current platform.
+rule prepend-path-variable-command ( variable : paths * )
+{   
+    return [ 
+      path-variable-setting-command $(variable) 
+        : $(paths) [ os.expand-variable $(variable) ]
+    ] ;
 }
 
 
@@ -521,20 +484,24 @@ rule __test__ ( ) {
     
     local save-os = [ modules.peek os : name ] ;
     
-    modules.poke os : name : LINUX ;
+    modules.poke os : .name : LINUX ;
     
-    assert.result "PATH=foo:$PATH:bar" :
-      path-variable-setting-command PATH : foo $PATH bar ;
-    
-    modules.poke os : name : NT ;
-    
-nl = "
+    local nl = "
 " ;
     
-    assert.result "set PATH=foo;%PATH%;bar$(nl)" :
-      path-variable-setting-command PATH : foo $PATH bar ;
+    assert.result "PATH=foo:bar:baz$(nl)export PATH$(nl)"
+      : path-variable-setting-command PATH : foo bar baz ;
+    
+    assert.result "PATH=foo:bar:$PATH$(nl)export PATH$(nl)"
+      : prepend-path-variable-command PATH : foo bar ;
+    
+    modules.poke os : .name : NT ;
+    
+    assert.result "set PATH=foo;bar;baz$(nl)"
+      : path-variable-setting-command PATH : foo bar baz ;
+    
+    assert.result "set PATH=foo;bar;%PATH%$(nl)"
+      : prepend-path-variable-command PATH : foo bar ;
 
-
-    modules.poke os : name : $(save-os) ;      
-      
+    modules.poke os : .name : $(save-os) ;      
 }    
