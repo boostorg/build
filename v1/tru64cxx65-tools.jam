@@ -14,9 +14,11 @@
 # - C++ standard iostreams are enabled with __USE_STD_IOSTREAM as the compiler
 #   defaults to the pre-standard iostreams in ansi language mode.
 #
-# - For template instantiation "-tlocal" is used. This avoids the need for a
-#   repository. Note that the compiler manual page warns against code bloat
-#   when using this option but this has not been observed so far.
+# - For template instantiation "-timplicit_local" is used. Previously,
+#   "-tlocal" has been tried to avoid the need for a template repository
+#   but this doesn't work with manually instantiated templates. "-tweak"
+#   has not been used to avoid the stream of warning messages issued by
+#   ar or ld when creating a library or linking an application.
 #
 
 # No static linking as far as I can tell.
@@ -111,7 +113,7 @@ rule C++-action
 # really can't ignore this one!
 actions tru64cxx65-C++-action
 {
-   cxx -c -tlocal -noimplicit_include -D__USE_STD_IOSTREAM -nousing_std -msg_display_number -msg_disable 186,450,1115 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
+   cxx -c -timplicit_local -ptr "$(<[1]:D)/cxx_repository" -noimplicit_include -D__USE_STD_IOSTREAM -nousing_std -msg_display_number -msg_disable 186,450,1115 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
