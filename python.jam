@@ -48,7 +48,7 @@ if $(NT)
     PYTHON_PROPERTIES ?=
       select-python-includes
       <runtime-link>dynamic
-      <include>$(BOOST_ROOT)
+      <sysinclude>$(BOOST_ROOT)
       <$(gcc-compilers)><*><define>USE_DL_IMPORT
       <$(gcc-compilers)><*><find-library>python$(PYTHON_VERSION).dll 
       ;
@@ -69,7 +69,7 @@ else if $(UNIX)
     PYTHON_STDLIB_PATH ?= $(PYTHON_ROOT)/lib/python$(PYTHON_VERSION) ;
 
     PYTHON_PROPERTIES ?=
-      <include>$(PYTHON_INCLUDES)
+      <sysinclude>$(PYTHON_INCLUDES)
         <library-path>$(PYTHON_LIB_PATH)
       ;
     
@@ -137,13 +137,13 @@ rule select-python-includes ( toolset variant : properties * )
         {
             python-root = $(GCC_PYTHON_DEBUG_ROOT) ;
         }
-        properties += <include>$(python-root)/include/python$(PYTHON_VERSION) ;
+        properties += <sysinclude>$(python-root)/include/python$(PYTHON_VERSION) ;
     }
     else
     {
       properties +=
-          <include>$(PYTHON_ROOT)/include
-            <include>$(PYTHON_ROOT)/PC # in case the user is using a source installation
+          <sysinclude>$(PYTHON_ROOT)/include
+            <sysinclude>$(PYTHON_ROOT)/PC # in case the user is using a source installation
               <debug-python><define>_DEBUG
               ;
     }
@@ -152,7 +152,7 @@ rule select-python-includes ( toolset variant : properties * )
 
 PYTHON_PROPERTIES += 
         <$(gcc-compilers)><*><find-library>util
-        <include>$(BOOST_ROOT)
+        <sysinclude>$(BOOST_ROOT)
           <stlport-iostream>on
             select-python-library
             ;
@@ -179,9 +179,10 @@ if $(NT)
 BOOST_PYTHON_V2_PROPERTIES 
   = $(PYTHON_PROPERTIES)
     <metrowerks><*><cxxflags>"-inline deferred" 
-    <cxx><*><include>$(BOOST_ROOT)/boost/compatibility/cpp_c_headers
-      <define>BOOST_PYTHON_DYNAMIC_LIB
-      <define>BOOST_PYTHON_V2
+      <cwpro8><*><cxxflags>"-inline deferred"  # added for internal testing purposes
+        <cxx><*><sysinclude>$(BOOST_ROOT)/boost/compatibility/cpp_c_headers
+         <define>BOOST_PYTHON_DYNAMIC_LIB
+           <define>BOOST_PYTHON_V2
       ;
 
 # Extends the RUN_PATH assignment for targets built under Cygwin so
