@@ -3,7 +3,7 @@ import numbers ;
 import sequence ;
 import class ;
 import os ;
-import os.path ;
+import path ;
 import feature ;
 import property ;
 import build-request ;

@@ -9,7 +9,7 @@
 # instance declared constants which also get interned into each loaded project.
 
 import modules ;
-import os.path ;
+import path ;
 import class ;
 import set ;
 
@@ -23,10 +23,10 @@ rule load (
 {
     # Find the project-root.jam corresponding to this directory.
     #
-    local location = [ os.path.glob $(dir) : project-root.jam ] ;
+    local location = [ path.glob $(dir) : project-root.jam ] ;
     if ! $(location)
     {
-        location = [ os.path.glob-in-parents $(dir) : project-root.jam ] ;
+        location = [ path.glob-in-parents $(dir) : project-root.jam ] ;
     }
 
     # No project-root file found.
@@ -38,7 +38,7 @@ rule load (
             "directories." ;
         EXIT "Please consult the documentation at 'http://www.boost.org'." ;
     }
-    location = [ os.path.parent [ os.path.make $(location) ] ] ;
+    location = [ path.parent [ path.make $(location) ] ] ;
 
     local module-name = project-root<$(location)> ;
 
@@ -138,7 +138,7 @@ rule project-root-object (
         # The module system handles checking for multiple includes.
         #
         modules.load $(self.module)
-            : project-root.jam : [ os.path.native $(self.location) ] ;
+            : project-root.jam : [ path.native $(self.location) ] ;
     }
     
     # Accessor, add a constant.
@@ -290,8 +290,8 @@ module project-root-context
         )
     {
         import project ;
-        import os.path ;
-        project.use $(id) : [ os.path.root $(location) [ project-root get-location ] ] ;
+        import path ;
+        project.use $(id) : [ path.root $(location) [ project-root get-location ] ] ;
     }
 }
 

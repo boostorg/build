@@ -451,17 +451,17 @@ rule virtual-target ( name : project
             local a = [ action ] ;
             if $(a) {
                 $(a).actualize ;
-                local path = [ os.path.join [ project.attribute $(self.project) location ] 
+                local path = [ path.join [ project.attribute $(self.project) location ] 
                                "bin" [ property.as-path [ subvariant ] ] 
                                $(self.extra-path) ] ;
-                path = [ os.path.native $(path) ] ;
+                path = [ path.native $(path) ] ;
                 LOCATE on $(self.actual-name) = $(path) ;
                 DEPENDS $(self.actual-name) : $(path) ;
                 utility.MkDir $(path) ;
                 utility.Clean clean : $(self.actual-name) ;
             } else {
                 SEARCH on $(self.actual-name) =
-                    [ os.path.native [ project.attribute $(self.project) source-location ] ] ;
+                    [ path.native [ project.attribute $(self.project) source-location ] ] ;
             }
         }
         return $(self.actual-name) ;
