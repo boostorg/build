@@ -157,6 +157,9 @@ class Tester(TestCmd.TestCmd):
         self.wait_for_time_change()
         if not type(names) == types.ListType:
             names = [names]
+
+	# Avoid attempts to remove current dir
+	os.chdir(self.original_workdir)
         for name in names:
             n = self.native_file_name(name)
             if os.path.isdir(n):
