@@ -26,16 +26,26 @@ flags borland CFLAGS <inlining>off : -vi- ;
 flags borland CFLAGS <inlining>on : -vi -w-inl ;
 flags borland CFLAGS <inlining>full : -vi -w-inl ;
 
-flags borland LINKFLAGS <threading>multi : -tWM ;
-flags borland LINKFLAGS <runtime-link>dynamic : -tWR ;
-flags borland LINKFLAGS <user-interface>gui/<target-type>EXE : -tW ;
-flags borland LINKFLAGS <user-interface>console/<target-type>EXE : -tWC ;
+# build the link options
+local USER-INTERFACE TARGET-TYPE THREADING RUNTIME-LINK ;
+
+flags borland USER-INTERFACE <user-interface>console : C ;
+flags borland TARGET-TYPE <target-type>DLL : D ;
+flags borland THREADING <threading>multi : M ;
+flags borland RUNTIME-LINK <runtime-link>dynamic : R ;
+
+USER-INTERFACE ?= "" ;
+TARGET-TYPE ?= "" ;
+THREADING ?= "" ;
+RUNTIME-LINK ?= "" ;
+
+flags borland LINKFLAGS :
+    -t$(USER-INTERFACE)$(TARGET-TYPE)$(THREADING)$(RUNTIME-LINK) ;
+    
+flags borland CFLAGS :
+    -t$(USER-INTERFACE)$(TARGET-TYPE)$(THREADING)$(RUNTIME-LINK) ;
+    
 flags borland LINKFLAGS <wide-character-support>on : -WU ;
-
-flags borland LINKFLAGS <target-type>DLL : -tWD ;
-
-flags borland CFLAGS <threading>multi : -tWM ;
-flags borland CFLAGS <runtime-link>dynamic : -tWR ;
 flags borland CFLAGS <wide-character-support>on : -WU ;
 
 flags borland CFLAGS <cflags> ;
