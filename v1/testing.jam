@@ -372,7 +372,7 @@ rule run ( sources + : args * : input-files * : requirements * : name ? : defaul
 {
     local gRUN_TEST_ARGS = $(args) ;
     local gRUN_TEST_INPUT_FILES = $(input-files) ;
-    SEARCH on $(input-files) = $(LOCATE_SOURCE) ;
+    SEARCH on $(input-files) = $(SEARCH_SOURCE) ;
     return [ boost-test $(sources) : RUN : $(requirements) : $(name) : $(default-build) ] ;
 }
 
@@ -380,7 +380,7 @@ rule run-fail ( sources + : args * : input-files * : requirements * : name ? )
 {
     local gRUN_TEST_ARGS = $(2) ;
     local gRUN_TEST_INPUT_FILES = $(3) ;
-    SEARCH on $(3) = $(LOCATE_SOURCE) ;
+    SEARCH on $(3) = $(SEARCH_SOURCE) ;
     return [ boost-test $(<) : RUN_FAIL : $(4) : $(name) ] ;
 }
 
