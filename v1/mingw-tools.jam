@@ -16,6 +16,7 @@ set-as-singleton MINGW_ROOT_DIRECTORY MINGW_BIN_DIRECTORY MINGW_INCLUDE_DIRECTOR
 }
 
 flags mingw LINKFLAGS <user-interface>gui : -Wl,--subsystem,windows ;
+flags mingw LINKFLAGS : -Wl,--allow-multiple-definition ;
 
 # Prefer linking DLLs without the -Wl,--export-all-symbols flag
 GCC_NO_EXPORT_ALL ?= true ;
@@ -23,3 +24,4 @@ GCC_NO_EXPORT_ALL ?= true ;
 # Use the -mno-cygwin flag for compiling C, C++ and linking
 CFLAGS += -mno-cygwin ;
 LINKFLAGS += -mno-cygwin ;
+
