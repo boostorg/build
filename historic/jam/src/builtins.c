@@ -129,16 +129,11 @@ load_builtins()
       bind_builtin( "HDRMACRO" ,
                     builtin_hdrmacro, 0, 0 ) );
 
-# if 0
-    /* FAIL_EXPECTED is an experimental built-in that is used to indicate        */
-    /* that the result of a target build action should be inverted (ok <=> fail) */
-    /* this can be useful when performing test runs from Jamfiles..              */
-    /*                                                                           */
-    /* Beware that this rule might disappear or be renamed in the future..       */
-    /* contact david.turner@freetype.org for more details..                      */
+    /* FAIL_EXPECTED is used to indicate that the result of a target build */
+    /* action should be inverted (ok <=> fail) this can be useful when     */
+    /* performing test runs from Jamfiles..                                */
       bind_builtin( "FAIL_EXPECTED" ,
                     builtin_flags, T_FLAG_FAIL_EXPECTED, 0 );
-# endif
 
       bind_builtin( "RMOLD" , builtin_flags, T_FLAG_RMOLD, 0 );
 

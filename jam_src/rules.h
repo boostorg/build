@@ -131,21 +131,28 @@ struct _target {
 	ACTIONS	*actions;		/* rules to execute, if any */
 	SETTINGS *settings;		/* variables to define */
 
-	char	flags;			/* status info */
+	short flags;    		/* status info */
 
-# define 	T_FLAG_TEMP 	0x01	/* TEMPORARY applied */
-# define 	T_FLAG_NOCARE 	0x02	/* NOCARE applied */
-# define 	T_FLAG_NOTFILE 	0x04	/* NOTFILE applied */
-# define	T_FLAG_TOUCHED	0x08	/* ALWAYS applied or -t target */
-# define	T_FLAG_LEAVES	0x10	/* LEAVES applied */
-# define	T_FLAG_NOUPDATE	0x20	/* NOUPDATE applied */
-# define	T_FLAG_VISITED  0x40    /* CWM: Used in debugging */
+# define 	T_FLAG_TEMP 	0x0001	/* TEMPORARY applied */
+# define 	T_FLAG_NOCARE 	0x0002	/* NOCARE applied */
+# define 	T_FLAG_NOTFILE 	0x0004	/* NOTFILE applied */
+# define	T_FLAG_TOUCHED	0x0008	/* ALWAYS applied or -t target */
+# define	T_FLAG_LEAVES	0x0010	/* LEAVES applied */
+# define	T_FLAG_NOUPDATE	0x0020	/* NOUPDATE applied */
+# define	T_FLAG_VISITED  0x0040    /* CWM: Used in debugging */
 
 /* this flag was added to support a new builtin rule named "RMBAD" */
 /* it is used to force removal of outdated targets whose dependencies
  * fail to build  */
     
-# define        T_FLAG_RMOLD    0x80    /* RMBAD applied */
+# define        T_FLAG_RMOLD    0x0080    /* RMBAD applied */
+
+/* this flag was added to support a new builting rule named "FAIL_EXPECTED" */
+/* it is used to indicate that the result of running a given action should  */
+/* be inverted (i.e. ok <=> fail). This is useful to launch certain test    */
+/* runs from a Jamfile..                                                    */
+/*                                                                          */
+# define        T_FLAG_FAIL_EXPECTED  0x0100  /* FAIL_EXPECTED applied */
 
 	char	binding;		/* how target relates to real file */
 

@@ -365,7 +365,6 @@ make1d(
 	/* status and signal our completion so make1c() can run the next */
 	/* command.  On interrupts, we bail heavily. */
 
-# if 0 /* apparently not needed */
         if ( t->flags & T_FLAG_FAIL_EXPECTED )
         {
           /* invert execution result when FAIL_EXPECTED was applied */
@@ -377,7 +376,6 @@ make1d(
               ;
           }
         }
-# endif 
         
 	if( status == EXEC_CMD_FAIL && ( cmd->rule->actions->flags & RULE_IGNORE ) )
 	    status = EXEC_CMD_OK;
