@@ -45,9 +45,14 @@ rule stage ( directory : sources * : requirements * : default-build * )
 {
     # FIXME: for now, just use directory as target name. We really
     # need to implement unnamed main targets.
-    targets.main-target-alternative 
-      $(directory) [ CALLER_MODULE ] stage-target-class : 2 : : 3 
-        : $(sources) : $(requirements) : $(default-build) ;
+    
+    local project = [ CALLER_MODULE ] ;
+    
+    targets.main-target-alternative
+      [ new stage-target-class $(directory) : $(project) : $(sources)
+        : [ targets.main-target-requirements $(requirements) : $(project) ] 
+        : [ targets.main-target-default-build $(default-build) : $(project) ] 
+      ] ;
 }
 
 IMPORT $(__name__) : stage : : stage ;

@@ -48,7 +48,19 @@ rule abstract-target ( name      # name of the target in Jamfile
 
     self.name = $(name) ;
     self.project = $(project) ;
-
+    
+    # Returns the name of this target.
+    rule name ( )
+    {
+        return $(self.name) ;
+    }
+    
+    # Returns the project for this target.
+    rule project ( )
+    {
+        return $(self.project) ;
+    }
+        
     # Returns a user-readable name for this target.
     rule full-name ( )
     {
@@ -496,72 +508,6 @@ rule basic-target ( name : project
 
 class basic-target : abstract-target ;
 
-.args = 5 6 7 8 9 ;
-
-# Creates a main target alternative of type 'class-name'. The ctor will be
-# passed 'target-name', 'project' and all trailing arguments.
-# If 'requirements-pos' and 'default-build-pos' are specified, the corresponding
-# trailing arguments will be specially processed.
-rule main-target-alternative ( target-name project class-name 
-        : requirements-pos ? : use-requirements-pos ? : default-build-pos ?
-        : * )
-{
-    for local i in $(.args) 
-    {
-        a$(i) = $($(i)) ;
-    }
-       
-    if $(requirements-pos)
-    {
-        local real-pos = $(.args[$(requirements-pos)]) ;
-        local real-pos2 = $(.args[$(use-requirements-pos)]) ;
-        local project-requirements = [ project.attribute $(project) requirements ] ;
-        local project-use-requirements = [ project.attribute $(project) use-requirements ] ;
-
-        local loc = [ project.attribute $(project) location ] ;
-        local requirements = 
-            [ property.translate-paths $($(real-pos)) : $(loc) ] ; 
-        # Should have only free properties
-        if [ property.remove free : $($(real-pos2)) ]
-        {
-            errors.error "use-requirements" $($(real-pos2)) "have non-free properties" ;
-        }
-        
-        local use-requirements = 
-            [ property.translate-paths $($(real-pos2)) : $(loc) ] ;           
-        use-requirements += $(project-use-requirements) ;
-        
-        requirements = [ property.refine $(project-requirements) : $(requirements) ] ;
-        if $(requirements[1]) = "@error" 
-        {
-            error "Conflicting requirements for target:" $(requirements) ;
-        }
-        else
-        {
-            a$(real-pos) = $(requirements) ;
-        }                        
-        a$(real-pos2) = $(use-requirements) ;        
-    }
-    
-    if $(default-build-pos)
-    {
-        local real-pos = $(.args[$(default-build-pos)]) ;
-        if ! $(a$(real-pos))
-        {
-            a$(real-pos) = [ project.attribute $(project) default-build ] ;
-        }        
-    }
-               
-    local location = [ project.attribute $(project) location ] ;
-    local ptarget = [ project.target $(location) ] ;
-    local target = [ $(ptarget).main-target $(target-name) ] ;
-
-    $(target).add-alternative
-        [ new $(class-name) $(target-name) : $(project) 
-          : $(a5) : $(a6) : $(a7) : $(a8) : $(a9) ] ;
-}
-
-
 rule typed-target ( name : project : type 
     : sources * : requirements * : default-build * : use-requirements * )
 {
@@ -587,3 +533,72 @@ rule typed-target ( name : project : type
 }
                     
 class typed-target : basic-target ;
+
+# Returns the requirement to use when declaring a main target,
+# which are obtained by
+# - translating all specified property paths, and
+# - refining project requirements with the one specified for the target
+rule main-target-requirements ( 
+  specification * # Properties explicitly specified for a main target
+  : project       # Project where the main target is to be declared
+      )
+{
+    local loc = [ project.attribute $(project) location ] ;
+    local requirements = [ property.translate-paths $(specification) : $(loc) ] ; 
+    local project-requirements = [ project.attribute $(project) requirements ] ;
+    requirements = [ property.refine $(project-requirements) : $(specification) ] ;
+    if $(requirements[1]) = "@error" 
+    {
+        errors.error "Conflicting requirements for target:" $(requirements) ;
+    }
+    return $(requirements) ;
+}
+
+# Returns the use requirement to use when declaraing a main target,
+# which are obtained by
+# - translating all specified property paths, and
+# - adding project's use requirements
+rule main-target-use-requirements (
+  specification * # Use-properties explicitly specified for a main target
+  : project       # Project where the main target is to be declared
+     )
+{
+    local loc = [ project.attribute $(project) location ] ;         
+    local project-use-requirements = [ project.attribute $(project) use-requirements ] ;
+
+    local use-requirements = [ property.translate-paths $(specification) : $(loc) ] ;
+    use-requirements += $(project-use-requirements) ;
+
+    return $(use-requirements) ;
+}
+
+# Return the default build value to use when declaring a main target,
+# which is obtained by using specified value if not empty and parent's
+# default build attribute otherwise.
+rule main-target-default-build (
+  specification * # Default build explicitly specified for a main target
+  : project       # Project where the main target is to be declared
+     )
+{
+    if $(specification)
+    {
+        return $(specification) ;
+    }
+    else
+    {
+        return [ project.attribute $(project) default-build ] ;        
+    }    
+}         
+
+# Registers the specified target as a main target alternatives.
+# Gets project and name for 'target', obtains main target
+# from them, and adds targets to the list of alternatives for
+# the main target.
+rule main-target-alternative ( target ) 
+{               
+    local location = [ project.attribute [ $(target).project ] location ] ;
+    local ptarget = [ project.target $(location) ] ;
+    local mtarget = [ $(ptarget).main-target [ $(target).name ] ] ;
+
+    $(mtarget).add-alternative $(target) ;
+}
