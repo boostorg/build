@@ -12,13 +12,13 @@ import assert ;
 # first argument which is passed to the rule named by the first
 # element.
 
-# Return the elements e of $(sequence) for which [ $(predicate) e ] is
+# Return the elements e of $(sequence) for which [ $(predicate) e ]
 # has a non-null value.
 rule filter ( predicate + : sequence * )
 {
     local caller = [ CALLER_MODULE ] ;
-    local result ; 
-    
+    local result ;
+
     for local e in $(sequence)
     {
         if [ modules.call-in $(caller) : $(predicate) $(e) ]
@@ -34,8 +34,8 @@ rule filter ( predicate + : sequence * )
 rule transform ( function + : sequence * )
 {
     local caller = [ CALLER_MODULE ] ;
-    local result ; 
-    
+    local result ;
+
     for local e in $(sequence)
     {
         result += [ modules.call-in $(caller) : $(function) $(e) ] ;
@@ -78,14 +78,14 @@ rule merge ( s1 * : s2 * : ordered * )
     ordered ?= sequence.less ;
     local result__ ;
     local caller = [ CALLER_MODULE ] ;
-    
+
     while $(s1) && $(s2) {
-        if [ modules.call-in $(caller) : $(ordered) $(s1[1]) $(s2[1]) ] 
+        if [ modules.call-in $(caller) : $(ordered) $(s1[1]) $(s2[1]) ]
         {
             result__ += $(s1[1]) ;
-            s1 = $(s1[2-]) ;                
-        } 
-        else 
+            s1 = $(s1[2-]) ;
+        }
+        else
         {
             result__ += $(s2[1]) ;
             s2 = $(s2[2-]) ;
@@ -94,7 +94,7 @@ rule merge ( s1 * : s2 * : ordered * )
     result__ += $(s1) ;
     result__ += $(s2) ;
 
-    return $(result__) ;    
+    return $(result__) ;
 }
 
 # join the elements of s into one long string. If joint is supplied,
@@ -116,7 +116,7 @@ rule length ( s * )
 {
     local length = "" ;
     local zeros p10 d z ; # declared once for speed
-    
+
     # Find the power of 10 that is just less than length(s)
     zeros = "" ;
     p10 = 1 ;
@@ -125,7 +125,7 @@ rule length ( s * )
         p10 = $(p10)0 ;
         zeros = $(zeros[1])0 $(zeros) ;
     }
-    
+
     # zeros is a list of the form  ... 000 00 0 ""
     for z in $(zeros) # for each digit in the result
     {
@@ -135,10 +135,10 @@ rule length ( s * )
         {
             d = $(d[2-]) ;
         }
-        
+
         # append it to the result
         length = $(length)$(d[1]) ;
-        
+
         # Explanation: $(d[1])$(z) the largest number x of the form
         # n000..., where n is a digit, such that x <= length(s). Here
         # we're deleting x elements from the list. Since $(s[n]-)
@@ -175,10 +175,10 @@ local rule __test__ ( )
                 return true ;
             }
         }
-        
+
         assert.result 4 6 4 2 8
           : sequence.filter is-even : 1 4 6 3 4 7 2 3 8 ;
-        
+
         # test that argument binding works
         local rule is-equal-test ( x y )
         {
@@ -187,23 +187,23 @@ local rule __test__ ( )
                 return true ;
             }
         }
-        
+
         assert.result 3 3 3 : sequence.filter is-equal-test 3 : 1 2 3 4 3 5 3 5 7 ;
-        
+
         local rule append-x ( n )
         {
             return $(n)x ;
         }
-        
+
         assert.result 1x 2x 3x : sequence.transform append-x : 1 2 3 ;
-        
+
         local rule repeat2 ( x )
         {
             return $(x) $(x) ;
         }
-        
+
         assert.result 1 1 2 2 3 3 : sequence.transform repeat2 : 1 2 3 ;
-        
+
         local rule test-greater ( a b )
         {
             if $(a) > $(b)
@@ -219,23 +219,23 @@ local rule __test__ ( )
 
         assert.result foo-bar-baz : sequence.join foo bar baz : - ;
         assert.result substandard : sequence.join sub stan dard ;
-        
+
         assert.result 0 : sequence.length ;
         assert.result 3 : sequence.length a b c ;
         assert.result 17 : sequence.length 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 ;
-        
+
         assert.result 1 : sequence.length a ;
         assert.result 10 : sequence.length a b c d e f g h i j ;
         assert.result 11 : sequence.length a b c d e f g h i j k ;
         assert.result 12 : sequence.length a b c d e f g h i j k l ;
-        
+
         local p2 = x ;
         for local i in 1 2 3 4 5 6 7 8
         {
           p2 = $(p2) $(p2) ;
         }
         assert.result 256 : sequence.length $(p2) ;
-        
+
         assert.result 1 2 3 4 5
           : sequence.unique 1 2 3 2 4 3 3 5 5 5 ;
     }

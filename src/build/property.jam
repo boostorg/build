@@ -5,6 +5,7 @@
 
 import feature ;
 import utility : ungrist ;
+import sequence : unique ;
 
 # Refines 'properties' by overriding any elements for which a different
 # value is specified in 'requirements'. If the resulting property set
@@ -17,27 +18,23 @@ rule refine ( properties * : requirements * : feature-space ? )
     feature-space ?= feature ;
 
     local result ;
-    local result-free ;
     local error ;
 
 
+    # All the elements of requirements should be present in the result
+    # Record them so that we can handle 'properties'.
     for local r in $(requirements)
     {
-        if free in [ $(feature-space).attributes $(r:G) ]
-        {
-            result-free += $(r) ;
-        }
-        else
-        {
-            __require__$(r:G) = $(r:G=) ;
-        }
+        # Note: cannot use local here, so take an ugly name
+         __require__$(r:G) = $(r:G=) ;
     }
 
     for local p in $(properties)
     {
+        # No processing for free properties
         if free in [ $(feature-space).attributes $(p:G) ]
         {
-            result-free += $(p) ;
+            result += $(p) ;
         }
         else
         {
@@ -76,8 +73,22 @@ rule refine ( properties * : requirements * : feature-space ? )
     }
     else
     {
-        return $(result) $(result-free) ;
+        return [ unique $(result) $(requirements) ] ;
     }
+}
+
+# Returns a path which represents the given property set.
+# TODO: this is a quick sketch. We need much better logic.
+rule as-path ( properties * )
+{
+    local components ;
+    for local p in $(properties)
+    {
+        local name = [ ungrist $(p:G) ] ;
+        local value = $(p:G=) ;
+        components += $(name)-$(value) ;
+    }
+    return $(components:J=/) ;
 }
 
 local rule __test__ ( )
@@ -114,10 +125,19 @@ local rule __test__ ( )
         : $(test-space)
         ;
 
+    assert.result <toolset>gcc <rtti>off
+        : refine <toolset>gcc : <rtti>off : $(test-space)
+        ;
+
+
     r = [ refine <toolset>gcc <rtti>off
             : <rtti>on
             : $(test-space) ] ;
     assert.equal $(r[1]) : "@error" ;
+
+    assert.result optimization-off/variant-debug
+        : as-path <optimization>off <variant>debug
+        ;
 
 }
 

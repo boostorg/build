@@ -200,6 +200,14 @@ rule text (
     }
 }
 
+# Outputs the text to the current targets, after word-wrapping it
+rule wrapped-text ( text + )
+{
+    local lines = [ split-at-words $(text) ] ;
+    text $(lines) ;
+}
+
+
 # Append single line to target file.
 #
 actions quietly text-action
