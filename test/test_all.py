@@ -27,3 +27,4 @@ import relative_sources
 import no_type
 import chain
 import default_build
+import main_properties

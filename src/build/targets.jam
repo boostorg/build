@@ -287,6 +287,12 @@ rule main-target ( name : project )
         ref = [ property.evaluate-conditionals $(ref) ] ;
         ref = [ property.take free : [ property.remove incidental : $(ref) ] ] ;
         
+        # Mark all targets in result as roots
+        for local t in $(result)
+        {
+            $(t).root true ;
+        }
+        
         # Process all vtargets that will be created if this main target
         # is created.
         local all-targets = 
@@ -370,7 +376,7 @@ rule basic-target ( name : project
                     [ property.refine $(properties) : $(self.requirements) ] ;
 
                 rproperties = [ property.evaluate-conditionals $(rproperties) ] ;
-
+                
                 if $(rproperties[1]) != "@error"                    
                 {
                     # TODO: issue a warning when requirements change properties, but

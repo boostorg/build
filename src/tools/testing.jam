@@ -10,7 +10,7 @@ import class : class new ;
 import property ;
 
 rule unit-test-target-class ( name : project : sources * : requirements * 
-                         : default-build )
+                         : default-build * )
 {
     typed-target.__init__ $(name) : $(project) : EXE : $(sources) 
       : $(requirements) : $(default-build) ;

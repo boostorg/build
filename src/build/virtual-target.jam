@@ -69,6 +69,18 @@ rule virtual-target ( name : type ? : project
         }
         return $(self.action) ;
     }
+    
+    # Sets/gets the 'root' flag. Target is root is it directly correspods to some
+    # variant of a main target.
+    rule root ( set ? )
+    {
+        if $(set)
+        {
+            self.root = true ;
+        }
+        return $(self.root) ;
+    }
+    
 
     # Sets the dependency graph this target is part of.
     # 'dg' is an instance of 'subvariant-dg' class.
@@ -432,7 +444,10 @@ rule traverse ( target )
 
         for local t in [ $(action).sources ] 
         {
-            result += [ traverse $(t) ] ;
+            if ! [ $(t).root ] 
+            {                
+                result += [ traverse $(t) ] ;
+            }            
         }        
     }
     return $(result) ;
