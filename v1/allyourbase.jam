@@ -771,7 +771,6 @@ rule HdrSearchAndLocate ( header : search * )
         }
         else
         {
-            NOUPDATE $(header) ;
             LOCATE on $(header) = $(DOT) ;
             gBINDING($(header)) = $(header:G=:R=$(DOT)) ;
         }
