@@ -122,7 +122,6 @@ if $(NT)
 {
     variant debug-python : debug :
       <define>BOOST_DEBUG_PYTHON
-      <define>_DEBUG
       <gcc><define>Py_DEBUG
       ;
 }
