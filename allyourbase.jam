@@ -449,6 +449,8 @@ YACCFLAGS       ?= ;
 
 HDRPATTERN = 
         "^[     ]*#[    ]*include[      ]*([<\"][^\">]*[\">]).*$" ;
+          
+#" My Jam mode gets its syntax highlighting confused without this comment
 
 OSFULL = $(OS)$(OSVER)$(OSPLAT) $(OS)$(OSPLAT) $(OS)$(OSVER) $(OS) ;
 #
