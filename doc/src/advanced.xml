@@ -1134,8 +1134,23 @@ stage dist : hello helpers ;
 <programlisting>
 stage dist : hello helpers : &lt;location&gt;/usr/bin ;
 </programlisting>
+        While you can achieve the same effect by changing the target name to
+        <filename>/usr/bin</filename>, using the <code>location</code>
+        property is better because it allows to use easy to remember name on
+        command line, and in other targets.
       </para>
 
+      <para>The <code>location</code> property is especially handy when the location
+        is not fixed, but depends on build variant or environment variables:
+<programlisting>
+stage dist : hello helpers : &lt;variant&gt;release:&lt;location&gt;dist/release
+                             &lt;variant&gt;debug:&lt;location&gt;dist/debug ;
+stage dist2 : hello helpers : &lt;location&gt;$(DIST) ;
+</programlisting> 
+        See also <link linkend="bbv2.reference.variants.propcond">conditional
+          properties</link> and <link linkend="bbv2.faq.envar">environment variables</link>
+      </para>
+      
       <para>
         Specifying the names of all libraries to install can be boring. The
         <code>stage</code> allows to specify only the top-level executable
@@ -1157,6 +1172,16 @@ stage dist : hello
         If the set of target types is specified, only targets of that type
         will be installed, otherwise, all found target will be installed.
       </para>
+
+      <para>The <link linkend="bbv2.builtins.alias"><code>alias</code></link>
+      rule can be used when targets must be installed into several
+      directories:
+<programlisting>
+alias install : install-bin install-lib ;
+stage install-bin : applications : /usr/bin ;
+stage install-lib : helper : /usr/lib ;
+</programlisting>
+    </para>
         
     </section>
 
@@ -1309,6 +1334,8 @@ unit-test helpers_test : helpers_test.cpp helpers ;
             libraries to system paths. This is very convenient during
             development. Plase see the <link
             linkend="bbv2.faq.dll-path">FAQ entry</link> for details.
+            Note that on Mac OSX, the paths are unconditionally hardcoded by
+            the linker, and it's not possible to disable that behaviour.
           </para>
         </listitem></varlistentry>
     </variablelist>
