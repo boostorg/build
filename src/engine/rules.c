@@ -43,27 +43,51 @@
  * 08/23/94 (seiwald) - Support for '+=' (append to variable)
  */
 
+static void set_rule_actions( RULE* rule, rule_actions* actions );
+static void set_rule_body( RULE* rule, argument_list* args, PARSE* procedure );
 static struct hash *targethash = 0;
 
 
-/*
- * bindrule() - return pointer to RULE, creating it if necessary
- */
 
+/*
+ * enter_rule() - return pointer to RULE, creating it if necessary in
+ * target_module.
+ */
 static RULE *
-enter_rule( char *rulename, module* m )
+enter_rule( char *rulename, module *target_module )
 {
     RULE rule, *r = &rule;
 
     r->name = rulename;
 
-    if( hashenter( m->rules, (HASHDATA **)&r ) )
+    if ( hashenter( target_module->rules, (HASHDATA **)&r ) )
     {
         r->name = newstr( rulename );	/* never freed */
         r->procedure = (PARSE *)0;
+        r->module = 0;
         r->actions = 0;
         r->arguments = 0;
-        r->local_only = 0;
+        r->exported = 0;
+        r->module = target_module;
+    }
+    return r;
+}
+
+/*
+ * define_rule() - return pointer to RULE, creating it if necessary in
+ * target_module. Prepare it to accept a body or action originating in
+ * src_module.
+ */
+static RULE *
+define_rule( module *src_module, char *rulename, module *target_module )
+{
+    RULE *r = enter_rule( rulename, target_module );
+
+    if ( r->module != src_module ) /* if the rule was imported from elsewhere, clear it now */
+    {
+        set_rule_body( r, 0, 0 ); 
+        set_rule_actions( r, 0 );
+        r->module = src_module; /* r will be executed in the source module */
     }
 
     return r;
@@ -285,6 +309,9 @@ donerules()
     }
 }
 
+/*
+ * args_new() - make a new reference-counted argument list
+ */
 argument_list* args_new()
 {
     argument_list* r = malloc( sizeof(argument_list) );
@@ -293,11 +320,17 @@ argument_list* args_new()
     return r;
 }
 
+/*
+ * args_refer() - add a new reference to the given argument list
+ */
 void args_refer( argument_list* a )
 {
     ++a->reference_count;
 }
 
+/*
+ * args_free() - release a reference to the given argument list
+ */
 void args_free( argument_list* a )
 {
     if (--a->reference_count <= 0)
@@ -307,11 +340,17 @@ void args_free( argument_list* a )
     }
 }
 
+/*
+ * actions_refer() - add a new reference to the given actions
+ */
 void actions_refer(rule_actions* a)
 {
     ++a->reference_count;
 }
 
+/*
+ * actions_free() - release a reference to the given actions
+ */
 void actions_free(rule_actions* a)
 {
     if (--a->reference_count <= 0)
@@ -322,6 +361,9 @@ void actions_free(rule_actions* a)
     }
 }
 
+/*
+ * set_rule_body() - set the argument list and procedure of the given rule
+ */
 void set_rule_body( RULE* rule, argument_list* args, PARSE* procedure )
 {
     if ( args )
@@ -337,38 +379,70 @@ void set_rule_body( RULE* rule, argument_list* args, PARSE* procedure )
     rule->procedure = procedure;
 }
 
-static char* global_name( char* rulename, module* m )
+/*
+ * global_name() - given a rule, return the name for a corresponding rule in the global module
+ */
+static char* global_rule_name( RULE* r )
 {
-    char name[4096] = "";
-    strncat(name, m->name, sizeof(name) - 1);
-    strncat(name, rulename, sizeof(name) - 1 );
-    return newstr(name);
-}
-
-static RULE* global_rule( char* rulename, module* m )
-{
-    char* name = global_name( rulename, m);
-    RULE* result = enter_rule( name, root_module() );
-    freestr(name);
-    return result;
-}
-
-RULE* new_rule_body( module* m, char* rulename, argument_list* args, PARSE* procedure, int local_only )
-{
-    RULE* local = enter_rule( rulename, m );
-    procedure->module = m;
-    if ( !local_only )
+    if ( r->module == root_module() )
     {
-        RULE* global = global_rule( rulename, m );
-        procedure->rulename = copystr( global->name );
-        set_rule_body( global, args, procedure );
+        return r->name;
     }
     else
     {
-        local->local_only = 1;
-        procedure->rulename = global_name( rulename, m );
+        char name[4096] = "";
+        strncat(name, r->module->name, sizeof(name) - 1);
+        strncat(name, r->name, sizeof(name) - 1 );
+        return newstr(name);
     }
+}
+
+/*
+ * global_rule() - given a rule, produce the corresponding entry in the global module
+ */
+static RULE* global_rule( RULE* r )
+{
+    if ( r->module == root_module() )
+    {
+        return r;
+    }
+    else
+    {
+        char* name = global_rule_name( r );
+        RULE* result = define_rule( r->module, name, root_module() );
+        freestr(name);
+        return result;
+    }
+}
+
+/*
+ * new_rule_body() - make a new rule named rulename in the given
+ * module, with the given argument list and procedure. If exported is
+ * true, the rule is exported to the global module as
+ * modulename.rulename.
+ */
+RULE* new_rule_body( module* m, char* rulename, argument_list* args, PARSE* procedure, int exported )
+{
+    RULE* local = define_rule( m, rulename, m );
+    local->exported = exported;
     set_rule_body( local, args, procedure );
+    
+    /* Mark the procedure with the global rule name, regardless of
+     * whether the rule is exported. That gives us something
+     * reasonably identifiable that we can use, e.g. in profiling
+     * output. Only do this once, since this could be called multiple
+     * times with the same procedure.
+     */
+    if ( procedure->rulename == 0 )
+        procedure->rulename = global_rule_name( local );
+
+    /* export the rule to the global module  if neccessary */
+    if ( exported )
+    {
+        RULE* global = global_rule( local );
+        set_rule_body( global, args, procedure );
+    }
+
     return local;
 }
 
@@ -394,8 +468,8 @@ static rule_actions* actions_new( char* command, LIST* bindlist, int flags )
 
 RULE* new_rule_actions( module* m, char* rulename, char* command, LIST* bindlist, int flags )
 {
-    RULE* local = enter_rule( rulename, m );
-    RULE* global = global_rule( rulename, m );
+    RULE* local = define_rule( m, rulename, m );
+    RULE* global = global_rule( local );
     set_rule_actions( local, actions_new( command, bindlist, flags ) );
     set_rule_actions( global, local->actions );
     return local;
@@ -403,10 +477,10 @@ RULE* new_rule_actions( module* m, char* rulename, char* command, LIST* bindlist
 
 RULE *bindrule( char *rulename, module* m )
 {
-	RULE rule, *r = &rule;
-	r->name = rulename;
+    RULE rule, *r = &rule;
+    r->name = rulename;
     
-	if ( hashcheck( m->rules, (HASHDATA **)&r ) )
+    if ( hashcheck( m->rules, (HASHDATA **)&r ) )
         return r;
     else
         return enter_rule( rulename, root_module() );
@@ -414,7 +488,7 @@ RULE *bindrule( char *rulename, module* m )
 
 RULE* import_rule( RULE* source, module* m, char* name )
 {
-    RULE* dest = enter_rule( name, m );
+    RULE* dest = define_rule( source->module, name, m );
     set_rule_body( dest, source->arguments, source->procedure );
     set_rule_actions( dest, source->actions );
     return dest;
