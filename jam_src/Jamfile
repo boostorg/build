@@ -1,0 +1,227 @@
+#
+# Jamfile to build Jam (a make(1)-like program)
+#
+# There are no user-serviceable parts in this file.
+#
+# Put executables in platform-specific  subdirectory.
+
+# compile without assertions by default
+CCFLAGS ?= -DNDEBUG ;
+
+if $(VMS) 	{ LOCATE_TARGET ?= [.binvms] ; }
+else if $(MAC) 	{ LOCATE_TARGET ?= :bin.mac ; }
+else 		{ LOCATE_TARGET ?= bin.$(OSFULL[1]:L) ; }
+
+# Leave generated source in current directory; it would be nice to use
+# these lines below to build the source into the platform-specific
+# directory, but getting scan.c to include the right jambase.h is
+# hard: with ""'s, it always gets the bootstrap version; with <>'s,
+# it won't find the bootstrap version.
+
+# SEARCH_SOURCE ?= $(LOCATE_TARGET) $(DOT) ;
+# LOCATE_SOURCE ?= $(LOCATE_TARGET) ;
+
+#
+# We have some different files for UNIX, VMS, and NT.
+#
+
+if $(NT) {
+     code = execnt.c filent.c pathunix.c ;
+     if $(OSTYPE) = cygwin
+     {
+        YACC ?= bison -t -d -l -v --yacc ;
+        YACCFILES = y.tab ;
+     }
+} 
+else if $(OS2)	
+{ 
+  # special case for OS/2. When building Jam with GCC/EMX
+  # we need to use the "fileunix.c" file
+  #
+  # when we build it with other toolsets, we use "fileos2.c"
+  #
+  code = execunix.c pathunix.c ;
+  if $(TOOLSET) = EMX
+  {
+    CCFLAGS += -D__OS2__ ;
+    code += fileunix.c ;
+  }
+  else
+  {
+    code += fileos2.c ;
+  }
+} 
+else if $(VMS) 	{ code = execvms.c filevms.c pathvms.c ; } 
+else if $(MAC)	{ code = execmac.c filemac.c pathmac.c ; }
+else 		{ code = execunix.c fileunix.c pathunix.c ; }
+
+# We have to signal jam.h for these
+
+if $(OS) = NT
+{
+  if $(TOOLSET) = MINGW || $(TOOLSET) = LCC 
+  {
+    CCFLAGS += -DNT ;
+  }
+  else
+  {
+    CCFLAGS += /DNT ;
+  }
+}
+
+# Do we know yacc?
+
+if $(YACC) 	{ code += jamgram.y ; }
+else            { code += jamgram.c ; }
+
+#
+# Build the jamgram.y from the jamgram.yy
+# yyacc is a slippery script that makes grammars a little
+# easier to read/maintain.
+#
+
+if ( $(UNIX) || $(NT) ) && $(YACC)
+{
+    local SUFEXE = ; # yyacc is a script with no suffix - this handles cygwin
+    GenFile jamgram.y jamgramtab.h : ./yyacc jamgram.yy ;
+}
+
+#
+# How to build the compiled in jambase.
+#
+
+Main		mkjambase : mkjambase.c ;
+
+#
+# The guts of the Jamfile: how to build Jam
+#
+
+Main 		jam : jam.c jambase.c ;
+LinkLibraries 	jam : libjam.a ;
+GenFile 	jambase.c : mkjambase$(SUFEXE) Jambase ;
+
+Library         libjam.a : 
+		    command.c compile.c $(code) expand.c glob.c
+		    hash.c headers.c hdrmacro.c lists.c make.c make1.c newstr.c
+		    option.c parse.c regexp.c rules.c scan.c search.c subst.c
+		    timestamp.c variable.c modules.c strings.c filesys.c ;
+ 
+
+if $(BINDIR) 	{ InstallBin $(BINDIR) : jam ; }
+
+#
+# Distribution making from here on out.
+#
+
+ALLSOURCE =
+	Build.com Build.mpw Jam.html Jambase Jambase.html Jamfile
+	Jamfile.html Makefile Porting README RELNOTES command.c command.h
+	compile.c compile.h execcmd.h execmac.c execunix.c execnt.c execvms.c
+	expand.c expand.h filemac.c filent.c fileos2.c filesys.h fileunix.c
+	filevms.c glob.c hash.c hash.h hdrmacro.c hdrmacro.h headers.c
+	headers.h jam.c jam.h jambase.c jambase.h jamgram.c jamgram.h
+	jamgram.y jamgram.yy jamgramtab.h lists.c lists.h make.c make.h
+	make1.c mkjambase.c modules.c newstr.c newstr.h option.c option.h parse.c
+	parse.h patchlevel.h pathmac.c pathunix.c pathvms.c regexp.c regexp.h
+	rules.c rules.h scan.c scan.h search.c search.h strings.c subst.c timestamp.c
+	timestamp.h variable.c variable.h filesys.c filesys.h yyacc
+	INSTALL
+	common.mk
+	builds/win32-visualc.mk
+	builds/win32-borlandc.mk
+	builds/win32-gcc.mk
+	;
+
+
+rule Binary
+{
+    NotFile  package ;
+    Depends  package : $(<) ;
+    
+    DEPENDS $(<) : $(>) ;
+    
+    switch $(<)
+    {
+    case *-win32.zip       : Zip-Exe  $(<) : $(>) ;
+    case *-os2.zip         : Zip-Exe  $(<) : $(>) ;
+    case *-linux-libc6.tar : GZip-Exe $(<) : $(>) ;
+    }
+}
+
+
+rule Package
+{
+	NotFile package ;
+	Depends package : $(<) ;
+
+	DEPENDS $(<) : $(>) ;
+
+	switch $(<) 
+	{
+	case *.tar  : { Tar-Gz  $(<) : $(>) ; Tar-Bz2 $(<) : $(>) ; }
+	case *.zip  :   Zip     $(<) : $(>) ;
+	}
+}
+
+VERSION = ftjam-2.3.5 ;
+
+
+actions Tar-Gz
+{
+  ln -s . $(VERSION)
+  tar cvhf $(<) $(VERSION)/$(>)
+  rm $(VERSION)
+  gzip -9 $(<)
+}
+
+actions Tar-Bz2
+{
+  ln -s . $(VERSION)
+  tar cvhf $(<) $(VERSION)/$(>)
+  rm $(VERSION)
+  bzip2 -9 $(<)
+}
+
+
+actions Zip
+{
+  zip -9r $(<) $(>) 
+}
+
+actions Zip-Exe
+{
+  zip -9j $(<) $(LOCATE_TARGET)\jam.exe
+}
+
+actions GZip-Exe
+{
+  ln -s $(LOCATE_TARGET)/jam jam
+  strip jam
+  tar chf $(<) jam
+  rm -f jam
+  gzip -9 $(<)
+}
+
+
+
+if $(NT)
+{
+  Binary  $(VERSION)-win32.zip : $(ALLSOURCE) ;
+  Package $(VERSION).zip       : $(ALLSOURCE) ;
+}
+else if $(OS2)
+{
+  Binary  $(VERSION)-os2.zip : $(ALLSOURCE) ;
+  Package $(VERSION).zip     : $(ALLSOURCE) ;
+}
+else if $(OS) = LINUX
+{
+  # how can we detect the C library version reliably ??
+  # for now, this should only be used for convenience
+  # purposes, until we add .rpm and .deb support in..
+  
+  Binary $(VERSION)-linux-libc6.tar : jam ;
+
+  Package $(VERSION).tar : $(ALLSOURCE) ;
+  Package $(VERSION).zip : $(ALLSOURCE) ;
+}
