@@ -90,7 +90,7 @@ actions link bind LIBRARIES
 }
 
 # Declare action for creating static libraries
-actions archive 
+actions piecemeal archive 
 {
     ar ur $(<) $(>)
 }
