@@ -488,13 +488,13 @@ rule free-features ( )
     return $(free.features) ;
 }
 
-rule expand-composites ( property-set * )
+rule expand-composites ( properties * )
 {
-    local explicit-features = $(property-set:G) ;
+    local explicit-features = $(properties:G) ;
     
     local result ;
     # now expand composite features
-    for local p in $(property-set)
+    for local p in $(properties)
     {
         for local x in [ expand-composite $(p) ]
         {
@@ -508,11 +508,11 @@ rule expand-composites ( property-set * )
                 {
                     error explicitly-specified values of non-free feature
                       $(x:G) conflict : 
-                        values: [ get-values $(x:G) : $(property-set) ] ;
+                        values: [ get-values $(x:G) : $(properties) ] ;
                 }
                 else if
                   # if it's not the result of composite expansion
-                  $(x) in $(property-set) 
+                  $(x) in $(properties) 
                     # or it is, but it doesn't match any explicitly-specified feature
                     || ( ! $(x:G) in $(explicit-features) )
                 {
@@ -529,15 +529,44 @@ rule expand-composites ( property-set * )
 # normalized property set with all implicit features expressed
 # explicitly, all subfeature values individually expressed, and all
 # components of composite properties expanded. Non-free features
-# directly expressed in the input property-set cause any values of
+# directly expressed in the input properties cause any values of
 # those features due to composite feature expansion to be dropped. If
 # two values of a given non-free feature are directly expressed in the
 # input, an error is issued.
-rule expand ( property-set * )
+rule expand ( properties * )
 {
-    local expanded = [ expand-subfeatures $(property-set) ] ;
+    local expanded = [ expand-subfeatures $(properties) ] ;
     
     return [ expand-composites $(expanded) ] ;
+}
+
+# Given a property-set of the form
+#       v1/v2/...vN-1/<fN>vN/<fN+1>vN+1/...<fM>vM
+#
+# Returns
+#       v1 v2 ... vN-1 <fN>vN <fN+1>vN+1 ... <fM>vM
+#
+# Note that vN...vM may contain slashes. This is resilient to the
+# substitution of backslashes for slashes, since Jam, unbidden,
+# sometimes swaps slash direction on NT.
+rule split ( property-set )
+{
+    local pieces = [ regex.split $(property-set) [\\/] ] ;
+    local result ;
+    
+    for local x in $(pieces)
+    {
+        if ( ! $(x:G) ) && $(result[-1]:G)
+        {
+            result = $(result[1--2]) $(result[-1])/$(x) ;
+        }
+        else
+        {
+            result += $(x) ;
+        }
+    }
+    
+    return $(result) ;
 }
 
 }
@@ -590,6 +619,22 @@ local rule __test__ ( )
         
         assert.result <variant>debug <define>_DEBUG <optimization>on
           : expand debug <optimization>on
+          ;
+        
+        assert.result <x>y/z <a>b/c <d>e/f
+          : split <x>y/z/<a>b/c/<d>e/f
+          ;
+        
+        assert.result <x>y/z <a>b/c <d>e/f
+          : split <x>y\\z\\<a>b\\c\\<d>e\\f
+          ;
+        
+        assert.result a b c <d>e/f/g <h>i/j/k
+          : split a/b/c/<d>e/f/g/<h>i/j/k
+          ;
+        
+        assert.result a b c <d>e/f/g <h>i/j/k
+          : split a\\b\\c\\<d>e\\f\\g\\<h>i\\j\\k
           ;
         
         # test error checking
