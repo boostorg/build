@@ -164,12 +164,13 @@ rule print ( )
 {
     import sequence ;
     import print ;
+    import project ;
 
     # Needed to get deterministic order of output, which makes testing simpler
     local rule compare_projects ( p1 p2 )
     {
-        local id1 = [ $(p1).id ] ;
-        local id2 = [ $(p2).id ] ;
+        local id1 = [ project.attribute $(p1) id ] ;
+        local id2 = [ project.attribute $(p2) id ] ;
         if $(id1) < $(id2)
         {
             return true ;
@@ -201,7 +202,8 @@ rule print ( )
         local projects = [ sequence.insertion-sort $(.projects) : compare_projects ] ;
         for local p in $(projects)
         {
-            $(p).print ;
+            local attributes = [ project.attributes $(p) ] ;
+            $(attributes).print ;
         }
     }
 }

@@ -4,22 +4,12 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-#   Each subproject is represented by a module with name Jamfile<jamfile-path>.
-#   The module interface is:
+#  Implements project representation and loading.
 #
-#       rule location ( )
-#       rule id ( )
-#       rule project-root ( )
-#       rule parent ( )
-#       rule requirements ( )
-#       rule default-build ( )
-#       rule source-location ( )
-#       rule target ( ) -- returns the 'project-target' for this project.
-
-#       rule subprojects ( )
-#
-#   Targets defined in Jamfile, as well as target representing the entire
-#   Jamfile will be available using facilities in the 'targets' module.
+#   Each project is represented by 
+#   - a module where all the Jamfile content live. 
+#   - an instance of 'project-attributes' class.
+#   - an instance of 'project-target' class (from targets.jam)
 #
 
 import modules : peek poke ;
@@ -30,6 +20,7 @@ import targets ;
 import errors : error ;
 import project-root ;
 import print ;
+import class : class new ;
 
 
 #
@@ -45,7 +36,7 @@ rule load ( jamfile-location )
     {
         .projects += $(jamfile-location) ;
 
-        for local subproject in [ $(module-name).subprojects ]
+        for local subproject in [ attribute $(module-name) subprojects ]
         {
             load [ os.path.join $(jamfile-location) $(subproject) ] ;
         }
@@ -96,11 +87,11 @@ rule lookup ( id : current-location )
 
             if ! $(project-id)
             {
-                return [ $(module-name).location ] ;
+                return [ attribute $(module-name) location ] ;
             }
             else 
             {
-                local base-id = [ $(module-name).id ] ;
+                local base-id = [ attribute $(module-name) id ] ;
 
                 if ! $(base-id)
                 {
@@ -168,15 +159,12 @@ rule find-target ( id : current-location )
     {
         # Try to load the project at the specified location
         location = [ MATCH (.*)@(.*) : $(project-id) ] ;
-        ECHO "XXX: looking if there's a jamfile at" $(location[1]) ;
         if [ find-jamfile $(location[1]) ]
         {
-            ECHO "XXXX: found" ;
             load $(location[1]) ;
-            # If there's proeject-id relative to the 'location' the
+            # If there's project-id relative to the 'location' the
             # jamfile at 'location' should made those available somehow.
             location = [ lookup $(project-id) : $(current-location) ] ;
-            ECHO "XXXXX: $(location)" ;
         }                        
         else
         {
@@ -185,8 +173,7 @@ rule find-target ( id : current-location )
     }
 
     if $(location) {
-        local project-module = [ module-name $(location) ] ;
-        local project-target = [ $(project-module).target ] ;
+        local project-target = [ project.target $(location) ] ;
         if [ $(project-target).has-main-target $(target-id) ] 
         {
             return [ $(project-target).main-target $(target-id) ] ;
@@ -200,68 +187,6 @@ rule find-target ( id : current-location )
         EXIT ;
     }
 }
-
-rule project ( id ? : option1 * : option2 * : option3 * )
-{
-    local caller = [ CALLER_MODULE ] ;
-    
-    if $(id) {
-        id = [ os.path.root $(id) / ] ;
-
-        $(id).jamfile-location = [ $(caller).location ] ;
-
-        poke $(caller) : __id__ : $(id) ;
-    }
-
-    if $(option1) {
-        assign-option [ CALLER_MODULE ] : $(option1) ;
-    }
-    if $(option2) {
-        assign-option [ CALLER_MODULE ] : $(option2) ;
-    }
-    if $(option3) {
-        assign-option [ CALLER_MODULE ] : $(option3) ;
-    }
-}
-
-rule assign-option ( module : option + )
-{
-    local first = $(option[1]) ;
-    local tail = $(option[2-]) ;
-
-    switch $(first) {
-    case "requirements" :
-        local inherited = [ peek $(module) : __requirements__ ] ;
-        local specified = $(tail) ;
-        local result = [ property.refine $(inherited) : $(specified) ] ;
-
-        if $(result[1]) = "@error"
-        {
-            local location = [ $(module).location ] ;
-            print.wrapped-text
-                "Requirements for project at '$(location)'"
-                "conflict with parent's." ;
-            print.wrapped-text
-                "Explanation: " $(result[2-]) ;
-            EXIT ;
-        }
-        else
-        {
-            poke $(module) : __requirements__ : $(result) ;
-        }
-
-    case "default-build" :
-         poke $(module) : __default-build__ : $(tail) ;
-    case "source-location" :
-         poke $(module) : __source-location__
-              : [ os.path.join [ $(module).location ] $(tail) ] ;
-    case * :
-         print.wrapped-text "Invalid project option '$(first)' specified "
-                            "for project '$(module)'" ;
-         EXIT ;
-    }
-}
-
 
 #
 # Returns the name of module corresponding to 'jamfile-location'.
@@ -353,7 +278,7 @@ local rule load-jamfile (
 
         # Setup, by coordinating with project-root.
         #
-        local project-root-module = [ $(jamfile-module).project-root-module ] ;
+        local project-root-module = [ attribute $(jamfile-module) project-root-module ] ;
         $(project-root-module).register-project $(jamfile-module) ;
 
         # Now load the Jamfile in it's own context.
@@ -380,6 +305,17 @@ local rule initialize (
     : jamfile # The location (binding) of the jamfile for the project to initialize.
     )
 {
+    # Create the module for the Jamfile first.    
+    module $(module-name)
+    {          
+    }    
+    $(module-name).attributes = [ new project-attributes [ os.path.parent $(jamfile) ] ] ;
+    local attributes = $($(module-name).attributes) ;
+
+    # Import rules common to all project modules from project-rules module,
+    # define at the end of this file.
+    modules.clone-rules project-rules $(module-name) ;
+   
     # Make sure we've loaded the project-root corresponding to this
     # Jamfile.
     #
@@ -393,123 +329,176 @@ local rule initialize (
         parent-module = [ load [ os.path.parent $(parent[1]) ] ] ;
     }
 
-    module $(module-name)
-    {
-        import project : project ;
-    }
+    $(attributes).set source-location : $(jamfile-location) : exact ;
+    # CONSIDER: seems to me we need either the first or the second of these.
+    $(attributes).set project-root : $(project-root) ;    
+    $(attributes).set project-root-module : $(project-root-module) ;    
 
-
-    # Import rules common to all project modules from project-rules module,
-    # define at the end of this file.
-    modules.clone-rules project-rules $(module-name) ;
-
-    modules.poke $(module-name) : __jamfile-location__ : $(jamfile-location) ;
-    modules.poke $(module-name) : __source-location__ : $(jamfile-location) ;
-    modules.poke $(module-name) : __project-root__ : $(project-root) ;
-    modules.poke $(module-name) : __project-root-module__ : $(project-root-module) ;
     if $(parent-module)
     {
-        modules.poke $(module-name) : __parent__ : [ os.path.parent $(parent) ] ;
-        modules.poke $(module-name) : __default-build__ : [ $(parent-module).default-build ] ;
-        modules.poke $(module-name) : __requirements__ : [ $(parent-module).requirements ] ;
+        local pattributes = [ attributes $(parent-module) ] ;
+        $(attributes).set parent : [ os.path.parent $(parent) ] ;
+        $(attributes).set default-build 
+            : [ $(pattributes).get default-build ] ;
+        $(attributes).set requirements
+            : [ $(pattributes).get requirements ] ;
     }
     else
     {
-        modules.poke $(module-name) : __default-build__ : debug ;
+        $(attributes).set default-build : debug ;
     }
 }
 
-# This module defines rules common to all projects
-module project-rules {
+# Associate the given id with the given location
+rule register-id ( id : location )
+{
+    $(id).jamfile-location = $(location) ;
+}
 
-    rule location ( )
-    {
-        return $(__jamfile-location__) ;
-    }
+# Class keeping all the attributes of a project.
+#
+# The standard attributes are "id", "location", "project-root", "parent"
+# "requirements", "default-build", "source-location" and "subprojects".
+rule project-attributes ( location )
+{
+    self.location = $(location) ;
 
-    rule id ( )
+    # Set the named attribute from the specification given by the user.
+    # The value actually set may be different.
+    rule set ( attribute : specification * 
+               : exact ? # Sets value from 'specification' without any processing
+               ) 
     {
-        return $(__id__) ;
-    }
-
-    rule project-root ( )
-    {
-        return $(__project-root__) ;
-    }
-
-    rule project-root-module ( )
-    {
-        return $(__project-root-module__) ;
-    }
-
-    rule parent ( )
-    {
-        return $(__parent__) ;
-    }
-
-    rule requirements ( )
-    {
-        return $(__requirements__) ;
-    }
-
-    rule default-build ( )
-    {
-        return $(__default-build__) ;
-    }
-
-    rule source-location ( )
-    {
-        return $(__source-location__) ;
-    }
-
-    rule subproject ( jamfile-location )
-    {
-        __subprojects__ += $(jamfile-location) ;
-    }
-
-    rule subprojects ( )
-    {
-        return $(__subprojects__) ;
-    }
-
-    rule target ( )
-    {
-        # FIXME: this should be done better!
-        import class : new ;
-        if ! $(__target__)
+        if $(exact)
         {
-            __target__ = [ new project-target $(__name__) : $(__name__) ] ;
+            self.$(attribute) = $(specification) ;
         }
-        return $(__target__) ;
+        else if $(attribute) = "requirements" 
+        {
+            local current = $(self.requirements) ;
+            local result = [ property.refine $(current) : $(specification) ] ;
+
+            if $(result[1]) = "@error"
+            {
+                print.wrapped-text
+                    "Requirements for project at '$(self.location)'"
+                    "conflict with parent's." ;
+                print.wrapped-text
+                    "Explanation: " $(result[2-]) ;
+                EXIT ;
+            }
+            else
+            {
+                self.requirements = $(result) ;
+            }
+        }
+        else if $(attribute) = "source-location"
+        { 
+            self.source-location = [ os.path.join $(self.location) $(specification) ] ;
+        }            
+        else if ! $(attribute) in "id" "default-build" "location" "source-location"
+           "project-root" "project-root-module" "parent" "subprojects" 
+        {
+            print.wrapped-text "Invalid project attribute '$(attribute)' specified "
+                               "for project at '$(self.location)'" ;
+            EXIT ;
+        }
+        else
+        {
+            self.$(attribute) = $(specification) ;
+        }
     }
 
+    # Returns the value of the given attribute.
+    rule get ( attribute )
+    {
+        return $(self.$(attribute)) ;
+    }
+
+    # Prints the project attributes.
     rule print ( )
     {
         import sequence ;
         import print ;
 
-        local id = [ id ] ; id ?= (none) ;
-        local parent = [ parent ] ; parent ?= (none) ;
+        local id = $(self.id) ; id ?= (none) ;
+        local parent = $(self.parent) ; parent ?= (none) ;
         print.section "'"$(id)"'" ;
         print.list-start ;
-        print.list-item "Project root:" [ project-root ] ;
+        print.list-item "Project root:" $(self.project-root) ;
         print.list-item "Parent project:" $(parent) ;
-        print.list-item "Requirements:" [ requirements ] ;
-        print.list-item "Default build:" [ default-build ] ;
-        print.list-item "Source location:" [ source-location ] ;
-        print.list-item "Subprojects:" [ sequence.insertion-sort [ subprojects ] ] ;
+        print.list-item "Requirements:" $(self.requirements) ;
+        print.list-item "Default build:" $(self.default-build) ;
+        print.list-item "Source location:" $(self.source-location) ;
+        print.list-item "Subprojects:" [ sequence.insertion-sort $(self.subprojects) ] ;
         print.list-end ;
+    }
+    
+}
+
+class project-attributes ;
+
+# Returns the project-attribute instance for the specified jamfile module.
+rule attributes ( project )
+{
+    return $($(project).attributes) ;
+}
+
+# Returns the value of the specified attribute in the specified jamfile module.
+rule attribute ( project attribute )
+{
+    return [ $($(project).attributes).get $(attribute) ] ;        
+}
+
+# Returns the project target corresponding to the project at 'location'.
+rule target ( location )
+{
+    if ! $(.target.$(location))
+    {
+        #TODO: Need to have some checks that 'location' is correct.
+
+        local pmodule = [ module-name $(location) ] ;        
+        .target.$(location) = [ new project-target $(pmodule) : $(pmodule) ] ;
+    }
+    return $(.target.$(location)) ;    
+}
+
+# This module defines rules common to all projects
+module project-rules {
+
+    rule project ( id ? : option1 * : option2 * : option3 * )
+    {
+        import project ;
+        local attributes = [ project.attributes $(__name__) ] ;
+        if $(id) 
+        {
+           id = [ os.path.root $(id) / ] ;
+           project.register-id $(id) : [ $(attributes).get location ] ;
+           $(attributes).set id : $(id) ;
+        }
+
+        if $(option1) 
+        {
+            $(attributes).set $(option1[1]) : $(option1[2-]) ;
+        }
+        if $(option2) 
+        {
+            $(attributes).set $(option2[1]) : $(option2[2-]) ;
+        }
+        if $(option3) 
+        {
+            $(attributes).set $(option3[1]) : $(option3[2-]) ;
+        }
     }
 
     rule use-project ( id : where )
     {
-        local used-location = [ os.path.root $(where) [ location ] ] ;
-        local project-module = [ project.load $(used-location) ] ;
-        local declared-id = [ $(project-module).id ] ;
+        import project ;
+        local attributes = [ project.attributes $(__name__) ] ;
 
-        # CONSIDER: Should move this import somewhere?
-        import errors : error ;
-        #errors.push-context "error: in 'use-project' rule at" [ errors.call-site ] ;
+        local used-location = [ os.path.root $(where) [ $(attributes).get location ] ] ;
+        local project-module = [ project.load $(used-location) ] ;
+        local declared-id = [ project.attribute $(project-module) id ] ;
 
         if ! $(declared-id)
         {
@@ -519,8 +508,15 @@ module project-rules {
         {
             error "project-id of a project differs from passed to 'use-project'" ;
         }
+    }
 
-        #errors.pop-context ;
+    rule subproject ( dir )
+    {
+        import project ;
+        local attributes = [ project.attributes $(__name__) ] ;
+
+        local now = [ $(attributes).get subprojects ] ;
+        $(attributes).set subprojects : $(now) $(dir) ;
     }
 }
 
