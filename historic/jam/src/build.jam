@@ -456,6 +456,10 @@ if $(grammar)
 {
     .yyacc jamgram.y jamgramtab.h : jamgram.yy ;
 }
+else
+{
+    .exe yyacc : yyacc.c ;
+}
 
 # How to build the grammar.
 if $(NT)
