@@ -19,15 +19,7 @@ import modules ;
 # process if they are asking for help.
 #
 import doc ;
-if [ doc.help ]
-{
-    # Do nothing, the doc system will generate the appropriate
-    # targets that prints out the documentation.
-    # To do this we need to fake the build system loading so the
-    # Jambase doesn't error.
-    module build-system { rule __placeholder__ ( ) { } }
-}
-else
+if ! [ doc.help ]
 {
     # No help requested, go ahead and load and build the users
     # project.

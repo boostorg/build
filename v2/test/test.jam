@@ -1,6 +1,3 @@
-
-module build-system { rule __dummy { } } # Keep the bogus assertion in Jambase happy
-
 import string ;
 import numbers ;
 import sequence ;
