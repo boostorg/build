@@ -144,10 +144,6 @@ rule class (
     
     module class@$(name)
     {
-        # always bring in the rules defined from this module, so that
-        # users can easily call "inherit", for example.
-        import class : * ;
-        
         # The constructor will be called through the __init__ rule
         # above. We import both rules into the class' module here,
         # then export them. Although rules are actually only called in
@@ -189,6 +185,10 @@ rule instance ( name : class args * : * )
     # Enter the namespace of the new object
     module $(name)
     {
+        # always bring in the rules defined from this module, so that
+        # users can easily call "inherit", for example.
+        import class : * ;
+        
         # import all of the rules from the class into the instance,
         # using the optional localize parameter so that they execute
         # in the instance's namespace.
