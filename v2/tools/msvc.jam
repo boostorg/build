@@ -256,16 +256,16 @@ flags msvc WHATEVER <toolset-msvc:version> ;
 # The actions differ only by explicit selection of input language
 actions compile.c
 {
-    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<)" "$(>)"
+    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<:W)" "$(>:W)"
 }
 actions compile.c++
 {
-    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<)" "$(>)"
+    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<:W)" "$(>:W)"
 }
 
 actions compile.rc
 {
-    $(.RC) -l 0x409 -U$(UNDEFS) -D$(DEFINES) -I"$(INCLUDES)" -fo "$(<)" "$(>)"
+    $(.RC) -l 0x409 -U$(UNDEFS) -D$(DEFINES) -I"$(INCLUDES)" -fo "$(<:W)" "$(>:W)"
 }
 
 # Declare flags and action for linking
