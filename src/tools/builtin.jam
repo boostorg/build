@@ -233,7 +233,7 @@ type.register CPP : cpp cxx ;
 declare-type NT : RSP : rsp ;
 if [ os.name ] = NT  # must be conditional; we'll error on other OSes
 {
-    generators.register-composing builtin.response-file : RSP : OBJ STATIC_LIB IMPORT_LIB ;
+    generators.register-composing builtin.response-file : OBJ STATIC_LIB IMPORT_LIB  : RSP ;
 }
 
 
@@ -242,7 +242,7 @@ flags builtin.response-file LIBRARIES <library> ;
 # response-file generation is broken up into two phases, the first of
 # which overwrites any existing file and the second of which appends
 # to the file, piecemeal, so that no command-line is too long.
-rule response-file ( target : sources * )
+rule response-file ( target : sources * : properties * )
 {
     sources += [ on $(target) return $(LIBRARIES) ] ;
     
