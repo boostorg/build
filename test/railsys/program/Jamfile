@@ -26,7 +26,7 @@ project program
     : requirements 
         <include>$(BOOST_ROOT)
         <threading>multi
-	<library>/qt//qt	
+        <library>/qt//qt    
         <hardcode-dll-paths>true
         <stdlib>stlport
         <use>/libx
