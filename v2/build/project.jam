@@ -128,7 +128,8 @@ rule find ( name : current-location )
                 
     if ! $(project-module)
     {            
-        local location = [ path.root $(name) $(current-location) ] ;
+        local location = [ path.root 
+            [ path.make $(name) ] $(current-location) ] ;
         # If no project is registered for the given location, try to
         # load it. First see if we have Jamfile. If not we might have project
         # root, willing to act as Jamfile. In that case, project-root
