@@ -413,6 +413,7 @@ class Tester(TestCmd.TestCmd):
             self.ignore('*.ilk') # msvc incremental linking files
             self.ignore('*.pdb') # msvc program database files
             self.ignore('*.rsp') # response files
+            self.ignore('*.tds') # borland debug symbols
 
         # debug builds of bjam built with gcc produce this profiling data
         self.ignore('gmon.out')
