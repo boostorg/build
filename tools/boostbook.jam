@@ -308,7 +308,8 @@ rule boostbook ( target-name : sources * : requirements * : default-build * )
   local project = [ CALLER_MODULE ] ;
  
   targets.main-target-alternative 
-    [ new boostbook-target-class $(target-name) : $(project) : $(sources) 
+    [ new boostbook-target-class $(target-name) : $(project) 
+        : [ targets.main-target-sources $(sources) : $(target-name) ] 
         : [ targets.main-target-requirements $(requirements) : $(project) ]
         : [ targets.main-target-default-build $(default-build) : $(project) ] 
     ] ;

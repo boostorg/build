@@ -95,7 +95,10 @@ rule symlink (
     local project = [ CALLER_MODULE ] ;
     
     return [ targets.main-target-alternative
-        [ class.new symlink-targets $(project) : $(targets) : $(sources) ] ] ;
+        [ class.new symlink-targets $(project) : $(targets) : 
+          # Note: inline targets are not supported for symlink, intentionally,
+          # since it's used to linking existing non-local targets.
+          $(sources) ] ] ;
 }
 
 rule ln

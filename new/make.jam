@@ -3,8 +3,7 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-#  This module defines the 'make' rule and associated class, derived from
-#  'basic-target'.  
+#  This module defines the 'make' main target rule.
 
 import targets ;
 import class : class new ;
@@ -37,6 +36,7 @@ rule make-target-class ( name : project : sources * : requirements *
 }
 class make-target-class : basic-target ;
 
+# Declares the 'make' main target.
 rule make ( target-name : sources * : generating-rule + : requirements * 
             : caller ? )
 {
@@ -51,10 +51,11 @@ rule make ( target-name : sources * : generating-rule + : requirements *
     }
     
    targets.main-target-alternative
-     [ new make-target-class $(target-name) : $(caller) : $(sources) :
-         [ targets.main-target-requirements $(requirements) : $(caller) ] :
-          $(generating-rule) :
-         [ targets.main-target-default-build : $(caller) ] 
+     [ new make-target-class $(target-name) : $(caller) 
+       : [ targets.main-target-sources $(sources) : $(target-name) ] 
+       : [ targets.main-target-requirements $(requirements) : $(caller) ] 
+       : $(generating-rule) 
+       : [ targets.main-target-default-build : $(caller) ] 
      ] ;
          
 }

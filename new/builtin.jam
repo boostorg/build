@@ -434,7 +434,7 @@ rule lib ( name : sources * : requirements * : default-build *
     import targets ;
     targets.main-target-alternative
       [ new lib-target-class $(name) : $(project) 
-        : $(sources)
+        : [ targets.main-target-sources $(sources) : $(name) ] 
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
         : [ targets.main-target-default-build $(default-build) : $(project) ]
         : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
