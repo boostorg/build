@@ -336,8 +336,7 @@ local rule initialize (
 
     # Import rules common to all project modules from project-rules module,
     # define at the end of this file.
-    # (Should be use classes instead?)
-    module $(module-name) { modules.localize project-rules export : * ; }
+    modules.clone-rules project-rules $(module-name) ;
 
     modules.poke $(module-name) : __jamfile-location__ : $(jamfile-location) ;
     modules.poke $(module-name) : __source-location__ : $(jamfile-location) ;

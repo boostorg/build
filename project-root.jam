@@ -39,9 +39,8 @@ rule load (
     #
     if ! [ modules.binding $(project-root-module) ]
     {
-        # Localize the rules for each project-root.
-        #
-        module $(project-root-module) { modules.localize project-root-context export : * ; }
+        # Give the new module all the rules from project-root-context
+        modules.clone-rules project-root-context $(project-root-module) ;
         
         # Remember the project-root, and some info about it.
         #
