@@ -615,9 +615,13 @@ module project-rules
             {
                 local l = [ path.join $(location) $(w:D) ] ;
                 local paths = [ path.glob $(l) : $(w:D="") ] ;                
+                # The paths we've found are relative to current directory,
+                # but the names specified in sources list are assumed to
+                # be relative to source directory of the corresponding
+                # prject. So, just make the name absolute.
                 for local p in $(paths)
                 {
-                    all-paths += [ path.relative $(p) $(location) ] ;
+                    all-paths += [ path.root $(p) [ path.pwd ] ] ;
                 }                
             }
             
