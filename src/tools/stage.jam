@@ -28,10 +28,8 @@ rule stage-target-class ( name-and-dir : project : sources * : requirements * : 
             local a = [ new action $(i2) : $(i) : common.copy ] ;
             $(i2).action $(a) ;
             
-            local pl = [ project.attribute $(self.project) location ] ;
-            local path = [ path.root [ path.native $(self.name) ] $(pl) ] ;
-        
-            $(i2).set-path $(path) ;
+            $(i2).set-path [ project.path-relative-to-project-location 
+                $(self.name) $(self.project) ] ;
             $(i2).extra-grist stage-$(self.name) ;
             result += $(i2) ;
         }

@@ -346,6 +346,12 @@ rule make-NT ( native )
     {
         result = /$(result) ;
     }
+    
+    if $(native) = ""
+    {
+        result = "." ;
+    }
+        
     return $(result) ;
 }
 
@@ -358,7 +364,15 @@ rule native-NT ( path )
 
 rule make-UNIX ( native )
 {
-    return [ path.join [ regex.split $(native) "/" ] ] ;
+    # VP: I have no idea now 'native' can be empty here! But it can!
+    if $(native) = ""
+    {
+        return "." ;
+    }
+    else
+    {        
+        return [ path.join [ regex.split $(native) "/" ] ] ;
+    }    
 }
 
 rule native-UNIX ( path )

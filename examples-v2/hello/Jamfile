@@ -1,4 +1,8 @@
 
 exe hello : hello.cpp ;
 
+#lib zlib : : <name>z <variant>release ;
+#lib zlib : : <name>z_d <variant>debug ;
+
 symlink hello_debug hello_release : hello/<variant>debug hello/<variant>release ;
+symlink links/hello_release : hello/<variant>release ;
