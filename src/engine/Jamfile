@@ -117,7 +117,7 @@ Library         libjam.a :
 		    hash.c headers.c hdrmacro.c lists.c make.c make1.c newstr.c
 		    option.c parse.c regexp.c rules.c scan.c search.c subst.c
 		    timestamp.c variable.c modules.c strings.c filesys.c 
-		    builtins.c ;
+		    builtins.c pwd.c ;
  
 
 if $(BINDIR) 	{ InstallBin $(BINDIR) : jam ; }
@@ -138,7 +138,7 @@ ALLSOURCE =
 	parse.h patchlevel.h pathmac.c pathunix.c pathvms.c regexp.c regexp.h
 	rules.c rules.h scan.c scan.h search.c search.h subst.c timestamp.c
 	timestamp.h variable.c variable.h yyacc strings.c modules.h
-	frames.h filesys.c strings.h 
+	frames.h filesys.c strings.h pwd.c pwd.h
 	INSTALL
 	common.mk
 	builds/win32-visualc.mk
