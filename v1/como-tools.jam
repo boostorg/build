@@ -15,10 +15,10 @@ if ! $(COMO_PATH_SETUP) # do this once
     COMO_BIN_DIRECTORY ?= "" ; # Don't clobber tool names if COMO_ROOT_DIRECTORY not
                                # set
 
-    COMO_INCLUDE_PATH ?= $(COMO_BASE)$(SLASH)$(DOTDOT)$(SLASH)libcomo ;
+    COMO_INCLUDE_PATH ?= $(COMO_BASE)$(SLASH)libcomo ;
     COMO_INCLUDE_PATH += $(COMO_INCLUDE_PATH)$(SLASH)cnames ;
 
-    COMO_STDLIB_PATH ?= $(COMO_BASE)$(SLASH)$(DOTDOT)$(SLASH)libcomo ;
+    COMO_STDLIB_PATH ?= $(COMO_BASE)$(SLASH)libcomo ;
 
     COMO_BACKEND_SETUP = $(COMO_BACKEND_SETUP) ;
     newline = "
