@@ -61,7 +61,7 @@ t.expect_addition(
 # was good news to see it working correctly now. We probably should figure 
 # out some other test cases just to be sure it is working for full coverage.
 t.rename('lib.cpp', 'lib.cpp.bak')
-t.rename('lib.err.cpp', 'lib.cpp')
+t.rename('lib-err.cpp', 'lib.cpp')
 t.touch('lib.cpp')
 t.run_build_system(arguments = 'test', status=1)
 t.expect_removal(
