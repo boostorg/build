@@ -458,6 +458,28 @@ rule get-values
     return $(_properties:G=) ;
 }
 
+rule replace-properties ( property-set * : new-properties * )
+{
+    local result = ;
+    for local x in $(property-set)
+    {
+        if $(x:G) in $(new-properties:G)
+        {
+            if ! $(x:G) in $(result:G)
+            {
+                result += [ get-properties $(x:G) : $(new-properties) ] ;
+            }
+            
+        }
+        else
+        {
+            result += $(x) ;
+        }
+    }
+    return $(result) ;
+}
+
+
 # normalize-properties properties
 #
 # Normalizes a set of (possibly qualified) properties by prepending <*> as many
@@ -474,6 +496,14 @@ rule normalize-properties
             case <*><tag>* : result += <*>$(property) ;
             case <tag>* : result += <*><*>$(property) ;
             
+            case <*><*><*><default>* : result += $(property) ;
+            case <*><*><default><*>* : result += <*>$(property) ;
+            case <*><*><default>* : result += $(property) ;
+            case <*><default><*>* : result += <*><*>$(property) ;
+            case <*><default>* : result += <*>$(property) ;
+            case <default><*>* : result += <*><*><*>$(property) ;
+            case <default>* : result += <*><*>$(property) ;
+                        
             case <*><*><*><*@*>* : result += $(property) ;
             case <*><*><*@*>* : result += <*>$(property) ;
             case <*><*@*>* : result += <*><*>$(property) ;
@@ -1071,13 +1101,11 @@ rule segregate-overrides
     $(>) = [ get-properties $(kept-features) : $($(>)) ] ;
 }
 
-# report-free-property-conflicts free-property... : target
-#
 # If any single-valued free-feature appears more than once in free-property...,
 # exit with an appropriate error message.
-rule report-free-property-conflicts
+rule report-free-property-conflicts ( free-property * : target + )
 {
-    local p = [ get-properties $(gSINGLE_VALUED_FREE_FEATURES) $(<) ] ;
+    local p = [ get-properties $(gSINGLE_VALUED_FREE_FEATURES) : $(free-property) ] ;
     local f = [ unique $(p:G) ] ;
     if $(p:G) != $(f)
     {
@@ -1086,28 +1114,22 @@ rule report-free-property-conflicts
     }
 }
 
-# expand-build-request
-#      toolset variant target-name : requirements : build-request
-#
 # Returns a list of path-property-sets (see make-path-property-sets above) for
 # all build configurations based on the given toolset, requirements, and
 # build-request. Target-name is just used for error reporting.
-rule expand-build-request 
+rule expand-build-request ( toolset variant target : raw-requirements * : raw-build-request * )
 {
-    local toolset = $(<[1]) ;
-    local variant = $(<[2]) ;
-
     # grab the requirements and BUILD-request relevant to this toolset and variant
-    local requirements = [ select-properties $(toolset) $(variant) : $(>) ] ;
-    local build-request = [ select-properties $(toolset) $(variant) : $(3) ] ;
+    local requirements = [ select-properties $(toolset) $(variant) : $(raw-requirements) ] ;
+    local build-request = [ select-properties $(toolset) $(variant) : $(raw-build-request) ] ;
 
     # Separate the free features (e.g. <define>, <undef>, <include>) from the others
     local free-properties = [ segregate-free-properties requirements build-request ] ;
 
     # Check for conflicts
-    report-free-property-conflicts $(free-properties) : $(<[3]) ;
+    report-free-property-conflicts $(free-properties) : $(target) ;
     build-request = [ remove-incompatible-builds $(requirements)
-      : $(build-request) : $(<[3]) ] ;
+      : $(build-request) : $(target) ] ;
 
     if $(build-request) != SKIP
     {
@@ -1129,6 +1151,7 @@ rule expand-build-request
                                    ] ;
         
         local defaulted-properties = [ feature-default $(defaulted-features) ] ;
+        
         # VP: defaulted-properties have the form <feature>value and there's 1 value.
         # Hence, each element of defaulted-properties will be part of each
         # component of override-sets and will be a part of each property-set 
@@ -1136,6 +1159,28 @@ rule expand-build-request
         # way: free properties does not show up in target path.
         local defaulted-free-properties = [ segregate-free-properties defaulted-properties ] ;
 
+        #
+        # Allow <default> properties and rules to take effect.
+        #
+        local default-requirements = [ get-values <default> : $(free-properties) ] ;
+        
+        defaulted-properties = [ replace-properties $(defaulted-properties)
+                                : [ select-gristed $(default-requirements) ] ] ;
+        
+        local non-defaults =  $(requirements) $(build-request) $(free-properties) ;
+
+        for local r in [ select-ungristed $(default-requirements) ]
+        {
+            local x = [ $(r) $(toolset) $(variant) : $(non-defaults) ] ;
+            # ECHO  $(r) yields $(x) ;
+            # ECHO defaulted-properties= $(defaulted-properties) ;
+            defaulted-properties = [ 
+              replace-properties $(defaulted-properties) : $(x) ] ;
+        }
+        
+        # In case any defaults should conflict with the requirements,
+        # force them to match up.
+        defaulted-properties = [ replace-properties $(defaulted-properties) : $(requirements) ] ;
 
         # form override property sets of the form (property1[/property2...] )+,
         # sorted in feature order. These represent the properties of subvariants

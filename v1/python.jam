@@ -124,7 +124,8 @@ else if $(UNIX)
     PYTHON_PROPERTIES ?=
       <sysinclude>$(PYTHON_INCLUDES)
         <library-path>$(PYTHON_LIB_PATH)
-          python-intel-use-gcc-stdlib
+          <default>python-intel-use-gcc-stdlib
+          python-static-multithread
       ;
     
     if $(OS) = OSF
@@ -193,13 +194,31 @@ CYGWIN_ROOT ?= c:/cygwin ;
 # intel-linked shared libs by a GCC-built executable unless they have
 # been told to use the GCC runtime.  This rule adds the requisite
 # flags to the compile and link lines.
-rule python-intel-use-gcc-stdlib ( toolset variant : properties * )
+rule python-intel-use-gcc-stdlib ( toolset variant : non-defaults * )
+{
+    if ( ! $(PYTHON_WINDOWS) )
+      && ( ! <define>BOOST_PYTHON_STATIC_LIB in $(non-defaults) )
+          && [ MATCH (intel) : $(toolset) ]
+    {
+        return <stdlib>gcc ;
+    }
+    else
+    {
+        return ;
+    }
+}
+
+# Force statically-linked embedding applications to be multithreaded
+# on UNIX.
+rule python-static-multithread ( toolset variant : properties * )
 {
     if ! $(PYTHON_WINDOWS)
-      && ! <define>BOOST_PYTHON_STATIC_LIB in $(properties)
-      && [ MATCH (intel) : $(toolset) ]
     {
-        properties += <cxxflags>-cxxlib-gcc <linkflags>-cxxlib-gcc ;
+        local x = <define>BOOST_PYTHON_STATIC_LIB <threading>single ;
+        if $(x) in $(properties)
+        {
+            properties = [ difference $(properties) : <threading>single ] <threading>multi ;
+        }
     }
     return $(properties) ;
 }
@@ -454,7 +473,16 @@ rule boost-python-runtest (
     local dependencies = [ FGristFiles [ expand-source-names $(sources) ] ] ;
     source-files on $(main-target) += $(gTARGET_SOURCES($(dependencies))) ;
       
-    local result = [ boost-test $(sources) : RUN_PYD : $(requirements) : $(target) : $(local-build) ] ;
+    local result = [ 
+      boost-test $(sources)
+        : RUN_PYD
+        : $(requirements)
+          <default>python-intel-use-gcc-stdlib # unless otherwise
+					       # specified, assume the GCC standard
+					       # library is needed for intel
+          : $(target)
+            : $(local-build)
+    ] ;
 }
 
 rule boost-python-test ( name : sources + : requirements * : default-BUILD * )

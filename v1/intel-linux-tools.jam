@@ -41,6 +41,7 @@ flags intel-linux INTEL_LINUX_SETUP : ". "$(INTEL_LINUX_ROOT)"/bin/iccvars.sh" ;
 # Additional DLL directory
 flags intel-linux INTEL_LINUX_RUN_LD_LIBRARY_PATH : $(INTEL_LINUX_ROOT)"/lib" ;
 
+
 #### compiler and linker switches ####
 
 # debugging
@@ -52,6 +53,10 @@ flags intel-linux LINKFLAGS <debug-symbols>off : -Xlinker -s ;
 flags intel-linux CFLAGS <optimization>off : -O0 ;
 flags intel-linux CFLAGS <optimization>space : -O2 ;
 flags intel-linux CFLAGS <optimization>speed : -O3 ;
+
+# standard library
+flags intel-linux CFLAGS <stdlib>gcc : -cxxlib-gcc ;
+flags intel-linux LINKFLAGS <stdlib>gcc : -cxxlib-gcc ;
 
 # inlining
 # results using -ip are worse than without?
