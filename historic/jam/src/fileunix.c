@@ -49,7 +49,7 @@
 # endif
 
 # if defined( OS_MVS ) || \
-     defined( OS_INTERIX ) || defined(OS_AIX)
+		 defined( OS_INTERIX )
 
 #define	ARMAG	"!<arch>\n"
 #define	SARMAG	8
@@ -77,6 +77,14 @@ struct ar_hdr		/* archive file member header - printable ascii */
 # endif
 
 # ifndef HAVE_AR
+
+# ifdef OS_AIX
+/* Define those for AIX to get the definitions for both the small and the
+ * big variant of the archive file format. */
+#	 define __AR_SMALL__
+#	 define __AR_BIG__
+# endif
+
 # include <ar.h>
 # endif	
 
@@ -287,63 +295,129 @@ file_archscan(
 
 # else /* AIAMAG - RS6000 AIX */
 
-void
-file_archscan(
-	char *archive,
-	scanback func,
-	void *closure )
+static void file_archscan_small(
+    int fd, char const *archive, scanback func, void *closure)
 {
-	struct fl_hdr fl_hdr;
+    struct fl_hdr fl_hdr;
 
-	struct {
-		struct ar_hdr hdr;
-		char pad[ 256 ];
-	} ar_hdr ;
+    struct {
+        struct ar_hdr hdr;
+        char pad[ 256 ];
+    } ar_hdr ;
 
-	char buf[ MAXJPATH ];
-	long offset;
-	int fd;
+    char buf[ MAXJPATH ];
+    long offset;
 
-	if( ( fd = open( archive, O_RDONLY, 0 ) ) < 0 )
-	    return;
+    if( read( fd, (char *)&fl_hdr, FL_HSZ ) != FL_HSZ)
+        return;
 
-	if( read( fd, (char *)&fl_hdr, FL_HSZ ) != FL_HSZ ||
-	    strncmp( AIAMAG, fl_hdr.fl_magic, SAIAMAG ) )
-	{
-	    close( fd );
-	    return;
-	}
+    sscanf( fl_hdr.fl_fstmoff, "%ld", &offset );
+  
+    if( DEBUG_BINDSCAN )
+        printf( "scan archive %s\n", archive );
+  
+    while( offset > 0
+           && lseek( fd, offset, 0 ) >= 0
+           && read( fd, &ar_hdr, sizeof( ar_hdr ) ) >= sizeof( ar_hdr.hdr ) )
+    {
+        long    lar_date;
+        int     lar_namlen;
+    
+        sscanf( ar_hdr.hdr.ar_namlen, "%d", &lar_namlen );
+        sscanf( ar_hdr.hdr.ar_date, "%ld", &lar_date );
+        sscanf( ar_hdr.hdr.ar_nxtmem, "%ld", &offset );
+    
+        if( !lar_namlen )
+            continue;
+      
+        ar_hdr.hdr._ar_name.ar_name[ lar_namlen ] = '\0';
 
-	sscanf( fl_hdr.fl_fstmoff, "%ld", &offset );
+        sprintf( buf, "%s(%s)", archive, ar_hdr.hdr._ar_name.ar_name );
 
-	if( DEBUG_BINDSCAN )
-	    printf( "scan archive %s\n", archive );
+        (*func)( closure, buf, 1 /* time valid */, (time_t)lar_date );
+    }
+}
 
-	while( offset > 0 &&
-	       lseek( fd, offset, 0 ) >= 0 &&
-	       read( fd, &ar_hdr, sizeof( ar_hdr ) ) >= sizeof( ar_hdr.hdr ) )
-	{
-	    long    lar_date;
-	    int	    lar_namlen;
+/* Check for OS version which supports the big variant. */
+#ifdef AR_HSZ_BIG
 
-	    sscanf( ar_hdr.hdr.ar_namlen, "%d", &lar_namlen );
-	    sscanf( ar_hdr.hdr.ar_date, "%ld", &lar_date );
-	    sscanf( ar_hdr.hdr.ar_nxtmem, "%ld", &offset );
+static void file_archscan_big(
+    int fd, char const *archive, scanback func, void *closure)
+{
+    struct fl_hdr_big fl_hdr;
 
-	    if( !lar_namlen )
-		continue;
+    struct {
+        struct ar_hdr_big hdr;
+        char pad[ 256 ];
+    } ar_hdr ;
 
-	    ar_hdr.hdr._ar_name.ar_name[ lar_namlen ] = '\0';
+    char buf[ MAXJPATH ];
+    long long offset;
 
-	    sprintf( buf, "%s(%s)", archive, ar_hdr.hdr._ar_name.ar_name );
+    if( read( fd, (char *)&fl_hdr, FL_HSZ_BIG) != FL_HSZ_BIG)
+        return;
 
-	    (*func)( closure, buf, 1 /* time valid */, (time_t)lar_date );
-	}
+    sscanf( fl_hdr.fl_fstmoff, "%lld", &offset );
 
-	close( fd );
+    if( DEBUG_BINDSCAN )
+        printf( "scan archive %s\n", archive );
+
+    while( offset > 0
+           && lseek( fd, offset, 0 ) >= 0
+           && read( fd, &ar_hdr, sizeof( ar_hdr ) ) >= sizeof( ar_hdr.hdr ) )
+    {
+        long    lar_date;
+        int     lar_namlen;
+
+        sscanf( ar_hdr.hdr.ar_namlen, "%d", &lar_namlen );
+        sscanf( ar_hdr.hdr.ar_date, "%ld", &lar_date );
+        sscanf( ar_hdr.hdr.ar_nxtmem, "%lld", &offset );
+
+        if( !lar_namlen )
+            continue;
+
+        ar_hdr.hdr._ar_name.ar_name[ lar_namlen ] = '\0';
+
+        sprintf( buf, "%s(%s)", archive, ar_hdr.hdr._ar_name.ar_name );
+
+        (*func)( closure, buf, 1 /* time valid */, (time_t)lar_date );
+    }
+
+}
+
+#endif /* AR_HSZ_BIG */
+
+void file_archscan(char *archive, scanback func, void *closure)
+{
+    int fd;
+    char fl_magic[SAIAMAG];
+
+    if(( fd = open(archive, O_RDONLY, 0)) < 0)
+        return;
+  
+    if(read( fd, fl_magic, SAIAMAG) != SAIAMAG
+       || lseek(fd, 0, SEEK_SET) == -1)
+    {
+        close(fd);
+        return;
+    }
+
+    if (strncmp(AIAMAG, fl_magic, SAIAMAG) == 0)
+    {
+        /* read small variant */
+        file_archscan_small(fd, archive, func, closure);
+    }
+#ifdef AR_HSZ_BIG
+    else if (strncmp(AIAMAGBIG, fl_magic, SAIAMAG) == 0)
+    {
+        /* read big variant */
+        file_archscan_big(fd, archive, func, closure);
+    }
+#endif
+  
+    close( fd );
 }
 
 # endif /* AIAMAG - RS6000 AIX */
 
 # endif /* USE_FILEUNIX */
-
