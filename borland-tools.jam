@@ -141,7 +141,7 @@ rule Cc-action
 
 actions borland-Cc-action
 {
-    "$(BCC_TOOL_PATH)bcc32" -j5 -g255 -q -c -w -a8 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(BCC_TOOL_PATH)bcc32" -j5 -g255 -q -c -w -a8 -b- -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -168,7 +168,7 @@ rule C++-action
 #
 actions borland-C++-action
 {
-    "$(BCC_TOOL_PATH)bcc32" -j5 -g255 -q -c -P -w -Ve -Vx -a8 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(BCC_TOOL_PATH)bcc32" -j5 -g255 -q -c -P -w -Ve -Vx -a8 -b- -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)"  -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 #### Archive ####
