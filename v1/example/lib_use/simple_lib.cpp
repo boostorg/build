@@ -1,6 +1,6 @@
 /* (C) Copyright Rene Rivera, 2002.
-**
-** See accompanying license for terms and conditions of use.
+** Distributed under the Boost Software License, Version 1.0.
+** (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 */
 
 extern int lib_call(int x);

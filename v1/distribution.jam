@@ -1,3 +1,7 @@
+# Copyright 2002 Rene Rivera
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
 ##
 ## Distribution module, contains rules for management of distributions.
 ## Like management of version headers, packaging, etc.
