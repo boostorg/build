@@ -56,12 +56,12 @@ rule Link-action ( target : sources + : target-type )
 # for tru64cxx, we repeat all libraries so that dependencies are always resolved
 actions tru64cxx65-Link-action bind NEEDLIBS
 {
-   cxx -ptr "$(<[1]:D)" $(LINKFLAGS) -o "$(<)" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -lrt
+   cxx -ptr "$(<[1]:D)"  -noimplicit_include $(LINKFLAGS) -o "$(<)" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -lrt
 }
 
 actions tru64cxx65-Link-shared bind NEEDLIBS
 {
-    cxx -ptr "$(<[1]:D)" -qrtti $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    cxx -ptr "$(<[1]:D)" -qrtti  -noimplicit_include $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
 }
 
 #### Cc #####
@@ -86,7 +86,7 @@ rule C++-action
 # really can't ignore this one!
 actions tru64cxx65-C++-action
 {
-   cxx -ptr "$(<[1]:D)" -c -std strict_ansi -msg_display_number -msg_disable 186,450,1115 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+   cxx -ptr "$(<[1]:D)" -noimplicit_include -c -std strict_ansi -msg_display_number -msg_disable 186,450,1115 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
