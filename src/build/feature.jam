@@ -1004,43 +1004,6 @@ rule split ( property-set )
     return $(result) ;
 }
 
-# Appends a rule to the list of rules assigned to the given feature or property.
-# That rules will be used in extending property sets by the 'run-actions' rule. 
-# The rule should accept two arguments:
-# - the property which is registered
-# - the list of all properties 
-# and return a set of additional 
-# properties to be added. Property should be specified in the usual way:
-# <feature>value, and feature should be specified as <feature>.
-rule action ( property-or-feature : rule-name )
-{
-    .rules.$(property-or-feature) += [ indirect.make-qualified $(rule-name) ] ;
-}
-
-# Returns 'properties' augmented with results of calling rule associated with properties.
-# If both a property and its feature have rules, only rules for the property are executed.
-rule run-actions ( properties * )
-{
-    local added = ;
-    for local e in $(properties)
-    {
-        local rules ;
-        if $(.rules.$(e)) 
-        {
-            rules = $(.rules.$(e)) ;
-        }
-        else if $(.rules.$(e:G)) 
-        {
-            rules = $(.rules.$(e:G)) ;
-        }
-        for local r in $(rules)
-        {
-            added += [ indirect.call $(r) $(e) : $(properties) ] ;
-        }
-    }
-    return $(properties) $(added) ;            
-}
-
 # tests of module feature
 local rule __test__ ( )
 {
@@ -1068,31 +1031,6 @@ local rule __test__ ( )
     extend-feature toolset : msvc metrowerks ;
     subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
       3.0 3.0.1 3.0.2 : optional ;
-
-    local rule handle-stlport ( property : properties * )
-    {
-        return <include>/path/to/stlport ;
-    }
-
-    local rule handle-magic ( property : properties * )
-    {
-        return <define>MAGIC=$(property:G=) ;
-    }
-
-    local rule handle-magic2 ( property : properties * )
-    {
-        return <define>MAGIC=BIG_MAGIC ;
-    }
-
-    local rule handle-magic3 ( property : properties * )
-    {
-        return <define>MAGIC=VERY_BIG_MAGIC ;
-    }
-
-    action <stdlib>stlport : handle-stlport ;
-    action <magic> : handle-magic ;
-    action <magic>17 : handle-magic2 ;
-    action <magic>17 : handle-magic3 ;
 
     assert.result <toolset-gcc:version>
       : select-subfeatures <toolset>gcc
@@ -1171,16 +1109,6 @@ local rule __test__ ( )
       : defaults <runtime-link>
       ;
       
-
-    assert.result  <toolset>gcc <define>foo <stdlib>stlport <magic>3 <include>/path/to/stlport <define>MAGIC=3
-      : run-actions <toolset>gcc <define>foo <stdlib>stlport <magic>3
-      ;
-
-    assert.result <magic>17 <define>MAGIC=BIG_MAGIC <define>MAGIC=VERY_BIG_MAGIC
-      : run-actions <magic>17 
-      ;
-
-
     assert.result gcc-3.0.1 debug <optimization>on
       : minimize [ expand gcc-3.0.1 debug <optimization>on <stdlib>native ]
       ;
