@@ -100,6 +100,7 @@ class generator
     import type ;
     import virtual-target ;
     import "class" : new ;
+    import property ;
    
     EXPORT class@generator : indent increase-indent decrease-indent generators.dout ;
     
@@ -622,7 +623,21 @@ rule register ( g )
     
     # Update the set of generators for toolset
     local id = [ $(g).id ] ;
-    .generators-for-toolset.$(id:S=) += $(g) ;
+
+    # Some generators have multiple periods in their name, so the
+    # normal $(id:S=) won't generate the right toolset name.
+    # e.g. if id = gcc.compile.c++, then
+    # .generators-for-toolset.$(id:S=) will append to
+    # .generators-for-toolset.gcc.compile, which is a separate
+    # value from .generators-for-toolset.gcc. Correcting this
+    # makes generator inheritance work properly.
+    # See also inherit-generators in module toolset
+    local base = $(id) ;
+    while $(base:S)
+    {
+        base = $(base:B) ;
+    }
+    .generators-for-toolset.$(base) += $(g) ;
 }
     
 # Creates new instance of the 'generator' class and registers it.
