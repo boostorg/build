@@ -80,12 +80,8 @@ steps.&nbsp; The sample commands given will work for both UNIX and Windows.</p>
   <li>Build the Boost libraries for your <a href="#Tools">tools</a>. The example
     is for the GNU and Metrowerks compilers.</li>
   <blockquote>
-    <p><code>jam&nbsp;-sBOOST_ROOT=.&nbsp;-sTOOLS=&quot;gcc&nbsp;metrowerks&quot;</code></p>
+    <p><code>bjam&nbsp;-sTOOLS=&quot;gcc&nbsp;metrowerks&quot;</code></p>
   </blockquote>
-
-  <li>If you don't want to specify <code>BOOST_ROOT</code> on the command-line,
-  you can instead set the <code>BOOST_ROOT</code> environment variable (an
-  absolute path is recommended).
 </ul>
 
 <h2><a name="Moretools">More on using the tools</a></h2>
@@ -125,7 +121,7 @@ steps.&nbsp; The sample commands given will work for both UNIX and Windows.</p>
     <td>GNU GCC command line compiler tools</td>
   </tr>
   <tr>
-    <td><code>gcc-stlport</code></td>
+    <td><code><a href="gcc-stlport-tools.html">gcc-stlport</a></code></td>
     <td>GNU GCC command line compiler tools, using the STLport library</td>
   </tr>
   <tr>
@@ -220,14 +216,20 @@ the Boost.Jam executable yourself:</p>
         <li>Your new Boost.Jam executable will be located in a newly-created
         <tt>tools/build/jam_src/bin.</tt><i>platform</i> subdirectory.
 
+        <li>There will be two executables generated: <tt>"jam"</tt>, and
+        <tt>"bjam"</tt>. They are in fact a copy of the same binary.
+        The <tt>"bjam"</tt> invocation uses the
+        newer simpler build behaviour. But if you need the traditional Jam/MR
+        behaviour you can use the <tt>"jam"</tt> invocation.
+
         <li>If you build Boost.Jam for a new platform using the same boost
         installation, be sure to first remove all object files, executables, and
         libraries created by the initial make in the <tt>jam_src</tt> directory.
   </ul>
 <hr>
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->22 February, 2002<!--webbot bot="Timestamp" i-checksum="40401" endspan -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->09 May, 2002<!--webbot bot="Timestamp" i-checksum="40401" endspan -->
 </p>
-<p>© Copyright 2001 Beman Dawes</p>
+<p>&copy; Copyright 2001 Beman Dawes</p>
 <p>&nbsp;</p>
 
 </body>
