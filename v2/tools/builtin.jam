@@ -402,21 +402,27 @@ generators.register [ new lib-generator ] ;
 
 rule searched-lib-generator ( )
 {
-    generator.__init__ searched-lib-generator : : SEARCHED_LIB ;    
+    # The requirements cause the generators to be tried *only* when we're building
+    # lib target and there's 'search' feature. This seems ugly --- all we want
+    # is make sure searched-lib-generator is not invoced deep in transformation
+    # search.
+    generator.__init__ searched-lib-generator : : SEARCHED_LIB ;
 
     rule run ( project name ? : property-set : sources * : multiple ? )
     {
-        local properties = [ $(property-set).raw ] ;        
-        local shared ;
-        if <link>shared in $(properties)
-        {
-            shared = true ;
-        }        
-        # sometimes this rule is called with no 'name' parameter. In those cases
-        # $(sources) is not empty, which should not be the case for SEARCHED_LIBs.
-        # looks like something is going wrong elsewhere.
         if $(name)
         {
+            # If name is empty, it means we're called not from top-level.
+            # In this case, we just fail immediately, because searched-lib-generator
+            # cannot be used to produce intermediate targets.
+            
+            local properties = [ $(property-set).raw ] ;        
+            local shared ;
+            if <link>shared in $(properties)
+            {
+                shared = true ;
+            }        
+            
             local t = [ new searched-lib-target $(name) : $(project) : $(shared)
                             : [ feature.get-values <name> : $(properties) ]
                             : [ feature.get-values <search> : $(properties) ]
