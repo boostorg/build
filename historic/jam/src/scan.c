@@ -65,7 +65,7 @@ void
 yyerror( char *s )
 {
 	if( incp )
-	    printf( "%s: line %d: ", incp->fname, incp->line );
+	    printf( "%s:%d: ", incp->fname, incp->line );
 
 	printf( "%s at %s\n", s, symdump( &yylval ) );
 
