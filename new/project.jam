@@ -11,6 +11,10 @@
 #   - an instance of 'project-attributes' class.
 #   - an instance of 'project-target' class (from targets.jam)
 #
+#   There are two kinds of projects. Regular ones are associated with Jamfiles
+#   at a specific location. The 'module-name' rule can be used to map location
+#   to Jamfile modules. Standalone project are not associated with Jamfiles, they
+#   can be declared anywhere and are accessible only by project id.
 
 import modules : peek poke ;
 import numbers ;
@@ -34,7 +38,7 @@ rule load ( jamfile-location )
 
     if $(loaded)
     {
-        .projects += $(jamfile-location) ;
+        .project-locations += $(jamfile-location) ;
 
         for local p in [ attribute $(module-name) projects-to-build ]
         {
@@ -80,7 +84,7 @@ rule lookup ( id : current-location )
             error Jamfile location must be specified for relative project-id $(id) ;
         }
 
-        if $(location) in $(.projects) 
+        if $(location) in $(.project-locations) 
         {
             local module-name = [ module-name $(location) ] ;
 
@@ -329,45 +333,64 @@ local rule load-jamfile (
     return $(jamfile-module) ;
 }
 
-# Initialize the module for a Jamfile.
+# Initialize the module for a project. 
 #
-local rule initialize (
-    module-name # The name of the Jamfile module.
-    : jamfile # The location (binding) of the jamfile for the project to initialize.
+rule initialize (
+    module-name # The name of the projecte module.
+    : jamfile ? # The location (binding) of the jamfile for the project to initialize.
+                # If not specified, stanalone project will be initialized.                 
     )
 {
+    # TODO: need to consider if standalone projects can do anything but defining
+    # prebuilt targets. If so, we need to give more sensible "jamfile", so that
+    # source paths are correct.
+    jamfile ?= "" ;
     # Create the module for the Jamfile first.    
     module $(module-name)
     {          
     }    
     $(module-name).attributes = [ new project-attributes [ path.parent $(jamfile) ] ] ;
     local attributes = $($(module-name).attributes) ;
+    
+    $(attributes).set source-location : $(jamfile-location) : exact ;    
+    $(attributes).set requirements : [ property-set.empty ] : exact ;
+    $(attributes).set usage-requirements : [ property-set.empty ] : exact ;    
 
     # Import rules common to all project modules from project-rules module,
     # defined at the end of this file.
     modules.clone-rules project-rules $(module-name) ;
-   
-    # Make sure we've loaded the project-root corresponding to this
-    # Jamfile.
-    #
-    local project-root-module = [ project-root.load [ path.parent $(jamfile) ] ] ;
-    local project-root = [ $(project-root-module).project-root get-location ] ;
 
-    local parent = [ find-jamfile [ path.parent $(jamfile) ] $(project-root) ] ;
-    local parent-module = ;
-    if $(parent)
-    {
-        parent-module = [ load [ path.parent $(parent[1]) ] ] ;
-    }
+    # We search for parent/project-root only if jamfile was specified --- i.e
+    # if the project is not standalone.
+    if $(jamfile)
+    {       
+        # Make sure we've loaded the project-root corresponding to this
+        # Jamfile.
+        #
+        local project-root-module = [ project-root.load [ path.parent $(jamfile) ] ] ;
+        local project-root = [ $(project-root-module).project-root get-location ] ;
 
+        local parent = [ find-jamfile [ path.parent $(jamfile) ] $(project-root) ] ;
+        local parent-module = ;
+        if $(parent)
+        {
+            parent-module = [ load [ path.parent $(parent[1]) ] ] ;
+        }
+        
+        inherit-attributes $(module-name) : $(project-root-module) : $(parent-module) ;
+    }    
+}
+
+# Make 'project-module' inherit attributes of project root and parent module.
+rule inherit-attributes ( project-module : project-root-module : parent-module ? )
+{
     # Register with the project root. This will inject project-root
     # constants and do some other initialization.
-    $(project-root-module).project-root register-project $(module-name) ;
-
-    $(attributes).set source-location : $(jamfile-location) : exact ;
+    $(project-root-module).project-root register-project $(project-module) ;
 
     if $(parent-module)
     {
+        local attributes = $($(project-module).attributes) ;        
         local pattributes = [ attributes $(parent-module) ] ;
         $(attributes).set parent : [ path.parent $(parent) ] ;
         $(attributes).set default-build 
@@ -388,16 +411,9 @@ local rule initialize (
             $(attributes).set build-dir : [ path.join $(parent-build-dir) 
                   [ path.relative $(our-dir) $(parent-dir) ] ] : exact ;
         }        
-    }
-    else
-    {
-        $(attributes).set requirements
-            : [ property-set.empty ] : exact ;
-        $(attributes).set usage-requirements
-            : [ property-set.empty ] : exact ;
-    }
-    
+    }            
 }
+
 
 # Associate the given id with the given project module
 rule register-id ( id : module )
@@ -593,7 +609,7 @@ module project-rules
     {
         import project ;
         import path ;
-        
+                
         local attributes = [ project.attributes $(__name__) ] ;
         if $(id) 
         {
