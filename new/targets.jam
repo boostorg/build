@@ -75,6 +75,7 @@ import common ;
 import property-set ;
 import project ;
 import feature ;
+import virtual-target ;
 
 # Base class for all abstract targets.
 rule abstract-target ( name      # name of the target in Jamfile
@@ -403,6 +404,15 @@ rule main-target ( name : project )
 
 class main-target : abstract-target ;
 
+# Helper for 'find', below.
+local rule remove-trailing-slash ( string )
+{
+    local stripped = [ MATCH (.*)/$ : $(string) ] ;
+    stripped ?= $(string) ;
+    return $(stripped) ;
+}
+
+
 # Given an 'id' for a target, return an instance of 'abstract-target' that
 # corresponds to it. If there's no such target, returns empty string.
 # The project referred to by id is loaded if it is not already loaded.
@@ -410,7 +420,7 @@ rule find ( id : current-location )
 {
     local target ;
     # Find if this is project
-    local project-module = [ find $(id) : $(current-location) ] ;
+    local project-module = [ project.find $(id) : $(current-location) ] ;
     if $(project-module)
     {
         target = [ project.target $(project-module) ] ;
@@ -424,7 +434,7 @@ rule find ( id : current-location )
         local has-project-id = $(split[2]) ;
         local target-name = $(split[4]) ;
         
-        local project-module = [ find $(project-name) : $(current-location) ] ;
+        local project-module = [ project.find $(project-name) : $(current-location) ] ;
                
         if $(project-module) {
             local project-target = [ project.target $(project-module) ] ;
@@ -445,9 +455,8 @@ rule find ( id : current-location )
 }
 
 
-# Attempts to generate the target given by target
-# reference. Either returns all the virtual targets
-# generated (possible none), or string "@main target not found"
+# Attempts to generate the target given by target reference, which
+# can refer both to a main target or to a file.
 rule generate ( target-reference # Target reference
     : project                    # Project where the reference is made
     : property-set               # Properties of the main target that 
@@ -485,7 +494,13 @@ rule generate ( target-reference # Target reference
     }  
     else
     {
-        return "@main target not found" ;
+        if $(sproperties)
+        {
+            errors.error 
+              "error: target reference '$(target-reference)' contains properties," :
+              "error: but refers to a file" ;
+        }        
+        return [ virtual-target.from-file $(id) : $(project) ] ;
     }    
 }
 
@@ -503,10 +518,6 @@ rule generate-dependencies ( property-set : project : generation-ps )
     for local p in [ $(property-set).dependency ] 
     {
         local g = [ targets.generate $(p:TG=) : $(project) : $(generation-ps) ] ;
-        #if ! $(g) 
-        #{
-        #    errors.error "cannot generate dependency " $(p) ;
-        #}
         xproperties += $(p:G)$(g) ;
     }
     local r = [ property-set.create 
@@ -613,16 +624,8 @@ rule basic-target ( name : project
             local more-targets = 
               [ targets.generate $(s) : $(self.project) 
                 : $(property-set) ] ;
-            if $(more-targets) != "@main target not found"
-            {
-                source-targets += $(more-targets) ;
-            }
-            else 
-            {
-                # Just a source file
-                source-targets += 
-                  [ virtual-target.from-file $(s) : $(self.project) ] ;                            
-            }
+            
+            source-targets += $(more-targets) ;            
             source-targets += <@>$(s) ;
         } 
         return $(source-targets) ;

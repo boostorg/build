@@ -164,15 +164,6 @@ rule find ( name : current-location )
     return $(project-module) ;
 }
 
-
-# Helper for 'find-target'
-local rule remove-trailing-slash ( string )
-{
-    local stripped = [ MATCH (.*)/$ : $(string) ] ;
-    stripped ?= $(string) ;
-    return $(stripped) ;
-}
-
 #
 # Returns the name of module corresponding to 'jamfile-location'.
 # If no module corresponds to location yet, associates default
