@@ -80,9 +80,21 @@ else            { code += jamgram.c ; }
 # easier to read/maintain.
 #
 
+rule MyChmod
+{
+    if $(CHMOD) { MyChmod1 $(<) : $(>) ; }
+}
+
+actions MyChmod1
+{
+   $(CHMOD) $(MODE) $(>)
+}
+
 if ( $(UNIX) || $(NT) ) && $(YACC)
 {
     local SUFEXE = ; # yyacc is a script with no suffix - this handles cygwin
+    MODE = $(EXEMODE) ;
+    MyChmod jamgram.y : ./yyacc ;
     GenFile jamgram.y jamgramtab.h : ./yyacc jamgram.yy ;
 }
 
