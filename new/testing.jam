@@ -16,7 +16,7 @@ import toolset ;
 feature.feature testing.launcher : : optional free ;
 
 xclass unit-test-target-class : typed-target
-{    
+{
     rule __init__ ( name : project : sources * : requirements * 
                          : default-build * )
     {

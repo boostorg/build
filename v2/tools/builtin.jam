@@ -487,6 +487,7 @@ xclass searched-lib-generator : generator
 
 generators.register [ xnew searched-lib-generator ] ;
 
+
 xclass compile-action : action 
 {
     import sequence ;

@@ -234,6 +234,11 @@ load_builtins()
                         builtin_instance, 0, args );
       }
 
+      {
+          char * args[] = { "sequence", "*", 0 };
+          bind_builtin( "SORT",
+                        builtin_sort, 0, args );
+      }
 }
 
 /*
@@ -897,6 +902,15 @@ LIST *builtin_instance( PARSE *parse, FRAME *frame )
 
     return L0;
 }
+
+LIST*
+builtin_sort( PARSE *parse, FRAME *frame )
+{
+    LIST* arg1 = lol_get( frame->args, 0 );
+
+    return list_sort(arg1);
+}
+
 
 static void lol_build( LOL* lol, char** elements )
 {
