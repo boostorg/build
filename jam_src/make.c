@@ -54,7 +54,10 @@
 # include "parse.h"
 # include "variable.h"
 # include "rules.h"
+
+#ifdef OPT_HEADER_CACHE_EXT
 # include "hcache.h"
+#endif
 
 # include "search.h"
 # include "newstr.h"

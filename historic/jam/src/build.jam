@@ -1,12 +1,22 @@
-# (C) Copyright Rene Rivera, 2002-2003.
-#
-# See accompanying license for terms and conditions of use.
-#
+#~ Copyright (C) Rene Rivera, 2002-2003.
+#~ Use, modification and distribution is subject to the
+#~ Boost Software License, Version 1.0. (See accompanying file
+#~ LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
+# Platform related specifics.
+if $(NT) { rule .path { return "$(<:J=\\)" ; } }
+else if $(OS2) { rule .path { return "$(<:J=\\)" ; } }
+else if $(VMS) { rule .path { return "[.$(<:J=/)]" ; } }
+else if $(MAC) { rule .path { return ":$(<:J=\:)" ; } }
+else { rule .path { return "$(<:J=/)" ; } }
+if $(VMS) { . = "_" ; }
+else { . = "." ; }
 
 # Info about what we are building.
 NAME = boost-jam ;
-VERSION = 3.1.7 ;
+VERSION = 3$(.)1$(.)7 ;
 RELEASE = 1 ;
+LICENSE = 1_0 ;
 
 # Generate development debug binaries?
 if --debug in $(ARGV)
@@ -161,11 +171,15 @@ toolset vc7 cl : /Fe : -D
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     : kernel32.lib ;
 ## VMS/OpenVMS DEC C
-toolset vms cc : /OBJECT= : "/DEFINES=(" "," ")"
-    : /STANDARD=VAXC
+toolset vmsdecc cc : /OBJECT= : "/DEFINES=(" "," ")"
+    : /STANDARD=VAXC /PREFIX_LIBRARY_ENTRIES=ALL_ENTRIES
+    [ opt --release : /OPTIMIZE /NODEBUG ]
+    [ opt --debug : /NOOPTIMIZE /DEBUG ]
     ;
-toolset vms link .link : /EXECUTABLE= :
+toolset vmsdecc link .link : /EXECUTABLE= :
     : /NOMAP
+    [ opt --release : /NODEBUG ]
+    [ opt --debug : /DEBUG ]
     ;
 
 # First set the build commands and options according to the
@@ -221,40 +235,35 @@ if $(tool.$(toolset).link.cc)
     --link-libs = $(tool.$(toolset).link.linklibs) ;
 }
 
-# Platform related specifics.
-if $(NT) { rule .path { return "$(<:J=\\)" ; } }
-else if $(OS2) { rule .path { return "$(<:J=\\)" ; } }
-else if $(VMS) { rule .path { return "[.$(<:J=/)]" ; } }
-else if $(MAC) { rule .path { return ":$(<:J=\:)" ; } }
-else { rule .path { return "$(<:J=/)" ; } }
-if $(VMS) { . = "_" ; }
-else { . = "." ; }
-
 # Put executables in platform-specific subdirectory.
 locate-target = $(LOCATE_TARGET) ;
 if $(VMS)
 {
-    locate-target ?= [ .path bin$(.)vms ] ;
+    locate-target ?= bin$(.)vms ;
     platform = vms ;
 }
 else if $(MAC)
 {
-    locate-target ?= [ .path bin$(.)$(OS:L)$(OSPLAT:L) ] ;
+    locate-target ?= bin$(.)$(OS:L)$(OSPLAT:L) ;
     platform = $(OS:L)$(OSPLAT:L) ;
 }
 else if $(OSPLAT)
 {
-    locate-target ?= [ .path bin$(.)$(OS:L)$(OSPLAT:L) ] ;
+    locate-target ?= bin$(.)$(OS:L)$(OSPLAT:L) ;
     platform = $(OS:L)$(OSPLAT:L) ;
 }
 else
 {
-    locate-target ?= [ .path bin$(.)$(OS:L) ] ;
+    locate-target ?= bin$(.)$(OS:L) ;
     platform = $(OS:L) ;
 }
 if $(debug)
 {
-    locate-target = $(locate-target)$(.)debug ;
+    locate-target = [ .path $(locate-target)$(.)debug ] ;
+}
+else
+{
+    locate-target = [ .path $(locate-target) ] ;
 }
 
 # We have some different files for UNIX, VMS, and NT.
@@ -571,7 +580,7 @@ rule .hdr.scan
 
 # Distribution making from here on out.
 dist.license =
-    [ GLOB . : LICENSE ] [ GLOB [ .path .. .. .. ] : LICENSE ] ;
+    [ GLOB . : LICENSE_$(LICENSE).txt ] [ GLOB [ .path .. .. .. ] : LICENSE_$(LICENSE).txt ] ;
 dist.docs =
     $(dist.license[1])
     index.html
@@ -736,11 +745,15 @@ actions .rpm. {
     rm -f rpm.out
 }
 
-# The distribution targets.
-.binary bjam ;
-.package $(NAME)-$(VERSION) : $(dist.source) ;
-.package $(NAME)-$(VERSION)-$(RELEASE)-$(platform) : $(dist.bin) ;
-if $(rpm-tool)
+# The distribution targets. Don't bother with the targets if
+# distribution build not requested.
+if dist in $(ARGV)
 {
-    .rpm $(NAME)-$(VERSION)-$(RELEASE) : $(NAME)-$(VERSION).tgz ;
+    .binary bjam ;
+    .package $(NAME)-$(VERSION) : $(dist.source) ;
+    .package $(NAME)-$(VERSION)-$(RELEASE)-$(platform) : $(dist.bin) ;
+    if $(rpm-tool)
+    {
+        .rpm $(NAME)-$(VERSION)-$(RELEASE) : $(NAME)-$(VERSION).tgz ;
+    }
 }

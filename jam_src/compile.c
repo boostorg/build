@@ -91,6 +91,7 @@
 static void debug_compile( int which, char *s, FRAME* frame );
 int glob( char *s, char *c );
 /* Internal functions from builtins.c */
+void backtrace( FRAME *frame );
 void backtrace_line( FRAME *frame );
 void print_source_line( PARSE* p );
 
