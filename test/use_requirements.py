@@ -9,7 +9,12 @@ t.write("Jamfile", """
     lib b : b.cpp : : : <define>FOO ;
     exe a : a.cpp b ;
 """)
-t.write("b.cpp", "void foo() {}\n")
+t.write("b.cpp",
+"""void
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+foo() {}\n""")
 t.write("a.cpp", """
 #ifdef FOO
 void foo() {}
@@ -28,7 +33,13 @@ t.write("Jamfile", """
     lib b : b.cpp : : : <define>FOO ;
     exe a : a.cpp : <dependency>b ;
 """)
-t.write("b.cpp", "void foo() {}\n")
+t.write("b.cpp",
+"""void
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+foo() {}\n"""
+)
 t.write("a.cpp", """
 #ifdef FOO
 int main() { return 0; }
@@ -48,7 +59,12 @@ project :
     ;
 lib b : b.cpp ;
 """)
-t.write("lib/b.cpp", "void foo() {}\n")
+t.write("lib/b.cpp", 
+"""void
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+foo() {}\n""")
 t.run_build_system()
 
 # Test that use requirements are inherited correctly
@@ -74,7 +90,12 @@ project :
     ;
 lib b : b.cpp ;
 """)
-t.write("lib/1/b.cpp", "void foo() {}\n")
+t.write("lib/1/b.cpp", 
+"""void
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+foo() {}\n""")
 
 t.run_build_system()
 t.run_build_system("--clean")
@@ -94,11 +115,20 @@ t.write("Jamfile", """
 """)
 t.write("a.cpp", """
 #ifdef FOO
-void foo();
+void
+#ifdef _WIN32
+__declspec(dllimport)
+#endif
+foo();
 #endif
 int main() { foo(); }
 """)
-t.write("c.cpp", "")
+t.write("c.cpp",
+"""
+#ifdef _WIN32
+int __declspec(dllexport) must_export_something();
+#endif
+""")
 
 t.run_build_system()
 t.run_build_system("--clean")
@@ -134,7 +164,11 @@ exe hello : hello.cpp main ;
 """)
 
 t.write("main.cpp", """ 
-void foo();
+void
+#ifdef _WIN32
+__declspec(dllimport)
+#endif
+foo();
 
 int main() { foo(); return 0; } 
 """)
@@ -146,7 +180,11 @@ import gcc ;
 """)
 
 t.write("libs/a.cpp", """ 
-void foo() {} 
+void
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+foo() {} 
 """)
 
 # This library should be build with the same properties as
