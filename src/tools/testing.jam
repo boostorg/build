@@ -277,17 +277,18 @@ rule run-path-setup ( target : source : properties * )
     if $(dll-paths)
     {    
         dll-paths = [ sequence.transform path.native : $(dll-paths) ] ;
-        if [ modules.peek : NT ]
+        
+        local var-name = LD_LIBRARY_PATH ;
+        # Even on cygwin, the LD_LIBRARY_PATH has no effect, need to
+        # use PATH. 
+        if [ os.on-windows ]
         {
-            PATH_SETUP on $(target) = 
-              [ common.path-variable-setting-command PATH : $(dll-paths) %PATH% ] ;
+            var-name = PATH ;
         }
-        else
-        {
-            PATH_SETUP on $(target) = 
-              [ common.path-variable-setting-command LD_LIBRARY_PATH :
-                  $(dll-paths) $LD_LIBRARY_PATH : exported ] ;
-        }        
+        
+        PATH_SETUP on $(target) = 
+          [ common.path-variable-setting-command $(var-name) 
+            : $(dll-paths) $$(var-name) : exported ] ;
     }            
 }
 
