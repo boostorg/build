@@ -78,7 +78,7 @@ flags msvc CFLAGS <optimization>space : /Ogisy /O1 /Gs ;
 flags msvc CFLAGS <inlining>off : /Ob0 ;
 flags msvc CFLAGS <inlining>on : /Ob1 ;
 flags msvc CFLAGS <inlining>full : /Ob2 ;
-flags msvc CFLAGS <exception-handling>on : /GX ;
+flags msvc CFLAGS <exception-handling>on : /EHsc ;
 flags msvc CFLAGS <rtti>on : /GR ;
 
 # Note that these two options actually imply multithreading support on MSVC
@@ -175,7 +175,7 @@ rule C++-action
 actions vc-C++
 {
     $(VC_SETUP)
-    "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm800 -nologo -GX -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" -Tp"$(>)"
+    "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm800 -nologo /EHsc -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" -Tp"$(>)"
 }
 
 #### Archive ####
