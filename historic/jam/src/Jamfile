@@ -166,7 +166,7 @@ ALLSOURCE =
     builtins.c builtins.h command.c command.h compile.c compile.h
     execcmd.h execmac.c execnt.c execunix.c execvms.c expand.c expand.h
     filemac.c filent.c fileos2.c filesys.c filesys.h fileunix.c filevms.c
-    frames.c frames.h glob.c hash.c hash.h hdrmacro.c hdrmacro.h headers.c
+    frames.c frames.h glob.c hash.c hash.h hcache.c hcache.h hdrmacro.c hdrmacro.h headers.c
     headers.h jambase.c jambase.h jam.c jamgram.c jamgram.h jamgramtab.h
     jam.h lists.c lists.h make1.c make.c make.h mkjambase.c
     modules.c modules.h newstr.c newstr.h option.c option.h
