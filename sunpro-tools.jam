@@ -96,7 +96,7 @@ rule Cc-action
 
 actions sunpro-Cc-action
 {
-    $(SUNPRO_BIN_PATH)CC -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(SUNPRO_BIN_PATH)cc -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
