@@ -72,6 +72,13 @@ feature location : : free path ;
 feature dll-path : : free path ;
 feature hardcode-dll-paths : false true : incidental propagated ;
 
+
+# This is internal feature which holds the paths of all dependency
+# dynamic libraries. On Windows, it's needed so that we can all
+# those paths to PATH, when running applications.
+# On Linux, it's needed to add proper -rpath-link command line options.
+feature xdll-path : : free path ;
+
 #provides means to specify def-file for windows dlls.
 feature def-file : : free dependency ;
 
@@ -378,10 +385,9 @@ class lib-target-class : basic-target
               property-set.create $(search:G=<library-path>) ] ] ;            
         }
         
-        # If <hardcode-dll-paths> is true, add appropricate <dll-path> usage
-        # requirements.
+        # Add appropricate <xdll-path> usage requirements.
         local raw = [ $(rproperties).raw ] ;
-        if <link>shared in $(raw) && <hardcode-dll-paths>true in $(raw)
+        if <link>shared in $(raw)
         {
             local paths ;
             local pwd = [ path.pwd ] ;
@@ -395,17 +401,14 @@ class lib-target-class : basic-target
             if $(paths)
             {
                 result = [ $(result).add 
-                  [ property-set.create $(paths:G=<dll-path>) ] ] ;
+                  [ property-set.create $(paths:G=<xdll-path>) ] ] ;
             }                                    
         }
         
-        # Pass <dll-path> features that we've got from sources.
-        if <hardcode-dll-paths>true in $(raw)
-        {
-            local u = [ $(subvariant).sources-usage-requirements ] ;
-            local values = [ $(u).get <dll-path> ] ;
-            result = [ $(result).add-raw $(values:G=<dll-path>) ] ;
-        }
+        # Pass <xdll-path> features that we've got from sources.
+        local u = [ $(subvariant).sources-usage-requirements ] ;
+        local values = [ $(u).get <xdll-path> ] ;
+        result = [ $(result).add-raw $(values:G=<xdll-path>) ] ;
         
         # For libraries that we've failed to consume, we need to 
         # pass <library-path> usage requirements, if any.
@@ -456,14 +459,12 @@ class exe-target-class : typed-target
     {
         local result = [ typed-target.compute-usage-requirements $(subvariant) ] ;
         local p = [ $(subvariant).build-properties ] ;
-        if <hardcode-dll-paths>true in [ $(p).raw ]
+        
+        local xdll-paths = [ $(p).get <xdll-path> ] ;
+        if $(xdll-paths)
         {
-            local dll-paths = [ $(p).get <dll-path> ] ;
-            if $(dll-paths)
-            {
-                result = [  $(result).add-raw $(dll-paths:G=<dll-path>) ] ;
-            }                            
-        }
+            result = [  $(result).add-raw $(xdll-paths:G=<xdll-path>) ] ;
+        }                            
         
         return $(result) ;
     }
@@ -630,7 +631,16 @@ class linking-generator : generator
     {   
         local libs = [ $(property-set).get <library> ] ;
         sources += $(libs:G=) ;
-                
+        
+        if [ $(property-set).get <hardcode-dll-paths> ] = true
+        {
+            local xdll-path = [ $(property-set).get <xdll-path> ] ;
+            if $(xdll-path)
+            {
+                property-set = [ $(property-set).add-raw $(xdll-path:G=<dll-path>) ] ;
+            }            
+        }
+                        
         local result = [ generator.run $(project) $(name) : $(property-set)
           : $(sources) : $(multiple) ] ;
         
