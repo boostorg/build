@@ -1226,13 +1226,7 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
     {
         result += $(intermediate) ;
     }
-    
-    if $(result)
-    {                
-        assert.true class.is-a $(result[1]) : property-set ;
-    }
-    
-    
+            
     # For all targets of 'allowed-type', reset the 'intermediate' attribute.
     if ! $(.construct-stack) && $(allowed-type) != * # This is first invocation in stack
     {

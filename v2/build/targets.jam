@@ -826,13 +826,6 @@ rule resolve-reference ( target-reference : project )
     # Find the target
     local target = [ $(project).find $(id) ] ;
     
-    # Do a sanity check
-    if $(sproperties) && [ class.is-a $(target) : file-reference ] 
-    {
-        errors.error 
-          "error: target reference '$(target-reference)' contains properties," :
-          "error: but refers to a file" ;
-    }
     return $(target) [ property-set.create $(sproperties) ] ;
 }
 

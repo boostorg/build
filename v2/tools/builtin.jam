@@ -636,8 +636,7 @@ class linking-generator : generator
         local fst ;
         for local s in $(sources)
         {
-            if [ type.is-derived [ $(s).type ] LIB ] &&
-               [ class.is-a $(s) : searched-lib-target ]
+            if [ type.is-derived [ $(s).type ] SEARCHED_LIB ]
             {
                 local name = [ $(s).real-name ] ;
                 if [ $(s).shared ] 
