@@ -78,12 +78,12 @@ rule section (
                     local p = [ MATCH "(.*)([	 ]*)(::)$" : $(paragraph[-1]) ] ;
                     if $(p[2]) && $(p[2]) != "" { paragraph = $(paragraph[1--2]) $(p[1]): ; }
                     else { paragraph = $(paragraph[1--2]) $(p[1]) ; }
-                    lines [ split-at-words " " $(paragraph) ] : "  " ;
+                    lines [ split-at-words " " $(paragraph) ] : "  " "  " ;
                     lines ;
                 }
                 else
                 {
-                    lines [ split-at-words " " $(paragraph) ] : "  " ;
+                    lines [ split-at-words " " $(paragraph) ] : "  " "  " ;
                     lines ;
                 }
             }
@@ -140,6 +140,7 @@ rule split-at-words (
     )
 {
     local lines = ;
+    text = [ string.words $(text:J=" ") ] ;
     text = $(text:J=" ") ;
     margin ?= 78 ;
     local char-match-1 = ".?" ;
