@@ -33,7 +33,11 @@ flags borland CFLAGS <inlining>full : -vi -w-inl ;
     local flag-vars = USER-INTERFACE TARGET-TYPE THREADING RUNTIME-LINK ;
     local $(flag-vars) ;
 
-    flags borland USER-INTERFACE <user-interface>console/<target-type>LIB <user-interface>console/<target-type>EXE : C ;
+    if [ get-values <target-type> : $(gBUILD_PROPERTIES) ] != DLL
+    {
+        flags borland USER-INTERFACE <user-interface>console : C ;
+    }
+    
     flags borland TARGET-TYPE <target-type>DLL : D ;
     flags borland THREADING <threading>multi : M ;
     flags borland RUNTIME-LINK <runtime-link>dynamic : R ;
@@ -41,13 +45,11 @@ flags borland CFLAGS <inlining>full : -vi -w-inl ;
     $(flag-vars) ?= "" ;
 
     flags borland LINKFLAGS :
-      -tW$(USER-INTERFACE)$(TARGET-TYPE)$(RUNTIME-LINK)$(THREADING)
-#      -tW$($(flag-vars))
+      -t$(USER-INTERFACE)$(TARGET-TYPE)$(RUNTIME-LINK)$(THREADING)
         ;
     
     flags borland CFLAGS :
-#      -t$(USER-INTERFACE)$(TARGET-TYPE)$(RUNTIME-LINK)$(THREADING)
-      -tW$($(flag-vars))
+      -t$(USER-INTERFACE)$(TARGET-TYPE)$(RUNTIME-LINK)$(THREADING)
         ;
 }
 
