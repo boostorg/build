@@ -17,6 +17,7 @@
 
 # include "modules.h"
 # include "jam.h"
+# include "parse.h"
 
 /*
  * rules.h -  targets, rules, and related information

@@ -21,6 +21,7 @@
 # include "make.h"
 # include "hdrmacro.h"
 # include "compile.h"
+# include "native.h"
 # include <ctype.h>
 
 /*
@@ -55,7 +56,7 @@ LIST* builtin_system_registry( PARSE *parse, FRAME *frame );
 
 int glob( char *s, char *c );
 
-static void lol_build( LOL* lol, char** elements );
+void lol_build( LOL* lol, char** elements );
 void backtrace( FRAME *frame );
 void backtrace_line( FRAME *frame );
 void print_source_line( PARSE* p );
@@ -255,6 +256,13 @@ load_builtins()
           bind_builtin( "CALC",
               builtin_calc, 0, args );
       }
+
+      {
+          char * args[] = { "module", ":", "rule", 0 };
+          bind_builtin( "NATIVE_RULE",
+              builtin_native_rule, 0, args );
+      }
+
 # ifdef OS_NT
       {
           char * args[] = { "key_path", ":", "data", "?", 0 };
@@ -262,6 +270,9 @@ load_builtins()
               builtin_system_registry, 0, args );
       }
 # endif
+
+      /* Initialize builtin modules */
+      init_set();
 }
 
 /*
@@ -1078,9 +1089,32 @@ LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
 
 }
 
+LIST *builtin_native_rule( PARSE *parse, FRAME *frame )
+{
+    LIST* module_name = lol_get( frame->args, 0 );    
+    LIST* rule_name = lol_get( frame->args, 1 );    
+
+    module_t* module = bindmodule(module_name->string);
+
+    native_rule_t n, *np = &n;
+    n.name = rule_name->string;
+    if (module->native_rules && hashcheck(module->native_rules, (HASHDATA**)&np))
+    {
+        new_rule_body(module, np->name, np->arguments, np->procedure, 1);
+    }
+    else
+    {
+        backtrace_line( frame->prev );
+        printf( "error: no native rule \"%s\" defined in module \"%s\"\n", 
+                n.name, module->name);
+        backtrace( frame->prev );
+        exit(1);
+    }
+    return L0;    
+}
 
 
-static void lol_build( LOL* lol, char** elements )
+void lol_build( LOL* lol, char** elements )
 {
     LIST* l = L0;
     lol_init( lol );
