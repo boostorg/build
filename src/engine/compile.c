@@ -647,6 +647,8 @@ type_check( char* type_name, LIST *values, FRAME* caller, RULE* called, LIST* ar
             return;
     }
     
+    exit_module( caller->module );
+    
     while ( values != 0 )
     {
         LIST *error;
@@ -654,17 +656,22 @@ type_check( char* type_name, LIST *values, FRAME* caller, RULE* called, LIST* ar
         frame_init( frame );
         frame->module = typecheck;
         frame->prev = caller;
-        
+
+        enter_module( typecheck );
         /* Prepare the argument list */
         lol_add( frame->args, list_new( L0, values->string ) );
         error = evaluate_rule( type_name, frame );
         
+        exit_module( typecheck );
+        
         if ( error )
             argument_error( error->string, called, caller, arg_name );
-        
+
         frame_free( frame );
 		values = values->next;
     }
+
+    enter_module( caller->module );
 }
 
 /*
