@@ -111,19 +111,19 @@ flags mipspro STDC++HDRS : "$(MIPSPRO_C++INCLUDE_DIRECTORY)"
                            "$(BOOST_ROOT)/boost/compatibility/cpp_c_headers"
                          ;
 
-flags mipspro STDLIBPATH <address-model>default/<architecture>mips3 :
+flags mipspro STDLIBPATH <address-model>default/<architecture>mips3 <architecture>native :
      "$(MIPSPRO_STDLIB_ROOTS)/lib32/$(MIPSPRO_STDLIB_MIPS3_SUBDIRECTORIES)"
       ;
 flags mipspro STDLIBPATH <address-model>default/<architecture>mips4 :
      "$(MIPSPRO_STDLIB_ROOTS)/lib32/$(MIPSPRO_STDLIB_MIPS4_SUBDIRECTORIES)"
       ;
-flags mipspro STDLIBPATH <address-model>32/<architecture>mips3 :
+flags mipspro STDLIBPATH <address-model>32/<architecture>mips3 <architecture>native :
      "$(MIPSPRO_STDLIB_ROOTS)/lib32/$(MIPSPRO_STDLIB_MIPS3_SUBDIRECTORIES)"
       ;
 flags mipspro STDLIBPATH <address-model>32/<architecture>mips4 :
      "$(MIPSPRO_STDLIB_ROOTS)/lib32/$(MIPSPRO_STDLIB_MIPS4_SUBDIRECTORIES)"
       ;
-flags mipspro STDLIBPATH <address-model>64/<architecture>mips3 :
+flags mipspro STDLIBPATH <address-model>64/<architecture>mips3 <architecture>native :
      "$(MIPSPRO_STDLIB_ROOTS)/lib64/$(MIPSPRO_STDLIB_MIPS3_SUBDIRECTORIES)"
       ;
 flags mipspro STDLIBPATH <address-model>64/<architecture>mips4 :
