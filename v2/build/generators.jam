@@ -7,42 +7,6 @@
 #  target types and contain algorithm for finding transformation from sources
 #  to targets.
 
-#####################
-#
-# 1.We should make sure we don't find the same transformation twice. For
-# example
-# cpp <- whl,dlp <- wd
-# when searching from cpp we'd find whl <- wd path and dlp <- wd path. We
-# should discover that these paths result in exactly the same set of 
-# generators to be used and that this is not an ambiguity.
-# Ideally, we'd want to avoid finding that duplicate transformation.
-# (actually, if we implement efficient caching, we can search for duplicates too).
-# Moreover, this case makes me thing we better have one set of requirements
-# per generator, as otherwise we'd have a terrible mess.
-
-# If is possible for the matching process to return type it was not asked for
-# We can't avoid this.
-# cpp <-\---- y <------ whl <---wd 
-#        \--- l <------ dlp <---/
-# The cpp<-y generator will call matching process to generate y from wd. However, it
-# will be compelled to return dlp also, and we can use dlp until we go back to cpp.
-
-# It is possible that generator will produce extra targets of type we 
-# don't want to handle. At some step we have to try transforming them
-# into required type. It is possible to do either in generator's 'run'
-# method or in macthing code. The latter alternative is chosen. The
-# reason is that matching code often need to decide between two
-# generators. In order to find if there's real ambiguity, it is
-# required to run all possible transformations.
-#
-# While it's theoretically possible to have different required
-# properties for different target types, it has no apparent benefit.
-#
-# Note that our target type concept is more powerfull than make's
-# target name -- we can have .cpp files used in a different way by
-# different rules.
-
-
 import class : class new is-a ;
 import container : vector ;
 import numbers : range ;
@@ -184,11 +148,12 @@ rule generator (
         generators.dout [ indent ] "  multiple:" $(mutliple) ;
 
         # Targets that this generator will consume directly.
-        local consumed ;
+        local consumed = ;
         # Targets that can't be consumed and will be returned as-is.
-        local bypassed ;
+        local bypassed = ;
         local failed ;
-
+                
+        # Ordinary generators take only one source targets
         if $(sources[2])
         {
             error "unsupported" ;
@@ -198,40 +163,14 @@ rule generator (
         {
             multiple = ;
         }
-
-        # Try to collect in 'consumed' full target set required for this generator.
-        # Directly place there target of acceptable types, and use 'construct'
-        # for all others. If 'construct' invocation return additional targets
-        # (of types we can't handle), place them to 'bypassed'.
-        local result ;        
-        for local st in $(self.source-types)
-        {
-            local actual-st = [ $(sources[1]).type ] ;
-            if $(actual-st) = $(st) || [ type.is-derived $(actual-st) $(st) ]
-            {
-                consumed += $(sources[1]) ;
-            }
-            else
-            {
-                local transformed = [ generators.construct $(project) $(name) :
-                      $(st) $(multiple) 
-                      : $(properties) : $(sources[1]) ] ;
-                for local t in $(transformed)
-                {
-                    if [ $(t).type ] = $(st)
-                    {
-                        consumed += $(t) ;
-                    }
-                    else
-                    {
-                        bypassed += $(t) ;
-                    }
-                }                
-            }
-        }    
+        
+        convert-to-consumable-types $(project) $(name) : 
+          $(properties) : $(sources) : $(multiple)
+          : consumed bypassed ;
 
         # Construct 'result' by creating dependency graph with 'consumed' as targets.
         
+        local result = ;
         # If this is 1->1 transformation, apply it to all consumed targets in order.
         if ! $(self.source-types[2])
         {
@@ -359,6 +298,57 @@ rule generator (
         
         return [ sequence.transform virtual-target.register : $(targets) ] ;
     }    
+    
+    # Attempts to convert 'source' to the types that this generator can
+    # handle. The intention is to produce the set of targets can should be
+    # used when generator is run.
+    rule convert-to-consumable-types ( project name ? : 
+        properties * : source : multiple ? 
+        : consumed-var # name of variable which recieves all targets which 
+                       # can be consumed
+          bypassed-var # name variable which recieves all targets which 
+                       # cannot be consumed  
+    )
+    {        
+        # For each source, type attempt, to convert 'source' to that type.
+        # If 'source' is equal or derived from the required type, just
+        # add it to $(consumed-var). Otherwise, call 'generators.construct'
+        
+        local real-source-type = [ $(source).type ] ;
+        for local st in $(self.source-types)
+        {
+            # The 'source' if of right type already)
+            if $(real-source-type) = $(st) || 
+              [ type.is-derived $(real-source-type) $(st) ]
+            {
+                $(consumed-var) += $(source) ;
+            }
+            else
+            {
+                # Attempt to convert 'source' to the right type
+                local transformed = [ generators.construct $(project) $(name) :
+                  $(st) $(multiple) : $(properties) : $(source) ] ;
+                                
+                # Add targets of right type to 'consumed'. Add others to
+                # 'bypassed'. The 'generators.construct' rule has done
+                # its best to convert everything to the required type.
+                # There's no need to rerun it on targets of different types.
+                for local t in $(transformed)
+                {
+                    if [ $(t).type ] = $(st)
+                    {
+                        $(consumed-var) += $(t) ;
+                    }
+                    else
+                    {
+                        $(bypassed-var) += $(t) ;
+                    }
+                }                
+            }
+        }    
+    }
+    
+
     
     # Returns the class to be used to actions. Default implementation 
     # returns "action".
@@ -918,7 +908,7 @@ rule construct ( project name ? : target-type multiple ? : properties * : source
                 $(results).push-back $(f) ;                
             }
             else 
-            {                        
+            {    
                 error [ $(results).size ] "possible generations for " $(target-types)
                   : "generations:" [ $(results).str ] ;
             }
