@@ -12,7 +12,12 @@ import string
 
 t = Tester()
 
-t.write("Jamfile", """ 
+t.write("Jamfile", """
+# Stage the binary, so that it will be relinked
+# without hardcode-dll-paths. That will chech that
+# we pass correct -rpath-link, even if not passing
+# -rpath.
+stage dist : main ;
 exe main : main.cpp b ; 
 """)
 

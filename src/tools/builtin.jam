@@ -693,6 +693,7 @@ class linking-generator : generator
     rule run ( project name ? : property-set : sources + :  multiple ? )
     {   
         if [ $(property-set).get <hardcode-dll-paths> ] = true
+         && [ type.is-derived $(self.target-types[1]) EXE ] 
         {
             local xdll-path = [ $(property-set).get <xdll-path> ] ;
             # It's possible that we have libraries in sources which did not came
