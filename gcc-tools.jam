@@ -48,6 +48,10 @@ else if $(UNIX)
         flags gcc FINDLIBS <threading>multi : rt ;
         NO_GNU_LN = true ; # sun seems not to use the GNU linker with gcc
         }
+    case BeOS :
+        {
+        # BeOS has no threading options, don't set anything here.
+        }
     case * :
         {
         flags gcc CFLAGS <threading>multi : -pthread ;
@@ -186,6 +190,7 @@ actions updated together piecemeal gcc-Archive-action
 {
     ar ru$(ARFLAGS) "$(<:T)" "$(>:T)"
 }
+
 
 
 
