@@ -36,7 +36,7 @@ helper() {}
 """)
 
 t.run_build_system("link=static")
-t.expect_addition("bin/test.test/$toolset/debug/link-static/test.run")
+t.expect_addition("bin/$toolset/debug/link-static/test.passed")
 
 
 

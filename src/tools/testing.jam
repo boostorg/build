@@ -65,6 +65,7 @@ type.register COMPILE_FAIL : : TEST : main ;
 type.register RUN_OUTPUT : run : : main ;
 type.register RUN : : TEST : main ;
 type.register RUN_FAIL : : TEST : main ;
+type.register UNIT_TEST : passed : TEST : main ;
 
 # Declare the rules which create main targets. 
 # While the 'type' module already creates rules with the same names for us,
@@ -202,6 +203,14 @@ generators.register-standard testing.expect-failure : RUN_OUTPUT : RUN_FAIL ;
 # Generator which runs an EXE and captures output.
 generators.register-standard testing.capture-output : EXE : RUN_OUTPUT ;
 
+# Generator which creates target if sources runs successfully.
+# Differers from RUN in that run output is not captured.
+# The reason why it exists is that the 'run' rule is much better for
+# automated testing, but is not user-friendly. See
+# http://article.gmane.org/gmane.comp.lib.boost.build/6353/
+generators.register-standard testing.unit-test : EXE : UNIT_TEST ;
+
+
 # The action rules called by generators.
 
 # Causes the 'target' to exist after bjam invocation if and only if all the 
@@ -255,26 +264,8 @@ actions (failed-as-expected)
     echo failed as expected > $(<)
 }
 
-toolset.flags testing.capture-output ARGS <testing.arg> ;
-toolset.flags testing.capture-output INPUT_FILES <testing.input-file> ;
-toolset.flags testing.capture-output LAUNCHER <testing.launcher> ;
-rule capture-output ( target : source : properties * )
+rule run-path-setup ( target : source : properties * )
 {
-    output-file on $(target) = $(target:S=.output) ;
-    LOCATE on $(target:S=.output) = [ on $(target) return $(LOCATE) ] ;
-    
-    # The INCLUDES kill a warning about independent target...
-    INCLUDES $(target) : $(target:S=.output) ;
-    # but it also puts .output into dependency graph, so we must tell jam
-    # it's OK if it cannot find the target or updating rule.
-    NOCARE $(target:S=.output) ;        
-    
-    # This has two-fold effect. First it adds input files to the dependendency
-    # graph, preventing a warning. Second, it causes input files to be bound
-    # before target is created. Therefore, they are bound using SEARCH setting 
-    # on them and not LOCATE setting of $(target), as in other case (due to jam bug).
-    DEPENDS $(target) : [ on $(target) return $(INPUT_FILES) ] ;
-    
     # For testing, we need to make sure that all dynamic libraries needed by
     # the test are found. So, we collect all paths from dependency libraries
     # (via xdll-path property) and add whatever explicit dll-path user has
@@ -297,9 +288,32 @@ rule capture-output ( target : source : properties * )
               [ common.path-variable-setting-command LD_LIBRARY_PATH :
                   $(dll-paths) $LD_LIBRARY_PATH : exported ] ;
         }        
-    }        
+    }            
 }
 
+
+toolset.flags testing.capture-output ARGS <testing.arg> ;
+toolset.flags testing.capture-output INPUT_FILES <testing.input-file> ;
+toolset.flags testing.capture-output LAUNCHER <testing.launcher> ;
+rule capture-output ( target : source : properties * )
+{
+    output-file on $(target) = $(target:S=.output) ;
+    LOCATE on $(target:S=.output) = [ on $(target) return $(LOCATE) ] ;
+    
+    # The INCLUDES kill a warning about independent target...
+    INCLUDES $(target) : $(target:S=.output) ;
+    # but it also puts .output into dependency graph, so we must tell jam
+    # it's OK if it cannot find the target or updating rule.
+    NOCARE $(target:S=.output) ;        
+    
+    # This has two-fold effect. First it adds input files to the dependendency
+    # graph, preventing a warning. Second, it causes input files to be bound
+    # before target is created. Therefore, they are bound using SEARCH setting 
+    # on them and not LOCATE setting of $(target), as in other case (due to jam bug).
+    DEPENDS $(target) : [ on $(target) return $(INPUT_FILES) ] ;
+    
+    run-path-setup $(target) : $(source) : $(properties) ;
+}
 
 
 if [ os.name ] = NT
@@ -362,14 +376,20 @@ actions capture-output bind INPUT_FILES output-file
     exit $(STATUS)      
 }
 
-rule unit-test ( name : sources * : requirements * : default-build *
-                 : usage-requirements * )
+MAKE_FILE = [ common.file-creation-command ] ;
+
+toolset.flags testing.unit-test LAUNCHER <testing.launcher> ;
+rule unit-test ( target : source : properties * )
 {
-    return [ run $(sources) : : : $(requirements) : $(name) 
-             : $(default-build) ] ;
-}        
+    run-path-setup $(target) : $(source) : $(properties) ;
+}
+
+actions unit-test 
+{
+    $(PATH_SETUP)
+    $(LAUNCHER) $(>) && $(MAKE_FILE) $(<)
+}
 
 IMPORT $(__name__) : compile compile-fail test-suite run run-fail 
-   unit-test
-  : : compile compile-fail test-suite run run-fail unit-test ;
+  : : compile compile-fail test-suite run run-fail ;
 
