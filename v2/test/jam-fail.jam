@@ -1,0 +1,68 @@
+#######################################################################
+# Rules and actions for testing the build system's response to errors #
+#######################################################################
+
+# Jam-fail string : optional-expected-output
+#
+# Creates a fake target, always built, which succeeds in building if
+# interpreting the given string causes an error. If optional-expected-output is
+# supplied, creates another fake target which succeeds in building if
+# optional-expected-output is in the Jam error messages.
+rule Jam-fail
+{
+    local jam-cmd = "$(<:G=jam_command)" ;
+    
+    NOTFILE "$(jam-cmd)" ;
+    ALWAYS "$(jam-cmd)" ;
+    DEPENDS all : "$(jam-cmd)" ;
+
+    redirect on $(jam-cmd) = "nul" ;
+    Jam-expect-failure $(jam-cmd) ;
+
+    if $(>)
+    {
+        redirect on $(jam-cmd) = "scratch-output.txt" ;
+        local output-target = "$(>:G=$(<))" ;
+        NOTFILE "$(output-target)" ;
+        ALWAYS "$(output-target)" ;
+        DEPENDS all : "$(output-target)" ;
+        Expect-in-output "$(output-target)" ;
+    }
+}
+
+BOOST_TEST_JAMFILE ?= expected-failure.jam ;
+
+# Jam-fail-action
+#
+# Will run Jam on a temporary Jamfile which contains the string in $(<:G=) and
+# redirect the results into a temporary files called scratch-output.txt.
+rule Jam-expect-failure
+{
+    FAIL_EXPECTED $(<) ;
+}
+actions Jam-expect-failure
+{
+    echo actions unbuilt { } unbuilt all ; $(<:G=) > expected-failure.jam
+    jam -f../Jambase -sJAMFILE=expected-failure.jam >$(redirect)
+}
+
+# These actions expect to find the ungristed part of $(<) in scratch-output.txt
+# and return a nonzero exit code otherwise
+if $(NT)
+{
+    # Explicitly get the NT find command in case someone has another find in their path.
+    actions quietly Expect-in-output
+    {
+        $(SystemRoot)\System32\find /C "$(<:G=)" scratch-output.txt >nul
+    }
+}
+else
+{
+    # Not really the right actions for Unix; the argument will be interpreted as
+    # a regular expression. Is there a simpler find?
+    actions quietly Expect-in-output
+    {
+        grep "$(<:G=)" scratch-output.txt
+    }
+}
+

@@ -1,0 +1,324 @@
+# Minimal core Jambase for boost
+
+# (C) Copyright David Abrahams 2001. Permission to copy, use,
+# modify, sell and distribute this software is granted provided this
+# copyright notice appears in all copies. This software is provided
+# "as is" without express or implied warranty, and with no claim as
+# to its suitability for any purpose.
+
+#########################################
+# User-settable Variable Documentation: #
+#########################################
+
+# Unless otherwise specified all variables will be picked up first from the
+# command-line, next from the environment, then from Jamrules, and finally from
+# the users' Jamfile
+
+# JAMRULES
+#       The name of the Jamrules file. By the time a Jamrules file is read it is
+#       too late to affect the initial Jamrules file that's loaded, but you can
+#       do it in a Jamfile.
+#    Default = "Jamrules"
+
+# JAMFILE
+#       The name of the user file to load after the Jambase is read. Changing
+#       JAMFILE in a Jamfile or Jamrules file will affect the name of the file
+#       loaded for recursive dependencies or subincludes.
+#    Default = "Jamfile"
+
+# BOOST_BUILD_INSTALLATION
+#       where to find the boost build jam code. Only the first setting of this
+#       variable is used, in case multiple project Jamrules files should set it.
+#    Default = project root of first project (boost Jamrules set this to tools/build).
+
+# BOOST_JAMBASE
+#       The name of the top-level build system source file. This file will be
+#       loaded once from the directory BOOST_BUILD_INSTALLATION, after the first
+#       project's Jamrules file is loaded. 
+#    Default = boost-base.jam
+
+#######################################################
+# Useful variables that should NOT be set by the user #
+#######################################################
+
+# gPROJECT_ROOT
+#       The path from the Jam invocation directory to the root of the current project.
+
+#########################################
+# Prepare utility globals               #
+#########################################
+
+# clear any settings for these that may have come from the environment
+DOT = ;
+DOTDOT = ;
+SLASH = ;
+
+# Customize for various OSes
+if $(NT)
+{
+    SLASH = \\ ;
+}
+if $(VMS)
+{
+    DOT = [] ;
+    DOTDOT = [-] ;
+    SLASH = . ;
+}
+else if $(MAC)
+{
+    DOT = ":" ;
+    DOTDOT = "::" ;
+    SLASH = ":" ;
+}
+# Defaults for uncustomized values
+DOT ?= . ;
+DOTDOT ?= .. ;
+JAMRULES ?= Jamrules ;
+JAMFILE ?= Jamfile ;
+SLASH ?= "/"  ;
+
+#########################################
+# Utility rules                         #
+#########################################
+
+rule report-argument-error # rule-name length argnum : $(1) : $(2) : $(3) : $(4)...
+{
+    # fancy footwork to get Jam to print $(x) where x is a number
+    local dollar = "\$" ;
+    local argname = $(dollar)($(<[3])) ;
+    EXIT "rule '$(<[1])' expects $(<[2]) elements in $(argname),"
+        "got arguments (" $(2)
+        ": "$(3[1]) $(3[2-])
+        ": "$(4[1]) $(4[2-])
+        ": "$(5[1]) $(5[2-])
+        ": "$(6[1]) $(6[2-])
+        ": "$(7[1]) $(7[2-])
+        ": "$(8[1]) $(8[2-])
+        ": "$(9[1]) $(9[2-])
+        ") instead." ;
+}
+
+rule check-arguments # rule-name max-lengths... : $(1) : $(2) : $(3) : $(4)...
+{
+    local rule-name = $(<[1]) ;
+    local lengths = $(<[2-]) ;
+    local argnums = 1 2 3 4 5 6 7 8 ;
+
+    for length in $(lengths)
+    {
+        local maximum minimum = $($(argnums[2])[$(length)-]) ;
+        switch $(length)
+        {
+         case *-* :
+            local max = [ SUBST $(length) ".*-([0-9]*)" $1 ] ;
+            maximum = $($(argnums[2])[$(max)-]) ;
+        }
+
+        if ( ! $(minimum) ) || $(maximum[2])
+        {
+            report-argument-error $(rule-name) $(length) $(argnums[1])
+                : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+                    
+        }
+
+        argnums = $(argnums[2-]) ;
+        lengths = $(lengths[2-]) ;
+    }
+
+    if $($(argnums[2-]))
+    {
+        report-argument-error $(rule-name) ZERO $(argnums[1])
+             : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+}
+
+# regex-match string pattern
+#
+# return "true" iff string matches pattern, empty otherwise.
+rule regex-match
+{
+    check-arguments regex-match 2 : $(1) : $(2) : $(3) ;
+    
+    local source = $(<[1]) ;
+    local pattern = $(<[2]) ;
+    
+    # SUBST rule is weird. When there's no match it returns the original string
+    # for /all/ $n results. When there /is/ a match, only the $n results that
+    # are set are matched
+    local unmatched = [ SUBST $(source) ($(pattern)) $2 ] ;
+    if ! $(unmatched)
+    {
+        return true ;
+    }
+}
+
+# regex-split string pattern
+#
+# split a single string into a list of elements on the boundaries given by
+# the regexp pattern.
+rule regex-split 
+{
+    # grab arguments
+    local source = $(<[1]) ;
+    local divider = $(<[2]) ;
+
+    # check for extra args
+    check-arguments regex-split 2 : $(1) : $(2) : $(3) ;
+    
+    if ! [ regex-match $(source) ".*$(divider).*" ]
+    {
+        return $(source) ;
+    }
+    else
+    {
+        local pattern = "(.*)("$(divider)")(.*)" ;
+        local head = [ SUBST $(source) $(pattern) $1 ] ;
+        local tail = [ SUBST $(source) $(pattern) $3 ] ;
+        return [ regex-split $(head) $(divider) ] $(tail) ;
+    }
+}
+
+# split-path path
+#
+# split a path into its components. Always splits at forward-slashes, regardless
+# of the OS.
+rule split-path
+{
+    check-arguments split-path 1 : $(1) : $(2) : $(3) ;
+    return [ regex-split $(<) "[/$(SLASH)]" ] ;
+}
+
+# rule subdirectory-to-root subdirectory
+#
+# Given a relative path from D1 to a subdirectory D2, return the relative path
+# from D2 to D1 using ../../ etc. If subdirectory is empty it will be treated
+# the same as $(DOT).
+#
+# CAVEATS: does not handle input paths containing ..
+rule subdirectory-to-root
+{
+    local subdirectory = $(<[1]) ;
+    
+    # check arguments
+    if $(subdirectory:R) || $(<[2-]) || $(2) || $(3)
+    {
+        EXIT subdirectory-to-root rule expects zero arguments or a single relative path
+                "(" $(<) ": "$(2) ": "$(3) ")" ;
+    }
+    
+    # split the path
+    local tokens = [ split-path $(subdirectory) ] ;
+    if $(DOTDOT) in $(tokens)
+    {
+        EXIT subdirectory-to-root rule can not handle paths
+                        containing $(DOTDOT) "(" $(<) ")" ;
+    }
+    
+    local token result = ;
+    for token in $(tokens)
+    {
+        if $(token) != $(DOT)
+        {
+            # Will leave result unset the first time around
+            result = $(result:R=$(DOTDOT)) ;
+            result ?= $(DOTDOT) ; # correct that here
+        }
+    }
+
+    # if the path is empty at this point, it should be $(DOT).
+    result ?= $(DOT) ;
+    return $(result) ;
+}
+
+# This rule named by this variable is used to find the path from the invocation
+# directory to the subproject root when the subproject rule is invoked. The
+# boost build system will redefine this variable to handle cross-project
+# dependencies.
+gFIND_SUBPROJECT_ROOT = subdirectory-to-root ;
+
+# Any rules named by this variable will be called upon entry to any subproject
+# Jamfile (after the project Jamrules file is read if the Jamfile is the first
+# seen in the project). The arguments will be:
+#   $(1) - the path from the invocation directory to the project root
+#   $(2) - the path from the project root to the subproject directory
+gSUBPROJECT_HOOKS = ;
+
+# include-once file
+rule include-once
+{
+    check-arguments include-once 1 : $(1) : $(2) : $(3) ;
+    
+    # include it if neccessary
+    if ! $(gINCLUDED:$(<))
+    {
+        gINCLUDED:$(<) = true ;
+        include $(<) ;
+    }
+}
+
+# subproject path
+#
+# Introduces a Jamfile rooted at the given location wrt the top of the project
+# tree. If the Jamrules file at the top of the project tree has not been loaded,
+# it is included. The Jamrules file can be used to define rules, and to set
+# global variables which change the behavior of the build system.
+rule subproject
+{
+    local subproject_path = $(<) ;
+    check-arguments subproject 1 : $(1) : $(2) : $(3) ;
+    
+    gPROJECT_ROOT = [ $(gFIND_SUBPROJECT_ROOT) $(subproject_path) ] ;
+
+    if ( ! $(gPROJECT_ROOT[1]) ) || $(gPROJECT_ROOT[2])
+    {
+        EXIT  "subproject rule expects a scalar path from rule
+                $(gFIND_SUBPROJECT_ROOT), but got ( $(gPROJECT_ROOT) )" ;
+    }
+
+    # locate the project Jamrules file for this subproject
+    local jamrules = $(JAMRULES:R=$(gPROJECT_ROOT)) ;
+
+    # include it if neccessary
+    if ! $(gINCLUDED:$(jamrules))
+    {
+        gINCLUDED:$(jamrules) = true ;
+        include $(jamrules) ;
+    }
+
+    # if the build system hasn't been loaded, do that.
+    if ! $(gBOOST_BUILD_INSTALLATION)
+    {
+        # determine where toolset specifications and boost-base can be
+        # found. The default is to find them in the project root directory
+        BOOST_BUILD_INSTALLATION ?= $(gPROJECT_ROOT) ;
+
+        # We ignore any further settings of BOOST_BUILD_INSTALLATION in other
+        # Jamrules files. The value used from here on is in
+        # gBOOST_BUILD_INSTALLATION. 
+        gBOOST_BUILD_INSTALLATION = $(BOOST_BUILD_INSTALLATION) ;
+
+        BOOST_JAMBASE ?= boost-base.jam ;
+        include $(BOOST_JAMBASE:R=$(gBOOST_BUILD_INSTALLATION)) ;
+    }
+
+    # Call any subproject hooks
+    local hook ;
+    for hook in $(gSUBPROJECT_HOOKS)
+    {
+        local ignored = [ $(hook) $(gPROJECT_ROOT) $(subproject_path) ] ;
+    }
+}
+
+# project-root
+#
+# Declares this directory to be the project root.
+rule project-root
+{
+    subproject $(DOT) ;
+}
+
+# include the Jamfile
+if $(JAMFILE)
+{
+    include $(JAMFILE) ;
+}

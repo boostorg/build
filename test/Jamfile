@@ -1,0 +1,26 @@
+subproject tools/build/test ;
+
+include jam-fail.jam ;
+
+#######################################
+# Some example expected failure tests #
+#######################################
+
+# This command
+Jam-fail "EXIT error ;" ;
+
+# This should fail to fail
+Jam-fail "include jam-fail.jam ; Jam-fail \"# this innocuous Jamfile should fail to fail\" ;" ;
+
+check-arguments goodbye 1 : z ;
+check-arguments hello 1-2 3 1-4 : a b : y z z : w ;
+
+DOLLAR = "\$" ;
+Jam-fail "check-arguments hello 1-2 3 1-4 : a b : c d e f : w ;"
+    : "rule 'hello' expects 3 elements in $(DOLLAR)(2), got arguments ( a b : c d e f : w ) instead."
+    ;
+    
+Jam-fail "check-arguments goodbye 1 : z x ;"
+    : "rule 'goodbye' expects 1 elements in $(DOLLAR)(1), got arguments ( z x ) instead."
+    ;
+
