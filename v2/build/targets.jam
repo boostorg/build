@@ -917,7 +917,7 @@ class basic-target : abstract-target
                 check-for-unused-sources 
                   $(result) : $(source-target-groups) ;
 
-                local s = [ create-subvariant $(result) : $(property-set) 
+                local s = [ create-subvariant $(result) : $(property-set) : $(source-targets)
                   : $(rproperties) : $(usage-requirements) ] ;
 
                 self.generated.$(property-set) = 
@@ -954,7 +954,8 @@ class basic-target : abstract-target
     }
     
     # Creates a new subvariant-dg instances for 'targets'
-    local rule create-subvariant ( targets * : build-request : rproperties 
+    local rule create-subvariant ( targets * : build-request : sources * :
+        rproperties 
         : usage-requirements )
     {
         for local e in $(targets)                    
@@ -966,7 +967,7 @@ class basic-target : abstract-target
         # is created.
         local all-targets = 
           [ sequence.transform virtual-target.traverse : $(targets) ] ; 
-        local dg = [ new subvariant $(__name__) : $(build-request) 
+        local dg = [ new subvariant $(__name__) : $(build-request) : $(sources)
           : $(rproperties) : $(usage-requirements) : $(all-targets) ] ;
         for local v in $(all-targets)          
         {

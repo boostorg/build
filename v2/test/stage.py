@@ -110,4 +110,34 @@ myexe a : a.cpp ;
 t.run_build_system()
 t.expect_addition("dist/a.myexe")
 
+# Test 'stage's ability to traverse dependencies.
+t.write("a.cpp", """ 
+int main() { return 0; }
+
+""")
+
+t.write("l.cpp", """
+void
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
+foo() { }
+
+""")
+
+t.write("Jamfile", """ 
+lib l : l.cpp ;
+exe a : a.cpp l ;
+stage dist : a : <traverse-dependencies>on <include-type>EXE <include-type>LIB ; 
+""")
+
+t.write("project-root.jam", "")
+
+t.rm("dist")
+t.run_build_system()
+t.expect_addition("dist/a.exe")
+t.expect_addition("dist/l.dll")
+
+
 t.cleanup()
+

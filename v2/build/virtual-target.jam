@@ -895,12 +895,14 @@ class subvariant
     
     rule __init__ ( main-target # The instance of main-target class
         : property-set                     # Properties requested for this target
+        : sources *
         : build-properties                 # Actually used properties
         : sources-usage-requirements       # Properties propagated from sources
         : created-targets * )              # Top-level created targets
     {        
-        self.main-target = $(main-target) ;
+        self.main-target = $(main-target) ;        
         self.properties = $(property-set) ;
+        self.sources = $(sources) ;
         self.build-properties = $(build-properties) ;
         self.sources-usage-requirements = $(sources-usage-requirements) ;
         self.created-targets = $(created-targets) ;
@@ -941,6 +943,33 @@ class subvariant
     {
         return $(self.sources-usage-requirements) ;
     }
+    
+    # Returns all targets referenced by this subvariant,
+    # either directly or indirectly, and 
+    # either as sources, or as dependency properties.
+    rule all-referenced-targets ( )
+    {
+        # Find directly referenced targets.
+        local deps = [ $(self.build-properties).dependency ] ;
+        local all-targets = $(self.sources) $(deps:G=) ;
+        
+        # Find other subvariants.
+        local r ;
+        for local t in $(all-targets)
+        {            
+            r += [ $(t).dg ] ;
+        }
+        r = [ sequence.unique $(r) ] ;
+        for local s in $(r) 
+        {
+            if $(s) != $(__name__)
+            {
+                all-targets += [ $(s).all-referenced-targets ] ;
+            }            
+        }
+        return $(all-targets) ;                        
+    }
+    
         
     # Returns a list of properties which contain implicit includes,
     # needed to handle dependencies of generated headers.

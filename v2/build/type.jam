@@ -183,6 +183,21 @@ rule is-derived ( type base )
     }
 }
 
+# Returns true if 'type' is either derived from 'base',
+# or 'type' is equal to 'base'.
+rule is-subtype ( type base )
+{
+    if $(type) = $(base)
+    {
+        return true ;
+    }
+    else
+    {
+        return [ is-derived $(type) $(base) ] ;
+    }    
+}
+
+
 # Sets a target suffix that should be used when generating target 
 # of 'type' with the specified properties. Can be called with
 # empty properties if no suffix for 'type' was specified yet.
