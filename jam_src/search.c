@@ -194,7 +194,9 @@ search(
 
     if (explicitly_located)
     {
-        BINDING b = {boundname, target}, *ba = &b;
+        BINDING b, *ba = &b;
+        b.binding = boundname;
+        b.target = target;
         /* CONSIDER: we probably should issue a warning is another file
            is explicitly bound to the same location. This might break
            compatibility, though. */

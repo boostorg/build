@@ -558,10 +558,9 @@ make1c( state *pState )
                 t->status == EXEC_CMD_OK &&
                 !t->rescanned) {
 
-                t->rescanned = 1;
-
-                int has_includes_already = t->includes ? 1 : 0;
                 SETTINGS *s;               
+
+                t->rescanned = 1;
 
                 if (t->flags & T_FLAG_INTERNAL) {
                     t = t->original_target;                    
