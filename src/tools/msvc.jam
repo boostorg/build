@@ -301,6 +301,7 @@ actions compile.c++
 # Declare flags and action for linking
 flags msvc.link PDB_LINKFLAG <debug-symbols>on/<debug-store>database : /PDB: ; # not used yet
 flags msvc.link LINKFLAGS <debug-symbols>on : /DEBUG ;
+flags msvc.link DEF_FILE <def-file> ;
 # The linker disables the default optimizations when using /DEBUG. Whe have
 # to enable them manually for release builds with debug symbols.
 flags msvc LINKFLAGS <debug-symbols>on/<runtime-debugging>off : /OPT:REF,ICF ;
@@ -333,6 +334,11 @@ if [ os.name ] in NT
 {    
     .implib = "/INCREMENTAL:NO /IMPLIB:" ;
     
+    rule link
+    {
+        DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
+    }
+
     actions archive 
     {
         if exist "$(<)" set _$(<:B)_="$(<)"
@@ -348,6 +354,8 @@ else # CYGWIN
             .implib on $(<) = "/INCREMENTAL:NO /IMPLIB:" ;
         }
         .cygpath = "cygpath -d " ;
+
+        DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
     }
 
     actions archive
@@ -360,8 +368,8 @@ else # CYGWIN
     }
 }
 
-actions link
+actions link bind DEF_FILE
 {
-    $(.LD) -nologo $(LINKFLAGS) /out:"$(<[1]:W)" $(.implib)"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(>:W)"
+    $(.LD) -nologo $(LINKFLAGS) /out:"$(<[1]:W)" $(.implib)"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"$(>:W)"
 }
         
