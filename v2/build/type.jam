@@ -35,10 +35,7 @@ feature.feature base-target-type : : composite optional free ;
 # If 'suffixes' are provided, they given all the suffixes that mean a file is of 'type'.
 # Also, the first element gives the suffix to be used when constructing and object of
 # 'type'.
-# If 'main' is given, a rule with the same name as the target type
-# and signature
-#     rule target-type ( name : sources * : requirements * : default-build )
-# will be added to the global scope.
+# The 'main' parameter is ignored for backward compatibility.
 rule register ( type : suffixes * : base-type ? : main ? ) 
 {
     # Type names cannot contain hyphens, because when used as
@@ -74,15 +71,16 @@ rule register ( type : suffixes * : base-type ? : main ? )
         feature.extend base-target-type : $(type) ;
 #        feature.compose <target-type>$(type) : <base-target-type>$(type) ;
         feature.compose <base-target-type>$(type) : <base-target-type>$(base-type) ;
-        
-        if $(main)
-        {
-            main-rule-name = [ type-to-rule-name $(type) ] ;            
-            .main-target-type.$(main-rule-name) = $(type) ;    
+
+        # We used to declare main target rule only when 'main' parameter
+        # is specified. However, it's hard to decide that a type *never*
+        # will need a main target rule and so from time to time we needed
+        # to make yet another type 'main'. So, now main target rule is defined
+        # for each type.
+        main-rule-name = [ type-to-rule-name $(type) ] ;            
+        .main-target-type.$(main-rule-name) = $(type) ;    
             
-            IMPORT $(__name__) : main-target-rule : : $(main-rule-name) ;
-#            feature.compose <main-target-type>$(type) : <base-target-type>$(type) ;
-        }        
+        IMPORT $(__name__) : main-target-rule : : $(main-rule-name) ;
     }
 }
 
