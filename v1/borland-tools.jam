@@ -17,6 +17,10 @@
 # BCCROOT is the install location of the borland tools.
 set-as-singleton BCCROOT ;
 
+# Get these variable set on the targets so that we can re-use the
+# build actions for other toolsets using this one as a base.
+flags borland BCC_TOOL_PATH ;
+
 # compute Borland tool path
 # You can either put the borland bin directory in your PATH, or you can set
 # BCCROOT to point at the borland installation directory
