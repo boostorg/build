@@ -1214,11 +1214,23 @@ rule tag-name ( name : property-set )
     local properties = [ $(property-set).raw ] ;
     
     local tagged-name = $(name) ;
+
     
-    if <tag> in $(properties:G)
+    local name_f = [ $(property-set).get <name> ] ;
+    local tags = [ $(property-set).get <tag> ] ;
+    
+    if $(name_f) && $(tags)
     {
-        local tags = [ $(property-set).get <tag> ] ;
-        
+        errors.error "Both <tag> and <name> properties specified" ;
+    }
+    
+
+    if $(name_f)
+    {
+        tagged-name = $(name_f) ;
+    }            
+    if $(tags)
+    {        
         local rule-name = [ MATCH ^@(.*) : $(tags) ] ;
         if $(rule-name)
         {
