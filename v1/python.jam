@@ -131,7 +131,11 @@ else if $(UNIX)
     
     if $(OS) = OSF
     {
-        PYTHON_PROPERTIES += <*><*><linkflags>"-expect_unresolved 'Py*' -expect_unresolved '_Py*'" ;
+        local not-gcc-compilers = [ difference $(TOOLS) : $(gcc-compilers) ] ;
+
+        PYTHON_PROPERTIES +=
+          <$(not-gcc-compilers)><*><linkflags>"-expect_unresolved 'Py*' -expect_unresolved '_Py*'"
+          <$(gcc-compilers)><*><linkflags>"-Xlinker -expect_unresolved -Xlinker 'Py*' -Xlinker -expect_unresolved -Xlinker '_Py*'" ;
     }
     else if $(OS) = AIX
     {
