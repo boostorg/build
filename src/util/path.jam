@@ -193,10 +193,23 @@ rule pwd ( )
 rule glob ( dirs * : patterns + )
 {
     local result ;
-    for dir in $(dirs)
+    if $(patterns:D)
     {
-        result += [ sequence.transform make : [ GLOB [ native $(dir) ] : $(patterns) ] ] ;
+        # Have directory in pattern, do something more complex.
+        for local p in $(patterns)
+        {
+            # First glob for directory part.
+            local globbed-dirs = [ glob $(dirs) : $(p:D) ] ;
+            result += [ glob $(globbed-dirs) : $(p:D="") ] ;
+        }        
     }
+    else
+    {        
+        for dir in $(dirs)
+        {
+            result += [ sequence.transform make : [ GLOB [ native $(dir) ] : $(patterns) ] ] ;
+        }
+    }    
     return $(result) ;
 }
 
