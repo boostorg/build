@@ -2,17 +2,16 @@
 
 # Clean up
 
+cvs up -dP
 rm -rf examples
 # This one is not fully finished
 rm -rf examples-v2/versioned
 
-find . -maxdepth 1 -type f | grep -v "roll.sh" | xargs rm -rf
-cvs up boost_build_v2.html
-cvs up c++boost.gif
-cvs up index_v2.html
-cvs up hacking.txt
+find . -maxdepth 1 -type f | egrep -v "roll.sh|boost_build_v2.html|c++boost.gif|index_v2.html|hacking.txt" | xargs rm -f
 
+# Prepare some more files.
 mv index_v2.html index.html
+echo -e "boost-build new ;\n" > boost-build.jam
 
 # Make packages
 find . -name CVS | xargs rm -rf
