@@ -467,8 +467,10 @@ YACCFILES       ?= ;
 YACCFLAGS       ?= ;
 BIN_DIRECTORY   ?= bin ;
 
+#~ HDRPATTERN = 
+        #~ "^[     ]*#[    ]*include[      ]*([<\"][^\">]*[\">]).*$" ;
 HDRPATTERN = 
-        "^[     ]*#[    ]*include[      ]*([<\"][^\">]*[\">]).*$" ;
+        "^[ 	]*#[ 	]*include[ 	]*([<\"][^\">]*[\">]).*$" ;
           
 #" My Jam mode gets its syntax highlighting confused without this comment
 
@@ -701,8 +703,8 @@ rule HdrRule
     # care if we can't actually find the headers (they may have been
     # within ifdefs),
 
-    local angle-includes = [ subst-list $(>) : "<(.+)>" ] ;
-    local quoted-includes = [ subst-list $(>) : "\"(.+)\"" ] ;
+    local angle-includes = [ MATCH "[<]([^>]+)[>]" : $(>) ] ;
+    local quoted-includes = [ MATCH "[\"]([^\"]+)[\"]" : $(>) ] ;
 
     local s ;
 
@@ -1055,6 +1057,7 @@ rule Object
     # Set STDHDRS on the object so that multi-compiler builds will search for
     # headers in the right places. 
     STDHDRS on $(<) = $(STDHDRS) ;
+    SYSHDRS on $(<) = $(SYSHDRS) ;
 
     # handle #includes for source: Jam scans for headers with
     # the regexp pattern $(HDRSCAN) and then invokes $(HDRRULE)
@@ -1079,7 +1082,7 @@ rule Object
 
     HDRRULE on $(>) = HdrRule ;
     HDRSCAN on $(>) = $(HDRPATTERN) ;
-    HDRSEARCH on $(>) = $(HDRS) $(h) $(STDHDRS) ;
+    HDRSEARCH on $(>) = $(HDRS) $(h) $(STDHDRS) $(SYSHDRS) ;
     HDRGRIST on $(>) = $(HDRGRIST) ;
 
     # if source is not .c, generate .c with specific rule
@@ -1798,14 +1801,6 @@ rule Yacc
 
 rule remember-binding ( target : bound-path ) {
     gBINDING($(target)) = $(bound-path) ;
-}
-
-rule subst-list ( list + : pattern ) {
-    local result ;
-    for local i in $(list) {
-        result += [ MATCH "($(pattern))" : $(i) ] ;
-    }
-    return $(result) ;
 }
 
 #
