@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#~ Copyright 2002-2003 Rene Rivera.
+#~ Copyright 2002-2004 Rene Rivera.
 #~ Distributed under the Boost Software License, Version 1.0.
 #~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
@@ -196,30 +196,42 @@ BJAM_SOURCES="\
  modules/path.c modules/regex.c modules/property-set.c\
  modules/sequence.c modules/order.c"
 
-echo_run rm -rf bootstrap
-echo_run mkdir bootstrap
-if test ! -r jamgram.y -o ! -r jamgramtab.h ; then
-    echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_YYACC} ${YYACC_SOURCES}
-    if test -x "./bootstrap/yyacc0" ; then
-        echo_run ./bootstrap/yyacc0 jamgram.y jamgramtab.h jamgram.yy
-    fi
+BJAM_UPDATE=
+if test "$1" = "--update" -o "$2" = "--update" -o "$3" = "--update" -o "$4" = "--update"  ; then
+    BJAM_UPDATE="update"
 fi
-if test ! -r jamgram.c -o ! -r jamgram.h ; then
-    if test_path yacc ; then YACC="yacc -d"
-    elif test_path bison ; then YACC="bison -y -d --yacc"
-    fi
-    echo_run $YACC jamgram.y
-    mv -f y.tab.c jamgram.c
-    mv -f y.tab.h jamgram.h
+if test "${BJAM_UPDATE}" = "update" -a ! -x "./bootstrap/jam0" ; then
+    BJAM_UPDATE=
 fi
-if test ! -r jambase.c ; then
-    echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_MKJAMBASE} ${MKJAMBASE_SOURCES}
-    if test -x "./bootstrap/mkjambase0" ; then
-        echo_run ./bootstrap/mkjambase0 jambase.c Jambase
+
+if test "${BJAM_UPDATE}" != "update" ; then
+    echo_run rm -rf bootstrap
+    echo_run mkdir bootstrap
+    if test ! -r jamgram.y -o ! -r jamgramtab.h ; then
+        echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_YYACC} ${YYACC_SOURCES}
+        if test -x "./bootstrap/yyacc0" ; then
+            echo_run ./bootstrap/yyacc0 jamgram.y jamgramtab.h jamgram.yy
+        fi
     fi
+    if test ! -r jamgram.c -o ! -r jamgram.h ; then
+        if test_path yacc ; then YACC="yacc -d"
+        elif test_path bison ; then YACC="bison -y -d --yacc"
+        fi
+        echo_run $YACC jamgram.y
+        mv -f y.tab.c jamgram.c
+        mv -f y.tab.h jamgram.h
+    fi
+    if test ! -r jambase.c ; then
+        echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_MKJAMBASE} ${MKJAMBASE_SOURCES}
+        if test -x "./bootstrap/mkjambase0" ; then
+            echo_run ./bootstrap/mkjambase0 jambase.c Jambase
+        fi
+    fi
+    echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_JAM} ${BJAM_SOURCES}
 fi
-echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_JAM} ${BJAM_SOURCES}
 if test -x "./bootstrap/jam0" ; then
-    echo_run ./bootstrap/jam0 -f build.jam --toolset=$BOOST_JAM_TOOLSET "--toolset-root=$BOOST_JAM_TOOLSET_ROOT" clean
+    if test "${BJAM_UPDATE}" != "update" ; then
+        echo_run ./bootstrap/jam0 -f build.jam --toolset=$BOOST_JAM_TOOLSET "--toolset-root=$BOOST_JAM_TOOLSET_ROOT" clean
+    fi
     echo_run ./bootstrap/jam0 -f build.jam --toolset=$BOOST_JAM_TOOLSET "--toolset-root=$BOOST_JAM_TOOLSET_ROOT" "$@"
 fi
