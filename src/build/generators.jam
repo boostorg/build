@@ -946,57 +946,9 @@ local rule select-dependency-graph ( options )
     
 .construct-stack = ;
 
-# Attempt to construct the target by looking at transformation cache.
-local rule construct-with-caching (
-   project name ? : target-type multiple ? : property-set : sources * )
-{     
-    local result ;
-    # Caching is only possible when we're not computing cacheable transformation
-    # already, when there's only one source which has no action -- i.e. source file,
-    # and name of target is not specified.
-    if ! $(.caching) && ! $(sources[2]) && $(sources[1]) && ! $(name)      
-       && ! [ $(sources[1]).action ] 
-    {
-        local .caching = true ;
-        
-        local t = $(sources[1]) ;            
-                    
-        local signature = [ sequence.join [ $(t).type ] $(target-type) $(property-set) : - ] ;
-            
-        # Get a transformation template from cache or create it.
-        local cresult ;
-        if $(.transformation.cache.$(signature))
-        {
-            cresult = $(.transformation.cache.$(signature)) ;
-        }
-        else 
-        {                            
-            local ut = [ new file-target % : [ $(t).type ] : "no project" ] ;            
-            cresult = [ construct $(project) : $(target-type) $(multiple) 
-              : $(property-set) : $(ut) ] ;
-            .transformation.cache.$(signature) = $(cresult) ;                
-        }
-                                    
-        # Substitute the real source name in the transformation template.
-        if $(cresult)
-        {                
-            result += $(cresult[1]) ;
-            generators.dout [ indent ] "*** putting to cache?" ;
-            for local c in $(cresult[2-])
-            {
-                generators.dout [ indent ] "*** cloning " $(c) ;                
-                local cc = [ virtual-target.clone-template $(c) : $(t) : $(project) ] ;
-                generators.dout [ indent ] "*** cloned" $(cc) --- $(cc) ;
-                result += $(cc) ;
-            }
-        }    
-    }
-    return $(result) ;
-}
-
 # Attempts to construct target by finding viable generators, running them
 # and selecting the dependency graph
-local rule construct-without-caching (
+local rule construct-really (
    project name ? : target-type multiple ? : property-set : sources * )
 {
     viable-generators = [ find-viable-generators $(target-type) : $(property-set) ] ;
@@ -1085,13 +1037,8 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
     }
     generators.dout [ indent ] "    properties:" [ $(property-set).raw ] ;        
                
-    local result = [ construct-with-caching $(project) $(name)  
+    local result = [ construct-really $(project) $(name)  
       : $(target-type) $(multiple) : $(property-set) : $(sources) ] ;
-    
-    if ! $(result)  {
-        result = [ construct-without-caching $(project) $(name)  
-      : $(target-type) $(multiple) : $(property-set) : $(sources) ] ;
-    }
                     
     decrease-indent ;
         
