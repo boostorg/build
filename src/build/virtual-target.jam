@@ -263,11 +263,18 @@ class abstract-file-target : virtual-target
 
     # Sets the dependency graph this target is part of.
     # 'dg' is an instance of 'subvariant-dg' class.
-    rule dg ( dg ? overwrite ? )
+    rule dg ( dg ? )
     {
         if $(dg) && ( ! $(self.dg) && ! $(overwrite) )
         {
-            self.dg = $(dg) ;
+            if $(self.dg)
+            {
+                errors.error "Attempt to change 'dg'" ;
+            }
+            else
+            {                
+                self.dg = $(dg) ;
+            }            
         }
         return $(self.dg) ;
     }
@@ -992,6 +999,16 @@ class subvariant
         return $(self.sources-usage-requirements) ;
     }
     
+    rule set-usage-requirements ( usage-requirements )
+    {
+        self.usage-requirements = $(usage-requirements) ;
+    }
+    
+    rule usage-requirements ( )
+    {
+        return $(self.usage-requirements) ;
+    }
+            
     # Returns all targets referenced by this subvariant,
     # either directly or indirectly, and 
     # either as sources, or as dependency properties.
