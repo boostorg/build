@@ -129,7 +129,8 @@ declare-type : SHARED_LIB : so : LIB : main ;
 declare-type NT CYGWIN : EXE : exe : : main ;
 declare-type : EXE : : : main ;
 
-declare-type NT CYGWIN : PYTHON_EXTENSION : dll : SHARED_LIB : main ;
+declare-type NT : PYTHON_EXTENSION : pyd : SHARED_LIB : main ;
+declare-type CYGWIN : PYTHON_EXTENSION : dll : SHARED_LIB : main ;
 declare-type : PYTHON_EXTENSION : so : SHARED_LIB : main ;
 
 type.register CPP : cpp cxx ;
