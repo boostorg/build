@@ -235,11 +235,11 @@ class project-target : abstract-target
         }
         
         # Collect all main targets here, except for "explicit" ones.
-        for local name in $(self.main-targets)
+        for local t in $(self.main-targets)
         {
-            if ! $(name) in $(self.explicit-targets)
+            if ! [ $(t).name ] in $(self.explicit-targets)
             {                    
-                result += [ main-target $(name) ] ;
+                result += $(t) ;
             }
         }
 
@@ -258,6 +258,8 @@ class project-target : abstract-target
     # only by explicit request
     rule mark-target-as-explicit ( target-name )
     {
+        # Record the name of the target, not instance, since this
+        # rule is called before main target instaces are created.
         self.explicit-targets += $(target-name) ;
     }
     
@@ -302,16 +304,16 @@ class project-target : abstract-target
             local target = $(self.main-target.$(name)) ;
             if ! $(target)
             {
-                self.main-target.$(name) = 
-                  [ new main-target $(name) : $(self.project) ] ;
-                self.main-targets += $(name) ;
+                local t = [ new main-target $(name) : $(self.project) ] ;
+                self.main-target.$(name) = $(t) ;
+                self.main-targets += $(t) ;
                 target = $(self.main-target.$(name)) ;
             }
             
             $(target).add-alternative $(a) ;            
         }    
     }
-                    
+                        
     # Returns the properties which would be used for a main
     # target in this project, if generation with
     # 'properties' is requested, and that main target 
