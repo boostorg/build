@@ -30,6 +30,7 @@
 
 # include <time.h>
 # include <assert.h>
+# include <string.h>
 
 /*
  * compile.c - compile parsed jam statements
@@ -775,15 +776,29 @@ evaluate_rule(
         return result;
     }
 
-    if ( DEBUG_COMPILE )
-    {
-        debug_compile( 1, l->string, frame);
-        lol_print( frame->args );
-        printf( "\n" );
-    }
     rulename = l->string;
     rule = bindrule( l->string, frame->module );
 
+    if ( DEBUG_COMPILE )
+    {
+        /* Try hard to indicate in which module the rule is going to execute */
+        if ( rule->module != frame->module
+             && rule->procedure != 0 && strcmp(rulename, rule->procedure->rulename) )
+        {
+            char buf[256] = "";
+            strncat( buf, rule->module->name, sizeof(buf) - 1 );
+            strncat( buf, rule->name, sizeof(buf) - 1 );
+            debug_compile( 1, buf, frame);
+        }
+        else
+        {
+            debug_compile( 1, rulename, frame);
+        }
+
+        lol_print( frame->args );
+        printf( "\n" );
+    }
+    
     if ( rule->procedure && rule->module != prev_module )
     {
         /* propagate current module to nested rule invocations */
@@ -803,7 +818,7 @@ evaluate_rule(
     /* record current rule name in frame */
     if ( rule->procedure )
     {
-        frame->rulename = rule->procedure->rulename;
+        frame->rulename = rulename;
         /* and enter record profile info */
         if ( DEBUG_PROFILE )
             profile_enter( rule->procedure->rulename, prof );
@@ -923,7 +938,6 @@ compile_set(
     if( DEBUG_COMPILE )
     {
         debug_compile( 0, "set", frame);
-        printf( frame->module->name );
         list_print( nt );
         printf( " %s ", trace );
         list_print( ns );
@@ -1017,7 +1031,7 @@ compile_settings(
     {
         debug_compile( 0, "set", frame);
         list_print( nt );
-        printf( "on " );
+        printf( " on " );
         list_print( targets );
         printf( " %s ", append ? "+=" : "=" );
         list_print( ns );
