@@ -58,7 +58,13 @@ rule boost-test ( sources + : target-type : requirements * : test-name ? )
                     ] ;
                 }
 
-                ECHO "(boost-test" \"$(test-name)\" ":" \"$(source-files)\" ")" ;
+                # Extract values of the <test-info> feature
+                local dump-test-info = [ get-values <test-info> : $(requirements) ] ;
+                
+                # Format them into a single string of quoted strings
+                dump-test-info = \"$(dump-test-info:J=\"\ \")\" ;
+                
+                ECHO "(boost-test" \"$(test-name)\" [$(dump-test-info)]  ":" \"$(source-files)\" ")" ;
             }
 
         }
