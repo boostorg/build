@@ -1,4 +1,4 @@
-#  (C) Copyright David Abrahams 2001. Permission to copy, use, modify, sell and
+#  (C) Copyright David Abrahams 2002. Permission to copy, use, modify, sell and
 #  distribute this software is granted provided this copyright notice appears in
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
@@ -23,6 +23,17 @@ rule chars ( string )
     return $(result) ;
 }
 
+rule join ( strings * : separator ? )
+{
+    separator ?= "" ;
+    local result = $(strings[1]) ;
+    for local x in $(strings[2-])
+    {
+        result = $(result)$(separator)$(x) ;
+    }
+    return $(result) ;
+}
+
 rule __test__ ( )
 {
     import assert ;
@@ -35,4 +46,7 @@ rule __test__ ( )
     assert.result a b c d e f g h i : chars abcdefghi ;
     assert.result a b c d e f g h i j : chars abcdefghij ;
     assert.result a b c d e f g h i j k : chars abcdefghijk ;
+    
+    assert.result a//b/c/d : join a "" b c d : / ;
+    assert.result abcd : join  a "" b c d ;
 }

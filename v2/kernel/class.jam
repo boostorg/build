@@ -1,3 +1,8 @@
+#  (C) Copyright David Abrahams 2002. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears in
+#  all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+
 import numbers ;
 import errors : * ;
 import set ;
@@ -38,7 +43,8 @@ rule class ( name : bases * )
         # rules to be visible to the builtin RULENAMES rule. We'll
         # need them in order to implement subclasses and instances of
         # the class.
-        EXPORT class@$(name) : __init__ [ RULENAMES class ] ;
+        EXPORT class@$(name) : __init__ # [ RULENAMES class ]
+          ;
 
         # Bring the __init__ functions in from the base classes, using
         # the optional localize parameter so that it will execute in
