@@ -3,32 +3,42 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
+#
+#   Returns a list of the following substrings:
+#   1) from beginning till the first occurence of 'separator' or till the end,
+#   2) between each occurence of 'separator' and the next occurence,
+#   3) from the last occurence of 'separator' till the end.
+#   If no separator is present, the result will contain only one element.
+#
 rule split ( string separator )
 {
     local result ;
     local s = $(string) ;
-    
-    while $(s)
-    {
-        local match = [ SUBST $(s) ^(.*)$(separator)(.*) $1 $2 ] ;
-        
-        local tail = $(match[2]) ;
-        tail ?= $(s) ;
 
-        result = $(tail) $(result) ;
-        s = $(match[1]) ;
+    # Break pieaces off 's' until it has no separators left.
+    local match = 1 ;
+    while $(match)
+    {
+        match = [ SUBST $(s) ^(.*)($(separator))(.*) $1 $2 $3 ] ;
+        if $(match) {
+            result = $(match[3]) $(result) ;
+            s = $(match[1]) ;
+        }
     }
-    return $(result) ;
+    # Combine the remaining part at the beginning, which does not have
+    # separators, with the pieces broken off.
+    # Note that rule's signature does not allow initial s to be empty.
+    return $(s) $(result) ;
 }
 
 rule __test__ ( )
 {
     import assert ;
-    
+
     assert.result a b c : split "a/b/c" / ;
-    assert.result a b c : split "/a/b/c" / ;
-    assert.result "" a b c : split "//a/b/c" / ;
-    assert.result a "" b c : split "/a//b/c" / ;
-    assert.result a "" b c "" : split "/a//b/c/" / ;
-    assert.result a "" b c "" "" : split "/a//b/c//" / ;
+    assert.result "" a b c : split "/a/b/c" / ;
+    assert.result "" "" a b c : split "//a/b/c" / ;
+    assert.result "" a "" b c : split "/a//b/c" / ;
+    assert.result "" a "" b c "" : split "/a//b/c/" / ;
+    assert.result "" a "" b c "" "" : split "/a//b/c//" / ;
 }
