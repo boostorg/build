@@ -37,6 +37,34 @@ rule variable-setting-command ( variable value )
     }
 }
 
+# Returns the command needed to set shell variable on the
+# current platform. Each element of values is expected to be a path,
+# elements are joined with os-specific characer which delimits paths in
+# environment variables.
+rule path-variable-setting-command ( variable : values * : exported ? )
+{   
+    local result ;
+    if [ modules.peek : NT ]
+    {
+        result = set $(variable)=$(values:J=";")$(nl) ;                
+    }
+    else
+    {
+        # We can't put ":" directly in :J modifier.
+        local sep = ":" ;
+        if $(exported)
+        {                       
+            result = export $(variable)=$(values:J=$(sep)) ;            
+        }
+        else
+        {
+            result = $(variable)=$(values:J=$(sep)) ;    
+        }                
+    }
+    return $(result:J=" ") ;
+}
+
+
 # Return a command which can create a file. If 'r' is result of invocation,
 # then 
 #   r foobar

@@ -46,6 +46,8 @@ import property-set ;
 import virtual-target ;
 import path ;
 import os ;
+import common ;
+import sequence ;
 
 rule init ( ) { }
 
@@ -278,8 +280,24 @@ rule capture-output ( target : source : properties * )
     # before target is created. Therefore, they are bound using SEARCH setting 
     # on them and not LOCATE setting of $(target), as in other case (due to jam bug).
     DEPENDS $(target) : [ on $(target) return $(INPUT_FILES) ] ;
+    
+    local dll-paths = [ feature.get-values <dll-path> : $(properties) ] ;
+    if $(dll-paths)
+    {    
+        dll-paths = [ sequence.transform path.native : $(dll-paths) ] ;
+        if [ modules.peek : NT ]
+        {
+            SET_DLL_PATHS on $(target) = 
+              [ common.path-variable-setting-command PATH : $(dll-paths) %PATH% ] ;
+        }
+        else
+        {
+            SET_DLL_PATHS on $(target) = 
+              [ common.path-variable-setting-command LD_LIBRARY_PATH :
+                  $(dll-paths) %PATH% : exported ] ;
+        }        
+    }        
 }
-
 
 if [ os.name ] = NT
 {
@@ -305,10 +323,7 @@ if --verbose-test in $(ARGV)
 
 actions capture-output bind INPUT_FILES output-file
 {
-    $(SHELL_SET)PATH=$(RUN_PATH:J=$(SPLITPATH))
-    $(SHELL_EXPORT)$(PATH_VAR)
-    $(SHELL_SET)LD_LIBRARY_PATH=$(RUN_LD_LIBRARY_PATH:J=$(SPLITPATH))
-    $(SHELL_EXPORT)$(LD_LIBRARY_PATH_VAR)
+    $(SET_DLL_PATHS)
     $(>)  $(ARG) "$(INPUT_FILES)" > $(output-file) 2>&1 && $(CP) $(output-file) $(<) $(VERBOSE_CAT)$(<)$(RUN_OUTPUT_FOOTER) || ( $(RUN_OUTPUT_HEADER) $(CATENATE) $(output-file) $(RUN_OUTPUT_FOOTER) && exit 1 )
 }
 

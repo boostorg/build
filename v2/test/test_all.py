@@ -109,11 +109,11 @@ tests = [ "project_test1",
           "project_root_constants",
           "double_loading",
           "dll_path",
+          "regression",
 	  ]
 
 if os.name == 'posix':
     tests.append("symlink")
-    tests.append("regression")
 
 if os.environ.has_key('QTDIR'):
     tests.append("railsys")

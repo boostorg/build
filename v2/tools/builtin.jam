@@ -453,7 +453,7 @@ class lib-target-class : basic-target
             {
                 if [ type.is-derived [ $(t).type ] SHARED_LIB ] 
                 {
-                    paths += [ path.root [ $(t).path ] $(pwd) ] ;
+                    paths += [ path.root [ path.make [ $(t).path ] ] $(pwd) ] ;
                 }                                
             }       
             if $(paths)
@@ -510,6 +510,23 @@ class exe-target-class : typed-target
         
         return [ typed-target.construct $(source-targets) : $(property-set) ] ;
     }            
+    
+    rule compute-usage-requirements ( subvariant )
+    {
+        local result = [ typed-target.compute-usage-requirements $(subvariant) ] ;
+        local p = [ $(subvariant).build-properties ] ;
+        if <hardcode-dll-paths>true in [ $(p).raw ]
+        {
+            local dll-paths = [ $(p).get <dll-path> ] ;
+            if $(dll-paths)
+            {
+                result = [  $(result).add-raw $(dll-paths:G=<dll-path>) ] ;
+            }                            
+        }
+        
+        return $(result) ;
+    }
+    
 }
 
 rule exe ( name : sources * : requirements * : default-build * 
