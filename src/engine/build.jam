@@ -141,10 +141,10 @@ toolset msvc cl : /Fe : -D
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     : kernel32.lib ;
 ## Sun Workshop 6 C++
-toolset sunpro CC : "-o " : -D
+toolset sunpro cc : "-o " : -D
     :
-    [ opt --release : -s -fast -O4 ]
-    [ opt --debug : -g +d ] ;
+    [ opt --release : -s -fast -xO4 ]
+    [ opt --debug : -g ] ;
 ## Compaq Alpha CXX
 toolset tru64cxx cc : "-o " : -D
     :
