@@ -98,6 +98,7 @@ void print_source_line( PARSE* p );
 void frame_init( FRAME* frame )
 {
     frame->prev = 0;
+    frame->prev_user = 0;
     lol_init(frame->args);
     frame->module = root_module();
     frame->rulename = "module scope";
@@ -584,6 +585,7 @@ compile_rule(
 
     frame_init( inner );
     inner->prev = frame;
+    inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
     inner->module = frame->module; /* This gets fixed up in evaluate_rule(), below */
     inner->procedure = parse;
 
@@ -690,6 +692,7 @@ type_check( char* type_name, LIST *values, FRAME* caller, RULE* called, LIST* ar
         frame_init( frame );
         frame->module = typecheck;
         frame->prev = caller;
+        frame->prev_user = caller->module->user_module ? caller : caller->prev_user;
 
         enter_module( typecheck );
         /* Prepare the argument list */
@@ -1049,7 +1052,9 @@ LIST *call_rule( char *rulename, FRAME* caller_frame, ...)
     FRAME       inner[1];
     frame_init( inner );
     inner->prev = caller_frame;
-    inner->module = caller_frame->module;
+    inner->prev_user = caller_frame->module->user_module ? 
+        caller_frame : caller_frame->prev_user;
+    inner->module = caller_frame->module;    
     inner->procedure = 0;
 
     va_start(va, caller_frame);    

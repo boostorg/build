@@ -263,6 +263,20 @@ load_builtins()
               builtin_native_rule, 0, args );
       }
 
+      {
+          char * args[] = { "module", "*", 0 };
+          bind_builtin( "USER_MODULE",
+              builtin_user_module, 0, args );
+      }
+
+      {
+          char * args[] = { 0 };
+          bind_builtin( "NEAREST_USER_LOCATION",
+              builtin_nearest_user_location, 0, args );
+      }
+
+
+
 # ifdef OS_NT
       {
           char * args[] = { "key_path", ":", "data", "?", 0 };
@@ -1122,6 +1136,40 @@ LIST *builtin_native_rule( PARSE *parse, FRAME *frame )
         exit(1);
     }
     return L0;    
+}
+
+LIST *builtin_user_module( PARSE *parse, FRAME *frame )
+{
+    LIST* module_name = lol_get( frame->args, 0 );    
+    for(; module_name; module_name = module_name->next) 
+    {
+        module_t* m = bindmodule( module_name->string);
+        m->user_module = 1;
+    }
+    return L0;
+}
+
+LIST *builtin_nearest_user_location( PARSE *parse, FRAME *frame )
+{
+    LIST* result = 0;
+    FRAME* nearest_user_frame = 
+        frame->module->user_module ? frame : frame->prev_user;
+
+    if (nearest_user_frame)
+    {
+        char* file;
+        int line;
+        char buf[32];
+        get_source_line( nearest_user_frame->procedure, &file, &line );
+        sprintf( buf, "%d", line );
+        result = list_new( result, newstr( file ) );
+        result = list_new( result, newstr( buf ) );
+        return result;
+    }
+    else
+    {
+        return L0;
+    }
 }
 
 
