@@ -14,7 +14,6 @@ import generators ;
 import regex ;
 import virtual-target ;
 import os ;
-import stage ;
 import prebuilt ;
 import toolset : flags ;
 import errors : error ;
@@ -221,6 +220,8 @@ type.set-generated-target-suffix PYTHON_EXTENSION : <os>NT : so ;
 type.set-generated-target-suffix PYTHON_EXTENSION : <os>CYGWIN : dll ;
 
 type.register CPP : cpp cxx ;
+
+import stage ;
 
 #
 # Response files - 

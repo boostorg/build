@@ -260,9 +260,9 @@ rule abstract-file-target ( name
 
     # Sets the dependency graph this target is part of.
     # 'dg' is an instance of 'subvariant-dg' class.
-    rule dg ( dg ? )
+    rule dg ( dg ? overwrite ? )
     {
-        if $(dg)
+        if $(dg) && ( ! $(self.dg) && ! $(overwrite) )
         {
             self.dg = $(dg) ;
         }

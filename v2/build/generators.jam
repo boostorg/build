@@ -641,6 +641,7 @@ rule base-to-derived-type-conversion ( targets * : target-types +
                 {
                     $(t).set-type $(tt) ;
                     $(result-var) += $(t) ;
+                    found = 1 ;
                 }                
             }            
             if ! $(found)
@@ -666,7 +667,7 @@ rule try-one-generator ( project name ? : generator multiple ? :
 
     base-to-derived-type-conversion $(targets) : $(target-types) 
         : result extra ;
-        
+            
     # Now try to convert extra targets 
     # 'construct' will to its best to return only requested
     # target types, so if we receive any extra from that call,
@@ -843,7 +844,11 @@ local rule construct-with-caching (
    project name ? : target-type multiple ? : property-set : sources * )
 {     
     local result ;
-    if ! $(.caching) && ! $(sources[2]) && $(sources[1]) && ! $(name)
+    # Caching is only possible when we're not computing cacheable transformation
+    # already, when there's only one source which has no action -- i.e. source file,
+    # and name of target is not specified.
+    if ! $(.caching) && ! $(sources[2]) && $(sources[1]) && ! $(name)      
+       && ! [ $(sources[1]).action ] 
     {
         local .caching = true ;
         
@@ -960,7 +965,7 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
         result = [ construct-without-caching $(project) $(name)  
       : $(target-type) $(multiple) : $(property-set) : $(sources) ] ;
     }
-                
+                    
     decrease-indent ;
         
     .construct-stack = $(.construct-stack[2-]) ;
