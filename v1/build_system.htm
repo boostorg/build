@@ -16,7 +16,7 @@
     <h2><a name="synopsis">Synopsis</a></h2>
 
     <p>Boost.Build is a system for large project software construction built on
-        Boost Jam, a descendant of &quot;<a
+        Boost.Jam, a descendant of &quot;<a
         href="http://www.perforce.com/jam/jam.html">Perforce Jam</a>&quot;, an
         open-source make replacement<a href="#1">[1]</a>. Key features are:
 
@@ -41,6 +41,19 @@
       <li>Automatic building of subproject dependencies
     </ul>
 
+    <h2><a name="status">Status</a></h2>
+
+    Boost.Build v1 is a useful, mature system. However, its design and
+    structure are not easily adapted to support some of the features
+    we'd like to see in the future. To this end, the Boost.Build
+    developers have begun work on v2 of Boost.Build, which will be
+    based around this
+    <a href="architecture.html">design document</a>. If you are
+    interested in contributing to this effort or you wish to discuss
+    the design of Boost.Build, please post inquiries to the <a
+    href="http://groups.yahoo.com/group/jamboost/">jamboost</a>
+    mailing list at yahoogroups.
+
     <p><a href="#design_criteria">Here</a> are some of the design criteria that
     led to these features.
 
@@ -49,11 +62,13 @@
     <ul>
       <li><a href="#synopsis">Synopsis</a>
 
+      <li><a href="#status">Status</a>
+
       <li>
         <a href="#getting_started">Getting Started</a> 
 
         <ul>
-          <li><a href="#installing_jam">Installing Jam</a>
+          <li><a href="#installing_jam">Installing Boost.Jam</a>
 
           <li><a href="#initiating">Initiating a Build</a>
 
@@ -128,7 +143,7 @@
 
             <ul>
               <li><a href="#variable_quoting">Command-line and Environment Variable Quoting</a>
-              <li><a href="#jambase_replacement">Jambase Replacement</a>
+              <li><a href="#jambase_replacement">Startup Behavior</a>
               <li><a href="#rule_indirection">Rule Indirection</a>
               <li><a href="#argument_lists">Argument Lists</a>
 
@@ -137,7 +152,7 @@
 
                 <ul>
                   <li><a href="#module_declaration">Declaration</a>
-                  <li><a href="#module_locals">Local Variables</a>
+                  <li><a href="#module_locals">Variable Scope</a>
                   <li><a href="#local_rules">Local Rules</a>
                   <li><a href="#RULENAMES_rule">The <tt>RULENAMES</tt> rule</a>
                   <li><a href="#IMPORT_rule">The <tt>IMPORT</tt> rule</a>
@@ -146,11 +161,11 @@
                 </ul>
 
               <li><a href="#local_foreach">Local for Loop Variables</a>
-              <li><a href="#while_loops">While Loops</a>
               <li><a href="#negative_indexing">Negative Indexing</a>
               <li><a href="#BINDRULE">Target Binding Detection</a>
               <li><a href="#FAIL_EXPECTED">Return Code Inversion</a>
               <li><a href="#NOCARE">Ignoring Return Codes</a>
+              <li><a href="#RMOLD">Removing outdated targets</a>
               <li><a href="#SUBST_rule">The <tt>SUBST</tt> Rule</a>
               <li><a href="#JAM_VERSION">The <tt>JAM_VERSION</tt> global variable</a>
               <li>
@@ -183,40 +198,26 @@
 
     <h2><a name="getting_started">Getting Started</a></h2>
 
-    <h3><a name="installing_jam">Installing Boost Jam</a></h3>
-
-    <ul>
-      <li>The Boost Jam sources are located in the <tt>tools/build/jam_src</tt>
-      subdirectory of the Boost installation.
-
-      <li>The <a href="http://public.perforce.com/public/jam/src/README">Jam
-      README</a> contains basic installation instructions.
-
-      
-    <li>If you are installing on Windows, the make process may prompt you to set 
-        some environment variables, and stop. Don't be alarmed; just follow the 
-        instructions and start over. Please keep in mind that these variable settings 
-        are case-sensitive. The variable settings necessary for bootstrapping 
-        Jam are not needed once it has been built. 
-    <li>Note that the supplied Makefile may require editing for your
-      platform; see the <a href=
-      "http://public.perforce.com/public/jam/src/README">Jam README</a> for
-      details. The Makefile is used for bootstrapping Jam; it builds Jam into a
-      subdirectory called <tt>bin.</tt><i>platform</i>.
-    </ul>
+    <h3><a name="installing_jam">Installing Boost.Jam</a></h3>
+    
+    Follow these <a href="index.html#Jam">instructions</a> to acquire
+    a bjam executable for your platform. Install it somewhere in your
+    path.
 
     <h3><a name="initiating">Initiating a Build</a></h3>
 
-    <p>The easiest way to get going is to set the <tt>BOOST_ROOT</tt>
-    environment variable to point at the Boost installation directory, though
-    you can also set <tt>BOOST_ROOT</tt> on the command-line, using
-    <tt>-s...</tt>. You can use the <tt>TOOLS</tt> variable to indicate which
-    toolset(s) to build with, and the <tt>BUILD</tt> variable to describe how
-    you want things built. In most cases it should be sufficient to invoke Jam
-    with no variable settings. The following examples all assume that
-    <tt>BOOST_ROOT</tt> has been set in the environment.
+    <p>Boost.Build responds to several global variable settins. The
+    easiest way to get going is usually to use environment variables,
+    though you can also set them on the command-line, using
+    <tt>-s</tt><i>VARIABLE_NAME</i><tt>=</tt><i>value</i>.  In
+    addition to the <a href="index.html#Configuring">toolset
+    configuration variables</a>, you can use the <tt>TOOLS</tt>
+    variable to indicate which toolset(s) to build with, and the
+    <tt>BUILD</tt> variable to describe how you want things built. In
+    many cases it should be sufficient to invoke <code>bjam</code>
+    with no variable settings.
 
-    <p>Here are some sample Boost Jam invocations:
+    <p>Some example Boost.Jam invocations:
 
     <table border="1" summary="Sample Jam Invocations=">
       <tr>
@@ -227,7 +228,7 @@
       <tr>
         <td>
 <pre>
-jam -sTOOLS=gcc my_target
+bjam -sTOOLS=gcc my_target
 </pre>
 
         <td>default (debug) <tt><a href="#build">BUILD</a></tt> of
@@ -235,7 +236,7 @@ jam -sTOOLS=gcc my_target
 
       <tr>
         <td>
-            <pre>jam -f<i>allyourbase-path</i> -sTOOLS=&quot;msvc gcc&quot;</pre> 
+            <pre>bjam -sTOOLS=&quot;msvc gcc&quot;</pre> 
 
         <td>default-build <tt>all</tt> with msvc and gcc
 
@@ -243,7 +244,7 @@ jam -sTOOLS=gcc my_target
         <td>
 <pre>
 set TOOLS=msvc
-jam
+bjam
 </pre>
 
         <td>Set an NT environment variable to always build with MSVC<br>
@@ -252,15 +253,16 @@ jam
       <tr>
         <td>
 <pre>
-jam -sBUILD=release
+bjam &quot;-sBUILD=release &lt;debug-symbols&gt;on&quot;
 </pre>
 
-        <td>release build <tt>all</tt> with default <tt><a href=
-        "#tools">TOOLS</a></tt>:<br>
+        <td>release build with debug symbols of <tt>all</tt> using
+        default <tt><a href=
+        "#tools">TOOLS</a></tt>
          
 
       <tr>
-        <td><pre>jam -sBUILD=&quot;debug release&quot;</pre> 
+        <td><pre>bjam -sBUILD=&quot;debug release&quot;</pre> 
 
         <td>debug and release build <tt>all</tt>.
     </table>
@@ -277,7 +279,7 @@ jam -sBUILD=release
 <blockquote><pre>
 &gt; <a href="#build">BUILD</a>=&quot;debug release&quot;  <i># assuming Unix</i>
 &gt; export <a href="#build">BUILD</a>
-&gt; jam ...
+&gt; bjam ...
 </pre></blockquote>
         This approach can be OK for quick-and-dirty tests, but environment variable
       settings tend to be unstable and non-uniform across users and machines, so
@@ -659,7 +661,7 @@ exe my_target : my_source1.cpp my_source2.c ;
 
         <td rowspan="2">Platform-dependent
 
-        <td><tt>-sTOOLS="gcc msvc"</tt> 
+        <td><tt>&quot;-sTOOLS=gcc msvc&quot;</tt> 
         <td>build with gcc and msvc
 
       <tr>
@@ -679,18 +681,18 @@ exe my_target : my_source1.cpp my_source2.c ;
         <td>build the <tt>release</tt> variant
 
       <tr>
-        <td><tt>-sBUILD="debug release"</tt> 
+        <td><tt>&quot;-sBUILD=debug release&quot;</tt> 
 
         <td>build both <tt>debug</tt> and <tt>release</tt> variants
 
       <tr>
-        <td><tt>-sBUILD="&lt;optimization&gt;speed"</tt> 
+        <td><tt>&quot;-sBUILD=&lt;optimization&gt;speed&quot;</tt> 
 
         <td>build a subvariant of the default variant (<tt>debug</tt>) with
         optimization for speed.
 
       <tr>
-        <td><tt>-sBUILD="debug release &lt;runtime-link&gt;static/dynamic"</tt>
+        <td><tt>&quot;-sBUILD=debug release &lt;runtime-link&gt;static/dynamic&quot;</tt>
         
 
         <td>build subvariants of the debug and release variants that link to
@@ -1361,60 +1363,38 @@ jam -sMSVCNT=&quot;\&quot;\&quot;C:\Program Files\Microsoft Visual C++\VC98\&quo
 set MSVCNT=&quot;&quot;C:\Program Files\Microsoft Visual C++\VC98\&quot;&quot;
 </pre></blockquote>
 
-      <h4><a name="jambase_replacement">Jambase Replacement</a></h4>
+      <h4><a name="jambase_replacement">Startup Behavior</a></h4>
 
-      <p>New logic has been added to allow the built-in Jambase to be replaced
-      without recompiling Jam or adding command-line arguments. The user can
-      control the location of the build system by setting any of the <tt>JAMBASE</tt>,
-      <tt>BOOST_ROOT</tt>, or <tt>BOOST_BUILD_PATH</tt> environment variables (the settings of
-      these variables can also be overridden on the command-line using the
-      <tt>-s<i>VARIABLE</i>=</tt>... option). 
+      <p>The Boost.Build v2 initialization behavior has been
+      implemented. This behavior only applies when the executable
+      being invoked is called &quot;<code>bjam</code>&quot; or, for
+      backward-compatibility, when the <code>BOOST_ROOT</code>
+      variable is set.
 
-      <p>The process is controlled by variables (in decreasing
-precedence):
-      <ul>
-
-      <li>If <tt>JAMBASE</tt> is set, it specifies the path to the Jambase
-      replacement. Non-rooted paths are computed relative to the directory of
-      Jam's invocation.
-
-      <li>Otherwise, if <tt>BOOST_BUILD_PATH</tt> or <tt>BOOST_ROOT</tt> is set,
-      the build system filename is <tt><b>boost-build.jam</b></tt>.
-
-      <li>If the build system filename does not contain a path specification,
-      the build system file is searched for on <tt>$(BOOST_BUILD_PATH)</tt>,
-      then at <tt>$(BOOST_ROOT)/tools/build</tt>.
-
-      <li>If <tt>BOOST_BUILD_PATH</tt> was not set, it will be set to
-      <tt>$(BOOST_ROOT)/tools/build</tt>.
-
-      <li>If neither <tt>JAMBASE</tt>, <tt>BOOST_ROOT</tt>, nor
-      <tt>BOOST_BUILD_PATH</tt> is set, we use the built-in Jambase (nearly
-      identical to the <a
-      href="http://freetype.sourceforge.net/jam/index.html">FTJam</a> Jambase)
-      and load the user's Jamfile. Perforce Jam has this behavior, and it is
-      used for building Jam itself. <b>Thus, when you rebuild Jam, these
-      variables should be unset</b>.
-
-      </ul>
-
-      <p>The rationale for this behavior is as follows:
-      <ul>
-
-      <li> The Jam executable should allow the Jambase to be overridden to
-           implement other build systems without the user having any knowledge
-           of Boost, thus the <tt>JAMBASE</tt> variable.
-
-      <li> <tt>BOOST_BUILD_PATH</tt> is designed to be used to find all <a
-      href="#module_support">modules</a> used by the build system, so that users
-      and system administrators may non-intrusively add modules to the system.
-
-      <li> Many Boost users already have <tt>BOOST_ROOT</tt> set. If a user
-      doesn't want to explicitly set up <tt>BOOST_BUILD_PATH</tt>,
-      <tt>BOOST_ROOT</tt> will supply reasonable behavior.
-
-      </ul>
-
+   <ol>
+   <li> We attempt to load "boost-build.jam" by searching from the
+        current invocation directory up to the root of the
+        file-system. This file is expected to invoke the
+        <tt>boost-build</tt> rule to indicate where the Boost.Build
+        system files are, and to load them.
+   <li> If boost-build.jam is not found we error and exit, giving
+        brief instructions on possible errors. 
+<blockquote>
+As a backward-compatibility measure for older versions of Boost.Build,
+when the <code>BOOST_ROOT</code> variable is set, we first search for
+<code>boost-build.jam</code> in <code>$(BOOST_ROOT)/tools/build</code>
+and <code>$(BOOST_BUILD_PATH)</code>. If found, it is loaded and
+initialization is complete.
+</blockquote>
+   <li> The <code>boost-build</code> rule adds its (optional) argument
+        to the front of <code>BOOST_BUILD_PATH</code>, and attempts to
+        load <code>bootstrap.jam</code> from those directories. If a
+        relative path is specified as an argument, it is treated as
+        though it was relative to the <code>boost-build.jam</code>
+        file.
+   <li> If the bootstrap.jam file was not found, we print a likely
+           error message and exit.
+</ol>
 
       <h4><a name="rule_indirection">Rule Indirection</a></h4>
 
@@ -1573,66 +1553,61 @@ module your_module
 
         <p>
 
-        <h5><a name="module_locals">Local Variables</a></h5>
-        <tt>module local </tt> <i>expression</i><tt> ;</tt><br>
-         <i>- or -</i><br>
-         <tt>module local </tt> <i>expression</i><tt> = </tt>
-        <i>expression2</i><tt> ;</tt> 
+        <h5><a name="module_locals">Variable Scope</a></h5>
 
-        <p>The variables named by <i>expression</i> are given a distinct value
-        in the module, and can be manipulated by code executing in the module
-        without affecting variable bindings seen by other modules. If the
-        assignment form is used, <i>expression2</i> is assigned to the
-        variables when the declaration is executed. For example:
-
-        <blockquote>
+        <p>Each module has its own set of dynamically nested variable
+        scopes. When execution passes from module A to module B, all
+        the variable bindings from A become unavailable, and are
+        replaced by the bindings that belong to B. This applies
+        equally to local and global variables:
 <pre>
-module M {
-  <b>module local</b> x = a b c ;
-
-  rule f ( )
-  {
+<blockquote>
+module A
+{
+    x = 1 ;
+    rule f ( )
     {
-      local x = 1 2 3 ; # temp override for M's x
-      N.g ;             # call into module N, below
+        local y = 999 ; # becomes visible again when B.f calls A.g
+        B.f ;
     }
-    ECHO $(x) ;         # prints "a b c"
-  }
+    rule g ( )
+    {
+        ECHO $(y) ;     # prints &quot;999&quot;
+    }
 }
 
-module N {
-  rule g ( )
-  {
-    x = foo bar baz ; # sets global x
-    M.h ;             # call back into M, below
-  }
+module B
+{
+    y = 2 ;
+    rule f ( )
+    {
+        ECHO $(y) ; # always prints &quot;2&quot;
+        A.g ;
+    }
 }
-
-module M {
-  rule h ( )
-  {
-    ECHO $(x) ;      # prints "1 2 3"
-  }
-}
-
-M.f ; 
-ECHO $(x) ;          # prints "foo bar baz"
+</blockquote>
 </pre>
-        </blockquote>
-        The only way to access another module's local variables is through a
-        rule defined in that module: 
+
+        The only way to access another module's variables is by
+        entering that module:
 
         <blockquote>
 <pre>
-module M {
-  rule get ( names * )
-  {
-    return $($(names)) ;
-  }
+rule peek ( module-name ? : variables + )
+{
+    module $(module-name)
+    {
+        return $($(&gt;)) ;
+    }
 }
-ECHO [ <b>M.get</b> x ] ;  # prints "a b c"
 </pre>
         </blockquote>
+
+        Note that because existing variable bindings change whenever a
+        new module scope is entered, argument bindings become
+        unavailable. That explains the use of
+        &quot;<code>$(&gt;)</code>&quot; in the <code>peek</code> rule
+        above.
 
         <h5><a name="local_rules">Local Rules</a></h5>
 
@@ -1759,36 +1734,6 @@ for <b>local</b> y in $(x)
 ECHO $(y) ;     # prints &quot;4 5 6&quot;
 </pre></blockquote>
 
-      <h4><a name="while_loops">While Loops</a></h4>
-
-      In classic Jam, some constructs are only possible using recursion:
-<blockquote><pre>
-# returns the part of $(list) following the first occurrence of $(symbol)
-rule after-symbol ( symbol : list * )
-{
-    if ! $(list) || ( $(symbol) = $(list[1]) )
-    {
-        return $(list[2-]) ;
-    }
-    else
-    {
-        return [ after-symbol $(symbol) : $(list[2-]) ] ;
-    }
-}
-</pre></blockquote>
-The addition of <tt>while</tt> loops allows a simpler formulation for this and
-many other rules:
-<blockquote><pre>
-rule after-symbol ( symbol : list * )
-{
-    while $(list) &amp;&amp; $(list[1]) != $(symbol)
-    {
-        list = $(list[2-]) ;
-    }
-    return $(list) ;
-}
-</pre></blockquote>
-
       <h4><a name="negative_indexing">Negative Indexing</a></h4>
       
       Classic Jam supplies 1-based list indexing, and slicing on a closed
@@ -1852,7 +1797,26 @@ rule bind-rule ( target : path )
         should be built anyway. Boost Jam extends <tt>NOCARE</tt> to apply to 
         targets with build actions: if their build actions exit with a nonzero 
         return code, dependent targets will still be built. 
+
+      <h4><a name="RMOLD">Removing Outdated Targets</a></h4>
+<blockquote>
+<pre>
+rule RMOLD ( targets * )
+</pre>
+</blockquote>
+
+      <p>Perforce Jam removes any target files that may exist on disk
+      when the rule used to build those targets fails. However,
+      targets whose dependencies fail to build are not removed by
+      default. The <code>RMOLD</code> rule causes its arguments to be
+      removed if any of their dependencies fail to build.
+
+      
     <h4><a name="SUBST_rule">The <tt>SUBST</tt> Rule</a></h4>
+
+    <p><b>Note:</b> the <code>SUBST</code> rule is deprecated in favor
+    of Perforce Jam's built-in <cdoe>MATCH</cdoe> rule, which has been
+    rolled into Boost.Jam.
 
       <p>The behavior of the <tt>SUBST</tt> rule for regular-expression matching
       and replacement (originally added in <a href=
@@ -1995,6 +1959,9 @@ rule BACKTRACE ( )
     &quot;Flow of Control&quot; section below the link target) to temporarily
     &quot;change&quot; a global variable by declaring a <tt>local</tt> of the
     same name.
+
+    <p>Many of the variables that are used to configure how Boost.Build works
+    internally are listed <a href="variables.html">here</a> with brief descriptions.
 
     <h3>Variables Associated with SubProject Identity</h3>
 

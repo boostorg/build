@@ -9,6 +9,7 @@ feature profiling : off on ;
 
 feature struct-alignment : auto 1 2 4 8 16 ;
 feature eh-model : default fast msvc ; # metrowerks only
+feature vtable-thunks : default on off ; # gcc only
 
 feature threading : single multi ;
 
@@ -67,6 +68,7 @@ gTARGET_TYPE_REQUIREMENTS(DLL) = <shared-linkable>true ;
 
 ##### Variant definitions ####
 COMMON_PROPERTIES ?= 
+    <vtable-thunks>default
     <struct-alignment>auto
     <eh-model>default
     <threading>single

@@ -24,23 +24,36 @@ flags msvc VC_PDB_NAME ;
 # compute MSVC tool path
 # You can either put the msvc bin directory in your PATH, or you can set
 # MSVCDir to point at the msvc installation directory
+
+# Some installations set MSVCDIR instead of MSVCDir; who knows why?
+MSVCDir ?= $(MSVCDIR) ;
+
+# If MSVCDir is not set the user hasn't run VCVARS32.BAT
 if ! $(MSVCDir)
 {
+    # In case someone set VISUALC in order to build Jam, we can just use that.
     MSVC_ROOT ?= $(VISUALC) ;
+    # Otherwise, guess a standard installation directory
     MSVC_ROOT ?= "C:\\Program Files\\Microsoft Visual C++\\VC98" ;
-    VC_TOOL_PATH ?= "$(MSVC_ROOT)"$(SLASH)bin$(SLASH) ;
-    VC_SETUP ?= "CALL \"$(VC_TOOL_PATH)VCVARS32.BAT\" >nul" ;
+    
+    # Reconstitutes paths containing spaces
+    MSVC_ROOT = $(MSVC_ROOT:J=" ") ;
+    
+    # The tools are provisionallly located in the msvc6 bin
+    # directory. This may be overridden by toolsets which extend this
+    # one.
+    VC_TOOL_PATH = "$(MSVC_ROOT)"$(SLASH)bin$(SLASH) ;
+    
+    # Always call VCVARS32.BAT before invoking the tools
+    VC_SETUP = "CALL \"$(VC_TOOL_PATH)VCVARS32.BAT\" >nul" ;
 }
 else
 {
-    # This hack reconstitutes paths containing spaces as long as
-    # they don't contain any consecutive spaces.
-    while $(MSVCDir[2]) 
-    {
-        MSVCDir = $(MSVCDir[1])" "$(MSVCDir[2]) $(MSVCDir[3-]) ;
-    }
+    # Reconstitutes paths containing spaces
+    MSVCDir = $(MSVCDir:J=" ") ;
     
-    VC_TOOL_PATH ?= "" ; # Don't clobber adjoining text if MSVCDir is already set
+    # Don't clobber adjoining text or use explicit paths if MSVCDir is already set
+    VC_TOOL_PATH = "" ; 
 }
 
 VC_COMPILER = cl ;

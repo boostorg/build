@@ -1,0 +1,83 @@
+# (C) Copyright David Abrahams and Carlos Pinto Coelho 2001, 2002.
+# Permission to copy, use, modify, sell and distribute this software
+# is granted provided this copyright notice appears in all
+# copies. This software is provided "as is" without express or implied
+# warranty, and with no claim as to its suitability for any purpose.
+
+#
+# gcc-nocygwin toolset by Raoul Gough (RaoulGough@yahoo.co.uk)
+#
+# This toolset builds boost on a cygwin system using the -mno-cygwin
+# gcc option, which creates windows-native binaries (without any
+# dependencies on cygwin1.dll). It requires an STLport built
+# by mingw gcc, or maybe by cygwin gcc using the -mno-cygwin
+# option, if you feel like messing with the STLport makefiles.
+#
+# Configuration:
+#
+# You need a boost jam executable that was built for NT, not
+# cygwin. There are two reasons for this. Firstly, you need the
+# NT jam variable to be set, and secondly, the cygwin build of
+# boost jam executes commands via the cygwin shell, which doesn't
+# handle backslashes in pathnames properly.
+#
+# Don't forget to set STLPORT_ROOT, either in your environment
+# or in Jamrules in the boost installation directory. Also set
+# BOOST_ROOT. Use native windows path names and not the
+# /cygdrive/... style.
+#
+# Set NOCYGWIN_STLPORT_LIB_ID to set the STLport naming
+# convention (default is "mingw32" which looks for libraries
+# named like stlport_mingw32_stldebug.lib)
+#
+# Run boost jam from the boost install directory like this:
+#
+# jam -sTOOLS=gcc-nocygwin
+#
+# If things are going wrong, a handy jam option is -d2, which shows
+# commands before execution.
+#
+
+NOCYGWIN_STLPORT_LIB_ID ?= mingw32 ;
+
+{
+  local GCC_STLPORT_LIB_ID = $(NOCYGWIN_STLPORT_LIB_ID) ;
+
+  extends-toolset gcc-stlport ;
+}
+
+flags gcc-nocygwin CFLAGS : -mno-cygwin ;
+flags gcc-nocygwin LINKFLAGS : -mno-cygwin ;
+flags gcc-nocygwin LINKFLAGS <threading>multi : -mthreads ;
+
+#### Link ####
+
+#
+# Duplicated from gcc-tools.jam (unfortunately) because we don't want
+# IMPLIB_COMMAND to include -Wl,--export-all-symbols
+#
+
+rule Link-action
+{
+    SPACE on $(<) = " " ;
+    # if we don't have a GNU linker then we can't pass any GNU-ld specific flags:
+    if $(NO_GNU_LN)
+    {
+        LNOPT on $(<) = ;
+    }
+    else
+    {
+        LNOPT on $(<) = "" ;
+    }
+
+    OUTTAG on $(<) = "" ;
+    SOTAG on $(<) = ;
+    ACTION_1 on $(<) = ;
+
+    # This will appear before the import library name when building a DLL, but
+    # will be "multiplied away" otherwise.
+    IMPLIB_COMMAND on $(<) = "-Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__ -Wl,--out-implib," ;
+    DEPENDS $(<) : $(NEEDLIBS) ;
+    gRUN_LD_LIBRARY_PATH($(<)) += $(GCC_STDLIB_DIRECTORY) ;
+    gcc-Link-action $(<) : $(>) ;
+}

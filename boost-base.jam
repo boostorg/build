@@ -1598,6 +1598,9 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
     # Remember the path from the build root to the subvariant directory
     gSUBVARIANT_PATH($(subvariant)) = $(subvariant-id) ;
     
+    # Add target suppression if <suppress> was in the requirements
+    local gSUPPRESS_FAKE_TARGETS = [ get-values <suppress> : $(gTARGET_REQUIREMENTS($(target))) ] $(gSUPPRESS_FAKE_TARGETS) ;
+
     declare-fake-targets $(target) : $(target-files) ;
 
     # set up gBUILD_PROPERTIES for include-tools (below)
@@ -1642,7 +1645,7 @@ rule subvariant-target ( target : subvariant-id build-properties * : toolset var
         depend-on-libraries $(target-files) : $(libs) ;
         depend-on-dlls $(target-files) : $(dlls) ;
     }
-
+    
     # dispatch to the appropriate declaration function. Here we are using an
     # FTJam-only feature (thanks, David Turner!)
     local ignored = [ $(gGENERATOR_FUNCTION($(target-type))) $(target-files)
@@ -1783,6 +1786,9 @@ rule unit-test
 # Used to build command files from a list of sources.
 rule build-command-file ( command : sources * )
 {
+    # Clean up after ourselves
+    Clean clean : $(command) ;
+    
     DEPENDS $(command) : $(sources) ;
     
     # Check whether there's anything to dump, so that we don't end up
