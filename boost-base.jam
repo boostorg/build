@@ -2257,3 +2257,24 @@ rule target-id-of ( target )
         [ FGristFiles $(target:D=:G=) ] ;
     return $(target-id) ;
 }
+
+# Stick this rule name in your requirements if you are building code
+# which requires locale support.  It handles the metrowerks-specific
+# case that locale support demands the static version of the runtime
+# library.
+rule std::locale-support ( toolset variant : subvariant-path properties * )
+{
+    if [ MATCH .*(metrowerks|cwpro).* : $(toolset) ]
+    {
+        local p = [ MATCH (.*)runtime-link-dynamic(.*) : $(subvariant-path) ] ;
+        
+        subvariant-path = $(p[1])runtime-link-static$(p[2]) ;
+        
+        properties =
+          [ difference $(properties) : <runtime-link>dynamic ]
+          <runtime-link>static
+          ;
+    }
+
+    return $(subvariant-path) $(properties) ;
+}
