@@ -67,7 +67,7 @@ rule init ( prefix ? )
     #generators.register-standard qt.uic-cpp : UI UIC_H : CPP : <uses>qt ;
 }
 
-rule qt.add-properties ( property )
+rule qt.add-properties ( property : properties * )
 {
     return <include>$(.prefix)/include <dll-path>$(.prefix)/lib <library-path>$(.prefix)/lib <find-shared-library>qt-mt ;
 }
