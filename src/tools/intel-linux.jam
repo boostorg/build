@@ -54,11 +54,11 @@ actions compile.c
 
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(CONFIG_LINK) $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST)
+    "$(CONFIG_COMMAND)" $(CONFIG_LINK) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(OPTIONS)
 }
 
 # Differ from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(CONFIG_LINK) $(OPTIONS) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST)
+    "$(CONFIG_COMMAND)" $(CONFIG_LINK) -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(OPTIONS)
 }
