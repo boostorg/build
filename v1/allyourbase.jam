@@ -187,7 +187,7 @@ if $(NT)
     # dwa 6/4/01 - removed compiler determination for boost
     # added some yacc/lex stuff, assuming cygwin for now.
     LEX             ?= flex ;
-    YACC            ?= bison -t -d -l -v ;
+    YACC            ?= bison -y ;
     YACCFILES       ?= y.tab ;
     YACC_OUTPUT     ?= --output= ;
     LEX_OUTPUT      ?= -o ;
@@ -320,14 +320,13 @@ else if $(UNIX)
         gLINKABLE_PRODUCT_INDEX(DLL) = 1 ; # (the .so is the one to link)
 
     case AMIGA :
-        YACC            ?= bison ;
+        YACC            ?= bison -y ;
 
     case CYGWIN :       
         LEX             ?= flex ;
-        JAMSHELL        ?= sh -c ;
         RANLIB          ?= "" ;
         SUFEXE          ?= .exe ;
-        YACC            ?= bison ;
+        YACC            ?= bison -y ;
 
     case DGUX :
         RANLIB          ?= "" ;
@@ -337,7 +336,6 @@ else if $(UNIX)
         RANLIB          ?= "" ;
 
     case INTERIX :
-        JAMSHELL        ?= sh -c ;
         RANLIB          ?= "" ;
 
     case IRIX :
