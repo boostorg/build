@@ -40,12 +40,13 @@ flags gcc LINKFLAGS <shared-linkable>true : -fPIC ;
 
 if $(BETOOLS)
 {
-flags gcc LINKFLAGS <target-type>DLL : -nostart ;
+    flags gcc LINKFLAGS <target-type>DLL : -nostart ;
 }
 else
 {
-flags gcc LINKFLAGS <target-type>DLL : -shared ;
+    flags gcc LINKFLAGS <target-type>DLL : -shared ;
 }
+
 flags gcc LIBPATH <library-path> ;
 flags gcc NEEDLIBS <library-file> ;
 flags gcc FINDLIBS <find-library> ;
@@ -57,8 +58,8 @@ rule Link-action
     # This will appear before the import library name when building a DLL, but
     # will be "multiplied away" otherwise. The --exclude-symbols directive
     # proved to be neccessary with some versions of Cygwin.
-    # IMPLIB_COMMAND on $(<) = "-Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__ -Wl,--out-implib," ;
-    IMPLIB_COMMAND on $(<) = "-Wl,--out-implib," ;
+    IMPLIB_COMMAND on $(<) = "-Wl,--exclude-symbols,_bss_end__:_bss_start__:_data_end__:_data_start__ -Wl,--out-implib," ;
+    # IMPLIB_COMMAND on $(<) = "-Wl,--out-implib," ;
     gcc-Link-action $(<) : $(>) ;
 }
 
