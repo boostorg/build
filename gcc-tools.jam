@@ -110,6 +110,12 @@ else if $(UNIX)
         GCC ?= cc ;
         GXX ?= c++ ;
         }
+    case *BSD :
+        {
+        flags gcc CFLAGS <threading>multi : -pthreads ;
+        flags gcc LINKFLAGS <threading>multi : -pthreads ;
+        # there is no -lrt on BSD
+        }
     case * :
         {
         flags gcc CFLAGS <threading>multi : -pthread ;
@@ -386,3 +392,4 @@ actions updated together piecemeal gcc-Archive-action
 {
     ar ru$(ARFLAGS) "$(<:T)" "$(>:T)"
 }
+
