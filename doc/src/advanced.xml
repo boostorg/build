@@ -410,7 +410,7 @@ boost-build /path/to/boost.build ;
 
 <anchor id="bbv2.main-target-rule-syntax"/>
 <programlisting>
-<replaceable>rule-name</replaceable> <replaceable>main-target-name</replaceable>
+<replaceable>rule-name</replaceable>&#x2002;<replaceable>main-target-name</replaceable>
     : <replaceable>sources...</replaceable>
     : <replaceable>requirements...</replaceable> 
     : <replaceable>default-build...</replaceable>
