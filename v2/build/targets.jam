@@ -66,7 +66,7 @@
 #                            .   | construct    |   | construct   |    | construct    |
 #                                +--------------+   +-------------+    +--------------+
 
-import "class" ;
+import "class" : new ;
 import sequence ;
 import regex ;
 import property ;
@@ -1127,4 +1127,23 @@ rule main-target-alternative ( target )
     
     $(ptarget).add-alternative $(target) ;
     return $(target) ;
+}
+
+# Creates a typed-target with the specified properties.
+# The 'name', 'sources', 'requirements', 'default-build' and
+# 'usage-requirements' are assumed to be in the form specified
+# by the user in Jamfile corresponding to 'project'.
+rule create-typed-target ( type : project : 
+    name : sources * : requirements * : default-build * 
+    : usage-requirements * )
+{
+    return [
+      targets.main-target-alternative
+      [ new typed-target $(name) : $(project) : $(type)
+        : [ targets.main-target-sources $(sources) : $(name) ] 
+        : [ targets.main-target-requirements $(requirements) : $(project) ] 
+        : [ targets.main-target-default-build $(default-build) : $(project) ]
+        : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
+      ] ] ;
+
 }

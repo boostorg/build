@@ -76,18 +76,33 @@ rule register ( type : suffixes * : base-type ? : main ? )
         
         if $(main)
         {
-            # Convert the type name to lowercase and convert all
-            # underscores to hyphens to get the main target rule name.
-            import regex ;
-            local n = [ regex.split $(type:L) "_" ] ;
-            n = $(n:J=-) ;
-            .main-target-type.$(n) = $(type) ;
+            main-rule-name = [ type-to-rule-name $(type) ] ;            
+            .main-target-type.$(main-rule-name) = $(type) ;    
             
-            IMPORT $(__name__) : main-target-rule : : $(n) ;
+            IMPORT $(__name__) : main-target-rule : : $(main-rule-name) ;
 #            feature.compose <main-target-type>$(type) : <base-target-type>$(type) ;
         }        
     }
 }
+
+# Given type, returns name of main target rule which creates
+# targets of that type.
+rule type-to-rule-name ( type )
+{
+    # Lowercase everything. Convert underscores to dashes.ame.
+    import regex ;
+    local n = [ regex.split $(type:L) "_" ] ;
+    n = $(n:J=-) ;
+    return $(n) ;
+}
+
+# Returns a type, given the name of a main rule.
+rule type-from-rule-name ( main-target-name )
+{
+    return $(.main-target-type.$(main-target-name)) ;
+}
+
+
 
 # Specifies that targets with suffix from 'suffixes' has the type 'type'. 
 # If different type is already specified for any of syffixes,
@@ -241,13 +256,8 @@ rule main-target-rule ( name : sources * : requirements * : default-build *
         
     # This is a circular module dependency, so it must be imported here
     import targets ;
-    return [
-      targets.main-target-alternative
-      [ new typed-target $(name) : $(project) : $(.main-target-type.$(rulename))
-        : [ targets.main-target-sources $(sources) : $(name) ] 
-        : [ targets.main-target-requirements $(requirements) : $(project) ] 
-        : [ targets.main-target-default-build $(default-build) : $(project) ]
-        : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-      ] ] ;
+    return [ targets.create-typed-target $(.main-target-type.$(rulename)) : $(project)
+      : $(name) : $(sources) : $(requirements) 
+      : $(default-build) : $(usage-requirements) ] ;        
 }
 
