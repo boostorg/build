@@ -1465,10 +1465,10 @@ rule enter-subproject ( project-path )
     gTOP = $(.gTOP) ;
     PROJECT = $(.PROJECT) ;
     
-    local project-name = [ MATCH "^@([^/]+)" : $(project-path) ] ;
+    local project-name = [ MATCH "^@([^/\\]+)" : $(project-path) ] ;
     project-name ?= $(PROJECT) ;
     project-name ?= "" ;
-    local project-subdir = [ MATCH "^@[^/]+/(.*)" : $(project-path) ] ;
+    local project-subdir = [ MATCH "^@[^/\\]+[/\\](.*)" : $(project-path) ] ;
     local project-top ;
     
     if $(project-name)
@@ -2366,7 +2366,7 @@ rule target-id-of ( target-ref )
         path = [ join @$(PROJECT) [ simplify-path-tokens [ top-relative-tokens $(path) ] ] : / ] ;
     }
     local tokens = [ split-path $(path) ] ;
-    local project-name = [ MATCH "^@([^/]+)" : $(tokens[1]) ] ;
+    local project-name = [ MATCH "^@([^/\\]+)" : $(tokens[1]) ] ;
     if $(project-name)
     {
         tokens = $(tokens[2-]) ;

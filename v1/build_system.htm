@@ -809,11 +809,11 @@ project-root ;
 
       <li><i>name</i> specifies the name of the main target, multiple targets
       with the same name are allowed but only if they are of different types.
-      Normally this is not the name of the final target file generated. The
+      Normally this is not the name of the final target file generated.  The
       target file name depends on the type of target which controls how the
-      base target name is renamed to conform to platform conventions. For
-      <tt>exe</tt>s the name might be the same or <tt>*.exe</tt>. For
-      <tt>lib</tt>s the name might be <tt>*.lib</tt> or <tt>lib*.a</tt>. And
+      base target name is renamed to conform to platform conventions.  For
+      <tt>exe</tt>s the name might be the same or <tt>*.exe</tt>.  For
+      <tt>lib</tt>s the name might be <tt>*.lib</tt> or <tt>lib*.a</tt>.  And
       for <tt>dll</tt>s the name might be <tt>*.dll</tt> or <tt>lib*.so</tt>.
       For platform specific naming consult the <tt><a href=
       "allyourbase.jam">allyourbase.jam</a></tt> file in the build
@@ -823,7 +823,7 @@ project-root ;
 
       <li>
         <i>sources</i> is a list of paths to source files and
-        dependency targets. <a name="dependency">The</a> syntax for
+        dependency targets.  <a name="dependency">The</a> syntax for
         dependency targets is described by the following grammar:
 
         <blockquote>
@@ -837,17 +837,21 @@ project-root ;
 <i>relative-path</i> -&gt; ( <b>path-element</b>/ ) *
 </pre>
         </blockquote>
-        The <i>location</i> specifies the location of a Jamfile in which a
-        dependency target called <code><b>target-name</b></code> can be
-        found, declared with the given <i>type-tag</i>. If
+        The <i>location</i> specifies the location of a Jamfile in
+        which a dependency target
+        called <code><b>target-name</b></code> can be found, declared
+        with the given <i>type-tag</i>.  Other <i>type-tag</i>s are
+        possible; for example the <a href="python.jam">python.jam</a>
+        module defines Python extensions with the
+        <code>&quot;&lt;pyd&gt;&quot;</code> tag.  If
         <code>@<b>project-id</b></code> is specified, the
         <i>relative-path</i> is interpreted with respect to the root
         directory of the <a href="#external_project">specified
-        project</a>. Otherwise, it is interpreted with respect to the
+        project</a>.  Otherwise, it is interpreted with respect to the
         directory of the current Jamfile.
 
         <p>The dependency's <i>type-tag</i> is also used to decide how to
-        link to it when needed. <tt>&lt;lib&gt;</tt> targets are linked
+        link to it when needed.  <tt>&lt;lib&gt;</tt> targets are linked
         statically and <tt>&lt;dll&gt;</tt> targets are linked dynamically.
         On Unix platforms dynamic linking will use (the appropriate platform
         equivalent of) <tt>LD_LIBRARY_PATH</tt> and the "<tt>-l</tt>" linker
@@ -855,7 +859,7 @@ project-root ;
         libraries in particular locations in the filesystem.</p>
 
         <p><b>NOTE:</b> It is important to match the <i>type-tag</i>
-        dependency with the type of the dependency target. Trying to specify
+        dependency with the type of the dependency target.  Trying to specify
         a <i>type-tag</i> of <tt>&lt;lib&gt;</tt> when the target is defined
         as a <tt>&lt;dll&gt;</tt> will cause an error.<br>
         <br>
@@ -864,7 +868,7 @@ project-root ;
 
       <li>
         <i><a name="target_requirements">requirements</a></i> specifies the
-        build properties intrinsic to the target. Requirements are given as
+        build properties intrinsic to the target.  Requirements are given as
         sets of optionally-<b>qualified build properties</b>: 
 
         <blockquote>
@@ -874,7 +878,7 @@ project-root ;
         </blockquote>
         <tt>&lt;<i>compiler</i>&gt;</tt> and <tt>&lt;<i>variant</i>&gt;</tt>,
         if supplied, can be used to restrict the applicability of the
-        requirement. Either one may be replaced by <tt>&lt;*&gt;</tt>, which
+        requirement.  Either one may be replaced by <tt>&lt;*&gt;</tt>, which
         is the same as omitting it. 
 
         <p>The system checks that simple feature requirements are not
