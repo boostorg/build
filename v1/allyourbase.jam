@@ -2068,7 +2068,7 @@ actions Chgrp
 
 actions Chmod1
 {
-    $(CHMOD) $(MODE) $(<)
+    $(CHMOD) $(MODE) "$(<)"
 }
 
 actions Chown
@@ -2078,17 +2078,17 @@ actions Chown
 
 actions piecemeal together existing Clean
 {
-    $(RM) $(>)
+    $(RM) "$(>)"
 }
 
 actions File
 {
-    $(CP) $(>) $(<)
+    $(CP) "$(>)" "$(<)"
 }
 
 actions FileClone
 {
-    $(CLONE) $(>) $(<)
+    $(CLONE) "$(>)" "$(<)"
 }
 
 actions GenFile1
@@ -2125,7 +2125,7 @@ actions together LexMv
 
 actions MkDir1
 {
-    $(MKDIR) $(<)
+    $(MKDIR) "$(<)"
 }
 
 actions together Ranlib
