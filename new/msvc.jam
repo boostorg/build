@@ -84,9 +84,12 @@ rule init ( version ? path ? : vendor ? : setup ? compiler ? linker ? )
     compiler ?= cl ;
     linker ?= link ;
     
-    flags msvc.compile CC $(condition) : $(prefix)$(compiler) ;
-    flags msvc.link LD $(condition) : $(prefix)$(linker) ;
+    flags msvc.compile .CC $(condition) : $(prefix)$(compiler) ;
+    flags msvc.link .LD $(condition) : $(prefix)$(linker) ;
 }
+
+.CC = cl ;
+.LD = link ;
 
 # Declare generators
 
@@ -131,7 +134,7 @@ flags msvc.compile INCLUDES <include> ;
 
 actions compile
 {
-    $(CC) /Zm800 -nologo -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<)" "$(>)"
+    $(.CC) /Zm800 -nologo -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<)" "$(>)"
 }
 
 # Declare flags and action for linking
@@ -157,12 +160,12 @@ toolset.flags msvc.link FINDLIBS <find-static-library> <find-shared-library> ;
 
 actions link
 {
-    $(LD) /nologo $(NOINCREMENTAL) $(LINKFLAGS) /out:"$(<[1])" /IMPLIB:"$(<[2])" /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" @"$(>)"
+    $(.LD) /nologo $(NOINCREMENTAL) $(LINKFLAGS) /out:"$(<[1])" /IMPLIB:"$(<[2])" /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" @"$(>)"
 }
 
 # Declare action for creating static libraries
 actions archive 
 {
     if exist "$(<)" set _$(<:B)_="$(<)"
-    $(LD) /nologo /lib /out:"$(<)" %_$(<:B)_% @"$(>)"
+    $(.LD) /nologo /lib /out:"$(<)" %_$(<:B)_% @"$(>)"
 }
