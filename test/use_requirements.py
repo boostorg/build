@@ -53,7 +53,7 @@ t.write(
     lib b : b.cpp : <link>shared:<define>SHARED_B
     : : <define>FOO <link>shared:<define>SHARED_B
     ;
-    exe a : a.cpp : <dependency>b ;
+    exe a : a.cpp : <use>b ;
 """)
 
 t.write(
