@@ -77,7 +77,7 @@ class Tester(TestCmd.TestCmd):
             self
             , program=os.path.join(
                 '..', 'jam_src', jam_build_dir, executable)
-              +  ' -sBOOST_BUILD_PATH=' + boost_build_path
+              +  ' --ignore-config -sBOOST_BUILD_PATH=' + boost_build_path
               + verbosity
               + arguments
             , match=match

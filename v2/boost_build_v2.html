@@ -24,9 +24,9 @@
 </style>
   </head>
   <!-- Things yet to document:
-                          - build request, build request expansion and directly requested targets
-                          - conditional properties
-                        -->
+                            - build request, build request expansion and directly requested targets
+                            - conditional properties
+                          -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -891,7 +891,7 @@ borland/runtime-link=static,dynamic
           <td><tt>--clean</tt></td>
 
           <td>Removes everything instead of building. Unlike <tt>clean</tt>
-          target in make, it is possible to clean one some targets.</td>
+          target in make, it is possible to clean only some targets.</td>
         </tr>
 
         <tr>
@@ -911,6 +911,13 @@ borland/runtime-link=static,dynamic
 
           <td>Don't print backtrace on errors. Primary usefull for
           testing.</td>
+        </tr>
+
+        <tr>
+          <td><tt>--ignore-config</tt></td>
+
+          <td>Do not load <tt>site-config.jam</tt> and
+          <tt>user-config.jam</tt></td>
         </tr>
       </tbody>
     </table>

@@ -15,26 +15,29 @@ import os ;
 
 import version ;
 
-module site-config 
-{
-    import toolset : using ;
-}
-
-module user-config 
-{
-    import toolset : using ;
-}
-
-local user-path = [ modules.peek : HOME ] [ modules.peek : BOOST_BUILD_PATH ] ;
-if [ os.name ] in NT CYGWIN
+if ! --ignore-config in [ modules.peek : ARGV ] 
 {    
-    modules.load site-config : : [ modules.peek : SystemRoot ] $(user-path) ;
-    modules.load user-config : : $(user-path) ;    
-}    
-else
-{
-    modules.load site-config : : /etc $(user-path) ;
-    modules.load user-config : : $(user-path) ;    
+    module site-config 
+    {
+        import toolset : using ;
+    }
+
+    module user-config 
+    {
+        import toolset : using ;
+    }
+
+    local user-path = [ modules.peek : HOME ] [ modules.peek : BOOST_BUILD_PATH ] ;
+    if [ os.name ] in NT CYGWIN
+    {    
+        modules.load site-config : : [ modules.peek : SystemRoot ] $(user-path) ;
+        modules.load user-config : : $(user-path) ;    
+    }    
+    else
+    {
+        modules.load site-config : : /etc $(user-path) ;
+        modules.load user-config : : $(user-path) ;    
+    }
 }
 
 
