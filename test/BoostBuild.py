@@ -297,14 +297,31 @@ class Tester(TestCmd.TestCmd):
         ignore_elements(self.unexpected_difference.modified_files, wildcard)
 
     def expect_touch(self, names):
+        
         if type(names) == types.StringType:
-                names = [names]
+            names = [names]
+            
+        d = self.unexpected_difference
         for name in names:
+
+            # We need to check in both touched and modified files if
+            # it's a Windows exe because they sometimes have slight
+            # differences even with identical inputs
+            if name.endswith('.exe'):
+                filesets = [d.modified_files, d.touched_files]
+            else:
+                filesets = [d.touched_files]
+
+            while filesets:
                 try:
-                        self.unexpected_difference.touched_files.remove(name)
-                except:
-                        print "File %s not touched as expected" % (name,)
-                        self.fail_test(1)
+                    filesets[-1].remove(name)
+                    break
+                except ValueError:
+                    filesets.pop()
+
+            if not filesets:
+                print "File %s not touched as expected" % (name,)
+                self.fail_test(1)
 
 
     def ignore_touch(self, wildcard):

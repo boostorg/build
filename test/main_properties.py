@@ -17,7 +17,7 @@ t.write("a.cpp", """
 void foo();
 int main() { foo(); }
 """)
-t.write("b.cpp", "void foo() {}")
+t.write("b.cpp", "void foo() {}\n")
 
 t.run_build_system()
 t.expect_addition("bin/gcc/debug/main-target-b/b.o")

@@ -9,7 +9,7 @@ t.write("Jamfile", """
     lib b : b.cpp : : : <define>FOO ;
     exe a : a.cpp b ;
 """)
-t.write("b.cpp", "void foo() {}")
+t.write("b.cpp", "void foo() {}\n")
 t.write("a.cpp", """
 #ifdef FOO
 void foo() {}
@@ -28,7 +28,7 @@ t.write("Jamfile", """
     lib b : b.cpp : : : <define>FOO ;
     exe a : a.cpp : <dependency>b ;
 """)
-t.write("b.cpp", "void foo() {}")
+t.write("b.cpp", "void foo() {}\n")
 t.write("a.cpp", """
 #ifdef FOO
 int main() {}
@@ -48,7 +48,7 @@ project :
     ;
 lib b : b.cpp ;
 """)
-t.write("lib/b.cpp", "void foo() {}")
+t.write("lib/b.cpp", "void foo() {}\n")
 t.run_build_system()
 
 # Test that use requirements are inherited correctly
@@ -74,7 +74,7 @@ project :
     ;
 lib b : b.cpp ;
 """)
-t.write("lib/1/b.cpp", "void foo() {}")
+t.write("lib/1/b.cpp", "void foo() {}\n")
 
 t.run_build_system()
 t.run_build_system("--clean")
