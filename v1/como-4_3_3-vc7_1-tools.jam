@@ -14,5 +14,5 @@
     local COMO_BACKEND = "vc71" ;
     local COMO_BACKEND_PATH = $(VC71_ROOT) ;
 
-    extends-toolset como-win32-4_3_3-vc7 ;
+    extends-toolset como-4_3_3-vc7 ;
 }
