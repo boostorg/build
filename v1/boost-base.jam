@@ -1009,6 +1009,13 @@ rule multiply-property-sets
     return $(result) ;
 }
 
+# Return a list consisting of all the elements of properties which
+# aren't the defaults for their features.
+rule remove-default-properties ( properties * )
+{
+    return [ difference $(properties) : [ feature-default $(properties:G) ] ] ;
+}
+
 # make-path-property-sets base-path : common-properties : property-sets
 #
 # Returns a list of paths where the initial ungristed part of each element is a
@@ -1028,21 +1035,29 @@ rule multiply-property-sets
 #
 #      gcc/release/p2-v2/p3-v3/<p1>v1/<p2>v2/<p3>v3
 #     |<-- subvariant path -->|<-- property-set -->|
-rule make-path-property-sets
+rule make-path-property-sets ( base-path : common-properties * : property-sets * )
 {
     local result ;
     local s ;
-    for s in $(3)
+    for s in $(property-sets)
     {
-        result += [ join
-                    $(<) [ ungrist-properties [ split-path $(s) ] ] # directory components
-                    $(>) $(s) : $(SLASH) ] ; # common properties + property set
+        local x = 
+          # directory components
+          $(base-path) 
+          [ ungrist-properties
+              [ remove-default-properties [ split-path $(s) ] ] 
+          ] 
+          # properties
+          $(common-properties) $(s) 
+            ;
+        
+        result += $(x:J=$(SLASH)) ;
     }
 
     # if there were no overrides, just add the base variant and properties
     if ! $(result)
     {
-        result = [ join $(<) $(>) : $(SLASH) ] ;
+        result = [ join $(base-path) $(common-properties) : $(SLASH) ] ;
     }
     return $(result) ;
 }
@@ -2526,4 +2541,39 @@ rule std::facet-support ( toolset variant : subvariant-path properties * )
       force-NT-static-link .*(intel).* 
         : $(toolset) : $(subvariant-path) $(properties)
           ] ;
+}
+
+# load the specified modules if they haven't been loaded already.  If
+# the module has no suffix, ".jam" is appended.  If the module name is
+# prepended with a path, it is sought in that location relative to the
+# current Jamfile, otherwise it is sought in BOOST_BUILD_PATH.
+rule import ( modules + )
+{
+    for local name in $(modules)
+    {
+        local search = $(BOOST_BUILD_PATH) ;  # search here
+        local n = $(name:D=) ;                # for this basename
+        if ! $(n:S)
+        {
+            n = $(n).jam ;
+        }
+        
+        # if a directory was specified
+        local d = $(name:D) ;
+        if $(d)
+        {
+            # Normalize the path relative to the invocation directory.
+            local p = [ simplify-path-tokens [ split-path $(d:R=$(SUBDIR)) ] ] $(n) ;
+            n = $(p:J=$(SLASH)) ;
+            search = ; # no searching; the path was specified.
+        }
+        
+        SEARCH on $(n) = $(search) ;
+        
+        if ! $($(n).included)
+        {
+            include $(n) ;
+            $(n).included = true ;
+        }
+    }
 }
