@@ -1,0 +1,5 @@
+{
+    local METROWERKS_ROOT = $(CWPRO8_ROOT) ;
+    extends-toolset metrowerks ;
+    flags cwpro8 C++FLAGS : -iso_templates on ;
+}

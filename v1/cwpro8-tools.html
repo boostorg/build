@@ -21,14 +21,17 @@
 
 <h2>Introduction</h2>
 
-<p>Boost.Build's <a href="http://msdn.microsoft.com/visualc/">vc7</a> toolset supports the
-Microsoft Visual C++ .NET tools. This toolset is an extention to the
-<code><a href="msvc-tools.html">msvc</a></code> toolset and is usefull for when
-you need to have access to both version 6 and version 7 of the toolsets.
+<p>Boost.Build's cwpro8 toolset supports the
+<a href="http://www.metrowerks.com">Metrowerks Codewarrior</a> Pro8.x tools. This toolset is an extention to the
+<code><a href="metrowerks-tools.html">metrowerks</a></code> toolset
+and is useful when you need to have access to the additional
+conformance features of Metrowerks' Pro8 tools. It adds the
+<code>-iso_templates on</code> option to the regular metrowerks
+command-lines for C++.
 
 <h2>Configuration Variables</h2>
 
-The vc7 toolset responds to the following variables which can be set in the
+The cwpro8 toolset responds to the following variables which can be set in the
 environment or configured on the jam command-line using
 <code>-s<i>VARIABLE_NAME</i>=</code><i>value</i>:
 
@@ -37,19 +40,16 @@ environment or configured on the jam command-line using
 <tr><th>Variable Name <th>Semantics <th>Default <th>Notes
 
 <tr>
-    <td><code>VC7_ROOT</code>
-    <td>Path to installation of VC7.
-    <td><code>C:\Program&nbsp;Files\Microsoft&nbsp;Visual&nbsp;Studio&nbsp;.NET\VC7</code>
-    <td>If <code>MSVCDir</code> is set in the environment, the toolset
-    will assume <code>VCVARS32.BAT</code>has already been called, and
-    will ignore this variable.
-
+    <td><code>CWPRO8_ROOT</code>
+    <td>Path to installation of Metrowerks Codewarrior.
+    <td><i>empty</i>
+    <td>
 </table>
 
 <hr>
 <p>Revised 
   <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-  15 May, 2002 
+  4 September, 2002 
   <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
 </p>
 <p><i>&copy; Copyright <a href="../../people/dave_abrahams.htm">Dave Abrahams</a> 
