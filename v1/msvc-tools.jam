@@ -9,7 +9,8 @@
 # compute MSVC tool path
 # You can either put the msvc bin directory in your PATH, or you can set
 # MSVCDir to point at the msvc installation directory
-MSVC_TOOL_PATH ?= $(MSVCDir)$(SLASH)bin$(SLASH) ;
+MSVC_TOOL_PATH ?= "$(MSVCDir)"$(SLASH)bin$(SLASH) ;
+MSVC_TOOL_PATH ?= "$(VISUALC)"$(SLASH)bin$(SLASH) ;
 MSVC_TOOL_PATH ?= "" ; # Don't clobber adjoining text if MSVCDir isn't set
 
 flags msvc CFLAGS <debug-symbols>on : /Zi ;
