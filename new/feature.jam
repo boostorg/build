@@ -248,8 +248,8 @@ local rule expand-subfeatures-aux (
     else
     {
         validate-feature $(feature) ;
-        validate-value-string $(feature) $(value) ;
     }
+    validate-value-string $(feature) $(value) ;
 
     local components = [ regex.split $(value) "-" ] ;
     

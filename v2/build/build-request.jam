@@ -102,7 +102,6 @@ local rule x-product ( property-sets * : feature-space )
 #
 rule expand ( property-sets * : feature-space ? )
 {
-    property.validate-property-sets $(property-sets) ;
     feature-space ?= feature ;
     local expanded = [ expand-no-defaults $(property-sets) : $(feature-space) ] ;
     
