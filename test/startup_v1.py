@@ -73,7 +73,7 @@ However, it failed to call the "boost-build" rule'''
 # test bootstrapping based on BOOST_BUILD_PATH
 os.chdir('../bootstrap-env')
 t.run_build_system(
-    extra_args = '-sBOOST_ROOT=../boost-root -sBOOST_BUILD_PATH=../boost-root/tools/build'
+    extra_args = '-sBOOST_ROOT=../boost-root -sBOOST_BUILD_PATH=../boost-root/build'
     , stdout = 'build system bootstrapped'
     )
 
