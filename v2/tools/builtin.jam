@@ -169,6 +169,11 @@ rule searched-lib-target ( name
     {
         NOTFILE $(target) ;
     }    
+    rule path ( )
+    {
+        NOTFILE $(target) ;
+    }
+
 }    
 
 
@@ -233,13 +238,6 @@ import stage ;
 # command-line.
 #
 
-declare-type NT : RSP : rsp ;
-if [ os.name ] = NT  # must be conditional; we'll error on other OSes
-{
-    generators.register-composing builtin.response-file : OBJ STATIC_LIB IMPORT_LIB  : RSP ;
-}
-
-
 # response-file generation is broken up into two phases, the first of
 # which overwrites any existing file and the second of which appends
 # to the file, piecemeal, so that no command-line is too long.
@@ -269,6 +267,12 @@ rule response-file ( target : sources * : properties * )
     {
         response-file-2 $(target) : $(sources[2-]) ;
     }
+    print.output $(target) ;
+    print.text [ on $(target)
+                 return "$(LIBRARY_PATH_OPTION)$(LIBRARY_PATH)"
+                        "$(FINDLIBS_ST:S=.lib)"
+                        "$(FINDLIBS_SA:S=.lib)"
+               ] ;
 }
 
 actions quietly response-file-1
@@ -396,7 +400,7 @@ rule searched-lib-generator ( )
 {
     generator.__init__ searched-lib-generator : : SEARCHED_LIB ;    
 
-    rule run ( project name ? : property-set : sources * )      
+    rule run ( project name ? : property-set : sources * : multiple ? )
     {
         local properties = [ $(property-set).raw ] ;        
         local shared ;
@@ -404,20 +408,20 @@ rule searched-lib-generator ( )
         {
             shared = true ;
         }        
-        # It might seem that, as we ignore all properties, searched-lib-targets
-        # with different properties can be confused. This is not true.
-        # searched-lib-target is pretty special. Although it's actualized into
-        # some real Jam target as all virtual targets, that Jam target is unused.
-        # Instead, the link-action class specially processes such targets, adding
-        # appropriate <find-*-library> properties. So, if one searched lib is build
-        # with two different properties, we'll get two different virtual targets.
-        # The library names will be correctly set, although both virtual targets will
-        # correspond to one Jam target.
-        
-        return [ new searched-lib-target $(name) : $(project) : $(shared)
-                    : [ feature.get-values <name> : $(properties) ] 
-                    : [ feature.get-values <search> : $(properties) ] 
-               ] ;
+        # sometimes this rule is called with no 'name' parameter. In those cases
+        # $(sources) is not empty, which should not be the case for SEARCHED_LIBs.
+        # looks like something is going wrong elsewhere.
+        if $(name)
+        {
+            local t = [ new searched-lib-target $(name) : $(project) : $(shared)
+                            : [ feature.get-values <name> : $(properties) ]
+                            : [ feature.get-values <search> : $(properties) ]
+                      ] ;
+            # attach an action and properties to the target
+            a = [ new null-action $(t) : $(property-set) ] ;
+            $(t).action $(a) ;
+            return $(t) ;
+        }
     }
 }
 
@@ -635,4 +639,14 @@ rule register-linker ( id composing ? : source-types + : target-types + :
 }
 
 IMPORT $(__name__) : register-linker : : generators.register-linker ;
+
+declare-type NT : RSP : rsp ;
+if [ os.name ] = NT  # must be conditional; we'll error on other OSes
+{
+    flags builtin.response-file LIBRARY_PATH_OPTION : /LIBPATH: ;
+    flags builtin.response-file FINDLIBS_ST <find-static-library> ;
+    flags builtin.response-file FINDLIBS_SA <find-shared-library> ;
+    flags builtin.response-file LIBRARY_PATH <library-path> ;
+    builtin.register-linker builtin.response-file : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : RSP ;
+}
 
