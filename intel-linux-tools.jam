@@ -6,6 +6,11 @@
 
 # Adapted from gcc-tools.jam by Joerg Walter
 
+# The following #// line will be used by the regression test table generation
+# program as the column heading for HTML tables. Must not include version
+# number.
+#//<a href="http://www.intel.com/software/products/compilers/">Intel<br>C++</a>
+
 # Intel root directory set?
 if ! $(IA32ROOT)
 {
