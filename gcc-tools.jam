@@ -52,6 +52,7 @@ else if $(UNIX)
         {
         flags gcc CFLAGS <threading>multi : -pthread ;
         flags gcc LINKFLAGS <threading>multi : -pthread ;
+        flags gcc FINDLIBS <threading>multi : rt ;
         }
     }
 }
@@ -185,6 +186,7 @@ actions updated together piecemeal gcc-Archive-action
 {
     ar ru$(ARFLAGS) "$(<:T)" "$(>:T)"
 }
+
 
 
 
