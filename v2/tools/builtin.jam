@@ -169,11 +169,10 @@ rule searched-lib-target ( name
     {
         NOTFILE $(target) ;
     }    
+    
     rule path ( )
     {
-        NOTFILE $(target) ;
     }
-
 }    
 
 
