@@ -5,6 +5,7 @@ project tools/build/v2/doc
 boostbook userman : src/userman.xml 
    : <xsl:param>toc.section.depth=1
      <xsl:param>doc.standalone=true 
+     <xsl:param>nav.layout=none
    ;
    
 if ! $(BOOST_ROOT)
