@@ -68,6 +68,12 @@ rule refine ( properties * : requirements * : feature-space ? )
         }
     }
 
+    # Unset our ugly map.        
+    for local r in $(requirements)
+    {
+         __require__$(r:G) = ;
+    }
+
     if $(error)
     {
         return $(error) ;
