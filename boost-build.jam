@@ -3,6 +3,18 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-BOOST_BUILD_INSTALLATION ?= $(BOOST_ROOT)/tools/build ;
 SEARCH on <jam-module>allyourbase.jam = $(BOOST_BUILD_PATH) ;
 include <jam-module>allyourbase.jam ;
+SEARCH on <jam-module>boost-base.jam = $(BOOST_BUILD_PATH) ;
+include <jam-module>boost-base.jam ;
+
+#
+# Now include the user's Jamfile.
+#
+{
+    if $(JAMFILE) && ! $(gINCLUDED($(JAMFILE)))
+    {
+        gINCLUDED($(JAMFILE)) = TRUE ;
+        include $(JAMFILE) ;
+    }
+}

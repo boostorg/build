@@ -179,6 +179,7 @@ if $(NT)
     SUFEXE          ?= .exe ;
     SUFDLL          ?= .dll .lib ;
     gLINKABLE_PRODUCT_INDEX(DLL) = 2 ; # (the .lib is the ones to link)
+    PREDLL          ?= "" ;
     NOARSCAN        ?= true ;
     SHELL_EXPORT    ?= ;
     SHELL_SET       ?= "set " ;
@@ -442,6 +443,8 @@ SUFEXE          ?= "" ;
 SUFDLL          ?= .so ;
 SUFLIB          ?= .a ;
 SUFOBJ          ?= .o ;
+PREDLL          ?= lib ;
+PRELIB          ?= lib ;
 UNDEFFLAG       ?= "-u _" ;
 YACC            ?= ;
 YACCFILES       ?= ;
@@ -1214,12 +1217,6 @@ rule SubDir
         # Include it.
 
         include $(_r) ;
-
-        # determine where toolset specifications and boost-base can be found. 
-        BOOST_BUILD_INSTALLATION ?= $($(gTOP)) ;
-
-        # and include boost-base
-        include [ join-path $(BOOST_BUILD_INSTALLATION) boost-base.jam ] ;
     }
 
     # Get path to current directory from root using SubDir.
@@ -1543,7 +1540,14 @@ rule SubInclude
     # protect variables from being permanently set by SubDir invocations
     # in included files.
     local [ protect-subdir ] ;
-    include $(JAMFILE:D=$(_s):R=$($(<[1]))) ;
+    local jamfile-path
+        = [ tokens-to-simple-path
+            [ split-path $(JAMFILE:D=$(_s):R=$($(<[1]))) ] ] ;
+    if ! $(gINCLUDED($(jamfile-path)))
+    {
+        gINCLUDED($(jamfile-path)) = TRUE ;
+        include $(jamfile-path) ;
+    }
 }
 
 rule Undefines
@@ -1982,11 +1986,4 @@ actions together YaccMv
 actions together Yacc-fix-line-directives
 {
     $(YACC_FIX_LINES) $(<) > $(<)
-}
-#
-# Now include the user's Jamfile.
-#
-
-{
-     if $(JAMFILE) { include $(JAMFILE) ; }
 }
