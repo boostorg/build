@@ -376,7 +376,8 @@ rule project-attributes ( location )
         else if $(attribute) = "requirements" 
         {
             local current = $(self.requirements) ;
-            local result = [ property.refine $(current) : $(specification) ] ;
+            local result = [ property.refine $(current) : 
+                             [ property.make $(specification) ] ] ;
 
             if $(result[1]) = "@error"
             {

@@ -176,6 +176,29 @@ rule validate ( property : feature-space ?  )
     }
 }
 
+# Makes a property set from 'specification', converting implicit values into 
+# full properties
+rule make ( specification * )
+{
+    local result ;
+    for local e in $(specification) 
+    {
+        if $(e:G)
+        {
+            result += $(e) ;
+        }
+        else if [ feature.is-implicit-value $(e) ]
+        {
+            result += [ feature.implied-feature $(e) ] ;      
+        }
+        else
+        {
+            error "'$(e)' is not a valid for property specification" ;
+        }
+    }
+    return $(result) ;
+}
+
 local rule __test__ ( )
 {
     import class : new ;
