@@ -113,7 +113,6 @@ flags msvc-stlport STLPORT_VERSION <stlport-version> ;
 
     flags msvc-stlport DEFINES <stlport-iostream>off : $(stl)_NO_SGI_IOSTREAMS=1 ;
     flags msvc-stlport DEFINES <stlport-cstd-namespace>std : $(stl)_DO_IMPORT_CSTD_FUNCTIONS=1 ;
-    flags msvc-stlport UNDEFS <stlport-iostream>on : $(stl)_NO_SGI_IOSTREAMS ;
     flags msvc-stlport DEFINES <runtime-build>debug : $(stl)_DEBUG=1 $(stl)_DEBUG_UNINITIALIZED=1 ;
 }
 
