@@ -125,6 +125,7 @@ tests = [ "project_test1",
           "wrapper",
           "duplicate",
           "library_property",
+          "load_order",
           #"ordered_properties",
           ]
 
