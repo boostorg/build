@@ -2552,6 +2552,9 @@ rule common-variant-tag ( toolset variant : properties * )
             toolset-tag += vc7 ;
             toolset-tag += [ MATCH "vc7[.]([0123456789]*)" : $(toolset) ] ;
             if <runtime-link>dynamic in $(properties) { thread-tag = mt ; }
+            # <stlport-iostream> is always on, no matter what we may think
+            # this is an stlport build requirement.
+            runtime-tag = [ difference $(runtime-tag) : n ] ;
         }
         case * :
         toolset-tag += [ MATCH "^([^-]*)" : $(toolset) ] ;
