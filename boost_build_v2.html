@@ -200,13 +200,13 @@
         (where N is the version you've downloaded).
       </li>
 
-      <li>Configure toolsets to use. Open <tt>new/user-config.jam</tt> file
+      <li>Configure toolsets to use. Open the <tt>user-config.jam</tt> file
       and follow instructions there to specify what compiles/libraries you
       have and where they are located.</li>
 
-      <li>You should now be able to go to <tt>examples-v2/hello</tt>, and run
+      <li>You should now be able to go to <tt>example/hello</tt>, and run
       <tt>bjam</tt> there. A simple application will be built. You can also
-      play with other projects in <tt>examples-v2</tt>. 
+      play with other projects in <tt>example</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
                                                                                                            it somewhere. 
                                                                                                             
@@ -247,7 +247,7 @@ boost-build /path/to/boost.build ;
 
     <h3 id="hello">Hello, world</h3>
     The simplest project that Boost.Build can construct is stored in
-    examples-v2/hello directory. The targets are declared in a file called
+    example/hello directory. The targets are declared in a file called
     <tt>Jamfile</tt>, which contains the following: 
 <pre>
    exe hello : hello.cpp ;
