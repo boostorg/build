@@ -25,7 +25,7 @@
    Note: it turns out that anonymous CVS access uses some backup server, which
    is not up-to-date.
 
-3. Go to "boost-build" directory.
+3. Go to "boost-build/v2" directory.
 
 4. Run "./roll.sh". This will create "boost-build.zip" and
    "boost-build.tar.bz2" in parent directory, and also upload
