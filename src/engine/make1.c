@@ -535,8 +535,17 @@ make1cmds( ACTIONS *a0 )
 		{
 		    /* Too long and not splittable. */
 
-		    printf( "%s actions too long (max %d)!\n", 
+		    printf( "%s actions too long (max %d):\n", 
 			rule->name, MAXLINE );
+
+                    /* Tell the user what didn't fit */
+                    cmd = cmd_new(
+                        rule, list_copy( L0, nt ), 
+			list_sublist( ns, start, chunk ),
+			list_new( L0, newstr( "%" ) ) );
+
+                    printf( cmd->buf );
+                
 		    exit( EXITBAD );
 		}
 	    }
