@@ -10,6 +10,7 @@
 import feature : feature ;
 import toolset : flags ;
 import type ;
+import common ;
 
 toolset.register darwin ;
 import gcc ;
@@ -22,9 +23,12 @@ toolset.inherit-rules darwin : gcc ;
 flags darwin.link ST_OPTIONS <debug-symbols>off : -s ;
 
 # No additional initialization should be necessary
-rule init ( )
+rule init ( version ? : command ? )
 {
-
+    local condition = [ common.check-init-parameters darwin : version $(version) ] ;    
+    local command = [ common.get-invocation-command darwin : g++ : $(command) ] ;
+    
+    flags darwin CONFIG_COMMAND $(condition) : $(command) ;    
 }
 
 # Darwin has a different shared library suffix
@@ -46,7 +50,7 @@ flags darwin.link FRAMEWORK <framework> ;
 
 actions link bind LIBRARIES
 {
-    $(NAME:E=g++) $(ST_OPTIONS) $(OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) -framework$(_)$(FRAMEWORK)    
+    $(CONFIG_COMMAND) $(ST_OPTIONS) $(OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) -framework$(_)$(FRAMEWORK)    
 }
 
 rule link.dll
@@ -56,7 +60,7 @@ rule link.dll
 
 actions link.dll bind LIBRARIES
 {
-    $(NAME:E=g++) -dynamiclib $(OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) -framework$(_)$(FRAMEWORK) 
+    $(CONFIG_COMMAND) -dynamiclib $(OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) -framework$(_)$(FRAMEWORK) 
 }
 
 actions piecemeal archive
