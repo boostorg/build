@@ -25,7 +25,7 @@ local rule property-set ( raw-properties * )
     
     for local p in $(raw-properties)
     {
-        local att = [ feature.attributes $(p:G) ] ;
+        local att = [ feature.attributes $(p:G) ] ;        
         if incidental in $(att)
         {
             self.incidental += $(p) ;
@@ -99,15 +99,16 @@ local rule property-set ( raw-properties * )
         }
         return $(self.refined.$(ps)) ;
     }
-    
-    rule evaluate-conditionals ( )
+        
+    rule evaluate-conditionals ( context ? )
     {
-        if ! $(self.evaluated)
+        context ?= $(__name__) ;
+        if ! $(self.evaluated.$(context))
         {
-            self.evaluated = [ property-set.create 
-                [ property.evaluate-conditionals $(self.raw) ] ] ;
+            self.evaluated.$(context) = [ property-set.create 
+                [ property.evaluate-conditionals-in-context $(self.raw) : [ $(context).raw ] ] ] ;
         }
-        return $(self.evaluated) ;        
+        return $(self.evaluated.$(context)) ;        
     }
     
     rule propagated ( )
