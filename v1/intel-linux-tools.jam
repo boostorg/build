@@ -12,12 +12,15 @@ if ! $(IA32ROOT)
     # Compiler version
     INTEL_LINUX_VERSION ?= "50" ;
 }
+
+flags intel-linux INTEL_LINUX_VERSION : $(INTEL_LINUX_VERSION) ;
+
 # Root directory
-INTEL_LINUX_ROOT = "/opt/intel/compiler"$(INTEL_LINUX_VERSION) ;
+flags intel-linux INTEL_LINUX_ROOT : "/opt/intel/compiler"$(INTEL_LINUX_VERSION) ;
 # Setup script
-INTEL_LINUX_SETUP = ". "$(INTEL_LINUX_ROOT)"/ia32/bin/iccvars.sh" ;
+flags intel-linux INTEL_LINUX_SETUP : ". "$(INTEL_LINUX_ROOT)"/ia32/bin/iccvars.sh" ;
 # Additional DLL directory
-INTEL_LINUX_RUN_LD_LIBRARY_PATH = $(INTEL_LINUX_ROOT)"/ia32/lib" ;
+flags intel-linux INTEL_LINUX_RUN_LD_LIBRARY_PATH : $(INTEL_LINUX_ROOT)"/ia32/lib" ;
 
 #### compiler and linker switches ####
 
