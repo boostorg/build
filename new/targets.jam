@@ -106,14 +106,7 @@ rule abstract-target ( name      # name of the target in Jamfile
         local location = [ project.attribute $(self.project) location ] ;
         return $(location)/$(self.name) ;
     }
-
-    # Adds one more direct build request for this target. If later generate
-    # is called with the same non-free non-incidental properties as in one
-    # of direct build requests, then that build request is used instead.
-    rule direct-build-request ( property-set )
-    {
-    }
-    
+        
     # Takes properties in split form ("<feature1>foo <feature2>bar").
     # Generates virtual targets for this abstract target, using the specified properties,
     # unless a different value of some feature is required by the target. The properties
@@ -127,6 +120,17 @@ rule abstract-target ( name      # name of the target in Jamfile
     {
         errors.error "method should be defined in derived classes" ;
     }
+    
+    # Set an object which will adjust build properties.
+    # It must have 'adjust' method and will be called
+    # immediately on enterting the 'generate' rule.
+    # Currently used only for implementation of direct
+    # build request
+    rule set-property-adjuster ( property-adjuster )
+    {
+        errors.error "method should be defined in derived classes" ;        
+    }
+    
 }
 class abstract-target ;
 
@@ -138,19 +142,19 @@ rule project-target ( name : project : requirements * : default-build * )
     self.requirements = $(requirements) ;
     self.default-build = $(default-build) ;
 
-    rule direct-build-request ( property-set )
+    rule set-property-adjuster ( property-adjuster )
     {
         for local name in $(self.main-targets)
         {
             local t = [ main-target $(name) ] ;
-            result += [ $(t).direct-build-request $(property-set) ] ;
+            result += [ $(t).set-property-adjuster $(property-adjuster) ] ;
         }
         local self-location = [ project.attribute $(self.project) location ] ;
         for local pn in [ project.attribute $(self.project) projects-to-build ]
         {
             local p = [ project.module-name [ path.join $(self-location) $(pn) ] ] ;
             local t = [ project.target [ project.attribute $(p) location ] ] ;
-            result += [ $(t).direct-build-request $(property-set) ] ;
+            result += [ $(t).set-property-adjuster $(property-adjuster) ] ;
         }            
     }
     
@@ -259,18 +263,9 @@ rule main-target ( name : project )
         self.alternatives += $(target) ;
     }
 
-    rule direct-build-request ( property-set )
+    rule set-property-adjuster ( property-adjuster )
     {
-        local base = [ $(property-set).base ] ;
-        local ep = $(self.direct-request.$(base:J=-)) ;
-        if $(ep) && $(ep) != $(properties) 
-        {            
-            error "Conflicting direct build requests" $(ep) "and" $(properties) ;
-        }
-        else
-        {
-            self.direct-request.$(base:J=-) = $(property-set) ;
-        }                
+        self.direct-request-property-adjuster = $(property-adjuster) ;
     }
 
     local rule select-alternatives ( property-set )
@@ -349,13 +344,12 @@ rule main-target ( name : project )
     # Returns the result of calling 'generate' on that alternative.
     rule generate ( property-set )
     {
-        local base = [ $(property-set).base ] ;
-        local ep = $(self.direct-request.$(base:J=-)) ;
-        if $(ep) 
+        if $(self.property-adjuster)
         {
-            property-set = $(ep) ;
+            property-set = [ $(self.property-adjuster).adjust 
+              $(property-set) ] ;
         }
-                
+                        
         local all-property-sets = [ apply-default-build $(property-set) ] ;
         local result ;
         for local p in $(all-property-sets)

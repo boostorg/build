@@ -9,6 +9,7 @@ import feature ;
 import property-set ;
 import build-request ;
 import errors : error ;
+import class : new ;
 
 import builtin ;
 import make ;
@@ -73,6 +74,12 @@ properties = [ $(build-request).get-at 2 ] ;
 if $(properties) 
 {    
     expanded = [ build-request.expand-no-defaults $(properties) ] ;
+    local xexpanded ;
+    for local e in $(expanded)
+    {
+        xexpanded += [ property-set.create [ feature.split $(e) ] ] ;
+    }
+    expanded = $(xexpanded) ;    
 }
 
 
@@ -114,22 +121,23 @@ if ! $(targets)
 virtual-targets = ;
 
 if $(expanded) 
-{
+{        
+    local dr-adjuster = [ new directly-requested-properties-adjuster ] ;    
     for local p in $(expanded)
     {
-        for local t in $(targets) 
-        {   
-            $(t).direct-build-request 
-              [ property-set.create [ feature.split $(p) ] ] ;
-        }        
+        $(dr-adjuster).add-requested-property-set $(p) ;
+    }
+    
+    for local t in $(targets) 
+    {   
+        $(t).set-property-adjuster $(dr-adjuster) ;
     }
     
     for local p in $(expanded)
     {
         for local t in $(targets)
         {            
-            virtual-targets += [ $(t).generate 
-              [ property-set.create [ feature.split $(p) ] ] ] ;
+            virtual-targets += [ $(t).generate $(p) ] ;
         }        
     }
 }
