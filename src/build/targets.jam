@@ -91,7 +91,7 @@ rule project-target ( name : project : requirements * : default-build * )
             local t = [ main-target $(name) ] ;
             result += [ $(t).generate $(properties) ] ;
         }
-        for local pn in [ project.attribute $(self.project) subprojects ]
+        for local pn in [ project.attribute $(self.project) projects-to-build ]
         {
             local p = [ project.module-name $(pn) ] ;
             local t = [ project.target [ project.attribute $(p) location ] ] ;
