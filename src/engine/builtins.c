@@ -243,8 +243,10 @@ builtin_depends(
 
 	    if( parse->num )
 	    {
-		if( !t->includes )
+            if( !t->includes ) {
 		    t->includes = copytarget( t );
+            t->includes->original_target = t;
+            }
 		t = t->includes;
 	    }
 

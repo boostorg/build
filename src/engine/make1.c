@@ -265,6 +265,7 @@ make1a( state *pState)
 {
     TARGET* t = pState->t;
 	TARGETS	*c;
+    TARGETS   *inc;
 
 	/* If the parent is the first to try to build this target */
 	/* or this target is in the make1c() quagmire, arrange for the */
@@ -293,6 +294,15 @@ make1a( state *pState)
 	/* make1b() ourselves, below. */
 
 	pState->t->asynccnt = 1;
+
+    /* Add header node that was created during building process. */
+
+    inc = 0;
+    for (c = t->depends; c; c = c->next) {        
+        if (c->target->rescanned && c->target->includes)
+            inc = targetentry(inc, c->target->includes);           
+    }
+    t->depends = targetchain(t->depends, inc);
 
 	/* against circular dependency. */
 
@@ -328,7 +338,8 @@ make1b( state *pState )
 {
     TARGET      *t = pState->t;
     TARGETS     *c;
-    char        *failed = "dependents";
+    TARGET      *failed = 0;
+    char* failed_name = "dependencies";
 
     /* If any dependents are still outstanding, wait until they */
     /* call make1b() to signal their completion. */
@@ -361,12 +372,21 @@ make1b( state *pState )
 
     /* Collect status from dependents */
 
+
     for( c = t->depends; c; c = c->next )
         if( c->target->status > t->status && !( c->target->flags & T_FLAG_NOCARE ))
         {
-            failed = c->target->name;
+            failed = c->target;
             pState->t->status = c->target->status;
         }
+    /* If a internal header node failed to build, we'd want to output the 
+       target that it failed on. */
+    if (failed && (failed->flags & T_FLAG_INTERNAL)) {
+        failed_name = failed->failed;
+    } else if (failed) {
+        failed_name = failed->name;
+    }
+    t->failed = failed_name;
 
     /* If actions on deps have failed, bail. */
     /* Otherwise, execute all actions to make target */
@@ -379,8 +399,9 @@ make1b( state *pState )
             if( !unlink( pState->t->boundname ) )
                 printf( "...removing outdated %s\n", pState->t->boundname );
         }
-        else
-        printf( "...skipped %s for lack of %s...\n", pState->t->name, failed );
+        else {
+            printf( "...skipped %s for lack of %s...\n", pState->t->name, failed_name );
+        }
     }
 
     if( pState->t->status == EXEC_CMD_OK )
@@ -527,12 +548,71 @@ make1c( state *pState )
 	    /* Tell parents dependent has been built */
 		{
 			stack temp_stack = { NULL };
-			TARGET *t = pState->t;
+			TARGET *t = pState->t;            
+            TARGET* additional_includes = NULL;
 
 			t->progress = T_MAKE_DONE;
 
-			for( c = t->parents; c; c = c->next )
+            /* Target was updated. Rescan dependencies. */
+            if (t->fate >= T_FATE_MISSING &&
+                t->status == EXEC_CMD_OK &&
+                !t->rescanned) {
+
+                t->rescanned = 1;
+
+                int has_includes_already = t->includes ? 1 : 0;
+                SETTINGS *s;               
+
+                if (t->flags & T_FLAG_INTERNAL) {
+                    t = t->original_target;                    
+                }
+
+                /* Clean current includes */
+                if (t->includes) {
+                    freetargets(t->includes->depends);
+                    t->includes = 0;
+                }
+
+                s = copysettings( t->settings );
+                pushsettings( s );
+                headers(t);
+                popsettings( s );
+                freesettings( s );
+
+                if (t->includes) {
+                    t->includes->rescanned = 1;
+                    /* Tricky. The parents were already processed, but they
+                       did not seen the internal node, because it was just 
+                       created. We need to make the calls to make1a that would
+                       have been done by parents here, and also make sure all
+                       unprocessed parents will pick up the includes. We must
+                       make sure processing of the additional make1a invocations
+                       is done before make1b which means this target is built,
+                       otherwise the parent will be considered built before this
+                       make1a processing is even started.
+                    */
+                    make0(t->includes, t->parents->target, 0, 0, 0);
+                    for( c = t->parents; c; c = c->next) {
+                        c->target->depends = targetentry( c->target->depends, 
+                                                          t->includes );
+                    }
+                    /* Will be processed below. */
+                    additional_includes = t->includes;
+                }                
+            }
+
+            if (additional_includes)
+                for ( c = t->parents; c; c = c->next ) {                            
+                    push_state(&temp_stack, additional_includes, c->target, T_STATE_MAKE1A);
+                    
+                }
+
+
+			for( c = t->parents; c; c = c->next ) {
 				push_state(&temp_stack, c->target, NULL, T_STATE_MAKE1B);
+            }
+             
+
 
 #ifdef OPT_SEMAPHORE
 	    /* If there is a semaphore, its now free */
