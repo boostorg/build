@@ -4,7 +4,7 @@ int bar();
 
 int main()
 {
-        foo();
-	bar();
-	return 0;
+    foo();
+    bar();
+    return 0;
 }

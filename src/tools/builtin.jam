@@ -9,7 +9,9 @@ import class : class new ;
 
 import feature : feature compose ;
 import type ;
+import scanner ;
 import generators ;
+import regex ;
 import virtual-target ;
 
 feature toolset : gcc : implicit propagated ;
@@ -31,6 +33,29 @@ type.register STATIC-LIB : a : LIB : main ;
 type.register SHARED-LIB : so : LIB : main ;
 
 type.register CPP : cpp cxx ;
+
+rule c-scanner ( includes * )
+{
+    scanner.__init__ ;
+    self.includes = $(includes) ;
+
+    rule pattern ( )
+    {
+        return "#include[ ]*(<(.*)>|\"(.*)\")" ;
+    }
+
+    rule process ( target : matches * )
+    {
+        ECHO "c-scanner: processing target" $(target) with $(matches) ;
+    }        
+}
+
+class c-scanner : scanner ;
+scanner.register c-scanner : include ;
+
+type.set-scanner CPP : c-scanner ;
+
+
 type.register H : h ;
 type.register C : c ;
 type.register OBJ : o ;
