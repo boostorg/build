@@ -104,7 +104,17 @@ local rule property-set ( raw-properties * )
         }
         return $(self.refined.$(ps)) ;
     }
-        
+    
+    rule expand-composites ( )
+    {
+        if ! $(self.composites)
+        {
+            self.composites = [ property-set.create
+                [ feature.expand-composites $(self.raw) ] ] ;
+        }
+        return $(self.composites) ;
+    }
+                
     rule evaluate-conditionals ( context ? )
     {
         context ?= $(__name__) ;
