@@ -16,6 +16,7 @@ toolset.register darwin ;
 import gcc ;
 toolset.inherit-generators darwin : gcc ;
 toolset.inherit-rules darwin : gcc ;
+toolset.inherit-flags darwin : gcc ;
 
 # No additional initialization should be necessary
 rule init ( version ? : command * : options * )
@@ -24,14 +25,8 @@ rule init ( version ? : command * : options * )
     local command = [ common.get-invocation-command darwin : g++ : $(command) ] ;
     
     common.handle-options darwin : $(condition) : $(command) : $(options) ;
-
-    # we can't pass -s to ld unless we also pass -static
-    # so we removed -s completly from OPTIONS and add it
-    # to ST_OPTIONS
-    gcc.init-link-flags gnu $(condition) ;
-    toolset.inherit-flags darwin : gcc : $(condition)/<debug-symbols>off ;
-    flags darwin.link ST_OPTIONS <debug-symbols>off : -s ;
-
+    
+    gcc.init-link-flags darwin darwin $(condition) ;
 }
 
 # Darwin has a different shared library suffix

@@ -53,7 +53,7 @@ rule init ( version ? : command * : options * )
     if ! $(linker) {
         linker = gnu ;
     }
-    init-link-flags $(linker) $(condition) ;
+    init-link-flags gcc $(linker) $(condition) ;
 }
 
 if [ os.name ] = NT
@@ -198,7 +198,7 @@ flags gcc.link OPTIONS <link-runtime>static : -static ;
 
 # Now, the vendor specific flags
 # The parameter linker can be either gnu or sun
-rule init-link-flags ( linker condition )
+rule init-link-flags ( toolset linker condition )
 {
     switch $(linker)
     {
@@ -208,17 +208,30 @@ rule init-link-flags ( linker condition )
         # We use --strip-all flag as opposed to -s since icc
         # (intel's compiler) is generally option-compatible with
         # and inherits from gcc toolset, but does not support -s
-        flags gcc.link OPTIONS $(condition)/<debug-symbols>off : -Wl,--strip-all ;
-        flags gcc.link RPATH $(condition) : <dll-path> ;
-        flags gcc.link RPATH_LINK $(condition) : <xdll-path> ;
+        flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off : -Wl,--strip-all 
+          : unchecked ;
+        flags $(toolset).link RPATH $(condition) : <dll-path> : unchecked ;
+        flags $(toolset).link RPATH_LINK $(condition) : <xdll-path> : unchecked ;
         }
+    case darwin :
+        {
+        # we can't pass -s to ld unless we also pass -static
+        # so we removed -s completly from OPTIONS and add it
+        # to ST_OPTIONS            
+        flags $(toolset).link ST_OPTIONS $(condition)/<debug-symbols>off : -s 
+           : unchecked ;  
+        flags $(toolset).link RPATH $(condition) : <dll-path> : unchecked ;
+        flags $(toolset).link RPATH_LINK $(condition) : <xdll-path> : unchecked ;
+        }
+
     case sun :
         {
-        flags gcc.link OPTIONS $(condition)/<debug-symbols>off : -Wl,-s ;
-        flags gcc.link RPATH $(condition) : <dll-path> ;
+        flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off : -Wl,-s 
+            : unchecked ;
+        flags $(toolset).link RPATH $(condition) : <dll-path> : unchecked ;
         # Solaris linker does not have a separate -rpath-link, but
         # allows to use -L for the same purpose.
-        flags gcc.link LINKPATH $(condition) : <xdll-path> ;
+        flags $(toolset).link LINKPATH $(condition) : <xdll-path> : unchecked ;
 
         # This permits shared libraries with non-PIC code on Solaris
         # VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll,
@@ -226,12 +239,13 @@ rule init-link-flags ( linker condition )
         # is a separate question.
         # AH, 2004/10/16: it is still necessary because some tests link
         # against static libraries that were compiled without PIC.
-        flags gcc.link OPTIONS $(condition)/<link>shared : -mimpure-text ;
+        flags $(toolset).link OPTIONS $(condition)/<link>shared : -mimpure-text 
+          : unchecked ;
         }
     case * :
         {
             errors.user-error
-            "gcc initialization: invalid linker '$(linker)'" :
+            "$(toolset) initialization: invalid linker '$(linker)'" :
             "The value '$(linker)' specified for <linker> is not recognized." :
             "Possible values are 'sun', 'gnu'" ;
         }
