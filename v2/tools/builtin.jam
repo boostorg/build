@@ -88,7 +88,7 @@ feature search : : free path ; #order-sensitive ;
 feature location : : free path ;
 
 feature dll-path : : free path ;
-feature hardcode-dll-paths : false true : incidental propagated ;
+feature hardcode-dll-paths : true false : incidental ;
 
 
 # This is internal feature which holds the paths of all dependency
