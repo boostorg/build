@@ -1296,23 +1296,43 @@ rule segregate-free-properties
 #
 # return non-empty iff a library built with <feature>value1 can be linked into a
 # target with <feature>value2, empty otherwise
-rule is-link-compatible
+rule is-link-compatible ( feature : value1 : value2 )
 {
     return [ intersection
-        $(<) $(>:G=$(<)) $(>:G=$(<))$(SLASH)$(3:G=$(<)) : $(gLINK_COMPATIBLE) ] ;
+        $(feature) $(value1:G=$(feature))
+        $(value1:G=$(feature))$(SLASH)$(value12:G=$(feature))
+        $(value2:G=$(feature))
+        : $(gLINK_COMPATIBLE) ] ;
 }
 
 # find-compatible-subvariant main-target : toolset variant : dependent-simple-properties
 rule find-compatible-subvariant ( main-target : toolset variant : dependent-simple-properties * )
 {
-    local BUILD = ;
-    local subvariants = [ expand-target-subvariants $(main-target) : $(variant) : $(toolset) : BUILD ] ;
+	# calculate the subvariant only of what is requested
+	local BUILD = $(variant)
+		[ intersection
+			[ multiply-property-sets [ select-gristed $(BUILD) ] ] :
+			$(dependent-simple-properties) ] ;
+	local subvariant = [ expand-target-subvariants $(main-target) : $(variant) : $(toolset) : BUILD ] ;
 
-    local sv-target = ;
-    local sv-properties = ;
-    local sv-toolset = ;
-    local sv-variant = ;
-    split-target-subvariant sv-target sv-properties sv-toolset sv-variant : $(subvariants[1]) ;
+	local sv-target = ;
+	local sv-properties = ;
+	local sv-toolset = ;
+	local sv-variant = ;
+	split-target-subvariant sv-target sv-properties sv-toolset sv-variant : $(subvariant) ;
+	local sv-overrides =
+		[ difference $(dependent-simple-properties) : [ select-gristed $(sv-properties) ] ] ;
+
+	# check to make sure we can link against the subvariant
+	for local sv-override in $(sv-overrides)
+	{
+		local sv-required = [ get-values $(sv-override:G) : $(sv-properties) ] ;
+		if ! [ is-link-compatible $(sv-override:G) : $(sv-override:G=) : $(sv-required) ]
+		{
+			EXIT $(main-target): required property $(sv-override:G)$(sv-required)
+				incompatible with $(sv-override) ;
+		}
+	}
 
     return $(sv-properties) ;
 }
@@ -1806,8 +1826,8 @@ rule stage ( name : sources + : requirements * : local-build * )
         local target = $(source:D=:G=) ;
         local target-id = [ FGristFiles $(target) ] ;
 
-        local build = ;
-        local subvariants = [ expand-target-subvariants $(target-id) : $(source-local-build) : $(TOOLS) : build ] ;
+        local BUILD = ;
+        local subvariants = [ expand-target-subvariants $(target-id) : $(source-local-build) : $(TOOLS) : BUILD ] ;
 
         dependent-include $(target) ;
 
