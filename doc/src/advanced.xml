@@ -176,12 +176,6 @@ using gcc : 3.4 : : &lt;compileflags&gt;-m64 &lt;linkflags&gt;-m64 ;
         </itemizedlist>
       </para>
 
-      <para>In addition to Jamfiles, Boost.Build has another user-editable
-        file, project-root.jam, which is mostly useful to declare constants
-        global to all the projects. It is described in more detail <link
-        linkend="bbv2.advanced.project-root">below</link>.
-      </para>
-
 <!--
       <para>The most fundemental entity in Boost.Build is <emphasis>main
           target</emphasis>. This is object that user want to construct from
@@ -497,7 +491,7 @@ exe hello : hello.cpp
     <section id="bbv2.advanced.projects">
       <title>Projects</title>
 
-      <para>As mentioned before, targets are grouped into project, and each
+      <para>As mentioned before, targets are grouped into projects, and each
         Jamfile is a separate project. Projects are useful because it allows
         to group related targets together, define properties common to all
         those targets, and assign a symbolic name to the project, allowing to
@@ -618,13 +612,57 @@ project tennis
           </tgroup>
         </table>
         </para>
-      </section>
+
+      <para>Besides setting attributes and defining main targets, 
+        projects can invoke a number of <link
+        linkend="bbv2.advanced.other-rules">rules</link>,
+        in particular the <code>constant</code> and <code>path-constant</code>
+        which defines constants for all child projects. Project can also
+        contain definitions of custom rules. 
+      </para>
+
+      <para>Each project inherits attributes, constants and rules from the
+        parent project -- the project in the nearest parent
+        directory. However, the top-level Jamfile should not inherit
+        anything. To indicate that, you'd need to use a different name:
+        <code>Jamroot</code>. When loading a project, Boost.Build
+        looks for both <code>Jamroot</code> and <code>Jamfile</code>,
+        and they are handled indentically, except that if file is called
+        <code>Jamroot</code>, search for parent project is not performed.
+      </para>
+
+      <para>An important note about parent/child Jamfiles is that parents are
+        always loaded before children. Consequently, every definitions made in
+        parents are always available to children. The loading order of any
+        other projects is not defined. Even if one project refers to another
+        via <link
+        linkend="bbv2.advanced.projects.relationships.useprojectrule">use-project</link>,
+        or via target reference, no specific order should be assumed.
+      </para>
+
+      <note>
+        <para>The root project must use a different name because Boost.Build
+          must decide if parent must be loaded before reading the project. If
+          we first loaded a project and then decide if parent should be
+          loaded, the definitions made by parent, especially constants, won't
+          be available to the child.
+        </para>          
+      </note>
+
+    </section>
+
+    
 
     <section id="bbv2.advanced.other-rules">
       <title>Additional Jamfile rules</title>
 
       <para>There's a number of other helper rules which can be used in
-      Jamfile, described in the following table.</para>
+      Jamfile, described in the following table. Detailed information for any
+      of the rules can be obtained by running:
+<screen>
+bjam --help project.rule-name
+</screen>
+      </para>
 
       <table>
         <title/>
@@ -674,59 +712,28 @@ project tennis
               <entry>Takes a list of wildcards, and returns the list of files
                 which match any of the wildcards.</entry>
             </row>
+
+            <row>
+              <entry>constant</entry>
+              
+              <entry>Defines a constant which can be used in this project and
+                all child projects.</entry>
+            </row>
+
+            <row>
+              <entry>path-constant</entry>
+              
+              <entry>Defines a constant which can be used in this project and
+                all child projects. This rule should be used if value is a
+                path relative to the location of the current project.</entry>
+            </row>
+
+
           </tbody>
         </tgroup>
       </table>
     </section>
       
-    <section id="bbv2.advanced.project-root">
-      <para>Each project is also associated with <emphasis>project root</emphasis>.
-        That's a root for a tree of projects, which specifies some global
-        properties.</para>
-      
-        <title>Project root</title>
-
-        <para>
-          Project root for a projects is the nearest parent directory
-          which contains a file called
-          <filename>project-root.jam</filename>. That file defines
-          certain properties which apply to all projects under project
-          root. It can:
-
-        <itemizedlist>
-          <listitem>
-            <simpara>
-              configure toolsets, via call to <literal>toolset.using</literal>
-            </simpara>
-          </listitem>
-          
-          <listitem>
-            <simpara>
-              refer to other projects, via the <literal>use-project</literal>
-              rule
-            </simpara>
-          </listitem>
-          
-          <listitem>
-            <simpara>
-              declare constants, via the <literal>constant</literal> and
-              <literal>path-constant</literal> rules.
-            </simpara>
-          </listitem>
-        </itemizedlist>
-
-      </para>
-
-      <para>To facilitate declaration of simple projects, Jamfile and
-        project-root can be merged together. To achieve this effect, the
-        project root file should call the <literal>project</literal> rule. The
-        semantic is precisely the same as if the call was made in
-        Jamfile, except that project-root.jam will start to serve as
-        Jamfile. The Jamfile in the directory of project-root.jam will be
-        ignored, and project-root.jam will be able to declare main
-        targets as usual.</para>
-      
-    </section>
 
 <!--
       <section id="bbv2.advanced.projects.relationships">
@@ -1338,6 +1345,25 @@ unit-test helpers_test : helpers_test.cpp helpers ;
             the linker, and it's not possible to disable that behaviour.
           </para>
         </listitem></varlistentry>
+
+      <varlistentry>
+        <term><literal>cflags</literal></term>
+        <term><literal>cxxflags</literal></term>
+        <term><literal>linkflags</literal></term>
+        
+        <listitem>
+          <simpara>
+            The value of those features is passed without modification to the
+            corresponding tools. For <code>cflags</code> that's both C and C++
+            compilers, for <code>cxxflags</code> that's C++ compiler and for
+            <code>linkflags</code> that's linker. The features are handy when
+            you're trying to do something special that cannot be achieved by
+            higher-level feature in Boost.Build.
+          </simpara>
+        </listitem>
+      </varlistentry>
+
+
     </variablelist>
   </section>
 
