@@ -39,6 +39,7 @@ flags vacpp C++FLAGS : -qfuncsect ;
 # libraries. Please note that this means that a static constructor
 # contained in such an object file won't be invoked.
 flags vacpp LINKFLAGS : -qtwolink ;
+flags vacpp LINKFLAGS <target-type>$(SHARED_TYPES) : -G ;
 
 flags vacpp CFLAGS <optimization>off : -qNOOPTimize ;
 flags vacpp CFLAGS <optimization>default : -O ;

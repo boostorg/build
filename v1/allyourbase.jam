@@ -317,7 +317,7 @@ else if $(UNIX)
     {
     case AIX :
         IMPLIB_FLAGS    ?= -bI: ;
-        SUFDLL          ?= .so .imp ;
+        SUFDLL          ?= .so ;
         gLINK_VARIABLE(.so) = NEEDLIBS ;  # shared libs should be added to the list of libs needed
         gLINK_VARIABLE(.imp) = NEEDIMPS ; # import libs are handled separately.
         gSHELL_LIBPATH = LIBPATH ;

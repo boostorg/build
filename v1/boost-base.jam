@@ -218,24 +218,9 @@ rule Link-DLL
     if $(UNIX) 
     {
         LINK_LIBPATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
-
-        if $(OS) = AIX
-        {
-            Aix-Implib-Action $(<) : $(>) ;
-        }
     }
     
     return [ .do-link $(<) : $(>) : DLL ] ;
-}
-
-rule Aix-Implib-Action
-{
-    SPACE on $(<) = " " ;
-}
-
-actions Aix-Implib-Action bind import-generator-script
-{
-    "$(BOOST_ROOT)/tools/build/v1/gen_aix_import_file.py" $(<[1]:BD=) $(>:D=) "-directory=$(<[1]:D)" -verbose=1
 }
 
 # store the shell's PATH again, just in case someone uses PATH.
