@@ -22,12 +22,12 @@
         div.alert { color: red }
         table { align: center; border: thin; }
         
-                                                                                </style>
+                                                                                    </style>
   </head>
   <!-- Things yet to document:
-                                                                        - build request, build request expansion and directly requested targets
-                                                                        - conditional properties
-                                                                      -->
+                                                                          - build request, build request expansion and directly requested targets
+                                                                          - conditional properties
+                                                                        -->
 
   <body>
     <p><a href="../../index.htm"><img class="banner" height="86" width="277"
@@ -191,8 +191,8 @@
 
       <li>
         Place the Boost.Jam binary, called "bjam" or "bjam.exe", somewhere in
-        your <tt>PATH</tt>. Verify that correct bjam is being executed by
-        running "bjam --version". You should get 
+        your <tt>PATH</tt>. Go to the root directory of Boost.Build and run
+        "bjam --version". You should get 
 <pre>
       Boost.Build V2 (Milestone N)
      
@@ -208,12 +208,12 @@
       <tt>bjam</tt> there. A simple application will be built. You can also
       play with other projects in <tt>example</tt>. 
       <!-- This part should not go into intoduction docs, but we need to place
-                                                                                                                 it somewhere. 
-                                                                                                                  
-                                                                                                                    <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
-                                                                                                                    into one of the locations where it can be found (given in <a href=
-                                                                                                                    "#config_files_location">this table</a>). This prevent you from
-                                                                                                                    accidentally overwriting your config when updating.</p> -->
+                                                                                                                       it somewhere. 
+                                                                                                                        
+                                                                                                                          <p>It is slighly better way is to copy <tt>new/user-config.jam</tt>
+                                                                                                                          into one of the locations where it can be found (given in <a href=
+                                                                                                                          "#config_files_location">this table</a>). This prevent you from
+                                                                                                                          accidentally overwriting your config when updating.</p> -->
       </li>
     </ol>
 
@@ -630,6 +630,9 @@ boost-build /path/to/boost.build ;
     Of course, you'll probably never in your life need debug version of zlib,
     but for other libraries this is quite reasonable. 
 
+    <p>More advanced use of prebuilt target is descibed in <a href=
+    "doc/recipes.html#site_config_targets">recipes</a>.</p>
+
     <h2><a name="sec-reference">Reference</a></h2>
     This section will document mostly high-level view of Boost.Build,
     mentioning appropriate modules and rules. The on-line help system must be
@@ -652,8 +655,8 @@ boost-build /path/to/boost.build ;
     language, and typically contains calls to functions provided by
     Boost.Build, which create main targets of needed type, declare project
     attributes and access other projects. The full list of functions provided
-    by Boost.Build is described <a href="#builtins">below</a>. Of course, user
-    can create his own functions, or it can directly access Boost.Build
+    by Boost.Build is described <a href="#builtins">below</a>. Of course,
+    user can create his own functions, or it can directly access Boost.Build
     internals from Jamfile, if builtin facilities are not sufficient.</p>
 
     <p>Each main target, or project can be built in a number of ways, say
@@ -1058,17 +1061,17 @@ boost-build /path/to/boost.build ;
 
       <li>It allows to have main target names with slashes. 
       <!-- The motivation for which is:
-                                                                              So, to summarize:
-                                                                              1. The project which extract tarfile may extract all possible kinds of 
-                                                                              targets, and it's reasonable to use them directly from other project.
-                                                                              2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
-                                                                              maintainability, and therefore, must use main target name which contains 
-                                                                              slashes?
-                                                                              3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
-                                                                              option, because you should not change existing tree 
+                                                                                    So, to summarize:
+                                                                                    1. The project which extract tarfile may extract all possible kinds of 
+                                                                                    targets, and it's reasonable to use them directly from other project.
+                                                                                    2. The rule for unpacking tar is inplemented in terms of "patch-file", for 
+                                                                                    maintainability, and therefore, must use main target name which contains 
+                                                                                    slashes?
+                                                                                    3. Using sub-Jamfile in "foo" to declare extracted file "foo/b" is not an 
+                                                                                    option, because you should not change existing tree 
 
-                                                                              That makes good rationale for why main target must contain names.
-                                                                               -->
+                                                                                    That makes good rationale for why main target must contain names.
+                                                                                     -->
       </li>
     </ul>
 
