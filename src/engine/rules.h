@@ -82,7 +82,7 @@ struct _rule {
     PARSE   *procedure;        /* parse tree from RULE */
     argument_list* arguments;  /* argument checking info, or NULL for unchecked */
     rule_actions* actions;     /* build actions, or NULL for no actions */
-    module  *module;           /* module in which this rule is executed */
+    module_t  *module;           /* module in which this rule is executed */
     int     exported;          /* nonzero if this rule is supposed to
                                 * appear in the global module and be
                                 * automatically imported into other modules
@@ -220,11 +220,11 @@ struct _target {
     char* failed;
 } ;
 
-RULE 	*bindrule( char *rulename, module* );
+RULE 	*bindrule( char *rulename, module_t* );
 
-RULE*   import_rule( RULE* source, module* m, char* name );
-RULE*   new_rule_body( module* m, char* rulename, argument_list* args, PARSE* procedure, int export );
-RULE*   new_rule_actions( module* m, char* rulename, char* command, LIST* bindlist, int flags );
+RULE*   import_rule( RULE* source, module_t* m, char* name );
+RULE*   new_rule_body( module_t* m, char* rulename, argument_list* args, PARSE* procedure, int export );
+RULE*   new_rule_actions( module_t* m, char* rulename, char* command, LIST* bindlist, int flags );
 TARGET  *bindtarget( const char *targetname );
 TARGET *copytarget( const TARGET *t );
 void bind_explicitly_located_targets();
