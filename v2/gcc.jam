@@ -1,7 +1,8 @@
 
 import property ;
 import generators ;
-
+import os ;
+  
 generators.register-composing gcc.link : LIB OBJ : EXE : <toolset>gcc ;
 generators.register-composing gcc.archive : OBJ : STATIC-LIB : <toolset>gcc ;
 generators.register-composing gcc.link-dll : OBJ : SHARED-LIB : <toolset>gcc ;
@@ -43,6 +44,7 @@ local rule link-options ( target : sources * : property-set * )
 {
     local options ;
     local libs ;
+    local findlibs ;
     for local p in $(property-set)
     {
         if $(p) = <debug-symbols>on
@@ -55,7 +57,7 @@ local rule link-options ( target : sources * : property-set * )
         }
         else if $(p:G) = <find-library>
         {
-            options += -l$(p:G=) ;
+            findlibs += -l$(p:G=) ;
         }        
         else if $(p:G) = <library>
         {
@@ -65,6 +67,7 @@ local rule link-options ( target : sources * : property-set * )
     
     OPTIONS on $(target) = $(options) ;
     LIBS on $(target) = $(libs) ;
+    FINDLIBS on $(target) = $(findlibs) ;
 }
 
 rule link ( target : sources * : property-set * )
@@ -74,7 +77,7 @@ rule link ( target : sources * : property-set * )
 
 actions link bind LIBS
 {
-    g++ $(OPTIONS) -o $(<) $(>) $(LIBS)
+    g++ $(OPTIONS) -o $(<) $(>) $(LIBS) $(FINDLIBS)
 }
 
 rule archive ( target : sources * : property-set * )
@@ -93,5 +96,5 @@ rule link-dll ( target : sources * : property-set * )
 
 actions link-dll bind LIBS
 {
-    g++ $(OPTIONS) -o $(<) -Wl,-soname,$(<[1]:D=) -shared $(>) $(LIBS)
+    g++ $(OPTIONS) -o $(<) -Wl,-soname,$(<[1]:D=) -shared $(>) $(LIBS) $(FINDLIBS)
 }
