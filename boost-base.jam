@@ -105,13 +105,7 @@ rule dll-files
     type-DEPENDS dll : $(<) ;
     
     # Set up the import library dependency on Windows
-    local f ;
-    for f in $(<[2-])
-    {
-        INCLUDES $(<) : $(f) ;
-        INCLUDES $(f) : $(<) ;
-    }
-    
+    INCLUDES $(<[1]) : $(<[2-]) ;
     main-from-objects $(<) : [ Objects $(>) ] : DLL ;
 }
 
@@ -124,8 +118,6 @@ rule main-from-objects
 {
     # make compiled sources a dependency of target
 
-    DEPENDS $(<) : $(>) ;
-
 	MakeLocate $(<) : $(LOCATE_TARGET) ;
 
     Clean clean : $(<) ;
@@ -134,6 +126,7 @@ rule main-from-objects
     local link-function = Link-$(3) ;
     local ignored = [ $(link-function) $(<) : $(>) : $(3) ] ;
     Chmod $(<[1]) ;
+    DEPENDS $(<) : $(>) ;
 }
 
 rule Link-EXE
@@ -1357,3 +1350,23 @@ rule unit-test
     }
 }
 
+rule list-files
+{
+    DEPENDS $(<) : $(>) ;
+
+    list-files-aux1 $(<) : $(>[1]) ;
+    if $(>[2])
+    {
+        list-files-aux2 $(<) : $(>[2-]) ;
+    }
+}
+
+actions quietly piecemeal list-files-aux1
+{
+    echo "$(>)" > $(<)
+}
+
+actions quietly piecemeal list-files-aux2
+{
+    echo "$(>)" >> $(<)
+}

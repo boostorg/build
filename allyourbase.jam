@@ -1248,7 +1248,7 @@ rule SubDir
 
 rule in-invocation-subdir
 {
-    local subdir-tokens = $(SUBDIR-TOKENS) ;
+    local subdir-tokens = $(SUBDIR_TOKENS) ;
     subdir-tokens ?= $(DOT) ;
     if $(subdir-tokens) = $(gINVOCATION_SUBDIR_TOKENS)
     {

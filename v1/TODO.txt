@@ -7,6 +7,9 @@ to its suitability for any purpose.
 Boost Build system TODO
 ===== ===== ====== ====
 
+* Devise a way to transmit paths with spaces through variables NOT ending in
+  PATH to Jam. Be sure that toolsets can be invoked through these variables.
+
 DONE * Fix split-path bug which unroots paths on Unix
 
 DONE * move NEEDLIBS to end of link line

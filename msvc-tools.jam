@@ -52,12 +52,26 @@ flags msvc LINKFLAGS <target-type>DLL : /DLL ;
 
 rule Link-action
 {
-    msvc-Link-action $(<) : $(>) ;
+    if $(COMMAND_FILES) {
+    local command-file = $(<[1]:S=.CMD) ;
+    LOCATE on $(command-file) = $(gLOCATE($(<))) ;
+    COMMAND on $(<) = @ ;
+    msvc-Link-action $(<) : $(command-file) ;
+    
+    list-files $(command-file) : $(>) ;
+    DEPENDS $(<) : $(command-file) ;
+    RmTemps $(<[1]) : $(command-file) ;
+    }
+    else
+    {
+    COMMAND on $(<) = "" ;
+        msvc-Link-action $(<) : $(>) ;
+    }
 }
 
-actions msvc-Link-action bind NEEDLIBS 
+actions together msvc-Link-action bind NEEDLIBS
 {
-    $(MSVC_TOOL_PATH)link /nologo $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(NEEDLIBS)" "$(>)"
+    $(MSVC_TOOL_PATH)link /nologo $(LINKFLAGS) /PDB:"$(<[1]:S=.pdb)" /out:"$(<[1])" /LIBPATH:$(LIBPATH) /LIBPATH:$(STDLIBPATH) "$(NEEDLIBS)" $(COMMAND)"$(>)"
 }
 
 #### Cc #####
