@@ -110,6 +110,7 @@ rule headers-to-doxyfile ( target : sources * : properties * )
 rule run ( target : source : properties * )
 {
   doxygen-action $(target) : $(source) ;  
+  NAME on $(target) = $(.doxygen) ;
 }
 
 # Collect the set of Doxygen XML files into a single XML source file
