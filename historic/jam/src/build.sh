@@ -59,7 +59,7 @@ Guess_Toolset ()
     if test_uname Darwin ; then BOOST_JAM_TOOLSET=darwin
     elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
     elif test_path icc ; then BOOST_JAM_TOOLSET=intel-linux
-    elif test -e /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
+    elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
         BOOST_JAM_TOOLSET=intel-linux
         BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
     elif test_path xlc ; then BOOST_JAM_TOOLSET=vacpp
@@ -97,10 +97,10 @@ case $BOOST_JAM_TOOLSET in
     ;;
     
     intel-linux)
-    if test -e /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
+    if test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
         BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
     fi
-    if test -e ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh ; then
+    if test -r ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh ; then
         . ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh
     fi
     BOOST_JAM_CC=icc
@@ -163,13 +163,13 @@ BJAM_SOURCES="\
 
 echo_run rm -rf bootstrap.$BOOST_JAM_TOOLSET
 echo_run mkdir bootstrap.$BOOST_JAM_TOOLSET
-if test ! -e jamgram.y -o ! -e jamgramtab.h ; then
+if test ! -r jamgram.y -o ! -r jamgramtab.h ; then
     echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_YYACC} ${YYACC_SOURCES}
     if test -x "./bootstrap.$BOOST_JAM_TOOLSET/yyacc0" ; then
         echo_run ./bootstrap.$BOOST_JAM_TOOLSET/yyacc0 jamgram.y jamgramtab.h jamgram.yy
     fi
 fi
-if test ! -e jamgram.c -o ! -e jamgram.h ; then
+if test ! -r jamgram.c -o ! -r jamgram.h ; then
     if test_path yacc ; then YACC="yacc -d"
     elif test_path bison ; then YACC="bison -y -d --yacc"
     fi
@@ -177,7 +177,7 @@ if test ! -e jamgram.c -o ! -e jamgram.h ; then
     mv -f y.tab.c jamgram.c
     mv -f y.tab.h jamgram.h
 fi
-if test ! -e jambase.c ; then
+if test ! -r jambase.c ; then
     echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_MKJAMBASE} ${MKJAMBASE_SOURCES}
     if test -x "./bootstrap.$BOOST_JAM_TOOLSET/mkjambase0" ; then
         echo_run ./bootstrap.$BOOST_JAM_TOOLSET/mkjambase0 jambase.c Jambase
