@@ -34,8 +34,16 @@ flags metrowerks CFLAGS <inlining>on : -inline on ;
 flags metrowerks CFLAGS <inlining>full : -inline auto -inline level=8 ;
 flags metrowerks CFLAGS <user-interface>console/<runtime-link>dynamic : -prefix UseDLLPrefix.h ;
 
-flags metrowerks STDLIBS <runtime-link>static : ansicx86.lib;mwcrtl.lib;ansicppx86.lib;gdi32.lib;user32.lib;kernel32.lib ;
-flags metrowerks STDLIBS <runtime-link>dynamic : mwcrtldll.lib;gdi32.lib;user32.lib;kernel32.lib ;
+if $(BOOST_CODEWARRIOR_7)
+{
+  flags metrowerks STDLIBS <runtime-link>static : MSL_C_x86.lib;MSL_Runtime_x86.lib;msl_c++_x86.lib;gdi32.lib;user32.lib;kernel32.lib ;
+  flags metrowerks STDLIBS <runtime-link>dynamic : MSL_All-DLL_x86.lib;gdi32.lib;user32.lib;kernel32.lib ;
+}
+else
+{
+  flags metrowerks STDLIBS <runtime-link>static : ansicx86.lib;mwcrtl.lib;ansicppx86.lib;gdi32.lib;user32.lib;kernel32.lib ;
+  flags metrowerks STDLIBS <runtime-link>dynamic : mwcrtldll.lib;gdi32.lib;user32.lib;kernel32.lib ;
+}
 
 flags metrowerks NEEDLIBS <library-file> ;
 flags metrowerks NEEDLIBS <find-library> ;
@@ -70,7 +78,7 @@ actions metrowerks-Link-action bind NEEDLIBS
 {
     $(METROWERKS_SETUP)
     set MWWinx86LibraryFiles=$(STDLIBS)
-    mwld -export dllexport -nowraplines -msgstyle gcc $(LINKFLAGS) $(IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])"  $(UNDEFS) $(NEEDLIBS) "$(>)"
+    mwld -export dllexport -nowraplines $(LINKFLAGS) $(IMPLIB_COMMAND)"$(<[2])" -o "$(<[1])"  $(UNDEFS) $(NEEDLIBS) "$(>)"
 }
 
 #### Cc #####
@@ -83,7 +91,7 @@ rule Cc-action
 actions metrowerks-Cc-action
 {
     $(METROWERKS_SETUP)
-    mwcc -c -cwd include -U$(UNDEFS) -D$(DEFINES) -msgstyle gcc -nowraplines $(CFLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    mwcc -c -cwd include -U$(UNDEFS) -D$(DEFINES) -nowraplines $(CFLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### C++ ####
@@ -95,7 +103,7 @@ rule C++-action
 actions metrowerks-C++-action
 {
     $(METROWERKS_SETUP)
-    mwcc -c -cwd include -U$(UNDEFS) -D$(DEFINES) -msgstyle gcc -nowraplines -lang c++ $(CFLAGS) $(C++FLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    mwcc -c -cwd include -U$(UNDEFS) -D$(DEFINES) -nowraplines -lang c++ $(CFLAGS) $(C++FLAGS) -I- -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
