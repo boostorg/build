@@ -40,6 +40,7 @@ flags vacpp C++FLAGS : -qfuncsect ;
 # contained in such an object file won't be invoked.
 flags vacpp LINKFLAGS : -qtwolink ;
 flags vacpp LINKFLAGS <target-type>$(SHARED_TYPES) : -G ;
+flags vacpp LINKFLAGS <target-type>EXE : -brtl ;
 
 flags vacpp CFLAGS <optimization>off : -qNOOPTimize ;
 flags vacpp CFLAGS <optimization>default : -O ;
