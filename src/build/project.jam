@@ -41,7 +41,8 @@ import numbers ;
 import path ;
 import sequence ;
 import errors : error ;
-import project-root ;
+import project-roots ;
+
 import print ;
 import class : class new ;
 import errors ;
@@ -56,7 +57,7 @@ import property-set ;
 rule load ( jamfile-location )
 {   
     # Load project root, first. It might decide to act as Jamfile.
-    project-root.load $(jamfile-location) ;
+    project-roots.load $(jamfile-location) ;
         
     local module-name = [ module-name $(jamfile-location) ] ;        
     # If Jamfile is already loaded, don't try again.
@@ -403,7 +404,7 @@ rule initialize (
         # Make sure we've loaded the project-root corresponding to this
         # Jamfile.
         #
-        local project-root-module = [ project-root.load $(location) ] ;
+        local project-root-module = [ project-roots.load $(location) ] ;
         local project-root = [ $(project-root-module).project-root get-location ] ;
 
         local parent = [ find-jamfile $(location) $(project-root) ] ;

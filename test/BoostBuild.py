@@ -92,12 +92,7 @@ class Tester(TestCmd.TestCmd):
             raise "Don't know directory where jam is build for this system"
 
         if boost_build_path is None:
-            boost_build_path = os.path.join(self.original_workdir,
-                                            "..", "new")
-            if os.name == 'nt':
-                boost_build_path += ";" + self.original_workdir
-            else:
-                boost_build_path += ":" + self.original_workdir
+            boost_build_path = self.original_workdir
             
 
         verbosity = ['-d0', '--quiet']
