@@ -205,7 +205,7 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     allowed. In that case any object with sequence interface is allowed.</p>
 
     <h3><a name="method-__init__">Method <tt>__init__(self,
-    arguments="")</tt></a></h3>
+    arguments='', executable='bjam')</tt></a></h3>
 
     <p><b>Effects:</b></p>
 
@@ -213,12 +213,13 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
       <li>Remembers the current working directory in member
       <tt>original_workdir</tt>.</li>
 
-      <li>Determines the location of <tt>bjam</tt> binary and build system
-      files, assuming that the current directory is
-      <tt>tools/build/test</tt>. Formulates jam invocation command, which
-      will include explicit setting for <tt>BOOST_BUILD_PATH</tt> variable
-      and arguments passed to this methods, if any. This command will be used
-      by subsequent invocation of <a href=
+      <li>Determines the location of executable (<code>bjam</code> by
+      default) and build system files, assuming that the current
+      directory is <tt>tools/build/test</tt>. Formulates jam
+      invocation command, which will include explicit setting for
+      <tt>BOOST_BUILD_PATH</tt> variable and arguments passed to this
+      methods, if any. This command will be used by subsequent
+      invocation of <a href=
       "#method-run_build_system"><tt>run_build_system</tt></a>. Finally,
       initializes the base class.</li>
 
@@ -260,8 +261,9 @@ FAILED test of D:\MyDocu~1\Work\build\boost-build\boost-build -d0
     to the current time. All the elements in <tt>names</tt> should be
     relative paths.</p>
 
-    <h3><a name="method-run_build_system">Method <tt>run_build_system(self,
-    subdir='', extra_args='', stdout=None, stderr='', status=0,
+    <h3><a name="method-run_build_system">Method
+    <tt>run_build_system(self, subdir='', extra_args='', stdout=None,
+    stderr='', status=0,
     **kw)</tt></a></h3>
 
     <p><b>Effects:</b></p>
