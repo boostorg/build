@@ -207,8 +207,8 @@ generators.register-linker msvc.link "" : RSP : EXE : <toolset>msvc ;
 generators.register-linker msvc.link "" : RSP : SHARED_LIB IMPORT_LIB : <toolset>msvc ;
 
 generators.register-standard msvc.archive : RSP : STATIC_LIB : <toolset>msvc ;
-generators.register-c-compiler msvc.compile : CPP : OBJ : <toolset>msvc ;
-generators.register-c-compiler msvc.compile : C : OBJ : <toolset>msvc ;
+generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
+generators.register-c-compiler msvc.compile.c : C : OBJ : <toolset>msvc ;
 
 #
 # Declare flags and action for compilation
@@ -234,6 +234,7 @@ flags msvc.compile CFLAGS <runtime-debugging>on/<link-runtime>static/<threading>
 flags msvc.compile CFLAGS <base-target-type>CPP : /GX ;
 
 flags msvc.compile USER_CFLAGS <cflags> : ;
+flags msvc.compile.c++ USER_CFLAGS <cxxflags> : ;
 
 flags msvc.compile PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;  # not used yet
 
@@ -243,10 +244,16 @@ flags msvc.compile INCLUDES <include> ;
 
 flags msvc WHATEVER <toolset-msvc:version> ;
 
-actions compile
+# The actions differ only by explicit selection of input language
+actions compile.c
 {
-    $(.CC) /Zm800 -nologo -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<)" "$(>)"
+    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<)" "$(>)"
 }
+actions compile.c++
+{
+    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<)" "$(>)"
+}
+
 
 # Declare flags and action for linking
 flags msvc.link PDB_LINKFLAG <debug-symbols>on/<debug-store>database : /PDB: ; # not used yet
