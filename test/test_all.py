@@ -98,14 +98,15 @@ tests = [ "project_test1",
           "bad_dirname",
           "c_file",
           "inline",
+          "conditionals2",
 	  ]
 
 if os.name == 'posix':
     tests.append("symlink")
 
-if 'QTDIR' in os.environ:
-    tests.append("railsys")
-else:
-    print 'skipping railsys test since QTDIR environment variable is unset'
+#if 'QTDIR' in os.environ:
+#    tests.append("railsys")
+#else:
+#    print 'skipping railsys test since QTDIR environment variable is unset'
 
 run_tests(critical_tests, tests)

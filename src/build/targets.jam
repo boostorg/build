@@ -282,8 +282,8 @@ rule project-target ( name : project : requirements * : default-build * )
         if ! $(self.ref-props.$(property-set))
         {            
             local ref = [ project.attribute $(self.project) requirements ] ;
-            local ps = [ $(property-set).refine $(ref) ] ;
-            ps = [ $(ps).evaluate-conditionals ] ;
+            local eref = [ $(ref).evaluate-conditionals $(property-set) ] ;
+            local ps = [ $(property-set).refine $(eref) ] ;
             ps = [ $(ps).run-actions ] ;                            
             
             ps = [ targets.generate-dependencies $(ps) : $(self.project) : $(ps) ] ;
@@ -412,7 +412,8 @@ rule main-target ( name : project )
         local result ;
         for local p in $(all-property-sets)
         {
-            local r = [ generate-really [ $(p).add-defaults ] ] ;
+            p = [ $(p).add-defaults ] ;
+            local r = [ generate-really $(p) ] ;
             usage-requirements = [ $(usage-requirements).add $(r[1]) ] ;
             result += $(r[2-]) ;
         }
@@ -757,14 +758,15 @@ rule basic-target ( name : project
     # generating depenendecies and running actions for features.
     local rule refined-properties ( build-request )
     {
-        local rproperties = [ $(build-request).refine $(self.requirements) ] ;
+        local erequirements = [ $(self.requirements).evaluate-conditionals
+          $(build-request) ] ;
+        
+        local rproperties = [ $(build-request).refine $(erequirements) ] ;
             
         if $(rproperties[1]) != "@error"                    
         {
             # TODO: issue a warning when requirements change properties, but
             # link-compatibility is still not broken.
-                        
-            rproperties = [ $(rproperties).evaluate-conditionals ] ;
             rproperties = [ $(rproperties).run-actions ] ;                
         }
         return $(rproperties) ;
