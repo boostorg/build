@@ -78,6 +78,7 @@ rule boost-test ( sources + : target-type : requirements * : test-name ? : defau
 local rule dump-test ( )
 {
     local srcs = [ on $(result) get-var-value source-files ] ;
+    local pwd = [ PWD ] ;
     
     # locate each source file
     local source-files ;
@@ -97,7 +98,7 @@ local rule dump-test ( )
         if $(files)
         {
             # make relative to the project root instead of "."
-            local file = $(files[1]:R=$(gINVOCATION_SUBDIR_TOKENS:J=/)) ;
+            local file = $(files[1]:R=$(pwd)) ;
             
             # try to undo absolute paths
             source-files += [ relative-path  $(file) ] ;
@@ -340,7 +341,7 @@ rule capture-run-output1 ( target : executable )
     p = $(gRUN_LD_LIBRARY_PATH($(executable))) ;
     if $(NT) 
     {
-    	RUN_LD_LIBRARY_PATH on $(target) = ;
+        RUN_LD_LIBRARY_PATH on $(target) = ;
         LD_LIBRARY_PATH_VAR on $(target) = ;
         if $(gCURRENT_TOOLSET) in $(gcc-compilers)
         {
@@ -352,7 +353,7 @@ rule capture-run-output1 ( target : executable )
     }
     else if $(p)
     {
-    	RUN_LD_LIBRARY_PATH on $(target) = $(p) $(ENV_LD_LIBRARY_PATH) ;
+        RUN_LD_LIBRARY_PATH on $(target) = $(p) $(ENV_LD_LIBRARY_PATH) ;
         LD_LIBRARY_PATH_VAR on $(target) = LD_LIBRARY_PATH ;
     }
     execute-test $(target) : $(executable) ;
