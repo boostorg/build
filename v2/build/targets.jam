@@ -824,13 +824,9 @@ class basic-target : abstract-target
         erequirements = [ $(erequirements).expand-composites ] ;
 
         local rproperties = [ $(build-request).refine $(erequirements) ] ;
+        # TODO: issue a warning when requirements change properties, but
+        # link-compatibility is still not broken.
 
-        if $(rproperties[1]) != "@error"                    
-        {
-            # TODO: issue a warning when requirements change properties, but
-            # link-compatibility is still not broken.
-            rproperties = [ $(rproperties).run-actions ] ;                
-        }
         return $(rproperties) ;
     }
 
