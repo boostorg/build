@@ -466,5 +466,5 @@ rule Archive-action
 
 actions updated together piecemeal gcc-Archive-action
 {
-    $(.AR) ru$(ARFLAGS) "$(<:T)" "$(>:T)"
+    $(.AR[1]) ru$(ARFLAGS:J=) "$(<:T)" "$(>:T)"
 }
