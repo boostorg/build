@@ -3,14 +3,26 @@
 #include <string.h>
 #include <assert.h>
 
+
 #ifndef NDEBUG
+# define JAM_STRING_MAGIC ((char)0xcf)
+# define JAM_STRING_MAGIC_SIZE 4
 static void assert_invariants( string* self )
 {
+    int i;
+    
     assert( self->size < self->capacity );
     assert( ( self->capacity <= sizeof(self->opt) ) == ( self->value == self->opt ) );
     assert( strlen( self->value ) == self->size );
+
+    for (i = 0; i < 4; ++i)
+    {
+        assert( self->magic[i] == JAM_STRING_MAGIC );
+        assert( self->value[self->capacity + i] == JAM_STRING_MAGIC );
+    }
 }
 #else
+# define JAM_STRING_MAGIC_SIZE 0
 # define assert_invariants(x) do {} while (0)
 #endif
 
@@ -20,6 +32,9 @@ void string_new( string* s )
     s->size = 0;
     s->capacity = sizeof(s->opt);
     s->opt[0] = 0;
+#ifndef NDEBUG
+    memset(s->magic, JAM_STRING_MAGIC, sizeof(s->magic));
+#endif
     assert_invariants( s );
 }
 
@@ -34,14 +49,18 @@ static void string_reserve_internal( string* self, size_t capacity )
 {
     if ( self->value == self->opt )
     {
-        self->value = malloc( capacity );
+        self->value = malloc( capacity + JAM_STRING_MAGIC_SIZE );
         self->value[0] = 0;
-        strcat( self->value, self->opt );
+        strncat( self->value, self->opt, sizeof(self->opt) );
+        assert( strlen( self->value ) <= self->capacity ); /* This is a regression test */
     }
     else
     {
-        self->value = realloc( self->value, capacity );
+        self->value = realloc( self->value, capacity + JAM_STRING_MAGIC_SIZE );
     }
+#ifndef NDEBUG
+    memcpy( self->value + capacity, self->magic, JAM_STRING_MAGIC_SIZE );
+#endif
     self->capacity = capacity;
 }
 
@@ -130,9 +149,7 @@ void string_pop_back( string* self )
 
 void string_push_back( string* self, char x )
 {
-    assert_invariants( self );
     string_append_range( self, &x, &x + 1 );
-    assert_invariants( self );
 }
 
 char string_back( string* self )
@@ -140,3 +157,29 @@ char string_back( string* self )
     assert_invariants( self );
     return self->value[self->size - 1];
 }
+
+#ifndef NDEBUG
+void string_unit_test()
+{
+    string s[1];
+    int i;
+    char buffer[sizeof(s->opt) * 2 + 2];
+    int limit = sizeof(buffer) > 254 ? 254 : sizeof(buffer);
+
+    string_new(s);
+    
+    for (i = 0; i < limit; ++i)
+    {
+        string_push_back( s, (char)(i + 1) );
+    };
+
+    for (i = 0; i < limit; ++i)
+    {
+        assert( i < s->size );
+        assert( s->value[i] == (char)(i + 1));
+    }
+
+    string_free(s);
+    
+}
+#endif

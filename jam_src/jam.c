@@ -107,6 +107,7 @@
 # include "scan.h"
 # include "timestamp.h"
 # include "make.h"
+# include "strings.h"
 
 /* Macintosh is "special" */
 
@@ -165,6 +166,7 @@ extern int yydebug;
 #ifndef NDEBUG
 static void run_unit_tests()
 {
+    string_unit_test();
     var_expand_unit_test();
 }
 #endif
