@@ -83,8 +83,19 @@ rule init ( version ? : path ? : vendor ? : setup ? compiler ? linker ? )
         }
     }
     
-    setup = "call \""$(path)\\bin\\$(setup)"\" > nul
+    setup = "call \""$(path)\\bin\\$(setup)"\" > nul" ;
+    
+    if [ os.name ] = NT
+    {
+        setup = $(setup)"
 " ;
+    }
+    else
+    {
+        setup = "cmd '"$(setup)" && " ;
+        .close-quote = "'" ;
+    }
+    
     flags msvc SETUP $(condition) : $(setup:E="") ;
 
     # prefix with setup, or quoted path if any
@@ -149,7 +160,7 @@ flags msvc WHATEVER <toolset-msvc:version> ;
 
 actions compile
 {
-    $(.CC) /Zm800 -nologo -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<)" "$(>)"
+    $(.CC) /Zm800 -nologo -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I"$(INCLUDES)" -c -Fo"$(<)" "$(>)" $(.close-quote)
 }
 
 # Declare flags and action for linking
@@ -208,7 +219,7 @@ else # CYGWIN
         if test "x$(<[2]:E=)x" != "xx" ; then
             _bbv2_out2_="$(.implib)"`cygpath -d $(<[2]:E=.:D)`
         fi
-        $(.LD) $(LINKFLAGS) /out:$_bbv2_out1_ ${_bbv2_out2_}\\$(<[2]:D=) /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @$_bbv2_in_
+        $(.LD) $(LINKFLAGS) /out:$_bbv2_out1_ ${_bbv2_out2_}\\$(<[2]:D=) /LIBPATH:"$(LINKPATH)" "$(FINDLIBS:S=.lib)" $(USER_LINKFLAGS) @$_bbv2_in_ $(.close-quote)
     }
 
     actions archive
@@ -218,6 +229,6 @@ else # CYGWIN
         if test -f $_bbv2_out_ ; then
             _$(<:B)_=$_bbv2_out_
         fi
-        $(.LD) /lib /out:$_bbv2_out_ $_$(<:B)_ @$_bbv2_in_
+        $(.LD) /lib /out:$_bbv2_out_ $_$(<:B)_ @$_bbv2_in_ $(.close-quote)
     }
 }
