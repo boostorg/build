@@ -139,8 +139,10 @@ class stage-target-class : basic-target
               : [ $(property-set).get <include-type> ] ] ;
         }
 
-        property-set = [ update-location $(property-set) ] ;
 
+        property-set = [ update-location $(property-set) ] ;          
+        local include-types = [ $(property-set).get <include-type> ] ;
+        
         local result ;
         for local i in $(source-targets)
         {
@@ -166,16 +168,42 @@ class stage-target-class : basic-target
                     errors.error "Unable to generate staged version of " [ $(source).str ] ;
                 }                
 
-                for t in $(staged-targets)
-                {                
-                    $(t).set-path [ $(property-set).get <location> ] ;                    
-                    result += [ virtual-target.register $(t) ] ;                
+                for t in [ select-included $(staged-targets) : $(include-types) ]
+                {
+                    $(t).set-path [ $(property-set).get <location> ] ;
+                    result += [ virtual-target.register $(t) ] ;          
                 }            
-            }
+            }            
         }
-
+        
         return $(result) ;
     }   
+    
+    rule select-included ( source-targets * : types-to-include * )
+    {
+        local result-targets ;
+        if $(types-to-include)
+        {            
+            for local r in $(source-targets)
+            {
+                local ty = [ $(r).type ] ;        
+                if $(ty)
+                {
+                    if [ include-type $(ty) : $(types-to-include) ]                  
+                    {
+                        result-targets += $(r) ;
+                    }                
+                }           
+            }
+        }
+        else
+        {
+            result-targets = $(source-targets) ;
+        }
+        
+        
+        return $(result-targets) ;
+    }
     
     rule collect-targets ( targets * : types-to-include * )
     {
@@ -192,24 +220,7 @@ class stage-target-class : basic-target
         {
             result += [ $(i).all-referenced-targets ] ;
         }
-        result = [ sequence.unique $(result) ] ;
-        
-        if $(types-to-include)
-        {
-            local result2 ;
-            for local r in $(result)
-            {
-                if [ include-type [ $(r).type ] : $(types-to-include) ]                  
-                {
-                    result2 += $(r) ;
-                }                
-            }           
-            return $(result2) ;
-        }
-        else
-        {
-            return $(result) ;        
-        }                                
+        result = [ sequence.unique $(result) ] ;        
     }
         
     # Don't do nothing.
