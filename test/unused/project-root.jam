@@ -16,7 +16,11 @@ rule test-target-class ( name : project )
     
     rule construct ( source-targets * : property-set )
     {
-        if [ modules.peek : GENERATE_ONLY_UNUSABLE ] 
+	if [ modules.peek : GENERATE_NOTHING ]
+	{
+	    return ;
+	}
+        else if [ modules.peek : GENERATE_ONLY_UNUSABLE ] 
         {
             return [ virtual-target.from-file b.x : $(self.project) ] 
               ;             
@@ -27,6 +31,11 @@ rule test-target-class ( name : project )
                    [ virtual-target.from-file b.cpp : $(self.project) ] 
               ; 
         }        
+    }
+    
+    rule compute-usage-requirements ( rproperties )
+    {
+	return [ property-set.create <define>FOO ] ;
     }
 }
 class test-target-class : basic-target ;

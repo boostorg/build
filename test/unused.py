@@ -19,5 +19,14 @@ t.fail_test(t.stdout() != '')
 t.run_build_system("-sGENERATE_ONLY_UNUSABLE=1")
 t.fail_test(find(t.stdout(), "warning: Unused source b in main target ./a") == -1)
 
+# Now check that even if main target generates nothing, its
+# usage requirements are still propagated to dependents.
+t.write("a.cpp","""
+#ifdef FOO
+int main() {}
+#endif
+""")
+t.run_build_system("-sGENERATE_NOTHING=1")
+
 t.cleanup()
 

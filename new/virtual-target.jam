@@ -256,18 +256,6 @@ rule abstract-file-target ( name
         return $(self.root) ;
     }
 
-    # Gets 'use' requirements.
-    rule usage-requirements ( )
-    {
-        return $(self.usage-requirements) ;
-    }
-
-    # Sets 'use' requirements
-    rule set-usage-requirements ( requirements * )
-    {
-        self.usage-requirements = $(requirements) ;
-    }
-
     # Sets the dependency graph this target is part of.
     # 'dg' is an instance of 'subvariant-dg' class.
     rule dg ( dg ? overwrite ? )
