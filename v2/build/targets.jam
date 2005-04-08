@@ -1336,10 +1336,10 @@ rule main-target-requirements (
       )
 {
     local loc = [ $(project).get location ] ;
-    local requirements = [ property.translate-paths $(specification) : $(loc) ] ; 
-    local requirements = 
-      [ property.expand-subfeatures-in-conditions $(requirements) ] ;
-    local requirements = [ property-set.create $(requirements) ] ;
+    local jamfile-module = [ $(project).project-module ] ;
+    local requirements = [ property-set.create-from-user-input $(specification)
+      : $(jamfile-module) $(loc) ] ;
+    
     local project-requirements = [ $(project).get requirements ] ;
     requirements = [ $(project-requirements).refine $(requirements) ] ;    
     if $(requirements[1]) = "@error" 

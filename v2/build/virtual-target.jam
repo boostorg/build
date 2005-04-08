@@ -429,11 +429,7 @@ class abstract-file-target : virtual-target
                     errors.error "<tag>@rulename is present but is not the only <tag> feature" ;
                 }
                 
-                # The rule name is not necessary imported in this module,
-                # so we need to use the 'indirect' module to correctly call
-                # it.
-                local indirect-rule = [ indirect.make-qualified $(rule-name) ] ;                
-                self.name = [ indirect.call $(indirect-rule) $(specified-name) :
+                self.name = [ indirect.call $(rule-name) $(specified-name) :
                   $(self.type) :  $(ps) ] ;
             }
             else

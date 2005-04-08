@@ -12,6 +12,7 @@ import sequence ;
 import set ;
 import path ;
 import assert ;
+import indirect ;
 
 # Refines 'properties' by overriding any non-free properties 
 # for which a different value is specified in 'requirements'. 
@@ -427,6 +428,32 @@ rule translate-paths ( properties * : path )
     }
     return $(result) ;
 }
+
+# Assumes that all feature values that start with '@' are 
+# names of rules, used in 'context-module'. Such rules
+# can be either local to the module or global. Converts such
+# values into 'indirect-rule' format (see indirect.jam), so
+# that they can be called from other modules.
+rule translate-indirect ( specification * : context-module )
+{
+    local result ;
+    for local p in $(specification)
+    {
+        local m = [ MATCH ^@(.+) : $(p:G=) ] ;
+        if $(m)
+        {
+            local v = [ indirect.make $(m) : $(context-module) ] ;
+            v = @$(v) ;
+            result += $(v:G=$(p:G)) ;
+        }
+        else
+        {
+            result += $(p) ;
+        }                                  
+    }
+    return $(result) ;    
+}
+
 
 # Class which maintains a property set -> string
 # mapping

@@ -359,7 +359,8 @@ rule initialize (
     module $(module-name)
     {          
     }    
-    $(module-name).attributes = [ new project-attributes $(location) ] ;
+    $(module-name).attributes = [ new project-attributes $(location) 
+      $(module-name) ] ;
     local attributes = $($(module-name).attributes) ;
     
     if $(location)
@@ -464,10 +465,12 @@ class project-attributes
     import path ;
     import print ;
     import sequence ;
+    import project ;
         
-    rule __init__ ( location )
+    rule __init__ ( location project-module )
     {       
         self.location = $(location) ;
+        self.project-module = $(project-module) ;
     }
             
     # Set the named attribute from the specification given by the user.
@@ -482,12 +485,8 @@ class project-attributes
         }
         else if $(attribute) = "requirements" 
         {
-            specification = [ property.translate-paths $(specification)
-                              : $(self.location) ] ;            
-            specification = 
-              [ property.expand-subfeatures-in-conditions $(specification) ] ;                
-            specification = [ property.make $(specification) ] ;            
-            result = [ property-set.create $(specification) ] ;            
+            local result = [ property-set.create-from-user-input
+                $(specification) : $(self.project-module) $(self.location) ] ;
             
             # If we have inherited properties, need to refine them with the
             # specified.
