@@ -367,6 +367,22 @@ rule create-with-validation ( raw-properties * )
     return [ create [ property.make $(raw-properties) ] ] ;
 }
 
+# Creates a property-set from the input given by the user, in the
+# context of 'jamfile-module' at 'location'
+rule create-from-user-input ( raw-properties * : jamfile-module location )
+{
+    local specification = [ property.translate-paths $(raw-properties)
+      : $(location) ] ;            
+    specification = [ property.translate-indirect $(specification)
+              : $(jamfile-module) ] ;
+    specification = 
+      [ property.expand-subfeatures-in-conditions $(specification) ] ;                
+    specification = [ property.make $(specification) ] ;            
+    result = [ property-set.create $(specification) ] ;            
+    return $(result) ;
+}
+
+
 
 # Returns property-set with empty set of properties.
 rule empty ( )

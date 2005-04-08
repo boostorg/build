@@ -6,6 +6,7 @@
 #  warranty, and with no claim as to its suitability for any purpose.
 
 from BoostBuild import Tester, List
+import string
 
 t = Tester()
 
@@ -80,6 +81,25 @@ t.expect_addition(file_list)
 
 t.run_build_system(variants + " clean")
 t.expect_removal(file_list)
+
+# Regression test: the 'tag' feature did not work in directories that
+# had dot in names.
+t.write("version-1.32.0/Jamroot", """
+project test : requirements <tag>@$(__name__).tag ;
+
+rule tag ( name : type ? : property-set )
+{
+   # Do nothing, just make sure the rule is invoked OK.
+   ECHO "The tag rule was invoked" ;
+}
+exe a : a.cpp ;
+""")
+
+t.write("version-1.32.0/a.cpp", "int main() { return 0; }\n")
+
+t.run_build_system(subdir="version-1.32.0")
+t.expect_addition("version-1.32.0/bin/$toolset/debug/a.exe")
+t.fail_test(string.find(t.stdout(), "The tag rule was invoked") == -1)
 
 t.cleanup()
 
