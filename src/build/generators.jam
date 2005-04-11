@@ -117,7 +117,7 @@ class generator
                   # recusrive generators.construct-types call.
     
     : source-types *  # types that this generator can handle.  If
-        		      # empty, the generator can consume anything.
+                      # empty, the generator can consume anything.
     
     : target-types-and-names +   
       # types the generator will create and, optionally, names for
@@ -724,6 +724,14 @@ local rule viable-source-types-real ( target-type )
         
         for local g in $(generators)
         {
+            if ! [ $(g).source-types ]
+            {
+                # Empty source types -- everything can be accepted
+                result = * ;
+                generator = ;
+                t = ;
+            }
+              
             for local source-type in [ $(g).source-types ] 
             {
                 if ! $(source-type) in $(result) 
@@ -792,7 +800,11 @@ rule viable-source-types-for-generator-real ( generator )
             result += [ type.all-derived $(s) ] 
               [ generators.viable-source-types $(s) ] ;
         }
-        result = [ sequence.unique $(result) ] ;
+        result = [ sequence.unique $(result) ] ;        
+        if * in $(result)
+        {
+            result = * ;
+        }        
         return $(result) ;
     }        
 }    
