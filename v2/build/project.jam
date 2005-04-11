@@ -379,37 +379,52 @@ rule initialize (
     # defined at the end of this file.
     modules.clone-rules project-rules $(module-name) ;
 
-    # We search for parent/project-root only if jamfile was specified --- i.e
-    # if the project is not standalone.
-    if $(location)
-    {       
-        local parent-module ;
-        if ! $(basename) in $(JAMROOT)
+    local parent-module ;
+    if $(module-name) = site-config
+    {
+        # No parent.
+    }    
+    else if $(module-name) = user-config
+    {
+        parent-module = site-config ;
+    }
+    else 
+    {
+        # We search for parent/project-root only if jamfile was specified 
+        # --- i.e
+        # if the project is not standalone.
+        if $(location) &&  ! $(basename) in $(JAMROOT)
         {
             parent-module = [ load-parent $(location) ] ;
-            inherit-attributes $(module-name) : $(parent-module) ;
-        }
-                        
-        local parent ;
-        if $(parent-module)
+        }            
+        else
         {
-            parent = [ target $(parent-module) ] ;
-        }
+            parent-module = user-config ;
+        }        
+    }
+                
+    if $(parent-module)
+    {        
+        inherit-attributes $(module-name) : $(parent-module) ;
+    }
+                                
+    local parent ;
+    if $(parent-module)
+    {
+        parent = [ target $(parent-module) ] ;
+    }
 
-        if ! $(.target.$(module-name))
+    if ! $(.target.$(module-name))
+    {
+        .target.$(module-name) = [ new project-target $(module-name)               
+          : $(module-name) $(parent)
+            : [ attribute $(module-name) requirements ] ] ;
+        
+        if --debug-loading in [ modules.peek : ARGV ]
         {
-            .target.$(module-name) = [ new project-target $(module-name)               
-             : $(module-name) $(parent)
-           : [ attribute $(module-name) requirements ] ] ;
-            
-            if --debug-loading in [ modules.peek : ARGV ]
-            {
-                ECHO "Assigned project target" $(.target.$(module-name)) 
-                  "to '$(module-name)'" ;
-            }
-            
-            
-        }                
+            ECHO "Assigned project target" $(.target.$(module-name)) 
+              "to '$(module-name)'" ;
+        }
     }    
     
     .current-project = [ target $(module-name) ] ;
@@ -420,8 +435,12 @@ rule inherit-attributes ( project-module : parent-module )
 {
     local attributes = $($(project-module).attributes) ;        
     local pattributes = [ attributes $(parent-module) ] ;
-    $(attributes).set parent : [ path.parent 
-        [ path.make [ modules.binding $(parent-module) ] ] ] ;
+    # Parent module might be locationless user-config.
+    if [ modules.binding $(parent-module) ]
+    {        
+        $(attributes).set parent : [ path.parent 
+            [ path.make [ modules.binding $(parent-module) ] ] ] ;
+    }    
     $(attributes).set default-build 
       : [ $(pattributes).get default-build ] ;
     $(attributes).set requirements

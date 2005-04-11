@@ -33,33 +33,53 @@ import version ;
 local test-config = [ GLOB [ modules.peek : BOOST_BUILD_PATH ] : test-config.jam ] ;
 if $(test-config)
 {
+    module test-config 
+    {
+        import project : _using : using ;
+    }
     import test-config ;    
 }
 
-if ! $(test-config) && ! --ignore-config in [ modules.peek : ARGV ] 
+local ignore-config ;
+if $(test-config) || --ignore-config in [ modules.peek : ARGV ] 
 {    
-    module site-config 
-    {
-        import toolset : using ;
-    }
+    ignore-config = true ;
+}
 
-    module user-config 
-    {
-        import toolset : using ;
-    }
-
-    local user-path = [ modules.peek : HOME ] [ modules.peek : BOOST_BUILD_PATH ] ;
+local user-path = [ modules.peek : HOME ] [ modules.peek : BOOST_BUILD_PATH ] ;        
+    
+# Load site-config.
+module site-config 
+{
+    import project : initialize ;
+    initialize site-config ;        
+}
+    
+if ! $(ignore-config)
+{    
     if [ os.name ] in NT CYGWIN
     {    
-        modules.load site-config : : [ modules.peek : SystemRoot ] $(user-path) ;
-        modules.load user-config : : $(user-path) ;    
-    }    
+        modules.load site-config : : [ modules.peek : SystemRoot ] $(user-path) ;    
+    }
     else
     {
         modules.load site-config : : /etc $(user-path) ;
-        modules.load user-config : : $(user-path) ;    
     }
 }
+
+
+# Load user-config.
+module user-config 
+{
+    import project : initialize ;
+    initialize user-config ;        
+}
+
+if ! $(ignore-config)
+{    
+    modules.load user-config : : $(user-path) ;    
+}    
+
 
 if USER_MODULE in [ RULENAMES ]
 {
