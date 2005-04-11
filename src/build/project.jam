@@ -378,6 +378,8 @@ rule initialize (
     # Import rules common to all project modules from project-rules module,
     # defined at the end of this file.
     modules.clone-rules project-rules $(module-name) ;
+    
+    local jamroot ;
 
     local parent-module ;
     if $(module-name) = site-config
@@ -399,6 +401,11 @@ rule initialize (
         }            
         else
         {
+            if $(location)
+            {
+                jamroot = true ;
+            }
+                        
             parent-module = user-config ;
         }        
     }
@@ -406,6 +413,11 @@ rule initialize (
     if $(parent-module)
     {        
         inherit-attributes $(module-name) : $(parent-module) ;
+    }
+    
+    if $(jamroot)
+    {        
+        $(attributes).set project-root : $(location) : exact ;
     }
                                 
     local parent ;
@@ -441,12 +453,15 @@ rule inherit-attributes ( project-module : parent-module )
         $(attributes).set parent : [ path.parent 
             [ path.make [ modules.binding $(parent-module) ] ] ] ;
     }    
+    local v = [ $(pattributes).get project-root ] ;
+    $(attributes).set project-root : $(v) : exact ;
     $(attributes).set default-build 
       : [ $(pattributes).get default-build ] ;
     $(attributes).set requirements
       : [ $(pattributes).get requirements ] : exact ;
     $(attributes).set usage-requirements
       : [ $(pattributes).get usage-requirements ] : exact ;
+    
     local parent-build-dir = [ $(pattributes).get build-dir ] ;
     if $(parent-build-dir)
     {            
@@ -568,7 +583,7 @@ class project-attributes
             self.build-dir = [ path.root $(specification) $(self.location) ] ;
         }        
         else if ! $(attribute) in "id" "default-build" "location" "source-location"
-          "parent" "projects-to-build"
+          "parent" "projects-to-build" "project-root"
         {
             errors.error "Invalid project attribute '$(attribute)' specified "
                                "for project at '$(self.location)'" ;
