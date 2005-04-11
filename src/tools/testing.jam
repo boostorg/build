@@ -158,6 +158,30 @@ rule dump-tests # ( project-module )
     }    
 }
 
+# Given a project location, compute the name of Boost library
+local rule get-library-name ( path )
+{
+    # Path is in normalized form, so all slashes are forward.
+
+    local match1 = [ MATCH /libs/(.*)/(test|example) : $(path) ] ;
+    local match2 = [ MATCH /libs/(.*)$ : $(path) ] ;
+    local match3 = [ MATCH (/status$) : $(path) ] ;
+
+    if $(match1) { return $(match1[0]) ; }
+    else if $(match2) { return $(match2[0]) ; }
+    else if $(match3) { return "" ; }
+    else if --dump-tests in [ modules.peek : ARGV ] 
+    { 
+        EXIT Cannot extract library name from path $(path) ; 
+    }
+}
+
+
+# Take a target (instance of 'basic-target') and prints 
+# - its type
+# - its name
+# - comments specified via the <test-info> property
+# - relative location of all source from the project root.
 rule dump-test ( target )
 {
     local type = [ $(target).type ] ;
@@ -165,8 +189,13 @@ rule dump-test ( target )
     local project = [ $(target).project ] ;
     
     local project-root = [ $(project).get project-root ] ;
-    local project-root-location = [ $(project-root).get-location ] ;
-    
+    local library = [ get-library-name 
+        [ path.root [ $(project).get location ] [ path.pwd ] ] ] ;
+    if $(library)
+    {
+        name = $(library)/$(name) ;
+    }
+        
     local sources = [ $(target).sources ] ;
     local source-files ;
     for local s in $(sources)
@@ -176,11 +205,11 @@ rule dump-test ( target )
             source-files += 
               [ path.relative 
                   [ path.root [ $(s).location ] [ path.pwd ] ]
-                  [ path.root $(project-root-location) [ path.pwd ] ] ] ;
+                  [ path.root $(project-root) [ path.pwd ] ] ] ;
         }                
     }
           
-    local r = [ $(t).requirements ] ;
+    local r = [ $(target).requirements ] ;
     # Extract values of the <test-info> feature
     local test-info = [ $(r).get <test-info> ] ;
     
