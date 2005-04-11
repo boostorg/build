@@ -32,16 +32,18 @@ import errors ;
 import targets ;
 import "class" : new ;
 import os ;
+import common ;
+import toolset : flags ;
 
 # Make this module a project
 project.initialize $(__name__) ;
 project python ;
 
-rule init ( version ? : root : includes ? : libraries ? : cygwin-condition ? )
+rule init ( version ? : root ? : includes ? : libraries ? : cygwin-condition ? )
 {
     .configured = true ;
                
-    if [ os.name ] = $(NT)
+    if [ os.name ] = NT
     {
         init-nt $(version) : $(root) : $(includes) : $(libraries) : $(cygwin-condition) ;
     }
@@ -55,20 +57,26 @@ rule init ( version ? : root : includes ? : libraries ? : cygwin-condition ? )
     }
 }
 
-rule init-unix ( version ? : root : includes ? : libraries ? )
+rule init-unix ( version ? : root ? : includes ? : libraries ? )
 {
     root ?= /usr ;
     includes ?= $(root)/include/python$(version) ;
     libraries ?= $(root)/lib/python$(version)/config ;
-
+    
+    # Find the 'python' binary, which is used for testing.
+    # Look first in $(root)/bin, then in PATH.
+    local interpreter = [ common.get-invocation-command 
+        python : python : : $(root)/bin : path-last ] ;
+    
     if --debug-configuration in [ modules.peek : ARGV ]
     {
         ECHO "notice: Python include path is" $(includes) ;
         ECHO "notice: Python library path is" $(libraries) ;
+        ECHO "notice: Python interpreter is" $(interpreter) ;        
     }
     
-
-
+    flags python.capture-output PYTHON : $(interpreter) ;
+    
     # On Linux, we don't want to link either Boost.Python or
     # Python extensions to libpython, so that when extensions
     # loaded in the interpreter, the symbols in the interpreter
@@ -91,28 +99,27 @@ rule init-unix ( version ? : root : includes ? : libraries ? )
                    <find-shared-library>python$(version)
                  ;
     
+    # NOTES:
+    # - V1 had logic to force intel to use gcc's runtime.
+    #   Note sure why that was needed, with icc 8.0 extensions
+    #   built with intel are loaded by python without problems.
+    # - There was 'python-static-multithread' logic. Don't know
+    #   what it affected, so can't test.
+    
+    # TODO: need to figure out when the following code is needed:
+    # for builtin extensions only or in some other cases too.
 
-    # TODO: handle the following V1 code:
-#    PYTHON_PROPERTIES ?=
-#      <sysinclude>$(PYTHON_INCLUDES)
-#        <library-path>$(PYTHON_LIB_PATH)
-#          <default>python-intel-use-gcc-stdlib
-#          python-static-multithread
-#      ;
     
-# TODO: need to figure out when the following code is needed:
-# for builtin extensions only or in some other cases too.
-    
-#    if [ modules.peek $(OS) ] = OSF
-#    {
-#        PYTHON_PROPERTIES += <*><*><linkflags>"-expect_unresolved 'Py*' -expect_unresolved '_Py*'" ;
-#    }
-#    else if [ modules.peek $(OS) ] = AIX
-#    {
-#        PYTHON_PROPERTIES 
-#          += <*><*><linkflags>"-Wl,-bI:$(PYTHON_LIB_PATH)/python.exp"
-#            <*><*><find-library>pthreads ;
-#    }
+    #    if [ modules.peek $(OS) ] = OSF
+    #    {
+    #        PYTHON_PROPERTIES += <*><*><linkflags>"-expect_unresolved 'Py*' -expect_unresolved '_Py*'" ;
+    #    }
+    #    else if [ modules.peek $(OS) ] = AIX
+    #    {
+    #        PYTHON_PROPERTIES 
+    #          += <*><*><linkflags>"-Wl,-bI:$(PYTHON_LIB_PATH)/python.exp"
+    #            <*><*><find-library>pthreads ;
+    #    }
 }
 
 rule init-mac ( version : root : includes ? : libraries ? )
@@ -152,7 +159,8 @@ rule init-mac ( version : root : includes ? : libraries ? )
       ;  
 }
 
-rule init-nt ( version : root : includes ? : libraries ? : cygwin-condition ? )
+.alias-defined = ;
+rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? )
 {
 #    PYTHON_PROPERTIES =
 #      boost-python-disable-borland
@@ -165,6 +173,9 @@ rule init-nt ( version : root : includes ? : libraries ? : cygwin-condition ? )
     if ! $(cygwin-condition)
     {        
         root ?= c:/tools/python ;
+        
+        local PATH = [ modules.peek : PATH ] ;
+        local PATH = [ modules.peek : Path ] ;        
         
         PYTHON_LIB_PATH ?= $(root)/libs [ GLOB $(root) : PCbuild ] ;
         
@@ -190,6 +201,7 @@ rule init-nt ( version : root : includes ? : libraries ? : cygwin-condition ? )
         #}
         #properties += <library-file>$(lib) ;
         #}
+        
         properties += <library-path>$(PYTHON_LIB_PATH) ;
             
         # msvc compilers auto-find the python library
@@ -197,26 +209,27 @@ rule init-nt ( version : root : includes ? : libraries ? : cygwin-condition ? )
         # for the rest of the world
         alias python 
           :
-          :
+          : <toolset>msvc 
           :
           : <library-path>$(PYTHON_LIB_PATH) 
-            <toolset>msvc 
           ;
                        
-        if $(toolset) != msvc  
-        {
-            properties += <library-path>$(PYTHON_LIB_PATH) ;
-            
-            local lib = python$(PYTHON_VERSION_NODOT) ;
-            if <define>BOOST_DEBUG_PYTHON in $(properties)
-            {
-                    lib = python$(PYTHON_VERSION_NODOT)_d ;
-            }
-            properties += <find-library>$(lib) ;
-        }                
+        local lib = python$(PYTHON_VERSION_NODOT) ;
+        # TODO: don't support BOOST_DEBUG_PYTHON yet.        
+        #    if <define>BOOST_DEBUG_PYTHON in $(properties)
+        #    {
+        #            lib = python$(PYTHON_VERSION_NODOT)_d ;
+        #    }
+        
+        alias python
+          :
+          :
+          :
+          : <library-path>$(PYTHON_LIB_PATH)    
+            <find-library>$(lib) ;                
     }
     else
-    {            
+    {        
         root ?= /usr ;  
         if $(root) = /usr
         {
@@ -233,15 +246,32 @@ rule init-nt ( version : root : includes ? : libraries ? : cygwin-condition ? )
         CYGWIN_PYTHON_DEBUG_DLL_PATH ?= $(CYGWIN_PYTHON_DEBUG_ROOT)/bin ;
         CYGWIN_PYTHON_DEBUG_LIB_PATH ?= $(CYGWIN_PYTHON_DEBUG_ROOT)/lib/python$(CYGWIN_PYTHON_DEBUG_VERSION)/config ;        
         
-        if <define>BOOST_DEBUG_PYTHON in $(properties)
-        {
-            properties += <library-path>$(CYGWIN_PYTHON_DEBUG_LIB_PATH) <find-library>python$(CYGWIN_PYTHON_DEBUG_VERSION).dll ;
-        }
-        else
-        {
-            properties += <library-path>$(CYGWIN_PYTHON_LIB_PATH) <find-library>python$(CYGWIN_PYTHON_VERSION).dll ;
-        }
-
+        local properties ;
+        # TODO: don't support BOOST_DEBUG_PYTHON yet.                
+        #if <define>BOOST_DEBUG_PYTHON in $(properties)
+        #{
+        #    properties += <library-path>$(CYGWIN_PYTHON_DEBUG_LIB_PATH) <find-library>python$(CYGWIN_PYTHON_DEBUG_VERSION).dll ;
+        #}
+        #else
+        #{
+        properties += <library-path>$(CYGWIN_PYTHON_LIB_PATH) 
+                      <find-library>python$(CYGWIN_PYTHON_VERSION).dll ;
+        
+        properties += <include>$(root)/include/python$(version) ;          
+          
+        #}
+        alias python
+          :
+          : $(cygwin-condition)
+          :
+          : $(properties)
+          ;        
+    }    
+    
+    if ! $(.alias-defined)
+    {
+        .alias-defined = true ;
+        alias python_for_extensions : python ;
     }    
 }
 
@@ -274,26 +304,12 @@ rule python-extension ( name : sources * : requirements * : default-build * :
     #    }
     #    properties += <framework>$(PYTHON_FRAMEWORK) ;
     #}    
-    
-    # TODO: handle
-    # python-intel-use-gcc-stdlib
-    
-       
+               
 #        <metrowerks><*><cxxflags>"-inline deferred" 
 #      <cwpro8><*><cxxflags>"-inline deferred"  # added for internal testing purposes
 #        <cxx><*><sysinclude>@boost/boost/compatibility/cpp_c_headers
 #         <define>BOOST_PYTHON_DYNAMIC_LIB
     
-#    if $(OS) = OSF
-#    {
-#        PYTHON_PROPERTIES += <*><*><linkflags>"-expect_unresolved 'Py*' -expect_unresolved '_Py*'" ;
-#    }
-#    else if $(OS) = AIX
-#    {
-#        PYTHON_PROPERTIES 
-#          += <*><*><linkflags>"-Wl,-bI:$(PYTHON_LIB_PATH)/python.exp"
-#            <*><*><find-library>pthreads ;
-#    }    
     
 #    PYTHON_PROPERTIES += 
 #        <sysinclude>@boost
@@ -306,13 +322,7 @@ rule python-extension ( name : sources * : requirements * : default-build * :
 #      <sysinclude>@boost
 #      <$(gcc-compilers)><*><define>USE_DL_IMPORT
 #          <sysinclude>$(PYTHON_INCLUDES)
-    
-#      <sysinclude>$(PYTHON_INCLUDES)
-#        <library-path>$(PYTHON_LIB_PATH)
-#          <default>python-intel-use-gcc-stdlib
-#          python-static-multithread
-    
-    
+            
     local project = [ project.current ] ;
 
     
@@ -407,7 +417,7 @@ rule capture-output ( target : sources * : properties * )
 {
     PYTHONPATH = [ on $(sources[2]) return $(LOCATE) ] ;
     testing.capture-output $(target) : $(sources[1]) : $(properties) ;
-    LAUNCHER on $(target) = PYTHONPATH=$(PYTHONPATH) "python" ;
+    LAUNCHER on $(target) = PYTHONPATH=$(PYTHONPATH) [ on $(target) return $(PYTHON) ] ;
 }
 
 rule bpl-test ( name : sources * : requirements * )
