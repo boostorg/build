@@ -1393,6 +1393,15 @@ rule SubDir
                          # other than TOP, but just in case...
     }
 
+    # Get path to current directory from root using SubDir.
+    # Save dir tokens for other potential uses.
+    local .SUBDIR_TOKENS = $(<[2-]) ;
+    
+    # This allows us to determine whether we're in the directory where jam was
+    # invoked from so that we can make locally named targets
+    gINVOCATION_SUBDIR_TOKENS ?= $(.SUBDIR_TOKENS) ;
+    gINVOCATION_SUBDIR_TOKENS ?= $(DOT) ;
+
     #
     # If $(TOP)/Jamrules hasn't been included, do so.
     #
@@ -1414,11 +1423,6 @@ rule SubDir
     # Save dir tokens for other potential uses.
     SUBDIR_TOKENS = $(<[2-]) ;
     
-    # This allows us to determine whether we're in the directory where jam was
-    # invoked from so that we can make locally named targets
-    gINVOCATION_SUBDIR_TOKENS ?= $(SUBDIR_TOKENS) ;
-    gINVOCATION_SUBDIR_TOKENS ?= $(DOT) ;
-
     # SUBDIR is the path from the invocation directory to the subproject
     # directory.
     SUBDIR = [ tokens-to-simple-path $($(gTOP)_TOKENS)  $(SUBDIR_TOKENS) ] ;

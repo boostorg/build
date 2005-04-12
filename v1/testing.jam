@@ -16,11 +16,11 @@ local rule get-var-value ( name + )
     return $($(name)) ;
 }
 
-local rule get-library-name ( path )
+local rule get-library-name ( path_or_tokens + )
 {
-    local forward_slash_path = "" ;
-    for i in [ split-path $(path) ] { forward_slash_path = $(forward_slash_path)/$(i) ; }
-    path = $(forward_slash_path) ;
+    local path = $(path_or_tokens) ;
+    if ! $(path[1]) { path = [ split-path $(path) ] ; }
+    path = /$(path:J=/) ;
 
     local match1 = [ MATCH /libs/(.*)/(test|example) : $(path) ] ;
     local match2 = [ MATCH /libs/(.*)$ : $(path) ] ;
@@ -51,7 +51,7 @@ rule boost-test ( sources + : target-type : requirements * : test-name ? : defau
             test-name ?= $(sources[1]:D=:S=) ;
             
             local library = "" ;
-            if $(RELATIVE_SUBDIR) { library = [ get-library-name $(RELATIVE_SUBDIR) ] ; }
+            if $(SUBDIR_TOKENS) { library = [ get-library-name $(SUBDIR_TOKENS) ] ; }
             
             # Make sure that targets don't become part of "all"
             local gSUPPRESS_FAKE_TARGETS = true ;
