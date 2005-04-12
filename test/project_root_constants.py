@@ -13,14 +13,14 @@ t = Tester()
 
 # Create the needed files
 t.write("project-root.jam", """
-constant FOO : foobar ;
+constant FOO : foobar gee ;
 ECHO $(FOO) ;
 """)
 t.write("Jamfile", """
 """)
 
 t.run_build_system()
-t.fail_test(find(t.stdout(), "foobar") == -1)
+t.fail_test(find(t.stdout(), "foobar gee") == -1)
 
 # Regression test: when absolute paths were passed to path-constant rule,
 # Boost.Build failed to recognize path as absolute and prepended current dir.
