@@ -243,7 +243,7 @@ rule check-tool ( xcommand + )
 # - OPTIONS for compile.c++ to the value of <cxxflags> in options
 # - OPTIOns for compile to the value of <compileflags> in options
 # - OPTIONs for link to the value of <linkflags> in options
-rule handle-options ( toolset : condition * : command ? : options * )
+rule handle-options ( toolset : condition * : command * : options * )
 {
     # The last parameter ('true') says it's OK to set flags for another
     # module,   
