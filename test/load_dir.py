@@ -35,6 +35,28 @@ def create_file(arg, dirname, fnames):
                 print l,
             print '\n""")\n'
 
+header =  """#!/usr/bin/python
+
+#  Copyright (C) FILL SOMETHING HERE 2005.
+#  Distributed under the Boost Software License, Version 1.0. (See
+#  accompanying file LICENSE_1_0.txt or copy at
+#  http://www.boost.org/LICENSE_1_0.txt)
+
+from BoostBuild import Tester, List
+import string
+
+t = Tester()
+"""
+
+footer = """
+
+t.run_build_system()
+
+t.expect_addition("bin/$toolset/debug/FILL_SOME_HERE.exe")
+
+t.cleanup()
+"""
+    
 def main():
     if len(sys.argv) != 2:
         usage()
@@ -48,7 +70,11 @@ def main():
         if not os.path.isdir(path):
             print "Path '%s' is not a directory" % (path,)
         
+        print header
+    
         os.path.walk(path, create_file, None)
+
+        print footer
 
 if __name__ == '__main__':
     main()
