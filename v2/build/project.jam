@@ -401,12 +401,13 @@ rule initialize (
         }            
         else
         {
+            # It's either jamroot, or standalone project.
+            # If it's jamroot, inherit from user-config.
             if $(location)
             {
+                parent-module = user-config ;                
                 jamroot = true ;
-            }
-                        
-            parent-module = user-config ;
+            }                   
         }        
     }
                 
