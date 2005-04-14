@@ -796,8 +796,8 @@ module project-rules
                 # This is Jamroot.
                 if $(id)
                 {                    
-                    local specified = [ $(attributes).get build-dir ] ;
-                    if $(specified) && [ path.is-rooted $(specified) ]
+                    if $(explicit-build-dir) 
+                      && [ path.is-rooted $(explicit-build-dir) ]
                     {
                         errors.user-error "Absolute directory specified via 'build-dir' project attribute" 
                           : "Don't know how to combine that with the --build-dir option." 
@@ -806,9 +806,9 @@ module project-rules
                     # Strip the leading slash from id.
                     local rid = [ MATCH /(.*) : $(id) ] ;                
                     local p = [ path.join 
-                        $(global-build-dir) $(rid) $(specified) ] ;
+                        $(global-build-dir) $(rid) $(explicit-build-dir) ] ;
 
-                    $(attributes).set build-dir : $(p) ;
+                    $(attributes).set build-dir : $(p) : exact ;
                 }                
             }                
             else 
