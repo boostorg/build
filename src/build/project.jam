@@ -309,6 +309,7 @@ local rule load-jamfile (
             }            
         }        
     }
+    # Now do some checks
     if $(.current-project) != $(saved-project)
     {
         errors.error "The value of the .current-project variable"
@@ -316,6 +317,28 @@ local rule load-jamfile (
           : "This means some of the targets might be defined a the wrong project."
           ;
     }
+
+    if $(.global-build-dir)
+    {        
+        local id = [ attribute $(jamfile-module) id ] ;
+        local project-root  = [ attribute $(jamfile-module) project-root ] ;
+        local location = [ attribute $(jamfile-module) location ] ;
+    
+        if $(location) && $(project-root) = $(dir)
+        {
+            # This is Jamroot
+            if ! $(id)
+            {
+                ECHO "warning: the --build-dir option was specified" ;
+                ECHO "warning: but Jamroot at '$(dir)'" ;
+                ECHO "warning: specified no project id" ;
+                ECHO "warning: the --build-dir option will be ignored" ;
+            }            
+        }        
+    }        
+    
+
+    
     
 }
 
@@ -335,6 +358,12 @@ rule load-aux ( module-name : file )
     }    
 }
 
+.global-build-dir = [ MATCH --build-dir=(.*) : [ modules.peek : ARGV ] ] ;
+if $(.global-build-dir)
+{    
+    # If the option is specified several times, take the last value.    
+    .global-build-dir = [ path.make $(.global-build-dir[-1]) ] ;
+}
 
 
 # Initialize the module for a project. 
@@ -731,7 +760,8 @@ module project-rules
     {
         import project ;
         import path ;
-                
+        import errors ;
+                        
         local attributes = [ project.attributes $(__name__) ] ;
         if $(id) 
         {
@@ -739,7 +769,9 @@ module project-rules
            project.register-id $(id) : $(__name__) ;
            $(attributes).set id : $(id) ;
         }
-
+        
+        local explicit-build-dir ;
+        
         for n in 2 3 4 5 6 7 8 9
         {
             local option = $($(n)) ;
@@ -747,7 +779,50 @@ module project-rules
             {
                 $(attributes).set $(option[1]) : $(option[2-]) ;
             }
+            if $(option[1]) = "build-dir"
+            {
+                explicit-build-dir = $(option[2-]) ;
+            }            
         }
+        
+        # If '--build-dir' is specified, change the build dir for the project.
+        local global-build-dir = 
+          [ modules.peek project : .global-build-dir ] ;
+        
+        if $(global-build-dir)
+        {                
+            if [ $(attributes).get location ]  = [ $(attributes).get project-root ]
+            {
+                # This is Jamroot.
+                if $(id)
+                {                    
+                    local specified = [ $(attributes).get build-dir ] ;
+                    if $(specified) && [ path.is-rooted $(specified) ]
+                    {
+                        errors.user-error "Absolute directory specified via 'build-dir' project attribute" 
+                          : "Don't know how to combine that with the --build-dir option." 
+                          ;                                          
+                    }
+                    # Strip the leading slash from id.
+                    local rid = [ MATCH /(.*) : $(id) ] ;                
+                    local p = [ path.join 
+                        $(global-build-dir) $(rid) $(specified) ] ;
+
+                    $(attributes).set build-dir : $(p) ;
+                }                
+            }                
+            else 
+            {
+                # Not Jamroot
+                if $(explicit-build-dir)
+                {                    
+                    errors.user-error "When --build-dir is specified, the 'build-project'"
+                      : "attribute is allowed only for top-level 'project' invocations" ;                      
+                }                
+            }                
+        }
+        
+
     }
     
     # Declare and set a project global constant. Project global constants are
