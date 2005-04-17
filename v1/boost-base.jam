@@ -1740,6 +1740,12 @@ else
         .shell-var(LD_LIBRARY_PATH) = PATH ;
     }
 
+    # Dynamic libraries search path var is loader, and hence system, dependant.
+    else
+    {
+        .shell-var(LD_LIBRARY_PATH) = $(gSHELL_LIBPATH) ;
+    }
+
     # The names of path variables in the shell
     .run-path-shell-vars = [ unique $(.shell-var($(.run-path-vars))) ] ;
     
