@@ -47,16 +47,7 @@ rule init ( name ? )
     generators.register-composing doxygen.headers-to-doxyfile : H HPP : DOXYFILE ; 
     generators.register-standard doxygen.run : DOXYFILE : DOXYGEN_XML_MULTIFILE ;
     generators.register-standard doxygen.xml-to-boostbook : DOXYGEN_XML : BOOSTBOOK ;
-    
-    if ! [ boostbook.xsl-dir ]
-    {
-        ECHO "warning: Doxygen initialization: Boost.Build stylesheets not found " ;
-        ECHO "warning: Generation of single XML file won't be possible. " ;
-    }
-    else
-    {          
-        generators.register-standard doxygen.collect : DOXYGEN_XML_MULTIFILE : DOXYGEN_XML ;
-    }
+    generators.register-standard doxygen.collect : DOXYGEN_XML_MULTIFILE : DOXYGEN_XML ;
             
     IMPORT $(__name__) : doxygen : : doxygen ;
   }
@@ -116,6 +107,22 @@ rule run ( target : source : properties * )
   NAME on $(target) = $(.doxygen) ;
 }
 
+# The rules below require Boost.Book stylesheets, so we need
+# some code to check that the boostbook module is actaully
+# initialized.
+rule check-boostbook ( )
+{
+    if ! [ modules.peek boostbook : .initialized ]
+    {
+        ECHO "error: the boostbook module is not initialized" ;
+        ECHO "error: you've attempted to use the 'doxygen' toolset, " ;
+        ECHO "error: which requires Boost.Book," ;
+        ECHO "error: but never initialized Boost.Book." ;
+        EXIT "error: Hint: add 'using boostbook ;' to your user-config.jam" ;
+    }      
+}
+
+
 # Collect the set of Doxygen XML files into a single XML source file
 # that can be handled by an XSLT processor. The source is completely
 # ignored (see doxygen-action), because this action picks up the
@@ -125,6 +132,7 @@ rule run ( target : source : properties * )
 # Doxygen XML file.
 rule collect ( target : source : properties * )
 {
+  check-boostbook ;
   local collect-xsl-dir = [ path.native 
                         [ path.join [ boostbook.xsl-dir ] doxygen collect ] 
                           ] ;
@@ -139,6 +147,7 @@ rule collect ( target : source : properties * )
 # Translate Doxygen XML into BoostBook
 rule xml-to-boostbook ( target : source : properties * )
 {
+  check-boostbook ;
   local xsl-dir = [ boostbook.xsl-dir ] ;
   local d2b-xsl = [ path.native 
                   [ path.join [ boostbook.xsl-dir ] doxygen 
