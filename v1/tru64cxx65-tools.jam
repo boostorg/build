@@ -129,6 +129,5 @@ rule Archive-action
 
 actions updated together piecemeal tru64cxx65-Archive-action
 {
-  rm -f $(<)
-  ar r$(ARFLAGS) $(<) $(>)
+  ar -ru$(ARFLAGS) $(<) $(>)
 }
