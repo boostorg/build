@@ -853,9 +853,9 @@ rule register-actual-name ( actual-name : virtual-target )
         }        
         errors.error "Duplicate name of actual target:" $(actual-name) 
           : "previous virtual target" [ $(.actual.$(actual-name)).str ] 
-          : "created from" [ $(cmt1).location ]
+          : "created from" [ $(cmt1).full-name ]
           : "another virtual target" [ $(virtual-target).str ]
-          : "created from" [ $(cmt2).location ]                
+          : "created from" [ $(cmt2).full-name ]                
           : "added properties: " $(properties-added) 
           : "removed properties: " $(properties-removed) ;
     }
