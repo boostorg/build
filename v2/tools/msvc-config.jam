@@ -1,0 +1,28 @@
+#~ Copyright 2005 Rene Rivera.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
+# Automatic configuration for VisualStudio toolset. To use, just import this module.
+
+import os ;
+import toolset : using ;
+
+if [ os.name ] = NT
+{
+    for local R in 8.0 7.1 7.0
+    {
+        local vc-path = [ W32_GETREG
+            "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\$(R)\\Setup\\VC"
+            : "ProductDir" ] ;
+        local vc-version = $(R) ;
+        
+        if $(vc-path)
+        {
+            if --debug-configuration in [ modules.peek : ARGV ]
+            {
+                ECHO "notice:" msvc ":" $(vc-version) ":" "$(vc-path)\\bin\\cl.exe" ;
+            }
+            using msvc : $(vc-version) : "$(vc-path)\\bin\\cl.exe" ;
+        }
+    }
+}
