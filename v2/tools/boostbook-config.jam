@@ -1,0 +1,37 @@
+#~ Copyright 2005 Rene Rivera.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
+# Automatic configuration for BoostBook tools. To use, just import this module.
+
+import os ;
+import toolset : using ;
+
+local docbook_xsl-path = [ modules.peek : DOCBOOK_XSL_DIR ] ;
+local docbook_dtd-path = [ modules.peek : DOCBOOK_DTD_DIR ] ;
+if [ os.name ] = NT
+{
+    docbook_xsl-path ?= [ GLOB "C:\\Boost\\share" : docbook-xsl* ] ;
+    docbook_xsl-path = $(docbook_xsl-path[1]) ;
+    docbook_dtd-path ?= [ GLOB "C:\\Boost\\share" : docbook-xml* ] ;
+    docbook_dtd-path = $(docbook_dtd-path[1]) ;
+    
+    if --debug-configuration in [ modules.peek : ARGV ]
+    {
+        ECHO "notice:" using boostbook ":" $(docbook_xsl-path) ":" $(docbook_dtd-path) ;
+    }
+    using boostbook : $(docbook_xsl-path) : $(docbook_dtd-path) ;
+}
+else
+{
+    docbook_xsl-path ?= [ GLOB "/usr/local/share" "/usr/share" "/opt/share" : docbook-xsl* ] ;
+    docbook_xsl-path = $(docbook_xsl-path[1]) ;
+    docbook_dtd-path ?= [ GLOB "/usr/local/share" "/usr/share" "/opt/share" : docbook-xml* ] ;
+    docbook_dtd-path = $(docbook_dtd-path[1]) ;
+    
+    if --debug-configuration in [ modules.peek : ARGV ]
+    {
+        ECHO "notice:" using boostbook ":" $(docbook_xsl-path) ":" $(docbook_dtd-path) ;
+    }
+    using boostbook : $(docbook_xsl-path) : $(docbook_dtd-path) ;
+}

@@ -20,7 +20,7 @@ if [ os.name ] = NT
         {
             if --debug-configuration in [ modules.peek : ARGV ]
             {
-                ECHO "notice:" msvc ":" $(vc-version) ":" "$(vc-path)\\bin\\cl.exe" ;
+                ECHO "notice:" using msvc ":" $(vc-version) ":" "$(vc-path)\\bin\\cl.exe" ;
             }
             using msvc : $(vc-version) : "$(vc-path)\\bin\\cl.exe" ;
         }
