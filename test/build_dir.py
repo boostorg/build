@@ -94,7 +94,7 @@ t.write("Jamroot", """
 project foo : build-dir %s ;
 exe a : a.cpp ;
 build-project sub ;
-""" % os.getcwd())
+""" % string.replace(os.getcwd(), '\\', '\\\\'))
 
 t.run_build_system("--build-dir=build", status=1)
 t.fail_test(string.find(t.stdout(),
