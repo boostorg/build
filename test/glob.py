@@ -7,6 +7,8 @@
 
 #  Test the 'glob' rule in Jamfile context.
 from BoostBuild import Tester, List
+import os
+import string
 
 # Create a temporary working directory
 t = Tester()
@@ -97,7 +99,21 @@ exe a : [ glob foo/*.cpp bar/*.cpp ] ../d2/d//l ;
 t.run_build_system(subdir="d1")
 t.expect_addition("d1/bin/$toolset/debug/a.exe")
 
+# Test that 'glob' works with absolute names
+t.rm("d1/bin")
 
+# Note that to get current dir, we use bjam's PWD,
+# not Python's os.getcwd, because the former will
+# always return long path. The latter might return
+# short path, and that will confuse path.glob.
+t.write("d1/Jamfile", """
+project : source-location src ;
+local pwd = [ PWD ] ; # Always absolute
+exe a : [ glob $(pwd)/src/foo/*.cpp $(pwd)/src/bar/*.cpp ] ../d2/d//l ; 
+""")
+
+t.run_build_system(subdir="d1")
+t.expect_addition("d1/bin/$toolset/debug/a.exe")
 
 
 t.cleanup()
