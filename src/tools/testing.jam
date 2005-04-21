@@ -48,6 +48,7 @@ import path ;
 import os ;
 import common ;
 import sequence ;
+import errors ;
 
 rule init ( ) { }
 
@@ -108,15 +109,27 @@ rule compile-fail ( sources + : requirements * : target-name ? )
     return [ make-test compile-fail : $(sources) : $(requirements) : $(target-name) ] ;
 }
 
+rule handle-input-files ( input-files * )
+{
+    if $(input-files[2])
+    {
+        # Check that sorting made when creating property-set instance
+        # won't change the ordering.
+        if [ sequence.insertion-sort $(input-files) ] != $(input-files)
+        {
+            errors.user-error "Names of input files must be sorted alphabetically"
+              : "due to internal limitations" ;
+        }        
+    }
+    return <testing.input-file>$(input-files) ;
+}
+
+
 rule run ( sources + : args * : input-files * : requirements * : target-name ? 
     : default-build * )
 {      
     requirements += <testing.arg>$(args:J=" ") ;
-    requirements += <testing.input-file>$(input-files[1]) ;
-    if $(input-files[2]) || $(default-build)
-    {
-        EXIT "NOT supported" ;
-    }    
+    requirements += [ handle-input-files $(input-files) ] ;
     return [ make-test run : $(sources) : $(requirements) : $(target-name) ] ;
 }
 
@@ -124,11 +137,7 @@ rule run-fail ( sources + : args * : input-files * : requirements * : target-nam
     : default-build * )
 {    
     requirements += <testing.arg>$(args:J=" ") ;    
-    requirements += <testing.input-file>$(input-files[1]) ;
-    if $(input-files[2]) || $(default-build)
-    {
-        EXIT "NOT supported" ;
-    }    
+    requirements += [ handle-input-files $(input-files) ] ;
     return [ make-test run-fail : $(sources) : $(requirements) : $(target-name) ] ;
 }
 
