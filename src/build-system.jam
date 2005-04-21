@@ -46,7 +46,10 @@ if $(test-config) || --ignore-config in [ modules.peek : ARGV ]
     ignore-config = true ;
 }
 
-local user-path = [ modules.peek : HOME ] [ modules.peek : BOOST_BUILD_PATH ] ;        
+local HOME = [ modules.peek : HOME ] ;
+# Bjam breaks vars at spaces -- fix this back.
+HOME = $(HOME:J=" ") ;
+local user-path = $(HOME) [ modules.peek : BOOST_BUILD_PATH ] ;        
     
 # Load site-config.
 module site-config 
