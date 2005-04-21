@@ -787,7 +787,7 @@ module project-rules
             }
             if $(option[1]) = "build-dir"
             {
-                explicit-build-dir = $(option[2-]) ;
+                explicit-build-dir = [ path.make $(option[2-]) ] ;
             }            
         }
         
