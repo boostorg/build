@@ -75,7 +75,6 @@ critical_tests += ["core_d12", "core_typecheck", "core_delete_module",
 
 tests = [ "rebuilds",
           "timedata",
-          "abs_workdir",
           "project_test3",
           "project_test4",
           "generators_test",
