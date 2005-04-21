@@ -1,0 +1,47 @@
+#~ Copyright 2005 Rene Rivera.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
+# Automatic configuration for Python tools and librries. To use, just import this module.
+
+import os ;
+import toolset : using ;
+
+if [ os.name ] = NT
+{
+    local ProgramFiles = [ modules.peek : ProgramFiles ] ;
+    if $(ProgramFiles)
+    {
+        ProgramFiles = "$(ProgramFiles:J= )" ;
+    }
+    else
+    {
+        ProgramFiles = "C:\\Program Files" ;
+    }
+    
+    local doxygen-path = [ GLOB [ modules.peek : PATH ] "$(ProgramFiles)\\doxygen\\bin" : doxygen\.exe ] ;
+    doxygen-path = $(doxygen-path[1]) ;
+    
+    if $(doxygen-path)
+    {
+        if --debug-configuration in [ modules.peek : ARGV ]
+        {
+            ECHO "notice:" using doxygen ":" $(doxygen-path) ;
+        }
+        using doxygen : $(doxygen-path) ;
+    }
+}
+else
+{
+    local doxygen-path = [ GLOB [ modules.peek : PATH ] : doxygen ] ;
+    doxygen-path = $(doxygen-path[1]) ;
+    
+    if $(xsltproc-path)
+    {
+        if --debug-configuration in [ modules.peek : ARGV ]
+        {
+            ECHO "notice:" using doxygen ":" $(doxygen-path) ;
+        }
+        using doxygen : $(doxygen-path) ;
+    }
+}
