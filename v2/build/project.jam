@@ -299,6 +299,7 @@ local rule load-jamfile (
     if ! $(jamfile-module) in $(.jamfile-modules)
     {           
         .jamfile-modules += $(jamfile-module) ;        
+        mark-as-user $(jamfile-module) ;
         modules.load $(jamfile-module) :  [ path.native $(jamfile-to-load) ] : . ;
         if $(jamfile-to-load:BS) in $(JAMROOT)
         {
@@ -342,13 +343,18 @@ local rule load-jamfile (
     
 }
 
-
-rule load-aux ( module-name : file )
+rule mark-as-user ( module-name )
 {
     if USER_MODULE in [ RULENAMES ]
     {            
         USER_MODULE $(module-name) ;
     }
+}
+
+
+rule load-aux ( module-name : file )
+{
+    mark-as-user $(module-name) ;
     
     module $(module-name)
     {
