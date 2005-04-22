@@ -134,8 +134,8 @@ if $(LINK_FORMAT) = bundle
 }
 else
 {
-    flags darwin LINKFLAGS <target-type>$(SHARED_TYPES) :
-        -Wl,-dynamic -nostartfiles -Wl,-dylib -Wl,-ldylib1.o ;
+#    flags darwin LINKFLAGS <target-type>$(SHARED_TYPES) :
+#        -Wl,-dynamic -nostartfiles -Wl,-dylib -Wl,-ldylib1.o ;
 }
 
 flags darwin .LINKFLAGS <linkflags> ;
@@ -184,7 +184,7 @@ actions darwin-Link-DyLib-action bind NEEDLIBS NEEDIMPS
     && \
     $(.GCC_BIN_DIR)$(.GXX) $(LINKFLAGS) -o "$(<[1])" "$(<[1]:S=.lo)" \
       -F$(FRAMEWORKS:D) -framework$(_)$(FRAMEWORKS:D=) \
-      -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) \
+      -L"$(LIBPATH:T)" -L"$(STDLIBPATH:T)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) -dynamiclib -install_name "$(<[1]:D=:S=.dylib)" \
     && \
     rm -f "$(<[1]:S=.lo)"
 }
