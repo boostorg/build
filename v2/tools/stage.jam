@@ -468,7 +468,7 @@ rule rename ( name : type ? : property-set : unversioned ? )
                 case tru64cxx* : toolset-tag += tru ;
                 case vacpp* : toolset-tag += xlc ;
             }
-            local version = [ MATCH "<toolset.*version>(.*)" : $(properties) ] ;
+            local version = [ MATCH "<toolset.*version>([0123456789]+)[.]([0123456789]*)" : $(properties) ] ;
             toolset-tag += $(version) ;
         }
 
