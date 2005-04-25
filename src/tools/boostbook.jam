@@ -52,7 +52,10 @@ type.register BOOSTBOOK_MAIN ;
 #   docbook-dtd-dir: The DocBook DTD directory. If not provided, we use
 #     DOCBOOK_DTD_DIR From the environment (if available). Otherwise, we let
 #     the XML processor load the DTD remotely.
-rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? )
+#
+#   boost-book-dir: The BoostBook directory with the DTD and XSL subdirs.
+#
+rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
 {
 
   docbook-xsl-dir ?= [ modules.peek : DOCBOOK_XSL_DIR ] ;
@@ -79,7 +82,7 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? )
     local boost-build-root = [
         sequence.transform path.make : [ modules.peek : BOOST_BUILD_PATH ]
     ] ; 
-    local search-dirs = [ path.join $(boost-root) tools boostbook ] 
+    local search-dirs = $(boostbook-dir) [ path.join $(boost-root) tools boostbook ] 
                         $(boost-build-root)/../../boostbook ;
     
     if --debug-configuration in [ modules.peek : ARGV ] 
