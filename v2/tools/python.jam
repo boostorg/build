@@ -179,7 +179,7 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
         
         PYTHON_LIB_PATH ?= $(root)/libs [ GLOB $(root) : PCbuild ] ;
         
-        PYTHON_INCLUDES ?= $(root)/include ;
+        PYTHON_INCLUDES ?= $(root)/include [ GLOB $(root) : PC ] ;
         
         PYTHON_DLL ?= [ GLOB $(PATH) $(Path) : python$(PYTHON_VERSION_NODOT).dll ] ;
         PYTHON_DEBUG_DLL ?= [ GLOB $(PATH) $(Path) : python$(PYTHON_VERSION_NODOT)_d.dll ] ;
@@ -212,6 +212,7 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
           : <toolset>msvc 
           :
           : <library-path>$(PYTHON_LIB_PATH) 
+            <include>$(PYTHON_INCLUDES)
           ;
                        
         local lib = python$(PYTHON_VERSION_NODOT) ;
@@ -226,6 +227,7 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
           :
           :
           : <library-path>$(PYTHON_LIB_PATH)    
+            <include>$(PYTHON_INCLUDES)
             <find-library>$(lib) ;                
     }
     else
