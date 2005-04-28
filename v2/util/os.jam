@@ -39,6 +39,12 @@ EXPORT $(__name__) : $(.constants) ;
 .expand-variable-prefix-NT = % ;
 .expand-variable-suffix-NT = % ;
 
+.shared-library-path-variable-CYGWIN = PATH ;
+.path-separator-CYGWIN = ":" ;
+.expand-variable-prefix-CYGWIN = $ ;
+.expand-variable-suffix-CYGWIN = "" ;
+
+
 .shared-library-path-variable = LD_LIBRARY_PATH ;
 .path-separator = ":" ;
 .expand-variable-prefix = $ ;
