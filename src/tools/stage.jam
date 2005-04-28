@@ -314,7 +314,7 @@ class installed-exe-generator : generator
     
     rule run ( project name ? : property-set : source : multiple ? )
     {
-        if [ $(property-set).get <os> ] = NT
+        if [ $(property-set).get <os> ] in NT CYGWIN
         {
             # Relinking is never needed on NT
             return [ stage.copy-file $(project) 
