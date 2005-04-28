@@ -240,8 +240,17 @@ rule glob-one ( dir : p )
         # 
 
     if $(p) != ".."
-    {                
-        result += [ GLOB $(dir) : $(p) ] ;
+    {       
+        # On cygwin, 'cygdrive' is a special directory and is
+        # not shown when listing '/'.
+        if $(dir) = / && $(p) = cygdrive
+        {
+            result = /cygdrive ;
+        }
+        else
+        {            
+            result += [ GLOB $(dir) : $(p) ] ;
+        }        
     }            
     else
     {
