@@ -921,7 +921,8 @@ rule clone-action ( action : new-project : new-action-name ? : new-properties ? 
     for local target in [ $(action).targets ]
     {
         local n = [ $(target).name ] ;
-        local cloned-target = [ class.new file-target $(n:D=) : [ $(target).type ] 
+        # Don't modify the name of the produced targets.Strip the directory f
+        local cloned-target = [ class.new file-target $(n) exact : [ $(target).type ] 
           : $(new-project) : $(cloned-action) ] ;
         local d = [ $(target).dependencies ] ;
         if $(d)
