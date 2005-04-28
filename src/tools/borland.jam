@@ -112,13 +112,13 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 
 actions compile.c++
 {
-    $(CONFIG_COMMAND) -j5 -g255 -q -c -P -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -P -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 # For C, we don't pass -P flag
 actions compile.c
 {
-    $(CONFIG_COMMAND) -j5 -g255 -q -c -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 
@@ -193,7 +193,7 @@ rule link ( targets + : sources * : properties * )
 
 actions link bind LIBRARIES
 {
-    $(.set-path)$(.root:W)$(.old-path) $(CONFIG_COMMAND) -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(<[2]:W)"
+    $(.set-path)$(.root:W)$(.old-path) "$(CONFIG_COMMAND)" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(<[2]:W)"
 }
 
 rule link.dll ( targets + : sources * : properties * )
@@ -203,6 +203,6 @@ rule link.dll ( targets + : sources * : properties * )
 
 actions link.dll bind LIBRARIES
 {
-    $(.set-path)$(.root:W)$(.old-path) $(CONFIG_COMMAND) -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(<[3]:W)"
+    $(.set-path)$(.root:W)$(.old-path) "$(CONFIG_COMMAND)" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(<[3]:W)"
     "$(.root)implib" "$(<[2]:W)" "$(<[1]:W)"
 }
