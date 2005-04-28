@@ -518,6 +518,14 @@ class file-target : abstract-file-target
 
                 common.MkDir $(d) ;
             }            
+            
+            # For real file target, we create gristless target that
+            # depends on the real target. This allows to run
+            #
+            #    bjam hello.o
+            #
+            # without trying to guess the name of the real target.            
+            DEPENDS $(target:G=) : $(target) ;
         }
         else
         {

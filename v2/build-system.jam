@@ -138,6 +138,8 @@ if "--clean" in [ modules.peek : ARGV ]
     clean = true ;
 }
 
+local bjam-targets ;
+
 for local id in $(target-ids)
 {
     if $(id) = clean
@@ -146,10 +148,12 @@ for local id in $(target-ids)
     }
     else
     {
-        local t = [ $(current-project).find $(id) ] ;
+        local t = [ $(current-project).find $(id) : no-error ] ;
         if ! $(t)
         {
-            error target $(id) does not exist ;
+            ECHO "notice: could not find main target " $(id) ;
+            ECHO "notice: assuming it's a name of file to create " ;
+            bjam-targets += $(id) ;
         }
         else
         {
@@ -194,7 +198,11 @@ for t in $(virtual-targets)
 NOTFILE all ;
 DEPENDS all : $(actual-targets) ;
 
-if $(clean)
+if $(bjam-targets)
+{
+    UPDATE $(bjam-targets) ;
+}
+else if $(clean)
 {
     UPDATE clean ;
 }
