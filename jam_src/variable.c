@@ -110,10 +110,14 @@ var_defines( char **e )
 	    {
 		LIST *l = L0;
 		char *pp, *p;
+# ifdef OPT_NO_EXTERNAL_VARIABLE_SPLIT
+                char split = '\0';
+# else
 # ifdef OS_MAC
 		char split = ',';
 # else
 		char split = ' ';
+# endif
 # endif
                 size_t len = strlen(val + 1);
                 if ( val[1] == '"' && val[len] == '"')

@@ -1,6 +1,6 @@
 @ECHO OFF
 
-REM ~ Copyright 2002-2004 Rene Rivera.
+REM ~ Copyright 2002-2005 Rene Rivera.
 REM ~ Distributed under the Boost Software License, Version 1.0.
 REM ~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
@@ -50,17 +50,6 @@ REM Try and guess the toolset to bootstrap the build with...
 REM Sets BOOST_JAM_TOOLSET to the first found toolset.
 REM May also set BOOST_JAM_TOOLSET_ROOT to the
 REM location of the found toolset.
-setlocal & endlocal
-if NOT "_%CWFolder%_" == "__" (
-    set BOOST_JAM_TOOLSET=metrowerks
-    set BOOST_JAM_TOOLSET_ROOT=%CWFolder%\
-    goto :eof )
-setlocal & endlocal
-call :Test_Path mwcc.exe
-if not errorlevel 1 (
-    set BOOST_JAM_TOOLSET=metrowerks
-    set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\..\
-    goto :eof)
 setlocal & endlocal
 if NOT "_%VS71COMNTOOLS%_" == "__" (
     set BOOST_JAM_TOOLSET=vc7
@@ -150,6 +139,17 @@ setlocal & endlocal
 if EXIST "C:\MinGW\bin\gcc.exe" (
     set BOOST_JAM_TOOLSET=mingw
     set BOOST_JAM_TOOLSET_ROOT=C:\MinGW\
+    goto :eof)
+setlocal & endlocal
+if NOT "_%CWFolder%_" == "__" (
+    set BOOST_JAM_TOOLSET=metrowerks
+    set BOOST_JAM_TOOLSET_ROOT=%CWFolder%\
+    goto :eof )
+setlocal & endlocal
+call :Test_Path mwcc.exe
+if not errorlevel 1 (
+    set BOOST_JAM_TOOLSET=metrowerks
+    set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\..\
     goto :eof)
 setlocal & endlocal
 call :Error_Print "Could not find a suitable toolset."

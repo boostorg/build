@@ -1,3 +1,15 @@
+bjam (3.1.11-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Rene Rivera <grafik@redshift-software.com>  Sat, 30 Apr 2005 00:00:00 +0000
+
+bjam (3.1.10-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Rene Rivera <grafik@redshift-software.com>  Tue, 1 Jun 2004 05:42:35 +0000
+
 bjam (3.1.9-2) unstable; urgency=low
 
   * Use default value of BOOST_BUILD_PATH is not is set in environment.

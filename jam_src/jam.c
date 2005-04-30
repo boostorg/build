@@ -269,7 +269,7 @@ int  main( int argc, char **argv, char **arg_environ )
 	   printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.  \n" );
         printf( "   Copyright 2001 David Turner.\n" );
         printf( "   Copyright 2001-2004 David Abrahams.\n" );
-        printf( "   Copyright 2002-2004 Rene Rivera.\n" );
+        printf( "   Copyright 2002-2005 Rene Rivera.\n" );
 
         return EXITOK;
     }
@@ -347,7 +347,7 @@ int  main( int argc, char **argv, char **arg_environ )
     {
    /* Pleace don't change the following line. The 'bump_version.py' script
        expect a specific format of it. */
-    char  *major_version = "03", *minor_version = "01", *changenum = "10";
+    char  *major_version = "03", *minor_version = "01", *changenum = "11";
     var_set( "JAM_VERSION",
              list_new( list_new( list_new( L0, newstr( major_version ) ), 
                                  newstr( minor_version ) ), 
