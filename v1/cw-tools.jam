@@ -77,6 +77,11 @@ flags cw CFLAGS <include-search>paths : "-cwd explicit" ;
 flags cw CFLAGS <include-search>relative : "-cwd include" ;
 flags cw C++FLAGS <rtti>off : "-RTTI off" ;
 flags cw C++FLAGS <rtti>on : "-RTTI on" ;
+# CodeWarrior on MacOS defaults to wchar_t support off, contrary
+# to what it does on Windows. So "fix" this discrepancy. Don't
+# bother with OS type just set this to on for all. After all it's
+# standard!
+flags cw CFLAGS : "-wchar_t on" ;
 
 # OS subsystem target
 if $(NT)
