@@ -107,12 +107,17 @@ rule check-init-parameters ( toolset : * )
     return $(condition) ;
 }
 
-# A helper rule to get the command to invoke some tool. The rule is either passed
-# a user provided command, it which case it checks it for correctness, or it tries
-# to find the tool using it's name, the PATH, and additional path.
+# A helper rule to get the command to invoke some tool. 
+# In 'user-provided-command' is not given, tries to find binary
+# named 'tool' in PATH and in the passed 'additional-path'. Otherwise,
+# verified that the first element of 'user-provided-command' is an
+# existing program.
+#
+#
 # This rule returns the command to be used when invoking the tool. If we can't
 # find the tool, a warning is issued.
-# If 'path-last' is specified, path is checked after 'additional-paths'.
+# If 'path-last' is specified, PATH is checked after 'additional-paths' when
+# searching to 'tool'.
 rule get-invocation-command ( 
     toolset : tool : user-provided-command * : additional-paths * : path-last ? )
 {
@@ -164,12 +169,12 @@ rule get-absolute-tool-path ( command )
 
 
 
-# Attempts to find tool (binary) named 'name' in PATH and in 'additiona-paths'.
-# If found in path, returns 'name'.
-# If found in additional paths, returns full name. If there are several possibilities,
-# returns them all.
+# Attempts to find tool (binary) named 'name' in PATH and in 'additional-paths'.
+# If found in PATH, returns 'name'.
+# If found in additional paths, returns absolute name. If the tool is found
+# in several directories, return all paths.
 # Otherwise, returns empty string.
-# If 'path-last' is specified, path is checked after 'additional-paths'.
+# If 'path-last' is specified, PATH is searched after 'additional-paths'.
 rule find-tool ( name : additional-paths * : path-last ? )
 {
     local path = [ path.programs-path ] ;
