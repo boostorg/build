@@ -1245,58 +1245,6 @@ class typed-target : basic-target
     }            
 }
 
-#
-# Given a base target name and a set of properties, returns the
-# name which should be really used, by looking at the <tag> properties.
-# The tag properties come in two flavour:
-#   - <tag>value, 
-#   - <tag>@rule-name
-# In the first case, value is just added to name
-# In the second case, the specified rule is called with name and properties
-# and should return the new name.
-rule tag-name ( name : property-set )
-{
-    local properties = [ $(property-set).raw ] ;
-    
-    local tagged-name = $(name) ;
-
-    local name_f = [ $(property-set).get <name> ] ;
-    local tags = [ $(property-set).get <tag> ] ;
-    
-    if $(name_f) && $(tags)
-    {
-        errors.error "Both <tag> and <name> properties specified" ;
-    }
-    
-
-    if $(name_f)
-    {
-        tagged-name = $(name_f) ;
-    }            
-    if $(tags)
-    {        
-        local rule-name = [ MATCH ^@(.*) : $(tags) ] ;
-        if $(rule-name)
-        {
-            if $(tags[2])
-            {
-                errors.error "<tag>@rulename is present but is the the only <tag> feature" ;
-            }
-            tagged-name = [ $(rule-name) $(name) : $(property-set) ] ;
-        }
-        else
-        {                            
-            for local tag in $(tags)
-            {
-                tagged-name = $(tagged-name)$(tag) ;
-            }
-        }        
-    }
-    
-    return $(tagged-name) ;
-}
-
-
 # Return the list of sources to use, if main target rule is invoked
 # with 'sources'. If there are any objects in 'sources', they are treated
 # as main target instances, and WRITEME.

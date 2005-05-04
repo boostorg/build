@@ -405,6 +405,17 @@ class abstract-file-target : virtual-target
         }                
     }            
 
+    # Given the target name specified in constructor, returns the
+    # name which should be really used, by looking at the <tag> properties.
+    # The tag properties come in two flavour:
+    #   - <tag>value, 
+    #   - <tag>@rule-name
+    # In the first case, value is just added to name
+    # In the second case, the specified rule is called with specified name,
+    # target type and properties and should return the new name.
+    # If not <tag> property is specified, or the rule specified by
+    # <tag> returns nothing, returns the result of calling 
+    # virtual-target.add-suffix
     rule _adjust-name ( specified-name )
     {        
         local ps ;
