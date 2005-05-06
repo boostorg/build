@@ -266,7 +266,7 @@ file_archscan(
 		*/
 
 		name = string_table + atoi( ar_hdr.ar_name + 1 );
-		endname = name + strlen( name );
+		for ( endname = name; *endname && *endname != '\n'; ++endname) {}
 	    }
 	    else
 	    {
