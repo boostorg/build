@@ -373,5 +373,5 @@ actions together cw-Archive-action
 {
     $(CW_SETUP)
     $(CW_CLEAR_ERROR)
-    $(MWLD) -library $(FLAGS) $(ARFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -o "$(<)" $(CMD)"$(>)" "$(FINDLIBS)$(SUFLIB)"
+    $(MWLD) -library $(FLAGS) $(ARFLAGS) "-L$(LIBPATH)" "-L$(STDLIBPATH)" -o "$(<)" $(CMD)"$(>)" "$(FINDLIBS)"
 }
