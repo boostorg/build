@@ -23,7 +23,8 @@
 
 # No static linking as far as I can tell.
 # flags cxx LINKFLAGS <runtime-link>static : -bstatic ;
-flags cxx CFLAGS <debug-symbols>on : -g ;
+flags tru64cxx65 CFLAGS <debug-symbols>on : -g ;
+flags tru64cxx65 C++FLAGS <debug-symbols>on : -gall ;
 flags tru64cxx65 LINKFLAGS <debug-symbols>on : -g ;
 flags tru64cxx65 LINKFLAGS <debug-symbols>off : -s ;
 flags tru64cxx65 LINKFLAGS <target-type>$(SHARED_TYPES) : -shared -expect_unresolved 'Py*' -expect_unresolved '_Py*' ;
