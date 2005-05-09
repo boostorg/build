@@ -527,6 +527,12 @@ NOTFILE all first shell files lib dll exe obj dirs clean uninstall test nothing 
 ALWAYS clean uninstall ;
 
 #
+# Prevent external variables from interfeering with some esnetial intenal
+# variables.
+#
+TOP = ;
+
+#
 # Rules
 #
 
