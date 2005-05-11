@@ -97,7 +97,10 @@ if ! [ MATCH "(gcc)" : $(.GCC) ]
 {
     flags darwin CFLAGS : -Wno-long-double -no-cpp-precomp ;
 }
-if ! [ MATCH "(g[+][+])" : $(.GXX) ]
+# GCC 4.0, the default compiler in Darwin 8.0.0, does not have
+# -fcoalesce-templates.  GCC 3.3 needs it.
+if ! [ MATCH "(g[+][+])" : $(.GXX) ] && $(JAMUNAME[3]) < "8.0.0" ||
+    [ MATCH "(g[+][+]-3.3)" : $(.GXX) ]
 {
     flags darwin C++FLAGS : -fcoalesce-templates ;
 }
