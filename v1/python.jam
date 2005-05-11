@@ -69,7 +69,7 @@ else if $(UNIX) && $(OS) = MACOSX
 }
 else
 {
-    PYTHON_EMBEDDED_LIBRARY = python$(PYTHON_VERSION) dl util ;
+    PYTHON_EMBEDDED_LIBRARY = python$(PYTHON_VERSION) dl ;
 }
 
 
