@@ -1,4 +1,5 @@
-# Copyright 2001 David Abrahams.  Copyright 2004 Markus Schöpflin.
+# Copyright 2001 David Abrahams.
+# Copyright 2004, 2005 Markus Schoepflin.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
@@ -20,11 +21,17 @@
 #   has not been used to avoid the stream of warning messages issued by
 #   ar or ld when creating a library or linking an application.
 #
+# - Debug symbols are generated with "-g3", as this works both in debug and
+#   release mode. When compiling C++ code without optimization, we additionally
+#   use "-gall", which generates full symbol table information for all classes,
+#   structs, and unions. As this turns off optimization, it can't be used when
+#   optimization is needed.
+#
 
 # No static linking as far as I can tell.
 # flags cxx LINKFLAGS <runtime-link>static : -bstatic ;
-flags tru64cxx65 CFLAGS <debug-symbols>on : -g ;
-flags tru64cxx65 C++FLAGS <debug-symbols>on : -gall ;
+flags tru64cxx65 CFLAGS <debug-symbols>on : -g3 ;
+flags tru64cxx65 C++FLAGS <optimization>off/<debug-symbols>on : -gall ;
 flags tru64cxx65 LINKFLAGS <debug-symbols>on : -g ;
 flags tru64cxx65 LINKFLAGS <debug-symbols>off : -s ;
 flags tru64cxx65 LINKFLAGS <target-type>$(SHARED_TYPES) : -shared -expect_unresolved 'Py*' -expect_unresolved '_Py*' ;
