@@ -29,7 +29,7 @@ rule compile-fortran
 
 actions compile-fortran
 {
-  ifort $(OPTIONS) /D$(DEFINES) /I$(INCLUDES) /c /object:"$(<)" "$(>)" 
+  ifort $(OPTIONS) /names:lowercase /D$(DEFINES) /I$(INCLUDES) /c /object:"$(<)" "$(>)" 
 }
 
 generators.register-fortran-compiler ifort.compile-fortran : FORTRAN : OBJ ; 
