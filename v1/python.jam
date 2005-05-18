@@ -306,7 +306,7 @@ rule select-python-library ( toolset variant : properties * )
             } 
         }
     }
-    if $(OS) = MACOSX && $(toolset) = darwin
+    if $(OS) = MACOSX && [ MATCH .*(darwin).* : $(toolset) ]
     {
         if <target-type>PYD in $(properties)
         {
