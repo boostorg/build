@@ -17,10 +17,12 @@ if ! $(MSVCDir)
         VC80_ROOT ?= $(ProgramFiles:J=" ")"\\Microsoft Visual Studio 8\\VC" ;
         VC_TOOL_PATH = "$(VC80_ROOT)"\\bin\\ ;
         VC_SETUP = "CALL \"$(VC_TOOL_PATH)VCVARS32.BAT\" >nul" ;
-    }
+    }    
 }
 
 VC_PDB_NAME = vc80 ;
+VC_MANIFEST = "mt -manifest " ;
+VC_OUTPUTRESOURCE = -outputresource: ;
 
 feature native-wchar_t : on off ;
 

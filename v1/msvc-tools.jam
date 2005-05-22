@@ -128,6 +128,12 @@ rule vc-set-pdb-file ( targets + : name )
 rule Link-action ( target implib ? : sources + : target-type ? )
 {
     with-command-file vc-Link $(<) : $(sources) $(NEEDLIBS) ;
+    
+    if $(target-type) != LIB
+    {
+        MANIFEST on $(target) = $(VC_MANIFEST) ;
+        OUTPUTRESOURCE on $(target) = $(VC_OUTPUTRESOURCE) ;
+    }
 
     gRUN_PATH($(<)) += $(VC_STDLIB_PATH) ;
     if $(implib)
@@ -143,10 +149,14 @@ rule Link-action ( target implib ? : sources + : target-type ? )
     vc-set-pdb-file $(<) : $(target:B) ;
 }
 
+VC_MANIFEST = ;
+VC_OUTPUTRESOURCE = ;
+
 actions together vc-Link
 {
     $(VC_SETUP)
     "$(VC_TOOL_PATH)$(VC_LINKER)" /nologo $(NOINCREMENTAL) $(LINKFLAGS) $(PDB_LINKFLAG)"$(VC_PDB_FILE)" /out:"$(<[1])" /IMPLIB:"$(<[2])" /LIBPATH:"$(LIBPATH)" /LIBPATH:"$(STDLIBPATH)" "$(FINDLIBS:S=.lib)" @"$(>)"
+    $(MANIFEST)$(<[1]).manifest $(OUTPUTRESOURCE)$(<[1]);#2
 }
 
 #### Cc #####
