@@ -12,7 +12,7 @@ def match_re(actual,expected):
 
 # Test the v1 startup behavior
 t = Tester(
-    executable='jam'
+    executable='bjam'
     , match=match_re
     , boost_build_path=''
     , pass_toolset=0
@@ -26,7 +26,7 @@ if os.name == 'nt':
 
 t.run_build_system(
     extra_args = '-sBOOST_ROOT=.', status=1
-    , stdout=r'''Unable to load Boost\.Build: could not find "boost-build\.jam".*BOOST_ROOT must be set'''
+    , stdout=r'''Unable to load Boost\.Build: could not find "boost-build\.jam".'''
     )
 
 os.chdir('no-bootstrap1')
