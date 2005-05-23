@@ -2627,12 +2627,14 @@ rule common-variant-tag ( toolset variant : properties * )
     local toolset-tag = ;
     if ! $(gUNVERSIONED_VARIANT_TAG)
     {
+        local include-minor-version = YES ;
         switch $(toolset)
         {
             case borland* : toolset-tag += bcb ;
             case como* : toolset-tag += como ;
             case cwpro8* : toolset-tag += cw 8 ;
             case cwpro9* : toolset-tag += cw 9 ;
+            case cw-* : toolset-tag += cw ; include-minor-version = ;
             case darwin* : toolset-tag += ;
             case edg* : toolset-tag += edg ;
             case gcc* : toolset-tag += gcc ;
@@ -2660,7 +2662,14 @@ rule common-variant-tag ( toolset variant : properties * )
             case * :
             toolset-tag += [ MATCH "^([^-]*)" : $(toolset) ] ;
         }
-        toolset-tag += [ MATCH "[-]([0123456789]+)[_]([0123456789]*)" : $(toolset) ] ;
+        if $(include-minor-version)
+        {
+            toolset-tag += [ MATCH "[-]([0123456789]+)[_.]([0123456789]*)" : $(toolset) ] ;
+        }
+        else
+        {
+            toolset-tag += [ MATCH "[-]([0123456789]+)[_.][0123456789]*" : $(toolset) ] ;
+        }
     }
     
     local version-tag = ;
