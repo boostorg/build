@@ -39,6 +39,24 @@ import toolset : flags ;
 project.initialize $(__name__) ;
 project python ;
 
+# Initializes the Python toolset.
+# - version -- the version of Python to use. Should be in Major.Minor format,
+#   for example 2.3
+# - 'root' -- the install root for Python
+# - 'includes' -- the include path to Python headers. If empty, will be
+#        guessed from 'root'
+# - 'libraries' -- the path to Python libraries. If empty, will be guessed
+#        from 'root'
+# - 'cygwin-condition' -- if specified, should be a set of properties which
+#   are present when we're building with cygwin gcc. 
+#   This argument is not used yet.
+#
+# Example usage:
+#
+#   using python 2.3 ;  # Use default root
+#   using python 2.3 : /usr/local ; # Root specified, include and lib paths
+#                                   # will be guessed
+#    
 rule init ( version ? : root ? : includes ? : libraries ? : cygwin-condition ? )
 {
     .configured = true ;
@@ -341,7 +359,7 @@ IMPORT python : python-extension : : python-extension ;
 # Support for testing
 type.register PY : py ;
 type.register RUN_PYD_OUTPUT ;
-type.set-generated-target-suffix RUN_PYD : : run ;
+#type.set-generated-target-suffix RUN_PYD : : run ;
 type.register RUN_PYD : : TEST ;
 
 class python-test-generator : generator
