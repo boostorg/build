@@ -13,6 +13,8 @@ rule init ( version ? : command * : options * )
 }
 
 # Declare flags and action for compilation
+flags ifort OPTIONS <fflags> ;
+
 flags ifort OPTIONS <optimization>off : /Od ;
 flags ifort OPTIONS <optimization>speed : /O3 ;
 flags ifort OPTIONS <optimization>space : /O1 ;
@@ -20,16 +22,23 @@ flags ifort OPTIONS <optimization>space : /O1 ;
 flags ifort OPTIONS <debug-symbols>on : /debug:full ;
 flags ifort OPTIONS <profiling>on : /Qprof_gen ;
 
+flags ifort.compile FFLAGS <runtime-debugging>off/<link-runtime>shared : /MD ;
+flags ifort.compile FFLAGS <runtime-debugging>on/<link-runtime>shared : /MDd ;
+flags ifort.compile FFLAGS <runtime-debugging>off/<link-runtime>static/<threading>single : /ML ;
+flags ifort.compile FFLAGS <runtime-debugging>on/<link-runtime>static/<threading>single : /MLd ;
+flags ifort.compile FFLAGS <runtime-debugging>off/<link-runtime>static/<threading>multi : /MT ;
+flags ifort.compile FFLAGS <runtime-debugging>on/<link-runtime>static/<threading>multi : /MTd ;
+
 flags ifort DEFINES <define> ;
 flags ifort INCLUDES <include> ;
 
-rule compile-fortran
+rule compile.fortran
 {
 }
 
-actions compile-fortran
+actions compile.fortran
 {
-  ifort $(OPTIONS) /names:lowercase /D$(DEFINES) /I$(INCLUDES) /c /object:"$(<)" "$(>)" 
+  ifort $(FFLAGS) $(OPTIONS) /names:lowercase /D$(DEFINES) /I"$(INCLUDES)" /c /object:"$(<)" "$(>)" 
 }
 
-generators.register-fortran-compiler ifort.compile-fortran : FORTRAN : OBJ ; 
+generators.register-fortran-compiler ifort.compile.fortran : FORTRAN : OBJ ; 

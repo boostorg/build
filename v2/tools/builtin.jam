@@ -49,6 +49,7 @@ feature define : : free ;
 feature "include" : : free path ; #order-sensitive ;
 feature cflags : : free ;
 feature cxxflags : : free ;
+feature fflags : : free ;
 feature linkflags : : free ;
 feature archiveflags : : free ;
 feature version : : free ;

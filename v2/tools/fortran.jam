@@ -12,6 +12,7 @@ import "class" : new ;
 
 import type ;
 import generators ;
+import common ;
 
 type.register FORTRAN : f ;
 
