@@ -614,9 +614,13 @@ class project-attributes
             self.default-build = [ property.make $(specification) ] ;
         }        
         else if $(attribute) = "source-location"
-        { 
-            self.source-location = [ path.root 
-                [ path.make $(specification) ] $(self.location) ] ;
+        {
+            self.source-location = ;
+            for local src-path in $(specification)
+	    {
+                self.source-location += [ path.root
+                    [ path.make $(src-path) ] $(self.location) ] ;
+	    }
         }            
         else if $(attribute) = "build-dir"
         {

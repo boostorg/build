@@ -365,7 +365,8 @@ class project-target : abstract-target
         else
         {   
             # Interpret as filename            
-            result = [ new file-reference [ path.make $(id) ] : $(project) ] ;        
+            result = [ new file-reference [ path.make $(id) ] : $(project) ] ;
+ 
             if ! [ $(result).exists ]
             {
                 # File actually does not exist.
@@ -789,23 +790,40 @@ class file-reference : abstract-target
     rule generate ( properties )
     {
          return [ property-set.empty ] 
-                [ virtual-target.from-file $(self.name) : $(self.project) ] ;        
+                [ virtual-target.from-file $(self.name)
+                                         : [ location ]
+                                         : $(self.project) ] ;        
     }    
 
     # Returns true if the referred file really exists;
     rule exists ( )
     {
-        local location = [ path.root $(self.name)
-          [ $(self.project).get source-location ] ] ;        
-        return [ CHECK_IF_FILE [ path.native $(location) ] ] ;
-    }    
-    
+		location ;
+		return $(self.file-path) ;
+    }
+
     # Returns the location of target. Needed by 'testing.jam'
     rule location ( )
     {
-        return [ path.root $(self.name)
-          [ $(self.project).get source-location ] ] ;    
-    }    
+        if ! $(self.file-location)
+        {
+	    local source-location = [ $(self.project).get source-location ] ;
+
+	    for local src-dir in $(source-location)
+            {
+                if ! $(self.file-location)
+                {
+                    local location = [ path.root $(self.name) $(src-dir) ] ;
+                    if [ CHECK_IF_FILE [ path.native $(location) ] ]
+                    {
+                         self.file-location = $(src-dir) ;
+                         self.file-path = $(location) ;
+                    }
+                }
+            }
+        }
+        return $(self.file-location) ;
+    }
 }
 
 
