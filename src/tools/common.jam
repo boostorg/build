@@ -259,6 +259,8 @@ rule handle-options ( toolset : condition * : command * : options * )
       [ feature.get-values <cflags> : $(options) ] : unchecked ;
     toolset.flags $(toolset).compile.c++ OPTIONS $(condition) :
       [ feature.get-values <cxxflags> : $(options) ] : unchecked ;
+    toolset.flags $(toolset).compile.fortran OPTIONS $(condition) :
+      [ feature.get-values <fflags> : $(options) ] : unchecked ;
     toolset.flags $(toolset).link OPTIONS $(condition) :
       [ feature.get-values <linkflags> : $(options) ] : unchecked ;        
 }
