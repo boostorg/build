@@ -110,6 +110,12 @@ load_builtins()
             );
     }
 
+    {
+        char * args[] = { "patterns", "*", 0 };
+        bind_builtin( "GLOB-RECURSIVELY" , builtin_glob_recursive, 0, args );
+    }
+
+
     duplicate_rule( "Includes" ,
       bind_builtin( "INCLUDES" ,
                     builtin_depends, 1, 0 ) );
@@ -550,8 +556,9 @@ builtin_glob_back(
     string_new( buf );
     path_build( &f, buf, 0 );
 
-    if (globbing->case_insensitive)
+    if (globbing->case_insensitive) {
         downcase_inplace( buf->value );
+    }
 
     for( l = globbing->patterns; l; l = l->next )
     {
@@ -617,6 +624,160 @@ builtin_glob(
         list_free( globbing.patterns );
     }
     return globbing.results;
+}
+
+static int has_wildcards(const char* str)
+{
+    size_t index = strcspn(str, "[]*?");
+    if (str[index] == '\0')
+        return 0;
+    else
+        return 1;
+}
+
+/** If 'file' exists, append 'file' to 'list'.
+    Returns 'list'.
+*/
+static LIST* append_if_exists(LIST* list, char* file)
+{
+    time_t time;
+    timestamp(file, &time);
+    if (time > 0)
+        return list_new(list, newstr(file));
+    else
+        return list;        
+}
+
+LIST* glob1(char* dirname, char* pattern)
+{
+    LIST* plist = list_new(L0, pattern);
+    struct globbing globbing;
+
+    globbing.results = L0;
+    globbing.patterns = plist;
+    
+    globbing.case_insensitive
+# if defined( OS_NT ) || defined( OS_CYGWIN )
+       = plist;  /* always case-insensitive if any files can be found */
+# else 
+       = L0;
+# endif
+
+    if ( globbing.case_insensitive )
+    {
+        globbing.patterns = downcase_list( plist );
+    }
+    
+    file_dirscan( dirname, builtin_glob_back, &globbing );
+
+    if ( globbing.case_insensitive )
+    {
+        list_free( globbing.patterns );
+    }
+
+    list_free(plist);
+
+    return globbing.results;
+}
+
+
+LIST* glob_recursive(char* pattern)
+{
+    LIST* result = L0;
+
+    /* Check if there's metacharacters in pattern */
+    if (!has_wildcards(pattern))
+    {
+        /* No metacharacters. Check if the path exists. */
+        result = append_if_exists(result, pattern);
+    }        
+    else
+    {
+        /* Have metacharacters in the pattern. Split into dir/name */
+        PATHNAME path[1];
+        path_parse(pattern, path);            
+        
+        if (path->f_dir.ptr)
+        {
+            LIST* dirs = L0;
+            string dirname[1];
+            string basename[1];
+            string_new(dirname);
+            string_new(basename);
+
+            string_append_range(dirname, path->f_dir.ptr, 
+                                path->f_dir.ptr + path->f_dir.len);
+
+            path->f_grist.ptr = 0;
+            path->f_grist.len = 0;
+            path->f_dir.ptr = 0;
+            path->f_dir.len = 0;
+            path_build(path, basename, 0);
+
+            if (has_wildcards(dirname->value))
+            {
+                dirs = glob_recursive(dirname->value);
+            }
+            else
+            {
+                dirs = list_new(dirs, dirname->value);
+            }
+            
+            if (has_wildcards(basename->value))
+            {
+                for(; dirs; dirs = dirs->next)
+                {
+                    result = list_append(result, 
+                                         glob1(dirs->string, basename->value));
+                }
+            }
+            else
+            {
+                string file_string[1];
+                string_new(file_string);
+
+                /** No wildcard in basename. */
+                for(; dirs; dirs = dirs->next)
+                {                                      
+                    path->f_dir.ptr = dirs->string;
+                    path->f_dir.len = strlen(dirs->string);                    
+                    path_build(path, file_string, 0);
+
+                    result = append_if_exists(result, file_string->value);
+
+                    string_truncate(file_string, 0);
+                }
+
+                string_free(file_string);
+            }
+
+            string_free(dirname);
+            string_free(basename);
+        }
+        else
+        {
+            /** No directory, just a pattern. */
+            result = list_append(result, glob1(".", pattern));
+        }
+    }
+
+    return result;
+}
+
+LIST *
+builtin_glob_recursive(
+    PARSE   *parse,
+    FRAME *frame )
+{
+    LIST* result = L0;
+    LIST* l = lol_get( frame->args, 0 );
+
+    for(; l; l = l->next)
+    {
+        result = list_append(result, glob_recursive(l->string));
+    }
+
+    return result;
 }
 
 /*

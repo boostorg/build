@@ -94,7 +94,10 @@ rule load ( jamfile-location )
     return $(module-name) ;        
 }
 
-JAMROOT = project-root.jam Jamroot jamroot Jamroot.jam jamroot.jam ;
+# Note the use of character groups, as opposed to listing
+# 'Jamroot' and 'jamroot'. With the latter, we'd get duplicate
+# matches on windows and would have to eliminate duplicates.
+JAMROOT = project-root.jam [Jj]amroot [Jj]amroot.jam ;
 # Loads parent of Jamfile at 'location'. Issues an error if nothing is found.
 rule load-parent ( location )
 {
@@ -301,7 +304,7 @@ local rule load-jamfile (
         .jamfile-modules += $(jamfile-module) ;        
         mark-as-user $(jamfile-module) ;
         modules.load $(jamfile-module) :  [ path.native $(jamfile-to-load) ] : . ;
-        if $(jamfile-to-load:BS) in $(JAMROOT)
+        if $(jamfile-to-load:BS) = project-root.jam
         {
             jamfile = [ find-jamfile $(dir) : no-errors ] ;
             if $(jamfile)
@@ -430,7 +433,8 @@ rule initialize (
         # We search for parent/project-root only if jamfile was specified 
         # --- i.e
         # if the project is not standalone.
-        if $(location) &&  ! $(basename) in $(JAMROOT)
+        if $(location) &&  ! $(basename) in 
+          project-root.jam Jamroot jamroot Jamroot.jam Jamroot
         {
             parent-module = [ load-parent $(location) ] ;
         }            
@@ -889,11 +893,13 @@ module project-rules
     {
         import path ;
         import project ;
+        import sequence ;
         
         local location = [ project.attribute $(__name__) source-location ] ;
 
         local result ;
-        local paths = [ path.glob $(location) : $(wildcards) ] ;   
+        local paths = [ path.glob $(location) : 
+          [ sequence.transform path.make : $(wildcards) ] ] ;
         if $(wildcards:D)
         {
             # The paths we've found are relative to current directory,

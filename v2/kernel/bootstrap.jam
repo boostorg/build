@@ -12,6 +12,21 @@ if $(JAM_VERSION:J="") < 030109
     EXIT ;
 } 
 
+local required-rules = GLOB-RECURSIVELY ;
+
+for local r in $(required-rules)
+{
+    if ! $(r) in [ RULENAMES ]
+    {
+        ECHO "error: builtin rule '$(r)' is not present" ;
+        ECHO "error: you version of bjam is likely out of date" ;
+        ECHO "error: please get a fresh version from CVS." ;
+        EXIT ;
+    }    
+}
+
+
+
 # Bootstrap the module system. Then bring the import rule into the global module.
 #
 SEARCH on <module@>modules.jam = $(.bootstrap-file:D) ;
