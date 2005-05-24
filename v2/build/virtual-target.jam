@@ -500,10 +500,13 @@ class file-target : abstract-file-target
         : type ?  # Optional type for this target
         : project
         : action ?
+        : path ?
     )
     {
         abstract-file-target.__init__ $(name) $(exact) : $(type) : $(project) 
           : $(action) ;   
+
+	self.path = $(path) ;
     }
         
     rule actualize-location ( target )
@@ -540,9 +543,7 @@ class file-target : abstract-file-target
         }
         else
         {
-            # This is a source file.
-            SEARCH on $(target) =
-              [ path.native [ $(self.project).get source-location ] ] ;
+            SEARCH on $(target) = [ path.native $(self.path) ] ;
         }        
     }
     
@@ -764,15 +765,14 @@ class null-action : action
 # FIXME: more correct way would be to compute path to the file, based on name and source location
 # for the project, and use that path to determine if the target was already created.
 # TODO: passing project with all virtual targets starts to be annoying.
-rule from-file ( file : project )
+rule from-file ( file : file-loc : project )
 {
     import type ; # had to do this here to break a circular dependency
 
     # Check if we've created a target corresponding to this file.
-    local source-location = [ $(project).get source-location ] ;
-    local path = [ path.root [ path.root [ path.make $(file) ] $(source-location) ] 
-      [ path.pwd ] ] ;
-                
+    local path = [ path.root [ path.root $(file) $(file-loc) ]
+                             [ path.pwd ] ] ;
+
     if $(.files.$(path))
     {
         return $(.files.$(path)) ;
@@ -782,16 +782,13 @@ rule from-file ( file : project )
         local name = [ path.make $(file) ] ;
         local type = [ type.type $(file) ] ;
         local result ;
-        if ! $(type)
-        {
-            # warning "cannot determine type for file $(file)" ;
-            result = [ new file-target $(file) :  : $(project) ] ;
-        }
-        else
-        {
-            local v = [ new file-target $(name) : $(type) : $(project) ] ;
-            result = $(v) ;
-        }
+
+	result = [ new file-target $(file)
+                         : $(type)
+                         : $(project)
+                         : #action
+                         : $(file-loc) ] ;
+
         .files.$(path) = $(result) ;
         return $(result) ;
     }
