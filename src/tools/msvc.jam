@@ -206,8 +206,9 @@ rule default-paths ( version ? )
     }
     else
     {
-        possible-paths += $(version-7.1-path) $(version-7.0-path) $(version-6-path) ;
+        possible-paths += $(version-8.0-path) $(version-7.1-path) $(version-7.0-path) $(version-6-path) ;
     }
+    
     # The vccars32.bat is actually in "bin" directory.
     # (except for free VC7.1 tools)
     possible-paths = $(possible-paths)\\bin $(possible-paths) ;
@@ -225,7 +226,7 @@ generators.register-linker msvc.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : 
 generators.register-linker msvc.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB RSP : <toolset>msvc ;
 
 generators.register-archiver msvc.archive : OBJ : STATIC_LIB RSP : <toolset>msvc ;
-generators.register-c-compiler msvc.compile.c++ : CPP : OBJ RSP(%_cpp) : <toolset>msvc ;
+generators.register-c-compiler msvc.compile.c++ : CPP : OBJ  : <toolset>msvc ;
 generators.register-c-compiler msvc.compile.c : C : OBJ RSP(%_cpp) : <toolset>msvc ;
 generators.register-standard msvc.compile.rc : RC : OBJ(%_res) : <toolset>msvc ;
 generators.override msvc.compile.rc : rc.resource-compile ;
@@ -267,9 +268,9 @@ actions compile.c
 {
     $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"$(<[2]:W)" -c -Fo"$(<[1]:W)"
 }
-actions compile.c++
+actions compile.c++ bind RSP
 {
-    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"$(<[2]:W)" -c -Fo"$(<[1]:W)" 
+    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"$(RSP:W)" -c -Fo"$(<[1]:W)"  && del "$(RSP)"
 }
 
 actions compile.rc
@@ -360,7 +361,10 @@ actions link.dll bind DEF_FILE
 
 rule compile.c++ ( targets + : sources * : properties * )
 {
-    common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;
+    local response-file = $(targets[1]).rsp ;
+    RSP on $(targets) = $(response-file) ;
+    LOCATE on $(response-file) = [ on $(targets[1]) return $(LOCATE) ] ;
+    common.response-file $(targets) : $(sources) : $(response-file) : $(properties) ;
 }
 
 rule compile.c ( targets + : sources * : properties * )
