@@ -204,97 +204,23 @@ rule pwd ( )
 rule glob ( dirs * : patterns + )
 {
     local result ;
+    local real-patterns ;
     for local d in $(dirs)
     {
         for local p in $(patterns)
         {
             local pattern = [ path.root $(p) $(d) ] ;
-            result += [ glob-really [ path.native $(pattern) ] ] ;
+            real-patterns += [ path.native $(pattern) ] ;
         }        
     }        
     
     # Windows is not case-sensitive, so if you're globbing
     # for Jamroot and jamroot, the result will include 'Jamroot'
     # twice. Remove duplicates.
-    return [ sequence.transform path.make : [ sequence.unique $(result) ] ] ;
+    return [ sequence.unique [ sequence.transform path.make : 
+        [ GLOB-RECURSIVELY $(real-patterns) ] ] ] ;
 }    
 
-# Looks for file matching 'pattern' in 'directory'.
-# Does not recurse. Directory is in the native format.
-rule glob-one ( dir : p )
-{
-    local result ;
-    # When a pattern has not directory, we glob directly.
-        # Take care of special ".." value. The "GLOB" rule simply ignores
-        # the ".." element (and ".") element in directory listings. This is
-        # needed so that 
-        #
-        #    [ glob libs/*/Jamfile ]
-        #
-        # don't return 
-        #
-        #    libs/../Jamfile (which is the same as ./Jamfile)
-        #
-        # On the other hand, when ".." is explicitly present in the pattern
-        # we need to return it.
-        # 
-
-    if $(p) != ".."
-    {       
-        # On cygwin, 'cygdrive' is a special directory and is
-        # not shown when listing '/'.
-        if $(dir) = / && $(p) = cygdrive
-        {
-            result = /cygdrive ;
-        }
-        else
-        {            
-            result += [ GLOB $(dir) : $(p) ] ;
-        }        
-    }            
-    else
-    {
-        result += [ path.join $(dir) .. ] ;
-    }            
-    return $(result) ;
-}
-
-# Searches for a single pattern and returns matches.
-# Both pattern and result are in native format.
-rule glob-really ( pattern )
-{
-    local result ;
-    # The second condition protects again looping infinitely
-    # on '/' path.
-    if $(pattern:D) && $(pattern:D) != $(pattern)
-    {
-        # When the pattern has a directory element, we first glob for
-        # directory, and then glob for file name is the found directories.
-        
-        # First glob for directory part.
-        local globbed-dirs = [ glob-really $(pattern:D) ] ;
-        for local dir in $(globbed-dirs)
-        {
-            local x = [ glob-one $(dir) : $(pattern:D="") ] ;
-            result += $(x) ;
-        }
-    }
-    else
-    {      
-        if $(pattern:D) = $(pattern)
-        {
-            # Just return the result.
-            # FIXME: Maybe need to check that the directory
-            # is indeed present.
-            result = $(pattern) ;
-        }
-        else
-        {            
-            result = [ glob-one . : $(pattern) ] ;
-        }
-    }    
-    return $(result) ;
-}
 
 #
 #    Returns true is the specified file exists.
