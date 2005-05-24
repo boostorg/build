@@ -46,13 +46,16 @@ rule init ( version ? : command * : options * )
     {
         command = [ common.get-absolute-tool-path $(command[-1]) ] ;
     }
-    local root = $(command) ;
+    local tool-root = $(command) ;
 
-    setup = $(root)\\$(setup) ;
+    setup = $(tool-root)\\$(setup) ;
 
    # map the batch file in setup so it can be executed
 
-   setup = "call \""$(setup)"\" > nul " ;
+    other-tools = $(tool-root:D) ;
+    root = $(other-tools:D) ;
+    
+    setup = "set \"CWFOLDER="$(root)"\" && call \""$(setup)"\" > nul " ;
 
    if [ os.name ] = NT
    {
