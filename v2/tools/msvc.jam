@@ -264,8 +264,6 @@ flags msvc.compile DEFINES <define> ;
 flags msvc.compile UNDEFS <undef> ;
 flags msvc.compile INCLUDES <include> ;
 
-flags msvc WHATEVER <toolset-msvc:version> ;
-
 # The actions differ only by explicit selection of input language
 actions compile.c
 {
