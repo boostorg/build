@@ -42,7 +42,7 @@ rule init ( version ? :     # the compiler version
     local root = [ common.get-absolute-tool-path $(command[-1]) ] ;
     
     local setup ;
-    setup = $(root:D)/iclvars.bat ;
+    setup = $(root)/iclvars.bat ;
     setup = "call \""$(setup)"\" > nul " ;
         
     if [ os.name ] = NT
