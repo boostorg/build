@@ -153,10 +153,12 @@ rule init (
     }
     
     # 8.0 deprecates some of the options
-    if [ MATCH ^(8) : $(version) ]
+    if ! [ MATCH ^([67]\..*) : $(version) ] 
     {
         flags msvc.compile CFLAGS $(condition)/<optimization>speed : /O2 ;
         flags msvc.compile CFLAGS $(condition)/<optimization>space : /O1 ;
+        flags msvc.link.dll MANIFEST : "mt -manifest " ;
+        flags msvc.link.dll OUTPUTRESOURCE : "-outputresource:" ;
     }
     else
     {        
@@ -358,6 +360,7 @@ actions link bind DEF_FILE
 actions link.dll bind DEF_FILE
 {
     $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"$(<[3]:W)"
+    $(MANIFEST)$(<[1]).manifest $(OUTPUTRESOURCE)$(<[1]);#2
 }
 
 rule compile.c++ ( targets + : sources * : properties * )
