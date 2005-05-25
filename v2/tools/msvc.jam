@@ -141,9 +141,12 @@ rule init (
         }                
     }
                 
-    # The following options work only for 7* versions. It means
-    # that if the user has not specified a version he gets 6.0 compatible
-    # behavious (i.e. a bit buggy)
+    # Starting with versions 7.0, the msvc compiler have the /Zc:forScope
+    # and /Zc:wchar_t options that improve C++ standard conformance, but
+    # those options are off by default.
+    # If we're sure that msvc version is at 7.*, add those options explicitly.
+    # We can be sure either if user specified version 7.* explicitly,
+    # or if the installation path contain 7.* (this is checked above).
     if [ MATCH ^(7\..*) : $(version) ] 
     {
         flags msvc.compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
