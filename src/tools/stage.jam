@@ -259,7 +259,7 @@ rule copy-file ( project : source : properties )
         # Get the real path of the target. We probably need to strip
         # relative path from the target name at construction...
         local path = [ $(source).path ] ;
-        path = [ path.join $(path) $(name:D) ] ;
+        path = [ path.root $(path) $(name:D) ] ;
         # Make the path absolute. Otherwise, it's hard to compute relative
         # path. The 'source-root' is already absolute, see the
         # 'adjust-properties' method above.
