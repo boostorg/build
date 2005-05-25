@@ -214,11 +214,9 @@ rule glob ( dirs * : patterns + )
         }        
     }        
     
-    # Windows is not case-sensitive, so if you're globbing
-    # for Jamroot and jamroot, the result will include 'Jamroot'
-    # twice. Remove duplicates.
-    return [ sequence.unique [ sequence.transform path.make : 
-        [ GLOB-RECURSIVELY $(real-patterns) ] ] ] ;
+    return [ sequence.transform path.make : 
+        [ GLOB-RECURSIVELY $(real-patterns) ] ] ;
+
 }    
 
 
