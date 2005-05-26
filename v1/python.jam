@@ -574,6 +574,8 @@ rule check-python-config ( )
         {
             gNO_PYTHON_INSTALL = true ;
             ECHO "---------------------------------------------------------------------" ;
+            ECHO "*** If you don't need Boost.Python, you can ignore this section ***" ;
+            ECHO ;
             ECHO skipping Boost.Python library build due to missing or incorrect configuration ;
             ECHO ;
             ECHO "couldn't find Python.h in"  \"$(dir:J=" ")\" ;
