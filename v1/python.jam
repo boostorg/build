@@ -554,7 +554,11 @@ rule test-executable(PYD) ( target-to-test )
 
 rule check-python-config ( )
 {
-    if ! $(gPYTHON_CONFIG_CHECKED)
+    if --without-python in $(ARGV)
+    {
+        gNO_PYTHON_INSTALL = true ;
+    }
+    else if ! $(gPYTHON_CONFIG_CHECKED)
     {
         local dir ;
         
@@ -574,7 +578,8 @@ rule check-python-config ( )
         {
             gNO_PYTHON_INSTALL = true ;
             ECHO "---------------------------------------------------------------------" ;
-            ECHO "*** If you don't need Boost.Python, you can ignore this section ***" ;
+            ECHO "*** If you don't need Boost.Python, you can ignore this section  ***" ;
+            ECHO "*** pass --without-python to suppress this message in the future ***" ;
             ECHO ;
             ECHO skipping Boost.Python library build due to missing or incorrect configuration ;
             ECHO ;
