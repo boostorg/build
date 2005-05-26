@@ -238,7 +238,7 @@ int  main( int argc, char **argv, char **arg_environ )
 
     argc--, argv++;
 
-	if( ( n = getoptions( argc, argv, "-:d:j:f:gs:t:ano:qv", optv ) ) < 0 )
+	if( getoptions( argc, argv, "-:d:j:f:gs:t:ano:qv", optv ) < 0 )
     {
         printf( "\nusage: jam [ options ] targets...\n\n" );
 
@@ -258,8 +258,6 @@ int  main( int argc, char **argv, char **arg_environ )
         exit( EXITBAD );
     }
 
-    argc -= n, argv += n;
-
     /* Version info. */
 
     if( ( s = getoptval( optv, 'v', 0 ) ) )
@@ -270,6 +268,7 @@ int  main( int argc, char **argv, char **arg_environ )
         printf( "   Copyright 2001 David Turner.\n" );
         printf( "   Copyright 2001-2004 David Abrahams.\n" );
         printf( "   Copyright 2002-2005 Rene Rivera.\n" );
+        printf( "   Copyright 2003-2005 Vladimir Prus.\n" );
 
         return EXITOK;
     }
@@ -414,9 +413,10 @@ int  main( int argc, char **argv, char **arg_environ )
 
     /* Add the targets in the command line to update list */
 
-    for ( n = 0; n < argc; ++n )
+    for ( n = 1; n < argc; ++n )
     {
-        mark_target_for_updating(argv[n]);
+        if( argv[n][0] != '-' || ( argv[n][1] != '-' && !isalpha( argv[n][1] ) ) )
+            mark_target_for_updating(argv[n]);
     }
 
     /* Parse ruleset */
