@@ -129,7 +129,7 @@ rule Link-action ( target implib ? : sources + : target-type ? )
 {
     with-command-file vc-Link $(<) : $(sources) $(NEEDLIBS) ;
     
-    if $(target-type) = PYD
+    if $(target-type) in $(SHARED_TYPES)
     {
         MANIFEST on $(target) = $(VC_MANIFEST) ;
         OUTPUTRESOURCE on $(target) = $(VC_OUTPUTRESOURCE) ;
