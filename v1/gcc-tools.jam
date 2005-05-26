@@ -231,12 +231,16 @@ flags gcc CFLAGS <architecture>sparc/<address-model>64 : -m64 ;
 flags gcc LINKFLAGS <architecture>sparc/<address-model>64 : -m64 ;
 # RS/6000 & PowerPC
 .ARCH = <architecture>power <architecture>native ;
-flags gcc CFLAGS <architecture>power/<instruction-set>default : -mcpu=power ;
+flags gcc CFLAGS <architecture>power/<address-model>default/<instruction-set>default : -mcpu=common ;
+flags gcc CFLAGS <architecture>power/<address-model>32/<instruction-set>default : -mcpu=common ;
+flags gcc CFLAGS <architecture>power/<address-model>64/<instruction-set>default : -mcpu=powerpc64 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>rios : -mcpu=rios ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>rios1 : -mcpu=rios1 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>rsc : -mcpu=rsc ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>rios2 : -mcpu=rios2 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>rs64a : -mcpu=rs64a ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>403 : -mcpu=403 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>505 : -mcpu=505 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>601 : -mcpu=601 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>602 : -mcpu=602 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>603 : -mcpu=603 ;
@@ -246,19 +250,26 @@ flags gcc CFLAGS $(.ARCH)/<instruction-set>604e : -mcpu=604e ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>620 : -mcpu=620 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>630 : -mcpu=630 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>740 : -mcpu=740 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>7400 : -mcpu=7400 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>7450 : -mcpu=7450 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>750 : -mcpu=750 ;
-flags gcc CFLAGS $(.ARCH)/<instruction-set>power : -mcpu=power ;
-flags gcc CFLAGS $(.ARCH)/<instruction-set>power2 : -mcpu=power2 ;
-flags gcc CFLAGS $(.ARCH)/<instruction-set>powerpc : -mcpu=powerpc ;
-flags gcc CFLAGS $(.ARCH)/<instruction-set>power64 : -mcpu=power64 ;
-flags gcc CFLAGS $(.ARCH)/<instruction-set>403 : -mcpu=403 ;
-flags gcc CFLAGS $(.ARCH)/<instruction-set>505 : -mcpu=505 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>801 : -mcpu=801 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>821 : -mcpu=821 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>823 : -mcpu=823 ;
 flags gcc CFLAGS $(.ARCH)/<instruction-set>860 : -mcpu=860 ;
-flags gcc CFLAGS $(.ARCH)/<instruction-set>power-common : -mcpu=common ;
-flags gcc CFLAGS <architecture>power/<address-model>64 : -mpowerpc64 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>power : -mcpu=power ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>power2 : -mcpu=power2 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>power3 : -mcpu=power3 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>power4 : -mcpu=power4 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>power5 : -mcpu=power5 ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>powerpc : -mcpu=powerpc ;
+flags gcc CFLAGS $(.ARCH)/<instruction-set>powerpc64 : -mcpu=powerpc64 ;
+# AIX variant of RS/6000 & PowerPC
+flags gcc CFLAGS <architecture>power/<address-model>32/<object-model>aix : -maix32 ;
+flags gcc LINKFLAGS <architecture>power/<address-model>32/<object-model>aix : -maix32 ;
+flags gcc CFLAGS <architecture>power/<address-model>64/<object-model>aix : -maix64 ;
+flags gcc LINKFLAGS <architecture>power/<address-model>64/<object-model>aix : -maix64 ;
+flags gcc AROPTIONS <architecture>power/<address-model>64/<object-model>aix : "-X 64" ;
 # MIPS-1-2-3-4
 flags gcc MIPS <architecture>mips1 <architecture>mips2 <architecture>mips3 <architecture>mips4 : TRUE ;
 flags gcc MIPS
@@ -492,5 +503,5 @@ rule Archive-action
 
 actions updated together piecemeal gcc-Archive-action
 {
-    "$(.AR[1])" ru$(ARFLAGS:J=) "$(<)" "$(>)"
+    "$(.AR[1])" $(AROPTIONS) ru$(ARFLAGS:J=) "$(<)" "$(>)"
 }

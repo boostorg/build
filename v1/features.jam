@@ -185,6 +185,8 @@ feature object-model :
     # Explicitly select the 'ansi' object model. Used to support the complete
     # standard.
     ansi
+    # AIX has it's own ABI, this is available with the gcc -maix32/64 options.
+    aix
     ;
 
 gLINK_COMPATIBLE = <shared-linkable>true <target-type> <inlining> ;
