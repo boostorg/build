@@ -29,11 +29,6 @@ rule init ( version ? : command * : options * )
     gcc.init-link-flags darwin darwin $(condition) ;
 }
 
-# Darwin has a different shared library suffix
-type.set-generated-target-suffix SHARED_LIB : <toolset>darwin : dylib ;
-# we need to be able to tell the type of .dylib files
-type.register-suffixes dylib : SHARED_LIB ;
-
 feature framework : : free ;
 
 flags darwin.compile OPTIONS <link>shared : -dynamic ;
