@@ -26,6 +26,19 @@ rule init ( version ? : command * : options * )
     
     common.handle-options darwin : $(condition) : $(command) : $(options) ;
     
+    local JAMUNAME = [ modules.peek : JAMUNAME ] ;
+
+    # GCC 4.0, the default compiler in Darwin 8.0.0, does not have
+    # -fcoalesce-templates.  GCC 3.3 needs it. So, we add '-fcoalesce-templates'
+    # is either:
+    #
+    # 1. We're not on 10.4
+    # 2. We're on 10.4 and compiler is not g++-3.3
+    if $(JAMUNAME[3]) < "8.0.0" || ! [ "(g[+][+]-3.3)" : $(command) ]
+    {
+        flags darwin.compile.c++ OPTIONS : -fcoalesce-templates ;
+    }
+    
     gcc.init-link-flags darwin darwin $(condition) ;
 }
 
@@ -33,7 +46,6 @@ feature framework : : free ;
 
 flags darwin.compile OPTIONS <link>shared : -dynamic ;
 flags darwin.compile OPTIONS : -Wno-long-double -no-cpp-precomp  ;
-flags darwin.compile.c++ OPTIONS : -fcoalesce-templates ;
 
 flags darwin.link FRAMEWORK <framework> ;
 
