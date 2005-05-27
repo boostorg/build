@@ -7,7 +7,7 @@ import type ; # for set-generated-target-suffix
 type.register LIB ;
 
 type STATIC_LIB : lib a : LIB : NT CYGWIN ;
-type STATIC_LIB : lib : LIB : MACOSX ;
+type STATIC_LIB : a : LIB : MACOSX ;
 type STATIC_LIB : a : LIB ;
 
 type IMPORT_LIB : : STATIC_LIB ;
