@@ -108,91 +108,97 @@ int maxline()
         : 2047;
 }
 
-static char**
-string_to_args( const char*  string, int*  pcount )
-{
-  int    total    = strlen( string );
-  int    in_quote = 0,
-      num_args = 0; /* was uninitialized -- dwa */
-  char*  line;
-  char*  p;
-  char** arg;
-  char** args;
-
-  *pcount = 0;  
-
-  /* do not copy trailing newlines, if any */  
-  while ( total > 0 )
-  {
-      if ( !isspace( string[total - 1] ) )
-          break;
-      --total;
-  }
-  
-  /* first of all, copy the input string */
-  line    = (char*)malloc( total+2 );
-  if (!line)
-    return 0;
-    
-  memcpy( line+1, string, total );
-  line[0]       = 0;
-  line[total+1] = 0;
-  
-  in_quote = 0;
-  for ( p = line+1; p[0]; p++ )
-  {
-    switch (p[0])
-    {
-      case '"':
-        in_quote = !in_quote;
-        break;
-        
-      case ' ':
-      case '\t':
-        if (!in_quote)
-          p[0]    = 0;
-        
-      default:
-        ;
-    }
-  }
-  
-  /* now count the arguments.. */
-  for ( p = line; p < line+total+1; p++ )
-    if ( !p[0] && p[1] )
-      num_args++;
-      
-  /* allocate the args array */
-  /* dwa -- did you really mean to allocate only 2 additional bytes? */
-#if 0 /* was like this */
-  args = (char**)malloc( num_args*sizeof(char*)+2 );
-#endif
-  args = (char**)malloc( (num_args + 2) * sizeof(char*) );
-  if (!args)
-  {
-    free( line );
-    return 0;
-  }
-  
-  arg = args+1;
-  for ( p = line; p < line+total+1; p++ )
-    if ( !p[0] && p[1] )
-    {
-      arg[0] = p+1;
-      arg++;
-    }
-  arg[0]  = 0;
-  *pcount = num_args;
-  args[0] = line;
-  return args+1;
-}
-
 static void
-free_args( char** args )
+free_argv( char** args )
 {
-  free( args[-1] );
-  free( args-1 );
+  free( args[0] );
+  free( args );
 }
+
+/* Convert a command string into arguments for spawnvp.  The original
+ * code, inherited from ftjam, tried to break up every argument on the
+ * command-line, dealing with quotes, but that's really a waste of
+ * time on Win32, at least.  It turns out that all you need to do is
+ * get the raw path to the executable in the first argument to
+ * spawnvp, and you can pass all the rest of the command-line
+ * arguments to spawnvp in one, un-processed string.
+ *
+ * New strategy: break the string in at most one place.
+ */
+static char**
+string_to_args( const char*  string )
+{
+    int src_len;
+    int in_quote;
+    char* line;
+    char const* src;
+    char* dst;
+    char** argv;
+
+    /* drop leading and trailing whitespace if any */
+    while (isspace(*string))
+        ++string;
+  
+    src_len = strlen( string );
+    while ( src_len > 0 && isspace( string[src_len - 1] ) )
+        --src_len;
+
+    /* Copy the input string into a buffer we can modify
+     */
+    line = (char*)malloc( src_len+1 );
+    if (!line)
+        return 0;
+
+    /* allocate the argv array.
+     *   element 0: stores the path to the executable
+     *   element 1: stores the command-line arguments to the executable
+     *   element 2: NULL terminator
+     */
+    argv = (char**)malloc( 3 * sizeof(char*) );
+    if (!argv)
+    {
+        free( line );
+        return 0;
+    }
+    
+    /* Strip quotes from the first command-line argument and find
+     * where it ends.  Quotes are illegal in Win32 pathnames, so we
+     * don't need to worry about preserving escaped quotes here.
+     * Spaces can't be escaped in Win32, only enclosed in quotes, so
+     * removing backslash escapes is also a non-issue.
+     */
+    in_quote = 0;
+    for ( src = string, dst = line ; *src; src++ )
+    {
+        if (*src == '"')
+            in_quote = !in_quote;
+        else if (!in_quote && isspace(*src))
+            break;
+        else
+            *dst++ = *src;
+    }
+    *dst++ = 0;
+    argv[0] = line;
+
+    /* skip whitespace in src */
+    while (isspace(*src))
+        ++src;
+
+    argv[1] = dst;
+
+	/* Copy the rest of the arguments verbatim */
+    
+    src_len -= src - string;
+
+    /* Use strncat because it appends a trailing nul */
+    *dst = 0;
+    strncat(dst, src, src_len);
+
+    argv[2] = 0;
+    
+    return argv;
+}
+
 
 
 /* process a "del" or "erase" command under Windows 95/98 */
@@ -311,28 +317,22 @@ onintr( int disp )
 	printf( "...interrupted\n" );
 }
 
-#if 0 // the shell is too different from direct invocation; let's
-      // always use the shell unless forced.
 /*
- * use_bat_file() - return true iff the command demands the use of a
- * .bat file to run it
+ * can_spawn() - If the command is suitable for execution via spawnvp,
+ * return a number >= the number of characters it would occupy on the
+ * command-line.  Otherwise, return zero.
  */
-int use_bat_file(char* command)
+long can_spawn(char* command)
 {
-    char *p = command;
+    char *p;
     
     char inquote = 0;
 
-    p += strspn( p, " \t" );
+    /* Move to the first non-whitespace */
+    command += strspn( command, " \t" );
 
-    /* spawnvp can't handle any paths with spaces or quoted filenames with no directory prefix */
-    if ( *p == '"' )
-    {
-        char* q = p + 1 + strcspn( p + 1, "\" /\\" );
-        if ( *q == '"' || *q == ' ' )
-            return 1;
-    }
-        
+    p = command;
+    
     /* Look for newlines and unquoted i/o redirection */
     do
     {
@@ -344,11 +344,11 @@ int use_bat_file(char* command)
             /* skip over any following spaces */
             while( isspace( *p ) )
                 ++p;
-            /* return true iff there is anything significant following
-             * the newline
+            /* Must use a .bat file if there is anything significant
+             * following the newline
              */
             if (*p)
-                return 1;
+                return 0;
             break;
             
         case '"':
@@ -368,20 +368,21 @@ int use_bat_file(char* command)
         case '>':
         case '|':
             if (!inquote)
-                return 1;
+                return 0;
             ++p;
             break;
         }
     }
     while (*p);
-    
-    return p - command >= MAXLINE;
+
+    /* Return the number of characters the command will occupy
+     */
+    return p - command;
 }
-#endif
 
 void execnt_unit_test()
 {
-#if 0 && !defined(NDEBUG)
+#if !defined(NDEBUG)        
     /* vc6 preprocessor is broken, so assert with these strings gets
      * confused. Use a table instead.
      */
@@ -391,10 +392,6 @@ void execnt_unit_test()
         { "x\n ", 0 },
         { "x\ny", 1 },
         { "x\n\n y", 1 },
-        { "\"x\"", 1 },
-        { "\"x y\"", 1 },
-        { "\"x/y\"", 0 },
-        { "\"x\\y\"", 0 },
         { "echo x > foo.bar", 1 },
         { "echo x < foo.bar", 1 },
         { "echo x \">\" foo.bar", 0 },
@@ -405,7 +402,7 @@ void execnt_unit_test()
     int i;
     for ( i = 0; i < sizeof(tests)/sizeof(*tests); ++i)
     {
-        assert( use_bat_file( tests[i].command ) == tests[i].result );
+        assert( !can_spawn( tests[i].command ) == tests[i].result );
     }
 
     {
@@ -413,13 +410,20 @@ void execnt_unit_test()
         assert( long_command != 0 );
         memset( long_command, 'x', MAXLINE + 9 );
         long_command[MAXLINE + 9] = 0;
-        assert( use_bat_file( long_command ) );
+        assert( can_spawn( long_command ) == MAXLINE + 9);
         free( long_command );
     }
+
+	{
+		char** argv = string_to_args("\"g++\" -c -I\"Foobar\"");
+		assert(!strcmp(argv[0], "g++"));
+		assert(!strcmp(argv[1], "-c -I\"Foobar\""));
+		free_argv(argv);
+	}
 #endif 
 }
 
-// SVA - handle temp dirs with spaces in the path
+/* SVA - handle temp dirs with spaces in the path */
 static const char *getTempDir(void)
 {
     static char tempPath[_MAX_PATH];
@@ -561,7 +565,7 @@ execcmd(
 
         tempdir = getTempDir();
   
-        // SVA - allocate 64 other just to be safe
+        /* SVA - allocate 64 other just to be safe */
         cmdtab[ slot ].tempfile = malloc( strlen( tempdir ) + 64 );
   
         procID = GetCurrentProcessId();
@@ -575,18 +579,20 @@ execcmd(
     while( isspace( *string ) )
         ++string;
 
-    /* If multi line, or too long, or JAMSHELL is set, write to bat file. */
-    /* Otherwise, exec directly. */
-    /* Frankly, if it is a single long line I don't think the */
-    /* command interpreter will do any better -- it will fail. */
-
-    if( shell || !raw_cmd // && use_bat_file( string )
-        )
+    /* Write to .BAT file unless the line would be too long and it
+     * meets the other spawnability criteria.
+     */
+    if( raw_cmd && can_spawn( string ) >= MAXLINE )
+    {
+        if( DEBUG_EXECCMD )
+            printf("Executing raw command directly\n");        
+    }
+    else
     {
         FILE *f;
-
+        raw_cmd = 0;
+        
         /* Write command to bat file. */
-
         f = fopen( cmdtab[ slot ].tempfile, "w" );
         if (!f)
         {
@@ -605,10 +611,6 @@ execcmd(
             else
                 printf("Executing through .bat file\n");
         }
-    }
-    else if( DEBUG_EXECCMD )
-    {
-        printf("Executing raw command directly\n");
     }
 
     /* Forumulate argv */
@@ -642,8 +644,7 @@ execcmd(
     }
     else if (raw_cmd)
     {
-        int ignored;
-        argv = string_to_args(string, &ignored);
+        argv = string_to_args(string);
     }
     else
     {
@@ -696,11 +697,10 @@ execcmd(
         if (spawn)
         {
             char**  args;
-            int     num_args;
             
             /* convert the string into an array of arguments */
             /* we need to take care of double quotes !!      */
-            args = string_to_args( string, &num_args );
+            args = string_to_args( string );
             if ( args )
             {
 #if 0
@@ -716,7 +716,7 @@ execcmd(
 #endif              
                 result = spawnvp( P_WAIT, args[0], args );
                 record_times(result, &time);
-                free_args( args );
+                free_argv( args );
             }
             else
                 result = 1;
@@ -773,7 +773,7 @@ execcmd(
     
     if (argv != argv_static)
     {
-        free_args(argv);
+        free_argv(argv);
     }
 }
 
@@ -840,7 +840,7 @@ execwait()
 	    rstat = EXEC_CMD_OK;
 
 	cmdtab[ i ].pid = 0;
-	// SVA don't leak temp files
+	/* SVA don't leak temp files */
 	if(cmdtab[i].tempfile != NULL)
 	{
             free(cmdtab[i].tempfile);
