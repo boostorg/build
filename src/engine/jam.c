@@ -413,10 +413,18 @@ int  main( int argc, char **argv, char **arg_environ )
 
     /* Add the targets in the command line to update list */
 
-    for ( n = 1; n < argc; ++n )
+    for ( n = 1; n < arg_c; ++n )
     {
-        if( argv[n][0] != '-' || ( argv[n][1] != '-' && !isalpha( argv[n][1] ) ) )
-            mark_target_for_updating(argv[n]);
+        if ( arg_v[n][0] == '-' )
+        {
+            char *f = "-:d:j:f:gs:t:ano:qv";
+            for( ; *f; f++ ) if( *f == arg_v[n][1] ) break;
+            if ( f[1] == ':' && arg_v[n][2] == '\0' ) { ++n; }
+        }
+        else
+        {
+            mark_target_for_updating(arg_v[n]);
+        }
     }
 
     /* Parse ruleset */
