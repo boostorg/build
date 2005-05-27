@@ -739,12 +739,19 @@ execcmd(
     }
 
     /* the rest is for Windows NT only */
-    /* spawn doesn't like quotes aroudn the command name */
+    /* spawn doesn't like quotes around the command name */
     if ( argv[0][0] == '"')
     {
         int l = strlen(argv[0]);
-        if (argv[0][l-1] == '"') argv[0][l-1] = '\0';
-        strcpy(argv[0],argv[0]+1);
+
+        /* Clobber any closing quote, shortening the string by one
+         * element */
+        if (argv[0][l-1] == '"')
+            argv[0][l-1] = '\0';
+        
+        /* Move everything *including* the original terminating zero
+         * back one place in memory, covering up the opening quote */
+        memmove(argv[0],argv[0]+1,l);
     }
     if( ( pid = spawnvp( P_NOWAIT, argv[0], argv ) ) == -1 )
     {
