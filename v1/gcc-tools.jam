@@ -385,6 +385,19 @@ if ! $(on-windows)
     flags gcc .SET_EXIT : "set -e" ;
 }
 
+# Since GCC doesn't support response files, we want to give it a
+# chance to execute any long commands via spawnvp on NT, where the
+# command-line length limitation can really get in the way.  We call
+# this on every target, but it will only take effect for targets we
+# deem spawnable, and that have long command-lines.
+rule gcc-spawn ( targets + )
+{
+    if $(NT) 
+    {
+        JAMSHELL on $(targets) = % ;
+    }
+}
+
 #### Link ####
 
 rule Link-action
@@ -443,10 +456,7 @@ rule Link-action
     gRUN_LD_LIBRARY_PATH($(<)) += $(STDLIBPATH:T) ;
     
     # Workaround GCC's lack of command-files and NT's line-length limitation.
-    if $(NT) {
-        JAMSHELL on $(<) = % ;
-    }
-
+    gcc-spawn $(<) ;
     gcc-Link-action $(<) : $(>) ;
 
     if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && ( $(OS) = LINUX || $(OS) = OPENBSD ) && ! $(NO_GNU_LN)
@@ -469,6 +479,7 @@ actions gcc-Link-action bind NEEDLIBS NEEDIMPS
 
 rule Cc-action
 {
+    gcc-spawn $(<) ;
     _ on $(<) = " " ;
     gcc-Cc-action $(<) : $(>) ;
 }
@@ -483,6 +494,7 @@ actions gcc-Cc-action
 #### C++ ####
 rule C++-action
 {
+    gcc-spawn $(<) ;
     _ on $(<) = " " ;
     gcc-C++-action $(<) : $(>) ;
 }
@@ -498,6 +510,7 @@ actions gcc-C++-action
 
 rule Archive-action
 {
+    gcc-spawn $(<) ;
     gcc-Archive-action $(<) : $(>) ;
 }
 
