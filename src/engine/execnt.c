@@ -414,16 +414,17 @@ void execnt_unit_test()
         free( long_command );
     }
 
-	{
-		char** argv = string_to_args("\"g++\" -c -I\"Foobar\"");
+    {
         /* Work around vc6 bug; it doesn't like escaped string
          * literals inside assert
          */
+        char** argv = string_to_args("\"g++\" -c -I\"Foobar\"");
         char const expected[] = "-c -I\"Foobar\""; 
-		assert(!strcmp(argv[0], "g++"));
-		assert(!strcmp(argv[1], expected));
-		free_argv(argv);
-	}
+        
+        assert(!strcmp(argv[0], "g++"));
+        assert(!strcmp(argv[1], expected));
+        free_argv(argv);
+    }
 #endif 
 }
 
