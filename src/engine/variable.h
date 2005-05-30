@@ -10,7 +10,7 @@
 
 struct hash;
 
-void 	var_defines( char **e );
+void 	var_defines( char* const *e, int preprocess );
 int 	var_string( char *in, char *out, int outsize, LOL *lol );
 LIST * 	var_get( char *symbol );
 void 	var_set( char *symbol, LIST *value, int flag );
