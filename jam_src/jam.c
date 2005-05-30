@@ -378,7 +378,13 @@ int  main( int argc, char **argv, char **arg_environ )
 
     /* load up environment variables */
 
-    var_defines( use_environ );
+    /* first into global module, with splitting, for backward compatibility */
+    var_defines( use_environ, 1 );
+    
+    /* then into .ENVIRON, without splitting */
+    enter_module( bindmodule(".ENVIRON") );
+    var_defines( use_environ, 0 );
+    exit_module( bindmodule(".ENVIRON") );
 
 	/*
 	 * Jam defined variables OS, OSPLAT
@@ -387,7 +393,7 @@ int  main( int argc, char **argv, char **arg_environ )
      * change Jam notion of the current platform.
 	 */
 
-    var_defines( othersyms );
+    var_defines( othersyms, 1 );
 
 
     /* Load up variables set on command line. */
@@ -397,7 +403,7 @@ int  main( int argc, char **argv, char **arg_environ )
         char *symv[2];
         symv[0] = s;
         symv[1] = 0;
-        var_defines( symv );
+        var_defines( symv, 1 );
     }
 
     /* Set the ARGV to reflect the complete list of arguments of invocation. */

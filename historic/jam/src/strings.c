@@ -78,7 +78,7 @@ void string_reserve( string* self, size_t capacity )
     assert_invariants( self );
 }
 
-static void extend_full( string* self, char* start, char *finish )
+static void extend_full( string* self, char const* start, char const* finish )
 {
     size_t new_size = self->capacity + ( finish - start );
     size_t new_capacity = self->capacity;
@@ -91,7 +91,7 @@ static void extend_full( string* self, char* start, char *finish )
     self->size = new_size;
 }
 
-void string_append( string* self, char* rhs )
+void string_append( string* self, char const* rhs )
 {
     char* p = self->value + self->size;
     char* end = self->value + self->capacity;
@@ -112,7 +112,7 @@ void string_append( string* self, char* rhs )
     assert_invariants( self );
 }
 
-void string_append_range( string* self, char* start, char* finish )
+void string_append_range( string* self, char const* start, char const* finish )
 {
     char* p = self->value + self->size;
     char* end = self->value + self->capacity;
@@ -133,7 +133,7 @@ void string_append_range( string* self, char* start, char* finish )
     assert_invariants( self );
 }
 
-void string_copy( string* s, char* rhs )
+void string_copy( string* s, char const* rhs )
 {
     string_new( s );
     string_append( s, rhs );
