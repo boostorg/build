@@ -39,6 +39,10 @@ flags tru64cxx65 CFLAGS <optimization>off : -O0 ;
 flags tru64cxx65 CFLAGS <optimization>speed/<inlining>on : -O2 ;
 flags tru64cxx65 CFLAGS <optimization>speed : -O2 ;
 
+# This (undocumented) macro needs to be defined to get all C function
+# overloads required by the C++ standard.
+flags tru64cxx65 C++FLAGS : -D__CNAME_OVERLOADS ;
+
 # Added for threading support
 flags tru64cxx65 CFLAGS <threading>multi : -pthread ;
 flags tru64cxx65 LINKFLAGS <threading>multi : -pthread ;
