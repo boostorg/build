@@ -4,6 +4,14 @@
 #  warranty, and with no claim as to its suitability for any purpose.
 
 import modules ;
+
+# Return the value(s) of the given environment variable(s) at the time
+# bjam was invoked.
+rule environ ( variable-names + )
+{
+    return [ modules.peek .ENVIRON : $(variable-names) ] ;
+}
+
 .name = [ modules.peek : OS ] ;
 .platform = [ modules.peek : OSPLAT ] ;
 .version = [ modules.peek : OSVER ] ;
@@ -50,6 +58,22 @@ EXPORT $(__name__) : $(.constants) ;
 .expand-variable-prefix = $ ;
 .expand-variable-suffix = "" ;
 
+if $(.name) = NT
+{
+    local home = [ environ HOMEDRIVE HOMEPATH HOME ] ;
+    .home-directories = $(home[1])$(home[2]) $(home[3]) ;
+}
+else
+{
+    .home-directories = [ environ HOME ] ;
+}
+
+# Can't use 'constant' mechanism because it only returns 1-element
+# values.
+rule home-directories ( )
+{
+    return $(.home-directories) ;
+}
 # Return the string needed to represent the expansion of the named
 # shell variable.
 rule expand-variable ( variable )

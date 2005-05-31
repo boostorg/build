@@ -30,7 +30,7 @@ import version ;
 
 # Check if we can load 'test-config.jam'. If we can, load it and
 # ignore user configs.
-local test-config = [ GLOB [ modules.peek : BOOST_BUILD_PATH ] : test-config.jam ] ;
+local test-config = [ GLOB [ os.environ BOOST_BUILD_PATH ] : test-config.jam ] ;
 if $(test-config)
 {
     module test-config 
@@ -46,10 +46,7 @@ if $(test-config) || --ignore-config in [ modules.peek : ARGV ]
     ignore-config = true ;
 }
 
-local HOME = [ modules.peek : HOME ] ;
-# Bjam breaks vars at spaces -- fix this back.
-HOME = $(HOME:J=" ") ;
-local user-path = $(HOME) [ modules.peek : BOOST_BUILD_PATH ] ;        
+local user-path = [ os.home-directories ] [ os.environ BOOST_BUILD_PATH ] ;
     
 # Load site-config.
 module site-config 

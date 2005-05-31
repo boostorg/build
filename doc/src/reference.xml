@@ -85,11 +85,13 @@ boost-build build-system ;
 
               <entry>
                 <simpara><code>%SystemRoot%</code></simpara>
+                <simpara><code>%HOMEDRIVE%%HOMEPATH%</code></simpara>
                 <simpara><code>%HOME%</code></simpara>
                 <simpara><code>%BOOST_BUILD_PATH%</code></simpara>
               </entry>
 
               <entry>
+                <simpara><code>%HOMEDRIVE%%HOMEPATH%</code></simpara>
                 <simpara><code>%HOME%</code></simpara>
                 <simpara><code>%BOOST_BUILD_PATH%</code></simpara>
               </entry>
