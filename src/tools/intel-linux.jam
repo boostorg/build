@@ -39,6 +39,8 @@ rule init ( version ? :  command * : options * )
 
 }
 
+SPACE = " " ;
+
 flags intel-linux.compile OPTIONS <inlining>off : "-Ob0" ;
 flags intel-linux.compile OPTIONS <inlining>on : "-Ob1" ;
 flags intel-linux.compile OPTIONS <inlining>full : "-Ob2" ;
