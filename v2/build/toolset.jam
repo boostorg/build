@@ -372,7 +372,7 @@ rule inherit-rules ( toolset : base )
         local id = [ MATCH "[^.]*\.(.*)" : [ $(g).id ] ] ;
         rules += $(id) ;
     }    
-    IMPORT $(base) : $(rules) : $(toolset) : $(rules) : localized ;
+    IMPORT $(base) : $(rules) : $(toolset) : $(rules) ;
     # Import the rules to the global scope
     IMPORT $(toolset) : $(rules) : : $(toolset).$(rules) ;
 }
