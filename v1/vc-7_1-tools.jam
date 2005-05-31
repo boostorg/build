@@ -15,6 +15,7 @@ VC_PDB_NAME = vc71 ;
 feature native-wchar_t : on off ;
 
 flags vc-7_1 CFLAGS : /Op ;
+flags vc-7_1 C++FLAGS : /wd4675 ; # Don't warn about the use of ADL
 flags vc-7_1 C++FLAGS : /Zc:forScope ;
 flags vc-7_1 C++FLAGS <native-wchar_t>on : /Zc:wchar_t ;
 
