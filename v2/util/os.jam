@@ -60,8 +60,8 @@ EXPORT $(__name__) : $(.constants) ;
 
 if $(.name) = NT
 {
-    local home = [ environ HOMEDRIVE HOMEPATH HOME ] ;
-    .home-directories = $(home[1])$(home[2]) $(home[3]) ;
+    local home = [ environ HOMEDRIVE HOMEPATH ] ;
+    .home-directories = $(home[1])$(home[2]) [ environ HOME ] ;
 }
 else
 {
