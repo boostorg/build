@@ -22,6 +22,8 @@ flags gfortran OPTIONS <optimization>space : -Os ;
 flags gfortran OPTIONS <debug-symbols>on : -g ;
 flags gfortran OPTIONS <profiling>on : -pg ;
 
+flags gfortran OPTIONS <link>shared/<main-target-type>LIB : -fPIC ;
+
 flags gfortran DEFINES <define> ;
 flags gfortran INCLUDES <include> ;
 
