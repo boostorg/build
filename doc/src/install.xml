@@ -8,7 +8,7 @@
     <para>
       This section describes how to install Boost.Build from a
       released <ulink
-      url="http://sourceforge.net/project/showfiles.php?group_id=7586&package_id=8041">Boost
+      url="http://sourceforge.net/project/showfiles.php?group_id=7586&amp;package_id=8041">Boost
       source distribution</ulink>
       or <ulink url="http://sourceforge.net/cvs/?group_id=7586">CVS
       image</ulink>.
@@ -18,7 +18,7 @@
       put things and even which parts of Boost to include.  When we
       say &#x201C;released source distribution&#x201D; we mean a
       distribution of Boost as released on its SourceForge
-      <ulink url="http://sourceforge.net/project/showfiles.php?group_id=7586&package_id=8041">project
+      <ulink url="http://sourceforge.net/project/showfiles.php?group_id=7586&amp;package_id=8041">project
       page</ulink>.
         </para>
     </footnote>
@@ -34,12 +34,12 @@ All paths are given relative to
 
       located in the <filename>tools/build/v2</filename> subdirectory
       of a full <ulink url="http://www.boost.org">Boost</ulink>
-      <ulink url="http://sourceforge.net/project/showfiles.php?group_id=7586&package_id=8041">distribution</ulink>.
+      <ulink url="http://sourceforge.net/project/showfiles.php?group_id=7586&amp;package_id=8041">distribution</ulink>.
       <footnote>
         <para>The Boost.Build subset of boost is also distributed
         separately, for those who are only interested in getting a
         build tool. The top-level directory of a <ulink
-        url="http://sourceforge.net/project/showfiles.php?group_id=7586&package_id=80982">Boost.Build
+        url="http://sourceforge.net/project/showfiles.php?group_id=7586&amp;package_id=80982">Boost.Build
         distribution</ulink> contains all the subdirectories of the
         <filename>tools/build/v2</filename> subdirectory from a full
         Boost distribution, so it is itself a valid Boost.Build root
