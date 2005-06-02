@@ -140,22 +140,4 @@ lib l : : <name>l_f ;
 
 t.run_build_system("-n")
 
-# A regression test. When a exe target uses obj target and
-# obj target uses searched lib, the path to library was not
-# added to 'exe's compile options. This is not a common use
-# case, but anyway, the less surprises, the better.
-
-t.rm(".")
-t.write("Jamroot", """
-exe a : a.cpp b ;
-obj b : b.cpp s ;
-lib s : : <search>foobar ;
-""")
-t.write("a.cpp", "")
-t.write("b.cpp", "")
-
-t.run_build_system("-n -d+2")
-t.fail_test(string.find(t.stdout(), "foobar") == -1) 
-
-
 t.cleanup()

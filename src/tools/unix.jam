@@ -35,10 +35,10 @@ class unix-linking-generator : linking-generator
           $(requirements) ;
     }
     
-    rule run ( project name ? : property-set : sources + :  multiple ? )
+    rule run ( project name ? : property-set : sources + )
     {   
         local result = [ linking-generator.run $(project) $(name) : $(property-set)
-          : $(sources) : $(multiple) ] ;
+          : $(sources) ] ;
         
         unix.set-library-order $(sources) : $(property-set) : $(result[2-]) ;
                                 
@@ -81,10 +81,10 @@ class unix-archive-generator : archive-generator
           $(requirements) ;
     }
         
-    rule run ( project name ? : property-set : sources + :  multiple ? )
+    rule run ( project name ? : property-set : sources + )
     {                                
         local result = [ archive-generator.run $(project) $(name) : $(property-set)
-          : $(sources) : $(multiple) ] ;
+          : $(sources) ] ;
         
         unix.set-library-order $(sources) : $(property-set) : $(result) ;
         
@@ -107,10 +107,10 @@ class unix-searched-lib-generator : searched-lib-generator
         return $(self.requirements) ;
     }
               
-    rule run ( project name ? : property-set : sources * : multiple ? )
+    rule run ( project name ? : property-set : sources * )
     {
         local result = [ searched-lib-generator.run $(project) $(name) 
-          : $(property-set) : $(sources) : $(multiple) ] ;
+          : $(property-set) : $(sources) ] ;
         
         unix.set-library-order $(sources) : $(property-set) : $(result) ;
         
@@ -126,7 +126,7 @@ class unix-prebuilt-lib-generator : generator
         generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
 
-    rule run ( project name ? : property-set : sources * : multiple ? )
+    rule run ( project name ? : property-set : sources * )
     {
         local f = [ $(property-set).get <file> ] ;
         unix.set-library-order-aux $(f) : $(sources) ;
