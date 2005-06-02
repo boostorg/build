@@ -25,6 +25,22 @@ for local r in $(required-rules)
     }    
 }
 
+# Check that the builtin .ENVIRON module is present. We don't have a
+# builtin to check that a module is present, so we assume that the PATH
+# environment variable is always set and verify that the .ENVIRON module
+# has non-empty value of that variable.
+module .ENVIRON 
+{   
+    local p = $(PATH) $(Path) $(path) ;
+    if ! $(p)
+    {
+        ECHO "error: no builtin module .ENVIRON is found" ;
+        ECHO "error: you version of bjam is likely out of date" ;
+        ECHO "error: please get a fresh version from CVS." ;
+        EXIT ;
+    }
+}
+
 
 
 # Bootstrap the module system. Then bring the import rule into the global module.
