@@ -307,7 +307,7 @@ class lib-generator : generator
         generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
     
-    rule run ( project name ? : property-set : sources * : multiple ? )
+    rule run ( project name ? : property-set : sources * )
     {
         # The lib generator is composing, and can be only invoked with
         # explicit name. This check is present in generator.run (and so in
@@ -408,7 +408,7 @@ class searched-lib-generator : generator
         generator.__init__ searched-lib-generator : : SEARCHED_LIB ;
     }
     
-    rule run ( project name ? : property-set : sources * : multiple ? )
+    rule run ( project name ? : property-set : sources * )
     {
         if $(name)
         {
@@ -447,7 +447,7 @@ class prebuilt-lib-generator : generator
         generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
 
-    rule run ( project name ? : property-set : sources * : multiple ? )
+    rule run ( project name ? : property-set : sources * )
     {
         local f = [ $(property-set).get <file> ] ;
         return $(f) $(sources) ;
@@ -532,7 +532,7 @@ class linking-generator : generator
           $(requirements) ;
     }
         
-    rule run ( project name ? : property-set : sources + :  multiple ? )
+    rule run ( project name ? : property-set : sources + )
     {   
         sources += [ $(property-set).get <library>  ] ;        
         
@@ -581,9 +581,10 @@ class linking-generator : generator
         }            
                         
         local result = [ generator.run $(project) $(name) : $(property-set)
-          : $(sources) : $(multiple) ] ;
-        
-        return [ extra-usage-requirements $(result) : $(property-set) ] $(result) ;
+          : $(sources) ] ;
+                        
+        return [ extra-usage-requirements $(result) : $(property-set) ] 
+               $(result) ;
     }
     
     rule extra-usage-requirements ( created-targets * : property-set )
@@ -617,7 +618,7 @@ class linking-generator : generator
         # the user, but then the user's to blaim for using internal feature.                
         local values = [ $(property-set).get <xdll-path> ] ;
         extra += $(values:G=<xdll-path>) ;
-        
+               
         if $(extra)
         {
             result = [ property-set.create $(extra) ] ;
@@ -687,12 +688,26 @@ class archive-generator : generator
           $(requirements) ;
     }
         
-    rule run ( project name ? : property-set : sources + :  multiple ? )
+    rule run ( project name ? : property-set : sources + )
     {                                
         sources += [ $(property-set).get <library>  ] ;                
         
         local result = [ generator.run $(project) $(name) : $(property-set)
-          : $(sources) : $(multiple) ] ;
+          : $(sources) ] ;
+        
+        # For static linking, we can't directly link to libraries.
+        # So, return all LIB sources together with created targets,
+        # so that dependents link to them.
+        if [ $(property-set).get <link> ] = static
+        {
+            for local t in $(sources)
+            {
+                if [ type.is-derived [ $(t).type ] LIB ]
+                {
+                    result += $(t) ;
+                }                
+            }            
+        }
              
         return $(result) ;
     }    

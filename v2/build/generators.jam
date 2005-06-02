@@ -269,19 +269,8 @@ class generator
                         # all generated targets. See 'generated-targets' method.
                : property-set # Desired properties for generated targets.
                : sources +  # Source targets.
-               : multiple ? # Allows the rule to run generator several times and return
-                          # multiple targets of the same type. When this argument is not
-                          # given, 'run' will return the list of targets, which is equal
-                          # in size to the list of target types, and where type of
-                          # each target is the same as the corresponding element of
-                          # target type list. Non-empty value allows to return several
-                          # such target lists, joined together.
-             )
-    {
-        # multiple = true ; # The tests seem to tolerate this; will
-                          # remove the parameter altogether in the
-                          # next revision to see what I learn -- DWA 2003/5/6
-        
+            )
+    {       
         generators.dout [ indent ] "  generator" $(self.id) ;
         generators.dout [ indent ] "  multiple:" $(mutliple) ;
         generators.dout [ indent ] "  composing:" $(self.composing) ;        
@@ -290,12 +279,7 @@ class generator
         {
             errors.error "Unsupported source/source-type combination" ;
         }
-
-        if $(self.source-types[2])
-        {
-            multiple = ;
-        }
-                
+               
         # We don't run composing generators if no name is specified. The reason
         # is that composing generator combines several targets, which can have
         # different names, and it cannot decide which name to give for produced
@@ -308,12 +292,12 @@ class generator
         # (the OBJ -> STATIC_LIB generator is composing)
         if ! $(self.composing) || $(name)
         {            
-            run-really $(project) $(name) : $(property-set) : $(sources) : $(multiple) ;
+            run-really $(project) $(name) : $(property-set) : $(sources) ;
         }        
     }
     
     
-    rule run-really ( project name ? : property-set : sources + : multiple ? )
+    rule run-really ( project name ? : property-set : sources + )
     {
         # Targets that this generator will consume directly.
         local consumed = ;
@@ -328,7 +312,7 @@ class generator
         else
         {               
             convert-to-consumable-types $(project) $(name) : 
-              $(property-set) : $(sources) : $(multiple)
+              $(property-set) : $(sources) 
                 :
                 : consumed bypassed ;
         }
@@ -338,7 +322,6 @@ class generator
         {            
             result = [ construct-result $(consumed) : $(project) $(name) 
                      : $(property-set) ] ;
-            result += $(bypassed) ;
         }
                             
                 
@@ -467,7 +450,7 @@ class generator
     # handle. The intention is to produce the set of targets can should be
     # used when generator is run.
     rule convert-to-consumable-types ( project name ? : 
-        property-set : sources + : multiple ? 
+        property-set : sources +  
         : only-one ? # convert 'source' to only one of source types
                      # if there's more that one possibility, report an
                      # error 
@@ -510,7 +493,7 @@ class generator
         if $(missing-types)
         {            
             local transformed = [ generators.construct-types $(project) $(name)
-              : $(missing-types) : $(multiple) : $(property-set) : $(sources) ] ;
+              : $(missing-types) : $(property-set) : $(sources) ] ;
                                 
             # Add targets of right type to 'consumed'. Add others to
             # 'bypassed'. The 'generators.construct' rule has done
@@ -558,9 +541,8 @@ class generator
     
     # Converts several files to consumable types.
     rule convert-multiple-sources-to-consumable-types
-      ( project : property-set : sources * : consumed-var bypassed-var : multiple ? )
+      ( project : property-set : sources * : consumed-var bypassed-var )
     {
-        multiple ?= * ;
         # We process each source one-by-one, trying to convert it to
         # a usable type.
         local failed ;
@@ -570,7 +552,7 @@ class generator
             local _b ;
             # TODO: need to check for failure on each source.
             convert-to-consumable-types $(project) : $(property-set)
-              : $(sources[1]) : $(multiple) : true : _c _b ;
+              : $(sources[1]) : true : _c _b ;
             if ! $(_c)
             {
                 generators.dout [ indent ] " failed to convert " $(sources[1]) ;
@@ -832,22 +814,15 @@ local rule viable-source-types-for-generator ( generator )
 
 
 # Returns usage requirements + list of created targets
-local rule try-one-generator-really ( project name ? : generator multiple ? : 
+local rule try-one-generator-really ( project name ? : generator : 
     target-type : property-set : sources * )
 {
     local targets =
       [ $(generator).run $(project) $(name)
                        : $(property-set)
                        : $(sources)
-                       : $(multiple)
       ] ;
-        
-
-    # Generated targets that are of required types
-    local result ;
-    # Generated target of other types.
-    local extra ;
-    
+            
     local usage-requirements ;
     if $(targets) && [ class.is-a $(targets[1]) : property-set ]
     {
@@ -859,53 +834,18 @@ local rule try-one-generator-really ( project name ? : generator multiple ? :
         usage-requirements = [ property-set.empty ] ;
     }
     
-    for local t in $(targets)       
-    {
-        if [ $(t).type ] = $(target-type)
-        {
-            result += $(t) ;
-        }
-        else
-        {
-            extra += $(t) ;
-        }        
-    }
-                
-    # Now try to convert extra targets 
-    # 'construct' will to its best to return only requested
-    # target types, so if we receive any extra from that call,
-    # we don't try to do anything about them.
-    local extra2 ;
-    if $(multiple) 
-    {
-        for local e in $(extra) 
-        {
-            local try2 = [ construct-types $(project) $(name) 
-                                         : $(target-type)
-                                         :
-                                         : $(property-set)
-                                         : $(e) ] ;
-            usage-requirements = [ $(usage-requirements).add $(try2[1]) ] ;
-            result += $(try2[2-]) ;
-        }    
-    }
-    else
-    {
-        extra2 = $(extra) ;
-    }
     generators.dout [ indent ] "  generator" [ $(generator).id ] " spawned " ;
-    generators.dout [ indent ] " " $(result) -- $(extra2) ; 
+    generators.dout [ indent ] " " $(targets) ; 
     if $(targets)
     {
-        result = $(usage-requirements) $(result) ;
+        return $(usage-requirements) $(targets) ;
     }    
-    return $(result) $(extra2) ;                     
 }
 
 # Checks if generator invocation can be pruned, because it's guaranteed
 # to fail. If so, quickly returns empty list. Otherwise, calls
 # try-one-generator-really.
-local rule try-one-generator ( project name ? : generator multiple ? : 
+local rule try-one-generator ( project name ? : generator : 
     target-type : property-set : sources * )
 {    
     local source-types ;
@@ -926,14 +866,14 @@ local rule try-one-generator ( project name ? : generator multiple ? :
     }          
     else {
         return [ try-one-generator-really $(project) $(name)
-          : $(generator) $(multiple) 
+          : $(generator)
             : $(target-type) : $(property-set) : $(sources) ] ;
     }       
 }
 
 
 
-rule construct-types ( project name ? : target-types + : multiple ? : 
+rule construct-types ( project name ? : target-types + :
     property-set : sources + )
 {
     local result ;
@@ -941,7 +881,7 @@ rule construct-types ( project name ? : target-types + : multiple ? :
     local usage-requirements = [ property-set.empty ] ;
     for local t in $(target-types)
     {
-        local r = [ construct $(project) $(name) : $(t) $(multiple) : $(property-set) :
+        local r = [ construct $(project) $(name) : $(t) : $(property-set) :
           $(sources) ] ;
         if $(r)
         {
@@ -1179,7 +1119,7 @@ local rule select-dependency-graph ( options )
 # Attempts to construct target by finding viable generators, running them
 # and selecting the dependency graph
 local rule construct-really (
-   project name ? : target-type multiple ? : property-set : sources * )
+   project name ? : target-type : property-set : sources * )
 {
     viable-generators = [ find-viable-generators $(target-type) : $(property-set) ] ;
                     
@@ -1193,7 +1133,7 @@ local rule construct-really (
         # This variable will be restored on exit from this scope.
         local .active-generators = $(g) $(.active-generators) ;
         
-        local r = [ try-one-generator $(project) $(name) : $(g) $(multiple) : $(target-type) :
+        local r = [ try-one-generator $(project) $(name) : $(g) : $(target-type) :
           $(property-set) : $(sources) ] ;
         
         if $(r)
@@ -1221,7 +1161,7 @@ local rule construct-really (
 # Does not return target which are not of 'allowed-type' or of type derived from
 # it. If 'allowed-type' is not specified, it's defaulted to 'target-type'.
 # See lib-target-class for use case of this.
-rule construct ( project name ? : target-type multiple ? : property-set * : sources * 
+rule construct ( project name ? : target-type : property-set * : sources * 
    : allowed-type * )
 {
     allowed-type ?= $(target-type) ;
@@ -1254,12 +1194,7 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
 
     increase-indent ;
     
-    local m ;
-    if $(multiple)
-    {
-        m = "(may return multiple targets)" ;
-    }
-    generators.dout [ indent ] "*** construct" $(target-type) $(m) ;
+    generators.dout [ indent ] "*** construct" $(target-type) ;
     
     for local s in $(sources)
     {
@@ -1268,7 +1203,7 @@ rule construct ( project name ? : target-type multiple ? : property-set * : sour
     generators.dout [ indent ] "    properties:" [ $(property-set).raw ] ;        
                
     local result = [ construct-really $(project) $(name)  
-      : $(target-type) $(multiple) : $(property-set) : $(sources) ] ;
+      : $(target-type) : $(property-set) : $(sources) ] ;
                     
     decrease-indent ;
         

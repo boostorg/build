@@ -64,7 +64,7 @@ rule init ( prefix ? )
                 generator.__init__ qt.uic-cpp : UI UIC_H : CPP : <allow>qt ;
             }
                         
-            rule run ( project name ? : properties * : sources + :  multiple ? )
+            rule run ( project name ? : properties * : sources + )
             {
                 # Consider this:
                 #    obj test : test_a.cpp : <optimization>off ;
@@ -81,13 +81,17 @@ rule init ( prefix ? )
                 {    
                     # Construct CPP as usual
                     result = [ generator.run $(project) $(name) 
-                      : $(properties) : $(sources) : $(multiple) ] ;
-                    # If OK, add "UIC_H" target to the returned list
+                      : $(properties) : $(sources) ] ;
+                    
+                    # If OK, process UIC_H with moc. It's pretty clear that
+                    # the object generated with UIC will have Q_OBJECT macro.
                     if $(result)
                     {
                         local action = [ $(result[1]).action ] ;
                         local sources = [ $(action).sources ] ;
-                        result += $(sources[2]) ;
+                        local mocced = [ generators.construct $(project) $(name)
+                          : CPP : $(properties) : $(sources[2]) ] ;
+                        result += $(mocced[2-]) ;
                     }
                 }
                             
