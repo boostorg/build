@@ -103,7 +103,7 @@ if [ os.name ] != CYGWIN && [ os.name ] != NT
     #
     # Yet another alternative would be to create propagated <sharedable> 
     # feature, and set it when building shared libraries, but that's hard
-    # to implement and will increate target path length even more.
+    # to implement and will increase target path length even more.
     flags gcc.compile OPTIONS <link>shared : -fPIC ;
 }    
 if [ os.name ] != NT
