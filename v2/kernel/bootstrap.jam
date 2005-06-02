@@ -71,6 +71,8 @@ IMPORT modules : import : : import ;
       ;
     local whereami = [ NORMALIZE_PATH $(.bootstrap-file:DT) ] ;
     BOOST_BUILD_PATH += $(whereami:D)/$(subdirs) ;
+    
+    modules.poke .ENVIRON : BOOST_BUILD_PATH : $(BOOST_BUILD_PATH) ;    
 }
 
 # Reload the modules, to clean up things. The modules module can tolerate
