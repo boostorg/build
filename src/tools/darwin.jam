@@ -33,8 +33,8 @@ rule init ( version ? : command * : options * )
     # is either:
     #
     # 1. We're not on 10.4
-    # 2. We're on 10.4 and compiler is not g++-3.3
-    if $(JAMUNAME[3]) < "8.0.0" || ! [ "(g[+][+]-3.3)" : $(command) ]
+    # 2. We're on 10.4 and compiler name is g++-3.3
+    if $(JAMUNAME[3]) < "8.0.0" || [ MATCH "(g[+][+]-3.3)" : $(command) ]
     {
         flags darwin.compile.c++ OPTIONS : -fcoalesce-templates ;
     }
