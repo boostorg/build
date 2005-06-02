@@ -51,7 +51,14 @@ if ! $(BOOST_BUILD_PATH) && $(UNIX)
     BOOST_BUILD_PATH = /usr/share/boost-build ;
 }
 
-
+    
+rule _poke ( module-name ? : variables + : value * )
+{
+    module $(<)
+    {
+        $(>) = $(3) ;
+    }
+}
 
 # This rule can be invoked from an optional user's boost-build.jam
 # file to both indicate where to find the build system files, and to
@@ -74,6 +81,12 @@ rule boost-build ( dir ? )
     #
     BOOST_BUILD_PATH = $(dir:R=$(.boost-build-file:D)) $(BOOST_BUILD_PATH) ;
     
+    # We might have just modified the *global* value of BOOST_BUILD_PATH.
+    # The code that loads the rest of Boost.Build, in particular the 
+    # site-config.jam and user-config.jam files uses os.environ, so we need to
+    # update the value there.    
+    _poke .ENVIRON : BOOST_BUILD_PATH : $(BOOST_BUILD_PATH) ;
+            
     # Try to find the build system bootstrap file 'bootstrap.jam'.
     #
     local bootstrap-file =
@@ -101,8 +114,7 @@ rule boost-build ( dir ? )
         ECHO "notice: loading Boost.Build from" 
           [ NORMALIZE_PATH $(.bootstrap-file:D) ] ;
     }
-    
-    
+           
     # Load the build system, now that we know where to start from.
     #
     include $(.bootstrap-file) ;
