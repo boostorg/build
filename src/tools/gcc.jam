@@ -87,7 +87,24 @@ flags gcc.compile OPTIONS <profiling>on : -pg ;
 # inside 'init'.
 if [ os.name ] != CYGWIN && [ os.name ] != NT
 {        
-    flags gcc.compile OPTIONS <link>shared/<main-target-type>LIB : -fPIC ;
+    # This logic will add -fPIC for all compilations:
+    #
+    # lib a : a.cpp b ;
+    # obj b : b.cpp ;
+    # exe c : c.cpp a d ;
+    # obj d : d.cpp ;
+    # 
+    # This all is fine, except that 'd' will be compiled with
+    # -fPIC even though it's not needed, as 'd' is used only in
+    # exe. However, it's hard to detect where a target is going to
+    # be used. Alternative, we can set -fPIC only when main target type 
+    # is LIB but than 'b' will be compiled without -fPIC. In x86-64 that
+    # will lead to link errors. So, compile everything with -fPIC.
+    #
+    # Yet another alternative would be to create propagated <sharedable> 
+    # feature, and set it when building shared libraries, but that's hard
+    # to implement and will increate target path length even more.
+    flags gcc.compile OPTIONS <link>shared : -fPIC ;
 }    
 if [ os.name ] != NT
 {
