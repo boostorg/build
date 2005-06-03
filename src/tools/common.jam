@@ -424,21 +424,22 @@ actions copy
 # Cause creation of response file, containing the sources in 'sources'
 # All the targets in 'targets' will depend on response file, and response
 # file will be created before the targets are built.
-rule response-file ( targets + : sources * : the-response-file : properties * )
+rule response-file ( targets + : sources * : the-response-file ? : properties * )
 {
-    # Manufacture a fake target for response file.
-    # If response file is in targets, we're in trouble.
-    # The actions for response file are already generated, and bjam thinks it's 
-    # created. So setting dependency on response file will not help to create
-    # it before other targets. So, we need another target.
+    # TODO: now 'the-response-file' is just ignored. Need to remove
+    # the argument altother and adjust callers.
     
-    local g = [ utility.ungrist $(the-response-file:G) ] ;
-    local rsp = $(the-response-file:G=$(g)-rsp) ;
-    LOCATE on $(rsp) = [ on $(the-response-file) return $(LOCATE) ] ;    
+    # Create a target for response file. Not that we add 'rsp' to the target
+    # name (without stripping suffix), so that response file names for c.exe
+    # and c.obj are different.
+    local rsp = $(targets[1]).rsp ;
+    RSP on $(targets) = $(rsp) ;
+    LOCATE on $(rsp) = [ on $(targets[1]) return $(LOCATE) ] ;
     DEPENDS $(targets) : $(rsp) ;
-    # Cause RSP to be recreated if sources are out-of-date.
-    DEPENDS $(rsp) : $(sources) ;
-        
+    # Note: we don't need dependecy from response file on sources
+    # because response file only needs the names of the sources.
+    TEMPORARY $(rsp) ;
+            
     # Add libraries from <library> property to the list of sources.
     local libraries ;
     for local p in $(properties)
@@ -457,7 +458,7 @@ rule response-file ( targets + : sources * : the-response-file : properties * )
     }
     
     sources += $(xlibraries) ; 
-       
+
     response-file-1 $(rsp) : $(sources[1]) ;
     if $(sources[2-])
     {
