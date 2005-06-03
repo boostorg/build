@@ -227,12 +227,12 @@ rule default-paths ( version ? )
 # is it possible to combine these?
 # make the generators non-composing, so that they don't convert each source
 # into separate rsp file.
-generators.register-linker msvc.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE RSP : <toolset>msvc ;
-generators.register-linker msvc.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB RSP : <toolset>msvc ;
-
-generators.register-archiver msvc.archive : OBJ : STATIC_LIB RSP : <toolset>msvc ;
-generators.register-c-compiler msvc.compile.c++ : CPP : OBJ RSP(%_cpp) : <toolset>msvc ;
-generators.register-c-compiler msvc.compile.c : C : OBJ RSP(%_cpp) : <toolset>msvc ;
+generators.register-linker msvc.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>msvc ;
+generators.register-linker msvc.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB : <toolset>msvc ;
+  
+generators.register-archiver msvc.archive : OBJ : STATIC_LIB : <toolset>msvc ;
+generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
+generators.register-c-compiler msvc.compile.c : C : OBJ : <toolset>msvc ;
 generators.register-standard msvc.compile.rc : RC : OBJ(%_res) : <toolset>msvc ;
 generators.override msvc.compile.rc : rc.resource-compile ;
 
@@ -246,7 +246,15 @@ flags msvc.compile CFLAGS <optimization>off : /Od ;
 flags msvc.compile CFLAGS <inlining>off : /Ob0 ;
 flags msvc.compile CFLAGS <inlining>on : /Ob1 ;
 flags msvc.compile CFLAGS <inlining>full : /Ob2 ;
-flags msvc.compile CFLAGS <exception-handling>on : /EHsc ;
+
+feature.feature asynch-exceptions : off on : propagated ;
+feature.feature extern-c-nothrow : off on : propagated ;
+
+flags msvc.compile CFLAGS  <base-target-type>CPP/<exception-handling>on/<asynch-exceptions>off : /EHs ;
+flags msvc.compile CFLAGS  <base-target-type>CPP/<exception-handling>on/<asynch-exceptions>on : /EHa ;
+flags msvc.compile CFLAGS  <base-target-type>CPP/<exception-handling>on/<extern-c-nothrow>off : /EHc- ;
+flags msvc.compile CFLAGS  <base-target-type>CPP/<exception-handling>on/<extern-c-nothrow>on : /EHc ;
+
 flags msvc.compile CFLAGS <rtti>on : /GR ;
 flags msvc.compile CFLAGS <runtime-debugging>off/<link-runtime>shared : /MD ;
 flags msvc.compile CFLAGS <runtime-debugging>on/<link-runtime>shared : /MDd ;
@@ -255,7 +263,6 @@ flags msvc.compile CFLAGS <runtime-debugging>off/<link-runtime>static/<threading
 flags msvc.compile CFLAGS <runtime-debugging>on/<link-runtime>static/<threading>single : /MLd ;
 flags msvc.compile CFLAGS <runtime-debugging>off/<link-runtime>static/<threading>multi : /MT ;
 flags msvc.compile CFLAGS <runtime-debugging>on/<link-runtime>static/<threading>multi : /MTd ;
-flags msvc.compile CFLAGS <base-target-type>CPP : /EHsc ;
 
 flags msvc.compile USER_CFLAGS <cflags> : ;
 flags msvc.compile.c++ USER_CFLAGS <cxxflags> : ;
@@ -267,13 +274,13 @@ flags msvc.compile UNDEFS <undef> ;
 flags msvc.compile INCLUDES <include> ;
 
 # The actions differ only by explicit selection of input language
-actions compile.c
+actions compile.c bind RSP
 {
-    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"$(<[2]:W)" -c -Fo"$(<[1]:W)"
+    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"$(RSP:W)" -c -Fo"$(<[1]:W)" && del "$(RSP)"
 }
-actions compile.c++
+actions compile.c++ bind RSP
 {
-    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"$(<[2]:W)" -c -Fo"$(<[1]:W)" 
+    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"$(RSP:W)" -c -Fo"$(<[1]:W)" 
 }
 
 actions compile.rc
@@ -331,18 +338,18 @@ if [ os.name ] in NT
 {    
     # The 'DEL' command would issue a message to stdout
     # if the file does not exist, so need a check.
-    actions archive 
+    actions archive bind RSP
     {  
         if exist "$(<[1])" DEL "$(<[1])"  
-        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(<[2])"
+        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(RSP)" && del "$(RSP)"
     }
 }
 else
 {
-    actions archive 
+    actions archive bind RSP
     {  
         $(RM) "$(<[1])"
-        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(<[2])"
+        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(RSP)" && del "$(RSP)"
     }
 }
         
@@ -352,20 +359,20 @@ else
 # rebuilt every time. I'm not sure that incremental linking is
 # such a great idea in general, but in this case I'm sure we
 # don't want it.
-actions link bind DEF_FILE
+actions link bind DEF_FILE RSP
 {
-    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(<[2]:W)"
+    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(RSP:W)" && del "$(RSP)"
 }
 
-actions link.dll bind DEF_FILE
+actions link.dll bind DEF_FILE RSP
 {
-    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"$(<[3]:W)"
+    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"$(RSP:W)" && del "$(RSP)"
     $(MANIFEST)$(<[1]).manifest $(OUTPUTRESOURCE)$(<[1]);#2
 }
 
 rule compile.c++ ( targets + : sources * : properties * )
 {
-    common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;
+    common.response-file $(targets) : $(sources) : $(response-file) : $(properties) ;
 }
 
 rule compile.c ( targets + : sources * : properties * )
