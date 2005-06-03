@@ -429,15 +429,17 @@ rule response-file ( targets + : sources * : the-response-file ? : properties * 
     # TODO: now 'the-response-file' is just ignored. Need to remove
     # the argument altother and adjust callers.
     
-    # Create a target for response file. Not that we add 'rsp' to the target
+    # Create a target for response file. Note that we add 'rsp' to the target
     # name (without stripping suffix), so that response file names for c.exe
     # and c.obj are different.
     local rsp = $(targets[1]).rsp ;
     RSP on $(targets) = $(rsp) ;
     LOCATE on $(rsp) = [ on $(targets[1]) return $(LOCATE) ] ;
     DEPENDS $(targets) : $(rsp) ;
-    # Note: we don't need dependecy from response file on sources
+    # In theory, we don't need dependecy from response file on sources
     # because response file only needs the names of the sources.
+    # In practice, bjam won't recreated TEMPORARY target without dependencies.
+    DEPENDS $(rsp) : $(sources) ;
     TEMPORARY $(rsp) ;
             
     # Add libraries from <library> property to the list of sources.
