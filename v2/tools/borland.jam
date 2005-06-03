@@ -45,8 +45,8 @@ type.register BORLAND.TDS : tds ;
 
 # Declare generators
 
-generators.register-linker borland.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE RSP : <toolset>borland ;
-generators.register-linker borland.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB RSP : <toolset>borland ;
+generators.register-linker borland.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>borland ;
+generators.register-linker borland.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB : <toolset>borland ;
 
 generators.register-archiver borland.archive : OBJ : STATIC_LIB : <toolset>borland ;
 generators.register-c-compiler borland.compile.c++ : CPP : OBJ : <toolset>borland ;
@@ -149,7 +149,8 @@ flags borland.archive AROPTIONS <archiveflags> ;
 # CONSIDER: don't know what 'together' is for...
 actions updated together piecemeal archive
 { 
-    "$(.root)tlib" $(AROPTIONS) /u /a /C "$(<:W)" +-"$(>:W)"
+    $(.set-path)$(.root:W)$(.old-path)
+    tlib $(AROPTIONS) /u /a /C "$(<:W)" +-"$(>:W)"
 }
 
 
@@ -187,13 +188,13 @@ else
 
 rule link ( targets + : sources * : properties * )
 {
-    common.response-file $(targets) : $(sources) : $(targets[2]) 
+   common.response-file $(targets) : $(sources) :  
       : $(properties) ;
 }   
 
-actions link bind LIBRARIES
+actions link bind LIBRARIES RSP
 {
-    $(.set-path)$(.root:W)$(.old-path) "$(CONFIG_COMMAND)" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(<[2]:W)"
+    $(.set-path)$(.root:W)$(.old-path) "$(CONFIG_COMMAND)" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(RSP:W)" && del "$(RSP)"
 }
 
 rule link.dll ( targets + : sources * : properties * )
@@ -201,8 +202,8 @@ rule link.dll ( targets + : sources * : properties * )
     common.response-file $(targets) : $(sources) : $(targets[3]) : $(properties) ;    
 }
 
-actions link.dll bind LIBRARIES
+actions link.dll bind LIBRARIES RSP
 {
-    $(.set-path)$(.root:W)$(.old-path) "$(CONFIG_COMMAND)" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(<[3]:W)"
+    $(.set-path)$(.root:W)$(.old-path) "$(CONFIG_COMMAND)" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(RSP:W)" && del "$(RSP)"
     "$(.root)implib" "$(<[2]:W)" "$(<[1]:W)"
 }
