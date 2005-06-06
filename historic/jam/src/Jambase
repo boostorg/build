@@ -138,13 +138,7 @@ if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
         [ GLOB $(search-path) : boost-build.jam ] ;
     
     .boost-build-file = $(boost-build-files[1]) ;
-    
-    if [ MATCH .*(--debug-configuration).* : $(ARGV) ]
-    {
-        ECHO "notice: found boost-build.jam at" 
-          [ NORMALIZE_PATH $(.boost-build-file) ] ;
-    }
-        
+            
     # There is no boost-build.jam we can find, exit with an error, and information.
     #
     if ! $(.boost-build-file)
@@ -163,6 +157,12 @@ if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
         ECHO "Attempted search from" [ PWD ] "up to the root" ;
         ECHO "and in these directories from BOOST_BUILD_PATH and BOOST_ROOT: "$(search-path:J=", ")"." ;
         EXIT "Please consult the documentation at 'http://www.boost.org'." ;
+    }
+    
+    if [ MATCH .*(--debug-configuration).* : $(ARGV) ]      
+    {
+        ECHO "notice: found boost-build.jam at" 
+             [ NORMALIZE_PATH $(.boost-build-file) ] ;
     }
     
     # Now load the boost-build.jam to get the build system loaded. This
