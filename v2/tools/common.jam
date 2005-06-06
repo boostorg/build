@@ -440,6 +440,10 @@ rule response-file ( targets + : sources * : the-response-file ? : properties * 
     # because response file only needs the names of the sources.
     # In practice, bjam won't recreated TEMPORARY target without dependencies.
     DEPENDS $(rsp) : $(sources) ;
+    # Make sure the directory is created before the response file. The target
+    # itself depends on directory, but response file does not, yet.
+    DEPENDS $(rsp) : [ on $(targets[1]) return $(LOCATE) ] ;
+    
     TEMPORARY $(rsp) ;
             
     # Add libraries from <library> property to the list of sources.
