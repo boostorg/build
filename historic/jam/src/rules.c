@@ -771,7 +771,7 @@ RULE *bindrule( char *rulename, module_t* m)
        here, but we don't have necessary information, such as frame.
     */
     if (!result)
-        result = enter_rule( rulename, root_module() );
+        result = enter_rule( rulename, m );
 
     return result;
 }
