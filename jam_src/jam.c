@@ -214,6 +214,7 @@ int  main( int argc, char **argv, char **arg_environ )
     int		status;
     int arg_c = argc;
     char ** arg_v = argv;
+    const char *progname = argv[0];
 
 # ifdef OS_MAC
     InitGraf(&qd.thePort);
@@ -240,7 +241,7 @@ int  main( int argc, char **argv, char **arg_environ )
 
 	if( getoptions( argc, argv, "-:d:j:f:gs:t:ano:qv", optv ) < 0 )
     {
-        printf( "\nusage: jam [ options ] targets...\n\n" );
+        printf( "\nusage: %s [ options ] targets...\n\n", progname );
 
         printf( "-a      Build all targets, even if they are current.\n" );
         printf( "-dx     Set the debug level to x (0-9).\n" );
