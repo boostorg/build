@@ -85,6 +85,10 @@ if ! $(ARFLAGS)
     flags tru64cxx65 ARFLAGS : "" ;
 }
 
+flags tru64cxx65 LIBPATH <library-path> ;
+flags tru64cxx65 NEEDLIBS <library-file> ;
+flags tru64cxx65 FINDLIBS <find-library> ;
+
 #### Link ####
 
 rule Link-action ( target : sources + : target-type )
