@@ -438,10 +438,6 @@ class generator
             targets += [ class.new file-target $(generated-name) 
               : $(t) : $(project) : $(a) ] ;
         }                 
-        for local t in $(targets)
-        {
-            $(t).set-intermediate true ;
-        }       
         
         return [ sequence.transform virtual-target.register : $(targets) ] ;
     }    
