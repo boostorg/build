@@ -11,10 +11,12 @@ import feature : feature ;
 import toolset : flags ;
 import type ;
 import common ;
+import generators ;
 
 toolset.register darwin ;
 import gcc ;
 toolset.inherit-generators darwin : gcc ;
+generators.override builtin.lib-generator : darwin.prebuilt ;
 toolset.inherit-rules darwin : gcc ;
 toolset.inherit-flags darwin : gcc ;
 

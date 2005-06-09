@@ -12,11 +12,13 @@ import intel ;
 import gcc ;
 import common ;
 import errors ;
+import generators ;
 
 feature.extend-subfeature toolset intel : platform : linux ;
 
 toolset.inherit-generators intel-linux 
      <toolset>intel <toolset-intel:platform>linux : gcc ;
+generators.override builtin.lib-generator : intel-linux.prebuilt ;
 toolset.inherit-rules intel-linux : gcc ;
 toolset.inherit-flags intel-linux : gcc 
         : <inlining>off <inlining>on <inlining>full <optimization>space ;

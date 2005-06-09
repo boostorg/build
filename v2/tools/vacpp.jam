@@ -11,9 +11,11 @@
 import toolset : flags ;
 import feature ;
 import common ;
+import generators ;
 
 feature.extend toolset : vacpp ;
 toolset.inherit vacpp : unix ;
+generators.override builtin.lib-generator : vacpp.prebuilt ;
 feature.subfeature toolset vacpp : version ;
 
 # Configures the vacpp toolset. 

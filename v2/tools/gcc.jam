@@ -21,6 +21,7 @@ feature.extend toolset : gcc ;
 
 import unix ;
 toolset.inherit-generators gcc : unix : unix.link unix.link.dll ;
+generators.override builtin.lib-generator : gcc.prebuilt ;
 toolset.inherit-flags gcc : unix ;
 toolset.inherit-rules gcc : unix ;
 
