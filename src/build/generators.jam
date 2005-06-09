@@ -1054,66 +1054,7 @@ local rule find-viable-generators ( target-type : property-set )
         
     return $(result) ;
 }    
-
-    
-# Given a vector of vectors, of of them represents results of running some 
-# generator, returns the 'best' result, it it exists. Otherwise, exit with
-# and error. Result is returned as plain jam list.
-local rule select-dependency-graph ( options )
-{
-    if [ $(options).size ] = 0
-    {
-        return ;
-    }
-    else if [ $(options).size ] = 1
-    {
-        return [ $(options).get-at 1 ] ;
-    }
-    else
-    {
-        # We have several alternatives and need to check if they
-        # are the same. 
         
-        for local r in [ $(options).get ] 
-        {
-            normalize-target-list $(r) ;
-            local v = [ $(r).get ] ;
-            generators.dout $(v[2-]) ;
-        }
-        
-        # One note why we can compare object names directly,
-        # without using deep copy. All the targets here are
-        # produced by some generators, and generators should
-        # pass the targets they've returned via 'virtual-target.register'.
-        # So, two elements can only be equivalent, if they are just
-        # the same object.       
-        local f = [ $(options).at 1 ] ;
-        f = [ $(f).get ] ;
-        f = $(f[2-]) ;
-        local mismatch ;
-        for local r in [ $(options).get ] 
-        {
-            local v = [ $(r).get ] ;
-            v = $(v[2-]) ;
-            if $(f) != $(v)
-            {
-                mismatch = true ;
-            }
-        }
-
-        if ! $(mismatch)
-        {
-            local v = [ $(options).at 1 ] ;
-            return [ $(v).get ] ;
-        }
-        else 
-        {                        
-            error [ $(options).size ] "possible generations for "
-                   $(target-types) "Can't handle this now." ;
-        }            
-    }                        
-}
-    
 .construct-stack = ;
 
 # Attempts to construct target by finding viable generators, running them
@@ -1122,12 +1063,11 @@ local rule construct-really (
    project name ? : target-type : property-set : sources * )
 {
     viable-generators = [ find-viable-generators $(target-type) : $(property-set) ] ;
-                    
-    local results = [ new vector ] ;
-    
+                        
     generators.dout [ indent ] "*** " [ sequence.length $(viable-generators) ] 
       " viable generators" ;
     
+    local result ;
     for local g in $(viable-generators)
     {
         # This variable will be restored on exit from this scope.
@@ -1138,11 +1078,18 @@ local rule construct-really (
         
         if $(r)
         {
-            $(results).push-back [ new vector $(r) ] ;
+            if $(result)
+            {
+                error "Ambiguity found when searching for best transformation" ;
+            }
+            else
+            {
+                result = $(r) ;
+            }            
         }
     }
     
-    return [ select-dependency-graph $(results) ] ;
+    return $(result) ;
 }       
     
         
@@ -1164,43 +1111,26 @@ local rule construct-really (
 rule construct ( project name ? : target-type : property-set * : sources * 
    : allowed-type * )
 {
-    allowed-type ?= $(target-type) ;
     if (.construct-stack)
     {
         ensure-type $(sources) ;
-    }
-
-    # Intermediate targets are not passed to generators
-    # and just returned unmodified.
-    local intermediate ;
-    if ! $(.construct-stack)
-    {
-        local sources2 ;
-        for local s in $(sources)
-        {
-            if ! [ $(s).intermediate ] 
-            {
-                sources2 += $(s) ;
-            }
-            else
-            {
-                intermediate += $(s) ;
-            }            
-        }
-        sources = $(sources2) ;
     }
         
     .construct-stack += 1 ;
 
     increase-indent ;
+
+    if $(.debug)
+    {        
+        generators.dout [ indent ] "*** construct" $(target-type) ;
     
-    generators.dout [ indent ] "*** construct" $(target-type) ;
-    
-    for local s in $(sources)
-    {
-        generators.dout [ indent ] "    from" $(s) ;
+        for local s in $(sources)
+        {
+            generators.dout [ indent ] "    from" $(s) ;
+        }
+        generators.dout [ indent ] "    properties:" [ $(property-set).raw ] ;        
     }
-    generators.dout [ indent ] "    properties:" [ $(property-set).raw ] ;        
+    
                
     local result = [ construct-really $(project) $(name)  
       : $(target-type) : $(property-set) : $(sources) ] ;
@@ -1208,30 +1138,7 @@ rule construct ( project name ? : target-type : property-set * : sources *
     decrease-indent ;
         
     .construct-stack = $(.construct-stack[2-]) ;
-    
-    if ! $(.construct-stack)
-    {
-        result += $(intermediate) ;
-    }
-            
-    # For all targets of 'allowed-type', reset the 'intermediate' attribute.
-    if ! $(.construct-stack) && $(allowed-type) != * # This is first invocation in stack
-    {
-        local result2 ;
-        for local t in $(result[2-])
-        {
-            local type = [ $(t).type ] ;    
-            # Return only targets of the requested type, unless 'return-all'
-            # is specified. If we don't do this, then all targets calling
-            # 'construct' will get unused target returned, which will break
-            # checking for unused sources a bit harder.
-            if $(type) && ( $(type) = $(target-type) || [ type.is-derived $(type) $(allowed-type) ] )
-            {
-                $(t).set-intermediate ;
-            }
-        }                
-    } 
-            
+                
     
     return $(result) ;        
 }

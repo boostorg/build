@@ -11,13 +11,16 @@ import toolset ;
 import feature ;
 import toolset : flags ;
 import common ;
+import generators ;
 
 import unix ;  
 import como ;
+
 feature.extend-subfeature toolset como : platform : linux ;
 
 toolset.inherit-generators como-linux 
      <toolset>como <toolset-como:platform>linux : unix ;
+generators.override builtin.lib-generator : como-linux.prebuilt ;     
 toolset.inherit-flags como-linux : unix ;
 toolset.inherit-rules como-linux : gcc ;
 

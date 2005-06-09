@@ -257,18 +257,6 @@ class abstract-file-target : virtual-target
         return $(self.root) ;
     }
     
-    rule set-intermediate ( value ? )
-    {
-        self.intermediate = $(value) ;
-    }
-    
-    rule intermediate ( )      
-    {
-        return $(self.intermediate) ;
-    }
-    
-    
-
     # Gets or sets the subvariant which created this target. Subvariant
     # is set when target is brought into existance, and is never changed
     # after that. In particual, if target is shared by subvariant, only 
@@ -506,7 +494,7 @@ class file-target : abstract-file-target
         abstract-file-target.__init__ $(name) $(exact) : $(type) : $(project) 
           : $(action) ;   
 
-	self.path = $(path) ;
+        self.path = $(path) ;
     }
         
     rule actualize-location ( target )
@@ -783,7 +771,7 @@ rule from-file ( file : file-loc : project )
         local type = [ type.type $(file) ] ;
         local result ;
 
-	result = [ new file-target $(file)
+        result = [ new file-target $(file)
                          : $(type)
                          : $(project)
                          : #action
@@ -801,7 +789,8 @@ rule from-file ( file : file-loc : project )
 rule register ( target )
 {
     local signature = [ sequence.join
-        [ $(target).name ] : - ] ;    
+       [ $(target).name ] : - ] ;    
+
             
     local result ;
     for local t in $(.cache.$(signature))
