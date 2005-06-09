@@ -250,10 +250,10 @@ flags msvc.compile CFLAGS <inlining>full : /Ob2 ;
 feature.feature asynch-exceptions : off on : propagated ;
 feature.feature extern-c-nothrow : off on : propagated ;
 
-flags msvc.compile CFLAGS  <base-target-type>CPP/<exception-handling>on/<asynch-exceptions>off : /EHs ;
-flags msvc.compile CFLAGS  <base-target-type>CPP/<exception-handling>on/<asynch-exceptions>on : /EHa ;
-flags msvc.compile CFLAGS  <base-target-type>CPP/<exception-handling>on/<extern-c-nothrow>off : /EHc- ;
-flags msvc.compile CFLAGS  <base-target-type>CPP/<exception-handling>on/<extern-c-nothrow>on : /EHc ;
+flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>off/<extern-c-nothrow>off : /EHs ;
+flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>off/<extern-c-nothrow>on : /EHsc ;
+flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>off : /EHa ;
+flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>on : /EHac ;
 
 flags msvc.compile CFLAGS <rtti>on : /GR ;
 flags msvc.compile CFLAGS <runtime-debugging>off/<link-runtime>shared : /MD ;
@@ -280,7 +280,7 @@ actions compile.c bind RSP
 }
 actions compile.c++ bind RSP
 {
-    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"$(RSP:W)" -c -Fo"$(<[1]:W)" && del "$(RSP)" 
+    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(USER_CFLAGS) @"$(RSP:W)" -c -Fo"$(<[1]:W)" && del "$(RSP)" 
 }
 
 actions compile.rc
