@@ -134,8 +134,12 @@ tests = [ "rebuilds",
 if os.name == 'posix':
     tests.append("symlink")
     # On windows, library order is not important, so skip this test
-    # Besides, it fails ;-)    
-    tests.append("library_order")
+    # Besides, it fails ;-)
+    # Further, the test relies on the fact that on Linux, one
+    # can build a shared library with unresolved symbols. This is
+    # not true on Windows (even with cygwin gcc).
+    if string.find(os.uname()[0], "CYGWIN") == -1:
+        tests.append("library_order")
 
 if string.find(get_toolset(), 'gcc') == 0:
     tests.append("gcc_runtime")
