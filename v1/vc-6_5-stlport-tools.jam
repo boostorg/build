@@ -1,0 +1,9 @@
+#~ Copyright 2005 Rene Rivera.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
+extends-toolset msvc-stlport ;
+
+# The following #// line will be used by the regression test table generation
+# program as the column heading for HTML tables. Must not include version number.
+#//<a href="http://msdn.microsoft.com/vstudio/default.asp">Micro-<br>soft<br>VC++</a><br><a href="http://www.stlport.org/">STLport</a>
