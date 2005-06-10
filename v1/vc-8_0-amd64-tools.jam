@@ -1,31 +1,10 @@
-extends-toolset msvc ;
+extends-toolset vc-8_0-tools.jam ;
 
-# singleton variables...
-set-as-singleton VC80_ROOT ;
-
-if ! $(MSVCDir)
+if $(VC80_ROOT)
 {
-    if $(VS80COMNTOOLS)
-    {
-        VC80_ROOT ?= $(VS80COMNTOOLS:J=" ")..\\..\\VC ;
-        VC_TOOL_PATH = "$(VC80_ROOT)"\\bin\\amd64\\ ;
-        VC_SETUP = "CALL \"$(VC_TOOL_PATH)vcvars_64.BAT\" >nul" ;
-    }
-    else
-    {
-        ProgramFiles ?= $(PROGRAMFILES) ;
-        VC80_ROOT ?= $(ProgramFiles:J=" ")"\\Microsoft Visual Studio 8\\VC" ;
-        VC_TOOL_PATH = "$(VC80_ROOT)"\\bin\\amd64\\ ;
-        VC_SETUP = "CALL \"$(VC_TOOL_PATH)vcvars_64.BAT\" >nul" ;
-    }
+    VC_TOOL_PATH = "$(VC80_ROOT)"\\bin\\amd64\\ ;
+    VC_SETUP = "CALL \"$(VC_TOOL_PATH)vcvarsamd64.BAT\" >nul" ;
 }
-
-VC_PDB_NAME = vc80 ;
-
-feature native-wchar_t : on off ;
-
-flags vc-8_0 C++FLAGS : /Zc:forScope ;
-flags vc-8_0 C++FLAGS <native-wchar_t>on : /Zc:wchar_t ;
 
 # The following #// line will be used by the regression test table generation
 # program as the column heading for HTML tables. Must not include version number.
