@@ -247,9 +247,6 @@ flags msvc.compile CFLAGS <inlining>off : /Ob0 ;
 flags msvc.compile CFLAGS <inlining>on : /Ob1 ;
 flags msvc.compile CFLAGS <inlining>full : /Ob2 ;
 
-feature.feature asynch-exceptions : off on : propagated ;
-feature.feature extern-c-nothrow : off on : propagated ;
-
 flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>off/<extern-c-nothrow>off : /EHs ;
 flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>off/<extern-c-nothrow>on : /EHsc ;
 flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>off : /EHa ;
