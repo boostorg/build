@@ -36,6 +36,7 @@ rule init ( version ? : command * : options * )
     
     flags borland.compile STDHDRS $(condition) : $(root)/include/ ;
     flags borland.link STDLIBPATH $(condition) : $(root)/lib ;
+    flags borland.link RUN_PATH $(condition) : $(root)/bin ;
     flags borland .root $(condition) : $(root)/bin/ ;    
 }
 
