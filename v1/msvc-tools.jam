@@ -18,7 +18,7 @@ flags msvc VC_SETUP ;
 flags msvc VC_COMPILER ;
 flags msvc VC_LINKER ;
 flags msvc VC_PDB_NAME ;
-  
+
 # compute MSVC tool path
 # You can either put the msvc bin directory in your PATH, or you can set
 # MSVCDir to point at the msvc installation directory
@@ -35,15 +35,15 @@ if ! $(MSVCDir)
 
     ProgramFiles ?= $(PROGRAMFILES) ;
     MSVC_ROOT ?= $(ProgramFiles:J=" ")"\\Microsoft Visual Studio\\VC98" ;
-    
+
     # Reconstitutes paths containing spaces
     MSVC_ROOT = $(MSVC_ROOT:J=" ") ;
-    
+
     # The tools are provisionallly located in the msvc6 bin
     # directory. This may be overridden by toolsets which extend this
     # one.
     VC_TOOL_PATH = "$(MSVC_ROOT)"$(SLASH)bin$(SLASH) ;
-    
+
     # Always call VCVARS32.BAT before invoking the tools
     VC_SETUP = "CALL \"$(VC_TOOL_PATH)VCVARS32.BAT\" >nul" ;
 }
@@ -51,9 +51,9 @@ else
 {
     # Reconstitutes paths containing spaces
     MSVCDir = $(MSVCDir:J=" ") ;
-    
+
     # Don't clobber adjoining text or use explicit paths if MSVCDir is already set
-    VC_TOOL_PATH = "" ; 
+    VC_TOOL_PATH = "" ;
 }
 
 VC_COMPILER = cl ;
@@ -76,7 +76,7 @@ flags msvc CFLAGS <optimization>space : /Ogisy /O1 /Gs ;
 flags msvc CFLAGS <inlining>off : /Ob0 ;
 flags msvc CFLAGS <inlining>on : /Ob1 ;
 flags msvc CFLAGS <inlining>full : /Ob2 ;
-flags msvc CFLAGS <exception-handling>on : /EHsc ;
+flags msvc CFLAGS <exception-handling>on : /EHac ;
 flags msvc CFLAGS <rtti>on : /GR ;
 
 # Note that these two options actually imply multithreading support on MSVC
@@ -128,7 +128,7 @@ rule vc-set-pdb-file ( targets + : name )
 rule Link-action ( target implib ? : sources + : target-type ? )
 {
     with-command-file vc-Link $(<) : $(sources) $(NEEDLIBS) ;
-    
+
     if $(target-type) in $(SHARED_TYPES)
     {
         MANIFEST on $(target) = $(VC_MANIFEST) ;
@@ -183,7 +183,7 @@ rule C++-action
 actions vc-C++
 {
     $(VC_SETUP)
-    "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm800 -nologo /EHsc -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" -Tp"$(>)"
+    "$(VC_TOOL_PATH)$(VC_COMPILER)" /Zm800 -nologo /EHac -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" $(PDB_CFLAG)"$(VC_PDB_FILE)" -Fo"$(<)" -Tp"$(>)"
 }
 
 #### Archive ####
