@@ -2670,6 +2670,15 @@ rule common-variant-tag ( toolset variant : properties * )
         {
             toolset-tag += [ MATCH "[-]([0123456789]+)[_.][0123456789]*" : $(toolset) ] ;
         }
+        
+        # boost/config/auto_link.hpp expects toolset tags that do not always
+        # match the above algorithm for MSVC 6.x and 7.0.
+        #
+        switch $(toolset-tag)
+        {
+            case vc6* : toolset-tag = vc 6 ;
+            case vc70 : toolset-tag = vc 7 ;
+        }
     }
     
     local version-tag = ;
