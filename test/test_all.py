@@ -129,6 +129,7 @@ tests = [ "rebuilds",
           "wrong_project",
           "using",
           "source_locations",
+          "out_of_tree",
           ]
 
 if os.name == 'posix':

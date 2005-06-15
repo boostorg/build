@@ -159,7 +159,7 @@ rule find ( name : current-location )
         project-module = [ module-name $(location) ] ;
         if ! $(project-module) in $(.jamfile-modules) 
         {
-            if [ find-jamfile $(location) : no-error ]
+            if [ path.glob $(location) : $(JAMROOT) $(JAMFILE) ]
             {
                 project-module = [ load $(location) ] ;            
             }        
