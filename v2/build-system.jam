@@ -122,7 +122,10 @@ if --version in [ modules.peek : ARGV ]
 # We always load project in "." so that 'use-project' directives has
 # any chance of been seen. Otherwise, we won't be able to refer to
 # subprojects using target ids.
-current-project = [ project.target [ project.load "." ] ] ;
+if [ project.find "." : "." ]
+{    
+    current-project = [ project.target [ project.load "." ] ] ;
+}    
 
 if ! [ feature.values <toolset> ] 
 {
@@ -162,6 +165,50 @@ if "--clean" in [ modules.peek : ARGV ]
 
 local bjam-targets ;
 
+# Given a target it, try to find and return corresponding target.
+# This is only invoked when there's no Jamfile in "."
+# This code somewhat duplicates code in project-target.find but we can't  reuse
+# that code without project-targets instance.
+rule find-target ( target-id )
+{
+    local split = [ MATCH (.*)//(.*) : $(target-id) ] ;        
+    
+    local pm ;
+    if $(split)
+    {
+        pm = [ project.find $(split[1]) : "." ] ;
+    }
+    else
+    {
+        pm = [ project.find $(target-id) : "." ] ;
+    }
+        
+    local result ;    
+    if $(pm)
+    {
+        result = [ project.target $(pm) ] ;
+    }
+        
+    if $(split)
+    {
+        result = [ $(result).find $(split[2]) ] ;
+    }
+    
+    return $(result) ;
+}
+
+
+
+if ! $(current-project) 
+{
+    if ! $(target-ids)
+    {        
+        ECHO "error: no Jamfile in current directory found, and no target references specified."  ;
+        EXIT ;
+    }
+}
+
+
 for local id in $(target-ids)
 {
     if $(id) = clean
@@ -170,7 +217,16 @@ for local id in $(target-ids)
     }
     else
     {
-        local t = [ $(current-project).find $(id) : no-error ] ;
+        local t ;
+        if $(current-project)
+        {
+            t = [ $(current-project).find $(id) : no-error ] ;
+        }
+        else
+        {
+            t = [ find-target $(id) ] ;
+        }
+        
         if ! $(t)
         {
             ECHO "notice: could not find main target " $(id) ;
