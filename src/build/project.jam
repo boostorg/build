@@ -617,10 +617,10 @@ class project-attributes
         {
             self.source-location = ;
             for local src-path in $(specification)
-	    {
+            {
                 self.source-location += [ path.root
                     [ path.make $(src-path) ] $(self.location) ] ;
-	    }
+            }
         }            
         else if $(attribute) = "build-dir"
         {
