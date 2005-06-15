@@ -22,12 +22,12 @@ flags ifort OPTIONS <optimization>space : /O1 ;
 flags ifort OPTIONS <debug-symbols>on : /debug:full ;
 flags ifort OPTIONS <profiling>on : /Qprof_gen ;
 
-flags ifort.compile FFLAGS <runtime-debugging>off/<link-runtime>shared : /MD ;
-flags ifort.compile FFLAGS <runtime-debugging>on/<link-runtime>shared : /MDd ;
-flags ifort.compile FFLAGS <runtime-debugging>off/<link-runtime>static/<threading>single : /ML ;
-flags ifort.compile FFLAGS <runtime-debugging>on/<link-runtime>static/<threading>single : /MLd ;
-flags ifort.compile FFLAGS <runtime-debugging>off/<link-runtime>static/<threading>multi : /MT ;
-flags ifort.compile FFLAGS <runtime-debugging>on/<link-runtime>static/<threading>multi : /MTd ;
+flags ifort.compile FFLAGS <runtime-debugging>off/<runtime-link>shared : /MD ;
+flags ifort.compile FFLAGS <runtime-debugging>on/<runtime-link>shared : /MDd ;
+flags ifort.compile FFLAGS <runtime-debugging>off/<runtime-link>static/<threading>single : /ML ;
+flags ifort.compile FFLAGS <runtime-debugging>on/<runtime-link>static/<threading>single : /MLd ;
+flags ifort.compile FFLAGS <runtime-debugging>off/<runtime-link>static/<threading>multi : /MT ;
+flags ifort.compile FFLAGS <runtime-debugging>on/<runtime-link>static/<threading>multi : /MTd ;
 
 flags ifort DEFINES <define> ;
 flags ifort INCLUDES <include> ;

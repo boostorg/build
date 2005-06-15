@@ -33,7 +33,7 @@ feature toolset : : implicit propagated symmetric ;
 feature stdlib : native : propagated composite ;
 
 feature link : shared static : propagated ;
-feature link-runtime : shared static : propagated ;
+feature runtime-link : shared static : propagated ;
 feature runtime-debugging : on off : propagated ;
 
 

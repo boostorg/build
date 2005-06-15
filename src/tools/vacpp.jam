@@ -43,8 +43,8 @@ flags vacpp C++FLAGS <exception-handling>on : -qeh ;
 flags vacpp C++FLAGS <rtti>off : -qnortti ;
 flags vacpp C++FLAGS <rtti>on : -qrtti ;
 
-# flags vacpp LINKFLAGS <link-runtime>static : -llibstd_v2.a ;
-# flags vacpp LINKFLAGS <link-runtime>shared : -llibstd_v2.sl ;
+# flags vacpp LINKFLAGS <runtime-link>static : -llibstd_v2.a ;
+# flags vacpp LINKFLAGS <runtime-link>shared : -llibstd_v2.sl ;
 
 # We want the full path to the sources in the debug symbols because otherwise
 # the debugger won't find the sources when we use boost.build.

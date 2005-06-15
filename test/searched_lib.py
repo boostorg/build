@@ -132,7 +132,7 @@ t.write("project-root.jam", "")
 t.write("a.cpp", "")
 
 t.write("Jamfile", """
-project a : requirements <link-runtime>static ;
+project a : requirements <runtime-link>static ;
 
 static-lib a : a.cpp l ;
 lib l : : <name>l_f ;

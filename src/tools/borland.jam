@@ -75,7 +75,7 @@ flags borland OPTIONS <user-interface>console : -tWC ;
 
 # -tWR sets -tW as well, so we turn it off here and then turn it 
 # on again later if we need it:
-flags borland OPTIONS <link-runtime>shared : -tWR -tWC ;
+flags borland OPTIONS <runtime-link>shared : -tWR -tWC ;
 flags borland OPTIONS <user-interface>gui : -tW ;
 
 flags borland OPTIONS <main-target-type>LIB/<link>shared : -tWD ;
