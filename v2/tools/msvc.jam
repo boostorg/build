@@ -253,13 +253,13 @@ flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<exter
 flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>on : /EHac ;
 
 flags msvc.compile CFLAGS <rtti>on : /GR ;
-flags msvc.compile CFLAGS <runtime-debugging>off/<link-runtime>shared : /MD ;
-flags msvc.compile CFLAGS <runtime-debugging>on/<link-runtime>shared : /MDd ;
+flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>shared : /MD ;
+flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>shared : /MDd ;
 
-flags msvc.compile CFLAGS <runtime-debugging>off/<link-runtime>static/<threading>single : /ML ;
-flags msvc.compile CFLAGS <runtime-debugging>on/<link-runtime>static/<threading>single : /MLd ;
-flags msvc.compile CFLAGS <runtime-debugging>off/<link-runtime>static/<threading>multi : /MT ;
-flags msvc.compile CFLAGS <runtime-debugging>on/<link-runtime>static/<threading>multi : /MTd ;
+flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>static/<threading>single : /ML ;
+flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>static/<threading>single : /MLd ;
+flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>static/<threading>multi : /MT ;
+flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>static/<threading>multi : /MTd ;
 
 flags msvc.compile USER_CFLAGS <cflags> : ;
 flags msvc.compile.c++ USER_CFLAGS <cxxflags> : ;

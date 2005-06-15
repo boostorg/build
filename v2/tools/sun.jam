@@ -76,8 +76,8 @@ flags sun.link LINKPATH <library-path> ;
 flags sun.link FINDLIBS-ST <find-static-library> ;
 flags sun.link FINDLIBS-SA <find-shared-library> ;
 flags sun.link LIBRARIES <library-file> ;
-flags sun.link LINK-RUNTIME <link-runtime>static : static ;
-flags sun.link LINK-RUNTIME <link-runtime>shared : dynamic ;
+flags sun.link LINK-RUNTIME <runtime-link>static : static ;
+flags sun.link LINK-RUNTIME <runtime-link>shared : dynamic ;
 flags sun.link RPATH <dll-path> ;
 # On gcc, there are separate options for dll path at runtime and
 # link time. On Solaris, there's only one: -R, so we have to use

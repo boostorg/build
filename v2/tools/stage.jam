@@ -429,7 +429,7 @@ rule rename ( name : type ? : property-set : unversioned ? )
         if <threading>multi in $(properties) { thread-tag = mt ; }
         
         local runtime-tag = ;
-        if <link-runtime>static in $(properties) { runtime-tag += s ; }
+        if <runtime-link>static in $(properties) { runtime-tag += s ; }
         if <runtime-build>debug in $(properties) { runtime-tag += g ; }
         
         if <variant>debug-python in $(properties) { runtime-tag += y ; }

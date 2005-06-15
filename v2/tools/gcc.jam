@@ -154,18 +154,18 @@ actions compile.c
 }
 
 # The class which check that we don't try to use
-# the <link-runtime>static property while creating or using shared library,
+# the <runtime-link>static property while creating or using shared library,
 # since it's not supported by gcc/libc.
 class gcc-linking-generator : unix-linking-generator
 {
     rule generated-targets ( sources + : property-set : project name ? )
     {
-        if <link-runtime>static in [ $(property-set).raw ] 
+        if <runtime-link>static in [ $(property-set).raw ] 
         {
             local m ;
             if [ id ] = "gcc.link.dll"
             {
-                m = "on gcc, DLL can't be build with <link-runtime>static" ;
+                m = "on gcc, DLL can't be build with <runtime-link>static" ;
             }         
             if ! $(m) {                
                 for local s in $(sources)
@@ -173,14 +173,14 @@ class gcc-linking-generator : unix-linking-generator
                     local type = [ $(s).type ] ;
                     if $(type) &&  [ type.is-derived $(type) SHARED_LIB ] 
                     {
-                        m = "on gcc, using DLLS together with the <link-runtime>static options is not possible " ;
+                        m = "on gcc, using DLLS together with the <runtime-link>static options is not possible " ;
                     }                
                 }                
             }
             if $(m)
             {
                 errors.user-error $(m) :
-                  "it's suggested to use <link-runtime>static together with the <link>static" ;
+                  "it's suggested to use <runtime-link>static together with the <link>static" ;
             }
             
         }
@@ -211,9 +211,9 @@ flags gcc.link FINDLIBS-ST <find-static-library> ;
 flags gcc.link FINDLIBS-SA <find-shared-library> ;
 flags gcc.link LIBRARIES <library-file> ;
 
-# For <link-runtime>static we made sure there are no dynamic libraries 
+# For <runtime-link>static we made sure there are no dynamic libraries 
 # in the link
-flags gcc.link OPTIONS <link-runtime>static : -static ;
+flags gcc.link OPTIONS <runtime-link>static : -static ;
 
 # Now, the vendor specific flags
 # The parameter linker can be either gnu or sun
