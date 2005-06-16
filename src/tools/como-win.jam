@@ -83,6 +83,8 @@ flags como-win LIBRARIES <library-file> ;
 flags como-win FINDLIBS <find-shared-library> ;
 flags como-win FINDLIBS <find-static-library> ;
 
+RM = [ common.rm-command ] ;
+
 #### Link ####
 
 rule link ( targets + : sources * : properties * )
@@ -94,7 +96,7 @@ rule link ( targets + : sources * : properties * )
 # for como, we repeat all libraries so that dependencies are always resolved
 actions link bind LIBRARIES RSP
 {
-    $(CONFIG_COMMAND) --no_version --no_prelink_verbose $(LINKFLAGS) -o "$(<[1]:S=)" @"$(RSP:W)" "$(LIBRARIES)" "$(FINDLIBS:S=.lib)" && del "$(RSP)"
+    $(CONFIG_COMMAND) --no_version --no_prelink_verbose $(LINKFLAGS) -o "$(<[1]:S=)" @"$(RSP:W)" "$(LIBRARIES)" "$(FINDLIBS:S=.lib)" && $(RM) "$(RSP)"
 }
 
 actions compile.c
@@ -117,6 +119,6 @@ rule archive ( targets + : sources * : properties * )
 actions updated together piecemeal archive bind RSP
 {
     $(CONFIG_COMMAND) --no_version --no_prelink_verbose --prelink_object @"$(RSP:W)"
-    lib $(ARFLAGS) /nologo /out:"$(<:S=.lib)" @"$(RSP:W)" && del "$(RSP)"
+    lib $(ARFLAGS) /nologo /out:"$(<:S=.lib)" @"$(RSP:W)" && $(RM) "$(RSP)"
 }
 
