@@ -159,6 +159,7 @@ if [ os.name ] = CYGWIN
 {
     .set-path = "cmd /S /C set \"PATH=" ;
     .old-path = ";%PATH%\" \"&&\"" ;
+    
 
     # Couldn't get TLIB to stop being confused about pathnames
     # containing dashes (it seemed to treat them as option separators
@@ -166,11 +167,13 @@ if [ os.name ] = CYGWIN
     # command into a .bat file and execute that.  TLIB is also finicky
     # about pathname style! Forward slashes, too, are treated as
     # options.
+    # TLIB
     actions updated together piecemeal archive
     { 
-        echo "\"$(.root)tlib\" $(OPTIONS) /u /a /C \"$(<:W)\" +-\"$(>:W)\"" > $(<:D)/tlib.bat
-        chmod +x $(<:D)/tlib.bat && $(<:D)/tlib.bat && rm $(<:D)/tlib.bat ;
-    }
+       chdir $(<:D)
+       echo +-$(>:BS) > $(<:BS).rsp
+       $(.set-path)$(.root)$(.old-path) "tlib.exe" $(AROPTIONS) /P256 /C $(<:BS) @$(<:BS).rsp && $(RM) $(<:BS).rsp
+    }    
 }
 else if [ os.name ] = NT
 {
