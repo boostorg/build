@@ -17,6 +17,7 @@ toolset.register darwin ;
 import gcc ;
 toolset.inherit-generators darwin : gcc ;
 generators.override builtin.lib-generator : darwin.prebuilt ;
+generators.override darwin.searched-lib-generator : searched-lib-generator ;
 toolset.inherit-rules darwin : gcc ;
 toolset.inherit-flags darwin : gcc ;
 

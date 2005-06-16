@@ -16,6 +16,7 @@ import generators ;
 feature.extend toolset : vacpp ;
 toolset.inherit vacpp : unix ;
 generators.override builtin.lib-generator : vacpp.prebuilt ;
+generators.override vacpp.searched-lib-generator : searched-lib-generator ;
 feature.subfeature toolset vacpp : version ;
 
 # Configures the vacpp toolset. 
