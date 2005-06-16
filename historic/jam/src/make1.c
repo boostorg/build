@@ -70,7 +70,7 @@
 static CMD *make1cmds( TARGET *t );
 static LIST *make1list( LIST *l, TARGETS *targets, int flags );
 static SETTINGS *make1settings( LIST *vars );
-static void make1bind( TARGET *t, int warn );
+static void make1bind( TARGET *t );
 
 /* Ugly static - it's too hard to carry it through the callbacks. */
 
@@ -995,13 +995,8 @@ make1list(
     {
 	TARGET *t = targets->target;
 
-	/* Sources to 'actions existing' are never in the dependency */
-	/* graph (if they were, they'd get built and 'existing' would */
-	/* be superfluous, so throttle warning message about independent */
-	/* targets. */
-
 	if( t->binding == T_BIND_UNBOUND )
-	    make1bind( t, !( flags & RULE_EXISTING ) );
+	    make1bind( t );
 
     if ( ( flags & RULE_EXISTING ) && ( flags & RULE_NEWSRCS ) )
     {
@@ -1057,11 +1052,10 @@ make1settings( LIST *vars )
 	    {
 		TARGET *t = bindtarget( l->string );
 
-		/* Make sure the target is bound, warning if it is not in the */
-		/* dependency graph. */
+		/* Make sure the target is bound */
 
 		if( t->binding == T_BIND_UNBOUND )
-		    make1bind( t, 1 );
+		    make1bind( t );
 
 		/* Build new list */
 
@@ -1085,19 +1079,10 @@ make1settings( LIST *vars )
 
 static void
 make1bind( 
-	TARGET	*t,
-	int	warn )
+	TARGET	*t )
 {
 	if( t->flags & T_FLAG_NOTFILE )
 	    return;
-
-	/* Sources to 'actions existing' are never in the dependency */
-	/* graph (if they were, they'd get built and 'existing' would */
-	/* be superfluous, so throttle warning message about independent */
-	/* targets. */
-
-	if( warn )
-	    printf( "warning: using independent target %s\n", t->name );
 
 	pushsettings( t->settings );
 	t->boundname = search( t->name, &t->time, 0 );
