@@ -405,10 +405,6 @@ rule translate-paths ( properties * : path )
             condition = $(split[1]): ;
             p = $(split[2]) ;
         }
-
-        # need to do this here to get reasonable error messages for
-        # unrecognized implicit features.
-        validate $(p) ;   
         
         if path in [ feature.attributes $(p:G) ] 
         {
