@@ -30,7 +30,7 @@ feature.subfeature toolset msvc : vendor
   # to be seen, though ;-)
   ;
 
-RM =  [ modules.peek common : RM ] ;
+RM =  [ common.rm-command ] ;
 
 # Initialize the toolset for a specific version. As the result, path to
 # compiler and, possible, program names are set up, and will be used when
@@ -273,11 +273,11 @@ flags msvc.compile INCLUDES <include> ;
 # The actions differ only by explicit selection of input language
 actions compile.c bind RSP
 {
-    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"$(RSP:W)" -c -Fo"$(<[1]:W)" && del "$(RSP)"
+    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"$(RSP:W)" -c -Fo"$(<[1]:W)" && $(RM) "$(RSP)"
 }
 actions compile.c++ bind RSP
 {
-    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(USER_CFLAGS) @"$(RSP:W)" -c -Fo"$(<[1]:W)" && del "$(RSP)" 
+    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(USER_CFLAGS) @"$(RSP:W)" -c -Fo"$(<[1]:W)" && $(RM) "$(RSP)" 
 }
 
 actions compile.rc
@@ -338,7 +338,7 @@ if [ os.name ] in NT
     actions archive bind RSP
     {  
         if exist "$(<[1])" DEL "$(<[1])"  
-        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(RSP)" && del "$(RSP)"
+        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(RSP)" && $(RM) "$(RSP)"
     }
 }
 else
@@ -346,7 +346,7 @@ else
     actions archive bind RSP
     {  
         $(RM) "$(<[1])"
-        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(RSP)" && del "$(RSP)"
+        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"$(RSP)" && $(RM) "$(RSP)"
     }
 }
         
@@ -358,12 +358,12 @@ else
 # don't want it.
 actions link bind DEF_FILE RSP
 {
-    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(RSP:W)" && del "$(RSP)"
+    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(RSP:W)" && $(RM) "$(RSP)"
 }
 
 actions link.dll bind DEF_FILE RSP
 {
-    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"$(RSP:W)" && del "$(RSP)"
+    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"$(RSP:W)" && $(RM) "$(RSP)"
     $(MANIFEST)$(<[1]).manifest $(OUTPUTRESOURCE)$(<[1]);#2
 }
 
