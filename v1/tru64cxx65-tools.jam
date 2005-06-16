@@ -9,11 +9,10 @@
 #
 # Notes on this toolset:
 #
-# - The default language mode "-std ansi" has been found to work better than
-#   "-std strict_ansi" so we keep to the default.
-#
-# - C++ standard iostreams are enabled with __USE_STD_IOSTREAM as the compiler
-#   defaults to the pre-standard iostreams in ansi language mode.
+# - Because of very subtle issues with the default ansi mode, strict_ansi mode
+#   is used for compilation. One example of things that don't work correctly in
+#   the default ansi mode is overload resolution of function templates when
+#   mixed with non-template functions.
 #
 # - For template instantiation "-timplicit_local" is used. Previously,
 #   "-tlocal" has been tried to avoid the need for a template repository
@@ -133,7 +132,7 @@ rule C++-action
 # really can't ignore this one!
 actions tru64cxx65-C++-action
 {
-   cxx -c -timplicit_local -ptr "$(<[1]:D)/cxx_repository" -noimplicit_include -D__USE_STD_IOSTREAM -nousing_std -msg_display_number -msg_disable 186,450,1115 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
+   cxx -c -std strict_ansi -nopure_cname -noimplicit_include -timplicit_local -ptr "$(<[1]:D)/cxx_repository" -msg_display_number -msg_disable 186,450,1115 -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS)  -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
 #### Archive ####
