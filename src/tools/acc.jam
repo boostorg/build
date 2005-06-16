@@ -15,6 +15,7 @@ import generators ;
 feature.extend toolset : acc ;
 toolset.inherit acc : unix ;
 generators.override builtin.lib-generator : acc.prebuilt ;
+generators.override acc.searched-lib-generator : searched-lib-generator ;
 feature.subfeature toolset acc : version ;
 
 # Configures the acc toolset. 

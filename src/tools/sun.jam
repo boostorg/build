@@ -15,6 +15,7 @@ import common ;
 feature.extend toolset : sun ;
 toolset.inherit  sun : unix ;
 generators.override builtin.lib-generator : sun.prebuilt ;
+generators.override sun.searched-lib-generator : searched-lib-generator ;
 feature.subfeature toolset sun : version ;
 
 feature.extend stdlib : sun-stlport ;
