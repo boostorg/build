@@ -77,6 +77,11 @@ class install-target-class : basic-target
         
         # Remove the <tag> feature on original targets.
         ps-raw = [ property.change $(ps-raw) : <tag> ] ;
+        # And <location>. If stage target has another stage target
+        # in sources, then we'll get virtual targets with <location>
+        # property set.
+        ps-raw = [ property.change $(ps-raw) : <location> ] ;
+        
         
         local d = [ $(build-property-set).get <dependency> ] ;
         ps-raw += $(d:G=<dependency>) ;
@@ -110,7 +115,7 @@ class install-target-class : basic-target
           targets-to-stage $(source-targets) : $(property-set) ] ;
         
         property-set = [ update-location $(property-set) ] ;          
-                               
+                                       
         local result ;
         for local i in $(source-targets)
         {            
@@ -118,7 +123,7 @@ class install-target-class : basic-target
                         
             local new-properties = 
               [ adjust-properties $(i) : $(property-set) ] ;
-                        
+                                    
             # See if something special should be done when staging this
             # type. It is indicated by presense of special "staged" type            
             local t = [ $(i).type ] ;            
@@ -386,7 +391,6 @@ rule install ( name : sources * : requirements * : default-build * )
     
     if <name> in $(requirements:G)
     {
-        ECHO "NAME IS " $(name) ;
         errors.user-error 
           "The <name> property is not allowed for the 'install' rule" ;
     }
