@@ -130,6 +130,7 @@ tests = [ "rebuilds",
           "using",
           "source_locations",
           "out_of_tree",
+          "notfile",
           ]
 
 if os.name == 'posix':
