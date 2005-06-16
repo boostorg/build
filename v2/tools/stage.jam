@@ -491,7 +491,7 @@ rule rename ( name : type ? : property-set : unversioned ? )
         {
             result = $(name) ;
         }
-        return [ virtual-target.add-suffix $(result) : $(type) 
+        return [ virtual-target.add-prefix-and-suffix $(result) : $(type) 
           : $(property-set) ] ;
     }    
 }

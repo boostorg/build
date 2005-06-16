@@ -104,6 +104,15 @@ rule on-windows
     return $(result) ;
 }
 
+if ! [ on-windows ] 
+{
+    .on-unix = 1 ;
+}
+
+rule on-unix
+{
+    return $(.on-unix) ;
+}
      
 
 import regex ;

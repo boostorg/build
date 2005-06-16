@@ -6,6 +6,7 @@
 import modules ;
 
 local dll-suffix = so ;
+local prefix = "" ;
 if [ modules.peek : OS ] in CYGWIN NT
 {
    if $toolset = gcc
@@ -17,12 +18,14 @@ if [ modules.peek : OS ] in CYGWIN NT
       dll-suffix = lib ;
    }
 }
+else
+{
+   prefix = "lib" ;      
+}
 if $toolset = darwin
 {
    dll-suffix = dylib ;
 }
-
-
 
 project ext ;
 
@@ -30,13 +33,13 @@ project ext ;
 local pwd = [ PWD ] ;
 
 lib a : 
-    : <file>$(pwd)/ext/bin/$toolset/debug/a.$(dll-suffix) <variant>debug
+    : <file>$(pwd)/ext/bin/$toolset/debug/$(prefix)a.$(dll-suffix) <variant>debug
     :
     : <include>debug
     ;
     
 lib a :
-    : <file>$(pwd)/ext/bin/$toolset/release/a.$(dll-suffix) <variant>release
+    : <file>$(pwd)/ext/bin/$toolset/release/$(prefix)a.$(dll-suffix) <variant>release
     :
     : <include>release
     ;

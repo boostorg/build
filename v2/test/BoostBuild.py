@@ -20,16 +20,18 @@ def get_toolset():
     return toolset or 'gcc'
 
 windows = 0
+if os.environ.get('OS','').lower().startswith('windows') or \
+       os.__dict__.has_key('uname') and \
+       os.uname()[0].lower().startswith('cygwin'):
+    windows = 1
+
 suffixes = {}
 
 # Prepare the map of suffixes
 def prepare_suffix_map(toolset):
     global windows, suffixes    
     suffixes = {'.exe': '', '.dll': '.so', '.lib': '.a', '.obj': '.o'}
-    if os.environ.get('OS','').lower().startswith('windows') or \
-       os.__dict__.has_key('uname') and \
-       os.uname()[0].lower().startswith('cygwin'):
-        windows = 1
+    if windows:
         suffixes = {}
         if toolset in ["gcc"]:
             suffixes['.lib'] = '.a' # static libs have '.a' suffix with mingw...
@@ -37,6 +39,9 @@ def prepare_suffix_map(toolset):
     if os.__dict__.has_key('uname') and os.uname()[0] == 'Darwin':
         suffixes['.dll'] = '.dylib'
 
+lib_prefix = 1
+if windows:
+    lib_prefix = 0
         
     
     
@@ -542,6 +547,20 @@ class Tester(TestCmd.TestCmd):
         """Removes in-place, element of 'list' that match the given wildcard."""
         list[:] = filter(lambda x, w=wildcard: not fnmatch.fnmatch(x, w), list)
 
+    def adjust_lib_name(self, name):
+        global lib_prefix
+        result = name
+        
+        pos = string.rfind(name, ".")
+        if pos != -1:
+            suffix = name[pos:]
+            if suffix in [".lib", ".dll"]:
+                (head, tail) = os.path.split(name)
+                if lib_prefix:
+                    tail = "lib" + tail
+                    result = os.path.join(head, tail)
+        return result
+                
     def adjust_suffix(self, name):
         if not self.translate_suffixes:
             return name
@@ -563,7 +582,8 @@ class Tester(TestCmd.TestCmd):
     def adjust_names(self, names):
         if type(names) == types.StringType:
                 names = [names]
-        r = map(self.adjust_suffix, names)
+        r = map(self.adjust_lib_name, names)
+        r = map(self.adjust_suffix, r)
         r = map(lambda x, t=self.toolset: string.replace(x, "$toolset", t), r)
         return r
 

@@ -23,23 +23,23 @@ rule tag ( name : type ? : property-set )
     }
     else if $(v) = release
     {
-	tags += r ;
+        tags += r ;
     }
     
     local l = [ $(property-set).get <link> ] ;
     if $(l) = shared
     {
-	tags += s ;
+        tags += s ;
     }
     else if $(l) = static
     {
-	tags += t ;
+        tags += t ;
     }
     
     if $(tags)
     {
-	return [ virtual-target.add-suffix $(name)_$(tags:J="") 
- 	    : $(type) : $(property-set) ] ;
+        return [ virtual-target.add-prefix-and-suffix $(name)_$(tags:J="") 
+            : $(type) : $(property-set) ] ;
     }
     
 }
