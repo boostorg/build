@@ -9,7 +9,7 @@
 #  if particular target should be created at all.
 
 import "class" : new ;
-import path property-set utility sequence errors set type ;
+import path property-set utility sequence errors set type os ;
 
 #                       +--------------------------+
 #                       | virtual-target           |
@@ -441,7 +441,7 @@ class abstract-file-target : virtual-target
         # If there's no tag or the tag rule returned nothing.
         if ! $(tag) || ! $(self.name)
         {                            
-            self.name = [ virtual-target.add-suffix
+            self.name = [ virtual-target.add-prefix-and-suffix
                 $(specified-name) : $(self.type) : $(ps) ] ;
         }    
     }
@@ -450,17 +450,19 @@ class abstract-file-target : virtual-target
 
 # Appends the suffix appropriate to 'type/property-set' combination
 # to the specified name and returns the result.
-rule add-suffix ( specified-name : type ? : property-set )
+rule add-prefix-and-suffix ( specified-name : type ? : property-set )
 {
-    suffix = [ type.generated-target-suffix $(type) : $(property-set) ] ;
-    if $(suffix)
-    {                    
-        return $(specified-name).$(suffix) ;
-    }            
-    else
+    local suffix = [ type.generated-target-suffix $(type) : $(property-set) ] ;
+    suffix = .$(suffix) ;
+    
+    local prefix ;
+    
+    if [ type.is-derived $(type) LIB ] && [ os.on-unix ]
     {
-        return $(specified-name) ;
-    }                
+        prefix = "lib" ;
+    }
+    
+    return $(prefix:E="")$(specified-name)$(suffix:E="") ;
 }
 
 
