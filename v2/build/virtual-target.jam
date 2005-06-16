@@ -457,7 +457,8 @@ rule add-prefix-and-suffix ( specified-name : type ? : property-set )
     
     local prefix ;
     
-    if [ type.is-derived $(type) LIB ] && [ os.on-unix ]
+    if [ type.is-derived $(type) LIB ] && [ os.on-unix ] 
+       && ! [ MATCH ^(lib) : $(specified-name) ]
     {
         prefix = "lib" ;
     }
@@ -567,9 +568,9 @@ class file-target : abstract-file-target
 
 class notfile-target : abstract-file-target
 {
-    rule __init__ ( name : project )
+    rule __init__ ( name : project : action ? )
     {
-        abstract-file-target.__init__ $(name) : : $(project) ;
+        abstract-file-target.__init__ $(name) : : $(project) : $(action) ;
     }
     
     # Returns nothing, to indicate that target path is not known.
