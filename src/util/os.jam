@@ -52,6 +52,8 @@ EXPORT $(__name__) : $(.constants) ;
 .expand-variable-prefix-CYGWIN = $ ;
 .expand-variable-suffix-CYGWIN = "" ;
 
+.shared-library-path-variable-MACOSX = DYLD_LIBRARY_PATH ;
+
 
 .shared-library-path-variable = LD_LIBRARY_PATH ;
 .path-separator = ":" ;
