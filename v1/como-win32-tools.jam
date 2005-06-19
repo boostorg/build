@@ -23,7 +23,7 @@ free-feature no-warn ;
 # COMO_BACKEND_PATH - path to backend compiler root directory, defaults to $(VC7_ROOT)
 
 # Keep using COMO_BASE for backward compatibility
-set-as-singleton COMO_BASE COMO_BIN_PATH COMO_INCLUDE_PATH COMO_STDLIB_PATH COMO_BACKEND COMO_BACKEND_PATH ;
+set-as-singleton COMO_BASE COMO_PATH COMO_BIN_PATH COMO_INCLUDE_PATH COMO_STDLIB_PATH COMO_BACKEND COMO_BACKEND_PATH ;
 COMO_BASE ?= $(COMO_PATH) ;
 
 # compute directories for invoking como
