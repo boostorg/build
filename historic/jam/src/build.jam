@@ -130,12 +130,17 @@ toolset kylix bc++ : -o : -D
     [ opt --debug : -v -Od -vi- ] ;
 ## Metrowerks CodeWarrior 8.x
 {
+    # Even though CW can compile all files at once, it crashes if it tries in the bjam case.
     local mwcc = ; if $(NT) { mwcc = mwcc ; } else { mwcc = mwc$(OSPLAT:L) ; }
     mwcc ?= mwcc ;
     toolset metrowerks $(mwcc) : "-o " : -D
-        : -subsystem console -cwd include -ladvapi32.lib
-        [ opt --release : -runtime ss -opt full -inline auto -inline level=8 ]
-        [ opt --debug : -runtime ssd -O0 -inline off ] ;
+        : -c -lang c -subsystem console -cwd include
+        [ opt --release : -runtime ss -opt full -inline all ]
+        [ opt --debug : -runtime ssd -opt none -inline off ] ;
+    toolset metrowerks $(mwcc) .link : "-o " :
+        : -subsystem console -ladvapi32.lib
+        [ opt --release : -runtime ss ]
+        [ opt --debug : -runtime ssd ] ;
 }
 ## MINGW GCC
 toolset mingw gcc : "-o " : -D
@@ -395,9 +400,14 @@ rule .exe
     .mkdir $(locate-target) ;
     if $(--link)
     {
+        local objs = ;
         for local s in $(>)
         {
-            local o = $(s:S=.o) ;
+            # Translate any subdir elements into a simple file name.
+            local o = [ MATCH "([^/]+)[/]?(.+)" : $(s) ] ;
+            o = $(o:J=_) ;
+            o = $(o:S=.o) ;
+            objs += $(o) ;
             LOCATE on $(o) = $(locate-target) ;
             DEPENDS $(exe) : $(o) ;
             DEPENDS $(o) : $(s) ;
@@ -405,9 +415,9 @@ rule .exe
             [COMPILE] $(o) : $(s) ;
             .clean $(o) ;
         }
-        DEPENDS $(exe) : $(>:S=.o) ;
+        DEPENDS $(exe) : $(objs) ;
         DEPENDS $(exe) : $(locate-target) ;
-        [COMPILE.LINK] $(exe) : $(>:S=.o) ;
+        [COMPILE.LINK] $(exe) : $(objs) ;
         .clean $(exe) ;
     }
     else
