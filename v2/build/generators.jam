@@ -688,7 +688,7 @@ rule override ( overrider-id : overridee-id )
 local rule viable-source-types-real ( target-type )
 {
     local generators ;
-        
+
     local t = [ type.all-bases $(target-type) ] ;
     
     local result ;
@@ -700,13 +700,20 @@ local rule viable-source-types-real ( target-type )
         local generators = $(.generators.$(t[1])) ;
         t = $(t[2-]) ;
         
-        for local g in $(generators)
+
+        
+        while $(generators)
         {
+            local g = $(generators[1]) ;
+            generators = $(generators[2-]) ;
+            
             if ! [ $(g).source-types ]
             {
                 # Empty source types -- everything can be accepted
                 result = * ;
-                generator = ;
+                # This will terminate this loop.
+                generators = ;
+                # This will terminate outer loop.
                 t = ;
             }
               
@@ -720,7 +727,7 @@ local rule viable-source-types-real ( target-type )
                     for local n in $(all)
                     {
                         if ! $(n) in $(result)
-                        {                                          
+                        {   
                             t += $(n) ;
                             result += $(n) ;
                         }    
