@@ -43,8 +43,8 @@ error_exit ()
 # Check that a command is in the PATH.
 test_path ()
 {
-    if `whence 1>/dev/null 2>/dev/null`; then
-        whence $1 1>/dev/null 2>/dev/null
+    if `command 1>/dev/null 2>/dev/null`; then
+        command -v $1 1>/dev/null 2>/dev/null
     else
         hash $1 1>/dev/null 2>/dev/null
     fi
