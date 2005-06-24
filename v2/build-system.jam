@@ -28,6 +28,17 @@ import os ;
 
 import version ;
 
+# Returns the location of the build system. The primary use case
+# is building Boost, where it's sometimes needed to get location
+# of other components (like BoostBook files), and it's convenient
+# to use location relatively to Boost.Build path.
+rule location ( )
+{
+    local r = [ modules.binding build-system ] ;
+    return $(r:P) ;
+}
+
+
 # Check if we can load 'test-config.jam'. If we can, load it and
 # ignore user configs.
 local test-config = [ GLOB [ os.environ BOOST_BUILD_PATH ] : test-config.jam ] ;

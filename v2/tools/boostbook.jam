@@ -23,6 +23,8 @@ import sequence ;
 import make ;
 import type ;
 import modules path project ;
+import build-system ;
+
 import xsltproc : xslt xslt-dir ;
 
 feature.feature format : html onehtml man pdf ps docbook fo tests
@@ -79,11 +81,10 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
     {
         boost-root = [ path.make $(boost-root) ] ;
     }    
-    local boost-build-root = [
-        sequence.transform path.make : [ modules.peek : BOOST_BUILD_PATH ]
-    ] ; 
+    local boost-build-root = [ build-system.location ] ;
     local search-dirs = $(boostbook-dir) [ path.join $(boost-root) tools boostbook ] 
                         $(boost-build-root)/../../boostbook ;
+    
     
     if --debug-configuration in [ modules.peek : ARGV ] 
     {

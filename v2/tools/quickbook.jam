@@ -128,7 +128,7 @@ feature.feature <quickbook-binary-dependencies> : : free dependency ;
 # As a last resort we rely on the shell to find 'quickbook'.
 class quickbook-binary-generator : generator
 {
-    import common modules path targets ;
+    import common modules path targets build-system ;
 
     rule run ( project name ? : property-set : sources * : multiple ? )
     {
@@ -150,7 +150,7 @@ class quickbook-binary-generator : generator
             # And build quickbook executable from sources.
 
             local boost-root = [ modules.peek : BOOST_ROOT ] ;
-            local boost-build-path = [ modules.peek : BOOST_BUILD_PATH ] ;
+            local boost-build-path = [ build-system.location ] ;
 
             local quickbook-dir ;
 
