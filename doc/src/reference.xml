@@ -153,20 +153,20 @@ boost-build build-system ;
               for example:
 
 <programlisting>
-borland/&lt;link-runtime&gt;static
+borland/&lt;runtime-link&gt;static
 </programlisting>
 
               A more complex form can be used to save typing. For example,
               instead of
 
 <programlisting>
-borland/link-runtime=static borland/link-runtime=dynamic
+borland/runtime-link=static borland/runtime-link=dynamic
 </programlisting>
 
               one can use
 
 <programlisting>
-borland/link-runtime=static,dynamic
+borland/runtime-link=static,dynamic
 </programlisting>
 
               Exactly, the conversion from argument to build request
@@ -203,7 +203,7 @@ borland/link-runtime=static,dynamic
           For example, the command line
 
 <programlisting>
-target1 debug gcc/link-runtime=dynamic,static
+target1 debug gcc/runtime-link=dynamic,static
 </programlisting>
 
           would cause target called <literal>target1</literal> to be rebuilt in
@@ -503,12 +503,12 @@ exe a : a.cpp
       
       <para>A <emphasis>property set</emphasis> is a set of properties (i.e. a
         collection without duplicates), for instance:
-        <literal>&lt;toolset&gt;gcc &lt;link-runtime&gt;static</literal>.</para>
+        <literal>&lt;toolset&gt;gcc &lt;runtime-link&gt;static</literal>.</para>
       
       <para>A <emphasis>property path</emphasis> is a property set whose elements have
         been joined into a single string separated by slashes. A property
         path representation of the previous example would be
-        <literal>&lt;toolset&gt;gcc/&lt;link-runtime&gt;static</literal>.</para>
+        <literal>&lt;toolset&gt;gcc/&lt;runtime-link&gt;static</literal>.</para>
       
       <para>A <emphasis>build specification</emphasis> is a property set that fully
         describes the set of features used to build a target.</para>
