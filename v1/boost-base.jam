@@ -1735,7 +1735,7 @@ else
     }
     
     # Dynamic libraries are actually found on PATH
-    if $(NT) || ( $(UNIX) = $(CYGWIN) )
+    if $(NT) || ( $(UNIX) = CYGWIN )
     {
         .shell-var(LD_LIBRARY_PATH) = PATH ;
     }
@@ -1774,6 +1774,8 @@ rule depend-on-libs ( targets + : libs * )
 {
     LIBPATH on $(<) += [ unique $(gLOCATE($(>))) ] ;
     DEPENDS $(<) : $(>) ;
+    library-dependencies on $(<) += $(>) ;
+    
     # To run these targets, we need everything needed to run the libraries
     for local v in $(.run-path-vars)
     {

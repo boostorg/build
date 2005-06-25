@@ -319,15 +319,32 @@ rule nt-paths-to-cygwin ( paths * )
 
 rule run-test ( type-to-test run-target : sources * )
 {
-    local targets-to-test = $(run-target:S=$(SUF$(type-to-test))) ; 
     local parent = $(run-target:S=.test) ;
+    local targets-to-test ;
     local main-target = $(gTARGET_SUBVARIANT($(parent))) ;
     
-    set-target-variables $(targets-to-test) ;
-    generate-dependencies $(main-target) : $(targets-to-test) ;
-    
-    if $(sources)
+    # If no sources, assume someone else already built the targets,
+    # and they are the library dependencies of the test target that
+    # match the type-to-test.  This should perhaps be _all_
+    # dependencies, but hopefully we'll throw this code out soon!
+    if ! $(sources)
     {
+        for local t in [ on $(parent) return $(library-dependencies) ]
+        {
+            if $(gTARGET_TYPE($(t))) = $(type-to-test)
+            {
+                targets-to-test += $(t) ;
+            }
+        }
+    }
+    else
+    {
+        targets-to-test = $(run-target:S=$(SUF$(type-to-test))) ; 
+        
+        set-target-variables $(targets-to-test) ;
+        
+        generate-dependencies $(main-target) : $(targets-to-test) ;
+        
         declare-basic-target $(targets-to-test) : $(sources) : : : $(type-to-test) ;
         $(gGENERATOR_FUNCTION($(type-to-test))) $(targets-to-test) : $(sources) ;
     }
@@ -337,7 +354,7 @@ rule run-test ( type-to-test run-target : sources * )
     local LOCATE_TARGET = [ FDirName [ split-path $(LOCATE_TARGET) ] ] ;
     MakeLocate $(run-target) : $(LOCATE_TARGET) ;
     
-    local executable = [ test-executable($(type-to-test)) $(targets-to-test[1]) ] ;
+    local executable = [ test-executable($(type-to-test)) $(targets-to-test) ] ;
     local x-input-files = [ expand-source-names $(gRUN_TEST_INPUT_FILES) ] ;
     local x-input-deps = ;
     for local x-input-file in $(x-input-files)
