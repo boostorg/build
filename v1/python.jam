@@ -525,8 +525,8 @@ rule boost-python-test ( name : sources + : requirements * : default-BUILD * )
     extension $(name) : $(sources) : $(requirements) <suppress>true : $(4) ;
 }
 
-# Returns the executable to use for testing a Python module
-rule test-executable(PYD) ( target-to-test )
+# Returns the executable to use for testing one or more Python modules
+rule test-executable(PYD) ( targets-to-test + )
 {
     # choose the right python executable
     local python = $(PYTHON) ;
