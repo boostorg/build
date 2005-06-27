@@ -798,8 +798,8 @@ class file-reference : abstract-target
     # Returns true if the referred file really exists;
     rule exists ( )
     {
-		location ;
-		return $(self.file-path) ;
+        location ;
+        return $(self.file-path) ;
     }
 
     # Returns the location of target. Needed by 'testing.jam'
@@ -807,9 +807,9 @@ class file-reference : abstract-target
     {
         if ! $(self.file-location)
         {
-	    local source-location = [ $(self.project).get source-location ] ;
+            local source-location = [ $(self.project).get source-location ] ;
 
-	    for local src-dir in $(source-location)
+            for local src-dir in $(source-location)
             {
                 if ! $(self.file-location)
                 {
@@ -1010,20 +1010,6 @@ class basic-target : abstract-target
         {
             errors.error "gristed element in sources for" [ full-name ] ;
         }
-    }
-    
-    # Returns the list of abstract-targets which are used as sources.
-    # The extra properties specified for sources are not represented.
-    rule sources ( )
-    {
-        if ! $(self.source-targets) {
-            for local s in $(self.sources)
-            {
-                self.source-targets += 
-                  [ targets.resolve-reference $(s) : $(self.project) ] ;
-            }            
-        }    
-        return $(self.source-targets) ;
     }
     
     rule requirements ( )
