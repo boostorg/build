@@ -104,18 +104,18 @@ generators.register-c-compiler cw.compile.c : C : OBJ : <toolset>cw ;
 
 generators.register-linker cw.link
    : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
-   : EXE RSP
+   : EXE
    : <toolset>cw
    ;
 generators.register-linker cw.link.dll
    : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
-   : SHARED_LIB IMPORT_LIB RSP
+   : SHARED_LIB IMPORT_LIB
    : <toolset>cw
    ;
 
 generators.register-archiver cw.archive
    : OBJ
-   : STATIC_LIB RSP
+   : STATIC_LIB
    : <toolset>cw
    ;
 
@@ -170,40 +170,40 @@ if [ os.name ] in NT
 {
    rule link ( targets + : sources * : properties * )
    {
-      common.response-file $(targets) : $(sources) : $(targets[2])
+      common.response-file $(targets) : $(sources) : 
          : $(properties) ;
    }
 
    rule link.dll ( targets + : sources * : properties * )
    {
-      common.response-file $(targets) : $(sources) : $(targets[3])
+      common.response-file $(targets) : $(sources) : 
          : $(properties) ;
       DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
    }
 
    rule archive ( targets + : sources * : properties * )
    {
-      common.response-file $(targets) : $(sources) : $(targets[2])
+      common.response-file $(targets) : $(sources) : 
          : $(properties) ;
    }
 
-   actions archive
+   actions archive bind RSP
    {
       if exist "$(<[1])" DEL "$(<[1])"
-      $(.LD) -library -o "$(<[1])" @"$(<[2])"
+      $(.LD) -library -o "$(<[1])" @"$(RSP:W)"
    }
 }
 else # cygwin
 {
    rule link ( targets + : sources * : properties * )
    {
-      common.response-file $(targets) : $(sources) : $(targets[2])
+      common.response-file $(targets) : $(sources) : 
          : $(properties) ;
    }
 
    rule link.dll ( targets + : sources + : properties * )
    {
-      common.response-file $(targets) : $(sources) : $(targets[3])
+      common.response-file $(targets) : $(sources) : 
          : $(properties) ;
       .cygpath = "cygpath -d " ;
       DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
@@ -211,27 +211,27 @@ else # cygwin
 
    rule archive ( targets + : sources * : properties * )
    {
-      common.response-file $(targets) : $(sources) : $(targets[2])
+      common.response-file $(targets) : $(sources) : 
          : $(properties) ;
    }
 
-   actions archive
+   actions archive bind RSP
    {
       _bbv2_out_="$(<)"
       if test -f "$_bbv2_out_" ; then
          _bbv2_existing_="$(<:W)"
       fi
-      $(.LD) -library -o "$(<:W)" $_bbv2_existing_ @"$(>:W)"
+      $(.LD) -library -o "$(<:W)" $_bbv2_existing_ @"$(RSP:W)"
    }
 }
 
-actions link bind DEF_FILE
+actions link bind DEF_FILE RSP
 {
-   $(.LD) -o "$(<[1]:W)" -L"$(LINKPATH)" $(LINKFLAGS) $(USER_LINKFLAGS) @"$(<[2]:W)"
+   $(.LD) -o "$(<[1]:W)" -L"$(LINKPATH)" $(LINKFLAGS) $(USER_LINKFLAGS) @"$(RSP:W)"
 }
 
-actions link.dll bind DEF_FILE
+actions link.dll bind DEF_FILE RSP
 {
-   $(.LD) -o "$(<[1]:W)" -implib "$(<[2]:W)" -L"$(LINKPATH)" $(LINKFLAGS) -f "$(DEF_FILE)" $(USER_LINKFLAGS) @"$(<[3]:W)"
+   $(.LD) -o "$(<[1]:W)" -implib "$(<[2]:W)" -L"$(LINKPATH)" $(LINKFLAGS) -f "$(DEF_FILE)" $(USER_LINKFLAGS) @"$(RSP:W)"
 }
 
