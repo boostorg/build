@@ -85,6 +85,11 @@ actions vacpp.link bind NEEDLIBS
     $(ROOT)/$(VA_CXX_COMPILER) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
 }
 
+actions vacpp.link.dll bind NEEDLIBS
+{
+    xlC_r -qmkshrobj $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+}
+
 actions vacpp.compile.c
 {    
     $(ROOT)/$(VA_C_COMPILER) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
