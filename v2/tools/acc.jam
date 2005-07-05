@@ -78,6 +78,11 @@ actions acc.link bind NEEDLIBS
     aCC $(LINKFLAGS) +DD64 -mt -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
 }
 
+actions acc.link.dll bind NEEDLIBS
+{
+    aCC -b $(LINKFLAGS) +DD64 -mt -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+}
+
 actions acc.compile.c
 {    
     aCC -Ae -mt +DD64 -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
