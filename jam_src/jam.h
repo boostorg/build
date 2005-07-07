@@ -330,6 +330,9 @@
 # define OS_MACOSX
 # endif
 # ifdef __osf__
+# ifndef unix
+# define unix
+# endif
 # define OSMINOR "OS=OSF"
 # define OS_OSF
 # endif
