@@ -43,7 +43,7 @@ error_exit ()
 # Check that a command is in the PATH.
 test_path ()
 {
-    if `command -v 1>/dev/null 2>/dev/null`; then
+    if `command -v command 1>/dev/null 2>/dev/null`; then
         command -v $1 1>/dev/null 2>/dev/null
     else
         hash $1 1>/dev/null 2>/dev/null
@@ -64,6 +64,7 @@ Guess_Toolset ()
     if test_uname Darwin ; then BOOST_JAM_TOOLSET=darwin
     elif test_uname IRIX ; then BOOST_JAM_TOOLSET=mipspro
     elif test_uname IRIX64 ; then BOOST_JAM_TOOLSET=mipspro
+    elif test_uname OSF1 ; then BOOST_JAM_TOOLSET=tru64cxx
     elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
     elif test_path icc ; then BOOST_JAM_TOOLSET=intel-linux
     elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
