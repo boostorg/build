@@ -12,7 +12,7 @@ BOOST_JAM_TOOLSET=
 echo_run ()
 {
     echo "$@"
-    "$@"
+    $@
     r=$?
     if test $r -ne 0 ; then
         exit $r
