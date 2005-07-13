@@ -42,6 +42,9 @@
 #include <Python.h>
 #endif
 
+/* Assume popen support is available unless known otherwise. */
+#define HAVE_POPEN 1
+
 /*
  * VMS, OPENVMS
  */
@@ -115,6 +118,12 @@
 # define OSMINOR "OS=AS400"
 # define OS_AS400
 # endif
+
+/* Metrowerks Standard Library on Windows. */
+
+# ifdef __MSL__
+#undef HAVE_POPEN
+#endif
 
 # endif
 

@@ -151,6 +151,13 @@ load_builtins()
       bind_builtin( "TEMPORARY" ,
                     builtin_flags, T_FLAG_TEMP, 0 ) );
 
+    {
+        char * args[] = { "targets", "*", 0 };
+        bind_builtin(
+            "ISFILE",
+            builtin_flags, T_FLAG_ISFILE, 0 );
+    }
+
     duplicate_rule( "HdrMacro" ,
       bind_builtin( "HDRMACRO" ,
                     builtin_hdrmacro, 0, 0 ) );
@@ -312,9 +319,9 @@ load_builtins()
 # endif
 
       {
-          char * args[] = { "targets", "*", 0 };
-          bind_builtin( "ISFILE",
-              builtin_flags, T_FLAG_NOUPDATE, 0 );
+          char * args[] = { "command", 0 };
+          bind_builtin( "SHELL",
+              builtin_shell, 0, args );
       }
 
       /* Initialize builtin modules */
@@ -1601,6 +1608,51 @@ bjam_import_rule(PyObject* self, PyObject* args)
 
     r->python_function = func;
     return Py_None;
+}
+
+#endif
+
+#ifdef HAVE_POPEN
+#if defined(_MSC_VER) || defined(__BORLANDC__)
+    #define popen _popen
+    #define pclose _pclose
+#endif
+
+LIST *builtin_shell( PARSE *parse, FRAME *frame )
+{
+    LIST* arg = lol_get( frame->args, 0 );
+    LIST* result = 0; 
+    string s;
+    int ret;
+    char buffer[1024];
+    FILE *p = NULL;
+
+    string_new( &s );
+
+    fflush(NULL);
+
+    p = popen(arg->string, "r");
+    if ( p == NULL )
+        return L0;
+
+    while ( (ret = fread(buffer, sizeof(char), sizeof(buffer)-1, p)) > 0 )
+    {
+        buffer[ret+1] = 0;
+        string_append( &s, buffer );
+    }
+
+    pclose(p);
+
+    result = list_new( L0, newstr(s.value) );
+    string_free(&s);
+    return result;
+}
+
+#else
+
+LIST *builtin_shell( PARSE *parse, FRAME *frame )
+{
+    return L0;
 }
 
 #endif
