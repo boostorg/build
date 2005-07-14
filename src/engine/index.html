@@ -123,6 +123,8 @@
         <dt><a href="#w32_getreg">The W32_GETREG rule</a></dt>
 
         <dt><a href="#ISFILE_rule">The <tt>ISFILE</tt> rule</a></dt>
+
+        <dt><a href="#SHELL_rule">The <tt>SHELL</tt> rule</a></dt>
       </dl>
     </dd>
 
@@ -1091,6 +1093,19 @@ rule ISFILE ( targets * )
   system items that are not file, like directories. This makes it possible to
   avoid <code>#include "exception"</code> matching if one happens to have a
   directory named <i>exception</i> in the header search path.</p>
+
+  <h4><a name="SHELL_rule" id="SHELL_rule">The <tt>SHELL</tt>
+  Rule</a></h4>
+  <pre>
+rule SHELL ( command )
+</pre>
+
+  <p><tt>SHELL</tt> executes <i>command</i>, and then returns the output
+  of <i>command</i>.  SHELL only works on platforms with a popen() function 
+  in the C library.  On platforms without a working popen() function,
+  SHELL is implemented as a no-op.  SHELL works on Unix, MacOS X,
+  and most Windows compilers.  SHELL is a no-op on Metrowerks compilers
+  under Windows.</p>.  
 
   <h2><a name="jam_fundamentals" id="jam_fundamentals">Jam
   Fundamentals</a></h2>
