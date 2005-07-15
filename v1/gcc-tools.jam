@@ -380,7 +380,6 @@ flags gcc .AR : [ GLOB $(GCC_BIN_DIRECTORY) $(PATH) : ar ar.exe ] ;
 # prevent the merging of debug symbols (which happens to be n^2 slow)
 if ! ( --no-objcopy in $(ARGV) )
 {
-ECHO @@@ --enable-objcopy ;
     flags gcc .OBJCOPY : [ GLOB $(GCC_BIN_DIRECTORY) $(PATH) : objcopy ] ;
 }
 
