@@ -171,13 +171,9 @@ rule default-paths ( version ? )
 {
     local possible-paths ;
     
-    local ProgramFiles = [ modules.peek : ProgramFiles ] ;
-    if $(ProgramFiles)
-    {
-        ProgramFiles = "$(ProgramFiles:J= )" ;
-    }
-    else
-    {
+    local ProgramFiles = [ os.environ ProgramFiles ] ;
+    if ! $(ProgramFiles)
+    {        
         ProgramFiles = "c:\\Program Files" ;
     }
 
