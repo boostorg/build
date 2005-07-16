@@ -109,5 +109,12 @@ C++FLAGS = [ unique $(C++FLAGS) ] ;
 
 if $(VC_SETUP)
 {
-    VC_SETUP = "CALL \"$(INTEL_TOOL_PATH)ICCVARS.BAT\" > nul" ;
+    if $(version) <= 7
+    {
+        VC_SETUP = "CALL \"$(INTEL_TOOL_PATH)ICCVARS.BAT\" > nul" ;
+    }
+    else
+    {
+        VC_SETUP = "CALL \"$(INTEL_TOOL_PATH)ICLVARS.BAT\" > nul" ;
+    }
 }
