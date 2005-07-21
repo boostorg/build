@@ -16,6 +16,7 @@ import type ;
 import generators ;
 import path ;
 import "class" : new ;
+import errors ;
 
 rule init ( path # path the Whale/Dolphin/WD binaries 
           )
