@@ -426,11 +426,8 @@ sh ./build.sh
 
   <p>The built executables are placed in a subdirectory specific to your
   platform. For example, in Linux running on an Intel x86 compatible chip,
-  the executables are placed in: <tt>"bin.linuxx86"</tt>. There are two
-  executables generated: <tt>jam[.exe]</tt>, and <tt>bjam[.exe]</tt>, both
-  are the same binary but with different names. The "jam" invocation is used
-  for compatability with the Perforce Jam/MR functionality, whereas "bjam" is
-  used for the extended Boost.Build functionality.</p>
+  the executables are placed in: <tt>"bin.linuxx86"</tt>. 
+  The <tt>bjam[.exe]</tt> executable can be used to invoke Boost.Build.</p>
 
   <p>The <tt>build</tt> scripts support additional invocation arguments for
   use by developers of Boost.Jam. The extra arguments come after the toolset,
@@ -1100,8 +1097,8 @@ rule ISFILE ( targets * )
 rule SHELL ( command )
 </pre>
 
-  <p><tt>SHELL</tt> executes <i>command</i>, and then returns the output
-  of <i>command</i>.  SHELL only works on platforms with a popen() function 
+  <p><tt>SHELL</tt> executes <i>command</i>, and then returns the standard
+  output of <i>command</i>.  SHELL only works on platforms with a popen() function 
   in the C library.  On platforms without a working popen() function,
   SHELL is implemented as a no-op.  SHELL works on Unix, MacOS X,
   and most Windows compilers.  SHELL is a no-op on Metrowerks compilers
