@@ -9,9 +9,9 @@
 # include "execcmd.h"
 # include <errno.h>
 # include <time.h>
+# include <unistd.h> /* needed for vfork(), _exit() prototypes */
 
 #if defined(sun) || defined(__sun)
-#include <unistd.h> /* need to include unistd.h on sun for the vfork prototype*/
 #include <wait.h>
 #endif
 
