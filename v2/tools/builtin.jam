@@ -380,11 +380,13 @@ rule lib ( names + : sources * : requirements * : default-build *
               "it's not allowed to specify sources. " ;
         }        
     }
-    
+                
     for local name in $(names)
     {    
         local r = $(requirements) ;
-        if $(names[2])
+        # Support " lib a ; " and " lib a b c ; " syntaxes.
+        if ! $(sources) && ! <name> in $(requirements:G)
+                        && ! <file> in $(requirements:G)
         {
             r += <name>$(name) ;
         }        
