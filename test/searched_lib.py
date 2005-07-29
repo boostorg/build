@@ -140,4 +140,22 @@ lib l : : <name>l_f ;
 
 t.run_build_system("-n")
 
+
+# Make sure that plain "lib foobar ; " works.
+t.write("Jamfile", """
+exe a : a.cpp foobar ;
+lib foobar ;
+""")
+t.run_build_system("-n -d2")
+t.fail_test(string.find(t.stdout(), "foobar") == -1)
+
+# Make sure that plain "lib foo bar ; " works.
+t.write("Jamfile", """
+exe a : a.cpp foo bar ;
+lib foo bar ;
+""")
+t.run_build_system("-n -d2")
+t.fail_test(string.find(t.stdout(), "foo") == -1)
+t.fail_test(string.find(t.stdout(), "bar") == -1)
+
 t.cleanup()
