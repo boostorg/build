@@ -2929,6 +2929,11 @@ rule toolset::requirements ( toolset variant : subvariant-path properties * )
                     case vc-8* : requirements += <stlport-iostream>on ;
                 }
             }
+            # vc8 doesn't have any single threaded runtime
+            switch $(toolset)
+            {
+                case vc-8* : requirements += <threading>multi ;
+            }
         }
         case intel-win32* :
         {
