@@ -1,0 +1,184 @@
+# Copyright 2002 Vladimir Prus 
+# Copyright 2005 Alo Sarv
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+# Qt4 library support module
+#
+# The module attempts to auto-detect QT installation location from QTDIR
+# environment variable; failing that, installation location can be passed as
+# argument:
+#
+# toolset.using qt4 : /usr/local/Trolltech/Qt-4.0.0 ;
+#
+# The module supports code generation from .ui and .qrc files, as well as
+# running the moc preprocessor on headers. Note that you must list all your
+# moc-able headers in sources.
+#
+# Example:
+#
+# exe myapp : myapp.cpp myapp.h myapp.ui myapp.qrc /qt4//QtGui /qt4//QtNetwork ;
+#
+
+import modules ;
+import feature ;
+import errors ;
+import type ;
+import "class" : new ;
+import generators ;
+import project ;
+import toolset : flags ;
+import os ;
+
+project.initialize $(__name__) ;
+project qt4 ;
+
+# Initialized the QT support module. The 'prefix' parameter
+# tells where QT is installed. When not given, environmental
+# variable QTDIR should be set.
+rule init ( prefix ? )
+{
+    if ! $(prefix)
+    {
+        prefix = [ modules.peek : QTDIR ] ;
+        if ! $(prefix)
+        {
+            errors.error
+              "QT installation prefix not given and QTDIR variable is empty" ;
+        }
+    }
+
+    if $(.initialized)
+    {
+        if $(prefix) != $(.prefix)
+        {
+            errors.error
+              "Attempt the reinitialize QT with different installation prefix" ;
+        }
+    }
+    else
+    {
+        .initialized = true ;
+        .prefix = $(prefix) ;
+
+        # Generates cpp files from header files using "moc" tool
+        generators.register-standard qt4.moc : H : CPP(moc_%) ;
+
+        # Generates header file from .ui file
+        type.register UI : ui ;
+        generators.register-standard qt4.uic-h : UI : H ; 
+
+        # Generates .cpp file from qrc file
+        type.register QRC : qrc ;
+        generators.register-standard qt4.rcc : QRC : CPP(qrc_%) ;
+
+        local usage-requirements = 
+            <include>$(.prefix)/include 
+            <library-path>$(.prefix)/lib 
+            <dll-path>$(.prefix)/lib ;
+
+        local suffix ;
+        if [ os.name ] = NT
+        {
+            # On NT, the libs have "4" suffix, and "d" suffix in debug builds
+            # Also, on NT we must link against qtmain library (for WinMain)
+            suffix_version = "4" ;
+            suffix_debug = "d" ;
+            lib qtmain : : <name>qtmain$(suffix_debug) <variant>debug ;
+            lib qtmain : : <name>qtmain <variant>release ;
+            main = qtmain ;
+        } 
+            else 
+        {
+            # On X11, debug versions of libs have "_debug" suffix
+            suffix_version = "" ;
+            suffix_debug = "_debug" ;
+        }
+
+        lib QtCore : $(main)
+            : <name>QtCore$(suffix_version) <variant>release
+            :
+            : <include>$(.prefix)/include/QtCore $(usage-requirements)
+        ;
+        lib QtCore : $(main)
+            : <name>QtCore$(suffix_debug)$(suffix_version) <variant>debug
+            :
+            : <include>$(.prefix)/include/QtCore $(usage-requirements) ;
+        lib QtGui : QtCore
+            : <name>QtGui$(suffix_version) <variant>release
+            :
+            : <include>$(.prefix)/include/QtGui <user-interface>gui  ;
+        lib QtGui : QtCore
+            : <name>QtGui$(suffix_debug)$(suffix_version) <variant>debug
+            :
+            : <include>$(.prefix)/include/QtGui <user-interface>gui ;
+        lib QtNetwork : QtCore
+            : <name>QtNetwork$(suffix_version) <variant>release
+            :
+            : <include>$(.prefix)/include/QtNetwork  ;
+        lib QtNetwork : QtCore
+            : <name>QtNetwork$(suffix_debug)$(suffix_version) <variant>debug
+            :
+            : <include>$(.prefix)/include/QtNetwork ;
+        lib Qt3Support : QtCore
+            : <name>Qt3Support$(suffix_version) <variant>release
+            :
+            : <include>$(.prefix)/include/Qt3Support ;
+        lib Qt3Support : QtCore
+            : <name>Qt3Support$(suffix_debug)$(suffix_version) <variant>debug
+            :
+            : <include>$(.prefix)/include/Qt3Support ;
+        lib QtOpenGL : QtCore
+            : <name>QtOpenGL$(suffix_version) <variant>release
+            :
+            : <include>$(.prefix)/include/QtOpenGL ;
+        lib QtOpenGL : QtCore
+            : <name>QtOpenGL$(suffix_debug)$(suffix_version) <variant>debug
+            :
+            : <include>$(.prefix)/include/QtOpenGL ;
+        lib QtSql : QtCore
+            : <name>QtSql$(suffix_version) <variant>release
+            :
+            : <include>$(.prefix)/include/QtSql ;
+        lib QtSql : QtCore
+            : <name>QtSql$(suffix_debug)$(suffix_version) <variant>debug
+            :
+            : <include>$(.prefix)/include/QtSql ;
+        lib QtXml : QtCore
+            : <name>QtXml$(suffix_version) <variant>release
+            :
+            : <include>$(.prefix)/include/QtXml ;
+        lib QtXml : QtCore
+            : <name>QtXml$(suffix_debug)$(suffix_version) <variant>debug
+            :
+            : <include>$(.prefix)/include/QtXml ;
+    }
+}
+
+# Query the installation directory
+# This is needed in at least two scenarios
+# First, when re-using sources from the Qt-Tree.
+# Second, to "install" custom Qt plugins to the Qt-Tree.
+rule directory
+{
+	return $(.prefix) ;
+}
+
+# Processes headers to create Qt MetaObject information
+actions moc
+{
+	$(.prefix)/bin/moc -f $(>) -o $(<)
+}
+
+# Generates source files from resource files
+actions rcc
+{
+    $(.prefix)/bin/rcc $(>) -o $(<)
+}
+
+# Generates user-interface source from .ui files
+actions uic-h
+{
+	$(.prefix)/bin/uic $(>) -o $(<)
+}
