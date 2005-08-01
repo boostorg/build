@@ -21,11 +21,15 @@ import errors ;
 rule init ( path # path the Whale/Dolphin/WD binaries 
           )
 {
-    if $(.configured) 
+    if $(.configured) && $(.path) != $(path)
     {
-        errors.error "Attempt to reconfigure Whale support" ;
+        errors.user-error "Attempt to reconfigure Whale support" :
+          "Previously configured with path \"$(.path:E=<empty>)\"" :
+          "Now configuring with path \"$(path:E=<empty>)\"" ;
+
     }
     .configured = true ;
+    .path = $(path) ;
 
     .whale = [ path.join $(path) whale ] ;
     .dolphin = [ path.join $(path) dolphin ] ;
