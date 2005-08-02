@@ -1,5 +1,5 @@
 #
-#   Copyright (c) 2005 Jo√£o Abecasis
+#   Copyright (c) 2005 Jo„o Abecasis
 #   Copyright (c) 2005 Vladimir Prus
 #
 #   Distributed under the Boost Software License, Version 1.0. (See
@@ -108,6 +108,7 @@ import feature ;
 import generators ;
 import toolset ;
 import type ;
+import scanner ;
 
 # The one and only QUICKBOOK type!
 type.register QUICKBOOK : qbk ;
@@ -242,6 +243,20 @@ class quickbook-binary-generator : generator
         return [ generator.run $(project) $(name) : $(property-set) : $(sources) : $(multiple) ] ;
     }
 }
+
+# Define a scanner for tracking QBK include dependencies
+class qbk-scanner : common-scanner
+{
+    rule pattern ( )
+    {
+        return "\\[include[ \t]+([^]]+)\\]" 
+        "\\[include:[a-zA-Z0-9_]+[ \t]+([^]]+)\\]" ;
+    }
+}
+
+scanner.register qbk-scanner : include ;
+
+type.set-scanner QUICKBOOK : qbk-scanner ;
 
 # Initialization of toolset.
 #
