@@ -68,7 +68,7 @@ rule init (
    # options can include <setup>, <compiler>, <linker> and <resource-compiler>
 )
 {    
-    # setup will be used iff a path has been specified.  If setup is
+    # setup will be used if a path has been specified.  If setup is
     # not specified, vcvars32.bat will be used instead.
     setup = [ get-values <setup> : $(options) ] ;
     setup ?= vcvars32.bat ;    
@@ -126,12 +126,12 @@ rule init (
         {
             version = 8.0 ;
         }                 
-        else if [ MATCH "(\\.NET 2003\\VC7)" : $(command) ] ||
+        else if [ MATCH "(NET 2003[\/\\]VC7)" : $(command) ] ||
                 [ MATCH "(Microsoft Visual C\\+\\+ Toolkit 2003)" : $(command) ]
         {
             version = 7.1 ;
         }
-        else if [ MATCH "(.NET\\VC7)" : $(command) ]
+        else if [ MATCH "(.NET[\/\\]VC7)" : $(command) ]
         {
             version = 7.0 ;
         }
@@ -147,23 +147,22 @@ rule init (
     # If we're sure that msvc version is at 7.*, add those options explicitly.
     # We can be sure either if user specified version 7.* explicitly,
     # or if the installation path contain 7.* (this is checked above).
-    if [ MATCH ^(7\..*) : $(version) ] 
+    if ! [ MATCH ^(6\\.) : $(version) ]
     {
         flags msvc.compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
     }
     
     # 8.0 deprecates some of the options
-    if ! [ MATCH ^([67].*) : $(version) ] 
+    if ! [ MATCH ^([67]\\.) : $(version) ]
     {
-        flags msvc.compile CFLAGS $(condition)/<optimization>speed : /O2 ;
-        flags msvc.compile CFLAGS $(condition)/<optimization>space : /O1 ;
-        flags msvc.link.dll MANIFEST : "mt -manifest " ;
-        flags msvc.link.dll OUTPUTRESOURCE : "-outputresource:" ;
+        flags msvc.link MANIFEST $(condition) : "mt -nologo -manifest " ;
+        flags msvc.link OUTPUTRESOURCE $(condition) : "-outputresource:" ;
     }
     else
     {        
-        flags msvc.compile CFLAGS $(condition)/<optimization>speed : /Ogity /O2 /Gs ;
-        flags msvc.compile CFLAGS $(condition)/<optimization>space : /Ogisy /O1 /Gs ;        
+        flags msvc.compile CFLAGS $(condition)/<optimization>speed $(condition)/<optimization>space : /Ogiy /Gs ;
+        flags msvc.compile CFLAGS $(condition)/<optimization>speed : /Ot ;
+        flags msvc.compile CFLAGS $(condition)/<optimization>space : /Os ;        
     }        
 }
 
@@ -183,23 +182,33 @@ rule default-paths ( version ? )
     local version-7.1-path = $(ProgramFiles)"\\Microsoft Visual Studio .NET 2003\\VC7" ;
     local version-8.0-path = $(ProgramFiles)"\\Microsoft Visual Studio 8" ;
     
-    local VS71COMNTOOLS = [ modules.peek : VS71COMNTOOLS ] ;
+    local VS71COMNTOOLS = [ os.environ VS71COMNTOOLS ] ;
     if $(VS71COMNTOOLS)
     {
         # VS71COMNTOOLS is set by VS .NET 2003 to <VSDIR>\Common7\Tools
-        version-7.1-path = [ path.make "$(VS71COMNTOOLS:J= )" ] ;
+        version-7.1-path = [ path.make $(VS71COMNTOOLS) ] ;
         version-7.1-path = [ path.parent $(version-7.1-path) ] ;
         version-7.1-path = [ path.parent $(version-7.1-path) ] ;
         version-7.1-path = [ path.join $(version-7.1-path) "VC7" ] ;
         version-7.1-path = [ path.native $(version-7.1-path) ] ;
     }
         
-    local VCToolkitInstallDir = [ modules.peek : VCToolkitInstallDir ] ;
-    if $(VCToolkitInstallDir)
+    local VS80COMNTOOLS = [ os.environ VS80COMNTOOLS ] ;
+
+    if $(VS80COMNTOOLS)
     {
-        version-7.1-path = [ path.make "$(VCToolkitInstallDir:J= )" ] ;
+        # VS80COMNTOOLS is set by VS .NET 2005 to <VSDIR>\Common7\Tools
+        version-8.0-path = [ path.make "$(VS80COMNTOOLS)" ] ;
+        version-8.0-path = [ path.parent $(version-8.0-path) ] ;
+        version-8.0-path = [ path.parent $(version-8.0-path) ] ;
+        version-8.0-path = [ path.join $(version-8.0-path) "VC" ] ;
+        version-8.0-path = [ path.native $(version-8.0-path) ] ;
+	
     }
-    
+
+    # Fixed so we don't add paths without \\bin to all versions.
+    # Path without 7.1 
+
     if $(version)
     {
         local v = [ MATCH ^(6|[^6].*) : $(version) ] ;
@@ -210,9 +219,21 @@ rule default-paths ( version ? )
         possible-paths += $(version-8.0-path) $(version-7.1-path) $(version-7.0-path) $(version-6-path) ;
     }
     
-    # The vccars32.bat is actually in "bin" directory.
+    # The vcvars32.bat is actually in "bin" directory.
     # (except for free VC7.1 tools)
-    possible-paths = $(possible-paths)\\bin $(possible-paths) ;
+    possible-paths = $(possible-paths)\\bin ;
+    
+    local VCToolkitInstallDir = [ os.environ VCToolkitInstallDir ] ;
+    if $(VCToolkitInstallDir)
+    {
+	if $(version) = "7.1" || ! $(version)
+        {
+	    # NOTE it's impossible to switch between Toolkit and VS. 
+            # I wonder is toolkit and VS can be installed together?
+            possible-paths += [ path.native [ path.make $(VCToolkitInstallDir) ] ] ;
+
+        }
+    }
 
     return $(possible-paths) ;
 }
@@ -236,6 +257,10 @@ generators.override msvc.compile.rc : rc.resource-compile ;
 # Declare flags and action for compilation
 #
 feature.feature debug-store : object database : propagated ;
+
+flags msvc.compile CFLAGS <optimization>speed : /O2 ;
+flags msvc.compile CFLAGS <optimization>space : /O1 ;
+
 flags msvc.compile CFLAGS <debug-symbols>on/<debug-store>object : /Z7 ;
 flags msvc.compile CFLAGS <debug-symbols>on/<debug-store>database : /Zi ;
 flags msvc.compile CFLAGS <optimization>off : /Od ;
@@ -354,9 +379,16 @@ else
 # rebuilt every time. I'm not sure that incremental linking is
 # such a great idea in general, but in this case I'm sure we
 # don't want it.
+
+# Windows Manifests is a new way to specify dependencies 
+# on managed DotNet assemblies and Windows native DLLs. The 
+# manifests are embedded as resourses and are useful in 
+# any PE targets (both DLL and EXE)
+
 actions link bind DEF_FILE RSP
 {
     $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"$(RSP:W)" && $(RM) "$(RSP)"
+    $(MANIFEST)$(<[1]).manifest $(OUTPUTRESOURCE)$(<[1]);#2
 }
 
 actions link.dll bind DEF_FILE RSP
