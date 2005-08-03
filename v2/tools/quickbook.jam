@@ -140,7 +140,7 @@ class quickbook-binary-generator : generator
         if $(quickbook-binary)
         {
             # Use user-supplied command.
-            quickbook-binary = [ common.get-invocation-command quickbook : $(quickbook-binary) ] ;
+            quickbook-binary = [ common.get-invocation-command quickbook : quickboost : $(quickbook-binary) ] ;
         }
         else
         {
