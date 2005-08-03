@@ -66,6 +66,7 @@ if [ os.name ] = NT
 
 generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c : C : OBJ : <toolset>gcc ;
+generators.register-c-compiler gcc.compile.asm : ASM : OBJ : <toolset>gcc ;
 
 
 # Declare flags and action for compilation
@@ -149,6 +150,16 @@ rule compile.c
 
 
 actions compile.c
+{
+    "$(CONFIG_COMMAND)" $(LANG) -Wall $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+}
+
+rule compile.asm
+{
+    LANG on $(<) = "-x assembler-with-cpp" ;
+}
+
+actions compile.asm
 {
     "$(CONFIG_COMMAND)" $(LANG) -Wall $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
