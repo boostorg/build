@@ -347,6 +347,8 @@ class installed-shared-lib-generator : generator
         local copied = [ stage.copy-file $(project) 
           : $(source) : $(property-set) ] ; 
         
+        copied = [ virtual-target.register $(copied) ] ;
+        
         if [ $(property-set).get <os> ] = NT
         {
             return $(copied) ;
