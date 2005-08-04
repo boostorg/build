@@ -99,8 +99,8 @@ exe a : a_obj ;
     namespace. Therefore, to access environment variable from Jamfile, you'd
     need the following code:
 <programlisting>
-import modules ;
-local SOME_LIBRARY_PATH = [ modules.peek : SOME_LIBRARY_PATH ] ;
+import os ;
+local SOME_LIBRARY_PATH = [ os.environ SOME_LIBRARY_PATH ] ;
 exe a : a.cpp : &lt;include&gt;$(SOME_LIBRARY_PATH) ;
 </programlisting>
     </para>
@@ -180,28 +180,11 @@ exe viewer : viewer png z ;
     <title>Can I get output of external program as a variable in a Jamfile?
     </title>
 
-    <para>From time to time users ask how to run an external program and save
-    the result in Jamfile variable, something like:
+    <para>The <code>SHELL</code> builtin can be used for the purpose:
 <programlisting>
-local gtk_includes = [ RUN_COMMAND gtk-config ] ;
+local gtk_includes = [ SHELL "gtk-config --cflags" ] ;
 </programlisting>
-      Unfortunately, this is not possible at the moment. However, if the
-      result of command invocation is to be used in a command to some tool,
-      and you're working on Unix, the following workaround is possible.
-<programlisting>
- alias gtk+-2.0 : : : :
-         &lt;cflags&gt;"`pkg-config --cflags gtk+-2.0`"
-         &lt;inkflags&gt;"`pkg-config --libs gtk+-2.0`"
-     ;
-</programlisting>
-      If you use the "gtk+-2.0" target in sources, then the properties
-      specified above will be added to the build properties and eventually
-      will appear in the command line. Unix command line shell processes
-      the backticks quoting by running the tool and using its output --
-      which is what's desired in that case. Thanks to Daniel James for
-      sharing this approach.
     </para>
-
   </section>
 
   <section>
@@ -342,7 +325,7 @@ exe hello : hello.cpp /site-config//zlib ;
   </chapter>
 <!--
      Local Variables:
-     mode: xml
+     mode: nxml
      sgml-indent-data: t     
      sgml-parent-document: ("userman.xml" "chapter")
      sgml-set-face: t
