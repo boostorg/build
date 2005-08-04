@@ -1637,7 +1637,7 @@ LIST *builtin_shell( PARSE *parse, FRAME *frame )
 
     while ( (ret = fread(buffer, sizeof(char), sizeof(buffer)-1, p)) > 0 )
     {
-        buffer[ret+1] = 0;
+        buffer[ret] = 0;
         string_append( &s, buffer );
     }
 
