@@ -714,20 +714,6 @@ rule use ( id : location )
     .current-project = $(saved-project) ;
 }
 
-
-# Initializes an additional toolset-like module.
-# First load 'toolset-module' and then calls its 'init'
-# rule with trailing arguments
-rule _using ( toolset-module : * )
-{
-    import $(toolset-module) ;
-    if ! $(.$(toolset-module)-init-callled)
-    {        
-        $(toolset-module)-init-callled = true ;
-        $(toolset-module).init $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
-    }    
-}
-
 # This module defines rules common to all projects
 module project-rules
 {                
@@ -745,7 +731,7 @@ module project-rules
         local x = [ modules.peek : BOOST_BUILD_PATH ] ;
         local caller = [ modules.binding $(__name__) ] ;
         modules.poke : BOOST_BUILD_PATH : $(caller:D) $(x) ;
-        project._using $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+        toolset.using $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
         modules.poke : BOOST_BUILD_PATH : $(x) ;
         
         # The above might have clobbered .current-project

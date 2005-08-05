@@ -23,11 +23,7 @@ import sequence ;
 rule using ( toolset-module : * )
 {
     import $(toolset-module) ;
-    if ! $(.$(toolset-module)-init-callled)
-    {        
-        $(toolset-module)-init-callled = true ;
-        $(toolset-module).init $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
-    }    
+    $(toolset-module).init $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
 }
 
 # Expands subfeatures in each property sets.
