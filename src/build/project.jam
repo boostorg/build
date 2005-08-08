@@ -319,6 +319,9 @@ local rule load-jamfile (
         errors.error "The value of the .current-project variable"
           : "has magically changed after loading a Jamfile."
           : "This means some of the targets might be defined a the wrong project."
+          : "after loading " $(jamfile-module) 
+          : "expected value " $(saved-project)  
+          : "actual value " $(.current-project)
           ;
     }
 
@@ -747,12 +750,12 @@ module project-rules
         modules.import project ;
                 
         local caller = [ CALLER_MODULE ] ;
+        local saved = [ modules.peek project : .current-project ] ;
         module $(caller)
         {
             modules.import $(1) : $(2) : $(3) ;
         }
-        modules.poke project : .current-project 
-          : [ project.target $(__name__) ] ;                        
+        modules.poke project : .current-project : $(saved) ;        
     }
 
         
@@ -885,7 +888,9 @@ module project-rules
         import project ;
         import sequence ;
         
-        local location = [ project.attribute $(__name__) source-location ] ;
+        local current = [ project.current ] ;
+                
+        local location = [ $(current).get source-location ] ;
 
         local result ;
         local paths = [ path.glob $(location) : 
