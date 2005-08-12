@@ -34,7 +34,7 @@
   <p>Boost.Build is a system for large project software construction built on
   <a href="../jam_src/index.html">Boost.Jam</a>, a descendant of "<a href=
   "http://www.perforce.com/jam/jam.html">Perforce Jam</a>", an open-source
-  make replacement<a href="#1">[1]</a>. Key features are:</p>
+  make replacement<a href="#one">[1]</a>. Key features are:</p>
 
   <ul>
     <li>A simple target description language</li>
@@ -497,7 +497,7 @@ subinclude foo/bar/baz <font color="#7F7F7F">foo/bar/...</font> ;
     dependency of built targets. For example, an external library might be
     specified with a dependency-feature: if the library is updated, the
     target will be updated also. The <tt>&lt;library-file&gt;</tt> feature
-    works this way <a href="#2">[2]</a>.</li>
+    works this way <a href="#two">[2]</a>.</li>
   </ol>
 
   <p>A feature-value pair is known as a <b>build property</b>, or simply
@@ -653,12 +653,12 @@ subinclude foo/bar/baz <font color="#7F7F7F">foo/bar/...</font> ;
   <p>The Jam command line ends with an optional list of target names; if no
   target names are supplied, the built-in pseudotarget <tt>all</tt> is built.
   In a large project, naming targets can be dicey because of collisions. Jam
-  uses a mechanism called <a href="#grist">grist</a> to distinguish targets
-  that would otherwise have the same name. Fortunately, you won't often have
-  to supply grist at the command-line. When you declare a main target, a Jam
-  pseudotarget of the same name is created which depends on <i>all</i> of the
-  subvariants requested for your invocation of the build system. For example,
-  if your subproject declares:</p>
+  uses a mechanism called grist to distinguish targets that would otherwise
+  have the same name. Fortunately, you won't often have to supply grist at
+  the command-line. When you declare a main target, a Jam pseudotarget of the
+  same name is created which depends on <i>all</i> of the subvariants
+  requested for your invocation of the build system. For example, if your
+  subproject declares:</p>
 
   <blockquote>
     <pre>
@@ -1538,27 +1538,23 @@ flags msvc HDRS &lt;include&gt; ;
     the source directories (they may be read-only)</li>
   </ul>
 
-  <h2><a name="footnotes" id="footnotes">Footnotes</a></h2><a name="1" id=
-  "1">[1]</a> Boost Jam is actually descended directly from <a href=
+  <h2><a name="footnotes" id="footnotes">Footnotes</a></h2><a name="one" id=
+  "one">[1]</a> Boost Jam is actually descended directly from <a href=
   "http://freetype.sourceforge.net/jam/index.html">FTJam</a>, which was
   itself a variant of <a href=
   "http://www.perforce.com/jam/jam.html">Jam/MR</a>. It is hoped that crucial
   features we rely on will eventually be incorporated back into the Jam/MR
   release.
 
-  <p><a name="2" id="2">[2]</a> Note: right now, a dependency feature of a
-  main target makes <b>all</b> resulting built targets dependent, including
+  <p><a name="two" id="two">[2]</a> Note: right now, a dependency feature of
+  a main target makes <b>all</b> resulting built targets dependent, including
   intermediate targets. That means that if an executable is dependent on an
   external library, and that library changes, all the sources comprising the
   executable will be recompiled as well. This behavior should probably be
   fixed.</p>
   <hr>
 
-  <p>Revised 
-  <!--webbot bot="Timestamp" s-type="EDITED" s-format="%d %B, %Y" startspan
-                                                  -->8 September, 2003 
-<!--webbot bot="Timestamp" endspan i-checksum="13972"
-                                                  --></p>
+  <p>Revised $Date$</p>
 
   <p>Copyright &copy; Dave Abrahams 2001.</p>
 

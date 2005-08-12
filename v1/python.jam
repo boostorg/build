@@ -428,13 +428,6 @@ rule Link-PYD
     if $(UNIX) 
     {
         LINK_LIBPATH on $(<) = [ join $(gRUN_LD_LIBRARY_PATH($(<))) : $(SPLITPATH) ] ;
-        
-        if $(OS) = AIX
-        {
-            # explicitly designate the exported init<module> function
-            LINKFLAGS on $(<) += "-e init$(<[1]:B)" ; 
-            Aix-Implib-Action $(<) : $(>) ;
-        }
     }
     gRUN_PYTHONPATH($(<)) += $(gLOCATE($(<[1]))) ;
     .do-link $(<) : $(>) : PYD ;

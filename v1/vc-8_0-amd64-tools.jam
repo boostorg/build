@@ -1,4 +1,4 @@
-extends-toolset vc-8_0-tools.jam ;
+extends-toolset vc-8_0 ;
 
 if $(VC80_ROOT)
 {
