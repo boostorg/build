@@ -133,9 +133,9 @@ a = $(b) $(c) ;</programlisting>
 rule <replaceable>example</replaceable> 
      (
          <replaceable>parameter1</replaceable> : 
-         <replaceable>parameter2</replaceable> <replaceable>?</replaceable> : 
-         <replaceable>parameter3</replaceable> <replaceable>+</replaceable> :
-         <replaceable>parameter4</replaceable> <replaceable>*</replaceable> 
+         <replaceable>parameter2 ?</replaceable> : 
+         <replaceable>parameter3 +</replaceable> :
+         <replaceable>parameter4 *</replaceable> 
      )
      {
         // body
