@@ -41,6 +41,7 @@ perl -pi -e 's%../../../doc/html/bbv2.installation.html%doc/html/bbv2.installati
 find . -name CVS | xargs rm -rf
 rm roll.sh
 chmod a+x jam_src/build.bat
+date >> timestamp.txt
 cd .. && zip -r boost-build.zip boost-build && tar --bzip2 -cf boost-build.tar.bz2 boost-build
 cd boost-build
 
