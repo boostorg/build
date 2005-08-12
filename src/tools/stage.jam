@@ -343,18 +343,39 @@ class installed-shared-lib-generator : generator
     }
     
     rule run ( project name ? : property-set : source : multiple ? )
-    {
-        local copied = [ stage.copy-file $(project) 
-          : $(source) : $(property-set) ] ; 
-        
-        copied = [ virtual-target.register $(copied) ] ;
-        
+    {                        
         if [ $(property-set).get <os> ] = NT
         {
+            local copied = [ stage.copy-file $(project) 
+              : $(source) : $(property-set) ] ; 
+        
+            copied = [ virtual-target.register $(copied) ] ;
+            
             return $(copied) ;
         }
         else 
         {
+            local a = [ $(source).action ] ;
+            local cp = [ $(a).properties ] ;
+            local current-dll-path = [ $(cp).get <dll-path> ] ;
+            local new-dll-path = [ $(property-set).get <dll-path> ] ;
+            
+            local copied ;
+            
+            if $(current-dll-path) != $(new-dll-path)
+            {
+                # Rpath changed, need to relink.
+                copied = [ stage.relink-file 
+                    $(project) : $(source) : $(property-set) ] ;
+            }
+            else
+            {                                        
+                copied = [ stage.copy-file $(project) 
+                  : $(source) : $(property-set) ] ; 
+            }
+                    
+            copied = [ virtual-target.register $(copied) ] ;
+                                    
             local result = $(copied) ;
             # If the name is in the form NNN.XXX.YYY.ZZZ, where all
             # 'X', 'Y' and 'Z' are numbers, we need to create
