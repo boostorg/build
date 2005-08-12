@@ -290,7 +290,7 @@ using gcc : : g++-3.2 ;
 Otherwise, it might be necessary to supply the complete path to the
 compiler executable:
 <programlisting>
-using msvc : : Z:/Programs/Microsoft Visual Studio/vc98/bin/cl ;
+using msvc : : "Z:/Programs/Microsoft Visual Studio/vc98/bin/cl" ;
 </programlisting>
 Some Boost.Build toolsets will use that path to take additional
 actions required before invoking the compiler, such as calling
