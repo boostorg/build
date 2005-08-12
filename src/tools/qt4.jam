@@ -168,13 +168,13 @@ rule directory
 # Processes headers to create Qt MetaObject information
 actions moc
 {
-	$(.prefix)/bin/moc -f $(>) -o $(<)
+	$(.prefix)/bin/moc -I$(.prefix)/include -I$(.prefix)/include/QtCore -f $(>) -o $(<)
 }
 
 # Generates source files from resource files
 actions rcc
 {
-    $(.prefix)/bin/rcc $(>) -o $(<)
+    $(.prefix)/bin/rcc $(>) -name $(>:B) -o $(<)
 }
 
 # Generates user-interface source from .ui files
