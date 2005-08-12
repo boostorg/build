@@ -999,7 +999,7 @@ local rule find-viable-generators-aux ( target-type : property-set )
     return $(viable-generators) ;
 }
 
-local rule find-viable-generators ( target-type : property-set )
+rule find-viable-generators ( target-type : property-set )
 {
     local key = $(target-type).$(property-set) ;
     local l = $(.fv.$(key)) ;

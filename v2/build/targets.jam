@@ -1241,8 +1241,21 @@ class typed-target : basic-target
           # ]
             : $(source-targets) ] ;
         if ! $(r)
-        {
-            errors.error "unable to construct" [ full-name ] ;
+        {                        
+            ECHO "error: unable to construct " [ full-name ] ;
+            
+            # Are there any top-level generators for this type/property set.
+            if ! [ generators.find-viable-generators 
+                $(self.type) : $(property-set) ]
+            {
+                ECHO "error: no generators were found for type '$(self.type)'" ;
+                ECHO "error: and the requested properties" ;
+                ECHO "error: make sure you've configured the needed tools" ;
+                ECHO "See http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html" ;
+            }
+            
+            ECHO "To debug this problem, try the --debug-generators option." ;
+            EXIT ;
         }
         
         return $(r) ;
