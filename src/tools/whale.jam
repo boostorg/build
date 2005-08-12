@@ -59,32 +59,36 @@ class wd-to-cpp : generator
         generator.__init__ $(1) : $(2) : $(3) ;
     }
     
-    rule run ( project name ? : property-set : source )
+    rule run ( project name ? : property-set : source * )
     {
-        local new-sources ;
-        if ! [ $(source).type ] in WHL DLP
-        {            
-            local r1 = [ generators.construct $(project) $(name) 
-              : WHL : $(property-set) : $(source) ] ;
-            local r2 = [ generators.construct $(project) $(name) 
-              : DLP : $(property-set) : $(source) ] ;
+        if ! $(source[2])
+        {                
+            local new-sources ;
+            if ! [ $(source).type ] in WHL DLP
+            {            
+                local r1 = [ generators.construct $(project) $(name) 
+                  : WHL : $(property-set) : $(source) ] ;
+                local r2 = [ generators.construct $(project) $(name) 
+                  : DLP : $(property-set) : $(source) ] ;
+                
+                new-sources = [ sequence.unique $(r1[2-]) $(r2[2-]) ] ;
+            }
+            else
+            {
+                new-sources = $(source) ;
+            }
             
-            new-sources = [ sequence.unique $(r1[2-]) $(r2[2-]) ] ;
-        }
-        else
-        {
-            new-sources = $(source) ;
-        }
-                    
-        local result ;
-        for local i in $(new-sources) 
-        {
-            local t = [ generators.construct $(project) $(name) : CPP 
-              : $(property-set) : $(i) ] ;          
-            result += $(t[2-]) ;
-        }
-        return $(result) ;
-    }        
+            local result ;
+            for local i in $(new-sources) 
+            {
+                local t = [ generators.construct $(project) $(name) : CPP 
+                  : $(property-set) : $(i) ] ;          
+                result += $(t[2-]) ;
+            }
+            return $(result) ;
+        }        
+    }
+    
 }
 
 
