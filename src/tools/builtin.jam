@@ -576,11 +576,7 @@ class linking-generator : generator
                 extra-xdll-paths += [ path.parent $(location) ] ;
             }                
         }
-        
-        ECHO "Extra xdll paths " $(extra-xdll-paths) ;
-
-        
-        
+                        
         # Hardcode dll paths only when linking executables.
         # Pros: don't need to relinking libraries when installing.
         # Cons: "standalone" libraries (plugins, python extensions)
