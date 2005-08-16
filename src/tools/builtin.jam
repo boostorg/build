@@ -555,7 +555,32 @@ class linking-generator : generator
                 extra += <library-path>$(search) ;
             }
         }
+        
+        # It's possible that sources include shared libraries that
+        # did not came from 'lib' targets. For example, .so files
+        # specified as sources. 
+        # In this case we have 
+        # - add extra dll-path properties
+        # - propagate extra xdll-path properties so that application
+        #   linking to use will get xdll-path to those libraries.
+        local extra-xdll-paths ;
+        for local s in $(sources)
+        {
+            if [ type.is-derived [ $(s).type ] SHARED_LIB ] && ! [ $(s).action ] 
+            {
+                # Unfortunately, we don't have a good way to find the path
+                # to a file, so use this nasty approach.
+                local p = [ $(s).project ] ;
+                local location = [ path.root [ $(s).name ]
+                  [ $(p).get source-location ] ] ;
+                extra-xdll-paths += [ path.parent $(location) ] ;
+            }                
+        }
+        
+        ECHO "Extra xdll paths " $(extra-xdll-paths) ;
 
+        
+        
         # Hardcode dll paths only when linking executables.
         # Pros: don't need to relinking libraries when installing.
         # Cons: "standalone" libraries (plugins, python extensions)
@@ -564,24 +589,7 @@ class linking-generator : generator
          && [ type.is-derived $(self.target-types[1]) EXE ] 
         {
             local xdll-path = [ $(property-set).get <xdll-path> ] ;
-            # It's possible that we have libraries in sources which did not came
-            # from 'lib' target. For example, libraries which are specified
-            # just as filenames as sources. We don't have xdll-path properties
-            # for such target, but still need to add proper dll-path properties.
-            for local s in $(sources)
-            {
-                if [ type.is-derived [ $(s).type ] SHARED_LIB ] && ! [ $(s).action ] 
-                {
-                    # Unfortunately, we don't have a good way to find the path
-                    # to a file, so use this nasty approach.
-                    local p = [ $(s).project ] ;
-                    local location = [ path.root [ $(s).name ]
-                      [ $(p).get source-location ] ] ;
-                    xdll-path += [ path.parent $(location) ] ;
-                }                
-            }
-                          
-            extra += <dll-path>$(xdll-path) ;
+            extra += <dll-path>$(xdll-path) <dll-path>$(extra-xdll-paths) ;
         }
         
         if $(extra)
@@ -591,9 +599,12 @@ class linking-generator : generator
                         
         local result = [ generator.run $(project) $(name) : $(property-set)
           : $(sources) ] ;
+        
+        local ur = [ extra-usage-requirements $(result) : $(property-set) ] ;
+        ur = [ $(ur).add 
+          [ property-set.create <xdll-path>$(extra-xdll-paths) ] ] ;
                         
-        return [ extra-usage-requirements $(result) : $(property-set) ] 
-               $(result) ;
+        return $(ur) $(result) ;
     }
     
     rule extra-usage-requirements ( created-targets * : property-set )
