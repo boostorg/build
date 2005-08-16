@@ -98,6 +98,40 @@ lib z : : <name>zzz ;
 t.run_build_system("-a -n -d+2")
 t.fail_test(string.find(t.stdout(), "zzz") == -1)
 
+#
+# Test main -> libb -> liba chain
+# in the case where liba is a file, not a Boost.Build target.
+#
+t.rm(".")
+t.write("Jamroot", "")
+t.write("a/Jamfile", """
+lib a : a.cpp ;
+""")
+t.write("a/a.cpp", "void a() {}\n")
+t.run_build_system(subdir="a")
+t.expect_addition("a/bin/$toolset/debug/a.dll")
+
+file = t.adjust_names(["a/bin/$toolset/debug/a.dll"])[0]
+
+t.write("b/Jamfile", """
+lib b : b.cpp ../%s ;
+""" % file)
+t.write("b/b.cpp", """
+void a();
+void b() { a(); }
+""")
+
+t.write("Jamroot", """
+exe main : main.cpp b//b ;
+""")
+t.write("main.cpp", """
+void b();
+int main() { b(); }
+""")
+
+t.run_build_system()
+t.expect_addition("bin/$toolset/debug/main.exe")
+
 
 
 t.cleanup()
