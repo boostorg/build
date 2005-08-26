@@ -385,6 +385,10 @@
 # define OS_OPENBSD
 # define unix
 # endif
+# if defined (__FreeBSD_kernel__) && !defined(__FreeBSD__)
+# define OSMINOR "OS=KFREEBSD"
+# define OS_KFREEBSD
+# endif
 # ifndef OSMINOR
 # define OSMINOR "OS=UNKNOWN"
 # endif

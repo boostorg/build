@@ -28,6 +28,8 @@ rule resource-compile ( target : sources * : properties * )
             create-empty-object $(target) : $(sources[1]) ;
         case "SOLARIS" :
             create-empty-object $(target) : $(sources[1]) ;
+        case "KFREEBSD" :
+            create-empty-object $(target) : $(sources[1]) ;
         case "LINUX" :
             create-empty-object $(target) : $(sources[1]) ;
         case "*" :

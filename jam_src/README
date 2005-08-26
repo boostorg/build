@@ -87,6 +87,7 @@ INSTALLING
 	    SunOS4.1		SUNOS
 	    Ultrix 4.2		ULTRIX
 	    BeOS		BEOS		*
+	    GNU/kFreeBSD	KFREEBSD
 
 	    * requires editing Makefile
 

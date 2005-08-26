@@ -416,7 +416,7 @@ rule Link-action
         LNOPT on $(<) = "" ;
     }
     # do we use sonames or not?
-    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && ( $(OS) = LINUX || $(OS) = OPENBSD ) && ! $(NO_GNU_LN)
+    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && ( $(OS) = LINUX || $(OS) = OPENBSD || $(OS) = KFREEBSD ) && ! $(NO_GNU_LN)
     {
         OUTTAG on $(<) = ".$(DLLVERSION)" ;
         SOTAG on $(<) = ".$(DLLVERSION)" ;
@@ -462,7 +462,7 @@ rule Link-action
     gcc-spawn $(<) ;
     gcc-Link-action $(<) : $(>) ;
 
-    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && ( $(OS) = LINUX || $(OS) = OPENBSD ) && ! $(NO_GNU_LN)
+    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && ( $(OS) = LINUX || $(OS) = OPENBSD || $(OS) = KFREEBSD ) && ! $(NO_GNU_LN)
     {
         return "$(<[1]).$(DLLVERSION)" ;
     }
