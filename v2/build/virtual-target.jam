@@ -830,9 +830,29 @@ rule register ( target )
         .cache.$(signature) += $(target) ;     
         result = $(target) ;
     }
+    
+    .recent-targets += $(result) ;
 
     return $(result) ;
 }
+
+
+# Each target returned by 'register' is added to a list of
+# 'recent-target', returned by this function. So, this allows
+# us to find all targets created when building a given main
+# target, even if the target
+rule recent-targets ( )
+{
+    return $(.recent-targets) ;
+}
+
+rule clear-recent-targets ( )
+{
+    .recent-targets = ;
+}
+
+
+
 
 rule register-actual-name ( actual-name : virtual-target )
 {
