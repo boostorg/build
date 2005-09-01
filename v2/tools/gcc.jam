@@ -309,16 +309,16 @@ actions link bind LIBRARIES
 RM = [ common.rm-command ] ;
 
 # Declare action for creating static libraries
-# The 'r' letter means to replace files in the archive
-# The 'u' letter means only outdated files in the archive
-#   should be replaced.
+# The 'r' letter means to add files to the archive with replacement
+# Since we remove archive, we don't care about replacement, but
+# there's no option "add without replacement".
 # The 'c' letter means suppresses warning in case the archive
 #   does not exists yet. That warning is produced only on
 #   some platforms, for whatever reasons.
 actions piecemeal archive 
 {
     $(RM) "$(<)"
-    ar ruc "$(<)" "$(>)"
+    ar rc "$(<)" "$(>)"
 }
 
 
