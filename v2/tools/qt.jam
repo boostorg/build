@@ -48,7 +48,9 @@ rule init ( prefix ? )
         
         generators.register-standard qt.moc : H : CPP(moc_%) : <allow>qt ;    
         
-        type.register UI : ui ;
+        # The UI type is defined in types/qt.jam,
+        # and UIC_H is only used in qt.jam, but not in qt4.jam, so
+        # define it here.
         type.register UIC_H : : H ;
         
         generators.register-standard qt.uic-h : UI : UIC_H : <allow>qt ;
