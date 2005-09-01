@@ -67,12 +67,10 @@ rule init ( prefix ? )
         generators.register-standard qt4.moc : H : CPP(moc_%) ;
 
         # Generates header file from .ui file
-        type.register UI : ui ;
-        # The generator class is defined after 'init'.
+        # The generator class is defined below the 'init' function.
         generators.register [ new uic-h-generator qt4.uic-h : UI : OBJ ] ;
 
         # Generates .cpp file from qrc file
-        type.register QRC : qrc ;
         generators.register-standard qt4.rcc : QRC : CPP(qrc_%) ;
         
         local usage-requirements = 
