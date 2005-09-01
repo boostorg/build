@@ -211,10 +211,15 @@ rule directory
     return $(.prefix) ;
 }
 
+# Get <include> and <defines> from current toolset
+flags qt4.moc INCLUDES <include> ;
+flags qt4.moc DEFINES  <define> ;
+
 # Processes headers to create Qt MetaObject information
+# Qt4-moc has its c++-parser, so pass INCLUDES and DEFINES.
 actions moc
 {
-    $(.prefix)/bin/moc -I$(.prefix)/include -I$(.prefix)/include/QtCore -f $(>) -o $(<)
+    $(.prefix)/bin/moc -I$(INCLUDES) -I$(DEFINES) -f $(>) -o $(<)
 }
 
 # Generates source files from resource files
