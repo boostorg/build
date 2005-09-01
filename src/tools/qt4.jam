@@ -30,6 +30,7 @@ import generators ;
 import project ;
 import toolset : flags ;
 import os ;
+import virtual-target ;
 
 project.initialize $(__name__) ;
 project qt4 ;
@@ -67,12 +68,13 @@ rule init ( prefix ? )
 
         # Generates header file from .ui file
         type.register UI : ui ;
-        generators.register-standard qt4.uic-h : UI : H ; 
+        # The generator class is defined after 'init'.
+        generators.register [ new uic-h-generator qt4.uic-h : UI : OBJ ] ;
 
         # Generates .cpp file from qrc file
         type.register QRC : qrc ;
         generators.register-standard qt4.rcc : QRC : CPP(qrc_%) ;
-
+        
         local usage-requirements = 
             <include>$(.prefix)/include 
             <library-path>$(.prefix)/lib 
@@ -156,19 +158,63 @@ rule init ( prefix ? )
     }
 }
 
+# This custom generator is needed because it QT4, UI files are translated
+# only in H files, and no C++ files are created. Further, the H files
+# need not be passed via MOC. The header is used only via inclusion.
+# If we define standard UI -> H generator, Boost.Build will run
+# MOC on H, and the compile resulting cpp. It will give a warning, since
+# output from moc will be empty.
+#
+# This generator is declared with UI -> OBJ signature, so it's
+# invoked when linking generator tries to convert sources to OBJ,
+# but it produces target of type H. This is non-standard, but allowed.
+# That header won't be mocced.
+#
+class uic-h-generator : generator
+{
+    rule __init__ ( * : * )
+    {
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+
+    rule run ( project name ? : property-set : sources * )
+    {       
+        if ! $(name)        
+        {
+            name = [ $(sources[0]).name ] ;
+            name = $(name:B) ;
+        }
+                
+        local a = [ new action $(source) : qt4.uic-h :
+          $(property-set) ] ;
+        
+        local target = [ 
+          new file-target $(name) : H : $(project) : $(a) ] ;
+ 
+        # Since this generator will return H target, the linking generator
+        # won't use it at all, and won't set any dependency on it.
+        # However, we need to target to be seen by bjam, so that dependency
+        # from sources to this generated header is detected -- if jam does
+        # not know about this target, it won't do anything.
+        DEPENDS all : [ $(target).actualize ] ;
+        
+        return [ virtual-target.register $(target) ] ;
+    }    
+}
+
 # Query the installation directory
 # This is needed in at least two scenarios
 # First, when re-using sources from the Qt-Tree.
 # Second, to "install" custom Qt plugins to the Qt-Tree.
 rule directory
 {
-	return $(.prefix) ;
+    return $(.prefix) ;
 }
 
 # Processes headers to create Qt MetaObject information
 actions moc
 {
-	$(.prefix)/bin/moc -I$(.prefix)/include -I$(.prefix)/include/QtCore -f $(>) -o $(<)
+    $(.prefix)/bin/moc -I$(.prefix)/include -I$(.prefix)/include/QtCore -f $(>) -o $(<)
 }
 
 # Generates source files from resource files
@@ -180,5 +226,5 @@ actions rcc
 # Generates user-interface source from .ui files
 actions uic-h
 {
-	$(.prefix)/bin/uic $(>) -o $(<)
+    $(.prefix)/bin/uic $(>) -o $(<)
 }

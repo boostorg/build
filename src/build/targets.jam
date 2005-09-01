@@ -1130,8 +1130,11 @@ class basic-target : abstract-target
                 local gur = $(result[1]) ;
                 result = $(result[2-]) ;
 
-                local s = [ create-subvariant $(result) : $(property-set) : $(source-targets)
+                local s = [ create-subvariant 
+                    [ virtual-target.recent-targets ] 
+                      : $(property-set) : $(source-targets)
                   : $(rproperties) : $(usage-requirements) ] ;
+                virtual-target.clear-recent-targets ;
 
                 local ur = [ compute-usage-requirements $(s) ] ;
                 ur = [ $(ur).add $(gur) ] ;
