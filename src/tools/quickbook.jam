@@ -293,6 +293,6 @@ rule quickbook-to-boostbook ( target : source : properties * )
 
 actions quickbook-to-boostbook
 {
-    $(QB-COMMAND) $(2) $(1) ;
+    $(QB-COMMAND) --output-file=$(1) $(2)  
 }
 
