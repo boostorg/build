@@ -2688,7 +2688,11 @@ rule common-variant-tag ( toolset variant : properties * )
     {
         local version-number = [ get-values <version> : $(properties) ] ;
         version-number ?= $(BOOST_VERSION) ;
-        version-tag = [ MATCH "^([^.]+)[.]([^.]+)" : $(version-number[1]) ] ;
+        version-tag = [ MATCH "^([^.]+)[.]([^.]+)[.]([^.]+)" : $(version-number[1]) ] ;
+        if $(version-tag[3]) = 0
+        {
+            version-tag = $(version-tag[1-2]) ;
+        }
         version-tag = $(version-tag:J="_") ;
     }
     
