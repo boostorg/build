@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#~ Copyright 2002-2004 Rene Rivera.
+#~ Copyright 2002-2005 Rene Rivera.
 #~ Distributed under the Boost Software License, Version 1.0.
 #~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
@@ -65,6 +65,7 @@ Guess_Toolset ()
     elif test_uname IRIX ; then BOOST_JAM_TOOLSET=mipspro
     elif test_uname IRIX64 ; then BOOST_JAM_TOOLSET=mipspro
     elif test_uname OSF1 ; then BOOST_JAM_TOOLSET=tru64cxx
+    elif test_path QCC ; then BOOST_JAM_TOOLSET=qcc
     elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
     elif test_path icc ; then BOOST_JAM_TOOLSET=intel-linux
     elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
@@ -176,6 +177,10 @@ case $BOOST_JAM_TOOLSET in
     BOOST_JAM_OPT_YYACC="$BOOST_JAM_OPT_YYACC $CFLAGS $LIBS"
     ;;
    
+    qcc)
+    BOOST_JAM_CC=QCC
+    ;;
+    
     *)
     error_exit "Unknown toolset: $BOOST_JAM_TOOLSET"
     ;;

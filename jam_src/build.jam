@@ -158,6 +158,11 @@ toolset msvc cl : /Fe : -D
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     : kernel32.lib advapi32.lib ;
+## QNX 6.x GCC 3.x
+toolset qcc QCC : "-o " : -D
+    : -pedantic
+    [ opt --release : [ opt --symbols : -g : -s ] -O3 -finline-functions ]
+    [ opt --debug : -g -O0 -fno-inline ] ;
 ## Sun Workshop 6 C++
 toolset sunpro cc : "-o " : -D
     :
