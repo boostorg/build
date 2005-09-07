@@ -1,5 +1,5 @@
 # Copyright (c) 2001 David Abrahams.
-# Copyright (c) 2002-2003 Rene Rivera.
+# Copyright (c) 2002-2005 Rene Rivera.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
@@ -143,6 +143,10 @@ else if $(UNIX)
     case HP_UX :
         {
         # gcc on HP-UX does not support multi-threading, don't set anything here
+        }
+    case QNX* :
+        {
+        # gcc/QCC on QNX is always? in multi-thread mode, don't set anything here
         }
     case * :
         {
