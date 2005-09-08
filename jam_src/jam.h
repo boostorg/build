@@ -313,11 +313,11 @@
 # define NO_VFORK
 # endif
 # ifdef __QNX__
+# define unix
 # ifdef __QNXNTO__
 # define OSMINOR "OS=QNXNTO"
 # define OS_QNXNTO
 # else
-# define unix
 # define OSMINOR "OS=QNX"
 # define OS_QNX
 # define NO_VFORK
