@@ -355,25 +355,33 @@ class installed-shared-lib-generator : generator
         }
         else 
         {
-            local a = [ $(source).action ] ;
-            local cp = [ $(a).properties ] ;
-            local current-dll-path = [ $(cp).get <dll-path> ] ;
-            local new-dll-path = [ $(property-set).get <dll-path> ] ;
-            
+            local a = [ $(source).action ] ;            
             local copied ;
-            
-            if $(current-dll-path) != $(new-dll-path)
+            if ! $(a)
             {
-                # Rpath changed, need to relink.
-                copied = [ stage.relink-file 
-                    $(project) : $(source) : $(property-set) ] ;
-            }
-            else
-            {                                        
+                # Non-derived file, just copy.
                 copied = [ stage.copy-file $(project) 
                   : $(source) : $(property-set) ] ; 
             }
-                    
+            else
+            {                            
+                local cp = [ $(a).properties ] ;
+                local current-dll-path = [ $(cp).get <dll-path> ] ;
+                local new-dll-path = [ $(property-set).get <dll-path> ] ;
+                                    
+                if $(current-dll-path) != $(new-dll-path)
+                {
+                    # Rpath changed, need to relink.
+                    copied = [ stage.relink-file 
+                        $(project) : $(source) : $(property-set) ] ;
+                }
+                else
+                {                                        
+                    copied = [ stage.copy-file $(project) 
+                      : $(source) : $(property-set) ] ; 
+                }
+            }
+                                
             copied = [ virtual-target.register $(copied) ] ;
                                     
             local result = $(copied) ;
