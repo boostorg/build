@@ -47,6 +47,11 @@ rule init ( prefix ? )
         .prefix = $(prefix) ;
         
         generators.register-standard qt.moc : H : CPP(moc_%) : <allow>qt ;    
+        # Note: the OBJ target type here is fake, take a look
+        # at qt4.jam/uic-h-generator for explanations that
+        # apply in this case as well.
+        generators.register [ new moc-h-generator 
+            qt.moc.cpp : MOCCABLE_CPP : OBJ : <allow>qt ] ;
         
         # The UI type is defined in types/qt.jam,
         # and UIC_H is only used in qt.jam, but not in qt4.jam, so
@@ -115,6 +120,39 @@ rule init ( prefix ? )
     }
 }
 
+class moc-h-generator : generator
+{
+    rule __init__ ( * : * )
+    {
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+
+    rule run ( project name ? : property-set : sources * )
+    {       
+        if ! $(sources[2]) && [ $(sources[1]).type ] = MOCCABLE_CPP
+        {                              
+            name = [ $(sources[0]).name ] ;
+            name = $(name:B) ;
+            
+            local a = [ new action $(sources[1]) : qt.moc.cpp :
+              $(property-set) ] ;
+            
+            local target = [ 
+              new file-target $(name) : MOC : $(project) : $(a) ] ;
+            
+            # Since this generator will return H target, the linking generator
+            # won't use it at all, and won't set any dependency on it.
+            # However, we need to target to be seen by bjam, so that dependency
+            # from sources to this generated header is detected -- if jam does
+            # not know about this target, it won't do anything.
+            DEPENDS all : [ $(target).actualize ] ;
+            
+            return [ virtual-target.register $(target) ] ;
+        }        
+    }    
+}
+
+
 # Query the installation directory
 # This is needed in at least two scenarios
 # First, when re-using sources from the Qt-Tree.
@@ -131,6 +169,14 @@ actions moc
 {
     $(.prefix)/bin/moc -f $(>) -o $(<)
 }
+
+# When moccing .cpp files, we don't need -f, otherwise generated
+# code will include .cpp and we'll get duplicated symbols.
+actions moc.cpp
+{
+    $(.prefix)/bin/moc $(>) -o $(<)
+}
+
 
 space = " " ;
 
