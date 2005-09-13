@@ -1,0 +1,13 @@
+
+using qt4 : /usr/share/qt4 ;
+
+import cast ;
+
+
+
+exe main : main.cpp 
+           [ cast _ moccable-cpp : main.cpp ]
+           /qt4//QtGui ;
+
+
+#cast _ moccable-cpp : main.cpp ;
