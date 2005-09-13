@@ -44,5 +44,7 @@
 
 9. Update the "next milestone query" in the tracker.
 
+10. Login to SF and update the current-release redirects in .htaccess.
+
 
    
