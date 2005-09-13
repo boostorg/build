@@ -39,8 +39,6 @@ STLPORT_VERSIONS ?= $(STLPORT_VERSIONS(4)) $(STLPORT_VERSIONS(5)) ;
 feature stlport-version : [ unique $(STLPORT_VERSION) $(STLPORT_VERSIONS) ] ;
 flags $(CURR_TOOLSET) STLPORT_VERSION_RELEVANT_FEATURE <stlport-version> ;
 
-STLPORT_LIB_DEBUG_SUFFIX ?= _stldebug ;
-
 # singleton variables...
 set-as-singleton STLPORT_INCLUDE_DIRECTORY STLPORT_LIB_DIRECTORY STLPORT_PATH STLPORT_ROOT ;
 
@@ -94,6 +92,7 @@ rule get-stlport-root
 STLPORT_INCLUDE_DIRECTORY ?= stlport ;
 STLPORT_LIB_DIRECTORY ?= lib ;
 STLPORT_BIN_DIRECTORY ?= bin ;
+STLPORT_LIB_DEBUG_SUFFIX ?= _stldebug ;
 
 # Clear out the STD paths so that the real toolset doesn't include
 # anything but the STLport as the STD. But also set the STDLIBPATH to
@@ -159,16 +158,13 @@ switch $(CURR_TOOLSET)
 flags $(CURR_TOOLSET) DEFINES
     <stlport-version>$(STLPORT_VERSIONS(5)) :
     _STLP_THREADS=1 ;
-flags $(CURR_TOOLSET) DEFINES
-    <stlport-version>$(STLPORT_VERSIONS(5))/<stlport-iostream>off :
-    _STLP_HAS_NO_NEW_IOSTREAMS=1 ;
 flags $(CURR_TOOLSET) STDLIBPATH
-    <stlport-version>$(STLPORT_VERSIONS(5))/<stlport-iostream>on/<stlport-cross>off :
+    <stlport-version>$(STLPORT_VERSIONS(5))/<stlport-cross>off :
     [ join [ get-stlport-root ] $(SLASH)$(STLPORT_LIB_DIRECTORY) ]
     [ join [ get-stlport-root ] $(SLASH)$(STLPORT_BIN_DIRECTORY) ]
     $(.stdlibpath) ;
 flags $(CURR_TOOLSET) STDLIBPATH
-    <stlport-version>$(STLPORT_VERSIONS(5))/<stlport-iostream>on/<stlport-cross>on :
+    <stlport-version>$(STLPORT_VERSIONS(5))/<stlport-cross>on :
     [ join [ get-stlport-root ] $(SLASH)$(STLPORT_LIB_DIRECTORY) $(SLASH)$(STLPORT_CROSS_DIR) ]
     [ join [ get-stlport-root ] $(SLASH)$(STLPORT_BIN_DIRECTORY) $(SLASH)$(STLPORT_CROSS_DIR) ]
     $(.stdlibpath) ;
@@ -179,16 +175,16 @@ if ! $(STLPORT_AUTOLINK)
     for local v in $(STLPORT_VERSIONS(5))
     {
         flags $(CURR_TOOLSET) FINDLIBS
-            <stlport-version>$(v)/<stlport-iostream>on/<runtime-build>debug/<runtime-link>static :
+            <stlport-version>$(v)/<runtime-build>debug/<runtime-link>static :
             stlportstlg$(STLPORT_LIB_STATIC_SUFFIX).$(v) ;
         flags $(CURR_TOOLSET) FINDLIBS
-            <stlport-version>$(v)/<stlport-iostream>on/<runtime-build>debug/<runtime-link>dynamic :
+            <stlport-version>$(v)/<runtime-build>debug/<runtime-link>dynamic :
             stlportstlg.$(v) ;
         flags $(CURR_TOOLSET) FINDLIBS
-            <stlport-version>$(v)/<stlport-iostream>on/<runtime-build>release/<runtime-link>static :
+            <stlport-version>$(v)/<runtime-build>release/<runtime-link>static :
             stlport$(STLPORT_LIB_STATIC_SUFFIX).$(v) ;
         flags $(CURR_TOOLSET) FINDLIBS
-            <stlport-version>$(v)/<stlport-iostream>on/<runtime-build>release/<runtime-link>dynamic :
+            <stlport-version>$(v)/<runtime-build>release/<runtime-link>dynamic :
             stlport.$(v) ;
     }
 }
