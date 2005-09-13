@@ -10,3 +10,8 @@ The current examples are:
 For convenience, there are examples both for 3.* and 4.* version of Qt,
 they are mostly identical and differ only in source code.
 
+All examples assumes that you just installed Boost.Build and that QTDIR
+environment variables is set (typical values can be /usr/share/qt3 and
+/usr/share/qt4). After adding "using qt ..." to your user-config.jam, you'd
+have to removing "using qt ; " statements from Jamroot file of examples.
+
