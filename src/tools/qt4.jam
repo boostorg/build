@@ -18,8 +18,21 @@
 #
 # Example:
 #
-# exe myapp : myapp.cpp myapp.h myapp.ui myapp.qrc /qt4//QtGui /qt4//QtNetwork ;
+#     exe myapp : myapp.cpp myapp.h myapp.ui myapp.qrc 
+#                 /qt4//QtGui /qt4//QtNetwork ;
 #
+# It's also possible to run moc on cpp sources:
+#
+#   import cast ; 
+#
+#   exe myapp : myapp.cpp [ cast _ moccable-cpp : myapp.cpp ] /qt4//QtGui ;
+#
+# When moccing source file myapp.cpp you need to include "myapp.moc" from
+# myapp.cpp. When moccing .h files, the output of moc will be automatically
+# compiled and linked in, you don't need any includes.
+#
+# This is consistent with Qt guidelines:
+# http://doc.trolltech.com/4.0/moc.html
 
 import modules ;
 import feature ;
@@ -65,10 +78,15 @@ rule init ( prefix ? )
 
         # Generates cpp files from header files using "moc" tool
         generators.register-standard qt4.moc : H : CPP(moc_%) ;
-
-        # Generates header file from .ui file
-        # The generator class is defined below the 'init' function.
+        
+        # The OBJ result type is a fake, 'H' will be really produces.
+        # See comments on the generator calss, defined below 
+        # the 'init' function.
         generators.register [ new uic-h-generator qt4.uic-h : UI : OBJ ] ;
+        
+        # The OBJ result type is a fake here too.
+        generators.register [ new moc-h-generator 
+            qt.moc.cpp : MOCCABLE_CPP : OBJ ] ;
 
         # Generates .cpp file from qrc file
         generators.register-standard qt4.rcc : QRC : CPP(qrc_%) ;
@@ -183,7 +201,7 @@ class uic-h-generator : generator
             name = $(name:B) ;
         }
                 
-        local a = [ new action $(source) : qt4.uic-h :
+        local a = [ new action $(sources[1]) : qt4.uic-h :
           $(property-set) ] ;
         
         local target = [ 
@@ -199,6 +217,39 @@ class uic-h-generator : generator
         return [ virtual-target.register $(target) ] ;
     }    
 }
+
+class moc-h-generator : generator
+{
+    rule __init__ ( * : * )
+    {
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+
+    rule run ( project name ? : property-set : sources * )
+    {       
+        if ! $(sources[2]) && [ $(sources[1]).type ] = MOCCABLE_CPP
+        {                              
+            name = [ $(sources[0]).name ] ;
+            name = $(name:B) ;
+            
+            local a = [ new action $(sources[1]) : qt4.moc.cpp :
+              $(property-set) ] ;
+            
+            local target = [ 
+              new file-target $(name) : MOC : $(project) : $(a) ] ;
+            
+            # Since this generator will return H target, the linking generator
+            # won't use it at all, and won't set any dependency on it.
+            # However, we need to target to be seen by bjam, so that dependency
+            # from sources to this generated header is detected -- if jam does
+            # not know about this target, it won't do anything.
+            DEPENDS all : [ $(target).actualize ] ;
+            
+            return [ virtual-target.register $(target) ] ;
+        }        
+    }    
+}
+
 
 # Query the installation directory
 # This is needed in at least two scenarios
@@ -219,6 +270,14 @@ actions moc
 {
     $(.prefix)/bin/moc -I$(INCLUDES) -I$(DEFINES) -f $(>) -o $(<)
 }
+
+# When moccing .cpp files, we don't need -f, otherwise generated
+# code will include .cpp and we'll get duplicated symbols.
+actions moc.cpp
+{
+    $(.prefix)/bin/moc -I$(INCLUDES) -I$(DEFINES) $(>) -o $(<)
+}
+
 
 # Generates source files from resource files
 actions rcc
