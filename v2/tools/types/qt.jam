@@ -4,3 +4,6 @@
 
 type UI : ui ;
 type QRC : qrc ;
+type MOCCABLE_CPP ;
+# Result of running moc.
+type MOC : moc : H ;
