@@ -166,25 +166,11 @@ class virtual-target
 # implementation
     rule actualize-no-scanner ( )
     {
-        local name = [ actual-name ] ;
-
-        # Do anything only on the first invocation
-        if ! $(self.made.$(name)) {
-            self.made.$(name) = true ;
-            
-            virtual-target.register-actual-name $(name) : $(__name__) ;            
-
-            for local i in $(self.dependencies) {
-                DEPENDS $(name) : [ $(i).actualize ] ;
-            }
-
-            actualize-location $(name) ;
-            actualize-action $(name) ;
-        }
-        return $(name) ;
-    }
-
-
+        # In fact, we just need to merge virtual-target with 
+        # abstract-virtual-target and the latter is the only class
+        # derived from the former. But that's for later.
+        errors.error "method should be defined in derived classes" ;        
+    }    
 }
 
 
@@ -445,6 +431,34 @@ class abstract-file-target : virtual-target
                 $(specified-name) : $(self.type) : $(ps) ] ;
         }    
     }
+
+    rule actualize-no-scanner ( )
+    {
+        local name = [ actual-name ] ;
+
+        # Do anything only on the first invocation
+        if ! $(self.made.$(name)) {
+            self.made.$(name) = true ;
+            
+            if $(self.action)
+            {                
+                # For non-derived target, we don't care if there
+                # are several virtual targets that refer to the same name.
+                # One case when this is unavoidable is when file name is
+                # main.cpp and two targets have types CPP (for compiling)
+                # and MOCCABLE_CPP (for convertion to H via Qt tools).
+                virtual-target.register-actual-name $(name) : $(__name__) ;
+            }
+                        
+            for local i in $(self.dependencies) {
+                DEPENDS $(name) : [ $(i).actualize ] ;
+            }
+
+            actualize-location $(name) ;
+            actualize-action $(name) ;
+        }
+        return $(name) ;
+    }
     
 }
 
@@ -485,6 +499,7 @@ class file-target : abstract-file-target
 {
     import common ;    
     import errors ;
+    import "class" : new ;
     
     rule __init__ (
       name exact ?
@@ -499,7 +514,13 @@ class file-target : abstract-file-target
 
         self.path = $(path) ;
     }
-        
+    
+    rule clone-with-different-type ( new-type )
+    {
+        return [ new file-target $(self.name) exact : $(new-type)
+          : $(self.project) : $(self.action) : $(self.path) ] ;
+    }
+            
     rule actualize-location ( target )
     {
         if $(self.action)
