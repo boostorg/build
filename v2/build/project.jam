@@ -627,7 +627,8 @@ class project-attributes
         }            
         else if $(attribute) = "build-dir"
         {
-            self.build-dir = [ path.root $(specification) $(self.location) ] ;
+            self.build-dir = [ path.root 
+                [ path.make $(specification) ] $(self.location) ] ;
         }        
         else if ! $(attribute) in "id" "default-build" "location" "source-location"
           "parent" "projects-to-build" "project-root"
