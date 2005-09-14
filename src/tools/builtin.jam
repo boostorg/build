@@ -106,6 +106,10 @@ feature xdll-path : : free path ;
 #provides means to specify def-file for windows dlls.
 feature def-file : : free dependency ;
 
+# This is internal feature which is used to store the name of 
+# bjam action to call when building a target.
+feature.feature action : : free ;
+
 # This feature is used to allow specific generators to run.
 # For example, QT tools can only be invoked when QT library
 # is used. In that case, <allow>qt will be in usage requirement

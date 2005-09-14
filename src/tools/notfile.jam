@@ -12,10 +12,7 @@ import targets ;
 import toolset ;
 import "class" : new ;
 
-feature.feature action : : free ;
 type.register NOTFILE_MAIN ;
-
-
 
 class notfile-generator : generator
 {
@@ -56,16 +53,17 @@ actions run
 
 rule notfile ( target-name : action + : sources * : requirements * : default-build * )
 { 
-  local project = [ project.current ] ;
+    local project = [ project.current ] ;
     
-  requirements += <action>$(action) ;
+    requirements += <action>$(action) ;
+
     
-  targets.main-target-alternative 
-    [ new typed-target $(target-name) : $(project) : NOTFILE_MAIN
+    targets.main-target-alternative 
+        [ new typed-target $(target-name) : $(project) : NOTFILE_MAIN
         : [ targets.main-target-sources $(sources) : $(target-name) ] 
         : [ targets.main-target-requirements $(requirements) : $(project) ]
         : [ targets.main-target-default-build $(default-build) : $(project) ] 
-    ] ;
+        ] ;
 }
 
 IMPORT $(__name__) : notfile : : notfile ;
