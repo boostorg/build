@@ -1449,15 +1449,13 @@ unit-test helpers_test : helpers_test.cpp helpers ;
         
         <listitem>
           <simpara>
-            The <code>&lt;source&gt;X</code> feature has the same effect on building a target
-            as putting X in the list of sources. The feature
-            is sometimes more convenient:
-            <!-- Than what? You have to say, or don't say "more." -->
-            you can put <code>&lt;source&gt;X</code> in the
-            requirements for a project and <filename>X</filename> will
-            be included as a source in all of the project's main
-            targets.
-            <!-- The previous text was inaccurate -->
+            The <code>&lt;source&gt;X</code> feature has the same effect on 
+            building a target as putting X in the list of sources. 
+            It's useful when you want to add
+            the same source to all targets in the project 
+            (you can put &lt;source&gt; in requirements) or to conditionally
+            include a source (using conditional requirements, see <xref linkend="bbv2.tutorial.conditions"/>)
+            See also the <code>&lt;library&gt;</code> feature.
           </simpara>
         </listitem>
       </varlistentry>
@@ -1466,8 +1464,12 @@ unit-test helpers_test : helpers_test.cpp helpers ;
         
         <listitem>
           <simpara>
-            This feature is equivalent to the &lt;source&gt; feature, and exists
-            for backward compatibility reasons.
+            This feature is almost equivalent to the <code>&lt;source&gt;</code> feature, 
+            except that it takes effect only for linking. When you want to 
+            link all targets in a Jamfile to certain library, the 
+            <code>&lt;library&gt;</code> feature is preferred over 
+            <code>&lt;source&gt;X</code> -- the latter will add the library to
+            all targets, even those that have nothing to do with libraries.
           </simpara>
         </listitem>
       </varlistentry>
