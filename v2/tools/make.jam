@@ -19,19 +19,21 @@ class make-target-class : basic-target
     import type regex virtual-target ;    
     import "class" : new ;
     
-    rule __init__ ( name : project : sources * : requirements * 
-        : make-rule + : default-build * )
+    rule __init__ ( name : project : sources * : requirements * : default-build * )
     {     
-        basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements) 
-          : $(default-build) ;
-       
-        self.make-rule = $(make-rule) ;    
+        basic-target.__init__ $(name) : $(project) : $(sources) 
+          : $(requirements) : $(default-build) ;
     }
         
     rule construct ( name : source-targets * : property-set )
     {
-        local a = [ new action $(source-targets) : $(self.make-rule) 
-                    : $(property-set) ] ;
+        local action-name = [ $(property-set).get <action> ] ;        
+        # 'm' will always be set -- we add '@' outselfs in 'make'
+        # rule below.
+        local m = [ MATCH ^@(.*) : $(action-name) ] ;
+                        
+        local a = [ new action $(source-targets) : $(m[1])
+                    : $(property-set) ] ;        
         local t = [ new file-target $(self.name) exact 
           : [ type.type $(self.name) ] : $(self.project) : $(a) ] ;        
         return [ property-set.empty ] [ virtual-target.register $(t) ] ;
@@ -39,26 +41,19 @@ class make-target-class : basic-target
 }
 
 # Declares the 'make' main target.
-rule make ( target-name : sources * : generating-rule + : requirements * 
-            : caller ? )
+rule make ( target-name : sources * : generating-rule + : requirements * )
 {
-    caller ?= [ project.current ] ;
-    caller-module = [ $(caller).project-module ] ;
-    local rules = [ RULENAMES $(caller-module) ] ;
-    if $(generating-rule[1]) in $(rules)
-    {
-        # This is local rule, make it global
-        local n = $(caller-module).$(generating-rule[1]) ;
-        IMPORT $(caller-module) : $(generating-rule[1]) : : $(n) ;
-        generating-rule = $(n) $(generating-rule[2-]) ;
-    }
+    local project = [ project.current ] ;
     
-   targets.main-target-alternative
-     [ new make-target-class $(target-name) : $(caller)
+    # The '@' sign causes the feature.jam module to qualify rule name
+    # with the module name of current project, if needed.
+    requirements += <action>@$(generating-rule) ;
+    
+    targets.main-target-alternative
+     [ new make-target-class $(target-name) : $(project)
        : [ targets.main-target-sources $(sources) : $(target-name) ] 
-       : [ targets.main-target-requirements $(requirements) : $(caller) ] 
-       : $(generating-rule) 
-       : [ targets.main-target-default-build : $(caller) ] 
+       : [ targets.main-target-requirements $(requirements) : $(project) ] 
+       : [ targets.main-target-default-build : $(project) ] 
      ] ;
          
 }
