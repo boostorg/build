@@ -155,9 +155,24 @@ switch $(CURR_TOOLSET)
     case vc-8* : STLPORT_CROSS_DIR ?= vc8 ;
 }
 
-flags $(CURR_TOOLSET) DEFINES
-    <stlport-version>$(STLPORT_VERSIONS(5)) :
-    _STLP_THREADS=1 ;
+switch $(CURR_TOOLSET)
+{
+    # GCC compilers have 'g' to indicate debug.
+    case gcc* : STLPORT_DEBUG_SUFFIX ?= g ;
+    case mingw* : STLPORT_DEBUG_SUFFIX ?= g ;
+    case darwin* : STLPORT_DEBUG_SUFFIX ?= g ;
+    # The others use 'd'.
+    case * : STLPORT_DEBUG_SUFFIX ?= d ;
+}
+
+# STLport-5 doesn't directly support single-threaded builds. There is an open
+# question if single-threaded application code can be combined with the
+# multi-threaded STLport-5. Until that's answered this is commented out and
+# boost-base.jam requires all builds to be multi-threaded.
+#~ flags $(CURR_TOOLSET) DEFINES
+    #~ <stlport-version>$(STLPORT_VERSIONS(5)) :
+    #~ _STLP_THREADS=1 ;
+
 flags $(CURR_TOOLSET) STDLIBPATH
     <stlport-version>$(STLPORT_VERSIONS(5))/<stlport-cross>off :
     [ join [ get-stlport-root ] $(SLASH)$(STLPORT_LIB_DIRECTORY) ]
@@ -176,10 +191,10 @@ if ! $(STLPORT_AUTOLINK)
     {
         flags $(CURR_TOOLSET) FINDLIBS
             <stlport-version>$(v)/<runtime-build>debug/<runtime-link>static :
-            stlportstlg$(STLPORT_LIB_STATIC_SUFFIX).$(v) ;
+            stlportstl$(STLPORT_DEBUG_SUFFIX)$(STLPORT_LIB_STATIC_SUFFIX).$(v) ;
         flags $(CURR_TOOLSET) FINDLIBS
             <stlport-version>$(v)/<runtime-build>debug/<runtime-link>dynamic :
-            stlportstlg.$(v) ;
+            stlportstl$(STLPORT_DEBUG_SUFFIX).$(v) ;
         flags $(CURR_TOOLSET) FINDLIBS
             <stlport-version>$(v)/<runtime-build>release/<runtime-link>static :
             stlport$(STLPORT_LIB_STATIC_SUFFIX).$(v) ;

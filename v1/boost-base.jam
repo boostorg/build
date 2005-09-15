@@ -2950,6 +2950,13 @@ rule toolset::requirements ( toolset variant : subvariant-path properties * )
             if <runtime-link>dynamic in $(properties) { requirements += <threading>multi ; }
         }
     }
+    if <stlport-version>5.0 in $(properties)
+    {
+        # STLPort-5 doesn't have any single-threaded builds, so we're going
+        # to force all such targets to be built with multithread support.
+        # This is essentially a usage-requirement on the stlport library.
+        requirements += <threading>multi ;
+    }
     return $(subvariant-path) [ impose-requirements $(properties) : $(requirements) ] ;
 }
 
