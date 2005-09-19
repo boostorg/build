@@ -6,10 +6,23 @@ use-project /lib2/helper : ../lib2/helper ;
 
 import property ;
 
+rule properties-as-path ( properties * )
+{
+    local r ;
+    for local p in $(properties)
+    {
+	    if $(p:G) != <action>
+	    {
+	        r += $(p) ;
+	    }
+    }
+    return [ property.as-path
+        [ property.remove incidental : $(r) ] ] ;
+}
+
 rule mfc-compile ( target : sources * : property-set * )
 {
-    PROPERTIES on $(target) = [ 
-      property.as-path [ property.remove incidental : $(property-set) ] ] ;      
+    PROPERTIES on $(target) = [ properties-as-path $(property-set) ] ;
 }
 
 actions mfc-compile
