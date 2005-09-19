@@ -308,6 +308,12 @@ actions link bind LIBRARIES
 # in liba.a 
 RM = [ common.rm-command ] ;
 
+if [ os.name ] = NT
+{
+    RM = "if exist \"$(<[1])\" DEL \"$(<[1])\""  ;
+}
+
+
 # Declare action for creating static libraries
 # The 'r' letter means to add files to the archive with replacement
 # Since we remove archive, we don't care about replacement, but
