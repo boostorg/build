@@ -204,8 +204,9 @@ class uic-h-generator : generator
         local a = [ new action $(sources[1]) : qt4.uic-h :
           $(property-set) ] ;
         
+        # The 'ui_' prefix is to match qmake's default behavior.
         local target = [ 
-          new file-target $(name) : H : $(project) : $(a) ] ;
+          new file-target ui_$(name) : H : $(project) : $(a) ] ;
  
         # Since this generator will return H target, the linking generator
         # won't use it at all, and won't set any dependency on it.
