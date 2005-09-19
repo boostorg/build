@@ -249,7 +249,7 @@ local rule validate1 ( property )
         {
             feature.validate-value-string $(feature) $(value) ;
         } 
-        else if ! $(value)
+        else if ! ( $(value) || ( optional in [ feature.attributes $(feature) ] ) )
         {
             feature = [ ungrist $(property:G) ] ; # Ungrist for better error messages
             msg = "No value specified for feature '$(feature)'" ; 

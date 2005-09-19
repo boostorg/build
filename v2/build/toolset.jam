@@ -66,6 +66,16 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
                               # "gcc". Subfeatures, like in "<toolset>gcc-3.2"
                               # are allowed. If left empty, the flag will
                               # always used.
+                              #
+                              # Propery sets may use value-less properties 
+                              # ('<a>'  vs. '<a>value') to match absent 
+                              # properties. This allows to separately match
+                              #
+                              #   <architecture>/<address-model>64
+                              #   <architecture>ia64/<address-model>
+                              #
+                              # Where both features are optional. Without this
+                              # syntax we'd be forced to define "default" value.
 
 
              values * :       # The value to add to variable. If <feature>
@@ -129,12 +139,41 @@ local rule add-flag ( rule-or-module :
 # 'properties', or an empty list if no such element exists.
 rule find-property-subset ( property-sets * : properties * )
 {
+    # cut property values off
+    local prop-keys = $(properties:G) ;
+
     local result ;
     for local s in $(property-sets)
     {
         if ! $(result)
         {
-            if [ feature.split $(s) ] in $(properties)
+            # Handle value-less properties like '<architecture>' (compare with 
+            # '<architecture>x86').
+
+            local set = [ feature.split $(s) ] ;
+
+            # Find the set of features that
+            # - have no property specified in required property set 
+            # - are omitted in build property set
+            local default-props ;
+            for local i in $(set)
+            {
+                # If $(i) is a value-less property it should match default 
+                # value of an optional property. See the first line in the 
+                # example below:
+                #
+                #  property set     properties     result
+                # <a> <b>foo      <b>foo           match
+                # <a> <b>foo      <a>foo <b>foo    no match
+                # <a>foo <b>foo   <b>foo           no match
+                # <a>foo <b>foo   <a>foo <b>foo    match
+                if ! ( $(i:G=) || ( $(i:G) in $(prop-keys) ) )
+                {
+                    default-props += $(i) ;
+                }
+            }
+
+            if $(set) in $(properties) $(default-props)
             {
                 result = $(s) ;
             }
@@ -381,4 +420,10 @@ local rule __test__ ( )
     local p = <b>0 <c>1 <d>2 <e>3 <f>4 ;
     assert.result <c>1/<d>2/<e>3 : find-property-subset <c>1/<d>2/<e>3 <a>0/<b>0/<c>1 <d>2/<e>5 <a>9 : $(p) ;
     assert.result : find-property-subset <a>0/<b>0/<c>9/<d>9/<e>5 <a>9 : $(p) ;
+
+    local p-set = <a>/<b> <a>0/<b> <a>/<b>1 <a>0/<b>1 ;
+    assert.result <a>/<b>   : find-property-subset $(p-set) :           ;
+    assert.result <a>0/<b>  : find-property-subset $(p-set) : <a>0      <c>2 ;
+    assert.result <a>/<b>1  : find-property-subset $(p-set) : <b>1      <c>2 ;
+    assert.result <a>0/<b>1 : find-property-subset $(p-set) : <a>0 <b>1 ;
 }
