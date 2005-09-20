@@ -156,7 +156,7 @@ rule set-scanner ( type : scanner )
 rule get-scanner ( type : property-set )
 {
     if $(.scanner.$(type)) {
-        return [ scanner.get $(.scanner.$(type)) : [ $(property-set).raw ] ] ;
+        return [ scanner.get $(.scanner.$(type)) : $(property-set) ] ;
     }    
 }
 
