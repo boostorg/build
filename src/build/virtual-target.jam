@@ -813,7 +813,7 @@ rule from-file ( file : file-loc : project )
 rule register ( target )
 {
     local signature = [ sequence.join
-       [ $(target).name ] : - ] ;    
+       [ $(target).path ] [ $(target).name ] : - ] ;    
 
             
     local result ;
