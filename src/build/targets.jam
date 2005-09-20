@@ -89,7 +89,6 @@ class abstract-target
         : project-target      # the project target to which this one belongs
     )
     {        
-        assert.true class.is-a $(project-target) : project-target ;
         # Note: it might seem that we don't need either name or project at all.
         # However, there are places where we really need it. One example is error
         # messages which should name problematic targets. Another is setting correct
