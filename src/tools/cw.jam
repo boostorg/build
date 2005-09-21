@@ -133,6 +133,11 @@ flags cw.compile CFLAGS <inlining>full : -inline all ;
 flags cw.compile CFLAGS <exception-handling>off : -Cpp_exceptions off ;
 flags cw.compile CFLAGS <rtti>off : -RTTI off ;
 
+flags cw.compile CFLAGS <warnings>on : -w on ;
+flags cw.compile CFLAGS <warnings>off : -w off ;
+flags cw.compile CFLAGS <warnings>all : -w all ;
+flags cw.compile CFLAGS <warnings-as-errors>on : -w error ;
+
 flags cw.compile USER_CFLAGS <cflags> : ;
 flags cw.compile.c++ USER_CFLAGS <cxxflags> : ;
 

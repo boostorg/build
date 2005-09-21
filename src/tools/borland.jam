@@ -67,6 +67,10 @@ flags borland CFLAGS <inlining>off : -vi- ;
 flags borland CFLAGS <inlining>on : -vi -w-inl ;
 flags borland CFLAGS <inlining>full : -vi -w-inl ;
 
+flags borland.compile OPTIONS <warnings>off : -w- ;
+flags borland.compile OPTIONS <warnings>all : -w ;
+flags borland.compile OPTIONS <warnings-as-errors>on : -w! ;
+
 
 # Deal with various runtime configs...
 
@@ -99,7 +103,6 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 # -q     no banner
 # -c     compile to object
 # -P     C++ code regardless of file extention
-# -w     turns on all warnings
 # -Ve    zero sized empty base classes, this option is on in the IDE by default 
 #        and effects binary compatibility.
 # -Vx    zero sized empty members, this option is on in the IDE by default 
@@ -113,13 +116,13 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -P -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -P -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 # For C, we don't pass -P flag
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 

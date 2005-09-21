@@ -78,6 +78,10 @@ flags gcc.compile OPTIONS <inlining>off : -fno-inline ;
 flags gcc.compile OPTIONS <inlining>on : -Wno-inline ;
 flags gcc.compile OPTIONS <inlining>full : -finline-functions -Wno-inline ;
 
+flags gcc.compile OPTIONS <warnings>off : -w ;
+flags gcc.compile OPTIONS <warnings>all : -Wall ;
+flags gcc.compile OPTIONS <warnings-as-errors>on : -Werror ;
+
 flags gcc.compile OPTIONS <debug-symbols>on : -g ;
 flags gcc.compile OPTIONS <profiling>on : -pg ;
 # On cygwin and mingw, gcc generates position independent code by default,
@@ -134,7 +138,7 @@ rule compile.c++
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" $(LANG) -Wall -ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 rule compile.c
@@ -151,7 +155,7 @@ rule compile.c
 
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" $(LANG) -Wall $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 rule compile.asm
@@ -161,7 +165,7 @@ rule compile.asm
 
 actions compile.asm
 {
-    "$(CONFIG_COMMAND)" $(LANG) -Wall $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 # The class which check that we don't try to use

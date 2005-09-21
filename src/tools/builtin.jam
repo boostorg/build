@@ -79,6 +79,17 @@ feature use : : free dependency incidental ;
 feature dependency : : free dependency incidental ;
 feature implicit-dependency : : free dependency incidental ;
 
+feature warnings :
+    all        # enable all warnings issued by the tool
+    on         # enable default warning level for the tool
+    off        # disable all warnings issued by the tool
+  : incidental ;
+
+feature warnings-as-errors :
+    off        # do not fail the compilation if there are warnings
+    on         # fail the compilation if there are warnings
+  : incidental ;
+
 feature source : : free dependency incidental ;
 feature library : : free dependency incidental ;
 feature file : : free dependency incidental ;
