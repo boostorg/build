@@ -38,8 +38,13 @@ rule init ( version ? :     # the compiler version
         $(command) ] ;    
     
     common.handle-options intel-win : $(condition) : $(command) : $(options) ;
-
-    local root = [ common.get-absolute-tool-path $(command[-1]) ] ;
+   
+    local root ;
+    if $(command)
+    {
+        root = [ common.get-absolute-tool-path $(command[-1]) ] ;
+        root = $(root)/ ;
+    }
     
     local setup ;
     setup = $(root)/iclvars.bat ;
