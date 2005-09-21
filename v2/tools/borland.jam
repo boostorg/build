@@ -167,7 +167,6 @@ if [ os.name ] = CYGWIN
     # command into a .bat file and execute that.  TLIB is also finicky
     # about pathname style! Forward slashes, too, are treated as
     # options.
-    # TLIB
     actions updated together piecemeal archive
     { 
        chdir $(<:D)
