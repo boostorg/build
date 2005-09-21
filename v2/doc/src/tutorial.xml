@@ -572,12 +572,11 @@ exe app : app.cpp core ;</programlisting>
     <title>Conditions and alternatives</title>
 
     <para>Sometimes, particular relationships need to be maintained
-    among a target's build properties. This can be achieved with 
-    <firstterm>conditional
-    requirement</firstterm>. For example, you might want to set
-    specific <code>#defines</code> when a library is built as shared,
-    or when a target's <code>release</code> variant is built in
-    release mode.
+    among a target's build properties. For example, you might want to set
+    specific <code>#define</code> when a library is built as shared,
+    or when a target's <code>release</code> variant is built. 
+    This can be achieved with <firstterm>conditional requirements</firstterm>. 
+
     <programlisting>
 lib network : network.cpp 
     : <emphasis role="bold">&lt;link&gt;shared:&lt;define&gt;NEWORK_LIB_SHARED</emphasis>
@@ -588,7 +587,8 @@ lib network : network.cpp
       In the example above, whenever <filename>network</filename> is
       built with <code>&lt;link&gt;shared</code>,
       <code>&lt;define&gt;NEWORK_LIB_SHARED</code> will be in its
-      properties, too.
+      properties, too. Also, whenever its release variant is built, 
+      <code>&lt;define&gt;EXTRA_FAST</code> will appear in its properties.
     </para>
 
     <para>
@@ -603,11 +603,12 @@ lib demangler : dummy_demangler.cpp ;                      # alternative 1
 lib demangler : demangler_gcc.cpp : &lt;toolset&gt;gcc ;   # alternative 2
 lib demangler : demangler_msvc.cpp : &lt;toolset&gt;msvc ; # alternative 3
 </programlisting>
-        In the example above, when built with <literal>gcc</literal>
-        or <literal>msvc</literal>, <filename>demangler</filename>
-        will use a source file specific to the toolset.  Otherwise, it
-        will use a generic source file,
-        <filename>dummy_demangler.cpp</filename>.
+      When building <filename>demangler</filename>, Boost.Build will compare
+      requirements for each alternative with build properties to find the best match.
+      For example, when building with with <code>&lt;toolset&gt;gcc</code> 
+      alternative 2, will be selected, and when building with 
+      <code>&lt;toolset&gt;msvc</code> alternative 3 will be selected. In all other
+      cases, the most generic alternative 1 will be built.
     </para>
     
   </section>
