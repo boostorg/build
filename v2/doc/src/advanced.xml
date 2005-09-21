@@ -1575,6 +1575,34 @@ unit-test helpers_test : helpers_test.cpp helpers ;
         </listitem>
       </varlistentry>
 
+      <varlistentry><term><literal>warnings</literal></term>
+        
+        <listitem>
+          <simpara>
+            The <code>&lt;warnings&gt;</code> feature controls warning level of compilers. It has the following values:
+            <itemizedlist>
+              <listitem><para><code>off</code> - disables all warnigns.</para></listitem>
+              <listitem><para><code>on</code> - enables default warning level for the tool.</para></listitem>
+              <listitem><para><code>all</code> - enables all warnings.</para></listitem>
+            </itemizedlist>
+            Default value is <code>all</code>.
+          </simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry><term><literal>warnings-as-errors</literal></term>
+        
+        <listitem>
+          <simpara>
+            The <code>&lt;warnings-as-errors&gt;</code> makes it possible treat warnings as errors and abort
+            compilation on warning. The value <code>on</code> enables this behaviour. The default value is 
+            <code>off</code>.
+          </simpara>
+        </listitem>
+      </varlistentry>
+
+
+
 
     </variablelist>
   </section>
