@@ -8,7 +8,7 @@
     <para>
       If you've just found out about Boost.Build V2 and want to know
       if it will work for you, start with <xref linkend=
-      "bbv2.tutorial" />. You can continue with the <xref
+      "bbv2.tutorial" />. You can continue with <xref
       linkend="bbv2.advanced" />. When you're ready to try Boost.Build
       in practice, go to <xref linkend="bbv2.installation"/>.
     </para>
@@ -21,16 +21,14 @@
 
     <para>
       If you're trying to build a project which uses Boost.Build,
-      look at <xref linkend="bbv2.installation"/> and then read about
+      see <xref linkend="bbv2.installation"/> and then read about
       <xref linkend="bbv2.reference.commandline"/>.
     </para>
 
     <para>
-      If you have questions, please post them to our <ulink
-      url="http://boost.org/more/mailing_lists.htm#jamboost">mailing
-      list</ulink>, and be sure to indicate in the subject line that
-      you're asking about Boost.Build <emphasis
-      role="bold">V2</emphasis>.
+      If you have questions, please post them to our mailing list (<ulink
+      url="http://boost.org/more/mailing_lists.htm#jamboost"/>). The mailing list is
+      also mirrowed to newsgroup <ulink url="news://news.gmane.org/gmane.comp.lib.boost.build"/>.
     </para>
 
   </chapter>
