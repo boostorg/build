@@ -224,7 +224,7 @@ exe hello2 : hello.cpp ;
     <title>Project Hierarchies</title>
 
     <para>So far we've only considered examples with one project
-    (i.e. with one user-written Boost.Jam file,
+    &#x2014;a. with one user-written Boost.Jam file,
     <filename>Jamroot</filename>). A typical large codebase would be
     composed of many projects organized into a tree. The top of the
     tree is called the <firstterm>project root</firstterm>.  Every
@@ -253,9 +253,7 @@ top/
        .    `-- bar.cpp
 </screen>
 
-      the project root is <filename>top/</filename>.  Because there is
-      no <filename>Jamfile</filename> in
-      <filename>top/util/</filename>, the projects in
+      the project root is <filename>top/</filename>.  The projects in
       <filename>top/app/</filename> and
       <filename>top/util/foo/</filename> are immediate children of the
       root project.
@@ -276,19 +274,19 @@ top/
     <para>
       Projects inherit all attributes (such as requirements)
       from their parents.  Inherited requirements are combined with
-      any requirements specified by the sub-project.  
+      any requirements specified by the subproject.  
       For example, if <filename>top/Jamroot</filename> has
 
 <programlisting>
 &lt;include&gt;/home/ghost/local
 </programlisting>
 
-      in its requirements, then all of its sub-projects will have it
+      in its requirements, then all of its subprojects will have it
       in their requirements, too.  Of course, any project can add
       include paths to those specified by its parents. <footnote>
       <para>Many
       features will be overridden,
-      rather than added-to, in sub-projects.  See <xref
+      rather than added-to, in subprojects.  See <xref
       linkend="bbv2.reference.features.attributes"/> for more
       information</para>
     </footnote> 
@@ -298,9 +296,9 @@ top/
 
     <para>
       Invoking <command>bjam</command> without explicitly specifying
-      any targets on the command-line builds the project rooted in the
+      any targets on the command line builds the project rooted in the
       current directory.  Building a project does not automatically
-      cause its sub-projects to be built unless the parent project's
+      cause its subprojects to be built unless the parent project's
       Jamfile explicitly requests it. In our example,
       <filename>top/Jamroot</filename> might contain:
 
@@ -494,7 +492,7 @@ lib l : l.cpp : &lt;link&gt;static ;
 exe important : main.cpp helpers/&lt;link&gt;static ;</programlisting>
 
     No matter what arguments are specified on the <command>bjam</command>
-    command-line, <filename>important</filename> will only be linked with
+    command line, <filename>important</filename> will only be linked with
     the static version of <filename>helpers</filename>.
     </para>
 
