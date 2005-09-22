@@ -318,10 +318,13 @@ build-project app ;
     <title>Dependent Targets</title>
 
     <para>
-      Targets that are &#x201C;needed&#x201D; by other targets are called
-      <firstterm>dependencies</firstterm> of those other targets.  The
-      targets that need the other targets are called
-      <firstterm>dependent</firstterm> targets.
+      When a building a target <filename>X</filename> depends on first
+      building another target <filename>Y</filename> (such as a
+      library that must be linked with <firstterm>X</firstterm>),
+      <filename>Y</filename> is called a
+      <firstterm>dependency</firstterm> of <filename>X</filename> and
+      <filename>X</filename> is termed a
+      <firstterm>dependent</firstterm> of <filename>Y</filename>.
     </para>
 
     <para>To get a feeling of target dependencies, let's continue the
