@@ -65,7 +65,7 @@ rule init (
    # 
    #       - if compiler is not found in default locations, PATH will be searched.    
     : options * 
-   # options can include <setup>, <compiler>, <linker> and <resource-compiler>
+   # options can include <setup>, <compiler>, <assembler>, <linker> and <resource-compiler>
 )
 {    
     # setup will be used if a path has been specified.  If setup is
@@ -78,6 +78,8 @@ rule init (
     linker ?= link ;
     resource-compiler = [ get-values <resource-compiler> : $(options) ] ;
     resource-compiler ?= rc ;
+    assembler = [ get-values <assembler> : $(options) ] ;
+    assembler ?= ml ;
     
     local condition = [ common.check-init-parameters msvc : 
         version $(version) ] ;
@@ -115,6 +117,7 @@ rule init (
     
     flags msvc.compile .CC $(condition) : $(prefix)$(compiler) ;
     flags msvc.compile .RC $(condition) : $(prefix)$(resource-compiler) ;
+    flags msvc.compile .ASM $(condition) : $(prefix)$(assembler) ;
     flags msvc.link .LD $(condition) : $(prefix)$(linker) ;
     flags msvc.archive .LD $(condition) : $(prefix)$(linker) ;
     
@@ -311,6 +314,23 @@ actions compile.c++ bind RSP
 actions compile.rc
 {
     $(.RC) -l 0x409 -U$(UNDEFS) -D$(DEFINES) -I"$(INCLUDES)" -fo "$(<:W)" "$(>:W)"
+}
+
+# Declare flags and action for the assembler
+
+flags msvc.compile.asm USER_ASMFLAGS <asmflags> : ;
+
+#
+# for the assembler the following options are turned on by default:
+#
+# -coff  generate COFF format object file (compatible with cl.exe output)
+# -Zp4   align structures to 4 bytes
+# -Cp    preserve case of user identifiers
+# -Cx    preserve case in publics, externs
+
+actions compile.asm
+{
+    $(.ASM) -nologo -c -coff -Zp4 -Cp -Cx $(USER_ASMFLAGS) -Fo "$(<:W)" "$(>:W)"
 }
 
 # Declare flags and action for linking
