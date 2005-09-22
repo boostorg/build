@@ -282,7 +282,7 @@ jam.source =
     jam.c jambase.c jamgram.c
     lists.c make.c make1.c newstr.c
     option.c parse.c regexp.c rules.c
-    scan.c search.c subst.c
+    scan.c search.c subst.c w32_getreg.c
     timestamp.c variable.c modules.c strings.c filesys.c 
     builtins.c pwd.c class.c native.c modules/set.c 
     modules/path.c modules/regex.c modules/property-set.c
@@ -290,7 +290,7 @@ jam.source =
     ;
 if $(NT)
 {
-    jam.source += execnt.c filent.c pathunix.c w32_getreg.c ;
+    jam.source += execnt.c filent.c pathunix.c ;
 }
 else if $(OS2)
 {

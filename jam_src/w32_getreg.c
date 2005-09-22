@@ -3,6 +3,9 @@
 /* file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) */
 
 # include "jam.h"
+
+# if defined( OS_NT ) || defined( OS_CYGWIN )
+
 # include "lists.h"
 # include "newstr.h"
 # include "parse.h"
@@ -122,3 +125,4 @@ builtin_system_registry(
     return  result;
 }
 
+# endif

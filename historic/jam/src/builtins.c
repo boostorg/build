@@ -51,7 +51,7 @@
 # define P0 (PARSE *)0
 # define C0 (char *)0
 
-# ifdef OS_NT
+# if defined( OS_NT ) || defined( OS_CYGWIN )
 LIST* builtin_system_registry( PARSE *parse, FRAME *frame );
 # endif
 
@@ -310,7 +310,7 @@ load_builtins()
       }
 #endif
 
-# ifdef OS_NT
+# if defined( OS_NT ) || defined( OS_CYGWIN )
       {
           char * args[] = { "key_path", ":", "data", "?", 0 };
           bind_builtin( "W32_GETREG",
