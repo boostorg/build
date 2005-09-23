@@ -13,7 +13,7 @@ import feature : feature get-values ;
 import path ;
 import sequence : unique ;
 import common ;
-
+import "class" : new ;
 import rc ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
@@ -30,7 +30,11 @@ feature.subfeature toolset msvc : vendor
   # to be seen, though ;-)
   ;
 
+# List of all registered configurations
+.versions = [ new configurations ] ;
+
 RM =  [ common.rm-command ] ;
+
 
 # Initialize the toolset for a specific version. As the result, path to
 # compiler and, possible, program names are set up, and will be used when
@@ -54,120 +58,212 @@ RM =  [ common.rm-command ] ;
 # Note: for free VC7.1 tools, we don't correctly find vcvars32.bar when user
 # explicitly provides a path.
 rule init ( 
-  version ? # the msvc version which is being configured. When omitted
+    version ? # the msvc version which is being configured. When omitted
             # the tools invoked when no explicit version is given will be configured.
     : command * 
-   # the command to invoke the compiler. If not specified:
-   #       - if version is given, default location for that version will be searched
-   # 
-   #       - if version is not given, default locations for 7.1, 7.0 and 6.* will 
-   #              be searched    
-   # 
-   #       - if compiler is not found in default locations, PATH will be searched.    
+    # the command to invoke the compiler. If not specified:
+    #       - if version is given, default location for that version will be searched
+    # 
+    #       - if version is not given, default locations for 7.1, 7.0 and 6.* will 
+    #              be searched    
+    # 
+    #       - if compiler is not found in default locations, PATH will be searched.    
     : options * 
-   # options can include <setup>, <compiler>, <assembler>, <linker> and <resource-compiler>
+    # options can include <setup>, <compiler>, <assembler>, <linker> and <resource-compiler>
 )
-{    
-    # setup will be used if a path has been specified.  If setup is
-    # not specified, vcvars32.bat will be used instead.
-    setup = [ get-values <setup> : $(options) ] ;
-    setup ?= vcvars32.bat ;    
-    compiler = [ get-values <compiler> : $(options) ] ;
-    compiler ?= cl ;
-    linker = [ get-values <linker> : $(options) ] ;
-    linker ?= link ;
-    resource-compiler = [ get-values <resource-compiler> : $(options) ] ;
-    resource-compiler ?= rc ;
-    assembler = [ get-values <assembler> : $(options) ] ;
-    assembler ?= ml ;
-    
-    local condition = [ common.check-init-parameters msvc : 
-        version $(version) ] ;
-
-    # If version is specified, we try to search first in default paths,
-    # and only then in PATH.
-    command = [ common.get-invocation-command msvc : cl.exe : $(command)
-      : [ default-paths $(version) ] : $(version) ] ;
-    
-    common.handle-options msvc : $(condition) : $(command) : $(options) ;
-        
+{
     if $(command)
-    {        
-        command = [ common.get-absolute-tool-path $(command[-1]) ] ;
-    }
-    local root = $(command:D) ;
-                  
-    setup = $(root)\\bin\\$(setup) ;
-    
-    # CONSIDER: What's the point of 'call'. Can we invoke the script directly?
-    setup = "call \""$(setup)"\" > nul " ;
-    
-    if [ os.name ] = NT
     {
-        setup = $(setup)"
-" ;
+        options += <command>$(command) ;
+    }
+
+    configure $(version) : $(options) ;
+}
+
+
+# 'configure' is a newer version of 'init'. The parameter 'command' is passed as 
+# a part of the 'options' list.
+rule configure (
+    version ? :
+    options * 
+    )
+{
+    switch $(version)
+    {
+        case all :
+            if $(options)
+            {
+                error "msvc: options should be empty when 'all' is specified" ;
+            }
+
+            # use all detected versions
+            for local v in [ $(.versions).all ]
+            {
+                configure-really $(v) ;
+            }
+
+        case "default" :
+            configure-really : $(options) ;
+
+        case * :
+            configure-really $(version) : $(options) ;
+    }
+}
+
+
+local rule configure-really (
+    version ? :
+    options *
+    )
+{
+    # If no version supplied use the default configuration. Note that condition 
+    # remains versionless.
+    local v = $(version) ;
+    if ! $(v)
+    {
+        # take the first detected version
+        version = [ $(.versions).all ] ;
+        version = $(version[1]) ;
+
+        # Note: 'version' can still be empty at this point if no versions were 
+        # detected.
+        version ?= "default" ;
+    }
+
+    # Check whether selected configuration is used already
+    if $(version) in [ $(.versions).used ]
+    {
+        # Allow multiple 'toolset.usage' calls for the same configuration
+        # if the identical sets of options are used 
+        if $(options) && ( $(options) != [ $(.versions).get $(version) : options ] )
+        {
+            error "msvc: the toolset version '$(version)' is configured already" ;
+        }
     }
     else
     {
-        setup = "cmd /S /C "$(setup)" \"&&\" " ;
-    }
+        # Register a new configuration 
+        $(.versions).register $(version) ;
 
-    # prefix with setup, or quoted path if any
-    local prefix = $(setup) ;
-    
-    flags msvc.compile .CC $(condition) : $(prefix)$(compiler) ;
-    flags msvc.compile .RC $(condition) : $(prefix)$(resource-compiler) ;
-    flags msvc.compile .ASM $(condition) : $(prefix)$(assembler) ;
-    flags msvc.link .LD $(condition) : $(prefix)$(linker) ;
-    flags msvc.archive .LD $(condition) : $(prefix)$(linker) ;
-    
-    if ! $(version) 
-    {
-        # Even if version is not explicitly specified, try to detect the version
-        # from the path.
-        if [ MATCH "(Microsoft Visual Studio 8)" : $(command) ]
+        # Set new options if any
+        if $(options)
         {
-            version = 8.0 ;
-        }                 
-        else if [ MATCH "(NET 2003[\/\\]VC7)" : $(command) ] ||
-                [ MATCH "(Microsoft Visual C\\+\\+ Toolkit 2003)" : $(command) ]
-        {
-            version = 7.1 ;
+            $(.versions).set $(version) : options : $(options) ;
         }
-        else if [ MATCH "(.NET[\/\\]VC7)" : $(command) ]
+
+        # Mark the configuration as 'used'.
+        $(.versions).use $(version) ;
+
+        # Get auto-detected or user-supplied options 
+        options = [ $(.versions).get $(version) : options ] ;
+
+        # Generate condition and save it
+        local condition = [ common.check-init-parameters msvc : 
+            version $(v) ] ;
+
+        $(.versions).set $(version) : condition : $(condition) ;
+
+        local command = [ get-values <command> : $(options) ] ;
+
+        # setup will be used if a path has been specified.  If setup is
+        # not specified, vcvars32.bat will be used instead.
+        setup = [ get-values <setup> : $(options) ] ;
+        setup ?= vcvars32.bat ;    
+        compiler = [ get-values <compiler> : $(options) ] ;
+        compiler ?= cl ;
+        linker = [ get-values <linker> : $(options) ] ;
+        linker ?= link ;
+        resource-compiler = [ get-values <resource-compiler> : $(options) ] ;
+        resource-compiler ?= rc ;
+        assembler = [ get-values <assembler> : $(options) ] ;
+        assembler ?= ml ;
+        
+        # If version is specified, we try to search first in default paths,
+        # and only then in PATH.
+        command = [ common.get-invocation-command msvc : cl.exe : $(command)
+          : [ default-paths $(version) ] : $(version) ] ;
+        
+        common.handle-options msvc : $(condition) : $(command) : $(options) ;
+            
+        if $(command)
+        {        
+            command = [ common.get-absolute-tool-path $(command[-1]) ] ;
+        }
+        local root = $(command:D) ;
+                      
+        setup = $(root)\\bin\\$(setup) ;
+        
+        # CONSIDER: What's the point of 'call'. Can we invoke the script directly?
+        setup = "call \""$(setup)"\" > nul " ;
+        
+        if [ os.name ] = NT
         {
-            version = 7.0 ;
+            setup = $(setup)"
+" ;
         }
         else
         {
-            version = 6.0 ;
-        }                
+            setup = "cmd /S /C "$(setup)" \"&&\" " ;
+        }
+
+        # prefix with setup, or quoted path if any
+        local prefix = $(setup) ;
+        
+        flags msvc.compile .CC $(condition) : $(prefix)$(compiler) ;
+        flags msvc.compile .RC $(condition) : $(prefix)$(resource-compiler) ;
+        flags msvc.compile .ASM $(condition) : $(prefix)$(assembler) ;
+        flags msvc.link .LD $(condition) : $(prefix)$(linker) ;
+        flags msvc.archive .LD $(condition) : $(prefix)$(linker) ;
+        
+        if ! $(version) 
+        {
+            # Even if version is not explicitly specified, try to detect the version
+            # from the path.
+            if [ MATCH "(Microsoft Visual Studio 8)" : $(command) ]
+            {
+                version = 8.0 ;
+            }                 
+            else if [ MATCH "(NET 2003[\/\\]VC7)" : $(command) ] ||
+                    [ MATCH "(Microsoft Visual C\\+\\+ Toolkit 2003)" : $(command) ]
+            {
+                version = 7.1 ;
+            }
+            else if [ MATCH "(.NET[\/\\]VC7)" : $(command) ]
+            {
+                version = 7.0 ;
+            }
+            else
+            {
+                version = 6.0 ;
+            }                
+        }
+                    
+        # Starting with versions 7.0, the msvc compiler have the /Zc:forScope
+        # and /Zc:wchar_t options that improve C++ standard conformance, but
+        # those options are off by default.
+        # If we're sure that msvc version is at 7.*, add those options explicitly.
+        # We can be sure either if user specified version 7.* explicitly,
+        # or if the installation path contain 7.* (this is checked above).
+        if ! [ MATCH ^(6\\.) : $(version) ]
+        {
+            flags msvc.compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
+        }
+        
+        # 8.0 deprecates some of the options
+        if ! [ MATCH ^([67]\\.) : $(version) ]
+        {
+            flags msvc.link MANIFEST $(condition) : "mt -nologo -manifest " ;
+            flags msvc.link OUTPUTRESOURCE $(condition) : "-outputresource:" ;
+        }
+        else
+        {
+            flags msvc.compile CFLAGS $(condition)/<optimization>speed $(condition)/<optimization>space : /Ogiy /Gs ;
+            flags msvc.compile CFLAGS $(condition)/<optimization>speed : /Ot ;
+            flags msvc.compile CFLAGS $(condition)/<optimization>space : /Os ;
+        }
     }
-                
-    # Starting with versions 7.0, the msvc compiler have the /Zc:forScope
-    # and /Zc:wchar_t options that improve C++ standard conformance, but
-    # those options are off by default.
-    # If we're sure that msvc version is at 7.*, add those options explicitly.
-    # We can be sure either if user specified version 7.* explicitly,
-    # or if the installation path contain 7.* (this is checked above).
-    if ! [ MATCH ^(6\\.) : $(version) ]
-    {
-        flags msvc.compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
-    }
-    
-    # 8.0 deprecates some of the options
-    if ! [ MATCH ^([67]\\.) : $(version) ]
-    {
-        flags msvc.link MANIFEST $(condition) : "mt -nologo -manifest " ;
-        flags msvc.link OUTPUTRESOURCE $(condition) : "-outputresource:" ;
-    }
-    else
-    {        
-        flags msvc.compile CFLAGS $(condition)/<optimization>speed $(condition)/<optimization>space : /Ogiy /Gs ;
-        flags msvc.compile CFLAGS $(condition)/<optimization>speed : /Ot ;
-        flags msvc.compile CFLAGS $(condition)/<optimization>space : /Os ;        
-    }        
 }
+
 
 rule default-paths ( version ? )
 {
@@ -206,7 +302,6 @@ rule default-paths ( version ? )
         version-8.0-path = [ path.parent $(version-8.0-path) ] ;
         version-8.0-path = [ path.join $(version-8.0-path) "VC" ] ;
         version-8.0-path = [ path.native $(version-8.0-path) ] ;
-	
     }
 
     # Fixed so we don't add paths without \\bin to all versions.
@@ -229,9 +324,9 @@ rule default-paths ( version ? )
     local VCToolkitInstallDir = [ os.environ VCToolkitInstallDir ] ;
     if $(VCToolkitInstallDir)
     {
-	if $(version) = "7.1" || ! $(version)
+        if $(version) = "7.1" || ! $(version)
         {
-	    # NOTE it's impossible to switch between Toolkit and VS. 
+            # NOTE it's impossible to switch between Toolkit and VS. 
             # I wonder is toolkit and VS can be installed together?
             possible-paths += [ path.native [ path.make $(VCToolkitInstallDir) ] ] ;
 
