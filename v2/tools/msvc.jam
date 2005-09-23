@@ -255,6 +255,7 @@ generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
 generators.register-c-compiler msvc.compile.c : C : OBJ : <toolset>msvc ;
 generators.register-standard msvc.compile.rc : RC : OBJ(%_res) : <toolset>msvc ;
 generators.override msvc.compile.rc : rc.resource-compile ;
+generators.register-standard msvc.compile.asm : ASM : OBJ : <toolset>msvc ;
 
 #
 # Declare flags and action for compilation
