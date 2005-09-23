@@ -1581,7 +1581,7 @@ unit-test helpers_test : helpers_test.cpp helpers ;
           <simpara>
             The <code>&lt;warnings&gt;</code> feature controls warning level of compilers. It has the following values:
             <itemizedlist>
-              <listitem><para><code>off</code> - disables all warnigns.</para></listitem>
+              <listitem><para><code>off</code> - disables all warnings.</para></listitem>
               <listitem><para><code>on</code> - enables default warning level for the tool.</para></listitem>
               <listitem><para><code>all</code> - enables all warnings.</para></listitem>
             </itemizedlist>
