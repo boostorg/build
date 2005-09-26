@@ -121,7 +121,7 @@ var_defines( char *const* e, int preprocess )
 # endif
                 size_t len = strlen(val + 1);
 
-                int quoted = val[1] == '"' && val[len] == '"';
+                int quoted = val[1] == '"' && val[len] == '"' && len > 1;
                 
                 if ( quoted && preprocess )
                 {
