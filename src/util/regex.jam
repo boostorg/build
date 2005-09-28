@@ -62,9 +62,7 @@ rule transform ( list * : pattern : indices * )
     return $(result) ;
 }
 
-# Commented out because of 'indices' parameter of 'transform' rule.
-#
-#NATIVE_RULE regex : transform ;
+NATIVE_RULE regex : transform ;
 
 # Escapes all of the characters in symbols using the escape symbol
 # escape-symbol for the given string, and returns the escaped string
@@ -154,7 +152,7 @@ rule __test__ ( )
     assert.result a.h c.h 
       : transform <a.h> \"b.h\" <c.h> :  <(.*)> ;
 
-    assert.result a.h "" b.h c.h 
+    assert.result a.h b.h c.h 
       : transform <a.h> \"b.h\" <c.h> :  <([^>]*)>|\"([^\"]*)\" : 1 2 ;
 
     assert.result "^<?xml version=\"1.0\"^>"

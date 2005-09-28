@@ -12,7 +12,7 @@ if $(JAM_VERSION:J="") < 030109
     EXIT ;
 } 
 
-local required-rules = GLOB-RECURSIVELY ;
+local required-rules = GLOB-RECURSIVELY HAS_NATIVE_RULE ;
 
 for local r in $(required-rules)
 {
@@ -24,6 +24,25 @@ for local r in $(required-rules)
         EXIT ;
     }    
 }
+
+local native = 
+    regex transform 2
+    ;
+    
+while $(native)
+{
+    if ! [ HAS_NATIVE_RULE $(native[1]) :
+                           $(native[2]) :
+			   $(native[3]) ] 
+    {
+	ECHO "error: missing native rule '$(native[1]).$(native[2])'" ;
+	ECHO "error: or interface version of that rule is too low" ;
+	ECHO "error: your version of bjam is likely out of date" ;
+	ECHO "error: please get a fresh version from CVS." ;
+	EXIT ;
+    }	
+    native = $(native[4-]) ;		   
+}    
 
 # Check that the builtin .ENVIRON module is present. We don't have a
 # builtin to check that a module is present, so we assume that the PATH
@@ -151,4 +170,10 @@ if ! $(dont-build)
 
     # Use last element in case of multiple command-line options
     import $(build-system[-1]) ;
+}
+else
+{
+    # Exit without printing "don't know how to build..." and "found 1 target"
+    # messages.
+    EXIT ;
 }
