@@ -10,7 +10,7 @@
 
 
 void declare_native_rule(char* module, char* rule, char** args, 
-                         LIST*(*f)(PARSE*, FRAME*))
+                         LIST*(*f)(PARSE*, FRAME*), int version)
 
 {
     module_t* m = bindmodule(module);
@@ -31,6 +31,7 @@ void declare_native_rule(char* module, char* rule, char** args,
             n.arguments = 0;
         }
         n.procedure = parse_make( f, P0, P0, P0, C0, C0, 0 );        
+        n.version = version;
         hashenter(m->native_rules, (HASHDATA**)&np);
     }
 }

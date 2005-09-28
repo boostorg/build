@@ -60,6 +60,6 @@ void init_regex()
 {
     {
         char* args[] = { "list", "*", ":", "pattern", 0 };
-        declare_native_rule("regex", "transform", args, regex_transform);
+        declare_native_rule("regex", "transform", args, regex_transform, 1);
     }
 }

@@ -35,7 +35,7 @@ void init_set()
 {
     {
         char* args[] = { "B", "*", ":", "A", "*", 0 };
-        declare_native_rule("set", "difference", args, set_difference);
+        declare_native_rule("set", "difference", args, set_difference, 1);
     }
 
 }

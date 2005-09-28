@@ -284,6 +284,13 @@ load_builtins()
       }
 
       {
+          char * args[] = { "module", ":", "rule", ":", "version", 0 };
+          bind_builtin( "HAS_NATIVE_RULE",
+              builtin_has_native_rule, 0, args );
+      }
+
+
+      {
           char * args[] = { "module", "*", 0 };
           bind_builtin( "USER_MODULE",
               builtin_user_module, 0, args );
@@ -1367,6 +1374,26 @@ LIST *builtin_native_rule( PARSE *parse, FRAME *frame )
     }
     return L0;    
 }
+
+LIST *builtin_has_native_rule( PARSE *parse, FRAME *frame )
+{
+    LIST* module_name = lol_get( frame->args, 0 );    
+    LIST* rule_name = lol_get( frame->args, 1 );    
+    LIST* version = lol_get( frame->args, 2 );    
+
+    module_t* module = bindmodule(module_name->string);
+
+    native_rule_t n, *np = &n;
+    n.name = rule_name->string;
+    if (module->native_rules && hashcheck(module->native_rules, (HASHDATA**)&np))
+    {
+        int expected_version = atoi(version->string);
+        if (np->version == expected_version)
+            return list_new(0, newstr("true"));
+    }
+    return L0;    
+}
+
 
 LIST *builtin_user_module( PARSE *parse, FRAME *frame )
 {

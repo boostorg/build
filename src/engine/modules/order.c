@@ -130,12 +130,12 @@ void init_order()
 {
     {
         char* args[] = { "first", "second", 0 };
-        declare_native_rule("class@order", "add-pair", args, add_pair);
+        declare_native_rule("class@order", "add-pair", args, add_pair, 1);
     }
 
     {
         char* args[] = { "objects", "*", 0 };
-        declare_native_rule("class@order", "order", args, order);
+        declare_native_rule("class@order", "order", args, order, 1);
     }
 
 

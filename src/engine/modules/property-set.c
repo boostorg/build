@@ -103,7 +103,7 @@ void init_property_set()
 {
     {
         char* args[] = { "raw-properties", "*", 0 };
-        declare_native_rule("property-set", "create", args, property_set_create);
+        declare_native_rule("property-set", "create", args, property_set_create, 1);
     }
 
 }

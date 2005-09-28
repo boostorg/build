@@ -26,7 +26,7 @@ void init_path()
 {
     {
         char* args[] = { "location", 0 };
-        declare_native_rule("path", "exists", args, path_exists);
+        declare_native_rule("path", "exists", args, path_exists, 1);
     }
 
 }
