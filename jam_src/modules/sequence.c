@@ -36,7 +36,7 @@ void init_sequence()
     {
         char* args[] = { "elements", "*", ":", "rank", "*", 0 };
         declare_native_rule("sequence", "select-highest-ranked", args, 
-                            sequence_select_highest_ranked);
+                            sequence_select_highest_ranked, 1);
     }
 
 }
