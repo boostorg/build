@@ -184,7 +184,15 @@ rule root ( path root )
 #
 rule pwd ( )
 {
-    return [ make [ PWD ] ] ;
+    if $(.pwd)
+    {
+        return $(.pwd) ;
+    }
+    else
+    {
+        .pwd = [ make [ PWD ] ] ;
+        return $(.pwd) ;
+    }    
 }
 
 #
