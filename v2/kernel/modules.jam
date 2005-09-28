@@ -205,6 +205,9 @@ local rule normalize-raw-paths ( paths * )
     return $(result) ;
 }
 
+.cwd = [ PWD ] ;
+
+
 # load the indicated module and import rule names into the current
 # module. Any members of rules-opt will be available without
 # qualification in the caller's module. Any members of rename-opt will
@@ -238,18 +241,17 @@ rule import ( module-names + : rules-opt * : rename-opt * )
             # if the importing module isn't already in the BOOST_BUILD_PATH,
             # prepend it to the path.  We don't want to invert the search
             # order of modules that are already there.
-            local cwd = [ PWD ] ;
-            
+                        
             local caller-location ; 
             if $(caller)
             {
                 caller-location = [ binding $(caller) ] ;
                 caller-location = $(caller-location:D) ;
-                caller-location = [ normalize-raw-paths $(caller-location:R=$(cwd)) ] ;
+                caller-location = [ normalize-raw-paths $(caller-location:R=$(.cwd)) ] ;
             }
             
             local search = [ peek : BOOST_BUILD_PATH ] ;
-            search = [ normalize-raw-paths $(search:R=$(cwd)) ] ;
+            search = [ normalize-raw-paths $(search:R=$(.cwd)) ] ;
             
             if $(caller-location) && ! $(caller-location) in $(search)
             {
