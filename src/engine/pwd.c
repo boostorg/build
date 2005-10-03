@@ -1,4 +1,4 @@
-/* Copyright Vladimir Prus 2002. Distributed under the Boost */
+/* Copyright Vladimir Prus 2002, Rene Rivera 2005. Distributed under the Boost */
 /* Software License, Version 1.0. (See accompanying */
 /* file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) */
 
@@ -21,24 +21,32 @@
 #endif
 #endif
 
+/* The current directory can't change in bjam, so optimize this to cache
+** the result.
+*/
+static char pwd_buffer[PATH_MAX];
+static char * pwd_result = NULL;
 
 
 LIST*
 pwd(void)
 {
-    char buffer[PATH_MAX];
-    if (getcwd(buffer, sizeof(buffer)) == NULL)
+    if (!pwd_result)
     {
-        perror("can not get current directory");
-        return L0;
-    }
-    else
-    {
+        if (getcwd(pwd_buffer, sizeof(pwd_buffer)) == NULL)
+        {
+            perror("can not get current directory");
+            return L0;
+        }
+        else
+        {
 #ifdef NT
-        return list_new(L0, short_path_to_long_path(buffer));
+            pwd_result = short_path_to_long_path(pwd_buffer);
 #else
-        return list_new(L0, newstr(buffer));
+            pwd_result = newstr(pwd_buffer);
 #endif
+        }
     }
+    return list_new(L0, pwd_result);
 }
 

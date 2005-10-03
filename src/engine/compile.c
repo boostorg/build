@@ -11,6 +11,7 @@
  */
 
 # include "jam.h"
+# include "debug.h"
 
 # include "lists.h"
 # include "parse.h"
@@ -28,7 +29,6 @@
 # include "builtins.h"
 # include "class.h"
 
-# include <time.h>
 # include <assert.h>
 # include <string.h>
 # include <stdarg.h>
@@ -799,96 +799,6 @@ collect_arguments( RULE* rule, FRAME* frame )
     return locals;
 }
 
-struct profile_info
-{
-    char* name;                 /* name of rule being called */
-    clock_t cumulative;         /* cumulative time spent in rule */
-    clock_t net;                /* time spent in rule proper */
-    unsigned long num_entries;  /* number of time rule was entered */
-    unsigned long stack_count;  /* number of the times this function is present in stack */
-};
-typedef struct profile_info profile_info;
-
-struct profile_frame
-{
-    profile_info* info;               /* permanent storage where data accumulates */
-    clock_t overhead;                 /* overhead for profiling in this call */
-    clock_t entry_time;               /* time of last entry to rule */
-    struct profile_frame* caller;     /* stack frame of caller */
-    clock_t subrules;                 /* time spent in subrules */
-};
-typedef struct profile_frame profile_frame;
-
-static profile_frame* profile_stack = 0;
-static struct hash* profile_hash = 0;
-
-static void profile_enter( char* rulename, profile_frame* frame )
-{
-    clock_t start = clock();
-    profile_info info, *p = &info;
-    
-    if ( !profile_hash )
-        profile_hash = hashinit(sizeof(profile_info), "profile");
-
-    info.name = rulename;
-    
-    if ( hashenter( profile_hash, (HASHDATA **)&p ) )
-        p->cumulative = p->net = p->num_entries = p->stack_count = 0;
-
-    ++(p->num_entries);
-    ++(p->stack_count);
-    
-    frame->info = p;
-    
-    frame->caller = profile_stack;
-    profile_stack = frame;
-
-    frame->entry_time = clock();
-    frame->overhead = 0;
-    frame->subrules = 0;
-
-    /* caller pays for the time it takes to play with the hash table */
-    if ( frame->caller )
-        frame->caller->overhead += frame->entry_time - start;
-}
-    
-static void profile_exit(profile_frame* frame)
-{
-    /* cumulative time for this call */
-    clock_t t = clock() - frame->entry_time - frame->overhead;
-    /* If this rule is already present on the stack, don't add the time for
-       this instance. */
-    if (frame->info->stack_count == 1)
-        frame->info->cumulative += t;
-    /* Net time does not depend on presense of the same rule in call stack. */
-    frame->info->net += t - frame->subrules;
-        
-    if (frame->caller)
-    {
-        /* caller's cumulative time must account for this overhead */
-        frame->caller->overhead += frame->overhead;
-        frame->caller->subrules += t;
-    }
-    /* pop this stack frame */
-    --frame->info->stack_count;
-    profile_stack = frame->caller;
-}
-
-static void dump_profile_entry(void* p_, void* ignored)
-{
-    profile_info* p = (profile_info*)p_;
-    printf("%10d %10d %10d %s\n", p->cumulative, p->net, p->num_entries, p->name);
-}
-
-void profile_dump()
-{
-    if ( profile_hash )
-    {
-        printf("%10s %10s %10s %s\n", "gross", "net", "# entries", "name");
-        hashenumerate( profile_hash, dump_profile_entry, 0 );
-    }
-}
-
 static int python_instance_number = 0;
 
 RULE *
@@ -1099,6 +1009,9 @@ evaluate_rule(
 
         action = (ACTION *)malloc( sizeof( ACTION ) );
         memset( (char *)action, '\0', sizeof( *action ) );
+
+        if ( DEBUG_PROFILE )
+            profile_memory( sizeof( ACTION ) );
 
         action->rule = rule;
         action->targets = targetlist( (TARGETS *)0, lol_get( frame->args, 0 ) );

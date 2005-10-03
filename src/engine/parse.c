@@ -17,6 +17,7 @@
 # include "newstr.h"
 # include "modules.h"
 # include "frames.h"
+# include "debug.h"
 
 /*
  * parse.c - make and destroy parse trees as driven by the parser
@@ -78,6 +79,8 @@ parse_make(
 	int	num )
 {
 	PARSE	*p = (PARSE *)malloc( sizeof( PARSE ) );
+    if ( DEBUG_PROFILE )
+        profile_memory( sizeof( PARSE ) );
 
 	p->func = func;
 	p->left = left;

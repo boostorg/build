@@ -3,6 +3,7 @@
 /* file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) */
 
 #include "strings.h"
+#include "debug.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -55,6 +56,8 @@ static void string_reserve_internal( string* self, size_t capacity )
     if ( self->value == self->opt )
     {
         self->value = (char*)malloc( capacity + JAM_STRING_MAGIC_SIZE );
+        if ( DEBUG_PROFILE )
+            profile_memory( capacity + JAM_STRING_MAGIC_SIZE );
         self->value[0] = 0;
         strncat( self->value, self->opt, sizeof(self->opt) );
         assert( strlen( self->value ) <= self->capacity ); /* This is a regression test */

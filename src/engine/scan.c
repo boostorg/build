@@ -11,6 +11,7 @@
 # include "jamgram.h"
 # include "jambase.h"
 # include "newstr.h"
+# include "debug.h"
 
 /*
  * scan.c - the jam yacc scanner
@@ -82,6 +83,8 @@ void
 yyfparse( char *s )
 {
 	struct include *i = (struct include *)malloc( sizeof( *i ) );
+    if ( DEBUG_PROFILE )
+        profile_memory( sizeof( *i ) );
 
 	/* Push this onto the incp chain. */
 

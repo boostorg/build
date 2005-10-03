@@ -16,6 +16,7 @@
 # include "lists.h"
 # include "pathsys.h"
 # include "timestamp.h"
+# include "debug.h"
 
 /*  This file is ALSO:
  *  Copyright 2001-2004 David Abrahams.
@@ -265,6 +266,8 @@ copytarget( const TARGET *ot )
 	TARGET *t;
 
 	t = (TARGET *)malloc( sizeof( *t ) );
+    if ( DEBUG_PROFILE )
+        profile_memory( sizeof( *t ) );
 	memset( (char *)t, '\0', sizeof( *t ) );
 	t->name = copystr( ot->name );
 	t->boundname = t->name;
@@ -319,6 +322,8 @@ targetentry(
 	TARGETS *c;
 
 	c = (TARGETS *)malloc( sizeof( TARGETS ) );
+    if ( DEBUG_PROFILE )
+        profile_memory( sizeof( TARGETS ) );
 	c->target = target;
 
 	if( !chain ) chain = c;
@@ -365,6 +370,8 @@ actionlist(
 	ACTION	*action )
 {
 	ACTIONS *actions = (ACTIONS *)malloc( sizeof( ACTIONS ) );
+    if ( DEBUG_PROFILE )
+        profile_memory( sizeof( ACTIONS ) );
 
 	actions->action = action;
 
@@ -413,7 +420,11 @@ addsettings(
         if ( v )
             settings_freelist = v->next;
         else
+        {
             v = (SETTINGS *)malloc( sizeof( *v ) );
+            if ( DEBUG_PROFILE )
+                profile_memory( sizeof( *v ) );
+        }
         
 	    v->symbol = newstr( symbol );
 	    v->value = value;
@@ -553,6 +564,8 @@ donerules()
 argument_list* args_new()
 {
     argument_list* r = (argument_list*)malloc( sizeof(argument_list) );
+    if ( DEBUG_PROFILE )
+        profile_memory( sizeof(argument_list) );
     r->reference_count = 0;
     lol_init(r->data);
     return r;
@@ -690,6 +703,8 @@ static void set_rule_actions( RULE* rule, rule_actions* actions )
 static rule_actions* actions_new( char* command, LIST* bindlist, int flags )
 {
     rule_actions* result = (rule_actions*)malloc(sizeof(rule_actions));
+    if ( DEBUG_PROFILE )
+        profile_memory( sizeof(rule_actions) );
     result->command = copystr( command );
     result->bindlist = bindlist;
     result->flags = flags;

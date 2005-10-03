@@ -7,6 +7,7 @@
 # include "jam.h"
 # include "newstr.h"
 # include "hash.h"
+# include "compile.h"
 # include <stddef.h>
 # include <stdlib.h>
 
@@ -34,6 +35,8 @@ typedef char *STRING;
 
 static struct hash *strhash = 0;
 static int strtotal = 0;
+static int strcount_in = 0;
+static int strcount_out = 0;
 
 /*
  * Immortal string allocator implementation speeds string allocation
@@ -53,11 +56,20 @@ static strblock* strblock_chain = 0;
 static char* storage_start = 0;
 static char* storage_finish = 0;
 
+/* */
+#define SIMPLE_ALLOC 0
+/*/
+#define SIMPLE_ALLOC 1
+/* */
+
 /*
  * allocate() - Allocate n bytes of immortal string storage
  */
 static char* allocate(size_t n)
 {
+    #if SIMPLE_ALLOC
+    return (char*)malloc(n);
+    #else
     /* See if we can grab storage from an existing block */
     size_t remaining = storage_finish - storage_start;
     if ( remaining >= n )
@@ -88,6 +100,7 @@ static char* allocate(size_t n)
         }
         return new_block->data;
     }
+    #endif
 }
 
 /*
@@ -112,8 +125,12 @@ newstr( char *string )
 	    strtotal += l + 1;
 	    memcpy( m, string, l + 1 );
 	    *s = m;
+
+        if ( DEBUG_PROFILE )
+            profile_memory( l+1 );
 	}
 
+    strcount_in += 1;
 	return *s;
 }
 
@@ -124,6 +141,7 @@ newstr( char *string )
 char *
 copystr( char *s )
 {
+    strcount_in += 1;
 	return s;
 }
 
@@ -134,6 +152,7 @@ copystr( char *s )
 void
 freestr( char *s )
 {
+    strcount_out += 1;
 }
 
 /*
@@ -155,4 +174,6 @@ donestr()
     
     if( DEBUG_MEM )
         printf( "%dK in strings\n", strtotal / 1024 );
+    
+    /* printf( "--- %d strings of %d dangling\n", strcount_in-strcount_out, strcount_in ); */
 }

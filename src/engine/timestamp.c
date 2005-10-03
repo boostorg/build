@@ -11,6 +11,8 @@
  */
 
 # include "jam.h"
+# include "debug.h"
+
 # include "hash.h"
 # include "filesys.h"
 # include "pathsys.h"
@@ -69,13 +71,15 @@ timestamp(
 	char	*target,
 	time_t	*time )
 {
+    PROFILE_ENTER(timestamp);
+    
 	PATHNAME f1, f2;
 	BINDING	binding, *b = &binding;
 	string buf[1];
+    string path; 
+	char *p;
 
 # ifdef DOWNSHIFT_PATHS
-        string path; 
-	char *p;
 
         string_copy( &path, target );
         p = path.value;
@@ -181,6 +185,8 @@ timestamp(
 # ifdef DOWNSHIFT_PATHS
         string_free( &path );
 #endif
+    
+    PROFILE_EXIT(timestamp);
 }
 
 static void
