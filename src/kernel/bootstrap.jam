@@ -6,11 +6,11 @@
 
 # First of all, check the jam version
 
-if $(JAM_VERSION:J="") < 030109
+if $(JAM_VERSION:J="") < 030112
 {
-    ECHO "error: Boost.Jam version 3.1.9 or later required" ;
+    ECHO "error: Boost.Jam version 3.1.12 or later required" ;
     EXIT ;
-} 
+}
 
 local required-rules = GLOB-RECURSIVELY HAS_NATIVE_RULE ;
 
@@ -22,34 +22,34 @@ for local r in $(required-rules)
         ECHO "error: you version of bjam is likely out of date" ;
         ECHO "error: please get a fresh version from CVS." ;
         EXIT ;
-    }    
+    }
 }
 
-local native = 
+local native =
     regex transform 2
     ;
-    
+
 while $(native)
 {
     if ! [ HAS_NATIVE_RULE $(native[1]) :
                            $(native[2]) :
-			   $(native[3]) ] 
+               $(native[3]) ]
     {
-	ECHO "error: missing native rule '$(native[1]).$(native[2])'" ;
-	ECHO "error: or interface version of that rule is too low" ;
-	ECHO "error: your version of bjam is likely out of date" ;
-	ECHO "error: please get a fresh version from CVS." ;
-	EXIT ;
-    }	
-    native = $(native[4-]) ;		   
-}    
+        ECHO "error: missing native rule '$(native[1]).$(native[2])'" ;
+        ECHO "error: or interface version of that rule is too low" ;
+        ECHO "error: your version of bjam is likely out of date" ;
+        ECHO "error: please get a fresh version from CVS." ;
+        EXIT ;
+    }
+    native = $(native[4-]) ;
+}
 
 # Check that the builtin .ENVIRON module is present. We don't have a
 # builtin to check that a module is present, so we assume that the PATH
 # environment variable is always set and verify that the .ENVIRON module
 # has non-empty value of that variable.
-module .ENVIRON 
-{   
+module .ENVIRON
+{
     local p = $(PATH) $(Path) $(path) ;
     if ! $(p)
     {
@@ -75,23 +75,23 @@ IMPORT modules : import : : import ;
     # separation of different layers without changing all of our code
     # to specify subdirectories in import statements or use an extra
     # level of qualification on imported names.
-    
-    local subdirs = 
+
+    local subdirs =
       kernel        # only the most-intrinsic modules: modules, errors
       util          # low-level substrate: string/number handling, etc.
       build         # essential elements of the build system architecture
       tools         # toolsets for handling specific build jobs and targets.
-      
+
       new           # until we get everything sorted out, there is
                     # still some code here
-      
+
       .             # build-system.jam lives here
-      
+
       ;
     local whereami = [ NORMALIZE_PATH $(.bootstrap-file:DT) ] ;
     BOOST_BUILD_PATH += $(whereami:D)/$(subdirs) ;
-    
-    modules.poke .ENVIRON : BOOST_BUILD_PATH : $(BOOST_BUILD_PATH) ;    
+
+    modules.poke .ENVIRON : BOOST_BUILD_PATH : $(BOOST_BUILD_PATH) ;
 }
 
 # Reload the modules, to clean up things. The modules module can tolerate
@@ -117,14 +117,14 @@ while $(args)
         arg = [ MATCH ^--(.*) : $(args[1]) ] ;
     }
     args = $(args[2-]) ;
-    
+
     if $(arg)
     {
         local split = [ MATCH ^(([^-=]+)[^=]*)(=?)(.*)$ : $(arg) ] ;
         local full-name = $(split[1]) ;
         local prefix = $(split[2]) ;
         local values ;
-        
+
         if $(split[3])
         {
             values = $(split[4]) ;
@@ -134,27 +134,27 @@ while $(args)
             values += $(args[1]) ;
             args = $(args[2-]) ;
         }
-        
+
         # look in options subdirectories of BOOST_BUILD_PATH for modules
         # matching the full option name and then its prefix.
         local plugin-dir = options ;
-        local option-files = [ 
-            GLOB $(plugin-dir:D=$(BOOST_BUILD_PATH)) : $(full-name).jam $(prefix).jam 
+        local option-files = [
+            GLOB $(plugin-dir:D=$(BOOST_BUILD_PATH)) : $(full-name).jam $(prefix).jam
             ] ;
-        
+
         if $(option-files)
         {
             # load the file into a module named for the option
             local f = $(option-files[1]) ;
             local module-name = --$(f:D=:S=) ;
             modules.load $(module-name) : $(f:D=) : $(f:D) ;
-            
+
             # if there's a process rule, call it with the full option name
             # and its value (if any).  If there was no "=" in the option,
             # the value will be empty.
             if process in [ RULENAMES $(module-name) ]
             {
-                dont-build += 
+                dont-build +=
                   [ modules.call-in $(module-name) : process --$(full-name) : $(values) ] ;
             }
         }
@@ -162,7 +162,7 @@ while $(args)
 }
 
 if ! $(dont-build)
-{   
+{
     # Allow users to override the build system file from the
     # command-line (mostly for testing)
     local build-system = [ MATCH --build-system=(.*) : $(ARGV) ] ;
