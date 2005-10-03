@@ -82,17 +82,17 @@ rule xinit ( instance : class )
 
 rule new ( class args * : * )
 {
-    .next-instance.$(class) ?= 1 ;
-    local id = object($(class))@$(.next-instance.$(class)) ;
+    .next-instance ?= 1 ;
+    local id = object($(class))@$(.next-instance) ;
     
-    xinit $(id) : $(class) ;    
-       
+    xinit $(id) : $(class) ;
+    
     INSTANCE $(id) : class@$(class) ;
     IMPORT_MODULE $(id) : ;
     $(id).__init__ $(args) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
-          
+    
     # bump the next unique object name
-    .next-instance.$(class) = [ numbers.increment $(.next-instance.$(class)) ] ;
+    .next-instance = [ numbers.increment $(.next-instance) ] ;
     
     # Return the name of the new instance.
     return $(id) ;

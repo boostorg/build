@@ -127,6 +127,8 @@ static state *alloc_state()
 	}
 	else
 	{
+        if ( DEBUG_PROFILE )
+            profile_memory( sizeof(state) );
 		return (state *)malloc(sizeof(state));
 	}
 }

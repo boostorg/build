@@ -1,5 +1,5 @@
 Name: boost-jam
-Version: 3.1.11
+Version: 3.1.12
 Summary: Build tool
 Release: 1
 Source: %{name}-%{version}.tgz
@@ -33,6 +33,7 @@ Copyright:
 Also:
     Copyright 2001-2004 David Abrahams.
     Copyright 2002-2005 Rene Rivera.
+    Copyright 2003-2005 Vladimir Prus.
     
     Distributed under the Boost Software License, Version 1.0.
     (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)

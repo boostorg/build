@@ -20,6 +20,7 @@
 # include "parse.h"
 # include "variable.h"
 # include "rules.h"
+# include "debug.h"
 
 # include "command.h"
 # include <limits.h>
@@ -42,6 +43,9 @@ cmd_new(
     int max_line = MAXLINE;
     int allocated = -1;
 
+    if ( DEBUG_PROFILE )
+        profile_memory( sizeof( CMD ) );
+
     cmd->rule = rule;
     cmd->shell = shell;
     cmd->next = 0;
@@ -56,6 +60,9 @@ cmd_new(
         free(cmd->buf); /* free any buffer from previous iteration */
         
         cmd->buf = (char*)malloc(max_line + 1);
+
+        if ( DEBUG_PROFILE )
+            profile_memory( max_line + 1 );
         
         if (cmd->buf == 0)
             break;

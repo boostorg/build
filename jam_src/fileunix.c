@@ -6,14 +6,17 @@
 
 /*  This file is ALSO:
  *  Copyright 2001-2004 David Abrahams.
+ *  Copyright 2005 Rene Rivera.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  */
 
 # include "jam.h"
+# include "debug.h"
 # include "filesys.h"
 # include "strings.h"
 # include "pathsys.h"
+# include "newstr.h"
 # include <stdio.h>
 
 #if defined(sun) || defined(__sun)
@@ -127,52 +130,110 @@ file_dirscan(
 	scanback func,
 	void *closure )
 {
-	PATHNAME f;
-	DIR *d;
-	STRUCT_DIRENT *dirent;
+    PROFILE_ENTER(FILE_DIRSCAN);
+    
+    file_info_t * d = 0;
+
+    d = file_query( dir );
+    
+    if ( ! d || ! d->is_dir )
+    {
+        PROFILE_EXIT(FILE_DIRSCAN);
+        return;
+    }
+
+    if ( ! d->files )
+    {
+        LIST* files = L0;
+        PATHNAME f;
+        DIR *dd;
+        STRUCT_DIRENT *dirent;
         string filename[1];
 
-	/* First enter directory itself */
+        /* First enter directory itself */
 
-	memset( (char *)&f, '\0', sizeof( f ) );
+        memset( (char *)&f, '\0', sizeof( f ) );
 
-	f.f_dir.ptr = dir;
-	f.f_dir.len = strlen(dir);
+        f.f_dir.ptr = dir;
+        f.f_dir.len = strlen(dir);
 
-	dir = *dir ? dir : ".";
+        dir = *dir ? dir : ".";
 
-	/* Special case / : enter it */
+        /* Now enter contents of directory */
 
-	if( f.f_dir.len == 1 && f.f_dir.ptr[0] == '/' )
-	    (*func)( closure, dir, 0 /* not stat()'ed */, (time_t)0 );
+        if( !( dd = opendir( dir ) ) )
+        {
+            PROFILE_EXIT(FILE_DIRSCAN);
+            return;
+        }
 
-	/* Now enter contents of directory */
-
-	if( !( d = opendir( dir ) ) )
-	    return;
-
-	if( DEBUG_BINDSCAN )
-	    printf( "scan directory %s\n", dir );
+        if( DEBUG_BINDSCAN )
+            printf( "scan directory %s\n", dir );
 
         string_new( filename );
-	while( dirent = readdir( d ) )
-	{
-# ifdef old_sinix
-	    /* Broken structure definition on sinix. */
-	    f.f_base.ptr = dirent->d_name - 2;
-# else
-	    f.f_base.ptr = dirent->d_name;
-# endif
-	    f.f_base.len = strlen( f.f_base.ptr );
+        while( dirent = readdir( dd ) )
+        {
+            file_info_t * ff = 0;
+            
+            # ifdef old_sinix
+            /* Broken structure definition on sinix. */
+            f.f_base.ptr = dirent->d_name - 2;
+            # else
+            f.f_base.ptr = dirent->d_name;
+            # endif
+            f.f_base.len = strlen( f.f_base.ptr );
 
             string_truncate( filename, 0 );
-	    path_build( &f, filename, 0 );
+            path_build( &f, filename, 0 );
 
-	    (*func)( closure, filename->value, 0 /* not stat()'ed */, (time_t)0 );
-	}
+            files = list_new( files, newstr(filename->value) );
+            file_query( filename->value );
+        }
         string_free( filename );
 
-	closedir( d );
+        closedir( dd );
+    
+        d->files = files;
+    }
+
+    /* Special case / : enter it */
+    {
+        unsigned long len = strlen(d->name);
+        if( len == 1 && d->name[0] == '/' )
+            (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
+    }
+
+    /* Now enter contents of directory */
+    if ( d->files )
+    {
+        LIST * files = d->files;
+        while ( files )
+        {
+            file_info_t * ff = file_info( files->string );
+            (*func)( closure, ff->name, 1 /* stat()'ed */, ff->time );
+            files = list_next( files );
+        }
+    }
+    
+    PROFILE_EXIT(FILE_DIRSCAN);
+}
+
+file_info_t * file_query( char * filename )
+{
+    file_info_t * ff = file_info( filename );
+    if ( ! ff->time )
+    {
+        struct stat statbuf;
+
+        if( stat( *filename ? filename : ".", &statbuf ) < 0 )
+            return 0;
+
+        ff->is_file = statbuf.st_mode & S_IFREG ? 1 : 0;
+        ff->is_dir = statbuf.st_mode & S_IFDIR ? 1 : 0;
+        ff->size = statbuf.st_size;
+        ff->time = statbuf.st_mtime ? statbuf.st_mtime : 1;
+    }
+    return ff;
 }
 
 /*
@@ -184,32 +245,17 @@ file_time(
 	char	*filename,
 	time_t	*time )
 {
-	struct stat statbuf;
-
-	if( stat( filename, &statbuf ) < 0 )
-	    return -1;
-
-    /* Technically, existing files can have 0 as statbuf.st_mtime 
-       --- in particular, the /cygdrive directory under cygwin. However, 
-       though all the code jam assumes that timestamp of 0 means
-       "does not exist" and will try to create the "missing" target, causing
-       problems. Work around this problem by chanding 0 to 1.
-    */
-	*time = statbuf.st_mtime ? statbuf.st_mtime : 1 ;
-	return 0;
+    file_info_t * ff = file_query( filename );
+    if ( !ff ) return -1;
+    *time = ff->time;
+    return 0;
 }
 
 int file_is_file(char* filename)
 {
-	struct stat statbuf;
-
-	if( stat( filename, &statbuf ) < 0 )
-	    return -1;
-
-    if (S_ISREG(statbuf.st_mode)) 
-        return 1;
-    else
-        return 0;    
+    file_info_t * ff = file_query( filename );
+    if ( !ff ) return -1;
+    return ff->is_file;
 }
 
 
@@ -281,6 +327,8 @@ file_archscan(
 		    */
 
 		    string_table = (char *)malloc(lar_size);
+            if ( DEBUG_PROFILE )
+                profile_memory( lar_size );
 		    lseek(fd, offset + SARHDR, 0);
 		    if (read(fd, string_table, lar_size) != lar_size)
 			printf("error reading string table\n");

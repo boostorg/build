@@ -13,6 +13,7 @@
 # include "jam.h"
 # include "lists.h"
 # include "execcmd.h"
+# include "debug.h"
 # include <errno.h>
 # include <assert.h>
 # include <ctype.h>
@@ -149,6 +150,9 @@ string_to_args( const char*  string )
     if (!line)
         return 0;
 
+    if ( DEBUG_PROFILE )
+        profile_memory( src_len+1 );
+
     /* allocate the argv array.
      *   element 0: stores the path to the executable
      *   element 1: stores the command-line arguments to the executable
@@ -160,6 +164,9 @@ string_to_args( const char*  string )
         free( line );
         return 0;
     }
+
+    if ( DEBUG_PROFILE )
+        profile_memory( 3 * sizeof(char*) );
     
     /* Strip quotes from the first command-line argument and find
      * where it ends.  Quotes are illegal in Win32 pathnames, so we
@@ -279,6 +286,8 @@ process_del( char*  command )
               line = (char*)malloc( len+4+1 );
               if (!line)
                 return 1;
+              if ( DEBUG_PROFILE )
+                  profile_memory( len+4+1 );
                 
               strncpy( line, "del ", 4 );
               strncpy( line+4, q, len );
@@ -572,6 +581,8 @@ execcmd(
   
         /* SVA - allocate 64 other just to be safe */
         cmdtab[ slot ].tempfile = malloc( strlen( tempdir ) + 64 );
+        if ( DEBUG_PROFILE )
+            profile_memory( strlen( tempdir ) + 64 );
   
         procID = GetCurrentProcessId();
   

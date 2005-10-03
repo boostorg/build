@@ -1,6 +1,8 @@
 # include "jam.h"
 # include "pathsys.h"
 # include "strings.h"
+# include "newstr.h"
+# include "filesys.h"
 
 void
 file_build1(
@@ -30,4 +32,33 @@ file_build1(
         if( file->value[file->size - 1] != '>' )
             string_push_back( file, '>' );
     }
+}
+
+static struct hash * filecache_hash = 0;
+
+file_info_t * file_info(char * filename)
+{
+    file_info_t finfo_, *finfo = &finfo_;
+    
+    if ( !filecache_hash )
+        filecache_hash = hashinit( sizeof( file_info_t ), "file_info" );
+    
+    finfo->name = filename;
+    if ( hashenter( filecache_hash, (HASHDATA**)&finfo ) )
+    {
+        /* printf( "file_info: %s\n", filename ); */
+        finfo->name = newstr( finfo->name );
+        finfo->is_file = 0;
+        finfo->is_dir = 0;
+        finfo->size = 0;
+        finfo->time = 0;
+        finfo->files = 0;
+    }
+    
+    return finfo;
+}
+
+void file_done()
+{
+    hashdone( filecache_hash );
 }

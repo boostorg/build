@@ -7,6 +7,7 @@
 #include "../strings.h"
 #include "../newstr.h"
 #include "../variable.h"
+#include "../debug.h"
 
 
 /* Use quite klugy approach: when we add order dependency from 'a' to 'b',
@@ -62,6 +63,8 @@ void topological_sort(int** graph, int num_vertices, int* result)
 {
     int i;
     int* colors = (int*)calloc(num_vertices, sizeof(int));
+    if ( DEBUG_PROFILE )
+        profile_memory( num_vertices*sizeof(int) );
     for (i = 0; i < num_vertices; ++i)
         colors[i] = white;
 
@@ -86,6 +89,8 @@ LIST *order( PARSE *parse, FRAME *frame )
     int length = list_length(arg);
     int** graph = (int**)calloc(length, sizeof(int*));
     int* order = (int*)malloc((length+1)*sizeof(int));
+    if ( DEBUG_PROFILE )
+        profile_memory( length*sizeof(int*) + (length+1)*sizeof(int) );
    
     for(tmp = arg, src = 0; tmp; tmp = tmp->next, ++src) {
         /* For all object this one depend upon, add elements
@@ -94,6 +99,8 @@ LIST *order( PARSE *parse, FRAME *frame )
         int index = 0;
 
         graph[src] = (int*)calloc(list_length(dependencies)+1, sizeof(int));
+        if ( DEBUG_PROFILE )
+            profile_memory( (list_length(dependencies)+1)*sizeof(int) );
         for(; dependencies; dependencies = dependencies->next) {          
             int dst = list_index(arg, dependencies->string);
             if (dst != -1)

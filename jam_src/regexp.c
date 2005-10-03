@@ -42,6 +42,7 @@
  * regular-expression syntax might require a total rethink.
  */
 #include "regexp.h"
+#include "debug.h"
 #include <stdio.h>
 #include <ctype.h>
 #ifndef ultrix
@@ -241,6 +242,8 @@ regcomp( char *exp )
 	r = (regexp *)malloc(sizeof(regexp) + (unsigned)regsize);
 	if (r == NULL)
 		FAIL("out of space");
+    if ( DEBUG_PROFILE )
+        profile_memory( sizeof(regexp) + (unsigned)regsize );
 
 	/* Second pass: emit code. */
 	regparse = (char *)exp;

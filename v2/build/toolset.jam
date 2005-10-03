@@ -293,17 +293,22 @@ rule set-target-variables ( rule-or-module targets + : property-set )
         }
         .stv.$(key) = $(settings) ;
     }
-        
+    
     if $(settings) != none
     {
-        while $(settings)
+        local var-name = ;
+        for local name-or-value in $(settings)
         {
-            # Here, $(settings[1]) is the name of variable to assign
-            # and $(settings[2]) is the value.
-            
-            $(settings[1]) on $(targets) += $(settings[2]) ;
-            settings = $(settings[3-]) ;
-        }    
+            if $(var-name)
+            {
+                $(var-name) on $(targets) += $(name-or-value) ;
+                var-name = ;
+            }
+            else
+            {
+                var-name = $(name-or-value) ;
+            }
+        }
     }
 }
 

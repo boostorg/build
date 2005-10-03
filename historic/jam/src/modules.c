@@ -3,8 +3,10 @@
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  */
-#include "modules.h"
 #include "jam.h"
+#include "debug.h"
+
+#include "modules.h"
 #include "string.h"
 #include "hash.h"
 #include "newstr.h"
@@ -30,6 +32,8 @@ static char* new_module_str( module_t* m, char* suffix )
 
 module_t* bindmodule( char* name )
 {
+    PROFILE_ENTER(BINDMODULE);
+    
     string s;
     module_t m_, *m = &m_;
 
@@ -56,6 +60,9 @@ module_t* bindmodule( char* name )
         m->user_module = 0;
     }
     string_free( &s );
+
+    PROFILE_EXIT(BINDMODULE);
+
     return m;
 }
 
@@ -115,9 +122,11 @@ void exit_module( module_t* m )
 }
 
 void import_module(LIST* module_names, module_t* target_module)
-{ 
+{
+    PROFILE_ENTER(IMPORT_MODULE);
+    
     struct hash* h;
-
+    
     if (!target_module->imported_modules)
         target_module->imported_modules = hashinit( sizeof(char*), "imported");
     h = target_module->imported_modules;
@@ -129,6 +138,8 @@ void import_module(LIST* module_names, module_t* target_module)
         
         hashenter(h, (HASHDATA**)&ss);
     }
+    
+    PROFILE_EXIT(IMPORT_MODULE);
 }
 
 static void add_module_name( void* r_, void* result_ )

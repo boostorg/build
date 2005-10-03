@@ -5,6 +5,7 @@
  */
 
 # include "jam.h"
+# include "debug.h"
 
 # include "lists.h"
 # include "parse.h"
@@ -266,7 +267,7 @@ load_builtins()
       }
 
       {
-          char * args[] = { "path", 0 };
+          char * args[] = { "path_parts", "*", 0 };
           bind_builtin( "NORMALIZE_PATH",
               builtin_normalize_path, 0, args );
       }
@@ -547,11 +548,13 @@ builtin_glob_back(
     int status,
     time_t  time )
 {
+    PROFILE_ENTER(BUILTIN_GLOB_BACK);
+    
     struct globbing *globbing = (struct globbing *)closure;
     LIST        *l;
     PATHNAME    f;
     string          buf[1];
-
+    
     /* Null out directory for matching. */
     /* We wish we had file_dirscan() pass up a PATHNAME. */
 
@@ -565,7 +568,10 @@ builtin_glob_back(
        "." and ".." won't work anywhere.
     */
     if (strcmp(f.f_base.ptr, ".") == 0 || strcmp(f.f_base.ptr, "..") == 0)
+    {
+        PROFILE_EXIT(BUILTIN_GLOB_BACK);
         return;
+    }
 
     string_new( buf );
     path_build( &f, buf, 0 );
@@ -584,6 +590,8 @@ builtin_glob_back(
     }
     
     string_free( buf );
+    
+    PROFILE_EXIT(BUILTIN_GLOB_BACK);
 }
 
 static LIST* downcase_list( LIST *in )
@@ -1263,7 +1271,7 @@ builtin_sort( PARSE *parse, FRAME *frame )
 
 LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
 {
-    LIST* arg1 = lol_get( frame->args, 0 );
+    LIST* arg = lol_get( frame->args, 0 );
 
     /* First, we iterate over all '/'-separated elements, starting from
        the end of string. If we see '..', we remove previous path elements.
@@ -1276,14 +1284,20 @@ LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
     char* end;      /* Last character of the part of string still to be processed. */
     char* current;  /* Working pointer. */  
     int dotdots = 0; /* Number of '..' elements seen and not processed yet. */
-    int rooted = arg1->string[0] == '/';
+    int rooted = arg->string[0] == '/';
     char* result;
 
     /* Make a copy of input: we should not change it. */
     string_new(in);
     if (!rooted)
         string_push_back(in, '/');
-    string_append(in, arg1->string);
+    while (arg)
+    {
+        string_append(in, arg->string);
+        arg = list_next(arg);
+        if (arg)
+            string_append(in, "/");
+    }
     
 
     end = in->value + in->size - 1;

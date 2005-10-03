@@ -48,8 +48,6 @@ LIST *call_rule( char *rulename, FRAME* caller_frame, ...);
 
 regexp* regex_compile( const char* pattern );
 
-void profile_dump();
-
 /* Flags for compile_set(), etc */
 
 # define ASSIGN_SET	0x00	/* = assign variable */

@@ -342,7 +342,7 @@ rule text (
             text-body on $(output-target) = ;
             text-suffix on $(output-target) = ;
             text-action $(output-target) ;
-            text-front-section.$(soutput-target) = ;
+            text-front-section.$(output-target) = ;
         }
         if $(overwrite)
         {
@@ -368,10 +368,9 @@ rule text (
                 text-front-section.$(output-target) = $(prefix-body-suffix) ;
                 strings = $(strings[2-]) ;
             }
-            while $(strings)
+            for local string-n in $(strings)
             {
-                text-$(prefix-body-suffix) on $(output-target) += [ echo-cmd $(strings[1]) ] ;
-                strings = $(strings[2-]) ;
+                text-$(prefix-body-suffix) on $(output-target) += [ echo-cmd $(string-n) ] ;
             }
         }
     }

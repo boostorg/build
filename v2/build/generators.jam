@@ -541,28 +541,20 @@ class generator
     {
         # We process each source one-by-one, trying to convert it to
         # a usable type.
-        local failed ;
-        while $(sources) && ! $(failed)
+        for local source in $(sources)
         {
             local _c ;
             local _b ;
             # TODO: need to check for failure on each source.
             convert-to-consumable-types $(project) : $(property-set)
-              : $(sources[1]) : true : _c _b ;
+              : $(source) : true : _c _b ;
             if ! $(_c)
             {
-                generators.dout [ indent ] " failed to convert " $(sources[1]) ;
-                # failed = true ;
+                generators.dout [ indent ] " failed to convert " $(source) ;
             }
             $(consumed-var) += $(_c) ;            
             $(bypassed-var) += $(_b) ;
-            sources = $(sources[2-]) ;
         }           
-        if $(failed)
-        {
-            $(consumed-var) = ;
-            $(bypassed-var) = ;
-        }        
     }
         
     rule consume-directly ( source : consumed-var : missing-types-var )

@@ -255,7 +255,11 @@ my_wait( int *status )
 	static HANDLE *active_handles = 0;
 
 	if (!active_handles)
+    {
 	    active_handles = (HANDLE *)malloc(globs.jobs * sizeof(HANDLE) );
+        if ( DEBUG_PROFILE )
+            profile_memory( globs.jobs * sizeof(HANDLE) );
+    }
 
 	/* first see if any non-waited-for processes are dead,
 	 * and return if so.

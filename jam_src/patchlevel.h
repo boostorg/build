@@ -7,5 +7,11 @@
 /* Keep JAMVERSYM in sync with VERSION. */
 /* It can be accessed as $(JAMVERSION) in the Jamfile. */
 
-#define VERSION "3.1.11"
+#define VERSION_MAJOR 3
+#define VERSION_MINOR 1
+#define VERSION_PATCH 12
+#define VERSION_MAJOR_SYM "03"
+#define VERSION_MINOR_SYM "1"
+#define VERSION_PATCH_SYM "12"
+#define VERSION "3.1.12"
 #define JAMVERSYM "JAMVERSION=3.1"

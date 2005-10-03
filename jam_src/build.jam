@@ -13,7 +13,7 @@ else { . = "." ; }
 
 # Info about what we are building.
 NAME = boost-jam ;
-VERSION = 3$(.)1$(.)11 ;
+VERSION = 3$(.)1$(.)12 ;
 RELEASE = 1 ;
 LICENSE = 1_0 ;
 
@@ -98,10 +98,10 @@ toolset darwin cc :  "-o " : -D
     :
     [ opt --release : -Wl,-x -O3 -finline-functions ]
     [ opt --debug : -g -O0 -fno-inline -pg ] ;
-## GCC 2.x, 3.x
+## GCC 2.x, 3.x, 4.x
 toolset gcc gcc : "-o " : -D
     : -pedantic
-    [ opt --release : [ opt --symbols : -g : -s ] -O3 -finline-functions ]
+    [ opt --release : [ opt --symbols : -g : -s ] -O3 ]
     [ opt --debug : -g -O0 -fno-inline ] ;
 ## GCC 2.x, 3.x on CYGWIN but without cygwin1.dll
 toolset gcc-nocygwin gcc : "-o " : -D
@@ -277,7 +277,7 @@ else
 
 # We have some different files for UNIX, VMS, and NT.
 jam.source =
-    command.c compile.c expand.c glob.c
+    command.c compile.c debug.c expand.c glob.c
     hash.c hcache.c headers.c hdrmacro.c
     jam.c jambase.c jamgram.c
     lists.c make.c make1.c newstr.c

@@ -6,6 +6,8 @@
 
 # include "jam.h"
 # include "hash.h"
+# include "compile.h"
+#include "debug.h"
 # include <assert.h>
 
 /* 
@@ -23,6 +25,10 @@
  *
  * 4/29/93 - ensure ITEM's are aligned
  */
+
+/* */
+#define HASH_DEBUG_PROFILE 1
+/* */
 
 char 	*hashsccssid="@(#)hash.c	1.14  ()  6/20/88";
 
@@ -144,12 +150,24 @@ hashitem(
 	register ITEM *i;
 	unsigned char *b = (unsigned char*)(*data)->key;
 	unsigned int keyval;
+    
+    #ifdef HASH_DEBUG_PROFILE
+    profile_frame prof[1];
+    if ( DEBUG_PROFILE )
+        profile_enter( 0, prof );
+    #endif
 
 	if( enter && !hp->items.more )
 	    hashrehash( hp );
 
 	if( !enter && !hp->items.nel )
+    {
+        #ifdef HASH_DEBUG_PROFILE
+        if ( DEBUG_PROFILE )
+            profile_exit( prof );
+        #endif
 	    return 0;
+    }
 
 	keyval = *b;
 
@@ -163,6 +181,10 @@ hashitem(
 		!strcmp( i->data.key, (*data)->key ) )
 	{
 		*data = &i->data;
+        #ifdef HASH_DEBUG_PROFILE
+        if ( DEBUG_PROFILE )
+            profile_exit( prof );
+        #endif
 		return !0;
 	}
 
@@ -188,6 +210,10 @@ hashitem(
 		*data = &i->data;
 	}
 
+    #ifdef HASH_DEBUG_PROFILE
+    if ( DEBUG_PROFILE )
+        profile_exit( prof );
+    #endif
 	return 0;
 }
 
@@ -198,10 +224,12 @@ hashitem(
 static void hashrehash( register struct hash *hp )
 {
 	int i = ++hp->items.list;
-
 	hp->items.more = i ? 2 * hp->items.nel : hp->inel;
 	hp->items.next = (char *)malloc( hp->items.more * hp->items.size );
     hp->items.free = 0;
+
+    if ( DEBUG_PROFILE )
+        profile_memory( hp->items.more * hp->items.size );
     
 	hp->items.lists[i].nel = hp->items.more;
 	hp->items.lists[i].base = hp->items.next;
@@ -212,6 +240,9 @@ static void hashrehash( register struct hash *hp )
 
 	hp->tab.nel = hp->items.nel * hp->bloat;
 	hp->tab.base = (ITEM **)malloc( hp->tab.nel * sizeof(ITEM **) );
+
+    if ( DEBUG_PROFILE )
+        profile_memory( hp->tab.nel * sizeof(ITEM **) );
 
 	memset( (char *)hp->tab.base, '\0', hp->tab.nel * sizeof( ITEM * ) );
 
@@ -268,6 +299,9 @@ hashinit(
 {
 	struct hash *hp = (struct hash *)malloc( sizeof( *hp ) );
 
+    if ( DEBUG_PROFILE )
+        profile_memory( sizeof( *hp ) );
+
 	hp->bloat = 3;
 	hp->tab.nel = 0;
 	hp->tab.base = (ITEM **)0;
@@ -277,7 +311,7 @@ hashinit(
 	hp->items.size = sizeof( struct hashhdr ) + ALIGNED( datalen );
 	hp->items.list = -1;
 	hp->items.nel = 0;
-	hp->inel = 11;
+	hp->inel = /* */ 11 /*/ 47 /* */;
 	hp->name = name;
 
 	return hp;

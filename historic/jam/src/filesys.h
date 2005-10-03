@@ -18,6 +18,8 @@
 # define FILESYS_DWA20011025_H
 
 # include "pathsys.h"
+#include "hash.h"
+#include "lists.h"
 
 typedef void (*scanback)( void *closure, char *file, int found, time_t t );
 
@@ -28,5 +30,21 @@ int file_time( char *filename, time_t *time );
 
 void file_build1(PATHNAME *f, string* file) ;
 int file_is_file(char* filename);
+
+struct file_info_t {
+    char * name;
+    short is_file;
+    short is_dir;
+    unsigned long size;
+    time_t time;
+    LIST * files;
+} ;
+typedef struct file_info_t file_info_t ;
+
+file_info_t * file_info(char * filename);
+
+file_info_t * file_query(char * filename);
+
+void file_done();
 
 #endif

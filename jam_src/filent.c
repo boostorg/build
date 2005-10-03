@@ -6,14 +6,18 @@
 
 /*  This file is ALSO:
  *  Copyright 2001-2004 David Abrahams.
+ *  Copyright 2005 Rene Rivera.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  */
 
 # include "jam.h"
+# include "debug.h"
+
 # include "filesys.h"
 # include "pathsys.h"
 # include "strings.h"
+# include "newstr.h"
 
 # ifdef OS_NT
 
@@ -59,89 +63,152 @@ file_dirscan(
 	scanback func,
 	void *closure )
 {
-    PATHNAME f;
-    string filespec[1];
-    string filename[1];
-    long handle;
-    int ret;
-    struct _finddata_t finfo[1];
+    PROFILE_ENTER(FILE_DIRSCAN);
+    
+    file_info_t * d = 0;
 
     dir = short_path_to_long_path( dir );
 
     /* First enter directory itself */
 
-    memset( (char *)&f, '\0', sizeof( f ) );
+    d = file_query( dir );
+    
+    if ( ! d || ! d->is_dir )
+    {
+        PROFILE_EXIT(FILE_DIRSCAN);
+        return;
+    }
 
-    f.f_dir.ptr = dir;
-    f.f_dir.len = strlen(dir);
+    if ( ! d->files )
+    {
+        PATHNAME f;
+        string filespec[1];
+        string filename[1];
+        long handle;
+        int ret;
+        struct _finddata_t finfo[1];
+        LIST* files = L0;
 
-    dir = *dir ? dir : ".";
+        memset( (char *)&f, '\0', sizeof( f ) );
+        
+        f.f_dir.ptr = d->name;
+        f.f_dir.len = strlen(d->name);
+        
+        /* Now enter contents of directory */
+
+        string_copy( filespec, *d->name ? d->name : "." );
+        string_append( filespec, "/*" );
+
+        if( DEBUG_BINDSCAN )
+            printf( "scan directory %s\n", dir );
+
+        # if defined(__BORLANDC__) && __BORLANDC__ < 0x550
+        if ( ret = findfirst( filespec->value, finfo, FA_NORMAL | FA_DIREC ) )
+        {
+            string_free( filespec );
+            PROFILE_EXIT(FILE_DIRSCAN);
+            return;
+        }
+
+        string_new( filename );
+        while( !ret )
+        {
+            file_info_t * ff = 0;
+            
+            f.f_base.ptr = finfo->ff_name;
+            f.f_base.len = strlen( finfo->ff_name );
+
+            string_truncate( filename, 0 );
+            path_build( &f, filename );
+
+            files = list_new( files, newstr(filename->value) );
+            ff = file_info( filename->value );
+            ff->is_file = finfo->ff_attrib & FA_DIREC ? 0 : 1;
+            ff->is_dir = finfo->ff_attrib & FA_DIREC ? 1 : 0;
+            ff->size = finfo->ff_fsize;
+            ff->time = (finfo->ff_ftime << 16) | finfo->ff_ftime;
+
+            ret = findnext( finfo );
+        }
+        # else
+        handle = _findfirst( filespec->value, finfo );
+
+        if( ret = ( handle < 0L ) )
+        {
+            string_free( filespec );
+            PROFILE_EXIT(FILE_DIRSCAN);
+            return;
+        }
+
+        string_new( filename );
+        while( !ret )
+        {
+            file_info_t * ff = 0;
+
+            f.f_base.ptr = finfo->name;
+            f.f_base.len = strlen( finfo->name );
+
+            string_truncate( filename, 0 );
+            path_build( &f, filename, 0 );
+
+            files = list_new( files, newstr(filename->value) );
+            ff = file_info( filename->value );
+            ff->is_file = finfo->attrib & _A_SUBDIR ? 0 : 1;
+            ff->is_dir = finfo->attrib & _A_SUBDIR ? 1 : 0;
+            ff->size = finfo->size;
+            ff->time = finfo->time_write;
+
+            ret = _findnext( handle, finfo );
+        }
+
+        _findclose( handle );
+        # endif
+        string_free( filename );
+        string_free( filespec );
+    
+        d->files = files;
+    }
 
     /* Special case \ or d:\ : enter it */
-
-    if( f.f_dir.len == 1 && f.f_dir.ptr[0] == '\\' )
-        (*func)( closure, dir, 0 /* not stat()'ed */, (time_t)0 );
-    else if( f.f_dir.len == 3 && f.f_dir.ptr[1] == ':' )
-        (*func)( closure, dir, 0 /* not stat()'ed */, (time_t)0 );
+    {
+        unsigned long len = strlen(d->name);
+        if( len == 1 && d->name[0] == '\\' )
+            (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
+        else if( len == 3 && d->name[1] == ':' )
+            (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
+    }
 
     /* Now enter contents of directory */
-
-    string_copy( filespec, dir );
-    string_append( filespec, "/*" );
-
-    if( DEBUG_BINDSCAN )
-        printf( "scan directory %s\n", dir );
-
-# if defined(__BORLANDC__) && __BORLANDC__ < 0x550
-    if ( ret = findfirst( filespec->value, finfo, FA_NORMAL | FA_DIREC ) )
+    if ( d->files )
     {
-        string_free( filespec );
-        return;
+        LIST * files = d->files;
+        while ( files )
+        {
+            file_info_t * ff = file_info( files->string );
+            (*func)( closure, ff->name, 1 /* stat()'ed */, ff->time );
+            files = list_next( files );
+        }
     }
+    
+    PROFILE_EXIT(FILE_DIRSCAN);
+}
 
-    string_new( filename );
-    while( !ret )
+file_info_t * file_query( char * filename )
+{
+    file_info_t * ff = file_info( filename );
+    if ( ! ff->time )
     {
-        time_t time_write = finfo->ff_fdate;
+        struct stat statbuf;
 
-        time_write = (time_write << 16) | finfo->ff_ftime;
-        f.f_base.ptr = finfo->ff_name;
-        f.f_base.len = strlen( finfo->ff_name );
+        if( stat( *filename ? filename : ".", &statbuf ) < 0 )
+            return 0;
 
-        string_truncate( filename, 0 );
-        path_build( &f, filename );
-
-        (*func)( closure, filename->value, 1 /* stat()'ed */, time_write );
-
-        ret = findnext( finfo );
+        ff->is_file = statbuf.st_mode & S_IFREG ? 1 : 0;
+        ff->is_dir = statbuf.st_mode & S_IFDIR ? 1 : 0;
+        ff->size = statbuf.st_size;
+        ff->time = statbuf.st_mtime ? statbuf.st_mtime : 1;
     }
-# else
-    handle = _findfirst( filespec->value, finfo );
-
-    if( ret = ( handle < 0L ) )
-    {
-        string_free( filespec );
-        return;
-    }
-
-    string_new( filename );
-    while( !ret )
-    {
-        f.f_base.ptr = finfo->name;
-        f.f_base.len = strlen( finfo->name );
-
-        string_truncate( filename, 0 );
-        path_build( &f, filename, 0 );
-
-        (*func)( closure, filename->value, 1 /* stat()'ed */, finfo->time_write );
-
-        ret = _findnext( handle, finfo );
-    }
-
-    _findclose( handle );
-# endif
-    string_free( filename );
-    string_free( filespec );
+    return ff;
 }
 
 /*
@@ -153,29 +220,17 @@ file_time(
 	char	*filename,
 	time_t	*time )
 {
-	/* On NT this is called only for C:/ */
-
-	struct stat statbuf;
-
-	if( stat( filename, &statbuf ) < 0 )
-	    return -1;
-
-	*time = statbuf.st_mtime;
-
-	return 0;
+    file_info_t * ff = file_query( filename );
+    if ( !ff ) return -1;
+    *time = ff->time;
+    return 0;
 }
 
 int file_is_file(char* filename)
 {
-	struct stat statbuf;
-
-	if( stat( filename, &statbuf ) < 0 )
-	    return -1;
-
-    if (statbuf.st_mode & S_IFREG) 
-        return 1;
-    else
-        return 0;    
+    file_info_t * ff = file_query( filename );
+    if ( !ff ) return -1;
+    return ff->is_file;
 }
 
 
@@ -252,6 +307,8 @@ file_archscan(
 		*/
 
 		string_table = malloc(lar_size+1);
+        if ( DEBUG_PROFILE )
+            profile_memory( lar_size+1 );
 		if (read(fd, string_table, lar_size) != lar_size)
 		    printf("error reading string table\n");
 		string_table[lar_size] = '\0';

@@ -121,6 +121,8 @@
 # include "make.h"
 # include "strings.h"
 # include "expand.h"
+# include "debug.h"
+# include "filesys.h"
 
 /* Macintosh is "special" */
 
@@ -319,6 +321,8 @@ int  main( int argc, char **argv, char **arg_environ )
             globs.debug[i--] = 1;
     }
 
+    { PROFILE_ENTER(MAIN);
+    
 #ifndef NDEBUG
     run_unit_tests();
 #endif
@@ -344,16 +348,11 @@ int  main( int argc, char **argv, char **arg_environ )
     }
 
  
-    {
-   /* Pleace don't change the following line. The 'bump_version.py' script
-       expect a specific format of it. */
-    char  *major_version = "03", *minor_version = "01", *changenum = "11";
     var_set( "JAM_VERSION",
-             list_new( list_new( list_new( L0, newstr( major_version ) ), 
-                                 newstr( minor_version ) ), 
-                       newstr( changenum ) ),
+             list_new( list_new( list_new( L0, newstr( VERSION_MAJOR_SYM ) ), 
+                                 newstr( VERSION_MINOR_SYM ) ), 
+                       newstr( VERSION_PATCH_SYM ) ),
              VAR_SET );
-    }
 
     /* And JAMUNAME */
 # ifdef unix
@@ -468,6 +467,8 @@ int  main( int argc, char **argv, char **arg_environ )
     /* Now make target */
 
     {
+        PROFILE_ENTER(MAIN_MAKE);
+        
         LIST* targets = targets_to_update();
         if ( !targets )
         {
@@ -478,6 +479,8 @@ int  main( int argc, char **argv, char **arg_environ )
             int targets_count = list_length(targets);
             const char **targets2 = (const char **)malloc(targets_count * sizeof(char *));
             int n = 0;
+            if ( DEBUG_PROFILE )
+                profile_memory( targets_count * sizeof(char *) );
             for ( ; targets; targets = list_next(targets) )
             {
                 targets2[n++] = targets->string;
@@ -485,9 +488,13 @@ int  main( int argc, char **argv, char **arg_environ )
             status |= make( targets_count, targets2, anyhow );       
             free(targets);
         }
+        
+        PROFILE_EXIT(MAIN_MAKE);
     }
 
 
+    PROFILE_EXIT(MAIN); }
+    
     if ( DEBUG_PROFILE )
         profile_dump();
 
@@ -497,6 +504,7 @@ int  main( int argc, char **argv, char **arg_environ )
     donerules();
     donestamps();
     donestr();
+    file_done();
 
     /* close cmdout */
 
