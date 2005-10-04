@@ -126,6 +126,22 @@ rule configure (
 }
 
 
+# Supported CPU architectures
+cpu-arch-i386 = 
+    <architecture>/<address-model>
+    <architecture>/<address-model>32
+    <architecture>x86/<address-model>   
+    <architecture>x86/<address-model>32 ;
+
+cpu-arch-amd64 = 
+    <architecture>/<address-model>64    
+    <architecture>x86/<address-model>64 ;
+
+cpu-arch-ia64 =
+    <architecture>ia64/<address-model>  
+    <architecture>ia64/<address-model>64 ;
+
+
 local rule configure-really (
     version ? :
     options *
@@ -184,58 +200,17 @@ local rule configure-really (
 
         $(.versions).set $(version) : condition : $(condition) ;
 
+
         local command = [ get-values <command> : $(options) ] ;
 
-        # setup will be used if a path has been specified.  If setup is
-        # not specified, vcvars32.bat will be used instead.
-        setup = [ get-values <setup> : $(options) ] ;
-        setup ?= vcvars32.bat ;    
-        compiler = [ get-values <compiler> : $(options) ] ;
-        compiler ?= cl ;
-        linker = [ get-values <linker> : $(options) ] ;
-        linker ?= link ;
-        resource-compiler = [ get-values <resource-compiler> : $(options) ] ;
-        resource-compiler ?= rc ;
-        assembler = [ get-values <assembler> : $(options) ] ;
-        assembler ?= ml ;
-        
         # If version is specified, we try to search first in default paths,
         # and only then in PATH.
         command = [ common.get-invocation-command msvc : cl.exe : $(command)
           : [ default-paths $(version) ] : $(version) ] ;
-        
+
         common.handle-options msvc : $(condition) : $(command) : $(options) ;
             
-        if $(command)
-        {        
-            command = [ common.get-absolute-tool-path $(command[-1]) ] ;
-        }
-        local root = $(command:D) ;
-                      
-        setup = $(root)\\bin\\$(setup) ;
-        
-        # CONSIDER: What's the point of 'call'. Can we invoke the script directly?
-        setup = "call \""$(setup)"\" > nul " ;
-        
-        if [ os.name ] = NT
-        {
-            setup = $(setup)"
-" ;
-        }
-        else
-        {
-            setup = "cmd /S /C "$(setup)" \"&&\" " ;
-        }
 
-        # prefix with setup, or quoted path if any
-        local prefix = $(setup) ;
-        
-        flags msvc.compile .CC $(condition) : $(prefix)$(compiler) ;
-        flags msvc.compile .RC $(condition) : $(prefix)$(resource-compiler) ;
-        flags msvc.compile .ASM $(condition) : $(prefix)$(assembler) ;
-        flags msvc.link .LD $(condition) : $(prefix)$(linker) ;
-        flags msvc.archive .LD $(condition) : $(prefix)$(linker) ;
-        
         if ! $(version) 
         {
             # Even if version is not explicitly specified, try to detect the version
@@ -261,6 +236,113 @@ local rule configure-really (
                 version = 6.0 ;
             }                
         }
+
+        
+        # Generate and register setup command
+
+        local below-8.0 = [ MATCH ^([67]\\.) : $(version) ] ;
+
+        local cpu = i386 ;
+
+        local setup ;
+        local setup-option ;
+
+        if $(command)
+        {
+            command = [ common.get-absolute-tool-path $(command[-1]) ] ;
+
+            local parent = [ path.make $(command) ] ;
+            parent = [ path.parent $(parent) ] ;
+            parent = [ path.native $(parent) ] ;
+
+            # setup will be used if the script name has been specified. 
+            # If setup is not specified, a default script will be used instead.
+            setup = [ get-values <setup> : $(options) ] ;
+
+            if ! $(setup)
+            {
+                if $(below-8.0)
+                {
+                    setup ?= vcvars32.bat ;
+                }
+                else
+                {
+                    setup ?= vcvarsall.bat ;
+                }
+
+                # The vccars32.bat is actually in "bin" directory.
+                # (except for free VC7.1 tools)
+                setup = [ GLOB $(command) $(parent) : $(setup) ] ;
+            }
+
+            if $(setup)
+            {
+                # Note Cygwin to Windows translation 
+                setup = "\""$(setup[1]:W)"\"" ;
+
+                if ! $(below-8.0)
+                {
+                    cpu = i386 amd64 ia64 ;
+                    setup-option = x86 x86_amd64 x86_ia64 ;
+                }
+            }
+        }
+
+        if ! $(setup)
+        {
+            error "msvc: Visual Studio setup script not found" ;
+        }
+
+        local prefix = "call " ;
+        local suffix = " >nul
+" ;
+        if ! [ os.name ] in NT
+        {
+            prefix = "cmd.exe /S /C call " ;
+            suffix = " \"&&\" " ;
+        }
+
+        command = $(prefix)$(setup)" "$(setup-option:E="")$(suffix) ;
+
+
+        # Get tool names (if any) and finish setup
+
+        compiler = [ get-values <compiler> : $(options) ] ;
+        compiler ?= cl ;
+
+        linker = [ get-values <linker> : $(options) ] ;
+        linker ?= link ;
+
+        resource-compiler = [ get-values <resource-compiler> : $(options) ] ;
+        resource-compiler ?= rc ;
+
+        assembler = [ get-values <assembler> : $(options) ] ;
+        assembler ?= ml ;
+
+
+        for local i in 1 2 3
+        {
+            local c = $(cpu[$(i)]) ;
+
+            if $(c)
+            {
+                if $(.debug-configuration)
+                {
+                    ECHO "msvc: condition:"
+                        "'$(condition)/$(cond-$(c))',"
+                        "command: '$(command[$(i)])'" ;
+                }
+        
+                local cond = $(condition)/$(cpu-arch-$(c)) ;
+
+                flags msvc.compile .CC  $(cond) : $(command[$(i)])$(compiler) ;
+                flags msvc.compile .RC  $(cond) : $(command[$(i)])$(resource-compiler) ;
+                flags msvc.compile .ASM $(cond) : $(command[$(i)])$(assembler) ;
+                flags msvc.link    .LD  $(cond) : $(command[$(i)])$(linker) ;
+                flags msvc.archive .LD  $(cond) : $(command[$(i)])$(linker) ;
+            }
+        }
+
                     
         # Starting with versions 7.0, the msvc compiler have the /Zc:forScope
         # and /Zc:wchar_t options that improve C++ standard conformance, but
