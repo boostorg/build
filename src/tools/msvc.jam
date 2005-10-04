@@ -443,7 +443,9 @@ generators.register-linker msvc.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LI
 generators.register-archiver msvc.archive : OBJ : STATIC_LIB : <toolset>msvc ;
 generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
 generators.register-c-compiler msvc.compile.c : C : OBJ : <toolset>msvc ;
-generators.register-standard msvc.compile.rc : RC : OBJ(%_res) : <toolset>msvc ;
+
+# Using 'register-c-compiler' adds the build directory to INCLUDES
+generators.register-c-compiler msvc.compile.rc : RC : OBJ(%_res) : <toolset>msvc ;
 generators.override msvc.compile.rc : rc.resource-compile ;
 generators.register-standard msvc.compile.asm : ASM : OBJ : <toolset>msvc ;
 

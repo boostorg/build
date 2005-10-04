@@ -58,7 +58,9 @@ actions quietly create-empty-object
 # The reason we generate OBJ and not RES, is that gcc does not
 # seem to like RES files, but works OK with OBJ.
 # See http://article.gmane.org/gmane.comp.lib.boost.build/5643/
-generators.register-standard rc.resource-compile : RC : OBJ(%_res) ;
+#
+# Using 'register-c-compiler' adds the build directory to INCLUDES
+generators.register-c-compiler rc.resource-compile : RC : OBJ(%_res) ;
 
 # Register scanner for resources
 class res-scanner : scanner 
