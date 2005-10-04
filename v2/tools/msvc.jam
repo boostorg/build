@@ -1,5 +1,6 @@
-# Copyright 2003 David Abrahams.
-# Copyright 2005 Vladimir Prus.
+# Copyright (c) 2003 David Abrahams.
+# Copyright (c) 2005 Vladimir Prus.
+# Copyright (c) 2005 Alexey Pakhunov.
 #
 # Use, modification and distribution is subject to the Boost Software
 # License Version 1.0. (See accompanying file LICENSE_1_0.txt or
@@ -40,22 +41,34 @@ RM =  [ common.rm-command ] ;
 
 # Initialize the toolset for a specific version. As the result, path to
 # compiler and, possible, program names are set up, and will be used when
-# that version of compiler is requested. For example, you might have::
+# that version of compiler is requested. For example, you might have:
 #
-#    using msvc : 6.5 : X:/some_dir ;
-#    using msvc : 7.0 : Y:/some_dir ;
-#    using msvc : : Z:/some_dir
+#    using msvc : 6.5 : cl.exe ;
+#    using msvc : 7.0 : Y:/foo/bar/cl.exe ;
 #
-# If you have "msvc-6.5" in build request, the version from X: drive will be used,
-# and if you put only "msvc", then drive "Z:" will be used. Note that it's not possible
-# the specify that by default, version 7.0 must be used --- you should use 'using'
-# without version number for that effect. 
-#    
-# version -- 
-# path -- 
+# The version paramater can be ommited:
 #
-# When invoking tools, we'll first run vcvars32.bat from the configured path and
-# then cl/link, without path.   
+#    using msvc : : Z:/foo/bar/cl.exe ;
+#
+# Two special version keywords may be supplied:
+#   - all - all detected versions will be registered;
+#   - default - this is an equivalent to an empty version.
+#
+# Depending on a supplied version, detected configurations and presence 
+# 'cl.exe' in the path different results may be achieved. The following 
+# table describes all possible cases:
+#
+#                                      Nothing            "x.y"
+# Passed   Nothing       "x.y"         detected,          detected,
+# version  detected      detected      cl.exe in path     cl.exe in path
+# 
+# default  Error         Use "x.y"     Create "default"   Use "x.y"
+# all      None          Use all       None               Use all
+# x.y      -             Use "x.y"     -                  Use "x.y"
+# a.b      Error         Error         Create "a.b"       Create "a.b"
+# 
+# "x.y" - refers to a detected version;
+# "a.b" - refers to an undetected version.
 #
 # Note: for free VC7.1 tools, we don't correctly find vcvars32.bar when user
 # explicitly provides a path.
@@ -130,6 +143,12 @@ local rule configure-really (
         # Note: 'version' can still be empty at this point if no versions were 
         # detected.
         version ?= "default" ;
+    }
+
+    # Version alias -> real version number
+    if $(.version-alias-$(version))
+    {
+        version = $(.version-alias-$(version)) ;
     }
 
     # Check whether selected configuration is used already
@@ -529,14 +548,19 @@ rule compile.c ( targets + : sources * : properties * )
 
 .ProgramFiles = [ path.make [ common.get-program-files-dir ] ] ;
 
-.known-versions             = 8.0 7.1 7.1toolkit 7.0 6.0 ;
+.known-versions = 8.0 7.1 7.1toolkit 7.0 6.0 ;
+
+# Version aliases
+.version-alias-6 = 6.0 ;
+.version-alias-7 = 7.0 ;
+.version-alias-8 = 8.0 ;
  
 # Name of the registry key that contains Visual C++ installation path
 #   (relative to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft\VisualStudio\x.y\Setup"
-.version-6.0-reg            = "Microsoft Visual C++" ;
-.version-7.0-reg            = "VC" ;
-.version-7.1-reg            = "VC" ;
-.version-8.0-reg            = "VC" ;
+.version-6.0-reg = "Microsoft Visual C++" ;
+.version-7.0-reg = "VC" ;
+.version-7.1-reg = "VC" ;
+.version-8.0-reg = "VC" ;
 
 # Visual C++ Toolkit 2003 do not store its installation path in the registry.
 # The environment variable 'VCToolkitInstallDir' and the default installation 
