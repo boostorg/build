@@ -252,6 +252,8 @@ local rule configure-really (
         if ! [ MATCH ^(6\\.) : $(version) ]
         {
             flags msvc.compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
+            flags msvc.compile.c++ C++FLAGS $(condition) : /wd4675 ;
+            flags msvc.compile CFLAGS $(condition)/<warnings>all : /Wp64 ; # 64-bit compatibility warning
         }
         
         # 8.0 deprecates some of the options
@@ -361,7 +363,7 @@ flags msvc.compile CFLAGS <inlining>full : /Ob2 ;
 
 flags msvc.compile CFLAGS <warnings>on : /W3 ;
 flags msvc.compile CFLAGS <warnings>off : /W0 ;
-flags msvc.compile CFLAGS <warnings>all : /W4 /Wp64 ;
+flags msvc.compile CFLAGS <warnings>all : /W4 ;
 flags msvc.compile CFLAGS <warnings-as-errors>on : /WX ;
 
 flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>off/<extern-c-nothrow>off : /EHs ;
@@ -386,8 +388,6 @@ flags msvc.compile PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;  # 
 flags msvc.compile DEFINES <define> ;
 flags msvc.compile UNDEFS <undef> ;
 flags msvc.compile INCLUDES <include> ;
-
-flags msvc.compile.c++ C++FLAGS : /wd4675 ;
 
 # The actions differ only by explicit selection of input language
 actions compile.c bind RSP
