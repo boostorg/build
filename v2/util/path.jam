@@ -140,7 +140,16 @@ rule reverse ( path )
 #
 local rule join-imp ( elements + )
 {
-    return [ NORMALIZE_PATH $(elements) ] ;
+    local result = ;
+    if ! $(elements[1])
+    {
+        result = [ NORMALIZE_PATH "/" "$(elements[2-])" ] ;
+    }
+    else
+    {
+        result = [ NORMALIZE_PATH "$(elements)" ] ;
+    }
+    return $(result) ;
 }
 
 #

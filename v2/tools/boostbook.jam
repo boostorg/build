@@ -99,14 +99,8 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
     for local dir in $(search-dirs) {
         boostbook-dtd-dir += [ path.glob $(dir) : dtd ] ;
     }
-    if $(boostbook-xsl-dir)
-    {        
-        .boostbook-xsl-dir = [ path.make $(boostbook-xsl-dir[1]) ] ;
-    }
-    if $(boostbook-dtd-dir)
-    {        
-        .boostbook-dtd-dir = [ path.make $(boostbook-dtd-dir[1]) ] ;
-    }
+    .boostbook-xsl-dir = $(boostbook-xsl-dir[1]) ;
+    .boostbook-dtd-dir = $(boostbook-dtd-dir[1]) ;
     
     
     if ! $(.boostbook-xsl-dir) || ! $(.boostbook-dtd-dir)
