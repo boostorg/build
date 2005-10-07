@@ -65,7 +65,7 @@ if $(with-python)
             if $(inc) && $(lib)
             {
                 --python-include ?= $(inc) ;
-                --python-lib ?= python$(v) ;
+                --python-lib ?= $(lib[1]:D) python$(v) ;
             }
         }
     }
@@ -106,13 +106,15 @@ toolset acc cc : "-o " : -D
     : -Ae
     [ opt --release : -s -O3 ]
     [ opt --debug : -g -pg ]
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Borland C++ 5.5.x
 toolset borland bcc32 : -e -n : /D
     : -WC -w- -q "-I$(toolset-root)Include" "-L$(toolset-root)Lib"
     [ opt --release : -O2 -vi -w-inl ]
     [ opt --debug : -v -Od -vi- ]
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : $(--python-lib) ;
 ## Generic Unix cc
 if ! $(CC) { CC = cc ; }
 toolset cc $(CC) : "-o " : -D
@@ -120,55 +122,63 @@ toolset cc $(CC) : "-o " : -D
     [ opt --release : -s -O ]
     [ opt --debug : -g ]
     -I$(--python-include)
-    : $(LIBS) ;
+    : $(LIBS) -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Comeau C/C++ 4.x
 toolset como como : "-o " : -D
     : --c
     [ opt --release : --inlining ]
     [ opt --debug : --no_inlining ]
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## MacOSX Darwin, using GCC 2.9.x, 3.x
 toolset darwin cc :  "-o " : -D
     :
     [ opt --release : -Wl,-x -O3 -finline-functions ]
     [ opt --debug : -g -O0 -fno-inline -pg ]
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## GCC 2.x, 3.x, 4.x
 toolset gcc gcc : "-o " : -D
     : -pedantic
     [ opt --release : [ opt --symbols : -g : -s ] -O3 ]
     [ opt --debug : -g -O0 -fno-inline ]
-    -I$(--python-include) ;
+    -I$(--python-include) -Wno-long-long
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## GCC 2.x, 3.x on CYGWIN but without cygwin1.dll
 toolset gcc-nocygwin gcc : "-o " : -D
     : -s -O3 -mno-cygwin
     [ opt --release : -finline-functions ]
     [ opt --debug : -s -O3 -fno-inline -pg ]
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Intel C/C++ for Linux
 toolset intel-linux icc : "-o " : -D
     :
     [ opt --release : -Xlinker -s -O3 ]
     [ opt --debug : -g -O0 -p ]
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Intel C/C++ for Win32
 toolset intel-win32 icl : /Fe : -D
     : /nologo
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : $(--python-lib) ;
 ## KCC ?
 toolset kcc KCC : "-o " : -D
     :
     [ opt --release : -s +K2 ]
     [ opt --debug : -g +K0 ]
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Borland Kylix
 toolset kylix bc++ : -o : -D
     : -tC -q
     [ opt --release : -O2 -vi -w-inl ]
     [ opt --debug : -v -Od -vi- ]
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Metrowerks CodeWarrior 8.x
 {
     # Even though CW can compile all files at once, it crashes if it tries in the bjam case.
@@ -182,53 +192,59 @@ toolset kylix bc++ : -o : -D
     toolset metrowerks $(mwcc) .link : "-o " :
         : -subsystem console -ladvapi32.lib
         [ opt --release : -runtime ss ]
-        [ opt --debug : -runtime ssd ] ;
+        [ opt --debug : -runtime ssd ]
+        : $(--python-lib) ;
 }
 ## MINGW GCC
 toolset mingw gcc : "-o " : -D
     :
     [ opt --release : -s -O3 -finline-functions ]
     [ opt --debug : -g -O0 -fno-inline -pg ]
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : $(--python-lib) ;
 ## MIPS Pro
 toolset mipspro cc : "-o " : -D
     :
     [ opt --release : -s -O3 -g0 -INLINE:none ]
     [ opt --debug : -g -O0 -INLINE ]
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Microsoft Visual Studio C++ 6.x
 toolset msvc cl : /Fe : -D
     : /nologo
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     -I$(--python-include)
-    : kernel32.lib advapi32.lib ;
+    : kernel32.lib advapi32.lib $(--python-lib) ;
 ## Sun Workshop 6 C++
 toolset sunpro cc : "-o " : -D
     :
     [ opt --release : -s -fast -xO4 ]
     [ opt --debug : -g ]
     -xarch=generic
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Compaq Alpha CXX
 toolset tru64cxx cc : "-o " : -D
     :
     [ opt --release : -s -O5 -inline speed ]
     [ opt --debug : -g -O0 -pg ]
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## IBM VisualAge C++
 toolset vacpp xlc : "-o " : -D
     :
     [ opt --release : -s -O3 -qstrict -qinline ]
     [ opt --debug : -g -qNOOPTimize -qnoinline -pg ]
-    -I$(--python-include) ;
+    -I$(--python-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Microsoft Visual C++ .NET 7.x
 toolset vc7 cl : /Fe : -D
     : /nologo
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     -I$(--python-include)
-    : kernel32.lib advapi32.lib ;
+    : kernel32.lib advapi32.lib $(--python-lib) ;
 ## VMS/OpenVMS DEC C
 toolset vmsdecc cc : /OBJECT= : "/DEFINES=(" "," ")"
     : /STANDARD=VAXC /PREFIX_LIBRARY_ENTRIES=ALL_ENTRIES
@@ -390,8 +406,6 @@ if $(VMS)
 if $(with-python)
 {
     --defs += HAVE_PYTHON ;
-    #~ --flags += -Wno-long-long ;
-    --libs += $(--python-lib) ;
 }
 
 
