@@ -68,6 +68,12 @@ Guess_Toolset ()
     elif test_path qcc ; then BOOST_JAM_TOOLSET=qcc
     elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
     elif test_path icc ; then BOOST_JAM_TOOLSET=intel-linux
+    elif test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
+        BOOST_JAM_TOOLSET=intel-linux
+        BOOST_JAM_TOOLSET_ROOT=/opt/intel/cc/9.0
+    elif test -r /opt/intel_cc_80/bin/iccvars.sh ; then
+        BOOST_JAM_TOOLSET=intel-linux
+        BOOST_JAM_TOOLSET_ROOT=/opt/intel_cc_80
     elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
         BOOST_JAM_TOOLSET=intel-linux
         BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler70/ia32/
@@ -118,7 +124,11 @@ case $BOOST_JAM_TOOLSET in
     ;;
     
     intel-linux)
-    if test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
+    if test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
+        BOOST_JAM_TOOLSET_ROOT=/opt/intel/cc/9.0/
+    elif test -r /opt/intel_cc_80/bin/iccvars.sh ; then
+        BOOST_JAM_TOOLSET_ROOT=/opt/intel_cc_80/
+    elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
         BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler70/ia32/
     elif test -r /opt/intel/compiler60/ia32/bin/iccvars.sh ; then
         BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler60/ia32/
@@ -126,6 +136,17 @@ case $BOOST_JAM_TOOLSET in
         BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
     fi
     if test -r ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh ; then
+        # iccvars doesn't change LD_RUN_PATH. We adjust LD_RUN_PATH
+        # here in order not to have to rely on ld.so.conf knowing the
+        # icc library directory. We do this before running iccvars.sh
+        # in order to allow a user to add modifications to LD_RUN_PATH
+        # in iccvars.sh.
+        if test -z "${LD_RUN_PATH}"; then
+            LD_RUN_PATH="${BOOST_JAM_TOOLSET_ROOT}lib"
+        else
+            LD_RUN_PATH="${BOOST_JAM_TOOLSET_ROOT}lib:${LD_RUN_PATH}"
+        fi
+        export LD_RUN_PATH
         . ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh
     fi
     BOOST_JAM_CC=icc

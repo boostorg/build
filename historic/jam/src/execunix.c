@@ -10,7 +10,7 @@
 # include <errno.h>
 # include <time.h>
 
-#if defined(sun) || defined(__sun)
+#if defined(sun) || defined(__sun) || defined(linux)
 #include <unistd.h> /* need to include unistd.h on sun for the vfork prototype*/
 #include <wait.h>
 #endif
