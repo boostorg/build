@@ -146,7 +146,8 @@ struct globs globs = {
 # else
 	{ 0, 1 }, 		/* debug ... */
 # endif
-	0			/* output commands, not run them */
+	0,			/* output commands, not run them */
+    0 /* action timeout */
 } ;
 
 /* Symbols to be defined as true for use in Jambase */
@@ -241,7 +242,7 @@ int  main( int argc, char **argv, char **arg_environ )
 
     argc--, argv++;
 
-	if( getoptions( argc, argv, "-:d:j:f:gs:t:ano:qv", optv ) < 0 )
+	if( getoptions( argc, argv, "-:l:d:j:f:gs:t:ano:qv", optv ) < 0 )
     {
         printf( "\nusage: %s [ options ] targets...\n\n", progname );
 
@@ -250,6 +251,7 @@ int  main( int argc, char **argv, char **arg_environ )
         printf( "-fx     Read x instead of Jambase.\n" );
 	    /* printf( "-g      Build from newest sources first.\n" ); */
         printf( "-jx     Run up to x shell commands concurrently.\n" );
+        printf( "-lx     Limit actions to x number of seconds after which they are stopped.\n" );
         printf( "-n      Don't actually execute the updating actions.\n" );
         printf( "-ox     Write the updating actions to file x.\n" );
 		printf( "-q      Quit quickly as soon as a target fails.\n" );
@@ -291,6 +293,9 @@ int  main( int argc, char **argv, char **arg_environ )
 
 	if( ( s = getoptval( optv, 'g', 0 ) ) )
 	    globs.newestfirst = 1;
+
+    if( ( s = getoptval( optv, 'l', 0 ) ) )
+        globs.timeout = atoi( s );
 
     /* Turn on/off debugging */
 
@@ -423,7 +428,7 @@ int  main( int argc, char **argv, char **arg_environ )
     {
         if ( arg_v[n][0] == '-' )
         {
-            char *f = "-:d:j:f:gs:t:ano:qv";
+            char *f = "-:l:d:j:f:gs:t:ano:qv";
             for( ; *f; f++ ) if( *f == arg_v[n][1] ) break;
             if ( f[1] == ':' && arg_v[n][2] == '\0' ) { ++n; }
         }
