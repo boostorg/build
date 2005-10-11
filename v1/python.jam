@@ -82,6 +82,10 @@ else if $(UNIX)
 	{
 		PYTHON_EMBEDDED_LIBRARY = python$(PYTHON_VERSION) dl ;
 	}
+	else if $(OS) = OSF
+	{
+		PYTHON_EMBEDDED_LIBRARY = python$(PYTHON_VERSION) ;
+	}
 	else
 	{
 		PYTHON_EMBEDDED_LIBRARY = python$(PYTHON_VERSION) dl util ;
