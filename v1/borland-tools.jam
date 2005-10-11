@@ -31,9 +31,17 @@ flags borland LINKFLAGS <debug-symbols>on : -v ;
 flags borland CFLAGS <optimization>off : -Od ;
 flags borland CFLAGS <optimization>speed : -O2 ;
 flags borland CFLAGS <optimization>space : -O1 ;
-flags borland CFLAGS <inlining>off : -vi- ;
-flags borland CFLAGS <inlining>on : -vi -w-inl ;
-flags borland CFLAGS <inlining>full : -vi -w-inl ;
+
+if $(.BORLAND_HAS_FIXED_INLINING_BUGS)
+{
+    flags borland CFLAGS <inlining>off : -vi- ;
+    flags borland CFLAGS <inlining>on : -vi -w-inl ;
+    flags borland CFLAGS <inlining>full : -vi -w-inl ;
+}
+else
+{
+    flags borland CFLAGS : -vi- ;
+}
 
 # build the options common to the link and C/C++ command-lines
 {

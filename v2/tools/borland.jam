@@ -63,9 +63,20 @@ flags borland.compile OPTIONS <optimization>off : -Od ;
 flags borland.compile OPTIONS <optimization>speed : -O2 ;
 flags borland.compile OPTIONS <optimization>space : -O1 ;
 
-flags borland CFLAGS <inlining>off : -vi- ;
-flags borland CFLAGS <inlining>on : -vi -w-inl ;
-flags borland CFLAGS <inlining>full : -vi -w-inl ;
+if $(.BORLAND_HAS_FIXED_INLINING_BUGS)
+{
+    flags borland CFLAGS <inlining>off : -vi- ;
+    flags borland CFLAGS <inlining>on : -vi -w-inl ;
+    flags borland CFLAGS <inlining>full : -vi -w-inl ;
+}
+else
+{
+    flags borland CFLAGS : -vi- ;
+}
+
+flags borland.compile OPTIONS <warnings>off : -w- ;
+flags borland.compile OPTIONS <warnings>all : -w ;
+flags borland.compile OPTIONS <warnings-as-errors>on : -w! ;
 
 
 # Deal with various runtime configs...
@@ -99,7 +110,6 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 # -q     no banner
 # -c     compile to object
 # -P     C++ code regardless of file extention
-# -w     turns on all warnings
 # -Ve    zero sized empty base classes, this option is on in the IDE by default 
 #        and effects binary compatibility.
 # -Vx    zero sized empty members, this option is on in the IDE by default 
@@ -113,13 +123,13 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -P -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -P -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 # For C, we don't pass -P flag
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -w -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 
@@ -167,7 +177,6 @@ if [ os.name ] = CYGWIN
     # command into a .bat file and execute that.  TLIB is also finicky
     # about pathname style! Forward slashes, too, are treated as
     # options.
-    # TLIB
     actions updated together piecemeal archive
     { 
        chdir $(<:D)
