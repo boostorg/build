@@ -63,9 +63,16 @@ flags borland.compile OPTIONS <optimization>off : -Od ;
 flags borland.compile OPTIONS <optimization>speed : -O2 ;
 flags borland.compile OPTIONS <optimization>space : -O1 ;
 
-flags borland CFLAGS <inlining>off : -vi- ;
-flags borland CFLAGS <inlining>on : -vi -w-inl ;
-flags borland CFLAGS <inlining>full : -vi -w-inl ;
+if $(.BORLAND_HAS_FIXED_INLINING_BUGS)
+{
+    flags borland CFLAGS <inlining>off : -vi- ;
+    flags borland CFLAGS <inlining>on : -vi -w-inl ;
+    flags borland CFLAGS <inlining>full : -vi -w-inl ;
+}
+else
+{
+    flags borland CFLAGS : -vi- ;
+}
 
 flags borland.compile OPTIONS <warnings>off : -w- ;
 flags borland.compile OPTIONS <warnings>all : -w ;
