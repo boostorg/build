@@ -219,6 +219,5 @@ rule link.dll ( targets + : sources * : properties * )
 
 actions link.dll bind LIBRARIES RSP
 {
-    $(.set-path)$(.root:W)$(.old-path) "$(CONFIG_COMMAND)" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(RSP:W)" && $(RM) "$(RSP)"
-    "$(.root)implib" "$(<[2]:W)" "$(<[1]:W)"
+    $(.set-path)$(.root:W)$(.old-path) "$(CONFIG_COMMAND)" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(RSP:W)" && $(RM) "$(RSP)" && "$(.root)implib" "$(<[2]:W)" "$(<[1]:W)"
 }
