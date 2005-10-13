@@ -223,23 +223,6 @@ int  main( int argc, char **argv, char **arg_environ )
     InitGraf(&qd.thePort);
 # endif
 
-#ifdef HAVE_PYTHON
-    Py_Initialize();
-
-    {
-        static PyMethodDef BjamMethods[] = {
-            {"call", bjam_call, METH_VARARGS,
-             "Call the specified bjam rule."},
-            {"import_rule", bjam_import_rule, METH_VARARGS,
-             "Imports Python callable to bjam."},
-            {NULL, NULL, 0, NULL}
-        };
-
-        Py_InitModule("bjam", BjamMethods);
-    }
-
-#endif
-
     argc--, argv++;
 
 	if( getoptions( argc, argv, "-:l:d:j:f:gs:t:ano:qv", optv ) < 0 )
@@ -327,6 +310,26 @@ int  main( int argc, char **argv, char **arg_environ )
     }
 
     { PROFILE_ENTER(MAIN);
+
+    #ifdef HAVE_PYTHON
+    {
+        PROFILE_ENTER(MAIN_PYTHON);
+        Py_Initialize();
+    
+        {
+            static PyMethodDef BjamMethods[] = {
+                {"call", bjam_call, METH_VARARGS,
+                 "Call the specified bjam rule."},
+                {"import_rule", bjam_import_rule, METH_VARARGS,
+                 "Imports Python callable to bjam."},
+                {NULL, NULL, 0, NULL}
+            };
+    
+            Py_InitModule("bjam", BjamMethods);
+        }
+        PROFILE_EXIT(MAIN_PYTHON);
+    }
+    #endif
     
 #ifndef NDEBUG
     run_unit_tests();
