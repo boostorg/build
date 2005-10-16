@@ -216,6 +216,13 @@ toolset msvc cl : /Fe : -D
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     -I$(--python-include)
     : kernel32.lib advapi32.lib $(--python-lib) ;
+## QNX 6.x GCC 3.x/2.95.3
+toolset qcc qcc : "-o " : -D
+    : -pedantic
+    [ opt --release : [ opt --symbols : -g : -s ] -O3 -finline-functions ]
+    [ opt --debug : -g -O0 -fno-inline ]
+    -I$(--python-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Sun Workshop 6 C++
 toolset sunpro cc : "-o " : -D
     :

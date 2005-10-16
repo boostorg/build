@@ -7,6 +7,8 @@
 # Use this toolset to add STLport flavor for any base toolset
 # define STLPORT_LIB_BASE_NAME to the shared between debug and release 
 # versions prefix for stlport library name for example stlport_sunpro
+# Define STLPORT_AUTOLINK to use the autolink facilities of the new
+# STLport-5.0
 
 # STLport iostreams or native iostreams
 feature stlport-iostream : on off ;
@@ -23,15 +25,19 @@ feature stlport-debug-alloc : off on ;
 # ?
 feature stlport-cstd-namespace : std global ;
 
+# STLport-5 libraries are located in cross-compilation individual subdirectories.
+feature stlport-cross : off on ;
+
 CURR_TOOLSET = $(gCURRENT_TOOLSET) ;
 
 # STLport versions
-STLPORT_VERSION ?= 4.6.2 ;
-STLPORT_VERSIONS ?= 4.6 4.5.3 4.5 ;
+STLPORT_VERSIONS(default) ?= 4.6.2 ;
+STLPORT_VERSIONS(4) ?= 4.6.2 4.6 4.5.3 4.5 ;
+STLPORT_VERSIONS(5) ?= 5.0 ;
+STLPORT_VERSION ?= $(STLPORT_VERSION(default)) ;
+STLPORT_VERSIONS ?= $(STLPORT_VERSIONS(4)) $(STLPORT_VERSIONS(5)) ;
 feature stlport-version : [ unique $(STLPORT_VERSION) $(STLPORT_VERSIONS) ] ;
 flags $(CURR_TOOLSET) STLPORT_VERSION_RELEVANT_FEATURE <stlport-version> ;
-
-STLPORT_LIB_DEBUG_SUFFIX ?= _stldebug ;
 
 # singleton variables...
 set-as-singleton STLPORT_INCLUDE_DIRECTORY STLPORT_LIB_DIRECTORY STLPORT_PATH STLPORT_ROOT ;
@@ -67,11 +73,11 @@ rule get-stlport-root
         ECHO "        found, in case there is no central location appropriate for STLPORT_PATH, above, or a" ;
         ECHO  "        particular version's installation is not located in the usual place." ;
         ECHO ;
-        ECHO STLPORT_VERSION - The version of STLport in use by default. Defaults to \"4.6\". Other ;
+        ECHO STLPORT_VERSION - The version of STLport in use by default. Defaults to \"$(STLPORT_VERSIONS(default))\". Other ;
         ECHO "       values can be selected in parallel setting the build property <stlport-version> to" ;
         ECHO "       values from the list of $(dollar)(STLPORT_VERSIONS)" ;
         ECHO ;
-        ECHO STLPORT_VERSIONS - Alternate versions of STLport available on this machine. Defaults to \"4.6 4.5.3 4.5\". ;
+        ECHO STLPORT_VERSIONS - Alternate versions of STLport available on this machine. Defaults to $(STLPORT_VERSIONS:J=" ") . ;
         ECHO ;
         ECHO "Note that STLport iostreams are /not/ in use by default. To enable them, you must place" ;
         ECHO "        <stlport-iostream>on in your BUILD variable or in target requirements." ;
@@ -85,6 +91,8 @@ rule get-stlport-root
 
 STLPORT_INCLUDE_DIRECTORY ?= stlport ;
 STLPORT_LIB_DIRECTORY ?= lib ;
+STLPORT_BIN_DIRECTORY ?= bin ;
+STLPORT_LIB_DEBUG_SUFFIX ?= _stldebug ;
 
 # Clear out the STD paths so that the real toolset doesn't include
 # anything but the STLport as the STD. But also set the STDLIBPATH to
@@ -93,10 +101,10 @@ STLPORT_LIB_DIRECTORY ?= lib ;
 local .stdlibpath = $(STDLIBPATH) ;
 STDHDRS = ;
 STDLIBPATH = ;
-flags $(CURR_TOOLSET) STDHDRS : [ join [ get-stlport-root ] $(SLASH)$(STLPORT_INCLUDE_DIRECTORY) ] ;
-flags $(CURR_TOOLSET) STDLIBPATH <stlport-iostream>on : [ join [ get-stlport-root ] $(SLASH)$(STLPORT_LIB_DIRECTORY) ] $(.stdlibpath) ;
 
-flags $(CURR_TOOLSET) DEFINES <stlport-iostream>off : _STLP_NO_OWN_IOSTREAMS=1 _STLP_HAS_NO_NEW_IOSTREAMS=1 ;
+### Common options.
+
+flags $(CURR_TOOLSET) STDHDRS : [ join [ get-stlport-root ] $(SLASH)$(STLPORT_INCLUDE_DIRECTORY) ] ;
 flags $(CURR_TOOLSET) DEFINES <stlport-extensions>off : _STLP_NO_EXTENSIONS=1 ;
 flags $(CURR_TOOLSET) DEFINES <stlport-anachronisms>off : _STLP_NO_ANACHRONISMS=1 ;
 flags $(CURR_TOOLSET) DEFINES <stlport-cstd-namespace>global : _STLP_VENDOR_GLOBAL_CSTD=1 ;
@@ -105,7 +113,93 @@ flags $(CURR_TOOLSET) DEFINES <stlport-debug-alloc>on : _STLP_DEBUG_ALLOC=1 ;
 flags $(CURR_TOOLSET) DEFINES <runtime-build>debug : _STLP_DEBUG=1 _STLP_DEBUG_UNINITIALIZED=1 ;
 flags $(CURR_TOOLSET) DEFINES <runtime-link>dynamic : _STLP_USE_DYNAMIC_LIB=1 ;
 
-flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>debug/<runtime-link>static    : $(STLPORT_LIB_BASE_NAME)$(STLPORT_LIB_DEBUG_SUFFIX)$(STLPORT_LIB_STATIC_SUFFIX) ;
-flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>debug/<runtime-link>dynamic   : $(STLPORT_LIB_BASE_NAME)$(STLPORT_LIB_DEBUG_SUFFIX) ;
-flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>release/<runtime-link>static  : $(STLPORT_LIB_BASE_NAME)$(STLPORT_LIB_STATIC_SUFFIX) ;
-flags $(CURR_TOOLSET) FINDLIBS <stlport-iostream>on/<runtime-build>release/<runtime-link>dynamic : $(STLPORT_LIB_BASE_NAME) ;
+### STLport 4.x
+
+flags $(CURR_TOOLSET) DEFINES
+    <stlport-version>$(STLPORT_VERSIONS(4))/<stlport-iostream>off :
+    _STLP_NO_OWN_IOSTREAMS=1 _STLP_HAS_NO_NEW_IOSTREAMS=1 ;
+flags $(CURR_TOOLSET) STDLIBPATH
+    <stlport-version>$(STLPORT_VERSIONS(4))/<stlport-iostream>on :
+    [ join [ get-stlport-root ] $(SLASH)$(STLPORT_LIB_DIRECTORY) ]
+    $(.stdlibpath) ;
+flags $(CURR_TOOLSET) FINDLIBS
+    <stlport-version>$(STLPORT_VERSIONS(4))/<stlport-iostream>on/<runtime-build>debug/<runtime-link>static :
+    $(STLPORT_LIB_BASE_NAME)$(STLPORT_LIB_DEBUG_SUFFIX)$(STLPORT_LIB_STATIC_SUFFIX) ;
+flags $(CURR_TOOLSET) FINDLIBS
+    <stlport-version>$(STLPORT_VERSIONS(4))/<stlport-iostream>on/<runtime-build>debug/<runtime-link>dynamic :
+    $(STLPORT_LIB_BASE_NAME)$(STLPORT_LIB_DEBUG_SUFFIX) ;
+flags $(CURR_TOOLSET) FINDLIBS
+    <stlport-version>$(STLPORT_VERSIONS(4))/<stlport-iostream>on/<runtime-build>release/<runtime-link>static :
+    $(STLPORT_LIB_BASE_NAME)$(STLPORT_LIB_STATIC_SUFFIX) ;
+flags $(CURR_TOOLSET) FINDLIBS
+    <stlport-version>$(STLPORT_VERSIONS(4))/<stlport-iostream>on/<runtime-build>release/<runtime-link>dynamic :
+    $(STLPORT_LIB_BASE_NAME) ;
+
+### STLport 5.x
+
+switch $(CURR_TOOLSET)
+{
+    case msvc* : STLPORT_AUTOLINK = TRUE ;
+    case vc* : STLPORT_AUTOLINK = TRUE ;
+}
+
+switch $(CURR_TOOLSET)
+{
+    case intel-win32* : STLPORT_CROSS_DIR ?= icl ;
+    case iw* : STLPORT_CROSS_DIR ?= icl ;
+    case msvc* : STLPORT_CROSS_DIR ?= vc6 ;
+    case vc-6* : STLPORT_CROSS_DIR ?= vc6 ;
+    case vc-7-* : STLPORT_CROSS_DIR ?= vc70 ;
+    case vc-7_0* : STLPORT_CROSS_DIR ?= vc70 ;
+    case vc-7_1* : STLPORT_CROSS_DIR ?= vc71 ;
+    case vc-8* : STLPORT_CROSS_DIR ?= vc8 ;
+}
+
+switch $(CURR_TOOLSET)
+{
+    # GCC compilers have 'g' to indicate debug.
+    case gcc* : STLPORT_DEBUG_SUFFIX ?= g ;
+    case mingw* : STLPORT_DEBUG_SUFFIX ?= g ;
+    case darwin* : STLPORT_DEBUG_SUFFIX ?= g ;
+    # The others use 'd'.
+    case * : STLPORT_DEBUG_SUFFIX ?= d ;
+}
+
+# STLport-5 doesn't directly support single-threaded builds. There is an open
+# question if single-threaded application code can be combined with the
+# multi-threaded STLport-5. Until that's answered this is commented out and
+# boost-base.jam requires all builds to be multi-threaded.
+#~ flags $(CURR_TOOLSET) DEFINES
+    #~ <stlport-version>$(STLPORT_VERSIONS(5)) :
+    #~ _STLP_THREADS=1 ;
+
+flags $(CURR_TOOLSET) STDLIBPATH
+    <stlport-version>$(STLPORT_VERSIONS(5))/<stlport-cross>off :
+    [ join [ get-stlport-root ] $(SLASH)$(STLPORT_LIB_DIRECTORY) ]
+    [ join [ get-stlport-root ] $(SLASH)$(STLPORT_BIN_DIRECTORY) ]
+    $(.stdlibpath) ;
+flags $(CURR_TOOLSET) STDLIBPATH
+    <stlport-version>$(STLPORT_VERSIONS(5))/<stlport-cross>on :
+    [ join [ get-stlport-root ] $(SLASH)$(STLPORT_LIB_DIRECTORY) $(SLASH)$(STLPORT_CROSS_DIR) ]
+    [ join [ get-stlport-root ] $(SLASH)$(STLPORT_BIN_DIRECTORY) $(SLASH)$(STLPORT_CROSS_DIR) ]
+    $(.stdlibpath) ;
+
+if ! $(STLPORT_AUTOLINK)
+{
+    STLPORT_LIB_STATIC_SUFFIX ?= "" ;
+    for local v in $(STLPORT_VERSIONS(5))
+    {
+        flags $(CURR_TOOLSET) FINDLIBS
+            <stlport-version>$(v)/<runtime-build>debug/<runtime-link>static :
+            stlportstl$(STLPORT_DEBUG_SUFFIX)$(STLPORT_LIB_STATIC_SUFFIX).$(v) ;
+        flags $(CURR_TOOLSET) FINDLIBS
+            <stlport-version>$(v)/<runtime-build>debug/<runtime-link>dynamic :
+            stlportstl$(STLPORT_DEBUG_SUFFIX).$(v) ;
+        flags $(CURR_TOOLSET) FINDLIBS
+            <stlport-version>$(v)/<runtime-build>release/<runtime-link>static :
+            stlport$(STLPORT_LIB_STATIC_SUFFIX).$(v) ;
+        flags $(CURR_TOOLSET) FINDLIBS
+            <stlport-version>$(v)/<runtime-build>release/<runtime-link>dynamic :
+            stlport.$(v) ;
+    }
+}

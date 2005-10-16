@@ -1,0 +1,222 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+  <link rel="stylesheet" type="text/css" href="../../../boost.css">
+
+  <title>Boost.Build - stlport library support</title>
+</head>
+
+<body link="#0000FF" vlink="#800080">
+  <table border="0" cellpadding="7" cellspacing="0" width="100%" summary=
+  "header">
+    <tbody>
+      <tr>
+        <td valign="top" width="300">
+          <h3><a href="http://www.boost.org/"><img height="86" width="277"
+          alt="C++ Boost" src="../../../boost.png" border="0"></a></h3>
+        </td>
+
+        <td valign="top">
+          <h1 align="center">Boost.Build</h1>
+
+          <h2 align="center">stlport library support</h2>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <hr>
+
+  <h2>Introduction</h2>
+
+  <p>Boost.Build's <a href="stlport-tools.jam">stlport</a> supports the use
+  of <a href="http://www.stlport.org">STLport</a> standard library
+  implementation with the various Boost.Build toolsets. It is designed to
+  allow you to build and test with multiple installed versions of STLPort, so
+  that objects built in each configuration will be built into separate
+  directories. The configuration and features describe here are in addition
+  to those provided by the specific toolsets that can be configured use the
+  STLport library.</p>
+
+  <h2><a name="configuration" id="configuration">Configuration
+  Variables</a></h2>
+
+  <p>The <code>stlport</code> support responds to the following variables,
+  which can be set in the environment or configured on the jam command-line
+  using <code>-s<i>VARIABLE_NAME</i>=</code><i>value</i>.</p>
+
+  <p>In the table below, <i>version</i> corresponds to an STLPort version
+  number, e.g. "<code>5.0</code>".</p>
+
+  <table border="1" summary="settings">
+    <tr>
+      <th>Variable Name</th>
+
+      <th>Semantics</th>
+
+      <th>Default</th>
+
+      <th>Notes</th>
+    </tr>
+
+    <tr>
+      <td><code>STLPORT_PATH</code></td>
+
+      <td>A directory containing at least one subdirectory of the form
+      <code>/STLPort-</code><i>version</i> where an STLPort installation can
+      be found.</td>
+
+      <td><i>empty</i></td>
+
+      <td>Allows easy configuration for an installation where several STLPort
+      versions are installed under a single directory.</td>
+    </tr>
+
+    <tr>
+      <td><code>STLPORT_</code><i>version</i><code>_PATH</code></td>
+
+      <td>The directory where the specific STLPort <i>version</i>
+      installation can be found, in case there is no central location
+      appropriate for <code>STLPORT_PATH</code>, above, or a particular
+      version's installation is not located in the usual place.</td>
+
+      <td><i>empty</i></td>
+
+      <td>Allows configuration of a specific STLPort installation.</td>
+    </tr>
+
+    <tr>
+      <td><code>STLPORT_VERSION</code></td>
+
+      <td>The version of STLPort in use by default.</td>
+
+      <td><code>4.6.2</code></td>
+
+      <td>Other values can be selected in parallel setting the <a href=
+      "build_system.htm#initiating">build property</a>
+      &lt;stlport-version&gt; to values from the list of
+      <code>$(STLPORT_VERSIONS)</code></td>
+    </tr>
+
+    <tr>
+      <td><code>STLPORT_VERSIONS</code></td>
+
+      <td>A space-separated list of alternate versions of STLport available
+      on this machine.</td>
+
+      <td><code>5.0&nbsp;4.6.2&nbsp;4.6&nbsp;4.5.3&nbsp;4.5</code></td>
+    </tr>
+  </table>
+
+  <h2><a name="features" id="features">STLport Specific Features</a></h2>
+
+  <p>The following <code>stlport</code> specific <a href=
+  "build_system.htm#features">features</a> can be used in target build
+  requirements or in the <a href=
+  "build_system.htm#initiating"><code>BUILD</code></a> variable:</p>
+
+  <table border="1" summary="features">
+    <tr>
+      <th>Feature</th>
+
+      <th>Values</th>
+
+      <th>Default</th>
+
+      <th>Semantics</th>
+    </tr>
+
+    <tr>
+      <td><code>stlport-version</code></td>
+
+      <td><code>$(STLPORT_VERSION)&nbsp;$(STLPORT_VERSIONS)</code> (see
+      above)</td>
+
+      <td><code>$(STLPORT_VERSION)</code></td>
+
+      <td>Selects a version of STLPort for each target</td>
+    </tr>
+
+    <tr>
+      <td><code>stlport-iostream</code></td>
+
+      <td><code>on off</code></td>
+
+      <td><code>on</code></td>
+
+      <td>Controls whether STLPort's own iostreams are in use. The default
+      for this is now "on". This is because overwhelmingly STLport is used
+      for it's iostreams support to the extent that non-iostream mode is no
+      longer available on version 5.0. Since this mode is not available in
+      5.0 this feature is ignored when using version 5.0.</td>
+    </tr>
+
+    <tr>
+      <td><code>stlport-cstd-namespace</code></td>
+
+      <td><code>std global</code></td>
+
+      <td><code>std</code></td>
+
+      <td>Controls whether or not names from the "C" library headers such as
+      &lt;cstdlib&gt; are imported into <code>namespace std</code>.</td>
+    </tr>
+
+    <tr>
+      <td><code>stlport-debug-alloc</code></td>
+
+      <td><code>off on</code></td>
+
+      <td><code>off</code></td>
+
+      <td>Enables STLport support for debugging memory allocations, i.e. it
+      defines <code>_STLP_DEBUG_ALLOC</code> appropriately.</td>
+    </tr>
+
+    <tr>
+      <td><code>stlport-cross</code></td>
+
+      <td><code>off on</code></td>
+
+      <td><code>off</code></td>
+
+      <td>For STLport 5.0, with it's new library naming scheme, it is
+      possible to build using compiler specific targets. This tells
+      Boost.Build that you built STLport in it's "cross compile" mode and
+      will adjust how it looks for the STLport libraries to match.</td>
+    </tr>
+
+    <tr>
+      <td><code>stlport-extensions</code></td>
+
+      <td><code>on off</code></td>
+
+      <td><code>on</code></td>
+
+      <td>Defines <code>_STLP_NO_EXTENSIONS</code> appropriately.</td>
+    </tr>
+
+    <tr>
+      <td><code>stlport-anachronisms</code></td>
+
+      <td><code>on off</code></td>
+
+      <td><code>on</code></td>
+
+      <td>Defines <code>_STLP_NO_ANACHRONISMS</code> appropriately.</td>
+    </tr>
+  </table>
+  <hr>
+
+  <p>Revised $Date$</p>
+
+  <p>Copyright &copy; Dave Abrahams 2002, Aleksey Gurtovoy 2004, Rene Rivera
+  2005.</p>
+
+  <p><small>Distributed under the Boost Software License, Version 1.0. (See
+  accompanying file <a href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</a> or
+  copy at <a href=
+  "http://www.boost.org/LICENSE_1_0.txt">www.boost.org/LICENSE_1_0.txt</a>)</small></p>
+</body>
+</html>

@@ -19,7 +19,7 @@
 # include "newstr.h"
 # include <stdio.h>
 
-#if defined(sun) || defined(__sun)
+#if defined(sun) || defined(__sun) || defined(linux)
 # include <unistd.h> /* needed for read and close prototype */
 #endif
 

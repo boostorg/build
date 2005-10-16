@@ -1,5 +1,5 @@
 # Copyright (c) 2001 David Abrahams.
-# Copyright (c) 2002-2003 Rene Rivera.
+# Copyright (c) 2002-2005 Rene Rivera.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
@@ -143,6 +143,10 @@ else if $(UNIX)
     case HP_UX :
         {
         # gcc on HP-UX does not support multi-threading, don't set anything here
+        }
+    case QNX* :
+        {
+        # gcc/QCC on QNX is always? in multi-thread mode, don't set anything here
         }
     case * :
         {
@@ -416,7 +420,7 @@ rule Link-action
         LNOPT on $(<) = "" ;
     }
     # do we use sonames or not?
-    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && ( $(OS) = LINUX || $(OS) = OPENBSD ) && ! $(NO_GNU_LN)
+    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && ( $(OS) = LINUX || $(OS) = OPENBSD || $(OS) = KFREEBSD ) && ! $(NO_GNU_LN)
     {
         OUTTAG on $(<) = ".$(DLLVERSION)" ;
         SOTAG on $(<) = ".$(DLLVERSION)" ;
@@ -462,7 +466,7 @@ rule Link-action
     gcc-spawn $(<) ;
     gcc-Link-action $(<) : $(>) ;
 
-    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && ( $(OS) = LINUX || $(OS) = OPENBSD ) && ! $(NO_GNU_LN)
+    if $(DLLVERSION) && $(TARGET_TYPE) in $(SHARED_TYPES) && ( $(OS) = LINUX || $(OS) = OPENBSD || $(OS) = KFREEBSD ) && ! $(NO_GNU_LN)
     {
         return "$(<[1]).$(DLLVERSION)" ;
     }

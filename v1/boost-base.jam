@@ -2688,7 +2688,11 @@ rule common-variant-tag ( toolset variant : properties * )
     {
         local version-number = [ get-values <version> : $(properties) ] ;
         version-number ?= $(BOOST_VERSION) ;
-        version-tag = [ MATCH "^([^.]+)[.]([^.]+)" : $(version-number[1]) ] ;
+        version-tag = [ MATCH "^([^.]+)[.]([^.]+)[.]([^.]+)" : $(version-number[1]) ] ;
+        if $(version-tag[3]) = 0
+        {
+            version-tag = $(version-tag[1-2]) ;
+        }
         version-tag = $(version-tag:J="_") ;
     }
     
@@ -2945,6 +2949,13 @@ rule toolset::requirements ( toolset variant : subvariant-path properties * )
             # dynamic runtime only comes in the multi-threading flavor
             if <runtime-link>dynamic in $(properties) { requirements += <threading>multi ; }
         }
+    }
+    if <stlport-version>5.0 in $(properties)
+    {
+        # STLPort-5 doesn't have any single-threaded builds, so we're going
+        # to force all such targets to be built with multithread support.
+        # This is essentially a usage-requirement on the stlport library.
+        requirements += <threading>multi ;
     }
     return $(subvariant-path) [ impose-requirements $(properties) : $(requirements) ] ;
 }

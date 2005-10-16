@@ -13,6 +13,9 @@ set-as-singleton MINGW_ROOT_DIRECTORY MINGW_BIN_DIRECTORY MINGW_INCLUDE_DIRECTOR
     local GCC_INCLUDE_DIRECTORY = $(MINGW_INCLUDE_DIRECTORY) ;
     local GCC_STDLIB_DIRECTORY = $(MINGW_STDLIB_DIRECTORY) ;
     extends-toolset gcc ;
+
+    # So that RUNPATH, and PATH, is set to include where the mingw DLLs are located.
+    flags mingw STDLIBPATH : $(GCC_BIN_DIRECTORY) ;
 }
 
 flags mingw LINKFLAGS <user-interface>gui : -Wl,--subsystem,windows ;
@@ -24,4 +27,3 @@ GCC_NO_EXPORT_ALL ?= true ;
 # Use the -mno-cygwin flag for compiling C, C++ and linking
 CFLAGS += -mno-cygwin ;
 LINKFLAGS += -mno-cygwin ;
-

@@ -313,11 +313,11 @@
 # define NO_VFORK
 # endif
 # ifdef __QNX__
+# define unix
 # ifdef __QNXNTO__
 # define OSMINOR "OS=QNXNTO"
 # define OS_QNXNTO
 # else
-# define unix
 # define OSMINOR "OS=QNX"
 # define OS_QNX
 # define NO_VFORK
@@ -384,6 +384,10 @@
 # define OSMINOR "OS=OPENBSD"
 # define OS_OPENBSD
 # define unix
+# endif
+# if defined (__FreeBSD_kernel__) && !defined(__FreeBSD__)
+# define OSMINOR "OS=KFREEBSD"
+# define OS_KFREEBSD
 # endif
 # ifndef OSMINOR
 # define OSMINOR "OS=UNKNOWN"

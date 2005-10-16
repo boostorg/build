@@ -345,6 +345,9 @@ else if $(UNIX)
     case IRIX :
         RANLIB          ?= "" ;
 
+    case KFREEBSD :
+        CLONE           ?= cp -fpd ;
+
     case LINUX :
         CLONE           ?= cp -fpd ;
 

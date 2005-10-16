@@ -11,7 +11,7 @@
 # include <time.h>
 # include <unistd.h> /* needed for vfork(), _exit() prototypes */
 
-#if defined(sun) || defined(__sun)
+#if defined(sun) || defined(__sun) || defined(linux)
 #include <wait.h>
 #endif
 
