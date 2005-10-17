@@ -68,7 +68,7 @@ Guess_Toolset ()
     elif test_uname IRIX ; then BOOST_JAM_TOOLSET=mipspro
     elif test_uname IRIX64 ; then BOOST_JAM_TOOLSET=mipspro
     elif test_uname OSF1 ; then BOOST_JAM_TOOLSET=tru64cxx
-    elif test_path qcc ; then BOOST_JAM_TOOLSET=qcc
+    elif test_uname QNX && test_path qcc ; then BOOST_JAM_TOOLSET=qcc
     elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
     elif test_path icc ; then BOOST_JAM_TOOLSET=intel-linux
     elif test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
