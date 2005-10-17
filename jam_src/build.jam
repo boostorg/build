@@ -54,6 +54,11 @@ if $(with-python)
             --python-lib ?= [ GLOB [ .path $(python-location) libs ] : "python$(v).lib" ] ;
         }
     }
+    else if $(OS) = MACOSX
+    {
+        --python-include = [ .path $(python-location) Headers ] ;
+        --python-lib = $(python-location) Python ;
+    }
     else
     {
         --python-include = ;
