@@ -1916,6 +1916,7 @@ rule subvariant-target ( main-target : subvariant-id build-properties * : toolse
       $(gNAME_ADJUST($(target-type))) $(target-files)
       : $(subvariant-id) $(build-properties)
       : $(toolset) $(variant) ] ;
+    gTARGET_TYPE($(target-files[1])) = $(target-type) ;
   }
 
   # Do nothing if we already have the build instructions for the specific
