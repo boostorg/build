@@ -598,7 +598,11 @@ rule register ( g )
 {
     .generators += $(g) ;
                    
-    for local t in [ $(g).target-types ] 
+    # A generator can produce several targets of the
+    # same type. We want unique occurence of that generator
+    # in .generators.$(t) in that case, otherwise, it will
+    # be tried twice and we'll get false ambiguity.
+    for local t in [ sequence.unique [ $(g).target-types ] ]
     {            
         .generators.$(t) += $(g) ;
     }    
