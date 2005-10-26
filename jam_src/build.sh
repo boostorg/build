@@ -107,6 +107,7 @@ Guess_Toolset ()
 # is the name of the toolset to force building
 # with.
 case "$1" in
+    --guess-toolset) Guess_Toolset ; echo "$BOOST_JAM_TOOLSET" ; exit 1 ;;
     -*) Guess_Toolset ;;
     ?*) BOOST_JAM_TOOLSET=$1 ; shift ;;
     *) Guess_Toolset ;;

@@ -280,6 +280,11 @@ else
     locate-target = [ .path $(locate-target) ] ;
 }
 
+if --show-locate-target in $(ARGV)
+{
+  ECHO $(locate-target) ;
+}
+
 # We have some different files for UNIX, VMS, and NT.
 jam.source =
     command.c compile.c expand.c glob.c
