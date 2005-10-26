@@ -343,32 +343,68 @@ local rule configure-really (
             }
         }
 
-                    
-        # Starting with versions 7.0, the msvc compiler have the /Zc:forScope
-        # and /Zc:wchar_t options that improve C++ standard conformance, but
-        # those options are off by default.
-        # If we're sure that msvc version is at 7.*, add those options explicitly.
-        # We can be sure either if user specified version 7.* explicitly,
-        # or if the installation path contain 7.* (this is checked above).
-        if ! [ MATCH ^(6\\.) : $(version) ]
-        {
-            flags msvc.compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
-            flags msvc.compile.c++ C++FLAGS $(condition) : /wd4675 ;
-            flags msvc.compile CFLAGS $(condition)/<warnings>all : /Wp64 ; # 64-bit compatibility warning
-        }
-        
-        # 8.0 deprecates some of the options
-        if ! [ MATCH ^([67]\\.) : $(version) ]
+        if ! $(below-8.0)
         {
             flags msvc.link MANIFEST $(condition) : "mt -nologo -manifest " ;
             flags msvc.link OUTPUTRESOURCE $(condition) : "-outputresource:" ;
         }
-        else
-        {
-            flags msvc.compile CFLAGS $(condition)/<optimization>speed $(condition)/<optimization>space : /Ogiy /Gs ;
-            flags msvc.compile CFLAGS $(condition)/<optimization>speed : /Ot ;
-            flags msvc.compile CFLAGS $(condition)/<optimization>space : /Os ;
-        }
+
+
+        # Set version-specific flags
+        configure-version-specific $(version) : $(condition) ;
+    }
+}
+
+
+# Supported CPU types
+cpu-type-g5 = i586 pentium pentium-mmx ;
+cpu-type-g6 = 
+    i686 pentiumpro pentium2 pentium3 pentium3m pentium-m k6 k6-2 k6-3 
+    winchip-c6 winchip2 c3 c3-2 ;
+
+cpu-type-em64t = prescott nocona ;
+cpu-type-amd64 = k8 opteron athlon64 athlon-fx ;
+
+cpu-type-g7 = 
+    pentium4 pentium4m athlon athlon-tbird athlon-4 athlon-xp athlon-mp 
+    $(cpu-type-em64t) $(cpu-type-amd64) ;
+
+cpu-type-itanium = itanium itanium1 merced ;
+cpu-type-itanium2 = itanium2 mckinley ;
+
+
+local rule configure-version-specific ( version : condition )
+{
+    # Starting with versions 7.0, the msvc compiler have the /Zc:forScope
+    # and /Zc:wchar_t options that improve C++ standard conformance, but
+    # those options are off by default.
+    # If we're sure that msvc version is at 7.*, add those options explicitly.
+    # We can be sure either if user specified version 7.* explicitly,
+    # or if the installation path contain 7.* (this is checked above).
+    if ! [ MATCH ^(6\\.) : $(version) ]
+    {
+        flags msvc.compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
+        flags msvc.compile.c++ C++FLAGS $(condition) : /wd4675 ;
+        flags msvc.compile CFLAGS $(condition)/<warnings>all : /Wp64 ; # 64-bit compatibility warning
+    }
+    
+    #
+    # Processor-specific optimization
+    #
+
+    if [ MATCH ^([67]\\.) : $(version) ]
+    {
+        # 8.0 deprecates some of the options
+        flags msvc.compile CFLAGS $(condition)/<optimization>speed $(condition)/<optimization>space : /Ogiy /Gs ;
+        flags msvc.compile CFLAGS $(condition)/<optimization>speed : /Ot ;
+        flags msvc.compile CFLAGS $(condition)/<optimization>space : /Os ;
+
+        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set> : /GB ;
+        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>i386 : /G3 ;
+        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>i486 : /G4 ;
+        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g5) : /G5 ;
+        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g6) : /G6 ;
+        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g7) : /G7 ;
     }
 }
 
@@ -456,6 +492,13 @@ feature.feature debug-store : object database : propagated ;
 
 flags msvc.compile CFLAGS <optimization>speed : /O2 ;
 flags msvc.compile CFLAGS <optimization>space : /O1 ;
+
+flags msvc.compile CFLAGS $(cpu-arch-amd64)/<instruction-set> : /favor:blend ;
+flags msvc.compile CFLAGS $(cpu-arch-amd64)/<instruction-set>$(cpu-type-em64t) : /favor:EM64T ;
+flags msvc.compile CFLAGS $(cpu-arch-amd64)/<instruction-set>$(cpu-type-amd64) : /favor:AMD64 ;
+
+flags msvc.compile CFLAGS $(cpu-arch-ia64)/<instruction-set>$(cpu-type-itanium) : /G1 ;
+flags msvc.compile CFLAGS $(cpu-arch-ia64)/<instruction-set>$(cpu-type-itanium2) : /G2 ;
 
 flags msvc.compile CFLAGS <debug-symbols>on/<debug-store>object : /Z7 ;
 flags msvc.compile CFLAGS <debug-symbols>on/<debug-store>database : /Zi ;
