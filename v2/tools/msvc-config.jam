@@ -4,25 +4,9 @@
 
 # Automatic configuration for VisualStudio toolset. To use, just import this module.
 
-import os ;
 import toolset : using ;
 
-if [ os.name ] = NT
-{
-    for local R in 8.0 7.1 7.0
-    {
-        local vc-path = [ W32_GETREG
-            "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\$(R)\\Setup\\VC"
-            : "ProductDir" ] ;
-        local vc-version = $(R) ;
-        
-        if $(vc-path)
-        {
-            if --debug-configuration in [ modules.peek : ARGV ]
-            {
-                ECHO "notice:" using msvc ":" $(vc-version) ":" "$(vc-path)\\bin\\cl.exe" ;
-            }
-            using msvc : $(vc-version) : "$(vc-path)\\bin\\cl.exe" ;
-        }
-    }
-}
+ECHO "warning: msvc-config.jam is deprecated. Use 'using msvc : all ;' instead." ;
+
+using msvc : all ;
+
