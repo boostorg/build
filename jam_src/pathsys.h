@@ -63,4 +63,11 @@ char* short_path_to_long_path(char* short_path);
 
 #endif
 
+#ifdef USE_PATHUNIX
+/** Returns a static pointer to the system dependent path to the temporary
+    directory. NOTE: *without* a trailing path separator.
+*/
+const char * path_tmpdir(void);
+#endif
+
 #endif

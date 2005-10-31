@@ -6,6 +6,7 @@
 
 /*  This file is ALSO:
  *  Copyright 2001-2004 David Abrahams.
+ *  Copyright 2005 Rene Rivera.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  */
@@ -392,6 +393,35 @@ char* short_path_to_long_path(char* short_path)
 }
 
 #endif
+
+static string path_tmpdir_buffer[1];
+static const char * path_tmpdir_result = 0;
+
+const char * path_tmpdir()
+{
+    if (!path_tmpdir_result)
+    {
+        # ifdef OS_NT
+        DWORD pathLength = 0;
+        pathLength = GetTempPath(pathLength,NULL);
+        string_new(path_tmpdir_buffer);
+        string_reserve(path_tmpdir_buffer,pathLength);
+        pathLength = GetTempPathA(pathLength,path_tmpdir_buffer[0].value);
+        path_tmpdir_buffer[0].value[pathLength] = '\0';
+        path_tmpdir_buffer[0].size = pathLength-1;
+        # else
+        const char * t = getenv("TMPDIR");
+        if (!t)
+        {
+            t = "/tmp";
+        }
+        string_new(path_tmpdir_buffer);
+        string_append(path_tmpdir_buffer,t);
+        # endif
+        path_tmpdir_result = path_tmpdir_buffer[0].value;
+    }
+    return path_tmpdir_result;
+}
 
 
 # endif /* unix, NT, OS/2, AmigaOS */

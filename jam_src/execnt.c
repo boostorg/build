@@ -13,6 +13,7 @@
 # include "jam.h"
 # include "lists.h"
 # include "execcmd.h"
+# include "pathsys.h"
 # include "debug.h"
 # include <errno.h>
 # include <assert.h>
@@ -440,34 +441,6 @@ void execnt_unit_test()
 #endif 
 }
 
-/* SVA - handle temp dirs with spaces in the path */
-static const char *getTempDir(void)
-{
-    static char tempPath[_MAX_PATH];
-    static char *pTempPath=NULL;
-
-    if(pTempPath == NULL)
-    {
-        char *p;
-
-        p = getenv("TEMP");
-        if(p == NULL)
-        {
-            p = getenv("TMP");
-        }
-        if(p == NULL)
-        {
-            pTempPath = "\\temp";
-        }
-        else
-        {
-            GetShortPathName(p, tempPath, _MAX_PATH);
-            pTempPath = tempPath;
-        }
-    }
-    return pTempPath;
-}
-
 /* 64-bit arithmetic helpers */
 
 /* Compute the carry bit from the addition of two 32-bit unsigned numbers */
@@ -577,17 +550,13 @@ execcmd(
   
     if( !cmdtab[ slot ].tempfile )
     {
-        const char *tempdir;
-        DWORD procID;
-
-        tempdir = getTempDir();
+        const char *tempdir = path_tmpdir();
+        DWORD procID = GetCurrentProcessId();
   
         /* SVA - allocate 64 other just to be safe */
         cmdtab[ slot ].tempfile = malloc( strlen( tempdir ) + 64 );
         if ( DEBUG_PROFILE )
             profile_memory( strlen( tempdir ) + 64 );
-  
-        procID = GetCurrentProcessId();
   
         sprintf( cmdtab[ slot ].tempfile, "%s\\jam%d-%02d.bat", 
                  tempdir, procID, slot );		
