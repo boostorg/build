@@ -391,6 +391,7 @@ else if $(UNIX)
     case SOLARIS :
         RANLIB          ?= "" ;
         AR              ?= "/usr/ccs/bin/ar ru" ;
+	STDHDRS         ?= "." ;
 
     case UNICOS :
         NOARSCAN        ?= true ;
