@@ -402,6 +402,7 @@ if ! $(debug) || --noassert in $(ARGV)
 --defs += OPT_HEADER_CACHE_EXT ;
 --defs += OPT_GRAPH_DEBUG_EXT ;
 --defs += OPT_SEMAPHORE ;
+--defs += OPT_AT_FILES ;
 
 # Bug fixes
 --defs += OPT_FIX_TARGET_VARIABLES_EXT ;
