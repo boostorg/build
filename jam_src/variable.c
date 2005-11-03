@@ -6,6 +6,8 @@
 
 /*  This file is ALSO:
  *  Copyright 2001-2004 David Abrahams.
+ *  Copyright 2005 Reece H. Dunn.
+ *  Copyright 2005 Rene Rivera.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  */
@@ -19,7 +21,9 @@
 # include "filesys.h"
 # include "newstr.h"
 # include "strings.h"
+# include "pathsys.h"
 # include <stdlib.h>
+# include <stdio.h>
 
 /*
  * variable.c - handle jam multi-element variables
@@ -207,6 +211,74 @@ var_string(
 
 		if( in[0] == '$' && in[1] == '(' )
 		    dollar++;
+                #ifdef OPT_AT_FILES
+                else if ( in[0] == '@' && in[1] == '(' )
+                {
+                    int depth = 1;
+                    char *ine = in + 2;
+                    char *split = 0;
+                    
+                    /* Scan the content of the response file @() section. */
+                    
+                    while( *ine && depth > 0 )
+                    {
+                        switch( *ine )
+                        {
+                        case '(':
+                            ++depth;
+                            break;
+                        case ')':
+                            --depth;
+                            break;
+                        case ':':
+                            if( depth == 1 && ine[1] == 'E' && ine[2] == '=' )
+                            {
+                                split = ine;
+                            }
+                           break;
+                        }
+                        ++ine;
+                    }
+                    
+                    if (!split)
+                    {
+                        printf( "no file specified!\n" );
+                        exit( EXITBAD );
+                    }
+                    
+                    if ( depth == 0 )
+                    {
+                        string file_name_v;
+                        int file_name_l = 0;
+                        
+                        /* expand the temporary file name var inline */
+                        #if 0
+                        string_copy(&file_name_v,"$(");
+                        string_append_range(&file_name_v,in+2,split);
+                        string_push_back(&file_name_v,')');
+                        #else
+                        string_new(&file_name_v);
+                        string_append_range(&file_name_v,in+2,split);
+                        #endif
+                        file_name_l = var_string(file_name_v.value,out,oute-out+1,lol);
+                        string_free(&file_name_v);
+                        if ( file_name_l < 0 ) return file_name_l;
+                        
+                        /* expand the file value into the file reference */
+                        if ( !globs.noexec )
+                            var_string_to_file( split+3, ine-split-4, out, lol );
+                        
+                        /* continue on with the expansion */
+                        if ( strcmp( "STDOUT", out ) == 0 || strcmp( "STDERR", out ) == 0 )
+                            out[0] = '\0';
+                        else
+                            out += strlen(out);
+                    }
+                    
+                    /* and continue with the parsing just past the @() reference */
+                    in = ine;
+                }
+                #endif
 
 		*out++ = *in++;
 	    }
@@ -228,7 +300,7 @@ var_string(
 
 		out = lastword;
 
-		for( ; l; l = list_next( l ) )
+		while ( l )
 		{
 		    int so = strlen( l->string );
 
@@ -237,7 +309,8 @@ var_string(
 
 		    strcpy( out, l->string );
 		    out += so;
-		    *out++ = ' ';
+		    l = list_next( l );
+		    if ( l ) *out++ = ' ';
 		}
 
 		list_free( l );
@@ -252,6 +325,102 @@ var_string(
 	return out - out0;
 }
 
+void var_string_to_file( const char * in, int insize, const char * out, LOL * lol )
+{
+    const char * ine = in+insize;
+    FILE * out_file = 0;
+    if ( strcmp( out, "STDOUT" ) == 0 )
+    {
+        out_file = stdout;
+    }
+    else if ( strcmp( out, "STDERR" ) == 0 )
+    {
+        out_file = stderr;
+    }
+    else
+    {
+        /* Handle "path to file" filenames. */
+        string out_name;
+        if ( out[0] == '"' && out[strlen(out) - 1] == '"' )
+        {
+            string_copy(&out_name,out+1);
+            string_truncate(&out_name,out_name.size-1);
+        }
+        else
+        {
+            string_copy(&out_name,out);
+        }
+        out_file = fopen( out_name.value, "w" );
+        if (!out_file)
+        {
+            printf( "failed to write output file '%s'!\n", out_name.value );
+            exit( EXITBAD );
+        }
+        string_free(&out_name);
+    }
+
+    while( *in && in < ine )
+    {
+        int dollar = 0;
+        const char * output_0 = in;
+        const char * output_1 = in;
+
+        /* Copy white space */
+
+        while ( output_1 < ine && *output_1 && isspace( *output_1 ) )
+        {
+            ++output_1;
+        }
+        if ( output_0 < output_1 )
+        {
+            fwrite(output_0,output_1-output_0,1,out_file);
+        }
+        output_0 = output_1;
+
+        /* Copy non-white space, watching for variables */
+
+        while( output_1 < ine && *output_1 && !isspace( *output_1 ) )
+        {
+            if( output_1[0] == '$' && output_1[1] && output_1[1] == '(' )
+            {
+                dollar++;
+            }
+            ++output_1;
+        }
+
+        /* If a variable encountered, expand it and and embed the */
+        /* space-separated members of the list in the output. */
+
+        if( dollar )
+        {
+            LIST *l;
+
+            l = var_expand( L0, (char*)output_0, (char*)output_1, lol, 0 );
+
+            while ( l )
+            {
+                fputs( l->string, out_file );
+                l = list_next( l );
+                if ( l ) fputc( ' ', out_file );
+            }
+
+            list_free( l );
+        }
+        else if ( output_0 < output_1 )
+        {
+            fwrite(output_0,output_1-output_0,1,out_file);
+        }
+        
+        in = output_1;
+    }
+
+    if ( out_file != stdout && out_file != stderr )
+    {
+        fflush( out_file );
+        fclose( out_file );
+    }
+}
+
 /*
  * var_get() - get value of a user defined symbol
  *
@@ -261,18 +430,45 @@ var_string(
 LIST *
 var_get( char *symbol )
 {
-	VARIABLE var, *v = &var;
-
-	v->symbol = symbol;
-
-	if( varhash && hashcheck( varhash, (HASHDATA **)&v ) )
-	{
-	    if( DEBUG_VARGET )
-		var_dump( v->symbol, v->value, "get" );
-	    return v->value;
-	}
+    LIST * result = 0;
+    #ifdef OPT_AT_FILES
+    /* Some "fixed" variables... */
+    if ( strcmp( "TMPDIR", symbol ) == 0 )
+    {
+        result = list_new( L0, newstr( (char*)path_tmpdir() ) );
+    }
+    else if ( strcmp( "TMPNAME", symbol ) == 0 )
+    {
+    }
+    else if ( strcmp( "TMPFILE", symbol ) == 0 )
+    {
+    }
+    #if 0
+    /* Not really usefull at the moment. */
+    else if ( strcmp( "STDOUT", symbol ) == 0 )
+    {
+        result = list_new( L0, newstr( "STDOUT" ) );
+    }
+    else if ( strcmp( "STDERR", symbol ) == 0 )
+    {
+        result = list_new( L0, newstr( "STDERR" ) );
+    }
+    #endif
+    else
+    #endif
+    {
+        VARIABLE var, *v = &var;
     
-	return 0;
+        v->symbol = symbol;
+    
+        if( varhash && hashcheck( varhash, (HASHDATA **)&v ) )
+        {
+            if( DEBUG_VARGET )
+                var_dump( v->symbol, v->value, "get" );
+            result = v->value;
+        }
+    }
+    return result;
 }
 
 /*
