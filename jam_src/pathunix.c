@@ -16,6 +16,11 @@
 # include "strings.h"
 # include "newstr.h"
 # include "filesys.h"
+# include <time.h>
+# include <stdlib.h>
+# ifndef OS_NT
+# include <unistd.h>
+# endif
 
 # ifdef USE_PATHUNIX
 
@@ -407,7 +412,7 @@ const char * path_tmpdir()
         string_new(path_tmpdir_buffer);
         string_reserve(path_tmpdir_buffer,pathLength);
         pathLength = GetTempPathA(pathLength,path_tmpdir_buffer[0].value);
-        path_tmpdir_buffer[0].value[pathLength] = '\0';
+        path_tmpdir_buffer[0].value[pathLength-1] = '\0';
         path_tmpdir_buffer[0].size = pathLength-1;
         # else
         const char * t = getenv("TMPDIR");
@@ -421,6 +426,35 @@ const char * path_tmpdir()
         path_tmpdir_result = path_tmpdir_buffer[0].value;
     }
     return path_tmpdir_result;
+}
+
+const char * path_tmpnam(void)
+{
+    char name_buffer[64];
+    # ifdef OS_NT
+    unsigned long c0 = GetCurrentProcessId();
+    # else
+    unsigned long c0 = getpid();
+    # endif
+    static unsigned long c1 = 0;
+    if (0 == c1) c1 = time(0)&0xffff;
+    c1 += 1;
+    sprintf(name_buffer,"jam%lx%lx.000",c0,c1);
+    return newstr(name_buffer);
+}
+
+const char * path_tmpfile(void)
+{
+    const char * result = 0;
+    
+    string file_path;
+    string_copy(&file_path,path_tmpdir());
+    string_push_back(&file_path,PATH_DELIM);
+    string_append(&file_path,path_tmpnam());
+    result = newstr(file_path.value);
+    string_free(&file_path);
+    
+    return result;
 }
 
 

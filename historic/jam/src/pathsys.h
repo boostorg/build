@@ -68,6 +68,14 @@ char* short_path_to_long_path(char* short_path);
     directory. NOTE: *without* a trailing path separator.
 */
 const char * path_tmpdir(void);
+
+/** Returns a new temporary name.
+*/
+const char * path_tmpnam(void);
+
+/** Returns a new temporary path.
+*/
+const char * path_tmpfile(void);
 #endif
 
 #endif
