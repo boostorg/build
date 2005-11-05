@@ -439,9 +439,11 @@ var_get( char *symbol )
     }
     else if ( strcmp( "TMPNAME", symbol ) == 0 )
     {
+        result = list_new( L0, newstr( (char*)path_tmpnam() ) );
     }
     else if ( strcmp( "TMPFILE", symbol ) == 0 )
     {
+        result = list_new( L0, newstr( (char*)path_tmpfile() ) );
     }
     #if 0
     /* Not really usefull at the moment. */
