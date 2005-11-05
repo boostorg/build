@@ -19,7 +19,7 @@ for local r in $(required-rules)
     if ! $(r) in [ RULENAMES ]
     {
         ECHO "error: builtin rule '$(r)' is not present" ;
-        ECHO "error: you version of bjam is likely out of date" ;
+        ECHO "error: your version of bjam is likely out of date" ;
         ECHO "error: please get a fresh version from CVS." ;
         EXIT ;
     }
@@ -54,7 +54,21 @@ module .ENVIRON
     if ! $(p)
     {
         ECHO "error: no builtin module .ENVIRON is found" ;
-        ECHO "error: you version of bjam is likely out of date" ;
+        ECHO "error: your version of bjam is likely out of date" ;
+        ECHO "error: please get a fresh version from CVS." ;
+        EXIT ;
+    }
+}
+
+# Check that @() functionality is present. Similarly to modules,
+# we don't have a way to test that directly. Instead we check that
+# $(TMPNAME) functionality is present which was added at roughly
+# the same time (more precisely it was added just before).
+{
+    if ! $(TMPNAME)
+    {
+        ECHO "error: no @() functionality found" ;
+        ECHO "error: your version of bjam is likely out of date" ;
         ECHO "error: please get a fresh version from CVS." ;
         EXIT ;
     }

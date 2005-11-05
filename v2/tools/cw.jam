@@ -23,6 +23,9 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 feature.extend toolset : cw ;
 
+nl = "
+" ;
+
 rule init ( version ? : command * : options * )
 {
    # TODO: fix the $(command[1]) = $(compiler) issue
@@ -147,11 +150,11 @@ flags cw.compile INCLUDES <include> ;
 
 actions compile.c
 {
-   $(.CC) -c -cwd include -lang c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I- -I"$(INCLUDES)" -o "$(<)" "$(>)"
+   $(.CC) -c -cwd include -lang c -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) -I- -o "$(<)" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")"
 }
 actions compile.c++
 {
-   $(.CC) -c -cwd include -lang c++ -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(USER_CFLAGS) -I- -I"$(INCLUDES)" -o "$(<)" "$(>)"
+   $(.CC) -c -cwd include -lang c++ -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) -I- -o "$(<)" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")"
 }
 
 ## linking phase
@@ -173,70 +176,31 @@ toolset.flags cw.link LINKPATH <library-path> ;
 
 if [ os.name ] in NT
 {
-   rule link ( targets + : sources * : properties * )
-   {
-      common.response-file $(targets) : $(sources) : 
-         : $(properties) ;
-   }
-
-   rule link.dll ( targets + : sources * : properties * )
-   {
-      common.response-file $(targets) : $(sources) : 
-         : $(properties) ;
-      DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
-   }
-
-   rule archive ( targets + : sources * : properties * )
-   {
-      common.response-file $(targets) : $(sources) : 
-         : $(properties) ;
-   }
-
-   actions archive bind RSP
+   actions archive bind
    {
       if exist "$(<[1])" DEL "$(<[1])"
-      $(.LD) -library -o "$(<[1])" @"$(RSP:W)"
+      $(.LD) -library -o "$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)")"
    }
 }
 else # cygwin
 {
-   rule link ( targets + : sources * : properties * )
-   {
-      common.response-file $(targets) : $(sources) : 
-         : $(properties) ;
-   }
-
-   rule link.dll ( targets + : sources + : properties * )
-   {
-      common.response-file $(targets) : $(sources) : 
-         : $(properties) ;
-      .cygpath = "cygpath -d " ;
-      DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
-   }
-
-   rule archive ( targets + : sources * : properties * )
-   {
-      common.response-file $(targets) : $(sources) : 
-         : $(properties) ;
-   }
-
-   actions archive bind RSP
+   actions archive bind
    {
       _bbv2_out_="$(<)"
       if test -f "$_bbv2_out_" ; then
          _bbv2_existing_="$(<:W)"
       fi
-      $(.LD) -library -o "$(<:W)" $_bbv2_existing_ @"$(RSP:W)"
+      $(.LD) -library -o "$(<:W)" $_bbv2_existing_ @"@($(<[1]:W).rsp:E=$(nl)"$(>)")"
    }
 }
 
-actions link bind DEF_FILE RSP
+actions link bind DEF_FILE
 {
-   $(.LD) -o "$(<[1]:W)" -L"$(LINKPATH)" $(LINKFLAGS) $(USER_LINKFLAGS) @"$(RSP:W)"
+   $(.LD) -o "$(<[1]:W)" -L"$(LINKPATH)" $(LINKFLAGS) $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)")"
 }
 
-actions link.dll bind DEF_FILE RSP
+actions link.dll bind DEF_FILE
 {
-   $(.LD) -o "$(<[1]:W)" -implib "$(<[2]:W)" -L"$(LINKPATH)" $(LINKFLAGS) -f "$(DEF_FILE)" $(USER_LINKFLAGS) @"$(RSP:W)"
+   $(.LD) -o "$(<[1]:W)" -implib "$(<[2]:W)" -L"$(LINKPATH)" $(LINKFLAGS) -f "$(DEF_FILE)" $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)")"
 }
 
