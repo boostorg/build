@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+<head>
+  <meta name="generator" content=
+  "HTML Tidy for Linux/x86 (vers 1st September 2003), see www.w3.org">
+  <meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+  <link rel="stylesheet" type="text/css" href="../../../boost.css">
+
+  <title>Boost.Build - vc-8_0 toolset</title>
+</head>
+
+<body link="#0000FF" vlink="#800080">
+  <table border="0" cellpadding="7" cellspacing="0" width="100%" summary=
+  "header">
+    <tr>
+      <td valign="top" width="300">
+        <h3><a href="http://www.boost.org"><img height="86" width="277" alt=
+        "C++ Boost" src="../../../boost.png" border="0"></a></h3>
+      </td>
+
+      <td valign="top">
+        <h1 align="center">Boost.Build</h1>
+
+        <h2 align="center">vc-8_0 toolset</h2>
+      </td>
+    </tr>
+  </table>
+  <hr>
+
+  <h2>Introduction</h2>
+
+  <p>Boost.Build's <a href="vc-8_0-tools.jam">vc-8_0</a> toolset supports the 
+  Microsoft <a href="http://msdn.microsoft.com/visualc/">Visual C++</a> .NET 
+  2005 (Visual Studio or Express edition with Platform SDK additionally installed). This toolset is an
+  extention to the <code><a href="msvc-tools.html">msvc</a></code> toolset
+  and is useful for when you need to have access to several versions of
+  Visual C++.</p>
+
+  <h2>Configuration Variables</h2>
+  <p>The <code>vc-8_0</code> toolset responds to 
+  the following variables which can be set in the environment or configured on 
+  the jam command-line using <code>-s<i>VARIABLE_NAME</i>=</code><i>value</i>:
+  </p>
+  
+  <table border="1" summary="settings">
+    <tr>
+      <th>Variable Name</th>
+
+      <th>Semantics</th>
+
+      <th>Default</th>
+
+      <th>Notes</th>
+    </tr>
+
+    <tr>
+      <td><code>VC80_ROOT</code></td>
+
+      <td>Path to installation of VC8</td>
+
+      <td>
+      <code>C:\Program&nbsp;Files\Microsoft&nbsp;Visual&nbsp;Studio&nbsp;8\VC</code></td>
+
+      <td>If <code>MSVCDir</code> is set in the environment, the toolset will
+      assume <code>VCVARS32.BAT</code>has already been called, and will
+      ignore this variable.</td>
+    </tr>
+  </table>
+  <h3>Note about warnings</h3>
+  <p>The implementation of the standard C++ library bundled with
+  Visual C++ .NET 2005 might issue a number of spurious
+  warnings <i>feature is deprecated</i> when using Boost headers. The
+  warnings come from the "Safe" C++ Library, which labels many
+  standard C and C++ library constructs as deprecated when in fact
+  they may be used safely and
+  correctly. Define <code>_SCL_SECURE_NO_DEPRECATE</code> globally to
+  eliminate these errors. Alternatively, you can enclose all includes
+  of Boost headers and C++ standard library headers with <code>#pragma
+      warning(disable:4996)</code>:<br><br>
+
+  <pre>
+  #pragma warning(push)<br>
+  #pragma warning(disable : 4996) <br>
+  #include &lt;vector&gt;
+  #include &lt;boost/shared_ptr.hpp&gt;<br>
+  #include &lt;boost/noncopyable.hpp&gt;<br>
+  #include &lt;boost/array.hpp&gt;<br>
+  #pragma warning(pop)<br>
+  </pre>
+  </p>
+
+  <hr>
+
+  <p>Revised 
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->05 November, 2005<!--webbot bot="Timestamp" endspan i-checksum="40844" --></p>
+
+  <p>Copyright &copy; Dave Abrahams 2002, Bronek Kozicki 2005.</p>
+
+  <p><small>Distributed under the Boost Software License, Version 1.0. (See
+  accompanying file <a href="../../../LICENSE_1_0.txt">LICENSE_1_0.txt</a> or
+  copy at <a href=
+  "http://www.boost.org/LICENSE_1_0.txt">www.boost.org/LICENSE_1_0.txt</a>)</small></p>
+</body>
+</html>
