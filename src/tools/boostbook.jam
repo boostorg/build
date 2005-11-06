@@ -196,17 +196,19 @@ rule docbook-to-fo ( target : source : properties * )
 
 rule generate-xml-catalog ( target : sources * : properties * )
 {
-  local text = "<?xml version=\"1.0\"?>" ;
+  print.output $(target) ;
 
-  text += "<!DOCTYPE catalog " ;
-  text += "  PUBLIC \"-//OASIS/DTD Entity Resolution XML Catalog V1.0//EN\"" ;
-  text += "  \"http://www.oasis-open.org/committees/entity/release/1.0/catalog.dtd\">" ;
-  text += "<catalog xmlns=\"urn:oasis:names:tc:entity:xmlns:xml:catalog\">" ;
- 
   # BoostBook DTD catalog entry
   local boostbook-dtd-dir = [ boostbook.dtd-dir ] ;
-
-  text += "  <rewriteURI uriStartString=\"http://www.boost.org/tools/boostbook/dtd/\" rewritePrefix=\"file://$(boostbook-dtd-dir)/\"/>" ;
+  
+  print.text
+    "<?xml version=\"1.0\"?>"
+    "<!DOCTYPE catalog "
+    "  PUBLIC \"-//OASIS/DTD Entity Resolution XML Catalog V1.0//EN\""
+    "  \"http://www.oasis-open.org/committees/entity/release/1.0/catalog.dtd\">"
+    "<catalog xmlns=\"urn:oasis:names:tc:entity:xmlns:xml:catalog\">"
+    "  <rewriteURI uriStartString=\"http://www.boost.org/tools/boostbook/dtd/\" rewritePrefix=\"file://$(boostbook-dtd-dir)/\"/>"
+    : true ;
 
   local docbook-xsl-dir = [ boostbook.docbook-xsl-dir ] ;
   if ! $(docbook-xsl-dir) 
@@ -221,7 +223,7 @@ rule generate-xml-catalog ( target : sources * : properties * )
   }
   else 
   {
-    text += "  <rewriteURI uriStartString=\"http://docbook.sourceforge.net/release/xsl/current/\" rewritePrefix=\"file://$(docbook-xsl-dir)/\"/>" ;
+    print.text "  <rewriteURI uriStartString=\"http://docbook.sourceforge.net/release/xsl/current/\" rewritePrefix=\"file://$(docbook-xsl-dir)/\"/>" ;
   }
 
   local docbook-dtd-dir = [ boostbook.docbook-dtd-dir ] ;
@@ -237,13 +239,10 @@ rule generate-xml-catalog ( target : sources * : properties * )
   }
   else 
   {
-    text += "  <rewriteURI uriStartString=\"http://www.oasis-open.org/docbook/xml/4.2/\" rewritePrefix=\"file://$(docbook-dtd-dir)/\"/>" ;
+    print.text "  <rewriteURI uriStartString=\"http://www.oasis-open.org/docbook/xml/4.2/\" rewritePrefix=\"file://$(docbook-dtd-dir)/\"/>" ;
   }
 
-  text += "</catalog>" ;
-
-  print.output $(target) ;
-  print.text $(text) : true ;          
+  print.text "</catalog>" ;
 }
 
 class boostbook-generator : generator
