@@ -250,6 +250,7 @@ var_string(
                     {
                         string file_name_v;
                         int file_name_l = 0;
+                        const char * file_name_s = 0;
                         
                         /* expand the temporary file name var inline */
                         #if 0
@@ -262,17 +263,39 @@ var_string(
                         #endif
                         file_name_l = var_string(file_name_v.value,out,oute-out+1,lol);
                         string_free(&file_name_v);
-                        if ( file_name_l < 0 ) return file_name_l;
+                        if ( file_name_l < 0 ) return -1;
+                        file_name_s = out;
+                        
+                        /* for stdout/stderr we will create a temp file and generate
+                           a command that outputs the content as needed. */
+                        if ( strcmp( "STDOUT", out ) == 0 || strcmp( "STDERR", out ) == 0 )
+                        {
+                            int err_redir = strcmp( "STDERR", out ) == 0;
+                            out[0] = '\0';
+                            file_name_s = path_tmpfile();
+                            file_name_l = strlen(file_name_s);
+                            #ifdef OS_NT
+                            if ( (out+7+file_name_l+(err_redir?5:0)) >= oute ) return -1;
+                            sprintf( out,"type \"%s\"%s",
+                                file_name_s,
+                                err_redir ? " 1>&2" : "" );
+                            #else
+                            if ( (out+6+file_name_l+(err_redir?5:0)) >= oute ) return -1;
+                            sprintf( out,"cat \"%s\"%s",
+                                file_name_s,
+                                err_redir ? " 1>&2" : "" );
+                            #endif
+                            /* we also make sure that the temp files created by this
+                               get nuked eventually. */
+                            file_remove_atexit( file_name_s );
+                        }
                         
                         /* expand the file value into the file reference */
                         if ( !globs.noexec )
-                            var_string_to_file( split+3, ine-split-4, out, lol );
+                            var_string_to_file( split+3, ine-split-4, file_name_s, lol );
                         
                         /* continue on with the expansion */
-                        if ( strcmp( "STDOUT", out ) == 0 || strcmp( "STDERR", out ) == 0 )
-                            out[0] = '\0';
-                        else
-                            out += strlen(out);
+                        out += strlen(out);
                     }
                     
                     /* and continue with the parsing just past the @() reference */
@@ -445,8 +468,6 @@ var_get( char *symbol )
     {
         result = list_new( L0, newstr( (char*)path_tmpfile() ) );
     }
-    #if 0
-    /* Not really usefull at the moment. */
     else if ( strcmp( "STDOUT", symbol ) == 0 )
     {
         result = list_new( L0, newstr( "STDOUT" ) );
@@ -455,7 +476,6 @@ var_get( char *symbol )
     {
         result = list_new( L0, newstr( "STDERR" ) );
     }
-    #endif
     else
     #endif
     {

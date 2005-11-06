@@ -3,6 +3,7 @@
 # include "strings.h"
 # include "newstr.h"
 # include "filesys.h"
+# include "lists.h"
 
 void
 file_build1(
@@ -61,4 +62,26 @@ file_info_t * file_info(char * filename)
 void file_done()
 {
     hashdone( filecache_hash );
+}
+
+static LIST * files_to_remove = L0;
+
+static void remove_files_atexit(void)
+{
+    /* we do pop front in case this exit function is called
+       more than once */
+    while ( files_to_remove )
+    {
+        remove( files_to_remove->string );
+        files_to_remove = list_pop_front( files_to_remove );
+    }
+}
+
+void file_remove_atexit( const char * path )
+{
+    if ( L0 == files_to_remove )
+    {
+        atexit(&remove_files_atexit);
+    }
+    files_to_remove = list_new( files_to_remove, newstr((char*)path) );
 }

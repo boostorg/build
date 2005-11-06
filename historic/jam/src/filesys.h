@@ -47,4 +47,8 @@ file_info_t * file_query(char * filename);
 
 void file_done();
 
+/** Marks a path/file to be removed when jam exits.
+*/
+void file_remove_atexit( const char * path );
+
 #endif
