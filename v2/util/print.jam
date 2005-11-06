@@ -318,62 +318,35 @@ rule text (
         }
         else
         {
-            while $(strings)
+            for local s in $(strings)
             {
-                ECHO $(strings[1]) ;
-                strings = $(strings[2-]) ;
+                ECHO $(s) ;
             }
         }
     }
-    # We ignore empty output because the Windows ECHO command is
-    # braindamaged. It doesn't have any facility for echoing a blank line.
-    else if $(output-target)
+    if ! $($(output-target).did-action)
     {
-        if ! $($(output-target).did-action)
-        {
-            $(output-target).did-action = yes ;
-            _ on $(output-target) = " " ;
-            nl on $(output-target) = "
+        $(output-target).did-action = yes ;
+        $(output-target).text-prefix = ;
+        $(output-target).text-body = ;
+        $(output-target).text-suffix = ;
+        
+        nl on $(output-target) = "
 " ;
-            text-redirect-0 on $(output-target) = ">>" ;
-            text-redirect-n on $(output-target) = ">>" ;
-            text-front on $(output-target) = ;
-            text-prefix on $(output-target) = ;
-            text-body on $(output-target) = ;
-            text-suffix on $(output-target) = ;
-            text-action $(output-target) ;
-            text-front-section.$(output-target) = ;
-        }
+        text-redirect on $(output-target) = ">>" ;
         if $(overwrite)
         {
-            text-redirect-0 on $(output-target) = ">" ;
+            text-redirect on $(output-target) = ">" ;
         }
-        if ! $(text-front-section.$(output-target))
-        {
-            text-front on $(output-target) = [ echo-cmd $(strings[1]) ] ;
-            text-front-section.$(output-target) = $(prefix-body-suffix) ;
-            strings = $(strings[2-]) ;
-        }
-        if $(strings)
-        {
-            if ( $(prefix-body-suffix) = prefix &&
-                    $(text-front-section.$(output-target)) != prefix ) ||
-                ( $(prefix-body-suffix) = body &&
-                $(text-front-section.$(output-target)) = suffix )
-            {
-                text-$(text-front-section.$(output-target)) on $(output-target) =
-                    [ on $(output-target) return $(text-front) ]
-                    [ on $(output-target) return $(text-$(text-front-section.$(output-target))) ] ;
-                text-front on $(output-target) = [ echo-cmd $(strings[1]) ] ;
-                text-front-section.$(output-target) = $(prefix-body-suffix) ;
-                strings = $(strings[2-]) ;
-            }
-            for local string-n in $(strings)
-            {
-                text-$(prefix-body-suffix) on $(output-target) += [ echo-cmd $(string-n) ] ;
-            }
-        }
+        text-content on $(output-target) = ;
+        
+        text-action $(output-target) ;
     }
+    $(output-target).text-$(prefix-body-suffix) += $(strings) ;
+    text-content on $(output-target) =
+        $($(output-target).text-prefix)
+        $($(output-target).text-body)
+        $($(output-target).text-suffix) ;
 }
 
 # Outputs the text to the current targets, after word-wrapping it.
@@ -414,41 +387,7 @@ rule escape-html (
 #
 actions quietly text-action
 {
-$(text-front)$(_)$(text-redirect-0)$(_)"$(<)"
-$(text-prefix)$(_)$(text-redirect-n)$(_)"$(<)"$(nl)
-$(text-body)$(_)$(text-redirect-n)$(_)"$(<)"$(nl)
-$(text-suffix)$(_)$(text-redirect-n)$(_)"$(<)"$(nl)
-}
-
-if [ modules.peek : NT ]
-{
-    rule echo-cmd ( string ? )
-    {
-        if $(string) || $(string) != ""
-        {
-            local escaped = [ regex.escape $(string) : "&|()<>^" : "^" ] ;
-            return "echo $(escaped)" ;
-        }
-        else
-        {
-            return "echo." ;
-        }
-    }
-}
-else
-{
-    rule echo-cmd ( string ? )
-    {
-        if $(string) || $(string) != ""
-        {
-            local escaped = [ regex.escape $(string) : "\\\"" : "\\" ] ;
-            return "echo \"$(escaped)\"" ;
-        }
-        else
-        {
-            return "echo" ;
-        }
-    }
+    @($(STDOUT):E=$(text-content:J=$(nl))) $(text-redirect) "$(<)"
 }
 
 local rule __test__ ( )
