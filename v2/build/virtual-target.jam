@@ -260,10 +260,10 @@ class abstract-file-target : virtual-target
             }
             else
             {                
-                self.creatin-subvariant = $(s) ;
+                self.creating-subvariant = $(s) ;
             }            
         }
-        return $(self.creatin-subvariant) ;
+        return $(self.creating-subvariant) ;
     }
 
     rule actualize-action ( target )
