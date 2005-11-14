@@ -652,13 +652,13 @@ else
 actions link bind DEF_FILE
 {
     $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
-    $(MANIFEST)$(<[1]).manifest $(OUTPUTRESOURCE)$(<[1]);#2
+    $(MANIFEST)$(<[1]).manifest $(OUTPUTRESOURCE)$(<[1]);1
 }
 
 actions link.dll bind DEF_FILE
 {
     $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
-    $(MANIFEST)$(<[1]).manifest $(OUTPUTRESOURCE)$(<[1]);#2
+    $(MANIFEST)$(<[1]).manifest $(OUTPUTRESOURCE)$(<[1]);2
 }
 
 
