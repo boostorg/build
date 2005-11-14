@@ -1,14 +1,19 @@
-project boost/tools/jam/doc ;
+# Copyright Rene Rivera 2005. Use, modification, and distribution are
+# subject to the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-import boostbook : boostbook ;
 using quickbook ;
 
-boostbook bjam
+xml bjam : bjam.qbk ;
+
+boostbook standalone
     :
-        bjam.qbk
+        bjam
     :
         <xsl:param>boost.root=../../../..
-        <xsl:param>boost.libraries=../../../../libs/libraries.htm
+        <xsl:param>nav.layout=none
+        <xsl:param>navig.graphics=0
+        #~ <xsl:param>boost.libraries=../../../../libs/libraries.htm
         #~ <xsl:param>generate.section.toc.level=3
         #~ <xsl:param>chunk.section.depth=2
         #~ <xsl:param>chunk.first.sections=1
