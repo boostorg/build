@@ -1,0 +1,15 @@
+project boost/tools/jam/doc ;
+
+import boostbook : boostbook ;
+using quickbook ;
+
+boostbook bjam
+    :
+        bjam.qbk
+    :
+        <xsl:param>boost.root=../../../..
+        <xsl:param>boost.libraries=../../../../libs/libraries.htm
+        #~ <xsl:param>generate.section.toc.level=3
+        #~ <xsl:param>chunk.section.depth=2
+        #~ <xsl:param>chunk.first.sections=1
+    ;
