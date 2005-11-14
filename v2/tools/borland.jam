@@ -52,7 +52,7 @@ generators.register-linker borland.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT
 generators.register-archiver borland.archive : OBJ : STATIC_LIB : <toolset>borland ;
 generators.register-c-compiler borland.compile.c++ : CPP : OBJ : <toolset>borland ;
 generators.register-c-compiler borland.compile.c : C : OBJ : <toolset>borland ;
-
+generators.register-standard borland.asm : ASM : OBJ : <toolset>borland ;
 
 # Declare flags 
 
@@ -213,4 +213,11 @@ actions link.dll bind LIBRARIES RSP
     $(.set-path)$(.root:W)$(.old-path) "$(CONFIG_COMMAND)" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"  && "$(.root)implib" "$(<[2]:W)" "$(<[1]:W)"
 }
 
+# It seems impossible to specify output file with directory when compiling
+# asm files using bcc32, so use tasm32 directly.
+# /ml makes all symbol names case-sensitive
+actions asm
+{
+    $(.set-path)$(.root:W)$(.old-path) tasm32.exe /ml "$(>)" "$(<)"
+}
 
