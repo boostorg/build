@@ -195,7 +195,7 @@ rule module-name ( jamfile-location )
 # declarations.
 #
 JAMFILE = [ modules.peek : JAMFILE ] ;
-JAMFILE ?= [Jj]amfile.v2 [Jj]amfile [Jj]amfile.jam ;
+JAMFILE ?= [Bb]uild.jam [Jj]amfile.v2 [Jj]amfile [Jj]amfile.jam ;
 
 # Find the Jamfile at the given location. This returns the exact names of
 # all the Jamfiles in the given directory. The optional parent-root argument
@@ -238,7 +238,7 @@ local rule find-jamfile (
     #
     if $(jamfile-to-load[2-])
     {
-        local v2-jamfiles = [ MATCH (.*[Jj]amfile\\.v2) : $(jamfile-to-load) ] ;
+        local v2-jamfiles = [ MATCH (.*[Jj]amfile\\.v2)|(.*[Bb]uild\\.jam) : $(jamfile-to-load) ] ;
 
         if $(v2-jamfiles) && ! $(v2-jamfiles[2])
         {
