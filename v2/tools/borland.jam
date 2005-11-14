@@ -139,7 +139,6 @@ toolset.flags borland.link LIBRARY_PATH <library-path> ;
 toolset.flags borland.link FINDLIBS_ST <find-static-library> ;
 toolset.flags borland.link FINDLIBS_SA <find-shared-library> ;
 toolset.flags borland.link LIBRARIES <library-file> ;
-toolset.flags borland.link LIBRARIES <library> ;
 
 flags borland.link OPTIONS <linkflags> ;
 flags borland.link OPTIONS <link>shared : -tWD ;
@@ -200,24 +199,18 @@ else
 
 RM = [ common.rm-command ] ;
 
+nl = "
+" ;
 
-rule link ( targets + : sources * : properties * )
+actions link
 {
-   common.response-file $(targets) : $(sources) :  
-      : $(properties) ;
-}   
-
-actions link bind LIBRARIES RSP
-{
-    $(.set-path)$(.root:W)$(.old-path) "$(CONFIG_COMMAND)" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(RSP:W)" && $(RM) "$(RSP)"
+    $(.set-path)$(.root:W)$(.old-path) "$(CONFIG_COMMAND)" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
 }
 
-rule link.dll ( targets + : sources * : properties * )
-{
-    common.response-file $(targets) : $(sources) : $(targets[3]) : $(properties) ;    
-}
 
 actions link.dll bind LIBRARIES RSP
 {
-    $(.set-path)$(.root:W)$(.old-path) "$(CONFIG_COMMAND)" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"$(RSP:W)" && $(RM) "$(RSP)" && "$(.root)implib" "$(<[2]:W)" "$(<[1]:W)"
+    $(.set-path)$(.root:W)$(.old-path) "$(CONFIG_COMMAND)" -v -q $(OPTIONS) -L"$(LIBRARY_PATH:W)" -L"$(STDLIBPATH:W)" -e"$(<[1]:W)" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"  && "$(.root)implib" "$(<[2]:W)" "$(<[1]:W)"
 }
+
+
