@@ -5,7 +5,7 @@ project
     : requirements <define>YY_NO_UNPUT
     ;
 
-exe a : a.cpp b.cxx obj_1 obj_2 c.ui d.wd x.l y.x_pro lib//auxilliary ;
+exe a : a.cpp b.cxx obj_1 obj_2 c.tui d.wd x.l y.x_pro lib//auxilliary ;
 # This should not cause second compilation of a.cpp 
 exe f : a.cpp b.cxx obj_1 obj_2 lib//auxilliary ;
 
