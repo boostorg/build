@@ -7,29 +7,23 @@ type.register FOO : foo ;
 
 generators.register-standard foo.foo : FOO : CPP H ;
 
+nl = "
+" ;
+
 rule foo ( targets * : sources * : properties * )
 {
-    # On NT, you need an exported symbol in order to have an import lib generated
-    if [ os.name ] = NT && <main-target-type>LIB in $(properties)
+    # On NT, you need an exported symbol in order to have an 
+    # import lib generated
+    # We won't really use the symbol defined here, just force
+    # lib creation.
+    if ( [ os.name ] = NT || [ modules.peek : OS ] in CYGWIN )
+        && <main-target-type>LIB in $(properties)
     {
-        .decl =  "echo void __declspec(dllexport) foo(){}" ;
+        .decl =  "void __declspec(dllexport) foo(){}" ;
     }
-    if [ modules.peek : OS ] in CYGWIN &&  <main-target-type>LIB in $(properties) && $toolset != gcc
-    {
-        .decl =  "echo 'void __declspec(dllexport) foo(){}'" ;
-    }
-
-
-    .decl1 on $(<) = $(.decl:E="echo //") ;
     
-    # Further files must be touched also; NT doesn't have a touch command
-    local i = [ print.echo-cmd "#include <z.h>" ] ;
-    .decl2 on $(<) = "      
-    $(i) > " ;
+    print.output $(<[1]) ;
+    print.text $(.decl:E="//")$(nl) ;
+    print.output $(<[2]) ;
+    print.text "#include <z.h>"$(nl) ;
 }
-
-actions foo
-{
-    $(.decl1) > $(<[1]) $(.decl2)$(<[2-])
-}
-
