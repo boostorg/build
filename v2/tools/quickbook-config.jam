@@ -10,7 +10,7 @@ import toolset : using ;
 if [ os.name ] = NT
 {
     local boost-dir = ;
-    for local R in cvs 1.33.0
+    for local R in snapshot cvs 1.33.0
     {
         boost-dir += [ W32_GETREG
             "HKEY_LOCAL_MACHINE\\SOFTWARE\\Boost.org\\$(R)"
