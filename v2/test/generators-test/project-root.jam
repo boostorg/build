@@ -7,9 +7,9 @@ import extra ;
 
 import type ;
 
-type.register UI : ui ;
-type.register UIC_H ;
-type.set-generated-target-suffix UIC_H : : h ;
+type.register tUI : tui ;
+type.register tUIC_H ;
+type.set-generated-target-suffix tUIC_H : : h ;
 
 type.register X1 : x1 ;
 type.register X2 : x2  ;
@@ -17,8 +17,8 @@ type.register X_PRO : x_pro ;
 
 import generators ;
 
-generators.register-standard qt.uic : UI UIC_H : CPP ;
-generators.register-standard qt.uic-h : UI : UIC_H ;
+generators.register-standard qt.uic : tUI tUIC_H : CPP ;
+generators.register-standard qt.uic-h : tUI : tUIC_H ;
 
 # That's an interesting example. Currently, X_PRO will be processed
 # twice.
