@@ -509,10 +509,10 @@ int  main( int argc, char **argv, char **arg_environ )
     /* Widely scattered cleanup */
 
     var_done();
+    file_done();
     donerules();
     donestamps();
     donestr();
-    file_done();
 
     /* close cmdout */
 

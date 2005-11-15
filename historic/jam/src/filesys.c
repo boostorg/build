@@ -59,11 +59,6 @@ file_info_t * file_info(char * filename)
     return finfo;
 }
 
-void file_done()
-{
-    hashdone( filecache_hash );
-}
-
 static LIST * files_to_remove = L0;
 
 static void remove_files_atexit(void)
@@ -77,11 +72,13 @@ static void remove_files_atexit(void)
     }
 }
 
+void file_done()
+{
+    remove_files_atexit();
+    hashdone( filecache_hash );
+}
+
 void file_remove_atexit( const char * path )
 {
-    if ( L0 == files_to_remove )
-    {
-        atexit(&remove_files_atexit);
-    }
     files_to_remove = list_new( files_to_remove, newstr((char*)path) );
 }
