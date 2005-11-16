@@ -1,5 +1,4 @@
 
-using qt4 : /usr/share/qt4 ;
 
 import cast ;
 

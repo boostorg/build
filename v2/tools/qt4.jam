@@ -86,7 +86,7 @@ rule init ( prefix ? )
         
         # The OBJ result type is a fake here too.
         generators.register [ new moc-h-generator 
-            qt.moc.cpp : MOCCABLE_CPP : OBJ ] ;
+            qt4.moc.cpp : MOCCABLE_CPP : OBJ ] ;
 
         # Generates .cpp file from qrc file
         generators.register-standard qt4.rcc : QRC : CPP(qrc_%) ;
@@ -94,7 +94,9 @@ rule init ( prefix ? )
         local usage-requirements = 
             <include>$(.prefix)/include 
             <library-path>$(.prefix)/lib 
-            <dll-path>$(.prefix)/lib ;
+            <dll-path>$(.prefix)/lib 
+            <threading>multi ;
+  
 
         local suffix ;
         if [ os.name ] = NT
@@ -139,22 +141,6 @@ rule init ( prefix ? )
             : <name>QtNetwork$(suffix_debug)$(suffix_version) <variant>debug
             :
             : <include>$(.prefix)/include/QtNetwork ;
-        lib Qt3Support : QtCore
-            : <name>Qt3Support$(suffix_version) <variant>release
-            :
-            : <include>$(.prefix)/include/Qt3Support ;
-        lib Qt3Support : QtCore
-            : <name>Qt3Support$(suffix_debug)$(suffix_version) <variant>debug
-            :
-            : <include>$(.prefix)/include/Qt3Support ;
-        lib QtOpenGL : QtCore
-            : <name>QtOpenGL$(suffix_version) <variant>release
-            :
-            : <include>$(.prefix)/include/QtOpenGL ;
-        lib QtOpenGL : QtCore
-            : <name>QtOpenGL$(suffix_debug)$(suffix_version) <variant>debug
-            :
-            : <include>$(.prefix)/include/QtOpenGL ;
         lib QtSql : QtCore
             : <name>QtSql$(suffix_version) <variant>release
             :
@@ -171,6 +157,35 @@ rule init ( prefix ? )
             : <name>QtXml$(suffix_debug)$(suffix_version) <variant>debug
             :
             : <include>$(.prefix)/include/QtXml ;
+
+        lib Qt3Support : QtGui QtNetwork QtXml QSql
+            : <name>Qt3Support$(suffix_version) <variant>release
+            :
+            : <include>$(.prefix)/include/Qt3Support ;
+        lib Qt3Support : QtGui QtNetwork QtXml QSql
+            : <name>Qt3Support$(suffix_debug)$(suffix_version) <variant>debug
+            :
+            : <include>$(.prefix)/include/Qt3Support ;
+
+        # OpenGl Support
+        lib QtOpenGL : QtGui
+            : <name>QtOpenGL$(suffix_version) <variant>release
+            :
+            : <include>$(.prefix)/include/QtOpenGL ;
+        lib QtOpenGL : QtGui
+            : <name>QtOpenGL$(suffix_debug)$(suffix_version) <variant>debug
+            :
+            : <include>$(.prefix)/include/QtOpenGL ;
+
+        # SVG-Support (Qt 4.1)
+        lib QtSvg : QtXml QtOpenGL
+            : <name>QtSvg$(suffix_version) <variant>release
+            :
+            : <include>$(.prefix)/include/QtSvg ;
+        lib QtSvg : QtXml QtOpenGL
+            : <name>QtSvg$(suffix_debug)$(suffix_version) <variant>debug
+            :
+            : <include>$(.prefix)/include/QtSvg ;
     }
 }
 
@@ -269,14 +284,14 @@ flags qt4.moc DEFINES  <define> ;
 # Qt4-moc has its c++-parser, so pass INCLUDES and DEFINES.
 actions moc
 {
-    $(.prefix)/bin/moc -I$(INCLUDES) -I$(DEFINES) -f $(>) -o $(<)
+    $(.prefix)/bin/moc -I$(INCLUDES) -D$(DEFINES) -f $(>) -o $(<)
 }
 
 # When moccing .cpp files, we don't need -f, otherwise generated
 # code will include .cpp and we'll get duplicated symbols.
 actions moc.cpp
 {
-    $(.prefix)/bin/moc -I$(INCLUDES) -I$(DEFINES) $(>) -o $(<)
+    $(.prefix)/bin/moc -I$(INCLUDES) -D$(DEFINES) $(>) -o $(<)
 }
 
 
