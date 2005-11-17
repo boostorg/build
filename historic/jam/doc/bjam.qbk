@@ -1,4 +1,4 @@
-[article Jam
+[article Boost.Jam
     [quickbook 1.3]
     [version 3.1.12]
     [authors [Rivera, Rene], [Abrahams, David], [Prus, Vladimir]]
@@ -28,25 +28,27 @@
 
 [/  Links   ]
 
-[def _boost_                 [@http://www.boost.org Boost]]
-[def _jam_                   [@http://www.perforce.com/jam/jam.html Perforce Jam]]
+[def _Boost_                 [@http://www.boost.org Boost]]
+[def _Perforce_Jam_          [@http://www.perforce.com/jam/jam.html Perforce Jam]]
 
 [section:intro Introduction]
 
 Boost.Jam (BJam)  is a build tool based on FTJam, which in turn is based on 
-Perforce Jam. It contains significant improvements made to facilitate its use 
-in the Boost Build System, but should be backward compatible with Perforce Jam.
+_Perforce_Jam_. It contains significant improvements made to facilitate its use 
+in the Boost Build System, but should be backward compatible with _Perforce_Jam_.
 
 This is version 3.1.12 of BJam and is based on version 2.4 of Jam/MR:
 
-    /+\
-    +\  Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
-    \+/
-    This is Release 2.4 of Jam/MR, a make-like program.
-    License is hereby granted to use this software and distribute it
-    freely, as long as this copyright notice is retained and modifications
-    are clearly marked.
-    ALL WARRANTIES ARE HEREBY DISCLAIMED.
+[pre
+/+\
++\  Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
+\+/
+This is Release 2.4 of Jam/MR, a make-like program.
+License is hereby granted to use this software and distribute it
+freely, as long as this copyright notice is retained and modifications
+are clearly marked.
+ALL WARRANTIES ARE HEREBY DISCLAIMED.
+]
 
 [endsect]
 
@@ -74,7 +76,7 @@ commercial products.
 
 [endsect]
 
-[section:building Building Boost.Jam]
+[section:building Building BJam]
 
 [endsect]
 
