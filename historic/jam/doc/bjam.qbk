@@ -21,21 +21,21 @@
 
 [/  Images   ]
 
-[def __note__                [$images/note.png]]
-[def __alert__               [$images/caution.png]]
-[def __detail__              [$images/note.png]]
-[def __tip__                 [$images/tip.png]]
+[def :note:                 [$images/note.png]]
+[def :alert:                [$images/caution.png]]
+[def :detail:               [$images/note.png]]
+[def :tip:                  [$images/tip.png]]
 
 [/  Links   ]
 
-[def _Boost_                 [@http://www.boost.org Boost]]
-[def _Perforce_Jam_          [@http://www.perforce.com/jam/jam.html Perforce Jam]]
+[def :Boost:                [@http://www.boost.org Boost]]
+[def :Perforce_Jam:         [@http://www.perforce.com/jam/jam.html Perforce Jam]]
 
 [section:intro Introduction]
 
 Boost.Jam (BJam)  is a build tool based on FTJam, which in turn is based on 
-_Perforce_Jam_. It contains significant improvements made to facilitate its use 
-in the Boost Build System, but should be backward compatible with _Perforce_Jam_.
+:Perforce_Jam:. It contains significant improvements made to facilitate its use 
+in the Boost Build System, but should be backward compatible with :Perforce_Jam:.
 
 This is version 3.1.12 of BJam and is based on version 2.4 of Jam/MR:
 
@@ -80,6 +80,6 @@ commercial products.
 
 [endsect]
 
-[section:jam Jam]
+[section:usage Using Jam]
 
 [endsect]
