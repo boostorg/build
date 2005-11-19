@@ -33,9 +33,7 @@
 
 [section:intro Introduction]
 
-Boost.Jam (BJam)  is a build tool based on FTJam, which in turn is based on 
-:Perforce_Jam:. It contains significant improvements made to facilitate its use 
-in the Boost Build System, but should be backward compatible with :Perforce_Jam:.
+Boost.Jam (BJam)  is a build tool based on FTJam, which in turn is based on :Perforce_Jam:. It contains significant improvements made to facilitate its use in the Boost Build System, but should be backward compatible with :Perforce_Jam:.
 
 This is version 3.1.12 of BJam and is based on version 2.4 of Jam/MR:
 
@@ -50,36 +48,134 @@ are clearly marked.
 ALL WARRANTIES ARE HEREBY DISCLAIMED.
 ]
 
-[endsect]
-
 [section:features Features]
 
-Jam is a make(1) replacement that makes building simple things simple and 
-building complicated things manageable.
+Jam is a make(1) replacement that makes building simple things simple and building complicated things manageable. 
 
 Jam's language is expressive, making Jamfiles (c.f. Makefiles) compact.
 
 Jam handles header file dependencies automatically and on-the-fly.
 
-Jam is very portable: it runs on UNIX, VMS, Mac, and NT. Most Jamfiles 
-themselves are portable.
+Jam is very portable: it runs on UNIX, VMS, Mac, and NT. Most Jamfiles themselves are portable.
 
-Jam is unintrusive: it is small, it has negligible CPU overhead, and it 
-doesn't create any of its own funny files (c.f. Odin, nmake, SunOS make).
+Jam is unintrusive: it is small, it has negligible CPU overhead, and it doesn't create any of its own funny files (c.f. Odin, nmake, SunOS make).
 
-Jam can build large projects spread across many directories in one pass, 
-without recursing, tracking the relationships among all files. Jam can do this 
-with multiple, concurrent processes.
+Jam can build large projects spread across many directories in one pass, without recursing, tracking the relationships among all files. Jam can do this with multiple, concurrent processes.
 
-Jam isn't under the blinkin GNU copyright, so you can incorporate it into 
-commercial products.
+Jam isn't under the blinkin GNU copyright, so you can incorporate it into commercial products.
+
+[endsect]
 
 [endsect]
 
 [section:building Building BJam]
-
 [endsect]
 
 [section:usage Using Jam]
 
+If /target/ is provided on the command line, =bjam=  builds /target/; otherwise =bjam= builds the target =all=.
+
+[pre
+bjam ( -option \[value\] | target ) *
+]
+
+[section:options Options]
+
+Options are either singular or have an accompanying value. When a value is allowed, or required, it can be either given as an argument following the option argument, or it can be given immediately after the option as part of the option argument. The allowed options are:
+
+[table
+
+  []
+  
+  [ [[^-a]]
+    [Build all targets anyway, even if they are up-to-date.] ]
+  
+  [ [[^-d'''&nbsp;'''/n/]]
+    [
+    Enable cummulative debugging levels from 1 to n. Values are:
+    
+    # Show actions (the default).
+    # Show "quiet" actions and display all action text.
+    # Show dependency analysis, and target/source timestamps/paths.
+    # Show shell arguments.
+    # Show rule invocations and variable expansions.
+    # Show directory/header file/archive scans.
+    # Show variable settings.
+    # Show variable fetches.
+    # Show variable manipulation, scanner tokens.
+    # 10
+    # 11
+    # 12
+    # 13
+    ] ]
+  
+  [ [[^-d'''&nbsp;'''+/n/]]
+    [Enable debugging level /n/.] ]
+  
+  [ [[^-d'''&nbsp;'''0]]
+    [Turn off all debugging levels. Only errors are reported.] ]
+  
+  [ [[^-f'''&nbsp;'''/Jambase/]]
+    [Read /Jambase/ instead of using the built-in Jambase. Only one -f flag is permitted, but the /Jambase/ may explicitly include other files.] ]
+  
+  [ [[^-j'''&nbsp;'''/n/]]
+    [Run up to /n/ shell commands concurrently (UNIX and NT only). The default is 1.] ]
+  
+  [ [[^-l'''&nbsp;'''/n/]]
+    [Limit actions to running for /n/ number of seconds, after which they are stopped.] ]
+  
+  [ [[^-n]]
+    [Don't actually execute the updating actions, but do everything else. This changes the debug level default to =-d 2=.] ]
+  
+  [ [[^-o'''&nbsp;'''/file/]]
+    [Write the updating actions to the specified file instead of running them.] ]
+  
+  [ [[^-q]]
+    [Quit quickly (as if an interrupt was received) as soon as *any* target fails.] ]
+  
+  [ [[^-s'''&nbsp;'''/var/=/value/]]
+    [Set the variable /var/ to /value/, overriding both internal variables and variables imported from the environment.] ]
+  
+  [ [[^-t'''&nbsp;'''/target/]]
+    [Rebuild /target/ and everything that depends on it, even if it is up-to-date.] ]
+  
+  [ [[^--'''&nbsp;'''/value/]]
+    [The option and /value/ is ignored, but is available from the =$(ARGV)= variable. ]]
+  
+  [ [[^-v]]
+    [Print the version of =bjam= and exit.] ]
+]
+
+[endsect]
+
+[section:operation Operation]
+
+BJam has four phases of operation: start-up, parsing, binding, and updating.
+
+[section:startup Start-up]
+
+Upon start-up, =bjam= imports environment variable settings into =bjam= variables. Environment variables are split at blanks with each word becoming an element in the variable's list of values. Environment variables whose names end in =PATH= are split at =$(SPLITPATH)= characters (e.g., =":"= for Unix).
+
+To set a variable's value on the command line, overriding the variable's environment value, use the =-s= option. To see variable assignments made during bjam's execution, use the =-d+7= option.
+
+[endsect]
+
+[section:parsing Parsing]
+[endsect]
+
+[section:binding Binding]
+[section:fate Update Determination]
+[endsect]
+[section:headerscan Header File Scanning]
+[endsect]
+[endsect]
+
+[section:updating Updating]
+[endsect]
+
+[endsect]
+
+[endsect]
+
+[section:language Language]
 [endsect]
