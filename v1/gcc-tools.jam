@@ -313,7 +313,7 @@ if $(MIPS)
     flags gcc CFLAGS <address-model>64 : -mgp64 -mlong64 ;
 }
 #S390
-if $(OSPLAT) = 390
+if $(OSPLAT) = 390 || $(OSPLAT) = IA64
 {
     flags gcc CFLAGS <threading>multi : -D_REENTRANT ;
 }
