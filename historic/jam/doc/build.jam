@@ -9,14 +9,14 @@ xml bjam
     bjam.qbk
     ;
 
-stage html
+stage html-$(BOOST_VERSION)
     :
     ../../../LICENSE_1_0.txt
     ../../../boost.png
     ../../../doc/html/boostbook.css
     ;
 
-stage html/images
+stage html-$(BOOST_VERSION)/images
     :
     [ path.glob ../../../doc/html/images : *.png ]
     ;
@@ -25,8 +25,8 @@ boostbook standalone
     :
         bjam
     :
-        <dependency>html
-        <dependency>html/images
+        <dependency>html-$(BOOST_VERSION)
+        <dependency>html-$(BOOST_VERSION)/images
         
         <xsl:param>boost.root=.
         <xsl:param>nav.layout=none

@@ -92,21 +92,21 @@ Options are either singular or have an accompanying value. When a value is allow
   
   [ [[^-d'''&nbsp;'''/n/]]
     [
-    Enable cummulative debugging levels from 1 to n. Values are:
+    Enable cummulative debugging levels from 1 to n. Values are:\n
     
-    # Show actions (the default).
-    # Show "quiet" actions and display all action text.
-    # Show dependency analysis, and target/source timestamps/paths.
-    # Show shell arguments.
-    # Show rule invocations and variable expansions.
-    # Show directory/header file/archive scans.
-    # Show variable settings.
-    # Show variable fetches.
-    # Show variable manipulation, scanner tokens.
-    # 10
-    # 11
-    # 12
-    # 13
+    1 - Show the actions taken for building targets, as they are executed (the default).\n
+    2 - Show "quiet" actions and display all action text, as they are executed.\n
+    3 - Show dependency analysis, and target/source timestamps/paths.\n
+    4 - Show arguments of shell invocations.\n
+    5 - Show rule invocations and variable expansions.\n
+    6 - Show directory/header file/archive scans, and attempts at binding to targets.\n
+    7 - Show variable settings.\n
+    8 - Show variable fetches, variable expansions, and evaluation of '"if"' expressions.\n
+    9 - Show variable manipulation, scanner tokens, and memory usage.\n
+    10 - Show profile information for rules, both timing and memory.\n
+    11 - Show parsing progress of Jamfiles.\n
+    12 - Show graph of target dependencies.\n
+    13 - Show change target status (fate).
     ] ]
   
   [ [[^-d'''&nbsp;'''+/n/]]
@@ -116,7 +116,7 @@ Options are either singular or have an accompanying value. When a value is allow
     [Turn off all debugging levels. Only errors are reported.] ]
   
   [ [[^-f'''&nbsp;'''/Jambase/]]
-    [Read /Jambase/ instead of using the built-in Jambase. Only one -f flag is permitted, but the /Jambase/ may explicitly include other files.] ]
+    [Read /Jambase/ instead of using the built-in Jambase. Only one -f flag is permitted, but the /Jambase/ may explicitly include other files. A /Jambase/ name of "-" is allowed, in which case console input is read until it is closed. At which point the input is treated as the Jambase.] ]
   
   [ [[^-j'''&nbsp;'''/n/]]
     [Run up to /n/ shell commands concurrently (UNIX and NT only). The default is 1.] ]
