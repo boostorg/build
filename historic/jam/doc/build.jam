@@ -25,9 +25,10 @@ boostbook standalone
     :
         bjam
     :
+        <format>html
+        <name>html-$(BOOST_VERSION)
         <dependency>html-$(BOOST_VERSION)
         <dependency>html-$(BOOST_VERSION)/images
-        
         <xsl:param>boost.root=.
         <xsl:param>nav.layout=none
     ;
