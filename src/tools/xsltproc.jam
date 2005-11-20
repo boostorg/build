@@ -73,7 +73,7 @@ rule compute-xslt-flags ( target : properties * )
 
 
 local rule .xsltproc ( target : source stylesheet : properties * : dirname ? : action )
-{   
+{
     STYLESHEET on $(target) = $(stylesheet) ;
     FLAGS on $(target) = [ compute-xslt-flags $(target) : $(properties) ] ;
     NAME on $(target) = $(.xsltproc) ;
@@ -83,7 +83,6 @@ local rule .xsltproc ( target : source stylesheet : properties * : dirname ? : a
         CATALOG = [ common.variable-setting-command XML_CATALOG_FILES : $(catalog) ] ;
     }
     
-    DIRECTORY on $(target) = $(dirname) ;
     $(action) $(target) : $(source) ;
 }
 
@@ -104,5 +103,5 @@ actions xslt-xsltproc
 
 actions xslt-xsltproc-dir
 {
-  $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(DIRECTORY)/" "$(STYLESHEET)" "$(>)"
+  $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<:D)/" "$(STYLESHEET)" "$(>)"
 }
