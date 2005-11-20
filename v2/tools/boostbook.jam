@@ -314,7 +314,9 @@ class boostbook-generator : generator
             # Generate HTML/PDF/PS from DOCBOOK.
             local target = [ generators.construct $(project) $(manifest)
               : $(type) : $(property-set) : $(base-target) ] ;
-            $(target[2]).set-path $(format) ;
+            local name = [ $(property-set).get <name> ] ;
+            name ?= $(format) ;
+            $(target[2]).set-path $(name) ;
             $(target[2]).depends $(catalog) ;            
 
             targets += $(target[2]) ;
