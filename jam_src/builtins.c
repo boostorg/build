@@ -330,6 +330,8 @@ load_builtins()
           char * args[] = { "command", 0 };
           bind_builtin( "SHELL",
               builtin_shell, 0, args );
+          bind_builtin( "COMMAND",
+              builtin_shell, 0, args );
       }
 
       /* Initialize builtin modules */
