@@ -577,11 +577,20 @@ execcmd(
     }
     else
     {
-        FILE *f;
+        FILE *f = 0;
+        int tries = 0;
         raw_cmd = 0;
         
-        /* Write command to bat file. */
-        f = fopen( cmdtab[ slot ].tempfile, "w" );
+        /* Write command to bat file. For some reason this open can
+           fails intermitently. But doing some retries works. Most likely
+           this is due to a previously existing file of the same name that
+           happens to be opened by an active virus scanner. Pointed out,
+           and fix by Bronek Kozicki. */
+        for (; !f && tries < 4; ++tries)
+        {
+            f = fopen( cmdtab[ slot ].tempfile, "w" );
+            if ( !f && tries < 4 ) Sleep( 250 );
+        }
         if (!f)
         {
             printf( "failed to write command file!\n" );
