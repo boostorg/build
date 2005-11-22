@@ -41,7 +41,11 @@ REM Tests wether the given string is in the form of an option: "-*"
 setlocal & endlocal
 setlocal
 set test=%1
-if not "-" == "%test:~0,1%" set _error_=
+set test=###%test%###
+set test=%test:"###=%
+set test=%test:###"=%
+set test=%test:###=%
+if not [-] == [%test:~0,1%] set _error_=
 endlocal
 goto :eof
 
