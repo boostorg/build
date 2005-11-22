@@ -384,7 +384,7 @@ rename y.tab.h jamgram.h
 @set args=
 :Set_Args
 @if not "_%1_" == "__" (
-    set args="%1"
+    set args=%args% %1
     shift
     goto Set_Args
 )
