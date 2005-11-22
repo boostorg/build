@@ -381,7 +381,14 @@ rename y.tab.h jamgram.h
 @if "_%BJAM_UPDATE%_" == "_update_" goto Skip_Clean
 .\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " clean
 :Skip_Clean
-.\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " %*
+@set args=
+:Set_Args
+@if not "_%1_" == "__" (
+    set args="%1"
+    shift
+    goto Set_Args
+)
+.\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " %args%
 :Skip_Jam
 
 :Finish
