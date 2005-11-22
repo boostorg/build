@@ -51,7 +51,14 @@ if $(with-python)
         --python-lib = ;
         for local v in 25 24 23 22
         {
-            --python-lib ?= [ GLOB [ .path $(python-location) libs ] : "python$(v).lib" ] ;
+            --python-lib ?=
+                [ GLOB [ .path $(python-location) libs ] : "python$(v).lib" ]
+                [ GLOB $(python-location) $(Path) $(PATH) $(path) : "python$(v).dll" ]
+                ;
+            if ! $(--python-lib[2])
+            {
+                --python-lib = ;
+            }
         }
     }
     else if $(OS) = MACOSX
@@ -119,7 +126,7 @@ toolset borland bcc32 : -e -n : /D
     [ opt --release : -O2 -vi -w-inl ]
     [ opt --debug : -v -Od -vi- ]
     -I$(--python-include)
-    : $(--python-lib) ;
+    : $(--python-lib[1]) ;
 ## Generic Unix cc
 if ! $(CC) { CC = cc ; }
 toolset cc $(CC) : "-o " : -D
@@ -169,7 +176,7 @@ toolset intel-win32 icl : /Fe : -D
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     -I$(--python-include)
-    : $(--python-lib) ;
+    : $(--python-lib[1]) ;
 ## KCC ?
 toolset kcc KCC : "-o " : -D
     :
@@ -198,7 +205,7 @@ toolset kylix bc++ : -o : -D
         : -subsystem console -ladvapi32.lib
         [ opt --release : -runtime ss ]
         [ opt --debug : -runtime ssd ]
-        : $(--python-lib) ;
+        : $(--python-lib[1]) ;
 }
 ## MINGW GCC
 toolset mingw gcc : "-o " : -D
@@ -206,7 +213,7 @@ toolset mingw gcc : "-o " : -D
     [ opt --release : -s -O3 -finline-functions ]
     [ opt --debug : -g -O0 -fno-inline -pg ]
     -I$(--python-include)
-    : $(--python-lib) ;
+    : $(--python-lib[2]) ;
 ## MIPS Pro
 toolset mipspro cc : "-o " : -D
     :
@@ -220,7 +227,7 @@ toolset msvc cl : /Fe : -D
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     -I$(--python-include)
-    : kernel32.lib advapi32.lib $(--python-lib) ;
+    : kernel32.lib advapi32.lib $(--python-lib[1]) ;
 ## QNX 6.x GCC 3.x/2.95.3
 toolset qcc qcc : "-o " : -D
     : -pedantic
@@ -256,7 +263,7 @@ toolset vc7 cl : /Fe : -D
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     -I$(--python-include)
-    : kernel32.lib advapi32.lib $(--python-lib) ;
+    : kernel32.lib advapi32.lib $(--python-lib[1]) ;
 ## VMS/OpenVMS DEC C
 toolset vmsdecc cc : /OBJECT= : "/DEFINES=(" "," ")"
     : /STANDARD=VAXC /PREFIX_LIBRARY_ENTRIES=ALL_ENTRIES
