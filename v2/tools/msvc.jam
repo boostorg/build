@@ -690,7 +690,7 @@ actions link.dll bind DEF_FILE
 
 .ProgramFiles = [ path.make [ common.get-program-files-dir ] ] ;
 
-.known-versions = 8.0 7.1 7.1toolkit 7.0 6.0 ;
+.known-versions = 8.0 8.0express 7.1 7.1toolkit 7.0 6.0 ;
 
 # Version aliases
 .version-alias-6 = 6.0 ;
@@ -698,11 +698,12 @@ actions link.dll bind DEF_FILE
 .version-alias-8 = 8.0 ;
  
 # Name of the registry key that contains Visual C++ installation path
-#   (relative to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft\VisualStudio\x.y\Setup"
-.version-6.0-reg = "Microsoft Visual C++" ;
-.version-7.0-reg = "VC" ;
-.version-7.1-reg = "VC" ;
-.version-8.0-reg = "VC" ;
+#   (relative to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft"
+.version-6.0-reg = "VisualStudio\\6.0\\Setup\\Microsoft Visual C++" ;
+.version-7.0-reg = "VisualStudio\\7.0\\Setup\\VC" ;
+.version-7.1-reg = "VisualStudio\\7.1\\Setup\\VC" ;
+.version-8.0-reg = "VisualStudio\\8.0\\Setup\\VC" ;
+.version-8.0express-reg = "VCExpress\\8.0\\Setup\\VC" ;
 
 # Visual C++ Toolkit 2003 do not store its installation path in the registry.
 # The environment variable 'VCToolkitInstallDir' and the default installation 
@@ -745,7 +746,7 @@ if [ os.name ] in NT CYGWIN
         if $(.version-$(i)-reg)
         {
             local vc-path = [ W32_GETREG
-                "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\$(i)\\Setup\\"$(.version-$(i)-reg)
+                "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\"$(.version-$(i)-reg)
                 : "ProductDir" ] ;
             
             if $(vc-path)
