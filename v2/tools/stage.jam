@@ -250,7 +250,8 @@ rule copy-file ( project : source : properties )
     local targets ;
     local name = [ $(source).name ] ;
                
-    new-a = [ new action $(source) : common.copy : $(properties) ] ;    
+    new-a = [ 
+      new non-scanning-action $(source) : common.copy : $(properties) ] ;    
     local source-root = [ $(properties).get <install-source-root> ] ;
     if $(source-root) 
     {        

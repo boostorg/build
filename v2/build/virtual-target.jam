@@ -770,6 +770,25 @@ class null-action : action
     }
 }
 
+# Class which acts exactly like 'action', except that the sources
+# are not scanned for dependencies.
+class non-scanning-action : action 
+{
+    rule __init__ ( sources * : action-name + : property-set ? )
+    {        
+        action.__init__ $(sources) : $(action-name) : $(property-set) ;
+    }
+    rule actualize-source-type ( sources * : property-set )
+    {
+        local result ;
+        for local i in $(sources)
+        {
+            result += [ $(i).actualize ] ;
+        }        
+        return $(result) ;
+    }
+}
+
 
 # Creates a virtual target with approariate name and type from 'file'.
 # If a target with that name in that project was already created, returns that already
