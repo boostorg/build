@@ -18,6 +18,7 @@ import sequence : unique ;
 import common ;
 import "class" : new ;
 import rc ;
+import midl ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
@@ -35,6 +36,9 @@ feature.subfeature toolset msvc : vendor
 
 # List of all registered configurations
 .versions = [ new configurations ] ;
+
+# Inherit MIDL flags
+toolset.inherit-flags msvc : midl ;
 
 RM =  [ common.rm-command ] ;
 nl = "
@@ -321,6 +325,9 @@ local rule configure-really (
         assembler = [ get-values <assembler> : $(options) ] ;
         assembler ?= ml ;
 
+        idl-compiler = [ get-values <idl-compiler> : $(options) ] ;
+        idl-compiler ?= midl ;
+
 
         for local i in 1 2 3
         {
@@ -342,6 +349,7 @@ local rule configure-really (
                 flags msvc.compile .ASM $(cond) : $(command[$(i)])$(assembler) ;
                 flags msvc.link    .LD  $(cond) : $(command[$(i)])$(linker) ;
                 flags msvc.archive .LD  $(cond) : $(command[$(i)])$(linker) ;
+                flags msvc.compile .IDL $(cond) : $(command[$(i)])$(idl-compiler) ;
             }
         }
 
@@ -487,6 +495,9 @@ generators.register-c-compiler msvc.compile.rc : RC : OBJ(%_res) : <toolset>msvc
 generators.override msvc.compile.rc : rc.resource-compile ;
 generators.register-standard msvc.compile.asm : ASM : OBJ : <toolset>msvc ;
 
+generators.register-c-compiler msvc.compile.idl : IDL : MSTYPELIB H C(%_i) C(%_proxy) C(%_dlldata) : <toolset>msvc ;
+generators.override msvc.compile.idl : midl.compile.idl ;
+
 #
 # Declare flags and action for compilation
 #
@@ -551,6 +562,15 @@ actions compile.c++ bind
 actions compile.rc
 {
     $(.RC) -l 0x409 -U$(UNDEFS) -D$(DEFINES) -I"$(INCLUDES)" -fo "$(<:W)" "$(>:W)"
+}
+
+TOUCH_FILE = [ midl.file-touch-command ] ;
+
+actions compile.idl
+{
+    $(.IDL) /nologo @"@($(<[1]:W).rsp:E=$(nl)"$(>:W)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)" $(nl)-U$(UNDEFS) $(nl)$(MIDLFLAGS) $(nl)/tlb "$(<[1]:W)" $(nl)/h "$(<[2]:W)" $(nl)/iid "$(<[3]:W)" $(nl)/proxy "$(<[4]:W)" $(nl)/dlldata "$(<[5]:W)")"
+    $(TOUCH_FILE) "$(<[4]:W)"  
+    $(TOUCH_FILE) "$(<[5]:W)"  
 }
 
 # Declare flags and action for the assembler
