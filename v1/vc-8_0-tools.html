@@ -30,19 +30,19 @@
 
   <h2>Introduction</h2>
 
-  <p>Boost.Build's <a href="vc-8_0-tools.jam">vc-8_0</a> toolset supports the 
-  Microsoft <a href="http://msdn.microsoft.com/visualc/">Visual C++</a> .NET 
-  2005 (Visual Studio or Express edition with Platform SDK additionally installed). This toolset is an
+  <p>Boost.Build's <a href="vc-8_0-tools.jam">vc-8_0</a> toolset supports the
+  Microsoft <a href="http://msdn.microsoft.com/visualc/" target="_blank">Visual C++</a> .NET
+  2005 (Visual Studio or Express edition). This toolset is an
   extention to the <code><a href="msvc-tools.html">msvc</a></code> toolset
   and is useful for when you need to have access to several versions of
   Visual C++.</p>
 
   <h2>Configuration Variables</h2>
-  <p>The <code>vc-8_0</code> toolset responds to 
-  the following variables which can be set in the environment or configured on 
+  <p>The <code>vc-8_0</code> toolset responds to
+  the following variables which can be set in the environment or configured on
   the jam command-line using <code>-s<i>VARIABLE_NAME</i>=</code><i>value</i>:
   </p>
-  
+
   <table border="1" summary="settings">
     <tr>
       <th>Variable Name</th>
@@ -77,23 +77,66 @@
   correctly. Define <code>_SCL_SECURE_NO_DEPRECATE</code> globally to
   eliminate these errors. Alternatively, you can enclose all includes
   of Boost headers and C++ standard library headers with <code>#pragma
-      warning(disable:4996)</code>:<br><br>
+      warning(disable:4996)</code>, as demonstrated below:<br><br>
 
   <pre>
-  #pragma warning(push)<br>
-  #pragma warning(disable : 4996) <br>
+  #pragma warning(push)
+  #pragma warning(disable : 4996)<br>
   #include &lt;vector&gt;
-  #include &lt;boost/shared_ptr.hpp&gt;<br>
-  #include &lt;boost/noncopyable.hpp&gt;<br>
+  #include &lt;algorithm&gt;
+  #include &lt;boost/shared_ptr.hpp&gt;
+  #include &lt;boost/noncopyable.hpp&gt;
   #include &lt;boost/array.hpp&gt;<br>
   #pragma warning(pop)<br>
   </pre>
   </p>
+  <h3>Note about Visual C++ 2005 Express Edition</h3>
+  <p>Visual C++ 2005 Express Edition is distributed <i>without</i> Windows API
+  headers and libraries (that is Platform SDK). These headers and libraries
+  are <i>required</i> to build and use boost on Windows and can be
+  <a href="http://msdn.microsoft.com/platformsdk" target="_blank">
+  downloaded from Microsoft web site</a>, which also provides
+  <a href="http://msdn.microsoft.com/vstudio/express/visualc/usingpsdk/" target="_blank">
+  installation instruction</a>. The only required component of
+  Platform SDK is "Microsoft Windows Core SDK".  After installation is
+  completed, you will need to manually edit <code>vsvars32.bat</code>
+  file in  <code>%VS80COMNTOOLS%</code> directory  (default is
+  <code>C:\Program Files\Microsoft Visual Studio 8\Common7\Tools\</code> )
+  and append full path to Platform SDK <code>include</code>,
+  <code>lib</code> and <code>bin</code> subdirectories to
+  <code>INCLUDE</code>, <code>LIB</code> and <code>PATH</code>
+  environment variables that are set in this file, respectively.
+  Alternatively, you might install Platform SDK  to directory
+  <code>%VC80_ROOT%\PlatformSDK</code> (which usually resolves to
+  <code>C:\Program Files\Microsoft Visual Studio 8\VC\PlatformSDK</code> ),
+  because this directory name  is apparently preconfigured in default
+  installation of Visual C++ 2005 Express.</p>
 
+  <p>Boost build will call <code>vsvars32.bat</code> batch file
+  (indirectly through <code>%VC80_ROOT%\bin\vcvars32.bat</code>) in
+  order to set environment variables that are required  by Visual C++ compiler
+  and linker if <code>MSVCDir</code> enrironment variable is not set.
+  If you set <code>MSVCDir</code> environment variable in your computer
+  configuration or any other batch file executed before boost build is
+  commenced, please make sure to adjust <code>INCLUDE</code> and
+  <code>LIB</code> accordingly in order to enable Visual C++ to use Platform SDK headers and libraries.</p>
+
+  <p>Please note that boost <i>does not support</i> Visual C++ 2005
+  projects that are targeted on CLR platform. Currently the only supported 
+	platform for Visual C++ line of compilers is Win32. This does not preclude 
+	building GUI applications that use boost, because Win32 supports development 
+	of Windows GUI applications, even though Visual C++ 2005 Express
+  lacks ATL, MFC or Windows application project template.
+  If you need GUI framework that can be used with Visual C++ 2005 Express, try
+  <a href="http://www.torjo.com/win32gui/" target="_blank">Win32 GUI</a>
+  or <a href="http://smartwin.sourceforge.net/" target="_blank">SmartWin++</a>
+  or <a href="http://dir.groups.yahoo.com/group/wtl/" target="_blank">WTL</a>
+  or <a href="http://www.google.com/search?q=win32+GUI+framework" target="_blank">many others</a>
+  .</p>
   <hr>
 
-  <p>Revised 
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->05 November, 2005<!--webbot bot="Timestamp" endspan i-checksum="40844" --></p>
+  <p>Revised
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->23 November, 2005<!--webbot bot="Timestamp" endspan i-checksum="39361" --></p>
 
   <p>Copyright &copy; Dave Abrahams 2002, Bronek Kozicki 2005.</p>
 
@@ -103,3 +146,4 @@
   "http://www.boost.org/LICENSE_1_0.txt">www.boost.org/LICENSE_1_0.txt</a>)</small></p>
 </body>
 </html>
+
