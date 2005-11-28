@@ -54,7 +54,8 @@ class cast-target-class : typed-target
                 ECHO "error: when building " [ full-name ] ;
                 EXIT ;
             }         
-            result += [ $(s).clone-with-different-type $(self.type) ] ;
+            local r = [ $(s).clone-with-different-type $(self.type) ] ;
+            result += [ virtual-target.register $(r) ] ;
         }
                         
         return [ property-set.empty ] $(result) ;
