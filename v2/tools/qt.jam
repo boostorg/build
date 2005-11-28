@@ -131,7 +131,7 @@ class moc-h-generator : generator
     {       
         if ! $(sources[2]) && [ $(sources[1]).type ] = MOCCABLE_CPP
         {                              
-            name = [ $(sources[0]).name ] ;
+            name = [ $(sources[1]).name ] ;
             name = $(name:B) ;
             
             local a = [ new action $(sources[1]) : qt.moc.cpp :
@@ -140,14 +140,16 @@ class moc-h-generator : generator
             local target = [ 
               new file-target $(name) : MOC : $(project) : $(a) ] ;
             
+            local r = [ virtual-target.register $(target) ] ; 
+                                  
             # Since this generator will return H target, the linking generator
             # won't use it at all, and won't set any dependency on it.
             # However, we need to target to be seen by bjam, so that dependency
             # from sources to this generated header is detected -- if jam does
             # not know about this target, it won't do anything.
-            DEPENDS all : [ $(target).actualize ] ;
+            DEPENDS all : [ $(r).actualize ] ;
             
-            return [ virtual-target.register $(target) ] ;
+            return $(r) ;            
         }        
     }    
 }
