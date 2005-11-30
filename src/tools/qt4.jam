@@ -222,15 +222,17 @@ class uic-h-generator : generator
         # The 'ui_' prefix is to match qmake's default behavior.
         local target = [ 
           new file-target ui_$(name) : H : $(project) : $(a) ] ;
+        
+        local r = [ virtual-target.register $(target) ] ;
  
         # Since this generator will return H target, the linking generator
         # won't use it at all, and won't set any dependency on it.
         # However, we need to target to be seen by bjam, so that dependency
         # from sources to this generated header is detected -- if jam does
         # not know about this target, it won't do anything.
-        DEPENDS all : [ $(target).actualize ] ;
+        DEPENDS all : [ $(r).actualize ] ;
         
-        return [ virtual-target.register $(target) ] ;
+        return $(r) ;
     }    
 }
 
