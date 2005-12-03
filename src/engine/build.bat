@@ -19,7 +19,7 @@ ECHO ###
 ECHO ### You can specify the toolset as the argument, i.e.:
 ECHO ###     .\build.bat msvc
 ECHO ###
-ECHO ### Toolsets supported by this script are: borland, como, gcc, gcc-nocygwin, intel-win32, metrowerks, mingw, msvc, vc7
+ECHO ### Toolsets supported by this script are: borland, como, gcc, gcc-nocygwin, intel-win32, metrowerks, mingw, msvc, vc7, vc8
 ECHO ###
 set _error_=
 endlocal
@@ -54,6 +54,19 @@ REM Try and guess the toolset to bootstrap the build with...
 REM Sets BOOST_JAM_TOOLSET to the first found toolset.
 REM May also set BOOST_JAM_TOOLSET_ROOT to the
 REM location of the found toolset.
+
+if "_%ProgramFiles%_" == "__" set ProgramFiles=C:\Program Files
+
+setlocal & endlocal
+if NOT "_%VS80COMNTOOLS%_" == "__" (
+    set BOOST_JAM_TOOLSET=vc8
+    set BOOST_JAM_TOOLSET_ROOT=%VS80COMNTOOLS%..\..\VC\
+    goto :eof)
+setlocal & endlocal
+if EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\bin\VCVARS32.BAT" (
+    set BOOST_JAM_TOOLSET=vc8
+    set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 8\VC\
+    goto :eof)
 setlocal & endlocal
 if NOT "_%VS71COMNTOOLS%_" == "__" (
     set BOOST_JAM_TOOLSET=vc7
@@ -70,19 +83,9 @@ if EXIST "%ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\bin\VCVARS32.BAT"
     set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\
     goto :eof)
 setlocal & endlocal
-if EXIST "C:\Program Files\Microsoft Visual Studio .NET 2003\VC7\bin\VCVARS32.BAT" (
-    set BOOST_JAM_TOOLSET=vc7
-    set BOOST_JAM_TOOLSET_ROOT=C:\Program Files\Microsoft Visual Studio .NET 2003\VC7\
-    goto :eof)
-setlocal & endlocal
 if EXIST "%ProgramFiles%\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
     set BOOST_JAM_TOOLSET=vc7
     set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET\VC7\
-    goto :eof)
-setlocal & endlocal
-if EXIST "C:\Program Files\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
-    set BOOST_JAM_TOOLSET=vc7
-    set BOOST_JAM_TOOLSET_ROOT=C:\Program Files\Microsoft Visual Studio .NET\VC7\
     goto :eof)
 setlocal & endlocal
 if NOT "_%MSVCDir%_" == "__" (
@@ -95,19 +98,9 @@ if EXIST "%ProgramFiles%\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT" (
     set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio\VC98\
     goto :eof)
 setlocal & endlocal
-if EXIST "C:\Program Files\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT" (
-    set BOOST_JAM_TOOLSET=msvc
-    set BOOST_JAM_TOOLSET_ROOT=C:\Program Files\Microsoft Visual Studio\VC98\
-    goto :eof)
-setlocal & endlocal
 if EXIST "%ProgramFiles%\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" (
     set BOOST_JAM_TOOLSET=msvc
     set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual C++\VC98\
-    goto :eof)
-setlocal & endlocal
-if EXIST "C:\Program Files\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" (
-    set BOOST_JAM_TOOLSET=msvc
-    set BOOST_JAM_TOOLSET_ROOT=C:\Program Files\Microsoft Visual C++\VC98\
     goto :eof)
 setlocal & endlocal
 call :Test_Path cl.exe
@@ -248,6 +241,21 @@ if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
         set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
     set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib advapi32.lib
+    set BOOST_JAM_OPT_JAM=/Febootstrap\jam0
+    set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0
+    set BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0
+    set _known_=1
+)
+if "_%BOOST_JAM_TOOLSET%_" == "_vc8_" (
+    if NOT "_%MSVCDir%_" == "__" (
+        set BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\) )
+if "_%BOOST_JAM_TOOLSET%_" == "_vc8_" (
+    if EXIST "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" (
+        call "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" ) )
+if "_%BOOST_JAM_TOOLSET%_" == "_vc8_" (
+    if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
+        set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
+    set BOOST_JAM_CC=cl /nologo /RTC1 /Zi /MTd -DNT -DYYDEBUG -wd4996 kernel32.lib advapi32.lib
     set BOOST_JAM_OPT_JAM=/Febootstrap\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0
     set BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0
