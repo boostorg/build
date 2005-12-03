@@ -264,6 +264,13 @@ toolset vc7 cl : /Fe : -D
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     -I$(--python-include)
     : kernel32.lib advapi32.lib $(--python-lib[1]) ;
+## Microsoft Visual C++ 2005
+toolset vc8 cl : /Fe : -D
+    : /nologo
+    [ opt --release : /MT /O2 /Ob2 /Gy /GF /GA /wd4996 ]
+    [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 /wd4996 ]
+    -I$(--python-include)
+    : kernel32.lib advapi32.lib $(--python-lib[1]) ;
 ## VMS/OpenVMS DEC C
 toolset vmsdecc cc : /OBJECT= : "/DEFINES=(" "," ")"
     : /STANDARD=VAXC /PREFIX_LIBRARY_ENTRIES=ALL_ENTRIES
