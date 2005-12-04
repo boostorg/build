@@ -681,11 +681,29 @@ void var_expand_unit_test()
     char axyb[] = "a$(xy)b";
     char azb[] = "a$($(z))b";
     char path[] = "$(p:W)";
+    
+    # ifdef OS_CYGWIN
+    char cygpath[256];
+    {
+        char P[] = "$(PATH[1])";
+        char * slash = 0;
+        l = var_expand( 0, P, P+sizeof(P)-1, lol, 0 );
+        assert(l != 0);
+        slash = strchr(l->string+1,'/');
+        assert(slash != 0);
+        strncpy(cygpath,l->string,slash-l->string+1);
+        cygpath[slash-l->string+1] = '\0';
+        assert(strlen(cygpath) < 246);
+        strcat(cygpath,"c/foo/bar");
+    }
+    # else
+    char cygpath[] = "/cygdrive/c/foo/bar";
+    # endif
         
     lol_init(lol);
     var_set("xy", list_new( list_new( L0, newstr( "x" ) ), newstr( "y" ) ), VAR_SET );
     var_set("z", list_new( L0, newstr( "xy" ) ), VAR_SET );
-    var_set("p", list_new( L0, newstr( "/cygdrive/c/foo/bar" ) ), VAR_SET );
+    var_set("p", list_new( L0, newstr( cygpath ) ), VAR_SET );
 
     l = var_expand( 0, axyb, axyb + sizeof(axyb) - 1, lol, 0 );
     for ( l2 = l, e2 = expected; l2 && e2; l2 = list_next(l2), e2 = list_next(e2) )
@@ -702,11 +720,11 @@ void var_expand_unit_test()
     l = var_expand( 0, path, path + sizeof(path) - 1, lol, 0 );
     assert(l != 0);
     assert(list_next(l) == 0);
-# ifdef OS_CYGWIN
+    # ifdef OS_CYGWIN
     assert( !strcmp( l->string, "c:\\foo\\bar" ) );
-# else 
-    assert( !strcmp( l->string, "/cygdrive/c/foo/bar" ) );
-# endif   
+    # else 
+    assert( !strcmp( l->string, cygpath ) );
+    # endif   
     list_free(l);
 
     list_free(expected);
