@@ -177,53 +177,40 @@ flags cw.link LINKPATH <library-path> ;
 flags cw.link FINDLIBS_ST <find-static-library> ;
 flags cw.link FINDLIBS_SA <find-shared-library> ;
 flags cw.link LIBRARY_OPTION <toolset>cw : "" : unchecked ;
-
-rule archive ( targets + : sources * : properties * )
-{
-    flags cw.link LIBRARIES
-        [ common.resolve-library-files properties ] ;
-}
-
-rule link ( targets + : sources * : properties * )
-{
-    flags cw.link LIBRARIES
-        [ common.resolve-library-files properties ] ;
-}
+flags cw.link LIBRARIES_MENTIONED_BY_FILE : <library-file> ;
 
 rule link.dll ( targets + : sources * : properties * )
 {
-    flags cw.link LIBRARIES
-        [ common.resolve-library-files properties ] ;
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
 }
 
 if [ os.name ] in NT
 {
-   actions archive bind
+   actions archive
    {
       if exist "$(<[1])" DEL "$(<[1])"
-      $(.LD) -library -o "$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+      $(.LD) -library -o "$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
    }
 }
 else # cygwin
 {
-   actions archive bind
+   actions archive
    {
       _bbv2_out_="$(<)"
       if test -f "$_bbv2_out_" ; then
          _bbv2_existing_="$(<:W)"
       fi
-      $(.LD) -library -o "$(<:W)" $_bbv2_existing_ @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+      $(.LD) -library -o "$(<:W)" $_bbv2_existing_ @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
    }
 }
 
 actions link bind DEF_FILE
 {
-   $(.LD) -o "$(<[1]:W)" -L"$(LINKPATH)" $(LINKFLAGS) $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+   $(.LD) -o "$(<[1]:W)" -L"$(LINKPATH)" $(LINKFLAGS) $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
 }
 
 actions link.dll bind DEF_FILE
 {
-   $(.LD) -o "$(<[1]:W)" -implib "$(<[2]:W)" -L"$(LINKPATH)" $(LINKFLAGS) -f "$(DEF_FILE)" $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+   $(.LD) -o "$(<[1]:W)" -implib "$(<[2]:W)" -L"$(LINKPATH)" $(LINKFLAGS) -f "$(DEF_FILE)" $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
 }
 
