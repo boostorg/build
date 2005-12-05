@@ -560,12 +560,12 @@ flags msvc.compile UNDEFS <undef> ;
 flags msvc.compile INCLUDES <include> ;
 
 # The actions differ only by explicit selection of input language
-actions compile.c bind
+actions compile.c
 {
     $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)"
 }
 
-actions compile.c++ bind
+actions compile.c++
 {
     $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)"
 }
@@ -624,24 +624,11 @@ flags msvc.link LINKPATH <library-path> ;
 flags msvc.link FINDLIBS_ST <find-static-library> ;
 flags msvc.link FINDLIBS_SA <find-shared-library> ;
 flags msvc.link LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
+flags msvc.link LIBRARIES_MENTIONED_BY_FILE : <library-file> ;
 
-
-rule archive ( targets + : sources * : properties * )
-{
-    flags msvc.link LIBRARIES
-        [ common.resolve-library-files properties ] ;
-}
-
-rule link ( targets + : sources * : properties * )
-{
-    flags msvc.link LIBRARIES
-        [ common.resolve-library-files properties ] ;
-}
 
 rule link.dll ( targets + : sources * : properties * )
 {
-    flags msvc.link LIBRARIES
-        [ common.resolve-library-files properties ] ;
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
 }
 
@@ -653,18 +640,18 @@ if [ os.name ] in NT
 {    
     # The 'DEL' command would issue a message to stdout
     # if the file does not exist, so need a check.
-    actions archive bind
+    actions archive
     {  
         if exist "$(<[1])" DEL "$(<[1])"  
-        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
     }
 }
 else
 {
-    actions archive bind
+    actions archive
     {  
         $(RM) "$(<[1])"
-        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
     }
 }
         
@@ -682,13 +669,13 @@ else
 
 actions link bind DEF_FILE
 {
-    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
     $(MANIFEST)$(<[1]).manifest $(OUTPUTRESOURCE)$(<[1]);1
 }
 
 actions link.dll bind DEF_FILE
 {
-    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
     $(MANIFEST)$(<[1]).manifest $(OUTPUTRESOURCE)$(<[1]);2
 }
 

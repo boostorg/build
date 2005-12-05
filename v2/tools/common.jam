@@ -447,34 +447,6 @@ rule prepend-path-variable-command ( variable : paths * )
 }
 
 
-# Returns the list of libraries from the <library> property
-# in their actualized form.
-rule resolve-library-files ( properties * )
-{
-    local libraries ;
-
-    for local p in $(properties)
-    {
-        if $(p:G) = <library-file> &&
-          ! [ type.is-derived [ $(p:G=).type ] SHARED_LIB ]
-        {
-            libraries += $(p:G=) ;
-        }
-    }
-
-    # Get real jam targets
-
-    local xlibraries ;
-
-    for local l in $(libraries)
-    {
-        xlibraries += [ $(l).actualize ] ;
-    }
-
-    return $(xlibraries) ;
-}
-
-
 # Return a command which can create a file. If 'r' is result of invocation,
 # then 
 #   r foobar
