@@ -15,6 +15,7 @@
 # ifdef OS_CYGWIN
 #  include <sys/cygwin.h>
 #  include <windows.h>
+#  include <stdlib.h>
 # endif
 
 /*
@@ -685,14 +686,12 @@ void var_expand_unit_test()
     # ifdef OS_CYGWIN
     char cygpath[256];
     {
-        char P[] = "$(PATH[1])";
-        char * slash = 0;
-        l = var_expand( 0, P, P+sizeof(P)-1, lol, 0 );
-        assert(l != 0);
-        slash = strchr(l->string+1,'/');
+        const char * P = getenv("PATH");
+        const char * slash = 0;
+        slash = strchr(P+1,'/');
         assert(slash != 0);
-        strncpy(cygpath,l->string,slash-l->string+1);
-        cygpath[slash-l->string+1] = '\0';
+        strncpy(cygpath,P,slash-P+1);
+        cygpath[slash-P+1] = '\0';
         assert(strlen(cygpath) < 246);
         strcat(cygpath,"c/foo/bar");
     }
