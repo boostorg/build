@@ -1,0 +1,68 @@
+# Copyright (c) 2005 Reece H. Dunn.
+#
+# Use, modification and distribution is subject to the Boost Software
+# License Version 1.0. (See accompanying file LICENSE_1_0.txt or
+# http://www.boost.org/LICENSE_1_0.txt)
+
+import type ;
+import feature : feature ;
+import generators ;
+
+##### Using Pre-compiled Headers (Quick Guide) #####
+#
+# Make mypch.hpp a pre-compiled header (PCH) using mypch.cpp as the source file:
+#    import cast ;
+#    pch mypch : [ cast _ pcheader : pch.hpp ] pch.cpp ;
+#
+# Enable PCHs in a target:
+#    exe hello : mypch main.cpp hello.cpp ;
+#                ^^^^^ -- mypch.hpp is a PCH
+#
+# Don't use PCHs for a specific source:
+#    obj nopch : nopch.cpp : <pch>off ;
+#
+
+type.register PCH : pch ;
+type.register PCHEADER : pcheader ;
+
+feature pch : # control precompiled header (PCH) generation
+    on  # this file has support for using PCHs (if available)
+    off # this file doesn't use PCHs
+  ;
+
+feature pch-source : : free dependency ; # mypch.cpp
+feature pch-header : : free dependency ; # mypch.h[pp]
+feature pch-file   : : free dependency ; # mypch.pch
+
+class pch-generator : generator
+{
+    import property-set ;
+
+    rule __init__ ( * : * )
+    {
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+
+    rule action-class ( )
+    {
+        return compile-action ;
+    }
+
+    rule run ( project name ? : property-set : sources * )
+    {
+        local r =
+          [ generator.run $(project) $(name) :
+            [
+              property-set.create
+                <pch-source>$(sources[2]) # mypch.cpp
+                [ $(property-set).raw ]
+            ] : $(sources)
+          ] ;
+
+        return
+          [ property-set.create
+              <pch-header>$(sources[1]) # mypch.h[pp]
+              <pch-file>$(r[2])         # mypch.pch
+          ] $(r) ;
+    }
+}

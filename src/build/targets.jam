@@ -1108,7 +1108,7 @@ class basic-target : abstract-target
                 if [ modules.peek : .debug-building ] 
                 {
                     ECHO [ targets.indent ] 
-                      "Usage requirements for $(self.name) are $(usage-requirements)" ;
+                      "Usage requirements for $(self.name) are " $(usage-requirements) ;
                 }
 
                 rproperties = [ property-set.create $(properties) 
@@ -1138,6 +1138,14 @@ class basic-target : abstract-target
                 local ur = [ compute-usage-requirements $(s) ] ;
                 ur = [ $(ur).add $(gur) ] ;
                 $(s).set-usage-requirements $(ur) ;
+                if [ modules.peek : .debug-building ] 
+                {
+                    ECHO [ targets.indent ]
+                      "Usage requirements from $(self.name) are "
+                        [ $(ur).raw ] ;
+                }
+                
+                
                 self.generated.$(property-set) = $(ur) $(result) ;
             } 
             else
@@ -1176,8 +1184,28 @@ class basic-target : abstract-target
         local result = [ property-set.create
             [ $(xusage-requirements).non-dependency ] $(extra) ] ;
         
-        result = [ $(result).add 
-          [ $(subvariant).sources-usage-requirements ] ] ;        
+        # Propagate usage requirements we've got from sources, except
+        # for the <pch-header> and <pch-file> features.
+        #
+        # That feature specifies which pch file to use, and should apply
+        # only to direct dependents. Consider:
+        #
+        #   pch pch1 : ...
+        #   lib lib1 : ..... pch1 ;
+        #   pch pch2 : 
+        #   lib lib2 : pch2 lib1 ;
+        #
+        # Here, lib2 should not get <pch-header> property from pch1.
+        #
+        # Essentially, when those two features are in usage requirements,
+        # they are propagated only to direct dependents. We might need
+        # a more general mechanism, but for now, only those two
+        # features are special.
+        local raw = [ $(subvariant).sources-usage-requirements ] ;
+        raw = [ $(raw).raw ] ;
+        raw = [ property.change $(raw) : <pch-header> ] ;      
+        raw = [ property.change $(raw) : <pch-file> ] ;             
+        result = [ $(result).add [ property-set.create $(raw) ] ] ;        
         
         return $(result) ;
     }
