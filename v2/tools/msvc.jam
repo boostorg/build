@@ -20,6 +20,7 @@ import "class" : new ;
 import rc ;
 import midl ;
 import mc ;
+import pch ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
@@ -509,6 +510,8 @@ generators.override msvc.compile.idl : midl.compile.idl ;
 generators.register-standard msvc.compile.mc : MC : H RC : <toolset>msvc ;
 generators.override msvc.compile.mc : mc.compile ;
 
+generators.register [ new pch-generator msvc.compile.pch : PCHEADER : OBJ PCH : <toolset>msvc ] ;
+
 #
 # Declare flags and action for compilation
 #
@@ -559,16 +562,44 @@ flags msvc.compile DEFINES <define> ;
 flags msvc.compile UNDEFS <undef> ;
 flags msvc.compile INCLUDES <include> ;
 
-# The actions differ only by explicit selection of input language
-actions compile.c
+flags msvc.compile PCH_SOURCE <pch-source> ;
+flags msvc.compile PCH_HEADER <pch>on : <pch-header> ;
+flags msvc.compile PCH_FILE <pch>on : <pch-file> ;
+
+rule compile.c ( targets + : sources * : properties * )
 {
-    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)"
+    DEPENDS $(<) : [ on $(<) return $(PCH_HEADER) ] ;
+    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
-actions compile.c++
+rule compile.c++ ( targets + : sources * : properties * )
 {
-    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)"
+    DEPENDS $(<) : [ on $(<) return $(PCH_HEADER) ] ;
+    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
+
+rule compile.pch ( targets + : sources * : properties * )
+{
+    DEPENDS $(<) : [ on $(<) return $(PCH_SOURCE) ] ;
+}
+
+
+# The actions differ only by explicit selection of input language
+actions compile.c bind PCH_HEADER PCH_FILE
+{
+    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
+}
+
+actions compile.c++ bind PCH_HEADER PCH_FILE
+{
+    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
+}
+
+actions compile.pch bind PCH_SOURCE
+{
+    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(PCH_SOURCE:W)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" /Yc"$(>[1]:D=)" -Fp"$(<[2]:W)"
+}
+
 
 actions compile.rc
 {
