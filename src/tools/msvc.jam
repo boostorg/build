@@ -299,11 +299,6 @@ local rule configure-really (
             }
         }
 
-        if ! $(setup)
-        {
-            error "msvc: Visual Studio setup script not found" ;
-        }
-
         local prefix = "call " ;
         local suffix = " >nul
 " ;
@@ -315,6 +310,8 @@ local rule configure-really (
 
         command = $(prefix)$(setup)" "$(setup-option:E="")$(suffix) ;
 
+        # Setup script is not required in some configurations
+        command ?= "" ;
 
         # Get tool names (if any) and finish setup
 
