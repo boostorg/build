@@ -756,8 +756,8 @@ project tennis
       subprojects, so that every definition made in a parent project
       is always available to its children. The loading order of any
       other projects is unspecified.  Even if one project refers to
-      another via <link
-      linkend="bbv2.advanced.projects.relationships.useprojectrule"><functionname>use-project</functionname></link>,
+      another via <xref
+      linkend="bbv2.advanced.projects.relationships.useprojectrule"><functionname>use-project</functionname></xref>,
       or a target reference, no specific order should be assumed.
       </para>
 
@@ -810,22 +810,22 @@ bjam --help project.<replaceable>rulename</replaceable>
             </row>
             
             <row>
-              <entry><link linkend=
-                  "bbv2.advanced.projects.relationships.useprojectrule">use-project</link></entry>
+              <entry><xref linkend=
+                  "bbv2.advanced.projects.relationships.useprojectrule">use-project</xref></entry>
               
               <entry>Make another project known so that it can be referred to by symbolic ID.</entry>
             </row>
             
             <row>
-              <entry><link linkend=
-                  "bbv2.advanced.projects.relationships.buildprojectrule">build-project</link></entry>
+              <entry><xref linkend=
+                  "bbv2.advanced.projects.relationships.buildprojectrule">build-project</xref></entry>
               
               <entry>Cause another project to be built when this one is built.</entry>
             </row>
             
             <row>
-              <entry><link linkend=
-                  "bbv2.reference.buildprocess.explict">explicit</link></entry>
+              <entry><xref linkend=
+                  "bbv2.reference.buildprocess.explict">explicit</xref></entry>
               
               <entry>State that a target should be built only by explicit
                 request.</entry>
