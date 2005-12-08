@@ -114,8 +114,7 @@ and linked it.
   </para>
 
       <para>In the subsequent sections, we will extend this example, and review
-        all the mechanisms in detail. The complete code is available in <ulink url=
-          "../../tools/build/v2/example/customization">example/customization</ulink>
+        all the mechanisms in detail. The complete code is available in <filename>example/customization</filename>
         directory.
       </para>
 

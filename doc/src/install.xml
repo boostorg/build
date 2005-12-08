@@ -162,7 +162,7 @@ boost-build <replaceable>/path/to/boost.build</replaceable> ;
   <para><emphasis role="bold">N.B.</emphasis>
   When <command>bjam</command> is invoked from anywhere in the Boost
   directory tree <emphasis>other than</emphasis> the Boost.Build root
-  and its subdirectories, <ulink url="../../tools/build">Boost.Build
+  and its subdirectories, <ulink url="../../tools/build/index.html">Boost.Build
   v1</ulink> is used by default. To override the default and use
   Boost.Build v2, you have to add the <option>--v2</option> command
   line option to all <command>bjam</command> invocations.</para>
