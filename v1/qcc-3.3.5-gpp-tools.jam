@@ -1,0 +1,9 @@
+# Copyright (c) 2005 Jim Douglas.
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
+{
+    local GXX = QCC -V3.3.5,gcc_ntox86_gpp ;
+    local GCC = qcc -V3.3.5,gcc_ntox86_gpp ;
+    extends-toolset qcc ;
+}

@@ -1,10 +1,31 @@
-# Copyright (c) 2005 Rene Rivera.
+# Copyright (c) 2005 Jim Douglas.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-{
-    local GXX = QCC ;
-    local GCC = qcc ;
-    extends-toolset gcc ;
-}
+GXX ?= QCC ;
+GCC ?= qcc ;
+extends-toolset gcc ;
 
+CFLAGS = [ difference $(CFLAGS) : -Wall -fno-inline -Wno-inline -finline-functions -fPIC -g ] ;
+flags qcc CFLAGS <inlining>off : -Wc,-fno-inline ;
+flags qcc CFLAGS <inlining>on : -Wc,-Wno-inline ;
+flags qcc CFLAGS <inlining>full : -Wc,-finline-functions,-Wno-inline ;
+flags qcc CFLAGS <debug-symbols>on : -gstabs+ ;
+flags qcc CFLAGS : -Wc,-Wall,-Wno-non-virtual-dtor ;
+flags qcc CFLAGS <shared-linkable>true : -Wc,-fPIC ;
+
+LINKFLAGS = [ difference $(LINKFLAGS) : -g -fPIC ] ;
+flags qcc LINKFLAGS <debug-symbols>on : -gstabs+ ;
+flags qcc LINKFLAGS <shared-linkable>true : -Wl,-fPIC ;
+
+flags qcc FINDLIBS : m ;
+
+C++FLAGS = [ difference $(C++FLAGS) : -ftemplate-depth-255 ] ;
+flags qcc C++FLAGS : -Wc,-ftemplate-depth-255 ;
+
+actions gcc-C++-action
+{
+    $(.SET_EXIT)
+    "$(.GXX[1]:R=$(GCC_BIN_DIR))" $(.GXX[2-]) -c -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I$(_)"$(STDHDRS)" -I$(_)"$(SYSHDRS)" -o "$(<)" "$(>)"
+    "$(.OBJCOPY[1])"$(_)$(OBJCOPY_FLAGS)$(_)"$(<)"
+}
