@@ -603,7 +603,8 @@ actions compile.rc
     $(.RC) -l 0x409 -U$(UNDEFS) -D$(DEFINES) -I"$(INCLUDES)" -fo "$(<:W)" "$(>:W)"
 }
 
-TOUCH_FILE = [ midl.file-touch-command ] ;
+# See midl.jam for details
+TOUCH_FILE = [ common.file-touch-command ] ;
 
 actions compile.idl
 {

@@ -465,6 +465,22 @@ rule file-creation-command ( )
 }
 
         
+# Returns a command that may be used for 'touching' files.
+# It is not a real 'touch' command on NT because it adds an empty line at 
+# the end of file but it works with source files
+rule file-touch-command ( )
+{
+    if [ os.name ] in NT
+    {
+        return "echo. >> " ;
+    }
+    else
+    {
+        return "touch " ;
+    }
+}
+
+
 rule MkDir
 {
     # If dir exists, don't update it
