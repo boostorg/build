@@ -128,22 +128,11 @@ flags midl.compile.idl INCLUDES <include> ;
 generators.register-c-compiler midl.compile.idl : IDL : MSTYPELIB H C(%_i) C(%_proxy) C(%_dlldata) ;
 
 
-# Returns a command that may be used for 'touching' files.
-# It is not a real 'touch' command on NT because it adds an empty line at 
-# the end of file but it works with source files
-rule file-touch-command ( )
-{
-    if [ os.name ] in NT
-    {
-        return "echo. >> " ;
-    }
-    else
-    {
-        return "touch " ;
-    }
-}
-
-TOUCH_FILE = [ file-touch-command ] ;
+# MIDL does not always generate '%_proxy.c' and '%_dlldata.c'. This behavior 
+# depends on contents of the source IDL file. Calling TOUCH_FILE below ensures
+# that both files will be created so bjam will not try to recreate them 
+# constantly.
+TOUCH_FILE = [ common.file-touch-command ] ;
 
 actions compile.idl
 {
