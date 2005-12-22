@@ -1067,6 +1067,7 @@ local rule construct-really (
       " viable generators" ;
     
     local result ;
+    local generators-that-succeeded ;
     for local g in $(viable-generators)
     {
         # This variable will be restored on exit from this scope.
@@ -1077,9 +1078,31 @@ local rule construct-really (
         
         if $(r)
         {
+            generators-that-succeeded += $(g) ;
             if $(result)
             {
-                error "Ambiguity found when searching for best transformation" ;
+                ECHO "Error: ambiguity found when searching for best transformation" ;
+                ECHO "Trying to produce type '$(target-type)' from: " ;
+                for local s in $(sources)
+                {
+                    ECHO " - " [ $(s).str ] ;
+                }
+                ECHO "Generators that succeeded:" ;
+                for local g in $(generators-that-succeeded)
+                {
+                    ECHO " - " [ $(g).id ] ;
+                }
+                ECHO "First generator produced: " ;
+                for local t in $(result[2-])
+                {
+                    ECHO " - " [ $(t).str ] ;
+                }
+                ECHO "Second generator produces: " ;
+                for local t in $(r[2-])
+                {
+                    ECHO " - " [ $(t).str ] ;
+                }
+                EXIT ;
             }
             else
             {
