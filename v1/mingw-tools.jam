@@ -15,7 +15,10 @@ set-as-singleton MINGW_ROOT_DIRECTORY MINGW_BIN_DIRECTORY MINGW_INCLUDE_DIRECTOR
     extends-toolset gcc ;
 
     # So that RUNPATH, and PATH, is set to include where the mingw DLLs are located.
-    flags mingw STDLIBPATH : $(GCC_BIN_DIRECTORY) ;
+    if $(GCC_BIN_DIRECTORY) && $(GCC_BIN_DIRECTORY) != ""
+    {
+        flags mingw STDLIBPATH : $(GCC_BIN_DIRECTORY) ;
+    }
 }
 
 flags mingw LINKFLAGS <user-interface>gui : -Wl,--subsystem,windows ;
