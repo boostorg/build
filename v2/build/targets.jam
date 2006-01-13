@@ -1012,6 +1012,22 @@ class basic-target : abstract-target
         }
     }
     
+    # Returns the list of abstract-targets which are used as sources.
+    # The extra properties specified for sources are not represented.
+    # The only used of this rule at the moment is the "--dump-test"
+    # feature of the test system.
+    rule sources ( )
+    {
+        if ! $(self.source-targets) {
+            for local s in $(self.sources)
+            {
+                self.source-targets += 
+                  [ targets.resolve-reference $(s) : $(self.project) ] ;
+            }            
+        }    
+        return $(self.source-targets) ;
+    }
+    
     rule requirements ( )
     {
         return $(self.requirements) ;
