@@ -76,7 +76,7 @@ rule load ( jamfile-location )
         # loading the current Jamfile.       
         for local p in [ attribute $(module-name) projects-to-build ]
         {
-            load [ path.join $(jamfile-location) $(p) ] ;
+            load [ path.root $(p) $(jamfile-location) ] ;
         }
 
         local used = [ modules.peek $(module-name) : .used-projects ] ;
