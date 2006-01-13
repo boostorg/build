@@ -305,7 +305,7 @@ local rule configure-really (
         if ! [ os.name ] in NT
         {
             prefix = "cmd.exe /S /C call " ;
-            suffix = " \"&&\" " ;
+            suffix = " >nul \"&&\" " ;
         }
 
         command = $(prefix)$(setup)" "$(setup-option:E="")$(suffix) ;
@@ -333,6 +333,7 @@ local rule configure-really (
         mc-compiler = [ get-values <mc-compiler> : $(options) ] ;
         mc-compiler ?= mc ;
 
+        manifest-tool = mt ;
 
         for local i in 1 2 3
         {
@@ -340,15 +341,14 @@ local rule configure-really (
 
             if $(c)
             {
+                local cond = $(condition)/$(cpu-arch-$(c)) ;
+
                 if $(.debug-configuration)
                 {
-                    ECHO "msvc: condition:"
-                        "'$(condition)/$(cond-$(c))',"
+                    ECHO "msvc: condition: '$(cond)', "
                         "command: '$(command[$(i)])'" ;
                 }
         
-                local cond = $(condition)/$(cpu-arch-$(c)) ;
-
                 flags msvc.compile .CC  $(cond) : $(command[$(i)])$(compiler) ;
                 flags msvc.compile .RC  $(cond) : $(command[$(i)])$(resource-compiler) ;
                 flags msvc.compile .ASM $(cond) : $(command[$(i)])$(assembler) ;
@@ -356,15 +356,13 @@ local rule configure-really (
                 flags msvc.archive .LD  $(cond) : $(command[$(i)])$(linker) ;
                 flags msvc.compile .IDL $(cond) : $(command[$(i)])$(idl-compiler) ;
                 flags msvc.compile .MC  $(cond) : $(command[$(i)])$(mc-compiler) ;
+
+                if ! [ os.name ] in NT
+                {
+                    flags msvc.link .MT $(cond) : $(command[$(i)])$(manifest-tool) ;
+                }
             }
-        }
-
-        if ! $(below-8.0)
-        {
-            flags msvc.link MANIFEST $(condition) : "mt -nologo -manifest " ;
-            flags msvc.link OUTPUTRESOURCE $(condition) : "-outputresource:" ;
-        }
-
+        }   
 
         # Set version-specific flags
         configure-version-specific $(version) : $(condition) ;
@@ -696,17 +694,43 @@ else
 # manifests are embedded as resourses and are useful in 
 # any PE targets (both DLL and EXE)
 
-actions link bind DEF_FILE
+if [ os.name ] in NT
 {
-    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
-    $(MANIFEST)$(<[1]).manifest $(OUTPUTRESOURCE)$(<[1]);1
+    actions link bind DEF_FILE
+    {
+        $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        if exist "$(<[1]).manifest" (
+            mt -nologo -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
+        )
+    }    
+
+    actions link.dll bind DEF_FILE
+    {
+        $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        if exist "$(<[1]).manifest" (
+            mt -nologo -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
+        )
+    } 
+}
+else
+{
+    actions link bind DEF_FILE
+    {
+        $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        if test -e "$(<[1]).manifest"; then
+            $(.MT) -nologo -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);1"
+        fi
+    }
+
+    actions link.dll bind DEF_FILE
+    {
+        $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        if test -e "$(<[1]).manifest"; then
+            $(.MT) -nologo -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
+        fi
+    }
 }
 
-actions link.dll bind DEF_FILE
-{
-    $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
-    $(MANIFEST)$(<[1]).manifest $(OUTPUTRESOURCE)$(<[1]);2
-}
 
 actions compile.mc
 {
