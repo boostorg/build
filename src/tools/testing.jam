@@ -211,9 +211,14 @@ rule dump-test ( target )
     {
         if [ class.is-a $(s) : file-reference ] 
         {
+            local location = 
+              [ path.root 
+                  [ path.root [ $(s).name ] [ $(s).location ] ]
+                  [ path.pwd ] ] ;  
+                       
             source-files += 
               [ path.relative 
-                  [ path.root [ $(s).location ] [ path.pwd ] ]
+                  $(location)
                   [ path.root $(project-root) [ path.pwd ] ] ] ;
         }                
     }
