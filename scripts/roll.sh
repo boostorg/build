@@ -23,8 +23,8 @@ echo -e "boost-build kernel ;\n" > boost-build.jam
 touch doc/project-root.jam
 export BOOST_ROOT=/home/ghost/Work/boost-rc
 cd doc
-/home/ghost/Work/boost/tools/build/jam_src/bin.linuxx86/bjam --v2
-/home/ghost/Work/boost/tools/build/jam_src/bin.linuxx86/bjam --v2 pdf
+/home/ghost/Work/boost-rc/tools/build/jam_src/bin.linuxx86/bjam --v2
+/home/ghost/Work/boost-rc/tools/build/jam_src/bin.linuxx86/bjam --v2 pdf
 cp `find bin -name "*.pdf"` ../..
 rm -rf bin
 cd ..
