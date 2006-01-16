@@ -321,6 +321,47 @@ exe hello : hello.cpp /site-config//zlib ;
       in any Jamfile.</para>
 
   </section>
+
+  <section id="bbv2.faq.header-only-libraries">
+    <title>Header-only libraries</title>
+
+    <para>In modern C++, libraries often consist of just header files, without
+    any source files to compile. To use such libraries, you need to add proper
+    includes and, maybe, defines, to your project. But with large number of
+    external libraries it becomes problematic to remember which libraries are
+    header only, and which are "real" ones. However, with Boost.Build a 
+    header-only library can be declared as Boost.Build target and all 
+    dependents can use such library without remebering if it's header-only or not.
+    </para>
+
+    <para>Header-only libraries are declared using the <code>alias</code> rule,
+    that specifies only usage requirements, for example:
+<programlisting>
+alias mylib 
+    : # no sources
+    : # no build requirements
+    : # no default build
+    : &lt;include&gt;whatever
+    ;
+</programlisting>
+    The includes specified in usage requirements of <code>mylib</code> are
+    automatically added to build properties of all dependents. The dependents
+    need not care if <code>mylib</code> is header-only or not, and it's possible
+    to later make <code>mylib</code> into a regular compiled library.
+    </para>
+
+    <para>
+      If you already have proper usage requirements declared for project where
+      header-only library is defined, you don't need to duplicate them for
+      the <code>alias</code> target:
+<programlisting>
+project my : usage-requirements &lt;include&gt;whatever ;
+alias mylib ;
+</programlisting>      
+    </para>
+
+  </section>
+
     
   </chapter>
 <!--
