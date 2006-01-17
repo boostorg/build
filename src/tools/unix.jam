@@ -112,7 +112,7 @@ class unix-searched-lib-generator : searched-lib-generator
         local result = [ searched-lib-generator.run $(project) $(name) 
           : $(property-set) : $(sources) ] ;
         
-        unix.set-library-order $(sources) : $(property-set) : $(result) ;
+        unix.set-library-order $(sources) : $(property-set) : $(result[2-]) ;
         
         return $(result) ;
     }    
