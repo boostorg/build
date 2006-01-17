@@ -495,18 +495,21 @@ class searched-lib-generator : generator
             {
                 shared = true ;
             }        
+            
+            local search = [ feature.get-values <search> : $(properties) ] ;
 
             a = [ new null-action $(property-set) ] ;
             local t = [ new searched-lib-target $(name) : $(project) : $(shared)
                             : [ feature.get-values <name> : $(properties) ]
-                            : [ feature.get-values <search> : $(properties) ]
+                            : $(search)
                             : $(a)
                       ] ;
             # We return sources for a simple reason. If there's
             #    lib png : z : <name>png ; 
             # the 'z' target should be returned, so that apps linking to
             # 'png' will link to 'z', too.
-            return [ virtual-target.register $(t) ] $(sources) ;
+            return [ property-set.create <xdll-path>$(search) ]
+                   [ virtual-target.register $(t) ] $(sources) ;
         }
     }        
 }
