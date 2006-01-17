@@ -9,6 +9,7 @@
 #  shared linking.
 from BoostBuild import Tester, List
 import string
+import os
 
 t = Tester()
 
@@ -95,8 +96,16 @@ exe main : main.cpp png ;
 lib png : z : <name>png ;
 lib z : : <name>zzz ;
 """)
-t.run_build_system("-a -n -d+2")
-t.fail_test(string.find(t.stdout(), "zzz") == -1)
+t.run_build_system("-a -d+2", status=1, stderr=None)
+# Try to find the "zzz" string either in response file
+# (for Windows compilers), or in standard output.
+rsp = t.adjust_names("bin/$toolset/debug/main.exe.rsp")[0]
+if os.path.exists(rsp) and string.find(open(rsp).read(), "zzz") != -1:
+    pass
+elif string.find(t.stdout(), "zzz") != -1:
+    pass
+else:
+    t.fail_test(1)
 
 #
 # Test main -> libb -> liba chain
@@ -107,17 +116,30 @@ t.write("Jamroot", "")
 t.write("a/Jamfile", """
 lib a : a.cpp ;
 """)
-t.write("a/a.cpp", "void a() {}\n")
+t.write("a/a.cpp", """
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
+void a() {}
+""")
 t.run_build_system(subdir="a")
 t.expect_addition("a/bin/$toolset/debug/a.dll")
 
+# FIXME: for Windows, need to link to .lib, not .dll!
 file = t.adjust_names(["a/bin/$toolset/debug/a.dll"])[0]
 
 t.write("b/Jamfile", """
 lib b : b.cpp ../%s ;
 """ % file)
 t.write("b/b.cpp", """
+#if defined(_WIN32)
+__declspec(dllimport)
+#endif
 void a();
+
+#if defined(_WIN32)
+__declspec(dllexport)
+#endif
 void b() { a(); }
 """)
 
@@ -125,6 +147,9 @@ t.write("Jamroot", """
 exe main : main.cpp b//b ;
 """)
 t.write("main.cpp", """
+#if defined(_WIN32)
+__declspec(dllimport)
+#endif
 void b();
 int main() { b(); }
 """)
