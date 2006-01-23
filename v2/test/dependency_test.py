@@ -72,4 +72,33 @@ t.run_build_system()
 t.expect_touch("bin/$toolset/debug/a.obj")
 t.expect_touch("bin/$toolset/debug/a_c.obj")
 
+# Regression test: on windows, <includes> with absolute paths
+# were not considered when scanning dependencies.
+
+t.rm(".")
+
+t.write("Jamroot", """
+path-constant TOP : . ;
+exe app : main.cpp
+        : <include>$(TOP)/include
+         ;
+""");
+
+t.write("main.cpp", """
+#include <dir/header.h>
+
+int main() { return 0; }
+
+""")
+
+t.write("include/dir/header.h", "")
+t.run_build_system()
+t.expect_addition("bin/$toolset/debug/main.obj")
+
+t.touch("include/dir/header.h")
+t.run_build_system()
+t.expect_touch("bin/$toolset/debug/main.obj")
+
+
+
 t.cleanup()
