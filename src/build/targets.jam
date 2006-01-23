@@ -364,22 +364,28 @@ class project-target : abstract-target
         }
         else
         {   
-            # Interpret as filename            
-            result = [ new file-reference [ path.make $(id) ] : $(project) ] ;
- 
-            if ! [ $(result).exists ]
-            {
-                # File actually does not exist.
-                # Reset 'target' so that an error is issued.
-                result = ;
-            }            
-            
             # Interpret target-name as name of main target
+            # Need to do this before checking for file. Consider this:
+            #
+            #  exe test : test.cpp ;
+            #  install s : test : <location>. ;
+            #
+            # After first build we'll have target 'test' in Jamfile and file
+            # 'test' on the disk. We need target to override the file.            
+            result = [ main-target $(id) ] ;            
+            
             if ! $(result)
             {
-                result = [ main-target $(id) ] ;
+                result = [ new file-reference [ path.make $(id) ] : $(project) ] ;
+ 
+                if ! [ $(result).exists ]
+                {
+                    # File actually does not exist.
+                    # Reset 'target' so that an error is issued.
+                    result = ;
+                }            
             }
-            
+                                         
             # Interpret id as project-id
             if ! $(result)
             {                
