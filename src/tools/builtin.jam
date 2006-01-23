@@ -313,8 +313,12 @@ class c-scanner : scanner
     rule __init__ ( includes * )
     {
         scanner.__init__ ;
-    
-        self.includes = $(includes) ;
+          
+        for local i in $(includes)
+        {            
+            self.includes += [ path.native $(i:G=) ] ;
+        }
+        
     }    
 
     rule pattern ( )
