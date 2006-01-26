@@ -232,7 +232,7 @@ class abstract-file-target : virtual-target
         return $(self.action) ;
     }
 
-    # Sets/gets the 'root' flag. Target is root is it directly correspods to some
+    # Sets/gets the 'root' flag. Target is root if it directly correspods to some
     # variant of a main target.
     rule root ( set ? )
     {
@@ -615,7 +615,7 @@ class notfile-target : abstract-file-target
 # not establish dependency relationship, but should do everything else.
 class action 
 {
-    import type toolset property-set indirect class path assert ;
+    import type toolset property-set indirect class path assert errors ;
     
     rule __init__ ( sources * : action-name + : property-set ? )
     {        
