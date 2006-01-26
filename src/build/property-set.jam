@@ -270,6 +270,10 @@ class property-set
                 else
                 {
                     self.target-path = $(p) ;
+                }   
+                if ! $(self.target-path)
+                {
+                    self.target-path = . ;
                 }                
                 # The path is relative to build dir.
                 self.target-path += true ;
