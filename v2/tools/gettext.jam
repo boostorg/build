@@ -136,7 +136,9 @@ class update-translations-generator : generator
         local types = [ $(property-set).get <gettext.types> ] ;
         types ?= "C CPP" ;
         types = [ regex.split $(types) " " ] ;
-        property-set = [ property-set.empty ] ;
+        
+        local keywords = [ $(property-set).get <gettext.keyword> ] ;
+        property-set = [ property-set.create $(keywords:G=<gettext.keyword>) ] ;
 
         # First deterime the list of sources that must be scanned for 
         # messages.
@@ -162,15 +164,15 @@ class update-translations-generator : generator
             # Create the POT file, which will contain list of messages extracted
             # from the sources.
             local extract = 
-              [ new action $(right-sources) : gettext.extract ] ;
+              [ new action $(right-sources) : gettext.extract : $(property-set) ] ;
             local new-messages = [ new file-target $(name) : gettext.POT 
               : $(project) : $(extract) ] ;
                 
             # Create a notfile target which will update the existing translation file
-            # with new messages.
-            local a = [ new action $(r) : $(sources[1]) $(new-messages) 
+            # with new messages.         
+            local a = [ new action $(sources[1]) $(new-messages) 
               : gettext.update-po-dispatch ] ;
-            local r = [ new notfile-target $(name) : $(project) : $(a) ] ;            
+            local r = [ new notfile-target $(name) : $(project) : $(a) ] ;
             .constructed = [ virtual-target.register $(r) ] ;
         }
         else
