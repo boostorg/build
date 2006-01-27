@@ -15,6 +15,7 @@
         (See accompanying file LICENSE_1_0.txt or copy at
         [@http://www.boost.org/LICENSE_1_0.txt])
     ]
+    [source-mode python]
 ]
 
 [/ QuickBook Document version 1.3 ]
@@ -228,7 +229,93 @@ A file target's identifier is generally the file's name, which can be absolutely
 
 [section:rules Rules]
 
+The basic =bjam= language entity is called a rule. A rule is defined in two parts: the procedure and the actions. The procedure is a body of jam statements to be run when the rule is invoked; the actions are the OS shell commands to execute when updating the built targets of the rule.
+
+Rules can return values, which can be expanded into a list with "[ /rule/ /args/ ... ]". A rule's value is the value of its last statement, though only the following statements have values: 'if' (value of the leg chosen), 'switch' (value of the case chosen), set (value of the resulting variable), and 'return' (value of its arguments). Note that 'return' doesn't actually cause a return, i.e., is a no-op unless it is the last statement of the last block executed within rule body.
+
+The =bjam= statements for defining and invoking rules are as follows:
+
+Define a rule's procedure, replacing any previous definition.
+
+[pre
+rule /rulename/ { /statements/ }
+]
+
+Define a rule's updating actions, replacing any previous definition.
+
+[pre
+actions \[ /modifiers/ \] /rulename/ { /commands/ }
+]
+
+Invoke a rule.
+
+[pre
+rulename /field1/ : /field2/ : /.../ : /fieldN/ ;
+]
+
+Invoke a rule under the influence of target's specific variables..
+
+[pre
+on /target/ /rulename/ /field1/ : /field2/ : /.../ : /fieldN/ ;
+]
+
+Used as an argument, expands to the return value of the rule invoked.
+
+[pre
+\[ /rulename/ /field1/ : /field2/ : /.../ : /fieldN/ \]
+\[ on /target/ /rulename/ /field1/ : /field2/ : /.../ : /fieldN/ \]
+]
+
+A rule is invoked with values in /field1/ through /fieldN/. They may be referenced in the procedure's statements as [^$(1)] through [^$(/N/)] (9 max), and the first two only may be referenced in the action's /commands/ as [^$(1)] and [^$(2)]. [^$(<)] and [^$(>)] are synonymous with [^$(1)] and [^$(2)].
+
+Rules fall into two categories: updating rules (with actions), and pure procedure rules (without actions). Updating rules treat arguments [^$(1)] and [^$(2)] as built targets and sources, respectively, while pure procedure rules can take arbitrary arguments.
+
+When an updating rule is invoked, its updating actions are added to those associated with its built targets ([^$(1)]) before the rule's procedure is run. Later, to build the targets in the updating phase, /commands/ are passed to the OS command shell, with [^$(1)] and [^$(2)] replaced by bound versions of the target names. See Binding above.
+
+Rule invokation may be indirected through a variable:
+
+[pre
+$(/var/) /field1/ : /field2/ : /.../ : /fieldN/ ;
+
+on /target/ $(/var/) /field1/ : /field2/ : /.../ : /fieldN/ ;
+
+\[ $(/var/) /field1/ : /field2/ : /.../ : /fieldN/ \]
+\[ on /target/ $(/var/) /field1/ : /field2/ : /.../ : /fieldN/ \]
+]
+
+The variable's value names the rule (or rules) to be invoked. A rule is invoked for each element in the list of [^$(/var/)]'s values. The fields [^/field1/ : /field2/ : /.../] are passed as arguments for each invokation. For the [ ... ] forms, the return value is the concatenation of the return values for all of the invokations.
+
 [section Action Modifiers]
+
+The following action modifiers are understood:
+
+[table
+
+[]
+
+[[[^actions bind /vars/]]
+ [[^$(/vars/)] will be replaced with bound values.]]
+
+[[[^actions existing]]
+ [[^$(>)] includes only source targets currently existing.]]
+
+[[[^actions ignore]]
+ [The return status of the commands is ignored.]]
+
+[[[^actions piecemeal]]
+ [commands are repeatedly invoked with a subset of [^$(>)] small enough to fit in the command buffer on this OS.]]
+
+[[[^actions quietly]]
+ [The action is not echoed to the standard output.]]
+
+[[[^actions together]]
+ [The [^$(>)] from multiple invocations of the same action on the same built target are glommed together.]]
+
+[[[^actions updated]]
+ [[^$(>)] includes only source targets themselves marked for updating.]]
+
+]
+
 [endsect]
 
 [section:builtins Built-in Rules]
