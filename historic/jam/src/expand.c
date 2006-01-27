@@ -685,16 +685,7 @@ void var_expand_unit_test()
     
     # ifdef OS_CYGWIN
     char cygpath[256];
-    {
-        const char * P = getenv("PATH");
-        const char * slash = 0;
-        slash = strchr(P+1,'/');
-        assert(slash != 0);
-        strncpy(cygpath,P,slash-P+1);
-        cygpath[slash-P+1] = '\0';
-        assert(strlen(cygpath) < 246);
-        strcat(cygpath,"c/foo/bar");
-    }
+    cygwin_conv_to_posix_path("c:\\foo\\bar", cygpath);
     # else
     char cygpath[] = "/cygdrive/c/foo/bar";
     # endif
