@@ -133,6 +133,7 @@ tests = [ "rebuilds",
           "notfile",
           "project_root_rule",
           "resolution",
+          "build_file",
           ]
 
 if os.name == 'posix':
