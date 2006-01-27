@@ -86,7 +86,10 @@ rule init ( prefix ? )
         
         # The OBJ result type is a fake here too.
         generators.register [ new moc-h-generator 
-            qt4.moc.cpp : MOCCABLE_CPP : OBJ ] ;
+            qt4.moc.inc : MOCCABLE_CPP : OBJ ] ;
+
+        generators.register [ new moc-inc-generator 
+            qt4.moc.inc : MOCCABLE_H : OBJ ] ;
 
         # Generates .cpp file from qrc file
         generators.register-standard qt4.rcc : QRC : CPP(qrc_%) ;
@@ -97,7 +100,6 @@ rule init ( prefix ? )
             <dll-path>$(.prefix)/lib 
             <threading>multi ;
   
-
         local suffix ;
         if [ os.name ] = NT
         {
@@ -115,77 +117,163 @@ rule init ( prefix ? )
             suffix_version = "" ;
             suffix_debug = "_debug" ;
         }
-
+    
         lib QtCore : $(main)
             : <name>QtCore$(suffix_version) <variant>release
             :
-            : <include>$(.prefix)/include/QtCore $(usage-requirements)
-        ;
+            : # usage-requirements
+              <define>QT_CORE_LIB
+              <include>$(.prefix)/include/QtCore 
+              $(usage-requirements)
+            ;
         lib QtCore : $(main)
             : <name>QtCore$(suffix_debug)$(suffix_version) <variant>debug
             :
-            : <include>$(.prefix)/include/QtCore $(usage-requirements) ;
+            : # usage-requirements
+              <define>QT_CORE_LIB
+              <include>$(.prefix)/include/QtCore 
+              $(usage-requirements) 
+            ;
+
         lib QtGui : QtCore
             : <name>QtGui$(suffix_version) <variant>release
             :
-            : <include>$(.prefix)/include/QtGui <user-interface>gui  ;
+            : # usage-requirements
+              <define>QT_GUI_LIB
+              <include>$(.prefix)/include/QtGui 
+              <user-interface>gui  
+            ;
+
         lib QtGui : QtCore
             : <name>QtGui$(suffix_debug)$(suffix_version) <variant>debug
             :
-            : <include>$(.prefix)/include/QtGui <user-interface>gui ;
+            : # usage-requirements
+              <define>QT_GUI_LIB
+              <include>$(.prefix)/include/QtGui 
+              <user-interface>gui  
+            ;
+
         lib QtNetwork : QtCore
             : <name>QtNetwork$(suffix_version) <variant>release
             :
-            : <include>$(.prefix)/include/QtNetwork  ;
+            : # usage-requirements
+              <define>QT_NETWORK_LIB
+              <include>$(.prefix)/include/QtNetwork  
+            ;
         lib QtNetwork : QtCore
             : <name>QtNetwork$(suffix_debug)$(suffix_version) <variant>debug
             :
-            : <include>$(.prefix)/include/QtNetwork ;
+            : # usage-requirements
+              <define>QT_NETWORK_LIB
+              <include>$(.prefix)/include/QtNetwork  
+            ;
+
         lib QtSql : QtCore
             : <name>QtSql$(suffix_version) <variant>release
             :
-            : <include>$(.prefix)/include/QtSql ;
+            : # usage-requirements
+              <define>QT_SQL_LIB
+              <include>$(.prefix)/include/QtSql 
+            ;
         lib QtSql : QtCore
             : <name>QtSql$(suffix_debug)$(suffix_version) <variant>debug
             :
-            : <include>$(.prefix)/include/QtSql ;
+            : # usage-requirements
+              <define>QT_SQL_LIB
+              <include>$(.prefix)/include/QtSql 
+            ;
+
         lib QtXml : QtCore
             : <name>QtXml$(suffix_version) <variant>release
             :
-            : <include>$(.prefix)/include/QtXml ;
+            : # usage-requirements
+              <define>QT_XML_LIB
+              <include>$(.prefix)/include/QtXml 
+            ;
         lib QtXml : QtCore
             : <name>QtXml$(suffix_debug)$(suffix_version) <variant>debug
             :
-            : <include>$(.prefix)/include/QtXml ;
-
+            : # usage-requirements
+              <define>QT_XML_LIB
+              <include>$(.prefix)/include/QtXml 
+            ;
+    
         lib Qt3Support : QtGui QtNetwork QtXml QSql
             : <name>Qt3Support$(suffix_version) <variant>release
             :
-            : <include>$(.prefix)/include/Qt3Support ;
+            : # usage-requirements
+              <define>QT_COMPAT_LIB
+              <define>QT3_SUPPORT
+              <include>$(.prefix)/include/Qt3Support 
+            ;
         lib Qt3Support : QtGui QtNetwork QtXml QSql
             : <name>Qt3Support$(suffix_debug)$(suffix_version) <variant>debug
             :
-            : <include>$(.prefix)/include/Qt3Support ;
-
+            : # usage-requirements
+              <define>QT_COMPAT_LIB
+              <define>QT3_SUPPORT
+              <include>$(.prefix)/include/Qt3Support 
+            ;
+    
         # OpenGl Support
         lib QtOpenGL : QtGui
             : <name>QtOpenGL$(suffix_version) <variant>release
             :
-            : <include>$(.prefix)/include/QtOpenGL ;
+            : # usage-requirements
+              <define>QT_OPENGL_LIB
+              <include>$(.prefix)/include/QtOpenGL 
+            ;
         lib QtOpenGL : QtGui
             : <name>QtOpenGL$(suffix_debug)$(suffix_version) <variant>debug
             :
-            : <include>$(.prefix)/include/QtOpenGL ;
+            : # usage-requirements
+              <define>QT_OPENGL_LIB
+              <include>$(.prefix)/include/QtOpenGL 
+            ;
 
         # SVG-Support (Qt 4.1)
         lib QtSvg : QtXml QtOpenGL
             : <name>QtSvg$(suffix_version) <variant>release
             :
-            : <include>$(.prefix)/include/QtSvg ;
+            : # usage-requirements
+              <define>QT_SVG_LIB
+              <include>$(.prefix)/include/QtSvg 
+            ;
         lib QtSvg : QtXml QtOpenGL
             : <name>QtSvg$(suffix_debug)$(suffix_version) <variant>debug
             :
-            : <include>$(.prefix)/include/QtSvg ;
+            : # usage-requirements 
+              <define>QT_SVG_LIB
+              <include>$(.prefix)/include/QtSvg 
+            ;
+
+        # Test-Support (Qt 4.1)
+        lib QtTest : QtCore
+            : <name>QtTest$(suffix_version) <variant>release
+            :
+            : # usage-requirements
+              <include>$(.prefix)/include/QtTest 
+            ;
+        lib QtTest : QtCore
+            : <name>QtTest$(suffix_debug)$(suffix_version) <variant>debug
+            :
+            : # usage-requirements
+              <include>$(.prefix)/include/QtTest 
+            ;
+
+        # AssistantClient Support
+        lib QtAssistantClient : QtGui
+            : <name>QtAssistantClient$(suffix_version) <variant>release
+            :
+            : # usage-requirements
+              <include>$(.prefix)/include/QtAssistantClient 
+            ;
+        lib QtAssistantClient : QtGui
+            : <name>QtAssistantClient$(suffix_debug)$(suffix_version) <variant>debug
+            :
+            : # usage-requirements
+              <include>$(.prefix)/include/QtAssistantClient 
+            ;
     }
 }
 
@@ -250,7 +338,7 @@ class moc-h-generator : generator
             name = [ $(sources[0]).name ] ;
             name = $(name:B) ;
             
-            local a = [ new action $(sources[1]) : qt4.moc.cpp :
+            local a = [ new action $(sources[1]) : qt4.moc.inc :
               $(property-set) ] ;
             
             local target = [ 
@@ -267,9 +355,39 @@ class moc-h-generator : generator
             
             return $(r) ;
         }        
+    }
+}
+class moc-inc-generator : generator
+{
+    rule __init__ ( * : * )
+    {
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+
+    rule run ( project name ? : property-set : sources * )
+    {       
+        if ! $(sources[2]) && [ $(sources[1]).type ] = MOCCABLE_H
+        {                              
+            name = [ $(sources[0]).name ] ;
+            name = $(name:B) ;
+            
+            local a = [ new action $(sources[1]) : qt4.moc.inc :
+              $(property-set) ] ;
+            
+            local target = [ 
+              new file-target moc_$(name) : CPP : $(project) : $(a) ] ;
+            
+            # Since this generator will return H target, the linking generator
+            # won't use it at all, and won't set any dependency on it.
+            # However, we need to target to be seen by bjam, so that dependency
+            # from sources to this generated header is detected -- if jam does
+            # not know about this target, it won't do anything.
+            DEPENDS all : [ $(target).actualize ] ;
+            
+            return [ virtual-target.register $(target) ] ;
+        }        
     }    
 }
-
 
 # Query the installation directory
 # This is needed in at least two scenarios
@@ -291,9 +409,10 @@ actions moc
     $(.prefix)/bin/moc -I$(INCLUDES) -D$(DEFINES) -f $(>) -o $(<)
 }
 
-# When moccing .cpp files, we don't need -f, otherwise generated
-# code will include .cpp and we'll get duplicated symbols.
-actions moc.cpp
+# When moccing files for include only, we don't need -f, 
+# otherwise the generated code will include the .cpp 
+# and we'll get duplicated symbols.
+actions moc.inc
 {
     $(.prefix)/bin/moc -I$(INCLUDES) -D$(DEFINES) $(>) -o $(<)
 }
