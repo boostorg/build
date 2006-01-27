@@ -289,7 +289,7 @@ DEPENDS all : $(actual-targets) ;
 
 if $(bjam-targets)
 {
-    UPDATE $(bjam-targets) ;
+    UPDATE $(bjam-targets:G=e) ;
 }
 else if $(clean)
 {
