@@ -7,6 +7,7 @@
 
 #  Tests that we can build a file (not target), by it's name
 from BoostBuild import Tester, List
+from string import find
 
 # Create a temporary working directory
 t = Tester()
@@ -24,6 +25,7 @@ int main()
 """)
 t.write("sub/Jamfile", """
 exe hello : hello.cpp ;
+exe sub : hello.cpp ;
 """)
 t.write("sub/hello.cpp", """
 int main()
@@ -35,6 +37,7 @@ int main()
 
 t.run_build_system(t.adjust_suffix("hello.obj"))
 
+t.fail_test(find(t.stdout(), "depends on itself") != -1)
 t.expect_addition("bin/$toolset/debug/hello.obj")
 t.expect_addition("sub/bin/$toolset/debug/hello.obj")
 t.expect_nothing_more()

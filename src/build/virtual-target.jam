@@ -545,13 +545,24 @@ class file-target : abstract-file-target
                 common.MkDir $(d) ;
             }            
             
-            # For real file target, we create gristless target that
+            # For real file target, we create a fake target that
             # depends on the real target. This allows to run
             #
             #    bjam hello.o
             #
             # without trying to guess the name of the real target.            
-            DEPENDS $(target:G=) : $(target) ;
+            # Note the that target has no directory name, and a special
+            # grist <e>.
+            #
+            # First, that means that "bjam hello.o" will build all
+            # known hello.o targets.
+            # Second, the <e> grist makes sure this target won't be confused
+            # with other targets, for example, if we have subdir 'test'
+            # with target 'test' in it that includes 'test.o' file,
+            # then the target for directory will be just 'test' the target
+            # for test.o will be <ptest/bin/gcc/debug>test.o and the target
+            # we create below will be <e>test.o
+            DEPENDS $(target:G=e) : $(target) ;
         }
         else
         {
