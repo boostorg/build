@@ -15,7 +15,6 @@
         (See accompanying file LICENSE_1_0.txt or copy at
         [@http://www.boost.org/LICENSE_1_0.txt])
     ]
-    [source-mode python]
 ]
 
 [/ QuickBook Document version 1.3 ]
@@ -266,7 +265,7 @@ Used as an argument, expands to the return value of the rule invoked.
 \[ on /target/ /rulename/ /field1/ : /field2/ : /.../ : /fieldN/ \]
 ]
 
-A rule is invoked with values in /field1/ through /fieldN/. They may be referenced in the procedure's statements as [^$(1)] through [^$(/N/)] (9 max), and the first two only may be referenced in the action's /commands/ as [^$(1)] and [^$(2)]. [^$(<)] and [^$(>)] are synonymous with [^$(1)] and [^$(2)].
+A rule is invoked with values in /field1/ through /fieldN/. They may be referenced in the procedure's statements as [^$(1)] through [^$(['N])] (9 max), and the first two only may be referenced in the action's /commands/ as [^$(1)] and [^$(2)]. [^$(<)] and [^$(>)] are synonymous with [^$(1)] and [^$(2)].
 
 Rules fall into two categories: updating rules (with actions), and pure procedure rules (without actions). Updating rules treat arguments [^$(1)] and [^$(2)] as built targets and sources, respectively, while pure procedure rules can take arbitrary arguments.
 
@@ -320,13 +319,109 @@ The following action modifiers are understood:
 
 [section:builtins Built-in Rules]
 
+=BJam= has a growing set of built-in rules, all of which are pure procedure rules without updating actions. They are in three groups: the first builds the dependency graph; the second modifies it; and the third are just utility rules.
+
 [section Dependency Building]
+
+[pre
+DEPENDS /targets1/ : /targets2/ ;
+]
+
+Builds a direct dependency: makes each of /targets1/ depend on each of /targets2/. Generally, /targets1/ will be rebuilt if /targets2/ are themselves rebuilt are or are newer than /targets1/.
+
+[pre
+INCLUDES /targets1/ : /targets2/ ;
+]
+
+Builds a sibling dependency: makes any target that depends on any of /targets1/ also depend on each of /targets2/. This reflects the dependencies that arise when one source file includes another: the object built from the source file depends both on the original and included source file, but the two sources files don't depend on each other. For example:
+
+[pre
+DEPENDS foo.o : foo.c ;
+INCLUDES foo.c : foo.h ;
+]
+
+"=foo.o=" depends on "=foo.c=" and "=foo.h=" in this example.
+
 [endsect]
 
 [section Modifying Binding]
+
+The six rules =ALWAYS=, =LEAVES=, =NOCARE=, =NOTFILE=, =NOUPDATE=, and =TEMPORARY= modify the dependency graph so that =bjam= treats the targets differently during its target binding phase. See Binding above. Normally, =bjam= updates a target if it is missing, if its filesystem modification time is older than any of its dependencies (recursively), or if any of its dependencies are being updated. This basic behavior can be changed by invoking the following rules:
+
+[pre
+ALWAYS /targets/ ;
+]
+
+Causes /targets/ to be rebuilt regardless of whether they are up-to-date (they must still be in the dependency graph). This is used for the clean and uninstall targets, as they have no dependencies and would otherwise appear never to need building. It is best applied to targets that are also =NOTFILE= targets, but it can also be used to force a real file to be updated as well.
+
+[pre
+LEAVES /targets/ ;
+]
+
+Makes each of /targets/ depend only on its leaf sources, and not on any intermediate targets. This makes it immune to its dependencies being updated, as the "leaf" dependencies are those without their own dependencies and without updating actions. This allows a target to be updated only if original source files change.
+
+[pre
+NOCARE /targets/ ;
+]
+
+Causes =bjam= to ignore /targets/ that neither can be found nor have updating actions to build them. Normally for such targets =bjam= issues a warning and then skips other targets that depend on these missing targets. The =HdrRule= in =Jambase= uses =NOCARE= on the header file names found during header file scanning, to let =bjam= know that the included files may not exist. For example, if an `#include` is within an `#ifdef`, the included file may not actually be around.
+
+[pre
+NOTFILE /targets/ ;
+]
+
+Marks /targets/ as pseudotargets and not real files. No timestamp is checked, and so the actions on such a target are only executed if the target's dependencies are updated, or if the target is also marked with =ALWAYS=. The default =bjam= target "=all=" is a pseudotarget. In =Jambase=, =NOTFILE= is used to define several addition convenient pseudotargets.
+
+[pre
+NOUPDATE /targets/ ;
+]
+
+Causes the timestamps on /targets/ to be ignored. This has two effects: first, once the target has been created it will never be updated; second, manually updating target will not cause other targets to be updated. In =Jambase=, for example, this rule is applied to directories by the =MkDir= rule, because =MkDir= only cares that the target directory exists, not when it has last been updated.
+
+[pre
+TEMPORARY /targets/ ;
+]
+
+Marks /targets/ as temporary, allowing them to be removed after other targets that depend upon them have been updated. If a =TEMPORARY= target is missing, =bjam= uses the timestamp of the target's parent. =Jambase= uses =TEMPORARY= to mark object files that are archived in a library after they are built, so that they can be deleted after they are archived. 
+
 [endsect]
 
 [section Utility]
+
+The two rules =ECHO= and =EXIT= are utility rules, used only in =bjam='s parsing phase.
+
+[pre
+ECHO /args/ ;
+]
+
+Blurts out the message /args/ to stdout.
+
+[pre
+EXIT /args/ ;
+]
+
+Blurts out the message args to stdout and then exits with a failure status.
+
+"=Echo=", "=echo=", "=Exit=", and "=exit=" are accepted as aliases for =ECHO= and =EXIT=, since it is hard to tell that these are built-in rules and not part of the language, like "=include=". 
+
+The =GLOB= rule does filename globbing.
+
+[pre
+GLOB /directories/ : /patterns/ : /downcase-opt/
+]
+
+Using the same wildcards as for the patterns in the switch statement. It is invoked by being used as an argument to a rule invocation inside of "=[ ]=". For example: "[^FILES = \[ GLOB dir1 dir2 : *.c *.h \]]" sets =FILES= to the list of C source and header files in =dir1= and =dir2=. The resulting filenames are the full pathnames, including the directory, but the pattern is applied only to the file name without the directory.
+
+If /downcase-opt/ is supplied, filenames are converted to all-lowercase before matching against the pattern; you can use this to do case-insensitive matching using lowercase patterns. The paths returned will still have mixed case if the OS supplies them. On Windows NT and Cygwin, filenames are always downcased before matching. 
+
+The =MATCH= rule does pattern matching.
+
+[pre
+MATCH /regexps/ : /list/
+]
+
+Matches the =egrep=(1) style regular expressions /regexps/ against the strings in /list/. The result is the concatenation of matching =()= subexpressions for each string in /list/, and for each regular expression in /regexps/. Only useful within the "=[ ]=" construct, to change the result into a list.
+
 [endsect]
 
 [endsect]
@@ -334,11 +429,251 @@ The following action modifiers are understood:
 [endsect]
 
 [section Flow-of-Control]
+
+=BJam= has several simple flow-of-control statements:
+
+[pre
+for /var/ in /list/ { /statements/ }
+]
+
+Executes /statements/ for each element in /list/, setting the variable /var/ to the element value.
+
+[pre
+if /cond/ { /statements/ }
+\[ else { /statements/ } \]
+]
+
+Does the obvious; the =else= clause is optional. /cond/ is built of:
+
+[table
+
+[]
+
+[[[^['a']]]
+ [true if any ['a] element is a non-zero-length string]]
+
+[[[^['a] = ['b]]]
+ [list ['a] matches list ['b] string-for-string]]
+
+[[[^['a] != ['b]]]
+ [list ['a] does not match list ['b]]]
+
+[[[^['a] < ['b]]]
+ [['a\[i\]] string is less than ['b\[i\]] string, where ['i] is first mismatched element in lists ['a] and ['b]]]
+
+[[[^['a] <= ['b]]]
+ [every ['a] string is less than or equal to its ['b] counterpart]]
+
+[[[^['a] > ['b]]]
+ [['a\[i\]] string is greater than ['b\[i\]] string, where ['i] is first mismatched element]]
+
+[[[^['a] >= ['b]]]
+ [every ['a] string is greater than or equal to its ['b] counterpart]]
+
+[[[^['a] in ['b]]]
+ [true if all elements of ['a] can be found in ['b], or if ['a] has no elements]]
+
+[[[^! ['cond]]]
+ [condition not true]]
+
+[[[^['cond] && ['cond]]]
+ [conjunction]]
+
+[[[^['cond] || ['cond]]]
+ [disjunction]]
+
+[[[^( ['cond] )]]
+ [precedence grouping]]
+
+]
+
+[pre
+include /file/ ;
+]
+
+Causes =bjam= to read the named /file/. The /file/ is bound like a regular target (see Binding above) but unlike a regular target the include /file/ cannot be built.
+
+The include /file/ is inserted into the input stream during the parsing phase. The primary input file and all the included file(s) are treated as a single file; that is, jam infers no scope boundaries from included files.
+
+[pre
+local /vars/ \[ = /values/ \] ;
+]
+
+Creates new /vars/ inside to the enclosing ={}= block, obscuring any previous values they might have. The previous values for vars are restored when the current block ends. Any rule called or file included will see the local and not the previous value (this is sometimes called Dynamic Scoping). The local statement may appear anywhere, even outside of a block (in which case the previous value is restored when the input ends). The /vars/ are initialized to /values/ if present, or left uninitialized otherwise.
+
+[pre
+return /values/ ;
+]
+
+Within a rule body, the return statement sets the return value for an invocation of the rule. It does *not* cause the rule to return; a rule's value is actually the value of the last statement executed, so a return should be the last statement executed before the rule "naturally" returns.
+
+[pre
+switch /value/
+{
+    case /pattern1/ : /statements/ ;
+    case /pattern2/ : /statements/ ;
+    ...
+}
+]
+
+The switch statement executes zero or one of the enclosed /statements/, depending on which, if any, is the first case whose /pattern/ matches /value/. The /pattern/ values are not variable-expanded. The pattern values may include the following wildcards:
+
+[table
+
+[]
+
+[[[^?]]
+ [match any single character]]
+
+[[[^*]]
+ [match zero or more characters]]
+
+[[[^\[/chars/\]]]
+ [match any single character in /chars/]]
+
+[[[^\[\^/chars/\]]]
+ [match any single character not in /chars/]]
+
+[[[^\\/x/]]
+ [match /x/ (escapes the other wildcards)]]
+
+]
+
+[pre
+while /cond/ { /statements/ }
+]
+
+Repeatedly execute /statements/ while /cond/ remains true upon entry. (See the description of /cond/ expression syntax under if, above). 
+
 [endsect]
 
 [section Variables]
 
+=BJam= variables are lists of zero or more elements, with each element being a string value. An undefined variable is indistinguishable from a variable with an empty list, however, a defined variable may have one more elements which are null strings. All variables are referenced as [^$(/variable/)].
+
+Variables are either global or target-specific. In the latter case, the variable takes on the given value only during the updating of the specific target.
+
+A variable is defined with:
+
+[pre
+/variable/ = /elements/ ;
+/variable/ += /elements ;
+/variable/ on /targets/ = /elements/ ;
+/variable/ on /targets/ += /elements/ ;
+/variable/ default = /elements/ ;
+/variable/ ?= /elements/ ;
+]
+
+The first two forms set /variable/ globally. The third and forth forms set a target-specific variable. The [^=] operator replaces any previous elements of /variable/ with /elements/; the [^+=] operation adds /elements/ to /variable/'s list of elements. The final two forms are synonymous: they set /variable/ globally, but only if it was previously unset.
+
+Variables referenced in updating commands will be replaced with their values; target-specific values take precedence over global values. Variables passed as arguments (=$(1)= and =$(2)=) to actions are replaced with their bound values; the "=bind=" modifier can be used on actions to cause other variables to be replaced with bound values. See Action Modifiers above.
+
+=BJam= variables are not re-exported to the environment of the shell that executes the updating actions, but the updating actions can reference =bjam= variables with [^$(/variable/)]. 
+
 [section:expansion Variable Expansion]
+
+During parsing, =bjam= performs variable expansion on each token that is not a keyword or rule name. Such tokens with embedded variable references are replaced with zero or more tokens. Variable references are of the form [^$(/v/)] or [^$(/vm/)], where ['v] is the variable name, and ['m] are optional modifiers.
+
+Variable expansion in a rule's actions is similar to variable expansion in statements, except that the action string is tokenized at whitespace regardless of quoting.
+
+The result of a token after variable expansion is the /product/ of the components of the token, where each component is a literal substring or a list substituting a variable reference. For example:
+
+[pre
+$(X) -> a b c
+t$(X) -> ta tb tc
+$(X)z -> az bz cz
+$(X)-$(X) -> a-a a-b a-c b-a b-b b-c c-a c-b c-c
+]
+
+The variable name and modifiers can themselves contain a variable reference, and this partakes of the product as well:
+
+[pre
+$(X) -> a b c
+$(Y) -> 1 2
+$(Z) -> X Y
+$($(Z)) -> a b c 1 2
+]
+
+Because of this product expansion, if any variable reference in a token is undefined, the result of the expansion is an empty list. If any variable element is a null string, the result propagates the non-null elements:
+
+[pre
+$(X) -> a ""
+$(Y) -> "" 1
+$(Z) ->
+-$(X)$(Y)- -> -a- -a1- -- -1-
+-$(X)$(Z)- ->
+]
+
+A variable element's string value can be parsed into grist and filename-related components. Modifiers to a variable are used to select elements, select components, and replace components. The modifiers are:
+
+[table
+
+[]
+
+[[[^\[['n]\]]]
+ [Select element number ['n] (starting at 1). If the variable contains fewer than ['n] elements, the result is a zero-element list.]]
+
+[[[^\[['n]-['m]\]]]
+ [Select elements number ['n] through ['m].]]
+
+[[[^\[['n]-\]]]
+ [Select elements number ['n] through the last.]]
+
+[[[^:B]]
+ [Select filename base.]]
+
+[[[^:S]]
+ [Select (last) filename suffix.]]
+
+[[[^:M]]
+ [Select archive member name.]]
+
+[[[^:D]]
+ [Select directory path.]]
+
+[[[^:P]]
+ [Select parent directory.]]
+
+[[[^:G]]
+ [Select grist.]]
+
+[[[^:U]]
+ [Replace lowercase characters with uppercase.]]
+
+[[[^:L]]
+ [Replace uppercase characters with lowercase.]]
+
+[[[^:['chars]]]
+ [Select the components listed in ['chars].]]
+
+[[[^:G=['grist]]]
+ [Replace grist with ['grist].]]
+
+[[[^:D=['path]]]
+ [Replace directory with ['path].]]
+
+[[[^:B=['base]]]
+ [Replace the base part of file name with ['base].]]
+
+[[[^:S=['suf]]]
+ [Replace the suffix of file name with ['suf].]]
+
+[[[^:M=['mem]]]
+ [Replace the archive member name with ['mem].]]
+
+[[[^:R=['root]]]
+ [Prepend ['root] to the whole file name, if not already rooted.]]
+
+[[[^:E=['value]]]
+ [Assign ['value] to the variable if it is unset.]]
+
+[[[^:J=['joinval]]]
+ [Concatentate list elements into single element, separated by ['joinval]'.]]
+
+]
+
+On VMS, [^$(var:P)] is the parent directory of [^$(var:D)].
+
 [endsect]
 
 [section:builtins Built-in Variables]
