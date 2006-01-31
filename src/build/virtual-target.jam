@@ -473,6 +473,8 @@ rule add-prefix-and-suffix ( specified-name : type ? : property-set )
     
     if [ type.is-derived $(type) LIB ] && [ os.on-unix ] 
        && ! [ MATCH ^(lib) : $(specified-name) ]
+       # This becomes hacky! Need to introduce more general mechanism  
+       && ! [ type.is-derived $(type) PYTHON_EXTENSION ] 
     {
         prefix = "lib" ;
     }
