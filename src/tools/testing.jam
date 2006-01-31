@@ -67,6 +67,7 @@ type.register RUN_OUTPUT : run ;
 type.register RUN : : TEST ;
 type.register RUN_FAIL : : TEST ;
 type.register LINK_FAIL : : TEST ;
+type.register LINK : : TEST ;
 type.register UNIT_TEST : passed : TEST ;
 
 # Declare the rules which create main targets. 
@@ -109,6 +110,12 @@ rule compile-fail ( sources + : requirements * : target-name ? )
 {    
     return [ make-test compile-fail : $(sources) : $(requirements) : $(target-name) ] ;
 }
+
+rule link ( sources + : requirements * : target-name ? )
+{    
+    return [ make-test link : $(sources) : $(requirements) : $(target-name) ] ;
+}
+
 
 rule link-fail ( sources + : requirements * : target-name ? )
 {    
@@ -249,6 +256,7 @@ generators.register-standard testing.expect-failure : OBJ : COMPILE_FAIL ;
 generators.register-standard testing.expect-success : RUN_OUTPUT : RUN ;
 generators.register-standard testing.expect-failure : RUN_OUTPUT : RUN_FAIL ;
 generators.register-standard testing.expect-failure : EXE : LINK_FAIL ;
+generators.register-standard testing.expect-success : EXE : LINK ;
 
 # Generator which runs an EXE and captures output.
 generators.register-standard testing.capture-output : EXE : RUN_OUTPUT ;
@@ -434,8 +442,8 @@ actions unit-test
     $(LAUNCHER) $(>) && $(MAKE_FILE) $(<)
 }
 
-IMPORT $(__name__) : compile compile-fail test-suite run run-fail link-fail 
-  : : compile compile-fail test-suite run run-fail link-fail ;
+IMPORT $(__name__) : compile compile-fail test-suite run run-fail link link-fail 
+  : : compile compile-fail test-suite run run-fail link link-fail ;
 
 
 type.register TIME : time ;
