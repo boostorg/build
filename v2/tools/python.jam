@@ -414,6 +414,11 @@ class python-test-generator : generator
                 }          
                 local extension = [ generators.construct $(project) $(name) :
                   PYTHON_EXTENSION : $(property-set) : $(s) $(libs) ] ;
+
+                # The important part of usage requirements returned from
+                # PYTHON_EXTENSION genrator are xdll-path properties that
+                # will allow to find python extension at runtime.
+                property-set = [ $(property-set).add $(extension[1]) ] ;
                 # Ignore usage requirements. We're top-level generator and
                 # nobody is going to use us.
                 new-sources += $(extension[2-]) ;
