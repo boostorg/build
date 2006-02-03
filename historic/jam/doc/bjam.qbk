@@ -109,16 +109,16 @@ The supported toolsets, and wether they are auto-detected, are:
 [[Script] [Platform] [Toolset] [Detection]]
 
 [   [=build.bat=] [Windows NT, 2000, and XP]
-    [   [@http://www.comeaucomputing.com/ =como=]\n
-        Comeau Computing C/C++]
-    [
+    [   [@http://www.borland.com/bcppbuilder/freecompiler =borland=]\n
+        [@http://www.borland.com/ Borland] C++Builder (BCC 5.5)]
+    [   * Common install location: "=C:\Borland\BCC55="\n
+        * =BCC32.EXE= in =PATH=
 ] ]
 
 [   [] []
-    [   [@http://www.borland.com/bcppbuilder/freecompiler =borland=]\n
-        [@http://www.borland.com/ Borland] C++Builder (BCC 5.5)]
-    [   * Common install location: "=C:\\Borland\\BCC55="\n
-        * =BCC32.EXE= in =PATH=
+    [   [@http://www.comeaucomputing.com/ =como=]\n
+        Comeau Computing C/C++]
+    [
 ] ]
 
 [   [] []
@@ -155,23 +155,32 @@ The supported toolsets, and wether they are auto-detected, are:
 [   [] []
     [   [@http://msdn.microsoft.com/visualc/ =msvc=]\n
         Microsoft Visual C++ 6.x]
-    [   * =VCVARS32.BAT= already configured
-        * Common install locations: "=C:\Program Files\Microsoft Visual Studio=", "=C:\Program Files\Microsoft Visual C++="
-        * =CL.EXE= in =PATH=
+    [   * =VCVARS32.BAT= already configured\n
+        * =%MSVCDir%= is present in environment\n
+        * Common install locations: "=%ProgramFiles%\Microsoft Visual Studio=", "=%ProgramFiles%\Microsoft Visual C++="\n
+        * =CL.EXE= in =PATH=\n
+        * =VCVARS32.BAT= in =PATH=
 ] ]
 
 [   [] []
-    [   [@http://msdn.microsoft.com/visualc/ =msvc=]\n
+    [   [@http://msdn.microsoft.com/visualc/ =vc7=]\n
         Microsoft Visual C++ 7.x]
     [   * =VCVARS32.BAT= or =VSVARS32.BAT= already configured
-        * Common install location: "=C:\Program Files\Microsoft Visual Studio .NET="
-        * Common install location: "=C:\Program Files\Microsoft Visual Studio .NET 2003="
+        * =%VS71COMNTOOLS%= is present in environment\n
+        * =%VCINSTALLDIR%= is present in environment\n
+        * Common install locations: "=%ProgramFiles%\Microsoft Visual Studio .NET=", "=%ProgramFiles%\Microsoft Visual Studio .NET 2003="\n
+        * =CL.EXE= in =PATH=\n
+        * =VCVARS32.BAT= in =PATH=
 ] ]
 
 [   [] []
-    [   [@http://msdn.microsoft.com/visualc/ =msvc=]\n
+    [   [@http://msdn.microsoft.com/visualc/ =vc8=]\n
         Microsoft Visual C++ 8.x]
-    [
+    [   * =VCVARS32.BAT= or =VSVARS32.BAT= already configured\n
+        * =%VS80COMNTOOLS%= is present in environment\n
+        * Common install location: "=%ProgramFiles%\Microsoft Visual Studio 8="\n
+        * =CL.EXE= in =PATH=\n
+        * =VCVARS32.BAT= in =PATH=
 ] ]
 
 [   [=build.sh=] [Unix, Linux, Cygwin, etc.]
@@ -196,8 +205,8 @@ The supported toolsets, and wether they are auto-detected, are:
 [   [] []
     [   [@http://www.intel.com/software/products/compilers/c60l/ =intel-linux=]\n
         Intel C++ for Linux]
-    [   * =icc= in =PATH=
-        * Common install locations: "=/opt/intel/compiler70=", "=/opt/intel/compiler60=", "=/opt/intel/compiler50="
+    [   * =icc= in =PATH=\n
+        * Common install locations: "=/opt/intel/cc/9.0=", "=/opt/intel_cc_80=", "=/opt/intel/compiler70=", "=/opt/intel/compiler60=", "=/opt/intel/compiler50="
 ] ]
 
 [   [] []
@@ -215,7 +224,7 @@ The supported toolsets, and wether they are auto-detected, are:
 [   [] []
     [   [@http://www.sgi.com/developers/devtools/languages/mipspro.html =mipspro=]\n
         SGI MIPSpro C]
-    [
+    [   * =uname= is "=IRIX=" or "=IRIX64="
 ] ]
 
 [   [] []
@@ -225,9 +234,15 @@ The supported toolsets, and wether they are auto-detected, are:
 ] ]
 
 [   [] []
+    [   =qcc=\n
+        [@http://www.qnx.com/ QNX Neutrino]]
+    [   * =uname= is "=QNX=" and =qcc= in =PATH=
+] ]
+
+[   [] []
     [   [@http://www.tru64unix.compaq.com/cplus/ =true64cxx=]\n
         Compaq C++ Compiler for True64 UNIX]
-    [
+    [   * =uname= is "=OSF1="
 ] ]
 
 [   [] []
@@ -240,6 +255,12 @@ The supported toolsets, and wether they are auto-detected, are:
     [   [@http://developer.apple.com/tools/compilers.html =darwin=]\n
         Apple MacOS X GCC]
     [   * =uname= is "=Darwin="
+] ]
+
+[   [] [Windows NT, 2000, and XP]
+    [   [@http://www.mingw.org/ =mingw=]\n
+        GNU [@http://gcc.gnu.org/ GCC] as the [@http://www.mingw.org/ MinGW] configuration with the MSYS shell]
+    [   * Common install location: "=/mingw="
 ] ]
 
 ]
