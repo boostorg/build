@@ -698,10 +698,10 @@ ECHO /args/ ;
 Blurts out the message /args/ to stdout.
 
 [pre
-EXIT /args/ ;
+rule EXIT ( /message/ * : /result-value/ ? )
 ]
 
-Blurts out the message args to stdout and then exits with a failure status.
+Blurts out the /message/ to stdout and then exits with a failure status if no /result-value/ is given, otherwise it exits with the given /result-value/.
 
 "=Echo=", "=echo=", "=Exit=", and "=exit=" are accepted as aliases for =ECHO= and =EXIT=, since it is hard to tell that these are built-in rules and not part of the language, like "=include=". 
 
@@ -768,7 +768,14 @@ local PSDK-location =
 rule SHELL ( /command/ : * )
 ]
 
-=SHELL= executes /command/, and then returns the standard output of /command/. =SHELL= only works on platforms with a =popen()= function in the C library. On platforms without a working =popen()= function, =SHELL= is implemented as a no-op. =SHELL= works on Unix, MacOS X, and most Windows compilers. =SHELL= is a no-op on Metrowerks compilers under Windows.
+=SHELL= executes /command/, and then returns the standard output of /command/. =SHELL= only works on platforms with a =popen()= function in the C library. On platforms without a working =popen()= function, =SHELL= is implemented as a no-op. =SHELL= works on Unix, MacOS X, and most Windows compilers. =SHELL= is a no-op on Metrowerks compilers under Windows. There is a variable set of allowed options as additional arguments:
+
+[variablelist
+    [[=exit-status=] [In addition to the output the result status of the executed command is returned as a second element of the result.]]
+    [[=no-output=] [Don't capture the output of the command. Instead an empty ("") string value is returned in place of the output.]]
+]
+
+Because the Perforce/Jambase defines a =Shell= rule which hides the builtin =COMMAND= can be used as an alias for =SHELL=.
 
 [endsect]
 

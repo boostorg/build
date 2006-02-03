@@ -1,0 +1,46 @@
+#~ Copyright 2006 Rene Rivera.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
+ECHO --- Testing SHELL builtin... ;
+
+local result = 0 ;
+local rule error ( message * )
+{
+    local b = [ BACKTRACE ] ;
+    ECHO "$(b[9]):$(b[10]): error:" $(message) ;
+}
+local rule assert ( expected + : test ? : obtained + )
+{
+    test ?= "(==)" ;
+    local r = 0 ;
+    if $(test) = "(==)" && $(expected) != $(obtained)
+    {
+        error [FAILED] '$(expected)' $(test) '$(obtained)' ;
+        r = 1 ;
+    }
+    else if $(test) = "(!=)" && $(expected) = $(obtained)
+    {
+        error [FAILED] '$(expected)' $(test) '$(obtained)' ;
+        r = 1 ;
+    }
+    result = [ CALC $(result) + $(r) ] ;
+}
+
+#~ ---------------------------------------------------------------------
+
+local c = "date" ;
+if $(NT) { c = "PATH" ; }
+
+assert ""       : (!=) : [ SHELL $(c) ] ;
+assert ""       : (==) : [ SHELL $(c) : no-output ] ;
+assert "" 0     : (!=) : [ SHELL $(c) : exit-status ] ;
+assert "" 0     : (==) : [ SHELL $(c) : no-output : exit-status ] ;
+assert ""       : (!=) : [ COMMAND $(c) ] ;
+assert ""       : (==) : [ COMMAND $(c) : no-output ] ;
+assert "" 0     : (!=) : [ COMMAND $(c) : exit-status ] ;
+assert "" 0     : (==) : [ COMMAND $(c) : no-output : exit-status ] ;
+
+#~ ---------------------------------------------------------------------
+
+EXIT --- Complete : $(result) ;
