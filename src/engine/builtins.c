@@ -98,10 +98,14 @@ load_builtins()
       bind_builtin( "ECHO" ,
                     builtin_echo, 0, 0 ) ) );
 
-    duplicate_rule( "exit" ,
-    duplicate_rule( "Exit" ,
-      bind_builtin( "EXIT" ,
-                    builtin_exit, 0, 0 ) ) );
+
+    {
+        char * args[] = { "message", "*", ":", "result-value", "?", 0 };
+        duplicate_rule( "exit" ,
+        duplicate_rule( "Exit" ,
+          bind_builtin( "EXIT" ,
+                        builtin_exit, 0, args ) ) );
+    }
 
     {
         char * args[] = { "directories", "*", ":", "patterns", "*", ":", "case-insensitive", "?", 0 };
@@ -327,7 +331,7 @@ load_builtins()
 # endif
 
       {
-          char * args[] = { "command", 0 };
+          char * args[] = { "command", ":", "*", 0 };
           bind_builtin( "SHELL",
               builtin_shell, 0, args );
           bind_builtin( "COMMAND",
@@ -496,13 +500,20 @@ builtin_echo(
 
 LIST *
 builtin_exit(
-	PARSE	*parse,
-	FRAME *frame )
+    PARSE   *parse,
+    FRAME   *frame )
 {
-	list_print( lol_get( frame->args, 0 ) );
-	printf( "\n" );
-	exit( EXITBAD ); /* yeech */
-	return L0;
+    list_print( lol_get( frame->args, 0 ) );
+    printf( "\n" );
+    if ( lol_get( frame->args, 1 ) )
+    {
+        exit ( atoi( lol_get( frame->args, 1 )->string ) );
+    }
+    else
+    {
+        exit( EXITBAD ); /* yeech */
+    }
+    return L0;
 }
 
 /*
@@ -1663,31 +1674,64 @@ bjam_import_rule(PyObject* self, PyObject* args)
 
 LIST *builtin_shell( PARSE *parse, FRAME *frame )
 {
-    LIST* arg = lol_get( frame->args, 0 );
-    LIST* result = 0; 
+    LIST* command = lol_get( frame->args, 0 );
+    LIST* result = 0;
     string s;
     int ret;
     char buffer[1024];
     FILE *p = NULL;
+    int exit_status = -1;
+    int exit_status_opt = 0;
+    int no_output_opt = 0;
+    
+    /* Process the variable args options. */
+    {
+        int a = 1;
+        LIST * arg = lol_get( frame->args, a );
+        while ( arg )
+        {
+            if ( strcmp("exit-status", arg->string) == 0 )
+            {
+                exit_status_opt = 1;
+            }
+            else if ( strcmp("no-output", arg->string) == 0 )
+            {
+                no_output_opt = 1;
+            }
+            arg = lol_get( frame->args, ++a );
+        }
+    }
 
     string_new( &s );
 
     fflush(NULL);
 
-    p = popen(arg->string, "r");
+    p = popen(command->string, "r");
     if ( p == NULL )
         return L0;
 
     while ( (ret = fread(buffer, sizeof(char), sizeof(buffer)-1, p)) > 0 )
     {
         buffer[ret] = 0;
-        string_append( &s, buffer );
+        if ( ! no_output_opt )
+        {
+            string_append( &s, buffer );
+        }
     }
 
-    pclose(p);
+    exit_status = pclose(p);
 
+    /* The command output is returned first. */
     result = list_new( L0, newstr(s.value) );
     string_free(&s);
+    
+    /* The command exit result next. */
+    if ( exit_status_opt )
+    {
+        sprintf (buffer, "%d", exit_status);
+        result = list_new( result, newstr( buffer ) );
+    }
+    
     return result;
 }
 
