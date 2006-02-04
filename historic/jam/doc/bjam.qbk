@@ -775,7 +775,7 @@ rule SHELL ( /command/ : * )
     [[=no-output=] [Don't capture the output of the command. Instead an empty ("") string value is returned in place of the output.]]
 ]
 
-Because the Perforce/Jambase defines a =Shell= rule which hides the builtin =COMMAND= can be used as an alias for =SHELL=.
+Because the Perforce/Jambase defines a =SHELL= rule which hides the builtin. =COMMAND= can be used as an alias for =SHELL= in such a case.
 
 [endsect]
 
