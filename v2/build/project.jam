@@ -876,7 +876,11 @@ module project-rules
     rule explicit ( target-names * )
     {
         import project ;
-        local t = [ project.target $(__name__) ] ;
+        # If 'explicit' is used in a helper rule defined in Jamroot,
+        # and inherited by children, then most of the time 
+        # we want 'explicit' to operate on the Jamfile where
+        # the helper rule is invoked.
+        local t = [ project.current ] ;
         for local n in $(target-names)
         {            
             $(t).mark-target-as-explicit $(n) ;
