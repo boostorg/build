@@ -202,7 +202,7 @@ rule init ( prefix ? )
             : <name>Qt3Support$(suffix_version) <variant>release
             :
             : # usage-requirements
-              <define>QT_COMPAT_LIB
+              <define>QT_QT3SUPPORT_LIB
               <define>QT3_SUPPORT
               <include>$(.prefix)/include/Qt3Support 
             ;
@@ -210,7 +210,7 @@ rule init ( prefix ? )
             : <name>Qt3Support$(suffix_debug)$(suffix_version) <variant>debug
             :
             : # usage-requirements
-              <define>QT_COMPAT_LIB
+              <define>QT_QT3SUPPORT_LIB
               <define>QT3_SUPPORT
               <include>$(.prefix)/include/Qt3Support 
             ;
