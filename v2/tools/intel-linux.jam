@@ -18,13 +18,14 @@ feature.extend-subfeature toolset intel : platform : linux ;
 
 toolset.inherit-generators intel-linux 
      <toolset>intel <toolset-intel:platform>linux : gcc ;
-generators.override builtin.lib-generator : intel-linux.prebuilt ;
+generators.override builtin.lib-generator : intel-linux.prebuilt ;     
+generators.override intel-linux.prebuilt : builtin.prebuilt ;
 generators.override intel-linux.searched-lib-generator : searched-lib-generator ;
 
 toolset.inherit-rules intel-linux : gcc ;
 toolset.inherit-flags intel-linux : gcc 
         : <inlining>off <inlining>on <inlining>full <optimization>space ;
-
+               
 # Initializes the intel-linux toolset
 #   version in mandatory
 #   name (default icc) is used to invoke the specified intellinux complier
