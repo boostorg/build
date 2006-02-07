@@ -435,22 +435,26 @@ rule <replaceable>rule-name</replaceable> (
       </itemizedlist>
 
       <para>          
-        Some main target rules have a shorter list of parameters;
-        consult their documentation for details.
+        Some main target rules have a different list of parameters, their 
+        documentation explicitly says so.
       </para>
+
       <para>The actual requirements for a target are obtained by refining
       requirements of the project where a target is declared with the
       explicitly specified requirements. The same is true for
       usage-requirements. More details can be found in 
       <xref linkend="bbv2.reference.variants.proprefine"/>
       </para>
-      
-      <para>The list of sources specifies what should be processed to
-      get the resulting targets. Most of the time, it's just a list of
-      files. Sometimes, you'll want to automatically construct the
-      list of source files rather than having to spell it out
-      manually, in which case you can use the
-      <functionname>glob</functionname> rule. Here are two examples:
+
+      <section>
+        <title>Sources</title>
+
+        <para>The list of sources specifies what should be processed to
+        get the resulting targets. Most of the time, it's just a list of
+        files. Sometimes, you'll want to automatically construct the
+        list of source files rather than having to spell it out
+        manually, in which case you can use the
+        <functionname>glob</functionname> rule. Here are two examples:
 <programlisting>
 exe a : a.cpp ;           # a.cpp is the only source file
 exe b : [ glob *.cpp ] ;  # all .cpp files in this directory are sources 
@@ -460,18 +464,18 @@ exe b : [ glob *.cpp ] ;  # all .cpp files in this directory are sources
         the directory where the Jamfile is located, but can be changed as
         described in <xref linkend=
           "bbv2.advanced.projects.attributes.projectrule"/>.
-      </para>
+        </para>
       
-      <para>
-        <!-- use "project-id" here? -->
-        The list of sources can also refer to other main targets.
-        Targets in the same project can be referred to by name, while
-        targets in other projects must be qualified with a directory or a
-        symbolic project name. The directory/project name is separated from
-        the target name by double slash. There's no special syntax to
-        distinguish directory name from project name&#x2014;the part before
-        double slash is first looked up as project name, and then as directory
-        name. For example:
+        <para>
+          <!-- use "project-id" here? -->
+          The list of sources can also refer to other main targets.
+          Targets in the same project can be referred to by name, while
+          targets in other projects must be qualified with a directory or a
+          symbolic project name. The directory/project name is separated from
+          the target name by double slash. There's no special syntax to
+          distinguish directory name from project name&#x2014;the part before
+          double slash is first looked up as project name, and then as directory
+          name. For example:
 <programlisting>
 lib helper : helper.cpp ;
 exe a : a.cpp helper ;
@@ -479,22 +483,26 @@ exe a : a.cpp helper ;
 exe b : b.cpp ..//utils ;
 exe c : c.cpp /boost/program_options//program_options ;
 </programlisting>
-        The first exe uses the library defined in the same
-        project. The second one uses some target (most likely library)
-        defined by Jamfile one level higher. Finally, the third target
-        uses some <ulink url="http://boost.org">C++ Boost</ulink>
-        library, referring to it by absolute symbolic name. More
-        information about target references can be found in <xref
-        linkend="bbv2.tutorial.libs"/> and <xref
-        linkend="bbv2.reference.ids"/>.
-      </para>
+          The first exe uses the library defined in the same
+          project. The second one uses some target (most likely library)
+          defined by Jamfile one level higher. Finally, the third target
+          uses some <ulink url="http://boost.org">C++ Boost</ulink>
+          library, referring to it by absolute symbolic name. More
+          information about target references can be found in <xref
+          linkend="bbv2.tutorial.libs"/> and <xref
+          linkend="bbv2.reference.ids"/>.
+        </para>
 
-      <para>Requirements are the properties that should always be present when
+      </section>
+
+      <section>
+        <title>Requirements</title>
+        <para>Requirements are the properties that should always be present when
         building a target. Typically, they are includes and defines:
 <programlisting>
 exe hello : hello.cpp : &lt;include&gt;/opt/boost &lt;define&gt;MY_DEBUG ;
 </programlisting>
-        There is a number of other feature, listed in
+        There is a number of other features, listed in
         <xref linkend="bbv2.advanced.builtins.features"/>. For example if
         a library can only be built statically, or a file can't be compiled
         with optimization due to a compiler bug, one can use
@@ -502,11 +510,66 @@ exe hello : hello.cpp : &lt;include&gt;/opt/boost &lt;define&gt;MY_DEBUG ;
 lib util : util.cpp : &lt;link&gt;static ;
 obj main : main.cpp : &lt;optimization&gt;off ;
 </programlisting>                
-      </para>
+        </para>
 
-      <para>The <varname>default-build</varname> parameter
-      is a set of properties to be used if the build request does
-      not otherwise specify a value for features in the set. For example:
+        <para id="bbv2.advanced.targets.requirements.conditional">Sometimes, particular relationships need to be maintained
+        among a target's build properties. This can be achieved with 
+        <firstterm>conditional
+        requirements</firstterm>. For example, you might want to set
+        specific <code>#defines</code> when a library is built as shared,
+        or when a target's <code>release</code> variant is built in
+        release mode.
+<programlisting>
+lib network : network.cpp 
+    : <emphasis role="bold">&lt;link&gt;shared:&lt;define&gt;NEWORK_LIB_SHARED</emphasis>
+     &lt;variant&gt;release:&lt;define&gt;EXTRA_FAST
+    ;
+</programlisting>
+
+        In the example above, whenever <filename>network</filename> is
+        built with <code>&lt;link&gt;shared</code>,
+        <code>&lt;define&gt;NEWORK_LIB_SHARED</code> will be in its
+        properties, too.      
+        </para>
+
+        <para>You can use several properties in the condition, for example:
+<programlisting>
+lib network : network.cpp
+    : &lt;toolset&gt;gcc,&lt;optimization&gt;speed:&lt;define&gt;USE_INLINE_ASSEMBLER
+    ;
+</programlisting>
+        </para>
+
+        <para id="bbv2.advanced.targets.requirements.indirect">
+          More powerfull variant of conditional requirements is <firstterm>indirect conditional requiremens</firstterm>.
+          You can provide a rule that will be called with the current build properties and can compute additional properties
+          to be added. For example:
+<programlisting>
+lib network : network.cpp 
+    : &lt;conditional&gt;@my-rule
+    ;
+rule my-rule ( properties * )
+{
+    local result ;
+    if &lt;toolset&gt;gcc &lt;optimization&gt;speed in $(properties)
+    {
+        result += &lt;define&gt;USE_INLINE_ASSEMBLER ;
+    }
+    return $(result) ;
+}  
+</programlisting>
+        This example is equivalent to the previous one, but for complex cases, indirect conditional
+        requirements can be easier to write and understand.
+        </para>
+
+      </section>
+
+      <section>
+        <title>Default build</title>
+
+        <para>The <varname>default-build</varname> parameter
+        is a set of properties to be used if the build request does
+        not otherwise specify a value for features in the set. For example:
 <programlisting>
 exe hello : hello.cpp : : &lt;threading&gt;multi ;
 </programlisting>
@@ -514,70 +577,55 @@ exe hello : hello.cpp : : &lt;threading&gt;multi ;
         explicitly requests a single-threaded version. The difference between
         requirements and default-build is that requirements cannot be
         overriden in any way.
-      </para>
+        </para>
+      </section>
 
-    <para>Sometimes, particular relationships need to be maintained
-    among a target's build properties. This can be achieved with 
-    <firstterm>conditional
-    requirement</firstterm>. For example, you might want to set
-    specific <code>#defines</code> when a library is built as shared,
-    or when a target's <code>release</code> variant is built in
-    release mode.
-    <programlisting>
-lib network : network.cpp 
-    : <emphasis role="bold">&lt;link&gt;shared:&lt;define&gt;NEWORK_LIB_SHARED</emphasis>
-     &lt;variant&gt;release:&lt;define&gt;EXTRA_FAST
-    ;
-</programlisting>
+      <section>
+        <title>Additional information</title>
 
-      In the example above, whenever <filename>network</filename> is
-      built with <code>&lt;link&gt;shared</code>,
-      <code>&lt;define&gt;NEWORK_LIB_SHARED</code> will be in its
-      properties, too.
-    </para>
-
-    <para>
-      The ways a target is built can be so different that
-      describing them using conditional requirements would be
-      hard. For example, imagine that a library actually uses
-      different source files depending on the toolset used to build
-      it. We can express this situation using <firstterm>target
-      alternatives</firstterm>:
+        <para>
+          The ways a target is built can be so different that
+          describing them using conditional requirements would be
+          hard. For example, imagine that a library actually uses
+          different source files depending on the toolset used to build
+          it. We can express this situation using <firstterm>target
+          alternatives</firstterm>:
 <programlisting>
 lib demangler : dummy_demangler.cpp ;                      # alternative 1
 lib demangler : demangler_gcc.cpp : &lt;toolset&gt;gcc ;   # alternative 2
 lib demangler : demangler_msvc.cpp : &lt;toolset&gt;msvc ; # alternative 3
 </programlisting>
-        In the example above, when built with <literal>gcc</literal>
-        or <literal>msvc</literal>, <filename>demangler</filename>
-        will use a source file specific to the toolset.  Otherwise, it
-        will use a generic source file,
-        <filename>dummy_demangler.cpp</filename>.
-    </para>
+          In the example above, when built with <literal>gcc</literal>
+          or <literal>msvc</literal>, <filename>demangler</filename>
+          will use a source file specific to the toolset.  Otherwise, it
+          will use a generic source file,
+          <filename>dummy_demangler.cpp</filename>.
+        </para>
 
-      <para>It is possible to declare a target inline, i.e. the "sources"
+        <para>It is possible to declare a target inline, i.e. the "sources"
         parameter may include calls to other main rules. For example:</para>
 
 <programlisting>
 exe hello : hello.cpp 
     [ obj helpers : helpers.cpp : &lt;optimization&gt;off ] ;</programlisting>
 
-      <para>
-        Will cause "helpers.cpp" to be always compiled without
-        optimization. When referring to an inline main target, its declared
-        name must be prefixed by its parent target's name and two dots. In
-        the example above, to build only helpers, one should run
-        <code>bjam hello..helpers</code>.
-      </para>
+         <para>
+           Will cause "helpers.cpp" to be always compiled without
+           optimization. When referring to an inline main target, its declared
+           name must be prefixed by its parent target's name and two dots. In
+           the example above, to build only helpers, one should run
+           <code>bjam hello..helpers</code>.
+         </para>
 
-    <para>When no target is requested on the command line, all targets in the
-    current project will be built. If a target should be built only by
-    explicit request, this can be expressed by the
-    <functionname>explicit</functionname> rule:
-<programlisting>
-explicit install_programs ;</programlisting>
-    </para>
+         <para>When no target is requested on the command line, all targets in the
+         current project will be built. If a target should be built only by
+         explicit request, this can be expressed by the
+         <functionname>explicit</functionname> rule:
+         <programlisting>
+         explicit install_programs ;</programlisting>
+         </para>
 
+      </section>
     </section>
 
     <section id="bbv2.advanced.projects">
