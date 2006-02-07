@@ -1442,42 +1442,40 @@ unit-test helpers_test : helpers_test.cpp helpers ;
       <varlistentry><term><literal>variant</literal></term>
         
         <listitem>
-          <simpara>
+          <para>
             A feature that combines several low-level features, making
             it easy to request common build configurations.
-          </simpara>
+          </para>
           
           <para><emphasis role="bold">Allowed values:</emphasis> <literal>debug</literal>, <literal>release</literal>,
-            <literal>profile</literal></para>
-            <!-- It should be noted that these are extensible -->
+            <literal>profile</literal>.</para>
           
           <para>The value <literal>debug</literal> expands to</para>
           
-          <!-- these are badly formatted when printed; they run off the right edge of the page.  Fix. -->
-          <programlisting>
-            &lt;optimization&gt;off &lt;debug-symbols&gt;on &lt;inlining&gt;off &lt;runtime-debugging&gt;on
-          </programlisting>
+<programlisting>
+&lt;optimization&gt;off &lt;debug-symbols&gt;on &lt;inlining&gt;off &lt;runtime-debugging&gt;on
+</programlisting>
           
           <para>The value <literal>release</literal> expands to</para>
           
-          <programlisting>
-            &lt;optimization&gt;speed &lt;debug-symbols&gt;off &lt;inlining&gt;full &lt;runtime-debugging&gt;off
-          </programlisting>
+<programlisting>
+&lt;optimization&gt;speed &lt;debug-symbols&gt;off &lt;inlining&gt;full &lt;runtime-debugging&gt;off
+</programlisting>
           
           <para>The value <literal>profile</literal> expands to the same as
-            <literal>release</literal>, plus:</para>
+          <literal>release</literal>, plus:</para>
           
-          <programlisting>
-            &lt;profiling&gt;on &lt;debug-symbols&gt;on
-          </programlisting>
+<programlisting>
+&lt;profiling&gt;on &lt;debug-symbols&gt;on
+</programlisting>
+
+          <para>User can define his own build variants using the <code>variant</code> rule from the <code>common</code>
+          module.</para>
           
-          <para><emphasis role="bold">Rationale:</emphasis> Runtime
+          <para><emphasis role="bold">Notee:</emphasis> Runtime
           debugging is on in debug builds to suit the expectations of
           people used to various IDEs. 
           <!-- Define "runtime debugging." Why will those people expect it to be on in debug builds? -->
-          It's assumed other folks don't
-          have any specific expectation in this point.
-          <!-- What is the value of that sentence? -->
           </para>
         </listitem></varlistentry>
       
@@ -1648,6 +1646,20 @@ unit-test helpers_test : helpers_test.cpp helpers ;
           </simpara>
         </listitem>
       </varlistentry>
+
+      <varlistentry><term><literal>build</literal></term>
+        
+        <listitem>
+          <para><emphasis role="bold">Allowed values:</emphasis> <literal>no</literal></para>
+
+          <para>
+            The <code>build</code> feature is used to conditionally disable build of a target. If <code>&lt;build&gt;no</code>
+            is in properties when building a target, build of that target is skipped. Combined with conditional requirements this
+            allows to skip building some target in configurations where the build is known to fail. 
+          </para>
+        </listitem>
+      </varlistentry>
+
 
 
 
