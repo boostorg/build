@@ -1140,7 +1140,7 @@ class basic-target : abstract-target
                 ECHO [ targets.indent ] "Common properties are" [ $(rproperties).raw ] ;
             }
                         
-            if $(rproperties[1]) != "@error"                    
+            if $(rproperties[1]) != "@error" && [ $(rproperties).get <build> ] != no
             {
                 local source-targets ;
                 local properties = [ $(rproperties).non-dependency ] ;
@@ -1200,6 +1200,11 @@ class basic-target : abstract-target
             else
             {
                 self.generated.$(property-set) = $(rproperties) ;
+                
+                if $(rproperties[1]) != "@error"
+                {
+                    ECHO "Skipping build of" [ full-name ] "-- <build>no in properties." ;
+                }
             }       
         }                
         else
