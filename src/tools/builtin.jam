@@ -177,6 +177,9 @@ feature instruction-set :
     vr4100 vr4111 vr4120 vr4130 vr4300 vr5000 vr5400 vr5500
     #
     : propagated optional ;
+    
+    
+feature conditional : : incidental free ;    
 
 # Windows-specific features
 
