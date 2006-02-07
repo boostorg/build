@@ -79,6 +79,7 @@ import virtual-target ;
 import path ;
 import set ;
 import assert ;
+import indirect ;
 
 # Base class for all abstract targets.
 class abstract-target 
@@ -934,16 +935,33 @@ rule common-properties2 ( build-request requirements )
     local raw = [ $(build-request).raw ] ;
     raw = [ property.refine $(raw) : 
       [ feature.expand [ $(requirements).non-conditional ] ] ] ;
-    
+      
     # We've collected properties that surely must be present in common
     # properties. We now try to figure out what other properties
     # should be added in order to satisfy rules (4)-(6) from the docs.        
     
     local conditionals = [ $(requirements).conditional ] ;
-    local count = $(conditionals) and-once-more ;
+    # The 'count' variable has one element for each conditional feature
+    # and for each occurence of '<indirect-conditional>' feature.
+    # It's used as a loop counter: for each iteration of the loop
+    # before we remove one element and the property set should
+    # stabilize before we've done. It's supposed to #conditionals iterations
+    # should be enough for properties to propagate along conditions in any
+    # direction.
+    local count = $(conditionals) 
+                  [ $(requirements).get <conditional> ]                    
+                  and-once-more ;
     local prev ;
     
     local current = $(raw) ;
+    
+    # It's assumed that ordinary conditional requirements can't add
+    # <indirect-conditional> properties, and that rules refered
+    # by <indirect-conditional> properties can't add new 
+    # <indirect-conditional> properties. So the list of indirect conditionals
+    # does not change.
+    local indirect = [ $(requirements).get <conditional> ] ;
+    indirect = [ MATCH @(.*) : $(indirect) ] ;  
     
     local ok ;
     while $(count) 
@@ -951,6 +969,13 @@ rule common-properties2 ( build-request requirements )
         # Evaluate conditionals in context of current properties
         local e = [ property.evaluate-conditionals-in-context $(conditionals) 
           : $(current) ] ;
+        
+        # Evaluate indirect conditionals.
+        for local i in $(indirect)
+        {
+            e += [ indirect.call $(i) $(current) ] ;
+        }
+                             
         if $(e) = $(prev)
         {                
             # If we got the same result, we've found final properties.
