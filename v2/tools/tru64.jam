@@ -61,7 +61,7 @@ generators.register-c-compiler tru64.compile.c : C : OBJ : <toolset>tru64 ;
 # No static linking as far as I can tell.
 # flags cxx LINKFLAGS <runtime-link>static : -bstatic ;
 flags tru64.compile OPTIONS <debug-symbols>on : -g3 ;
-flags tru64.compile OPTIONS.c++ <optimization>off/<debug-symbols>on : -gall ;
+flags tru64.compile OPTIONS <optimization>off/<debug-symbols>on : -gall ;
 flags tru64.link OPTIONS <debug-symbols>on : -g ;
 flags tru64.link OPTIONS <debug-symbols>off : -s ;
 # FIXME: Can we just add '-shared' to link.dll rule below?
@@ -127,7 +127,7 @@ actions link bind LIBRARIES
 
 actions link.dll bind LIBRARIES
 {
-    $(CONFIG_COMMAND)  -qrtti  -noimplicit_include $(OPTIONS) -o "$(<[1])" -L$(LIBPATH)  "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) -lm
+    $(CONFIG_COMMAND) -noimplicit_include $(OPTIONS) -o "$(<[1])" -L$(LIBPATH)  "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) -lm
 }
 
 
