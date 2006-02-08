@@ -89,7 +89,7 @@ t.expect_addition(["bin/$toolset/release/a.exe",
                   "bin/$toolset/release/optimization-off/a.exe", 
                   "bin/$toolset/release/optimization-off/a.obj"])
 
-t.run_build_system(extra_args='clean')
+t.run_build_system(extra_args='--clean-all')
 t.expect_removal(["bin/$toolset/debug/a.obj",
                  "bin/$toolset/debug/a.exe",
                  "lib/bin/$toolset/debug/b.obj",
@@ -106,7 +106,7 @@ t.run_build_system("lib//b.obj")
 t.expect_addition("lib/bin/$toolset/debug/b.obj")
 t.expect_nothing_more()
 
-t.run_build_system("clean lib//b.obj")
+t.run_build_system("--clean lib//b.obj")
 t.expect_removal("lib/bin/$toolset/debug/b.obj")
 t.expect_nothing_more()
 

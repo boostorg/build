@@ -137,6 +137,7 @@ tests = [ "rebuilds",
           "indirect_conditional",
           "build_no",
           "disambiguation",
+          "clean",
           ]
 
 if os.name == 'posix':

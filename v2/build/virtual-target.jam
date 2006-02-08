@@ -706,7 +706,7 @@ class action
             
             # Since we set up creating action here, we also set up
             # action for cleaning up
-            common.Clean clean : $(actual-targets) ;
+            common.Clean clean-all : $(actual-targets) ;
         }
     }
 
@@ -885,6 +885,7 @@ rule register ( target )
     }
     
     .recent-targets += $(result) ;
+    .all-targets += $(result) ;
 
     return $(result) ;
 }
@@ -904,6 +905,11 @@ rule clear-recent-targets ( )
     .recent-targets = ;
 }
 
+# Returns all virtual targets ever created
+rule all-targets ( )
+{
+    return $(.all-targets) ;
+}
 
 
 
