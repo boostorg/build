@@ -1322,7 +1322,7 @@ class typed-target : basic-target
             
     rule construct ( name : source-targets * : property-set )
     {
-        local r = [ generators.construct $(self.project) $(name) : $(self.type) 
+        local r = [ generators.construct $(self.project) $(name:S=) : $(self.type) 
           : [ property-set.create [ $(property-set).raw ] # [ feature.expand
               <main-target-type>$(self.type) ]
           # ]
@@ -1360,13 +1360,8 @@ rule main-target-sources ( sources * : main-target-name )
         if [ class.is-instance $(t) ]
         {
             local name = [ $(t).name ] ;
-            # NOTE: on windows, this won't work if 'main-target-name'
-            # if single letter. But other alternatives are even worse.
-            local new-name = $(main-target-name)..$(name) ;
+            local new-name = $(main-target-name)__$(name) ;
             $(t).rename $(new-name) ;
-            #local p = [ $(t).project ] ;            
-            #local pt = [ project.target $(p) ] ;
-            #$(pt).rename-main-target $(name) : $(new-name) ;
             result += $(new-name) ;
         }
         else
