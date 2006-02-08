@@ -87,9 +87,14 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
 {
     local caller = [ CALLER_MODULE ] ;
     if ! [ MATCH ".*([.]).*" : $(rule-or-module) ]
+       && [ MATCH "(Jamfile<.*)" : $(caller) ]
     {
-        # Unqualified rule name, qualify
+        # Unqualified rule name, used inside Jamfile.
         # (most likely used with 'make' or 'notfile' rules.
+        # This prevents setting flags on entire Jamfile module
+        # (this will be considered as rule), but who cares?
+        # Probably, 'flags' rule should be split into 'flags' and
+        # 'flags-on-module'.
         rule-or-module = $(caller).$(rule-or-module) ;
     }
     else
