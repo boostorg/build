@@ -23,11 +23,11 @@ int main()
 """)
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/everything..a.exe")
-t.rm("bin/$toolset/debug/everything..a.exe")
+t.expect_addition("bin/$toolset/debug/everything__a.exe")
+t.rm("bin/$toolset/debug/everything__a.exe")
 
-t.run_build_system("everything..a")
-t.expect_addition("bin/$toolset/debug/everything..a.exe")
+t.run_build_system("everything__a")
+t.expect_addition("bin/$toolset/debug/everything__a.exe")
 
 t.rm("bin")
 
@@ -42,8 +42,8 @@ alias everything2 : [ exe a : a.cpp ] ;
 
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug/a.exe")
-t.expect_addition("bin/$toolset/debug/everything..a.exe")
-t.expect_addition("bin/$toolset/debug/everything2..a.exe")
+t.expect_addition("bin/$toolset/debug/everything__a.exe")
+t.expect_addition("bin/$toolset/debug/everything2__a.exe")
 
 
 t.cleanup()
