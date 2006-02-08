@@ -20,6 +20,7 @@ import feature ;
 import property-set ;
 import build-request ;
 import errors : error ;
+import virtual-target ;
 import "class" : new ;
 
 import builtin ;
@@ -169,10 +170,16 @@ local targets
 local clean ;
 
 
+if "--clean-all" in [ modules.peek : ARGV ]
+{
+    cleanall = true ;
+}
+
 if "--clean" in [ modules.peek : ARGV ]
 {
     clean = true ;
 }
+
 
 local bjam-targets ;
 
@@ -225,7 +232,7 @@ for local id in $(target-ids)
     if $(id) = clean
     {
         clean = true ;
-    }
+    }    
     else
     {
         local t ;
@@ -278,6 +285,70 @@ else
     }    
 }
 
+# The cleaning is tricky. Say, if
+# user says: 
+#
+#    bjam --clean foo
+#
+# where 'foo' is a directory, then we want to clean targets
+# which are in 'foo' or in any children Jamfiles, but not in any
+# unrelated Jamfiles. So, we collect the list of project under which
+# cleaning is allowed.
+#
+
+local projects-to-clean ;
+for local t in $(targets)
+{
+    if [ class.is-a $(t) : project-target ]
+    {
+        projects-to-clean += [ $(t).project-module ] ;
+    }
+    else
+    {
+        # If user says:
+        #
+        #   bjam --clean some_project//sometarget
+        #
+        # We'll clean any target created in 'project' and below.
+        #
+        # It might be desirable to clean only files that are
+        # part of 'sometarget', and don't belong to other
+        # main target, but it's not clear if this is good,
+        # and harder to implement.
+        local p = [ $(t).project ] ;
+        projects-to-clean += [ $(p).project-module ] ;
+    }        
+}
+
+# Returns 'true' if 'project' is a child of 'current-project',
+# possibly indirect, or is equal to 'project'.
+# Returns 'false' otherwise.
+rule is-child ( project )
+{
+    if ! $(.is-child.$(project))
+    {
+        local r = false ;
+        if $(project) in $(projects-to-clean)
+        {            
+            r = true ;
+        }
+        else 
+        {
+            local parent = [ project.attribute $(project) parent-module ] ;
+            if $(parent) && $(parent) != user-config
+            {
+                r = [ is-child $(parent) ] ;
+            }            
+        }       
+        
+        .is-child.$(project) = $(r) ;
+    }
+    
+    return $(.is-child.$(project)) ;    
+}
+
+
+
 
 actual-targets = ;
 for t in $(virtual-targets)
@@ -289,12 +360,34 @@ DEPENDS all : $(actual-targets) ;
 
 if $(bjam-targets)
 {
-    UPDATE $(bjam-targets:G=e) ;
+    UPDATE $(bjam-targets:G=e) ;        
+}
+else if $(cleanall)
+{    
+    UPDATE clean-all ;
 }
 else if $(clean)
 {
+    local to-clean ;
+    for local t in [ virtual-target.all-targets ]
+    {
+        local p = [ $(t).project ] ;
+        if [ is-child [ $(p).project-module ] ] = true
+        {
+            to-clean += $(t) ;
+        }        
+    }
+    local to-clean-actual ;
+    for local t in $(to-clean)
+    {
+        to-clean-actual += [ $(t).actualize ] ;
+    }
+    common.Clean clean : $(to-clean-actual) ;
     UPDATE clean ;
+    
+    
 }
+
 else
 {
     UPDATE all ;

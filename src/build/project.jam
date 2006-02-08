@@ -456,6 +456,7 @@ rule initialize (
     if $(parent-module)
     {        
         inherit-attributes $(module-name) : $(parent-module) ;
+        $(attributes).set parent-module : $(parent-module) : exact ;
     }
     
     if $(jamroot)
