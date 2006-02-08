@@ -438,6 +438,18 @@ rule translate-indirect ( specification * : context-module )
         local m = [ MATCH ^@(.+) : $(p:G=) ] ;
         if $(m)
         {
+            if ! [ MATCH ".*([.]).*" : $(m) ]
+            {
+                # This is unqualified rule name. The user might want
+                # to set flags on this rule name, and toolset.flag
+                # auto-qualifies the rule name. Need to do the same
+                # here so set flag setting work.
+                # We can arrange for toolset.flag to *not* auto-qualify
+                # the argument, but then two rules defined in two Jamfiles
+                # will conflict.
+                m = $(context-module).$(m) ;
+            }
+            
             local v = [ indirect.make $(m) : $(context-module) ] ;
             v = @$(v) ;
             result += $(v:G=$(p:G)) ;

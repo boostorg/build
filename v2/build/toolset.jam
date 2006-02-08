@@ -85,12 +85,22 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
                               # that flags are set for the calling module.
           )
 {
-    local module_ = [ MATCH "([^.]*).*" : $(rule-or-module) ] ;
     local caller = [ CALLER_MODULE ] ;
-    if $(unchecked) != unchecked && $(module_) != $(caller)
+    if ! [ MATCH ".*([.]).*" : $(rule-or-module) ]
     {
-        errors.error "Module $(caller) attempted to set flags for module $(module_)" ;
+        # Unqualified rule name, qualify
+        # (most likely used with 'make' or 'notfile' rules.
+        rule-or-module = $(caller).$(rule-or-module) ;
     }
+    else
+    {              
+        local module_ = [ MATCH "([^.]*).*" : $(rule-or-module) ] ;
+        if $(unchecked) != unchecked && $(module_) != $(caller)
+        {
+            errors.error "Module $(caller) attempted to set flags for module $(module_)" ;
+        }
+    }
+    
     
     if $(condition) && ! $(condition:G=)
     {
