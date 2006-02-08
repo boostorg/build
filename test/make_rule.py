@@ -7,39 +7,36 @@ from string import find
 
 t = Tester(pass_toolset=1)
 
-t.write("project-root.jam", "")
-t.write("Jamfile", """
+t.write("Jamroot", """
 
-rule creator ( string targets * : sources * : * )
-{
-    STRING on $(targets) = $(string) ;
-    creator2 $(targets) : $(sources) ;
-}
+import feature ;
+feature.feature test_feature : : free ;
 
-actions creator2
+import toolset ;
+toolset.flags creator STRING : <test_feature> ;
+
+actions creator
 {
     echo $(STRING) > $(<)
 }
 
-make foo.bar : : creator foobar ;
+make foo.bar : : creator : <test_feature>12345678 ;
 """)
 
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug/foo.bar")
-t.fail_test(find(t.read("bin/$toolset/debug/foo.bar"), "foobar") == -1)
+t.fail_test(find(t.read("bin/$toolset/debug/foo.bar"), "12345678") == -1)
 
 # Regression test. Make sure that if main target requested two times,
 # and build request differ only in incidental properties, the main target
 # if created only once. The bug was discovered by Kirill Lapshin.
 
-t.write("Jamfile", """ 
+t.write("Jamroot", """ 
 # Make sure that incidental property does not
 # cause second creation of 'hello1.cpp'.
 exe a : dir//hello1.cpp ;
 exe b : dir//hello1.cpp/<hardcode-dll-paths>true ; 
 """)
-
-t.write("project-root.jam", "")
 
 t.write("dir/Jamfile", """ 
 import common ;
@@ -53,7 +50,8 @@ int main()
     return 1;
 }
 """)
-t.run_build_system("-d2")
-t.fail_test(t.stdout().count("common.copy") != 1)
+# Show only names of the actions.
+t.run_build_system("-d1 -n")
+t.fail_test(t.stdout().count("copy") != 1)
 
 t.cleanup()
