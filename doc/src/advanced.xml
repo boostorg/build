@@ -447,6 +447,28 @@ rule <replaceable>rule-name</replaceable> (
       </para>
 
       <section>
+        <title>Name</title>
+
+        <para>The name of main target has two purposes. First, it's used to refer to this target from
+        other targets and from command line. Second, it's used to compute the names of the generated files.
+        Typically, filenames are obtained from main target name by appending system-dependent suffixes and
+        prefixes.
+        </para>
+
+        <para>Name of main target can contain alphanumeral characters, dash, undescore and dot. The entire
+        name is significant when resolving references from other targets. For determining filenames, only the
+        part before the first dot is taken. For example:</para>
+<programlisting>
+obj test.release : test.cpp : &lt;variant&gt;release ;
+obj test.debug : test.cpp : &lt;variant&gt;debug ;
+</programlisting>
+        <para>will generate two files named <filename>test.obj</filename> (in two different directories), not
+        two files named <filename>test.release.obj</filename> and <filename>test.debug.obj</filename>.
+        </para>      
+
+      </section>
+
+      <section>
         <title>Sources</title>
 
         <para>The list of sources specifies what should be processed to
