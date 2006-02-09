@@ -353,6 +353,140 @@ using gcc : 3.4 : : &lt;compileflags&gt;-m64 &lt;linkflags&gt;-m64 ;
                 
     </section>
 
+    <section id="bbv2.advanced.invocation">
+      <title>Invocation</title>
+
+      <para>This section describes how invoke Boost.Build from the command line</para>
+
+      <para>To build all targets defined in Jamfile in the current directory with default properties, run:
+<screen>
+bjam
+</screen></para>
+
+      <para>To build specific targets, specify them on the command line:
+<screen>
+bjam lib1 subproject//lib2 
+</screen>
+      </para>
+
+      <para>To request a certain value for some property, add <literal>
+      <replaceable>property</replaceable>=<replaceable>value</replaceable></literal> to the command line:
+<screen>
+bjam toolset=gcc variant=debug optimization=space
+</screen>
+       For often used features, like <literal>toolset</literal> and <literal>variant</literal> you can
+       omit the feature name, so the above can be written as:
+<screen>
+bjam optimization=space
+</screen>
+      </para>
+
+      <para>To clean all targets in the current directory and in any subprojects, add the <literal>--clean</literal>
+      option:
+<screen>
+bjam --clean
+</screen>
+      </para>
+
+      <para>Not that unlike the <literal>clean</literal> target in make, you can use <literal>--clean</literal>
+      together with target names to clean specific targets.</para>
+
+      <para>The <literal>--clean-all</literal> option will clean all targets, no matter where they are defined. In
+      particular, it will clean targets in parent Jamfiles, and targets defined under other project roots.</para>
+
+      <para>Other important options are listed in the table below.</para>
+
+      <table>
+          <title>Command line options</title>
+          <tgroup cols="2">
+
+            <thead>
+              <row>
+                <entry>Option</entry>
+
+                <entry>Description</entry>
+              </row>
+            </thead>
+
+            <tbody>
+              <row>
+                <entry><literal>--version</literal></entry>
+
+                <entry>Prints information on Boost.Build and Boost.Jam
+                  versions.</entry>
+              </row>
+
+              <row id="bbv2.reference.init.options.help">
+                <entry><literal>--help</literal></entry>
+
+                <entry>Access to the online help system. This prints general
+                  information on how to use the help system with additional
+                  --help* options.</entry>
+              </row>
+
+              <row>
+                <entry><literal>--clean</literal>,<literal>--clean-all</literal></entry>
+
+                <entry>Removes everything instead of building. </entry>
+              </row>
+
+              <row>
+                <entry><literal>--debug-configuration</literal></entry>
+
+                <entry>Produces debug information about loading of Boost.Build and toolset files.</entry>
+              </row>
+
+              <row>
+                <entry><literal>--debug-building</literal></entry>
+
+                <entry>Prints what targets are being built and with what properties.</entry>
+              </row>
+
+              <row>
+                <entry><literal>--debug-generators</literal></entry>
+
+                <entry>Produces debug output from generator search process. Useful for debugging custom generators.</entry>
+              </row>
+
+              <row>
+                <entry><literal>--ignore-config</literal></entry>
+
+                <entry>Do not load <literal>site-config.jam</literal> and
+                  <literal>user-config.jam</literal></entry>
+              </row>
+
+
+              <row>
+                <entry><literal>--debug</literal></entry>
+
+                <entry>Enables internal checks.</entry>
+              </row>
+
+              <row>
+                <entry><literal>--dump-projects</literal></entry>
+
+                <entry>Cause the project structure to be output.</entry>
+              </row>
+
+              <row>
+                <entry><literal>--no-error-backtrace</literal></entry>
+
+                <entry>Don't print backtrace on errors. Primary useful for
+                  testing.</entry>
+              </row>
+
+            </tbody>
+          </tgroup>
+      </table>
+ 
+
+      <para>For complete specification of command line syntax, see 
+      <xref linkend="bbv2.reference.init.args"/>
+      </para>
+
+
+    </section>
+
     <section id="bbv2.advanced.targets">
       <title>Declaring targets</title>
 
@@ -1411,7 +1545,7 @@ install install-lib : helper : /usr/lib ;
     The only two which matter are  
     <link linkend="bbv2.builtin.features.dependency">
     <varname>dependency</varname></link> and, on Unix,
-    <varname>dll-path</varname>. 
+    <link linkend="bbv2.builtin.feature.dll-path"><varname>dll-path</varname></link>. 
     </para>
 
     <note>
@@ -1590,7 +1724,8 @@ unit-test helpers_test : helpers_test.cpp helpers ;
         </listitem>
       </varlistentry>
       
-      <varlistentry><term><literal>dll-path</literal></term>
+      <varlistentry><term><anchor id="bbv2.builtin.features.dll-path"/>
+      <literal>dll-path</literal></term>
         
         <listitem>
           <simpara>

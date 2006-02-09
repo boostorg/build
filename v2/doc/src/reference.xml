@@ -218,70 +218,9 @@ target1 debug gcc/runtime-link=dynamic,static
         <para>All of the Boost.Build options start with the "--" prefix.
           They are described in the following table.</para>
 
-        <table>
-          <title>Command line options</title>
-          <tgroup cols="2">
+        <para>FIXME: That table has moved into "User documentation" section
+        and there's nothing we can add here. Remove this part?</para>
 
-            <thead>
-              <row>
-                <entry>Option</entry>
-
-                <entry>Description</entry>
-              </row>
-            </thead>
-
-            <tbody>
-              <row>
-                <entry><literal>--version</literal></entry>
-
-                <entry>Prints information on Boost.Build and Boost.Jam
-                  versions.</entry>
-              </row>
-
-              <row id="bbv2.reference.init.options.help">
-                <entry><literal>--help</literal></entry>
-
-                <entry>Access to the online help system. This prints general
-                  information on how to use the help system with additional
-                  --help* options.</entry>
-              </row>
-
-              <row>
-                <entry><literal>--clean</literal></entry>
-
-                <entry>Removes everything instead of building. Unlike
-                  <literal>clean</literal> target in make, it is possible to clean only
-                  some targets.</entry>
-              </row>
-
-              <row>
-                <entry><literal>--debug</literal></entry>
-
-                <entry>Enables internal checks.</entry>
-              </row>
-
-              <row>
-                <entry><literal>--dump-projects</literal></entry>
-
-                <entry>Cause the project structure to be output.</entry>
-              </row>
-
-              <row>
-                <entry><literal>--no-error-backtrace</literal></entry>
-
-                <entry>Don't print backtrace on errors. Primary useful for
-                  testing.</entry>
-              </row>
-
-              <row>
-                <entry><literal>--ignore-config</literal></entry>
-
-                <entry>Do not load <literal>site-config.jam</literal> and
-                  <literal>user-config.jam</literal></entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </table>
 
       </section>
     </section>
