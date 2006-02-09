@@ -87,5 +87,12 @@ rule process ( )
             }
         }
     }
+
+    if $(dont-build)
+    {
+        # Exit without printing "don't know how to build..." and "found 1 target"
+        # messages.
+        EXIT ;
+    }    
 }
 

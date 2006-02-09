@@ -112,19 +112,11 @@ IMPORT modules : import : : import ;
 #
 import modules ;
 
-if ! $(dont-build)
-{
-    # Allow users to override the build system file from the
-    # command-line (mostly for testing)
-    local build-system = [ MATCH --build-system=(.*) : $(ARGV) ] ;
-    build-system ?= build-system ;
+# Allow users to override the build system file from the
+# command-line (mostly for testing)
+local build-system = [ MATCH --build-system=(.*) : $(ARGV) ] ;
+build-system ?= build-system ;
 
-    # Use last element in case of multiple command-line options
-    import $(build-system[-1]) ;
-}
-else
-{
-    # Exit without printing "don't know how to build..." and "found 1 target"
-    # messages.
-    EXIT ;
-}
+# Use last element in case of multiple command-line options
+import $(build-system[-1]) ;
+
