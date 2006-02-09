@@ -163,6 +163,11 @@ if $(properties)
     }
     expanded = $(xexpanded) ;    
 }
+else
+{
+    expanded = [ property-set.empty ] ;
+}
+
 
 
 local target-ids = [ $(build-request).get-at 1 ] ;
@@ -265,24 +270,26 @@ if ! $(targets)
 
 virtual-targets = ;
 
-if $(expanded) 
-{        
-    for local p in $(expanded)
-    {
-        for local t in $(targets)
-        {   
-            local g = [ $(t).generate $(p) ] ;
-            virtual-targets += $(g[2-]) ;
-        }        
-    }
-}
-else
+# Virtual targets obtained when building main targets references on
+# the command line. When running
+#
+#   bjam --clean main_target
+#
+# we want to clean the files that belong only to that main target,
+# so we need to record which targets are produced.
+local results-of-main-targets ;
+
+for local p in $(expanded)
 {
     for local t in $(targets)
-    {        
-        local g = [ $(t).generate [ property-set.empty ] ] ;
+    {   
+        local g = [ $(t).generate $(p) ] ;
+        if ! [ class.is-a $(t) : project-target ]
+        {
+            results-of-main-targets += $(g[2-]) ;
+        }        
         virtual-targets += $(g[2-]) ;
-    }    
+    }        
 }
 
 # The cleaning is tricky. Say, if
@@ -297,27 +304,24 @@ else
 #
 
 local projects-to-clean ;
-for local t in $(targets)
-{
-    if [ class.is-a $(t) : project-target ]
+local targets-to-clean ;
+if $(clean) || $(clean-all)
+{    
+    for local t in $(targets)
     {
-        projects-to-clean += [ $(t).project-module ] ;
+        if [ class.is-a $(t) : project-target ]
+        {
+            projects-to-clean += [ $(t).project-module ] ;
+        }       
     }
-    else
+    
+    local subvariants ;
+    for local t in $(results-of-main-targets)
     {
-        # If user says:
-        #
-        #   bjam --clean some_project//sometarget
-        #
-        # We'll clean any target created in 'project' and below.
-        #
-        # It might be desirable to clean only files that are
-        # part of 'sometarget', and don't belong to other
-        # main target, but it's not clear if this is good,
-        # and harder to implement.
-        local p = [ $(t).project ] ;
-        projects-to-clean += [ $(p).project-module ] ;
-    }        
+        # Don't include roots or sources.
+        targets-to-clean += [ virtual-target.traverse $(t) ] ;
+    }
+    targets-to-clean = [ sequence.unique $(targets-to-clean) ] ;        
 }
 
 # Returns 'true' if 'project' is a child of 'current-project',
@@ -372,7 +376,8 @@ else if $(clean)
     for local t in [ virtual-target.all-targets ]
     {
         local p = [ $(t).project ] ;
-        if [ is-child [ $(p).project-module ] ] = true
+        if $(t) in $(targets-to-clean)
+           || [ is-child [ $(p).project-module ] ] = true
         {
             to-clean += $(t) ;
         }        
