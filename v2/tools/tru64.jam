@@ -75,9 +75,8 @@ flags tru64.compile OPTIONS <debug-symbols>on : -g3 ;
 flags tru64.compile OPTIONS <optimization>off/<debug-symbols>on : -gall ;
 flags tru64.link OPTIONS <debug-symbols>on : -g ;
 flags tru64.link OPTIONS <debug-symbols>off : -s ;
-# FIXME: Can we just add '-shared' to link.dll rule below?
 # FIXME: What about -expect_unresolved, what do they do?
-#flags tru64.link OPTIONS <target-type>$(SHARED_TYPES) : -shared -expect_unresolved 'Py*' -expect_unresolved '_Py*' ;
+#flags tru64.link OPTIONS <target-type>$(SHARED_TYPES) : -expect_unresolved 'Py*' -expect_unresolved '_Py*' ;
 
 flags tru64.compile OPTIONS <optimization>off : -O0 ;
 flags tru64.compile OPTIONS <optimization>speed/<inlining>on : -O2 ;
@@ -145,8 +144,6 @@ actions link.dll bind LIBRARIES
 # Note: Relaxed ANSI mode (-std) is used for compilation because in strict ANSI
 # C89 mode (-std1) the compiler doesn't accept C++ comments in C files. As -std
 # is the default, no special flag is needed.
-
-# FIXME: Need to add whatever flags that makes compiler act in C mode.
 actions compile.c
 {
     $(.root:E=)cc -msg_display_number -msg-disable 186,450,1115 -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
