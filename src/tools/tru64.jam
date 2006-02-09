@@ -48,9 +48,20 @@ rule init ( version ? : command * : options * )
     local condition = [ common.check-init-parameters tru64 : version $(version) ] ;
     
     local command = [ common.get-invocation-command tru64 : cxx : $(command) ] ;
-    command ?= cxx ;
+    
+    if $(command)
+    {
+        local root = [ common.get-absolute-tool-path $(command[-1]) ] ;
 
-    common.handle-options tru64 : $(condition) : $(command) : $(options) ;   
+        if $(root)
+        {
+            flags tru64 .root $(condition) : "\"$(root)\"/" ;
+        }        
+    }      
+    # If we can't find 'cxx' anyway, at least show 'cxx' in the commands
+    command ?= cxx ;
+        
+    common.handle-options tru64 : $(condition) : $(command) : $(options) ;               
 }
 
 generators.register-c-compiler tru64.compile.c++ : CPP : OBJ : <toolset>tru64 ;
@@ -127,7 +138,7 @@ actions link bind LIBRARIES
 
 actions link.dll bind LIBRARIES
 {
-    $(CONFIG_COMMAND) -noimplicit_include $(OPTIONS) -o "$(<[1])" -L$(LIBPATH)  "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) -lm
+    $(CONFIG_COMMAND) -shared -noimplicit_include $(OPTIONS) -o "$(<[1])" -L$(LIBPATH)  "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) -lm
 }
 
 
@@ -138,7 +149,7 @@ actions link.dll bind LIBRARIES
 # FIXME: Need to add whatever flags that makes compiler act in C mode.
 actions compile.c
 {
-    $(CONFIG_COMMAND) -msg_display_number -msg-disable 186,450,1115 -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
+    $(.root:E=)cc -msg_display_number -msg-disable 186,450,1115 -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
 }
 
 # Note: DON'T disable warning 1133 -- the compiler is buggy and you
