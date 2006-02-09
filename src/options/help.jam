@@ -11,6 +11,8 @@ import assert ;
 import doc : do-scan set-option set-output set-output-file print-help-usage print-help-top ;
 import sequence ;
 import set ;
+import project ;
+import print ;
 
 
 # List of possible modules, but which really aren't.
@@ -81,7 +83,7 @@ rule process (
         local doc-module-spec = [ split-symbol doc ] ;
         do-scan $(doc-module-spec[1]) : print-help-options ;
         did-help = true ;
-        
+               
         case --help-usage :
         print-help-usage ;
         did-help = true ;
@@ -111,7 +113,20 @@ rule process (
         }
         else
         {
-            print-help-top ;
+            # First print documentation from the current Jamfile, if any.
+            if [ project.find "." : "." ] 
+            {
+                local m = [ project.load "." ] ;
+                local help = [ modules.peek $(m) : project-help ] ;
+                if $(help)
+                {
+                    print.text "Project-specific help" ;
+                    print.text "" ;
+                    print.text $(help) ;                    
+                }                
+            }
+            
+            print-help-top ;                                  
         }
         did-help = true ;
     }
