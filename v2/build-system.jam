@@ -26,6 +26,7 @@ import "class" : new ;
 import builtin ;
 import make ;
 import os ;
+import option ;
 
 import version ;
 
@@ -130,6 +131,10 @@ if --version in [ modules.peek : ARGV ]
     version.print ;
     EXIT ;
 }
+
+
+option.process ;
+
 
 # We always load project in "." so that 'use-project' directives has
 # any chance of been seen. Otherwise, we won't be able to refer to
