@@ -31,6 +31,7 @@ import feature generators common ;
 import toolset : flags ;
 
 feature.extend toolset : tru64 ;
+feature.extend c++abi : cxxarm ;
 
 # Inherit from Unix toolset to get library ordering magic.
 toolset.inherit  tru64 : unix ;
@@ -104,18 +105,13 @@ flags tru64.link OPTIONS <profiling>on : -pg ;
 
 # Selection of the object model. This flag is needed on both the C++ compiler
 # and linker command line.
-#
-# FIXME: Don't know what this <object-model> feature does. Disabling until
-# it's figured out.
 
-#flags tru64.compile.c++ OPTIONS <object-model>arm : -model arm ;
-#flags tru64.compile.c++ OPTIONS <object-model>ansi : -model ansi ;
-#flags tru64.compile.c++ OPTIONS <object-model>default : -model ansi ;
-
-
-#flags tru64.link OPTIONS <object-model>arm : -model arm ;
-#flags tru64.link OPTIONS <object-model>ansi : -model ansi ;
-#flags tru64.link OPTIONS <object-model>default : -model ansi ;
+# Unspecified ABI translates to '-model ansi' as most
+# standard-conforming.
+flags tru64.compile.c++ OPTIONS <c++abi> : -model ansi : : hack-hack ;
+flags tru64.compile.c++ OPTIONS <c++abi>cxxarm : -model arm ;
+flags tru64.link OPTIONS <c++abi> : -model ansi : : hack-hack ;
+flags tru64.link OPTIONS <c++abi>cxxarm : -model arm ;
 
 
 flags tru64.compile OPTIONS <cflags> ;
@@ -128,7 +124,6 @@ flags tru64.link LIBPATH <library-path> ;
 flags tru64.link LIBRARIES <library-file> ;
 flags tru64.link FINDLIBS-ST <find-static-library> ;
 flags tru64.link FINDLIBS-SA <find-shared-library> ;
-
 
 actions link bind LIBRARIES
 {
