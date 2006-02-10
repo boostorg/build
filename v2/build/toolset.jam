@@ -83,6 +83,10 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
                               # will be added.
              unchecked ?      # If value 'unchecked' is passed, will not test
                               # that flags are set for the calling module.
+             : hack-hack ?    # For 
+                              #   flags rule OPTIONS <cxx-abi> : -model ansi
+                              # Treak <cxx-abi> as condition
+                              # FIXME: ugly hack.                      
           )
 {
     local caller = [ CALLER_MODULE ] ;
@@ -107,7 +111,7 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
     }
     
     
-    if $(condition) && ! $(condition:G=)
+    if $(condition) && ! $(condition:G=) && ! $(hack-hack)
     {
         # We have condition in the form '<feature>', that is, without
         # value. That's a previous syntax:
@@ -261,7 +265,7 @@ rule set-target-variables-aux ( rule-or-module : property-set )
         local variable = $(.$(rule-or-module).variable.$(f)) ;
         local condition = $(.$(rule-or-module).condition.$(f)) ;
         local values = $(.$(rule-or-module).values.$(f)) ;
-
+        
         
         if ! $(condition) ||
           [ find-property-subset $(condition) : $(properties) ]

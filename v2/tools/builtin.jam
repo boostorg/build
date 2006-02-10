@@ -179,6 +179,11 @@ feature instruction-set :
     : propagated optional ;
     
     
+# Used to select specific variant of C++ ABI is the compiler
+# supports several.
+feature c++abi : : propagated optional ;    
+    
+    
 feature conditional : : incidental free ;    
 
 # The value of 'no' prevents building of a target.
