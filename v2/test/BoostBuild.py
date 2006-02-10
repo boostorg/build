@@ -120,6 +120,8 @@ class Tester(TestCmd.TestCmd):
                 jam_build_dir = "bin.irix"
             elif os.uname()[0] == "FreeBSD":
                 jam_build_dir = "bin.freebsd"
+            elif os.uname()[0] == "OSF1":
+                jam_build_dir = "bin.osf"
             else:
                 raise "Don't know directory where jam is build for this system: " + os.name + "/" + os.uname()[0]
         else:
