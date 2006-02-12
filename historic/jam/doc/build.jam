@@ -9,14 +9,14 @@ xml bjam
     bjam.qbk
     ;
 
-stage html-$(BOOST_VERSION)
+stage html
     :
     ../../../LICENSE_1_0.txt
     ../../../boost.png
     ../../../doc/html/boostbook.css
     ;
 
-stage html-$(BOOST_VERSION)/images
+stage html/images
     :
     [ path.glob ../../../doc/html/images : *.png ]
     ;
@@ -26,13 +26,13 @@ boostbook standalone
         bjam
     :
         <format>html
-        <name>html-$(BOOST_VERSION)
-        <dependency>html-$(BOOST_VERSION)
-        <dependency>html-$(BOOST_VERSION)/images
+        <name>html
+        <dependency>html
+        <dependency>html/images
         <xsl:param>boost.root=.
         <xsl:param>nav.layout=none
     ;
 
-# Copyright Rene Rivera 2005. Use, modification, and distribution are
+# Copyright Rene Rivera 2005-2006. Use, modification, and distribution are
 # subject to the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)

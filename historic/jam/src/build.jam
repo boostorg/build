@@ -16,7 +16,7 @@ _VERSION_ = 3 1 12 ;
 NAME = boost-jam ;
 VERSION = $(_VERSION_:J=$(.)) ;
 RELEASE = 1 ;
-LICENSE = 1_0 ;
+LICENSE = LICENSE_1_0 ;
 
 # Generate development debug binaries?
 if --debug in $(ARGV)
@@ -713,22 +713,28 @@ rule .hdr.scan
 }
 .scan [ GLOB . : *.c ] ;
 
-# Distribution making from here on out.
+# Distribution making from here on out. Assumes that
+# the docs are already built as html at ../doc/html. If
+# they aren't, then the docs are not included in the dist
+# archive.
 dist.license =
-    #~ [ GLOB . : LICENSE_$(LICENSE).txt ] [ GLOB [ .path .. .. .. ] : LICENSE_$(LICENSE).txt ] ;
-    [ GLOB . : LICENSE_$(LICENSE).txt ]
-    [ GLOB [ .path .. .. .. ] : LICENSE_$(LICENSE).txt ]
-    [ GLOB [ .path .. boost ] : LICENSE_$(LICENSE).txt ] ;
+    [ GLOB . : $(LICENSE).txt ]
+    ;
+dist.license = $(dist.license:D=)
+    [ GLOB [ .path .. .. .. ] : $(LICENSE).txt ]
+    [ GLOB [ .path .. boost ] : $(LICENSE).txt ] ;
 dist.docs =
-    $(dist.license[1])
-    index.html
-    Porting
-    Jam.html
+    [ GLOB . : *.png *.css *.html ]
+    ;
+dist.docs = $(dist.docs:D=)
+    [ GLOB [ .path images ] : *.png ]
+    [ GLOB [ .path jam ] : *.html ]
     ;
 dist.source =
     [ GLOB . : *.c *.h ]
     ;
 dist.source = $(dist.source:D=)
+    $(dist.license[1])
     $(dist.docs)
     build.jam build.bat build.sh build_vms.com
     Jambase
