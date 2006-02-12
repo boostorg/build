@@ -12,6 +12,7 @@ local docbook_dtd-path = [ modules.peek : DOCBOOK_DTD_DIR ] ;
 local boostbook-path = [ modules.peek : BOOSTBOOK_DIR ] ;
 if [ os.name ] = NT
 {
+    # If installed by the Boost installer.
     local boost-dir = ;
     for local R in snapshot cvs 1.33.0
     {
@@ -19,24 +20,30 @@ if [ os.name ] = NT
             "HKEY_LOCAL_MACHINE\\SOFTWARE\\Boost.org\\$(R)"
             : "InstallRoot" ] ;
     }
+    # Plausible locations.
     docbook_xsl-path ?= [ GLOB "$(boost-dir)\\share" "\\Boost\\share" : docbook-xsl* ] ;
-    docbook_xsl-path = $(docbook_xsl-path[1]) ;
     docbook_dtd-path ?= [ GLOB "$(boost-dir)\\share" "\\Boost\\share" : docbook-xml* ] ;
-    docbook_dtd-path = $(docbook_dtd-path[1]) ;
     boostbook-path ?= [ GLOB "$(boost-dir)\\share" "\\Boost\\share" : boostbook* ] ;
+    
+    docbook_xsl-path = $(docbook_xsl-path[1]) ;
+    docbook_dtd-path = $(docbook_dtd-path[1]) ;
     boostbook-path = $(boostbook-path[1]) ;
 }
 else
 {
+    # Plausible locations.
     docbook_xsl-path ?= [ GLOB "/usr/local/share" "/usr/share" "/opt/share" : docbook-xsl* ] ;
-    docbook_xsl-path = $(docbook_xsl-path[1]) ;
     docbook_dtd-path ?= [ GLOB "/usr/local/share" "/usr/share" "/opt/share" : docbook-xml* ] ;
-    docbook_dtd-path = $(docbook_dtd-path[1]) ;
     boostbook-path ?= [ GLOB "/usr/local/share" "/usr/share" "/opt/share" : boostbook* ] ;
-    boostbook-path = $(boostbook-path[1]) ;
+    # Ubuntu Linux
+    docbook_xsl-path ?= [ GLOB "/usr/share/xml/docbook/stylesheet" : nwalsh ] ;
+    docbook_dtd-path ?= [ GLOB "/usr/share/xml/docbook/dtd" : 4.3 4.2 ] ;
     
+    docbook_xsl-path = $(docbook_xsl-path[1]) ;
+    docbook_dtd-path = $(docbook_dtd-path[1]) ;
+    boostbook-path = $(boostbook-path[1]) ;
 }
-if $(docbook_xsl-path) && $(docbook_dtd-path) && $(boostbook-path)
+if $(docbook_xsl-path) && $(docbook_dtd-path)
 {
     if --debug-configuration in [ modules.peek : ARGV ]
     {
