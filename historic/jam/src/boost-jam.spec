@@ -50,7 +50,7 @@ mkdir -p $RPM_BUILD_ROOT%{_bindir}
 mkdir -p $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
 install -m 755 bin/bjam $RPM_BUILD_ROOT%{_bindir}/bjam-%{version}
 ln -sf bjam-%{version} $RPM_BUILD_ROOT%{_bindir}/bjam
-install -m 644 images jam *.html *.png *.css LICENSE*.txt $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
+cp -R *.html *.png *.css LICENSE*.txt images jam $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
 
 find $RPM_BUILD_ROOT -name CVS -type d -depth -exec rm -r {} \;
 
