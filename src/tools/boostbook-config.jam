@@ -37,7 +37,7 @@ else
     boostbook-path ?= [ GLOB "/usr/local/share" "/usr/share" "/opt/share" : boostbook* ] ;
     # Ubuntu Linux
     docbook_xsl-path ?= [ GLOB "/usr/share/xml/docbook/stylesheet" : nwalsh ] ;
-    docbook_dtd-path ?= [ GLOB "/usr/share/xml/docbook/dtd" : 4.3 4.2 ] ;
+    docbook_dtd-path ?= [ GLOB "/usr/share/xml/docbook/schema/dtd" : 4.3 4.2 ] ;
     
     docbook_xsl-path = $(docbook_xsl-path[1]) ;
     docbook_dtd-path = $(docbook_dtd-path[1]) ;
