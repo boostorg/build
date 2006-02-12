@@ -31,9 +31,9 @@ Copyright:
     ALL WARRANTIES ARE HEREBY DISCLAIMED.
 
 Also:
-    Copyright 2001-2004 David Abrahams.
-    Copyright 2002-2005 Rene Rivera.
-    Copyright 2003-2005 Vladimir Prus.
+    Copyright 2001-2006 David Abrahams.
+    Copyright 2002-2006 Rene Rivera.
+    Copyright 2003-2006 Vladimir Prus.
     
     Distributed under the Boost Software License, Version 1.0.
     (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
@@ -50,7 +50,7 @@ mkdir -p $RPM_BUILD_ROOT%{_bindir}
 mkdir -p $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
 install -m 755 bin/bjam $RPM_BUILD_ROOT%{_bindir}/bjam-%{version}
 ln -sf bjam-%{version} $RPM_BUILD_ROOT%{_bindir}/bjam
-install -m 644 *.html *.txt Porting $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
+install -m 644 images jam *.html *.png *.css LICENSE*.txt $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
 
 find $RPM_BUILD_ROOT -name CVS -type d -depth -exec rm -r {} \;
 
