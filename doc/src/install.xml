@@ -43,7 +43,7 @@ All paths are given relative to
         <filename>tools/build/v2</filename> subdirectory from a full
         Boost distribution, so it is itself a valid Boost.Build root
         directory.  It also contains the
-        <filename>tools/build/jam_src</filename> subdirectory of a
+        <filename>tools/jam/src</filename> subdirectory of a
         full Boost distribution, so you can rebuild Boost.Jam from
         source.
         </para>
@@ -54,7 +54,7 @@ All paths are given relative to
       <listitem>
         <simpara>
           Boost.Build uses <ulink
-          url= "../../tools/build/jam_src/index.html">Boost.Jam</ulink>, an
+          url= "../../tools/jam/index.html">Boost.Jam</ulink>, an
           extension of the <ulink
           url="http://www.perforce.com/jam/jam.html">Perforce
           Jam</ulink> portable <command>make</command> replacement. The
@@ -65,7 +65,7 @@ All paths are given relative to
           If a prebuilt executable is not provided for your platform
           or you are using Boost's sources in an unreleased state, it
           may be necessary to <ulink
-          url= "../../tools/build/jam_src/index.html#building_bjam">build <command>bjam</command>
+          url= "../../doc/html/jam/buildin.html">build <command>bjam</command>
           from sources</ulink> included in the Boost source tree.
         </simpara>
       </listitem>
