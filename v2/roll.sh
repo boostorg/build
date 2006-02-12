@@ -5,7 +5,7 @@ set -e
 
 cp -r ../v2 ../boost-build
 # Grab jam_src
-cp -r ../jam_src ../boost-build
+cp -r ../../jam/src ../boost-build/jam_src
 cd ../boost-build
 
 # This one is not fully finished
@@ -23,8 +23,8 @@ echo -e "boost-build kernel ;\n" > boost-build.jam
 touch doc/project-root.jam
 export BOOST_ROOT=/home/ghost/Work/boost-rc
 cd doc
-/home/ghost/Work/boost-rc/tools/build/jam_src/bin.linuxx86/bjam --v2
-/home/ghost/Work/boost-rc/tools/build/jam_src/bin.linuxx86/bjam --v2 pdf
+/home/ghost/Work/boost-rc/tools/jam/src/bin.linuxx86/bjam --v2
+/home/ghost/Work/boost-rc/tools/jam/src/bin.linuxx86/bjam --v2 pdf
 cp `find bin -name "*.pdf"` ../..
 rm -rf bin
 cd ..

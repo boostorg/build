@@ -141,7 +141,9 @@ class Tester(TestCmd.TestCmd):
         # Find there jam_src is located.
         # try for the debug version if it's lying around
 
-        dirs = [os.path.join('../../jam_src', jam_build_dir + '.debug'),
+        dirs = [os.path.join('../../../jam/src', jam_build_dir + '.debug'),
+                os.path.join('../../../jam/src', jam_build_dir),
+                os.path.join('../../jam_src', jam_build_dir + '.debug'),
                 os.path.join('../../jam_src', jam_build_dir),
                 os.path.join('../jam_src', jam_build_dir + '.debug'),
                 os.path.join('../jam_src', jam_build_dir),

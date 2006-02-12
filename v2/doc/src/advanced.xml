@@ -59,10 +59,8 @@
         <listitem>
           <para>Some Basics about the Boost.Jam language. See the
           <ulink 
-          url="http://www.boost.org/tools/build/jam_src/index.html#jam_fundamentals">Boost.Jam</ulink>
-          and <ulink
-          url="http://www.boost.org/tools/build/jam_src/jam.html">Classic
-          Jam</ulink> documentation.
+          url="http://www.boost.org/tools/jam/index.html">Boost.Jam</ulink>
+          documentation.
           <!-- Something better than this is desperately needed; the
                tutorial at least should clarify that whitespace is
                significant and we shouldn't get any further than the
@@ -80,10 +78,8 @@
       <para>This section will describe the basics of the Boost.Jam
       language&#x2014;just enough for writing Jamfiles. For more information,
       please see the <ulink
-      url="http://www.boost.org/tools/build/jam_src/index.html#jam_fundamentals">Boost.Jam</ulink>
-      and <ulink
-      url="http://www.boost.org/tools/build/jam_src/Jam.html">Classic
-      Jam</ulink> documentation.</para>
+      url="http://www.boost.org/tools/jam/index.html">Boost.Jam</ulink>
+      documentation.</para>
 
       <para>Boost.Jam has an interpreted, procedural language. 
       On the lowest level, a Boost.Jam program consists of variables and 

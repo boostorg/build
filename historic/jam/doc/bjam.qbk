@@ -94,7 +94,7 @@ cd /jam source location/
 sh ./build.sh
 ]
 
-For the Boost.Jam source included with the Boost distribution the /jam source location/ is =BOOST_ROOT/tools/build/jam_src=.
+For the Boost.Jam source included with the Boost distribution the /jam source location/ is =BOOST_ROOT/tools/jam/src=.
 
 If the scripts fail to detect an appropriate toolset to build with your particular toolset may not be auto-detectable. In that case, you can specify the toolset as the first argument, this assumes that the toolset is readily available in the =PATH=.
 
