@@ -36,12 +36,9 @@ feature.extend c++abi : cxxarm ;
 # Inherit from Unix toolset to get library ordering magic.
 toolset.inherit  tru64 : unix ;
 
-#toolset.inherit-generators tru64 : unix : unix.link unix.link.dll ;
-
 generators.override builtin.lib-generator : tru64.prebuilt ;
+generators.override tru64.prebuilt : builtin.prebuilt ;
 generators.override tru64.searched-lib-generator : searched-lib-generator ;
-
-#feature.subfeature toolset tru64 : version ;
 
 
 rule init ( version ? : command * : options * )
@@ -151,7 +148,10 @@ actions compile.c++
     $(CONFIG_COMMAND)  -c -std strict_ansi -nopure_cname -noimplicit_include -timplicit_local -ptr "$(<[1]:D)/cxx_repository" -msg_display_number -msg_disable 186,450,1115 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
 }
 
+# Always create archive from scratch. See the gcc toolet for rationale.
+RM = [ common.rm-command ] ;
 actions updated together piecemeal archive
 {
-  ar -ru $(<) $(>)
+  $(RM) "$(<)"
+  ar rc $(<) $(>)
 }
