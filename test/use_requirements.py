@@ -8,14 +8,16 @@ t = Tester()
 # dependents)
 t.write("project-root.jam", "import gcc ;")
 
+# Note: 'lib cc ..', not 'lib c', If using 'lib c: ...' the HP-CXX
+# linker will confuse it with the system C runtime.
 t.write(
     "Jamfile",
 """
     lib b : b.cpp : <link>shared:<define>SHARED_B
     : : <define>FOO <link>shared:<define>SHARED_B    
     ;
-    lib c : c.cpp b ;
-    exe a : a.cpp c ;
+    lib cc : c.cpp b ;
+    exe a : a.cpp cc ;
 """)
 
 t.write(
@@ -177,11 +179,11 @@ t.write(
     # Here's the test: we should correctly
     # handle dependency feature and get
     # use requirements from 'b'.
-    lib c : c.cpp : <link>shared:<define>SHARED_C : : <library>b ;
+    lib cc : c.cpp : <link>shared:<define>SHARED_C : : <library>b ;
     
     # This will build only if <define>FOO
     # was propagated from 'c'.
-    exe a : a.cpp c ;
+    exe a : a.cpp cc ;
 """)
 
 t.write(
@@ -216,7 +218,7 @@ t.run_build_system("--clean")
 t.write(
     "Jamfile",
 """
-    exe a : a.cpp lib1//c ;
+    exe a : a.cpp lib1//cc ;
 """)
 
 t.write(
@@ -227,7 +229,7 @@ t.write(
     : usage-requirements <library>../lib2//b <link>shared:<define>SHARED_C
     ;
     
-    lib c : c.cpp ;    
+    lib cc : c.cpp ;    
 """)
 
 t.write(
