@@ -746,6 +746,23 @@ class action
           actualize-source-type $(dependencies) : $(property-set) ] ;
         self.actual-sources += [ 
           actualize-source-type $(sources) : $(property-set) ] ;
+
+        # This is used to help bjam find dependencies in generated headers
+        # in other main targets.
+        # Say:
+        #
+        #   make a.h : ....... ;
+        #   exe hello : hello.cpp : <implicit-dependency>a.h ;
+        #
+        # However, for bjam to find the dependency the generated target must
+        # be actualized (i.e. have the jam target). In the above case,
+        # if we're building just hello ("bjam hello"), 'a.h' won't be
+        # actualized unless we do it here.
+        local implicit = [ $(self.properties).get <implicit-dependency> ] ;
+        for local i in $(implicit)
+        {
+            $(i:G=).actualize ;
+        }        
     }
 
     # Determined real properties when trying building with 'properties'.

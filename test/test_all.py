@@ -139,6 +139,7 @@ tests = [ "rebuilds",
           "disambiguation",
           "clean",
           "lib_source_property",
+          "implicit_dependency",
           ]
 
 if os.name == 'posix':
