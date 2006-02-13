@@ -84,12 +84,12 @@ feature warnings :
     all        # enable all warnings issued by the tool
     on         # enable default warning level for the tool
     off        # disable all warnings issued by the tool
-  : incidental ;
+  : incidental propagated ;
 
 feature warnings-as-errors :
     off        # do not fail the compilation if there are warnings
     on         # fail the compilation if there are warnings
-  : incidental ;
+  : incidental propagated ;
 
 feature source : : free dependency incidental ;
 feature library : : free dependency incidental ;
