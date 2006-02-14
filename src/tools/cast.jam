@@ -67,11 +67,19 @@ rule cast ( name type : sources * : requirements * : default-build *
     : usage-requirements * )
 {
     local project = [ project.current ] ;
+    
+    local real-type = [ type.type-from-rule-name $(type) ] ;
+    if ! $(real-type)
+    {
+        errors.user-error "No type corresponds to main target rule nam '$(type)'"
+          : "Hint: try lowercase the name" ;
+    }
+    
         
     # This is a circular module dependency, so it must be imported here
     import targets ;
     targets.main-target-alternative
-      [ new cast-target-class $(name) : $(project) : [ type.type-from-rule-name $(type) ]
+      [ new cast-target-class $(name) : $(project) : $(real-type) 
         : [ targets.main-target-sources $(sources) : $(name) ] 
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
         : [ targets.main-target-default-build $(default-build) : $(project) ]
