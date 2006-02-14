@@ -31,22 +31,22 @@
 import feature generators common ;
 import toolset : flags ;
 
-feature.extend toolset : tru64 ;
+feature.extend toolset : hp_cxx ;
 feature.extend c++abi : cxxarm ;
 
 # Inherit from Unix toolset to get library ordering magic.
-toolset.inherit  tru64 : unix ;
+toolset.inherit  hp_cxx : unix ;
 
-generators.override builtin.lib-generator : tru64.prebuilt ;
-generators.override tru64.prebuilt : builtin.prebuilt ;
-generators.override tru64.searched-lib-generator : searched-lib-generator ;
+generators.override builtin.lib-generator : hp_cxx.prebuilt ;
+generators.override hp_cxx.prebuilt : builtin.prebuilt ;
+generators.override hp_cxx.searched-lib-generator : searched-lib-generator ;
 
 
 rule init ( version ? : command * : options * )
 {
-    local condition = [ common.check-init-parameters tru64 : version $(version) ] ;
+    local condition = [ common.check-init-parameters hp_cxx : version $(version) ] ;
     
-    local command = [ common.get-invocation-command tru64 : cxx : $(command) ] ;
+    local command = [ common.get-invocation-command hp_cxx : cxx : $(command) ] ;
     
     if $(command)
     {
@@ -54,74 +54,74 @@ rule init ( version ? : command * : options * )
 
         if $(root)
         {
-            flags tru64 .root $(condition) : "\"$(root)\"/" ;
+            flags hp_cxx .root $(condition) : "\"$(root)\"/" ;
         }        
     }      
     # If we can't find 'cxx' anyway, at least show 'cxx' in the commands
     command ?= cxx ;
         
-    common.handle-options tru64 : $(condition) : $(command) : $(options) ;               
+    common.handle-options hp_cxx : $(condition) : $(command) : $(options) ;               
 }
 
-generators.register-c-compiler tru64.compile.c++ : CPP : OBJ : <toolset>tru64 ;
-generators.register-c-compiler tru64.compile.c : C : OBJ : <toolset>tru64 ;
+generators.register-c-compiler hp_cxx.compile.c++ : CPP : OBJ : <toolset>hp_cxx ;
+generators.register-c-compiler hp_cxx.compile.c : C : OBJ : <toolset>hp_cxx ;
 
 
 
 # No static linking as far as I can tell.
 # flags cxx LINKFLAGS <runtime-link>static : -bstatic ;
-flags tru64.compile OPTIONS <debug-symbols>on : -g3 ;
-flags tru64.compile OPTIONS <optimization>off/<debug-symbols>on : -gall ;
-flags tru64.link OPTIONS <debug-symbols>on : -g ;
-flags tru64.link OPTIONS <debug-symbols>off : -s ;
+flags hp_cxx.compile OPTIONS <debug-symbols>on : -g3 ;
+flags hp_cxx.compile OPTIONS <optimization>off/<debug-symbols>on : -gall ;
+flags hp_cxx.link OPTIONS <debug-symbols>on : -g ;
+flags hp_cxx.link OPTIONS <debug-symbols>off : -s ;
 # FIXME: What about -expect_unresolved, what do they do?
-#flags tru64.link OPTIONS <target-type>$(SHARED_TYPES) : -expect_unresolved 'Py*' -expect_unresolved '_Py*' ;
+#flags hp_cxx.link OPTIONS <target-type>$(SHARED_TYPES) : -expect_unresolved 'Py*' -expect_unresolved '_Py*' ;
 
-flags tru64.compile OPTIONS <optimization>off : -O0 ;
-flags tru64.compile OPTIONS <optimization>speed/<inlining>on : -O2 ;
-flags tru64.compile OPTIONS <optimization>speed : -O2 ;
+flags hp_cxx.compile OPTIONS <optimization>off : -O0 ;
+flags hp_cxx.compile OPTIONS <optimization>speed/<inlining>on : -O2 ;
+flags hp_cxx.compile OPTIONS <optimization>speed : -O2 ;
 
 # This (undocumented) macro needs to be defined to get all C function
 # overloads required by the C++ standard.
-flags tru64.compile.c++ OPTIONS : -D__CNAME_OVERLOADS ;
+flags hp_cxx.compile.c++ OPTIONS : -D__CNAME_OVERLOADS ;
 
 # Added for threading support
-flags tru64.compile OPTIONS <threading>multi : -pthread ;
-flags tru64.link OPTIONS <threading>multi : -pthread ;
+flags hp_cxx.compile OPTIONS <threading>multi : -pthread ;
+flags hp_cxx.link OPTIONS <threading>multi : -pthread ;
 
-flags tru64.compile OPTIONS <optimization>space/<inlining>on : <inlining>size ;
-flags tru64.compile OPTIONS <optimization>space : -O1 ;
-flags tru64.compile OPTIONS <inlining>off : -inline none ;
+flags hp_cxx.compile OPTIONS <optimization>space/<inlining>on : <inlining>size ;
+flags hp_cxx.compile OPTIONS <optimization>space : -O1 ;
+flags hp_cxx.compile OPTIONS <inlining>off : -inline none ;
 
 # The compiler versions tried (up to V6.5-040) hang when compiling Boost code
 # with full inlining enabled. So leave it at the default level for now.
 #
-# flags tru64.compile OPTIONS <inlining>full : -inline all ;
+# flags hp_cxx.compile OPTIONS <inlining>full : -inline all ;
 
-flags tru64.compile OPTIONS <profiling>on : -pg ;
-flags tru64.link OPTIONS <profiling>on : -pg ;
+flags hp_cxx.compile OPTIONS <profiling>on : -pg ;
+flags hp_cxx.link OPTIONS <profiling>on : -pg ;
 
 # Selection of the object model. This flag is needed on both the C++ compiler
 # and linker command line.
 
 # Unspecified ABI translates to '-model ansi' as most
 # standard-conforming.
-flags tru64.compile.c++ OPTIONS <c++abi> : -model ansi : : hack-hack ;
-flags tru64.compile.c++ OPTIONS <c++abi>cxxarm : -model arm ;
-flags tru64.link OPTIONS <c++abi> : -model ansi : : hack-hack ;
-flags tru64.link OPTIONS <c++abi>cxxarm : -model arm ;
+flags hp_cxx.compile.c++ OPTIONS <c++abi> : -model ansi : : hack-hack ;
+flags hp_cxx.compile.c++ OPTIONS <c++abi>cxxarm : -model arm ;
+flags hp_cxx.link OPTIONS <c++abi> : -model ansi : : hack-hack ;
+flags hp_cxx.link OPTIONS <c++abi>cxxarm : -model arm ;
 
 
-flags tru64.compile OPTIONS <cflags> ;
-flags tru64.compile.c++ OPTIONS <cxxflags> ;
-flags tru64.compile DEFINES <define> ;
-flags tru64.compile INCLUDES <include> ;
-flags tru64.link OPTIONS <linkflags> ;
+flags hp_cxx.compile OPTIONS <cflags> ;
+flags hp_cxx.compile.c++ OPTIONS <cxxflags> ;
+flags hp_cxx.compile DEFINES <define> ;
+flags hp_cxx.compile INCLUDES <include> ;
+flags hp_cxx.link OPTIONS <linkflags> ;
 
-flags tru64.link LIBPATH <library-path> ;
-flags tru64.link LIBRARIES <library-file> ;
-flags tru64.link FINDLIBS-ST <find-static-library> ;
-flags tru64.link FINDLIBS-SA <find-shared-library> ;
+flags hp_cxx.link LIBPATH <library-path> ;
+flags hp_cxx.link LIBRARIES <library-file> ;
+flags hp_cxx.link FINDLIBS-ST <find-static-library> ;
+flags hp_cxx.link FINDLIBS-SA <find-shared-library> ;
 
 actions link bind LIBRARIES
 {
