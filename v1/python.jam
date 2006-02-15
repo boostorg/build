@@ -86,6 +86,10 @@ else if $(UNIX)
 	{
 		PYTHON_EMBEDDED_LIBRARY = python$(PYTHON_VERSION) ;
 	}
+	else if $(OS) = QNXNTO
+	{
+		PYTHON_EMBEDDED_LIBRARY = python$(PYTHON_VERSION) ;
+	}
 	else
 	{
 		PYTHON_EMBEDDED_LIBRARY = python$(PYTHON_VERSION) dl util ;
