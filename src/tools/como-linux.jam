@@ -20,7 +20,7 @@ feature.extend-subfeature toolset como : platform : linux ;
 
 toolset.inherit-generators como-linux 
      <toolset>como <toolset-como:platform>linux : unix ;
-generators.override builtin.lib-generator : como-linux.prebuilt ;     
+generators.override como-linux.prebuilt : builtin.lib-generator ;     
 generators.override como-linux.searched-lib-generator : searched-lib-generator ;
 toolset.inherit-flags como-linux : unix ;
 toolset.inherit-rules como-linux : gcc ;

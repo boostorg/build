@@ -551,7 +551,7 @@ class prebuilt-lib-generator : generator
 generators.register 
   [ new prebuilt-lib-generator builtin.prebuilt : : LIB : <file> ] ;
 
-generators.override builtin.lib-generator : builtin.prebuilt ;
+generators.override builtin.prebuilt : builtin.lib-generator ;
 
     
 class compile-action : action 

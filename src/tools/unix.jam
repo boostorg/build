@@ -138,7 +138,7 @@ generators.register
   [ new unix-prebuilt-lib-generator unix.prebuilt : : LIB 
       : <file> <toolset>unix ] ;
 
-generators.override builtin.lib-generator : unix.prebuilt ;
+generators.override unix.prebuilt : builtin.lib-generator ;
 
 
 # Declare generators
