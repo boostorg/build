@@ -50,6 +50,35 @@ flags intel-linux.compile OPTIONS <inlining>off : "-Ob0" ;
 flags intel-linux.compile OPTIONS <inlining>on : "-Ob1" ;
 flags intel-linux.compile OPTIONS <inlining>full : "-Ob2" ;
 flags intel-linux.compile OPTIONS <optimization>space : "-O1" ; # no specific space optimization flag in icc
+
+# Disable some pointless warnings:
+# 1418 is 'external definition with no prior declaration'
+#    This is just pointless
+# 383 is 'value copied to temporary, reference to temporary used'
+#    Produced too often.
+# 981 is 'operands are evaluated in unspecified order'
+#    This triggers even on chained operator "<<"
+# 444 is 'destructor for base class XX is not virtual'
+#    Emitted on boost::noncopyable, that has no virtual
+#    methods to begin with and is not a "real" base class.
+# 193 is 'zero used for undefined preprocessing identifier'
+#    This is common thing, and used in BOOST_WORKAROUND often.
+# 530 is 'inline function XXX cannot be explicitly instantiated'
+#    Obscure warning affecting Boost. No docs can be found.     
+# 810 is 'conversion from X to Y may loose significant bits'
+#    This is emitted even for explicit conversions
+# 304 is 'access control not specified, public by default'
+#    Emitted on "struct foo : whatever", which is used often in Boost.MPL
+# 279 is 'controlling expression is constant'
+#    Happens, in particular, on "assert(false)"
+# 1419 is 'external declaration in primary source file'
+#    This is just pointless
+#
+# It might be good idea to disable those "remark" warnings, but
+# 869 (paremeter is never referenced) seems reasonable.
+flags intel-linux.compile OPTIONS 
+  : -wd1418 -wd383 -wd981 -wd444 -wd193 -wd530 -wd810 -wd304 -wd279 ;
+
 actions compile.c++
 {
     "$(CONFIG_COMMAND)" -c -xc++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
