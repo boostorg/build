@@ -928,6 +928,22 @@ rule all-targets ( )
     return $(.all-targets) ;
 }
 
+# Returns all targets from 'targets' with types
+# equal to 'type' or derived from it.
+rule select-by-type ( type : targets * )
+{
+    local result ;
+    for local t in $(targets)
+    {
+        if [ type.is-subtype [ $(t).type ] $(type) ]
+        {
+            result += $(t) ;
+        }         
+    }
+    
+    return $(result) ;    
+}
+
 
 
 rule register-actual-name ( actual-name : virtual-target )
