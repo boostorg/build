@@ -1,0 +1,70 @@
+# Copyright (c) 2005 Jim Douglas.
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
+
+import toolset ;
+import feature ;
+import toolset : flags ;
+
+import gcc ;
+import common ;
+import errors ;
+import generators ;
+
+feature.extend toolset : qcc ;
+
+
+toolset.inherit-generators qcc : gcc ;
+generators.override qcc.prebuilt : builtin.lib-generator ;
+generators.override qcc.prebuilt : builtin.prebuilt ;
+generators.override qcc.searched-lib-generator : searched-lib-generator ;
+
+toolset.inherit-rules qcc : gcc ;
+toolset.inherit-flags qcc : gcc 
+        : <inlining>off <inlining>on <inlining>full <debug-symbols>on <link>shared ;
+               
+rule init ( version ? :  command * : options * )
+{
+    local condition = [ common.check-init-parameters qcc : version $(version) ] ;
+    
+    command = [ common.get-invocation-command qcc : QCC : $(command) : ] ;
+    
+    if $(command)
+    {
+        local root = [ common.get-absolute-tool-path $(command[-1]) ] ;
+
+        if $(root)
+        {
+            flags qcc.compile.c C_CONFIG_COMMAND : $(root)/qcc ;
+        }        
+        else
+        {
+            # Just for legible output when testing.
+            flags qcc.compile.c C_CONFIG_COMMAND : qcc ;            
+        }        
+    }      
+    command ?= QCC ;
+                
+    common.handle-options qcc : $(condition) : $(command) : $(options) ;
+}
+
+# For both compile and link.
+flags qcc OPTIONS <debug-symbols>on : -gstabs+ ;
+
+flags qcc.compile OPTIONS <inlining>off : -Wc,-fno-inline ;
+flags qcc.compile OPTIONS <inlining>on : -Wc,-Wno-inline ;
+flags qcc.compile OPTIONS <inlining>full : -Wc,-finline-functions,-Wno-inline ;
+flags qcc.compile CFLAGS : -Wc,-Wall,-Wno-non-virtual-dtor ;
+
+flags qcc OPTIONS <link>shared : -Wc,-fPIC ;
+
+flags qcc FINDLIBS : m ;
+
+actions compile.c
+{
+    "$(C_CONFIG_COMMAND)" $(LANG) $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+}
+
+
+
