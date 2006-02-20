@@ -22,7 +22,9 @@ generators.override qcc.searched-lib-generator : searched-lib-generator ;
 
 toolset.inherit-rules qcc : gcc ;
 toolset.inherit-flags qcc : gcc 
-        : <inlining>off <inlining>on <inlining>full <debug-symbols>on <link>shared ;
+        : <inlining>off <inlining>on <inlining>full <debug-symbols>on <link>shared 
+	  <warnings>off <warnings>all
+	;
                
 rule init ( version ? :  command * : options * )
 {
