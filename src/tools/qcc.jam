@@ -55,11 +55,24 @@ flags qcc OPTIONS <debug-symbols>on : -gstabs+ ;
 flags qcc.compile OPTIONS <inlining>off : -Wc,-fno-inline ;
 flags qcc.compile OPTIONS <inlining>on : -Wc,-Wno-inline ;
 flags qcc.compile OPTIONS <inlining>full : -Wc,-finline-functions,-Wno-inline ;
-flags qcc.compile CFLAGS : -Wc,-Wall,-Wno-non-virtual-dtor ;
+#flags qcc.compile CFLAGS : -Wc,-Wall,-Wno-non-virtual-dtor ;
 
-flags qcc OPTIONS <link>shared : -Wc,-fPIC ;
+flags qcc.compile OPTIONS <warnings>off : -Wc,-w ;
+flags qcc.compile OPTIONS <warnings>all : -Wc,-Wall ;
+flags qcc.compile OPTIONS <warnings-as-errors>on : -Wc,-Werror ;
+
+#flags qcc OPTIONS <link>shared : -Wc,-fPIC ;
+
+flags qcc.compile OPTIONS <link>shared : -Wc,-fPIC ;
+
+flags qcc.link OPTIONS <link>shared : -Wl,-fPIC ;
 
 flags qcc FINDLIBS : m ;
+
+actions compile.c++
+{
+    "$(CONFIG_COMMAND)" $(LANG) -Wc,-ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+}
 
 actions compile.c
 {
