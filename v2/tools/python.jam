@@ -442,7 +442,8 @@ rule capture-output ( target : sources * : properties * )
 {
     PYTHONPATH = [ on $(sources[2]) return $(LOCATE) ] ;
     testing.capture-output $(target) : $(sources[1]) : $(properties) ;
-    LAUNCHER on $(target) = PYTHONPATH=$(PYTHONPATH) [ on $(target) return $(PYTHON) ] ;
+    local c = [ common.prepend-path-variable-command PYTHONPATH : $(PYTHONPATH) ] ;
+    LAUNCHER on $(target) = $(c) [ on $(target) return $(PYTHON) ] ;
 }
 
 rule bpl-test ( name : sources * : requirements * )
