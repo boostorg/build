@@ -589,14 +589,6 @@ rule compose ( composite-property : component-properties * )
     $(composite-property).components = $(component-properties) ;
 }
 
-local rule has-attribute ( attribute property )
-{
-    if $(attribute) in [ attributes [ get-feature $(property) ] ]
-    {
-        return true ;
-    }
-}
-
 local rule expand-composite ( property )
 {
     return $(property)
