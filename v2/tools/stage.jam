@@ -73,6 +73,11 @@ class install-target-class : basic-target
             # add them.
             local l = [ $(build-property-set).get <dll-path> ] ;
             ps-raw += $(l:G=<dll-path>) ;
+            
+            # Also copy <linkflags> feature from current build
+            # set, to be used for relinking.
+            local l = [ $(build-property-set).get <linkflags> ] ;
+            ps-raw += $(l:G=<linkflags>) ;            
         }
         
         # Remove the <tag> feature on original targets.
@@ -159,7 +164,7 @@ class install-target-class : basic-target
     rule targets-to-stage ( source-targets * : property-set )
     {   
         local result ;
-        
+               
         # Traverse the dependencies, if needed.
         if [ $(property-set).get <install-dependencies> ] = "on"
         {
@@ -187,12 +192,14 @@ class install-target-class : basic-target
                     {
                         result += $(r) ;                        
                     }   
-                }                
+                }                                
             }
-            else
+            else if ! $(included-types)
             {
+                # Don't install typeless target if there's
+                # explicit list of allowed types.
                 result += $(r) ;
-            }
+            }                
         }
                 
         return $(result) ;
@@ -249,7 +256,7 @@ rule copy-file ( project : source : properties )
 {   
     local targets ;
     local name = [ $(source).name ] ;
-               
+
     new-a = [ 
       new non-scanning-action $(source) : common.copy : $(properties) ] ;    
     local source-root = [ $(properties).get <install-source-root> ] ;
@@ -421,6 +428,7 @@ rule install ( name : sources * : requirements * : default-build * )
         requirements += <hardcode-dll-paths>false ;
     }        
     
+    
     if <name> in $(requirements:G)
     {
         errors.user-error 
@@ -466,7 +474,7 @@ rule rename ( name : type ? : property-set : unversioned ? )
         
         local runtime-tag = ;
         if <runtime-link>static in $(properties) { runtime-tag += s ; }
-        if <runtime-build>debug in $(properties) { runtime-tag += g ; }
+        if <runtime-debugging>on in $(properties) { runtime-tag += g ; }
         
         if <variant>debug-python in $(properties) { runtime-tag += y ; }
         if <variant>debug in $(properties) { runtime-tag += d ; }
