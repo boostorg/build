@@ -21,9 +21,11 @@ feature.extend toolset : gcc ;
 
 import unix ;
 toolset.inherit-generators gcc : unix : unix.link unix.link.dll ;
-generators.override gcc.prebuilt : builtin.lib-generator ; 
 toolset.inherit-flags gcc : unix ;
 toolset.inherit-rules gcc : unix ;
+
+generators.override gcc.prebuilt : builtin.prebuilt ;
+generators.override gcc.searched-lib-generator : searched-lib-generator ;
 
 
 
@@ -210,10 +212,6 @@ generators.register [ new gcc-linking-generator gcc.link : LIB OBJ : EXE
 
 generators.register [ new gcc-linking-generator gcc.link.dll : LIB OBJ : SHARED_LIB 
     : <toolset>gcc ] ;
-
-generators.override gcc.prebuilt : builtin.prebuilt ;
-generators.override gcc.searched-lib-generator : searched-lib-generator ;
-
 
 
 # Declare flags for linking
