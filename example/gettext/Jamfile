@@ -17,6 +17,6 @@ gettext.catalog russian : russian.po ;
 # location gettext expects.
 stage messages-russian : russian
     : <location>messages/ru_RU.KOI8-R/LC_MESSAGES 
-      <name>main
+      <name>main.mo
     ;
 
