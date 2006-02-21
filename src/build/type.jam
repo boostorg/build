@@ -28,9 +28,6 @@ feature.feature main-target-type : : optional incidental ;
 feature.feature base-target-type : : composite optional free ;
 # feature.feature main-target-type : : composite optional incidental ;
 
-# Store suffixes for generated targets
-.suffixes = [ new property-map ] ;
-
 # Registers a target type, possible derived from a 'base-type'. 
 # If 'suffixes' are provided, they given all the suffixes that mean a file is of 'type'.
 # Also, the first element gives the suffix to be used when constructing and object of
@@ -208,6 +205,13 @@ rule is-subtype ( type base )
 }
 
 
+# Store suffixes for generated targets
+.suffixes = [ new property-map ] ;
+
+# Store prefixes for generated targets (e.g. "lib" for library)
+.prefixes = [ new property-map ] ;
+
+
 # Sets a target suffix that should be used when generating target 
 # of 'type' with the specified properties. Can be called with
 # empty properties if no suffix for 'type' was specified yet.
@@ -221,36 +225,79 @@ rule is-subtype ( type base )
 # no suffix should be used.
 rule set-generated-target-suffix ( type : properties * : suffix )
 {
-    properties = <target-type>$(type) $(properties) ;
-    $(.suffixes).insert $(properties) : $(suffix) ;
+    set-generated-target-ps  suffix : $(type) : $(properties) : $(suffix) ;
 }    
 
 # Change the suffix previously registered for this type/properties 
 # combination. If suffix is not yet specified, sets it.
 rule change-generated-target-suffix ( type : properties * : suffix )
 {        
+    change-generated-target-ps  suffix : $(type) : $(properties) : $(suffix) ;
+}
+
+rule generated-target-suffix ( type : property-set )
+{
+    return [ generated-target-ps  suffix : $(type) : $(property-set) ] ;
+}
+
+# Sets a target prefix that should be used when generating target 
+# of 'type' with the specified properties. Can be called with
+# empty properties if no prefix for 'type' was specified yet.
+#
+# The 'prefix' parameter can be empty string ("") to indicate that
+# no prefix should be used.
+#
+# Example usage is for library names that have to have a "lib"
+# prefix as in unix.
+rule set-generated-target-prefix ( type : properties * : prefix )
+{
+    set-generated-target-ps  prefix : $(type) : $(properties) : $(prefix) ;
+}    
+
+# Change the prefix previously registered for this type/properties 
+# combination. If prefix is not yet specified, sets it.
+rule change-generated-target-prefix ( type : properties * : prefix )
+{        
+    change-generated-target-ps  prefix : $(type) : $(properties) : $(prefix) ;
+}
+
+rule generated-target-prefix ( type : property-set )
+{
+    return [ generated-target-ps  prefix : $(type) : $(property-set) ] ;
+}
+
+# Common rules for prefix/suffix provisioning follow
+
+rule set-generated-target-ps ( ps : type : properties * : psval )
+{
+    properties = <target-type>$(type) $(properties) ;
+    $(.$(ps)es).insert $(properties) : $(psval) ;
+}    
+
+rule change-generated-target-ps ( ps : type : properties * : psval )
+{        
     properties = <target-type>$(type) $(properties) ;    
-    local prev = [ $(.suffixes).find-replace $(properties) : $(suffix) ] ;
+    local prev = [ $(.$(ps)es).find-replace $(properties) : $(psval) ] ;
     if ! $(prev)
     {
-        set-generated-target-suffix $(type) : $(properties) : $(suffix) ;
+        set-generated-target-ps $(ps) : $(type) : $(properties) : $(psval) ;
     }    
 }
 
-
-# Returns suffix that should be used when generating target of 'type',
-# with the specified properties. If not suffix were specified for
-# 'type', returns suffix for base type, if any.
-rule generated-target-suffix-real ( type : properties * )
+# Returns either prefix or suffix (as indicated by 'ps') that
+# should be used when generating target of 'type' with the specified properties.  
+# Parameter 'ps' can be either "prefix" or "suffix".  If no prefix/suffix is 
+# specified for 'type', returns prefix/suffix for base type, if any.
+rule generated-target-ps-real ( ps : type : properties * )
 {
     local result ;
     local found ;
     while $(type) && ! $(found)
     {
-        result = [ $(.suffixes).find <target-type>$(type) $(properties) ] ;
-        # If the suffix is explicitly set to empty string, we consider suffix
-        # to be found. If we did not compare with "", there would be no
-        # way for user to set empty suffix.
+        result = [ $(.$(ps)es).find <target-type>$(type) $(properties) ] ;
+        # If the prefix/suffix is explicitly set to empty string, 
+        # we consider prefix/suffix to be found. If we did not compare with "", 
+        # there would be no way for user to set empty prefix/suffix.
         if $(result)-is-not-empty
         {
             found = true ;
@@ -264,13 +311,14 @@ rule generated-target-suffix-real ( type : properties * )
     return $(result) ;
 }
 
-rule generated-target-suffix ( type : property-set )
+
+rule generated-target-ps ( ps : type : property-set )
 {
-    local key = .gts.$(type).$(property-set) ;
+    local key = .$(ps).$(type).$(property-set) ;
     local v = $($(key)) ;
     if ! $(v)
     {
-        v = [ generated-target-suffix-real $(type) 
+        v = [ generated-target-ps-real $(ps) : $(type)
           : [ $(property-set).raw ] ] ;
         if ! $(v)
         {

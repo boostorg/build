@@ -469,16 +469,20 @@ rule add-prefix-and-suffix ( specified-name : type ? : property-set )
     local suffix = [ type.generated-target-suffix $(type) : $(property-set) ] ;
     suffix = .$(suffix) ;
     
-    local prefix ;
+    local prefix = [ type.generated-target-prefix $(type) : $(property-set) ] ;
     
-    if [ type.is-derived $(type) LIB ] && [ os.on-unix ] 
-       && ! [ MATCH ^(lib) : $(specified-name) ]
-       # This becomes hacky! Need to introduce more general mechanism  
+    if ! $(prefix)
+       && [ type.is-derived $(type) LIB ] && [ os.on-unix ] 
+       # This becomes hacky! Need to introduce more general mechanism.
+       # Invoke type.set-target-prefix in unix toolkit?
        && ! [ type.is-derived $(type) PYTHON_EXTENSION ] 
     {
-        prefix = "lib" ;
+        prefix = lib ;
     }
-    
+    if  [ MATCH ^($(prefix)) : $(specified-name) ]
+    {
+        prefix = ;
+    }
     return $(prefix:E="")$(specified-name)$(suffix:E="") ;
 }
 
