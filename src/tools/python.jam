@@ -205,6 +205,22 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
         PYTHON_DEBUG_IMPORT_LIB ?= [ GLOB $(PYTHON_LIB_PATH) : libpython$(PYTHON_VERSION_NODOT).* ] ;        
         
         
+        local interpreter = [ common.get-invocation-command 
+            python : python$(version) : : $(root)/bin 
+                                          $(root)
+                                          $(root)/PCBuild
+                                            : path-last ] ;
+        
+        if --debug-configuration in [ modules.peek : ARGV ]
+        {
+            ECHO "notice: Python include path is" $(includes) ;
+            ECHO "notice: Python library path is" $(libraries) ;
+            ECHO "notice: Python interpreter is" $(interpreter) ;        
+        }
+        
+        flags python.capture-output PYTHON : $(interpreter) ;
+
+                
         # This is mingw-specific V1 code. I don't yet understand
         # why mingw must be specially-cased.
         #local lib = $(PYTHON_IMPORT_LIB) ;
