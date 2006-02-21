@@ -115,11 +115,20 @@ class install-target-class : basic-target
     
         
     rule construct ( name : source-targets * : property-set )
-    {        
+    {                
         source-targets = [ 
           targets-to-stage $(source-targets) : $(property-set) ] ;
         
         property-set = [ update-location $(property-set) ] ;          
+        
+        local ename = [ $(property-set).get <name> ] ;              
+                
+        if $(ename) && $(source-targets[2])
+        {
+            errors.error 
+              "When <name> property is used in 'install', only one source is allowed" ;
+        }
+        
                                        
         local result ;
         for local i in $(source-targets)
@@ -134,13 +143,20 @@ class install-target-class : basic-target
             local t = [ $(i).type ] ;            
             if $(t) && [ type.registered INSTALLED_$(t) ]
             {
-                local targets = [ generators.construct $(self.project) $(name) : 
-                  INSTALLED_$(t) : $(new-properties) : $(i) : * ] ;
-                staged-targets += $(targets[2-]) ;                                
+                if $(ename)
+                {
+                    error.error "In 'install': <name> property specified with target that requires relinking" ;
+                }
+                else
+                {
+                    local targets = [ generators.construct $(self.project) $(name) : 
+                      INSTALLED_$(t) : $(new-properties) : $(i) : * ] ;
+                    staged-targets += $(targets[2-]) ;                                
+                }                                                
             }
             else             
             {                
-                staged-targets = [ stage.copy-file $(self.project) 
+                staged-targets = [ stage.copy-file $(self.project) $(ename)
                   : $(i) : $(new-properties) ] ;
             }
             
@@ -252,10 +268,10 @@ class install-target-class : basic-target
 # Creates a copy of target 'source'. The 'properties' object should
 # have a <location> property which specifies where the target must
 # be placed.
-rule copy-file ( project : source : properties )
+rule copy-file ( project name ? : source : properties )
 {   
     local targets ;
-    local name = [ $(source).name ] ;
+    name ?= [ $(source).name ] ;
 
     new-a = [ 
       new non-scanning-action $(source) : common.copy : $(properties) ] ;    
@@ -427,13 +443,7 @@ rule install ( name : sources * : requirements * : default-build * )
     {
         requirements += <hardcode-dll-paths>false ;
     }        
-    
-    
-    if <name> in $(requirements:G)
-    {
-        errors.user-error 
-          "The <name> property is not allowed for the 'install' rule" ;
-    }
+        
     if <tag> in $(requirements:G)
     {
         errors.user-error 
