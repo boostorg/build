@@ -403,6 +403,23 @@ bjam optimization=space
         </varlistentry>
 
         <varlistentry>
+          <term><option>--build-dir</option></term>
+          <listitem>
+            <para>Changes build directories for all project roots being built. When
+            this option is specified, all Jamroot files should declare project name.
+            The build directory for the project root will be computed by contanating 
+            the value of the <option>--build-dir</option> option, the project name 
+            specified in Jamroot, and the build dir specified in Jamroot 
+            (or <literal>bin</literal>, if none is specified).
+            </para>
+
+            <para>The option is primarily useful when building from read-only
+            media, when you can't modify Jamroot.
+            </para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
           <term><option>--version</option></term>
           <listitem>
             <para>Prints information on Boost.Build and Boost.Jam
