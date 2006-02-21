@@ -1585,6 +1585,24 @@ unit-test helpers_test : helpers_test.cpp helpers ;
         can't miss a unit test failure.
       </para>
 
+      <para>By default, the executable is run directly. Sometimes, it's 
+      desirable to run the executable using some helper command. You should use the
+      <literal>testing.launcher</literal> property to specify the name of the
+      helper command. For example, if you write:
+      </para>
+<programlisting>
+unit-test helpers_test 
+   : helpers_test.cpp helpers 
+   : <emphasis role="bold">&lt;testing.launcher&gt;valgrind</emphasis>
+   ;  
+</programlisting>
+      <para>The command used to run the executable will be:</para>
+<screen>
+<emphasis role="bold">valgrind</emphasis> bin/$toolset/debug/helpers_test 
+</screen>
+      
+      
+
       <para>There are rules for more elaborate testing: <code>compile</code>,
         <code>compile-fail</code>, <code>run</code> and
         <code>run-fail</code>. They are more suitable for automated testing, and
