@@ -377,104 +377,94 @@ bjam optimization=space
 </screen>
       </para>
 
-      <para>To clean all targets in the current directory and in any subprojects, add the <literal>--clean</literal>
-      option:
-<screen>
-bjam --clean
-</screen>
-      </para>
 
-      <para>Not that unlike the <literal>clean</literal> target in make, you can use <literal>--clean</literal>
-      together with target names to clean specific targets.</para>
+      <para>Boost.Build recognizes the following command line options.</para>
 
-      <para>The <literal>--clean-all</literal> option will clean all targets, no matter where they are defined. In
-      particular, it will clean targets in parent Jamfiles, and targets defined under other project roots.</para>
+      <variablelist>
+        
+        <varlistentry>
+          <term><option>--clean</option></term>
+          <listitem>
+            <para>Cleans all targets in the current directory and 
+            in any subprojects. Note that unlike the <literal>clean</literal> 
+            target in make, you can use <literal>--clean</literal>
+            together with target names to clean specific targets.</para>
+          </listitem>
+        </varlistentry>
 
-      <para>Other important options are listed in the table below.</para>
+        <varlistentry>
+          <term><option>--clean-all</option></term>
+          <listitem>
+            <para>Cleans all targets, 
+            no matter where they are defined. In particular, it will clean targets 
+            in parent Jamfiles, and targets defined under other project roots.
+            </para>
+          </listitem>
+        </varlistentry>
 
-      <table>
-          <title>Command line options</title>
-          <tgroup cols="2">
+        <varlistentry>
+          <term><option>--version</option></term>
+          <listitem>
+            <para>Prints information on Boost.Build and Boost.Jam
+                  versions.
+            </para>
+          </listitem>
+        </varlistentry>
 
-            <thead>
-              <row>
-                <entry>Option</entry>
-
-                <entry>Description</entry>
-              </row>
-            </thead>
-
-            <tbody>
-              <row>
-                <entry><literal>--version</literal></entry>
-
-                <entry>Prints information on Boost.Build and Boost.Jam
-                  versions.</entry>
-              </row>
-
-              <row id="bbv2.reference.init.options.help">
-                <entry><literal>--help</literal></entry>
-
-                <entry>Access to the online help system. This prints general
+        <varlistentry id="bbv2.reference.init.options.help">
+          <term><option>--help</option></term>
+          <listitem>
+            <para>Invokes the online help system. This prints general
                   information on how to use the help system with additional
-                  --help* options.</entry>
-              </row>
+                  --help* options.
+            </para>
+          </listitem>
+        </varlistentry>
 
-              <row>
-                <entry><literal>--clean</literal>,<literal>--clean-all</literal></entry>
+        <varlistentry>
+          <term><option>--debug-configuration</option></term>
+          <listitem>
+            <para>Produces debug information about loading of Boost.Build 
+            and toolset files.</para>
+          </listitem>
+        </varlistentry>
 
-                <entry>Removes everything instead of building. </entry>
-              </row>
+        <varlistentry>
+          <term><option>--debug-building</option></term>
+          <listitem>
+            <para>Prints what targets are being built and with what properties.
+            </para>
+          </listitem>
+        </varlistentry>
 
-              <row>
-                <entry><literal>--debug-configuration</literal></entry>
+        <varlistentry>
+          <term><option>--debug-generators</option></term>
+          <listitem>
+            <para>Produces debug output from generator search process. 
+            Useful for debugging custom generators.
+            </para>
+          </listitem>
+        </varlistentry>
 
-                <entry>Produces debug information about loading of Boost.Build and toolset files.</entry>
-              </row>
+        <varlistentry>
+          <term><option>--ignore-config</option></term>
+          <listitem>
+            <para>Do not load <literal>site-config.jam</literal> and
+                  <literal>user-config.jam</literal> configuration files.
+            </para>
+          </listitem>
+        </varlistentry>
 
-              <row>
-                <entry><literal>--debug-building</literal></entry>
+        <varlistentry>
+          <term><option>--debug</option></term>
+          <listitem>
+            <para>Enables internal checks.
+            </para>
+          </listitem>
+        </varlistentry>
+    
+      </variablelist>
 
-                <entry>Prints what targets are being built and with what properties.</entry>
-              </row>
-
-              <row>
-                <entry><literal>--debug-generators</literal></entry>
-
-                <entry>Produces debug output from generator search process. Useful for debugging custom generators.</entry>
-              </row>
-
-              <row>
-                <entry><literal>--ignore-config</literal></entry>
-
-                <entry>Do not load <literal>site-config.jam</literal> and
-                  <literal>user-config.jam</literal></entry>
-              </row>
-
-
-              <row>
-                <entry><literal>--debug</literal></entry>
-
-                <entry>Enables internal checks.</entry>
-              </row>
-
-              <row>
-                <entry><literal>--dump-projects</literal></entry>
-
-                <entry>Cause the project structure to be output.</entry>
-              </row>
-
-              <row>
-                <entry><literal>--no-error-backtrace</literal></entry>
-
-                <entry>Don't print backtrace on errors. Primary useful for
-                  testing.</entry>
-              </row>
-
-            </tbody>
-          </tgroup>
-      </table>
- 
 
       <para>For complete specification of command line syntax, see 
       <xref linkend="bbv2.reference.init.args"/>
