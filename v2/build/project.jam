@@ -97,7 +97,9 @@ rule load ( jamfile-location )
 # Note the use of character groups, as opposed to listing
 # 'Jamroot' and 'jamroot'. With the latter, we'd get duplicate
 # matches on windows and would have to eliminate duplicates.
-JAMROOT = project-root.jam [Jj]amroot [Jj]amroot.jam ;
+JAMROOT ?= [ peek : JAMROOT ] ;
+JAMROOT ?= project-root.jam [Jj]amroot [Jj]amroot.jam ;
+
 # Loads parent of Jamfile at 'location'. Issues an error if nothing is found.
 rule load-parent ( location )
 {
@@ -106,8 +108,8 @@ rule load-parent ( location )
     
     if ! $(found)
     {
-        ECHO "error: Could not find parent for project at '$(location)'" ;
-        ECHO "error: Did not find Jamfile or project-root.jam in any parent directory." ;
+        error "Could not find parent for project at '$(location)'"
+            : "Did not find Jamfile or project-root.jam in any parent directory." ;
         EXIT ;
     }
     
@@ -304,7 +306,7 @@ local rule load-jamfile (
         .jamfile-modules += $(jamfile-module) ;        
         mark-as-user $(jamfile-module) ;
         modules.load $(jamfile-module) :  [ path.native $(jamfile-to-load) ] : . ;
-        if $(jamfile-to-load:BS) = project-root.jam
+        if [ MATCH ($(JAMROOT)) : $(jamfile-to-load:BS) ]
         {
             jamfile = [ find-jamfile $(dir) : no-errors ] ;
             if $(jamfile)
@@ -436,8 +438,7 @@ rule initialize (
         # We search for parent/project-root only if jamfile was specified 
         # --- i.e
         # if the project is not standalone.
-        if $(location) &&  ! $(basename) in 
-          project-root.jam Jamroot jamroot Jamroot.jam Jamroot
+        if $(location) &&  ! [ MATCH ($(JAMROOT)) : $(basename) ]
         {
             parent-module = [ load-parent $(location) ] ;
         }            
