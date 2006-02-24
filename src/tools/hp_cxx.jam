@@ -111,6 +111,9 @@ flags hp_cxx.compile.c++ OPTIONS <c++abi>cxxarm : -model arm ;
 flags hp_cxx.link OPTIONS <c++abi> : -model ansi : : hack-hack ;
 flags hp_cxx.link OPTIONS <c++abi>cxxarm : -model arm ;
 
+# Display a descriptive tag together with each compiler message. This tag can
+# be used by the user to explicitely suppress the compiler message.
+flags hp_cxx.compile OPTIONS : -msg_display_tag ;
 
 flags hp_cxx.compile OPTIONS <cflags> ;
 flags hp_cxx.compile.c++ OPTIONS <cxxflags> ;
@@ -144,17 +147,18 @@ actions link.dll bind LIBRARIES
 # is the default, no special flag is needed.
 actions compile.c
 {
-    $(.root:E=)cc -msg_display_number -msg-disable 186,450,1115 -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
+    $(.root:E=)cc -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
 }
 
-# Note: DON'T disable warning 1133 -- the compiler is buggy and you
-# really can't ignore this one!
-#
-# The compiler is forced to compile the files as C++ (-x cxx) because
+# Note: The compiler is forced to compile the files as C++ (-x cxx) because
 # otherwise it will silently ignore files with no file extension.
+#
+# Note: We deliberately don't suppress any warnings on the compiler command
+# line, the user can always do this in a customized toolset later on.
+
 actions compile.c++
 {
-    $(CONFIG_COMMAND) -x cxx -c -std strict_ansi -nopure_cname -noimplicit_include -timplicit_local -ptr "$(<[1]:D)/cxx_repository" -msg_display_number -msg_disable 186,450,1115 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
+    $(CONFIG_COMMAND) -x cxx -c -std strict_ansi -nopure_cname -noimplicit_include -timplicit_local -ptr "$(<[1]:D)/cxx_repository" $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
 }
 
 # Always create archive from scratch. See the gcc toolet for rationale.
