@@ -140,7 +140,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? )
     #    }
 }
 
-rule init-mac ( version : root : includes ? : libraries ? )
+rule init-mac ( version : root ? : includes ? : libraries ? )
 {
     if ! $(root)
     {
@@ -153,16 +153,29 @@ rule init-mac ( version : root : includes ? : libraries ? )
             root = /Library/Frameworks/Python.framework/Versions/$(version) ;
         }
     }   
-    includes ?= $(PYTHON_ROOT)/include/python$(PYTHON_VERSION) ;
-    # FIXME: not sure what PYTHON_FRAMEWORK variable is
-    PYTHON_FRAMEWORK ?= $(root) ;
-    while $(PYTHON_FRAMEWORK:D=) && $(PYTHON_FRAMEWORK:D=) != Python.framework
-    {
-        PYTHON_FRAMEWORK = $(PYTHON_FRAMEWORK:D) ;
-    }
-    PYTHON_FRAMEWORK = $(PYTHON_FRAMEWORK:D)/Python ;
 
-    alias python
+    # includes ?= $(PYTHON_ROOT)/include/python$(PYTHON_VERSION) ;
+    includes ?= $(root)/include/python$(version) ;
+    libraries ?= $(root)/lib/python$(version)/config ;
+
+    # Find the 'python' binary, which is used for testing.
+    # Look first in $(root)/bin, then in PATH.
+    local interpreter = [ common.get-invocation-command 
+        python : python : : $(root)/bin : path-last ] ;
+    
+    # debug support
+    if --debug-configuration in [ modules.peek : ARGV ]
+    {
+        ECHO "notice: Python include path is" $(includes) ;
+        ECHO "notice: Python library path is" $(libraries) ;
+        ECHO "notice: Python interpreter is" $(interpreter) ;        
+    }
+    
+    flags python.capture-output PYTHON : $(interpreter) ;
+    
+    PYTHON_FRAMEWORK ?= /System/Library/Frameworks/Python.framework ;
+
+    alias python_for_extensions
       : 
       :
       : 
@@ -171,7 +184,7 @@ rule init-mac ( version : root : includes ? : libraries ? )
     
     alias python
       :
-      : <os>MACOSXX <toolset>darwin
+      : <os>MACOSX <toolset>darwin
       :
       : <framework>$(PYTHON_FRAMEWORK)
       ;  
