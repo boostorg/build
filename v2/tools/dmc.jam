@@ -13,6 +13,7 @@
 
 import feature generators common ;
 import toolset : flags ;
+import sequence regex ;
 
 feature.extend toolset : dmc ;
 
@@ -33,7 +34,10 @@ rule init ( version ? : command * : options * )
     
     if $(root)
     {        
-        flags dmc .root $(condition) : $(root)/bin/ ;    
+        # DMC linker is sensitive the the direction of slashes, and
+        # won't link if forward slashes are used in command.
+        root = [ sequence.join [ regex.split $(root) "/" ] : "\\" ] ;
+        flags dmc .root $(condition) : $(root)\bin\ ;    
     }
     else
     {
