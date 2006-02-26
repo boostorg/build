@@ -219,7 +219,7 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
         
         
         local interpreter = [ common.get-invocation-command 
-            python : python$(version) : : $(root)/bin 
+            python : python : : $(root)/bin 
                                           $(root)
                                           $(root)/PCBuild
                                             : path-last ] ;
