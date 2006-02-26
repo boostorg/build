@@ -582,7 +582,7 @@ rule compose ( composite-property : component-properties * )
                 $($(composite-property).components) ;
     }
 
-    if $(composite-property) in $(components)
+    if $(composite-property) in $(component-properties)
     {
         error composite property "$(composite-property)" cannot have itself as a component ;
     }
@@ -1002,12 +1002,19 @@ local rule __test__ ( )
     feature define : : free ;
     feature runtime-link : dynamic static : symmetric ;
     feature optimization : on off ;
-    feature variant : debug release : implicit composite symmetric ;
+    feature variant : debug release profile : implicit composite symmetric ;
     feature stdlib : native stlport ;
     feature magic : : free ;
 
     compose <variant>debug : <define>_DEBUG <optimization>off ;
     compose <variant>release : <define>NDEBUG <optimization>on ;
+
+
+    try ;
+    {
+        compose <variant>profile : <variant>profile ;
+    }
+    catch composite property <variant>profile cannot have itself as a component ;   
 
     extend-feature toolset : msvc metrowerks ;
     subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
