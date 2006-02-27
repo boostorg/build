@@ -103,20 +103,20 @@ flags dmc FINDLIBS <find-library-st> ;
 # shared libraries? Does it work for shared libraries at all?
 actions together link bind LIBRARIES
 {
-    "$(.root)"link $(OPTIONS) -delexecutable -noi -implib:"$(<[2])" "$(>)" $(LIBRARIES) , "$(<[1])" , NUL , user32.lib kernel32.lib "$(FINDLIBS:S=.lib)" , "$(<[2]:B).def"
+    "$(.root)link" $(OPTIONS) -delexecutable -noi -implib:"$(<[2])" "$(>)" $(LIBRARIES) , "$(<[1])" , NUL , user32.lib kernel32.lib "$(FINDLIBS:S=.lib)" , "$(<[2]:B).def"
 }
 
 actions compile.c++
 {
-    "$(.root)"dmc  -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o"$(<)" "$(>)"
+    "$(.root)dmc"  -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o"$(<)" "$(>)"
 }
 
 actions compile.c++
 {
-    "$(.root)"dmc -cpp -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o"$(<)" "$(>)"
+    "$(.root)dmc" -cpp -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o"$(<)" "$(>)"
 }
 
 actions together piecemeal archive
 {
-    "$(.root)"lib $(OPTIONS) -c -n -p128 "$(<)" "$(>)"
+    "$(.root)lib" $(OPTIONS) -c -n -p128 "$(<)" "$(>)"
 }
