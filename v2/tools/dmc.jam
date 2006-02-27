@@ -37,7 +37,7 @@ rule init ( version ? : command * : options * )
         # DMC linker is sensitive the the direction of slashes, and
         # won't link if forward slashes are used in command.
         root = [ sequence.join [ regex.split $(root) "/" ] : "\\" ] ;
-        flags dmc .root $(condition) : $(root)\bin\ ;    
+        flags dmc .root $(condition) : $(root)\\bin\\ ;
     }
     else
     {
