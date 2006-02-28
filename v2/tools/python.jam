@@ -336,8 +336,8 @@ type.register PYTHON_EXTENSION : : SHARED_LIB ;
 # ordinary library. Therefore, we specify only suffixes
 # used for generation of targets.
 type.set-generated-target-suffix PYTHON_EXTENSION : : so ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <os>NT : so ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <os>CYGWIN : dll ;
+type.set-generated-target-suffix PYTHON_EXTENSION : <os>NT : dll ;
+type.set-generated-target-suffix PYTHON_EXTENSION : <os>CYGWIN : so ;
 
 rule python-extension ( name : sources * : requirements * : default-build * : 
                         usage-requirements * )
