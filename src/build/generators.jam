@@ -1097,7 +1097,7 @@ local rule construct-really (
                 {
                     ECHO " - " [ $(t).str ] ;
                 }
-                ECHO "Second generator produces: " ;
+                ECHO "Second generator produced: " ;
                 for local t in $(r[2-])
                 {
                     ECHO " - " [ $(t).str ] ;
