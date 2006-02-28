@@ -44,8 +44,9 @@ rule tag ( name : type ? : property-set )
     
 }
 
+# Test both fully-qualified and local name of the rule
 exe a : a.cpp : <tag>@$(__name__).tag ;
-lib b : a.cpp : <tag>@$(__name__).tag ;
+lib b : a.cpp : <tag>@tag ;
 stage c : a ;
 """)
 
