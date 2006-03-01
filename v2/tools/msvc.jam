@@ -582,12 +582,12 @@ rule compile.pch ( targets + : sources * : properties * )
 # The actions differ only by explicit selection of input language
 actions compile.c bind PCH_HEADER PCH_FILE
 {
-    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
+    $(.CC) /Zm800 -nologo -TC -Op -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
 }
 
 actions compile.c++ bind PCH_HEADER PCH_FILE
 {
-    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
+    $(.CC) /Zm800 -nologo -TP -Op -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
 }
 
 actions compile.pch bind PCH_SOURCE
