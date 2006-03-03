@@ -106,7 +106,19 @@ actions together link bind LIBRARIES
     "$(.root)link" $(OPTIONS) -delexecutable -noi -implib:"$(<[2])" "$(>)" $(LIBRARIES) , "$(<[1])" , NUL , user32.lib kernel32.lib "$(FINDLIBS:S=.lib)" , "$(<[2]:B).def"
 }
 
-actions compile.c++
+actions together link.dll bind LIBRARIES
+{
+    echo LIBRARY "$(<[1])" > $(<[2]:B).def
+    echo DESCRIPTION 'A Library' >> $(<[2]:B).def
+    echo EXETYPE NT >> $(<[2]:B).def
+    echo SUBSYSTEM WINDOWS >> $(<[2]:B).def
+    echo CODE SHARED EXECUTE >> $(<[2]:B).def
+    echo DATA WRITE >> $(<[2]:B).def
+    
+    "$(.root)link" $(OPTIONS) -delexecutable -noi -implib:"$(<[2])" "$(>)" $(LIBRARIES) , "$(<[1])" , NUL , user32.lib kernel32.lib "$(FINDLIBS:S=.lib)" , "$(<[2]:B).def"
+}
+
+actions compile.c
 {
     "$(.root)dmc"  -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o"$(<)" "$(>)"
 }
