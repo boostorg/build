@@ -419,6 +419,10 @@ local rule configure-version-specific ( version : condition )
         flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g5) : /G5 ;
         flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g6) : /G6 ;
         flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g7) : /G7 ;
+        
+        # Improve floating-point accuracy. Otherwise, some of C++ Boost's
+        # "math" tests will fail.
+        flags msvc.compile CFLAGS : /Op ;
     }
 }
 
@@ -582,12 +586,12 @@ rule compile.pch ( targets + : sources * : properties * )
 # The actions differ only by explicit selection of input language
 actions compile.c bind PCH_HEADER PCH_FILE
 {
-    $(.CC) /Zm800 -nologo -TC -Op -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
+    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) $(CFLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
 }
 
 actions compile.c++ bind PCH_HEADER PCH_FILE
 {
-    $(.CC) /Zm800 -nologo -TP -Op -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
+    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(USER_CFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
 }
 
 actions compile.pch bind PCH_SOURCE
