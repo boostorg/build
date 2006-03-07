@@ -37,7 +37,7 @@ feature.extend c++abi : cxxarm ;
 # Inherit from Unix toolset to get library ordering magic.
 toolset.inherit  hp_cxx : unix ;
 
-generators.override builtin.lib-generator : hp_cxx.prebuilt ;
+generators.override hp_cxx.prebuilt : builtin.lib-generator ;
 generators.override hp_cxx.prebuilt : builtin.prebuilt ;
 generators.override hp_cxx.searched-lib-generator : searched-lib-generator ;
 
@@ -163,7 +163,7 @@ actions compile.c++
 
 # Always create archive from scratch. See the gcc toolet for rationale.
 RM = [ common.rm-command ] ;
-actions updated together piecemeal archive
+actions together piecemeal archive
 {
   $(RM) "$(<)"
   ar rc $(<) $(>)
