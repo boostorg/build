@@ -422,7 +422,7 @@ local rule configure-version-specific ( version : condition )
         
         # Improve floating-point accuracy. Otherwise, some of C++ Boost's
         # "math" tests will fail.
-        flags msvc.compile CFLAGS : /Op ;
+        flags msvc.compile CFLAGS $(condition) : /Op ;
     }
 }
 
