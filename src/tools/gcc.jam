@@ -121,8 +121,8 @@ if [ os.name ] != NT
 
 
 
-flags gcc.compile OPTIONS <cflags> ;
-flags gcc.compile.c++ OPTIONS <cxxflags> ;
+flags gcc.compile USER_OPTIONS <cflags> ;
+flags gcc.compile.c++ USER_OPTIONS <cxxflags> ;
 flags gcc.compile DEFINES <define> ;
 flags gcc.compile INCLUDES <include> ;
 
@@ -140,7 +140,7 @@ rule compile.c++
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-100 $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 rule compile.c
@@ -157,7 +157,7 @@ rule compile.c
 
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 rule compile.asm
@@ -218,7 +218,7 @@ generators.register [ new gcc-linking-generator gcc.link.dll : LIB OBJ : SHARED_
 # First, the common flags
 flags gcc.link OPTIONS <debug-symbols>on : -g ;
 flags gcc.link OPTIONS <profiling>on : -pg ;
-flags gcc.link OPTIONS <linkflags> ;
+flags gcc.link USER_OPTIONS <linkflags> ;
 flags gcc.link LINKPATH <library-path> ;
 flags gcc.link FINDLIBS-ST <find-static-library> ;
 flags gcc.link FINDLIBS-SA <find-shared-library> ;
@@ -297,7 +297,7 @@ rule link ( targets * : sources * : properties * )
 
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) 
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
 }
 
 
@@ -339,7 +339,7 @@ rule link.dll ( targets * : sources * : properties * )
 # Differ from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" $(HAVE_SONAME)-Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS)  
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" $(HAVE_SONAME)-Wl,-h$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)  
 }
 
 # Set up threading support. It's somewhat contrived, so perform it at the end,
