@@ -74,8 +74,6 @@ flags hp_cxx.compile OPTIONS <debug-symbols>on : -g3 ;
 flags hp_cxx.compile OPTIONS <optimization>off/<debug-symbols>on : -gall ;
 flags hp_cxx.link OPTIONS <debug-symbols>on : -g ;
 flags hp_cxx.link OPTIONS <debug-symbols>off : -s ;
-# FIXME: What about -expect_unresolved, what do they do?
-#flags hp_cxx.link OPTIONS <target-type>$(SHARED_TYPES) : -expect_unresolved 'Py*' -expect_unresolved '_Py*' ;
 
 flags hp_cxx.compile OPTIONS <optimization>off : -O0 ;
 flags hp_cxx.compile OPTIONS <optimization>speed/<inlining>on : -O2 ;
