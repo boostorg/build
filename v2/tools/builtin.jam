@@ -81,8 +81,8 @@ feature dependency : : free dependency incidental ;
 feature implicit-dependency : : free dependency incidental ;
 
 feature warnings :
-    all        # enable all warnings issued by the tool
-    on         # enable default warning level for the tool
+    on         # enable default/"reasonable" warning level for the tool
+    all        # enable all possible warnings issued by the tool
     off        # disable all warnings issued by the tool
   : incidental propagated ;
 
