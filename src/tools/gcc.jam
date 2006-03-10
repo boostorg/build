@@ -57,6 +57,18 @@ rule init ( version ? : command * : options * )
         linker = gnu ;
     }
     init-link-flags gcc $(linker) $(condition) ;
+    
+    # If gcc is installed in non-standard location, we'd need to
+    # add LD_LIBRARY_PATH when running programs created with it
+    # (for unit-test/run rules).
+    if $(command)
+    {
+        local path = [ common.get-absolute-tool-path $(command[-1]) ] ;
+        local lib_path = $(path:D)/lib ;
+        flags gcc.link RUN_PATH : $(lib_path) ;
+    }   
+
+
 }
 
 if [ os.name ] = NT
