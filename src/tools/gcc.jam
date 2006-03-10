@@ -81,7 +81,8 @@ flags gcc.compile OPTIONS <inlining>on : -Wno-inline ;
 flags gcc.compile OPTIONS <inlining>full : -finline-functions -Wno-inline ;
 
 flags gcc.compile OPTIONS <warnings>off : -w ;
-flags gcc.compile OPTIONS <warnings>all : -Wall ;
+flags gcc.compile OPTIONS <warnings>on : -Wall ;
+flags gcc.compile OPTIONS <warnings>all : -Wall -pedantic ;
 flags gcc.compile OPTIONS <warnings-as-errors>on : -Werror ;
 
 flags gcc.compile OPTIONS <debug-symbols>on : -g ;
