@@ -90,6 +90,10 @@ else if $(UNIX)
 	{
 		PYTHON_EMBEDDED_LIBRARY = python$(PYTHON_VERSION) ;
 	}
+	else if $(OS) = FREEBSD
+	{
+		PYTHON_EMBEDDED_LIBRARY = python$(PYTHON_VERSION) util ;
+	}
 	else
 	{
 		PYTHON_EMBEDDED_LIBRARY = python$(PYTHON_VERSION) dl util ;
