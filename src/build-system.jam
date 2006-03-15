@@ -43,9 +43,17 @@ rule location ( )
 
 # Check if we can load 'test-config.jam'. If we can, load it and
 # ignore user configs.
+
 local test-config = [ GLOB [ os.environ BOOST_BUILD_PATH ] : test-config.jam ] ;
 if $(test-config)
 {
+    if --debug-configuration in [ modules.peek : ARGV ]
+    {
+        ECHO "notice: loading test-config.jam from" 
+          [ NORMALIZE_PATH $(test-config[1]) ] ;
+        ECHO "notice: user-config.jam and site-config.jam will be ignored" ;
+    }        
+       
     module test-config 
     {
         import toolset : using : using ;
