@@ -40,7 +40,7 @@ char *jambase[] = {
 "ECHO ;\n",
 "EXIT \"Please consult the documentation at 'http://www.boost.org'.\" ;\n",
 "}\n",
-"BOOST_BUILD_PATH = $(dir:R=$(.boost-build-file:D)) $(BOOST_BUILD_PATH) ;\n",
+"BOOST_BUILD_PATH = $(BOOST_BUILD_PATH) $(dir:R=$(.boost-build-file:D)) ;\n",
 "_poke .ENVIRON : BOOST_BUILD_PATH : $(BOOST_BUILD_PATH) ;\n",
 "local bootstrap-file =\n",
 "[ GLOB $(BOOST_BUILD_PATH) : bootstrap.jam ] ;\n",

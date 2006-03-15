@@ -79,7 +79,7 @@ rule boost-build ( dir ? )
     # Add the given directory to the path so we can find the build
     # system. If dir is empty, has no effect.
     #
-    BOOST_BUILD_PATH = $(dir:R=$(.boost-build-file:D)) $(BOOST_BUILD_PATH) ;
+    BOOST_BUILD_PATH = $(BOOST_BUILD_PATH) $(dir:R=$(.boost-build-file:D)) ;
     
     # We might have just modified the *global* value of BOOST_BUILD_PATH.
     # The code that loads the rest of Boost.Build, in particular the 
