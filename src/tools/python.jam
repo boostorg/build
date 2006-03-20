@@ -186,7 +186,7 @@ rule init-mac ( version : root ? : includes ? : libraries ? )
       :
       : <os>MACOSX <toolset>darwin
       :
-      : <framework>$(PYTHON_FRAMEWORK)
+      : <include>$(includes) <framework>$(PYTHON_FRAMEWORK)
       ;  
 }
 
