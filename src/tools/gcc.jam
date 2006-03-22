@@ -65,7 +65,7 @@ rule init ( version ? : command * : options * )
     {
         local path = [ common.get-absolute-tool-path $(command[-1]) ] ;
         local lib_path = $(path:D)/lib ;
-        flags gcc.link RUN_PATH : $(lib_path) ;
+        flags gcc.link RUN_PATH $(condition) : $(lib_path) ;
     }   
 
 
