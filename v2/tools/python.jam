@@ -44,6 +44,11 @@ project python ;
 # not in whatever project we were called by.
 .project = [ project.current ] ;
 
+# Dynamic linker lib. Necessary to specify it explicitly 
+# on some platforms.
+lib dl ;        
+
+
 # Initializes the Python toolset.
 # - version -- the version of Python to use. Should be in Major.Minor format,
 #   for example 2.3
@@ -119,11 +124,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     else
     {              
         flags python.capture-output PYTHON $(condition:J=/) : $(interpreter) ;
-    }
-    
-    # Dynamic linker lib. Necessary to specify it explicitly 
-    # on some platforms.
-    lib dl ;        
+    }   
     
     # On Linux, we don't want to link either Boost.Python or
     # Python extensions to libpython, so that when extensions
