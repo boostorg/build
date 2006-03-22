@@ -46,7 +46,7 @@ import os ;
 import virtual-target ;
 
 project.initialize $(__name__) ;
-project qt4 ;
+project qt ;
 
 # Initialized the QT support module. The 'prefix' parameter
 # tells where QT is installed. 

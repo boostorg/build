@@ -21,7 +21,7 @@ import toolset : flags ;
 # targets here.
 
 project.initialize $(__name__) ;
-project qt ;
+project qt3 ;
 
 # Initialized the QT support module. The 'prefix' parameter 
 # tells where QT is installed. When not given, environmental
