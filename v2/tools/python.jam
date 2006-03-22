@@ -46,7 +46,10 @@ project python ;
 
 # Dynamic linker lib. Necessary to specify it explicitly 
 # on some platforms.
-lib dl ;        
+lib dl ;  
+# This contains 'openpty' function need by python. Again, on
+# some system need to pass this to linker explicitly.
+lib util ;
 
 
 # Initializes the Python toolset.
@@ -140,7 +143,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
                  ;
     
     alias python
-                 :  dl 
+                 :  dl util
                  : $(condition)
                  :
                  : <include>$(includes) 
