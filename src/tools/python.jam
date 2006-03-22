@@ -121,6 +121,9 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
         flags python.capture-output PYTHON $(condition:J=/) : $(interpreter) ;
     }
     
+    # Dynamic linker lib. Necessary to specify it explicitly 
+    # on some platforms.
+    lib dl ;        
     
     # On Linux, we don't want to link either Boost.Python or
     # Python extensions to libpython, so that when extensions
@@ -136,7 +139,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
                  ;
     
     alias python
-                 :  
+                 :  dl 
                  : $(condition)
                  :
                  : <include>$(includes) 
