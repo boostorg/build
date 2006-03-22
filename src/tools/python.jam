@@ -92,18 +92,35 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     libraries ?= $(root)/lib/python$(version)/config ;
     
     # Find the 'python' binary, which is used for testing.
-    # Look first in $(root)/bin, then in PATH.
+    # Look first in $(root)/bin, then in PATH.    
     local interpreter = [ common.get-invocation-command 
         python : python : : $(root)/bin : path-last ] ;
     
+    if $(interpreter:D) != $(root)/bin
+    {            
+        ECHO "warning: was expecting Python interpreter in " $(root)/bin ;
+        ECHO "warning: found only in PATH:" $(interpreter) ;
+    }        
+                
     if --debug-configuration in [ modules.peek : ARGV ]
     {
         ECHO "notice: Python include path is" $(includes) ;
         ECHO "notice: Python library path is" $(libraries) ;
-        ECHO "notice: Python interpreter is" $(interpreter) ;        
+        ECHO "notice: Python interpreter is" $(interpreter) ;                
     }
     
-    flags python.capture-output PYTHON : $(interpreter) ;
+    # If not specific condition is specified, set global value
+    # If condition is specified, set PYTHON on target. It will
+    # override the global value.
+    if ! $(condition)
+    {
+        PYTHON = $(interpreter) ;
+    }
+    else
+    {              
+        flags python.capture-output PYTHON $(condition:J=/) : $(interpreter) ;
+    }
+    
     
     # On Linux, we don't want to link either Boost.Python or
     # Python extensions to libpython, so that when extensions
