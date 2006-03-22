@@ -134,6 +134,9 @@ flags cw.compile CFLAGS <inlining>off : -inline off ;
 flags cw.compile CFLAGS <inlining>on : -inline on ;
 flags cw.compile CFLAGS <inlining>full : -inline all ;
 flags cw.compile CFLAGS <exception-handling>off : -Cpp_exceptions off ;
+
+
+flags cw.compile CFLAGS <rtti>on : -RTTI on ;
 flags cw.compile CFLAGS <rtti>off : -RTTI off ;
 
 flags cw.compile CFLAGS <warnings>on : -w on ;
