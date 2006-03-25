@@ -50,6 +50,7 @@ feature asynch-exceptions : off on : propagated ;
 feature extern-c-nothrow : off on : propagated ;
 feature debug-symbols : on off : propagated ;
 feature define : : free ;
+feature undef : : free ;
 feature "include" : : free path ; #order-sensitive ;
 feature cflags : : free ;
 feature cxxflags : : free ;
