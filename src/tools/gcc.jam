@@ -63,27 +63,38 @@ rule init ( version ? : command * : options * )
     }
     init-link-flags gcc $(linker) $(condition) ;
     
+    local root = [ feature.get-values <root> : $(options) ] ;
+    local bin ;
+    if $(command)
+    {
+        bin ?= [ common.get-absolute-tool-path $(command[-1]) ] ;
+        root ?= $(bin:D) ;
+    }
+    
     # If gcc is installed in non-standard location, we'd need to
     # add LD_LIBRARY_PATH when running programs created with it
     # (for unit-test/run rules).       
     if $(command)
     {
-        local root = [ feature.get-values <root> : $(options) ] ;
-        if ! $(root)
-        {            
-            root = [ common.get-absolute-tool-path $(command[-1]) ] ;
-            root = $(root:D) ;
-        }        
         local lib_path = $(root)/lib ;
         if $(.debug-configuration)
         {
-            ECHO "notice: gcc lib directory for version" $(condition) ;
-            ECHO "notice:   is" $(lib_path) ;
+            ECHO notice: using gcc libraries :: $(condition) :: $(lib_path) ;
         }
         flags gcc.link RUN_PATH $(condition) : $(lib_path) ;
     }   
 
-
+    #~ If it's not a system gcc install we should adjust the various
+    #~ programs as needed to prefer using the install specific versions.
+    #~ This is essential for correct use of MinGW and for cross-compiling.
+    local archiver =
+        [ common.get-invocation-command gcc
+            : ar : [ feature.get-values <archiver> : $(options) ] : $(bin) : PATH ] ;
+    flags gcc.archive .AR $(condition) : $(archiver[1]) ;
+    if $(.debug-configuration)
+    {
+        ECHO notice: using gcc archiver :: $(condition) :: $(archiver[1]) ;
+    }
 }
 
 if [ os.name ] = NT
@@ -338,20 +349,37 @@ actions link bind LIBRARIES
 }
 
 
-# Always remove archive and start again. Here's rationale from
-# Andre Hentz:
-# I had a file, say a1.c, that was included into liba.a. 
-# I moved a1.c to a2.c, updated my Jamfiles and rebuilt. 
-# My program was crashing with absurd errors. 
-# After some debugging I traced it back to the fact that a1.o was *still* 
-# in liba.a 
-RM = [ common.rm-command ] ;
+flags gcc.archive AROPTIONS <archiveflags> ;
 
-if [ os.name ] = NT
+rule archive ( targets * : sources * : properties * )
 {
-    RM = "if exist \"$(<[1])\" DEL \"$(<[1])\""  ;
+    # Always remove archive and start again. Here's rationale from
+    #
+    # Andre Hentz:
+    #
+    # I had a file, say a1.c, that was included into liba.a. 
+    # I moved a1.c to a2.c, updated my Jamfiles and rebuilt. 
+    # My program was crashing with absurd errors. 
+    # After some debugging I traced it back to the fact that a1.o was *still* 
+    # in liba.a 
+    #
+    # Rene Rivera:
+    #
+    # Originally removing the archive was done by splicing an RM
+    # onto the archive action. That makes archives fail to build on NT
+    # when they have many files because it will no longer execute the
+    # action directly and blow the line length limit. Instead we
+    # remove the file in a different action, just before the building
+    # of the archive.
+    #
+    local clean.a = $(targets[1])(clean) ;
+    TEMPORARY $(clean.a) ;
+    NOCARE $(clean.a) ;
+    LOCATE on $(clean.a) = [ on $(targets[1]) return $(LOCATE) ] ;
+    DEPENDS $(clean.a) : $(sources) ;
+    DEPENDS $(targets) : $(clean.a) ;
+    common.RmTemps $(clean.a) : $(targets) ;
 }
-
 
 # Declare action for creating static libraries
 # The 'r' letter means to add files to the archive with replacement
@@ -362,8 +390,7 @@ if [ os.name ] = NT
 #   some platforms, for whatever reasons.
 actions piecemeal archive 
 {
-    $(RM) "$(<)"
-    ar rc "$(<)" "$(>)"
+    "$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
 }
 
 
