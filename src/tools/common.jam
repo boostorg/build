@@ -387,8 +387,9 @@ rule get-program-files-dir ( )
 
 if [ os.name ] = NT
 {
-    RM = del /f ;
+    RM = del /f /q ;
     CP = copy ;
+    IGNORE = "2>nul >nul & setlocal" ;
 }
 else
 {
@@ -544,6 +545,14 @@ rule copy
 actions copy
 {
     $(CP) "$(>)" "$(<)"
+}
+
+rule RmTemps
+{
+}
+actions quietly updated piecemeal together RmTemps
+{
+    $(RM) "$(>)" $(IGNORE)
 }
 
 rule __test__ ( ) {
