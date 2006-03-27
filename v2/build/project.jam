@@ -674,6 +674,22 @@ rule current ( )
     return $(.current-project) ;
 }
 
+# Temporary changes the current project to 'project'. Should
+# be followed by 'pop-current'. 
+rule push-current ( project )
+{
+    .saved-current-project += $(.current-project) ;
+    .current-project = $(project) ;
+}
+
+rule pop-current ( )
+{
+    .current-project = $(.saved-current-project[-1]) ;
+    .saved-current-project = $(.saved-current-project[1--2]) ;
+}
+
+
+
 # Returns the project-attribute instance for the specified jamfile module.
 rule attributes ( project )
 {

@@ -46,23 +46,12 @@ import os ;
 import virtual-target ;
 
 project.initialize $(__name__) ;
-project qt4 ;
+project qt ;
 
 # Initialized the QT support module. The 'prefix' parameter
-# tells where QT is installed. When not given, environmental
-# variable QTDIR should be set.
-rule init ( prefix ? )
+# tells where QT is installed. 
+rule init ( prefix )
 {
-    if ! $(prefix)
-    {
-        prefix = [ modules.peek : QTDIR ] ;
-        if ! $(prefix)
-        {
-            errors.error
-              "QT installation prefix not given and QTDIR variable is empty" ;
-        }
-    }
-
     if $(.initialized)
     {
         if $(prefix) != $(.prefix)
