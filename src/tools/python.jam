@@ -39,6 +39,19 @@ import toolset : flags ;
 project.initialize $(__name__) ;
 project python ;
 
+# Save the project so that if 'init' is called several
+# times we define new targets in the python project,
+# not in whatever project we were called by.
+.project = [ project.current ] ;
+
+# Dynamic linker lib. Necessary to specify it explicitly 
+# on some platforms.
+lib dl ;  
+# This contains 'openpty' function need by python. Again, on
+# some system need to pass this to linker explicitly.
+lib util ;
+
+
 # Initializes the Python toolset.
 # - version -- the version of Python to use. Should be in Major.Minor format,
 #   for example 2.3
@@ -57,9 +70,12 @@ project python ;
 #   using python 2.3 : /usr/local ; # Root specified, include and lib paths
 #                                   # will be guessed
 #    
-rule init ( version ? : root ? : includes ? : libraries ? : cygwin-condition ? )
+rule init ( version ? : root ? : includes ? : libraries ? 
+    : cygwin-condition * )
 {
     .configured = true ;
+    
+    project.push-current $(.project) ;
                
     if [ os.name ] = NT
     {
@@ -71,46 +87,64 @@ rule init ( version ? : root ? : includes ? : libraries ? : cygwin-condition ? )
     } 
     else if [ modules.peek : UNIX ]
     {
-        init-unix $(version) : $(root) : $(includes) : $(libraries) ;
+        init-unix $(version) : $(root) : $(includes) : $(libraries) : $(cygwin-condition) ;
     }
+    
+    project.pop-current ;
 }
 
-rule init-unix ( version ? : root ? : includes ? : libraries ? )
+rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
 {
     root ?= /usr ;
     includes ?= $(root)/include/python$(version) ;
     libraries ?= $(root)/lib/python$(version)/config ;
     
     # Find the 'python' binary, which is used for testing.
-    # Look first in $(root)/bin, then in PATH.
+    # Look first in $(root)/bin, then in PATH.    
     local interpreter = [ common.get-invocation-command 
         python : python : : $(root)/bin : path-last ] ;
     
+    if $(interpreter:D) != $(root)/bin
+    {            
+        ECHO "warning: was expecting Python interpreter in " $(root)/bin ;
+        ECHO "warning: found only in PATH:" $(interpreter) ;
+    }        
+                
     if --debug-configuration in [ modules.peek : ARGV ]
     {
         ECHO "notice: Python include path is" $(includes) ;
         ECHO "notice: Python library path is" $(libraries) ;
-        ECHO "notice: Python interpreter is" $(interpreter) ;        
+        ECHO "notice: Python interpreter is" $(interpreter) ;                
     }
     
-    flags python.capture-output PYTHON : $(interpreter) ;
+    # If not specific condition is specified, set global value
+    # If condition is specified, set PYTHON on target. It will
+    # override the global value.
+    if ! $(condition)
+    {
+        PYTHON = $(interpreter) ;
+    }
+    else
+    {              
+        flags python.capture-output PYTHON $(condition:J=/) : $(interpreter) ;
+    }   
     
     # On Linux, we don't want to link either Boost.Python or
     # Python extensions to libpython, so that when extensions
     # loaded in the interpreter, the symbols in the interpreter
     # are used. If we linked to libpython, we'd get duplicate
     # symbols. So declare two targets -- one for headers and another
-    # for library.          
+    # for library.   
     alias python_for_extensions
-                 : 
-                 :
+                 :  
+                 : $(condition)
                  :
                  : <include>$(includes) 
                  ;
     
     alias python
-                 : 
-                 :
+                 :  dl util
+                 : $(condition)
                  :
                  : <include>$(includes) 
                    <library-path>$(libraries)
