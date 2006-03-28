@@ -51,19 +51,19 @@ rule init ( prefix ? )
         .initialized = true ;
         .prefix = $(prefix) ;
         
-        generators.register-standard qt.moc : H : CPP(moc_%) : <allow>qt ;    
+        generators.register-standard qt3.moc : H : CPP(moc_%) : <allow>qt ;    
         # Note: the OBJ target type here is fake, take a look
         # at qt4.jam/uic-h-generator for explanations that
         # apply in this case as well.
         generators.register [ new moc-h-generator 
-            qt.moc.cpp : MOCCABLE_CPP : OBJ : <allow>qt ] ;
+            qt3.moc.cpp : MOCCABLE_CPP : OBJ : <allow>qt ] ;
         
         # The UI type is defined in types/qt.jam,
         # and UIC_H is only used in qt.jam, but not in qt4.jam, so
         # define it here.
         type.register UIC_H : : H ;
         
-        generators.register-standard qt.uic-h : UI : UIC_H : <allow>qt ;
+        generators.register-standard qt3.uic-h : UI : UIC_H : <allow>qt ;
         
         # The following generator is used to convert UI files to CPP
         # It creates UIC_H from UI, and constructs CPP from UI/UIC_H
@@ -73,7 +73,7 @@ rule init ( prefix ? )
         {
             rule __init__ ( )
             {
-                generator.__init__ qt.uic-cpp : UI UIC_H : CPP : <allow>qt ;
+                generator.__init__ qt3.uic-cpp : UI UIC_H : CPP : <allow>qt ;
             }
                         
             rule run ( project name ? : properties * : sources + )
@@ -139,7 +139,7 @@ class moc-h-generator : generator
             name = [ $(sources[1]).name ] ;
             name = $(name:B) ;
             
-            local a = [ new action $(sources[1]) : qt.moc.cpp :
+            local a = [ new action $(sources[1]) : qt3.moc.cpp :
               $(property-set) ] ;
             
             local target = [ 
@@ -196,13 +196,13 @@ space = " " ;
 # 
 # and have everything work. We'd add quite a bunch of unrelated paths
 # but it won't hurt.
-flags qt.uic-h LIBRARY_PATH <xdll-path> ;
+flags qt3.uic-h LIBRARY_PATH <xdll-path> ;
 actions uic-h
 {
     $(.prefix)/bin/uic $(>) -o $(<) -L$(space)$(LIBRARY_PATH)
 }
 
-flags qt.uic-cpp LIBRARY_PATH <xdll-path> ;
+flags qt3.uic-cpp LIBRARY_PATH <xdll-path> ;
 # The second target is uic-generated header name. It's placed in
 # build dir, but we want to include it using only basename.
 actions uic-cpp
