@@ -43,7 +43,24 @@ rule init ( version ? :  command * : options * )
     common.handle-options intel-linux : $(condition) : $(command) : $(options) ;
 
     gcc.init-link-flags intel-linux gnu $(condition) ;
-
+    
+    local root = [ feature.get-values <root> : $(options) ] ;
+    local bin ;
+    if $(command)
+    {
+        bin ?= [ common.get-absolute-tool-path $(command[-1]) ] ;
+        root ?= $(bin:D) ;
+    
+        if $(command)
+        {
+            local lib_path = $(root)/lib ;
+            if $(.debug-configuration)
+            {
+                ECHO notice: using intel libraries :: $(condition) :: $(lib_path) ;
+            }
+            flags intel-linux.link RUN_PATH $(condition) : $(lib_path) ;
+        }   
+    }
 }
 
 SPACE = " " ;
