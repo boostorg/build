@@ -177,7 +177,7 @@ toolset intel-win32 icl : /Fe : -D
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     -I$(--python-include)
-    : $(--python-lib[1]) ;
+    : kernel32.lib advapi32.lib $(--python-lib[1]) ;
 ## KCC ?
 toolset kcc KCC : "-o " : -D
     :
