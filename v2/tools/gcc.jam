@@ -39,6 +39,7 @@ generators.override gcc.searched-lib-generator : searched-lib-generator ;
 type.set-generated-target-suffix OBJ : <toolset>gcc : o ;
 type.set-generated-target-suffix STATIC_LIB : <toolset>gcc : a ;
 
+import rc ;
 
 # Initializes the gcc toolset for the given version.
 # If necessary, command may be used to specify where the compiler
@@ -100,6 +101,8 @@ rule init ( version ? : command * : options * )
     #~ If it's not a system gcc install we should adjust the various
     #~ programs as needed to prefer using the install specific versions.
     #~ This is essential for correct use of MinGW and for cross-compiling.
+    
+    #~ - The archive builder.
     local archiver =
         [ common.get-invocation-command gcc
             : ar : [ feature.get-values <archiver> : $(options) ] : $(bin) : PATH ] ;
@@ -108,6 +111,15 @@ rule init ( version ? : command * : options * )
     {
         ECHO notice: using gcc archiver :: $(condition) :: $(archiver[1]) ;
     }
+    
+    #~ - The resource compiler.
+    local rc =
+        [ common.get-invocation-command gcc
+            : windres : [ feature.get-values <rc> : $(options) ] : $(bin) : PATH ] ;
+    local rc-type =
+        [ feature.get-values <rc-type> : $(options) ] ;
+    rc-type ?= windres ;
+    rc.configure $(rc) : $(condition) : <rc-type>$(rc-type) ;
 }
 
 if [ os.name ] = NT

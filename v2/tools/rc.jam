@@ -2,12 +2,24 @@
 #  distribute this software is granted provided this copyright notice appears in
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
+#  
+#  Copyright (c) 2006 Rene Rivera.
+#
+#  Use, modification and distribution is subject to the Boost Software
+#  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
+#  http://www.boost.org/LICENSE_1_0.txt)
 
 import type ;
 import generators ;
 import feature ;
 import errors ;
 import scanner ;
+import toolset : flags ;
+
+if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
+{
+    .debug-configuration = true ;
+}
 
 type.register RC : rc ;
 
@@ -15,40 +27,50 @@ rule init ( )
 {
 }
 
-rule resource-compile ( target : sources * : properties * )
+# Configures a new resource compilation command specific to a condition,
+# usually a toolset selection condition. The possible options are:
+#
+#     * <rc-type>(rc|windres) - Indicates the type of options the command
+#       accepts.
+#
+# Even though the arguments are all optional, only when a command, condition,
+# and at minimum the rc-type option are given will the command be configured.
+# This is so that callers don't have to check auto-configuration values
+# before calling this. And still get the functionality of build failures when
+# the resource compiler can't be found.
+#
+rule configure ( command ? : condition ? : options * )
 {
-    local OS = [ feature.get-values <os> : $(properties) ] ;
-    switch $(OS)
+    local rc-type = [ feature.get-values <rc-type> : $(options) ] ;
+
+    if $(command) && $(condition) && $(rc-type)
     {
-        case "NT" :
-            resource-compile-nt $(target) : $(sources[1]) ;
-        case "CYGWIN" :
-            resource-compile-cygwin $(target) : $(sources[1]) ;
-        case "FREEBSD" :
-            create-empty-object $(target) : $(sources[1]) ;
-        case "SOLARIS" :
-            create-empty-object $(target) : $(sources[1]) ;
-        case "KFREEBSD" :
-            create-empty-object $(target) : $(sources[1]) ;
-        case "LINUX" :
-            create-empty-object $(target) : $(sources[1]) ;
-        case "*" :
-            errors.error "Cannot process RC files for OS=$(OS)" ;
+        flags rc.compile.resource .RC $(condition) : $(command) ;
+        flags rc.compile.resource .RC_TYPE $(condition) : $(rc-type:L) ;
+        if $(.debug-configuration)
+        {
+            ECHO notice: using rc compiler :: $(condition) :: $(command) ;
+        }
     }
 }
 
-
-actions quietly resource-compile-nt
+rule compile.resource ( target : sources * : properties * )
 {
-    rc /i "$(>:D)" /i "$(<:D)" /fo "$(<)" "$(>)"
+    local rc-type = [ on $(target) return $(.RC_TYPE) ] ;
+    compile.resource.$(rc-type) $(target) : $(sources[1]) ;
 }
 
-actions quietly resource-compile-cygwin
+actions compile.resource.rc
 {
-    windres --include-dir "$(>:D)" -o "$(<)" -i "$(>)"
+    "$(.RC)" -l 0x409 "-U$(UNDEFS)" "-D$(DEFINES)" -I"$(>:D)" -I"$(<:D)" -I"$(INCLUDES)" -fo "$(<)" "$(>)"
 }
 
-actions quietly create-empty-object
+actions compile.resource.windres
+{
+    "$(.RC)" "-U$(UNDEFS)" "-D$(DEFINES)" -I"$(>:D)" -I"$(<:D)" -I"$(INCLUDES)" -o "$(<)" -i "$(>)"
+}
+
+actions quietly compile.resource.null
 {
     as /dev/null -o "$(<)"
 }
@@ -62,7 +84,7 @@ actions quietly create-empty-object
 # See http://article.gmane.org/gmane.comp.lib.boost.build/5643/
 #
 # Using 'register-c-compiler' adds the build directory to INCLUDES
-generators.register-c-compiler rc.resource-compile : RC : OBJ(%_res) ;
+generators.register-c-compiler rc.compile.resource : RC : OBJ(%_res) ;
 
 # Register scanner for resources
 class res-scanner : scanner 
@@ -129,7 +151,3 @@ class res-scanner : scanner
 
 scanner.register res-scanner : include ;
 type.set-scanner RC : res-scanner ;
-
-
-
-
