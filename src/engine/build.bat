@@ -298,7 +298,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_gcc-nocygwin_" (
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_intel-win32_" (
-    set BOOST_JAM_CC=icl -DNT /nologo
+    set BOOST_JAM_CC=icl -DNT /nologo kernel32.lib advapi32.lib
     set BOOST_JAM_OPT_JAM=/Febootstrap\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0
     set BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0
