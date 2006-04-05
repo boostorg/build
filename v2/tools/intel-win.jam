@@ -117,11 +117,15 @@ rule init ( version ? :     # the compiler version
     {
         C++FLAGS += 
           -Qoption,cpp,--arg_dep_lookup
-          -Qoption,cpp,--const_string_literals
-          -Qoption,cpp,--new_for_init
-          -Qoption,cpp,--no_implicit_typename
-          -Qoption,cpp,--no_friend_injection
-          -Qoption,cpp,--no_microsoft_bugs
+          # The following options were intended to disable
+          # 'bug-emulation' mode of intel compiler, but later
+          # were reported to case ICE with Intel-Win 9.0
+          # It's not yet clear which options can be safely used.
+          # -Qoption,cpp,--const_string_literals
+          # -Qoption,cpp,--new_for_init
+          # -Qoption,cpp,--no_implicit_typename
+          # -Qoption,cpp,--no_friend_injection
+          # -Qoption,cpp,--no_microsoft_bugs
           ;
     }
     
