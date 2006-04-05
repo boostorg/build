@@ -500,7 +500,7 @@ generators.register-c-compiler msvc.compile.c : C : OBJ : <toolset>msvc ;
 
 # Using 'register-c-compiler' adds the build directory to INCLUDES
 generators.register-c-compiler msvc.compile.rc : RC : OBJ(%_res) : <toolset>msvc ;
-generators.override msvc.compile.rc : rc.resource-compile ;
+generators.override msvc.compile.rc : rc.compile.resource ;
 generators.register-standard msvc.compile.asm : ASM : OBJ : <toolset>msvc ;
 
 generators.register-c-compiler msvc.compile.idl : IDL : MSTYPELIB H C(%_i) C(%_proxy) C(%_dlldata) : <toolset>msvc ;
