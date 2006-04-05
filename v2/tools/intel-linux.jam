@@ -27,7 +27,12 @@ toolset.inherit-flags intel-linux : gcc
         : <inlining>off <inlining>on <inlining>full <optimization>space 
           <warnings>off <warnings>all <warnings>on
         ;
-               
+        
+if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
+{
+    .debug-configuration = true ;
+}
+                       
 # Initializes the intel-linux toolset
 #   version in mandatory
 #   name (default icc) is used to invoke the specified intellinux complier
@@ -46,12 +51,12 @@ rule init ( version ? :  command * : options * )
     
     local root = [ feature.get-values <root> : $(options) ] ;
     local bin ;
-    if $(command)
+    if $(command) || $(root)
     {
         bin ?= [ common.get-absolute-tool-path $(command[-1]) ] ;
         root ?= $(bin:D) ;
     
-        if $(command)
+        if $(root)
         {
             local lib_path = $(root)/lib ;
             if $(.debug-configuration)
