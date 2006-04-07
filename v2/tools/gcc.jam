@@ -317,6 +317,8 @@ rule init-link-flags ( toolset linker condition )
           : unchecked ;
         flags $(toolset).link RPATH $(condition) : <dll-path> : unchecked ;
         flags $(toolset).link RPATH_LINK $(condition) : <xdll-path> : unchecked ;
+        flags $(toolset).link START-GROUP $(condition) : -Wl,--start-group : unchecked ;
+        flags $(toolset).link END-GROUP $(condition) : -Wl,--end-group : unchecked ;
         }
     case darwin :
         {
@@ -383,7 +385,7 @@ rule link ( targets * : sources * : properties * )
 
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 }
 
 
@@ -441,7 +443,7 @@ rule link.dll ( targets * : sources * : properties * )
 # Differ from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" -o "$(<)" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" -o "$(<)" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 }
 
 # Set up threading support. It's somewhat contrived, so perform it at the end,
