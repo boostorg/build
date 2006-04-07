@@ -128,6 +128,22 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     {              
         flags python.capture-output PYTHON $(condition:J=/) : $(interpreter) ;
     }   
+
+    
+    local extra-libs ;
+    if [ os.name ] = SOLARIS
+    {
+        extra-libs = dl ;
+    }
+    else if [ os.name ] = OSF || [ os.name ] = QNXTO
+    {
+        # Nothing.
+    }   
+    else
+    {
+        extra-libs = dl util ;
+    }
+    
     
     # On Linux, we don't want to link either Boost.Python or
     # Python extensions to libpython, so that when extensions
@@ -143,7 +159,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
                  ;
     
     alias python
-                 :  dl util
+                 :  $(extra-libs)
                  : $(condition)
                  :
                  : <include>$(includes) 
@@ -372,6 +388,9 @@ type.register PYTHON_EXTENSION : : SHARED_LIB ;
 type.set-generated-target-suffix PYTHON_EXTENSION : : so ;
 type.set-generated-target-suffix PYTHON_EXTENSION : <os>NT : dll ;
 type.set-generated-target-suffix PYTHON_EXTENSION : <os>CYGWIN : so ;
+
+# Unset 'lib' prefix for PYTHON_EXTENSION
+type.set-generated-target-prefix PYTHON_EXTENSION : : "" ;
 
 rule python-extension ( name : sources * : requirements * : default-build * : 
                         usage-requirements * )
