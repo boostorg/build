@@ -50,10 +50,16 @@ import virtual-target ;
 project.initialize $(__name__) ;
 project qt ;
 
+# Save the project so that we tolerate 'import + using' combo.
+.project = [ project.current ] ;
+
+
 # Initialized the QT support module. The 'prefix' parameter
 # tells where QT is installed. 
 rule init ( prefix )
 {
+    project.push-current $(.project) ;
+    
     if $(.initialized)
     {
         if $(prefix) != $(.prefix)
@@ -296,7 +302,16 @@ rule init ( prefix )
                 ;
         }
     }
+    
+    project.pop-current ;
 }
+
+rule initialized ( )
+{
+    return $(.initialized) ;
+}
+
+
 
 # This custom generator is needed because it QT4, UI files are translated
 # only in H files, and no C++ files are created. Further, the H files
