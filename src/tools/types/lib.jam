@@ -3,8 +3,14 @@
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 import type ; # for set-generated-target-suffix
+import os ;
 
 type.register LIB ;
+
+if [ os.on-unix ]
+{
+    type.set-generated-target-prefix LIB : : "lib" ;
+}
 
 type STATIC_LIB : lib a : LIB : NT CYGWIN ;
 type STATIC_LIB : a : LIB : MACOSX ;
