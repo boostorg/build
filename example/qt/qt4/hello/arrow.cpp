@@ -55,7 +55,6 @@ Arrow_widget::draw_arrow(int x1, int y1, int x2, int y2, QPainter& painter)
     }
     double straight_angle = angle*180/M_PI;
     
-    double max_delta = 30;
     double limit = 10;
     
     double angle_to_vertical;
@@ -87,9 +86,9 @@ Arrow_widget::draw_arrow(int x1, int y1, int x2, int y2, QPainter& painter)
     m2.translate(x2, y2);        
     m2.rotate(-end_angle);
     
-    arrow.cubicTo(m1.map(QPoint(straight_length/2, 0)),              
-                  m2.map(QPoint(straight_length/2, 0)),
-                  m2.map(QPoint(arrowhead_length, 0)));
+    arrow.cubicTo(m1.map(QPointF(straight_length/2, 0)),              
+                  m2.map(QPointF(straight_length/2, 0)),
+                  m2.map(QPointF(arrowhead_length, 0)));
     
     painter.save();
     painter.setBrush(Qt::NoBrush);
