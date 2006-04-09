@@ -40,6 +40,7 @@ import "class" : new ;
 import targets ;
 import property-set ;
 import common ;
+import type ;
 
 # Make this module into a project.
 project.initialize $(__name__) ;
@@ -81,7 +82,7 @@ class stlport-target-class : basic-target
     import feature project type errors generators ;
     import set : difference ;
 
-    rule __init__ ( project : headers ? : libraries + :  version ? )
+    rule __init__ ( project : headers ? : libraries * :  version ? )
     {
         basic-target.__init__ stlport : $(project) ;
         self.headers = $(headers) ;
@@ -160,9 +161,46 @@ class stlport-target-class : basic-target
                 }
             }
             name += .$(self.version.5) ;
+            name = $(name:J=) ;
             
-            return [ generators.construct
-                $(self.project) $(name:J=) : SEARCHED_LIB : $(property-set) ] ;
+            if [ feature.get-values <install-dependencies> : $(raw) ] = "on"
+            {
+                #~ Allow explicitly asking to install the STLport lib by
+                #~ refering to it directly: /stlport//stlport/<install-dependencies>on
+                #~ This allows for install packaging of all libs one might need for
+                #~ a standalone distribution.
+                import path : make : path-make ;
+                local runtime-link
+                    = [ feature.get-values <runtime-link> : $(raw) ] ;
+                local lib-file.props
+                    = [ property-set.create $(raw) <link>$(runtime-link) ] ;
+                local lib-file.prefix
+                    = [ type.generated-target-prefix $(runtime-link:U)_LIB : $(lib-file.props) ] ;
+                local lib-file.suffix
+                    = [ type.generated-target-suffix $(runtime-link:U)_LIB : $(lib-file.props) ] ;
+                lib-file.prefix
+                    ?= "" "lib" ;
+                lib-file.suffix
+                    ?= "" ;
+                local lib-file
+                    = [ GLOB $(self.libraries) [ modules.peek : PATH ] :
+                        $(lib-file.prefix)$(name).$(lib-file.suffix) ] ;
+                lib-file
+                    = [ new file-reference [ path-make $(lib-file[1]) ] : $(self.project) ] ;
+                lib-file
+                    = [ $(lib-file).generate "" ] ;
+                local lib-file.requirements
+                    = [ targets.main-target-requirements
+                        [ $(lib-file.props).raw ] <file>$(lib-file[-1])
+                        : $(self.project) ] ;
+                return [ generators.construct $(self.project) $(name) : LIB : $(lib-file.requirements) : : LIB ] ;
+            }
+            else
+            {
+                #~ Otherwise, it's just a regular usage of the library.
+                return [ generators.construct
+                    $(self.project) $(name) : SEARCHED_LIB : $(property-set) ] ;
+            }
         }
         else if ! $(hostios) && $(toolset) != msvc
         {
@@ -218,6 +256,21 @@ class stlport-target-class : basic-target
             usage-requirements +=
                 <define>_STLP_NO_OWN_IOSTREAMS=1
                 <define>_STLP_HAS_NO_NEW_IOSTREAMS=1 ;
+        }
+        
+        #~ Allow setting up to use STLport by only using the library target
+        #~ /stlport//stlport.
+        #~ TODO: Make it possible to use /stlport//stlport/<version>5.0 to select
+        #~ a specific configured version.
+        if $(self.version)
+        {
+            usage-requirements +=
+                <stdlib>stlport-$(self.version) ;
+        }
+        else
+        {
+            usage-requirements +=
+                <stdlib>stlport ;
         }
 
         return [ property-set.create $(usage-requirements) ] ;
