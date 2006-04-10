@@ -13,3 +13,4 @@ cd boost-build/build/v2
 ./roll.sh > ../roll-log
 cd ..
 scp boost-build.zip boost-build.tar.bz2 vladimir_prus@shell.sf.net:/home/groups/b/bo/boost/htdocs/boost-build2 > scp-log
+echo "Upload successfull"
