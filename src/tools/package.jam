@@ -41,9 +41,10 @@ rule install ( name : requirements * : binaries * : libraries * : headers * )
 {
     local install-source-root = [ property.select <install-source-root> 
         : $(requirements) ] ;
-    install-source-root ?= "." ;
-    
-    
+    # If <install-source-root> is not specified, all headers are installed
+    # to prefix/include, no matter what their relative path is. Sometimes
+    # that's what needed.
+        
     requirements = [ property.change $(requirements) : <install-source-root> ] ;
     
     
@@ -70,7 +71,11 @@ rule install ( name : requirements * : binaries * : libraries * : headers * )
 
     
     stage.install $(name)-bin : $(binaries) : $(requirements) <location>$(bin-locate) ;
-    stage.install $(name)-lib : $(libraries) : $(requirements) <location>$(lib-locate) ;
+    stage.install $(name)-lib : 
+        $(binaries) $(libraries) 
+        : $(requirements) <location>$(lib-locate) 
+          <install-dependencies>on <install-type>LIB 
+        ;
     stage.install $(name)-headers : $(headers) : $(requirements) 
       <location>$(include-locate) <install-source-root>$(install-source-root) ;
     alias $(name) : $(name)-bin $(name)-lib $(name)-headers ;
