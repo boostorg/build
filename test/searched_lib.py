@@ -41,7 +41,7 @@ local here = [ project.attribute $(__name__) location ] ;
 here = [ path.root $(here) [ path.pwd ] ] ;
 
 exe main : main.cpp helper ;
-lib helper : helper.cpp test_lib : <dll-path>$(here)/lib ;
+lib helper : helper.cpp test_lib ;
 lib test_lib : : <name>test_lib <search>lib ;
 """)
 t.write("main.cpp", """
@@ -57,9 +57,31 @@ __declspec(dllexport)
 #endif
 helper() { foo(); }
 """)
-t.run_build_system(stderr=None) # gcc warns about libraries which are not in -rpath.
+t.run_build_system()
 t.expect_addition("bin/$toolset/debug/main.exe")
 t.rm("bin/$toolset/debug/main.exe")
+
+# Test the 'unit-test' will correctly add runtime paths
+# to searched libraries.
+t.write('Jamfile', """
+
+import path ;
+import project ;
+import testing ;
+
+project : requirements <hardcode-dll-paths>false ;
+
+local here = [ project.attribute $(__name__) location ] ;
+here = [ path.root $(here) [ path.pwd ] ] ;
+
+unit-test main : main.cpp helper ;
+lib helper : helper.cpp test_lib ;
+lib test_lib : : <name>test_lib <search>lib ;
+""")
+t.run_build_system()
+t.expect_addition("bin/$toolset/debug/main.passed")
+t.rm("bin/$toolset/debug/main.exe")
+
 
 # Now try using searched lib from static lib. Request shared version
 # of searched lib, since we don't have static one handy.
