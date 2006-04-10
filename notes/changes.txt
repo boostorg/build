@@ -1,5 +1,97 @@
 
-Milestone 10 ()
+Milestone 11 (not yet released)
+
+Changes in this release:
+
+    - New C++ compilers: IBM xlf, HP aCC, HP CXX, Intel fortran compiler.
+    - New tools: Qt4 support, MS message compiler and IDL compiler.
+    - New main targets: 'notfile' and 'cast'.
+
+    - Core changes:
+
+        - Only one file required at top level of a project, named Jamroot.
+        - Jamfiles can now contain project-specific help messages.
+        - "Indirect conditional requirements" introduced
+          (http://tinyurl.com/mn3jp)
+        - Strip suffix in main target names when computing names of generated 
+          files (URL) 
+        - The 'source-location' project attribute can contain 
+          several directories.
+        - Usage requirements are propagated not only direct dependents, 
+          but to indirect dependents.
+
+    - Command line option changes (see http://tinyurl.com/zbycz)
+        - New option --build-dir
+        - The --clean option cleans only target below the current directory,
+          not globally. 
+        - New --clean-all option was added.
+        - New option --debug-building
+        - Running "bjam some_directory" works even if there's no Jamfile 
+          in the current directory.
+
+    - Toolset improvements:
+        - Assembling support with gcc, borland and msvc.
+        - Support amd64/ia64 cross-compiling with msvc.
+        - Improved, registry-based autodetection for msvc.
+        - Serialize execution of gcc.link actions  
+        - Precompiled headers supported on MSVC 
+          (Need documentation)
+
+    - New features <warnings> and <warnings-as-errors>           
+    - The 'glob' rule accepts wildcards in directory names.
+    - The 'stage' rule was renamed to 'install' 
+      (the old name still available for compatibility)
+    - The <tag> feature can accept user-defined function as value
+      (URL)
+    - The 'install' rule can install a directory hierarchy preserving relative
+      paths.
+    - The 'install' rule no longer allows to change library 
+      name during install.
+    - The Jamfile referred via 'use-project' may declare project id different
+      from the one in 'use-project'.
+    - The 'using' rule now searches the directory of containing Jamfile.
+     
+
+The following bugs were fixed:
+
+    - The <library> feature was ignored for static linking
+    - Fix #include scanning for C files.
+    - Child projects were sometimes loaded before parent projects.
+    - Fix project references with absolute paths on Windows. 
+    - The <dependency> feature was ignored for 'install' targets.
+    - A generator having the same type in sources and targets was causing hang.
+    - Use 'icpc' command for Intel, fixing errors with 8.1 and higher. 
+    - Generation of PS files with the FOP tool really produces .PS files.
+    - No dependency scanning was done for C files.
+    - The 'constant' and 'path-constant' rules did not accept multi-element
+      value.
+    - Don't pass -fcoalesce-templates to gcc on OSX 10.4
+    - Fix static lib suffix on OSX.
+    - Fix rpath setting on Intel/Linux.
+    - The 'install' rule don't unnecessary scans #includes in installed
+      headers.
+       
+
+Developer visible changes:
+
+    - Ability to customize type's prefix depending on build properties.
+    - Generator's 'run' method can return usage-requirements.  
+    - Main target rule is automatically declared for each new target type.
+    - 'Link incompatible' feature attribute was removed
+    - Generators no longer bypass unhandled sources, they just ignore them.
+    - If there are several applicable generators, immediately report ambiguity.
+      Provide a way to explicitly resolve conflicts between generators.
+    - The 'flags' rule can match absense of feature.
+    - Great improvement in response files handling
+    - The 'toolset.flags' rules allows value-less feature to signify
+      absense of this feature (fix hack-hack).
+    - Automatically declare main target rule for each declared target type.
+    - When inheriting types, inherit generators for the base type, as opposed
+      to using various hacks to invoke base generators when needed.
+    - Improve diagnostic for "duplicate actual target" and generator ambiguity.
+
+
+Milestone 10 (October 29, 2004)
 
 Changes in this release:
 
