@@ -1,5 +1,7 @@
-# Copyright 2002 Vladimir Prus 
+# Copyright 2002-2006 Vladimir Prus 
 # Copyright 2005 Alo Sarv
+# Copyright 2005-2006 Juergen Hunold
+#
 # Distributed under the Boost Software License, Version 1.0. (See
 # accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
@@ -48,10 +50,16 @@ import virtual-target ;
 project.initialize $(__name__) ;
 project qt ;
 
+# Save the project so that we tolerate 'import + using' combo.
+.project = [ project.current ] ;
+
+
 # Initialized the QT support module. The 'prefix' parameter
 # tells where QT is installed. 
 rule init ( prefix )
 {
+    project.push-current $(.project) ;
+    
     if $(.initialized)
     {
         if $(prefix) != $(.prefix)
@@ -66,19 +74,20 @@ rule init ( prefix )
         .prefix = $(prefix) ;
 
         # Generates cpp files from header files using "moc" tool
-        generators.register-standard qt4.moc : H : CPP(moc_%) ;
+        generators.register-standard qt4.moc : H : CPP(moc_%) : <allow>qt4 ;
         
         # The OBJ result type is a fake, 'H' will be really produces.
         # See comments on the generator calss, defined below 
         # the 'init' function.
-        generators.register [ new uic-h-generator qt4.uic-h : UI : OBJ ] ;
+        generators.register [ new uic-h-generator qt4.uic-h : UI : OBJ
+            : <allow>qt4  ] ;
         
         # The OBJ result type is a fake here too.
         generators.register [ new moc-h-generator 
-            qt4.moc.inc : MOCCABLE_CPP : OBJ ] ;
+            qt4.moc.inc : MOCCABLE_CPP : OBJ : <allow>qt4 ] ;
 
         generators.register [ new moc-inc-generator 
-            qt4.moc.inc : MOCCABLE_H : OBJ ] ;
+            qt4.moc.inc : MOCCABLE_H : OBJ : <allow>qt4 ] ;
 
         # Generates .cpp file from qrc file
         generators.register-standard qt4.rcc : QRC : CPP(qrc_%) ;
@@ -90,7 +99,12 @@ rule init ( prefix )
             local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg Qt3Support QtTest QtAssistantClient QtUiTools ;
             for local l in $(all-libraries) 
             {
-                alias $(l) : $(.prefix)//$(l) ;
+                alias $(l) 
+                  : $(.prefix)//$(l) 
+                  : 
+                  : 
+                  : <allow>qt4 
+                  ;
                 explicit $(l) ;
             }
         }
@@ -101,7 +115,9 @@ rule init ( prefix )
                 <include>$(.prefix)/include 
                 <library-path>$(.prefix)/lib 
                 <dll-path>$(.prefix)/lib 
-                <threading>multi ;
+                <threading>multi 
+                <allow>qt4
+                ;
             
             local suffix ;
             if [ os.name ] = NT
@@ -294,7 +310,16 @@ rule init ( prefix )
                 ;
         }
     }
+    
+    project.pop-current ;
 }
+
+rule initialized ( )
+{
+    return $(.initialized) ;
+}
+
+
 
 # This custom generator is needed because it QT4, UI files are translated
 # only in H files, and no C++ files are created. Further, the H files

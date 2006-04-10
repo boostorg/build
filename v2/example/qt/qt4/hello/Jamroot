@@ -1,5 +1,6 @@
 
 import qt4 ;
+
 if ! [ qt4.initialized ]
 {
     ECHO "Warning: Qt4 not initialized in user-config.jam" ;
@@ -8,11 +9,6 @@ if ! [ qt4.initialized ]
     using qt4 : /space/p2/ghost/build/Qt4 ;
 }
 
-import cast ;
-exe main : main.cpp 
-           [ cast _ moccable-cpp : main.cpp ]
-           /qt//QtGui 
-	 : <threading>multi   
-         ;
+project : requirements <threading>multi ;
 
-
+exe arrow : main.cpp arrow.cpp arrow.h /qt//QtGui ;

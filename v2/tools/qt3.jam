@@ -51,19 +51,19 @@ rule init ( prefix ? )
         .initialized = true ;
         .prefix = $(prefix) ;
         
-        generators.register-standard qt3.moc : H : CPP(moc_%) : <allow>qt ;    
+        generators.register-standard qt3.moc : H : CPP(moc_%) : <allow>qt3 ;
         # Note: the OBJ target type here is fake, take a look
         # at qt4.jam/uic-h-generator for explanations that
         # apply in this case as well.
-        generators.register [ new moc-h-generator 
-            qt3.moc.cpp : MOCCABLE_CPP : OBJ : <allow>qt ] ;
+        generators.register [ new moc-h-generator-qt3 
+            qt3.moc.cpp : MOCCABLE_CPP : OBJ : <allow>qt3 ] ;
         
         # The UI type is defined in types/qt.jam,
         # and UIC_H is only used in qt.jam, but not in qt4.jam, so
         # define it here.
         type.register UIC_H : : H ;
         
-        generators.register-standard qt3.uic-h : UI : UIC_H : <allow>qt ;
+        generators.register-standard qt3.uic-h : UI : UIC_H : <allow>qt3 ;
         
         # The following generator is used to convert UI files to CPP
         # It creates UIC_H from UI, and constructs CPP from UI/UIC_H
@@ -73,7 +73,7 @@ rule init ( prefix ? )
         {
             rule __init__ ( )
             {
-                generator.__init__ qt3.uic-cpp : UI UIC_H : CPP : <allow>qt ;
+                generator.__init__ qt3.uic-cpp : UI UIC_H : CPP : <allow>qt3 ;
             }
                         
             rule run ( project name ? : properties * : sources + )
@@ -118,14 +118,14 @@ rule init ( prefix ? )
              <include>$(.prefix)/include 
              <dll-path>$(.prefix)/lib
              <library-path>$(.prefix)/lib     
-             <allow>qt
+             <allow>qt3
              ;  
         lib qt : : <name>qt-mt <threading>multi : : $(usage-requirements) ;
         lib qt : : <name>qt <threading>single : : $(usage-requirements) ;        
     }
 }
 
-class moc-h-generator : generator
+class moc-h-generator-qt3 : generator
 {
     rule __init__ ( * : * )
     {

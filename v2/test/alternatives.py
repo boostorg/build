@@ -86,7 +86,7 @@ exe a : a_empty.cpp ;
 exe a : a.cpp ;
 """)
 t.run_build_system("--no-error-backtrace", status=1)
-t.fail_test(find(t.stdout(), "because no best-matching alternative could be found") == -1)
+t.fail_test(find(t.stdout(), "No best alternative") == -1)
 
 # Another ambiguity test: two matches properties in one alternative are
 # neither better nor worse than a single one in another alternative.
@@ -96,7 +96,7 @@ exe a : a.cpp : <debug-symbols>on ;
 """)
 
 t.run_build_system("--no-error-backtrace", status=1)
-t.fail_test(find(t.stdout(), "because no best-matching alternative could be found") == -1)
+t.fail_test(find(t.stdout(), "No best alternative") == -1)
 
 
 
