@@ -141,6 +141,7 @@ tests = [ "rebuilds",
           "lib_source_property",
           "implicit_dependency",
           "example_libraries",
+          "example_make",
           ]
 
 if os.name == 'posix':
@@ -159,6 +160,12 @@ if string.find(get_toolset(), 'gcc') == 0:
 if "--extras" in sys.argv:
     tests.append("boostbook")
     tests.append("example_qt4")
+    # Requires ./whatever.py to work, so is
+    # not guaranted to work everywhere.
+    tests.append("example_customization")
+    # Requires gettext tools.
+    tests.append("example_gettext")
+    
 else:
     print 'Note: skipping extra tests'
 
