@@ -399,7 +399,10 @@ local rule configure-version-specific ( version : condition )
     {
         flags msvc.compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
         flags msvc.compile.c++ C++FLAGS $(condition) : /wd4675 ;
-        flags msvc.compile CFLAGS $(condition)/<warnings>all : /Wp64 ; # 64-bit compatibility warning
+        # disable the function is deprecated warning        
+        flags msvc.compile CFLAGS $(condition)/<warnings>off : /wd4996 ; 
+        # 64-bit compatibility warning
+        flags msvc.compile CFLAGS $(condition)/<warnings>all : /Wp64 ; 
     }
     
     #
