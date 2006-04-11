@@ -271,7 +271,7 @@ class generator
                : sources +  # Source targets.
             )
     {       
-        generators.dout [ indent ] "  generator" $(self.id) ;
+        generators.dout [ indent ] "  ** generator" $(self.id) ;
         generators.dout [ indent ] "  multiple:" $(mutliple) ;
         generators.dout [ indent ] "  composing:" $(self.composing) ;        
         
@@ -353,7 +353,6 @@ class generator
         # If this is 1->1 transformation, apply it to all consumed targets in order.
         if ! $(self.source-types[2]) && ! $(self.composing)
         {
-            generators.dout [ indent ] "alt1" ;
             for local r in $(consumed)
             {                
                 result += [ generated-targets $(r) : $(property-set) : $(project) $(name) ] ; #(targets) ;
@@ -361,7 +360,6 @@ class generator
         }
         else
         {
-            generators.dout [ indent ] "alt2 : consumed is" $(consumed) ;
             if $(consumed) 
             {
                 result += [ generated-targets $(consumed) : $(property-set) 
@@ -859,7 +857,7 @@ local rule try-one-generator ( project name ? : generator :
       ! [ set.intersection $(source-types) : $(viable-source-types) ] 
     {
         local id = [ $(generator).id ] ;
-        generators.dout [ indent ] "generator '$(id)' pruned" ;
+        generators.dout [ indent ] "  ** generator '$(id)' pruned" ;
         #generators.dout [ indent ] "source-types" '$(source-types)' ;
         #generators.dout [ indent ] "viable-source-types" '$(viable-source-types)' ;
     }          

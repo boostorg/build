@@ -200,6 +200,51 @@ import <replaceable>module</replaceable> : <replaceable>rule</replaceable> ;</pr
       The second form imports the specified rules only, and they can be called
       using unqualified names.
       </para>
+
+      <para id="bbv2.advanced.jam_language.actions">
+        Sometimes, you'd need to specify the actual command lines to be used
+        when creating targets. In jam language, you use named actions to do this.
+        For example:
+<programlisting>
+actions create-file-from-another
+{
+    create-file-from-another $(&lt;) $(&gt;)
+}
+</programlisting>
+        This specifies a named action called 
+        <literal>create-file-from-another</literal>. The text inside braces is the
+        command to invoke. The <literal>$(&lt;)</literal> variable will be expanded to list of
+        generated files, and the <literal>$(&gt;)</literal> variable will be expanded
+        to the list of source files.
+      </para>
+
+      <para>To flexibly adjust command line, you can define a rule with the
+      same name as the action, and taking three parameters -- targets, sources 
+      and properties. For example:
+<programlisting>
+rule create-file-from-another ( targets * : sources * : properties * )
+{
+   if &lt;variant&gt;debug in $(properties)
+   {
+       OPTIONS on $(targets) = --debug ;
+   }
+}
+actions create-file-from-another
+{
+    create-file-from-another $(OPTIONS) $(&lt;) $(&gt;)
+}
+</programlisting>
+      In this example, the rule checks if certain build property is specified.
+      If so, it sets variable <varname>OPIONS</varname> that's used inside
+      action. Note that the variable is set "on targets" -- the value will
+      be only visible inside action, not globally. Were it set globally,
+      using variable named <varname>OPTIONS</varname> in two unrelated
+      actions would be impossible.
+      </para>
+
+      <para>More details can be found in Jam reference, <xref linkend="jam.language.rules"/>
+      </para>
+
     </section>
 
   <section id="bbv2.advanced.configuration">
@@ -1608,6 +1653,66 @@ unit-test helpers_test
         <code>run-fail</code>. They are more suitable for automated testing, and
         are not covered here.
       </para>        
+    </section>
+
+    <section id="bbv2.builtins.raw">
+
+      <title>Raw commands: 'make' and 'notfile'</title>
+
+      <para>Sometimes, the builtin target types are not enough, and you
+      want Boost.Build to just run specific commands. There are two main
+      target rules that make it possible: <functionname>make</functionname>
+      and <functionname>notfile</functionname>.
+      </para>
+
+      <para>The <functionname>make</functionname> rule is used when you want to
+      create one file from a number of sources using some specific command.
+      The <functionname>notfile</functionname> is used to unconditionally run
+      a command. 
+      </para>
+
+      <para>
+        Suppose you want to create file <filename>file.out</filename> from
+        file <filename>file.in</filename> by running command 
+        <command>in2out</command>. Here's how you'd do this in Boost.Build:
+<programlisting>
+actions in2out
+{
+    in2out $(&lt;) $(&gt;)
+}
+make file.out : file.in : @in2out ;
+</programlisting>
+        If you run <command>bjam</command> and <filename>file.out</filename> 
+        does not exist, Boost.Build will run the <command>in2out</command>
+        command to create that file. For more details on specifying actions,
+        see <xref linkend="bbv2.advanced.jam_language.actions"/>.
+      </para>
+
+      <note>
+        <para>
+          The <functionname>make</functionname> rule is useful to express custom
+          transformation that are used just once or twice in your project. For
+          transformations that are used often, you are advised to declare
+          new generator, as described in <xref linkend="bbv2.extending.tools"/>.
+        </para>
+      </note>
+
+      <para>
+        It could be that you just want to run some command unconditionally,
+        and that command does not create any specific files. The, you can use
+        the <functionname>notfile</functionname> rule. For example:
+<programlisting>
+notfile echo_something : @echo ;
+actions echo
+{
+    echo "something"
+}
+</programlisting>
+        The only difference from the <functionname>make</functionname> rule is
+        that the name of the target is not considered a name of a file, so
+        Boost.Build will unconditionally run the action.
+      </para>
+            
     </section>
     
   </section>
