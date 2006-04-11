@@ -39,6 +39,8 @@ rule init ( version ? : command * : options * )
     }
 
     gcc.init-link-flags darwin darwin $(condition) ;
+    
+    flags darwin.link NEED_STRIP $(condition)/<debug-symbols>off : "" ;        
 }
 
 feature framework : : free ;
@@ -56,7 +58,8 @@ _ = " " ;
 
 actions link bind LIBRARIES
 {
-    $(CONFIG_COMMAND) $(ST_OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) -framework$(_)$(FRAMEWORK) $(OPTIONS)   
+    $(CONFIG_COMMAND) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) -framework$(_)$(FRAMEWORK) $(OPTIONS)
+    $(NEED_STRIP)strip $(NEED_STRIP)"$(<)"
 }
 
 actions link.dll bind LIBRARIES
