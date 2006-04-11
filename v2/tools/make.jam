@@ -47,7 +47,12 @@ rule make ( target-name : sources * : generating-rule + : requirements * )
     
     # The '@' sign causes the feature.jam module to qualify rule name
     # with the module name of current project, if needed.
-    requirements += <action>@$(generating-rule) ;
+    local m = [ MATCH ^(@).* : $(generating-rule) ] ;
+    if ! $(m)
+    {
+        generating-rule = @$(generating-rule) ;
+    }        
+    requirements += <action>$(generating-rule) ;
     
     targets.main-target-alternative
      [ new make-target-class $(target-name) : $(project)
