@@ -108,8 +108,8 @@ rule load-parent ( location )
     
     if ! $(found)
     {
-        error "Could not find parent for project at '$(location)'"
-            : "Did not find Jamfile or project-root.jam in any parent directory." ;
+        ECHO "error: Could not find parent for project at '$(location)'" ;
+        ECHO "error: Did not find Jamfile or project-root.jam in any parent directory." ;
         EXIT ;
     }
     
