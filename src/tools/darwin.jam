@@ -21,7 +21,11 @@ generators.override darwin.prebuilt : builtin.prebuilt ;
 generators.override darwin.searched-lib-generator : searched-lib-generator ;
 
 toolset.inherit-rules darwin : gcc ;
-toolset.inherit-flags darwin : gcc ;
+toolset.inherit-flags darwin : gcc     
+  :  # On Darwin, static runtime is just not supported. So don't inherit
+     # any flags settings for <runtime-link>static
+     <runtime-link>static
+  ;
 
 # No additional initialization should be necessary
 rule init ( version ? : command * : options * )
