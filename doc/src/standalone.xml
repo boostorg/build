@@ -18,5 +18,10 @@
 
   <!-- Appendicies -->
   <xi:include href="architecture.xml"/>
+  <appendix id="bbv2.jam">
+    <title>Boost.Jam documentation</title>
+    <xi:include href="jam_docs.xml" parse="xml" 
+	xpointer="xpointer(id('jam.intro')|id('jam.intro')/following-sibling::*)"/>
+  </appendix>    
 
 </part>
