@@ -105,7 +105,7 @@ rule init ( version ? : command * : options * )
     #~ - The archive builder.
     local archiver =
         [ common.get-invocation-command gcc
-            : ar : [ feature.get-values <archiver> : $(options) ] : $(bin) : PATH ] ;
+            : ar : [ feature.get-values <archiver> : $(options) ] : $(bin) : search-path ] ;
     flags gcc.archive .AR $(condition) : $(archiver[1]) ;
     if $(.debug-configuration)
     {
@@ -115,10 +115,21 @@ rule init ( version ? : command * : options * )
     #~ - The resource compiler.
     local rc =
         [ common.get-invocation-command gcc
-            : windres : [ feature.get-values <rc> : $(options) ] : $(bin) : PATH ] ;
+            : windres : [ feature.get-values <rc> : $(options) ] : $(bin) : search-path ] ;
     local rc-type =
         [ feature.get-values <rc-type> : $(options) ] ;
     rc-type ?= windres ;
+    if ! $(rc)
+    {
+        #~ If we can't find an RC compiler we fallback to a null RC compiler
+        #~ that creates empty object files. This allows the same Jamfiles
+        #~ to work across the board. The null RC uses the assembler to create
+        #~ the empty objects, so configure that.
+        local rc =
+            [ common.get-invocation-command gcc
+                : as : : $(bin) : search-path ] ;
+        rc-type = null ;
+    }
     rc.configure $(rc) : $(condition) : <rc-type>$(rc-type) ;
 }
 
