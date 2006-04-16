@@ -125,7 +125,7 @@ rule init ( version ? : command * : options * )
         #~ that creates empty object files. This allows the same Jamfiles
         #~ to work across the board. The null RC uses the assembler to create
         #~ the empty objects, so configure that.
-        local rc =
+        rc =
             [ common.get-invocation-command gcc
                 : as : : $(bin) : search-path ] ;
         rc-type = null ;
