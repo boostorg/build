@@ -96,7 +96,7 @@ rule init ( prefix )
         if [ glob $(.prefix)/Jamroot ]
         {
             # Import all Qt Modules
-            local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg Qt3Support QtTest QtAssistantClient QtUiTools ;
+            local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg QtOpenGL Qt3Support QtTest QtAssistantClient QtUiTools ;
             for local l in $(all-libraries) 
             {
                 alias $(l) 
