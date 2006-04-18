@@ -218,7 +218,7 @@ rule init ( prefix )
                   <include>$(.prefix)/include/QtXml 
                 ;
             
-            lib Qt3Support : QtGui QtNetwork QtXml QSql
+            lib Qt3Support : QtGui QtNetwork QtXml QtSql
                 : <name>Qt3Support$(suffix_version) <variant>release
                 :
                 : # usage-requirements
@@ -226,7 +226,7 @@ rule init ( prefix )
                   <define>QT3_SUPPORT
                   <include>$(.prefix)/include/Qt3Support 
                 ;
-            lib Qt3Support : QtGui QtNetwork QtXml QSql
+            lib Qt3Support : QtGui QtNetwork QtXml QtSql
                 : <name>Qt3Support$(suffix_debug)$(suffix_version) <variant>debug
                 :
                 : # usage-requirements
