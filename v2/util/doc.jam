@@ -14,6 +14,7 @@ import set ;
 import container ;
 import "class" ;
 import sequence ;
+import path ;
 
 # The type of output to generate.
 # "console" is formated text echoed to the console (the default);
@@ -901,6 +902,7 @@ local rule read-file (
     file # The file to read in.
     )
 {
+    file = [ path.native [ path.root [ path.make $(file) ] [ path.pwd ] ] ] ;
     if ! $(.file<$(file)>.lines)
     {
         local content ;
