@@ -14,6 +14,7 @@ import set ;
 import container ;
 import "class" ;
 import sequence ;
+import path ;
 
 # The type of output to generate.
 # "console" is formated text echoed to the console (the default);
@@ -570,6 +571,41 @@ local rule print-help-variables (
     }
 }
 
+# Generate documentation for a project.
+#
+local rule print-help-project (
+    unused ?
+    : jamfile * # The project Jamfile.
+    )
+{
+    if $(jamfile<$(jamfile)>.docs[1])
+    {
+        # Print the docs.
+        print.section "Project-specific help"
+            Project has jamfile at $(jamfile) ;
+        
+        print.lines $(jamfile<$(jamfile)>.docs) "" ;
+    }
+}
+
+# Generate documentation for a config file.
+#
+local rule print-help-config (
+    unused ?
+    : type # The type of configuration file user or site.
+    config-file # The configuration Jamfile.
+    )
+{
+    if $(jamfile<$(config-file)>.docs[1])
+    {
+        # Print the docs.
+        print.section "Configuration help"
+            Configuration file at $(config-file) ;
+        
+        print.lines $(jamfile<$(config-file)>.docs) "" ;
+    }
+}
+
 local rule __test__
 {
 }
@@ -808,11 +844,11 @@ local rule scan-class (
 rule scan-module (
     target # The module file.
     : text * # The text in the file, one item per line.
-    : binding
+    : action * # Rule to call to output docs for the module.
     )
-{    
+{
     if $(.option.debug) { ECHO "HELP:" scanning module target '$(target)' ; }
-    local module-name = $(.module<$(target)>.name) ;
+    local module-name = $(target:B) ;
     local module-documented = ;
     local comment-block = ;
     local syntax-block = ;
@@ -836,6 +872,12 @@ rule scan-module (
             # mark as the copy for the module.
             set-module-copyright $(module-name) : $(comment-block) ;
         }
+        else if $(action[1]) in "print-help-project" "print-help-config"
+            && ! $(jamfile<$(target)>.docs[1])
+        {
+            # special module docs for the project jamfile.
+            jamfile<$(target)>.docs = $(comment-block) ;
+        }
         else if ! $(module-documented)
         {
             # document the module.
@@ -843,11 +885,9 @@ rule scan-module (
             module-documented = true ;
         }
     }
-    for local action in $(.module<$(target)>.actions)
+    if $(action)
     {
-        local action-rule = [ $(action).front ] ; $(action).pop-front ;
-        local action-args = [ $(action).get ] ;
-        local ignored = [ $(action-rule) $(module-name) : $(action-args) ] ;
+        $(action[1]) $(module-name) : $(action[2-]) ;
     }
 }
 
@@ -855,6 +895,39 @@ rule scan-module (
 # header scanning phase.
 IMPORT $(__name__) : scan-module : : doc.scan-module ;
 
+# Read in a file using the SHELL builtin and return the
+# individual lines as would be done for header scanning.
+#
+local rule read-file (
+    file # The file to read in.
+    )
+{
+    file = [ path.native [ path.root [ path.make $(file) ] [ path.pwd ] ] ] ;
+    if ! $(.file<$(file)>.lines)
+    {
+        local content ;
+        switch [ modules.peek : OS ]
+        {
+            case NT :
+            content = [ SHELL "TYPE \"$(file)\"" ] ;
+
+            case * :
+            content = [ SHELL "cat \"$(file)\"" ] ;
+        }
+        local lines ;
+        local nl = "
+" ;
+        local << = "([^$(nl)]*)[$(nl)](.*)" ;
+        local line+ = [ MATCH "$(<<)" : "$(content)" ] ;
+        while $(line+)
+        {
+            lines += $(line+[1]) ;
+            line+ = [ MATCH "$(<<)" : "$(line+[2])" ] ;
+        }
+        .file<$(file)>.lines = $(lines) ;
+    }
+    return $(.file<$(file)>.lines) ;
+}
 
 # Add a scan action to perform to generate the help documentation.
 # The action rule is passed the name of the module as the first argument.
@@ -866,38 +939,21 @@ local rule do-scan (
     : action * # The action rule, plus the secondary arguments to pass to the action rule.
     )
 {
-    local targets = ;
-    for local module-file in $(modules)
-    {
-        local module-name = $(module-file:B) ;
-        .module<$(module-file)>.name = $(module-name) ;
-        if $(action)
-        {
-            .module<$(module-file)>.actions += [ class.new vector $(action) ] ;
-        }
-        HDRSCAN on $(module-file) = "^(.*).$" ;
-        HDRRULE on $(module-file) = doc.scan-module ;
-        NOTFILE $(module-name).scan ;
-        ALWAYS $(module-name).scan ;
-        INCLUDES $(module-name).scan : $(module-file) ;
-        targets += $(module-name).scan ;
-    }
-    if $(help-output) = console
-    {
-        DEPENDS all : $(targets) ;
-    }
     if $(help-output) = text
     {
         print.output $(help-output-file).txt plain ;
         ALWAYS $(help-output-file).txt ;
-        DEPENDS $(help-output-file).txt : $(targets) ;
         DEPENDS all : $(help-output-file).txt ;
     }
     if $(help-output) = html
     {
         print.output $(help-output-file).html html ;
         ALWAYS $(help-output-file).html ;
-        DEPENDS $(help-output-file).html : $(targets) ;
         DEPENDS all : $(help-output-file).html ;
     }
+    for local module-file in $(modules[1--2])
+    {
+        scan-module $(module-file) : [ read-file $(module-file) ] ;
+    }
+    scan-module $(modules[-1]) : [ read-file $(modules[-1]) ] : $(action) ;
 }
