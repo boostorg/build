@@ -204,7 +204,7 @@ JAMFILE ?= [Bb]uild.jam [Jj]amfile.v2 [Jj]amfile [Jj]amfile.jam ;
 # causes this to search not the given directory but the ones above it up
 # to the directory given in it.
 #
-local rule find-jamfile (
+rule find-jamfile (
     dir # The directory(s) to look for a Jamfile.
     parent-root ? # Optional flag indicating to search for the parent Jamfile.
     : no-errors ?
