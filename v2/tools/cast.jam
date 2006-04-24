@@ -72,7 +72,7 @@ rule cast ( name type : sources * : requirements * : default-build *
     if ! $(real-type)
     {
         errors.user-error "No type corresponds to main target rule nam '$(type)'"
-          : "Hint: try lowercase the name" ;
+          : "Hint: try lowercase name" ;
     }
     
         
