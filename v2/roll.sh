@@ -26,11 +26,12 @@ cd doc
 /home/ghost/Work/boost-rc/tools/jam/src/bin.linuxx86/bjam --v2
 /home/ghost/Work/boost-rc/tools/jam/src/bin.linuxx86/bjam --v2 pdf
 cp `find bin -name "*.pdf"` ../..
+mv standalone.pdf useman.pdf
 rm -rf bin
 cd ..
 
 # Get the boost logo.
-wget http://boost.org/boost-build2/boost.png
+wget http://boost.sf.net/boost-build2/boost.png
 
 # Adjust the links, so they work with the standalone package
 perl -pi -e 's%../../../boost.png%boost.png%' index.html
