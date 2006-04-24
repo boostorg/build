@@ -386,10 +386,15 @@ else if $(clean)
     for local t in [ virtual-target.all-targets ]
     {
         local p = [ $(t).project ] ;
-        if $(t) in $(targets-to-clean)
-           || [ is-child [ $(p).project-module ] ] = true
-        {
-            to-clean += $(t) ;
+
+        # Remove only derived targets.
+        if [ $(t).action ]
+        {                    
+            if $(t) in $(targets-to-clean)
+              || [ is-child [ $(p).project-module ] ] = true
+              {
+                  to-clean += $(t) ;
+              }        
         }        
     }
     local to-clean-actual ;

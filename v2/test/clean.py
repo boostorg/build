@@ -114,13 +114,17 @@ t.expect_nothing("sub2/bin/$toolset/debug/sub2.obj")
 t.expect_nothing("sub3/bin/$toolset/debug/sub3.obj")
 
 
+# Regression test: sources of the 'cast' rule were mistakenly
+# deleted.
+t.rm(".")
+t.write("Jamroot", """
+import cast ;
+cast a cpp : a.h ;
+""")
+t.write("a.h", "")
 
-
-
-
-
-
-
+t.run_build_system("--clean")
+t.expect_nothing("a.h")
 
 t.cleanup()
 
