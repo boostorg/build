@@ -537,7 +537,7 @@ exe e10 : e10.cpp foo ;</programlisting>
 
       <tip>
         <para>
-          When one library uses another, you put the second library is
+          When one library uses another, you put the second library in
           the source list of the first. For example:
           <programlisting>
 lib utils : utils.cpp /boost/filesystem//fs ;   
@@ -550,7 +550,7 @@ exe app : app.cpp core ;</programlisting>
           as a static library, its dependency on <filename>utils</filename> is passed along to
           <filename>core</filename>'s dependents, causing
           <filename>app</filename> to be linked with both
-          <filename>core</filename> and <filename>utils</filename>."
+          <filename>core</filename> and <filename>utils</filename>.
         </para>
       </tip>
 

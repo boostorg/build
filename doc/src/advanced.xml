@@ -42,7 +42,7 @@
     </para>
 
     <para>So, to be able to successfully use Boost.Build, you need to know only
-      three things:
+      four things:
       <itemizedlist>
         <listitem>
           <para><link linkend="bbv2.advanced.configuration">
@@ -57,7 +57,7 @@
               How the build process works</link></para>
         </listitem>
         <listitem>
-          <para>Some Basics about the Boost.Jam language. See the
+          <para>Some Basics about the Boost.Jam language. See also the
           <ulink 
           url="http://www.boost.org/tools/jam/index.html">Boost.Jam</ulink>
           documentation.
@@ -150,8 +150,8 @@ x = [ helper 1 : 2 : 3 ] ;</programlisting>
       result of the call must be used inside some expression, you need to add
       brackets around the call, like shown on the second line.
       <programlisting>
-if cond { statements } [ else statement ]</programlisting>
-      Regular if-statement. The condition is composed of:
+if cond { statements } [ else { statements } ]</programlisting>
+      This is a regular if-statement. The condition is composed of:
       <itemizedlist>
         <listitem><para>Literals (true if at least one string is not empty)</para></listitem>        
         <listitem><para>Comparisons: <code>a
@@ -184,11 +184,11 @@ return values ;
 rule test ( )
 {
    if 1 = 1 {
-      return "resonable" ;
+      return "reasonable" ;
    }
    return "strange" ;
 }</programlisting> will return <literal>strange</literal>, not
-<literal>resonable</literal>.           
+<literal>reasonable</literal>.
       </para></warning>
 
         <programlisting>
@@ -251,8 +251,8 @@ actions create-file-from-another
     <title>Configuration</title>
 
     <para>The Boost.Build configuration is specified in the file
-    <filename>user-config.jam</filename>. You can edit the one in top-level
-    directory of Boost.Build installation create a copy in your home directory
+    <filename>user-config.jam</filename>. You can edit the one in the top-level
+    directory of Boost.Build installation or create a copy in your home directory
     and edit that. (See <xref linkend="bbv2.reference.init.config"/>  for the
     exact search paths.) The primary function of that file is to declare which
     compilers and other tools are available. The simplest syntax to configure
@@ -452,7 +452,7 @@ bjam optimization=space
           <listitem>
             <para>Changes build directories for all project roots being built. When
             this option is specified, all Jamroot files should declare project name.
-            The build directory for the project root will be computed by contanating 
+            The build directory for the project root will be computed by concatanating
             the value of the <option>--build-dir</option> option, the project name 
             specified in Jamroot, and the build dir specified in Jamroot 
             (or <literal>bin</literal>, if none is specified).
@@ -699,7 +699,7 @@ exe c : c.cpp /boost/program_options//program_options ;
 
       </section>
 
-      <section>
+      <section id="bbv2.advanced.targets.requirements">
         <title>Requirements</title>
         <para>Requirements are the properties that should always be present when
         building a target. Typically, they are includes and defines:
@@ -964,7 +964,7 @@ project tennis
                 <entry><literal>build-dir</literal></entry>
                 
                 <entry>Empty if the parent has no build directory set.
-                Otherwise, the parent's build directory with with the
+                Otherwise, the parent's build directory with the
                 relative path from parent to the current project
                 appended to it.
                 </entry>
@@ -998,7 +998,7 @@ project tennis
       called <filename>Jamroot</filename> rather than
       <filename>Jamfile</filename>.  When loading a project,
       Boost.Build looks for either <filename>Jamroot</filename> or
-      <code>Jamfile</code>.  They are handled indentically, except
+      <code>Jamfile</code>.  They are handled identically, except
       that if the file is called <filename>Jamroot</filename>, the
       search for a parent project is not performed.
       </para>
@@ -1171,7 +1171,7 @@ bjam app1 lib1//lib1 gcc debug optimization=full
     <section><title>Building a main target</title>
 
       <para>When you request, directly or indirectly, a build of a main target
-        with specific requirements, the following steps are made. Some brief
+        with specific requirements, the following steps are done. Some brief
         explanation is provided, and more details are given in <xref
         linkend="bbv2.reference.buildprocess"/>.
         <orderedlist>
@@ -1406,7 +1406,7 @@ lib aux : : &lt;name&gt;aux ;
 </programlisting>
       </para>
           
-      <para>When a library uses another library you should put that another
+      <para>When a library uses another library you should put that other
         library in the list of sources. This will do the right thing in all
         cases. For portability, you should specify library dependencies even
         for searched and prebuilt libraries, othewise, static linking on
@@ -1477,15 +1477,15 @@ lib a : a.cpp : &lt;use&gt;b : : &lt;library&gt;b ;
 
       <para>
         The <functionname>alias</functionname> rule gives alternative name to
-        a group of targets. For example, to give name
+        a group of targets. For example, to give the name
         <filename>core</filename> to a group of three other targets with the
         following code:
         <programlisting>
 alias core : im reader writer ;</programlisting>
-        Using <filename>core</filename> on the command line, or in source list
+        Using <filename>core</filename> on the command line, or in the source list
         of any other target is the same as explicitly using
         <filename>im</filename>, <filename>reader</filename>, and
-        <filename>writer</filename>, just more convenient.
+        <filename>writer</filename>, but it is just more convenient.
 
       </para>
 
@@ -1539,7 +1539,7 @@ install dist : hello helpers : &lt;location&gt;/usr/bin ;
 </programlisting>
         While you can achieve the same effect by changing the target name to
         <filename>/usr/bin</filename>, using the <code>location</code>
-        property is better, because it allows you to use a memnonic target
+        property is better, because it allows you to use a mnemonic target
         name.
       </para>
 
@@ -1565,7 +1565,7 @@ install dist : hello
            ;
 </programlisting>
         will find all targets that <code>hello</code> depends on, and install
-        all of the which are either executables or libraries. More
+        all of those which are either executables or libraries. More
         specifically, for each target, other targets that were specified as
         sources or as dependency properties, will be recursively found.  One
         exception is that targets referred with the <link
@@ -1580,7 +1580,7 @@ install dist : hello
       rule can be used when targets must be installed into several
       directories:
 <programlisting>
-install install : install-bin install-lib ;
+alias install : install-bin install-lib ;
 install install-bin : applications : /usr/bin ;
 install install-lib : helper : /usr/lib ;
 </programlisting>
@@ -1589,7 +1589,7 @@ install install-lib : helper : /usr/lib ;
     <para>Because the <code>install</code> rule just copies targets, most 
     free features <footnote><para>see the definition of "free" in <xref
     linkend="bbv2.reference.features.attributes"/>.</para></footnote>
-    have no effect when used in requirements of the <code>install</code>. 
+    have no effect when used in requirements of the <code>install</code> rule.
     The only two which matter are  
     <link linkend="bbv2.builtin.features.dependency">
     <varname>dependency</varname></link> and, on Unix,
@@ -1895,9 +1895,9 @@ actions echo
         <listitem>
           <simpara>
             The value of those features is passed without modification to the
-            corresponding tools. For <code>cflags</code> that's both C and C++
-            compilers, for <code>cxxflags</code> that's C++ compiler and for
-            <code>linkflags</code> that's linker. The features are handy when
+            corresponding tools. For <code>cflags</code> that's both the C and C++
+            compilers, for <code>cxxflags</code> that's the C++ compiler and for
+            <code>linkflags</code> that's the linker. The features are handy when
             you're trying to do something special that cannot be achieved by
             higher-level feature in Boost.Build.
           </simpara>
@@ -1908,7 +1908,7 @@ actions echo
         
         <listitem>
           <simpara>
-            The <code>&lt;warnings&gt;</code> feature controls warning level of compilers. It has the following values:
+            The <code>&lt;warnings&gt;</code> feature controls the warning level of compilers. It has the following values:
             <itemizedlist>
               <listitem><para><code>off</code> - disables all warnings.</para></listitem>
               <listitem><para><code>on</code> - enables default warning level for the tool.</para></listitem>
@@ -1923,8 +1923,8 @@ actions echo
         
         <listitem>
           <simpara>
-            The <code>&lt;warnings-as-errors&gt;</code> makes it possible treat warnings as errors and abort
-            compilation on warning. The value <code>on</code> enables this behaviour. The default value is 
+            The <code>&lt;warnings-as-errors&gt;</code> makes it possible to treat warnings as errors and abort
+            compilation on a warning. The value <code>on</code> enables this behaviour. The default value is
             <code>off</code>.
           </simpara>
         </listitem>
