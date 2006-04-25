@@ -26,6 +26,7 @@ t.expect_addition("lib/bin/$toolset/debug/test_lib.dll")
 # 
 if (os.name == 'nt' or os.uname()[0].lower().startswith('cygwin')) and get_toolset() != 'gcc':
     t.copy("lib/bin/$toolset/debug/test_lib.lib", "lib/test_lib.lib")
+    t.copy("lib/bin/$toolset/debug/test_lib.dll", "lib/test_lib.dll")
 else:
     t.copy("lib/bin/$toolset/debug/test_lib.dll", "lib/test_lib.dll")
 
@@ -61,7 +62,7 @@ t.run_build_system()
 t.expect_addition("bin/$toolset/debug/main.exe")
 t.rm("bin/$toolset/debug/main.exe")
 
-# Test the 'unit-test' will correctly add runtime paths
+# Test that 'unit-test' will correctly add runtime paths
 # to searched libraries.
 t.write('Jamfile', """
 
