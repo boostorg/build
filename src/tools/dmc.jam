@@ -2,6 +2,7 @@
 
 # (C) Copyright Christof Meerwald 2003.
 # (C) Copyright Aleksey Gurtovoy 2004.
+# (C) Copyright Arjan Knepper 2006.
 #
 # Distributed under the Boost Software License, Version 1.0. (See
 # accompanying file LICENSE_1_0.txt or copy at
@@ -56,16 +57,23 @@ generators.register-c-compiler dmc.compile.c : C : OBJ : <toolset>dmc ;
 
 
 # Declare flags
-# FIXME: what's this 'debug-store'?
-#flags dmc.compile OPTIONS <debug-symbols>on/<debug-store>object : -g ;
-flags dmc.compile OPTIONS <debug-symbols>on : -g ;
-flags dmc.link <debug-symbols>on : -co ;
+# dmc optlink has some limitation on the amount of debug-info included. Therefore only linenumbers are enabled in debug builds.
+# flags dmc.compile OPTIONS <debug-symbols>on : -g ;
+flags dmc.compile OPTIONS <debug-symbols>on : -gl ;
+flags dmc.link OPTIONS <debug-symbols>on : /CO /NOPACKF /DEBUGLI ;
+flags dmc.link OPTIONS <debug-symbols>off : /PACKF ;
 
 flags dmc.compile OPTIONS <optimization>off : -S -o+none ;
 flags dmc.compile OPTIONS <optimization>speed : -o+time ;
 flags dmc.compile OPTIONS <optimization>space : -o+space ;
 flags dmc.compile OPTIONS <exception-handling>on : -Ae ;
 flags dmc.compile OPTIONS <rtti>on : -Ar ;
+# FIXME:
+# Compiling sources to be linked into a shared lib (dll) the -WD cflag should be used
+# Compiling sources to be linked into a static lib (lib) or executable the -WA cflag should be used
+# But for some reason the -WD cflag is always in use.
+# flags dmc.compile OPTIONS <link>shared : -WD ;
+# flags dmc.compile OPTIONS <link>static : -WA ;
 
 # Note that these two options actually imply multithreading support on DMC
 # because there is no single-threaded dynamic runtime library. Specifying
@@ -94,16 +102,9 @@ flags dmc LIBRARIES <library-file> ;
 flags dmc FINDLIBS <find-library-sa> ;
 flags dmc FINDLIBS <find-library-st> ;
 
-
-# FIXME: what's this?
-# flags msvc STDHDRS : $(DMC_ROOT)$(SLASH)include ;
-
-
-# FIXME: how one action handles both linking of executables and
-# shared libraries? Does it work for shared libraries at all?
 actions together link bind LIBRARIES
 {
-    "$(.root)link" $(OPTIONS) -delexecutable -noi -implib:"$(<[2])" "$(>)" $(LIBRARIES) , "$(<[1])" , NUL , user32.lib kernel32.lib "$(FINDLIBS:S=.lib)" , "$(<[2]:B).def"
+    "$(.root)link" $(OPTIONS) /NOI /DE /XN "$(>)" , "$(<[1])" ,, $(LIBRARIES) user32.lib kernel32.lib "$(FINDLIBS:S=.lib)" , "$(<[2]:B).def"
 }
 
 actions together link.dll bind LIBRARIES
@@ -112,10 +113,9 @@ actions together link.dll bind LIBRARIES
     echo DESCRIPTION 'A Library' >> $(<[2]:B).def
     echo EXETYPE NT >> $(<[2]:B).def
     echo SUBSYSTEM WINDOWS >> $(<[2]:B).def
-    echo CODE SHARED EXECUTE >> $(<[2]:B).def
-    echo DATA WRITE >> $(<[2]:B).def
-    
-    "$(.root)link" $(OPTIONS) -delexecutable -noi -implib:"$(<[2])" "$(>)" $(LIBRARIES) , "$(<[1])" , NUL , user32.lib kernel32.lib "$(FINDLIBS:S=.lib)" , "$(<[2]:B).def"
+    echo CODE	EXECUTE READ >> $(<[2]:B).def
+    echo DATA	READ WRITE >> $(<[2]:B).def
+    "$(.root)link" $(OPTIONS) /NOI /DE /XN /ENTRY:_DllMainCRTStartup /IMPLIB:"$(<[2])" "$(>)" $(LIBRARIES) , "$(<[1])" ,, user32.lib kernel32.lib "$(FINDLIBS:S=.lib)" , "$(<[2]:B).def"
 }
 
 actions compile.c
@@ -125,10 +125,10 @@ actions compile.c
 
 actions compile.c++
 {
-    "$(.root)dmc" -cpp -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o"$(<)" "$(>)"
+    "$(.root)dmc" -cpp -c -Ab $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o"$(<)" "$(>)"
 }
 
 actions together piecemeal archive
 {
-    "$(.root)lib" $(OPTIONS) -c -n -p128 "$(<)" "$(>)"
+    "$(.root)lib" $(OPTIONS) -c -n -p256 "$(<)" "$(>)"
 }
