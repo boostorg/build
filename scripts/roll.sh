@@ -26,7 +26,7 @@ cd doc
 /home/ghost/Work/boost-rc/tools/jam/src/bin.linuxx86/bjam --v2
 /home/ghost/Work/boost-rc/tools/jam/src/bin.linuxx86/bjam --v2 pdf
 cp `find bin -name "*.pdf"` ../..
-mv standalone.pdf useman.pdf
+mv ../../standalone.pdf ../../userman.pdf
 rm -rf bin
 cd ..
 
