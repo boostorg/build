@@ -74,7 +74,12 @@ Jam isn't under the blinkin GNU copyright, so you can incorporate it into commer
 
 [section:building Building BJam]
 
-Installing =BJam= after building it is simply a matter of copying the generated executables someplace in your =PATH=. For building the executables there are a set of =build= bootstrap scripts to accomodate particular environments. The scripts take one optional argument, the name of the toolset to build with. When the toolset is not given an attempt is made to detect an available toolset and use that. The build scripts accept these areguments:
+Installing =BJam= after building it is simply a matter of copying the
+generated executables someplace in your =PATH=. For building the executables
+there are a set of =build= bootstrap scripts to accomodate particular
+environments. The scripts take one optional argument, the name of the toolset
+to build with. When the toolset is not given an attempt is made to detect an
+available toolset and use that. The build scripts accept these arguments:
 
 [pre
 /build/ \[/toolset/\]
@@ -265,7 +270,7 @@ The supported toolsets, and wether they are auto-detected, are:
 
 ]
 
-The built executables are placed in a subdirectory specific to your platform. For example, in Linux running on an Intel x86 compatible chip, the executables are placed in: "=bin.linuxx86=". The =bjam\[.exe\]= executable can be used to invoke Boost.Build.
+The built executables are placed in a subdirectory specific to your platform. For example, in Linux running on an Intel x86 compatible chip, the executables are placed in: "=bin.linuxx86=". The =bjam[.exe]= executable can be used to invoke Boost.Build.
 
 The build scripts support additional invocation arguments for use by developers of Boost.Jam. The extra arguments come after the toolset, and can take the form of "=--option=" or targets for the =build.jam= script:
 
@@ -321,8 +326,11 @@ Options are either singular or have an accompanying value. When a value is allow
   [ [[^-d'''&nbsp;'''0]]
     [Turn off all debugging levels. Only errors are reported.] ]
   
-  [ [[^-f'''&nbsp;'''/Jambase/]]
-    [Read /Jambase/ instead of using the built-in Jambase. Only one -f flag is permitted, but the /Jambase/ may explicitly include other files. A /Jambase/ name of "-" is allowed, in which case console input is read until it is closed. At which point the input is treated as the Jambase.] ]
+  [ [[^-f'''&nbsp;'''/Jambase/]] [Read /Jambase/ instead of using the built-in
+    Jambase. Only one -f flag is permitted, but the /Jambase/ may explicitly
+    include other files. A /Jambase/ name of "-" is allowed, in which case
+    console input is read until it is closed, at which point the input is
+    treated as the Jambase.] ]
   
   [ [[^-j'''&nbsp;'''/n/]]
     [Run up to /n/ shell commands concurrently (UNIX and NT only). The default is 1.] ]
@@ -396,7 +404,7 @@ The Boost.Build v2 initialization behavior has been implemented. This behavior o
 
 In the parsing phase, =bjam= reads and parses the =Jambase= file, by default the built-in one. It is written in the [link jam.language jam language]. The last action of the =Jambase= is to read (via the "include" rule) a user-provided file called "=Jamfile=".
 
-Collectively, the purpose of the =Jambase= and the =Jamfile= is to name built target and source files, construct the dependency graph among them, and associate build actions with targets. The =Jambase= defines boilerplate rules and variable assignments, and the =Jamfile= uses these to specify the actual relationship among the target and source files.
+Collectively, the purpose of the =Jambase= and the =Jamfile= is to name build targets and source files, construct the dependency graph among them, and associate build actions with targets. The =Jambase= defines boilerplate rules and variable assignments, and the =Jamfile= uses these to specify the actual relationship among the target and source files.
 
 [endsect]
 
@@ -438,23 +446,27 @@ The =-j= flag instructs =bjam= to build more than one target at a time. If there
 
 [section:lexical Lexical Features]
 
-=BJam= treats its input files as whitespace-separated tokens, with two exceptions: double quotes (") can enclose whitespace to embed it into a token, and everything between the matching curly braces ({}) in the definition of a rule action is treated as a single string. A backslash (\) can escape a double quote, or any single whitespace character.
+=BJam= treats its input files as whitespace-separated tokens, with two exceptions: double quotes (") can enclose whitespace to embed it into a token, and everything between the matching curly braces ({}) in the definition of a rule action is treated as a single string. A backslash (\\) can escape a double quote, or any single whitespace character.
 
 =BJam= requires whitespace (blanks, tabs, or newlines) to surround all tokens, including the colon (:) and semicolon (;) tokens.
 
-=BJam= keywords (an mentioned in this document) are reserved and generally must be quoted with double quotes (") to be used as arbitrary tokens, such as variable or target names. 
+=BJam= keywords (an mentioned in this document) are reserved and generally
+must be quoted with double quotes (") to be used as arbitrary tokens, such as
+variable or target names. 
+
+Comments start with the [^#] character and extend until the end of line.
 
 [endsect]
 
 [section:target Targets]
 
-The essential =bjam= data entity is a target. Built targets are files to be updated. Source targets are the files used in updating built targets. Built targets and source targets are collectively referred to as file targets, and frequently built targets are source targets for other built targets. Pseudotargets are symbols which represent dependencies on other targets, but which are not themselves associated with any real file.
+The essential =bjam= data entity is a target. Build targets are files to be updated. Source targets are the files used in updating built targets. Built targets and source targets are collectively referred to as file targets, and frequently built targets are source targets for other built targets. Pseudotargets are symbols which represent dependencies on other targets, but which are not themselves associated with any real file.
 
 A file target's identifier is generally the file's name, which can be absolutely rooted, relative to the directory of =bjam='s invocation, or simply local (no directory). Most often it is the last case, and the actual file path is bound using the =$(SEARCH)= and =$(LOCATE)= special variables. See [link jam.language.variables.builtins.search SEARCH and LOCATE Variables] below. A local filename is optionally qualified with grist, a string value used to assure uniqueness. A file target with an identifier of the form /file(member)/ is a library member (usually an =ar=(1) archive on Unix).
 
 [section Binding Detection]
 
-Whenever a target is bound to a location in the filesystem, Boost Jam will look for a variable called =BINDRULE= (first "on" the target being bound, then in the global module). If non-empty, =$(BINDRULE\[1\])= names a rule which is called with the name of the target and the path it is being bound to. The signature of the rule named by =$(BINDRULE\[1\])= should match the following:
+Whenever a target is bound to a location in the filesystem, Boost Jam will look for a variable called =BINDRULE= (first "on" the target being bound, then in the global module). If non-empty, =$(BINDRULE[1])= names a rule which is called with the name of the target and the path it is being bound to. The signature of the rule named by =$(BINDRULE[1])= should match the following:
 
 [pre
 rule /bind-rule/ ( /target/ : /path/ )
@@ -489,7 +501,7 @@ actions \[ /modifiers/ \] /rulename/ { /commands/ }
 Invoke a rule.
 
 [pre
-rulename /field1/ : /field2/ : /.../ : /fieldN/ ;
+/rulename/ /field1/ : /field2/ : /.../ : /fieldN/ ;
 ]
 
 Invoke a rule under the influence of target's specific variables..
@@ -511,7 +523,7 @@ Rules fall into two categories: updating rules (with actions), and pure procedur
 
 When an updating rule is invoked, its updating actions are added to those associated with its built targets ([^$(1)]) before the rule's procedure is run. Later, to build the targets in the updating phase, /commands/ are passed to the OS command shell, with [^$(1)] and [^$(2)] replaced by bound versions of the target names. See Binding above.
 
-Rule invokation may be indirected through a variable:
+Rule invocation may be indirected through a variable:
 
 [pre
 $(/var/) /field1/ : /field2/ : /.../ : /fieldN/ ;
@@ -522,7 +534,11 @@ on /target/ $(/var/) /field1/ : /field2/ : /.../ : /fieldN/ ;
 \[ on /target/ $(/var/) /field1/ : /field2/ : /.../ : /fieldN/ \]
 ]
 
-The variable's value names the rule (or rules) to be invoked. A rule is invoked for each element in the list of [^$(/var/)]'s values. The fields [^/field1/ : /field2/ : /.../] are passed as arguments for each invokation. For the [ ... ] forms, the return value is the concatenation of the return values for all of the invokations.
+The variable's value names the rule (or rules) to be invoked. A rule is
+invoked for each element in the list of [^$(/var/)]'s values. The fields
+[^/field1/ : /field2/ : /.../] are passed as arguments for each
+invokation. For the [ ... ] forms, the return value is the concatenation of
+the return values for all of the invocations.
 
 [section Action Modifiers]
 
@@ -761,7 +777,7 @@ Currently supported data types : '=REG_DWORD=', '=REG_SZ=', '=REG_EXPAND_SZ=', '
 
 [pre
 local PSDK-location =
-  \[ PROFILE HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\MicrosoftSDK\\\\Directories : "Install Dir" \] ;
+  \[ W32_GETREG HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\MicrosoftSDK\\\\Directories : "Install Dir" \] ;
 ]
 
 [pre
@@ -775,7 +791,8 @@ rule SHELL ( /command/ : * )
     [[=no-output=] [Don't capture the output of the command. Instead an empty ("") string value is returned in place of the output.]]
 ]
 
-Because the Perforce/Jambase defines a =SHELL= rule which hides the builtin. =COMMAND= can be used as an alias for =SHELL= in such a case.
+Because the Perforce/Jambase defines a =SHELL= rule which hides the
+builtin rule, =COMMAND= can be used as an alias for =SHELL= in such a case.
 
 [endsect]
 
@@ -908,14 +925,14 @@ A variable is defined with:
 
 [pre
 /variable/ = /elements/ ;
-/variable/ += /elements ;
+/variable/ += /elements/ ;
 /variable/ on /targets/ = /elements/ ;
 /variable/ on /targets/ += /elements/ ;
 /variable/ default = /elements/ ;
 /variable/ ?= /elements/ ;
 ]
 
-The first two forms set /variable/ globally. The third and forth forms set a target-specific variable. The [^=] operator replaces any previous elements of /variable/ with /elements/; the [^+=] operation adds /elements/ to /variable/'s list of elements. The final two forms are synonymous: they set /variable/ globally, but only if it was previously unset.
+The first two forms set /variable/ globally. The third and forth forms set a target-specific variable. The [^\=] operator replaces any previous elements of /variable/ with /elements/; the [^+=] operation adds /elements/ to /variable/'s list of elements. The final two forms are synonymous: they set /variable/ globally, but only if it was previously unset.
 
 Variables referenced in updating commands will be replaced with their values; target-specific values take precedence over global values. Variables passed as arguments (=$(1)= and =$(2)=) to actions are replaced with their bound values; the "=bind=" modifier can be used on actions to cause other variables to be replaced with bound values. See Action Modifiers above.
 
@@ -959,8 +976,10 @@ A variable element's string value can be parsed into grist and filename-related 
 
 [variablelist
 
-[[[^\[['n]\]]]
- [Select element number ['n] (starting at 1). If the variable contains fewer than ['n] elements, the result is a zero-element list. ['n] can be negative in which case the element number ['n] from the last leftward is returned]]
+[[[^\[['n]\]]] [Select element number ['n] (starting at 1). If the variable
+ contains fewer than ['n] elements, the result is a zero-element list. ['n]
+ can be negative in which case the element number ['n] from the last leftward
+ is returned.]]
 
 [[[^\[['n]-['m]\]]]
  [Select elements number ['n] through ['m]. ['n] and ['m] can be negative in which case they refer to elements counting from the last leftward.]]
@@ -993,7 +1012,17 @@ A variable element's string value can be parsed into grist and filename-related 
  [Replace uppercase characters with lowercase.]]
 
 [[[^:W]]
- [When invoking Windows-based tools from [@http://www.cygwin.com/ Cygwin] it can be important to pass them true windows-style paths. Tthe =:W= modifier which, *under Cygwin only*, turns a cygwin path into a Win32 path using the  [@http://www.cygwin.com/cygwin-api/func-cygwin-conv-to-win32-path.html =cygwin_conv_to_win32_path=] function. On other platforms, the string is unchanged. [^x = "/cygdrive/c/Program Files/Borland" ; ECHO $(x:W) ; # prints "C:\\Program Files\\Borland" on Cygwin]]]
+ [When invoking Windows-based tools from [@http://www.cygwin.com/ Cygwin] 
+  it can be important to pass them true windows-style paths. The =:W= 
+  modifier, *under Cygwin only*, turns a cygwin path into a Win32 path using
+ the  [@http://www.cygwin.com/cygwin-api/func-cygwin-conv-to-win32-path.html
+ =cygwin_conv_to_win32_path=] function. On other platforms, the string is
+ unchanged. For example
+`` 
+ x = "/cygdrive/c/Program Files/Borland" ; ECHO $(x:W) ;
+``
+prints [^"C:\\Program Files\\Borland"] on Cygwin
+]]
 
 [[[^:['chars]]]
  [Select the components listed in ['chars].]]
@@ -1050,7 +1079,9 @@ This section discusses variables that have special meaning to =bjam=.
 
 [section:search SEARCH and LOCATE]
 
-These two variables control the binding of file target names to locations in the file system. Generally, =$(SEARCH)= is used to find existing sources while= $(LOCATE)= is used to fix the location for built targets.
+These two variables control the binding of file target names to locations in
+the file system. Generally, =$(SEARCH)= is used to find existing sources
+while =$(LOCATE)= is used to fix the location for built targets.
 
 Rooted (absolute path) file targets are bound as is. Unrooted file target names are also normally bound as is, and thus relative to the current directory, but the settings of =$(LOCATE)= and =$(SEARCH)= alter this:
 
@@ -1064,7 +1095,13 @@ Both =$(SEARCH)= and =$(LOCATE)= should be set target-specific and not globally.
 
 [section:hdrscan HDRSCAN and HDRRULE]
 
-These two variable control header file scanning. =$(HDRSCAN)= is an =egrep(1)= pattern, with ()'s surrounding the file name, used to find file inclusion statements in source files. =Jambase= uses =$(HDRPATTERN)= as the pattern for =$(HDRSCAN)=. =$(HDRRULE)= is the name of a rule to invoke with the results of the scan: the scanned file is the target, the found files are the sources. This is the only place where =bjam= invokes a rule through a variable setting.
+These two variables control header file scanning. =$(HDRSCAN)= is an
+=egrep(1)= pattern, with ()'s surrounding the file name, used to find file
+inclusion statements in source files. =Jambase= uses =$(HDRPATTERN)= as the
+pattern for =$(HDRSCAN)=. =$(HDRRULE)= is the name of a rule to invoke with
+the results of the scan: the scanned file is the target, the found files are
+the sources. This is the only place where =bjam= invokes a rule through a
+variable setting.
 
 Both =$(HDRSCAN)= and =$(HDRRULE)= must be set for header file scanning to take place, and they should be set target-specific and not globally. If they were set globally, all files, including executables and libraries, would be scanned for header file include statements.
 
@@ -1420,7 +1457,7 @@ This section is derived from the official Jam documentation and from experience 
 
 * A Jam *target* is an abstract entity identified by an arbitrary string. The build-in =DEPENDS= rule creates a link in the dependency graph between the named targets.
 
-* Note that the documentation for the built-in =INCLUDES= rule is incorrect: [^INCLUDES ['targets1] : ['targets2]] causes everything that depends on a member of /targets1/ to depend on all members of /targets2/. It does this in an odd way, by tacking /targets2/ onto a special tail section in the dependency list of everything in /targets1/. It seems to be OK to create circular dependencies this way; in fact, it appears to be the "right thing to do" when a single build action produces both /targets1/ and /targets2/.
+* Note that the original Jam documentation for the built-in =INCLUDES= rule is incorrect: [^INCLUDES ['targets1] : ['targets2]] causes everything that depends on a member of /targets1/ to depend on all members of /targets2/. It does this in an odd way, by tacking /targets2/ onto a special tail section in the dependency list of everything in /targets1/. It seems to be OK to create circular dependencies this way; in fact, it appears to be the "right thing to do" when a single build action produces both /targets1/ and /targets2/.
 
 * When a rule is invoked, if there are =actions= declared with the same name as the rule, the actions are added to the updating actions for the target identified by the rule's first argument. It is actually possible to invoke an undeclared rule if corresponding actions are declared: the rule is treated as empty.
 
@@ -1445,7 +1482,15 @@ This section is derived from the official Jam documentation and from experience 
 
 * When Jam is invoked it imports all environment variable settings into corresponding Jam variables, followed by all command-line (-s...) variable settings. Variables whose name ends in PATH, Path, or path are split into string lists on OS-specific path-list separator boundaries (e.g. ":" for UNIX and ";" for Windows). All other variables are split on space (" ") boundaries. Boost Jam modifies that behavior by allowing variables to be quoted.
 
-* A variable whose value is an empty list or which consists entirely of empty strings has a negative logical value. Thus, for example, code like the following allows a sensible non-empty default which can easily be overridden by the user: [^MESSAGE ?\= starting jam... ; if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }] If the user wants a specific message, he invokes jam with "-sMESSAGE=message text". If he wants no message, he invokes jam with -sMESSAGE\= and nothing at all is printed.
+* A variable whose value is an empty list or which consists entirely of empty
+ strings has a negative logical value. Thus, for example, code like the
+ following allows a sensible non-empty default which can easily be overridden
+ by the user: 
+ ``
+MESSAGE ?\= starting jam... ;
+if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
+``
+ If the user wants a specific message, he invokes jam with [^"-sMESSAGE\=message text"]. If he wants no message, he invokes jam with [^-sMESSAGE\=] and nothing at all is printed.
 
 * The parsing of command line options in Jam can be rather unintuitive, with regards to how other Unix programs accept options. There are two variants accepted as valid for an option:
 
