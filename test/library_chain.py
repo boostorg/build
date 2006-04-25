@@ -7,7 +7,7 @@
 
 #  Test that a chain of libraries work ok, not matter if we use static or
 #  shared linking.
-from BoostBuild import Tester, List
+from BoostBuild import Tester, List, get_toolset
 import string
 import os
 
@@ -96,7 +96,7 @@ exe main : main.cpp png ;
 lib png : z : <name>png ;
 lib z : : <name>zzz ;
 """)
-t.run_build_system("-a -d+2", status=1, stderr=None)
+t.run_build_system("-a -d+2", status=None, stderr=None)
 # Try to find the "zzz" string either in response file
 # (for Windows compilers), or in standard output.
 rsp = t.adjust_names("bin/$toolset/debug/main.exe.rsp")[0]
@@ -125,8 +125,10 @@ void a() {}
 t.run_build_system(subdir="a")
 t.expect_addition("a/bin/$toolset/debug/a.dll")
 
-# FIXME: for Windows, need to link to .lib, not .dll!
-file = t.adjust_names(["a/bin/$toolset/debug/a.dll"])[0]
+if (os.name == 'nt' or os.uname()[0].lower().startswith('cygwin')) and get_toolset() != 'gcc':
+    file = t.adjust_names(["a/bin/$toolset/debug/a.lib"])[0]
+else:
+    file = t.adjust_names(["a/bin/$toolset/debug/a.dll"])[0]
 
 t.write("b/Jamfile", """
 lib b : b.cpp ../%s ;

@@ -20,10 +20,21 @@ explicit a.h ;
 
 exe hello : hello.cpp : <implicit-dependency>a.h ;
 
-actions gen-header
+import os ;
+if [ os.name ] = NT
 {
-    echo "int i;" > $(<)
-} 
+    actions gen-header
+    {
+       echo int i; > $(<)
+    }
+}
+else
+{
+    actions gen-header
+    {
+        echo "int i;" > $(<)
+    }
+}
 """)
 
 t.write("hello.cpp", """ 
