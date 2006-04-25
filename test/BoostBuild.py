@@ -479,6 +479,7 @@ class Tester(TestCmd.TestCmd):
             self.ignore('*.pdb') # msvc program database files
             self.ignore('*.rsp') # response files
             self.ignore('*.tds') # borland debug symbols
+            self.ignore('*.manifest') # msvc DLL manifests
 
         # debug builds of bjam built with gcc produce this profiling data
         self.ignore('gmon.out')
