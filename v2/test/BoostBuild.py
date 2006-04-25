@@ -370,7 +370,7 @@ class Tester(TestCmd.TestCmd):
         if condition and dump_stdio:
             self.dump_stdio()
 
-        if '--preserve' in sys.argv:
+        if condition and '--preserve' in sys.argv:
             print 
             print "*** Copying the state of working dir into 'failed_test' ***"
             print 
