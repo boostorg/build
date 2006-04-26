@@ -46,7 +46,7 @@ generators.register-linker como-win.link
   : <toolset>como <toolset-como:platform>win ;  
 # Note that status of shared libraries support is not clear, so we don't
 # define the link.dll generator.
-generators.register-archiver como-winc.archive 
+generators.register-archiver como-win.archive 
   : OBJ : STATIC_LIB
   : <toolset>como <toolset-como:platform>win ;  
 
@@ -84,19 +84,14 @@ flags como-win FINDLIBS <find-shared-library> ;
 flags como-win FINDLIBS <find-static-library> ;
 
 RM = [ common.rm-command ] ;
+nl = "
+" ;
 
-#### Link ####
-
-rule link ( targets + : sources * : properties * )
-{
-    common.response-file $(targets) : $(sources) : $(targets[2]) 
-      : $(properties) ;
-}
 
 # for como, we repeat all libraries so that dependencies are always resolved
-actions link bind LIBRARIES RSP
+actions link bind LIBRARIES
 {
-    $(CONFIG_COMMAND) --no_version --no_prelink_verbose $(LINKFLAGS) -o "$(<[1]:S=)" @"$(RSP:W)" "$(LIBRARIES)" "$(FINDLIBS:S=.lib)" && $(RM) "$(RSP)"
+    $(CONFIG_COMMAND) --no_version --no_prelink_verbose $(LINKFLAGS) -o "$(<[1]:S=)" @"@($(<[1]:W).rsp:E=$(nl)"$(>)")" "$(LIBRARIES)" "$(FINDLIBS:S=.lib)"
 }
 
 actions compile.c
@@ -116,9 +111,9 @@ rule archive ( targets + : sources * : properties * )
     common.response-file $(targets) : $(sources) : $(targets[2]) : $(properties) ;             
 }
 
-actions updated together piecemeal archive bind RSP
+actions updated together piecemeal archive
 {
-    $(CONFIG_COMMAND) --no_version --no_prelink_verbose --prelink_object @"$(RSP:W)"
-    lib $(ARFLAGS) /nologo /out:"$(<:S=.lib)" @"$(RSP:W)" && $(RM) "$(RSP)"
+    $(CONFIG_COMMAND) --no_version --no_prelink_verbose --prelink_object "$(LIBRARIES)"
+    lib $(ARFLAGS) /nologo /out:"$(<:S=.lib)" "$(LIBRARIES)"
 }
 
