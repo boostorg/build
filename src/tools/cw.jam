@@ -78,6 +78,22 @@ rule init ( version ? : command * : options * )
    flags cw.compile .CC $(condition) : $(prefix)$(compiler) ;
    flags cw.link .LD $(condition) : $(prefix)$(linker) ;
    flags cw.archive .LD $(condition) : $(prefix)$(linker) ;
+
+    if [ MATCH ^([89]\\.) : $(version) ]   
+    {
+        if [ os.name ] = NT
+        {
+        # The runtime libraries
+        flags cw.compile CFLAGS <runtime-link>static/<threading>single/<runtime-debugging>off : -runtime ss ;
+        flags cw.compile CFLAGS <runtime-link>static/<threading>single/<runtime-debugging>on : -runtime ssd ;
+        
+        flags cw.compile CFLAGS <runtime-link>static/<threading>multi/<runtime-debugging>off : -runtime sm ;
+        flags cw.compile CFLAGS <runtime-link>static/<threading>multi/<runtime-debugging>on : -runtime smd ;
+        
+        flags cw.compile CFLAGS <runtime-link>shared/<runtime-debugging>off : -runtime dm ;
+        flags cw.compile CFLAGS <runtime-link>shared/<runtime-debugging>on : -runtime dmd ;
+        }        
+    }    
 }
 
 rule default-paths ( version ? ) # FIXME
@@ -99,6 +115,9 @@ rule default-paths ( version ? ) # FIXME
 
    return $(possible-paths) ;
 }
+
+
+
 
 ## declare generators
 
