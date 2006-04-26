@@ -660,6 +660,8 @@ flags msvc.link FINDLIBS_SA <find-shared-library> ;
 flags msvc.link LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
 flags msvc.link LIBRARIES_MENTIONED_BY_FILE : <library-file> ;
 
+flags msvc.archive AROPTIONS <archiveflags> ;
+
 
 rule link.dll ( targets + : sources * : properties * )
 {
@@ -677,7 +679,7 @@ if [ os.name ] in NT
     actions archive
     {  
         if exist "$(<[1])" DEL "$(<[1])"  
-        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) /lib /NOLOGO $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
     }
 }
 else
@@ -685,7 +687,7 @@ else
     actions archive
     {  
         $(RM) "$(<[1])"
-        $(.LD) /lib /NOLOGO /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) /lib /NOLOGO $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
     }
 }
         
