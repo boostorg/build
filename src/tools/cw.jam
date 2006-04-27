@@ -45,6 +45,7 @@ rule init ( version ? : command * : options * )
     
     common.handle-options cw : $(condition) : $(command) : $(options) ;
 
+    local root = [ feature.get-values <root> : $(options) ] ;    
     if $(command)
     {
         command = [ common.get-absolute-tool-path $(command[-1]) ] ;
@@ -56,7 +57,11 @@ rule init ( version ? : command * : options * )
    # map the batch file in setup so it can be executed
 
     other-tools = $(tool-root:D) ;
-    root = $(other-tools:D) ;
+    root ?= $(other-tools:D) ;
+    
+    flags cw.link RUN_PATH $(condition) : 
+        "$(root)\\Win32-x86 Support\\Libraries\\Runtime"
+        "$(root)\\Win32-x86 Support\\Libraries\\Runtime\\Libs\\MSL_All-DLLs" ;      
     
     setup = "set \"CWFOLDER="$(root)"\" && call \""$(setup)"\" > nul " ;
 
