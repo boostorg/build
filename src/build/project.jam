@@ -71,13 +71,11 @@ rule load ( jamfile-location )
         # after parent projects. In particular, because parent projects
         # define attributes whch are inherited by children, and we don't
         # want children to be loaded before parents has defined everything.
-        # So, for "build-project" and "use-project" we only record relevant
-        # information, and actually load the mentioned projects after
-        # loading the current Jamfile.       
-        for local p in [ attribute $(module-name) projects-to-build ]
-        {
-            load [ path.root $(p) $(jamfile-location) ] ;
-        }
+        #
+        # While "build-project" and "use-project" can potentially refer
+        # to child projects from parent projects, we don't immediately
+        # loading child projects when seing those attributes. Instead,
+        # we record the minimal information that will be used only later.
 
         local used = [ modules.peek $(module-name) : .used-projects ] ;
                 import project ;
