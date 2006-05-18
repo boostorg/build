@@ -645,7 +645,7 @@ rule register-standard ( id : source-types * : target-types + : requirements * )
 
 # Creates new instance of the 'composing-generator' class and
 # registers it.
-rule register-composing ( id : source-types + : target-types + : requirements * )
+rule register-composing ( id : source-types * : target-types + : requirements * )
 {
     local g = [ new generator $(id) true : $(source-types) 
                 : $(target-types) : $(requirements) ] ;
