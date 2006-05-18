@@ -41,9 +41,35 @@ int main() { return 0; }
 
 t.run_build_system()
 
+
 t.expect_addition("child/bin/$toolset/debug/main.exe")
 t.fail_test(find(t.stdout(), "Setting child requirements") <
             find(t.stdout(), "Setting parent requirements"))
+
+
+# Regression test: parent requirements were ignored in some cases
+t.rm(".")
+t.write("Jamroot", """ 
+build-project src ; 
+""")
+
+t.write("src/Jamfile", """ 
+project : requirements <define>EVERYTHING_OK ; 
+""")
+
+t.write("src/app/Jamfile", """ 
+exe test : test.cpp ; 
+""")
+
+t.write("src/app/test.cpp", """ 
+#ifdef EVERYTHING_OK
+int main() {}
+#endif
+
+""")
+
+t.run_build_system(subdir="src/app")
+t.expect_addition("src/app/bin/$toolset/debug/test.exe")
 
 
 t.cleanup()
