@@ -125,9 +125,14 @@ rule from-command-line ( command-line * )
     local properties ;
 
     command-line = $(command-line[2-]) ;
+    local skip-next = ;
     for local e in $(command-line)
     {
-        if ! [ MATCH "^(-).*" : $(e) ] 
+        if $(skip-next)
+        {
+            skip-next = ;
+        }
+        else if ! [ MATCH "^(-).*" : $(e) ] 
         {
             # Build request spec either has "=" in it, or completely
             # consists of implicit feature values.
@@ -141,6 +146,10 @@ rule from-command-line ( command-line * )
             {
                 targets += $(e) ;
             }
+        }
+        else if [ MATCH "^(-[-ldjfsto])$" : $(e) ]
+        {
+            skip-next = true ;
         }
     }
     return [ new vector [ new vector $(targets) ] [ new vector $(properties) ] ] ;
