@@ -223,7 +223,12 @@ rule init-mac ( version : root ? : includes ? : libraries ? )
     
     flags python.capture-output PYTHON : $(interpreter) ;
     
-    PYTHON_FRAMEWORK ?= /System/Library/Frameworks/Python.framework ;
+    PYTHON_FRAMEWORK ?= $(root) ;
+    while $(PYTHON_FRAMEWORK:D=) && $(PYTHON_FRAMEWORK:D=) != Python.framework
+    {
+        PYTHON_FRAMEWORK = $(PYTHON_FRAMEWORK:D) ;
+    }
+    PYTHON_FRAMEWORK = $(PYTHON_FRAMEWORK:D)/Python ;
 
     alias python_for_extensions
       : 
