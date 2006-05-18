@@ -333,11 +333,10 @@ rule init-link-flags ( toolset linker condition )
         }
     case darwin :
         {
-        # we can't pass -s to ld unless we also pass -static
-        # so we removed -s completly from OPTIONS and add it
-        # to ST_OPTIONS            
-        flags $(toolset).link ST_OPTIONS $(condition)/<debug-symbols>off : -s 
-           : unchecked ;  
+        # On Darwin, the -s option to ld does not work unless we pass
+        # -static, and passing -static unconditionally is a bad idea.
+        # So, don't pass -s at all, darwin.jam will use separate 'strip'
+        # invocation.
         flags $(toolset).link RPATH $(condition) : <dll-path> : unchecked ;
         flags $(toolset).link RPATH_LINK $(condition) : <xdll-path> : unchecked ;
         }
