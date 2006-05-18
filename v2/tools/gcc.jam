@@ -399,6 +399,12 @@ actions link bind LIBRARIES
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 }
 
+# Default value. Mostly for the sake of intel-linux
+# that inherits from gcc, but does not has the same
+# logic to set the .AR variable. We can put the same
+# logic in intel-linux, but that's hardly worth the trouble
+# as on Linux, 'ar' is always available.
+.AR = ar ; 
 
 flags gcc.archive AROPTIONS <archiveflags> ;
 
