@@ -791,7 +791,7 @@ class file-reference : abstract-target
     
     rule generate ( properties )
     {
-        compute-location ;
+        location ;
         return [ property-set.empty ] 
                [ virtual-target.from-file $(self.name)
                                          : $(self.file-location)
@@ -801,12 +801,12 @@ class file-reference : abstract-target
     # Returns true if the referred file really exists;
     rule exists ( )
     {
-        compute-location ;
+        location ;
         return $(self.file-path) ;
     }
-
+           
     # Returns the location of target. Needed by 'testing.jam'
-    rule compute-location ( )
+    rule location ( )
     {
         if ! $(self.file-location)
         {
