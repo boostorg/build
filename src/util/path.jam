@@ -306,8 +306,9 @@ rule glob-in-parents ( dir : patterns + : upper-limit ? )
 # Assuming 'child' is a subdirectory of 'parent', return the relative
 # path from 'parent' to 'child'
 #
-rule relative ( child parent )
+rule relative ( child parent : no-error ? )
 {
+    local not-a-child ;
     if $(parent) = "." 
     {
         return $(child) ;
@@ -326,10 +327,26 @@ rule relative ( child parent )
             }
             else
             {
-                errors.error $(child) is not a subdir of $(parent) ;
+                not-a-child = true ;
+                split1 = ;
             }                
         }    
-        return [ join $(split2) ] ;    
+        
+        if $(not-a-child)
+        {
+            if $(no-error)
+            {
+                return not-a-child ;
+            }
+            else
+            {
+                errors.error $(child) is not a subdir of $(parent) ;
+            }                        
+        }
+        else
+        {
+            return [ join $(split2) ] ;    
+        }        
     }    
 }
 
