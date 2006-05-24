@@ -189,18 +189,13 @@ if [ os.name ] != CYGWIN && [ os.name ] != NT
     # to implement and will increase target path length even more.
     flags gcc.compile OPTIONS <link>shared : -fPIC ;
 }    
-if [ os.name ] != NT
+if [ os.name ] != NT && [ os.name ] != OSF
 {
-    HAVE_SONAME = "" ;
+    # OSF does have an option called -soname but it doesn't seem to work as
+    # expected, therefore it has been disabled.
 
-    if [ os.name ] = OSF
-    {
-        SONAME_OPTION = -soname ;
-    }
-    else
-    {
-        SONAME_OPTION = -h ;
-    }
+    HAVE_SONAME   = "" ;
+    SONAME_OPTION = -h ;
 }
 
 
