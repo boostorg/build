@@ -287,11 +287,11 @@ path_parent( PATHNAME *f )
 DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
                           cchBuffer)
 {
-    DWORD i=0;
+    LONG i=0;
     TCHAR path[_MAX_PATH]={0};
     TCHAR ret[_MAX_PATH]={0};
-    DWORD pos=0, prev_pos=0;
-    DWORD len=_tcslen(lpszShortPath);
+    LONG pos=0, prev_pos=0;
+    LONG len=_tcslen(lpszShortPath);
 
     /* Is the string valid? */
     if (!lpszShortPath) {
