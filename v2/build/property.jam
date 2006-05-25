@@ -139,19 +139,12 @@ rule expand-subfeatures-in-conditions ( properties * )
             local e ;
             for local c in $(condition)
             {           
-                if [ MATCH "^(<toolset>|<toolset->)" : $(c:G) ] ||
-                   [ MATCH "^(<os>)" : $(c:G) ]
-                {
-                    # It common that condition includes a toolset which
-                    # was never defined, or mentiones subfeatures which
-                    # were never defined. In that case, validation will
-                    # only produce an spirious error, so don't validate.
-                    e += [ feature.expand-subfeatures $(c) : true ] ;
-                }               
-                else
-                {
-                    e += [ feature.expand-subfeatures $(c) ] ;
-                }                
+                # It common that condition includes a toolset which
+                # was never defined, or mentiones subfeatures which
+                # were never defined. In that case, validation will
+                # only produce an spirious error, so prevent
+                # validation by passing 'true' as second parameter.
+                e += [ feature.expand-subfeatures $(c) : true ] ;
             }
             
             if $(e) = $(condition)
