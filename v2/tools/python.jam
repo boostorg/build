@@ -527,6 +527,12 @@ generators.register-standard testing.expect-success
 
 rule capture-output ( target : sources * : properties * )
 {
+    # Setup up proper DLL search path.
+    # Here, $(sources[1]) is python module and $(sources[2]) is
+    # DLL. Only $(sources[1]) is passed to testing.capture-output,
+    # so RUN_PATH variable on $(sources[2]) is not consulted. Move it
+    # over explicitly.
+    RUN_PATH on $(sources[1]) = [ on $(sources[2]) return $(RUN_PATH) ] ;
     PYTHONPATH = [ on $(sources[2]) return $(LOCATE) ] ;
     testing.capture-output $(target) : $(sources[1]) : $(properties) ;
     local c = [ common.prepend-path-variable-command PYTHONPATH : $(PYTHONPATH) ] ;
