@@ -7,49 +7,74 @@
 # and updates all necessary files. For the time being, it's assumes presense
 # of 'perl' executable and Debian-specific 'dch' executable.
 #
- 
 
-import sys
-import string
+
 import os
+import os.path
+import re
+import string
+import sys
 
-def spec(version):
-    os.system("perl -pi -e 's|^Version:.*|Version: %s|' boost-jam.spec" %
-              string.join(version, "."))
+srcdir = os.path.abspath(os.path.dirname(__file__ ))
+docdir = os.path.abspath(os.path.join(srcdir,"..","doc"))
 
-def build_jam(version):
-    os.system("perl -pi -e 's|^VERSION = .* ;|VERSION = %s\$(.)%s\$(.)%s ;|' build.jam"
-              % (version[0], version[1], version[2]))
+def edit(file,replacements):
+    print "  '%s'..." %(file)
+    text = open(file,'r').read()
+    while len(replacements) > 0:
+        #~ print  "  '%s' ==> '%s'" % (replacements[0],replacements[1])
+        text = re.compile(replacements[0],re.M).subn(replacements[1],text)[0]
+        replacements = replacements[2:]
+    #~ print text
+    open(file,'w').write(text)
 
-def index_html(version):
-    os.system("perl -pi -e 's|This is version .* of BJam|This is version %s of BJam|' index.html"
-              % string.join(version, "."))
+def make_edits(version):
+    edit(os.path.join(srcdir,"boost-jam.spec"), [
+        '^Version:.*$','Version: %s' % string.join(version, "."),
+        ])
 
-def jam_c(version):
-    re = "\\*major_version = .*, \\*minor_version = .*, \\*changenum = .*";
-    new = ('*major_version = "%02d", *minor_version = "%02d", *changenum = "%02d";' %
-        (int(version[0]), int(version[1]), int(version[2])))
-    os.system("perl -pi -e 's|%s|%s|' jam.c" % (re, new))
+    edit(os.path.join(srcdir,"build.jam"), [
+        '^_VERSION_ = .* ;$','_VERSION_ = %s %s %s ;' % (version[0], version[1], version[2]),
+        ])
 
-def patchlevel(version):
-    os.system("perl -pi -e 's|VERSION .*|VERSION \"%s\"|' patchlevel.h" %
-              string.join(version, "."))
+    edit(os.path.join(docdir,"bjam.qbk"), [
+        '\[version.*\]','[version: %s]' % string.join(version, '.'),
+        '\[def :version:.*\]','[def :version: %s]' % string.join(version, '.'),
+        ])
 
-def dch(version):
-    os.system("dch --ignore-dirname -v " + string.join(version, ".") + "-1")
-       
-bumpers = [spec, build_jam, index_html, jam_c, patchlevel, dch]
+    edit(os.path.join(srcdir,"patchlevel.h"), [
+        '^#define VERSION_MAJOR .*$',
+            '#define VERSION_MAJOR %s' % (version[0]),
+        '^#define VERSION_MINOR .*$',
+            '#define VERSION_MINOR %s' % (version[1]),
+        '^#define VERSION_PATCH .*$',
+            '#define VERSION_PATCH %s' % (version[2]),
+        '^#define VERSION_MAJOR_SYM .*$',
+            '#define VERSION_MAJOR_SYM "0%s"' % (version[0]),
+        '^#define VERSION_MINOR_SYM .*$',
+            '#define VERSION_MINOR_SYM "%s"' % (version[1]),
+        '^#define VERSION_PATCH_SYM .*$',
+            '#define VERSION_PATCH_SYM "%s"' % (version[2]),
+        '^#define VERSION .*$',
+            '#define VERSION "%s"' % string.join(version, '.'),
+        '^#define JAMVERSYM .*$',
+            '#define JAMVERSYM "JAMVERSION=%s.%s"' % (version[0],version[1]),
+        ])
 
 def main():
 
     if len(sys.argv) < 2:
         print "Expect new version as argument"
         sys.exit(1)
-                
-    new_version = string.split(sys.argv[1], ".")
-    print "Setting version to", new_version
-    for b in bumpers:
-        b(new_version)
+
+    version = string.split(sys.argv[1], ".")
+    print "Setting version to", version
+    make_edits(version)
 
 if __name__ == '__main__':
     main()
+
+#~ Copyright 2006 Rene Rivera.
+#~ Copyright 2005-2006 Vladimir Prus.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
