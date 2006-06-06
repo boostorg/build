@@ -210,7 +210,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_metrowerks_" (
 if "_%BOOST_JAM_TOOLSET%_" == "_metrowerks_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
         set PATH=%BOOST_JAM_TOOLSET_ROOT%Other Metrowerks Tools\Command Line Tools;%PATH%)
-    set BOOST_JAM_CC=mwcc -runtime ss -cwd include -DNT -ladvapi32.lib
+    set BOOST_JAM_CC=mwcc -runtime ss -cwd include -DNT -lkernel32.lib -ladvapi32.lib -luser32.lib
     set BOOST_JAM_OPT_JAM=-o bootstrap\jam0.exe
     set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap\mkjambase0.exe
     set BOOST_JAM_OPT_YYACC=-o bootstrap\yyacc0.exe
@@ -225,7 +225,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
 if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
         set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
-    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib advapi32.lib
+    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib advapi32.lib user32.lib
     set BOOST_JAM_OPT_JAM=/Febootstrap\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0
     set BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0
@@ -240,7 +240,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
 if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
         set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
-    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib advapi32.lib
+    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib advapi32.lib user32.lib
     set BOOST_JAM_OPT_JAM=/Febootstrap\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0
     set BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0
@@ -255,7 +255,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_vc8_" (
 if "_%BOOST_JAM_TOOLSET%_" == "_vc8_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
         set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
-    set BOOST_JAM_CC=cl /nologo /RTC1 /Zi /MTd -DNT -DYYDEBUG -wd4996 kernel32.lib advapi32.lib
+    set BOOST_JAM_CC=cl /nologo /RTC1 /Zi /MTd -DNT -DYYDEBUG -wd4996 kernel32.lib advapi32.lib user32.lib
     set BOOST_JAM_OPT_JAM=/Febootstrap\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0
     set BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0
@@ -298,7 +298,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_gcc-nocygwin_" (
     set _known_=1
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_intel-win32_" (
-    set BOOST_JAM_CC=icl -DNT /nologo kernel32.lib advapi32.lib
+    set BOOST_JAM_CC=icl -DNT /nologo kernel32.lib advapi32.lib user32.lib
     set BOOST_JAM_OPT_JAM=/Febootstrap\jam0
     set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0
     set BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0
