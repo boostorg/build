@@ -853,7 +853,6 @@ rule .package ( dst-dir : src-files + )
 rpm-tool = [ GLOB $(PATH) : "rpmbuild" ] ;
 rpm-tool ?= [ GLOB $(PATH) : "rpm" ] ;
 rpm-tool = $(rpm-tool[1]) ;
-ECHO --- [$(rpm-tool)] ;
 rule .rpm ( name : source )
 {
     local rpm-arch = ;
