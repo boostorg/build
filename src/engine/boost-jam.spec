@@ -52,7 +52,7 @@ install -m 755 bin/bjam $RPM_BUILD_ROOT%{_bindir}/bjam-%{version}
 ln -sf bjam-%{version} $RPM_BUILD_ROOT%{_bindir}/bjam
 cp -R *.html *.png *.css LICENSE*.txt images jam $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
 
-find $RPM_BUILD_ROOT -name CVS -type d -depth -exec rm -r {} \;
+find $RPM_BUILD_ROOT -name CVS -type d -exec rm -r {} \;
 
 %files
 %defattr(-,root,root)
