@@ -924,17 +924,7 @@ module project-rules
             # prject. So, just make the name absolute.
             for local p in $(paths)
             {
-                # If the path is below source location, use relative path.
-                # Otherwise, use full path just to avoid any ambiguities.
-                local rel = [ path.relative $(p) $(location) : no-error ] ;
-                if $(rel) = not-a-child
-                {                   
-                    result += [ path.root $(p) [ path.pwd ] ] ;
-                }
-                else
-                {
-                    result += $(rel) ;
-                }                
+                result += [ path.root $(p) [ path.pwd ] ] ;
             }                
         }
         else 
