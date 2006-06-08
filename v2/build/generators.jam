@@ -105,7 +105,6 @@ class generator
     import virtual-target ;
     import "class" : new ;
     import property ;
-    import path ;
    
     EXPORT class@generator : indent increase-indent decrease-indent generators.dout ;
     
@@ -415,20 +414,8 @@ class generator
                 }
             }
 
-            # See if we need to add directory to the target name.
-            local dir = [ $(sources[1]).name ] ;            
-            dir = $(dir:D) ;
-            if $(dir) && 
-              # Never append '..' to target path.
-              ! [ MATCH .*(\\.\\.).* : $(dir) ] 
-                && 
-              ! [ path.is-rooted $(dir) ]
-            {
-                # Relative path is always relative to the source
-                # directory. Retain it, so that users can have files
-                # with the same in two different subdirectories.
-                name = $(dir)/$(name) ;                
-            }            
+            # Names of sources might include directory. We should strip it.
+            name = $(name:D=) ;
         }
         
         # Assign an action for each target
