@@ -12,7 +12,7 @@ if $(VMS) { . = "_" ; }
 else { . = "." ; }
 
 # Info about what we are building.
-_VERSION_ = 3 1 12 ;
+_VERSION_ = 3 1 13 ;
 NAME = boost-jam ;
 VERSION = $(_VERSION_:J=$(.)) ;
 RELEASE = 1 ;
@@ -177,7 +177,7 @@ toolset intel-win32 icl : /Fe : -D
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     -I$(--python-include)
-    : kernel32.lib advapi32.lib $(--python-lib[1]) ;
+    : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
 ## KCC ?
 toolset kcc KCC : "-o " : -D
     :
@@ -203,7 +203,7 @@ toolset kylix bc++ : -o : -D
         [ opt --debug : -runtime ssd -opt none -inline off ]
         -I$(--python-include) ;
     toolset metrowerks $(mwcc) .link : "-o " :
-        : -subsystem console -ladvapi32.lib
+        : -subsystem console -lkernel32.lib -ladvapi32.lib -luser32.lib
         [ opt --release : -runtime ss ]
         [ opt --debug : -runtime ssd ]
         : $(--python-lib[1]) ;
@@ -228,7 +228,7 @@ toolset msvc cl : /Fe : -D
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     -I$(--python-include)
-    : kernel32.lib advapi32.lib $(--python-lib[1]) ;
+    : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
 ## QNX 6.x GCC 3.x/2.95.3
 toolset qcc qcc : "-o " : -D
     : -Wc,-pedantic
@@ -264,14 +264,14 @@ toolset vc7 cl : /Fe : -D
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
     -I$(--python-include)
-    : kernel32.lib advapi32.lib $(--python-lib[1]) ;
+    : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
 ## Microsoft Visual C++ 2005
 toolset vc8 cl : /Fe : -D
     : /nologo
     [ opt --release : /MT /O2 /Ob2 /Gy /GF /GA /wd4996 ]
     [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 /wd4996 ]
     -I$(--python-include)
-    : kernel32.lib advapi32.lib $(--python-lib[1]) ;
+    : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
 ## VMS/OpenVMS DEC C
 toolset vmsdecc cc : /OBJECT= : "/DEFINES=(" "," ")"
     : /STANDARD=VAXC /PREFIX_LIBRARY_ENTRIES=ALL_ENTRIES
@@ -762,7 +762,8 @@ dist.bin =
 
 if $(NT)
 {
-    zip ?= [ GLOB "$(ProgramFiles:J= )\\7-ZIP" "C:\\Program Files\\7-ZIP" : "7z.exe" "7zn.exe" ] ;
+    zip ?= [ GLOB "$(ProgramFiles:J= )\\7-ZIP" "C:\\Program Files\\7-ZIP" : "7z.exe" ] ;
+    zip ?= [ GLOB "$(ProgramFiles:J= )\\7-ZIP" "C:\\Program Files\\7-ZIP" : "7zn.exe" ] ;
     zip ?= [ GLOB $(PATH) : zip.exe ] ;
     zip ?= zip ;
     zip = $(zip[1]) ;
@@ -849,7 +850,9 @@ rule .package ( dst-dir : src-files + )
 }
 
 # RPM distro file.
-rpm-tool = [ GLOB $(PATH) : "rpmbuild" "rpm" ] ;
+rpm-tool = [ GLOB $(PATH) : "rpmbuild" ] ;
+rpm-tool ?= [ GLOB $(PATH) : "rpm" ] ;
+rpm-tool = $(rpm-tool[1]) ;
 rule .rpm ( name : source )
 {
     local rpm-arch = ;
@@ -878,8 +881,9 @@ rule .rpm ( name : source )
     .clean $(name).$(rpm-arch).rpm $(name).src.rpm ;
 }
 actions [RPM] {
+    set -e
     export BOOST_JAM_TOOLSET="$(toolset)"
-    $(rpm-tool[1]) -ta $(target-opt)$(arch) $(>) | tee rpm.out
+    $(rpm-tool) -ta $(target-opt)$(arch) $(>) | tee rpm.out
     cp `grep -e '^Wrote:' rpm.out | sed 's/^Wrote: //'` .
     rm -f rpm.out
 }

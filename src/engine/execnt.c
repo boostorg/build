@@ -998,6 +998,67 @@ kill_all(DWORD pid, HANDLE process)
     TerminateProcess(process,-2);
 }
 
+int is_parent_child(DWORD parent, DWORD child)
+{
+    HANDLE process_snapshot_h = INVALID_HANDLE_VALUE;
+
+    if (parent == child)
+        return 1;
+
+    process_snapshot_h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0);
+    if (INVALID_HANDLE_VALUE != process_snapshot_h)
+    {
+        BOOL ok = TRUE;
+        PROCESSENTRY32 pinfo;
+        pinfo.dwSize = sizeof(PROCESSENTRY32);
+        for (
+            ok = Process32First(process_snapshot_h, &pinfo); 
+            ok == TRUE; 
+            ok = Process32Next(process_snapshot_h, &pinfo) )
+        {
+            if (pinfo.th32ProcessID == child && pinfo.th32ParentProcessID)
+                return is_parent_child(parent, pinfo.th32ParentProcessID);
+        }
+
+        CloseHandle(process_snapshot_h);
+    }
+
+    return 0;
+}
+
+int related(HANDLE h, DWORD p)
+{
+    return is_parent_child(get_process_id(h), p);
+}
+
+BOOL CALLBACK window_enum(HWND hwnd, LPARAM lParam)
+{
+    char buf[10] = {0};
+    HANDLE h = *((HANDLE*) (lParam));
+    DWORD pid = 0;
+
+    if (!GetClassNameA(hwnd, buf, 10))
+        return TRUE; // failed to read class name
+
+    if (strcmp(buf, "#32770"))
+        return TRUE; // not a dialog
+
+    GetWindowThreadProcessId(hwnd, &pid);
+    if (related(h, pid))
+    {
+        PostMessage(hwnd, WM_QUIT, 0, 0);
+        // just one window at a time
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+void close_alert(HANDLE process)
+{
+    EnumWindows(&window_enum, (LPARAM) &process);
+}
+
 static int
 my_wait( int *status )
 {
@@ -1046,6 +1107,9 @@ my_wait( int *status )
                     double t = running_time(active_handles[i]);
                     if ( t > (double)globs.timeout )
                     {
+                        /* the job may have left an alert dialog around,
+                         try and get rid of it before killing */
+                        close_alert(active_handles[i]);
                         /* we have a "runaway" job, kill it */
                         kill_all(0,active_handles[i]);
                         /* indicate the job "finished" so we query its status below */

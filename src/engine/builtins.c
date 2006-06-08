@@ -1621,7 +1621,13 @@ bjam_call(PyObject* self, PyObject* args)
                 {
                     /* PySequence_GetItem returns new reference. */
                     PyObject* e = PySequence_GetItem(a, i);
-                    l = list_new(l, newstr(PyString_AsString(e)));
+                    char* s = PyString_AsString(e);
+                    if (!s)
+                    {
+                        printf("Invalid parameter type passed from Python\n");
+                        exit(1);
+                    }
+                    l = list_new(l, newstr(s));
                     Py_DECREF(e);
                 }
                 lol_add(inner->args, l);
@@ -1632,6 +1638,8 @@ bjam_call(PyObject* self, PyObject* args)
     result = evaluate_rule( rulename, inner );
 
     frame_free( inner );
+
+    return Py_None;
 }
 
 /** Accepts three arguments: module name, rule name and Python callable.
