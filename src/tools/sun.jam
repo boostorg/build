@@ -29,7 +29,11 @@ rule init ( version ? : command * : options * )
     
     command = [ common.get-invocation-command sun : CC 
         : $(command) : "/opt/SUNWspro/bin" ] ;
-    
+
+    # Even if the real compiler is not found, put CC to
+    # command line so that user see command line that would have being executed.
+    command ?= CC ;
+
     common.handle-options sun : $(condition) : $(command) : $(options) ;
     
     command_c = $(command[1--2]) $(command[-1]:B=cc) ;
@@ -83,6 +87,9 @@ flags sun.link RPATH <dll-path> ;
 # link time. On Solaris, there's only one: -R, so we have to use
 # it, even though it's bad idea.
 flags sun.link RPATH <xdll-path> ;
+
+# The POSIX real-time library is always needed (nanosleep, clock_gettime etc.)
+flags sun.link FINDLIBS-SA : rt ;
 
 rule link ( targets * : sources * : properties * )
 {
