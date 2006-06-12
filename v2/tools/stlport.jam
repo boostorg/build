@@ -91,7 +91,7 @@ class stlport-target-class : basic-target
         self.version.5 = [ MATCH "^(5[.][^.]+).*" : $(version) ] ;
     }
 
-    rule match ( property-set )
+    rule match ( property-set debug ? )
     {
         # Override the rule which detects if this basic-target is
         # suitable for the specified property set.
@@ -117,6 +117,11 @@ class stlport-target-class : basic-target
             }
         }
         matched ?= no-match ;
+        
+        if $(debug)
+        {
+            ECHO "    stlport.match: " $(matched) ;
+        }
         
         return $(matched) ;
     }
