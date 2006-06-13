@@ -88,7 +88,7 @@ class stlport-target-class : basic-target
         self.headers = $(headers) ;
         self.libraries = $(libraries) ;
         self.version = $(version) ;
-        self.version.5 = [ MATCH "^(5[.][^.]+).*" : $(version) ] ;
+        self.version.5 = [ MATCH "^(5[.][0123456789]+).*" : $(version) ] ;
     }
 
     rule match ( property-set debug ? )
