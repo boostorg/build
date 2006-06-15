@@ -423,6 +423,13 @@ local rule configure-version-specific ( version : condition )
         # "math" tests will fail.
         flags msvc.compile CFLAGS $(condition) : /Op ;
     }
+    else
+    {
+        # 8.0 adds some more options
+        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set> : /favor:blend ;
+        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-em64t) : /favor:EM64T ;
+        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-amd64) : /favor:AMD64 ;
+    }
 }
 
 
@@ -517,10 +524,6 @@ feature.feature debug-store : object database : propagated ;
 
 flags msvc.compile CFLAGS <optimization>speed : /O2 ;
 flags msvc.compile CFLAGS <optimization>space : /O1 ;
-
-flags msvc.compile CFLAGS $(cpu-arch-amd64)/<instruction-set> : /favor:blend ;
-flags msvc.compile CFLAGS $(cpu-arch-amd64)/<instruction-set>$(cpu-type-em64t) : /favor:EM64T ;
-flags msvc.compile CFLAGS $(cpu-arch-amd64)/<instruction-set>$(cpu-type-amd64) : /favor:AMD64 ;
 
 flags msvc.compile CFLAGS $(cpu-arch-ia64)/<instruction-set>$(cpu-type-itanium) : /G1 ;
 flags msvc.compile CFLAGS $(cpu-arch-ia64)/<instruction-set>$(cpu-type-itanium2) : /G2 ;
