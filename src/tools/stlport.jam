@@ -89,41 +89,15 @@ class stlport-target-class : basic-target
         self.libraries = $(libraries) ;
         self.version = $(version) ;
         self.version.5 = [ MATCH "^(5[.][0123456789]+).*" : $(version) ] ;
-    }
-
-    rule match ( property-set debug ? )
-    {
-        # Override the rule which detects if this basic-target is
-        # suitable for the specified property set.
-        # Basically, just checks that requested version is equal to
-        # self.version. We could have added stlport-$(version) to
-        # requirements, but then stlport-$(version) would show in
-        # the common properties, causing recursive building of ourselfs.
         
-        local matched ;
-        if [ $(property-set).get <stdlib-stlport:version> ] = $(self.version)
+        local requirements ;
+        requirements += <stdlib-stlport:version>$(self.version) ;
+        if $(self.version.5)
         {
-            if $(self.version.5)
-            {
-                # And for STLport 5.x multi-threading is required.
-                if [ $(property-set).get <threading> ] = multi
-                {
-                    matched = stlport-$(self.version) ;
-                }
-            }
-            else
-            {
-                matched = stlport-$(self.version) ;
-            }
+            # For STLport 5.x multi-threading is required.
+            requirements += <threading>multi ;
         }
-        matched ?= no-match ;
-        
-        if $(debug)
-        {
-            ECHO "    stlport.match: " $(matched) ;
-        }
-        
-        return $(matched) ;
+        self.requirements = [ property-set.create $(requirements) ] ;
     }
 
     rule generate ( property-set )
@@ -133,8 +107,13 @@ class stlport-target-class : basic-target
         # cause a loop in main target references. Remove that property
         # manually.
 
-        property-set = [ property-set.create [ difference
-            [ $(property-set).raw ] : <library>/stlport//stlport <stdlib>stlport ] ] ;
+        property-set = [ property-set.create
+            [ difference
+                [ $(property-set).raw ] :
+                <library>/stlport//stlport
+                <stdlib>stlport
+                ]
+            ] ;
         return [ basic-target.generate $(property-set) ] ;
     }
 
