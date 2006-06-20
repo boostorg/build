@@ -95,7 +95,12 @@ class stlport-target-class : basic-target
         if $(self.version.5)
         {
             # For STLport 5.x multi-threading is required.
-            requirements += <threading>multi ;
+            #~ requirements += <threading>multi ;
+            
+            #~ Doesn't currently work as the matching fallback takes over
+            #~ and matches a build without stlport when threading-multi is not
+            #~ specified. Question stands as to wether single-thread code
+            #~ can use the multi-thread STLport.
         }
         self.requirements = [ property-set.create $(requirements) ] ;
     }
