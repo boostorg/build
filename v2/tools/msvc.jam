@@ -343,18 +343,22 @@ local rule configure-really (
                         "command: '$(command[$(i)])'" ;
                 }
         
-                flags msvc.compile .CC  $(cond) : $(command[$(i)])$(compiler) ;
+                flags msvc.compile .CC  $(cond) : $(command[$(i)])$(compiler) /Zm800 -nologo ;
                 flags msvc.compile .RC  $(cond) : $(command[$(i)])$(resource-compiler) ;
                 flags msvc.compile .ASM $(cond) : $(command[$(i)])$(assembler) ;
-                flags msvc.link    .LD  $(cond) : $(command[$(i)])$(linker) ;
-                flags msvc.archive .LD  $(cond) : $(command[$(i)])$(linker) ;
+                flags msvc.link    .LD  $(cond) : $(command[$(i)])$(linker) /NOLOGO /INCREMENTAL:NO ;
+                flags msvc.archive .LD  $(cond) : $(command[$(i)])$(linker) /lib /NOLOGO  ;
                 flags msvc.compile .IDL $(cond) : $(command[$(i)])$(idl-compiler) ;
                 flags msvc.compile .MC  $(cond) : $(command[$(i)])$(mc-compiler) ;
 
                 if ! [ os.name ] in NT
                 {
-                    flags msvc.link .MT $(cond) : $(command[$(i)])$(manifest-tool) ;
+                    flags msvc.link .MT $(cond) : $(command[$(i)])$(manifest-tool) -nologo ;
                 }
+		else
+		{
+                    flags msvc.link .MT $(cond) : $(manifest-tool) -nologo ;
+		}
             }
         }   
 
@@ -588,17 +592,17 @@ rule compile.pch ( targets + : sources * : properties * )
 # The actions differ only by explicit selection of input language
 actions compile.c bind PCH_HEADER PCH_FILE
 {
-    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) $(CFLAGS) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
+    $(.CC) -TC -U$(UNDEFS) $(CFLAGS) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
 }
 
 actions compile.c++ bind PCH_HEADER PCH_FILE
 {
-    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
+    $(.CC) -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
 }
 
 actions compile.pch bind PCH_SOURCE
 {
-    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(PCH_SOURCE:W)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" /Yc"$(>[1]:D=)" -Fp"$(<[2]:W)"
+    $(.CC) -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(PCH_SOURCE:W)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" /Yc"$(>[1]:D=)" -Fp"$(<[2]:W)"
 }
 
 
@@ -676,7 +680,7 @@ if [ os.name ] in NT
     actions archive
     {  
         if exist "$(<[1])" DEL "$(<[1])"  
-        $(.LD) /lib /NOLOGO $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
     }
 }
 else
@@ -684,7 +688,7 @@ else
     actions archive
     {  
         $(RM) "$(<[1])"
-        $(.LD) /lib /NOLOGO $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
     }
 }
         
@@ -704,17 +708,17 @@ if [ os.name ] in NT
 {
     actions link bind DEF_FILE
     {
-        $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
         if exist "$(<[1]).manifest" (
-            mt -nologo -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
+            $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
         )
     }    
 
     actions link.dll bind DEF_FILE
     {
-        $(.LD) /NOLOGO /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
         if exist "$(<[1]).manifest" (
-            mt -nologo -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
+            $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
         )
     } 
 }
@@ -722,17 +726,17 @@ else
 {
     actions link bind DEF_FILE
     {
-        $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
         if test -e "$(<[1]).manifest"; then
-            $(.MT) -nologo -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);1"
+            $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);1"
         fi
     }
 
     actions link.dll bind DEF_FILE
     {
-        $(.LD) /NOLOGO /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
         if test -e "$(<[1]).manifest"; then
-            $(.MT) -nologo -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
+            $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
         fi
     }
 }
