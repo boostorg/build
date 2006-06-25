@@ -426,6 +426,10 @@ local rule configure-version-specific ( version : condition )
         # Improve floating-point accuracy. Otherwise, some of C++ Boost's
         # "math" tests will fail.
         flags msvc.compile CFLAGS $(condition) : /Op ;
+
+        # 7.1 and below have single-threaded static RTL
+        flags msvc.compile CFLAGS $(condition)/<runtime-debugging>off/<runtime-link>static/<threading>single : /ML ;
+        flags msvc.compile CFLAGS $(condition)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MLd ;
     }
     else
     {
@@ -433,6 +437,10 @@ local rule configure-version-specific ( version : condition )
         flags msvc.compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set> : /favor:blend ;
         flags msvc.compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-em64t) : /favor:EM64T ;
         flags msvc.compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-amd64) : /favor:AMD64 ;
+
+        # 8.0 only has multi-threaded static RTL
+        flags msvc.compile CFLAGS $(condition)/<runtime-debugging>off/<runtime-link>static/<threading>single : /MT ;
+        flags msvc.compile CFLAGS $(condition)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MTd ;
     }
 }
 
@@ -553,8 +561,6 @@ flags msvc.compile CFLAGS <rtti>on : /GR ;
 flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>shared : /MD ;
 flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>shared : /MDd ;
 
-flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>static/<threading>single : /ML ;
-flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>static/<threading>single : /MLd ;
 flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>static/<threading>multi : /MT ;
 flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>static/<threading>multi : /MTd ;
 
