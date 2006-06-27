@@ -89,20 +89,6 @@ class stlport-target-class : basic-target
         self.libraries = $(libraries) ;
         self.version = $(version) ;
         self.version.5 = [ MATCH "^(5[.][0123456789]+).*" : $(version) ] ;
-        
-        local requirements ;
-        requirements += <stdlib-stlport:version>$(self.version) ;
-        if $(self.version.5)
-        {
-            # For STLport 5.x multi-threading is required.
-            #~ requirements += <threading>multi ;
-            
-            #~ Doesn't currently work as the matching fallback takes over
-            #~ and matches a build without stlport when threading-multi is not
-            #~ specified. Question stands as to wether single-thread code
-            #~ can use the multi-thread STLport.
-        }
-        self.requirements = [ property-set.create $(requirements) ] ;
     }
 
     rule generate ( property-set )
@@ -245,6 +231,19 @@ class stlport-target-class : basic-target
             usage-requirements +=
                 <define>_STLP_NO_OWN_IOSTREAMS=1
                 <define>_STLP_HAS_NO_NEW_IOSTREAMS=1 ;
+        }
+        if $(self.version.5)
+        {
+            # Version 5.x
+            if [ $(rproperties).get <threading> ] = "single"
+            {
+                # Since STLport5 doesn't normally support single-thread
+                # we force STLport5 into the multi-thread mode. Hence
+                # getting what other libs provide of single-thread code
+                # linking against a multi-thread lib.
+                usage-requirements +=
+                    <define>_STLP_THREADS=1 ;
+            }
         }
         
         #~ Allow setting up to use STLport by only using the library target
