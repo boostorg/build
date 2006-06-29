@@ -355,12 +355,12 @@ local rule configure-really (
                 {
                     flags msvc.link .MT $(cond) : $(command[$(i)])$(manifest-tool) -nologo ;
                 }
-		else
-		{
+                else
+                {
                     flags msvc.link .MT $(cond) : $(manifest-tool) -nologo ;
-		}
+                }
             }
-        }   
+        }
 
         # Set version-specific flags
         configure-version-specific $(version) : $(condition) ;
@@ -577,40 +577,43 @@ flags msvc.compile PCH_SOURCE <pch-source> ;
 flags msvc.compile PCH_HEADER <pch>on : <pch-header> ;
 flags msvc.compile PCH_FILE <pch>on : <pch-file> ;
 
-rule compile.c ( targets + : sources * : properties * )
+local rule cc-compile ( targets + : sources * : rsp-content * : suffix * )
+{
+    CC_RSPLINE on $(<) = [ on $(<) return -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)" -Yu"$(PCH_HEADER:D=)" ] ;
+}
+
+actions cc-compile
+{
+     $(.CC) @"@($(<[1]:W).rsp:E="$(>)"$(nl) -Fo"$(<[1]:W)"$(nl) $(CC_RSPLINE))"
+}
+
+local rule cc-compile-c-c++ ( targets + : sources * : lang-opt )
 {
     DEPENDS $(<) : [ on $(<) return $(PCH_HEADER) ] ;
     DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
+    cc-compile $(targets) : $(sources)
+        : [ on $(<) return "$(>)"$(nl) $(CC_RSPLINE) ]
+        : [ on $(<) return $(lang-opt) -Fp"$(PCH_FILE:W)" ] ;
+}
+
+# The actions differ only by explicit selection of input language
+rule compile.c ( targets + : sources * : properties * )
+{
+    cc-compile-c-c++ $(<) : $(>) : -TC ;
 }
 
 rule compile.c++ ( targets + : sources * : properties * )
 {
-    DEPENDS $(<) : [ on $(<) return $(PCH_HEADER) ] ;
-    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
+    cc-compile-c-c++ $(<) : $(>) : -TP ;
 }
 
 rule compile.pch ( targets + : sources * : properties * )
 {
     DEPENDS $(<) : [ on $(<) return $(PCH_SOURCE) ] ;
+    cc-compile $(<) : $(>) 
+        : [ on $(<) return $(nl)"$(PCH_SOURCE:W)" $(CC_RSPLINE) ]
+        : [ on $(<) return -Yc"$(>[1]:D=)" -TP -Fp"$(<[2]:W)" ] ;
 }
-
-
-# The actions differ only by explicit selection of input language
-actions compile.c bind PCH_HEADER PCH_FILE
-{
-    $(.CC) -TC -U$(UNDEFS) $(CFLAGS) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
-}
-
-actions compile.c++ bind PCH_HEADER PCH_FILE
-{
-    $(.CC) -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
-}
-
-actions compile.pch bind PCH_SOURCE
-{
-    $(.CC) -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(PCH_SOURCE:W)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" /Yc"$(>[1]:D=)" -Fp"$(<[2]:W)"
-}
-
 
 actions compile.rc
 {
@@ -718,7 +721,7 @@ if [ os.name ] in NT
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
         )
-    }    
+    }
 
     actions link.dll bind DEF_FILE
     {
@@ -726,7 +729,7 @@ if [ os.name ] in NT
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
         )
-    } 
+    }
 }
 else
 {
