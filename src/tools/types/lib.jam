@@ -15,9 +15,11 @@ if [ os.on-unix ]
 type STATIC_LIB : lib a : LIB : NT CYGWIN ;
 type STATIC_LIB : a : LIB : MACOSX ;
 type STATIC_LIB : a : LIB ;
+type.set-generated-target-prefix STATIC_LIB : : lib ;
 
 type IMPORT_LIB : : STATIC_LIB ;
 type.set-generated-target-suffix IMPORT_LIB : : lib ;
+type.set-generated-target-prefix IMPORT_LIB : : "" ;
 
 type SHARED_LIB : dll : LIB : NT CYGWIN ;
 type SHARED_LIB : dylib : LIB : MACOSX ;
