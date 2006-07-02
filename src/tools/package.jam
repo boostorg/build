@@ -39,14 +39,19 @@ import property ;
 
 rule install ( name : requirements * : binaries * : libraries * : headers * )
 {
-    local install-source-root = [ property.select <install-source-root> 
-        : $(requirements) ] ;
     # If <install-source-root> is not specified, all headers are installed
     # to prefix/include, no matter what their relative path is. Sometimes
     # that's what needed.
-        
+    local install-source-root
+        = [ property.select <install-source-root> : $(requirements) ] ;
     requirements = [ property.change $(requirements) : <install-source-root> ] ;
     
+    #
+    local install-header-subdir
+        = [ property.select <install-header-subdir> : $(requirements) ] ;
+    install-header-subdir = /$(install-header-subdir:G=) ;
+    install-header-subdir ?= "" ;
+    requirements = [ property.change $(requirements) : <install-header-subdir> ] ;
     
     # First, figure out all locations.
     local prefix = [ option.get prefix : "" ] ;
@@ -77,7 +82,8 @@ rule install ( name : requirements * : binaries * : libraries * : headers * )
           <install-dependencies>on <install-type>LIB 
         ;
     stage.install $(name)-headers : $(headers) : $(requirements) 
-      <location>$(include-locate) <install-source-root>$(install-source-root) ;
+      <location>$(include-locate)$(install-header-subdir)
+      <install-source-root>$(install-source-root) ;
     alias $(name) : $(name)-bin $(name)-lib $(name)-headers ;
     
     local c = [ project.current ] ;
