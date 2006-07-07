@@ -99,6 +99,7 @@ if ! $(ignore-config)
     }        
         
     modules.load site-config : : $(path) ;
+    project.load-used-projects site-config ;
 }
 
 
@@ -122,7 +123,7 @@ if ! $(ignore-config)
     }    
         
     modules.load user-config : : $(user-path) ;    
-
+    project.load-used-projects user-config ;
 }    
 
 
