@@ -76,21 +76,27 @@ rule load ( jamfile-location )
         # to child projects from parent projects, we don't immediately
         # loading child projects when seing those attributes. Instead,
         # we record the minimal information that will be used only later.
-
-        local used = [ modules.peek $(module-name) : .used-projects ] ;
-                import project ;
-        while $(used)
-        {
-            local id = $(used[1]) ;
-            local where = $(used[2]) ;
-            
-            project.use $(id) : [ path.root 
-                [ path.make $(where) ] $(jamfile-location) ] ;
-            used = $(used[3-]) ;
-        }        
+        load-used-projects $(module-name) ;
     }                
     return $(module-name) ;        
 }
+
+rule load-used-projects ( module-name )
+{
+    local used = [ modules.peek $(module-name) : .used-projects ] ;
+    local location = [ attribute $(module-name) location ] ;
+    import project ;
+    while $(used)
+    {
+        local id = $(used[1]) ;
+        local where = $(used[2]) ;
+        
+        project.use $(id) : [ path.root 
+            [ path.make $(where) ] $(location) ] ;
+        used = $(used[3-]) ;
+    }            
+}
+
 
 # Note the use of character groups, as opposed to listing
 # 'Jamroot' and 'jamroot'. With the latter, we'd get duplicate
