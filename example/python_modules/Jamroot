@@ -1,0 +1,5 @@
+
+import python_helpers ;
+
+ECHO "test1:" [ python_helpers.test1 ] ;
+ECHO "test2:" [ python_helpers.test2 1234 : 5678 ] ;
