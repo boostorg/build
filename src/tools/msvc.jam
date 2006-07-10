@@ -577,42 +577,45 @@ flags msvc.compile PCH_SOURCE <pch-source> ;
 flags msvc.compile PCH_HEADER <pch>on : <pch-header> ;
 flags msvc.compile PCH_FILE <pch>on : <pch-file> ;
 
-local rule cc-compile ( targets + : sources * : rsp-content * : suffix * )
+rule get-rspline ( target : lang-opt )
 {
-    CC_RSPLINE on $(<) = [ on $(<) return -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)" -Yu"$(PCH_HEADER:D=)" ] ;
+    CC_RSPLINE on $(target) = [ on $(target) return $(lang-opt) -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c $(nl)-D$(DEFINES) $(nl)\"-I$(INCLUDES)\" ] ;
 }
 
-actions cc-compile
+rule compile-c-c++ ( targets + : sources * )
 {
-     $(.CC) @"@($(<[1]:W).rsp:E="$(>)"$(nl) -Fo"$(<[1]:W)"$(nl) $(CC_RSPLINE))"
+    DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_HEADER) ] ;
+    DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_FILE) ] ;
 }
 
-local rule cc-compile-c-c++ ( targets + : sources * : lang-opt )
+actions compile-c-c++
 {
-    DEPENDS $(<) : [ on $(<) return $(PCH_HEADER) ] ;
-    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
-    cc-compile $(targets) : $(sources)
-        : [ on $(<) return "$(>)"$(nl) $(CC_RSPLINE) ]
-        : [ on $(<) return $(lang-opt) -Fp"$(PCH_FILE:W)" ] ;
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))"
 }
 
-# The actions differ only by explicit selection of input language
 rule compile.c ( targets + : sources * : properties * )
 {
-    cc-compile-c-c++ $(<) : $(>) : -TC ;
+    C++FLAGS on $(targets[1]) = ;
+    get-rspline $(targets) : -TC ;
+    compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
 rule compile.c++ ( targets + : sources * : properties * )
 {
-    cc-compile-c-c++ $(<) : $(>) : -TP ;
+    get-rspline $(targets[1]) : -TP ;
+    compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
+}
+
+actions compile-pch
+{
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[1]:W)" -Yc"$(>[1]:D=)" -Fp"$(<[2]:W)" $(CC_RSPLINE))"
 }
 
 rule compile.pch ( targets + : sources * : properties * )
 {
     DEPENDS $(<) : [ on $(<) return $(PCH_SOURCE) ] ;
-    cc-compile $(<) : $(>) 
-        : [ on $(<) return $(nl)"$(PCH_SOURCE:W)" $(CC_RSPLINE) ]
-        : [ on $(<) return -Yc"$(>[1]:D=)" -TP -Fp"$(<[2]:W)" ] ;
+    get-rspline $(targets[1]) : -TP ;
+    compile-pch $(targets) : $(sources) [ on $(<) return $(PCH_SOURCE) ] ;
 }
 
 actions compile.rc
