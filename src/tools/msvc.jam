@@ -1,6 +1,7 @@
 # Copyright (c) 2003 David Abrahams.
 # Copyright (c) 2005 Vladimir Prus.
 # Copyright (c) 2005 Alexey Pakhunov.
+# Copyright (c) 2006 Bojan Resnik.
 #
 # Use, modification and distribution is subject to the Boost Software
 # License Version 1.0. (See accompanying file LICENSE_1_0.txt or
@@ -608,7 +609,7 @@ rule compile.c++ ( targets + : sources * : properties * )
 
 actions compile-pch
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[1]:W)" -Yc"$(>[1]:D=)" -Fp"$(<[2]:W)" $(CC_RSPLINE))"
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[1]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[2]:W)" $(CC_RSPLINE))"
 }
 
 rule compile.pch ( targets + : sources * : properties * )
