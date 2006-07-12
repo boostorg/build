@@ -131,19 +131,14 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
 
     
     local extra-libs ;
-    if [ os.name ] = SOLARIS
-    {
-        extra-libs = dl ;
-    }
-    else if [ os.name ] = OSF || [ os.name ] = QNXTO
-    {
-        # Nothing.
-    }   
-    else
-    {
-        extra-libs = dl util ;
-    }
     
+    switch [ os.name ]
+    {
+        case SOLARIS : extra-libs = dl      ;
+        case OSF:      extra-libs =         ;
+        case QNXTO:    extra-libs = util    ;
+        case *:        extra-libs = dl util ;
+    }
     
     # On Linux, we don't want to link either Boost.Python or
     # Python extensions to libpython, so that when extensions
@@ -159,7 +154,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
                  ;
     
     alias python
-                 :  $(extra-libs)
+                 : $(extra-libs)
                  : $(condition)
                  :
                  : <include>$(includes) 
