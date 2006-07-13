@@ -135,9 +135,9 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     switch [ os.name ]
     {
         case SOLARIS : extra-libs = dl      ;
-        case OSF:      extra-libs =         ;
-        case QNXTO:    extra-libs = util    ;
-        case *:        extra-libs = dl util ;
+        case OSF :     extra-libs =         ;
+        case QNXTO :   extra-libs = util    ;
+        case * :       extra-libs = dl util ;
     }
     
     # On Linux, we don't want to link either Boost.Python or
