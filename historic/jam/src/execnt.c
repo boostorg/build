@@ -1002,6 +1002,8 @@ int is_parent_child(DWORD parent, DWORD child)
 {
     HANDLE process_snapshot_h = INVALID_HANDLE_VALUE;
 
+    if (!child)
+        return 0;
     if (parent == child)
         return 1;
 
@@ -1016,8 +1018,37 @@ int is_parent_child(DWORD parent, DWORD child)
             ok == TRUE; 
             ok = Process32Next(process_snapshot_h, &pinfo) )
         {
-            if (pinfo.th32ProcessID == child && pinfo.th32ParentProcessID)
+            if (pinfo.th32ProcessID == child)
+            {
+                CloseHandle(process_snapshot_h);
+                if (!stricmp(pinfo.szExeFile, "explorer.exe"))
+                {
+                    /* explorer.exe is orphaned and process_id of its parent may
+                    accidentally match process_id of process we are after. We must not
+                    close dialog boxes displayed by children of explorer.exe even 
+                    though (thanks to its parent process id) it might appear to be 
+                    our child. This is not very reliable - there might be more 
+                    orphaned processes or shell might be something else than 
+                    explorer.exe, but this is most common and important scenario */
+                    return 0; 
+                }
+                if (!stricmp(pinfo.szExeFile, "csrss.exe"))
+                {
+                    /* csrss.exe may display message box like following:
+                        xyz.exe - Unable To Locate Component
+                        This application has failed to start because boost_foo-bar.dll 
+                        was not found. Re-installing the application may fix the problem
+                    This actually happens when starting test process that depends on 
+                    dynamic library which failed to build. We want to automatically 
+                    close these message boxes even though csrss.exe is not our 
+                    child process. We may depend on the fact that (in all current 
+                    versions of Windows) csrss.exe is indirectly child of System which 
+                    always has process id == 4 */
+                    if (is_parent_child(4, pinfo.th32ParentProcessID))
+                        return 1;
+                }
                 return is_parent_child(parent, pinfo.th32ParentProcessID);
+            }
         }
 
         CloseHandle(process_snapshot_h);
@@ -1026,28 +1057,44 @@ int is_parent_child(DWORD parent, DWORD child)
     return 0;
 }
 
-int related(HANDLE h, DWORD p)
+int related(DWORD d, DWORD p)
 {
-    return is_parent_child(get_process_id(h), p);
+    return is_parent_child(d, p);
 }
+
+typedef struct PROCESS_HANDLE_ID {HANDLE h; DWORD pid;} PROCESS_HANDLE_ID;
 
 BOOL CALLBACK window_enum(HWND hwnd, LPARAM lParam)
 {
-    char buf[10] = {0};
-    HANDLE h = *((HANDLE*) (lParam));
+    char buf[7] = {0};
+    PROCESS_HANDLE_ID p = *((PROCESS_HANDLE_ID*) (lParam));
     DWORD pid = 0;
+    DWORD tid = 0;
 
-    if (!GetClassNameA(hwnd, buf, 10))
-        return TRUE; // failed to read class name
+    if (!IsWindowVisible(hwnd))
+        return TRUE;
+
+    if (!GetClassNameA(hwnd, buf, 7))
+        return TRUE; /* failed to read class name; presume it's not a dialog */
 
     if (strcmp(buf, "#32770"))
-        return TRUE; // not a dialog
+        return TRUE; /* not a dialog */
 
-    GetWindowThreadProcessId(hwnd, &pid);
-    if (related(h, pid))
+    tid = GetWindowThreadProcessId(hwnd, &pid);
+    if (tid && related(p.pid, pid))
     {
-        PostMessage(hwnd, WM_QUIT, 0, 0);
-        // just one window at a time
+        /* ask really nice */
+        PostMessageA(hwnd, WM_CLOSE, 0, 0);
+        /* now wait and see if it worked. If not, insist */
+        if (WaitForSingleObject(p.h, 200) == WAIT_TIMEOUT)
+        {
+            PostThreadMessageA(tid, WM_QUIT, 0, 0);
+            if (WaitForSingleObject(p.h, 500) == WAIT_TIMEOUT)
+            {
+                PostThreadMessageA(tid, WM_QUIT, 0, 0);
+                WaitForSingleObject(p.h, 500);
+            }
+        }
         return FALSE;
     }
 
@@ -1056,7 +1103,13 @@ BOOL CALLBACK window_enum(HWND hwnd, LPARAM lParam)
 
 void close_alert(HANDLE process)
 {
-    EnumWindows(&window_enum, (LPARAM) &process);
+    DWORD pid = get_process_id(process);
+    /* If process already exited or we just cannot get its process id, do not go any further */
+    if (pid)
+    {
+        PROCESS_HANDLE_ID p = {process, pid};
+        EnumWindows(&window_enum, (LPARAM) &p);
+    }
 }
 
 static int
@@ -1094,9 +1147,10 @@ my_wait( int *status )
     
     if ( globs.timeout > 0 )
     {
+        unsigned int alert_wait = 1;
         /* with a timeout we wait for a finish or a timeout, we check every second
          to see if something timed out */
-        for (waitcode = WAIT_TIMEOUT; waitcode == WAIT_TIMEOUT;)
+        for (waitcode = WAIT_TIMEOUT; waitcode == WAIT_TIMEOUT; ++alert_wait)
         {
             waitcode = WaitForMultipleObjects( num_active, active_handles, FALSE, 1*1000 /* 1 second */ );
             if ( waitcode == WAIT_TIMEOUT )
@@ -1105,10 +1159,15 @@ my_wait( int *status )
                 for ( i = 0; i < num_active; ++i )
                 {
                     double t = running_time(active_handles[i]);
+
+                    /* periodically (each 5 secs) review and close alert dialogs hanging around */
+                    if ((alert_wait % ((unsigned int) 5)) == 0)
+                        close_alert(active_handles[i]);
+
                     if ( t > (double)globs.timeout )
                     {
                         /* the job may have left an alert dialog around,
-                         try and get rid of it before killing */
+                        try and get rid of it before killing */
                         close_alert(active_handles[i]);
                         /* we have a "runaway" job, kill it */
                         kill_all(0,active_handles[i]);
