@@ -915,6 +915,17 @@ running_time(HANDLE process)
     return 0.0;
 }
 
+static double
+creation_time(HANDLE process)
+{
+    FILETIME creation, exit, kernel, user, current;
+    if (GetProcessTimes(process, &creation, &exit, &kernel, &user))
+    {
+        return filetime_seconds(creation);
+    }
+    return 0.0;
+}
+
 /* it's just stupidly silly that one has to do this! */
 typedef struct PROCESS_BASIC_INFORMATION__ {
     LONG ExitStatus;
@@ -998,7 +1009,10 @@ kill_all(DWORD pid, HANDLE process)
     TerminateProcess(process,-2);
 }
 
-int is_parent_child(DWORD parent, DWORD child)
+/* recursive check if first process is parent (directly or indirectly) of 
+the latter one. Both processes are passed as process ids, not handles */
+static int 
+is_parent_child(DWORD parent, DWORD child)
 {
     HANDLE process_snapshot_h = INVALID_HANDLE_VALUE;
 
@@ -1020,33 +1034,53 @@ int is_parent_child(DWORD parent, DWORD child)
         {
             if (pinfo.th32ProcessID == child)
             {
-                CloseHandle(process_snapshot_h);
-                if (!stricmp(pinfo.szExeFile, "explorer.exe"))
+                /*
+                Unfortunately, process ids are not really unique. There might 
+                be spurious "parent and child" relationship match between
+                two non-related processes if real parent process of a given
+                process has exited (while child process kept running as an 
+                "orphan") and the process id of such parent process has been 
+                reused by internals of the operating system when creating 
+                another process. Thus additional check is needed - process
+                creation time. */
+                double tchild = 0.0;
+                double tparent = 0.0;
+                HANDLE hchild = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pinfo.th32ProcessID);
+                if (hchild != 0)
                 {
-                    /* explorer.exe is orphaned and process_id of its parent may
-                    accidentally match process_id of process we are after. We must not
-                    close dialog boxes displayed by children of explorer.exe even 
-                    though (thanks to its parent process id) it might appear to be 
-                    our child. This is not very reliable - there might be more 
-                    orphaned processes or shell might be something else than 
-                    explorer.exe, but this is most common and important scenario */
-                    return 0; 
+                    HANDLE hparent = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pinfo.th32ParentProcessID);
+                    if (hparent != 0)
+                    {
+                        tchild = creation_time(hchild);
+                        tparent = creation_time(hparent);
+                        
+                        CloseHandle(hparent);
+                    }
+                    CloseHandle(hchild);
                 }
-                if (!stricmp(pinfo.szExeFile, "csrss.exe"))
+                CloseHandle(process_snapshot_h);
+
+                /* was child created before alleged parent? */
+                if (tchild == 0.0 || tparent == 0.0 || tchild < tparent)
+                    return 0;
+
+                /* csrss.exe may display message box like following:
+                    xyz.exe - Unable To Locate Component
+                    This application has failed to start because 
+                    boost_foo-bar.dll was not found. Re-installing the 
+                    application may fix the problem
+                This actually happens when starting test process that depends
+                on a dynamic library which failed to build. We want to 
+                automatically close these message boxes even though csrss.exe
+                is not our child process. We may depend on the fact that (in
+                all current versions of Windows) csrss.exe is indirectly 
+                child of System process, which always has process id == 4 */
+                if (stricmp(pinfo.szExeFile, "csrss.exe") == 0)
                 {
-                    /* csrss.exe may display message box like following:
-                        xyz.exe - Unable To Locate Component
-                        This application has failed to start because boost_foo-bar.dll 
-                        was not found. Re-installing the application may fix the problem
-                    This actually happens when starting test process that depends on 
-                    dynamic library which failed to build. We want to automatically 
-                    close these message boxes even though csrss.exe is not our 
-                    child process. We may depend on the fact that (in all current 
-                    versions of Windows) csrss.exe is indirectly child of System which 
-                    always has process id == 4 */
                     if (is_parent_child(4, pinfo.th32ParentProcessID))
                         return 1;
                 }
+                
                 return is_parent_child(parent, pinfo.th32ParentProcessID);
             }
         }
@@ -1057,31 +1091,35 @@ int is_parent_child(DWORD parent, DWORD child)
     return 0;
 }
 
-int related(DWORD d, DWORD p)
-{
-    return is_parent_child(d, p);
-}
-
 typedef struct PROCESS_HANDLE_ID {HANDLE h; DWORD pid;} PROCESS_HANDLE_ID;
 
-BOOL CALLBACK window_enum(HWND hwnd, LPARAM lParam)
+/* This function is called by the operating system for each topmost window. */
+BOOL CALLBACK
+window_enum(HWND hwnd, LPARAM lParam)
 {
     char buf[7] = {0};
     PROCESS_HANDLE_ID p = *((PROCESS_HANDLE_ID*) (lParam));
     DWORD pid = 0;
     DWORD tid = 0;
 
+    /* we want to find and close any window that:
+    1. is visible and
+    2. is a dialog and
+    3. is displayed by any of our child processes */
     if (!IsWindowVisible(hwnd))
         return TRUE;
 
-    if (!GetClassNameA(hwnd, buf, 7))
+    if (!GetClassNameA(hwnd, buf, sizeof(buf)))
         return TRUE; /* failed to read class name; presume it's not a dialog */
-
-    if (strcmp(buf, "#32770"))
+ 
+    if (strcmp(buf, "#32770") != 0)
         return TRUE; /* not a dialog */
 
+    /* GetWindowThreadProcessId returns 0 on error, otherwise thread id
+    of window message pump thread */
     tid = GetWindowThreadProcessId(hwnd, &pid);
-    if (tid && related(p.pid, pid))
+ 
+    if (tid && is_parent_child(p.pid, pid))
     {
         /* ask really nice */
         PostMessageA(hwnd, WM_CLOSE, 0, 0);
@@ -1089,22 +1127,22 @@ BOOL CALLBACK window_enum(HWND hwnd, LPARAM lParam)
         if (WaitForSingleObject(p.h, 200) == WAIT_TIMEOUT)
         {
             PostThreadMessageA(tid, WM_QUIT, 0, 0);
-            if (WaitForSingleObject(p.h, 500) == WAIT_TIMEOUT)
-            {
-                PostThreadMessageA(tid, WM_QUIT, 0, 0);
-                WaitForSingleObject(p.h, 500);
-            }
+            WaitForSingleObject(p.h, 300);
         }
+        
+        /* done, we do not want to check any other window now */
         return FALSE;
     }
 
     return TRUE;
 }
 
-void close_alert(HANDLE process)
+static void 
+close_alert(HANDLE process)
 {
     DWORD pid = get_process_id(process);
-    /* If process already exited or we just cannot get its process id, do not go any further */
+    /* If process already exited or we just cannot get its process id, do not 
+    go any further */
     if (pid)
     {
         PROCESS_HANDLE_ID p = {process, pid};
@@ -1160,7 +1198,8 @@ my_wait( int *status )
                 {
                     double t = running_time(active_handles[i]);
 
-                    /* periodically (each 5 secs) review and close alert dialogs hanging around */
+                    /* periodically (each 5 secs) check and close message boxes
+                    displayed by any of our child processes */
                     if ((alert_wait % ((unsigned int) 5)) == 0)
                         close_alert(active_handles[i]);
 
