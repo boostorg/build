@@ -1,5 +1,5 @@
 
-Milestone 11 (not yet released)
+Milestone 11 (Jule 20, 2006)
 
 Changes in this release:
 
