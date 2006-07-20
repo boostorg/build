@@ -5,11 +5,11 @@
 # while site-config.jam and user-config.jam will be ignored.
 
 using gcc ;
-using msvc : : "P:/Program Files/Microsoft Visual Studio/vc98" : : vcvars32-p.bat ;
 using borland ;
 
 using boostbook 
      : /home/ghost/build/docbook/xsl
      : /home/ghost/build/docbook/dtd
-    ; 
+     : /home/ghost/Work/boost-rc/tools/boostbook
+     ; 
 using doxygen ;
