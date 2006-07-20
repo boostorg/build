@@ -953,7 +953,7 @@ rule common-properties2 ( build-request requirements )
     local current = $(raw) ;
     
     # It's assumed that ordinary conditional requirements can't add
-    # <indirect-conditional> properties, and that rules refered
+    # <indirect-conditional> properties, and that rules referred
     # by <indirect-conditional> properties can't add new 
     # <indirect-conditional> properties. So the list of indirect conditionals
     # does not change.
