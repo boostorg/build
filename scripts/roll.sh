@@ -10,8 +10,6 @@ cd ../boost-build
 
 # This one is not fully finished
 rm -rf example/versioned
-# This one is too low-level and misleading
-rm -rf example/make
 
 # Remove unnecessary top-level files
 find . -maxdepth 1 -type f | egrep -v "roll.sh|bootstrap.jam|build-system.jam|boost_build_v2.html|boost.png|index.html|hacking.txt|site-config.jam|user-config.jam" | xargs rm -f
