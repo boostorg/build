@@ -50,6 +50,8 @@ lib dl ;
 # This contains 'openpty' function need by python. Again, on
 # some system need to pass this to linker explicitly.
 lib util ;
+# Python uses pthread symbols.
+lib pthread ;
 
 
 # Initializes the Python toolset.
@@ -129,7 +131,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
         flags python.capture-output PYTHON $(condition:J=/) : $(interpreter) ;
     }   
 
-    
+
     local extra-libs ;
     
     switch [ os.name ]
@@ -139,6 +141,16 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
         case QNXTO :   extra-libs = util    ;
         case * :       extra-libs = dl util ;
     }
+    
+    # Depending on system, Python library is either static
+    # or shared. When it's static, we need to add 'pthread'
+    # to link line of all clients, otherwise we'll get
+    # unresolved symbols. Same effect can be accomplished
+    # by using <threading>multi on the client, but
+    # that can have performance overhead, and is not really
+    # necessary, as Python interface has nothing that's
+    # affected by threading mode.
+    extra-libs += pthread ;
     
     # On Linux, we don't want to link either Boost.Python or
     # Python extensions to libpython, so that when extensions
