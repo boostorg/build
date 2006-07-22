@@ -1009,8 +1009,8 @@ kill_all(DWORD pid, HANDLE process)
     TerminateProcess(process,-2);
 }
 
-/* recursive check if first process is parent (directly or indirectly) of 
-the latter one. Both processes are passed as process ids, not handles */
+/* Recursive check if first process is parent (directly or indirectly) of 
+the second one. Both processes are passed as process ids, not handles */
 static int 
 is_parent_child(DWORD parent, DWORD child)
 {
@@ -1042,10 +1042,35 @@ is_parent_child(DWORD parent, DWORD child)
                 "orphan") and the process id of such parent process has been 
                 reused by internals of the operating system when creating 
                 another process. Thus additional check is needed - process
-                creation time. */
+                creation time. This check may fail (ie. return 0) for system 
+                processes due to insufficient privileges, and that's OK. */
                 double tchild = 0.0;
                 double tparent = 0.0;
                 HANDLE hchild = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pinfo.th32ProcessID);
+
+                CloseHandle(process_snapshot_h);
+
+                /* csrss.exe may display message box like following:
+                    xyz.exe - Unable To Locate Component
+                    This application has failed to start because 
+                    boost_foo-bar.dll was not found. Re-installing the 
+                    application may fix the problem
+                This actually happens when starting test process that depends
+                on a dynamic library which failed to build. We want to 
+                automatically close these message boxes even though csrss.exe
+                is not our child process. We may depend on the fact that (in
+                all current versions of Windows) csrss.exe is directly 
+                child of smss.exe process, which in turn is directly child of
+                System process, which always has process id == 4 .
+                This check must be performed before comparison of process 
+                creation time */
+                if (stricmp(pinfo.szExeFile, "csrss.exe") == 0
+                    || stricmp(pinfo.szExeFile, "smss.exe") == 0)
+                {
+                    if (is_parent_child(4, pinfo.th32ParentProcessID))
+                        return 1;
+                }
+
                 if (hchild != 0)
                 {
                     HANDLE hparent = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pinfo.th32ParentProcessID);
@@ -1058,29 +1083,13 @@ is_parent_child(DWORD parent, DWORD child)
                     }
                     CloseHandle(hchild);
                 }
-                CloseHandle(process_snapshot_h);
 
-                /* was child created before alleged parent? */
+                /* return 0 if one of the following is true:
+                1. we failed to read process creation time
+                2. child was created before alleged parent */
                 if (tchild == 0.0 || tparent == 0.0 || tchild < tparent)
                     return 0;
 
-                /* csrss.exe may display message box like following:
-                    xyz.exe - Unable To Locate Component
-                    This application has failed to start because 
-                    boost_foo-bar.dll was not found. Re-installing the 
-                    application may fix the problem
-                This actually happens when starting test process that depends
-                on a dynamic library which failed to build. We want to 
-                automatically close these message boxes even though csrss.exe
-                is not our child process. We may depend on the fact that (in
-                all current versions of Windows) csrss.exe is indirectly 
-                child of System process, which always has process id == 4 */
-                if (stricmp(pinfo.szExeFile, "csrss.exe") == 0)
-                {
-                    if (is_parent_child(4, pinfo.th32ParentProcessID))
-                        return 1;
-                }
-                
                 return is_parent_child(parent, pinfo.th32ParentProcessID);
             }
         }
