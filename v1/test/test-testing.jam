@@ -1,3 +1,5 @@
+#~ Copyright 2004 Misha Bergal.
+
 import testing ;
 
 local rule assert ( path : expected )
