@@ -152,6 +152,18 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     # affected by threading mode.
     extra-libs += pthread ;
     
+    # Add 'rt' option on Sun. While we duplicate the
+    # logic already in sun.jam and gcc.jam, I see no easy
+    # way to refactor it.
+    condition += <toolset>sun:<find-shared-library>rt ;
+    switch [ modules.peek : JAMUNAME ]
+    {
+    case SunOS* :
+        {
+            condition += <toolset>gcc:<find-shared-library>rt ;
+        }
+    }
+             
     # On Linux, we don't want to link either Boost.Python or
     # Python extensions to libpython, so that when extensions
     # loaded in the interpreter, the symbols in the interpreter
