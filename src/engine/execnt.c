@@ -1010,7 +1010,9 @@ kill_all(DWORD pid, HANDLE process)
 }
 
 /* Recursive check if first process is parent (directly or indirectly) of 
-the second one. Both processes are passed as process ids, not handles */
+the second one. Both processes are passed as process ids, not handles.
+Special return value 2 means that the second process is smss.exe and its 
+parent process is System (first argument is ignored) */
 static int 
 is_parent_child(DWORD parent, DWORD child)
 {
@@ -1065,10 +1067,14 @@ is_parent_child(DWORD parent, DWORD child)
                 This check must be performed before comparison of process 
                 creation time */
                 if (stricmp(pinfo.szExeFile, "csrss.exe") == 0
-                    || stricmp(pinfo.szExeFile, "smss.exe") == 0)
+                    && is_parent_child(parent, pinfo.th32ParentProcessID) == 2)
                 {
-                    if (is_parent_child(4, pinfo.th32ParentProcessID))
-                        return 1;
+                    return 1;
+                }
+                else if (stricmp(pinfo.szExeFile, "smss.exe") == 0
+                    && pinfo.th32ParentProcessID == 4)
+                {
+                    return 2;
                 }
 
                 if (hchild != 0)
@@ -1090,7 +1096,7 @@ is_parent_child(DWORD parent, DWORD child)
                 if (tchild == 0.0 || tparent == 0.0 || tchild < tparent)
                     return 0;
 
-                return is_parent_child(parent, pinfo.th32ParentProcessID);
+                return is_parent_child(parent, pinfo.th32ParentProcessID) & 1;
             }
         }
 
