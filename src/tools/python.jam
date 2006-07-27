@@ -52,6 +52,8 @@ lib dl ;
 lib util ;
 # Python uses pthread symbols.
 lib pthread ;
+# Extra library needed by phtread on some platforms.
+lib rt ;
 
 
 # Initializes the Python toolset.
@@ -152,15 +154,17 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     # affected by threading mode.
     extra-libs += pthread ;
     
+    extra-libs-conditional = ;
     # Add 'rt' option on Sun. While we duplicate the
     # logic already in sun.jam and gcc.jam, I see no easy
     # way to refactor it.
-    condition += <toolset>sun:<find-shared-library>rt ;
+    # Note that for 'sun' toolset, rt is already unconditionally
+    # added.
     switch [ modules.peek : JAMUNAME ]
     {
-    case SunOS* :
+        case SunOS* :
         {
-            condition += <toolset>gcc:<find-shared-library>rt ;
+            extra-libs-conditional += <toolset>gcc:<source>rt ;
         }
     }
              
@@ -178,8 +182,8 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
                  ;
     
     alias python
-                 : $(extra-libs)
-                 : $(condition)
+                 : $(extra-libs) 
+                 : $(condition) $(extra-libs-conditional)
                  :
                  : <include>$(includes) 
                    <library-path>$(libraries)
