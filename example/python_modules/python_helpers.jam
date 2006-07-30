@@ -1,0 +1,7 @@
+
+# Import the Python rules to Boost.Build
+PYTHON_IMPORT_RULE python_helpers : test1 : python_helpers : test1 ;
+PYTHON_IMPORT_RULE python_helpers : test2 : python_helpers : test2 ;
+
+# Make the new rules accessible to everybody who imports us.
+EXPORT python_helpers : test1 test2 ;
