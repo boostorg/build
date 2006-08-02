@@ -1,10 +1,10 @@
-#  Copyright (c) 2001 David Abrahams.
-#  Copyright (c) 2002-2003 Rene Rivera.
-#  Copyright (c) 2002-2003 Vladimir Prus.
+# Copyright 2001 David Abrahams.
+# Copyright 2002-2006 Rene Rivera.
+# Copyright 2002-2003 Vladimir Prus.
 #
-#  Use, modification and distribution is subject to the Boost Software
-#  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-#  http://www.boost.org/LICENSE_1_0.txt)
+# Distributed under the Boost Software License, Version 1.0.
+#    (See accompanying file LICENSE_1_0.txt or copy at
+#          http://www.boost.org/LICENSE_1_0.txt)
 
 import toolset : flags ;
 import property ;
@@ -254,36 +254,54 @@ actions compile.asm
 # since it's not supported by gcc/libc.
 class gcc-linking-generator : unix-linking-generator
 {
-    rule generated-targets ( sources + : property-set : project name ? )
+    rule can-build ( target-type : property-set : sources * )
     {
-        if <runtime-link>static in [ $(property-set).raw ] 
+        local no-static-link = ;
+        if [ modules.peek : UNIX ]
         {
-            local m ;
-            if [ id ] = "gcc.link.dll"
+            switch [ modules.peek : JAMUNAME ]
             {
-                m = "on gcc, DLL can't be build with <runtime-link>static" ;
-            }         
-            if ! $(m) {                
+                case * : no-static-link = true ;
+            }
+        }
+
+        local properties = [ $(property-set).raw ] ;
+        local reason ;
+        if $(no-static-link) && <runtime-link>static in $(properties)
+        {
+            if <link>shared in $(properties)
+            {
+                reason =
+                    "On gcc, DLL can't be build with '<runtime-link>static'." ;
+            }
+            else if [ type.is-derived $(target-type) EXE ]
+            {
                 for local s in $(sources)
                 {
                     local type = [ $(s).type ] ;
-                    if $(type) &&  [ type.is-derived $(type) SHARED_LIB ] 
+                    if $(type) &&  [ type.is-derived $(type) SHARED_LIB ]
                     {
-                        m = "on gcc, using DLLS together with the <runtime-link>static options is not possible " ;
-                    }                
-                }                
+                        reason =
+                            "On gcc, using DLLS together with the"
+                            "<runtime-link>static options is not possible " ;
+                    }
+                }
             }
-            if $(m)
-            {
-                errors.user-error $(m) :
-                  "it's suggested to use <runtime-link>static together with the <link>static" ;
-            }
-            
         }
-                        
-        return [ unix-linking-generator.generated-targets 
-            $(sources) : $(property-set) : $(project) $(name) ] ;
-    }    
+        if $(reason)
+        {
+            ECHO warn:
+                $(reason) ;
+            ECHO warn:
+                "It's suggested to use '<runtime-link>static' together"
+                "with the '<link>static'." ;
+            return ;
+        }
+        else
+        {
+            return true ;
+        }
+    }
 }
 
 generators.register [ new gcc-linking-generator gcc.link : LIB OBJ : EXE 
