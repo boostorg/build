@@ -1,7 +1,9 @@
-#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
-#  distribute this software is granted provided this copyright notice appears in
-#  all copies. This software is provided "as is" without express or implied
-#  warranty, and with no claim as to its suitability for any purpose.
+# Copyright Vladimir Prus 2002.
+# Copyright Rene Rivera 2006.
+#
+# Distributed under the Boost Software License, Version 1.0.
+#    (See accompanying file LICENSE_1_0.txt or copy at
+#          http://www.boost.org/LICENSE_1_0.txt)
 
 
 #   Supports 'abstract' targets, which are targets explicitly defined in Jamfile.
@@ -733,8 +735,11 @@ class main-target : abstract-target
         for local p in $(all-property-sets)
         {
             local r = [ generate-really $(p) ] ;
-            usage-requirements = [ $(usage-requirements).add $(r[1]) ] ;
-            result += $(r[2-]) ;
+            if $(r)
+            {
+                usage-requirements = [ $(usage-requirements).add $(r[1]) ] ;
+                result += $(r[2-]) ;
+            }
         }
         end-building $(__name__) ;
         return $(usage-requirements) [ sequence.unique $(result) ] ;                
@@ -1184,28 +1189,30 @@ class basic-target : abstract-target
                   [ construct $(self.name) : 
                     $(source-targets) : $(rproperties) ] ;
                 
-                local gur = $(result[1]) ;
-                result = $(result[2-]) ;
-
-                local s = [ create-subvariant 
-                    $(result) :
-                    [ virtual-target.recent-targets ] 
-                      : $(property-set) : $(source-targets)
-                  : $(rproperties) : $(usage-requirements) ] ;
-                virtual-target.clear-recent-targets ;
-
-                local ur = [ compute-usage-requirements $(s) ] ;
-                ur = [ $(ur).add $(gur) ] ;
-                $(s).set-usage-requirements $(ur) ;
-                if [ modules.peek : .debug-building ] 
+                if $(result)
                 {
-                    ECHO [ targets.indent ]
-                      "Usage requirements from $(self.name) are "
-                        [ $(ur).raw ] ;
+                    local gur = $(result[1]) ;
+                    result = $(result[2-]) ;
+
+                    local s = [ create-subvariant 
+                        $(result) :
+                        [ virtual-target.recent-targets ] 
+                          : $(property-set) : $(source-targets)
+                      : $(rproperties) : $(usage-requirements) ] ;
+                    virtual-target.clear-recent-targets ;
+
+                    local ur = [ compute-usage-requirements $(s) ] ;
+                    ur = [ $(ur).add $(gur) ] ;
+                    $(s).set-usage-requirements $(ur) ;
+                    if [ modules.peek : .debug-building ] 
+                    {
+                        ECHO [ targets.indent ]
+                          "Usage requirements from $(self.name) are "
+                            [ $(ur).raw ] ;
+                    }
+                    
+                    self.generated.$(property-set) = $(ur) $(result) ;
                 }
-                
-                
-                self.generated.$(property-set) = $(ur) $(result) ;
             } 
             else
             {
@@ -1339,20 +1346,19 @@ class typed-target : basic-target
             : $(source-targets) ] ;
         if ! $(r)
         {                        
-            ECHO "error: unable to construct " [ full-name ] ;
+            ECHO "warn: Unable to construct" [ full-name ] ;
             
             # Are there any top-level generators for this type/property set.
             if ! [ generators.find-viable-generators 
-                $(self.type) : $(property-set) ]
+                $(self.type) : $(property-set) : $(source-targets) ]
             {
                 ECHO "error: no generators were found for type '$(self.type)'" ;
                 ECHO "error: and the requested properties" ;
                 ECHO "error: make sure you've configured the needed tools" ;
                 ECHO "See http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html" ;
+                
+                ECHO "To debug this problem, try the --debug-generators option." ;
             }
-            
-            ECHO "To debug this problem, try the --debug-generators option." ;
-            EXIT ;
         }
         
         return $(r) ;
