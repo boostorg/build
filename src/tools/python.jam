@@ -160,9 +160,15 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     # way to refactor it.
     # Note that for 'sun' toolset, rt is already unconditionally
     # added.
+
+    # (MS) Question: Why not [ os.name ] in the next statement?
     switch [ modules.peek : JAMUNAME ]
     {
         case SunOS* :
+        {
+            extra-libs-conditional += <toolset>gcc:<source>rt ;
+        }
+        case OSF* :
         {
             extra-libs-conditional += <toolset>gcc:<source>rt ;
         }
