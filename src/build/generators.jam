@@ -222,13 +222,6 @@ class generator
         }
     }
     
-    # Indicates if this generator can handle building the given target
-    # combination.
-    rule can-build ( target-type : property-set : sources * )
-    {
-        return true ;
-    }
-        
     # Returns another generator which differers from $(self) in
     # - id
     # - value to <toolset> feature in properties
@@ -273,6 +266,8 @@ class generator
     
     # Tries to invoke this generator on the given sources. Returns a
     # list of generated targets (instances of 'virtual-target').
+    # Returning nothing from run indicates that the generator was
+    # unable to create the target.
     rule run ( project  # Project for which the targets are generated
                name ?   # Determines the name of 'name' attribute for 
                         # all generated targets. See 'generated-targets' method.
@@ -937,7 +932,7 @@ local rule ensure-type ( targets * )
 #
 # Note: this algorithm explicitly ignores generators for base classes if there's
 # at least one generator for requested target-type.
-local rule find-viable-generators-aux ( target-type : property-set : sources * )
+local rule find-viable-generators-aux ( target-type : property-set )
 {
     # Select generators that can create the required target type.
     local viable-generators = ;
@@ -991,27 +986,24 @@ local rule find-viable-generators-aux ( target-type : property-set : sources * )
     {
         generators.dout [ indent ] "trying generator" [ $(g).id ] "(" [ $(g).source-types ] -> [ $(g).target-types ] ")" ;
         
-        if [ $(g).can-build $(target-type) : $(property-set) : $(sources) ]
+        local m = [ $(g).match-rank $(property-set) ] ;
+        if $(m)
         {
-            local m = [ $(g).match-rank $(property-set) ] ;
-            if $(m)
-            {
-                generators.dout [ indent ] "  is viable" ;
-                viable-generators += $(g) ;
-            }
+            generators.dout [ indent ] "  is viable" ;
+            viable-generators += $(g) ;
         }
     }
                             
     return $(viable-generators) ;
 }
 
-rule find-viable-generators ( target-type : property-set : sources * )
+rule find-viable-generators ( target-type : property-set )
 {
     local key = $(target-type).$(property-set) ;
     local l = $(.fv.$(key)) ;
     if ! $(l)
     {
-        l = [ find-viable-generators-aux $(target-type) : $(property-set) : $(sources) ] ;
+        l = [ find-viable-generators-aux $(target-type) : $(property-set) ] ;
         if ! $(l)
         {
             l = none ;
@@ -1071,7 +1063,7 @@ rule find-viable-generators ( target-type : property-set : sources * )
 local rule construct-really (
    project name ? : target-type : property-set : sources * )
 {
-    viable-generators = [ find-viable-generators $(target-type) : $(property-set) : $(sources) ] ;
+    viable-generators = [ find-viable-generators $(target-type) : $(property-set) ] ;
                         
     generators.dout [ indent ] "*** " [ sequence.length $(viable-generators) ] 
       " viable generators" ;
