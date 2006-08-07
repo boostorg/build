@@ -254,8 +254,9 @@ actions compile.asm
 # since it's not supported by gcc/libc.
 class gcc-linking-generator : unix-linking-generator
 {
-    rule can-build ( target-type : property-set : sources * )
+    rule run ( project name ? : property-set : sources + )
     {
+        #~ TODO: Replace this with the use of a target-os property.
         local no-static-link = ;
         if [ modules.peek : UNIX ]
         {
@@ -274,7 +275,7 @@ class gcc-linking-generator : unix-linking-generator
                 reason =
                     "On gcc, DLL can't be build with '<runtime-link>static'." ;
             }
-            else if [ type.is-derived $(target-type) EXE ]
+            else if [ type.is-derived $(self.target-types[1]) EXE ]
             {
                 for local s in $(sources)
                 {
@@ -290,16 +291,17 @@ class gcc-linking-generator : unix-linking-generator
         }
         if $(reason)
         {
-            ECHO warn:
+            ECHO warning:
                 $(reason) ;
-            ECHO warn:
+            ECHO warning:
                 "It's suggested to use '<runtime-link>static' together"
                 "with the '<link>static'." ;
             return ;
         }
         else
         {
-            return true ;
+            return [ unix-linking-generator.run $(project) $(name)
+                : $(property-set) : $(sources) ] ;
         }
     }
 }
