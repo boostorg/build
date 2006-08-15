@@ -740,6 +740,29 @@ rule use ( id : location )
     .current-project = $(saved-project) ;
 }
 
+# Defines a Boost.Build extension project. Such extensions usually
+# contain library targets and features that can be used by many people.
+# Even though extensions are really projects, they can be initialize as
+# a module would be with the "using" (project.project-rules.using)
+# mechanism.
+rule extension ( id : options * : * )
+{
+    # The caller is a standalone module for the extension.
+    local mod = [ CALLER_MODULE ] ;
+    
+    # We need to do the rest within the extension module.
+    module $(mod)
+    {
+        # Create the project data, and bring in the project rules
+        # into the module.
+        project.initialize $(__name__) ;
+        
+        # Create the project itself, i.e. the attributes.
+        # All extensions are created in the "/ext" project space.
+        project /ext/$(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+}
+
 # This module defines rules common to all projects
 module project-rules
 {                
@@ -942,7 +965,19 @@ module project-rules
         }
 
         return $(result) ;                
-    }        
+    }
+    
+    # Calculates conditional requirements for multiple requirements
+    # at once. This is a shorthand to be reduce duplication and to
+    # keep an inline declarative syntax. For example:
+    #
+    #   lib x : x.cpp : [ <toolset>gcc <variant>debug :
+    #       <define>DEBUG_EXCEPTION <define>DEBUG_TRACE ] ;
+    #
+    rule conditional ( condition + : requirements * )
+    {
+        return $(condition:J=,):$(requirements) ;
+    }
 }
 
 
