@@ -141,7 +141,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     {
         case SOLARIS : extra-libs = dl      ;
         case OSF :     extra-libs =         ;
-        case QNX* :    extra-libs = util    ;
+        case QNX* :    extra-libs =         ;
         case * :       extra-libs = dl util ;
     }
     
