@@ -402,6 +402,14 @@ class abstract-file-target : virtual-target
             ps = [ property-set.empty ] ;
         }
         
+        #~ We add ourselves to the properties so that any tag rule can get
+        #~ more direct information about the target than just that available
+        #~ through the properties. This is useful in implementing
+        #~ name changes based on the sources of the target. For example to
+        #~ make unique names of object files based on the source file.
+        #~ --grafik
+        ps = [ property-set.create [ $(ps).raw ] <target>$(__name__) ] ;
+        
         local tag = [ $(ps).get <tag> ] ;
 
         if $(tag)
