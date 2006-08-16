@@ -53,6 +53,7 @@ local rule default-host-os ( )
             case IRIX : host-os = sgi ;
             case MACOSX : host-os = darwin ;
             case KFREEBSD : host-os = freebsd ;
+            case LINUX : host-os = linux ;
             case * : host-os = unix ;
         }
     }
@@ -68,13 +69,13 @@ local rule default-host-os ( )
 feature host-os
     :   amiga aix bsd cygwin darwin dos emx freebsd hpux
         linux netbsd openbsd osf qnx qnxnto sgi solaris sun sunos
-        svr4 sysv ultrix unixware vms windows
+        svr4 sysv ultrix unix unixware vms windows
     :   optional ;
         feature.set-default host-os : [ default-host-os ] ;
 feature target-os
     :   amiga aix bsd cygwin darwin dos emx freebsd hpux
         linux netbsd openbsd osf qnx qnxnto sgi solaris sun sunos
-        svr4 sysv ultrix unixware vms windows
+        svr4 sysv ultrix unix unixware vms windows
     :   propagated link-incompatible ;
         feature.set-default target-os : [ default-host-os ] ;
 
