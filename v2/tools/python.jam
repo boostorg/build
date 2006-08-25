@@ -361,7 +361,7 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
           :
           : <library-path>$(PYTHON_LIB_PATH)    
             <include>$(PYTHON_INCLUDES)
-            <find-library>$(lib) ;                
+            <find-shared-library>$(lib) ;                
     }
     else
     {        
@@ -390,7 +390,7 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
         #else
         #{
         properties += <library-path>$(CYGWIN_PYTHON_LIB_PATH) 
-                      <find-library>python$(CYGWIN_PYTHON_VERSION).dll ;
+                      <find-shared-library>python$(CYGWIN_PYTHON_VERSION).dll ;
         
         properties += <include>$(root)/include/python$(version) ;          
           
