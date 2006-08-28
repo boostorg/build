@@ -291,8 +291,7 @@ var_string(
                         }
                         
                         /* expand the file value into the file reference */
-                        if ( !globs.noexec )
-                            var_string_to_file( split+3, ine-split-4, file_name_s, lol );
+                        var_string_to_file( split+3, ine-split-4, file_name_s, lol );
                         
                         /* continue on with the expansion */
                         out += strlen(out);
@@ -352,7 +351,12 @@ void var_string_to_file( const char * in, int insize, const char * out, LOL * lo
 {
     const char * ine = in+insize;
     FILE * out_file = 0;
-    if ( strcmp( out, "STDOUT" ) == 0 )
+    int out_debug = DEBUG_EXEC ? 1 : 0;
+    if ( globs.noexec )
+    {
+        out_debug = 1;
+    }
+    else if ( strcmp( out, "STDOUT" ) == 0 )
     {
         out_file = stdout;
     }
@@ -382,6 +386,8 @@ void var_string_to_file( const char * in, int insize, const char * out, LOL * lo
         string_free(&out_name);
     }
 
+    if ( out_debug ) printf("\nfile %s\n",out);
+
     while( *in && in < ine )
     {
         int dollar = 0;
@@ -396,7 +402,8 @@ void var_string_to_file( const char * in, int insize, const char * out, LOL * lo
         }
         if ( output_0 < output_1 )
         {
-            fwrite(output_0,output_1-output_0,1,out_file);
+            if ( out_file ) fwrite(output_0,output_1-output_0,1,out_file);
+            if ( out_debug ) fwrite(output_0,output_1-output_0,1,stdout);
         }
         output_0 = output_1;
 
@@ -411,7 +418,7 @@ void var_string_to_file( const char * in, int insize, const char * out, LOL * lo
             ++output_1;
         }
 
-        /* If a variable encountered, expand it and and embed the */
+        /* If a variable encountered, expand it and embed the */
         /* space-separated members of the list in the output. */
 
         if( dollar )
@@ -422,26 +429,34 @@ void var_string_to_file( const char * in, int insize, const char * out, LOL * lo
 
             while ( l )
             {
-                fputs( l->string, out_file );
+                if ( out_file ) fputs( l->string, out_file );
+                if ( out_debug ) puts( l->string );
                 l = list_next( l );
-                if ( l ) fputc( ' ', out_file );
+                if ( l )
+                {
+                    if ( out_file ) fputc( ' ', out_file );
+                    if ( out_debug ) fputc( ' ', stdout );
+                }
             }
 
             list_free( l );
         }
         else if ( output_0 < output_1 )
         {
-            fwrite(output_0,output_1-output_0,1,out_file);
+            if ( out_file ) fwrite(output_0,output_1-output_0,1,out_file);
+            if ( out_debug ) fwrite(output_0,output_1-output_0,1,stdout);
         }
         
         in = output_1;
     }
 
-    if ( out_file != stdout && out_file != stderr )
+    if ( out_file && out_file != stdout && out_file != stderr )
     {
         fflush( out_file );
         fclose( out_file );
     }
+
+    if ( out_debug ) fputc('\n',stdout);
 }
 
 /*
