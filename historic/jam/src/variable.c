@@ -354,7 +354,7 @@ void var_string_to_file( const char * in, int insize, const char * out, LOL * lo
     int out_debug = DEBUG_EXEC ? 1 : 0;
     if ( globs.noexec )
     {
-        out_debug = 1;
+        /* out_debug = 1; */
     }
     else if ( strcmp( out, "STDOUT" ) == 0 )
     {
