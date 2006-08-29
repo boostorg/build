@@ -11,10 +11,10 @@ rule properties-as-path ( properties * )
     local r ;
     for local p in $(properties)
     {
-	    if $(p:G) != <action>
-	    {
-	        r += $(p) ;
-	    }
+        if $(p:G) != <action>
+        {
+            r += $(p) ;
+        }
     }
     return [ property.as-path
         [ property.remove incidental : $(r) ] ] ;
