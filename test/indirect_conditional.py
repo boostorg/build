@@ -17,7 +17,7 @@ rule a1-rule ( properties * )
 {
     if <variant>debug in $(properties)
     {
-	    return <define>OK ;
+        return <define>OK ;
     }
 }
 
