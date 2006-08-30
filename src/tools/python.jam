@@ -139,21 +139,11 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     
     switch [ os.name ]
     {
-        case SOLARIS : extra-libs = dl      ;
-        case OSF :     extra-libs =         ;
-        case QNX* :    extra-libs =         ;
-        case * :       extra-libs = dl util ;
+        case SOLARIS : extra-libs = pthread dl      ;
+        case OSF :     extra-libs = pthread         ;
+        case QNX* :    extra-libs =                 ;
+        case * :       extra-libs = pthread dl util ;
     }
-    
-    # Depending on system, Python library is either static
-    # or shared. When it's static, we need to add 'pthread'
-    # to link line of all clients, otherwise we'll get
-    # unresolved symbols. Same effect can be accomplished
-    # by using <threading>multi on the client, but
-    # that can have performance overhead, and is not really
-    # necessary, as Python interface has nothing that's
-    # affected by threading mode.
-    extra-libs += pthread ;
     
     extra-libs-conditional = ;
     # Add 'rt' option on Sun. While we duplicate the
@@ -175,12 +165,11 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
         }
     }
              
-    # On Linux, we don't want to link either Boost.Python or
-    # Python extensions to libpython, so that when extensions
-    # loaded in the interpreter, the symbols in the interpreter
-    # are used. If we linked to libpython, we'd get duplicate
-    # symbols. So declare two targets -- one for headers and another
-    # for library.   
+    # On *nix, we don't want to link either Boost.Python or Python
+    # extensions to libpython, because the Python interpreter itself
+    # provides all those symbols. If we linked to libpython, we'd get
+    # duplicate symbols. So declare two targets -- one for building
+    # extensions and another embedding
     alias python_for_extensions
                  :  
                  : $(condition)
@@ -188,6 +177,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
                  : <include>$(includes) 
                  ;
     
+    # This should really be called python_for_embedding
     alias python
                  : $(extra-libs) 
                  : $(condition) $(extra-libs-conditional)
