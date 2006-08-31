@@ -45,6 +45,8 @@ project python ;
 # not in whatever project we were called by.
 .project = [ project.current ] ;
 
+.alias-defined = ;
+
 # Dynamic linker lib. Necessary to specify it explicitly 
 # on some platforms.
 lib dl ;  
@@ -94,6 +96,13 @@ rule init ( version ? : root ? : includes ? : libraries ?
     {
         init-unix $(version) : $(root) : $(includes) : $(libraries) : $(cygwin-condition) ;
     }
+    
+    if [ os.on-windows ] && ! $(.alias-defined)
+    {
+        .alias-defined = true ;
+        alias python_for_extensions : python ;
+    }
+    
     
     project.pop-current ;
 }
@@ -164,18 +173,22 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
             extra-libs-conditional += <toolset>gcc:<source>rt ;
         }
     }
-             
-    # On *nix, we don't want to link either Boost.Python or Python
-    # extensions to libpython, because the Python interpreter itself
-    # provides all those symbols. If we linked to libpython, we'd get
-    # duplicate symbols. So declare two targets -- one for building
-    # extensions and another embedding
-    alias python_for_extensions
-                 :  
-                 : $(condition)
-                 :
-                 : <include>$(includes) 
-                 ;
+    
+    if ! [ os.on-windows ]
+    {
+        # On *nix, we don't want to link either Boost.Python or Python
+        # extensions to libpython, because the Python interpreter itself
+        # provides all those symbols. If we linked to libpython, we'd get
+        # duplicate symbols. So declare two targets -- one for building
+        # extensions and another embedding
+        alias python_for_extensions
+                     :  
+                     : $(condition)
+                     :
+                     : <include>$(includes) 
+                     ;
+    }
+    
     
     # This should really be called python_for_embedding
     alias python
@@ -187,6 +200,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
                    <find-shared-library>python$(version)
                  ;
     
+             
     # NOTES:
     # - V1 had logic to force intel to use gcc's runtime.
     #   Note sure why that was needed, with icc 8.0 extensions
@@ -265,7 +279,6 @@ rule init-mac ( version : root ? : includes ? : libraries ? )
       ;  
 }
 
-.alias-defined = ;
 rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? )
 {
 #    PYTHON_PROPERTIES =
@@ -392,12 +405,6 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
           : $(properties)
           ;        
     }    
-    
-    if ! $(.alias-defined)
-    {
-        .alias-defined = true ;
-        alias python_for_extensions : python ;
-    }    
 }
 
 
@@ -407,13 +414,14 @@ rule configured ( )
 }
         
 type.register PYTHON_EXTENSION : : SHARED_LIB ;
+
 # We can't give "dll" suffix to PYTHON_EXTENSION, because
 # we would not know what "a.dll" is: python extenstion or
 # ordinary library. Therefore, we specify only suffixes
 # used for generation of targets.
 type.set-generated-target-suffix PYTHON_EXTENSION : : so ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <os>NT : dll ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <os>CYGWIN : so ;
+type.set-generated-target-suffix PYTHON_EXTENSION : <os>NT : pyd ;
+type.set-generated-target-suffix PYTHON_EXTENSION : <os>CYGWIN : dll ;
 
 # Unset 'lib' prefix for PYTHON_EXTENSION
 type.set-generated-target-prefix PYTHON_EXTENSION : : "" ;
