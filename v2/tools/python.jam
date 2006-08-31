@@ -145,7 +145,15 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
 
 
     local extra-libs ;
-    
+
+    # Depending on system, Python library is either static
+    # or shared. When it's static, we need to add 'pthread'
+    # to link line of all clients, otherwise we'll get
+    # unresolved symbols. Same effect can be accomplished
+    # by using <threading>multi on the client, but
+    # that can have performance overhead, and is not really
+    # necessary, as Python interface has nothing that's
+    # affected by threading mode.
     switch [ os.name ]
     {
         case SOLARIS : extra-libs = pthread dl      ;
