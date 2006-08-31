@@ -300,7 +300,22 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
         
         PYTHON_INCLUDES ?= $(root)/include [ GLOB $(root) : PC ] ;
         
-        local PYTHON_VERSION_NODOT = [ regex.match ([0-9]+[.][0-9]+).* : $(version) : 1 ] ;
+        # The name of Python library file does not have a dot between
+        # major and minor version. 
+        local PYTHON_VERSION_NODOT = [ regex.match ([0-9]+)[.]([0-9]+).* : $(version) : 1 2 ] ;
+        if $(PYTHON_VERSION_NODOT)
+        {
+            PYTHON_VERSION_NODOT = $(PYTHON_VERSION_NODOT[1])$(PYTHON_VERSION_NODOT[2]) ;
+        }
+        else
+        {
+            # Try to link to 'python' lib, without version. Probably won't
+            # work, but better that not passing any library name at all.
+            PYTHON_VERSION_NODOT = "" ;
+        }
+        
+        
+        
         PYTHON_DLL ?= [ GLOB $(PATH) $(Path) : python$(PYTHON_VERSION_NODOT).dll ] ;
         PYTHON_DEBUG_DLL ?= [ GLOB $(PATH) $(Path) : python$(PYTHON_VERSION_NODOT)_d.dll ] ;
         PYTHON_IMPORT_LIB ?= [ GLOB $(PYTHON_LIB_PATH) : libpython$(PYTHON_VERSION_NODOT).* ] ;
@@ -318,6 +333,7 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
             ECHO "notice: Python include path is" $(includes) ;
             ECHO "notice: Python library path is" $(libraries) ;
             ECHO "notice: Python interpreter is" $(interpreter) ;        
+            ECHO "notice: Python library name is" python$(PYTHON_VERSION_NODOT) ;
         }
         
         flags python.capture-output PYTHON : $(interpreter) ;
