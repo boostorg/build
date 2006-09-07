@@ -325,7 +325,7 @@ file_archscan(
 		    ** 15 characters (ie. don't fit into a ar_name
 		    */
 
-		    string_table = (char *)BJAM_MALLOC(lar_size);
+		    string_table = (char *)BJAM_MALLOC_ATOMIC(lar_size);
 		    lseek(fd, offset + SARHDR, 0);
 		    if (read(fd, string_table, lar_size) != lar_size)
 			printf("error reading string table\n");
