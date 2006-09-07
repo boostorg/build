@@ -16,7 +16,6 @@
 # include "lists.h"
 # include "pathsys.h"
 # include "timestamp.h"
-# include "debug.h"
 
 /*  This file is ALSO:
  *  Copyright 2001-2004 David Abrahams.
@@ -265,9 +264,7 @@ copytarget( const TARGET *ot )
 {
 	TARGET *t;
 
-	t = (TARGET *)malloc( sizeof( *t ) );
-    if ( DEBUG_PROFILE )
-        profile_memory( sizeof( *t ) );
+	t = (TARGET *)BJAM_MALLOC( sizeof( *t ) );
 	memset( (char *)t, '\0', sizeof( *t ) );
 	t->name = copystr( ot->name );
 	t->boundname = t->name;
@@ -321,9 +318,7 @@ targetentry(
 {
 	TARGETS *c;
 
-	c = (TARGETS *)malloc( sizeof( TARGETS ) );
-    if ( DEBUG_PROFILE )
-        profile_memory( sizeof( TARGETS ) );
+	c = (TARGETS *)BJAM_MALLOC( sizeof( TARGETS ) );
 	c->target = target;
 
 	if( !chain ) chain = c;
@@ -369,9 +364,7 @@ actionlist(
 	ACTIONS	*chain,
 	ACTION	*action )
 {
-	ACTIONS *actions = (ACTIONS *)malloc( sizeof( ACTIONS ) );
-    if ( DEBUG_PROFILE )
-        profile_memory( sizeof( ACTIONS ) );
+	ACTIONS *actions = (ACTIONS *)BJAM_MALLOC( sizeof( ACTIONS ) );
 
 	actions->action = action;
 
@@ -421,9 +414,7 @@ addsettings(
             settings_freelist = v->next;
         else
         {
-            v = (SETTINGS *)malloc( sizeof( *v ) );
-            if ( DEBUG_PROFILE )
-                profile_memory( sizeof( *v ) );
+            v = (SETTINGS *)BJAM_MALLOC( sizeof( *v ) );
         }
         
 	    v->symbol = newstr( symbol );
@@ -489,7 +480,7 @@ void freetargets( TARGETS *chain )
     while( chain )
     {
         TARGETS* n = chain->next;
-        free( chain );
+        BJAM_FREE( chain );
         chain = n;
     }
 }
@@ -502,7 +493,7 @@ void freeactions( ACTIONS *chain )
     while( chain )
     {
         ACTIONS* n = chain->next;
-        free( chain );
+        BJAM_FREE( chain );
         chain = n;
     }
 }
@@ -553,7 +544,7 @@ donerules()
     while ( settings_freelist )
     {
         SETTINGS* n = settings_freelist->next;
-        free( settings_freelist );
+        BJAM_FREE( settings_freelist );
         settings_freelist = n;
     }
 }
@@ -563,9 +554,7 @@ donerules()
  */
 argument_list* args_new()
 {
-    argument_list* r = (argument_list*)malloc( sizeof(argument_list) );
-    if ( DEBUG_PROFILE )
-        profile_memory( sizeof(argument_list) );
+    argument_list* r = (argument_list*)BJAM_MALLOC( sizeof(argument_list) );
     r->reference_count = 0;
     lol_init(r->data);
     return r;
@@ -587,7 +576,7 @@ void args_free( argument_list* a )
     if (--a->reference_count <= 0)
     {
         lol_free(a->data);
-        free(a);
+        BJAM_FREE(a);
     }
 }
 
@@ -608,7 +597,7 @@ void actions_free(rule_actions* a)
     {
         freestr(a->command);
         list_free(a->bindlist);
-        free(a);
+        BJAM_FREE(a);
     }
 }
 
@@ -702,9 +691,7 @@ static void set_rule_actions( RULE* rule, rule_actions* actions )
 
 static rule_actions* actions_new( char* command, LIST* bindlist, int flags )
 {
-    rule_actions* result = (rule_actions*)malloc(sizeof(rule_actions));
-    if ( DEBUG_PROFILE )
-        profile_memory( sizeof(rule_actions) );
+    rule_actions* result = (rule_actions*)BJAM_MALLOC(sizeof(rule_actions));
     result->command = copystr( command );
     result->bindlist = bindlist;
     result->flags = flags;

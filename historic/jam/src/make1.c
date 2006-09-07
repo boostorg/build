@@ -127,9 +127,7 @@ static state *alloc_state()
 	}
 	else
 	{
-        if ( DEBUG_PROFILE )
-            profile_memory( sizeof(state) );
-		return (state *)malloc(sizeof(state));
+		return (state *)BJAM_MALLOC(sizeof(state));
 	}
 }
 
@@ -145,7 +143,7 @@ static void clear_state_freelist()
 	{
 		state *pState = state_freelist;
 		state_freelist = state_freelist->prev;
-		free(pState);
+		BJAM_FREE(pState);
 	}
 }
 
@@ -650,7 +648,7 @@ make1c( state *pState )
 		    if( DEBUG_EXECCMD )
 			printf( "SEM: placing %s on stack\n", first->target->name);
             push_state(&temp_stack, first->target, NULL, T_STATE_MAKE1B);
-		    free( first );
+		    BJAM_FREE( first );
 		}
 	    }
 #endif

@@ -556,4 +556,10 @@ extern struct globs globs;
 # define DEBUG_GRAPH	( globs.debug[ 12 ] )	/* debug dependencies */
 # define DEBUG_FATE ( globs.debug[ 13 ] )  /* show changes to fate in make0() */
 
+/* Everyone gets the memory definitions. */
+#include "mem.h"
+
+/* They also get the profile functions. */
+#include "debug.h"
+
 #endif

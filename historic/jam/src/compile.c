@@ -11,7 +11,6 @@
  */
 
 # include "jam.h"
-# include "debug.h"
 
 # include "lists.h"
 # include "parse.h"
@@ -1007,11 +1006,8 @@ evaluate_rule(
 
         /* The action is associated with this instance of this rule */
 
-        action = (ACTION *)malloc( sizeof( ACTION ) );
+        action = (ACTION *)BJAM_MALLOC( sizeof( ACTION ) );
         memset( (char *)action, '\0', sizeof( *action ) );
-
-        if ( DEBUG_PROFILE )
-            profile_memory( sizeof( ACTION ) );
 
         action->rule = rule;
         action->targets = targetlist( (TARGETS *)0, lol_get( frame->args, 0 ) );
