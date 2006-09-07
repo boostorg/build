@@ -41,7 +41,7 @@ LIST *regex_transform( PARSE *parse, FRAME *frame )
     if (indices_list)
     {
         size = list_length(indices_list);
-        indices = (int*)malloc(size*sizeof(int));
+        indices = (int*)BJAM_MALLOC(size*sizeof(int));
         for(p = indices; indices_list; indices_list = indices_list->next)
         {
             *p++ = atoi(indices_list->string);
@@ -50,7 +50,7 @@ LIST *regex_transform( PARSE *parse, FRAME *frame )
     else 
     {
         size = 1;
-        indices = (int*)malloc(sizeof(int));
+        indices = (int*)BJAM_MALLOC(sizeof(int));
         *indices = 1;
     }
 
@@ -82,7 +82,7 @@ LIST *regex_transform( PARSE *parse, FRAME *frame )
         string_free( buf );
     }
 
-    free(indices);
+    BJAM_FREE(indices);
     
     return result;
 }

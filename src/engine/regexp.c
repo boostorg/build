@@ -41,8 +41,8 @@
  * precedence is structured in regular expressions.  Serious changes in
  * regular-expression syntax might require a total rethink.
  */
+#include "jam.h"
 #include "regexp.h"
-#include "debug.h"
 #include <stdio.h>
 #include <ctype.h>
 #ifndef ultrix
@@ -239,11 +239,9 @@ regcomp( char *exp )
 		FAIL("regexp too big");
 
 	/* Allocate space. */
-	r = (regexp *)malloc(sizeof(regexp) + (unsigned)regsize);
+	r = (regexp *)BJAM_MALLOC(sizeof(regexp) + (unsigned)regsize);
 	if (r == NULL)
 		FAIL("out of space");
-    if ( DEBUG_PROFILE )
-        profile_memory( sizeof(regexp) + (unsigned)regsize );
 
 	/* Second pass: emit code. */
 	regparse = (char *)exp;

@@ -14,7 +14,6 @@
 # include "lists.h"
 # include "execcmd.h"
 # include "pathsys.h"
-# include "debug.h"
 # include <errno.h>
 # include <assert.h>
 # include <ctype.h>
@@ -116,8 +115,8 @@ int maxline()
 static void
 free_argv( char** args )
 {
-  free( args[0] );
-  free( args );
+  BJAM_FREE( args[0] );
+  BJAM_FREE( args );
 }
 
 /* Convert a command string into arguments for spawnvp.  The original
@@ -150,27 +149,21 @@ string_to_args( const char*  string )
 
     /* Copy the input string into a buffer we can modify
      */
-    line = (char*)malloc( src_len+1 );
+    line = (char*)BJAM_MALLOC( src_len+1 );
     if (!line)
         return 0;
-
-    if ( DEBUG_PROFILE )
-        profile_memory( src_len+1 );
 
     /* allocate the argv array.
      *   element 0: stores the path to the executable
      *   element 1: stores the command-line arguments to the executable
      *   element 2: NULL terminator
      */
-    argv = (char**)malloc( 3 * sizeof(char*) );
+    argv = (char**)BJAM_MALLOC( 3 * sizeof(char*) );
     if (!argv)
     {
-        free( line );
+        BJAM_FREE( line );
         return 0;
     }
-
-    if ( DEBUG_PROFILE )
-        profile_memory( 3 * sizeof(char*) );
     
     /* Strip quotes from the first command-line argument and find
      * where it ends.  Quotes are illegal in Win32 pathnames, so we
@@ -287,11 +280,9 @@ process_del( char*  command )
               if ( len <= 0 )
                 return 1;
   
-              line = (char*)malloc( len+4+1 );
+              line = (char*)BJAM_MALLOC( len+4+1 );
               if (!line)
                 return 1;
-              if ( DEBUG_PROFILE )
-                  profile_memory( len+4+1 );
                 
               strncpy( line, "del ", 4 );
               strncpy( line+4, q, len );
@@ -302,7 +293,7 @@ process_del( char*  command )
               else
                 result = !DeleteFile( line+4 );
   
-              free( line );
+              BJAM_FREE( line );
               if (result)
                 return 1;
                 
@@ -419,12 +410,12 @@ void execnt_unit_test()
     }
 
     {
-        char* long_command = malloc(MAXLINE + 10);
+        char* long_command = BJAM_MALLOC(MAXLINE + 10);
         assert( long_command != 0 );
         memset( long_command, 'x', MAXLINE + 9 );
         long_command[MAXLINE + 9] = 0;
         assert( can_spawn( long_command ) == MAXLINE + 9);
-        free( long_command );
+        BJAM_FREE( long_command );
     }
 
     {
@@ -554,9 +545,7 @@ execcmd(
         DWORD procID = GetCurrentProcessId();
   
         /* SVA - allocate 64 other just to be safe */
-        cmdtab[ slot ].tempfile = malloc( strlen( tempdir ) + 64 );
-        if ( DEBUG_PROFILE )
-            profile_memory( strlen( tempdir ) + 64 );
+        cmdtab[ slot ].tempfile = BJAM_MALLOC( strlen( tempdir ) + 64 );
   
         sprintf( cmdtab[ slot ].tempfile, "%s\\jam%d-%02d.bat", 
                  tempdir, procID, slot );		
@@ -840,7 +829,7 @@ execwait()
 	/* SVA don't leak temp files */
 	if(cmdtab[i].tempfile != NULL)
 	{
-            free(cmdtab[i].tempfile);
+            BJAM_FREE(cmdtab[i].tempfile);
             cmdtab[i].tempfile = NULL;
 	}
 	(*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time );

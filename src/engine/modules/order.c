@@ -7,7 +7,6 @@
 #include "../strings.h"
 #include "../newstr.h"
 #include "../variable.h"
-#include "../debug.h"
 
 
 /* Use quite klugy approach: when we add order dependency from 'a' to 'b',
@@ -62,9 +61,7 @@ void do_ts(int** graph, int current_vertex, int* colors, int** result_ptr)
 void topological_sort(int** graph, int num_vertices, int* result)
 {
     int i;
-    int* colors = (int*)calloc(num_vertices, sizeof(int));
-    if ( DEBUG_PROFILE )
-        profile_memory( num_vertices*sizeof(int) );
+    int* colors = (int*)BJAM_CALLOC(num_vertices, sizeof(int));
     for (i = 0; i < num_vertices; ++i)
         colors[i] = white;
 
@@ -72,7 +69,7 @@ void topological_sort(int** graph, int num_vertices, int* result)
         if (colors[i] == white)
             do_ts(graph, i, colors, &result);
 
-    free(colors);
+    BJAM_FREE(colors);
 }
 
 LIST *order( PARSE *parse, FRAME *frame )
@@ -87,10 +84,8 @@ LIST *order( PARSE *parse, FRAME *frame )
        passed to 'add_pair'.
     */
     int length = list_length(arg);
-    int** graph = (int**)calloc(length, sizeof(int*));
-    int* order = (int*)malloc((length+1)*sizeof(int));
-    if ( DEBUG_PROFILE )
-        profile_memory( length*sizeof(int*) + (length+1)*sizeof(int) );
+    int** graph = (int**)BJAM_CALLOC(length, sizeof(int*));
+    int* order = (int*)BJAM_MALLOC((length+1)*sizeof(int));
    
     for(tmp = arg, src = 0; tmp; tmp = tmp->next, ++src) {
         /* For all object this one depend upon, add elements
@@ -98,9 +93,7 @@ LIST *order( PARSE *parse, FRAME *frame )
         LIST* dependencies = var_get(tmp->string);
         int index = 0;
 
-        graph[src] = (int*)calloc(list_length(dependencies)+1, sizeof(int));
-        if ( DEBUG_PROFILE )
-            profile_memory( (list_length(dependencies)+1)*sizeof(int) );
+        graph[src] = (int*)BJAM_CALLOC(list_length(dependencies)+1, sizeof(int));
         for(; dependencies; dependencies = dependencies->next) {          
             int dst = list_index(arg, dependencies->string);
             if (dst != -1)
@@ -125,9 +118,9 @@ LIST *order( PARSE *parse, FRAME *frame )
     {
         int i;
         for(i = 0; i < length; ++i)
-            free(graph[i]);
-        free(graph);
-        free(order);
+            BJAM_FREE(graph[i]);
+        BJAM_FREE(graph);
+        BJAM_FREE(order);
     }
 
     return result;

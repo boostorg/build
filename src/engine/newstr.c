@@ -68,7 +68,7 @@ static char* storage_finish = 0;
 static char* allocate(size_t n)
 {
     #if SIMPLE_ALLOC
-    return (char*)malloc(n);
+    return (char*)BJAM_MALLOC(n);
     #else
     /* See if we can grab storage from an existing block */
     size_t remaining = storage_finish - storage_start;
@@ -86,7 +86,7 @@ static char* allocate(size_t n)
             nalloc = STRING_BLOCK;
 
         /* allocate a new block and link into the chain */
-        new_block = (strblock*)malloc( offsetof( strblock, data[0] ) + nalloc * sizeof(new_block->data[0]) );
+        new_block = (strblock*)BJAM_MALLOC( offsetof( strblock, data[0] ) + nalloc * sizeof(new_block->data[0]) );
         if ( new_block == 0 )
             return 0;
         new_block->next = strblock_chain;
@@ -125,9 +125,6 @@ newstr( char *string )
 	    strtotal += l + 1;
 	    memcpy( m, string, l + 1 );
 	    *s = m;
-
-        if ( DEBUG_PROFILE )
-            profile_memory( l+1 );
 	}
 
     strcount_in += 1;
@@ -166,7 +163,7 @@ donestr()
     while ( strblock_chain != 0 )
     {
         strblock* n = strblock_chain->next;
-        free(strblock_chain);
+        BJAM_FREE(strblock_chain);
         strblock_chain = n;
     }
     

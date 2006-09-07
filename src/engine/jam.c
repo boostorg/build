@@ -121,7 +121,6 @@
 # include "make.h"
 # include "strings.h"
 # include "expand.h"
-# include "debug.h"
 # include "filesys.h"
 
 /* Macintosh is "special" */
@@ -218,6 +217,8 @@ int  main( int argc, char **argv, char **arg_environ )
     int arg_c = argc;
     char ** arg_v = argv;
     const char *progname = argv[0];
+    
+    BJAM_MEM_INIT();
 
 # ifdef OS_MAC
     InitGraf(&qd.thePort);
@@ -485,10 +486,8 @@ int  main( int argc, char **argv, char **arg_environ )
         else 
         {
             int targets_count = list_length(targets);
-            const char **targets2 = (const char **)malloc(targets_count * sizeof(char *));
+            const char **targets2 = (const char **)BJAM_MALLOC(targets_count * sizeof(char *));
             int n = 0;
-            if ( DEBUG_PROFILE )
-                profile_memory( targets_count * sizeof(char *) );
             for ( ; targets; targets = list_next(targets) )
             {
                 targets2[n++] = targets->string;
@@ -522,6 +521,8 @@ int  main( int argc, char **argv, char **arg_environ )
 #ifdef HAVE_PYTHON
     Py_Finalize();
 #endif
+    
+    BJAM_MEM_CLOSE();
 
 
     return status ? EXITBAD : EXITOK;

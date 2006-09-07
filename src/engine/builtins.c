@@ -5,7 +5,6 @@
  */
 
 # include "jam.h"
-# include "debug.h"
 
 # include "lists.h"
 # include "parse.h"

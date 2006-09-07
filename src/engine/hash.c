@@ -7,7 +7,6 @@
 # include "jam.h"
 # include "hash.h"
 # include "compile.h"
-#include "debug.h"
 # include <assert.h>
 
 /* 
@@ -225,24 +224,18 @@ static void hashrehash( register struct hash *hp )
 {
 	int i = ++hp->items.list;
 	hp->items.more = i ? 2 * hp->items.nel : hp->inel;
-	hp->items.next = (char *)malloc( hp->items.more * hp->items.size );
+	hp->items.next = (char *)BJAM_MALLOC( hp->items.more * hp->items.size );
     hp->items.free = 0;
-
-    if ( DEBUG_PROFILE )
-        profile_memory( hp->items.more * hp->items.size );
     
 	hp->items.lists[i].nel = hp->items.more;
 	hp->items.lists[i].base = hp->items.next;
 	hp->items.nel += hp->items.more;
 
 	if( hp->tab.base )
-		free( (char *)hp->tab.base );
+		BJAM_FREE( (char *)hp->tab.base );
 
 	hp->tab.nel = hp->items.nel * hp->bloat;
-	hp->tab.base = (ITEM **)malloc( hp->tab.nel * sizeof(ITEM **) );
-
-    if ( DEBUG_PROFILE )
-        profile_memory( hp->tab.nel * sizeof(ITEM **) );
+	hp->tab.base = (ITEM **)BJAM_MALLOC( hp->tab.nel * sizeof(ITEM **) );
 
 	memset( (char *)hp->tab.base, '\0', hp->tab.nel * sizeof( ITEM * ) );
 
@@ -297,10 +290,7 @@ hashinit(
 	int datalen,
 	char *name )
 {
-	struct hash *hp = (struct hash *)malloc( sizeof( *hp ) );
-
-    if ( DEBUG_PROFILE )
-        profile_memory( sizeof( *hp ) );
+	struct hash *hp = (struct hash *)BJAM_MALLOC( sizeof( *hp ) );
 
 	hp->bloat = 3;
 	hp->tab.nel = 0;
@@ -333,10 +323,10 @@ hashdone( struct hash *hp )
 	    hashstat( hp );
 
 	if( hp->tab.base )
-		free( (char *)hp->tab.base );
+		BJAM_FREE( (char *)hp->tab.base );
 	for( i = 0; i <= hp->items.list; i++ )
-		free( hp->items.lists[i].base );
-	free( (char *)hp );
+		BJAM_FREE( hp->items.lists[i].base );
+	BJAM_FREE( (char *)hp );
 }
 
 /* ---- */
