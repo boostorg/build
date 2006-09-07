@@ -362,9 +362,8 @@ local rule configure-really (
                 }
             }
         }
-
         # Set version-specific flags
-        configure-version-specific $(version) : $(condition) ;
+        configure-version-specific msvc : $(version) : $(condition) ;
     }
 }
 
@@ -385,9 +384,15 @@ cpu-type-g7 =
 cpu-type-itanium = itanium itanium1 merced ;
 cpu-type-itanium2 = itanium2 mckinley ;
 
-
-local rule configure-version-specific ( version : condition )
+# Sets up flag definitions that are dependent on the version ot
+# compiler. 
+# - 'version' is the version of compiler in N.M format.
+# - 'condition' is the property set to be used as condition for flag
+# - 'toolset' is the toolset for which flag settings are to be defined
+#   This makes the rule reusable for other msvc-option-compatible compilers.
+rule configure-version-specific ( toolset : version : condition )
 {
+    toolset.push-checking-for-flags-module unchecked ;
     # Starting with versions 7.0, the msvc compiler have the /Zc:forScope
     # and /Zc:wchar_t options that improve C++ standard conformance, but
     # those options are off by default.
@@ -396,14 +401,14 @@ local rule configure-version-specific ( version : condition )
     # or if the installation path contain 7.* (this is checked above).
     if ! [ MATCH ^(6\\.) : $(version) ]
     {
-        flags msvc.compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
-        flags msvc.compile.c++ C++FLAGS $(condition) : /wd4675 ;
+        flags $(toolset).compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
+        flags $(toolset).compile.c++ C++FLAGS $(condition) : /wd4675 ;
         # disable the function is deprecated warning
         # Some version of msvc have a bug, that cause deprecation
         # warning to be emitted even with /W0
-        flags msvc.compile CFLAGS $(condition)/<warnings>off : /wd4996 ; 
+        flags $(toolset).compile CFLAGS $(condition)/<warnings>off : /wd4996 ; 
         # 64-bit compatibility warning
-        flags msvc.compile CFLAGS $(condition)/<warnings>all : /Wp64 ; 
+        flags $(toolset).compile CFLAGS $(condition)/<warnings>all : /Wp64 ; 
     }
     
     #
@@ -413,36 +418,37 @@ local rule configure-version-specific ( version : condition )
     if [ MATCH ^([67]\\.) : $(version) ]
     {
         # 8.0 deprecates some of the options
-        flags msvc.compile CFLAGS $(condition)/<optimization>speed $(condition)/<optimization>space : /Ogiy /Gs ;
-        flags msvc.compile CFLAGS $(condition)/<optimization>speed : /Ot ;
-        flags msvc.compile CFLAGS $(condition)/<optimization>space : /Os ;
+        flags $(toolset).compile CFLAGS $(condition)/<optimization>speed $(condition)/<optimization>space : /Ogiy /Gs ;
+        flags $(toolset).compile CFLAGS $(condition)/<optimization>speed : /Ot ;
+        flags $(toolset).compile CFLAGS $(condition)/<optimization>space : /Os ;
 
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set> : /GB ;
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>i386 : /G3 ;
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>i486 : /G4 ;
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g5) : /G5 ;
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g6) : /G6 ;
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g7) : /G7 ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set> : /GB ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>i386 : /G3 ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>i486 : /G4 ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g5) : /G5 ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g6) : /G6 ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g7) : /G7 ;
         
         # Improve floating-point accuracy. Otherwise, some of C++ Boost's
         # "math" tests will fail.
-        flags msvc.compile CFLAGS $(condition) : /Op ;
+        flags $(toolset).compile CFLAGS $(condition) : /Op ;
 
         # 7.1 and below have single-threaded static RTL
-        flags msvc.compile CFLAGS $(condition)/<runtime-debugging>off/<runtime-link>static/<threading>single : /ML ;
-        flags msvc.compile CFLAGS $(condition)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MLd ;
+        flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>off/<runtime-link>static/<threading>single : /ML ;
+        flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MLd ;
     }
     else
     {
         # 8.0 adds some more options
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set> : /favor:blend ;
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-em64t) : /favor:EM64T ;
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-amd64) : /favor:AMD64 ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set> : /favor:blend ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-em64t) : /favor:EM64T ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-amd64) : /favor:AMD64 ;
 
         # 8.0 only has multi-threaded static RTL
-        flags msvc.compile CFLAGS $(condition)/<runtime-debugging>off/<runtime-link>static/<threading>single : /MT ;
-        flags msvc.compile CFLAGS $(condition)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MTd ;
+        flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>off/<runtime-link>static/<threading>single : /MT ;
+        flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MTd ;
     }
+    toolset.pop-checking-for-flags-module ;
 }
 
 

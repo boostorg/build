@@ -44,6 +44,23 @@ local rule normalize-condition ( property-sets * )
 }
 
 
+# Specifies if the 'flags' rule should do checking that
+# the invoking module is the same as module we're setting
+# flag for.
+# 'v' can be either 'checked' or 'unchecked'.
+# Subsequent call to 'pop-checking-for-flags-module'
+# will restore the behaviour that was in effect before
+# calling this rule.
+rule push-checking-for-flags-module ( v )
+{
+    .flags-module-checking = $(v) $(.flags-module-checking) ;
+}
+
+rule pop-checking-for-flags-module ( )
+{
+    .flags-module-checking = $(.flags-module-checking[2-]) ;
+}
+
 # Specifies the flags (variables) that must be set on targets under certain
 # conditions, described by arguments.
 rule flags ( rule-or-module   # If contains dot, should be a rule name.
@@ -104,7 +121,9 @@ rule flags ( rule-or-module   # If contains dot, should be a rule name.
     else
     {              
         local module_ = [ MATCH "([^.]*).*" : $(rule-or-module) ] ;
-        if $(unchecked) != unchecked && $(module_) != $(caller)
+        if $(unchecked) != unchecked 
+            && $(.flags-module-checking[1]) != unchecked
+            && $(module_) != $(caller)
         {
             errors.error "Module $(caller) attempted to set flags for module $(module_)" ;
         }
@@ -387,9 +406,18 @@ rule inherit-generators ( toolset properties * : base : generators-to-ignore * )
     }    
 }
 
-# properties listed in prohibited-properties won't
-# be inherited. Note that <debug-symbols>on and
-# <debug-symbols>off are two different properties
+# Brings all flag definitions from 'base' toolset into
+# other toolset 'toolset'. Flag definitions which
+# condition make use of properties in 'prohibited-properties'
+# are ignored. Don't confuse property and feature, for
+# example <debug-symbols>on and <debug-symbols>off, so blocking
+# one of them does not block the other one.
+#
+# The flag conditions are not altered at all, so if condition
+# includes name, or version of base toolset, it won't ever match
+# the inheriting toolset. When such flag settings must be
+# inherited, define a rule in base toolset module and call it
+# as needed.
 rule inherit-flags ( toolset : base : prohibited-properties * )
 {
     for local f in $(.module-flags.$(base))
