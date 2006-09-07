@@ -149,7 +149,7 @@ string_to_args( const char*  string )
 
     /* Copy the input string into a buffer we can modify
      */
-    line = (char*)BJAM_MALLOC( src_len+1 );
+    line = (char*)BJAM_MALLOC_ATOMIC( src_len+1 );
     if (!line)
         return 0;
 
@@ -280,7 +280,7 @@ process_del( char*  command )
               if ( len <= 0 )
                 return 1;
   
-              line = (char*)BJAM_MALLOC( len+4+1 );
+              line = (char*)BJAM_MALLOC_ATOMIC( len+4+1 );
               if (!line)
                 return 1;
                 
@@ -410,7 +410,7 @@ void execnt_unit_test()
     }
 
     {
-        char* long_command = BJAM_MALLOC(MAXLINE + 10);
+        char* long_command = BJAM_MALLOC_ATOMIC(MAXLINE + 10);
         assert( long_command != 0 );
         memset( long_command, 'x', MAXLINE + 9 );
         long_command[MAXLINE + 9] = 0;
@@ -545,7 +545,7 @@ execcmd(
         DWORD procID = GetCurrentProcessId();
   
         /* SVA - allocate 64 other just to be safe */
-        cmdtab[ slot ].tempfile = BJAM_MALLOC( strlen( tempdir ) + 64 );
+        cmdtab[ slot ].tempfile = BJAM_MALLOC_ATOMIC( strlen( tempdir ) + 64 );
   
         sprintf( cmdtab[ slot ].tempfile, "%s\\jam%d-%02d.bat", 
                  tempdir, procID, slot );		

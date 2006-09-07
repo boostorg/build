@@ -55,7 +55,7 @@ static void string_reserve_internal( string* self, size_t capacity )
 {
     if ( self->value == self->opt )
     {
-        self->value = (char*)BJAM_MALLOC( capacity + JAM_STRING_MAGIC_SIZE );
+        self->value = (char*)BJAM_MALLOC_ATOMIC( capacity + JAM_STRING_MAGIC_SIZE );
         self->value[0] = 0;
         strncat( self->value, self->opt, sizeof(self->opt) );
         assert( strlen( self->value ) <= self->capacity ); /* This is a regression test */

@@ -55,7 +55,7 @@ cmd_new(
     {
         BJAM_FREE(cmd->buf); /* free any buffer from previous iteration */
         
-        cmd->buf = (char*)BJAM_MALLOC(max_line + 1);
+        cmd->buf = (char*)BJAM_MALLOC_ATOMIC(max_line + 1);
         
         if (cmd->buf == 0)
             break;

@@ -56,19 +56,13 @@ static strblock* strblock_chain = 0;
 static char* storage_start = 0;
 static char* storage_finish = 0;
 
-/* */
-#define SIMPLE_ALLOC 0
-/*/
-#define SIMPLE_ALLOC 1
-/* */
-
 /*
  * allocate() - Allocate n bytes of immortal string storage
  */
 static char* allocate(size_t n)
 {
-    #if SIMPLE_ALLOC
-    return (char*)BJAM_MALLOC(n);
+    #ifdef OPT_BOEHM_GC
+    return (char*)BJAM_MALLOC_ATOMIC(n);
     #else
     /* See if we can grab storage from an existing block */
     size_t remaining = storage_finish - storage_start;

@@ -90,6 +90,11 @@ struct hash
 
 static void hashrehash( struct hash *hp );
 static void hashstat( struct hash *hp );
+static void * hash_mem_alloc(size_t datalen, size_t size);
+static void hash_mem_free(size_t datalen, void * data);
+#ifdef OPT_BOEHM_GC
+static void hash_mem_finalizer(char * key, struct hash * hp);
+#endif
 
 /*
  * hash_free() - remove the given item from the table if it's there.
@@ -207,6 +212,12 @@ hashitem(
 		i->hdr.next = *base;
 		*base = i;
 		*data = &i->data;
+        #ifdef OPT_BOEHM_GC
+        if (sizeof(HASHDATA) == hp->items.datalen)
+        {
+            GC_REGISTER_FINALIZER(i->data.key,&hash_mem_finalizer,hp,0,0);
+        }
+        #endif
 	}
 
     #ifdef HASH_DEBUG_PROFILE
@@ -224,7 +235,7 @@ static void hashrehash( register struct hash *hp )
 {
 	int i = ++hp->items.list;
 	hp->items.more = i ? 2 * hp->items.nel : hp->inel;
-	hp->items.next = (char *)BJAM_MALLOC( hp->items.more * hp->items.size );
+	hp->items.next = (char *)hash_mem_alloc( hp->items.datalen, hp->items.more * hp->items.size );
     hp->items.free = 0;
     
 	hp->items.lists[i].nel = hp->items.more;
@@ -232,10 +243,10 @@ static void hashrehash( register struct hash *hp )
 	hp->items.nel += hp->items.more;
 
 	if( hp->tab.base )
-		BJAM_FREE( (char *)hp->tab.base );
+		hash_mem_free( hp->items.datalen, (char *)hp->tab.base );
 
 	hp->tab.nel = hp->items.nel * hp->bloat;
-	hp->tab.base = (ITEM **)BJAM_MALLOC( hp->tab.nel * sizeof(ITEM **) );
+	hp->tab.base = (ITEM **)hash_mem_alloc( hp->items.datalen, hp->tab.nel * sizeof(ITEM **) );
 
 	memset( (char *)hp->tab.base, '\0', hp->tab.nel * sizeof( ITEM * ) );
 
@@ -290,7 +301,7 @@ hashinit(
 	int datalen,
 	char *name )
 {
-	struct hash *hp = (struct hash *)BJAM_MALLOC( sizeof( *hp ) );
+	struct hash *hp = (struct hash *)hash_mem_alloc( datalen, sizeof( *hp ) );
 
 	hp->bloat = 3;
 	hp->tab.nel = 0;
@@ -323,11 +334,45 @@ hashdone( struct hash *hp )
 	    hashstat( hp );
 
 	if( hp->tab.base )
-		BJAM_FREE( (char *)hp->tab.base );
+		hash_mem_free( hp->items.datalen, (char *)hp->tab.base );
 	for( i = 0; i <= hp->items.list; i++ )
-		BJAM_FREE( hp->items.lists[i].base );
-	BJAM_FREE( (char *)hp );
+		hash_mem_free( hp->items.datalen, hp->items.lists[i].base );
+	hash_mem_free( hp->items.datalen, (char *)hp );
 }
+
+static void * hash_mem_alloc(size_t datalen, size_t size)
+{
+    if (sizeof(HASHDATA) == datalen)
+    {
+        return BJAM_MALLOC_RAW(size);
+    }
+    else
+    {
+        return BJAM_MALLOC(size);
+    }
+}
+
+static void hash_mem_free(size_t datalen, void * data)
+{
+    if (sizeof(HASHDATA) == datalen)
+    {
+        BJAM_FREE_RAW(data);
+    }
+    else
+    {
+        BJAM_FREE(data);
+    }
+}
+
+#ifdef OPT_BOEHM_GC
+static void hash_mem_finalizer(char * key, struct hash * hp)
+{
+    HASHDATA d;
+    d.key = (char*)key;
+    hash_free(hp,&d);
+}
+#endif
+
 
 /* ---- */
 
