@@ -1,6 +1,7 @@
 # Copyright (c) 2003 David Abrahams.
 # Copyright (c) 2005 Vladimir Prus.
 # Copyright (c) 2005 Alexey Pakhunov.
+# Copyright (c) 2006 Bojan Resnik.
 #
 # Use, modification and distribution is subject to the Boost Software
 # License Version 1.0. (See accompanying file LICENSE_1_0.txt or
@@ -343,23 +344,26 @@ local rule configure-really (
                         "command: '$(command[$(i)])'" ;
                 }
         
-                flags msvc.compile .CC  $(cond) : $(command[$(i)])$(compiler) ;
+                flags msvc.compile .CC  $(cond) : $(command[$(i)])$(compiler) /Zm800 -nologo ;
                 flags msvc.compile .RC  $(cond) : $(command[$(i)])$(resource-compiler) ;
                 flags msvc.compile .ASM $(cond) : $(command[$(i)])$(assembler) ;
-                flags msvc.link    .LD  $(cond) : $(command[$(i)])$(linker) ;
-                flags msvc.archive .LD  $(cond) : $(command[$(i)])$(linker) ;
+                flags msvc.link    .LD  $(cond) : $(command[$(i)])$(linker) /NOLOGO /INCREMENTAL:NO ;
+                flags msvc.archive .LD  $(cond) : $(command[$(i)])$(linker) /lib /NOLOGO  ;
                 flags msvc.compile .IDL $(cond) : $(command[$(i)])$(idl-compiler) ;
                 flags msvc.compile .MC  $(cond) : $(command[$(i)])$(mc-compiler) ;
 
                 if ! [ os.name ] in NT
                 {
-                    flags msvc.link .MT $(cond) : $(command[$(i)])$(manifest-tool) ;
+                    flags msvc.link .MT $(cond) : $(command[$(i)])$(manifest-tool) -nologo ;
+                }
+                else
+                {
+                    flags msvc.link .MT $(cond) : $(manifest-tool) -nologo ;
                 }
             }
-        }   
-
+        }
         # Set version-specific flags
-        configure-version-specific $(version) : $(condition) ;
+        configure-version-specific msvc : $(version) : $(condition) ;
     }
 }
 
@@ -380,9 +384,15 @@ cpu-type-g7 =
 cpu-type-itanium = itanium itanium1 merced ;
 cpu-type-itanium2 = itanium2 mckinley ;
 
-
-local rule configure-version-specific ( version : condition )
+# Sets up flag definitions that are dependent on the version ot
+# compiler. 
+# - 'version' is the version of compiler in N.M format.
+# - 'condition' is the property set to be used as condition for flag
+# - 'toolset' is the toolset for which flag settings are to be defined
+#   This makes the rule reusable for other msvc-option-compatible compilers.
+rule configure-version-specific ( toolset : version : condition )
 {
+    toolset.push-checking-for-flags-module unchecked ;
     # Starting with versions 7.0, the msvc compiler have the /Zc:forScope
     # and /Zc:wchar_t options that improve C++ standard conformance, but
     # those options are off by default.
@@ -391,14 +401,14 @@ local rule configure-version-specific ( version : condition )
     # or if the installation path contain 7.* (this is checked above).
     if ! [ MATCH ^(6\\.) : $(version) ]
     {
-        flags msvc.compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
-        flags msvc.compile.c++ C++FLAGS $(condition) : /wd4675 ;
+        flags $(toolset).compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
+        flags $(toolset).compile.c++ C++FLAGS $(condition) : /wd4675 ;
         # disable the function is deprecated warning
         # Some version of msvc have a bug, that cause deprecation
         # warning to be emitted even with /W0
-        flags msvc.compile CFLAGS $(condition)/<warnings>off : /wd4996 ; 
+        flags $(toolset).compile CFLAGS $(condition)/<warnings>off : /wd4996 ; 
         # 64-bit compatibility warning
-        flags msvc.compile CFLAGS $(condition)/<warnings>all : /Wp64 ; 
+        flags $(toolset).compile CFLAGS $(condition)/<warnings>all : /Wp64 ; 
     }
     
     #
@@ -408,21 +418,37 @@ local rule configure-version-specific ( version : condition )
     if [ MATCH ^([67]\\.) : $(version) ]
     {
         # 8.0 deprecates some of the options
-        flags msvc.compile CFLAGS $(condition)/<optimization>speed $(condition)/<optimization>space : /Ogiy /Gs ;
-        flags msvc.compile CFLAGS $(condition)/<optimization>speed : /Ot ;
-        flags msvc.compile CFLAGS $(condition)/<optimization>space : /Os ;
+        flags $(toolset).compile CFLAGS $(condition)/<optimization>speed $(condition)/<optimization>space : /Ogiy /Gs ;
+        flags $(toolset).compile CFLAGS $(condition)/<optimization>speed : /Ot ;
+        flags $(toolset).compile CFLAGS $(condition)/<optimization>space : /Os ;
 
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set> : /GB ;
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>i386 : /G3 ;
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>i486 : /G4 ;
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g5) : /G5 ;
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g6) : /G6 ;
-        flags msvc.compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g7) : /G7 ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set> : /GB ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>i386 : /G3 ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>i486 : /G4 ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g5) : /G5 ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g6) : /G6 ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g7) : /G7 ;
         
         # Improve floating-point accuracy. Otherwise, some of C++ Boost's
         # "math" tests will fail.
-        flags msvc.compile CFLAGS $(condition) : /Op ;
+        flags $(toolset).compile CFLAGS $(condition) : /Op ;
+
+        # 7.1 and below have single-threaded static RTL
+        flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>off/<runtime-link>static/<threading>single : /ML ;
+        flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MLd ;
     }
+    else
+    {
+        # 8.0 adds some more options
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set> : /favor:blend ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-em64t) : /favor:EM64T ;
+        flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-amd64) : /favor:AMD64 ;
+
+        # 8.0 only has multi-threaded static RTL
+        flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>off/<runtime-link>static/<threading>single : /MT ;
+        flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MTd ;
+    }
+    toolset.pop-checking-for-flags-module ;
 }
 
 
@@ -518,10 +544,6 @@ feature.feature debug-store : object database : propagated ;
 flags msvc.compile CFLAGS <optimization>speed : /O2 ;
 flags msvc.compile CFLAGS <optimization>space : /O1 ;
 
-flags msvc.compile CFLAGS $(cpu-arch-amd64)/<instruction-set> : /favor:blend ;
-flags msvc.compile CFLAGS $(cpu-arch-amd64)/<instruction-set>$(cpu-type-em64t) : /favor:EM64T ;
-flags msvc.compile CFLAGS $(cpu-arch-amd64)/<instruction-set>$(cpu-type-amd64) : /favor:AMD64 ;
-
 flags msvc.compile CFLAGS $(cpu-arch-ia64)/<instruction-set>$(cpu-type-itanium) : /G1 ;
 flags msvc.compile CFLAGS $(cpu-arch-ia64)/<instruction-set>$(cpu-type-itanium2) : /G2 ;
 
@@ -546,8 +568,6 @@ flags msvc.compile CFLAGS <rtti>on : /GR ;
 flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>shared : /MD ;
 flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>shared : /MDd ;
 
-flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>static/<threading>single : /ML ;
-flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>static/<threading>single : /MLd ;
 flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>static/<threading>multi : /MT ;
 flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>static/<threading>multi : /MTd ;
 
@@ -564,40 +584,46 @@ flags msvc.compile PCH_SOURCE <pch-source> ;
 flags msvc.compile PCH_HEADER <pch>on : <pch-header> ;
 flags msvc.compile PCH_FILE <pch>on : <pch-file> ;
 
+rule get-rspline ( target : lang-opt )
+{
+    CC_RSPLINE on $(target) = [ on $(target) return $(lang-opt) -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c $(nl)-D$(DEFINES) $(nl)\"-I$(INCLUDES)\" ] ;
+}
+
+rule compile-c-c++ ( targets + : sources * )
+{
+    DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_HEADER) ] ;
+    DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_FILE) ] ;
+}
+
+actions compile-c-c++
+{
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))"
+}
+
 rule compile.c ( targets + : sources * : properties * )
 {
-    DEPENDS $(<) : [ on $(<) return $(PCH_HEADER) ] ;
-    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
+    C++FLAGS on $(targets[1]) = ;
+    get-rspline $(targets) : -TC ;
+    compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
 rule compile.c++ ( targets + : sources * : properties * )
 {
-    DEPENDS $(<) : [ on $(<) return $(PCH_HEADER) ] ;
-    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
+    get-rspline $(targets[1]) : -TP ;
+    compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
+}
+
+actions compile-pch
+{
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[1]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[2]:W)" $(CC_RSPLINE))"
 }
 
 rule compile.pch ( targets + : sources * : properties * )
 {
     DEPENDS $(<) : [ on $(<) return $(PCH_SOURCE) ] ;
+    get-rspline $(targets[1]) : -TP ;
+    compile-pch $(targets) : $(sources) [ on $(<) return $(PCH_SOURCE) ] ;
 }
-
-
-# The actions differ only by explicit selection of input language
-actions compile.c bind PCH_HEADER PCH_FILE
-{
-    $(.CC) /Zm800 -nologo -TC -U$(UNDEFS) $(CFLAGS) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
-}
-
-actions compile.c++ bind PCH_HEADER PCH_FILE
-{
-    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" -Yu"$(PCH_HEADER:D=)" -Fp"$(PCH_FILE:W)"
-}
-
-actions compile.pch bind PCH_SOURCE
-{
-    $(.CC) /Zm800 -nologo -TP -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(PCH_SOURCE:W)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)")" -c -Fo"$(<[1]:W)" /Yc"$(>[1]:D=)" -Fp"$(<[2]:W)"
-}
-
 
 actions compile.rc
 {
@@ -673,7 +699,7 @@ if [ os.name ] in NT
     actions archive
     {  
         if exist "$(<[1])" DEL "$(<[1])"  
-        $(.LD) /lib /NOLOGO $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
     }
 }
 else
@@ -681,7 +707,7 @@ else
     actions archive
     {  
         $(RM) "$(<[1])"
-        $(.LD) /lib /NOLOGO $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
     }
 }
         
@@ -701,35 +727,35 @@ if [ os.name ] in NT
 {
     actions link bind DEF_FILE
     {
-        $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
         if exist "$(<[1]).manifest" (
-            mt -nologo -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
+            $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
         )
-    }    
+    }
 
     actions link.dll bind DEF_FILE
     {
-        $(.LD) /NOLOGO /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
         if exist "$(<[1]).manifest" (
-            mt -nologo -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
+            $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
         )
-    } 
+    }
 }
 else
 {
     actions link bind DEF_FILE
     {
-        $(.LD) /NOLOGO $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
         if test -e "$(<[1]).manifest"; then
-            $(.MT) -nologo -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);1"
+            $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);1"
         fi
     }
 
     actions link.dll bind DEF_FILE
     {
-        $(.LD) /NOLOGO /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /INCREMENTAL:NO /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+        $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:$(DEF_FILE) $(OPTIONS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)$(LIBRARIES) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
         if test -e "$(<[1]).manifest"; then
-            $(.MT) -nologo -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
+            $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
         fi
     }
 }
