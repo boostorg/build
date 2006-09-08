@@ -64,6 +64,7 @@ rule init ( version ? :     # the compiler version
     flags intel-win.compile .CC $(condition) : $(setup)icl ; 
     flags intel-win.link .LD $(condition) : $(setup)xilink ; 
     flags intel-win.archive .LD $(condition) : $(setup)xilink /lib ;       
+    flags intel-win.link .MT $(condition) : mt -nologo ;
     
     local m = [ MATCH (.).* : $(version) ] ;
     local major = $(m[1]) ;
