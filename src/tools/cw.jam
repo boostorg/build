@@ -188,6 +188,7 @@ actions compile.c++
 
 flags cw.link DEF_FILE <def-file> ;
 
+flags cw LINKFLAGS : -search ;
 flags cw LINKFLAGS <debug-symbols>on : -g ;
 flags cw LINKFLAGS <user-interface>console : -subsystem console ;
 flags cw LINKFLAGS <user-interface>gui : -subsystem windows ;
