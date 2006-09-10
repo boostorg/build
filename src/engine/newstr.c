@@ -61,7 +61,7 @@ static char* storage_finish = 0;
  */
 static char* allocate(size_t n)
 {
-    #ifdef OPT_BOEHM_GC
+    #ifdef BJAM_NEWSTR_NO_ALLOCATE
     return (char*)BJAM_MALLOC_ATOMIC(n);
     #else
     /* See if we can grab storage from an existing block */
