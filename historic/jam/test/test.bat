@@ -9,3 +9,4 @@ set BJAM=..\src\bin.ntx86\bjam
 @ECHO ON
 
 %BJAM% -f builtin_shell.jam
+%BJAM% -f builtin_w32_getregnames.jam

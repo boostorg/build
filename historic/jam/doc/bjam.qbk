@@ -618,14 +618,20 @@ If you omit the list of formal arguments, all checking is bypassed as in "classi
 
 [section Dependency Building]
 
+[section =DEPENDS= ]
+
 [pre
-DEPENDS /targets1/ : /targets2/ ;
+rule DEPENDS ( /targets1/ * : /targets2/ * )
 ]
 
 Builds a direct dependency: makes each of /targets1/ depend on each of /targets2/. Generally, /targets1/ will be rebuilt if /targets2/ are themselves rebuilt are or are newer than /targets1/.
 
+[endsect]
+
+[section =INCLUDES= ]
+
 [pre
-INCLUDES /targets1/ : /targets2/ ;
+rule INCLUDES ( /targets1/ * : /targets2/ * )
 ]
 
 Builds a sibling dependency: makes any target that depends on any of /targets1/ also depend on each of /targets2/. This reflects the dependencies that arise when one source file includes another: the object built from the source file depends both on the original and included source file, but the two sources files don't depend on each other. For example:
@@ -639,59 +645,95 @@ INCLUDES foo.c : foo.h ;
 
 [endsect]
 
+[endsect]
+
 [section Modifying Binding]
 
 The six rules =ALWAYS=, =LEAVES=, =NOCARE=, =NOTFILE=, =NOUPDATE=, and =TEMPORARY= modify the dependency graph so that =bjam= treats the targets differently during its target binding phase. See Binding above. Normally, =bjam= updates a target if it is missing, if its filesystem modification time is older than any of its dependencies (recursively), or if any of its dependencies are being updated. This basic behavior can be changed by invoking the following rules:
 
+[section =ALWAYS= ]
+
 [pre
-ALWAYS /targets/ ;
+rule ALWAYS ( /targets/ * )
 ]
 
 Causes /targets/ to be rebuilt regardless of whether they are up-to-date (they must still be in the dependency graph). This is used for the clean and uninstall targets, as they have no dependencies and would otherwise appear never to need building. It is best applied to targets that are also =NOTFILE= targets, but it can also be used to force a real file to be updated as well.
 
+[endsect]
+
+[section =LEAVES= ]
+
 [pre
-LEAVES /targets/ ;
+rule LEAVES ( /targets/ * )
 ]
 
 Makes each of /targets/ depend only on its leaf sources, and not on any intermediate targets. This makes it immune to its dependencies being updated, as the "leaf" dependencies are those without their own dependencies and without updating actions. This allows a target to be updated only if original source files change.
 
+[endsect]
+
+[section =NOCARE= ]
+
 [pre
-NOCARE /targets/ ;
+rule NOCARE ( /targets/ * )
 ]
 
 Causes =bjam= to ignore /targets/ that neither can be found nor have updating actions to build them. Normally for such targets =bjam= issues a warning and then skips other targets that depend on these missing targets. The =HdrRule= in =Jambase= uses =NOCARE= on the header file names found during header file scanning, to let =bjam= know that the included files may not exist. For example, if an `#include` is within an `#ifdef`, the included file may not actually be around.
 
 [warning For targets with build actions: if their build actions exit with a nonzero return code, dependent targets will still be built.]
 
+[endsect]
+
+[section =NOTFILE= ]
+
 [pre
-NOTFILE /targets/ ;
+rule NOTFILE ( /targets/ * )
 ]
 
 Marks /targets/ as pseudotargets and not real files. No timestamp is checked, and so the actions on such a target are only executed if the target's dependencies are updated, or if the target is also marked with =ALWAYS=. The default =bjam= target "=all=" is a pseudotarget. In =Jambase=, =NOTFILE= is used to define several addition convenient pseudotargets.
 
+[endsect]
+
+[section =NOUPDATE= ]
+
 [pre
-NOUPDATE /targets/ ;
+rule NOUPDATE ( /targets/ * )
 ]
 
 Causes the timestamps on /targets/ to be ignored. This has two effects: first, once the target has been created it will never be updated; second, manually updating target will not cause other targets to be updated. In =Jambase=, for example, this rule is applied to directories by the =MkDir= rule, because =MkDir= only cares that the target directory exists, not when it has last been updated.
 
+[endsect]
+
+[section =TEMPORARY= ]
+
 [pre
-TEMPORARY /targets/ ;
+rule TEMPORARY ( /targets/ * )
 ]
 
 Marks /targets/ as temporary, allowing them to be removed after other targets that depend upon them have been updated. If a =TEMPORARY= target is missing, =bjam= uses the timestamp of the target's parent. =Jambase= uses =TEMPORARY= to mark object files that are archived in a library after they are built, so that they can be deleted after they are archived.
 
+[endsect]
+
+[section =FAIL_EXPECTED= ]
+
 [pre
-FAIL_EXPECTED /targets/ ;
+rule FAIL_EXPECTED ( /targets/ * )
 ]
 
 For handling targets whose build actions are expected to fail (e.g. when testing that assertions or compile-time type checkin work properly), Boost Jam supplies the =FAIL_EXPECTED= rule in the same style as =NOCARE=, et. al. During target updating, the return code of the build actions for arguments to =FAIL_EXPECTED= is inverted: if it fails, building of dependent targets continues as though it succeeded. If it succeeds, dependent targets are skipped.
 
+[endsect]
+
+[section =RMOLD= ]
+
 [pre
-RMOLD /targets/ ;
+rule RMOLD ( /targets/ * )
 ]
 
 =BJam= removes any target files that may exist on disk when the rule used to build those targets fails. However, targets whose dependencies fail to build are not removed by default. The =RMOLD= rule causes its arguments to be removed if any of their dependencies fail to build.
+
+[endsect]
+
+[section =ISFILE= ]
 
 [pre
 rule ISFILE ( /targets/ * )
@@ -703,15 +745,23 @@ rule ISFILE ( /targets/ * )
 
 [endsect]
 
+[endsect]
+
 [section Utility]
 
 The two rules =ECHO= and =EXIT= are utility rules, used only in =bjam='s parsing phase.
 
+[section =ECHO= ]
+
 [pre
-ECHO /args/ ;
+rule ECHO ( /args/ * )
 ]
 
 Blurts out the message /args/ to stdout.
+
+[endsect]
+
+[section =EXIT= ]
 
 [pre
 rule EXIT ( /message/ * : /result-value/ ? )
@@ -721,29 +771,45 @@ Blurts out the /message/ to stdout and then exits with a failure status if no /r
 
 "=Echo=", "=echo=", "=Exit=", and "=exit=" are accepted as aliases for =ECHO= and =EXIT=, since it is hard to tell that these are built-in rules and not part of the language, like "=include=". 
 
+[endsect]
+
+[section =GLOB= ]
+
 The =GLOB= rule does filename globbing.
 
 [pre
-GLOB /directories/ : /patterns/ : /downcase-opt/
+rule GLOB ( /directories/ * : /patterns/ * : /downcase-opt/ ? )
 ]
 
 Using the same wildcards as for the patterns in the switch statement. It is invoked by being used as an argument to a rule invocation inside of "=[ ]=". For example: "[^FILES = \[ GLOB dir1 dir2 : *.c *.h \]]" sets =FILES= to the list of C source and header files in =dir1= and =dir2=. The resulting filenames are the full pathnames, including the directory, but the pattern is applied only to the file name without the directory.
 
 If /downcase-opt/ is supplied, filenames are converted to all-lowercase before matching against the pattern; you can use this to do case-insensitive matching using lowercase patterns. The paths returned will still have mixed case if the OS supplies them. On Windows NT and Cygwin, filenames are always downcased before matching. 
 
+[endsect]
+
+[section =MATCH= ]
+
 The =MATCH= rule does pattern matching.
 
 [pre
-MATCH /regexps/ : /list/
+rule MATCH ( /regexps/ + : /list/ * )
 ]
 
 Matches the =egrep=(1) style regular expressions /regexps/ against the strings in /list/. The result is the concatenation of matching =()= subexpressions for each string in /list/, and for each regular expression in /regexps/. Only useful within the "=[ ]=" construct, to change the result into a list.
+
+[endsect]
+
+[section =BACKTRACE= ]
 
 [pre
 rule BACKTRACE ( )
 ]
 
 Returns a list of quadruples: /filename/ /line/ /module/ /rulename/..., describing each shallower level of the call stack. This rule can be used to generate useful diagnostic messages from Jam rules.
+
+[endsect]
+
+[section =UPDATE= ]
 
 [pre
 rule UPDATE ( /targets/ * )
@@ -760,6 +826,10 @@ If no target was specified with the =UPDATE= rule, no targets will be updated. T
 local previous-updates = \[ UPDATE \] ;
 UPDATE $(previous-updates) a-new-target ;
 ]
+
+[endsect]
+
+[section =W32_GETREG= ]
 
 [pre
 rule W32_GETREG ( /path/ : /data/ ? )
@@ -780,6 +850,44 @@ local PSDK-location =
   \[ W32_GETREG HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\MicrosoftSDK\\\\Directories : "Install Dir" \] ;
 ]
 
+[endsect]
+
+[section =W32_GETREGNAMES= ]
+
+[pre
+rule W32_GETREGNAMES ( /path/ : /result-type/ )
+]
+
+Defined only for win32 platform. It reads the registry of Windows. '/path/' is the location of the information, and '/result-type/' is either '=subkeys=' or '=values='. For more information on '/path/' format and constraints, please see =W32_GETREG=.
+
+Depending on '/result-type/', the rule returns one of the following:
+
+[variablelist
+    [[=subkeys=] [Names of all direct subkeys of '/path/'.]]
+    [[=values=] [Names of values contained in registry key given by '/path/'. The "default" value of the key appears in the returned list only if its value has been set in the registry.]]
+]
+
+If '/result-type/' is not recognized, or requested data cannot be retrieved, the rule returns an empty list.
+Example:
+
+[pre 
+local key = "HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths" ;
+local subkeys = \[ W32_GETREGNAMES "$(key)" : subkeys \] ;
+for local subkey in $(subkeys)
+{
+    local values = \[ W32_GETREGNAMES "$(key)\\\\$(subkey)" : values \] ;
+    for local value in $(values)
+    {
+        local data = \[ W32_GETREG "$(key)\\\\$(subkey)" : "$(value)" \] ;
+        ECHO "Registry path: " $(key)\\\\$(subkey) ":" $(value) "=" $(data) ;
+    }
+}
+]
+
+[endsect]
+
+[section =SHELL= ]
+
 [pre
 rule SHELL ( /command/ : * )
 ]
@@ -793,6 +901,8 @@ rule SHELL ( /command/ : * )
 
 Because the Perforce/Jambase defines a =SHELL= rule which hides the
 builtin rule, =COMMAND= can be used as an alias for =SHELL= in such a case.
+
+[endsect]
 
 [endsect]
 

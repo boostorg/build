@@ -1,6 +1,8 @@
-/* Copyright Paul Lin 2003. Distributed under the Boost */
-/* Software License, Version 1.0. (See accompanying */
-/* file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) */
+/*
+Copyright Paul Lin 2003. Copyright 2006 Bojan Resnik.
+Distributed under the Boost Software License, Version 1.0. (See accompanying
+file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+*/
 
 # include "jam.h"
 
@@ -15,7 +17,9 @@
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>
 
-# define  MAX_REGISTRY_DATA_LENGTH  4096
+# define  MAX_REGISTRY_DATA_LENGTH 4096
+# define  MAX_REGISTRY_KEYNAME_LENGTH 256
+# define  MAX_REGISTRY_VALUENAME_LENGTH 16384
 
 typedef struct
 {
@@ -33,6 +37,26 @@ static const KeyMap dlRootKeys[] = {
     { 0, 0 }
 };
 
+static HKEY get_key(char const** path)
+{
+    const KeyMap *p;
+
+    for (p = dlRootKeys; p->name; ++p)
+    {
+        int n = strlen(p->name);
+        if (!strncmp(*path,p->name,n))
+        {
+            if ((*path)[n] == '\\' || (*path)[n] == 0)
+            {
+                *path += n + 1;
+                break;
+            }
+        }
+    }
+
+    return p->value;
+}
+
 LIST*
 builtin_system_registry(
     PARSE    *parse,
@@ -40,27 +64,8 @@ builtin_system_registry(
 {
     char const* path = lol_get(frame->args, 0)->string;
     LIST* result = L0;
-    HKEY key;
+    HKEY key = get_key(&path);
     
-    {
-        const KeyMap *p;
-        
-        for (p = dlRootKeys; p->name; ++p)
-        {
-            int n = strlen(p->name);
-            if (!strncmp(path,p->name,n))
-            {
-                if (path[n] == '\\' || path[n] == 0)
-                {
-                    path += n + 1;
-                    break;
-                }
-            }
-        }
-        
-        key = p->value;
-    }
-
     if (
         key != 0
         && ERROR_SUCCESS == RegOpenKeyEx(key, path, 0, KEY_QUERY_VALUE, &key) 
@@ -123,6 +128,80 @@ builtin_system_registry(
         RegCloseKey(key);
     }
     return  result;
+}
+
+static LIST* get_subkey_names(HKEY key, char const* path)
+{
+    LIST* result = 0;
+    
+    if ( ERROR_SUCCESS == 
+         RegOpenKeyEx(key, path, 0, KEY_ENUMERATE_SUB_KEYS, &key) 
+    )
+    {
+        char name[MAX_REGISTRY_KEYNAME_LENGTH];
+        DWORD name_size = sizeof(name);
+        DWORD index;
+        FILETIME last_write_time;
+
+        for ( index = 0; 
+              ERROR_SUCCESS == RegEnumKeyEx(
+                  key, index, name, &name_size, 0, 0, 0, &last_write_time);
+              ++index, 
+              name_size = sizeof(name)
+        )
+        {
+            name[name_size] = 0;
+            result = list_append(result, list_new(0, newstr(name)));
+        }
+        
+        RegCloseKey(key);
+    }
+    
+    return result;
+}
+
+static LIST* get_value_names(HKEY key, char const* path)
+{
+    LIST* result = 0;
+    
+    if ( ERROR_SUCCESS == RegOpenKeyEx(key, path, 0, KEY_QUERY_VALUE, &key) )
+    {
+        char name[MAX_REGISTRY_VALUENAME_LENGTH];
+        DWORD name_size = sizeof(name);
+        DWORD index;
+
+        for ( index = 0; 
+              ERROR_SUCCESS == RegEnumValue(
+                  key, index, name, &name_size, 0, 0, 0, 0);
+              ++index, 
+              name_size = sizeof(name)
+        )
+        {
+            name[name_size] = 0;
+            result = list_append(result, list_new(0, newstr(name)));
+        }
+        
+        RegCloseKey(key);
+    }
+    
+    return result;
+}
+
+LIST*
+builtin_system_registry_names(
+    PARSE    *parse,
+    FRAME    *frame )
+{
+    char const* path        = lol_get(frame->args, 0)->string;
+    char const* result_type = lol_get(frame->args, 1)->string;
+    
+    HKEY key = get_key(&path);
+
+    if ( !strcmp(result_type, "subkeys") )
+        return get_subkey_names(key, path);
+    if ( !strcmp(result_type, "values") )
+        return get_value_names(key, path);
+    return 0;
 }
 
 # endif
