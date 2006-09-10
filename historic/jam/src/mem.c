@@ -5,7 +5,7 @@ Distributed under the Boost Software License, Version 1.0.
 http://www.boost.org/LICENSE_1_0.txt)
 */
 
-#include "mem.h"
+#include "jam.h"
 
 #ifdef OPT_BOEHM_GC
 
@@ -56,5 +56,13 @@ http://www.boost.org/LICENSE_1_0.txt)
     
     /* Needs to be last. */
     #include "boehm_gc/finalize.c"
+
+#elif defined(OPT_DUMA)
+
+    #ifdef OS_NT
+        #define WIN32
+    #endif
+    #include "duma/duma.c"
+    #include "duma/print.c"
 
 #endif

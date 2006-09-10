@@ -330,7 +330,7 @@ hashdone( struct hash *hp )
 	if( !hp )
 	    return;
 
-	if( DEBUG_MEM )
+	if( DEBUG_MEM || DEBUG_PROFILE )
 	    hashstat( hp );
 
 	if( hp->tab.base )
@@ -368,7 +368,7 @@ static void hash_mem_free(size_t datalen, void * data)
 static void hash_mem_finalizer(char * key, struct hash * hp)
 {
     HASHDATA d;
-    d.key = (char*)key;
+    d.key = key;
     hash_free(hp,&d);
 }
 #endif
