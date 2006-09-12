@@ -415,7 +415,7 @@ rule configure-version-specific ( toolset : version : condition )
     # Processor-specific optimization
     #
 
-    if [ MATCH ^([67]\\.) : $(version) ]
+    if [ MATCH ^([67]) : $(version) ]
     {
         # 8.0 deprecates some of the options
         flags $(toolset).compile CFLAGS $(condition)/<optimization>speed $(condition)/<optimization>space : /Ogiy /Gs ;
