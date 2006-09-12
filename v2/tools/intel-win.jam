@@ -7,6 +7,7 @@ import toolset ;
 import feature ;
 import toolset : flags ;
 import os ;
+import errors ;
 
 # This is needed because the rule we import here depend on 'common'
 # That's nasty.
@@ -137,10 +138,17 @@ rule init ( version ? :     # the compiler version
     if ! $(compatibility)
     {
         # If there's no backend version, assume 7.1.
-        compatibility = 7.1 ;
+        compatibility = vc7.1 ;
     }
     
-    msvc.configure-version-specific intel-win : $(compatibility) : $(condition) ;
+    local extract-version = [ MATCH ^vc(.*) : $(compatibility) ] ;
+    if ! $(extract-version)
+    {
+        errors.user-error "Invalid value for compatibility option:"
+          $(compatibility) ;
+    }
+    
+    msvc.configure-version-specific intel-win : $(extract-version[1]) : $(condition) ;
 }
 
 flags intel-win.link LIBRARY_OPTION <toolset>intel : "" ;
