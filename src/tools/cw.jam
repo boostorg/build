@@ -197,7 +197,6 @@ flags cw LINKFLAGS <user-interface>native : -subsystem native ;
 flags cw LINKFLAGS <user-interface>auto : -subsystem auto ;
 
 flags cw LINKFLAGS <main-target-type>LIB/<link>static : -library ;
-flags cw LINKFLAGS <main-target-type>LIB/<link>shared : -shared ;
 
 flags cw.link USER_LINKFLAGS <linkflags> ;
 flags cw.link LINKPATH <library-path> ;
@@ -239,6 +238,6 @@ actions link bind DEF_FILE
 
 actions link.dll bind DEF_FILE
 {
-   $(.LD) -o "$(<[1]:W)" -implib "$(<[2]:W)" -L"$(LINKPATH)" $(LINKFLAGS) -f"$(DEF_FILE)" $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
+   $(.LD) -shared -o "$(<[1]:W)" -implib "$(<[2]:W)" -L"$(LINKPATH)" $(LINKFLAGS) -f"$(DEF_FILE)" $(USER_LINKFLAGS) @"@($(<[1]:W).rsp:E=$(nl)"$(>)" $(nl)$(LIBRARIES_MENTIONED_BY_FILE) $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST:S=.lib)" $(nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA:S=.lib)")"
 }
 
