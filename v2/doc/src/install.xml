@@ -167,4 +167,72 @@ boost-build <replaceable>/path/to/boost.build</replaceable> ;
   Boost.Build v2, you have to add the <option>--v2</option> command
   line option to all <command>bjam</command> invocations.</para>
 
+      
+
+        <bridgehead>Information for distributors</bridgehead>
+
+        <para>
+          If you're planning to package Boost.Build for a Linux distribution,
+          please follow these guidelines:
+
+          <itemizedlist>
+            <listitem><para>Create a separate package for Boost.Jam.</para></listitem>
+
+            <listitem>
+              <para>Create another package for Boost.Build, and make
+              this package install all Boost.Build files to
+              <filename>/usr/share/boost-build</filename> directory. After
+              install, that directory should contain everything you see in
+              Boost.Build release package, except for
+              <filename>jam_src</filename> directory.  If you're using Boost CVS
+              to obtain Boost.Build, as opposed to release package, take
+              everything from the <filename>tools/build/v2</filename> directory.
+              For a check, make sure that
+              <filename>/usr/share/boost-build/boost-build.jam</filename> is installed.
+              </para>
+
+              <para>Placing Boost.Build into <filename>/usr/share/boost-build</filename>
+              will make sure that <command>bjam</command> will find Boost.Build
+              without any additional setup.</para>
+            </listitem>
+
+            <listitem><para>Provide a
+            <filename>/etc/site-config.jam</filename> configuration file that will
+            contain:
+<programlisting>
+using gcc ;
+</programlisting>
+             You might want to add dependency from Boost.Build package to gcc,
+             to make sure that users can always build Boost.Build examples.
+            </para></listitem>
+          </itemizedlist>
+        </para>
+
+        <para>If those guidelines are met, users will be able to invoke
+        <command>bjam</command> without any explicit configuration.
+        </para>
+
+    
+      
+
   </chapter>
+
+<!--
+     Local Variables:
+     mode: nxml
+     sgml-indent-data:t
+     sgml-parent-document:("userman.xml" "chapter")
+     sgml-set-face: t
+     sgml-omittag:nil
+     sgml-shorttag:nil
+     sgml-namecase-general:t
+     sgml-general-insert-case:lower
+     sgml-minimize-attributes:nil
+     sgml-always-quote-attributes:t
+     sgml-indent-step:2
+     sgml-exposed-tags:nil
+     sgml-local-catalogs:nil
+     sgml-local-ecat-files:nil
+     End:
+-->
+
