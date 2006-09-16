@@ -109,6 +109,7 @@ rule init ( version ? : root ? : includes ? : libraries ?
 
 rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
 {
+    version ?= 2.4 ;
     root ?= /usr ;
     includes ?= $(root)/include/python$(version) ;
     libraries ?= $(root)/lib/python$(version)/config ;
