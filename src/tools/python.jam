@@ -107,30 +107,115 @@ rule init ( version ? : root ? : includes ? : libraries ?
     project.pop-current ;
 }
 
-rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
+local rule python-version ( cmd )
 {
-    version ?= 2.4 ;
-    root ?= /usr ;
-    includes ?= $(root)/include/python$(version) ;
-    libraries ?= $(root)/lib/python$(version)/config ;
+    cmd ?= python ;
+    local version = [ SHELL $(cmd)" -c 'import sys; print sys.version'" : exit-status ] ;
     
-    # Find the 'python' binary, which is used for testing.
-    # Look first in $(root)/bin, then in PATH.    
-    local interpreter = [ common.get-invocation-command 
-        python : python : : $(root)/bin : path-last ] ;
-    
-    if $(interpreter:D) != $(root)/bin
-    {            
-        ECHO "warning: was expecting Python interpreter in " $(root)/bin ;
-        ECHO "warning: found only in PATH:" $(interpreter) ;
-    }        
-                
+    if $(version[2]) = 0
+    {
+        return [ MATCH ^([0-9]+.[0-9]+) : $(version[1]) : 1 ] ;
+    }
+    else
+    {
+        return ;
+    }
+}
+
+local rule python-interpreter ( cmd )
+{
+    local which = [ SHELL "which "$(cmd) : exit-status ] ;
+    if $(which[2]) = 0
+    {
+        return $(which[1]) ;
+    }
+    else
+    {
+        return ;
+    }
+}
+
+local rule python-root ( cmd )
+{
+    return [ MATCH (.*)/bin/[^/]* : [ SHELL "which "$(cmd) ] : 1 ] ;
+}
+
+
+local rule debug-message ( message * )
+{
     if --debug-configuration in [ modules.peek : ARGV ]
     {
-        ECHO "notice: Python include path is" $(includes) ;
-        ECHO "notice: Python library path is" $(libraries) ;
-        ECHO "notice: Python interpreter is" $(interpreter) ;                
+        ECHO notice: $(message) ;
     }
+}
+
+rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
+{
+    #
+    # Autoconfiguration sequence
+    #
+    if $(version)
+    {
+        if ! [ MATCH ^[0-9]+\.[0-9]+$ : $(version) : 0 ]
+        {
+            ECHO "Warning: \"using python\" expects a two part (major, minor) version number; got" $(version) instead ;
+        }
+        debug-message looking for python $(version) ;
+    }
+    
+    # if root is explicitly specified, look in its bin subdirectory
+    local bin = $(bin/:R=(root)) ;
+    if $(bin)
+    {
+        debug-message searching for python binaries in $(bin) ;
+    }
+    
+    # Form the python commands to try in order.  First look for python
+    # with the explicit version number, then without it
+    local cmds = $(bin:E="")python$(version:E="") $(bin:E="")python ;
+
+    local interpreter ;
+    while $(cmds)
+    {
+        # pop a command
+        interpreter = $(cmds[0]) ; cmds = $(cmds[2-]) ;
+        debug-message trying Python interpreter command $(interpreter) ;
+          
+        # Check to see what version that command actually runs, if any
+        local true-version = [ python-version $(interpreter) ] ;
+        
+        if ! $(true-version)
+        {
+            debug-message $(interpreter) does not invoke a working Python interpreter ;
+        }
+        else
+        {
+            debug-message $(interpreter) invokes actual Python (major,minor) version $(true-version) ;
+            
+            # if no version was specified, assume that's OK
+            version ?= $(true-version) ;
+            
+            # if the version is a match, stop searching
+            if $(version) = $(true-version)
+            {
+                debug-message qualifying Python interpreter found ;
+                root ?= [ python-root $(interpreter) ] ;
+                cmds = ; # break
+            }
+        }
+    }
+    debug-message "Python interpreter command is" $(interpreter) ;
+    
+    includes ?= $(root)/include/python$(version) ;
+    debug-message "Python include path is" $(includes) ;
+    
+    libraries ?= $(root)/lib/python$(version)/config ;
+    debug-message "Python library path is" $(includes) ;
+    
+    #
+    # End autoconfiguration sequence
+    #
+    
     
     # If not specific condition is specified, set global value
     # If condition is specified, set PYTHON on target. It will
