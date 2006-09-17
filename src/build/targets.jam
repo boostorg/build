@@ -1142,11 +1142,12 @@ class basic-target : abstract-target
         {
             ECHO [ targets.indent ] "Building target '$(self.name)'" ;
             ECHO [ targets.indent ] "Build request: " [ $(property-set).raw ] ;
+            ECHO [ targets.indent ] "Target requirements: " [ $(self.requirements).raw ] ;            
             targets.increase-indent ;
         }
                 
         if ! $(self.generated.$(property-set)) 
-        {           
+        {
             local rproperties = [ targets.common-properties $(property-set) 
               $(self.requirements) ] ;           
             
