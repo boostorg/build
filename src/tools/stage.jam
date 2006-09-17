@@ -516,6 +516,22 @@ rule rename ( name : type ? : property-set : unversioned ? )
                 case vacpp* : toolset-tag += xlc ;
             }
             local version = [ MATCH "<toolset.*version>([0123456789]+)[.]([0123456789]*)" : $(properties) ] ;
+            # For historical reasons, vc6.0 and vc7.0 use different
+            # naming.
+            if $(toolset-tag) = vc
+            {
+                if $(version[1]) = 6
+                {
+                    # Cancel minor version.
+                    version = 6 ;
+                }
+                else if $(version[1]) = 7 && $(version[2]) = 0
+                {
+                    version = 7 ;
+                }
+            }
+            
+            
             toolset-tag += $(version) ;
         }
 
