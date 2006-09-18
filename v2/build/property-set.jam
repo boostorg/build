@@ -7,6 +7,7 @@ import "class" : new ;
 import feature ;
 import property ;
 import sequence ;
+import set ;
 
 # Class for storing a set of properties.
 # - there's 1<->1 correspondence between identity and value. No
@@ -384,6 +385,58 @@ rule create-from-user-input ( raw-properties * : jamfile-module location )
     specification = [ property.make $(specification) ] ;            
     result = [ property-set.create $(specification) ] ;            
     return $(result) ;
+}
+
+# Refines requirements with requirements provided by the user.
+# Specially handles "-<property>value" syntax in specification
+# to remove given requirements.
+# - parent-requirements -- property-set object with requirements
+#   to refine
+# - specification -- string list of requirements provided by the use
+# - project-module -- the module to which context indirect features
+#   will be bound.
+# - location -- the path to which path features are relative.
+#
+#
+rule refine-from-user-input ( parent-requirements : specification * 
+    : project-module : location )
+{
+    if ! $(specification)
+    {
+        return $(parent-requirements) ;
+    }
+    else
+    {
+        local add-requirements ;
+        local remove-requirements ;
+        
+        for local r in $(specification)
+        {
+            local m = [ MATCH "^-(.*)" : $(r) ] ;
+            if $(m)
+            {
+                remove-requirements += $(m) ;
+            }
+            else
+            {
+                add-requirements += $(r) ;
+            }
+        }
+        
+        if $(remove-requirements)
+        {
+            parent-requirements = [ property-set.create 
+                [ set.difference [ $(parent-requirements).raw ] 
+                  : $(remove-requirements) ] ] ;
+            specification = $(add-requirements) ;
+        }
+
+        local requirements = [ property-set.create-from-user-input 
+            $(specification) : $(project-module) $(location) ] ;
+        
+        requirements = [ $(parent-requirements).refine $(requirements) ] ;    
+        return $(requirements) ;
+    }
 }
 
 
