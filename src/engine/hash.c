@@ -96,6 +96,47 @@ static void hash_mem_free(size_t datalen, void * data);
 static void hash_mem_finalizer(char * key, struct hash * hp);
 #endif
 
+static unsigned int hash_keyval( const unsigned char * key )
+{
+    unsigned int keyval = *key;
+    while( *key )
+        keyval = keyval * 2147059363 + *key++;
+    return keyval;
+}
+
+#define hash_bucket(hp,keyval) ((hp)->tab.base + ( (keyval) % (hp)->tab.nel ))
+
+/*  Find the hash item for the given data. Returns pointer to the
+    item and if given a pointer to the item before the found item.
+    If it's the first item in a bucket, there is no previous item,
+    and zero is returned for the previous item instead.
+*/
+static ITEM * hash_search(
+    struct hash *hp,
+    unsigned int keyval,
+    const unsigned char * keydata,
+    ITEM ** previous )
+{
+    ITEM * i = *hash_bucket(hp,keyval);
+    ITEM * p = 0;
+
+    for ( ; i; i = i->hdr.next )
+    {
+        if( keyval == i->hdr.keyval &&
+            !strcmp( i->data.key, keydata ) )
+        {
+            if (previous)
+            {
+                *previous = p;
+            }
+            return i;
+        }
+        p = i;
+    }
+    
+    return 0;
+}
+
 /*
  * hash_free() - remove the given item from the table if it's there.
  * Returns 1 if found, 0 otherwise.
@@ -104,38 +145,28 @@ static void hash_mem_finalizer(char * key, struct hash * hp);
  */
 int
 hash_free(
-	register struct hash *hp,
-	HASHDATA *data)
+    register struct hash *hp,
+    HASHDATA *data)
 {
-	ITEM **prev;
-	register ITEM **i;
-	unsigned char *b = (unsigned char*)data->key;
-	unsigned int keyval;
-
-	keyval = *b;
-
-	while( *b )
-		keyval = keyval * 2147059363 + *b++;
-
-    prev = hp->tab.base + ( keyval % hp->tab.nel );
-	while(*prev )
+    ITEM * i = 0;
+    ITEM * prev = 0;
+    unsigned int keyval = hash_keyval((unsigned char*)data->key);
+    
+    i = hash_search( hp, keyval, (unsigned char*)data->key, &prev );
+    if (i)
     {
-        register ITEM* i = *prev;
-	    if( keyval == i->hdr.keyval && 
-            !strcmp( i->data.key, data->key ) )
-        {
-            /* unlink the record from the hash chain */
-            *prev = i->hdr.next;
-            /* link it into the freelist */
-            i->hdr.next = hp->items.free;
-            hp->items.free = i;
-            /* mark it free so we skip it during enumeration */
-            i->data.key = 0;
-            /* we have another item */
-            hp->items.more++;
-            return 1;
-        }
-        prev = &i->hdr.next;
+        /* mark it free so we skip it during enumeration */
+        i->data.key = 0;
+        /* unlink the record from the hash chain */
+        if (prev) prev->hdr.next = i->hdr.next;
+        else *hash_bucket(hp,keyval) = i->hdr.next;
+        /* link it into the freelist */
+        i->hdr.next = hp->items.free;
+        hp->items.free = i;
+        /* we have another item */
+        hp->items.more++;
+        
+        return 1;
     }
     return 0;
 }
@@ -150,10 +181,9 @@ hashitem(
 	HASHDATA **data,
 	int enter )
 {
-	ITEM **base;
 	register ITEM *i;
 	unsigned char *b = (unsigned char*)(*data)->key;
-	unsigned int keyval;
+	unsigned int keyval = hash_keyval(b);
     
     #ifdef HASH_DEBUG_PROFILE
     profile_frame prof[1];
@@ -172,28 +202,21 @@ hashitem(
         #endif
 	    return 0;
     }
-
-	keyval = *b;
-
-	while( *b )
-		keyval = keyval * 2147059363 + *b++;
-
-	base = hp->tab.base + ( keyval % hp->tab.nel );
-
-	for( i = *base; i; i = i->hdr.next )
-	    if( keyval == i->hdr.keyval && 
-		!strcmp( i->data.key, (*data)->key ) )
-	{
-		*data = &i->data;
+    
+    i = hash_search( hp, keyval, (unsigned char*)(*data)->key, 0 );
+    if (i)
+    {
+        *data = &i->data;
         #ifdef HASH_DEBUG_PROFILE
-        if ( DEBUG_PROFILE )
-            profile_exit( prof );
+        if ( DEBUG_PROFILE ) profile_exit( prof );
         #endif
-		return !0;
-	}
+        return !0;
+    }
 
-	if( enter ) 
-	{
+    if( enter ) 
+    {
+        ITEM **base = hash_bucket(hp,keyval);
+        
         /* try to grab one from the free list */
         if ( hp->items.free )
         {
@@ -206,19 +229,19 @@ hashitem(
             i = (ITEM *)hp->items.next;
             hp->items.next += hp->items.size;
         }
-		hp->items.more--;
-		memcpy( (char *)&i->data, (char *)*data, hp->items.datalen );
-		i->hdr.keyval = keyval;
-		i->hdr.next = *base;
-		*base = i;
-		*data = &i->data;
+        hp->items.more--;
+        memcpy( (char *)&i->data, (char *)*data, hp->items.datalen );
+        i->hdr.keyval = keyval;
+        i->hdr.next = *base;
+        *base = i;
+        *data = &i->data;
         #ifdef OPT_BOEHM_GC
         if (sizeof(HASHDATA) == hp->items.datalen)
         {
             GC_REGISTER_FINALIZER(i->data.key,&hash_mem_finalizer,hp,0,0);
         }
         #endif
-	}
+    }
 
     #ifdef HASH_DEBUG_PROFILE
     if ( DEBUG_PROFILE )
