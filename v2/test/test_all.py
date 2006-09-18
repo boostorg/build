@@ -142,6 +142,7 @@ tests = [ "rebuilds",
           "implicit_dependency",
           "example_libraries",
           "example_make",
+          "remove_requirement",
           ]
 
 if os.name == 'posix':
