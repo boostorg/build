@@ -473,6 +473,10 @@ if $(with-python)
     --defs += HAVE_PYTHON ;
 }
 
+if $(debug)
+{
+    --defs += BJAM_NEWSTR_NO_ALLOCATE ;
+}
 
 
 # The basic symbolic targets...

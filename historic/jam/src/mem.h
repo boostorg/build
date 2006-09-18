@@ -26,7 +26,9 @@ http://www.boost.org/LICENSE_1_0.txt)
     #define bjam_realloc_raw_x(p,s) realloc(p,s)
     #define bjam_free_raw_x(p) free(p)
     
+    #ifndef BJAM_NEWSTR_NO_ALLOCATE
     #define BJAM_NEWSTR_NO_ALLOCATE
+    #endif
 
 #elif defined(OPT_DUMA)
 
@@ -53,7 +55,9 @@ http://www.boost.org/LICENSE_1_0.txt)
     #define bjam_realloc_x(p,s) realloc(p,s)
     #define bjam_free_x(p) free(p)
     
+    #ifndef BJAM_NEWSTR_NO_ALLOCATE
     #define BJAM_NEWSTR_NO_ALLOCATE
+    #endif
 
 #else
 
