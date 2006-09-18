@@ -568,16 +568,9 @@ class project-attributes
         }
         else if $(attribute) = "requirements" 
         {
-            local result = [ property-set.create-from-user-input
-                $(specification) : $(self.project-module) $(self.location) ] ;
-            
-            # If we have inherited properties, need to refine them with the
-            # specified.
-            local current = $(self.requirements) ;                                    
-            if $(current)
-            {
-                result = [ $(current).refine $(result) ] ;
-            }
+            local result = [ property-set.refine-from-user-input
+                $(self.requirements) : $(specification)
+                  : $(self.project-module) : $(self.location) ] ;
 
             if $(result[1]) = "@error"
             {
