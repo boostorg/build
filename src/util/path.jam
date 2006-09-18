@@ -236,6 +236,30 @@ rule glob ( dirs * : patterns + )
 
 }    
 
+# Recursive version of GLOB. Builds the glob of files while
+# also searching in the subdirectories of the given roots.
+#
+rule glob-tree ( roots * : patterns + )
+{
+    return [ sequence.transform path.make : [ .glob-tree
+        [ sequence.transform path.native : $(roots) ] : $(patterns) ] ] ;
+}
+
+local rule .glob-tree ( roots * : patterns * )
+{
+    local result = [ GLOB $(roots) : $(patterns) ] ;
+    local subdirs ;
+    for local d in [ GLOB $(roots) : * ]
+    {
+        if ! ( $(d:D=) in . .. ) && ! [ CHECK_IF_FILE $(d) ] { subdirs += $(d) ; }
+    }
+    if $(subdirs)
+    {
+        result += [ .glob-tree $(subdirs) : $(patterns) ] ;
+    }
+    return $(result) ;
+}
+
 
 #
 #    Returns true is the specified file exists.
