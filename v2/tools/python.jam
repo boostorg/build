@@ -156,9 +156,14 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     #
     if $(version)
     {
-        if ! [ MATCH ^[0-9]+\.[0-9]+$ : $(version) : 0 ]
+        local v = [ MATCH ^([0-9]+\.[0-9]+)(.*)$ : $(version) : 1 2 ] ;
+        if ! $(v) || $(v[2])
         {
             ECHO "Warning: \"using python\" expects a two part (major, minor) version number; got" $(version) instead ;
+            if $(v)
+            {
+                version = $(v[1]) ;
+            }
         }
         debug-message looking for python $(version) ;
     }
