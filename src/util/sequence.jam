@@ -179,12 +179,14 @@ rule length ( s * )
 rule unique ( list * )
 {
     local result ;
-    for local f in $(list)
+    local prev ;
+    for local i in [ SORT $(list) ]
     {
-        if ! $(f) in $(result)
+        if $(i) != $(prev)
         {
-            result += $(f) ;
+            result += $(i) ;
         }
+        prev = $(i) ;
     }
     return $(result) ;
 }
