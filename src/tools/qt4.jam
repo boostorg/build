@@ -286,13 +286,13 @@ rule init ( prefix )
                 : <name>QtAssistantClient$(suffix_version) <variant>release
                 :
                 : # usage-requirements
-                  <include>$(.prefix)/include/QtAssistantClient 
+                  <include>$(.prefix)/include/QtAssistant
                 ;
             lib QtAssistantClient : QtGui
                 : <name>QtAssistantClient$(suffix_debug)$(suffix_version) <variant>debug
                 :
                 : # usage-requirements
-                  <include>$(.prefix)/include/QtAssistantClient 
+                  <include>$(.prefix)/include/QtAssistant
                 ;
             
             # Support for dynamic Widgets (Qt 4.1)
