@@ -503,8 +503,15 @@ rule rename ( name : type ? : property-set : unversioned ? )
                 case darwin* : toolset-tag += ;
                 case edg* : toolset-tag += edg ;
                 case gcc* : toolset-tag += gcc ;
-                case intel-linux* : toolset-tag += il ;
-                case intel-win* : toolset-tag += iw ;
+                case intel : 
+                  if [ $(property-set).get <toolset-intel:platform> ] = win
+                  {
+                      toolset-tag += iw ;
+                  }
+                  else
+                  {
+                      toolset-tag += il ;
+                  }
                 case kcc* : toolset-tag += kcc ;
                 case kylix* : toolset-tag += bck ;
                 #case metrowerks* : toolset-tag += cw ;
@@ -530,7 +537,15 @@ rule rename ( name : type ? : property-set : unversioned ? )
                     version = 7 ;
                 }
             }
-            
+            # On intel, version is not added, because it does not
+            # matter and it's the version of vc used as backend
+            # that matters. Ideally, we'd encode the backend
+            # version but that will break compatibility with
+            # V1.
+            if $(toolset-tag) = iw
+            {
+                version = ;
+            }
             
             toolset-tag += $(version) ;
         }
