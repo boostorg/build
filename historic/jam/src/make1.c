@@ -1064,7 +1064,7 @@ make1settings( LIST *vars )
 
 	    /* Add to settings chain */
 
-	    settings = addsettings( settings, 0, vars->string, nl );
+	    settings = addsettings( settings, VAR_SET, vars->string, nl );
 	}
 
 	return settings;
