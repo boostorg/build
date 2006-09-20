@@ -382,15 +382,16 @@ static SETTINGS* settings_freelist;
  * addsettings() - add a deferred "set" command to a target
  *
  * Adds a variable setting (varname=list) onto a chain of settings
- * for a particular target.  Replaces the previous previous value,
- * if any, unless 'append' says to append the new list onto the old.
+ * for a particular target.
+ * 'flag' controls the relationship between new and old values in the same
+ * way as in var_set() function (see variable.c).
  * Returns the head of the chain of settings.
  */
 
 SETTINGS *
 addsettings(
 	SETTINGS *head,
-	int	append,
+	int	flag,
 	char	*symbol,
 	LIST	*value )
 {
@@ -422,15 +423,17 @@ addsettings(
 	    v->next = head;
 	    head = v;
 	}
-	else if( append )
+	else if( flag == VAR_APPEND )
 	{
 	    v->value = list_append( v->value, value );
 	}
-	else
+	else if( flag != VAR_DEFAULT )
 	{
 	    list_free( v->value );
 	    v->value = value;
 	} 
+        else
+            list_free( value );
 
 	/* Return (new) head of list. */
 
@@ -467,7 +470,7 @@ copysettings( SETTINGS *head )
     SETTINGS *copy = 0, *v;
 
     for (v = head; v; v = v->next)
-	copy = addsettings(copy, 0, v->symbol, list_copy(0, v->value));
+	copy = addsettings(copy, VAR_SET, v->symbol, list_copy(0, v->value));
 
     return copy;
 }

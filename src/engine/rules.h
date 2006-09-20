@@ -246,7 +246,7 @@ TARGETS *targetchain( TARGETS *chain, TARGETS *targets );
 void freetargets( TARGETS *chain );
 ACTIONS *actionlist( ACTIONS *chain, ACTION *action );
 void freeactions( ACTIONS *chain );
-SETTINGS *addsettings( SETTINGS *head, int append, char *symbol, LIST *value );
+SETTINGS *addsettings( SETTINGS *head, int flag, char *symbol, LIST *value );
 void 	pushsettings( SETTINGS *v );
 void 	popsettings( SETTINGS *v );
 SETTINGS *copysettings( SETTINGS *v );
