@@ -47,6 +47,24 @@ import toolset : flags ;
 import os ;
 import virtual-target ;
 
+# Qt3Support control feature
+#
+# Qt4 configure defaults to build Qt4 libraries with Qt3Support.
+# The autodetection is missing, so we default to disable Qt3Support.
+# This prevents the user from inadvertedly using a deprecated API.
+#
+# The Qt3Support library can be activated by adding
+# "<qt3support>on" to requirements
+# 
+# Use "<qt3support>on:<define>QT3_SUPPORT_WARNINGS"
+# to get warnings about deprecated Qt3 support funtions and classes.
+# Files ported by the "qt3to4" conversion tool contain _tons_ of 
+# warnings, so this define is not set as default. 
+#
+# Todo: Detect Qt3Support from Qt's configure data.
+#       Or add more auto-configuration (like python).
+feature.feature qt3support : off on : propagated link-incompatible ;
+
 project.initialize $(__name__) ;
 project qt ;
 
@@ -96,7 +114,7 @@ rule init ( prefix )
         if [ glob $(.prefix)/Jamroot ]
         {
             # Import all Qt Modules
-            local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg QtOpenGL Qt3Support QtTest QtAssistantClient QtUiTools ;
+            local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg QtOpenGL Qt3Support QtTest QtAssistantClient QtDesigner QtUiTools ;
             for local l in $(all-libraries) 
             {
                 alias $(l) 
@@ -219,21 +237,26 @@ rule init ( prefix )
                 ;
             
             lib Qt3Support : QtGui QtNetwork QtXml QtSql
-                : <name>Qt3Support$(suffix_version) <variant>release
+                : <name>Qt3Support$(suffix_version) <variant>release <qt3support>on
                 :
                 : # usage-requirements
                   <define>QT_QT3SUPPORT_LIB
                   <define>QT3_SUPPORT
                   <include>$(.prefix)/include/Qt3Support 
                 ;
+ 
             lib Qt3Support : QtGui QtNetwork QtXml QtSql
-                : <name>Qt3Support$(suffix_debug)$(suffix_version) <variant>debug
+                : <name>Qt3Support$(suffix_debug)$(suffix_version) <variant>debug <qt3support>on
                 :
                 : # usage-requirements
                   <define>QT_QT3SUPPORT_LIB
                   <define>QT3_SUPPORT
                   <include>$(.prefix)/include/Qt3Support 
                 ;
+
+            # Dummy target to enable "<qt3support>off" and "<library>/qt//Qt3Support" at the same time.
+            # This enables quick switching from one to the other for test/porting purposes.        
+            alias Qt3Support : : <qt3support>off ;
             
             # OpenGl Support
             lib QtOpenGL : QtGui
@@ -295,6 +318,21 @@ rule init ( prefix )
                   <include>$(.prefix)/include/QtAssistant
                 ;
             
+            # Qt designer library
+            lib QtDesigner : QtGui QtXml
+                : <name>QtDesigner$(suffix_version) <variant>release
+                :   
+                : # usage-requirements
+                  <include>$(.prefix)/include/QtDesigner
+                ;
+
+            lib QtDesigner : QtGui QtXml
+                : <name>QtDesigner$(suffix_debug)$(suffix_version) <variant>debug
+                :   
+                : # usage-requirements
+                  <include>$(.prefix)/include/QtDesigner
+                ;
+
             # Support for dynamic Widgets (Qt 4.1)
             lib QtUiTools : QtGui QtXml
                 : <name>QtUiTools$(suffix_version) <variant>release
