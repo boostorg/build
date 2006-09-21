@@ -33,7 +33,7 @@ type.set-scanner ReST : rst-scanner ;
 
 generators.register-standard docutils.html : ReST : HTML ;
 
-rule init ( docutils-dir )
+rule init ( docutils-dir ? )
 {
     docutils-dir ?= [ modules.peek : DOCUTILS_DIR ] ;
 
@@ -50,7 +50,8 @@ rule init ( docutils-dir )
 
 rule html ( target : source : properties *  )
 {
-    docutils-dir on $(target) = $(.docutils-dir) ;
+    local command-prefix = "python "$(.docutils-dir)/tools/ ;
+    command-prefix on $(target) = $(command-prefix:E="") ;
 }
 
 
@@ -62,6 +63,6 @@ toolset.flags docutils HTML-FLAGS : <docutils-html> ;
 actions html
 {
     $(.setup)
-    python $(docutils-dir)/tools/rst2html.py $(COMMON-FLAGS) $(HTML-FLAGS) $(>) $(<)
+    $(command-prefix)rst2html.py $(COMMON-FLAGS) $(HTML-FLAGS) $(>) $(<)
 }
 
