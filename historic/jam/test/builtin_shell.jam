@@ -4,31 +4,6 @@
 
 ECHO --- Testing SHELL builtin... ;
 
-local result = 0 ;
-local rule error ( message * )
-{
-    local b = [ BACKTRACE ] ;
-    ECHO "$(b[9]):$(b[10]): error:" $(message) ;
-}
-local rule assert ( expected + : test ? : obtained + )
-{
-    test ?= "(==)" ;
-    local r = 0 ;
-    if $(test) = "(==)" && $(expected) != $(obtained)
-    {
-        error [FAILED] '$(expected)' $(test) '$(obtained)' ;
-        r = 1 ;
-    }
-    else if $(test) = "(!=)" && $(expected) = $(obtained)
-    {
-        error [FAILED] '$(expected)' $(test) '$(obtained)' ;
-        r = 1 ;
-    }
-    result = [ CALC $(result) + $(r) ] ;
-}
-
-#~ ---------------------------------------------------------------------
-
 local c = "date" ;
 if $(NT) { c = "PATH" ; }
 
@@ -40,7 +15,3 @@ assert ""       : (!=) : [ COMMAND $(c) ] ;
 assert ""       : (==) : [ COMMAND $(c) : no-output ] ;
 assert "" 0     : (!=) : [ COMMAND $(c) : exit-status ] ;
 assert "" 0     : (==) : [ COMMAND $(c) : no-output : exit-status ] ;
-
-#~ ---------------------------------------------------------------------
-
-EXIT --- Complete : $(result) ;

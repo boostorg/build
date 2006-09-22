@@ -4,31 +4,6 @@
 
 ECHO --- Testing W32_GETREGNAMES builtin... ;
 
-local result = 0 ;
-local rule error ( message * )
-{
-    local b = [ BACKTRACE ] ;
-    ECHO "$(b[9]):$(b[10]): error:" $(message) ;
-}
-local rule assert ( expected * : test ? : obtained * )
-{
-    test ?= "(==)" ;
-    local r = 0 ;
-    if $(test) = "(==)" && $(expected) != $(obtained)
-    {
-        error [FAILED] '$(expected)' $(test) '$(obtained)' ;
-        r = 1 ;
-    }
-    else if $(test) = "(!=)" && $(expected) = $(obtained)
-    {
-        error [FAILED] '$(expected)' $(test) '$(obtained)' ;
-        r = 1 ;
-    }
-    result = [ CALC $(result) + $(r) ] ;
-}
-
-#~ ---------------------------------------------------------------------
-
 if $(NT)
 {
     assert "Beep" "ExtendedSounds"
@@ -40,7 +15,3 @@ if $(NT)
     assert "Control" "Enum" "Hardware Profiles" "Services"
         : (==) : [ W32_GETREGNAMES "HKLM\\SYSTEM\\CurrentControlSet" : subkeys ] ;
 }
-
-#~ ---------------------------------------------------------------------
-
-EXIT --- Complete : $(result) ;

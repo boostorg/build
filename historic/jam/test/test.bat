@@ -9,7 +9,4 @@ REM ~ set BJAM=..\src\bin.ntx86.debug\bjam
 
 @ECHO ON
 
-%BJAM% -f builtin_shell.jam
-%BJAM% -f builtin_w32_getregnames.jam
-%BJAM% -f stress_var_expand.jam
-%BJAM% -f target_var.jam
+%BJAM% -f test.jam

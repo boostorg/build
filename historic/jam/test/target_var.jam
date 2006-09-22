@@ -2,36 +2,7 @@
 #~ Distributed under the Boost Software License, Version 1.0.
 #~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-ECHO --- Testing var expansion builtin... ;
-
-local result = 0 ;
-local rule error ( message * )
-{
-    local b = [ BACKTRACE ] ;
-    ECHO "$(b[9]):$(b[10]): error:" $(message) ;
-}
-local rule assert ( expected * : test ? : obtained * )
-{
-    test ?= "(==)" ;
-    local r = 0 ;
-    if $(test) = "(==)" && $(expected) != $(obtained)
-    {
-        error [FAILED] '$(expected)' $(test) '$(obtained)' ;
-        r = 1 ;
-    }
-    else if $(test) = "(!=)" && $(expected) = $(obtained)
-    {
-        error [FAILED] '$(expected)' $(test) '$(obtained)' ;
-        r = 1 ;
-    }
-    #~ else
-    #~ {
-        #~ error [PASSED] '$(expected)' $(test) '$(obtained)' ;
-    #~ }
-    result = [ CALC $(result) + $(r) ] ;
-}
-
-#~ ---------------------------------------------------------------------
+ECHO --- Testing var on target semantics... ;
 
 v on a = 1 ;
 v on b = 1 2 ;
@@ -43,7 +14,3 @@ assert [ on a return $(v) ] : (==) : 1 ;
 assert [ on b return $(v) ] : (==) : 1 2 ;
 assert [ on c return $(v) ] : (==) : 1 2 3 ;
 assert [ on d return $(v) ] : (==) : 1 2 3 4 ;
-
-#~ ---------------------------------------------------------------------
-
-EXIT --- Complete : $(result) ;
