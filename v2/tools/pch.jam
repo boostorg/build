@@ -1,8 +1,8 @@
 # Copyright (c) 2005 Reece H. Dunn.
 #
-# Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#          http://www.boost.org/LICENSE_1_0.txt)
+# Use, modification and distribution is subject to the Boost Software
+# License Version 1.0. (See accompanying file LICENSE_1_0.txt or
+# http://www.boost.org/LICENSE_1_0.txt)
 
 import type ;
 import feature : feature ;
@@ -50,18 +50,29 @@ class pch-generator : generator
 
     rule run ( project name ? : property-set : sources * )
     {
+        # The two sources are cpp file and PCHEADER, but they
+        # can be passed in any order. Figure out which source
+        # is what.
+        local cpp = $(sources[2]) ;
+        local h   = $(sources[1]) ;
+        if [ $(sources[2]).type ] = PCHEADER
+        {
+            cpp = $(sources[1]) ;
+            h   = $(sources[2]) ;
+        }
+
         local r =
           [ generator.run $(project) $(name) :
             [
               property-set.create
-                <pch-source>$(sources[2]) # mypch.cpp
+                <pch-source>$(cpp)      # mypch.cpp
                 [ $(property-set).raw ]
             ] : $(sources)
           ] ;
 
         return
           [ property-set.create
-              <pch-header>$(sources[1]) # mypch.h[pp]
+              <pch-header>$(h)          # mypch.h[pp]
               <pch-file>$(r[2])         # mypch.pch
           ] $(r) ;
     }
