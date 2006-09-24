@@ -363,19 +363,20 @@ rule init-mac ( version : root ? : includes ? : libraries ? )
     }
     PYTHON_FRAMEWORK = $(PYTHON_FRAMEWORK:D)/Python ;
 
-    alias python_for_extensions
-      : 
-      :
-      : 
-      : <include>$(includes)
-      ;  
-    
     alias python
       :
       : <os>MACOSX <toolset>darwin
       :
       : <include>$(includes) <framework>$(PYTHON_FRAMEWORK)
       ;  
+
+    # Unlike most *nix systems, Mac OS X's linker does not permit undefined
+    # symbols when linking a shared library. So, we still need to link
+    # against the Python framework, even when building extensions. 
+    # Note that framework builds of Python always use shared libraries,
+    # so we do not need to worry about duplicate Python symbols.
+    .alias-defined = true ;
+    alias python_for_extensions : python ;
 }
 
 rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? )
