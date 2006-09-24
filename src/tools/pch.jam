@@ -50,18 +50,26 @@ class pch-generator : generator
 
     rule run ( project name ? : property-set : sources * )
     {
+        local cpp = $(sources[2]) ;
+        local h   = $(sources[1]) ;
+        if [ $(sources[2]).type ] = PCHEADER
+        {
+            cpp = $(sources[1]) ;
+            h   = $(sources[2]) ;
+        }
+
         local r =
           [ generator.run $(project) $(name) :
             [
               property-set.create
-                <pch-source>$(sources[2]) # mypch.cpp
+                <pch-source>$(cpp)      # mypch.cpp
                 [ $(property-set).raw ]
             ] : $(sources)
           ] ;
 
         return
           [ property-set.create
-              <pch-header>$(sources[1]) # mypch.h[pp]
+              <pch-header>$(h)          # mypch.h[pp]
               <pch-file>$(r[2])         # mypch.pch
           ] $(r) ;
     }
