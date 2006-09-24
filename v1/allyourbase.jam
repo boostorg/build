@@ -1280,6 +1280,20 @@ rule project ( name : location ? )
     else
     {
         gPROJECT($(name)) = [ root-paths $(location) : [ root-paths $($(gTOP)) : [ PWD ] ] ] ;
+        # <speedsnail>
+        # Root the path globals to fix a bug which prevented to use them from an external
+        # project. The fix is as as uninvasive as possible, as it will only trigger when
+        # an external project is declared. So it will not interfere with the build of the
+        # boost library. I took this route, as at the time of this fix, the bbv1 is expected
+        # to be retired soon.
+        # N.B.: The path-globals rule is expected to be invoked from Jamrules files only.
+        local val ;
+        for val in $(gPATH_GLOBALS) {
+        gPATH_GLOBAL_VALUE($(val)) = [ root-paths $(gPATH_GLOBAL_VALUE($(val))) :
+                                            [ root-paths $($(gTOP)) : [ PWD ]  ]
+                                     ] ;
+        }
+	# </speedsnail>
         local [ protect-subproject ] ;
         enter-subproject @$(name) ;
     }
