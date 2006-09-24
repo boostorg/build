@@ -50,6 +50,9 @@ class pch-generator : generator
 
     rule run ( project name ? : property-set : sources * )
     {
+        # The two sources are cpp file and PCHEADER, but they
+        # can be passed in any order. Figure out which source
+        # is what.
         local cpp = $(sources[2]) ;
         local h   = $(sources[1]) ;
         if [ $(sources[2]).type ] = PCHEADER
