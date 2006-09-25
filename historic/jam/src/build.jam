@@ -277,7 +277,7 @@ toolset vacpp xlc : "-o " : -D
     [ opt --release : -s -O3 -qstrict -qinline ]
     [ opt --debug : -g -qNOOPTimize -qnoinline -pg ]
     -I$(--python-include) -I$(--extra-include)
-    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) -bmaxdata:0x40000000 ;
 ## Microsoft Visual C++ .NET 7.x
 toolset vc7 cl : /Fe : -D
     : /nologo
