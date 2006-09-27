@@ -27,11 +27,11 @@ rule assert ( expected * : test ? : obtained * )
 {
     test ?= "(==)" ;
     local r = 0 ;
-    if $(test) = "(==)" && $(expected) != $(obtained)
+    if $(test) = "(==)" && "*$(expected)*" != "*$(obtained)*"
     {
         fail '$(expected)' $(test) '$(obtained)' ;
     }
-    else if $(test) = "(!=)" && $(expected) = $(obtained)
+    else if $(test) = "(!=)" && "*$(expected)*" = "*$(obtained)*"
     {
         fail '$(expected)' $(test) '$(obtained)' ;
     }
@@ -45,5 +45,6 @@ include builtin_shell.jam ;
 include builtin_w32_getregnames.jam ;
 include stress_var_expand.jam ;
 include target_var.jam ;
+include var_expand.jam ;
 
 EXIT --- Complete: PASSED($(pass-count)) *FAILED($(fail-count))* : $(fail-count) ;

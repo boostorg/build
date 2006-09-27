@@ -1,0 +1,16 @@
+#~ Copyright 2006 Rene Rivera.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
+ECHO --- Testing var expansion... ;
+
+local p0 = name ;
+local p1 = dir/name ;
+local p2 = dir/sub/name ;
+
+assert $(p0:D=) : (==) : name ;
+assert $(p1:D=) : (==) : name ;
+assert $(p2:D=) : (==) : name ;
+assert $(p0:D) : (==) : ;
+assert $(p1:D) : (==) : dir ;
+assert $(p2:D) : (==) : dir/sub ;
