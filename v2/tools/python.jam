@@ -212,7 +212,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     debug-message "Python include path is" $(includes) ;
     
     libraries ?= $(root)/lib/python$(version)/config ;
-    debug-message "Python library path is" $(includes) ;
+    debug-message "Python library path is" $(libraries) ;
     
     #
     # End autoconfiguration sequence
