@@ -21,9 +21,6 @@
 #   SHARED_LIB, not PYTHON_EXTENSION. That's because we reuse 
 #   'lib-target-class', which creates SHARED_LIB explicitly.
 
-
-
-
 import type ;
 import testing ;
 import generators ;
@@ -215,7 +212,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     debug-message "Python include path is" $(includes) ;
     
     libraries ?= $(root)/lib/python$(version)/config ;
-    debug-message "Python library path is" $(includes) ;
+    debug-message "Python library path is" $(libraries) ;
     
     #
     # End autoconfiguration sequence
@@ -235,7 +232,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     }   
 
 
-    local extra-libs ;
+    local extra-libs extra-libs-conditional ;
 
     # Depending on system, Python library is either static
     # or shared. When it's static, we need to add 'pthread'
@@ -247,30 +244,30 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     # affected by threading mode.
     switch [ os.name ]
     {
-        case SOLARIS : extra-libs = pthread dl      ;
-        case OSF :     extra-libs = pthread         ;
-        case QNX* :    extra-libs =                 ;
+        case SOLARIS :
+        {
+            extra-libs = pthread dl ;
+            
+            # Add 'rt' option on Sun. While we duplicate the
+            # logic already in sun.jam and gcc.jam, I see no easy
+            # way to refactor it -- Volodya.
+            # Note that for 'sun' toolset, rt is already unconditionally
+            # added.
+            extra-libs-conditional = <toolset>gcc:<source>rt ;
+        }
+        
+        case OSF :     
+        {
+            extra-libs = pthread z ;
+            extra-libs-conditional = <toolset>gcc:<source>rt ;
+        }
+        
+        case QNX* :    
+        {
+            extra-libs =                 ;
+        }
+        
         case * :       extra-libs = pthread dl util ;
-    }
-    
-    extra-libs-conditional = ;
-    # Add 'rt' option on Sun. While we duplicate the
-    # logic already in sun.jam and gcc.jam, I see no easy
-    # way to refactor it.
-    # Note that for 'sun' toolset, rt is already unconditionally
-    # added.
-
-    # (MS) Question: Why not [ os.name ] in the next statement?
-    switch [ modules.peek : JAMUNAME ]
-    {
-        case SunOS* :
-        {
-            extra-libs-conditional += <toolset>gcc:<source>rt ;
-        }
-        case OSF* :
-        {
-            extra-libs-conditional += <toolset>gcc:<source>rt ;
-        }
     }
     
     if ! [ os.on-windows ]
@@ -298,29 +295,6 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
                    <library-path>$(libraries)
                    <find-shared-library>python$(version)
                  ;
-    
-             
-    # NOTES:
-    # - V1 had logic to force intel to use gcc's runtime.
-    #   Note sure why that was needed, with icc 8.0 extensions
-    #   built with intel are loaded by python without problems.
-    # - There was 'python-static-multithread' logic. Don't know
-    #   what it affected, so can't test.
-    
-    # TODO: need to figure out when the following code is needed:
-    # for builtin extensions only or in some other cases too.
-
-    
-    #    if [ modules.peek $(OS) ] = OSF
-    #    {
-    #        PYTHON_PROPERTIES += <*><*><linkflags>"-expect_unresolved 'Py*' -expect_unresolved '_Py*'" ;
-    #    }
-    #    else if [ modules.peek $(OS) ] = AIX
-    #    {
-    #        PYTHON_PROPERTIES 
-    #          += <*><*><linkflags>"-Wl,-bI:$(PYTHON_LIB_PATH)/python.exp"
-    #            <*><*><find-library>pthreads ;
-    #    }
 }
 
 rule init-mac ( version : root ? : includes ? : libraries ? )
@@ -381,14 +355,6 @@ rule init-mac ( version : root ? : includes ? : libraries ? )
 
 rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? )
 {
-#    PYTHON_PROPERTIES =
-#      boost-python-disable-borland
-#      select-nt-python-includes
-#      <runtime-link>dynamic
-#      <sysinclude>@boost
-#      <$(gcc-compilers)><*><define>USE_DL_IMPORT
-#      ;
-
     if ! $(cygwin-condition)
     {        
         root ?= c:/tools/python ;
@@ -428,21 +394,6 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
         flags python.capture-output PYTHON : $(interpreter) ;
 
                 
-        # This is mingw-specific V1 code. I don't yet understand
-        # why mingw must be specially-cased.
-        #local lib = $(PYTHON_IMPORT_LIB) ;
-        #if <define>BOOST_DEBUG_PYTHON in $(properties)
-        #{
-        #    lib = $(PYTHON_DEBUG_IMPORT_LIB) ;
-        #}
-        #lib ?= $(PYTHON_DLL) ;
-        #if <define>BOOST_DEBUG_PYTHON in $(properties)
-        #{
-        #    lib ?= $(PYTHON_DEBUG_DLL) ;
-        #}
-        #properties += <library-file>$(lib) ;
-        #}
-        
         properties += <library-path>$(PYTHON_LIB_PATH) ;
             
         # msvc compilers auto-find the python library
@@ -457,11 +408,6 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
           ;
                        
         local lib = python$(PYTHON_VERSION_NODOT) ;
-        # TODO: don't support BOOST_DEBUG_PYTHON yet.        
-        #    if <define>BOOST_DEBUG_PYTHON in $(properties)
-        #    {
-        #            lib = python$(PYTHON_VERSION_NODOT)_d ;
-        #    }
         
         alias python
           :
@@ -490,19 +436,12 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
         CYGWIN_PYTHON_DEBUG_LIB_PATH ?= $(CYGWIN_PYTHON_DEBUG_ROOT)/lib/python$(CYGWIN_PYTHON_DEBUG_VERSION)/config ;        
         
         local properties ;
-        # TODO: don't support BOOST_DEBUG_PYTHON yet.                
-        #if <define>BOOST_DEBUG_PYTHON in $(properties)
-        #{
-        #    properties += <library-path>$(CYGWIN_PYTHON_DEBUG_LIB_PATH) <find-library>python$(CYGWIN_PYTHON_DEBUG_VERSION).dll ;
-        #}
-        #else
-        #{
+
         properties += <library-path>$(CYGWIN_PYTHON_LIB_PATH) 
                       <find-shared-library>python$(CYGWIN_PYTHON_VERSION).dll ;
         
         properties += <include>$(root)/include/python$(version) ;          
           
-        #}
         alias python
           :
           : $(cygwin-condition)
@@ -535,35 +474,7 @@ rule python-extension ( name : sources * : requirements * : default-build * :
                         usage-requirements * )
 {
     requirements += <use>/python//python_for_extensions ;
-        
-    # TODO: handle the following V1 code
-    #if $(OS) = MACOSX && $(toolset) = darwin
-    #{
-    #    if <target-type>PYD in $(properties)
-    #    {
-    #        properties += <link-format>bundle ;
-    #    }
-    #    properties += <framework>$(PYTHON_FRAMEWORK) ;
-    #}    
-               
-#        <metrowerks><*><cxxflags>"-inline deferred" 
-#      <cwpro8><*><cxxflags>"-inline deferred"  # added for internal testing purposes
-#        <cxx><*><sysinclude>@boost/boost/compatibility/cpp_c_headers
-#         <define>BOOST_PYTHON_DYNAMIC_LIB
-    
-    
-#    PYTHON_PROPERTIES += 
-#        <sysinclude>@boost
-#          <stlport-iostream>on
-#            select-python-library
-    
-#      boost-python-disable-borland
-#      select-nt-python-includes
-#      <runtime-link>dynamic
-#      <sysinclude>@boost
-#      <$(gcc-compilers)><*><define>USE_DL_IMPORT
-#          <sysinclude>$(PYTHON_INCLUDES)
-            
+                    
     local project = [ project.current ] ;
 
     
