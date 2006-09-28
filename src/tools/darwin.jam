@@ -60,15 +60,40 @@ flags darwin.link FRAMEWORK <framework> ;
 
 _ = " " ;
 
+# set up the -F option to include the paths to any frameworks used.
+local rule prepare-framework-path ( target + )
+{
+    local framework-path = [ on $(target) return $(FRAMEWORK:D) ] ;
+    
+    if $(framework-path)
+    {
+        FRAMEWORK_PATH on $(target) += -F$(framework-path) ;
+    }
+    else
+    {
+        FRAMEWORK_PATH on $(target) = ;
+    }
+}
+
+rule link
+{
+    prepare-framework-path $(<) ;
+}
+
 actions link bind LIBRARIES
 {
-    $(CONFIG_COMMAND) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) -F$(FRAMEWORK:D) -framework$(_)$(FRAMEWORK:D=) $(OPTIONS) $(USER_OPTIONS)
+    $(CONFIG_COMMAND) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=) $(OPTIONS) $(USER_OPTIONS)
     $(NEED_STRIP)strip $(NEED_STRIP)"$(<)"
+}
+
+rule link.dll
+{
+    prepare-framework-path $(<) ;
 }
 
 actions link.dll bind LIBRARIES
 {
-    $(CONFIG_COMMAND) -dynamiclib -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) -F$(FRAMEWORK:D)  -framework$(_)$(FRAMEWORK:D=) $(OPTIONS) $(USER_OPTIONS)
+    $(CONFIG_COMMAND) -dynamiclib -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=) $(OPTIONS) $(USER_OPTIONS)
 }
 
 actions piecemeal archive
