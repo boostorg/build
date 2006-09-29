@@ -258,7 +258,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
         
         case OSF :     
         {
-            extra-libs = pthread z ;
+            extra-libs = pthread ;
             extra-libs-conditional = <toolset>gcc:<source>rt ;
         }
         
