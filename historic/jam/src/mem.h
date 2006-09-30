@@ -73,7 +73,7 @@ http://www.boost.org/LICENSE_1_0.txt)
     #define bjam_malloc_atomic_x(s) bjam_malloc_x(s)
 #endif
 #ifndef bjam_calloc_atomic_x
-    #define bjam_calloc_atomic_x(s) bjam_calloc_x(s)
+    #define bjam_calloc_atomic_x(n,s) bjam_calloc_x(n,s)
 #endif
 #ifndef bjam_mem_init_x
     #define bjam_mem_init_x()
