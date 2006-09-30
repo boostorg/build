@@ -231,7 +231,10 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
         flags python.capture-output PYTHON $(condition:J=/) : $(interpreter) ;
     }   
 
-
+    # Depending on system, or on toolset used, we need extra libraries.
+    # Libraries which are needed depending on system are added to
+    # 'extra-libs' and for libraries which depend on toolset we need
+    # conditional requirements to 'extra-libs-conditional'.
     local extra-libs extra-libs-conditional ;
 
     # Depending on system, Python library is either static
