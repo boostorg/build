@@ -146,6 +146,7 @@ local rule debug-message ( message * )
     }
 }
 
+# condition is a list of properties for which this python initialization applies.
 rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
 {
     #
@@ -166,7 +167,9 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     }
     
     # if root is explicitly specified, look in its bin subdirectory
-    local bin = $(bin/:R=(root)) ;
+    local bin = bin/ ;
+    bin = $(bin:R=$(root)) ; # will null out $(bin) if $(root) is empty.
+    
     if $(bin)
     {
         debug-message searching for python binaries in $(bin) ;
@@ -219,7 +222,8 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     #
     
     
-    # If not specific condition is specified, set global value
+    # Set up the PYTHON variable to point at the interpreter.
+    # If no specific condition is specified, set global value
     # If condition is specified, set PYTHON on target. It will
     # override the global value.
     if ! $(condition)
@@ -231,31 +235,42 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
         flags python.capture-output PYTHON $(condition:J=/) : $(interpreter) ;
     }   
 
-    # Depending on system, or on toolset used, we need extra libraries.
-    # Libraries which are needed depending on system are added to
-    # 'extra-libs' and for libraries which depend on toolset we need
-    # conditional requirements to 'extra-libs-conditional'.
+    # Provide system library dependencies for targets linking with
+    # static Python libraries.
+    #
+    # On many systems, Python uses libraries such as pthreads or
+    # libdl.  Since static libraries carry no library dependency
+    # information of their own that the linker can extract, these
+    # extra dependencies have to be given explicitly on the link line
+    # of the client.  The information about these dependencies is
+    # packaged into the "python" target below.
+
+    # Even where Python itself uses pthreads, it never allows
+    # extension modules to be entered concurrently (unless they
+    # explicitly give up the interpreter lock).  Therefore, extension
+    # modules don't need the efficiency overhead of threadsafe code as
+    # produced by <threading>multi, and we handle libpthread along
+    # with other libraries here.  Note: this optimization is based on
+    # an assumption that the compiler generates link-compatible code
+    # in both the single- and multi-threaded cases, and that system
+    # libraries don't change their ABIs either.  
+
+    # Most libraries are added to 'extra-libs'. Those that depend on
+    # the toolset are added to 'extra-libs-conditional', which will be
+    # used to form more specific target alternatives.
+    
     local extra-libs extra-libs-conditional ;
 
-    # Depending on system, Python library is either static
-    # or shared. When it's static, we need to add 'pthread'
-    # to link line of all clients, otherwise we'll get
-    # unresolved symbols. Same effect can be accomplished
-    # by using <threading>multi on the client, but
-    # that can have performance overhead, and is not really
-    # necessary, as Python interface has nothing that's
-    # affected by threading mode.
     switch [ os.name ]
     {
         case SOLARIS :
         {
             extra-libs = pthread dl ;
             
-            # Add 'rt' option on Sun. While we duplicate the
-            # logic already in sun.jam and gcc.jam, I see no easy
-            # way to refactor it -- Volodya.
-            # Note that for 'sun' toolset, rt is already unconditionally
-            # added.
+            # Add a librt dependency for the gcc toolset on SunOS (the
+            # sun toolset adds -lrt unconditionally). While this
+            # appears to duplicate the logic already in gcc.jam, it
+            # doesn't as long as we're not forcing <threading>multi.
             extra-libs-conditional = <toolset>gcc:<source>rt ;
         }
         
@@ -279,7 +294,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
         # extensions to libpython, because the Python interpreter itself
         # provides all those symbols. If we linked to libpython, we'd get
         # duplicate symbols. So declare two targets -- one for building
-        # extensions and another embedding
+        # extensions and another for embedding
         alias python_for_extensions
                      :  
                      : $(condition)
