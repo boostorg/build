@@ -177,7 +177,8 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
     
     # Form the python commands to try in order.  First look for python
     # with the explicit version number, then without it
-    local cmds = $(bin:E="")python$(version:E="") $(bin:E="")python ;
+    local python = python ;
+    local cmds = $(python:D=$(bin:E=""))$(version:E="") $(python:D=$(bin:E="")) ;
 
     local interpreter ;
     while $(cmds)
@@ -276,7 +277,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
         
         case OSF :     
         {
-            extra-libs = pthread z ;
+            extra-libs = pthread ;
             extra-libs-conditional = <toolset>gcc:<source>rt ;
         }
         
