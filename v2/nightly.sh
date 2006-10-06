@@ -5,12 +5,21 @@
 
 # Create the packages
 set -e
+trap "echo 'Nightly build failed'" ERR
+
+export QTDIR=/usr/share/qt3
+export LC_ALL=C
+export LC_MESSAGES=C
+export LANG=C
 cd /tmp
 rm -rf boost-build
+echo "Checking out sources"
 cvs -d :ext:vladimir_prus@boost.cvs.sourceforge.net:/cvsroot/boost co -P -d  boost-build boost/tools > /tmp/boost_build_checkout_log
 mv /tmp/boost_build_checkout_log boost-build/checkout-log
 cd boost-build/build/v2
-./roll.sh > ../roll-log
+echo "Building packages and uploading docs"
+./roll.sh > ../roll-log 2>&1
 cd ..
-scp boost-build.zip boost-build.tar.bz2 vladimir_prus@shell.sf.net:/home/groups/b/bo/boost/htdocs/boost-build2 > scp-log
-echo "Upload successfull"
+echo "Uploading packages"
+scp boost-build.zip boost-build.tar.bz2 vladimir_prus@shell.sourceforge.net:/home/groups/b/bo/boost/htdocs/boost-build2 > scp-log
+echo "Nightly build successful"
