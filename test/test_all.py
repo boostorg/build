@@ -157,6 +157,7 @@ if os.name == 'posix':
 
 if string.find(get_toolset(), 'gcc') == 0:
     tests.append("gcc_runtime")
+    tests.append("pch")
 
 if "--extras" in sys.argv:
     tests.append("boostbook")

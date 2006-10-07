@@ -234,6 +234,13 @@ class Tester(TestCmd.TestCmd):
         self.wait_for_time_change()
         self.write(dst, self.read(src))
 
+    def copy_preserving_timestamp(self, src, dst):
+        src_name = self.native_file_name(src)
+        dst_name = self.native_file_name(dst)
+        stats = os.stat(src_name)        
+        self.write(dst, self.read(src))
+        os.utime(dst_name, (stats.st_atime, stats.st_mtime))
+        
     def touch(self, names):
         self.wait_for_time_change()
         for name in self.adjust_names(names):
