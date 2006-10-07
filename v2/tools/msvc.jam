@@ -2,6 +2,7 @@
 # Copyright (c) 2005 Vladimir Prus.
 # Copyright (c) 2005 Alexey Pakhunov.
 # Copyright (c) 2006 Bojan Resnik.
+# Copyright (c) 2006 Ilya Sokolov.
 #
 # Use, modification and distribution is subject to the Boost Software
 # License Version 1.0. (See accompanying file LICENSE_1_0.txt or
@@ -534,7 +535,92 @@ generators.override msvc.compile.idl : midl.compile.idl ;
 generators.register-standard msvc.compile.mc : MC : H RC : <toolset>msvc ;
 generators.override msvc.compile.mc : mc.compile ;
 
-generators.register [ new pch-generator msvc.compile.pch : PCHEADER : OBJ PCH : <toolset>msvc ] ;
+# pch support
+
+feature pch-source : : free dependency ;
+
+class msvc-pch-generator : pch-generator
+{
+    import property-set ;
+
+    rule run-pch ( project name ? : property-set : source-1 source-2 )
+    {        
+        # searching header and source file in the sources
+        local sources = $(source-1) $(source-2) ;
+        local pch-header ;
+        local pch-source ;
+        for local s in $(sources)
+        {
+            if [ type.is-derived [ $(s).type ] H ]
+            {
+                pch-header = $(s) ;
+            }
+            else if
+                 [ type.is-derived [ $(s).type ] CPP ]
+              || [ type.is-derived [ $(s).type ] C ]
+            {
+                pch-source = $(s) ;
+            }
+        }
+        
+        if ! $(pch-header)
+        {
+            errors.user-error "can't build pch without pch-header" ;
+        }
+
+        if ! $(pch-source)
+        {
+            errors.user-error "can't build pch without pch-source" ;
+        }
+
+        local generated =
+            [
+              # Passing of <pch-source> is a dirty trick,
+              # needed because non-composing generators
+              # with multiple inputs are subtly broken:
+              # https://zigzag.cs.msu.su:7813/boost.build/ticket/111
+              generator.run $(project) $(name)
+                : [
+                    property-set.create
+                      <pch-source>$(pch-source)
+                      [ $(property-set).raw ]
+                  ]
+                : $(pch-header)
+            ]
+          ;
+
+        local pch-file ;
+        for local g in $(generated)
+        {
+            if [ type.is-derived [ $(g).type ] PCH ]
+            {
+                pch-file = $(g) ;
+            }
+        }
+
+        return
+            [ 
+              property-set.create
+                <pch-header>$(pch-header)
+                <pch-file>$(pch-file)
+            ]
+            $(generated)
+          ;
+    }
+}
+
+# Note: the 'H' source type will catch both '.h' header and '.hpp' header. The latter
+# have HPP type, but HPP type is derived from H.  The type of compilation is determined
+# entirely by the destination type.
+generators.register [ new msvc-pch-generator msvc.compile.c.pch   : H :   C_PCH OBJ : <pch>on <toolset>msvc ] ;
+generators.register [ new msvc-pch-generator msvc.compile.c++.pch : H : CPP_PCH OBJ : <pch>on <toolset>msvc ] ;
+
+generators.override msvc.compile.c.pch   : pch.default-c-pch-generator ;
+generators.override msvc.compile.c++.pch : pch.default-cpp-pch-generator ;
+
+flags msvc.compile PCH_FILE <pch>on : <pch-file> ;
+flags msvc.compile PCH_SOURCE  <pch>on : <pch-source>  ;
+flags msvc.compile PCH_HEADER  <pch>on : <pch-header>  ;
 
 #
 # Declare flags and action for compilation
@@ -580,10 +666,6 @@ flags msvc.compile DEFINES <define> ;
 flags msvc.compile UNDEFS <undef> ;
 flags msvc.compile INCLUDES <include> ;
 
-flags msvc.compile PCH_SOURCE <pch-source> ;
-flags msvc.compile PCH_HEADER <pch>on : <pch-header> ;
-flags msvc.compile PCH_FILE <pch>on : <pch-file> ;
-
 rule get-rspline ( target : lang-opt )
 {
     CC_RSPLINE on $(target) = [ on $(target) return $(lang-opt) -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c $(nl)-D$(DEFINES) $(nl)\"-I$(INCLUDES)\" ] ;
@@ -613,16 +695,24 @@ rule compile.c++ ( targets + : sources * : properties * )
     compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
-actions compile-pch
+actions compile-c-c++-pch
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[1]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[2]:W)" $(CC_RSPLINE))"
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))"
 }
 
-rule compile.pch ( targets + : sources * : properties * )
+rule compile.c.pch ( targets + : sources * : properties * )
+{
+    C++FLAGS on $(targets[1]) = ;
+    DEPENDS $(<) : [ on $(<) return $(PCH_SOURCE) ] ;
+    get-rspline $(targets[1]) : -TC ;
+    compile-c-c++-pch $(targets) : $(sources) [ on $(<) return $(PCH_SOURCE) ] ;
+}
+
+rule compile.c++.pch ( targets + : sources * : properties * )
 {
     DEPENDS $(<) : [ on $(<) return $(PCH_SOURCE) ] ;
     get-rspline $(targets[1]) : -TP ;
-    compile-pch $(targets) : $(sources) [ on $(<) return $(PCH_SOURCE) ] ;
+    compile-c-c++-pch $(targets) : $(sources) [ on $(<) return $(PCH_SOURCE) ] ;
 }
 
 actions compile.rc
