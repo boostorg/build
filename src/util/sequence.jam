@@ -149,17 +149,30 @@ rule length ( s * )
     return $(result) ;
 }
 
-rule unique ( list * )
+rule unique ( list * : stable ? )
 {
     local result ;
     local prev ;
-    for local i in [ SORT $(list) ]
+    if $(stable)
     {
-        if $(i) != $(prev)
+        for local f in $(list)
         {
-            result += $(i) ;
+            if ! $(f) in $(result)
+            {
+                result += $(f) ;
+            }
         }
-        prev = $(i) ;
+    }
+    else
+    {
+        for local i in [ SORT $(list) ]
+        {
+            if $(i) != $(prev)
+            {
+                result += $(i) ;
+            }
+            prev = $(i) ;
+        }
     }
     return $(result) ;
 }
