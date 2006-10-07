@@ -894,6 +894,18 @@ rule register-archiver ( id composing ? : source-types + : target-types + :
     generators.register $(g) ;
 }
 
+# Generators that accepts everything, and produces nothing.
+# Usefull as general fallback for toolset-specific actions, like
+# PCH generation.
+class dummy-generator : generator
+{
+    rule run ( project name ? : property-set : sources + )
+    {
+        return [ property-set.empty ] ;
+    }
+}
+
+
 
 IMPORT $(__name__) : register-linker register-archiver 
   : : generators.register-linker generators.register-archiver ;
