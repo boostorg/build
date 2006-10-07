@@ -825,22 +825,28 @@ local rule try-one-generator-really ( project name ? : generator :
       ] ;
             
     local usage-requirements ;
-    if $(targets) && [ class.is-a $(targets[1]) : property-set ]
+    local success ;
+    if $(targets)
     {
-        usage-requirements = $(targets[1]) ;
-        targets = $(targets[2-]) ;
-    }
-    else
-    {
-        usage-requirements = [ property-set.empty ] ;
+        success = true ;
+    
+        if  [ class.is-a $(targets[1]) : property-set ]
+        {
+            usage-requirements = $(targets[1]) ;
+            targets = $(targets[2-]) ;
+        }
+        else
+        {
+            usage-requirements = [ property-set.empty ] ;
+        }
     }
     
     generators.dout [ indent ] "  generator" [ $(generator).id ] " spawned " ;
     generators.dout [ indent ] " " $(targets) ; 
-    if $(targets)
+    if $(success)
     {
         return $(usage-requirements) $(targets) ;
-    }    
+    }
 }
 
 # Checks if generator invocation can be pruned, because it's guaranteed
