@@ -138,55 +138,41 @@ rule join ( s * : joint ? )
     return $(s:J=$(joint)) ;
 }
 
-# Find the length of any sequence in log(N) time.
+# Find the length of any sequence.
 rule length ( s * )
 {
-    local length = "" ;
-    local zeros p10 d z ; # declared once for speed
-
-    # Find the power of 10 that is just less than length(s)
-    zeros = "" ;
-    p10 = 1 ;
-    while $(s[$(p10)0])
+    local result = 0 ;
+    for local i in $(s)
     {
-        p10 = $(p10)0 ;
-        zeros = $(zeros[1])0 $(zeros) ;
+        result = [ CALC $(result) + 1 ] ;
     }
-
-    # zeros is a list of the form  ... 000 00 0 ""
-    for z in $(zeros) # for each digit in the result
-    {
-        # Find the next digit
-        d = 0 1 2 3 4 5 6 7 8 9 ;
-        while $(s[$(d[2])$(z)])
-        {
-            d = $(d[2-]) ;
-        }
-
-        # append it to the result
-        length = $(length)$(d[1]) ;
-
-        # Explanation: $(d[1])$(z) the largest number x of the form
-        # n000..., where n is a digit, such that x <= length(s). Here
-        # we're deleting x elements from the list. Since $(s[n]-)
-        # removes n - 1 elements from the list, we chop an additional
-        # one off the end.
-        s = $(s[$(d[1])$(z)--2]) ;
-    }
-    return $(length) ;
+    return $(result) ;
 }
 
-rule unique ( list * )
+rule unique ( list * : stable ? )
 {
     local result ;
     local prev ;
-    for local i in [ SORT $(list) ]
+    if $(stable)
     {
-        if $(i) != $(prev)
+        for local f in $(list)
         {
-            result += $(i) ;
+            if ! $(f) in $(result)
+            {
+                result += $(f) ;
+            }
         }
-        prev = $(i) ;
+    }
+    else
+    {
+        for local i in [ SORT $(list) ]
+        {
+            if $(i) != $(prev)
+            {
+                result += $(i) ;
+            }
+            prev = $(i) ;
+        }
     }
     return $(result) ;
 }
