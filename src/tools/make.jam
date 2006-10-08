@@ -19,10 +19,11 @@ class make-target-class : basic-target
     import type regex virtual-target ;    
     import "class" : new ;
     
-    rule __init__ ( name : project : sources * : requirements * : default-build * )
+    rule __init__ ( name : project : sources * : requirements *
+        : default-build * : usage-requirements * )
     {     
         basic-target.__init__ $(name) : $(project) : $(sources) 
-          : $(requirements) : $(default-build) ;
+          : $(requirements) : $(default-build) : $(usage-requirements) ;
     }
         
     rule construct ( name : source-targets * : property-set )
@@ -41,7 +42,8 @@ class make-target-class : basic-target
 }
 
 # Declares the 'make' main target.
-rule make ( target-name : sources * : generating-rule + : requirements * )
+rule make ( target-name : sources * : generating-rule + : requirements *
+    : usage-requirements * )
 {
     local project = [ project.current ] ;
     
@@ -59,6 +61,7 @@ rule make ( target-name : sources * : generating-rule + : requirements * )
        : [ targets.main-target-sources $(sources) : $(target-name) ] 
        : [ targets.main-target-requirements $(requirements) : $(project) ] 
        : [ targets.main-target-default-build : $(project) ] 
+       : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
      ] ;
          
 }
