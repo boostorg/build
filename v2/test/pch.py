@@ -15,7 +15,7 @@ t.write("Jamroot", """
 
 import pch ;
 
-cpp-pch pch : pch.hpp : <toolset>msvc:<source>pch.cpp ;
+cpp-pch pch : pch.hpp : <toolset>msvc:<source>pch.cpp <include>. ;
 
 exe hello : hello.cpp pch : <include>. ; 
 """)
