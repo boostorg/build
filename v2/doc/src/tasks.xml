@@ -237,6 +237,11 @@ exe main : main.cpp lib_alias ;
     <section id="bbv2.builtins.stage">
       <title>Installing</title>
 
+      <para>This section describes various ways to install built target
+      and arbitrary files.</para>
+
+      <bridgehead>Basic install</bridgehead>
+
       <para>For installing a built target you should use the
         <code>install</code> rule, which follows the <link
           linkend="bbv2.main-target-rule-syntax">common syntax</link>. For
@@ -267,6 +272,8 @@ install dist2 : hello helpers : &lt;location&gt;$(DIST) ;
         See also <link linkend="bbv2.reference.variants.propcond">conditional
           properties</link> and <link linkend="bbv2.faq.envar">environment variables</link>
       </para>
+
+      <bridgehead>Installing with all dependencies</bridgehead>
       
       <para>
         Specifying the names of all libraries to install can be boring. The
@@ -289,6 +296,28 @@ install dist : hello
         If the set of target types is specified, only targets of that type
         will be installed, otherwise, all found target will be installed.
       </para>
+
+      <bridgehead>Preserving Directory Hierarchy</bridgehead>
+
+      <para>By default, the <code>install</code> rules will stip paths from
+      it's sources. So, if sources include <filename>a/b/c.hpp</filename>,
+      the <filename>a/b</filename> part will be ignored. To make the 
+      <code>install</code> rule preserve the directory hierarchy you need
+      to use the <code>install-source-root</code> feature to specify the
+      root of the hierarchy you are installing. Relative paths from that
+      root will be preserved. For example, if you write:
+
+<programlisting>
+install headers 
+    : a/b/c.h 
+    : &lt;location&gt;/tmp &lt;install-source-root&gt;a 
+    ;
+</programlisting>
+
+      the a file named <filename>/tmp/b/c.h</filename> will be created.
+      </para>
+            
+      <bridgehead>Installing into Several Directories</bridgehead>
 
       <para>The <link linkend="bbv2.builtins.alias"><code>alias</code></link>
       rule can be used when targets must be installed into several
