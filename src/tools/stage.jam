@@ -286,11 +286,19 @@ rule copy-file ( project name ? : source : properties )
         # path. The 'source-root' is already absolute, see the
         # 'adjust-properties' method above.
         path = [ path.root $(path) [ path.pwd ] ] ;
-
-        relative = [ path.relative-to $(source-root) $(path) ] ;
         
-        targets = [ new file-target $(name:D=$(relative)) exact : [ $(source).type ] 
+        relative = [ path.relative-to $(source-root) $(path) ] ;        
+        # Note: using $(name:D=$(relative)) might be faster
+        # here, but then we need to explicitly check that
+        # relative is not ".", otherwise we might get paths like
+        #
+        #   <prefix>/boost/.
+        #
+        # try to create it, and mkdir will obviously fail.
+        name = [ path.root $(name:D=) $(relative) ] ;                      
+        targets = [ new file-target $(name) exact : [ $(source).type ] 
           : $(project) : $(new-a) ] ;
+                
     }        
     else
     {
