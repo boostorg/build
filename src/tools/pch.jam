@@ -71,7 +71,6 @@ class pch-generator : generator
             # try to use pch generator to get OBJ from that H, which
             # is completely wrong. By restricting this generator
             # only to pch main target, such problem is solved.
-            return [ property-set.empty ] ;            
         }
         else
         {
