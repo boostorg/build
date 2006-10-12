@@ -335,13 +335,13 @@ rule init ( prefix )
 
             # Support for dynamic Widgets (Qt 4.1)
             lib QtUiTools : QtGui QtXml
-                : <name>QtUiTools$(suffix_version) <variant>release
+                : <name>QtUiTools <variant>release
                 :
                 : # usage-requirements
                   <include>$(.prefix)/include/QtUiTools 
                 ;
             lib QtUiTools : QtGui QtXml
-                : <name>QtUiTools$(suffix_debug)$(suffix_version) <variant>debug
+                : <name>QtUiTools$(suffix_debug) <variant>debug
                 :   
                 : # usage-requirements
                   <include>$(.prefix)/include/QtUiTools 
