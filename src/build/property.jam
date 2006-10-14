@@ -555,7 +555,7 @@ local rule __test__ ( )
     assert.true path-order $(test-space) <optimization>on <rtti>on ;
     assert.false path-order $(test-space) <rtti>on <optimization>on ;
       
-    assert.result <toolset>gcc <rtti>off <define>FOO
+    assert.result <define>FOO <rtti>off <toolset>gcc
         : refine <toolset>gcc <rtti>off
         : <define>FOO
         : $(test-space)

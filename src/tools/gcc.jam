@@ -1,6 +1,8 @@
 # Copyright 2001 David Abrahams.
 # Copyright 2002-2006 Rene Rivera.
 # Copyright 2002-2003 Vladimir Prus.
+#  Copyright (c) 2005 Reece H. Dunn.
+# Copyright 2006 Ilya Sokolov.
 #
 # Distributed under the Boost Software License, Version 1.0.
 #    (See accompanying file LICENSE_1_0.txt or copy at
@@ -16,6 +18,8 @@ import "class" : new ;
 import set ;
 import common ;
 import errors ;
+import property-set ;
+import pch ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
@@ -144,6 +148,84 @@ generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c : C : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.asm : ASM : OBJ : <toolset>gcc ;
 
+# pch support
+
+# The compiler looks for a precompiled header in each directory just 
+# before it looks for the include file in that directory.
+# The name searched for is the name specified in the #include directive 
+# with ".gch" suffix appended.
+# The logic in gcc-pch-generator will make sure that BASE_PCH suffix is
+# appended to full name of the header.
+
+type.set-generated-target-suffix PCH : <toolset>gcc : gch ;
+
+# GCC-specific pch generator.
+class gcc-pch-generator : pch-generator
+{
+    import project ;
+    import property-set ;
+    import type ;
+
+    rule run-pch ( project name ? : property-set : sources + )
+    {
+        # Find the header in sources. Ignore any CPP sources.
+        local header ;
+        for local s in $(sources)
+        {
+            if [ type.is-derived [ $(s).type ] H ] 
+            {
+                header = $(s) ;
+            }            
+        }
+                
+        # error handling
+        # base name of header file should be the same as the base name 
+        # of precompiled header.
+        local header-name = [ $(header).name ] ;
+        local header-basename = $(header-name:B) ;
+        if $(header-basename) != $(name)
+        {
+            local location = [ $(project).project-module ] ;
+            errors.user-error "in" $(location)": pch target name `"$(name)"' should be the same as the base name of header file `"$(header-name)"'" ;
+        }
+
+        local pch-file =
+            [ 
+              generator.run $(project) $(name)
+                : $(property-set)
+                : $(header)
+            ]
+          ;
+
+        # return result of base class and pch-file property as usage-requirements
+        return
+            [ property-set.create <pch-file>$(pch-file) ]
+            $(pch-file)
+          ;
+    }
+    
+    # Calls the base version specifying source's name as the
+    # name of the created target. As result, the PCH will be named
+    # whatever.hpp.gch, and not whatever.gch.
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        name = [ $(sources[1]).name ] ;
+        return [ generator.generated-targets $(sources) 
+          : $(property-set) : $(project) $(name) ] ;
+    }    
+}
+
+# Note: the 'H' source type will catch both '.h' header and '.hpp' header. The latter
+# have HPP type, but HPP type is derived from H.  The type of compilation is determined
+# entirely by the destination type.
+generators.register [ new gcc-pch-generator gcc.compile.c.pch   : H :   C_PCH : <pch>on <toolset>gcc ] ;
+generators.register [ new gcc-pch-generator gcc.compile.c++.pch : H : CPP_PCH : <pch>on <toolset>gcc ] ;
+
+# Override default do-nothing generators.
+generators.override gcc.compile.c.pch   : pch.default-c-pch-generator   ;
+generators.override gcc.compile.c++.pch : pch.default-cpp-pch-generator ;
+
+flags gcc.compile PCH_FILE <pch>on : <pch-file> ;
 
 # Declare flags and action for compilation
 flags gcc.compile OPTIONS <optimization>off : -O0 ;
@@ -205,6 +287,16 @@ flags gcc.compile.c++ USER_OPTIONS <cxxflags> ;
 flags gcc.compile DEFINES <define> ;
 flags gcc.compile INCLUDES <include> ;
 
+actions compile.c++.pch
+{
+    "$(CONFIG_COMMAND)" -x c++-header $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+}
+
+actions compile.c.pch
+{
+    "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+}
+
 rule compile.c++
 {
     # Some extensions are compiled as C++ by default. For others, we need
@@ -214,12 +306,7 @@ rule compile.c++
     {
         LANG on $(<) = "-x c++" ;
     }    
-}
-
-
-actions compile.c++
-{
-    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-128 $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
 rule compile.c
@@ -231,12 +318,17 @@ rule compile.c
     #{
         LANG on $(<) = "-x c" ;
     #}    
+    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
-
-actions compile.c
+actions compile.c++ bind PCH_FILE
 {
-    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
+    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-128 $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<:W)" "$(>:W)"
+}
+
+actions compile.c bind PCH_FILE
+{
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 rule compile.asm

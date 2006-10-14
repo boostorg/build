@@ -63,7 +63,7 @@ rule alias ( name : sources * : requirements * : default-build * : usage-require
     
     targets.main-target-alternative
       [ new alias-target-class $(name) : $(project) 
-        : [ targets.main-target-sources $(sources) : $(name) ] 
+        : [ targets.main-target-sources $(sources) : $(name) : no-renaming ] 
         : [ targets.main-target-requirements $(requirements) : $(project) ] 
         : [ targets.main-target-default-build $(default-build) : $(project) ] 
         : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]           

@@ -1,79 +1,93 @@
 # Copyright (c) 2005 Reece H. Dunn.
+# Copyright 2006 Ilya Sokolov
 #
 # Use, modification and distribution is subject to the Boost Software
 # License Version 1.0. (See accompanying file LICENSE_1_0.txt or
 # http://www.boost.org/LICENSE_1_0.txt)
 
+##### Using Precompiled Headers (Quick Guide) #####
+#
+# Make precompiled mypch.hpp:
+#
+#    import pch ;
+#
+#    cpp-pch mypch
+#      : # sources
+#        mypch.hpp
+#      : # requiremnts
+#        <toolset>msvc:<source>mypch.cpp
+#      ;
+#
+# Add cpp-pch to sources:
+#
+#    exe hello
+#      : main.cpp hello.cpp mypch
+#      ;
+
+import "class" : new ;
 import type ;
-import feature : feature ;
+import feature ;
 import generators ;
 
-##### Using Pre-compiled Headers (Quick Guide) #####
-#
-# Make mypch.hpp a pre-compiled header (PCH) using mypch.cpp as the source file:
-#    import cast ;
-#    pch mypch : [ cast _ pcheader : pch.hpp ] pch.cpp ;
-#
-# Enable PCHs in a target:
-#    exe hello : mypch main.cpp hello.cpp ;
-#                ^^^^^ -- mypch.hpp is a PCH
-#
-# Don't use PCHs for a specific source:
-#    obj nopch : nopch.cpp : <pch>off ;
-#
+type.register     PCH : pch ;
 
-type.register PCH : pch ;
-type.register PCHEADER : pcheader ;
+type.register   C_PCH : : PCH ;
+type.register CPP_PCH : : PCH ;
 
-feature pch : # control precompiled header (PCH) generation
-    on  # this file has support for using PCHs (if available)
-    off # this file doesn't use PCHs
+# control precompiled header (PCH) generation
+feature.feature pch :
+    on
+    off
   ;
 
-feature pch-source : : free dependency ; # mypch.cpp
-feature pch-header : : free dependency ; # mypch.h[pp]
-feature pch-file   : : free dependency ; # mypch.pch
+feature.feature pch-header : : free dependency ;
+feature.feature pch-file   : : free dependency ;
 
+# Base PCH generator. The 'run' method has the logic to
+# prevent this generator from being run unless it's used
+# in top-level PCH target.
 class pch-generator : generator
 {
     import property-set ;
-
-    rule __init__ ( * : * )
-    {
-        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
-    }
 
     rule action-class ( )
     {
         return compile-action ;
     }
 
-    rule run ( project name ? : property-set : sources * )
+    rule run ( project name ? : property-set : sources + )
     {
-        # The two sources are cpp file and PCHEADER, but they
-        # can be passed in any order. Figure out which source
-        # is what.
-        local cpp = $(sources[2]) ;
-        local h   = $(sources[1]) ;
-        if [ $(sources[2]).type ] = PCHEADER
+        if ! $(name)
         {
-            cpp = $(sources[1]) ;
-            h   = $(sources[2]) ;
+            # Unless this generator is invoked as the top-most
+            # generator for a main target, fail. This allows using
+            # 'H' type as input type for this generator, while
+            # preventing Boost.Build to try this generator when not
+            # explicitly asked for.
+            #
+            # One bad example is msvc, where pch generator produces
+            # both PCH target and OBJ target, so if there's any
+            # header generated (like by bison, or by msidl), we'd
+            # try to use pch generator to get OBJ from that H, which
+            # is completely wrong. By restricting this generator
+            # only to pch main target, such problem is solved.
         }
-
-        local r =
-          [ generator.run $(project) $(name) :
-            [
-              property-set.create
-                <pch-source>$(cpp)      # mypch.cpp
-                [ $(property-set).raw ]
-            ] : $(sources)
-          ] ;
-
-        return
-          [ property-set.create
-              <pch-header>$(h)          # mypch.h[pp]
-              <pch-file>$(r[2])         # mypch.pch
-          ] $(r) ;
+        else
+        {
+            return [ run-pch $(project) $(name) : $(property-set) 
+            : $(sources) ] ;
+        }                        
     }
+    
+    # This rule must be overridden by the derived classes.
+    rule run-pch ( project name ? : property-set : sources + )
+    {        
+    }    
 }
+
+# NOTE: requiremetns are empty, 
+# default pch generator can be applied when pch=off
+generators.register [ 
+  new dummy-generator pch.default-c-pch-generator   : :   C_PCH ] ;
+generators.register [ 
+  new dummy-generator pch.default-cpp-pch-generator : : CPP_PCH ] ;
