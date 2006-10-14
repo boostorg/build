@@ -691,7 +691,7 @@ rule compile.c ( targets + : sources * : properties * )
 
 rule compile.c++ ( targets + : sources * : properties * )
 {
-    get-rspline $(targets[1]) : -TP ;
+    get-rspline $(targets) : -TP ;
     compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
@@ -705,6 +705,7 @@ rule compile.c.pch ( targets + : sources * : properties * )
     C++FLAGS on $(targets[1]) = ;
     DEPENDS $(<) : [ on $(<) return $(PCH_SOURCE) ] ;
     get-rspline $(targets[1]) : -TC ;
+    get-rspline $(targets[2]) : -TC ;
     compile-c-c++-pch $(targets) : $(sources) [ on $(<) return $(PCH_SOURCE) ] ;
 }
 
@@ -712,6 +713,7 @@ rule compile.c++.pch ( targets + : sources * : properties * )
 {
     DEPENDS $(<) : [ on $(<) return $(PCH_SOURCE) ] ;
     get-rspline $(targets[1]) : -TP ;
+    get-rspline $(targets[2]) : -TP ;    
     compile-c-c++-pch $(targets) : $(sources) [ on $(<) return $(PCH_SOURCE) ] ;
 }
 
