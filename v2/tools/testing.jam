@@ -155,19 +155,11 @@ rule run-fail ( sources + : args * : input-files * : requirements * : target-nam
     return [ make-test run-fail : $(sources) : $(requirements) : $(target-name) ] ;
 }
 
-# Rule for grouping tests in suites.
-rule test-suite ( suite-name : tests + ) 
-{
-    # In V2, if 'tests' are instances of 'abstract-target', they will be considered
-    # 'inline-targets' and will suffer some adjustments. This will not be compatible
-    # with V1 behaviour, so we get names of 'tests' and use them.
-    local names ;
-    for local t in $(tests)
-    {
-        names += [ $(t).name ] ;
-    }    
-    modules.call-in [ CALLER_MODULE ] : alias $(suite-name) : $(names) ;
-}
+
+# Use 'test-suite' as synonym for 'alias', for backward compatibility.
+IMPORT : alias : : test-suite ;
+
+
 
 # For all main target in 'project-module', 
 # which are typed target with type derived from 'TEST', 
@@ -442,8 +434,8 @@ actions unit-test
     $(LAUNCHER) $(>) && $(MAKE_FILE) $(<)
 }
 
-IMPORT $(__name__) : compile compile-fail test-suite run run-fail link link-fail 
-  : : compile compile-fail test-suite run run-fail link link-fail ;
+IMPORT $(__name__) : compile compile-fail run run-fail link link-fail 
+  : : compile compile-fail run run-fail link link-fail ;
 
 
 type.register TIME : time ;

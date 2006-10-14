@@ -499,6 +499,7 @@ generators.register [ new lib-generator builtin.lib-generator :  : LIB ] ;
 rule lib ( names + : sources * : requirements * : default-build * 
     : usage-requirements * )
 {
+    local result ;
     local project = [ project.current ] ;
     
     # This is a circular module dependency, so it must be imported here
