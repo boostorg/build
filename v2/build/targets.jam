@@ -1369,18 +1369,27 @@ class typed-target : basic-target
 
 # Return the list of sources to use, if main target rule is invoked
 # with 'sources'. If there are any objects in 'sources', they are treated
-# as main target instances, and WRITEME.
-rule main-target-sources ( sources * : main-target-name )
+# as main target instances, and the name of such targets are adjusted to
+# be '<name_of_this_target>__<name_of_source_target>'. Such renaming
+# is disabled is non-empty value is passed for 'no-renaming' parameter.
+# 
+rule main-target-sources ( sources * : main-target-name : no-renaming ? )
 {
     local result ;
     for local t in $(sources)
     {
         if [ class.is-instance $(t) ]
         {
-            local name = [ $(t).name ] ;
-            local new-name = $(main-target-name)__$(name) ;
-            $(t).rename $(new-name) ;
-            result += $(new-name) ;
+            local name = [ $(t).name ] ;            
+            if ! $(no-renaming)
+            {                
+                name = $(main-target-name)__$(name) ;
+                $(t).rename $(name) ;
+            }            
+            # Inline targets are not built by default.
+            local p = [ $(t).project ] ;
+            $(p).mark-target-as-explicit $(name) ;            
+            result += $(name) ;
         }
         else
         {

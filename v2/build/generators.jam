@@ -825,22 +825,28 @@ local rule try-one-generator-really ( project name ? : generator :
       ] ;
             
     local usage-requirements ;
-    if $(targets) && [ class.is-a $(targets[1]) : property-set ]
+    local success ;
+    if $(targets)
     {
-        usage-requirements = $(targets[1]) ;
-        targets = $(targets[2-]) ;
-    }
-    else
-    {
-        usage-requirements = [ property-set.empty ] ;
+        success = true ;
+    
+        if  [ class.is-a $(targets[1]) : property-set ]
+        {
+            usage-requirements = $(targets[1]) ;
+            targets = $(targets[2-]) ;
+        }
+        else
+        {
+            usage-requirements = [ property-set.empty ] ;
+        }
     }
     
     generators.dout [ indent ] "  generator" [ $(generator).id ] " spawned " ;
     generators.dout [ indent ] " " $(targets) ; 
-    if $(targets)
+    if $(success)
     {
         return $(usage-requirements) $(targets) ;
-    }    
+    }
 }
 
 # Checks if generator invocation can be pruned, because it's guaranteed
@@ -1128,12 +1134,7 @@ local rule construct-really (
 # 'construct' in stack, returns only targets of requested 'target-type',
 # otherwise, returns also unused sources and additionally generated
 # targets.    
-#
-# Does not return target which are not of 'allowed-type' or of type derived from
-# it. If 'allowed-type' is not specified, it's defaulted to 'target-type'.
-# See lib-target-class for use case of this.
-rule construct ( project name ? : target-type : property-set * : sources * 
-   : allowed-type * )
+rule construct ( project name ? : target-type : property-set * : sources * )
 {
     if (.construct-stack)
     {
