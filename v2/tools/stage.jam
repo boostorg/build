@@ -150,7 +150,7 @@ class install-target-class : basic-target
                 else
                 {
                     local targets = [ generators.construct $(self.project) $(name) : 
-                      INSTALLED_$(t) : $(new-properties) : $(i) : * ] ;
+                      INSTALLED_$(t) : $(new-properties) : $(i) ] ;
                     staged-targets += $(targets[2-]) ;                                
                 }                                                
             }
