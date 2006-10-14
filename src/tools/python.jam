@@ -530,7 +530,16 @@ class python-test-generator : generator
         {
             if [ $(s).type ] = PY
             {
-                python = $(s) ;
+                if ! $(python)
+                {
+                    # First Python source ends up on command line.
+                    python = $(s) ;
+                }
+                else
+                {
+                    # Other Python sources become dependencies.
+                    property-set = [ $(property-set).add-raw <dependency>$(s) ] ;
+                }                
             }
         }
         
