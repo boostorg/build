@@ -526,11 +526,21 @@ class python-test-generator : generator
     rule run ( project name ? : property-set : sources * : multiple ? )
     {       
         local python ;
+        local other-pythons ;
         for local s in $(sources)
         {
             if [ $(s).type ] = PY
             {
-                python = $(s) ;
+                if ! $(python)
+                {
+                    # First Python source ends up on command line.
+                    python = $(s) ;
+                }
+                else
+                {
+                    # Other Python sources become dependencies.
+                    other-pythons += $(s) ;
+                }                
             }
         }
         
@@ -576,7 +586,8 @@ class python-test-generator : generator
             }
         }
 
-            
+        property-set = [ $(property-set).add-raw <dependency>$(other-pythons) ] ;
+        
         result = [ construct-result $(python) $(extensions) $(new-sources) 
           : $(project) $(name) : $(property-set) ] ;        
     }    
@@ -589,6 +600,10 @@ generators.register-standard testing.expect-success
   : RUN_PYD_OUTPUT : RUN_PYD ;
 
 
+# The flag settings on testing.capture-output do not
+# apply to python.capture output at the moment.
+# Redo this explicitly.
+toolset.flags python.capture-output ARGS <testing.arg> ;
 rule capture-output ( target : sources * : properties * )
 {
     # Setup up proper DLL search path.
