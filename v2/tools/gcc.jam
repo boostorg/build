@@ -164,9 +164,20 @@ class gcc-pch-generator : pch-generator
 {
     import project ;
     import property-set ;
+    import type ;
 
-    rule run-pch ( project name ? : property-set : header )
+    rule run-pch ( project name ? : property-set : sources + )
     {
+        # Find the header in sources. Ignore any CPP sources.
+        local header ;
+        for local s in $(sources)
+        {
+            if [ type.is-derived [ $(s).type ] H ] 
+            {
+                header = $(s) ;
+            }            
+        }
+                
         # error handling
         # base name of header file should be the same as the base name 
         # of precompiled header.
