@@ -172,7 +172,7 @@ class stlport-target-class : basic-target
                     = [ targets.main-target-requirements
                         [ $(lib-file.props).raw ] <file>$(lib-file[-1])
                         : $(self.project) ] ;
-                return [ generators.construct $(self.project) $(name) : LIB : $(lib-file.requirements) : : LIB ] ;
+                return [ generators.construct $(self.project) $(name) : LIB : $(lib-file.requirements) ] ;
             }
             else
             {

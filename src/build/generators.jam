@@ -1134,12 +1134,7 @@ local rule construct-really (
 # 'construct' in stack, returns only targets of requested 'target-type',
 # otherwise, returns also unused sources and additionally generated
 # targets.    
-#
-# Does not return target which are not of 'allowed-type' or of type derived from
-# it. If 'allowed-type' is not specified, it's defaulted to 'target-type'.
-# See lib-target-class for use case of this.
-rule construct ( project name ? : target-type : property-set * : sources * 
-   : allowed-type * )
+rule construct ( project name ? : target-type : property-set * : sources * )
 {
     if (.construct-stack)
     {
