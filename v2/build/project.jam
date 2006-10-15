@@ -964,7 +964,7 @@ module project-rules
     # at once. This is a shorthand to be reduce duplication and to
     # keep an inline declarative syntax. For example:
     #
-    #   lib x : x.cpp : [ <toolset>gcc <variant>debug :
+    #   lib x : x.cpp : [ conditional <toolset>gcc <variant>debug :
     #       <define>DEBUG_EXCEPTION <define>DEBUG_TRACE ] ;
     #
     rule conditional ( condition + : requirements * )
