@@ -1,7 +1,10 @@
-#  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
-#  distribute this software is granted provided this copyright notice appears in
-#  all copies. This software is provided "as is" without express or implied
-#  warranty, and with no claim as to its suitability for any purpose.
+# Copyright Vladimir Prus 2002-2006.
+# Copyright Dave Abrahams 2003-2004.
+# Copyright Rene Rivera 2003-2006.
+#
+# Distributed under the Boost Software License, Version 1.0.
+#    (See accompanying file LICENSE_1_0.txt or copy at
+#          http://www.boost.org/LICENSE_1_0.txt)
 
 #  Performs various path manipulations. Path are always in a 'normilized' 
 #  representation. In it, a path may be either:
@@ -18,6 +21,7 @@ import modules ;
 import sequence ;
 import regex ;
 import errors : error ;
+import set ;
 
 
 os = [ modules.peek : OS ] ;
@@ -237,19 +241,33 @@ rule glob ( dirs * : patterns + )
 }    
 
 # Recursive version of GLOB. Builds the glob of files while
-# also searching in the subdirectories of the given roots.
+# also searching in the subdirectories of the given roots. An
+# optional set of exclusion patterns will filter out the
+# matching entries from the result. The exclusions also apply
+# to the subdirectory scanning, such that directories that
+# match the exclusion patterns will not be searched.
 #
-rule glob-tree ( roots * : patterns + )
+rule glob-tree ( roots * : patterns + : exclude-patterns * )
 {
     return [ sequence.transform path.make : [ .glob-tree
-        [ sequence.transform path.native : $(roots) ] : $(patterns) ] ] ;
+        [ sequence.transform path.native : $(roots) ]
+        : $(patterns)
+        : $(exclude-patterns)
+        ] ] ;
 }
 
-local rule .glob-tree ( roots * : patterns * )
+local rule .glob-tree ( roots * : patterns * : exclude-patterns * )
 {
-    local result = [ GLOB $(roots) : $(patterns) ] ;
+    local excluded ;
+    if $(exclude-patterns)
+    {
+        excluded = [ GLOB $(roots) : $(exclude-patterns) ] ;
+    }
+    local result = [ set.difference
+        [ GLOB $(roots) : $(patterns) ] : $(excluded) ] ;
     local subdirs ;
-    for local d in [ GLOB $(roots) : * ]
+    for local d in [ set.difference
+        [ GLOB $(roots) : * ] : $(excluded) ]
     {
         if ! ( $(d:D=) in . .. ) && ! [ CHECK_IF_FILE $(d) ] { subdirs += $(d) ; }
     }
