@@ -746,13 +746,31 @@ rule extension ( id : options * : * )
     # We need to do the rest within the extension module.
     module $(mod)
     {
+        import path ;
+        
+        # Find the root project.
+        local root-project = [ project.current ] ;
+        root-project = [ $(root-project).project-module ] ;
+        while
+            [ project.attribute $(root-project) parent-module ] &&
+            [ project.attribute $(root-project) parent-module ] != user-config
+        {
+            root-project = [ project.attribute $(root-project) parent-module ] ;
+        }
+        
         # Create the project data, and bring in the project rules
         # into the module.
-        project.initialize $(__name__) ;
+        project.initialize $(__name__) :
+            [ path.join [ project.attribute $(root-project) location ] ext $(1:L) ] ;
         
         # Create the project itself, i.e. the attributes.
         # All extensions are created in the "/ext" project space.
         project /ext/$(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+        local attributes = [ project.attributes $(__name__) ] ;
+        
+        # Inherit from the root project of whomever is defining us.
+        project.inherit-attributes $(__name__) : $(root-project) ;
+        $(attributes).set parent-module : $(root-project) : exact ;
     }
 }
 
