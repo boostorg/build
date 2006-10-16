@@ -566,6 +566,45 @@ actions quietly updated piecemeal together RmTemps
     $(RM) "$(>)" $(IGNORE)
 }
 
+# Given a format and the info from a target, as given to a tag
+# rule, returns for synthesized name for the target. The format
+# specifies which information from the target is place, and where
+# it is placed to form the name. The individual elements of the format
+# are evaluated and sequencially composed into the resulting name.
+# The format options can be:
+#
+#   <base>[joiner]
+#       ::  The basename of the target name.
+#   <toolset>[joiner]
+#       ::  The abbreviated toolset tag being used to build the target.
+#   <threading>[joiner]
+#       ::  Indication of a multi-threaded build.
+#   <runtine>[joiner]
+#       ::  Collective tag of the build runtime.
+#   <version:/version-feature | X.Y[.Z]/>[joiner]
+#       ::  Short version tag taken from the given "version-feature"
+#           in the build properties. Or if not present the literal
+#           value as the version number.
+#   <property:/property-name/>[joiner]
+#       ::  Direct lookup of the given property-name value in the
+#           build properties.
+#   otherwise
+#       ::  The literal value of the format argument.
+#
+# For all, but the literal, format the value, if given, is taken as
+# the as string to prepend to the output to join the item to the rest of
+# the name. If not given "-" is used as a joiner. For example this format:
+#
+#   boost_ <base> <toolset> <threading> <runtime> <version:boost-version>
+#
+# Might return:
+#
+#   boost_thread-vc80-mt-gd-1_33.dll, or
+#   boost_regex-vc80-gd-1_33.dll
+#
+# The returned name also has the target type specific prefix and suffix
+# which puts it in a ready form to use as the value from a custom tag rule.
+#
 rule format-name ( format * : name : type ? : property-set )
 {
     if [ type.is-derived $(type) LIB ]
@@ -586,7 +625,7 @@ rule format-name ( format * : name : type ? : property-set )
                 result += [ join-tag $(f:G=) :
                     [ threading-tag $(name) : $(type) : $(property-set) ] ] ;
                 
-                case <threading> :
+                case <runtime> :
                 result += [ join-tag $(f:G=) :
                     [ runtime-tag $(name) : $(type) : $(property-set) ] ] ;
                 
@@ -594,7 +633,7 @@ rule format-name ( format * : name : type ? : property-set )
                 local key = [ MATCH <version:(.*)> : $(f:G) ] ;
                 local version = [ $(property-set).get <$(key)> ] ;
                 version ?= $(key) ;
-                version = [ MATCH "^([^.]+)[.]([^.]+)[.]([^.]+)"
+                version = [ MATCH "^([^.]+)[.]([^.]+)[.]?([^.]*)"
                     : $(version) ] ;
                 result += [ join-tag $(f:G=) : $(version[1])_$(version[2]) ] ;
                 
@@ -687,6 +726,7 @@ local rule toolset-tag ( name : type ? : property-set )
 local rule threading-tag ( name : type ? : property-set )
 {
     local tag = ;
+    local properties = [ $(property-set).raw ] ;
     if <threading>multi in $(properties) { tag = mt ; }
     
     return $(tag:J=) ;
