@@ -566,11 +566,14 @@ actions quietly updated piecemeal together RmTemps
     $(RM) "$(>)" $(IGNORE)
 }
 
-# Given a format and the info from a target, as given to a tag
-# rule, returns for synthesized name for the target. The format
-# specifies which information from the target is place, and where
-# it is placed to form the name. The individual elements of the format
-# are evaluated and sequencially composed into the resulting name.
+# Given a target, as given to a custom tag rule, returns a string formatted
+# according to the passed format. Format is a list of properties that is
+# represented in the result. For each element of format the corresponding
+# target information is obtained and added to the result string.
+# For all, but the literal, the format value is taken as the as string to
+# prepend to the output to join the item to the rest of the result. If not
+# given "-" is used as a joiner.
+#
 # The format options can be:
 #
 #   <base>[joiner]
@@ -588,12 +591,10 @@ actions quietly updated piecemeal together RmTemps
 #   <property:/property-name/>[joiner]
 #       ::  Direct lookup of the given property-name value in the
 #           build properties.
-#   otherwise
+#   /otherwise/
 #       ::  The literal value of the format argument.
 #
-# For all, but the literal, format the value, if given, is taken as
-# the as string to prepend to the output to join the item to the rest of
-# the name. If not given "-" is used as a joiner. For example this format:
+# For example this format:
 #
 #   boost_ <base> <toolset> <threading> <runtime> <version:boost-version>
 #
