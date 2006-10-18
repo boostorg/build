@@ -737,10 +737,13 @@ class linking-generator : generator
         local result = [ generator.run $(project) $(name) : $(property-set)
           : $(sources) ] ;
         
-        local ur = [ extra-usage-requirements $(result) : $(property-set) ] ;
-        ur = [ $(ur).add 
-          [ property-set.create <xdll-path>$(extra-xdll-paths) ] ] ;
-                        
+        local ur ;
+        if $(result)
+        {            
+          ur = [ extra-usage-requirements $(result) : $(property-set) ] ;
+            ur = [ $(ur).add 
+              [ property-set.create <xdll-path>$(extra-xdll-paths) ] ] ;                        
+        }        
         return $(ur) $(result) ;
     }
     
