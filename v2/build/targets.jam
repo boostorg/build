@@ -1041,7 +1041,7 @@ class basic-target : abstract-target
         
         if $(sources:G)
         {
-            errors.error "gristed element in sources for" [ full-name ] ;
+            errors.user-error "properties found in the 'sources' parameter for" [ full-name ] ;
         }
     }
     
