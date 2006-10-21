@@ -719,6 +719,14 @@ local rule toolset-tag ( name : type ? : property-set )
     {
         version = ;
     }
+    
+    # On borland, version is not added for compatibility
+    # with V1.
+    if $(tag) = bcb
+    {
+        version = ;
+    }
+        
     tag += $(version) ;
     
     return $(tag:J=) ;
