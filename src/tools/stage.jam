@@ -555,6 +555,13 @@ rule rename ( name : type ? : property-set : unversioned ? )
                 version = ;
             }
             
+            # On borland, version is not added for compatibility
+            # with V1.
+            if $(toolset-tag) = bcb
+            {
+                version = ;
+            }
+            
             toolset-tag += $(version) ;
         }
 
