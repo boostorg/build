@@ -38,6 +38,7 @@ type.register CPP_PCH : : PCH ;
 feature.feature pch :
     on
     off
+  : propagated    
   ;
 
 feature.feature pch-header : : free dependency ;
@@ -74,8 +75,10 @@ class pch-generator : generator
         }
         else
         {
-            return [ run-pch $(project) $(name) : $(property-set) 
-            : $(sources) ] ;
+            local r = [ run-pch $(project) $(name) : $(property-set) 
+              : $(sources) ] ;
+            return [ generators.add-usage-requirements $(r)
+              : <define>BOOST_BUILD_PCH_ENABLED ] ;
         }                        
     }
     
