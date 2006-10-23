@@ -13,8 +13,8 @@ cpp-pch pch
     include/pch.hpp
   : # requirements
     <include>include
-    <toolset>msvc:<source>source/pch.cpp
   ;
+explicit pch ;
 
 # exe ##########################################################################
 
