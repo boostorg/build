@@ -199,7 +199,7 @@ class gcc-pch-generator : pch-generator
 
         # return result of base class and pch-file property as usage-requirements
         return
-            [ property-set.create <pch-file>$(pch-file) ]
+            [ property-set.create <pch-file>$(pch-file) <cflags>-Winvalid-pch ]
             $(pch-file)
           ;
     }
