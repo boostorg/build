@@ -543,10 +543,9 @@ class msvc-pch-generator : pch-generator
 {
     import property-set ;
 
-    rule run-pch ( project name ? : property-set : source-1 source-2 )
+    rule run-pch ( project name ? : property-set : sources * )
     {        
         # searching header and source file in the sources
-        local sources = $(source-1) $(source-2) ;
         local pch-header ;
         local pch-source ;
         for local s in $(sources)
@@ -568,10 +567,8 @@ class msvc-pch-generator : pch-generator
             errors.user-error "can't build pch without pch-header" ;
         }
 
-        if ! $(pch-source)
-        {
-            errors.user-error "can't build pch without pch-source" ;
-        }
+        # If we don't have PCH source, it's fine, we'll
+        # create temporary .cpp file in the action.
 
         local generated =
             [
@@ -695,26 +692,51 @@ rule compile.c++ ( targets + : sources * : properties * )
     compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
-actions compile-c-c++-pch
+actions compile-c-c++-pch-s
 {
     $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))"
+}
+
+# Needed only to avoid messing up Emacs syntax highlighting in
+# the messing N-quoted code below.
+quote = "\"" ;
+
+actions compile-c-c++-pch
+{
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(quote)$(>[1]:D)$(quote))"
 }
 
 rule compile.c.pch ( targets + : sources * : properties * )
 {
     C++FLAGS on $(targets[1]) = ;
-    DEPENDS $(<) : [ on $(<) return $(PCH_SOURCE) ] ;
     get-rspline $(targets[1]) : -TC ;
     get-rspline $(targets[2]) : -TC ;
-    compile-c-c++-pch $(targets) : $(sources) [ on $(<) return $(PCH_SOURCE) ] ;
+    local pch-source = [ on $(<) return $(PCH_SOURCE) ] ;
+    if $(pch-source)
+    {        
+        DEPENDS $(<) : $(pch-source) ;
+        compile-c-c++-pch-s $(targets) : $(sources) $(pch-source) ;
+    }
+    else
+    {
+        compile-c-c++-pch $(targets) : $(sources) ;
+    }    
 }
 
 rule compile.c++.pch ( targets + : sources * : properties * )
 {
-    DEPENDS $(<) : [ on $(<) return $(PCH_SOURCE) ] ;
-    get-rspline $(targets[1]) : -TP ;
-    get-rspline $(targets[2]) : -TP ;    
-    compile-c-c++-pch $(targets) : $(sources) [ on $(<) return $(PCH_SOURCE) ] ;
+    get-rspline $(targets[1]) : -TC ;
+    get-rspline $(targets[2]) : -TC ;
+    local pch-source = [ on $(<) return $(PCH_SOURCE) ] ;
+    if $(pch-source)
+    {        
+        DEPENDS $(<) : $(pch-source) ;
+        compile-c-c++-pch-s $(targets) : $(sources) $(pch-source) ;
+    }
+    else
+    {
+        compile-c-c++-pch $(targets) : $(sources) ;
+    }    
 }
 
 actions compile.rc
