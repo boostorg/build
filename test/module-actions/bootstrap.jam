@@ -39,10 +39,7 @@ module A
         ALWAYS $(target) ;
     }
     
-    actions act
-    {
-        echo A.act $(<):  $(X1)  $(X2)  $(X3)
-    }
+    actions act { echo A.act $(<): $(X1) $(X2) $(X3) }
     
     make t1 : : A.act ;
     make t2 : : A.act ;
@@ -53,20 +50,14 @@ module B
 {
     X2 = X2-B ;
     
-    actions act
-    {
-        echo B.act $(<):  $(X1)  $(X2)  $(X3)
-    }
+    actions act { echo B.act $(<): $(X1) $(X2) $(X3) }
     
     make t1 : : B.act ;
     make t2 : : B.act ;
     make t3 : : B.act ;
 }
 
-actions act
-{
-    echo act $(<):  $(X1)  $(X2)  $(X3)
-}
+actions act { echo act $(<): $(X1) $(X2) $(X3) }
 
 make t1 : : act ;
 make t2 : : act ;
