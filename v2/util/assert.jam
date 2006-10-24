@@ -36,6 +36,35 @@ rule result ( expected * : rule-name args * : * )
     }
 }
 
+rule .set.equal ( set1 * : set2 * )
+{
+    if ( $(set1) in $(set2) ) && ( $(set2) in $(set1) )
+    {
+        return true ;
+    }
+}
+
+# assert that EXPECTED is equal to the result of calling RULE-NAME with the
+# given arguments
+rule result-equal ( expected * : rule-name args * : * )
+{
+    local result ;
+    module [ CALLER_MODULE ]
+    {
+        modules.poke assert : result
+            : [ $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ] ;
+    }
+
+    if ! [ .set.equal $(result) : $(expected) ]
+    {
+        error-skip-frames 3 assertion failure: "[" $(rule-name) 
+          [ lol->list $(args) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ]
+            "]"
+          : expected: \"$(expected)\"
+          : got: \"$(result)\" ;
+    }
+}
+
 # assert that the given variable is nonempty.
 rule nonempty-variable ( name )
 {
