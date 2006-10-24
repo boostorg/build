@@ -555,28 +555,28 @@ local rule __test__ ( )
     assert.true path-order $(test-space) <optimization>on <rtti>on ;
     assert.false path-order $(test-space) <rtti>on <optimization>on ;
       
-    assert.result <toolset>gcc <rtti>off <define>FOO
+    assert.result-equal <toolset>gcc <rtti>off <define>FOO
         : refine <toolset>gcc <rtti>off
         : <define>FOO
         : $(test-space)
         ;
 
-    assert.result <toolset>gcc <optimization>on
+    assert.result-equal <toolset>gcc <optimization>on
         : refine <toolset>gcc <optimization>off
         : <optimization>on
         : $(test-space)
         ;
 
-    assert.result <toolset>gcc <rtti>off
+    assert.result-equal <toolset>gcc <rtti>off
         : refine <toolset>gcc : <rtti>off : $(test-space)
         ;
 
-    assert.result <toolset>gcc <rtti>off <rtti>off:<define>FOO
+    assert.result-equal <toolset>gcc <rtti>off <rtti>off:<define>FOO
         : refine <toolset>gcc : <rtti>off <rtti>off:<define>FOO 
         : $(test-space)
         ;
     
-    assert.result <toolset>gcc:<define>foo <toolset>gcc:<define>bar 
+    assert.result-equal <toolset>gcc:<define>foo <toolset>gcc:<define>bar 
         : refine <toolset>gcc:<define>foo : <toolset>gcc:<define>bar 
         : $(test-space)
         ;
@@ -617,19 +617,19 @@ local rule __test__ ( )
     catch "value" is not a value of an implicit feature ;
            
 
-    assert.result <rtti>on 
+    assert.result-equal <rtti>on 
         : remove free implicit : <toolset>gcc <define>foo <rtti>on : $(test-space) ;
 
-    assert.result <include>a 
+    assert.result-equal <include>a 
         : select include : <include>a <toolset>gcc ;
 
-    assert.result <include>a 
+    assert.result-equal <include>a 
         : select include bar : <include>a <toolset>gcc ;
 
-    assert.result <include>a <toolset>gcc
+    assert.result-equal <include>a <toolset>gcc
         : select include <bar> <toolset> : <include>a <toolset>gcc ;
     
-    assert.result <toolset>kylix <include>a 
+    assert.result-equal <toolset>kylix <include>a 
         : change <toolset>gcc <include>a : <toolset> kylix ;
 
     pm = [ new property-map ] ;
@@ -658,7 +658,7 @@ local rule __test__ ( )
       ;
     
     # Test conditional feature
-    assert.result <toolset>gcc,<toolset-gcc:version>3.0 <define>FOO
+    assert.result-equal <toolset>gcc,<toolset-gcc:version>3.0 <define>FOO
       : split-conditional <toolset>gcc,<toolset-gcc:version>3.0:<define>FOO
       ;
     
