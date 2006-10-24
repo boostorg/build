@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-#  Copyright (C) Vladimir Prus 2003. Permission to copy, use, modify, sell and
-#  distribute this software is granted provided this copyright notice appears in
-#  all copies. This software is provided "as is" without express or implied
-#  warranty, and with no claim as to its suitability for any purpose.
+# Copyright (C) Vladimir Prus 2003.
+# Distributed under the Boost Software License, Version 1.0.
+#    (See accompanying file LICENSE_1_0.txt or copy at
+#         http://www.boost.org/LICENSE_1_0.txt)
 
 #  Test for the regression testing framework.
 from BoostBuild import Tester, List
@@ -74,7 +74,7 @@ t.expect_addition("bin/r-f.test/$toolset/debug/r-f.test")
 
 # Make sure args are handled.
 t.expect_content("bin/r.test/$toolset/debug/r.output",
-                 "foo\nbar\n\nEXIT STATUS: 0\n")
+                 "foo\nbar\n\nEXIT STATUS: 0\n",True)
 
 # Test that input file is handled as well.
 t.write("r.cpp", """

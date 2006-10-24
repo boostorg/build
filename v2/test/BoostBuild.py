@@ -1,16 +1,23 @@
+# Copyright 2002-2005 Vladimir Prus.
+# Copyright 2002-2003 Dave Abrahams.
+# Copyright 2006 Rene Rivera.
+# Distributed under the Boost Software License, Version 1.0.
+#    (See accompanying file LICENSE_1_0.txt or copy at
+#         http://www.boost.org/LICENSE_1_0.txt)
 
 import TestCmd
 from tree import build_tree, trees_difference
 import copy
 import fnmatch
+import glob
 import os
+import re
 import shutil
 import string
 import types
 import time
 import tempfile
 import sys
-import re
 
 def get_toolset():
     toolset = None;
@@ -38,6 +45,17 @@ def prepare_suffix_map(toolset):
             suffixes['.obj'] = '.o'
     if os.__dict__.has_key('uname') and os.uname()[0] == 'Darwin':
         suffixes['.dll'] = '.dylib'
+
+def re_remove(sequence,regex):
+    me = re.compile(regex)
+    result = filter( lambda x: me.match(x), sequence )
+    for r in result:
+        sequence.remove(r)
+
+def glob_remove(sequence,pattern):
+    result = fnmatch.filter(sequence,pattern)
+    for r in result:
+        sequence.remove(r)
 
 lib_prefix = 1
 if windows:
@@ -255,10 +273,13 @@ class Tester(TestCmd.TestCmd):
         os.chdir(self.original_workdir)
         for name in names:
             n = self.native_file_name(name)
-            if os.path.isdir(n):
-                shutil.rmtree(n, ignore_errors=0)
-            else:
-                os.unlink(n)
+            n = glob.glob(n)
+            if n:
+                n = n[0]
+                if os.path.isdir(n):
+                    shutil.rmtree(n, ignore_errors=0)
+                else:
+                    os.unlink(n)
 
         # Create working dir root again, in case
         # we've removed it
@@ -358,10 +379,10 @@ class Tester(TestCmd.TestCmd):
         self.last_build_time = time.time()
 
     def read(self, name):
-        return open(self.native_file_name(name), "rb").read()
+        return open(glob.glob(self.native_file_name(name))[0], "rb").read()
 
     def read_and_strip(self, name):
-        lines = open(self.native_file_name(name), "rb").readlines()
+        lines = open(glob.glob(self.native_file_name(name))[0], "rb").readlines()
         result = string.join(map(string.rstrip, lines), "\n")
         if lines and lines[-1][-1] == '\n':
             return result + '\n'
@@ -399,7 +420,7 @@ class Tester(TestCmd.TestCmd):
     def expect_addition(self, names):        
         for name in self.adjust_names(names):
                 try:
-                        self.unexpected_difference.added_files.remove(name)
+                        glob_remove(self.unexpected_difference.added_files,name)
                 except:
                         print "File %s not added as expected" % (name,)
                         self.fail_test(1)
@@ -410,7 +431,7 @@ class Tester(TestCmd.TestCmd):
     def expect_removal(self, names):
         for name in self.adjust_names(names):
                 try:
-                        self.unexpected_difference.removed_files.remove(name)
+                        glob_remove(self.unexpected_difference.removed_files,name)
                 except:
                         print "File %s not removed as expected" % (name,)
                         self.fail_test(1)
@@ -443,7 +464,7 @@ class Tester(TestCmd.TestCmd):
 
             while filesets:
                 try:
-                    filesets[-1].remove(name)
+                    glob_remove(filesets[-1],name)
                     break
                 except ValueError:
                     filesets.pop()
@@ -509,9 +530,23 @@ class Tester(TestCmd.TestCmd):
             print "Note: could not open file", name
             self.fail_test(1)
 
-        content = string.replace(content, "$toolset", self.toolset)
+        content = string.replace(content, "$toolset", self.toolset+"*")
+        
+        if exact:
+            matched = fnmatch.fnmatch(actual,content)
+        else:
+            actual_ = map(lambda x: sorted(x.split()),actual.splitlines())
+            content_ = map(lambda x: sorted(x.split()),content.splitlines())
+            matched = map(
+                lambda x,y: map(lambda n,p: fnmatch.fnmatch(n,p),x,y),
+                actual_, content_ )
+            matched = reduce(
+                lambda x,y: x and reduce(
+                    lambda a,b: a and b,
+                    y ),
+                matched )
 
-        if actual != content:
+        if not matched:
             print "Expected:\n"
             print content
             print "Got:\n"
@@ -596,7 +631,7 @@ class Tester(TestCmd.TestCmd):
                 names = [names]
         r = map(self.adjust_lib_name, names)
         r = map(self.adjust_suffix, r)
-        r = map(lambda x, t=self.toolset: string.replace(x, "$toolset", t), r)
+        r = map(lambda x, t=self.toolset: string.replace(x, "$toolset", t+"*"), r)
         return r
 
     def native_file_name(self, name):

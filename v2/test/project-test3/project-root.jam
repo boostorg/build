@@ -1,3 +1,7 @@
+# Copyright 2002-2005 Vladimir Prus.
+# Distributed under the Boost Software License, Version 1.0.
+#    (See accompanying file LICENSE_1_0.txt or copy at
+#         http://www.boost.org/LICENSE_1_0.txt)
 
 import gcc ;
 import property ;
@@ -7,10 +11,10 @@ rule properties-as-path ( properties * )
     local r ;
     for local p in $(properties)
     {
-	if $(p:G) != <action>
-	{
-	    r += $(p) ;
-	}
+        if $(p:G) != <action>
+        {
+            r += $(p) ;
+        }
     }
     return [ property.as-path
         [ property.remove incidental : $(r) ] ] ;
