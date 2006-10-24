@@ -1,4 +1,11 @@
 #!/usr/bin/python
+
+# Copyright 2002-2005 Dave Abrahams.
+# Copyright 2002-2006 Vladimir Prus.
+# Distributed under the Boost Software License, Version 1.0.
+#    (See accompanying file LICENSE_1_0.txt or copy at
+#         http://www.boost.org/LICENSE_1_0.txt)
+
 import os, sys, string
 from BoostBuild import get_toolset
 
@@ -112,7 +119,7 @@ tests = [ "rebuilds",
           "suffix",
           "inherit_toolset",
           "skipping",
-          "glob",
+          "project_glob",
           "project_root_constants",
           "double_loading",
           "dll_path",
