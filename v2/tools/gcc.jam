@@ -20,6 +20,7 @@ import common ;
 import errors ;
 import property-set ;
 import pch ;
+import regex ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
@@ -56,10 +57,45 @@ import rc ;
 #   using gcc : 3.4 : : <cxxflags>foo <linkflags>bar <linker-type>sun ;
 rule init ( version ? : command * : options * )
 {
-    local condition = [ common.check-init-parameters gcc : version $(version) ] ;
-    
+    # Information about the gcc command...
+    #   The command.
     local command = [ common.get-invocation-command gcc : g++ : $(command) ] ;
+    #   The root directory of the tool install.
+    local root = [ feature.get-values <root> : $(options) ] ;
+    #   The bin directory where to find the command to execute.
+    local bin ;
+    #   The flavor of compiler.
+    local flavor = [ feature.get-values <flavor> : $(options) ] ;
+    #   AUtodetect the root and bin dir if not given.
+    if $(command)
+    {
+        bin ?= [ common.get-absolute-tool-path $(command[-1]) ] ;
+        root ?= $(bin:D) ;
+    }
+    #   Autodetect the version and flavor if not given.
+    if $(bin)
+    {
+        local command-info = [ MATCH "^[^ ]+[ ]+[^ ]+[ ]+([^ ]+)[^(]*[(]?([^)]*)"
+            : [ SHELL "$(bin)/gcc --version" ] ] ;
+        version ?= $(command-info[1]) ;
+        flavor ?= [ regex.replace $(command-info[2]:L) "[ .-:]" "_" ] ;
+    }
 
+    local condition ;
+    if $(flavor)
+    {
+        condition = [ common.check-init-parameters gcc
+            : version $(version)
+            : flavor $(flavor)
+            ] ;
+    }
+    else
+    {
+        condition = [ common.check-init-parameters gcc
+            : version $(version)
+            ] ;
+    }
+    
     common.handle-options gcc : $(condition) : $(command) : $(options) ;
     
     local linker = [ feature.get-values <linker-type> : $(options) ] ;
@@ -76,13 +112,6 @@ rule init ( version ? : command * : options * )
     }
     init-link-flags gcc $(linker) $(condition) ;
     
-    local root = [ feature.get-values <root> : $(options) ] ;
-    local bin ;
-    if $(command)
-    {
-        bin ?= [ common.get-absolute-tool-path $(command[-1]) ] ;
-        root ?= $(bin:D) ;
-    }
     
     # If gcc is installed in non-standard location, we'd need to
     # add LD_LIBRARY_PATH when running programs created with it
