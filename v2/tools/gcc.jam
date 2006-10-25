@@ -76,7 +76,7 @@ rule init ( version ? : command * : options * )
     if $(bin)
     {
         local command-info = [ MATCH "^[^ ]+[ ]+[^ ]+[ ]+([^ ]+)[^(]*[(]?([^)]*)"
-            : [ SHELL "$(bin)/gcc --version" ] ] ;
+            : [ SHELL "$(command) --version" ] ] ;
         version ?= $(command-info[1]) ;
         flavor ?= [ regex.replace $(command-info[2]:L) "[ .-:]" "_" ] ;
     }
