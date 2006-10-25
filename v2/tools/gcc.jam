@@ -66,14 +66,14 @@ rule init ( version ? : command * : options * )
     local bin ;
     #   The flavor of compiler.
     local flavor = [ feature.get-values <flavor> : $(options) ] ;
-    #   AUtodetect the root and bin dir if not given.
+    #   Autodetect the root and bin dir if not given.
     if $(command)
     {
         bin ?= [ common.get-absolute-tool-path $(command[-1]) ] ;
         root ?= $(bin:D) ;
     }
     #   Autodetect the version and flavor if not given.
-    if $(bin)
+    if $(command)
     {
         local command-info = [ MATCH "^[^ ]+[ ]+[^ ]+[ ]+([^ ]+)[^(]*[(]?([^)]*)"
             : [ SHELL "$(command) --version" ] ] ;
