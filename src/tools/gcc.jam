@@ -78,7 +78,10 @@ rule init ( version ? : command * : options * )
         local command-info = [ MATCH "^[^ ]+[ ]+[^ ]+[ ]+([^ ]+)[^(]*[(]?([^)]*)"
             : [ SHELL "$(command) --version" ] ] ;
         version ?= $(command-info[1]) ;
-        flavor ?= [ regex.replace $(command-info[2]:L) "[ .-:]" "_" ] ;
+        switch $(command-info[2]:L)
+        {
+            case *mingw* : flavor ?= mingw ;
+        }
     }
 
     local condition ;
