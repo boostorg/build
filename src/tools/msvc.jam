@@ -725,8 +725,8 @@ rule compile.c.pch ( targets + : sources * : properties * )
 
 rule compile.c++.pch ( targets + : sources * : properties * )
 {
-    get-rspline $(targets[1]) : -TC ;
-    get-rspline $(targets[2]) : -TC ;
+    get-rspline $(targets[1]) : -TP ;
+    get-rspline $(targets[2]) : -TP ;
     local pch-source = [ on $(<) return $(PCH_SOURCE) ] ;
     if $(pch-source)
     {        
