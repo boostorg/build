@@ -1,4 +1,5 @@
 #  Copyright (c) 2005 Vladimir Prus.
+#  Copyright 2006 Rene Rivera.
 #
 #  Use, modification and distribution is subject to the Boost Software
 #  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
@@ -53,9 +54,11 @@ rule install ( name : requirements * : binaries * : libraries * : headers * )
     install-header-subdir ?= "" ;
     requirements = [ property.change $(requirements) : <install-header-subdir> ] ;
     
-    # First, figure out all locations.
-    local prefix = [ option.get prefix : "" ] ;
-    
+    # First, figure out all locations. Use the default if no prefix option given.
+    local prefix = [ option.get prefix :
+        [ property.select <install-default-prefix> : $(requirements) ] ] ;
+    requirements = [ property.change $(requirements) : <install-default-prefix> ] ;
+    # Or some likely defaults if neither is given.
     if ! $(prefix)
     {
         if [ modules.peek : NT ] { prefix = C:\\$(name) ; }
