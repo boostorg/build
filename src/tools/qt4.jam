@@ -158,6 +158,12 @@ rule init ( prefix )
                     ;
                 main = qtmain ;
             } 
+            else if [ os.name ] = MACOSX
+            {
+                # On MacOS X, both debug and release libraries are available.
+                suffix_version = "" ;
+                suffix_debug = "_debug" ;
+            }
             else 
             {
                 # Since Qt-4.2, debug versions on unix have to be built separately 
