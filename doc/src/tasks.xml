@@ -458,6 +458,63 @@ actions echo
             
     </section>
 
+    <section id="bbv2.reference.precompiled_headers">
+      <title>Precompiled headers</title>
+
+      <para>Precompiled headers is a mechanism to speed up compilation
+      by creating a partially processed version of some header files,
+      and then using that version during compilations rather then
+      repeatedly parsing the original headers. Boost.Build supports
+      precompiled headers with gcc and msvc toolsets.</para>
+
+      <para>To use precompiled headers, follow these steps:</para>
+      <orderedlist>
+        <listitem><para>Create a header that includes big headers used by your project.
+        It's better to include only headers that are sufficiently stable &#x2014;
+        like headers from the compiler, and external libraries. Please wrap
+        the header in <code>#ifdef BOOST_BUILD_PCH_ENABLED</code>, so that
+        the potentially expensive inclusion of headers is not done
+        when PCH is not enabled. Include the new header at the top of your
+        source files.</para></listitem>
+
+        <listitem><para>Declare new Boost.Build target for the precompiled header
+        and add that precompiled header to sources of the target whose compilation
+        you want to speed up:
+        <programlisting>
+cpp-pch pch : header.hpp ;
+exe main : main.cpp pch ;</programlisting>
+        You can use the <code>c-pch</code> if you want to use the precompiled
+        header in C programs.
+        </para></listitem>
+
+      </orderedlist>
+      <para>The <filename>pch</filename> example in Boost.Build distribution
+      can be used as reference.</para>
+
+      <para>Please note the following:</para>
+      <itemizedlist>
+        <listitem><para>The inclusion of the precompiled header must be the
+        first thing in a source file, before any code or preprocessor directives.
+        </para></listitem>
+
+        <listitem><para>The build properties used to build the sources and the
+        preprocessed must be the same. Consider using project requirements to 
+        assure this.
+        </para></listitem>
+
+        <listitem><para>Precompiled headers must be used purely as a way to
+        improve compilation time, not to save the number of include statements.
+        If a source file needs to include some header, explicitly include
+        it in the source file, even if the same header is included from
+        the precompiled header. This makes sure that your project will build
+        even if precompiled headers are not supported.</para></listitem>
+        
+      </itemizedlist>
+      
+      
+    </section>
+
+
     <section id="bbv2.reference.generated_headers">
       <title>Generated headers</title>
 
@@ -720,7 +777,29 @@ exe app : app.cpp : &lt;implicit-dependency&gt;parser ;
         </listitem>
       </varlistentry>
 
+      <varlistentry><term><literal>tag</literal></term>
 
+        <listitem><para>The <literal>tag</literal> feature is used to customize
+        the name of the generated files. The value should have the form:
+<programlisting>@<replaceable>rulename</replaceable></programlisting> where
+        <replaceable>rulename</replaceable> should be a name of a rule with
+        the following signature:
+<programlisting>rule tag ( name : type ? : property-set )</programlisting>
+        The rule will be called for each target with the default name computed
+        by Boost.Build, the type of the target, and property set. The rule
+        can either return a string that must be used as the name of the
+        target, or empty string, in which case the default name will be used.
+        </para>
+
+        <para>Most typical use of the <literal>tag</literal> feature is
+        to encode build properties, or library version in library target names.
+        You should take care to return non-empty string from the tag rule
+        only for types you care about &#x2014; otherwise, you might
+        end up modifying names of object files, generated header file and
+        other targets for which changing names does not make sense.</para>
+        </listitem>
+
+      </varlistentry>
 
 
 

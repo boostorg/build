@@ -766,6 +766,34 @@ rule my-rule ( properties * )
         requirements can be easier to write and understand.
         </para>
 
+        <para>Requirements explicitly specified for a target are usually
+        combined with the requirements specified for the containing project. You
+        can cause a target to completely ignore specific project's requirement
+        using the syntax by adding minus sign before a property, for example:
+<programlisting>
+exe main : main.cpp : <emphasis role="bold">-&lt;define&gt;UNNECESSARY_DEFINE</emphasis> ;
+</programlisting>
+        This syntax is the only way to ignore free properties from parent,
+        such as defines. It can be also useful for ordinary properties. Consider
+        this example:
+<programlisting>
+project test : requirements &lt;threading;&gt;multi ;
+exe test1 : test1.cpp ;
+exe test2 : test2.cpp : &lt;threading;&gt;single ;
+exe test3 : test3.cpp : -&lt;threading;&gt;multi ;
+</programlisting>
+        Here, <code>test1</code> inherits project requirements and will always
+        be built in multi-threaded mode. The <code>test2</code> target
+        <emphasis>overrides</emphasis> project's requirements and will
+        always be built in single-threaded mode. In contrast, the 
+        <code>test3</code> target <emphasis>removes</emphasis> a property
+        from project requirements and will be built either in single-threaded or
+        multi-threaded mode depending on which variant is requested by the
+        user.</para>
+
+        <para>Note that removing of requirements is completely textual: 
+        you need to specify exactly the same property to remove it.</para>
+        
       </section>
 
       <section>
