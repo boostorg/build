@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+# Copyright 2002 Dave Abrahams 
+# Distributed under the Boost Software License, Version 1.0. 
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+
 from BoostBuild import Tester, List
 import os
 from string import strip

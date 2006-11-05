@@ -1,3 +1,7 @@
+# Copyright 2004, 2005, 2006 Vladimir Prus 
+# Distributed under the Boost Software License, Version 1.0. 
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+
 
 # Skeleton for test configuration. If your local configuration 
 # interferes with testing, rename this files to 'test-system.jam'
