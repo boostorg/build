@@ -1,8 +1,7 @@
-# Copyright (C) 2001 Vladimir Prus. Permission to copy, use, modify, sell and
-# distribute this software is granted, provided this copyright notice appears
-# in all copies and modified versions are clearly marked as such. This software
-# is provided "as is" without express or implied warranty, and with no claim as
-# to is suitability for any purpose.
+# Copyright 2003 Dave Abrahams 
+# Copyright 2001, 2002 Vladimir Prus 
+# Distributed under the Boost Software License, Version 1.0. 
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
 # This file is based in part on the content of svn_tree.py.
 

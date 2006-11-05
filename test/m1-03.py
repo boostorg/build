@@ -1,4 +1,9 @@
 #!/usr/bin/python
+
+# Copyright 2002 Vladimir Prus 
+# Distributed under the Boost Software License, Version 1.0. 
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+
 # Tests that we can use objects from other projects
 # (i.e. with other project root)
 # Test also that we can refer to those target using project-id.

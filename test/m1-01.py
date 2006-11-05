@@ -1,4 +1,9 @@
 #!/usr/bin/python
+
+# Copyright 2002 Vladimir Prus 
+# Distributed under the Boost Software License, Version 1.0. 
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+
 # Test the very basic 'make' functionality.
 
 from BoostBuild import Tester, List
