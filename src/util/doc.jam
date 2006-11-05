@@ -1,7 +1,8 @@
-# (C) Copyright Rene Rivera, 2002-2003.
-#
-# See accompanying license for terms and conditions of use.
-#
+# Copyright 2002, 2005 Dave Abrahams 
+# Copyright 2002, 2003, 2006 Rene Rivera 
+# Copyright 2003 Vladimir Prus 
+# Distributed under the Boost Software License, Version 1.0. 
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
 # Documentation system, handles --help requests.
 # It defines rules that attach documentation to modules, rules, and variables.
