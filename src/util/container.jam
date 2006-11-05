@@ -1,7 +1,8 @@
-# (C) Copyright Rene Rivera, 2002.
-#
-# See accompanying license for terms and conditions of use.
-#
+# Copyright 2003 Dave Abrahams 
+# Copyright 2002, 2003 Rene Rivera 
+# Copyright 2002, 2003, 2004 Vladimir Prus 
+# Distributed under the Boost Software License, Version 1.0. 
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
 # Various container classes.
 

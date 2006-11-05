@@ -75,7 +75,8 @@ class pch-generator : generator
         }
         else
         {
-            local r = [ run-pch $(project) $(name) : $(property-set) 
+            local r = [ run-pch $(project) $(name) 
+              : [ $(property-set).add-raw <define>BOOST_BUILD_PCH_ENABLED ]
               : $(sources) ] ;
             return [ generators.add-usage-requirements $(r)
               : <define>BOOST_BUILD_PCH_ENABLED ] ;
