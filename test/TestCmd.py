@@ -41,6 +41,14 @@ or incorrect permissions).
 # AND THERE IS NO OBLIGATION WHATSOEVER TO PROVIDE MAINTENANCE,
 # SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
+# Copyright 2002-2003 Vladimir Prus.
+# Copyright 2002-2003 Dave Abrahams.
+# Copyright 2006 Rene Rivera.
+# Distributed under the Boost Software License, Version 1.0.
+#    (See accompanying file LICENSE_1_0.txt or copy at
+#         http://www.boost.org/LICENSE_1_0.txt)
+
+
 from string import join, split
 
 __author__ = "Steven Knight <knight@baldmt.com>"
@@ -198,10 +206,14 @@ class TestCmd:
                         workdir = None,
                         subdir = None,
                         verbose = 0,
-                        match = None):
+                        match = None,
+                        inpath = None):
         self._cwd = os.getcwd()
         self.description_set(description)
-        self.program_set(program)
+        if inpath:
+            self.program = program
+        else:
+            self.program_set(program)
         self.interpreter_set(interpreter)
         self.verbose_set(verbose)
         if not match is None:
@@ -392,7 +404,7 @@ class TestCmd:
             os.chdir(chdir)
         cmd = []
         if program and program[0]:
-            if not os.path.isabs(program[0]):
+            if program[0] != self.program[0] and not os.path.isabs(program[0]):
                 program[0] = os.path.join(self._cwd, program[0])
             cmd += program
         #    if interpreter:
