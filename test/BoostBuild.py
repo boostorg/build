@@ -110,73 +110,77 @@ class Tester(TestCmd.TestCmd):
 
         self.toolset = get_toolset()
         self.pass_toolset = pass_toolset
-        
+
         prepare_suffix_map(pass_toolset and self.toolset or 'gcc')
 
-        jam_build_dir = ""
-        if os.name == 'nt':
-            jam_build_dir = "bin.ntx86"
-        elif os.name == 'posix' and os.__dict__.has_key('uname'):
-            if os.uname()[0].lower().startswith('cygwin'):
-                jam_build_dir = "bin.cygwinx86"
-                if 'TMP' in os.environ and os.environ['TMP'].find('~') != -1:
-                    print 'Setting $TMP to /tmp to get around problem with short path names'
-                    os.environ['TMP'] = '/tmp'
-            elif os.uname()[0] == 'Linux':
-                cpu = os.uname()[4]
-                if re.match("i.86", cpu):
-                    jam_build_dir = "bin.linuxx86";
+        if not '--default-bjam' in sys.argv:
+            jam_build_dir = ""
+            if os.name == 'nt':
+                jam_build_dir = "bin.ntx86"
+            elif os.name == 'posix' and os.__dict__.has_key('uname'):
+                if os.uname()[0].lower().startswith('cygwin'):
+                    jam_build_dir = "bin.cygwinx86"
+                    if 'TMP' in os.environ and os.environ['TMP'].find('~') != -1:
+                        print 'Setting $TMP to /tmp to get around problem with short path names'
+                        os.environ['TMP'] = '/tmp'
+                elif os.uname()[0] == 'Linux':
+                    cpu = os.uname()[4]
+                    if re.match("i.86", cpu):
+                        jam_build_dir = "bin.linuxx86";
+                    else:
+                        jam_build_dir = "bin.linux" + os.uname()[4]
+                elif os.uname()[0] == 'SunOS':
+                    jam_build_dir = "bin.solaris"
+                elif os.uname()[0] == 'Darwin':
+                    jam_build_dir = "bin.macosxppc"
+                elif os.uname()[0] == "AIX":
+                    jam_build_dir = "bin.aix"
+                elif os.uname()[0] == "IRIX64":
+                    jam_build_dir = "bin.irix"
+                elif os.uname()[0] == "FreeBSD":
+                    jam_build_dir = "bin.freebsd"
+                elif os.uname()[0] == "OSF1":
+                    jam_build_dir = "bin.osf"
                 else:
-                    jam_build_dir = "bin.linux" + os.uname()[4]
-            elif os.uname()[0] == 'SunOS':
-                jam_build_dir = "bin.solaris"
-            elif os.uname()[0] == 'Darwin':
-                jam_build_dir = "bin.macosxppc"
-            elif os.uname()[0] == "AIX":
-                jam_build_dir = "bin.aix"
-            elif os.uname()[0] == "IRIX64":
-                jam_build_dir = "bin.irix"
-            elif os.uname()[0] == "FreeBSD":
-                jam_build_dir = "bin.freebsd"
-            elif os.uname()[0] == "OSF1":
-                jam_build_dir = "bin.osf"
+                    raise "Don't know directory where jam is build for this system: " + os.name + "/" + os.uname()[0]
             else:
-                raise "Don't know directory where jam is build for this system: " + os.name + "/" + os.uname()[0]
-        else:
-            raise "Don't know directory where jam is build for this system: " + os.name
+                raise "Don't know directory where jam is build for this system: " + os.name
 
-        if boost_build_path is None:
-            boost_build_path = self.original_workdir
-            
+            # Find there jam_src is located.
+            # try for the debug version if it's lying around
+
+            dirs = [os.path.join('../../../jam/src', jam_build_dir + '.debug'),
+                    os.path.join('../../../jam/src', jam_build_dir),
+                    os.path.join('../../jam_src', jam_build_dir + '.debug'),
+                    os.path.join('../../jam_src', jam_build_dir),
+                    os.path.join('../jam_src', jam_build_dir + '.debug'),
+                    os.path.join('../jam_src', jam_build_dir),
+                    ]
+
+            for d in dirs:
+                if os.path.exists(d):
+                    jam_build_dir = d
+                    break
+            else:
+                print "Cannot find built Boost.Jam"
+                os.exit(1)
 
         verbosity = ['-d0', '--quiet']
         if '--verbose' in sys.argv:
             keywords['verbose'] = 1
             verbosity = ['-d+2']
 
+        if boost_build_path is None:
+            boost_build_path = self.original_workdir
+
         program_list = []
-
-        # Find there jam_src is located.
-        # try for the debug version if it's lying around
-
-        dirs = [os.path.join('../../../jam/src', jam_build_dir + '.debug'),
-                os.path.join('../../../jam/src', jam_build_dir),
-                os.path.join('../../jam_src', jam_build_dir + '.debug'),
-                os.path.join('../../jam_src', jam_build_dir),
-                os.path.join('../jam_src', jam_build_dir + '.debug'),
-                os.path.join('../jam_src', jam_build_dir),
-                ]
-
-        for d in dirs:
-            if os.path.exists(d):
-                jam_build_dir = d
-                break
-        else:
-            print "Cannot find built Boost.Jam"
-            os.exit(1)                                    
         
-            
-        program_list.append(os.path.join(jam_build_dir, executable))
+        if '--default-bjam' in sys.argv:
+            program_list.append(executable)
+            inpath_bjam = True
+        else:
+            program_list.append(os.path.join(jam_build_dir, executable))
+            inpath_bjam = None
         program_list.append('-sBOOST_BUILD_PATH=' + boost_build_path)
         if verbosity:
             program_list += verbosity
@@ -188,6 +192,7 @@ class Tester(TestCmd.TestCmd):
             , program=program_list
             , match=match
             , workdir = workdir
+            , inpath = inpath_bjam
             , **keywords)
 
         os.chdir(self.workdir)
