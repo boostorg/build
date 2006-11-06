@@ -1,3 +1,7 @@
+Copyright 2003 Vladimir Prus 
+Distributed under the Boost Software License, Version 1.0. 
+(See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+
 
 This example shows how it's possible to used GNU gettext utilities with
 Boost.Build.
