@@ -1,3 +1,7 @@
+# Copyright 2002 Dave Abrahams 
+# Distributed under the Boost Software License, Version 1.0. 
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+
 # Proof-of-concept for bjam-based testing mechanism. This file should
 # work on NT, Cygwin, and Linux. No promises for other platforms.
 
