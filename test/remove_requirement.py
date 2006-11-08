@@ -78,5 +78,38 @@ t.expect_addition("sub2/bin/$toolset/debug/link-static/hello.exe")
 t.expect_addition("sub3/bin/$toolset/debug/threading-multi/hello.exe")
 t.expect_addition("sub4/bin/$toolset/debug/threading-multi/hello.exe")
 
+t.rm(".")
+
+# No test that path requirements can be removed as well.
+t.write("Jamroot", """ 
+build-project sub ;
+
+""")
+
+t.write("sub/Jamfile", """ 
+project : requirements <include>broken ;
+
+exe hello : hello.cpp : -<include>broken ; 
+""")
+
+t.write("sub/hello.cpp", """ 
+#include "math.h"
+
+int main()
+{
+    return 0;
+}
+
+""")
+
+t.write("sub/broken/math.h", """ 
+Broken 
+""")
+
+
+t.run_build_system()
+
+t.expect_addition("bin/$toolset/debug/hello.exe")
+
 t.cleanup()
 
