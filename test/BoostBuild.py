@@ -551,20 +551,22 @@ class Tester(TestCmd.TestCmd):
             self.fail_test(1)
 
         content = string.replace(content, "$toolset", self.toolset+"*")
-        
+
+        matched = 0
         if exact:
             matched = fnmatch.fnmatch(actual,content)
         else:
-            actual_ = map(lambda x: sorted(x.split()),actual.splitlines())
-            content_ = map(lambda x: sorted(x.split()),content.splitlines())
-            matched = map(
-                lambda x,y: map(lambda n,p: fnmatch.fnmatch(n,p),x,y),
-                actual_, content_ )
-            matched = reduce(
-                lambda x,y: x and reduce(
-                    lambda a,b: a and b,
+            if len(actual_) == len(content_):
+                actual_ = map(lambda x: sorted(x.split()),actual.splitlines())
+                content_ = map(lambda x: sorted(x.split()),content.splitlines())
+                matched = map(
+                    lambda x,y: map(lambda n,p: fnmatch.fnmatch(n,p),x,y),
+                    actual_, content_ )
+                matched = reduce(
+                    lambda x,y: x and reduce(
+                        lambda a,b: a and b,
                     y ),
-                matched )
+                    matched )
 
         if not matched:
             print "Expected:\n"
