@@ -28,8 +28,6 @@ int main()
 t.run_build_system()
 t.expect_nothing_more()
 
-t.fail_test(string.find(t.stdout(), "Skipping build of ./hello -- <build>no in properties.") == -1)
-
 t.run_build_system("release")
 t.expect_addition("bin/$toolset/release/hello.exe")
 
