@@ -556,9 +556,9 @@ class Tester(TestCmd.TestCmd):
         if exact:
             matched = fnmatch.fnmatch(actual,content)
         else:
+            actual_ = map(lambda x: sorted(x.split()),actual.splitlines())
+            content_ = map(lambda x: sorted(x.split()),content.splitlines())
             if len(actual_) == len(content_):
-                actual_ = map(lambda x: sorted(x.split()),actual.splitlines())
-                content_ = map(lambda x: sorted(x.split()),content.splitlines())
                 matched = map(
                     lambda x,y: map(lambda n,p: fnmatch.fnmatch(n,p),x,y),
                     actual_, content_ )
