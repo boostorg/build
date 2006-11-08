@@ -15,7 +15,7 @@
   linkend="bbv2.main-target-rule-syntax"/>.
   </para>
   
-  <section>
+  <section id="bbv2.tasks.programs">
     <title>Programs</title>
 
       <indexterm><primary>Builtin
@@ -52,7 +52,7 @@ exe hello : hello.cpp some_library.lib /some_project//library
       </tip>
     </section>
 
-    <section>
+    <section id="bbv2.tasks.libraries">
       <title>Libraries</title>
 
       <para>Libraries are created using the <code>lib</code> rule, which
@@ -190,7 +190,7 @@ lib a : a.cpp : &lt;use&gt;b : : &lt;library&gt;b ;
           
     </section>
 
-    <section id="bbv2.builtins.alias">
+    <section id="bbv2.tasks.alias">
       <title>Alias</title>
 
       <para>
@@ -238,7 +238,7 @@ exe main : main.cpp lib_alias ;
  
     </section>
 
-    <section id="bbv2.builtins.stage">
+    <section id="bbv2.tasks.installing">
       <title>Installing</title>
 
       <para>This section describes various ways to install built target

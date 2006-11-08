@@ -543,7 +543,7 @@ bjam optimization=space
         entity that can be built, for example an executable file.
         Declaring a main target is usually done using one of the main
         target rules described in <xref linkend=
-        "bbv2.advanced.builtins.targets"/>.  The user can also declare
+        "bbv2.reference.target-rules"/>.  The user can also declare
         custom main target rules as shown in <xref
         linkend="bbv2.extending.rules"/>.
       </para>
@@ -603,7 +603,7 @@ rule <replaceable>rule-name</replaceable> (
           <simpara>
             <parameter>default-build</parameter> is the list of properties that will be used
             unless some other value of the same feature is already
-            specified, e.g. on the command line or by propogation from a dependent target.
+            specified, e.g. on the command line or by propagation from a dependent target.
           </simpara>
         </listitem>
         
@@ -617,8 +617,8 @@ rule <replaceable>rule-name</replaceable> (
       </itemizedlist>
 
       <para>          
-        Some main target rules have a different list of parameters, their 
-        documentation explicitly says so.
+        Some main target rules have a different list of parameters as explicitly
+        stated in their documentation.
       </para>
 
       <para>The actual requirements for a target are obtained by refining
@@ -637,7 +637,8 @@ rule <replaceable>rule-name</replaceable> (
         prefixes.
         </para>
 
-        <para>Name of main target can contain alphanumeral characters, dash, undescore and dot. The entire
+        <para>THe name of a main target can contain alphanumeral characters, 
+        dashes, undescores and dots. The entire
         name is significant when resolving references from other targets. For determining filenames, only the
         part before the first dot is taken. For example:</para>
 <programlisting>
@@ -676,9 +677,9 @@ exe b : [ glob *.cpp ] ;  # all .cpp files in this directory are sources
           Targets in the same project can be referred to by name, while
           targets in other projects must be qualified with a directory or a
           symbolic project name. The directory/project name is separated from
-          the target name by double slash. There's no special syntax to
-          distinguish directory name from project name&#x2014;the part before
-          double slash is first looked up as project name, and then as directory
+          the target name by a double forward slash. There's no special syntax to
+          distinguish the directory name from the project name&#x2014;the part before
+          the double slash is first looked up as project name, and then as directory
           name. For example:
 <programlisting>
 lib helper : helper.cpp ;
@@ -745,7 +746,8 @@ lib network : network.cpp
         </para>
 
         <para id="bbv2.advanced.targets.requirements.indirect">
-          More powerfull variant of conditional requirements is <firstterm>indirect conditional requiremens</firstterm>.
+          A more powerful variant of conditional requirements 
+          is <firstterm>indirect conditional requirements</firstterm>.
           You can provide a rule that will be called with the current build properties and can compute additional properties
           to be added. For example:
 <programlisting>
@@ -769,11 +771,11 @@ rule my-rule ( properties * )
         <para>Requirements explicitly specified for a target are usually
         combined with the requirements specified for the containing project. You
         can cause a target to completely ignore specific project's requirement
-        using the syntax by adding minus sign before a property, for example:
+        using the syntax by adding a minus sign before a property, for example:
 <programlisting>
 exe main : main.cpp : <emphasis role="bold">-&lt;define&gt;UNNECESSARY_DEFINE</emphasis> ;
 </programlisting>
-        This syntax is the only way to ignore free properties from parent,
+        This syntax is the only way to ignore free properties from a parent,
         such as defines. It can be also useful for ordinary properties. Consider
         this example:
 <programlisting>
@@ -791,7 +793,7 @@ exe test3 : test3.cpp : -&lt;threading;&gt;multi ;
         multi-threaded mode depending on which variant is requested by the
         user.</para>
 
-        <para>Note that removing of requirements is completely textual: 
+        <para>Note that the removal of requirements is completely textual: 
         you need to specify exactly the same property to remove it.</para>
         
       </section>
@@ -805,10 +807,10 @@ exe test3 : test3.cpp : -&lt;threading;&gt;multi ;
 <programlisting>
 exe hello : hello.cpp : : &lt;threading&gt;multi ;
 </programlisting>
-        would build a multi-threaded target in unless the user
+        would build a multi-threaded target unless the user
         explicitly requests a single-threaded version. The difference between
         requirements and default-build is that requirements cannot be
-        overriden in any way.
+        overridden in any way.
         </para>
       </section>
 
