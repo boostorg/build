@@ -522,7 +522,22 @@ class Tester(TestCmd.TestCmd):
            print 'FAILED'
            print '------- The following changes were unexpected ------- '
            self.unexpected_difference.pprint()
-           self.fail_test(1)       
+           self.fail_test(1)
+
+    def expect_output_line(self, expected):
+        expected = expected.strip()
+        lines = self.stdout().splitlines()
+        found = 0
+        for line in lines:
+            line = line.strip()
+            if fnmatch.fnmatch(line, expected):
+                found = 1
+                break
+
+        if not found:
+            print "Did not found expected line in output:"
+            print expected
+            self.fail_test(1)
 
     def expect_content(self, name, content, exact=0):
         name = self.adjust_names(name)[0]
