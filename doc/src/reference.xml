@@ -228,6 +228,60 @@ target1 debug gcc/runtime-link=dynamic,static
 
   </section>
 
+  <section id="bbv2.reference.target-rules">
+    <title>Builtin targets</title>
+
+    <para>This section contains the list of all target types defined
+    in Boost.Build.</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><literal>exe</literal></term>
+        
+        <listitem><para>Creates an executable file. See 
+        <xref linkend="bbv2.tasks.programs"/>.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>lib</literal></term>
+        
+        <listitem><para>Creates an library file. See 
+        <xref linkend="bbv2.tasks.libraries"/>.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>install</literal></term>
+        
+        <listitem><para>Installs built targets and other files. See 
+        <xref linkend="bbv2.tasks.installing"/>.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>alias</literal></term>
+        
+        <listitem><para>Creates an alias for other targets. See 
+        <xref linkend="bbv2.tasks.alias"/>.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>unit-test</literal></term>
+        
+        <listitem><para>Creates an executable that will be automatically run. See 
+        <xref linkend="bbv2.tutorial.testing"/>.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>obj</literal></term>
+        
+        <listitem><para>Creates an object file. Useful when a single source
+        file must be compiled with special properties.</para></listitem>
+      </varlistentry>
+
+    </variablelist>
+
+  </section>
+
+
     <section id="bbv2.advanced.other-rules">
       <title>Jamfile Utility Rules</title>
 
