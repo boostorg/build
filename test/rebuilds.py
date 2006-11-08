@@ -19,7 +19,7 @@ rule make
 actions make
 {
     echo "******" making $(<) from $(>) "******"
-    echo made from $(>) >> $(<)
+    echo made from $(>) > $(<)
 }
 
 make aux1 : bar ;
