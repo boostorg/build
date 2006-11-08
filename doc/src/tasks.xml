@@ -463,7 +463,7 @@ actions echo
     </section>
 
     <section id="bbv2.reference.precompiled_headers">
-      <title>Precompiled headers</title>
+      <title>Precompiled Headers</title>
 
       <para>Precompiled headers is a mechanism to speed up compilation
       by creating a partially processed version of some header files,
@@ -481,8 +481,8 @@ actions echo
         when PCH is not enabled. Include the new header at the top of your
         source files.</para></listitem>
 
-        <listitem><para>Declare new Boost.Build target for the precompiled header
-        and add that precompiled header to sources of the target whose compilation
+        <listitem><para>Declare a new Boost.Build target for the precompiled header
+        and add that precompiled header to the sources of the target whose compilation
         you want to speed up:
         <programlisting>
 cpp-pch pch : header.hpp ;
@@ -501,14 +501,14 @@ exe main : main.cpp pch ;</programlisting>
         first thing in a source file, before any code or preprocessor directives.
         </para></listitem>
 
-        <listitem><para>The build properties used to build the sources and the
-        preprocessed must be the same. Consider using project requirements to 
-        assure this.
+        <listitem><para>The build properties used to compile the source files 
+        and  the precompiled header must be the same. Consider using 
+        project requirements to assure this.
         </para></listitem>
 
         <listitem><para>Precompiled headers must be used purely as a way to
-        improve compilation time, not to save the number of include statements.
-        If a source file needs to include some header, explicitly include
+        improve compilation time, not to save the number of <code>#include</code>
+        statements. If a source file needs to include some header, explicitly include
         it in the source file, even if the same header is included from
         the precompiled header. This makes sure that your project will build
         even if precompiled headers are not supported.</para></listitem>
@@ -805,6 +805,21 @@ exe app : app.cpp : &lt;implicit-dependency&gt;parser ;
 
       </varlistentry>
 
+      <varlistentry><term><literal>debug-symbols</literal></term>
+        
+        <listitem>        
+          <para><emphasis role="bold">Allowed values:</emphasis> <literal>on</literal>, <literal>off</literal>.</para>
+
+          <para>The <literal>debug-symbols</literal> feature specifies if
+          produced object files, executables and libraries should include 
+          debug information.
+          Typically, the value of this feature is implicitly set by the
+          <literal>variant</literal> feature, but it can be explicitly
+          specified by the user. The most common usage is to build
+          release variant with debugging information.</para>
+        </listitem>
+      </varlistentry>
+      
 
 
     </variablelist>
