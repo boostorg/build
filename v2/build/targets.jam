@@ -1217,12 +1217,11 @@ class basic-target : abstract-target
             } 
             else
             {
+                # We're here either because there's error computing
+                # properties, or there's <build>no in properties.
+                # In the latter case we don't want any diagnostic.
+                # In the former case, we need diagnostics. FIXME.
                 self.generated.$(property-set) = $(rproperties) ;
-                
-                if $(rproperties[1]) != "@error"
-                {
-                    ECHO "Skipping build of" [ full-name ] "-- <build>no in properties." ;
-                }
             }       
         }                
         else
