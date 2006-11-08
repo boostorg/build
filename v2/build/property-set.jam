@@ -425,9 +425,15 @@ rule refine-from-user-input ( parent-requirements : specification *
         
         if $(remove-requirements)
         {
+            # Need to create property set, so that path features
+            # and indirect features are translated just like they
+            # are in project requirements.
+            local ps = [ property-set.create-from-user-input 
+                $(remove-requirements) : $(project-module) $(location) ] ;
+            
             parent-requirements = [ property-set.create 
                 [ set.difference [ $(parent-requirements).raw ] 
-                  : $(remove-requirements) ] ] ;
+                  : [ $(ps).raw ] ] ] ;
             specification = $(add-requirements) ;
         }
 
