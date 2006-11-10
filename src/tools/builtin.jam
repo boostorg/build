@@ -25,6 +25,7 @@ import property ;
 import print ;
 import utility ;
 import project ;
+import generate ;
 
 # This feature is used to determine which OS we're on.
 # In future, this may become <target-os> and <host-os>
