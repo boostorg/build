@@ -524,9 +524,9 @@ class Tester(TestCmd.TestCmd):
            self.unexpected_difference.pprint()
            self.fail_test(1)
 
-    def expect_output_line(self, expected):
+    def _expect_line(self, content, expected):
         expected = expected.strip()
-        lines = self.stdout().splitlines()
+        lines = content.splitlines()
         found = 0
         for line in lines:
             line = line.strip()
@@ -537,19 +537,33 @@ class Tester(TestCmd.TestCmd):
         if not found:
             print "Did not found expected line in output:"
             print expected
+            print "The output was:"
+            print content
             self.fail_test(1)
 
-    def expect_content(self, name, content, exact=0):
+    def expect_output_line(self, expected):
+        self._expect_line(self.stdout(), expected)
+
+    def expect_content_line(self, name, expected):
+        content = self._read_file(name)
+        self._expect_line(content, expected)
+
+    def _read_file(self, name, exact=0):
         name = self.adjust_names(name)[0]
+        result = ""
         try:
             if exact:
-                actual = self.read(name)
+                result = self.read(name)
             else:
-                actual = string.replace(self.read_and_strip(name), "\\", "/")
+                result = string.replace(self.read_and_strip(name), "\\", "/")
         except IOError:
             print "Note: could not open file", name
             self.fail_test(1)
+        return result
+            
 
+    def expect_content(self, name, content, exact=0):
+        actual = self._read_file(name, exact)
         content = string.replace(content, "$toolset", self.toolset+"*")
 
         matched = 0
