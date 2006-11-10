@@ -3,6 +3,36 @@ Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
 
+Milestone 12 (in development)
+
+Changes in this release:
+
+    - Support for precompiled headers for gcc toolset,
+      and improvements for msvc.
+    - Mechanism for removing inherited requirements.
+    - The 'make' rule support specifying usage-requirements.
+    - New 'project.extension' rule for declaring standalone
+    projects.
+    - New 'conditional' convenience rule.
+    - New 'path.glob-tree' rule.
+    - Inline targets are now marked explicit automatically.
+
+Documentation changes:
+
+    - Installation instructions for Linux distributors.
+
+The following bugs were fixed:
+
+    - The 'cflags' and 'linkflags' features not working for Darwin.
+    - The intel toolset not working on Windows.
+    - Fix library search options for CodeWarriour toolset.
+    - The <install-source-root> could cause duplicate
+    mkdir commands.
+    - Numerious fixes in Boost autolink support
+    - Numerious fixes in Boost.Python support.
+
+
+
 Milestone 11 (Jule 20, 2006)
 
 Changes in this release:
