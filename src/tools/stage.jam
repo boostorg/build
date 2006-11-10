@@ -24,6 +24,9 @@ import path ;
 feature.feature <install-dependencies> : off on : incidental ;
 feature.feature <install-type> : : free incidental ;
 feature.feature <install-source-root> : : free path  ;
+# If 'on', version symblinks for shared libraries won't be created
+# This feature has effect only on Unix.
+feature.feature <install-no-version-symlinks> : on : optional incidental ;
 feature.feature <so-version> : : free incidental ;
 
 class install-target-class : basic-target
@@ -94,6 +97,9 @@ class install-target-class : basic-target
         
         local d = [ $(build-property-set).get <location> ] ;
         ps-raw += $(d:G=<location>) ;
+        
+        local ns = [ $(build-property-set).get <install-no-version-symlinks> ] ;
+        ps-raw += $(ns:G=<install-no-version-symlinks>) ;
         
         local d = [ $(build-property-set).get <install-source-root> ] ;
         # Make the path absolute: we'll use it to compute relative
@@ -425,12 +431,28 @@ class installed-shared-lib-generator : generator
               : [ $(copied).name ] ] ;
             if $(m)
             {
-                result += [ stage.symlink $(m[1]).$(m[2]) : $(project)
-                  : $(copied) : $(property-set) ] ;
-                result += [ stage.symlink $(m[1]).$(m[2]).$(m[3])  : $(project)
-                  : $(copied) : $(property-set) ] ;
+                # Symlink without version at all is used to make
+                # -lsome_library work.
+                result += [ stage.symlink $(m[1]) : $(project)
+                  : $(copied) : $(property-set) ] ;                
+                
+                # Symlinks of some libfoo.N and libfoo.N.M are used
+                # so that library can found at runtime, if libfoo.N.M.X
+                # has soname of libfoo.N. That happens when the library
+                # makes some binary compatibility guarantees. If not,
+                # it's possible to skip those symlinks.
+                local suppress = 
+                  [ $(property-set).get <install-no-version-symlinks> ] ;
+                
+                if $(suppress) != "on"
+                {                    
+                    result += [ stage.symlink $(m[1]).$(m[2]) : $(project)
+                      : $(copied) : $(property-set) ] ;
+                    result += [ stage.symlink $(m[1]).$(m[2]).$(m[3])  : $(project)
+                      : $(copied) : $(property-set) ] ;
+                }                
             }
-                                    
+                                                
             return $(result) ;
         }                
     }    
