@@ -114,6 +114,7 @@ t.rm(".")
 t.write("Jamroot", "")
 t.write("a/Jamfile", """
 lib a : a.cpp ;
+install dist : a ;
 """)
 t.write("a/a.cpp", """
 #if defined(_WIN32)
@@ -122,12 +123,12 @@ __declspec(dllexport)
 void a() {}
 """)
 t.run_build_system(subdir="a")
-t.expect_addition("a/bin/$toolset/debug/a.dll")
+t.expect_addition("a/dist/a.dll")
 
 if (os.name == 'nt' or os.uname()[0].lower().startswith('cygwin')) and get_toolset() != 'gcc':
-    file = t.adjust_names(["a/bin/$toolset/debug/a.lib"])[0]
+    file = t.adjust_names(["a/dist/a.lib"])[0]
 else:
-    file = t.adjust_names(["a/bin/$toolset/debug/a.dll"])[0]
+    file = t.adjust_names(["a/dist/a.dll"])[0]
 
 t.write("b/Jamfile", """
 lib b : b.cpp ../%s ;
