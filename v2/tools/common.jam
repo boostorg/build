@@ -411,11 +411,13 @@ if [ os.name ] = NT
     RM = del /f /q ;
     CP = copy ;
     IGNORE = "2>nul >nul & setlocal" ;
+    LN              ?= $(CP) ;
 }
 else
 {
     RM = rm -f ;
     CP = cp ;
+    LN = ln ;
 }
 
 nl = "
@@ -575,6 +577,13 @@ actions quietly updated piecemeal together RmTemps
 {
     $(RM) "$(>)" $(IGNORE)
 }
+
+actions hard-link
+{
+    $(RM) "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+    $(LN) "$(>)" "$(<)" $(NULL_OUT)    
+}
+
 
 # Given a target, as given to a custom tag rule, returns a string formatted
 # according to the passed format. Format is a list of properties that is
