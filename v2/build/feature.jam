@@ -466,7 +466,7 @@ local rule subvalue-var (
     }
 
     local subfeature-name = [ get-subfeature-name $(subfeature) $(value-string) ] ;
-    
+
     return $(subfeature-name)
     $(feature)$(value-string:E="")<>$(subvalues).subfeature ;
 }
@@ -506,7 +506,7 @@ rule extend-subfeature (
 rule is-subvalue ( feature : value-string ? : subfeature : subvalue )
 {
     local subfeature-vars = [ 
-      subvalue-var $(feature) $(value-string) : $(subfeature) : $(subvalues) ] ;
+      subvalue-var $(feature) $(value-string) : $(subfeature) : $(subvalue) ] ;
     
     if $($(subfeature-vars[2])) = $(subfeature-vars[1]) 
     {
@@ -1064,9 +1064,13 @@ local rule __test__ ( )
     assert.true is-subvalue toolset : gcc : version : 2.95.3 ;
     assert.false is-subvalue toolset : gcc : version : 1.1 ;
 
-    assert.false is-subvalue toolset : notool : version : 2.95.3 ;
-    assert.true is-subvalue toolset : : version : 2.95.3 ;
+    assert.false is-subvalue toolset : msvc : version : 2.95.3 ;
     assert.false is-subvalue toolset : : version : yabba ;
+    
+    feature yabba ;
+    subfeature yabba : version : dabba ;
+    assert.true is-subvalue yabba : : version : dabba ;
+    
     
     subfeature toolset gcc : platform : linux cygwin : optional ;
     

@@ -129,7 +129,7 @@ load-config user-config : $(user-path) ;
 local argv = [ modules.peek : ARGV ] ;
 local x-toolset-version = [ MATCH ^(--)?toolset=(.*) : $(argv) ] ;
 
-if $(x-toolset-version)
+if $(x-toolset-version) && ! $(ignore-config)
 {
     local toolset-version = $(x-toolset-version[2]) ;
     local toolset = [ MATCH ([^-]+).* : $(toolset-version) ] ;
@@ -229,7 +229,10 @@ if ! [ feature.values <toolset> ]
     ECHO "warning:   http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html" ;
     ECHO "warning:   for more configuration options" ;
     
-    toolset.using $(default-toolset) ;
+    if ! $(ignore-config)
+    {
+        toolset.using $(default-toolset) ;
+    }
 }
 
 
