@@ -127,11 +127,14 @@ load-config user-config : $(user-path) ;
 # toolset=xxx in the command line
 #
 local argv = [ modules.peek : ARGV ] ;
-local x-toolset-version = [ MATCH ^(--)?toolset=(.*) : $(argv) ] ;
+local toolset-version = [ MATCH ^-?-?toolset=(.*) : $(argv) ] ;
 
-if $(x-toolset-version) && ! $(ignore-config)
+# if the user specified --toolset=..., we need to add toolset=... to
+# the build request
+local extra-build-request ; 
+
+if $(toolset-version) && ! $(ignore-config)
 {
-    local toolset-version = $(x-toolset-version[2]) ;
     local toolset = [ MATCH ([^-]+).* : $(toolset-version) ] ;
     local version = [ MATCH [^-]+-(.+) : $(toolset-version) ] ;
     
@@ -174,18 +177,14 @@ if $(x-toolset-version) && ! $(ignore-config)
     
     # make sure we get an appropriate property in the build request into
     # case the user used the "--toolset=..." form
-    local toolset-option = [ MATCH ^--toolset=(.*) : $(argv) ] ;
-    if $(toolset-option) 
-      && ! $(toolset-option) in $(argv)
-        && ! toolset=$(toolset-option) in $(argv) 
+    if ! $(toolset-version) in $(argv)
+        && ! toolset=$(toolset-version) in $(argv) 
     {
         if $(debug-config)
         {
-            ECHO notice: [cmdline-cfg] adding toolset=$(toolset-option) "to build request." ;
+            ECHO notice: [cmdline-cfg] adding toolset=$(toolset-version) "to build request." ;
         }
-        
-        argv += $(toolset-option) ;
-        modules.poke : ARGV : $(argv) ;
+        extra-build-request += toolset=$(toolset-version) ;
     }
 }
     
@@ -235,9 +234,11 @@ if ! [ feature.values <toolset> ]
     }
 }
 
-
-
-build-request = [ build-request.from-command-line [ modules.peek : ARGV ] ] ;
+build-request = [ 
+  build-request.from-command-line [ 
+    modules.peek : ARGV 
+  ] $(extra-build-request) 
+] ;
 
 properties = [ $(build-request).get-at 2 ] ;
 
