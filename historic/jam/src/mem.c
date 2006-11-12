@@ -19,7 +19,13 @@ http://www.boost.org/LICENSE_1_0.txt)
     #define SILENT
     #define ALL_INTERIOR_POINTERS
     #define LARGE_CONFIG
+    #ifndef GC_DEBUG
     #define NO_DEBUGGING
+    #endif
+    
+    #ifdef __GLIBC__
+    #define __USE_GNU
+    #endif
     
     #include "boehm_gc/reclaim.c"
     #include "boehm_gc/allchblk.c"
