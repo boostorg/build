@@ -451,6 +451,10 @@ if ! $(debug) || --noassert in $(ARGV)
 if $(--boehm-gc)
 {
     --defs += OPT_BOEHM_GC ;
+    if $(debug)
+    {
+        --defs += GC_DEBUG ;
+    }
 }
 
 if $(--duma)
