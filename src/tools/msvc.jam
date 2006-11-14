@@ -893,6 +893,7 @@ actions compile.mc
 
 # Version aliases
 .version-alias-6 = 6.0 ;
+.version-alias-6.5 = 6.0 ;
 .version-alias-7 = 7.0 ;
 .version-alias-8 = 8.0 ;
  
