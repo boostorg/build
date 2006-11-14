@@ -1,6 +1,6 @@
 # Copyright 2003, 2004, 2005 Dave Abrahams 
 # Copyright 2003, 2004, 2005 Douglas Gregor 
-# Copyright 2005 Rene Rivera 
+# Copyright 2005, 2006 Rene Rivera 
 # Copyright 2003, 2004, 2005 Vladimir Prus 
 # Distributed under the Boost Software License, Version 1.0. 
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
@@ -113,12 +113,6 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
           : $(search-dirs:J="
 ") ;
     }    
-    # Add trailing slash since some other code 
-    # uses :B modifier to add last element, and fails
-    # without trailing slash. The code really should be fixed,
-    # but not now.
-    .boostbook-xsl-dir = $(.boostbook-xsl-dir)/ ;
-    .boostbook-dtd-dir = $(.boostbook-dtd-dir)/ ;   
     
     # Register generators only if we've were called via "using boostbook ; "
     generators.register-standard boostbook.dtdxml-to-boostbook : DTDXML : XML ;
@@ -162,36 +156,31 @@ rule dtdxml-to-boostbook ( target : source : properties * )
 
 rule boostbook-to-docbook ( target : source : properties * )
 {
-  local native-path = [ path.native $(.boostbook-xsl-dir) ] ;
-  local stylesheet = $(native-path:B=docbook:S=.xsl) ;
+  local stylesheet = [ path.native $(.boostbook-xsl-dir)/docbook.xsl ] ;
   xslt $(target) : $(source) $(stylesheet) : $(properties) ;
 }
 
 rule docbook-to-onehtml ( target : source : properties * )
 {
-  local native-path = [ path.native $(.boostbook-xsl-dir) ] ;
-  local stylesheet = $(native-path:B=html-single:S=.xsl) ;
+  local stylesheet = [ path.native $(.boostbook-xsl-dir)/html-single.xsl ] ;
   xslt $(target) : $(source) $(stylesheet) : $(properties) ;
 }
 
 rule docbook-to-htmldir ( target : source : properties * )
 {
-  local native-path = [ path.native $(.boostbook-xsl-dir) ] ;
-  local stylesheet = $(native-path:B=html:S=.xsl) ;
+  local stylesheet = [ path.native $(.boostbook-xsl-dir)/html.xsl ] ;
   xslt-dir $(target) : $(source) $(stylesheet) : $(properties) : html ;
 }
 
 rule docbook-to-manpages ( target : source : properties * )
 {
-  local native-path = [ path.native $(.boostbook-xsl-dir) ] ;
-  local stylesheet = $(native-path:B=manpages:S=.xsl) ;
+  local stylesheet = [ path.native $(.boostbook-xsl-dir)/manpages.xsl ] ;
   xslt-dir $(target) : $(source) $(stylesheet) : $(properties) : man ;
 }
 
 rule docbook-to-fo ( target : source : properties * )
 {
-  local native-path = [ path.native $(.boostbook-xsl-dir) ] ;
-  local stylesheet = $(native-path:B=fo:S=.xsl) ;
+  local stylesheet = [ path.native $(.boostbook-xsl-dir)/fo.xsl ] ;
   xslt $(target) : $(source) $(stylesheet) : $(properties) ;
 }
 
@@ -272,9 +261,7 @@ class boostbook-generator : generator
        
         # Add the catalog to the property set
         local catalog-path = [ $(catalog).path ] ;
-        catalog-path = "$(catalog-path)/" ;
-        local catalog-file = $(catalog-path:G=<catalog>:B=catalog:S=.xml) ;
-        property-set = [ $(property-set).add-raw $(catalog-file) ] ;
+        property-set = [ $(property-set).add-raw <catalog>$(catalog-path)/catalog.xml ] ;
 
         # local targets = $(catalog) ;
 

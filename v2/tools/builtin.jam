@@ -116,6 +116,9 @@ feature linkflags : : free ;
 feature archiveflags : : free ;
 feature version : : free ;
 
+# Generic, i.e. non-lanugage specific, flags for tools.
+feature flags : : free ;
+
 feature.feature location-prefix : : free ;
 
 

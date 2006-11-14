@@ -10,6 +10,7 @@
 #  Note: except for 'init', this modules does not provide any rules
 #  for end users. 
 
+import toolset : flags ;
 import feature ;
 import regex ;
 import sequence ;
@@ -38,6 +39,10 @@ rule init ( xsltproc ? )
 rule compute-xslt-flags ( target : properties * )
 {
   local flags ;
+  
+  # Raw flags.
+  flags += [ feature.get-values <flags> : $(properties) ] ;
+  
   # Translate <xsl:param> into command line flags.  
   for local param in [ feature.get-values <xsl:param> : $(properties) ]
   {
@@ -75,7 +80,7 @@ rule compute-xslt-flags ( target : properties * )
 local rule .xsltproc ( target : source stylesheet : properties * : dirname ? : action )
 {
     STYLESHEET on $(target) = $(stylesheet) ;
-    FLAGS on $(target) = [ compute-xslt-flags $(target) : $(properties) ] ;
+    FLAGS on $(target) += [ compute-xslt-flags $(target) : $(properties) ] ;
     NAME on $(target) = $(.xsltproc) ;
     
     for local catalog in [ feature.get-values <catalog> : $(properties) ]
