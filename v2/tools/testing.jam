@@ -333,6 +333,11 @@ rule run-path-setup ( target : source : properties * )
     }            
 }
 
+local argv = [ modules.peek : ARGV ] ;
+if --preserve-test-targets in $(argv)
+{
+    preserve-test-targets = true ;
+}
 
 toolset.flags testing.capture-output ARGS <testing.arg> ;
 toolset.flags testing.capture-output INPUT_FILES <testing.input-file> ;
@@ -353,8 +358,14 @@ rule capture-output ( target : source : properties * )
     # before target is created. Therefore, they are bound using SEARCH setting 
     # on them and not LOCATE setting of $(target), as in other case (due to jam bug).
     DEPENDS $(target) : [ on $(target) return $(INPUT_FILES) ] ;
-    
+        
     run-path-setup $(target) : $(source) : $(properties) ;
+    
+    if ! $(preserve-test-targets)
+    {
+        TEMPORARY $(sources) ;
+        RmTemps $(target) : $(source) ;
+    }
 }
 
 
@@ -396,6 +407,9 @@ else
     VERBOSE_TEST = 0 ;
 }
 
+
+RM = [ common.rm-command ] ;
+
 actions capture-output bind INPUT_FILES output-file
 {
     $(PATH_SETUP)
@@ -414,8 +428,13 @@ actions capture-output bind INPUT_FILES output-file
         echo ====== BEGIN OUTPUT ======
         $(CATENATE) $(output-file)
         echo ====== END OUTPUT ======
-    $(ENDIF)
+    $(ENDIF)    
     exit $(STATUS)      
+}
+
+actions quietly updated piecemeal together RmTemps
+{
+    $(RM) "$(>)"
 }
 
 MAKE_FILE = [ common.file-creation-command ] ;
