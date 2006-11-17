@@ -363,7 +363,7 @@ rule capture-output ( target : source : properties * )
     
     if ! $(preserve-test-targets)
     {
-        TEMPORARY $(sources) ;
+        TEMPORARY $(source) ;
         RmTemps $(target) : $(source) ;
     }
 }
