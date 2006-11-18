@@ -465,7 +465,23 @@ rule inherit-rules ( toolset : base )
     IMPORT $(toolset) : $(rules) : : $(toolset).$(rules) ;
 }
 
+# Return the list of global 'toolset requirements'.
+# Those requirements will be automatically added to
+# the requirements of any main target.
+rule requirements ( )
+{
+    return $(.requirements) ;
+}
 
+# Adds elements to the list of global 'toolset requirements'.
+# The requirements will be automatically added to the requirements
+# for all main targets, as if they were specified literally.
+# For best results, all requirements added should be conditional or
+# indirect conditional.
+rule add-requirements ( requirements * )
+{
+    .requirements += $(requirements) ;
+}
 
 local rule __test__ ( )
 {
