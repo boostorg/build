@@ -342,7 +342,14 @@ if --preserve-test-targets in $(argv)
 toolset.flags testing.capture-output ARGS <testing.arg> ;
 toolset.flags testing.capture-output INPUT_FILES <testing.input-file> ;
 toolset.flags testing.capture-output LAUNCHER <testing.launcher> ;
-rule capture-output ( target : source : properties * )
+
+# Runs executable 'sources' and stores stdout in file 'target'.
+# If --preserve-test-targets command line option, removes the executable.
+# The 'target-to-remove' parameter controls what should be removed:
+#   - if 'none', does not remove anything, ever
+#   - if empty, removes 'source'
+#   - if non-empty and not 'none', contains a list of sources to remove.
+rule capture-output ( target : source : properties * : targets-to-remove ? )
 {
     output-file on $(target) = $(target:S=.output) ;
     LOCATE on $(target:S=.output) = [ on $(target) return $(LOCATE) ] ;
@@ -358,13 +365,22 @@ rule capture-output ( target : source : properties * )
     # before target is created. Therefore, they are bound using SEARCH setting 
     # on them and not LOCATE setting of $(target), as in other case (due to jam bug).
     DEPENDS $(target) : [ on $(target) return $(INPUT_FILES) ] ;
-        
+    
+    if $(targets-to-remove) = none
+    {
+        targets-to-remove = ;
+    }
+    else if ! $(targets-to-remove)
+    {
+        targets-to-remove = $(source) ;
+    }
+            
     run-path-setup $(target) : $(source) : $(properties) ;
     
     if ! $(preserve-test-targets)
     {
-        TEMPORARY $(source) ;
-        RmTemps $(target) : $(source) ;
+        TEMPORARY $(targets-to-remove) ;
+        RmTemps $(target) : $(targets-to-remove) ;
     }
 }
 
