@@ -33,13 +33,13 @@ project ext ;
 local pwd = [ PWD ] ;
 
 lib a : 
-    : <file>$(pwd)/ext/bin/$toolset/debug/$(prefix)a.$(dll-suffix) <variant>debug
+    : <file>$(pwd)/ext/debug/$(prefix)a.$(dll-suffix) <variant>debug
     :
     : <include>debug
     ;
     
 lib a :
-    : <file>$(pwd)/ext/bin/$toolset/release/$(prefix)a.$(dll-suffix) <variant>release
+    : <file>$(pwd)/ext/release/$(prefix)a.$(dll-suffix) <variant>release
     :
     : <include>release
     ;
