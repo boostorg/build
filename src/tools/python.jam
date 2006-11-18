@@ -613,7 +613,10 @@ rule capture-output ( target : sources * : properties * )
     # over explicitly.
     RUN_PATH on $(sources[1]) = [ on $(sources[2]) return $(RUN_PATH) ] ;
     PYTHONPATH = [ on $(sources[2]) return $(LOCATE) ] ;
-    testing.capture-output $(target) : $(sources[1]) : $(properties) ;
+    # After test is run, we remove the Python module, but not the Python
+    # script.
+    testing.capture-output $(target) : $(sources[1]) : $(properties) 
+      : $(sources[2]) ;
     local c = [ common.prepend-path-variable-command PYTHONPATH : $(PYTHONPATH) ] ;
     LAUNCHER on $(target) = $(c) [ on $(target) return $(PYTHON) ] ;
 }
