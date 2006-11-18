@@ -26,13 +26,13 @@ if $toolset = darwin
 project ext ;
 
 lib a : 
-    : <file>bin/$toolset/debug/$(prefix)a.$(dll-suffix) <variant>debug
+    : <file>debug/$(prefix)a.$(dll-suffix) <variant>debug
     :
     : <include>debug
     ;
     
 lib a :
-    : <file>bin/$toolset/release/$(prefix)a.$(dll-suffix) <variant>release
+    : <file>release/$(prefix)a.$(dll-suffix) <variant>release
     :
     : <include>release
     ;
