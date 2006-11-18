@@ -23,6 +23,8 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 feature.extend toolset : cw ;
 
+toolset.add-requirements <toolset>cw,<runtime-link>shared:<threading>multi ;
+
 nl = "
 " ;
 
