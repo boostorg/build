@@ -22,6 +22,8 @@ toolset.inherit-generators intel-win <toolset>intel <toolset-intel:platform>win 
 toolset.inherit-flags intel-win : msvc ;
 toolset.inherit-rules intel-win : msvc ;
 
+toolset.add-requirements <toolset>intel-win,<runtime-link>shared:<threading>multi ;
+
 # Initializes the intel toolset for windows
 rule init ( version ? :     # the compiler version
             command * :     # the command to invoke the compiler itself
