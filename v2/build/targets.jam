@@ -82,6 +82,7 @@ import path ;
 import set ;
 import assert ;
 import indirect ;
+import toolset ;
 
 # Base class for all abstract targets.
 class abstract-target 
@@ -1408,6 +1409,8 @@ rule main-target-requirements (
   : project       # Project where the main target is to be declared
       )
 {
+    specification += [ toolset.requirements ] ;
+    
     local requirements = [ property-set.refine-from-user-input 
         [ $(project).get requirements ] : $(specification) :
         [ $(project).project-module ] : [ $(project).get location ] ] ;
