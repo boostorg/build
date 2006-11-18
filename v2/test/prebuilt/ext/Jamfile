@@ -8,3 +8,6 @@ project ext
     ;
 
 lib a : a.cpp ;
+
+install dist : a : <variant>release:<location>release
+                   <variant>debug:<location>debug ;
