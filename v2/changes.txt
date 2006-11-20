@@ -7,12 +7,15 @@ Milestone 12 (in development)
 
 Changes in this release:
 
+    - Support for autoconfiguration of toolset based on command-line
+      toolset=xxxx or --toolset=xxxx options, and for default toolset
+      configuration as a fallback.
     - Support for precompiled headers for gcc toolset,
       and improvements for msvc.
     - Mechanism for removing inherited requirements.
     - The 'make' rule support specifying usage-requirements.
     - New 'project.extension' rule for declaring standalone
-    projects.
+      projects.
     - New 'conditional' convenience rule.
     - New 'path.glob-tree' rule.
     - Inline targets are now marked explicit automatically.

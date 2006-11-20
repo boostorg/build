@@ -219,14 +219,13 @@ if ! [ feature.values <toolset> ]
         default-toolset = msvc ;
     }
     
-    ECHO "warning: * No toolsets are configured." ;
-    ECHO "warning: * Configuring default toolset" \"$(default-toolset)\". ;
-    ECHO "warning: * If the default is wrong, you may not be able to" ;
-    ECHO "warning:   build C++ programs." ;
-    ECHO "warning: * Use the \"--toolset=xxxxx\" option to override our guess." ;
-    ECHO "warning: * Please consult the documentation at" ;
-    ECHO "warning:   http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html" ;
-    ECHO "warning:   for more configuration options" ;
+    ECHO "warning: No toolsets are configured." ;
+    ECHO "warning: Configuring default toolset" \"$(default-toolset)\". ;
+    ECHO "warning: If the default is wrong, you may not be able to build C++ programs." ;
+    ECHO "warning: Use the \"--toolset=xxxxx\" option to override our guess." ;
+    ECHO "warning: For more configuration options, please consult"
+    ECHO "warning: http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html" ;
+
     
     if ! $(ignore-config)
     {
