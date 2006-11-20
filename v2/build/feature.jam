@@ -439,6 +439,38 @@ rule validate-value-string ( feature value-string )
     }
 }
 
+# A helper that computes:
+#  * the name(s) of the module-local variable(s) used to record the
+#    correspondence between subvalue(s) and a subfeature
+#
+#  * the value of that variable when such a subfeature/subvalue has
+#    been defined
+#
+# Returns a list consisting of the latter followed by the former
+local rule subvalue-var ( 
+  feature           # Main feature name
+    
+    value-string ?  # If supplied, specifies a specific value of the
+                    # main feature for which the subfeature values
+                    # are valid
+    
+    : subfeature    # The name of the subfeature
+    : subvalues *   # The subfeature values
+)
+{
+    feature = [ grist $(feature) ] ;
+    validate-feature $(feature) ;
+    if $(value-string)
+    {
+        validate-value-string $(feature) $(value-string) ;
+    }
+
+    local subfeature-name = [ get-subfeature-name $(subfeature) $(value-string) ] ;
+
+    return $(subfeature-name)
+    $(feature)$(value-string:E="")<>$(subvalues).subfeature ;
+}
+
 # Extends the given subfeature with the subvalues.  If the optional
 # value-string is provided, the subvalues are only valid for the given
 # value of the feature. Thus, you could say that
@@ -457,21 +489,29 @@ rule extend-subfeature (
     : subvalues *   # The additional values of the subfeature being defined.
 )
 {
-    feature = [ grist $(feature) ] ;
-    validate-feature $(feature) ;
-    if $(value-string)
-    {
-        validate-value-string $(feature) $(value-string) ;
-    }
-
-    local subfeature-name = [ get-subfeature-name $(subfeature) $(value-string) ] ;
+    local subfeature-vars = [ 
+      subvalue-var $(feature) $(value-string) : $(subfeature) : $(subvalues) ] ;
     
-    local f = [ utility.ungrist $(feature) ] ;
-    extend $(f)-$(subfeature-name) : $(subvalues) ;
+    local f = [ utility.ungrist [ grist $(feature) ] ] ;
+    extend $(f)-$(subfeature-vars[1]) : $(subvalues) ;
     
     # provide a way to get from the given feature or property and
     # subfeature value to the subfeature name.
-    $(feature)$(value-string:E="")<>$(subvalues).subfeature = $(subfeature-name) ;
+    $(subfeature-vars[2-]) = $(subfeature-vars[1]) ;
+}
+
+# Returns true iff the subvalues are valid for the feature.  When the
+# optional value-string is provided, returns true iff the subvalues
+# are valid for the given value of the feature.
+rule is-subvalue ( feature : value-string ? : subfeature : subvalue )
+{
+    local subfeature-vars = [ 
+      subvalue-var $(feature) $(value-string) : $(subfeature) : $(subvalue) ] ;
+    
+    if $($(subfeature-vars[2])) = $(subfeature-vars[1]) 
+    {
+        return true ;
+    }
 }
 
 # Can be called three ways:
@@ -1020,6 +1060,17 @@ local rule __test__ ( )
     extend-feature toolset : msvc metrowerks ;
     subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
       3.0 3.0.1 3.0.2 ;
+    
+    assert.true is-subvalue toolset : gcc : version : 2.95.3 ;
+    assert.false is-subvalue toolset : gcc : version : 1.1 ;
+
+    assert.false is-subvalue toolset : msvc : version : 2.95.3 ;
+    assert.false is-subvalue toolset : : version : yabba ;
+    
+    feature yabba ;
+    subfeature yabba : version : dabba ;
+    assert.true is-subvalue yabba : : version : dabba ;
+    
     
     subfeature toolset gcc : platform : linux cygwin : optional ;
     
