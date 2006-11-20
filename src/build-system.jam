@@ -22,6 +22,7 @@ import build-request ;
 import errors : error ;
 import virtual-target ;
 import "class" : new ;
+import toolset ;
 
 import builtin ;
 import make ;
@@ -44,9 +45,12 @@ rule location ( )
 # ignore user configs.
 
 local test-config = [ GLOB [ os.environ BOOST_BUILD_PATH ] : test-config.jam ] ;
+
+local debug-config = [ MATCH ^(--debug-configuration)$ : [ modules.peek : ARGV ] ] ;
+
 if $(test-config)
 {
-    if --debug-configuration in [ modules.peek : ARGV ]
+    if $(debug-config)
     {
         ECHO "notice: loading test-config.jam from" 
           [ NORMALIZE_PATH $(test-config[1]) ] ;
@@ -68,65 +72,122 @@ if $(test-config) || --ignore-config in [ modules.peek : ARGV ]
 
 local user-path = [ os.home-directories ] [ os.environ BOOST_BUILD_PATH ] ;
     
+# Unless ignore-config is set, load the configuration file in
+# $(path)/$(basename).jam
+local rule load-config ( basename : path + )
+{       
+    if ! $(ignore-config)    
+    {
+        if $(debug-config)
+        {
+            local where = [ GLOB $(path) : $(basename).jam ] ;
+            if $(where)
+            {            
+                ECHO notice: loading $(basename).jam from
+                  [ NORMALIZE_PATH $(where[1]) ] ;
+            }        
+        }        
+
+        modules.load $(basename) : : $(path) ;
+        project.load-used-projects $(basename) ;
+    }
+}
+
+#
 # Load site-config.
+#
 module site-config 
 {
     import project : initialize ;
     initialize site-config ;        
 }
-    
-if ! $(ignore-config)
-{   
-    local path ; 
-    if [ os.name ] in NT CYGWIN
-    {    
-        path = [ modules.peek : SystemRoot ] $(user-path) ;   
-    }
-    else
-    {
-        path = /etc $(user-path) ;
-    }
-    
-    
-    if --debug-configuration in [ modules.peek : ARGV ]
-    {
-        local where = [ GLOB $(path) : site-config.jam ] ;
-        if $(where)
-        {            
-            ECHO "notice: loading site-config.jam from" 
-              [ NORMALIZE_PATH $(where[1]) ] ;
-        }        
-    }        
-        
-    modules.load site-config : : $(path) ;
-    project.load-used-projects site-config ;
+
+local site-path = /etc $(user-path) ; 
+
+if [ os.name ] in NT CYGWIN
+{    
+    site-path = [ modules.peek : SystemRoot ] $(user-path) ;   
 }
 
+load-config site-config : $(site-path) ;
 
+#
 # Load user-config.
+#
 module user-config 
 {
     import project : initialize ;
     initialize user-config ;        
 }
 
-if ! $(ignore-config)
-{    
-    if --debug-configuration in [ modules.peek : ARGV ]
+load-config user-config : $(user-path) ;
+
+#
+# Autoconfigure toolsets based on any instances of --toolset=xxx or
+# toolset=xxx in the command line
+#
+local argv = [ modules.peek : ARGV ] ;
+local toolset-version = [ MATCH ^-?-?toolset=(.*) : $(argv) ] ;
+
+# if the user specified --toolset=..., we need to add toolset=... to
+# the build request
+local extra-build-request ; 
+
+if $(toolset-version) && ! $(ignore-config)
+{
+    local toolset = [ MATCH ([^-]+).* : $(toolset-version) ] ;
+    local version = [ MATCH [^-]+-(.+) : $(toolset-version) ] ;
+    
+    if $(debug-config)
     {
-        local where = [ GLOB $(user-path) : user-config.jam ] ;
-        if $(where)
+        ECHO notice: [cmdline-cfg] Detected command-line request for 
+          $(toolset-version): toolset= \"$(toolset)\" "version= \""$(version)\" ;
+    }
+    
+    local known ;
+    
+    # if the toolset isn't known, configure it now.
+    if $(toolset) in [ feature.values <toolset>  ]
+    {
+        known = true ;
+    }
+    
+    if $(known) && $(version) 
+      && ! [ feature.is-subvalue toolset : $(toolset) : version : $(version) ]
+    {
+        known = ;
+    }
+    
+    if ! $(known)
+    {
+        if $(debug-config)
         {
-            ECHO "notice: loading user-config.jam from" 
-              [ NORMALIZE_PATH $(where[1]) ] ;
-        }        
-    }    
-        
-    modules.load user-config : : $(user-path) ;    
-    project.load-used-projects user-config ;
-}    
-
-
+            ECHO notice: [cmdline-cfg] toolset $(toolset-version) 
+              not previously configured; configuring now ; 
+        }
+        toolset.using $(toolset) : $(version) ;
+    }
+    else
+    {
+        if $(debug-config)
+        {
+            ECHO notice: [cmdline-cfg] toolset $(toolset-version) already configured ;
+        }
+    }
+    
+    # make sure we get an appropriate property in the build request into
+    # case the user used the "--toolset=..." form
+    if ! $(toolset-version) in $(argv)
+        && ! toolset=$(toolset-version) in $(argv) 
+    {
+        if $(debug-config)
+        {
+            ECHO notice: [cmdline-cfg] adding toolset=$(toolset-version) "to build request." ;
+        }
+        extra-build-request += toolset=$(toolset-version) ;
+    }
+}
+    
 if USER_MODULE in [ RULENAMES ]
 {
     USER_MODULE site-config user-config ;
@@ -152,16 +213,31 @@ if [ project.find "." : "." ]
 
 if ! [ feature.values <toolset> ] 
 {
-    ECHO "warning: no toolsets are configured." ;
-    ECHO "warning: you won't be able to build C++ programs." ;
-    ECHO "warning: please consult the documentation at" ;
+    local default-toolset = gcc ;
+    if [ os.name ] = NT
+    {
+        default-toolset = msvc ;
+    }
+    
+    ECHO "warning: No toolsets are configured." ;
+    ECHO "warning: Configuring default toolset" \"$(default-toolset)\". ;
+    ECHO "warning: If the default is wrong, you may not be able to build C++ programs." ;
+    ECHO "warning: Use the \"--toolset=xxxxx\" option to override our guess." ;
+    ECHO "warning: For more configuration options, please consult"
     ECHO "warning: http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html" ;
-    ECHO ;
+
+    
+    if ! $(ignore-config)
+    {
+        toolset.using $(default-toolset) ;
+    }
 }
 
-
-
-build-request = [ build-request.from-command-line [ modules.peek : ARGV ] ] ;
+build-request = [ 
+  build-request.from-command-line [ 
+    modules.peek : ARGV 
+  ] $(extra-build-request) 
+] ;
 
 properties = [ $(build-request).get-at 2 ] ;
 
