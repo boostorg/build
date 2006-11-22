@@ -325,4 +325,35 @@ foo() {}
 t.run_build_system("link=static")
 t.expect_addition("libs/bin/$toolset/debug/link-static/a_d.obj")
 
+
+# Test that indirect conditionals are respected in
+# usage requirements.
+t.rm(".")
+
+t.write("Jamroot", """
+rule has-foo ( properties * )
+{
+    return <define>HAS_FOO ;
+}
+
+exe a : a.cpp b ;
+lib b : b.cpp : <link>static : : <conditional>@has-foo ;
+""")
+t.write("a.cpp", """
+#ifdef HAS_FOO
+void foo();
+int main() { foo(); }
+#endif
+""")
+t.write("b.cpp", """
+void
+#if defined(_WIN32) && defined(SHARED_B)
+__declspec(dllexport)
+#endif
+foo() {}\n
+""")
+t.run_build_system()
+t.expect_addition("bin/$toolset/debug/a.exe")
+
+
 t.cleanup()
