@@ -82,6 +82,7 @@ import path ;
 import set ;
 import assert ;
 import indirect ;
+import toolset ;
 
 # Base class for all abstract targets.
 class abstract-target 
@@ -913,30 +914,38 @@ rule common-properties ( build-request requirements )
     }        
     result = [ $($(key)).add-raw $(free) ] ;
 }
-    
-rule common-properties2 ( build-request requirements )
-{           
-    # This guarantees that default properties are present
-    # in result, unless they are overrided by some requirement.
-    # FIXME: There is possibility that we've added <foo>bar, which is composite
-    # and expands to <foo2>bar2, but default value of <foo2> is not bar2,
-    # in which case it's not clear what to do.
-    # 
-    build-request = [ $(build-request).add-defaults ] ;
-    # Featured added by 'add-default' can be composite and expand
-    # to features without default values -- so they are not added yet.
-    # It could be clearer/faster to expand only newly added properties
-    # but that's not critical.
-    build-request = [ $(build-request).expand ] ;
-    
+
+# Given 'context' -- a set of already present properties, and 'requirements',
+# decide which extra properties should be applied to 'context'. 
+# For conditional requirements, this means evaluating condition. For 
+# indirect conditional requirements, this means calling a rule. Ordinary
+# requirements are always applied.
+#
+# Handles situation where evaluating one conditional requirements affects
+# condition of another conditional requirements, for example:
+#
+#     <toolset>gcc:<variant>release <variant>release:<define>RELEASE
+#
+# If 'what' is 'refined' returns context refined with new requirements. 
+# If 'what' is 'added' returns just the requirements that must be applied.
+rule evaluate-requirements ( requirements : context : what )
+{
     # Apply non-conditional requirements. 
-    # There's a slight bug here: it's possible that conditional
-    # requirement change a value set by non-conditional requirements. This
-    # should be error, but we don't detect it yet.   
+    # It's possible that that further conditional requirement change 
+    # a value set by non-conditional requirements. For example:
+    #
+    #    exe a : a.cpp : <threading>single <toolset>foo:<threading>multi ;
+    # 
+    # I'm not sure if this should be an error, or not, especially given that
+    #
+    #    <threading>single 
+    #
+    # might come from project's requirements.
     
-    local raw = [ $(build-request).raw ] ;
-    raw = [ property.refine $(raw) : 
-      [ feature.expand [ $(requirements).non-conditional ] ] ] ;
+    local unconditional = [ feature.expand [ $(requirements).non-conditional ] ] ;
+    
+    local raw = [ $(context).raw ] ;
+    raw = [ property.refine $(raw) : $(unconditional) ] ;
       
     # We've collected properties that surely must be present in common
     # properties. We now try to figure out what other properties
@@ -953,7 +962,8 @@ rule common-properties2 ( build-request requirements )
     local count = $(conditionals) 
                   [ $(requirements).get <conditional> ]                    
                   and-once-more ;
-    local prev ;
+    
+    local added-requirements ;
     
     local current = $(raw) ;
     
@@ -978,7 +988,7 @@ rule common-properties2 ( build-request requirements )
             e += [ indirect.call $(i) $(current) ] ;
         }
                              
-        if $(e) = $(prev)
+        if $(e) = $(added-requirements)
         {                
             # If we got the same result, we've found final properties.
             count = ;      
@@ -986,11 +996,11 @@ rule common-properties2 ( build-request requirements )
         }         
         else
         {
-            # Oops, results of evaluation of conditionals has changes
+            # Oops, results of evaluation of conditionals has changed.
             # Also 'current' contains leftover from previous evaluation.
             # Recompute 'current' using initial properties and conditional
             # requirements.
-            prev = $(e) ;
+            added-requirements = $(e) ;
             current = [ property.refine $(raw) : [ feature.expand $(e) ] ] ;
         }            
         count = $(count[2-]) ;
@@ -1000,8 +1010,39 @@ rule common-properties2 ( build-request requirements )
         errors.error "Can't evaluate conditional properties " $(conditionals) ;
     }
     
+
+    if $(what) = added
+    {
+        return [ property-set.create $(unconditional) $(added-requirements) ] ;
+    }
+    else if $(what) = refined
+    {        
+        return [ property-set.create $(current) ] ;    
+    }
+    else
+    {
+        errors.error "Invalid value of the 'what' parameter" ;
+    }    
+}
+
     
-    return [ property-set.create $(current) ] ;
+rule common-properties2 ( build-request requirements )
+{           
+    # This guarantees that default properties are present
+    # in result, unless they are overrided by some requirement.
+    # FIXME: There is possibility that we've added <foo>bar, which is composite
+    # and expands to <foo2>bar2, but default value of <foo2> is not bar2,
+    # in which case it's not clear what to do.
+    # 
+    build-request = [ $(build-request).add-defaults ] ;
+    # Featured added by 'add-default' can be composite and expand
+    # to features without default values -- so they are not added yet.
+    # It could be clearer/faster to expand only newly added properties
+    # but that's not critical.
+    build-request = [ $(build-request).expand ] ;
+    
+    return [ evaluate-requirements $(requirements) 
+      : $(build-request) : refined ] ;
 }
 
 # Implements the most standard way of constructing main target
@@ -1243,8 +1284,10 @@ class basic-target : abstract-target
     rule compute-usage-requirements ( subvariant )
     {
         local rproperties = [ $(subvariant).build-properties ] ;
-        xusage-requirements = [ $(self.usage-requirements).evaluate-conditionals 
-          $(rproperties) ] ;                
+        xusage-requirements = [ targets.evaluate-requirements 
+            $(self.usage-requirements) 
+              : $(rproperties) 
+                : added ] ;                
         
         # We generate all dependency properties and add them,
         # as well as their usage requirements, to result.
@@ -1408,6 +1451,8 @@ rule main-target-requirements (
   : project       # Project where the main target is to be declared
       )
 {
+    specification += [ toolset.requirements ] ;
+    
     local requirements = [ property-set.refine-from-user-input 
         [ $(project).get requirements ] : $(specification) :
         [ $(project).project-module ] : [ $(project).get location ] ] ;
@@ -1430,10 +1475,15 @@ rule main-target-usage-requirements (
 {
     local loc = [ $(project).get location ] ;         
     local project-usage-requirements = [ $(project).get usage-requirements ] ;
-        
-    local usage-requirements = [ property-set.create 
-        [ property.translate-paths $(specification) : $(loc) ] ] ;
     
+    # We don't use 'refine-from-user-input' because I'm not sure if:
+    # - removing of parent's usage requirements makes sense
+    # - refining of usage requirements is not needed, since usage requirements
+    #   are always free.
+    local usage-requirements = [ property-set.create-from-user-input 
+        $(specification) 
+          : [ $(project).project-module ] [ $(project).get location ] ] ;
+            
     return [ $(project-usage-requirements).add $(usage-requirements) ] ;
 }
 
