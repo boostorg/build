@@ -162,7 +162,7 @@ if os.name == 'posix':
     if string.find(os.uname()[0], "CYGWIN") == -1:
         tests.append("library_order")
 
-if string.find(get_toolset(), 'gcc') == 0:
+if string.find(get_toolset(), 'gcc') == 0 or string.find(get_toolset(), 'msvc') == 0:
     tests.append("gcc_runtime")
     tests.append("pch")
 
