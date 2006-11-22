@@ -47,6 +47,10 @@ toolset.inherit-flags msvc : midl ;
 # Inherit MC flags
 toolset.inherit-flags msvc : mc ;
 
+# Dynamic runtime comes only in MT flavour.
+toolset.add-requirements <toolset>msvc,<runtime-link>shared:<threading>multi ;
+
+
 RM =  [ common.rm-command ] ;
 nl = "
 " ;
