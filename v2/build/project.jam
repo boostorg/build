@@ -943,7 +943,7 @@ module project-rules
         }        
     }    
     
-    rule glob ( wildcards + )
+    rule glob ( wildcards + : excludes * )
     {
         import path ;
         import project ;
@@ -954,8 +954,9 @@ module project-rules
         local location = [ $(current).get source-location ] ;
 
         local result ;
-        local paths = [ path.glob $(location) : 
-          [ sequence.transform path.make : $(wildcards) ] ] ;
+        local paths = [ path.glob $(location) 
+          : [ sequence.transform path.make : $(wildcards) ] 
+            : [ sequence.transform path.make : $(excludes) ] ] ;
         if $(wildcards:D)
         {
             # The paths we've found are relative to current directory,
