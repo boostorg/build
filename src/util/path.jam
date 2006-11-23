@@ -282,7 +282,7 @@ local rule .glob-tree ( roots * : patterns * : exclude-patterns * )
     }
     if $(subdirs)
     {
-        result += [ .glob-tree $(subdirs) : $(patterns) ] ;
+        result += [ .glob-tree $(subdirs) : $(patterns) : $(exclude-patterns) ] ;
     }
     return $(result) ;
 }
