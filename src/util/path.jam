@@ -222,10 +222,11 @@ rule pwd ( )
 #    For example: 
 #        [ glob . : *.cpp ] 
 #        [ glob . : */build/Jamfile ] 
-rule glob ( dirs * : patterns + )
+rule glob ( dirs * : patterns + : exclude-patterns * )
 {
     local result ;
     local real-patterns ;
+    local real-exclude-patterns ;
     for local d in $(dirs)
     {
         for local p in $(patterns)
@@ -233,11 +234,19 @@ rule glob ( dirs * : patterns + )
             local pattern = [ path.root $(p) $(d) ] ;
             real-patterns += [ path.native $(pattern) ] ;
         }        
+        
+        for local p in $(exclude-patterns)
+        {
+            local pattern = [ path.root $(p) $(d) ] ;
+            real-exclude-patterns += [ path.native $(pattern) ] ;
+        }        
     }        
+
+    local inc = [ GLOB-RECURSIVELY $(real-patterns) ] ;
+    local exc = [ GLOB-RECURSIVELY $(real-exclude-patterns) ] ;
     
     return [ sequence.transform path.make : 
-        [ GLOB-RECURSIVELY $(real-patterns) ] ] ;
-
+        [ set.difference $(inc) : $(exc) ] ] ;
 }    
 
 # Recursive version of GLOB. Builds the glob of files while
