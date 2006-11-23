@@ -76,7 +76,8 @@ exe a : [ glob *.cpp ] ../d2/d//l ;
 t.run_build_system(subdir="d1")
 t.expect_addition("d1/bin/$toolset/debug/a.exe")
 
-# Test that wildcards can include directories
+# Test that wildcards can include directories. Also
+# test exclusion patterns.
 t.rm("d1")
 
 t.write("d1/src/foo/a.cpp", """
@@ -90,14 +91,41 @@ void bar() {}
 
 """)
 
+t.write("d1/src/bar/bad.cpp", """
+very bad non-compilable file
+""")
+
 
 t.write("d1/Jamfile", """
 project : source-location src ;
-exe a : [ glob foo/*.cpp bar/*.cpp ] ../d2/d//l ; 
+exe a : [ glob foo/*.cpp bar/*.cpp : bar/bad* ] ../d2/d//l ; 
 """)
 
 t.run_build_system(subdir="d1")
 t.expect_addition("d1/bin/$toolset/debug/a.exe")
+
+
+# Test that 'glob-tree' works.
+t.rm("d1/bin/$toolset/debug/a.exe")
+t.write("d1/Jamfile", """
+project : source-location src ;
+exe a : [ glob-tree *.cpp : bad* ] ../d2/d//l ; 
+""")
+t.run_build_system(subdir="d1")
+t.expect_addition("d1/bin/$toolset/debug/a.exe")
+
+# Test that directory names in patterns for
+# 'glob-tree' are rejected.
+t.write("d1/Jamfile", """
+project : source-location src ;
+exe a : [ glob-tree foo/*.cpp bar/*.cpp : bad* ] ../d2/d//l ; 
+""")
+
+t.run_build_system(subdir="d1", status=1)
+t.expect_output_line("error: The patterns * may not include directory")
+
+
+t.rm("d1/src/bar/bad.cpp")
 
 # Test that 'glob' works with absolute names
 t.rm("d1/bin")
