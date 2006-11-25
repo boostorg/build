@@ -1181,10 +1181,11 @@ class basic-target : abstract-target
     {
         if [ modules.peek : .debug-building ] 
         {
+            ECHO ;
             ECHO [ targets.indent ] "Building target '$(self.name)'" ;
+            targets.increase-indent ;
             ECHO [ targets.indent ] "Build request: " [ $(property-set).raw ] ;
             ECHO [ targets.indent ] "Target requirements: " [ $(self.requirements).raw ] ;            
-            targets.increase-indent ;
         }
                 
         if ! $(self.generated.$(property-set)) 
@@ -1194,7 +1195,8 @@ class basic-target : abstract-target
             
             if [ modules.peek : .debug-building ] 
             {
-                ECHO [ targets.indent ] "Common properties are" [ $(rproperties).raw ] ;
+                ECHO ;
+                ECHO [ targets.indent ] "Common properties:" [ $(rproperties).raw ] ;
             }
                         
             if $(rproperties[1]) != "@error" && [ $(rproperties).get <build> ] != no
@@ -1212,6 +1214,7 @@ class basic-target : abstract-target
                 
                 if [ modules.peek : .debug-building ] 
                 {
+                    ECHO ;
                     ECHO [ targets.indent ] 
                       "Usage requirements for $(self.name) are " $(usage-requirements) ;
                 }
@@ -1219,6 +1222,12 @@ class basic-target : abstract-target
                 rproperties = [ property-set.create $(properties) 
                   $(usage-requirements) ] ;
                 usage-requirements = [ property-set.create $(usage-requirements) ] ;
+                
+                if [ modules.peek : .debug-building ] 
+                {
+                    ECHO [ targets.indent ] 
+                      "Build properties: " [ $(rproperties).raw ] ;
+                }
                 
                 local extra = [ $(rproperties).get <source> ] ;                
                 source-targets += $(extra:G=) ;
@@ -1272,8 +1281,7 @@ class basic-target : abstract-target
                 ECHO [ targets.indent ] "Already built" ;
             }            
         }
-        
-        
+
         targets.decrease-indent ;
         return $(self.generated.$(property-set)) ;
     }
