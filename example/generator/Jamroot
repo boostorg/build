@@ -1,0 +1,3 @@
+
+import soap ;
+exe foo : foo.gci : <server>on ;
