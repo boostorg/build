@@ -1,6 +1,7 @@
 #
 #   Copyright (c) 2005 João Abecasis
 #   Copyright (c) 2005 Vladimir Prus
+#   Copyright (c) 2006 Rene Rivera
 #
 #   Distributed under the Boost Software License, Version 1.0. (See
 #   accompanying file LICENSE_1_0.txt or copy at
@@ -109,6 +110,8 @@ import generators ;
 import toolset ;
 import type ;
 import scanner ;
+import project ;
+import targets ;
 
 # The one and only QUICKBOOK type!
 type.register QUICKBOOK : qbk ;
@@ -296,3 +299,16 @@ actions quickbook-to-boostbook
     $(QB-COMMAND) --output-file=$(1) $(2)  
 }
 
+# Declare a main target to convert a quickbook source into a boostbook
+# XML file.
+rule to-boostbook ( target-name : sources * : requirements * : default-build * )
+{ 
+  local project = [ project.current ] ;
+    
+  targets.main-target-alternative 
+    [ new typed-target $(target-name) : $(project) : XML
+        : [ targets.main-target-sources $(sources) : $(target-name) ] 
+        : [ targets.main-target-requirements $(requirements) : $(project) ]
+        : [ targets.main-target-default-build $(default-build) : $(project) ] 
+    ] ;
+}
