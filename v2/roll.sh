@@ -25,7 +25,7 @@ echo -e "boost-build kernel ;\n" > boost-build.jam
 
 # Build the documentation
 touch doc/project-root.jam
-export BOOST_ROOT=/home/ghost/Work/boost-rc
+export BOOST_BUILD_PATH=/home/ghost/Work/boost-rc/tools/build/v2
 cd doc
 /home/ghost/Work/boost-rc/tools/jam/src/bin.linuxx86/bjam --v2
 /home/ghost/Work/boost-rc/tools/jam/src/bin.linuxx86/bjam --v2 pdf
