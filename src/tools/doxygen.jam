@@ -1,10 +1,22 @@
-# Copyright 2003, 2004 Douglas Gregor 
-# Copyright 2003, 2004, 2005 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003, 2004 Douglas Gregor
+# Copyright 2003, 2004, 2005 Vladimir Prus
+# Copyright 2006 Rene Rivera
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-#  This module defines rules to handle generation of BoostBook XML
-#  from Doxygen XML output. 
+# This module defines rules to handle generation of various outputs
+# from source files documented with doxygen comments. The supported
+# transformations are:
+#
+# * Source -> Doxygen XML -> BoostBook XML
+# * Source -> Doxygen HTML
+#
+# The type of transformation is selected based on the target requested.
+# For BoostBook XML, the default, specifying a target with an ".xml" suffix,
+# or an empty suffix, will produce a <target>.xml and <target>.boostbook.
+# For Doxygen HTML specifying a target with an ".html" suffix will produce
+# a directory <target> with the Doxygen html files, and a <target>.html file
+# redirecting to that directory.
 
 import "class" : new ;
 import targets ;
@@ -18,92 +30,164 @@ import print ;
 import regex ;
 import stage ;
 import project ;
-
 import xsltproc ;
+import make ;
+import os ;
 
+# Use to specify extra configuration paramters. These get translated
+# into a doxyfile which configures the building of the docs.
 feature.feature doxygen:param : : free ;
+
+# Specify the "<xsl:param>boost.doxygen.header.prefix" XSLT option.
 feature.feature prefix : : free ;
+
+# Specify the "<xsl:param>boost.doxygen.reftitle" XSLT option.
 feature.feature reftitle : : free ;
 
-type.register DOXYFILE : doxyfile ; # Doxygen input file
-type.register DOXYGEN_XML_MULTIFILE : : XML ; # Doxygen XML multi-file output
-type.register DOXYGEN_XML : doxygen : XML ; # Doxygen XML output
+# Doxygen configuration input file.
+type.register DOXYFILE : doxyfile ;
+
+# Doxygen XML multi-file output.
+type.register DOXYGEN_XML_MULTIFILE : : XML ;
+
+# Doxygen XML coallesed output.
+type.register DOXYGEN_XML : doxygen : XML ;
+
+# Doxygen HTML multifile directory.
+type.register DOXYGEN_HTML_MULTIFILE : dir : HTML ;
+
+# Redirection HTML file to HTML multifile directory.
+type.register DOXYGEN_HTML : : HTML ;
 
 # Initialize the Doxygen module. Parameters are:
 #   name: the name of the 'doxygen' executable. If not specified, the name
 #         'doxygen' will be used
 rule init ( name ? )
 {
-  if ! $(.initialized)
-  {
-    .initialized = true ;
-      
-    if $(name)
+    if ! $(.initialized)
     {
-      .doxygen = $(name) ; 
-    }   
-    
-    generators.register-composing doxygen.headers-to-doxyfile : H HPP : DOXYFILE ; 
-    generators.register-standard doxygen.run : DOXYFILE : DOXYGEN_XML_MULTIFILE ;
-    generators.register-standard doxygen.xml-to-boostbook : DOXYGEN_XML : BOOSTBOOK ;
-    generators.register-standard doxygen.collect : DOXYGEN_XML_MULTIFILE : DOXYGEN_XML ;
-            
-    IMPORT $(__name__) : doxygen : : doxygen ;
-  }
+        .initialized = true ;
+
+        if ! $(name)
+        {
+            if [ os.name ] = NT
+            {
+                local ProgramFiles = [ modules.peek : ProgramFiles ] ;
+                if $(ProgramFiles)
+                {
+                    ProgramFiles = "$(ProgramFiles:J= )" ;
+                }
+                else
+                {
+                    ProgramFiles = "C:\\Program Files" ;
+                }
+                
+                local doxygen-path =
+                    [ GLOB
+                        [ modules.peek : PATH ]
+                        "$(ProgramFiles)\\doxygen\\bin"
+                        : doxygen\.exe ] ;
+                doxygen-path = $(doxygen-path[1]) ;
+                
+                if $(doxygen-path)
+                {
+                    if --debug-configuration in [ modules.peek : ARGV ]
+                    {
+                        ECHO "notice:" using doxygen ":" $(doxygen-path) ;
+                    }
+                    .doxygen = $(doxygen-path) ;
+                }
+            }
+            else
+            {
+                local doxygen-path =
+                    [ GLOB
+                        [ modules.peek : PATH ]
+                        : doxygen ] ;
+                doxygen-path = $(doxygen-path[1]) ;
+                
+                if $(doxygen-path)
+                {
+                    if --debug-configuration in [ modules.peek : ARGV ]
+                    {
+                        ECHO "notice:" using doxygen ":" $(doxygen-path) ;
+                    }
+                    .doxygen = $(doxygen-path) ;
+                }
+            }
+        }
+        else
+        {
+            if --debug-configuration in [ modules.peek : ARGV ]
+            {
+                ECHO "notice:" using doxygen ":" $(name) ;
+            }
+            .doxygen = $(name) ;
+        }
+        .doxygen ?= doxygen ;
+
+        generators.register-composing doxygen.headers-to-doxyfile : H HPP CPP : DOXYFILE ;
+        generators.register-standard doxygen.run : DOXYFILE : DOXYGEN_XML_MULTIFILE ;
+        generators.register-standard doxygen.xml-to-boostbook : DOXYGEN_XML : BOOSTBOOK ;
+        generators.register-standard doxygen.collect : DOXYGEN_XML_MULTIFILE : DOXYGEN_XML ;
+        generators.register-standard doxygen.run : DOXYFILE : DOXYGEN_HTML_MULTIFILE ;
+        generators.register-standard doxygen.html-redirect : DOXYGEN_HTML_MULTIFILE : DOXYGEN_HTML ;
+
+        IMPORT $(__name__) : doxygen : : doxygen ;
+    }
 }
 
 rule name ( )
 {
-  return $(.doxygen) ;
+    return $(.doxygen) ;
 }
 
 # Runs Doxygen on the given Doxygen configuration file (the source) to
-# generate Doxygen XML (in multiple files). The output is dumped
-# according to the settings in the Doxygen configuration file, not
-# according to the target! Because of this, we essentially "touch" the
-# target file, in effect making it look like we've really written
-# something useful to it. Anyone that uses this action must deal with
-# this behavior.  
-actions doxygen-action 
+# generate the Doxygen files. The output is dumped according to the settings
+# in the Doxygen configuration file, not according to the target! Because
+# of this, we essentially "touch" the target file, in effect making it look
+# like we've really written something useful to it. Anyone that uses this
+# action must deal with this behavior.
+actions doxygen-action
 {
-  "$(NAME:E=doxygen)" $(>) ;
-  echo "Stamped" > "$(<)"
+    "$(NAME:E=doxygen)" $(>) && echo "Stamped" > "$(<)"
 }
 
 # Generates a doxygen configuration file (doxyfile) given a set of C++
-# sources anda property list that may contain <doxygen:param>
+# sources and a property list that may contain <doxygen:param>
 # features.
 rule headers-to-doxyfile ( target : sources * : properties * )
 {
-  local text "# Generated by Boost.Build version 2" ;
+    local text "# Generated by Boost.Build version 2" ;
 
-  # Translate <doxygen:param> into command line flags.  
-  for local param in [ feature.get-values <doxygen:param> : $(properties) ]
-  {
-    local namevalue = [ regex.match ([^=]*)=(.*) : $(param) ] ;
-    text += "$(namevalue[1]) = $(namevalue[2])" ;
-  }
- 
-  local headers = "" ;
-  for local source in $(sources:G=)
-  {
-    headers = "$(headers) $(source)" ;
-  }
+    # Translate <doxygen:param> into command line flags.
+    for local param in [ feature.get-values <doxygen:param> : $(properties) ]
+    {
+        local namevalue = [ regex.match ([^=]*)=(.*) : $(param) ] ;
+        text += "$(namevalue[1]) = $(namevalue[2])" ;
+    }
 
-  text += "GENERATE_HTML = NO" ;
-  text += "GENERATE_LATEX = NO" ;
-  text += "GENERATE_XML = YES" ;
-  text += "INPUT = $(headers) " ;
-  print.output $(target) plain ;
-  print.text $(text) : true ;
+    local headers = "" ;
+    for local source in $(sources:G=)
+    {
+        headers = "$(headers) $(source)" ;
+    }
+
+    # Doxygen generates LaTex by default. So disable it unconditionally,
+    # or at least until someone needs, and hence writes support for, LaTex
+    # output.
+    text += "GENERATE_LATEX = NO" ;
+    text += "INPUT = $(headers) " ;
+    print.output $(target) plain ;
+    print.text $(text) : true ;
 }
 
 # Run Doxygen. See doxygen-action for a description of the strange
 # properties of this rule
 rule run ( target : source : properties * )
 {
-  doxygen-action $(target) : $(source) ;  
-  NAME on $(target) = $(.doxygen) ;
+    doxygen-action $(target) : $(source) ;
+    NAME on $(target) = $(.doxygen) ;
 }
 
 # The rules below require Boost.Book stylesheets, so we need
@@ -118,9 +202,8 @@ rule check-boostbook ( )
         ECHO "error: which requires Boost.Book," ;
         ECHO "error: but never initialized Boost.Book." ;
         EXIT "error: Hint: add 'using boostbook ;' to your user-config.jam" ;
-    }      
+    }
 }
-
 
 # Collect the set of Doxygen XML files into a single XML source file
 # that can be handled by an XSLT processor. The source is completely
@@ -131,58 +214,137 @@ rule check-boostbook ( )
 # Doxygen XML file.
 rule collect ( target : source : properties * )
 {
-  check-boostbook ;
-  local collect-xsl-dir = [ path.native 
-                        [ path.join [ boostbook.xsl-dir ] doxygen collect ] 
-                          ] ;
-  local collect-path = [ path.join [ path.pwd ] xml ] ;
-  local real-source = [ path.native xml/index.xml ] ;
-  NOTFILE $(real-source) ;
-  xsltproc.xslt $(target) : $(real-source) $(collect-xsl-dir:S=.xsl) 
-                 : <xsl:param>doxygen.xml.path=$(collect-path)
-                 ;
+    check-boostbook ;
+    local collect-xsl-dir = [ path.native
+        [ path.join [ boostbook.xsl-dir ] doxygen collect ]
+        ] ;
+    local collect-path = [ path.join [ path.pwd ] xml ] ;
+    local real-source = [ path.native xml/index.xml ] ;
+    NOTFILE $(real-source) ;
+    xsltproc.xslt $(target) : $(real-source) $(collect-xsl-dir:S=.xsl)
+        : <xsl:param>doxygen.xml.path=$(collect-path)
+        ;
 }
 
 # Translate Doxygen XML into BoostBook
 rule xml-to-boostbook ( target : source : properties * )
 {
-  check-boostbook ;
-  local xsl-dir = [ boostbook.xsl-dir ] ;
-  local d2b-xsl = [ path.native 
-                  [ path.join [ boostbook.xsl-dir ] doxygen 
-                    doxygen2boostbook.xsl ] ] ;
+    check-boostbook ;
+    local xsl-dir = [ boostbook.xsl-dir ] ;
+    local d2b-xsl = [ path.native
+        [ path.join [ boostbook.xsl-dir ] doxygen
+        doxygen2boostbook.xsl ] ] ;
 
-  local xslt-properties = $(properties) ;
-  for local prefix in [ feature.get-values <prefix> : $(properties) ]
-  {
-    xslt-properties += "<xsl:param>boost.doxygen.header.prefix=$(prefix)" ;
-  }
-  for local title in [ feature.get-values <reftitle> : $(properties) ]
-  {
-    xslt-properties += "<xsl:param>boost.doxygen.reftitle=\"$(title)\"" ;
-  }
+    local xslt-properties = $(properties) ;
+    for local prefix in [ feature.get-values <prefix> : $(properties) ]
+    {
+        xslt-properties += "<xsl:param>boost.doxygen.header.prefix=$(prefix)" ;
+    }
+    for local title in [ feature.get-values <reftitle> : $(properties) ]
+    {
+        xslt-properties += "<xsl:param>boost.doxygen.reftitle=\"$(title)\"" ;
+    }
 
-  xsltproc.xslt $(target) : $(source) $(d2b-xsl) : $(xslt-properties) ;
+    xsltproc.xslt $(target) : $(source) $(d2b-xsl) : $(xslt-properties) ;
 }
 
-# User-level rule to generate BoostBook XML from a set of headers via Doxygen. 
-rule doxygen ( target-name : sources * : requirements * : default-build * )
+# Generate the HTML redirect to HTML dir index.html file.
+rule html-redirect ( target : source : properties * )
 {
-  local project = [ project.current ] ;
+    local uri = "$(target:B)/index.html" ;
+    print.output $(target) plain ;
+    print.text
+"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"
+    \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">
+<html xmlns=\"http://www.w3.org/1999/xhtml\">
+<head>
+  <meta http-equiv=\"refresh\" content=\"0; URL=$(uri)\" />
 
-  local doxyfile = [ 
-    new typed-target $(target-name) : $(project) : BOOSTBOOK
-        : [ targets.main-target-sources $(sources) : $(target-name) ] 
-        : [ targets.main-target-requirements $(requirements) : $(project) ] 
-        : [ targets.main-target-default-build $(default-build) : $(project) ]
-    ] ;
+  <title></title>
+</head>
 
-  targets.main-target-alternative $(doxyfile) ;
+<body>
+  Automatic redirection failed, please go to <a href=
+  \"$(uri)\">$(uri)</a>.
+</body>
+</html>
+"
+        : true ;
+}
 
-  targets.main-target-alternative
-    [ new install-target-class $(target-name:S=.xml) : $(project) 
-      : [ $(doxyfile).name ]
-      : [ targets.main-target-requirements $(requirements) <location>. : $(project) ] 
-      : [ targets.main-target-default-build $(default-build) : $(project) ] 
-    ] ;
+# User-level rule to generate BoostBook XML from a set of headers via Doxygen.
+rule doxygen ( target : sources * : requirements * : default-build * )
+{
+    local project = [ project.current ] ;
+
+    if $(target:S) = .html
+    {
+        # Build an HTML directory from the sources.
+        local output-dir = [ path.root
+            [ path.join
+                [ feature.get-values <location> : $(requirements) ]
+                [ $(project).get build-dir ]
+                ]
+            [ path.pwd ]
+            ] ;
+        local output-dir-native = [ path.native $(output-dir) ] ;
+        requirements = [ property.change $(requirements) : <location> ] ;
+        
+        ## The doxygen configuration file.
+        targets.main-target-alternative
+            [ new typed-target $(target:S=.tag) : $(project) : DOXYFILE
+                : [ targets.main-target-sources $(sources) : $(target:S=.tag) ]
+                : [ targets.main-target-requirements $(requirements)
+                    <doxygen:param>GENERATE_HTML=YES
+                    <doxygen:param>GENERATE_XML=NO
+                    <doxygen:param>"OUTPUT_DIRECTORY=$(output-dir-native)"
+                    <doxygen:param>HTML_OUTPUT=$(target:B)
+                    : $(project) ]
+                : [ targets.main-target-default-build $(default-build) : $(project) ]
+            ] ;
+        $(project).mark-target-as-explicit $(target:S=.tag) ;
+        
+        ## The html directory to generate by running doxygen.
+        targets.main-target-alternative
+            [ new typed-target $(target:S=.dir) : $(project) : DOXYGEN_HTML_MULTIFILE
+                : $(target:S=.tag)
+                : [ targets.main-target-requirements $(requirements)
+                    : $(project) ]
+                : [ targets.main-target-default-build $(default-build) : $(project) ]
+                ] ;
+        $(project).mark-target-as-explicit $(target:S=.dir) ;
+        
+        ## The redirect html file into the generated html.
+        targets.main-target-alternative
+            [ new typed-target $(target) : $(project) : DOXYGEN_HTML
+                : $(target:S=.dir)
+                : [ targets.main-target-requirements $(requirements)
+                    <location>$(output-dir)
+                    : $(project) ]
+                : [ targets.main-target-default-build $(default-build) : $(project) ]
+                ] ;
+    }
+    else
+    {
+        # Build a BoostBook XML file from the sources.
+        local doxyfile = [
+            new typed-target $(target) : $(project) : BOOSTBOOK
+                : [ targets.main-target-sources $(sources) : $(target) ]
+                : [ targets.main-target-requirements $(requirements)
+                    <doxygen:param>GENERATE_HTML=NO
+                    <doxygen:param>GENERATE_XML=YES
+                    : $(project) ]
+                : [ targets.main-target-default-build $(default-build) : $(project) ]
+            ] ;
+        targets.main-target-alternative $(doxyfile) ;
+
+        targets.main-target-alternative
+            [ new install-target-class $(target:S=.xml) : $(project)
+                : [ $(doxyfile).name ]
+                : [ targets.main-target-requirements $(requirements)
+                    <location>.
+                    : $(project) ]
+                : [ targets.main-target-default-build $(default-build) : $(project) ]
+            ] ;
+    }
 }
