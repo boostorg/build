@@ -34,6 +34,18 @@ rule split ( string separator )
     return $(s) $(result) ;
 }
 
+# Returns the concatenated results of Applying regex.split to every
+# element of list using the separator pattern.
+rule split-list ( list * : separator )
+{
+    local result ;
+    for s in $(list)
+    {
+        result += [ split $(s) $(separator) ] ;
+    }
+    return $(result) ;
+}
+  
 # Match string against pattern, and return the elements indicated by
 # indices.
 rule match ( pattern : string : indices * )
