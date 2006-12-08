@@ -23,6 +23,7 @@ import errors : error ;
 import virtual-target ;
 import "class" : new ;
 import toolset ;
+import regex ;
 
 import builtin ;
 import make ;
@@ -123,68 +124,73 @@ module user-config
 load-config user-config : $(user-path) ;
 
 #
-# Autoconfigure toolsets based on any instances of --toolset=xxx or
-# toolset=xxx in the command line
+# Autoconfigure toolsets based on any instances of --toolset=xx,yy,...zz or
+# toolset=xx,yy,...zz in the command line
 #
 local argv = [ modules.peek : ARGV ] ;
-local toolset-version = [ MATCH ^-?-?toolset=(.*) : $(argv) ] ;
+
+local option-toolsets = [ regex.split-list [ MATCH ^--toolset=(.*) : $(argv) ] : "," ] ;
+local feature-toolsets = [ regex.split-list [ MATCH ^toolset=(.*) : $(argv) ] : "," ] ;
 
 # if the user specified --toolset=..., we need to add toolset=... to
 # the build request
 local extra-build-request ; 
 
-if $(toolset-version) && ! $(ignore-config)
+if ! $(ignore-config)
 {
-    local toolset = [ MATCH ([^-]+).* : $(toolset-version) ] ;
-    local version = [ MATCH [^-]+-(.+) : $(toolset-version) ] ;
-    
-    if $(debug-config)
+    for local toolset-version in $(option-toolsets) $(feature-toolsets)
     {
-        ECHO notice: [cmdline-cfg] Detected command-line request for 
-          $(toolset-version): toolset= \"$(toolset)\" "version= \""$(version)\" ;
-    }
-    
-    local known ;
-    
-    # if the toolset isn't known, configure it now.
-    if $(toolset) in [ feature.values <toolset>  ]
-    {
-        known = true ;
-    }
-    
-    if $(known) && $(version) 
-      && ! [ feature.is-subvalue toolset : $(toolset) : version : $(version) ]
-    {
-        known = ;
-    }
-    
-    if ! $(known)
-    {
+        local toolset = [ MATCH ([^-]+).* : $(toolset-version) ] ;
+        local version = [ MATCH [^-]+-(.+) : $(toolset-version) ] ;
+
         if $(debug-config)
         {
-            ECHO notice: [cmdline-cfg] toolset $(toolset-version) 
-              not previously configured; configuring now ; 
+            ECHO notice: [cmdline-cfg] Detected command-line request for 
+              $(toolset-version): toolset= \"$(toolset)\" "version= \""$(version)\" ;
         }
-        toolset.using $(toolset) : $(version) ;
-    }
-    else
-    {
-        if $(debug-config)
+
+        local known ;
+
+        # if the toolset isn't known, configure it now.
+        if $(toolset) in [ feature.values <toolset>  ]
         {
-            ECHO notice: [cmdline-cfg] toolset $(toolset-version) already configured ;
+            known = true ;
         }
-    }
-    
-    # make sure we get an appropriate property in the build request into
-    # case the user used the "--toolset=..." form
-    if ! $(toolset-version) in $(argv)
-        && ! toolset=$(toolset-version) in $(argv) 
-    {
-        if $(debug-config)
+
+        if $(known) && $(version) 
+          && ! [ feature.is-subvalue toolset : $(toolset) : version : $(version) ]
         {
-            ECHO notice: [cmdline-cfg] adding toolset=$(toolset-version) "to build request." ;
+            known = ;
         }
-        extra-build-request += toolset=$(toolset-version) ;
+
+        if ! $(known)
+        {
+            if $(debug-config)
+            {
+                ECHO notice: [cmdline-cfg] toolset $(toolset-version) 
+                  not previously configured; configuring now ; 
+            }
+            toolset.using $(toolset) : $(version) ;
+        }
+        else
+        {
+            if $(debug-config)
+            {
+                ECHO notice: [cmdline-cfg] toolset $(toolset-version) already configured ;
+            }
+        }
+
+        # make sure we get an appropriate property into the build request in
+        # case the user used the "--toolset=..." form
+        if ! $(toolset-version) in $(argv)
+            && ! $(toolset-version) in $(feature-toolsets) 
+        {
+            if $(debug-config)
+            {
+                ECHO notice: [cmdline-cfg] adding toolset=$(toolset-version) "to build request." ;
+            }
+            extra-build-request += toolset=$(toolset-version) ;
+        }
     }
 }
     
