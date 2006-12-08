@@ -132,6 +132,10 @@ local argv = [ modules.peek : ARGV ] ;
 local option-toolsets = [ regex.split-list [ MATCH ^--toolset=(.*) : $(argv) ] : "," ] ;
 local feature-toolsets = [ regex.split-list [ MATCH ^toolset=(.*) : $(argv) ] : "," ] ;
 
+# if the user specified --toolset=..., we need to add toolset=... to
+# the build request
+local extra-build-request ; 
+
 if ! $(ignore-config)
 {
     for local toolset-version in $(option-toolsets) $(feature-toolsets)
