@@ -280,11 +280,9 @@ rule doxygen ( target : sources * : requirements * : default-build * )
     if $(target:S) = .html
     {
         # Build an HTML directory from the sources.
+        local html-location = [ feature.get-values <location> : $(requirements) ] ;
         local output-dir = [ path.root
-            [ path.join
-                [ feature.get-values <location> : $(requirements) ]
-                [ $(project).get build-dir ]
-                ]
+            [ path.join $(html-location:E=html) [ $(project).get build-dir ] ]
             [ path.pwd ]
             ] ;
         local output-dir-native = [ path.native $(output-dir) ] ;
