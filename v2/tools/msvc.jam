@@ -102,6 +102,10 @@ rule init (
     #       - if compiler is not found in default locations, PATH will be searched.    
     : options * 
     # options can include <setup>, <compiler>, <assembler>, <linker> and <resource-compiler>
+    #
+    #   <compiler-filter>
+    #       Command to pipe the output of running the compiler. For example
+    #       to pass the output to STLfilt.
 )
 {
     if $(command)
@@ -334,6 +338,8 @@ local rule configure-really (
         mc-compiler ?= mc ;
 
         manifest-tool = mt ;
+        
+        local cc-filter = [ get-values <compiler-filter> : $(options) ] ;
 
         for local i in 1 2 3
         {
@@ -364,6 +370,11 @@ local rule configure-really (
                 else
                 {
                     flags msvc.link .MT $(cond) : $(manifest-tool) -nologo ;
+                }
+                
+                if $(cc-filter)
+                {
+                    flags msvc .CC.FILTER $(cond) : "|" $(cc-filter) ;
                 }
             }
         }
@@ -680,7 +691,7 @@ rule compile-c-c++ ( targets + : sources * )
 
 actions compile-c-c++
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))"
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
 }
 
 rule compile.c ( targets + : sources * : properties * )
@@ -698,7 +709,7 @@ rule compile.c++ ( targets + : sources * : properties * )
 
 actions compile-c-c++-pch-s
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))"
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
 }
 
 # Needed only to avoid messing up Emacs syntax highlighting in
@@ -707,7 +718,7 @@ quote = "\"" ;
 
 actions compile-c-c++-pch
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(quote)$(>[1]:D=)$(quote))"
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(quote)$(>[1]:D=)$(quote))" $(.CC.FILTER)
 }
 
 rule compile.c.pch ( targets + : sources * : properties * )
