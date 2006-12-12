@@ -198,8 +198,6 @@ local rule safe-shell-command ( cmdline )
 # Initialize the MPI module.  
 rule init ( mpicxx ? : options * )
 {
-  .configured = true ;
-
   if ! $(options)
   {
     if $(.debug-configuration)
@@ -210,14 +208,24 @@ rule init ( mpicxx ? : options * )
     # Try to auto-detect options based on the wrapper compiler
     local command = [ common.get-invocation-command mpi : mpic++ : $(mpicxx) ] ;
 
+    if ! $(mpicxx) && ! $(command) 
+    {
+      # Try "mpiCC", which is used by MPICH 
+      command = [ common.get-invocation-command mpi : mpiCC ] ;
+    }
+
     local result ;
     local compile_flags ;
     local link_flags ;
 
+    if ! $(command)
+    { 
+      # Do nothing: we'll complain later
+    }
     # OpenMPI and newer versions of LAM-MPI have -showme:compile and 
     # -showme:link.
-    if [ safe-shell-command "$(command) -showme:compile" ] &&
-       [ safe-shell-command "$(command) -showme:link" ]
+    else if [ safe-shell-command "$(command) -showme:compile" ] &&
+              [ safe-shell-command "$(command) -showme:link" ]
     {
       if $(.debug-configuration)
       {
@@ -293,24 +301,41 @@ rule init ( mpicxx ? : options * )
         echo "MPI build features: " ;
         ECHO $(options) ;
       }
-    } else {
-      ECHO "MPI auto-detection failed." ;
+    } 
+    else 
+    {
+      if $(command)
+      {
+        ECHO "MPI auto-detection failed: unknown wrapper compiler $(command)" ;
+        ECHO "Please report this error to the Boost mailing list: http://www.boost.org" ;
+      }     
+      else if $(mpicxx)
+      {
+        ECHO "MPI auto-detection failed: unable to find wrapper compiler $(mpicxx)" ;
+      } 
+      else
+      {
+        ECHO "MPI auto-detection failed: unable to find wrapper compiler `mpic++' or `mpiCC'" ;
+      }
       ECHO "You will need to manually configure MPI support." ;
     }
+
+   if $(options)  
+   {
+     .configured = true ;
+
+    # Set up the "mpi" alias 
+    alias mpi : : : : $(options) ;
+   }
 
     if $(.debug-configuration)
     {
       ECHO "====================================================" ;
     }
   }
-
-  # Set up the "mpi" alias 
-  alias mpi : : : : $(options) ;
 }
 
 rule configured ( )
 {
   return $(.configured) ;
 }
-
-# IMPORT $(__name__) : configured : : configured ;
