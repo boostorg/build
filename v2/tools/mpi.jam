@@ -35,6 +35,14 @@
 # To see the results of MPI auto-detection, pass "--debug-configuration" on
 # the bjam command line.
 #
+# The (optional) fourth argument configures Boost.MPI for running
+# regression tests. These parameters specify the executable used to launch jobs 
+# (default: "mpirun") followed by any necessary arguments to this to run tests and
+# tell the program to expect the number of processors to follow (default: "-np"). 
+# With the default parameters, for instance, the test harness will execute, e.g.,
+#  
+#    mpirun -np 4 all_gather_test
+#
 # ==== Linking Against the MPI Libraries ===
 #
 # To link against the MPI libraries, import the "mpi" module and add the 
@@ -45,8 +53,15 @@
 # Since MPI support is not always available, you should check 
 # "mpi.configured" before trying to link against the MPI libraries.
 
+import "class" : new ;
 import common ;
+import feature : feature ;
+import generators ;
 import project ;
+import property ;
+import testing ;
+import toolset ;
+import type ;
 
 # Make this module a project
 project.initialize $(__name__) ;
@@ -196,7 +211,7 @@ local rule safe-shell-command ( cmdline )
 }
 
 # Initialize the MPI module.  
-rule init ( mpicxx ? : options * )
+rule init ( mpicxx ? : options * : mpirun-with-options * )
 {
   if ! $(options)
   {
@@ -319,23 +334,103 @@ rule init ( mpicxx ? : options * )
       }
       ECHO "You will need to manually configure MPI support." ;
     }
-
-   if $(options)  
-   {
-     .configured = true ;
-
-    # Set up the "mpi" alias 
-    alias mpi : : : : $(options) ;
-   }
-
+ 
     if $(.debug-configuration)
     {
       ECHO "====================================================" ;
     }
+  }
+
+  # Find mpirun (or its equivalent) and its flags
+  .mpirun = 
+      [ common.get-invocation-command mpi : mpirun : $(mpirun-with-options[1]) ] ;
+  .mpirun_flags = $(mpirun-with-options[2-]) ;
+  .mpirun_flags ?= -np ;
+
+  if $(options)  
+  {
+    .configured = true ;
+
+    # Set up the "mpi" alias 
+    alias mpi : : : : $(options) ;
   }
 }
 
 rule configured ( )
 {
   return $(.configured) ;
+}
+
+# Support for testing; borrowed from Python
+type.register RUN_MPI_OUTPUT ;
+type.register RUN_MPI : : TEST ;
+
+class mpi-test-generator : generator
+{
+    import property-set ;
+
+    rule __init__ ( * : * )
+    {
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+        self.composing = true ;
+    }
+
+    rule run ( project name ? : property-set : sources * : multiple ? )
+    {  
+      # Generate an executable from the sources. This is the executable we will run.
+      local executable = 
+        [ generators.construct $(project) $(name) : EXE : $(property-set) : $(sources) ] ;
+
+      result = 
+        [ construct-result $(executable[2-]) : $(project) $(name)-run : $(property-set) ] ;
+    }
+}
+
+# Use mpi-test-generator to generate MPI tests from sources
+generators.register 
+  [ new mpi-test-generator mpi.capture-output : : RUN_MPI_OUTPUT ] ;
+
+generators.register-standard testing.expect-success 
+  : RUN_MPI_OUTPUT : RUN_MPI ;
+
+# 
+feature mpi:processes : : free incidental ;
+
+# The flag settings on testing.capture-output do not
+# apply to mpi.capture output at the moment.
+# Redo this explicitly.
+toolset.flags mpi.capture-output ARGS <testing.arg> ;
+rule capture-output ( target : sources * : properties * )
+{
+    # Use the standard capture-output rule to run the tests
+    testing.capture-output $(target) : $(sources[1]) : $(properties) ;
+
+    # Determine the number of processes we should run on.
+    local num_processes = [ property.select <mpi:processes> : $(properties) ] ;
+    num_processes = $(num_processes:G=) ;
+
+    # We launch MPI processes using the "mpirun" equivalent specified by the user.
+    LAUNCHER on $(target) =  
+      [ on $(target) return $(.mpirun) $(.mpirun_flags) $(num_processes) ] ;
+}
+
+# Creates a set of test cases to be run through the MPI launcher. The name, sources, 
+# and requirements are the same as for any other test generator. However, schedule is 
+# a list of numbers, which indicates how many processes each test run will use. For 
+# example, passing 1 2 7 will run the test with 1 process, then 2 processes, then 7
+# 7 processes. The name provided is just the base name: the actual tests will be 
+# the name followed by a hypen, then the number of processes. 
+rule mpi-test ( name : sources * : requirements * : schedule * )
+{        
+    sources ?= $(name).cpp ;
+    schedule ?= 1 2 3 4 7 8 13 17 ;
+
+    local result ;
+    for processes in $(schedule)
+    {  
+      result += [ testing.make-test 
+        run-mpi : $(sources) /boost/mpi//boost_mpi
+          : $(requirements) <mpi:processes>$(processes) : $(name)-$(processes) ] ;
+    }
+    return $(result) ;
 }
