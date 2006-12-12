@@ -1,0 +1,316 @@
+# Support for the Message Passing Interface (MPI)
+#
+# (C) Copyright 2005, 2006 Trustees of Indiana University
+# (C) Copyright 2005 Douglas Gregor
+#
+# Distributed under the Boost Software License, Version 1.0. (See accompanying 
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt.)
+#
+# Authors: Douglas Gregor
+#          Andrew Lumsdaine
+#
+# ==== MPI Configuration ====
+# 
+# For many users, MPI support can be enabled simply by adding the following 
+# line to your user-config.jam file:
+#
+#   using mpi ;
+#
+# This should auto-detect MPI settings based on the MPI wrapper compiler in 
+# your path, e.g., "mpic++". If the wrapper compiler is not in your path, or
+# has a different name, you can pass the name of the wrapper compiler as the
+# first argument to the mpi module:
+#
+#   using mpi : /opt/mpich2-1.0.4/bin/mpiCC ;
+#
+# If your MPI implementation does not have a wrapper compiler, or the MPI 
+# auto-detection code does not work with your MPI's wrapper compiler,
+# you can pass MPI-related options explicitly via the second parameter to the 
+# mpi module:
+#
+#    using mpi : : <find-shared-library>lammpio <find-shared-library>lammpi++
+#                  <find-shared-library>mpi <find-shared-library>lam 
+#                  <find-shared-library>dl ;
+#
+# To see the results of MPI auto-detection, pass "--debug-configuration" on
+# the bjam command line.
+#
+# ==== Linking Against the MPI Libraries ===
+#
+# To link against the MPI libraries, import the "mpi" module and add the 
+# following requirement to your target:
+# 
+#   <library>/mpi//mpi
+#
+# Since MPI support is not always available, you should check 
+# "mpi.configured" before trying to link against the MPI libraries.
+
+import common ;
+import project ;
+
+# Make this module a project
+project.initialize $(__name__) ;
+project mpi ;
+
+if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
+{
+  .debug-configuration = true ;
+}
+
+# Assuming the first part of the command line is the given prefix
+# followed by some non-empty value, remove the first argument. Returns
+# either nothing (if there was no prefix or no value) or a pair
+#
+#   <name>value rest-of-cmdline
+#
+# This is a subroutine of cmdline_to_features
+rule add_feature ( prefix name cmdline ) 
+{
+    local match = [ MATCH "^$(prefix)([^\" ]+|\"[^\"]+\") *(.*)$" : $(cmdline) ] ;
+
+    # If there was no value associated with the prefix, abort
+    if ! $(match) {
+      return ;
+    }
+
+    local value = $(match[1]) ;
+
+    if [ MATCH " +" : $(value) ] {
+      value = "\"$(value)\"" ;
+    }
+
+    return "<$(name)>$(value)" $(match[2]) ;
+}
+
+# Strip any end-of-line characters off the given string and return the
+# result.
+rule strip-eol ( string )
+{
+  local match = [ MATCH "^(([A-Za-z0-9~`\.!@#$%^&*()_+={};:'\",.<>/?\\| -]|[|])*).*$" : $(string) ] ;
+
+  if $(match)
+  {
+    return $(match[1]) ;
+  }
+  else
+  {
+    return $(string) ;
+  }
+}
+
+# Split a command-line into a set of features. Certain kinds of
+# compiler flags are recognized (e.g., -I, -D, -L, -l) and replaced
+# with their Boost.Build equivalents (e.g., <include>, <define>,
+# <library-path>, <find-library>). All other arguments are introduced
+# using the features in the unknown-features parameter, because we
+# don't know how to deal with them. For instance, if your compile and
+# correct. The incoming command line should be a string starting with
+# an executable (e.g., g++ -I/include/path") and may contain any
+# number of command-line arguments thereafter. The result is a list of
+# features corresponding to the given command line, ignoring the
+# executable.
+rule cmdline_to_features ( cmdline : unknown-features ? )
+{
+    local executable ;
+    local features ;
+    local otherflags ;
+    local result ;
+
+    unknown-features ?= <cxxflags> <linkflags> ;
+
+    # Pull the executable out of the command line. At this point, the
+    # executable is just thrown away.
+    local match = [ MATCH "^([^\" ]+|\"[^\"]+\") *(.*)$" : $(cmdline) ] ;
+    executable = $(match[1]) ;
+    cmdline = $(match[2]) ;
+
+    # List the prefix/feature pairs that we will be able to transform. 
+    # Every kind of parameter not mentioned here will be placed in both
+    # cxxflags and linkflags, because we don't know where they should go.
+    local feature_kinds-D = "define" ;
+    local feature_kinds-I = "include" ;
+    local feature_kinds-L = "library-path" ;
+    local feature_kinds-l = "find-shared-library" ;
+
+    while $(cmdline) {
+
+        # Check for one of the feature prefixes we know about. If we
+        # find one (and the associated value is nonempty), convert it
+        # into a feature.
+        local match = [ MATCH "^(-.)(.*)" : $(cmdline) ] ;
+        local matched ;
+        if $(match) && $(match[2]) {
+           local prefix = $(match[1]) ;
+           if $(feature_kinds$(prefix)) {
+               local name = $(feature_kinds$(prefix)) ;
+               local add = [ add_feature $(prefix) $(name) $(cmdline) ] ;
+
+               if $(add) {
+                  result += $(add[1]) ;
+                  cmdline = $(add[2]) ;
+                  matched = yes ;
+               }
+           }
+        }
+
+        # If we haven't matched a feature prefix, just grab the command-line
+        # argument itself. If we can map this argument to a feature
+        # (e.g., -pthread -> <threading>multi), then do so; otherwise,
+        # and add it to the list of "other" flags that we don't
+        # understand.
+        if ! $(matched) {
+           match = [ MATCH "^([^\" ]+|\"[^\"]+\") *(.*)$" : $(cmdline) ] ;
+           local value = $(match[1]) ;
+           cmdline = $(match[2]) ;
+
+           # Check for multithreading support
+           if $(value) = "-pthread" || $(value) = "-pthreads"
+           {
+             result += "<threading>multi" ;
+           }
+           else if [ MATCH "(.*[a-zA-Z0-9<>?-].*)" : $(value) ] {
+              otherflags += $(value) ;
+           }
+        }
+    }
+
+    # If there are other flags that we don't understand, add them to the
+    # result as both <cxxflags> and <linkflags>
+    if $(otherflags) {
+       for unknown in $(unknown-features)
+       {
+         result += "$(unknown)$(otherflags)" ;
+       }
+    }
+
+    return $(result) ;
+}
+
+# Determine if it is safe to execute the given shell command by trying
+# to execute it and determining whether the exit code is zero or
+# not. Returns true for an exit code of zero, false otherwise.
+local rule safe-shell-command ( cmdline )
+{
+  local result = [ SHELL "$(cmdline) > /dev/null 2>/dev/null; if [ "$?" -eq "0" ]; then echo SSCOK; fi" ] ;
+  return [ MATCH ".*(SSCOK).*" : $(result) ] ;
+}
+
+# Initialize the MPI module.  
+rule init ( mpicxx ? : options * )
+{
+  .configured = true ;
+
+  if ! $(options)
+  {
+    if $(.debug-configuration)
+    {
+      ECHO "===============MPI Auto-configuration===============" ;
+    }
+
+    # Try to auto-detect options based on the wrapper compiler
+    local command = [ common.get-invocation-command mpi : mpic++ : $(mpicxx) ] ;
+
+    local result ;
+    local compile_flags ;
+    local link_flags ;
+
+    # OpenMPI and newer versions of LAM-MPI have -showme:compile and 
+    # -showme:link.
+    if [ safe-shell-command "$(command) -showme:compile" ] &&
+       [ safe-shell-command "$(command) -showme:link" ]
+    {
+      if $(.debug-configuration)
+      {
+        ECHO "Found recent LAM-MPI or Open MPI wrapper compiler: $(command)" ;
+      }
+
+      compile_flags = [ SHELL "$(command) -showme:compile" ] ;
+      link_flags = [ SHELL "$(command) -showme:link" ] ;
+   
+      # Prepend COMPILER as the executable name, to match the format of 
+      # other compilation commands.
+      compile_flags = "COMPILER $(compile_flags)" ;
+      link_flags = "COMPILER $(link_flags)" ;
+    }
+    # Look for LAM-MPI's -showme
+    else if [ safe-shell-command "$(command) -showme" ]
+    {
+      if $(.debug-configuration)
+      {
+        ECHO "Found older LAM-MPI wrapper compiler: $(command)" ;
+      }
+
+      result = [ SHELL "$(command) -showme" ] ;
+    }
+    # Look for MPICH
+    else if [ safe-shell-command "$(command) -show" ]
+    {
+      if $(.debug-configuration)
+      {
+        ECHO "Found MPICH wrapper compiler: $(command)" ;
+      }
+      compile_flags = [ SHELL "$(command) -compile_info" ] ;
+      link_flags = [ SHELL "$(command) -link_info" ] ;
+    }
+
+    if $(result) || $(compile_flags) && $(link_flags)
+    {
+      if $(result)
+      {
+         result = [ strip-eol $(result) ] ;
+         options = [ cmdline_to_features $(result) ] ;
+      }
+      else 
+      { 
+         compile_flags = [ strip-eol $(compile_flags) ] ;
+         link_flags = [ strip-eol $(link_flags) ] ;
+
+         # Separately process compilation and link features, then combine
+         # them at the end.
+         local compile_features = [ cmdline_to_features $(compile_flags) 
+                                                        : "<cxxflags>" ] ; 
+         local link_features = [ cmdline_to_features $(link_flags) 
+                                                     : "<linkflags>" ] ; 
+         options = $(compile_features) $(link_features) ;
+      }
+
+      # If requested, display MPI configuration information.
+      if $(.debug-configuration)
+      {
+        if $(result)
+        {
+          ECHO "  Wrapper compiler command line: $(result)" ;
+        }
+        else
+        {
+	  local match = [ MATCH "^([^\" ]+|\"[^\"]+\") *(.*)$" 
+                                : $(compile_flags) ] ;
+          ECHO "MPI compilation flags: $(match[2])" ;
+	  local match = [ MATCH "^([^\" ]+|\"[^\"]+\") *(.*)$" 
+                                : $(link_flags) ] ;
+          ECHO "MPI link flags: $(match[2])" ;
+        }
+        echo "MPI build features: " ;
+        ECHO $(options) ;
+      }
+    } else {
+      ECHO "MPI auto-detection failed." ;
+      ECHO "You will need to manually configure MPI support." ;
+    }
+
+    if $(.debug-configuration)
+    {
+      ECHO "====================================================" ;
+    }
+  }
+
+  # Set up the "mpi" alias 
+  alias mpi : : : : $(options) ;
+}
+
+rule configured ( )
+{
+  return $(.configured) ;
+}
+
+# IMPORT $(__name__) : configured : : configured ;
