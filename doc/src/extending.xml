@@ -385,7 +385,7 @@ generators.register [ new itrace-generator nm.itrace : EXE : ITRACE ] ;
         program will import itself, not the extension. Here's how it can be
         done:
 <programlisting>
-rule run ( project name ? : property-set : sources * : multiple ? )
+rule run ( project name ? : property-set : sources * )
 {       
     local python ;
     for local s in $(sources)
