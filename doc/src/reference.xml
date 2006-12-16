@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE chapter PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
-  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd">
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd"
+[
+<!ENTITY toolset_ops "<optional><replaceable>version</replaceable></optional> : <optional><replaceable>c++-compile-command</replaceable></optional> : <optional><replaceable>compiler options</replaceable></optional>">
+<!ENTITY option_list_intro "<para>The following options can be provided, using <literal>&lt;<replaceable>option-name</replaceable>&gt;<replaceable>option-value</replaceable></literal> syntax:</para>">
+<!ENTITY using_repeation "<para>This statement may be repeated several times, if you want to configure several versions of the compiler.</para>">
+]>
 
-<chapter id="bbv2.reference">
+<chapter id="bbv2.reference"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
   <title>Detailed reference</title>
 
   <section id="bbv2.reference.general">
@@ -283,7 +289,7 @@ target1 debug gcc/runtime-link=dynamic,static
 
 
     <section id="bbv2.advanced.other-rules">
-      <title>Jamfile Utility Rules</title>
+      <title>Utility Rules</title>
 
       <para>The following table describes utility rules that can be
       used in Jamfiles. Detailed information for any of these rules can
@@ -292,6 +298,27 @@ target1 debug gcc/runtime-link=dynamic,static
 bjam --help project.<replaceable>rulename</replaceable>
 </screen>
       </para>
+
+    <variablelist>
+      <varlistentry>
+        <term><literal>glob</literal></term>
+        
+        <listitem><para>The <code>glob</code> rule takes a shell pattern and
+        returns the list of files in the project's source directory that
+        match the pattern. For example:
+        <programlisting>
+lib tools : [ glob *.cpp ] ;
+        </programlisting>
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>lib</literal></term>
+        
+        <listitem><para>Creates an library file. See 
+        <xref linkend="bbv2.tasks.libraries"/>.</para></listitem>
+      </varlistentry>
+    </variablelist>
 
       <table>
         <title/>
@@ -365,6 +392,509 @@ bjam --help project.<replaceable>rulename</replaceable>
       </table>
     </section>
 
+    <section id="bbv2.reference.tools">
+      <title>Builtin tools</title>
+
+      <para>Boost.Build comes with support for a large number of C++ compilers,
+      and other tools. This section documents how to use those tools.</para>
+
+      <para>Before using any tool, you must declare your intention, and possibly
+      specify additional information about tool's configuration. This is done
+      with the <code>using</code> rule, for example:
+<programlisting>
+using gcc ;
+</programlisting>
+      additional parameters can be passed just like for other rules, for example:
+<programlisting>
+using gcc : 4.0 : g++-4.0 ;
+</programlisting>
+      The options that can be passed to each tool will be documented in the
+      subsequent sections.</para>
+
+      <section id="bbv2.reference.tools.compilers">
+
+        <title>C++ Compilers</title>
+
+        <para>This section lists all Boost.Build modules that support C++
+        compilers and documents how each one can be initialized.</para>
+
+        <section id="bbv2.reference.tools.compiler.gcc">
+
+          <title>GNU C++</title>
+          
+          <para>The <code>gcc</code> module supports the 
+          <ulink url="http://gcc.gnu.org">GNU C++ compiler</ulink> 
+          on Linux, a number of Unix-like system including MacOS X, SunOS and
+          BeOS, and on Windows (either <ulink url="http://www.cygwin.com">Cygwin</ulink>
+          or <ulink url="http://www.mingw.org">MinGW</ulink>).
+          </para>
+
+          <para>The <code>gcc</code> module is initialized using the following
+          syntax:</para>
+          <programlisting>
+using gcc : &toolset_ops; ;</programlisting>
+
+          &using_repeation;
+
+          <!-- FIXME: mention everywhere what is the semantic
+          of version is -->
+
+          <para>
+          If the version is not explicitly specified, it will be
+          automatically detected by running the compiler with the <code>-v</code>
+          option. If the command is not specified, the <command>g++</command>
+          binary will be searched in <envar>PATH</envar>.</para>
+
+          &option_list_intro;
+          <variablelist>
+
+            <xi:include href="fragments.xml#xpointer(id('common_options')/*)" 
+                        parse="xml"/> 
+
+            <xi:include href="fragments.xml#xpointer(id('root_option')/*)" 
+                        parse="xml"/> 
+
+            <varlistentry>
+              <term><literal>rc</literal></term>
+
+              <listitem>
+                <para>Specifies the resource compiler command
+                that will be used with the version of gcc that is being
+                configured. This setting makes sense only for Windows and only
+                if you plan to use resource files. By
+                default <command>windres</command> will be used.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><literal>rc-type</literal></term>
+
+              <listitem>
+                <para>Specifies the type of resource compiler. The value can
+                be either <code>windres</code> for msvc resource compiler,
+                or <code>rc</code> for borland's resource compiler.</para>
+              </listitem>
+            </varlistentry>
+            
+          </variablelist>
+
+        </section>
+
+
+        <section id="bbv2.reference.tools.compiler.msvc">
+
+          <title>Microsoft Visual C++</title>
+
+          <para>The <code>msvc</code> module supports the  
+          <ulink url="http://msdn.microsoft.com/visualc/">Microsoft Visual
+          C++</ulink> command-line tools on Microsoft Windows. The supported
+          products and versions of command line tools are listed below:</para>
+          <itemizedlist>
+            <listitem><para>Visual Studio 2005&#x2014;8.0</para></listitem>
+            <listitem><para>Visual Studio .NET 2003&#x2014;7.1</para></listitem>
+            <listitem><para>Visual Studio .NET&#x2014;7.0</para></listitem>
+            <listitem><para>Visual Studio 6.0, Service Pack 5&#x2014;6.5</para></listitem>
+          </itemizedlist>
+
+          <para>The <code>msvc</code> module is initialized using the following
+          syntax:</para>
+          <programlisting>
+using msvc : &toolset_ops; ;
+          </programlisting>
+          &using_repeation;
+          <para>If the version is not explicitly specified, the most recent
+          version found in the registry will be used instead.  If the
+          special value <code>all</code> is passed as the version, all
+          versions found in the registry will be configured. If a version is
+          specified, but the command is not, the compiler binary will be
+          searched in standard installation paths for that version, followed
+          by <envar>PATH</envar>.
+          </para>
+
+          <para>The compiler command should be specified using forward slashes,
+          and quoted.</para>
+
+          &option_list_intro;
+          <variablelist>
+
+            <xi:include href="fragments.xml#xpointer(id('common_options')/*)" 
+                        parse="xml"/> 
+
+            <varlistentry>
+              <term><literal>setup</literal></term>
+
+              <listitem><para>The filename of the environment setup scripts
+              to run before invoking the compiler. If not specified, 
+              <command>vcvars32.bat</command> alongside the compiler binary
+              will be used.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><literal>compiler</literal></term>
+
+              <listitem><para>The command that compiles C and C++ sources.
+              If not specified, <command>cl</command> will be used. The
+              command will be invoked after the setup script was
+              executed and adjusted the <envar>PATH</envar> variable.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><literal>linker</literal></term>
+
+              <listitem><para>The command that links executables and dynamic
+              libraries.
+              If not specified, <command>link</command> will be used. The
+              command will be invoked after the setup script was
+              executed and adjusted the <envar>PATH</envar> variable.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><literal>assembler</literal></term>
+
+              <listitem><para>The command that compiles assember files.
+              If not specified, <command>cl</command> will be used. The
+              command will be invoked after the setup script was
+              executed and adjusted the <envar>PATH</envar> variable.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><literal>resource-compiler</literal></term>
+
+              <listitem><para>The command that compiles resource files.
+              If not specified, <command>rc</command> will be used. The
+              command will be invoked after the setup script was
+              executed and adjusted the <envar>PATH</envar> variable.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><literal>idl-compiler</literal></term>
+
+              <listitem><para>The command that compiles Microsoft COM
+              interface definition files.
+              If not specified, <command>midl</command> will be used. The
+              command will be invoked after the setup script was
+              executed and adjusted the <envar>PATH</envar> variable.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><literal>mc-compiler</literal></term>
+
+              <listitem><para>The command that compiles Microsoft message
+              catalog files.
+              If not specified, <command>mt</command> will be used. The
+              command will be invoked after the setup script was
+              executed and adjusted the <envar>PATH</envar> variable.</para>
+              </listitem>
+            </varlistentry>
+
+
+          </variablelist>
+                 
+        </section>
+
+        <section id="bbv2.reference.tools.compiler.intel">
+
+          <title>Intel C++</title>
+
+          <para>The <code>intel-linux</code> and <code>intel-win</code> modules
+          support the Intel C++ command-line compiler&#x2014;the <ulink url=
+          "http://www.intel.com/software/products/compilers/clin/index.htm">Linux</ulink>
+          and <ulink url=
+          "http://www.intel.com/cd/software/products/asmo-na/eng/compilers/284527.htm">
+          Windows</ulink> versions respectively.</para>
+
+          &option_list_intro;
+          <variablelist>
+
+            <xi:include href="fragments.xml#xpointer(id('common_options')/*)" 
+                        parse="xml"/> 
+
+          </variablelist>
+          
+          <para>The Linux version supports the following additional options:</para>
+          <variablelist>
+
+            <xi:include href="fragments.xml#xpointer(id('root_option')/*)" 
+                        parse="xml"/> 
+
+          </variablelist>
+
+          <!-- the compatibility option appears to be messed up -->
+                 
+        </section>
+
+        <section id="bbv2.reference.tools.compiler.acc">
+
+          <title>HP aC++ compiler</title>
+
+          <para>The <code>acc</code> module supports the
+<ulink url="http://h21007.www2.hp.com/dspp/tech/tech_TechSoftwareDetailPage_IDX/1,1703,1740,00.html">HP aC++ compiler</ulink>
+          for the HP-UX operating system.</para>
+
+          <para>The module is initialized using the following
+          syntax:</para>
+          <programlisting>
+using acc ;</programlisting>
+
+          <para>There are no configuration options. The
+          compiler will always be invoked as <command>aCC</command> and should
+          be in <envar>PATH</envar>.</para>
+       
+        </section>
+
+        <section id="bbv2.reference.tools.compiler.borland">
+
+          <title>Borland C++ Compiler</title>
+
+          <para>The <code>borland</code> module supports the command line
+          C++ compiler included in
+          <ulink url="http://www.borland.com/us/products/cbuilder/index.html">C++ Builder 2006</ulink>
+          product and earlier version of it, running on Microsoft Windows.</para>
+
+          <para>The supported products are listed below. The version reported
+          by the command lines tools is also listed for reference.:</para>
+          <itemizedlist>
+            <listitem><para>C++ Builder 2006&#x2014;5.8.2</para></listitem>
+            <listitem><para>CBuilderX&#x2014;5.6.5, 5.6.4 (depending on release)</para></listitem>
+            <listitem><para>CBuilder6&#x2014;5.6.4</para></listitem>
+            <listitem><para>Free command line tools&#x2014;5.5.1</para></listitem>
+          </itemizedlist>
+
+          <para>The module is initialized using the following syntax:</para>
+          <programlisting>
+using borland : &toolset_ops; ;</programlisting>
+
+          &using_repeation;
+
+          <para>If the command is not specified, Boost.Build will search for
+          a binary named <command>bcc32</command> in <envar>PATH</envar>.</para>
+
+          &option_list_intro;
+          <variablelist>
+            <xi:include href="fragments.xml#xpointer(id('common_options')/*)" 
+                        parse="xml"/> 
+          </variablelist>
+       
+        </section>
+
+        <section id="bbv2.reference.tools.compiler.como">
+
+          <title>Comeau C/C++ Compiler</title>
+
+          <para>The <code>como-linux</code> and the <code>como-win</code>
+          modules supports the 
+          <ulink url="http://www.comeaucomputing.com/">Comeau C/C++ Compiler</ulink>
+          on Linux and Windows respectively.</para>
+
+          <para>The module is initialized using the following syntax:</para>
+          <programlisting>
+using como-linux : &toolset_ops; ;</programlisting>
+
+          &using_repeation;
+
+          <para>If the command is not specified, Boost.Build will search for
+          a binary named <command>como</command> in 
+          <envar>PATH</envar>.</para>
+
+          &option_list_intro;
+          <variablelist>
+            <xi:include href="fragments.xml#xpointer(id('common_options')/*)" 
+                        parse="xml"/> 
+          </variablelist>
+
+          <para>Before using the windows version of the compiler, 
+          you need to setup necessary environment variables per compiler's
+          documentation. In particular, the <envar>COMO_XXX_INCLUDE</envar>
+          variable should be set, where <envar>XXX</envar> corresponds to the
+          used backend C compiler.</para>
+       
+        </section>
+
+        <section id="bbv2.reference.tools.compiler.cw">
+
+          <title>Code Warrior</title>
+
+          <para>The <code>cw</code> module support CodeWarrior compiler,
+          originally produced by Metrowerks and presently developed
+          by Freescale. Boost.Build supports only the versions of the compiler
+          that target x86 processors. All such versions were released by
+          Metrowerks before aquisition and are not sold any longer. 
+          The last version known to work is 9.4</para>
+
+          <para>The module is initialized using the following syntax:</para>
+          <programlisting>
+using cw : &toolset_ops; ;</programlisting>
+
+          &using_repeation;
+
+          <para>If the command is not specified, Boost.Build will search for
+          a binary named <command>mwcc</command> in default installation
+          paths and in <envar>PATH</envar>.</para>
+
+          &option_list_intro;
+          <variablelist>
+
+            <xi:include href="fragments.xml#xpointer(id('common_options')/*)" 
+                        parse="xml"/> 
+
+            <xi:include href="fragments.xml#xpointer(id('root_option')/*)" 
+                        parse="xml"/> 
+
+            <varlistentry>
+              <term><literal>setup</literal></term>
+
+              <listitem><para>The command that sets up environment variables
+              prior to invoking the compiler. If not specified, 
+              <command>cwenv.bat</command> alongside the compiler binary
+              will be used.</para>
+              </listitem>
+            </varlistentry>
+
+
+            <varlistentry>
+              <term><literal>compiler</literal></term>
+
+              <listitem><para>The command that compiles C and C++ sources.
+              If not specified, <command>mwcc</command> will be used. The
+              command will be invoked after the setup script was
+              executed and adjusted the <envar>PATH</envar> variable.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><literal>linker</literal></term>
+
+              <listitem><para>The command that links executables and dynamic
+              libraries.
+              If not specified, <command>mwld</command> will be used. The
+              command will be invoked after the setup script was
+              executed and adjusted the <envar>PATH</envar> variable.</para>
+              </listitem>
+            </varlistentry>
+                      
+          </variablelist>
+                 
+        </section>
+
+        <section id="bbv2.reference.tools.compiler.dmc">
+
+          <title>Digital Mars C/C++ Compiler</title>
+
+          <para>The <code>dmc</code> module supports the
+          <ulink url="http://www.digitalmars.com/">Digital Mars C++ compiler.</ulink>
+          </para>
+
+          <para>The module is initialized using the following syntax:</para>
+          <programlisting>
+using dmc : &toolset_ops; ;</programlisting>
+
+          &using_repeation;
+
+          <para>If the command is not specified, Boost.Build will search for
+          a binary named <command>como</command> in 
+          <envar>PATH</envar>.</para>
+
+          &option_list_intro;
+          <variablelist>
+            <xi:include href="fragments.xml#xpointer(id('common_options')/*)" 
+                        parse="xml"/> 
+          </variablelist>
+       
+        </section>
+
+        <section id="bbv2.reference.tools.compiler.hp_cxx">
+
+          <title>HP C++ Compiler for Tru64 Unix</title>
+
+          <para>The <code>hp_cxx</code> modules supports the
+          <ulink url="http://h30097.www3.hp.com/cplus/?jumpid=reg_R1002_USEN">
+            HP C++ Compiler</ulink> for Tru64 Unix.</para>
+
+          <para>The module is initialized using the following syntax:</para>
+          <programlisting>
+using hp_cxx : &toolset_ops; ;</programlisting>
+
+          &using_repeation;
+
+          <para>If the command is not specified, Boost.Build will search for
+          a binary named <command>hp_cxx</command> in <envar>PATH</envar>.</para>
+
+          &option_list_intro;
+          <variablelist>
+            <xi:include href="fragments.xml#xpointer(id('common_options')/*)" 
+                        parse="xml"/> 
+          </variablelist>
+       
+        </section>
+
+        <section id="bbv2.reference.tools.compiler.sun">
+
+          <title>Sun Studio</title>
+
+          <para>The <code>sun</code> module supports the
+          <ulink url="http://developers.sun.com/sunstudio/index.jsp">
+          Sun Studio</ulink> C++ compilers for the Solaris OS.</para>
+
+          <para>The module is initialized using the following syntax:</para>
+          <programlisting>
+using sun : &toolset_ops; ;</programlisting>
+
+          &using_repeation;
+
+          <para>If the command is not specified, Boost.Build will search for
+          a binary named <command>CC</command>
+          in <filename>/opt/SUNWspro/bin</filename> and in 
+          <envar>PATH</envar>.</para>
+
+          <para>When using this compiler on complex C++ code, such as the
+          <ulink url="http://boost.org">Boost C++ library</ulink>, it is
+          recommended to specify the following options when intializing the
+          <code>sun</code> module:
+          <screen>
+-library=stlport4 -features=tmplife -features=tmplrefstatic
+          </screen> See the <ulink url="http://blogs.sun.com/sga/entry/command_line_options">
+          Sun C++ Frontend Tales</ulink> for details.</para>
+
+          &option_list_intro;
+          <variablelist>
+            <xi:include href="fragments.xml#xpointer(id('common_options')/*)" 
+                        parse="xml"/> 
+          </variablelist>
+       
+        </section>
+
+        <section id="bbv2.reference.tools.compiler.vacpp">
+
+          <title>IBM Visual Age</title>
+          <para>The <code>vacpp</code> module supports the
+          <ulink url="http://www.ibm.com/software/ad/vacpp">IBM Visual
+          Age</ulink> C++ Compiler, for the AIX operating system. Versions
+          7.1 and 8.0 are known to work.</para>
+
+          <para>The module is initialized using the following
+          syntax:</para>
+          <programlisting>
+using vacpp ;</programlisting>
+
+          <para>The module does not accept any initialization options. The
+          compiler should be installed in the <filename>/usr/vacpp/bin</filename>
+          directory.</para>
+
+          <para>Later versions of Visual Age are known as XL C/C++. They
+          were not tested with the the <code>vacpp</code> module.</para>
+       
+        </section>
+
+
+      </section>
+  
+    </section>
 
   <section id="bbv2.reference.buildprocess">
     <title>Build process</title>
