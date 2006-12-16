@@ -138,10 +138,13 @@ local extra-build-request ;
 
 if ! $(ignore-config)
 {
-    for local toolset-version in $(option-toolsets) $(feature-toolsets)
+    for local t in $(option-toolsets) $(feature-toolsets)
     {
-        local toolset = [ MATCH ([^-]+).* : $(toolset-version) ] ;
-        local version = [ MATCH [^-]+-(.+) : $(toolset-version) ] ;
+        # Parse toolset-version/properties
+        local (t-v,t,v) = [ MATCH (([^-/]+)-?([^/]+)?)/?.* : $(t) ] ;
+        local toolset-version = $((t-v,t,v)[1]) ;
+        local toolset = $((t-v,t,v)[2]) ;
+        local version = $((t-v,t,v)[3]) ;
 
         if $(debug-config)
         {
@@ -182,14 +185,14 @@ if ! $(ignore-config)
 
         # make sure we get an appropriate property into the build request in
         # case the user used the "--toolset=..." form
-        if ! $(toolset-version) in $(argv)
-            && ! $(toolset-version) in $(feature-toolsets) 
+        if ! $(t) in $(argv)
+            && ! $(t) in $(feature-toolsets) 
         {
             if $(debug-config)
             {
-                ECHO notice: [cmdline-cfg] adding toolset=$(toolset-version) "to build request." ;
+                ECHO notice: [cmdline-cfg] adding toolset=$(t) "to build request." ;
             }
-            extra-build-request += toolset=$(toolset-version) ;
+            extra-build-request += toolset=$(t) ;
         }
     }
 }
