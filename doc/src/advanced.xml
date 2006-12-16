@@ -668,7 +668,7 @@ exe a : a.cpp ;           # a.cpp is the only source file
 exe b : [ glob *.cpp ] ;  # all .cpp files in this directory are sources 
 </programlisting>
         Unless you specify a file with an absolute path, the name is
-        considered relative to the source directory&#x2014;which is typically
+        considered relative to the source directory&#x200A;&#x2014;&#x200A;which is typically
         the directory where the Jamfile is located, but can be changed as
         described in <xref linkend=
           "bbv2.advanced.projects.attributes.projectrule"/>.
