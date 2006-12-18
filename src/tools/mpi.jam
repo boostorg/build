@@ -36,10 +36,11 @@
 # the bjam command line.
 #
 # The (optional) fourth argument configures Boost.MPI for running
-# regression tests. These parameters specify the executable used to launch jobs 
-# (default: "mpirun") followed by any necessary arguments to this to run tests and
-# tell the program to expect the number of processors to follow (default: "-np"). 
-# With the default parameters, for instance, the test harness will execute, e.g.,
+# regression tests. These parameters specify the executable used to
+# launch jobs (default: "mpirun") followed by any necessary arguments
+# to this to run tests and tell the program to expect the number of
+# processors to follow (default: "-np").  With the default parameters,
+# for instance, the test harness will execute, e.g.,
 #  
 #    mpirun -np 4 all_gather_test
 #
@@ -48,7 +49,7 @@
 # To link against the MPI libraries, import the "mpi" module and add the 
 # following requirement to your target:
 # 
-#   <library>/mpi//mpi
+#   <library>/mpi//mpi 
 #
 # Since MPI support is not always available, you should check 
 # "mpi.configured" before trying to link against the MPI libraries.
@@ -182,6 +183,15 @@ rule cmdline_to_features ( cmdline : unknown-features ? )
            if $(value) = "-pthread" || $(value) = "-pthreads"
            {
              result += "<threading>multi" ;
+
+             # DPG: This is a hack intended to work around a BBv2 bug where
+             # requirements propagated from libraries are not checked for
+             # conflicts when BBv2 determines which "common" properties to
+             # apply to a target. In our case, the <threading>single property
+             # gets propagated from the common properties to Boost.MPI
+             # targets, even though <threading>multi is in the usage 
+             # requirements of <library>/mpi//mpi.
+             MPI_EXTRA_REQUIREMENTS += "<threading>multi" ;
            }
            else if [ MATCH "(.*[a-zA-Z0-9<>?-].*)" : $(value) ] {
               otherflags += $(value) ;
@@ -356,9 +366,19 @@ rule init ( mpicxx ? : options * : mpirun-with-options * )
   }
 }
 
+# States whether MPI has bee configured
 rule configured ( )
 {
   return $(.configured) ;
+}
+
+# Returs the "extra" requirements needed to build MPI. These requirements are
+# part of the /mpi//mpi library target, but they need to be added to anything
+# that uses MPI directly to work around bugs in BBv2's propagation of
+# requirements.
+rule extra-requirements ( )
+{
+  return $(MPI_EXTRA_REQUIREMENTS) ;
 }
 
 # Support for testing; borrowed from Python
@@ -393,7 +413,7 @@ generators.register
 generators.register-standard testing.expect-success 
   : RUN_MPI_OUTPUT : RUN_MPI ;
 
-# 
+# The number of processes to spawn when executing an MPI test.
 feature mpi:processes : : free incidental ;
 
 # The flag settings on testing.capture-output do not
