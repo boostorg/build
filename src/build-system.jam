@@ -45,6 +45,8 @@ rule location ( )
 # Check if we can load 'test-config.jam'. If we can, load it and
 # ignore user configs.
 
+local argv = [ modules.peek : ARGV ] ;
+
 local test-config = [ GLOB [ os.environ BOOST_BUILD_PATH ] : test-config.jam ] ;
 
 local debug-config = [ MATCH ^(--debug-configuration)$ : [ modules.peek : ARGV ] ] ;
@@ -121,14 +123,30 @@ module user-config
     initialize user-config ;        
 }
 
-load-config user-config : $(user-path) ;
+local user-config-path = [ MATCH ^--user-config=(.*) : $(argv) ] ;
+
+if $(user-config-path)
+{
+    if $(debug-config)
+    {
+        ECHO "Loading explicitly specifier user configuration file:" ;
+        ECHO "    $(user-config-path)" ;
+    }
+    
+    
+    modules.load user-config : $(user-config-path:BS) : $(user-config-path:D) ;
+    project.load-used-projects user-config ;
+}
+else
+{    
+    load-config user-config : $(user-path) ;
+}
+
 
 #
 # Autoconfigure toolsets based on any instances of --toolset=xx,yy,...zz or
 # toolset=xx,yy,...zz in the command line
 #
-local argv = [ modules.peek : ARGV ] ;
-
 local option-toolsets = [ regex.split-list [ MATCH ^--toolset=(.*) : $(argv) ] : "," ] ;
 local feature-toolsets = [ regex.split-list [ MATCH ^toolset=(.*) : $(argv) ] : "," ] ;
 
