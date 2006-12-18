@@ -609,6 +609,22 @@ using msvc : &toolset_ops; ;
           "http://www.intel.com/cd/software/products/asmo-na/eng/compilers/284527.htm">
           Windows</ulink> versions respectively.</para>
 
+          <para>The module is initialized using the following syntax:</para>
+          <programlisting>
+using intel-linux : &toolset_ops; ;</programlisting>
+          <para>or</para>
+          <programlisting>
+using intel-win : &toolset_ops; ;</programlisting>
+          <para>respectively.</para>
+
+          &using_repeation;
+
+          <para>
+          If compiler command is not specified, then Boost.Build will
+          look in <envar>PATH</envar> for an executable <command>icpc</command>
+          (on Linux), or <command>icc.exe</command> (on Windows).
+          </para>
+          
           &option_list_intro;
           <variablelist>
 
