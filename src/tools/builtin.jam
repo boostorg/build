@@ -222,7 +222,7 @@ feature instruction-set :
     itanium itanium1 merced itanium2 mckinley
     # Sparc
     v7 cypress v8 supersparc sparclite hypersparc sparclite86x
-    f930 f934 sparclet tsc701 v9 ultrasparc
+    f930 f934 sparclet tsc701 v9 ultrasparc ultrasparc3
     # RS/6000 & PowerPC
     401 403 405 405fp 440 440fp 505
     601 602 603 603e 604 604e 620 630 740 7400 7450 750
