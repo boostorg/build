@@ -1182,7 +1182,8 @@ class basic-target : abstract-target
         if [ modules.peek : .debug-building ] 
         {
             ECHO ;
-            ECHO [ targets.indent ] "Building target '$(self.name)'" ;
+            local fn = [ full-name ] ;
+            ECHO [ targets.indent ] "Building target '$(fn)'" ;
             targets.increase-indent ;
             ECHO [ targets.indent ] "Build request: " [ $(property-set).raw ] ;
             ECHO [ targets.indent ] "Target requirements: " [ $(self.requirements).raw ] ;            
