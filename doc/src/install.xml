@@ -64,9 +64,9 @@ All paths are given relative to
           a prebuilt executable</ulink></emphasis> from SourceForge.
           If a prebuilt executable is not provided for your platform
           or you are using Boost's sources in an unreleased state, it
-          may be necessary to <ulink
-          url= "../../doc/html/jam/buildin.html">build <command>bjam</command>
-          from sources</ulink> included in the Boost source tree.
+          may be necessary to 
+          <link linkend="jam.building">build <command>bjam</command>
+          from sources</link> included in the Boost source tree.
         </simpara>
       </listitem>
 
