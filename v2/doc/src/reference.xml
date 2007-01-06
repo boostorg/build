@@ -287,12 +287,35 @@ target1 debug gcc/runtime-link=dynamic,static
       <varlistentry>
         <term><literal>glob</literal></term>
         
-        <listitem><para>The <code>glob</code> rule takes a shell pattern and
-        returns the list of files in the project's source directory that
+        <listitem><para>The <code>glob</code> rule takes a list shell pattern 
+        and returns the list of files in the project's source directory that
         match the pattern. For example:
         <programlisting>
 lib tools : [ glob *.cpp ] ;
         </programlisting>
+        It is possible to also pass a second argument&#x2014;the list of
+        exclude patterns. The result will then include the list of
+        files patching any of include patterns, and not matching any
+        of the exclude patterns. For example:
+        <programlisting>
+lib tools : [ glob *.cpp : file_to_exclude.cpp bad*.cpp ] ;
+        </programlisting>
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>glob-tree</literal></term>
+        
+        <listitem><para>The <code>glob-tree</code> is similar to the
+        <code>glob</code> except that it operates recursively from
+        the directory of the containing Jamfile. For example:
+        <programlisting>
+ECHO [ glob-tree *.cpp : .svn ] ;
+        </programlisting>
+        will print the names of all C++ files in your project. The 
+        <literal>.svn</literal> exclude pattern prevents the 
+        <code>glob-tree</code> rule from entering administrative
+        directories of the Subverion version control system.
         </para></listitem>
       </varlistentry>
 
