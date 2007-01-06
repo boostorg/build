@@ -192,7 +192,7 @@ rule list-item (
 {
     if $(output-type) = plain
     {
-        lines [ split-at-words "*" $(item) ] : "  " ;
+        lines [ split-at-words "*" $(item) ] : "    " "  " ;
     }
     else if $(output-type) = html
     {
