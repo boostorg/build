@@ -392,13 +392,71 @@ unit-test helpers_test
 <emphasis role="bold">valgrind</emphasis> bin/$toolset/debug/helpers_test 
 </screen>
       
-      
+      <para>There are few specialized testing rules, listed below:
+      <programlisting>
+rule compile ( sources : requirements * : target-name ? )
+rule compile-fail ( sources : requirements * : target-name ? )
+rule link ( sources + : requirements * : target-name ? )
+rule link-fail ( sources + : requirements * : target-name ? )
+      </programlisting>
+      They are are given a list of sources and requirements. 
+      If the target name is not provided, the name of the first
+      source file is used instead. The <literal>compile*</literal>
+      tests try to compile the passed source. The <literal>link*</literal>
+      rules try to compile and link an application from all the passed sources.
+      The <literal>compile</literal> and <literal>link</literal> rules expect
+      that compilation/linking succeeds. The <literal>compile-fail</literal>
+      and <literal>link-fail</literal> rules, on the opposite, expect that
+      the compilation/linking fails.
+      </para>
 
-      <para>There are rules for more elaborate testing: <code>compile</code>,
-        <code>compile-fail</code>, <code>run</code> and
-        <code>run-fail</code>. They are more suitable for automated testing, and
-        are not covered here.
-      </para>        
+      <para>There are two specialized rules for running applications, which
+      are more powerful than the <code>unit-test</code> rule. The 
+      <code>run</code> rule has the following signature:
+      <programlisting>
+rule run ( sources + : args * : input-files * : requirements * : target-name ? 
+    : default-build * )
+      </programlisting>
+      The rule builds application from the provided sources and runs it,
+      passing <varname>args</varname> and <varname>input-files</varname>
+      as command-line arguments. The <varname>args</varname> parameter
+      is passed verbatim and the values of the <varname>input-files</varname>
+      parameter are treated as paths relative to containing Jamfile, and are
+      adjusted if <command>bjam</command> is invoked from a different
+      directory. The <code>run-fail</code> rule is identical to the
+      <code>run</code> rule, except that it expects that the run fails.
+      </para>
+      
+      <para>All rules described in this section, if executed successfully,
+      create a special manifest file to indicate that the test passed.
+      For the <code>unit-test</code> rule the files is named
+      <filename><replaceable>target-name</replaceable>.passed</filename> and
+      for the other rules it is called 
+      <filename><replaceable>target-name</replaceable>.test</filename>.
+      The <code>run*</code> rules also capture all output from the program,
+      and store it in a file named 
+      <filename><replaceable>target-name</replaceable>.output</filename>.</para>
+
+      <para>The <code>run</code> and the <code>run-fail</code> rules, if
+      the test passes, automatically delete the linked executable, to
+      save space. This behaviour can be suppressed by passing the
+      <literal>--preserve-test-targets</literal> command line option.</para>
+
+      <para>It is possible to print the list of all test targets (except for
+      <code>unit-test</code>) declared in your project, by passing
+      the <literal>--dump-tests</literal> command-line option. The output
+      will consist of lines of the form:
+      <screen>
+boost-test(<replaceable>test-type</replaceable>) <replaceable>path</replaceable> : <replaceable>sources</replaceable> 
+      </screen>      
+      </para>
+
+      <para>It is possible to process the list of tests, the output of
+      bjam during command run, and the presense/absense of the 
+      <filename>*.test</filename> files created when test passes into
+      human-readable status table of tests. Such processing utilities
+      are not included in Boost.Build.</para>
+
     </section>
 
     <section id="bbv2.builtins.raw">
