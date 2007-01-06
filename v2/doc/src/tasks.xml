@@ -323,7 +323,7 @@ install headers
             
       <bridgehead>Installing into Several Directories</bridgehead>
 
-      <para>The <link linkend="bbv2.builtins.alias"><code>alias</code></link>
+      <para>The <link linkend="bbv2.tasks.alias"><code>alias</code></link>
       rule can be used when targets must be installed into several
       directories:
 <programlisting>
