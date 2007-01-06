@@ -7,7 +7,7 @@ exe main : main.cpp ;
 # Create 'main.cpp' from 'main.cpp.pro' using action
 # 'do-something' defined below. 
 #
-make main.cpp : main.cpp.pro : @do-something ;
+make main.cpp : main_cpp.pro : @do-something ;
 
 # In this example, we'll just copy a file.
 # Need to find out the name of a command to copy a file.
