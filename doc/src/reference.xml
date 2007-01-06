@@ -278,6 +278,19 @@ target1 debug gcc/runtime-link=dynamic,static
       </varlistentry>
 
       <varlistentry>
+        <term><literal>compile</literal></term>
+        <term><literal>compile-fail</literal></term>
+        <term><literal>link</literal></term>
+        <term><literal>link-fail</literal></term>
+        <term><literal>run</literal></term>
+        <term><literal>run-fail</literal></term>
+        
+        <listitem><para>Specialized rules for testing. See 
+        <xref linkend="bbv2.tutorial.testing"/>.</para></listitem>
+      </varlistentry>
+
+
+      <varlistentry>
         <term><literal>obj</literal></term>
         
         <listitem><para>Creates an object file. Useful when a single source
@@ -387,6 +400,13 @@ path-constant DATA : data/a.txt ;
         At the moment, the parameter to this rule should be a directory
         name. Project ID or general target references are not allowed.
         </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>test-suite</literal></term>
+        
+        <listitem><para>This rule is deprecated and equivalent to
+        <code>alias</code>.</para></listitem>
       </varlistentry>
 
     </variablelist>
