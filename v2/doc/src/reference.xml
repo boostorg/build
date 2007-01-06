@@ -153,7 +153,7 @@ boost-build build-system ;
               An argument containing either slashes or
               the <code>=</code> symbol specifies a number of build
               request elements (see <xref
-              linkend="bbv2.reference.buildreq"/>). In its simplest
+              linkend="bbv2.advanced.build_request"/>). In its simplest
               form, it's just a set of properties, separated by
               slashes, which become a single build request element,
               for example:
@@ -234,11 +234,12 @@ target1 debug gcc/runtime-link=dynamic,static
 
   </section>
 
-  <section id="bbv2.reference.target-rules">
-    <title>Builtin targets</title>
+  <section id="bbv2.reference.rules">
+    <title>Builtin rules</title>
 
-    <para>This section contains the list of all target types defined
-    in Boost.Build.</para>
+    <para>This section contains the list of all rules that
+    can be used in Jamfile&#x2014;both rules that define new
+    targets and auxiliary rules.</para>
 
     <variablelist>
       <varlistentry>
@@ -283,23 +284,6 @@ target1 debug gcc/runtime-link=dynamic,static
         file must be compiled with special properties.</para></listitem>
       </varlistentry>
 
-    </variablelist>
-
-  </section>
-
-
-    <section id="bbv2.advanced.other-rules">
-      <title>Utility Rules</title>
-
-      <para>The following table describes utility rules that can be
-      used in Jamfiles. Detailed information for any of these rules can
-      be obtained by running:
-<screen>
-bjam --help project.<replaceable>rulename</replaceable>
-</screen>
-      </para>
-
-    <variablelist>
       <varlistentry>
         <term><literal>glob</literal></term>
         
@@ -313,84 +297,348 @@ lib tools : [ glob *.cpp ] ;
       </varlistentry>
 
       <varlistentry>
-        <term><literal>lib</literal></term>
+        <term><literal>project</literal></term>
         
-        <listitem><para>Creates an library file. See 
-        <xref linkend="bbv2.tasks.libraries"/>.</para></listitem>
+        <listitem><para>Declares project id and attributes, including
+        project requirements. See <xref linkend="bbv2.advanced.projects"/>.
+        </para></listitem>
       </varlistentry>
+
+      <varlistentry>
+        <term><literal>use-project</literal></term>
+        
+        <listitem><para>Assigns a symbolic project ID to a project at 
+        a given path. This rule must be better documented!
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>explicit</literal></term>
+        
+        <listitem><para>The <literal>explicit</literal> rule takes a single
+        parameter&#x2014;a list of target names. The named targets will
+        be marked explicit, and will be built only if they are explicitly
+        requested on the command line, or if their dependents are built.
+        Compare this to ordinary targets, that are built implicitly when
+        their containing project is built.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>constant</literal></term>
+        
+        <listitem><para>Sets project-wide constant. Takes two
+        parameters: variable name and a value and makes the specified
+        variable name accessible in this Jamfile and any child Jamfiles.
+        For example:
+        <programlisting>
+constant VERSION : 1.34.0 ;
+        </programlisting>
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>path-constant</literal></term>
+        
+        <listitem><para>Same as <literal>constant</literal> except that
+        the value is treated as path relative to Jamfile location. For example,
+        if <command>bjam</command> is invoked in the current directory,
+        and Jamfile in <filename>helper</filename> subdirectory has:
+        <programlisting>
+path-constant DATA : data/a.txt ;
+        </programlisting>
+        then the variable <varname>DATA</varname> will be set to 
+        <literal>helper/data/a.txt</literal>, and if <command>bjam</command>
+        is invoked from the <filename>helper</filename> directory, then
+        the variable <varname>DATA</varname> will be set to 
+        <literal>data/a.txt</literal>.
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>build-project</literal></term>
+        
+        <listitem><para>Cause some other project to be built. This rule
+        takes a single parameter&#x2014;a directory name relative to
+        the containing Jamfile. When the containing Jamfile is built,
+        the project located at that directory will be built as well.
+        At the moment, the parameter to this rule should be a directory
+        name. Project ID or general target references are not allowed.
+        </para></listitem>
+      </varlistentry>
+
     </variablelist>
 
-      <table>
-        <title/>
-        <tgroup cols="2">
-          <thead>
-            <row>
-              <entry>Rule</entry>
-              
-              <entry>Semantics</entry>
-            </row>
-          </thead>
+  </section>
+
+  <section id="bbv2.advanced.builtins.features">
+    <title>Builtin features</title> 
+        
+    <variablelist>
+      <varlistentry><term><literal>variant</literal></term>
+        
+        <listitem>
+          <para>
+            A feature that combines several low-level features, making
+            it easy to request common build configurations.
+          </para>
           
-          <tbody>
-            <row>
-              <entry><link linkend=
-                  "bbv2.advanced.projects.attributes.projectrule">project</link>
-              </entry>
-              
-              <entry>Define this project's symbolic ID or attributes.</entry>
-            </row>
-            
-            <row>
-              <entry><xref linkend=
-                  "bbv2.advanced.projects.relationships.useprojectrule">use-project</xref></entry>
-              
-              <entry>Make another project known so that it can be referred to by symbolic ID.</entry>
-            </row>
-            
-            <row>
-              <entry><xref linkend=
-                  "bbv2.advanced.projects.relationships.buildprojectrule">build-project</xref></entry>
-              
-              <entry>Cause another project to be built when this one is built.</entry>
-            </row>
-            
-            <row>
-              <entry><xref linkend=
-                  "bbv2.reference.buildprocess.explict">explicit</xref></entry>
-              
-              <entry>State that a target should be built only by explicit
-                request.</entry>
-            </row>
-            
-            <row>
-              <entry>glob</entry>
-              
-              <entry>Translate a list of shell-style wildcards into a
-              corresponding list of files.</entry>
-            </row>
+          <para><emphasis role="bold">Allowed values:</emphasis> <literal>debug</literal>, <literal>release</literal>,
+            <literal>profile</literal>.</para>
+          
+          <para>The value <literal>debug</literal> expands to</para>
+          
+<programlisting>
+&lt;optimization&gt;off &lt;debug-symbols&gt;on &lt;inlining&gt;off &lt;runtime-debugging&gt;on
+</programlisting>
+          
+          <para>The value <literal>release</literal> expands to</para>
+          
+<programlisting>
+&lt;optimization&gt;speed &lt;debug-symbols&gt;off &lt;inlining&gt;full &lt;runtime-debugging&gt;off
+</programlisting>
+          
+          <para>The value <literal>profile</literal> expands to the same as
+          <literal>release</literal>, plus:</para>
+          
+<programlisting>
+&lt;profiling&gt;on &lt;debug-symbols&gt;on
+</programlisting>
 
-            <row>
-              <entry>constant</entry>
-              
-              <entry>Injects a variable setting into this project's
-              Jamfile module and those of all its subprojects.</entry>
-            </row>
+          <para>User can define his own build variants using the <code>variant</code> rule from the <code>common</code>
+          module.</para>
+          
+          <para><emphasis role="bold">Notee:</emphasis> Runtime
+          debugging is on in debug builds to suit the expectations of
+          people used to various IDEs. 
+          <!-- Define "runtime debugging." Why will those people expect it to be on in debug builds? -->
+          </para>
+        </listitem></varlistentry>
+      
+      <varlistentry id="bbv2.advanced.builtins.features.link">
+        <term><literal>link</literal></term>
+        
+        <listitem>
+          <simpara>
+            A feature that controls how libraries are built.
+          </simpara>
+          
+          <para><emphasis role="bold">Allowed values:</emphasis> <literal>shared</literal>,
+            <literal>static</literal></para>
+        </listitem></varlistentry>
+      
+      <varlistentry><term><literal>source</literal></term>
+        
+        <listitem>
+          <simpara>
+            The <code>&lt;source&gt;X</code> feature has the same effect on 
+            building a target as putting X in the list of sources. 
+            It's useful when you want to add
+            the same source to all targets in the project 
+            (you can put &lt;source&gt; in requirements) or to conditionally
+            include a source (using conditional requirements, see <xref linkend="bbv2.tutorial.conditions"/>)
+            See also the <code>&lt;library&gt;</code> feature.
+          </simpara>
+        </listitem>
+      </varlistentry>
+      
+      <varlistentry><term><literal>library</literal></term>
+        
+        <listitem>
+          <simpara>
+            This feature is almost equivalent to the <code>&lt;source&gt;</code> feature, 
+            except that it takes effect only for linking. When you want to 
+            link all targets in a Jamfile to certain library, the 
+            <code>&lt;library&gt;</code> feature is preferred over 
+            <code>&lt;source&gt;X</code> -- the latter will add the library to
+            all targets, even those that have nothing to do with libraries.
+          </simpara>
+        </listitem>
+      </varlistentry>
 
-            <row>
-              <entry>path-constant</entry>
-              
-              <entry>Injects a variable set to a path value into
-              this project's Jamfile module and those of all its subprojects.
-              If the value is a relative path it will be adjusted for
-              each subproject so that it refers to the same
-              directory.</entry>
-            </row>
+      <varlistentry><term><anchor id="bbv2.builtin.features.dependency"/>
+          <literal>dependency</literal></term>
+        
+        <listitem>
+          <simpara>
+            Introduces a dependency on the target named by the
+            value of this feature (so it will be brought
+            up-to-date whenever the target being declared is).
+            The dependency is not used in any other way. For example, in
+            application with plugins, the plugins are not used when linking
+            the application, 
+            application might have dependency on its plugins, even though 
 
 
-          </tbody>
-        </tgroup>
-      </table>
-    </section>
+            , and
+            adds its usage requirements to the build properties 
+            of the target being declared.  
+
+ The primary use case is when you want
+            the usage requirements (such as <code>#include</code> paths) of some
+            library to be applied, but don't want to link to it.
+            <!-- It's hard to picture why anyone would want to do
+                 that.  Please flesh out this motivation -->
+          </simpara>
+        </listitem>
+      </varlistentry>
+
+            
+      <varlistentry><term><anchor id="bbv2.builtin.features.use"/>
+          <literal>use</literal></term>
+        
+        <listitem>
+          <simpara>
+            Introduces a dependency on the target named by the
+            value of this feature (so it will be brought
+            up-to-date whenever the target being declared is), and
+            adds its usage requirements to the build properties 
+            <!-- Do you really mean "to the requirements?" -->
+            of the target being declared.  The dependency is not used
+            in any other way. The primary use case is when you want
+            the usage requirements (such as <code>#include</code> paths) of some
+            library to be applied, but don't want to link to it.
+            <!-- It's hard to picture why anyone would want to do
+                 that.  Please flesh out this motivation -->
+          </simpara>
+        </listitem>
+      </varlistentry>
+      
+      <varlistentry><term><anchor id="bbv2.reference.features.dll-path"/>
+      <literal>dll-path</literal></term>
+        
+        <listitem>
+          <simpara>
+            Specify an additional directory where the system should
+            look for shared libraries when the executable or shared
+            library is run. This feature only affects Unix
+            compilers. Plase see <xref linkend="bbv2.faq.dll-path"/>
+            in <xref linkend="bbv2.faq"/> for details.
+          </simpara>
+        </listitem></varlistentry>
+      
+      <varlistentry><term><literal>hardcode-dll-paths</literal></term>
+        
+        <listitem>
+          <simpara>
+            Controls automatic generation of dll-path properties.
+          </simpara>
+          
+          <para><emphasis role="bold">Allowed values:</emphasis>
+            <literal>true</literal>, <literal>false</literal>.  This property
+            is specific to Unix systems. If an executable is built with
+            <code>&lt;hardcode-dll-paths&gt;true</code>, the generated binary
+            will contain the list of all the paths to the used shared
+            libraries. As the result, the executable can be run without
+            changing system paths to shared libraries or installing the
+            libraries to system paths. This 
+            <!-- you need an antecedent.  This _what_? -->
+            is very convenient during
+            development. Plase see the <link
+            linkend="bbv2.faq.dll-path">FAQ entry</link> for details.
+            Note that on Mac OSX, the paths are unconditionally hardcoded by
+            the linker, and it's not possible to disable that behaviour.
+          </para>
+        </listitem></varlistentry>
+
+      <varlistentry>
+        <term><literal>cflags</literal></term>
+        <term><literal>cxxflags</literal></term>
+        <term><literal>linkflags</literal></term>
+        
+        <listitem>
+          <simpara>
+            The value of those features is passed without modification to the
+            corresponding tools. For <code>cflags</code> that's both the C and C++
+            compilers, for <code>cxxflags</code> that's the C++ compiler and for
+            <code>linkflags</code> that's the linker. The features are handy when
+            you're trying to do something special that cannot be achieved by
+            higher-level feature in Boost.Build.
+          </simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry><term><literal>warnings</literal></term>
+        
+        <listitem>
+          <simpara>
+            The <code>&lt;warnings&gt;</code> feature controls the warning level of compilers. It has the following values:
+            <itemizedlist>
+              <listitem><para><code>off</code> - disables all warnings.</para></listitem>
+              <listitem><para><code>on</code> - enables default warning level for the tool.</para></listitem>
+              <listitem><para><code>all</code> - enables all warnings.</para></listitem>
+            </itemizedlist>
+            Default value is <code>all</code>.
+          </simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry><term><literal>warnings-as-errors</literal></term>
+        
+        <listitem>
+          <simpara>
+            The <code>&lt;warnings-as-errors&gt;</code> makes it possible to treat warnings as errors and abort
+            compilation on a warning. The value <code>on</code> enables this behaviour. The default value is
+            <code>off</code>.
+          </simpara>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry><term><literal>build</literal></term>
+        
+        <listitem>
+          <para><emphasis role="bold">Allowed values:</emphasis> <literal>no</literal></para>
+
+          <para>
+            The <code>build</code> feature is used to conditionally disable build of a target. If <code>&lt;build&gt;no</code>
+            is in properties when building a target, build of that target is skipped. Combined with conditional requirements this
+            allows to skip building some target in configurations where the build is known to fail. 
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry><term><literal>tag</literal></term>
+
+        <listitem><para>The <literal>tag</literal> feature is used to customize
+        the name of the generated files. The value should have the form:
+<programlisting>@<replaceable>rulename</replaceable></programlisting> where
+        <replaceable>rulename</replaceable> should be a name of a rule with
+        the following signature:
+<programlisting>rule tag ( name : type ? : property-set )</programlisting>
+        The rule will be called for each target with the default name computed
+        by Boost.Build, the type of the target, and property set. The rule
+        can either return a string that must be used as the name of the
+        target, or empty string, in which case the default name will be used.
+        </para>
+
+        <para>Most typical use of the <literal>tag</literal> feature is
+        to encode build properties, or library version in library target names.
+        You should take care to return non-empty string from the tag rule
+        only for types you care about &#x2014; otherwise, you might
+        end up modifying names of object files, generated header file and
+        other targets for which changing names does not make sense.</para>
+        </listitem>
+
+      </varlistentry>
+
+      <varlistentry><term><literal>debug-symbols</literal></term>
+        
+        <listitem>        
+          <para><emphasis role="bold">Allowed values:</emphasis> <literal>on</literal>, <literal>off</literal>.</para>
+
+          <para>The <literal>debug-symbols</literal> feature specifies if
+          produced object files, executables and libraries should include 
+          debug information.
+          Typically, the value of this feature is implicitly set by the
+          <literal>variant</literal> feature, but it can be explicitly
+          specified by the user. The most common usage is to build
+          release variant with debugging information.</para>
+        </listitem>
+      </varlistentry>
+      
+
+
+    </variablelist>
+  </section>
 
     <section id="bbv2.reference.tools">
       <title>Builtin tools</title>
