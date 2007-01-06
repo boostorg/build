@@ -235,10 +235,11 @@ target1 debug gcc/runtime-link=dynamic,static
   </section>
 
   <section id="bbv2.reference.target-rules">
-    <title>Builtin targets</title>
+    <title>Builtin rules</title>
 
-    <para>This section contains the list of all target types defined
-    in Boost.Build.</para>
+    <para>This section contains the list of all rules that
+    can be used in Jamfile&#x2014;both rules that define new
+    targets and auxiliary rules.</para>
 
     <variablelist>
       <varlistentry>
@@ -283,23 +284,6 @@ target1 debug gcc/runtime-link=dynamic,static
         file must be compiled with special properties.</para></listitem>
       </varlistentry>
 
-    </variablelist>
-
-  </section>
-
-
-    <section id="bbv2.advanced.other-rules">
-      <title>Utility Rules</title>
-
-      <para>The following table describes utility rules that can be
-      used in Jamfiles. Detailed information for any of these rules can
-      be obtained by running:
-<screen>
-bjam --help project.<replaceable>rulename</replaceable>
-</screen>
-      </para>
-
-    <variablelist>
       <varlistentry>
         <term><literal>glob</literal></term>
         
@@ -313,84 +297,78 @@ lib tools : [ glob *.cpp ] ;
       </varlistentry>
 
       <varlistentry>
-        <term><literal>lib</literal></term>
+        <term><literal>project</literal></term>
         
-        <listitem><para>Creates an library file. See 
-        <xref linkend="bbv2.tasks.libraries"/>.</para></listitem>
+        <listitem><para>Declares project id and attributes, including
+        project requirements. See <xref linkend="bbv2.advanced.projects"/>.
+        </para></listitem>
       </varlistentry>
+
+      <varlistentry>
+        <term><literal>use-project</literal></term>
+        
+        <listitem><para>Assigns a symbolic project ID to a project at 
+        a given path. This rule must be better documented!
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>explicit</literal></term>
+        
+        <listitem><para>The <literal>explicit</literal> rule takes a single
+        parameter&#x2014;a list of target names. The named targets will
+        be marked explicit, and will be built only if they are explicitly
+        requested on the command line, or if their dependents are built.
+        Compare this to ordinary targets, that are built implicitly when
+        their containing project is built.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>constant</literal></term>
+        
+        <listitem><para>Sets project-wide constant. Takes two
+        parameters: variable name and a value and makes the specified
+        variable name accessible in this Jamfile and any child Jamfiles.
+        For example:
+        <programlisting>
+constant VERSION : 1.34.0 ;
+        </programlisting>
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>path-constant</literal></term>
+        
+        <listitem><para>Same as <literal>constant</literal> except that
+        the value is treated as path relative to Jamfile location. For example,
+        if <command>bjam</command> is invoked in the current directory,
+        and Jamfile in <filename>helper</filename> subdirectory has:
+        <programlisting>
+path-constant DATA : data/a.txt ;
+        </programlisting>
+        then the variable <varname>DATA</varname> will be set to 
+        <literal>helper/data/a.txt</literal>, and if <command>bjam</command>
+        is invoked from the <filename>helper</filename> directory, then
+        the variable <varname>DATA</varname> will be set to 
+        <literal>data/a.txt</literal>.
+        </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>build-project</literal></term>
+        
+        <listitem><para>Cause some other project to be built. This rule
+        takes a single parameter&#x2014;a directory name relative to
+        the containing Jamfile. When the containing Jamfile is built,
+        the project located at that directory will be built as well.
+        At the moment, the parameter to this rule should be a directory
+        name. Project ID or general target references are not allowed.
+        </para></listitem>
+      </varlistentry>
+
     </variablelist>
 
-      <table>
-        <title/>
-        <tgroup cols="2">
-          <thead>
-            <row>
-              <entry>Rule</entry>
-              
-              <entry>Semantics</entry>
-            </row>
-          </thead>
-          
-          <tbody>
-            <row>
-              <entry><link linkend=
-                  "bbv2.advanced.projects.attributes.projectrule">project</link>
-              </entry>
-              
-              <entry>Define this project's symbolic ID or attributes.</entry>
-            </row>
-            
-            <row>
-              <entry><xref linkend=
-                  "bbv2.advanced.projects.relationships.useprojectrule">use-project</xref></entry>
-              
-              <entry>Make another project known so that it can be referred to by symbolic ID.</entry>
-            </row>
-            
-            <row>
-              <entry><xref linkend=
-                  "bbv2.advanced.projects.relationships.buildprojectrule">build-project</xref></entry>
-              
-              <entry>Cause another project to be built when this one is built.</entry>
-            </row>
-            
-            <row>
-              <entry><xref linkend=
-                  "bbv2.reference.buildprocess.explict">explicit</xref></entry>
-              
-              <entry>State that a target should be built only by explicit
-                request.</entry>
-            </row>
-            
-            <row>
-              <entry>glob</entry>
-              
-              <entry>Translate a list of shell-style wildcards into a
-              corresponding list of files.</entry>
-            </row>
-
-            <row>
-              <entry>constant</entry>
-              
-              <entry>Injects a variable setting into this project's
-              Jamfile module and those of all its subprojects.</entry>
-            </row>
-
-            <row>
-              <entry>path-constant</entry>
-              
-              <entry>Injects a variable set to a path value into
-              this project's Jamfile module and those of all its subprojects.
-              If the value is a relative path it will be adjusted for
-              each subproject so that it refers to the same
-              directory.</entry>
-            </row>
-
-
-          </tbody>
-        </tgroup>
-      </table>
-    </section>
+  </section>
 
     <section id="bbv2.reference.tools">
       <title>Builtin tools</title>
