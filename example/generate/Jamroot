@@ -2,7 +2,7 @@
 import common ;
 import "class" : new ;
 
-rule generate-example ( project name ? : property-set : sources * )
+rule generate-example ( project name : property-set : sources * )
 {
     local result ;
     for local s in $(sources)
