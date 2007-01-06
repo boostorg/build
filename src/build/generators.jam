@@ -371,7 +371,37 @@ class generator
             }                        
         }
         return $(result) ;
-    }   
+    }
+    
+    # Determine the name of the produced target from the
+    # names of the sources.
+    rule determine-output-name ( sources + )
+    {
+        # The simple case if when a name
+        # of source has single dot. Then, we take the part before
+        # dot. Several dots can be caused by:
+        # - Using source file like a.host.cpp
+        # - A type which suffix has a dot. Say, we can
+        #   type 'host_cpp' with extension 'host.cpp'.
+        # In the first case, we want to take the part till the last
+        # dot. In the second case -- no sure, but for now take
+        # the part till the last dot too.
+        name = [ utility.basename [ $(sources[1]).name ] ] ;
+                        
+        for local s in $(sources[2])
+        {
+            local n2 = [ utility.basename [ $(s).name ] ] ;
+            if $(n2) != $(name)
+            {
+                error "$(self.id): source targets have different names: cannot determine target name" ;
+            }
+        }
+        
+        # Names of sources might include directory. We should strip it.
+        name = $(name:D=) ;
+        
+        return $(name) ;
+    }
     
     # Constructs targets that are created after consuming 'sources'.
     # The result will be the list of virtual-target, which the same length
@@ -397,29 +427,7 @@ class generator
     {
         if ! $(name)
         {
-            # Determine the name of the produced target from the
-            # names of the sources. The simple case if when a name
-            # of source has single dot. Then, we take the part before
-            # dot. Several dots can be caused by:
-            # - Using source file like a.host.cpp
-            # - A type which suffix has a dot. Say, we can
-            #   type 'host_cpp' with extension 'host.cpp'.
-            # In the first case, we want to take the part till the last
-            # dot. In the second case -- no sure, but for now take
-            # the part till the last dot too.
-            name = [ utility.basename [ $(sources[1]).name ] ] ;
-                        
-            for local s in $(sources[2])
-            {
-                local n2 = [ utility.basename [ $(s).name ] ] ;
-                if $(n2) != $(name)
-                {
-                    error "$(self.id): source targets have different names: cannot determine target name" ;
-                }
-            }
-
-            # Names of sources might include directory. We should strip it.
-            name = $(name:D=) ;
+            name = [ determine-output-name $(sources) ] ;
         }
         
         # Assign an action for each target
