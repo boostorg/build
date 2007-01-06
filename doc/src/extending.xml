@@ -55,9 +55,6 @@ import type ;
 type.register VERBATIM : vrb ;
 </programlisting>
 
-<!-- changed "verbatim" to "vrb."  Too many similar things
-     (verbatim/VERBATIM) makes for easy confusion -->
-
   <para>The first parameter to
   <functionname>type.register</functionname> gives the name of the
   declared type. By convention, it's uppercase. The second parameter
