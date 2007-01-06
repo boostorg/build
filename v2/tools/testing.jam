@@ -99,12 +99,12 @@ rule make-test ( target-type : sources + : requirements * : target-name ? )
     return $(t) ;    
 }
 
-rule compile ( sources + : requirements * : target-name ? )
+rule compile ( sources : requirements * : target-name ? )
 {    
     return [ make-test compile : $(sources) : $(requirements) : $(target-name) ] ;
 }
 
-rule compile-fail ( sources + : requirements * : target-name ? )
+rule compile-fail ( sources : requirements * : target-name ? )
 {    
     return [ make-test compile-fail : $(sources) : $(requirements) : $(target-name) ] ;
 }
@@ -184,7 +184,10 @@ local rule get-library-name ( path )
     else if $(match3) { return "" ; }
     else if --dump-tests in [ modules.peek : ARGV ] 
     { 
-        EXIT Cannot extract library name from path $(path) ; 
+        # The 'run' rule and others might be used outside
+        # boost. In that case, just return the path,
+        # since the 'library name' makes no sense.
+        return $(path) ;
     }
 }
 
