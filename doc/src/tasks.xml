@@ -403,13 +403,27 @@ unit-test helpers_test
 
     <section id="bbv2.builtins.raw">
 
-      <title>Raw commands: 'make' and 'notfile'</title>
+      <title>Custom commands</title>
 
-      <para>Sometimes, the builtin target types are not enough, and you
-      want Boost.Build to just run specific commands. There are two main
-      target rules that make it possible: <functionname>make</functionname>
-      and <functionname>notfile</functionname>.
-      </para>
+      <para>When you use most of main target rules, Boost.Build automatically
+      figures what commands to run and it what order. As soon as you want
+      to use new file types, or support new tools, one approach is to
+      extend Boost.Build to smoothly support them, as documented in
+      <xref linkend="bbv2.extender"/>. However, if there's a single
+      place where the new tool is used, it might be easier to just
+      explicitly specify the commands to run.</para>
+      
+      <para>Three main target rules can be used for that. The
+      <functionname>make</functionname> rule allows you to construct
+      a single file from any number of source file, by running a
+      command you specify. The <functionname>notfile</functionname> rule
+      allows you to run an arbitrary command, without creating any files.
+      Finaly, the <functionname>generate</functionname> rule allows you
+      to describe transformation using Boost.Build's virtual targets.
+      This is higher-level than file names that the make rule operates with,
+      and allows you to create more than one target, or create differently
+      named targets depending on properties, or use more than one
+      tool.</para>
 
       <para>The <functionname>make</functionname> rule is used when you want to
       create one file from a number of sources using some specific command.
@@ -434,14 +448,6 @@ make file.out : file.in : @in2out ;
         see <xref linkend="bbv2.advanced.jam_language.actions"/>.
       </para>
 
-      <note>
-        <para>
-          The <functionname>make</functionname> rule is useful to express custom
-          transformation that are used just once or twice in your project. For
-          transformations that are used often, you are advised to declare
-          new generator, as described in <xref linkend="bbv2.extending.tools"/>.
-        </para>
-      </note>
 
       <para>
         It could be that you just want to run some command unconditionally,
@@ -457,6 +463,29 @@ actions echo
         The only difference from the <functionname>make</functionname> rule is
         that the name of the target is not considered a name of a file, so
         Boost.Build will unconditionally run the action.
+      </para>
+
+      <para>The <functionname>generate</functionname> rule is used when
+      you want to express transformations using Boost.Build's virtual targets,
+      as opposed to just filenames. The <functionname>generate</functionname>
+      rule has the standard main target rule signature, but you are required
+      to specify the <literal>generating-rule</literal> property. The value
+      of the property should be in the form 
+      <literal>@<replaceable>rule-name</replaceable></literal> and the named
+      rule should have the following signature:
+      <programlisting>
+rule generating-rule ( project name : property-set : sources * )
+      </programlisting>
+      and will be called with an instance of the <code>project-target</code> 
+      class, the name of the main target, an instance of the
+      <code>property-set</code> class containing build properties,
+      and the list of instances of the <code>virtual-target</code> class
+      corresponding to sources.
+      The rule must return a list of <code>virtual-target</code> instances.
+      The interface of the <code>virtual-target</code> class can be learned
+      by looking at the <filename>build/virtual-target.jam</filename> file.
+      The <filename>generate</filename> example in Boost.Build distribution
+      illustrates how the <literal>generate</literal> rule can be used.
       </para>
             
     </section>
