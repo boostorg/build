@@ -235,26 +235,36 @@ local rule set-variable-doc (
 # Generates a general description of the documentation and help system.
 #
 local rule print-help-top ( )
-{
-    print.section "Available Help"
-        These are the available options for obtaining documentation.
-        Some options have additional instructions on how to get more
-        detailed information. Multiple options are allowed and
-        sometimes required. For example, the options that configure
-        the help system still require a regular help request option
-        for any output to be generated.
-        ;
+{    
+    print.section "General command line usage" ;
+
+    print.text "    bjam [options] [properties] [targets]
+      
+  Options, properties and targets can be specified in any order.
+      " ;
+        
+    print.section "Important Options" ;          
+    
+    print.list-start ;    
+    print.list-item "--clean Remove targets instead of building" ;
+    print.list-item "-a Rebuild everything" ;
+    print.list-item "-n Don't execute the commands, only print them" ;
+    print.list-item "-d+2 Show commands as they are executed" ;
+    print.list-item "-d0 Supress all informational messages" ;
+    print.list-item "-q Stop at first error" ;
+    print.list-item "--debug-configuration Diagnose configuration" ;
+    print.list-item "--debug-building Report which targets are built with what properties" ;
+    print.list-item "--debug-generator Diagnose generator search/execution" ;
+    print.list-end ;
+        
+    print.section "Further Help"
+        The following options can be used to obtain additional documentation.
+      ;
+ 
     print.list-start ;
-    print.list-item --help; This help message. ;
-    print.list-item --help-usage; How to invoke '"bjam".' ;
-    print.list-item --help-all; Brief information on available modules. ;
-    print.list-item --help <module-name>; Get information about a module. ;
-    print.list-item --help-options; Options for controlling the help display. ;
-    print.list-item --help-output <type>; The type of output to genetare.
-        '"console" is formated text echoed to the console (the default);'
-        '"text" is formated text appended to the output file;'
-        '"html" is HTML output to the file.' ;
-    print.list-item --help-output-file <file>; The file to output the documentation. ;
+    print.list-item "--help-options Print more obscure command line options." ;
+    print.list-item "--help-internal Boost.Build implementation details." ;
+    print.list-item "--help-doc-options Implementation details doc formatting." ;
     print.list-end ;
 }
 
