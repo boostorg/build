@@ -671,6 +671,15 @@ rule generators-for-toolset ( toolset )
     return $(.generators-for-toolset.$(toolset)) ;
 }
 
+# Make generator 'overrider-id' be preferred to
+# 'overridee-id'. If, when searching for generators
+# that could produce a target of certain type,
+# both those generators are amoung viable generators,
+# the overridden generator is immediately discarded.
+#
+# The overridden generators are discarded immediately
+# after computing the list of viable generators, before
+# running any of them.
 rule override ( overrider-id : overridee-id )
 {
     .override.$(overrider-id) += $(overridee-id) ;    
