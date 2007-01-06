@@ -43,8 +43,7 @@ exe hello : hello.cpp some_library.lib /some_project//library
           <literal>PATH</literal> environment variable should include the path
           to the libraries. It means you have to either add the paths
           manually, or place the application and the libraries to the same
-          directory, for example using the <link linkend="bbv2.builtins.stage">
-            stage</link> rule.
+          directory. See <xref linkend="bbv2.tasks.installing"/>.
         </para>
         <!-- We should be emphasizing the use of the built-in testing
              rules rather than continually discussing these quirks of
