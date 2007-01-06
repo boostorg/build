@@ -148,6 +148,15 @@ headers1(
 
 	while( fgets( buf, sizeof( buf ), f ) )
 	{
+            int size = strlen (buf);
+            /* Remove trailing \r and \n, if any. */
+            while (size > 0 
+                   && (buf[size-1] == '\n' && buf[size-1] == '\r'))
+            {
+                buf[size-1] = '\0';
+                --size;
+            }
+
 	    for( i = 0; i < rec; i++ )
 		if( regexec( re[i], buf ) && re[i]->startp[1] )
 	    {
