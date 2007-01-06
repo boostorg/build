@@ -246,9 +246,9 @@ local rule print-help-top ( )
     print.section "Important Options" ;          
     
     print.list-start ;    
-    print.list-item "--clean Remove target instead of building" ;
+    print.list-item "--clean Remove targets instead of building" ;
     print.list-item "-a Rebuild everything" ;
-    print.list-item "-n Don't execute the command, only print them" ;
+    print.list-item "-n Don't execute the commands, only print them" ;
     print.list-item "-d+2 Show commands as they are executed" ;
     print.list-item "-d0 Supress all informational messages" ;
     print.list-item "-q Stop at first error" ;
