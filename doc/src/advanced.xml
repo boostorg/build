@@ -49,24 +49,16 @@
               How to configure Boost.Build</link></para>
         </listitem>
         <listitem>
-          <para><link linkend="bbv2.advanced.jamfiles">
-              How to write Jamfiles</link></para>
+          <para><link linkend="bbv2.advanced.targets">
+              How to write declares targets in Jamfiles</link></para>
         </listitem>
         <listitem>
           <para><link linkend="bbv2.advanced.build_process">
               How the build process works</link></para>
         </listitem>
         <listitem>
-          <para>Some Basics about the Boost.Jam language. See also the
-          <ulink 
-          url="http://www.boost.org/tools/jam/index.html">Boost.Jam</ulink>
-          documentation.
-          <!-- Something better than this is desperately needed; the
-               tutorial at least should clarify that whitespace is
-               significant and we shouldn't get any further than the
-               beginning of this document before briefly explaining
-               Jam's data and procedural model, rule
-               signatures, and Boost.Build modules -->
+          <para>Some Basics about the Boost.Jam language. See 
+          <xref linkend="bbv2.advanced.jam_language"/>.
           </para>
         </listitem>
       </itemizedlist>
@@ -77,8 +69,7 @@
 
       <para>This section will describe the basics of the Boost.Jam
       language&#x2014;just enough for writing Jamfiles. For more information,
-      please see the <ulink
-      url="http://www.boost.org/tools/jam/index.html">Boost.Jam</ulink>
+      please see the <link linkend="bbv2.jam">Boost.Jam</link>
       documentation.</para>
 
       <para>Boost.Jam has an interpreted, procedural language. 
@@ -543,7 +534,7 @@ bjam optimization=space
         entity that can be built, for example an executable file.
         Declaring a main target is usually done using one of the main
         target rules described in <xref linkend=
-        "bbv2.reference.target-rules"/>.  The user can also declare
+        "bbv2.reference.rules"/>.  The user can also declare
         custom main target rules as shown in <xref
         linkend="bbv2.extending.rules"/>.
       </para>
@@ -1011,17 +1002,9 @@ project tennis
         </para>
 
       <para>Besides defining projects and main targets, Jamfiles
-      commonly invoke utility rules such as
-      <functionname>constant</functionname> and
-      <functionname>path-constant</functionname>, which inject a
-      specified Boost.Jam variable setting into this project's Jamfile
-      module and those of all its subprojects.  See <xref
-      linkend="bbv2.advanced.other-rules"/> for a complete description
-      of these utility rules.  Jamfiles are regular Boost.Jam source
-      files and Boost.Build modules, so naturally they can contain any kind of Boost.Jam code,
-      including rule definitions.
-      <!-- I improved that sentence, but I don't think it belongs
-           here.  I suggest you strike it. -->
+      often invoke various utility rules. For the full list of rules
+      that can be directly used in Jamfile see 
+      <xref linkend="bbv2.reference.rules"/>.
       </para>
 
       <para>Each subproject inherits attributes, constants and rules
@@ -1095,7 +1078,7 @@ project tennis
       </para>
     </tip>
 
-    <section>
+    <section id="bbv2.advanced.build_request">
       <title>Build Request</title>
 
       <para>

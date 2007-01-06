@@ -43,8 +43,7 @@ exe hello : hello.cpp some_library.lib /some_project//library
           <literal>PATH</literal> environment variable should include the path
           to the libraries. It means you have to either add the paths
           manually, or place the application and the libraries to the same
-          directory, for example using the <link linkend="bbv2.builtins.stage">
-            stage</link> rule.
+          directory. See <xref linkend="bbv2.tasks.installing"/>.
         </para>
         <!-- We should be emphasizing the use of the built-in testing
              rules rather than continually discussing these quirks of
@@ -323,7 +322,7 @@ install headers
             
       <bridgehead>Installing into Several Directories</bridgehead>
 
-      <para>The <link linkend="bbv2.builtins.alias"><code>alias</code></link>
+      <para>The <link linkend="bbv2.tasks.alias"><code>alias</code></link>
       rule can be used when targets must be installed into several
       directories:
 <programlisting>
@@ -340,7 +339,7 @@ install install-lib : helper : /usr/lib ;
     The only two which matter are  
     <link linkend="bbv2.builtin.features.dependency">
     <varname>dependency</varname></link> and, on Unix,
-    <link linkend="bbv2.builtin.feature.dll-path"><varname>dll-path</varname></link>. 
+    <link linkend="bbv2.reference.features.dll-path"><varname>dll-path</varname></link>. 
     </para>
 
     <note>
@@ -553,277 +552,7 @@ exe app : app.cpp : &lt;implicit-dependency&gt;parser ;
         targets from "parser" as potential dependencies.
       </para>
 </section>
-
     
-  <section id="bbv2.advanced.builtins.features">
-    <title>Builtin features</title> 
-        
-    <variablelist>
-      <varlistentry><term><literal>variant</literal></term>
-        
-        <listitem>
-          <para>
-            A feature that combines several low-level features, making
-            it easy to request common build configurations.
-          </para>
-          
-          <para><emphasis role="bold">Allowed values:</emphasis> <literal>debug</literal>, <literal>release</literal>,
-            <literal>profile</literal>.</para>
-          
-          <para>The value <literal>debug</literal> expands to</para>
-          
-<programlisting>
-&lt;optimization&gt;off &lt;debug-symbols&gt;on &lt;inlining&gt;off &lt;runtime-debugging&gt;on
-</programlisting>
-          
-          <para>The value <literal>release</literal> expands to</para>
-          
-<programlisting>
-&lt;optimization&gt;speed &lt;debug-symbols&gt;off &lt;inlining&gt;full &lt;runtime-debugging&gt;off
-</programlisting>
-          
-          <para>The value <literal>profile</literal> expands to the same as
-          <literal>release</literal>, plus:</para>
-          
-<programlisting>
-&lt;profiling&gt;on &lt;debug-symbols&gt;on
-</programlisting>
-
-          <para>User can define his own build variants using the <code>variant</code> rule from the <code>common</code>
-          module.</para>
-          
-          <para><emphasis role="bold">Notee:</emphasis> Runtime
-          debugging is on in debug builds to suit the expectations of
-          people used to various IDEs. 
-          <!-- Define "runtime debugging." Why will those people expect it to be on in debug builds? -->
-          </para>
-        </listitem></varlistentry>
-      
-      <varlistentry id="bbv2.advanced.builtins.features.link">
-        <term><literal>link</literal></term>
-        
-        <listitem>
-          <simpara>
-            A feature that controls how libraries are built.
-          </simpara>
-          
-          <para><emphasis role="bold">Allowed values:</emphasis> <literal>shared</literal>,
-            <literal>static</literal></para>
-        </listitem></varlistentry>
-      
-      <varlistentry><term><literal>source</literal></term>
-        
-        <listitem>
-          <simpara>
-            The <code>&lt;source&gt;X</code> feature has the same effect on 
-            building a target as putting X in the list of sources. 
-            It's useful when you want to add
-            the same source to all targets in the project 
-            (you can put &lt;source&gt; in requirements) or to conditionally
-            include a source (using conditional requirements, see <xref linkend="bbv2.tutorial.conditions"/>)
-            See also the <code>&lt;library&gt;</code> feature.
-          </simpara>
-        </listitem>
-      </varlistentry>
-      
-      <varlistentry><term><literal>library</literal></term>
-        
-        <listitem>
-          <simpara>
-            This feature is almost equivalent to the <code>&lt;source&gt;</code> feature, 
-            except that it takes effect only for linking. When you want to 
-            link all targets in a Jamfile to certain library, the 
-            <code>&lt;library&gt;</code> feature is preferred over 
-            <code>&lt;source&gt;X</code> -- the latter will add the library to
-            all targets, even those that have nothing to do with libraries.
-          </simpara>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry><term><anchor id="bbv2.builtin.features.dependency"/>
-          <literal>dependency</literal></term>
-        
-        <listitem>
-          <simpara>
-            Introduces a dependency on the target named by the
-            value of this feature (so it will be brought
-            up-to-date whenever the target being declared is).
-            The dependency is not used in any other way. For example, in
-            application with plugins, the plugins are not used when linking
-            the application, 
-            application might have dependency on its plugins, even though 
-
-
-            , and
-            adds its usage requirements to the build properties 
-            of the target being declared.  
-
- The primary use case is when you want
-            the usage requirements (such as <code>#include</code> paths) of some
-            library to be applied, but don't want to link to it.
-            <!-- It's hard to picture why anyone would want to do
-                 that.  Please flesh out this motivation -->
-          </simpara>
-        </listitem>
-      </varlistentry>
-
-            
-      <varlistentry><term><anchor id="bbv2.builtin.features.use"/>
-          <literal>use</literal></term>
-        
-        <listitem>
-          <simpara>
-            Introduces a dependency on the target named by the
-            value of this feature (so it will be brought
-            up-to-date whenever the target being declared is), and
-            adds its usage requirements to the build properties 
-            <!-- Do you really mean "to the requirements?" -->
-            of the target being declared.  The dependency is not used
-            in any other way. The primary use case is when you want
-            the usage requirements (such as <code>#include</code> paths) of some
-            library to be applied, but don't want to link to it.
-            <!-- It's hard to picture why anyone would want to do
-                 that.  Please flesh out this motivation -->
-          </simpara>
-        </listitem>
-      </varlistentry>
-      
-      <varlistentry><term><anchor id="bbv2.builtin.features.dll-path"/>
-      <literal>dll-path</literal></term>
-        
-        <listitem>
-          <simpara>
-            Specify an additional directory where the system should
-            look for shared libraries when the executable or shared
-            library is run. This feature only affects Unix
-            compilers. Plase see <xref linkend="bbv2.faq.dll-path"/>
-            in <xref linkend="bbv2.faq"/> for details.
-          </simpara>
-        </listitem></varlistentry>
-      
-      <varlistentry><term><literal>hardcode-dll-paths</literal></term>
-        
-        <listitem>
-          <simpara>
-            Controls automatic generation of dll-path properties.
-          </simpara>
-          
-          <para><emphasis role="bold">Allowed values:</emphasis>
-            <literal>true</literal>, <literal>false</literal>.  This property
-            is specific to Unix systems. If an executable is built with
-            <code>&lt;hardcode-dll-paths&gt;true</code>, the generated binary
-            will contain the list of all the paths to the used shared
-            libraries. As the result, the executable can be run without
-            changing system paths to shared libraries or installing the
-            libraries to system paths. This 
-            <!-- you need an antecedent.  This _what_? -->
-            is very convenient during
-            development. Plase see the <link
-            linkend="bbv2.faq.dll-path">FAQ entry</link> for details.
-            Note that on Mac OSX, the paths are unconditionally hardcoded by
-            the linker, and it's not possible to disable that behaviour.
-          </para>
-        </listitem></varlistentry>
-
-      <varlistentry>
-        <term><literal>cflags</literal></term>
-        <term><literal>cxxflags</literal></term>
-        <term><literal>linkflags</literal></term>
-        
-        <listitem>
-          <simpara>
-            The value of those features is passed without modification to the
-            corresponding tools. For <code>cflags</code> that's both the C and C++
-            compilers, for <code>cxxflags</code> that's the C++ compiler and for
-            <code>linkflags</code> that's the linker. The features are handy when
-            you're trying to do something special that cannot be achieved by
-            higher-level feature in Boost.Build.
-          </simpara>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry><term><literal>warnings</literal></term>
-        
-        <listitem>
-          <simpara>
-            The <code>&lt;warnings&gt;</code> feature controls the warning level of compilers. It has the following values:
-            <itemizedlist>
-              <listitem><para><code>off</code> - disables all warnings.</para></listitem>
-              <listitem><para><code>on</code> - enables default warning level for the tool.</para></listitem>
-              <listitem><para><code>all</code> - enables all warnings.</para></listitem>
-            </itemizedlist>
-            Default value is <code>all</code>.
-          </simpara>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry><term><literal>warnings-as-errors</literal></term>
-        
-        <listitem>
-          <simpara>
-            The <code>&lt;warnings-as-errors&gt;</code> makes it possible to treat warnings as errors and abort
-            compilation on a warning. The value <code>on</code> enables this behaviour. The default value is
-            <code>off</code>.
-          </simpara>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry><term><literal>build</literal></term>
-        
-        <listitem>
-          <para><emphasis role="bold">Allowed values:</emphasis> <literal>no</literal></para>
-
-          <para>
-            The <code>build</code> feature is used to conditionally disable build of a target. If <code>&lt;build&gt;no</code>
-            is in properties when building a target, build of that target is skipped. Combined with conditional requirements this
-            allows to skip building some target in configurations where the build is known to fail. 
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry><term><literal>tag</literal></term>
-
-        <listitem><para>The <literal>tag</literal> feature is used to customize
-        the name of the generated files. The value should have the form:
-<programlisting>@<replaceable>rulename</replaceable></programlisting> where
-        <replaceable>rulename</replaceable> should be a name of a rule with
-        the following signature:
-<programlisting>rule tag ( name : type ? : property-set )</programlisting>
-        The rule will be called for each target with the default name computed
-        by Boost.Build, the type of the target, and property set. The rule
-        can either return a string that must be used as the name of the
-        target, or empty string, in which case the default name will be used.
-        </para>
-
-        <para>Most typical use of the <literal>tag</literal> feature is
-        to encode build properties, or library version in library target names.
-        You should take care to return non-empty string from the tag rule
-        only for types you care about &#x2014; otherwise, you might
-        end up modifying names of object files, generated header file and
-        other targets for which changing names does not make sense.</para>
-        </listitem>
-
-      </varlistentry>
-
-      <varlistentry><term><literal>debug-symbols</literal></term>
-        
-        <listitem>        
-          <para><emphasis role="bold">Allowed values:</emphasis> <literal>on</literal>, <literal>off</literal>.</para>
-
-          <para>The <literal>debug-symbols</literal> feature specifies if
-          produced object files, executables and libraries should include 
-          debug information.
-          Typically, the value of this feature is implicitly set by the
-          <literal>variant</literal> feature, but it can be explicitly
-          specified by the user. The most common usage is to build
-          release variant with debugging information.</para>
-        </listitem>
-      </varlistentry>
-      
-
-
-    </variablelist>
-  </section>
 </chapter>
 
 

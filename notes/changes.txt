@@ -16,8 +16,12 @@ Changes in this release:
     - New 'project.extension' rule for declaring standalone
       projects.
     - New 'conditional' convenience rule.
-    - New 'path.glob-tree' rule.
+    - New 'glob-tree' rule.
+    - The 'glob' rule accepts patterns to exclude.
     - Inline targets are now marked explicit automatically.
+    - Toolsets can now implicitly add requirements to
+    all targets.
+    - New 'generate' rule.
 
 Documentation changes:
 
@@ -32,7 +36,7 @@ The following bugs were fixed:
     mkdir commands.
     - Numerious fixes in Boost autolink support
     - Numerious fixes in Boost.Python support.
-
+    - Indirect properties not evaluates in usage requirements.
 
 Milestone 11 (Jule 20, 2006)
 
