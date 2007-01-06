@@ -653,18 +653,19 @@ obj test.debug : test.cpp : &lt;variant&gt;debug ;
         files. Sometimes, you'll want to automatically construct the
         list of source files rather than having to spell it out
         manually, in which case you can use the
-        <functionname>glob</functionname> rule. Here are two examples:
+        <functionname>glob</functionname> rule. Here are two examples:</para>
 <programlisting>
 exe a : a.cpp ;           # a.cpp is the only source file
 exe b : [ glob *.cpp ] ;  # all .cpp files in this directory are sources 
 </programlisting>
+        <para>
         Unless you specify a file with an absolute path, the name is
         considered relative to the source directory&#x200A;&#x2014;&#x200A;which is typically
         the directory where the Jamfile is located, but can be changed as
         described in <xref linkend=
           "bbv2.advanced.projects.attributes.projectrule"/>.
         </para>
-      
+
         <para>
           <!-- use "project-id" here? -->
           The list of sources can also refer to other main targets.
@@ -675,6 +676,8 @@ exe b : [ glob *.cpp ] ;  # all .cpp files in this directory are sources
           distinguish the directory name from the project name&#x2014;the part before
           the double slash is first looked up as project name, and then as directory
           name. For example:
+        </para>
+      
 <programlisting>
 lib helper : helper.cpp ;
 exe a : a.cpp helper ;
@@ -682,6 +685,7 @@ exe a : a.cpp helper ;
 exe b : b.cpp ..//utils ;
 exe c : c.cpp /boost/program_options//program_options ;
 </programlisting>
+        <para>
           The first exe uses the library defined in the same
           project. The second one uses some target (most likely library)
           defined by Jamfile one level higher. Finally, the third target
@@ -1024,9 +1028,8 @@ project tennis
       subprojects, so that every definition made in a parent project
       is always available to its children. The loading order of any
       other projects is unspecified.  Even if one project refers to
-      another via <xref
-      linkend="bbv2.advanced.projects.relationships.useprojectrule"><functionname>use-project</functionname></xref>,
-      or a target reference, no specific order should be assumed.
+      another via the <code>use-project</code> or a target reference, 
+      no specific order should be assumed.
       </para>
 
       <note>

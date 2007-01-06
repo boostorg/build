@@ -12,7 +12,7 @@
   <para>This section describes main targets types that Boost.Build supports
   of-of-the-box. Unless otherwise noted, all mentioned main target rules
   have the common signature, described in <xref
-  linkend="bbv2.main-target-rule-syntax"/>.
+  linkend="bbv2.advanced.targets"/>.
   </para>
   
   <section id="bbv2.tasks.programs">
