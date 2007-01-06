@@ -15,6 +15,7 @@ import project ;
 import print ;
 import os ;
 import version ;
+import path ;
 
 # List of possible modules, but which really aren't.
 #
@@ -115,10 +116,16 @@ rule process (
         {
             version.print ;
             ECHO ;
-            # First print documentation from the current Jamfile, if any.
-            local project-file =
-                [ project.find-jamfile . : no-error ]
-                [ project.find-jamfile . parent : no-error ] ;
+            # First print documentation from the current Jamfile, if any.            
+            # FIXME: Generally, this duplication of project.jam logic is bad.
+            local names = [ modules.peek project : JAMROOT ]
+              [ modules.peek project : JAMFILE ] ;
+            local project-file = [ path.glob . : $(names) ] ;
+            if ! $(project-file)
+            {
+                project-file = [ path.glob-in-parents . : $(names) ] ;
+            }
+            
             for local p in $(project-file)
             {
                 do-scan $(p) : print-help-project $(p) ;
