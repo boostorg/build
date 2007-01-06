@@ -14,7 +14,8 @@ import set ;
 import project ;
 import print ;
 import os ;
-
+import version ;
+import path ;
 
 # List of possible modules, but which really aren't.
 #
@@ -44,7 +45,7 @@ rule process (
     local did-help = ;
     switch $(command)
     {
-        case --help-all :
+        case --help-internal :
         local path-to-modules = [ modules.peek : BOOST_BUILD_PATH ] ;
         path-to-modules ?= . ;
         local possible-modules = [ GLOB $(path-to-modules) : *\\.jam ] ;
@@ -79,12 +80,12 @@ rule process (
         set-output-file $(values[1]) ;
         did-help = true ;
 
-        case --help-options :
+        case --help-doc-options :
         local doc-module-spec = [ split-symbol doc ] ;
         do-scan $(doc-module-spec[1]) : print-help-options ;
         did-help = true ;
 
-        case --help-usage :
+        case --help-options :
         print-help-usage ;
         did-help = true ;
 
@@ -113,10 +114,18 @@ rule process (
         }
         else
         {
-            # First print documentation from the current Jamfile, if any.
-            local project-file =
-                [ project.find-jamfile . : no-error ]
-                [ project.find-jamfile . parent : no-error ] ;
+            version.print ;
+            ECHO ;
+            # First print documentation from the current Jamfile, if any.            
+            # FIXME: Generally, this duplication of project.jam logic is bad.
+            local names = [ modules.peek project : JAMROOT ]
+              [ modules.peek project : JAMFILE ] ;
+            local project-file = [ path.glob . : $(names) ] ;
+            if ! $(project-file)
+            {
+                project-file = [ path.glob-in-parents . : $(names) ] ;
+            }
+            
             for local p in $(project-file)
             {
                 do-scan $(p) : print-help-project $(p) ;
