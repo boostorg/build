@@ -99,12 +99,14 @@ rule make-test ( target-type : sources + : requirements * : target-name ? )
     return $(t) ;    
 }
 
-rule compile ( sources : requirements * : target-name ? )
+# Note: passing more that one cpp file here is know to
+# fail. Passing a cpp file and a library target works.
+rule compile ( sources + : requirements * : target-name ? )
 {    
     return [ make-test compile : $(sources) : $(requirements) : $(target-name) ] ;
 }
 
-rule compile-fail ( sources : requirements * : target-name ? )
+rule compile-fail ( sources + : requirements * : target-name ? )
 {    
     return [ make-test compile-fail : $(sources) : $(requirements) : $(target-name) ] ;
 }
