@@ -59,94 +59,94 @@ if "_%ProgramFiles%_" == "__" set ProgramFiles=C:\Program Files
 
 setlocal & endlocal
 if NOT "_%VS80COMNTOOLS%_" == "__" (
-    set BOOST_JAM_TOOLSET=vc8
-    set BOOST_JAM_TOOLSET_ROOT=%VS80COMNTOOLS%..\..\VC\
+    set "BOOST_JAM_TOOLSET=vc8"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS80COMNTOOLS%..\..\VC\"
     goto :eof)
 setlocal & endlocal
 if EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\bin\VCVARS32.BAT" (
-    set BOOST_JAM_TOOLSET=vc8
-    set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 8\VC\
+    set "BOOST_JAM_TOOLSET=vc8"
+    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 8\VC\"
     goto :eof)
 setlocal & endlocal
 if NOT "_%VS71COMNTOOLS%_" == "__" (
-    set BOOST_JAM_TOOLSET=vc7
-    set BOOST_JAM_TOOLSET_ROOT=%VS71COMNTOOLS%\..\..\VC7\
+    set "BOOST_JAM_TOOLSET=vc7"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS71COMNTOOLS%\..\..\VC7\"
     goto :eof)
 setlocal & endlocal
 if NOT "_%VCINSTALLDIR%_" == "__" (
-    set BOOST_JAM_TOOLSET=vc7
-    set BOOST_JAM_TOOLSET_ROOT=%VCINSTALLDIR%\VC7\
+    set "BOOST_JAM_TOOLSET=vc7"
+    set "BOOST_JAM_TOOLSET_ROOT=%VCINSTALLDIR%\VC7\"
     goto :eof)
 setlocal & endlocal
 if EXIST "%ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\bin\VCVARS32.BAT" (
-    set BOOST_JAM_TOOLSET=vc7
-    set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\
+    set "BOOST_JAM_TOOLSET=vc7"
+    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\"
     goto :eof)
 setlocal & endlocal
 if EXIST "%ProgramFiles%\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
-    set BOOST_JAM_TOOLSET=vc7
-    set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET\VC7\
+    set "BOOST_JAM_TOOLSET=vc7"
+    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET\VC7\"
     goto :eof)
 setlocal & endlocal
 if NOT "_%MSVCDir%_" == "__" (
-    set BOOST_JAM_TOOLSET=msvc
-    set BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\
+    set "BOOST_JAM_TOOLSET=msvc"
+    set "BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\"
     goto :eof)
 setlocal & endlocal
 if EXIST "%ProgramFiles%\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT" (
-    set BOOST_JAM_TOOLSET=msvc
-    set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio\VC98\
+    set "BOOST_JAM_TOOLSET=msvc"
+    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio\VC98\"
     goto :eof)
 setlocal & endlocal
 if EXIST "%ProgramFiles%\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" (
-    set BOOST_JAM_TOOLSET=msvc
-    set BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual C++\VC98\
+    set "BOOST_JAM_TOOLSET=msvc"
+    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual C++\VC98\"
     goto :eof)
 setlocal & endlocal
 call :Test_Path cl.exe
 if not errorlevel 1 (
-    set BOOST_JAM_TOOLSET=msvc
-    set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\
+    set "BOOST_JAM_TOOLSET=msvc"
+    set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
     goto :eof)
 setlocal & endlocal
 call :Test_Path vcvars32.bat
 if not errorlevel 1 (
-    set BOOST_JAM_TOOLSET=msvc
+    set "BOOST_JAM_TOOLSET=msvc"
     call "%FOUND_PATH%VCVARS32.BAT"
-    set BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\
+    set "BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\"
     goto :eof)
 setlocal & endlocal
 if EXIST "C:\Borland\BCC55\Bin\bcc32.exe" (
-    set BOOST_JAM_TOOLSET=borland
-    set BOOST_JAM_TOOLSET_ROOT=C:\Borland\BCC55\
+    set "BOOST_JAM_TOOLSET=borland"
+    set "BOOST_JAM_TOOLSET_ROOT=C:\Borland\BCC55\"
     goto :eof)
 setlocal & endlocal
 call :Test_Path bcc32.exe
 if not errorlevel 1 (
-    set BOOST_JAM_TOOLSET=borland
-    set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\
+    set "BOOST_JAM_TOOLSET=borland"
+    set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
     goto :eof)
 setlocal & endlocal
 call :Test_Path icl.exe
 if not errorlevel 1 (
-    set BOOST_JAM_TOOLSET=intel-win32
-    set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\
+    set "BOOST_JAM_TOOLSET=intel-win32"
+    set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
     goto :eof)
 setlocal & endlocal
 if EXIST "C:\MinGW\bin\gcc.exe" (
-    set BOOST_JAM_TOOLSET=mingw
-    set BOOST_JAM_TOOLSET_ROOT=C:\MinGW\
+    set "BOOST_JAM_TOOLSET=mingw"
+    set "BOOST_JAM_TOOLSET_ROOT=C:\MinGW\"
     goto :eof)
 setlocal & endlocal
 if NOT "_%CWFolder%_" == "__" (
-    set BOOST_JAM_TOOLSET=metrowerks
-    set BOOST_JAM_TOOLSET_ROOT=%CWFolder%\
+    set "BOOST_JAM_TOOLSET=metrowerks"
+    set "BOOST_JAM_TOOLSET_ROOT=%CWFolder%\"
     goto :eof )
 setlocal & endlocal
 call :Test_Path mwcc.exe
 if not errorlevel 1 (
-    set BOOST_JAM_TOOLSET=metrowerks
-    set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\..\
+    set "BOOST_JAM_TOOLSET=metrowerks"
+    set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\..\"
     goto :eof)
 setlocal & endlocal
 call :Error_Print "Could not find a suitable toolset."
@@ -157,16 +157,16 @@ REM Tries to find bison or yacc in common places so we can build the grammar.
 setlocal & endlocal
 call :Test_Path yacc.exe
 if not errorlevel 1 (
-    set YACC=yacc -d
+    set "YACC=yacc -d"
     goto :eof)
 setlocal & endlocal
 call :Test_Path bison.exe
 if not errorlevel 1 (
-    set YACC=bison -d --yacc
+    set "YACC=bison -d --yacc"
     goto :eof)
 setlocal & endlocal
 if EXIST "C:\Program Files\GnuWin32\bin\bison.exe" (
-    set YACC="C:\Program Files\GnuWin32\bin\bison.exe" -d --yacc
+    set "YACC=C:\Program Files\GnuWin32\bin\bison.exe" -d --yacc
     goto :eof)
 setlocal & endlocal
 call :Error_Print "Could not find Yacc to build the Jam grammar."
@@ -182,13 +182,13 @@ if "_%1_" == "__" (
     call :Guess_Toolset
     if not errorlevel 1 goto Setup_Toolset
 ) else (
-    call :Test_Option %1
+    call :Test_Option "%1"
     if not errorlevel 1 (
         call :Guess_Toolset
         if not errorlevel 1 goto Setup_Toolset
     ) else (
         setlocal & endlocal
-        set BOOST_JAM_TOOLSET=%1
+        set "BOOST_JAM_TOOLSET=%1"
         shift
         goto Setup_Toolset
     )
@@ -206,60 +206,68 @@ REM command. A complete "if ... ( commands ) else ( commands )"
 REM is a single command, even though it's in multiple lines here.
 if "_%BOOST_JAM_TOOLSET%_" == "_metrowerks_" (
     if NOT "_%CWFolder%_" == "__" (
-        set BOOST_JAM_TOOLSET_ROOT=%CWFolder%\) )
+        set "BOOST_JAM_TOOLSET_ROOT=%CWFolder%\"
+        ) )
 if "_%BOOST_JAM_TOOLSET%_" == "_metrowerks_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
-        set PATH=%BOOST_JAM_TOOLSET_ROOT%Other Metrowerks Tools\Command Line Tools;%PATH%)
-    set BOOST_JAM_CC=mwcc -runtime ss -cwd include -DNT -lkernel32.lib -ladvapi32.lib -luser32.lib
-    set BOOST_JAM_OPT_JAM=-o bootstrap\jam0.exe
-    set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap\mkjambase0.exe
-    set BOOST_JAM_OPT_YYACC=-o bootstrap\yyacc0.exe
-    set _known_=1
+        set "PATH=%BOOST_JAM_TOOLSET_ROOT%Other Metrowerks Tools\Command Line Tools;%PATH%"
+        )
+    set "BOOST_JAM_CC=mwcc -runtime ss -cwd include -DNT -lkernel32.lib -ladvapi32.lib -luser32.lib"
+    set "BOOST_JAM_OPT_JAM=-o bootstrap\jam0.exe"
+    set "BOOST_JAM_OPT_MKJAMBASE=-o bootstrap\mkjambase0.exe"
+    set "BOOST_JAM_OPT_YYACC=-o bootstrap\yyacc0.exe"
+    set "_known_=1"
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
     if NOT "_%MSVCDir%_" == "__" (
-        set BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\) )
+        set "BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\"
+        ) )
 if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
     if EXIST "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" (
         call "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" ) )
 if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
-        set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
-    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib advapi32.lib user32.lib
-    set BOOST_JAM_OPT_JAM=/Febootstrap\jam0
-    set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0
-    set BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0
-    set _known_=1
+        set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
+        )
+    set "BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib advapi32.lib user32.lib"
+    set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
+    set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
+    set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
+    set "_known_=1"
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
     if NOT "_%MSVCDir%_" == "__" (
-        set BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\) )
+        set "BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\"
+        ) )
 if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
     if EXIST "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" (
         call "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" ) )
 if "_%BOOST_JAM_TOOLSET%_" == "_vc7_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
-        set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
-    set BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib advapi32.lib user32.lib
-    set BOOST_JAM_OPT_JAM=/Febootstrap\jam0
-    set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0
-    set BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0
-    set _known_=1
+        set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
+        )
+    set "BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd -DNT -DYYDEBUG kernel32.lib advapi32.lib user32.lib"
+    set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
+    set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
+    set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
+    set "_known_=1"
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_vc8_" (
     if NOT "_%MSVCDir%_" == "__" (
-        set BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\) )
+        set "BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\"
+        ) )
 if "_%BOOST_JAM_TOOLSET%_" == "_vc8_" (
     if EXIST "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" (
         call "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT" ) )
 if "_%BOOST_JAM_TOOLSET%_" == "_vc8_" (
     if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
-        set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
-    set BOOST_JAM_CC=cl /nologo /RTC1 /Zi /MTd -DNT -DYYDEBUG -wd4996 kernel32.lib advapi32.lib user32.lib
-    set BOOST_JAM_OPT_JAM=/Febootstrap\jam0
-    set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0
-    set BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0
-    set _known_=1
+        set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
+        )
+    set "BOOST_JAM_CC=cl /nologo /RTC1 /Zi /MTd -DNT -DYYDEBUG -wd4996 kernel32.lib advapi32.lib user32.lib"
+    set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
+    set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
+    set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
+    set "_known_=1"
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_borland_" (
     if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
@@ -267,50 +275,55 @@ if "_%BOOST_JAM_TOOLSET%_" == "_borland_" (
 if "_%BOOST_JAM_TOOLSET%_" == "_borland_" (
     if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
         if not errorlevel 1 (
-            set BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\) ) )
+            set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
+            ) ) )
 if "_%BOOST_JAM_TOOLSET%_" == "_borland_" (
-    if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (set PATH=%BOOST_JAM_TOOLSET_ROOT%Bin;%PATH%)
-    set BOOST_JAM_CC=bcc32 -WC -w- -q "-I%BOOST_JAM_TOOLSET_ROOT%Include" "-L%BOOST_JAM_TOOLSET_ROOT%Lib" /DNT -nbootstrap
-    set BOOST_JAM_OPT_JAM=-ejam0
-    set BOOST_JAM_OPT_MKJAMBASE=-emkjambasejam0
-    set BOOST_JAM_OPT_YYACC=-eyyacc0
-    set _known_=1
+    if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
+        set "PATH=%BOOST_JAM_TOOLSET_ROOT%Bin;%PATH%"
+        )
+    set "BOOST_JAM_CC=bcc32 -WC -w- -q "-I%BOOST_JAM_TOOLSET_ROOT%Include" "-L%BOOST_JAM_TOOLSET_ROOT%Lib" /DNT -nbootstrap"
+    set "BOOST_JAM_OPT_JAM=-ejam0"
+    set "BOOST_JAM_OPT_MKJAMBASE=-emkjambasejam0"
+    set "BOOST_JAM_OPT_YYACC=-eyyacc0"
+    set "_known_=1"
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_como_" (
-    set BOOST_JAM_CC=como -DNT
-    set BOOST_JAM_OPT_JAM=-o bootstrap\jam0.exe
-    set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap\mkjambase0.exe
-    set BOOST_JAM_OPT_YYACC=-o bootstrap\yyacc0.exe
-    set _known_=1
+    set "BOOST_JAM_CC=como -DNT"
+    set "BOOST_JAM_OPT_JAM=-o bootstrap\jam0.exe"
+    set "BOOST_JAM_OPT_MKJAMBASE=-o bootstrap\mkjambase0.exe"
+    set "BOOST_JAM_OPT_YYACC=-o bootstrap\yyacc0.exe"
+    set "_known_=1"
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_gcc_" (
-    set BOOST_JAM_CC=gcc -DNT
-    set BOOST_JAM_OPT_JAM=-o bootstrap\jam0.exe
-    set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap\mkjambase0.exe
-    set BOOST_JAM_OPT_YYACC=-o bootstrap\yyacc0.exe
-    set _known_=1
+    set "BOOST_JAM_CC=gcc -DNT"
+    set "BOOST_JAM_OPT_JAM=-o bootstrap\jam0.exe"
+    set "BOOST_JAM_OPT_MKJAMBASE=-o bootstrap\mkjambase0.exe"
+    set "BOOST_JAM_OPT_YYACC=-o bootstrap\yyacc0.exe"
+    set "_known_=1"
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_gcc-nocygwin_" (
-    set BOOST_JAM_CC=gcc -DNT -mno-cygwin
-    set BOOST_JAM_OPT_JAM=-o bootstrap\jam0.exe
-    set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap\mkjambase0.exe
-    set BOOST_JAM_OPT_YYACC=-o bootstrap\yyacc0.exe
-    set _known_=1
+    set "BOOST_JAM_CC=gcc -DNT -mno-cygwin"
+    set "BOOST_JAM_OPT_JAM=-o bootstrap\jam0.exe"
+    set "BOOST_JAM_OPT_MKJAMBASE=-o bootstrap\mkjambase0.exe"
+    set "BOOST_JAM_OPT_YYACC=-o bootstrap\yyacc0.exe"
+    set "_known_=1"
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_intel-win32_" (
-    set BOOST_JAM_CC=icl -DNT /nologo kernel32.lib advapi32.lib user32.lib
-    set BOOST_JAM_OPT_JAM=/Febootstrap\jam0
-    set BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0
-    set BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0
-    set _known_=1
+    set "BOOST_JAM_CC=icl -DNT /nologo kernel32.lib advapi32.lib user32.lib"
+    set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
+    set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
+    set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
+    set "_known_=1"
 )
 if "_%BOOST_JAM_TOOLSET%_" == "_mingw_" (
-    if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (set PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%)
-    set BOOST_JAM_CC=gcc -DNT
-    set BOOST_JAM_OPT_JAM=-o bootstrap\jam0.exe
-    set BOOST_JAM_OPT_MKJAMBASE=-o bootstrap\mkjambase0.exe
-    set BOOST_JAM_OPT_YYACC=-o bootstrap\yyacc0.exe
-    set _known_=1
+    if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
+        set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
+        )
+    set "BOOST_JAM_CC=gcc -DNT"
+    set "BOOST_JAM_OPT_JAM=-o bootstrap\jam0.exe"
+    set "BOOST_JAM_OPT_MKJAMBASE=-o bootstrap\mkjambase0.exe"
+    set "BOOST_JAM_OPT_YYACC=-o bootstrap\yyacc0.exe"
+    set "_known_=1"
 )
 if "_%_known_%_" == "__" (
     call :Error_Print "Unknown toolset: %BOOST_JAM_TOOLSET%"
