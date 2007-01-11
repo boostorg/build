@@ -416,12 +416,12 @@ class Doxygen2BoostBook:
             id=memberdef.getAttribute('id'),
             name=self._getChildData('name',root=memberdef)))
         typedef_type = typedef.appendChild(self._createNode('type'))
-        self._translateChildren(self._getChild('type',root=memberdef),target=typedef_type)
+        self._translate_type(self._getChild('type',root=memberdef),target=typedef_type)
         return typedef
     
     def _translate_memberdef_function( self, memberdef, target=None, scope=None, **kwargs ):
         ## The current BoostBook to Docbook translator doesn't respect method
-        ## Ids. Nor does it assign any useable IDs to the individial methods.
+        ## IDs. Nor does it assign any useable IDs to the individial methods.
         # self._setID(memberdef.getAttribute('id'),
         #     scope+'::'+self._getChildData('name',root=memberdef))
         ## Hence instead of registering an ID for the method we point it at the
@@ -449,12 +449,16 @@ class Doxygen2BoostBook:
     
     def _translate_memberdef_function_type( self, resultType, target=None, **kwargs ):
         methodType = target.appendChild(self._createNode('type'))
-        self._translateChildren(resultType,target=methodType)
+        self._translate_type(resultType,target=methodType)
         return methodType
     
     def _translate_memberdef_function_briefdescription( self, description, target=None, **kwargs ):
-        self._translateDescription(description,target=target,**kwargs)
-        return self._translateDescription(description,target=target,tag='purpose',**kwargs)
+        result = self._translateDescription(description,target=target,**kwargs)
+        ## For functions if we translate the brief docs to the purpose they end up
+        ## right above the regular description. And since we just added the brief to that
+        ## on the previous line, don't bother with the repetition.
+        # result = self._translateDescription(description,target=target,tag='purpose',**kwargs)
+        return result
     
     def _translate_memberdef_function_detaileddescription( self, description, target=None, **kwargs ):
         return self._translateDescription(description,target=target,**kwargs)
@@ -472,7 +476,7 @@ class Doxygen2BoostBook:
             id=memberdef.getAttribute('id'),
             name=self._getChildData('name',root=memberdef)))
         data_member_type = data_member.appendChild(self._createNode('type'))
-        self._translateChildren(self._getChild('type',root=memberdef),target=data_member_type)
+        self._translate_type(self._getChild('type',root=memberdef),target=data_member_type)
     
     def _translate_memberdef_enum( self, memberdef, target=None, scope=None, **kwargs ):
         self._setID(memberdef.getAttribute('id'),
@@ -518,6 +522,21 @@ class Doxygen2BoostBook:
     def _translate_ref_member( self, ref, **kwargs ):
         result = self._createNode('link',linkend=ref.getAttribute('refid'))
         self._translateChildren(ref,target=result)
+        return result
+    
+    def _translate_type( self, type, target=None, **kwargs ):
+        result = self._translateChildren(type,target=target,**kwargs)
+        #~ Filter types to clean up various readability problems, most notably
+        #~ with really long types.
+        xml = target.toxml('utf-8');
+        if (
+            xml.startswith('<type>boost::mpl::') or
+            xml.startswith('<type>BOOST_PP_') or
+            re.match('<type>boost::(lazy_)?(enable|disable)_if',xml)
+            ):
+            while target.firstChild:
+                target.removeChild(target.firstChild)
+            target.appendChild(self._createText('emphasis','unspecified'))
         return result
     
     def _getChild( self, tag = None, id = None, name = None, root = None ):
