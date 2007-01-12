@@ -381,19 +381,24 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
 {
     if ! $(cygwin-condition)
     {        
-        root ?= c:/tools/python ;
-        
+        # The name of Python library file does not have a dot between
+        # major and minor version. 
+        local PYTHON_VERSION_NODOT = [ regex.match ([0-9]+)[.]([0-9]+).* : $(version) : 1 2 ] ;
+
+        PYTHON_VERSION_NODOT = $(PYTHON_VERSION_NODOT:J="") ;
+
+        root ?= c:/python$(PYTHON_VERSION_NODOT) ;
+	          
         local PATH = [ modules.peek : PATH ] ;
         local PATH = [ modules.peek : Path ] ;        
         
+        PYTHON_INCLUDES = $(includes) ;
+        PYTHON_LIB_PATH = $(libraries) ;
+
         PYTHON_LIB_PATH ?= $(root)/libs [ GLOB $(root) : PCbuild ] ;
         
         PYTHON_INCLUDES ?= $(root)/include [ GLOB $(root) : PC ] ;
         
-        # The name of Python library file does not have a dot between
-        # major and minor version. 
-        local PYTHON_VERSION_NODOT = [ regex.match ([0-9]+)[.]([0-9]+).* : $(version) : 1 2 ] ;
-        PYTHON_VERSION_NODOT = $(PYTHON_VERSION_NODOT:J="") ;
         
         PYTHON_DLL ?= [ GLOB $(PATH) $(Path) : python$(PYTHON_VERSION_NODOT).dll ] ;
         PYTHON_DEBUG_DLL ?= [ GLOB $(PATH) $(Path) : python$(PYTHON_VERSION_NODOT)_d.dll ] ;
@@ -401,16 +406,17 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
         PYTHON_DEBUG_IMPORT_LIB ?= [ GLOB $(PYTHON_LIB_PATH) : libpython$(PYTHON_VERSION_NODOT).* ] ;        
         
         
+	  ECHO searching for python.exe in $(root)/bin ;
         local interpreter = [ common.get-invocation-command 
-            python : python : : $(root)/bin 
+            python.exe : python.exe : : $(root)/bin 
                                           $(root)
                                           $(root)/PCBuild
                                             : path-last ] ;
         
         if --debug-configuration in [ modules.peek : ARGV ]
         {
-            ECHO "notice: Python include path is" $(includes) ;
-            ECHO "notice: Python library path is" $(libraries) ;
+            ECHO "notice: Python include path is" $(PYTHON_INCLUDES) ;
+            ECHO "notice: Python library path is" $(PYTHON_LIB_PATH) ;
             ECHO "notice: Python interpreter is" $(interpreter) ;        
             ECHO "notice: Python library name is" python$(PYTHON_VERSION_NODOT) ;
         }
