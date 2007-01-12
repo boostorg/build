@@ -50,6 +50,57 @@ rule chars (
     return $(result) ;
 }
 
+# Apply a set of standard transformations to string to produce an
+# abbreviation no more than 5 characters long
+#
+rule abbreviate ( string )
+{
+    local r = $(.abbreviated-$(string)) ;
+    if $(r)
+    {
+        return $(r) ;
+    }
+    # Anything less than 4 characters gets no abbreviation
+    else if ! [ MATCH (....) : $(string) ]
+    {
+        $(.abbreviated-$(string)) = $(string) ;
+        return $(string) ;
+    }
+    else
+    {
+        # Separate the initial letter in case it's a vowel
+        local s1 = [ MATCH ^(.)(.*) : $(string) ] ;
+        
+        # drop trailing "ing"
+        local s2 = [ MATCH ^(.*)ing$ : $(s1[2]) ] ;
+        s2 ?= $(s1[2]) ;
+        
+        # Reduce all doubled characters to one
+        local last = "" ;
+        for local c in [ chars $(s2) ]
+        {
+            if $(c) != $(last)
+            {
+                r += $(c) ;
+                last = $(c) ;
+            }
+        }
+        s2 = $(r:J="") ;
+        
+        # Chop all vowels out of the remainder
+        s2 = [ regex.replace $(s2) [AEIOUaeiou] "" ] ;
+
+        # Shorten remaining consonants to 4 characters
+        s2 = [ MATCH ^(.?.?.?.?) : $(s2) ] ;
+        
+        # Glue the initial character back on to the front
+        s2 = $(s1[1])$(s2) ;
+        
+        $(.abbreviated-$(string)) = $(s2) ;
+        return $(s2) ;
+    }
+}
+
 # Concatenates the given strings, inserting the given separator
 # between each string.
 #
@@ -100,6 +151,15 @@ rule __test__ ( )
 {
     import assert ;
     assert.result a b c : chars abc ;
+    
+    assert.result rntm : abbreviate runtime ;
+    assert.result ovrld : abbreviate overload ;
+    assert.result dbg : abbreviate debugging ;
+    assert.result async : abbreviate asynchronous ;
+    assert.result pop : abbreviate pop ;
+    assert.result aaa : abbreviate aaa ;
+    assert.result qck : abbreviate quack ;
+    assert.result sttc : abbreviate static ;
     
     # check boundary cases
     assert.result a : chars a ;
