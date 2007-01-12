@@ -9,6 +9,7 @@ import sequence : unique ;
 import errors : error ;
 import feature ;
 import regex ;
+import string ;
 import sequence ;
 import set ;
 import path ;
@@ -192,6 +193,30 @@ local rule path-order ( x y )
     }
 }
 
+local rule abbreviate-dashed ( string )
+{
+    local r ;
+    for local part in [ regex.split $(string) - ]
+    {
+        r += [ string.abbreviate $(part) ] ;
+    }
+    return $(r:J=-) ;
+}
+
+local rule identity ( string )
+{
+    return $(string) ;
+}
+
+if --abbreviate-paths in [ modules.peek : ARGV ]
+{
+    .abbrev = abbreviate-dashed ;
+}
+else
+{
+    .abbrev = identity ;
+}
+
 # Returns a path which represents the given expanded property set.
 rule as-path ( properties * )
 {
@@ -211,12 +236,10 @@ rule as-path ( properties * )
             if $(p:G)
             {
                 local f = [ ungrist $(p:G) ] ;
-                components += $(f)-$(p:G=) ;
+                p = $(f)-$(p:G=) ;
             }
-            else
-            {
-                components += $(p) ;
-            }
+            
+            components += [ $(.abbrev) $(p) ] ;
         }
         
         $(entry) = $(components:J=/) ;
@@ -528,7 +551,7 @@ local rule __test__ ( )
     import feature : feature subfeature compose ;
     
     # local rules must be explicitly re-imported
-    import property : path-order ;
+    import property : path-order abbreviate-dashed ;
     
     feature.prepare-test property-test-temp ;
 
@@ -598,7 +621,10 @@ local rule __test__ ( )
       : as-path <toolset>gcc <optimization>off <rtti>off <variant>debug
       : $(test-space)
       ;
-        
+
+    assert.result optmz-off : abbreviate-dashed optimization-off ;
+    assert.result rntm-lnk-sttc : abbreviate-dashed runtime-link-static ;
+    
     try ;
         validate <feature>value : $(test-space) ;
     catch "Invalid property '<feature>value': unknown feature 'feature'." ;
