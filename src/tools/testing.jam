@@ -434,12 +434,12 @@ RM = [ common.rm-command ] ;
 actions capture-output bind INPUT_FILES output-file
 {
     $(PATH_SETUP)
-    $(LAUNCHER) $(>) $(ARGS) "$(INPUT_FILES)" > $(output-file) 2>&1      
+    $(LAUNCHER) "$(>)" $(ARGS) "$(INPUT_FILES)" > "$(output-file)" 2>&1      
     $(SET_STATUS)
-    $(RUN_OUTPUT_NL) >> $(output-file)
-    echo EXIT STATUS: $(STATUS) >> $(output-file)
+    $(RUN_OUTPUT_NL) >> "$(output-file)"
+    echo EXIT STATUS: $(STATUS) >> "$(output-file)"
     if $(STATUS_0)
-        $(CP) $(output-file) $(<)
+        $(CP) "$(output-file)" "$(<)"
     $(ENDIF)
     $(SHELL_SET)verbose=$(VERBOSE_TEST)
     if $(STATUS_NOT_0)
@@ -447,7 +447,7 @@ actions capture-output bind INPUT_FILES output-file
     $(ENDIF)
     if $(VERBOSE)
         echo ====== BEGIN OUTPUT ======
-        $(CATENATE) $(output-file)
+        $(CATENATE) "$(output-file)"
         echo ====== END OUTPUT ======
     $(ENDIF)    
     exit $(STATUS)      
