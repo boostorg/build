@@ -385,6 +385,17 @@ rule capture-output ( target : source : properties * : targets-to-remove ? )
     if ! $(preserve-test-targets)
     {
         TEMPORARY $(targets-to-remove) ;
+        # Set a second action on target that will
+        # be executed after capture output action.
+        # The 'RmTemps' rule has the 'ignore' modifier
+        # so it's always considered succeeded.
+        # This is needed for 'run-fail' test. For that
+        # test the target will be marked with FAIL_EXPECTED,
+        # and without 'ingore' successfull execution 
+        # will be negated and be reported as failure.
+        # With 'ignore' we don't detect a case where
+        # removing files, but it's not likely to
+        # happen.
         RmTemps $(target) : $(targets-to-remove) ;
     }
 }
@@ -453,7 +464,7 @@ actions capture-output bind INPUT_FILES output-file
     exit $(STATUS)      
 }
 
-actions quietly updated piecemeal together RmTemps
+actions quietly updated ignore piecemeal together RmTemps
 {
     $(RM) "$(>)"
 }
