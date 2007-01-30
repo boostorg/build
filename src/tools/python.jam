@@ -104,6 +104,18 @@ rule init ( version ? : root ? : includes ? : libraries ?
     project.pop-current ;
 }
 
+# Retrieves the Python interpreter
+rule get-python-interpreter ( )
+{
+  return $(PYTHON) ;
+}
+
+# Retrieves the Python version number
+rule get-python-version ( )
+{
+  return [ python-version [ get-python-interpreter ] ] ;
+}
+
 local rule python-version ( cmd )
 {
     cmd ?= python ;
@@ -352,6 +364,7 @@ rule init-mac ( version : root ? : includes ? : libraries ? )
         ECHO "notice: Python interpreter is" $(interpreter) ;        
     }
     
+    PYTHON = $(interpreter) ;
     flags python.capture-output PYTHON : $(interpreter) ;
     
     PYTHON_FRAMEWORK ?= $(root) ;
@@ -421,9 +434,9 @@ rule init-nt ( version : root ? : includes ? : libraries ? : cygwin-condition ? 
             ECHO "notice: Python library name is" python$(PYTHON_VERSION_NODOT) ;
         }
         
+        PYTHON = $(interpreter) ;
         flags python.capture-output PYTHON : $(interpreter) ;
-
-                
+               
         properties += <library-path>$(PYTHON_LIB_PATH) ;
             
         # msvc compilers auto-find the python library
