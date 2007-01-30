@@ -152,13 +152,16 @@ flags borland.link LIBRARY_OPTION <toolset>borland : "" : unchecked ;
 # The NEED_IMPLIB variable controls whether we need to invoke implib.
 
 flags borland.archive AROPTIONS <archiveflags> ;
+
 # Declare action for archives. We don't use response file
 # since it's hard to get "+-" there.
+# The /P256 increases 'page' size -- with too low
+# values tlib fails when building large applications.
 # CONSIDER: don't know what 'together' is for...
 actions updated together piecemeal archive
 { 
     $(.set-path)$(.root:W)$(.old-path)
-    tlib $(AROPTIONS) /u /a /C "$(<:W)" +-"$(>:W)"
+    tlib $(AROPTIONS) /P256 /u /a /C "$(<:W)" +-"$(>:W)"
 }
 
 
