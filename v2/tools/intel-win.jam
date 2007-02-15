@@ -150,6 +150,9 @@ rule init ( version ? :     # the compiler version
           $(compatibility) ;
     }
     
+    # Depending on the settings, running of tests require some runtime DLLs.
+    flags intel-win RUN_PATH $(condition) : $(root) ;
+    
     msvc.configure-version-specific intel-win : $(extract-version[1]) : $(condition) ;
 }
 
