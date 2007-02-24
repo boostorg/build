@@ -298,7 +298,13 @@ local rule configure-really (
                 if ! $(below-8.0)
                 {
                     cpu = i386 amd64 ia64 ;
-                    setup-option = x86 x86_amd64 x86_ia64 ;
+                    setup-option = x86 x86_amd64 x86_iPF ;
+                    
+                    # Use a native x64 compiler if possible
+                    if [ os.environ PROCESSOR_ARCHITECTURE ] = AMD64
+                    {
+                        setup-option = x86 amd64 x86_IPF ;
+                    }
                 }
             }
         }
