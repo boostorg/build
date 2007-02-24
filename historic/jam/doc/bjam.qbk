@@ -2,7 +2,7 @@
     [quickbook 1.3]
     [version: 3.1.14]
     [authors [Rivera, Rene], [Abrahams, David], [Prus, Vladimir]]
-    [copyright 2003 2004 2005 2006 Rene Rivera, David Abrahams, Vladimir Prus]
+    [copyright 2003 2004 2005 2006 2007 Rene Rivera, David Abrahams, Vladimir Prus]
     [category tool-build]
     [id jam]
     [dirname jam]
@@ -111,7 +111,7 @@ The supported toolsets, and wether they are auto-detected, are:
 
 [table Supported Toolsets
 
-[[Script] [Platform] [Toolset] [Detection]]
+[[Script] [Platform] [Toolset] [Detection and Notes]]
 
 [   [=build.bat=] [Windows NT, 2000, and XP]
     [   [@http://www.borland.com/bcppbuilder/freecompiler =borland=]\n
@@ -164,7 +164,6 @@ The supported toolsets, and wether they are auto-detected, are:
         * =%MSVCDir%= is present in environment\n
         * Common install locations: "=%ProgramFiles%\Microsoft Visual Studio=", "=%ProgramFiles%\Microsoft Visual C++="\n
         * =CL.EXE= in =PATH=\n
-        * =VCVARS32.BAT= in =PATH=
 ] ]
 
 [   [] []
@@ -175,17 +174,19 @@ The supported toolsets, and wether they are auto-detected, are:
         * =%VCINSTALLDIR%= is present in environment\n
         * Common install locations: "=%ProgramFiles%\Microsoft Visual Studio .NET=", "=%ProgramFiles%\Microsoft Visual Studio .NET 2003="\n
         * =CL.EXE= in =PATH=\n
-        * =VCVARS32.BAT= in =PATH=
 ] ]
 
 [   [] []
     [   [@http://msdn.microsoft.com/visualc/ =vc8=]\n
         Microsoft Visual C++ 8.x]
-    [   * =VCVARS32.BAT= or =VSVARS32.BAT= already configured\n
+    [Detection:\n
+        * =VCVARSALL.BAT= already configured\n
         * =%VS80COMNTOOLS%= is present in environment\n
         * Common install location: "=%ProgramFiles%\Microsoft Visual Studio 8="\n
         * =CL.EXE= in =PATH=\n
-        * =VCVARS32.BAT= in =PATH=
+    \n
+    Notes:\n
+        * If =VCVARSALL.BAT= is called to set up the toolset, it is passed all the extra arguments, see below for what those arguments are. This can be used to build, for example, a Win64 specific version of =bjam=. Consult the VisualStudio documentation for what the possible argument values to the =VCVARSALL.BAT= are.
 ] ]
 
 [   [=build.sh=] [Unix, Linux, Cygwin, etc.]
@@ -272,15 +273,46 @@ The supported toolsets, and wether they are auto-detected, are:
 
 The built executables are placed in a subdirectory specific to your platform. For example, in Linux running on an Intel x86 compatible chip, the executables are placed in: "=bin.linuxx86=". The =bjam[.exe]= executable can be used to invoke Boost.Build.
 
-The build scripts support additional invocation arguments for use by developers of Boost.Jam. The extra arguments come after the toolset, and can take the form of "=--option=" or targets for the =build.jam= script:
+The build scripts support additional invocation arguments for use by developers of Boost.Jam and for additional setup of the toolset. The extra arguments come after the toolset:
+
+* Arguments not in the form of an option, before option arguments, are used for extra setup to toolset configuration scripts.
+* Arguments of the form "=--option=", which are passed to the =build.jam= build script.
+* Arguments not in the form of an option, after the options, which are targets for the =build.jam= script.
 
 [pre
-/build/ \[/toolset/\] \[--/option/+ /target/*\]
+/build/ \[/toolset/\] \[/setup/\*\] \[--/option/+ /target/\*\]
 ]
 
-There is currently only one available option, "=--debug=", which builds debugging versions of the executable. When built they are placed in their own directory "=bin./platform/.debug=". To specify targets without options, one can suply a special ignore option "=---=".
+The arguments immediately after the toolset are passed directly to the setup script of the toolset, if available and if it needs to be invoked. This allows one to configure the toolset ass needed to do non-default builds of =bjam=. For example to build a Win64 version with =vc8=. See the toolset descriptiona above for when particular toolsets support this.
 
-Currently there are two targets supported: =dist=, and =clean=. Respectively they: generate packages (compressed archives) as appropriate for distribution in the platform, or remove all the built executables and objects.
+The arguments starting with the "=--option=" forms are passed to the =build.jam= script and are used to further customize what gets built. Options and targets supported by the =build.jam= script:
+
+[variablelist
+    [[[^---]]
+        [Empty option when one wants to only specify a target.]]
+    [[[^--release]]
+        [The default, builds the optimized executable.]]
+    [[[^--debug]]
+        [Builds debugging versions of the executable. When built they are placed in their own directory "=bin./platform/.debug=".]]
+    [[[^--grammar]]
+        [Normally the Jam language grammar parsing files are not regenerated. This forces building of the grammar, although it may not force the regeneration of the grammar parser. If the parser is out of date it will be regenerated and subsequently built.]]
+    [[[^--with-python=/path/]]
+        [Enables Python integration, given a path to the Python libraries.]]
+    [[[^--gc]]
+        [Enables use of the Boehm Garbage Collector. The build will look for the Boehm-GC source in a "boehm_gc" subdirectory from the =bjam= sources.]]
+    [[[^--duma]]
+        [Enables use of the DUMA (Detect Uintended Memory Access) debugging memory allocator. The build expects to find the DUMA source files in a "duma" subdirectory from the =bjam= sources.]]
+    [[[^--toolset-root=/path/]]
+        [Indicates where the toolset used to build is located. This option is passed in by the bootstrap (=build.bat= or =build.sh=) script.]]
+    [[[^--show-locate-target]]
+        [For information, prints out where it will put the built executable.]]
+    [[[^--noassert]]
+        [Disable debug assertions, even if building the debug version of the executable.]]
+    [[[^dist]]
+        [Generate packages (compressed archives) as appropriate for distribution in the platform, if possible.]]
+    [[[^clean]]
+        [Remove all the built executables and objects.]]
+]
 
 [endsect]
 
