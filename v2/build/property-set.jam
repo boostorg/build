@@ -101,6 +101,11 @@ class property-set
         return $(self.raw) ;
     }
     
+    rule str ( )
+    {
+        return "[" $(self.raw) "]" ;
+    }
+    
     # Returns properties that are neither incidental nor free
     rule base ( )
     {
