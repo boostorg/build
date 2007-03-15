@@ -301,7 +301,7 @@ local rule configure-really (
                     setup-option = x86 x86_amd64 x86_iPF ;
                     
                     # Use a native x64 compiler if possible
-                    if [ os.environ PROCESSOR_ARCHITECTURE ] = AMD64
+                    if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_IDENTIFIER ] ]
                     {
                         setup-option = x86 amd64 x86_IPF ;
                     }
@@ -968,14 +968,19 @@ if [ os.name ] in NT CYGWIN
     {
         if $(.version-$(i)-reg)
         {
-            local vc-path = [ W32_GETREG
-                "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\"$(.version-$(i)-reg)
+            local vc-path ;
+            for local x in "" "Wow6432Node\\"
+            {
+                vc-path += [ W32_GETREG
+                "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\"$(x)$(.version-$(i)-reg)
                 : "ProductDir" ] ;
+            }
+            
             
             if $(vc-path)
             {
-                vc-path = [ path.native [ path.join [ path.make-NT $(vc-path) ] "bin" ] ] ;
-                register-configuration $(i) : $(vc-path) ;
+                vc-path = [ path.native [ path.join [ path.make-NT $(vc-path[1]) ] "bin" ] ] ;
+                register-configuration $(i) : $(vc-path[1]) ;
             }
         }
     }

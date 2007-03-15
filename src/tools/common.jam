@@ -338,6 +338,10 @@ rule check-tool-aux ( command )
     if $(command:D)
     {
         if [ path.exists $(command) ]
+          # Both NT and Cygwin will run .exe files by their unqualified names
+          ||  [ os.on-windows ] && [ path.exists $(command).exe ]
+            # Only NT will run .bat files by their unqualified names
+            || [ os.name ] = NT && [ path.exists $(command).bat ]
         {
             return $(command) ;
         }        

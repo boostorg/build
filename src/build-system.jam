@@ -83,6 +83,7 @@ local rule load-config ( basename : path + )
     {
         if $(debug-config)
         {
+            ECHO notice: searching \"$(path)\" for \"$(basename).jam\" ;
             local where = [ GLOB $(path) : $(basename).jam ] ;
             if $(where)
             {            
@@ -250,7 +251,7 @@ if ! [ feature.values <toolset> ]
     ECHO "warning: Configuring default toolset" \"$(default-toolset)\". ;
     ECHO "warning: If the default is wrong, you may not be able to build C++ programs." ;
     ECHO "warning: Use the \"--toolset=xxxxx\" option to override our guess." ;
-    ECHO "warning: For more configuration options, please consult"
+    ECHO "warning: For more configuration options, please consult" ;
     ECHO "warning: http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html" ;
 
     

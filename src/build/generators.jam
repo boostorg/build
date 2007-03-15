@@ -842,6 +842,9 @@ local rule try-one-generator-really ( project name ? : generator :
             
     local usage-requirements ;
     local success ;
+    
+    generators.dout [ indent ] returned $(targets) ;
+    
     if $(targets)
     {
         success = true ;
@@ -859,6 +862,12 @@ local rule try-one-generator-really ( project name ? : generator :
     
     generators.dout [ indent ] "  generator" [ $(generator).id ] " spawned " ;
     generators.dout [ indent ] " " $(targets) ; 
+    if $(usage-requirements)
+    {
+        generators.dout [ indent ] "  with usage requirements:" $(x) ;
+    }
+    
+    
     if $(success)
     {
         return $(usage-requirements) $(targets) ;
