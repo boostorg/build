@@ -92,7 +92,7 @@ rule init ( version ? : cmd-or-prefix ? : includes ? : libraries ?
     project.push-current $(.project) ;
          
     debug-message Configuring python... ;
-    for local v in version root includes libraries condition
+    for local v in version cmd-or-prefix includes libraries condition
     {
         if $($(v))
         {
