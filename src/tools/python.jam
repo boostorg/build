@@ -616,7 +616,7 @@ local rule system-library-dependencies ( target-os )
         
         case hpux : return pthread rt ;
         
-        case * : return pthread dl util ;
+        case * : return pthread dl <toolset>gcc:<source>util ;
     }
 }
 
@@ -785,24 +785,24 @@ local rule configure (
         condition += <python>$(version:E=default) ;
     }
     
-    # Collect dependencies on system libraries.
+    condition += <target-os>$(target-os) ;
+    
+    # Set up the PYTHON variable to point at the interpreter.
+    flags python.capture-output PYTHON $(condition:J=/) : $(interpreter-cmd) ;
+    
+    local target-requirements = $(condition) ;
     local system-libs ;
     for local x in [ system-library-dependencies $(target-os) ]
     {
         if $(x:G)
         {
-            condition += $(x) ;
+            target-requirements += $(x) ;
         }
         else
         {
             system-libs += $(x) ;
         }
     }      
-    
-    condition += <target-os>$(target-os) ;
-    
-    # Set up the PYTHON variable to point at the interpreter.
-    flags python.capture-output PYTHON $(condition:J=/) : $(interpreter-cmd) ;
     
     # Declare the "python" target. This should really be called python_for_embedding
     if $(target-os) = darwin
@@ -817,7 +817,7 @@ local rule configure (
         debug-message framework directory is \"$(fwk)\" ;
         alias python
           : 
-          : $(condition)
+          : $(target-requirements)
           :
           : <include>$(includes) <framework>$(fwk)
           ;
@@ -827,7 +827,7 @@ local rule configure (
         local libpython-target-name = [ declare-libpython-target $(version) : $(target-os) ] ;
         alias python
           : $(system-libs) 
-          : $(condition)
+          : $(target-requirements)
           :
           : <include>$(includes) <library-path>$(libraries) <library>$(libpython-target-name)
           ;
@@ -846,13 +846,13 @@ local rule configure (
     # so we do not need to worry about duplicate Python symbols.
     if $(target-os) in windows cygwin darwin
     {
-        alias python_for_extensions : python : $(condition) ;
+        alias python_for_extensions : python : $(target-requirements) ;
     }
     else
     {
         alias python_for_extensions
                      :  
-                     : $(condition)
+                     : $(target-requirements)
                      :
                      : <include>$(includes) 
                      ;
