@@ -622,12 +622,12 @@ local rule system-library-dependencies ( target-os )
 
 # Declare a target to represent Python's library, returning the target
 # name.
-local rule declare-libpython-target ( version ? : target-os )
+local rule declare-libpython-target ( version ? : sys.platform : requirements * )
 {
     # Compute the representation of Python version in the name of
     # Python's library file.
     local lib-version = $(version) ;
-    if $(target-os) = windows
+    if <target-os>windows in $(requirements)
     {
         local major-minor = [ split-version $(version) ] ;
         lib-version = $(major-minor:J="") ;
@@ -638,7 +638,7 @@ local rule declare-libpython-target ( version ? : target-os )
     libpython-target-name = $(libpython-target-name:J=-) ;
     
     # Declare and return it
-    lib $(libpython-target-name) : : <name>python$(lib-version) ;
+    lib $(libpython-target-name) : : <name>python$(lib-version) $(requirements) ;
     return $(libpython-target-name) ;
 }
 
@@ -824,7 +824,9 @@ local rule configure (
     }
     else
     {
-        local libpython-target-name = [ declare-libpython-target $(version) : $(target-os) ] ;
+        local libpython-target-name
+          = [ declare-libpython-target $(version) : $(sys.platform) : $(target-requirements) ] ;
+        
         alias python
           : $(system-libs) 
           : $(target-requirements)
