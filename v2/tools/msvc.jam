@@ -855,7 +855,7 @@ else
 
 # Windows Manifests is a new way to specify dependencies 
 # on managed DotNet assemblies and Windows native DLLs. The 
-# manifests are embedded as resourses and are useful in 
+# manifests are embedded as resources and are useful in 
 # any PE targets (both DLL and EXE)
 
 if [ os.name ] in NT

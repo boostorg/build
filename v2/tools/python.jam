@@ -635,7 +635,7 @@ local rule declare-libpython-target ( version ? : sys.platform ? : requirements 
     
     # Compute the name of the target to declare
     local libpython-target-name = python $(version) $(sys.platform) ;
-    libpython-target-name = $(libpython-target-name:J=-) ;
+    libpython-target-name = $(libpython-target-name:J=-).lib ;
     
     # Declare and return it
     lib $(libpython-target-name) : : <name>python$(lib-version) $(requirements) ;
@@ -886,10 +886,10 @@ rule configured ( )
         
 type.register PYTHON_EXTENSION : : SHARED_LIB ;
 
-# We can't give "dll" suffix to PYTHON_EXTENSION, because
-# we would not know what "a.dll" is: python extenstion or
-# ordinary library. Therefore, we specify only suffixes
-# used for generation of targets.
+# We can't simply assign the "dll" or "so" suffix to PYTHON_EXTENSION,
+# because then we wouldn't know whether "x.dll" is a python extension
+# or an ordinary library. Therefore, we specify only the suffixes used
+# for target generation.
 type.set-generated-target-suffix PYTHON_EXTENSION : : so ;
 type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>windows : pyd ;
 type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>cygwin : dll ;
@@ -984,12 +984,15 @@ class python-test-generator : generator
                 local extension = [ generators.construct $(project) $(name) :
                   PYTHON_EXTENSION : $(property-set) : $(s) $(libs) ] ;
 
-                # The important part of usage requirements returned from
-                # PYTHON_EXTENSION genrator are xdll-path properties that
-                # will allow to find python extension at runtime.
+                # The important part of usage requirements returned
+                # from PYTHON_EXTENSION generator are xdll-path
+                # properties that will allow us to find the python
+                # extension at runtime.
                 property-set = [ $(property-set).add $(extension[1]) ] ;
-                # Ignore usage requirements. We're top-level generator and
-                # nobody is going to use us.
+                
+                # Ignore usage requirements. We're a top-level
+                # generator and nobody is going to use what we
+                # generate.
                 new-sources += $(extension[2-]) ;
             }
         }
@@ -1032,13 +1035,14 @@ rule capture-output ( target : sources * : properties * )
     # DLL. Only $(sources[1]) is passed to testing.capture-output,
     # so RUN_PATH variable on $(sources[2]) is not consulted. Move it
     # over explicitly.
-    RUN_PATH on $(sources[1]) = [ on $(sources[2]) return $(RUN_PATH) ] ;
+    RUN_PATH on $(sources[1]) = [ on $(sources[2-]) return $(RUN_PATH) ] ;
     
-    PYTHONPATH = [ on $(sources[2]) return $(LOCATE) ] ;
+    PYTHONPATH = [ on $(sources[2-]) return $(LOCATE) $(SEARCH) ] ;
+    
     # After test is run, we remove the Python module, but not the Python
     # script.
     testing.capture-output $(target) : $(sources[1]) : $(properties) 
-      : $(sources[2]) ;
+      : $(sources[2-]) ;
 
     # PYTHONPATH is different; it will be interpreted by whichever
     # Python is invoked and so must follow path rules for the target
