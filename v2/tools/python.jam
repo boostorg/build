@@ -638,7 +638,7 @@ local rule declare-libpython-target ( version ? : sys.platform ? : requirements 
     libpython-target-name = $(libpython-target-name:J=-).lib ;
     
     # Declare and return it
-    lib $(libpython-target-name) : : <name>python$(lib-version) $(requirements) ;
+    searched-lib $(libpython-target-name) : : <name>python$(lib-version) $(requirements) ;
     return $(libpython-target-name) ;
 }
 
