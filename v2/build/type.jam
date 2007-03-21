@@ -359,9 +359,6 @@ rule main-target-rule ( name : sources * : requirements * : default-build *
     local bt = [ BACKTRACE 1 ] ;
     local rulename = $(bt[4]) ;
     
-    # This rule may be only called from Jamfile, and therefore, 
-    # CALLER_MODULE is Jamfile module, which is used to denote 
-    # a project.
     local project = [ project.current ] ;
         
     # This is a circular module dependency, so it must be imported here
