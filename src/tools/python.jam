@@ -470,7 +470,6 @@ local rule compute-default-paths (
   target-os : version ? : prefix ? : exec-prefix ? )
 {
     exec-prefix ?= $(prefix) ;
-    executable ?= $(:E=python:R=$(exec-prefix)) ;
     
     if $(target-os) = windows
     {
@@ -618,9 +617,8 @@ local rule system-library-dependencies ( target-os )
     }
 }
 
-# Declare a target to represent Python's library, returning the target
-# name.
-local rule declare-libpython-target ( version ? : sys.platform ? : requirements * )
+# Declare a target to represent Python's library.
+local rule declare-libpython-target ( version ? : requirements * )
 {
     # Compute the representation of Python version in the name of
     # Python's library file.
@@ -631,13 +629,16 @@ local rule declare-libpython-target ( version ? : sys.platform ? : requirements 
         lib-version = $(major-minor:J="") ;
     }
     
-    # Compute the name of the target to declare
-    local libpython-target-name = python $(version) $(sys.platform) ;
-    libpython-target-name = $(libpython-target-name:J=-).lib ;
+    if ! $(lib-version)
+    {
+        ECHO *** warning: could not determine Python version, which will ;
+        ECHO *** warning: probably prevent us from linking with the python ;
+        ECHO *** warning: library.  Consider explicitly passing the version ;
+        ECHO *** warning: to 'using python'. ;
+    }
     
-    # Declare and return it
-    searched-lib $(libpython-target-name) : : <name>python$(lib-version) $(requirements) ;
-    return $(libpython-target-name) ;
+    # Declare it
+    lib python.lib : : <name>python$(lib-version) $(requirements) ;
 }
 
 # implementation of init
@@ -729,8 +730,6 @@ local rule configure (
                 {
                     debug-message ...requested configuration matched! ;
                     
-                    executable ?= $(sys.executable) ;
-                    
                     compute-default-paths
                       $(target-os) : $(sys.version) 
                         : $(sys.prefix)
@@ -748,7 +747,7 @@ local rule configure (
         }
         
         # Anything left to compute?
-        if ! ( $(includes) && $(libraries) && $(executable) )
+        if ! ( $(includes) && $(libraries) && $(interpreter-cmd) )
         {
             version ?= $(fallback-version) ;
             version ?= 2.5 ;
@@ -763,15 +762,13 @@ local rule configure (
                     ECHO warning: falling back to \"$(interpreter-cmd)\" ;
                 }
             }
-            compute-default-paths $(target-os) : $(version) : $(prefix) ;
+            compute-default-paths $(target-os) : $(version) : $(sys.prefix:E=) ;
         }
     }
     
-    local executable-dir = $(executable:D) ;
     debug-message "Python interpreter command is" \"$(interpreter-cmd:E=<empty>)\" ;
     debug-message "Python include path is" \"$(includes:E=<empty>)\" ;
     debug-message "Python library path is" \"$(libraries:E=<empty>)\" ;
-    debug-message "Python executable directory is" \"$(executable-dir:E=<empty>)\" ;
     
     #
     # End autoconfiguration sequence
@@ -830,9 +827,9 @@ local rule configure (
 
     # Make sure that we can find the Python DLL on windows
     local dll-path ;
-    if $(target-os) = windows
+    if $(target-os) = windows && $(sys.exec_prefix)
     {
-        dll-path += $(executable-dir) ;
+        dll-path += $(sys.exec_prefix) ;
     }
     
     #
@@ -851,14 +848,16 @@ local rule configure (
     }
     else
     {
-        local libpython-target-name
-          = [ declare-libpython-target $(version) : $(sys.platform) : $(target-requirements) ] ;
-        
+        declare-libpython-target $(version) : $(target-requirements) ;
         alias python
-          : $(system-libs) 
-          : $(target-requirements)
+          : $(system-libs)
+          : $(target-requirements) 
           :
-          : <include>$(includes) <library-path>$(libraries) <library>$(libpython-target-name) <dll-path>$(dll-path)
+            # why python.lib must be listed here instead of along with
+            # the system libs is a mystery, but if we don't do it, on
+            # cygwin -lpythonX.Y never appears in the command line
+            # (although it does on linux).
+          : <include>$(includes) <library-path>$(libraries) <dll-path>$(dll-path) <library>python.lib
           ;
     }
     
