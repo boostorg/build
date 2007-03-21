@@ -185,8 +185,6 @@ local rule default-extension ( names * : ext * )
     return $(result) ;
 }
 
-# Find the path to the python executable invoked by the given command
-#
 # Tries to determine whether invoking "cmd" would actually attempt to
 # launch a cygwin symlink.
 #
@@ -465,17 +463,17 @@ rule dump-sys ( python-cmd )
     }
 }
 
-# Make sure the "libraries" and "includes" variables (in an enclosing
-# scope) have a value, based on the information given.
+# Make sure the "executable", "libraries", and "includes" variables
+# (in an enclosing scope) have a value, based on the information
+# given.
 local rule compute-default-paths ( 
-  target-os : version ? : prefix ? : exec-prefix ? : executable ? )
+  target-os : version ? : prefix ? : exec-prefix ? )
 {
     exec-prefix ?= $(prefix) ;
+    executable ?= $(:E=python:R=$(exec-prefix)) ;
     
     if $(target-os) = windows
     {
-        executable ?= $(:E=python:R=$(exec-prefix)) ;
-        
         # The exec-prefix is where you're supposed to look for
         # machine-specific libraries.
         local default-library-path = $(:E=libs:R=$(exec-prefix)) ;
@@ -605,10 +603,10 @@ local rule system-library-dependencies ( target-os )
             # sun toolset adds -lrt unconditionally). While this
             # appears to duplicate the logic already in gcc.jam, it
             # doesn't as long as we're not forcing <threading>multi.
-            return pthread dl <toolset>gcc:<source>rt ;
+            return pthread dl <toolset>gcc:<library>rt ;
 
         
-        case osf : return pthread <toolset>gcc:<source>rt ;
+        case osf : return pthread <toolset>gcc:<library>rt ;
         
         case qnx* : return ;  
         case darwin : return ;
@@ -616,7 +614,7 @@ local rule system-library-dependencies ( target-os )
         
         case hpux : return pthread rt ;
         
-        case * : return pthread dl <toolset>gcc:<source>util ;
+        case * : return pthread dl <toolset>gcc:<library>util ;
     }
 }
 
@@ -731,11 +729,12 @@ local rule configure (
                 {
                     debug-message ...requested configuration matched! ;
                     
+                    executable ?= $(sys.executable) ;
+                    
                     compute-default-paths
                       $(target-os) : $(sys.version) 
                         : $(sys.prefix)
                           : $(sys.exec_prefix)
-                            : $(sys.executable)
                               ;
                     version = $(sys.version) ;
                     interpreter-cmd ?= $(cmd) ;
@@ -749,7 +748,7 @@ local rule configure (
         }
         
         # Anything left to compute?
-        if ! ( $(includes) && $(libraries) )
+        if ! ( $(includes) && $(libraries) && $(executable) )
         {
             version ?= $(fallback-version) ;
             version ?= 2.5 ;
@@ -768,9 +767,12 @@ local rule configure (
         }
     }
     
+    local executable-dir = $(executable:D) ;
     debug-message "Python interpreter command is" \"$(interpreter-cmd:E=<empty>)\" ;
     debug-message "Python include path is" \"$(includes:E=<empty>)\" ;
     debug-message "Python library path is" \"$(libraries:E=<empty>)\" ;
+    debug-message "Python executable directory is" \"$(executable-dir:E=<empty>)\" ;
+    
     #
     # End autoconfiguration sequence
     #
@@ -825,6 +827,13 @@ local rule configure (
             framework-directory = ;
         }
     }
+
+    # Make sure that we can find the Python DLL on windows
+    local dll-path ;
+    if $(target-os) = windows
+    {
+        dll-path += $(executable-dir) ;
+    }
     
     #
     # Declare the "python" target. This should really be called
@@ -849,7 +858,7 @@ local rule configure (
           : $(system-libs) 
           : $(target-requirements)
           :
-          : <include>$(includes) <library-path>$(libraries) <library>$(libpython-target-name)
+          : <include>$(includes) <library-path>$(libraries) <library>$(libpython-target-name) <dll-path>$(dll-path)
           ;
     }
     
