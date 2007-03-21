@@ -214,18 +214,24 @@ local rule debug-message ( message * )
     }
 }
 
-# Like W32_GETREG, except prepend HKEY_CURRENT_USER and
-# HKEY_LOCAL_MACHINE to the argument, returning the first result
-# found.
-local rule registry-value ( path : data ? )
+# Like W32_GETREG, except prepend HKEY_CURRENT_USER\SOFTWARE and
+# HKEY_LOCAL_MACHINE\SOFTWARE to the first argument, returning the
+# first result found.  Also accounts for the fact that on 64-bit
+# machines, 32-bit software has its own area, under
+# SOFTWARE\Wow6432node.
+local rule software-registry-value ( path : data ? )
 {
     local result ;
     for local root in HKEY_CURRENT_USER HKEY_LOCAL_MACHINE
     {
-        if ! $(result)
+        for local x64elt in "" Wow6432node\\ # Account for 64-bit windows
         {
-            result = [ W32_GETREG $(root)"\\"$(path) : $(data) ] ;
+            if ! $(result)
+            {
+                result = [ W32_GETREG $(root)\\SOFTWARE\\$(x64elt)$(path) : $(data) ] ;
+            }
         }
+        
     }
     return $(result) ;
 }
@@ -270,7 +276,7 @@ local rule cygwin-to-windows-path ( path )
         while $(head)
         {
             local root = [ 
-              registry-value "SOFTWARE\\Cygnus Solutions\\Cygwin\\mounts v2\\"$(head) 
+              software-registry-value "Cygnus Solutions\\Cygwin\\mounts v2\\"$(head) 
                 : native 
             ] ;
             
@@ -324,16 +330,22 @@ local rule guess-windows-path ( path )
     return [ SUBST $(path) ($(.windows-drive-letter-re)|.*([\\]).*) $1 ] ;
 }
 
-local rule path-to-native ( path )
+local rule path-to-native ( paths * )
 {
-    if [ guess-windows-path $(path) ]
+    local result ;
+    
+    for local p in $(paths)
     {
-        return [ windows-path-to-native $(path) ] ;
+        if [ guess-windows-path $(p) ]
+        {
+            result += [ windows-path-to-native $(p) ] ;
+        }
+        else
+        {
+            result += [ *nix-path-to-native $(p:T) ] ;
+        }
     }
-    else
-    {
-        return [ *nix-path-to-native $(path:T) ] ;
-    }
+    return $(result) ;
 }
 
 # Validate the version string and extract the major/minor part we care
@@ -369,19 +381,16 @@ local rule windows-installed-pythons ( version ? )
     
     for local v in $(version)
     {
-        for local x64elt in "" Wow6432node\\ # Account for 64-bit windows
+        local install-path = [ 
+          software-registry-value "Python\\PythonCore\\"$(v)"\\InstallPath" ] ;
+            
+        if $(install-path)
         {
-            local install-path = [ 
-              registry-value "SOFTWARE\\"$(x64elt)"Python\\PythonCore\\"$(v)"\\InstallPath" ] ;
-            
-            if $(install-path)
-            {
-                install-path = [ windows-path-to-native $(install-path) ] ;
-                debug-message Registry indicates Python $(v) installed at \"$(install-path)\" ;
-            }
-            
-            interpreters += $(:E=python:R=$(install-path)) ;
+            install-path = [ windows-path-to-native $(install-path) ] ;
+            debug-message Registry indicates Python $(v) installed at \"$(install-path)\" ;
         }
+            
+        interpreters += $(:E=python:R=$(install-path)) ;
     }
     return $(interpreters) ;
 }
@@ -463,9 +472,8 @@ rule dump-sys ( python-cmd )
     }
 }
 
-# Make sure the "executable", "libraries", and "includes" variables
-# (in an enclosing scope) have a value, based on the information
-# given.
+# Make sure the "libraries" and "includes" variables (in an enclosing
+# scope) have a value based on the information given.
 local rule compute-default-paths ( 
   target-os : version ? : prefix ? : exec-prefix ? )
 {
@@ -473,19 +481,10 @@ local rule compute-default-paths (
     
     if $(target-os) = windows
     {
-        # The exec-prefix is where you're supposed to look for
+        # The exec_prefix is where you're supposed to look for
         # machine-specific libraries.
-        local default-library-path = $(:E=libs:R=$(exec-prefix)) ;
+        local default-library-path = $(exec-prefix)\\libs ;
         local default-include-path = $(:E=Include:R=$(prefix)) ;
-        
-        if $(default-library-path)
-        {
-            default-library-path = [ path-to-native $(default-library-path) ] ;
-        }
-        if $(default-include-path)
-        {
-            default-include-path = [ path-to-native $(default-include-path) ] ;
-        }
         
         # If the interpreter was found in a directory
         # called "PCBuild" or "PCBuild8," assume we're
@@ -504,11 +503,10 @@ local rule compute-default-paths (
             debug-message "This Python appears to reside in a source distribution;" ;
             debug-message "prepending \""$(executable-dir)"\" to default library search path" ;
             
-            default-library-path = [ path-to-native $(executable-dir) ] 
+            default-library-path = $(executable-dir)
               $(default-library-path) ;
             
-            default-include-path = [ path-to-native $(:E=PC:R=$(executable-dir:D)) ] 
-              $(default-include-path) ;
+            default-include-path = $(:E=PC:R=$(executable-dir:D)) $(default-include-path) ;
             
             debug-message "and \""$(default-include-path[1])"\" to default #include path" ;
         }
@@ -518,13 +516,10 @@ local rule compute-default-paths (
     }
     else
     {
-        # $(prefix)/include/python$(version) 
-        includes ?= [ path-to-native $(:E=python$(version):R=$(:E=include:R=$(prefix))) ] ;
+        includes ?= $(prefix)/include/python$(version) ;
         
-        # $(exec-prefix)/lib/python$(version)/config $(exec-prefix)/lib
-        local lib = [ path-to-native $(:E=lib:R=$(exec-prefix)) ] ;
-        libraries ?= [ path-to-native $(:E=config:R=$(:E=python$(version):R=$(lib))) ] 
-          [ path-to-native $(lib) ] ;
+        local lib = $(exec-prefix)/lib ;
+        libraries ?= $(lib)/python$(version)/config $(lib) ;
     }
 }
 
@@ -532,14 +527,9 @@ local rule compute-default-paths (
 feature.feature python : : propagated ;
 
 # Return a list of candidate commands to try when looking for a Python
-# interpreter.
+# interpreter.  prefix is expected to be a native path.
 local rule candidate-interpreters ( version ? : prefix ? : target-os )
 {
-    if $(prefix)
-    {
-        prefix = [ path-to-native $(prefix) ] ;
-    }
-    
     local bin-path = bin ;
     if $(target-os) = windows
     {
@@ -646,6 +636,7 @@ local rule configure (
   version ? : cmd-or-prefix ? : includes ? : libraries ? : condition * )
 {
     local prefix ;
+    local exec-prefix ;
     local cmds-to-try ;
     local interpreter-cmd ;
     
@@ -730,11 +721,14 @@ local rule configure (
                 {
                     debug-message ...requested configuration matched! ;
                     
+                    exec-prefix = $(sys.exec_prefix) ;
+                    
                     compute-default-paths
-                      $(target-os) : $(sys.version) 
-                        : $(sys.prefix)
-                          : $(sys.exec_prefix)
-                              ;
+                      $(target-os)
+                        : $(sys.version)
+                          : $(sys.prefix)
+                            : $(sys.exec_prefix) ;
+                    
                     version = $(sys.version) ;
                     interpreter-cmd ?= $(cmd) ;
                     cmds-to-try = ; # All done.
@@ -762,13 +756,23 @@ local rule configure (
                     ECHO warning: falling back to \"$(interpreter-cmd)\" ;
                 }
             }
-            compute-default-paths $(target-os) : $(version) : $(sys.prefix:E=) ;
+            exec-prefix ?= $(prefix) ;
+            compute-default-paths $(target-os) : $(version) : $(prefix:E=) ;
         }
     }
     
-    debug-message "Python interpreter command is" \"$(interpreter-cmd:E=<empty>)\" ;
-    debug-message "Python include path is" \"$(includes:E=<empty>)\" ;
-    debug-message "Python library path is" \"$(libraries:E=<empty>)\" ;
+    includes = [ path-to-native $(includes) ] ;
+    libraries = [ path-to-native $(libraries) ] ;
+    
+    debug-message "Details of this Python configuration:" ;
+    debug-message "  interpreter command:" \"$(interpreter-cmd:E=<empty>)\" ;
+    debug-message "  include path:" \"$(includes:E=<empty>)\" ;
+    debug-message "  library path:" \"$(libraries:E=<empty>)\" ;
+    if $(target-os) = windows
+    {
+        debug-message "  DLL search path:" \"$(exec-prefix:E=<empty>)\" ;
+    }
+    
     
     #
     # End autoconfiguration sequence
@@ -827,9 +831,9 @@ local rule configure (
 
     # Make sure that we can find the Python DLL on windows
     local dll-path ;
-    if $(target-os) = windows && $(sys.exec_prefix)
+    if $(target-os) = windows && $(exec-prefix)
     {
-        dll-path += $(sys.exec_prefix) ;
+        dll-path += $(exec-prefix) ;
     }
     
     #
@@ -855,7 +859,7 @@ local rule configure (
           :
             # why python.lib must be listed here instead of along with
             # the system libs is a mystery, but if we don't do it, on
-            # cygwin -lpythonX.Y never appears in the command line
+            # cygwin, -lpythonX.Y never appears in the command line
             # (although it does on linux).
           : <include>$(includes) <library-path>$(libraries) <dll-path>$(dll-path) <library>python.lib
           ;
