@@ -601,7 +601,7 @@ local rule system-library-dependencies ( target-os )
         case darwin : return ;
         case windows : return ;
         
-        case hpux : return pthread rt ;
+        case hpux : return rt ;
         
         case * : return pthread dl <toolset>gcc:<library>util ;
     }
