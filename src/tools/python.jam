@@ -906,6 +906,15 @@ type.set-generated-target-suffix PYTHON_EXTENSION : : so ;
 type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>windows : pyd ;
 type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>cygwin : dll ;
 
+# Prior to python 2.5, HPUX extension modules had a ".sl" extension
+type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>2.4 : sl ;
+type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>2.3 : sl ;
+type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>2.2 : sl ;
+type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>2.1 : sl ;
+type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>2.0 : sl ;
+type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>1.6 : sl ;
+type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>1.5 : sl ;
+
 # Unset 'lib' prefix for PYTHON_EXTENSION
 type.set-generated-target-prefix PYTHON_EXTENSION : : "" ;
 
