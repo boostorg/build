@@ -525,6 +525,9 @@ local rule compute-default-paths (
 
 # The version of the python interpreter to use
 feature.feature python : : propagated ;
+feature.feature python.interpreter : : free ;
+
+flags python.capture-output PYTHON : <python.interpreter> ;
 
 # Return a list of candidate commands to try when looking for a Python
 # interpreter.  prefix is expected to be a native path.
@@ -790,9 +793,7 @@ local rule configure (
     
     condition += <target-os>$(target-os) ;
     
-    # Set up the PYTHON variable to point at the interpreter.
-    flags python.capture-output PYTHON $(condition:J=/) : $(interpreter-cmd) ;
-    
+    # Set up the PYTHON variable to point at the interpreter.    
     local target-requirements = $(condition) ;
     local system-libs ;
     for local x in [ system-library-dependencies $(target-os) ]
@@ -836,6 +837,8 @@ local rule configure (
         dll-path += $(exec-prefix) ;
     }
     
+    local usage-requirements = <include>$(includes) <python.interpreter>$(interpreter-cmd) ;
+    
     #
     # Declare the "python" target. This should really be called
     # python_for_embedding
@@ -847,7 +850,7 @@ local rule configure (
           : 
           : $(target-requirements)
           :
-          : <include>$(includes) <framework>$(fwk)
+          : $(usage-requirements) <framework>$(fwk)
           ;
     }
     else
@@ -861,7 +864,7 @@ local rule configure (
             # the system libs is a mystery, but if we don't do it, on
             # cygwin, -lpythonX.Y never appears in the command line
             # (although it does on linux).
-          : <include>$(includes) <library-path>$(libraries) <dll-path>$(dll-path) <library>python.lib
+          : $(usage-requirements) <library-path>$(libraries) <dll-path>$(dll-path) <library>python.lib
           ;
     }
     
@@ -886,7 +889,7 @@ local rule configure (
                      :  
                      : $(target-requirements)
                      :
-                     : <include>$(includes) 
+                     : $(usage-requirements)
                      ;
     }
 }
