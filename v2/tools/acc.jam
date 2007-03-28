@@ -1,5 +1,6 @@
 # Copyright Vladimir Prus 2004.
 # Copyright Toon Knapen 2004.
+# Copyright Boris Gubenko 2007.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -75,22 +76,22 @@ flags acc LINKFLAGS <threading>multi : -mt ;
 
 actions acc.link bind NEEDLIBS
 {
-    aCC $(LINKFLAGS) +DD64 -mt -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    aCC $(LINKFLAGS) +DD64 -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
 }
 
 actions acc.link.dll bind NEEDLIBS
 {
-    aCC -b $(LINKFLAGS) +DD64 -mt -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    aCC -b $(LINKFLAGS) +DD64 -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
 }
 
 actions acc.compile.c
 {    
-    aCC -Ae -mt +DD64 -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    aCC -Ae +DD64 -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 actions acc.compile.c++
 {
-    aCC -AA -mt +DD64 -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    aCC -AA +DD64 -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 actions updated together piecemeal acc.archive
