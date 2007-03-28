@@ -519,6 +519,20 @@ class Doxygen2BoostBook:
         return self._translate_sectiondef_func_(sectiondef,
             name='private static functions',target=target,**kwargs)
     
+    #~ Translate:
+    #~   <sectiondef kind="public-func">...</sectiondef>
+    def _translate_sectiondef_private_func( self, sectiondef, target=None, **kwargs ):
+        return self._translate_sectiondef_func_(sectiondef,
+            name='private member functions',target=target,**kwargs)
+    
+    #~ Translate:
+    #~   <memberdef kind="typedef" id="?">
+    #~     <name>...</name>
+    #~   </memberdef>
+    #~ To:
+    #~   <typedef id="?" name="?">
+    #~     <type>...</type>
+    #~   </typedef>
     def _translate_memberdef_typedef( self, memberdef, target=None, scope=None, **kwargs ):
         self._setID(memberdef.getAttribute('id'),
             scope+'::'+self._getChildData('name',root=memberdef))
@@ -529,6 +543,14 @@ class Doxygen2BoostBook:
         self._translate_type(self._getChild('type',root=memberdef),target=typedef_type)
         return typedef
     
+    #~ Translate:
+    #~   <memberdef kind="function" id="?" const="?" static="?" explicit="?" inline="?">
+    #~     <name>...</name>
+    #~   </memberdef>
+    #~ To:
+    #~   <method name="?" cv="?" specifiers="?">
+    #~     ...
+    #~   </method>
     def _translate_memberdef_function( self, memberdef, target=None, scope=None, **kwargs ):
         ## The current BoostBook to Docbook translator doesn't respect method
         ## IDs. Nor does it assign any useable IDs to the individial methods.
@@ -549,19 +571,28 @@ class Doxygen2BoostBook:
                 if_attribute(memberdef,'inline','inline','')
                 ]).strip()
             ))
+        ## We iterate the children to translate each part of the function.
         for n in memberdef.childNodes:
             self._translateNode(memberdef,'function',n,target=method)
         return method
     
+    #~ Translate:
+    #~   <memberdef kind="function"...><templateparamlist>...</templateparamlist></memberdef>
     def _translate_memberdef_function_templateparamlist(
         self, templateparamlist, target=None, **kwargs ):
         return self._translate_templateparamlist(templateparamlist,target=target,**kwargs)
     
+    #~ Translate:
+    #~   <memberdef kind="function"...><type>...</type></memberdef>
+    #~ To:
+    #~   ...<type>?</type>
     def _translate_memberdef_function_type( self, resultType, target=None, **kwargs ):
         methodType = target.appendChild(self._createNode('type'))
         self._translate_type(resultType,target=methodType)
         return methodType
     
+    #~ Translate:
+    #~   <memberdef kind="function"...><briefdescription>...</briefdescription></memberdef>
     def _translate_memberdef_function_briefdescription( self, description, target=None, **kwargs ):
         result = self._translateDescription(description,target=target,**kwargs)
         ## For functions if we translate the brief docs to the purpose they end up
@@ -570,15 +601,30 @@ class Doxygen2BoostBook:
         # result = self._translateDescription(description,target=target,tag='purpose',**kwargs)
         return result
     
+    #~ Translate:
+    #~   <memberdef kind="function"...><detaileddescription>...</detaileddescription></memberdef>
     def _translate_memberdef_function_detaileddescription( self, description, target=None, **kwargs ):
         return self._translateDescription(description,target=target,**kwargs)
     
+    #~ Translate:
+    #~   <memberdef kind="function"...><inbodydescription>...</inbodydescription></memberdef>
     def _translate_memberdef_function_inbodydescription( self, description, target=None, **kwargs ):
         return self._translateDescription(description,target=target,**kwargs)
     
+    #~ Translate:
+    #~   <memberdef kind="function"...><param>...</param></memberdef>
     def _translate_memberdef_function_param( self, param, target=None, **kwargs ):
         return self._translate_param(param,target=target,**kwargs)
     
+    #~ Translate:
+    #~   <memberdef kind="variable" id="?">
+    #~     <name>...</name>
+    #~     <type>...</type>
+    #~   </memberdef>
+    #~ To:
+    #~   <data-member id="?" name="?">
+    #~     <type>...</type>
+    #~   </data-member>
     def _translate_memberdef_variable( self, memberdef, target=None, scope=None, **kwargs ):
         self._setID(memberdef.getAttribute('id'),
             scope+'::'+self._getChildData('name',root=memberdef))
@@ -588,6 +634,15 @@ class Doxygen2BoostBook:
         data_member_type = data_member.appendChild(self._createNode('type'))
         self._translate_type(self._getChild('type',root=memberdef),target=data_member_type)
     
+    #~ Translate:
+    #~   <memberdef kind="enum" id="?">
+    #~     <name>...</name>
+    #~     ...
+    #~   </memberdef>
+    #~ To:
+    #~   <enum id="?" name="?">
+    #~     ...
+    #~   </enum>
     def _translate_memberdef_enum( self, memberdef, target=None, scope=None, **kwargs ):
         self._setID(memberdef.getAttribute('id'),
             scope+'::'+self._getChildData('name',root=memberdef))
@@ -598,6 +653,17 @@ class Doxygen2BoostBook:
             self._translateNode(memberdef,'enum',n,target=enum,scope=scope,**kwargs)
         return enum
     
+    #~ Translate:
+    #~   <memberdef kind="enum"...>
+    #~     <enumvalue id="?">
+    #~       <name>...</name>
+    #~       <initializer>...</initializer>
+    #~     </enumvalue>
+    #~   </memberdef>
+    #~ To:
+    #~   <enumvalue id="?" name="?">
+    #~     <default>...</default>
+    #~   </enumvalue>
     def _translate_memberdef_enum_enumvalue( self, enumvalue, target=None, scope=None, **kwargs ):
         self._setID(enumvalue.getAttribute('id'),
             scope+'::'+self._getChildData('name',root=enumvalue))
@@ -610,6 +676,17 @@ class Doxygen2BoostBook:
                 target=target.appendChild(self._createNode('default')))
         return value
     
+    #~ Translate:
+    #~   <param>
+    #~     <type>...</type>
+    #~     <declname>...</declname>
+    #~     <defval>...</defval>
+    #~   </param>
+    #~ To:
+    #~   <parameter name="?">
+    #~     <paramtype>...</paramtype>
+    #~     ...
+    #~   </parameter>
     def _translate_param( self, param, target=None, **kwargs):
         parameter = target.appendChild(self._createNode('parameter',
             name=self._getChildData('declname',root=param)))
@@ -620,20 +697,32 @@ class Doxygen2BoostBook:
             self._translateChildren(self._getChild('defval',root=param),target=parameter)
         return parameter
     
+    #~ Translate:
+    #~   <ref kindref="?" ...>...</ref>
     def _translate_ref( self, ref, **kwargs ):
         return self._translateNode(ref,ref.getAttribute('kindref'))
     
+    #~ Translate:
+    #~   <ref refid="?" kindref="compound">...</ref>
+    #~ To:
+    #~   <link linkend="?"><classname>...</classname></link>
     def _translate_ref_compound( self, ref, **kwargs ):
         result = self._createNode('link',linkend=ref.getAttribute('refid'))
         classname = result.appendChild(self._createNode('classname'))
         self._translateChildren(ref,target=classname)
         return result
     
+    #~ Translate:
+    #~   <ref refid="?" kindref="member">...</ref>
+    #~ To:
+    #~   <link linkend="?">...</link>
     def _translate_ref_member( self, ref, **kwargs ):
         result = self._createNode('link',linkend=ref.getAttribute('refid'))
         self._translateChildren(ref,target=result)
         return result
     
+    #~ Translate:
+    #~   <type>...</type>
     def _translate_type( self, type, target=None, **kwargs ):
         result = self._translateChildren(type,target=target,**kwargs)
         #~ Filter types to clean up various readability problems, most notably
