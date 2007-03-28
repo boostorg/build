@@ -583,9 +583,8 @@ local rule candidate-interpreters ( version ? : prefix ? : target-os )
 # in both the single- and multi-threaded cases, and that system
 # libraries don't change their ABIs either.  
 #
-# Returns a list consisting of ungristed library names to be used as
-# direct dependencies and conditional library names to be added to
-# target conditions.
+# Returns a list of usage-requirements that link to the necessary
+# system libraries.
 local rule system-library-dependencies ( target-os )
 {
     switch $(target-os)
@@ -595,18 +594,18 @@ local rule system-library-dependencies ( target-os )
             # sun toolset adds -lrt unconditionally). While this
             # appears to duplicate the logic already in gcc.jam, it
             # doesn't as long as we're not forcing <threading>multi.
-            return pthread dl <toolset>gcc:<library>rt ;
+            return <library>pthread <library>dl <toolset>gcc:<library>rt ;
 
         
-        case osf : return pthread <toolset>gcc:<library>rt ;
+        case osf : return  <library>pthread <toolset>gcc:<library>rt ;
         
         case qnx* : return ;  
         case darwin : return ;
         case windows : return ;
         
-        case hpux : return rt ;
+        case hpux : return  <library>rt ;
         
-        case * : return pthread dl <toolset>gcc:<library>util ;
+        case * : return  <library>pthread <library>dl <toolset>gcc:<library>util ;
     }
 }
 
@@ -780,33 +779,21 @@ local rule configure (
     #
     # End autoconfiguration sequence
     #
+    local target-requirements = $(condition) ;
     
-    # Add the version, if any, to the condition
+    # Add the version, if any, to the target requirements
     if $(version)
     {
         if ! $(version) in [ feature.values python ] 
         {
             feature.extend python : $(version) ;
         }
-        condition += <python>$(version:E=default) ;
+        target-requirements += <python>$(version:E=default) ;
     }
     
-    condition += <target-os>$(target-os) ;
+    target-requirements += <target-os>$(target-os) ;
     
-    # Set up the PYTHON variable to point at the interpreter.    
-    local target-requirements = $(condition) ;
-    local system-libs ;
-    for local x in [ system-library-dependencies $(target-os) ]
-    {
-        if $(x:G)
-        {
-            target-requirements += $(x) ;
-        }
-        else
-        {
-            system-libs += $(x) ;
-        }
-    }      
+    local usage-requirements = [ system-library-dependencies $(target-os) ] ;
     
     # See if we can find a framework directory on darwin
     local framework-directory ;
@@ -837,7 +824,7 @@ local rule configure (
         dll-path += $(exec-prefix) ;
     }
     
-    local usage-requirements = <include>$(includes) <python.interpreter>$(interpreter-cmd) ;
+    usage-requirements += <include>$(includes) <python.interpreter>$(interpreter-cmd) ;
     
     #
     # Declare the "python" target. This should really be called
@@ -857,7 +844,7 @@ local rule configure (
     {
         declare-libpython-target $(version) : $(target-requirements) ;
         alias python
-          : $(system-libs)
+          : 
           : $(target-requirements) 
           :
             # why python.lib must be listed here instead of along with
