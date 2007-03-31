@@ -42,9 +42,9 @@ project python ;
 # not in whatever project we were called by.
 .project = [ project.current ] ;
 
-# Dynamic linker lib. Necessary to specify it explicitly 
+# Dynamic linker lib. Necessary to specify it explicitly
 # on some platforms.
-lib dl ;  
+lib dl ;
 # This contains 'openpty' function need by python. Again, on
 # some system need to pass this to linker explicitly.
 lib util ;
@@ -81,14 +81,14 @@ lib rt ;
 #
 #   using python 2.3 ;
 #   using python 2.3 : /usr/local/bin/python ;
-#    
-rule init ( version ? : cmd-or-prefix ? : includes ? : libraries ? 
+#
+rule init ( version ? : cmd-or-prefix ? : includes ? : libraries ?
     : condition * )
 {
     .configured = true ;
-    
+
     project.push-current $(.project) ;
-         
+
     debug-message Configuring python... ;
     for local v in version cmd-or-prefix includes libraries condition
     {
@@ -97,9 +97,9 @@ rule init ( version ? : cmd-or-prefix ? : includes ? : libraries ?
             debug-message "  user-specified "$(v): \"$($(v))\" ;
         }
     }
-    
+
     configure $(version) : $(cmd-or-prefix) : $(includes) : $(libraries) : $(condition) ;
-    
+
     project.pop-current ;
 }
 
@@ -131,7 +131,7 @@ local rule shell-cmd ( cmd )
 local rule is-cygwin-symlink ( path )
 {
     local is-symlink = ;
-    
+
     # Look for a file with the given path having the S attribute set,
     # as cygwin symlinks do.  /-C means "do not use thousands
     # separators in file sizes."
@@ -141,10 +141,10 @@ local rule is-cygwin-symlink ( path )
     {
         # escape any special regex characters in the base part of the path
         local base-pat = [ regex.escape $(path:D=) : ].[()*+?|\\$^ : \\ ] ;
-        
+
         # extract the file's size from the directory listing
         local size-of-system-file = [ MATCH "([0-9]+) "$(base-pat) : $(dir-listing) : 1 ] ;
-        
+
         # if the file has a reasonably small size, look for the
         # special symlink identification text
         if $(size-of-system-file) && [ numbers.less $(size-of-system-file) 1000 ]
@@ -229,7 +229,7 @@ local rule software-registry-value ( path : data ? )
                 result = [ W32_GETREG $(root)\\SOFTWARE\\$(x64elt)$(path) : $(data) ] ;
             }
         }
-        
+
     }
     return $(result) ;
 }
@@ -238,18 +238,18 @@ local rule software-registry-value ( path : data ? )
 .cygwin-drive-letter-re = ^/cygdrive/([a-z])/(.*) ;
 
 .working-directory = [ PWD ] ;
-.working-drive-letter = [ SUBST $(.working-directory) $(.windows-drive-letter-re) $1 ] ; 
+.working-drive-letter = [ SUBST $(.working-directory) $(.windows-drive-letter-re) $1 ] ;
 .working-drive-letter ?= [ SUBST $(.working-directory) $(.cygwin-drive-letter-re) $1 ] ;
-  
+
 local rule windows-to-cygwin-path ( path )
 {
     # if path is rooted with a drive letter, rewrite it using the
     # /cygdrive mountpoint
     local p = [ SUBST $(path:T) $(.windows-drive-letter-re) /cygdrive/$1/$2 ] ;
-    
+
     # else if path is rooted without a drive letter, use the working directory
     p ?=  [ SUBST $(path:T) ^/(.*) /cygdrive/$(.working-drive-letter:L)/$2 ] ;
-    
+
     # else return the path unchanged
     return $(p:E=$(path:T)) ;
 }
@@ -259,7 +259,7 @@ local rule windows-to-cygwin-path ( path )
 local rule cygwin-to-windows-path ( path )
 {
     path = $(path:R="") ; # strip any trailing slash
-    
+
     local drive-letter = [ SUBST $(path) $(.cygwin-drive-letter-re) $1:/$2 ] ;
     if $(drive-letter)
     {
@@ -273,18 +273,18 @@ local rule cygwin-to-windows-path ( path )
 
         while $(head)
         {
-            local root = [ 
-              software-registry-value "Cygnus Solutions\\Cygwin\\mounts v2\\"$(head) 
-                : native 
+            local root = [
+              software-registry-value "Cygnus Solutions\\Cygwin\\mounts v2\\"$(head)
+                : native
             ] ;
-            
+
             if $(root)
             {
                 path = $(tail:R=$(root)) ;
                 head = ;
             }
             tail = $(tail:R=$(head:D=)) ;
-            
+
             if $(head) = /
             {
                 head = ;
@@ -307,7 +307,7 @@ local rule *nix-path-to-native ( path )
     }
     return $(path) ;
 }
-  
+
 # Convert an NT path to native
 local rule windows-path-to-native ( path )
 {
@@ -331,7 +331,7 @@ local rule guess-windows-path ( path )
 local rule path-to-native ( paths * )
 {
     local result ;
-    
+
     for local p in $(paths)
     {
         if [ guess-windows-path $(p) ]
@@ -354,11 +354,11 @@ local rule split-version ( version )
     if ! $(major-minor[2]) || $(major-minor[3])
     {
         ECHO "Warning: \"using python\" expects a two part (major, minor) version number; got" $(version) instead ;
-        
+
         # Add a zero to account for the missing digit if necessary.
         major-minor += 0 ;
     }
-    
+
     return $(major-minor[1]) $(major-minor[2]) ;
 }
 
@@ -376,18 +376,18 @@ local rule windows-installed-pythons ( version ? )
 {
     version ?= $(.version-countdown) ;
     local interpreters ;
-    
+
     for local v in $(version)
     {
-        local install-path = [ 
+        local install-path = [
           software-registry-value "Python\\PythonCore\\"$(v)"\\InstallPath" ] ;
-            
+
         if $(install-path)
         {
             install-path = [ windows-path-to-native $(install-path) ] ;
             debug-message Registry indicates Python $(v) installed at \"$(install-path)\" ;
         }
-            
+
         interpreters += $(:E=python:R=$(install-path)) ;
     }
     return $(interpreters) ;
@@ -396,11 +396,11 @@ local rule windows-installed-pythons ( version ? )
 local rule darwin-installed-pythons ( version ? )
 {
     version ?= $(.version-countdown) ;
-    
-    local prefix 
+
+    local prefix
       = [ GLOB /System/Library/Frameworks /Library/Frameworks
           : Python.framework ] ;
-    
+
     return $(prefix)/Versions/$(version)/bin/python ;
 }
 
@@ -415,7 +415,7 @@ local rule probe ( python-cmd )
     {
         skip-symlink = [ invokes-cygwin-symlink $(python-cmd) ] ;
     }
-    
+
     if $(skip-symlink)
     {
         debug-message -------------------------------------------------------------------- ;
@@ -434,23 +434,23 @@ local rule probe ( python-cmd )
         # Prepare a List of Python format strings and expressions that
         # can be used to print the constants we want from the sys
         # module.
-        
+
         # We don't really want sys.version since that's a complicated
         # string, so get the information from sys.version_info
         # instead.
         local format = "version=%d.%d" ;
         local exprs = "version_info[0]" "version_info[1]" ;
-        
+
         for local s in $(sys-elements[2-])
         {
             format += $(s)=%s ;
             exprs += $(s) ;
         }
-        
+
         # Invoke Python and ask it for all those values
-        local full-cmd = 
+        local full-cmd =
           $(python-cmd)" -c \"from sys import *; print '"$(format:J=\\n)"' % ("$(exprs:J=,)")\"" ;
-        
+
         local output = [ shell-cmd $(full-cmd) ] ;
         if $(output)
         {
@@ -472,50 +472,50 @@ local rule probe ( python-cmd )
 
 # Make sure the "libraries" and "includes" variables (in an enclosing
 # scope) have a value based on the information given.
-local rule compute-default-paths ( 
+local rule compute-default-paths (
   target-os : version ? : prefix ? : exec-prefix ? )
 {
     exec-prefix ?= $(prefix) ;
-    
+
     if $(target-os) = windows
     {
         # The exec_prefix is where you're supposed to look for
         # machine-specific libraries.
         local default-library-path = $(exec-prefix)\\libs ;
         local default-include-path = $(:E=Include:R=$(prefix)) ;
-        
+
         # If the interpreter was found in a directory
         # called "PCBuild" or "PCBuild8," assume we're
         # looking at a Python built from the source
         # distro, and go up one additional level to the
         # default root.  Otherwise, the default root is
         # the directory where the interpreter was found.
-        
+
         # We ask Python itself what the executable path is
         # in case of intermediate symlinks or shell
         # scripts.
         local executable-dir = $(executable:D) ;
-        
+
         if [ MATCH ^(PCBuild) : $(executable-dir:D=) ]
         {
             debug-message "This Python appears to reside in a source distribution;" ;
             debug-message "prepending \""$(executable-dir)"\" to default library search path" ;
-            
+
             default-library-path = $(executable-dir)
               $(default-library-path) ;
-            
+
             default-include-path = $(:E=PC:R=$(executable-dir:D)) $(default-include-path) ;
-            
+
             debug-message "and \""$(default-include-path[1])"\" to default #include path" ;
         }
-        
+
         libraries ?= $(default-library-path) ;
         includes ?= $(default-include-path) ;
     }
     else
     {
         includes ?= $(prefix)/include/python$(version) ;
-        
+
         local lib = $(exec-prefix)/lib ;
         libraries ?= $(lib)/python$(version)/config $(lib) ;
     }
@@ -536,11 +536,11 @@ local rule candidate-interpreters ( version ? : prefix ? : target-os )
     {
         # on Windows, look in the root directory itself and, to work
         # with the result of a build-from-source, the PCBuild directory
-        bin-path = PCBuild8 PCBuild ""  ; 
+        bin-path = PCBuild8 PCBuild ""  ;
     }
-    
+
     bin-path = $(bin-path:R=$(prefix)) ;
-    
+
     if $(target-os) in windows darwin
     {
         return                                          # Search:
@@ -553,7 +553,7 @@ local rule candidate-interpreters ( version ? : prefix ? : target-os )
     {
         # Search relative to the prefix, or if none supplied, in PATH
         local unversioned = $(:E=python:R=$(bin-path:E=)) ;
-        
+
         # if a version was specified, look for a python with that
         # specific version appended before looking for one called,
         # simply, "python"
@@ -579,7 +579,7 @@ local rule candidate-interpreters ( version ? : prefix ? : target-os )
 # with other libraries here.  Note: this optimization is based on
 # an assumption that the compiler generates link-compatible code
 # in both the single- and multi-threaded cases, and that system
-# libraries don't change their ABIs either.  
+# libraries don't change their ABIs either.
 #
 # Returns a list of usage-requirements that link to the necessary
 # system libraries.
@@ -592,7 +592,7 @@ local rule system-library-dependencies ( target-os )
             # sun toolset adds -lrt unconditionally). While this
             # appears to duplicate the logic already in gcc.jam, it
             # doesn't as long as we're not forcing <threading>multi.
-          
+
             # Caleb Epstein reports that his python's
             # distutils.sysconfig.get_config_var('LIBS') yields
             # -lresolv -lsocket -lnsl -lrt -ldl.  However, we're not
@@ -600,15 +600,15 @@ local rule system-library-dependencies ( target-os )
             # Being conservative, we add rt and remove pthread, which
             # was causing errors.
             return <library>dl <toolset>gcc:<library>rt ;
-        
+
         case osf : return  <library>pthread <toolset>gcc:<library>rt ;
-        
-        case qnx* : return ;  
+
+        case qnx* : return ;
         case darwin : return ;
         case windows : return ;
-        
+
         case hpux : return  <library>rt ;
-        
+
         case * : return  <library>pthread <library>dl <toolset>gcc:<library>util ;
     }
 }
@@ -624,7 +624,7 @@ local rule declare-libpython-target ( version ? : requirements * )
         local major-minor = [ split-version $(version) ] ;
         lib-version = $(major-minor:J="") ;
     }
-    
+
     if ! $(lib-version)
     {
         ECHO *** warning: could not determine Python version, which will ;
@@ -632,35 +632,35 @@ local rule declare-libpython-target ( version ? : requirements * )
         ECHO *** warning: library.  Consider explicitly passing the version ;
         ECHO *** warning: to 'using python'. ;
     }
-    
+
     # Declare it
     lib python.lib : : <name>python$(lib-version) $(requirements) ;
 }
 
 # implementation of init
-local rule configure ( 
+local rule configure (
   version ? : cmd-or-prefix ? : includes ? : libraries ? : condition * )
 {
     local prefix ;
     local exec-prefix ;
     local cmds-to-try ;
     local interpreter-cmd ;
-    
+
     local target-os = [ feature.get-values target-os : $(condition) ] ;
     target-os ?= [ feature.defaults target-os ] ;
     target-os = $(target-os:G=) ;
-    
+
     # Normalize and dissect any version number
     local major-minor ;
-    if $(version) 
+    if $(version)
     {
         major-minor = [ split-version $(version) ] ;
         version = $(major-minor:J=.) ;
     }
 
     local cmds-to-try ;
-    
-    if ! $(cmd-or-prefix) || [ GLOB $(cmd-or-prefix) : * ] 
+
+    if ! $(cmd-or-prefix) || [ GLOB $(cmd-or-prefix) : * ]
     {
         # if the user didn't pass a command, whatever we got was a prefix
         prefix = $(cmd-or-prefix) ;
@@ -670,7 +670,7 @@ local rule configure (
     {
         # Work with the command the user gave us.
         cmds-to-try = $(cmd-or-prefix) ;
-        
+
         # On windows, don't nail down the interpreter command just yet
         # in case the user specified something that turns out to be a
         # cygwin symlink, which could bring down bjam if we invoke it.
@@ -679,7 +679,7 @@ local rule configure (
             interpreter-cmd = $(cmd-or-prefix) ;
         }
     }
-    
+
     # Anything left to find or check?
     if ! ( $(interpreter-cmd) && $(includes) && $(libraries) )
     {
@@ -687,18 +687,18 @@ local rule configure (
         # be set by the probe rule, above, using Jam's dynamic scoping.
         local sys-elements = version platform prefix exec_prefix executable ;
         local sys.$(sys-elements) ;
-    
+
         # compute the string Python's sys.platform needs to match.  If
         # not targeting windows or cygwin we'll assume only native
         # builds can possibly run, so we won't require a match and we
         # leave sys.platform blank.
         local platform ;
-        switch $(target-os) 
+        switch $(target-os)
         {
             case windows : platform = win32 ;
             case cygwin : platform = cygwin ;
         }
-        
+
         local fallback-cmd = $(cmds-to-try[1]) ;
         local fallback-version ;
         while $(cmds-to-try)
@@ -706,35 +706,35 @@ local rule configure (
             # pop top command
             local cmd = $(cmds-to-try[1]) ;
             cmds-to-try = $(cmds-to-try[2-]) ;
-            
+
             debug-message Checking interpreter command \"$(cmd)\"... ;
             if [ probe $(cmd) ]
             {
                 fallback-version ?= $(sys.version) ;
-                
+
                 # Check for version/platform validity
                 for local x in version platform
                 {
                     if $($(x)) && $($(x)) != $(sys.$(x))
                     {
-                        debug-message ...$(x) "mismatch (looking for" 
+                        debug-message ...$(x) "mismatch (looking for"
                             $($(x)) but found $(sys.$(x))")" ;
                         cmd = ;
                     }
                 }
-                
+
                 if $(cmd)
                 {
                     debug-message ...requested configuration matched! ;
-                    
+
                     exec-prefix = $(sys.exec_prefix) ;
-                    
+
                     compute-default-paths
                       $(target-os)
                         : $(sys.version)
                           : $(sys.prefix)
                             : $(sys.exec_prefix) ;
-                    
+
                     version = $(sys.version) ;
                     interpreter-cmd ?= $(cmd) ;
                     cmds-to-try = ; # All done.
@@ -745,13 +745,13 @@ local rule configure (
                 debug-message ...does not invoke a working interpreter ;
             }
         }
-        
+
         # Anything left to compute?
         if ! ( $(includes) && $(libraries) && $(interpreter-cmd) )
         {
             version ?= $(fallback-version) ;
             version ?= 2.5 ;
-            
+
             if ! $(interpreter-cmd)
             {
                 fallback-cmd ?= python ;
@@ -766,10 +766,10 @@ local rule configure (
             compute-default-paths $(target-os) : $(version) : $(prefix:E=) ;
         }
     }
-    
+
     includes = [ path-to-native $(includes) ] ;
     libraries = [ path-to-native $(libraries) ] ;
-    
+
     debug-message "Details of this Python configuration:" ;
     debug-message "  interpreter command:" \"$(interpreter-cmd:E=<empty>)\" ;
     debug-message "  include path:" \"$(includes:E=<empty>)\" ;
@@ -778,27 +778,27 @@ local rule configure (
     {
         debug-message "  DLL search path:" \"$(exec-prefix:E=<empty>)\" ;
     }
-    
-    
+
+
     #
     # End autoconfiguration sequence
     #
     local target-requirements = $(condition) ;
-    
+
     # Add the version, if any, to the target requirements
     if $(version)
     {
-        if ! $(version) in [ feature.values python ] 
+        if ! $(version) in [ feature.values python ]
         {
             feature.extend python : $(version) ;
         }
         target-requirements += <python>$(version:E=default) ;
     }
-    
+
     target-requirements += <target-os>$(target-os) ;
-    
+
     local usage-requirements = [ system-library-dependencies $(target-os) ] ;
-    
+
     # See if we can find a framework directory on darwin
     local framework-directory ;
     if $(target-os) = darwin
@@ -809,7 +809,7 @@ local rule configure (
         {
             framework-directory = $(framework-directory:D) ;
         }
-        
+
         if $(framework-directory) = Python.framework
         {
             debug-message framework directory is \"$(fwk)\" ;
@@ -827,18 +827,18 @@ local rule configure (
     {
         dll-path += $(exec-prefix) ;
     }
-    
+
     usage-requirements += <include>$(includes) <python.interpreter>$(interpreter-cmd) ;
-    
+
     #
     # Declare the "python" target. This should really be called
     # python_for_embedding
     #
-    
+
     if $(framework-directory)
     {
         alias python
-          : 
+          :
           : $(target-requirements)
           :
           : $(usage-requirements) <framework>$(fwk)
@@ -848,8 +848,8 @@ local rule configure (
     {
         declare-libpython-target $(version) : $(target-requirements) ;
         alias python
-          : 
-          : $(target-requirements) 
+          :
+          : $(target-requirements)
           :
             # why python.lib must be listed here instead of along with
             # the system libs is a mystery, but if we don't do it, on
@@ -858,7 +858,7 @@ local rule configure (
           : $(usage-requirements) <library-path>$(libraries) <dll-path>$(dll-path) <library>python.lib
           ;
     }
-    
+
     # On *nix, we don't want to link either Boost.Python or Python
     # extensions to libpython, because the Python interpreter itself
     # provides all those symbols. If we linked to libpython, we'd get
@@ -867,7 +867,7 @@ local rule configure (
     #
     # Unlike most *nix systems, Mac OS X's linker does not permit undefined
     # symbols when linking a shared library. So, we still need to link
-    # against the Python framework, even when building extensions. 
+    # against the Python framework, even when building extensions.
     # Note that framework builds of Python always use shared libraries,
     # so we do not need to worry about duplicate Python symbols.
     if $(target-os) in windows cygwin darwin
@@ -877,7 +877,7 @@ local rule configure (
     else
     {
         alias python_for_extensions
-                     :  
+                     :
                      : $(target-requirements)
                      :
                      : $(usage-requirements)
@@ -885,11 +885,11 @@ local rule configure (
     }
 }
 
-rule configured ( ) 
+rule configured ( )
 {
      return $(.configured) ;
 }
-        
+
 type.register PYTHON_EXTENSION : : SHARED_LIB ;
 
 # We can't simply assign the "dll" or "so" suffix to PYTHON_EXTENSION,
@@ -912,21 +912,21 @@ type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>1.5 
 # Unset 'lib' prefix for PYTHON_EXTENSION
 type.set-generated-target-prefix PYTHON_EXTENSION : : "" ;
 
-rule python-extension ( name : sources * : requirements * : default-build * : 
+rule python-extension ( name : sources * : requirements * : default-build * :
                         usage-requirements * )
 {
     requirements += <use>/python//python_for_extensions <suppress-import-lib>true ;
-                    
+
     local project = [ project.current ] ;
 
-    
+
     targets.main-target-alternative
       [ new typed-target $(name) : $(project) : PYTHON_EXTENSION
         : [ targets.main-target-sources $(sources) : $(name) ]
-        : [ targets.main-target-requirements $(requirements) : $(project) ] 
-        : [ targets.main-target-default-build $(default-build) : $(project) ] 
+        : [ targets.main-target-requirements $(requirements) : $(project) ]
+        : [ targets.main-target-default-build $(default-build) : $(project) ]
       ] ;
-}                            
+}
 
 IMPORT python : python-extension : : python-extension ;
 
@@ -939,15 +939,15 @@ type.register RUN_PYD : : TEST ;
 class python-test-generator : generator
 {
     import set ;
-    
+
     rule __init__ ( * : * )
     {
         generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
         self.composing = true ;
     }
-        
+
     rule run ( project name ? : property-set : sources * : multiple ? )
-    {       
+    {
         local python ;
         local other-pythons ;
         for local s in $(sources)
@@ -963,10 +963,10 @@ class python-test-generator : generator
                 {
                     # Other Python sources become dependencies.
                     other-pythons += $(s) ;
-                }                
+                }
             }
         }
-        
+
         local extensions ;
         for local s in $(sources)
         {
@@ -975,27 +975,27 @@ class python-test-generator : generator
                 extensions += $(s) ;
             }
         }
-                
+
         local libs ;
         for local s in $(sources)
         {
-            if [ type.is-derived [ $(s).type ] LIB ] 
+            if [ type.is-derived [ $(s).type ] LIB ]
               && ! $(s) in $(extensions)
             {
                 libs += $(s) ;
             }
         }
-        
+
         local new-sources ;
         for local s in $(sources)
         {
-            if [ type.is-derived [ $(s).type ] CPP ] 
+            if [ type.is-derived [ $(s).type ] CPP ]
             {
                 local name = [ utility.basename [ $(s).name ] ] ;
                 if $(name) = [ utility.basename [ $(python).name ] ]
                 {
                     name = $(name)_ext ;
-                }          
+                }
                 local extension = [ generators.construct $(project) $(name) :
                   PYTHON_EXTENSION : $(property-set) : $(s) $(libs) ] ;
 
@@ -1004,7 +1004,7 @@ class python-test-generator : generator
                 # properties that will allow us to find the python
                 # extension at runtime.
                 property-set = [ $(property-set).add $(extension[1]) ] ;
-                
+
                 # Ignore usage requirements. We're a top-level
                 # generator and nobody is going to use what we
                 # generate.
@@ -1014,15 +1014,15 @@ class python-test-generator : generator
 
         property-set = [ $(property-set).add-raw <dependency>$(other-pythons) ] ;
 
-        result = [ construct-result $(python) $(extensions) $(new-sources) 
-          : $(project) $(name) : $(property-set) ] ;        
-    }    
+        result = [ construct-result $(python) $(extensions) $(new-sources)
+          : $(project) $(name) : $(property-set) ] ;
+    }
 }
 
-generators.register 
+generators.register
   [ new python-test-generator python.capture-output : : RUN_PYD_OUTPUT ] ;
 
-generators.register-standard testing.expect-success 
+generators.register-standard testing.expect-success
   : RUN_PYD_OUTPUT : RUN_PYD ;
 
 # There are two different ways of spelling OS names.  One is used for
@@ -1051,12 +1051,12 @@ rule capture-output ( target : sources * : properties * )
     # so RUN_PATH variable on $(sources[2]) is not consulted. Move it
     # over explicitly.
     RUN_PATH on $(sources[1]) = [ on $(sources[2-]) return $(RUN_PATH) ] ;
-    
+
     PYTHONPATH = [ on $(sources[2-]) return $(LOCATE) $(SEARCH) ] ;
-    
+
     # After test is run, we remove the Python module, but not the Python
     # script.
-    testing.capture-output $(target) : $(sources[1]) : $(properties) 
+    testing.capture-output $(target) : $(sources[1]) : $(properties)
       : $(sources[2-]) ;
 
     # PYTHONPATH is different; it will be interpreted by whichever
@@ -1066,28 +1066,28 @@ rule capture-output ( target : sources * : properties * )
     # cases.
     local target-os = [ feature.get-values target-os : $(properties) ] ;
     # oddly, host-os isn't in properties, so grab the default value.
-    local host-os = [ feature.defaults host-os ] ; 
+    local host-os = [ feature.defaults host-os ] ;
     host-os = $(host-os:G=) ;
     if $(target-os) != $(host-os)
     {
-        PYTHONPATH = 
+        PYTHONPATH =
           [ sequence.transform $(host-os)-to-$(target-os)-path : $(PYTHONPATH) ] ;
     }
-    local path-separator = 
+    local path-separator =
       [ os.path-separator [ translate-os $(target-os) ] ] ;
-    local set-PYTHONPATH = 
+    local set-PYTHONPATH =
       [ common.variable-setting-command PYTHONPATH : $(PYTHONPATH:J=$(path-separator)) ] ;
     LAUNCHER on $(target) = $(set-PYTHONPATH) [ on $(target) return $(PYTHON) ] ;
 }
 
 rule bpl-test ( name : sources * : requirements * )
-{        
+{
     sources ?= $(name).py $(name).cpp ;
-    return [ testing.make-test 
+    return [ testing.make-test
         run-pyd : $(sources) /boost/python//boost_python
           : $(requirements) : $(name) ] ;
 }
 
 IMPORT $(__name__) : bpl-test : : bpl-test ;
-  
-  
+
+
