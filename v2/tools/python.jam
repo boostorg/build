@@ -42,8 +42,6 @@ project python ;
 # not in whatever project we were called by.
 .project = [ project.current ] ;
 
-.alias-defined = ;
-
 # Dynamic linker lib. Necessary to specify it explicitly 
 # on some platforms.
 lib dl ;  
@@ -409,7 +407,7 @@ local rule darwin-installed-pythons ( version ? )
 # Assume "python-cmd" invokes a python interpreter and invoke it to
 # extract all the information we care about from its "sys" module.
 # Returns void if unsuccessful.
-rule dump-sys ( python-cmd )
+local rule probe ( python-cmd )
 {
     # Avoid invoking a Cygwin symlink on NT
     local skip-symlink ;
@@ -594,8 +592,14 @@ local rule system-library-dependencies ( target-os )
             # sun toolset adds -lrt unconditionally). While this
             # appears to duplicate the logic already in gcc.jam, it
             # doesn't as long as we're not forcing <threading>multi.
-            return <library>pthread <library>dl <toolset>gcc:<library>rt ;
-
+          
+            # Caleb Epstein reports that his python's
+            # distutils.sysconfig.get_config_var('LIBS') yields
+            # -lresolv -lsocket -lnsl -lrt -ldl.  However, we're not
+            # yet sure that is the right list for extension modules.
+            # Being conservative, we add rt and remove pthread, which
+            # was causing errors.
+            return <library>dl <toolset>gcc:<library>rt ;
         
         case osf : return  <library>pthread <toolset>gcc:<library>rt ;
         
@@ -680,7 +684,7 @@ local rule configure (
     if ! ( $(interpreter-cmd) && $(includes) && $(libraries) )
     {
         # Values to be extracted from python's sys module.  These will
-        # be set by the dump-sys rule, above, using Jam's dynamic scoping.
+        # be set by the probe rule, above, using Jam's dynamic scoping.
         local sys-elements = version platform prefix exec_prefix executable ;
         local sys.$(sys-elements) ;
     
@@ -704,7 +708,7 @@ local rule configure (
             cmds-to-try = $(cmds-to-try[2-]) ;
             
             debug-message Checking interpreter command \"$(cmd)\"... ;
-            if [ dump-sys $(cmd) ]
+            if [ probe $(cmd) ]
             {
                 fallback-version ?= $(sys.version) ;
                 
