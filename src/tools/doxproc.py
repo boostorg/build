@@ -193,20 +193,21 @@ class Doxygen2BoostBook:
     #~ return None.
     def _translateNode( self, *context, **kwargs ):
         node = None
-        name = '_translate'
+        names = [ ]
         for c in context:
             if c:
                 if not isinstance(c,xml.dom.Node):
-                    name += '_'+c
+                    suffix = '_'+c.replace('-','_')
                 else:
-                    name += '_'+c.nodeName
+                    suffix = '_'+c.nodeName.replace('-','_')
                     node = c
-        name = name.replace('-','_')
-        #~ print '_translateNode:', name
-        if node and hasattr(self,name):
-            return getattr(self,name)(node,**kwargs)
-        else:
-            return None
+                names.append('_translate')
+                names = map(lambda x: x+suffix,names)
+        if node:
+            for name in names:
+                if hasattr(self,name):
+                    return getattr(self,name)(node,**kwargs)
+        return None
     
     #~ Translates the children of the given parent node, appending the results
     #~ to the indicated target. For nodes not translated by the translation method
@@ -221,7 +222,7 @@ class Doxygen2BoostBook:
             else:
                 child = n.cloneNode(False)
                 if hasattr(child,'data'):
-                    child.data = child.data.strip()
+                    child.data = re.sub(r'\s+',' ',child.data)
                 target.appendChild(child)
                 self._translateChildren(n,target=child)
     
@@ -419,6 +420,7 @@ class Doxygen2BoostBook:
     #~   <template>
     #~     <template-type-parameter name="?" />
     #~     <template-nontype-parameter name="?">
+    #~       <type>?</type>
     #~       <default>?</default>
     #~     </template-nontype-parameter>
     #~   </template>
@@ -426,16 +428,20 @@ class Doxygen2BoostBook:
         template = target.appendChild(self._createNode('template'))
         for param in templateparamlist.childNodes:
             if param.nodeName == 'param':
+                type = self._getChildData('type',root=param)
+                defval = self._getChild('defval',root=param)
                 paramKind = None
-                if self._getChildData('type',root=param) in (
-                    'class','typename'):
+                if type in ('class','typename'):
                     paramKind = 'template-type-parameter'
                 else:
                     paramKind = 'template-nontype-parameter'
                 templateParam = template.appendChild(
                     self._createNode(paramKind,
                         name=self._getChildData('declname',root=param)))
-                defval = self._getChild('defval',root=param)
+                if paramKind == 'template-nontype-parameter':
+                    template_type = templateParam.appendChild(self._createNode('type'))
+                    self._translate_type(
+                        self._getChild('type',root=param),target=template_type)
                 if defval:
                     value = self._getChildData('ref',root=defval.firstChild)
                     if not value:
@@ -552,16 +558,23 @@ class Doxygen2BoostBook:
     #~     ...
     #~   </method>
     def _translate_memberdef_function( self, memberdef, target=None, scope=None, **kwargs ):
-        ## The current BoostBook to Docbook translator doesn't respect method
-        ## IDs. Nor does it assign any useable IDs to the individial methods.
-        # self._setID(memberdef.getAttribute('id'),
-        #     scope+'::'+self._getChildData('name',root=memberdef))
-        ## Hence instead of registering an ID for the method we point it at the
-        ## containing class.
-        self._setID(memberdef.getAttribute('id'),scope)
-        method = target.appendChild(self._createNode('method',
+        name = self._getChildData('name',root=memberdef)
+        self._setID(memberdef.getAttribute('id'),scope+'::'+name)
+        ## Check if we have some specific kind of method.
+        if name == scope.split('::')[-1]:
+            kind = 'constructor'
+            target = target.parentNode
+        elif name == '~'+scope.split('::')[-1]:
+            kind = 'destructor'
+            target = target.parentNode
+        elif name == 'operator=':
+            kind = 'copy-assignment'
+            target = target.parentNode
+        else:
+            kind = 'method'
+        method = target.appendChild(self._createNode(kind,
             # id=memberdef.getAttribute('id'),
-            name=self._getChildData('name',root=memberdef),
+            name=name,
             cv=' '.join([
                 if_attribute(memberdef,'const','const','').strip()
                 ]),
@@ -587,8 +600,10 @@ class Doxygen2BoostBook:
     #~ To:
     #~   ...<type>?</type>
     def _translate_memberdef_function_type( self, resultType, target=None, **kwargs ):
-        methodType = target.appendChild(self._createNode('type'))
+        methodType = self._createNode('type')
         self._translate_type(resultType,target=methodType)
+        if methodType.hasChildNodes():
+            target.appendChild(methodType)
         return methodType
     
     #~ Translate:
@@ -691,7 +706,7 @@ class Doxygen2BoostBook:
         parameter = target.appendChild(self._createNode('parameter',
             name=self._getChildData('declname',root=param)))
         paramtype = parameter.appendChild(self._createNode('paramtype'))
-        self._translateChildren(self._getChild('type',root=param),target=paramtype)
+        self._translate_type(self._getChild('type',root=param),target=paramtype)
         defval = self._getChild('defval',root=param)
         if defval:
             self._translateChildren(self._getChild('defval',root=param),target=parameter)
@@ -789,10 +804,11 @@ class Doxygen2BoostBook:
     def _createNode( self, tag, **kwargs ):
         result = self.boostbook.createElement(tag)
         for k in kwargs.keys():
-            if k == 'id':
-                result.setAttribute('id',kwargs[k])
-            else:
-                result.setAttribute(k,kwargs[k])
+            if kwargs[k] != '':
+                if k == 'id':
+                    result.setAttribute('id',kwargs[k])
+                else:
+                    result.setAttribute(k,kwargs[k])
         return result
     
     def _createText( self, tag, data, **kwargs ):
