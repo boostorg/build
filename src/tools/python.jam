@@ -32,6 +32,8 @@ import property ;
 import sequence ;
 import path ;
 import feature ;
+import set ;
+import builtin ;
 
 # Make this module a project
 project.initialize $(__name__) ;
@@ -77,13 +79,24 @@ lib rt ;
 #   matched against the build configuration when Boost.Build selects a
 #   Python configuration to use.
 #
+# - extension-suffix: A string to append to the name of extension
+#   modules before the true filename extension.  Ordinarily we would
+#   just compute this based on the value of the <python-debugging>
+#   feature.  However ubuntu's python-dbg package uses the windows
+#   convention of appending _d to debug-build extension modules.  We
+#   have no way of detecting ubuntu, or of probing python for the "_d"
+#   requirement, and if you configure and build python using
+#   --with-pydebug, you'll be using the standard *nix convention.
+#   Defaults to "" (or "_d" when targeting windows and
+#   <python-debugging> is set).
+#
 # Example usage:
 #
 #   using python 2.3 ;
 #   using python 2.3 : /usr/local/bin/python ;
-#
-rule init ( version ? : cmd-or-prefix ? : includes ? : libraries ?
-    : condition * )
+#    
+rule init ( version ? : cmd-or-prefix ? : includes ? : libraries ? 
+    : condition * : extension-suffix ? )
 {
     .configured = true ;
 
@@ -97,8 +110,8 @@ rule init ( version ? : cmd-or-prefix ? : includes ? : libraries ?
             debug-message "  user-specified "$(v): \"$($(v))\" ;
         }
     }
-
-    configure $(version) : $(cmd-or-prefix) : $(includes) : $(libraries) : $(condition) ;
+    
+    configure $(version) : $(cmd-or-prefix) : $(includes) : $(libraries) : $(condition) : $(extension-suffix) ;
 
     project.pop-current ;
 }
@@ -494,7 +507,7 @@ local rule compute-default-paths (
         # We ask Python itself what the executable path is
         # in case of intermediate symlinks or shell
         # scripts.
-        local executable-dir = $(executable:D) ;
+        local executable-dir = $(sys.executable:D) ;
 
         if [ MATCH ^(PCBuild) : $(executable-dir:D=) ]
         {
@@ -526,6 +539,12 @@ feature.feature python : : propagated ;
 feature.feature python.interpreter : : free ;
 
 flags python.capture-output PYTHON : <python.interpreter> ;
+
+#
+# Support for Python configured --with-pydebug
+#
+feature.feature python-debugging : off on : propagated ;
+builtin.variant debug-python : debug : <python-debugging>on ;
 
 # Return a list of candidate commands to try when looking for a Python
 # interpreter.  prefix is expected to be a native path.
@@ -623,6 +642,10 @@ local rule declare-libpython-target ( version ? : requirements * )
     {
         local major-minor = [ split-version $(version) ] ;
         lib-version = $(major-minor:J="") ;
+        if <python-debugging>on in $(requirements)
+        {
+            lib-version = $(lib-version)_d ;
+        }
     }
 
     if ! $(lib-version)
@@ -638,8 +661,8 @@ local rule declare-libpython-target ( version ? : requirements * )
 }
 
 # implementation of init
-local rule configure (
-  version ? : cmd-or-prefix ? : includes ? : libraries ? : condition * )
+local rule configure ( 
+  version ? : cmd-or-prefix ? : includes ? : libraries ? : condition * : extension-suffix ? )
 {
     local prefix ;
     local exec-prefix ;
@@ -649,7 +672,13 @@ local rule configure (
     local target-os = [ feature.get-values target-os : $(condition) ] ;
     target-os ?= [ feature.defaults target-os ] ;
     target-os = $(target-os:G=) ;
-
+    
+    if $(target-os) = windows && <python-debugging>on in $(condition) 
+    {
+        extension-suffix ?= _d ;
+    }
+    extension-suffix ?= "" ;
+    
     # Normalize and dissect any version number
     local major-minor ;
     if $(version)
@@ -797,8 +826,6 @@ local rule configure (
 
     target-requirements += <target-os>$(target-os) ;
 
-    local usage-requirements = [ system-library-dependencies $(target-os) ] ;
-
     # See if we can find a framework directory on darwin
     local framework-directory ;
     if $(target-os) = darwin
@@ -821,15 +848,36 @@ local rule configure (
         }
     }
 
+    local dll-path = $(libraries) ;
+    
     # Make sure that we can find the Python DLL on windows
-    local dll-path ;
     if $(target-os) = windows && $(exec-prefix)
     {
         dll-path += $(exec-prefix) ;
     }
-
+    
+    #
+    # prepare usage requirements
+    #
+    local usage-requirements = [ system-library-dependencies $(target-os) ] ;
     usage-requirements += <include>$(includes) <python.interpreter>$(interpreter-cmd) ;
+    if <python-debugging>on in $(condition)
+    {
+        if $(target-os) = windows
+        {
+            # in pyconfig.h, Py_DEBUG is set if _DEBUG is set.  If we
+            # define Py_DEBUG we'll get multiple definition warnings.
+            usage-requirements += <define>_DEBUG ;
+        }
+        else
+        {
+            usage-requirements += <define>Py_DEBUG ;
+        }
+    }
 
+    # Register the right suffix for extensions 
+    register-extension-suffix $(extension-suffix) : $(target-requirements) ;
+    
     #
     # Declare the "python" target. This should really be called
     # python_for_embedding
@@ -892,22 +940,30 @@ rule configured ( )
 
 type.register PYTHON_EXTENSION : : SHARED_LIB ;
 
-# We can't simply assign the "dll" or "so" suffix to PYTHON_EXTENSION,
-# because then we wouldn't know whether "x.dll" is a python extension
-# or an ordinary library. Therefore, we specify only the suffixes used
-# for target generation.
-type.set-generated-target-suffix PYTHON_EXTENSION : : so ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>windows : pyd ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>cygwin : dll ;
-
-# Prior to python 2.5, HPUX extension modules had a ".sl" extension
-type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>2.4 : sl ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>2.3 : sl ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>2.2 : sl ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>2.1 : sl ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>2.0 : sl ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>1.6 : sl ;
-type.set-generated-target-suffix PYTHON_EXTENSION : <target-os>hpux <python>1.5 : sl ;
+local rule register-extension-suffix ( root : condition * )
+{
+    local suffix ;
+    
+    switch [ feature.get-values target-os : $(condition) ]
+    {
+      case windows : suffix = pyd ;
+      case cygwin : suffix = dll ;
+      case hpux : 
+      {
+          if [ feature.get-values python : $(condition) ] in 1.5 1.6 2.0 2.1 2.2 2.3 2.4
+          {
+              suffix = sl ;
+          }
+          else
+          {
+              suffix = so ;
+          }
+      }
+      case * : suffix = so ;
+    }
+    
+    type.set-generated-target-suffix PYTHON_EXTENSION : $(condition) : <$(root).$(suffix)> ;
+}
 
 # Unset 'lib' prefix for PYTHON_EXTENSION
 type.set-generated-target-prefix PYTHON_EXTENSION : : "" ;

@@ -605,11 +605,11 @@ actions hard-link
 #       ::  The abbreviated toolset tag being used to build the target.
 #   <threading>[joiner]
 #       ::  Indication of a multi-threaded build.
-#   <runtine>[joiner]
+#   <runtime>[joiner]
 #       ::  Collective tag of the build runtime.
 #   <version:/version-feature | X.Y[.Z]/>[joiner]
 #       ::  Short version tag taken from the given "version-feature"
-#           in the build properties. Or if not present the literal
+#           in the build properties. Or if not present, the literal
 #           value as the version number.
 #   <property:/property-name/>[joiner]
 #       ::  Direct lookup of the given property-name value in the
@@ -790,7 +790,7 @@ local rule runtime-tag ( name : type ? : property-set )
         if <runtime-debugging>on in $(properties) { tag += g ; }        
     }
       
-    if <variant>debug-python in $(properties) { tag += y ; }
+    if <python-debugging>on in $(properties) { tag += y ; }
     if <variant>debug in $(properties) { tag += d ; }
     if <stdlib>stlport in $(properties) { tag += p ; }
     if <stdlib-stlport:iostream>hostios in $(properties) { tag += n ; }
