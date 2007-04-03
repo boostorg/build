@@ -165,13 +165,14 @@ rule defaults ( features * )
     local result ;
     for local f in $(features)
     {
-        local a = $($(f).attributes) ;
+        local gf = $(:E=:G=$(f)) ;
+        local a = $($(gf).attributes) ;
         if ( free in $(a) ) || ( optional in $(a) )
         {
         }
         else
         {
-            result += $(f)$($(f).default) ;
+            result += $(gf)$($(gf).default) ;
         }
     }
     return $(result) ;
@@ -189,13 +190,13 @@ rule valid ( names + )
 # return the attibutes of the given feature
 rule attributes ( feature )
 {
-    return $($(feature).attributes) ;
+    return $($(:E=:G=$(feature)).attributes) ;
 }
 
 # return the values of the given feature
 rule values ( feature )
 {
-    return $($(feature).values) ;
+    return $($(:E=:G=$(feature)).values) ;
 }
 
 # returns true iff 'value-string' is a value-string of an implicit feature
@@ -640,6 +641,8 @@ local rule expand-composite ( property )
 rule get-values ( feature : properties * )
 {
     local result ;
+    
+    feature = $(:E=:G=$(feature)) ; # add <> if necessary.
     for local p in $(properties)
     {
         if $(p:G) = $(feature)
@@ -1050,6 +1053,8 @@ local rule __test__ ( )
     compose <variant>debug : <define>_DEBUG <optimization>off ;
     compose <variant>release : <define>NDEBUG <optimization>on ;
 
+    assert.result dynamic static : values <runtime-link> ;
+    assert.result dynamic static : values runtime-link ;
 
     try ;
     {
@@ -1128,12 +1133,20 @@ local rule __test__ ( )
       : defaults <runtime-link> <define> <optimization>
       ;
     
+    # make sure defaults is resilient to missing grist.
+    assert.result <runtime-link>dynamic <optimization>on
+      : defaults runtime-link define optimization
+      ;
+    
     feature dummy : dummy1 dummy2 ;
     subfeature dummy : subdummy : x y z : optional ;
 
     feature fu : fu1 fu2 : optional ;
     subfeature fu : subfu : x y z : optional ;
     subfeature fu : subfu2 : q r s ;
+
+    assert.result optional : attributes <fu> ;
+    assert.result optional : attributes fu ;
     
     assert.result <runtime-link>static <define>foobar <optimization>on <toolset>gcc:<define>FOO
       <toolset>gcc <variant>debug <stdlib>native <dummy>dummy1 <toolset-gcc:version>2.95.2
