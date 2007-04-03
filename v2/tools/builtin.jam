@@ -33,14 +33,17 @@ import generate ;
 local os = [ modules.peek : OS ] ;
 feature os : $(os) : propagated link-incompatible ;
 
+.os-names = amiga aix bsd cygwin darwin dos emx freebsd hpux
+        linux netbsd openbsd osf qnx qnxnto sgi solaris sun sunos
+        svr4 sysv ultrix unix unixware vms windows ;
+
 # Translates from bjam current OS to the os tags used
 # in host-os and target-os. I.e. it returns the
 # running host-os.
 local rule default-host-os ( )
 {
     local host-os ;
-    local os-list = [ feature.values host-os ] ;
-    if [ os.name ] in $(os-list:U)
+    if [ os.name ] in $(.os-names:U)
     {
         host-os = [ os.name ] ;
     }
@@ -70,18 +73,13 @@ local rule default-host-os ( )
 # to list all the values to prevent unkown value errors.
 # Both set the default value to the current OS to account for
 # the default use case of building on the target OS.
-feature host-os
-    :   amiga aix bsd cygwin darwin dos emx freebsd hpux
-        linux netbsd openbsd osf qnx qnxnto sgi solaris sun sunos
-        svr4 sysv ultrix unix unixware vms windows
-    :   optional ;
-        feature.set-default host-os : [ default-host-os ] ;
+feature host-os :  $(.os-names) ;
+feature.set-default host-os : [ default-host-os ] ;
+
 feature target-os
-    :   amiga aix bsd cygwin darwin dos emx freebsd hpux
-        linux netbsd openbsd osf qnx qnxnto sgi solaris sun sunos
-        svr4 sysv ultrix unix unixware vms windows
+    :   $(.os-names)
     :   propagated link-incompatible ;
-        feature.set-default target-os : [ default-host-os ] ;
+feature.set-default target-os : [ default-host-os ] ;
 
 
 feature toolset : : implicit propagated symmetric ;
@@ -169,14 +167,16 @@ feature dll-path : : free path ;
 feature hardcode-dll-paths : true false : incidental ;
 
 
-# This is internal feature which holds the paths of all dependency
+# An internal feature that holds the paths of all dependency
 # dynamic libraries. On Windows, it's needed so that we can all
-# those paths to PATH, when running applications.
+# those paths to PATH when running applications.
 # On Linux, it's needed to add proper -rpath-link command line options.
 feature xdll-path : : free path ;
 
 #provides means to specify def-file for windows dlls.
 feature def-file : : free dependency ;
+
+feature.feature suppress-import-lib : false true : incidental ; 
 
 # This is internal feature which is used to store the name of 
 # bjam action to call when building a target.
@@ -726,7 +726,7 @@ class linking-generator : generator
         }
                         
         # Hardcode dll paths only when linking executables.
-        # Pros: don't need to relinking libraries when installing.
+        # Pros: don't need to relink libraries when installing.
         # Cons: "standalone" libraries (plugins, python extensions)
         # can't hardcode paths to dependent libraries.
         if [ $(property-set).get <hardcode-dll-paths> ] = true

@@ -65,14 +65,7 @@ local rule prepare-framework-path ( target + )
 {
     local framework-path = [ on $(target) return $(FRAMEWORK:D) ] ;
     
-    if $(framework-path)
-    {
-        FRAMEWORK_PATH on $(target) += -F$(framework-path) ;
-    }
-    else
-    {
-        FRAMEWORK_PATH on $(target) = ;
-    }
+    FRAMEWORK_PATH on $(target) += -F$(framework-path) ;
 }
 
 rule link
@@ -82,7 +75,7 @@ rule link
 
 actions link bind LIBRARIES
 {
-    $(CONFIG_COMMAND) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=) $(OPTIONS) $(USER_OPTIONS)
+    $(CONFIG_COMMAND) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=:S=) $(OPTIONS) $(USER_OPTIONS)
     $(NEED_STRIP)strip $(NEED_STRIP)"$(<)"
 }
 
@@ -93,7 +86,7 @@ rule link.dll
 
 actions link.dll bind LIBRARIES
 {
-    $(CONFIG_COMMAND) -dynamiclib -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=) $(OPTIONS) $(USER_OPTIONS)
+    $(CONFIG_COMMAND) -dynamiclib -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=:S=) $(OPTIONS) $(USER_OPTIONS)
 }
 
 actions piecemeal archive
