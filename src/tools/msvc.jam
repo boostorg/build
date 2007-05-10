@@ -176,6 +176,7 @@ local rule configure-really (
         # take the first detected version
         version = [ $(.versions).all ] ;
         version = $(version[1]) ;
+        v = $(version) ;
 
         # Note: 'version' can still be empty at this point if no versions were 
         # detected.
