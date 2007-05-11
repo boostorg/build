@@ -58,7 +58,8 @@ class soap-generator : generator
                     t2 = [ new file-target $(name)_server : CPP : $(project)
                       : $(a) ] ;
                 }
-                return $(t) $(t2) ;
+                return [ virtual-target.register $(t) ] 
+		       [ virtual-target.register $(t2) ] ;
             }
         }
     }
