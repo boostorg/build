@@ -95,7 +95,7 @@ lib rt ;
 #   using python 2.3 ;
 #   using python 2.3 : /usr/local/bin/python ;
 #    
-rule init ( version ? : cmd-or-prefix ? : includes ? : libraries ? 
+rule init ( version ? : cmd-or-prefix ? : includes * : libraries ? 
     : condition * : extension-suffix ? )
 {
     project.push-current $(.project) ;
@@ -660,7 +660,7 @@ local rule declare-libpython-target ( version ? : requirements * )
 
 # implementation of init
 local rule configure ( 
-  version ? : cmd-or-prefix ? : includes ? : libraries ? : condition * : extension-suffix ? )
+  version ? : cmd-or-prefix ? : includes * : libraries ? : condition * : extension-suffix ? )
 {
     local prefix ;
     local exec-prefix ;
