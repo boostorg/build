@@ -5,13 +5,14 @@
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #
-# Boost.Build V2 toolset for the IBM VisualAge compiler
+# Boost.Build V2 toolset for the IBM XL C++ compiler
 #
 
 import toolset : flags ;
 import feature ;
 import common ;
 import generators ;
+import os ;
 
 feature.extend toolset : vacpp ;
 toolset.inherit vacpp : unix ;
@@ -19,43 +20,65 @@ generators.override vacpp.prebuilt : builtin.lib-generator ;
 generators.override vacpp.searched-lib-generator : searched-lib-generator ;
 feature.subfeature toolset vacpp : version ;
 
-# Configures the vacpp toolset. 
+# Configure the vacpp toolset
 rule init ( version ? : command * : options * )
 {
 }
-
 
 # Declare generators
 generators.register-c-compiler vacpp.compile.c : C : OBJ : <toolset>vacpp ;
 generators.register-c-compiler vacpp.compile.c++ : CPP : OBJ : <toolset>vacpp ;
 
-# Declare flags.
+# Allow C++ style comments in C files
+flags vacpp CFLAGS : -qcpluscmt ;
+
+# Declare flags
 flags vacpp CFLAGS <optimization>off : -qNOOPTimize ;
 flags vacpp CFLAGS <optimization>speed : -O3 -qstrict ;
 flags vacpp CFLAGS <optimization>space : -O2 -qcompact ;
 
+# Discretionary inlining (not recommended)
 flags vacpp CFLAGS <inlining>off : -qnoinline ;
 flags vacpp CFLAGS <inlining>on : -qinline ;
-flags vacpp CFLAGS <inlining>full : -qinline ;
+#flags vacpp CFLAGS <inlining>full : -qinline ;
+flags vacpp CFLAGS <inlining>full : ;
 
+# Exception handling
 flags vacpp C++FLAGS <exception-handling>off : -qnoeh ;
 flags vacpp C++FLAGS <exception-handling>on : -qeh ;
 
+# Run-time Type Identification
 flags vacpp C++FLAGS <rtti>off : -qnortti ;
 flags vacpp C++FLAGS <rtti>on : -qrtti ;
 
-# flags vacpp LINKFLAGS <runtime-link>static : -llibstd_v2.a ;
-# flags vacpp LINKFLAGS <runtime-link>shared : -llibstd_v2.sl ;
+# Enable 64-bit memory addressing model
+flags vacpp CFLAGS <address-model>64 : -q64 ;
+flags vacpp LINKFLAGS <address-model>64 : -q64 ;
+flags vacpp ARFLAGS <address-model>64 : -X 64 ;
 
-# We want the full path to the sources in the debug symbols because otherwise
-# the debugger won't find the sources when we use boost.build.
-flags vacpp CFLAGS <debug-symbols>on : -g ;
-flags vacpp LINKFLAGS <debug-symbols>on : -g ;
+# Use absolute path when generating debug information
+flags vacpp CFLAGS <debug-symbols>on : -g -qfullpath ;
+flags vacpp LINKFLAGS <debug-symbols>on : -g -qfullpath ;
 flags vacpp LINKFLAGS <debug-symbols>off : -s ;
 
-# V2 does not have <shared-linkable>, not sure what this meant in V1.
-#flags vacpp CFLAGS <shared-linkable>true : +Z ;
+if [ os.name ] = AIX
+{
+    # Tell the linker to discard unneeded object files from archive libraries.
+    # Please note that the static constructors contained by the discarded object
+    # files will not be invoked.
+    flags vacpp.compile C++FLAGS : -qfuncsect ;
+    flags vacpp.link LINKFLAGS <link>static : -qtwolink ;
 
+    # Run-time linking
+    flags vacpp.link EXE-LINKFLAGS <link>shared : -brtl ;
+}
+else
+{
+    # Linux PPC
+    flags vacpp.compile CFLAGS <link>shared : -qpic ;
+}
+
+# Profiling
 flags vacpp CFLAGS <profiling>on : -pg ;
 flags vacpp LINKFLAGS <profiling>on : -pg ;
 
@@ -79,25 +102,25 @@ flags vacpp VA_C_COMPILER  <threading>multi : xlc_r ;
 flags vacpp VA_CXX_COMPILER <threading>single : xlC   ;
 flags vacpp VA_CXX_COMPILER <threading>multi : xlC_r ;
 
-ROOT = /usr/vacpp/bin ;
+
 actions vacpp.link bind NEEDLIBS
 {
-    $(ROOT)/$(VA_CXX_COMPILER) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    $(VA_CXX_COMPILER) $(EXE-LINKFLAGS) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
 }
 
 actions vacpp.link.dll bind NEEDLIBS
 {
-    xlC_r -qmkshrobj $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    xlC_r -G $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
 }
 
 actions vacpp.compile.c
-{    
-    $(ROOT)/$(VA_C_COMPILER) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+{
+    $(VA_C_COMPILER) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 actions vacpp.compile.c++
 {
-    $(ROOT)/$(VA_CXX_COMPILER) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(VA_CXX_COMPILER) -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
 }
 
 actions updated together piecemeal vacpp.archive
