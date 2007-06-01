@@ -626,6 +626,8 @@ local rule system-library-dependencies ( target-os )
 
         case hpux : return  <library>rt ;
 
+        case aix : return  <library>pthread <library>dl ;
+
         case * : return  <library>pthread <library>dl <toolset>gcc:<library>util ;
     }
 }
@@ -925,6 +927,18 @@ local rule configure (
     if $(target-os) in windows cygwin darwin
     {
         alias python_for_extensions : python : $(target-requirements) ;
+    }
+    # On AIX we need Python extensions and Boost.Python to import symbols
+    # from the Python interpreter. Dynamic libraries opened with dlopen()
+    # do not inherit the symbols from the Python interpreter.
+    else if $(target-os) = aix
+    {
+        alias python_for_extensions
+                     :
+                     : $(target-requirements)
+                     :
+                     : $(usage-requirements) <linkflags>-Wl,-bI:$(libraries[1])/python.exp
+                     ;
     }
     else
     {
