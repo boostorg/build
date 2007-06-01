@@ -55,6 +55,7 @@ EXPORT $(__name__) : $(.constants) ;
 
 .shared-library-path-variable-MACOSX = DYLD_LIBRARY_PATH ;
 
+.shared-library-path-variable-AIX = LIBPATH ;
 
 .shared-library-path-variable = LD_LIBRARY_PATH ;
 .path-separator = ":" ;
