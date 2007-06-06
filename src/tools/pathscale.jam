@@ -10,7 +10,6 @@ import feature ;
 import type ;
 import common ;
 import fortran ;
-import fortran90 ;
 
 feature.extend toolset : pathscale ;
 toolset.inherit  pathscale : unix ;
