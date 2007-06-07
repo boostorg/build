@@ -30,7 +30,7 @@ error_exit ()
     echo "###"
     echo "### Toolsets supported by this script are:"
     echo "###     acc, como, darwin, gcc, intel-linux, kcc, kylix, mipspro,"
-    echo "###     mingw(msys), qcc, sunpro, tru64cxx, vacpp"
+    echo "###     mingw(msys), pathscale, pgi, qcc, sunpro, tru64cxx, vacpp"
     echo "###"
     echo "### A special toolset; cc, is available which is used as a fallback"
     echo "### when a more specific toolset is not found and the cc command is"
@@ -86,6 +86,8 @@ Guess_Toolset ()
     elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
         BOOST_JAM_TOOLSET=intel-linux
         BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
+    elif test_path pgcc ; then BOOST_JAM_TOOLSET=pgi
+    elif test_path pathcc ; then BOOST_JAM_TOOLSET=pathscale
     elif test_path xlc ; then BOOST_JAM_TOOLSET=vacpp
     elif test_path como ; then BOOST_JAM_TOOLSET=como
     elif test_path KCC ; then BOOST_JAM_TOOLSET=kcc
@@ -181,6 +183,14 @@ case $BOOST_JAM_TOOLSET in
     
     mipspro)
     BOOST_JAM_CC=cc
+    ;;
+    
+    pathscale)
+    BOOST_JAM_CC=pathcc
+    ;;
+    
+    pgi)
+    BOOST_JAM_CC=pgcc
     ;;
     
     sunpro)
