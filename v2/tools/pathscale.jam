@@ -21,7 +21,7 @@ generators.override pathscale.searched-lib-generator : searched-lib-generator ;
 
 rule init ( version ? : command * : options * ) 
 {
-  # local condition = [ common.check-init-parameters pathscale : version $(version) ] ;
+  local condition = [ common.check-init-parameters pathscale : version $(version) ] ;
 
   command = [ common.get-invocation-command pathscale : mpicxx : $(command) ] ;
 
@@ -44,10 +44,10 @@ rule init ( version ? : command * : options * )
 }
 
 # Declare generators
-# generators.register-c-compiler pathscale.compile.c : C : OBJ : <toolset>pathscale ;
-# generators.register-c-compiler pathscale.compile.c++ : CPP : OBJ : <toolset>pathscale ;
-# generators.register-fortran-compiler pathscale.compile.fortran : FORTRAN : OBJ ; # : <toolset>pathscale ;
-generators.register-fortran90-compiler pathscale.compile.fortran90 : FORTRAN90 : OBJ ; # : <toolset>pathscale ;
+generators.register-c-compiler pathscale.compile.c : C : OBJ : <toolset>pathscale ;
+generators.register-c-compiler pathscale.compile.c++ : CPP : OBJ : <toolset>pathscale ;
+generators.register-fortran-compiler pathscale.compile.fortran : FORTRAN : OBJ : <toolset>pathscale ;
+generators.register-fortran90-compiler pathscale.compile.fortran90 : FORTRAN90 : OBJ : <toolset>pathscale ;
 
 # Declare flags and actions for compilation
 flags pathscale.compile OPTIONS <debug-symbols>on : -g ;
@@ -129,7 +129,7 @@ rule link ( targets * : sources * : properties * )
 
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
+    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST)
 }
 
 # Slight mods for dlls
@@ -140,7 +140,7 @@ rule link.dll ( targets * : sources * : properties * )
 
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" -h$(<[1]:D=) -G "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
+    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" -h$(<[1]:D=) -G "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST)
 }
 
 # Declare action for creating static libraries
