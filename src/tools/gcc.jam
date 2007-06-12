@@ -439,20 +439,34 @@ class gcc-linking-generator : unix-linking-generator
     }
 }
 
-generators.register [ new gcc-linking-generator gcc.link : LIB OBJ : EXE 
-    : <toolset>gcc ] ;
-
 .IMPLIB-COMMAND = ;
-.IMPLIB-TYPE = ;
 if [ os.on-windows ]
 {
     .IMPLIB-COMMAND = "-Wl,--out-implib," ;
-    .IMPLIB-TYPE = IMPORT_LIB ;
+    generators.register
+        [ new gcc-linking-generator gcc.link
+            : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
+            : EXE
+            : <toolset>gcc ] ;
+    generators.register
+        [ new gcc-linking-generator gcc.link.dll
+            : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
+            : IMPORT_LIB SHARED_LIB
+            : <toolset>gcc ] ;
 }
-
-generators.register 
-  [ new gcc-linking-generator gcc.link.dll : LIB OBJ : $(.IMPLIB-TYPE) SHARED_LIB 
-    : <toolset>gcc ] ;
+else
+{
+    generators.register
+        [ new gcc-linking-generator gcc.link
+            : LIB OBJ
+            : EXE
+            : <toolset>gcc ] ;
+    generators.register
+        [ new gcc-linking-generator gcc.link.dll
+            : LIB OBJ
+            : SHARED_LIB
+            : <toolset>gcc ] ;
+}
 
 # Declare flags for linking
 # First, the common flags
