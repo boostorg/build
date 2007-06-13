@@ -28,7 +28,7 @@ import build-system ;
 
 import xsltproc : xslt xslt-dir ;
 
-feature.feature format : html onehtml man pdf ps docbook fo tests
+feature.feature format : html xhtml onehtml man pdf ps docbook fo tests
   : incidental implicit composite ;
 
 type.register DTDXML : dtdxml ;
@@ -40,6 +40,7 @@ type.register PDF : pdf ;
 type.register PS : ps ;
 type.register XSLT : xsl : XML ;
 type.register HTMLDIR ;
+type.register XHTMLDIR ;
 type.register MANPAGES ;
 type.register TESTS : tests ;
 # Artificial target type, used to require invocation of top-level
@@ -120,6 +121,7 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
     generators.register-standard boostbook.boostbook-to-tests : XML : TESTS ;
     generators.register-standard boostbook.docbook-to-onehtml : DOCBOOK : HTML ;
     generators.register-standard boostbook.docbook-to-htmldir : DOCBOOK : HTMLDIR ;
+    generators.register-standard boostbook.docbook-to-xhtmldir : DOCBOOK : XHTMLDIR ;
     generators.register-standard boostbook.docbook-to-manpages : DOCBOOK : MANPAGES ;
     generators.register-standard boostbook.docbook-to-fo : DOCBOOK : FO ;
     
@@ -170,6 +172,12 @@ rule docbook-to-htmldir ( target : source : properties * )
 {
   local stylesheet = [ path.native $(.boostbook-xsl-dir)/html.xsl ] ;
   xslt-dir $(target) : $(source) $(stylesheet) : $(properties) : html ;
+}
+
+rule docbook-to-xhtmldir ( target : source : properties * )
+{
+  local stylesheet = [ path.native $(.boostbook-xsl-dir)/xhtml.xsl ] ;
+  xslt-dir $(target) : $(source) $(stylesheet) : $(properties) : xhtml ;
 }
 
 rule docbook-to-manpages ( target : source : properties * )
@@ -274,6 +282,11 @@ class boostbook-generator : generator
             {
                 type = HTMLDIR ;
                 manifest = HTML.manifest ;
+            }
+            case xhtml    : 
+            {
+                type = XHTMLDIR ;
+                manifest = XHTML.manifest ;
             }
             
             case onehtml : type = HTML ;
