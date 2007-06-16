@@ -30,7 +30,7 @@ error_exit ()
     echo "###"
     echo "### Toolsets supported by this script are:"
     echo "###     acc, como, darwin, gcc, intel-linux, kcc, kylix, mipspro,"
-    echo "###     mingw(msys), pathscale, pgi, qcc, sunpro, tru64cxx, vacpp"
+    echo "###     mingw(msys), qcc, sunpro, tru64cxx, vacpp"
     echo "###"
     echo "### A special toolset; cc, is available which is used as a fallback"
     echo "### when a more specific toolset is not found and the cc command is"
@@ -86,8 +86,6 @@ Guess_Toolset ()
     elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
         BOOST_JAM_TOOLSET=intel-linux
         BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
-    elif test_path pgcc ; then BOOST_JAM_TOOLSET=pgi
-    elif test_path pathcc ; then BOOST_JAM_TOOLSET=pathscale
     elif test_path xlc ; then BOOST_JAM_TOOLSET=vacpp
     elif test_path como ; then BOOST_JAM_TOOLSET=como
     elif test_path KCC ; then BOOST_JAM_TOOLSET=kcc
@@ -185,14 +183,6 @@ case $BOOST_JAM_TOOLSET in
     BOOST_JAM_CC=cc
     ;;
     
-    pathscale)
-    BOOST_JAM_CC=pathcc
-    ;;
-    
-    pgi)
-    BOOST_JAM_CC=pgcc
-    ;;
-    
     sunpro)
     if test -z "${BOOST_JAM_TOOLSET_ROOT}" -a -r /opt/SUNWspro/bin/cc ; then
         BOOST_JAM_TOOLSET_ROOT=/opt/SUNWspro/
@@ -238,7 +228,7 @@ MKJAMBASE_SOURCES="mkjambase.c"
 BJAM_SOURCES="\
  command.c compile.c debug.c execunix.c expand.c fileunix.c glob.c hash.c\
  hdrmacro.c headers.c jam.c jambase.c jamgram.c lists.c make.c make1.c\
- newstr.c option.c parse.c pathunix.c pathvms.c regexp.c\
+ newstr.c option.c output.c parse.c pathunix.c pathvms.c regexp.c\
  rules.c scan.c search.c subst.c timestamp.c variable.c modules.c\
  strings.c filesys.c builtins.c pwd.c class.c native.c w32_getreg.c\
  modules/set.c modules/path.c modules/regex.c modules/property-set.c\

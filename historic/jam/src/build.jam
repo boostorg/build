@@ -256,20 +256,6 @@ toolset qcc qcc : "-o " : -D
     [ opt --debug : -g -O0 -Wc,-fno-inline ]
     -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
-## Qlogic Pathscale 2.4
-toolset pathscale pathcc : "-o " : -D
-    :
-    [ opt --release : -s -Ofast -O3 ]
-    [ opt --debug : -g ]
-    -I$(--python-include) -I$(--extra-include)
-    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
-## Portland Group Pgi 6.2
-toolset pgi pgcc : "-o " : -D
-    :
-    [ opt --release : -s -O3 ]
-    [ opt --debug : -g ]
-    -I$(--python-include) -I$(--extra-include)
-    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Sun Workshop 6 C++
 toolset sunpro cc : "-o " : -D
     :
@@ -413,7 +399,7 @@ jam.source =
     hash.c hcache.c headers.c hdrmacro.c
     jam.c jambase.c jamgram.c
     lists.c make.c make1.c mem.c newstr.c
-    option.c parse.c regexp.c rules.c
+    option.c output.c parse.c regexp.c rules.c
     scan.c search.c subst.c w32_getreg.c
     timestamp.c variable.c modules.c strings.c filesys.c 
     builtins.c pwd.c class.c native.c modules/set.c 
