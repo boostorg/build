@@ -96,8 +96,9 @@ static void hash_mem_free(size_t datalen, void * data);
 static void hash_mem_finalizer(char * key, struct hash * hp);
 #endif
 
-static unsigned int hash_keyval( const unsigned char * key )
+static unsigned int hash_keyval( const char * key_ )
 {
+    const unsigned char * key = (const unsigned char *)key_;
     unsigned int keyval = *key;
     while( *key )
         keyval = keyval * 2147059363 + *key++;
@@ -114,7 +115,7 @@ static unsigned int hash_keyval( const unsigned char * key )
 static ITEM * hash_search(
     struct hash *hp,
     unsigned int keyval,
-    const unsigned char * keydata,
+    const char * keydata,
     ITEM ** previous )
 {
     ITEM * i = *hash_bucket(hp,keyval);
@@ -150,9 +151,9 @@ hash_free(
 {
     ITEM * i = 0;
     ITEM * prev = 0;
-    unsigned int keyval = hash_keyval((unsigned char*)data->key);
+    unsigned int keyval = hash_keyval(data->key);
     
-    i = hash_search( hp, keyval, (unsigned char*)data->key, &prev );
+    i = hash_search( hp, keyval, data->key, &prev );
     if (i)
     {
         /* mark it free so we skip it during enumeration */
@@ -182,7 +183,7 @@ hashitem(
 	int enter )
 {
 	register ITEM *i;
-	unsigned char *b = (unsigned char*)(*data)->key;
+	char *b = (*data)->key;
 	unsigned int keyval = hash_keyval(b);
     
     #ifdef HASH_DEBUG_PROFILE
@@ -203,7 +204,7 @@ hashitem(
 	    return 0;
     }
     
-    i = hash_search( hp, keyval, (unsigned char*)(*data)->key, 0 );
+    i = hash_search( hp, keyval, (*data)->key, 0 );
     if (i)
     {
         *data = &i->data;
