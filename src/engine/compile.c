@@ -1147,7 +1147,7 @@ compile_set(
     LIST    *nt = parse_evaluate( parse->left, frame );
     LIST    *ns = parse_evaluate( parse->right, frame );
     LIST    *l;
-    char    *trace;
+    const char *trace;
     int     setflag = assign_var_mode( parse->num, &trace );
 
     if( DEBUG_COMPILE )
@@ -1240,7 +1240,7 @@ compile_settings(
     LIST    *ns = parse_evaluate( parse->third, frame );
     LIST    *targets = parse_evaluate( parse->right, frame );
     LIST    *ts;
-    char    *trace;
+    const char *trace;
     int     setflag = assign_var_mode( parse->num, &trace );
 
     if( DEBUG_COMPILE )
