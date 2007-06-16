@@ -103,7 +103,7 @@ static void make1atail(state *pState);
 static void make1b( state *pState );
 static void make1c( state *pState );
 static void make1d( state *pState );
-static void make_closure(void *closure, int status, timing_info*);
+static void make_closure(void *closure, int status, timing_info*, char *, char *);
 
 typedef struct _stack
 {
@@ -502,19 +502,14 @@ make1c( state *pState )
 
 	if( cmd && pState->t->status == EXEC_CMD_OK )
 	{
+            char *rule_name = 0;
+            char *target = 0;
 		if( DEBUG_MAKEQ || 
             ! ( cmd->rule->actions->flags & RULE_QUIETLY ) && DEBUG_MAKE)
 	    {
-		printf( "%s ", cmd->rule->name );
-		list_print( lol_get( &cmd->args, 0 ) );
-		printf( "\n" );
+            rule_name = cmd->rule->name;
+            target = lol_get(&cmd->args, 0)->string;
 	    }
-
-	    if( DEBUG_EXEC )
-		printf( "%s\n", cmd->buf );
-
-	    if( globs.cmdout )
-		fprintf( globs.cmdout, "%s", cmd->buf );
 
 	    if( globs.noexec )
 	    {
@@ -524,10 +519,9 @@ make1c( state *pState )
 	    else
 	    {
 			TARGET *t = pState->t;
-			fflush( stdout );
 
 			pop_state(&state_stack); /* pop state first because execcmd could push state */
-			execcmd( cmd->buf, make_closure, t, cmd->shell );
+			execcmd( cmd->buf, make_closure, t, cmd->shell, rule_name, target );
 	    }
 	}
 	else
@@ -708,14 +702,67 @@ static void call_timing_rule(TARGET* target, timing_info* time)
     }
 }
 
+static void append_int_string(LOL *l, int x)
+{
+    char buffer[50];
+    sprintf(buffer, "%i", x);
+    lol_add(l, list_new(L0, newstr(buffer)));
+}
+
+/* Look up the __ACTION_RULE__ variable on the given target, and if
+ * non-empty, invoke the rule it names, passing the given info, 
+ * timing_info, executed command and command output
+ */
+static void call_action_rule(TARGET* target, int status, timing_info* time,
+    char *executed_command, char *command_output)
+{
+    LIST* action_rule;
+
+    pushsettings(target->settings);
+    action_rule = var_get( "__ACTION_RULE__" );
+    popsettings(target->settings);
+
+    if (action_rule)
+    {
+        /* We'll prepend $(__ACTION_RULE__[2-]) to the first argument */
+        LIST* initial_args = list_copy( L0, action_rule->next );
+            
+        /* Prepare the argument list */
+        FRAME frame[1];
+        frame_init( frame );
+
+        /* First argument is the name of the target */
+        lol_add( frame->args, list_new( initial_args, target->name ) );
+        append_int_string(frame->args, status);
+        append_double_string(frame->args, time->user);
+        append_double_string(frame->args, time->system);
+        lol_add(frame->args, list_new(L0, newstr(executed_command)));
+
+        if (command_output)
+            lol_add(frame->args, list_new(L0, newstr(command_output)));
+        else
+            lol_add(frame->args, L0);
+
+        if( lol_get( frame->args, 2 ) )
+            evaluate_rule( action_rule->string, frame );
+
+        /* Clean up */
+        frame_free( frame );
+    }
+}
+
+
 static void make_closure(
-    void *closure, int status, timing_info* time)
+    void *closure, int status, timing_info* time, char *executed_command,
+    char *command_output)
 {
     TARGET* built = (TARGET*)closure;
 
     call_timing_rule(built, time);
     if (DEBUG_EXECCMD)
         printf("%f sec system; %f sec user\n", time->system, time->user);
+
+    call_action_rule(built, status, time, executed_command, command_output);
     
     push_state(&state_stack, built, NULL, T_STATE_MAKE1D)->status = status;
 }
