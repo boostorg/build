@@ -37,7 +37,7 @@ rule init ( version ? :     # the compiler version
     local condition = [  common.check-init-parameters intel-win
         : version $(version) : compatibility $(compatibility) ] ;
     
-    command = [ common.get-invocation-command intel-win : icc.exe :
+    command = [ common.get-invocation-command intel-win : icl.exe :
         $(command) ] ;    
     
     common.handle-options intel-win : $(condition) : $(command) : $(options) ;
