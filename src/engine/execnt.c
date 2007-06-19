@@ -1195,7 +1195,10 @@ static void close_alert(HANDLE process)
     go any further */
     if (pid)
     {
-        PROCESS_HANDLE_ID p = {process, pid};
+        //PROCESS_HANDLE_ID p = {process, pid};
+        PROCESS_HANDLE_ID p;
+	p.h = process;
+       	p.pid = pid;
         EnumWindows(&close_alert_window_enum, (LPARAM) &p);
     }
 }
