@@ -924,8 +924,10 @@ static int try_kill_one()
 static void close_alerts()
 {
     /* we only attempt this every 5 seconds, or so, because it's
-    not a cheap operation, and we'll catch the alerts eventually. */
-    if ( (clock() % (CLOCKS_PER_SEC*5)) < (CLOCKS_PER_SEC/2) )
+    not a cheap operation, and we'll catch the alerts eventually.
+    this check uses floats as some compilers define CLOCKS_PER_SEC
+    as a float or double. */
+    if ( ((float)clock() / (float)(CLOCKS_PER_SEC*5)) < (1.0/5.0) )
     {
         int i;
         for ( i = 0; i < globs.jobs; ++i )
