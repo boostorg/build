@@ -30,7 +30,7 @@ error_exit ()
     echo "###"
     echo "### Toolsets supported by this script are:"
     echo "###     acc, como, darwin, gcc, intel-linux, kcc, kylix, mipspro,"
-    echo "###     mingw(msys), pathscale, pgi, qcc, sunpro, tru64cxx, vacpp"
+    echo "###     mingw(msys), pathscale, pgi, qcc, sun, sunpro, tru64cxx, vacpp"
     echo "###"
     echo "### A special toolset; cc, is available which is used as a fallback"
     echo "### when a more specific toolset is not found and the cc command is"
@@ -193,7 +193,7 @@ case $BOOST_JAM_TOOLSET in
     BOOST_JAM_CC=pgcc
     ;;
     
-    sunpro)
+    sun*)
     if test -z "${BOOST_JAM_TOOLSET_ROOT}" -a -r /opt/SUNWspro/bin/cc ; then
         BOOST_JAM_TOOLSET_ROOT=/opt/SUNWspro/
     fi
