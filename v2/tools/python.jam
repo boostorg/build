@@ -300,7 +300,7 @@ rule init-unix ( version ? : root ? : includes ? : libraries ? : condition * )
         
         case HPUX :
         {
-            extra-libs = pthread rt ;
+            extra-libs = rt ;
         }
         
         case * :       extra-libs = pthread dl util ;
