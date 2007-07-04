@@ -218,6 +218,7 @@
 
 # ifdef _AIX
 # define unix
+# define MAXLINE 23552 /* 24k - 1k, longest 'together' actions */
 # define OSMINOR "OS=AIX"
 # define OS_AIX
 # define NO_VFORK
