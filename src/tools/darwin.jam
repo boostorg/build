@@ -39,7 +39,7 @@ rule init ( version ? : command * : options * )
     local gccversion = [ SHELL "$(command) -dumpversion" ] ;
     if $(gccversion) < "4.0.0"
     {
-        flags darwin.compile.c++ OPTIONS : -fcoalesce-templates ;
+        flags darwin.compile.c++ OPTIONS $(condition) : -fcoalesce-templates ;
     }
 
     gcc.init-link-flags darwin darwin $(condition) ;
