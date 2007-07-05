@@ -208,7 +208,7 @@ rule nearest-user-location ( )
     while $(bt) && ! $(result)
     {
         local m = [ MATCH ^(.+)\\.$ : $(bt[3]) ] ;
-        local user-modules = ([Jj]amfile(.jam|.v2|)|user-config.jam|site-config.jam|project-root.jam) ;
+        local user-modules = ([Jj]amroot(.jam|.v2|)|([Jj]amfile(.jam|.v2|)|user-config.jam|site-config.jam|project-root.jam) ;
         
         if [ MATCH $(user-modules) : $(bt[1]:D=) ] 
         {                
