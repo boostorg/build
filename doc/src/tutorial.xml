@@ -429,9 +429,9 @@ The <filename>/library-example/foo//bar</filename> syntax is used
       <para>If you want all applications in some project to link
       to a certain library, you can avoid having to specify it directly the sources of every
       target by using the
-      <varname>&lt;source&gt;</varname> property. For example, if <filename>/boost/filesystem//fs</filename>
+      <varname>&lt;library&gt;</varname> property. For example, if <filename>/boost/filesystem//fs</filename>
       should be linked to all applications in your project, you can add
-      <code>&lt;source&gt;/boost/filesystem//fs</code> to the project's requirements, like this:</para>
+      <code>&lt;library&gt;/boost/filesystem//fs</code> to the project's requirements, like this:</para>
 
       <programlisting>
 project 
