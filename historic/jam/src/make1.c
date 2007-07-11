@@ -60,6 +60,7 @@
 # include "make.h"
 # include "command.h"
 # include "execcmd.h"
+# include "compile.h"
 
 # include <stdlib.h>
 

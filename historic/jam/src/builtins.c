@@ -23,6 +23,7 @@
 # include "compile.h"
 # include "native.h"
 # include "variable.h"
+# include "timestamp.h"
 # include <ctype.h>
 
 /*
@@ -58,7 +59,6 @@ LIST* builtin_system_registry_names( PARSE *parse, FRAME *frame );
 
 int glob( char *s, char *c );
 
-void lol_build( LOL* lol, char** elements );
 void backtrace( FRAME *frame );
 void backtrace_line( FRAME *frame );
 void print_source_line( PARSE* p );
