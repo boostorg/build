@@ -299,12 +299,15 @@ local rule configure-really (
                 if ! $(below-8.0)
                 {
                     cpu = i386 amd64 ia64 ;
-                    setup-option = x86 x86_amd64 x86_iPF ;
+                    # Whereas http://msdn2.microsoft.com/en-us/library/x4d2c09s(VS.80).aspx
+                    # say about x86_ipf, that seem to be doc bug,
+                    # and x86_ia64 is right one.
+                    setup-option = x86 x86_amd64 x86_ia64 ;
                     
                     # Use a native x64 compiler if possible
                     if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_IDENTIFIER ] ]
                     {
-                        setup-option = x86 amd64 x86_IPF ;
+                        setup-option = x86 amd64 x86_ia64 ;
                     }
                 }
             }
