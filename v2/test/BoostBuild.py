@@ -255,7 +255,10 @@ class Tester(TestCmd.TestCmd):
 
     def copy(self, src, dst):
         self.wait_for_time_change()
-        self.write(dst, self.read(src))
+        try:
+            self.write(dst, self.read(src))
+        except:
+            self.fail_test(1)
 
     def copy_preserving_timestamp(self, src, dst):
         src_name = self.native_file_name(src)
@@ -384,7 +387,11 @@ class Tester(TestCmd.TestCmd):
         self.last_build_time = time.time()
 
     def read(self, name):
-        return open(glob.glob(self.native_file_name(name))[0], "rb").read()
+        try:
+            return open(glob.glob(self.native_file_name(name))[0], "rb").read()
+        except:
+            self.fail_test(1)
+            return ''
 
     def read_and_strip(self, name):
         lines = open(glob.glob(self.native_file_name(name))[0], "rb").readlines()
@@ -556,7 +563,7 @@ class Tester(TestCmd.TestCmd):
                 result = self.read(name)
             else:
                 result = string.replace(self.read_and_strip(name), "\\", "/")
-        except IOError:
+        except (IOError, IndexError):
             print "Note: could not open file", name
             self.fail_test(1)
         return result
@@ -598,7 +605,7 @@ class Tester(TestCmd.TestCmd):
             open(a, "w").write(actual)
             print "DIFFERENCE"
             if os.system("diff -u " + e + " " + a):
-                print "Unable to compute difference"               
+                print "Unable to compute difference: diff -u %s %s" % (e,a)
             os.unlink(e)
             os.unlink(a)    
         else:
