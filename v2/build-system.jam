@@ -83,7 +83,7 @@ local rule load-config ( basename : path + )
     {
         if $(debug-config)
         {
-            ECHO searching \"$(path)\" for \"$(basename).jam\" ;
+            ECHO notice: searching \"$(path)\" for \"$(basename).jam\" ;
             local where = [ GLOB $(path) : $(basename).jam ] ;
             if $(where)
             {            
