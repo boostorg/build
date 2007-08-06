@@ -199,7 +199,8 @@ void execcmd(
     char *argv_static[ MAXARGC + 1 ]; /* +1 for NULL */
     char **argv = argv_static;
     char *p;
-
+    char* command_orig = command;
+    
     /* Check to see if we need to hack around the line-length limitation. */
     /* Look for a JAMSHELL setting of "%", indicating that the command
      * should be invoked directly */
@@ -401,7 +402,7 @@ void execcmd(
             string_free( &cmdtab[ slot ].target );
             string_new( &cmdtab[ slot ].target );
         }
-        string_copy( &cmdtab[ slot ].command, command );
+        string_copy( &cmdtab[ slot ].command, command_orig );
         
         /* put together the comman we run */
         {
