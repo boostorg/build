@@ -206,6 +206,7 @@ rule generate-xml-catalog ( target : sources * : properties * )
 
   # BoostBook DTD catalog entry
   local boostbook-dtd-dir = [ boostbook.dtd-dir ] ;
+  boostbook-dtd-dir = [ regex.replace $(boostbook-dtd-dir) " " "%20" ] ;
   
   print.text
     "<?xml version=\"1.0\"?>"
@@ -217,6 +218,7 @@ rule generate-xml-catalog ( target : sources * : properties * )
     : true ;
 
   local docbook-xsl-dir = [ boostbook.docbook-xsl-dir ] ;
+  docbook-xsl-dir = [ regex.replace $(docbook-xsl-dir) " " "%20" ] ;
   if ! $(docbook-xsl-dir) 
   {
     ECHO "BoostBook warning: no DocBook XSL directory specified." ;
@@ -233,6 +235,7 @@ rule generate-xml-catalog ( target : sources * : properties * )
   }
 
   local docbook-dtd-dir = [ boostbook.docbook-dtd-dir ] ;
+  docbook-dtd-dir = [ regex.replace $(docbook-dtd-dir) " " "%20" ] ;
   if ! $(docbook-dtd-dir)
   {
     ECHO "BoostBook warning: no DocBook DTD directory specified." ;
