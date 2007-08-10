@@ -29,7 +29,7 @@ import build-system ;
 import xsltproc : xslt xslt-dir ;
 
 feature.feature format : html xhtml htmlhelp onehtml man pdf ps docbook fo tests
-  : incidental implicit composite ;
+  : incidental implicit composite propagated ;
 
 type.register DTDXML : dtdxml ;
 type.register XML : xml ;
