@@ -78,7 +78,7 @@ if os.name == 'posix':
         if os.WIFEXITED(self.status):
             return os.WEXITSTATUS(self.status)
         else:
-            return None
+            return -1
 elif os.name == 'nt':
     def _failed(self, status = 0):
         return not self.status is None and self.status != status
