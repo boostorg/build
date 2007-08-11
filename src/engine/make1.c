@@ -510,6 +510,10 @@ make1c( state *pState )
 	    {
             rule_name = cmd->rule->name;
             target = lol_get(&cmd->args, 0)->string;
+            if ( globs.noexec )
+            {
+                out_action(rule_name,target,cmd->buf,"","");
+            }
 	    }
 
 	    if( globs.noexec )
