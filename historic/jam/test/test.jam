@@ -1,4 +1,4 @@
-#~ Copyright 2006 Rene Rivera.
+#~ Copyright 2006-2007 Rene Rivera.
 #~ Distributed under the Boost Software License, Version 1.0.
 #~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
@@ -43,6 +43,7 @@ rule assert ( expected * : test ? : obtained * )
 
 include builtin_shell.jam ;
 include builtin_w32_getregnames.jam ;
+include option_n.jam ;
 include parallel_actions.jam ;
 include stress_var_expand.jam ;
 include target_var.jam ;
