@@ -126,6 +126,8 @@ module user-config
 
 local user-config-path = [ MATCH ^--user-config=(.*) : $(argv) ] ;
 
+user-config-path ?= [ os.environ BOOST_USER_CONFIG ] ;
+
 if $(user-config-path)
 {
     if $(debug-config)
