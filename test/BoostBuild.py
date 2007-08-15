@@ -458,7 +458,7 @@ class Tester(TestCmd.TestCmd):
     def expect_modification(self, names):
         for name in self.adjust_names(names):
                 try:
-                        self.unexpected_difference.modified_files.remove(name)
+                        glob_remove(self.unexpected_difference.modified_files,name)
                 except:
                         print "File %s not modified as expected" % (name,)
                         self.fail_test(1)
