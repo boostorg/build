@@ -49,11 +49,15 @@ def prepare_suffix_map(toolset):
 def re_remove(sequence,regex):
     me = re.compile(regex)
     result = filter( lambda x: me.match(x), sequence )
+    if 0 == len(result):
+        raise ValueError()
     for r in result:
         sequence.remove(r)
 
 def glob_remove(sequence,pattern):
     result = fnmatch.filter(sequence,pattern)
+    if 0 == len(result):
+        raise ValueError()
     for r in result:
         sequence.remove(r)
 
