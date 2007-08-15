@@ -61,6 +61,8 @@ def glob_remove(sequence,pattern):
     for r in result:
         sequence.remove(r)
 
+features = [ 'threading-multi' ]
+
 lib_prefix = 1
 if windows:
     lib_prefix = 0
@@ -389,6 +391,15 @@ class Tester(TestCmd.TestCmd):
         self.unexpected_difference = copy.deepcopy(self.difference)
 
         self.last_build_time = time.time()
+        
+        self.unexpected_difference.added_files \
+            = self.remove_variant_features(self.unexpected_difference.added_files)
+        self.unexpected_difference.removed_files \
+            = self.remove_variant_features(self.unexpected_difference.removed_files)
+        self.unexpected_difference.modified_files \
+            = self.remove_variant_features(self.unexpected_difference.modified_files)
+        self.unexpected_difference.touched_files \
+            = self.remove_variant_features(self.unexpected_difference.touched_files)
 
     def read(self, name):
         try:
@@ -433,7 +444,7 @@ class Tester(TestCmd.TestCmd):
     # All the 'ignore*' methods allow wildcards.
 
     # All names can be lists, which are taken to be directory components
-    def expect_addition(self, names):        
+    def expect_addition(self, names):
         for name in self.adjust_names(names):
                 try:
                         glob_remove(self.unexpected_difference.added_files,name)
@@ -670,6 +681,7 @@ class Tester(TestCmd.TestCmd):
             suffix = ''
 
         return name + suffix
+        
 
     # Acceps either string of list of string and returns list of strings
     # Adjusts suffixes on all names.
@@ -691,6 +703,21 @@ class Tester(TestCmd.TestCmd):
     def wait_for_time_change(self):
         while int(time.time()) < int(self.last_build_time) + 1:
             time.sleep(0.1)
+    
+    # Remove the variant feature sub-dir from a path.
+    def remove_variant_features(self, names):
+        
+        def remove_features_(name):
+            elements = string.split(name,"/")
+            for feature in features:
+                try:
+                    elements.remove(feature)
+                except:
+                    pass
+            return string.join(elements,"/")
+        
+        r = map(remove_features_,names)
+        return r
 
             
 class List:
