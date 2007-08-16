@@ -400,16 +400,31 @@ class Tester(TestCmd.TestCmd):
             = self.remove_variant_features(self.unexpected_difference.modified_files)
         self.unexpected_difference.touched_files \
             = self.remove_variant_features(self.unexpected_difference.touched_files)
+    
+    def glob_file(self, name):
+        result = None
+        if hasattr(self,'difference'):
+            for f in self.difference.added_files+self.difference.modified_files+self.difference.touched_files:
+                fname = self.remove_variant_features([f])[0]
+                if fnmatch.fnmatch(fname,name):
+                    result = self.native_file_name(f)
+                    break
+        if not result:
+            result = glob.glob(self.native_file_name(name))[0]
+        return result
 
     def read(self, name):
         try:
-            return open(glob.glob(self.native_file_name(name))[0], "rb").read()
+            if self.toolset:
+                name = string.replace(name, "$toolset", self.toolset+"*")
+            name = self.glob_file(name)
+            return open(name, "rb").read()
         except:
             self.fail_test(1)
             return ''
 
     def read_and_strip(self, name):
-        lines = open(glob.glob(self.native_file_name(name))[0], "rb").readlines()
+        lines = open(self.glob_file(name), "rb").readlines()
         result = string.join(map(string.rstrip, lines), "\n")
         if lines and lines[-1][-1] == '\n':
             return result + '\n'
@@ -552,6 +567,9 @@ class Tester(TestCmd.TestCmd):
         found = 0
         for line in lines:
             line = line.strip()
+            for feature in features:
+                line = string.replace(line,"/"+feature,"")
+                line = string.replace(line,"\\"+feature,"")
             if fnmatch.fnmatch(line, expected):
                 found = 1
                 break
@@ -587,6 +605,10 @@ class Tester(TestCmd.TestCmd):
     def expect_content(self, name, content, exact=0):
         actual = self._read_file(name, exact)
         content = string.replace(content, "$toolset", self.toolset+"*")
+        if not exact:
+            for feature in features:
+                actual = string.replace(actual,"/"+feature,"")
+                actual = string.replace(actual,"\\"+feature,"")
 
         matched = 0
         if exact:
