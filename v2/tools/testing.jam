@@ -354,7 +354,7 @@ toolset.flags testing.capture-output LAUNCHER <testing.launcher> ;
 #   - if 'none', does not remove anything, ever
 #   - if empty, removes 'source'
 #   - if non-empty and not 'none', contains a list of sources to remove.
-rule capture-output ( target : source : properties * : targets-to-remove ? )
+rule capture-output ( target : source : properties * : targets-to-remove * )
 {
     output-file on $(target) = $(target:S=.output) ;
     LOCATE on $(target:S=.output) = [ on $(target) return $(LOCATE) ] ;

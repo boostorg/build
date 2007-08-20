@@ -70,12 +70,13 @@ if [ os.name ] = AIX
     flags vacpp.link LINKFLAGS <link>static : -qtwolink ;
 
     # Run-time linking
-    flags vacpp.link EXE-LINKFLAGS <link>shared : -brtl ;
+    flags vacpp.link EXE-LINKFLAGS <link>shared : -brtl -qtwolink ;
 }
 else
 {
     # Linux PPC
     flags vacpp.compile CFLAGS <link>shared : -qpic ;
+    flags vacpp FINDLIBS : rt ;
 }
 
 # Profiling
