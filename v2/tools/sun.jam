@@ -54,6 +54,9 @@ flags sun.compile OPTIONS <threading>multi : -mt ;
 
 flags sun.compile.c++ OPTIONS <inlining>off : +d ;
 
+flags sun OPTIONS <address-model>32 : -m32 ;
+flags sun OPTIONS <address-model>64 : -m64 ;
+
 flags sun.compile OPTIONS <cflags> ;
 flags sun.compile.c++ OPTIONS <cxxflags> ;
 flags sun.compile DEFINES <define> ;
