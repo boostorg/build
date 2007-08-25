@@ -333,31 +333,28 @@ class searched-lib-target : abstract-file-target
     rule __init__ ( name     
         : project 
         : shared ?                                
-        : real-name ?
         : search *
         : action
     )
     {
-        abstract-file-target.__init__ $(name) : SEARCHED_LIB : $(project) 
-          : $(action) ;
+        abstract-file-target.__init__ $(name) exact : SEARCHED_LIB : $(project) 
+          : $(action) : ;
+        
+        local rn = [ apply-tag $(name) : [ tag-properties ] ] ;
+        if $(rn)
+        {
+           self.name = $(rn) ;
+        }        
         
         self.shared = $(shared) ;
-        self.real-name = $(real-name) ;
-        self.real-name ?= $(name) ;
         self.search = $(search) ;
     }
-    
-    
+        
     rule shared ( )
     {
         return $(self.shared) ;
     }
-    
-    rule real-name ( ) 
-    {
-        return $(self.real-name) ;
-    }
-    
+        
     rule search ( )
     {
         return $(self.search) ;
@@ -578,8 +575,8 @@ class searched-lib-generator : generator
             local search = [ feature.get-values <search> : $(properties) ] ;
 
             a = [ new null-action $(property-set) ] ;
-            local t = [ new searched-lib-target $(name) : $(project) : $(shared)
-                            : [ feature.get-values <name> : $(properties) ]
+            local lib-name = [ feature.get-values <name> : $(properties) ] ;
+            local t = [ new searched-lib-target $(lib-name) : $(project) : $(shared)
                             : $(search)
                             : $(a)
                       ] ;
@@ -809,7 +806,7 @@ class linking-generator : generator
         {
             if [ type.is-derived [ $(s).type ] SEARCHED_LIB ]
             {
-                local name = [ $(s).real-name ] ;
+                local name = [ $(s).name ] ;
                 if [ $(s).shared ] 
                 {                    
                     fsa +=  $(name) ;

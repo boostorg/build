@@ -56,6 +56,13 @@ flags sun.compile.c++ OPTIONS <inlining>off : +d ;
 
 flags sun OPTIONS <address-model>32 : -m32 ;
 flags sun OPTIONS <address-model>64 : -m64 ;
+# On sparc, there's a difference between -Kpic
+# and -KPIC. The first is slightly more efficient,
+# but has the limits on the size of GOT table.
+# For minimal fuss on user side, we use -KPIC here.
+# See http://svn.boost.org/trac/boost/ticket/1186#comment:6
+# for detailed explanation.
+flags sun OPTIONS <link>shared : -KPIC ;
 
 flags sun.compile OPTIONS <cflags> ;
 flags sun.compile.c++ OPTIONS <cxxflags> ;
