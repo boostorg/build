@@ -64,9 +64,10 @@ def glob_remove(sequence,pattern):
 features = [ 'threading-multi' ]
 
 lib_prefix = 1
+dll_prefix = 1
 if windows:
-    lib_prefix = 0
-        
+    #~ lib_prefix = 0
+    dll_prefix = 0
     
     
 #
@@ -681,9 +682,14 @@ class Tester(TestCmd.TestCmd):
         pos = string.rfind(name, ".")
         if pos != -1:
             suffix = name[pos:]
-            if suffix in [".lib", ".dll"]:
+            if suffix == ".lib":
                 (head, tail) = os.path.split(name)
                 if lib_prefix:
+                    tail = "lib" + tail
+                    result = os.path.join(head, tail)
+            elif suffix == ".dll":
+                (head, tail) = os.path.split(name)
+                if dll_prefix:
                     tail = "lib" + tail
                     result = os.path.join(head, tail)
         return result
