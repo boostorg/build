@@ -419,7 +419,7 @@ class Tester(TestCmd.TestCmd):
             if self.toolset:
                 name = string.replace(name, "$toolset", self.toolset+"*")
             name = self.glob_file(name)
-            return open(name, "rb").read()
+            return open(name, "rU").read()
         except:
             self.fail_test(1)
             return ''
