@@ -43,11 +43,11 @@ perl -pi -e 's%../../../doc/html/bbv2.html%doc/html/index.html%' index.html
 perl -pi -e 's%../../../doc/html/bbv2.installation.html%doc/html/bbv2.installation.html%' index.html
 
 # Make packages
-find . -name CVS | xargs rm -rf
+find . -name ".svn" | xargs rm -rf
 rm roll.sh
 chmod a+x jam_src/build.bat
 revision=`svnversion .`
-echo 'SVN Revision $revision' >> timestamp.txt
+echo "SVN Revision $revision" >> timestamp.txt
 date >> timestamp.txt
 cd .. && zip -r boost-build.zip boost-build && tar --bzip2 -cf boost-build.tar.bz2 boost-build
 cd boost-build
