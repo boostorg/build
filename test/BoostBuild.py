@@ -289,8 +289,10 @@ class Tester(TestCmd.TestCmd):
         for name in names:
             n = self.native_file_name(name)
             n = glob.glob(n)
+            if n: n = n[0]
+            if not n:
+                n = self.glob_file(string.replace(name, "$toolset", self.toolset+"*"))
             if n:
-                n = n[0]
                 if os.path.isdir(n):
                     shutil.rmtree(n, ignore_errors=0)
                 else:
@@ -411,7 +413,9 @@ class Tester(TestCmd.TestCmd):
                     result = self.native_file_name(f)
                     break
         if not result:
-            result = glob.glob(self.native_file_name(name))[0]
+            result = glob.glob(self.native_file_name(name))
+            if result:
+                result = result[0]
         return result
 
     def read(self, name):
