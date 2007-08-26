@@ -380,7 +380,14 @@ rule relative ( child parent )
                 errors.error $(child) is not a subdir of $(parent) ;
             }                
         }    
-        return [ join $(split2) ] ;    
+        if $(split2)
+        {
+            return [ join $(split2) ] ;    
+        }
+        else
+        {
+            return "." ;
+        }
     }    
 }
 
