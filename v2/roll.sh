@@ -7,16 +7,17 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
 set -e
-# Capture the version
-revision=`svnversion .`
-echo "SVN Revision $revision" >> timestamp.txt
-date >> timestamp.txt
 
 # Do some renames/rearrangments
 cp -r ../v2 ../boost-build
 # Grab jam_src
 cp -r ../../jam/src ../boost-build/jam_src
 cd ../boost-build
+
+# Capture the version
+revision=`svnversion ..`
+echo "SVN Revision $revision" >> timestamp.txt
+date >> timestamp.txt
 
 # This one is not fully finished
 rm -rf example/versioned
