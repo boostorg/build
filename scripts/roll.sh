@@ -7,8 +7,12 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
 set -e
-# Do some renames/rearrangments
+# Capture the version
+revision=`svnversion .`
+echo "SVN Revision $revision" >> timestamp.txt
+date >> timestamp.txt
 
+# Do some renames/rearrangments
 cp -r ../v2 ../boost-build
 # Grab jam_src
 cp -r ../../jam/src ../boost-build/jam_src
@@ -43,9 +47,6 @@ perl -pi -e 's%../../../doc/html/bbv2.html%doc/html/index.html%' index.html
 perl -pi -e 's%../../../doc/html/bbv2.installation.html%doc/html/bbv2.installation.html%' index.html
 
 # Make packages
-revision=`svnversion .`
-echo "SVN Revision $revision" >> timestamp.txt
-date >> timestamp.txt
 find . -name ".svn" | xargs rm -rf
 rm roll.sh
 chmod a+x jam_src/build.bat
