@@ -243,7 +243,9 @@ rule glob ( dirs * : patterns + : exclude-patterns * )
     }        
 
     local inc = [ GLOB-RECURSIVELY $(real-patterns) ] ;
+    inc = [ sequence.transform NORMALIZE_PATH : $(inc) ] ;
     local exc = [ GLOB-RECURSIVELY $(real-exclude-patterns) ] ;
+    exc = [ sequence.transform NORMALIZE_PATH : $(exc) ] ;
     
     return [ sequence.transform path.make : 
         [ set.difference $(inc) : $(exc) ] ] ;
