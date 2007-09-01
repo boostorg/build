@@ -41,6 +41,15 @@ rule location ( )
     return $(r:P) ;
 }
 
+# Returns the property set with the
+# free features from the currently processed
+# build request.
+rule command-line-free-features ( )
+{
+    return $(.command-line-free-features) ;
+}
+
+
 
 # Check if we can load 'test-config.jam'. If we can, load it and
 # ignore user configs.
@@ -399,6 +408,7 @@ local results-of-main-targets ;
 
 for local p in $(expanded)
 {
+    .command-line-free-features = [ property-set.create [ $(p).free ] ] ;
     for local t in $(targets)
     {   
         local g = [ $(t).generate $(p) ] ;
