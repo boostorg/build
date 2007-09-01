@@ -143,5 +143,38 @@ exe a : [ glob $(pwd)/src/foo/*.cpp $(pwd)/src/bar/*.cpp ] ../d2/d//l ;
 t.run_build_system(subdir="d1")
 t.expect_addition("d1/bin/$toolset/debug/a.exe")
 
+# Regression test: glob excludes used to be broken
+# when building from a subdirectory.
+t.rm(".")
+
+t.write("Jamroot", """ 
+build-project p ;
+""")
+
+t.write("p/p.c", """ 
+int main()
+{
+    return 0;
+}
+
+
+""")
+
+t.write("p/p_x.c", """ 
+int main()
+{
+    return 0;
+}
+
+""")
+
+t.write("p/Jamfile", """ 
+exe p : 
+  [ glob *.c : p_x.c ]
+  ;
+""")
+
+t.run_build_system(subdir="p")
+t.expect_addition("p/bin/$toolset/debug/p.exe")
 
 t.cleanup()
