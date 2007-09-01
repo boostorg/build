@@ -337,14 +337,8 @@ class searched-lib-target : abstract-file-target
         : action
     )
     {
-        abstract-file-target.__init__ $(name) exact : SEARCHED_LIB : $(project) 
+        abstract-file-target.__init__ $(name) : SEARCHED_LIB : $(project) 
           : $(action) : ;
-        
-        local rn = [ apply-tag $(name) : [ tag-properties ] ] ;
-        if $(rn)
-        {
-           self.name = $(rn) ;
-        }        
         
         self.shared = $(shared) ;
         self.search = $(search) ;
