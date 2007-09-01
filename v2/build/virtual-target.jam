@@ -378,65 +378,8 @@ class abstract-file-target : virtual-target
                         
             return l$(location-grist) ;
         }                
-    }
-    
-    # Applies the <tag> feature to the specified name,
-    # and returns the new name. If there no <tag>
-    # or <tag> rule retuend nothing, return empty string.
-    # 'ps' is the property set to be used when calling
-    # the 'tag' rule. Typically, that should be
-    # obtained from 'tag-properties'.
-    rule apply-tag ( specified-name : ps )
-    {        
-        local tag = [ $(ps).get <tag> ] ;
-        local result ;
+    }            
 
-        if $(tag)
-        {
-            local rule-name = [ MATCH ^@(.*) : $(tag) ] ;
-            if $(rule-name)
-            {
-                if $(tag[2])
-                {
-                    errors.error "<tag>@rulename is present but is not the only <tag> feature" ;
-                }
-                
-                result = [ indirect.call $(rule-name) $(specified-name) :
-                  $(self.type) :  $(ps) ] ;
-            }
-            else
-            {
-                errors.error 
-                  "The value of the <tag> feature must be '@rule-nane'" ;
-            }
-        }        
-        return $(result) ;
-    }
-
-    rule tag-properties ( )
-    {        
-        local ps ;
-        if $(self.action) 
-        {
-            ps = [ $(self.action).properties ] ;
-        }
-        else
-        {
-            ps = [ property-set.empty ] ;            
-        }
-
-        
-        #~ We add ourselves to the properties so that any tag rule can get
-        #~ more direct information about the target than just that available
-        #~ through the properties. This is useful in implementing
-        #~ name changes based on the sources of the target. For example to
-        #~ make unique names of object files based on the source file.
-        #~ --grafik
-        ps = [ property-set.create [ $(ps).raw ] <target>$(__name__) ] ;
-
-        return $(ps) ;
-    }
-        
     # Given the target name specified in constructor, returns the
     # name which should be really used, by looking at the <tag> properties.
     # The tag properties come in two flavour:
@@ -450,16 +393,52 @@ class abstract-file-target : virtual-target
     # virtual-target.add-suffix
     rule _adjust-name ( specified-name )
     {        
-        local ps = [ tag-properties ] ;
+        local ps ;
+        if $(self.action) 
+        {
+            ps = [ $(self.action).properties ] ;
+        }
+        else
+        {
+            ps = [ property-set.empty ] ;
+        }
         
-        self.name = [ apply-tag $(specified-name) : $(ps) ] ;
-        # If tag rule does not exists or returned nothing,
-        # just add prefix/suffix.
-        if ! $(self.name)
+        #~ We add ourselves to the properties so that any tag rule can get
+        #~ more direct information about the target than just that available
+        #~ through the properties. This is useful in implementing
+        #~ name changes based on the sources of the target. For example to
+        #~ make unique names of object files based on the source file.
+        #~ --grafik
+        ps = [ property-set.create [ $(ps).raw ] <target>$(__name__) ] ;
+        
+        local tag = [ $(ps).get <tag> ] ;
+
+        if $(tag)
+        {
+            local rule-name = [ MATCH ^@(.*) : $(tag) ] ;
+            if $(rule-name)
+            {
+                if $(tag[2])
+                {
+                    errors.error "<tag>@rulename is present but is not the only <tag> feature" ;
+                }
+                
+                self.name = [ indirect.call $(rule-name) $(specified-name) :
+                  $(self.type) :  $(ps) ] ;
+            }
+            else
+            {
+                errors.error 
+                  "The value of the <tag> feature must be '@rule-nane'" ;
+            }
+        }
+        
+        # If there's no tag or the tag rule returned nothing.
+        if ! $(tag) || ! $(self.name)
         {                            
             self.name = [ virtual-target.add-prefix-and-suffix
                 $(specified-name) : $(self.type) : $(ps) ] ;
-        }
+        }    
     }
 
     rule actualize-no-scanner ( )
