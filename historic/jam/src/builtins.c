@@ -1695,6 +1695,27 @@ bjam_import_rule(PyObject* self, PyObject* args)
     return Py_None;
 }
 
+
+/* Accepts two arguments -- an action name and an action body.
+   Defines an action on bjam side.  
+   
+   This interface does not (yet) support the list of bound
+   variables of the action flags (together/piecemeal/etc).  */
+PyObject*
+bjam_define_action(PyObject* self, PyObject *args)
+{
+    char* name;
+    char* body;
+    module_t* m;
+
+    if (!PyArg_ParseTuple(args, "ss:define_action", &name, &body))
+        return NULL;
+
+    new_rule_actions(root_module(), name, newstr(body), L0, 0);
+
+    return Py_None;    
+}
+
 #endif
 
 #ifdef HAVE_POPEN

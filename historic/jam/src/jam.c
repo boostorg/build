@@ -206,6 +206,9 @@ static void run_unit_tests()
  
     extern PyObject*
     bjam_import_rule(PyObject* self, PyObject* args);
+
+    extern PyObject*
+    bjam_define_action(PyObject* self, PyObject* args);
 #endif
 
 int  main( int argc, char **argv, char **arg_environ )
@@ -339,6 +342,8 @@ int  main( int argc, char **argv, char **arg_environ )
                  "Call the specified bjam rule."},
                 {"import_rule", bjam_import_rule, METH_VARARGS,
                  "Imports Python callable to bjam."},
+                {"define_action", bjam_define_action, METH_VARARGS,
+                 "Defines a command line action."},
                 {NULL, NULL, 0, NULL}
             };
     
