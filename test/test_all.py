@@ -150,6 +150,7 @@ tests = [ "rebuilds",
           "example_libraries",
           "example_make",
           "remove_requirement",
+          "free_features_request",
           ]
 
 if os.name == 'posix':

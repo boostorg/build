@@ -1057,6 +1057,7 @@ class basic-target : abstract-target
     import set sequence errors ;
     import "class" : new ;
     import property feature ;
+    import build-system ;
         
     rule __init__ ( name : project
         : sources * : requirements * : 
@@ -1185,12 +1186,21 @@ class basic-target : abstract-target
             local fn = [ full-name ] ;
             ECHO [ targets.indent ] "Building target '$(fn)'" ;
             targets.increase-indent ;
-            ECHO [ targets.indent ] "Build request: " [ $(property-set).raw ] ;
+            ECHO [ targets.indent ] "Build request: " [ $(property-set).raw ] ;            
+            local cf = [ build-system.command-line-free-features ] ;
+            ECHO [ targets.indent ] "Command line free features: "               
+              [ $(cf).raw ] ;
             ECHO [ targets.indent ] "Target requirements: " [ $(self.requirements).raw ] ;            
         }
                 
         if ! $(self.generated.$(property-set)) 
         {
+            # Apply free features form the command line.  If user
+            # said 
+            #   define=FOO
+            # he most likely want this define to be set for all compiles.
+            property-set = [ $(property-set).refine 
+              [ build-system.command-line-free-features ] ] ;
             local rproperties = [ targets.common-properties $(property-set) 
               $(self.requirements) ] ;           
             
