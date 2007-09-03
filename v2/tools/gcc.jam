@@ -522,6 +522,50 @@ rule init-link-flags ( toolset linker condition )
         flags $(toolset).link RPATH_LINK $(condition) : <xdll-path> : unchecked ;
         flags $(toolset).link START-GROUP $(condition) : -Wl,--start-group : unchecked ;
         flags $(toolset).link END-GROUP $(condition) : -Wl,--end-group : unchecked ;
+        
+        # gnu ld has the ability to change the search behaviour for libraries referenced
+        # by -l switch. These modifiers are -Bstatic and -Bdynamic and change search
+        # for -l switches that follow them. The following list shows the tried variants.
+        # The search stops at the first variant that has a match.
+        # *nix: -Bstatic -lxxx
+        #    libxxx.a
+        #
+        # *nix: -Bdynamic -lxxx
+        #    libxxx.so
+        #    libxxx.a
+        #
+        # windows (mingw,cygwin) -Bstatic -lxxx
+        #    libxxx.a
+        #    xxx.lib
+        #
+        # windows (mingw,cygwin) -Bdynamic -lxxx
+        #    libxxx.dll.a
+        #    xxx.dll.a
+        #    libxxx.a
+        #    xxx.lib
+        #    cygxxx.dll (*)
+        #    libxxx.dll
+        #    xxx.dll
+        #    libxxx.a
+        #
+        # (*) This is for cygwin
+        # Please note that -Bstatic and -Bdynamic are not a guarantee that a static
+        # or dynamic lib indeed gets linked in. The switches only change search
+        # patterns!
+        
+        # On *nix mixing shared libs with static runtime is not a good idea.
+        flags $(toolset).link FINDLIBS-ST-PFX $(condition)/<runtime-link>shared 
+            : -Wl,-Bstatic : unchecked ;
+        flags $(toolset).link FINDLIBS-SA-PFX $(condition)/<runtime-link>shared 
+            : -Wl,-Bdynamic : unchecked ;
+        
+        # On windows allow mixing of static and dynamic libs with static runtime
+        flags $(toolset).link FINDLIBS-ST-PFX $(condition)/<runtime-link>static/<target-os>windows
+            : -Wl,-Bstatic : unchecked ;
+        flags $(toolset).link FINDLIBS-SA-PFX $(condition)/<runtime-link>static/<target-os>windows 
+            : -Wl,-Bdynamic : unchecked ;
+        flags $(toolset).link OPTIONS $(condition)/<runtime-link>static/<target-os>windows 
+            : -Wl,-Bstatic ;
         }
     case darwin :
         {
@@ -587,7 +631,8 @@ rule link ( targets * : sources * : properties * )
 
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+
 }
 
 # Default value. Mostly for the sake of intel-linux
@@ -651,7 +696,7 @@ rule link.dll ( targets * : sources * : properties * )
 # Differ from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 }
 
 # Set up threading support. It's somewhat contrived, so perform it at the end,
