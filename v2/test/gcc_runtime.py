@@ -26,7 +26,7 @@ int main()
 
 t.run_build_system("runtime-link=static", status=1)
 t.fail_test(string.find(t.stdout(),
-                        "on gcc, DLL can't be build with <runtime-link>static") == -1)
+                        "On gcc, DLL can't be build with '<runtime-link>static'") == -1)
 
 t.run_build_system("link=static runtime-link=static")
 t.expect_addition("bin/$toolset/debug/link-static/runtime-link-static/hello.lib")
