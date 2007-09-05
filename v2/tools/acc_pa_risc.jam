@@ -1,0 +1,100 @@
+# Copyright Vladimir Prus 2004.
+# Copyright Toon Knapen 2004.
+# Copyright Boris Gubenko 2007.
+# Distributed under the Boost Software License, Version 1.0.
+# (See acc_pa_riscompanying file LICENSE_1_0.txt
+# or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#
+# Boost.Build V2 toolset for the HP aC++ compiler.
+#
+
+import toolset : flags ;
+import feature ;
+import generators ;
+
+feature.extend toolset : acc_pa_risc ;
+toolset.inherit acc_pa_risc : unix ;
+generators.override builtin.lib-generator : acc_pa_risc.prebuilt ;
+generators.override acc_pa_risc.searched-lib-generator : searched-lib-generator ;
+feature.subfeature toolset acc_pa_risc : version ;
+
+# Configures the acc_pa_risc toolset. 
+rule init ( version ? : path * )
+{
+}
+
+
+# Declare generators
+generators.register-c-compiler acc_pa_risc.compile.c : C : OBJ : <toolset>acc_pa_risc ;
+generators.register-c-compiler acc_pa_risc.compile.c++ : CPP : OBJ : <toolset>acc_pa_risc ;
+
+# Declare flags.
+flags acc_pa_risc CFLAGS <optimization>off : ;
+flags acc_pa_risc CFLAGS <optimization>speed : -O3 ;
+flags acc_pa_risc CFLAGS <optimization>space : -O2 ;
+
+flags acc_pa_risc CFLAGS <inlining>off : +d ;
+flags acc_pa_risc CFLAGS <inlining>on : ;
+flags acc_pa_risc CFLAGS <inlining>full : ;
+
+flags acc_pa_risc C++FLAGS <exception-handling>off : ;
+flags acc_pa_risc C++FLAGS <exception-handling>on : ;
+
+flags acc_pa_risc C++FLAGS <rtti>off : ;
+flags acc_pa_risc C++FLAGS <rtti>on : ;
+
+# We want the full path to the sources in the debug symbols because otherwise
+# the debugger won't find the sources when we use boost.build.
+flags acc_pa_risc CFLAGS <debug-symbols>on : -g ;
+flags acc_pa_risc LINKFLAGS <debug-symbols>on : -g ;
+flags acc_pa_risc LINKFLAGS <debug-symbols>off : -s ;
+
+# V2 does not have <shared-linkable>, not sure what this meant in V1.
+# flags acc_pa_risc CFLAGS <shared-linkable>true : +Z ;
+
+flags acc_pa_risc CFLAGS <profiling>on : -pg ;
+flags acc_pa_risc LINKFLAGS <profiling>on : -pg ;
+
+flags acc_pa_risc CFLAGS <cflags> ;
+flags acc_pa_risc C++FLAGS <cxxflags> ;
+flags acc_pa_risc DEFINES <define> ;
+flags acc_pa_risc UNDEFS <undef> ;
+flags acc_pa_risc HDRS <include> ;
+flags acc_pa_risc STDHDRS <sysinclude> ;
+flags acc_pa_risc LINKFLAGS <linkflags> ;
+flags acc_pa_risc ARFLAGS <arflags> ;
+
+flags acc_pa_risc LIBPATH <library-path> ;
+flags acc_pa_risc NEEDLIBS <library-file> ;
+flags acc_pa_risc FINDLIBS <find-shared-library> ;
+flags acc_pa_risc FINDLIBS <find-static-library> ;
+
+# Select the compiler name acc_pa_riscording to the threading model.
+flags acc_pa_risc CFLAGS <threading>multi : -mt   ;
+flags acc_pa_risc LINKFLAGS <threading>multi : -mt ;
+
+actions acc_pa_risc.link bind NEEDLIBS
+{
+    aCC $(LINKFLAGS) +DD64 -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+}
+
+actions acc_pa_risc.link.dll bind NEEDLIBS
+{
+    aCC -b $(LINKFLAGS) +DD64 -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+}
+
+actions acc_pa_risc.compile.c
+{    
+    aCC -Ae +DD64 -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+}
+
+actions acc_pa_risc.compile.c++
+{
+    aCC -AA +DD64 -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+}
+
+actions updated together piecemeal acc_pa_risc.archive
+{
+    ar ru$(ARFLAGS:E="") "$(<)" "$(>)"
+}
