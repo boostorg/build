@@ -13,8 +13,6 @@
 #  Some important libraries can also be configured.
 #  Uncomment relevant parts to suite your local configuration and preferences.
 
-import toolset : using ;
-
 #  GCC configuration
 
 #  Configure gcc (default version)
