@@ -222,6 +222,7 @@ class Tester(TestCmd.TestCmd):
         program_list.append('-sBOOST_BUILD_PATH=' + boost_build_path)
         if verbosity:
             program_list += verbosity
+        program_list += ["--ignore-toolset-requirements"]            
         if arguments:
             program_list += arguments.split(" ")
 
