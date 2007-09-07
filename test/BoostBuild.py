@@ -424,8 +424,7 @@ class Tester(TestCmd.TestCmd):
         result = None
         if hasattr(self,'difference'):
             for f in self.difference.added_files+self.difference.modified_files+self.difference.touched_files:
-                fname = self.remove_variant_features([f])[0]
-                if fnmatch.fnmatch(fname,name):
+                if fnmatch.fnmatch(f,name):
                     result = self.native_file_name(f)
                     break
         if not result:
