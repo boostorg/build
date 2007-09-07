@@ -94,8 +94,6 @@ def glob_remove(sequence,pattern):
     for r in result:
         sequence.remove(r)
 
-features = [ 'threading-multi' ]
-
 lib_prefix = 1
 dll_prefix = 1
 if windows:
@@ -386,8 +384,8 @@ class Tester(TestCmd.TestCmd):
             if status != 0:
                 expect = " (expected %d)" % status
 
-            print '"%s" returned %d%s' % (
-                kw['program'], _status(self), expect)
+            annotation("failed command", '"%s" returned %d%s' % (
+                kw['program'], _status(self), expect))
 
             annotation("reason", "error returned by bjam")
             self.fail_test(1)
@@ -421,15 +419,6 @@ class Tester(TestCmd.TestCmd):
         self.unexpected_difference = copy.deepcopy(self.difference)
 
         self.last_build_time = time.time()
-        
-        self.unexpected_difference.added_files \
-            = self.remove_variant_features(self.unexpected_difference.added_files)
-        self.unexpected_difference.removed_files \
-            = self.remove_variant_features(self.unexpected_difference.removed_files)
-        self.unexpected_difference.modified_files \
-            = self.remove_variant_features(self.unexpected_difference.modified_files)
-        self.unexpected_difference.touched_files \
-            = self.remove_variant_features(self.unexpected_difference.touched_files)
     
     def glob_file(self, name):
         result = None
@@ -495,7 +484,7 @@ class Tester(TestCmd.TestCmd):
     # All the 'ignore*' methods allow wildcards.
 
     # All names can be lists, which are taken to be directory components
-    def expect_addition(self, names):
+    def expect_addition(self, names):        
         for name in self.adjust_names(names):
                 try:
                         glob_remove(self.unexpected_difference.added_files,name)
@@ -608,9 +597,6 @@ class Tester(TestCmd.TestCmd):
         found = 0
         for line in lines:
             line = line.strip()
-            for feature in features:
-                line = string.replace(line,"/"+feature,"")
-                line = string.replace(line,"\\"+feature,"")
             if fnmatch.fnmatch(line, expected):
                 found = 1
                 break
@@ -646,10 +632,6 @@ class Tester(TestCmd.TestCmd):
     def expect_content(self, name, content, exact=0):
         actual = self._read_file(name, exact)
         content = string.replace(content, "$toolset", self.toolset+"*")
-        if not exact:
-            for feature in features:
-                actual = string.replace(actual,"/"+feature,"")
-                actual = string.replace(actual,"\\"+feature,"")
 
         matched = 0
         if exact:
@@ -749,7 +731,6 @@ class Tester(TestCmd.TestCmd):
             suffix = ''
 
         return name + suffix
-        
 
     # Acceps either string of list of string and returns list of strings
     # Adjusts suffixes on all names.
@@ -771,21 +752,6 @@ class Tester(TestCmd.TestCmd):
     def wait_for_time_change(self):
         while int(time.time()) < int(self.last_build_time) + 1:
             time.sleep(0.1)
-    
-    # Remove the variant feature sub-dir from a path.
-    def remove_variant_features(self, names):
-        
-        def remove_features_(name):
-            elements = string.split(name,"/")
-            for feature in features:
-                try:
-                    elements.remove(feature)
-                except:
-                    pass
-            return string.join(elements,"/")
-        
-        r = map(remove_features_,names)
-        return r
 
             
 class List:
