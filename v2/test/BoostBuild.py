@@ -18,6 +18,39 @@ import types
 import time
 import tempfile
 import sys
+import traceback
+from StringIO import StringIO
+
+annotation_func = None
+
+annotations = []
+
+def print_annotation(name, value):
+    """Writes some named bit of information about test
+    run.
+    """
+    print name + " {{{"
+    print value
+    print "}}}"
+
+
+def flush_annotations():
+    global annotations
+    for ann in annotations:
+        print_annotation(ann[0], ann[1])
+    annotations = []
+
+defer_annotations = 0
+
+def set_defer_annotations(n):
+    global defer_annotations
+    defer_annotations = n
+
+def annotation(name, value):
+    """Records an annotation about test run."""
+    annotations.append((name, value))
+    if not defer_annotations:
+        flush_annotations()
 
 def get_toolset():
     toolset = None;
@@ -311,11 +344,8 @@ class Tester(TestCmd.TestCmd):
         self.write(name, content)
                                                         
     def dump_stdio(self):
-        print "STDOUT ============"
-        print self.stdout()    
-        print "STDERR ============"
-        print self.stderr()
-        print "END ==============="
+        annotation("STDOUT", self.stdout())
+        annotation("STDERR", self.stderr())
                     
     #
     #   FIXME: Large portion copied from TestSCons.py, should be moved?
@@ -359,17 +389,16 @@ class Tester(TestCmd.TestCmd):
             print '"%s" returned %d%s' % (
                 kw['program'], _status(self), expect)
 
+            annotation("reason", "error returned by bjam")
             self.fail_test(1)
 
         if not stdout is None and not match(self.stdout(), stdout):
-            print "Expected STDOUT =========="
-            print stdout
-            print "Actual STDOUT ============"
-            print self.stdout()
+            annotation("reason", "Unexpected stdout")
+            annotation("Expected STDOUT", stdout)
+            annotation("Actual STDOUT", self.stdout())
             stderr = self.stderr()
             if stderr:
-                print "STDERR ==================="
-                print stderr
+                annotation("STDERR", stderr)
             self.maybe_do_diff(self.stdout(), stdout)
             self.fail_test(1, dump_stdio = 0)
 
@@ -379,12 +408,10 @@ class Tester(TestCmd.TestCmd):
         actual_stderr = re.sub(intel_workaround, "", self.stderr())
 
         if not stderr is None and not match(actual_stderr, stderr):
-            print "STDOUT ==================="
-            print self.stdout()
-            print "Expected STDERR =========="
-            print stderr
-            print "Actual STDERR ============"
-            print actual_stderr
+            annotation("reason", "Unexpected stderr")
+            annotation("Expected STDERR", stderr)
+            annotation("Actual STDERR", self.stderr())
+            annotation("STDOUT", self.stdout())
             self.maybe_do_diff(actual_stderr, stderr)
             self.fail_test(1, dump_stdio = 0)
 
@@ -439,8 +466,9 @@ class Tester(TestCmd.TestCmd):
     def fail_test(self, condition, dump_stdio = 1, *args):
         # If test failed, print the difference        
         if condition and hasattr(self, 'difference'):            
-            print '-------- all changes caused by last build command ----------'
-            self.difference.pprint()
+            f = StringIO()
+            self.difference.pprint(f)
+            annotation("changes causes by the last build command", f.getvalue())
             
         if condition and dump_stdio:
             self.dump_stdio()
@@ -455,8 +483,11 @@ class Tester(TestCmd.TestCmd):
             elif os.path.exists(path):
                 raise "The path " + path + " already exists and is not directory";
             shutil.copytree(self.workdir, path)
-                        
-        TestCmd.TestCmd.fail_test(self, condition, *args)
+
+        if condition:
+            at = TestCmd.caller(traceback.extract_stack(), 0)
+            annotation("stacktrace", at)
+            sys.exit(1)
         
     # A number of methods below check expectations with actual difference
     # between directory trees before and after build.
@@ -517,7 +548,8 @@ class Tester(TestCmd.TestCmd):
                     filesets.pop()
 
             if not filesets:
-                print "File %s not touched as expected" % (name,)
+                annotation("reason",
+                           "File %s not touched as expected" % (name,))
                 self.fail_test(1)
 
 
@@ -533,17 +565,21 @@ class Tester(TestCmd.TestCmd):
     def expect_nothing(self, names):
         for name in self.adjust_names(names):
             if name in self.difference.added_files:
-                print "File %s is added, but no action was expected" % (name,)
+                annotation("reason",
+                           "File %s is added, but no action was expected" % (name,))
                 self.fail_test(1)
             if name in self.difference.removed_files:
-                print "File %s is removed, but no action was expected" % (name,)
+                annotation("reason",
+                           "File %s is removed, but no action was expected" % (name,))
                 self.fail_test(1)
                 pass
             if name in self.difference.modified_files:
-                print "File %s is modified, but no action was expected" % (name,)
+                annotation("reason",
+                           "File %s is modified, but no action was expected" % (name,))
                 self.fail_test(1)
             if name in self.difference.touched_files:
-                print "File %s is touched, but no action was expected" % (name,)
+                annotation("reason",
+                           "File %s is touched, but no action was expected" % (name,))
                 self.fail_test(1)
 
     def expect_nothing_more(self):

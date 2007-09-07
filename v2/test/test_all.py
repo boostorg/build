@@ -7,6 +7,7 @@
 #         http://www.boost.org/LICENSE_1_0.txt)
 
 import os, sys, string
+import BoostBuild
 from BoostBuild import get_toolset
 
 # clear environment for testing
@@ -20,6 +21,8 @@ for s in (
         del os.environ[s]
     except:
         pass
+
+BoostBuild.set_defer_annotations(1)    
 
 def run_tests(critical_tests, other_tests):
     """Runs first critical tests and then other_tests.
@@ -49,8 +52,10 @@ def run_tests(critical_tests, other_tests):
             # Restore the current directory, which might be changed by the
             # test
             os.chdir(invocation_dir)
+            BoostBuild.flush_annotations();
             continue
         print "PASSED"
+        BoostBuild.flush_annotations();
         sys.stdout.flush()  # makes testing under emacs more entertaining.
         
     # Erase the file on success
