@@ -442,6 +442,7 @@ class Tester(TestCmd.TestCmd):
             name = self.glob_file(name)
             return open(name, "rU").read()
         except:
+            annotation("reason", "Could not open '%s'" % name)
             self.fail_test(1)
             return ''
 
