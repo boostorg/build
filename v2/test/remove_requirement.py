@@ -80,7 +80,7 @@ t.expect_addition("sub4/bin/$toolset/debug/threading-multi/hello.exe")
 
 t.rm(".")
 
-# No test that path requirements can be removed as well.
+# Now test that path requirements can be removed as well.
 t.write("Jamroot", """ 
 build-project sub ;
 
@@ -109,7 +109,7 @@ Broken
 
 t.run_build_system()
 
-t.expect_addition("bin/$toolset/debug/hello.exe")
+t.expect_addition("sub/bin/$toolset/debug/hello.exe")
 
 t.cleanup()
 
