@@ -37,6 +37,7 @@ def run_tests(critical_tests, other_tests):
 
     invocation_dir = os.getcwd()
 
+    pass_count = 0
     failures_count = 0
     for i in all_tests:
         print ("%-25s : " %(i)),
@@ -56,11 +57,18 @@ def run_tests(critical_tests, other_tests):
             continue
         print "PASSED"
         BoostBuild.flush_annotations();
+        pass_count = pass_count + 1
         sys.stdout.flush()  # makes testing under emacs more entertaining.
         
     # Erase the file on success
     if failures_count == 0:
         open('test_results.txt', 'w')
+
+    print """
+    === Test summary ===
+    PASS: %d
+    FAIL: %d
+    """ % (pass_count, failures_count)
         
 
 def last_failed_test():
