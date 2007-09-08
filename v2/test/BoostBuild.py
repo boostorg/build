@@ -19,6 +19,7 @@ import time
 import tempfile
 import sys
 import traceback
+import math
 from StringIO import StringIO
 
 annotation_func = None
@@ -750,8 +751,13 @@ class Tester(TestCmd.TestCmd):
     # Wait while time is no longer equal to the time last "run_build_system"
     # call finished.
     def wait_for_time_change(self):
-        while int(time.time()) < int(self.last_build_time) + 1:
-            time.sleep(0.1)
+        while 1:
+            f = time.time();
+            if math.floor(f) < math.floor(self.last_build_time) + 1:
+                time.sleep(0.1)
+            else:
+                break
+            
 
             
 class List:
