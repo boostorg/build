@@ -754,7 +754,11 @@ class Tester(TestCmd.TestCmd):
     def wait_for_time_change(self):
         while 1:
             f = time.time();
-            if math.floor(f) < math.floor(self.last_build_time) + 1:
+            # In fact, I'm not sure why "+ 2" as opposed to "+ 1" is
+            # needed but empirically, "+ 1" sometimes causes 'touch'
+            # and other functions not to bump file time enough for
+            # rebuild to happen.
+            if math.floor(f) < math.floor(self.last_build_time) + 2:
                 time.sleep(0.1)
             else:
                 break
