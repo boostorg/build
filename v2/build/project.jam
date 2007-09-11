@@ -882,7 +882,12 @@ module project-rules
         
         if $(global-build-dir)
         {                
-            if [ $(attributes).get location ]  = [ $(attributes).get project-root ]
+            local location = [ $(attributes).get location ] ;
+            # Project with empty location is 'standalone' project, like
+            # user-config, or qt.  It has no build dir.
+            # If we try to set build dir for user-config, we'll then
+            # try to inherit it, with either weird, or wrong consequences.
+            if $(location) && $(location) = [ $(attributes).get project-root ]
             {
                 # This is Jamroot.
                 if $(id)
