@@ -565,7 +565,7 @@ rule init-link-flags ( toolset linker condition )
         flags $(toolset).link FINDLIBS-SA-PFX $(condition)/<runtime-link>static/<target-os>windows 
             : -Wl,-Bdynamic : unchecked ;
         flags $(toolset).link OPTIONS $(condition)/<runtime-link>static/<target-os>windows 
-            : -Wl,-Bstatic ;
+            : -Wl,-Bstatic : unchecked ;
         }
     case darwin :
         {
