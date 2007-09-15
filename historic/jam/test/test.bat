@@ -6,6 +6,8 @@ REM ~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0
 
 set BJAM=..\src\bin.ntx86\bjam
 REM ~ set BJAM=..\src\bin.ntx86.debug\bjam
+REM ~ set BJAM=bjam-3_1_14
+REM ~ set BJAM=bjam
 
 @ECHO ON
 
