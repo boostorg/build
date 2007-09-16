@@ -11,11 +11,12 @@
 # include "pathsys.h"
 # include "newstr.h"
 # include <assert.h>
+# include <stdlib.h>
+# include <stdio.h>
 
 # ifdef OS_CYGWIN
 #  include <sys/cygwin.h>
 #  include <windows.h>
-#  include <stdlib.h>
 # endif
 
 /*
