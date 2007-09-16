@@ -452,33 +452,31 @@
 # if defined( _i386_ ) || \
      defined( __i386__ ) || \
      defined( _M_IX86 )
-# if !defined( OS_FREEBSD ) && \
-     !defined( OS_DRAGONFLYBSD ) && \
-     !defined( OS_OS2 ) && \
-     !defined( OS_AS400 )
 # define OSPLAT "OSPLAT=X86"
-# endif
 # endif 
 
-# ifdef __sparc__
-# if !defined( OS_SUNOS ) && \
-     !defined( OS_SOLARIS )
-# define OSPLAT "OSPLAT=SPARC"
+# if defined( __ia64__ ) || defined( __IA64__ )
+# define OSPLAT "OSPLAT=IA64"
 # endif
+
+# if \
+    defined( __x86_64__ ) || \
+    defined( __amd64__ ) || \
+    defined( _M_AMD64 )
+# define OSPLAT "OSPLAT=X86_64"
+# endif
+
+
+# ifdef __sparc__
+# define OSPLAT "OSPLAT=SPARC"
 # endif
 
 # ifdef __mips__
-# if !defined( OS_SGI )
 # define OSPLAT "OSPLAT=MIPS"
-# endif
 # endif
 
 # ifdef __arm__
 # define OSPLAT "OSPLAT=ARM"
-# endif
-
-# if defined( __ia64__ ) || defined( __IA64__ )
-# define OSPLAT "OSPLAT=IA64"
 # endif
 
 # ifdef __s390__
