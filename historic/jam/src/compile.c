@@ -1012,6 +1012,24 @@ evaluate_rule(
         action->rule = rule;
         action->targets = targetlist( (TARGETS *)0, lol_get( frame->args, 0 ) );
         action->sources = targetlist( (TARGETS *)0, lol_get( frame->args, 1 ) );
+        
+        /*  Make targets[1,N-1] depend on targets[0], to describe the multply
+            generated targets for the rule. Do it with includes, to reflect
+            non-build dependency. */
+        {
+            TARGET * t0 = action->targets->target;
+            for ( t = action->targets->next; t; t = t->next )
+            {
+                TARGET * tn = t->target;
+                if ( !tn->includes )
+                {
+                    tn->includes = copytarget( tn );
+                    tn->includes->original_target = tn;
+                }
+                tn = tn->includes;
+                tn->depends = targetentry( tn->depends, t0 );
+            }
+        }
 
         /* Append this action to the actions of each target */
 
