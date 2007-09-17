@@ -8,11 +8,14 @@
 # include "jam.h"
 # include "lists.h"
 # include "execcmd.h"
+# include "output.h"
 # include <errno.h>
 # include <signal.h>
 # include <stdio.h>
 # include <time.h>
 # include <unistd.h> /* needed for vfork(), _exit() prototypes */
+# include <sys/resource.h>
+# include <sys/times.h>
 
 #if defined(sun) || defined(__sun) || defined(linux)
 #include <wait.h>
@@ -68,6 +71,7 @@ static struct
     int	    pid;              /* on win32, a real process handle */
     int     fd[2];            /* file descriptors for stdout and stderr */
     FILE   *stream[2];        /* child's stdout (0) and stderr (1) file stream */
+    clock_t start_time;       /* start time of child process */
     int     action_length;    /* length of action string */
     int     target_length;    /* length of target string */
     char   *action;           /* buffer to hold action and target invoked */
@@ -193,6 +197,31 @@ execcmd(
             }
             else
                 dup2(err[1], STDERR_FILENO);
+
+            /* terminate processes only if timeout is positive */
+            if (0 < globs.timeout) {
+              struct rlimit rl;
+              struct tms buf;
+
+              /* 
+               * set hard and soft resource limits for cpu usage
+               * won't catch hung processes that don't consume cpu
+               */
+              rl.rlim_cur = globs.timeout;
+              rl.rlim_max = globs.timeout;
+              setrlimit(RLIMIT_CPU, &rl);
+
+              /*
+               * handle hung processes using different mechanism
+               * manually track elapsed time and signal process
+               * when time limit expires
+               *
+               * could use this approach for both consuming too
+               * much cpu and hung processes, but it never hurts
+               * to have backup
+               */
+              cmdtab[ slot ].start_time = times(&buf);
+            }
 
 	    execvp( argv[0], argv );
 	    _exit(127);
@@ -339,6 +368,8 @@ execwait()
     struct tms old_time, new_time;
     char *tmp;
     char buffer[BUFSIZ];
+    struct tms buf;
+    clock_t current = times(&buf);
 
     /* Handle naive make1() which doesn't know if cmds are running. */
 
@@ -358,6 +389,11 @@ execwait()
             {
                 fd_max = fd_max < cmdtab[i].fd[OUT] ? cmdtab[i].fd[OUT] : fd_max;
                 FD_SET(cmdtab[i].fd[OUT], &fds);
+
+                /* signal child processes that have expired (timed out) */
+                if (cmdtab[i].start_time && globs.timeout < current - cmdtab[i].start_time) {
+                    kill(cmdtab[i].pid, SIGKILL);
+                }
             }
             if (globs.pipe_action != 0)
             {
@@ -365,6 +401,11 @@ execwait()
                 {
                     fd_max = fd_max < cmdtab[i].fd[ERR] ? cmdtab[i].fd[ERR] : fd_max;
                     FD_SET(cmdtab[i].fd[ERR], &fds);
+
+                    /* signal child processes that have expired (timed out) */
+                    if (cmdtab[i].start_time && globs.timeout < current - cmdtab[i].start_time) {
+                        kill(cmdtab[i].pid, SIGKILL);
+                    }
                 }
             }
         }
