@@ -12,7 +12,7 @@
 # include "newstr.h"
 # include <assert.h>
 # include <stdlib.h>
-# include <stdio.h>
+# include <limits.h>
 
 # ifdef OS_CYGWIN
 #  include <sys/cygwin.h>
@@ -128,7 +128,7 @@ var_expand(
             at_buf = (char*)BJAM_MALLOC_ATOMIC(at_size + 1);
             at_len = var_string( in, at_buf, at_size, lol );
             at_size *= 2;
-        } while ( at_len < 0 && at_len < INT_MAX / 2 );
+        } while ( at_len < 0 && at_size < INT_MAX / 2 );
         /* Return the result as a single item list. */
         if ( at_len > 0 )
         {
