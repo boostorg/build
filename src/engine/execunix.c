@@ -59,6 +59,7 @@
  * 06/02/97 (gsar)    - full async multiprocess support for Win32
  */
 
+static struct timeval tv, *tv_ptr = 0;
 static int intr = 0;
 static int cmdsrunning = 0;
 static void (*istat)( int );
@@ -353,6 +354,31 @@ void close_streams(int i, int s)
     cmdtab[i].fd[s] = 0;
 }
 
+void populate_file_descriptors(int *fmax, fd_set *fds)
+{
+    int i, fd_max = 0;
+
+    /* compute max read file descriptor for use in select */
+    FD_ZERO(fds);
+    for (i=0; i<globs.jobs; ++i)
+    {
+        if (0 < cmdtab[i].fd[OUT])
+        {
+            fd_max = fd_max < cmdtab[i].fd[OUT] ? cmdtab[i].fd[OUT] : fd_max;
+            FD_SET(cmdtab[i].fd[OUT], fds);
+        }
+        if (globs.pipe_action != 0)
+        {
+            if (0 < cmdtab[i].fd[ERR])
+            {
+                fd_max = fd_max < cmdtab[i].fd[ERR] ? cmdtab[i].fd[ERR] : fd_max;
+                FD_SET(cmdtab[i].fd[ERR], fds);
+            }
+        }
+    }
+    *fmax = fd_max;
+}
+
 /*
  * execwait() - wait and drive at most one execution completion
  */
@@ -369,49 +395,48 @@ execwait()
     char *tmp;
     char buffer[BUFSIZ];
     struct tms buf;
-    clock_t current = times(&buf);
 
     /* Handle naive make1() which doesn't know if cmds are running. */
 
     if( !cmdsrunning )
         return 0;
 
+    /* force select to timeout so we can terminate expired processes */
+    if (globs.timeout) {
+        tv.tv_sec = globs.timeout;
+        tv.tv_usec = 0;
+        tv_ptr = &tv;
+    }
+    else {
+        tv_ptr = 0;
+    }
+
     /* process children that signaled */
     finished = 0;
     while (!finished && cmdsrunning)
     {
         /* compute max read file descriptor for use in select */
-        fd_max = 0;
-        FD_ZERO(&fds);
-        for (i=0; i<globs.jobs; ++i)
-        {
-            if (0 < cmdtab[i].fd[OUT])
-            {
-                fd_max = fd_max < cmdtab[i].fd[OUT] ? cmdtab[i].fd[OUT] : fd_max;
-                FD_SET(cmdtab[i].fd[OUT], &fds);
+        populate_file_descriptors(&fd_max, &fds);
 
-                /* signal child processes that have expired (timed out) */
-                if (cmdtab[i].start_time && globs.timeout < current - cmdtab[i].start_time) {
-                    kill(cmdtab[i].pid, SIGKILL);
-                }
-            }
-            if (globs.pipe_action != 0)
-            {
-                if (0 < cmdtab[i].fd[ERR])
-                {
-                    fd_max = fd_max < cmdtab[i].fd[ERR] ? cmdtab[i].fd[ERR] : fd_max;
-                    FD_SET(cmdtab[i].fd[ERR], &fds);
+        /* select will wait until io on a descriptor or a signal */
+        ret = select(fd_max+1, &fds, 0, 0, tv_ptr);
 
-                    /* signal child processes that have expired (timed out) */
-                    if (cmdtab[i].start_time && globs.timeout < current - cmdtab[i].start_time) {
+        if (0 == ret) {
+            clock_t tps = sysconf(_SC_CLK_TCK);
+
+            /* select timed out, check for expired processes */
+            for (i=0; i<globs.jobs; ++i) {
+                if (0 < cmdtab[i].pid) {
+                    clock_t current = times(&buf);
+                    if (globs.timeout <= (current-cmdtab[i].start_time)/tps) {
                         kill(cmdtab[i].pid, SIGKILL);
                     }
                 }
             }
+            /* select will wait until io on a descriptor or a signal */
+            populate_file_descriptors(&fd_max, &fds);
+            ret = select(fd_max+1, &fds, 0, 0, 0);
         }
-
-        /* select will wait until io on a descriptor or a signal */
-        ret = select(fd_max+1, &fds, 0, 0, 0);
 
         if (0 < ret)
         {
@@ -477,6 +502,7 @@ execwait()
 
                         cmdtab[i].func = 0;
                         cmdtab[i].closure = 0;
+                        cmdtab[i].start_time = 0;
                     }
                     else
                     {
