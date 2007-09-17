@@ -44,11 +44,12 @@ rule assert ( expected * : test ? : obtained * )
 include builtin_shell.jam ;
 include builtin_w32_getregnames.jam ;
 include option_d2.jam ;
+include option_l.jam ;
 include option_n.jam ;
 include parallel_actions.jam ;
+include parallel_multifile_actions.jam ;
 include stress_var_expand.jam ;
 include target_var.jam ;
 include var_expand.jam ;
-include parallel_multifile_actions.jam ;
 
 EXIT --- Complete: PASSED($(pass-count)) *FAILED($(fail-count))* : $(fail-count) ;
