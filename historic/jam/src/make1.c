@@ -61,6 +61,7 @@
 # include "command.h"
 # include "execcmd.h"
 # include "compile.h"
+# include "output.h"
 
 # include <stdlib.h>
 
