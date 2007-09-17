@@ -15,4 +15,5 @@ assert "" : (==) : $(p0:D) ;
 assert dir : (==) : $(p1:D) ;
 assert dir/sub : (==) : $(p2:D) ;
 assert "" : (==) : $(p0:S) ;
-assert "@(.*)" : (==) : @(.*) ;
+assert ($(p0)) : (==) : [ MATCH ^@(.*) : "@($(p0))" ] ;
+assert ($(p0)) : (==) : [ MATCH @(.*) : "--@($(p0))" ] ;

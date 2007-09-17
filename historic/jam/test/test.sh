@@ -6,4 +6,4 @@
 
 BJAM=`ls -1 ../src/bin.*/bjam`
 
-${BJAM} -f test.jam
+${BJAM} -f test.jam "$*"
