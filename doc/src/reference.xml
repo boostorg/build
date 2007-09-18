@@ -947,11 +947,20 @@ using intel-win : &toolset_ops; ;</programlisting>
           <para>The module is initialized using the following
           syntax:</para>
           <programlisting>
-using acc ;</programlisting>
+using acc : &toolset_ops; ;</programlisting>
 
-          <para>There are no configuration options. The
-          compiler will always be invoked as <command>aCC</command> and should
-          be in <envar>PATH</envar>.</para>
+          &using_repeation;
+
+
+          <para>
+            If the command is not specified, the <command>aCC</command>
+          binary will be searched in <envar>PATH</envar>.</para>
+
+          &option_list_intro;
+          <variablelist>
+            <xi:include href="fragments.xml#xpointer(id('common_options')/*)" 
+                        parse="xml"/> 
+          </variablelist>
        
         </section>
 
