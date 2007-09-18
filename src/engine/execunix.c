@@ -59,7 +59,8 @@
  * 06/02/97 (gsar)    - full async multiprocess support for Win32
  */
 
-static struct timeval tv, *tv_ptr = 0;
+static clock_t tps = 0;
+static struct timeval tv;
 static int intr = 0;
 static int cmdsrunning = 0;
 static void (*istat)( int );
@@ -110,7 +111,6 @@ execcmd(
         int out[2], err[2];
 	int slot, len;
 	char *argv[ MAXARGC + 1 ];	/* +1 for NULL */
-        FILE *stream;
 
 	/* Find a slot in the running commands table for this one. */
 
@@ -160,6 +160,8 @@ execcmd(
 	    argv[2] = string;
 	    argv[3] = 0;
 	}
+
+        if (tps == 0) tps = sysconf(_SC_CLK_TCK);                
 
 	/* increment jobs running */
 	++cmdsrunning;
@@ -317,7 +319,7 @@ execcmd(
 
 int read_descriptor(int i, int s)
 {
-    int done, ret, len;
+    int ret, len;
     char buffer[BUFSIZ];
 
     while (0 < (ret = fread(buffer, sizeof(char),  BUFSIZ-1, cmdtab[i].stream[s])))
@@ -378,7 +380,6 @@ void populate_file_descriptors(int *fmax, fd_set *fds)
 
         if (globs.timeout && cmdtab[i].pid) {
             struct tms buf;
-            clock_t tps = sysconf(_SC_CLK_TCK);                
             clock_t current = times(&buf);
             if (globs.timeout <= (current-cmdtab[i].start_time)/tps) {
                 kill(cmdtab[i].pid, SIGKILL);
@@ -395,30 +396,17 @@ void populate_file_descriptors(int *fmax, fd_set *fds)
 int
 execwait()
 {
-    int i, j, len, ret, fd_max;
+    int i, ret, fd_max;
     int pid, status, w, finished;
     int rstat;
     timing_info time;
     fd_set fds;
     struct tms old_time, new_time;
-    char *tmp;
-    char buffer[BUFSIZ];
-    struct tms buf;
 
     /* Handle naive make1() which doesn't know if cmds are running. */
 
     if( !cmdsrunning )
         return 0;
-
-    /* force select to timeout so we can terminate expired processes */
-    if (globs.timeout) {
-        tv.tv_sec = globs.timeout;
-        tv.tv_usec = 0;
-        tv_ptr = &tv;
-    }
-    else {
-        tv_ptr = 0;
-    }
 
     /* process children that signaled */
     finished = 0;
@@ -427,16 +415,26 @@ execwait()
         /* compute max read file descriptor for use in select */
         populate_file_descriptors(&fd_max, &fds);
 
-        /* select will wait until io on a descriptor or a signal */
-        ret = select(fd_max+1, &fds, 0, 0, tv_ptr);
+        if (0 < globs.timeout) {
+            /* force select to timeout so we can terminate expired processes */
+            tv.tv_sec = globs.timeout;
+            tv.tv_usec = 0;
 
-        if (0 == ret) {
-            /* select timed out, all processes have expired, kill them */
-            for (i=0; i<globs.jobs; ++i) {
-                cmdtab[i].start_time = 0;
-            }
             /* select will wait until io on a descriptor or a signal */
-            populate_file_descriptors(&fd_max, &fds);
+            ret = select(fd_max+1, &fds, 0, 0, &tv);
+
+            if (0 == ret) {
+                /* select timed out, all processes have expired, kill them */
+                for (i=0; i<globs.jobs; ++i) {
+                    cmdtab[i].start_time = 0;
+                }
+                /* select will wait until io on a descriptor or a signal */
+                populate_file_descriptors(&fd_max, &fds);
+                ret = select(fd_max+1, &fds, 0, 0, 0);
+            }
+        }
+        else {
+            /* select will wait until io on a descriptor or a signal */
             ret = select(fd_max+1, &fds, 0, 0, 0);
         }
 
