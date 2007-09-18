@@ -375,6 +375,15 @@ void populate_file_descriptors(int *fmax, fd_set *fds)
                 FD_SET(cmdtab[i].fd[ERR], fds);
             }
         }
+
+        if (globs.timeout && cmdtab[i].pid) {
+            struct tms buf;
+            clock_t tps = sysconf(_SC_CLK_TCK);                
+            clock_t current = times(&buf);
+            if (globs.timeout <= (current-cmdtab[i].start_time)/tps) {
+                kill(cmdtab[i].pid, SIGKILL);
+            }
+        }
     }
     *fmax = fd_max;
 }
@@ -422,15 +431,11 @@ execwait()
         ret = select(fd_max+1, &fds, 0, 0, tv_ptr);
 
         if (0 == ret) {
-            clock_t tps = sysconf(_SC_CLK_TCK);
-
-            /* select timed out, check for expired processes */
+            /* select timed out, all processes have expired, kill them */
             for (i=0; i<globs.jobs; ++i) {
                 if (0 < cmdtab[i].pid) {
                     clock_t current = times(&buf);
-                    if (globs.timeout <= (current-cmdtab[i].start_time)/tps) {
-                        kill(cmdtab[i].pid, SIGKILL);
-                    }
+                    kill(cmdtab[i].pid, SIGKILL);
                 }
             }
             /* select will wait until io on a descriptor or a signal */
