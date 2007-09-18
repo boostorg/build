@@ -433,10 +433,7 @@ execwait()
         if (0 == ret) {
             /* select timed out, all processes have expired, kill them */
             for (i=0; i<globs.jobs; ++i) {
-                if (0 < cmdtab[i].pid) {
-                    clock_t current = times(&buf);
-                    kill(cmdtab[i].pid, SIGKILL);
-                }
+                cmdtab[i].start_time = 0;
             }
             /* select will wait until io on a descriptor or a signal */
             populate_file_descriptors(&fd_max, &fds);
