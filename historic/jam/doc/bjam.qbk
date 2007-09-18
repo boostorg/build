@@ -35,6 +35,15 @@
 [def :Boost:                [@http://www.boost.org Boost]]
 [def :Perforce_Jam:         [@http://www.perforce.com/jam/jam.html Perforce Jam]]
 
+[/ Templates ]
+
+[template literal[text]'''<literallayout>'''[text]'''</literallayout>''']
+[template list[items]'''<itemizedlist>'''[items]'''</itemizedlist>''']
+[template orderedlist[items]'''<orderedlist>'''[items]'''</orderedlist>''']
+[template li[text]'''<listitem>'''[text]'''</listitem>''']
+[template lines[items]'''<simplelist type='vert' columns='1'>'''[items]'''</simplelist>''']
+[template line[text]'''<member>'''[text]'''</member>''']
+
 [section:intro Introduction]
 
 Boost.Jam (BJam)  is a build tool based on FTJam, which in turn is based on :Perforce_Jam:. It contains significant improvements made to facilitate its use in the Boost Build System, but should be backward compatible with :Perforce_Jam:.
@@ -114,160 +123,249 @@ The supported toolsets, and wether they are auto-detected, are:
 [[Script] [Platform] [Toolset] [Detection and Notes]]
 
 [   [=build.bat=] [Windows NT, 2000, and XP]
-    [   [@http://www.borland.com/bcppbuilder/freecompiler =borland=]\n
-        [@http://www.borland.com/ Borland] C++Builder (BCC 5.5)]
-    [   * Common install location: "=C:\Borland\BCC55="\n
-        * =BCC32.EXE= in =PATH=
-] ]
+    [[lines
+        [line [@http://www.borland.com/bcppbuilder/freecompiler =borland=]]
+        [line [@http://www.borland.com/ Borland] C++Builder (BCC 5.5)]
+        ]]
+    [[list
+        [li Common install location: "=C:\Borland\BCC55="]
+        [li =BCC32.EXE= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.comeaucomputing.com/ =como=]\n
-        Comeau Computing C/C++]
-    [
-] ]
+    [[lines
+        [line [@http://www.comeaucomputing.com/ =como=]]
+        [line Comeau Computing C/C++]
+        ]]
+    []
+]
 
 [   [] []
-    [   [@http://gcc.gnu.org/ =gcc=]\n
-        GNU GCC]
-    [
-] ]
+    [[lines
+        [line [@http://gcc.gnu.org/ =gcc=]]
+        [line GNU GCC]
+        ]]
+    []
+]
 
 [   [] []
-    [   [@http://gcc.gnu.org/ =gcc-nocygwin=]\n
-        GNU GCC]
-    [
-] ]
+    [[lines
+        [line [@http://gcc.gnu.org/ =gcc-nocygwin=]]
+        [line GNU GCC]
+        ]]
+    []
+]
 
 [   [] []
-    [   [@http://www.intel.com/software/products/compilers/c60 =intel-win32=]\n
-        Intel C++ Compiler for Windows]
-    [   * =ICL.EXE= in =PATH=
-] ]
+    [[lines
+        [line [@http://www.intel.com/software/products/compilers/c60 =intel-win32=]]
+        [line Intel C++ Compiler for Windows]
+        ]]
+    [[list
+        [li =ICL.EXE= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.metrowerks.com/ =metrowerks=]\n
-        MetroWerks CodeWarrior C/C++ 7.x, 8.x, 9.x]
-    [   * =CWFolder= variable configured
-        * =MWCC.EXE= in =PATH=
-] ]
+    [[lines
+        [line [@http://www.metrowerks.com/ =metrowerks=]]
+        [line MetroWerks CodeWarrior C/C++ 7.x, 8.x, 9.x]
+        ]]
+    [[list
+        [li =CWFolder= variable configured]
+        [li =MWCC.EXE= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.mingw.org/ =mingw=]\n
-        GNU [@http://gcc.gnu.org/ GCC] as the [@http://www.mingw.org/ MinGW] configuration]
-    [   * Common install location: "=C:\MinGW="
-] ]
+    [[lines
+        [line [@http://www.mingw.org/ =mingw=]]
+        [line GNU [@http://gcc.gnu.org/ GCC] as the [@http://www.mingw.org/ MinGW] configuration]
+        ]]
+    [[list
+        [li Common install location: "=C:\MinGW="]
+        ]]
+]
 
 [   [] []
-    [   [@http://msdn.microsoft.com/visualc/ =msvc=]\n
-        Microsoft Visual C++ 6.x]
-    [   * =VCVARS32.BAT= already configured\n
-        * =%MSVCDir%= is present in environment\n
-        * Common install locations: "=%ProgramFiles%\Microsoft Visual Studio=", "=%ProgramFiles%\Microsoft Visual C++="\n
-        * =CL.EXE= in =PATH=\n
-] ]
+    [[lines
+        [line [@http://msdn.microsoft.com/visualc/ =msvc=]]
+        [line Microsoft Visual C++ 6.x]
+        ]]
+    [[list
+        [li =VCVARS32.BAT= already configured]
+        [li =%MSVCDir%= is present in environment]
+        [li Common install locations: "=%ProgramFiles%\Microsoft Visual Studio=", "=%ProgramFiles%\Microsoft Visual C++="]
+        [li =CL.EXE= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://msdn.microsoft.com/visualc/ =vc7=]\n
-        Microsoft Visual C++ 7.x]
-    [   * =VCVARS32.BAT= or =VSVARS32.BAT= already configured
-        * =%VS71COMNTOOLS%= is present in environment\n
-        * =%VCINSTALLDIR%= is present in environment\n
-        * Common install locations: "=%ProgramFiles%\Microsoft Visual Studio .NET=", "=%ProgramFiles%\Microsoft Visual Studio .NET 2003="\n
-        * =CL.EXE= in =PATH=\n
-] ]
+    [[lines
+        [line [@http://msdn.microsoft.com/visualc/ =vc7=]]
+        [line Microsoft Visual C++ 7.x]
+        ]]
+    [[list
+        [li =VCVARS32.BAT= or =VSVARS32.BAT= already configured]
+        [li =%VS71COMNTOOLS%= is present in environment]
+        [li =%VCINSTALLDIR%= is present in environment]
+        [li Common install locations: "=%ProgramFiles%\Microsoft Visual Studio .NET=", "=%ProgramFiles%\Microsoft Visual Studio .NET 2003="]
+        [li =CL.EXE= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://msdn.microsoft.com/visualc/ =vc8=]\n
-        Microsoft Visual C++ 8.x]
-    [Detection:\n
-        * =VCVARSALL.BAT= already configured\n
-        * =%VS80COMNTOOLS%= is present in environment\n
-        * Common install location: "=%ProgramFiles%\Microsoft Visual Studio 8="\n
-        * =CL.EXE= in =PATH=\n
-    \n
-    Notes:\n
-        * If =VCVARSALL.BAT= is called to set up the toolset, it is passed all the extra arguments, see below for what those arguments are. This can be used to build, for example, a Win64 specific version of =bjam=. Consult the VisualStudio documentation for what the possible argument values to the =VCVARSALL.BAT= are.
-] ]
+    [[lines
+        [line [@http://msdn.microsoft.com/visualc/ =vc8=]]
+        [line Microsoft Visual C++ 8.x]
+        ]]
+    [Detection:
+        [list
+            [li =VCVARSALL.BAT= already configured]
+            [li =%VS80COMNTOOLS%= is present in environment]
+            [li Common install location: "=%ProgramFiles%\Microsoft Visual Studio 8="]
+            [li =CL.EXE= in =PATH=]
+            ]
+    
+    Notes:
+        [list
+            [li If =VCVARSALL.BAT= is called to set up the toolset, it is passed all the extra arguments, see below for what those arguments are. This can be used to build, for example, a Win64 specific version of =bjam=. Consult the VisualStudio documentation for what the possible argument values to the =VCVARSALL.BAT= are.]
+            ]
+        ]
+]
 
 [   [=build.sh=] [Unix, Linux, Cygwin, etc.]
-    [   [@http://www.hp.com/go/c++ =acc=]\n
-        HP-UX aCC]
-    [   * =aCC= in =PATH=\n
-        * =uname= is "HP-UX"
-] ]
+    [[lines
+        [line [@http://www.hp.com/go/c++ =acc=]]
+        [line HP-UX aCC]
+        ]]
+    [[list
+        [li =aCC= in =PATH=]
+        [li =uname= is "HP-UX"]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.comeaucomputing.com/ =como=]\n
-        Comeau Computing C/C++]
-    [   * como in =PATH=
-] ]
+    [[lines
+        [line [@http://www.comeaucomputing.com/ =como=]]
+        [line Comeau Computing C/C++]
+        ]]
+    [[list
+        [li como in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://gcc.gnu.org/ =gcc=]\n
-        GNU GCC]
-    [   * gcc in =PATH=
-] ]
+    [[lines
+        [line [@http://gcc.gnu.org/ =gcc=]]
+        [line GNU GCC]
+        ]]
+    [[list
+        [li gcc in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.intel.com/software/products/compilers/c60l/ =intel-linux=]\n
-        Intel C++ for Linux]
-    [   * =icc= in =PATH=\n
-        * Common install locations: "=/opt/intel/cc/9.0=", "=/opt/intel_cc_80=", "=/opt/intel/compiler70=", "=/opt/intel/compiler60=", "=/opt/intel/compiler50="
-] ]
+    [[lines
+        [line [@http://www.intel.com/software/products/compilers/c60l/ =intel-linux=]]
+        [line Intel C++ for Linux]
+        ]]
+    [[list
+        [li =icc= in =PATH=]
+        [li Common install locations: "=/opt/intel/cc/9.0=", "=/opt/intel_cc_80=", "=/opt/intel/compiler70=", "=/opt/intel/compiler60=", "=/opt/intel/compiler50="]
+        ]]
+]
 
 [   [] []
-    [   =kcc=\n
-        Intel KAI C++]
-    [   * =KCC= in =PATH=
-] ]
+    [[lines
+        [line =kcc=]
+        [line Intel KAI C++]
+        ]]
+    [[list
+        [li =KCC= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.borland.com/bcppbuilder/freecompiler =kylix=]\n
-        [@http://www.borland.com/ Borland] C++Builder]
-    [   * bc++ in PATH
-] ]
+    [[lines
+        [line [@http://www.borland.com/bcppbuilder/freecompiler =kylix=]]
+        [line [@http://www.borland.com/ Borland] C++Builder]
+        ]]
+    [[list
+        [li bc++ in PATH]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.sgi.com/developers/devtools/languages/mipspro.html =mipspro=]\n
-        SGI MIPSpro C]
-    [   * =uname= is "=IRIX=" or "=IRIX64="
-] ]
+    [[lines
+        [line [@http://www.sgi.com/developers/devtools/languages/mipspro.html =mipspro=]]
+        [line SGI MIPSpro C]
+        ]]
+    [[list
+        [li =uname= is "=IRIX=" or "=IRIX64="]
+        ]]
+]
 
 [   [] []
-    [   =sunpro=\n
-        Sun Workshop 6 C++]
-    [   * Standard install location: "=/opt/SUNWspro="
-] ]
+    [[lines
+        [line =sunpro=]
+        [line Sun Workshop 6 C++]
+        ]]
+    [[list
+        [li Standard install location: "=/opt/SUNWspro="]
+        ]]
+]
 
 [   [] []
-    [   =qcc=\n
-        [@http://www.qnx.com/ QNX Neutrino]]
-    [   * =uname= is "=QNX=" and =qcc= in =PATH=
-] ]
+    [[lines
+        [line =qcc=]
+        [line [@http://www.qnx.com/ QNX Neutrino]]
+        ]]
+    [[list
+        [li =uname= is "=QNX=" and =qcc= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.tru64unix.compaq.com/cplus/ =true64cxx=]\n
-        Compaq C++ Compiler for True64 UNIX]
-    [   * =uname= is "=OSF1="
-] ]
+    [[lines
+        [line [@http://www.tru64unix.compaq.com/cplus/ =true64cxx=]]
+        [line Compaq C++ Compiler for True64 UNIX]
+        ]]
+    [[list
+        [li =uname= is "=OSF1="]
+        ]]
+]
 
 [   [] []
-    [   [@http://www-3.ibm.com/software/ad/vacpp/ =vacpp=]\n
-        IBM VisualAge C++]
-    [   * =xlc= in =PATH=
-] ]
+    [[lines
+        [line [@http://www-3.ibm.com/software/ad/vacpp/ =vacpp=]]
+        [line IBM VisualAge C++]
+        ]]
+    [[list
+        [li =xlc= in =PATH=]
+        ]]
+]
 
 [   [] [MacOS X]
-    [   [@http://developer.apple.com/tools/compilers.html =darwin=]\n
-        Apple MacOS X GCC]
-    [   * =uname= is "=Darwin="
-] ]
+    [[lines
+        [line [@http://developer.apple.com/tools/compilers.html =darwin=]]
+        [line Apple MacOS X GCC]
+        ]]
+    [[list
+        [li =uname= is "=Darwin="]
+        ]]
+]
 
 [   [] [Windows NT, 2000, and XP]
-    [   [@http://www.mingw.org/ =mingw=]\n
-        GNU [@http://gcc.gnu.org/ GCC] as the [@http://www.mingw.org/ MinGW] configuration with the MSYS shell]
-    [   * Common install location: "=/mingw="
-] ]
+    [[lines
+        [line [@http://www.mingw.org/ =mingw=]]
+        [line GNU [@http://gcc.gnu.org/ GCC] as the [@http://www.mingw.org/ MinGW] configuration with the MSYS shell]
+        ]]
+    [[list
+        [li Common install location: "=/mingw="]
+        ]]
+]
 
 ]
 
@@ -335,21 +433,23 @@ Options are either singular or have an accompanying value. When a value is allow
   
   [ [[^-d'''&nbsp;'''/n/]]
     [
-    Enable cummulative debugging levels from 1 to n. Values are:\n
+    Enable cummulative debugging levels from 1 to n. Values are:
     
-    1 - Show the actions taken for building targets, as they are executed (the default).\n
-    2 - Show "quiet" actions and display all action text, as they are executed.\n
-    3 - Show dependency analysis, and target/source timestamps/paths.\n
-    4 - Show arguments and timming of shell invocations.\n
-    5 - Show rule invocations and variable expansions.\n
-    6 - Show directory/header file/archive scans, and attempts at binding to targets.\n
-    7 - Show variable settings.\n
-    8 - Show variable fetches, variable expansions, and evaluation of '"if"' expressions.\n
-    9 - Show variable manipulation, scanner tokens, and memory usage.\n
-    10 - Show profile information for rules, both timing and memory.\n
-    11 - Show parsing progress of Jamfiles.\n
-    12 - Show graph of target dependencies.\n
-    13 - Show change target status (fate).
+    [orderedlist
+        [li Show the actions taken for building targets, as they are executed (the default).]
+        [li Show "quiet" actions and display all action text, as they are executed.]
+        [li Show dependency analysis, and target/source timestamps/paths.]
+        [li Show arguments and timming of shell invocations.]
+        [li Show rule invocations and variable expansions.]
+        [li Show directory/header file/archive scans, and attempts at binding to targets.]
+        [li Show variable settings.]
+        [li Show variable fetches, variable expansions, and evaluation of '"if"' expressions.]
+        [li Show variable manipulation, scanner tokens, and memory usage.]
+        [li Show profile information for rules, both timing and memory.]
+        [li Show parsing progress of Jamfiles.]
+        [li Show graph of target dependencies.]
+        [li Show change target status (fate).]
+        ]
     ] ]
   
   [ [[^-d'''&nbsp;'''+/n/]]
