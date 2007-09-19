@@ -71,12 +71,13 @@ flags mipspro.compile OPTIONS <warnings>on : -ansiW ;
 flags mipspro.compile OPTIONS <warnings>all : -fullwarn ;
 flags mipspro.compile OPTIONS <optimization>speed : -Ofast ;
 flags mipspro.compile OPTIONS <optimization>space : -O2 ;
-flags mipspro.compile OPTIONS <threading>multi : -mt ;
+# flags mipspro.compile OPTIONS <threading>multi : -mt ;
 flags mipspro.compile OPTIONS <cflags> : -LANG:std ;
 flags mipspro.compile.c++ OPTIONS <inlining>off : -INLINE:none ;
 flags mipspro.compile.c++ OPTIONS <cxxflags> ;
 flags mipspro.compile DEFINES <define> ;
 flags mipspro.compile INCLUDES <include> ;
+
 
 flags mipspro.compile.fortran OPTIONS <fflags> ;
 
@@ -87,7 +88,7 @@ actions compile.c
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -FE:template_in_elf_section -ptused $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.fortran
@@ -105,6 +106,8 @@ flags mipspro.link OPTIONS <debug-symbols>on : -g ;
 flags mipspro.link OPTIONS $(cpu-arch-32) : -n32 ;
 flags mipspro.link OPTIONS $(cpu-arch-64) : -64 ;
 
+flags mipspro.link OPTIONS <optimization>speed : -Ofast ;
+flags mipspro.link OPTIONS <optimization>space : -O2 ;
 flags mipspro.link OPTIONS <linkflags> ;
 flags mipspro.link LINKPATH <library-path> ;
 flags mipspro.link FINDLIBS-ST <find-static-library> ;
@@ -121,7 +124,7 @@ rule link ( targets * : sources * : properties * )
 
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
+    "$(CONFIG_COMMAND)" -FE:template_in_elf_section -ptused $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
 }
 
 # Slight mods for dlls
