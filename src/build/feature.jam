@@ -647,7 +647,10 @@ rule get-values ( feature : properties * )
     {
         if $(p:G) = $(feature)
         {
-            result += $(p:G=) ;
+            #~ Use MATCH instead if :G= to get the value, in order to preserve
+            #~ the value intact instead of having bjam treat it as a decompossible
+            #~ path.
+            result += [ MATCH ">(.*)" : $(p) ] ;
         }
     }
     return $(result) ;
