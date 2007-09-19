@@ -1681,11 +1681,7 @@ A target that is not a dependency of any other target is being referenced with =
 
 [section Bugs, Limitations]
 
-The =-j= flag can cause =bjam= to get confused when single actions update more than one target at a time. =bjam= may proceed as if the targets were built even though they are still under construction.
-
 For parallel building to be successful, the dependencies among files must be properly spelled out, as targets tend to get built in a quickest-first ordering. Also, beware of un-parallelizable commands that drop fixed-named files into the current directory, like =yacc(1)= does.
-
-With the =-j= flag, errors from failed commands can get staggeringly mixed up.
 
 A poorly set =$(JAMSHELL)= is likely to result in silent failure. 
 
