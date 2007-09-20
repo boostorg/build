@@ -236,14 +236,22 @@ echo "###"
 YYACC_SOURCES="yyacc.c"
 MKJAMBASE_SOURCES="mkjambase.c"
 BJAM_SOURCES="\
- command.c compile.c debug.c execunix.c expand.c fileunix.c glob.c hash.c\
+ command.c compile.c debug.c expand.c glob.c hash.c\
  hdrmacro.c headers.c jam.c jambase.c jamgram.c lists.c make.c make1.c\
  newstr.c option.c output.c parse.c pathunix.c pathvms.c regexp.c\
  rules.c scan.c search.c subst.c timestamp.c variable.c modules.c\
  strings.c filesys.c builtins.c pwd.c class.c native.c w32_getreg.c\
  modules/set.c modules/path.c modules/regex.c modules/property-set.c\
- modules/sequence.c modules/order.c\
- execnt.c filent.c"
+ modules/sequence.c modules/order.c"
+case $BOOST_JAM_TOOLSET in
+    mingw)
+    BJAM_SOURCES="${BJAM_SOURCES} execnt.c filent.c"
+    ;;
+    
+    *)
+    BJAM_SOURCES="${BJAM_SOURCES} execunix.c fileunix.c"
+    ;;
+esac
 
 BJAM_UPDATE=
 if test "$1" = "--update" -o "$2" = "--update" -o "$3" = "--update" -o "$4" = "--update"  ; then
