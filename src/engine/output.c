@@ -53,6 +53,22 @@ void out_action(
     {
         fputs(command,globs.cmdout);
     }
+
+    switch (exit_reason)
+    {
+        case EXIT_OK:
+            break;
+        case EXIT_FAIL:
+            break;
+        case EXIT_TIMEOUT:
+        {
+            /* process expired, make user aware with explicit message */
+            fprintf(bjam_out, "%d second time limit exceeded\n", globs.timeout);
+            break;
+        }
+        default:
+          break;
+    }
     
     /* print out the command output, if requested */
     if (0 != out_data &&
