@@ -73,6 +73,7 @@ static struct
     int     fd[2];            /* file descriptors for stdout and stderr */
     FILE   *stream[2];        /* child's stdout (0) and stderr (1) file stream */
     clock_t start_time;       /* start time of child process */
+    int     exit_reason;      /* termination status */
     int     action_length;    /* length of action string */
     int     target_length;    /* length of target string */
     char   *action;           /* buffer to hold action and target invoked */
@@ -184,17 +185,11 @@ execcmd(
 	/* Start the command */
 
         if (0 < globs.timeout) {
-            struct tms buf;
-
-            /*
-             * handle hung processes using different mechanism
-             * manually track elapsed time and signal process
-             * when time limit expires
-             *
-             * could use this approach for both consuming too
-             * much cpu and hung processes, but it never hurts
-             * to have backup
+            /* 
+             * handle hung processes by manually tracking elapsed 
+             * time and signal process when time limit expires
              */
+            struct tms buf;
             cmdtab[ slot ].start_time = times(&buf);
 
             /* make a global, only do this once */
@@ -215,19 +210,6 @@ execcmd(
             }
             else
                 dup2(err[1], STDERR_FILENO);
-
-            /* terminate processes only if timeout is positive */
-            if (0 < globs.timeout) {
-              struct rlimit rl;
-
-              /* 
-               * set hard and soft resource limits for cpu usage
-               * won't catch hung processes that don't consume cpu
-               */
-              rl.rlim_cur = globs.timeout;
-              rl.rlim_max = globs.timeout;
-              setrlimit(RLIMIT_CPU, &rl);
-            }
 
 	    execvp( argv[0], argv );
 	    _exit(127);
@@ -386,6 +368,7 @@ void populate_file_descriptors(int *fmax, fd_set *fds)
             clock_t current = times(&buf);
             if (globs.timeout <= (current-cmdtab[i].start_time)/tps) {
                 kill(cmdtab[i].pid, SIGKILL);
+                cmdtab[i].exit_reason = EXIT_TIMEOUT;
             }
         }
     }
@@ -469,12 +452,21 @@ execwait()
                         pid = 0;
                         cmdtab[i].pid = 0;
 
+                        /* set reason for exit if not timed out */
+                        if (WIFEXITED(status)) 
+                        {
+                            if (0 == WEXITSTATUS(status)) 
+                                cmdtab[i].exit_reason = EXIT_OK;
+                            else
+                                cmdtab[i].exit_reason = EXIT_FAIL;
+                        }
+
                         times(&old_time);
 
                         /* print out the rule and target name */
                         out_action(cmdtab[i].action, cmdtab[i].target,
                             cmdtab[i].command, cmdtab[i].buffer[OUT], cmdtab[i].buffer[ERR],
-                            EXIT_OK);
+                            cmdtab[i].exit_reason);
 
                         times(&new_time);
 
