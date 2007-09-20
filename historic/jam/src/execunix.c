@@ -473,7 +473,8 @@ execwait()
 
                         /* print out the rule and target name */
                         out_action(cmdtab[i].action, cmdtab[i].target,
-                            cmdtab[i].command, cmdtab[i].buffer[OUT], cmdtab[i].buffer[ERR]);
+                            cmdtab[i].command, cmdtab[i].buffer[OUT], cmdtab[i].buffer[ERR],
+                            EXIT_OK);
 
                         times(&new_time);
 

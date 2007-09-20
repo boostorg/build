@@ -513,7 +513,7 @@ make1c( state *pState )
             target = lol_get(&cmd->args, 0)->string;
             if ( globs.noexec )
             {
-                out_action(rule_name,target,cmd->buf,"","");
+                out_action(rule_name,target,cmd->buf,"","",EXIT_OK);
             }
 	    }
 

@@ -7,12 +7,17 @@
 #ifndef BJAM_OUTPUT_H
 #define BJAM_OUTPUT_H
 
+#define EXIT_OK 0
+#define EXIT_FAIL 1
+#define EXIT_TIMEOUT 2
+
 void out_action(
     const char * action,
     const char * target,
     const char * command,
     const char * out_data,
-    const char * err_data
+    const char * err_data,
+    int exit_reason
     );
 
 #endif
