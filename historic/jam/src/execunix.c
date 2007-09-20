@@ -63,7 +63,6 @@ static clock_t tps = 0;
 static struct timeval tv;
 static int intr = 0;
 static int cmdsrunning = 0;
-static void (*istat)( int );
 
 #define OUT 0
 #define ERR 1
@@ -161,8 +160,6 @@ execcmd(
 	    argv[3] = 0;
 	}
 
-        if (tps == 0) tps = sysconf(_SC_CLK_TCK);                
-
 	/* increment jobs running */
 	++cmdsrunning;
 
@@ -186,6 +183,24 @@ execcmd(
 
 	/* Start the command */
 
+        if (0 < globs.timeout) {
+            struct tms buf;
+
+            /*
+             * handle hung processes using different mechanism
+             * manually track elapsed time and signal process
+             * when time limit expires
+             *
+             * could use this approach for both consuming too
+             * much cpu and hung processes, but it never hurts
+             * to have backup
+             */
+            cmdtab[ slot ].start_time = times(&buf);
+
+            /* make a global, only do this once */
+            if (tps == 0) tps = sysconf(_SC_CLK_TCK);                
+        }
+
 	if ((cmdtab[slot].pid = vfork()) == 0) 
    	{
             close(out[0]);
@@ -204,7 +219,6 @@ execcmd(
             /* terminate processes only if timeout is positive */
             if (0 < globs.timeout) {
               struct rlimit rl;
-              struct tms buf;
 
               /* 
                * set hard and soft resource limits for cpu usage
@@ -213,17 +227,6 @@ execcmd(
               rl.rlim_cur = globs.timeout;
               rl.rlim_max = globs.timeout;
               setrlimit(RLIMIT_CPU, &rl);
-
-              /*
-               * handle hung processes using different mechanism
-               * manually track elapsed time and signal process
-               * when time limit expires
-               *
-               * could use this approach for both consuming too
-               * much cpu and hung processes, but it never hurts
-               * to have backup
-               */
-              cmdtab[ slot ].start_time = times(&buf);
             }
 
 	    execvp( argv[0], argv );
