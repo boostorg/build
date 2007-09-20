@@ -129,11 +129,13 @@ static struct
     string buffer_err;
     /* running process info */
     PROCESS_INFORMATION pi;
-    /* when comand complates, the result value */
+    /* when comand completes, the result value */
     DWORD exitcode;
     /* function called when the command completes */
     void (*func)( void *closure, int status, timing_info*, char *, char * );
     void *closure;
+    /* when command completes, the reason it completed */
+    int exit_reason;
 } cmdtab[ MAXJOBS ] = {{0}};
 
 /* execution unit tests */
@@ -518,7 +520,8 @@ int execwait()
             cmdtab[i].target.size > 0 ? cmdtab[i].target.value : 0,
             cmdtab[i].command.size > 0 ? cmdtab[i].command.value : 0,
             cmdtab[i].buffer_out.size > 0 ? cmdtab[i].buffer_out.value : 0,
-            cmdtab[i].buffer_err.size > 0 ? cmdtab[i].buffer_err.value : 0);
+            cmdtab[i].buffer_err.size > 0 ? cmdtab[i].buffer_err.value : 0,
+            cmdtab[i].exit_reason);
 
         /* call the callback, may call back to jam rule land.
         assume -p0 in effect so only pass buffer containing
@@ -542,6 +545,7 @@ int execwait()
         string_free(&cmdtab[i].buffer_out); string_new(&cmdtab[i].buffer_out);
         string_free(&cmdtab[i].buffer_err); string_new(&cmdtab[i].buffer_err);
         cmdtab[i].exitcode = 0;
+        cmdtab[i].exit_reason = EXIT_OK;
     }
 
     return 1;
@@ -915,6 +919,8 @@ static int try_kill_one()
                 kill_process_tree(0,cmdtab[i].pi.hProcess);
                 /* and return it as complete, with the failure code */
                 GetExitCodeProcess( cmdtab[i].pi.hProcess, &cmdtab[i].exitcode );
+                /* mark it as a timeout */
+                cmdtab[i].exit_reason = EXIT_TIMEOUT;
                 return i;
             }
         }

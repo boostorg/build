@@ -30,7 +30,8 @@ void out_action(
     const char * target,
     const char * command,
     const char * out_data,
-    const char * err_data
+    const char * err_data,
+    int exit_reason
     )
 {
     /* print out the action+target line, if the action is quite
