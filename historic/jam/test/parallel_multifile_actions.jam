@@ -21,7 +21,7 @@ else
 {
     actions .gen. {
 echo 001
-sleep 1
+sleep 4
 echo 002
 }
     rule .use.1 { DEPENDS $(<) : $(>) ; }
@@ -30,6 +30,7 @@ echo 003
 }
     rule .use.2 { DEPENDS $(<) : $(>) ; }
     actions .use.2 {
+sleep 1
 echo 004
 }
 
