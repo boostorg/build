@@ -394,7 +394,7 @@ int
 execwait()
 {
     int i, ret, fd_max;
-    int pid, status, w, finished;
+    int pid, status, finished;
     int rstat;
     timing_info time;
     fd_set fds;
@@ -480,7 +480,7 @@ execwait()
 
                         if( intr )
                             rstat = EXEC_CMD_INTR;
-                        else if( w == -1 || status != 0 )
+                        else if( status != 0 )
                             rstat = EXEC_CMD_FAIL;
                         else
                             rstat = EXEC_CMD_OK;
