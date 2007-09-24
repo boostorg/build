@@ -16,6 +16,7 @@
 # include <unistd.h> /* needed for vfork(), _exit() prototypes */
 # include <sys/resource.h>
 # include <sys/times.h>
+# include <sys/wait.h>
 
 #if defined(sun) || defined(__sun) || defined(linux)
 #include <wait.h>
