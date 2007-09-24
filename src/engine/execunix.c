@@ -212,16 +212,15 @@ execcmd(
             else
                 dup2(err[1], STDERR_FILENO);
 
-            /* Make this process a session leader
+            /* Make this process a process group leader
              * so that when we kill it, all child
              * processes of this process are terminated
              * as well.
              *
-             * we use kill(-pid, SIGKILL) to kill the
-             * session leader and all children of this
-             * session.
+             * we use killpg(pid, SIGKILL) to kill the
+             * process group leader and all its children.
              */
-            setsid();
+            setpgid(cmdtab[slot].pid, cmdtab[slot].pid);
 
 	    execvp( argv[0], argv );
 	    _exit(127);
@@ -379,7 +378,7 @@ void populate_file_descriptors(int *fmax, fd_set *fds)
             struct tms buf;
             clock_t current = times(&buf);
             if (globs.timeout <= (current-cmdtab[i].start_time)/tps) {
-                kill(-cmdtab[i].pid, SIGKILL);
+                killpg(cmdtab[i].pid, SIGKILL);
                 cmdtab[i].exit_reason = EXIT_TIMEOUT;
             }
         }
@@ -418,7 +417,7 @@ execwait()
             tv.tv_sec = globs.timeout;
             tv.tv_usec = 0;
 
-            /* select will wait until io on a descriptor or a signal */
+            /* select will wait until: io on a descriptor, a signal, or we time out */
             ret = select(fd_max+1, &fds, 0, 0, &tv);
         }
         else {
