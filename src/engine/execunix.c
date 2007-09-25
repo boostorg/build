@@ -62,6 +62,7 @@
 
 static clock_t tps = 0;
 static struct timeval tv;
+static int timeout = 0;
 static int intr = 0;
 static int cmdsrunning = 0;
 
@@ -355,6 +356,9 @@ void close_streams(int i, int s)
 void populate_file_descriptors(int *fmax, fd_set *fds)
 {
     int i, fd_max = 0;
+    struct tms buf;
+    clock_t current = times(&buf);
+    timeout = globs.timeout;
 
     /* compute max read file descriptor for use in select */
     FD_ZERO(fds);
@@ -375,9 +379,9 @@ void populate_file_descriptors(int *fmax, fd_set *fds)
         }
 
         if (globs.timeout && cmdtab[i].pid) {
-            struct tms buf;
-            clock_t current = times(&buf);
-            if (globs.timeout <= (current-cmdtab[i].start_time)/tps) {
+            clock_t consumed = (current - cmdtab[i].start_time) / tps;
+            timeout = (globs.timeout - consumed) < timeout ? (globs.timeout - consumed) : timeout;
+            if (globs.timeout <= consumed) {
                 killpg(cmdtab[i].pid, SIGKILL);
                 cmdtab[i].exit_reason = EXIT_TIMEOUT;
             }
@@ -414,7 +418,7 @@ execwait()
 
         if (0 < globs.timeout) {
             /* force select to timeout so we can terminate expired processes */
-            tv.tv_sec = globs.timeout;
+            tv.tv_sec = timeout;
             tv.tv_usec = 0;
 
             /* select will wait until: io on a descriptor, a signal, or we time out */
