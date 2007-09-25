@@ -88,11 +88,12 @@ flags pgi.link OPTIONS <debug-symbols>on : -g ;
 # Strip the binary when no debugging is needed
 flags pgi.link OPTIONS <debug-symbols>off : -s ;
 flags pgi.link OPTIONS <profiling>on : -xprofile=tcov ;
-# flags pgi.link OPTIONS <threading>multi : -mt ;
 flags pgi.link OPTIONS <linkflags> ;
+flags pgi.link OPTIONS <link>shared : -fpic ;
 flags pgi.link LINKPATH <library-path> ;
 flags pgi.link FINDLIBS-ST <find-static-library> ;
 flags pgi.link FINDLIBS-SA <find-shared-library> ;
+flags pgi.link FINDLIBS-SA <threading>multi : pthread ;
 flags pgi.link LIBRARIES <library-file> ;
 flags pgi.link LINK-RUNTIME <runtime-link>static : static ;
 flags pgi.link LINK-RUNTIME <runtime-link>shared : dynamic ;
@@ -115,7 +116,7 @@ rule link ( targets * : sources * : properties * )
 # "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Bstatic -l$(FINDLIBS-ST)
+    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Bstatic -l$(FINDLIBS-ST) -Bdynamic -l$(FINDLIBS-SA) -B$(LINK-RUNTIME)
 }
 
 # Slight mods for dlls
