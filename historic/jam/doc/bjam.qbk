@@ -1738,3 +1738,8 @@ if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
 [endsect]
 
 [endsect]
+
+
+[section History]
+[include history.qbk]
+[endsect]

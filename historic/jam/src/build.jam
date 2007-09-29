@@ -818,18 +818,19 @@ dist.source = $(dist.source:D=)
     build.jam build.bat build.sh build_vms.com
     Jambase
     jamgram.y jamgram.yy
-    [ .path debian changelog ]
-    [ .path debian control ]
-    [ .path debian copyright ]
-    [ .path debian jam.man.sgml ]
-    [ .path debian rules ]
     [ .path modules set.c ]
     [ .path modules path.c ]
     [ .path modules regex.c ]
     [ .path modules property-set.c ]
     [ .path modules sequence.c ]
     [ .path modules order.c ]
-    boost-jam.spec
+    [ GLOB [ .path boehm_gc ] : * ]
+    [ GLOB [ .path boehm_gc include ] : * ]
+    [ GLOB [ .path boehm_gc include private ] : * ]
+    [ GLOB [ .path boehm_gc cord ] : * ]
+    [ GLOB [ .path boehm_gc Mac_files ] : * ]
+    [ GLOB [ .path boehm_gc tests ] : * ]
+    [ GLOB [ .path boehm_gc doc ] : * ]
     ;
 dist.bin =
     bjam
@@ -895,14 +896,17 @@ rule .package ( dst-dir : src-files + )
     local dst-files ;
     for local src-path in $(src-files)
     {
-        local src-subdir = $(src-path:D) ;
-        local src-file = $(src-path) ;
-        while $(src-subdir:D) { src-subdir = $(src-subdir:D) ; }
-        if $(src-subdir) = ".."
+        if ! [ GLOB $(src-path:P) : $(src-path:B) ] || [ CHECK_IF_FILE $(src-path) ]
         {
-            src-file = $(src-file:D=) ;
+            local src-subdir = $(src-path:D) ;
+            local src-file = $(src-path) ;
+            while $(src-subdir:D) { src-subdir = $(src-subdir:D) ; }
+            if $(src-subdir) = ".."
+            {
+                src-file = $(src-file:D=) ;
+            }
+            dst-files += $(src-file:R=$(dst-dir)) ;
         }
-        dst-files += $(src-file:R=$(dst-dir)) ;
     }
     
     local pack = ;

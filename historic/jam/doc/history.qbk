@@ -1,0 +1,102 @@
+[variablelist
+
+[[3.1.15] [
+
+This release sees a variety of fixes for long standing Perforce/Jam problems. Most of
+them relating to running actions in parallel with the -jN option. The end result of the
+changes is that running parallel actions is now reliably possible in Unix and Windows
+environments. Many thanks to Noel for joining the effort, to implement and fix the Unix
+side of stuff.
+
+[list
+    [li Add support for building bjam with pgi and pathscale toolsets.
+        -- ['Noel B.]
+        ]
+    [li Implement running action commands through pipes (-p option) to fix jumbled
+        output when using parallel execution with -j option. This is implemented
+        for Unix variants, and Windows (Win32/NT).
+        -- ['Rene R.], ['Noel B.]
+        ]
+    [li Add "sun" as alias to Sun Workshop compiler tools.
+        -- ['Rene R.]
+        ]
+    [li Set MAXLINE in jam.h to 23k bytes for AIX.  The piecemeal archive action
+        was broken with the default MAXLINE of 102400.  Because the AIX shell uses
+        some of the 24k default buffer size for its own use, I reduced it to 23k.
+        -- ['Noel B.]
+        ]
+    [li Make use of output dir options of msvc to not polute src dir with compiled files.
+        -- ['Rene R.]
+        ]
+    [li A small fix, so -d+2 will always show the "real" commands being executed
+        instead of casually the name of a temporary batch file.
+        -- ['Roland S.]
+        ]
+    [li Add test to check 'bjam -n'.
+        -- ['Rene R.]
+        ]
+    [li Add test to check 'bjam -d2'.
+        -- ['Rene R.]
+        ]
+    [li Bring back missing output of -n option. The -o option continues to be
+        broken as it has been for a long time now because of the @ file feature.
+        -- ['Rene R.]
+        ]
+    [li Update GC support to work with Boehm GC 7.0.
+        -- ['Rene R.]
+        ]
+    [li Revert the BOOST_BUILD_PATH change, since the directory passed to
+        boost-build should be first in searched paths, else project local
+        build system will not be picked correctly. The order had been changed to
+        allow searching of alternate user-config.jam files from boost build. This
+        better should be done with --user-config= switch or similar. 
+        -- ['Roland S.]
+        ]
+    [li Initial support for defining action body from Python.
+        -- ['Vladimir P.]
+        ]
+    [li Implement @() expansion during parse phase.
+        -- ['Rene R.]
+        ]
+    [li Define OSPLAT var unconditionally, and more generically, when possible.
+        -- ['Rene R.]
+        ]
+    [li Fix undeclared INT_MAX on some platforms, i.e. Linux.
+        -- ['Rene R.]
+        ]
+    [li Modified execunix.c to add support for terminating
+        processes that consume too much cpu or that hang and
+        fail to consume cpu at all.  This in support of the
+        bjam -lx option.
+        -- ['Noel B.]
+        ]
+    [li Add internal dependencies for multi-file generating actions to indicate
+        that the targets all only appear when the first target appears. This fixes
+        the long standing problem Perforce/Jam has with multi-file actions and
+        parallel execution (-jN).
+        -- ['Rene R.]
+        ]
+    [li Add test of -l limit option now that it's implemented on windows and unix.
+        -- ['Rene R.]
+        ]
+    [li Add test for no-op @() expansion.
+        -- ['Rene R.]
+        ]
+    [li Handle invalid formats of @() as doing a straight substitution instead of
+        erroring out.
+        -- ['Rene R.]
+        ]
+    [li Various fixes to compile on SGI/Irix.
+        -- ['Noel B.]
+        ]
+    [li Add output for when actions timeout with -lN option.
+        -- ['Rene R.], ['Noel B.]
+        ]
+    [li Add needed include (according to XOPEN) for definition of WIFEXITED and WEXITSTATUS.
+        -- ['Markus S.]
+        ]
+]
+
+]]
+
+]
