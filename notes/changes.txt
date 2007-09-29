@@ -1,4 +1,4 @@
-Copyright 2004, 2006 Vladimir Prus 
+Copyright 2004-2007 Vladimir Prus 
 Distributed under the Boost Software License, Version 1.0. 
 (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
@@ -7,8 +7,9 @@ Milestone 12 (in development)
 
 Changes in this release:
 
+    - The Pathscale, PGI and mipspro compilers are now supported.    
     - Support for autoconfiguration of toolset based on command-line
-      toolset=xxxx or --toolset=xxxx options, and for default toolset
+      toolset=xxxx request, and for default toolset
       configuration as a fallback.
     - Support for precompiled headers for gcc toolset,
       and improvements for msvc.
@@ -23,21 +24,37 @@ Changes in this release:
     - Toolsets can now implicitly add requirements to
     all targets.
     - New 'generate' rule.
+    - The executables produced by the 'run' rule are automatically
+    removed after run.
+    - The gcc toolset uses the version obtained by running
+    the compiler, if no explicit one is provided.    
+    - The sun toolset now supports the 'address-model' feature,
+    and uses -KPIC for shared libraries.
+    - Free features on command line affect all targets, not
+    just 'directly requested' ones.
+
 
 Documentation changes:
 
     - Installation instructions for Linux distributors.
+    - Configuration options for all supported C++ compilers
+    are now documented.
 
 The following bugs were fixed:
 
-    - The 'cflags' and 'linkflags' features not working for Darwin.
-    - The intel toolset not working on Windows.
+    - The 'cflags' and 'linkflags' now work on Darwin.o
+    - The intel toolset now works on Windows.
     - Fix library search options for CodeWarriour toolset.
     - The <install-source-root> could cause duplicate
     mkdir commands.
     - Numerious fixes in Boost autolink support
     - Numerious fixes in Boost.Python support.
-    - Indirect properties not evaluates in usage requirements.
+    - Indirect properties not evaluated in usage requirements.
+    - Generator that returns a property set but not target is
+    considered successful.
+    - On Darwin, when several compiler versions
+    are configured, -fcoalesce-templates is applied only to
+    versions that need it.
 
 
 Milestone 11 (Jule 20, 2006)
