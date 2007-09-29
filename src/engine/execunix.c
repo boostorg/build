@@ -62,7 +62,7 @@
 
 static clock_t tps = 0;
 static struct timeval tv;
-static int timeout = 0;
+static int select_timeout = 0;
 static int intr = 0;
 static int cmdsrunning = 0;
 
@@ -221,6 +221,13 @@ execcmd(
              * we use killpg(pid, SIGKILL) to kill the
              * process group leader and all its children.
              */
+             if (0 < globs.timeout)
+             {
+                struct rlimit r_limit;
+                r_limit.rlim_cur = globs.timeout;
+                r_limit.rlim_max = globs.timeout;
+                setrlimit(RLIMIT_CPU, &r_limit);
+            }
             setpgid(cmdtab[slot].pid, cmdtab[slot].pid);
 
 	    execvp( argv[0], argv );
@@ -358,7 +365,7 @@ void populate_file_descriptors(int *fmax, fd_set *fds)
     int i, fd_max = 0;
     struct tms buf;
     clock_t current = times(&buf);
-    timeout = globs.timeout;
+    select_timeout = globs.timeout;
 
     /* compute max read file descriptor for use in select */
     FD_ZERO(fds);
@@ -380,8 +387,9 @@ void populate_file_descriptors(int *fmax, fd_set *fds)
 
         if (globs.timeout && cmdtab[i].pid) {
             clock_t consumed = (current - cmdtab[i].start_time) / tps;
-            if (0 <= (globs.timeout - consumed) && ((globs.timeout - consumed) < timeout)) {
-              timeout = globs.timeout - consumed;
+            clock_t process_timesout = globs.timeout - consumed;
+            if (0 < process_timesout && process_timesout < select_timeout) {
+                select_timeout = process_timesout;
             }
             if (globs.timeout <= consumed) {
                 killpg(cmdtab[i].pid, SIGKILL);
@@ -420,7 +428,7 @@ execwait()
 
         if (0 < globs.timeout) {
             /* force select to timeout so we can terminate expired processes */
-            tv.tv_sec = timeout;
+            tv.tv_sec = select_timeout;
             tv.tv_usec = 0;
 
             /* select will wait until: io on a descriptor, a signal, or we time out */
