@@ -1016,6 +1016,7 @@ evaluate_rule(
         /*  Make targets[1,N-1] depend on targets[0], to describe the multply
             generated targets for the rule. Do it with includes, to reflect
             non-build dependency. */
+        if ( action->targets )
         {
             TARGET * t0 = action->targets->target;
             for ( t = action->targets->next; t; t = t->next )
