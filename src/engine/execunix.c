@@ -380,7 +380,9 @@ void populate_file_descriptors(int *fmax, fd_set *fds)
 
         if (globs.timeout && cmdtab[i].pid) {
             clock_t consumed = (current - cmdtab[i].start_time) / tps;
-            timeout = (globs.timeout - consumed) < timeout ? (globs.timeout - consumed) : timeout;
+            if (0 <= (globs.timeout - consumed) && ((globs.timeout - consumed) < timeout)) {
+              timeout = globs.timeout - consumed;
+            }
             if (globs.timeout <= consumed) {
                 killpg(cmdtab[i].pid, SIGKILL);
                 cmdtab[i].exit_reason = EXIT_TIMEOUT;
