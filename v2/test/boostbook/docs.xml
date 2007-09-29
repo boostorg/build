@@ -32,5 +32,5 @@
     
   </section>
    
-  <xi:include href="autodoc.boostbook"/> 
+  <xi:include href="autodoc.xml"/> 
 </library>
