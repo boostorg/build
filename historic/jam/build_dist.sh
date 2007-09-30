@@ -24,4 +24,4 @@ cp -R html/* ../stage
 cd ../stage
 
 #~ Build distribution archives.
-. ./build.sh --- dist
+sh ./build.sh --- dist

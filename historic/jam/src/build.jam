@@ -864,9 +864,19 @@ if $(NT)
 }
 if $(UNIX)
 {
-    actions [PACK] {
-    tar zcf "$(<)" "$(>)"
+    tar ?= [ GLOB $(PATH) : star bsdtar tar ] ;
+    tar = $(tar[1]) ;
+    switch $(tar:D=:S=)
+    {
+        case star : tar += -c artype=pax -D -d -to-stdout ;
+        case * : tar += -c -f - ;
     }
+    actions [PACK] {
+    "$(tar)" "$(>)" | gzip -c9 > "$(<)"
+    }
+    #~ actions [PACK] {
+    #~ tar cf "$(<:S=.tar)" "$(>)"
+    #~ }
     actions [ZIP] {
     gzip -c9 "$(>)" > "$(<)"
     }
@@ -894,6 +904,7 @@ rule .binary
 rule .package ( dst-dir : src-files + )
 {
     local dst-files ;
+    local src-files-actual ;
     for local src-path in $(src-files)
     {
         if ! [ GLOB $(src-path:P) : $(src-path:B) ] || [ CHECK_IF_FILE $(src-path) ]
@@ -906,6 +917,7 @@ rule .package ( dst-dir : src-files + )
                 src-file = $(src-file:D=) ;
             }
             dst-files += $(src-file:R=$(dst-dir)) ;
+            src-files-actual += $(src-path) ;
         }
     }
     
@@ -917,7 +929,7 @@ rule .package ( dst-dir : src-files + )
     DEPENDS $(pack) : $(dst-files) ;
     
     local dst-files-queue = $(dst-files) ;
-    for local src-path in $(src-files)
+    for local src-path in $(src-files-actual)
     {
         local dst-file = $(dst-files-queue[1]) ;
         dst-files-queue = $(dst-files-queue[2-]) ;
@@ -980,6 +992,6 @@ if dist in $(ARGV)
     .package $(NAME)-$(VERSION)-$(RELEASE)-$(platform) : $(dist.bin) ;
     if $(rpm-tool)
     {
-        .rpm $(NAME)-$(VERSION)-$(RELEASE) : $(NAME)-$(VERSION).tgz ;
+        #~ .rpm $(NAME)-$(VERSION)-$(RELEASE) : $(NAME)-$(VERSION).tgz ;
     }
 }
