@@ -253,21 +253,6 @@ class stlport-target-class : basic-target
             }
         }
         
-        #~ Allow setting up to use STLport by only using the library target
-        #~ /stlport//stlport.
-        #~ TODO: Make it possible to use /stlport//stlport/<version>5.0 to select
-        #~ a specific configured version.
-        if $(self.version)
-        {
-            usage-requirements +=
-                <stdlib>stlport-$(self.version) ;
-        }
-        else
-        {
-            usage-requirements +=
-                <stdlib>stlport ;
-        }
-
         return [ property-set.create $(usage-requirements) ] ;
     }
 }
