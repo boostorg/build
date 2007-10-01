@@ -10,7 +10,7 @@
 # The subfeature value 'hostios' means to use host compiler's iostreams.
 #
 # The specific version of stlport is selected by features:
-# The <link> feature selects between static and shared library
+# The <runtime-link> feature selects between static and shared library
 # The <runtime-debugging>on selects STLPort with debug symbols
 # and stl debugging.
 # There's no way to use STLPort with debug symbols but without
@@ -124,7 +124,7 @@ class stlport-target-class : basic-target
             # STLport host IO streams no longer supported. So we always 
             # need libraries.
             
-            # name: stlport(stl)?[dg]?.M.R
+            # name: stlport(stl)?[dg]?(_static)?.M.R
             local name = stlport ;
             if [ feature.get-values <runtime-debugging> : $(raw) ] = "on"
             {
@@ -136,6 +136,12 @@ class stlport-target-class : basic-target
                     case * : name += d ;
                 }
             }
+
+            if [ feature.get-values <runtime-link> : $(raw) ] = "static"
+            {
+                name += _static ;
+            }
+
             name += .$(self.version.5) ;
             name = $(name:J=) ;
             
@@ -217,7 +223,7 @@ class stlport-target-class : basic-target
                 <define>_STLP_DEBUG=1
                 <define>_STLP_DEBUG_UNINITIALIZED=1 ;
         }
-        if [ $(rproperties).get <runtime-debugging> ] = "on"
+        if [ $(rproperties).get <runtime-link> ] = "shared"
         {
             usage-requirements +=
                 <define>_STLP_USE_DYNAMIC_LIB=1 ;
