@@ -16,4 +16,4 @@ using boostbook
      : /home/ghost/Work/Boost/boost-svn/tools/boostbook
      ; 
 using doxygen ;
-using qt4 : /usr/share/qt ;
+using qt4 : /usr/share/qt4 ;
