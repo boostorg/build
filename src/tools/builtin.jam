@@ -570,6 +570,7 @@ class searched-lib-generator : generator
 
             a = [ new null-action $(property-set) ] ;
             local lib-name = [ feature.get-values <name> : $(properties) ] ;
+            lib-name ?= $(name) ;
             local t = [ new searched-lib-target $(lib-name) : $(project) : $(shared)
                             : $(search)
                             : $(a)
