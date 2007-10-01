@@ -1696,22 +1696,43 @@ bjam_import_rule(PyObject* self, PyObject* args)
 }
 
 
-/* Accepts two arguments -- an action name and an action body.
+/* Accepts four arguments:
+   - an action name
+   - an action body
+   - a list of variable that will be bound inside the action
+   - integer flags.
    Defines an action on bjam side.  
-   
-   This interface does not (yet) support the list of bound
-   variables of the action flags (together/piecemeal/etc).  */
+*/
 PyObject*
 bjam_define_action(PyObject* self, PyObject *args)
 {
     char* name;
     char* body;
     module_t* m;
+    PyObject *bindlist_python;
+    int flags;
+    LIST *bindlist = L0;
+    int n;
+    int i;
 
-    if (!PyArg_ParseTuple(args, "ss:define_action", &name, &body))
+    if (!PyArg_ParseTuple(args, "ssO!i:define_action", &name, &body, 
+                          &PyList_Type, &bindlist_python, &flags))
         return NULL;
+    
+    n = PyList_Size (bindlist_python);
+    for (i = 0; i < n; ++i)
+    {
+        PyObject *next = PyList_GetItem(bindlist_python, i);
+        if (!PyString_Check(next))
+        {
+            PyErr_SetString(PyExc_RuntimeError, 
+                            "bind list has non-string type");
+            return NULL;
+        }
+        bindlist = list_new(bindlist, PyString_AsString(next));
+    }
 
-    new_rule_actions(root_module(), name, newstr(body), L0, 0);
+    new_rule_actions(root_module(), name, newstr(body), bindlist, flags);
 
     return Py_None;    
 }
