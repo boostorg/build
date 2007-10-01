@@ -4,6 +4,7 @@
 #  Copyright (c) 2005 Reece H. Dunn.
 # Copyright 2006 Ilya Sokolov.
 # Copyright 2007 Roland Schwarz
+# Copyright 2007 Boris Gubenko.
 #
 # Distributed under the Boost Software License, Version 1.0.
 #    (See accompanying file LICENSE_1_0.txt or copy at
@@ -136,6 +137,10 @@ rule init ( version ? : command * : options * )
         if [ os.name ] = OSF
         {
             linker = osf ;
+        }
+        else if [ os.name ] = HPUX
+        {
+            linker = hpux ;
         }
         else
         {                            
@@ -332,7 +337,7 @@ if [ os.name ] != CYGWIN && [ os.name ] != NT
     # to implement and will increase target path length even more.
     flags gcc.compile OPTIONS <link>shared : -fPIC ;
 }    
-if [ os.name ] != NT && [ os.name ] != OSF
+if [ os.name ] != NT && [ os.name ] != OSF && [ os.name ] != HPUX
 {
     # OSF does have an option called -soname but it doesn't seem to work as
     # expected, therefore it has been disabled.
@@ -500,9 +505,16 @@ flags gcc.link FINDLIBS-ST <find-static-library> ;
 flags gcc.link FINDLIBS-SA <find-shared-library> ;
 flags gcc.link LIBRARIES <library-file> ;
 
-# For <runtime-link>static we made sure there are no dynamic libraries 
-# in the link
-flags gcc.link OPTIONS <runtime-link>static : -static ;
+# For <runtime-link>static we made sure there are no dynamic libraries
+# in the link.
+# On HP-UX not all system libraries exist as archived libraries (for example,
+# there is no libunwind.a), so, on this platform, the -static option cannot
+# be specified.
+
+if [ os.name ] != HPUX
+{
+    flags gcc.link OPTIONS <runtime-link>static : -static ;
+}
 
 # Now, the vendor specific flags
 # The parameter linker can be either gnu or sun
@@ -608,6 +620,15 @@ rule init-link-flags ( toolset linker condition )
         flags $(toolset).link OPTIONS $(condition)/<link>shared : -mimpure-text 
           : unchecked ;
         }
+
+    case hpux :
+        {
+            flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off : -Wl,-s
+              : unchecked ;
+            flags $(toolset).link OPTIONS $(condition)/<link>shared : -fPIC
+              : unchecked ;
+        }
+
     case * :
         {
             errors.user-error
@@ -733,10 +754,6 @@ else if [ modules.peek : UNIX ]
     case IRIX :
         {
         # gcc on IRIX does not support multi-threading, don't set anything here.
-        }
-    case HP_UX :
-        {
-        # gcc on HP-UX does not support multi-threading, don't set anything here
         }
     case Darwin :
         {
