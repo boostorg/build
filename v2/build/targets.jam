@@ -1278,6 +1278,21 @@ class basic-target : abstract-target
             } 
             else
             {
+                if $(rproperties[1]) = "@error" 
+                {
+                    ECHO [ targets.indent ] 
+                      "Skipping build: cannot compute common properties" ;
+                }
+                else if [ $(rproperties).get <build> ] = no
+                {
+                    ECHO [ targets.indent ] 
+                      "Skipping build: <build>no in common properties" ;
+                }
+                else
+                {
+                    ECHO [ targets.indent ] "Skipping build: unknown reason" ;
+                }
+                               
                 # We're here either because there's error computing
                 # properties, or there's <build>no in properties.
                 # In the latter case we don't want any diagnostic.
