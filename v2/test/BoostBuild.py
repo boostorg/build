@@ -716,6 +716,9 @@ class Tester(TestCmd.TestCmd):
                 if dll_prefix:
                     tail = "lib" + tail
                     result = os.path.join(head, tail)
+        # If we try to use this name in Jamfile, we better
+        # convert \ to /, as otherwise we'd have to quote \.
+        result = string.replace(result, "\\", "/")
         return result
                 
     def adjust_suffix(self, name):
