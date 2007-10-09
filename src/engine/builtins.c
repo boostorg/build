@@ -1339,8 +1339,8 @@ LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
        and we want this function to obtain canonic representation.  */
     for (current = in->value, end = in->value + in->size; 
          current < end; ++current)
-        if (*current = '\\')
-            * current = '/';
+        if (*current == '\\')
+            *current = '/';
 
     
     end = in->value + in->size - 1;
