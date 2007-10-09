@@ -72,11 +72,13 @@ suffixes = {}
 def prepare_suffix_map(toolset):
     global windows, suffixes    
     suffixes = {'.exe': '', '.dll': '.so', '.lib': '.a', '.obj': '.o'}
+    suffixes['.implib'] = '.no_implib_files_on_this_platform'
     if windows:
         suffixes = {}
         if toolset in ["gcc"]:
             suffixes['.lib'] = '.a' # static libs have '.a' suffix with mingw...
             suffixes['.obj'] = '.o'
+        suffixes['.implib'] = '.lib'
     if os.__dict__.has_key('uname') and os.uname()[0] == 'Darwin':
         suffixes['.dll'] = '.dylib'
 
