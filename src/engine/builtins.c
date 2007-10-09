@@ -1337,7 +1337,8 @@ LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
 
     /* Convert \ into /. On windows, paths using / and \ are equivalent,
        and we want this function to obtain canonic representation.  */
-    for (current = in->value, end = in->value + in_size; current < end; ++current)
+    for (current = in->value, end = in->value + in->size; 
+         current < end; ++current)
         if (*current = '\\')
             * current = '/';
 
