@@ -964,7 +964,7 @@ local rule register-configuration ( version : path ? )
     }
 }
 
-if [ os.name ] in NT CYGWIN
+if [ os.name ] in NTXX CYGWIN
 {
     # Get installation paths from the registry
 
