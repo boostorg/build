@@ -13,9 +13,6 @@ cpp-pch pch
     include/pch.hpp
   : # requirements
     <include>include
-  : # default-build
-  : # usage requirements
-    <include>foobar
   ;
 explicit pch ;
 
