@@ -434,6 +434,9 @@ int  main( int argc, char **argv, char **arg_environ )
         symv[0] = s;
         symv[1] = 0;
         var_defines( symv, 1 );
+        enter_module( bindmodule(".ENVIRON") );
+        var_defines( symv, 0 );
+        exit_module( bindmodule(".ENVIRON") );
     }
 
     /* Set the ARGV to reflect the complete list of arguments of invocation. */
