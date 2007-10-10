@@ -23,7 +23,7 @@ date >> timestamp.txt
 rm -rf example/versioned
 
 # Remove unnecessary top-level files
-find . -maxdepth 1 -type f | egrep -v "timestamp.txt|roll.sh|bootstrap.jam|build-system.jam|boost_build_v2.html|boost.png|index.html|hacking.txt|site-config.jam|user-config.jam" | xargs rm -f
+find . -maxdepth 1 -type f | egrep -v "timestamp.txt|roll.sh|bootstrap.jam|build-system.jam|boost_build_v2.html|boost_build.png|index.html|hacking.txt|site-config.jam|user-config.jam" | xargs rm -f
 
 # Prepare some more files.
 echo -e "boost-build kernel ;\n" > boost-build.jam
