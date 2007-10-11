@@ -1669,6 +1669,7 @@ bjam_call(PyObject* self, PyObject* args)
 
     frame_free( inner );
 
+    Py_INCREF(Py_None);
     return Py_None;
 }
 
