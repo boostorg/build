@@ -896,6 +896,15 @@ call_python_function(RULE* r, FRAME* frame)
     
     return result;
 }
+
+module_t* python_module()
+{
+    static module_t* python = 0;
+    if ( !python )
+        python = bindmodule("__python__");
+    return python;
+}
+
 #endif
 
 /*
@@ -937,7 +946,41 @@ evaluate_rule(
 #ifdef HAVE_PYTHON
     if (rule->python_function)
     {
-        return call_python_function(rule, frame);
+        /* The below messing with modules is due to the
+           way modules are implemented in jam.  
+           Suppose we're in module M1 now.  The global
+           variable map actually holds 'M1' variables,
+           and M1->variables hold global variables.
+
+           If we call Python right away, and then Python
+           call back Jam, and jam does:
+
+              module M1 {  }
+
+           then jam will try to swap current global 
+           variables with M1->variables. The result will
+           be that global variables map will hold
+           global variables, and any variables settings
+           we do will go to global module, not M1.
+
+           By restoring basic state, where global
+           variable map hold global variable, we make
+           sure any fugure 'module M1' will work OK.  */
+           
+        LIST *result;
+        module_t *m = python_module();
+
+        frame->module = m;
+        
+        exit_module( prev_module );
+        enter_module( m );
+
+        result = call_python_function(rule, frame);
+
+        exit_module( m );
+        enter_module ( prev_module );
+
+        return result;
     }
 #endif
 
