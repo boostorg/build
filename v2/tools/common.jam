@@ -250,6 +250,7 @@ rule get-invocation-command (
                 ECHO "warning: toolset $(toolset) initialization: can't find tool $(tool)" ;
                 ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
             }
+            command = $(tool) ;
         }        
     }
     else
@@ -268,10 +269,7 @@ rule get-invocation-command (
             command = $(user-provided-command) ;
         }        
     }
-    if ! $(command)
-    {        
-        command = $(user-provided-command) ;
-    }    
+
     return $(command) ;
 }
 
@@ -378,6 +376,11 @@ rule check-tool ( xcommand + )
 # - OPTIONs for link to the value of <linkflags> in options
 rule handle-options ( toolset : condition * : command * : options * )
 {
+    if $(.debug-configuration)
+    {
+        ECHO "notice: will use '$(command)' for $(toolset), condition $(condition:E=(empty))" ;
+    }
+    
     # The last parameter ('true') says it's OK to set flags for another
     # module,   
     toolset.flags $(toolset) CONFIG_COMMAND $(condition) : $(command) : unchecked ;
