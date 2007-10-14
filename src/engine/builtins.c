@@ -1691,7 +1691,11 @@ bjam_import_rule(PyObject* self, PyObject* args)
         return NULL;
     
     if (!PyCallable_Check(func))
+    {
+        PyErr_SetString(PyExc_RuntimeError, 
+                        "Non-callable object passed to bjam.import_rule");
         return NULL;
+    }
     
     m = bindmodule(module);
     r = bindrule(rule, m);
