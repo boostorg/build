@@ -55,13 +55,15 @@ if $(with-python)
         {
             --python-lib ?=
                 [ GLOB [ .path $(python-location) libs ] : "python$(v).lib" ]
-                [ GLOB $(python-location) $(Path) $(PATH) $(path) : "python$(v).dll" ]
+                [ GLOB $(python-location) [ .path $(python-location) libs ]
+                    $(Path) $(PATH) $(path) : "python$(v).dll" ]
                 ;
             if ! $(--python-lib[2])
             {
                 --python-lib = ;
             }
         }
+        --python-lib = $(--python-lib[1]) ;
     }
     else if $(OS) = MACOSX
     {
