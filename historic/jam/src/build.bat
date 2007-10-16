@@ -40,7 +40,7 @@ goto :eof
 
 
 :Test_Option
-REM Tests wether the given string is in the form of an option: "-*"
+REM Tests wether the given string is in the form of an option: "--*"
 setlocal & endlocal
 setlocal
 set test=%1
@@ -48,7 +48,7 @@ set test=###%test%###
 set test=%test:"###=%
 set test=%test:###"=%
 set test=%test:###=%
-if not [-] == [%test:~0,1%] set _error_=
+if not [-] == [%test:~1,1%] set _error_=
 endlocal
 goto :eof
 
