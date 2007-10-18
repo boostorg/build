@@ -26,5 +26,7 @@
   </appendix>    
 
   <xi:include href="v1_vs_v2.xml"/>
+  
+  <index/>
 
 </book>
