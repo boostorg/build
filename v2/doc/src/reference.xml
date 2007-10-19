@@ -316,7 +316,8 @@ lib tools : [ glob *.cpp : file_to_exclude.cpp bad*.cpp ] ;
         </para></listitem>
       </varlistentry>
 
-      <varlistentry>
+      <varlistentry id="bbv2.reference.glob-tree">
+        <indexterm><primary>glob-tree</primary></indexterm>
         <term><literal>glob-tree</literal></term>
         
         <listitem><para>The <code>glob-tree</code> is similar to the
