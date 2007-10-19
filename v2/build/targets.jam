@@ -506,21 +506,7 @@ class project-target : abstract-target
             [ RULENAMES project-rules ] ] ;
         IMPORT $(parent-module) : $(user-rules) : $(this-module) : $(user-rules) ;
         EXPORT $(this-module) : $(user-rules) ;
-    }
-    
-    
-    # Intern the constants from this project into the specified module.
-    #
-    rule intern-constants (
-        target-module # The module to intern into.
-        )
-    {
-        for local c in $(self.constants)
-        {
-            modules.poke $(target-module) : $(c) : $(self.constant.$(c)) ;
-        }
-    }
-
+    }        
 }
 
 
