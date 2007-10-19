@@ -835,13 +835,6 @@ class file-reference : abstract-target
     }
 }
 
-
-if "--quiet" in [ modules.peek : ARGV ]
-{
-    .quiet = true ;
-}
-
-
 # Given a target-reference, made in context of 'project',
 # returns the abstract-target instance that is referred to, as well
 # as properties explicitly specified for this reference.
