@@ -989,7 +989,11 @@ type.set-generated-target-prefix PYTHON_EXTENSION : : "" ;
 rule python-extension ( name : sources * : requirements * : default-build * :
                         usage-requirements * )
 {
-    requirements += <use>/python//python_for_extensions <suppress-import-lib>true ;
+    if [ configured ]
+    {
+        requirements += <use>/python//python_for_extensions ;
+    }
+    requirements += <suppress-import-lib>true ;
 
     local project = [ project.current ] ;
 
