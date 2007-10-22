@@ -1704,6 +1704,8 @@ bjam_import_rule(PyObject* self, PyObject* args)
     Py_INCREF(func);
 
     r->python_function = func;
+
+    Py_INCREF(Py_None);
     return Py_None;
 }
 
@@ -1746,6 +1748,7 @@ bjam_define_action(PyObject* self, PyObject *args)
 
     new_rule_actions(root_module(), name, newstr(body), bindlist, flags);
 
+    Py_INCREF(Py_None);
     return Py_None;    
 }
 
