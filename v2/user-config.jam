@@ -4,14 +4,40 @@
 # Distributed under the Boost Software License, Version 1.0. 
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
-#  This file is used to configure your Boost.Build installation. Please read
-#  the user manual to find out where to put it.
+#  This file is used to configure your Boost.Build installation.
+#  You can modify this file in place, or you can place it it
+#  permanent location so that it's not overwritten should you
+#  get new version of Boost.Build. See:
+#
+#    http://boost.org/boost-build2/doc/html/bbv2/reference.html#bbv2.reference.init
+#
+#  for documentation about permanent location.
 
-#  Toolset declarations are most important in this file. They tell Boost.Build
-#  what compilers are available and where to look for them. The first toolset
-#  will become "default" one.
-#  Some important libraries can also be configured.
-#  Uncomment relevant parts to suite your local configuration and preferences.
+#  This file specifies which toolsets (C++ compilers), libraries,
+#  and other tools are available.  Often, you should be able to
+#  just uncomment existing example lines and adjus them to taste.
+#  The complete list of supported tools, and configuration instructions
+#  can be found at:
+#
+#    http://boost.org/boost-build2/doc/html/bbv2/reference/tools.html
+#
+
+#  This file uses Jam language syntax to describe available tools.
+#  Mostly, there are 'using' lines, that contain the name of the used
+#  tools, and parameters to pass to those tools -- where paremeters
+#  are separated by semicolons.
+#  Important syntax notes:
+#
+#    - Both ':' and ';' must be separated from other tokens by whitespace
+#    - The '\' symbol is quote character, so when specifying Windows paths
+#      it's recommended to use '/' instead, or use '\\'.
+#
+#  More details about syntax can be found at:
+#
+#    http://boost.org/boost-build2/doc/html/bbv2/advanced.html#bbv2.advanced.jam_language
+#
+
+
 
 #  GCC configuration
 
