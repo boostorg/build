@@ -901,6 +901,27 @@ local rule configure (
     else
     {
         declare-libpython-target $(version) : $(target-requirements) ;
+
+        # This is an evil hack.  On, Windows, when Python is embedded,
+        # nothing seems to set up sys.path to include Python's
+        # standard library
+        # (http://article.gmane.org/gmane.comp.python.general/544986). The
+        # evil here, aside from the workaround necessitated by
+        # Python's bug, is that:
+        # 
+        # a. we're guessing the location of the python standard
+        #    library from the location of pythonXX.lib
+        #
+        # b. we're hijacking the <testing.launcher> property to get
+        #    the environment variable set up, and the user may want to
+        #    use it for something else (e.g. launch the debugger).
+        local set-PYTHONPATH ;
+        if $(target-os) = windows
+        {
+            set-PYTHONPATH =
+              [ common.prepend-path-variable-command PYTHONPATH : $(libraries:D)/Lib ] ;
+        }
+        
         alias python
           :
           : $(target-requirements)
@@ -909,7 +930,9 @@ local rule configure (
             # the system libs is a mystery, but if we don't do it, on
             # cygwin, -lpythonX.Y never appears in the command line
             # (although it does on linux).
-          : $(usage-requirements) <library-path>$(libraries) <dll-path>$(dll-path) <library>python.lib
+          : $(usage-requirements) 
+            <testing.launcher>$(set-PYTHONPATH) 
+              <library-path>$(libraries) <dll-path>$(dll-path) <library>python.lib
           ;
     }
 
