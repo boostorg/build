@@ -1260,16 +1260,16 @@ class basic-target : abstract-target
                 if $(rproperties[1]) = "@error" 
                 {
                     ECHO [ targets.indent ] 
-                      "Skipping build: cannot compute common properties" ;
+                      "Skipping build of: " [ full-name ] " cannot compute common properties" ;
                 }
                 else if [ $(rproperties).get <build> ] = no
                 {
                     ECHO [ targets.indent ] 
-                      "Skipping build: <build>no in common properties" ;
+                      "Skipping build of: " [ full-name ] " <build>no in common properties" ;
                 }
                 else
                 {
-                    ECHO [ targets.indent ] "Skipping build: unknown reason" ;
+                    ECHO [ targets.indent ] "Skipping build of: " [ full-name] " unknown reason" ;
                 }
                                
                 # We're here either because there's error computing
