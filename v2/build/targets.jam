@@ -1269,7 +1269,7 @@ class basic-target : abstract-target
                 }
                 else
                 {
-                    ECHO [ targets.indent ] "Skipping build of: " [ full-name] " unknown reason" ;
+                    ECHO [ targets.indent ] "Skipping build of: " [ full-name ] " unknown reason" ;
                 }
                                
                 # We're here either because there's error computing
