@@ -211,8 +211,11 @@ rule generate-xml-catalog ( target : sources * : properties * )
 
   # BoostBook DTD catalog entry
   local boostbook-dtd-dir = [ boostbook.dtd-dir ] ;
-  boostbook-dtd-dir = [ regex.replace $(boostbook-dtd-dir) " " "%20" ] ;
-  
+  if $(boostbook-dtd-dir)
+  {      
+    boostbook-dtd-dir = [ regex.replace $(boostbook-dtd-dir) " " "%20" ] ;
+  }
+    
   print.text
     "<?xml version=\"1.0\"?>"
     "<!DOCTYPE catalog "
@@ -222,8 +225,7 @@ rule generate-xml-catalog ( target : sources * : properties * )
     "  <rewriteURI uriStartString=\"http://www.boost.org/tools/boostbook/dtd/\" rewritePrefix=\"file://$(boostbook-dtd-dir)/\"/>"
     : true ;
 
-  local docbook-xsl-dir = [ boostbook.docbook-xsl-dir ] ;
-  docbook-xsl-dir = [ regex.replace $(docbook-xsl-dir) " " "%20" ] ;
+  local docbook-xsl-dir = [ boostbook.docbook-xsl-dir ] ;    
   if ! $(docbook-xsl-dir) 
   {
     ECHO "BoostBook warning: no DocBook XSL directory specified." ;
@@ -236,11 +238,11 @@ rule generate-xml-catalog ( target : sources * : properties * )
   }
   else 
   {
+    docbook-xsl-dir = [ regex.replace $(docbook-xsl-dir) " " "%20" ] ;      
     print.text "  <rewriteURI uriStartString=\"http://docbook.sourceforge.net/release/xsl/current/\" rewritePrefix=\"file://$(docbook-xsl-dir)/\"/>" ;
   }
 
-  local docbook-dtd-dir = [ boostbook.docbook-dtd-dir ] ;
-  docbook-dtd-dir = [ regex.replace $(docbook-dtd-dir) " " "%20" ] ;
+  local docbook-dtd-dir = [ boostbook.docbook-dtd-dir ] ;  
   if ! $(docbook-dtd-dir)
   {
     ECHO "BoostBook warning: no DocBook DTD directory specified." ;
@@ -253,6 +255,7 @@ rule generate-xml-catalog ( target : sources * : properties * )
   }
   else 
   {
+    docbook-dtd-dir = [ regex.replace $(docbook-dtd-dir) " " "%20" ] ;      
     print.text "  <rewriteURI uriStartString=\"http://www.oasis-open.org/docbook/xml/4.2/\" rewritePrefix=\"file://$(docbook-dtd-dir)/\"/>" ;
   }
 
