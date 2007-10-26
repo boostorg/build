@@ -286,6 +286,7 @@ generators.register [ new quickbook-binary-generator quickbook.quickbook-to-boos
 # <quickbook-binary-dependencies> targets to build QuickBook from sources.
 toolset.flags quickbook.quickbook-to-boostbook QB-COMMAND       <quickbook-binary> ;
 toolset.flags quickbook.quickbook-to-boostbook QB-DEPENDENCIES  <quickbook-binary-dependencies> ;
+toolset.flags quickbook.quickbook-to-boostbook INCLUDES         <include> ;
 
 rule quickbook-to-boostbook ( target : source : properties * )
 {
@@ -296,7 +297,7 @@ rule quickbook-to-boostbook ( target : source : properties * )
 
 actions quickbook-to-boostbook
 {
-    "$(QB-COMMAND)" --output-file=$(1) $(2)  
+    "$(QB-COMMAND)" -I"$(INCLUDES)" --output-file=$(1) $(2)  
 }
 
 # Declare a main target to convert a quickbook source into a boostbook
