@@ -94,6 +94,8 @@ void backtrace_line( FRAME *frame );
 void print_source_line( PARSE* p );
 
 
+struct frame *frame_before_python_call;
+
 void frame_init( FRAME* frame )
 {
     frame->prev = 0;
@@ -827,6 +829,7 @@ call_python_function(RULE* r, FRAME* frame)
         PyTuple_SetItem(arguments, i, arg);
     }
 
+    frame_before_python_call = frame;
     py_result = PyObject_CallObject(r->python_function, arguments);
     Py_DECREF(arguments);
     if (py_result != NULL) {

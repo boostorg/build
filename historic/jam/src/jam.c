@@ -212,6 +212,9 @@ static void run_unit_tests()
 
     extern PyObject*
     bjam_variable(PyObject* self, PyObject* args);
+
+    extern PyObject*
+    bjam_backtrace(PyObject* self, PyObject *args);
 #endif
 
 int  main( int argc, char **argv, char **arg_environ )
@@ -349,6 +352,8 @@ int  main( int argc, char **argv, char **arg_environ )
                  "Defines a command line action."},
                 {"variable", bjam_variable, METH_VARARGS,
                  "Obtains a variable from bjam's global module."},
+                {"backtrace", bjam_backtrace, METH_VARARGS,
+                 "Returns bjam backtrace from the last call into Python."},
                 {NULL, NULL, 0, NULL}
             };
     

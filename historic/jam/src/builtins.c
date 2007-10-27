@@ -1775,6 +1775,32 @@ bjam_variable(PyObject* self, PyObject* args)
     return result;
 }
 
+PyObject*
+bjam_backtrace(PyObject* self, PyObject *args)
+{
+    PyObject *result = PyList_New(0);
+    struct frame *f = frame_before_python_call;
+
+    for(; f = f->prev;)
+    {
+        PyObject *tuple = PyTuple_New(4);
+        char* file;
+        int line;
+        char buf[32];
+        get_source_line( f->procedure, &file, &line );
+        sprintf( buf, "%d", line );
+        
+        /* PyTuple_SetItem steals reference. */
+        PyTuple_SetItem(tuple, 0, PyString_FromString(file));
+        PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
+        PyTuple_SetItem(tuple, 2, PyString_FromString(f->module->name));
+        PyTuple_SetItem(tuple, 3, PyString_FromString(f->rulename));
+
+        PyList_Append(result, tuple);
+        Py_DECREF(tuple);
+    }
+    return result;
+}
 
 #endif
 
