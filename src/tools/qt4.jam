@@ -206,7 +206,6 @@ rule init ( prefix )
                 : # usage-requirements
                   <define>QT_GUI_LIB
                   <include>$(.incprefix)/QtGui 
-                  <user-interface>gui  
                 ;
             
             lib QtGui : QtCore
@@ -217,7 +216,6 @@ rule init ( prefix )
                 : # usage-requirements
                   <define>QT_GUI_LIB
                   <include>$(.incprefix)/QtGui 
-                  <user-interface>gui  
                 ;
             
             lib QtNetwork : QtCore
