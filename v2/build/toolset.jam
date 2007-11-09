@@ -360,15 +360,6 @@ rule set-target-variables ( rule-or-module targets + : property-set )
     }
 }
 
-.toolsets += $(toolset) ;
-
-# Registers a new toolset
-rule register ( toolset )
-{
-    feature.extend toolset : $(toolset) ;
-    .toolsets += $(toolset) ;
-}
-
 # Make toolset 'toolset', defined in a module of the same name,
 # inherit from 'base'
 # 1. The 'init' rule from 'base' is imported into 'toolset' with full
