@@ -13,7 +13,7 @@ import type ;
 import common ;
 import generators ;
 
-toolset.register darwin ;
+feature.extend toolset : darwin ;
 import gcc ;
 toolset.inherit-generators darwin : gcc ;
 
