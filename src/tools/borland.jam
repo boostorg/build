@@ -14,7 +14,7 @@ import feature : get-values ;
 import type ;
 import common ;
 
-toolset.register borland ;
+feature.extend toolset : borland ;
 
 rule init ( version ? : command * : options * )
 {
