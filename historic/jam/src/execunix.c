@@ -65,6 +65,7 @@ static struct timeval tv;
 static int select_timeout = 0;
 static int intr = 0;
 static int cmdsrunning = 0;
+static struct tms old_time;
 
 #define OUT 0
 #define ERR 1
@@ -110,6 +111,7 @@ execcmd(
         char *action,
         char *target )
 {
+        static int initialized = 0;
         int out[2], err[2];
 	int slot, len;
 	char *argv[ MAXARGC + 1 ];	/* +1 for NULL */
@@ -169,6 +171,12 @@ execcmd(
         /* save off actual command string */
         cmdtab[ slot ].command = BJAM_MALLOC_ATOMIC(strlen(string)+1);
         strcpy(cmdtab[slot].command, string);
+
+        /* initialize only once */
+        if ( ! initialized ) {
+          times(&old_time);
+          initialized = 1;
+        }
 
         /* create pipe from child to parent */
 
@@ -412,7 +420,7 @@ execwait()
     int rstat;
     timing_info time;
     fd_set fds;
-    struct tms old_time, new_time;
+    struct tms new_time;
 
     /* Handle naive make1() which doesn't know if cmds are running. */
 
@@ -476,8 +484,6 @@ execwait()
                                 cmdtab[i].exit_reason = EXIT_FAIL;
                         }
 
-                        times(&old_time);
-
                         /* print out the rule and target name */
                         out_action(cmdtab[i].action, cmdtab[i].target,
                             cmdtab[i].command, cmdtab[i].buffer[OUT], cmdtab[i].buffer[ERR],
@@ -488,6 +494,8 @@ execwait()
                         time.system = (double)(new_time.tms_cstime - old_time.tms_cstime) / CLOCKS_PER_SEC;
                         time.user = (double)(new_time.tms_cutime - old_time.tms_cutime) / CLOCKS_PER_SEC;
     
+                        old_time = new_time;
+
                         /* Drive the completion */
 
                         --cmdsrunning;
