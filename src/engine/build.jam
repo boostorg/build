@@ -197,8 +197,8 @@ toolset intel-linux icc : "-o " : -D
 ## Intel C/C++ for Win32
 toolset intel-win32 icl : /Fe : -D
     : /nologo
-    [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
-    [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
+    [ opt --release : /MT /O2 /Ob2 /Gy /GF /GA /GB ]
+    [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 ]
     -I$(--python-include) -I$(--extra-include)
     : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
 ## KCC ?
