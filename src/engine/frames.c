@@ -7,7 +7,6 @@
 # include "frames.h"
 # include "lists.h"
 
-
 void frame_init( FRAME* frame )
 {
     frame->prev = 0;

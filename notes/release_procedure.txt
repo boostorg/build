@@ -14,18 +14,22 @@ Distributed under the Boost Software License, Version 1.0.
    Make sure that "bjam --version" output is correct. Update version string if
    needed. Update bjam version and the version check is necessary.  
    Check the download locations in "index.html". Check that "last modified"
-   strings in docs are correct.
+   string in index.html is correct.
 
-1. Make sure you don't have any local modification, and tag the CVS tree with 
-   Milestone_X tag. Be sure to tag both Boost.Build and Boost.Jam sources.
+1. Make sure you don't have any local modification, and create SVN directory
+
+	https://svn.boost.org/svn/boost/branches/build/Milestone_X
+	
+   Then, copy:
+   
+        https://svn.boost.org/svn/boost/trunk/tools/build
+	https://svn.boost.org/svn/boost/trunk/tools/jam
+	
+   to that directory.
   
 2. Run
 
-   cvs -d :ext:<your_user_name>@boost.cvs.sourceforge.net:/cvsroot/boost co -r
-   Milestone_X -P -d  boost-build boost/tools
-
-   Note: it turns out that anonymous CVS access uses some backup server, which
-   is not up-to-date.
+   svn co https://svn.boost.org/svn/boost/branches/build/Milestone_X boost-build
 
 3. Go to "boost-build/build/v2" directory.
 

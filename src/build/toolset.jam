@@ -18,6 +18,15 @@ import sequence ;
 
 .flag-no = 1 ;
 
+.ignore-requirements = ;
+
+# This is used only for testing, to make sure
+# we don't get random extra elements in paths.
+if --ignore-toolset-requirements in [ modules.peek : ARGV ]
+{
+    .ignore-requirements = 1 ;
+}
+
 # Initializes an additional toolset-like module.
 # First load 'toolset-module' and then calls its 'init'
 # rule with trailing arguments
@@ -351,15 +360,6 @@ rule set-target-variables ( rule-or-module targets + : property-set )
     }
 }
 
-.toolsets += $(toolset) ;
-
-# Registers a new toolset
-rule register ( toolset )
-{
-    feature.extend toolset : $(toolset) ;
-    .toolsets += $(toolset) ;
-}
-
 # Make toolset 'toolset', defined in a module of the same name,
 # inherit from 'base'
 # 1. The 'init' rule from 'base' is imported into 'toolset' with full
@@ -480,7 +480,10 @@ rule requirements ( )
 # indirect conditional.
 rule add-requirements ( requirements * )
 {
-    .requirements += $(requirements) ;
+    if ! $(.ignore-requirements)
+    {
+        .requirements += $(requirements) ;
+    }
 }
 
 local rule __test__ ( )

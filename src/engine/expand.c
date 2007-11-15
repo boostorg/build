@@ -11,11 +11,12 @@
 # include "pathsys.h"
 # include "newstr.h"
 # include <assert.h>
+# include <stdlib.h>
+# include <limits.h>
 
 # ifdef OS_CYGWIN
 #  include <sys/cygwin.h>
 #  include <windows.h>
-#  include <stdlib.h>
 # endif
 
 /*
@@ -90,18 +91,55 @@ var_expand(
 
     /* This gets alot of cases: $(<) and $(>) */
 
-    if( in[0] == '$' && in[1] == '(' && in[3] == ')' && !in[4] )
+    if( in[0] == '$' && in[1] == '(' && in[3] == ')' && in[4] == '\0' )
     {
         switch( in[2] )
         {
-        case '1':
         case '<':
             return list_copy( l, lol_get( lol, 0 ) );
 
-        case '2':
         case '>':
             return list_copy( l, lol_get( lol, 1 ) );
+        
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            return list_copy( l, lol_get( lol, in[2]-'1' ) );
         }
+    }
+    
+    /* Expand @() files, to single item plus accompanying file. */
+    
+    if ( in[0] == '@' && in[1] == '(' && *(end-1) == ')' )
+    {
+        /* We try the expansion until it fits within the propspective output buffer. */
+        char * at_buf = 0;
+        int at_size = MAXJPATH;
+        int at_len = 0;
+        do
+        {
+            BJAM_FREE(at_buf);
+            at_buf = (char*)BJAM_MALLOC_ATOMIC(at_size + 1);
+            at_len = var_string( in, at_buf, at_size, lol );
+            at_size *= 2;
+        } while ( at_len < 0 && at_size < INT_MAX / 2 );
+        /* Return the result as a single item list. */
+        if ( at_len > 0 )
+        {
+            LIST * r;
+            string_copy( buf, at_buf );
+            r = list_new( l, newstr( buf->value) );
+            string_free( buf );
+            BJAM_FREE(at_buf);
+            return r;
+        }
+        BJAM_FREE(at_buf);
     }
 
     /* Just try simple copy of in to out. */

@@ -54,6 +54,23 @@ flags sun.compile OPTIONS <threading>multi : -mt ;
 
 flags sun.compile.c++ OPTIONS <inlining>off : +d ;
 
+# The -m32 and -m64 options are supported starting
+# with Sun Studio 12.  On earlier compilers, the
+# 'address-model' feature is not supported and should not
+# be used. Instead, use -xarch=generic64 command line
+# option.
+# See http://svn.boost.org/trac/boost/ticket/1186
+# for details.
+flags sun OPTIONS <address-model>32 : -m32 ;
+flags sun OPTIONS <address-model>64 : -m64 ;
+# On sparc, there's a difference between -Kpic
+# and -KPIC. The first is slightly more efficient,
+# but has the limits on the size of GOT table.
+# For minimal fuss on user side, we use -KPIC here.
+# See http://svn.boost.org/trac/boost/ticket/1186#comment:6
+# for detailed explanation.
+flags sun OPTIONS <link>shared : -KPIC ;
+
 flags sun.compile OPTIONS <cflags> ;
 flags sun.compile.c++ OPTIONS <cxxflags> ;
 flags sun.compile DEFINES <define> ;

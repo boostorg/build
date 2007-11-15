@@ -31,11 +31,11 @@ class Trees_difference:
         self.modified_files = filter(not_dir, self.modified_files)
         self.touched_files = filter(not_dir, self.touched_files)
 
-    def pprint(self):
-        print "Added files   :", self.added_files
-        print "Removed files :", self.removed_files
-        print "Modified files:", self.modified_files
-        print "Touched files :", self.touched_files
+    def pprint(self, f=None):
+        print >> f, "Added files   :", self.added_files
+        print >> f,"Removed files :", self.removed_files
+        print >> f, "Modified files:", self.modified_files
+        print >> f, "Touched files :", self.touched_files
 
     def empty(self):
         return (len(self.added_files) == 0 and len(self.removed_files) == 0)\

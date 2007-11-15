@@ -7,6 +7,7 @@
 #         http://www.boost.org/LICENSE_1_0.txt)
 
 import os, sys, string
+import BoostBuild
 from BoostBuild import get_toolset
 
 # clear environment for testing
@@ -21,6 +22,8 @@ for s in (
     except:
         pass
 
+BoostBuild.set_defer_annotations(1)    
+
 def run_tests(critical_tests, other_tests):
     """Runs first critical tests and then other_tests.
 
@@ -34,6 +37,7 @@ def run_tests(critical_tests, other_tests):
 
     invocation_dir = os.getcwd()
 
+    pass_count = 0
     failures_count = 0
     for i in all_tests:
         print ("%-25s : " %(i)),
@@ -49,13 +53,22 @@ def run_tests(critical_tests, other_tests):
             # Restore the current directory, which might be changed by the
             # test
             os.chdir(invocation_dir)
+            BoostBuild.flush_annotations();
             continue
         print "PASSED"
+        BoostBuild.flush_annotations();
+        pass_count = pass_count + 1
         sys.stdout.flush()  # makes testing under emacs more entertaining.
         
     # Erase the file on success
     if failures_count == 0:
         open('test_results.txt', 'w')
+
+    print """
+    === Test summary ===
+    PASS: %d
+    FAIL: %d
+    """ % (pass_count, failures_count)
         
 
 def last_failed_test():
@@ -150,6 +163,7 @@ tests = [ "rebuilds",
           "example_libraries",
           "example_make",
           "remove_requirement",
+          "free_features_request",
           ]
 
 if os.name == 'posix':
@@ -162,8 +176,10 @@ if os.name == 'posix':
     if string.find(os.uname()[0], "CYGWIN") == -1:
         tests.append("library_order")
 
-if string.find(get_toolset(), 'gcc') == 0 or string.find(get_toolset(), 'msvc') == 0:
+if string.find(get_toolset(), 'gcc') == 0:
     tests.append("gcc_runtime")
+
+if string.find(get_toolset(), 'gcc') == 0 or string.find(get_toolset(), 'msvc') == 0:
     tests.append("pch")
 
 if "--extras" in sys.argv:

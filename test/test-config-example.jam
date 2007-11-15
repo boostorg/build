@@ -9,11 +9,11 @@
 # while site-config.jam and user-config.jam will be ignored.
 
 using gcc ;
-using borland ;
 
 using boostbook 
      : /home/ghost/Store/docbook/xsl
      : /home/ghost/Store/docbook/dtd
-     : /home/ghost/Work/boost-rc/tools/boostbook
+     : /home/ghost/Work/Boost/boost-svn/tools/boostbook
      ; 
 using doxygen ;
+using qt4 : /usr/share/qt4 ;

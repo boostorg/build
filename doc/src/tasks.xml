@@ -18,8 +18,7 @@
   <section id="bbv2.tasks.programs">
     <title>Programs</title>
 
-      <indexterm><primary>Builtin
-      rules</primary><secondary>exe</secondary></indexterm>
+      <indexterm><primary>exe</primary></indexterm>
       <para>Programs are created using the <code>exe</code> rule, which
         follows the <link linkend="bbv2.main-target-rule-syntax">common
           syntax</link>. For example:
@@ -302,6 +301,7 @@ install dist : hello
 
       <bridgehead>Preserving Directory Hierarchy</bridgehead>
 
+      <indexterm><primary>install-source-root</primary></indexterm>
       <para>By default, the <code>install</code> rules will stip paths from
       it's sources. So, if sources include <filename>a/b/c.hpp</filename>,
       the <filename>a/b</filename> part will be ignored. To make the 
@@ -319,6 +319,10 @@ install headers
 
       the a file named <filename>/tmp/b/c.h</filename> will be created.
       </para>
+
+      <para>The <link linkend="bbv2.reference.glob-tree">glob-tree</link> rule
+      can be used to find all files below a given directory, making
+      it easy to install entire directory tree.</para>
             
       <bridgehead>Installing into Several Directories</bridgehead>
 

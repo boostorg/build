@@ -37,7 +37,7 @@ rule init ( version ? :     # the compiler version
     local condition = [  common.check-init-parameters intel-win
         : version $(version) : compatibility $(compatibility) ] ;
     
-    command = [ common.get-invocation-command intel-win : icc.exe :
+    command = [ common.get-invocation-command intel-win : icl.exe :
         $(command) ] ;    
     
     common.handle-options intel-win : $(condition) : $(command) : $(options) ;
@@ -149,6 +149,9 @@ rule init ( version ? :     # the compiler version
         errors.user-error "Invalid value for compatibility option:"
           $(compatibility) ;
     }
+    
+    # Depending on the settings, running of tests require some runtime DLLs.
+    flags intel-win RUN_PATH $(condition) : $(root) ;
     
     msvc.configure-version-specific intel-win : $(extract-version[1]) : $(condition) ;
 }

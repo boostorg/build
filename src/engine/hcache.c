@@ -137,7 +137,7 @@ read_netstring(FILE* f)
 	unsigned long new_len = buf_len * 2;
 	if (new_len < len)
 	    new_len = len;
-	buf = (char*)realloc(buf, new_len + 1);
+	buf = (char*)BJAM_REALLOC(buf, new_len + 1);
 	if (buf)
 	    buf_len = new_len;
     }

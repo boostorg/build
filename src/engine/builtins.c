@@ -5,7 +5,6 @@
  */
 
 # include "jam.h"
-# include "debug.h"
 
 # include "lists.h"
 # include "parse.h"
@@ -24,6 +23,7 @@
 # include "compile.h"
 # include "native.h"
 # include "variable.h"
+# include "timestamp.h"
 # include <ctype.h>
 
 /*
@@ -54,11 +54,11 @@
 
 # if defined( OS_NT ) || defined( OS_CYGWIN )
 LIST* builtin_system_registry( PARSE *parse, FRAME *frame );
+LIST* builtin_system_registry_names( PARSE *parse, FRAME *frame );
 # endif
 
 int glob( char *s, char *c );
 
-void lol_build( LOL* lol, char** elements );
 void backtrace( FRAME *frame );
 void backtrace_line( FRAME *frame );
 void print_source_line( PARSE* p );
@@ -327,6 +327,12 @@ load_builtins()
           char * args[] = { "key_path", ":", "data", "?", 0 };
           bind_builtin( "W32_GETREG",
               builtin_system_registry, 0, args );
+      }
+
+      {
+          char * args[] = { "key_path", ":", "result-type", 0 };
+          bind_builtin( "W32_GETREGNAMES",
+              builtin_system_registry_names, 0, args );
       }
 # endif
 
@@ -1328,8 +1334,15 @@ LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
         if (arg)
             string_append(in, "/");
     }
-    
 
+    /* Convert \ into /. On windows, paths using / and \ are equivalent,
+       and we want this function to obtain canonic representation.  */
+    for (current = in->value, end = in->value + in->size; 
+         current < end; ++current)
+        if (*current == '\\')
+            *current = '/';
+
+    
     end = in->value + in->size - 1;
     current = end;
     
@@ -1656,6 +1669,7 @@ bjam_call(PyObject* self, PyObject* args)
 
     frame_free( inner );
 
+    Py_INCREF(Py_None);
     return Py_None;
 }
 
@@ -1677,7 +1691,11 @@ bjam_import_rule(PyObject* self, PyObject* args)
         return NULL;
     
     if (!PyCallable_Check(func))
+    {
+        PyErr_SetString(PyExc_RuntimeError, 
+                        "Non-callable object passed to bjam.import_rule");
         return NULL;
+    }
     
     m = bindmodule(module);
     r = bindrule(rule, m);
@@ -1686,7 +1704,102 @@ bjam_import_rule(PyObject* self, PyObject* args)
     Py_INCREF(func);
 
     r->python_function = func;
+
+    Py_INCREF(Py_None);
     return Py_None;
+}
+
+
+/* Accepts four arguments:
+   - an action name
+   - an action body
+   - a list of variable that will be bound inside the action
+   - integer flags.
+   Defines an action on bjam side.  
+*/
+PyObject*
+bjam_define_action(PyObject* self, PyObject *args)
+{
+    char* name;
+    char* body;
+    module_t* m;
+    PyObject *bindlist_python;
+    int flags;
+    LIST *bindlist = L0;
+    int n;
+    int i;
+
+    if (!PyArg_ParseTuple(args, "ssO!i:define_action", &name, &body, 
+                          &PyList_Type, &bindlist_python, &flags))
+        return NULL;
+    
+    n = PyList_Size (bindlist_python);
+    for (i = 0; i < n; ++i)
+    {
+        PyObject *next = PyList_GetItem(bindlist_python, i);
+        if (!PyString_Check(next))
+        {
+            PyErr_SetString(PyExc_RuntimeError, 
+                            "bind list has non-string type");
+            return NULL;
+        }
+        bindlist = list_new(bindlist, PyString_AsString(next));
+    }
+
+    new_rule_actions(root_module(), name, newstr(body), bindlist, flags);
+
+    Py_INCREF(Py_None);
+    return Py_None;    
+}
+
+/* Returns the value of a variable in root Jam module.  */
+PyObject*
+bjam_variable(PyObject* self, PyObject* args)
+{
+    char *name;
+    LIST* value;
+    PyObject *result;
+    int i;
+
+    if (!PyArg_ParseTuple(args, "s", &name))
+        return NULL;
+
+    enter_module(root_module());
+    value = var_get(name);
+    exit_module(root_module());
+
+    result = PyList_New(list_length(value));
+    for (i = 0; value; value = list_next(value), ++i)
+        PyList_SetItem(result, i, PyString_FromString(value->string));
+
+    return result;
+}
+
+PyObject*
+bjam_backtrace(PyObject* self, PyObject *args)
+{
+    PyObject *result = PyList_New(0);
+    struct frame *f = frame_before_python_call;
+
+    for(; f = f->prev;)
+    {
+        PyObject *tuple = PyTuple_New(4);
+        char* file;
+        int line;
+        char buf[32];
+        get_source_line( f->procedure, &file, &line );
+        sprintf( buf, "%d", line );
+        
+        /* PyTuple_SetItem steals reference. */
+        PyTuple_SetItem(tuple, 0, PyString_FromString(file));
+        PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
+        PyTuple_SetItem(tuple, 2, PyString_FromString(f->module->name));
+        PyTuple_SetItem(tuple, 3, PyString_FromString(f->rulename));
+
+        PyList_Append(result, tuple);
+        Py_DECREF(tuple);
+    }
+    return result;
 }
 
 #endif

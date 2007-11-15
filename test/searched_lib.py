@@ -30,7 +30,7 @@ t.expect_addition("lib/bin/$toolset/debug/test_lib.dll")
 # change dll to lib.
 # 
 if (os.name == 'nt' or os.uname()[0].lower().startswith('cygwin')) and get_toolset() != 'gcc':
-    t.copy("lib/bin/$toolset/debug/test_lib.lib", "lib/test_lib.lib")
+    t.copy("lib/bin/$toolset/debug/test_lib.implib", "lib/test_lib.implib")
     t.copy("lib/bin/$toolset/debug/test_lib.dll", "lib/test_lib.dll")
 else:
     t.copy("lib/bin/$toolset/debug/test_lib.dll", "lib/test_lib.dll")

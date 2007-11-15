@@ -74,7 +74,7 @@ t.expect_addition("bin/r-f.test/$toolset/debug/r-f.test")
 
 # Make sure args are handled.
 t.expect_content("bin/r.test/$toolset/debug/r.output",
-                 "foo\nbar\n\nEXIT STATUS: 0\n",True)
+                 "foo\nbar\n*\nEXIT STATUS: 0*\n",True)
 
 # Test that input file is handled as well.
 t.write("r.cpp", """

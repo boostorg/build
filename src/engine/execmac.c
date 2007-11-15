@@ -47,7 +47,7 @@
 void
 execcmd( 
 	char *string,
-	void (*func)( void *closure, int status ),
+        void (*func)( void *closure, int status, timing_info*, char *, char * ),
 	void *closure,
 	LIST *shell )
 {
