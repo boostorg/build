@@ -18,7 +18,7 @@ export LANG=C
 cd /tmp
 rm -rf boost-build
 echo "Checking out sources"
-cvs -d :ext:vladimir_prus@boost.cvs.sourceforge.net:/cvsroot/boost co -P -d  boost-build boost/tools > /tmp/boost_build_checkout_log
+svn co http://svn.boost.org/svn/boost/trunk/tools boost-build > /tmp/boost_build_checkout_log
 mv /tmp/boost_build_checkout_log boost-build/checkout-log
 cd boost-build/build/v2
 echo "Building packages and uploading docs"

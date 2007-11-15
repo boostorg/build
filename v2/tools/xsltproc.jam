@@ -47,12 +47,12 @@ rule compute-xslt-flags ( target : properties * )
   for local param in [ feature.get-values <xsl:param> : $(properties) ]
   {
     local namevalue = [ regex.split $(param) "=" ] ;
-    flags += --stringparam $(namevalue[1]) $(namevalue[2]) ;
+    flags += --stringparam $(namevalue[1]) \"$(namevalue[2])\" ;
   }
   # Translate <xsl:path>
   for local path in [ feature.get-values <xsl:path> : $(properties) ] 
   {
-    flags += --path $(path:G=) ;
+    flags += --path \"$(path:G=)\" ;
   }
         
   # Take care of implicit dependencies
@@ -70,7 +70,7 @@ rule compute-xslt-flags ( target : properties * )
 
   for local dir in $(implicit-target-directories)
   {
-    flags += --path $(dir) ;
+    flags += --path \"$(dir)\" ;
   }
 
   return $(flags) ;

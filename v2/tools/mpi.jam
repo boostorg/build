@@ -58,6 +58,7 @@ import "class" : new ;
 import common ;
 import feature : feature ;
 import generators ;
+import os ;
 import project ;
 import property ;
 import testing ;
@@ -223,13 +224,44 @@ local rule safe-shell-command ( cmdline )
 # Initialize the MPI module.  
 rule init ( mpicxx ? : options * : mpirun-with-options * )
 {
-  if ! $(options)
+  if ! $(options) && $(.debug-configuration)
   {
-    if $(.debug-configuration)
+    ECHO "===============MPI Auto-configuration===============" ;
+  }
+    
+  if ! $(mpicxx) && [ os.on-windows ]
+  {  
+    # Try to auto-configure to the Microsoft Compute Cluster Pack
+    local cluster_pack_path_native = "C:\\Program Files\\Microsoft Compute Cluster Pack" ;
+    local cluster_pack_path = [ path.make $(cluster_pack_path_native) ] ;
+    if [ GLOB $(cluster_pack_path_native)\\Include : mpi.h ]
     {
-      ECHO "===============MPI Auto-configuration===============" ;
+      if $(.debug-configuration)
+      {
+        ECHO "Found Microsoft Compute Cluster Pack: $(cluster_pack_path_native)" ;
+      }
+      
+      # Pick up either the 32-bit or 64-bit library, depending on which address
+      # model the user has selected. Default to 32-bit.
+      options = <include>$(cluster_pack_path)/Include 
+                <address-model>64:<library-path>$(cluster_pack_path)/Lib/amd64
+                <library-path>$(cluster_pack_path)/Lib/i386
+                <find-static-library>msmpi
+                <toolset>msvc:<define>_SECURE_SCL=0
+              ;
+              
+      # Setup the "mpirun" equivalent (mpiexec)
+      .mpirun = "\"$(cluster_pack_path_native)\\Bin\\mpiexec.exe"\" ;
+      .mpirun_flags = -n ;
     }
-
+    else if $(.debug-configuration)
+    {
+      ECHO "Did not find Microsoft Compute Cluster Pack in $(cluster_pack_path_native)." ;
+    }
+  } 
+   
+  if ! $(options)
+  { 
     # Try to auto-detect options based on the wrapper compiler
     local command = [ common.get-invocation-command mpi : mpic++ : $(mpicxx) ] ;
 
@@ -323,8 +355,6 @@ rule init ( mpicxx ? : options * : mpirun-with-options * )
                                 : $(link_flags) ] ;
           ECHO "MPI link flags: $(match[2])" ;
         }
-        echo "MPI build features: " ;
-        ECHO $(options) ;
       }
     } 
     else 
@@ -345,17 +375,32 @@ rule init ( mpicxx ? : options * : mpirun-with-options * )
       ECHO "You will need to manually configure MPI support." ;
     }
  
-    if $(.debug-configuration)
-    {
-      ECHO "====================================================" ;
-    }
   }
 
   # Find mpirun (or its equivalent) and its flags
-  .mpirun = 
-      [ common.get-invocation-command mpi : mpirun : $(mpirun-with-options[1]) ] ;
-  .mpirun_flags = $(mpirun-with-options[2-]) ;
-  .mpirun_flags ?= -np ;
+  if ! $(.mpirun)
+  {
+    .mpirun = 
+        [ common.get-invocation-command mpi : mpirun : $(mpirun-with-options[1]) ] ;
+    .mpirun_flags = $(mpirun-with-options[2-]) ;
+    .mpirun_flags ?= -np ;
+  }
+  
+  if $(.debug-configuration)
+  {
+    if $(options)
+    {
+      echo "MPI build features: " ;
+      ECHO $(options) ;
+    }
+
+    if $(.mpirun)
+    {
+      echo "MPI launcher: $(.mpirun) $(.mpirun_flags)" ;
+    }
+        
+    ECHO "====================================================" ;
+  }
 
   if $(options)  
   {
@@ -450,7 +495,7 @@ rule mpi-test ( name : sources * : requirements * : schedule * )
     {  
       result += [ testing.make-test 
         run-mpi : $(sources) /boost/mpi//boost_mpi
-          : $(requirements) <mpi:processes>$(processes) : $(name)-$(processes) ] ;
+          : $(requirements) <toolset>msvc:<link>static <mpi:processes>$(processes) : $(name)-$(processes) ] ;
     }
     return $(result) ;
 }

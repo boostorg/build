@@ -218,6 +218,7 @@
 
 # ifdef _AIX
 # define unix
+# define MAXLINE 23552 /* 24k - 1k, longest 'together' actions */
 # define OSMINOR "OS=AIX"
 # define OS_AIX
 # define NO_VFORK
@@ -451,33 +452,31 @@
 # if defined( _i386_ ) || \
      defined( __i386__ ) || \
      defined( _M_IX86 )
-# if !defined( OS_FREEBSD ) && \
-     !defined( OS_DRAGONFLYBSD ) && \
-     !defined( OS_OS2 ) && \
-     !defined( OS_AS400 )
 # define OSPLAT "OSPLAT=X86"
-# endif
 # endif 
 
-# ifdef __sparc__
-# if !defined( OS_SUNOS ) && \
-     !defined( OS_SOLARIS )
-# define OSPLAT "OSPLAT=SPARC"
+# if defined( __ia64__ ) || defined( __IA64__ ) || defined( __ia64 )
+# define OSPLAT "OSPLAT=IA64"
 # endif
+
+# if \
+    defined( __x86_64__ ) || \
+    defined( __amd64__ ) || \
+    defined( _M_AMD64 )
+# define OSPLAT "OSPLAT=X86_64"
+# endif
+
+
+# ifdef __sparc__
+# define OSPLAT "OSPLAT=SPARC"
 # endif
 
 # ifdef __mips__
-# if !defined( OS_SGI )
 # define OSPLAT "OSPLAT=MIPS"
-# endif
 # endif
 
 # ifdef __arm__
 # define OSPLAT "OSPLAT=ARM"
-# endif
-
-# if defined( __ia64__ ) || defined( __IA64__ )
-# define OSPLAT "OSPLAT=IA64"
 # endif
 
 # ifdef __s390__
@@ -522,9 +521,11 @@ struct globs {
 	int	jobs;
 	int	quitquick;
 	int	newestfirst;		/* build newest sources first */
+        int     pipe_action;
 	char	debug[DEBUG_MAX];
 	FILE	*cmdout;		/* print cmds, not run them */
-    long timeout; /* number of seconds to limit actions to, default 0 for no limit. */
+    long timeout;           /* number of seconds to limit actions to, default 0 for no limit. */
+    int dart;               /* output build and test results formatted for Dart */
 } ;
 
 extern struct globs globs;
@@ -555,5 +556,11 @@ extern struct globs globs;
 # define DEBUG_PARSE	( globs.debug[ 11 ] )	/* debug parsing */
 # define DEBUG_GRAPH	( globs.debug[ 12 ] )	/* debug dependencies */
 # define DEBUG_FATE ( globs.debug[ 13 ] )  /* show changes to fate in make0() */
+
+/* Everyone gets the memory definitions. */
+#include "mem.h"
+
+/* They also get the profile functions. */
+#include "debug.h"
 
 #endif

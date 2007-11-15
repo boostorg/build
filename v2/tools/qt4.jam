@@ -91,6 +91,12 @@ rule init ( prefix )
         .initialized = true ;
         .prefix = $(prefix) ;
 
+        #~ Setup prefixes for include, binaries and libs.
+        #~ TODO: Implement overrides in "init" parameter list.
+        .incprefix = $(.prefix)/include ;
+        .libprefix = $(.prefix)/lib ;
+        .binprefix = $(.prefix)/bin ;
+
         # Generates cpp files from header files using "moc" tool
         generators.register-standard qt4.moc : H : CPP(moc_%) : <allow>qt4 ;
         
@@ -130,9 +136,9 @@ rule init ( prefix )
         # Use pre-built Qt
         {
             local usage-requirements = 
-                <include>$(.prefix)/include 
-                <library-path>$(.prefix)/lib 
-                <dll-path>$(.prefix)/lib 
+                <include>$(.incprefix) 
+                <library-path>$(.libprefix) 
+                <dll-path>$(.libprefix) 
                 <threading>multi 
                 <allow>qt4
                 ;
@@ -179,7 +185,7 @@ rule init ( prefix )
                 : # usage-requirements
                   <define>QT_CORE_LIB
                   <define>QT_NO_DEBUG
-                  <include>$(.prefix)/include/QtCore 
+                  <include>$(.incprefix)/QtCore 
                   $(usage-requirements)
                 ;
             lib QtCore : $(main)
@@ -189,7 +195,7 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements
                   <define>QT_CORE_LIB
-                  <include>$(.prefix)/include/QtCore 
+                  <include>$(.incprefix)/QtCore 
                   $(usage-requirements) 
                 ;
             
@@ -199,8 +205,7 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements
                   <define>QT_GUI_LIB
-                  <include>$(.prefix)/include/QtGui 
-                  <user-interface>gui  
+                  <include>$(.incprefix)/QtGui 
                 ;
             
             lib QtGui : QtCore
@@ -210,8 +215,7 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements
                   <define>QT_GUI_LIB
-                  <include>$(.prefix)/include/QtGui 
-                  <user-interface>gui  
+                  <include>$(.incprefix)/QtGui 
                 ;
             
             lib QtNetwork : QtCore
@@ -220,7 +224,7 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements
                   <define>QT_NETWORK_LIB
-                  <include>$(.prefix)/include/QtNetwork  
+                  <include>$(.incprefix)/QtNetwork  
                 ;
             lib QtNetwork : QtCore
                 : # requirements
@@ -229,7 +233,7 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements
                   <define>QT_NETWORK_LIB
-                  <include>$(.prefix)/include/QtNetwork  
+                  <include>$(.incprefix)/QtNetwork  
                 ;
             
             lib QtSql : QtCore
@@ -238,7 +242,7 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements
                   <define>QT_SQL_LIB
-                  <include>$(.prefix)/include/QtSql 
+                  <include>$(.incprefix)/QtSql 
                 ;
             lib QtSql : QtCore
                 : # requirements
@@ -247,7 +251,7 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements
                   <define>QT_SQL_LIB
-                  <include>$(.prefix)/include/QtSql 
+                  <include>$(.incprefix)/QtSql 
                 ;
             
             lib QtXml : QtCore
@@ -256,7 +260,7 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements
                   <define>QT_XML_LIB
-                  <include>$(.prefix)/include/QtXml 
+                  <include>$(.incprefix)/QtXml 
                 ;
             lib QtXml : QtCore
                 : # requirements
@@ -265,7 +269,7 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements
                   <define>QT_XML_LIB
-                  <include>$(.prefix)/include/QtXml 
+                  <include>$(.incprefix)/QtXml 
                 ;
             
             lib Qt3Support : QtGui QtNetwork QtXml QtSql
@@ -276,7 +280,7 @@ rule init ( prefix )
                 : # usage-requirements
                   <define>QT_QT3SUPPORT_LIB
                   <define>QT3_SUPPORT
-                  <include>$(.prefix)/include/Qt3Support 
+                  <include>$(.incprefix)/Qt3Support 
                 ;
  
             lib Qt3Support : QtGui QtNetwork QtXml QtSql
@@ -288,7 +292,7 @@ rule init ( prefix )
                 : # usage-requirements
                   <define>QT_QT3SUPPORT_LIB
                   <define>QT3_SUPPORT
-                  <include>$(.prefix)/include/Qt3Support 
+                  <include>$(.incprefix)/Qt3Support 
                 ;
 
             # Dummy target to enable "<qt3support>off" and "<library>/qt//Qt3Support" at the same time.
@@ -302,7 +306,7 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements
                   <define>QT_OPENGL_LIB
-                  <include>$(.prefix)/include/QtOpenGL 
+                  <include>$(.incprefix)/QtOpenGL 
                 ;
             lib QtOpenGL : QtGui
                 : # requirements
@@ -311,7 +315,7 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements
                   <define>QT_OPENGL_LIB
-                  <include>$(.prefix)/include/QtOpenGL 
+                  <include>$(.incprefix)/QtOpenGL 
                 ;
             
             # SVG-Support (Qt 4.1)
@@ -321,7 +325,7 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements
                   <define>QT_SVG_LIB
-                  <include>$(.prefix)/include/QtSvg 
+                  <include>$(.incprefix)/QtSvg 
                 ;
             lib QtSvg : QtXml QtOpenGL
                 : # requirements
@@ -330,7 +334,7 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements 
                   <define>QT_SVG_LIB
-                  <include>$(.prefix)/include/QtSvg 
+                  <include>$(.incprefix)/QtSvg 
                 ;
             
             # Test-Support (Qt 4.1)
@@ -339,7 +343,7 @@ rule init ( prefix )
                   <name>QtTest$(suffix_version) 
                 : # default-build
                 : # usage-requirements
-                  <include>$(.prefix)/include/QtTest 
+                  <include>$(.incprefix)/QtTest 
                 ;
             lib QtTest : QtCore
                 : # requirements
@@ -347,7 +351,7 @@ rule init ( prefix )
                   <variant>debug 
                 : # default-build
                 : # usage-requirements
-                  <include>$(.prefix)/include/QtTest 
+                  <include>$(.incprefix)/QtTest 
                 ;
             
             # AssistantClient Support
@@ -356,7 +360,7 @@ rule init ( prefix )
                   <name>QtAssistantClient$(suffix_version) 
                 : # default-build
                 : # usage-requirements
-                  <include>$(.prefix)/include/QtAssistant
+                  <include>$(.incprefix)/QtAssistant
                 ;
             lib QtAssistantClient : QtGui
                 : # requirements
@@ -364,7 +368,7 @@ rule init ( prefix )
                   <variant>debug 
                 : # default-build
                 : # usage-requirements
-                  <include>$(.prefix)/include/QtAssistant
+                  <include>$(.incprefix)/QtAssistant 
                 ;
             
             # Qt designer library
@@ -373,7 +377,7 @@ rule init ( prefix )
                   <name>QtDesigner$(suffix_version) 
                 : # default-build  
                 : # usage-requirements
-                  <include>$(.prefix)/include/QtDesigner
+                  <include>$(.incprefix)/QtDesigner
                 ;
 
             lib QtDesigner : QtGui QtXml
@@ -382,7 +386,7 @@ rule init ( prefix )
                   <variant>debug 
                 : # default-build  
                 : # usage-requirements
-                  <include>$(.prefix)/include/QtDesigner
+                  <include>$(.incprefix)/QtDesigner
                 ;
 
             # Support for dynamic Widgets (Qt 4.1)
@@ -391,7 +395,7 @@ rule init ( prefix )
                   <name>QtUiTools
                 : # default-build
                 : # usage-requirements
-                  <include>$(.prefix)/include/QtUiTools 
+                  <include>$(.incprefix)/QtUiTools 
                 ;
             lib QtUiTools : QtGui QtXml
                 : # requirements
@@ -399,7 +403,7 @@ rule init ( prefix )
                   <variant>debug 
                 : # default-build  
                 : # usage-requirements
-                  <include>$(.prefix)/include/QtUiTools 
+                  <include>$(.incprefix)/QtUiTools 
                 ;
 
             # DBus-Support (Qt 4.2)
@@ -408,7 +412,7 @@ rule init ( prefix )
                   <name>QtDBus$(suffix_version) 
                 : # default-build
                 : # usage-requirements
-                  <include>$(.prefix)/include/QtDBus 
+                  <include>$(.incprefix)/QtDBus 
                 ;
             lib QtDBus : QtXml
                 : # requirements
@@ -416,7 +420,7 @@ rule init ( prefix )
                   <variant>debug 
                 : # default-build
                 : # usage-requirements
-                  <include>$(.prefix)/include/QtDBus 
+                  <include>$(.incprefix)/QtDBus
                 ;
         }
     }
@@ -560,7 +564,7 @@ flags qt4.moc DEFINES  <define> ;
 # Qt4-moc has its c++-parser, so pass INCLUDES and DEFINES.
 actions moc
 {
-    $(.prefix)/bin/moc -I$(INCLUDES) -D$(DEFINES) -f $(>) -o $(<)
+    $(.binprefix)/moc -I$(INCLUDES) -D$(DEFINES) -f $(>) -o $(<)
 }
 
 # When moccing files for include only, we don't need -f, 
@@ -568,18 +572,18 @@ actions moc
 # and we'll get duplicated symbols.
 actions moc.inc
 {
-    $(.prefix)/bin/moc -I$(INCLUDES) -D$(DEFINES) $(>) -o $(<)
+    $(.binprefix)/moc -I$(INCLUDES) -D$(DEFINES) $(>) -o $(<)
 }
 
 
 # Generates source files from resource files
 actions rcc
 {
-    $(.prefix)/bin/rcc $(>) -name $(>:B) -o $(<)
+    $(.binprefix)/rcc $(>) -name $(>:B) -o $(<)
 }
 
 # Generates user-interface source from .ui files
 actions uic-h
 {
-    $(.prefix)/bin/uic $(>) -o $(<)
+    $(.binprefix)/uic $(>) -o $(<)
 }

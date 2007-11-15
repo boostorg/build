@@ -1,18 +1,19 @@
-#~ Copyright 2002-2005 Rene Rivera.
+#~ Copyright 2002-2007 Rene Rivera.
 #~ Distributed under the Boost Software License, Version 1.0.
 #~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Platform related specifics.
-if $(NT) { rule .path { return "$(<:J=\\)" ; } }
-else if $(OS2) { rule .path { return "$(<:J=\\)" ; } }
+if $(NT) { rule .path { return "$(<:J=\\)" ; } ./ = "/" ; }
+else if $(OS2) { rule .path { return "$(<:J=\\)" ; } ./ = "/" ; }
 else if $(VMS) { rule .path { return "[.$(<:J=/)]" ; } }
 else if $(MAC) { rule .path { return ":$(<:J=\:)" ; } }
 else { rule .path { return "$(<:J=/)" ; } }
 if $(VMS) { . = "_" ; }
 else { . = "." ; }
+./ ?= "" ; 
 
 # Info about what we are building.
-_VERSION_ = 3 1 14 ;
+_VERSION_ = 3 1 16 ;
 NAME = boost-jam ;
 VERSION = $(_VERSION_:J=$(.)) ;
 RELEASE = 1 ;
@@ -54,13 +55,15 @@ if $(with-python)
         {
             --python-lib ?=
                 [ GLOB [ .path $(python-location) libs ] : "python$(v).lib" ]
-                [ GLOB $(python-location) $(Path) $(PATH) $(path) : "python$(v).dll" ]
+                [ GLOB $(python-location) [ .path $(python-location) libs ]
+                    $(Path) $(PATH) $(path) : "python$(v).dll" ]
                 ;
             if ! $(--python-lib[2])
             {
                 --python-lib = ;
             }
         }
+        --python-lib = $(--python-lib[1]) ;
     }
     else if $(OS) = MACOSX
     {
@@ -82,6 +85,26 @@ if $(with-python)
             }
         }
     }
+}
+
+# Boehm GC?
+if --gc in $(ARGV)
+{
+    --boehm-gc = true ;
+}
+if $(--boehm-gc)
+{
+    --extra-include += [ .path [ PWD ] "boehm_gc" "include" ] ;
+}
+
+# Duma?
+if --duma in $(ARGV)
+{
+    --duma = true ;
+}
+if $(--duma)
+{
+    --extra-include += [ .path [ PWD ] "duma" ] ;
 }
 
 # An explicit root for the toolset? (trim spaces)
@@ -119,14 +142,14 @@ toolset acc cc : "-o " : -D
     : -Ae
     [ opt --release : -s -O3 ]
     [ opt --debug : -g -pg ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Borland C++ 5.5.x
 toolset borland bcc32 : -e -n : /D
     : -WC -w- -q "-I$(toolset-root)Include" "-L$(toolset-root)Lib"
     [ opt --release : -O2 -vi -w-inl ]
     [ opt --debug : -v -Od -vi- ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : $(--python-lib[1]) ;
 ## Generic Unix cc
 if ! $(CC) { CC = cc ; }
@@ -134,63 +157,63 @@ toolset cc $(CC) : "-o " : -D
     : $(CFLAGS)
     [ opt --release : -s -O ]
     [ opt --debug : -g ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : $(LIBS) -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Comeau C/C++ 4.x
 toolset como como : "-o " : -D
     : --c
     [ opt --release : --inlining ]
     [ opt --debug : --no_inlining ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## MacOSX Darwin, using GCC 2.9.x, 3.x
 toolset darwin cc :  "-o " : -D
     :
     [ opt --release : -Wl,-x -O3 -finline-functions ]
     [ opt --debug : -g -O0 -fno-inline -pg ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## GCC 2.x, 3.x, 4.x
 toolset gcc gcc : "-o " : -D
-    : -pedantic
+    : -pedantic -fno-strict-aliasing
     [ opt --release : [ opt --symbols : -g : -s ] -O3 ]
     [ opt --debug : -g -O0 -fno-inline ]
-    -I$(--python-include) -Wno-long-long
+    -I$(--python-include) -I$(--extra-include) -Wno-long-long
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## GCC 2.x, 3.x on CYGWIN but without cygwin1.dll
 toolset gcc-nocygwin gcc : "-o " : -D
     : -s -O3 -mno-cygwin
     [ opt --release : -finline-functions ]
     [ opt --debug : -s -O3 -fno-inline -pg ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Intel C/C++ for Linux
 toolset intel-linux icc : "-o " : -D
     :
     [ opt --release : -Xlinker -s -O3 ]
     [ opt --debug : -g -O0 -p ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Intel C/C++ for Win32
 toolset intel-win32 icl : /Fe : -D
     : /nologo
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
 ## KCC ?
 toolset kcc KCC : "-o " : -D
     :
     [ opt --release : -s +K2 ]
     [ opt --debug : -g +K0 ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Borland Kylix
 toolset kylix bc++ : -o : -D
     : -tC -q
     [ opt --release : -O2 -vi -w-inl ]
     [ opt --debug : -v -Od -vi- ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Metrowerks CodeWarrior 8.x
 {
@@ -201,7 +224,7 @@ toolset kylix bc++ : -o : -D
         : -c -lang c -subsystem console -cwd include
         [ opt --release : -runtime ss -opt full -inline all ]
         [ opt --debug : -runtime ssd -opt none -inline off ]
-        -I$(--python-include) ;
+        -I$(--python-include) -I$(--extra-include) ;
     toolset metrowerks $(mwcc) .link : "-o " :
         : -subsystem console -lkernel32.lib -ladvapi32.lib -luser32.lib
         [ opt --release : -runtime ss ]
@@ -213,64 +236,86 @@ toolset mingw gcc : "-o " : -D
     :
     [ opt --release : -s -O3 -finline-functions ]
     [ opt --debug : -g -O0 -fno-inline -pg ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : $(--python-lib[2]) ;
 ## MIPS Pro
 toolset mipspro cc : "-o " : -D
     :
     [ opt --release : -s -O3 -g0 -INLINE:none ]
     [ opt --debug : -g -O0 -INLINE ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Microsoft Visual Studio C++ 6.x
-toolset msvc cl : /Fe : -D
+toolset msvc cl : /Fe /Fe /Fd /Fo : -D
     : /nologo
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
 ## QNX 6.x GCC 3.x/2.95.3
 toolset qcc qcc : "-o " : -D
     : -Wc,-pedantic
     [ opt --release : [ opt --symbols : -g ] -O3 -Wc,-finline-functions ]
     [ opt --debug : -g -O0 -Wc,-fno-inline ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
+## Qlogic Pathscale 2.4
+toolset pathscale pathcc : "-o " : -D
+    :
+    [ opt --release : -s -Ofast -O3 ]
+    [ opt --debug : -g ]
+    -I$(--python-include) -I$(--extra-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
+## Portland Group Pgi 6.2
+toolset pgi pgcc : "-o " : -D
+    :
+    [ opt --release : -s -O3 ]
+    [ opt --debug : -g ]
+    -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Sun Workshop 6 C++
+toolset sun cc : "-o " : -D
+    :
+    [ opt --release : -s -fast -xO4 ]
+    [ opt --debug : -g ]
+    -xarch=generic
+    -I$(--python-include) -I$(--extra-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
+## Sun Workshop 6 C++ (old alias)
 toolset sunpro cc : "-o " : -D
     :
     [ opt --release : -s -fast -xO4 ]
     [ opt --debug : -g ]
     -xarch=generic
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Compaq Alpha CXX
 toolset tru64cxx cc : "-o " : -D
     :
     [ opt --release : -s -O5 -inline speed ]
     [ opt --debug : -g -O0 -pg ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## IBM VisualAge C++
 toolset vacpp xlc : "-o " : -D
     :
     [ opt --release : -s -O3 -qstrict -qinline ]
     [ opt --debug : -g -qNOOPTimize -qnoinline -pg ]
-    -I$(--python-include)
-    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
+    -I$(--python-include) -I$(--extra-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) -bmaxdata:0x40000000 ;
 ## Microsoft Visual C++ .NET 7.x
-toolset vc7 cl : /Fe : -D
+toolset vc7 cl : /Fe /Fe /Fd /Fo : -D
     : /nologo
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
 ## Microsoft Visual C++ 2005
-toolset vc8 cl : /Fe : -D
+toolset vc8 cl : /Fe /Fe /Fd /Fo : -D
     : /nologo
     [ opt --release : /MT /O2 /Ob2 /Gy /GF /GA /wd4996 ]
     [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 /wd4996 ]
-    -I$(--python-include)
+    -I$(--python-include) -I$(--extra-include)
     : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
 ## VMS/OpenVMS DEC C
 toolset vmsdecc cc : /OBJECT= : "/DEFINES=(" "," ")"
@@ -308,8 +353,16 @@ if ! $(toolset) in $(toolsets)
 --cc = $(tool.$(toolset).cc) ;
 if $(tool.$(toolset).opt.out[2])
 {
-    --bin = $(tool.$(toolset).opt.out[1]) ;
-    --dir = $(tool.$(toolset).opt.out[2]) ;
+    if $(tool.$(toolset).opt.out[1]) = $(tool.$(toolset).opt.out[2])
+    {
+        --out = $(tool.$(toolset).opt.out[1]) ;
+        --dir = $(tool.$(toolset).opt.out[3-]) ;
+    }
+    else
+    {
+        --bin = $(tool.$(toolset).opt.out[1]) ;
+        --dir = $(tool.$(toolset).opt.out[2-]) ;
+    }
 }
 else
 {
@@ -324,8 +377,16 @@ if $(tool.$(toolset).link.cc)
     --link = $(tool.$(toolset).link.cc) ;
     if $(tool.$(toolset).link.opt.out[2])
     {
-        --link-bin = $(tool.$(toolset).link.opt.out[1]) ;
-        --link-dir = $(tool.$(toolset).link.opt.out[2]) ;
+        if $(tool.$(toolset).link.opt.out[1]) = $(tool.$(toolset).link.opt.out[2])
+        {
+            --link-out = $(tool.$(toolset).link.opt.out[1]) ;
+            --link-dir = $(tool.$(toolset).link.opt.out[3-]) ;
+        }
+        else
+        {
+            --link-bin = $(tool.$(toolset).link.opt.out[1]) ;
+            --link-dir = $(tool.$(toolset).link.opt.out[2-]) ;
+        }
     }
     else
     {
@@ -378,8 +439,8 @@ jam.source =
     command.c compile.c debug.c expand.c glob.c
     hash.c hcache.c headers.c hdrmacro.c
     jam.c jambase.c jamgram.c
-    lists.c make.c make1.c newstr.c
-    option.c parse.c regexp.c rules.c
+    lists.c make.c make1.c mem.c newstr.c
+    option.c output.c parse.c regexp.c rules.c
     scan.c search.c subst.c w32_getreg.c
     timestamp.c variable.c modules.c strings.c filesys.c 
     builtins.c pwd.c class.c native.c modules/set.c 
@@ -418,6 +479,7 @@ if ! $(debug) || --noassert in $(ARGV)
 --defs += OPT_GRAPH_DEBUG_EXT ;
 --defs += OPT_SEMAPHORE ;
 --defs += OPT_AT_FILES ;
+--defs += OPT_DEBUG_PROFILE ;
 
 # Bug fixes
 --defs += OPT_FIX_TARGET_VARIABLES_EXT ;
@@ -425,6 +487,21 @@ if ! $(debug) || --noassert in $(ARGV)
 
 # Improvements
 --defs += OPT_IMPROVED_PATIENCE_EXT ;
+
+# Use Boehm GC memory allocator?
+if $(--boehm-gc)
+{
+    --defs += OPT_BOEHM_GC ;
+    if $(debug)
+    {
+        --defs += GC_DEBUG ;
+    }
+}
+
+if $(--duma)
+{
+    --defs += OPT_DUMA ;
+}
 
 if ( $(OS) = NT || $(NT) ) && ! NT in $(--defs)
 {
@@ -441,6 +518,10 @@ if $(with-python)
     --defs += HAVE_PYTHON ;
 }
 
+if $(debug)
+{
+    --defs += BJAM_NEWSTR_NO_ALLOCATE ;
+}
 
 
 # The basic symbolic targets...
@@ -526,16 +607,16 @@ rule .exe
     return $(exe) ;
 }
 if ! $(--def[2]) { actions [COMPILE] {
-    "$(--cc)" $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def)$(--defs) $(--flags) "$(--libs)" $(>)
+    "$(--cc)" $(--bin)$(<:D=) $(--dir)$(<:D)$(./) $(--out)$(<) $(--def)$(--defs) $(--flags) "$(--libs)" $(>)
 } }
 else { actions [COMPILE] {
-    "$(--cc)" $(--bin)$(<:D=) $(--dir)$(<:D) $(--out)$(<) $(--def[1])$(--defs:J=$(--def[2]))$(--def[3]) $(--flags) "$(--libs)" $(>)
+    "$(--cc)" $(--bin)$(<:D=) $(--dir)$(<:D)$(./) $(--out)$(<) $(--def[1])$(--defs:J=$(--def[2]))$(--def[3]) $(--flags) "$(--libs)" $(>)
 } }
 if $(VMS) { actions [COMPILE.LINK] {
-    "$(--link)" $(--link-bin)$(<:D=) $(--link-dir)$(<:D) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>J=", ")
+    "$(--link)" $(--link-bin)$(<:D=) $(--link-dir)$(<:D)$(./) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>J=", ")
 } }
 else { actions [COMPILE.LINK] {
-    "$(--link)" $(--link-bin)$(<:D=) $(--link-dir)$(<:D) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>)
+    "$(--link)" $(--link-bin)$(<:D=) $(--link-dir)$(<:D)$(./) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>)
 } }
 
 rule .link
@@ -739,18 +820,19 @@ dist.source = $(dist.source:D=)
     build.jam build.bat build.sh build_vms.com
     Jambase
     jamgram.y jamgram.yy
-    [ .path debian changelog ]
-    [ .path debian control ]
-    [ .path debian copyright ]
-    [ .path debian jam.man.sgml ]
-    [ .path debian rules ]
     [ .path modules set.c ]
     [ .path modules path.c ]
     [ .path modules regex.c ]
     [ .path modules property-set.c ]
     [ .path modules sequence.c ]
     [ .path modules order.c ]
-    boost-jam.spec
+    [ GLOB [ .path boehm_gc ] : * ]
+    [ GLOB [ .path boehm_gc include ] : * ]
+    [ GLOB [ .path boehm_gc include private ] : * ]
+    [ GLOB [ .path boehm_gc cord ] : * ]
+    [ GLOB [ .path boehm_gc Mac_files ] : * ]
+    [ GLOB [ .path boehm_gc tests ] : * ]
+    [ GLOB [ .path boehm_gc doc ] : * ]
     ;
 dist.bin =
     bjam
@@ -784,9 +866,19 @@ if $(NT)
 }
 if $(UNIX)
 {
-    actions [PACK] {
-    tar zcf "$(<)" "$(>)"
+    tar ?= [ GLOB $(PATH) : star bsdtar tar ] ;
+    tar = $(tar[1]) ;
+    switch $(tar:D=:S=)
+    {
+        case star : tar += -c artype=pax -D -d -to-stdout ;
+        case * : tar += -c -f - ;
     }
+    actions [PACK] {
+    "$(tar)" "$(>)" | gzip -c9 > "$(<)"
+    }
+    #~ actions [PACK] {
+    #~ tar cf "$(<:S=.tar)" "$(>)"
+    #~ }
     actions [ZIP] {
     gzip -c9 "$(>)" > "$(<)"
     }
@@ -814,16 +906,21 @@ rule .binary
 rule .package ( dst-dir : src-files + )
 {
     local dst-files ;
+    local src-files-actual ;
     for local src-path in $(src-files)
     {
-        local src-subdir = $(src-path:D) ;
-        local src-file = $(src-path) ;
-        while $(src-subdir:D) { src-subdir = $(src-subdir:D) ; }
-        if $(src-subdir) = ".."
+        if ! [ GLOB $(src-path:P) : $(src-path:B) ] || [ CHECK_IF_FILE $(src-path) ]
         {
-            src-file = $(src-file:D=) ;
+            local src-subdir = $(src-path:D) ;
+            local src-file = $(src-path) ;
+            while $(src-subdir:D) { src-subdir = $(src-subdir:D) ; }
+            if $(src-subdir) = ".."
+            {
+                src-file = $(src-file:D=) ;
+            }
+            dst-files += $(src-file:R=$(dst-dir)) ;
+            src-files-actual += $(src-path) ;
         }
-        dst-files += $(src-file:R=$(dst-dir)) ;
     }
     
     local pack = ;
@@ -834,7 +931,7 @@ rule .package ( dst-dir : src-files + )
     DEPENDS $(pack) : $(dst-files) ;
     
     local dst-files-queue = $(dst-files) ;
-    for local src-path in $(src-files)
+    for local src-path in $(src-files-actual)
     {
         local dst-file = $(dst-files-queue[1]) ;
         dst-files-queue = $(dst-files-queue[2-]) ;
@@ -897,6 +994,6 @@ if dist in $(ARGV)
     .package $(NAME)-$(VERSION)-$(RELEASE)-$(platform) : $(dist.bin) ;
     if $(rpm-tool)
     {
-        .rpm $(NAME)-$(VERSION)-$(RELEASE) : $(NAME)-$(VERSION).tgz ;
+        #~ .rpm $(NAME)-$(VERSION)-$(RELEASE) : $(NAME)-$(VERSION).tgz ;
     }
 }

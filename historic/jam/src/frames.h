@@ -24,6 +24,14 @@ struct frame
     char*  rulename;
 };
 
+/* When call into Python is in progress, this
+   variable points to the bjam frame that
+   was current at the moment of call.  When the call
+   completes, the variable is not defined.  Further,
+   if Jam calls Python which calls Jam and so on,
+   this variable only keeps the most recent Jam frame.  */
+extern struct frame *frame_before_python_call;
+
 void frame_init( FRAME* ); /* implemented in compile.c */
 void frame_free( FRAME* ); /* implemented in compile.c */
 

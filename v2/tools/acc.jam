@@ -12,16 +12,23 @@
 import toolset : flags ;
 import feature ;
 import generators ;
+import common ;
 
 feature.extend toolset : acc ;
 toolset.inherit acc : unix ;
 generators.override builtin.lib-generator : acc.prebuilt ;
 generators.override acc.searched-lib-generator : searched-lib-generator ;
-feature.subfeature toolset acc : version ;
 
 # Configures the acc toolset. 
-rule init ( version ? : path * )
+rule init ( version ? : user-provided-command * : options * )
 {
+    local condition = [ common.check-init-parameters acc 
+        : version $(version) ] ;
+    
+    local command = [ common.get-invocation-command acc : aCC
+        : $(user-provided-command) ] ;
+    
+    common.handle-options acc : $(condition) : $(command) : $(options) ;
 }
 
 
@@ -76,22 +83,22 @@ flags acc LINKFLAGS <threading>multi : -mt ;
 
 actions acc.link bind NEEDLIBS
 {
-    aCC $(LINKFLAGS) +DD64 -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    $(CONFIG_COMMAND) -AA $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS)
 }
 
 actions acc.link.dll bind NEEDLIBS
 {
-    aCC -b $(LINKFLAGS) +DD64 -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    $(CONFIG_COMMAND) -AA -b $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS)
 }
 
 actions acc.compile.c
 {    
-    aCC -Ae +DD64 -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(CONFIG_COMMAND) -Ae -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)" $(OPTIONS)
 }
 
 actions acc.compile.c++
 {
-    aCC -AA +DD64 -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+    $(CONFIG_COMMAND) -AA -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)" $(OPTIONS)
 }
 
 actions updated together piecemeal acc.archive

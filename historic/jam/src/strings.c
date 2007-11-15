@@ -2,8 +2,8 @@
 /* Software License, Version 1.0. (See accompanying */
 /* file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) */
 
+#include "jam.h"
 #include "strings.h"
-#include "debug.h"
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -48,23 +48,21 @@ void string_free( string* s )
 {
     assert_invariants( s );
     if ( s->value != s->opt )
-        free( s->value );
+        BJAM_FREE( s->value );
 }
 
 static void string_reserve_internal( string* self, size_t capacity )
 {
     if ( self->value == self->opt )
     {
-        self->value = (char*)malloc( capacity + JAM_STRING_MAGIC_SIZE );
-        if ( DEBUG_PROFILE )
-            profile_memory( capacity + JAM_STRING_MAGIC_SIZE );
+        self->value = (char*)BJAM_MALLOC_ATOMIC( capacity + JAM_STRING_MAGIC_SIZE );
         self->value[0] = 0;
         strncat( self->value, self->opt, sizeof(self->opt) );
         assert( strlen( self->value ) <= self->capacity ); /* This is a regression test */
     }
     else
     {
-        self->value = (char*)realloc( self->value, capacity + JAM_STRING_MAGIC_SIZE );
+        self->value = (char*)BJAM_REALLOC( self->value, capacity + JAM_STRING_MAGIC_SIZE );
     }
 #ifndef NDEBUG
     memcpy( self->value + capacity, self->magic, JAM_STRING_MAGIC_SIZE );

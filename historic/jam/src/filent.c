@@ -12,7 +12,6 @@
  */
 
 # include "jam.h"
-# include "debug.h"
 
 # include "filesys.h"
 # include "pathsys.h"
@@ -306,9 +305,7 @@ file_archscan(
 		** 15 characters (ie. don't fit into a ar_name
 		*/
 
-		string_table = malloc(lar_size+1);
-        if ( DEBUG_PROFILE )
-            profile_memory( lar_size+1 );
+		string_table = BJAM_MALLOC_ATOMIC(lar_size+1);
 		if (read(fd, string_table, lar_size) != lar_size)
 		    printf("error reading string table\n");
 		string_table[lar_size] = '\0';

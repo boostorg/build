@@ -1,8 +1,8 @@
 [article Boost.Jam
     [quickbook 1.3]
-    [version: 3.1.14]
+    [version: 3.1.16]
     [authors [Rivera, Rene], [Abrahams, David], [Prus, Vladimir]]
-    [copyright 2003 2004 2005 2006 Rene Rivera, David Abrahams, Vladimir Prus]
+    [copyright 2003 2004 2005 2006 2007 Rene Rivera, David Abrahams, Vladimir Prus]
     [category tool-build]
     [id jam]
     [dirname jam]
@@ -21,7 +21,7 @@
 
 [/ Shortcuts ]
 
-[def :version: 3.1.14]
+[def :version: 3.1.16]
 
 [/ Images ]
 
@@ -34,6 +34,15 @@
 
 [def :Boost:                [@http://www.boost.org Boost]]
 [def :Perforce_Jam:         [@http://www.perforce.com/jam/jam.html Perforce Jam]]
+
+[/ Templates ]
+
+[template literal[text]'''<literallayout>'''[text]'''</literallayout>''']
+[template list[items]'''<itemizedlist>'''[items]'''</itemizedlist>''']
+[template orderedlist[items]'''<orderedlist>'''[items]'''</orderedlist>''']
+[template li[text]'''<listitem>'''[text]'''</listitem>''']
+[template lines[items]'''<simplelist type='vert' columns='1'>'''[items]'''</simplelist>''']
+[template line[text]'''<member>'''[text]'''</member>''']
 
 [section:intro Introduction]
 
@@ -111,176 +120,297 @@ The supported toolsets, and wether they are auto-detected, are:
 
 [table Supported Toolsets
 
-[[Script] [Platform] [Toolset] [Detection]]
+[[Script] [Platform] [Toolset] [Detection and Notes]]
 
 [   [=build.bat=] [Windows NT, 2000, and XP]
-    [   [@http://www.borland.com/bcppbuilder/freecompiler =borland=]\n
-        [@http://www.borland.com/ Borland] C++Builder (BCC 5.5)]
-    [   * Common install location: "=C:\Borland\BCC55="\n
-        * =BCC32.EXE= in =PATH=
-] ]
+    [[lines
+        [line [@http://www.borland.com/bcppbuilder/freecompiler =borland=]]
+        [line [@http://www.borland.com/ Borland] C++Builder (BCC 5.5)]
+        ]]
+    [[list
+        [li Common install location: "=C:\Borland\BCC55="]
+        [li =BCC32.EXE= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.comeaucomputing.com/ =como=]\n
-        Comeau Computing C/C++]
-    [
-] ]
+    [[lines
+        [line [@http://www.comeaucomputing.com/ =como=]]
+        [line Comeau Computing C/C++]
+        ]]
+    []
+]
 
 [   [] []
-    [   [@http://gcc.gnu.org/ =gcc=]\n
-        GNU GCC]
-    [
-] ]
+    [[lines
+        [line [@http://gcc.gnu.org/ =gcc=]]
+        [line GNU GCC]
+        ]]
+    []
+]
 
 [   [] []
-    [   [@http://gcc.gnu.org/ =gcc-nocygwin=]\n
-        GNU GCC]
-    [
-] ]
+    [[lines
+        [line [@http://gcc.gnu.org/ =gcc-nocygwin=]]
+        [line GNU GCC]
+        ]]
+    []
+]
 
 [   [] []
-    [   [@http://www.intel.com/software/products/compilers/c60 =intel-win32=]\n
-        Intel C++ Compiler for Windows]
-    [   * =ICL.EXE= in =PATH=
-] ]
+    [[lines
+        [line [@http://www.intel.com/software/products/compilers/c60 =intel-win32=]]
+        [line Intel C++ Compiler for Windows]
+        ]]
+    [[list
+        [li =ICL.EXE= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.metrowerks.com/ =metrowerks=]\n
-        MetroWerks CodeWarrior C/C++ 7.x, 8.x, 9.x]
-    [   * =CWFolder= variable configured
-        * =MWCC.EXE= in =PATH=
-] ]
+    [[lines
+        [line [@http://www.metrowerks.com/ =metrowerks=]]
+        [line MetroWerks CodeWarrior C/C++ 7.x, 8.x, 9.x]
+        ]]
+    [[list
+        [li =CWFolder= variable configured]
+        [li =MWCC.EXE= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.mingw.org/ =mingw=]\n
-        GNU [@http://gcc.gnu.org/ GCC] as the [@http://www.mingw.org/ MinGW] configuration]
-    [   * Common install location: "=C:\MinGW="
-] ]
+    [[lines
+        [line [@http://www.mingw.org/ =mingw=]]
+        [line GNU [@http://gcc.gnu.org/ GCC] as the [@http://www.mingw.org/ MinGW] configuration]
+        ]]
+    [[list
+        [li Common install location: "=C:\MinGW="]
+        ]]
+]
 
 [   [] []
-    [   [@http://msdn.microsoft.com/visualc/ =msvc=]\n
-        Microsoft Visual C++ 6.x]
-    [   * =VCVARS32.BAT= already configured\n
-        * =%MSVCDir%= is present in environment\n
-        * Common install locations: "=%ProgramFiles%\Microsoft Visual Studio=", "=%ProgramFiles%\Microsoft Visual C++="\n
-        * =CL.EXE= in =PATH=\n
-        * =VCVARS32.BAT= in =PATH=
-] ]
+    [[lines
+        [line [@http://msdn.microsoft.com/visualc/ =msvc=]]
+        [line Microsoft Visual C++ 6.x]
+        ]]
+    [[list
+        [li =VCVARS32.BAT= already configured]
+        [li =%MSVCDir%= is present in environment]
+        [li Common install locations: "=%ProgramFiles%\Microsoft Visual Studio=", "=%ProgramFiles%\Microsoft Visual C++="]
+        [li =CL.EXE= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://msdn.microsoft.com/visualc/ =vc7=]\n
-        Microsoft Visual C++ 7.x]
-    [   * =VCVARS32.BAT= or =VSVARS32.BAT= already configured
-        * =%VS71COMNTOOLS%= is present in environment\n
-        * =%VCINSTALLDIR%= is present in environment\n
-        * Common install locations: "=%ProgramFiles%\Microsoft Visual Studio .NET=", "=%ProgramFiles%\Microsoft Visual Studio .NET 2003="\n
-        * =CL.EXE= in =PATH=\n
-        * =VCVARS32.BAT= in =PATH=
-] ]
+    [[lines
+        [line [@http://msdn.microsoft.com/visualc/ =vc7=]]
+        [line Microsoft Visual C++ 7.x]
+        ]]
+    [[list
+        [li =VCVARS32.BAT= or =VSVARS32.BAT= already configured]
+        [li =%VS71COMNTOOLS%= is present in environment]
+        [li =%VCINSTALLDIR%= is present in environment]
+        [li Common install locations: "=%ProgramFiles%\Microsoft Visual Studio .NET=", "=%ProgramFiles%\Microsoft Visual Studio .NET 2003="]
+        [li =CL.EXE= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://msdn.microsoft.com/visualc/ =vc8=]\n
-        Microsoft Visual C++ 8.x]
-    [   * =VCVARS32.BAT= or =VSVARS32.BAT= already configured\n
-        * =%VS80COMNTOOLS%= is present in environment\n
-        * Common install location: "=%ProgramFiles%\Microsoft Visual Studio 8="\n
-        * =CL.EXE= in =PATH=\n
-        * =VCVARS32.BAT= in =PATH=
-] ]
+    [[lines
+        [line [@http://msdn.microsoft.com/visualc/ =vc8=]]
+        [line Microsoft Visual C++ 8.x]
+        ]]
+    [Detection:
+        [list
+            [li =VCVARSALL.BAT= already configured]
+            [li =%VS80COMNTOOLS%= is present in environment]
+            [li Common install location: "=%ProgramFiles%\Microsoft Visual Studio 8="]
+            [li =CL.EXE= in =PATH=]
+            ]
+    
+    Notes:
+        [list
+            [li If =VCVARSALL.BAT= is called to set up the toolset, it is passed all the extra arguments, see below for what those arguments are. This can be used to build, for example, a Win64 specific version of =bjam=. Consult the VisualStudio documentation for what the possible argument values to the =VCVARSALL.BAT= are.]
+            ]
+        ]
+]
 
 [   [=build.sh=] [Unix, Linux, Cygwin, etc.]
-    [   [@http://www.hp.com/go/c++ =acc=]\n
-        HP-UX aCC]
-    [   * =aCC= in =PATH=\n
-        * =uname= is "HP-UX"
-] ]
+    [[lines
+        [line [@http://www.hp.com/go/c++ =acc=]]
+        [line HP-UX aCC]
+        ]]
+    [[list
+        [li =aCC= in =PATH=]
+        [li =uname= is "HP-UX"]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.comeaucomputing.com/ =como=]\n
-        Comeau Computing C/C++]
-    [   * como in =PATH=
-] ]
+    [[lines
+        [line [@http://www.comeaucomputing.com/ =como=]]
+        [line Comeau Computing C/C++]
+        ]]
+    [[list
+        [li como in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://gcc.gnu.org/ =gcc=]\n
-        GNU GCC]
-    [   * gcc in =PATH=
-] ]
+    [[lines
+        [line [@http://gcc.gnu.org/ =gcc=]]
+        [line GNU GCC]
+        ]]
+    [[list
+        [li gcc in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.intel.com/software/products/compilers/c60l/ =intel-linux=]\n
-        Intel C++ for Linux]
-    [   * =icc= in =PATH=\n
-        * Common install locations: "=/opt/intel/cc/9.0=", "=/opt/intel_cc_80=", "=/opt/intel/compiler70=", "=/opt/intel/compiler60=", "=/opt/intel/compiler50="
-] ]
+    [[lines
+        [line [@http://www.intel.com/software/products/compilers/c60l/ =intel-linux=]]
+        [line Intel C++ for Linux]
+        ]]
+    [[list
+        [li =icc= in =PATH=]
+        [li Common install locations: "=/opt/intel/cc/9.0=", "=/opt/intel_cc_80=", "=/opt/intel/compiler70=", "=/opt/intel/compiler60=", "=/opt/intel/compiler50="]
+        ]]
+]
 
 [   [] []
-    [   =kcc=\n
-        Intel KAI C++]
-    [   * =KCC= in =PATH=
-] ]
+    [[lines
+        [line =kcc=]
+        [line Intel KAI C++]
+        ]]
+    [[list
+        [li =KCC= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.borland.com/bcppbuilder/freecompiler =kylix=]\n
-        [@http://www.borland.com/ Borland] C++Builder]
-    [   * bc++ in PATH
-] ]
+    [[lines
+        [line [@http://www.borland.com/bcppbuilder/freecompiler =kylix=]]
+        [line [@http://www.borland.com/ Borland] C++Builder]
+        ]]
+    [[list
+        [li bc++ in PATH]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.sgi.com/developers/devtools/languages/mipspro.html =mipspro=]\n
-        SGI MIPSpro C]
-    [   * =uname= is "=IRIX=" or "=IRIX64="
-] ]
+    [[lines
+        [line [@http://www.sgi.com/developers/devtools/languages/mipspro.html =mipspro=]]
+        [line SGI MIPSpro C]
+        ]]
+    [[list
+        [li =uname= is "=IRIX=" or "=IRIX64="]
+        ]]
+]
 
 [   [] []
-    [   =sunpro=\n
-        Sun Workshop 6 C++]
-    [   * Standard install location: "=/opt/SUNWspro="
-] ]
+    [[lines
+        [line =sunpro=]
+        [line Sun Workshop 6 C++]
+        ]]
+    [[list
+        [li Standard install location: "=/opt/SUNWspro="]
+        ]]
+]
 
 [   [] []
-    [   =qcc=\n
-        [@http://www.qnx.com/ QNX Neutrino]]
-    [   * =uname= is "=QNX=" and =qcc= in =PATH=
-] ]
+    [[lines
+        [line =qcc=]
+        [line [@http://www.qnx.com/ QNX Neutrino]]
+        ]]
+    [[list
+        [li =uname= is "=QNX=" and =qcc= in =PATH=]
+        ]]
+]
 
 [   [] []
-    [   [@http://www.tru64unix.compaq.com/cplus/ =true64cxx=]\n
-        Compaq C++ Compiler for True64 UNIX]
-    [   * =uname= is "=OSF1="
-] ]
+    [[lines
+        [line [@http://www.tru64unix.compaq.com/cplus/ =true64cxx=]]
+        [line Compaq C++ Compiler for True64 UNIX]
+        ]]
+    [[list
+        [li =uname= is "=OSF1="]
+        ]]
+]
 
 [   [] []
-    [   [@http://www-3.ibm.com/software/ad/vacpp/ =vacpp=]\n
-        IBM VisualAge C++]
-    [   * =xlc= in =PATH=
-] ]
+    [[lines
+        [line [@http://www-3.ibm.com/software/ad/vacpp/ =vacpp=]]
+        [line IBM VisualAge C++]
+        ]]
+    [[list
+        [li =xlc= in =PATH=]
+        ]]
+]
 
 [   [] [MacOS X]
-    [   [@http://developer.apple.com/tools/compilers.html =darwin=]\n
-        Apple MacOS X GCC]
-    [   * =uname= is "=Darwin="
-] ]
+    [[lines
+        [line [@http://developer.apple.com/tools/compilers.html =darwin=]]
+        [line Apple MacOS X GCC]
+        ]]
+    [[list
+        [li =uname= is "=Darwin="]
+        ]]
+]
 
 [   [] [Windows NT, 2000, and XP]
-    [   [@http://www.mingw.org/ =mingw=]\n
-        GNU [@http://gcc.gnu.org/ GCC] as the [@http://www.mingw.org/ MinGW] configuration with the MSYS shell]
-    [   * Common install location: "=/mingw="
-] ]
+    [[lines
+        [line [@http://www.mingw.org/ =mingw=]]
+        [line GNU [@http://gcc.gnu.org/ GCC] as the [@http://www.mingw.org/ MinGW] configuration with the MSYS shell]
+        ]]
+    [[list
+        [li Common install location: "=/mingw="]
+        ]]
+]
 
 ]
 
 The built executables are placed in a subdirectory specific to your platform. For example, in Linux running on an Intel x86 compatible chip, the executables are placed in: "=bin.linuxx86=". The =bjam[.exe]= executable can be used to invoke Boost.Build.
 
-The build scripts support additional invocation arguments for use by developers of Boost.Jam. The extra arguments come after the toolset, and can take the form of "=--option=" or targets for the =build.jam= script:
+The build scripts support additional invocation arguments for use by developers of Boost.Jam and for additional setup of the toolset. The extra arguments come after the toolset:
+
+* Arguments not in the form of an option, before option arguments, are used for extra setup to toolset configuration scripts.
+* Arguments of the form "=--option=", which are passed to the =build.jam= build script.
+* Arguments not in the form of an option, after the options, which are targets for the =build.jam= script.
 
 [pre
-/build/ \[/toolset/\] \[--/option/+ /target/*\]
+/build/ \[/toolset/\] \[/setup/\*\] \[--/option/+ /target/\*\]
 ]
 
-There is currently only one available option, "=--debug=", which builds debugging versions of the executable. When built they are placed in their own directory "=bin./platform/.debug=". To specify targets without options, one can suply a special ignore option "=---=".
+The arguments immediately after the toolset are passed directly to the setup script of the toolset, if available and if it needs to be invoked. This allows one to configure the toolset ass needed to do non-default builds of =bjam=. For example to build a Win64 version with =vc8=. See the toolset descriptiona above for when particular toolsets support this.
 
-Currently there are two targets supported: =dist=, and =clean=. Respectively they: generate packages (compressed archives) as appropriate for distribution in the platform, or remove all the built executables and objects.
+The arguments starting with the "=--option=" forms are passed to the =build.jam= script and are used to further customize what gets built. Options and targets supported by the =build.jam= script:
+
+[variablelist
+    [[[^---]]
+        [Empty option when one wants to only specify a target.]]
+    [[[^--release]]
+        [The default, builds the optimized executable.]]
+    [[[^--debug]]
+        [Builds debugging versions of the executable. When built they are placed in their own directory "=bin./platform/.debug=".]]
+    [[[^--grammar]]
+        [Normally the Jam language grammar parsing files are not regenerated. This forces building of the grammar, although it may not force the regeneration of the grammar parser. If the parser is out of date it will be regenerated and subsequently built.]]
+    [[[^--with-python=/path/]]
+        [Enables Python integration, given a path to the Python libraries.]]
+    [[[^--gc]]
+        [Enables use of the Boehm Garbage Collector. The build will look for the Boehm-GC source in a "boehm_gc" subdirectory from the =bjam= sources.]]
+    [[[^--duma]]
+        [Enables use of the DUMA (Detect Uintended Memory Access) debugging memory allocator. The build expects to find the DUMA source files in a "duma" subdirectory from the =bjam= sources.]]
+    [[[^--toolset-root=/path/]]
+        [Indicates where the toolset used to build is located. This option is passed in by the bootstrap (=build.bat= or =build.sh=) script.]]
+    [[[^--show-locate-target]]
+        [For information, prints out where it will put the built executable.]]
+    [[[^--noassert]]
+        [Disable debug assertions, even if building the debug version of the executable.]]
+    [[[^dist]]
+        [Generate packages (compressed archives) as appropriate for distribution in the platform, if possible.]]
+    [[[^clean]]
+        [Remove all the built executables and objects.]]
+]
 
 [endsect]
 
@@ -303,21 +433,23 @@ Options are either singular or have an accompanying value. When a value is allow
   
   [ [[^-d'''&nbsp;'''/n/]]
     [
-    Enable cummulative debugging levels from 1 to n. Values are:\n
+    Enable cummulative debugging levels from 1 to n. Values are:
     
-    1 - Show the actions taken for building targets, as they are executed (the default).\n
-    2 - Show "quiet" actions and display all action text, as they are executed.\n
-    3 - Show dependency analysis, and target/source timestamps/paths.\n
-    4 - Show arguments and timming of shell invocations.\n
-    5 - Show rule invocations and variable expansions.\n
-    6 - Show directory/header file/archive scans, and attempts at binding to targets.\n
-    7 - Show variable settings.\n
-    8 - Show variable fetches, variable expansions, and evaluation of '"if"' expressions.\n
-    9 - Show variable manipulation, scanner tokens, and memory usage.\n
-    10 - Show profile information for rules, both timing and memory.\n
-    11 - Show parsing progress of Jamfiles.\n
-    12 - Show graph of target dependencies.\n
-    13 - Show change target status (fate).
+    [orderedlist
+        [li Show the actions taken for building targets, as they are executed (the default).]
+        [li Show "quiet" actions and display all action text, as they are executed.]
+        [li Show dependency analysis, and target/source timestamps/paths.]
+        [li Show arguments and timming of shell invocations.]
+        [li Show rule invocations and variable expansions.]
+        [li Show directory/header file/archive scans, and attempts at binding to targets.]
+        [li Show variable settings.]
+        [li Show variable fetches, variable expansions, and evaluation of '"if"' expressions.]
+        [li Show variable manipulation, scanner tokens, and memory usage.]
+        [li Show profile information for rules, both timing and memory.]
+        [li Show parsing progress of Jamfiles.]
+        [li Show graph of target dependencies.]
+        [li Show change target status (fate).]
+        ]
     ] ]
   
   [ [[^-d'''&nbsp;'''+/n/]]
@@ -618,14 +750,20 @@ If you omit the list of formal arguments, all checking is bypassed as in "classi
 
 [section Dependency Building]
 
+[section =DEPENDS= ]
+
 [pre
-DEPENDS /targets1/ : /targets2/ ;
+rule DEPENDS ( /targets1/ * : /targets2/ * )
 ]
 
 Builds a direct dependency: makes each of /targets1/ depend on each of /targets2/. Generally, /targets1/ will be rebuilt if /targets2/ are themselves rebuilt are or are newer than /targets1/.
 
+[endsect]
+
+[section =INCLUDES= ]
+
 [pre
-INCLUDES /targets1/ : /targets2/ ;
+rule INCLUDES ( /targets1/ * : /targets2/ * )
 ]
 
 Builds a sibling dependency: makes any target that depends on any of /targets1/ also depend on each of /targets2/. This reflects the dependencies that arise when one source file includes another: the object built from the source file depends both on the original and included source file, but the two sources files don't depend on each other. For example:
@@ -639,59 +777,95 @@ INCLUDES foo.c : foo.h ;
 
 [endsect]
 
+[endsect]
+
 [section Modifying Binding]
 
 The six rules =ALWAYS=, =LEAVES=, =NOCARE=, =NOTFILE=, =NOUPDATE=, and =TEMPORARY= modify the dependency graph so that =bjam= treats the targets differently during its target binding phase. See Binding above. Normally, =bjam= updates a target if it is missing, if its filesystem modification time is older than any of its dependencies (recursively), or if any of its dependencies are being updated. This basic behavior can be changed by invoking the following rules:
 
+[section =ALWAYS= ]
+
 [pre
-ALWAYS /targets/ ;
+rule ALWAYS ( /targets/ * )
 ]
 
 Causes /targets/ to be rebuilt regardless of whether they are up-to-date (they must still be in the dependency graph). This is used for the clean and uninstall targets, as they have no dependencies and would otherwise appear never to need building. It is best applied to targets that are also =NOTFILE= targets, but it can also be used to force a real file to be updated as well.
 
+[endsect]
+
+[section =LEAVES= ]
+
 [pre
-LEAVES /targets/ ;
+rule LEAVES ( /targets/ * )
 ]
 
 Makes each of /targets/ depend only on its leaf sources, and not on any intermediate targets. This makes it immune to its dependencies being updated, as the "leaf" dependencies are those without their own dependencies and without updating actions. This allows a target to be updated only if original source files change.
 
+[endsect]
+
+[section =NOCARE= ]
+
 [pre
-NOCARE /targets/ ;
+rule NOCARE ( /targets/ * )
 ]
 
 Causes =bjam= to ignore /targets/ that neither can be found nor have updating actions to build them. Normally for such targets =bjam= issues a warning and then skips other targets that depend on these missing targets. The =HdrRule= in =Jambase= uses =NOCARE= on the header file names found during header file scanning, to let =bjam= know that the included files may not exist. For example, if an `#include` is within an `#ifdef`, the included file may not actually be around.
 
 [warning For targets with build actions: if their build actions exit with a nonzero return code, dependent targets will still be built.]
 
+[endsect]
+
+[section =NOTFILE= ]
+
 [pre
-NOTFILE /targets/ ;
+rule NOTFILE ( /targets/ * )
 ]
 
 Marks /targets/ as pseudotargets and not real files. No timestamp is checked, and so the actions on such a target are only executed if the target's dependencies are updated, or if the target is also marked with =ALWAYS=. The default =bjam= target "=all=" is a pseudotarget. In =Jambase=, =NOTFILE= is used to define several addition convenient pseudotargets.
 
+[endsect]
+
+[section =NOUPDATE= ]
+
 [pre
-NOUPDATE /targets/ ;
+rule NOUPDATE ( /targets/ * )
 ]
 
 Causes the timestamps on /targets/ to be ignored. This has two effects: first, once the target has been created it will never be updated; second, manually updating target will not cause other targets to be updated. In =Jambase=, for example, this rule is applied to directories by the =MkDir= rule, because =MkDir= only cares that the target directory exists, not when it has last been updated.
 
+[endsect]
+
+[section =TEMPORARY= ]
+
 [pre
-TEMPORARY /targets/ ;
+rule TEMPORARY ( /targets/ * )
 ]
 
 Marks /targets/ as temporary, allowing them to be removed after other targets that depend upon them have been updated. If a =TEMPORARY= target is missing, =bjam= uses the timestamp of the target's parent. =Jambase= uses =TEMPORARY= to mark object files that are archived in a library after they are built, so that they can be deleted after they are archived.
 
+[endsect]
+
+[section =FAIL_EXPECTED= ]
+
 [pre
-FAIL_EXPECTED /targets/ ;
+rule FAIL_EXPECTED ( /targets/ * )
 ]
 
 For handling targets whose build actions are expected to fail (e.g. when testing that assertions or compile-time type checkin work properly), Boost Jam supplies the =FAIL_EXPECTED= rule in the same style as =NOCARE=, et. al. During target updating, the return code of the build actions for arguments to =FAIL_EXPECTED= is inverted: if it fails, building of dependent targets continues as though it succeeded. If it succeeds, dependent targets are skipped.
 
+[endsect]
+
+[section =RMOLD= ]
+
 [pre
-RMOLD /targets/ ;
+rule RMOLD ( /targets/ * )
 ]
 
 =BJam= removes any target files that may exist on disk when the rule used to build those targets fails. However, targets whose dependencies fail to build are not removed by default. The =RMOLD= rule causes its arguments to be removed if any of their dependencies fail to build.
+
+[endsect]
+
+[section =ISFILE= ]
 
 [pre
 rule ISFILE ( /targets/ * )
@@ -703,15 +877,23 @@ rule ISFILE ( /targets/ * )
 
 [endsect]
 
+[endsect]
+
 [section Utility]
 
 The two rules =ECHO= and =EXIT= are utility rules, used only in =bjam='s parsing phase.
 
+[section =ECHO= ]
+
 [pre
-ECHO /args/ ;
+rule ECHO ( /args/ * )
 ]
 
 Blurts out the message /args/ to stdout.
+
+[endsect]
+
+[section =EXIT= ]
 
 [pre
 rule EXIT ( /message/ * : /result-value/ ? )
@@ -721,29 +903,45 @@ Blurts out the /message/ to stdout and then exits with a failure status if no /r
 
 "=Echo=", "=echo=", "=Exit=", and "=exit=" are accepted as aliases for =ECHO= and =EXIT=, since it is hard to tell that these are built-in rules and not part of the language, like "=include=". 
 
+[endsect]
+
+[section =GLOB= ]
+
 The =GLOB= rule does filename globbing.
 
 [pre
-GLOB /directories/ : /patterns/ : /downcase-opt/
+rule GLOB ( /directories/ * : /patterns/ * : /downcase-opt/ ? )
 ]
 
 Using the same wildcards as for the patterns in the switch statement. It is invoked by being used as an argument to a rule invocation inside of "=[ ]=". For example: "[^FILES = \[ GLOB dir1 dir2 : *.c *.h \]]" sets =FILES= to the list of C source and header files in =dir1= and =dir2=. The resulting filenames are the full pathnames, including the directory, but the pattern is applied only to the file name without the directory.
 
 If /downcase-opt/ is supplied, filenames are converted to all-lowercase before matching against the pattern; you can use this to do case-insensitive matching using lowercase patterns. The paths returned will still have mixed case if the OS supplies them. On Windows NT and Cygwin, filenames are always downcased before matching. 
 
+[endsect]
+
+[section =MATCH= ]
+
 The =MATCH= rule does pattern matching.
 
 [pre
-MATCH /regexps/ : /list/
+rule MATCH ( /regexps/ + : /list/ * )
 ]
 
 Matches the =egrep=(1) style regular expressions /regexps/ against the strings in /list/. The result is the concatenation of matching =()= subexpressions for each string in /list/, and for each regular expression in /regexps/. Only useful within the "=[ ]=" construct, to change the result into a list.
+
+[endsect]
+
+[section =BACKTRACE= ]
 
 [pre
 rule BACKTRACE ( )
 ]
 
 Returns a list of quadruples: /filename/ /line/ /module/ /rulename/..., describing each shallower level of the call stack. This rule can be used to generate useful diagnostic messages from Jam rules.
+
+[endsect]
+
+[section =UPDATE= ]
 
 [pre
 rule UPDATE ( /targets/ * )
@@ -760,6 +958,10 @@ If no target was specified with the =UPDATE= rule, no targets will be updated. T
 local previous-updates = \[ UPDATE \] ;
 UPDATE $(previous-updates) a-new-target ;
 ]
+
+[endsect]
+
+[section =W32_GETREG= ]
 
 [pre
 rule W32_GETREG ( /path/ : /data/ ? )
@@ -780,6 +982,44 @@ local PSDK-location =
   \[ W32_GETREG HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\MicrosoftSDK\\\\Directories : "Install Dir" \] ;
 ]
 
+[endsect]
+
+[section =W32_GETREGNAMES= ]
+
+[pre
+rule W32_GETREGNAMES ( /path/ : /result-type/ )
+]
+
+Defined only for win32 platform. It reads the registry of Windows. '/path/' is the location of the information, and '/result-type/' is either '=subkeys=' or '=values='. For more information on '/path/' format and constraints, please see =W32_GETREG=.
+
+Depending on '/result-type/', the rule returns one of the following:
+
+[variablelist
+    [[=subkeys=] [Names of all direct subkeys of '/path/'.]]
+    [[=values=] [Names of values contained in registry key given by '/path/'. The "default" value of the key appears in the returned list only if its value has been set in the registry.]]
+]
+
+If '/result-type/' is not recognized, or requested data cannot be retrieved, the rule returns an empty list.
+Example:
+
+[pre 
+local key = "HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths" ;
+local subkeys = \[ W32_GETREGNAMES "$(key)" : subkeys \] ;
+for local subkey in $(subkeys)
+{
+    local values = \[ W32_GETREGNAMES "$(key)\\\\$(subkey)" : values \] ;
+    for local value in $(values)
+    {
+        local data = \[ W32_GETREG "$(key)\\\\$(subkey)" : "$(value)" \] ;
+        ECHO "Registry path: " $(key)\\\\$(subkey) ":" $(value) "=" $(data) ;
+    }
+}
+]
+
+[endsect]
+
+[section =SHELL= ]
+
 [pre
 rule SHELL ( /command/ : * )
 ]
@@ -793,6 +1033,8 @@ rule SHELL ( /command/ : * )
 
 Because the Perforce/Jambase defines a =SHELL= rule which hides the
 builtin rule, =COMMAND= can be used as an alias for =SHELL= in such a case.
+
+[endsect]
 
 [endsect]
 
@@ -1439,11 +1681,7 @@ A target that is not a dependency of any other target is being referenced with =
 
 [section Bugs, Limitations]
 
-The =-j= flag can cause =bjam= to get confused when single actions update more than one target at a time. =bjam= may proceed as if the targets were built even though they are still under construction.
-
 For parallel building to be successful, the dependencies among files must be properly spelled out, as targets tend to get built in a quickest-first ordering. Also, beware of un-parallelizable commands that drop fixed-named files into the current directory, like =yacc(1)= does.
-
-With the =-j= flag, errors from failed commands can get staggeringly mixed up.
 
 A poorly set =$(JAMSHELL)= is likely to result in silent failure. 
 
@@ -1499,4 +1737,9 @@ if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
 
 [endsect]
 
+[endsect]
+
+
+[section History]
+[include history.qbk]
 [endsect]

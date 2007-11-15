@@ -4,7 +4,7 @@
 
 rule boost-build ( )
 {
-    return "V2 (Milestone 11)" ;
+    return "V2 (Milestone 12)" ;
 }
 rule jam ( )
 {

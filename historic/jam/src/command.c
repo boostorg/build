@@ -20,7 +20,6 @@
 # include "parse.h"
 # include "variable.h"
 # include "rules.h"
-# include "debug.h"
 
 # include "command.h"
 # include <limits.h>
@@ -37,14 +36,11 @@ cmd_new(
 	LIST	*sources,
 	LIST	*shell )
 {
-    CMD *cmd = (CMD *)malloc( sizeof( CMD ) );
+    CMD *cmd = (CMD *)BJAM_MALLOC( sizeof( CMD ) );
     /* lift line-length limitation entirely when JAMSHELL is just "%" */
     int no_limit = ( shell && !strcmp(shell->string,"%") && !list_next(shell) );
     int max_line = MAXLINE;
     int allocated = -1;
-
-    if ( DEBUG_PROFILE )
-        profile_memory( sizeof( CMD ) );
 
     cmd->rule = rule;
     cmd->shell = shell;
@@ -57,12 +53,9 @@ cmd_new(
 
     do
     {
-        free(cmd->buf); /* free any buffer from previous iteration */
+        BJAM_FREE(cmd->buf); /* free any buffer from previous iteration */
         
-        cmd->buf = (char*)malloc(max_line + 1);
-
-        if ( DEBUG_PROFILE )
-            profile_memory( max_line + 1 );
+        cmd->buf = (char*)BJAM_MALLOC_ATOMIC(max_line + 1);
         
         if (cmd->buf == 0)
             break;
@@ -106,6 +99,6 @@ cmd_free( CMD *cmd )
 {
 	lol_free( &cmd->args );
 	list_free( cmd->shell );
-    free( cmd->buf );
-	free( (char *)cmd );
+    BJAM_FREE( cmd->buf );
+	BJAM_FREE( (char *)cmd );
 }

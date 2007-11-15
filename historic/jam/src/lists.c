@@ -7,7 +7,6 @@
 # include "jam.h"
 # include "newstr.h"
 # include "lists.h"
-# include "debug.h"
 
 /*
  * lists.c - maintain lists of strings
@@ -81,9 +80,7 @@ list_new(
 	}
 	else
 	{
-        l = (LIST *)malloc( sizeof( LIST ) );
-        if ( DEBUG_PROFILE )
-            profile_memory( sizeof( LIST ) );
+        l = (LIST *)BJAM_MALLOC( sizeof( LIST ) );
 	}
 
 	/* If first on chain, head points here. */
