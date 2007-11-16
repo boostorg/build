@@ -3,6 +3,7 @@
 # Copyright (c) 2005 Alexey Pakhunov.
 # Copyright (c) 2006 Bojan Resnik.
 # Copyright (c) 2006 Ilya Sokolov.
+# Copyright (c) 2007 Rene Rivera
 #
 # Use, modification and distribution is subject to the Boost Software
 # License Version 1.0. (See accompanying file LICENSE_1_0.txt or
@@ -231,6 +232,10 @@ local rule configure-really (
         {
             # Even if version is not explicitly specified, try to detect the version
             # from the path.
+            if [ MATCH "(Microsoft Visual Studio 9)" : $(command) ]
+            {
+                version = 9.0 ;
+            }
             if [ MATCH "(Microsoft Visual Studio 8)" : $(command) ]
             {
                 version = 8.0 ;
@@ -299,8 +304,9 @@ local rule configure-really (
                 if ! $(below-8.0)
                 {
                     cpu = i386 amd64 ia64 ;
-                    # Whereas http://msdn2.microsoft.com/en-us/library/x4d2c09s(VS.80).aspx
-                    # say about x86_ipf, that seem to be doc bug,
+                    # Whereas http://msdn2.microsoft.com/en-us/library/x4d2c09s(VS.80).aspx or
+                    # http://msdn2.microsoft.com/en-us/library/x4d2c09s(vs.90).aspx
+                    # say about x86_IPF, that seem to be doc bug,
                     # and x86_ia64 is right one.
                     setup-option = x86 x86_amd64 x86_ia64 ;
                     
@@ -394,13 +400,16 @@ local rule configure-really (
 }
 
 
-# Supported CPU types
+# Supported CPU types (only Itanium optimization options are supported from
+# VC++ 2005 on). See http://msdn2.microsoft.com/en-us/library/h66s5s0e(vs.90).aspx
 cpu-type-g5 = i586 pentium pentium-mmx ;
 cpu-type-g6 = 
     i686 pentiumpro pentium2 pentium3 pentium3m pentium-m k6 k6-2 k6-3 
     winchip-c6 winchip2 c3 c3-2 ;
 
-cpu-type-em64t = prescott nocona ;
+cpu-type-em64t = prescott nocona   
+    conroe conroe-xe conroe-l allendale mermon mermon-xe kentsfield kentsfield-xe
+    penryn wolfdale yorksfield nehalem ;
 cpu-type-amd64 = k8 opteron athlon64 athlon-fx ;
 
 cpu-type-g7 = 
@@ -465,12 +474,12 @@ rule configure-version-specific ( toolset : version : condition )
     }
     else
     {
-        # 8.0 adds some more options
+        # 8.0 and above adds some more options
         flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set> : /favor:blend ;
         flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-em64t) : /favor:EM64T ;
         flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-amd64) : /favor:AMD64 ;
 
-        # 8.0 only has multi-threaded static RTL
+        # 8.0 and above only has multi-threaded static RTL
         flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>off/<runtime-link>static/<threading>single : /MT ;
         flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MTd ;
     }
@@ -916,13 +925,14 @@ actions compile.mc
 
 .ProgramFiles = [ path.make [ common.get-program-files-dir ] ] ;
 
-.known-versions = 8.0 8.0express 7.1 7.1toolkit 7.0 6.0 ;
+.known-versions = 9.0 9.0express 8.0 8.0express 7.1 7.1toolkit 7.0 6.0 ;
 
 # Version aliases
 .version-alias-6 = 6.0 ;
 .version-alias-6.5 = 6.0 ;
 .version-alias-7 = 7.0 ;
 .version-alias-8 = 8.0 ;
+.version-alias-9 = 9.0 ;
  
 # Name of the registry key that contains Visual C++ installation path
 #   (relative to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft"
@@ -931,6 +941,8 @@ actions compile.mc
 .version-7.1-reg = "VisualStudio\\7.1\\Setup\\VC" ;
 .version-8.0-reg = "VisualStudio\\8.0\\Setup\\VC" ;
 .version-8.0express-reg = "VCExpress\\8.0\\Setup\\VC" ;
+.version-9.0-reg = "VisualStudio\\9.0\\Setup\\VC" ;
+.version-9.0express-reg = "VCExpress\\9.0\\Setup\\VC" ;
 
 # Visual C++ Toolkit 2003 do not store its installation path in the registry.
 # The environment variable 'VCToolkitInstallDir' and the default installation 

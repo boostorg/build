@@ -1,5 +1,5 @@
 # Copyright 2002, 2003, 2004, 2005 Dave Abrahams 
-# Copyright 2002, 2005, 2006 Rene Rivera 
+# Copyright 2002, 2005, 2006, 2007 Rene Rivera 
 # Copyright 2006 Juergen Hunold 
 # Copyright 2005 Toon Knapen 
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus 
@@ -214,6 +214,8 @@ feature instruction-set :
     i386 i486 i586 i686
     pentium pentium-mmx pentiumpro pentium2 pentium3 pentium3m pentium-m pentium4 pentium4m
     prescott nocona
+    conroe conroe-xe conroe-l allendale mermon mermon-xe kentsfield kentsfield-xe
+    penryn wolfdale yorksfield nehalem
     k6 k6-2 k6-3 athlon athlon-tbird athlon-4 athlon-xp athlon-mp
     k8 opteron athlon64 athlon-fx
     winchip-c6 winchip2
