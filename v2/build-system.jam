@@ -499,17 +499,20 @@ if $(.out-xml)
         # Prepare valid XML header and footer with some basic info
         local nl = "
 " ;
-        local jam = [ modules.peek : JAM_VERSION ] ;
+        local jam = [ version.jam ] ;
         local os = [ modules.peek : OS OSPLAT JAMUNAME ] "" ;
         local timestamp = [ modules.peek : JAMDATE ] ;
         local cwd = [ PWD ] ;
+        local command = [ modules.peek : ARGV ] ;
+        local bb-version = [ version.boost-build ] ;
         .header on $(xml-file) =
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-            "$(nl)<build version=\"1.0\">"
+            "$(nl)<build format=\"1.0\" version=\"$(bb-version)\">"
             "$(nl)  <jam version=\"$(jam:J=.)\" />"
             "$(nl)  <os name=\"$(os[1])\" platform=\"$(os[2])\"><![CDATA[$(os[3-]:J= )]]></os>"
             "$(nl)  <timestamp><![CDATA[$(timestamp)]]></timestamp>"
             "$(nl)  <directory><![CDATA[$(cwd)]]></directory>"
+            "$(nl)  <command><![CDATA[\"$(command:J=\" \")\"]]></command>"
             ;
         .footer on $(xml-file) =
             "$(nl)</build>" ;
@@ -603,9 +606,10 @@ if $(.out-xml)
         }
         
         local locate = [ on $(target) return $(LOCATE) ] ;
+        locate ?= "" ;
         .contents on $(xml-file) +=
-            "$(nl)    <actual><![CDATA[$(target)]]></actual>"
-            "$(nl)    <target><![CDATA[$(target:G=:R=$(locate))]]></target>"
+            "$(nl)    <target><![CDATA[$(target)]]></target>"
+            "$(nl)    <path><![CDATA[$(target:G=:R=$(locate))]]></path>"
             "$(nl)    <command><![CDATA[$(command)]]></command>"
             "$(nl)    <output><![CDATA[$(output)]]></output>"
             ;
