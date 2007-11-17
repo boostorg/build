@@ -502,12 +502,14 @@ if $(.out-xml)
         local jam = [ modules.peek : JAM_VERSION ] ;
         local os = [ modules.peek : OS OSPLAT JAMUNAME ] "" ;
         local timestamp = [ modules.peek : JAMDATE ] ;
+        local cwd = [ PWD ] ;
         .header on $(xml-file) =
             "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
             "$(nl)<build version=\"1.0\">"
-            "$(nl)  <jam><![CDATA[$(jam:J=.)]]></jam>"
+            "$(nl)  <jam version=\"$(jam:J=.)\" />"
             "$(nl)  <os name=\"$(os[1])\" platform=\"$(os[2])\"><![CDATA[$(os[3-]:J= )]]></os>"
             "$(nl)  <timestamp><![CDATA[$(timestamp)]]></timestamp>"
+            "$(nl)  <directory><![CDATA[$(cwd)]]></directory>"
             ;
         .footer on $(xml-file) =
             "$(nl)</build>" ;
@@ -552,8 +554,7 @@ if $(.out-xml)
 " ;
         # Open the action with some basic info.
         .contents on $(xml-file) +=
-            "$(nl)  <action actual=\"$(target)\""
-            "$(nl)    status=\"$(status)\" user=\"$(user)\" system=\"$(system)\">"
+            "$(nl)  <action status=\"$(status)\" user=\"$(user)\" system=\"$(system)\">"
             ;
         
         # If we have an action object we can print out more detailed info.
@@ -603,6 +604,7 @@ if $(.out-xml)
         
         local locate = [ on $(target) return $(LOCATE) ] ;
         .contents on $(xml-file) +=
+            "$(nl)    <actual><![CDATA[$(target)]]></actual>"
             "$(nl)    <target><![CDATA[$(target:G=:R=$(locate))]]></target>"
             "$(nl)    <command><![CDATA[$(command)]]></command>"
             "$(nl)    <output><![CDATA[$(output)]]></output>"
