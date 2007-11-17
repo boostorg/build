@@ -1,5 +1,5 @@
-# Copyright 2003, 2005 Dave Abrahams 
-# Copyright 2006 Rene Rivera 
+# Copyright 2003, 2005, 2007 Dave Abrahams 
+# Copyright 2006, 2007 Rene Rivera 
 # Copyright 2003, 2004, 2005, 2006 Vladimir Prus 
 # Distributed under the Boost Software License, Version 1.0. 
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
@@ -492,60 +492,141 @@ for t in $(virtual-targets)
 .out-xml = [ MATCH --out-xml=(.*) : [ modules.peek : ARGV ] ] ;
 if $(.out-xml)
 {
-    modules.poke : .out-xml : $(.out-xml) ;
-    module 
+    # Generate an XML file containing build statistics for each
+    # constituent
+    rule out-xml ( xml-file : constituents * )
     {
-        rule out-xml ( target : sources * )
-        {
-            INCLUDES $(target) : $(sources) ;
-            local nl = "
+        # Prepare valid XML header and footer with some basic info
+        local nl = "
 " ;
-            on $(target) .header =
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-                "$(nl)<build version=\"1.0\">" ;
-            on $(target) .footer =
-                $(nl)</build>$(nl) ;
-        }
+        local jam = [ modules.peek : JAM_VERSION ] ;
+        local os = [ modules.peek : OS OSPLAT JAMUNAME ] "" ;
+        local timestamp = [ modules.peek : JAMDATE ] ;
+        .header on $(xml-file) =
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+            "$(nl)<build version=\"1.0\">"
+            "$(nl)  <jam><![CDATA[$(jam:J=.)]]></jam>"
+            "$(nl)  <os name=\"$(os[1])\" platform=\"$(os[2])\"><![CDATA[$(os[3-]:J= )]]></os>"
+            "$(nl)  <timestamp><![CDATA[$(timestamp)]]></timestamp>"
+            ;
+        .footer on $(xml-file) =
+            "$(nl)</build>" ;
+        
+        # Build $(xml-file) after $(constituents) and do so even if a
+        # constituent action fails, and regenerate the xml on every bjam run.
+        INCLUDES $(xml-file) : $(constituents) ;
+        ALWAYS $(xml-file) ;
+        __ACTION_RULE__ on $(xml-file) =
+            build-system.out-xml.generate-action ;
+        out-xml.generate $(xml-file) ;
+    }
 
-        actions out-xml 
-        {
-        }
+    # The actual build actions are here; if we did this work in the
+    # actions clause we would have to form a valid command line
+    # containing the result of @(...) below (the name of the XML file).
+    rule out-xml.generate-action (
+        xml-file args * :
+        status : user : system : command : output ? )
+    {
+        local contents =
+            [ on $(xml-file) return $(.header) $(.contents) $(.footer) ] ;
+        local f = @($(xml-file):E=$(contents)) ;
+    }
 
-        rule out-xml-action-rule ( target sources * : status : user : system : command : output ? )
+    # Nothing to do here; the *real* actions happen in
+    # out-xml.generate-action
+    actions quietly out-xml.generate { }
+    
+    # Define the out-xml file target, which depends on all the targets
+    # so that it runs the collection after the targets have run.
+    out-xml $(.out-xml) : $(actual-targets) ;
+
+    # Set up a global __ACTION_RULE__ that records all the available
+    # statistics about each actual target in a variable "on" the
+    # --out-xml target.
+    rule out-xml.collect (
+        xml-file target :
+        status : user : system : command : output ? )
+    {
+        local nl = "
+" ;
+        # Open the action with some basic info.
+        .contents on $(xml-file) +=
+            "$(nl)  <action actual=\"$(target)\""
+            "$(nl)    status=\"$(status)\" user=\"$(user)\" system=\"$(system)\">"
+            ;
+        
+        # If we have an action object we can print out more detailed info.
+        local action = [ on $(target) return $(.action) ] ;
+        if $(action)
         {
-            local contents = [ on $(target) return $(.header) $(.contents) $(.footer) ] ;
-            local f = @($(target):E=$(contents)) ;
+            local action-name = [ $(action).action-name ] ;
+            local action-sources = [ $(action).sources ] ;
+            local action-props = [ $(action).properties ] ;
+            
+            # The qualified name of the action which we created the target.
+            .contents on $(xml-file) +=
+                "$(nl)    <name><![CDATA[$(action-name)]]></name>"
+                ;
+            
+            # The sources that made up the target.
+            .contents on $(xml-file) +=
+                "$(nl)    <sources>"
+                ;
+            for local source in $(action-sources)
+            {
+                local source-actual = [ $(source).actual-name ] ;
+                .contents on $(xml-file) +=
+                    "$(nl)      <source><![CDATA[$(source-actual)]]></source>"
+                    ;
+            }
+            .contents on $(xml-file) +=
+                "$(nl)    </sources>"
+                ;
+            
+            # The properties that define the conditions under which the
+            # target was built.
+            .contents on $(xml-file) +=
+                "$(nl)    <properties>"
+                ;
+            for local prop in [ $(action-props).raw ]
+            {
+                local prop-name = [ MATCH ^<(.*)>$ : $(prop:G) ] ;
+                .contents on $(xml-file) +=
+                    "$(nl)      <property name=\"$(prop-name)\"><![CDATA[$(prop:G=)]]></property>"
+                    ;
+            }
+            .contents on $(xml-file) +=
+                "$(nl)    </properties>"
+                ;
         }
         
-        __ACTION_RULE__ on $(.out-xml) = out-xml-action-rule ;
-
-        rule __ACTION_RULE__ ( target sources * : status : user : system : command : output ? )
-        {
-            local nl = "
-" ;
-            local locate = [ on $(target) return $(LOCATE) ] ;
-            .contents on $(.out-xml) +=
-              $(nl)"  <action status=\""$(status)"\" user=\""$(user)"\" system=\""$(system)"\">"
-              $(nl)"    "<target>$(target:G=:R=$(locate))</target>
-              $(nl)"    "<source>$(sources)</source>
-              $(nl)"    "<command>$(nl)<![CDATA[$(command)]]></command>
-              $(nl)"    "<output><![CDATA[$(output)]]></output>
-              $(nl)"  "</action>$(nl) ;
-        }
-
-        __ACTION_RULE__ = __ACTION_RULE__ ;
+        local locate = [ on $(target) return $(LOCATE) ] ;
+        .contents on $(xml-file) +=
+            "$(nl)    <target><![CDATA[$(target:G=:R=$(locate))]]></target>"
+            "$(nl)    <command><![CDATA[$(command)]]></command>"
+            "$(nl)    <output><![CDATA[$(output)]]></output>"
+            ;
+        .contents on $(xml-file) +=
+            "$(nl)  </action>"
+            ;
     }
-    
-    ALWAYS $(.out-xml) ;
-    out-xml $(.out-xml) : $(actual-targets) ;
+
+    # When no __ACTION_RULE__ is set "on" a target, the search falls
+    # back to the global module
+    module
+    {
+        __ACTION_RULE__ = build-system.out-xml.collect
+            [ modules.peek build-system : .out-xml ] ;
+    }
 }
 
 NOTFILE all ;
-DEPENDS all : $(actual-targets) $(.out-xml) ;
+DEPENDS all : $(actual-targets) ;
 
 if $(bjam-targets)
 {
-    UPDATE $(bjam-targets:G=e) ;        
+    UPDATE $(bjam-targets:G=e) $(.out-xml) ;
 }
 else if $(cleanall)
 {    
@@ -560,13 +641,13 @@ else if $(clean)
 
         # Remove only derived targets.
         if [ $(t).action ]
-        {                    
+        {
             if $(t) in $(targets-to-clean)
               || [ is-child [ $(p).project-module ] ] = true
               {
                   to-clean += $(t) ;
-              }        
-        }        
+              }
+        }
     }
     local to-clean-actual ;
     for local t in $(to-clean)
@@ -575,14 +656,8 @@ else if $(clean)
     }
     common.Clean clean : $(to-clean-actual) ;
     UPDATE clean ;
-    
-    
 }
-
 else
 {
-    UPDATE all ;
+    UPDATE all $(.out-xml) ;
 }
-
-
-
