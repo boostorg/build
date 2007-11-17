@@ -487,8 +487,61 @@ for t in $(virtual-targets)
 {
     actual-targets += [ $(t).actualize ] ;
 }
+
+# Was an XML dump requested?
+.out-xml = [ MATCH --out-xml=(.*) : [ modules.peek : ARGV ] ] ;
+if $(.out-xml)
+{
+    modules.poke : .out-xml : $(.out-xml) ;
+    module 
+    {
+        rule out-xml ( target : sources * )
+        {
+            INCLUDES $(target) : $(sources) ;
+            local nl = "
+" ;
+            on $(target) .header =
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+                "$(nl)<build version=\"1.0\">" ;
+            on $(target) .footer =
+                $(nl)</build>$(nl) ;
+        }
+
+        actions out-xml 
+        {
+        }
+
+        rule out-xml-action-rule ( target sources * : status : user : system : command : output ? )
+        {
+            local contents = [ on $(target) return $(.header) $(.contents) $(.footer) ] ;
+            local f = @($(target):E=$(contents)) ;
+        }
+        
+        __ACTION_RULE__ on $(.out-xml) = out-xml-action-rule ;
+
+        rule __ACTION_RULE__ ( target sources * : status : user : system : command : output ? )
+        {
+            local nl = "
+" ;
+            local locate = [ on $(target) return $(LOCATE) ] ;
+            .contents on $(.out-xml) +=
+              $(nl)"  <action status=\""$(status)"\" user=\""$(user)"\" system=\""$(system)"\">"
+              $(nl)"    "<target>$(target:G=:R=$(locate))</target>
+              $(nl)"    "<source>$(sources)</source>
+              $(nl)"    "<command>$(nl)<![CDATA[$(command)]]></command>
+              $(nl)"    "<output><![CDATA[$(output)]]></output>
+              $(nl)"  "</action>$(nl) ;
+        }
+
+        __ACTION_RULE__ = __ACTION_RULE__ ;
+    }
+    
+    ALWAYS $(.out-xml) ;
+    out-xml $(.out-xml) : $(actual-targets) ;
+}
+
 NOTFILE all ;
-DEPENDS all : $(actual-targets) ;
+DEPENDS all : $(actual-targets) $(.out-xml) ;
 
 if $(bjam-targets)
 {
