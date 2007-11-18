@@ -492,6 +492,15 @@ for t in $(virtual-targets)
 .out-xml = [ MATCH --out-xml=(.*) : [ modules.peek : ARGV ] ] ;
 if $(.out-xml)
 {
+    # Get the qualified name of a virtual target.
+    rule full-target-name ( t )
+    {
+        local name = [ $(t).name ] ;
+        local project = [ $(t).project ] ;
+        local project-path = [ $(project).get location ] ;
+        return $(project-path)//$(name) ;
+    }
+    
     # Generate an XML file containing build statistics for each
     # constituent
     rule out-xml ( xml-file : constituents * )
@@ -516,7 +525,46 @@ if $(.out-xml)
             ;
         .footer on $(xml-file) =
             "$(nl)</build>" ;
-        
+        # Generate target dependency graph
+        .contents on $(xml-file) +=
+            "$(nl)  <targets>"
+            ;
+
+        for local t in [ virtual-target.all-targets ]
+        {
+            local action = [ $(t).action ] ;
+            if $(action)
+            {
+                # If a target has no action, it has
+                # no dependencies.
+
+                local name = [ full-target-name $(t) ] ;
+                local sources = [ $(action).sources ] ;
+                local dependencies ;
+                for local s in $(sources)
+                {
+                    dependencies += [ full-target-name $(s) ] ;
+                }
+
+                local path = [ $(t).path ] ;
+                local jam-target = [ $(t).actual-name ] ;
+
+                .contents on $(xml-file) +=
+                    "$(nl)    <target>"
+                    "$(nl)      <name><![CDATA[$(name)]]></name>"
+                    "$(nl)      <dependencies>"
+                    "$(nl)        <dependency><![CDATA[$(dependencies)]]></dependency>"
+                    "$(nl)      </dependencies>"
+                    "$(nl)      <path><![CDATA[$(path)]]></path>"
+                    "$(nl)      <jam-target><![CDATA[$(jam-target)]]></jam-target>"
+                    "$(nl)    </target>"
+                    ;
+            }                
+        }
+        .contents on $(xml-file) +=
+            "$(nl)  </targets>"
+            ;
+
         # Build $(xml-file) after $(constituents) and do so even if a
         # constituent action fails, and regenerate the xml on every bjam run.
         INCLUDES $(xml-file) : $(constituents) ;
@@ -608,7 +656,7 @@ if $(.out-xml)
         local locate = [ on $(target) return $(LOCATE) ] ;
         locate ?= "" ;
         .contents on $(xml-file) +=
-            "$(nl)    <target><![CDATA[$(target)]]></target>"
+            "$(nl)    <jam-target><![CDATA[$(target)]]></jam-target>"
             "$(nl)    <path><![CDATA[$(target:G=:R=$(locate))]]></path>"
             "$(nl)    <command><![CDATA[$(command)]]></command>"
             "$(nl)    <output><![CDATA[$(output)]]></output>"
