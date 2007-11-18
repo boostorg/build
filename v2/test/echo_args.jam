@@ -1,3 +1,7 @@
+# Copyright 2001 Dave Abrahams
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
 rule echo_args ( a b ? c ? : d + : e * )
 {
     ECHO a= $(a) b= $(b) c= $(c) ":" d= $(d) ":" e= $(e) ;
