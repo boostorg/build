@@ -41,6 +41,7 @@ rule assert ( expected * : test ? : obtained * )
     }
 }
 
+include actions_quietly.jam ;
 include builtin_shell.jam ;
 include builtin_w32_getregnames.jam ;
 include option_d2.jam ;
