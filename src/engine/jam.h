@@ -483,6 +483,10 @@
 # define OSPLAT "OSPLAT=390"
 # endif
 
+# ifdef __hppa
+# define OSPLAT "OSPLAT=PARISC"
+# endif
+
 # ifndef OSPLAT
 # define OSPLAT ""
 # endif
