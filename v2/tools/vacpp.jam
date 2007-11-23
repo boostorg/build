@@ -18,11 +18,17 @@ feature.extend toolset : vacpp ;
 toolset.inherit vacpp : unix ;
 generators.override vacpp.prebuilt : builtin.lib-generator ;
 generators.override vacpp.searched-lib-generator : searched-lib-generator ;
-feature.subfeature toolset vacpp : version ;
 
 # Configure the vacpp toolset
 rule init ( version ? : command * : options * )
 {
+    local condition = [ 
+        common.check-init-parameters vacpp : version $(version) ] ;
+              
+    command = [ common.get-invocation-command vacpp : xlC
+        : $(command) : "/usr/vacpp/bin/xlC" ] ;
+                              
+    common.handle-options vacpp : $(condition) : $(command) : $(options) ;
 }
 
 # Declare generators

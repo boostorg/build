@@ -1,5 +1,5 @@
 # Copyright 2002, 2003, 2004, 2005 Dave Abrahams 
-# Copyright 2002, 2005, 2006 Rene Rivera 
+# Copyright 2002, 2005, 2006, 2007 Rene Rivera 
 # Copyright 2006 Juergen Hunold 
 # Copyright 2005 Toon Knapen 
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus 
@@ -205,6 +205,8 @@ feature architecture :
     power
     # MIPS/SGI
     mips1 mips2 mips3 mips4 mips32 mips32r2 mips64
+    # HP/PA-RISC
+    parisc
     #
     : propagated optional ;
 
@@ -214,6 +216,8 @@ feature instruction-set :
     i386 i486 i586 i686
     pentium pentium-mmx pentiumpro pentium2 pentium3 pentium3m pentium-m pentium4 pentium4m
     prescott nocona
+    conroe conroe-xe conroe-l allendale mermon mermon-xe kentsfield kentsfield-xe
+    penryn wolfdale yorksfield nehalem
     k6 k6-2 k6-3 athlon athlon-tbird athlon-4 athlon-xp athlon-mp
     k8 opteron athlon64 athlon-fx
     winchip-c6 winchip2
@@ -235,6 +239,8 @@ feature instruction-set :
     r2000 r3000 r3900 r4000 r4100 r4300 r4400 r4600 r4650 r6000 r8000
     rm7000 rm9000 orion sb1
     vr4100 vr4111 vr4120 vr4130 vr4300 vr5000 vr5400 vr5500
+    # HP/PA-RISC
+    700 7100 7100lc 7200 7300 8000
     #
     : propagated optional ;
     
