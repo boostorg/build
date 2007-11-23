@@ -716,6 +716,11 @@ class action
               [ indirect.get-rule $(self.action-name[1]) ] $(actual-targets)
                 : $(properties) ;
             
+            # Reflect ourselves in a variable for the target. This allows
+            # looking up additional info for the action given the raw target.
+            # For example to debug or output action information from action rules.
+            .action on $(actual-targets) = $(__name__) ;
+            
             indirect.call $(self.action-name) 
               $(actual-targets) : $(self.actual-sources) : [ $(properties).raw ] 
                 ;

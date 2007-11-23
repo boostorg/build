@@ -193,6 +193,8 @@ local rule get-library-name ( path )
     }
 }
 
+# Was an XML dump requested?
+.out-xml = [ MATCH --out-xml=(.*) : [ modules.peek : ARGV ] ] ;
 
 # Take a target (instance of 'basic-target') and prints 
 # - its type
@@ -235,13 +237,29 @@ rule dump-test ( target )
     # Extract values of the <test-info> feature
     local test-info = [ $(r).get <test-info> ] ;
     
-    # Format them into a single string of quoted strings
-    test-info = \"$(test-info:J=\"\ \")\" ;
-    
-    ECHO boost-test($(type)) \"$(name)\" 
-      [$(test-info)]            
-        ":" \"$(source-files)\"
-          ;            
+    # If the user requested XML output on the command-line, add the
+    # test info to that XML file rather than dumping them to stdout.
+    if $(.out-xml)
+    {
+        local nl = "
+" ;
+        .contents on $(.out-xml) += 
+            "$(nl)  <test type=\"$(type)\" name=\"$(name)\">"
+            "$(nl)    <info><![CDATA[$(test-info)]]></info>"
+            "$(nl)    <source><![CDATA[$(source-files)]]></source>"
+            "$(nl)  </test>"
+            ;
+    }
+    else
+    {
+        # Format them into a single string of quoted strings
+        test-info = \"$(test-info:J=\"\ \")\" ;
+        
+        ECHO boost-test($(type)) \"$(name)\" 
+          [$(test-info)]            
+            ":" \"$(source-files)\"
+              ;            
+    }
 }
 
 # Register generators. Depending on target type, either
