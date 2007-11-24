@@ -1007,7 +1007,15 @@ module project-rules
     #
     rule conditional ( condition + : requirements * )
     {
-        return $(condition:J=,):$(requirements) ;
+        local condition = $(condition:J=,) ;
+        if [ MATCH (:) : $(condition) ]
+        {
+            return $(condition)$(requirements) ;
+        }
+        else
+        {
+            return $(condition):$(requirements) ;
+        }
     }
 }
 
