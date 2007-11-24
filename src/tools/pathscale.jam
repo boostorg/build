@@ -23,19 +23,19 @@ rule init ( version ? : command * : options * )
 {
   local condition = [ common.check-init-parameters pathscale : version $(version) ] ;
 
-  command = [ common.get-invocation-command pathscale : mpicxx : $(command) ] ;
+  command = [ common.get-invocation-command pathscale : pathCC : $(command) ] ;
 
   common.handle-options pathscale : $(condition) : $(command) : $(options) ;
     
   toolset.flags pathscale.compile.fortran90 OPTIONS $(condition) :
     [ feature.get-values <fflags> : $(options) ] : unchecked ;
 
-  command_c = $(command_c[1--2]) $(command[-1]:B=mpicxx) ;
+  command_c = $(command_c[1--2]) $(command[-1]:B=pathCC) ;
 
   toolset.flags pathscale CONFIG_C_COMMAND $(condition) : $(command_c) ;
 
   # fortran support
-  local f-command = [ common.get-invocation-command pathscale : mpif77 : $(command) ] ;
+  local f-command = [ common.get-invocation-command pathscale : pathf90 : $(command) ] ;
   local command_f = $(command_f[1--2]) $(f-command[-1]:B=pathf77) ;
   local command_f90 = $(command_f[1--2]) $(f-command[-1]:B=pathf90) ;
 
@@ -84,7 +84,7 @@ actions compile.c++
 
 actions compile.fortran
 {
-    "$(CONFIG_F_COMMAND)" $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_F_COMMAND)" -f77 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 rule compile.fortran90 ( targets * : sources * : properties * )
