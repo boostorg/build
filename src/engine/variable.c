@@ -177,143 +177,147 @@ var_defines( char *const* e, int preprocess )
 
 int
 var_string(
-	char	*in,
-	char	*out,
-	int	outsize,
-	LOL	*lol )
+    char *in,
+    char *out,
+    int outsize,
+    LOL *lol )
 {
-	char 	*out0 = out;
-	char	*oute = out + outsize - 1;
+    char *out0 = out;
+    char *oute = out + outsize - 1;
 
-	while( *in )
-	{
-	    char	*lastword;
-	    int		dollar = 0;
+    while( *in )
+    {
+        char	*lastword;
+        int		dollar = 0;
 
-	    /* Copy white space */
+        /* Copy white space */
 
-	    while( isspace( *in ) )
-	    {
-		if( out >= oute )
-		    return -1;
+        while( isspace( *in ) )
+        {
+            if( out >= oute )
+                return -1;
 
-		*out++ = *in++;
-	    }
+            *out++ = *in++;
+        }
 
-	    lastword = out;
+        lastword = out;
 
-	    /* Copy non-white space, watching for variables */
+        /* Copy non-white space, watching for variables */
 
-	    while( *in && !isspace( *in ) )
-	    {
-	        if( out >= oute )
-		    return -1;
+        while( *in && !isspace( *in ) )
+        {
+            if( out >= oute )
+                return -1;
 
-		if( in[0] == '$' && in[1] == '(' )
-		    dollar++;
-                #ifdef OPT_AT_FILES
-                else if ( in[0] == '@' && in[1] == '(' )
+            if( in[0] == '$' && in[1] == '(' )
+            {
+                dollar++;
+                *out++ = *in++;
+            }
+            #ifdef OPT_AT_FILES
+            else if ( in[0] == '@' && in[1] == '(' )
+            {
+                int depth = 1;
+                char *ine = in + 2;
+                char *split = 0;
+                
+                /* Scan the content of the response file @() section. */
+                
+                while( *ine && depth > 0 )
                 {
-                    int depth = 1;
-                    char *ine = in + 2;
-                    char *split = 0;
-                    
-                    /* Scan the content of the response file @() section. */
-                    
-                    while( *ine && depth > 0 )
+                    switch( *ine )
                     {
-                        switch( *ine )
+                    case '(':
+                        ++depth;
+                        break;
+                    case ')':
+                        --depth;
+                        break;
+                    case ':':
+                        if( depth == 1 && ine[1] == 'E' && ine[2] == '=' )
                         {
-                        case '(':
-                            ++depth;
-                            break;
-                        case ')':
-                            --depth;
-                            break;
-                        case ':':
-                            if( depth == 1 && ine[1] == 'E' && ine[2] == '=' )
-                            {
-                                split = ine;
-                            }
-                           break;
+                            split = ine;
                         }
-                        ++ine;
+                        break;
                     }
-                    
-                    if (!split)
-                    {
-                        /*  the @() reference doesn't match the @(foo:E=bar) format.
-                            hence we leave it alone by copying directly to output. */
-                        int l = 0;
-                        if ( out+2 >= oute ) return -1;
-                        *(out++) = '@';
-                        *(out++) = '(';
-                        l = var_string(in+2,out,oute-out,lol);
-                        if ( l < 0 ) return -1;
-                        out += l;
-                        if ( out+1 >= oute ) return -1;
-                        *(out++) = ')';
-                        in = ine;
-                    }
-                    
-                    else if ( depth == 0 )
-                    {
-                        string file_name_v;
-                        int file_name_l = 0;
-                        const char * file_name_s = 0;
-                        
-                        /* expand the temporary file name var inline */
-                        #if 0
-                        string_copy(&file_name_v,"$(");
-                        string_append_range(&file_name_v,in+2,split);
-                        string_push_back(&file_name_v,')');
-                        #else
-                        string_new(&file_name_v);
-                        string_append_range(&file_name_v,in+2,split);
-                        #endif
-                        file_name_l = var_string(file_name_v.value,out,oute-out+1,lol);
-                        string_free(&file_name_v);
-                        if ( file_name_l < 0 ) return -1;
-                        file_name_s = out;
-                        
-                        /* for stdout/stderr we will create a temp file and generate
-                           a command that outputs the content as needed. */
-                        if ( strcmp( "STDOUT", out ) == 0 || strcmp( "STDERR", out ) == 0 )
-                        {
-                            int err_redir = strcmp( "STDERR", out ) == 0;
-                            out[0] = '\0';
-                            file_name_s = path_tmpfile();
-                            file_name_l = strlen(file_name_s);
-                            #ifdef OS_NT
-                            if ( (out+7+file_name_l+(err_redir?5:0)) >= oute ) return -1;
-                            sprintf( out,"type \"%s\"%s",
-                                file_name_s,
-                                err_redir ? " 1>&2" : "" );
-                            #else
-                            if ( (out+6+file_name_l+(err_redir?5:0)) >= oute ) return -1;
-                            sprintf( out,"cat \"%s\"%s",
-                                file_name_s,
-                                err_redir ? " 1>&2" : "" );
-                            #endif
-                            /* we also make sure that the temp files created by this
-                               get nuked eventually. */
-                            file_remove_atexit( file_name_s );
-                        }
-                        
-                        /* expand the file value into the file reference */
-                        var_string_to_file( split+3, ine-split-4, file_name_s, lol );
-                        
-                        /* continue on with the expansion */
-                        out += strlen(out);
-                    }
-                    
-                    /* and continue with the parsing just past the @() reference */
-                    in = ine;
+                    ++ine;
                 }
-                #endif
-
-		*out++ = *in++;
-	    }
+                
+                if (!split)
+                {
+                    /*  the @() reference doesn't match the @(foo:E=bar) format.
+                        hence we leave it alone by copying directly to output. */
+                    int l = 0;
+                    if ( out+2 >= oute ) return -1;
+                    *(out++) = '@';
+                    *(out++) = '(';
+                    l = var_string(in+2,out,oute-out,lol);
+                    if ( l < 0 ) return -1;
+                    out += l;
+                    if ( out+1 >= oute ) return -1;
+                    *(out++) = ')';
+                }
+                
+                else if ( depth == 0 )
+                {
+                    string file_name_v;
+                    int file_name_l = 0;
+                    const char * file_name_s = 0;
+                    
+                    /* expand the temporary file name var inline */
+                    #if 0
+                    string_copy(&file_name_v,"$(");
+                    string_append_range(&file_name_v,in+2,split);
+                    string_push_back(&file_name_v,')');
+                    #else
+                    string_new(&file_name_v);
+                    string_append_range(&file_name_v,in+2,split);
+                    #endif
+                    file_name_l = var_string(file_name_v.value,out,oute-out+1,lol);
+                    string_free(&file_name_v);
+                    if ( file_name_l < 0 ) return -1;
+                    file_name_s = out;
+                    
+                    /* for stdout/stderr we will create a temp file and generate
+                       a command that outputs the content as needed. */
+                    if ( strcmp( "STDOUT", out ) == 0 || strcmp( "STDERR", out ) == 0 )
+                    {
+                        int err_redir = strcmp( "STDERR", out ) == 0;
+                        out[0] = '\0';
+                        file_name_s = path_tmpfile();
+                        file_name_l = strlen(file_name_s);
+                        #ifdef OS_NT
+                        if ( (out+7+file_name_l+(err_redir?5:0)) >= oute ) return -1;
+                        sprintf( out,"type \"%s\"%s",
+                            file_name_s,
+                            err_redir ? " 1>&2" : "" );
+                        #else
+                        if ( (out+6+file_name_l+(err_redir?5:0)) >= oute ) return -1;
+                        sprintf( out,"cat \"%s\"%s",
+                            file_name_s,
+                            err_redir ? " 1>&2" : "" );
+                        #endif
+                        /* we also make sure that the temp files created by this
+                           get nuked eventually. */
+                        file_remove_atexit( file_name_s );
+                    }
+                    
+                    /* expand the file value into the file reference */
+                    var_string_to_file( split+3, ine-split-4, file_name_s, lol );
+                    
+                    /* continue on with the expansion */
+                    out += strlen(out);
+                }
+                
+                /* and continue with the parsing just past the @() reference */
+                in = ine;
+            }
+            #endif
+            else
+            {
+                *out++ = *in++;
+            }
+        }
 
         /* Add zero to 'out' so that 'lastword' is correctly zero-terminated. */
         if (out >= oute)
@@ -321,40 +325,40 @@ var_string(
         /* Don't increment, intentionally. */
         *out= '\0';
            
-	    /* If a variable encountered, expand it and and embed the */
-	    /* space-separated members of the list in the output. */
+        /* If a variable encountered, expand it and and embed the */
+        /* space-separated members of the list in the output. */
 
-	    if( dollar )
-	    {
-		LIST	*l;
+        if( dollar )
+        {
+            LIST *l;
 
-		l = var_expand( L0, lastword, out, lol, 0 );
+            l = var_expand( L0, lastword, out, lol, 0 );
 
-		out = lastword;
+            out = lastword;
 
-		while ( l )
-		{
-		    int so = strlen( l->string );
+            while ( l )
+            {
+                int so = strlen( l->string );
 
-		    if( out + so >= oute )
-			return -1;
+                if( out + so >= oute )
+                return -1;
 
-		    strcpy( out, l->string );
-		    out += so;
-		    l = list_next( l );
-		    if ( l ) *out++ = ' ';
-		}
+                strcpy( out, l->string );
+                out += so;
+                l = list_next( l );
+                if ( l ) *out++ = ' ';
+            }
 
-		list_free( l );
-	    }
-	}
+            list_free( l );
+        }
+    }
 
-	if( out >= oute )
-	    return -1;
+    if( out >= oute )
+        return -1;
 
-	*out++ = '\0';
+    *out++ = '\0';
 
-	return out - out0;
+    return out - out0;
 }
 
 void var_string_to_file( const char * in, int insize, const char * out, LOL * lol )
