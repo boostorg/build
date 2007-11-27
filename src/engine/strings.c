@@ -16,6 +16,14 @@
 static void assert_invariants( string* self )
 {
     int i;
+
+    if ( self->value == 0 )
+    {
+        assert( self->size == 0 );
+        assert( self->capacity == 0 );
+        assert( self->opt[0] == 0 );
+        return;
+    }
     
     assert( self->size < self->capacity );
     assert( ( self->capacity <= sizeof(self->opt) ) == ( self->value == self->opt ) );
@@ -49,6 +57,7 @@ void string_free( string* s )
     assert_invariants( s );
     if ( s->value != s->opt )
         BJAM_FREE( s->value );
+    string_new( s );
 }
 
 static void string_reserve_internal( string* self, size_t capacity )
