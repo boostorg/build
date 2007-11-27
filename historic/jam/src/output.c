@@ -6,6 +6,7 @@
 
 #include "jam.h"
 #include "output.h"
+#include "newstr.h"
 #include <stdio.h>
 
 #define bjam_out (stdout)
@@ -95,3 +96,26 @@ void out_action(
     fflush(bjam_err);
     fflush(globs.cmdout);
 }
+
+
+char * outf_int( int value )
+{
+    char buffer[50];
+    sprintf(buffer, "%i", value);
+    return newstr(buffer);
+}
+
+char * outf_double( double value )
+{
+    char buffer[50];
+    sprintf(buffer, "%f", value);
+    return newstr(buffer);
+}
+
+char * outf_time( time_t value )
+{
+    char buffer[50];
+    strftime(buffer,49,"%Y-%m-%d %H:%M:%SZ",gmtime(&value));
+    return newstr(buffer);
+}
+
