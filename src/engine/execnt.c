@@ -21,6 +21,7 @@
 # include <assert.h>
 # include <ctype.h>
 # include <time.h>
+# include <math.h>
 
 # ifdef USE_EXECNT
 
@@ -758,7 +759,35 @@ static FILETIME negate_FILETIME(FILETIME t)
 /* Convert a FILETIME to a number of seconds */
 static double filetime_seconds(FILETIME t)
 {
-    return t.dwHighDateTime * (double)(1UL << 31) * 2 + t.dwLowDateTime * 1.0e-7;
+    return t.dwHighDateTime * ((double)(1UL << 31) * 2.0 * 1.0e-7) + t.dwLowDateTime * 1.0e-7;
+}
+
+/* What should be a simple conversion, turns out to be horribly
+ complicated by the defficiencies of MSVC and the Win32 API. */
+static time_t filetime_dt(FILETIME t_utc)
+{
+    static int calc_time_diff = 1;
+    static double time_diff;
+    if ( calc_time_diff )
+    {
+        struct tm t0_;
+        FILETIME f0_local,f0_;
+        SYSTEMTIME s0_;
+        GetSystemTime(&s0_);
+        t0_.tm_year = s0_.wYear-1900;
+        t0_.tm_mon = s0_.wMonth-1;
+        t0_.tm_wday = s0_.wDayOfWeek;
+        t0_.tm_mday = s0_.wDay;
+        t0_.tm_hour = s0_.wHour;
+        t0_.tm_min = s0_.wMinute;
+        t0_.tm_sec = s0_.wSecond;
+        t0_.tm_isdst = 0;
+        SystemTimeToFileTime(&s0_,&f0_local);
+        LocalFileTimeToFileTime(&f0_local,&f0_);
+        time_diff = filetime_seconds(f0_)-((double)mktime(&t0_));
+        calc_time_diff = 0;
+    }
+    return ceil(filetime_seconds(t_utc)-time_diff);
 }
 
 static void record_times(HANDLE process, timing_info* time)
@@ -767,17 +796,11 @@ static void record_times(HANDLE process, timing_info* time)
     
     if (GetProcessTimes(process, &creation, &exit, &kernel, &user))
     {
-        /* Compute the elapsed time */
-        #if 0 /* We don't know how to get this number on Unix */
-        time->elapsed = filetime_seconds(
-            add_FILETIME( exit, negate_FILETIME(creation) )
-            );
-        #endif 
         time->system = filetime_seconds(kernel);
-        time->user = filetime_seconds(user);            
+        time->user = filetime_seconds(user);
+        time->start = filetime_dt(creation);
+        time->end = filetime_dt(exit);
     }
-        
-    /* CloseHandle((HANDLE)pid); */
 }
 
 #define IO_BUFFER_SIZE (16*1024)

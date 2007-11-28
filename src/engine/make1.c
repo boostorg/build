@@ -664,16 +664,6 @@ make1c( state *pState )
 	}
 }
 
-/* To l, append a 1-element list containing the string representation
- * of x
- */
-static void append_double_string( LOL *l, double x )
-{
-    char buffer[50];
-    sprintf(buffer, "%f", x);
-    lol_add( l, list_new( L0, newstr( buffer ) ) );
-}
-
 /* Look up the __TIMING_RULE__ variable on the given target, and if
  * non-empty, invoke the rule it names, passing the given
  * timing_info
@@ -688,31 +678,35 @@ static void call_timing_rule(TARGET* target, timing_info* time)
 
     if (timing_rule)
     {
-        /* We'll prepend $(__TIMING_RULE__[2-]) to the first argument */
-        LIST* initial_args = list_copy( L0, timing_rule->next );
-            
+        /* rule timing-rule (
+            args * :
+            target :
+            start end user system ) */
+
         /* Prepare the argument list */
         FRAME frame[1];
         frame_init( frame );
 
-        /* First argument is the name of the timed target */
-        lol_add( frame->args, list_new( initial_args, target->name ) );
-        append_double_string(frame->args, time->user);
-        append_double_string(frame->args, time->system);
+        /* args * :: $(__ACTION_RULE__[2-]) */
+        lol_add( frame->args, list_copy( L0, timing_rule->next ) );
 
-        if( lol_get( frame->args, 2 ) )
-            evaluate_rule( timing_rule->string, frame );
-            
+        /* target :: the name of the target */
+        lol_add( frame->args, list_new( L0, target->name ) );
+
+        /* start end user system :: info about the action command */
+        lol_add( frame->args,
+            list_new( list_new( list_new( list_new( L0,
+                outf_time(time->start) ),
+                outf_time(time->end) ),
+                outf_double(time->user) ),
+                outf_double(time->system) ) );
+
+        /* Call the rule. */
+        evaluate_rule( timing_rule->string, frame );
+
         /* Clean up */
         frame_free( frame );
     }
-}
-
-static void append_int_string(LOL *l, int x)
-{
-    char buffer[50];
-    sprintf(buffer, "%i", x);
-    lol_add(l, list_new(L0, newstr(buffer)));
 }
 
 /* Look up the __ACTION_RULE__ variable on the given target, and if
@@ -730,27 +724,40 @@ static void call_action_rule(TARGET* target, int status, timing_info* time,
 
     if (action_rule)
     {
-        /* We'll prepend $(__ACTION_RULE__[2-]) to the first argument */
-        LIST* initial_args = list_copy( L0, action_rule->next );
-            
+        /* rule action-rule (
+            args * :
+            target :
+            command status start end user system :
+            output ? ) */
+
         /* Prepare the argument list */
         FRAME frame[1];
         frame_init( frame );
 
-        /* First argument is the name of the target */
-        lol_add( frame->args, list_new( initial_args, target->name ) );
-        append_int_string(frame->args, status);
-        append_double_string(frame->args, time->user);
-        append_double_string(frame->args, time->system);
-        lol_add(frame->args, list_new(L0, newstr(executed_command)));
+        /* args * :: $(__ACTION_RULE__[2-]) */
+        lol_add( frame->args, list_copy( L0, action_rule->next ) );
 
+        /* target :: the name of the target */
+        lol_add( frame->args, list_new( L0, target->name ) );
+
+        /* command status start end user system :: info about the action command */
+        lol_add( frame->args,
+            list_new( list_new( list_new( list_new( list_new( list_new( L0,
+                newstr(executed_command) ),
+                outf_int(status) ),
+                outf_time(time->start) ),
+                outf_time(time->end) ),
+                outf_double(time->user) ),
+                outf_double(time->system) ) );
+
+        /* output ? :: the output of the action command */
         if (command_output)
             lol_add(frame->args, list_new(L0, newstr(command_output)));
         else
             lol_add(frame->args, L0);
 
-        if( lol_get( frame->args, 2 ) )
-            evaluate_rule( action_rule->string, frame );
+        /* Call the rule. */
+        evaluate_rule( action_rule->string, frame );
 
         /* Clean up */
         frame_free( frame );

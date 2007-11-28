@@ -85,6 +85,7 @@ static struct
     char   *buffer[2];        /* buffer to hold stdout and stderr, if any */
     void    (*func)( void *closure, int status, timing_info*, char *, char * );
     void   *closure;
+    time_t  start_dt;         /* start of command timestamp */
 } cmdtab[ MAXJOBS ] = {{0}};
 
 /*
@@ -193,6 +194,8 @@ execcmd(
         fcntl(err[1], F_SETFL, O_NONBLOCK);
 
 	/* Start the command */
+
+        cmdtab[ slot ].start_dt = time(0);
 
         if (0 < globs.timeout) {
             /* 
@@ -418,7 +421,7 @@ execwait()
     int i, ret, fd_max;
     int pid, status, finished;
     int rstat;
-    timing_info time;
+    timing_info time_info;
     fd_set fds;
     struct tms new_time;
 
@@ -491,8 +494,10 @@ execwait()
 
                         times(&new_time);
 
-                        time.system = (double)(new_time.tms_cstime - old_time.tms_cstime) / CLOCKS_PER_SEC;
-                        time.user = (double)(new_time.tms_cutime - old_time.tms_cutime) / CLOCKS_PER_SEC;
+                        time_info.system = (double)(new_time.tms_cstime - old_time.tms_cstime) / CLOCKS_PER_SEC;
+                        time_info.user = (double)(new_time.tms_cutime - old_time.tms_cutime) / CLOCKS_PER_SEC;
+                        time_info.start = cmdtab[i].start_dt;
+                        time_info.end = time(0);
     
                         old_time = new_time;
 
@@ -508,7 +513,7 @@ execwait()
                             rstat = EXEC_CMD_OK;
 
                         /* assume -p0 in effect so only pass buffer[0] containing merged output */
-                        (*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time, cmdtab[i].command, cmdtab[i].buffer[0] );
+                        (*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time_info, cmdtab[i].command, cmdtab[i].buffer[0] );
 
                         BJAM_FREE(cmdtab[i].buffer[OUT]);
                         cmdtab[i].buffer[OUT] = 0;

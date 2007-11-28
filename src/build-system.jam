@@ -578,8 +578,8 @@ if $(.out-xml)
     # actions clause we would have to form a valid command line
     # containing the result of @(...) below (the name of the XML file).
     rule out-xml.generate-action (
-        xml-file args * :
-        status : user : system : command : output ? )
+        args * : xml-file :
+        command status start end user system : output ? )
     {
         local contents =
             [ on $(xml-file) return $(.header) $(.contents) $(.footer) ] ;
@@ -598,14 +598,14 @@ if $(.out-xml)
     # statistics about each actual target in a variable "on" the
     # --out-xml target.
     rule out-xml.collect (
-        xml-file target :
-        status : user : system : command : output ? )
+        xml-file : target :
+        command status start end user system : output ? )
     {
         local nl = "
 " ;
         # Open the action with some basic info.
         .contents on $(xml-file) +=
-            "$(nl)  <action status=\"$(status)\" user=\"$(user)\" system=\"$(system)\">"
+            "$(nl)  <action status=\"$(status)\" start=\"$(start)\" end=\"$(end)\" user=\"$(user)\" system=\"$(system)\">"
             ;
         
         # If we have an action object we can print out more detailed info.
