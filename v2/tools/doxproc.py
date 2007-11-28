@@ -530,6 +530,12 @@ class Doxygen2BoostBook:
     def _translate_sectiondef_private_func( self, sectiondef, target=None, **kwargs ):
         return self._translate_sectiondef_func_(sectiondef,
             name='private member functions',target=target,**kwargs)
+
+    #~ Translate:
+    #~   <sectiondef kind="user-defined"><header>...</header>...</sectiondef>
+    def _translate_sectiondef_user_defined( self, sectiondef, target=None, **kwargs ):
+        return self._translate_sectiondef_func_(sectiondef,
+            name=self._getChildData('header', root=sectiondef),target=target,**kwargs)
     
     #~ Translate:
     #~   <memberdef kind="typedef" id="?">
@@ -829,11 +835,11 @@ def main( xmldir=None, output=None, id=None, title=None, index=False ):
     #~ and definitions so that lookup is unambiguous when reading in the definitions.
     namespace_files = filter(
         lambda x:
-            os.path.basename(x).startswith('namespace_'),
+            os.path.basename(x).startswith('namespace'),
         input)
     decl_files = filter(
         lambda x:
-            not os.path.basename(x).startswith('namespace_') and not os.path.basename(x).startswith('_'),
+            not os.path.basename(x).startswith('namespace') and not os.path.basename(x).startswith('_'),
         input)
     for dox in namespace_files:
         #~ print '--|',os.path.basename(dox)
