@@ -122,6 +122,7 @@
 # include "strings.h"
 # include "expand.h"
 # include "filesys.h"
+# include "output.h"
 
 /* Macintosh is "special" */
 
@@ -372,19 +373,7 @@ int  main( int argc, char **argv, char **arg_environ )
 
     /* Set JAMDATE first */
 
-    {
-        char *date;
-        time_t clock;
-        time( &clock );
-        date = newstr( ctime( &clock ) );
-
-        /* Trim newline from date */
-
-        if( strlen( date ) == 25 )
-            date[ 24 ] = 0;
-
-        var_set( "JAMDATE", list_new( L0, newstr( date ) ), VAR_SET );
-    }
+    var_set( "JAMDATE", list_new( L0, outf_time(time(0)) ), VAR_SET );
 
  
     var_set( "JAM_VERSION",
