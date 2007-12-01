@@ -67,6 +67,16 @@ REM location of the found toolset.
 if "_%ProgramFiles%_" == "__" set ProgramFiles=C:\Program Files
 
 setlocal & endlocal
+if NOT "_%VS90COMNTOOLS%_" == "__" (
+    set "BOOST_JAM_TOOLSET=vc9"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS90COMNTOOLS%..\..\VC\"
+    goto :eof)
+setlocal & endlocal
+if EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\VCVARSALL.BAT" (
+    set "BOOST_JAM_TOOLSET=vc9"
+    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 9.0\VC\"
+    goto :eof)
+setlocal & endlocal
 if NOT "_%VS80COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc8"
     set "BOOST_JAM_TOOLSET_ROOT=%VS80COMNTOOLS%..\..\VC\"
@@ -83,6 +93,7 @@ if NOT "_%VS71COMNTOOLS%_" == "__" (
     goto :eof)
 setlocal & endlocal
 if NOT "_%VCINSTALLDIR%_" == "__" (
+    REM %VCINSTALLDIR% is also set for VC9 (and probably VC8)
     set "BOOST_JAM_TOOLSET=vc7"
     set "BOOST_JAM_TOOLSET_ROOT=%VCINSTALLDIR%\VC7\"
     goto :eof)
@@ -281,6 +292,21 @@ set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
 :Skip_VC8
+if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc9_" goto :Skip_VC9
+if NOT "_%VS90COMNTOOLS%_" == "__" (
+    set "BOOST_JAM_TOOLSET_ROOT=%VS90COMNTOOLS%..\..\VC\"
+    )
+if "_%VCINSTALLDIR%_" == "__" call :Call_If_Exists "%BOOST_JAM_TOOLSET_ROOT%VCVARSALL.BAT" %BOOST_JAM_ARGS%
+if NOT "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
+    if "_%VCINSTALLDIR%_" == "__" (
+        set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
+        ) )
+set "BOOST_JAM_CC=cl /nologo /RTC1 /Zi /MTd /Fobootstrap/ /Fdbootstrap/ -DNT -DYYDEBUG -wd4996 kernel32.lib advapi32.lib user32.lib"
+set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
+set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
+set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
+set "_known_=1"
+:Skip_VC9
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_borland_" goto :Skip_BORLAND
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     call :Test_Path bcc32.exe )
