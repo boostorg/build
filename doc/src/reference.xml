@@ -1349,6 +1349,47 @@ using vacpp ;</programlisting>
        
         </section>
 
+      </section>
+
+      <section>
+        <title>Third-party libraries</title>
+        
+        <para>Boost.Build provides special support for some
+        third-party C++ libraries, documented below.</para>
+
+        <section id="bbv2.reference.tools.libraries.stlport">
+          <title>STLport library</title>
+          <indexterm><primary>STLport</primary></indexterm>
+
+          <para>The <ulink url="http://stlport.org">STLport</ulink> library
+          is an alternative implementation of C++ runtime library. Boost.Build
+          supports using that library on Windows platfrom.  Linux is 
+          hampered by different naming of libraries in each STLport
+          version and is not officially supported.</para>
+
+          <para>Before using STLport, you need to configure it in 
+          <filename>user-config.jam</filename> using the following syntax:
+          </para>
+          <programlisting>
+using stlport : <optional><replaceable>version</replaceable></optional> : <replaceable>header-path</replaceable> : <optional><replaceable>library-path</replaceable></optional> ;
+</programlisting>
+          <para>
+          Where <replaceable>version</replaceable> is the version of 
+          STLport, for example <literal>5.1.4</literal>,
+          <replaceable>headers</replaceable> is the location where
+          STLport headers can be found, and <replaceable>libraries</replaceable>
+          is the location where STLport libraries can be found.
+          The version should always be provided, and the library path should
+          be provided if you're using STLport's implementation of
+          iostreams. Note that STLport 5.* always uses its own iostream
+          implementation, so the library path is required.
+          </para>
+
+          <para>When STLport is configured, you can build with STLport by
+          requesting <literal>stdlib=stlport</literal> on the command line.
+          </para>
+
+        </section>
 
       </section>
   
