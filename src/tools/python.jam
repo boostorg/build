@@ -610,13 +610,16 @@ local rule system-library-dependencies ( target-os )
             # appears to duplicate the logic already in gcc.jam, it
             # doesn't as long as we're not forcing <threading>multi.
 
-            # Caleb Epstein reports that his python's
+            # On solaris 10,
             # distutils.sysconfig.get_config_var('LIBS') yields
-            # -lresolv -lsocket -lnsl -lrt -ldl.  However, we're not
-            # yet sure that is the right list for extension modules.
-            # Being conservative, we add rt and remove pthread, which
-            # was causing errors.
-            return <library>dl <toolset>gcc:<library>rt ;
+            # '-lresolv -lsocket -lnsl -lrt -ldl'.  However, that
+            # doesn't seem to be the right list for extension modules.
+            # For example, on my installation, adding -ldl causes at
+            # least one test to fail because the library can't be
+            # found and removing it causes no failures.
+          
+            # Apparently, though, we need to add -lrt for gcc.
+            return <toolset>gcc:<library>rt ;
 
         case osf : return  <library>pthread <toolset>gcc:<library>rt ;
 
