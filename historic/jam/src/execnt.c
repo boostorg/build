@@ -539,6 +539,7 @@ int execwait()
         string_free(&cmdtab[i].target); string_new(&cmdtab[i].target);
         string_free(&cmdtab[i].command); string_new(&cmdtab[i].command);
         if (cmdtab[i].pi.hProcess) { CloseHandle(cmdtab[i].pi.hProcess); cmdtab[i].pi.hProcess = 0; }
+        if (cmdtab[i].pi.hThread) { CloseHandle(cmdtab[i].pi.hThread); cmdtab[i].pi.hThread = 0; }
         if (cmdtab[i].pipe_out[0]) { CloseHandle(cmdtab[i].pipe_out[0]); cmdtab[i].pipe_out[0] = 0; }
         if (cmdtab[i].pipe_out[1]) { CloseHandle(cmdtab[i].pipe_out[1]); cmdtab[i].pipe_out[1] = 0; }
         if (cmdtab[i].pipe_err[0]) { CloseHandle(cmdtab[i].pipe_err[0]); cmdtab[i].pipe_err[0] = 0; }
