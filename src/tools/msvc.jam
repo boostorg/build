@@ -310,8 +310,16 @@ local rule configure-really (
                     # and x86_ia64 is right one.
                     setup-option = x86 x86_amd64 x86_ia64 ;
                     
-                    # Use a native x64 compiler if possible
+                    # When using 64-bit Windows, and targeting 64-bit,
+                    # it's possible to use native 64-bit compiler, which is
+                    # selected by the "amd64" parameter to vcvarsall.bat.
+                    # There are two variables we can use -- 
+                    # PROCESSOR_ARCHITECTURE and PROCESSOR_IDENTIFIER.
+                    # The first reflects processor proper, and the second is
+                    # empirically found to be always x86 when using 32-bit
+                    # windows.                    
                     if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_IDENTIFIER ] ]
+                      || [ MATCH ^(EM64T) : [ os.environ PROCESSOR_IDENTIFIER ] ]
                     {
                         setup-option = x86 amd64 x86_ia64 ;
                     }
