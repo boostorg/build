@@ -490,6 +490,7 @@ actions quietly updated ignore piecemeal together RmTemps
 MAKE_FILE = [ common.file-creation-command ] ;
 
 toolset.flags testing.unit-test LAUNCHER <testing.launcher> ;
+toolset.flags testing.unit-test ARGS <testing.arg> ;
 rule unit-test ( target : source : properties * )
 {
     run-path-setup $(target) : $(source) : $(properties) ;
@@ -498,7 +499,7 @@ rule unit-test ( target : source : properties * )
 actions unit-test 
 {
     $(PATH_SETUP)
-    $(LAUNCHER) $(>) && $(MAKE_FILE) $(<)
+    $(LAUNCHER) $(>) $(ARGS) && $(MAKE_FILE) $(<)
 }
 
 IMPORT $(__name__) : compile compile-fail run run-fail link link-fail 
