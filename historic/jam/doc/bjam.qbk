@@ -217,12 +217,14 @@ The supported toolsets, and wether they are auto-detected, are:
 
 [   [] []
     [[lines
-        [line [@http://msdn.microsoft.com/visualc/ =vc8=]]
-        [line Microsoft Visual C++ 8.x]
+        [line [@http://msdn.microsoft.com/visualc/ =vc8= and =vc9=]]
+        [line Microsoft Visual C++ 8.x and 9.x]
         ]]
     [Detection:
         [list
             [li =VCVARSALL.BAT= already configured]
+            [li =%VS90COMNTOOLS%= is present in environment]
+            [li Common install location: "=%ProgramFiles%\Microsoft Visual Studio 9="]
             [li =%VS80COMNTOOLS%= is present in environment]
             [li Common install location: "=%ProgramFiles%\Microsoft Visual Studio 8="]
             [li =CL.EXE= in =PATH=]
@@ -1315,6 +1317,17 @@ ECHO $(y) ;     # prints "4 5 6"
 
 [endsect]
 
+[section:atfile Generated File Expansion]
+
+During expansion of expressions =bjam= also looks for subexpressions of the form
+=@(filename:E=filecontents)= and replaces the expression with =filename= after
+creating the given file with the contents set to =filecontents=. This is useful
+for creating compiler response files, and other "internal" files. The expansion
+works both during parsing and action execution. Hence it is possible to create
+files during any of the three build phases.
+
+[endsect]
+
 [section:builtins Built-in Variables]
 
 This section discusses variables that have special meaning to =bjam=.
@@ -1387,7 +1400,7 @@ A number of Jam built-in variables can be used to identify runtime platform:
 [section Jam Version]
 
 [variablelist
-[[=JAMDATE=]                [Time and date at =bjam= start-up.]]
+[[=JAMDATE=]                [Time and date at =bjam= start-up as an ISO-8601 UTC value.]]
 [[=JAMUNAME=]               [Ouput of uname(1) command (Unix only)]]
 [[=JAMVERSION=]             [=bjam= version, currently ":version:"]]
 [[=JAM_VERSION=]            [A predefined global variable with two elements indicates the version number of Boost Jam. Boost Jam versions start at "=03=" "=00=". Earlier versions of =Jam= do not automatically define =JAM_VERSION=.]]
@@ -1429,6 +1442,52 @@ case $1 in
 *) eval "$2";;
 esac
 ]
+
+[endsect]
+
+[section:actionrule =__TIMING_RULE__= and =__ACTION_RULE__=]
+
+The =__TIMING_RULE__= and =__ACTION_RULE__= can be set to the name of a rule
+for =bjam= to call *after* an action completes for a target. They both give
+diagnostic information about the action that completed. For =__TIMING_RULE__=
+the rule is called as:
+
+    rule timing-rule ( args * : target : start end user system )
+
+And =__ACTION_RULE__= is called as:
+
+    rule action-rule ( args * : target : command status start end user system : output ? )
+
+The arguments for both are:
+
+[variablelist
+    [[[^args]]
+        [Any values following the rule name in the =__TIMING_RULE__= or =__ACTION_RULE__=
+        are passed along here.]]
+    [[[^target]]
+        [The =bjam= target that was built.]]
+    [[[^command]]
+        [The text of the executed command in the action body.]]
+    [[[^status]]
+        [The integer result of the executed command.]]
+    [[[^start]]
+        [The starting timestamp of the executed command as a ISO-8601 UTC value.]]
+    [[[^end]]
+        [The completion timestamp of the executed command as a ISO-8601 UTC value.]]
+    [[[^user]]
+        [The number of user CPU seconds the executed command spent as a floating
+        point value.]]
+    [[[^system]]
+        [The number of system CPU seconds the executed command spent as a floating
+        point value.]]
+    [[[^output]]
+        [The output of the command as a single string. The content of the output
+        reflects the use of the =-pX= option.]]
+]
+
+[note
+    If both variables are set for a target both are called, first =__TIMING_RULE__=
+    then =__ACTION_RULE__=. ]
 
 [endsect]
 
