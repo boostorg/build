@@ -1,6 +1,9 @@
 # Copyright 2003 Christopher Currie
 # Copyright 2006 Dave Abrahams 
 # Copyright 2003, 2004, 2005, 2006 Vladimir Prus 
+# Copyright 2005-2007 Mat Marcus
+# Copyright 2005-2007 Adobe Systems Incorporated
+# Copyright 2007 Rene Rivera
 # Distributed under the Boost Software License, Version 1.0. 
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
@@ -12,6 +15,7 @@ import toolset : flags ;
 import type ;
 import common ;
 import generators ;
+import path : basename ;
 
 feature.extend toolset : darwin ;
 import gcc ;
@@ -22,10 +26,13 @@ generators.override darwin.searched-lib-generator : searched-lib-generator ;
 
 toolset.inherit-rules darwin : gcc ;
 toolset.inherit-flags darwin : gcc     
-  :  # On Darwin, static runtime is just not supported. So don't inherit
-     # any flags settings for <runtime-link>static
-     <runtime-link>static
-  ;
+  :  <runtime-link>static
+     <architecture>x86/<address-model>32
+     <architecture>x86/<address-model>64
+     <architecture>x86/<instruction-set>
+     <architecture>power/<address-model>32
+     <architecture>power/<address-model>64
+     <architecture>power/<instruction-set>  ;
 
 # No additional initialization should be necessary
 rule init ( version ? : command * : options * )
@@ -49,8 +56,104 @@ rule init ( version ? : command * : options * )
 
 feature framework : : free ;
 
+# The following adds objective-c support to darwin.
+# Thanks to http://thread.gmane.org/gmane.comp.lib.boost.build/13759
+
+type.register OBJECTIVE_C : m ;
+type.register OBJECTIVE_CPP : mm ;
+
+generators.register-c-compiler darwin.compile.m : OBJECTIVE_C : OBJ : <toolset>darwin ;
+generators.register-c-compiler darwin.compile.mm : OBJECTIVE_CPP : OBJ : <toolset>darwin ;
+
+rule compile.m
+{
+    LANG on $(<) = "-x objective-c" ;
+}
+
+actions compile.m
+{
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
+
+rule compile.mm
+{
+    LANG on $(<) = "-x objective-c++" ;
+}
+
+actions compile.mm
+{
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
+
+# Determine the MacOSX SDK versions installed and their locations.
+local rule available-macosx-versions ( )
+{
+    local sdks = [ GLOB /Developer/SDKs : MacOSX* ] ;
+    for local sdk in $(sdks)
+    {
+        local sdk-version = [ MATCH ([0-9]+[.][0-9]+[.]?[0-9]*) : $(sdk) ] ;
+        if $(sdk-version)
+        {
+            .macosx-sdk = $(sdk-version) $(.macosx-sdk) ;
+            .macosx-sdk.$(sdk-version) = $(sdk) ;
+        }
+    }
+    return $(.macosx-sdk) ;
+}
+
+# Add the found SDK version only to the allowed set. The "latests" SDKs
+# wil be first in the list, and hence the default.
+feature macosx-version
+    : [ available-macosx-versions ]
+    : propagated link-incompatible symmetric ;
+
+# Add the options for all the found SDKs.
+for local sdk in $(.macosx-sdk)
+{
+    flags darwin.compile OPTIONS <macosx-version>$(sdk) :
+        -isysroot $(.macosx-sdk.$(sdk))
+        -mmacosx-version-min=$(sdk)
+        ;
+    flags darwin.link OPTIONS <macosx-version>$(sdk) :
+        -isysroot $(.macosx-sdk.$(sdk))
+        -mmacosx-version-min=$(sdk)
+        ;
+}
+
+# Add option selection for combined and specific architecture combinations.
+
+local rule arch-addr-flags ( toolset variable
+    : architecture : address-model + : values + : default ? )
+{
+    if $(default)
+    {
+        flags $(toolset) $(variable)
+            <architecture>$(architecture)/<address-model>
+            : $(values) ;
+    }
+    flags $(toolset) $(variable)
+        <architecture>/<address-model>$(address-model)
+        <architecture>$(architecture)/<address-model>$(address-model)
+        : $(values) ;
+}
+
+arch-addr-flags darwin OPTIONS : combined : 32 : -arch i386 -arch ppc : default ;
+arch-addr-flags darwin OPTIONS : combined : 64 : -arch x86_64 -arch ppc64 ;
+
+arch-addr-flags darwin OPTIONS : x86 : 32 : -arch i386 : default ;
+arch-addr-flags darwin OPTIONS : x86 : 64 : -arch x86_64 ;
+
+arch-addr-flags darwin OPTIONS : power : 32 : -arch ppc : default ;
+arch-addr-flags darwin OPTIONS : power : 64 : -arch ppc64 ;
+
+
+flags darwin.link OPTIONS <runtime-link>static
+    : -nodefaultlibs -shared-libgcc -lstdc++-static -lgcc_eh -lgcc -lSystem ;
+
+flags darwin.link OPTIONS <variant>release : -Wl,-dead_strip -no_dead_strip_inits_and_terms ;
+
 flags darwin.compile OPTIONS <link>shared : -dynamic ;
-flags darwin.compile OPTIONS : -Wno-long-double -no-cpp-precomp  ;
+flags darwin.compile OPTIONS : -Wno-long-double -no-cpp-precomp  -gdwarf-2  ;
 
 flags darwin.link FRAMEWORK <framework> ;
 
@@ -86,11 +189,12 @@ rule link.dll
 
 actions link.dll bind LIBRARIES
 {
-    $(CONFIG_COMMAND) -dynamiclib -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=:S=) $(OPTIONS) $(USER_OPTIONS)
+    $(CONFIG_COMMAND) -dynamiclib -install_name "$(<:B)$(<:S)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=:S=) $(OPTIONS) $(USER_OPTIONS)
 }
 
+# We use libtool instead of ar to support universal binary linking
+# TODO: Find a way to use the underlying tools, i.e. lipo, to do this.
 actions piecemeal archive
 {
-    ar -c -r -s $(ARFLAGS) "$(<:T)" "$(>:T)"
+    libtool -static -o "$(<:T)"  $(ARFLAGS)  "$(>:T)"
 }
-
