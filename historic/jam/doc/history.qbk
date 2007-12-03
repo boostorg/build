@@ -5,6 +5,10 @@
 This is mostly a bug fix release.
 
 [list
+    [li Work around some Windows CMD.EXE programs that will fail executing a totally
+        empty batch file.
+        -- ['Rene R.]
+        ]
     [li Add support for detection and building with =vc9=.
         -- ['John P.]
         ]
