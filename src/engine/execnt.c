@@ -238,7 +238,7 @@ void execcmd(
     }
 
     /* Trim leading, -ending- white space */
-    while( isspace( *command ) )
+    while( *(command+1) && isspace( *command ) )
         ++command;
 
     /* Write to .BAT file unless the line would be too long and it
