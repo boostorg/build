@@ -49,6 +49,7 @@ generators.register-c-compiler pgi.compile.c++ : CPP : OBJ : <toolset>pgi ;
 generators.register-fortran-compiler pgi.compile.fortran : FORTRAN : OBJ : <toolset>pgi ;
 
 # Declare flags and actions for compilation
+flags pgi.compile OPTIONS : -Kieee ;
 flags pgi.compile OPTIONS <link>shared : -shared -fpic ;
 flags pgi.compile OPTIONS <debug-symbols>on : -g ;
 flags pgi.compile OPTIONS <profiling>on : -xprofile=tcov ;
@@ -93,7 +94,7 @@ flags pgi.link OPTIONS <link>shared : -fpic ;
 flags pgi.link LINKPATH <library-path> ;
 flags pgi.link FINDLIBS-ST <find-static-library> ;
 flags pgi.link FINDLIBS-SA <find-shared-library> ;
-flags pgi.link FINDLIBS-SA <threading>multi : pthread ;
+flags pgi.link FINDLIBS-SA <threading>multi : pthread rt ;
 flags pgi.link LIBRARIES <library-file> ;
 flags pgi.link LINK-RUNTIME <runtime-link>static : static ;
 flags pgi.link LINK-RUNTIME <runtime-link>shared : dynamic ;
