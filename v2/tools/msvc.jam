@@ -315,11 +315,11 @@ local rule configure-really (
                     # selected by the "amd64" parameter to vcvarsall.bat.
                     # There are two variables we can use -- 
                     # PROCESSOR_ARCHITECTURE and PROCESSOR_IDENTIFIER.
-                    # The first reflects processor proper, and the second is
-                    # empirically found to be always x86 when using 32-bit
+                    # The first is 'x86' when running 32-bit windows,
+                    # no matter what processor is, and 'AMD64' on 64-bit
+                    # windows on x86 (either AMD64 or EM64T).
                     # windows.                    
-                    if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_IDENTIFIER ] ]
-                      || [ MATCH ^(EM64T) : [ os.environ PROCESSOR_IDENTIFIER ] ]
+                    if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_ARCHITECTURE ] ]
                     {
                         setup-option = x86 amd64 x86_ia64 ;
                     }
