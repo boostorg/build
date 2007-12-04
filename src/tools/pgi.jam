@@ -11,6 +11,7 @@ import feature ;
 import fortran ;
 import type ;
 import common ;
+import gcc ;
 
 feature.extend toolset : pgi ;
 toolset.inherit pgi : unix ;
@@ -41,6 +42,8 @@ rule init ( version ? : command * : options * )
 
   flags pgi.link FINDLIBS-SA : [
     feature.get-values <find-shared-library> : $(options) ] : unchecked ;
+
+  gcc.init-link-flags pgi gnu $(condition) ;
 }
 
 # Declare generators
@@ -50,7 +53,7 @@ generators.register-fortran-compiler pgi.compile.fortran : FORTRAN : OBJ : <tool
 
 # Declare flags and actions for compilation
 flags pgi.compile OPTIONS : -Kieee ;
-flags pgi.compile OPTIONS <link>shared : -shared -fpic ;
+flags pgi.compile OPTIONS <link>shared : -fpic ;
 flags pgi.compile OPTIONS <debug-symbols>on : -g ;
 flags pgi.compile OPTIONS <profiling>on : -xprofile=tcov ;
 flags pgi.compile OPTIONS <optimization>speed : -fast -Mx,8,0x10000000 ;
@@ -124,13 +127,19 @@ actions link bind LIBRARIES
 rule link.dll ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;
+    # pgi can't link with lib*-d-1_35.so.1.35.0
+    # requires a library file name suffix that it recognizes (.so, .a)
+    # give them what they want (library ending in .so)
+    local grist = $(targets:G) ;
+    local lt = [ MATCH "$(grist)(.*.so).*" : $(targets) ] ;
+    targets = $(grist)$(lt) ;
 }
 
 # "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" -h$(<[1]:D=) -G "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
 
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -shared -fpic $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
+    "$(CONFIG_COMMAND)" $(OPTIONS) -shared -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" -Wl,-h -Wl,$(<[1]:D=) "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
 }
 
 actions updated together piecemeal pgi.archive
