@@ -127,12 +127,6 @@ actions link bind LIBRARIES
 rule link.dll ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;
-    # pgi can't link with lib*-d-1_35.so.1.35.0
-    # requires a library file name suffix that it recognizes (.so, .a)
-    # give them what they want (library ending in .so)
-    local grist = $(targets:G) ;
-    local lt = [ MATCH "$(grist)(.*.so).*" : $(targets) ] ;
-    targets = $(grist)$(lt) ;
 }
 
 # "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" -h$(<[1]:D=) -G "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
