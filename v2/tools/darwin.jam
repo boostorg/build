@@ -91,7 +91,8 @@ local rule available-macosx-versions ( )
     local sdks = [ GLOB /Developer/SDKs : MacOSX* ] ;
     for local sdk in $(sdks)
     {
-        local sdk-version = [ MATCH ([0-9]+[.][0-9]+[.]?[0-9]*) : $(sdk) ] ;
+        local sdk-version = [ MATCH ([0-9]+)[.]([0-9]+)[.]?([0-9]+)? : $(sdk:D=) ] ;
+        sdk-version = $(sdk-version:J=.) ;
         if $(sdk-version)
         {
             .macosx-sdk = $(sdk-version) $(.macosx-sdk) ;
@@ -106,6 +107,10 @@ local rule available-macosx-versions ( )
 feature macosx-version
     : [ available-macosx-versions ]
     : propagated link-incompatible symmetric ;
+if 10.4 in [ feature.values macosx-version ]
+{
+    feature.set-default macosx-version : 10.4 ;
+}
 
 # Add the options for all the found SDKs.
 for local sdk in $(.macosx-sdk)
