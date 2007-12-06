@@ -52,6 +52,8 @@ find . -name ".svn" | xargs rm -rf
 rm roll.sh
 chmod a+x jam_src/build.bat
 cd .. && zip -r boost-build.zip boost-build && tar --bzip2 -cf boost-build.tar.bz2 boost-build
+# Copy packages to a location where they are grabbed for beta.boost.org
+cp boost-build.zip boost-build.tar.bz2 ~/public_html/boost_build_nightly
 cd boost-build
 
 chmod -R u+w *
@@ -65,6 +67,6 @@ urchinTracker();
 </script>
 EOF`
 echo $x
-perl -pi -e "s|</body>|$x</body>|" doc/*.html
+perl -pi -e "s|</body>|$x</body>|" `find doc -name *.html`
 scp -r  doc example boost_build.png *.html hacking.txt vladimir_prus@shell.sourceforge.net:/home/groups/b/bo/boost/htdocs/boost-build2
 scp ../userman.pdf vladimir_prus@shell.sourceforge.net:/home/groups/b/bo/boost/htdocs/boost-build2/doc
