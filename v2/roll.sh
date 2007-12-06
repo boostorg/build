@@ -56,6 +56,15 @@ cd boost-build
 
 chmod -R u+w *
 # Upload docs to sourceforge
-perl -pi -e 's%<!-- sf logo -->%<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=7586&amp;type=1" width="88" height="31" border="0" alt="SourceForge.net Logo" align="right"/></a>%' index.html doc/*.html
+x=`cat <<EOF
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-2917240-2";
+urchinTracker();
+</script>
+EOF`
+echo $x
+perl -pi -e "s|</body>|$x</body>|" doc/*.html
 scp -r  doc example boost_build.png *.html hacking.txt vladimir_prus@shell.sourceforge.net:/home/groups/b/bo/boost/htdocs/boost-build2
 scp ../userman.pdf vladimir_prus@shell.sourceforge.net:/home/groups/b/bo/boost/htdocs/boost-build2/doc
