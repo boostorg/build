@@ -996,10 +996,9 @@ if [ os.name ] in NT CYGWIN
             for local x in "" "Wow6432Node\\"
             {
                 vc-path += [ W32_GETREG
-                "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\"$(x)$(.version-$(i)-reg)
+                "HKEY_LOCAL_MACHINE\\SOFTWARE\\"$(x)"\\Microsoft\\"$(.version-$(i)-reg)
                 : "ProductDir" ] ;
             }
-            
             
             if $(vc-path)
             {
