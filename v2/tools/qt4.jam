@@ -46,6 +46,7 @@ import project ;
 import toolset : flags ;
 import os ;
 import virtual-target ;
+import scanner ;
 
 # Qt3Support control feature
 #
@@ -120,7 +121,7 @@ rule init ( prefix )
         if [ glob $(.prefix)/Jamroot ]
         {
             # Import all Qt Modules
-            local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg QtOpenGL Qt3Support QtTest QtAssistantClient QtDesigner QtUiTools QtDBus ;
+            local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg QtOpenGL Qt3Support QtTest QtAssistantClient QtDesigner QtUiTools QtDBus QtScript ;
             for local l in $(all-libraries) 
             {
                 alias $(l) 
@@ -421,6 +422,23 @@ rule init ( prefix )
                 : # default-build
                 : # usage-requirements
                   <include>$(.incprefix)/QtDBus
+                ;
+
+            # Script-Engine (Qt 4.3)
+            lib QtScript : QtGui QtXml
+                : # requirements
+                  <name>QtScript$(suffix_version) 
+                : # default-build
+                : # usage-requirements
+                  <include>$(.incprefix)/QtScript 
+                ;
+            lib QtScript : QtGui QtXml
+                : # requirements
+                  <name>QtScript$(suffix_debug)$(suffix_version) 
+                  <variant>debug 
+                : # default-build
+                : # usage-requirements
+                  <include>$(.incprefix)/QtScript
                 ;
         }
     }
