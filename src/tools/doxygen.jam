@@ -299,7 +299,7 @@ rule xml-to-boostbook ( target : source : properties * )
     }
     for local title in [ feature.get-values <reftitle> : $(properties) ]
     {
-        xslt-properties += "<xsl:param>boost.doxygen.reftitle=\"$(title)\"" ;
+        xslt-properties += "<xsl:param>boost.doxygen.reftitle=$(title)" ;
     }
 
     xsltproc.xslt $(target) : $(source) $(d2b-xsl) : $(xslt-properties) ;
