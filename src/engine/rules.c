@@ -165,7 +165,7 @@ static void bind_explicitly_located_target(void* xtarget, void* data)
                 /* We're binding a target with explicit LOCATE. So
                    third argument is of now use: nothing will be returned
                    through it. */
-                t->boundname = search( t->name, &t->time, 0 );
+                t->boundname = search( t->name, &t->time, 0, 0 );
                 popsettings(t->settings);
                 break;
             }

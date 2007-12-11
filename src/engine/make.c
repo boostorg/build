@@ -289,7 +289,8 @@ make0(
 	if( t->binding == T_BIND_UNBOUND && !( t->flags & T_FLAG_NOTFILE ) )
 	{
             char* another_target;
-            t->boundname = search( t->name, &t->time, &another_target );
+            t->boundname = search( t->name, &t->time, &another_target,
+                                   (t->flags & T_FLAG_ISFILE));
             /* If it was detected that this target refers to an already
                existing and bound one, we add include dependency, so that
                every target which depends on us will depend on that other 

@@ -1145,7 +1145,8 @@ make1bind(
 	    return;
 
 	pushsettings( t->settings );
-	t->boundname = search( t->name, &t->time, 0 );
+	t->boundname = search( t->name, &t->time, 0, 
+                               (t->flags & T_FLAG_ISFILE) );
 	t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
 	popsettings( t->settings );
 }
