@@ -431,6 +431,8 @@ class c-scanner : scanner
         # Just propagate current scanner to includes, in a hope
         # that includes do not change scanners. 
         scanner.propagate $(__name__) : $(angle) $(quoted) : $(target) ;
+        
+        ISFILE $(angle) $(quoted) ;
     }        
 }
 
