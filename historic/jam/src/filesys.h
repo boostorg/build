@@ -41,8 +41,13 @@ struct file_info_t {
 } ;
 typedef struct file_info_t file_info_t ;
 
+/* Creates a pointer to information about file
+   'filename', creating it as necessary.  If
+   created, the structure will be default initialized.  */
 file_info_t * file_info(char * filename);
 
+/* Returns information about a file, queries the OS
+   if needed.  */
 file_info_t * file_query(char * filename);
 
 void file_done();

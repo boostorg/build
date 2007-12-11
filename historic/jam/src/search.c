@@ -20,6 +20,7 @@
 # include "compile.h"
 # include "strings.h"
 # include "hash.h"
+# include "filesys.h"
 # include <string.h>
 
 typedef struct _binding {
@@ -89,7 +90,8 @@ char *
 search( 
     char *target,
     time_t *time,
-    char **another_target
+    char **another_target,
+    int file
 )
 {
 	PATHNAME f[1];
@@ -135,6 +137,7 @@ search(
         while( varlist )
         {
             BINDING b, *ba = &b;
+            file_info_t *ff;
 
             f->f_root.ptr = varlist->string;
             f->f_root.len = strlen( varlist->string );
@@ -145,6 +148,7 @@ search(
             if( DEBUG_SEARCH )
                 printf( "search %s: %s\n", target, buf->value );
 
+            ff = file_query(buf->value);
             timestamp( buf->value, time );
 
             b.binding = buf->value;
@@ -159,10 +163,13 @@ search(
                 found = 1;
                 break;                
             }
-            else if( *time )
+            else if( ff && ff->time )
             {
-                found = 1;
-                break;
+                if (!file || ff->is_file)
+                {
+                    found = 1;
+                    break;
+                }
             }
 
             varlist = list_next( varlist );
