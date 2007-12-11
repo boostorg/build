@@ -1186,6 +1186,26 @@ rule construct ( project name ? : target-type : property-set * : sources * )
     decrease-indent ;
         
     .construct-stack = $(.construct-stack[2-]) ;
-                        
+                    
     return $(result) ;        
+}
+
+# Given 'result', obtained from some generator or 
+# generators.construct, adds 'raw-properties' as usage requirements
+# to it. If result already contains usage requirements -- that is
+# the first element of result of an instance of the property-set class,
+# the existing usage requirements and 'raw-properties' are combined.
+rule add-usage-requirements ( result * : raw-properties * )
+{
+    if $(result)
+    {
+        if [ class.is-a $(result[1]) : property-set ] 
+        {
+            return [ $(result[1]).add-raw $(raw-properties) ] $(result[2-]) ;
+        }
+        else
+        {
+            return [ property-set.create $(raw-properties) ] $(result) ;
+        }        
+    }    
 }
