@@ -46,6 +46,7 @@ import project ;
 import toolset : flags ;
 import os ;
 import virtual-target ;
+import scanner ;
 
 # Qt3Support control feature
 #
@@ -116,11 +117,14 @@ rule init ( prefix )
         # Generates .cpp file from qrc file
         generators.register-standard qt4.rcc : QRC : CPP(qrc_%) ;
         
+        # dependency scanner for wrapped files
+        type.set-scanner QRC : qrc-scanner ;
+
         # Test for a buildable Qt.
         if [ glob $(.prefix)/Jamroot ]
         {
             # Import all Qt Modules
-            local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg QtOpenGL Qt3Support QtTest QtAssistantClient QtDesigner QtUiTools QtDBus ;
+            local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg QtOpenGL Qt3Support QtTest QtAssistantClient QtDesigner QtUiTools QtDBus QtScript ;
             for local l in $(all-libraries) 
             {
                 alias $(l) 
@@ -422,6 +426,23 @@ rule init ( prefix )
                 : # usage-requirements
                   <include>$(.incprefix)/QtDBus
                 ;
+
+            # Script-Engine (Qt 4.3)
+            lib QtScript : QtGui QtXml
+                : # requirements
+                  <name>QtScript$(suffix_version) 
+                : # default-build
+                : # usage-requirements
+                  <include>$(.incprefix)/QtScript 
+                ;
+            lib QtScript : QtGui QtXml
+                : # requirements
+                  <name>QtScript$(suffix_debug)$(suffix_version) 
+                  <variant>debug 
+                : # default-build
+                : # usage-requirements
+                  <include>$(.incprefix)/QtScript
+                ;
         }
     }
     
@@ -587,3 +608,19 @@ actions uic-h
 {
     $(.binprefix)/uic $(>) -o $(<)
 }
+
+# Scanner for .qrc files.
+# Look for the CDATA section of the <file> tag.
+# Ignore the "alias" attribute.
+# See http://doc.trolltech.com/qt/resources.html
+# for detailed documentation of the Qt Resource System.
+class qrc-scanner : common-scanner 
+{
+    rule pattern ( )
+    {
+        return "<file.*>(.*)</file>" ;
+    }
+}
+
+# Wrapped files are "included".
+scanner.register qrc-scanner : include ;
