@@ -575,7 +575,7 @@ rule generating-rule ( project name : property-set : sources * )
         and add that precompiled header to the sources of the target whose compilation
         you want to speed up:
         <programlisting>
-cpp-pch pch : header.hpp ;
+cpp-pch pch : pch.hpp ;
 exe main : main.cpp pch ;</programlisting>
         You can use the <code>c-pch</code> if you want to use the precompiled
         header in C programs.
@@ -602,6 +602,15 @@ exe main : main.cpp pch ;</programlisting>
         it in the source file, even if the same header is included from
         the precompiled header. This makes sure that your project will build
         even if precompiled headers are not supported.</para></listitem>
+
+        <listitem><para>On the gcc compiler, the name of the header being
+        precompiled must be equal to the name of the <code>cpp-pch</code>
+        target.  This is gcc requirement.</para></listitem>
+
+        <listitem><para>Prior to version 4.2, the gcc compiler did not
+        handle anonymous namespaces in precompiled headers, which 
+        limit their utility. See the <ulink url="http://gcc.gnu.org/bugzilla/show_bug.cgi?id=29085">bug
+        report</ulink> for details.</para></listitem>
         
       </itemizedlist>
       
