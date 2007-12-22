@@ -509,7 +509,7 @@ IMPORT $(__name__) : compile compile-fail run run-fail link link-fail
 type.register TIME : time ;
 generators.register-standard testing.time : : TIME ;
 
-rule record-time ( target source : user : system )
+rule record-time ( target : source : start end user system )
 {
     local src-string = [$(source:G=:J=",")"] " ;
     USER_TIME on $(target) += $(src-string)$(user) ;
