@@ -22,7 +22,7 @@ actions time
     echo timed from $(>) >> $(<)
 }
 
-rule record_time ( target source : user : system )
+rule record_time ( target : source : start end user system )
 {
     ECHO record_time called: $(target) / $(source) / $(user) / $(system) ;
     __USER_TIME__ on $(target) = $(user) ;
