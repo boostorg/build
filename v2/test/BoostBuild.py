@@ -461,7 +461,7 @@ class Tester(TestCmd.TestCmd):
         if condition and hasattr(self, 'difference'):            
             f = StringIO()
             self.difference.pprint(f)
-            annotation("changes causes by the last build command", f.getvalue())
+            annotation("changes caused by the last build command", f.getvalue())
             
         if condition and dump_stdio:
             self.dump_stdio()
@@ -662,7 +662,6 @@ class Tester(TestCmd.TestCmd):
 
     def maybe_do_diff(self, actual, expected):
         if os.environ.has_key("DO_DIFF") and os.environ["DO_DIFF"] != '':
-            
             e = tempfile.mktemp("expected")
             a = tempfile.mktemp("actual")
             open(e, "w").write(expected)

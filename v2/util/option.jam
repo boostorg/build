@@ -25,7 +25,7 @@ rule process ( )
     # Check command-line args as soon as possible.  For each option try
     # to load module named after option. Is that succeeds, invoke 'process'
     # rule in the module. The rule may return "true" to indicate that the
-    # regular built process should not be attempted.
+    # regular build process should not be attempted.
     #
     # Options take the general form of: --<name>[=<value>] [<value>]
     #
