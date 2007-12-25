@@ -184,7 +184,7 @@ rule init ( version ? : command * : options * )
     
     #~ - The resource compiler.
     local rc =
-        [ common.get-invocation-command gcc
+        [ common.get-invocation-command-nodefault gcc
             : windres : [ feature.get-values <rc> : $(options) ] : $(bin) : search-path ] ;
     local rc-type =
         [ feature.get-values <rc-type> : $(options) ] ;
