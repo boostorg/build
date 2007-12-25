@@ -236,43 +236,56 @@ rule check-init-parameters ( toolset : * )
 # find the tool, a warning is issued.
 # If 'path-last' is specified, PATH is checked after 'additional-paths' when
 # searching to 'tool'.
-rule get-invocation-command ( 
+rule get-invocation-command-nodefault ( 
     toolset : tool : user-provided-command * : additional-paths * : path-last ? )
 {
     local command ;
     if ! $(user-provided-command)
     {
         command = [ common.find-tool $(tool) : $(additional-paths) : $(path-last) ] ;
-        if ! $(command)
+        if ! $(command) && $(.debug-configuration)
         {
-            if $(.debug-configuration)
-            {
-                ECHO "warning: toolset $(toolset) initialization: can't find tool $(tool)" ;
-                ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
-            }
-            command = $(tool) ;
-        }        
+            ECHO "warning: toolset $(toolset) initialization: can't find tool $(tool)" ;
+            ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
+        }
     }
     else
     {
         command = [ common.check-tool $(user-provided-command) ] ;        
-        if ! $(command)
+        if ! $(command) && $(.debug-configuration)
         {
-            if $(.debug-configuration)
-            {
-                ECHO "warning: toolset $(toolset) initialization: " ;
-                ECHO "warning: can't find user-provided command " '$(user-provided-command)' ;
-                ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
-            }
-            # It's possible, in theory, that user-provided command is OK, but we're
-            # not smart enough to understand that. 
-            command = $(user-provided-command) ;
-        }        
+            ECHO "warning: toolset $(toolset) initialization: " ;
+            ECHO "warning: can't find user-provided command " '$(user-provided-command)' ;
+            ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
+        }
     }
 
     return $(command) ;
 }
 
+# Same as get-invocation-command-nodefault, except that if no tool
+# if found, returns either the user-provided-command, if present,
+# or the 'tool' parameter.
+rule get-invocation-command ( 
+    toolset : tool : user-provided-command * : additional-paths * : path-last ? )
+{
+    local result = [ get-invocation-command-nodefault $(toolset) : $(tool)
+      : $(user-provided-command) : $(additional-paths) : $(path-last) ] ;
+    
+    if ! $(result)
+    {
+        if $(user-provided-command)
+        {
+            result = $(user-provided-command) ;
+        }
+        else
+        {
+            result = $(tool) ;
+        }                   
+    }
+    return $(result) ;    
+}
+    
 # Given an invocation command,
 # return the absolute path to the command. This works even if commnad
 # has not path element and is present in PATH.
