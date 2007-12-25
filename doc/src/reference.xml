@@ -329,7 +329,7 @@ ECHO [ glob-tree *.cpp : .svn ] ;
         will print the names of all C++ files in your project. The 
         <literal>.svn</literal> exclude pattern prevents the 
         <code>glob-tree</code> rule from entering administrative
-        directories of the Subverion version control system.
+        directories of the Subversion version control system.
         </para></listitem>
       </varlistentry>
 
