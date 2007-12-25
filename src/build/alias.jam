@@ -24,10 +24,7 @@
 
 import targets ;
 import "class" : new ;
-import property ;
 import errors : error ;
-import type : type ;
-import regex ;
 import project ;
 import property-set ;
 
