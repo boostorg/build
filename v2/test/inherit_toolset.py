@@ -13,10 +13,10 @@ t.write("a.cpp", """
 """)
 
 t.write("yfc1.jam", """ 
-import toolset ;
-import generators ;
+import feature    : extend            ;
+import generators : register-standard ;
 
-toolset.register yfc1 ;
+feature.extend toolset : yfc1 ;
 
 rule init ( )
 {
@@ -34,14 +34,13 @@ actions link
 {
     yfc1-link
 }
-
-
 """)
 
 t.write("yfc2.jam", """ 
-import toolset ;
+import feature : extend  ;
+import toolset : inherit ;
 
-toolset.register yfc2 ;
+feature.extend toolset : yfc2 ;
 toolset.inherit yfc2 : yfc1 ;
 
 rule init ( )
