@@ -1,19 +1,19 @@
 #!/usr/bin/python
 
-# Copyright 2003 Dave Abrahams 
-# Copyright 2003, 2004, 2005, 2006 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Dave Abrahams
+# Copyright 2003, 2004, 2005, 2006 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Test usage of searched-libs: one which are found via -l
-# switch to the linker/compiler. 
+# switch to the linker/compiler.
 
 from BoostBuild import Tester, get_toolset
 import string
 import os
 t = Tester()
 
-# To start with, we have to prepate a library to link with
+# To start with, we have to prepare a library to link with.
 t.write("lib/project-root.jam", "")
 t.write("lib/Jamfile", "lib test_lib : test_lib.cpp ;")
 t.write("lib/test_lib.cpp", """
@@ -28,7 +28,6 @@ t.expect_addition("lib/bin/$toolset/debug/test_lib.dll")
 
 # Auto adjusting of suffixes does not work, since we need to
 # change dll to lib.
-# 
 if (os.name == 'nt' or os.uname()[0].lower().startswith('cygwin')) and get_toolset() != 'gcc':
     t.copy("lib/bin/$toolset/debug/test_lib.implib", "lib/test_lib.implib")
     t.copy("lib/bin/$toolset/debug/test_lib.dll", "lib/test_lib.dll")
@@ -104,7 +103,7 @@ t.rm("bin/$toolset/debug/main.exe")
 # A regression test: <library>property referring to
 # searched-lib was mishandled. As the result, we were
 # putting target name to the command line!
-# Note that 
+# Note that
 #    g++ ...... <.>z
 # works nicely in some cases, sending output from compiler
 # to file 'z'.
