@@ -16,9 +16,14 @@ feature.subfeature toolset intel : platform : : propagated link-incompatible ;
 
 rule init ( * : * )
 {
-    if [ os.name ] = LINUX || [ os.name ] = MACOSX
+    if [ os.name ] = LINUX
     {
         toolset.using intel-linux : 
+          $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    }
+    else if [ os.name ] = MACOSX
+    {
+        toolset.using intel-darwin : 
           $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
     else
