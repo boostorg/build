@@ -153,10 +153,10 @@ class modifier : generator
     }
 }
 
-# A modifier that changes the name of a target, after it's generated, given
-# a regular expression to slpit the name, and a set of token to insert
-# between the split tokens of the name. This also exposes the target for other
-# uses with a symlink to the original name (optionally).
+# A modifier that changes the name of a target, after it's generated, given a
+# regular expression to split the name, and a set of token to insert between the
+# split tokens of the name. This also exposes the target for other uses with a
+# symlink to the original name (optionally).
 #
 class name-modifier : modifier
 {
