@@ -35,18 +35,13 @@
 #  standalone projects are not recorded, the only way to use them is by project
 #  id.
 
-
-import modules : peek poke ;
-import numbers ;
-import path ;
-import sequence ;
-import errors : error ;
-
-import print ;
 import "class" : new ;
 import errors ;
-import assert ;
+import modules ;
+import path ;
+import print ;
 import property-set ;
+import sequence ;
 
 #
 #   Loads jamfile at the given location. After loading, project global
@@ -101,7 +96,7 @@ rule load-used-projects ( module-name )
 # Note the use of character groups, as opposed to listing
 # 'Jamroot' and 'jamroot'. With the latter, we'd get duplicate
 # matches on windows and would have to eliminate duplicates.
-JAMROOT ?= [ peek : JAMROOT ] ;
+JAMROOT ?= [ modules.peek : JAMROOT ] ;
 JAMROOT ?= project-root.jam [Jj]amroot [Jj]amroot.jam ;
 
 # Loads parent of Jamfile at 'location'. Issues an error if nothing is found.
