@@ -289,8 +289,7 @@ local rule load-jamfile (
     {
         jamfile-to-load = [ find-jamfile $(dir) ] ;
     }
-    
-    
+
     # The module of the jamfile.
     #
     local jamfile-module = [ module-name  [ path.parent $(jamfile-to-load) ] ] ;
@@ -324,7 +323,7 @@ local rule load-jamfile (
     {
         errors.error "The value of the .current-project variable"
           : "has magically changed after loading a Jamfile."
-          : "This means some of the targets might be defined a the wrong project."
+          : "This means some of the targets might be defined in the wrong project."
           : "after loading " $(jamfile-module) 
           : "expected value " $(saved-project)  
           : "actual value " $(.current-project)
@@ -334,9 +333,9 @@ local rule load-jamfile (
     if $(.global-build-dir)
     {        
         local id = [ attribute $(jamfile-module) id ] ;
-        local project-root  = [ attribute $(jamfile-module) project-root ] ;
+        local project-root = [ attribute $(jamfile-module) project-root ] ;
         local location = [ attribute $(jamfile-module) location ] ;
-    
+
         if $(location) && $(project-root) = $(dir)
         {
             # This is Jamroot
@@ -349,10 +348,6 @@ local rule load-jamfile (
             }            
         }        
     }        
-    
-
-    
-    
 }
 
 rule mark-as-user ( module-name )
@@ -883,10 +878,10 @@ module project-rules
         if $(global-build-dir)
         {                
             local location = [ $(attributes).get location ] ;
-            # Project with empty location is 'standalone' project, like
-            # user-config, or qt.  It has no build dir.
+            # Project with an empty location is a 'standalone' project such as
+            # user-config or qt.  It has no build dir.
             # If we try to set build dir for user-config, we'll then
-            # try to inherit it, with either weird, or wrong consequences.
+            # try to inherit it, with either weird or wrong consequences.
             if $(location) && $(location) = [ $(attributes).get project-root ]
             {
                 # This is Jamroot.
