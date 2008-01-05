@@ -5,30 +5,29 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-
-#   Supports 'abstract' targets, which are targets explicitly defined in Jamfile.
+#   Supports 'abstract' targets, which are targets explicitly defined in a
+#   Jamfile.
 #
 #   Abstract targets are represented by classes derived from 'abstract-target'
 #   class. The first abstract target is 'project-target', which is created for
 #   each Jamfile, and can be obtained by the 'target' rule in the Jamfile's
 #   module (see project.jam).
 #
-#   Project targets keep a list of 'main-target' instances.
-#   A main target is what the user explicitly defines in a Jamfile. It is
-#   possible to have several definitions for a main target, for example to have
-#   different lists of sources for different platforms. So, main targets
-#   keep a list of alternatives.
+#   Project targets keep a list of 'main-target' instances. A main target is
+#   what the user explicitly defines in a Jamfile. It is possible to have
+#   several definitions for a main target, for example to have different lists
+#   of sources for different platforms. So, main targets keep a list of
+#   alternatives.
 #
 #   Each alternative is an instance of 'abstract-target'. When a main target
-#   subvariant is defined by some rule, that rule will decide what class to
-#   use, create an instance of that class and add it to the list of alternatives
-#   for the main target.
+#   subvariant is defined by some rule, that rule will decide what class to use,
+#   create an instance of that class and add it to the list of alternatives for
+#   the main target.
 #
-#   Rules supplied by the build system will use only targets derived
-#   from 'basic-target' class, which will provide some default behaviour.
-#   There will be different classes derived from it such as 'make-target',
-#   created by the 'make' rule, and 'typed-target', created by rules such as
-#   'exe' and 'lib'.
+#   Rules supplied by the build system will use only targets derived from
+#   'basic-target' class, which will provide some default behaviour. There will
+#   be different classes derived from it such as 'make-target', created by the
+#   'make' rule, and 'typed-target', created by rules such as 'exe' and 'lib'.
 
 #
 #                         +------------------------+
@@ -147,6 +146,7 @@ class abstract-target
     }
 }
 
+
 if --debug-building in [ modules.peek : ARGV ]
 {
     modules.poke : .debug-building : true ;
@@ -171,17 +171,16 @@ rule decrease-indent ( )
 }
 
 
-#  Project target class (derived from 'abstract-target')
+#  Project target class (derived from 'abstract-target').
 #
-#  This class these responsibilities:
-#  - maintaining a list of main targets in this project and building them
+#  This class has the following responsibilities:
+#  - Maintaining a list of main targets in this project and building them.
 #
 #  Main targets are constructed in two stages:
-#  - When Jamfile is read, a number of calls to 'add-alternative' is made.
-#    At that time, alternatives can also be renamed to account for inline
-#    targets.
-#  - The first time 'main-target' or 'has-main-target' rule is called,
-#    all alternatives are enumerated an main targets are created.
+#  - When Jamfile is read, a number of calls to 'add-alternative' is made. At
+#    that time, alternatives can also be renamed to account for inline targets.
+#  - The first time 'main-target' or 'has-main-target' rule is called, all
+#    alternatives are enumerated and main targets are created.
 class project-target : abstract-target
 {
     import project ;
@@ -210,8 +209,8 @@ class project-target : abstract-target
         }
     }
 
-    # This is needed only by the 'make' rule. Need to find the
-    # way to make 'make' work without this method.
+    # This is needed only by the 'make' rule. Need to find the way to make
+    # 'make' work without this method.
     rule project-module ( )
     {
         return $(self.project-module) ;
@@ -260,8 +259,8 @@ class project-target : abstract-target
         return $(usage-requirements) [ sequence.unique $(targets) ] ;
     }
 
-    # Computes and returns a list of abstract-target instances which
-    # must be built when this project is built.
+    # Computes and returns a list of abstract-target instances which must be
+    # built when this project is built.
     rule targets-to-build ( )
     {
         local result ;
@@ -305,7 +304,7 @@ class project-target : abstract-target
         if $(self.built-main-targets)
         {
             errors.error "add-alternative called when main targets are already created."
-              : "in project" [ full-name ] ;
+                : "in project" [ full-name ] ;
         }
         self.alternatives += $(target-instance) ;
     }
@@ -350,8 +349,8 @@ class project-target : abstract-target
         local extra-error-message ;
         if $(project-part)
         {
-            # There's explicit project part in id. Looks up the
-            # project and pass the request to it.
+            # There's explicit project part in id. Looks up the project and
+            #  passes the request to it.
             local pm = [ project.find $(project-part) : $(current-location) ] ;
             if $(pm)
             {
@@ -365,8 +364,8 @@ class project-target : abstract-target
         }
         else
         {
-            # Interpret target-name as name of main target
-            # Need to do this before checking for file. Consider this:
+            # Interpret target-name as name of main target. Need to do this
+            # before checking for file. Consider this:
             #
             #  exe test : test.cpp ;
             #  install s : test : <location>. ;
@@ -381,8 +380,8 @@ class project-target : abstract-target
 
                 if ! [ $(result).exists ]
                 {
-                    # File actually does not exist.
-                    # Reset 'target' so that an error is issued.
+                    # File actually does not exist. Reset 'target' so that an
+                    # error is issued.
                     result = ;
                 }
             }
@@ -454,9 +453,9 @@ class project-target : abstract-target
 
     # Accessor, add a constant.
     rule add-constant (
-        name # Variable name of the constant.
-        : value + # Value of the constant.
-        : type ? # Optional type of value.
+        name       # Variable name of the constant.
+        : value +  # Value of the constant.
+        : type ?   # Optional type of value.
         )
     {
         switch $(type)
@@ -466,9 +465,9 @@ class project-target : abstract-target
               for local v in $(value)
               {
                 v = [ path.root [ path.make $(v) ] $(self.location) ] ;
-                # Now make the value absolute path
+                # Now make the value absolute path.
                 v = [ path.root $(v) [ path.pwd ] ] ;
-                # Constants should be in platform-native form
+                # Constants should be in platform-native form.
                 v = [ path.native $(v) ] ;
                 r += $(v) ;
               }
@@ -479,7 +478,7 @@ class project-target : abstract-target
             self.constants += $(name) ;
         }
         self.constant.$(name) = $(value) ;
-        # Inject the constant in the scope of project-root module
+        # Inject the constant in the scope of project-root module.
         modules.poke $(self.project-module) : $(name) : $(value) ;
     }
 
@@ -493,11 +492,11 @@ class project-target : abstract-target
               : [ modules.peek $(parent) : self.constant.$(c) ] ;
         }
 
-        # Import rules from parent
+        # Import rules from parent.
         local this-module = [ project-module ] ;
         local parent-module = [ $(parent).project-module ] ;
-        # Don't import rules which comes from 'project-rules', they
-        # must be imported localized.
+        # Don't import rules coming from 'project-rules' as they must be
+        # imported localized.
         local user-rules = [ set.difference
             [ RULENAMES $(parent-module) ] :
             [ RULENAMES project-rules ] ] ;
@@ -532,16 +531,16 @@ local rule end-building ( main-target-instance )
 }
 
 
-# A named top-level target in Jamfile
+# A named top-level target in Jamfile.
 class main-target : abstract-target
 {
-    import errors ;
     import assert ;
-    import sequence ;
-    import print ;
     import build-request ;
+    import errors ;
     import feature ;
+    import print ;
     import property-set ;
+    import sequence ;
     import targets : start-building end-building ;
 
     rule __init__ ( name : project )
@@ -567,20 +566,18 @@ class main-target : abstract-target
         self.alternatives += $(target) ;
     }
 
-    # Returns the best viable alternative for this property-set
-    # See the documentation for selection rules.
+    # Returns the best viable alternative for this property-set. See the
+    # documentation for selection rules.
     local rule select-alternatives ( property-set debug ? )
     {
-        # When selecting alternatives we have to consider defaults,
-        # for example:
+        # When selecting alternatives we have to consider defaults, for example:
         #    lib l : l.cpp : <variant>debug ;
         #    lib l : l_opt.cpp : <variant>release ;
         # won't work unless we add default value <variant>debug.
         property-set = [ $(p).add-defaults ] ;
 
-        # The algorithm: we keep the current best viable alternative.
-        # When we've got new best viable alternative, we compare it
-        # with the current one.
+        # The algorithm: we keep the current best viable alternative. When we've
+        # got a new best viable alternative, we compare it with the current one.
 
         local best ;
         local best-properties ;
@@ -635,11 +632,10 @@ class main-target : abstract-target
         }
     }
 
-
     rule apply-default-build ( property-set )
     {
-        # 1. First, see what properties from default-build
-        # are already present in property-set.
+        # 1. First, see what properties from default-build are already present
+        # in property-set.
 
         local raw = [ $(property-set).raw ] ;
         local specified-features = $(raw:G) ;
@@ -653,18 +649,17 @@ class main-target : abstract-target
             }
         }
 
-        # 2. If there's any defaults to be applied, form the new
-        # build request. Pass it throw 'expand-no-defaults', since
-        # default-build might contain "release debug", which will
-        # result in two property-sets.
+        # 2. If there are any defaults to be applied, form a new build request.
+        # Pass it through to 'expand-no-defaults' since default-build might
+        # contain "release debug" resulting in two property-sets.
         local result ;
         if $(defaults-to-apply)
         {
             properties = [
               build-request.expand-no-defaults
 
-                # We have to compress subproperties here to prevent
-                # property lists like:
+                # We have to compress subproperties here to prevent property
+                # lists like:
                 #
                 #    <toolset>msvc <toolset-msvc:version>7.1 <threading>multi
                 #
@@ -673,10 +668,9 @@ class main-target : abstract-target
                 #    <toolset-msvc:version>7.1/<threading>multi
                 #    <toolset>msvc/<toolset-msvc:version>7.1/<threading>multi
                 #
-                # due to cross-product property combination.  That may
-                # be an indication that
-                # build-request.expand-no-defaults is the wrong rule
-                # to use here.
+                # due to a cross-product property combination. That may be an
+                # indication that build-request.expand-no-defaults is the wrong
+                # rule to use here.
                 [ feature.compress-subproperties $(raw) ]
                   $(defaults-to-apply)
             ] ;
@@ -693,7 +687,6 @@ class main-target : abstract-target
             {
                 result = [ property-set.empty ] ;
             }
-
         }
         else
         {
@@ -704,14 +697,14 @@ class main-target : abstract-target
 
     # Select an alternative for this main target, by finding all alternatives
     # which requirements are satisfied by 'properties' and picking the one with
-    # longest requirements set.
-    # Returns the result of calling 'generate' on that alternative.
+    # longest requirements set. Returns the result of calling 'generate' on that
+    # alternative.
     rule generate ( property-set )
     {
         start-building $(__name__) ;
 
-        # We want composite properties in build request act as if
-        # all the properties it expands too are explicitly specified.
+        # We want composite properties in build request act as if all the
+        # properties it expands too are explicitly specified.
         property-set = [ $(property-set).expand ] ;
 
         local all-property-sets = [ apply-default-build $(property-set) ] ;
@@ -730,11 +723,10 @@ class main-target : abstract-target
         return $(usage-requirements) [ sequence.unique $(result) ] ;
     }
 
-    # Generates the main target with the given property set
-    # and returns a list which first element is property-set object
-    # containing usage-requirements of generated target and with
-    # generated virtual target in other elements. It's possible
-    # that no targets are generated.
+    # Generates the main target with the given property set and returns a list
+    # which first element is property-set object containing usage-requirements
+    # of generated target and with generated virtual target in other elements.
+    # It's possible that no targets are generated.
     local rule generate-really ( property-set )
     {
         local best-alternatives = [ select-alternatives $(property-set) ] ;
@@ -746,10 +738,8 @@ class main-target : abstract-target
         }
         else
         {
-            local result = [ $(best-alternatives).generate $(property-set) ] ;
-
-            # Now return virtual targets for the only alternative
-            return $(result) ;
+            # Now return virtual targets for the only alternative.
+            return [ $(best-alternatives).generate $(property-set) ] ;
         }
     }
 
@@ -760,13 +750,13 @@ class main-target : abstract-target
         {
             $(a).rename $(new-name) ;
         }
-
     }
 }
 
-# Abstract target which refers to a source file.
-# This is artificial creature; it's usefull so that sources to
-# a target can be represented as list of abstract target instances.
+
+# Abstract target which refers to a source file. This is an artificial entity
+# allowing sources to a target to be represented using a list of abstract target
+# instances.
 class file-reference : abstract-target
 {
     import virtual-target ;
@@ -787,20 +777,19 @@ class file-reference : abstract-target
                                          : $(self.project) ] ;
     }
 
-    # Returns true if the referred file really exists;
+    # Returns true if the referred file really exists.
     rule exists ( )
     {
         location ;
         return $(self.file-path) ;
     }
 
-    # Returns the location of target. Needed by 'testing.jam'
+    # Returns the location of target. Needed by 'testing.jam'.
     rule location ( )
     {
         if ! $(self.file-location)
         {
             local source-location = [ $(self.project).get source-location ] ;
-
             for local src-dir in $(source-location)
             {
                 if ! $(self.file-location)
@@ -818,9 +807,10 @@ class file-reference : abstract-target
     }
 }
 
-# Given a target-reference, made in context of 'project',
-# returns the abstract-target instance that is referred to, as well
-# as properties explicitly specified for this reference.
+
+# Given a target-reference, made in context of 'project', returns the
+# abstract-target instance that is referred to, as well as properties explicitly
+# specified for this reference.
 rule resolve-reference ( target-reference : project )
 {
     # Separate target name from properties override
@@ -840,44 +830,42 @@ rule resolve-reference ( target-reference : project )
 }
 
 
-
-# Attempts to generate the target given by target reference, which
-# can refer both to a main target or to a file.
-# Returns a list consisting of
+# Attempts to generate the target given by target reference, which can refer
+# both to a main target or to a file. Returns a list consisting of
 # - usage requirements
 # - generated virtual targets, if any
-rule generate-from-reference
-   ( target-reference            # Target reference
-    : project                    # Project where the reference is made
-    : property-set               # Properties of the main target that
-                                 # makes the reference
-   )
+rule generate-from-reference (
+    target-reference  # Target reference.
+    : project         # Project where the reference is made.
+    : property-set    # Properties of the main target that makes the reference.
+)
 {
     local r = [ resolve-reference $(target-reference) : $(project) ] ;
     local target = $(r[1]) ;
     local sproperties = $(r[2]) ;
 
-    # Take properties which should be propagated and refine them
-    # with source-specific requirements.
+    # Take properties which should be propagated and refine them with
+    # source-specific requirements.
     local propagated = [ $(property-set).propagated ] ;
     local rproperties = [ $(propagated).refine $(sproperties) ] ;
     if $(rproperties[1]) = "@error"
     {
         errors.error
-          "When building" [ full-name ] " with properties " $(properties) :
+            "When building" [ full-name ] " with properties " $(properties) :
             "Invalid properties specified for " $(source) ":"
-              $(rproperties[2-]) ;
+            $(rproperties[2-]) ;
     }
     return [ $(target).generate $(rproperties) ] ;
 }
 
-# Given build request and requirements, return properties common to dependency
+
+# Given a build request and requirements, return properties common to dependency
 # build request and target build properties.
 rule common-properties ( build-request requirements )
 {
-    # For optimization, we add free requirements directly,
-    # without using complex algorithsm.
-    # This gives the complex algorithm better chance of caching results.
+    # For optimization, we add free requirements directly, without using a
+    # complex algorithm. This gives the complex algorithm better chance of
+    # caching results.
     local free = [ $(requirements).free ] ;
     local non-free = [ property-set.create
         [ $(requirements).base ]  [ $(requirements).incidental ] ] ;
@@ -890,24 +878,24 @@ rule common-properties ( build-request requirements )
     result = [ $($(key)).add-raw $(free) ] ;
 }
 
+
 # Given 'context' -- a set of already present properties, and 'requirements',
-# decide which extra properties should be applied to 'context'.
-# For conditional requirements, this means evaluating condition. For
-# indirect conditional requirements, this means calling a rule. Ordinary
-# requirements are always applied.
+# decide which extra properties should be applied to 'context'. For conditional
+# requirements, this means evaluating condition. For indirect conditional
+# requirements, this means calling a rule. Ordinary requirements are always
+# applied.
 #
-# Handles situation where evaluating one conditional requirements affects
-# condition of another conditional requirements, for example:
-#
+# Handles the situation where evaluating one conditional requirement affects
+# conditions of another conditional requirements, such as:
 #     <toolset>gcc:<variant>release <variant>release:<define>RELEASE
 #
-# If 'what' is 'refined' returns context refined with new requirements.
-# If 'what' is 'added' returns just the requirements that must be applied.
+# If 'what' is 'refined' returns context refined with new requirements. If
+# 'what' is 'added' returns just the requirements to be applied.
 rule evaluate-requirements ( requirements : context : what )
 {
-    # Apply non-conditional requirements.
-    # It's possible that further conditional requirement change a value set by
-    # non-conditional requirements. For example:
+    # Apply non-conditional requirements. It's possible that further conditional
+    # requirement change a value set by non-conditional requirements. For
+    # example:
     #
     #    exe a : a.cpp : <threading>single <toolset>foo:<threading>multi ;
     #
@@ -923,17 +911,16 @@ rule evaluate-requirements ( requirements : context : what )
     raw = [ property.refine $(raw) : $(unconditional) ] ;
 
     # We've collected properties that surely must be present in common
-    # properties. We now try to figure out what other properties
-    # should be added in order to satisfy rules (4)-(6) from the docs.
+    # properties. We now try to figure out what other properties should be added
+    # in order to satisfy rules (4)-(6) from the docs.
 
     local conditionals = [ $(requirements).conditional ] ;
-    # The 'count' variable has one element for each conditional feature
-    # and for each occurence of '<indirect-conditional>' feature.
-    # It's used as a loop counter: for each iteration of the loop
-    # before we remove one element and the property set should
-    # stabilize before we've done. It's supposed to #conditionals iterations
-    # should be enough for properties to propagate along conditions in any
-    # direction.
+    # The 'count' variable has one element for each conditional feature and for
+    # each occurence of '<indirect-conditional>' feature. It's used as a loop
+    # counter: for each iteration of the loop before we remove one element and
+    # the property set should stabilize before we're done. It's assumed that
+    # #conditionals iterations should be enough for properties to propagate
+    # along conditions in any direction.
     local count = $(conditionals)
                   [ $(requirements).get <conditional> ]
                   and-once-more ;
@@ -943,19 +930,18 @@ rule evaluate-requirements ( requirements : context : what )
     local current = $(raw) ;
 
     # It's assumed that ordinary conditional requirements can't add
-    # <indirect-conditional> properties, and that rules referred
-    # by <indirect-conditional> properties can't add new
-    # <indirect-conditional> properties. So the list of indirect conditionals
-    # does not change.
+    # <indirect-conditional> properties, and that rules referred by
+    # <indirect-conditional> properties can't add new <indirect-conditional>
+    # properties. So the list of indirect conditionals does not change.
     local indirect = [ $(requirements).get <conditional> ] ;
     indirect = [ MATCH @(.*) : $(indirect) ] ;
 
     local ok ;
     while $(count)
     {
-        # Evaluate conditionals in context of current properties
+        # Evaluate conditionals in context of current properties.
         local e = [ property.evaluate-conditionals-in-context $(conditionals)
-          : $(current) ] ;
+            : $(current) ] ;
 
         # Evaluate indirect conditionals.
         for local i in $(indirect)
@@ -971,10 +957,9 @@ rule evaluate-requirements ( requirements : context : what )
         }
         else
         {
-            # Oops, results of evaluation of conditionals has changed.
-            # Also 'current' contains leftover from previous evaluation.
-            # Recompute 'current' using initial properties and conditional
-            # requirements.
+            # Oops, results of evaluation of conditionals has changed. Also
+            # 'current' contains leftover from previous evaluation. Recompute
+            # 'current' using initial properties and conditional requirements.
             added-requirements = $(e) ;
             current = [ property.refine $(raw) : [ feature.expand $(e) ] ] ;
         }
@@ -984,7 +969,6 @@ rule evaluate-requirements ( requirements : context : what )
     {
         errors.error "Can't evaluate conditional properties " $(conditionals) ;
     }
-
 
     if $(what) = added
     {
@@ -1003,22 +987,22 @@ rule evaluate-requirements ( requirements : context : what )
 
 rule common-properties2 ( build-request requirements )
 {
-    # This guarantees that default properties are present
-    # in result, unless they are overrided by some requirement.
-    # FIXME: There is possibility that we've added <foo>bar, which is composite
-    # and expands to <foo2>bar2, but default value of <foo2> is not bar2,
-    # in which case it's not clear what to do.
+    # This guarantees that default properties are present in the result, unless
+    # they are overriden by some requirement. FIXME: There is possibility that
+    # we've added <foo>bar, which is composite and expands to <foo2>bar2, but
+    # default value of <foo2> is not bar2, in which case it's not clear what to
+    # do.
     #
     build-request = [ $(build-request).add-defaults ] ;
-    # Featured added by 'add-default' can be composite and expand
-    # to features without default values -- so they are not added yet.
-    # It could be clearer/faster to expand only newly added properties
-    # but that's not critical.
+    # Features added by 'add-default' can be composite and expand to features
+    # without default values -- so they are not added yet. It could be clearer/
+    # /faster to expand only newly added properties but that's not critical.
     build-request = [ $(build-request).expand ] ;
 
     return [ evaluate-requirements $(requirements)
       : $(build-request) : refined ] ;
 }
+
 
 # Implements the most standard way of constructing main target alternative from
 # sources. Allows sources to be either file or other main target and handles
@@ -1026,20 +1010,19 @@ rule common-properties2 ( build-request requirements )
 class basic-target : abstract-target
 {
     import build-request ;
-    import virtual-target ;
-    import targets ;
-    import property-set ;
-    import set ;
-    import sequence ;
-    import errors ;
-    import "class" : new ;
-    import property ;
-    import feature ;
     import build-system ;
+    import "class" : new ;
+    import errors ;
+    import feature ;
+    import property ;
+    import property-set ;
+    import sequence ;
+    import set ;
+    import targets ;
+    import virtual-target ;
 
-    rule __init__ ( name : project
-        : sources * : requirements * :
-        default-build * : usage-requirements * )
+    rule __init__ ( name : project : sources * : requirements *
+        : default-build * : usage-requirements * )
     {
         abstract-target.__init__ $(name) : $(project) ;
 
@@ -1065,10 +1048,9 @@ class basic-target : abstract-target
         }
     }
 
-    # Returns the list of abstract-targets which are used as sources.
-    # The extra properties specified for sources are not represented.
-    # The only user of this rule at the moment is the "--dump-tests"
-    # feature of the test system.
+    # Returns the list of abstract-targets which are used as sources. The extra
+    # properties specified for sources are not represented. The only user for
+    # this rule at the moment is the "--dump-tests" feature of the test system.
     rule sources ( )
     {
         if ! $(self.source-targets) {
@@ -1091,18 +1073,18 @@ class basic-target : abstract-target
         return $(self.default-build) ;
     }
 
-    # Returns the alternative condition for this alternative, if
-    # the condition is satisfied by 'property-set'.
+    # Returns the alternative condition for this alternative, if the condition
+    # is satisfied by 'property-set'.
     rule match ( property-set debug ? )
     {
-        # The condition is composed of all base non-conditional properties.
-        # It's not clear if we should expand 'self.requirements' or not.
-        # For one thing, it would be nice to be able to put
+        # The condition is composed of all base non-conditional properties. It's
+        # not clear if we should expand 'self.requirements' or not. For one
+        # thing, it would be nice to be able to put
         #    <toolset>msvc-6.0
         # in requirements.
-        # On the other hand, if we have <variant>release in condition it
-        # does not make sense to require <optimization>full to be in
-        # build request just to select this variant.
+        # On the other hand, if we have <variant>release in condition it does
+        # not make sense to require <optimization>full to be in build request
+        # just to select this variant.
         local bcondition = [ $(self.requirements).base ] ;
         local ccondition = [ $(self.requirements).conditional ] ;
         local condition = [ set.difference $(bcondition) : $(ccondition) ] ;
@@ -1129,12 +1111,11 @@ class basic-target : abstract-target
         }
     }
 
-    # Takes a target reference, which might be either target id
-    # or a dependency property, and generates that target using
-    # 'property-set' as build request.
+    # Takes a target reference, which might be either target id or a dependency
+    # property, and generates that target using 'property-set' as build request.
     #
-    # The results are added to to variable called 'result-var'.
-    # Usage requirements are added variable called 'usage-requirements-var'.
+    # The results are added to the variable called 'result-var'. Usage
+    # requirements are added to the variable called 'usage-requirements-var'.
     rule generate-dependencies ( dependencies * : property-set
         : result-var usage-requirements-var )
     {
@@ -1144,7 +1125,7 @@ class basic-target : abstract-target
             local id = $(dependency:G=) ;
 
             local result =
-              [ targets.generate-from-reference $(id) : $(self.project)
+                [ targets.generate-from-reference $(id) : $(self.project)
                 : $(property-set) ] ;
 
             $(result-var) += $(result[2-]:G=$(grist)) ;
@@ -1152,10 +1133,8 @@ class basic-target : abstract-target
         }
     }
 
-
-    # Determines final build properties, generates sources,
-    # and calls 'construct'. This method should not be
-    # overridden.
+    # Determines final build properties, generates sources, and calls
+    # 'construct'. This method should not be overridden.
     rule generate ( property-set )
     {
         if [ modules.peek : .debug-building ]
@@ -1166,21 +1145,19 @@ class basic-target : abstract-target
             targets.increase-indent ;
             ECHO [ targets.indent ] "Build request: " [ $(property-set).raw ] ;
             local cf = [ build-system.command-line-free-features ] ;
-            ECHO [ targets.indent ] "Command line free features: "
-              [ $(cf).raw ] ;
+            ECHO [ targets.indent ] "Command line free features: " [ $(cf).raw ] ;
             ECHO [ targets.indent ] "Target requirements: " [ $(self.requirements).raw ] ;
         }
 
         if ! $(self.generated.$(property-set))
         {
-            # Apply free features form the command line.  If user
-            # said
+            # Apply free features form the command line. If user said
             #   define=FOO
-            # he most likely want this define to be set for all compiles.
+            # he most likely wants this define to be set for all compiles.
             property-set = [ $(property-set).refine
-              [ build-system.command-line-free-features ] ] ;
+                [ build-system.command-line-free-features ] ] ;
             local rproperties = [ targets.common-properties $(property-set)
-              $(self.requirements) ] ;
+                $(self.requirements) ] ;
 
             if [ modules.peek : .debug-building ]
             {
@@ -1195,34 +1172,33 @@ class basic-target : abstract-target
                 local usage-requirements ;
 
                 generate-dependencies [ $(rproperties).dependency ]
-                  : $(rproperties)
-                  : properties usage-requirements ;
+                    : $(rproperties)
+                    : properties usage-requirements ;
 
                 generate-dependencies $(self.sources) : $(rproperties)
-                  : source-targets usage-requirements ;
+                    : source-targets usage-requirements ;
 
                 if [ modules.peek : .debug-building ]
                 {
                     ECHO ;
                     ECHO [ targets.indent ]
-                      "Usage requirements for $(self.name) are " $(usage-requirements) ;
+                        "Usage requirements for $(self.name) are " $(usage-requirements) ;
                 }
 
                 rproperties = [ property-set.create $(properties)
-                  $(usage-requirements) ] ;
+                    $(usage-requirements) ] ;
                 usage-requirements = [ property-set.create $(usage-requirements) ] ;
 
                 if [ modules.peek : .debug-building ]
                 {
                     ECHO [ targets.indent ]
-                      "Build properties: " [ $(rproperties).raw ] ;
+                        "Build properties: " [ $(rproperties).raw ] ;
                 }
 
                 local extra = [ $(rproperties).get <source> ] ;
                 source-targets += $(extra:G=) ;
-                # We might get duplicate sources, for example if
-                # we link to two library which have the same <library> in
-                # usage requirements.
+                # We might get duplicate sources, for example if we link to two
+                # libraries having the same <library> usage requirement.
                 source-targets = [ sequence.unique $(source-targets) ] ;
 
                 local result =
@@ -1234,11 +1210,10 @@ class basic-target : abstract-target
                     local gur = $(result[1]) ;
                     result = $(result[2-]) ;
 
-                    local s = [ create-subvariant
-                        $(result) :
-                        [ virtual-target.recent-targets ]
-                          : $(property-set) : $(source-targets)
-                      : $(rproperties) : $(usage-requirements) ] ;
+                    local s = [ create-subvariant $(result)
+                        : [ virtual-target.recent-targets ]
+                        : $(property-set) : $(source-targets)
+                        : $(rproperties) : $(usage-requirements) ] ;
                     virtual-target.clear-recent-targets ;
 
                     local ur = [ compute-usage-requirements $(s) ] ;
@@ -1259,12 +1234,12 @@ class basic-target : abstract-target
                 if $(rproperties[1]) = "@error"
                 {
                     ECHO [ targets.indent ]
-                      "Skipping build of: " [ full-name ] " cannot compute common properties" ;
+                        "Skipping build of: " [ full-name ] " cannot compute common properties" ;
                 }
                 else if [ $(rproperties).get <build> ] = no
                 {
                     ECHO [ targets.indent ]
-                      "Skipping build of: " [ full-name ] " <build>no in common properties" ;
+                        "Skipping build of: " [ full-name ] " <build>no in common properties" ;
                 }
                 else
                 {
@@ -1290,19 +1265,16 @@ class basic-target : abstract-target
         return $(self.generated.$(property-set)) ;
     }
 
-    # Given the set of generated targets, and refined build
-    # properties, determines and sets appripriate usage requirements
-    # on those targets.
+    # Given the set of generated targets, and refined build properties,
+    # determines and sets appripriate usage requirements on those targets.
     rule compute-usage-requirements ( subvariant )
     {
         local rproperties = [ $(subvariant).build-properties ] ;
         xusage-requirements = [ targets.evaluate-requirements
-            $(self.usage-requirements)
-              : $(rproperties)
-                : added ] ;
+            $(self.usage-requirements) : $(rproperties) : added ] ;
 
-        # We generate all dependency properties and add them,
-        # as well as their usage requirements, to result.
+        # We generate all dependency properties and add them, as well as their
+        # usage requirements, to the result.
         local extra ;
         generate-dependencies [ $(xusage-requirements).dependency ] :
             $(rproperties) : extra extra ;
@@ -1310,11 +1282,11 @@ class basic-target : abstract-target
         local result = [ property-set.create
             [ $(xusage-requirements).non-dependency ] $(extra) ] ;
 
-        # Propagate usage requirements we've got from sources, except
-        # for the <pch-header> and <pch-file> features.
+        # Propagate usage requirements we've got from sources, except for the
+        # <pch-header> and <pch-file> features.
         #
-        # That feature specifies which pch file to use, and should apply
-        # only to direct dependents. Consider:
+        # That feature specifies which pch file to use, and should apply only to
+        # direct dependents. Consider:
         #
         #   pch pch1 : ...
         #   lib lib1 : ..... pch1 ;
@@ -1323,27 +1295,22 @@ class basic-target : abstract-target
         #
         # Here, lib2 should not get <pch-header> property from pch1.
         #
-        # Essentially, when those two features are in usage requirements,
-        # they are propagated only to direct dependents. We might need
-        # a more general mechanism, but for now, only those two
-        # features are special.
+        # Essentially, when those two features are in usage requirements, they
+        # are propagated only to direct dependents. We might need a more general
+        # mechanism, but for now, only those two features are special.
         local raw = [ $(subvariant).sources-usage-requirements ] ;
         raw = [ $(raw).raw ] ;
         raw = [ property.change $(raw) : <pch-header> ] ;
         raw = [ property.change $(raw) : <pch-file> ] ;
-        result = [ $(result).add [ property-set.create $(raw) ] ] ;
-
-        return $(result) ;
+        return [ $(result).add [ property-set.create $(raw) ] ] ;
     }
 
-    # Creates a new subvariant-dg instances for 'targets'
-    # - 'root-targets' the virtual targets will be returned to dependents
-    # - 'all-targets' all virtual
-    #      targets created while building this main target
-    # - 'build-request' is property-set instance with requested build properties
+    # Creates new subvariant instances for 'targets'.
+    # 'root-targets'  - virtual targets to be returned to dependants
+    # 'all-targets'   - virtual targets created while building this main target
+    # 'build-request' - property-set instance with requested build properties
     local rule create-subvariant ( root-targets *
-        : all-targets * : build-request : sources * :
-        rproperties
+        : all-targets * : build-request : sources * : rproperties
         : usage-requirements )
     {
         for local e in $(root-targets)
@@ -1351,10 +1318,10 @@ class basic-target : abstract-target
             $(e).root true ;
         }
 
-        # Process all vtargets that will be created if this main target
+        # Process all virtual targets that will be created if this main target
         # is created.
         local s = [ new subvariant $(__name__) : $(build-request) : $(sources)
-          : $(rproperties) : $(usage-requirements) : $(all-targets) ] ;
+            : $(rproperties) : $(usage-requirements) : $(all-targets) ] ;
         for local v in $(all-targets)
         {
             if ! [ $(v).creating-subvariant ]
@@ -1365,9 +1332,9 @@ class basic-target : abstract-target
         return $(s) ;
     }
 
-    # Constructs the virtual targets for this abstract targets and
-    # the dependecy graph. Returns the list of virtual targets.
-    # Should be overrided in derived classes.
+    # Constructs virtual targets for this abstract target and the dependency
+    # graph. Returns the list of virtual targets. Should be overriden in derived
+    # classes.
     rule construct ( name : source-targets * : properties * )
     {
         errors.error "method should be defined in derived classes" ;
@@ -1379,11 +1346,11 @@ class typed-target : basic-target
 {
     import generators ;
 
-    rule __init__ ( name : project : type
-        : sources * : requirements * : default-build * : usage-requirements * )
+    rule __init__ ( name : project : type : sources * : requirements *
+        : default-build * : usage-requirements * )
     {
-        basic-target.__init__ $(name) : $(project)
-          : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;
+        basic-target.__init__ $(name) : $(project) : $(sources)
+            : $(requirements) : $(default-build) : $(usage-requirements) ;
 
         self.type = $(type) ;
     }
@@ -1404,8 +1371,8 @@ class typed-target : basic-target
             ECHO "warn: Unable to construct" [ full-name ] ;
 
             # Are there any top-level generators for this type/property set.
-            if ! [ generators.find-viable-generators
-                $(self.type) : $(property-set) ]
+            if ! [ generators.find-viable-generators $(self.type)
+                : $(property-set) ]
             {
                 ECHO "error: no generators were found for type '$(self.type)'" ;
                 ECHO "error: and the requested properties" ;
@@ -1415,7 +1382,6 @@ class typed-target : basic-target
                 EXIT ;
             }
         }
-
         return $(r) ;
     }
 }
@@ -1425,7 +1391,7 @@ class typed-target : basic-target
 # 'sources'. If there are any objects in 'sources', they are treated as main
 # target instances, and the name of such targets are adjusted to be
 # '<name_of_this_target>__<name_of_source_target>'. Such renaming is disabled if
-# a non-empty value is passed for 'no-renaming' parameter.
+# a non-empty value is passed as the 'no-renaming' parameter.
 #
 rule main-target-sources ( sources * : main-target-name : no-renaming ? )
 {
@@ -1454,13 +1420,12 @@ rule main-target-sources ( sources * : main-target-name : no-renaming ? )
 }
 
 
-# Returns the requirement to use when declaring a main target, which are
-# obtained by
-# - translating all specified property paths, and
-# - refining project requirements with the one specified for the target
+# Returns the requirements to use when declaring a main target, obtained by
+# translating all specified property paths and refining project requirements
+# with the ones specified for the target.
 rule main-target-requirements (
-  specification *  # Properties explicitly specified for a main target
-  : project        # Project where the main target is to be declared
+    specification *  # Properties explicitly specified for the main target.
+    : project        # Project where the main target is to be declared.
 )
 {
     specification += [ toolset.requirements ] ;
@@ -1468,7 +1433,6 @@ rule main-target-requirements (
     local requirements = [ property-set.refine-from-user-input
         [ $(project).get requirements ] : $(specification) :
         [ $(project).project-module ] : [ $(project).get location ] ] ;
-
     if $(requirements[1]) = "@error"
     {
         errors.error "Conflicting requirements for target:" $(requirements) ;
@@ -1477,25 +1441,23 @@ rule main-target-requirements (
 }
 
 
-# Returns the use requirement to use when declaring a main target, which are
-# obtained by
-# - translating all specified property paths, and
-# - adding project's usage requirements
+# Returns the usage requirements to use when declaring a main target, which are
+# obtained by translating all specified property paths and adding project's
+# usage requirements.
 rule main-target-usage-requirements (
-  specification *  # Use-properties explicitly specified for a main target
-  : project        # Project where the main target is to be declared
+    specification *  # Use-properties explicitly specified for a main target.
+    : project        # Project where the main target is to be declared.
 )
 {
-    local loc = [ $(project).get location ] ;
     local project-usage-requirements = [ $(project).get usage-requirements ] ;
 
-    # We don't use 'refine-from-user-input' because I'm not sure if:
-    # - removing of parent's usage requirements makes sense
+    # We don't use 'refine-from-user-input' because:
+    # - I'm not sure if removing of parent's usage requirements makes sense
     # - refining of usage requirements is not needed, since usage requirements
     #   are always free.
     local usage-requirements = [ property-set.create-from-user-input
         $(specification)
-          : [ $(project).project-module ] [ $(project).get location ] ] ;
+        : [ $(project).project-module ] [ $(project).get location ] ] ;
 
     return [ $(project-usage-requirements).add $(usage-requirements) ] ;
 }
@@ -1505,9 +1467,9 @@ rule main-target-usage-requirements (
 # obtained by using the specified value if not empty and parent's default build
 # attribute otherwise.
 rule main-target-default-build (
-  specification * # Default build explicitly specified for a main target
-  : project       # Project where the main target is to be declared
-     )
+    specification *  # Default build explicitly specified for a main target.
+    : project        # Project where the main target is to be declared.
+)
 {
     local result ;
     if $(specification)
@@ -1522,8 +1484,7 @@ rule main-target-default-build (
 }
 
 
-# Registers the specified target as a main target alternatives.
-# Returns 'target'.
+# Registers the specified target as a main target alternative and returns it.
 rule main-target-alternative ( target )
 {
     local ptarget = [ $(target).project ] ;
@@ -1535,17 +1496,15 @@ rule main-target-alternative ( target )
 # Creates a typed-target with the specified properties. The 'name', 'sources',
 # 'requirements', 'default-build' and 'usage-requirements' are assumed to be in
 # the form specified by the user in Jamfile corresponding to 'project'.
-rule create-typed-target ( type : project :
-    name : sources * : requirements * : default-build *
-    : usage-requirements * )
+rule create-typed-target ( type : project : name : sources * : requirements *
+    : default-build * : usage-requirements * )
 {
     return [
-      targets.main-target-alternative
-      [ new typed-target $(name) : $(project) : $(type)
-        : [ targets.main-target-sources $(sources) : $(name) ]
-        : [ targets.main-target-requirements $(requirements) : $(project) ]
-        : [ targets.main-target-default-build $(default-build) : $(project) ]
-        : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-      ] ] ;
-
+        targets.main-target-alternative
+        [ new typed-target $(name) : $(project) : $(type)
+            : [ targets.main-target-sources $(sources) : $(name) ]
+            : [ targets.main-target-requirements $(requirements) : $(project) ]
+            : [ targets.main-target-default-build $(default-build) : $(project) ]
+            : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
+        ] ] ;
 }
