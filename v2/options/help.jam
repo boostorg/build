@@ -25,15 +25,16 @@ import path ;
 
 # The help system options are parsed here and handed off to the doc
 # module to translate into documentation requests and actions. The
-# understood options are::
+# understood options are:
 #
-#    --help-all
-#    --help-enable-<option>
 #    --help-disable-<option>
-#    --help-output <type>
-#    --help-output-file <file>
+#    --help-doc-options
+#    --help-enable-<option>
+#    --help-internal
 #    --help-options
 #    --help-usage
+#    --help-output <type>
+#    --help-output-file <file>
 #    --help [<module-or-class>]
 #
 rule process (
