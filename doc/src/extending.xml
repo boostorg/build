@@ -279,13 +279,13 @@ actions inline-file
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
 generators.register-composing mex.mex : CPP LIB : MEX ;
 </programlisting>
-        Standard generators take a <emphasis>single</emphasis> source of type
-        <code>VERBATIM</code> and produces a result. The second generator
-        takes any number of sources, which can have either the
-        <code>CPP</code> or the <code>LIB</code> type. Composing generators
+        The first (standard) generator takes a <emphasis>single</emphasis>
+        source of type <code>VERBATIM</code> and produces a result. The second
+        (composing) generator takes any number of sources, which can have either
+        the <code>CPP</code> or the <code>LIB</code> type. Composing generators
         are typically used for generating top-level target type. For example,
-        the first generator invoked when building an <code>exe</code> target
-        is a composing generator corresponding to the proper linker.
+        the first generator invoked when building an <code>exe</code> target is
+        a composing generator corresponding to the proper linker.
       </para>
 
       <para>You should also know about two specific functions for registering
@@ -743,18 +743,12 @@ glib codegen ;
     </para>
 
     <para>
-      Note that because you can associate a custom generator with a target
-      type, the logic of building can be rather compiler. 
-      <!-- "compiler" is not an adjective.  The logic can't be "rather
-           compiler."  What you might mean here is completely
-           mysterious to me -->
-      For example, the
+      Note that because you can associate a custom generator with a target type,
+      the logic of building can be rather complicated. For example, the
       <code>boostbook</code> module declares a target type
-      <code>BOOSTBOOK_MAIN</code> and a custom generator for that
-      type. You can use that as example if your main target rule is
-      non-trivial.
+      <code>BOOSTBOOK_MAIN</code> and a custom generator for that type. You can
+      use that as example if your main target rule is non-trivial.
     </para>
-         
   </section>
 
   <section id="bbv2.extending.toolset_modules">
