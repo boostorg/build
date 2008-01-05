@@ -37,30 +37,28 @@
     </listitem>
   </orderedlist>
 
-  <para>It's quite easy to achieve. You write special verbatim files
-  that are just C++, except that the very first line of the file
-  contains the name of a variable that should be generated. A simple tool
-  is created that takes a verbatim file and creates a cpp file with
-  a single <code>char*</code> variable whose name is taken from the first line
-  of the verbatim file and whose value is the file's properly quoted content.</para>
+  <para>It's quite easy to achieve. You write special verbatim files that are
+  just C++, except that the very first line of the file contains the name of a
+  variable that should be generated. A simple tool is created that takes a
+  verbatim file and creates a cpp file with a single <code>char*</code> variable
+  whose name is taken from the first line of the verbatim file and whose value
+  is the file's properly quoted content.</para>
 
   <para>Let's see what Boost.Build can do.</para>
 
-  <para>First off, Boost.Build has no idea about "verbatim files". So,
-  you must register a new target type. The following code does
-  it:</para>
+  <para>First off, Boost.Build has no idea about "verbatim files". So, you must
+  register a new target type. The following code does it:</para>
 
 <programlisting>
 import type ;
-type.register VERBATIM : vrb ;
+type.register VERBATIM : verbatim ;
 </programlisting>
 
-  <para>The first parameter to
-  <functionname>type.register</functionname> gives the name of the
-  declared type. By convention, it's uppercase. The second parameter
-  is the suffix for files of this type. So, if Boost.Build sees
-  <filename>code.vrb</filename> in a list of sources, it knows that it's of type
-  <code>VERBATIM</code>.</para>
+  <para>The first parameter to <functionname>type.register</functionname> gives
+  the name of the declared type. By convention, it's uppercase. The second
+  parameter is the suffix for files of this type. So, if Boost.Build sees
+  <filename>code.verbatim</filename> in a list of sources, it knows that it's of
+  type <code>VERBATIM</code>.</para>
 
   <para>Next, you tell Boost.Build that the verbatim files can be
   transformed into C++ files in one build step.  A
@@ -96,26 +94,26 @@ actions inline-file
         -->
 </para>
 
-  <para>Now, we're ready to tie it all together. Put all the code
-  above in file <filename>verbatim.jam</filename>, add <code>import verbatim ;</code> 
-  to <filename>project-root.jam</filename>, and it's possible to write
-  the following in Jamfile:</para>
+  <para>Now, we're ready to tie it all together. Put all the code above in file
+    <filename>verbatim.jam</filename>, add <code>import verbatim ;</code> to
+    <filename>project-root.jam</filename>, and it's possible to write the
+    following in Jamfile:
+  </para>
 
 <programlisting>
 exe codegen : codegen.cpp class_template.verbatim usage.verbatim ;
 </programlisting>
 
-  <para>
-The verbatim files will be automatically converted into C++
-and linked it.
+  <para>The listed verbatim files will be automatically converted into C++,
+    compiled and then linked to the codegen executable.
   </para>
 
-      <para>In the subsequent sections, we will extend this example, and review
-        all the mechanisms in detail. The complete code is available in <filename>example/customization</filename>
-        directory.
-      </para>
-
+  <para>In subsequent sections, we will extend this example, and review all the
+    mechanisms in detail. The complete code is available in the
+    <filename>example/customization</filename> directory.
+  </para>
   </section>
+
   <section id="bbv2.extending.targets">
     <title>Target types</title>
       <para>The first thing we did in the <link
