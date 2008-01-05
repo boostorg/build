@@ -848,10 +848,10 @@ local rule scan-class (
     }
 }
 
-# Scan a module file for documentation comments. This also
-# invokes any actions assigned to the module. The actions
-# are the rules that do the actual output of the documentation.
-# This rue is invoked as the header scan rule for the module file.
+# Scan a module file for documentation comments. This also invokes any actions
+# assigned to the module. The actions are the rules that do the actual output of
+# the documentation. This rule is invoked as the header scan rule for the module
+# file.
 #
 rule scan-module (
     target # The module file.

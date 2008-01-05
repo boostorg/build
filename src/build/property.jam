@@ -87,9 +87,9 @@ rule refine ( properties * : requirements * )
     }
 }
 
-# Removes all conditional properties which conditions are not met
-# For those with met conditions, removes the condition. Properies
-# in conditions are looked up in 'context'
+# Removes all conditional properties which conditions are not met. For those
+# with met conditions, removes the condition. Properties in conditions are
+# looked up in 'context'.
 rule evaluate-conditionals-in-context ( properties * : context * )
 {
     local base ;
