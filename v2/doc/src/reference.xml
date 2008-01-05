@@ -1436,10 +1436,10 @@ using stlport : <optional><replaceable>version</replaceable></optional> : <repla
       <orderedlist>
         <listitem>
           <simpara>
-            For each alternative <emphasis>condition</emphasis> is defined
-            as the set of base properies in requirements. [Note: it might be
-            better to specify the condition explicitly, as in
-            conditional requirements].
+            For each alternative <emphasis>condition</emphasis> is defined as
+            the set of base properties in requirements. [Note: it might be
+            better to specify the condition explicitly, as in conditional
+            requirements].
           </simpara>
         </listitem>
         
