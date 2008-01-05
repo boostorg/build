@@ -279,18 +279,18 @@ local rule print-help-usage ( )
     print.list-item -a;
         Build all targets, even if they are current. ;
     print.list-item -fx;
-        Read '"x"' as the Jamfile for building instead of searching
-        for the Boost.Build system. ;
+        Read '"x"' as the Jamfile for building instead of searching for the
+        Boost.Build system. ;
     print.list-item -jx;
         Run up to '"x"' commands concurrently. ;
     print.list-item -n;
-        Do not execute build commands. Instead print out the commands
-        as they would be executed if building. ;
+        Do not execute build commands. Instead print out the commands as they
+        would be executed if building. ;
     print.list-item -ox;
-        Write the build commands to the file '"x"'. ;
+        Output the used build commands to file '"x"'. ;
     print.list-item -q;
-        Quit as soon as the build of a target fails. Specifying this prevents the
-        attempt of building as many targets as possible regardless of failures. ;
+        Quit as soon as a build failure is encountered. Without this option
+        Boost.Jam will continue building as many targets as it can.
     print.list-item -sx=y;
         Sets a Jam variable '"x"' to the value '"y"', overriding any value that
         variable would have from the environment. ;
@@ -299,18 +299,19 @@ local rule print-help-usage ( )
     print.list-item -v;
         Display the version of bjam. ;
     print.list-item --x;
-        Option '"x"' is ignored but considered and option. The option is then
-        available from the '"ARGV"' variable. ;
+        Any option not explicitly handled by Boost.Jam remains available to
+        build scripts using the '"ARGV"' variable. ;
     print.list-item -dn;
         Enables output of diagnostic messages. The debug level '"n"' and all
         below it are enabled by this option. ;
     print.list-item -d+n;
-        Enables output of diagnostic messages. Only the output for debug level '"n"'
-        is enabled. ;
+        Enables output of diagnostic messages. Only the output for debug level
+        '"n"' is enabled. ;
     print.list-end ;
     print.section "Debug Levels"
-        Each debug level shows a different set of information. Usually with the higher
-        levels producing more verbose information. The following levels are supported:
+        Each debug level shows a different set of information. Usually with
+        higher levels producing more verbose information. The following levels
+        are supported:
         ;
     print.list-start ;
     print.list-item 0;
@@ -353,9 +354,9 @@ local rule print-help-options (
     )
 {
     print.section "Help Options"
-        These are all the options available for enabling or disabling
-        to control the help system in various ways. Options can be enabled
-        or disabled with '"--help-enable-<option>"', and "'--help-disable-<option>'"
+        These are all the options available for enabling or disabling to control
+        the help system in various ways. Options can be enabled or disabled with
+        '"--help-enable-<option>"', and "'--help-disable-<option>'"
         respectively.
         ;
     local options-to-list = [ MATCH ^[.]option[.](.*) : $($(module-name).variables) ] ;
