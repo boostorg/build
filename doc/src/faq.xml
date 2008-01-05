@@ -216,12 +216,12 @@ local gtk_includes = [ SHELL "gtk-config --cflags" ] ;
   </section>
 
   <section>
-    <title>How to get the project-root location?
+    <title>How to get the project root (a.k.a. Jamroot.jam) location?
     </title>
 
-    <para>You might want to use the location of the project-root in your
-      Jamfiles. To do it, you'd need to declare path constant in your
-      project-root.jam:
+    <para>
+      You might want to use your project's root location in your Jamfiles. To
+      access it just declare a path constant in your Jamroot.jam file using:
 <programlisting>
 path-constant TOP : . ;
 </programlisting>
