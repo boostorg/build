@@ -12,28 +12,28 @@
 #   - an instance of 'project-target' class (from targets.jam)
 #     (given a module name, can be obtained by 'target' rule)
 #
-#  Typically, projects are created as result of loading Jamfile, which is
-#  do by rules 'load' and 'initialize', below. First, module for Jamfile
-#  is loaded and new project-attributes instance is created. Some rules
-#  necessary for project are added to the module (see 'project-rules' module)
-#  at the bottom of this file.
-#  Default project attributes are set (inheriting attributes of parent project, if
-#  it exists). After that, Jamfile is read. It can declare its own attributes,
-#  via 'project' rule, which will be combined with already set attributes.
-#
+#  Typically, projects are created as result of loading a Jamfile, which is done
+#  by rules 'load' and 'initialize', below. First, module for Jamfile is loaded
+#  and new project-attributes instance is created. Some rules necessary for
+#  project are added to the module (see 'project-rules' module) at the bottom of
+#  this file. Default project attributes are set (inheriting attributes of
+#  parent project, if it exists). After that, Jamfile is read. It can declare
+#  its own attributes, via 'project' rule, which will be combined with already
+#  set attributes.
 #
 #  The 'project' rule can also declare project id, which will be associated with 
 #  the project module.
 #
-#  There can also be 'standalone' projects. They are created by calling 'initialize'
-#  on arbitrary module, and not specifying location. After the call, the module can
-#  call 'project' rule, declare main target and behave as regular projects. However,
-#  since it's not associated with any location, it's better declare only prebuilt 
-#  targets.
+#  There can also be 'standalone' projects. They are created by calling
+#  'initialize' on arbitrary module, and not specifying location. After the
+#  call, the module can call 'project' rule, declare main target and behave as
+#  regular projects. However, since it's not associated with any location, it's
+#  better declare only prebuilt targets.
 #
-#  The list of all loaded Jamfile is stored in variable .project-locations. It's possible
-#  to obtain module name for a location using 'module-name' rule. The standalone projects
-#  are not recorded, the only way to use them is by project id.
+#  The list of all loaded Jamfile is stored in variable .project-locations. It's
+#  possible to obtain module name for a location using 'module-name' rule. The
+#  standalone projects are not recorded, the only way to use them is by project
+#  id.
 
 
 import modules : peek poke ;
@@ -67,15 +67,15 @@ rule load ( jamfile-location )
     {      
         load-jamfile $(jamfile-location) ;
                 
-        # We want to make sure that child project are loaded only
-        # after parent projects. In particular, because parent projects
-        # define attributes whch are inherited by children, and we don't
-        # want children to be loaded before parents has defined everything.
+        # We want to make sure that child project are loaded only after parent
+        # projects. In particular, because parent projects define attributes
+        # which are inherited by children, and we don't want children to be
+        # loaded before parents has defined everything.
         #
-        # While "build-project" and "use-project" can potentially refer
-        # to child projects from parent projects, we don't immediately
-        # loading child projects when seing those attributes. Instead,
-        # we record the minimal information that will be used only later.
+        # While "build-project" and "use-project" can potentially refer to child
+        # projects from parent projects, we don't immediately loading child
+        # projects when seing those attributes. Instead, we record the minimal
+        # information that will be used only later.
         load-used-projects $(module-name) ;
     }                
     return $(module-name) ;        
@@ -906,16 +906,14 @@ module project-rules
             {
                 # Not Jamroot
                 if $(explicit-build-dir)
-                {                    
-                    errors.user-error "When --build-dir is specified, the 'build-project'"
-                      : "attribute is allowed only for top-level 'project' invocations" ;                      
-                }                
-            }                
+                {
+                    errors.user-error "When --build-dir is specified, the 'build-dir' project"
+                      : "attribute is allowed only for top-level 'project' invocations" ;
+                }
+            }
         }
-        
-
     }
-    
+
     # Declare and set a project global constant. Project global constants are
     # normal variables but should not be changed. They are applied to every
     # child Jamfile.

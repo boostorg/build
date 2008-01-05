@@ -208,11 +208,10 @@ rule update-po-dispatch
     EXISTING_PO on $(<) = $(>[1]) ;
 }
 
-# Due to fancy interaction of existing and updated, this rule
-# can be called with with one source, in which case we copy
-# the lonely source into EXISTING_PO, or with two sources,
-# in which case the action body expands to nothing.
-# I'd really like to have "missing" action modifier.
+# Due to fancy interaction of existing and updated, this rule can be called with
+# one source, in which case we copy the lonely source into EXISTING_PO, or with
+# two sources, in which case the action body expands to nothing. I'd really like
+# to have "missing" action modifier.
 actions quietly existing updated create-po bind EXISTING_PO
 {
     cp$(_)"$(>[1])"$(_)"$(EXISTING_PO)"$($(>[2]:E=ok))    
