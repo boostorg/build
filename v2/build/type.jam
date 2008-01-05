@@ -6,16 +6,16 @@
 #  Deals with target type declaration and defines target class which supports
 #  typed targets.
 
-import feature ;
-import generators : * ;
 import "class" : new ;
 import errors ;
+import feature ;
+import generators : * ;
+import project ;
 import property ;
 import scanner ;
-import project ;
 
-# This creates a circular dependency
-# project-test1 -> project -> project-root -> builtin -> type -> targets -> project
+# The follwing import would create a circular dependency:
+# project -> project-root -> builtin -> type -> targets -> project
 # import targets ;
 
 # The feature is optional so it would never get added implicitly. It's used only
@@ -24,6 +24,7 @@ feature.feature target-type : : composite optional ;
 
 feature.feature main-target-type : : optional incidental ;
 feature.feature base-target-type : : composite optional free ;
+
 
 # Registers a target type, possible derived from a 'base-type'. Providing a list
 # of 'suffixes' here is a shortcut for separately calling the register-suffixes
@@ -51,7 +52,7 @@ rule register ( type : suffixes * : base-type ? )
 
         if $(suffixes)-is-not-empty
         {
-            # Specify mapping from suffixes to type
+            # Specify mapping from suffixes to type.
             register-suffixes $(suffixes) : $(type) ;
             # Generated targets of 'type' will use the first of 'suffixes'. This
             # may be overriden.
@@ -82,7 +83,7 @@ rule register ( type : suffixes * : base-type ? )
 # of that type.
 rule type-to-rule-name ( type )
 {
-    # Lowercase everything. Convert underscores to dashes.ame.
+    # Lowercase everything. Convert underscores to dashes.
     import regex ;
     local n = [ regex.split $(type:L) "_" ] ;
     return $(n:J=-) ;
@@ -110,7 +111,7 @@ rule register-suffixes ( suffixes + : type )
         else if $(.type.$(s)) != type
         {
             errors.error Attempting to specify multiple types for suffix \"$(s)\"
-              : "Old type $(.type.$(s)), New type $(type)" ;
+                : "Old type $(.type.$(s)), New type $(type)" ;
         }
     }
 }
@@ -150,13 +151,15 @@ rule set-scanner ( type : scanner )
 # Returns a scanner instance appropriate to 'type' and 'properties'.
 rule get-scanner ( type : property-set )
 {
-    if $(.scanner.$(type)) {
+    if $(.scanner.$(type))
+    {
         return [ scanner.get $(.scanner.$(type)) : $(property-set) ] ;
     }
 }
 
 
-# returns  type and all of its bases in order of their distance from type.
+# Returns the given type and all of its base types in order of their distance
+# from type.
 rule all-bases ( type )
 {
     local result = $(type) ;
@@ -204,10 +207,10 @@ rule is-subtype ( type base )
 }
 
 
-# Store suffixes for generated targets
+# Store suffixes for generated targets.
 .suffixes = [ new property-map ] ;
 
-# Store prefixes for generated targets (e.g. "lib" for library)
+# Store prefixes for generated targets (e.g. "lib" for library).
 .prefixes = [ new property-map ] ;
 
 
@@ -272,7 +275,7 @@ rule generated-target-prefix ( type : property-set )
 }
 
 
-# Common rules for prefix/suffix provisioning follow
+# Common rules for prefix/suffix provisioning follow.
 
 local rule set-generated-target-ps ( ps : type : properties * : psval )
 {
@@ -359,22 +362,22 @@ rule type ( filename )
 
 
 # Rule used to construct all main targets. Note that this rule gets imported
-# into the global namespace under different names and exactly what type of
-# target it is supposed to construct is read from the name of the rule actually
-# used to invoke it.
+# into the global namespace under different alias names and exactly what type of
+# target it is supposed to construct is read from the name of the alias rule
+# actually used to invoke it.
 rule main-target-rule ( name : sources * : requirements * : default-build *
-                        : usage-requirements * )
+    : usage-requirements * )
 {
-    # First find the required target type, which is equal to the rule name used
-    # to invoke us.
+    # First discover the required target type, which is equal to the rule name
+    # used to invoke us.
     local bt = [ BACKTRACE 1 ] ;
     local rulename = $(bt[4]) ;
 
     local project = [ project.current ] ;
 
-    # This is a circular module dependency, so it must be imported here
+    # This is a circular module dependency so it must be imported here.
     import targets ;
     return [ targets.create-typed-target $(.main-target-type.$(rulename))
-      : $(project) : $(name) : $(sources) : $(requirements)
-      : $(default-build) : $(usage-requirements) ] ;
+        : $(project) : $(name) : $(sources) : $(requirements)
+        : $(default-build) : $(usage-requirements) ] ;
 }

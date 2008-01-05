@@ -1,8 +1,8 @@
-# Copyright 2003, 2005, 2007 Dave Abrahams 
-# Copyright 2006, 2007 Rene Rivera 
-# Copyright 2003, 2004, 2005, 2006 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003, 2005, 2007 Dave Abrahams
+# Copyright 2006, 2007 Rene Rivera
+# Copyright 2003, 2004, 2005, 2006 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # This file is part of Boost.Build version 2.  You can think of it as
 # forming the main() routine.  It is invoked by the bootstrapping code
@@ -64,42 +64,42 @@ if $(test-config)
 {
     if $(debug-config)
     {
-        ECHO "notice: loading test-config.jam from" 
+        ECHO "notice: loading test-config.jam from"
           [ NORMALIZE_PATH $(test-config[1]) ] ;
         ECHO "notice: user-config.jam and site-config.jam will be ignored" ;
-    }        
-       
-    module test-config 
+    }
+
+    module test-config
     {
         import toolset : using : using ;
     }
-    import test-config ;    
+    import test-config ;
 }
 
 local ignore-config ;
-if $(test-config) || --ignore-config in [ modules.peek : ARGV ] 
-{    
+if $(test-config) || --ignore-config in [ modules.peek : ARGV ]
+{
     ignore-config = true ;
 }
 
 local user-path = [ os.home-directories ] [ os.environ BOOST_BUILD_PATH ] ;
-    
+
 # Unless ignore-config is set, load the configuration file in
 # $(path)/$(basename).jam
 local rule load-config ( basename : path + )
-{       
-    if ! $(ignore-config)    
+{
+    if ! $(ignore-config)
     {
         if $(debug-config)
         {
             ECHO notice: searching \"$(path)\" for \"$(basename).jam\" ;
             local where = [ GLOB $(path) : $(basename).jam ] ;
             if $(where)
-            {            
+            {
                 ECHO notice: loading $(basename).jam from
                   [ NORMALIZE_PATH $(where[1]) ] ;
-            }        
-        }        
+            }
+        }
 
         modules.load $(basename) : : $(path) ;
         project.load-used-projects $(basename) ;
@@ -109,17 +109,17 @@ local rule load-config ( basename : path + )
 #
 # Load site-config.
 #
-module site-config 
+module site-config
 {
     import project : initialize ;
-    initialize site-config ;        
+    initialize site-config ;
 }
 
-local site-path = /etc $(user-path) ; 
+local site-path = /etc $(user-path) ;
 
 if [ os.name ] in NT CYGWIN
-{    
-    site-path = [ modules.peek : SystemRoot ] $(user-path) ;   
+{
+    site-path = [ modules.peek : SystemRoot ] $(user-path) ;
 }
 
 load-config site-config : $(site-path) ;
@@ -127,30 +127,28 @@ load-config site-config : $(site-path) ;
 #
 # Load user-config.
 #
-module user-config 
+module user-config
 {
     import project : initialize ;
-    initialize user-config ;        
+    initialize user-config ;
 }
 
 local user-config-path = [ MATCH ^--user-config=(.*) : $(argv) ] ;
-
 user-config-path ?= [ os.environ BOOST_BUILD_USER_CONFIG ] ;
 
 if $(user-config-path)
 {
     if $(debug-config)
     {
-        ECHO "Loading explicitly specifier user configuration file:" ;
+        ECHO "Loading explicitly specified user configuration file:" ;
         ECHO "    $(user-config-path)" ;
     }
-    
-    
+
     modules.load user-config : $(user-config-path:BS) : $(user-config-path:D) ;
     project.load-used-projects user-config ;
 }
 else
-{    
+{
     load-config user-config : $(user-path) ;
 }
 
@@ -164,7 +162,7 @@ local feature-toolsets = [ regex.split-list [ MATCH ^toolset=(.*) : $(argv) ] : 
 
 # if the user specified --toolset=..., we need to add toolset=... to
 # the build request
-local extra-build-request ; 
+local extra-build-request ;
 
 if ! $(ignore-config)
 {
@@ -178,8 +176,8 @@ if ! $(ignore-config)
 
         if $(debug-config)
         {
-            ECHO notice: [cmdline-cfg] Detected command-line request for 
-              $(toolset-version): toolset= \"$(toolset)\" "version= \""$(version)\" ;
+            ECHO notice: [cmdline-cfg] Detected command-line request for
+                $(toolset-version): toolset= \"$(toolset)\" "version= \""$(version)\" ;
         }
 
         local known ;
@@ -190,8 +188,8 @@ if ! $(ignore-config)
             known = true ;
         }
 
-        if $(known) && $(version) 
-          && ! [ feature.is-subvalue toolset : $(toolset) : version : $(version) ]
+        if $(known) && $(version)
+            && ! [ feature.is-subvalue toolset : $(toolset) : version : $(version) ]
         {
             known = ;
         }
@@ -200,8 +198,8 @@ if ! $(ignore-config)
         {
             if $(debug-config)
             {
-                ECHO notice: [cmdline-cfg] toolset $(toolset-version) 
-                  not previously configured; configuring now ; 
+                ECHO notice: [cmdline-cfg] toolset $(toolset-version)
+                    not previously configured; configuring now ;
             }
             toolset.using $(toolset) : $(version) ;
         }
@@ -216,7 +214,7 @@ if ! $(ignore-config)
         # make sure we get an appropriate property into the build request in
         # case the user used the "--toolset=..." form
         if ! $(t) in $(argv)
-            && ! $(t) in $(feature-toolsets) 
+            && ! $(t) in $(feature-toolsets)
         {
             if $(debug-config)
             {
@@ -226,12 +224,11 @@ if ! $(ignore-config)
         }
     }
 }
-    
+
 if USER_MODULE in [ RULENAMES ]
 {
     USER_MODULE site-config user-config ;
 }
-
 
 
 if --version in [ modules.peek : ARGV ]
@@ -241,23 +238,22 @@ if --version in [ modules.peek : ARGV ]
 }
 
 
-
-# We always load project in "." so that 'use-project' directives has
-# any chance of been seen. Otherwise, we won't be able to refer to
-# subprojects using target ids.
+# We always load project in "." so that 'use-project' directives has any chance
+# of been seen. Otherwise, we won't be able to refer to subprojects using target
+# ids.
 if [ project.find "." : "." ]
-{    
+{
     current-project = [ project.target [ project.load "." ] ] ;
-}    
+}
 
-if ! [ feature.values <toolset> ] 
+if ! [ feature.values <toolset> ]
 {
     local default-toolset = gcc ;
     if [ os.name ] = NT
     {
         default-toolset = msvc ;
     }
-    
+
     ECHO "warning: No toolsets are configured." ;
     ECHO "warning: Configuring default toolset" \"$(default-toolset)\". ;
     ECHO "warning: If the default is wrong, you may not be able to build C++ programs." ;
@@ -265,30 +261,28 @@ if ! [ feature.values <toolset> ]
     ECHO "warning: For more configuration options, please consult" ;
     ECHO "warning: http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html" ;
 
-    
     if ! $(ignore-config)
     {
         toolset.using $(default-toolset) ;
     }
 }
 
-build-request = [ 
-  build-request.from-command-line [ 
-    modules.peek : ARGV 
-  ] $(extra-build-request) 
+build-request = [
+    build-request.from-command-line [ modules.peek : ARGV ]
+    $(extra-build-request)
 ] ;
 
 properties = [ $(build-request).get-at 2 ] ;
 
-if $(properties) 
-{    
+if $(properties)
+{
     expanded = [ build-request.expand-no-defaults $(properties) ] ;
     local xexpanded ;
     for local e in $(expanded)
     {
         xexpanded += [ property-set.create [ feature.split $(e) ] ] ;
     }
-    expanded = $(xexpanded) ;    
+    expanded = $(xexpanded) ;
 }
 else
 {
@@ -321,8 +315,8 @@ local bjam-targets ;
 # that code without project-targets instance.
 rule find-target ( target-id )
 {
-    local split = [ MATCH (.*)//(.*) : $(target-id) ] ;        
-    
+    local split = [ MATCH (.*)//(.*) : $(target-id) ] ;
+
     local pm ;
     if $(split)
     {
@@ -332,27 +326,27 @@ rule find-target ( target-id )
     {
         pm = [ project.find $(target-id) : "." ] ;
     }
-        
-    local result ;    
+
+    local result ;
     if $(pm)
     {
         result = [ project.target $(pm) ] ;
     }
-        
+
     if $(split)
     {
         result = [ $(result).find $(split[2]) ] ;
     }
-    
+
     return $(result) ;
 }
 
 
 
-if ! $(current-project) 
+if ! $(current-project)
 {
     if ! $(target-ids)
-    {        
+    {
         ECHO "error: no Jamfile in current directory found, and no target references specified."  ;
         EXIT ;
     }
@@ -364,7 +358,7 @@ for local id in $(target-ids)
     if $(id) = clean
     {
         clean = true ;
-    }    
+    }
     else
     {
         local t ;
@@ -376,7 +370,7 @@ for local id in $(target-ids)
         {
             t = [ find-target $(id) ] ;
         }
-        
+
         if ! $(t)
         {
             ECHO "notice: could not find main target " $(id) ;
@@ -386,13 +380,13 @@ for local id in $(target-ids)
         else
         {
             targets += $(t) ;
-        }                
-    }    
+        }
+    }
 }
 
 if ! $(targets)
 {
-    targets += [ project.target [ project.module-name "." ] ] ; 
+    targets += [ project.target [ project.module-name "." ] ] ;
 }
 
 virtual-targets = ;
@@ -410,18 +404,17 @@ for local p in $(expanded)
 {
     .command-line-free-features = [ property-set.create [ $(p).free ] ] ;
     for local t in $(targets)
-    {   
+    {
         local g = [ $(t).generate $(p) ] ;
         if ! [ class.is-a $(t) : project-target ]
         {
             results-of-main-targets += $(g[2-]) ;
-        }        
+        }
         virtual-targets += $(g[2-]) ;
-    }        
+    }
 }
 
-# The cleaning is tricky. Say, if
-# user says: 
+# The cleaning is tricky. Say, if user says:
 #
 #    bjam --clean foo
 #
@@ -434,22 +427,22 @@ for local p in $(expanded)
 local projects-to-clean ;
 local targets-to-clean ;
 if $(clean) || $(clean-all)
-{    
+{
     for local t in $(targets)
     {
         if [ class.is-a $(t) : project-target ]
         {
             projects-to-clean += [ $(t).project-module ] ;
-        }       
+        }
     }
-    
+
     local subvariants ;
     for local t in $(results-of-main-targets)
     {
         # Don't include roots or sources.
         targets-to-clean += [ virtual-target.traverse $(t) ] ;
     }
-    targets-to-clean = [ sequence.unique $(targets-to-clean) ] ;        
+    targets-to-clean = [ sequence.unique $(targets-to-clean) ] ;
 }
 
 # Returns 'true' if 'project' is a child of 'current-project',
@@ -461,22 +454,22 @@ rule is-child ( project )
     {
         local r = false ;
         if $(project) in $(projects-to-clean)
-        {            
+        {
             r = true ;
         }
-        else 
+        else
         {
             local parent = [ project.attribute $(project) parent-module ] ;
             if $(parent) && $(parent) != user-config
             {
                 r = [ is-child $(parent) ] ;
-            }            
-        }       
-        
+            }
+        }
+
         .is-child.$(project) = $(r) ;
     }
-    
-    return $(.is-child.$(project)) ;    
+
+    return $(.is-child.$(project)) ;
 }
 
 
@@ -500,7 +493,7 @@ if $(.out-xml)
         local project-path = [ $(project).get location ] ;
         return $(project-path)//$(name) ;
     }
-    
+
     # Generate an XML file containing build statistics for each
     # constituent
     rule out-xml ( xml-file : constituents * )
@@ -559,7 +552,7 @@ if $(.out-xml)
                     "$(nl)      <jam-target><![CDATA[$(jam-target)]]></jam-target>"
                     "$(nl)    </target>"
                     ;
-            }                
+            }
         }
         .contents on $(xml-file) +=
             "$(nl)  </targets>"
@@ -589,7 +582,7 @@ if $(.out-xml)
     # Nothing to do here; the *real* actions happen in
     # out-xml.generate-action
     actions quietly out-xml.generate { }
-    
+
     # Define the out-xml file target, which depends on all the targets
     # so that it runs the collection after the targets have run.
     out-xml $(.out-xml) : $(actual-targets) ;
@@ -607,7 +600,7 @@ if $(.out-xml)
         .contents on $(xml-file) +=
             "$(nl)  <action status=\"$(status)\" start=\"$(start)\" end=\"$(end)\" user=\"$(user)\" system=\"$(system)\">"
             ;
-        
+
         # If we have an action object we can print out more detailed info.
         local action = [ on $(target) return $(.action) ] ;
         if $(action)
@@ -615,12 +608,12 @@ if $(.out-xml)
             local action-name = [ $(action).action-name ] ;
             local action-sources = [ $(action).sources ] ;
             local action-props = [ $(action).properties ] ;
-            
+
             # The qualified name of the action which we created the target.
             .contents on $(xml-file) +=
                 "$(nl)    <name><![CDATA[$(action-name)]]></name>"
                 ;
-            
+
             # The sources that made up the target.
             .contents on $(xml-file) +=
                 "$(nl)    <sources>"
@@ -635,7 +628,7 @@ if $(.out-xml)
             .contents on $(xml-file) +=
                 "$(nl)    </sources>"
                 ;
-            
+
             # The properties that define the conditions under which the
             # target was built.
             .contents on $(xml-file) +=
@@ -652,7 +645,7 @@ if $(.out-xml)
                 "$(nl)    </properties>"
                 ;
         }
-        
+
         local locate = [ on $(target) return $(LOCATE) ] ;
         locate ?= "" ;
         .contents on $(xml-file) +=
@@ -683,7 +676,7 @@ if $(bjam-targets)
     UPDATE $(bjam-targets:G=e) $(.out-xml) ;
 }
 else if $(cleanall)
-{    
+{
     UPDATE clean-all ;
 }
 else if $(clean)

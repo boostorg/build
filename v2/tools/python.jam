@@ -94,8 +94,8 @@ lib rt ;
 #
 #   using python 2.3 ;
 #   using python 2.3 : /usr/local/bin/python ;
-#    
-rule init ( version ? : cmd-or-prefix ? : includes * : libraries ? 
+#
+rule init ( version ? : cmd-or-prefix ? : includes * : libraries ?
     : condition * : extension-suffix ? )
 {
     project.push-current $(.project) ;
@@ -108,7 +108,7 @@ rule init ( version ? : cmd-or-prefix ? : includes * : libraries ?
             debug-message "  user-specified "$(v): \"$($(v))\" ;
         }
     }
-    
+
     configure $(version) : $(cmd-or-prefix) : $(includes) : $(libraries) : $(condition) : $(extension-suffix) ;
 
     project.pop-current ;
@@ -617,7 +617,7 @@ local rule system-library-dependencies ( target-os )
             # For example, on my installation, adding -ldl causes at
             # least one test to fail because the library can't be
             # found and removing it causes no failures.
-          
+
             # Apparently, though, we need to add -lrt for gcc.
             return <toolset>gcc:<library>rt ;
 
@@ -664,7 +664,7 @@ local rule declare-libpython-target ( version ? : requirements * )
 }
 
 # implementation of init
-local rule configure ( 
+local rule configure (
   version ? : cmd-or-prefix ? : includes * : libraries ? : condition * : extension-suffix ? )
 {
     local prefix ;
@@ -675,13 +675,13 @@ local rule configure (
     local target-os = [ feature.get-values target-os : $(condition) ] ;
     target-os ?= [ feature.defaults target-os ] ;
     target-os = $(target-os:G=) ;
-    
-    if $(target-os) = windows && <python-debugging>on in $(condition) 
+
+    if $(target-os) = windows && <python-debugging>on in $(condition)
     {
         extension-suffix ?= _d ;
     }
     extension-suffix ?= "" ;
-    
+
     # Normalize and dissect any version number
     local major-minor ;
     if $(version)
@@ -715,7 +715,7 @@ local rule configure (
     # Values to use in case we can't really find anything in the system.
     local fallback-cmd = $(cmds-to-try[1]) ;
     local fallback-version ;
-    
+
     # Anything left to find or check?
     if ! ( $(interpreter-cmd) && $(includes) && $(libraries) )
     {
@@ -734,7 +734,7 @@ local rule configure (
             case windows : platform = win32 ;
             case cygwin : platform = cygwin ;
         }
-        
+
         while $(cmds-to-try)
         {
             # pop top command
@@ -780,7 +780,7 @@ local rule configure (
             }
         }
     }
-    
+
     # Anything left to compute?
     if $(includes) && $(libraries)
     {
@@ -858,13 +858,13 @@ local rule configure (
     }
 
     local dll-path = $(libraries) ;
-    
+
     # Make sure that we can find the Python DLL on windows
     if $(target-os) = windows && $(exec-prefix)
     {
         dll-path += $(exec-prefix) ;
     }
-    
+
     #
     # prepare usage requirements
     #
@@ -884,9 +884,9 @@ local rule configure (
         }
     }
 
-    # Register the right suffix for extensions 
+    # Register the right suffix for extensions.
     register-extension-suffix $(extension-suffix) : $(target-requirements) ;
-    
+
     #
     # Declare the "python" target. This should really be called
     # python_for_embedding
@@ -911,7 +911,7 @@ local rule configure (
         # (http://article.gmane.org/gmane.comp.python.general/544986). The
         # evil here, aside from the workaround necessitated by
         # Python's bug, is that:
-        # 
+        #
         # a. we're guessing the location of the python standard
         #    library from the location of pythonXX.lib
         #
@@ -924,7 +924,7 @@ local rule configure (
             set-PYTHONPATH =
               [ common.prepend-path-variable-command PYTHONPATH : $(libraries:D)/Lib ] ;
         }
-        
+
         alias python
           :
           : $(target-requirements)
@@ -933,8 +933,8 @@ local rule configure (
             # the system libs is a mystery, but if we don't do it, on
             # cygwin, -lpythonX.Y never appears in the command line
             # (although it does on linux).
-          : $(usage-requirements) 
-            <testing.launcher>$(set-PYTHONPATH) 
+          : $(usage-requirements)
+            <testing.launcher>$(set-PYTHONPATH)
               <library-path>$(libraries) <dll-path>$(dll-path) <library>python.lib
           ;
     }
@@ -987,12 +987,12 @@ type.register PYTHON_EXTENSION : : SHARED_LIB ;
 local rule register-extension-suffix ( root : condition * )
 {
     local suffix ;
-    
+
     switch [ feature.get-values target-os : $(condition) ]
     {
       case windows : suffix = pyd ;
       case cygwin : suffix = dll ;
-      case hpux : 
+      case hpux :
       {
           if [ feature.get-values python : $(condition) ] in 1.5 1.6 2.0 2.1 2.2 2.3 2.4
           {
@@ -1005,7 +1005,7 @@ local rule register-extension-suffix ( root : condition * )
       }
       case * : suffix = so ;
     }
-    
+
     type.set-generated-target-suffix PYTHON_EXTENSION : $(condition) : <$(root).$(suffix)> ;
 }
 
@@ -1023,22 +1023,22 @@ rule python-extension ( name : sources * : requirements * : default-build * :
 
     local project = [ project.current ] ;
 
-
     targets.main-target-alternative
-      [ new typed-target $(name) : $(project) : PYTHON_EXTENSION
-        : [ targets.main-target-sources $(sources) : $(name) ]
-        : [ targets.main-target-requirements $(requirements) : $(project) ]
-        : [ targets.main-target-default-build $(default-build) : $(project) ]
-      ] ;
+        [ new typed-target $(name) : $(project) : PYTHON_EXTENSION
+            : [ targets.main-target-sources $(sources) : $(name) ]
+            : [ targets.main-target-requirements $(requirements) : $(project) ]
+            : [ targets.main-target-default-build $(default-build) : $(project) ]
+        ] ;
 }
 
 IMPORT python : python-extension : : python-extension ;
 
+
 # Support for testing
 type.register PY : py ;
 type.register RUN_PYD_OUTPUT ;
-#type.set-generated-target-suffix RUN_PYD : : run ;
 type.register RUN_PYD : : TEST ;
+
 
 class python-test-generator : generator
 {

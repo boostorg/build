@@ -40,7 +40,7 @@ goto :eof
 
 
 :Test_Option
-REM Tests wether the given string is in the form of an option: "--*"
+REM Tests whether the given string is in the form of an option: "--*"
 setlocal & endlocal
 setlocal
 set test=%1
