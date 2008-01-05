@@ -118,7 +118,7 @@ import modules ;
 import option ;
 local dont-build = [ option.process ] ;
 
-# Should we skip building, i.e. loding the build system, according
+# Should we skip building, i.e. loading the build system, according
 # to the options processed?
 #
 if ! $(dont-build)
@@ -131,4 +131,3 @@ if ! $(dont-build)
     # Use last element in case of multiple command-line options
     import $(build-system[-1]) ;
 }
-
