@@ -94,21 +94,24 @@ actions inline-file
         -->
 </para>
 
-  <para>Now, we're ready to tie it all together. Put all the code above in file
+  <para>
+    Now, we're ready to tie it all together. Put all the code above in file
     <filename>verbatim.jam</filename>, add <code>import verbatim ;</code> to
-    <filename>project-root.jam</filename>, and it's possible to write the
-    following in Jamfile:
+    <filename>Jamroot.jam</filename>, and it's possible to write the following
+    in your Jamfile:
   </para>
 
 <programlisting>
 exe codegen : codegen.cpp class_template.verbatim usage.verbatim ;
 </programlisting>
 
-  <para>The listed verbatim files will be automatically converted into C++,
-    compiled and then linked to the codegen executable.
+  <para>
+    The listed verbatim files will be automatically converted into C++ source
+    files, compiled and then linked to the codegen executable.
   </para>
 
-  <para>In subsequent sections, we will extend this example, and review all the
+  <para>
+    In subsequent sections, we will extend this example, and review all the
     mechanisms in detail. The complete code is available in the
     <filename>example/customization</filename> directory.
   </para>
@@ -721,22 +724,23 @@ generators.register-standard obfuscate.file : CPP : OBFUSCATED_CPP ;
       in Jamfiles, which will convert source to the OBFUSCATED_CPP type.
     </para>
     
-    <para>The second way is to write a wrapper rule that calls
-      any of the existing rules. For example, suppose you have only one library per
-      directory and want all cpp files in the directory to be compiled into that library. You
-      can achieve this effect with:
+    <para>
+      The second way is to write a wrapper rule that calls any of the existing
+      rules. For example, suppose you have only one library per directory and
+      want all cpp files in the directory to be compiled into that library. You
+      can achieve this effect using:
 <programlisting>
 lib codegen : [ glob *.cpp ] ;
 </programlisting>
-      but if you want to make it even simpler, you could add the following
-      definition to the <filename>project-root.jam</filename> file:
+      If you want to make it even simpler, you could add the following
+      definition to the <filename>Jamroot.jam</filename> file:
 <programlisting>
 rule glib ( name : extra-sources * : requirements * )
 {
     lib $(name) : [ glob *.cpp ] $(extra-sources) : $(requirements) ;
 }
 </programlisting>
-which would allow you to reduce the Jamfile to
+      allowing you to reduce the Jamfile to just
 <programlisting>
 glib codegen ;
 </programlisting>
@@ -755,11 +759,11 @@ glib codegen ;
 
     <title>Toolset modules</title>
 
-    <para>If your extensions will be used only on one project, they can be
-      placed in a separate <filename>.jam</filename> file that will be
-      imported by your <filename>project-root.jam</filename>. If the
-      extensions will be used on many projects, users will thank you for 
-      a finishing touch.
+    <para>
+      If your extensions will be used only on one project, they can be placed in
+      a separate <filename>.jam</filename> file and imported by your
+      <filename>Jamroot.jam</filename>. If the extensions will be used on many
+      projects, users will thank you for a finishing touch.
     </para>
 
     <para>The <code>using</code> rule provides a standard mechanism
