@@ -1068,7 +1068,7 @@ class basic-target : abstract-target
     
     # Returns the list of abstract-targets which are used as sources.
     # The extra properties specified for sources are not represented.
-    # The only used of this rule at the moment is the "--dump-test"
+    # The only user of this rule at the moment is the "--dump-tests"
     # feature of the test system.
     rule sources ( )
     {
