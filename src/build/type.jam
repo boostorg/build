@@ -330,7 +330,7 @@ local rule generated-target-ps ( ps : type : property-set )
     if ! $(v)
     {
         v = [ generated-target-ps-real $(ps) : $(type)
-          : [ $(property-set).raw ] ] ;
+            : [ $(property-set).raw ] ] ;
         if ! $(v)
         {
             v = none ;

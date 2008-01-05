@@ -25,10 +25,10 @@
 #  the project module.
 #
 #  There can also be 'standalone' projects. They are created by calling
-#  'initialize' on arbitrary module, and not specifying location. After the
-#  call, the module can call 'project' rule, declare main target and behave as
-#  regular projects. However, since it's not associated with any location, it's
-#  better declare only prebuilt targets.
+#  'initialize' on an arbitrary module, and not specifying location. After the
+#  call, the module can call the 'project' rule, declare main targets and behave
+#  as a regular project. However, since it's not associated with any location,
+#  it's better to declare only prebuilt targets.
 #
 #  The list of all loaded Jamfile is stored in variable .project-locations. It's
 #  possible to obtain module name for a location using 'module-name' rule. The
@@ -65,16 +65,17 @@ rule load ( jamfile-location )
         # We want to make sure that child project are loaded only after parent
         # projects. In particular, because parent projects define attributes
         # which are inherited by children, and we don't want children to be
-        # loaded before parents has defined everything.
+        # loaded before parent has defined everything.
         #
         # While "build-project" and "use-project" can potentially refer to child
-        # projects from parent projects, we don't immediately loading child
+        # projects from parent projects, we don't immediately load child
         # projects when seeing those attributes. Instead, we record the minimal
-        # information that will be used only later.
+        # information to be used only later.
         load-used-projects $(module-name) ;
     }
     return $(module-name) ;
 }
+
 
 rule load-used-projects ( module-name )
 {
@@ -86,8 +87,7 @@ rule load-used-projects ( module-name )
         local id = $(used[1]) ;
         local where = $(used[2]) ;
 
-        project.use $(id) : [ path.root
-            [ path.make $(where) ] $(location) ] ;
+        project.use $(id) : [ path.root [ path.make $(where) ] $(location) ] ;
         used = $(used[3-]) ;
     }
 }
@@ -276,7 +276,7 @@ rule find-jamfile (
 # twice with the same 'dir' is undefined.
 #
 local rule load-jamfile (
-    dir # The directory of the project Jamfile.
+    dir  # The directory of the project Jamfile.
     )
 {
     # See if the Jamfile is where it should be.
@@ -294,7 +294,7 @@ local rule load-jamfile (
     # Initialize the jamfile module before loading.
     #
     initialize $(jamfile-module) : [ path.parent $(jamfile-to-load) ]
-      : $(jamfile-to-load:BS) ;
+        : $(jamfile-to-load:BS) ;
 
     local saved-project = $(.current-project) ;
     # Now load the Jamfile in it's own context. Initialization might have loaded
@@ -381,8 +381,8 @@ if $(.global-build-dir)
 #
 rule initialize (
     module-name   # The name of the project module.
-    : location ?  # The location (directory) of the project to initialize.
-                  # If not specified, a standalone project will be initialized.
+    : location ?  # The location (directory) of the project to initialize. If
+                  # not specified, a standalone project will be initialized.
     : basename ?
     )
 {
@@ -391,9 +391,9 @@ rule initialize (
         ECHO "Initializing project '$(module-name)'" ;
     }
 
-    # TODO: need to consider if standalone projects can do anything but defining
-    # prebuilt targets. If so, we need to give more sensible "location", so that
-    # source paths are correct.
+    # TODO: need to consider if standalone projects can do anything but define
+    # prebuilt targets. If so, we need to give it a more sensible "location", so
+    # that source paths are correct.
     location ?= "" ;
     # Create the module for the Jamfile first.
     module $(module-name)
@@ -432,7 +432,7 @@ rule initialize (
     }
     else
     {
-        # We search for parent/project-root only if jamfile was specified, i.e.
+        # We search for parent/project-root only if Jamfile was specified, i.e.
         # if the project is not standalone.
         if $(location) && ! [ MATCH ($(JAMROOT)) : $(basename) ]
         {
@@ -440,7 +440,7 @@ rule initialize (
         }
         else
         {
-            # It's either jamroot, or standalone project. If it's jamroot,
+            # It's either jamroot or standalone project. If it's jamroot,
             # inherit from user-config.
             if $(location)
             {
@@ -489,7 +489,7 @@ rule inherit-attributes ( project-module : parent-module )
 {
     local attributes = $($(project-module).attributes) ;
     local pattributes = [ attributes $(parent-module) ] ;
-    # Parent module might be locationless user-config.
+    # Parent module might be locationless configuration module.
     if [ modules.binding $(parent-module) ]
     {
         $(attributes).set parent : [ path.parent
@@ -718,8 +718,8 @@ rule use ( id : location )
 
     if ! $(declared-id) || $(declared-id) != $(id)
     {
-        # The project at 'location' either have no id or
-        # that id is not equal to the 'id' parameter.
+        # The project at 'location' either has no id or that id is not equal to
+        # the 'id' parameter.
         if $($(id).jamfile-module)
             && $($(id).jamfile-module) != $(project-module)
         {
