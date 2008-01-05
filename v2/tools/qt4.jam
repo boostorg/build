@@ -492,16 +492,17 @@ class uic-h-generator : generator
         
         local r = [ virtual-target.register $(target) ] ;
  
-        # Since this generator will return H target, the linking generator
-        # won't use it at all, and won't set any dependency on it.
-        # However, we need to target to be seen by bjam, so that dependency
-        # from sources to this generated header is detected -- if jam does
-        # not know about this target, it won't do anything.
+        # Since this generator will return a H target, the linking generator
+        # won't use it at all, and won't set any dependency on it. However, we
+        # need the target to be seen by bjam, so that dependency from sources to
+        # this generated header is detected -- if jam does not know about this
+        # target, it won't do anything.
         DEPENDS all : [ $(r).actualize ] ;
         
         return $(r) ;
     }    
 }
+
 
 class moc-h-generator : generator
 {
@@ -525,17 +526,19 @@ class moc-h-generator : generator
             
             local r = [ virtual-target.register $(target) ] ;
             
-            # Since this generator will return H target, the linking generator
-            # won't use it at all, and won't set any dependency on it.
-            # However, we need to target to be seen by bjam, so that dependency
-            # from sources to this generated header is detected -- if jam does
-            # not know about this target, it won't do anything.
+            # Since this generator will return a H target, the linking generator
+            # won't use it at all, and won't set any dependency on it. However,
+            # we need the target to be seen by bjam, so that dependency from
+            # sources to this generated header is detected -- if jam does not
+            # know about this target, it won't do anything.
             DEPENDS all : [ $(r).actualize ] ;
             
             return $(r) ;
         }        
     }
 }
+
+
 class moc-inc-generator : generator
 {
     rule __init__ ( * : * )
@@ -556,11 +559,11 @@ class moc-inc-generator : generator
             local target = [ 
               new file-target moc_$(name) : CPP : $(project) : $(a) ] ;
             
-            # Since this generator will return H target, the linking generator
-            # won't use it at all, and won't set any dependency on it.
-            # However, we need to target to be seen by bjam, so that dependency
-            # from sources to this generated header is detected -- if jam does
-            # not know about this target, it won't do anything.
+            # Since this generator will return a H target, the linking generator
+            # won't use it at all, and won't set any dependency on it. However,
+            # we need the target to be seen by bjam, so that dependency from
+            # sources to this generated header is detected -- if jam does not
+            # know about this target, it won't do anything.
             DEPENDS all : [ $(target).actualize ] ;
             
             return [ virtual-target.register $(target) ] ;
@@ -568,18 +571,20 @@ class moc-inc-generator : generator
     }    
 }
 
-# Query the installation directory
-# This is needed in at least two scenarios
-# First, when re-using sources from the Qt-Tree.
-# Second, to "install" custom Qt plugins to the Qt-Tree.
+
+# Query the installation directory. This is needed in at least two scenarios.
+# First, when re-using sources from the Qt-Tree. Second, to "install" custom Qt
+# plugins to the Qt-Tree.
 rule directory
 {
     return $(.prefix) ;
 }
 
+
 # Get <include> and <defines> from current toolset
 flags qt4.moc INCLUDES <include> ;
-flags qt4.moc DEFINES  <define> ;
+flags qt4.moc DEFINES <define> ;
+
 
 # Processes headers to create Qt MetaObject information
 # Qt4-moc has its c++-parser, so pass INCLUDES and DEFINES.
@@ -587,6 +592,7 @@ actions moc
 {
     $(.binprefix)/moc -I$(INCLUDES) -D$(DEFINES) -f $(>) -o $(<)
 }
+
 
 # When moccing files for include only, we don't need -f, 
 # otherwise the generated code will include the .cpp 
@@ -603,11 +609,13 @@ actions rcc
     $(.binprefix)/rcc $(>) -name $(>:B) -o $(<)
 }
 
+
 # Generates user-interface source from .ui files
 actions uic-h
 {
     $(.binprefix)/uic $(>) -o $(<)
 }
+
 
 # Scanner for .qrc files.
 # Look for the CDATA section of the <file> tag.

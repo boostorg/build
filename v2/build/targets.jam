@@ -127,14 +127,14 @@ class abstract-target
         return $(location)/$(self.name) ;
     }
 
-    # Takes a property set.  Generates virtual targets for this abstract target,
-    # using the specified properties, unless a different value of some feature
-    # is required by the target.
+    # Generates virtual targets for this abstract target using the specified
+    # properties, unless a different value of some feature is required by the
+    # target.
     # On success, returns:
-    # - a property-set with the usage requirements to be applied to dependents
+    # - a property-set with the usage requirements to be applied to dependants
     # - a list of produced virtual targets, which may be empty.
-    # If 'property-set' are empty, performs default build of this target, in a
-    # way specific to derived class.
+    # If 'property-set' is empty, performs the default build of this target, in
+    # a way specific to the derived class.
     rule generate ( property-set )
     {
         errors.error "method should be defined in derived classes" ;
