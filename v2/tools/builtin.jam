@@ -21,6 +21,7 @@ import project ;
 import property ;
 import regex ;
 import scanner ;
+import stage ;
 import symlink ;
 import type ;
 import utility ;
@@ -370,9 +371,6 @@ class searched-lib-target : abstract-file-target
     {
     }
 }
-
-
-import stage ;
 
 
 class c-scanner : scanner
