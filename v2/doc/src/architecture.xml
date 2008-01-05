@@ -334,7 +334,7 @@ a.cpp (installed copy)    &lt;--(copy) ----------------------- a.cpp (no scanner
     "bin" directory, it should be supported as well. I.e. in the
     scanario above, Jamfile in "dir" might create a main target,
     which generates "a.h". The file will be generated to "dir/bin"
-    directory, but we still have to recornize the dependency.
+    directory, but we still have to recognize the dependency.
       </simpara>
     </listitem>
   </orderedlist>
