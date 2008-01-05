@@ -1087,15 +1087,14 @@ builtin_export(
 
     module_t* m = bindmodule( module_list ? module_list->string : 0 );
     
-            
     for ( ; rules; rules = list_next( rules ) )
     {
         RULE r_, *r = &r_;
         r_.name = rules->string;
-                
+
         if ( !m->rules || !hashcheck( m->rules, (HASHDATA**)&r ) )
             unknown_rule( frame, "EXPORT", m->name, r_.name );
-        
+
         r->exported = 1;
     }
     return L0;
