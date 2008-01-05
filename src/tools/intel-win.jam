@@ -78,6 +78,10 @@ rule init ( version ? :     # the compiler version
 
     # Enable ADL
     C++FLAGS += -Qoption,c,--arg_dep_lookup ; #"c" works for C++, too
+    
+    # Disable Microsoft "secure" overloads in Dinkumware libraries
+    # since they cause compile errors with Intel versions 9 and 10    
+    C++FLAGS += -D_SECURE_SCL=0 ;
 
     if $(major) > 5
     {
