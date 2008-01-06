@@ -125,9 +125,10 @@ class modifier : generator
         return $(target) ;
     }
     
-    # Utility, clones a file-target with optional changes to the name, type, and project
-    # of the target.
-    # NOTE: This functionality should be moved, and generalized, to virtual-targets.
+    # Utility, clones a file-target with optional changes to the name, type and
+    # project of the target.
+    # NOTE: This functionality should be moved, and generalized, to
+    # virtual-targets.
     #
     rule clone-file-target ( target : new-name ? : new-type ? : new-project ? )
     {
@@ -152,6 +153,7 @@ class modifier : generator
         return $(result) ;
     }
 }
+
 
 # A modifier that changes the name of a target, after it's generated, given a
 # regular expression to split the name, and a set of token to insert between the

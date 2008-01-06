@@ -148,9 +148,9 @@ class Tester(TestCmd.TestCmd):
     Optional argument `work_dir` indicates an absolute directory, where the test
     will run be run.
     """
-    def __init__(self, arguments="", executable = 'bjam', match =
-                 TestCmd.match_exact, boost_build_path = None,
-                 translate_suffixes = 1, pass_toolset = 1,
+    def __init__(self, arguments="", executable = 'bjam',
+                 match = TestCmd.match_exact, boost_build_path = None,
+                 translate_suffixes = True, pass_toolset = True,
                  workdir = '', **keywords):
 
         self.original_workdir = os.getcwd()
@@ -194,9 +194,9 @@ class Tester(TestCmd.TestCmd):
                 elif os.uname()[0] == "OSF1":
                     jam_build_dir = "bin.osf"
                 else:
-                    raise "Don't know directory where jam is build for this system: " + os.name + "/" + os.uname()[0]
+                    raise "Don't know directory where Jam is built for this system: " + os.name + "/" + os.uname()[0]
             else:
-                raise "Don't know directory where jam is build for this system: " + os.name
+                raise "Don't know directory where Jam is built for this system: " + os.name
 
             # Find where jam_src is located. Try for the debug version if it's
             # lying around.
@@ -380,9 +380,9 @@ class Tester(TestCmd.TestCmd):
             kw['program'] = []
             kw['program'] += self.program
             if extra_args:
-                kw['program'] += extra_args.split(" ")            
+                kw['program'] += extra_args.split(" ")
             if pass_toolset:
-                kw['program'].append(self.toolset)
+                kw['program'].append("toolset=" + self.toolset)
             kw['chdir'] = subdir
             apply(TestCmd.TestCmd.run, [self], kw)
         except:
@@ -551,10 +551,8 @@ class Tester(TestCmd.TestCmd):
                     filesets.pop()
 
             if not filesets:
-                annotation("reason",
-                           "File %s not touched as expected" % (name,))
+                annotation("failure", "File %s not touched as expected" % name)
                 self.fail_test(1)
-
 
     def ignore_touch(self, wildcard):
         self.ignore_elements(self.unexpected_difference.touched_files, wildcard)
@@ -621,12 +619,12 @@ class Tester(TestCmd.TestCmd):
                 (expected, content))
             self.fail_test(1)
 
-    def expect_output_line(self, expected):
-        self._expect_line(self.stdout(), expected)
+    def expect_output_line(self, line):
+        self._expect_line(self.stdout(), line)
 
-    def expect_content_line(self, name, expected):
+    def expect_content_line(self, name, line):
         content = self._read_file(name)
-        self._expect_line(content, expected)
+        self._expect_line(content, line)
 
     def _read_file(self, name, exact=0):
         name = self.adjust_names(name)[0]
