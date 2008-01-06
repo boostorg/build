@@ -151,7 +151,7 @@ class Tester(TestCmd.TestCmd):
     def __init__(self, arguments="", executable = 'bjam',
                  match = TestCmd.match_exact, boost_build_path = None,
                  translate_suffixes = True, pass_toolset = True,
-                 workdir = '', **keywords):
+                 use_test_config = True, workdir = '', **keywords):
 
         self.original_workdir = os.getcwd()
         if workdir != '' and not os.path.isabs(workdir):
@@ -159,6 +159,7 @@ class Tester(TestCmd.TestCmd):
 
         self.last_build_time = 0
         self.translate_suffixes = translate_suffixes
+        self.use_test_config = use_test_config
 
         self.toolset = get_toolset()
         self.pass_toolset = pass_toolset
@@ -360,7 +361,7 @@ class Tester(TestCmd.TestCmd):
     #
     def run_build_system(
         self, extra_args='', subdir='', stdout = None, stderr = '', status = 0,
-        match = None, pass_toolset = None, **kw):
+        match = None, pass_toolset = None, use_test_config = None, **kw):
 
         if os.path.isabs(subdir):
             if stderr:
@@ -376,6 +377,9 @@ class Tester(TestCmd.TestCmd):
         if pass_toolset is None:
             pass_toolset = self.pass_toolset
 
+        if use_test_config is None:
+            use_test_config = self.use_test_config
+
         try:
             kw['program'] = []
             kw['program'] += self.program
@@ -383,6 +387,10 @@ class Tester(TestCmd.TestCmd):
                 kw['program'] += extra_args.split(" ")
             if pass_toolset:
                 kw['program'].append("toolset=" + self.toolset)
+            if use_test_config:
+                kw['program'].append("--test-config=\""
+                    + os.path.join(self.original_workdir, "test-config.jam")
+                    + "\"")
             kw['chdir'] = subdir
             apply(TestCmd.TestCmd.run, [self], kw)
         except:
