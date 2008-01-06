@@ -4,36 +4,36 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-#  Implements project representation and loading.
-#   Each project is represented by
+#  Implements project representation and loading. Each project is represented
+#  by:
 #   - a module where all the Jamfile content live.
 #   - an instance of 'project-attributes' class.
-#     (given module name, can be obtained by 'attributes' rule)
+#     (given a module name, can be obtained using the 'attributes' rule)
 #   - an instance of 'project-target' class (from targets.jam)
-#     (given a module name, can be obtained by 'target' rule)
+#     (given a module name, can be obtained using the 'target' rule)
 #
 #  Typically, projects are created as result of loading a Jamfile, which is done
 #  by rules 'load' and 'initialize', below. First, module for Jamfile is loaded
 #  and new project-attributes instance is created. Some rules necessary for
 #  project are added to the module (see 'project-rules' module) at the bottom of
 #  this file. Default project attributes are set (inheriting attributes of
-#  parent project, if it exists). After that, Jamfile is read. It can declare
-#  its own attributes, via 'project' rule, which will be combined with already
-#  set attributes.
+#  parent project, if it exists). After that the Jamfile is read. It can declare
+#  its own attributes using the 'project' rule which will be combined with any
+#  alread set attributes.
 #
-#  The 'project' rule can also declare project id, which will be associated with
-#  the project module.
+#  The 'project' rule can also declare a project id which will be associated
+#  with the project module.
 #
 #  There can also be 'standalone' projects. They are created by calling
-#  'initialize' on an arbitrary module, and not specifying location. After the
-#  call, the module can call the 'project' rule, declare main targets and behave
-#  as a regular project. However, since it's not associated with any location,
-#  it's better to declare only prebuilt targets.
+#  'initialize' on an arbitrary module and not specifying their location. After
+#  the call, the module can call the 'project' rule, declare main targets and
+#  behave as a regular project except that, since it's not associated with any
+#  location, it should not declare targets that are not prebuilt.
 #
-#  The list of all loaded Jamfile is stored in variable .project-locations. It's
-#  possible to obtain module name for a location using 'module-name' rule. The
-#  standalone projects are not recorded, the only way to use them is by project
-#  id.
+#  The list of all loaded Jamfile is stored in the .project-locations variable.
+#  It's possible to obtain a module name for a location using the 'module-name'
+#  rule. Standalone projects are not recorded and can only be referenced using
+#  their project id.
 
 import "class" : new ;
 import errors ;
@@ -44,9 +44,9 @@ import property-set ;
 import sequence ;
 
 
-# Loads the jamfile at the given location. After loading, project global file
-# and jamfiles needed by the requested one will be loaded recursively. If the
-# jamfile at that location is loaded already, does nothing. Returns the project
+# Loads the Jamfile at the given location. After loading, project global file
+# and Jamfiles needed by the requested one will be loaded recursively. If the
+# Jamfile at that location is loaded already, does nothing. Returns the project
 # module for the Jamfile.
 #
 rule load ( jamfile-location )
@@ -287,11 +287,11 @@ local rule load-jamfile (
         jamfile-to-load = [ find-jamfile $(dir) ] ;
     }
 
-    # The module of the jamfile.
+    # The module of the Jamfile.
     #
     local jamfile-module = [ module-name [ path.parent $(jamfile-to-load) ] ] ;
 
-    # Initialize the jamfile module before loading.
+    # Initialize the Jamfile module before loading.
     #
     initialize $(jamfile-module) : [ path.parent $(jamfile-to-load) ]
         : $(jamfile-to-load:BS) ;
@@ -682,14 +682,14 @@ rule pop-current ( )
 }
 
 
-# Returns the project-attribute instance for the specified jamfile module.
+# Returns the project-attribute instance for the specified Jamfile module.
 rule attributes ( project )
 {
     return $($(project).attributes) ;
 }
 
 
-# Returns the value of the specified attribute in the specified jamfile module.
+# Returns the value of the specified attribute in the specified Jamfile module.
 rule attribute ( project attribute )
 {
     return [ $($(project).attributes).get $(attribute) ] ;

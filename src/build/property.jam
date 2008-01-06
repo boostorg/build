@@ -582,13 +582,13 @@ local rule __test__ ( )
     feature.compose <variant>debug : <define>_DEBUG <optimization>off ;
     feature.compose <variant>release : <define>NDEBUG <optimization>on ;
 
-    validate <toolset>gcc  <toolset>gcc-3.0.1 : $(test-space) ;
+    validate <toolset>gcc <toolset>gcc-3.0.1 : $(test-space) ;
 
-    assert.true path-order $(test-space) debug <define>foo ;
+    assert.true  path-order $(test-space) debug <define>foo ;
     assert.false path-order $(test-space) <define>foo debug ;
-    assert.true path-order $(test-space) gcc debug ;
+    assert.true  path-order $(test-space) gcc debug ;
     assert.false path-order $(test-space) debug gcc ;
-    assert.true path-order $(test-space) <optimization>on <rtti>on ;
+    assert.true  path-order $(test-space) <optimization>on <rtti>on ;
     assert.false path-order $(test-space) <rtti>on <optimization>on ;
 
     assert.result-equal <toolset>gcc <rtti>off <define>FOO
