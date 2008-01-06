@@ -422,9 +422,13 @@ rule initialize (
     local jamroot ;
 
     local parent-module ;
-    if $(module-name) = site-config
+    if $(module-name) = test-config
     {
         # No parent.
+    }
+    else if $(module-name) = site-config
+    {
+        parent-module = test-config ;
     }
     else if $(module-name) = user-config
     {
