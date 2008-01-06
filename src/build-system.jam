@@ -284,11 +284,6 @@ local rule load-configuration-files
                 ECHO "notice: be ignored due to the test configuration being"
                     "loaded." ;
             }
-
-            # This legacy setting should be removed. Added here only to preserve
-            # behaviour with test configuration being loaded automatically
-            # disabling toolset auto-configuration and default toolset usage.
-            .legacy-ignore-config = true ;
         }
         else
         {
