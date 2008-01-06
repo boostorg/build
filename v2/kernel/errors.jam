@@ -222,6 +222,7 @@ rule nearest-user-location ( )
     return $(result) ;
 }
 
+
 # If optimized rule is available in Jam, use it.
 if NEAREST_USER_LOCATION in [ RULENAMES ]
 {
@@ -231,7 +232,6 @@ if NEAREST_USER_LOCATION in [ RULENAMES ]
         return $(r[1]):$(r[2]) ;
     }
 }
-
 
 
 rule __test__ ( )

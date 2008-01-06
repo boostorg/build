@@ -7,16 +7,19 @@
 import modules ;
 import string ;
 
-# Return the value(s) of the given environment variable(s) at the time
-# bjam was invoked.
+
+# Return the value(s) of the given environment variable(s) at the time bjam was
+# invoked.
 rule environ ( variable-names + )
 {
     return [ modules.peek .ENVIRON : $(variable-names) ] ;
 }
 
+
 .name = [ modules.peek : OS ] ;
 .platform = [ modules.peek : OSPLAT ] ;
 .version = [ modules.peek : OSVER ] ;
+
 
 local rule constant ( c : os ? )
 {
@@ -27,10 +30,10 @@ local rule constant ( c : os ? )
     return $(result[1]) ;
 }
 
-rule get-constant  ( os ? )
+rule get-constant ( os ? )
 {
-    # Find the name of the constant being accessed, which is
-    # equal to the name used to invoke us.
+    # Find the name of the constant being accessed, which is equal to the name
+    # used to invoke us.
     local bt = [ BACKTRACE 1 ] ;
     local rulename = [ MATCH ([^.]*)$ : $(bt[4]) ] ;
     return [ constant $(rulename) : $(os) ] ;
@@ -46,8 +49,8 @@ for local constant in $(.constants)
 EXPORT $(__name__) : $(.constants) ;
 
 .executable-path-variable-NT = PATH ;
-# On Windows the case and capitalization of PATH is not always
-# predictable, so let's find out what variable name was really set.
+# On Windows the case and capitalization of PATH is not always predictable, so
+# let's find out what variable name was really set.
 if $(.name) = NT
 {
     for local n in [ VARNAMES .ENVIRON ]
@@ -59,8 +62,8 @@ if $(.name) = NT
     }
 }
 
-# Specific constants for various platforms.  There's no need to define
-# any constant whose value would be the same as the default, below.
+# Specific constants for various platforms.  There's no need to define any
+# constant whose value would be the same as the default, below.
 .shared-library-path-variable-NT = $(.executable-path-variable-NT) ;
 .path-separator-NT = ";" ;
 .expand-variable-prefix-NT = % ;

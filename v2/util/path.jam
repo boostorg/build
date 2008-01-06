@@ -6,7 +6,7 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-#  Performs various path manipulations. Path are always in a 'normilized' 
+#  Performs various path manipulations. Paths are always in a 'normalized' 
 #  representation. In it, a path may be either:
 #
 #     - '.', or
@@ -17,10 +17,10 @@
 #   at the beginning, and it never ends in slash, except for path consisting
 #   of slash only.
 
+import errors ;
 import modules ;
-import sequence ;
 import regex ;
-import errors : error ;
+import sequence ;
 import set ;
 
 
@@ -30,15 +30,11 @@ if [ modules.peek : UNIX ]
     local uname = [ modules.peek : JAMUNAME ] ;
     switch $(uname)
     {
-        case CYGWIN* :
-          os = CYGWIN ;
-        
-        case * :
-          os = UNIX ;
+        case CYGWIN* : os = CYGWIN ;
+        case *       : os = UNIX ;
     }        
 }
 
-#
 #    Converts the native path into normalized form.
 #
 rule make ( native )
@@ -46,7 +42,7 @@ rule make ( native )
     return [ make-$(os) $(native) ] ;
 }
 
-#
+
 #    Builds native representation of the path.
 #
 rule native ( path )
@@ -54,7 +50,7 @@ rule native ( path )
     return [ native-$(os) $(path) ] ;
 }
 
-#
+
 #    Tests if a path is rooted.
 #
 rule is-rooted ( path )
@@ -62,19 +58,22 @@ rule is-rooted ( path )
     return [ MATCH "^(/)" : $(path) ] ;
 }
 
-#
+
 #    Tests if a path has a parent.
 #
 rule has-parent ( path )
 {
-    if $(path) != / {
+    if $(path) != /
+    {
         return 1 ;
-    } else {
+    }
+    else
+    {
         return ;
     }
 }
 
-#
+
 #    Returns the path without any directory components.
 #
 rule basename ( path )
@@ -82,41 +81,52 @@ rule basename ( path )
     return [ MATCH "([^/]+)$" : $(path) ] ;
 }
 
-#
+
 #    Returns parent directory of the path. If no parent exists, error is issued.
 #
 rule parent ( path )
 {
-    if [ has-parent $(path) ] {
-
-        if $(path) = . {
+    if [ has-parent $(path) ]
+    {
+        if $(path) = .
+        {
             return .. ;
-        } else {
-
+        }
+        else
+        {
             # Strip everything at the end of path up to and including
             # the last slash
             local result = [ regex.match "((.*)/)?([^/]+)" : $(path) : 2 3 ] ;
 
             # Did we strip what we shouldn't?
-            if $(result[2]) = ".." {
+            if $(result[2]) = ".."
+            {
                 return $(path)/.. ;
-            } else {
-                if ! $(result[1]) {
-                    if [ is-rooted $(path) ] {
+            }
+            else
+            {
+                if ! $(result[1])
+                {
+                    if [ is-rooted $(path) ]
+                    {
                         result = / ;
-                    } else {
+                    }
+                    else
+                    {
                         result = . ;
                     }
                 }
                 return $(result[1]) ;
             }
         }
-    } else {
-        error "Path '$(path)' has no parent" ;
+    }
+    else
+    {
+        errors.error "Path '$(path)' has no parent" ;
     }
 }
 
-#
+
 #    Returns path2 such that "[ join path path2 ] = .".
 #    The path may not contain ".." element or be rooted.
 #
@@ -130,14 +140,15 @@ rule reverse ( path )
     {
         local tokens = [ regex.split $(path) "/" ] ;
         local tokens2 ;
-        for local i in $(tokens) {
+        for local i in $(tokens)
+        {
             tokens2 += .. ;
         }
         return [ sequence.join $(tokens2) : "/" ] ;
     }
 }
 
-#
+
 # Auxillary rule: does all the semantic of 'join', except for error cheching.
 # The error checking is separated because this rule is recursive, and I don't
 # like the idea of checking the same input over and over.
@@ -156,7 +167,7 @@ local rule join-imp ( elements + )
     return $(result) ;
 }
 
-#
+
 #    Contanenates the passed path elements. Generates an error if
 #    any element other than the first one is rooted.
 #
@@ -172,7 +183,7 @@ rule join ( elements + )
         {
             if [ is-rooted $(e) ]
             {
-                error only first element may be rooted ;
+                errors.error only first element may be rooted ;
             }
         }
         return [ join-imp $(elements) ] ;
@@ -180,7 +191,6 @@ rule join ( elements + )
 }
 
 
-#
 #    If 'path' is relative, it is rooted at 'root'. Otherwise, it's unchanged.
 #
 rule root ( path root )
@@ -192,7 +202,7 @@ rule root ( path root )
     }
 }
 
-#
+
 #   Returns the current working directory.
 #
 rule pwd ( )
@@ -208,7 +218,7 @@ rule pwd ( )
     }    
 }
 
-#
+
 #    Returns the list of files matching the given pattern in the
 #    specified directory.  Both directories and patterns are 
 #    supplied as portable paths. Each pattern should be non-absolute
@@ -251,6 +261,7 @@ rule glob ( dirs * : patterns + : exclude-patterns * )
         [ set.difference $(inc) : $(exc) ] ] ;
 }    
 
+
 # Recursive version of GLOB. Builds the glob of files while
 # also searching in the subdirectories of the given roots. An
 # optional set of exclusion patterns will filter out the
@@ -266,6 +277,7 @@ rule glob-tree ( roots * : patterns + : exclude-patterns * )
         : $(exclude-patterns)
         ] ] ;
 }
+
 
 local rule .glob-tree ( roots * : patterns * : exclude-patterns * )
 {
@@ -290,7 +302,6 @@ local rule .glob-tree ( roots * : patterns * : exclude-patterns * )
 }
 
 
-#
 #    Returns true is the specified file exists.
 #
 rule exists ( file )
@@ -300,8 +311,6 @@ rule exists ( file )
 NATIVE_RULE path : exists ;
 
 
-
-#
 #   Find out the absolute name of path and returns the list of all the parents,
 #   starting with the immediate one. Parents are returned as relative names.
 #   If 'upper_limit' is specified, directories above it will be pruned.
@@ -323,7 +332,8 @@ rule all-parents ( path : upper_limit ? : cwd ? )
     }
     
     # All upper elements removed ?
-    if ! $(upper_ele) {
+    if ! $(upper_ele)
+    {
         # Create the relative paths to parents, number of elements in 'path_ele'
         local result ;
         for local i in $(path_ele) {
@@ -332,13 +342,13 @@ rule all-parents ( path : upper_limit ? : cwd ? )
         }
         return $(result) ;
     }
-    else {
-        error "$(upper_limit) is not prefix of $(path)" ;
+    else
+    {
+        errors.error "$(upper_limit) is not prefix of $(path)" ;
     }
 }
 
 
-#
 #  Search for 'pattern' in parent directories of 'dir', up till and including
 #  'upper_limit', if it is specified, or till the filesystem root otherwise.
 #
@@ -355,7 +365,7 @@ rule glob-in-parents ( dir : patterns + : upper-limit ? )
     return $(result) ;    
 }
 
-#
+
 # Assuming 'child' is a subdirectory of 'parent', return the relative
 # path from 'parent' to 'child'
 #
@@ -393,6 +403,7 @@ rule relative ( child parent )
     }    
 }
 
+
 # Returns the minimal path to path2 that is relative path1.
 #
 rule relative-to ( path1 path2 )
@@ -417,6 +428,7 @@ rule relative-to ( path1 path2 )
     return [ join . $(root_1) $(split2) ] ;
 }
 
+
 # Returns the list of paths which are used by the operating system
 # for looking up programs
 rule programs-path ( )
@@ -432,6 +444,7 @@ rule programs-path ( )
     }
     return $(result) ;
 }
+
 
 rule make-NT ( native )
 {
@@ -459,12 +472,14 @@ rule make-NT ( native )
     return $(result) ;
 }
 
+
 rule native-NT ( path )
 {
     local result = [ MATCH "^/?(.*)" : $(path) ] ;
     result = [ sequence.join [ regex.split $(result) "/" ] : "\\" ] ;
     return $(result) ;
 }
+
 
 rule make-UNIX ( native )
 {
@@ -479,15 +494,18 @@ rule make-UNIX ( native )
     }    
 }
 
+
 rule native-UNIX ( path )
 {
     return $(path) ;
 }
 
+
 rule make-CYGWIN ( path )
 {
     return [ make-NT $(path) ] ;
 }
+
 
 rule native-CYGWIN ( path )
 {
@@ -499,7 +517,7 @@ rule native-CYGWIN ( path )
     return [ native-UNIX $(result) ] ;
 }
 
-#
+
 # split-VMS: splits input native path into
 # device dir file (each part is optional),
 # example:
@@ -516,7 +534,7 @@ rule split-path-VMS ( native )
     return $(device) $(dir) $(file) ;
 }
 
-#
+
 # Converts a native VMS path into a portable path spec.
 #
 # Does not handle current-device absolute paths such
@@ -592,7 +610,7 @@ rule make-VMS ( native )
     return $(portable) ;
 }
 
-#
+
 # Converts a portable path spec into a native VMS path.
 #
 # Relies on having at least one dot (".") included in the file
@@ -663,8 +681,8 @@ rule native-VMS ( path )
 }
 
 
-rule __test__ ( ) {
-
+rule __test__ ( )
+{
     import assert ;
     import errors : try catch ;
 
@@ -693,7 +711,6 @@ rule __test__ ( ) {
     assert.result ".." : parent "." ;
     assert.result ".." : parent "../foo" ;
     assert.result "../../foo" : parent "../../foo/bar" ;
-
 
     assert.result "." : reverse "." ;
     assert.result ".." : reverse "foo" ;
@@ -820,5 +837,4 @@ rule __test__ ( ) {
     assert.result "disk:[my_docs.work]Jamfile." : native "/disk:/my_docs/work/Jamfile." ;
 
     modules.poke path : os : $(save-os) ;
-
 }

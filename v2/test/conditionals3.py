@@ -1,19 +1,17 @@
 #!/usr/bin/python
 
-# Copyright 2003 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-#  Test that conditional properties work, even if property is free, and
-#  value includes colon.
-from BoostBuild import Tester, List
+#  Test that conditional properties work, even if property is free, and value
+#  includes a colon.
 
+import BoostBuild
 
-t = Tester()
+t = BoostBuild.Tester()
 
-# Create the needed files
-t.write("project-root.jam", "")
-t.write("Jamfile", """
+t.write("Jamroot.jam", """
 exe hello : hello.cpp : <variant>debug:<define>CLASS=Foo::Bar ;
 """)
 t.write("hello.cpp", """
@@ -21,12 +19,11 @@ namespace Foo { class Bar { } ; }
 int main()
 {
     CLASS c;
+    c;  // Disables the unused variable warning.
     return 0;
 }
-
 """)
 
-# Don't check stderr, which can include warning about unused 'c'.
 t.run_build_system(stdout=None, stderr=None)
 t.expect_addition("bin/$toolset/debug/hello.exe")
 
