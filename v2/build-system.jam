@@ -269,7 +269,8 @@ local rule load-config ( module-name : filename : path + : must-find ? )
 #   Always named site-config.jam. Will only be found if located on the system
 # root path (Windows), /etc (non-Windows), user's home folder or the Boost Build
 # path, in that order. Not loaded in case the test-config configuration file is
-# loaded or the --ignore-config command-line options is specified.
+# loaded or either the --ignore-site-config or the --ignore-config command-line
+# option is specified.
 #
 #   -- user-config --
 #   Named user-config.jam by default but may be explicitly renamed using the
@@ -285,6 +286,10 @@ local rule load-config ( module-name : filename : path + : must-find ? )
 #
 local rule load-configuration-files
 {
+    # Flag indicating that site configuration should not be loaded.
+    local ignore-site-config =
+        [ MATCH ^(--ignore-site-config)$ : $(.argv) ] ;
+
     if $(.legacy-ignore-config) && $(.debug-config)
     {
         ECHO "notice: Regular site and user configuration files will be ignored" ;
@@ -319,8 +324,14 @@ local rule load-configuration-files
         site-path = [ modules.peek : SystemRoot ] $(user-path) ;
     }
 
+    if $(ignore-site-config) && !$(.legacy-ignore-config)
+    {
+        ECHO "notice: Site configuration files will be ignored due to the" ;
+        ECHO "notice: --ignore-site-config command-line option." ;
+    }
+
     initialize-config-module site-config ;
-    if ! $(test-config) && ! $(.legacy-ignore-config)
+    if ! $(test-config) && ! $(ignore-site-config) && ! $(.legacy-ignore-config)
     {
         load-config site-config : site-config.jam : $(site-path) ;
     }
