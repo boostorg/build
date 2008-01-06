@@ -63,6 +63,15 @@ import virtual-target ;
 # Was an XML dump requested?
 .out-xml = [ MATCH ^--out-xml=(.*)$ : $(.argv) ] ;
 
+# Default toolset & version to be used in case no other toolset has been used
+# explicitly by either the loaded configuration files, the loaded project build
+# scripts or an explicit toolset request on the command line. If not specified,
+# an arbitrary default will be used based on the current host OS. This value,
+# while not strictly necessary, has been added to allow testing Boost-Build's
+# default toolset usage functionality.
+.default-toolset = ;
+.default-toolset-version = ;
+
 
 ################################################################################
 #
@@ -88,6 +97,18 @@ rule location ( )
 {
     local r = [ modules.binding build-system ] ;
     return $(r:P) ;
+}
+
+
+# Sets the default toolset & version to be used in case no other toolset has
+# been used explicitly by either the loaded configuration files, the loaded
+# project build scripts or an explicit toolset request on the command line. For
+# more detailed information see the comment related to used global variables.
+#
+rule set-default-toolset ( toolset : version ? )
+{
+    .default-toolset = $(toolset) ;
+    .default-toolset-version = $(version) ;
 }
 
 
@@ -477,10 +498,20 @@ local rule should-clean-project ( project )
     # the default toolset.
     if ! $(.legacy-ignore-config) && ! [ feature.values <toolset> ]
     {
-        local default-toolset = gcc ;
-        if [ os.name ] = NT
+        local default-toolset = [ modules.peek toolset : .default-toolset ] ;
+        local default-toolset-version = ;
+        if $(default-toolset)
         {
-            default-toolset = msvc ;
+            default-toolset-version =
+                [ modules.peek toolset : .default-toolset-version ] ;
+        }
+        else
+        {
+            default-toolset = gcc ;
+            if [ os.name ] = NT
+            {
+                default-toolset = msvc ;
+            }
         }
 
         ECHO "warning: No toolsets are configured." ;
@@ -490,7 +521,7 @@ local rule should-clean-project ( project )
         ECHO "warning: For more configuration options, please consult" ;
         ECHO "warning: http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html" ;
 
-        toolset.using $(default-toolset) ;
+        toolset.using $(default-toolset) : $(default-toolset-version) ;
     }
 
 
