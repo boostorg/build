@@ -16,6 +16,7 @@ import regex ;
 import sequence ;
 import set ;
 
+
 .flag-no = 1 ;
 
 .ignore-requirements = ;
@@ -30,6 +31,7 @@ if --ignore-toolset-requirements in [ modules.peek : ARGV ]
 
 # Initializes an additional toolset-like module. First load the 'toolset-module'
 # and then calls its 'init' rule with trailing arguments.
+#
 rule using ( toolset-module : * )
 {
     import $(toolset-module) ;
@@ -39,6 +41,7 @@ rule using ( toolset-module : * )
 
 # Expands subfeatures in each property sets, e.g. '<toolset>gcc-3.2' will be
 # converted to '<toolset>gcc/<toolset-version>3.2'.
+#
 local rule normalize-condition ( property-sets * )
 {
     local result ;
@@ -56,6 +59,7 @@ local rule normalize-condition ( property-sets * )
 # same as the module we're setting the flag for. 'v' can be either 'checked' or
 # 'unchecked'. Subsequent call to 'pop-checking-for-flags-module' will restore
 # the setting that was in effect before calling this rule.
+#
 rule push-checking-for-flags-module ( v )
 {
     .flags-module-checking = $(v) $(.flags-module-checking) ;
@@ -69,6 +73,7 @@ rule pop-checking-for-flags-module ( )
 
 # Specifies the flags (variables) that must be set on targets under certain
 # conditions, described by arguments.
+#
 rule flags (
     rule-or-module   # If contains a dot, should be a rule name. The flags will
                      # be applied when that rule is used to set up build
@@ -154,6 +159,7 @@ rule flags (
 
 
 # Adds a new flag setting with the specified values. Does no checking.
+#
 local rule add-flag ( rule-or-module : variable-name : condition * : values * )
 {
     .$(rule-or-module).flags += $(.flag-no) ;
@@ -174,6 +180,7 @@ local rule add-flag ( rule-or-module : variable-name : condition * : values * )
 
 # Returns the first element of 'property-sets' which is a subset of
 # 'properties', or an empty list if no such element exists.
+#
 rule find-property-subset ( property-sets * : properties * )
 {
     # Cut property values off.
@@ -276,6 +283,7 @@ rule handle-flag-value ( value * : properties * )
 # Given a rule name and a property set, returns a list of interleaved variables
 # names and values which must be set on targets for that rule/property-set
 # combination.
+#
 rule set-target-variables-aux ( rule-or-module : property-set )
 {
     local result ;
@@ -356,6 +364,7 @@ rule set-target-variables ( rule-or-module targets + : property-set )
 #    property in requires is adjusted too.
 # 3. All flags are inherited.
 # 4. All rules are imported.
+#
 rule inherit ( toolset : base )
 {
     import $(base) ;
@@ -406,6 +415,7 @@ rule inherit-generators ( toolset properties * : base : generators-to-ignore * )
 # or version of a base toolset, it won't ever match the inheriting toolset. When
 # such flag settings must be inherited, define a rule in base toolset module and
 # call it as needed.
+#
 rule inherit-flags ( toolset : base : prohibited-properties * )
 {
     for local f in $(.module-flags.$(base))
@@ -455,6 +465,7 @@ rule inherit-rules ( toolset : base )
 
 # Return the list of global 'toolset requirements'. Those requirements will be
 # automatically added to the requirements of any main target.
+#
 rule requirements ( )
 {
     return $(.requirements) ;
@@ -465,6 +476,7 @@ rule requirements ( )
 # will be automatically added to the requirements for all main targets, as if
 # they were specified literally. For best results, all requirements added should
 # be conditional or indirect conditional.
+#
 rule add-requirements ( requirements * )
 {
     if ! $(.ignore-requirements)
