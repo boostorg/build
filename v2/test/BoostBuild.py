@@ -611,7 +611,7 @@ class Tester(TestCmd.TestCmd):
             self.unexpected_difference.pprint()
             self.fail_test(1)
 
-    def _expect_line(self, content, expected):
+    def _expect_line(self, content, expected, expected_to_exist):
         expected = expected.strip()
         lines = content.splitlines()
         found = 0
@@ -621,18 +621,23 @@ class Tester(TestCmd.TestCmd):
                 found = 1
                 break
 
-        if not found:
+        if expected_to_exist and not found:
             annotation( "failure",
                 "Did not find expected line:\n%s\nin output:\n%s" %
                 (expected, content))
             self.fail_test(1)
+        if not expected_to_exist and found:
+            annotation( "failure",
+                "Found an unexpected line:\n%s\nin output:\n%s" %
+                (expected, content))
+            self.fail_test(1)
 
-    def expect_output_line(self, line):
-        self._expect_line(self.stdout(), line)
+    def expect_output_line(self, line, expected_to_exist=True):
+        self._expect_line(self.stdout(), line, expected_to_exist)
 
-    def expect_content_line(self, name, line):
+    def expect_content_line(self, name, line, expected_to_exist=True):
         content = self._read_file(name)
-        self._expect_line(content, line)
+        self._expect_line(content, line, expected_to_exist)
 
     def _read_file(self, name, exact=0):
         name = self.adjust_names(name)[0]
