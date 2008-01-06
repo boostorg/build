@@ -148,10 +148,10 @@ class Tester(TestCmd.TestCmd):
     Optional argument `work_dir` indicates an absolute directory, where the test
     will run be run.
     """
-    def __init__(self, arguments="", executable = 'bjam',
-                 match = TestCmd.match_exact, boost_build_path = None,
-                 translate_suffixes = True, pass_toolset = True,
-                 use_test_config = True, workdir = '', **keywords):
+    def __init__(self, arguments="", executable="bjam",
+        match=TestCmd.match_exact, boost_build_path=None,
+        translate_suffixes=True, pass_toolset=True, use_test_config=True,
+        ignore_toolset_requirements=True, workdir="", **keywords):
 
         self.original_workdir = os.getcwd()
         if workdir != '' and not os.path.isabs(workdir):
@@ -163,6 +163,7 @@ class Tester(TestCmd.TestCmd):
 
         self.toolset = get_toolset()
         self.pass_toolset = pass_toolset
+        self.ignore_toolset_requirements = ignore_toolset_requirements
 
         prepare_suffix_map(pass_toolset and self.toolset or 'gcc')
 
@@ -234,7 +235,6 @@ class Tester(TestCmd.TestCmd):
         program_list.append('-sBOOST_BUILD_PATH=' + boost_build_path)
         if verbosity:
             program_list += verbosity
-        program_list += ["--ignore-toolset-requirements"]
         if arguments:
             program_list += arguments.split(" ")
 
@@ -359,9 +359,9 @@ class Tester(TestCmd.TestCmd):
     #
     #   FIXME: Large portion copied from TestSCons.py, should be moved?
     #
-    def run_build_system(
-        self, extra_args='', subdir='', stdout = None, stderr = '', status = 0,
-        match = None, pass_toolset = None, use_test_config = None, **kw):
+    def run_build_system(self, extra_args='', subdir='', stdout=None, stderr='',
+        status=0, match=None, pass_toolset=None, use_test_config=None,
+        ignore_toolset_requirements=None, **kw):
 
         if os.path.isabs(subdir):
             if stderr:
@@ -380,6 +380,9 @@ class Tester(TestCmd.TestCmd):
         if use_test_config is None:
             use_test_config = self.use_test_config
 
+        if ignore_toolset_requirements is None:
+            ignore_toolset_requirements = self.ignore_toolset_requirements
+
         try:
             kw['program'] = []
             kw['program'] += self.program
@@ -388,9 +391,10 @@ class Tester(TestCmd.TestCmd):
             if pass_toolset:
                 kw['program'].append("toolset=" + self.toolset)
             if use_test_config:
-                kw['program'].append("--test-config=\""
-                    + os.path.join(self.original_workdir, "test-config.jam")
-                    + "\"")
+                kw['program'].append('--test-config="%s"'
+                    % os.path.join(self.original_workdir, "test-config.jam"))
+            if ignore_toolset_requirements:
+                kw['program'].append("--ignore-toolset-requirements")
             kw['chdir'] = subdir
             apply(TestCmd.TestCmd.run, [self], kw)
         except:
