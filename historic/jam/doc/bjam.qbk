@@ -116,7 +116,7 @@ If the scripts fail to detect an appropriate toolset to build with your particul
 The toolset used to build Boost.Jam is independent of the toolsets used for Boost.Build. Only one version of Boost.Jam is needed to use Boost.Build.
 ]
 
-The supported toolsets, and wether they are auto-detected, are:
+The supported toolsets, and whether they are auto-detected, are:
 
 [table Supported Toolsets
 
