@@ -34,7 +34,7 @@ type.register     PCH : pch ;
 type.register   C_PCH : : PCH ;
 type.register CPP_PCH : : PCH ;
 
-# Fontrol precompiled header (PCH) generation.
+# Control precompiled header (PCH) generation.
 feature.feature pch :
       on
       off
@@ -89,7 +89,7 @@ class pch-generator : generator
 
 # NOTE: requirements are empty, default pch generator can be applied when
 # pch=off.
-generators.register [
-  new dummy-generator pch.default-c-pch-generator   : :   C_PCH ] ;
-generators.register [
-  new dummy-generator pch.default-cpp-pch-generator : : CPP_PCH ] ;
+generators.register
+    [ new dummy-generator pch.default-c-pch-generator   : :   C_PCH ] ;
+generators.register
+    [ new dummy-generator pch.default-cpp-pch-generator : : CPP_PCH ] ;
