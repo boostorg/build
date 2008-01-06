@@ -311,8 +311,7 @@ local rule print-help-usage ( )
     print.section "Debug Levels"
         Each debug level shows a different set of information. Usually with
         higher levels producing more verbose information. The following levels
-        are supported:
-        ;
+        are supported: ;
     print.list-start ;
     print.list-item 0;
         Turn off all diagnostic output. Only errors are reported. ;
