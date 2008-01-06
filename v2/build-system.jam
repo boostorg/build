@@ -509,12 +509,11 @@ local rule should-clean-project ( project )
     # the default toolset.
     if ! $(.legacy-ignore-config) && ! [ feature.values <toolset> ]
     {
-        local default-toolset = [ modules.peek toolset : .default-toolset ] ;
+        local default-toolset = $(.default-toolset) ;
         local default-toolset-version = ;
         if $(default-toolset)
         {
-            default-toolset-version =
-                [ modules.peek toolset : .default-toolset-version ] ;
+            default-toolset-version = $(.default-toolset-version) ;
         }
         else
         {
