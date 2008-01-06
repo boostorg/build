@@ -264,7 +264,7 @@ obj b : b.cpp : &lt;variant&gt;release:&lt;optimization&gt;off ;
     <para>(This entry is specific to Unix system.)Before answering the
       questions, let's recall a few points about shared libraries. Shared
       libraries can be used by several applications, or other libraries,
-      without phisycally including the library in the application. This can
+      without physically including the library in the application. This can
       greatly decrease the total size of applications. It's also possible to
       upgrade a shared library when the application is already
       installed. Finally, shared linking can be faster.

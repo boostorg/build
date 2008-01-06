@@ -613,8 +613,8 @@ local rule should-clean-project ( project )
 
             if ! $(t)
             {
-                ECHO "notice: could not find main target " $(id) ;
-                ECHO "notice: assuming it's a name of file to create " ;
+                ECHO "notice: could not find main target" $(id) ;
+                ECHO "notice: assuming it's a name of file to create." ;
                 bjam-targets += $(id) ;
             }
             else
