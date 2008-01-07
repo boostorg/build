@@ -66,11 +66,11 @@ def get_toolset():
 
 
 # Detect the host OS.
-windows = 0
+windows = False
 if os.environ.get('OS','').lower().startswith('windows') or \
        os.__dict__.has_key('uname') and \
        os.uname()[0].lower().startswith('cygwin'):
-    windows = 1
+    windows = True
 
 
 suffixes = {}
@@ -78,7 +78,8 @@ suffixes = {}
 
 # Prepare the map of suffixes
 def prepare_suffix_map(toolset):
-    global windows, suffixes
+    global windows
+    global suffixes
     suffixes = {'.exe': '', '.dll': '.so', '.lib': '.a', '.obj': '.o'}
     suffixes['.implib'] = '.no_implib_files_on_this_platform'
     if windows:
@@ -91,7 +92,7 @@ def prepare_suffix_map(toolset):
         suffixes['.dll'] = '.dylib'
 
 
-def re_remove(sequence,regex):
+def re_remove(sequence, regex):
     me = re.compile(regex)
     result = filter( lambda x: me.match(x), sequence )
     if 0 == len(result):
@@ -100,7 +101,7 @@ def re_remove(sequence,regex):
         sequence.remove(r)
 
 
-def glob_remove(sequence,pattern):
+def glob_remove(sequence, pattern):
     result = fnmatch.filter(sequence,pattern)
     if 0 == len(result):
         raise ValueError()
@@ -110,10 +111,10 @@ def glob_remove(sequence,pattern):
 
 # Configuration stating whether Boost Build is expected to automatically prepend
 # prefixes to built library targets.
-lib_prefix = 1
-dll_prefix = 1
+lib_prefix = True
+dll_prefix = True
 if windows:
-    dll_prefix = 0
+    dll_prefix = False
 
 
 #
@@ -121,7 +122,7 @@ if windows:
 # Should be moved to TestCmd.py?
 #
 if os.name == 'posix':
-    def _failed(self, status = 0):
+    def _failed(self, status=0):
         if self.status is None:
             return None
         if os.WIFSIGNALED(status):
@@ -133,11 +134,10 @@ if os.name == 'posix':
         else:
             return -1
 elif os.name == 'nt':
-    def _failed(self, status = 0):
+    def _failed(self, status=0):
         return not self.status is None and self.status != status
     def _status(self):
         return self.status
-
 
 class Tester(TestCmd.TestCmd):
     """Class for testing Boost.Build.
@@ -242,8 +242,8 @@ class Tester(TestCmd.TestCmd):
             self
             , program=program_list
             , match=match
-            , workdir = workdir
-            , inpath = inpath_bjam
+            , workdir=workdir
+            , inpath=inpath_bjam
             , **keywords)
 
         os.chdir(self.workdir)
@@ -265,7 +265,7 @@ class Tester(TestCmd.TestCmd):
         # Seems like it's not possible to remove the current a directory.
         d = os.getcwd()
         os.chdir(os.path.dirname(self.workdir))
-        shutil.rmtree(self.workdir, ignore_errors=0)
+        shutil.rmtree(self.workdir, ignore_errors=False)
 
         if not os.path.isabs(tree_location):
             tree_location = os.path.join(self.original_workdir, tree_location)
@@ -337,7 +337,7 @@ class Tester(TestCmd.TestCmd):
                 n = self.glob_file(string.replace(name, "$toolset", self.toolset+"*"))
             if n:
                 if os.path.isdir(n):
-                    shutil.rmtree(n, ignore_errors=0)
+                    shutil.rmtree(n, ignore_errors=False)
                 else:
                     os.unlink(n)
 
@@ -347,7 +347,8 @@ class Tester(TestCmd.TestCmd):
         os.chdir(self.workdir)
 
     def expand_toolset(self, name):
-        """Expands $toolset in the given file to tested toolset"""
+        """Expands $toolset in the given file to tested toolset.
+        """
         content = self.read(name)
         content = string.replace(content, "$toolset", self.toolset)
         self.write(name, content)
@@ -359,7 +360,7 @@ class Tester(TestCmd.TestCmd):
     #
     #   FIXME: Large portion copied from TestSCons.py, should be moved?
     #
-    def run_build_system(self, extra_args='', subdir='', stdout=None, stderr='',
+    def run_build_system(self, extra_args="", subdir="", stdout=None, stderr="",
         status=0, match=None, pass_toolset=None, use_test_config=None,
         ignore_toolset_requirements=None, **kw):
 
@@ -420,7 +421,7 @@ class Tester(TestCmd.TestCmd):
             if stderr:
                 annotation("STDERR", stderr)
             self.maybe_do_diff(self.stdout(), stdout)
-            self.fail_test(1, dump_stdio = 0)
+            self.fail_test(1, dump_stdio=False)
 
         # Intel tends to produce some message to stderr which makes tests fail.
         intel_workaround = re.compile("^xi(link|lib): executing.*\n", re.M)
@@ -432,7 +433,7 @@ class Tester(TestCmd.TestCmd):
             annotation("Actual STDERR", self.stderr())
             annotation("STDOUT", self.stdout())
             self.maybe_do_diff(actual_stderr, stderr)
-            self.fail_test(1, dump_stdio = 0)
+            self.fail_test(1, dump_stdio=False)
 
         self.tree = tree.build_tree(self.workdir)
         self.difference = tree.trees_difference(self.previous_tree, self.tree)
@@ -454,7 +455,7 @@ class Tester(TestCmd.TestCmd):
                 result = result[0]
         return result
 
-    def read(self, name, binary = 0):
+    def read(self, name, binary=False):
         try:
             if self.toolset:
                 name = string.replace(name, "$toolset", self.toolset+"*")
@@ -478,7 +479,7 @@ class Tester(TestCmd.TestCmd):
         else:
             return result
 
-    def fail_test(self, condition, dump_stdio = 1, *args):
+    def fail_test(self, condition, dump_stdio=True, *args):
         if not condition:
             return
 
@@ -496,7 +497,7 @@ class Tester(TestCmd.TestCmd):
             print
             path = os.path.join(self.original_workdir, "failed_test")
             if os.path.isdir(path):
-                shutil.rmtree(path, ignore_errors=0)
+                shutil.rmtree(path, ignore_errors=False)
             elif os.path.exists(path):
                 raise "Path " + path + " already exists and is not a directory";
             shutil.copytree(self.workdir, path)
@@ -615,14 +616,14 @@ class Tester(TestCmd.TestCmd):
             self.unexpected_difference.pprint()
             self.fail_test(1)
 
-    def _expect_line(self, content, expected, expected_to_exist):
+    def __expect_line(self, content, expected, expected_to_exist):
         expected = expected.strip()
         lines = content.splitlines()
-        found = 0
+        found = False
         for line in lines:
             line = line.strip()
             if fnmatch.fnmatch(line, expected):
-                found = 1
+                found = True
                 break
 
         if expected_to_exist and not found:
@@ -637,13 +638,13 @@ class Tester(TestCmd.TestCmd):
             self.fail_test(1)
 
     def expect_output_line(self, line, expected_to_exist=True):
-        self._expect_line(self.stdout(), line, expected_to_exist)
+        self.__expect_line(self.stdout(), line, expected_to_exist)
 
     def expect_content_line(self, name, line, expected_to_exist=True):
-        content = self._read_file(name)
-        self._expect_line(content, line, expected_to_exist)
+        content = self.__read_file(name)
+        self.__expect_line(content, line, expected_to_exist)
 
-    def _read_file(self, name, exact=0):
+    def __read_file(self, name, exact=False):
         name = self.adjust_names(name)[0]
         result = ""
         try:
@@ -656,11 +657,11 @@ class Tester(TestCmd.TestCmd):
             self.fail_test(1)
         return result
 
-    def expect_content(self, name, content, exact=0):
-        actual = self._read_file(name, exact)
+    def expect_content(self, name, content, exact=False):
+        actual = self.__read_file(name, exact)
         content = string.replace(content, "$toolset", self.toolset+"*")
 
-        matched = 0
+        matched = False
         if exact:
             matched = fnmatch.fnmatch(actual,content)
         else:
@@ -700,25 +701,26 @@ class Tester(TestCmd.TestCmd):
     # Helpers.
     def mul(self, *arguments):
         if len(arguments) == 0:
-                return None
-        else:
-                here = arguments[0]
-                if type(here) == type(''):
-                        here = [here]
+            return None
 
-                if len(arguments) > 1:
-                        there = apply(self.mul, arguments[1:])
-                        result = []
-                        for i in here:
-                                for j in there:
-                                        result.append(i + j)
-                        return result
-                else:
-                        return here
+        here = arguments[0]
+        if type(here) == type(''):
+            here = [here]
+
+        if len(arguments) > 1:
+            there = apply(self.mul, arguments[1:])
+            result = []
+            for i in here:
+                for j in there:
+                    result.append(i + j)
+            return result
+
+        return here
 
     # Internal methods.
     def ignore_elements(self, list, wildcard):
-        """Removes in-place, element of 'list' that match the given wildcard."""
+        """Removes in-place, element of 'list' that match the given wildcard.
+        """
         list[:] = filter(lambda x, w=wildcard: not fnmatch.fnmatch(x, w), list)
 
     def adjust_lib_name(self, name):
@@ -763,7 +765,7 @@ class Tester(TestCmd.TestCmd):
     # Adjusts suffixes on all names.
     def adjust_names(self, names):
         if type(names) == types.StringType:
-                names = [names]
+            names = [names]
         r = map(self.adjust_lib_name, names)
         r = map(self.adjust_suffix, r)
         r = map(lambda x, t=self.toolset: string.replace(x, "$toolset", t+"*"), r)
