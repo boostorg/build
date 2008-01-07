@@ -15,6 +15,7 @@ import feature ;
 import make ;
 import modules ;
 import os ;
+import path ;
 import project ;
 import property-set ;
 import regex ;
@@ -273,13 +274,15 @@ local rule load-config ( module-name : filename : path + : must-find ? )
 # option is specified.
 #
 #   -- user-config --
-#   Named user-config.jam by default but may be explicitly renamed using the
+#   Named user-config.jam by default or may be named explicitly using the
 # --user-config command-line option or the BOOST_BUILD_USER_CONFIG environment
-# variable. File is searched for in the user's home folder and the Boost Build
-# path, in that order. Not loaded in case either the test-configuration file is
-# loaded, --ignore-config command-line option is specified or an empty file
-# name is explicitly specified. If its non-empty name has been explicitly
-# specified then the file must exist.
+# variable. If named explicitly the file is looked for from the current working
+# directory and if the default one is used then it is searched for in the
+# user's home directory and the Boost Build path, in that order. Not loaded in
+# case either the test-config configuration file is loaded, --ignore-config
+# command-line option is specified or an empty file name is explicitly
+# specified. If the file name has been given explicitly then the file must
+# exist.
 #
 # Test configurations have been added primarily for use by Boost Build's
 # internal unit testing system but may be used freely in other places as well.
@@ -345,23 +348,34 @@ local rule load-configuration-files
         local explicitly-requested = $(user-config) ;
         user-config ?= user-config.jam ;
 
-        if $(.debug-config) && $(explicitly-requested)
+        if $(user-config)
         {
-            if $(user-config)
+            if $(explicitly-requested)
             {
-                ECHO "Loading explicitly specified user configuration file:" ;
-                ECHO "    $(user-config)" ;
+                # Treat explicitly entered user paths as native OS path
+                # references and, if non-absolute, root them at the current
+                # working directory.
+                user-config = [ path.make $(user-config) ] ;
+                user-config = [ path.root $(user-config) [ path.pwd ] ] ;
+                user-config = [ path.native $(user-config) ] ;
+
+                if $(.debug-config)
+                {
+                    ECHO "Loading explicitly specified user configuration file:" ;
+                    ECHO "    $(user-config)" ;
+                }
+
+                load-config user-config : $(user-config:BS) : $(user-config:D)
+                    : must-exist ;
             }
             else
             {
-                ECHO "User configuration file loading explicitly disabled." ;
+                load-config user-config : $(user-config) : $(user-path) ;
             }
         }
-
-        if $(user-config)
+        else if $(.debug-config)
         {
-            load-config user-config : $(user-config) : $(user-path)
-                : $(explicitly-requested) ;
+            ECHO "User configuration file loading explicitly disabled." ;
         }
     }
 }
