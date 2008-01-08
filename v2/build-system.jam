@@ -361,7 +361,7 @@ local rule load-configuration-files
 
                 if $(.debug-config)
                 {
-                    ECHO "Loading explicitly specified user configuration file:" ;
+                    ECHO "notice: Loading explicitly specified user configuration file:" ;
                     ECHO "    $(user-config)" ;
                 }
 
@@ -375,7 +375,7 @@ local rule load-configuration-files
         }
         else if $(.debug-config)
         {
-            ECHO "User configuration file loading explicitly disabled." ;
+            ECHO "notice: User configuration file loading explicitly disabled." ;
         }
     }
 }
