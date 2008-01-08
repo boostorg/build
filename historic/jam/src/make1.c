@@ -687,7 +687,7 @@ static void call_timing_rule(TARGET* target, timing_info* time)
         FRAME frame[1];
         frame_init( frame );
 
-        /* args * :: $(__ACTION_RULE__[2-]) */
+        /* args * :: $(__TIMING_RULE__[2-]) */
         lol_add( frame->args, list_copy( L0, timing_rule->next ) );
 
         /* target :: the name of the target */
