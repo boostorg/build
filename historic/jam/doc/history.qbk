@@ -1,5 +1,19 @@
 [variablelist
 
+[[3.1.17] [
+
+In development...
+
+[list
+    [li __ACTION_RULE__ now receives the action output as a list of output lines
+        instead of a single string to work around problems with different
+        newline character combinations.
+        -- ['Jurko Gospodnetic.]
+        ]
+]
+
+]]
+
 [[3.1.16] [
 
 This is mostly a bug fix release.
