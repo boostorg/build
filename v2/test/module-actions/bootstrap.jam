@@ -6,6 +6,16 @@
 # Demonstration that module variables have the right effect in actions.
 
 
+rule display-action-output ( args * : target
+    : command status start end user system : output-lines * )
+{
+    for local line in $(output-lines)
+    {
+        ECHO $(line) ;
+    }
+}
+
+
 # Top-level rule that causes a target to be built by invoking the specified
 # action.
 rule make ( target : sources * : act )
@@ -13,6 +23,7 @@ rule make ( target : sources * : act )
     DEPENDS all : $(target) ;
     DEPENDS $(target) : $(sources) ;
     $(act) $(target) : $(sources) ;
+    __ACTION_RULE__ on $(target) = display-action-output ;
 }
 
 
