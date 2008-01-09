@@ -751,10 +751,39 @@ static void call_action_rule(TARGET* target, int status, timing_info* time,
                 outf_double(time->system) ) );
 
         /* output ? :: the output of the action command */
-        if (command_output)
-            lol_add(frame->args, list_new(L0, newstr(command_output)));
-        else
-            lol_add(frame->args, L0);
+        {
+            // Split command output into separate lines. We consider both \n and
+            // \r\n to be valid newline sequences.
+            LIST* output_lines = L0;
+            if ( command_output )
+            {
+                char * line = command_output;
+                char index = 0;
+                while ( line[index] )
+                {
+                    if ( line[index] != '\r' )
+                        ++index;
+                    else
+                    {
+                        int next = index + 1;
+                        if ( line[next] == '\n' ) ++next;
+                        {
+                            char temp_char = line[index];
+                            line[index] = 0;
+                            output_lines = list_new(output_lines, newstr(line));
+                            line[index] = temp_char;
+                        }
+                        index = 0;
+                        line += next;
+                    }
+                }
+                // Check for the case when there is no trailing newline
+                // sequence.
+                if ( index )
+                    output_lines = list_new(output_lines, newstr(line));
+            }
+            lol_add(frame->args, output_lines);
+        }
 
         /* Call the rule. */
         evaluate_rule( action_rule->string, frame );
