@@ -764,7 +764,7 @@ local rule should-clean-project ( project )
         # result of @(...) below (the name of the XML file).
         #
         rule out-xml.generate-action ( args * : xml-file
-            : command status start end user system : output-lines * )
+            : command status start end user system : output ? )
         {
             local contents =
                 [ on $(xml-file) return $(.header) $(.contents) $(.footer) ] ;
@@ -784,7 +784,7 @@ local rule should-clean-project ( project )
         # target.
         #
         rule out-xml.collect ( xml-file : target : command status start end user
-            system : output-lines * )
+            system : output ? )
         {
             local nl = "
 " ;
@@ -836,7 +836,7 @@ local rule should-clean-project ( project )
                 "$(nl)    <jam-target><![CDATA[$(target)]]></jam-target>"
                 "$(nl)    <path><![CDATA[$(target:G=:R=$(locate))]]></path>"
                 "$(nl)    <command><![CDATA[$(command)]]></command>"
-                "$(nl)    <output><![CDATA[$(output-lines:J=$(nl))$(nl)]]></output>" ;
+                "$(nl)    <output><![CDATA[$(output)]]></output>" ;
             .contents on $(xml-file) +=
                 "$(nl)  </action>" ;
         }
