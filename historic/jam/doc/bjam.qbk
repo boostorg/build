@@ -1456,7 +1456,7 @@ the rule is called as:
 
 And =__ACTION_RULE__= is called as:
 
-    rule action-rule ( args * : target : command status start end user system : output-lines * )
+    rule action-rule ( args * : target : command status start end user system : output ? )
 
 The arguments for both are:
 
@@ -1480,9 +1480,9 @@ The arguments for both are:
     [[[^system]]
         [The number of system CPU seconds the executed command spent as a floating
         point value.]]
-    [[[^output-lines]]
-        [List of lines outputed by the command. The output content reflects the
-        use of the =-pX= option.]]
+    [[[^output]]
+        [The output of the command as a single string. The content of the output
+        reflects the use of the =-pX= option.]]
 ]
 
 [note
