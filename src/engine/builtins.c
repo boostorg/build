@@ -840,37 +840,37 @@ builtin_match(
 
 	for( l = lol_get( frame->args, 0 ); l; l = l->next )
 	{
-            /* Result is cached and intentionally never freed */
+        /* Result is cached and intentionally never freed */
 	    regexp *re = regex_compile( l->string );
 
 	    /* For each string to match against */
-            for( r = lol_get( frame->args, 1 ); r; r = r->next )
+        for( r = lol_get( frame->args, 1 ); r; r = r->next )
+        {
+            if( regexec( re, r->string ) )
             {
-                if( regexec( re, r->string ) )
+                int i, top;
+
+                /* Find highest parameter */
+
+                for( top = NSUBEXP; top-- > 1; )
+                    if( re->startp[top] )
+                        break;
+
+                /* And add all parameters up to highest onto list. */
+                /* Must have parameters to have results! */
+
+                for( i = 1; i <= top; i++ )
                 {
-                    int i, top;
-
-                    /* Find highest parameter */
-
-                    for( top = NSUBEXP; top-- > 1; )
-                        if( re->startp[top] )
-                            break;
-
-                    /* And add all parameters up to highest onto list. */
-                    /* Must have parameters to have results! */
-
-                    for( i = 1; i <= top; i++ )
-                    {
-                        string_append_range( buf, re->startp[i], re->endp[i] );
-                        result = list_new( result, newstr( buf->value ) );
-                        string_truncate( buf, 0 );
-                    }
+                    string_append_range( buf, re->startp[i], re->endp[i] );
+                    result = list_new( result, newstr( buf->value ) );
+                    string_truncate( buf, 0 );
                 }
             }
         }
+    }
 
-        string_free( buf );
-        return result;
+    string_free( buf );
+    return result;
 }
 
 LIST *
