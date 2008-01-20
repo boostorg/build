@@ -1,8 +1,8 @@
-# Copyright 2001, 2002, 2003, 2005 Dave Abrahams 
-# Copyright 2006 Rene Rivera 
-# Copyright 2003, 2005 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2001, 2002, 2003, 2005 Dave Abrahams
+# Copyright 2006 Rene Rivera
+# Copyright 2003, 2005 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 import modules ;
 import string ;
@@ -42,7 +42,7 @@ rule get-constant ( os ? )
 
 # export all the common constants
 .constants = name platform version shared-library-path-variable path-separator executable-path-variable executable-suffix ;
-for local constant in $(.constants) 
+for local constant in $(.constants)
 {
     IMPORT $(__name__) : get-constant : $(__name__) : $(constant) ;
 }
@@ -84,16 +84,20 @@ if $(.name) = NT
 .executable-path-variable = PATH ;
 .executable-suffix = "" ;
 
-# Return a list of the directories in the PATH.  Yes, that information
-# is (sort of) available in the global module, but jam code can change
-# those values, and it isn't always clear what case/capitalization to
-# use when looking.  This rule is a more reliable way to get there.
+
+# Return a list of the directories in the PATH. Yes, that information is (sort
+# of) available in the global module, but jam code can change those values, and
+# it isn't always clear what case/capitalization to use when looking. This rule
+# is a more reliable way to get there.
 rule executable-path ( )
 {
-    return [ string.words [ environ [ constant executable-path-variable ] ] 
-          : [ constant path-separator ] ] ;
+    return [ string.words [ environ [ constant executable-path-variable ] ]
+        : [ constant path-separator ] ] ;
 }
-  
+
+
+# Initialize the list of home directories for the current user depending on the
+# OS.
 if $(.name) = NT
 {
     local home = [ environ HOMEDRIVE HOMEPATH ] ;
@@ -104,14 +108,16 @@ else
     .home-directories = [ environ HOME ] ;
 }
 
-# Can't use 'constant' mechanism because it only returns 1-element
-# values.
+
+# Can't use 'constant' mechanism because it only returns 1-element values.
 rule home-directories ( )
 {
     return $(.home-directories) ;
 }
-# Return the string needed to represent the expansion of the named
-# shell variable.
+
+
+# Return the string needed to represent the expansion of the named shell
+# variable.
 rule expand-variable ( variable )
 {
     local prefix = [ constant expand-variable-prefix ] ;
@@ -119,17 +125,18 @@ rule expand-variable ( variable )
     return $(prefix)$(variable)$(suffix) ;
 }
 
+
 # Returns true if running on windows, whether in cygwin or not.
-rule on-windows 
+rule on-windows ( )
 {
     local result ;
-    if [ modules.peek : NT ] 
+    if [ modules.peek : NT ]
     {
         result = true ;
     }
-    else if [ modules.peek : UNIX ] 
+    else if [ modules.peek : UNIX ]
     {
-        switch [ modules.peek : JAMUNAME ] 
+        switch [ modules.peek : JAMUNAME ]
         {
             case CYGWIN* :
             {
@@ -140,24 +147,22 @@ rule on-windows
     return $(result) ;
 }
 
-if ! [ on-windows ] 
+
+if ! [ on-windows ]
 {
     .on-unix = 1 ;
 }
+
 
 rule on-unix
 {
     return $(.on-unix) ;
 }
-     
 
-import regex ;
 
 rule __test__
 {
     import assert ;
-    rule identity ( args * ) { return $(args) ; }
-
     if ! ( --quiet in [ modules.peek : ARGV ] )
     {
         ECHO os: name= [ name ] ;
