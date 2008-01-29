@@ -361,7 +361,8 @@ class installed-exe-generator : generator
 
     rule run ( project name ? : property-set : source : multiple ? )
     {
-        if [ $(property-set).get <os> ] in NT CYGWIN
+        if [ $(property-set).get <os> ] in NT CYGWIN ||
+            [ $(property-set).get <target-os> ] in windows cygwin
         {
             # Relinking is never needed on NT
             return [ stage.copy-file $(project)
@@ -397,7 +398,8 @@ class installed-shared-lib-generator : generator
 
     rule run ( project name ? : property-set : source : multiple ? )
     {
-        if [ $(property-set).get <os> ] = NT
+        if [ $(property-set).get <os> ] in NT CYGWIN ||
+            [ $(property-set).get <target-os> ] in windows cygwin
         {
             local copied = [ stage.copy-file $(project)
               : $(source) : $(property-set) ] ;
