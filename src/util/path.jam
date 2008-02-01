@@ -475,7 +475,15 @@ rule make-NT ( native )
 
 rule native-NT ( path )
 {
-    local result = [ MATCH "^/?(.*)" : $(path) ] ;
+    local result ;
+    if [ is-rooted $(path) ] && ! [ regex.match "^/(.:)" : $(path) ]
+    {
+        result = $(path) ;
+    }
+    else
+    {
+        result = [ MATCH "^/?(.*)" : $(path) ] ;
+    }
     result = [ sequence.join [ regex.split $(result) "/" ] : "\\" ] ;
     return $(result) ;
 }
@@ -761,11 +769,14 @@ rule __test__ ( )
     assert.result "foo/bar/giz" : make "foo\\bar\\giz" ;
     assert.result "foo" : make "foo/." ;
     assert.result "foo" : make "foo/bar/.." ;
+    assert.result "foo/bar" : make "foo/././././bar" ;
+    assert.result "/foo" : make "\\foo" ;
     assert.result "/D:/My Documents" : make "D:\\My Documents" ;
     assert.result "/c:/boost/tools/build/new/project.jam" : make "c:\\boost\\tools\\build\\test\\..\\new\\project.jam" ;
 
     assert.result "foo\\bar\\giz" : native "foo/bar/giz" ;
     assert.result "foo" : native "foo" ;
+    assert.result "\\foo" : native "/foo" ;
     assert.result "D:\\My Documents\\Work" : native "/D:/My Documents/Work" ;
 
     modules.poke path : os : UNIX ;
