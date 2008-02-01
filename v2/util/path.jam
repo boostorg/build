@@ -6,13 +6,13 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-#  Performs various path manipulations. Paths are always in a 'normalized' 
+#  Performs various path manipulations. Paths are always in a 'normalized'
 #  representation. In it, a path may be either:
 #
 #     - '.', or
 #
 #     - ['/'] [ ( '..' '/' )*  (token '/')* token ]
-# 
+#
 #   In plain english, path can be rooted, '..' elements are allowed only
 #   at the beginning, and it never ends in slash, except for path consisting
 #   of slash only.
@@ -25,14 +25,14 @@ import set ;
 
 
 os = [ modules.peek : OS ] ;
-if [ modules.peek : UNIX ] 
-{    
+if [ modules.peek : UNIX ]
+{
     local uname = [ modules.peek : JAMUNAME ] ;
     switch $(uname)
     {
         case CYGWIN* : os = CYGWIN ;
         case *       : os = UNIX ;
-    }        
+    }
 }
 
 #    Converts the native path into normalized form.
@@ -173,12 +173,12 @@ local rule join-imp ( elements + )
 #
 rule join ( elements + )
 {
-    if ! $(elements[2]) 
+    if ! $(elements[2])
     {
         return $(elements[1]) ;
     }
     else
-    {        
+    {
         for local e in $(elements[2-])
         {
             if [ is-rooted $(e) ]
@@ -187,7 +187,7 @@ rule join ( elements + )
             }
         }
         return [ join-imp $(elements) ] ;
-    }    
+    }
 }
 
 
@@ -215,12 +215,12 @@ rule pwd ( )
     {
         .pwd = [ make [ PWD ] ] ;
         return $(.pwd) ;
-    }    
+    }
 }
 
 
 #    Returns the list of files matching the given pattern in the
-#    specified directory.  Both directories and patterns are 
+#    specified directory.  Both directories and patterns are
 #    supplied as portable paths. Each pattern should be non-absolute
 #    path, and can't contain "." or ".." elements. Each slash separated
 #    element of pattern can contain the following special characters:
@@ -229,9 +229,9 @@ rule pwd ( )
 #    A file $(d)/e1/e2/e3 (where 'd' is in $(dirs)) matches pattern p1/p2/p3
 #    if and only if e1 matches p1, e2 matches p2 and so on.
 #
-#    For example: 
-#        [ glob . : *.cpp ] 
-#        [ glob . : */build/Jamfile ] 
+#    For example:
+#        [ glob . : *.cpp ]
+#        [ glob . : */build/Jamfile ]
 rule glob ( dirs * : patterns + : exclude-patterns * )
 {
     local result ;
@@ -243,23 +243,23 @@ rule glob ( dirs * : patterns + : exclude-patterns * )
         {
             local pattern = [ path.root $(p) $(d) ] ;
             real-patterns += [ path.native $(pattern) ] ;
-        }        
-        
+        }
+
         for local p in $(exclude-patterns)
         {
             local pattern = [ path.root $(p) $(d) ] ;
             real-exclude-patterns += [ path.native $(pattern) ] ;
-        }        
-    }        
+        }
+    }
 
     local inc = [ GLOB-RECURSIVELY $(real-patterns) ] ;
     inc = [ sequence.transform NORMALIZE_PATH : $(inc) ] ;
     local exc = [ GLOB-RECURSIVELY $(real-exclude-patterns) ] ;
     exc = [ sequence.transform NORMALIZE_PATH : $(exc) ] ;
-    
-    return [ sequence.transform path.make : 
+
+    return [ sequence.transform path.make :
         [ set.difference $(inc) : $(exc) ] ] ;
-}    
+}
 
 
 # Recursive version of GLOB. Builds the glob of files while
@@ -330,7 +330,7 @@ rule all-parents ( path : upper_limit ? : cwd ? )
         upper_ele = $(upper_ele[2-]) ;
         path_ele = $(path_ele[2-]) ;
     }
-    
+
     # All upper elements removed ?
     if ! $(upper_ele)
     {
@@ -362,7 +362,7 @@ rule glob-in-parents ( dir : patterns + : upper-limit ? )
         result = [ glob $(parent-dirs[1]) : $(patterns) ] ;
         parent-dirs = $(parent-dirs[2-]) ;
     }
-    return $(result) ;    
+    return $(result) ;
 }
 
 
@@ -371,15 +371,15 @@ rule glob-in-parents ( dir : patterns + : upper-limit ? )
 #
 rule relative ( child parent )
 {
-    if $(parent) = "." 
+    if $(parent) = "."
     {
         return $(child) ;
     }
-    else 
-    {       
+    else
+    {
         local split1 = [ regex.split $(parent) / ] ;
         local split2 = [ regex.split $(child) / ] ;
-    
+
         while $(split1)
         {
             if $(split1[1]) = $(split2[1])
@@ -390,17 +390,17 @@ rule relative ( child parent )
             else
             {
                 errors.error $(child) is not a subdir of $(parent) ;
-            }                
-        }    
+            }
+        }
         if $(split2)
         {
-            return [ join $(split2) ] ;    
+            return [ join $(split2) ] ;
         }
         else
         {
             return "." ;
         }
-    }    
+    }
 }
 
 
@@ -440,7 +440,7 @@ rule programs-path ( )
         if $(p)
         {
             result += [ path.make $(p) ] ;
-        }        
+        }
     }
     return $(result) ;
 }
@@ -463,12 +463,12 @@ rule make-NT ( native )
     {
         result = /$(result) ;
     }
-    
+
     if $(native) = ""
     {
         result = "." ;
     }
-        
+
     return $(result) ;
 }
 
@@ -489,9 +489,9 @@ rule make-UNIX ( native )
         errors.error "Empty path passed to 'make-UNIX'" ;
     }
     else
-    {        
+    {
         return [ NORMALIZE_PATH $(native:T) ] ;
-    }    
+    }
 }
 
 
@@ -550,13 +550,13 @@ rule make-VMS ( native )
     {
         errors.error "Can't handle default-device absolute paths: " $(native) ;
     }
-        
+
     local parts = [ split-path-VMS $(native) ] ;
     local device = $(parts[1]) ;
     local dir = $(parts[2]) ;
     local file = $(parts[3]) ;
     local elems ;
-    
+
     if $(device)
     {
         #
@@ -564,7 +564,7 @@ rule make-VMS ( native )
         #
         elems = /$(device) ;
     }
-    
+
     if $(dir) = "[]"
     {
         #
@@ -576,7 +576,7 @@ rule make-VMS ( native )
     {
         dir = [ regex.replace $(dir) "\\[|\\]" "" ] ;
         local dir_parts = [ regex.split $(dir) \\. ]  ;
-    
+
         if $(dir_parts[1]) = ""
         {
             #
@@ -584,15 +584,15 @@ rule make-VMS ( native )
             #
             dir_parts = $(dir_parts[2--1]) ;
         }
-        
+
         #
         # replace "parent-directory" parts (- => ..)
         #
         dir_parts = [ regex.replace-list $(dir_parts) : - : .. ] ;
-        
+
         elems = $(elems) $(dir_parts) ;
     }
-    
+
     if $(file)
     {
         if ! [ MATCH (\\.) : $(file) ]
@@ -652,7 +652,7 @@ rule native-VMS ( path )
         file = $(maybe_file) ;
         dir = [ sequence.join $(split[1--2]) : / ] ;
     }
-    
+
     #
     # Has dir spec ?
     #
@@ -669,12 +669,12 @@ rule native-VMS ( path )
         {
             #
             # Relative directory
-            # 
+            #
             dir = "."$(dir) ;
         }
         dir = "["$(dir)"]" ;
     }
-    
+
     native = [ sequence.join $(device) $(dir) $(file) ] ;
 
     return $(native) ;
@@ -750,7 +750,7 @@ rule __test__ ( )
     local CWD = "/home/ghost" ;
     assert.result . .. : all-parents "Jamfile" : "/home" : $(CWD) ;
     assert.result . : all-parents "Jamfile" : "/home/ghost" : $(CWD) ;
-    
+
     assert.result "c/d" : relative "a/b/c/d" "a/b" ;
     assert.result "foo" : relative "foo" "." ;
 
@@ -772,7 +772,7 @@ rule __test__ ( )
 
     assert.result "foo/bar/giz" : make "foo/bar/giz" ;
     assert.result "/sub1" : make "/sub1/." ;
-    assert.result "/sub1" : make "/sub1/sub2/.." ;    
+    assert.result "/sub1" : make "/sub1/sub2/.." ;
     assert.result "sub1" : make "sub1/." ;
     assert.result "sub1" : make "sub1/sub2/.." ;
     assert.result "/foo/bar" : native "/foo/bar" ;
@@ -784,12 +784,12 @@ rule __test__ ( )
     #
     assert.result "disk:" "[dir]"  "file" : split-path-VMS "disk:[dir]file" ;
     assert.result "disk:" "[dir]"  ""     : split-path-VMS "disk:[dir]" ;
-    assert.result "disk:" ""     ""       : split-path-VMS "disk:" ;
-    assert.result "disk:" ""     "file"   : split-path-VMS "disk:file" ;
+    assert.result "disk:" ""       ""     : split-path-VMS "disk:" ;
+    assert.result "disk:" ""       "file" : split-path-VMS "disk:file" ;
     assert.result ""      "[dir]"  "file" : split-path-VMS "[dir]file" ;
     assert.result ""      "[dir]"  ""     : split-path-VMS "[dir]" ;
-    assert.result ""      ""     "file"   : split-path-VMS "file" ;
-    assert.result ""      ""     ""       : split-path-VMS "" ;
+    assert.result ""      ""       "file" : split-path-VMS "file" ;
+    assert.result ""      ""       ""     : split-path-VMS "" ;
 
     #
     # Special case: current directory
