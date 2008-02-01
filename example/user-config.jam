@@ -51,11 +51,7 @@
 
 #  Configure msvc (default version, searched in standard location
 #  and PATH).
-using msvc : 8.0 : ;
-
-# using python : 2.4 : "C:/Program Files/Python24/python.exe" : "C:/Program Files/Python24/include/" ;
-
-using python ;
+#  using msvc ;
 
 #  Borland configuration
 #  using borland ;
