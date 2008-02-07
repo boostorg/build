@@ -271,6 +271,12 @@ rule init ( mpicxx ? : options * : mpirun-with-options * )
       command = [ common.get-invocation-command mpi : mpiCC ] ;
     }
 
+    if ! $(mpicxx) && ! $(command) 
+    {
+      # Try "mpicxx", which is used by OpenMPI and MPICH2
+      command = [ common.get-invocation-command mpi : mpicxx ] ;
+    }
+
     local result ;
     local compile_flags ;
     local link_flags ;
