@@ -85,14 +85,7 @@ rule init ( version ? :  command * : options * )
 
     local major = $(m) ;
     
-    if $(major) = "8" {
-      flags intel-darwin.compile OPTIONS $(condition)/<inlining>off : -Ob0 ;
-      flags intel-darwin.compile OPTIONS $(condition)/<inlining>on : -Ob1  ;
-      flags intel-darwin.compile OPTIONS $(condition)/<inlining>full : -Ob2  ;
-      flags intel-darwin.link OPTIONS $(condition)/<runtime-link>static : -static -static-libcxa -lstdc++ -lpthread ;
-      flags intel-darwin.link OPTIONS $(condition)/<runtime-link>shared : -shared-libcxa -lstdc++ -lpthread ;
-    }
-    else if $(major) = "9" {
+    if $(major) = "9" {
       flags intel-darwin.compile OPTIONS $(condition)/<inlining>off : -Ob0 ;
       flags intel-darwin.compile OPTIONS $(condition)/<inlining>on : -Ob1  ;
       flags intel-darwin.compile OPTIONS $(condition)/<inlining>full : -Ob2  ;
@@ -207,5 +200,5 @@ actions link bind LIBRARIES
 
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(USER_OPTIONS) -L"$(LINKPATH)" -o "$(<)" -dynamiclib -install_name "$(<[1]:D=)" "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(OPTIONS)
+    "$(CONFIG_COMMAND)" $(USER_OPTIONS) -L"$(LINKPATH)" -o "$(<)" -single_module -dynamiclib -install_name "$(<[1]:D=)" "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(OPTIONS)
 }
