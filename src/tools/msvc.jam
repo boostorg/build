@@ -663,7 +663,11 @@ flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>off/<exte
 flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>off : /EHa ;
 flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>on : /EHac ;
 
+# By default 8.0 enables rtti support while prior versions disabled it. We
+# simply enable or disable it expliclty so we do not have to depend on this
+# default behaviour.
 flags msvc.compile CFLAGS <rtti>on : /GR ;
+flags msvc.compile CFLAGS <rtti>off : /GR- ;
 flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>shared : /MD ;
 flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>shared : /MDd ;
 
