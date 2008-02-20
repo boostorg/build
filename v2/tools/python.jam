@@ -883,6 +883,11 @@ local rule configure (
             usage-requirements += <define>Py_DEBUG ;
         }
     }
+    
+    # Global, but conditional, requirements to give access to the interpreter
+    # for general utilities, like other toolsets, that run Python scripts.
+    toolset.add-requirements
+        $(target-requirements:J=,):<python.interpreter>$(interpreter-cmd) ;
 
     # Register the right suffix for extensions.
     register-extension-suffix $(extension-suffix) : $(target-requirements) ;
