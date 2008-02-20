@@ -12,6 +12,7 @@ import common ;
 import toolset ;
 import path ;
 import feature : feature ;
+import property ;
 
 .initialized = ;
 
@@ -58,10 +59,10 @@ rule init ( docutils-dir ? )
 
 rule html ( target : source : properties *  )
 {
-    local command-prefix = "python "$(.docutils-dir)/tools/ ;
     if ! [ on $(target) return $(RST2XXX) ]
     {
-        RST2XXX on $(target) = $(command-prefix:E="")rst2html.py ;
+        local python-cmd = [ property.select <python.interpreter> : $(properties) ] ;
+        RST2XXX on $(target) = $(python-cmd:G=:E="python") $(.docutils-dir)/tools/rst2html.py ;
     }
 }
 
@@ -76,6 +77,6 @@ toolset.flags docutils RST2XXX : <docutils-cmd> ;
 actions html
 {
     $(.setup)
-    $(RST2XXX) $(COMMON-FLAGS) $(HTML-FLAGS) $(>) $(<)
+    "$(RST2XXX)" $(COMMON-FLAGS) $(HTML-FLAGS) $(>) $(<)
 }
 
