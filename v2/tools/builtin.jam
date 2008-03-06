@@ -437,8 +437,17 @@ type.register C   : c ;
 
 scanner.register c-scanner : include ;
 
+# It most cases where a CPP file or a H file is a source of some action, 
+# we should rebuild the result if any of files included by CPP/H
+# are changed. One case when this is not needed is installation,
+# which is handled specifically.
 type.set-scanner CPP : c-scanner ;
 type.set-scanner C   : c-scanner ;
+# One case where scanning of H/HPP files is necessary is PCH generation --
+# if any header included by HPP being precompiled changes, we need to
+# recompile the header.
+type.set-scanner H   : c-scanner ;
+type.set-scanner HPP : c-scanner ;
 
 
 # The generator class for libraries (target type LIB). Depending on properties
