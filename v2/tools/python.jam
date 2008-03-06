@@ -111,6 +111,12 @@ rule init ( version ? : cmd-or-prefix ? : includes * : libraries ?
 
     configure $(version) : $(cmd-or-prefix) : $(includes) : $(libraries) : $(condition) : $(extension-suffix) ;
 
+    # The pythonpath feature specifies additional elements for the PYTHONPATH
+    # environment variable, set by run-pyd. For example, pythonpath can be used
+    # to access Python modules that are part of the product being built, but
+    # are not installed in the development system's default paths.
+    feature.feature pythonpath : : free optional path ;
+
     project.pop-current ;
 }
 
@@ -1148,6 +1154,13 @@ local rule translate-os ( src-os )
     return $(x[1]) ;
 }
 
+# Extract the path to a single ".pyd" source. This is used to build the
+# PYTHONPATH for running bpl tests.
+local rule pyd-pythonpath ( source )
+{
+    return [ on $(source) return $(LOCATE) $(SEARCH) ] ;
+}
+
 # The flag settings on testing.capture-output do not
 # apply to python.capture output at the moment.
 # Redo this explicitly.
@@ -1161,8 +1174,9 @@ rule capture-output ( target : sources * : properties * )
     # over explicitly.
     RUN_PATH on $(sources[1]) = [ on $(sources[2-]) return $(RUN_PATH) ] ;
 
-    PYTHONPATH = [ on $(sources[2-]) return $(LOCATE) $(SEARCH) ] ;
-
+    PYTHONPATH  = [ sequence.transform pyd-pythonpath : $(sources[2-]) ] ;
+    PYTHONPATH += [ feature.get-values pythonpath : $(properties) ] ;
+    
     # After test is run, we remove the Python module, but not the Python
     # script.
     testing.capture-output $(target) : $(sources[1]) : $(properties)
