@@ -55,6 +55,11 @@ lib pthread ;
 # Extra library needed by phtread on some platforms.
 lib rt ;
 
+# The pythonpath feature specifies additional elements for the PYTHONPATH
+# environment variable, set by run-pyd. For example, pythonpath can be used
+# to access Python modules that are part of the product being built, but
+# are not installed in the development system's default paths.
+feature.feature pythonpath : : free optional path ;
 
 # Initializes the Python toolset.  Note that all parameters are
 # optional.
@@ -110,12 +115,6 @@ rule init ( version ? : cmd-or-prefix ? : includes * : libraries ?
     }
 
     configure $(version) : $(cmd-or-prefix) : $(includes) : $(libraries) : $(condition) : $(extension-suffix) ;
-
-    # The pythonpath feature specifies additional elements for the PYTHONPATH
-    # environment variable, set by run-pyd. For example, pythonpath can be used
-    # to access Python modules that are part of the product being built, but
-    # are not installed in the development system's default paths.
-    feature.feature pythonpath : : free optional path ;
 
     project.pop-current ;
 }
