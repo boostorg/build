@@ -605,13 +605,12 @@ lib demangler : demangler_gcc.cpp : &lt;toolset&gt;gcc ;   # alternative 2
 lib demangler : demangler_msvc.cpp : &lt;toolset&gt;msvc ; # alternative 3
 </programlisting>
       When building <filename>demangler</filename>, Boost.Build will compare
-      requirements for each alternative with build properties to find the best match.
-      For example, when building with with <code>&lt;toolset&gt;gcc</code> 
-      alternative 2, will be selected, and when building with 
-      <code>&lt;toolset&gt;msvc</code> alternative 3 will be selected. In all other
-      cases, the most generic alternative 1 will be built.
+      requirements for each alternative with build properties to find the best
+      match. For example, when building with <code>&lt;toolset&gt;gcc</code> 
+      alternative 2, will be selected, and when building with
+      <code>&lt;toolset&gt;msvc</code> alternative 3 will be selected. In all
+      other cases, the most generic alternative 1 will be built.
     </para>
-    
   </section>
 
   <section id="bbv2.tutorial.prebuilt">

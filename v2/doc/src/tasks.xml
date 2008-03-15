@@ -192,17 +192,16 @@ lib a : a.cpp : &lt;use&gt;b : : &lt;library&gt;b ;
       <title>Alias</title>
 
       <para>
-        The <functionname>alias</functionname> rule gives alternative name to
+        The <functionname>alias</functionname> rule gives an alternative name to
         a group of targets. For example, to give the name
         <filename>core</filename> to a group of three other targets with the
         following code:
         <programlisting>
 alias core : im reader writer ;</programlisting>
-        Using <filename>core</filename> on the command line, or in the source list
-        of any other target is the same as explicitly using
+        Using <filename>core</filename> on the command line, or in the source
+        list of any other target is the same as explicitly using
         <filename>im</filename>, <filename>reader</filename>, and
         <filename>writer</filename>, but it is just more convenient.
-
       </para>
 
 
@@ -214,7 +213,6 @@ alias core : im reader writer ;</programlisting>
 alias threads : /boost/thread//boost_thread : &lt;link&gt;static ;
 </programlisting>
         and use only the <code>threads</code> alias in your Jamfiles.
-        <!-- changed name for clarity -->
       </para>              
 
       <para>
@@ -224,14 +222,16 @@ alias threads : /boost/thread//boost_thread : &lt;link&gt;static ;
 alias header_only_library : : : :  &lt;include&gt;/usr/include/header_only_library ; 
 </programlisting>
         then using <code>header_only_library</code> in sources will only add an
-        include path. Also note that when there are some sources, their usage
-        requirements are propagated, too. For example:
+        include path. Also note that when an alias has sources, their usage
+        requirements are propagated as well. For example:
 <programlisting>
-lib lib : lib.cpp : : : &lt;include&gt;. ;
-alias lib_alias ; <!-- This line can't possibly be correct!?? -->
-exe main : main.cpp lib_alias ;
+lib library1 : library1.cpp : : : &lt;include&gt;/library/include1 ;
+lib library2 : library2.cpp : : : &lt;include&gt;/library/include2 ;
+alias static_libraries : library1 library2 : &lt;link&gt;static ;
+exe main : main.cpp static_libraries ;
 </programlisting>
-        will compile <filename>main.cpp</filename> with the additional include.
+        will compile <filename>main.cpp</filename> with additional includes
+        required for using the specified static libraries.
       </para>
  
     </section>
@@ -575,7 +575,7 @@ rule generating-rule ( project name : property-set : sources * )
         and add that precompiled header to the sources of the target whose compilation
         you want to speed up:
         <programlisting>
-cpp-pch pch : header.hpp ;
+cpp-pch pch : pch.hpp ;
 exe main : main.cpp pch ;</programlisting>
         You can use the <code>c-pch</code> if you want to use the precompiled
         header in C programs.
@@ -602,6 +602,15 @@ exe main : main.cpp pch ;</programlisting>
         it in the source file, even if the same header is included from
         the precompiled header. This makes sure that your project will build
         even if precompiled headers are not supported.</para></listitem>
+
+        <listitem><para>On the gcc compiler, the name of the header being
+        precompiled must be equal to the name of the <code>cpp-pch</code>
+        target.  This is gcc requirement.</para></listitem>
+
+        <listitem><para>Prior to version 4.2, the gcc compiler did not
+        handle anonymous namespaces in precompiled headers, which 
+        limit their utility. See the <ulink url="http://gcc.gnu.org/bugzilla/show_bug.cgi?id=29085">bug
+        report</ulink> for details.</para></listitem>
         
       </itemizedlist>
       

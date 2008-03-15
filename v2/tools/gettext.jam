@@ -1,47 +1,47 @@
-# Copyright 2003, 2004, 2005, 2006 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003, 2004, 2005, 2006 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 #  This module support GNU gettext internationalization utilities.
-# 
+#
 #  It provides two main target rules: 'gettext.catalog', used for
 #  creating machine-readable catalogs from translations files, and
 #  'gettext.update', used for update translation files from modified
 #  sources.
-# 
+#
 #  To add i18n support to your application you should follow these
 #  steps.
-#  
+#
 #  - Decide on a file name which will contain translations and
 #  what main target name will be used to update it. For example::
-#    
+#
 #    gettext.update update-russian : russian.po a.cpp my_app ;
-# 
+#
 #  - Create the initial translation file by running::
 #
 #    bjam update-russian
 #
 #  - Edit russian.po. For example, you might change fields like LastTranslator.
-#  
+#
 #  - Create a main target for final message catalog::
 #
 #    gettext.catalog russian : russian.po ;
 #
-#  The machine-readable catalog will be updated whenever you update 
+#  The machine-readable catalog will be updated whenever you update
 #  "russian.po". The "russian.po" file will be updated only on explicit
 #  request. When you're ready to update translations, you should
-#  
+#
 #  - Run::
-# 
+#
 #    bjam update-russian
 #
 #  - Edit "russian.po" in appropriate editor.
-#   
+#
 #  The next bjam run will convert "russian.po" into machine-readable form.
 #
 #  By default, translations are marked by 'i18n' call. The 'gettext.keyword'
 #  feature can be used to alter this.
-  
+
 
 import targets ;
 import property-set ;
@@ -59,7 +59,7 @@ import regex ;
 
 # Initializes the gettext module.
 rule init ( path ? # Path where all tools are located. If not specified,
-                   # they should be in PATH.          
+                   # they should be in PATH.
           )
 {
     if $(.initialized) && $(.path) != $(path)
@@ -68,9 +68,9 @@ rule init ( path ? # Path where all tools are located. If not specified,
     }
     .initialized = true ;
     if $(path)
-    {        
+    {
         .path = $(path)/ ;
-    }    
+    }
 }
 
 # Creates a main target 'name', which, when updated, will cause
@@ -80,36 +80,36 @@ rule init ( path ? # Path where all tools are located. If not specified,
 # of those main targets will be scanned, provided they are of
 # appropricate type. The 'gettext.types' feature can be used to
 # control the types.
-# 
+#
 # The target will be updated only if explicitly requested on the
 # command line.
 rule update ( name : existing-translation sources + : requirements * )
 {
     local project = [ project.current ] ;
-    
+
     targets.main-target-alternative
       [ new typed-target $(name) : $(project) : gettext.UPDATE :
         $(existing-translation) $(sources)
-        : [ targets.main-target-requirements $(requirements) : $(project) ]        
+        : [ targets.main-target-requirements $(requirements) : $(project) ]
       ] ;
     $(project).mark-target-as-explicit $(name) ;
 }
 
 
 # The human editable source, containing translation.
-type.register gettext.PO : po ; 
+type.register gettext.PO : po ;
 # The machine readable message catalog.
 type.register gettext.catalog : mo ;
 # Intermediate type produce by extracting translations from
 # sources.
-type.register gettext.POT : pot ; 
+type.register gettext.POT : pot ;
 # Pseudo type used to invoke update-translations generator
 type.register gettext.UPDATE ;
 
 # Identifies the keyword that should be used when scanning sources.
 # Default: i18n
 feature gettext.keyword : : free ;
-# Contains space-separated list of sources types which should be scanned. 
+# Contains space-separated list of sources types which should be scanned.
 # Default: "C CPP"
 feature gettext.types : : free ;
 
@@ -119,7 +119,7 @@ class update-translations-generator : generator
 {
     import regex : split ;
     import property-set ;
-   
+
     rule __init__ ( * : * )
     {
         generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
@@ -135,11 +135,11 @@ class update-translations-generator : generator
         local types = [ $(property-set).get <gettext.types> ] ;
         types ?= "C CPP" ;
         types = [ regex.split $(types) " " ] ;
-        
+
         local keywords = [ $(property-set).get <gettext.keyword> ] ;
         property-set = [ property-set.create $(keywords:G=<gettext.keyword>) ] ;
 
-        # First deterime the list of sources that must be scanned for 
+        # First deterime the list of sources that must be scanned for
         # messages.
         local all-sources ;
         # CONSIDER: I'm not sure if the logic should be the same as for 'stage':
@@ -154,22 +154,22 @@ class update-translations-generator : generator
             if [ $(s).type ] in $(types)
             {
                 right-sources += $(s) ;
-            }                
+            }
         }
-            
+
         local .constructed ;
         if $(right-sources)
-        {                                              
+        {
             # Create the POT file, which will contain list of messages extracted
             # from the sources.
-            local extract = 
+            local extract =
               [ new action $(right-sources) : gettext.extract : $(property-set) ] ;
-            local new-messages = [ new file-target $(name) : gettext.POT 
+            local new-messages = [ new file-target $(name) : gettext.POT
               : $(project) : $(extract) ] ;
-                
+
             # Create a notfile target which will update the existing translation file
-            # with new messages.         
-            local a = [ new action $(sources[1]) $(new-messages) 
+            # with new messages.
+            local a = [ new action $(sources[1]) $(new-messages)
               : gettext.update-po-dispatch ] ;
             local r = [ new notfile-target $(name) : $(project) : $(a) ] ;
             .constructed = [ virtual-target.register $(r) ] ;
@@ -177,9 +177,9 @@ class update-translations-generator : generator
         else
         {
             errors.error "No source could be scanned by gettext tools" ;
-        }            
-        return $(.constructed) ;                
-    }        
+        }
+        return $(.constructed) ;
+    }
 }
 generators.register [ new update-translations-generator gettext.update : : gettext.UPDATE ] ;
 
@@ -199,23 +199,22 @@ actions extract
 # first run), we need to copy the file created from sources.
 # In all other cases, we need to update the file.
 rule update-po-dispatch
-{    
+{
     NOCARE $(>[1]) ;
     gettext.create-po $(<) : $(>) ;
     gettext.update-po $(<) : $(>) ;
-    _ on $(<) = " " ;    
+    _ on $(<) = " " ;
     ok on $(<) = "" ;
     EXISTING_PO on $(<) = $(>[1]) ;
 }
 
-# Due to fancy interaction of existing and updated, this rule
-# can be called with with one source, in which case we copy
-# the lonely source into EXISTING_PO, or with two sources,
-# in which case the action body expands to nothing.
-# I'd really like to have "missing" action modifier.
+# Due to fancy interaction of existing and updated, this rule can be called with
+# one source, in which case we copy the lonely source into EXISTING_PO, or with
+# two sources, in which case the action body expands to nothing. I'd really like
+# to have "missing" action modifier.
 actions quietly existing updated create-po bind EXISTING_PO
 {
-    cp$(_)"$(>[1])"$(_)"$(EXISTING_PO)"$($(>[2]:E=ok))    
+    cp$(_)"$(>[1])"$(_)"$(EXISTING_PO)"$($(>[2]:E=ok))
 }
 
 actions updated update-po bind EXISTING_PO
@@ -223,12 +222,9 @@ actions updated update-po bind EXISTING_PO
     $(.path)msgmerge$(_)-U$(_)"$(EXISTING_PO)"$(_)"$(>[1])"
 }
 
-actions gettext.compile 
+actions gettext.compile
 {
-    $(.path)msgfmt -o $(<) $(>)   
+    $(.path)msgfmt -o $(<) $(>)
 }
 
 IMPORT $(__name__) : update : : gettext.update ;
-
-
-                  

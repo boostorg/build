@@ -1,13 +1,13 @@
-# Copyright 2002, 2005 Dave Abrahams 
-# Copyright 2002, 2003, 2006 Rene Rivera 
-# Copyright 2003 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2002, 2005 Dave Abrahams
+# Copyright 2002, 2003, 2006 Rene Rivera
+# Copyright 2003 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Documentation system, handles --help requests.
 # It defines rules that attach documentation to modules, rules, and variables.
-# Collects and generates documentation for the various parts of the build system.
-# The documentation is collected from comments integrated into the code.
+# Collects and generates documentation for the various parts of the build
+# system. The documentation is collected from comments integrated into the code.
 
 import modules ;
 import print ;
@@ -235,17 +235,17 @@ local rule set-variable-doc (
 # Generates a general description of the documentation and help system.
 #
 local rule print-help-top ( )
-{    
+{
     print.section "General command line usage" ;
 
     print.text "    bjam [options] [properties] [targets]
-      
+
   Options, properties and targets can be specified in any order.
       " ;
-        
-    print.section "Important Options" ;          
-    
-    print.list-start ;    
+
+    print.section "Important Options" ;
+
+    print.list-start ;
     print.list-item "--clean Remove targets instead of building" ;
     print.list-item "-a Rebuild everything" ;
     print.list-item "-n Don't execute the commands, only print them" ;
@@ -256,11 +256,11 @@ local rule print-help-top ( )
     print.list-item "--debug-building Report which targets are built with what properties" ;
     print.list-item "--debug-generator Diagnose generator search/execution" ;
     print.list-end ;
-        
+
     print.section "Further Help"
         The following options can be used to obtain additional documentation.
       ;
- 
+
     print.list-start ;
     print.list-item "--help-options Print more obscure command line options." ;
     print.list-item "--help-internal Boost.Build implementation details." ;
@@ -279,18 +279,18 @@ local rule print-help-usage ( )
     print.list-item -a;
         Build all targets, even if they are current. ;
     print.list-item -fx;
-        Read '"x"' as the Jamfile for building instead of searching
-        for the Boost.Build system. ;
+        Read '"x"' as the Jamfile for building instead of searching for the
+        Boost.Build system. ;
     print.list-item -jx;
         Run up to '"x"' commands concurrently. ;
     print.list-item -n;
-        Do not execute build commands. Instead print out the commands
-        as they would be executed if building. ;
+        Do not execute build commands. Instead print out the commands as they
+        would be executed if building. ;
     print.list-item -ox;
-        Write the build commands to the file '"x"'. ;
+        Output the used build commands to file '"x"'. ;
     print.list-item -q;
-        Quit as soon as the build of a target fails. Specifying this prevents the
-        attempt of building as many targets as possible regardless of failures. ;
+        Quit as soon as a build failure is encountered. Without this option
+        Boost.Jam will continue building as many targets as it can.
     print.list-item -sx=y;
         Sets a Jam variable '"x"' to the value '"y"', overriding any value that
         variable would have from the environment. ;
@@ -299,19 +299,19 @@ local rule print-help-usage ( )
     print.list-item -v;
         Display the version of bjam. ;
     print.list-item --x;
-        Option '"x"' is ignored but considered and option. The option is then
-        available from the '"ARGV"' variable. ;
+        Any option not explicitly handled by Boost.Jam remains available to
+        build scripts using the '"ARGV"' variable. ;
     print.list-item -dn;
         Enables output of diagnostic messages. The debug level '"n"' and all
         below it are enabled by this option. ;
     print.list-item -d+n;
-        Enables output of diagnostic messages. Only the output for debug level '"n"'
-        is enabled. ;
+        Enables output of diagnostic messages. Only the output for debug level
+        '"n"' is enabled. ;
     print.list-end ;
     print.section "Debug Levels"
-        Each debug level shows a different set of information. Usually with the higher
-        levels producing more verbose information. The following levels are supported:
-        ;
+        Each debug level shows a different set of information. Usually with
+        higher levels producing more verbose information. The following levels
+        are supported: ;
     print.list-start ;
     print.list-item 0;
         Turn off all diagnostic output. Only errors are reported. ;
@@ -353,9 +353,9 @@ local rule print-help-options (
     )
 {
     print.section "Help Options"
-        These are all the options available for enabling or disabling
-        to control the help system in various ways. Options can be enabled
-        or disabled with '"--help-enable-<option>"', and "'--help-disable-<option>'"
+        These are all the options available for enabling or disabling to control
+        the help system in various ways. Options can be enabled or disabled with
+        '"--help-enable-<option>"', and "'--help-disable-<option>'"
         respectively.
         ;
     local options-to-list = [ MATCH ^[.]option[.](.*) : $($(module-name).variables) ] ;
@@ -410,11 +410,11 @@ local rule print-help-module-section (
     }
 }
 
-# Generate documentation for possible modules. We attempt to list all known
-# modules, and a brief description of each.
+# Generate documentation for all possible modules. We attempt to list all known
+# modules together with a brief description of each.
 #
 local rule print-help-all (
-    ignored # Usually the module name, but is ignored here.
+    ignored  # Usually the module name, but is ignored here.
     )
 {
     print.section "Modules"
@@ -451,19 +451,19 @@ local rule print-help-module (
 {
     # Print the docs.
     print.section "Module '$(module-name)'" $($(module-name).docs) ;
-    
+
     # Print out the documented classes.
     print-help-module-section $(module-name) classes : "Module '$(module-name)' classes"
         Use --help $(module-name).<class-name> to get more information. ;
-    
+
     # Print out the documented rules.
     print-help-module-section $(module-name) rules : "Module '$(module-name)' rules"
         Use --help $(module-name).<rule-name> to get more information. ;
-    
+
     # Print out the documented variables.
     print-help-module-section $(module-name) variables : "Module '$(module-name)' variables"
         Use --help $(module-name).<variable-name> to get more information. ;
-    
+
     # Print out all the same information but indetailed form.
     if $(.option.detailed)
     {
@@ -536,11 +536,11 @@ local rule print-help-classes (
                     print.list-end ;
                 }
             }
-            
+
             # Print out the documented rules of the class.
             print-help-module-section $(module-name) $(class-name).class-rules : "Class '$(module-name).$(class-name)' rules"
                 Use --help $(module-name).<rule-name> to get more information. ;
-            
+
             # Print out all the rules if details are requested.
             if $(.option.detailed)
             {
@@ -594,7 +594,7 @@ local rule print-help-project (
         # Print the docs.
         print.section "Project-specific help"
             Project has jamfile at $(jamfile) ;
-        
+
         print.lines $(jamfile<$(jamfile)>.docs) "" ;
     }
 }
@@ -612,7 +612,7 @@ local rule print-help-config (
         # Print the docs.
         print.section "Configuration help"
             Configuration file at $(config-file) ;
-        
+
         print.lines $(jamfile<$(config-file)>.docs) "" ;
     }
 }
@@ -738,7 +738,7 @@ local rule scan-rule (
                 scope-level = $(scope-level[2-]) ;
             }
         }
-        
+
         return true ;
     }
 }
@@ -847,10 +847,10 @@ local rule scan-class (
     }
 }
 
-# Scan a module file for documentation comments. This also
-# invokes any actions assigned to the module. The actions
-# are the rules that do the actual output of the documentation.
-# This rue is invoked as the header scan rule for the module file.
+# Scan a module file for documentation comments. This also invokes any actions
+# assigned to the module. The actions are the rules that do the actual output of
+# the documentation. This rule is invoked as the header scan rule for the module
+# file.
 #
 rule scan-module (
     target # The module file.

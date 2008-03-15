@@ -11,7 +11,7 @@
 #     exe a : a.cpp helper ;
 #     obj helper : helper.cpp : <optimization>off ;
 #
-#  caused 'foo' to be built with with and without optimization.
+#  caused 'foo' to be built with and without optimization.
 from BoostBuild import Tester, List
 
 # Create a temporary working directory

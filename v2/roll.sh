@@ -23,10 +23,7 @@ date >> timestamp.txt
 rm -rf example/versioned
 
 # Remove unnecessary top-level files
-find . -maxdepth 1 -type f | egrep -v "timestamp.txt|roll.sh|bootstrap.jam|build-system.jam|boost_build_v2.html|boost_build.png|index.html|hacking.txt|site-config.jam|user-config.jam" | xargs rm -f
-
-# Prepare some more files.
-echo -e "boost-build kernel ;\n" > boost-build.jam
+find . -maxdepth 1 -type f | egrep -v "boost-build.jam|timestamp.txt|roll.sh|bootstrap.jam|build-system.jam|boost_build.png|index.html|hacking.txt|site-config.jam|user-config.jam" | xargs rm -f
 
 # Build the documentation
 touch doc/project-root.jam
@@ -52,10 +49,21 @@ find . -name ".svn" | xargs rm -rf
 rm roll.sh
 chmod a+x jam_src/build.bat
 cd .. && zip -r boost-build.zip boost-build && tar --bzip2 -cf boost-build.tar.bz2 boost-build
+# Copy packages to a location where they are grabbed for beta.boost.org
+cp boost-build.zip boost-build.tar.bz2 ~/public_html/boost_build_nightly
 cd boost-build
 
 chmod -R u+w *
 # Upload docs to sourceforge
-perl -pi -e 's%<!-- sf logo -->%<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=7586&amp;type=1" width="88" height="31" border="0" alt="SourceForge.net Logo" align="right"/></a>%' index.html doc/*.html
+x=`cat <<EOF
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-2917240-2";
+urchinTracker();
+</script>
+EOF`
+echo $x
+perl -pi -e "s|</body>|$x</body>|" `find doc -name '*.html'`
 scp -r  doc example boost_build.png *.html hacking.txt vladimir_prus@shell.sourceforge.net:/home/groups/b/bo/boost/htdocs/boost-build2
 scp ../userman.pdf vladimir_prus@shell.sourceforge.net:/home/groups/b/bo/boost/htdocs/boost-build2/doc

@@ -79,6 +79,7 @@ class common-scanner : scanner
         NOCARE $(matches) ;
         INCLUDES $(target) : $(matches) ;
         SEARCH on $(matches) = $(target_path) $(self.includes:G=) ;
+        ISFILE $(matches) ;
     
         scanner.propagate $(__name__) : $(matches) : $(target) ;     
     }
