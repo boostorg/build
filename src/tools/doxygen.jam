@@ -352,7 +352,7 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
         # Build an HTML directory from the sources.
         local html-location = [ feature.get-values <location> : $(requirements) ] ;
         local output-dir = [ path.root
-            [ path.join $(html-location:E=html) [ $(project).get build-dir ] ]
+            [ path.join [ $(project).get build-dir ] $(html-location:E=html) ]
             [ path.pwd ]
             ] ;
         local output-dir-native = [ path.native $(output-dir) ] ;

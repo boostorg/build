@@ -37,30 +37,28 @@
     </listitem>
   </orderedlist>
 
-  <para>It's quite easy to achieve. You write special verbatim files
-  that are just C++, except that the very first line of the file
-  contains the name of a variable that should be generated. A simple tool
-  is created that takes a verbatim file and creates a cpp file with
-  a single <code>char*</code> variable whose name is taken from the first line
-  of the verbatim file and whose value is the file's properly quoted content.</para>
+  <para>It's quite easy to achieve. You write special verbatim files that are
+  just C++, except that the very first line of the file contains the name of a
+  variable that should be generated. A simple tool is created that takes a
+  verbatim file and creates a cpp file with a single <code>char*</code> variable
+  whose name is taken from the first line of the verbatim file and whose value
+  is the file's properly quoted content.</para>
 
   <para>Let's see what Boost.Build can do.</para>
 
-  <para>First off, Boost.Build has no idea about "verbatim files". So,
-  you must register a new target type. The following code does
-  it:</para>
+  <para>First off, Boost.Build has no idea about "verbatim files". So, you must
+  register a new target type. The following code does it:</para>
 
 <programlisting>
 import type ;
-type.register VERBATIM : vrb ;
+type.register VERBATIM : verbatim ;
 </programlisting>
 
-  <para>The first parameter to
-  <functionname>type.register</functionname> gives the name of the
-  declared type. By convention, it's uppercase. The second parameter
-  is the suffix for files of this type. So, if Boost.Build sees
-  <filename>code.vrb</filename> in a list of sources, it knows that it's of type
-  <code>VERBATIM</code>.</para>
+  <para>The first parameter to <functionname>type.register</functionname> gives
+  the name of the declared type. By convention, it's uppercase. The second
+  parameter is the suffix for files of this type. So, if Boost.Build sees
+  <filename>code.verbatim</filename> in a list of sources, it knows that it's of
+  type <code>VERBATIM</code>.</para>
 
   <para>Next, you tell Boost.Build that the verbatim files can be
   transformed into C++ files in one build step.  A
@@ -96,26 +94,29 @@ actions inline-file
         -->
 </para>
 
-  <para>Now, we're ready to tie it all together. Put all the code
-  above in file <filename>verbatim.jam</filename>, add <code>import verbatim ;</code> 
-  to <filename>project-root.jam</filename>, and it's possible to write
-  the following in Jamfile:</para>
+  <para>
+    Now, we're ready to tie it all together. Put all the code above in file
+    <filename>verbatim.jam</filename>, add <code>import verbatim ;</code> to
+    <filename>Jamroot.jam</filename>, and it's possible to write the following
+    in your Jamfile:
+  </para>
 
 <programlisting>
 exe codegen : codegen.cpp class_template.verbatim usage.verbatim ;
 </programlisting>
 
   <para>
-The verbatim files will be automatically converted into C++
-and linked it.
+    The listed verbatim files will be automatically converted into C++ source
+    files, compiled and then linked to the codegen executable.
   </para>
 
-      <para>In the subsequent sections, we will extend this example, and review
-        all the mechanisms in detail. The complete code is available in <filename>example/customization</filename>
-        directory.
-      </para>
-
+  <para>
+    In subsequent sections, we will extend this example, and review all the
+    mechanisms in detail. The complete code is available in the
+    <filename>example/customization</filename> directory.
+  </para>
   </section>
+
   <section id="bbv2.extending.targets">
     <title>Target types</title>
       <para>The first thing we did in the <link
@@ -281,13 +282,13 @@ actions inline-file
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
 generators.register-composing mex.mex : CPP LIB : MEX ;
 </programlisting>
-        Standard generators take a <emphasis>single</emphasis> source of type
-        <code>VERBATIM</code> and produces a result. The second generator
-        takes any number of sources, which can have either the
-        <code>CPP</code> or the <code>LIB</code> type. Composing generators
+        The first (standard) generator takes a <emphasis>single</emphasis>
+        source of type <code>VERBATIM</code> and produces a result. The second
+        (composing) generator takes any number of sources, which can have either
+        the <code>CPP</code> or the <code>LIB</code> type. Composing generators
         are typically used for generating top-level target type. For example,
-        the first generator invoked when building an <code>exe</code> target
-        is a composing generator corresponding to the proper linker.
+        the first generator invoked when building an <code>exe</code> target is
+        a composing generator corresponding to the proper linker.
       </para>
 
       <para>You should also know about two specific functions for registering
@@ -723,51 +724,46 @@ generators.register-standard obfuscate.file : CPP : OBFUSCATED_CPP ;
       in Jamfiles, which will convert source to the OBFUSCATED_CPP type.
     </para>
     
-    <para>The second way is to write a wrapper rule that calls
-      any of the existing rules. For example, suppose you have only one library per
-      directory and want all cpp files in the directory to be compiled into that library. You
-      can achieve this effect with:
+    <para>
+      The second way is to write a wrapper rule that calls any of the existing
+      rules. For example, suppose you have only one library per directory and
+      want all cpp files in the directory to be compiled into that library. You
+      can achieve this effect using:
 <programlisting>
 lib codegen : [ glob *.cpp ] ;
 </programlisting>
-      but if you want to make it even simpler, you could add the following
-      definition to the <filename>project-root.jam</filename> file:
+      If you want to make it even simpler, you could add the following
+      definition to the <filename>Jamroot.jam</filename> file:
 <programlisting>
 rule glib ( name : extra-sources * : requirements * )
 {
     lib $(name) : [ glob *.cpp ] $(extra-sources) : $(requirements) ;
 }
 </programlisting>
-which would allow you to reduce the Jamfile to
+      allowing you to reduce the Jamfile to just
 <programlisting>
 glib codegen ;
 </programlisting>
     </para>
 
     <para>
-      Note that because you can associate a custom generator with a target
-      type, the logic of building can be rather compiler. 
-      <!-- "compiler" is not an adjective.  The logic can't be "rather
-           compiler."  What you might mean here is completely
-           mysterious to me -->
-      For example, the
+      Note that because you can associate a custom generator with a target type,
+      the logic of building can be rather complicated. For example, the
       <code>boostbook</code> module declares a target type
-      <code>BOOSTBOOK_MAIN</code> and a custom generator for that
-      type. You can use that as example if your main target rule is
-      non-trivial.
+      <code>BOOSTBOOK_MAIN</code> and a custom generator for that type. You can
+      use that as example if your main target rule is non-trivial.
     </para>
-         
   </section>
 
   <section id="bbv2.extending.toolset_modules">
 
     <title>Toolset modules</title>
 
-    <para>If your extensions will be used only on one project, they can be
-      placed in a separate <filename>.jam</filename> file that will be
-      imported by your <filename>project-root.jam</filename>. If the
-      extensions will be used on many projects, users will thank you for 
-      a finishing touch.
+    <para>
+      If your extensions will be used only on one project, they can be placed in
+      a separate <filename>.jam</filename> file and imported by your
+      <filename>Jamroot.jam</filename>. If the extensions will be used on many
+      projects, users will thank you for a finishing touch.
     </para>
 
     <para>The <code>using</code> rule provides a standard mechanism

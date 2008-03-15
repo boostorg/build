@@ -10,7 +10,7 @@
 # This is done with:
 #
 #    exe main : main.cpp [ cast _ moccable-cpp : widget.cpp ] ;
-# 
+#
 # Boost.Build will assing target type CPP to both main.cpp and widget.cpp.
 # Then, the cast rule will change target type of widget.cpp to
 # MOCCABLE-CPP, and Qt support will run MOC tool as part of build process.
@@ -22,22 +22,25 @@
 # cast, as defining new target type + generator for that type is somewhat
 # simpler then defining main target rule.
 
-import project type targets ;
 import "class" : new ;
 import errors ;
+import project ;
 import property-set ;
+import targets ;
+import type ;
+
 
 class cast-target-class : typed-target
 {
     import type ;
-    
-    rule __init__ ( name : project : type 
-    : sources * : requirements * : default-build * : usage-requirements * )
+
+    rule __init__ ( name : project : type : sources * : requirements *
+        : default-build * : usage-requirements * )
     {
-        typed-target.__init__ $(name) : $(project) : $(type)
-          : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ;
+        typed-target.__init__ $(name) : $(project) : $(type) : $(sources)
+            : $(requirements) : $(default-build) : $(usage-requirements) ;
     }
-       
+
     rule construct ( name : source-targets * : property-set )
     {
         local result ;
@@ -47,43 +50,42 @@ class cast-target-class : typed-target
             {
                 ECHO "error: source to the 'cast' rule is not a file!" ;
                 EXIT ;
-            }  
+            }
             if [ $(s).action ]
             {
                 ECHO "error: only non-derived target are allowed for 'cast'." ;
                 ECHO "error: when building " [ full-name ] ;
                 EXIT ;
-            }         
+            }
             local r = [ $(s).clone-with-different-type $(self.type) ] ;
             result += [ virtual-target.register $(r) ] ;
         }
-                        
         return [ property-set.empty ] $(result) ;
-    }            
-        
+    }
 }
 
-rule cast ( name type : sources * : requirements * : default-build * 
+
+rule cast ( name type : sources * : requirements * : default-build *
     : usage-requirements * )
 {
     local project = [ project.current ] ;
-    
+
     local real-type = [ type.type-from-rule-name $(type) ] ;
     if ! $(real-type)
     {
-        errors.user-error "No type corresponds to main target rule nam '$(type)'"
-          : "Hint: try lowercase name" ;
+        errors.user-error "No type corresponds to main target rule name '$(type)'"
+            : "Hint: try lowercase name" ;
     }
-    
-        
-    # This is a circular module dependency, so it must be imported here
+
+    # This is a circular module dependency so it must be imported here.
     import targets ;
     targets.main-target-alternative
-      [ new cast-target-class $(name) : $(project) : $(real-type) 
-        : [ targets.main-target-sources $(sources) : $(name) ] 
-        : [ targets.main-target-requirements $(requirements) : $(project) ] 
-        : [ targets.main-target-default-build $(default-build) : $(project) ]
-        : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-      ] ;
+        [ new cast-target-class $(name) : $(project) : $(real-type)
+            : [ targets.main-target-sources $(sources) : $(name) ]
+            : [ targets.main-target-requirements $(requirements) : $(project) ]
+            : [ targets.main-target-default-build $(default-build) : $(project) ]
+            : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
+        ] ;
 }
+
 IMPORT $(__name__) : cast : : cast ;
