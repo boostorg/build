@@ -117,8 +117,8 @@ flags intel-darwin.compile OPTIONS <optimization>space : -O1 ; # no specific spa
 
 # 
 cpu-type-em64t = prescott nocona ;
-# flags intel-darwin.compile OPTIONS <instruction-set>$(cpu-type-em64t)/<address-model>32 : -mcmodel=small ;
-flags intel-darwin.compile OPTIONS <instruction-set>$(cpu-type-em64t)/<address-model>64 : -mcmodel=large ;
+flags intel-darwin.compile OPTIONS <instruction-set>$(cpu-type-em64t)/<address-model>32 : -m32; # -mcmodel=small ;
+flags intel-darwin.compile OPTIONS <instruction-set>$(cpu-type-em64t)/<address-model>64 : -m64; # -mcmodel=large ;
 
 flags intel-darwin.compile.c OPTIONS <warnings>off : -w0 ;
 flags intel-darwin.compile.c OPTIONS <warnings>on : -w1 ;
