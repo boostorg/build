@@ -186,7 +186,10 @@ class Tester(TestCmd.TestCmd):
                 elif os.uname()[0] == 'SunOS':
                     jam_build_dir = "bin.solaris"
                 elif os.uname()[0] == 'Darwin':
-                    jam_build_dir = "bin.macosxppc"
+		    if os.uname()[4] == 'i386':
+                        jam_build_dir = "bin.macosxx86"
+	            else:
+                        jam_build_dir = "bin.macosxppc"
                 elif os.uname()[0] == "AIX":
                     jam_build_dir = "bin.aix"
                 elif os.uname()[0] == "IRIX64":
