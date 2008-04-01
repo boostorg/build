@@ -222,6 +222,7 @@ local rule initialize-config-module ( module-name )
 #
 local rule load-config ( module-name : filename : path + : must-find ? )
 {
+    .debug-config = 1 ;
     if $(.debug-config)
     {
         ECHO "notice: Searching" "$(path)" "for" "$(module-name)"
@@ -242,7 +243,7 @@ local rule load-config ( module-name : filename : path + : must-find ? )
     }
     else
     {
-        if ( must-find )
+        if $(must-find)
         {
             errors.user-error "Configuration file" "$(filename)" "not found in"
                 "$(path)" "." ;
@@ -253,7 +254,7 @@ local rule load-config ( module-name : filename : path + : must-find ? )
                 "$(path)" "." ;
         }
     }
-    return where ;
+    return $(where) ;
 }
 
 
@@ -301,6 +302,11 @@ local rule load-configuration-files
 
     initialize-config-module test-config ;
     local test-config = [ MATCH ^--test-config=(.*)$ : $(.argv) ] ;
+    local uq = [ MATCH \"(.*)\" : $(test-config) ] ;
+    if $(uq)
+    {
+        test-config = $(uq) ;
+    }    
     if $(test-config)
     {
         local where =
