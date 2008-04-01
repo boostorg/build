@@ -572,6 +572,10 @@ class file-target : abstract-file-target
             # will be <ptest/bin/gcc/debug>test.o and the target we create below
             # will be <e>test.o
             DEPENDS $(target:G=e) : $(target) ;
+            # Allow bjam <path-to-file>/<file> to work.  This won't catch all
+            # possible ways to refer to the path (relative/absolute, extra ".",
+            # various "..", but should help in obvious cases.
+            DEPENDS $(target:G=e:R=$(path)) : $(target) ;
         }
         else
         {
