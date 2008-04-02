@@ -222,7 +222,6 @@ local rule initialize-config-module ( module-name )
 #
 local rule load-config ( module-name : filename : path + : must-find ? )
 {
-    .debug-config = 1 ;
     if $(.debug-config)
     {
         ECHO "notice: Searching" "$(path)" "for" "$(module-name)"
