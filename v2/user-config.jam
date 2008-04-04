@@ -51,7 +51,7 @@
 
 #  Configure msvc (default version, searched in standard location
 #  and PATH).
-using msvc : 8.0 : ;
+#  using msvc : 8.0 : ;
 
 #  Borland configuration
 #  using borland ;
