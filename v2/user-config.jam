@@ -76,13 +76,3 @@
 #  Configure with explicit installation prefix
 #  using qt : /usr/opt/qt ;
 
-# XSLT configuration
-using xsltproc 
-  : "C:/Downloads/C++/Boost/boost.book/xsltproc-win32/xsltproc.exe" 
-  ;
-
-#  BoostBook configuration
-using boostbook 
-  : "C:/Downloads/C++/Boost/boost.book/docbook-xsl-1.66.1"
-  : "C:/Downloads/C++/Boost/boost.book/docbook-xml-4.2"
-  ;
