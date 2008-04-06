@@ -101,12 +101,12 @@ rule xslt-dir ( target : source stylesheet : properties * : dirname )
     return [ .xsltproc $(target) : $(source) $(stylesheet) : $(properties) : $(dirname) : xslt-xsltproc-dir ] ;
 }
 
-actions xslt-xsltproc
+actions xslt-xsltproc bind STYLESHEET
 {
   $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET)" "$(>)"
 }
 
-actions xslt-xsltproc-dir
+actions xslt-xsltproc-dir bind STYLESHEET
 {
   $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<:D)/" "$(STYLESHEET)" "$(>)"
 }
