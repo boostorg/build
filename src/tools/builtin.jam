@@ -29,7 +29,7 @@ import virtual-target ;
 import types/register ;
 
 
-.os-names = amiga aix bsd cygwin darwin dos emx freebsd hpux linux netbsd
+.os-names = amiga aix bsd cygwin darwin dos emx freebsd hpux iphone linux netbsd
     openbsd osf qnx qnxnto sgi solaris sun sunos svr4 sysv ultrix unix unixware
     vms windows ;
 
@@ -206,6 +206,9 @@ feature.feature architecture :
 
     # HP/PA-RISC
     parisc
+    
+    # Advanced RISC Machines
+    arm
 
     # Combined architectures for platforms/toolsets that support building for
     # multiple architectures at once. "combined" would be the default multi-arch
@@ -243,6 +246,9 @@ feature.feature instruction-set :
 
     # HP/PA-RISC
     700 7100 7100lc 7200 7300 8000
+    
+    # Advanced RISC Machines
+    armv2 armv2a armv3 armv3m armv4 armv4t armv5 armv5t armv5te armv6 armv6j iwmmxt ep9312
 
     : propagated optional ;
 
