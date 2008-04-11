@@ -668,8 +668,11 @@ class Tester(TestCmd.TestCmd):
         if exact:
             matched = fnmatch.fnmatch(actual,content)
         else:
-            actual_ = map(lambda x: sorted(x.split()),actual.splitlines())
-            content_ = map(lambda x: sorted(x.split()),content.splitlines())
+            def sorted_(x):
+                x.sort()
+                return x
+            actual_ = map(lambda x: sorted_(x.split()),actual.splitlines())
+            content_ = map(lambda x: sorted_(x.split()),content.splitlines())
             if len(actual_) == len(content_):
                 matched = map(
                     lambda x,y: map(lambda n,p: fnmatch.fnmatch(n,p),x,y),
