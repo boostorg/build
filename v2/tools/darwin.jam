@@ -3,7 +3,7 @@
 # Copyright 2003, 2004, 2005, 2006 Vladimir Prus 
 # Copyright 2005-2007 Mat Marcus
 # Copyright 2005-2007 Adobe Systems Incorporated
-# Copyright 2007 Rene Rivera
+# Copyright 2007-2008 Rene Rivera
 # Distributed under the Boost Software License, Version 1.0. 
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
@@ -31,6 +31,9 @@ generators.override darwin.compile.c++.pch : pch.default-cpp-pch-generator ;
 toolset.inherit-rules darwin : gcc ;
 toolset.inherit-flags darwin : gcc     
   :  <runtime-link>static
+     <architecture>arm/<address-model>32
+     <architecture>arm/<address-model>64
+     <architecture>arm/<instruction-set>
      <architecture>x86/<address-model>32
      <architecture>x86/<address-model>64
      <architecture>x86/<instruction-set>
@@ -39,9 +42,9 @@ toolset.inherit-flags darwin : gcc
      <architecture>power/<instruction-set>  ;
 
 # No additional initialization should be necessary
-rule init ( version ? : command * : options * )
+rule init ( version ? : command * : options * : requirement * )
 {
-    local condition = [ common.check-init-parameters darwin : version $(version) ] ;    
+    condition = [ common.check-init-parameters darwin $(requirement) : version $(version) ] ;
     local command = [ common.get-invocation-command darwin : g++ : $(command) ] ;
     
     common.handle-options darwin : $(condition) : $(command) : $(options) ;
@@ -54,8 +57,47 @@ rule init ( version ? : command * : options * )
     }
 
     gcc.init-link-flags darwin darwin $(condition) ;
-    
-    flags darwin.link NEED_STRIP $(condition)/<debug-symbols>off : "" ;        
+
+    # - The symbol strip program.
+    if <striper> in $(options)
+    {
+        # We can turn off strip by specifying it as empty. In which
+        # case we switch to using the linker to do the strip.
+        flags darwin.link.dll OPTIONS
+            $(condition)/<main-target-type>LIB/<link>shared/<address-model>32/<debug-symbols>off : -Wl,-x ;
+        flags darwin.link.dll OPTIONS
+            $(condition)/<main-target-type>LIB/<link>shared/<address-model>/<debug-symbols>off : -Wl,-x ;
+        flags darwin.link OPTIONS
+            $(condition)/<main-target-type>EXE/<address-model>32/<debug-symbols>off : -s ;
+        flags darwin.link OPTIONS
+            $(condition)/<main-target-type>EXE/<address-model>/<debug-symbols>off : -s ;
+    }
+    else
+    {
+        # Otherwise we need to find a strip program to use. And hence
+        # also tell the link action that we need to use a strip
+        # post-process.
+        flags darwin.link NEED_STRIP $(condition)/<debug-symbols>off : "" ;        
+        local strip =
+            [ common.get-invocation-command darwin
+                : strip : [ feature.get-values <striper> : $(options) ] : $(bin) : search-path ] ;
+        flags darwin.link .STRIP $(condition) : $(strip[1]) ;
+        if $(.debug-configuration)
+        {
+            ECHO notice: using strip :: $(condition) :: $(strip[1]) ;
+        }
+    }
+
+    # - The archive builder (libtool is the default as creating
+    #   archives in darwin is complicated.
+    local archiver =
+        [ common.get-invocation-command darwin
+            : libtool : [ feature.get-values <archiver> : $(options) ] : $(bin) : search-path ] ;
+    flags darwin.archive .LIBTOOL $(condition) : $(archiver[1]) ;
+    if $(.debug-configuration)
+    {
+        ECHO notice: using archiver :: $(condition) :: $(archiver[1]) ;
+    }
 }
 
 feature framework : : free ;
@@ -107,10 +149,10 @@ local rule available-macosx-versions ( )
 }
 
 # Add the found SDK version only to the allowed set. The "latests" SDKs
-# wil be first in the list, and hence the default.
+# will be first in the list, and hence the default.
 feature macosx-version
     : [ available-macosx-versions ]
-    : propagated link-incompatible symmetric ;
+    : propagated link-incompatible symmetric optional ;
 if 10.4 in [ feature.values macosx-version ]
 {
     feature.set-default macosx-version : 10.4 ;
@@ -119,11 +161,11 @@ if 10.4 in [ feature.values macosx-version ]
 # Add the options for all the found SDKs.
 for local sdk in $(.macosx-sdk)
 {
-    flags darwin.compile OPTIONS <macosx-version>$(sdk) :
+    flags darwin.compile OPTIONS <target-os>darwin/<macosx-version>$(sdk) :
         -isysroot $(.macosx-sdk.$(sdk))
         -mmacosx-version-min=$(sdk)
         ;
-    flags darwin.link OPTIONS <macosx-version>$(sdk) :
+    flags darwin.link OPTIONS <target-os>darwin/<macosx-version>$(sdk) :
         -isysroot $(.macosx-sdk.$(sdk))
         -mmacosx-version-min=$(sdk)
         ;
@@ -155,6 +197,8 @@ arch-addr-flags darwin OPTIONS : x86 : 64 : -arch x86_64 ;
 arch-addr-flags darwin OPTIONS : power : 32 : -arch ppc : default ;
 arch-addr-flags darwin OPTIONS : power : 64 : -arch ppc64 ;
 
+arch-addr-flags darwin OPTIONS : arm : 32 : -arch arm : default ;
+
 
 flags darwin.link OPTIONS <runtime-link>static
     : -nodefaultlibs -shared-libgcc -lstdc++-static -lgcc_eh -lgcc -lSystem ;
@@ -168,7 +212,7 @@ flags darwin.link FRAMEWORK <framework> ;
 
 # This is flag is useful for debugging the link step
 # uncomment to see what libtool is doing under the hood
-# flags darwin.link.dll OPTIONS : -Wl,-v ;
+#~ flags darwin.link.dll OPTIONS : -Wl,-v ;
 
 _ = " " ;
 
@@ -195,8 +239,8 @@ rule link
 
 actions link bind LIBRARIES
 {
-    $(CONFIG_COMMAND) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=:S=) $(OPTIONS) $(USER_OPTIONS)
-    $(NEED_STRIP)strip $(NEED_STRIP)"$(<)"
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=:S=) $(OPTIONS) $(USER_OPTIONS)
+    $(NEED_STRIP)"$(.STRIP)" $(NEED_STRIP)"$(<)"
 }
 
 rule link.dll
@@ -206,12 +250,12 @@ rule link.dll
 
 actions link.dll bind LIBRARIES
 {
-    $(CONFIG_COMMAND) -dynamiclib -install_name "$(<:B)$(<:S)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=:S=) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -dynamiclib -Wl,-single_module -install_name "$(<:B)$(<:S)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=:S=) $(OPTIONS) $(USER_OPTIONS)
 }
 
 # We use libtool instead of ar to support universal binary linking
 # TODO: Find a way to use the underlying tools, i.e. lipo, to do this.
 actions piecemeal archive
 {
-    libtool -static -o "$(<:T)"  $(ARFLAGS)  "$(>:T)"
+    "$(.LIBTOOL)" -static -o "$(<:T)"  $(ARFLAGS)  "$(>:T)"
 }
