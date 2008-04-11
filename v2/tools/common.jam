@@ -145,10 +145,11 @@ class configurations
 # extend it with all the values.
 #
 # The return value from this rule is a condition to be used for flags settings.
-rule check-init-parameters ( toolset : * )
+rule check-init-parameters ( toolset requirement * : * )
 {
     local sig = $(toolset) ;
     local condition = <toolset>$(toolset) ;
+    local subcondition ;
     for local index in 2 3 4 5 6 7 8 9
     {
         local name = $($(index)[1]) ;
@@ -185,6 +186,7 @@ rule check-init-parameters ( toolset : * )
                 .had-value.$(toolset).$(name) = true ;
             }
             feature.extend-subfeature toolset $(t) : $(name) : $(value) ;
+            subcondition += <toolset-$(t):$(name)>$(value) ;
         }
         else
         {
@@ -218,12 +220,25 @@ rule check-init-parameters ( toolset : * )
     }
     .all-signatures += $(sig) ;
     .init-loc.$(sig) = [ errors.nearest-user-location ] ;
+    
+    # If we have a requirment, this version should only be applied under that
+    # condition. To accomplish this we add a toolset requirement that imposes the toolset
+    # subcondition, which encodes the version.
+    if $(requirement)
+    {
+        local r = <toolset>$(toolset) $(requirement) ;
+        toolset.add-requirements $(r:J=,):$(subcondition:J=/) ;
+    }
+    
+    # We add the requirements, if any, to the condition to scope the toolset
+    # variables and options to this specific version.
+    condition += $(requirement) ;
 
     if $(.show-configuration)
     {
         ECHO notice: $(condition) ;
     }
-    return $(condition) ;
+    return $(condition:J=/) ;
 }
 
 
