@@ -712,7 +712,7 @@ else if [ modules.peek : UNIX ]
     case SunOS* :
         {
         flags gcc OPTIONS <threading>multi : -pthreads ;
-        flags gcc FINDLIBS-SA <threading>multi : rt ;
+        flags gcc FINDLIBS-SA : rt ;
         }
     case BeOS :
         {
@@ -740,7 +740,7 @@ else if [ modules.peek : UNIX ]
     case * :
         {
         flags gcc OPTIONS <threading>multi : -pthread ;
-        flags gcc FINDLIBS-SA <threading>multi : rt ;
+        flags gcc FINDLIBS-SA : rt ;
         }
     }
 }
