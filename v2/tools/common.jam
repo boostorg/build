@@ -227,7 +227,8 @@ rule check-init-parameters ( toolset requirement * : * )
     if $(requirement)
     {
         local r = <toolset>$(toolset) $(requirement) ;
-        toolset.add-requirements $(r:J=,):$(subcondition:J=/) ;
+        r = $(r:J=,) ;
+        toolset.add-requirements $(r):$(subcondition) ;
     }
 
     # We add the requirements, if any, to the condition to scope the toolset
