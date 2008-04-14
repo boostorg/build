@@ -98,6 +98,8 @@ IMPORT modules : import : : import ;
       new           # until we get everything sorted out, there is
                     # still some code here
 
+      contrib       # user contributed (unreviewed) modules
+
       .             # build-system.jam lives here
 
       ;
