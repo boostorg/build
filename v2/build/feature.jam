@@ -19,7 +19,6 @@ local rule setup ( )
 {
     .all-attributes =
         implicit
-        executed
         composite
         optional
         symmetric
