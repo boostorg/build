@@ -175,8 +175,6 @@ rule use-project
                     case 0.0.1 : boost_0_0_1 $(inc) $(lib) ;
                     case *    : boost_std $(inc) $(lib) ;
                 }
-                project.act-as-jamfile boost : $(__name__) ;
-                modules.call-in $(mod) : use-project boost : $(__name__) ;
             }
         }
         else {
