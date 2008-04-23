@@ -36,6 +36,9 @@ rule init ( version ? : command * : options * )
   flags pgi.compile DEFINES $(condition) :
     [ feature.get-values <define> : $(options) ] : unchecked ;
 
+  # IOV_MAX support
+  flags pgi.compile DEFINES $(condition) : __need_IOV_MAX : unchecked ;
+
   # set link flags
   flags pgi.link FINDLIBS-ST : [
     feature.get-values <find-static-library> : $(options) ] : unchecked ;
@@ -97,6 +100,7 @@ flags pgi.link OPTIONS <link>shared : -fpic ;
 flags pgi.link LINKPATH <library-path> ;
 flags pgi.link FINDLIBS-ST <find-static-library> ;
 flags pgi.link FINDLIBS-SA <find-shared-library> ;
+flags pgi.link FINDLIBS-SA <threading>single : rt ;
 flags pgi.link FINDLIBS-SA <threading>multi : pthread rt ;
 flags pgi.link LIBRARIES <library-file> ;
 flags pgi.link LINK-RUNTIME <runtime-link>static : static ;
