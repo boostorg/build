@@ -130,12 +130,12 @@ flags intel-darwin.compile.c++ OPTIONS <warnings>all : -w2 ;
 
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" -xc $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -xc -D__WINT_TYPE__=int $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" -xc++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -xc++ -D__WINT_TYPE__=int $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 flags intel-darwin ARFLAGS <archiveflags> ;
