@@ -239,6 +239,9 @@ rule dump-test ( target )
         }
     }
 
+    local target-name = [ $(project).get location ] // [ $(target).name ] .test ;
+    target-name = $(target-name:J=) ;
+
     local r = [ $(target).requirements ] ;
     # Extract values of the <test-info> feature.
     local test-info = [ $(r).get <test-info> ] ;
@@ -251,6 +254,7 @@ rule dump-test ( target )
 " ;
         .contents on $(.out-xml) +=
             "$(nl)  <test type=\"$(type)\" name=\"$(name)\">"
+            "$(nl)    <target><![CDATA[$(target-name)]]></target>"
             "$(nl)    <info><![CDATA[$(test-info)]]></info>"
             "$(nl)    <source><![CDATA[$(source-files)]]></source>"
             "$(nl)  </test>"
