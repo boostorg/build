@@ -124,7 +124,7 @@ The supported toolsets, and whether they are auto-detected, are:
 
 [   [=build.bat=] [Windows NT, 2000, and XP]
     [[lines
-        [line [@http://www.borland.com/bcppbuilder/freecompiler =borland=]]
+        [line [@http://www.codegear.com/downloads/free/cppbuilder =borland=]]
         [line [@http://www.borland.com/ Borland] C++Builder (BCC 5.5)]
         ]]
     [[list
@@ -291,7 +291,7 @@ The supported toolsets, and whether they are auto-detected, are:
 
 [   [] []
     [[lines
-        [line [@http://www.borland.com/bcppbuilder/freecompiler =kylix=]]
+        [line [@http://www.codegear.com/downloads/free/cppbuilder =kylix=]]
         [line [@http://www.borland.com/ Borland] C++Builder]
         ]]
     [[list
@@ -341,7 +341,7 @@ The supported toolsets, and whether they are auto-detected, are:
 
 [   [] []
     [[lines
-        [line [@http://www-3.ibm.com/software/ad/vacpp/ =vacpp=]]
+        [line [@http://www-306.ibm.com/software/awdtools/vacpp/ =vacpp=]]
         [line IBM VisualAge C++]
         ]]
     [[list
