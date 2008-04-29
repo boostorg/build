@@ -954,7 +954,7 @@ Classic jam treats any non-option element of command line as a name of target to
 # It clears the list of targets to update, and
 # Causes the specified targets to be updated.
 
-If no target was specified with the =UPDATE= rule, no targets will be updated. To support changing of the update list in more usefull ways, the rule also returns the targets previously in the update list. This makes it possible to add targets as such:
+If no target was specified with the =UPDATE= rule, no targets will be updated. To support changing of the update list in more useful ways, the rule also returns the targets previously in the update list. This makes it possible to add targets as such:
 
 [pre
 local previous-updates = \[ UPDATE \] ;

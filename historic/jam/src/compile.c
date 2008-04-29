@@ -1118,13 +1118,12 @@ evaluate_rule(
 }
 
 /*
- * Call the given rule with the specified parameters.
- * The parameters should be of LIST* and end with NULL pointer.
- * This differs from the 'evaluate_rule' in that frame
- * for called rule is prepared in 'call_rule'.
+ * Call the given rule with the specified parameters. The parameters should be
+ * of type LIST* and end with a NULL pointer. This differs from 'evaluate_rule'
+ * in that frame for the called rule is prepared inside 'call_rule'.
  *
- * This function is usefull when builtin rule (in C) wants to
- * call another rule, which might be implemented in Jam.
+ * This function is useful when a builtin rule (in C) wants to call another
+ * rule which might be implemented in Jam.
  */
 LIST *call_rule( char *rulename, FRAME* caller_frame, ...)
 {
