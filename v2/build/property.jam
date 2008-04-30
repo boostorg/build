@@ -346,7 +346,7 @@ rule remove ( attributes + : properties * )
 }
 
 
-# Returns a property set containig all the elements in 'properties' that have
+# Returns a property set containing all the elements in 'properties' that have
 # their attributes listed in 'attributes'.
 rule take ( attributes + : properties * )
 {
