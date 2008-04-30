@@ -335,15 +335,13 @@ generators.register
         converted to the right types to actually create the result.
       </para>
 
-      <para>The <code>generated-target</code> <!-- Is it generated-target or generated-targets? -->
-      method can be overridden
-      when you want to add additional properties to the generated
-      targets or use additional sources. For a real-life example,
-      suppose you have a program analysis tool that should be given a
-      name of executable and the list of all sources. Naturally, you
-      don't want to list all source files manually. Here's how the
-      <code>generated-targets</code> method can find the list of
-      sources automatically:
+      <para>The <code>generated-targets</code> method can be overridden when you
+        want to add additional properties to the generated targets or use
+        additional sources. For a real-life example, suppose you have a program
+        analysis tool that should be given a name of executable and the list of
+        all sources. Naturally, you don't want to list all source files
+        manually. Here's how the <code>generated-targets</code> method can find
+        the list of sources automatically:
 <programlisting>
 class itrace-generator : generator {
 ....
