@@ -30,7 +30,7 @@ class modifier : generator
         id
         composing ?
         : source-types *
-        : target-types-and-names +   
+        : target-types-and-names +
         : requirements *
         )
     {
@@ -38,10 +38,10 @@ class modifier : generator
             : $(source-types)
             : $(target-types-and-names)
             : $(requirements) ;
-    
+
         self.targets-in-progress = ;
     }
-    
+
     # Wraps the generation of the target to call before and after rules to
     # affect the real target.
     #
@@ -72,7 +72,7 @@ class modifier : generator
             property-set = $(property-set_) ;
             sources = $(sources_) ;
             multiple = $(multiple_) ;
-            
+
             # Generate the real target...
             local target-type-p =
                 [ property.select <main-target-type> : [ $(property-set).raw ] ] ;
@@ -83,7 +83,7 @@ class modifier : generator
                     : $(property-set)
                     : $(sources) ] ;
             self.targets-in-progress = $(self.targets-in-progress[1--2]) ;
-            
+
             # After modifications...
             result =
                 [ modify-target-after $(result)
@@ -94,37 +94,37 @@ class modifier : generator
         }
         return $(result) ;
     }
-    
+
     rule modify-project-before ( project name ? : property-set : sources + :  multiple ? )
     {
         return $(project) ;
     }
-    
+
     rule modify-name-before ( project name ? : property-set : sources + :  multiple ? )
     {
         return $(name) ;
     }
-    
+
     rule modify-properties-before ( project name ? : property-set : sources + :  multiple ? )
     {
         return $(property-set) ;
     }
-    
+
     rule modify-sources-before ( project name ? : property-set : sources + :  multiple ? )
     {
         return $(sources) ;
     }
-    
+
     rule modify-multiple-before ( project name ? : property-set : sources + :  multiple ? )
     {
         return $(multiple) ;
     }
-    
+
     rule modify-target-after ( target : project name ? : property-set : sources + :  multiple ? )
     {
         return $(target) ;
     }
-    
+
     # Utility, clones a file-target with optional changes to the name, type and
     # project of the target.
     # NOTE: This functionality should be moved, and generalized, to
@@ -137,19 +137,19 @@ class modifier : generator
         new-type ?= [ $(target).type ] ;
         new-project ?= [ $(target).project ] ;
         local result = [ new file-target $(new-name) : $(new-type) : $(new-project) ] ;
-        
+
         if [ $(target).dependencies ] { $(result).depends [ $(target).dependencies ] ; }
         $(result).root [ $(target).root ] ;
         $(result).set-usage-requirements [ $(target).usage-requirements ] ;
-        
+
         local action = [ $(target).action ] ;
         local action-class = [ modules.peek $(action) : __class__ ] ;
-        
+
         local ps = [ $(action).properties ] ;
-        local cloned-action = [ new $(action-class) $(result) : 
+        local cloned-action = [ new $(action-class) $(result) :
           [ $(action).sources ] : [ $(action).action-name ] : $(ps) ] ;
         $(result).action $(cloned-action) ;
-        
+
         return $(result) ;
     }
 }
@@ -167,13 +167,13 @@ class name-modifier : modifier
         # Apply ourselves to EXE targets, for now.
         modifier.__init__ name.modifier : : EXE LIB : <name-modify>yes ;
     }
-    
+
     # Modifies the name, by cloning the target with the new name.
     #
     rule modify-target-after ( target : project name ? : property-set : sources + :  multiple ? )
     {
         local result = $(target) ;
-        
+
         local name-mod-p = [ property.select <name-modifier> : [ $(property-set).raw ] ] ;
         if $(name-mod-p)
         {
@@ -190,10 +190,10 @@ class name-modifier : modifier
                     : [ property-set.create [ $(property-set).raw ] <symlink-location>build-relative ] ] ;
             }
         }
-        
+
         return $(result) ;
     }
-    
+
     # Do the transformation of the name.
     #
     rule modify-name ( name : modifier-spec + )
@@ -218,7 +218,7 @@ class name-modifier : modifier
         new-name-parts += $(name-parts) ;
         return [ sequence.join $(new-name-parts) ] ;
     }
-    
+
     rule optional-properties ( )
     {
         return <name-modify>yes ;
