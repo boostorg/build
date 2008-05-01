@@ -18,7 +18,7 @@
 
   <para>This section will guide you though the most basic features of
   Boost.Build V2. We will start with the &#x201C;Hello, world&#x201D; example,
-  learn how to use libraries, and finish with testing and installing features.  
+  learn how to use libraries, and finish with testing and installing features.
   </para>
 
   <section id="bbv2.tutorial.hello">
@@ -37,9 +37,9 @@ exe hello : hello.cpp ;
       things. First of all, just invoking <command>bjam</command> will
       build the <filename>hello</filename>
       executable by compiling and
-      linking <filename>hello.cpp</filename>. By default, debug variant 
+      linking <filename>hello.cpp</filename>. By default, debug variant
       is built. Now, to build the
-      release variant of <filename>hello</filename>, invoke 
+      release variant of <filename>hello</filename>, invoke
 
 <screen>
 bjam release
@@ -66,7 +66,7 @@ bjam debug release
       Since we have already built both variants
       of <filename>hello</filename>, hello.cpp won't be recompiled;
       instead the existing object files will just be linked into the
-      corresponding variants of <filename>hello2</filename>. Now 
+      corresponding variants of <filename>hello2</filename>. Now
       let's remove all the built products:
 
 <screen>
@@ -140,7 +140,7 @@ bjam variant=release inlining=off debug-symbols=on
     <section id="bbv2.tutorial.properties.requirements">
       <title>Build Requests and Target Requirements</title>
 
-      <para>      
+      <para>
         The set of properties specified on the command line constitute
         a <firstterm>build request</firstterm>&#x2014;a description of
         the desired properties for building the requested targets (or,
@@ -162,15 +162,15 @@ bjam variant=release inlining=off debug-symbols=on
       </para>
 
 <programlisting>
-exe hello 
+exe hello
     : hello.cpp
     : &lt;include&gt;boost &lt;threading&gt;multi
     ;
 </programlisting>
 
-      <para> 
+      <para>
         When <filename>hello</filename> is built, the two
-        requirements specified above will always be present. 
+        requirements specified above will always be present.
         If the build request given on the <command>bjam</command>
         command-line explictly contradicts a target's requirements,
         the target requirements usually override (or, in the case of
@@ -187,7 +187,7 @@ See <xref linkend="bbv2.reference.features.attributes"/>
       <tip>
         <para>The value of the <varname>&lt;include&gt;</varname> feature is
           relative to the location of <filename>Jamroot</filename> where it's
-          used. 
+          used.
         </para>
       </tip>
 
@@ -200,14 +200,14 @@ See <xref linkend="bbv2.reference.features.attributes"/>
         target, <filename>hello2</filename>, we could simply duplicate
         them.  However, as projects grow, that approach leads to a great
         deal of repeated boilerplate in Jamfiles.
-        
+
         Fortunately, there's a better way. Each project can specify a
         set of <firstterm>attributes</firstterm>, including
         requirements:
 
 <programlisting>
-project 
-    : requirements &lt;include&gt;/home/ghost/Work/boost &lt;threading&gt;multi 
+project
+    : requirements &lt;include&gt;/home/ghost/Work/boost &lt;threading&gt;multi
     ;
 
 exe hello : hello.cpp ;
@@ -236,7 +236,7 @@ exe hello2 : hello.cpp ;
     example, in the following directory layout:
 
 <screen>
-top/ 
+top/
   |
   +-- Jamroot
   |
@@ -244,7 +244,7 @@ top/
   |    |
   |    +-- Jamfile
   |    `-- app.cpp
-  | 
+  |
   `-- util/
        |
        +-- foo/
@@ -274,7 +274,7 @@ top/
     <para>
       Projects inherit all attributes (such as requirements)
       from their parents.  Inherited requirements are combined with
-      any requirements specified by the subproject.  
+      any requirements specified by the subproject.
       For example, if <filename>top/Jamroot</filename> has
 
 <programlisting>
@@ -289,8 +289,8 @@ top/
       rather than added-to, in subprojects.  See <xref
       linkend="bbv2.reference.features.attributes"/> for more
       information</para>
-    </footnote> 
-    More details can be found in 
+    </footnote>
+    More details can be found in
       <xref linkend= "bbv2.advanced.projects"/>.
     </para>
 
@@ -346,7 +346,7 @@ exe app : app.cpp ../util/foo//bar ;
       While <code>app.cpp</code> refers to a regular source file,
       <code>../util/foo//bar</code> is a reference to another target:
       a library <filename>bar</filename> declared in the Jamfile at
-      <filename>../util/foo</filename>. 
+      <filename>../util/foo</filename>.
     </para>
 
     <tip>
@@ -378,13 +378,13 @@ bjam app optimization=full define=USE_ASM
       <filename>app.cpp</filename>. We could manually add the necessary
       <code>#include</code> paths to <filename>app</filename>'s
       requirements as values of the
-      <varname>&lt;include&gt;</varname> feature, but then this work will 
+      <varname>&lt;include&gt;</varname> feature, but then this work will
       be repeated for all programs
       that use <filename>foo</filename>. A better solution is to modify
       <filename>util/foo/Jamfile</filename> in this way:
 
 <programlisting>
-project 
+project
     : usage-requirements &lt;include&gt;.
     ;
 
@@ -399,7 +399,7 @@ lib foo : foo.cpp ;
 
     <para>Another improvement is using symbolic identifiers to refer to
       the library, as opposed to <filename>Jamfile</filename> location.
-      In a large project, a library can be used by many targets, and if 
+      In a large project, a library can be used by many targets, and if
       they all use <filename>Jamfile</filename> location,
       a change in directory organization entails much work.
       The solution is to use project ids&#x2014;symbolic names
@@ -415,14 +415,14 @@ use-project /library-example/foo : util/foo ;
 <programlisting>
 exe app : app.cpp /library-example/foo//bar ;
 </programlisting>
-The <filename>/library-example/foo//bar</filename> syntax is used 
+The <filename>/library-example/foo//bar</filename> syntax is used
       to refer to the target <filename>bar</filename> in
       the project with id <filename>/library-example/foo</filename>.
       We've achieved our goal&#x2014;if the library is moved to a different
       directory, only <filename>Jamroot</filename> must be modified.
       Note that project ids are global&#x2014;two Jamfiles are not
       allowed to assign the same project id to different directories.
-           
+
     </para>
 
     <tip>
@@ -434,12 +434,12 @@ The <filename>/library-example/foo//bar</filename> syntax is used
       <code>&lt;library&gt;/boost/filesystem//fs</code> to the project's requirements, like this:</para>
 
       <programlisting>
-project 
+project
    : requirements &lt;source&gt;/boost/filesystem//fs
-   ;   
+   ;
       </programlisting>
     </tip>
-    
+
   </section>
 
   <section id="bbv2.tutorial.testing">
@@ -457,38 +457,35 @@ project
     <emphasis>dynamic</emphasis>), which are only referred to from executables,
     and must be available at run time. Boost.Build can create and use both kinds.
     </para>
-    
+
     <para>The kind of library produced from a <code>lib</code> target is
     determined by the value of the <varname>link</varname> feature. Default
-    value is <literal>shared</literal>, and to build static library, the value
-    should be <literal>static</literal>. You can either requiest static build
+    value is <literal>shared</literal>, and to build a static library, the value
+    should be <literal>static</literal>. You can request a static build either
     on the command line:
     <screen>
 bjam link=static
     </screen>
-    or in the library's requirements:    
+    or in the library's requirements:
     <programlisting>
 lib l : l.cpp : &lt;link&gt;static ;
     </programlisting>
     </para>
 
     <para>
-      We can also use the <varname>&lt;link&gt;</varname> property
-      to express linking requirements on a per-target basis.  
-      For example, if a particular executable can be correctly built
-      only with the static version of a library, we can qualify the
-      executable's <link
-      linkend="bbv2.reference.targets.references">target
-      reference</link> to the library as follows:
+      We can also use the <varname>&lt;link&gt;</varname> property to express
+      linking requirements on a per-target basis. For example, if a particular
+      executable can be correctly built only with the static version of a
+      library, we can qualify the executable's <link
+      linkend="bbv2.reference.targets.references">target reference</link> to the
+      library as follows:
 
-<!-- There has been no earlier indication that target references can
-     contain properties.  You can't assume that the reader will
-     recognize that strange incantation as a target reference, or that
-     she'll know what it means.  You also can't assume that hyperlinks
-     will help the reader, because she may be working from a printout,
-     as I was. 
-     VP: to be addressed when this section is moved. See comment
-     below.
+<!-- There has been no earlier indication that target references can contain
+     properties. You can't assume that the reader will recognize that strange
+     incantation as a target reference, or that she'll know what it means. You
+     also can't assume that hyperlinks will help the reader, because she may be
+     working from a printout, as I was.
+     VP: to be addressed when this section is moved. See comment below.
 -->
 
     <programlisting>
@@ -521,14 +518,14 @@ alias foo : /other_project//bar/&lt;link&gt;static ;
 exe e1 : e1.cpp foo ;
 exe e10 : e10.cpp foo ;</programlisting>
 
-        The <link linkend="bbv2.tasks.alias"><functionname>alias</functionname></link> 
+        The <link linkend="bbv2.tasks.alias"><functionname>alias</functionname></link>
         rule is specifically used to rename a reference to a target and possibly
         change the properties.
-        
+
         <!-- You should introduce the alias rule in an earlier
              section, before describing how it applies to this
              specific use-case, and the foregoing sentence should
-             go there. 
+             go there.
              VP: we've agreed that this section should be moved further
              in the docs, since it's more like advanced reading. When
              I'll move it, I'll make sure 'alias' is already mentioned.
@@ -540,10 +537,10 @@ exe e10 : e10.cpp foo ;</programlisting>
           When one library uses another, you put the second library in
           the source list of the first. For example:
           <programlisting>
-lib utils : utils.cpp /boost/filesystem//fs ;   
+lib utils : utils.cpp /boost/filesystem//fs ;
 lib core : core.cpp utils ;
 exe app : app.cpp core ;</programlisting>
-          This works no matter what kind of linking is used. When 
+          This works no matter what kind of linking is used. When
           <filename>core</filename> is built as a shared library, it is linked
           directly into <filename>utils</filename>. Static libraries can't
           link to other libraries, so when <filename>core</filename> is built
@@ -575,11 +572,11 @@ exe app : app.cpp core ;</programlisting>
     <para>Sometimes, particular relationships need to be maintained
     among a target's build properties. For example, you might want to set
     specific <code>#define</code> when a library is built as shared,
-    or when a target's <code>release</code> variant is built. 
-    This can be achieved with <firstterm>conditional requirements</firstterm>. 
+    or when a target's <code>release</code> variant is built.
+    This can be achieved with <firstterm>conditional requirements</firstterm>.
 
     <programlisting>
-lib network : network.cpp 
+lib network : network.cpp
     : <emphasis role="bold">&lt;link&gt;shared:&lt;define&gt;NEWORK_LIB_SHARED</emphasis>
      &lt;variant&gt;release:&lt;define&gt;EXTRA_FAST
     ;
@@ -588,7 +585,7 @@ lib network : network.cpp
       In the example above, whenever <filename>network</filename> is
       built with <code>&lt;link&gt;shared</code>,
       <code>&lt;define&gt;NEWORK_LIB_SHARED</code> will be in its
-      properties, too. Also, whenever its release variant is built, 
+      properties, too. Also, whenever its release variant is built,
       <code>&lt;define&gt;EXTRA_FAST</code> will appear in its properties.
     </para>
 
@@ -606,7 +603,7 @@ lib demangler : demangler_msvc.cpp : &lt;toolset&gt;msvc ; # alternative 3
 </programlisting>
       When building <filename>demangler</filename>, Boost.Build will compare
       requirements for each alternative with build properties to find the best
-      match. For example, when building with <code>&lt;toolset&gt;gcc</code> 
+      match. For example, when building with <code>&lt;toolset&gt;gcc</code>
       alternative 2, will be selected, and when building with
       <code>&lt;toolset&gt;msvc</code> alternative 3 will be selected. In all
       other cases, the most generic alternative 1 will be built.
@@ -625,12 +622,12 @@ lib demangler : demangler_msvc.cpp : &lt;toolset&gt;msvc ; # alternative 3
 <programlisting>
 # util/lib2/Jamfile
 lib lib2
-    : 
+    :
     : &lt;file&gt;lib2_release.a &lt;variant&gt;release
     ;
 
 lib lib2
-    : 
+    :
     : &lt;file&gt;lib2_debug.a &lt;variant&gt;debug
     ;
 </programlisting>
@@ -650,7 +647,7 @@ exe app : app.cpp ../util/lib2//lib2 ;
       As with any target, the alternative selected depends on the
       properties propagated from <filename>lib2</filename>'s dependents.
       If we build the the release and debug versions of <filename>app</filename> will be linked
-      with <filename>lib2_release.a</filename> and <filename>lib2_debug.a</filename>, respectively.  
+      with <filename>lib2_release.a</filename> and <filename>lib2_debug.a</filename>, respectively.
 
     </para>
 
@@ -668,7 +665,7 @@ lib pythonlib : : &lt;name&gt;python22 ;
       compiler. If the gcc toolset were used to link an executable
       target to <filename>pythonlib</filename>, <option>-lpython22</option>
       would appear in the command line (other compilers may use
-      different options). 
+      different options).
     </para>
 
     <para>
@@ -688,7 +685,7 @@ lib pythonlib : : &lt;name&gt;python22_d &lt;variant&gt;debug ;
     </para>
 
     <para>A more advanced use of prebuilt targets is described in <xref
-        linkend="bbv2.recipies.site-config"/>.    
+        linkend="bbv2.recipies.site-config"/>.
     </para>
 
   </section>
