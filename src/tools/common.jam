@@ -565,15 +565,15 @@ rule MkDir
     if $(<) != $(DOT) && ! $($(<)-mkdir)
     {
         # Cheesy gate to prevent multiple invocations on same dir.
-        # MkDir1 has the actions.
-        # Arrange for jam dirs.
-
         $(<)-mkdir = true ;
         MkDir1 $(<) ;
+
+        # Prepare a Jam 'dirs' target that can be used to make the build only
+        # construct all the target directories.
         DEPENDS dirs : $(<) ;
 
-        # Recursively make parent directories.
-        # $(<:P) = $(<)'s parent, & we recurse until root
+        # Recursively create parent directories. $(<:P) = $(<)'s parent & we
+        # recurse until root.
 
         local s = $(<:P) ;
 
