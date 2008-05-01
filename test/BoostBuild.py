@@ -139,6 +139,7 @@ elif os.name == 'nt':
     def _status(self):
         return self.status
 
+
 class Tester(TestCmd.TestCmd):
     """Class for testing Boost.Build.
 
@@ -186,9 +187,9 @@ class Tester(TestCmd.TestCmd):
                 elif os.uname()[0] == 'SunOS':
                     jam_build_dir = "bin.solaris"
                 elif os.uname()[0] == 'Darwin':
-		    if os.uname()[4] == 'i386':
+                    if os.uname()[4] == 'i386':
                         jam_build_dir = "bin.macosxx86"
-	            else:
+                    else:
                         jam_build_dir = "bin.macosxppc"
                 elif os.uname()[0] == "AIX":
                     jam_build_dir = "bin.aix"
