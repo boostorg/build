@@ -269,7 +269,7 @@ class Tester(TestCmd.TestCmd):
         else:
             program_list.append(os.path.join(jam_build_dir, executable))
             inpath_bjam = None
-        program_list.append('-sBOOST_BUILD_PATH=' + boost_build_path)
+        program_list.append('-sBOOST_BUILD_PATH="' + boost_build_path + '"')
         if verbosity:
             program_list += verbosity
         if arguments:
