@@ -63,6 +63,7 @@ class configurations
     #
     # Returns 'true' if the configuration has been added and an empty value if
     # it already exists. Reports an error if the configuration is 'used'.
+    #
     rule register ( id )
     {
         if $(id) in $(self.used)
@@ -88,6 +89,7 @@ class configurations
     # Returns 'true' if the state of the configuration has been changed to
     # 'used' and an empty value if it the state wasn't changed. Reports an error
     # if the configuration isn't known.
+    #
     rule use ( id )
     {
         if ! $(id) in $(self.all)
@@ -109,24 +111,28 @@ class configurations
     }
 
     # Return all registered configurations.
+    #
     rule all ( )
     {
         return $(self.all) ;
     }
 
     # Return all used configurations.
+    #
     rule used ( )
     {
         return $(self.used) ;
     }
 
     # Returns the value of a configuration parameter.
+    #
     rule get ( id : param )
     {
         return $(self.$(param).$(id)) ;
     }
 
     # Sets the value of a configuration parameter.
+    #
     rule set ( id : param : value * )
     {
         self.$(param).$(id) = $(value) ;
@@ -140,11 +146,12 @@ class configurations
 # will check that the combination of all parameter values is unique in all
 # invocations.
 #
-# Each parameter name corresponds to a subfeature. This rule will declare
-# a subfeature the first time a non-empty parameter value is passed and will
+# Each parameter name corresponds to a subfeature. This rule will declare a
+# subfeature the first time a non-empty parameter value is passed and will
 # extend it with all the values.
 #
 # The return value from this rule is a condition to be used for flags settings.
+#
 rule check-init-parameters ( toolset requirement * : * )
 {
     local sig = $(toolset) ;
@@ -251,6 +258,7 @@ rule check-init-parameters ( toolset requirement * : * )
 # This rule returns the command to be used when invoking the tool. If we can't
 # find the tool, a warning is issued. If 'path-last' is specified, PATH is
 # checked after 'additional-paths' when searching for 'tool'.
+#
 rule get-invocation-command-nodefault (
     toolset : tool : user-provided-command * : additional-paths * : path-last ? )
 {
@@ -281,6 +289,7 @@ rule get-invocation-command-nodefault (
 
 # Same as get-invocation-command-nodefault, except that if no tool is found,
 # returns either the user-provided-command, if present, or the 'tool' parameter.
+#
 rule get-invocation-command (
     toolset : tool : user-provided-command * : additional-paths * : path-last ? )
 {
@@ -304,6 +313,7 @@ rule get-invocation-command (
 
 # Given an invocation command return the absolute path to the command. This
 # works even if command has no path element and was found on the PATH.
+#
 rule get-absolute-tool-path ( command )
 {
     if $(command:D)
@@ -323,6 +333,7 @@ rule get-absolute-tool-path ( command )
 # absolute name. If the tool is found in several directories, returns all paths.
 # Otherwise, returns an empty string. If 'path-last' is specified, PATH is
 # searched after 'additional-paths'.
+#
 rule find-tool ( name : additional-paths * : path-last ? )
 {
     local path = [ path.programs-path ] ;
@@ -358,6 +369,7 @@ rule find-tool ( name : additional-paths * : path-last ? )
 
 # Checks if 'command' can be found either in path or is a full name to an
 # existing file.
+#
 rule check-tool-aux ( command )
 {
     if $(command:D)
@@ -384,6 +396,7 @@ rule check-tool-aux ( command )
 # Checks that a tool can be invoked by 'command'. If command is not an absolute
 # path, checks if it can be found in 'path'. If comand is an absolute path,
 # check that it exists. Returns 'command' if ok or empty string otherwise.
+#
 rule check-tool ( xcommand + )
 {
     if [ check-tool-aux $(xcommand[1]) ] ||
@@ -399,8 +412,9 @@ rule check-tool ( xcommand + )
 # - CONFIG_COMMAND to 'command'
 # - OPTIONS for compile.c   to the value of <cflags>       in options
 # - OPTIONS for compile.c++ to the value of <cxxflags>     in options
-# - OPTIOns for compile     to the value of <compileflags> in options
-# - OPTIONs for link        to the value of <linkflags>    in options
+# - OPTIONS for compile     to the value of <compileflags> in options
+# - OPTIONS for link        to the value of <linkflags>    in options
+#
 rule handle-options ( toolset : condition * : command * : options * )
 {
     if $(.debug-configuration)
@@ -411,19 +425,20 @@ rule handle-options ( toolset : condition * : command * : options * )
     # The last parameter ('true') says it's OK to set flags for another module.
     toolset.flags $(toolset) CONFIG_COMMAND $(condition) : $(command) : unchecked ;
     toolset.flags $(toolset).compile OPTIONS $(condition) :
-      [ feature.get-values <compileflags> : $(options) ] : unchecked ;
+        [ feature.get-values <compileflags> : $(options) ] : unchecked ;
     toolset.flags $(toolset).compile.c OPTIONS $(condition) :
-      [ feature.get-values <cflags> : $(options) ] : unchecked ;
+        [ feature.get-values <cflags> : $(options) ] : unchecked ;
     toolset.flags $(toolset).compile.c++ OPTIONS $(condition) :
-      [ feature.get-values <cxxflags> : $(options) ] : unchecked ;
+        [ feature.get-values <cxxflags> : $(options) ] : unchecked ;
     toolset.flags $(toolset).compile.fortran OPTIONS $(condition) :
-      [ feature.get-values <fflags> : $(options) ] : unchecked ;
+        [ feature.get-values <fflags> : $(options) ] : unchecked ;
     toolset.flags $(toolset).link OPTIONS $(condition) :
-      [ feature.get-values <linkflags> : $(options) ] : unchecked ;
+        [ feature.get-values <linkflags> : $(options) ] : unchecked ;
 }
 
 
-# Returns the location of the "program files" directory on a windows platform.
+# Returns the location of the "program files" directory on a Windows platform.
+#
 rule get-program-files-dir ( )
 {
     local ProgramFiles = [ modules.peek : ProgramFiles ] ;
@@ -471,6 +486,7 @@ rule copy-command ( )
 # visible in the environment seen by subsequently executed commands. In other
 # words, on Unix systems, the variable is exported, which is consistent with the
 # only possible behavior on Windows systems.
+#
 rule variable-setting-command ( variable : value )
 {
     local nl = "
@@ -489,6 +505,7 @@ rule variable-setting-command ( variable : value )
 
 # Returns a command to sets a named shell path variable to the given NATIVE
 # paths on the current platform.
+#
 rule path-variable-setting-command ( variable : paths * )
 {
     local sep = [ os.path-separator ] ;
@@ -498,6 +515,7 @@ rule path-variable-setting-command ( variable : paths * )
 
 # Returns a command that prepends the given paths to the named path variable on
 # the current platform.
+#
 rule prepend-path-variable-command ( variable : paths * )
 {
     return [ path-variable-setting-command $(variable)
@@ -508,6 +526,7 @@ rule prepend-path-variable-command ( variable : paths * )
 # Return a command which can create a file. If 'r' is result of invocation, then
 # 'r foobar' will create foobar with unspecified content. What happens if file
 # already exists is unspecified.
+#
 rule file-creation-command ( )
 {
     if [ modules.peek : NT ]
@@ -524,6 +543,7 @@ rule file-creation-command ( )
 # Returns a command that may be used for 'touching' files. It is not a real
 # 'touch' command on NT because it adds an empty line at the end of file but it
 # works with source files.
+#
 rule file-touch-command ( )
 {
     if [ os.name ] in NT
@@ -550,7 +570,7 @@ rule MkDir
 
         $(<)-mkdir = true ;
         MkDir1 $(<) ;
-        Depends dirs : $(<) ;
+        DEPENDS dirs : $(<) ;
 
         # Recursively make parent directories.
         # $(<:P) = $(<)'s parent, & we recurse until root
@@ -568,7 +588,7 @@ rule MkDir
 
         if $(s) && $(s) != $(<)
         {
-            Depends $(<) : $(s) ;
+            DEPENDS $(<) : $(s) ;
             MkDir $(s) ;
         }
         else if $(s)
@@ -703,7 +723,7 @@ rule format-name ( format * : name : type ? : property-set )
                         result += [ join-tag $(f:G=) : $(p) ] ;
                     }
                 }
-                
+
                 case * :
                 result += $(f:G=) ;
             }
