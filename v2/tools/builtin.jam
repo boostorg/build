@@ -449,9 +449,9 @@ scanner.register c-scanner : include ;
 # which is handled specifically.
 type.set-scanner CPP : c-scanner ;
 type.set-scanner C   : c-scanner ;
-# One case where scanning of H/HPP files is necessary is PCH generation --
-# if any header included by HPP being precompiled changes, we need to
-# recompile the header.
+# One case where scanning of H/HPP files is necessary is PCH generation -- if
+# any header included by HPP being precompiled changes, we need to recompile the
+# header.
 type.set-scanner H   : c-scanner ;
 type.set-scanner HPP : c-scanner ;
 
