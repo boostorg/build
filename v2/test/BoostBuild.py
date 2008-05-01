@@ -285,7 +285,7 @@ class Tester(TestCmd.TestCmd):
         os.path.walk(".", make_writable, None)
 
     def write(self, file, content):
-        self.wait_for_time_change()
+        self.wait_for_time_change_since_last_build()
         nfile = self.native_file_name(file)
         try:
             os.makedirs(os.path.dirname(nfile))
@@ -308,7 +308,7 @@ class Tester(TestCmd.TestCmd):
         self.touch(new);
 
     def copy(self, src, dst):
-        self.wait_for_time_change()
+        self.wait_for_time_change_since_last_build()
         try:
             self.write(dst, self.read(src, 1))
         except:
@@ -322,12 +322,12 @@ class Tester(TestCmd.TestCmd):
         os.utime(dst_name, (stats.st_atime, stats.st_mtime))
 
     def touch(self, names):
-        self.wait_for_time_change()
+        self.wait_for_time_change_since_last_build()
         for name in self.adjust_names(names):
             os.utime(self.native_file_name(name), None)
 
     def rm(self, names):
-        self.wait_for_time_change()
+        self.wait_for_time_change_since_last_build()
         if not type(names) == types.ListType:
             names = [names]
 
@@ -784,8 +784,9 @@ class Tester(TestCmd.TestCmd):
         return os.path.normpath(apply(os.path.join, [self.workdir]+elements))
 
     # Wait while time is no longer equal to the time last "run_build_system"
-    # call finished.
-    def wait_for_time_change(self):
+    # call finished. Used to avoid subsequent builds treating existing files as
+    # 'current'.
+    def wait_for_time_change_since_last_build(self):
         while 1:
             f = time.time();
             # In fact, I'm not sure why "+ 2" as opposed to "+ 1" is needed but

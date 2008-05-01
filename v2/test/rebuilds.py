@@ -35,7 +35,7 @@ t.run_build_system('-ffile.jam bar')
 t.expect_addition('bar')
 t.expect_nothing_more()
 
-t.wait_for_time_change()
+t.wait_for_time_change_since_last_build()
 t.run_build_system('-ffile.jam foo')
 t.expect_touch('bar')
 t.expect_addition('foo')
