@@ -401,7 +401,65 @@ class TestCmd:
         try:
             p = popen2.Popen3(cmd, 1)
         except AttributeError:
-            (tochild, fromchild, childerr) = os.popen3(join(cmd, " "))
+            # We end up here in case the popen2.Popen3 class is not available
+            # (e.g. on Windows). We will be using the os.popen3() Python API
+            # which takes a string parameter and so needs its executable quoted
+            # in case its name contains spaces.
+            cmd[0] = '"' + cmd[0] + '"'
+            command_string = join(cmd, " ")
+            if ( os.name == 'nt' ):
+                # This is a workaround for a longstanding Python bug on Windows
+                # when using os.popen(), os.system() and similar functions to
+                # execute a command containing quote characters. The bug seems
+                # to be related to the quote stripping functionality used by the
+                # Windows cmd.exe interpreter when its /S is not specified.
+                #
+                # Cleaned up quote from the cmd.exe help screen as displayed on
+                # Windows XP SP2:
+                #
+                #   1. If all of the following conditions are met, then quote
+                #      characters on the command line are preserved:
+                #
+                #       - no /S switch
+                #       - exactly two quote characters
+                #       - no special characters between the two quote
+                #         characters, where special is one of: &<>()@^|
+                #       - there are one or more whitespace characters between
+                #         the two quote characters
+                #       - the string between the two quote characters is the
+                #         name of an executable file.
+                #
+                #   2. Otherwise, old behavior is to see if the first character
+                #      is a quote character and if so, strip the leading
+                #      character and remove the last quote character on the
+                #      command line, preserving any text after the last quote
+                #      character.
+                #
+                # This causes some commands containing quotes not to be executed
+                # correctly. For example:
+                #
+                #   "\Long folder name\aaa.exe" --name="Jurko" --no-surname
+                #
+                # would get its outermost quotes stripped and would be executed
+                # as:
+                #
+                #   \Long folder name\aaa.exe" --name="Jurko --no-surname
+                #
+                # which would report an error about '\Long' not being a valid
+                # command.
+                #
+                # cmd.exe help seems to indicate it would be enough to add an
+                # extra space character in front of the command to avoid this
+                # but this does not work, most likely due to the shell first
+                # stripping all leading whitespace characters from the command.
+                #
+                # Solution implemented here is to quote the whole command in
+                # case it contains any quote characters. Note thought this will
+                # not work correctly should Python ever fix this bug.
+                #                                    (01.05.2008.) (Jurko)
+                if command_string.find('"') != -1:
+                    command_string = '"' + command_string + '"'
+            (tochild, fromchild, childerr) = os.popen3(command_string)
             if stdin:
                 if type(stdin) is ListType:
                     for line in stdin:
