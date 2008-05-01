@@ -141,13 +141,46 @@ elif os.name == 'nt':
 
 
 class Tester(TestCmd.TestCmd):
-    """Class for testing Boost.Build.
+    """Main tester class for Boost Build.
 
-    Optional argument `executable` indicates the name of the executable to
-    invoke. Set this to "jam" to test Boost.Build v1 behavior.
+    Optional arguments:
 
-    Optional argument `work_dir` indicates an absolute directory, where the test
-    will run be run.
+    `arguments`                   - Arguments passed to the run executable.
+    `executable`                  - Name of the executable to invoke.
+    `match`                       - Function to use for compating actual and
+                                    expected file contents.
+    `boost_build_path`            - Boost build path to be passed to the run
+                                    executable.
+    `translate_suffixes`          - Whether to update suffixes on the the file
+                                    names passed from the test script so they
+                                    match those actually created by the current
+                                    toolset. For example, static library files
+                                    are specified by using the .lib suffix but
+                                    when the 'gcc' toolset is used it actually
+                                    creates them using the .a suffix.
+    `pass_toolset`                - Whether the test system should pass the
+                                    specified toolset to the run executable.
+    `use_test_config`             - Whether the test system should tell the run
+                                    executable to read in the test_config.jam
+                                    configuration file.
+    `ignore_toolset_requirements` - Whether the test system should tell the run
+                                    executable to ignore toolset requirements.
+    `workdir`                     - indicates an absolute directory where the
+                                    test will be run from.
+
+    Optional arguments inherited from the base class:
+
+    `description`                 - Test description string displayed in case of
+                                    a failed test.
+    `subdir'                      - List of subdirectories to automatically
+                                    create under the working directory. Each
+                                    subdirectory needs to be specified
+                                    separately parent coming before its child.
+    `verbose`                     - Flag that may be used to enable more verbose
+                                    test system output. Note that it does not
+                                    also enable more verbose build system
+                                    output like the --verbose command line
+                                    option does.
     """
     def __init__(self, arguments="", executable="bjam",
         match=TestCmd.match_exact, boost_build_path=None,
@@ -222,7 +255,7 @@ class Tester(TestCmd.TestCmd):
 
         verbosity = ['-d0', '--quiet']
         if '--verbose' in sys.argv:
-            keywords['verbose'] = 1
+            keywords['verbose'] = True
             verbosity = ['-d+2']
 
         if boost_build_path is None:
@@ -266,7 +299,7 @@ class Tester(TestCmd.TestCmd):
     # Methods that change the working directory's content.
     #
     def set_tree(self, tree_location):
-        # Seems like it's not possible to remove the current a directory.
+        # It is not possible to remove the current directory.
         d = os.getcwd()
         os.chdir(os.path.dirname(self.workdir))
         shutil.rmtree(self.workdir, ignore_errors=False)
@@ -345,7 +378,7 @@ class Tester(TestCmd.TestCmd):
                 else:
                     os.unlink(n)
 
-        # Create working dir root again, in case we've removed it.
+        # Create working dir root again in case we removed it.
         if not os.path.exists(self.workdir):
             os.mkdir(self.workdir)
         os.chdir(self.workdir)
