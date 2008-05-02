@@ -758,7 +758,7 @@ If you omit the list of formal arguments, all checking is bypassed as in "classi
 rule DEPENDS ( /targets1/ * : /targets2/ * )
 ]
 
-Builds a direct dependency: makes each of /targets1/ depend on each of /targets2/. Generally, /targets1/ will be rebuilt if /targets2/ are themselves rebuilt are or are newer than /targets1/.
+Builds a direct dependency: makes each of /targets1/ depend on each of /targets2/. Generally, /targets1/ will be rebuilt if /targets2/ are themselves rebuilt or are newer than /targets1/.
 
 [endsect]
 
