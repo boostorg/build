@@ -191,7 +191,8 @@ class Tester(TestCmd.TestCmd):
         if workdir != '' and not os.path.isabs(workdir):
             raise "Parameter workdir <"+workdir+"> must point to an absolute directory: "
 
-        self.last_build_time = 0
+        self.last_build_time_start = 0
+        self.last_build_time_finish = 0
         self.translate_suffixes = translate_suffixes
         self.use_test_config = use_test_config
 
@@ -290,7 +291,7 @@ class Tester(TestCmd.TestCmd):
             TestCmd.TestCmd.cleanup(self)
             os.chdir(self.original_workdir)
         except AttributeError:
-            # When this is called during by TestCmd.TestCmd.__del__ we can have
+            # When this is called during TestCmd.TestCmd.__del__ we can have
             # both 'TestCmd' and 'os' unavailable in our scope. Do nothing in
             # this case.
             pass
@@ -399,45 +400,50 @@ class Tester(TestCmd.TestCmd):
     #
     def run_build_system(self, extra_args="", subdir="", stdout=None, stderr="",
         status=0, match=None, pass_toolset=None, use_test_config=None,
-        ignore_toolset_requirements=None, **kw):
+        ignore_toolset_requirements=None, expected_duration=None, **kw):
 
-        if os.path.isabs(subdir):
-            if stderr:
-                print "You must pass a relative directory to subdir <"+subdir+">."
-            status = 1
-            return
-
-        self.previous_tree = tree.build_tree(self.workdir)
-
-        if match is None:
-            match = self.match
-
-        if pass_toolset is None:
-            pass_toolset = self.pass_toolset
-
-        if use_test_config is None:
-            use_test_config = self.use_test_config
-
-        if ignore_toolset_requirements is None:
-            ignore_toolset_requirements = self.ignore_toolset_requirements
+        self.last_build_time_start = time.time()
 
         try:
-            kw['program'] = []
-            kw['program'] += self.program
-            if extra_args:
-                kw['program'] += extra_args.split(" ")
-            if pass_toolset:
-                kw['program'].append("toolset=" + self.toolset)
-            if use_test_config:
-                kw['program'].append('--test-config="%s"'
-                    % os.path.join(self.original_workdir, "test-config.jam"))
-            if ignore_toolset_requirements:
-                kw['program'].append("--ignore-toolset-requirements")
-            kw['chdir'] = subdir
-            apply(TestCmd.TestCmd.run, [self], kw)
-        except:
-            self.dump_stdio()
-            raise
+            if os.path.isabs(subdir):
+                if stderr:
+                    print "You must pass a relative directory to subdir <"+subdir+">."
+                status = 1
+                return
+
+            self.previous_tree = tree.build_tree(self.workdir)
+
+            if match is None:
+                match = self.match
+
+            if pass_toolset is None:
+                pass_toolset = self.pass_toolset
+
+            if use_test_config is None:
+                use_test_config = self.use_test_config
+
+            if ignore_toolset_requirements is None:
+                ignore_toolset_requirements = self.ignore_toolset_requirements
+
+            try:
+                kw['program'] = []
+                kw['program'] += self.program
+                if extra_args:
+                    kw['program'] += extra_args.split(" ")
+                if pass_toolset:
+                    kw['program'].append("toolset=" + self.toolset)
+                if use_test_config:
+                    kw['program'].append('--test-config="%s"'
+                        % os.path.join(self.original_workdir, "test-config.jam"))
+                if ignore_toolset_requirements:
+                    kw['program'].append("--ignore-toolset-requirements")
+                kw['chdir'] = subdir
+                apply(TestCmd.TestCmd.run, [self], kw)
+            except:
+                self.dump_stdio()
+                raise
+        finally:
+            self.last_build_time_finish = time.time()
 
         if status != None and _failed(self, status):
             expect = ''
@@ -460,7 +466,7 @@ class Tester(TestCmd.TestCmd):
             self.maybe_do_diff(self.stdout(), stdout)
             self.fail_test(1, dump_stdio=False)
 
-        # Intel tends to produce some message to stderr which makes tests fail.
+        # Intel tends to produce some messages to stderr which make tests fail.
         intel_workaround = re.compile("^xi(link|lib): executing.*\n", re.M)
         actual_stderr = re.sub(intel_workaround, "", self.stderr())
 
@@ -472,12 +478,18 @@ class Tester(TestCmd.TestCmd):
             self.maybe_do_diff(actual_stderr, stderr)
             self.fail_test(1, dump_stdio=False)
 
+        if not expected_duration is None:
+            actual_duration = self.last_build_time_finish - self.last_build_time_start 
+            if ( actual_duration > expected_duration ):
+                print "Test run lasted %f seconds while it was expected to " \
+                    "finish in under %f seconds." % (actual_duration,
+                    expected_duration)
+                self.fail_test(1, dump_stdio=False)
+
         self.tree = tree.build_tree(self.workdir)
         self.difference = tree.trees_difference(self.previous_tree, self.tree)
         self.difference.ignore_directories()
         self.unexpected_difference = copy.deepcopy(self.difference)
-
-        self.last_build_time = time.time()
 
     def glob_file(self, name):
         result = None
@@ -821,11 +833,10 @@ class Tester(TestCmd.TestCmd):
     # 'current'.
     def wait_for_time_change_since_last_build(self):
         while 1:
-            f = time.time();
             # In fact, I'm not sure why "+ 2" as opposed to "+ 1" is needed but
             # empirically, "+ 1" sometimes causes 'touch' and other functions
             # not to bump the file time enough for a rebuild to happen.
-            if math.floor(f) < math.floor(self.last_build_time) + 2:
+            if math.floor(time.time()) < math.floor(self.last_build_time_finish) + 2:
                 time.sleep(0.1)
             else:
                 break
