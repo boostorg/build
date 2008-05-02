@@ -42,6 +42,7 @@ feature.feature os : $(os) : propagated link-incompatible ;
 
 # Translates from bjam current OS to the os tags used in host-os and target-os,
 # i.e. returns the running host-os.
+#
 local rule default-host-os ( )
 {
     local host-os ;
@@ -278,6 +279,7 @@ feature.feature variant : : implicit composite propagated symmetric ;
 #
 # Lastly, makes appropriate value of 'variant' property expand to the full
 # property set.
+#
 rule variant ( name            # Name of the variant
     : parents-or-properties *  # Specifies parent variants, if
                                # 'explicit-properties' are given, and
@@ -443,10 +445,9 @@ type.register C   : c ;
 
 scanner.register c-scanner : include ;
 
-# It most cases where a CPP file or a H file is a source of some action, 
-# we should rebuild the result if any of files included by CPP/H
-# are changed. One case when this is not needed is installation,
-# which is handled specifically.
+# It most cases where a CPP file or a H file is a source of some action, we
+# should rebuild the result if any of files included by CPP/H are changed. One
+# case when this is not needed is installation, which is handled specifically.
 type.set-scanner CPP : c-scanner ;
 type.set-scanner C   : c-scanner ;
 # One case where scanning of H/HPP files is necessary is PCH generation -- if
@@ -459,6 +460,7 @@ type.set-scanner HPP : c-scanner ;
 # The generator class for libraries (target type LIB). Depending on properties
 # it will request building of the appropriate specific library type --
 # -- SHARED_LIB, STATIC_LIB or SHARED_LIB.
+#
 class lib-generator : generator
 {
     rule __init__ ( * : * )
@@ -515,6 +517,7 @@ generators.register [ new lib-generator builtin.lib-generator :  : LIB ] ;
 
 # The implementation of the 'lib' rule. Beyond standard syntax that rule allows
 # simplified: "lib a b c ;".
+#
 rule lib ( names + : sources * : requirements * : default-build *
     : usage-requirements * )
 {
@@ -640,6 +643,7 @@ class compile-action : action
 
     # For all virtual targets for the same dependency graph as self, i.e. which
     # belong to the same main target, add their directories to the include path.
+    #
     rule adjust-properties ( property-set )
     {
         local s = [ $(self.targets[1]).creating-subvariant ] ;
@@ -653,6 +657,7 @@ class compile-action : action
 # type used to represent 'action' in the constructed dependency graph to
 # 'compile-action'. That class in turn adds additional include paths to handle
 # cases when a source file includes headers which are generated themselves.
+#
 class C-compiling-generator : generator
 {
     rule __init__ ( id : source-types + : target-types + : requirements *
@@ -679,10 +684,12 @@ rule register-c-compiler ( id : source-types + : target-types + : requirements *
 # FIXME: this is ugly, should find a better way (we'd like client code to
 # register all generators as "generators.some-rule" instead of
 # "some-module.some-rule".)
+#
 IMPORT $(__name__) : register-c-compiler : : generators.register-c-compiler ;
 
 
 # The generator class for handling EXE and SHARED_LIB creation.
+#
 class linking-generator : generator
 {
     import path ;
@@ -854,6 +861,7 @@ rule register-linker ( id composing ? : source-types + : target-types +
 
 
 # The generator class for handling STATIC_LIB creation.
+#
 class archive-generator : generator
 {
     import property-set ;
@@ -918,6 +926,7 @@ rule register-archiver ( id composing ? : source-types + : target-types +
 
 # Generator that accepts everything and produces nothing. Useful as a general
 # fallback for toolset-specific actions like PCH generation.
+#
 class dummy-generator : generator
 {
     import property-set ;
