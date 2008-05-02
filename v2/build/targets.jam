@@ -1077,7 +1077,8 @@ class basic-target : abstract-target
     #
     rule sources ( )
     {
-        if ! $(self.source-targets) {
+        if ! $(self.source-targets)
+        {
             for local s in $(self.sources)
             {
                 self.source-targets +=
@@ -1149,9 +1150,8 @@ class basic-target : abstract-target
             local grist = $(dependency:G) ;
             local id = $(dependency:G=) ;
 
-            local result =
-                [ targets.generate-from-reference $(id) : $(self.project)
-                : $(property-set) ] ;
+            local result = [ targets.generate-from-reference $(id) :
+                $(self.project) : $(property-set) ] ;
 
             $(result-var) += $(result[2-]:G=$(grist)) ;
             $(usage-requirements-var) += [ $(result[1]).raw ] ;
@@ -1197,12 +1197,11 @@ class basic-target : abstract-target
                 local properties = [ $(rproperties).non-dependency ] ;
                 local usage-requirements ;
 
-                generate-dependencies [ $(rproperties).dependency ]
-                    : $(rproperties)
-                    : properties usage-requirements ;
+                generate-dependencies [ $(rproperties).dependency ] :
+                    $(rproperties) : properties usage-requirements ;
 
-                generate-dependencies $(self.sources) : $(rproperties)
-                    : source-targets usage-requirements ;
+                generate-dependencies $(self.sources) : $(rproperties) :
+                    source-targets usage-requirements ;
 
                 if [ modules.peek : .debug-building ]
                 {
@@ -1227,9 +1226,8 @@ class basic-target : abstract-target
                 # libraries having the same <library> usage requirement.
                 source-targets = [ sequence.unique $(source-targets) ] ;
 
-                local result =
-                  [ construct $(self.name) :
-                    $(source-targets) : $(rproperties) ] ;
+                local result = [ construct $(self.name) : $(source-targets) :
+                    $(rproperties) ] ;
 
                 if $(result)
                 {
@@ -1248,7 +1246,7 @@ class basic-target : abstract-target
                     if [ modules.peek : .debug-building ]
                     {
                         ECHO [ targets.indent ]
-                          "Usage requirements from $(self.name) are "
+                            "Usage requirements from $(self.name) are"
                             [ $(ur).raw ] ;
                     }
 
@@ -1259,8 +1257,9 @@ class basic-target : abstract-target
             {
                 if $(rproperties[1]) = "@error"
                 {
-                    ECHO [ targets.indent ]
-                        "Skipping build of: " [ full-name ] " cannot compute common properties" ;
+                    ECHO [ targets.indent ] "Skipping build of:" [ full-name ]
+                        
+                        "cannot compute common properties" ;
                 }
                 else if [ $(rproperties).get <build> ] = no
                 {
@@ -1272,7 +1271,7 @@ class basic-target : abstract-target
                     ECHO [ targets.indent ] "Skipping build of: " [ full-name ] " unknown reason" ;
                 }
 
-                # We're here either because there's been an error computing
+                # We are here either because there's been an error computing
                 # properties, or there's <build>no in properties. In the latter
                 # case we don't want any diagnostic. In the former case, we need
                 # diagnostics. FIXME
