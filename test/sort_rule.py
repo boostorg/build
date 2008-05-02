@@ -20,7 +20,7 @@ import BoostBuild
 def testSORTCorrectness():
     """Testing that Boost Jam's SORT builtin rule actually sorts correctly.
     """
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester("-f test.jam -d1", pass_toolset=False, use_test_config=False)
 
     t.write("test.jam", """
 NOCARE all ;
@@ -38,7 +38,7 @@ if $(sorted-data) != $(target-data)
 }
 """)
 
-    t.run_build_system("-d1 -f test.jam", pass_toolset=False, use_test_config=False)
+    t.run_build_system()
     t.expect_output_line("starting up")
     t.expect_output_line("done")
     t.expect_output_line("SORT error", False)
@@ -57,7 +57,7 @@ def testSORTDuration():
     """Regression test making sure Boost Jam's SORT builtin rule does not get
     quadratic behaviour again in this use case.
     """
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester("-f test.jam -d1", pass_toolset=False, use_test_config=False)
 
     f = open(t.workpath("test.jam"), "w")
     print >> f, "data = "
@@ -75,7 +75,7 @@ NOCARE all ;
 """
     f.close()
 
-    t.run_build_system("-d1 -f test.jam", pass_toolset=False, use_test_config=False, expected_duration=1)
+    t.run_build_system(expected_duration=1)
     t.expect_output_line("starting up")
     t.expect_output_line("done")
 
