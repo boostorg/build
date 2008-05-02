@@ -328,31 +328,31 @@ t.cleanup()
 
     <ul>
         <li><tt>arguments</tt>
-            - Arguments passed to the run executable.</li>
+            -- Arguments passed to the run executable.</li>
         <li><tt>executable</tt>
-            - Name of the executable to invoke.</li>
+            -- Name of the executable to invoke.</li>
         <li><tt>match</tt>
-            - Function to use for compating actual and expected file contents.
+            -- Function to use for compating actual and expected file contents.
             </li>
         <li><tt>boost_build_path</tt>
-            - Boost build path to be passed to the run executable.</li>
+            -- Boost build path to be passed to the run executable.</li>
         <li><tt>translate_suffixes</tt>
-            - Whether to update suffixes on the the file names passed from the
+            -- Whether to update suffixes on the the file names passed from the
             test script so they match those actually created by the current
             toolset. For example, static library files are specified by using
             the .lib suffix but when the 'gcc' toolset is used it actually
             creates them using the .a suffix.</li>
         <li><tt>pass_toolset</tt>
-            - Whether the test system should pass the specified toolset to the
+            -- Whether the test system should pass the specified toolset to the
             run executable.</li>
         <li><tt>use_test_config</tt>
-            - Whether the test system should tell the run executable to read in
+            -- Whether the test system should tell the run executable to read in
             the test_config.jam configuration file.</li>
         <li><tt>ignore_toolset_requirements</tt>
-            - Whether the test system should tell the run executable to ignore
+            -- Whether the test system should tell the run executable to ignore
             toolset requirements.</li>
         <li><tt>workdir</tt>
-            - indicates an absolute directory where the test will be run from.
+            -- Indicates an absolute directory where the test will be run from.
             </li>
     </ul>
 
@@ -360,13 +360,13 @@ t.cleanup()
 
     <ul>
         <li><tt>description</tt>
-            - Test description string displayed in case of a failed test.</li>
+            -- Test description string displayed in case of a failed test.</li>
         <li><tt>subdir</tt>
-            - List of subdirectories to automatically create under the working
+            -- List of subdirectories to automatically create under the working
               directory. Each subdirectory needs to be specified separately
               parent coming before its child.</li>
         <li><tt>verbose</tt>
-            - Flag that may be used to enable more verbose test system output.
+            -- Flag that may be used to enable more verbose test system output.
             Note that it does not also enable more verbose build system output
             like the <a href="#sec-command-line-options">"--verbose" command
             line option</a> does.</li>
@@ -391,10 +391,10 @@ t.cleanup()
 
       <li>If you want to run a test in an existing directory, pass it as
       <tt>workdir</tt>.</li>
-      
+
       <li> Most parameters passed to this constructor function may be overruled
-      for each specific test system run (using <a href=
-      "#method-run_build_system"><tt> run_build_system</tt></a> parameters).
+      for each specific test system run using <a href=
+      "#method-run_build_system"><tt>run_build_system</tt></a> parameters.
     </ol>
 
     <h3><a name="method-set_tree">Method <tt>set_tree(self,
@@ -427,14 +427,14 @@ t.cleanup()
 
     <p><b>Effects:</b></p>
 
-    <p>Sets the access and modification times for all files in <tt>names</tt>
-    to the current time. All the elements in <tt>names</tt> should be
-    relative paths.</p>
+    <p>Sets the access and modification times for all files in <tt>names</tt> to
+    the current time. All the elements in <tt>names</tt> should be relative
+    paths.</p>
 
     <h3><a name="method-run_build_system">Method <tt>run_build_system(self,
     extra_args="", subdir="", stdout=None, stderr="", status=0, match=None,
     pass_toolset=None, use_test_config=None, ignore_toolset_requirements=None,
-    **kw)</tt></a></h3>
+    expected_duration=None, **kw)</tt></a></h3>
 
     <p><b>Effects:</b></p>
 
@@ -455,18 +455,18 @@ t.cleanup()
       invocation with values to appropriate parameters, if they are not
       <tt>None</tt>. If any difference is found, the test fails.</li>
 
-      <li>
-        <p>Stores the new state of the working directory in
-        <tt>self.tree</tt>. Computes the difference between previous and
-        current trees and store them in variables
-        <tt>self.tree_difference</tt> and
-        <tt>self.unexpected_difference</tt>.</p>
+      <li>If the <tt>expected_duration</tt> parameter is specified then it
+      represents the maximal allowed time in seconds for the test to run. The
+      test will be marked as failed if its duration is greater than the given
+      <tt>expected_duration</tt> parameter value.</li>
 
-        <p>Both variables are instances of class
-        <tt>tree.Trees_different</tt>, which have four attributes:
-        <tt>added_files</tt>, <tt>removed_files</tt>, <tt>modified_files</tt>
-        and <tt>touched_files</tt>. Each is a list of strings.</p>
-      </li>
+      <li>Stores the new state of the working directory in <tt>self.tree</tt>.
+      Computes the difference between previous and current trees and stores them
+      in variables <tt>self.tree_difference</tt> and
+      <tt>self.unexpected_difference</tt>. Both variables are instances of class
+      <tt>tree.Trees_different</tt>, which have four attributes:
+      <tt>added_files</tt>, <tt>removed_files</tt>, <tt>modified_files</tt> and
+      <tt>touched_files</tt>. Each is a list of strings.</p></li>
     </ol>
 
     <h3><a name="method-read">Method <tt>read(self, name)</tt></a></h3>
@@ -529,8 +529,8 @@ t.cleanup()
     the changes are either expected or ignored, in other words that
     <tt>unexpected_difference</tt> is empty by now.</p>
 
-    <p>Lastly, there's a method to compare file content with expected
-    content:</p>
+    <p>Lastly, there's a method to compare file content with expected content:
+    </p>
     <tt>expect_content(self, name, content, exact=0)</tt>
 
     <p>The method fails the test if the content of file identified by 'name' is
@@ -574,37 +574,34 @@ t.cleanup()
 
     <h4>Method <tt>fail_test(self, condition=1)</tt></h4>
 
-    <p><b>Effects:</b> Cause the test to fail if <tt>condition</tt> is
-    true.</p>
+    <p><b>Effects:</b> Cause the test to fail if <tt>condition</tt> is true.</p>
 
     <h3><a name="class-list">Helper class <tt>List</tt></a></h3>
     The class has sequence interface and two additional methods.
 
     <h4>Method <tt>__init__(self, string)</tt></h4>
 
-    <p><b>Effects:</b> Splits the string on unescaped spaces and tabs. The
-    split components can further be retrieved using standard sequence
-    access.</p>
+    <p><b>Effects:</b> Splits the string on unescaped spaces and tabs. The split
+    components can further be retrieved using standard sequence access.</p>
 
     <h4>Method <tt>__mul__(self, other)</tt></h4>
 
-    <p><b>Effects:</b> Returns an <tt>List</tt> instance, which elements are
-    all possible concatenations of two string, first of which is from
-    <tt>self</tt>, and second of which is from <tt>other</tt>.</p>
+    <p><b>Effects:</b> Returns an <tt>List</tt> instance, which elements are all
+    possible concatenations of two string, first of which is from <tt>self</tt>,
+    and second of which is from <tt>other</tt>.</p>
 
     <p>The class also defines <tt>__str__</tt> and <tt>__repr__</tt> methods.
-    Finally, there's <tt>__coerce__</tt> method which allows to convert
-    strings to instances of <tt>List</tt>.</p>
+    Finally, there's <tt>__coerce__</tt> method which allows to convert strings
+    to instances of <tt>List</tt>.</p>
 
     <p><b>Example:</b></p>
 <pre>
     l = "a b" * List("c d")
     for e in l:
         print e
-
 </pre>
 
-    <p>will output</p>
+    <p>will output:</p>
 <pre>
     ac
     ad
@@ -613,13 +610,10 @@ t.cleanup()
 
 </pre>
     <hr>
-
-    <p class="revision">Last modified: May 01, 2008</p>
-
+    <p class="revision">Last modified: May 02, 2008</p>
     <p>&copy; Copyright Vladimir Prus 2002, 2003, 2004, 2005.<br>
     &copy; Copyright Jurko Gospodnetic 2008.<br>
     Distributed under the Boost Software License, Version 1.0.
     (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)</p>
   </body>
 </html>
-
