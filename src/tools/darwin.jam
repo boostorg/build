@@ -50,7 +50,7 @@ rule init ( version ? : command * : options * : requirement * )
     common.handle-options darwin : $(condition) : $(command) : $(options) ;
     
     # GCC 4.0 and higher in Darwin does not have -fcoalesce-templates.
-    local gccversion = [ SHELL "$(command) -dumpversion" ] ;
+    local gccversion = [ SHELL "$(command:J= ) -dumpversion" ] ;
     if $(gccversion) < "4.0.0"
     {
         flags darwin.compile.c++ OPTIONS $(condition) : -fcoalesce-templates ;
