@@ -857,9 +857,11 @@ local rule should-clean-project ( project )
     }
 
 
-    # TODO: See if this 'NOTFILE all' statement can be moved below to the
-    # default case where the 'all' target is actually requested to be built.
-    # Check for other Jam scripts manually setting a dependency for this target.
+    # The 'all' pseudo target is not strictly needed expect in the case when we
+    # use it below but people often assume they always have this target
+    # available and do not declare it themselves before use which may cause
+    # build failures with an error message about not being able to build the
+    # 'all' target.
     NOTFILE all ;
 
 
