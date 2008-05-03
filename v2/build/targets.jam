@@ -1258,7 +1258,6 @@ class basic-target : abstract-target
                 if $(rproperties[1]) = "@error"
                 {
                     ECHO [ targets.indent ] "Skipping build of:" [ full-name ]
-                        
                         "cannot compute common properties" ;
                 }
                 else if [ $(rproperties).get <build> ] = no
@@ -1291,7 +1290,7 @@ class basic-target : abstract-target
     }
 
     # Given the set of generated targets, and refined build properties,
-    # determines and sets appripriate usage requirements on those targets.
+    # determines and sets appropriate usage requirements on those targets.
     #
     rule compute-usage-requirements ( subvariant )
     {
@@ -1324,6 +1323,13 @@ class basic-target : abstract-target
         # Essentially, when those two features are in usage requirements, they
         # are propagated only to direct dependents. We might need a more general
         # mechanism, but for now, only those two features are special.
+        #
+        # TODO - Actually there are more possible candidates like for instance
+        # when listing static library X as a source for another static library.
+        # Then static library X will be added as a <source> property to the
+        # second library's usage requirements but those requirements should last
+        # only up to the first executable or shared library that actually links
+        # to it.
         local raw = [ $(subvariant).sources-usage-requirements ] ;
         raw = [ $(raw).raw ] ;
         raw = [ property.change $(raw) : <pch-header> ] ;
@@ -1336,9 +1342,8 @@ class basic-target : abstract-target
     # 'all-targets'   - virtual targets created while building this main target
     # 'build-request' - property-set instance with requested build properties
     #
-    local rule create-subvariant ( root-targets *
-        : all-targets * : build-request : sources * : rproperties
-        : usage-requirements )
+    local rule create-subvariant ( root-targets * : all-targets * :
+        build-request : sources * : rproperties : usage-requirements )
     {
         for local e in $(root-targets)
         {
@@ -1347,8 +1352,8 @@ class basic-target : abstract-target
 
         # Process all virtual targets that will be created if this main target
         # is created.
-        local s = [ new subvariant $(__name__) : $(build-request) : $(sources)
-            : $(rproperties) : $(usage-requirements) : $(all-targets) ] ;
+        local s = [ new subvariant $(__name__) : $(build-request) : $(sources) :
+            $(rproperties) : $(usage-requirements) : $(all-targets) ] ;
         for local v in $(all-targets)
         {
             if ! [ $(v).creating-subvariant ]
@@ -1529,8 +1534,8 @@ rule main-target-alternative ( target )
 # 'requirements', 'default-build' and 'usage-requirements' are assumed to be in
 # the form specified by the user in Jamfile corresponding to 'project'.
 #
-rule create-typed-target ( type : project : name : sources * : requirements *
-    : default-build * : usage-requirements * )
+rule create-typed-target ( type : project : name : sources * : requirements * :
+    default-build * : usage-requirements * )
 {
     return [
         targets.main-target-alternative
