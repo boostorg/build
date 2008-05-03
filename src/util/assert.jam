@@ -7,7 +7,9 @@
 import errors : error-skip-frames lol->list ;
 import modules ;
 
-# assert the equality of A and B 
+
+# Assert the equality of A and B 
+#
 rule equal ( a * : b * )
 {
     if $(a) != $(b)
@@ -16,8 +18,10 @@ rule equal ( a * : b * )
     }
 }
 
-# assert that EXPECTED is the result of calling RULE-NAME with the
-# given arguments
+
+# Assert that EXPECTED is the result of calling RULE-NAME with the given
+# arguments.
+#
 rule result ( expected * : rule-name args * : * )
 {
     local result ;
@@ -37,6 +41,7 @@ rule result ( expected * : rule-name args * : * )
     }
 }
 
+
 rule .set.equal ( set1 * : set2 * )
 {
     if ( $(set1) in $(set2) ) && ( $(set2) in $(set1) )
@@ -45,8 +50,10 @@ rule .set.equal ( set1 * : set2 * )
     }
 }
 
-# assert that EXPECTED is equal to the result of calling RULE-NAME with the
-# given arguments
+
+# Assert that EXPECTED is equal to the result of calling RULE-NAME with the
+# given arguments.
+#
 rule result-equal ( expected * : rule-name args * : * )
 {
     local result ;
@@ -66,7 +73,9 @@ rule result-equal ( expected * : rule-name args * : * )
     }
 }
 
-# assert that the given variable is nonempty.
+
+# Assert that the given variable is nonempty.
+#
 rule nonempty-variable ( name )
 {
     local value = [ modules.peek [ CALLER_MODULE ] : $(name) ] ;
@@ -77,9 +86,10 @@ rule nonempty-variable ( name )
     }
 }
 
-# assert that the result of calling RULE-NAME on the given arguments
-# has a true logical value (is neither an empty list nor all empty
-# strings).
+
+# Assert that the result of calling RULE-NAME on the given arguments has a true
+# logical value (is neither an empty list nor all empty strings).
+#
 rule true ( rule-name args * : * )
 {
     local result ;
@@ -99,29 +109,31 @@ rule true ( rule-name args * : * )
     }
 }
 
-# assert that the result of calling RULE-NAME on the given arguments
-# has a false logical value (is either an empty list or all empty
-# strings).
+
+# Assert that the result of calling RULE-NAME on the given arguments has a false
+# logical value (is either an empty list or all empty strings).
+#
 rule false ( rule-name args * : * )
 {
     local result ;
     module [ CALLER_MODULE ]
     {
-        modules.poke assert : result
-          : [ $(1) : $(2) : $(3) : $(4)
-            : $(5) : $(6) : $(7) : $(8) : $(9) ] ;
+        modules.poke assert : result : [ $(1) : $(2) : $(3) : $(4) : $(5) : $(6)
+            : $(7) : $(8) : $(9) ] ;
     }
 
     if $(result)
     {
         error-skip-frames 3 assertion failure: expecting false result from
-          "[" $(rule-name) 
-          [ lol->list $(args) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ]
-            "]" : got [ lol->list $(result) ] instead  ;
+            "[" $(rule-name) [ lol->list $(args) : $(2) : $(3) : $(4) : $(5) :
+            $(6) : $(7) : $(8) : $(9) ] "]" : got [ lol->list $(result) ]
+            instead ;
     }
 }
 
-# assert that 'element' is present in 'list'.
+
+# Assert that 'element' is present in 'list'.
+#
 rule "in" ( element : list * )
 {
     if ! $(element) in $(list)
@@ -131,7 +143,9 @@ rule "in" ( element : list * )
     }
 }
 
-# assert that 'element' is not present in 'list'.
+
+# Assert that 'element' is not present in 'list'.
+#
 rule not-in ( element : list * )
 {
     if $(element) in $(list)
