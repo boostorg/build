@@ -169,7 +169,7 @@ local rule join-imp ( elements + )
 
 
 # Concatenates the passed path elements. Generates an error if any element other
-# than the first one is rooted.
+# than the first one is rooted. Path elements are not allowed to be undefined.
 #
 rule join ( elements + )
 {
@@ -195,9 +195,12 @@ rule join ( elements + )
 #
 rule root ( path root )
 {
-    if [ is-rooted $(path) ] {
+    if [ is-rooted $(path) ]
+    {
         return $(path) ;
-    } else {
+    }
+    else
+    {
         return [ join $(root) $(path) ] ;
     }
 }
@@ -447,12 +450,15 @@ rule programs-path ( )
 }
 
 
+# This rule does not support 'invalid' paths containing multiple successive
+# path separator characters.
+#
 rule make-NT ( native )
 {
     local tokens = [ regex.split $(native) "[/\\]" ] ;
     local result ;
 
-    # Handle paths ending with slashes.
+    # Handle paths ending with a slash.
     if $(tokens[-1]) = ""
     {
         tokens = $(tokens[1--2]) ;  # Discard the empty element.
@@ -768,8 +774,12 @@ rule __test__ ( )
 
     assert.result "foo/bar/giz" : make "foo/bar/giz" ;
     assert.result "foo/bar/giz" : make "foo\\bar\\giz" ;
+    assert.result "foo" : make "foo/" ;
+    assert.result "foo" : make "foo\\" ;
     assert.result "foo" : make "foo/." ;
     assert.result "foo" : make "foo/bar/.." ;
+    assert.result "foo" : make "foo/bar/../" ;
+    assert.result "foo" : make "foo/bar/..\\" ;
     assert.result "foo/bar" : make "foo/././././bar" ;
     assert.result "/foo" : make "\\foo" ;
     assert.result "/D:/My Documents" : make "D:\\My Documents" ;
