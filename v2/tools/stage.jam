@@ -24,8 +24,8 @@ feature.feature <install-type>         :        : free incidental ;
 feature.feature <install-source-root>  :        : free path       ;
 feature.feature <so-version>           :        : free incidental ;
 
-# If 'on', version symlinks for shared libraries won't be created. Affects Unix
-# builds only.
+# If 'on', version symlinks for shared libraries will not be created. Affects
+# Unix builds only.
 feature.feature <install-no-version-symlinks> : on : optional incidental ;
 
 
@@ -152,7 +152,7 @@ class install-target-class : basic-target
                 $(property-set) ] ;
 
             # See if something special should be done when staging this type. It
-            # is indicated by the presense of special "INSTALLED_" type.
+            # is indicated by the presence of a special "INSTALLED_" type.
             local t = [ $(i).type ] ;
             if $(t) && [ type.registered INSTALLED_$(t) ]
             {
@@ -169,8 +169,8 @@ class install-target-class : basic-target
             }
             else
             {
-                staged-targets = [ stage.copy-file $(self.project) $(ename)
-                  : $(i) : $(new-properties) ] ;
+                staged-targets = [ stage.copy-file $(self.project) $(ename) :
+                    $(i) : $(new-properties) ] ;
             }
 
             if ! $(staged-targets)
@@ -286,8 +286,8 @@ class install-target-class : basic-target
 #
 rule copy-file ( project name ? : source : properties )
 {
-    local targets ;
     name ?= [ $(source).name ] ;
+    local relative ;
 
     local new-a = [ new non-scanning-action $(source) : common.copy :
         $(properties) ] ;
@@ -304,24 +304,16 @@ rule copy-file ( project name ? : source : properties )
         path = [ path.root $(path) [ path.pwd ] ] ;
 
         relative = [ path.relative-to $(source-root) $(path) ] ;
-        # Note: using $(name:D=$(relative)) might be faster here, but then we
-        # need to explicitly check that relative is not ".", otherwise we might
-        # get paths like
-        #
-        #   <prefix>/boost/.
-        #
-        # try to create it, and mkdir will obviously fail.
-        name = [ path.root $(name:D=) $(relative) ] ;
-        targets = [ new file-target $(name) exact : [ $(source).type ] :
-            $(project) : $(new-a) ] ;
-    }
-    else
-    {
-        targets = [ new file-target $(name:D=) exact : [ $(source).type ] :
-            $(project) : $(new-a) ] ;
     }
 
-    return $(targets) ;
+    # Note: Using $(name:D=$(relative)) might be faster here, but then we would
+    # need to explicitly check that relative is not ".", otherwise we might get
+    # paths like '<prefix>/boost/.', try to create it and mkdir would obviously
+    # fail.
+    name = [ path.join $(relative) $(name:D=) ] ;
+
+    return [ new file-target $(name) exact : [ $(source).type ] : $(project) :
+        $(new-a) ] ;
 }
 
 
@@ -364,7 +356,7 @@ class installed-exe-generator : generator
         if [ $(property-set).get <os> ] in NT CYGWIN ||
             [ $(property-set).get <target-os> ] in windows cygwin
         {
-            # Relinking is never needed on NT
+            # Relinking is never needed on NT.
             return [ stage.copy-file $(project)
               : $(source) : $(property-set) ] ;
         }
@@ -443,7 +435,7 @@ class installed-shared-lib-generator : generator
             # 'Z' are numbers, we need to create NNN.XXX and NNN.XXX.YYY
             # symbolic links.
             local m = [ MATCH (.*)\\.([0123456789]+)\\.([0123456789]+)\\.([0123456789]+)$
-              : [ $(copied).name ] ] ;
+                : [ $(copied).name ] ] ;
             if $(m)
             {
                 # Symlink without version at all is used to make
@@ -492,7 +484,7 @@ rule install ( name : sources * : requirements * : default-build * )
     if <tag> in $(requirements:G)
     {
         errors.user-error
-          "The <tag> property is not allowed for the 'install' rule" ;
+            "The <tag> property is not allowed for the 'install' rule" ;
     }
 
     targets.main-target-alternative
