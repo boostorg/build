@@ -26,6 +26,18 @@ local rule extend ( )
 }
 
 
+rule trim-leading-zeroes ( value )
+{
+    local value2 = [ MATCH "^0(.*)$" : $(value) ] ;
+    while $(value2)
+    {
+        value = $(value2) ;
+        value2 = [ MATCH "^0(.*)$" : $(value) ] ;
+    }
+    return $(value:E="") ;
+}
+
+
 rule check ( numbers * )
 {
     for local n in $(numbers)
@@ -92,6 +104,9 @@ rule range ( start finish ? : step ? )
 rule less ( n1 n2 )
 {
     check $(n1) $(n2) ;
+    n1 = [ trim-leading-zeroes $(n1) ] ;
+    n2 = [ trim-leading-zeroes $(n2) ] ;
+
     # Avoid messy 0 case by appending 1.
     local l1 = [ range 2 [ log10 $(n1)1 ] ] ;
     local l2 = [ range 2 [ log10 $(n2)1 ] ] ;
@@ -129,14 +144,13 @@ rule log10 ( number )
             {
                 chars = $(chars[2-]) ;
             }
-
             if ! $(chars)
             {
                 errors.error can't take log of zero ;
             }
             else
             {
-                return [ sequence.length $(chars) ] ;
+                return [ decrement [ sequence.length $(chars) ] ] ;
             }
         }
     }
@@ -167,13 +181,23 @@ rule __test__ ( )
     assert.result 2 4 6 8 10 : range 2 10 : 2 ;
     assert.result 25 50 75 100 : range 25 100 : 25 ;
 
-    assert.true less 1 2 ;
-    assert.true less 1 12 ;
-    assert.true less 005 217 ;
-    assert.true less 0005 217 ;
-    assert.true less 5 00217 ;
-    assert.true less 1 21 ;
+    assert.result 0           : trim-leading-zeroes 0           ;
+    assert.result 1234        : trim-leading-zeroes 1234        ;
+    assert.result 123456      : trim-leading-zeroes 0000123456  ;
+    assert.result 10000123456 : trim-leading-zeroes 10000123456 ;
+    assert.result 10000       : trim-leading-zeroes 10000       ;
+    assert.result 10000       : trim-leading-zeroes 00010000    ;
+                       
+    assert.true  less 1 2 ;
+    assert.true  less 1 12 ;
+    assert.true  less 1 21 ;
+    assert.true  less 005 217 ;
     assert.false less 0 0 ;
+    assert.false less 03 3 ;
+    assert.false less 3 03 ;
+    assert.true  less 005 217 ;
+    assert.true  less 0005 217 ;
+    assert.true  less 5 00217 ;
 
     # TEMPORARY disabled, because nested "try"/"catch" do not work and I do no
     # have the time to fix that right now.
@@ -215,8 +239,12 @@ rule __test__ ( )
     assert.result 0 : log10 9 ;
     assert.result 1 : log10 10 ;
     assert.result 1 : log10 99 ;
+    assert.result 2 : log10 100 ;
+    assert.result 2 : log10 101 ;
     assert.result 2 : log10 125 ;
-    assert.result 11 : log10 12345678901 ;
+    assert.result 2 : log10 999 ;
+    assert.result 3 : log10 1000 ;
+    assert.result 10 : log10 12345678901 ;
 
     for local x in [ range 75 110 : 5 ]
     {
