@@ -66,7 +66,7 @@ void print_source_line( PARSE* p );
 RULE* bind_builtin( char* name, LIST*(*f)(PARSE*, FRAME*), int flags, char** args )
 {
     argument_list* arg_list = 0;
-    
+
     if ( args )
     {
         arg_list = args_new();
@@ -130,7 +130,7 @@ load_builtins()
         bind_builtin( "REBUILDS" ,
                       builtin_rebuilds, 0, args );
     }
-    
+
     duplicate_rule( "Leaves" ,
       bind_builtin( "LEAVES" ,
                     builtin_flags, T_FLAG_LEAVES, 0 ) );
@@ -174,7 +174,7 @@ load_builtins()
                     builtin_flags, T_FLAG_FAIL_EXPECTED, 0 );
 
       bind_builtin( "RMOLD" , builtin_flags, T_FLAG_RMOLD, 0 );
-      
+
       {
           char * args[] = { "targets", "*", 0 };
           bind_builtin( "UPDATE", builtin_update, 0, args );
@@ -315,7 +315,7 @@ load_builtins()
 
 #ifdef HAVE_PYTHON
       {
-          char * args[] = { "python-module", ":", "function", ":", 
+          char * args[] = { "python-module", ":", "function", ":",
                             "jam-module", ":", "rule-name", 0 };
           bind_builtin( "PYTHON_IMPORT_RULE",
               builtin_python_import_rule, 0, args );
@@ -410,8 +410,8 @@ builtin_calc(
 /*
  * builtin_depends() - DEPENDS/INCLUDES rule
  *
- * The DEPENDS builtin rule appends each of the listed sources on the 
- * dependency list of each of the listed targets.  It binds both the 
+ * The DEPENDS builtin rule appends each of the listed sources on the
+ * dependency list of each of the listed targets.  It binds both the
  * targets and sources as TARGETs.
  */
 
@@ -483,7 +483,7 @@ builtin_rebuilds(
 /*
  * builtin_echo() - ECHO rule
  *
- * The ECHO builtin rule echoes the targets to the user.  No other 
+ * The ECHO builtin rule echoes the targets to the user.  No other
  * actions are taken.
  */
 
@@ -559,7 +559,8 @@ static void downcase_inplace( char* p )
         *p = tolower(*p);
     }
 }
-    
+
+
 static void
 builtin_glob_back(
     void    *closure,
@@ -568,12 +569,12 @@ builtin_glob_back(
     time_t  time )
 {
     PROFILE_ENTER(BUILTIN_GLOB_BACK);
-    
+
     struct globbing *globbing = (struct globbing *)closure;
     LIST        *l;
     PATHNAME    f;
     string          buf[1];
-    
+
     /* Null out directory for matching. */
     /* We wish we had file_dirscan() pass up a PATHNAME. */
 
@@ -607,19 +608,19 @@ builtin_glob_back(
             break;
         }
     }
-    
+
     string_free( buf );
-    
+
     PROFILE_EXIT(BUILTIN_GLOB_BACK);
 }
 
 static LIST* downcase_list( LIST *in )
 {
     LIST* result = 0;
-    
+
     string s[1];
     string_new( s );
-        
+
     while (in)
     {
         string_copy( s, in->string );
@@ -627,7 +628,7 @@ static LIST* downcase_list( LIST *in )
         result = list_append( result, list_new( 0, newstr( s->value ) ) );
         in = in->next;
     }
-    
+
     string_free( s );
     return result;
 }
@@ -639,16 +640,16 @@ builtin_glob(
 {
     LIST *l = lol_get( frame->args, 0 );
     LIST *r = lol_get( frame->args, 1 );
-    
+
     struct globbing globbing;
 
     globbing.results = L0;
     globbing.patterns = r;
-    
+
     globbing.case_insensitive
 # if defined( OS_NT ) || defined( OS_CYGWIN )
        = l;  /* always case-insensitive if any files can be found */
-# else 
+# else
        = lol_get( frame->args, 2 );
 # endif
 
@@ -656,7 +657,7 @@ builtin_glob(
     {
         globbing.patterns = downcase_list( r );
     }
-    
+
     for( ; l; l = list_next( l ) )
         file_dirscan( l->string, builtin_glob_back, &globbing );
 
@@ -686,8 +687,9 @@ static LIST* append_if_exists(LIST* list, char* file)
     if (time > 0)
         return list_new(list, newstr(file));
     else
-        return list;        
+        return list;
 }
+
 
 LIST* glob1(char* dirname, char* pattern)
 {
@@ -696,11 +698,11 @@ LIST* glob1(char* dirname, char* pattern)
 
     globbing.results = L0;
     globbing.patterns = plist;
-    
+
     globbing.case_insensitive
 # if defined( OS_NT ) || defined( OS_CYGWIN )
        = plist;  /* always case-insensitive if any files can be found */
-# else 
+# else
        = L0;
 # endif
 
@@ -708,7 +710,7 @@ LIST* glob1(char* dirname, char* pattern)
     {
         globbing.patterns = downcase_list( plist );
     }
-    
+
     file_dirscan( dirname, builtin_glob_back, &globbing );
 
     if ( globbing.case_insensitive )
@@ -731,13 +733,13 @@ LIST* glob_recursive(char* pattern)
     {
         /* No metacharacters. Check if the path exists. */
         result = append_if_exists(result, pattern);
-    }        
+    }
     else
     {
         /* Have metacharacters in the pattern. Split into dir/name */
         PATHNAME path[1];
-        path_parse(pattern, path);            
-        
+        path_parse(pattern, path);
+
         if (path->f_dir.ptr)
         {
             LIST* dirs = L0;
@@ -746,7 +748,7 @@ LIST* glob_recursive(char* pattern)
             string_new(dirname);
             string_new(basename);
 
-            string_append_range(dirname, path->f_dir.ptr, 
+            string_append_range(dirname, path->f_dir.ptr,
                                 path->f_dir.ptr + path->f_dir.len);
 
             path->f_grist.ptr = 0;
@@ -763,12 +765,12 @@ LIST* glob_recursive(char* pattern)
             {
                 dirs = list_new(dirs, dirname->value);
             }
-            
+
             if (has_wildcards(basename->value))
             {
                 for(; dirs; dirs = dirs->next)
                 {
-                    result = list_append(result, 
+                    result = list_append(result,
                                          glob1(dirs->string, basename->value));
                 }
             }
@@ -779,9 +781,9 @@ LIST* glob_recursive(char* pattern)
 
                 /** No wildcard in basename. */
                 for(; dirs; dirs = dirs->next)
-                {                                      
+                {
                     path->f_dir.ptr = dirs->string;
-                    path->f_dir.len = strlen(dirs->string);                    
+                    path->f_dir.len = strlen(dirs->string);
                     path_build(path, file_string, 0);
 
                     result = append_if_exists(result, file_string->value);
@@ -805,6 +807,7 @@ LIST* glob_recursive(char* pattern)
     return result;
 }
 
+
 LIST *
 builtin_glob_recursive(
     PARSE   *parse,
@@ -821,6 +824,7 @@ builtin_glob_recursive(
     return result;
 }
 
+
 /*
  * builtin_match() - MATCH rule, regexp matching
  */
@@ -832,7 +836,7 @@ builtin_match(
 {
 	LIST *l, *r;
 	LIST *result = 0;
-        
+
         string buf[1];
         string_new(buf);
 
@@ -873,27 +877,29 @@ builtin_match(
         return result;
 }
 
+
 LIST *
 builtin_hdrmacro(
     PARSE    *parse,
     FRAME *frame )
 {
   LIST*  l = lol_get( frame->args, 0 );
-  
+
   for ( ; l; l = list_next(l) )
   {
     TARGET*  t = bindtarget( l->string );
 
-    /* scan file for header filename macro definitions */    
+    /* scan file for header filename macro definitions */
     if ( DEBUG_HEADER )
       printf( "scanning '%s' for header file macro definitions\n",
               l->string );
 
     macro_headers( t );
   }
-  
+
   return L0;
 }
+
 
 /*  builtin_rulenames() - RULENAMES ( MODULE ? )
  *
@@ -926,12 +932,14 @@ builtin_rulenames(
     return result;
 }
 
+
 /*  builtin_varnames() - VARNAMES ( MODULE ? )
  *
  *  Returns a list of the variable names in the given MODULE. If
  *  MODULE is not supplied, returns the list of variable names in the
  *  global module.
  */
+
 
 /* helper function for builtin_varnames(), below.  Used with
  * hashenumerate, will prepend the key of each element to a list
@@ -942,6 +950,7 @@ static void add_hash_key( void* np, void* result_ )
 
     *result = list_new( *result, copystr( *(char**)np ) );
 }
+
 
 static struct hash *get_running_module_vars()
 {
@@ -954,6 +963,7 @@ static struct hash *get_running_module_vars()
     return vars;
 }
 
+
 LIST *
 builtin_varnames(
     PARSE   *parse,
@@ -965,14 +975,15 @@ builtin_varnames(
 
     /* The running module _always_ has its 'variables' member set to NULL
      * due to the way enter_module and var_hash_swap work */
-    struct hash *vars = 
-        source_module == frame->module ? 
+    struct hash *vars =
+        source_module == frame->module ?
             get_running_module_vars() : source_module->variables;
 
     if ( vars )
         hashenumerate( vars, add_hash_key, &result );
     return result;
 }
+
 
 /*
  * builtin_delete_module() - MODULE ?
@@ -992,14 +1003,15 @@ builtin_delete_module(
     return result;
 }
 
+
 static void unknown_rule( FRAME *frame, char* key, char *module_name, char *rule_name )
 {
     backtrace_line( frame->prev );
     printf( "%s error: rule \"%s\" unknown in module \"%s\"\n", key, rule_name, module_name );
     backtrace( frame->prev );
     exit(1);
-    
 }
+
 
 /*
  * builtin_import() - IMPORT ( SOURCE_MODULE ? : SOURCE_RULES * : TARGET_MODULE ? : TARGET_RULES * : LOCALIZE ? )
@@ -1027,9 +1039,9 @@ builtin_import(
 
     module_t* target_module = bindmodule( target_module_list ? target_module_list->string : 0 );
     module_t* source_module = bindmodule( source_module_list ? source_module_list->string : 0 );
-    
+
     LIST *source_name, *target_name;
-            
+
     for ( source_name = source_rules, target_name = target_rules;
           source_name && target_name;
           source_name = list_next( source_name )
@@ -1037,20 +1049,20 @@ builtin_import(
     {
         RULE r_, *r = &r_, *imported;
         r_.name = source_name->string;
-                
+
         if ( !source_module->rules
              || !hashcheck( source_module->rules, (HASHDATA**)&r )
             )
         {
             unknown_rule( frame, "IMPORT", source_module->name, r_.name );
         }
-        
+
         imported = import_rule( r, target_module, target_name->string );
         if ( localize )
             imported->module = target_module;
         imported->exported = 0; /* this rule is really part of some other module; just refer to it here, but don't let it out */
     }
-    
+
     if ( source_name || target_name )
     {
         backtrace_line( frame->prev );
@@ -1084,7 +1096,7 @@ builtin_export(
     LIST *rules = lol_get( frame->args, 1 );
 
     module_t* m = bindmodule( module_list ? module_list->string : 0 );
-    
+
     for ( ; rules; rules = list_next( rules ) )
     {
         RULE r_, *r = &r_;
@@ -1097,6 +1109,7 @@ builtin_export(
     }
     return L0;
 }
+
 
 /*  Retrieve the file and line number that should be indicated for a
  *  given procedure in debug output or an error backtrace
@@ -1122,6 +1135,7 @@ static void get_source_line( PARSE* procedure, char** file, int* line )
     }
 }
 
+
 void print_source_line( PARSE* p )
 {
     char* file;
@@ -1133,6 +1147,7 @@ void print_source_line( PARSE* p )
     else
         printf( "%s:%d:", file, line);
 }
+
 
 /* Print a single line of error backtrace for the given frame */
 void backtrace_line( FRAME *frame )
@@ -1148,6 +1163,7 @@ void backtrace_line( FRAME *frame )
     }
 }
 
+
 /*  Print the entire backtrace from the given frame to the Jambase
  *  which invoked it.
  */
@@ -1159,6 +1175,7 @@ void backtrace( FRAME *frame )
         backtrace_line( frame );
     }
 }
+
 
 /*  A Jam version of the backtrace function, taking no arguments and
  *  returning a list of quadruples: FILENAME LINE MODULE. RULENAME
@@ -1185,6 +1202,7 @@ LIST *builtin_backtrace( PARSE *parse, FRAME *frame )
     }
     return result;
 }
+
 
 /*
  * builtin_caller_module() - CALLER_MODULE ( levels ? )
@@ -1213,18 +1231,19 @@ LIST *builtin_caller_module( PARSE *parse, FRAME *frame )
     else
     {
         LIST* result;
-        
+
         string name;
         string_copy( &name, frame->module->name );
         string_pop_back( &name );
 
         result = list_new( L0, newstr(name.value) );
-        
+
         string_free( &name );
-        
+
         return result;
     }
 }
+
 
 /*
  * Return the current working directory.
@@ -1237,10 +1256,11 @@ builtin_pwd( PARSE *parse, FRAME *frame )
     return pwd();
 }
 
+
 /*
  * Adds targets to the list of target that jam will attempt to update.
  */
-LIST* 
+LIST*
 builtin_update( PARSE *parse, FRAME *frame)
 {
     LIST* result = list_copy( L0, targets_to_update() );
@@ -1251,6 +1271,7 @@ builtin_update( PARSE *parse, FRAME *frame)
     return result;
 }
 
+
 LIST*
 builtin_search_for_target( PARSE *parse, FRAME *frame )
 {
@@ -1260,6 +1281,7 @@ builtin_search_for_target( PARSE *parse, FRAME *frame )
     TARGET* t = search_for_target( arg1->string, arg2 );
     return list_new( L0, t->name );
 }
+
 
 LIST *builtin_import_module( PARSE *parse, FRAME *frame )
 {
@@ -1282,6 +1304,7 @@ LIST *builtin_imported_modules( PARSE *parse, FRAME *frame )
     return imported_modules(source_module);
 }
 
+
 LIST *builtin_instance( PARSE *parse, FRAME *frame )
 {
     LIST* arg1 = lol_get( frame->args, 0 );
@@ -1294,6 +1317,7 @@ LIST *builtin_instance( PARSE *parse, FRAME *frame )
     return L0;
 }
 
+
 LIST*
 builtin_sort( PARSE *parse, FRAME *frame )
 {
@@ -1302,20 +1326,21 @@ builtin_sort( PARSE *parse, FRAME *frame )
     return list_sort(arg1);
 }
 
+
 LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
 {
     LIST* arg = lol_get( frame->args, 0 );
 
-    /* First, we iterate over all '/'-separated elements, starting from
-       the end of string. If we see '..', we remove previous path elements.
-       If we see '.', we remove it.
-       The removal is done by putting '\1' in the string. After all the string
-       is processed, we do a second pass, removing '\1' characters.
+    /* First, we iterate over all '/'-separated elements, starting from the end
+       of string. If we see a '..', we remove a previous path elements. If we
+       see '.', we remove it. The removal is done by overwriting data using '\1'
+       in the string. After the whole string has been processed, we do a second
+       pass, removing all the entered '\1' characters.
     */
-    
+
     string in[1], out[1], tmp[1];
     char* end;      /* Last character of the part of string still to be processed. */
-    char* current;  /* Working pointer. */  
+    char* current;  /* Working pointer. */
     int dotdots = 0; /* Number of '..' elements seen and not processed yet. */
     int rooted = arg->string[0] == '/';
     char* result;
@@ -1334,20 +1359,21 @@ LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
 
     /* Convert \ into /. On windows, paths using / and \ are equivalent,
        and we want this function to obtain canonic representation.  */
-    for (current = in->value, end = in->value + in->size; 
+    for (current = in->value, end = in->value + in->size;
          current < end; ++current)
         if (*current == '\\')
             *current = '/';
 
-    
+
     end = in->value + in->size - 1;
     current = end;
-    
-    for(;end >= in->value;) {
+
+    for(;end >= in->value;)
+    {
         /* Set 'current' to the next occurence of '/', which always exists. */
         for(current = end; *current != '/'; --current)
             ;
-        
+
         if (current == end && current != in->value) {
             /* Found a trailing slash. Remove it. */
             *current = '\1';
@@ -1357,18 +1383,18 @@ LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
         } else if (end - current == 1 && strncmp(current, "/.", 2) == 0) {
             /* Found '/.'. Drop them all. */
             *current = '\1';
-            *(current+1) = '\1';                   
+            *(current+1) = '\1';
         } else if (end - current == 2 && strncmp(current, "/..", 3) == 0) {
-            /* Found '/..' */                
+            /* Found '/..' */
             *current = '\1';
-            *(current+1) = '\1';                   
-            *(current+2) = '\1';                   
+            *(current+1) = '\1';
+            *(current+2) = '\1';
             ++dotdots;
         } else if (dotdots) {
             char* p = current;
             memset(current, '\1', end-current+1);
             --dotdots;
-        }                 
+        }
         end = current-1;
     }
 
@@ -1379,36 +1405,36 @@ LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
     string_append(tmp, in->value);
     string_copy(in, tmp->value);
     string_free(tmp);
-        
-       
+
+
     string_new(out);
     /* The resulting path is either empty or has '/' as the first significant
-       element. If the original path was not rooted, we need to drop first '/'. 
+       element. If the original path was not rooted, we need to drop first '/'.
        If the original path was rooted, and we've got empty path, need to add '/'
     */
     if (!rooted) {
         current = strchr(in->value, '/');
         if (current)
             *current = '\1';
-    } 
-       
+    }
+
     for (current = in->value; *current; ++current)
         if (*current != '\1')
             string_push_back(out, *current);
 
-    
+
     result = newstr(out->size ? out->value : (rooted ? "/" : "."));
     string_free(in);
     string_free(out);
 
     return list_new(0, result);
-
 }
+
 
 LIST *builtin_native_rule( PARSE *parse, FRAME *frame )
 {
-    LIST* module_name = lol_get( frame->args, 0 );    
-    LIST* rule_name = lol_get( frame->args, 1 );    
+    LIST* module_name = lol_get( frame->args, 0 );
+    LIST* rule_name = lol_get( frame->args, 1 );
 
     module_t* module = bindmodule(module_name->string);
 
@@ -1421,19 +1447,20 @@ LIST *builtin_native_rule( PARSE *parse, FRAME *frame )
     else
     {
         backtrace_line( frame->prev );
-        printf( "error: no native rule \"%s\" defined in module \"%s\"\n", 
+        printf( "error: no native rule \"%s\" defined in module \"%s\"\n",
                 n.name, module->name);
         backtrace( frame->prev );
         exit(1);
     }
-    return L0;    
+    return L0;
 }
+
 
 LIST *builtin_has_native_rule( PARSE *parse, FRAME *frame )
 {
-    LIST* module_name = lol_get( frame->args, 0 );    
-    LIST* rule_name = lol_get( frame->args, 1 );    
-    LIST* version = lol_get( frame->args, 2 );    
+    LIST* module_name = lol_get( frame->args, 0 );
+    LIST* rule_name = lol_get( frame->args, 1 );
+    LIST* version = lol_get( frame->args, 2 );
 
     module_t* module = bindmodule(module_name->string);
 
@@ -1445,14 +1472,14 @@ LIST *builtin_has_native_rule( PARSE *parse, FRAME *frame )
         if (np->version == expected_version)
             return list_new(0, newstr("true"));
     }
-    return L0;    
+    return L0;
 }
 
 
 LIST *builtin_user_module( PARSE *parse, FRAME *frame )
 {
-    LIST* module_name = lol_get( frame->args, 0 );    
-    for(; module_name; module_name = module_name->next) 
+    LIST* module_name = lol_get( frame->args, 0 );
+    for(; module_name; module_name = module_name->next)
     {
         module_t* m = bindmodule( module_name->string);
         m->user_module = 1;
@@ -1463,7 +1490,7 @@ LIST *builtin_user_module( PARSE *parse, FRAME *frame )
 LIST *builtin_nearest_user_location( PARSE *parse, FRAME *frame )
 {
     LIST* result = 0;
-    FRAME* nearest_user_frame = 
+    FRAME* nearest_user_frame =
         frame->module->user_module ? frame : frame->prev_user;
 
     if (nearest_user_frame)
@@ -1499,10 +1526,10 @@ LIST *builtin_check_if_file( PARSE *parse, FRAME *frame )
 LIST *builtin_python_import_rule( PARSE *parse, FRAME *frame )
 {
     static int first_time = 1;
-   char* python_module = lol_get( frame->args, 0 )->string;        
-   char* python_function = lol_get( frame->args, 1 )->string;        
-   char* jam_module = lol_get( frame->args, 2 )->string;        
-   char* jam_rule = lol_get( frame->args, 3 )->string;        
+   char* python_module = lol_get( frame->args, 0 )->string;
+   char* python_function = lol_get( frame->args, 1 )->string;
+   char* jam_module = lol_get( frame->args, 2 )->string;
+   char* jam_rule = lol_get( frame->args, 3 )->string;
 
    PyObject *pName, *pModule, *pDict, *pFunc;
 
@@ -1522,9 +1549,9 @@ LIST *builtin_python_import_rule( PARSE *parse, FRAME *frame )
            exit_module( outer_module );
            enter_module( root_module());
        }
-    
+
        extra = var_get("EXTRA_PYTHONPATH");
-    
+
        if ( outer_module != root_module())
        {
             exit_module( root_module());
@@ -1538,14 +1565,14 @@ LIST *builtin_python_import_rule( PARSE *parse, FRAME *frame )
            string_append(buf, "import sys\nsys.path.append(\"");
            string_append(buf, extra->string);
            string_append(buf, "\")\n");
-           PyRun_SimpleString(buf->value);   
-           string_free(buf);               
-       }       
+           PyRun_SimpleString(buf->value);
+           string_free(buf);
+       }
    }
 
 
    pName = PyString_FromString(python_module);
-   
+
    pModule = PyImport_Import(pName);
    Py_DECREF(pName);
 
@@ -1584,7 +1611,7 @@ void lol_build( LOL* lol, char** elements )
 {
     LIST* l = L0;
     lol_init( lol );
-    
+
     while ( elements && *elements )
     {
         if ( !strcmp( *elements, ":" ) )
@@ -1598,7 +1625,7 @@ void lol_build( LOL* lol, char** elements )
         }
         ++elements;
     }
-    
+
     if ( l != L0 )
         lol_add( lol, l );
 }
@@ -1616,7 +1643,7 @@ bjam_call(PyObject* self, PyObject* args)
     LIST    *result;
     PARSE   *p;
     char*  rulename;
-    
+
     /* Build up the list of arg lists */
 
     frame_init( inner );
@@ -1636,7 +1663,7 @@ bjam_call(PyObject* self, PyObject* args)
             PyObject* a = PyTuple_GetItem(args, i);
             if (PyString_Check(a))
             {
-                lol_add(inner->args, 
+                lol_add(inner->args,
                         list_new(0, newstr(PyString_AsString(a))));
             }
             else if (PySequence_Check(a))
@@ -1658,7 +1685,7 @@ bjam_call(PyObject* self, PyObject* args)
                     Py_DECREF(e);
                 }
                 lol_add(inner->args, l);
-            }                
+            }
         }
     }
 
@@ -1686,14 +1713,14 @@ bjam_import_rule(PyObject* self, PyObject* args)
 
     if (!PyArg_ParseTuple(args, "ssO:import_rule", &module, &rule, &func))
         return NULL;
-    
+
     if (!PyCallable_Check(func))
     {
-        PyErr_SetString(PyExc_RuntimeError, 
+        PyErr_SetString(PyExc_RuntimeError,
                         "Non-callable object passed to bjam.import_rule");
         return NULL;
     }
-    
+
     m = bindmodule(module);
     r = bindrule(rule, m);
 
@@ -1712,7 +1739,7 @@ bjam_import_rule(PyObject* self, PyObject* args)
    - an action body
    - a list of variable that will be bound inside the action
    - integer flags.
-   Defines an action on bjam side.  
+   Defines an action on bjam side.
 */
 PyObject*
 bjam_define_action(PyObject* self, PyObject *args)
@@ -1726,17 +1753,17 @@ bjam_define_action(PyObject* self, PyObject *args)
     int n;
     int i;
 
-    if (!PyArg_ParseTuple(args, "ssO!i:define_action", &name, &body, 
+    if (!PyArg_ParseTuple(args, "ssO!i:define_action", &name, &body,
                           &PyList_Type, &bindlist_python, &flags))
         return NULL;
-    
+
     n = PyList_Size (bindlist_python);
     for (i = 0; i < n; ++i)
     {
         PyObject *next = PyList_GetItem(bindlist_python, i);
         if (!PyString_Check(next))
         {
-            PyErr_SetString(PyExc_RuntimeError, 
+            PyErr_SetString(PyExc_RuntimeError,
                             "bind list has non-string type");
             return NULL;
         }
@@ -1746,7 +1773,7 @@ bjam_define_action(PyObject* self, PyObject *args)
     new_rule_actions(root_module(), name, newstr(body), bindlist, flags);
 
     Py_INCREF(Py_None);
-    return Py_None;    
+    return Py_None;
 }
 
 /* Returns the value of a variable in root Jam module.  */
@@ -1786,7 +1813,7 @@ bjam_backtrace(PyObject* self, PyObject *args)
         char buf[32];
         get_source_line( f->procedure, &file, &line );
         sprintf( buf, "%d", line );
-        
+
         /* PyTuple_SetItem steals reference. */
         PyTuple_SetItem(tuple, 0, PyString_FromString(file));
         PyTuple_SetItem(tuple, 1, PyString_FromString(buf));
@@ -1818,7 +1845,7 @@ LIST *builtin_shell( PARSE *parse, FRAME *frame )
     int exit_status = -1;
     int exit_status_opt = 0;
     int no_output_opt = 0;
-    
+
     /* Process the variable args options. */
     {
         int a = 1;
@@ -1859,14 +1886,14 @@ LIST *builtin_shell( PARSE *parse, FRAME *frame )
     /* The command output is returned first. */
     result = list_new( L0, newstr(s.value) );
     string_free(&s);
-    
+
     /* The command exit result next. */
     if ( exit_status_opt )
     {
         sprintf (buffer, "%d", exit_status);
         result = list_new( result, newstr( buffer ) );
     }
-    
+
     return result;
 }
 
