@@ -861,7 +861,7 @@ rule __test__ ( )
     local nl = "
 " ;
 
-    local save-os = [ modules.peek os : name ] ;
+    local save-os = [ modules.peek os : .name ] ;
 
     modules.poke os : .name : LINUX ;
 
