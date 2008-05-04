@@ -95,7 +95,7 @@ rule load (
                    # $(BOOST_BUILD_PATH).
 )
 {
-    # Avoid loading modules twice
+    # Avoid loading modules twice.
     if ! ( $(module-name) in $(.loaded) )
     {
         filename ?= $(module-name).jam ;
