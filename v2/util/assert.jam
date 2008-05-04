@@ -8,7 +8,7 @@ import errors : error-skip-frames lol->list ;
 import modules ;
 
 
-# Assert the equality of A and B 
+# Assert the equality of A and B.
 #
 rule equal ( a * : b * )
 {
