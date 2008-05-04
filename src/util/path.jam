@@ -35,6 +35,7 @@ if [ modules.peek : UNIX ]
     }
 }
 
+
 # Converts the native path into normalized form.
 #
 rule make ( native )
@@ -149,31 +150,19 @@ rule reverse ( path )
 }
 
 
-# Auxillary rule: does all the semantic of 'join', except for error cheching.
-# The error checking has been separated because this rule is recursive, and I
-# do not like the idea of checking the same input over and over.
-#
-local rule join-imp ( elements + )
-{
-    local result = ;
-    if ! $(elements[1])
-    {
-        result = [ NORMALIZE_PATH "/" "$(elements[2-])" ] ;
-    }
-    else
-    {
-        result = [ NORMALIZE_PATH "$(elements)" ] ;
-    }
-    return $(result) ;
-}
-
-
 # Concatenates the passed path elements. Generates an error if any element other
-# than the first one is rooted. Path elements are not allowed to be undefined.
+# than the first one is rooted.
+#
+# Boost Jam has problems with unclear NORMALIZE_PATH builtin rule behavior in
+# case you pass it a leading backslash instead of a slash or in some cases when
+# you send it an empty initial path element. At least some of those cases are
+# being hit and relied upon by the path.make-NT rule. One thing this
+# implementation does not support correctly is converting a native Windows path
+# with multiple leading backslashes into the internal path format. 
 #
 rule join ( elements + )
 {
-    if ! $(elements[2])
+    if ! $(elements[2-])
     {
         return $(elements[1]) ;
     }
@@ -183,10 +172,17 @@ rule join ( elements + )
         {
             if [ is-rooted $(e) ]
             {
-                errors.error only first element may be rooted ;
+                errors.error only the first element may be rooted ;
             }
         }
-        return [ join-imp $(elements) ] ;
+        if ! $(elements[1]) && $(elements[2])
+        {
+            return [ NORMALIZE_PATH "/" "$(elements[2-])" ] ;
+        }
+        else
+        {
+            return [ NORMALIZE_PATH "$(elements)" ] ;
+        }
     }
 }
 
@@ -450,30 +446,26 @@ rule programs-path ( )
 }
 
 
-# This rule does not support 'invalid' paths containing multiple successive
-# path separator characters.
+# Converts native Windows paths into our internal canonic path representation.
+#
+# TODO: Check and if needed add support for Windows 'X:file' path format where
+# the file is located in the current folder on drive X.
 #
 rule make-NT ( native )
 {
-    local tokens = [ regex.split $(native) "[/\\]" ] ;
-    local result ;
+    # This implementation does not support native Windows paths containing
+    # multiple successive path separator characters. Some cases might work but
+    # some do not. All this is due to a not so clear way NORMALIZE_PATH rule
+    # works.
+    local result = [ path.join [ regex.split $(native) "[/\\]" ] ] ;
 
-    # Handle paths ending with a slash.
-    if $(tokens[-1]) = ""
-    {
-        tokens = $(tokens[1--2]) ;  # Discard the empty element.
-    }
-
-    result = [ path.join $(tokens) ] ;
-
-    if [ regex.match "(^.:)" : $(native)  ]
+    # We need to add an extra '/' in front in case this is a rooted Windows path
+    # starting with a drive letter and not a path separator character since the
+    # builtin NORMALIZE_PATH rule has no knowledge of this leading drive letter
+    # and treats it as a regular folder name.
+    if [ regex.match "(^.:)" : $(native) ]
     {
         result = /$(result) ;
-    }
-
-    if $(native) = ""
-    {
-        result = "." ;
     }
 
     return $(result) ;
