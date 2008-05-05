@@ -5,46 +5,37 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-#  Manages 'generators' --- objects which can do transformation between
-#  different target types and contain algorithm for finding transformation from
-#  sources to targets.
+# Manages 'generators' --- objects which can do transformation between different
+# target types and contain algorithm for finding transformation from sources to
+# targets.
 #
-#  The main entry point to this module is generators.construct rule. It is given
-#  a list of source targets, desired target type and a set of properties. It
-#  starts by selecting 'viable generators', which have any chances of producing
-#  the desired target type with the required properties. Generators are ranked
-#  and a set of the most specific ones is selected.
+# The main entry point to this module is generators.construct rule. It is given
+# a list of source targets, desired target type and a set of properties. It
+# starts by selecting 'viable generators', which have any chances of producing
+# the desired target type with the required properties. Generators are ranked
+# and a set of the most specific ones is selected.
 #
-#  The most specific generators have their 'run' methods called, with the
-#  properties and list of sources. Each one selects a target which can be
-#  directly consumed, and tries to convert the remaining ones to the types it
-#  can consume. This is done by recursively calling 'construct' with all
-#  consumable types.
+# The most specific generators have their 'run' methods called, with the
+# properties and list of sources. Each one selects a target which can be
+# directly consumed, and tries to convert the remaining ones to the types it can
+# consume. This is done by recursively calling 'construct' with all consumable
+# types.
 #
-#  If the generator has collected all the targets it needs, it creates targets
-#  corresponding to result, and returns it. When all generators have been run,
-#  results of one of them are selected and returned as a result.
+# If the generator has collected all the targets it needs, it creates targets
+# corresponding to result, and returns it. When all generators have been run,
+# results of one of them are selected and returned as a result.
 #
-#  It's quite possible that 'construct' returns more targets that it was asked
-#  for. For example, it was asked to target type EXE, but the only found
-#  generators produces both EXE and TDS (file with debug) information. The extra
-#  target will be returned.
+# It is quite possible for 'construct' to return more targets that it was asked
+# for. For example, if it were asked to generate a target of type EXE, but the
+# only found generator produces both EXE and TDS (file with debug) information.
+# The extra target will be returned.
 #
-#  Likewise, when generator tries to convert sources to consumable types, it can
-#  get more targets that it was asked for. The question is what to do with extra
-#  targets. Boost.Build attempts to convert them to requested types, and
-#  attempts that as early as possible. Specifically, this is done after invoking
-#  each generator. (Later I'll document the rationale for trying extra target
-#  conversion at that point).
-#
-#  That early conversion is not always desirable. Suppose a generator got a
-#  source of type Y and must consume one target of type X_1 and one target of
-#  type X_2. When converting Y to X_1 extra target of type Y_2 is created. We
-#  should not try to convert it to type X_1, because if we do so, the generator
-#  will get two targets of type X_1, and will be at loss as to which one to use.
-#  Because of that, the 'construct' rule has a parameter, telling if multiple
-#  targets can be returned. If the parameter is false, conversion of extra
-#  targets is not performed.
+# Likewise, when generator tries to convert sources to consumable types, it can
+# get more targets that it was asked for. The question is what to do with extra
+# targets. Boost.Build attempts to convert them to requested types, and attempts
+# that as early as possible. Specifically, this is done after invoking each
+# generator. TODO: An example is needed to document the rationale for trying
+# extra target conversion at that point.
 
 import "class" : new ;
 import errors ;
@@ -293,7 +284,6 @@ class generator
             )
     {
         generators.dout [ indent ] "  ** generator" $(self.id) ;
-        generators.dout [ indent ] "  multiple:" $(mutliple) ;
         generators.dout [ indent ] "  composing:" $(self.composing) ;
 
         if ! $(self.composing) && $(sources[2]) && $(self.source-types[2])
@@ -1163,8 +1153,7 @@ local rule construct-really (
 
 # Attempts to create a target of 'target-type' with 'properties' from 'sources'.
 # The 'sources' are treated as a collection of *possible* ingridients -- i.e. it
-# is not required to consume them all. If 'multiple' is true, the rule is
-# allowed to return several targets of 'target-type'.
+# is not required to consume them all.
 #
 # Returns a list of targets. When this invocation is first instance of
 # 'construct' in stack, returns only targets of requested 'target-type',
