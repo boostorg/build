@@ -1338,94 +1338,110 @@ LIST *builtin_normalize_path( PARSE *parse, FRAME *frame )
        pass, removing all the entered '\1' characters.
     */
 
-    string in[1], out[1], tmp[1];
-    char* end;      /* Last character of the part of string still to be processed. */
-    char* current;  /* Working pointer. */
-    int dotdots = 0; /* Number of '..' elements seen and not processed yet. */
-    int rooted = arg->string[0] == '/';
-    char* result;
+    string in[1];
+    string out[1];
+    char * end;          /* Last character of the part of string still to be processed. */
+    char * current;      /* Working pointer. */
+    int    dotdots = 0;  /* Number of '..' elements seen and not processed yet. */
+    int    rooted  = 0;
+    char * result  = 0;
 
-    /* Make a copy of input: we should not change it. */
+    /* Make a copy of input: we should not change it. Prepend a '/' before it as
+       a guard for the algorithm later on and remember whether it was originally
+       rooted or not. */
+
     string_new(in);
-    if (!rooted)
-        string_push_back(in, '/');
-    while (arg)
+    string_push_back(in, '/');
+    for (; arg; arg = list_next(arg) )
     {
-        string_append(in, arg->string);
-        arg = list_next(arg);
-        if (arg)
-            string_append(in, "/");
+        if (arg->string[0] != '\0')
+        {
+            if (in->size == 1)
+                rooted = ( (arg->string[0] == '/' ) || (arg->string[0] == '\\') );
+            else
+                string_append(in, "/");
+            string_append(in, arg->string);
+        }
     }
 
-    /* Convert \ into /. On windows, paths using / and \ are equivalent,
-       and we want this function to obtain canonic representation.  */
+    /* Convert \ into /. On Windows, paths using / and \ are equivalent, and we
+       want this function to obtain a canonic representation. */
+
     for (current = in->value, end = in->value + in->size;
-         current < end; ++current)
+        current < end; ++current)
         if (*current == '\\')
             *current = '/';
 
+    /* Now we remove any extra path elements by overwriting them with '\1'
+       characters and cound how many more unused '..' path elements there are
+       remaining. Note that each remaining path element with always starts with
+       a '/' character. */
 
-    end = in->value + in->size - 1;
-    current = end;
-
-    for(;end >= in->value;)
+    for (end = in->value + in->size - 1; end >= in->value; )
     {
         /* Set 'current' to the next occurence of '/', which always exists. */
-        for(current = end; *current != '/'; --current)
+        for (current = end; *current != '/'; --current)
             ;
 
-        if (current == end && current != in->value) {
-            /* Found a trailing slash. Remove it. */
+        if (current == end)
+        {
+            /* Found a trailing or duplicate '/'. Remove it. */
             *current = '\1';
-        } else if (current == end && *(current+1) == '/') {
-            /* Found duplicated slash. Remove it. */
-            *current = '\1';
-        } else if (end - current == 1 && strncmp(current, "/.", 2) == 0) {
-            /* Found '/.'. Drop them all. */
+        }
+        else if (end - current == 1 && *(current+1) == '.')
+        {
+            /* Found '/.'. Remove them all. */
             *current = '\1';
             *(current+1) = '\1';
-        } else if (end - current == 2 && strncmp(current, "/..", 3) == 0) {
-            /* Found '/..' */
+        }
+        else if (end - current == 2 && *(current+1) == '.' && *(current+2) == '.')
+        {
+            /* Found '/..'. Remove them all. */
             *current = '\1';
             *(current+1) = '\1';
             *(current+2) = '\1';
             ++dotdots;
-        } else if (dotdots) {
-            char* p = current;
+        }
+        else if (dotdots)
+        {
             memset(current, '\1', end-current+1);
             --dotdots;
         }
         end = current-1;
     }
 
-
-    string_new(tmp);
-    while(dotdots--)
-        string_append(tmp, "/..");
-    string_append(tmp, in->value);
-    string_copy(in, tmp->value);
-    string_free(tmp);
-
-
     string_new(out);
-    /* The resulting path is either empty or has '/' as the first significant
-       element. If the original path was not rooted, we need to drop first '/'.
-       If the original path was rooted, and we've got empty path, need to add '/'
-    */
-    if (!rooted) {
-        current = strchr(in->value, '/');
-        if (current)
-            *current = '\1';
+
+    /* Now we know that we need to add exactly dotdots '..' path elements to the
+       front and that our string is either empty or has a '/' as its first
+       significant character. If we have any dotdots remaining then the passed
+       path must not have been rooted or else it is invalid we return an empty
+       list. */
+
+    if (dotdots)
+    {
+        if (rooted) return L0;
+        do
+            string_append(out, "/..");
+        while (--dotdots);
     }
+
+    /* Now we actually remove all the path characters marked for removal. */
 
     for (current = in->value; *current; ++current)
         if (*current != '\1')
             string_push_back(out, *current);
 
+    /* Here we know that our string contains no '\1' characters and is either
+       empty or has a '/' as its initial character. If the original path was not
+       rooted and we have a non-empty path we need to drop the initial '/'. If
+       the original path was rooted and we have an empty path we need to add
+       back the '/'. */
 
-    result = newstr(out->size ? out->value : (rooted ? "/" : "."));
-    string_free(in);
+    result = newstr( out->size ? out->value + !rooted : (rooted ? "/" : "."));
+
     string_free(out);
+    string_free(in);
 
     return list_new(0, result);
 }

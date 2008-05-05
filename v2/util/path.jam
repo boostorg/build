@@ -22,6 +22,7 @@ import modules ;
 import regex ;
 import sequence ;
 import set ;
+import version ;
 
 
 os = [ modules.peek : OS ] ;
@@ -151,14 +152,7 @@ rule reverse ( path )
 
 
 # Concatenates the passed path elements. Generates an error if any element other
-# than the first one is rooted.
-#
-# Boost Jam has problems with unclear NORMALIZE_PATH builtin rule behavior in
-# case you pass it a leading backslash instead of a slash or in some cases when
-# you send it an empty initial path element. At least some of those cases are
-# being hit and relied upon by the path.make-NT rule. One thing this
-# implementation does not support correctly is converting a native Windows path
-# with multiple leading backslashes into the internal path format. 
+# than the first one is rooted. Skips any empty or undefined path elements.
 #
 rule join ( elements + )
 {
@@ -175,13 +169,26 @@ rule join ( elements + )
                 errors.error only the first element may be rooted ;
             }
         }
-        if ! $(elements[1]) && $(elements[2])
+        if [ version.check-jam-version 3 1 17 ]
         {
-            return [ NORMALIZE_PATH "/" "$(elements[2-])" ] ;
+            return [ NORMALIZE_PATH "$(elements)" ] ;
         }
         else
         {
-            return [ NORMALIZE_PATH "$(elements)" ] ;
+            # Boost Jam prior to version 3.1.17 had problems with its
+            # NORMALIZE_PATH rule in case you passed it a leading backslash
+            # instead of a slash, in some cases when you sent it an empty
+            # initial path element and possibly some others. At least some of
+            # those cases were being hit and relied upon when calling this rule
+            # from the path.make-NT rule.
+            if ! $(elements[1]) && $(elements[2])
+            {
+                return [ NORMALIZE_PATH "/" "$(elements[2-])" ] ;
+            }
+            else
+            {
+                return [ NORMALIZE_PATH "$(elements)" ] ;
+            }
         }
     }
 }
@@ -447,17 +454,29 @@ rule programs-path ( )
 
 
 # Converts native Windows paths into our internal canonic path representation.
+# Supports 'invalid' paths containing multiple successive path separator
+# characters.
 #
 # TODO: Check and if needed add support for Windows 'X:file' path format where
 # the file is located in the current folder on drive X.
 #
 rule make-NT ( native )
 {
-    # This implementation does not support native Windows paths containing
-    # multiple successive path separator characters. Some cases might work but
-    # some do not. All this is due to a not so clear way NORMALIZE_PATH rule
-    # works.
-    local result = [ path.join [ regex.split $(native) "[/\\]" ] ] ;
+    local result ;
+
+    if [ version.check-jam-version 3 1 17 ]
+    {
+        result = [ NORMALIZE_PATH $(native) ] ;
+    }
+    else
+    {
+        # This old implementation is really fragile due to a not so clear way
+        # NORMALIZE_PATH rule worked in Boost.Jam versions prior to 3.1.17. E.g.
+        # path.join would mostly ignore empty path elements but would root the
+        # joined path in case the initial two path elements were empty or some
+        # similar accidental wierdness.
+        result = [ path.join [ regex.split $(native) "[/\\]" ] ] ;
+    }
 
     # We need to add an extra '/' in front in case this is a rooted Windows path
     # starting with a drive letter and not a path separator character since the
@@ -605,7 +624,7 @@ rule make-VMS ( native )
         if ! [ MATCH (\\.) : $(file) ]
         {
             #
-            # Always add "." to end of non-extension file
+            # Always add "." to end of non-extension file.
             #
             file = $(file). ;
         }
@@ -776,6 +795,38 @@ rule __test__ ( )
     assert.result "/foo" : make "\\foo" ;
     assert.result "/D:/My Documents" : make "D:\\My Documents" ;
     assert.result "/c:/boost/tools/build/new/project.jam" : make "c:\\boost\\tools\\build\\test\\..\\new\\project.jam" ;
+    
+    #   Test processing 'invalid' paths containing multiple successive path
+    # separators.
+    assert.result "foo" : make "foo//" ;
+    assert.result "foo" : make "foo///" ;
+    assert.result "foo" : make "foo\\\\" ;
+    assert.result "foo" : make "foo\\\\\\" ;
+    assert.result "/foo" : make "//foo" ;
+    assert.result "/foo" : make "///foo" ;
+    assert.result "/foo" : make "\\\\foo" ;
+    assert.result "/foo" : make "\\\\\\foo" ;
+    assert.result "/foo" : make "\\/\\/foo" ;
+    assert.result "foo/bar" : make "foo//\\//\\\\bar//\\//\\\\\\//\\//\\\\" ;
+    assert.result "foo/bar" : make "foo//\\//\\\\bar//\\//\\\\\\//\\//\\\\" ;
+    assert.result "foo" : make "foo/bar//.." ;
+    assert.result "foo/bar" : make "foo/bar/giz//.." ;
+    assert.result "foo/giz" : make "foo//\\//\\\\bar///\\\\//\\\\////\\/..///giz\\//\\\\\\//\\//\\\\" ;
+    assert.result "../../../foo" : make "..///.//..///.//..////foo///" ;
+
+    #   Test processing 'invalid' rooted paths with too many '..' path elements
+    # that would place them before the root.
+    assert.result "" : make "/.." ;
+    assert.result "" : make "/../" ;
+    assert.result "" : make "/../." ;
+    assert.result "" : make "/.././" ;
+    assert.result "" : make "/foo/../bar/giz/.././././../../." ;
+    assert.result "" : make "/foo/../bar/giz/.././././../.././" ;
+    assert.result "" : make "//foo/../bar/giz/.././././../../." ;
+    assert.result "" : make "//foo/../bar/giz/.././././../.././" ;
+    assert.result "" : make "\\\\foo/../bar/giz/.././././../../." ;
+    assert.result "" : make "\\\\foo/../bar/giz/.././././../.././" ;
+    assert.result "" : make "/..///.//..///.//..////foo///" ;
 
     assert.result "foo\\bar\\giz" : native "foo/bar/giz" ;
     assert.result "foo" : native "foo" ;
