@@ -7,11 +7,11 @@ ECHO --- Testing SHELL builtin... ;
 local c = "date" ;
 if $(NT) { c = "PATH" ; }
 
-assert ""       : (!=) : [ SHELL $(c) ] ;
-assert ""       : (==) : [ SHELL $(c) : no-output ] ;
-assert "" 0     : (!=) : [ SHELL $(c) : exit-status ] ;
-assert "" 0     : (==) : [ SHELL $(c) : no-output : exit-status ] ;
-assert ""       : (!=) : [ COMMAND $(c) ] ;
-assert ""       : (==) : [ COMMAND $(c) : no-output ] ;
-assert "" 0     : (!=) : [ COMMAND $(c) : exit-status ] ;
-assert "" 0     : (==) : [ COMMAND $(c) : no-output : exit-status ] ;
+assert ""   : (!=) : [ SHELL $(c) ] ;
+assert ""   : (==) : [ SHELL $(c) : no-output ] ;
+assert "" 0 : (!=) : [ SHELL $(c) : exit-status ] ;
+assert "" 0 : (==) : [ SHELL $(c) : no-output : exit-status ] ;
+assert ""   : (!=) : [ COMMAND $(c) ] ;
+assert ""   : (==) : [ COMMAND $(c) : no-output ] ;
+assert "" 0 : (!=) : [ COMMAND $(c) : exit-status ] ;
+assert "" 0 : (==) : [ COMMAND $(c) : no-output : exit-status ] ;
