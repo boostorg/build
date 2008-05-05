@@ -76,16 +76,58 @@ project qt ;
 # Initialized the QT support module. The 'prefix' parameter tells where QT is
 # installed.
 #
-rule init ( prefix )
+rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
 {
     project.push-current $(.project) ;
+
+    # pre-build paths to detect reinitializations changes
+    local inc_prefix lib_prefix bin_prefix ;
+    if $(full_inc)
+    {
+        inc_prefix = $(full_inc) ; 
+    }
+    else
+    {
+        inc_prefix = $(prefix)/include ;
+    }
+    if $(full_lib)
+    {
+        lib_prefix = $(full_lib) ;
+    }
+    else
+    {
+        lib_prefix = $(prefix)/lib ;
+    }
+    if $(full_bin)
+    {
+        bin_prefix = $(full_bin) ;
+    }
+    else
+    {
+        bin_prefix = $(prefix)/bin ;
+    }
 
     if $(.initialized)
     {
         if $(prefix) != $(.prefix)
         {
             errors.error
-              "Attempt the reinitialize QT with different installation prefix" ;
+                "Attempt the reinitialize QT with different installation prefix" ;
+        }
+        if $(inc_prefix) != $(.incprefix)
+        {
+            errors.error
+                "Attempt the reinitialize QT with different include path" ;
+        }
+        if $(lib_prefix) != $(.libprefix)
+        {
+            errors.error
+                "Attempt the reinitialize QT with different library path" ;
+        }
+        if $(bin_prefix) != $(.binprefix)
+        {
+            errors.error
+                "Attempt the reinitialize QT with different bin path" ;
         }
     }
     else
@@ -94,7 +136,6 @@ rule init ( prefix )
         .prefix = $(prefix) ;
 
         # Setup prefixes for include, binaries and libs.
-        # TODO: Implement overrides in "init" parameter list.
         .incprefix = $(.prefix)/include ;
         .libprefix = $(.prefix)/lib ;
         .binprefix = $(.prefix)/bin ;
