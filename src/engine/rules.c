@@ -137,6 +137,9 @@ bindtarget( const char *targetname )
 	    targethash = hashinit( sizeof( TARGET ), "targets" );
 
     /* Perforce added const everywhere. No time to merge that change. */
+#ifdef NT
+    targetname = short_path_to_long_path( (char*)targetname );
+#endif
 	t->name = (char*)targetname;
 
 	if( hashenter( targethash, (HASHDATA **)&t ) )
