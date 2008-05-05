@@ -15,14 +15,13 @@ if ! $(BJAM_SUBTEST)
 }
 else
 {
-    #~ actions .a. { $(ACTION) }
     actions quietly .a. { $(ACTION) }
-    
+
     rule .a.
     {
         DEPENDS $(<) : $(>) ;
     }
-    
+
     NOTFILE subtest ;
     .a. subtest_a : subtest ;
     DEPENDS all : subtest_a ;

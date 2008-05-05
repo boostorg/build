@@ -5,6 +5,7 @@
 if ! $(BJAM_SUBTEST)
 {
     ECHO --- Testing -l option... ;
+
     assert "...found 2 targets...
 ...updating 1 target...
 .a. sleeper
