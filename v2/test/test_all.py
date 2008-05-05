@@ -167,6 +167,7 @@ tests = [ "rebuilds",
           "example_make",
           "remove_requirement",
           "free_features_request",
+          "file_name_handling",
           "sort_rule"
           ]
 
