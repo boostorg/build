@@ -808,7 +808,6 @@ rule __test__ ( )
     assert.result "/foo" : make "\\\\\\foo" ;
     assert.result "/foo" : make "\\/\\/foo" ;
     assert.result "foo/bar" : make "foo//\\//\\\\bar//\\//\\\\\\//\\//\\\\" ;
-    assert.result "foo/bar" : make "foo//\\//\\\\bar//\\//\\\\\\//\\//\\\\" ;
     assert.result "foo" : make "foo/bar//.." ;
     assert.result "foo/bar" : make "foo/bar/giz//.." ;
     assert.result "foo/giz" : make "foo//\\//\\\\bar///\\\\//\\\\////\\/..///giz\\//\\\\\\//\\//\\\\" ;
