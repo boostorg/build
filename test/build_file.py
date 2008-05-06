@@ -6,8 +6,8 @@
 #  accompanying file LICENSE_1_0.txt or copy at
 #  http://www.boost.org/LICENSE_1_0.txt)
 
-# Tests that we explicitly request a file (not target) to be built by
-# specifying its name on the command line.
+# Tests that we explicitly request a file (not target) to be built by specifying
+# its name on the command line.
 
 import BoostBuild
 
