@@ -1169,7 +1169,7 @@ class basic-target : abstract-target
             local fn = [ full-name ] ;
             ECHO [ targets.indent ] "Building target '$(fn)'" ;
             targets.increase-indent ;
-            ECHO [ targets.indent ] "Build request: " [ $(property-set).raw ] ;
+            ECHO [ targets.indent ] "Build request: " $(property-set) [ $(property-set).raw ] ;
             local cf = [ build-system.command-line-free-features ] ;
             ECHO [ targets.indent ] "Command line free features: " [ $(cf).raw ] ;
             ECHO [ targets.indent ] "Target requirements: " [ $(self.requirements).raw ] ;
@@ -1274,7 +1274,16 @@ class basic-target : abstract-target
                 # properties, or there's <build>no in properties. In the latter
                 # case we don't want any diagnostic. In the former case, we need
                 # diagnostics. FIXME
-                self.generated.$(property-set) = $(rproperties) ;
+                
+                # If this target fails to build, add <build>no to properties
+                # to cause any parent target to fail to build.  Except that it
+                # - does not work now, since we check for <build>no only in
+                #   common properties, but not in properties that came from
+                #   dependencies
+                # - it's not clear if that's a good idea anyway.  The alias
+                #   target, for example, should not fail to build if a dependency
+                #   fails.
+                self.generated.$(property-set) = [ property-set.create <build>no ] ;
             }
         }
         else
@@ -1282,6 +1291,9 @@ class basic-target : abstract-target
             if [ modules.peek : .debug-building ]
             {
                 ECHO [ targets.indent ] "Already built" ;
+                local ur = $(self.generated.$(property-set)) ;
+                ur = $(ur[0]) ;
+                ECHO [ targets.indent ] "  Usage requirements " [ $(ur).raw ] ;
             }
         }
 
