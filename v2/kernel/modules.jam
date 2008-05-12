@@ -19,6 +19,7 @@
 
 # Meant to be invoked from import when no __test__ rule is defined in the given
 # module.
+#
 local rule no-test-defined
 {
     import modules ;
@@ -30,6 +31,7 @@ local rule no-test-defined
 
 
 # Return the binding of the given module.
+#
 rule binding ( module )
 {
     return $($(module).__binding__) ;
@@ -39,6 +41,7 @@ rule binding ( module )
 # Sets the module-local value of a variable. This is the most reliable way to
 # set a module-local variable in a different module; it eliminates issues of
 # name shadowing due to dynamic scoping.
+#
 rule poke ( module-name ? : variables + : value * )
 {
     module $(<)
@@ -51,6 +54,7 @@ rule poke ( module-name ? : variables + : value * )
 # Returns the module-local value of a variable. This is the most reliable way to
 # examine a module-local variable in a different module; it eliminates issues of
 # name shadowing due to dynamic scoping.
+#
 rule peek ( module-name ? : variables + )
 {
     module $(<)
@@ -93,6 +97,7 @@ rule call-locally ( qualified-rule-name args * : * )
 
 
 # Load the indicated module if it is not already loaded.
+#
 rule load (
       module-name  # Name of module to load. Rules will be defined in this
                    # module.
@@ -199,6 +204,7 @@ rule load (
 
 # This helper is used by load (above) to record the binding (path) of each
 # loaded module.
+#
 rule record-binding ( module-target : binding )
 {
     $(.loading[-1]).__binding__ = $(binding) ;
@@ -209,6 +215,7 @@ rule record-binding ( module-target : binding )
 # slashes and all detectable redundancy removed. Something like this is probably
 # needed in path.jam, but I'm not sure of that, I don't understand it, and I'm
 # not ready to move all of path.jam into the kernel.
+#
 local rule normalize-raw-paths ( paths * )
 {
     local result ;
@@ -230,6 +237,7 @@ local rule normalize-raw-paths ( paths * )
 # If rules-opt = '*', all rules from the indicated module are imported into the
 # caller's module. If rename-opt is supplied, it must have the same number of
 # elements as rules-opt.
+#
 rule import ( module-names + : rules-opt * : rename-opt * )
 {
     if ( $(rules-opt) = * || ! $(rules-opt) ) && $(rename-opt)
@@ -294,10 +302,12 @@ rule import ( module-names + : rules-opt * : rename-opt * )
     }
 }
 
+
 # Define exported copies in $(target-module) of all rules exported from
 # $(source-module). Also make them available in the global module with
 # qualification, so that it is just as though the rules were defined originally
 # in $(target-module).
+#
 rule clone-rules ( source-module target-module )
 {
     local rules = [ RULENAMES $(source-module) ] ;
