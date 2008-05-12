@@ -50,7 +50,7 @@ rm roll.sh
 chmod a+x jam_src/build.bat
 cd .. && zip -r boost-build.zip boost-build && tar --bzip2 -cf boost-build.tar.bz2 boost-build
 # Copy packages to a location where they are grabbed for beta.boost.org
-cp boost-build.zip boost-build.tar.bz2 ~/public_html/boost_build_nightly
+cp userman.pdf boost-build.zip boost-build.tar.bz2 ~/public_html/boost_build_nightly
 cd boost-build
 
 chmod -R u+w *
