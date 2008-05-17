@@ -159,7 +159,7 @@ boost-build build-system ;
               for example:
 
 <programlisting>
-borland/&lt;runtime-link&gt;static
+borland/runtime-link=static
 </programlisting>
 
               A more complex form can be used to save typing. For example,
