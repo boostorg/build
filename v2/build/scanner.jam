@@ -28,6 +28,7 @@
 
 import "class" : new ;
 import property virtual-target property-set ;
+import errors : error ;
 
 #  Base scanner class. 
 class scanner 
