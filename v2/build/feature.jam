@@ -118,7 +118,15 @@ rule feature (
     {
         error = free features cannot be propagated ;
     }
-
+    else 
+    {
+        local m = [ MATCH (.*=.*) : $(values) ] ;
+        if $(m[1])
+        {
+            error = "feature value may not contain '='" ;
+        }        
+    }
+    
     if $(error)
     {
         errors.error $(error)
