@@ -1737,7 +1737,7 @@ bjam_import_rule(PyObject* self, PyObject* args)
         return NULL;
     }
 
-    m = bindmodule(module);
+    m = bindmodule(*module ? module : 0);
     r = bindrule(rule, m);
 
     /* Make pFunc owned */
