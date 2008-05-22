@@ -71,7 +71,7 @@ rule boost-build ( dir ? )
 {
     if $(.bootstrap-file)
     {
-        EXIT "Error: Illegal attempt to re-bootstrap the build system by invoking" ;
+        ECHO "Error: Illegal attempt to re-bootstrap the build system by invoking" ;
         ECHO ;
         ECHO "   'boost-build" $(dir) ";'" ;
         ECHO ;
