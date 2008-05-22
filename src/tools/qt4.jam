@@ -164,8 +164,8 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
         # Test for a buildable Qt.
         if [ glob $(.prefix)/Jamroot ]
         {
+            local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg QtOpenGL Qt3Support QtTest QtAssistantClient QtDesigner QtUiTools QtDBus QtScript QtHelp QtXmlPatterns QtWebKit phonon ;
             # Import all Qt Modules
-            local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg QtOpenGL Qt3Support QtTest QtAssistantClient QtDesigner QtUiTools QtDBus QtScript ;
             for local l in $(all-libraries)
             {
                 alias $(l)
@@ -399,23 +399,6 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
                   <include>$(.incprefix)/QtTest
                 ;
 
-            # AssistantClient Support
-            lib QtAssistantClient : QtGui
-                : # requirements
-                  <name>QtAssistantClient$(suffix_version)
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtAssistant
-                ;
-            lib QtAssistantClient : QtGui
-                : # requirements
-                  <name>QtAssistantClient$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtAssistant
-                ;
-
             # Qt designer library
             lib QtDesigner : QtGui QtXml
                 : # requirements
@@ -435,6 +418,7 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
                 ;
 
             # Support for dynamic Widgets (Qt 4.1)
+            # Static library without version number
             lib QtUiTools : QtGui QtXml
                 : # requirements
                   <name>QtUiTools
@@ -484,7 +468,100 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
                 : # usage-requirements
                   <include>$(.incprefix)/QtScript
                 ;
-        }
+
+            # WebKit (Qt 4.4)
+            lib QtWebKit : QtGui
+                : # requirements
+                  <name>QtWebKit$(suffix_version) 
+                : # default-build
+                : # usage-requirements
+                  <define>QT_WEBKIT_LIB
+                  <include>$(.incprefix)/QtWebKit 
+                ;
+            lib QtWebKit : QtGui
+                : # requirements
+                  <name>QtWebKit$(suffix_debug)$(suffix_version) 
+                  <variant>debug 
+                : # default-build
+                : # usage-requirements
+                  <define>QT_WEBKIT_LIB
+                  <include>$(.incprefix)/QtWebKit
+                ;
+
+            # Phonon Multimedia (Qt 4.4) 
+            lib phonon : QtGui QtXml
+                : # requirements
+                  <name>phonon$(suffix_version) 
+                : # default-build
+                : # usage-requirements
+                  <define>QT_PHONON_LIB
+                  <include>$(.incprefix)/phonon 
+                ;
+            lib phonon : QtGui QtXml
+                : # requirements
+                  <name>phonon$(suffix_debug)$(suffix_version) 
+                  <variant>debug 
+                : # default-build
+                : # usage-requirements
+                  <define>QT_PHONON_LIB
+                  <include>$(.incprefix)/phonon
+                ;
+
+            # XmlPatterns-Engine (Qt 4.4) 
+            lib QtXmlPatterns : QtNetwork
+                : # requirements
+                  <name>QtXmlPatterns$(suffix_version) 
+                : # default-build
+                : # usage-requirements
+                  <define>QT_XMLPATTERNS_LIB
+                  <include>$(.incprefix)/QtXmlPatterns 
+                ;
+            lib QtXmlPatterns : QtNetwork
+                : # requirements
+                  <name>QtXmlPatterns$(suffix_debug)$(suffix_version) 
+                  <variant>debug 
+                : # default-build
+                : # usage-requirements
+                  <define>QT_XMLPATTERNS_LIB
+                  <include>$(.incprefix)/QtXmlPatterns
+                ;
+
+            # Help-Engine (Qt 4.4) 
+            lib QtHelp : QtGui QtSql QtXml
+                : # requirements
+                  <name>QtHelp$(suffix_version) 
+                : # default-build
+                : # usage-requirements
+                  <include>$(.incprefix)/QtHelp 
+                ;
+            lib QtHelp : QtGui QtSql QtXml
+                : # requirements
+                  <name>QtHelp$(suffix_debug)$(suffix_version) 
+                  <variant>debug 
+                : # default-build
+                : # usage-requirements
+                  <include>$(.incprefix)/QtHelp
+                ;
+
+            # AssistantClient Support
+            # Compat library
+            # Pre-4.4 help system, use QtHelp for new programs
+            lib QtAssistantClient : QtGui
+                : # requirements
+                  <name>QtAssistantClient$(suffix_version) 
+                : # default-build
+                : # usage-requirements
+                  <include>$(.incprefix)/QtAssistant
+                ;
+            lib QtAssistantClient : QtGui
+                : # requirements
+                  <name>QtAssistantClient$(suffix_debug)$(suffix_version) 
+                  <variant>debug 
+                : # default-build
+                : # usage-requirements
+                  <include>$(.incprefix)/QtAssistant 
+                ;
+       }
     }
 
     project.pop-current ;
