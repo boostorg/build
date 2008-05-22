@@ -160,11 +160,13 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
 
         # dependency scanner for wrapped files.
         type.set-scanner QRC : qrc-scanner ;
+        
+        # List of all Qt libraries
+        local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg QtOpenGL Qt3Support QtTest QtAssistantClient QtDesigner QtUiTools QtDBus QtScript QtHelp QtXmlPatterns QtWebKit phonon ;
 
         # Test for a buildable Qt.
         if [ glob $(.prefix)/Jamroot ]
         {
-            local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg QtOpenGL Qt3Support QtTest QtAssistantClient QtDesigner QtUiTools QtDBus QtScript QtHelp QtXmlPatterns QtWebKit phonon ;
             # Import all Qt Modules
             for local l in $(all-libraries)
             {
@@ -173,7 +175,6 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
                     :
                     :
                     : <allow>qt4 ;
-                explicit $(l) ;
             }
         }
         else
@@ -561,6 +562,13 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
                 : # usage-requirements
                   <include>$(.incprefix)/QtAssistant 
                 ;
+       }
+
+       # Make library names explicit so that a simple <use>qt4 will not bring in everything.
+       # And some components like QtDBus/Phonon may not be available on some platforms.
+       for local l in $(all-libraries)
+       {
+           explicit $(l) ;
        }
     }
 
