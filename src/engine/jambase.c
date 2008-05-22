@@ -34,7 +34,7 @@ char *jambase[] = {
 "{\n",
 "if $(.bootstrap-file)\n",
 "{\n",
-"EXIT \"Error: Illegal attempt to re-bootstrap the build system by invoking\" ;\n",
+"ECHO \"Error: Illegal attempt to re-bootstrap the build system by invoking\" ;\n",
 "ECHO ;\n",
 "ECHO \"   'boost-build\" $(dir) \";'\" ;\n",
 "ECHO ;\n",
