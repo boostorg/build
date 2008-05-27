@@ -73,6 +73,9 @@ rule init ( version ? :     # the compiler version
     local major = $(m[1]) ;
 
     local C++FLAGS ;
+    
+    C++FLAGS += /nologo ;
+    
     # Reduce the number of spurious error messages
     C++FLAGS += /Qwn5 /Qwd985 ;
 
