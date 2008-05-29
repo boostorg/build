@@ -102,6 +102,8 @@ rule init ( version ? : command * : options * : requirement * )
 
 feature framework : : free ;
 
+flags darwin.compile OPTIONS <flags> ;
+
 # The following adds objective-c support to darwin.
 # Thanks to http://thread.gmane.org/gmane.comp.lib.boost.build/13759
 
