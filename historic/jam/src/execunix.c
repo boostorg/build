@@ -25,7 +25,7 @@
 # ifdef USE_EXECUNIX
 # include <sys/times.h>
 
-# if defined(__APPLE__) && defined(__ppc__)
+# if defined(__APPLE__)
 # define NO_VFORK
 # endif
 
