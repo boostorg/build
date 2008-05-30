@@ -435,8 +435,14 @@ rule configure-version-specific ( toolset : version : condition )
         # Some version of msvc have a bug, that cause deprecation
         # warning to be emitted even with /W0
         toolset.flags $(toolset).compile CFLAGS $(condition)/<warnings>off : /wd4996 ;
-        # 64-bit compatibility warning
-        toolset.flags $(toolset).compile CFLAGS $(condition)/<warnings>all : /Wp64 ;
+
+        if [ MATCH ^([78]\\.) : $(version) ]
+        {
+          # 64-bit compatibility warning
+          # deprecated since 9.0, see
+          # http://msdn.microsoft.com/en-us/library/yt4xw8fh.aspx
+          toolset.flags $(toolset).compile CFLAGS $(condition)/<warnings>all : /Wp64 ;
+        }
     }
 
     #
