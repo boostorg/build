@@ -107,9 +107,6 @@ flags darwin.compile OPTIONS <flags> ;
 # The following adds objective-c support to darwin.
 # Thanks to http://thread.gmane.org/gmane.comp.lib.boost.build/13759
 
-type.register OBJECTIVE_C : m ;
-type.register OBJECTIVE_CPP : mm ;
-
 generators.register-c-compiler darwin.compile.m : OBJECTIVE_C : OBJ : <toolset>darwin ;
 generators.register-c-compiler darwin.compile.mm : OBJECTIVE_CPP : OBJ : <toolset>darwin ;
 
