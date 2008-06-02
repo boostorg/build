@@ -135,7 +135,6 @@ rule flags (
         }
     }
 
-
     if $(condition) && ! $(condition:G=) && ! $(hack-hack)
     {
         # We have condition in the form '<feature>', that is, without value.
@@ -153,8 +152,7 @@ rule flags (
         condition = [ normalize-condition $(condition) ] ;
     }
 
-    add-flag $(rule-or-module) : $(variable-name)
-      : $(condition) : $(values) ;
+    add-flag $(rule-or-module) : $(variable-name) : $(condition) : $(values) ;
 }
 
 
@@ -327,8 +325,8 @@ rule set-target-variables ( rule-or-module targets + : property-set )
     local settings = $(.stv.$(key)) ;
     if ! $(settings)
     {
-        settings = [
-          set-target-variables-aux $(rule-or-module) : $(property-set) ] ;
+        settings = [ set-target-variables-aux $(rule-or-module) :
+            $(property-set) ] ;
 
         if ! $(settings)
         {
