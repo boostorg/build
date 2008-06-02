@@ -68,7 +68,7 @@ rule abbreviate ( string )
     # Anything less than 4 characters gets no abbreviation.
     else if ! [ MATCH (....) : $(string) ]
     {
-        $(.abbreviated-$(string)) = $(string) ;
+        .abbreviated-$(string) = $(string) ;
         return $(string) ;
     }
     else
@@ -101,7 +101,7 @@ rule abbreviate ( string )
         # Glue the initial character back on to the front.
         s2 = $(s1[1])$(s2) ;
 
-        $(.abbreviated-$(string)) = $(s2) ;
+        .abbreviated-$(string) = $(s2) ;
         return $(s2) ;
     }
 }
