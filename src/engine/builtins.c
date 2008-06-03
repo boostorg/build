@@ -1846,9 +1846,80 @@ bjam_backtrace(PyObject* self, PyObject *args)
 #endif
 
 #ifdef HAVE_POPEN
+
 #if defined(_MSC_VER) || defined(__BORLANDC__)
-    #define popen _popen
+    #define popen windows_popen_wrapper
     #define pclose _pclose
+
+    /*
+     * This wrapper is a workaround for a funny _popen() feature on Windows
+     * where it eats external quotes in some cases. The bug seems to be related
+     * to the quote stripping functionality used by the Windows cmd.exe
+     * interpreter when its /S is not specified.
+     *
+     * Cleaned up quote from the cmd.exe help screen as displayed on Windows XP
+     * SP3:
+     *
+     *   1. If all of the following conditions are met, then quote characters on
+     *      the command line are preserved:
+     *
+     *       - no /S switch
+     *       - exactly two quote characters
+     *       - no special characters between the two quote characters, where
+     *         special is one of: &<>()@^|
+     *       - there are one or more whitespace characters between the two quote
+     *         characters
+     *       - the string between the two quote characters is the name of an
+     *         executable file.
+     *
+     *   2. Otherwise, old behavior is to see if the first character is a quote
+     *      character and if so, strip the leading character and remove the last
+     *      quote character on the command line, preserving any text after the
+     *      last quote character.
+     *
+     * This causes some commands containing quotes not to be executed correctly.
+     * For example:
+     *
+     *   "\Long folder name\aaa.exe" --name="Jurko" --no-surname
+     *
+     * would get its outermost quotes stripped and would be executed as:
+     *
+     *   \Long folder name\aaa.exe" --name="Jurko --no-surname
+     *
+     * which would report an error about '\Long' not being a valid command.
+     *
+     * cmd.exe help seems to indicate it would be enough to add an extra space
+     * character in front of the command to avoid this but this does not work,
+     * most likely due to the shell first stripping all leading whitespace
+     * characters from the command.
+     *
+     * Solution implemented here is to quote the whole command in case it
+     * contains any quote characters. Note thought this will not work correctly
+     * should Windows ever 'fix' this feature.
+     *                                               (03.06.2008.) (Jurko)
+     */
+    static FILE * windows_popen_wrapper( char * command, char * mode )
+    {
+        int extra_command_quotes_needed = ( strchr( command, '"' ) != 0 );
+        string quoted_command;
+        FILE * result;
+
+        if ( extra_command_quotes_needed )
+        {
+            string_new( &quoted_command );
+            string_append( &quoted_command, "\"" );
+            string_append( &quoted_command, command );
+            string_append( &quoted_command, "\"" );
+            command = quoted_command.value;
+        }
+
+        result = _popen( command, "r" );
+
+        if ( extra_command_quotes_needed )
+            string_free( &quoted_command );
+
+        return result;
+    }
 #endif
 
 LIST *builtin_shell( PARSE *parse, FRAME *frame )
