@@ -494,6 +494,7 @@ builtin_echo(
 {
 	list_print( lol_get( frame->args, 0 ) );
 	printf( "\n" );
+    fflush( stdout );
 	return L0;
 }
 
