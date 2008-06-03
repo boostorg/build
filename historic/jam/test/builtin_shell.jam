@@ -2,6 +2,20 @@
 #~ Distributed under the Boost Software License, Version 1.0.
 #~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
+# TODO: Here we should test for the Windows popen() command unquoting bug but
+# that test will have to wait until a better testing framework is implemented.
+# To reproduce the bug try executing any command with its first parameter quoted
+# and containing spaces and having at least one other quote in the command
+# string.
+#
+# For example:
+#
+#   "\Long folder name\aaa.exe" --name="Jurko" --no-surname
+#
+# would get its outermost quotes stripped and would be executed as:
+#
+#   \Long folder name\aaa.exe" --name="Jurko --no-surname
+
 ECHO --- Testing SHELL builtin... ;
 
 local c = "date" ;
