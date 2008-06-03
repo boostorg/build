@@ -1881,13 +1881,16 @@ LIST *builtin_shell( PARSE *parse, FRAME *frame )
         }
     }
 
-    string_new( &s );
+    /* The following fflush() call seems to be indicated as a workaround for
+       popen() bug on POSIX implementations realted to synhronizing input stream
+       positions for the called and the calling process. */
+    fflush( NULL );
 
-    fflush(NULL);
-
-    p = popen(command->string, "r");
+    p = popen( command->string, "r" );
     if ( p == NULL )
         return L0;
+
+    string_new( &s );
 
     while ( (ret = fread(buffer, sizeof(char), sizeof(buffer)-1, p)) > 0 )
     {
@@ -1898,7 +1901,7 @@ LIST *builtin_shell( PARSE *parse, FRAME *frame )
         }
     }
 
-    exit_status = pclose(p);
+    exit_status = pclose( p );
 
     /* The command output is returned first. */
     result = list_new( L0, newstr(s.value) );
@@ -1907,7 +1910,7 @@ LIST *builtin_shell( PARSE *parse, FRAME *frame )
     /* The command exit result next. */
     if ( exit_status_opt )
     {
-        sprintf (buffer, "%d", exit_status);
+        sprintf( buffer, "%d", exit_status );
         result = list_new( result, newstr( buffer ) );
     }
 
