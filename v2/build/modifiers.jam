@@ -45,7 +45,7 @@ class modifier : generator
     # Wraps the generation of the target to call before and after rules to
     # affect the real target.
     #
-    rule run ( project name ? : property-set : sources + :  multiple ? )
+    rule run ( project name ? : property-set : sources + )
     {
         local result ;
         local current-target = $(project)^$(name) ;
@@ -54,24 +54,20 @@ class modifier : generator
             # Before modifications...
             local project_ =
                 [ modify-project-before
-                    $(project) $(name) : $(property-set) : $(sources) : $(multiple) ] ;
+                    $(project) $(name) : $(property-set) : $(sources) ] ;
             local name_ =
                 [ modify-name-before
-                    $(project) $(name) : $(property-set) : $(sources) : $(multiple) ] ;
+                    $(project) $(name) : $(property-set) : $(sources) ] ;
             local property-set_ =
                 [ modify-properties-before
-                    $(project) $(name) : $(property-set) : $(sources) : $(multiple) ] ;
+                    $(project) $(name) : $(property-set) : $(sources) ] ;
             local sources_ =
                 [ modify-sources-before
-                    $(project) $(name) : $(property-set) : $(sources) : $(multiple) ] ;
-            local multiple_ =
-                [ modify-multiple-before
-                    $(project) $(name) : $(property-set) : $(sources) : $(multiple) ] ;
+                    $(project) $(name) : $(property-set) : $(sources) ] ;
             project = $(project_) ;
             name = $(name_) ;
             property-set = $(property-set_) ;
             sources = $(sources_) ;
-            multiple = $(multiple_) ;
 
             # Generate the real target...
             local target-type-p =
@@ -79,7 +75,7 @@ class modifier : generator
             self.targets-in-progress += $(current-target) ;
             result =
                 [ generators.construct $(project) $(name)
-                    : $(target-type-p:G=) $(multiple)
+                    : $(target-type-p:G=)
                     : $(property-set)
                     : $(sources) ] ;
             self.targets-in-progress = $(self.targets-in-progress[1--2]) ;
@@ -89,38 +85,32 @@ class modifier : generator
                 [ modify-target-after $(result)
                     : $(project) $(name)
                     : $(property-set)
-                    : $(sources)
-                    : $(multiple) ] ;
+                    : $(sources) ] ;
         }
         return $(result) ;
     }
 
-    rule modify-project-before ( project name ? : property-set : sources + :  multiple ? )
+    rule modify-project-before ( project name ? : property-set : sources + )
     {
         return $(project) ;
     }
 
-    rule modify-name-before ( project name ? : property-set : sources + :  multiple ? )
+    rule modify-name-before ( project name ? : property-set : sources + )
     {
         return $(name) ;
     }
 
-    rule modify-properties-before ( project name ? : property-set : sources + :  multiple ? )
+    rule modify-properties-before ( project name ? : property-set : sources + )
     {
         return $(property-set) ;
     }
 
-    rule modify-sources-before ( project name ? : property-set : sources + :  multiple ? )
+    rule modify-sources-before ( project name ? : property-set : sources + )
     {
         return $(sources) ;
     }
 
-    rule modify-multiple-before ( project name ? : property-set : sources + :  multiple ? )
-    {
-        return $(multiple) ;
-    }
-
-    rule modify-target-after ( target : project name ? : property-set : sources + :  multiple ? )
+    rule modify-target-after ( target : project name ? : property-set : sources + )
     {
         return $(target) ;
     }
@@ -170,7 +160,7 @@ class name-modifier : modifier
 
     # Modifies the name, by cloning the target with the new name.
     #
-    rule modify-target-after ( target : project name ? : property-set : sources + :  multiple ? )
+    rule modify-target-after ( target : project name ? : property-set : sources + )
     {
         local result = $(target) ;
 
