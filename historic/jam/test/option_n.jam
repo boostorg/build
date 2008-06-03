@@ -21,7 +21,7 @@ echo [subtest_b] 1
 echo [subtest_b] 2
     
 ...updated 2 targets...
-" : (==) : [ SHELL "$(ARGV[1]) -f option_n.jam -sBJAM_SUBTEST=1 -n" ] ;
+" : (==) : [ SHELL "\"$(ARGV[1])\" -f option_n.jam -sBJAM_SUBTEST=1 -n" ] ;
 }
 else
 {

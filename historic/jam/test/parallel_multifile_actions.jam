@@ -16,7 +16,7 @@ if ! $(BJAM_SUBTEST)
 .use.2 u2.user
 004
 ...updated 4 targets...
-" : (==) : [ SHELL "$(ARGV[1]) -f parallel_multifile_actions.jam -sBJAM_SUBTEST=1 -j2" ] ;
+" : (==) : [ SHELL "\"$(ARGV[1])\" -f parallel_multifile_actions.jam -sBJAM_SUBTEST=1 -j2" ] ;
 }
 else
 {

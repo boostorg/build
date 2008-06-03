@@ -6,12 +6,12 @@ if ! $(BJAM_SUBTEST)
 {
     ECHO --- Testing \"actions status results\"... ;
 
-    assert "" 0 : (==) : [ SHELL "$(ARGV[1]) -f action_status.jam -sBJAM_SUBTEST=1" : exit-status : no-output ] ;
+    assert "" 0 : (==) : [ SHELL "\"$(ARGV[1])\" -f action_status.jam -sBJAM_SUBTEST=1" : exit-status : no-output ] ;
     if $(NT)
     {
-        assert "" 0 : (==) : [ SHELL "$(ARGV[1]) -f action_status.jam -sBJAM_SUBTEST=1 \"-sACTION=;\"" : exit-status : no-output ] ;
+        assert "" 0 : (==) : [ SHELL "\"$(ARGV[1])\" -f action_status.jam -sBJAM_SUBTEST=1 \"-sACTION=;\"" : exit-status : no-output ] ;
     }
-    assert "" 0 : (!=) : [ SHELL "$(ARGV[1]) -f action_status.jam -sBJAM_SUBTEST=1 -sACTION=invalid" : exit-status : no-output ] ;
+    assert "" 0 : (!=) : [ SHELL "\"$(ARGV[1])\" -f action_status.jam -sBJAM_SUBTEST=1 -sACTION=invalid" : exit-status : no-output ] ;
 }
 else
 {
