@@ -34,6 +34,7 @@ import path ;
 import feature ;
 import set ;
 import builtin ;
+import version ;
 
 
 # Make this module a project.
@@ -133,7 +134,7 @@ local rule shell-cmd ( cmd )
 # Try to identify Cygwin symlinks. Invoking such a file directly as an NT
 # executable from a native Windows build of bjam would be fatal to the bjam
 # process. One /can/ invoke them through sh.exe or bash.exe, if you can prove
-# that those aren't also symlinks ;-)
+# that those aren't also symlinks. ;-)
 #
 # If a symlink is found returns non-empty; we try to extract the target of the
 # symlink from the file and return that.
@@ -145,7 +146,7 @@ local rule is-cygwin-symlink ( path )
 
     # Look for a file with the given path having the S attribute set, as cygwin
     # symlinks do. /-C means "do not use thousands separators in file sizes."
-    local dir-listing = [ shell-cmd "DIR /-C /A:S "$(path) ] ;
+    local dir-listing = [ shell-cmd "DIR /-C /A:S \""$(path)"\"" ] ;
 
     if $(dir-listing)
     {
@@ -207,12 +208,12 @@ local rule invokes-cygwin-symlink ( cmd )
     {
         dirs = . [ os.executable-path ] ;
     }
-    local base = [ default-extension $(cmd:D=) : .exe .bat ] ;
+    local base = [ default-extension $(cmd:D=) : .exe .cmd .bat ] ;
     local paths = [ GLOB $(dirs) : $(base) ] ;
     if $(paths)
     {
-        # Make sure we didn't find a Cygwin symlink.  Invoking such a
-        # file as an NT executable will be fatal to the bjam process.
+        # Make sure we have not run into a Cygwin symlink. Invoking such a file
+        # as an NT executable would be fatal for the bjam process.
         return [ is-cygwin-symlink $(paths[1]) ] ;
     }
 }
@@ -453,7 +454,7 @@ local rule probe ( python-cmd )
         debug-message If you intend to target a Cygwin build of Python, please ;
         debug-message replace the path to the link with the path to a real executable ;
         debug-message (guessing: \"$(skip-symlink)\") "in" your 'using python' line ;
-        debug-message "in" user-config.jam or site-config.jam.  Don't forget to escape ;
+        debug-message "in" user-config.jam or site-config.jam. Do not forget to escape ;
         debug-message backslashes ;
         debug-message -------------------------------------------------------------------- ;
     }
@@ -474,6 +475,14 @@ local rule probe ( python-cmd )
         }
 
         # Invoke Python and ask it for all those values.
+        if [ version.check-jam-version 3 1 17 ] || ( [ os.name ] != NT )
+        {
+            # Prior to version 3.1.17 Boost Jam's SHELL command did not support
+            # quoted commands correctly on Windows. This means that on that
+            # platform we do not support using a Python command interpreter
+            # executable whose path contains a space character.
+            python-cmd = \"$(python-cmd)\" ;
+        }
         local full-cmd =
             $(python-cmd)" -c \"from sys import *; print '"$(format:J=\\n)"' % ("$(exprs:J=,)")\"" ;
 
