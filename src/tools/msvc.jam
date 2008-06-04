@@ -123,6 +123,13 @@ rule init (
     #       Global setup command to invoke before running any of the msvc tools.
     #     It will be passed additional option parameters depending on the actual
     #     target platform.
+    #
+    #   <setup-amd64>
+    #   <setup-i386>
+    #   <setup-ia64>
+    #       Platform specific setup command to invoke before running any of the
+    #     msvc tools used when builing a target for a specific platform, e.g.
+    #     when building a 32 or 64 bit executable.
     : options *
 )
 {
@@ -177,6 +184,20 @@ rule configure ( version ? : options * )
 .cpu-arch-ia64 =
     <architecture>ia64/<address-model>
     <architecture>ia64/<address-model>64 ;
+
+
+# Locates the requested setup script under the given folder and returns its full
+# path or nothing in case the script can not be found. In case multiple scripts
+# are found only the first one is returned.
+#
+local rule locate-default-setup ( command : parent : setup-name )
+{
+    local result = [ GLOB $(command) $(parent) : $(setup-name) ] ;
+    if $(result[1])
+    {
+        return $(result[1]) ;
+    }
+}
 
 
 local rule configure-really ( version ? : options * )
@@ -271,9 +292,15 @@ local rule configure-really ( version ? : options * )
 
         local below-8.0 = [ MATCH ^([67]\\.) : $(version) ] ;
 
-        local cpu = i386 ;
+        local cpu = i386 amd64 ia64 ;
+        if $(below-8.0)
+        {
+            cpu = i386 ;
+        }
 
-        local setup ;
+        local setup-amd64 ;
+        local setup-i386 ;
+        local setup-ia64 ;
 
         if $(command)
         {
@@ -290,51 +317,66 @@ local rule configure-really ( version ? : options * )
             parent = [ path.parent $(parent) ] ;
             parent = [ path.native $(parent) ] ;
 
-            # Setup will be used if the script name has been specified. If setup
-            # is not specified, a default script will be used instead.
-            setup = [ feature.get-values <setup> : $(options) ] ;
+            # Setup will be used if the command name has been specified. If
+            # setup is not specified explicitly then a default setup script will
+            # be used instead. Setup scripts may be global or arhitecture/
+            # /platform/cpu specific. Setup options are used only in case of
+            # global setup scripts.
+            
+            # Default setup scripts provided with different VC distributions:
+            #
+            #   VC 7.1 had only the vcvars32.bat script specific to 32 bit i386
+            # builds. It was located in the bin folder for the regular version
+            # and in the root folder for the free VC 7.1 tools.
+            #
+            #   Later 8.0 & 9.0 versions introduce separate platform specific
+            # vcvars*.bat scripts (e.g. 32 bit, 64 bit AMD or 64 bit Itanium)
+            # located in or under the bin folder. Most also include a global
+            # vcvarsall.bat helper script located in the root folder which runs
+            # one of the aforementioned vcvars*.bat scripts based on the options
+            # passed to it. So far only the version coming with some PlatformSDK
+            # distributions does not include this top level script but to
+            # support those we need to fall back to using the worker scripts
+            # directly in case the top level script can not be found.
 
-            if ! $(setup)
+            local global-setup = [ feature.get-values <setup> : $(options) ] ;
+            global-setup = $(global-setup[1]) ;
+            if ! $(below-8.0)
             {
-                if $(below-8.0)
-                {
-                    setup ?= vcvars32.bat ;
-                }
-                else
-                {
-                    setup ?= vcvarsall.bat ;
-                }
-
-                # The vccars32.bat is actually in "bin" directory except for
-                # free VC7.1 tools.
-                setup = [ GLOB $(command) $(parent) : $(setup) ] ;
+                global-setup ?= [ locate-default-setup $(command) : $(parent) : vcvarsall.bat ] ;
             }
 
-            local setup-option ;
+            local default-setup-amd64 = vcvarsx86_amd64.bat ;
+            local default-setup-i386  = vcvars32.bat ;
+            local default-setup-ia64  = vcvarsx86_ia64.bat ;
 
-            if $(setup)
+            # http://msdn2.microsoft.com/en-us/library/x4d2c09s(VS.80).aspx and
+            # http://msdn2.microsoft.com/en-us/library/x4d2c09s(vs.90).aspx
+            # mention an x86_IPF option, that seems to be a documentation bug
+            # and x86_ia64 is the correct option.
+            local default-global-setup-options-amd64 = x86_amd64 ;
+            local default-global-setup-options-i386  = x86 ;
+            local default-global-setup-options-ia64  = x86_ia64 ;
+
+            # When using 64-bit Windows, and targeting 64-bit, it is possible to
+            # use a native 64-bit compiler, selected by the "amd64" & "ia64"
+            # parameters to vcvarsall.bat. There are two variables we can use --
+            # PROCESSOR_ARCHITECTURE and PROCESSOR_IDENTIFIER. The first is
+            # 'x86' when running 32-bit Windows, no matter which processor is
+            # used, and 'AMD64' on 64-bit windows on x86 (either AMD64 or EM64T)
+            # Windows.
+            #
+            if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_ARCHITECTURE ] ]
             {
-                if ! $(below-8.0)
-                {
-                    cpu = i386 amd64 ia64 ;
-                    # Whereas http://msdn2.microsoft.com/en-us/library/x4d2c09s(VS.80).aspx or
-                    # http://msdn2.microsoft.com/en-us/library/x4d2c09s(vs.90).aspx
-                    # say about x86_IPF, that seem to be doc bug,
-                    # and x86_ia64 is right one.
-                    setup-option = x86 x86_amd64 x86_ia64 ;
-
-                    # When using 64-bit Windows, and targeting 64-bit, it's
-                    # possible to use native 64-bit compiler, which is selected
-                    # by the "amd64" parameter to vcvarsall.bat. There are two
-                    # variables we can use -- PROCESSOR_ARCHITECTURE and
-                    # PROCESSOR_IDENTIFIER. The first is 'x86' when running
-                    # 32-bit windows, no matter what processor is, and 'AMD64'
-                    # on 64-bit windows on x86 (either AMD64 or EM64T) windows.
-                    if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_ARCHITECTURE ] ]
-                    {
-                        setup-option = x86 amd64 x86_ia64 ;
-                    }
-                }
+                default-global-setup-options-amd64 = amd64 ;
+            }
+            # TODO: The same 'native compiler usage' should be implemented for
+            # the Itanium platform by using the "ia64" parameter. For this
+            # though we need someone with access to this platform who can find
+            # out how to correctly detect this case.
+            else if $(somehow-detect-the-itanium-platform)
+            {
+                default-global-setup-options-ia64 = ia64 ;
             }
 
             local setup-prefix = "call " ;
@@ -345,12 +387,39 @@ local rule configure-really ( version ? : options * )
                 setup-suffix = " >nul \"&&\" " ;
             }
 
-            # Cygwin to Windows path translation.
-            setup = "\""$(setup[1]:W)"\"" ;
+            for local c in $(cpu)
+            {
+                local setup-options ;
 
-            # Append setup options to the setup name and add the final setup
-            # prefix & suffix.
-            setup = $(setup-prefix)$(setup)" "$(setup-option:E="")$(setup-suffix) ;
+                setup-$(c) = [ feature.get-values <setup-$(c)> : $(options) ] ;
+
+                if ! $(setup-$(c))-is-defined
+                {
+                    if $(global-setup)-is-defined
+                    {
+                        setup-$(c) = $(global-setup) ;
+                        
+                        # If needed we can easily add using configuration flags
+                        # here for overriding which options get passed to the
+                        # global setup command for which target platform:
+                        # setup-options = [ feature.get-values <setup-options-$(c)> : $(options) ] ;
+
+                        setup-options ?= default-global-setup-options-$(c) ;
+                    }
+                    else
+                    {
+                        setup-$(c) = [ locate-default-setup $(command) : $(parent) : $(default-setup-$(c)) ] ;
+                    }
+                }
+
+                # Cygwin to Windows path translation.
+                setup-$(c) = "\""$(setup-$(c):W)"\"" ;
+
+                # Append setup options to the setup name and add the final setup
+                # prefix & suffix.
+                setup-options ?= "" ;
+                setup-$(c) = $(setup-prefix)$(setup-$(c):J=" ")" "$(setup-options:J=" ")$(setup-suffix) ;
+            }
         }
 
         # Get tool names (if any) and finish setup.
@@ -377,45 +446,41 @@ local rule configure-really ( version ? : options * )
 
         local cc-filter = [ feature.get-values <compiler-filter> : $(options) ] ;
 
-        # Setup script is not required in some configurations.
-        setup ?= "" ;
-
-        for local i in 1 2 3
+        for local c in $(cpu)
         {
-            local c = $(cpu[$(i)]) ;
-            if $(c)
+            # Setup script is not required in some configurations.
+            setup-$(c) ?= "" ;
+
+            local cpu-conditions = $(conditions)/$(.cpu-arch-$(c)) ;
+
+            if $(.debug-configuration)
             {
-                local cpu-conditions = $(conditions)/$(.cpu-arch-$(c)) ;
-
-                if $(.debug-configuration)
+                for local cpu-condition in $(cpu-conditions)
                 {
-                    for local cpu-condition in $(cpu-conditions)
-                    {
-                        ECHO "msvc: condition: '$(cpu-condition)', setup: '$(setup[$(i)]:E="")'" ;
-                    }
+                    ECHO "msvc: condition: '$(cpu-condition)', setup: '$(setup-$(c))'" ;
                 }
+            }
 
-                toolset.flags msvc.compile .CC  $(cpu-conditions) : $(setup[$(i)])$(compiler) /Zm800 -nologo ;
-                toolset.flags msvc.compile .RC  $(cpu-conditions) : $(setup[$(i)])$(resource-compiler) ;
-                toolset.flags msvc.compile .ASM $(cpu-conditions) : $(setup[$(i)])$(assembler) ;
-                toolset.flags msvc.link    .LD  $(cpu-conditions) : $(setup[$(i)])$(linker) /NOLOGO /INCREMENTAL:NO ;
-                toolset.flags msvc.archive .LD  $(cpu-conditions) : $(setup[$(i)])$(linker) /lib /NOLOGO  ;
-                toolset.flags msvc.compile .IDL $(cpu-conditions) : $(setup[$(i)])$(idl-compiler) ;
-                toolset.flags msvc.compile .MC  $(cpu-conditions) : $(setup[$(i)])$(mc-compiler) ;
+            toolset.flags msvc.compile .CC  $(cpu-conditions) : $(setup-$(c))$(compiler) /Zm800 -nologo ;
+            toolset.flags msvc.compile .RC  $(cpu-conditions) : $(setup-$(c))$(resource-compiler) ;
+            toolset.flags msvc.compile .ASM $(cpu-conditions) : $(setup-$(c))$(assembler) ;
+            toolset.flags msvc.link    .LD  $(cpu-conditions) : $(setup-$(c))$(linker) /NOLOGO /INCREMENTAL:NO ;
+            toolset.flags msvc.archive .LD  $(cpu-conditions) : $(setup-$(c))$(linker) /lib /NOLOGO  ;
+            toolset.flags msvc.compile .IDL $(cpu-conditions) : $(setup-$(c))$(idl-compiler) ;
+            toolset.flags msvc.compile .MC  $(cpu-conditions) : $(setup-$(c))$(mc-compiler) ;
 
-                if ! [ os.name ] in NT
-                {
-                    toolset.flags msvc.link .MT $(cpu-conditions) : $(setup[$(i)])$(manifest-tool) -nologo ;
-                }
-                else
-                {
-                    toolset.flags msvc.link .MT $(cpu-conditions) : $(manifest-tool) -nologo ;
-                }
+            if ! [ os.name ] in NT
+            {
+                toolset.flags msvc.link .MT $(cpu-conditions) : $(setup-$(c))$(manifest-tool) -nologo ;
+            }
+            else
+            {
+                toolset.flags msvc.link .MT $(cpu-conditions) : $(manifest-tool) -nologo ;
+            }
 
-                if $(cc-filter)
-                {
-                    toolset.flags msvc .CC.FILTER $(cpu-conditions) : "|" $(cc-filter) ;
-                }
+            if $(cc-filter)
+            {
+                toolset.flags msvc .CC.FILTER $(cpu-conditions) : "|" $(cc-filter) ;
             }
         }
         # Set version-specific flags.
