@@ -88,23 +88,42 @@ nl = "
 #
 # Note: for free VC7.1 tools, we don't correctly find vcvars32.bar when user
 # explicitly provides a path.
+#
 rule init (
-    version ? # the msvc version which is being configured. When omitted
-            # the tools invoked when no explicit version is given will be configured.
+    # The msvc version being configured. When omitted the tools invoked when no
+    # explicit version is given will be configured.
+    version ? 
+
+    # The command used to invoke the compiler. If not specified:
+    #   - if version is given, default location for that version will be
+    #     searched
+    #
+    #   - if version is not given, default locations for MSVC 9.0, 8.0, 7.1, 7.0
+    #     and 6.* will be searched
+    #
+    #   - if compiler is not found in the default locations, PATH will be
+    #     searched.
     : command *
-    # the command to invoke the compiler. If not specified:
-    #       - if version is given, default location for that version will be searched
+
+    # Options can include:
     #
-    #       - if version is not given, default locations for 7.1, 7.0 and 6.* will
-    #              be searched
-    #
-    #       - if compiler is not found in default locations, PATH will be searched.
-    : options *
-    # options can include <setup>, <compiler>, <assembler>, <linker> and <resource-compiler>
+    #   <assembler>
+    #   <compiler>
+    #   <idl-compiler>
+    #   <linker>
+    #   <mc-compiler>
+    #   <resource-compiler>
+    #       Exact tool names to be used by this msvc toolset configuration.
     #
     #   <compiler-filter>
-    #       Command to pipe the output of running the compiler. For example
-    #       to pass the output to STLfilt.
+    #       Command through which to pipe the output of running the compiler.
+    #     For example to pass the output to STLfilt.
+    #
+    #   <setup>
+    #       Global setup command to invoke before running any of the msvc tools.
+    #     It will be passed additional option parameters depending on the actual
+    #     target platform.
+    : options *
 )
 {
     if $(command)
@@ -118,6 +137,7 @@ rule init (
 
 # 'configure' is a newer version of 'init'. The parameter 'command' is passed as
 # a part of the 'options' list.
+#
 rule configure ( version ? : options * )
 {
     switch $(version)
@@ -143,25 +163,25 @@ rule configure ( version ? : options * )
 }
 
 
-# Supported CPU architectures
-cpu-arch-i386 =
+# Supported CPU architectures.
+.cpu-arch-i386 =
     <architecture>/<address-model>
     <architecture>/<address-model>32
     <architecture>x86/<address-model>
     <architecture>x86/<address-model>32 ;
 
-cpu-arch-amd64 =
+.cpu-arch-amd64 =
     <architecture>/<address-model>64
     <architecture>x86/<address-model>64 ;
 
-cpu-arch-ia64 =
+.cpu-arch-ia64 =
     <architecture>ia64/<address-model>
     <architecture>ia64/<address-model>64 ;
 
 
 local rule configure-really ( version ? : options * )
 {
-    # If no version supplied use the default configuration. Note that condition
+    # Note that if no version supplied uses the default configuration condition
     # remains versionless.
     local v = $(version) ;
     if ! $(v)
@@ -185,37 +205,37 @@ local rule configure-really ( version ? : options * )
     # Check whether selected configuration is used already
     if $(version) in [ $(.versions).used ]
     {
-        # Allow multiple 'toolset.usage' calls for the same configuration
-        # if the identical sets of options are used
+        # Allow multiple 'toolset.using' calls for the same configuration if the
+        # identical sets of options are used.
         if $(options) && ( $(options) != [ $(.versions).get $(version) : options ] )
         {
-            errors.error "msvc: the toolset version '$(version)' is configured already" ;
+            errors.error "msvc: the toolset version '$(version)' already configured." ;
         }
     }
     else
     {
-        # Register a new configuration
+        # Register a new configuration.
         $(.versions).register $(version) ;
 
-        # Add user-supplied to auto-detected options
+        # Add user-supplied to auto-detected options.
         options = [ $(.versions).get $(version) : options ] $(options) ;
 
         # Mark the configuration as 'used'.
         $(.versions).use $(version) ;
 
-        # Generate condition and save it
-        local condition = [ common.check-init-parameters msvc : version $(v) ] ;
+        # Generate conditions and save them.
+        local conditions = [ common.check-init-parameters msvc : version $(v) ] ;
 
-        $(.versions).set $(version) : condition : $(condition) ;
+        $(.versions).set $(version) : conditions : $(conditions) ;
 
         local command = [ feature.get-values <command> : $(options) ] ;
 
         # If version is specified, we try to search first in default paths, and
         # only then in PATH.
-        command = [ common.get-invocation-command msvc : cl.exe : $(command)
-          : [ default-paths $(version) ] : $(version) ] ;
+        command = [ common.get-invocation-command msvc : cl.exe : $(command) :
+            [ default-paths $(version) ] : $(version) ] ;
 
-        common.handle-options msvc : $(condition) : $(command) : $(options) ;
+        common.handle-options msvc : $(conditions) : $(command) : $(options) ;
 
         if ! $(version)
         {
@@ -254,10 +274,16 @@ local rule configure-really ( version ? : options * )
         local cpu = i386 ;
 
         local setup ;
-        local setup-option ;
 
         if $(command)
         {
+            # TODO: Note that if we specify a non-existant toolset version then
+            # this rule may find and use a corresponding compiler executable
+            # belonging to an incorrect toolset version. For example, if you
+            # have only MSVC 7.1 installed and specify you want Boost Build to
+            # use MSVC 9.0, then you want Boost Build to report an error but
+            # this may cause it to silently use the MSVC 7.1 compiler even
+            # though it thinks its using the msvc 9.0 toolset.
             command = [ common.get-absolute-tool-path $(command[-1]) ] ;
 
             local parent = [ path.make $(command) ] ;
@@ -284,11 +310,10 @@ local rule configure-really ( version ? : options * )
                 setup = [ GLOB $(command) $(parent) : $(setup) ] ;
             }
 
+            local setup-option ;
+
             if $(setup)
             {
-                # Note Cygwin to Windows translation.
-                setup = "\""$(setup[1]:W)"\"" ;
-
                 if ! $(below-8.0)
                 {
                     cpu = i386 amd64 ia64 ;
@@ -311,21 +336,22 @@ local rule configure-really ( version ? : options * )
                     }
                 }
             }
+
+            local setup-prefix = "call " ;
+            local setup-suffix = " >nul"$(nl) ;
+            if ! [ os.name ] in NT
+            {
+                setup-prefix = "cmd.exe /S /C call " ;
+                setup-suffix = " >nul \"&&\" " ;
+            }
+
+            # Cygwin to Windows path translation.
+            setup = "\""$(setup[1]:W)"\"" ;
+
+            # Append setup options to the setup name and add the final setup
+            # prefix & suffix.
+            setup = $(setup-prefix)$(setup)" "$(setup-option:E="")$(setup-suffix) ;
         }
-
-        local prefix = "call " ;
-        local suffix = " >nul
-" ;
-        if ! [ os.name ] in NT
-        {
-            prefix = "cmd.exe /S /C call " ;
-            suffix = " >nul \"&&\" " ;
-        }
-
-        command = $(prefix)$(setup)" "$(setup-option:E="")$(suffix) ;
-
-        # Setup script is not required in some configurations.
-        command ?= "" ;
 
         # Get tool names (if any) and finish setup.
 
@@ -351,45 +377,49 @@ local rule configure-really ( version ? : options * )
 
         local cc-filter = [ feature.get-values <compiler-filter> : $(options) ] ;
 
+        # Setup script is not required in some configurations.
+        setup ?= "" ;
+
         for local i in 1 2 3
         {
             local c = $(cpu[$(i)]) ;
-
             if $(c)
             {
-                local cond = $(condition)/$(cpu-arch-$(c)) ;
+                local cpu-conditions = $(conditions)/$(.cpu-arch-$(c)) ;
 
                 if $(.debug-configuration)
                 {
-                    ECHO "msvc: condition: '$(cond)', "
-                        "command: '$(command[$(i)])'" ;
+                    for local cpu-condition in $(cpu-conditions)
+                    {
+                        ECHO "msvc: condition: '$(cpu-condition)', setup: '$(setup[$(i)]:E="")'" ;
+                    }
                 }
 
-                toolset.flags msvc.compile .CC  $(cond) : $(command[$(i)])$(compiler) /Zm800 -nologo ;
-                toolset.flags msvc.compile .RC  $(cond) : $(command[$(i)])$(resource-compiler) ;
-                toolset.flags msvc.compile .ASM $(cond) : $(command[$(i)])$(assembler) ;
-                toolset.flags msvc.link    .LD  $(cond) : $(command[$(i)])$(linker) /NOLOGO /INCREMENTAL:NO ;
-                toolset.flags msvc.archive .LD  $(cond) : $(command[$(i)])$(linker) /lib /NOLOGO  ;
-                toolset.flags msvc.compile .IDL $(cond) : $(command[$(i)])$(idl-compiler) ;
-                toolset.flags msvc.compile .MC  $(cond) : $(command[$(i)])$(mc-compiler) ;
+                toolset.flags msvc.compile .CC  $(cpu-conditions) : $(setup[$(i)])$(compiler) /Zm800 -nologo ;
+                toolset.flags msvc.compile .RC  $(cpu-conditions) : $(setup[$(i)])$(resource-compiler) ;
+                toolset.flags msvc.compile .ASM $(cpu-conditions) : $(setup[$(i)])$(assembler) ;
+                toolset.flags msvc.link    .LD  $(cpu-conditions) : $(setup[$(i)])$(linker) /NOLOGO /INCREMENTAL:NO ;
+                toolset.flags msvc.archive .LD  $(cpu-conditions) : $(setup[$(i)])$(linker) /lib /NOLOGO  ;
+                toolset.flags msvc.compile .IDL $(cpu-conditions) : $(setup[$(i)])$(idl-compiler) ;
+                toolset.flags msvc.compile .MC  $(cpu-conditions) : $(setup[$(i)])$(mc-compiler) ;
 
                 if ! [ os.name ] in NT
                 {
-                    toolset.flags msvc.link .MT $(cond) : $(command[$(i)])$(manifest-tool) -nologo ;
+                    toolset.flags msvc.link .MT $(cpu-conditions) : $(setup[$(i)])$(manifest-tool) -nologo ;
                 }
                 else
                 {
-                    toolset.flags msvc.link .MT $(cond) : $(manifest-tool) -nologo ;
+                    toolset.flags msvc.link .MT $(cpu-conditions) : $(manifest-tool) -nologo ;
                 }
 
                 if $(cc-filter)
                 {
-                    toolset.flags msvc .CC.FILTER $(cond) : "|" $(cc-filter) ;
+                    toolset.flags msvc .CC.FILTER $(cpu-conditions) : "|" $(cc-filter) ;
                 }
             }
         }
         # Set version-specific flags.
-        configure-version-specific msvc : $(version) : $(condition) ;
+        configure-version-specific msvc : $(version) : $(conditions) ;
     }
 }
 
@@ -416,10 +446,11 @@ cpu-type-itanium2 = itanium2 mckinley ;
 
 # Sets up flag definitions dependent on the compiler version used.
 # - 'version' is the version of compiler in N.M format.
-# - 'condition' is the property set to be used as condition for flag.
+# - 'conditions' is the property set to be used as flag conditions.
 # - 'toolset' is the toolset for which flag settings are to be defined.
 #   This makes the rule reusable for other msvc-option-compatible compilers.
-rule configure-version-specific ( toolset : version : condition )
+#
+rule configure-version-specific ( toolset : version : conditions )
 {
     toolset.push-checking-for-flags-module unchecked ;
     # Starting with versions 7.0, the msvc compiler have the /Zc:forScope and
@@ -429,19 +460,19 @@ rule configure-version-specific ( toolset : version : condition )
     # 7.* explicitly, or if the installation path contain 7.* (checked above).
     if ! [ MATCH ^(6\\.) : $(version) ]
     {
-        toolset.flags $(toolset).compile CFLAGS $(condition) : /Zc:forScope /Zc:wchar_t ;
-        toolset.flags $(toolset).compile.c++ C++FLAGS $(condition) : /wd4675 ;
-        # disable the function is deprecated warning
-        # Some version of msvc have a bug, that cause deprecation
-        # warning to be emitted even with /W0
-        toolset.flags $(toolset).compile CFLAGS $(condition)/<warnings>off : /wd4996 ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions) : /Zc:forScope /Zc:wchar_t ;
+        toolset.flags $(toolset).compile.c++ C++FLAGS $(conditions) : /wd4675 ;
+
+        # Explicitly disable the 'function is deprecated' warning. Some msvc
+        # versions have a bug, causing them to emit the deprecation warning even
+        # with /W0.
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/<warnings>off : /wd4996 ;
 
         if [ MATCH ^([78]\\.) : $(version) ]
         {
-          # 64-bit compatibility warning
-          # deprecated since 9.0, see
-          # http://msdn.microsoft.com/en-us/library/yt4xw8fh.aspx
-          toolset.flags $(toolset).compile CFLAGS $(condition)/<warnings>all : /Wp64 ;
+            # 64-bit compatibility warning deprecated since 9.0, see
+            # http://msdn.microsoft.com/en-us/library/yt4xw8fh.aspx
+            toolset.flags $(toolset).compile CFLAGS $(conditions)/<warnings>all : /Wp64 ;
         }
     }
 
@@ -452,41 +483,42 @@ rule configure-version-specific ( toolset : version : condition )
     if [ MATCH ^([67]) : $(version) ]
     {
         # 8.0 deprecates some of the options.
-        toolset.flags $(toolset).compile CFLAGS $(condition)/<optimization>speed $(condition)/<optimization>space : /Ogiy /Gs ;
-        toolset.flags $(toolset).compile CFLAGS $(condition)/<optimization>speed : /Ot ;
-        toolset.flags $(toolset).compile CFLAGS $(condition)/<optimization>space : /Os ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/<optimization>speed $(conditions)/<optimization>space : /Ogiy /Gs ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/<optimization>speed : /Ot ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/<optimization>space : /Os ;
 
-        toolset.flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set> : /GB ;
-        toolset.flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>i386 : /G3 ;
-        toolset.flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>i486 : /G4 ;
-        toolset.flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g5) : /G5 ;
-        toolset.flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g6) : /G6 ;
-        toolset.flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-i386)/<instruction-set>$(cpu-type-g7) : /G7 ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set> : /GB ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set>i386 : /G3 ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set>i486 : /G4 ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set>$(cpu-type-g5) : /G5 ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set>$(cpu-type-g6) : /G6 ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set>$(cpu-type-g7) : /G7 ;
 
         # Improve floating-point accuracy. Otherwise, some of C++ Boost's "math"
         # tests will fail.
-        toolset.flags $(toolset).compile CFLAGS $(condition) : /Op ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions) : /Op ;
 
         # 7.1 and below have single-threaded static RTL.
-        toolset.flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>off/<runtime-link>static/<threading>single : /ML ;
-        toolset.flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MLd ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>off/<runtime-link>static/<threading>single : /ML ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MLd ;
     }
     else
     {
         # 8.0 and above adds some more options.
-        toolset.flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set> : /favor:blend ;
-        toolset.flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-em64t) : /favor:EM64T ;
-        toolset.flags $(toolset).compile CFLAGS $(condition)/$(cpu-arch-amd64)/<instruction-set>$(cpu-type-amd64) : /favor:AMD64 ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set> : /favor:blend ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(cpu-type-em64t) : /favor:EM64T ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(cpu-type-amd64) : /favor:AMD64 ;
 
         # 8.0 and above only has multi-threaded static RTL.
-        toolset.flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>off/<runtime-link>static/<threading>single : /MT ;
-        toolset.flags $(toolset).compile CFLAGS $(condition)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MTd ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>off/<runtime-link>static/<threading>single : /MT ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MTd ;
     }
     toolset.pop-checking-for-flags-module ;
 }
 
 
 # Returns the default installation path for the given version.
+#
 local rule default-path ( version )
 {
     # Use auto-detected path if possible
@@ -526,6 +558,7 @@ local rule default-path ( version )
 
 # Returns either the default installation path (if 'version' is not empty) or
 # list of all known default paths (if no version is given)
+#
 rule default-paths ( version ? )
 {
     local possible-paths ;
@@ -548,8 +581,8 @@ rule default-paths ( version ? )
 
 # Declare generators.
 
-# Is it possible to combine these? Make the generators non-composing so that
-# they don't convert each source into a separate rsp file.
+# TODO: Is it possible to combine these? Make the generators non-composing so
+# that they do not convert each source into a separate .rsp file.
 generators.register-linker msvc.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>msvc ;
 generators.register-linker msvc.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB : <toolset>msvc ;
 
@@ -578,7 +611,7 @@ class msvc-pch-generator : pch-generator
 
     rule run-pch ( project name ? : property-set : sources * )
     {
-        # searching header and source file in the sources
+        # Searching header and source file in the sources.
         local pch-header ;
         local pch-source ;
         for local s in $(sources)
@@ -649,8 +682,8 @@ feature.feature debug-store : object database : propagated ;
 flags msvc.compile CFLAGS <optimization>speed : /O2 ;
 flags msvc.compile CFLAGS <optimization>space : /O1 ;
 
-flags msvc.compile CFLAGS $(cpu-arch-ia64)/<instruction-set>$(cpu-type-itanium) : /G1 ;
-flags msvc.compile CFLAGS $(cpu-arch-ia64)/<instruction-set>$(cpu-type-itanium2) : /G2 ;
+flags msvc.compile CFLAGS $(.cpu-arch-ia64)/<instruction-set>$(cpu-type-itanium) : /G1 ;
+flags msvc.compile CFLAGS $(.cpu-arch-ia64)/<instruction-set>$(cpu-type-itanium2) : /G2 ;
 
 flags msvc.compile CFLAGS <debug-symbols>on/<debug-store>object : /Z7 ;
 flags msvc.compile CFLAGS <debug-symbols>on/<debug-store>database : /Zi ;
@@ -841,6 +874,7 @@ rule link.dll ( targets + : sources * : properties * )
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
 }
 
+
 # Declare action for creating static libraries. If library exists, remove it
 # before adding files. See
 # http://article.gmane.org/gmane.comp.lib.boost.build/4241 for rationale.
@@ -960,6 +994,7 @@ actions compile.mc
 
 # Validates given path, registers found configuration and prints debug
 # information about it.
+#
 local rule register-configuration ( version : path ? )
 {
     if $(path)
