@@ -404,7 +404,7 @@ local rule configure-really ( version ? : options * )
                         # global setup command for which target platform:
                         # setup-options = [ feature.get-values <setup-options-$(c)> : $(options) ] ;
 
-                        setup-options ?= default-global-setup-options-$(c) ;
+                        setup-options ?= $(default-global-setup-options-$(c)) ;
                     }
                     else
                     {
