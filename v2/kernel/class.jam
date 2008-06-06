@@ -1,16 +1,16 @@
-# Copyright 2001, 2002, 2003 Dave Abrahams 
-# Copyright 2002, 2005 Rene Rivera 
-# Copyright 2002, 2003 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2001, 2002, 2003 Dave Abrahams
+# Copyright 2002, 2005 Rene Rivera
+# Copyright 2002, 2003 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Polymorphic class system built on top of core Jam facilities.
 #
 # Classes are defined by 'class' keywords::
 #
-#     class myclass ( arg1 )          
+#     class myclass
 #     {
-#         rule __init__ ( )          # constructor
+#         rule __init__ ( arg1 )     # constructor
 #         {
 #             self.attribute = $(arg1) ;
 #         }
@@ -35,7 +35,7 @@
 #
 # Derived class are created by mentioning base classes in the declaration::
 #
-#     class derived : myclass 
+#     class derived : myclass
 #     {
 #          rule __init__ ( arg )
 #          {
@@ -77,7 +77,7 @@ rule xinit ( instance : class )
     {
         __class__ = $(2) ;
         __name__ = $(1) ;
-    }    
+    }
 }
 
 
@@ -85,16 +85,16 @@ rule new ( class args * : * )
 {
     .next-instance ?= 1 ;
     local id = object($(class))@$(.next-instance) ;
-    
+
     xinit $(id) : $(class) ;
-    
+
     INSTANCE $(id) : class@$(class) ;
     IMPORT_MODULE $(id) : ;
     $(id).__init__ $(args) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
-    
+
     # bump the next unique object name
     .next-instance = [ numbers.increment $(.next-instance) ] ;
-    
+
     # Return the name of the new instance.
     return $(id) ;
 }
@@ -106,7 +106,7 @@ rule bases ( class )
     #{
     #    error class $(class) not defined ;
     #}
-    
+
     module class@$(class)
     {
         return $(__bases__) ;
@@ -121,7 +121,7 @@ rule is-derived ( class : bases + )
     #{
     #    error class(es) [ set.difference $(class) $(bases) : $(classes) ] not defined ;
     #}
-    
+
     local stack = $(class) ;
     local visited found ;
     while ( ! $(found) ) && $(stack)
@@ -132,7 +132,7 @@ rule is-derived ( class : bases + )
         {
             visited += $(top) ;
             stack += [ bases $(top) ] ;
-            
+
             if $(bases) in $(visited)
             {
                 found = true ;
@@ -147,7 +147,7 @@ rule is-derived ( class : bases + )
 #
 rule is-instance ( value )
 {
-    return [ MATCH "^(object\\()[^@]+\\)@.*" : $(value) ] ;        
+    return [ MATCH "^(object\\()[^@]+\\)@.*" : $(value) ] ;
 }
 
 
@@ -182,18 +182,18 @@ local rule __test__ ( )
     import errors : * ;
 
     # This will be the construction function for a class called 'myclass'.
-    class myclass 
+    class myclass
     {
-        import assert : nonempty-variable ;        
-        
+        import assert : nonempty-variable ;
+
         rule __init__ ( x_ * : y_ * )
-        {            
+        {
             # set some instance variables
             x = $(x_) ;
             y = $(y_) ;
             foo += 10 ;
         }
-        
+
         rule set-x ( newx * )
         {
             x = $(newx) ;
@@ -239,32 +239,32 @@ local rule __test__ ( )
         {
             return $(__class__) ;
         }
-        
+
         rule get-instance ( )
         {
             return $(__name__) ;
         }
-        
+
         rule invariant ( )
         {
             assert.equal 1 : 1 ;
-        }                
-        
+        }
+
         rule get-foo ( )
         {
             return $(foo) ;
-        }                        
+        }
     }
 #    class myclass ;
 
     class derived1 : myclass
-    {        
+    {
         rule __init__ ( z_ )
         {
             myclass.__init__ $(z_) : X ;
-            z = $(z_) ;            
+            z = $(z_) ;
         }
-        
+
         # override g
         rule g ( args * )
         {
@@ -285,24 +285,24 @@ local rule __test__ ( )
         rule invariant2 ( )
         {
             assert.equal 2 : 2 ;
-        }                
-        
+        }
+
         # Check that 'nonempty-variable' visible in base class is visible here.
         rule invariant3 ( )
         {
             local v = 10 ;
             nonempty-variable v ;
-        }                
+        }
     }
 #    class derived1 : myclass ;
 
-    class derived2 : myclass 
+    class derived2 : myclass
     {
         rule __init__ ( )
-        {            
+        {
             myclass.__init__ 1 : 2 ;
         }
-        
+
         # override g
         rule g ( args * )
         {
@@ -319,10 +319,10 @@ local rule __test__ ( )
 
     class derived2a : derived2
     {
-        rule __init__ 
+        rule __init__
         {
             derived2.__init__ ;
-        }                
+        }
     }
 #    class derived2a : derived2 ;
 
@@ -353,7 +353,6 @@ local rule __test__ ( )
           ;
     }
 
-
     #try ;
     #{
     #    new bad_subclass ;
@@ -379,13 +378,13 @@ local rule __test__ ( )
     assert.result derived1.g : $(b).f ;
     assert.result derived2.g : $(c).f ;
     assert.result derived2.g : $(d).f ;
-    
+
     assert.result 10 : $(b).get-foo ;
-    
+
     $(a).invariant ;
     $(b).invariant2 ;
     $(b).invariant3 ;
-    
+
     # Check that the __class__ attribute is getting properly set.
     assert.result myclass : $(a).get-class ;
     assert.result derived1 : $(b).get-class ;
@@ -400,13 +399,12 @@ local rule __test__ ( )
     assert.result c.x : $(c).get-x ;
     assert.result d.x : $(d).get-x ;
 
-    class derived3 : derived1 derived2 
+    class derived3 : derived1 derived2
     {
         rule __init__ ( )
         {
         }
     }
-    
 
     assert.result : bases myclass ;
     assert.result myclass : bases derived1 ;
