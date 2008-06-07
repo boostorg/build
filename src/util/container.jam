@@ -153,8 +153,11 @@ class vector : node
         )
     {
         local left = $(self.value[1-$(index)]) ;
-        left = $(left[1--2]) ;
         local right = $(self.value[$(index)-]) ;
+        if $(right)-is-defined
+        {
+            left = $(left[1--2]) ;
+        }
         self.value = $(left) $(value) $(right) ;
     }
 
@@ -316,4 +319,22 @@ local rule __test__ ( )
 
     local v6 = [ new vector [ new vector 1 2 3 ] ] ;
     assert.true $(v6).equal [ new vector [ new vector 1 2 3 ] ] ;
+
+    local v7 = [ new vector 111 222 333 ] ;
+    $(v7).insert 4 : 444 ;
+    assert.result 111 222 333 444 : $(v7).get ;
+    $(v7).insert 999 : xxx ;
+    assert.result 111 222 333 444 xxx : $(v7).get ;
+
+    local v8 = [ new vector "" "" "" ] ;
+    assert.result 3 : $(v8).size ;
+    $(v8).insert 2 : 222 ;
+    assert.result 4 : $(v8).size ;
+    assert.result "" 222 "" "" : $(v8).get ;
+    $(v8).insert 999 : "" ;
+    assert.result 5 : $(v8).size ;
+    assert.result "" 222 "" "" "" : $(v8).get ;
+    $(v8).insert 999 : xxx ;
+    assert.result 6 : $(v8).size ;
+    assert.result "" 222 "" "" "" xxx : $(v8).get ;
 }
