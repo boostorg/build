@@ -165,7 +165,7 @@ rule result ( expected * : rule-name args * : * )
 # to the result of calling RULE-NAME with the given arguments. Note that rules
 # called this way may accept at most 8 parameters.
 #
-rule result-equal ( expected * : rule-name args * : * )
+rule result-set-equal ( expected * : rule-name args * : * )
 {
     local result ;
     module [ CALLER_MODULE ]
