@@ -25,7 +25,39 @@ local rule no-test-defined
     import modules ;
     if ! ( --quiet in [ modules.peek : ARGV ] )
     {
-        ECHO warning: no __test__ rule defined in module $(__module__) ;
+        ECHO warning: no __test__ rule defined in module $(.module-under-test) ;
+    }
+}
+
+
+# Runs internal Boost Build unit tests for the specified module. The module's
+# __test__ rule is executed in its own module to eliminate any inadvertent
+# effects of testing module dependencies (such as assert) on the module itself.
+#
+local rule run_test ( m )
+{
+    if ( ! $(m) in $(.tested) )  # Avoid recursive test invocations.
+        && ( ( --debug in $(argv) ) || ( --debug-module=$(m) in $(argv) ) )
+    {
+        .tested += $(m) ;
+        if ! ( --quiet in $(argv) )
+        {
+            ECHO testing module $(m)... ;
+        }
+
+        local test-module = __test-$(m)__ ;
+
+        IMPORT $(m) : [ RULENAMES $(m) ] : $(test-module) : [ RULENAMES $(m) ] ;
+        IMPORT $(m) : __test__ : $(test-module) : __test__ : LOCALIZE ;
+
+        # Set up the name of the module we are testing so that no-test-defined
+        # can find it.
+        poke $(test-module) : .module-under-test : $(m) ;
+
+        module $(test-module)
+        {
+            __test__ ;
+        }
     }
 }
 
@@ -163,31 +195,7 @@ rule load (
             local argv = [ peek : ARGV ] ;
             for local m in $(.untested)
             {
-                if ( ! $(m) in $(.tested) )  # Avoid recursive test invocations.
-                    && ( ( --debug in $(argv) ) || ( --debug-module=$(m) in $(argv) ) )
-                {
-                    .tested += $(m) ;
-                    if ! ( --quiet in $(argv) )
-                    {
-                        ECHO testing module $(m)... ;
-                    }
-
-                    # Import m's rules into __test-$(m)__ for easy access.
-                    IMPORT $(m) : [ RULENAMES $(m) ] : __test-$(m)__ : [ RULENAMES $(m) ] ;
-
-                    # Execute the module's __test__ rule in its own module to
-                    # eliminate the inadvertent effects of testing module
-                    # dependencies (such as assert) on the module itself.
-                    IMPORT $(m) : __test__ : __test-$(m)__ : __test__ : LOCALIZE ;
-
-                    module __test-$(m)__
-                    {
-                        # Set up the name of the module we're testing so that
-                        # no-test-defined can find it.
-                        __module__ = $(1) ;
-                        __test__ ;
-                    }
-                }
+                run_test $(m) ;
             }
             .untested = ;
         }
