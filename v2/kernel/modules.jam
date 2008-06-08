@@ -10,53 +10,48 @@
 # dependencies.
 .loading ?= ;
 
-# A list of modules needing to be tested via __test__ rule.
+# A list of modules needing to be tested using their __test__ rule.
 .untested ?= ;
 
-# A list of modules which have been tested via __test__.
+# A list of modules which have been tested using their __test__ rule.
 .tested ?= ;
-
-
-# Meant to be invoked from import when no __test__ rule is defined in the given
-# module.
-#
-local rule no-test-defined
-{
-    import modules ;
-    if ! ( --quiet in [ modules.peek : ARGV ] )
-    {
-        ECHO warning: no __test__ rule defined in module $(.module-under-test) ;
-    }
-}
 
 
 # Runs internal Boost Build unit tests for the specified module. The module's
 # __test__ rule is executed in its own module to eliminate any inadvertent
 # effects of testing module dependencies (such as assert) on the module itself.
 #
-local rule run_test ( m )
+local rule run-module-test ( m )
 {
-    if ( ! $(m) in $(.tested) )  # Avoid recursive test invocations.
+    local tested-modules = [ modules.peek modules : .tested ] ;
+
+    if ( ! $(m) in $(tested-modules) )  # Avoid recursive test invocations.
         && ( ( --debug in $(argv) ) || ( --debug-module=$(m) in $(argv) ) )
     {
-        .tested += $(m) ;
-        if ! ( --quiet in $(argv) )
+        modules.poke modules : .tested : $(tested-modules) $(m) ;
+
+        if ! ( __test__ in [ RULENAMES $(m) ] )
         {
-            ECHO testing module $(m)... ;
+            local argv = [ peek : ARGV ] ;
+            if ! ( --quiet in $(argv) ) && ( --debug-tests in $(argv) )
+            {
+                ECHO warning: no __test__ rule defined in module $(m) ;
+            }
         }
-
-        local test-module = __test-$(m)__ ;
-
-        IMPORT $(m) : [ RULENAMES $(m) ] : $(test-module) : [ RULENAMES $(m) ] ;
-        IMPORT $(m) : __test__ : $(test-module) : __test__ : LOCALIZE ;
-
-        # Set up the name of the module we are testing so that no-test-defined
-        # can find it.
-        poke $(test-module) : .module-under-test : $(m) ;
-
-        module $(test-module)
+        else
         {
-            __test__ ;
+            if ! ( --quiet in $(argv) )
+            {
+                ECHO testing module $(m)... ;
+            }
+
+            local test-module = __test-$(m)__ ;
+            IMPORT $(m) : [ RULENAMES $(m) ] : $(test-module) : [ RULENAMES $(m) ] ;
+            IMPORT $(m) : __test__ : $(test-module) : __test__ : LOCALIZE ;
+            module $(test-module)
+            {
+                __test__ ;
+            }
         }
     }
 }
@@ -143,7 +138,7 @@ rule load (
     {
         filename ?= $(module-name).jam ;
 
-        # Mark the module loaded so we don't try to load it recursively.
+        # Mark the module loaded so we do not try to load it recursively.
         .loaded += $(module-name) ;
 
         # Suppress tests if any module loads are already in progress.
@@ -152,7 +147,7 @@ rule load (
         # Push this module on the loading stack.
         .loading += $(module-name) ;
 
-        # Remember that it's untested.
+        # Remember that it is untested.
         .untested += $(module-name) ;
 
         # Insert the new module's __name__ and __file__ globals.
@@ -161,9 +156,6 @@ rule load (
 
         module $(module-name)
         {
-            # Prepare default behavior, in case no __test__ is defined.
-            IMPORT modules : no-test-defined : $(__name__) : __test__ ;
-
             # Add some grist so that the module will have a unique target name.
             local module-target = $(__file__:G=module@) ;
 
@@ -182,11 +174,11 @@ rule load (
         if $(module-name) != modules && ! [ binding $(module-name) ]
         {
             import errors ;
-            errors.error "Couldn't find module" $(module-name) in $(search) ;
+            errors.error "Could not find module" $(module-name) in $(search) ;
         }
 
-        # Pop the loading stack. Must happen before testing or we'll run into a
-        # circular loading dependency.
+        # Pop the loading stack. Must happen before testing or we will run into
+        # a circular loading dependency.
         .loading = $(.loading[1--2]) ;
 
         # Run any pending tests if this is an outer load.
@@ -195,7 +187,7 @@ rule load (
             local argv = [ peek : ARGV ] ;
             for local m in $(.untested)
             {
-                run_test $(m) ;
+                run-module-test $(m) ;
             }
             .untested = ;
         }
@@ -221,8 +213,8 @@ rule record-binding ( module-target : binding )
 
 # Transform each path in the list, with all backslashes converted to forward
 # slashes and all detectable redundancy removed. Something like this is probably
-# needed in path.jam, but I'm not sure of that, I don't understand it, and I'm
-# not ready to move all of path.jam into the kernel.
+# needed in path.jam, but I am not sure of that, I do not understand it, and I
+# am not ready to move all of path.jam into the kernel.
 #
 local rule normalize-raw-paths ( paths * )
 {
