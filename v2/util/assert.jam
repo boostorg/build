@@ -151,7 +151,7 @@ rule result ( expected * : rule-name args * : * )
             : $(8) : $(9) ] ;
     }
 
-    if $(result) != $(expected)
+    if ! [ exact-equal-test $(result) : $(expected) ]
     {
         errors.error-skip-frames 3 assertion failure: "[" $(rule-name) [
             errors.lol->list $(args) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
