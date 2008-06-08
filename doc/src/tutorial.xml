@@ -409,7 +409,7 @@ use-project /library-example/foo : util/foo ;</programlisting>
     <para>
       Second, we modify <filename>app/Jamfile</filename> to use the project id:
       <programlisting>
-exe app : app.cpp /library-example/foo//bar ;<programlisting>
+exe app : app.cpp /library-example/foo//bar ;</programlisting>
 
       The <filename>/library-example/foo//bar</filename> syntax is used to refer
       to the target <filename>bar</filename> in the project with id <filename>
@@ -458,7 +458,7 @@ project
       <literal>shared</literal>, and to build a static library, the value should
       be <literal>static</literal>. You can request a static build either on the
       command line:
-      <programlisting>bjam link=static<programlisting>
+      <programlisting>bjam link=static</programlisting>
       or in the library's requirements:
       <programlisting>lib l : l.cpp : &lt;link&gt;static ;</programlisting>
     </para>
