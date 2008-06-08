@@ -16,22 +16,22 @@ import regex ;
 # The current output target. Defaults to console.
 output-target = console ;
 
-# The current output type. Defaults to plain.
+# The current output type. Defaults to plain. Other possible values are "html".
 output-type = plain ;
 
 # Whitespace.
 .whitespace = [ string.whitespace ] ;
 
-# Set the target and type of output to generate. This sets both
-# the destination output and the type of docs to generate to that
-# output. The target can be either a file or "console" for echoing
-# to the console. If the type of output is not specified it defaults
-# to plain text.
+
+# Set the target and type of output to generate. This sets both the destination
+# output and the type of docs to generate to that output. The target can be
+# either a file or "console" for echoing to the console. If the type of output
+# is not specified it defaults to plain text.
 #
 rule output (
-    target # The target file or device; file or "console".
-    type ? # The type of output; "plain", or "html".
-    )
+    target  # The target file or device; file or "console".
+    type ?  # The type of output; "plain" or "html".
+)
 {
     type ?= plain ;
     if $(output-target) != $(target)
@@ -57,15 +57,14 @@ rule output (
     }
 }
 
-# Generate a section with a description. The type of output can be
-# controlled by the value of the 'output-type' variable. If not set
-# it defaults to 'console' indicating immediate display to the console.
-# Other possible values are: 'html-file'.
+
+# Generate a section with a description. The type of output can be controlled by
+# the value of the 'output-type' variable.
 #
 rule section (
-    name # The name of the section.
-    description * # A number of description lines.
-    )
+    name  # The name of the section.
+    description *  # A number of description lines.
+)
 {
     if $(output-type) = plain
     {
@@ -165,10 +164,9 @@ rule section (
     }
 }
 
-# Generate the start of a list of items. The type of output can be
-# controlled by the value of the 'output-type' variable. If not set
-# it defaults to 'console' indicating immediate display to the console.
-# Other possible values are: 'html-file'.
+
+# Generate the start of a list of items. The type of output can be controlled by
+# the value of the 'output-type' variable.
 #
 rule list-start ( )
 {
@@ -181,14 +179,13 @@ rule list-start ( )
     }
 }
 
-# Generate an item in a list. The type of output can be
-# controlled by the value of the 'output-type' variable. If not set
-# it defaults to 'console' indicating immediate display to the console.
-# Other possible values are: 'html-file'.
+
+# Generate an item in a list. The type of output can be controlled by the value
+# of the 'output-type' variable.
 #
 rule list-item (
-    item + # The item to list.
-    )
+    item +  # The item to list.
+)
 {
     if $(output-type) = plain
     {
@@ -200,10 +197,9 @@ rule list-item (
     }
 }
 
-# Generate the end of a list of items. The type of output can be
-# controlled by the value of the 'output-type' variable. If not set
-# it defaults to 'console' indicating immediate display to the console.
-# Other possible values are: 'html-file'.
+
+# Generate the end of a list of items. The type of output can be controlled by
+# the value of the 'output-type' variable.
 #
 rule list-end ( )
 {
@@ -217,13 +213,14 @@ rule list-end ( )
     }
 }
 
-# Split the given text into separate lines, word-wrapping to a margin.
-# The default margin is 78 characters.
+
+# Split the given text into separate lines, word-wrapping to a margin. The
+# default margin is 78 characters.
 #
 rule split-at-words (
-    text + # The text to split.
-    : margin ? # An optional margin, default is 78.
-    )
+    text +  # The text to split.
+    : margin ?  # An optional margin, default is 78.
+)
 {
     local lines = ;
     text = [ string.words $(text:J=" ") ] ;
@@ -264,15 +261,16 @@ rule split-at-words (
     return $(lines) ;
 }
 
-# Generate a set of fixed lines. Each single item passed in is
-# output on a separate line. For console this just echos each line,
-# but for html this will split them with <br>.
+
+# Generate a set of fixed lines. Each single item passed in is output on a
+# separate line. For console this just echos each line, but for html this will
+# split them with <br>.
 #
 rule lines (
-    text * # The lines of text.
-    : indent ? # Optional indentation prepended to each line after the first one.
-    outdent ? # Optional indentation to prepend to the first line.
-    )
+    text *  # The lines of text.
+    : indent ?  # Optional indentation prepended to each line after the first one.
+    outdent ?  # Optional indentation to prepend to the first line.
+)
 {
     text ?= "" ;
     indent ?= "" ;
@@ -296,19 +294,20 @@ rule lines (
     }
 }
 
-# Output text directly to the current target. When doing output
-# to a file, one can indicate if the text should be output to
-# "prefix" it, as the "body" (default), or "suffix" of the file. This is
-# independant of the actual execution order of the text rule. This rule
-# invokes a singular action, one action only once, which does the
-# build of the file. Therefore actions on the target outside of this
-# rule will happen entirely before and/or after all output using this rule.
+
+# Output text directly to the current target. When doing output to a file, one
+# can indicate if the text should be output to "prefix" it, as the "body"
+# (default), or "suffix" of the file. This is independant of the actual
+# execution order of the text rule. This rule invokes a singular action, one
+# action only once, which does the build of the file. Therefore actions on the
+# target outside of this rule will happen entirely before and/or after all
+# output using this rule.
 #
 rule text (
-    strings * # The strings of text to output.
-    : overwrite ? # true to overwrite the output (if it is a file)
-    : prefix-body-suffix ? # Indication to output prefix, body, or suffix (for a file).
-    )
+    strings *  # The strings of text to output.
+    : overwrite ?  # true to overwrite the output (if it is a file)
+    : prefix-body-suffix ?  # Indication to output prefix, body, or suffix (for a file).
+)
 {
     prefix-body-suffix ?= body ;
     if $(output-target) = console
@@ -350,21 +349,24 @@ rule text (
         $($(output-target).text-suffix) ;
 }
 
+
 # Outputs the text to the current targets, after word-wrapping it.
+#
 rule wrapped-text ( text + )
 {
     local lines = [ split-at-words $(text) ] ;
     text $(lines) ;
 }
 
-# Escapes text into html/xml printable equivalents.
-# Does not know about tags and therefore tags fed into
-# this will also be escaped. Currently escapes space, "<", ">", and "&".
+
+# Escapes text into html/xml printable equivalents. Does not know about tags and
+# therefore tags fed into this will also be escaped. Currently escapes space,
+# "<", ">", and "&".
 #
 rule escape-html (
-    text + # The text to escape.
-    : space ? # What to replace spaces with, defaults to " ".
-    )
+    text +  # The text to escape.
+    : space ?  # What to replace spaces with, defaults to " ".
+)
 {
     local html-text = ;
     while $(text)
@@ -383,24 +385,26 @@ rule escape-html (
     return $(html-text) ;
 }
 
-# Outputs the text strings collected by the text rule to the output
-# file.
+
+# Outputs the text strings collected by the text rule to the output file.
 #
 actions quietly text-action
 {
     @($(STDOUT):E=$(text-content:J=$(nl))) $(text-redirect) "$(<)"
 }
 
-local rule __test__ ( )
+
+rule __test__ ( )
 {
     import assert ;
     
-    assert.result one two three : split-at-words one two three : 5 ;
+    assert.result one two three   : split-at-words one two three : 5 ;
     assert.result "one two" three : split-at-words one two three : 8 ;
     assert.result "one two" three : split-at-words one two three : 9 ;
     assert.result "one two three" : split-at-words one two three ;
-    # VP, 2004-12-03 The following test fails for some reason,
-    # so commenting it out.
+
+    # VP, 2004-12-03 The following test fails for some reason, so commenting it
+    # out.
     #assert.result "one&nbsp;two&nbsp;three" "&amp;&lt;&gt;" :
     #    escape-html "one two three" "&<>" ;
 }

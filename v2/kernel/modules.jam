@@ -324,7 +324,7 @@ local globalize = peek poke record-binding ;
 IMPORT modules : $(globalize) : : modules.$(globalize) ;
 
 
-local rule __test__ ( )
+rule __test__ ( )
 {
     import assert ;
     import modules : normalize-raw-paths ;

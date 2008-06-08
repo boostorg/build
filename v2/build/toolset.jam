@@ -484,7 +484,7 @@ rule add-requirements ( requirements * )
 }
 
 
-local rule __test__ ( )
+rule __test__ ( )
 {
     import assert ;
     local p = <b>0 <c>1 <d>2 <e>3 <f>4 ;
