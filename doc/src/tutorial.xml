@@ -16,74 +16,70 @@
     sections.
 -->
 
-  <para>This section will guide you though the most basic features of
-  Boost.Build V2. We will start with the &#x201C;Hello, world&#x201D; example,
-  learn how to use libraries, and finish with testing and installing features.
+  <para>
+    This section will guide you though the most basic features of Boost.Build
+    V2. We will start with the &#x201C;Hello, world&#x201D; example, learn how
+    to use libraries, and finish with testing and installing features.
   </para>
 
   <section id="bbv2.tutorial.hello">
     <title>Hello, world</title>
 
-    <para>The simplest project that Boost.Build can construct is
-      stored in <filename>example/hello/</filename> directory. The
-      project is described by a file
-      called <filename>Jamroot</filename> that contains:
+    <para>
+      The simplest project that Boost.Build can construct is stored in
+      <filename>example/hello/</filename> directory. The project is described by
+      a file called <filename>Jamroot</filename> that contains:
 
 <programlisting>
 exe hello : hello.cpp ;
 </programlisting>
 
-      Even with this simple setup, you can do some interesting
-      things. First of all, just invoking <command>bjam</command> will
-      build the <filename>hello</filename>
-      executable by compiling and
-      linking <filename>hello.cpp</filename>. By default, debug variant
-      is built. Now, to build the
-      release variant of <filename>hello</filename>, invoke
+      Even with this simple setup, you can do some interesting things. First of
+      all, just invoking <command>bjam</command> will build the <filename>hello
+      </filename> executable by compiling and linking <filename>hello.cpp
+      </filename>. By default, debug variant is built. Now, to build the release
+      variant of <filename>hello</filename>, invoke
 
 <screen>
 bjam release
 </screen>
 
-      Note that debug and release variants are created in different
-      directories, so you can switch between variants or even build
-      multiple variants at once, without any unnecessary
-      recompilation. Let's extend the example by adding another line
-      to our project's <filename>Jamroot</filename>:
+      Note that debug and release variants are created in different directories,
+      so you can switch between variants or even build multiple variants at
+      once, without any unnecessary recompilation. Let us extend the example by
+      adding another line to our project's <filename>Jamroot</filename>:
 
 <programlisting>
 exe hello2 : hello.cpp ;
 </programlisting>
 
-      Now let us build both the debug and release variants of our project
-      again:
+      Now let us build both the debug and release variants of our project again:
 
 <screen>
 bjam debug release
 </screen>
 
-      Note that two variants of <filename>hello2</filename> are linked.
-      Since we have already built both variants
-      of <filename>hello</filename>, hello.cpp won't be recompiled;
-      instead the existing object files will just be linked into the
-      corresponding variants of <filename>hello2</filename>. Now
-      let's remove all the built products:
+      Note that two variants of <filename>hello2</filename> are linked. Since we
+      have already built both variants of <filename>hello</filename>, hello.cpp
+      will not be recompiled; instead the existing object files will just be
+      linked into the corresponding variants of <filename>hello2</filename>. Now
+      let us remove all the built products:
 
 <screen>
 bjam --clean debug release
 </screen>
 
-      It's also possible to build or clean specific targets.  The
-      following two commands, respectively, build or clean only the
-      debug version of <filename>hello2</filename>.
+      It is also possible to build or clean specific targets. The following two
+      commands, respectively, build or clean only the debug version of
+      <filename>hello2</filename>.
 
 <screen>
 bjam hello2
 bjam --clean hello2
 </screen>
     </para>
-
   </section>
+
   <section id="bbv2.tutorial.properties">
     <title>Properties</title>
 
@@ -97,45 +93,48 @@ bjam --clean hello2
       value) pair.  When a user initiates a build, Boost.Build
       automatically translates the requested properties into appropriate
       command-line flags for invoking toolset components like compilers
-      and linkers.</para>
+      and linkers.
+    </para>
 
-    <para>There are many built-in features that can be combined to
+    <para>
+      There are many built-in features that can be combined to
       produce arbitrary build configurations.  The following command
       builds the project's <code>release</code> variant with inlining
       disabled and debug symbols enabled:
-
 <screen>
 bjam release inlining=off debug-symbols=on
 </screen>
-</para>
+    </para>
 
-    <para>Properties on the command-line are specified with the syntax:
+    <para>
+      Properties on the command-line are specified with the syntax:
 
 <screen>
 <replaceable>feature-name</replaceable>=<replaceable>feature-value</replaceable>
 </screen>
-</para>
+    </para>
 
-    <para>The <option>release</option> and <option>debug</option> that we've seen
-      in <command>bjam</command> invocations are just a shorthand way to
-      specify values of the <varname>variant</varname> feature.  For example, the command
-      above could also have been written this way:
+    <para>
+      The <option>release</option> and <option>debug</option> that we have seen
+      in <command>bjam</command> invocations are just a shorthand way to specify
+      values of the <varname>variant</varname> feature.  For example, the
+      command above could also have been written this way:
 
       <screen>
 bjam variant=release inlining=off debug-symbols=on
       </screen>
     </para>
 
-    <para> <varname>variant</varname> is so commonly-used that it has
-      been given special status as an <firstterm>implicit</firstterm>
-      feature&#x2014;Boost.Build will deduce the its identity just
-      from the name of one of its values.
+    <para>
+      <varname>variant</varname> is so commonly-used that it has been given
+      special status as an <firstterm>implicit</firstterm> feature&#x2014;
+      Boost.Build will deduce the its identity just from the name of one of its
+      values.
     </para>
 
     <para>
       A complete description of features can be found in <xref linkend="bbv2.reference.features"/>.
     </para>
-
 
     <section id="bbv2.tutorial.properties.requirements">
       <title>Build Requests and Target Requirements</title>
@@ -145,19 +144,19 @@ bjam variant=release inlining=off debug-symbols=on
         a <firstterm>build request</firstterm>&#x2014;a description of
         the desired properties for building the requested targets (or,
         if no targets were explicitly requested, the project in the
-        current directory).  The <emphasis>actual</emphasis>
+        current directory). The <emphasis>actual</emphasis>
         properties used for building targets are typically a
         combination of the build request and properties derived from
         the project's <filename>Jamroot</filename> (and its other
         Jamfiles, as described in <xref
-        linkend="bbv2.tutorial.hierarchy"/>).  For example, the
+        linkend="bbv2.tutorial.hierarchy"/>). For example, the
         locations of <code>#include</code>d header files are normally
         not specified on the command-line, but described in
         Jamfiles as <firstterm>target
         requirements</firstterm> and automatically combined with the
-        build request for those targets.  Multithread-enabled
+        build request for those targets. Multithread-enabled
         compilation is another example of a typical target
-        requirement.  The Jamfile fragment below
+        requirement. The Jamfile fragment below
         illustrates how these requirements might be specified.
       </para>
 
@@ -169,41 +168,39 @@ exe hello
 </programlisting>
 
       <para>
-        When <filename>hello</filename> is built, the two
-        requirements specified above will always be present.
-        If the build request given on the <command>bjam</command>
-        command-line explictly contradicts a target's requirements,
-        the target requirements usually override (or, in the case of
-        &#x201C;free&rdquo;&#x201D; features like
+        When <filename>hello</filename> is built, the two requirements specified
+        above will always be present. If the build request given on the
+        <command>bjam</command> command-line explictly contradicts a target's
+        requirements, the target requirements usually override (or, in the case
+        of &#x201C;free&rdquo;&#x201D; features like
         <varname>&lt;include&gt;</varname>,
         <footnote>
-<para>
-See <xref linkend="bbv2.reference.features.attributes"/>
-</para></footnote>
+          <para>
+             See <xref linkend="bbv2.reference.features.attributes"/>
+          </para>
+        </footnote>
         augments) the build request.
-
       </para>
 
       <tip>
-        <para>The value of the <varname>&lt;include&gt;</varname> feature is
-          relative to the location of <filename>Jamroot</filename> where it's
+        <para>
+          The value of the <varname>&lt;include&gt;</varname> feature is
+          relative to the location of <filename>Jamroot</filename> where it is
           used.
         </para>
       </tip>
-
     </section>
+
     <section id="bbv2.tutorial.properties.project_attributes">
       <title>Project Attributes</title>
 
       <para>
-        If we want the same requirements for our other
-        target, <filename>hello2</filename>, we could simply duplicate
-        them.  However, as projects grow, that approach leads to a great
-        deal of repeated boilerplate in Jamfiles.
+        If we want the same requirements for our other target, <filename>hello2
+        </filename>, we could simply duplicate them. However, as projects grow,
+        that approach leads to a great deal of repeated boilerplate in Jamfiles.
 
-        Fortunately, there's a better way. Each project can specify a
-        set of <firstterm>attributes</firstterm>, including
-        requirements:
+        Fortunately, there's a better way. Each project can specify a set of
+        <firstterm>attributes</firstterm>, including requirements:
 
 <programlisting>
 project
@@ -211,11 +208,10 @@ project
     ;
 
 exe hello : hello.cpp ;
-exe hello2 : hello.cpp ;
-</programlisting>
+exe hello2 : hello.cpp ;</programlisting>
 
-        The effect would be as if we specified the same requirement for
-        both <filename>hello</filename> and <filename>hello2</filename>.
+        The effect would be as if we specified the same requirement for both
+        <filename>hello</filename> and <filename>hello2</filename>.
       </para>
     </section>
   </section>
@@ -223,17 +219,16 @@ exe hello2 : hello.cpp ;
   <section id="bbv2.tutorial.hierarchy">
     <title>Project Hierarchies</title>
 
-    <para>So far we've only considered examples with one project
-    &#x2014;a. with one user-written Boost.Jam file,
-    <filename>Jamroot</filename>). A typical large codebase would be
-    composed of many projects organized into a tree. The top of the
-    tree is called the <firstterm>project root</firstterm>.  Every
-    subproject is defined by a file called
-    <filename>Jamfile</filename> in a descendant directory of the
-    project root.  The parent project of a subproject is defined by
-    the nearest <filename>Jamfile</filename> or
-    <filename>Jamroot</filename> file in an ancestor directory. For
-    example, in the following directory layout:
+    <para>
+      So far we have only considered examples with one project &#x2014;a. with
+      one user-written Boost.Jam file, <filename>Jamroot</filename>). A typical
+      large codebase would be composed of many projects organized into a tree.
+      The top of the tree is called the <firstterm>project root</firstterm>.
+      Every subproject is defined by a file called <filename>Jamfile</filename>
+      in a descendant directory of the project root. The parent project of a
+      subproject is defined by the nearest <filename>Jamfile</filename> or
+      <filename>Jamroot</filename> file in an ancestor directory. For example,
+      in the following directory layout:
 
 <screen>
 top/
@@ -253,10 +248,9 @@ top/
        .    `-- bar.cpp
 </screen>
 
-      the project root is <filename>top/</filename>.  The projects in
-      <filename>top/app/</filename> and
-      <filename>top/util/foo/</filename> are immediate children of the
-      root project.
+      the project root is <filename>top/</filename>. The projects in
+      <filename>top/app/</filename> and <filename>top/util/foo/</filename> are
+      immediate children of the root project.
 
       <note>
         <para>
@@ -551,7 +545,6 @@ exe app : app.cpp core ;</programlisting>
         <!-- Need ref here to 'testing facilities' -->
       </para>
     </note>
-
   </section>
 
   <section id="bbv2.tutorial.conditions">
