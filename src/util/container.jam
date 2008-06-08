@@ -242,7 +242,7 @@ class vector : node
 }
 
 
-local rule __test__ ( )
+rule __test__ ( )
 {
     import assert ;
     import "class" : new ;

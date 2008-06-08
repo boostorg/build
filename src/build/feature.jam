@@ -1090,7 +1090,7 @@ rule split ( property-set )
 
 # Tests of module feature.
 #
-local rule __test__ ( )
+rule __test__ ( )
 {
     # Use a fresh copy of the feature module.
     prepare-test feature-test-temp ;

@@ -1031,9 +1031,3 @@ module project-rules
         }
     }
 }
-
-
-local rule __test__ ( )
-{
-    import assert ;
-}
