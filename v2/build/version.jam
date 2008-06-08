@@ -90,7 +90,7 @@ rule check-jam-version ( version + )
         errors.error Invalid version specifier: : $(version:E="(undefined)") ;
     }
 
-    if ! $(.jam-version-check.$(version-tag))-is-defined
+    if ! $(.jam-version-check.$(version-tag))-is-not-empty
     {
         local jam-version = [ modules.peek : JAM_VERSION ] ;
         if ! $(jam-version)

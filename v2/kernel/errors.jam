@@ -89,7 +89,7 @@ rule catch ( messages * : * )
 
     import sequence ;
 
-    if ! $(.last-error-$(.args))-is-nonempty
+    if ! $(.last-error-$(.args))-is-not-empty
     {
         error-skip-frames 3 expected an error, but none occurred ;
     }
