@@ -393,9 +393,9 @@ local rule configure-really ( version ? : options * )
 
                 setup-$(c) = [ feature.get-values <setup-$(c)> : $(options) ] ;
 
-                if ! $(setup-$(c))-is-defined
+                if ! $(setup-$(c))-is-not-empty
                 {
-                    if $(global-setup)-is-defined
+                    if $(global-setup)-is-not-empty
                     {
                         setup-$(c) = $(global-setup) ;
                         

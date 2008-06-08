@@ -1216,7 +1216,7 @@ class subvariant
     rule implicit-includes ( feature : target-type ? )
     {
         local key = ii$(feature)-$(target-type:E="") ;
-        if ! $($(key))-is-nonempty
+        if ! $($(key))-is-not-empty
         {
             local target-paths = [ all-target-directories $(target-type) ] ;
             target-paths = [ sequence.unique $(target-paths) ] ;

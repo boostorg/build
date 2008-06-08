@@ -18,8 +18,8 @@ import scanner ;
 # project -> project-root -> builtin -> type -> targets -> project
 # import targets ;
 
-# The feature is optional so it would never get added implicitly. It's used only
-# for internal purposes and in all cases we want to use it explicitly.
+# The feature is optional so it would never get added implicitly. It is used
+# only for internal purposes and in all cases we want to use it explicitly.
 feature.feature target-type : : composite optional ;
 
 feature.feature main-target-type : : optional incidental ;
@@ -30,6 +30,7 @@ feature.feature base-target-type : : composite optional free ;
 # of 'suffixes' here is a shortcut for separately calling the register-suffixes
 # rule with the given suffixes and the set-generated-target-suffix rule with the
 # first given suffix.
+#
 rule register ( type : suffixes * : base-type ? )
 {
     # Type names cannot contain hyphens, because when used as feature-values
@@ -81,6 +82,7 @@ rule register ( type : suffixes * : base-type ? )
 
 # Given a type, returns the name of the main target rule which creates targets
 # of that type.
+#
 rule type-to-rule-name ( type )
 {
     # Lowercase everything. Convert underscores to dashes.
@@ -91,6 +93,7 @@ rule type-to-rule-name ( type )
 
 
 # Given a main target rule name, returns the type for which it creates targets.
+#
 rule type-from-rule-name ( rule-name )
 {
     return $(.main-target-type.$(rule-name)) ;
@@ -100,6 +103,7 @@ rule type-from-rule-name ( rule-name )
 # Specifies that files with suffix from 'suffixes' be recognized as targets of
 # type 'type'. Issues an error if a different type is already specified for any
 # of the suffixes.
+#
 rule register-suffixes ( suffixes + : type )
 {
     for local s in $(suffixes)
@@ -118,6 +122,7 @@ rule register-suffixes ( suffixes + : type )
 
 
 # Returns true iff type has been registered.
+#
 rule registered ( type )
 {
     if $(type) in $(.types)
@@ -128,6 +133,7 @@ rule registered ( type )
 
 
 # Issues an error if 'type' is unknown.
+#
 rule validate ( type )
 {
     if ! $(type) in $(.types)
@@ -138,6 +144,7 @@ rule validate ( type )
 
 
 # Sets a scanner class that will be used for this 'type'.
+#
 rule set-scanner ( type : scanner )
 {
     if ! $(type) in $(.types)
@@ -149,6 +156,7 @@ rule set-scanner ( type : scanner )
 
 
 # Returns a scanner instance appropriate to 'type' and 'properties'.
+#
 rule get-scanner ( type : property-set )
 {
     if $(.scanner.$(type))
@@ -160,6 +168,7 @@ rule get-scanner ( type : property-set )
 
 # Returns the given type and all of its base types in order of their distance
 # from type.
+#
 rule all-bases ( type )
 {
     local result = $(type) ;
@@ -184,6 +193,7 @@ rule all-derived ( type )
 
 
 # Returns true if 'type' has 'base' as its direct or indirect base.
+#
 rule is-derived ( type base )
 {
     if $(base) in [ all-bases $(type) ]
@@ -194,6 +204,7 @@ rule is-derived ( type base )
 
 
 # Returns true if 'type' is either derived from or is equal to 'base'.
+#
 rule is-subtype ( type base )
 {
     if $(type) = $(base)
@@ -233,6 +244,7 @@ rule set-generated-target-suffix ( type : properties * : suffix )
 
 # Change the suffix previously registered for this type/properties combination.
 # If suffix is not yet specified, sets it.
+#
 rule change-generated-target-suffix ( type : properties * : suffix )
 {
     change-generated-target-ps suffix : $(type) : $(properties) : $(suffix) ;
@@ -241,6 +253,7 @@ rule change-generated-target-suffix ( type : properties * : suffix )
 
 # Returns the suffix used when generating a file of 'type' with the given
 # properties.
+#
 rule generated-target-suffix ( type : property-set )
 {
     return [ generated-target-ps suffix : $(type) : $(property-set) ] ;
@@ -255,6 +268,7 @@ rule generated-target-suffix ( type : property-set )
 # should be used.
 #
 # Usage example: library names use the "lib" prefix on unix.
+#
 rule set-generated-target-prefix ( type : properties * : prefix )
 {
     set-generated-target-ps prefix : $(type) : $(properties) : $(prefix) ;
@@ -263,6 +277,7 @@ rule set-generated-target-prefix ( type : properties * : prefix )
 
 # Change the prefix previously registered for this type/properties combination.
 # If prefix is not yet specified, sets it.
+#
 rule change-generated-target-prefix ( type : properties * : prefix )
 {
     change-generated-target-ps prefix : $(type) : $(properties) : $(prefix) ;
@@ -299,6 +314,7 @@ local rule change-generated-target-ps ( ps : type : properties * : psval )
 # when generating a target of 'type' with the specified properties. Parameter
 # 'ps' can be either "prefix" or "suffix".  If no prefix/suffix is specified for
 # 'type', returns prefix/suffix for base type, if any.
+#
 local rule generated-target-ps-real ( ps : type : properties * )
 {
     local result ;
@@ -348,6 +364,7 @@ local rule generated-target-ps ( ps : type : property-set )
 # Returns file type given it's name. If there are several dots in filename,
 # tries each suffix. E.g. for name of "file.so.1.2" suffixes "2", "1", and "so"
 # will be tried.
+#
 rule type ( filename )
 {
     local type ;
@@ -365,6 +382,7 @@ rule type ( filename )
 # into the global namespace under different alias names and exactly what type of
 # target it is supposed to construct is read from the name of the alias rule
 # actually used to invoke it.
+#
 rule main-target-rule ( name : sources * : requirements * : default-build *
     : usage-requirements * )
 {
