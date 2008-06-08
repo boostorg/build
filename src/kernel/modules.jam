@@ -94,7 +94,7 @@ rule peek ( module-name ? : variables + )
 # Call the given rule locally in the given module. Use this for rules accepting
 # rule names as arguments, so that the passed rule may be invoked in the context
 # of the rule's caller (for example, if the rule accesses module globals or is a
-# local rule). Note that rules called this way may accept at most 8 parmeters.
+# local rule). Note that rules called this way may accept at most 8 parameters.
 #
 rule call-in ( module-name ? : rule-name args * : * )
 {
@@ -108,7 +108,7 @@ rule call-in ( module-name ? : rule-name args * : * )
 # Given a possibly qualified rule name and arguments, remove any initial module
 # qualification from the rule and invoke it in that module. If there is no
 # module qualification, the rule is invoked in the global module. Note that
-# rules called this way may accept at most 8 parmeters.
+# rules called this way may accept at most 8 parameters.
 #
 rule call-locally ( qualified-rule-name args * : * )
 {
