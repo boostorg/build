@@ -957,7 +957,7 @@ rule compress-subproperties ( properties * )
         if ! $(p:G)
         {
             # Expecting fully-gristed properties.
-            assert.nonempty-variable p:G ;
+            assert.variable-not-empty p:G ;
         }
 
         if ! subfeature in $($(p:G).attributes)

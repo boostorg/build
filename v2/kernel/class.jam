@@ -279,7 +279,7 @@ local rule __test__ ( )
         rule invariant3 ( )
         {
             local v = 10 ;
-            assert.nonempty-variable v ;
+            assert.variable-not-empty v ;
         }
     }
 #    class derived1 : myclass ;
