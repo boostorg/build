@@ -62,13 +62,8 @@
 # base-name.method-name. By convention, attribute names are prefixed with
 # "self.".
 
-import numbers ;
-import errors : * ;
-import set ;
 import modules ;
-import assert ;
-
-classes = ;
+import numbers ;
 
 
 rule xinit ( instance : class )
@@ -89,10 +84,10 @@ rule new ( class args * : * )
     xinit $(id) : $(class) ;
 
     INSTANCE $(id) : class@$(class) ;
-    IMPORT_MODULE $(id) : ;
+    IMPORT_MODULE $(id) ;
     $(id).__init__ $(args) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
 
-    # bump the next unique object name
+    # Bump the next unique object name.
     .next-instance = [ numbers.increment $(.next-instance) ] ;
 
     # Return the name of the new instance.
@@ -102,11 +97,6 @@ rule new ( class args * : * )
 
 rule bases ( class )
 {
-    #if ! ( $(class) in $(classes) )
-    #{
-    #    error class $(class) not defined ;
-    #}
-
     module class@$(class)
     {
         return $(__bases__) ;
@@ -116,15 +106,9 @@ rule bases ( class )
 
 rule is-derived ( class : bases + )
 {
-    #local all = $(class) $(bases) ;
-    #if ! ( $(all) in $(classes) )
-    #{
-    #    error class(es) [ set.difference $(class) $(bases) : $(classes) ] not defined ;
-    #}
-
     local stack = $(class) ;
     local visited found ;
-    while ( ! $(found) ) && $(stack)
+    while ! $(found) && $(stack)
     {
         local top = $(stack[1]) ;
         stack = $(stack[2-]) ;
@@ -154,9 +138,9 @@ rule is-instance ( value )
 # Check if the given value is of the given type.
 #
 rule is-a (
-    instance # The value to check.
-    : type # The type to test for.
-    )
+    instance  # The value to check.
+    : type  # The type to test for.
+)
 {
     if [ is-instance $(instance) ]
     {
@@ -177,18 +161,18 @@ local rule typecheck ( x )
 
 local rule __test__ ( )
 {
-    import "class" : * ;
     import assert ;
-    import errors : * ;
+    import "class" : new ;
 
     # This will be the construction function for a class called 'myclass'.
+    #
     class myclass
     {
-        import assert : nonempty-variable ;
+        import assert ;
 
         rule __init__ ( x_ * : y_ * )
         {
-            # set some instance variables
+            # Set some instance variables.
             x = $(x_) ;
             y = $(y_) ;
             foo += 10 ;
@@ -265,7 +249,8 @@ local rule __test__ ( )
             z = $(z_) ;
         }
 
-        # override g
+        # Override g.
+        #
         rule g ( args * )
         {
             return derived1.g ;
@@ -282,16 +267,19 @@ local rule __test__ ( )
         }
 
         # Check that 'assert.equal' visible in base class is visible here.
+        #
         rule invariant2 ( )
         {
             assert.equal 2 : 2 ;
         }
 
-        # Check that 'nonempty-variable' visible in base class is visible here.
+        # Check that 'assert.variable-not-empty' visible in base class is
+        # visible here.
+        #
         rule invariant3 ( )
         {
             local v = 10 ;
-            nonempty-variable v ;
+            assert.nonempty-variable v ;
         }
     }
 #    class derived1 : myclass ;
@@ -303,17 +291,19 @@ local rule __test__ ( )
             myclass.__init__ 1 : 2 ;
         }
 
-        # override g
+        # Override g.
+        #
         rule g ( args * )
         {
             return derived2.g ;
         }
 
-         rule get-x ( )
-         {
-             # Test the ability to call base class functions with qualification.
-             return [ myclass.get-x ] ;
-         }
+        # Test the ability to call base class functions with qualification.
+        #
+        rule get-x ( )
+        {
+            return [ myclass.get-x ] ;
+        }
     }
 #    class derived2 : myclass ;
 
@@ -339,9 +329,9 @@ local rule __test__ ( )
     expect_derived2 $(e) ;
 
     # Argument checking is set up to call exit(1) directly on failure, and we
-    # can't hijack that with try, so we'd better not do this test by default.
-    # We could fix this by having errors look up and invoke the EXIT rule
-    # instead; EXIT can be hijacked (;-)
+    # can not hijack that with try, so we should better not do this test by
+    # default. We could fix this by having errors look up and invoke the EXIT
+    # rule instead; EXIT can be hijacked (;-)
     if --fail-typecheck in [ modules.peek : ARGV ]
     {
         try ;
@@ -349,8 +339,8 @@ local rule __test__ ( )
             expect_derived2 $(a) ;
         }
         catch
-          "Expected an instance of derived2 but got" instead
-          ;
+            "Expected an instance of derived2 but got" instead
+            ;
     }
 
     #try ;

@@ -507,7 +507,7 @@ class project-target : abstract-target
         # Import rules from parent.
         local this-module = [ project-module ] ;
         local parent-module = [ $(parent).project-module ] ;
-        # Don't import rules coming from 'project-rules' as they must be
+        # Do not import rules coming from 'project-rules' as they must be
         # imported localized.
         local user-rules = [ set.difference
             [ RULENAMES $(parent-module) ] :
@@ -832,7 +832,7 @@ class file-reference : abstract-target
 #
 rule resolve-reference ( target-reference : project )
 {
-    # Separate target name from properties override
+    # Separate target name from properties override.
     local split = [ MATCH "^([^<]*)(/(<.*))?$" : $(target-reference) ] ;
     local id = $(split[1]) ;
     local sproperties = ;
@@ -842,7 +842,7 @@ rule resolve-reference ( target-reference : project )
         sproperties = [ feature.expand-composites $(sproperties) ] ;
     }
 
-    # Find the target
+    # Find the target.
     local target = [ $(project).find $(id) ] ;
 
     return $(target) [ property-set.create $(sproperties) ] ;
@@ -880,16 +880,23 @@ rule generate-from-reference (
 
 
 # Given a build request and requirements, return properties common to dependency
-# build request and target build properties.
+# build request and target requirements.
+#
+# TODO: Document exactly what 'common properties' are, whether they should
+# include default property values, whether they should contain any conditional
+# properties or should those be already processed, etc. See whether there are
+# any differences between use cases with empty and non-empty build-request as
+# well as with requirements containing and those not containing any non-free
+# features.
 #
 rule common-properties ( build-request requirements )
 {
     # For optimization, we add free requirements directly, without using a
-    # complex algorithm. This gives the complex algorithm better chance of
+    # complex algorithm. This gives the complex algorithm a better chance of
     # caching results.
     local free = [ $(requirements).free ] ;
-    local non-free = [ property-set.create
-        [ $(requirements).base ]  [ $(requirements).incidental ] ] ;
+    local non-free = [ property-set.create [ $(requirements).base ]
+        [ $(requirements).incidental ] ] ;
 
     local key = .rp.$(build-request)-$(non-free) ;
     if ! $($(key))
@@ -900,7 +907,7 @@ rule common-properties ( build-request requirements )
 }
 
 
-# Given 'context' -- a set of already present properties, and 'requirements',
+# Given a 'context' -- a set of already present properties, and 'requirements',
 # decide which extra properties should be applied to 'context'. For conditional
 # requirements, this means evaluating condition. For indirect conditional
 # requirements, this means calling a rule. Ordinary requirements are always
@@ -915,13 +922,13 @@ rule common-properties ( build-request requirements )
 #
 rule evaluate-requirements ( requirements : context : what )
 {
-    # Apply non-conditional requirements. It's possible that further conditional
-    # requirement change a value set by non-conditional requirements. For
-    # example:
+    # Apply non-conditional requirements. It is possible that further
+    # conditional requirement change a value set by non-conditional
+    # requirements. For example:
     #
     #    exe a : a.cpp : <threading>single <toolset>foo:<threading>multi ;
     #
-    # I'm not sure if this should be an error, or not, especially given that
+    # I am not sure if this should be an error, or not, especially given that
     #
     #    <threading>single
     #
@@ -932,15 +939,15 @@ rule evaluate-requirements ( requirements : context : what )
     local raw = [ $(context).raw ] ;
     raw = [ property.refine $(raw) : $(unconditional) ] ;
 
-    # We've collected properties that surely must be present in common
+    # We have collected properties that surely must be present in common
     # properties. We now try to figure out what other properties should be added
     # in order to satisfy rules (4)-(6) from the docs.
 
     local conditionals = [ $(requirements).conditional ] ;
     # The 'count' variable has one element for each conditional feature and for
-    # each occurence of '<indirect-conditional>' feature. It's used as a loop
+    # each occurence of '<indirect-conditional>' feature. It is used as a loop
     # counter: for each iteration of the loop before we remove one element and
-    # the property set should stabilize before we're done. It's assumed that
+    # the property set should stabilize before we are done. It is assumed that
     # #conditionals iterations should be enough for properties to propagate
     # along conditions in any direction.
     local count = $(conditionals)
@@ -951,9 +958,9 @@ rule evaluate-requirements ( requirements : context : what )
 
     local current = $(raw) ;
 
-    # It's assumed that ordinary conditional requirements can't add
-    # <indirect-conditional> properties, and that rules referred by
-    # <indirect-conditional> properties can't add new <indirect-conditional>
+    # It is assumed that ordinary conditional requirements can not add
+    # <indirect-conditional> properties, and that rules referred to by
+    # <indirect-conditional> properties can not add new <indirect-conditional>
     # properties. So the list of indirect conditionals does not change.
     local indirect = [ $(requirements).get <conditional> ] ;
     indirect = [ MATCH @(.*) : $(indirect) ] ;
@@ -979,9 +986,9 @@ rule evaluate-requirements ( requirements : context : what )
         }
         else
         {
-            # Oops, results of evaluation of conditionals has changed. Also
-            # 'current' contains leftover from previous evaluation. Recompute
-            # 'current' using initial properties and conditional requirements.
+            # Oops, conditional evaluation results have changed. Also 'current'
+            # contains leftovers from a previous evaluation. Recompute 'current'
+            # using initial properties and conditional requirements.
             added-requirements = $(e) ;
             current = [ property.refine $(raw) : [ feature.expand $(e) ] ] ;
         }
@@ -989,7 +996,7 @@ rule evaluate-requirements ( requirements : context : what )
     }
     if ! $(ok)
     {
-        errors.error "Can't evaluate conditional properties " $(conditionals) ;
+        errors.error "Can not evaluate conditional properties " $(conditionals) ;
     }
 
     if $(what) = added
@@ -1011,18 +1018,18 @@ rule common-properties2 ( build-request requirements )
 {
     # This guarantees that default properties are present in the result, unless
     # they are overriden by some requirement. FIXME: There is possibility that
-    # we've added <foo>bar, which is composite and expands to <foo2>bar2, but
-    # default value of <foo2> is not bar2, in which case it's not clear what to
+    # we have added <foo>bar, which is composite and expands to <foo2>bar2, but
+    # default value of <foo2> is not bar2, in which case it is not clear what to
     # do.
     #
     build-request = [ $(build-request).add-defaults ] ;
     # Features added by 'add-default' can be composite and expand to features
     # without default values -- so they are not added yet. It could be clearer/
-    # /faster to expand only newly added properties but that's not critical.
+    # /faster to expand only newly added properties but that is not critical.
     build-request = [ $(build-request).expand ] ;
 
-    return [ evaluate-requirements $(requirements)
-      : $(build-request) : refined ] ;
+    return [ evaluate-requirements $(requirements) : $(build-request) :
+        refined ] ;
 }
 
 
@@ -1177,7 +1184,7 @@ class basic-target : abstract-target
 
         if ! $(self.generated.$(property-set))
         {
-            # Apply free features form the command line. If user said
+            # Apply free features from the command line. If user said
             #   define=FOO
             # he most likely wants this define to be set for all compiles.
             property-set = [ $(property-set).refine
@@ -1188,7 +1195,7 @@ class basic-target : abstract-target
             if [ modules.peek : .debug-building ]
             {
                 ECHO ;
-                ECHO [ targets.indent ] "Common properties:" [ $(rproperties).raw ] ;
+                ECHO [ targets.indent ] "Common properties: " [ $(rproperties).raw ] ;
             }
 
             if $(rproperties[1]) != "@error" && [ $(rproperties).get <build> ] != no
@@ -1206,8 +1213,8 @@ class basic-target : abstract-target
                 if [ modules.peek : .debug-building ]
                 {
                     ECHO ;
-                    ECHO [ targets.indent ]
-                        "Usage requirements for $(self.name) are " $(usage-requirements) ;
+                    ECHO [ targets.indent ] "Usage requirements for"
+                        $(self.name)": " $(usage-requirements) ;
                 }
 
                 rproperties = [ property-set.create $(properties)
@@ -1216,8 +1223,8 @@ class basic-target : abstract-target
 
                 if [ modules.peek : .debug-building ]
                 {
-                    ECHO [ targets.indent ]
-                        "Build properties: " [ $(rproperties).raw ] ;
+                    ECHO [ targets.indent ] "Build properties: "
+                        [ $(rproperties).raw ] ;
                 }
 
                 local extra = [ $(rproperties).get <source> ] ;
@@ -1245,9 +1252,8 @@ class basic-target : abstract-target
                     $(s).set-usage-requirements $(ur) ;
                     if [ modules.peek : .debug-building ]
                     {
-                        ECHO [ targets.indent ]
-                            "Usage requirements from $(self.name) are"
-                            [ $(ur).raw ] ;
+                        ECHO [ targets.indent ] "Usage requirements from"
+                            $(self.name)": " [ $(ur).raw ] ;
                     }
 
                     self.generated.$(property-set) = $(ur) $(result) ;
@@ -1262,27 +1268,28 @@ class basic-target : abstract-target
                 }
                 else if [ $(rproperties).get <build> ] = no
                 {
-                    ECHO [ targets.indent ]
-                        "Skipping build of: " [ full-name ] " <build>no in common properties" ;
+                    ECHO [ targets.indent ] "Skipping build of: " [ full-name ]
+                        " <build>no in common properties" ;
                 }
                 else
                 {
-                    ECHO [ targets.indent ] "Skipping build of: " [ full-name ] " unknown reason" ;
+                    ECHO [ targets.indent ] "Skipping build of: " [ full-name ]
+                        " unknown reason" ;
                 }
 
-                # We are here either because there's been an error computing
-                # properties, or there's <build>no in properties. In the latter
-                # case we don't want any diagnostic. In the former case, we need
-                # diagnostics. FIXME
-                
-                # If this target fails to build, add <build>no to properties
-                # to cause any parent target to fail to build.  Except that it
+                # We are here either because there has been an error computing
+                # properties or there is <build>no in properties. In the latter
+                # case we do not want any diagnostic. In the former case, we
+                # need diagnostics. FIXME
+
+                # If this target fails to build, add <build>no to properties to
+                # cause any parent target to fail to build. Except that it
                 # - does not work now, since we check for <build>no only in
                 #   common properties, but not in properties that came from
                 #   dependencies
-                # - it's not clear if that's a good idea anyway.  The alias
-                #   target, for example, should not fail to build if a dependency
-                #   fails.
+                # - it is not clear if that is a good idea anyway. The alias
+                #   target, for example, should not fail to build if a
+                #   dependency fails.
                 self.generated.$(property-set) = [ property-set.create <build>no ] ;
             }
         }
@@ -1293,7 +1300,10 @@ class basic-target : abstract-target
                 ECHO [ targets.indent ] "Already built" ;
                 local ur = $(self.generated.$(property-set)) ;
                 ur = $(ur[0]) ;
-                ECHO [ targets.indent ] "  Usage requirements " [ $(ur).raw ] ;
+                targets.increase-indent ;
+                ECHO [ targets.indent ] "Usage requirements from"
+                    $(self.name)": " [ $(ur).raw ] ;
+                targets.decrease-indent ;
             }
         }
 
@@ -1319,7 +1329,7 @@ class basic-target : abstract-target
         local result = [ property-set.create
             [ $(xusage-requirements).non-dependency ] $(extra) ] ;
 
-        # Propagate usage requirements we've got from sources, except for the
+        # Propagate usage requirements we got from sources, except for the
         # <pch-header> and <pch-file> features.
         #
         # That feature specifies which pch file to use, and should apply only to

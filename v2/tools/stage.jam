@@ -56,7 +56,6 @@ class install-target-class : basic-target
         if ! $(loc)
         {
             loc = [ path.root $(self.name) [ $(self.project).get location ] ] ;
-
             property-set = [ $(property-set).add-raw $(loc:G=<location>) ] ;
         }
 
@@ -76,7 +75,7 @@ class install-target-class : basic-target
             ps-raw = [ $(ps).raw ] ;
 
             # Unless <hardcode-dll-paths>true is in properties, which can happen
-            # only if the user has explicitly requested it, nuke all.
+            # only if the user has explicitly requested it, nuke all
             # <dll-path> properties
             if [ $(property-set).get <hardcode-dll-paths> ] != true
             {
@@ -158,7 +157,7 @@ class install-target-class : basic-target
             {
                 if $(ename)
                 {
-                    errors.error "In 'install': <name> property specified with target that requires relinking" ;
+                    errors.error "In 'install': <name> property specified with target that requires relinking." ;
                 }
                 else
                 {
@@ -200,7 +199,7 @@ class install-target-class : basic-target
             source-targets = [ collect-targets $(source-targets) ] ;
         }
 
-        # Filter the target types, if needed
+        # Filter the target types, if needed.
         local included-types = [ $(property-set).get <install-type> ] ;
         for local r in $(source-targets)
         {
@@ -234,7 +233,7 @@ class install-target-class : basic-target
         return $(result) ;
     }
 
-    # CONSIDER: figure out why we can't use virtual-target.traverse here.
+    # CONSIDER: figure out why we can not use virtual-target.traverse here.
     #
     rule collect-targets ( targets * )
     {

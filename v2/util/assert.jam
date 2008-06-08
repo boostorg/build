@@ -1,48 +1,37 @@
-# Copyright 2001, 2002, 2003 Dave Abrahams 
-# Copyright 2006 Rene Rivera 
-# Copyright 2002, 2003 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2001, 2002, 2003 Dave Abrahams
+# Copyright 2006 Rene Rivera
+# Copyright 2002, 2003 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-import errors : error-skip-frames lol->list ;
+import errors ;
 import modules ;
 
 
-# Assert the equality of A and B.
+################################################################################
 #
-rule equal ( a * : b * )
+# Private implementation details.
+#
+################################################################################
+
+# Rule added as a replacement for the regular Jam = operator but which does not
+# ignore trailing empty string elements.
+#
+local rule exact-equal-test ( lhs * : rhs * )
 {
-    if $(a) != $(b)
+    local lhs_extended = $(lhs) xxx ;
+    local rhs_extended = $(rhs) xxx ;
+    if $(lhs_extended) = $(rhs_extended)
     {
-        error-skip-frames 3 assertion failure: \"$(a)\" "!=" \"$(b)\" ;
+        return true ;
     }
 }
 
 
-# Assert that EXPECTED is the result of calling RULE-NAME with the given
-# arguments.
+# Two lists are considered set-equal if they contain the same elements, ignoring
+# duplicates and ordering.
 #
-rule result ( expected * : rule-name args * : * )
-{
-    local result ;
-    module [ CALLER_MODULE ]
-    {
-        modules.poke assert : result
-            : [ $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ] ;
-    }
-
-    if $(result) != $(expected)
-    {
-        error-skip-frames 3 assertion failure: "[" $(rule-name) 
-          [ lol->list $(args) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ]
-            "]"
-          : expected: \"$(expected)\"
-          : got: \"$(result)\" ;
-    }
-}
-
-
-rule .set.equal ( set1 * : set2 * )
+local rule set-equal-test ( set1 * : set2 * )
 {
     if ( $(set1) in $(set2) ) && ( $(set2) in $(set1) )
     {
@@ -51,61 +40,20 @@ rule .set.equal ( set1 * : set2 * )
 }
 
 
-# Assert that EXPECTED is equal to the result of calling RULE-NAME with the
-# given arguments.
+################################################################################
 #
-rule result-equal ( expected * : rule-name args * : * )
-{
-    local result ;
-    module [ CALLER_MODULE ]
-    {
-        modules.poke assert : result
-            : [ $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ] ;
-    }
-
-    if ! [ .set.equal $(result) : $(expected) ]
-    {
-        error-skip-frames 3 assertion failure: "[" $(rule-name) 
-          [ lol->list $(args) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ]
-            "]"
-          : expected: \"$(expected)\"
-          : got: \"$(result)\" ;
-    }
-}
-
-
-# Assert that the given variable is nonempty.
+# Public interface.
 #
-rule nonempty-variable ( name )
-{
-    local value = [ modules.peek [ CALLER_MODULE ] : $(name) ] ;
+################################################################################
 
-    if ! $(value)-is-nonempty
-    {
-        error-skip-frames 3 assertion failure: expecting non-empty variable $(variable) ;
-    }
-}
-
-
-# Assert that the result of calling RULE-NAME on the given arguments has a true
-# logical value (is neither an empty list nor all empty strings).
+# Assert the equality of A and B, ignoring trailing empty string elements.
 #
-rule true ( rule-name args * : * )
+rule equal ( a * : b * )
 {
-    local result ;
-    module [ CALLER_MODULE ]
+    if $(a) != $(b)
     {
-        modules.poke assert : result
-          : [ $(1) : $(2) : $(3) : $(4)
-            : $(5) : $(6) : $(7) : $(8) : $(9) ] ;
-    }
-
-    if ! $(result)
-    {
-        error-skip-frames 3 assertion failure: expecting true result from
-          "[" $(rule-name) 
-          [ lol->list $(args) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ]
-            "]" ;
+        errors.error-skip-frames 3 assertion failure: \"$(a)\" "==" \"$(b)\"
+            (ignoring trailing empty strings) ;
     }
 }
 
@@ -124,33 +72,190 @@ rule false ( rule-name args * : * )
 
     if $(result)
     {
-        error-skip-frames 3 assertion failure: expecting false result from
-            "[" $(rule-name) [ lol->list $(args) : $(2) : $(3) : $(4) : $(5) :
-            $(6) : $(7) : $(8) : $(9) ] "]" : got [ lol->list $(result) ]
-            instead ;
+        errors.error-skip-frames 3 assertion failure: Expected false result from
+            "[" $(rule-name) [ errors.lol->list $(args) : $(2) : $(3) : $(4) :
+            $(5) : $(6) : $(7) : $(8) : $(9) ] "]" : Got: "[" \"$(result)\" "]" ;
     }
 }
 
 
-# Assert that 'element' is present in 'list'.
+# Assert that ELEMENT is present in LIST.
 #
 rule "in" ( element : list * )
 {
     if ! $(element) in $(list)
     {
-        error-skip-frames 3 assertion failure: expecting $(element) in 
-                          "[" $(list) "]" ;
+        errors.error-skip-frames 3 assertion failure: Expected \"$(element)\" in
+            "[" \"$(list)\" "]" ;
     }
 }
 
 
-# Assert that 'element' is not present in 'list'.
+# Assert the inequality of A and B, ignoring trailing empty string elements.
+#
+rule not-equal ( a * : b * )
+{
+    if $(a) = $(b)
+    {
+        errors.error-skip-frames 3 assertion failure: \"$(a)\" "!=" \"$(b)\"
+            (ignoring trailing empty strings) ;
+    }
+}
+
+
+# Assert that ELEMENT is not present in LIST.
 #
 rule not-in ( element : list * )
 {
     if $(element) in $(list)
     {
-        error-skip-frames 3 assertion failure: did not expect $(element) in 
-                          "[" $(list) "]" ;
+        errors.error-skip-frames 3 assertion failure: Did not expect
+            \"$(element)\" in "[" \"$(list)\" "]" ;
     }
+}
+
+
+# Assert the inequality of A and B as sets.
+#
+rule not-set-equal ( a * : b * )
+{
+    if [ set-equal-test $(a) : $(b) ]
+    {
+        errors.error-skip-frames 3 assertion failure: Expected "[" \"$(a)\" "]"
+            and "[" \"$(b)\" "]" to not be equal as sets ;
+    }
+}
+
+
+# Assert that A and B are not exactly equal, not ignoring trailing empty string
+# elements.
+#
+rule not-exact-equal ( a * : b * )
+{
+    if [ exact-equal-test $(a) : $(b) ]
+    {
+        errors.error-skip-frames 3 assertion failure: \"$(a)\" "!=" \"$(b)\" ;
+    }
+}
+
+
+# Assert that EXPECTED is the result of calling RULE-NAME with the given
+# arguments.
+#
+rule result ( expected * : rule-name args * : * )
+{
+    local result ;
+    module [ CALLER_MODULE ]
+    {
+        modules.poke assert : result : [ $(2) : $(3) : $(4) : $(5) : $(6) : $(7)
+            : $(8) : $(9) ] ;
+    }
+
+    if $(result) != $(expected)
+    {
+        errors.error-skip-frames 3 assertion failure: "[" $(rule-name) [
+            errors.lol->list $(args) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
+            $(9) ] "]" : Expected: "[" \"$(expected)\" "]" : Got: "["
+            \"$(result)\" "]" ;
+    }
+}
+
+
+# Assert that EXPECTED is set-equal (i.e. duplicates and ordering are ignored)
+# to the result of calling RULE-NAME with the given arguments. Note that rules
+# called this way may accept at most 8 parameters.
+#
+rule result-equal ( expected * : rule-name args * : * )
+{
+    local result ;
+    module [ CALLER_MODULE ]
+    {
+        modules.poke assert : result : [ $(2) : $(3) : $(4) : $(5) : $(6) : $(7)
+            : $(8) : $(9) ] ;
+    }
+
+    if ! [ set-equal-test $(result) : $(expected) ]
+    {
+        errors.error-skip-frames 3 assertion failure: "[" $(rule-name) [
+            errors.lol->list $(args) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
+            $(9) ] "]" : Expected: "[" \"$(expected)\" "]" : Got: "["
+            \"$(result)\" "]" ;
+    }
+}
+
+
+# Assert the equality of A and B as sets.
+#
+rule set-equal ( a * : b * )
+{
+    if ! [ set-equal-test $(a) : $(b) ]
+    {
+        errors.error-skip-frames 3 assertion failure: Expected "[" \"$(a)\" "]"
+            and "[" \"$(b)\" "]" to be equal as sets ;
+    }
+}
+
+
+# Assert that the result of calling RULE-NAME on the given arguments has a true
+# logical value (is neither an empty list nor all empty strings).
+#
+rule true ( rule-name args * : * )
+{
+    local result ;
+    module [ CALLER_MODULE ]
+    {
+        modules.poke assert : result : [ $(1) : $(2) : $(3) : $(4) : $(5) : $(6)
+            : $(7) : $(8) : $(9) ] ;
+    }
+
+    if ! $(result)
+    {
+        errors.error-skip-frames 3 assertion failure: Expected true result from
+            "[" $(rule-name) [ errors.lol->list $(args) : $(2) : $(3) : $(4) :
+            $(5) : $(6) : $(7) : $(8) : $(9) ] "]" ;
+    }
+}
+
+
+# Assert the exact equality of A and B, not ignoring trailing empty string
+# elements.
+#
+rule exact-equal ( a * : b * )
+{
+    if ! [ exact-equal-test $(a) : $(b) ]
+    {
+        errors.error-skip-frames 3 assertion failure: \"$(a)\" "==" \"$(b)\" ;
+    }
+}
+
+
+# Assert that the given variable is not an empty list.
+#
+rule nonempty-variable ( name )
+{
+    local value = [ modules.peek [ CALLER_MODULE ] : $(name) ] ;
+    if ! $(value)-is-not-empty
+    {
+        errors.error-skip-frames 3 assertion failure: Expected variable
+            \"$(name)\" not to be an empty list ;
+    }
+}
+
+
+rule __test__ ( )
+{
+    # -------------------------
+    # assert.set-equal() tests.
+    # -------------------------
+
+        set-equal         :         ;
+    not-set-equal "" ""   :         ;
+        set-equal "" ""   : ""      ;
+        set-equal "" ""   : "" ""   ;
+        set-equal a b c   : a b c   ;
+        set-equal a b c   : b c a   ;
+        set-equal a b c a : a b c   ;
+        set-equal a b c   : a b c a ;
+    not-set-equal a b c   : a b c d ;
+    not-set-equal a b c d : a b c   ;
 }

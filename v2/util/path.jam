@@ -510,7 +510,7 @@ rule native-NT ( path )
 rule make-UNIX ( native )
 {
     # VP: I have no idea now 'native' can be empty here! But it can!
-    if $(native) = ""
+    if ! $(native)
     {
         errors.error "Empty path passed to 'make-UNIX'" ;
     }
@@ -815,17 +815,17 @@ rule __test__ ( )
 
     #   Test processing 'invalid' rooted paths with too many '..' path elements
     # that would place them before the root.
-    assert.result "" : make "/.." ;
-    assert.result "" : make "/../" ;
-    assert.result "" : make "/../." ;
-    assert.result "" : make "/.././" ;
-    assert.result "" : make "/foo/../bar/giz/.././././../../." ;
-    assert.result "" : make "/foo/../bar/giz/.././././../.././" ;
-    assert.result "" : make "//foo/../bar/giz/.././././../../." ;
-    assert.result "" : make "//foo/../bar/giz/.././././../.././" ;
-    assert.result "" : make "\\\\foo/../bar/giz/.././././../../." ;
-    assert.result "" : make "\\\\foo/../bar/giz/.././././../.././" ;
-    assert.result "" : make "/..///.//..///.//..////foo///" ;
+    assert.result : make "/.." ;
+    assert.result : make "/../" ;
+    assert.result : make "/../." ;
+    assert.result : make "/.././" ;
+    assert.result : make "/foo/../bar/giz/.././././../../." ;
+    assert.result : make "/foo/../bar/giz/.././././../.././" ;
+    assert.result : make "//foo/../bar/giz/.././././../../." ;
+    assert.result : make "//foo/../bar/giz/.././././../.././" ;
+    assert.result : make "\\\\foo/../bar/giz/.././././../../." ;
+    assert.result : make "\\\\foo/../bar/giz/.././././../.././" ;
+    assert.result : make "/..///.//..///.//..////foo///" ;
 
     assert.result "foo\\bar\\giz" : native "foo/bar/giz" ;
     assert.result "foo" : native "foo" ;
