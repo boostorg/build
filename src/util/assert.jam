@@ -231,7 +231,7 @@ rule exact-equal ( a * : b * )
 
 # Assert that the given variable is not an empty list.
 #
-rule nonempty-variable ( name )
+rule variable-not-empty ( name )
 {
     local value = [ modules.peek [ CALLER_MODULE ] : $(name) ] ;
     if ! $(value)-is-not-empty
