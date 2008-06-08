@@ -22,14 +22,6 @@ import types/register ;
 feature.feature <install-dependencies> : off on : incidental      ;
 feature.feature <install-type>         :        : free incidental ;
 feature.feature <install-source-root>  :        : free path       ;
-# <install-target-root> must not be a path feature since it always specifies a
-# path relative to the install action's <location> property and not the Jamfile.
-# TODO: We should find a way to make this feature be converted to the internal
-# path format when specified from the outside as a command line parameter but be
-# interpreted as already being in internal path format when read from the
-# Jamfile. However, unlike 'path' features these values should not be rebased to
-# point to their target relative to the Jamfile location.
-feature.feature <install-target-root>  :        : free            ;
 feature.feature <so-version>           :        : free incidental ;
 
 # If 'on', version symlinks for shared libraries will not be created. Affects
@@ -124,30 +116,6 @@ class install-target-class : basic-target
             d = [ path.root $(d) [ path.pwd ] ] ;
             ps-raw += $(d:G=<install-source-root>) ;
         }
-
-        local d = [ $(build-property-set).get <install-target-root> ] ;
-        if $(d)
-        {
-            # We need to manually convert the <install-target-root> property
-            # value into internal Boost Build path representation since its
-            # feature does not represent a path relative to the project's
-            # Jamfile and so could not be marked with the 'path' attribute.
-            d = [ path.make $(d) ] ;
-            if [ path.is-rooted $(d) ]
-            {   
-                local error-message =
-                    "The <install-target-root> property must specify a relative"
-                    "and not an absolute path. That is the path prepended to"
-                    "all target names installed with this property." ;
-                if ! ( "--debug-building" in [ modules.peek : ARGV ] )
-                {
-                    error-message += "Use the --debug-building command line"
-                        "option to get more detailed information." ;
-                }
-                errors.user-error $(error-message) ;
-            }
-        }
-        ps-raw += $(d:G=<install-target-root>) ;
 
         if $(ps-raw)
         {
@@ -322,7 +290,6 @@ rule copy-file ( project name ? : source : properties )
 
     local new-a = [ new non-scanning-action $(source) : common.copy :
         $(properties) ] ;
-    local target-root = [ $(properties).get <install-target-root> ] ;
     local source-root = [ $(properties).get <install-source-root> ] ;
     if $(source-root)
     {
@@ -342,7 +309,7 @@ rule copy-file ( project name ? : source : properties )
     # need to explicitly check that relative is not ".", otherwise we might get
     # paths like '<prefix>/boost/.', try to create it and mkdir would obviously
     # fail.
-    name = [ path.join $(target-root) $(relative) $(name:D=) ] ;
+    name = [ path.join $(relative) $(name:D=) ] ;
 
     return [ new file-target $(name) exact : [ $(source).type ] : $(project) :
         $(new-a) ] ;
