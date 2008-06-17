@@ -194,7 +194,7 @@ rule join ( elements + )
 }
 
 
-# If 'path' is relative, it is rooted at 'root'. Otherwise, it's unchanged.
+# If 'path' is relative, it is rooted at 'root'. Otherwise, it is unchanged.
 #
 rule root ( path root )
 {
