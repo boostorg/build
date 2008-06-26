@@ -409,11 +409,12 @@ rule check-tool ( xcommand + )
 
 # Handle common options for toolset, specifically sets the following flag
 # variables:
-# - CONFIG_COMMAND to 'command'
-# - OPTIONS for compile.c   to the value of <cflags>       in options
-# - OPTIONS for compile.c++ to the value of <cxxflags>     in options
-# - OPTIONS for compile     to the value of <compileflags> in options
-# - OPTIONS for link        to the value of <linkflags>    in options
+# - CONFIG_COMMAND to $(command)
+# - OPTIONS for compile         to the value of <compileflags> in $(options)
+# - OPTIONS for compile.c       to the value of <cflags>       in $(options)
+# - OPTIONS for compile.c++     to the value of <cxxflags>     in $(options)
+# - OPTIONS for compile.fortran to the value of <fflags>       in $(options)
+# - OPTIONS for link            to the value of <linkflags>    in $(options)
 #
 rule handle-options ( toolset : condition * : command * : options * )
 {
@@ -422,18 +423,25 @@ rule handle-options ( toolset : condition * : command * : options * )
         ECHO "notice: will use '$(command)' for $(toolset), condition $(condition:E=(empty))" ;
     }
 
-    # The last parameter ('true') says it's OK to set flags for another module.
-    toolset.flags $(toolset) CONFIG_COMMAND $(condition) : $(command) : unchecked ;
-    toolset.flags $(toolset).compile OPTIONS $(condition) :
+    #   The last parameter ('unchecked') says it is OK to set flags for another
+    # module.
+    toolset.flags $(toolset) CONFIG_COMMAND $(condition) : $(command)
+        : unchecked ;
+
+    toolset.flags $(toolset).compile         OPTIONS $(condition) :
         [ feature.get-values <compileflags> : $(options) ] : unchecked ;
-    toolset.flags $(toolset).compile.c OPTIONS $(condition) :
-        [ feature.get-values <cflags> : $(options) ] : unchecked ;
-    toolset.flags $(toolset).compile.c++ OPTIONS $(condition) :
-        [ feature.get-values <cxxflags> : $(options) ] : unchecked ;
+
+    toolset.flags $(toolset).compile.c       OPTIONS $(condition) :
+        [ feature.get-values <cflags>       : $(options) ] : unchecked ;
+
+    toolset.flags $(toolset).compile.c++     OPTIONS $(condition) :
+        [ feature.get-values <cxxflags>     : $(options) ] : unchecked ;
+
     toolset.flags $(toolset).compile.fortran OPTIONS $(condition) :
-        [ feature.get-values <fflags> : $(options) ] : unchecked ;
-    toolset.flags $(toolset).link OPTIONS $(condition) :
-        [ feature.get-values <linkflags> : $(options) ] : unchecked ;
+        [ feature.get-values <fflags>       : $(options) ] : unchecked ;
+
+    toolset.flags $(toolset).link            OPTIONS $(condition) :
+        [ feature.get-values <linkflags>    : $(options) ] : unchecked ;
 }
 
 
