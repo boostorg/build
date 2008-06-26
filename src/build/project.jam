@@ -955,8 +955,8 @@ module project-rules
     # path is taken to be either absolute, or relative to this project root.
     #
     rule path-constant (
-        name # Variable name of the constant.
-        : value + # Value of the constant.
+        name  # Variable name of the constant.
+        : value +  # Value of the constant.
         )
     {
         import project ;

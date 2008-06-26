@@ -44,8 +44,8 @@ class install-target-class : basic-target
 
     rule __init__ ( name-and-dir : project : sources * : requirements * : default-build * )
     {
-        basic-target.__init__ $(name-and-dir) : $(project) : $(sources) : $(requirements)
-          : $(default-build) ;
+        basic-target.__init__ $(name-and-dir) : $(project) : $(sources) :
+            $(requirements) : $(default-build) ;
     }
 
     # If <location> is not set, sets it based on the project data.
@@ -75,8 +75,8 @@ class install-target-class : basic-target
             ps-raw = [ $(ps).raw ] ;
 
             # Unless <hardcode-dll-paths>true is in properties, which can happen
-            # only if the user has explicitly requested it, nuke all
-            # <dll-path> properties
+            # only if the user has explicitly requested it, nuke all <dll-path>
+            # properties.
             if [ $(property-set).get <hardcode-dll-paths> ] != true
             {
                 ps-raw = [ property.change $(ps-raw) : <dll-path> ] ;
@@ -96,7 +96,7 @@ class install-target-class : basic-target
         # Remove the <tag> feature on original targets.
         ps-raw = [ property.change $(ps-raw) : <tag> ] ;
         # And <location>. If stage target has another stage target in sources,
-        # then we'll get virtual targets with <location> property set.
+        # then we shall get virtual targets with <location> property set.
         ps-raw = [ property.change $(ps-raw) : <location> ] ;
 
         local d = [ $(build-property-set).get <dependency> ] ;
@@ -109,7 +109,7 @@ class install-target-class : basic-target
         ps-raw += $(ns:G=<install-no-version-symlinks>) ;
 
         local d = [ $(build-property-set).get <install-source-root> ] ;
-        # Make the path absolute: we'll use it to compute relative paths and
+        # Make the path absolute: we shall use it to compute relative paths and
         # making the path absolute will help.
         if $(d)
         {
