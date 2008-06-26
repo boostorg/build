@@ -86,13 +86,13 @@ nl = "
 # "x.y" - refers to a detected version;
 # "a.b" - refers to an undetected version.
 #
-# Note: for free VC7.1 tools, we don't correctly find vcvars32.bar when user
+# Note: for free VC7.1 tools, we do not correctly find vcvars32.bar when user
 # explicitly provides a path.
 #
 rule init (
     # The msvc version being configured. When omitted the tools invoked when no
     # explicit version is given will be configured.
-    version ? 
+    version ?
 
     # The command used to invoke the compiler. If not specified:
     #   - if version is given, default location for that version will be
@@ -105,7 +105,11 @@ rule init (
     #     searched.
     : command *
 
-    # Options can include:
+    # Options may include:
+    #
+    #     All options shared by multiple toolset types as handled by the
+    #   common.handle-options() rule, e.g. <cflags>, <compileflags>, <cxxflags>,
+    #   <fflags> & <linkflags>.
     #
     #   <assembler>
     #   <compiler>
@@ -322,7 +326,7 @@ local rule configure-really ( version ? : options * )
             # be used instead. Setup scripts may be global or arhitecture/
             # /platform/cpu specific. Setup options are used only in case of
             # global setup scripts.
-            
+
             # Default setup scripts provided with different VC distributions:
             #
             #   VC 7.1 had only the vcvars32.bat script specific to 32 bit i386
@@ -398,7 +402,7 @@ local rule configure-really ( version ? : options * )
                     if $(global-setup)-is-not-empty
                     {
                         setup-$(c) = $(global-setup) ;
-                        
+
                         # If needed we can easily add using configuration flags
                         # here for overriding which options get passed to the
                         # global setup command for which target platform:
