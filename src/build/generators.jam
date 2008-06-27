@@ -418,13 +418,13 @@ class generator
     # the '%' symbol in the name pattern will be replaced with the 'name'
     # parameter to obtain the 'name' attribute.
     #
-    # For example, if targets types are T1 and T2(with name pattern "%_x"),
-    # suffixes for T1 and T2 are .t1 and t2, and source if foo.z, then created
+    # For example, if targets types are T1 and T2 (with name pattern "%_x"),
+    # suffixes for T1 and T2 are .t1 and .t2, and source is foo.z, then created
     # files would be "foo.t1" and "foo_x.t2". The 'name' attribute actually
     # determines the basename of a file.
     #
     # Note that this pattern mechanism has nothing to do with implicit patterns
-    # in make. It's a way to produce target which name is different for name of
+    # in make. It is a way to produce target which name is different for name of
     # source.
     #
     rule generated-targets ( sources + : property-set : project name ? )
@@ -449,8 +449,8 @@ class generator
             pre = $(pre[2-]) ;
             post = $(post[2-]) ;
 
-            targets += [ class.new file-target $(generated-name)
-              : $(t) : $(project) : $(a) ] ;
+            targets += [ class.new file-target $(generated-name) : $(t) :
+                $(project) : $(a) ] ;
         }
 
         return [ sequence.transform virtual-target.register : $(targets) ] ;
