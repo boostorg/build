@@ -760,7 +760,7 @@ local rule toolset-tag ( name : type ? : property-set )
         case borland* : tag += bcb ;
         case como* : tag += como ;
         case cw : tag += cw ;
-        case darwin* : tag += ;
+        case darwin* : tag += xgcc ;
         case edg* : tag += edg ;
         case gcc* :
         {

@@ -17,6 +17,32 @@ import common ;
 import generators ;
 import path : basename ;
 
+## Use a framework.
+feature framework : : free ;
+
+## The MacOSX versions we can target.
+.macosx-versions =
+    10.5 10.4 10.3
+    iphone-2.0 iphone-1.x iphonesim-2.0
+    ;
+
+## The MacOSX version to compile for, which maps to the SDK to use (sysroot).
+feature macosx-version
+    : $(.macosx-versions)
+    : propagated link-incompatible symmetric optional ;
+
+## The minimal MacOSX version to target.
+feature macosx-version-min
+    : $(.macosx-versions)
+    : propagated optional ;
+
+#############################################################################
+
+if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
+{
+    .debug-configuration = true ;
+}
+
 feature.extend toolset : darwin ;
 import gcc ;
 toolset.inherit-generators darwin : gcc ;
@@ -41,30 +67,73 @@ toolset.inherit-flags darwin : gcc
      <architecture>power/<address-model>64
      <architecture>power/<instruction-set>  ;
 
-# No additional initialization should be necessary
+# Options:
+#
+#   <root>PATH
+#       Platform root path. The common autodetection will set this to
+#       "/Developer". And when a command is given it will be set to
+#       the corresponding "*.platform/Developer" directory.
+#
 rule init ( version ? : command * : options * : requirement * )
 {
-    condition = [ common.check-init-parameters darwin $(requirement) : version $(version) ] ;
+    # - The root directory of the tool install.
+    local root = [ feature.get-values <root> : $(options) ] ;
+    
+    # - The bin directory where to find the commands to execute.
+    local bin ;
+    
+    # - The configured compile driver command.
     local command = [ common.get-invocation-command darwin : g++ : $(command) ] ;
     
+    # - Autodetect the root and bin dir if not given.
+    if $(command)
+    {
+        bin ?= [ common.get-absolute-tool-path $(command[1]) ] ;
+        if $(bin) = "/usr/bin"
+        {
+            root ?= /Developer ;
+        }
+        else
+        {
+            local r = $(bin:D) ;
+            r = $(r:D) ;
+            root ?= $(r) ;
+        }
+    }
+    
+    # - Autodetect the version if not given.
+    if $(command)
+    {
+        # - The 'command' variable can have multiple elements. When calling
+        #   the SHELL builtin we need a single string.
+        local command-string = $(command:J=" ") ;
+        version ?= [ MATCH "^([0-9.]+)"
+            : [ SHELL "$(command-string) -dumpversion" ] ] ;
+    }
+    
+    # - Define the condition for this toolset instance.
+    local condition =
+        [ common.check-init-parameters darwin $(requirement) : version $(version) ] ;
+    
+    # - Set the toolset generic common options.
     common.handle-options darwin : $(condition) : $(command) : $(options) ;
     
-    local gccversion = [ SHELL "$(command:J= ) -dumpversion" ] ;
-    
-    # GCC 4.0 and higher in Darwin does not have -fcoalesce-templates.
-    if $(gccversion) < "4.0.0"
+    # - GCC 4.0 and higher in Darwin does not have -fcoalesce-templates.
+    if $(version) < "4.0.0"
     {
         flags darwin.compile.c++ OPTIONS $(condition) : -fcoalesce-templates ;
     }
-    # GCC 4.2 and higher in Darwin does not have -Wno-long-double.
-    if $(gccversion) < "4.2.0"
+    # - GCC 4.2 and higher in Darwin does not have -Wno-long-double.
+    if $(version) < "4.2.0"
     {
         flags darwin.compile OPTIONS $(condition) : -Wno-long-double ;
     }
 
+    # - Set the link flags common with the GCC toolset.
     gcc.init-link-flags darwin darwin $(condition) ;
 
     # - The symbol strip program.
+    local strip ;
     if <striper> in $(options)
     {
         # We can turn off strip by specifying it as empty. In which
@@ -84,7 +153,7 @@ rule init ( version ? : command * : options * : requirement * )
         # also tell the link action that we need to use a strip
         # post-process.
         flags darwin.link NEED_STRIP $(condition)/<debug-symbols>off : "" ;        
-        local strip =
+        strip =
             [ common.get-invocation-command darwin
                 : strip : [ feature.get-values <striper> : $(options) ] : $(bin) : search-path ] ;
         flags darwin.link .STRIP $(condition) : $(strip[1]) ;
@@ -104,11 +173,80 @@ rule init ( version ? : command * : options * : requirement * )
     {
         ECHO notice: using archiver :: $(condition) :: $(archiver[1]) ;
     }
+    
+    # - Initialize the SDKs available in the root for this tool.
+    local sdks = [ init-available-sdk-versions $(condition) : $(root) ] ;
+    
+    #~ ECHO --- ;
+    #~ ECHO --- bin :: $(bin) ;
+    #~ ECHO --- root :: $(root) ;
+    #~ ECHO --- version :: $(version) ;
+    #~ ECHO --- condition :: $(condition) ;
+    #~ ECHO --- strip :: $(strip) ;
+    #~ ECHO --- archiver :: $(archiver) ;
+    #~ ECHO --- sdks :: $(sdks) ;
+    #~ ECHO --- ;
+    #~ EXIT ;
 }
 
-feature framework : : free ;
+# Determine the MacOSX SDK versions installed and their locations.
+local rule init-available-sdk-versions ( condition * : root ? )
+{
+    root ?= /Developer ;
+    local sdks-root = $(root)/SDKs ;
+    local sdks = [ GLOB $(sdks-root) : MacOSX*.sdk iPhoneOS*.sdk iPhoneSimulator*.sdk ] ;
+    local result ;
+    for local sdk in $(sdks)
+    {
+        local sdk-version = [ MATCH ([^0-9]+)([0-9]+)[.]([0-9x]+)[.]?([0-9x]+)? : $(sdk:D=) ] ;
+        sdk-version = $(sdk-version[1]:L) $(sdk-version[2-3]:J=.) ;
+        if $(sdk-version)
+        {
+            switch $(sdk-version[1])
+            {
+                case macosx :
+                {
+                    sdk-version = $(sdk-version[2]) ;
+                }
+                case iphoneos :
+                {
+                    sdk-version = iphone-$(sdk-version[2]) ;
+                }
+                case iphonesimulator :
+                {
+                    sdk-version = iphonesim-$(sdk-version[2]) ;
+                }
+                case * :
+                {
+                    sdk-version = $(sdk-version:J=-) ;
+                }
+            }
+            result += $(sdk-version) ;
+            flags darwin.compile OPTIONS $(condition)/<macosx-version>$(sdk-version)
+                : -isysroot $(sdk) ;
+            flags darwin.link OPTIONS $(condition)/<macosx-version>$(sdk-version)
+                : -isysroot $(sdk) ;
+            if $(.debug-configuration)
+            {
+                ECHO notice: available sdk :: $(condition)/<macosx-version>$(sdk-version) :: $(sdk) ;
+            }
+        }
+    }
+    return $(result) ;
+}
 
+# Generic options.
 flags darwin.compile OPTIONS <flags> ;
+
+# Minimal OSX target option. Note that the default is for the min-version
+# option to not be included to let the compiler default take hold.
+for local macosx-version in $(.macosx-versions)
+{
+    flags darwin.compile OPTIONS <macosx-version-min>$(macosx-version)
+        : -mmacosx-version-min=$(macosx-version) ;
+    flags darwin.link OPTIONS <macosx-version-min>$(macosx-version)
+        : -mmacosx-version-min=$(macosx-version) ;
+}
 
 # The following adds objective-c support to darwin.
 # Thanks to http://thread.gmane.org/gmane.comp.lib.boost.build/13759
@@ -134,46 +272,6 @@ rule compile.mm
 actions compile.mm
 {
     "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
-}
-
-# Determine the MacOSX SDK versions installed and their locations.
-local rule available-macosx-versions ( )
-{
-    local sdks = [ GLOB /Developer/SDKs : MacOSX* ] ;
-    for local sdk in $(sdks)
-    {
-        local sdk-version = [ MATCH ([0-9]+)[.]([0-9]+)[.]?([0-9]+)? : $(sdk:D=) ] ;
-        sdk-version = $(sdk-version:J=.) ;
-        if $(sdk-version)
-        {
-            .macosx-sdk = $(sdk-version) $(.macosx-sdk) ;
-            .macosx-sdk.$(sdk-version) = $(sdk) ;
-        }
-    }
-    return $(.macosx-sdk) ;
-}
-
-# Add the found SDK version only to the allowed set. The "latests" SDKs
-# will be first in the list, and hence the default.
-feature macosx-version
-    : [ available-macosx-versions ]
-    : propagated link-incompatible symmetric optional ;
-if 10.4 in [ feature.values macosx-version ]
-{
-    feature.set-default macosx-version : 10.4 ;
-}
-
-# Add the options for all the found SDKs.
-for local sdk in $(.macosx-sdk)
-{
-    flags darwin.compile OPTIONS <target-os>darwin/<macosx-version>$(sdk) :
-        -isysroot $(.macosx-sdk.$(sdk))
-        -mmacosx-version-min=$(sdk)
-        ;
-    flags darwin.link OPTIONS <target-os>darwin/<macosx-version>$(sdk) :
-        -isysroot $(.macosx-sdk.$(sdk))
-        -mmacosx-version-min=$(sdk)
-        ;
 }
 
 # Add option selection for combined and specific architecture combinations.
@@ -204,15 +302,24 @@ arch-addr-flags darwin OPTIONS : power : 64 : -arch ppc64 ;
 
 arch-addr-flags darwin OPTIONS : arm : 32 : -arch arm : default ;
 
+# Set the max header padding to allow renaming of libs for installation.
+flags darwin.link.dll OPTIONS : -headerpad_max_install_names ;
 
+# To link the static runtime we need to link to all the core runtime libraries.
 flags darwin.link OPTIONS <runtime-link>static
     : -nodefaultlibs -shared-libgcc -lstdc++-static -lgcc_eh -lgcc -lSystem ;
 
-flags darwin.link OPTIONS <variant>release : -Wl,-dead_strip -no_dead_strip_inits_and_terms ;
+# Strip as much as possible when optimizing.
+flags darwin.link OPTIONS <optimization>speed : -Wl,-dead_strip -no_dead_strip_inits_and_terms ;
+flags darwin.link OPTIONS <optimization>space : -Wl,-dead_strip -no_dead_strip_inits_and_terms ;
 
+# Dynamic/shared linking.
 flags darwin.compile OPTIONS <link>shared : -dynamic ;
+
+# Misc options.
 flags darwin.compile OPTIONS : -no-cpp-precomp -gdwarf-2 ;
 
+# Add the framework names to use.
 flags darwin.link FRAMEWORK <framework> ;
 
 # This is flag is useful for debugging the link step
