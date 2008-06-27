@@ -817,7 +817,6 @@ cpu-flags gcc OPTIONS : sparc : ultrasparc3 : -mcpu=ultrasparc3 ;
 # RS/6000 & PowerPC
 flags gcc OPTIONS <architecture>power/<address-model>32 : -m32 ;
 flags gcc OPTIONS <architecture>power/<address-model>64 : -m64 ;
-flags gcc OPTIONS <architecture>power/<address-model>/<instruction-set> : -mcpu=common ;
 cpu-flags gcc OPTIONS : power : 403 : -mcpu=403 ;
 cpu-flags gcc OPTIONS : power : 505 : -mcpu=505 ;
 cpu-flags gcc OPTIONS : power : 601 : -mcpu=601 ;
