@@ -968,9 +968,9 @@ else
 
 
 # Incremental linking a DLL causes no end of problems: if the actual exports
-# don't change, the import .lib file is never updated. Therefore, the .lib is
+# do not change, the import .lib file is never updated. Therefore, the .lib is
 # always out-of-date and gets rebuilt every time. I'm not sure that incremental
-# linking is such a great idea in general, but in this case I'm sure we don't
+# linking is such a great idea in general, but in this case I am sure we do not
 # want it.
 
 # Windows manifest is a new way to specify dependencies on managed DotNet
