@@ -388,7 +388,7 @@ local rule configure-really ( version ? : options * )
             if ! [ os.name ] in NT
             {
                 setup-prefix = "cmd.exe /S /C call " ;
-                setup-suffix = " >nul \"&&\" " ;
+                setup-suffix = " \">nul\" \"&&\" " ;
             }
 
             for local c in $(cpu)
@@ -794,7 +794,7 @@ flags msvc.compile INCLUDES <include> ;
 
 rule get-rspline ( target : lang-opt )
 {
-    CC_RSPLINE on $(target) = [ on $(target) return $(lang-opt) -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c $(nl)-D$(DEFINES) $(nl)\"-I$(INCLUDES)\" ] ;
+    CC_RSPLINE on $(target) = [ on $(target) return $(lang-opt) -U$(UNDEFS) $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c $(nl)-D$(DEFINES) $(nl)\"-I$(INCLUDES:W)\" ] ;
 }
 
 
@@ -879,7 +879,7 @@ rule compile.c++.pch ( targets + : sources * : properties * )
 
 actions compile.rc
 {
-    $(.RC) -l 0x409 -U$(UNDEFS) -D$(DEFINES) -I"$(INCLUDES)" -fo "$(<:W)" "$(>:W)"
+    $(.RC) -l 0x409 -U$(UNDEFS) -D$(DEFINES) -I"$(INCLUDES:W)" -fo "$(<:W)" "$(>:W)"
 }
 
 
@@ -889,7 +889,7 @@ TOUCH_FILE = [ common.file-touch-command ] ;
 
 actions compile.idl
 {
-    $(.IDL) /nologo @"@($(<[1]:W).rsp:E=$(nl)"$(>:W)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES)" $(nl)-U$(UNDEFS) $(nl)$(MIDLFLAGS) $(nl)/tlb "$(<[1]:W)" $(nl)/h "$(<[2]:W)" $(nl)/iid "$(<[3]:W)" $(nl)/proxy "$(<[4]:W)" $(nl)/dlldata "$(<[5]:W)")"
+    $(.IDL) /nologo @"@($(<[1]:W).rsp:E=$(nl)"$(>:W)" $(nl)-D$(DEFINES) $(nl)"-I$(INCLUDES:W)" $(nl)-U$(UNDEFS) $(nl)$(MIDLFLAGS) $(nl)/tlb "$(<[1]:W)" $(nl)/h "$(<[2]:W)" $(nl)/iid "$(<[3]:W)" $(nl)/proxy "$(<[4]:W)" $(nl)/dlldata "$(<[5]:W)")"
     $(TOUCH_FILE) "$(<[4]:W)"
     $(TOUCH_FILE) "$(<[5]:W)"
 }
