@@ -1262,10 +1262,9 @@ A variable element's string value can be parsed into grist and filename-related 
  the  [@http://www.cygwin.com/cygwin-api/func-cygwin-conv-to-win32-path.html
  =cygwin_conv_to_win32_path=] function. On other platforms, the string is
  unchanged. For example
-[pre
-local x = "/cygdrive/c/Program Files/Borland" ;
-ECHO $(x:W) ;
-]
+`` 
+ x = "/cygdrive/c/Program Files/Borland" ; ECHO $(x:W) ;
+``
 prints [^"C:\\Program Files\\Borland"] on Cygwin
 ]]
 
