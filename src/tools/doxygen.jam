@@ -282,13 +282,13 @@ rule collect ( target : source : properties * )
     local source-path
         = [ path.make [ on $(source) return $(LOCATE) ] ] ;
     local collect-path
-        = [ path.root [ path.pwd ] [ path.join $(source-path) $(source:B) ] ] ;
+        = [ path.root [ path.join $(source-path) $(source:B) ] [ path.pwd ] ] ;
     local native-path
         = [ path.native $(collect-path) ] ;
     local real-source
         = [ path.native [ path.join $(collect-path) index.xml ] ] ;
     xsltproc.xslt $(target) : $(real-source) $(collect-xsl-dir:S=.xsl)
-        : <xsl:param>doxygen.xml.path="$(native-path)" ;
+        : <xsl:param>doxygen.xml.path=$(native-path) ;
 }
 
 
