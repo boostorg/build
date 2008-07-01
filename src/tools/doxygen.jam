@@ -208,19 +208,15 @@ rule headers-to-doxyfile ( target : sources * : properties * )
     if ! $(output-dir)
     {
         output-dir = [ on $(target) return $(LOCATE) ] ;
-        text += "OUTPUT_DIRECTORY = $(output-dir)" ;
+        text += "OUTPUT_DIRECTORY = \"$(output-dir)\"" ;
     }
 
-    local headers = "" ;
-    for local source in $(sources:G=)
-    {
-        headers = "$(headers) $(source)" ;
-    }
+    local headers = \"$(sources:G=)\" ;
 
     # Doxygen generates LaTex by default. So disable it unconditionally, or at
     # least until someone needs, and hence writes support for, LaTex output.
     text += "GENERATE_LATEX = NO" ;
-    text += "INPUT = $(headers) " ;
+    text += "INPUT = $(headers:J= )" ;
     print.output $(target) plain ;
     print.text $(text) : true ;
 }
@@ -371,7 +367,7 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
                 : [ targets.main-target-requirements $(requirements)
                     <doxygen:param>GENERATE_HTML=YES
                     <doxygen:param>GENERATE_XML=NO
-                    <doxygen:param>"OUTPUT_DIRECTORY=$(output-dir-native)"
+                    <doxygen:param>"OUTPUT_DIRECTORY=\"$(output-dir-native)\""
                     <doxygen:param>HTML_OUTPUT=$(target:B)
                     : $(project) ]
                 : [ targets.main-target-default-build $(default-build) : $(project) ]
