@@ -181,7 +181,7 @@ rule name ( )
 #
 actions doxygen-action
 {
-    $(RM) "$(*.XML)" & "$(NAME:E=doxygen)" $(>) && echo "Stamped" > "$(<)"
+    $(RM) "$(*.XML)" & "$(NAME:E=doxygen)" "$(>)" && echo "Stamped" > "$(<)"
 }
 
 
@@ -283,10 +283,12 @@ rule collect ( target : source : properties * )
         = [ path.make [ on $(source) return $(LOCATE) ] ] ;
     local collect-path
         = [ path.root [ path.pwd ] [ path.join $(source-path) $(source:B) ] ] ;
+    local native-path
+        = [ path.native $(collect-path) ] ;
     local real-source
-        = [ path.native [ path.join [ path.native $(collect-path) ] index.xml ] ] ;
+        = [ path.native [ path.join $(collect-path) index.xml ] ] ;
     xsltproc.xslt $(target) : $(real-source) $(collect-xsl-dir:S=.xsl)
-        : <xsl:param>doxygen.xml.path=$(collect-path) ;
+        : <xsl:param>doxygen.xml.path="$(native-path)" ;
 }
 
 
