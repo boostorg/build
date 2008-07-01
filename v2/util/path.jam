@@ -308,7 +308,7 @@ local rule .glob-tree ( roots * : patterns * : exclude-patterns * )
 }
 
 
-#    Returns true is the specified file exists.
+# Returns true is the specified file exists.
 #
 rule exists ( file )
 {
