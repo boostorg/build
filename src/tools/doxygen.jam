@@ -282,7 +282,7 @@ rule collect ( target : source : properties * )
     local source-path
         = [ path.make [ on $(source) return $(LOCATE) ] ] ;
     local collect-path
-        = [ path.join [ path.pwd ] $(source-path) $(source:B) ] ;
+        = [ path.root [ path.pwd ] [ path.join $(source-path) $(source:B) ] ] ;
     local real-source
         = [ path.native [ path.join [ path.native $(collect-path) ] index.xml ] ] ;
     xsltproc.xslt $(target) : $(real-source) $(collect-xsl-dir:S=.xsl)
