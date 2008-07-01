@@ -309,7 +309,7 @@ rule quickbook-to-boostbook ( target : source : properties * )
 
 actions quickbook-to-boostbook
 {
-    "$(QB-COMMAND)" -I"$(INCLUDES)" --output-file=$(1) $(2)  
+    "$(QB-COMMAND)" -I"$(INCLUDES)" --output-file="$(1)" "$(2)"  
 }
 
 
