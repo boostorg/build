@@ -37,6 +37,7 @@ import alias ;
 import common ;
 import modules ;
 
+
 # Use to specify extra configuration paramters. These get translated
 # into a doxyfile which configures the building of the docs.
 feature.feature doxygen:param : : free ;
@@ -87,6 +88,8 @@ rule init ( name ? )
 
         if ! $(name)
         {
+            local doxygen-path ;
+
             if [ os.name ] = NT
             {
                 local ProgramFiles = [ modules.peek : ProgramFiles ] ;
@@ -99,49 +102,38 @@ rule init ( name ? )
                     ProgramFiles = "C:\\Program Files" ;
                 }
 
-                local doxygen-path =
+                doxygen-path =
                     [ GLOB
                         [ modules.peek : PATH ]
                         "$(ProgramFiles)\\doxygen\\bin"
                         : doxygen\.exe ] ;
-                doxygen-path = $(doxygen-path[1]) ;
-
-                if $(doxygen-path)
-                {
-                    if --debug-configuration in [ modules.peek : ARGV ]
-                    {
-                        ECHO "notice:" using doxygen ":" $(doxygen-path) ;
-                    }
-                    .doxygen = $(doxygen-path) ;
-                }
             }
             else
             {
-                local doxygen-path =
+                doxygen-path =
                     [ GLOB
                         [ modules.peek : PATH ]
                         : doxygen ] ;
-                doxygen-path = $(doxygen-path[1]) ;
-
-                if $(doxygen-path)
-                {
-                    if --debug-configuration in [ modules.peek : ARGV ]
-                    {
-                        ECHO "notice:" using doxygen ":" $(doxygen-path) ;
-                    }
-                    .doxygen = $(doxygen-path) ;
-                }
             }
+
+            doxygen-path = $(doxygen-path[1]) ;
+
+            if $(doxygen-path)
+            {
+                .doxygen = $(doxygen-path) ;
+            }
+
+            .doxygen ?= doxygen ;
         }
         else
         {
-            if --debug-configuration in [ modules.peek : ARGV ]
-            {
-                ECHO "notice:" using doxygen ":" $(name) ;
-            }
             .doxygen = $(name) ;
         }
-        .doxygen ?= doxygen ;
+
+        if --debug-configuration in [ modules.peek : ARGV ]
+        {
+            ECHO "notice:" using doxygen ":" $(.doxygen) ;
+        }
 
         .doxproc = [ modules.binding $(__name__) ] ;
         .doxproc = $(.doxproc:D)/doxproc.py ;
