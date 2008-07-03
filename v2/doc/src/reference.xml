@@ -528,13 +528,14 @@ path-constant DATA : data/a.txt ;
             feature (so it will be brought up-to-date whenever the target being
             declared is). The dependency is not used in any other way.
 
-            <!------------------------------------------------------------------
+            <!--
+            ====================================================================
             An example and a motivation is needed here. Below is some commented
             out content that used to be here but did not make any sense and
             seems to have been left unfinished in some previous revision. Should
             be fixed and this whole feature should be retested and fixed as
             needed.
-            --------------------------------------------------------------------
+            ====================================================================
             For example, in application with plugins, the plugins are not used
             when linking the application, application might have a dependency on
             its plugins, even though
@@ -549,7 +550,8 @@ path-constant DATA : data/a.txt ;
 
             It is hard to picture why anyone would want to do that. Please flesh
             out this motivation.
-            ------------------------------------------------------------------->
+            ====================================================================
+            -->
           </simpara>
         </listitem>
       </varlistentry>
