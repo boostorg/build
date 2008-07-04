@@ -574,6 +574,8 @@ rule MkDir
     {
         # Cheesy gate to prevent multiple invocations on same dir.
         $(<)-mkdir = true ;
+
+        # Schedule the mkdir build action.
         MkDir1 $(<) ;
 
         # Prepare a Jam 'dirs' target that can be used to make the build only
@@ -594,7 +596,7 @@ rule MkDir
             }
         }
 
-        if $(s) && $(s) != $(<)
+        if $(s) && ( $(s) != $(<) )
         {
             DEPENDS $(<) : $(s) ;
             MkDir $(s) ;
