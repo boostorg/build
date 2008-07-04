@@ -567,7 +567,7 @@ rule file-touch-command ( )
 
 rule MkDir
 {
-    # If dir exists, don't update it. Do this even for $(DOT).
+    # If dir exists, do not update it. Do this even for $(DOT).
     NOUPDATE $(<) ;
 
     if $(<) != $(DOT) && ! $($(<)-mkdir)
