@@ -198,23 +198,24 @@ local rule init-available-sdk-versions ( condition * : root ? )
     local result ;
     for local sdk in $(sdks)
     {
-        local sdk-version = [ MATCH ([^0-9]+)([0-9]+)[.]([0-9x]+)[.]?([0-9x]+)? : $(sdk:D=) ] ;
-        sdk-version = $(sdk-version[1]:L) $(sdk-version[2-3]:J=.) ;
+        local sdk-match = [ MATCH ([^0-9]+)([0-9]+)[.]([0-9x]+)[.]?([0-9x]+)? : $(sdk:D=) ] ;
+        local sdk-platform = $(sdk-match[1]:L) ;
+        local sdk-version = $(sdk-match[2]).$(sdk-match[3]) ;
         if $(sdk-version)
         {
-            switch $(sdk-version[1])
+            switch $(sdk-platform)
             {
                 case macosx :
                 {
-                    sdk-version = $(sdk-version[2]) ;
+                    sdk-version = $(sdk-version) ;
                 }
                 case iphoneos :
                 {
-                    sdk-version = iphone-$(sdk-version[2]) ;
+                    sdk-version = iphone-$(sdk-version) ;
                 }
                 case iphonesimulator :
                 {
-                    sdk-version = iphonesim-$(sdk-version[2]) ;
+                    sdk-version = iphonesim-$(sdk-version) ;
                 }
                 case * :
                 {
