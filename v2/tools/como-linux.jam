@@ -1,9 +1,10 @@
-# Copyright 2004, 2005, 2006 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2004, 2005, 2006 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # The following #// line will be used by the regression test table generation
-# program as the column heading for HTML tables. Must not include version number.
+# program as the column heading for HTML tables. Must not include a version
+# number.
 #//<a href="http://www.comeaucomputing.com/">Comeau<br>C++</a>
 
 import toolset ;
@@ -12,33 +13,35 @@ import toolset : flags ;
 import common ;
 import generators ;
 
-import unix ;  
+import unix ;
 import como ;
 
 feature.extend-subfeature toolset como : platform : linux ;
 
-toolset.inherit-generators como-linux 
+toolset.inherit-generators como-linux
      <toolset>como <toolset-como:platform>linux : unix ;
-generators.override como-linux.prebuilt : builtin.lib-generator ;     
+generators.override como-linux.prebuilt : builtin.lib-generator ;
 generators.override como-linux.searched-lib-generator : searched-lib-generator ;
 toolset.inherit-flags como-linux : unix ;
 toolset.inherit-rules como-linux : gcc ;
 
-generators.register-c-compiler como-linux.compile.c++ : CPP : OBJ 
-  : <toolset>como <toolset-como:platform>linux ;
+generators.register-c-compiler como-linux.compile.c++ : CPP : OBJ
+    : <toolset>como <toolset-como:platform>linux ;
 generators.register-c-compiler como-linux.compile.c : C : OBJ
-  : <toolset>como <toolset-como:platform>linux ;
+    : <toolset>como <toolset-como:platform>linux ;
+
 
 rule init ( version ? : command * : options * )
 {
     local condition = [ common.check-init-parameters como-linux
         : version $(version) ] ;
-    
-    command = [ common.get-invocation-command como-linux : como 
+
+    command = [ common.get-invocation-command como-linux : como
         : $(command) ] ;
-    
+
     common.handle-options como-linux : $(condition) : $(command) : $(options) ;
 }
+
 
 flags como-linux C++FLAGS <exception-handling>off : --no_exceptions ;
 flags como-linux C++FLAGS <exception-handling>on : --exceptions ;
@@ -98,4 +101,3 @@ actions archive
 {
     ar rcu $(<) $(>)
 }
-
