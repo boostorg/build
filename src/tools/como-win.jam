@@ -6,7 +6,8 @@
 # http://www.boost.org/LICENSE_1_0.txt)
 
 # The following #// line will be used by the regression test table generation
-# program as the column heading for HTML tables. Must not include version number.
+# program as the column heading for HTML tables. Must not include a version
+# number.
 #//<a href="http://www.comeaucomputing.com/">Comeau<br>C++</a>
 
 import common ;
@@ -17,38 +18,42 @@ import toolset : flags ;
 
 feature.extend-subfeature toolset como : platform : win ;
 
-# Initializes the Comeau toolset for windows.
-# The command is the command which invokes the compiler.
-# You should either set environment variable COMO_XXX_INCLUDE where
-# XXX is the used backed (as described in documentation), or pass
-# that as part of command, e.g:
-# 
+
+# Initializes the Comeau toolset for windows. The command is the command which
+# invokes the compiler. You should either set environment variable
+# COMO_XXX_INCLUDE where XXX is the used backend (as described in the
+# documentation), or pass that as part of command, e.g:
+#
 #   using como-win : 4.3 : "set COMO_BCC_INCLUDE=C:/include &&" como.exe ;
+#
 rule init ( version ? : command * : options * )
 {
     local condition = [  common.check-init-parameters como-win
         : version $(version) ] ;
-    
+
     command = [ common.get-invocation-command como-win : como.exe :
-        $(command) ] ;    
-    
+        $(command) ] ;
+
     common.handle-options como-win : $(condition) : $(command) : $(options) ;
 }
 
-generators.register-c-compiler como-win.compile.c++ : CPP : OBJ 
-  : <toolset>como <toolset-como:platform>win ;
+generators.register-c-compiler como-win.compile.c++ : CPP : OBJ
+    : <toolset>como <toolset-como:platform>win ;
 generators.register-c-compiler como-win.compile.c : C : OBJ
-  : <toolset>como <toolset-como:platform>win ;
+    : <toolset>como <toolset-como:platform>win ;
 
-generators.register-linker como-win.link 
-  : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB 
-  : EXE
-  : <toolset>como <toolset-como:platform>win ;  
-# Note that status of shared libraries support is not clear, so we don't
-# define the link.dll generator.
-generators.register-archiver como-win.archive 
-  : OBJ : STATIC_LIB
-  : <toolset>como <toolset-como:platform>win ;  
+
+generators.register-linker como-win.link
+    : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
+    : EXE
+    : <toolset>como <toolset-como:platform>win ;
+
+# Note that status of shared libraries support is not clear, so we do not define
+# the link.dll generator.
+generators.register-archiver como-win.archive
+    : OBJ : STATIC_LIB
+    : <toolset>como <toolset-como:platform>win ;
+
 
 flags como-win C++FLAGS <exception-handling>off : --no_exceptions ;
 flags como-win C++FLAGS <exception-handling>on : --exceptions ;
@@ -56,16 +61,17 @@ flags como-win C++FLAGS <exception-handling>on : --exceptions ;
 flags como-win CFLAGS <inlining>off : --no_inlining ;
 flags como-win CFLAGS <inlining>on <inlining>full : --inlining ;
 
-# The following seems to be VC-specific options. At least,
-# when I uncomment then, Comeau with bcc as backend reports
-# that bcc32 invocation.
+
+# The following seems to be VC-specific options. At least, when I uncomment
+# then, Comeau with bcc as backend reports that bcc32 invocation failed.
 #
 #flags como-win CFLAGS <debug-symbols>on : /Zi ;
 #flags como-win CFLAGS <optimization>off : /Od ;
 
+
 flags como-win CFLAGS <cflags> ;
-flags como-win CFLAGS : -D_WIN32 ; # make sure that we get the Boost Win32 platform config header.
-flags como-win CFLAGS <threading>multi : -D_MT ; # make sure that our config knows that threading is on.
+flags como-win CFLAGS : -D_WIN32 ;  # Make sure that we get the Boost Win32 platform config header.
+flags como-win CFLAGS <threading>multi : -D_MT ;  # Make sure that our config knows that threading is on.
 flags como-win C++FLAGS <cxxflags> ;
 flags como-win DEFINES <define> ;
 flags como-win UNDEFS <undef> ;
@@ -83,12 +89,12 @@ flags como-win LIBRARIES <library-file> ;
 flags como-win FINDLIBS <find-shared-library> ;
 flags como-win FINDLIBS <find-static-library> ;
 
-RM = [ common.rm-command ] ;
 nl = "
 " ;
 
 
-# for como, we repeat all libraries so that dependencies are always resolved
+# For como, we repeat all libraries so that dependencies are always resolved.
+#
 actions link bind LIBRARIES
 {
     $(CONFIG_COMMAND) --no_version --no_prelink_verbose $(LINKFLAGS) -o "$(<[1]:S=)" @"@($(<[1]:W).rsp:E=$(nl)"$(>)")" "$(LIBRARIES)" "$(FINDLIBS:S=.lib)"
@@ -109,4 +115,3 @@ actions updated together piecemeal archive
     $(CONFIG_COMMAND) --no_version --no_prelink_verbose --prelink_object "$(>)"
     lib $(ARFLAGS) /nologo /out:"$(<:S=.lib)" "$(>)"
 }
-
