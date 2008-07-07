@@ -376,9 +376,9 @@ rule check-tool-aux ( command )
     {
         if [ path.exists $(command) ]
             # Both NT and Cygwin will run .exe files by their unqualified names.
-            || [ os.on-windows ] && [ path.exists $(command).exe ]
+            || ( [ os.on-windows ] && [ path.exists $(command).exe ] )
             # Only NT will run .bat files by their unqualified names.
-            || [ os.name ] = NT && [ path.exists $(command).bat ]
+            || ( ( [ os.name ] = NT ) && [ path.exists $(command).bat ] )
         {
             return $(command) ;
         }
@@ -537,7 +537,7 @@ rule prepend-path-variable-command ( variable : paths * )
 #
 rule file-creation-command ( )
 {
-    if [ modules.peek : NT ]
+    if [ os.name ] = NT
     {
         return "echo. > " ;
     }
@@ -554,7 +554,7 @@ rule file-creation-command ( )
 #
 rule file-touch-command ( )
 {
-    if [ os.name ] in NT
+    if [ os.name ] = NT
     {
         return "echo. >> " ;
     }
@@ -586,7 +586,6 @@ rule MkDir
         # recurse until root.
 
         local s = $(<:P) ;
-
         if $(NT)
         {
             switch $(s)
@@ -596,14 +595,17 @@ rule MkDir
             }
         }
 
-        if $(s) && ( $(s) != $(<) )
+        if $(s)
         {
-            DEPENDS $(<) : $(s) ;
-            MkDir $(s) ;
-        }
-        else if $(s)
-        {
-            NOTFILE $(s) ;
+            if $(s) != $(<)
+            {
+                DEPENDS $(<) : $(s) ;
+                MkDir $(s) ;
+            }
+            else
+            {
+                NOTFILE $(s) ;
+            }
         }
     }
 }
