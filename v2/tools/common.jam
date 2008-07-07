@@ -586,7 +586,7 @@ rule MkDir
         # recurse until root.
 
         local s = $(<:P) ;
-        if $(NT)
+        if [ os.name ] = NT
         {
             switch $(s)
             {
