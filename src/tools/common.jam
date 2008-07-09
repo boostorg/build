@@ -506,6 +506,34 @@ rule variable-setting-command ( variable : value )
     }
     else
     {
+        # (todo)
+        #   The following does not work on CYGWIN and needs to be fixed. On
+        # CYGWIN the $(nl) variable holds a Windows new-line \r\n sequence that
+        # messes up the executed export command which then reports that the
+        # passed variable name is incorrect. This is most likely due to the
+        # extra \r character getting interpreted as a part of the variable name.
+        #
+        #   Several ideas pop to mind on how to fix this:
+        #     * One way would be to separate the commands using the ; shell
+        #       command separator. This seems like the quickest possible
+        #       solution but I do not know whether this would break code on any
+        #       platforms I I have no access to.
+        #     * Another would be to not use the terminating $(nl) but that would
+        #       require updating all the using code so it does not simply
+        #       prepend this variable to its own commands.
+        #     * I guess the cleanest solution would be to update Boost Jam to
+        #       allow explicitly specifying \n & \r characters in its scripts
+        #       instead of always relying only on the 'current OS native newline
+        #       sequence'.
+        #
+        #   Some code found to depend on this behaviour:
+        #     * This Boost Build module.
+        #         * __test__ rule.
+        #         * path-variable-setting-command rule.
+        #     * python.jam toolset.
+        #     * xsltproc.jam toolset.
+        #     * fop.jam toolset.
+        #                                     (todo) (07.07.2008.) (Jurko)
         return "$(variable)=$(value)$(nl)export $(variable)$(nl)" ;
     }
 }
@@ -576,7 +604,14 @@ rule MkDir
         $(<)-mkdir = true ;
 
         # Schedule the mkdir build action.
-        MkDir1 $(<) ;
+        if [ os.name ] = NT
+        {
+            MkDir1-quick-fix-for-windows $(<) ;
+        }
+        else
+        {
+            MkDir1-quick-fix-for-unix $(<) ;
+        }
 
         # Prepare a Jam 'dirs' target that can be used to make the build only
         # construct all the target directories.
@@ -614,6 +649,21 @@ rule MkDir
 actions MkDir1
 {
     mkdir "$(<)"
+}
+
+
+# (todo)
+#   The following quick-fix actions should be replaced using the original MkDir1
+# action once Boost Jam gets updated to correctly detect different paths leading
+# up to the same filesystem target and triggers their build action only once.
+#                                             (todo) (04.07.2008.) (Jurko)
+actions MkDir1-quick-fix-for-unix
+{
+    mkdir -p "$(<)"
+}
+actions MkDir1-quick-fix-for-windows
+{
+    if not exist "$(<)\\" mkdir "$(<)"
 }
 
 
