@@ -134,7 +134,7 @@ local rule shell-cmd ( cmd )
 # Try to identify Cygwin symlinks. Invoking such a file directly as an NT
 # executable from a native Windows build of bjam would be fatal to the bjam
 # process. One /can/ invoke them through sh.exe or bash.exe, if you can prove
-# that those aren't also symlinks. ;-)
+# that those are not also symlinks. ;-)
 #
 # If a symlink is found returns non-empty; we try to extract the target of the
 # symlink from the file and return that.
@@ -345,6 +345,7 @@ local rule windows-path-to-native ( path )
 
 # Return nonempty if path looks like a windows path, i.e. it starts with a drive
 # letter or contains backslashes.
+#
 local rule guess-windows-path ( path )
 {
     return [ SUBST $(path) ($(.windows-drive-letter-re)|.*([\\]).*) $1 ] ;
@@ -387,9 +388,9 @@ local rule split-version ( version )
 }
 
 
-# Build a list of versions from 3.0 down to 1.5. Because bjam can't enumerate
+# Build a list of versions from 3.0 down to 1.5. Because bjam can not enumerate
 # registry sub-keys, we have no way of finding a version with a 2-digit minor
-# version, e.g. 2.10 -- let's hope that never happens.
+# version, e.g. 2.10 -- let us hope that never happens.
 #
 .version-countdown = ;
 for local v in [ numbers.range 15 30 ]
@@ -717,7 +718,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
 
     if ! $(cmd-or-prefix) || [ GLOB $(cmd-or-prefix) : * ]
     {
-        # If the user didn't pass a command, whatever we got was a prefix.
+        # If the user did not pass a command, whatever we got was a prefix.
         prefix = $(cmd-or-prefix) ;
         cmds-to-try = [ candidate-interpreters $(version) : $(prefix) : $(target-os) ] ;
     }
@@ -726,7 +727,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         # Work with the command the user gave us.
         cmds-to-try = $(cmd-or-prefix) ;
 
-        # On windows, don't nail down the interpreter command just yet in case
+        # On windows, do not nail down the interpreter command just yet in case
         # the user specified something that turns out to be a cygwin symlink,
         # which could bring down bjam if we invoke it.
         if $(target-os) != windows
@@ -735,7 +736,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         }
     }
 
-    # Values to use in case we can't really find anything in the system.
+    # Values to use in case we can not really find anything in the system.
     local fallback-cmd = $(cmds-to-try[1]) ;
     local fallback-version ;
 
@@ -748,8 +749,8 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         local sys.$(sys-elements) ;
 
         # Compute the string Python's sys.platform needs to match. If not
-        # targeting windows or cygwin we'll assume only native builds can
-        # possibly run, so we won't require a match and we leave sys.platform
+        # targeting windows or cygwin we will assume only native builds can
+        # possibly run, so we will not require a match and we leave sys.platform
         # blank.
         local platform ;
         switch $(target-os)
