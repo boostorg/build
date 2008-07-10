@@ -330,9 +330,9 @@ rule get-absolute-tool-path ( command )
 
 # Attempts to find tool (binary) named 'name' in PATH and in 'additional-paths'.
 # If found in PATH, returns 'name' and if found in additional paths, returns
-# absolute name. If the tool is found in several directories, returns all paths.
-# Otherwise, returns an empty string. If 'path-last' is specified, PATH is
-# searched after 'additional-paths'.
+# absolute name. If the tool is found in several directories, returns the
+# first path found.  Otherwise, returns an empty string. If 'path-last' is
+# specified, PATH is searched after 'additional-paths'.
 #
 rule find-tool ( name : additional-paths * : path-last ? )
 {
