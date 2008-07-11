@@ -114,7 +114,7 @@ rule init ( version ? : cmd-or-prefix ? : includes * : libraries ?
 }
 
 # A simpler version of SHELL that grabs stderr as well as stdout, but returns
-# nothing if there's an error.
+# nothing if there was an error.
 #
 local rule shell-cmd ( cmd )
 {
@@ -201,6 +201,7 @@ local rule default-extension ( names * : ext * )
 # cygwin symlink.
 #
 # Note: only works on NT.
+#
 local rule invokes-cygwin-symlink ( cmd )
 {
     local dirs = $(cmd:D) ;
@@ -464,8 +465,8 @@ local rule probe ( python-cmd )
         # Prepare a List of Python format strings and expressions that can be
         # used to print the constants we want from the sys module.
 
-        # We don't really want sys.version since that's a complicated string, so
-        # get the information from sys.version_info instead.
+        # We do not really want sys.version since that is a complicated string,
+        # so get the information from sys.version_info instead.
         local format = "version=%d.%d" ;
         local exprs = "version_info[0]" "version_info[1]" ;
 
@@ -613,11 +614,11 @@ local rule candidate-interpreters ( version ? : prefix ? : target-os )
 #
 # Even where Python itself uses pthreads, it never allows extension modules to
 # be entered concurrently (unless they explicitly give up the interpreter lock).
-# Therefore, extension modules don't need the efficiency overhead of threadsafe
+# Therefore, extension modules do not need the efficiency overhead of threadsafe
 # code as produced by <threading>multi, and we handle libpthread along with
 # other libraries here. Note: this optimization is based on an assumption that
 # the compiler generates link-compatible code in both the single- and
-# multi-threaded cases, and that system libraries don't change their ABIs
+# multi-threaded cases, and that system libraries do not change their ABIs
 # either.
 #
 # Returns a list of usage-requirements that link to the necessary system
@@ -630,14 +631,14 @@ local rule system-library-dependencies ( target-os )
         case s[uo][nl]* : # solaris, sun, sunos
             # Add a librt dependency for the gcc toolset on SunOS (the sun
             # toolset adds -lrt unconditionally). While this appears to
-            # duplicate the logic already in gcc.jam, it doesn't as long as
-            # we're not forcing <threading>multi.
+            # duplicate the logic already in gcc.jam, it does not as long as
+            # we are not forcing <threading>multi.
 
             # On solaris 10, distutils.sysconfig.get_config_var('LIBS') yields
-            # '-lresolv -lsocket -lnsl -lrt -ldl'. However, that doesn't seem to
-            # be the right list for extension modules. For example, on my
+            # '-lresolv -lsocket -lnsl -lrt -ldl'. However, that does not seem
+            # to be the right list for extension modules. For example, on my
             # installation, adding -ldl causes at least one test to fail because
-            # the library can't be found and removing it causes no failures.
+            # the library can not be found and removing it causes no failures.
 
             # Apparently, though, we need to add -lrt for gcc.
             return <toolset>gcc:<library>rt ;
@@ -727,7 +728,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         # Work with the command the user gave us.
         cmds-to-try = $(cmd-or-prefix) ;
 
-        # On windows, do not nail down the interpreter command just yet in case
+        # On Windows, do not nail down the interpreter command just yet in case
         # the user specified something that turns out to be a cygwin symlink,
         # which could bring down bjam if we invoke it.
         if $(target-os) != windows
@@ -749,7 +750,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         local sys.$(sys-elements) ;
 
         # Compute the string Python's sys.platform needs to match. If not
-        # targeting windows or cygwin we will assume only native builds can
+        # targeting Windows or cygwin we will assume only native builds can
         # possibly run, so we will not require a match and we leave sys.platform
         # blank.
         local platform ;
@@ -879,8 +880,8 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
 
     local dll-path = $(libraries) ;
 
-    # Make sure that we can find the Python DLL on windows.
-    if $(target-os) = windows && $(exec-prefix)
+    # Make sure that we can find the Python DLL on Windows.
+    if ( $(target-os) = windows ) && $(exec-prefix)
     {
         dll-path += $(exec-prefix) ;
     }
@@ -895,7 +896,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         if $(target-os) = windows
         {
             # In pyconfig.h, Py_DEBUG is set if _DEBUG is set. If we define
-            # Py_DEBUG we'll get multiple definition warnings.
+            # Py_DEBUG we will get multiple definition warnings.
             usage-requirements += <define>_DEBUG ;
         }
         else
@@ -953,7 +954,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
           : $(target-requirements)
           :
             # Why python.lib must be listed here instead of along with the
-            # system libs is a mystery, but if we don't do it, on cygwin,
+            # system libs is a mystery, but if we do not do it, on cygwin,
             # -lpythonX.Y never appears in the command line (although it does on
             # linux).
           : $(usage-requirements)
@@ -962,10 +963,11 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
           ;
     }
 
-    # On *nix, we don't want to link either Boost.Python or Python extensions to
-    # libpython, because the Python interpreter itself provides all those
-    # symbols. If we linked to libpython, we'd get duplicate symbols. So declare
-    # two targets -- one for building extensions and another for embedding.
+    # On *nix, we do not want to link either Boost.Python or Python extensions
+    # to libpython, because the Python interpreter itself provides all those
+    # symbols. If we linked to libpython, we would get duplicate symbols. So
+    # declare two targets -- one for building extensions and another for
+    # embedding.
     #
     # Unlike most *nix systems, Mac OS X's linker does not permit undefined
     # symbols when linking a shared library. So, we still need to link against
@@ -1155,12 +1157,12 @@ generators.register
 generators.register-standard testing.expect-success
   : RUN_PYD_OUTPUT : RUN_PYD ;
 
-  
+
 # There are two different ways of spelling OS names. One is used for [ os.name ]
 # and the other is used for the <host-os> and <target-os> properties. Until that
 # is remedied, this sets up a crude mapping from the latter to the former, that
-# will work *for the purposes of cygwin/NT cross-builds only*. Couldn't think of
-# a better name than "translate".
+# will work *for the purposes of cygwin/NT cross-builds only*. Could not think
+# of a better name than "translate".
 #
 .translate-os-windows = NT ;
 .translate-os-cygwin = CYGWIN ;
@@ -1187,8 +1189,8 @@ toolset.flags python.capture-output ARGS <testing.arg> ;
 
 rule capture-output ( target : sources * : properties * )
 {
-    # Setup up proper DLL search path. Here, $(sources[1]) is python module and
-    # $(sources[2]) is DLL. Only $(sources[1]) is passed to
+    # Setup up a proper DLL search path. Here, $(sources[1]) is a python module
+    # and $(sources[2]) is a DLL. Only $(sources[1]) is passed to
     # testing.capture-output, so RUN_PATH variable on $(sources[2]) is not
     # consulted. Move it over explicitly.
     RUN_PATH on $(sources[1]) = [ on $(sources[2-]) return $(RUN_PATH) ] ;
@@ -1202,10 +1204,10 @@ rule capture-output ( target : sources * : properties * )
 
     # PYTHONPATH is different; it will be interpreted by whichever Python is
     # invoked and so must follow path rules for the target os. The only OSes
-    # where we can run pythons for other OSes currently are NT and CYGWIN, so we
+    # where we can run python for other OSes currently are NT and CYGWIN so we
     # only need to handle those cases.
     local target-os = [ feature.get-values target-os : $(properties) ] ;
-    # Oddly, host-os isn't in properties, so grab the default value.
+    # Oddly, host-os is not in properties, so grab the default value.
     local host-os = [ feature.defaults host-os ] ;
     host-os = $(host-os:G=) ;
     if $(target-os) != $(host-os)
@@ -1223,9 +1225,8 @@ rule capture-output ( target : sources * : properties * )
 rule bpl-test ( name : sources * : requirements * )
 {
     sources ?= $(name).py $(name).cpp ;
-    return [ testing.make-test
-        run-pyd : $(sources) /boost/python//boost_python
-          : $(requirements) : $(name) ] ;
+    return [ testing.make-test run-pyd : $(sources) /boost/python//boost_python
+        : $(requirements) : $(name) ] ;
 }
 
 
