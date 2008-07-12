@@ -159,8 +159,7 @@ rule expand-subfeatures-in-conditions ( properties * )
             }
             else
             {
-                local individual-subfeatures = [ set.difference $(e) : $(condition) ] ;
-                result += $(individual-subfeatures:J=,):$(value) ;
+                result += $(e:J=,):$(value) ;
             }
         }
     }
