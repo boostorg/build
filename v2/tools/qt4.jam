@@ -161,24 +161,17 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
         # dependency scanner for wrapped files.
         type.set-scanner QRC : qrc-scanner ;
         
-        # List of all Qt libraries
-        local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg QtOpenGL Qt3Support QtTest QtAssistantClient QtDesigner QtUiTools QtDBus QtScript QtHelp QtXmlPatterns QtWebKit phonon ;
-
         # Test for a buildable Qt.
         if [ glob $(.prefix)/Jamroot ]
         {
-            # Import all Qt Modules
-            for local l in $(all-libraries)
-            {
-                alias $(l)
-                    : $(.prefix)//$(l)
-                    :
-                    :
-                    : <allow>qt4 ;
-            }
+            .bjam-qt = true
+
+            # this will declare QtCore (and qtmain on <target-os>windows)
+            add-shared-library QtCore ;
         }
         else
-        # Use pre-built Qt.
+        # Setup common pre-built Qt.
+        # Special setup for QtCore on which everything depends
         {
             local usage-requirements =
                 <include>$(.incprefix)
@@ -193,12 +186,12 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
                 # On NT, the libs have "4" suffix, and "d" suffix in debug
                 # builds. Also, on NT we must link against the qtmain library
                 # (for WinMain).
-                suffix_version = "4" ;
-                suffix_debug = "d" ;
+                .suffix_version = "4" ;
+                .suffix_debug = "d" ;
                 lib qtmain
                     : # sources
                     : # requirements
-                      <name>qtmain$(suffix_debug)
+                      <name>qtmain$(.suffix_debug)
                       <variant>debug
                     ;
 
@@ -212,20 +205,20 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
             else if [ os.name ] = MACOSX
             {
                 # On MacOS X, both debug and release libraries are available.
-                suffix_version = "" ;
-                suffix_debug = "_debug" ;
+                .suffix_version = "" ;
+                .suffix_debug = "_debug" ;
             }
             else
             {
                 # Since Qt-4.2, debug versions on unix have to be built
                 # separately and therefore have no suffix.
-                suffix_version = "" ;
-                suffix_debug = "" ;
+                .suffix_version = "" ;
+                .suffix_debug = "" ;
             }
 
             lib QtCore : $(main)
                 : # requirements
-                  <name>QtCore$(suffix_version)
+                  <name>QtCore$(.suffix_version)
                 : # default-build
                 : # usage-requirements
                   <define>QT_CORE_LIB
@@ -235,7 +228,7 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
                 ;
             lib QtCore : $(main)
                 : # requirements
-                  <name>QtCore$(suffix_debug)$(suffix_version)
+                  <name>QtCore$(.suffix_debug)$(.suffix_version)
                   <variant>debug
                 : # default-build
                 : # usage-requirements
@@ -243,333 +236,60 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
                   <include>$(.incprefix)/QtCore
                   $(usage-requirements)
                 ;
+         }
 
-            lib QtGui : QtCore
-                : # requirements
-                  <name>QtGui$(suffix_version)
-                : # default-build
-                : # usage-requirements
-                  <define>QT_GUI_LIB
-                  <include>$(.incprefix)/QtGui
-                ;
+         # Initialising the remaining libraries is canonical
+         add-shared-library QtGui     : QtCore : QT_GUI_LIB     ;
+         add-shared-library QtNetwork : QtCore : QT_NETWORK_LIB ;
+         add-shared-library QtSql     : QtCore : QT_SQL_LIB     ;
+         add-shared-library QtXml     : QtCore : QT_XML_LIB     ;
 
-            lib QtGui : QtCore
-                : # requirements
-                  <name>QtGui$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_GUI_LIB
-                  <include>$(.incprefix)/QtGui
-                ;
+         add-shared-library Qt3Support : QtGui QtNetwork QtXml QtSql 
+                                       : QT_QT3SUPPORT_LIB QT3_SUPPORT
+                                       : <qt3support>on ;
 
-            lib QtNetwork : QtCore
-                : # requirements
-                  <name>QtNetwork$(suffix_version)
-                : # default-build
-                : # usage-requirements
-                  <define>QT_NETWORK_LIB
-                  <include>$(.incprefix)/QtNetwork
-                ;
-            lib QtNetwork : QtCore
-                : # requirements
-                  <name>QtNetwork$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_NETWORK_LIB
-                  <include>$(.incprefix)/QtNetwork
-                ;
+         # Dummy target to enable "<qt3support>off" and
+         # "<library>/qt//Qt3Support" at the same time. This enables quick
+         # switching from one to the other for test/porting purposes.
+         alias Qt3Support : : : : <qt3support>off ;
 
-            lib QtSql : QtCore
-                : # requirements
-                  <name>QtSql$(suffix_version)
-                : # default-build
-                : # usage-requirements
-                  <define>QT_SQL_LIB
-                  <include>$(.incprefix)/QtSql
-                ;
-            lib QtSql : QtCore
-                : # requirements
-                  <name>QtSql$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_SQL_LIB
-                  <include>$(.incprefix)/QtSql
-                ;
+         # OpenGl Support
+         add-shared-library QtOpenGL : QtGui : QT_OPENGL_LIB ;
 
-            lib QtXml : QtCore
-                : # requirements
-                  <name>QtXml$(suffix_version)
-                : # default-build
-                : # usage-requirements
-                  <define>QT_XML_LIB
-                  <include>$(.incprefix)/QtXml
-                ;
-            lib QtXml : QtCore
-                : # requirements
-                  <name>QtXml$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_XML_LIB
-                  <include>$(.incprefix)/QtXml
-                ;
+         # SVG-Support (Qt 4.1)
+         add-shared-library QtSvg : QtXml QtOpenGL : QT_SVG_LIB ;
 
-            lib Qt3Support : QtGui QtNetwork QtXml QtSql
-                : # requirements
-                  <name>Qt3Support$(suffix_version)
-                  <qt3support>on
-                : # default-build
-                : # usage-requirements
-                  <define>QT_QT3SUPPORT_LIB
-                  <define>QT3_SUPPORT
-                  <include>$(.incprefix)/Qt3Support
-                ;
+         # Test-Support (Qt 4.1)
+         add-shared-library QtTest : QtCore ;
 
-            lib Qt3Support : QtGui QtNetwork QtXml QtSql
-                : # requirements
-                  <name>Qt3Support$(suffix_debug)$(suffix_version)
-                  <qt3support>on
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_QT3SUPPORT_LIB
-                  <define>QT3_SUPPORT
-                  <include>$(.incprefix)/Qt3Support
-                ;
+         # Qt designer library
+         add-shared-library QtDesigner : QtGui QtXml ;
 
-            # Dummy target to enable "<qt3support>off" and
-            # "<library>/qt//Qt3Support" at the same time. This enables quick
-            # switching from one to the other for test/porting purposes.
-            alias Qt3Support : : <qt3support>off ;
+         # Support for dynamic Widgets (Qt 4.1)
+         add-static-library  QtUiTools : QtGui QtXml ;
 
-            # OpenGl Support
-            lib QtOpenGL : QtGui
-                : # requirements
-                  <name>QtOpenGL$(suffix_version)
-                : # default-build
-                : # usage-requirements
-                  <define>QT_OPENGL_LIB
-                  <include>$(.incprefix)/QtOpenGL
-                ;
-            lib QtOpenGL : QtGui
-                : # requirements
-                  <name>QtOpenGL$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_OPENGL_LIB
-                  <include>$(.incprefix)/QtOpenGL
-                ;
+         # DBus-Support (Qt 4.2)
+         add-shared-library QtDBus : QtXml ;
 
-            # SVG-Support (Qt 4.1)
-            lib QtSvg : QtXml QtOpenGL
-                : # requirements
-                  <name>QtSvg$(suffix_version)
-                : # default-build
-                : # usage-requirements
-                  <define>QT_SVG_LIB
-                  <include>$(.incprefix)/QtSvg
-                ;
-            lib QtSvg : QtXml QtOpenGL
-                : # requirements
-                  <name>QtSvg$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_SVG_LIB
-                  <include>$(.incprefix)/QtSvg
-                ;
+         # Script-Engine (Qt 4.3)
+         add-shared-library QtScript : QtGui QtXml ;
 
-            # Test-Support (Qt 4.1)
-            lib QtTest : QtCore
-                : # requirements
-                  <name>QtTest$(suffix_version)
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtTest
-                ;
-            lib QtTest : QtCore
-                : # requirements
-                  <name>QtTest$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtTest
-                ;
+         # WebKit (Qt 4.4)
+         add-shared-library QtWebKit : QtGui : QT_WEBKIT_LIB ;
 
-            # Qt designer library
-            lib QtDesigner : QtGui QtXml
-                : # requirements
-                  <name>QtDesigner$(suffix_version)
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtDesigner
-                ;
+         # Phonon Multimedia (Qt 4.4) 
+         add-shared-library phonon : QtGui QtXml : QT_PHONON_LIB ;
 
-            lib QtDesigner : QtGui QtXml
-                : # requirements
-                  <name>QtDesigner$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtDesigner
-                ;
+         # XmlPatterns-Engine (Qt 4.4) 
+         add-shared-library QtXmlPatterns : QtNetwork : QT_XMLPATTERNS_LIB ;
 
-            # Support for dynamic Widgets (Qt 4.1)
-            # Static library without version number
-            lib QtUiTools : QtGui QtXml
-                : # requirements
-                  <name>QtUiTools
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtUiTools
-                ;
-            lib QtUiTools : QtGui QtXml
-                : # requirements
-                  <name>QtUiTools$(suffix_debug)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtUiTools
-                ;
+         # Help-Engine (Qt 4.4) 
+         add-shared-library QtHelp : QtGui QtSql QtXml ;
 
-            # DBus-Support (Qt 4.2)
-            lib QtDBus : QtXml
-                : # requirements
-                  <name>QtDBus$(suffix_version)
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtDBus
-                ;
-            lib QtDBus : QtXml
-                : # requirements
-                  <name>QtDBus$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtDBus
-                ;
-
-            # Script-Engine (Qt 4.3)
-            lib QtScript : QtGui QtXml
-                : # requirements
-                  <name>QtScript$(suffix_version)
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtScript
-                ;
-            lib QtScript : QtGui QtXml
-                : # requirements
-                  <name>QtScript$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtScript
-                ;
-
-            # WebKit (Qt 4.4)
-            lib QtWebKit : QtGui
-                : # requirements
-                  <name>QtWebKit$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <define>QT_WEBKIT_LIB
-                  <include>$(.incprefix)/QtWebKit 
-                ;
-            lib QtWebKit : QtGui
-                : # requirements
-                  <name>QtWebKit$(suffix_debug)$(suffix_version) 
-                  <variant>debug 
-                : # default-build
-                : # usage-requirements
-                  <define>QT_WEBKIT_LIB
-                  <include>$(.incprefix)/QtWebKit
-                ;
-
-            # Phonon Multimedia (Qt 4.4) 
-            lib phonon : QtGui QtXml
-                : # requirements
-                  <name>phonon$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <define>QT_PHONON_LIB
-                  <include>$(.incprefix)/phonon 
-                ;
-            lib phonon : QtGui QtXml
-                : # requirements
-                  <name>phonon$(suffix_debug)$(suffix_version) 
-                  <variant>debug 
-                : # default-build
-                : # usage-requirements
-                  <define>QT_PHONON_LIB
-                  <include>$(.incprefix)/phonon
-                ;
-
-            # XmlPatterns-Engine (Qt 4.4) 
-            lib QtXmlPatterns : QtNetwork
-                : # requirements
-                  <name>QtXmlPatterns$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <define>QT_XMLPATTERNS_LIB
-                  <include>$(.incprefix)/QtXmlPatterns 
-                ;
-            lib QtXmlPatterns : QtNetwork
-                : # requirements
-                  <name>QtXmlPatterns$(suffix_debug)$(suffix_version) 
-                  <variant>debug 
-                : # default-build
-                : # usage-requirements
-                  <define>QT_XMLPATTERNS_LIB
-                  <include>$(.incprefix)/QtXmlPatterns
-                ;
-
-            # Help-Engine (Qt 4.4) 
-            lib QtHelp : QtGui QtSql QtXml
-                : # requirements
-                  <name>QtHelp$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtHelp 
-                ;
-            lib QtHelp : QtGui QtSql QtXml
-                : # requirements
-                  <name>QtHelp$(suffix_debug)$(suffix_version) 
-                  <variant>debug 
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtHelp
-                ;
-
-            # AssistantClient Support
-            # Compat library
-            # Pre-4.4 help system, use QtHelp for new programs
-            lib QtAssistantClient : QtGui
-                : # requirements
-                  <name>QtAssistantClient$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtAssistant
-                ;
-            lib QtAssistantClient : QtGui
-                : # requirements
-                  <name>QtAssistantClient$(suffix_debug)$(suffix_version) 
-                  <variant>debug 
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtAssistant 
-                ;
-       }
-
-       # Make library names explicit so that a simple <use>qt4 will not bring in everything.
-       # And some components like QtDBus/Phonon may not be available on some platforms.
-       for local l in $(all-libraries)
-       {
-           explicit $(l) ;
-       }
+         # AssistantClient Support
+         # Compat library
+         # Pre-4.4 help system, use QtHelp for new programs
+         add-shared-library QtAssistantClient : QtGui : : : QtAssistant ;
     }
 
     project.pop-current ;
@@ -701,6 +421,77 @@ class moc-inc-generator : generator
 rule directory
 {
     return $(.prefix) ;
+}
+
+# Add a shared Qt library.
+rule add-shared-library ( lib-name : depends-on * : usage-defines * : requirements * :  include ? )
+{
+     add-library $(lib-name) : $(.suffix_version) : $(depends-on) : $(usage-defines) : $(requirements) : $(include) ;
+}
+
+# Add a static Qt library.
+rule add-static-library ( lib-name : depends-on * : usage-defines * : requirements * : include ? )
+{
+     add-library $(lib-name) : : $(depends-on) : $(usage-defines) : $(requirements) : $(include) ;
+}
+
+# Add a Qt library.
+# Static libs are unversioned, whereas shared libs have the major number as suffix.
+# Creates both release and debug versions on platforms where both are enabled by Qt configure.
+# Flags:
+# - lib-name Qt library Name
+# - version  Qt major number used as shared library suffix (QtCore4.so)
+# - depends-on other Qt libraries
+# - usage-defines those are set by qmake, so set them when using this library
+# - requirements addional requirements
+# - include non-canonical include path. The canonical path is $(.incprefix)/$(lib-name).
+rule add-library ( lib-name : version ? : depends-on * : usage-defines * : requirements * : include ? )
+{
+    if $(.bjam-qt)
+    {
+        # Import Qt module
+        # Eveything will be setup there
+        alias $(lib-name)
+           : $(.prefix)//$(lib-name)
+           :
+           :
+           : <allow>qt4 ;
+    }
+    else
+    {
+        local real_include ;
+        real_include ?= $(include) ;
+        real_include ?= $(lib-name) ;
+        
+        lib $(lib-name) 
+           : # sources
+             $(depends-on)
+           : # requirements
+             <name>$(lib-name)$(version)
+             $(requirements)
+           : # default-build
+           : # usage-requirements
+             <define>$(usage-defines)
+             <include>$(.incprefix)/$(real_include)
+           ;
+        
+        lib $(lib-name) 
+           : # sources
+             $(depends-on)
+           : # requirements
+             <name>$(lib-name)$(.suffix_debug)$(version)
+             $(requirements)
+             <variant>debug
+           : # default-build
+           : # usage-requirements
+             <define>$(usage-defines)
+             <include>$(.incprefix)/$(real_include)
+           ;
+    } 
+
+    # Make library explicit so that a simple <use>qt4 will not bring in everything.
+    # And some components like QtDBus/Phonon may not be available on all platforms.
+    explicit $(lib-name) ;
 }
 
 
