@@ -799,7 +799,7 @@ rule format-name ( format * : name : type ? : property-set )
 
 local rule join-tag ( joiner ? : tag ? )
 {
-    if ! $(joinder) { joiner = - ; }
+    if ! $(joiner) { joiner = - ; }
     return $(joiner)$(tag) ;
 }
 
