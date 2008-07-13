@@ -189,6 +189,7 @@ if string.find(get_toolset(), 'gcc') == 0 or string.find(get_toolset(), 'msvc') 
 
 if "--extras" in sys.argv:
     tests.append("boostbook")
+    tests.append("qt4")
     tests.append("example_qt4")
     # Requires ./whatever.py to work, so is
     # not guaranted to work everywhere.
