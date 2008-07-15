@@ -25,6 +25,10 @@
 # ifdef USE_EXECUNIX
 # include <sys/times.h>
 
+# if defined(__APPLE__)
+# define NO_VFORK
+# endif
+
 # ifdef NO_VFORK
 # define vfork() fork()
 # endif
@@ -211,6 +215,8 @@ execcmd(
 
 	if ((cmdtab[slot].pid = vfork()) == 0) 
    	{
+            int pid = getpid();
+
             close(out[0]);
             close(err[0]);
 
@@ -239,16 +245,18 @@ execcmd(
                 r_limit.rlim_max = globs.timeout;
                 setrlimit(RLIMIT_CPU, &r_limit);
             }
-            setpgid(cmdtab[slot].pid, cmdtab[slot].pid);
-
-	    execvp( argv[0], argv );
-	    _exit(127);
-	}
+            setpgid(pid,pid);
+            execvp( argv[0], argv );
+            perror( "execvp" );
+            _exit(127);
+        }
         else if( cmdtab[slot].pid == -1 )
 	{
 	    perror( "vfork" );
 	    exit( EXITBAD );
 	}
+
+        setpgid(cmdtab[slot].pid, cmdtab[slot].pid);
 
         /* close write end of pipes */
         close(out[1]); 
@@ -458,7 +466,7 @@ execwait()
                 if (FD_ISSET(cmdtab[i].fd[OUT], &fds))
                     out = read_descriptor(i, OUT);
 
-                if (FD_ISSET(cmdtab[i].fd[ERR], &fds))
+                if ((globs.pipe_action != 0) && (FD_ISSET(cmdtab[i].fd[ERR], &fds)))
                     err = read_descriptor(i, ERR);
 
                 /* if feof on either descriptor, then we're done */

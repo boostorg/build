@@ -137,6 +137,9 @@ bindtarget( const char *targetname )
 	    targethash = hashinit( sizeof( TARGET ), "targets" );
 
     /* Perforce added const everywhere. No time to merge that change. */
+#ifdef NT
+    targetname = short_path_to_long_path( (char*)targetname );
+#endif
 	t->name = (char*)targetname;
 
 	if( hashenter( targethash, (HASHDATA **)&t ) )
@@ -165,7 +168,7 @@ static void bind_explicitly_located_target(void* xtarget, void* data)
                 /* We're binding a target with explicit LOCATE. So
                    third argument is of now use: nothing will be returned
                    through it. */
-                t->boundname = search( t->name, &t->time, 0 );
+                t->boundname = search( t->name, &t->time, 0, 0 );
                 popsettings(t->settings);
                 break;
             }
