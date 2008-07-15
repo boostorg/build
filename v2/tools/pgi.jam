@@ -36,11 +36,15 @@ rule init ( version ? : command * : options * )
   flags pgi.compile DEFINES $(condition) :
     [ feature.get-values <define> : $(options) ] : unchecked ;
 
+  # IOV_MAX support
+  flags pgi.compile DEFINES $(condition) : __need_IOV_MAX : unchecked ;
+
   # set link flags
   flags pgi.link FINDLIBS-ST : [
     feature.get-values <find-static-library> : $(options) ] : unchecked ;
 
-  flags pgi.link FINDLIBS-SA : [
+  # always link lib rt to resolve clock_gettime()
+  flags pgi.link FINDLIBS-SA : rt [
     feature.get-values <find-shared-library> : $(options) ] : unchecked ;
 
   gcc.init-link-flags pgi gnu $(condition) ;

@@ -141,6 +141,10 @@ rule init ( version ? : command * : options * )
         {
             linker = hpux ;
         }
+        else if [ os.name ] = AIX
+        {
+            linker = aix ;
+        }
         else
         {
             linker = gnu ;
@@ -327,7 +331,7 @@ if [ os.name ] != CYGWIN && [ os.name ] != NT
     # implement and will increase target path length even more.
     flags gcc.compile OPTIONS <link>shared : -fPIC ;
 }
-if [ os.name ] != NT && [ os.name ] != OSF && [ os.name ] != HPUX
+if [ os.name ] != NT && [ os.name ] != OSF && [ os.name ] != HPUX && [ os.name ] != AIX
 {
     # OSF does have an option called -soname but it doesn't seem to work as
     # expected, therefore it has been disabled.
@@ -611,6 +615,33 @@ rule init-link-flags ( toolset linker condition )
             flags $(toolset).link OPTIONS $(condition)/<link>shared
                 : -fPIC : unchecked ;
         }
+        
+    case aix :
+      {
+	  #
+	  # On AIX we *have* to use the native linker.
+	  #
+	  # Using -brtl, the AIX linker will look for libraries with both the .a and .so 
+	  # extensions, such as libfoo.a and libfoo.so. Without -brtl, the AIX linker 
+	  # looks only for libfoo.a. Note that libfoo.a is an archived file that may 
+	  # contain shared objects and is different from static libs as on Linux.
+	  #
+	  # The -bnoipath strips the prepending (relative) path of libraries from 
+	  # the loader section in the target library or executable. Hence, during load-
+	  # time LIBPATH (identical to LD_LIBRARY_PATH) or a hard-coded -blibpath 
+	  # (*similar* to -lrpath/-lrpath-link) is searched.  Without this option, 
+	  # the prepending (relative) path + library name is hard-coded in the loader 
+	  # section, causing *only* this path to be searched during load-time. 
+	  # Note that the AIX linker does not have an -soname equivalent, this
+	  # is as close as it gets.
+	  #
+	  # The above options are definately for AIX 5.x, and most likely also for
+	  # AIX 4.x and AIX 6.x. For details about AIX linker: 
+	  # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
+	  #
+	  
+	  flags $(toolset).link OPTIONS : -Wl,-brtl -Wl,-bnoipath : unchecked ;
+      }
 
     case * :
         {
@@ -712,7 +743,7 @@ else if [ modules.peek : UNIX ]
     case SunOS* :
         {
         flags gcc OPTIONS <threading>multi : -pthreads ;
-        flags gcc FINDLIBS-SA <threading>multi : rt ;
+        flags gcc FINDLIBS-SA : rt ;
         }
     case BeOS :
         {
@@ -740,7 +771,7 @@ else if [ modules.peek : UNIX ]
     case * :
         {
         flags gcc OPTIONS <threading>multi : -pthread ;
-        flags gcc FINDLIBS-SA <threading>multi : rt ;
+        flags gcc FINDLIBS-SA : rt ;
         }
     }
 }
@@ -817,7 +848,6 @@ cpu-flags gcc OPTIONS : sparc : ultrasparc3 : -mcpu=ultrasparc3 ;
 # RS/6000 & PowerPC
 flags gcc OPTIONS <architecture>power/<address-model>32 : -m32 ;
 flags gcc OPTIONS <architecture>power/<address-model>64 : -m64 ;
-flags gcc OPTIONS <architecture>power/<address-model>/<instruction-set> : -mcpu=common ;
 cpu-flags gcc OPTIONS : power : 403 : -mcpu=403 ;
 cpu-flags gcc OPTIONS : power : 505 : -mcpu=505 ;
 cpu-flags gcc OPTIONS : power : 601 : -mcpu=601 ;

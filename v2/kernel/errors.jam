@@ -6,6 +6,7 @@
 # Print a stack backtrace leading to this rule's caller. Each argument
 # represents a line of output to be printed after the first line of the
 # backtrace.
+#
 rule backtrace ( skip-frames prefix messages * : * )
 {
     local frame-skips = 5 9 13 17 21 25 29 33 37 41 45 49 53 57 61 65 69 73 77 81 ;
@@ -71,6 +72,7 @@ rule backtrace ( skip-frames prefix messages * : * )
 # message matched expectations.
 
 # Begin looking for error messages.
+#
 rule try ( )
 {
     .disabled += true ;
@@ -80,13 +82,14 @@ rule try ( )
 
 # Stop looking for error messages; generate an error if an argument of messages
 # is not found in the corresponding argument in the error call.
+#
 rule catch ( messages * : * )
 {
     .disabled = $(.disabled[2-]) ;  # Pop the stack.
 
     import sequence ;
 
-    if ! $(.last-error-$(.args))-is-nonempty
+    if ! $(.last-error-$(.args))-is-not-empty
     {
         error-skip-frames 3 expected an error, but none occurred ;
     }
@@ -102,7 +105,7 @@ rule catch ( messages * : * )
 
                 .last-error-$(.args) = ;
                 error-skip-frames 3 expected \"$(v)\" in argument $(n) of error
-                  : got \"$(joined)\" instead ;
+                    : got \"$(joined)\" instead ;
             }
         }
     }
@@ -134,6 +137,7 @@ if --no-error-backtrace in [ modules.peek : ARGV ]
 
 
 # Print an error message with a stack backtrace and exit.
+#
 rule error ( messages * : * )
 {
     if $(.no-error-backtrace)
@@ -164,6 +168,7 @@ rule error ( messages * : * )
 
 
 # Same as 'error', but the generated backtrace will include only user files.
+#
 rule user-error ( messages * : * )
 {
     .user-modules-only = 1 ;
@@ -172,6 +177,7 @@ rule user-error ( messages * : * )
 
 
 # Print a warning message with a stack backtrace and exit.
+#
 rule warning
 {
     backtrace 2 warning: $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
@@ -182,6 +188,7 @@ rule warning
 # elements representing the same information. This is mostly useful for
 # formatting descriptions of arguments with which a rule was called when
 # reporting an error.
+#
 rule lol->list ( * )
 {
     local result ;
@@ -203,6 +210,7 @@ rule lol->list ( * )
 
 # Return the file:line for the nearest entry in backtrace which correspond to a
 # user module.
+#
 rule nearest-user-location ( )
 {
     local bt = [ BACKTRACE ] ;

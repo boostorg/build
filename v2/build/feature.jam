@@ -19,7 +19,6 @@ local rule setup ( )
 {
     .all-attributes =
         implicit
-        executed
         composite
         optional
         symmetric
@@ -43,6 +42,7 @@ setup ;
 
 # Prepare a fresh space to test in by moving all global variable settings into
 # the given temporary module and erasing them here.
+#
 rule prepare-test ( temp-module )
 {
     DELETE_MODULE $(temp-module) ;
@@ -62,6 +62,7 @@ rule prepare-test ( temp-module )
 
 # Clear out all global variables and recover all variables from the given
 # temporary module.
+#
 rule finish-test ( temp-module )
 {
     # Clear globals.
@@ -81,8 +82,9 @@ rule finish-test ( temp-module )
 }
 
 
-# Transform features by bracketing any elements which aren't already bracketed
+# Transform features by bracketing any elements which are not already bracketed
 # by "<>".
+#
 local rule grist ( features * )
 {
     local empty = "" ;
@@ -91,6 +93,7 @@ local rule grist ( features * )
 
 
 # Declare a new feature with the given name, values, and attributes.
+#
 rule feature (
       name          # Feature name.
     : values *      # Allowable values - may be extended later using feature.extend.
@@ -119,6 +122,14 @@ rule feature (
     {
         error = free features cannot be propagated ;
     }
+    else
+    {
+        local m = [ MATCH (.*=.*) : $(values) ] ;
+        if $(m[1])
+        {
+            error = "feature value may not contain '='" ;
+        }
+    }
 
     if $(error)
     {
@@ -146,6 +157,7 @@ rule feature (
 
 
 # Sets the default value of the given feature, overriding any previous default.
+#
 rule set-default ( feature : value )
 {
     local f = [ grist $(feature) ] ;
@@ -159,6 +171,7 @@ rule set-default ( feature : value )
 
 
 # Returns the default property values for the given features.
+#
 rule defaults ( features * )
 {
     local result ;
@@ -179,6 +192,7 @@ rule defaults ( features * )
 
 
 # Returns true iff all 'names' elements are valid features.
+#
 rule valid ( names + )
 {
     if $(names) in $(.all-features)
@@ -189,6 +203,7 @@ rule valid ( names + )
 
 
 # Returns the attibutes of the given feature.
+#
 rule attributes ( feature )
 {
     return $($(:E=:G=$(feature)).attributes) ;
@@ -196,6 +211,7 @@ rule attributes ( feature )
 
 
 # Returns the values of the given feature.
+#
 rule values ( feature )
 {
     return $($(:E=:G=$(feature)).values) ;
@@ -203,6 +219,7 @@ rule values ( feature )
 
 
 # Returns true iff 'value-string' is a value-string of an implicit feature.
+#
 rule is-implicit-value ( value-string )
 {
     local v = [ regex.split $(value-string) - ] ;
@@ -231,6 +248,7 @@ rule is-implicit-value ( value-string )
 
 
 # Returns the implicit feature associated with the given implicit value.
+#
 rule implied-feature ( implicit-value )
 {
     local components = [ regex.split $(implicit-value) "-" ] ;
@@ -260,6 +278,7 @@ local rule find-implied-subfeature ( feature subvalue : value-string ? )
 # Given a feature and a value of one of its subfeatures, find the name of the
 # subfeature. If value-string is supplied, looks for implied subfeatures that
 # are specific to that value of feature
+#
 rule implied-subfeature (
       feature         # The main feature name.
       subvalue        # The value of one of its subfeatures.
@@ -279,6 +298,7 @@ rule implied-subfeature (
 
 
 # Generate an error if the feature is unknown.
+#
 local rule validate-feature ( feature )
 {
     if ! $(feature) in $(.all-features)
@@ -298,6 +318,7 @@ local rule validate-feature ( feature )
 # return:
 #
 #   <toolset>gcc <toolset-version>2.95.2 <toolset-os>linux <toolset-cpu>x86
+#
 local rule expand-subfeatures-aux (
       feature ?        # Feature name or empty if value corresponds to an
                        # implicit property.
@@ -392,6 +413,7 @@ rule expand-subfeatures (
 
 
 # Helper for extend, below. Handles the feature case.
+#
 local rule extend-feature ( feature : values * )
 {
     feature = [ grist $(feature) ] ;
@@ -420,6 +442,7 @@ local rule extend-feature ( feature : values * )
 
 
 # Checks that value-string is a valid value-string for the given feature.
+#
 rule validate-value-string ( feature value-string )
 {
     if ! (
@@ -457,6 +480,7 @@ rule validate-value-string ( feature value-string )
 #    between subvalue(s) and a subfeature
 #  * value of that variable when such a subfeature/subvalue has been defined and
 # returns a list consisting of the latter followed by the former.
+#
 local rule subvalue-var (
     feature         # Main feature name.
     value-string ?  # If supplied, specifies a specific value of the main
@@ -511,6 +535,7 @@ rule extend-subfeature (
 # Returns true iff the subvalues are valid for the feature. When the optional
 # value-string is provided, returns true iff the subvalues are valid for the
 # given value of the feature.
+#
 rule is-subvalue ( feature : value-string ? : subfeature : subvalue )
 {
     local subfeature-vars = [ subvalue-var $(feature) $(value-string)
@@ -584,6 +609,7 @@ local rule get-subfeature-name ( subfeature value-string ? )
 
 
 # Declares a subfeature.
+#
 rule subfeature (
     feature         # Root feature that is not a subfeature.
     value-string ?  # A value-string specifying which feature or subfeature
@@ -616,6 +642,7 @@ rule subfeature (
 
 
 # Set components of the given composite property.
+#
 rule compose ( composite-property : component-properties * )
 {
     local feature = $(composite-property:G) ;
@@ -647,6 +674,7 @@ local rule expand-composite ( property )
 
 
 # Return all values of the given feature specified by the given property set.
+#
 rule get-values ( feature : properties * )
 {
     local result ;
@@ -674,6 +702,7 @@ rule free-features ( )
 
 # Expand all composite properties in the set so that all components are
 # explicitly expressed.
+#
 rule expand-composites ( properties * )
 {
     local explicit-features = $(properties:G) ;
@@ -732,6 +761,7 @@ rule expand-composites ( properties * )
 # Return true iff f is an ordinary subfeature of the parent-property's feature,
 # or if f is a subfeature of the parent-property's feature specific to the
 # parent-property's value.
+#
 local rule is-subfeature-of ( parent-property f )
 {
     if subfeature in $($(f).attributes)
@@ -762,6 +792,7 @@ local rule is-subfeature-of ( parent-property f )
 
 
 # As for is-subfeature-of but for subproperties.
+#
 local rule is-subproperty-of ( parent-property p )
 {
     return [ is-subfeature-of $(parent-property) $(p:G) ] ;
@@ -771,6 +802,7 @@ local rule is-subproperty-of ( parent-property p )
 # Given a property, return the subset of features consisting of all ordinary
 # subfeatures of the property's feature, and all specific subfeatures of the
 # property's feature which are conditional on the property's value.
+#
 local rule select-subfeatures ( parent-property : features * )
 {
     return [ sequence.filter is-subfeature-of $(parent-property) : $(features) ] ;
@@ -778,6 +810,7 @@ local rule select-subfeatures ( parent-property : features * )
 
 
 # As for select-subfeatures but for subproperties.
+#
 local rule select-subproperties ( parent-property : properties * )
 {
     return [ sequence.filter is-subproperty-of $(parent-property) : $(properties) ] ;
@@ -792,6 +825,7 @@ local rule select-subproperties ( parent-property : properties * )
 # of those features due to composite feature expansion to be dropped. If two
 # values of a given non-free feature are directly expressed in the input, an
 # error is issued.
+#
 rule expand ( properties * )
 {
     local expanded = [ expand-subfeatures $(properties) ] ;
@@ -801,6 +835,7 @@ rule expand ( properties * )
 
 # Helper rule for minimize. Returns true iff property's feature is present in
 # the contents of the variable named by feature-set-var.
+#
 local rule in-features ( feature-set-var property )
 {
     if $(property:G) in $($(feature-set-var))
@@ -812,6 +847,7 @@ local rule in-features ( feature-set-var property )
 
 # Helper rule for minimize. Returns the list with the same properties, but with
 # all subfeatures moved to the end of the list.
+#
 local rule move-subfeatures-to-the-end ( properties * )
 {
     local x1 ;
@@ -837,6 +873,7 @@ local rule move-subfeatures-to-the-end ( properties * )
 # they override a value from some composite property. Implicit properties will
 # be expressed without feature grist, and sub-property values will be expressed
 # as elements joined to the corresponding main property.
+#
 rule minimize ( properties * )
 {
     # Precondition checking
@@ -906,8 +943,9 @@ rule minimize ( properties * )
 # Requires: for every subproperty, there is a parent property. All features are
 # explicitly expressed.
 #
-# This rule probably shouldn't be needed, but build-request.expand-no-defaults
+# This rule probably should not be needed, but build-request.expand-no-defaults
 # is being abused for unintended purposes and it needs help.
+#
 rule compress-subproperties ( properties * )
 {
     local all-subs ;
@@ -919,7 +957,7 @@ rule compress-subproperties ( properties * )
         if ! $(p:G)
         {
             # Expecting fully-gristed properties.
-            assert.nonempty-variable p:G ;
+            assert.variable-not-empty p:G ;
         }
 
         if ! subfeature in $($(p:G).attributes)
@@ -947,6 +985,7 @@ rule compress-subproperties ( properties * )
 # feature name followed by a dash, and return a pair consisting of the parts
 # before and after that dash. More interesting than a simple split because
 # feature names may contain dashes.
+#
 local rule split-top-feature ( feature-plus )
 {
     local e = [ regex.split $(feature-plus) - ] ;
@@ -982,6 +1021,7 @@ local rule split-top-feature ( feature-plus )
 #     <variant>debug <runtime_debugging>off
 #
 #   and that's kind of strange.
+#
 rule add-defaults ( properties * )
 {
     for local v in $(properties:G=)
@@ -1026,6 +1066,7 @@ rule add-defaults ( properties * )
 # Note that vN...vM may contain slashes. This needs to be resilient to the
 # substitution of backslashes for slashes, since Jam, unbidden, sometimes swaps
 # slash direction on NT.
+#
 rule split ( property-set )
 {
     local pieces = [ regex.split $(property-set) [\\/] ] ;
@@ -1048,7 +1089,8 @@ rule split ( property-set )
 
 
 # Tests of module feature.
-local rule __test__ ( )
+#
+rule __test__ ( )
 {
     # Use a fresh copy of the feature module.
     prepare-test feature-test-temp ;

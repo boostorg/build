@@ -4,36 +4,35 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-#  Implements project representation and loading. Each project is represented
-#  by:
-#   - a module where all the Jamfile content live.
-#   - an instance of 'project-attributes' class.
-#     (given a module name, can be obtained using the 'attributes' rule)
-#   - an instance of 'project-target' class (from targets.jam)
-#     (given a module name, can be obtained using the 'target' rule)
+# Implements project representation and loading. Each project is represented by:
+#  - a module where all the Jamfile content live.
+#  - an instance of 'project-attributes' class.
+#    (given a module name, can be obtained using the 'attributes' rule)
+#  - an instance of 'project-target' class (from targets.jam)
+#    (given a module name, can be obtained using the 'target' rule)
 #
-#  Typically, projects are created as result of loading a Jamfile, which is done
-#  by rules 'load' and 'initialize', below. First, module for Jamfile is loaded
-#  and new project-attributes instance is created. Some rules necessary for
-#  project are added to the module (see 'project-rules' module) at the bottom of
-#  this file. Default project attributes are set (inheriting attributes of
-#  parent project, if it exists). After that the Jamfile is read. It can declare
-#  its own attributes using the 'project' rule which will be combined with any
-#  alread set attributes.
+# Typically, projects are created as result of loading a Jamfile, which is done
+# by rules 'load' and 'initialize', below. First, module for Jamfile is loaded
+# and new project-attributes instance is created. Some rules necessary for
+# project are added to the module (see 'project-rules' module) at the bottom of
+# this file. Default project attributes are set (inheriting attributes of parent
+# project, if it exists). After that the Jamfile is read. It can declare its own
+# attributes using the 'project' rule which will be combined with any already
+# set attributes.
 #
-#  The 'project' rule can also declare a project id which will be associated
-#  with the project module.
+# The 'project' rule can also declare a project id which will be associated with
+# the project module.
 #
-#  There can also be 'standalone' projects. They are created by calling
-#  'initialize' on an arbitrary module and not specifying their location. After
-#  the call, the module can call the 'project' rule, declare main targets and
-#  behave as a regular project except that, since it's not associated with any
-#  location, it should not declare targets that are not prebuilt.
+# There can also be 'standalone' projects. They are created by calling
+# 'initialize' on an arbitrary module and not specifying their location. After
+# the call, the module can call the 'project' rule, declare main targets and
+# behave as a regular project except that, since it is not associated with any
+# location, it should not declare targets that are not prebuilt.
 #
-#  The list of all loaded Jamfile is stored in the .project-locations variable.
-#  It's possible to obtain a module name for a location using the 'module-name'
-#  rule. Standalone projects are not recorded and can only be referenced using
-#  their project id.
+# The list of all loaded Jamfile is stored in the .project-locations variable.
+# It is possible to obtain a module name for a location using the 'module-name'
+# rule. Standalone projects are not recorded and can only be referenced using
+# their project id.
 
 import "class" : new ;
 import errors ;
@@ -94,13 +93,14 @@ rule load-used-projects ( module-name )
 
 
 # Note the use of character groups, as opposed to listing 'Jamroot' and
-# 'jamroot'. With the latter, we'd get duplicate matches on Windows and would
-# have to eliminate duplicates.
+# 'jamroot'. With the latter, we would get duplicate matches on Windows and
+# would have to eliminate duplicates.
 JAMROOT ?= [ modules.peek : JAMROOT ] ;
 JAMROOT ?= project-root.jam [Jj]amroot [Jj]amroot.jam ;
 
 
 # Loads parent of Jamfile at 'location'. Issues an error if nothing is found.
+#
 rule load-parent ( location )
 {
     local found = [ path.glob-in-parents $(location) :
@@ -120,6 +120,7 @@ rule load-parent ( location )
 # Makes the specified 'module' act as if it were a regularly loaded Jamfile at
 # 'location'. Reports an error if a Jamfile has already been loaded for that
 # location.
+#
 rule act-as-jamfile ( module : location )
 {
     if [ module-name $(location) ] in $(.jamfile-modules)
@@ -139,6 +140,7 @@ rule act-as-jamfile ( module : location )
 
 # Returns the project module corresponding to the given project-id or plain
 # directory name. Returns nothing if such a project can not be found.
+#
 rule find ( name : current-location )
 {
     local project-module ;
@@ -489,6 +491,7 @@ rule initialize (
 
 
 # Make 'project-module' inherit attributes of project root and parent module.
+#
 rule inherit-attributes ( project-module : parent-module )
 {
     local attributes = $($(project-module).attributes) ;
@@ -528,6 +531,7 @@ rule inherit-attributes ( project-module : parent-module )
 
 
 # Associate the given id with the given project module.
+#
 rule register-id ( id : module )
 {
     $(id).jamfile-module = $(module) ;
@@ -538,6 +542,7 @@ rule register-id ( id : module )
 #
 # The standard attributes are "id", "location", "project-root", "parent"
 # "requirements", "default-build", "source-location" and "projects-to-build".
+#
 class project-attributes
 {
     import property ;
@@ -556,6 +561,7 @@ class project-attributes
 
     # Set the named attribute from the specification given by the user. The
     # value actually set may be different.
+    #
     rule set ( attribute : specification *
         : exact ?  # Sets value from 'specification' without any processing.
         )
@@ -640,12 +646,14 @@ class project-attributes
     }
 
     # Returns the value of the given attribute.
+    #
     rule get ( attribute )
     {
         return $(self.$(attribute)) ;
     }
 
     # Prints the project attributes.
+    #
     rule print ( )
     {
         local id = $(self.id) ; id ?= (none) ;
@@ -664,6 +672,7 @@ class project-attributes
 
 
 # Returns the project which is currently being loaded.
+#
 rule current ( )
 {
     return $(.current-project) ;
@@ -672,6 +681,7 @@ rule current ( )
 
 # Temporarily changes the current project to 'project'. Should be followed by
 # 'pop-current'.
+#
 rule push-current ( project )
 {
     .saved-current-project += $(.current-project) ;
@@ -687,6 +697,7 @@ rule pop-current ( )
 
 
 # Returns the project-attribute instance for the specified Jamfile module.
+#
 rule attributes ( project )
 {
     return $($(project).attributes) ;
@@ -694,6 +705,7 @@ rule attributes ( project )
 
 
 # Returns the value of the specified attribute in the specified Jamfile module.
+#
 rule attribute ( project attribute )
 {
     return [ $($(project).attributes).get $(attribute) ] ;
@@ -701,6 +713,7 @@ rule attribute ( project attribute )
 
 
 # Returns the project target corresponding to the 'project-module'.
+#
 rule target ( project-module )
 {
     if ! $(.target.$(project-module))
@@ -714,6 +727,7 @@ rule target ( project-module )
 
 
 # Use/load a project.
+#
 rule use ( id : location )
 {
     local saved-project = $(.current-project) ;
@@ -810,6 +824,7 @@ rule glob-internal ( project : wildcards + : excludes * : rule-name )
 
 
 # This module defines rules common to all projects.
+#
 module project-rules
 {
     rule using ( toolset-module : * )
@@ -926,8 +941,8 @@ module project-rules
     # child Jamfile.
     #
     rule constant (
-        name # Variable name of the constant.
-        : value + # Value of the constant.
+        name  # Variable name of the constant.
+        : value +  # Value of the constant.
         )
     {
         import project ;
@@ -938,9 +953,10 @@ module project-rules
     # Declare and set a project global constant, whose value is a path. The path
     # is adjusted to be relative to the invocation directory. The given value
     # path is taken to be either absolute, or relative to this project root.
+    #
     rule path-constant (
-        name # Variable name of the constant.
-        : value + # Value of the constant.
+        name  # Variable name of the constant.
+        : value +  # Value of the constant.
         )
     {
         import project ;
@@ -979,8 +995,8 @@ module project-rules
     rule glob ( wildcards + : excludes * )
     {
         import project ;
-        return [ project.glob-internal [ project.current ]
-          : $(wildcards) : $(excludes) : glob ] ;
+        return [ project.glob-internal [ project.current ] : $(wildcards) :
+            $(excludes) : glob ] ;
     }
 
     rule glob-tree ( wildcards + : excludes * )
@@ -1014,10 +1030,4 @@ module project-rules
             return $(condition):$(requirements) ;
         }
     }
-}
-
-
-local rule __test__ ( )
-{
-    import assert ;
 }

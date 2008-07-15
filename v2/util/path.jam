@@ -6,22 +6,23 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-#  Performs various path manipulations. Paths are always in a 'normalized'
-#  representation. In it, a path may be either:
+# Performs various path manipulations. Paths are always in a 'normalized'
+# representation. In it, a path may be either:
 #
 #     - '.', or
 #
-#     - ['/'] [ ( '..' '/' )*  (token '/')* token ]
+#     - ['/'] [ ( '..' '/' )* (token '/')* token ]
 #
-#   In plain english, path can be rooted, '..' elements are allowed only
-#   at the beginning, and it never ends in slash, except for path consisting
-#   of slash only.
+# In plain english, path can be rooted, '..' elements are allowed only at the
+# beginning, and it never ends in slash, except for path consisting of slash
+# only.
 
 import errors ;
 import modules ;
 import regex ;
 import sequence ;
 import set ;
+import version ;
 
 
 os = [ modules.peek : OS ] ;
@@ -35,7 +36,8 @@ if [ modules.peek : UNIX ]
     }
 }
 
-#    Converts the native path into normalized form.
+
+# Converts the native path into normalized form.
 #
 rule make ( native )
 {
@@ -43,7 +45,7 @@ rule make ( native )
 }
 
 
-#    Builds native representation of the path.
+# Builds native representation of the path.
 #
 rule native ( path )
 {
@@ -51,7 +53,7 @@ rule native ( path )
 }
 
 
-#    Tests if a path is rooted.
+# Tests if a path is rooted.
 #
 rule is-rooted ( path )
 {
@@ -59,7 +61,7 @@ rule is-rooted ( path )
 }
 
 
-#    Tests if a path has a parent.
+# Tests if a path has a parent.
 #
 rule has-parent ( path )
 {
@@ -74,7 +76,7 @@ rule has-parent ( path )
 }
 
 
-#    Returns the path without any directory components.
+# Returns the path without any directory components.
 #
 rule basename ( path )
 {
@@ -82,7 +84,7 @@ rule basename ( path )
 }
 
 
-#    Returns parent directory of the path. If no parent exists, error is issued.
+# Returns parent directory of the path. If no parent exists, error is issued.
 #
 rule parent ( path )
 {
@@ -94,8 +96,8 @@ rule parent ( path )
         }
         else
         {
-            # Strip everything at the end of path up to and including
-            # the last slash
+            # Strip everything at the end of path up to and including the last
+            # slash.
             local result = [ regex.match "((.*)/)?([^/]+)" : $(path) : 2 3 ] ;
 
             # Did we strip what we shouldn't?
@@ -127,8 +129,8 @@ rule parent ( path )
 }
 
 
-#    Returns path2 such that "[ join path path2 ] = .".
-#    The path may not contain ".." element or be rooted.
+# Returns path2 such that "[ join path path2 ] = .". The path may not contain
+# ".." element or be rooted.
 #
 rule reverse ( path )
 {
@@ -149,31 +151,12 @@ rule reverse ( path )
 }
 
 
-# Auxillary rule: does all the semantic of 'join', except for error cheching.
-# The error checking is separated because this rule is recursive, and I don't
-# like the idea of checking the same input over and over.
-#
-local rule join-imp ( elements + )
-{
-    local result = ;
-    if ! $(elements[1])
-    {
-        result = [ NORMALIZE_PATH "/" "$(elements[2-])" ] ;
-    }
-    else
-    {
-        result = [ NORMALIZE_PATH "$(elements)" ] ;
-    }
-    return $(result) ;
-}
-
-
-#    Contanenates the passed path elements. Generates an error if
-#    any element other than the first one is rooted.
+# Concatenates the passed path elements. Generates an error if any element other
+# than the first one is rooted. Skips any empty or undefined path elements.
 #
 rule join ( elements + )
 {
-    if ! $(elements[2])
+    if ! $(elements[2-])
     {
         return $(elements[1]) ;
     }
@@ -183,27 +166,50 @@ rule join ( elements + )
         {
             if [ is-rooted $(e) ]
             {
-                errors.error only first element may be rooted ;
+                errors.error only the first element may be rooted ;
             }
         }
-        return [ join-imp $(elements) ] ;
+        if [ version.check-jam-version 3 1 17 ]
+        {
+            return [ NORMALIZE_PATH "$(elements)" ] ;
+        }
+        else
+        {
+            # Boost Jam prior to version 3.1.17 had problems with its
+            # NORMALIZE_PATH rule in case you passed it a leading backslash
+            # instead of a slash, in some cases when you sent it an empty
+            # initial path element and possibly some others. At least some of
+            # those cases were being hit and relied upon when calling this rule
+            # from the path.make-NT rule.
+            if ! $(elements[1]) && $(elements[2])
+            {
+                return [ NORMALIZE_PATH "/" "$(elements[2-])" ] ;
+            }
+            else
+            {
+                return [ NORMALIZE_PATH "$(elements)" ] ;
+            }
+        }
     }
 }
 
 
-#    If 'path' is relative, it is rooted at 'root'. Otherwise, it's unchanged.
+# If 'path' is relative, it is rooted at 'root'. Otherwise, it is unchanged.
 #
 rule root ( path root )
 {
-    if [ is-rooted $(path) ] {
+    if [ is-rooted $(path) ]
+    {
         return $(path) ;
-    } else {
+    }
+    else
+    {
         return [ join $(root) $(path) ] ;
     }
 }
 
 
-#   Returns the current working directory.
+# Returns the current working directory.
 #
 rule pwd ( )
 {
@@ -219,19 +225,20 @@ rule pwd ( )
 }
 
 
-#    Returns the list of files matching the given pattern in the
-#    specified directory.  Both directories and patterns are
-#    supplied as portable paths. Each pattern should be non-absolute
-#    path, and can't contain "." or ".." elements. Each slash separated
-#    element of pattern can contain the following special characters:
-#    -  '?', which match any character
-#    -  '*', which matches arbitrary number of characters.
-#    A file $(d)/e1/e2/e3 (where 'd' is in $(dirs)) matches pattern p1/p2/p3
-#    if and only if e1 matches p1, e2 matches p2 and so on.
+# Returns the list of files matching the given pattern in the specified
+# directory. Both directories and patterns are supplied as portable paths. Each
+# pattern should be non-absolute path, and can't contain "." or ".." elements.
+# Each slash separated element of pattern can contain the following special
+# characters:
+#   - '?', which match any character
+#   - '*', which matches arbitrary number of characters.
+# A file $(d)/e1/e2/e3 (where 'd' is in $(dirs)) matches pattern p1/p2/p3 if and
+# only if e1 matches p1, e2 matches p2 and so on.
 #
-#    For example:
-#        [ glob . : *.cpp ]
-#        [ glob . : */build/Jamfile ]
+# For example:
+#   [ glob . : *.cpp ]
+#   [ glob . : */build/Jamfile ]
+#
 rule glob ( dirs * : patterns + : exclude-patterns * )
 {
     local result ;
@@ -262,12 +269,11 @@ rule glob ( dirs * : patterns + : exclude-patterns * )
 }
 
 
-# Recursive version of GLOB. Builds the glob of files while
-# also searching in the subdirectories of the given roots. An
-# optional set of exclusion patterns will filter out the
-# matching entries from the result. The exclusions also apply
-# to the subdirectory scanning, such that directories that
-# match the exclusion patterns will not be searched.
+# Recursive version of GLOB. Builds the glob of files while also searching in
+# the subdirectories of the given roots. An optional set of exclusion patterns
+# will filter out the matching entries from the result. The exclusions also
+# apply to the subdirectory scanning, such that directories that match the
+# exclusion patterns will not be searched.
 #
 rule glob-tree ( roots * : patterns + : exclude-patterns * )
 {
@@ -302,7 +308,7 @@ local rule .glob-tree ( roots * : patterns * : exclude-patterns * )
 }
 
 
-#    Returns true is the specified file exists.
+# Returns true is the specified file exists.
 #
 rule exists ( file )
 {
@@ -311,9 +317,9 @@ rule exists ( file )
 NATIVE_RULE path : exists ;
 
 
-#   Find out the absolute name of path and returns the list of all the parents,
-#   starting with the immediate one. Parents are returned as relative names.
-#   If 'upper_limit' is specified, directories above it will be pruned.
+# Find out the absolute name of path and returns the list of all the parents,
+# starting with the immediate one. Parents are returned as relative names. If
+# 'upper_limit' is specified, directories above it will be pruned.
 #
 rule all-parents ( path : upper_limit ? : cwd ? )
 {
@@ -349,8 +355,8 @@ rule all-parents ( path : upper_limit ? : cwd ? )
 }
 
 
-#  Search for 'pattern' in parent directories of 'dir', up till and including
-#  'upper_limit', if it is specified, or till the filesystem root otherwise.
+# Search for 'pattern' in parent directories of 'dir', up till and including
+# 'upper_limit', if it is specified, or till the filesystem root otherwise.
 #
 rule glob-in-parents ( dir : patterns + : upper-limit ? )
 {
@@ -366,8 +372,8 @@ rule glob-in-parents ( dir : patterns + : upper-limit ? )
 }
 
 
-# Assuming 'child' is a subdirectory of 'parent', return the relative
-# path from 'parent' to 'child'
+# Assuming 'child' is a subdirectory of 'parent', return the relative path from
+# 'parent' to 'child'.
 #
 rule relative ( child parent )
 {
@@ -429,8 +435,9 @@ rule relative-to ( path1 path2 )
 }
 
 
-# Returns the list of paths which are used by the operating system
-# for looking up programs
+# Returns the list of paths which are used by the operating system for looking
+# up programs.
+#
 rule programs-path ( )
 {
     local result ;
@@ -446,27 +453,38 @@ rule programs-path ( )
 }
 
 
+# Converts native Windows paths into our internal canonic path representation.
+# Supports 'invalid' paths containing multiple successive path separator
+# characters.
+#
+# TODO: Check and if needed add support for Windows 'X:file' path format where
+# the file is located in the current folder on drive X.
+#
 rule make-NT ( native )
 {
-    local tokens = [ regex.split $(native) "[/\\]" ] ;
     local result ;
 
-    # Handle paths ending with slashes
-    if $(tokens[-1]) = ""
+    if [ version.check-jam-version 3 1 17 ]
     {
-        tokens = $(tokens[1--2]) ; # discard the empty element
+        result = [ NORMALIZE_PATH $(native) ] ;
+    }
+    else
+    {
+        # This old implementation is really fragile due to a not so clear way
+        # NORMALIZE_PATH rule worked in Boost.Jam versions prior to 3.1.17. E.g.
+        # path.join would mostly ignore empty path elements but would root the
+        # joined path in case the initial two path elements were empty or some
+        # similar accidental wierdness.
+        result = [ path.join [ regex.split $(native) "[/\\]" ] ] ;
     }
 
-    result = [ path.join $(tokens) ] ;
-
-    if [ regex.match "(^.:)" : $(native)  ]
+    # We need to add an extra '/' in front in case this is a rooted Windows path
+    # starting with a drive letter and not a path separator character since the
+    # builtin NORMALIZE_PATH rule has no knowledge of this leading drive letter
+    # and treats it as a regular folder name.
+    if [ regex.match "(^.:)" : $(native) ]
     {
         result = /$(result) ;
-    }
-
-    if $(native) = ""
-    {
-        result = "." ;
     }
 
     return $(result) ;
@@ -492,7 +510,7 @@ rule native-NT ( path )
 rule make-UNIX ( native )
 {
     # VP: I have no idea now 'native' can be empty here! But it can!
-    if $(native) = ""
+    if ! $(native)
     {
         errors.error "Empty path passed to 'make-UNIX'" ;
     }
@@ -518,16 +536,17 @@ rule make-CYGWIN ( path )
 rule native-CYGWIN ( path )
 {
     local result = $(path) ;
-    if [ regex.match "(^/.:)" : $(path)  ] # win absolute
+    if [ regex.match "(^/.:)" : $(path)  ]  # Windows absolute path.
     {
-        result = [ MATCH "^/?(.*)" : $(path) ] ; # remove leading '/'
+        result = [ MATCH "^/?(.*)" : $(path) ] ;  # Remove leading '/'.
     }
     return [ native-UNIX $(result) ] ;
 }
 
 
-# split-VMS: splits input native path into
-# device dir file (each part is optional),
+# split-path-VMS: splits input native path into device dir file (each part is
+# optional).
+#
 # example:
 #
 # dev:[dir]file.c => dev: [dir] file.c
@@ -545,12 +564,11 @@ rule split-path-VMS ( native )
 
 # Converts a native VMS path into a portable path spec.
 #
-# Does not handle current-device absolute paths such
-# as "[dir]File.c" as it is not clear how to represent
-# them in the portable path notation.
+# Does not handle current-device absolute paths such as "[dir]File.c" as it is
+# not clear how to represent them in the portable path notation.
 #
-# Adds a trailing dot (".") to the file part if no extension
-# is present (helps when converting it back into native path).
+# Adds a trailing dot (".") to the file part if no extension is present (helps
+# when converting it back into native path).
 #
 rule make-VMS ( native )
 {
@@ -606,7 +624,7 @@ rule make-VMS ( native )
         if ! [ MATCH (\\.) : $(file) ]
         {
             #
-            # Always add "." to end of non-extension file
+            # Always add "." to end of non-extension file.
             #
             file = $(file). ;
         }
@@ -621,8 +639,8 @@ rule make-VMS ( native )
 
 # Converts a portable path spec into a native VMS path.
 #
-# Relies on having at least one dot (".") included in the file
-# name to be able to differentiate it ftom the directory part.
+# Relies on having at least one dot (".") included in the file name to be able
+# to differentiate it from the directory part.
 #
 rule native-VMS ( path )
 {
@@ -767,12 +785,47 @@ rule __test__ ( )
 
     assert.result "foo/bar/giz" : make "foo/bar/giz" ;
     assert.result "foo/bar/giz" : make "foo\\bar\\giz" ;
+    assert.result "foo" : make "foo/" ;
+    assert.result "foo" : make "foo\\" ;
     assert.result "foo" : make "foo/." ;
     assert.result "foo" : make "foo/bar/.." ;
+    assert.result "foo" : make "foo/bar/../" ;
+    assert.result "foo" : make "foo/bar/..\\" ;
     assert.result "foo/bar" : make "foo/././././bar" ;
     assert.result "/foo" : make "\\foo" ;
     assert.result "/D:/My Documents" : make "D:\\My Documents" ;
     assert.result "/c:/boost/tools/build/new/project.jam" : make "c:\\boost\\tools\\build\\test\\..\\new\\project.jam" ;
+    
+    #   Test processing 'invalid' paths containing multiple successive path
+    # separators.
+    assert.result "foo" : make "foo//" ;
+    assert.result "foo" : make "foo///" ;
+    assert.result "foo" : make "foo\\\\" ;
+    assert.result "foo" : make "foo\\\\\\" ;
+    assert.result "/foo" : make "//foo" ;
+    assert.result "/foo" : make "///foo" ;
+    assert.result "/foo" : make "\\\\foo" ;
+    assert.result "/foo" : make "\\\\\\foo" ;
+    assert.result "/foo" : make "\\/\\/foo" ;
+    assert.result "foo/bar" : make "foo//\\//\\\\bar//\\//\\\\\\//\\//\\\\" ;
+    assert.result "foo" : make "foo/bar//.." ;
+    assert.result "foo/bar" : make "foo/bar/giz//.." ;
+    assert.result "foo/giz" : make "foo//\\//\\\\bar///\\\\//\\\\////\\/..///giz\\//\\\\\\//\\//\\\\" ;
+    assert.result "../../../foo" : make "..///.//..///.//..////foo///" ;
+
+    #   Test processing 'invalid' rooted paths with too many '..' path elements
+    # that would place them before the root.
+    assert.result : make "/.." ;
+    assert.result : make "/../" ;
+    assert.result : make "/../." ;
+    assert.result : make "/.././" ;
+    assert.result : make "/foo/../bar/giz/.././././../../." ;
+    assert.result : make "/foo/../bar/giz/.././././../.././" ;
+    assert.result : make "//foo/../bar/giz/.././././../../." ;
+    assert.result : make "//foo/../bar/giz/.././././../.././" ;
+    assert.result : make "\\\\foo/../bar/giz/.././././../../." ;
+    assert.result : make "\\\\foo/../bar/giz/.././././../.././" ;
+    assert.result : make "/..///.//..///.//..////foo///" ;
 
     assert.result "foo\\bar\\giz" : native "foo/bar/giz" ;
     assert.result "foo" : native "foo" ;

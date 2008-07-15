@@ -10,21 +10,20 @@
   <title>Common tasks</title>
 
   <para>This section describes main targets types that Boost.Build supports
-  of-of-the-box. Unless otherwise noted, all mentioned main target rules
-  have the common signature, described in <xref
-  linkend="bbv2.advanced.targets"/>.
+  out-of-the-box. Unless otherwise noted, all mentioned main target rules have
+  the common signature, described in <xref linkend="bbv2.advanced.targets"/>.
   </para>
-  
+
   <section id="bbv2.tasks.programs">
     <title>Programs</title>
 
       <indexterm><primary>exe</primary></indexterm>
-      <para>Programs are created using the <code>exe</code> rule, which
-        follows the <link linkend="bbv2.main-target-rule-syntax">common
-          syntax</link>. For example:
+      <para>Programs are created using the <code>exe</code> rule, which follows
+        the <link linkend="bbv2.main-target-rule-syntax">common syntax</link>.
+        For example:
 <programlisting>
-exe hello : hello.cpp some_library.lib /some_project//library 
-          : &lt;threading&gt;multi 
+exe hello : hello.cpp some_library.lib /some_project//library
+          : &lt;threading&gt;multi
           ;
 </programlisting>
         This will create an executable file from the sources -- in this case,
@@ -35,7 +34,7 @@ exe hello : hello.cpp some_library.lib /some_project//library
       </para>
 
       <tip>
-        <para>         
+        <para>
           On Windows, if an application uses dynamic libraries, and both
           the application and the libraries are built by Boost.Build, its not
           possible to immediately run the application, because the
@@ -44,9 +43,9 @@ exe hello : hello.cpp some_library.lib /some_project//library
           manually, or place the application and the libraries to the same
           directory. See <xref linkend="bbv2.tasks.installing"/>.
         </para>
-        <!-- We should be emphasizing the use of the built-in testing
-             rules rather than continually discussing these quirks of
-             running programs with dynamic libraries. -->
+        <!-- We should be emphasizing the use of the built-in testing rules
+             rather than continually discussing these quirks of running programs
+             with dynamic libraries. -->
       </tip>
     </section>
 
@@ -55,27 +54,27 @@ exe hello : hello.cpp some_library.lib /some_project//library
 
       <para>Libraries are created using the <code>lib</code> rule, which
         follows the <link linkend="bbv2.main-target-rule-syntax">common
-          syntax</link>. For example:
+        syntax</link>. For example:
 <programlisting>
 lib helpers : helpers.cpp : &lt;include&gt;boost : : &lt;include&gt;. ;
 </programlisting>
       </para>
       <!-- Add one sentence that says what the above does. -->
-      <para>In the most common case, the <code>lib</code> creates a library
-        from the specified sources. Depending on the value of
-        &lt;link&gt; feature the library will be either static or
-        shared. There are two other cases. First is when the library is
-        installed somewhere in compiler's search paths, and should be
-        searched by the compiler (typically, using the <option>-l</option>
-        option). The second case is where the library is available as a 
-        prebuilt file and the full path is known.          
+      <para>
+        In the most common case, the <code>lib</code> creates a library from the
+        specified sources. Depending on the value of &lt;link&gt; feature the
+        library will be either static or shared. There are two other cases.
+        First is when the library is installed somewhere in compiler's search
+        paths, and should be searched by the compiler (typically, using the
+        <option>-l</option> option). The second case is where the library is
+        available as a prebuilt file and the full path is known.
         <!-- But the first case is also prebuilt.  This is confusingly phrased. -->
-        </para>
-      
+      </para>
+
       <para>
         The syntax for these case is given below:
 <programlisting>
-lib z : : &lt;name&gt;z &lt;search&gt;/home/ghost ;            
+lib z : : &lt;name&gt;z &lt;search&gt;/home/ghost ;
 lib compress : : &lt;file&gt;/opt/libs/compress.a ;
 </programlisting>
         The <code>name</code> property specifies the name that should be
@@ -106,7 +105,7 @@ lib b : : &lt;variant&gt;debug &lt;file&gt;/pool/debug/b.so ;
         release or debug versions.
         <!-- explain -->
       </para>
-      
+
       <para>
         For convenience, the following syntax is allowed:
 <programlisting>
@@ -115,18 +114,19 @@ lib gui db aux ;
 </programlisting>
           and is does exactly the same as:
 <programlisting>
-lib z : : &lt;name&gt;z ;            
-lib gui : : &lt;name&gt;gui ;            
-lib db : : &lt;name&gt;db ;            
-lib aux : : &lt;name&gt;aux ;            
+lib z : : &lt;name&gt;z ;
+lib gui : : &lt;name&gt;gui ;
+lib db : : &lt;name&gt;db ;
+lib aux : : &lt;name&gt;aux ;
 </programlisting>
       </para>
-          
-      <para>When a library uses another library you should put that other
-        library in the list of sources. This will do the right thing in all
-        cases. For portability, you should specify library dependencies even
-        for searched and prebuilt libraries, othewise, static linking on
-        Unix won't work. For example:
+
+      <para>
+        When a library uses another library you should put that other library in
+        the list of sources. This will do the right thing in all cases. For
+        portability, you should specify library dependencies even for searched
+        and prebuilt libraries, othewise, static linking on Unix will not work.
+        For example:
 <programlisting>
 lib z ;
 lib png : z : &lt;name&gt;png ;
@@ -134,15 +134,16 @@ lib png : z : &lt;name&gt;png ;
         </para>
 
       <note>
-        <para>When a library (say, <code>a</code>), that has another
-          library, (say, <code>b</code>) 
+        <para>
+          When a library (say, <code>a</code>), that has another library, (say,
+          <code>b</code>)
           <!-- how can a library "have" a library? -->
           is linked dynamically, the <code>b</code>
-          library will be incorporated 
+          library will be incorporated
           <!-- Incorporated?  Be precise. -->
           in <code>a</code>. (If <code>b</code>
-          is dynamic library as well, then <code>a</code> will only refer to
-          it, and not include any extra code.) 
+          is dynamic library as well, then <code>a</code> will only refer to it,
+          and not include any extra code.)
           <!-- Don't parenthesize a whole sentence. -->
           When the <code>a</code>
           library is linked statically, Boost.Build will assure that all
@@ -150,9 +151,10 @@ lib png : z : &lt;name&gt;png ;
           <code>b</code>.
         </para>
       </note>
-         
-      <para>One feature of Boost.Build that is very important for libraries
-        is usage requirements. 
+
+      <para>
+        One feature of Boost.Build that is very important for libraries is usage
+        requirements.
         <!-- Rephrase that.  But then, it's much too late for an
              introduction of usage requirements - you've already
              discussed them many times. -->
@@ -161,7 +163,7 @@ lib png : z : &lt;name&gt;png ;
 lib helpers : helpers.cpp : : : &lt;include&gt;. ;
 </programlisting>
         then the compiler include path for all targets that use
-        <code>helpers</code> will contain the directory 
+        <code>helpers</code> will contain the directory
         <!-- The rest of this sentence is unintelligible -->
         where the target is defined.path to "helpers.cpp". The user
         only needs to add <code>helpers</code> to the list of sources,
@@ -185,7 +187,7 @@ lib a : a.cpp : &lt;use&gt;b : : &lt;library&gt;b ;
           <code>a</code> library won't even refer to <code>b</code>.
         </para>
       </note>
-          
+
     </section>
 
     <section id="bbv2.tasks.alias">
@@ -213,13 +215,13 @@ alias core : im reader writer ;</programlisting>
 alias threads : /boost/thread//boost_thread : &lt;link&gt;static ;
 </programlisting>
         and use only the <code>threads</code> alias in your Jamfiles.
-      </para>              
+      </para>
 
       <para>
         You can also specify usage requirements for the
         <code>alias</code> target. If you write the following:
 <programlisting>
-alias header_only_library : : : :  &lt;include&gt;/usr/include/header_only_library ; 
+alias header_only_library : : : :  &lt;include&gt;/usr/include/header_only_library ;
 </programlisting>
         then using <code>header_only_library</code> in sources will only add an
         include path. Also note that when an alias has sources, their usage
@@ -233,7 +235,7 @@ exe main : main.cpp static_libraries ;
         will compile <filename>main.cpp</filename> with additional includes
         required for using the specified static libraries.
       </para>
- 
+
     </section>
 
     <section id="bbv2.tasks.installing">
@@ -270,19 +272,19 @@ install dist : hello helpers : &lt;location&gt;/usr/bin ;
 install dist : hello helpers : &lt;variant&gt;release:&lt;location&gt;dist/release
                              &lt;variant&gt;debug:&lt;location&gt;dist/debug ;
 install dist2 : hello helpers : &lt;location&gt;$(DIST) ;
-</programlisting> 
+</programlisting>
         See also <link linkend="bbv2.reference.variants.propcond">conditional
           properties</link> and <link linkend="bbv2.faq.envar">environment variables</link>
       </para>
 
       <bridgehead>Installing with all dependencies</bridgehead>
-      
+
       <para>
         Specifying the names of all libraries to install can be boring. The
         <code>install</code> allows you to specify only the top-level executable
         targets to install, and automatically install all dependencies:
 <programlisting>
-install dist : hello 
+install dist : hello
            : &lt;install-dependencies&gt;on &lt;install-type&gt;EXE
              &lt;install-type&gt;LIB
            ;
@@ -304,16 +306,16 @@ install dist : hello
       <indexterm><primary>install-source-root</primary></indexterm>
       <para>By default, the <code>install</code> rules will stip paths from
       it's sources. So, if sources include <filename>a/b/c.hpp</filename>,
-      the <filename>a/b</filename> part will be ignored. To make the 
+      the <filename>a/b</filename> part will be ignored. To make the
       <code>install</code> rule preserve the directory hierarchy you need
       to use the <code>install-source-root</code> feature to specify the
       root of the hierarchy you are installing. Relative paths from that
       root will be preserved. For example, if you write:
 
 <programlisting>
-install headers 
-    : a/b/c.h 
-    : &lt;location&gt;/tmp &lt;install-source-root&gt;a 
+install headers
+    : a/b/c.h
+    : &lt;location&gt;/tmp &lt;install-source-root&gt;a
     ;
 </programlisting>
 
@@ -323,7 +325,7 @@ install headers
       <para>The <link linkend="bbv2.reference.glob-tree">glob-tree</link> rule
       can be used to find all files below a given directory, making
       it easy to install entire directory tree.</para>
-            
+
       <bridgehead>Installing into Several Directories</bridgehead>
 
       <para>The <link linkend="bbv2.tasks.alias"><code>alias</code></link>
@@ -336,26 +338,26 @@ install install-lib : helper : /usr/lib ;
 </programlisting>
     </para>
 
-    <para>Because the <code>install</code> rule just copies targets, most 
-    free features <footnote><para>see the definition of "free" in <xref
-    linkend="bbv2.reference.features.attributes"/>.</para></footnote>
-    have no effect when used in requirements of the <code>install</code> rule.
-    The only two which matter are  
-    <link linkend="bbv2.builtin.features.dependency">
-    <varname>dependency</varname></link> and, on Unix,
-    <link linkend="bbv2.reference.features.dll-path"><varname>dll-path</varname></link>. 
+    <para>
+      Because the <code>install</code> rule just copies targets, most free
+      features <footnote><para>see the definition of "free" in
+      <xref linkend="bbv2.reference.features.attributes"/>.</para></footnote>
+      have no effect when used in requirements of the <code>install</code> rule.
+      The only two which matter are <link
+      linkend="bbv2.builtin.features.dependency"><varname>dependency</varname>
+      </link> and, on Unix, <link linkend="bbv2.reference.features.dll-path">
+      <varname>dll-path</varname></link>.
     </para>
 
     <note>
       <para>
         (Unix specific). On Unix, executables built with Boost.Build typically
-        contain the list of paths to all used dynamic libraries. For
-        installing, this is not desired, so Boost.Build relinks the executable
-        with an empty list of paths. You can also specify additional paths for
-        installed executables with the <varname>dll-path</varname> feature.
+        contain the list of paths to all used dynamic libraries. For installing,
+        this is not desired, so Boost.Build relinks the executable with an empty
+        list of paths. You can also specify additional paths for installed
+        executables with the <varname>dll-path</varname> feature.
       </para>
     </note>
-      
 
     </section>
 
@@ -363,9 +365,10 @@ install install-lib : helper : /usr/lib ;
 
       <title>Testing</title>
 
-      <para>Boost.Build has convenient support for running unit tests. The
-        simplest way is the <code>unit-test</code> rule, which follows the
-        <link linkend="bbv2.main-target-rule-syntax">common syntax</link>. For
+      <para>
+        Boost.Build has convenient support for running unit tests. The simplest
+        way is the <code>unit-test</code> rule, which follows the <link
+        linkend="bbv2.main-target-rule-syntax">common syntax</link>. For
         example:
 <programlisting>
 unit-test helpers_test : helpers_test.cpp helpers ;
@@ -380,22 +383,22 @@ unit-test helpers_test : helpers_test.cpp helpers ;
         can't miss a unit test failure.
       </para>
 
-      <para>By default, the executable is run directly. Sometimes, it's 
+      <para>By default, the executable is run directly. Sometimes, it's
       desirable to run the executable using some helper command. You should use the
       <literal>testing.launcher</literal> property to specify the name of the
       helper command. For example, if you write:
       </para>
 <programlisting>
-unit-test helpers_test 
-   : helpers_test.cpp helpers 
+unit-test helpers_test
+   : helpers_test.cpp helpers
    : <emphasis role="bold">&lt;testing.launcher&gt;valgrind</emphasis>
-   ;  
+   ;
 </programlisting>
       <para>The command used to run the executable will be:</para>
 <screen>
-<emphasis role="bold">valgrind</emphasis> bin/$toolset/debug/helpers_test 
+<emphasis role="bold">valgrind</emphasis> bin/$toolset/debug/helpers_test
 </screen>
-      
+
       <para>There are few specialized testing rules, listed below:
       <programlisting>
 rule compile ( sources : requirements * : target-name ? )
@@ -403,7 +406,7 @@ rule compile-fail ( sources : requirements * : target-name ? )
 rule link ( sources + : requirements * : target-name ? )
 rule link-fail ( sources + : requirements * : target-name ? )
       </programlisting>
-      They are are given a list of sources and requirements. 
+      They are are given a list of sources and requirements.
       If the target name is not provided, the name of the first
       source file is used instead. The <literal>compile*</literal>
       tests try to compile the passed source. The <literal>link*</literal>
@@ -415,10 +418,10 @@ rule link-fail ( sources + : requirements * : target-name ? )
       </para>
 
       <para>There are two specialized rules for running applications, which
-      are more powerful than the <code>unit-test</code> rule. The 
+      are more powerful than the <code>unit-test</code> rule. The
       <code>run</code> rule has the following signature:
       <programlisting>
-rule run ( sources + : args * : input-files * : requirements * : target-name ? 
+rule run ( sources + : args * : input-files * : requirements * : target-name ?
     : default-build * )
       </programlisting>
       The rule builds application from the provided sources and runs it,
@@ -430,15 +433,15 @@ rule run ( sources + : args * : input-files * : requirements * : target-name ?
       directory. The <code>run-fail</code> rule is identical to the
       <code>run</code> rule, except that it expects that the run fails.
       </para>
-      
+
       <para>All rules described in this section, if executed successfully,
       create a special manifest file to indicate that the test passed.
       For the <code>unit-test</code> rule the files is named
       <filename><replaceable>target-name</replaceable>.passed</filename> and
-      for the other rules it is called 
+      for the other rules it is called
       <filename><replaceable>target-name</replaceable>.test</filename>.
       The <code>run*</code> rules also capture all output from the program,
-      and store it in a file named 
+      and store it in a file named
       <filename><replaceable>target-name</replaceable>.output</filename>.</para>
 
       <para>The <code>run</code> and the <code>run-fail</code> rules, if
@@ -451,12 +454,12 @@ rule run ( sources + : args * : input-files * : requirements * : target-name ?
       the <literal>--dump-tests</literal> command-line option. The output
       will consist of lines of the form:
       <screen>
-boost-test(<replaceable>test-type</replaceable>) <replaceable>path</replaceable> : <replaceable>sources</replaceable> 
-      </screen>      
+boost-test(<replaceable>test-type</replaceable>) <replaceable>path</replaceable> : <replaceable>sources</replaceable>
+      </screen>
       </para>
 
       <para>It is possible to process the list of tests, the output of
-      bjam during command run, and the presense/absense of the 
+      bjam during command run, and the presense/absense of the
       <filename>*.test</filename> files created when test passes into
       human-readable status table of tests. Such processing utilities
       are not included in Boost.Build.</para>
@@ -467,53 +470,64 @@ boost-test(<replaceable>test-type</replaceable>) <replaceable>path</replaceable>
 
       <title>Custom commands</title>
 
-      <para>When you use most of main target rules, Boost.Build automatically
-      figures what commands to run and it what order. As soon as you want
-      to use new file types, or support new tools, one approach is to
-      extend Boost.Build to smoothly support them, as documented in
-      <xref linkend="bbv2.extender"/>. However, if there's a single
-      place where the new tool is used, it might be easier to just
-      explicitly specify the commands to run.</para>
-      
-      <para>Three main target rules can be used for that. The
-      <functionname>make</functionname> rule allows you to construct
-      a single file from any number of source file, by running a
-      command you specify. The <functionname>notfile</functionname> rule
-      allows you to run an arbitrary command, without creating any files.
-      Finaly, the <functionname>generate</functionname> rule allows you
-      to describe transformation using Boost.Build's virtual targets.
-      This is higher-level than file names that the make rule operates with,
-      and allows you to create more than one target, or create differently
-      named targets depending on properties, or use more than one
-      tool.</para>
-
-      <para>The <functionname>make</functionname> rule is used when you want to
-      create one file from a number of sources using some specific command.
-      The <functionname>notfile</functionname> is used to unconditionally run
-      a command. 
+      <para>
+        When you use most of main target rules, Boost.Build automatically
+        figures what commands to run and it what order. As soon as you want to
+        use new file types, or support new tools, one approach is to extend
+        Boost.Build to smoothly support them, as documented in
+        <xref linkend="bbv2.extender"/>. However, if there's a single place
+        where the new tool is used, it might be easier to just explicitly
+        specify the commands to run.
       </para>
 
       <para>
-        Suppose you want to create file <filename>file.out</filename> from
-        file <filename>file.in</filename> by running command 
-        <command>in2out</command>. Here's how you'd do this in Boost.Build:
+        <!-- This paragraph requires links to where the terms 'virtual target'
+        & 'target' are defined. -->
+        Three main target rules can be used for that. The <functionname>make
+        </functionname> rule allows you to construct a single file from any
+        number of source file, by running a command you specify. The
+        <functionname>notfile</functionname> rule allows you to run an arbitrary
+        command, without creating any files. And finaly, the <functionname>
+        generate</functionname> rule allows you to describe transformation using
+        Boost.Build's virtual targets. This is higher-level than file names that
+        the <functionname>make</functionname> rule operates with and allows you
+        to create more than one target, create differently named targets
+        depending on properties or use more than one tool.
+      </para>
+
+      <para>
+        The <functionname>make</functionname> rule is used when you want to
+        create one file from a number of sources using some specific command.
+        The <functionname>notfile</functionname> is used to unconditionally run
+        a command.
+      </para>
+
+      <!-- We need to specify somewhere that the user can get rules like make,
+      notfile & generate defined in his Jamfiles by importing an appropriate
+      Boost.Build module. Also, each of those rules should get a separate
+      documentation page explicitly listing which module needs to be imported
+      for them to become accessible. -->
+
+      <para>
+        Suppose you want to create file <filename>file.out</filename> from file
+        <filename>file.in</filename> by running command
+        <command>in2out</command>. Here is how you would do this in Boost.Build:
 <programlisting>
+make file.out : file.in : @in2out ;
 actions in2out
 {
     in2out $(&lt;) $(&gt;)
 }
-make file.out : file.in : @in2out ;
 </programlisting>
-        If you run <command>bjam</command> and <filename>file.out</filename> 
+        If you run <command>bjam</command> and <filename>file.out</filename>
         does not exist, Boost.Build will run the <command>in2out</command>
-        command to create that file. For more details on specifying actions,
-        see <xref linkend="bbv2.advanced.jam_language.actions"/>.
+        command to create that file. For more details on specifying actions, see
+        <xref linkend="bbv2.advanced.jam_language.actions"/>.
       </para>
 
-
       <para>
-        It could be that you just want to run some command unconditionally,
-        and that command does not create any specific files. The, you can use
+        It could be that you just want to run some command unconditionally, and
+        that command does not create any specific files. For that you can use
         the <functionname>notfile</functionname> rule. For example:
 <programlisting>
 notfile echo_something : @echo ;
@@ -527,96 +541,117 @@ actions echo
         Boost.Build will unconditionally run the action.
       </para>
 
-      <para>The <functionname>generate</functionname> rule is used when
-      you want to express transformations using Boost.Build's virtual targets,
-      as opposed to just filenames. The <functionname>generate</functionname>
-      rule has the standard main target rule signature, but you are required
-      to specify the <literal>generating-rule</literal> property. The value
-      of the property should be in the form 
-      <literal>@<replaceable>rule-name</replaceable></literal> and the named
-      rule should have the following signature:
-      <programlisting>
+      <para>
+        <!-- This paragraph requires links to where terms like 'virtual target',
+        'target', 'project-target' & 'property-set' are defined. -->
+        The <functionname>generate</functionname> rule is used when you want to
+        express transformations using Boost.Build's virtual targets, as opposed
+        to just filenames. The <functionname>generate</functionname> rule has
+        the standard main target rule signature, but you are required to specify
+        the <literal>generating-rule</literal> property. The value of the
+        property should be in the form
+        <literal>@<replaceable>rule-name</replaceable></literal>, the named rule
+        should have the following signature:
+<programlisting>
 rule generating-rule ( project name : property-set : sources * )
-      </programlisting>
-      and will be called with an instance of the <code>project-target</code> 
-      class, the name of the main target, an instance of the
-      <code>property-set</code> class containing build properties,
-      and the list of instances of the <code>virtual-target</code> class
-      corresponding to sources.
-      The rule must return a list of <code>virtual-target</code> instances.
-      The interface of the <code>virtual-target</code> class can be learned
-      by looking at the <filename>build/virtual-target.jam</filename> file.
-      The <filename>generate</filename> example in Boost.Build distribution
-      illustrates how the <literal>generate</literal> rule can be used.
+</programlisting>
+        and will be called with an instance of the <code>project-target</code>
+        class, the name of the main target, an instance of the
+        <code>property-set</code> class containing build properties, and the
+        list of instances of the <code>virtual-target</code> class corresponding
+        to sources. The rule must return a list of <code>virtual-target</code>
+        instances. The interface of the <code>virtual-target</code> class can be
+        learned by looking at the <filename>build/virtual-target.jam</filename>
+        file. The <filename>generate</filename> example contained in the
+        Boost.Build distribution illustrates how the <literal>generate</literal>
+        rule can be used.
       </para>
-            
+
     </section>
 
     <section id="bbv2.reference.precompiled_headers">
       <title>Precompiled Headers</title>
 
-      <para>Precompiled headers is a mechanism to speed up compilation
-      by creating a partially processed version of some header files,
-      and then using that version during compilations rather then
-      repeatedly parsing the original headers. Boost.Build supports
-      precompiled headers with gcc and msvc toolsets.</para>
+      <para>
+        Precompiled headers is a mechanism to speed up compilation by creating a
+        partially processed version of some header files, and then using that
+        version during compilations rather then repeatedly parsing the original
+        headers. Boost.Build supports precompiled headers with gcc and msvc
+        toolsets.
+      </para>
 
-      <para>To use precompiled headers, follow these steps:</para>
+      <para>
+        To use precompiled headers, follow the following steps:
+      </para>
+
       <orderedlist>
-        <listitem><para>Create a header that includes big headers used by your project.
-        It's better to include only headers that are sufficiently stable &#x2014;
-        like headers from the compiler, and external libraries. Please wrap
-        the header in <code>#ifdef BOOST_BUILD_PCH_ENABLED</code>, so that
-        the potentially expensive inclusion of headers is not done
-        when PCH is not enabled. Include the new header at the top of your
-        source files.</para></listitem>
+        <listitem><para>
+          Create a header that includes headers used by your project that you
+          want precompiled. It is better to include only headers that are
+          sufficiently stable &#x2014; like headers from the compiler and
+          external libraries. Please wrap the header in <code>#ifdef
+          BOOST_BUILD_PCH_ENABLED</code>, so that the potentially expensive
+          inclusion of headers is not done when PCH is not enabled. Include the
+          new header at the top of your source files.
+        </para></listitem>
 
-        <listitem><para>Declare a new Boost.Build target for the precompiled header
-        and add that precompiled header to the sources of the target whose compilation
-        you want to speed up:
-        <programlisting>
+        <listitem><para>
+          Declare a new Boost.Build target for the precompiled header and add
+          that precompiled header to the sources of the target whose compilation
+          you want to speed up:
+<programlisting>
 cpp-pch pch : pch.hpp ;
-exe main : main.cpp pch ;</programlisting>
-        You can use the <code>c-pch</code> if you want to use the precompiled
-        header in C programs.
+exe main : main.cpp pch ;
+</programlisting>
+          You can use the <functionname>c-pch</functionname> rule if you want to
+          use the precompiled header in C programs.
         </para></listitem>
-
       </orderedlist>
-      <para>The <filename>pch</filename> example in Boost.Build distribution
-      can be used as reference.</para>
 
-      <para>Please note the following:</para>
+      <para>
+        The <filename>pch</filename> example in Boost.Build distribution can be
+        used as reference.
+      </para>
+
+      <para>
+        Please note the following:
+      </para>
+
       <itemizedlist>
-        <listitem><para>The inclusion of the precompiled header must be the
-        first thing in a source file, before any code or preprocessor directives.
+        <listitem><para>
+          The inclusion of the precompiled header must be the first thing in a
+          source file, before any code or preprocessor directives.
         </para></listitem>
 
-        <listitem><para>The build properties used to compile the source files 
-        and  the precompiled header must be the same. Consider using 
-        project requirements to assure this.
+        <listitem><para>
+          The build properties used to compile the source files and the
+          precompiled header must be the same. Consider using project
+          requirements to assure this.
         </para></listitem>
 
-        <listitem><para>Precompiled headers must be used purely as a way to
-        improve compilation time, not to save the number of <code>#include</code>
-        statements. If a source file needs to include some header, explicitly include
-        it in the source file, even if the same header is included from
-        the precompiled header. This makes sure that your project will build
-        even if precompiled headers are not supported.</para></listitem>
+        <listitem><para>
+          Precompiled headers must be used purely as a way to improve
+          compilation time, not to save the number of <code>#include</code>
+          statements. If a source file needs to include some header, explicitly
+          include it in the source file, even if the same header is included
+          from the precompiled header. This makes sure that your project will
+          build even if precompiled headers are not supported.
+        </para></listitem>
 
-        <listitem><para>On the gcc compiler, the name of the header being
-        precompiled must be equal to the name of the <code>cpp-pch</code>
-        target.  This is gcc requirement.</para></listitem>
+        <listitem><para>
+          On the gcc compiler, the name of the header being precompiled must be
+          equal to the name of the <code>cpp-pch</code> target. This is a gcc
+          requirement.
+        </para></listitem>
 
-        <listitem><para>Prior to version 4.2, the gcc compiler did not
-        handle anonymous namespaces in precompiled headers, which 
-        limit their utility. See the <ulink url="http://gcc.gnu.org/bugzilla/show_bug.cgi?id=29085">bug
-        report</ulink> for details.</para></listitem>
-        
+        <listitem><para>
+          Prior to version 4.2, the gcc compiler did not allow anonymous
+          namespaces in precompiled headers, which limits their utility. See the
+          <ulink url="http://gcc.gnu.org/bugzilla/show_bug.cgi?id=29085">bug
+          report</ulink> for details.
+        </para></listitem>
       </itemizedlist>
-      
-      
     </section>
-
 
     <section id="bbv2.reference.generated_headers">
       <title>Generated headers</title>
@@ -625,7 +660,7 @@ exe main : main.cpp pch ;</programlisting>
         automatically. For example, for C++ files, all <literal>#include</literal>
         statements are found and handled. The only aspect where user help
         might be needed is implicit dependency on generated files.</para>
-      
+
       <para>By default, Boost.Build handles such dependencies within one
         main target. For example, assume that main target "app" has two
         sources, "app.cpp" and "parser.y". The latter source is converted
@@ -634,13 +669,13 @@ exe main : main.cpp pch ;</programlisting>
         since "parser.h" will be generated into a build directory, the
         path to that directory will automatically added to include
         path.</para>
-      
+
       <para>Making this mechanism work across main target boundaries is
         possible, but imposes certain overhead. For that reason, if
         there's implicit dependency on files from other main targets, the
         <literal>&lt;implicit-dependency&gt;</literal> [ link ] feature must
         be used, for example:</para>
-      
+
 <programlisting>
 lib parser : parser.y ;
 exe app : app.cpp : &lt;implicit-dependency&gt;parser ;
@@ -652,14 +687,14 @@ exe app : app.cpp : &lt;implicit-dependency&gt;parser ;
         targets from "parser" as potential dependencies.
       </para>
 </section>
-    
+
 </chapter>
 
 
 <!--
      Local Variables:
      mode: xml
-     sgml-indent-data: t     
+     sgml-indent-data: t
      sgml-parent-document: ("userman.xml" "chapter")
      sgml-set-face: t
      End:

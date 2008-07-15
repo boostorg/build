@@ -86,9 +86,10 @@ actions acc.link bind NEEDLIBS
     $(CONFIG_COMMAND) -AA $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS)
 }
 
+SPACE = " " ;
 actions acc.link.dll bind NEEDLIBS
 {
-    $(CONFIG_COMMAND) -AA -b $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS)
+    $(CONFIG_COMMAND) -AA -b $(LINKFLAGS) -o "$(<[1])" -Wl,+h$(SPACE)-Wl,$(<[-1]:D=)  -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS)
 }
 
 actions acc.compile.c

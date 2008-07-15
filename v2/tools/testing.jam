@@ -47,6 +47,7 @@ import os ;
 import common ;
 import sequence ;
 import errors ;
+import regex ;
 
 
 rule init ( )
@@ -83,6 +84,15 @@ type.register UNIT_TEST    : passed : TEST ;
 rule make-test ( target-type : sources + : requirements * : target-name ? )
 {
     target-name ?= $(sources[1]:D=:S=) ;
+    
+    # Having periods (".") in the target name is problematic because the
+    # typed generator will strip the suffix and use the bare name for the
+    # file targets. Even though the location-prefix averts problems most
+    # times it doesn't prevent ambiguity issues when referring to the
+    # test targets. For example when using the XML log output. So we
+    # rename the target to remove the periods, and provide an alias
+    # for users.
+    local real-name = [ regex.replace $(target-name) "[.]" "~" ] ;
 
     local project = [ project.current ] ;
     # The <location-prefix> forces the build system for generate paths in the
@@ -91,8 +101,14 @@ rule make-test ( target-type : sources + : requirements * : target-name ? )
     local t =
       [ targets.create-typed-target
           [ type.type-from-rule-name $(target-type) ] : $(project)
-            : $(target-name) : $(sources)
-            : $(requirements) <location-prefix>$(target-name).test ] ;
+            : $(real-name) : $(sources)
+            : $(requirements) <location-prefix>$(real-name).test ] ;
+    
+    # The alias to the real target, per period replacement above.
+    if $(real-name) != $(target-name)
+    {
+        alias $(target-name) : $(t) ;
+    }
 
     # Remember the test (for --dump-tests). A good way would be to collect all
     # given a project. This has some technical problems: e.g. we can't call this
@@ -239,6 +255,9 @@ rule dump-test ( target )
         }
     }
 
+    local target-name = [ $(project).get location ] // [ $(target).name ] .test ;
+    target-name = $(target-name:J=) ;
+
     local r = [ $(target).requirements ] ;
     # Extract values of the <test-info> feature.
     local test-info = [ $(r).get <test-info> ] ;
@@ -251,6 +270,7 @@ rule dump-test ( target )
 " ;
         .contents on $(.out-xml) +=
             "$(nl)  <test type=\"$(type)\" name=\"$(name)\">"
+            "$(nl)    <target><![CDATA[$(target-name)]]></target>"
             "$(nl)    <info><![CDATA[$(test-info)]]></info>"
             "$(nl)    <source><![CDATA[$(source-files)]]></source>"
             "$(nl)  </test>"

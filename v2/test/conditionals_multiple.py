@@ -236,7 +236,7 @@ notfile testTarget1 : @buildRule : :
     t.expect_output_line("description: /a0-t1-b0/", False)
     t.expect_output_line("description: /a0-t1-b1/", False)
     t.expect_output_line("description: /a1-t0-b0/", False)
-    t.expect_output_line("description: /a1-t0-b1/", False)
+    t.expect_output_line("description: /a1-t0-b1/"       )
     t.expect_output_line("description: /b0-a1-t0/", False)
     t.expect_output_line("description: /b0-a0-t1/", False)
     t.expect_output_line("description: /b0-a1-t1/", False)

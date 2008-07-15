@@ -139,14 +139,48 @@ elif os.name == 'nt':
     def _status(self):
         return self.status
 
+
 class Tester(TestCmd.TestCmd):
-    """Class for testing Boost.Build.
+    """Main tester class for Boost Build.
 
-    Optional argument `executable` indicates the name of the executable to
-    invoke. Set this to "jam" to test Boost.Build v1 behavior.
+    Optional arguments:
 
-    Optional argument `work_dir` indicates an absolute directory, where the test
-    will run be run.
+    `arguments`                   - Arguments passed to the run executable.
+    `executable`                  - Name of the executable to invoke.
+    `match`                       - Function to use for compating actual and
+                                    expected file contents.
+    `boost_build_path`            - Boost build path to be passed to the run
+                                    executable.
+    `translate_suffixes`          - Whether to update suffixes on the the file
+                                    names passed from the test script so they
+                                    match those actually created by the current
+                                    toolset. For example, static library files
+                                    are specified by using the .lib suffix but
+                                    when the 'gcc' toolset is used it actually
+                                    creates them using the .a suffix.
+    `pass_toolset`                - Whether the test system should pass the
+                                    specified toolset to the run executable.
+    `use_test_config`             - Whether the test system should tell the run
+                                    executable to read in the test_config.jam
+                                    configuration file.
+    `ignore_toolset_requirements` - Whether the test system should tell the run
+                                    executable to ignore toolset requirements.
+    `workdir`                     - indicates an absolute directory where the
+                                    test will be run from.
+
+    Optional arguments inherited from the base class:
+
+    `description`                 - Test description string displayed in case of
+                                    a failed test.
+    `subdir'                      - List of subdirectories to automatically
+                                    create under the working directory. Each
+                                    subdirectory needs to be specified
+                                    separately parent coming before its child.
+    `verbose`                     - Flag that may be used to enable more verbose
+                                    test system output. Note that it does not
+                                    also enable more verbose build system
+                                    output like the --verbose command line
+                                    option does.
     """
     def __init__(self, arguments="", executable="bjam",
         match=TestCmd.match_exact, boost_build_path=None,
@@ -157,7 +191,8 @@ class Tester(TestCmd.TestCmd):
         if workdir != '' and not os.path.isabs(workdir):
             raise "Parameter workdir <"+workdir+"> must point to an absolute directory: "
 
-        self.last_build_time = 0
+        self.last_build_time_start = 0
+        self.last_build_time_finish = 0
         self.translate_suffixes = translate_suffixes
         self.use_test_config = use_test_config
 
@@ -186,7 +221,10 @@ class Tester(TestCmd.TestCmd):
                 elif os.uname()[0] == 'SunOS':
                     jam_build_dir = "bin.solaris"
                 elif os.uname()[0] == 'Darwin':
-                    jam_build_dir = "bin.macosxppc"
+                    if os.uname()[4] == 'i386':
+                        jam_build_dir = "bin.macosxx86"
+                    else:
+                        jam_build_dir = "bin.macosxppc"
                 elif os.uname()[0] == "AIX":
                     jam_build_dir = "bin.aix"
                 elif os.uname()[0] == "IRIX64":
@@ -218,7 +256,7 @@ class Tester(TestCmd.TestCmd):
 
         verbosity = ['-d0', '--quiet']
         if '--verbose' in sys.argv:
-            keywords['verbose'] = 1
+            keywords['verbose'] = True
             verbosity = ['-d+2']
 
         if boost_build_path is None:
@@ -232,7 +270,7 @@ class Tester(TestCmd.TestCmd):
         else:
             program_list.append(os.path.join(jam_build_dir, executable))
             inpath_bjam = None
-        program_list.append('-sBOOST_BUILD_PATH=' + boost_build_path)
+        program_list.append('-sBOOST_BUILD_PATH="' + boost_build_path + '"')
         if verbosity:
             program_list += verbosity
         if arguments:
@@ -253,7 +291,7 @@ class Tester(TestCmd.TestCmd):
             TestCmd.TestCmd.cleanup(self)
             os.chdir(self.original_workdir)
         except AttributeError:
-            # When this is called during by TestCmd.TestCmd.__del__ we can have
+            # When this is called during TestCmd.TestCmd.__del__ we can have
             # both 'TestCmd' and 'os' unavailable in our scope. Do nothing in
             # this case.
             pass
@@ -262,7 +300,7 @@ class Tester(TestCmd.TestCmd):
     # Methods that change the working directory's content.
     #
     def set_tree(self, tree_location):
-        # Seems like it's not possible to remove the current a directory.
+        # It is not possible to remove the current directory.
         d = os.getcwd()
         os.chdir(os.path.dirname(self.workdir))
         shutil.rmtree(self.workdir, ignore_errors=False)
@@ -281,7 +319,7 @@ class Tester(TestCmd.TestCmd):
         os.path.walk(".", make_writable, None)
 
     def write(self, file, content):
-        self.wait_for_time_change()
+        self.wait_for_time_change_since_last_build()
         nfile = self.native_file_name(file)
         try:
             os.makedirs(os.path.dirname(nfile))
@@ -304,7 +342,7 @@ class Tester(TestCmd.TestCmd):
         self.touch(new);
 
     def copy(self, src, dst):
-        self.wait_for_time_change()
+        self.wait_for_time_change_since_last_build()
         try:
             self.write(dst, self.read(src, 1))
         except:
@@ -318,12 +356,12 @@ class Tester(TestCmd.TestCmd):
         os.utime(dst_name, (stats.st_atime, stats.st_mtime))
 
     def touch(self, names):
-        self.wait_for_time_change()
+        self.wait_for_time_change_since_last_build()
         for name in self.adjust_names(names):
             os.utime(self.native_file_name(name), None)
 
     def rm(self, names):
-        self.wait_for_time_change()
+        self.wait_for_time_change_since_last_build()
         if not type(names) == types.ListType:
             names = [names]
 
@@ -341,7 +379,7 @@ class Tester(TestCmd.TestCmd):
                 else:
                     os.unlink(n)
 
-        # Create working dir root again, in case we've removed it.
+        # Create working dir root again in case we removed it.
         if not os.path.exists(self.workdir):
             os.mkdir(self.workdir)
         os.chdir(self.workdir)
@@ -362,45 +400,50 @@ class Tester(TestCmd.TestCmd):
     #
     def run_build_system(self, extra_args="", subdir="", stdout=None, stderr="",
         status=0, match=None, pass_toolset=None, use_test_config=None,
-        ignore_toolset_requirements=None, **kw):
+        ignore_toolset_requirements=None, expected_duration=None, **kw):
 
-        if os.path.isabs(subdir):
-            if stderr:
-                print "You must pass a relative directory to subdir <"+subdir+">."
-            status = 1
-            return
-
-        self.previous_tree = tree.build_tree(self.workdir)
-
-        if match is None:
-            match = self.match
-
-        if pass_toolset is None:
-            pass_toolset = self.pass_toolset
-
-        if use_test_config is None:
-            use_test_config = self.use_test_config
-
-        if ignore_toolset_requirements is None:
-            ignore_toolset_requirements = self.ignore_toolset_requirements
+        self.last_build_time_start = time.time()
 
         try:
-            kw['program'] = []
-            kw['program'] += self.program
-            if extra_args:
-                kw['program'] += extra_args.split(" ")
-            if pass_toolset:
-                kw['program'].append("toolset=" + self.toolset)
-            if use_test_config:
-                kw['program'].append('--test-config="%s"'
-                    % os.path.join(self.original_workdir, "test-config.jam"))
-            if ignore_toolset_requirements:
-                kw['program'].append("--ignore-toolset-requirements")
-            kw['chdir'] = subdir
-            apply(TestCmd.TestCmd.run, [self], kw)
-        except:
-            self.dump_stdio()
-            raise
+            if os.path.isabs(subdir):
+                if stderr:
+                    print "You must pass a relative directory to subdir <"+subdir+">."
+                status = 1
+                return
+
+            self.previous_tree = tree.build_tree(self.workdir)
+
+            if match is None:
+                match = self.match
+
+            if pass_toolset is None:
+                pass_toolset = self.pass_toolset
+
+            if use_test_config is None:
+                use_test_config = self.use_test_config
+
+            if ignore_toolset_requirements is None:
+                ignore_toolset_requirements = self.ignore_toolset_requirements
+
+            try:
+                kw['program'] = []
+                kw['program'] += self.program
+                if extra_args:
+                    kw['program'] += extra_args.split(" ")
+                if pass_toolset:
+                    kw['program'].append("toolset=" + self.toolset)
+                if use_test_config:
+                    kw['program'].append('--test-config="%s"'
+                        % os.path.join(self.original_workdir, "test-config.jam"))
+                if ignore_toolset_requirements:
+                    kw['program'].append("--ignore-toolset-requirements")
+                kw['chdir'] = subdir
+                apply(TestCmd.TestCmd.run, [self], kw)
+            except:
+                self.dump_stdio()
+                raise
+        finally:
+            self.last_build_time_finish = time.time()
 
         if status != None and _failed(self, status):
             expect = ''
@@ -423,7 +466,7 @@ class Tester(TestCmd.TestCmd):
             self.maybe_do_diff(self.stdout(), stdout)
             self.fail_test(1, dump_stdio=False)
 
-        # Intel tends to produce some message to stderr which makes tests fail.
+        # Intel tends to produce some messages to stderr which make tests fail.
         intel_workaround = re.compile("^xi(link|lib): executing.*\n", re.M)
         actual_stderr = re.sub(intel_workaround, "", self.stderr())
 
@@ -435,12 +478,18 @@ class Tester(TestCmd.TestCmd):
             self.maybe_do_diff(actual_stderr, stderr)
             self.fail_test(1, dump_stdio=False)
 
+        if not expected_duration is None:
+            actual_duration = self.last_build_time_finish - self.last_build_time_start 
+            if ( actual_duration > expected_duration ):
+                print "Test run lasted %f seconds while it was expected to " \
+                    "finish in under %f seconds." % (actual_duration,
+                    expected_duration)
+                self.fail_test(1, dump_stdio=False)
+
         self.tree = tree.build_tree(self.workdir)
         self.difference = tree.trees_difference(self.previous_tree, self.tree)
         self.difference.ignore_directories()
         self.unexpected_difference = copy.deepcopy(self.difference)
-
-        self.last_build_time = time.time()
 
     def glob_file(self, name):
         result = None
@@ -665,8 +714,11 @@ class Tester(TestCmd.TestCmd):
         if exact:
             matched = fnmatch.fnmatch(actual,content)
         else:
-            actual_ = map(lambda x: sorted(x.split()),actual.splitlines())
-            content_ = map(lambda x: sorted(x.split()),content.splitlines())
+            def sorted_(x):
+                x.sort()
+                return x
+            actual_ = map(lambda x: sorted_(x.split()),actual.splitlines())
+            content_ = map(lambda x: sorted_(x.split()),content.splitlines())
             if len(actual_) == len(content_):
                 matched = map(
                     lambda x,y: map(lambda n,p: fnmatch.fnmatch(n,p),x,y),
@@ -777,14 +829,14 @@ class Tester(TestCmd.TestCmd):
         return os.path.normpath(apply(os.path.join, [self.workdir]+elements))
 
     # Wait while time is no longer equal to the time last "run_build_system"
-    # call finished.
-    def wait_for_time_change(self):
+    # call finished. Used to avoid subsequent builds treating existing files as
+    # 'current'.
+    def wait_for_time_change_since_last_build(self):
         while 1:
-            f = time.time();
             # In fact, I'm not sure why "+ 2" as opposed to "+ 1" is needed but
             # empirically, "+ 1" sometimes causes 'touch' and other functions
             # not to bump the file time enough for a rebuild to happen.
-            if math.floor(f) < math.floor(self.last_build_time) + 2:
+            if math.floor(time.time()) < math.floor(self.last_build_time_finish) + 2:
                 time.sleep(0.1)
             else:
                 break

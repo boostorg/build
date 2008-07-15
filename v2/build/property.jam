@@ -18,6 +18,7 @@ import utility ;
 # Refines 'properties' by overriding any non-free and non-conditional properties
 # for which a different value is specified in 'requirements'. Returns the
 # resulting list of properties.
+#
 rule refine ( properties * : requirements * )
 {
     local result ;
@@ -27,7 +28,7 @@ rule refine ( properties * : requirements * )
     # them so that we can handle 'properties'.
     for local r in $(requirements)
     {
-        # Don't consider conditional requirements.
+        # Do not consider conditional requirements.
         if ! [ MATCH (:) : $(r:G=) ]
         {
             # Note: cannot use a local variable here, so use an ugly name.
@@ -88,6 +89,7 @@ rule refine ( properties * : requirements * )
 # Removes all conditional properties whose conditions are not met. For those
 # with met conditions, removes the condition. Properties in conditions are
 # looked up in 'context'.
+#
 rule evaluate-conditionals-in-context ( properties * : context * )
 {
     local base ;
@@ -147,15 +149,17 @@ rule expand-subfeatures-in-conditions ( properties * )
                 # passing 'true' as the second parameter.
                 e += [ feature.expand-subfeatures $(c) : true ] ;
             }
-
             if $(e) = $(condition)
             {
+                # (todo)
+                #   This is just an optimization and possibly a premature one at
+                # that.
+                #                             (todo) (12.07.2008.) (Jurko)
                 result += $(p) ;
             }
             else
             {
-                local individual-subfeatures = [ set.difference $(e) : $(condition) ] ;
-                result += $(individual-subfeatures:J=,):$(value) ;
+                result += $(e:J=,):$(value) ;
             }
         }
     }
@@ -165,6 +169,7 @@ rule expand-subfeatures-in-conditions ( properties * )
 
 # Helper for as-path, below. Orders properties with the implicit ones first, and
 # within the two sections in alphabetical order of feature name.
+#
 local rule path-order ( x y )
 {
     if $(y:G) && ! $(x:G)
@@ -219,16 +224,17 @@ else
 
 
 # Returns a path representing the given expanded property set.
+#
 rule as-path ( properties * )
 {
     local entry = .result.$(properties:J=-) ;
 
     if ! $($(entry))
     {
-        # trim redundancy
+        # Trim redundancy.
         properties = [ feature.minimize $(properties) ] ;
 
-        # sort according to path-order
+        # Sort according to path-order.
         properties = [ sequence.insertion-sort $(properties) : path-order ] ;
 
         local components ;
@@ -250,6 +256,7 @@ rule as-path ( properties * )
 
 
 # Exit with error if property is not valid.
+#
 local rule validate1 ( property )
 {
     local msg ;
@@ -307,6 +314,7 @@ rule validate-property-sets ( property-sets * )
 
 # Expands any implicit property values in the given property 'specification' so
 # they explicitly state their feature.
+#
 rule make ( specification * )
 {
     local result ;
@@ -332,6 +340,7 @@ rule make ( specification * )
 
 # Returns a property set containing all the elements in 'properties' that do not
 # have their attributes listed in 'attributes'.
+#
 rule remove ( attributes + : properties * )
 {
     local result ;
@@ -346,8 +355,9 @@ rule remove ( attributes + : properties * )
 }
 
 
-# Returns a property set containig all the elements in 'properties' that have
+# Returns a property set containing all the elements in 'properties' that have
 # their attributes listed in 'attributes'.
+#
 rule take ( attributes + : properties * )
 {
     local result ;
@@ -363,6 +373,7 @@ rule take ( attributes + : properties * )
 
 
 # Selects properties corresponding to any of the given features.
+#
 rule select ( features * : properties * )
 {
     local result ;
@@ -384,6 +395,7 @@ rule select ( features * : properties * )
 
 # Returns a modified version of properties with all values of the given feature
 # replaced by the given value. If 'value' is empty the feature will be removed.
+#
 rule change ( properties * : feature value ? )
 {
     local result ;
@@ -406,6 +418,7 @@ rule change ( properties * : feature value ? )
 # property. E.g. <variant>debug,<toolset>gcc:<inlining>full will become
 # <variant>debug,<toolset>gcc <inlining>full. Otherwise, returns an empty
 # string.
+#
 rule split-conditional ( property )
 {
     local m = [ MATCH "(.+):<(.+)" : $(property) ] ;
@@ -419,6 +432,7 @@ rule split-conditional ( property )
 # Interpret all path properties in 'properties' as relative to 'path'. The
 # property values are assumed to be in system-specific form, and will be
 # translated into normalized form.
+#
 rule translate-paths ( properties * : path )
 {
     local result ;
@@ -456,6 +470,7 @@ rule translate-paths ( properties * : path )
 # in 'context-module'. Such rules can be either local to the module or global.
 # Converts such values into 'indirect-rule' format (see indirect.jam), so they
 # can be called from other modules.
+#
 rule translate-indirect ( specification * : context-module )
 {
     local result ;
@@ -497,7 +512,8 @@ rule translate-indirect ( specification * : context-module )
 }
 
 
-# Class which maintains a property set -> string mapping.
+# Class maintaining a property set -> string mapping.
+#
 class property-map
 {
     import errors ;
@@ -509,7 +525,8 @@ class property-map
         self.next-flag = 1 ;
     }
 
-    # Associate 'value' with 'properties'
+    # Associate 'value' with 'properties'.
+    #
     rule insert ( properties + : value )
     {
         self.all-flags += $(self.next-flag) ;
@@ -521,7 +538,8 @@ class property-map
 
     # Returns the value associated with 'properties' or any subset of it. If
     # more than one subset has a value assigned to it, returns the value for the
-    # longest subset, if it's unique.
+    # longest subset, if it is unique.
+    #
     rule find ( properties + )
     {
         return [ find-replace $(properties) ] ;
@@ -529,9 +547,10 @@ class property-map
 
     # Returns the value associated with 'properties'. If 'value' parameter is
     # given, replaces the found value.
+    #
     rule find-replace ( properties + : value ? )
     {
-        # First find all matches
+        # First find all matches.
         local matches ;
         local match-ranks ;
         for local i in $(self.all-flags)
@@ -558,7 +577,7 @@ class property-map
 }
 
 
-local rule __test__ ( )
+rule __test__ ( )
 {
     import assert ;
     import "class" : new ;
@@ -591,24 +610,24 @@ local rule __test__ ( )
     assert.true  path-order $(test-space) <optimization>on <rtti>on ;
     assert.false path-order $(test-space) <rtti>on <optimization>on ;
 
-    assert.result-equal <toolset>gcc <rtti>off <define>FOO
+    assert.result-set-equal <toolset>gcc <rtti>off <define>FOO
         : refine <toolset>gcc <rtti>off
         : <define>FOO
         : $(test-space) ;
 
-    assert.result-equal <toolset>gcc <optimization>on
+    assert.result-set-equal <toolset>gcc <optimization>on
         : refine <toolset>gcc <optimization>off
         : <optimization>on
         : $(test-space) ;
 
-    assert.result-equal <toolset>gcc <rtti>off
+    assert.result-set-equal <toolset>gcc <rtti>off
         : refine <toolset>gcc : <rtti>off : $(test-space) ;
 
-    assert.result-equal <toolset>gcc <rtti>off <rtti>off:<define>FOO
+    assert.result-set-equal <toolset>gcc <rtti>off <rtti>off:<define>FOO
         : refine <toolset>gcc : <rtti>off <rtti>off:<define>FOO
         : $(test-space) ;
 
-    assert.result-equal <toolset>gcc:<define>foo <toolset>gcc:<define>bar
+    assert.result-set-equal <toolset>gcc:<define>foo <toolset>gcc:<define>bar
         : refine <toolset>gcc:<define>foo : <toolset>gcc:<define>bar
         : $(test-space) ;
 
@@ -646,19 +665,19 @@ local rule __test__ ( )
         validate value : $(test-space) ;
     catch "value" is not a value of an implicit feature ;
 
-    assert.result-equal <rtti>on
+    assert.result-set-equal <rtti>on
         : remove free implicit : <toolset>gcc <define>foo <rtti>on : $(test-space) ;
 
-    assert.result-equal <include>a
+    assert.result-set-equal <include>a
         : select include : <include>a <toolset>gcc ;
 
-    assert.result-equal <include>a
+    assert.result-set-equal <include>a
         : select include bar : <include>a <toolset>gcc ;
 
-    assert.result-equal <include>a <toolset>gcc
+    assert.result-set-equal <include>a <toolset>gcc
         : select include <bar> <toolset> : <include>a <toolset>gcc ;
 
-    assert.result-equal <toolset>kylix <include>a
+    assert.result-set-equal <toolset>kylix <include>a
         : change <toolset>gcc <include>a : <toolset> kylix ;
 
     pm = [ new property-map ] ;
@@ -681,7 +700,7 @@ local rule __test__ ( )
     assert.result : split-conditional <define>FOO=A::B ;
 
     # Test conditional feature.
-    assert.result-equal <toolset>gcc,<toolset-gcc:version>3.0 <define>FOO
+    assert.result-set-equal <toolset>gcc,<toolset-gcc:version>3.0 <define>FOO
         : split-conditional <toolset>gcc,<toolset-gcc:version>3.0:<define>FOO ;
 
     feature.finish-test property-test-temp ;

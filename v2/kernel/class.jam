@@ -1,16 +1,16 @@
-# Copyright 2001, 2002, 2003 Dave Abrahams 
-# Copyright 2002, 2005 Rene Rivera 
-# Copyright 2002, 2003 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2001, 2002, 2003 Dave Abrahams
+# Copyright 2002, 2005 Rene Rivera
+# Copyright 2002, 2003 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Polymorphic class system built on top of core Jam facilities.
 #
 # Classes are defined by 'class' keywords::
 #
-#     class myclass ( arg1 )          
+#     class myclass
 #     {
-#         rule __init__ ( )          # constructor
+#         rule __init__ ( arg1 )     # constructor
 #         {
 #             self.attribute = $(arg1) ;
 #         }
@@ -28,14 +28,14 @@
 #
 # The __init__ rule is the constructor, and sets member variables.
 #
-# New instances are created by invoking [ new <class> <args...> ]::
+# New instances are created by invoking [ new <class> <args...> ]:
 #
 #     local x = [ new myclass foo ] ;        # x is a new myclass object
 #     assert.result foo : [ $(x).method1 ] ; # $(x).method1 returns "foo"
 #
 # Derived class are created by mentioning base classes in the declaration::
 #
-#     class derived : myclass 
+#     class derived : myclass
 #     {
 #          rule __init__ ( arg )
 #          {
@@ -49,26 +49,21 @@
 #          }
 #     }
 #
-# All methods operate virtually, replacing behavior in the base
-# classes. For example::
+# All methods operate virtually, replacing behavior in the base classes. For
+# example::
 #
-#     local y = [ new derived foo ] ;           # y is a new derived object
-#     assert.result fooXXX : [ $(y).method1 ] ; # $(y).method1 returns "foo"
+#     local y = [ new derived foo ] ;            # y is a new derived object
+#     assert.result fooXXX : [ $(y).method1 ] ;  # $(y).method1 returns "foo"
 #
-# Each class instance is its own core Jam module. All instance
-# attributes and methods are accessible without additional
-# qualification from within the class instance. All rules imported in
-# class declaration, or visible in base classses are also visible.
-# Base methods are available in qualified form: base-name.method-name.
-# By convention, attribute names are prefixed with "self.".
+# Each class instance is its own core Jam module. All instance attributes and
+# methods are accessible without additional qualification from within the class
+# instance. All rules imported in class declaration, or visible in base classses
+# are also visible. Base methods are available in qualified form:
+# base-name.method-name. By convention, attribute names are prefixed with
+# "self.".
 
-import numbers ;
-import errors : * ;
-import set ;
 import modules ;
-import assert ;
-
-classes = ;
+import numbers ;
 
 
 rule xinit ( instance : class )
@@ -77,7 +72,7 @@ rule xinit ( instance : class )
     {
         __class__ = $(2) ;
         __name__ = $(1) ;
-    }    
+    }
 }
 
 
@@ -85,16 +80,16 @@ rule new ( class args * : * )
 {
     .next-instance ?= 1 ;
     local id = object($(class))@$(.next-instance) ;
-    
+
     xinit $(id) : $(class) ;
-    
+
     INSTANCE $(id) : class@$(class) ;
-    IMPORT_MODULE $(id) : ;
+    IMPORT_MODULE $(id) ;
     $(id).__init__ $(args) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
-    
-    # bump the next unique object name
+
+    # Bump the next unique object name.
     .next-instance = [ numbers.increment $(.next-instance) ] ;
-    
+
     # Return the name of the new instance.
     return $(id) ;
 }
@@ -102,28 +97,18 @@ rule new ( class args * : * )
 
 rule bases ( class )
 {
-    #if ! ( $(class) in $(classes) )
-    #{
-    #    error class $(class) not defined ;
-    #}
-    
     module class@$(class)
     {
         return $(__bases__) ;
     }
 }
 
+
 rule is-derived ( class : bases + )
 {
-    #local all = $(class) $(bases) ;
-    #if ! ( $(all) in $(classes) )
-    #{
-    #    error class(es) [ set.difference $(class) $(bases) : $(classes) ] not defined ;
-    #}
-    
     local stack = $(class) ;
     local visited found ;
-    while ( ! $(found) ) && $(stack)
+    while ! $(found) && $(stack)
     {
         local top = $(stack[1]) ;
         stack = $(stack[2-]) ;
@@ -131,7 +116,7 @@ rule is-derived ( class : bases + )
         {
             visited += $(top) ;
             stack += [ bases $(top) ] ;
-            
+
             if $(bases) in $(visited)
             {
                 found = true ;
@@ -141,25 +126,28 @@ rule is-derived ( class : bases + )
     return $(found) ;
 }
 
+
 # Returns true if the 'value' is a class instance.
-rule is-instance ( value # The value to check 
-     )
+#
+rule is-instance ( value )
 {
-    return [ MATCH "^(object\\()[^@]+\\)@.*" : $(value) ] ;        
+    return [ MATCH "^(object\\()[^@]+\\)@.*" : $(value) ] ;
 }
+
 
 # Check if the given value is of the given type.
 #
 rule is-a (
-    instance # The value to check.
-    : type # The type to test for.
-    )
+    instance  # The value to check.
+    : type  # The type to test for.
+)
 {
     if [ is-instance $(instance) ]
     {
         return [ class.is-derived [ modules.peek $(instance) : __class__ ] : $(type) ] ;
     }
 }
+
 
 local rule typecheck ( x )
 {
@@ -170,26 +158,26 @@ local rule typecheck ( x )
     }
 }
 
-local rule __test__ ( )
-{
-    import "class" : * ;
-    import assert ;
-    import errors : * ;
 
-    # This will be the construction function for a class called
-    # 'myclass'
-    class myclass 
+rule __test__ ( )
+{
+    import assert ;
+    import "class" : new ;
+
+    # This will be the construction function for a class called 'myclass'.
+    #
+    class myclass
     {
-        import assert : nonempty-variable ;        
-        
+        import assert ;
+
         rule __init__ ( x_ * : y_ * )
-        {            
-            # set some instance variables
+        {
+            # Set some instance variables.
             x = $(x_) ;
             y = $(y_) ;
             foo += 10 ;
         }
-        
+
         rule set-x ( newx * )
         {
             x = $(newx) ;
@@ -235,33 +223,34 @@ local rule __test__ ( )
         {
             return $(__class__) ;
         }
-        
+
         rule get-instance ( )
         {
             return $(__name__) ;
         }
-        
+
         rule invariant ( )
         {
             assert.equal 1 : 1 ;
-        }                
-        
+        }
+
         rule get-foo ( )
         {
             return $(foo) ;
-        }                        
+        }
     }
 #    class myclass ;
 
     class derived1 : myclass
-    {        
+    {
         rule __init__ ( z_ )
         {
             myclass.__init__ $(z_) : X ;
-            z = $(z_) ;            
+            z = $(z_) ;
         }
-        
-        # override g
+
+        # Override g.
+        #
         rule g ( args * )
         {
             return derived1.g ;
@@ -277,50 +266,53 @@ local rule __test__ ( )
             return $(z) ;
         }
 
-        # Check that 'assert.equal' visible in base class is visible
-        # here.
+        # Check that 'assert.equal' visible in base class is visible here.
+        #
         rule invariant2 ( )
         {
             assert.equal 2 : 2 ;
-        }                
-        
-        # Check that 'nonempty-variable' visible in base class is
+        }
+
+        # Check that 'assert.variable-not-empty' visible in base class is
         # visible here.
+        #
         rule invariant3 ( )
         {
             local v = 10 ;
-            nonempty-variable v ;
-        }                
+            assert.variable-not-empty v ;
+        }
     }
 #    class derived1 : myclass ;
 
-    class derived2 : myclass 
+    class derived2 : myclass
     {
         rule __init__ ( )
-        {            
+        {
             myclass.__init__ 1 : 2 ;
         }
-        
-        # override g
+
+        # Override g.
+        #
         rule g ( args * )
         {
             return derived2.g ;
         }
 
-         rule get-x ( )
-         {
-             # Test the ability to call base class functions with qualification.
-             return [ myclass.get-x ] ;
-         }
+        # Test the ability to call base class functions with qualification.
+        #
+        rule get-x ( )
+        {
+            return [ myclass.get-x ] ;
+        }
     }
 #    class derived2 : myclass ;
 
     class derived2a : derived2
     {
-        rule __init__ 
+        rule __init__
         {
             derived2.__init__ ;
-        }                
+        }
     }
 #    class derived2a : derived2 ;
 
@@ -336,11 +328,10 @@ local rule __test__ ( )
     expect_derived2 $(d) ;
     expect_derived2 $(e) ;
 
-    # argument checking is set up to call exit(1) directly on
-    # failure, and we can't hijack that with try, so we'd better
-    # not do this test by default.  We could fix this by having
-    # errors look up and invoke the EXIT rule instead; EXIT can be
-    # hijacked (;-)
+    # Argument checking is set up to call exit(1) directly on failure, and we
+    # can not hijack that with try, so we should better not do this test by
+    # default. We could fix this by having errors look up and invoke the EXIT
+    # rule instead; EXIT can be hijacked (;-)
     if --fail-typecheck in [ modules.peek : ARGV ]
     {
         try ;
@@ -348,10 +339,9 @@ local rule __test__ ( )
             expect_derived2 $(a) ;
         }
         catch
-          "Expected an instance of derived2 but got" instead
-          ;
+            "Expected an instance of derived2 but got" instead
+            ;
     }
-
 
     #try ;
     #{
@@ -378,14 +368,14 @@ local rule __test__ ( )
     assert.result derived1.g : $(b).f ;
     assert.result derived2.g : $(c).f ;
     assert.result derived2.g : $(d).f ;
-    
+
     assert.result 10 : $(b).get-foo ;
-    
+
     $(a).invariant ;
     $(b).invariant2 ;
     $(b).invariant3 ;
-    
-    # Check that the __class__  attribute is getting properly set.
+
+    # Check that the __class__ attribute is getting properly set.
     assert.result myclass : $(a).get-class ;
     assert.result derived1 : $(b).get-class ;
     assert.result $(a) : $(a).get-instance ;
@@ -399,13 +389,12 @@ local rule __test__ ( )
     assert.result c.x : $(c).get-x ;
     assert.result d.x : $(d).get-x ;
 
-    class derived3 : derived1 derived2 
+    class derived3 : derived1 derived2
     {
         rule __init__ ( )
         {
         }
     }
-    
 
     assert.result : bases myclass ;
     assert.result myclass : bases derived1 ;
