@@ -13,12 +13,12 @@
  *
  * This implementation essentially uses a singly linked list, but
  * guarantees that the head element of every list has a valid pointer
- * to the tail of the list, so the new elements can efficiently and 
+ * to the tail of the list, so the new elements can efficiently and
  * properly be appended to the end of a list.
  *
  * To avoid massive allocation, list_free() just tacks the whole freed
  * chain onto freelist and list_new() looks on freelist first for an
- * available list struct.  list_free() does not free the strings in the 
+ * available list struct.  list_free() does not free the strings in the
  * chain: it lazily lets list_new() do so.
  *
  * 08/23/94 (seiwald) - new list_append()
@@ -32,7 +32,7 @@ static LIST *freelist = 0;	/* junkpile for list_free() */
  */
 
 LIST *
-list_append( 
+list_append(
 	LIST	*l,
 	LIST	*nl )
 {
@@ -59,7 +59,7 @@ list_append(
  */
 
 LIST *
-list_new( 
+list_new(
 	LIST	*head,
 	char	*string )
 {
@@ -102,7 +102,7 @@ list_new(
  */
 
 LIST *
-list_copy( 
+list_copy(
 	LIST	*l,
 	LIST 	*nl )
 {
@@ -117,7 +117,7 @@ list_copy(
  */
 
 LIST *
-list_sublist( 
+list_sublist(
 	LIST	*l,
 	int	start,
 	int	count )
@@ -133,81 +133,41 @@ list_sublist(
 	return nl;
 }
 
+static int str_ptr_compare(const void *va, const void *vb)
+{
+    char* a = *( (char**)va );
+    char* b = *( (char**)vb );
+    return strcmp(a, b);
+}
+
 LIST *
 list_sort(
     LIST *l)
 {
-
-    LIST* first = 0;
-    LIST* second = 0;
-    LIST* merged = l;
-    LIST* result;
+    int len, ii;
+    char** strings;
+    LIST* listp;
+    LIST* result = 0;
 
     if (!l)
         return L0;
 
-    for(;;) {
-        
-        /* Split the list in two */
-        LIST** dst = &first;
-        LIST* src = merged;
-        
-        for(;;) {
-            
-            *dst = list_append(*dst, list_new(0, src->string));
-            
-            if (!src->next)
-                break;
+    len = list_length(l);
+    strings = (char**)BJAM_MALLOC( len * sizeof(char*) );
 
-            if (strcmp(src->string, src->next->string) > 0) 
-            {
-                if (dst == &first)
-                    dst = &second;
-                else
-                    dst = &first;
-            }
-            
-            src = src->next;
-        }
-
-        if (merged != l)
-            list_free( merged );
-        merged = 0;
-        
-        if (second == 0) {
-            result = first;
-            break;
-        }
-
-        
-        /* Merge lists 'first' and 'second' into 'merged' and free
-           'first'/'second'. */
-        {
-            LIST* f = first;
-            LIST* s = second;
-
-            while(f && s)
-            {
-                if (strcmp(f->string, s->string) < 0)
-                {
-                    merged = list_append( merged, list_new(0, f->string ));
-                    f = f->next;
-                }
-                else
-                {
-                    merged = list_append( merged, list_new(0, s->string ));
-                    s = s->next;
-                }
-            }
-
-            merged = list_copy( merged, f );
-            merged = list_copy( merged, s );
-            list_free( first );
-            list_free( second );
-            first = 0;
-            second = 0;
-        }                            
+    listp = l;
+    for (ii = 0; ii < len; ++ii) {
+        strings[ii] = listp->string;
+        listp = listp->next;
     }
+
+    qsort(strings, len, sizeof(char*), str_ptr_compare);
+
+    for (ii = 0; ii < len; ++ii) {
+        result = list_append( result, list_new(0, strings[ii]) );
+    }
+
+    BJAM_FREE(strings);
 
     return result;
 }
@@ -251,12 +211,12 @@ LIST *  list_pop_front( LIST *l )
 void
 list_print( LIST *l )
 {
-        LIST *p = 0; 
+        LIST *p = 0;
         for( ; l; p = l, l = list_next( l ) )
-            if ( p ) 
+            if ( p )
                 printf( "%s ", p->string );
         if ( p )
-            printf( "%s", p->string );                
+            printf( "%s", p->string );
 }
 
 /*
@@ -274,7 +234,7 @@ list_length( LIST *l )
 	return n;
 }
 
-int     
+int
 list_in(LIST* l, char* value)
 {
     for(; l; l = l->next)
@@ -283,7 +243,7 @@ list_in(LIST* l, char* value)
     return 0;
 }
 
-LIST *  
+LIST *
 list_unique( LIST *sorted_list)
 {
     LIST* result = 0;
@@ -297,7 +257,7 @@ list_unique( LIST *sorted_list)
             last_added = sorted_list;
         }
     }
-    return result;    
+    return result;
 }
 
 
@@ -316,7 +276,7 @@ lol_init( LOL *lol )
  */
 
 void
-lol_add( 
+lol_add(
 	LOL	*lol,
 	LIST	*l )
 {
@@ -344,7 +304,7 @@ lol_free( LOL *lol )
  */
 
 LIST *
-lol_get( 
+lol_get(
 	LOL	*lol,
 	int	i )
 {

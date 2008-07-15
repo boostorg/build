@@ -5,16 +5,21 @@
 fail-count = 0 ;
 pass-count = 0 ;
 
+
 rule message ( message * )
 {
     local b = [ BACKTRACE ] ;
     ECHO "$(b[-4]):$(b[-3]):" $(message) ;
 }
+
+
 rule fail ( message * )
 {
     fail-count = [ CALC $(fail-count) + 1 ] ;
     message "error:" [FAILED] $(message) ;
 }
+
+
 rule pass ( message * )
 {
     pass-count = [ CALC $(pass-count) + 1 ] ;
@@ -23,6 +28,8 @@ rule pass ( message * )
         message "info:" [PASSED] $(message) ;
     }
 }
+
+
 rule assert ( expected * : test ? : obtained * )
 {
     test ?= "(==)" ;
@@ -41,8 +48,10 @@ rule assert ( expected * : test ? : obtained * )
     }
 }
 
+
 include action_status.jam ;
 include actions_quietly.jam ;
+include builtin_normalize_path.jam ;
 include builtin_shell.jam ;
 include builtin_w32_getregnames.jam ;
 include option_d2.jam ;

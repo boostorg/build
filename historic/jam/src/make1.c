@@ -687,7 +687,7 @@ static void call_timing_rule(TARGET* target, timing_info* time)
         FRAME frame[1];
         frame_init( frame );
 
-        /* args * :: $(__ACTION_RULE__[2-]) */
+        /* args * :: $(__TIMING_RULE__[2-]) */
         lol_add( frame->args, list_copy( L0, timing_rule->next ) );
 
         /* target :: the name of the target */
@@ -1145,7 +1145,8 @@ make1bind(
 	    return;
 
 	pushsettings( t->settings );
-	t->boundname = search( t->name, &t->time, 0 );
+	t->boundname = search( t->name, &t->time, 0, 
+                               (t->flags & T_FLAG_ISFILE) );
 	t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
 	popsettings( t->settings );
 }

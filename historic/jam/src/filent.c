@@ -87,18 +87,33 @@ file_dirscan(
         int ret;
         struct _finddata_t finfo[1];
         LIST* files = L0;
+        int d_length = strlen( d->name );
 
         memset( (char *)&f, '\0', sizeof( f ) );
         
         f.f_dir.ptr = d->name;
-        f.f_dir.len = strlen(d->name);
-        
+        f.f_dir.len = d_length;
+
         /* Now enter contents of directory */
 
-        string_copy( filespec, *d->name ? d->name : "." );
-        string_append( filespec, "/*" );
+        /* Prepare file search specification for the findfirst() API. */
+        if ( d_length == 0 )
+            string_copy( filespec, ".\\*" );
+        else
+        {
+            /*
+             * We can not simply assume the given folder name will never include
+             * its trailing path separator or otherwise we would not support the
+             * Windows root folder specified without its drive letter, i.e. '\'.
+             */
+            char trailingChar = d->name[ d_length - 1 ] ;
+            string_copy( filespec, d->name );
+            if ( ( trailingChar != '\\' ) && ( trailingChar != '/' ) )
+                string_append( filespec, "\\" );
+            string_append( filespec, "*" );
+        }
 
-        if( DEBUG_BINDSCAN )
+        if ( DEBUG_BINDSCAN )
             printf( "scan directory %s\n", dir );
 
         # if defined(__BORLANDC__) && __BORLANDC__ < 0x550
