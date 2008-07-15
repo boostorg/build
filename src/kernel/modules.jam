@@ -10,26 +10,55 @@
 # dependencies.
 .loading ?= ;
 
-# A list of modules needing to be tested via __test__ rule.
+# A list of modules needing to be tested using their __test__ rule.
 .untested ?= ;
 
-# A list of modules which have been tested via __test__.
+# A list of modules which have been tested using their __test__ rule.
 .tested ?= ;
 
 
-# Meant to be invoked from import when no __test__ rule is defined in the given
-# module.
-local rule no-test-defined
+# Runs internal Boost Build unit tests for the specified module. The module's
+# __test__ rule is executed in its own module to eliminate any inadvertent
+# effects of testing module dependencies (such as assert) on the module itself.
+#
+local rule run-module-test ( m )
 {
-    import modules ;
-    if ! ( --quiet in [ modules.peek : ARGV ] )
+    local tested-modules = [ modules.peek modules : .tested ] ;
+
+    if ( ! $(m) in $(tested-modules) )  # Avoid recursive test invocations.
+        && ( ( --debug in $(argv) ) || ( --debug-module=$(m) in $(argv) ) )
     {
-        ECHO warning: no __test__ rule defined in module $(__module__) ;
+        modules.poke modules : .tested : $(tested-modules) $(m) ;
+
+        if ! ( __test__ in [ RULENAMES $(m) ] )
+        {
+            local argv = [ peek : ARGV ] ;
+            if ! ( --quiet in $(argv) ) && ( --debug-tests in $(argv) )
+            {
+                ECHO warning: no __test__ rule defined in module $(m) ;
+            }
+        }
+        else
+        {
+            if ! ( --quiet in $(argv) )
+            {
+                ECHO testing module $(m)... ;
+            }
+
+            local test-module = __test-$(m)__ ;
+            IMPORT $(m) : [ RULENAMES $(m) ] : $(test-module) : [ RULENAMES $(m) ] ;
+            IMPORT $(m) : __test__ : $(test-module) : __test__ : LOCALIZE ;
+            module $(test-module)
+            {
+                __test__ ;
+            }
+        }
     }
 }
 
 
 # Return the binding of the given module.
+#
 rule binding ( module )
 {
     return $($(module).__binding__) ;
@@ -39,6 +68,7 @@ rule binding ( module )
 # Sets the module-local value of a variable. This is the most reliable way to
 # set a module-local variable in a different module; it eliminates issues of
 # name shadowing due to dynamic scoping.
+#
 rule poke ( module-name ? : variables + : value * )
 {
     module $(<)
@@ -51,6 +81,7 @@ rule poke ( module-name ? : variables + : value * )
 # Returns the module-local value of a variable. This is the most reliable way to
 # examine a module-local variable in a different module; it eliminates issues of
 # name shadowing due to dynamic scoping.
+#
 rule peek ( module-name ? : variables + )
 {
     module $(<)
@@ -63,7 +94,8 @@ rule peek ( module-name ? : variables + )
 # Call the given rule locally in the given module. Use this for rules accepting
 # rule names as arguments, so that the passed rule may be invoked in the context
 # of the rule's caller (for example, if the rule accesses module globals or is a
-# local rule).
+# local rule). Note that rules called this way may accept at most 8 parameters.
+#
 rule call-in ( module-name ? : rule-name args * : * )
 {
     module $(module-name)
@@ -75,18 +107,24 @@ rule call-in ( module-name ? : rule-name args * : * )
 
 # Given a possibly qualified rule name and arguments, remove any initial module
 # qualification from the rule and invoke it in that module. If there is no
-# module qualification, the rule is invoked in the global module.
+# module qualification, the rule is invoked in the global module. Note that
+# rules called this way may accept at most 8 parameters.
+#
 rule call-locally ( qualified-rule-name args * : * )
 {
     local module-rule = [ MATCH (.*)\\.(.*) : $(qualified-rule-name) ] ;
     local rule-name = $(module-rule[2]) ;
     rule-name ?= $(qualified-rule-name) ;
-    return [ call-in $(module-rule[1]) : $(rule-name) $(args)
-        : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ] ;
+    #   We pass only 8 parameters here since Boost Jam allows at most 9 rule
+    # parameter positions and the call-in rule already uses up the initial
+    # position for the module name.
+    return [ call-in $(module-rule[1]) : $(rule-name) $(args) : $(2) : $(3) :
+        $(4) : $(5) : $(6) : $(7) : $(8) ] ;
 }
 
 
 # Load the indicated module if it is not already loaded.
+#
 rule load (
       module-name  # Name of module to load. Rules will be defined in this
                    # module.
@@ -95,12 +133,12 @@ rule load (
                    # $(BOOST_BUILD_PATH).
 )
 {
-    # Avoid loading modules twice
+    # Avoid loading modules twice.
     if ! ( $(module-name) in $(.loaded) )
     {
         filename ?= $(module-name).jam ;
 
-        # Mark the module loaded so we don't try to load it recursively.
+        # Mark the module loaded so we do not try to load it recursively.
         .loaded += $(module-name) ;
 
         # Suppress tests if any module loads are already in progress.
@@ -109,7 +147,7 @@ rule load (
         # Push this module on the loading stack.
         .loading += $(module-name) ;
 
-        # Remember that it's untested.
+        # Remember that it is untested.
         .untested += $(module-name) ;
 
         # Insert the new module's __name__ and __file__ globals.
@@ -118,9 +156,6 @@ rule load (
 
         module $(module-name)
         {
-            # Prepare default behavior, in case no __test__ is defined.
-            IMPORT modules : no-test-defined : $(__name__) : __test__ ;
-
             # Add some grist so that the module will have a unique target name.
             local module-target = $(__file__:G=module@) ;
 
@@ -139,11 +174,11 @@ rule load (
         if $(module-name) != modules && ! [ binding $(module-name) ]
         {
             import errors ;
-            errors.error "Couldn't find module" $(module-name) in $(search) ;
+            errors.error "Could not find module" $(module-name) in $(search) ;
         }
 
-        # Pop the loading stack. Must happen before testing or we'll run into a
-        # circular loading dependency.
+        # Pop the loading stack. Must happen before testing or we will run into
+        # a circular loading dependency.
         .loading = $(.loading[1--2]) ;
 
         # Run any pending tests if this is an outer load.
@@ -152,31 +187,7 @@ rule load (
             local argv = [ peek : ARGV ] ;
             for local m in $(.untested)
             {
-                if ( ! $(m) in $(.tested) )  # Avoid recursive test invocations.
-                    && ( ( --debug in $(argv) ) || ( --debug-module=$(m) in $(argv) ) )
-                {
-                    .tested += $(m) ;
-                    if ! ( --quiet in $(argv) )
-                    {
-                        ECHO testing module $(m)... ;
-                    }
-
-                    # Import m's rules into __test-$(m)__ for easy access.
-                    IMPORT $(m) : [ RULENAMES $(m) ] : __test-$(m)__ : [ RULENAMES $(m) ] ;
-
-                    # Execute the module's __test__ rule in its own module to
-                    # eliminate the inadvertent effects of testing module
-                    # dependencies (such as assert) on the module itself.
-                    IMPORT $(m) : __test__ : __test-$(m)__ : __test__ : LOCALIZE ;
-
-                    module __test-$(m)__
-                    {
-                        # Set up the name of the module we're testing so that
-                        # no-test-defined can find it.
-                        __module__ = $(1) ;
-                        __test__ ;
-                    }
-                }
+                run-module-test $(m) ;
             }
             .untested = ;
         }
@@ -193,6 +204,7 @@ rule load (
 
 # This helper is used by load (above) to record the binding (path) of each
 # loaded module.
+#
 rule record-binding ( module-target : binding )
 {
     $(.loading[-1]).__binding__ = $(binding) ;
@@ -201,8 +213,9 @@ rule record-binding ( module-target : binding )
 
 # Transform each path in the list, with all backslashes converted to forward
 # slashes and all detectable redundancy removed. Something like this is probably
-# needed in path.jam, but I'm not sure of that, I don't understand it, and I'm
-# not ready to move all of path.jam into the kernel.
+# needed in path.jam, but I am not sure of that, I do not understand it, and I
+# am not ready to move all of path.jam into the kernel.
+#
 local rule normalize-raw-paths ( paths * )
 {
     local result ;
@@ -224,6 +237,7 @@ local rule normalize-raw-paths ( paths * )
 # If rules-opt = '*', all rules from the indicated module are imported into the
 # caller's module. If rename-opt is supplied, it must have the same number of
 # elements as rules-opt.
+#
 rule import ( module-names + : rules-opt * : rename-opt * )
 {
     if ( $(rules-opt) = * || ! $(rules-opt) ) && $(rename-opt)
@@ -288,10 +302,12 @@ rule import ( module-names + : rules-opt * : rename-opt * )
     }
 }
 
+
 # Define exported copies in $(target-module) of all rules exported from
 # $(source-module). Also make them available in the global module with
 # qualification, so that it is just as though the rules were defined originally
 # in $(target-module).
+#
 rule clone-rules ( source-module target-module )
 {
     local rules = [ RULENAMES $(source-module) ] ;
@@ -308,7 +324,7 @@ local globalize = peek poke record-binding ;
 IMPORT modules : $(globalize) : : modules.$(globalize) ;
 
 
-local rule __test__ ( )
+rule __test__ ( )
 {
     import assert ;
     import modules : normalize-raw-paths ;

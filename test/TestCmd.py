@@ -1,28 +1,26 @@
 """
 TestCmd.py:  a testing framework for commands and scripts.
 
-The TestCmd module provides a framework for portable automated testing
-of executable commands and scripts (in any language, not just Python),
-especially commands and scripts that require file system interaction.
+The TestCmd module provides a framework for portable automated testing of
+executable commands and scripts (in any language, not just Python), especially
+commands and scripts that require file system interaction.
 
 In addition to running tests and evaluating conditions, the TestCmd module
-manages and cleans up one or more temporary workspace directories, and
-provides methods for creating files and directories in those workspace
-directories from in-line data, here-documents), allowing tests to be
-completely self-contained.
+manages and cleans up one or more temporary workspace directories, and provides
+methods for creating files and directories in those workspace directories from
+in-line data, here-documents), allowing tests to be completely self-contained.
 
 A TestCmd environment object is created via the usual invocation:
 
     test = TestCmd()
 
-The TestCmd module provides pass_test(), fail_test(), and no_result()
-unbound methods that report test results for use with the Aegis change
-management system.  These methods terminate the test immediately,
-reporting PASSED, FAILED, or NO RESULT respectively, and exiting with
-status 0 (success), 1 or 2 respectively.  This allows for a distinction
-between an actual failed test and a test that could not be properly
-evaluated because of an external condition (such as a full file system
-or incorrect permissions).
+The TestCmd module provides pass_test(), fail_test(), and no_result() unbound
+methods that report test results for use with the Aegis change management
+system. These methods terminate the test immediately, reporting PASSED, FAILED
+or NO RESULT respectively and exiting with status 0 (success), 1 or 2
+respectively. This allows for a distinction between an actual failed test and a
+test that could not be properly evaluated because of an external condition (such
+as a full file system or incorrect permissions).
 """
 
 # Copyright 2000 Steven Knight
@@ -67,6 +65,7 @@ import sys
 import tempfile
 import traceback
 
+
 tempfile.template = 'testcmd.'
 
 _Cleanup = []
@@ -80,6 +79,7 @@ def _clean():
         test.cleanup()
 
 sys.exitfunc = _clean
+
 
 def caller(tblist, skip):
     string = ""
@@ -98,12 +98,13 @@ def caller(tblist, skip):
         atfrom = "\tfrom"
     return string
 
-def fail_test(self = None, condition = 1, function = None, skip = 0):
+
+def fail_test(self=None, condition=True, function=None, skip=0):
     """Cause the test to fail.
 
-    By default, the fail_test() method reports that the test FAILED
-    and exits with a status of 1.  If a condition argument is supplied,
-    the test fails only if the condition is true.
+    By default, the fail_test() method reports that the test FAILED and exits
+    with a status of 1. If a condition argument is supplied, the test fails only
+    if the condition is true.
     """
     if not condition:
         return
@@ -124,15 +125,15 @@ def fail_test(self = None, condition = 1, function = None, skip = 0):
 
     sys.stderr.write("FAILED test" + of + desc + sep + at + """
 in directory: """ + os.getcwd() )
-
     sys.exit(1)
 
-def no_result(self = None, condition = 1, function = None, skip = 0):
+
+def no_result(self=None, condition=True, function=None, skip=0):
     """Causes a test to exit with no valid result.
 
-    By default, the no_result() method reports NO RESULT for the test
-    and exits with a status of 2.  If a condition argument is supplied,
-    the test fails only if the condition is true.
+    By default, the no_result() method reports NO RESULT for the test and exits
+    with a status of 2. If a condition argument is supplied, the test fails only
+    if the condition is true.
     """
     if not condition:
         return
@@ -151,15 +152,15 @@ def no_result(self = None, condition = 1, function = None, skip = 0):
 
     at = caller(traceback.extract_stack(), skip)
     sys.stderr.write("NO RESULT for test" + of + desc + sep + at)
-
     sys.exit(2)
 
-def pass_test(self = None, condition = 1, function = None):
+
+def pass_test(self=None, condition=True, function=None):
     """Causes a test to pass.
 
-    By default, the pass_test() method reports PASSED for the test
-    and exits with a status of 0.  If a condition argument is supplied,
-    the test passes only if the condition is true.
+    By default, the pass_test() method reports PASSED for the test and exits
+    with a status of 0. If a condition argument is supplied, the test passes
+    only if the condition is true.
     """
     if not condition:
         return
@@ -168,8 +169,10 @@ def pass_test(self = None, condition = 1, function = None):
     sys.stderr.write("PASSED\n")
     sys.exit(0)
 
-def match_exact(lines = None, matches = None):
-    """
+
+def match_exact(lines=None, matches=None):
+    """Returns whether the given lists or strings containing lines separated
+    using newline characters contain exactly the same data.
     """
     if not type(lines) is ListType:
         lines = split(lines, "\n")
@@ -182,8 +185,11 @@ def match_exact(lines = None, matches = None):
             return
     return 1
 
-def match_re(lines = None, res = None):
-    """
+
+def match_re(lines=None, res=None):
+    """Given lists or strings contain lines separated using newline characters.
+    This function matches those lines one by one, interpreting the lines in the
+    res parameter as regular expressions.
     """
     if not type(lines) is ListType:
         lines = split(lines, "\n")
@@ -196,25 +202,20 @@ def match_re(lines = None, res = None):
             return
     return 1
 
+
 class TestCmd:
-    """Class TestCmd
+    """Class TestCmd.
     """
 
-    def __init__(self, description = None,
-                        program = None,
-                        interpreter = None,
-                        workdir = None,
-                        subdir = None,
-                        verbose = 0,
-                        match = None,
-                        inpath = None):
+    def __init__(self, description=None, program=None, workdir=None,
+        subdir=None, verbose=False, match=None, inpath=None):
+
         self._cwd = os.getcwd()
         self.description_set(description)
         if inpath:
             self.program = program
         else:
             self.program_set(program)
-        self.interpreter_set(interpreter)
         self.verbose_set(verbose)
         if not match is None:
             self.match_func = match
@@ -252,20 +253,20 @@ class TestCmd:
     def __repr__(self):
         return "%x" % id(self)
 
-    def cleanup(self, condition = None):
-        """Removes any temporary working directories for the specified
-        TestCmd environment.  If the environment variable PRESERVE was
-        set when the TestCmd environment was created, temporary working
-        directories are not removed.  If any of the environment variables
-        PRESERVE_PASS, PRESERVE_FAIL, or PRESERVE_NO_RESULT were set
-        when the TestCmd environment was created, then temporary working
-        directories are not removed if the test passed, failed, or had
-        no result, respectively.  Temporary working directories are also
-        preserved for conditions specified via the preserve method.
+    def cleanup(self, condition=None):
+        """Removes any temporary working directories for the specified TestCmd
+        environment. If the environment variable PRESERVE was set when the
+        TestCmd environment was created, temporary working directories are not
+        removed. If any of the environment variables PRESERVE_PASS,
+        PRESERVE_FAIL or PRESERVE_NO_RESULT were set when the TestCmd
+        environment was created, then temporary working directories are not
+        removed if the test passed, failed or had no result, respectively.
+        Temporary working directories are also preserved for conditions
+        specified via the preserve method.
 
-        Typically, this method is not called directly, but is used when
-        the script exits to clean up temporary working directories as
-        appropriate for the exit status.
+        Typically, this method is not called directly, but is used when the
+        script exits to clean up temporary working directories as appropriate
+        for the exit status.
         """
         if not self._dirlist:
             return
@@ -280,10 +281,10 @@ class TestCmd:
             for dir in list:
                 self.writable(dir, 1)
                 shutil.rmtree(dir, ignore_errors = 1)
-                
+
         self._dirlist = []
         self.workdir = None
-        os.chdir(self._cwd)            
+        os.chdir(self._cwd)
         try:
             global _Cleanup
             _Cleanup.remove(self)
@@ -295,11 +296,7 @@ class TestCmd:
         """
         self.description = description
 
-#    def diff(self):
-#        """Diff two arrays.
-#        """
-
-    def fail_test(self, condition = 1, function = None, skip = 0):
+    def fail_test(self, condition=True, function=None, skip=0):
         """Cause the test to fail.
         """
         if not condition:
@@ -309,12 +306,6 @@ class TestCmd:
                   condition = condition,
                   function = function,
                   skip = skip)
-
-    def interpreter_set(self, interpreter):
-        """Set the program to be used to interpret the program
-        under test as a script.
-        """
-        self.interpreter = interpreter
 
     def match(self, lines, matches):
         """Compare actual and expected file contents.
@@ -331,7 +322,7 @@ class TestCmd:
         """
         return match_re(lines, res)
 
-    def no_result(self, condition = 1, function = None, skip = 0):
+    def no_result(self, condition=True, function=None, skip=0):
         """Report that the test could not be run.
         """
         if not condition:
@@ -342,7 +333,7 @@ class TestCmd:
                   function = function,
                   skip = skip)
 
-    def pass_test(self, condition = 1, function = None):
+    def pass_test(self, condition=True, function=None):
         """Cause the test to pass.
         """
         if not condition:
@@ -351,11 +342,10 @@ class TestCmd:
         pass_test(self = self, condition = condition, function = function)
 
     def preserve(self, *conditions):
-        """Arrange for the temporary working directories for the
-        specified TestCmd environment to be preserved for one or more
-        conditions.  If no conditions are specified, arranges for
-        the temporary working directories to be preserved for all
-        conditions.
+        """Arrange for the temporary working directories for the specified
+        TestCmd environment to be preserved for one or more conditions. If no
+        conditions are specified, arranges for the temporary working directories
+        to be preserved for all conditions.
         """
         if conditions is ():
             conditions = ('pass_test', 'fail_test', 'no_result')
@@ -369,13 +359,12 @@ class TestCmd:
             program[0] = os.path.join(self._cwd, program[0])
         self.program = program
 
-    def read(self, file, mode = 'rb'):
-        """Reads and returns the contents of the specified file name.
-        The file name may be a list, in which case the elements are
-        concatenated with the os.path.join() method.  The file is
-        assumed to be under the temporary working directory unless it
-        is an absolute path name.  The I/O mode for the file may
-        be specified; it must begin with an 'r'.  The default is
+    def read(self, file, mode='rb'):
+        """Reads and returns the contents of the specified file name. The file
+        name may be a list, in which case the elements are concatenated with the
+        os.path.join() method. The file is assumed to be under the temporary
+        working directory unless it is an absolute path name. The I/O mode for
+        the file may be specified; it must begin with an 'r'. The default is
         'rb' (binary read).
         """
         if type(file) is ListType:
@@ -386,14 +375,10 @@ class TestCmd:
             raise ValueError, "mode must begin with 'r'"
         return open(file, mode).read()
 
-    def run(self, program = None,
-                  interpreter = None,
-                  arguments = None,
-                  chdir = None,
-                  stdin = None):
-        """Runs a test of the program or script for the test
-        environment.  Standard output and error output are saved for
-        future retrieval via the stdout() and stderr() methods.
+    def run(self, program=None, arguments=None, chdir=None, stdin=None):
+        """Runs a test of the program or script for the test environment.
+        Standard output and error output are saved for future retrieval via the
+        stdout() and stderr() methods.
         """
         if chdir:
             oldcwd = os.getcwd()
@@ -407,12 +392,8 @@ class TestCmd:
             if program[0] != self.program[0] and not os.path.isabs(program[0]):
                 program[0] = os.path.join(self._cwd, program[0])
             cmd += program
-        #    if interpreter:
-        #        cmd = interpreter + " " + cmd
         else:
             cmd += self.program
-        #    if self.interpreter:
-        #        cmd =  self.interpreter + " " + cmd
         if arguments:
             cmd += arguments.split(" ")
         if self.verbose:
@@ -420,7 +401,65 @@ class TestCmd:
         try:
             p = popen2.Popen3(cmd, 1)
         except AttributeError:
-            (tochild, fromchild, childerr) = os.popen3(join(cmd, " "))
+            # We end up here in case the popen2.Popen3 class is not available
+            # (e.g. on Windows). We will be using the os.popen3() Python API
+            # which takes a string parameter and so needs its executable quoted
+            # in case its name contains spaces.
+            cmd[0] = '"' + cmd[0] + '"'
+            command_string = join(cmd, " ")
+            if ( os.name == 'nt' ):
+                # This is a workaround for a longstanding Python bug on Windows
+                # when using os.popen(), os.system() and similar functions to
+                # execute a command containing quote characters. The bug seems
+                # to be related to the quote stripping functionality used by the
+                # Windows cmd.exe interpreter when its /S is not specified.
+                #
+                # Cleaned up quote from the cmd.exe help screen as displayed on
+                # Windows XP SP2:
+                #
+                #   1. If all of the following conditions are met, then quote
+                #      characters on the command line are preserved:
+                #
+                #       - no /S switch
+                #       - exactly two quote characters
+                #       - no special characters between the two quote
+                #         characters, where special is one of: &<>()@^|
+                #       - there are one or more whitespace characters between
+                #         the two quote characters
+                #       - the string between the two quote characters is the
+                #         name of an executable file.
+                #
+                #   2. Otherwise, old behavior is to see if the first character
+                #      is a quote character and if so, strip the leading
+                #      character and remove the last quote character on the
+                #      command line, preserving any text after the last quote
+                #      character.
+                #
+                # This causes some commands containing quotes not to be executed
+                # correctly. For example:
+                #
+                #   "\Long folder name\aaa.exe" --name="Jurko" --no-surname
+                #
+                # would get its outermost quotes stripped and would be executed
+                # as:
+                #
+                #   \Long folder name\aaa.exe" --name="Jurko --no-surname
+                #
+                # which would report an error about '\Long' not being a valid
+                # command.
+                #
+                # cmd.exe help seems to indicate it would be enough to add an
+                # extra space character in front of the command to avoid this
+                # but this does not work, most likely due to the shell first
+                # stripping all leading whitespace characters from the command.
+                #
+                # Solution implemented here is to quote the whole command in
+                # case it contains any quote characters. Note thought this will
+                # not work correctly should Python ever fix this bug.
+                #                                    (01.05.2008.) (Jurko)
+                if command_string.find('"') != -1:
+                    command_string = '"' + command_string + '"'
+            (tochild, fromchild, childerr) = os.popen3(command_string)
             if stdin:
                 if type(stdin) is ListType:
                     for line in stdin:
@@ -429,7 +468,7 @@ class TestCmd:
                     tochild.write(stdin)
             tochild.close()
             self._stdout.append(fromchild.read())
-            self._stderr.append(childerr.read())                
+            self._stderr.append(childerr.read())
             fromchild.close()
             self.status = childerr.close()
             if not self.status:
@@ -447,20 +486,19 @@ class TestCmd:
             self._stdout.append(p.fromchild.read())
             self._stderr.append(p.childerr.read())
             self.status = p.wait()
-            
+
         if self.verbose:
             sys.stdout.write(self._stdout[-1])
             sys.stderr.write(self._stderr[-1])
-            
+
         if chdir:
             os.chdir(oldcwd)
 
-    def stderr(self, run = None):
-        """Returns the error output from the specified run number.
-        If there is no specified run number, then returns the error
-        output of the last run.  If the run number is less than zero,
-        then returns the error output from that many runs back from the
-        current run.
+    def stderr(self, run=None):
+        """Returns the error output from the specified run number. If there is
+        no specified run number, then returns the error output of the last run.
+        If the run number is less than zero, then returns the error output from
+        that many runs back from the current run.
         """
         if not run:
             run = len(self._stderr)
@@ -471,12 +509,11 @@ class TestCmd:
             return ''
         return self._stderr[run]
 
-    def stdout(self, run = None):
-        """Returns the standard output from the specified run number.
-        If there is no specified run number, then returns the standard
-        output of the last run.  If the run number is less than zero,
-        then returns the standard output from that many runs back from
-        the current run.
+    def stdout(self, run=None):
+        """Returns the standard output from the specified run number. If there
+        is no specified run number, then returns the standard output of the last
+        run. If the run number is less than zero, then returns the standard
+        output from that many runs back from the current run.
         """
         if not run:
             run = len(self._stdout)
@@ -488,11 +525,11 @@ class TestCmd:
         return self._stdout[run]
 
     def subdir(self, *subdirs):
-        """Create new subdirectories under the temporary working
-        directory, one for each argument.  An argument may be a list,
-        in which case the list elements are concatenated using the
-        os.path.join() method.  Subdirectories multiple levels deep
-        must be created using a separate argument for each level:
+        """Create new subdirectories under the temporary working directory, one
+        for each argument. An argument may be a list, in which case the list
+        elements are concatenated using the os.path.join() method.
+        Subdirectories multiple levels deep must be created using a separate
+        argument for each level:
 
                 test.subdir('sub', ['sub', 'dir'], ['sub', 'dir', 'ectory'])
 
@@ -514,11 +551,10 @@ class TestCmd:
         return count
 
     def unlink (self, file):
-        """Unlinks the specified file name.
-        The file name may be a list, in which case the elements are
-        concatenated with the os.path.join() method.  The file is
-        assumed to be under the temporary working directory unless it
-        is an absolute path name.
+        """Unlinks the specified file name. The file name may be a list, in
+        which case the elements are concatenated using the os.path.join()
+        method. The file is assumed to be under the temporary working directory
+        unless it is an absolute path name.
         """
         if type(file) is ListType:
             file = apply(os.path.join, tuple(file))
@@ -526,16 +562,14 @@ class TestCmd:
             file = os.path.join(self.workdir, file)
         os.unlink(file)
 
-
     def verbose_set(self, verbose):
         """Set the verbose level.
         """
         self.verbose = verbose
 
     def workdir_set(self, path):
-        """Creates a temporary working directory with the specified
-        path name.  If the path is a null string (''), a unique
-        directory name is created.
+        """Creates a temporary working directory with the specified path name.
+        If the path is a null string (''), a unique directory name is created.
         """
 
         if os.path.isabs(path):
@@ -554,9 +588,9 @@ class TestCmd:
                     _Cleanup.append(self)
                 # We'd like to set self.workdir like this:
                 #        self.workdir = path
-                # But symlinks in the path will report things
-                # differently from os.getcwd(), so chdir there
-                # and back to fetch the canonical path.
+                # But symlinks in the path will report things differently from
+                # os.getcwd(), so chdir there and back to fetch the canonical
+                # path.
                 cwd = os.getcwd()
                 os.chdir(path)
                 self.workdir = os.getcwd()
@@ -565,16 +599,16 @@ class TestCmd:
                 self.workdir = None
 
     def workpath(self, *args):
-        """Returns the absolute path name to a subdirectory or file
-        within the current temporary working directory.  Concatenates
-        the temporary working directory name with the specified
-        arguments using the os.path.join() method.
+        """Returns the absolute path name to a subdirectory or file within the
+        current temporary working directory. Concatenates the temporary working
+        directory name with the specified arguments using the os.path.join()
+        method.
         """
         return apply(os.path.join, (self.workdir,) + tuple(args))
 
     def writable(self, top, write):
-        """Make the specified directory tree writable (write == 1)
-        or not (write == None).
+        """Make the specified directory tree writable (write == 1) or not
+        (write == None).
         """
 
         def _walk_chmod(arg, dirname, names):
@@ -598,16 +632,15 @@ class TestCmd:
         try:
             os.path.walk(top, _walk_chmod, f)
         except:
-            pass # ignore any problems changing modes
+            pass  # Ignore any problems changing modes.
 
-    def write(self, file, content, mode = 'wb'):
-        """Writes the specified content text (second argument) to the
-        specified file name (first argument).  The file name may be
-        a list, in which case the elements are concatenated with the
-        os.path.join() method.        The file is created under the temporary
-        working directory.  Any subdirectories in the path must already
-        exist.  The I/O mode for the file may be specified; it must
-        begin with a 'w'.  The default is 'wb' (binary write).
+    def write(self, file, content, mode='wb'):
+        """Writes the specified content text (second argument) to the specified
+        file name (first argument). The file name may be a list, in which case
+        the elements are concatenated using the os.path.join() method. The file
+        is created under the temporary working directory. Any subdirectories in
+        the path must already exist. The I/O mode for the file may be specified;
+        it must begin with a 'w'. The default is 'wb' (binary write).
         """
         if type(file) is ListType:
             file = apply(os.path.join, tuple(file))

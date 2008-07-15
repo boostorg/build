@@ -5,18 +5,17 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
 #  Test the unit_test rule
-from BoostBuild import Tester, List
+import BoostBuild
 
-t = Tester()
+t = BoostBuild.Tester()
 
-# Create the needed files
-t.write("project-root.jam", """
+# Create the needed files.
+t.write("Jamroot.jam", """
 using testing ;
-""")
-t.write("Jamfile", """
 lib helper : helper.cpp ;
 unit-test test : test.cpp : <library>helper ;
 """)
+
 t.write("test.cpp", """
 void helper();
 int main()
@@ -36,8 +35,5 @@ helper() {}
 
 t.run_build_system("link=static")
 t.expect_addition("bin/$toolset/debug/link-static/test.passed")
-
-
-
 
 t.cleanup()

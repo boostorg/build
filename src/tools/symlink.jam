@@ -129,10 +129,12 @@ actions ln-UNIX
     ln -f -s '$(>:D=:R=$(PATH_TO_SOURCE))' '$(<)'
 }
 
-# there is a way to do this; it's a dummy rule for now
+# there is a way to do this; we fall back to a copy for now
 actions ln-NT
 {
-    echo "NT symlinks not supported yet"
+    echo "NT symlinks not supported yet, making copy"
+    del /f /q "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+    copy "$(>)" "$(<)" $(NULL_OUT)
 }
 
 IMPORT $(__name__) : symlink : : symlink ;

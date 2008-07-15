@@ -15,7 +15,6 @@ rule environ ( variable-names + )
     return [ modules.peek .ENVIRON : $(variable-names) ] ;
 }
 
-
 .name = [ modules.peek : OS ] ;
 .platform = [ modules.peek : OSPLAT ] ;
 .version = [ modules.peek : OSVER ] ;
@@ -24,7 +23,7 @@ rule environ ( variable-names + )
 local rule constant ( c : os ? )
 {
     os ?= $(.name) ;
-    # First look for platform-specific name, then general value
+    # First look for a platform-specific name, then the general value.
     local variables = .$(c)-$(os) .$(c) ;
     local result = $($(variables)) ;
     return $(result[1]) ;

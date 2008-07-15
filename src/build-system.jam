@@ -242,7 +242,7 @@ local rule load-config ( module-name : filename : path + : must-find ? )
     }
     else
     {
-        if ( must-find )
+        if $(must-find)
         {
             errors.user-error "Configuration file" "$(filename)" "not found in"
                 "$(path)" "." ;
@@ -253,7 +253,7 @@ local rule load-config ( module-name : filename : path + : must-find ? )
                 "$(path)" "." ;
         }
     }
-    return where ;
+    return $(where) ;
 }
 
 
@@ -301,6 +301,11 @@ local rule load-configuration-files
 
     initialize-config-module test-config ;
     local test-config = [ MATCH ^--test-config=(.*)$ : $(.argv) ] ;
+    local uq = [ MATCH \"(.*)\" : $(test-config) ] ;
+    if $(uq)
+    {
+        test-config = $(uq) ;
+    }    
     if $(test-config)
     {
         local where =
@@ -594,12 +599,21 @@ local rule should-clean-project ( project )
     local cleanall ; if "--clean-all" in $(.argv) { cleanall = true ; }
 
 
-    # List of Boost Build meta-targets and actual raw Jam targets directly
-    # requested by the user. Raw Jam targets are used when user's request
-    # contains a reference to a specific file not modeled using a main Boost
-    # Build target.
+    # List of explicitly requested files to build. Any target references read
+    # from the command line parameter not recognized as one of the targets
+    # defined in the loaded Jamfiles will be interpreted as an explicitly
+    # requested file to build. If any such files are explicitly requested then
+    # only those files and the targets they depend on will be built and they
+    # will be searched for among targets that would have been built had there
+    # been no explicitly requested files.
+    local explicitly-requested-files
+
+
+    # List of Boost Build meta-targets, virtual-targets and actual Jam targets
+    # constructed in this build system run.
     local targets ;
-    local bjam-targets ;
+    local virtual-targets ;
+    local actual-targets ;
 
     
     # Process each target specified on the command-line and convert it into
@@ -628,7 +642,7 @@ local rule should-clean-project ( project )
             {
                 ECHO "notice: could not find main target" $(id) ;
                 ECHO "notice: assuming it's a name of file to create." ;
-                bjam-targets += $(id) ;
+                explicitly-requested-files += $(id) ;
             }
             else
             {
@@ -640,10 +654,6 @@ local rule should-clean-project ( project )
     {
         targets += [ project.target [ project.module-name "." ] ] ;
     }
-
-
-    # List of all virtual-targets created in this build system run.
-    local virtual-targets ;
 
 
     # Now that we have a set of targets to build and a set of property sets to
@@ -665,11 +675,7 @@ local rule should-clean-project ( project )
     }
 
 
-    # List of all Jam targets constructed in this build system run.
-    local actual-targets ;
-
-
-    # Convert all collected virtual targets into actual raw Jam targets.
+    # Convert collected virtual targets into actual raw Jam targets.
     for t in $(virtual-targets)
     {
         actual-targets += [ $(t).actualize ] ;
@@ -851,19 +857,24 @@ local rule should-clean-project ( project )
     }
 
 
-    # TODO: See if this 'NOTFILE all' statement can be moved below to the
-    # default case where the 'all' target is actually requested to be built.
-    # Check for other Jam scripts manually setting a dependency for this target.
+    # The 'all' pseudo target is not strictly needed expect in the case when we
+    # use it below but people often assume they always have this target
+    # available and do not declare it themselves before use which may cause
+    # build failures with an error message about not being able to build the
+    # 'all' target.
     NOTFILE all ;
 
 
     # And now that all the actual raw Jam targets and all the dependencies
-    # between them have been prepared (or we have everything set so we can
-    # easily prepare them) all that is left is to tell Jam to update those
-    # targets.
-    if $(bjam-targets)
+    # between them have been prepared all that is left is to tell Jam to update
+    # those targets.
+    if $(explicitly-requested-files)
     {
-        UPDATE $(bjam-targets:G=e) $(.out-xml) ;
+        # Note that this case can not be joined with the regular one when only
+        # exact Boost Build targets are requested as here we do not build those
+        # requested targets but only use them to construct the dependency tree
+        # needed to build the explicitly requested files.
+        UPDATE $(explicitly-requested-files:G=e) $(.out-xml) ;
     }
     else if $(cleanall)
     {

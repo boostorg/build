@@ -16,13 +16,13 @@ for s in (
     'BOOST_ROOT','BOOST_BUILD_PATH','JAM_TOOLSET','BCCROOT',
     'MSVCDir','MSVC','MSVCNT','MINGW','watcom'
     ):
-    
+
     try:
         del os.environ[s]
     except:
         pass
 
-BoostBuild.set_defer_annotations(1)    
+BoostBuild.set_defer_annotations(1)
 
 def run_tests(critical_tests, other_tests):
     """Runs first critical tests and then other_tests.
@@ -59,7 +59,7 @@ def run_tests(critical_tests, other_tests):
         BoostBuild.flush_annotations();
         pass_count = pass_count + 1
         sys.stdout.flush()  # makes testing under emacs more entertaining.
-        
+
     # Erase the file on success
     if failures_count == 0:
         open('test_results.txt', 'w')
@@ -69,7 +69,7 @@ def run_tests(critical_tests, other_tests):
     PASS: %d
     FAIL: %d
     """ % (pass_count, failures_count)
-        
+
 
 def last_failed_test():
     "Returns the name of last failed test or None"
@@ -87,7 +87,7 @@ def reorder_tests(tests, first_test):
     except ValueError:
         return tests
 
-            
+
 critical_tests = ["unit_tests", "module_actions", "startup_v1", "startup_v2"]
 
 critical_tests += ["core_d12", "core_typecheck", "core_delete_module",
@@ -167,6 +167,8 @@ tests = [ "rebuilds",
           "example_make",
           "remove_requirement",
           "free_features_request",
+          "file_name_handling",
+          "sort_rule"
           ]
 
 if os.name == 'posix':
@@ -187,13 +189,14 @@ if string.find(get_toolset(), 'gcc') == 0 or string.find(get_toolset(), 'msvc') 
 
 if "--extras" in sys.argv:
     tests.append("boostbook")
+    tests.append("qt4")
     tests.append("example_qt4")
     # Requires ./whatever.py to work, so is
     # not guaranted to work everywhere.
     tests.append("example_customization")
     # Requires gettext tools.
     tests.append("example_gettext")
-    
+
 else:
     print 'Note: skipping extra tests'
 

@@ -1,9 +1,10 @@
-# Copyright 2002 Dave Abrahams 
-# Copyright 2002, 2003 Rene Rivera 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2002 Dave Abrahams
+# Copyright 2002, 2003 Rene Rivera
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 import regex ;
+
 
 # Characters considered whitespace, as a list.
 .whitespace-chars = " " "	" "
@@ -12,12 +13,14 @@ import regex ;
 # Characters considered whitespace, as a single string.
 .whitespace = $(.whitespace-chars:J="") ;
 
+
 # Returns the canonical set of whitespace characters, as a list.
 #
 rule whitespace-chars ( )
 {
     return $(.whitespace-chars) ;
 }
+
 
 # Returns the canonical set of whitespace characters, as a single string.
 #
@@ -26,11 +29,12 @@ rule whitespace ( )
     return $(.whitespace) ;
 }
 
-# Splits the given string into a list of strings composed
-# of each character of the string in sequence.
+
+# Splits the given string into a list of strings composed of each character of
+# the string in sequence.
 #
 rule chars (
-    string # The string to split.
+    string  # The string to split.
     )
 {
     local result ;
@@ -40,18 +44,19 @@ rule chars (
         string = $(s[9]) ;
         result += $(s[1-8]) ;
     }
-    
-    # trim off empty strings
+
+    # Trim off empty strings.
     while $(result[1]) && ! $(result[-1])
     {
         result = $(result[1--2]) ;
     }
-    
+
     return $(result) ;
 }
 
-# Apply a set of standard transformations to string to produce an
-# abbreviation no more than 5 characters long
+
+# Apply a set of standard transformations to string to produce an abbreviation
+# no more than 5 characters long.
 #
 rule abbreviate ( string )
 {
@@ -60,22 +65,22 @@ rule abbreviate ( string )
     {
         return $(r) ;
     }
-    # Anything less than 4 characters gets no abbreviation
+    # Anything less than 4 characters gets no abbreviation.
     else if ! [ MATCH (....) : $(string) ]
     {
-        $(.abbreviated-$(string)) = $(string) ;
+        .abbreviated-$(string) = $(string) ;
         return $(string) ;
     }
     else
     {
-        # Separate the initial letter in case it's a vowel
+        # Separate the initial letter in case it's a vowel.
         local s1 = [ MATCH ^(.)(.*) : $(string) ] ;
-        
-        # drop trailing "ing"
+
+        # Drop trailing "ing".
         local s2 = [ MATCH ^(.*)ing$ : $(s1[2]) ] ;
         s2 ?= $(s1[2]) ;
-        
-        # Reduce all doubled characters to one
+
+        # Reduce all doubled characters to one.
         local last = "" ;
         for local c in [ chars $(s2) ]
         {
@@ -86,38 +91,40 @@ rule abbreviate ( string )
             }
         }
         s2 = $(r:J="") ;
-        
-        # Chop all vowels out of the remainder
+
+        # Chop all vowels out of the remainder.
         s2 = [ regex.replace $(s2) [AEIOUaeiou] "" ] ;
 
-        # Shorten remaining consonants to 4 characters
+        # Shorten remaining consonants to 4 characters.
         s2 = [ MATCH ^(.?.?.?.?) : $(s2) ] ;
-        
-        # Glue the initial character back on to the front
+
+        # Glue the initial character back on to the front.
         s2 = $(s1[1])$(s2) ;
-        
-        $(.abbreviated-$(string)) = $(s2) ;
+
+        .abbreviated-$(string) = $(s2) ;
         return $(s2) ;
     }
 }
 
-# Concatenates the given strings, inserting the given separator
-# between each string.
+
+# Concatenates the given strings, inserting the given separator between each
+# string.
 #
 rule join (
-    strings * # The strings to join.
-    : separator ? # The optional separator.
+    strings *  # The strings to join.
+    : separator ?  # The optional separator.
     )
 {
     separator ?= "" ;
     return $(strings:J=$(separator)) ;
 }
 
+
 # Split a string into whitespace separated words.
 #
 rule words (
-    string # The string to split.
-    : whitespace * # Optional, characters to consider as whitespace.
+    string  # The string to split.
+    : whitespace *  # Optional, characters to consider as whitespace.
     )
 {
     whitespace = $(whitespace:J="") ;
@@ -135,10 +142,11 @@ rule words (
     return $(w) ;
 }
 
+
 # Check that the given string is composed entirely of whitespace.
 #
 rule is-whitespace (
-    string ? # The string to test.
+    string ?  # The string to test.
     )
 {
     if ! $(string) { return true ; }
@@ -151,7 +159,7 @@ rule __test__ ( )
 {
     import assert ;
     assert.result a b c : chars abc ;
-    
+
     assert.result rntm : abbreviate runtime ;
     assert.result ovrld : abbreviate overload ;
     assert.result dbg : abbreviate debugging ;
@@ -160,20 +168,20 @@ rule __test__ ( )
     assert.result aaa : abbreviate aaa ;
     assert.result qck : abbreviate quack ;
     assert.result sttc : abbreviate static ;
-    
-    # check boundary cases
+
+    # Check boundary cases.
     assert.result a : chars a ;
     assert.result : chars "" ;
     assert.result a b c d e f g h : chars abcdefgh ;
     assert.result a b c d e f g h i : chars abcdefghi ;
     assert.result a b c d e f g h i j : chars abcdefghij ;
     assert.result a b c d e f g h i j k : chars abcdefghijk ;
-    
+
     assert.result a//b/c/d : join a "" b c d : / ;
     assert.result abcd : join  a "" b c d ;
-    
+
     assert.result a b c : words "a b	c" ;
-    
+
     assert.true is-whitespace "     	" ;
     assert.false is-whitespace "  a b c	" ;
     assert.true is-whitespace "" ;

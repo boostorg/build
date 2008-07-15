@@ -105,6 +105,13 @@ rule init ( version ? :  command * : options * )
       flags intel-darwin.link OPTIONS $(condition)/<runtime-link>static : -static -static-intel -lstdc++ -lpthread ;
       flags intel-darwin.link OPTIONS $(condition)/<runtime-link>shared : -shared-intel -lstdc++ -lpthread ;
     }
+
+    local minor = [ MATCH ".*\\.(.).*" : $(version) ] ;
+
+    # wchar_t char_traits workaround for compilers older than 10.2
+    if $(major) = "9" || ( $(major) = "10" && ( $(minor) = "0" || $(minor) = "1" ) ) {
+        flags intel-darwin.compile DEFINES $(condition) : __WINT_TYPE__=int : unchecked ;
+    }
 }
 
 SPACE = " " ;
@@ -117,8 +124,8 @@ flags intel-darwin.compile OPTIONS <optimization>space : -O1 ; # no specific spa
 
 # 
 cpu-type-em64t = prescott nocona ;
-# flags intel-darwin.compile OPTIONS <instruction-set>$(cpu-type-em64t)/<address-model>32 : -mcmodel=small ;
-flags intel-darwin.compile OPTIONS <instruction-set>$(cpu-type-em64t)/<address-model>64 : -mcmodel=large ;
+flags intel-darwin.compile OPTIONS <instruction-set>$(cpu-type-em64t)/<address-model>32 : -m32 ; # -mcmodel=small ;
+flags intel-darwin.compile OPTIONS <instruction-set>$(cpu-type-em64t)/<address-model>64 : -m64 ; # -mcmodel=large ;
 
 flags intel-darwin.compile.c OPTIONS <warnings>off : -w0 ;
 flags intel-darwin.compile.c OPTIONS <warnings>on : -w1 ;

@@ -1,16 +1,14 @@
-#  Copyright (C) 2003 Doug Gregor. Permission to copy, use, modify,
-#  sell and distribute this software is granted provided this
-#  copyright notice appears in all copies. This software is provided
-#  "as is" without express or implied warranty, and with no claim as
-#  to its suitability for any purpose.
+# Copyright (C) 2003 Doug Gregor. Permission to copy, use, modify, sell and
+# distribute this software is granted provided this copyright notice appears in
+# all copies. This software is provided "as is" without express or implied
+# warranty, and with no claim as to its suitability for any purpose.
 
-#  This module defines rules to apply an XSLT stylesheet to an XML file 
-#  using the xsltproc driver, part of libxslt.
+# This module defines rules to apply an XSLT stylesheet to an XML file using the
+# xsltproc driver, part of libxslt.
 #
-#  Note: except for 'init', this modules does not provide any rules
-#  for end users. 
+# Note: except for 'init', this modules does not provide any rules for end
+# users.
 
-import toolset : flags ;
 import feature ;
 import regex ;
 import sequence ;
@@ -20,60 +18,64 @@ feature.feature xsl:param : : free ;
 feature.feature xsl:path : : free ;
 feature.feature catalog : : free ;
 
+
 # Initialize xsltproc support. The parameters are:
 #   xsltproc: The xsltproc executable
+#
 rule init ( xsltproc ? )
 {
-  if ! $(xsltproc)
-  {
-    xsltproc = [ modules.peek : XSLTPROC ] ;
-  }
+    if ! $(xsltproc)
+    {
+        xsltproc = [ modules.peek : XSLTPROC ] ;
+    }
 
-  if ! $(.initialized) 
-  {
-    $(.initialized) = true ;
-    .xsltproc = $(xsltproc) ;
-  }
+    if ! $(.initialized)
+    {
+        $(.initialized) = true ;
+        .xsltproc = $(xsltproc) ;
+    }
 }
+
 
 rule compute-xslt-flags ( target : properties * )
 {
-  local flags ;
-  
-  # Raw flags.
-  flags += [ feature.get-values <flags> : $(properties) ] ;
-  
-  # Translate <xsl:param> into command line flags.  
-  for local param in [ feature.get-values <xsl:param> : $(properties) ]
-  {
-    local namevalue = [ regex.split $(param) "=" ] ;
-    flags += --stringparam $(namevalue[1]) \"$(namevalue[2])\" ;
-  }
-  # Translate <xsl:path>
-  for local path in [ feature.get-values <xsl:path> : $(properties) ] 
-  {
-    flags += --path \"$(path:G=)\" ;
-  }
-        
-  # Take care of implicit dependencies
-  local other-deps ;
-  for local dep in [ feature.get-values <implicit-dependency> : $(properties) ]
-  {
-    other-deps += [ $(dep:G=).creating-subvariant ] ;
-  }
+    local flags ;
 
-  local implicit-target-directories ;
-  for local dep in [ sequence.unique $(other-deps) ]
-  {
-    implicit-target-directories += [ $(dep).all-target-directories ] ;
-  }
+    # Raw flags.
+    flags += [ feature.get-values <flags> : $(properties) ] ;
 
-  for local dir in $(implicit-target-directories)
-  {
-    flags += --path \"$(dir)\" ;
-  }
+    # Translate <xsl:param> into command line flags.
+    for local param in [ feature.get-values <xsl:param> : $(properties) ]
+    {
+        local namevalue = [ regex.split $(param) "=" ] ;
+        flags += --stringparam $(namevalue[1]) \"$(namevalue[2])\" ;
+    }
 
-  return $(flags) ;
+    # Translate <xsl:path>.
+    for local path in [ feature.get-values <xsl:path> : $(properties) ]
+    {
+        flags += --path \"$(path:G=)\" ;
+    }
+
+    # Take care of implicit dependencies.
+    local other-deps ;
+    for local dep in [ feature.get-values <implicit-dependency> : $(properties) ]
+    {
+        other-deps += [ $(dep:G=).creating-subvariant ] ;
+    }
+
+    local implicit-target-directories ;
+    for local dep in [ sequence.unique $(other-deps) ]
+    {
+        implicit-target-directories += [ $(dep).all-target-directories ] ;
+    }
+
+    for local dir in $(implicit-target-directories)
+    {
+        flags += --path \"$(dir)\" ;
+    }
+
+    return $(flags) ;
 }
 
 
@@ -82,31 +84,35 @@ local rule .xsltproc ( target : source stylesheet : properties * : dirname ? : a
     STYLESHEET on $(target) = $(stylesheet) ;
     FLAGS on $(target) += [ compute-xslt-flags $(target) : $(properties) ] ;
     NAME on $(target) = $(.xsltproc) ;
-    
+
     for local catalog in [ feature.get-values <catalog> : $(properties) ]
     {
         CATALOG = [ common.variable-setting-command XML_CATALOG_FILES : $(catalog) ] ;
     }
-    
+
     $(action) $(target) : $(source) ;
 }
 
+
 rule xslt ( target : source stylesheet : properties * )
-{ 
+{
     return [ .xsltproc $(target) : $(source) $(stylesheet) : $(properties) : : xslt-xsltproc ] ;
 }
 
+
 rule xslt-dir ( target : source stylesheet : properties * : dirname )
-{ 
+{
     return [ .xsltproc $(target) : $(source) $(stylesheet) : $(properties) : $(dirname) : xslt-xsltproc-dir ] ;
 }
 
-actions xslt-xsltproc
+
+actions xslt-xsltproc bind STYLESHEET
 {
-  $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET)" "$(>)"
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET)" "$(>)"
 }
 
-actions xslt-xsltproc-dir
+
+actions xslt-xsltproc-dir bind STYLESHEET
 {
-  $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<:D)/" "$(STYLESHEET)" "$(>)"
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<:D)/" "$(STYLESHEET)" "$(>)"
 }

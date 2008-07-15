@@ -41,6 +41,9 @@ rule init ( version ? : command * : options * )
 
   toolset.flags pathscale CONFIG_F_COMMAND $(condition) : $(command_f) ;
   toolset.flags pathscale CONFIG_F90_COMMAND $(condition) : $(command_f90) ;
+
+  # always link lib rt to resolve clock_gettime()
+  flags pathscale.link FINDLIBS-SA : rt : unchecked ;
 }
 
 # Declare generators
@@ -112,7 +115,6 @@ flags pathscale.link LINKPATH <library-path> ;
 flags pathscale.link FINDLIBS-ST <find-static-library> ;
 flags pathscale.link FINDLIBS-SA <find-shared-library> ;
 flags pathscale.link FINDLIBS-SA <threading>multi : pthread ;
-flags pathscale.link FINDLIBS-SA <threading>multi : rt ;
 flags pathscale.link LIBRARIES <library-file> ;
 flags pathscale.link LINK-RUNTIME <runtime-link>static : static ;
 flags pathscale.link LINK-RUNTIME <runtime-link>shared : dynamic ;

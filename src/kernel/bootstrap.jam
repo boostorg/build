@@ -94,12 +94,8 @@ IMPORT modules : import : : import ;
       util          # low-level substrate: string/number handling, etc.
       build         # essential elements of the build system architecture
       tools         # toolsets for handling specific build jobs and targets.
-
-      new           # until we get everything sorted out, there is
-                    # still some code here
-
+      contrib       # user contributed (unreviewed) modules
       .             # build-system.jam lives here
-
       ;
     local whereami = [ NORMALIZE_PATH $(.bootstrap-file:DT) ] ;
     BOOST_BUILD_PATH += $(whereami:D)/$(subdirs) ;

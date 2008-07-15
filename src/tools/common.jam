@@ -5,8 +5,8 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-#  Provides actions common to all toolsets, for as making directoies and
-#  removing files.
+#   Provides actions common to all toolsets, such as creating directories and
+# removing files.
 
 import os ;
 import modules ;
@@ -63,6 +63,7 @@ class configurations
     #
     # Returns 'true' if the configuration has been added and an empty value if
     # it already exists. Reports an error if the configuration is 'used'.
+    #
     rule register ( id )
     {
         if $(id) in $(self.used)
@@ -88,6 +89,7 @@ class configurations
     # Returns 'true' if the state of the configuration has been changed to
     # 'used' and an empty value if it the state wasn't changed. Reports an error
     # if the configuration isn't known.
+    #
     rule use ( id )
     {
         if ! $(id) in $(self.all)
@@ -109,24 +111,28 @@ class configurations
     }
 
     # Return all registered configurations.
+    #
     rule all ( )
     {
         return $(self.all) ;
     }
 
     # Return all used configurations.
+    #
     rule used ( )
     {
         return $(self.used) ;
     }
 
     # Returns the value of a configuration parameter.
+    #
     rule get ( id : param )
     {
         return $(self.$(param).$(id)) ;
     }
 
     # Sets the value of a configuration parameter.
+    #
     rule set ( id : param : value * )
     {
         self.$(param).$(id) = $(value) ;
@@ -140,15 +146,17 @@ class configurations
 # will check that the combination of all parameter values is unique in all
 # invocations.
 #
-# Each parameter name corresponds to a subfeature. This rule will declare
-# a subfeature the first time a non-empty parameter value is passed and will
+# Each parameter name corresponds to a subfeature. This rule will declare a
+# subfeature the first time a non-empty parameter value is passed and will
 # extend it with all the values.
 #
 # The return value from this rule is a condition to be used for flags settings.
-rule check-init-parameters ( toolset : * )
+#
+rule check-init-parameters ( toolset requirement * : * )
 {
     local sig = $(toolset) ;
     local condition = <toolset>$(toolset) ;
+    local subcondition ;
     for local index in 2 3 4 5 6 7 8 9
     {
         local name = $($(index)[1]) ;
@@ -185,6 +193,7 @@ rule check-init-parameters ( toolset : * )
                 .had-value.$(toolset).$(name) = true ;
             }
             feature.extend-subfeature toolset $(t) : $(name) : $(value) ;
+            subcondition += <toolset-$(t):$(name)>$(value) ;
         }
         else
         {
@@ -219,11 +228,25 @@ rule check-init-parameters ( toolset : * )
     .all-signatures += $(sig) ;
     .init-loc.$(sig) = [ errors.nearest-user-location ] ;
 
+    # If we have a requirement, this version should only be applied under that
+    # condition. To accomplish this we add a toolset requirement that imposes
+    # the toolset subcondition, which encodes the version.
+    if $(requirement)
+    {
+        local r = <toolset>$(toolset) $(requirement) ;
+        r = $(r:J=,) ;
+        toolset.add-requirements $(r):$(subcondition) ;
+    }
+
+    # We add the requirements, if any, to the condition to scope the toolset
+    # variables and options to this specific version.
+    condition += $(requirement) ;
+
     if $(.show-configuration)
     {
         ECHO notice: $(condition) ;
     }
-    return $(condition) ;
+    return $(condition:J=/) ;
 }
 
 
@@ -235,6 +258,7 @@ rule check-init-parameters ( toolset : * )
 # This rule returns the command to be used when invoking the tool. If we can't
 # find the tool, a warning is issued. If 'path-last' is specified, PATH is
 # checked after 'additional-paths' when searching for 'tool'.
+#
 rule get-invocation-command-nodefault (
     toolset : tool : user-provided-command * : additional-paths * : path-last ? )
 {
@@ -265,6 +289,7 @@ rule get-invocation-command-nodefault (
 
 # Same as get-invocation-command-nodefault, except that if no tool is found,
 # returns either the user-provided-command, if present, or the 'tool' parameter.
+#
 rule get-invocation-command (
     toolset : tool : user-provided-command * : additional-paths * : path-last ? )
 {
@@ -288,6 +313,7 @@ rule get-invocation-command (
 
 # Given an invocation command return the absolute path to the command. This
 # works even if command has no path element and was found on the PATH.
+#
 rule get-absolute-tool-path ( command )
 {
     if $(command:D)
@@ -304,9 +330,10 @@ rule get-absolute-tool-path ( command )
 
 # Attempts to find tool (binary) named 'name' in PATH and in 'additional-paths'.
 # If found in PATH, returns 'name' and if found in additional paths, returns
-# absolute name. If the tool is found in several directories, returns all paths.
-# Otherwise, returns an empty string. If 'path-last' is specified, PATH is
-# searched after 'additional-paths'.
+# absolute name. If the tool is found in several directories, returns the
+# first path found. Otherwise, returns an empty string. If 'path-last' is
+# specified, PATH is searched after 'additional-paths'.
+#
 rule find-tool ( name : additional-paths * : path-last ? )
 {
     local path = [ path.programs-path ] ;
@@ -342,15 +369,16 @@ rule find-tool ( name : additional-paths * : path-last ? )
 
 # Checks if 'command' can be found either in path or is a full name to an
 # existing file.
+#
 rule check-tool-aux ( command )
 {
     if $(command:D)
     {
         if [ path.exists $(command) ]
             # Both NT and Cygwin will run .exe files by their unqualified names.
-            || [ os.on-windows ] && [ path.exists $(command).exe ]
+            || ( [ os.on-windows ] && [ path.exists $(command).exe ] )
             # Only NT will run .bat files by their unqualified names.
-            || [ os.name ] = NT && [ path.exists $(command).bat ]
+            || ( ( [ os.name ] = NT ) && [ path.exists $(command).bat ] )
         {
             return $(command) ;
         }
@@ -368,6 +396,7 @@ rule check-tool-aux ( command )
 # Checks that a tool can be invoked by 'command'. If command is not an absolute
 # path, checks if it can be found in 'path'. If comand is an absolute path,
 # check that it exists. Returns 'command' if ok or empty string otherwise.
+#
 rule check-tool ( xcommand + )
 {
     if [ check-tool-aux $(xcommand[1]) ] ||
@@ -380,11 +409,13 @@ rule check-tool ( xcommand + )
 
 # Handle common options for toolset, specifically sets the following flag
 # variables:
-# - CONFIG_COMMAND to 'command'
-# - OPTIONS for compile.c   to the value of <cflags>       in options
-# - OPTIONS for compile.c++ to the value of <cxxflags>     in options
-# - OPTIOns for compile     to the value of <compileflags> in options
-# - OPTIONs for link        to the value of <linkflags>    in options
+# - CONFIG_COMMAND to $(command)
+# - OPTIONS for compile         to the value of <compileflags> in $(options)
+# - OPTIONS for compile.c       to the value of <cflags>       in $(options)
+# - OPTIONS for compile.c++     to the value of <cxxflags>     in $(options)
+# - OPTIONS for compile.fortran to the value of <fflags>       in $(options)
+# - OPTIONS for link            to the value of <linkflags>    in $(options)
+#
 rule handle-options ( toolset : condition * : command * : options * )
 {
     if $(.debug-configuration)
@@ -392,22 +423,30 @@ rule handle-options ( toolset : condition * : command * : options * )
         ECHO "notice: will use '$(command)' for $(toolset), condition $(condition:E=(empty))" ;
     }
 
-    # The last parameter ('true') says it's OK to set flags for another module.
-    toolset.flags $(toolset) CONFIG_COMMAND $(condition) : $(command) : unchecked ;
-    toolset.flags $(toolset).compile OPTIONS $(condition) :
-      [ feature.get-values <compileflags> : $(options) ] : unchecked ;
-    toolset.flags $(toolset).compile.c OPTIONS $(condition) :
-      [ feature.get-values <cflags> : $(options) ] : unchecked ;
-    toolset.flags $(toolset).compile.c++ OPTIONS $(condition) :
-      [ feature.get-values <cxxflags> : $(options) ] : unchecked ;
+    #   The last parameter ('unchecked') says it is OK to set flags for another
+    # module.
+    toolset.flags $(toolset) CONFIG_COMMAND $(condition) : $(command)
+        : unchecked ;
+
+    toolset.flags $(toolset).compile         OPTIONS $(condition) :
+        [ feature.get-values <compileflags> : $(options) ] : unchecked ;
+
+    toolset.flags $(toolset).compile.c       OPTIONS $(condition) :
+        [ feature.get-values <cflags>       : $(options) ] : unchecked ;
+
+    toolset.flags $(toolset).compile.c++     OPTIONS $(condition) :
+        [ feature.get-values <cxxflags>     : $(options) ] : unchecked ;
+
     toolset.flags $(toolset).compile.fortran OPTIONS $(condition) :
-      [ feature.get-values <fflags> : $(options) ] : unchecked ;
-    toolset.flags $(toolset).link OPTIONS $(condition) :
-      [ feature.get-values <linkflags> : $(options) ] : unchecked ;
+        [ feature.get-values <fflags>       : $(options) ] : unchecked ;
+
+    toolset.flags $(toolset).link            OPTIONS $(condition) :
+        [ feature.get-values <linkflags>    : $(options) ] : unchecked ;
 }
 
 
-# Returns the location of the "program files" directory on a windows platform.
+# Returns the location of the "program files" directory on a Windows platform.
+#
 rule get-program-files-dir ( )
 {
     local ProgramFiles = [ modules.peek : ProgramFiles ] ;
@@ -455,6 +494,7 @@ rule copy-command ( )
 # visible in the environment seen by subsequently executed commands. In other
 # words, on Unix systems, the variable is exported, which is consistent with the
 # only possible behavior on Windows systems.
+#
 rule variable-setting-command ( variable : value )
 {
     local nl = "
@@ -466,6 +506,34 @@ rule variable-setting-command ( variable : value )
     }
     else
     {
+        # (todo)
+        #   The following does not work on CYGWIN and needs to be fixed. On
+        # CYGWIN the $(nl) variable holds a Windows new-line \r\n sequence that
+        # messes up the executed export command which then reports that the
+        # passed variable name is incorrect. This is most likely due to the
+        # extra \r character getting interpreted as a part of the variable name.
+        #
+        #   Several ideas pop to mind on how to fix this:
+        #     * One way would be to separate the commands using the ; shell
+        #       command separator. This seems like the quickest possible
+        #       solution but I do not know whether this would break code on any
+        #       platforms I I have no access to.
+        #     * Another would be to not use the terminating $(nl) but that would
+        #       require updating all the using code so it does not simply
+        #       prepend this variable to its own commands.
+        #     * I guess the cleanest solution would be to update Boost Jam to
+        #       allow explicitly specifying \n & \r characters in its scripts
+        #       instead of always relying only on the 'current OS native newline
+        #       sequence'.
+        #
+        #   Some code found to depend on this behaviour:
+        #     * This Boost Build module.
+        #         * __test__ rule.
+        #         * path-variable-setting-command rule.
+        #     * python.jam toolset.
+        #     * xsltproc.jam toolset.
+        #     * fop.jam toolset.
+        #                                     (todo) (07.07.2008.) (Jurko)
         return "$(variable)=$(value)$(nl)export $(variable)$(nl)" ;
     }
 }
@@ -473,6 +541,7 @@ rule variable-setting-command ( variable : value )
 
 # Returns a command to sets a named shell path variable to the given NATIVE
 # paths on the current platform.
+#
 rule path-variable-setting-command ( variable : paths * )
 {
     local sep = [ os.path-separator ] ;
@@ -482,6 +551,7 @@ rule path-variable-setting-command ( variable : paths * )
 
 # Returns a command that prepends the given paths to the named path variable on
 # the current platform.
+#
 rule prepend-path-variable-command ( variable : paths * )
 {
     return [ path-variable-setting-command $(variable)
@@ -492,9 +562,10 @@ rule prepend-path-variable-command ( variable : paths * )
 # Return a command which can create a file. If 'r' is result of invocation, then
 # 'r foobar' will create foobar with unspecified content. What happens if file
 # already exists is unspecified.
+#
 rule file-creation-command ( )
 {
-    if [ modules.peek : NT ]
+    if [ os.name ] = NT
     {
         return "echo. > " ;
     }
@@ -508,9 +579,10 @@ rule file-creation-command ( )
 # Returns a command that may be used for 'touching' files. It is not a real
 # 'touch' command on NT because it adds an empty line at the end of file but it
 # works with source files.
+#
 rule file-touch-command ( )
 {
-    if [ os.name ] in NT
+    if [ os.name ] = NT
     {
         return "echo. >> " ;
     }
@@ -523,25 +595,33 @@ rule file-touch-command ( )
 
 rule MkDir
 {
-    # If dir exists, don't update it. Do this even for $(DOT).
+    # If dir exists, do not update it. Do this even for $(DOT).
     NOUPDATE $(<) ;
 
     if $(<) != $(DOT) && ! $($(<)-mkdir)
     {
         # Cheesy gate to prevent multiple invocations on same dir.
-        # MkDir1 has the actions.
-        # Arrange for jam dirs.
-
         $(<)-mkdir = true ;
-        MkDir1 $(<) ;
-        Depends dirs : $(<) ;
 
-        # Recursively make parent directories.
-        # $(<:P) = $(<)'s parent, & we recurse until root
+        # Schedule the mkdir build action.
+        if [ os.name ] = NT
+        {
+            MkDir1-quick-fix-for-windows $(<) ;
+        }
+        else
+        {
+            MkDir1-quick-fix-for-unix $(<) ;
+        }
+
+        # Prepare a Jam 'dirs' target that can be used to make the build only
+        # construct all the target directories.
+        DEPENDS dirs : $(<) ;
+
+        # Recursively create parent directories. $(<:P) = $(<)'s parent & we
+        # recurse until root.
 
         local s = $(<:P) ;
-
-        if $(NT)
+        if [ os.name ] = NT
         {
             switch $(s)
             {
@@ -550,14 +630,17 @@ rule MkDir
             }
         }
 
-        if $(s) && $(s) != $(<)
+        if $(s)
         {
-            Depends $(<) : $(s) ;
-            MkDir $(s) ;
-        }
-        else if $(s)
-        {
-            NOTFILE $(s) ;
+            if $(s) != $(<)
+            {
+                DEPENDS $(<) : $(s) ;
+                MkDir $(s) ;
+            }
+            else
+            {
+                NOTFILE $(s) ;
+            }
         }
     }
 }
@@ -566,6 +649,21 @@ rule MkDir
 actions MkDir1
 {
     mkdir "$(<)"
+}
+
+
+# (todo)
+#   The following quick-fix actions should be replaced using the original MkDir1
+# action once Boost Jam gets updated to correctly detect different paths leading
+# up to the same filesystem target and triggers their build action only once.
+#                                             (todo) (04.07.2008.) (Jurko)
+actions MkDir1-quick-fix-for-unix
+{
+    mkdir -p "$(<)"
+}
+actions MkDir1-quick-fix-for-windows
+{
+    if not exist "$(<)\\" mkdir "$(<)"
 }
 
 
@@ -628,7 +726,8 @@ actions hard-link
 #           value as the version number.
 #   <property:/property-name/>[joiner]
 #       ::  Direct lookup of the given property-name value in the
-#           build properties.
+#           build properties. /property-name/ is a regular expression.
+#           e.g. <property:toolset-.*:flavor> will match every toolset.
 #   /otherwise/
 #       ::  The literal value of the format argument.
 #
@@ -678,10 +777,13 @@ rule format-name ( format * : name : type ? : property-set )
 
                 case <property:*> :
                 local key = [ MATCH <property:(.*)> : $(f:G) ] ;
-                local p = [ $(property-set).get [ MATCH <property:(.*)> : $(f:G) ] ] ;
-                if $(p)
-                {
-                    result += [ join-tag $(f:G=) : $(p) ] ;
+                local p0 = [ MATCH <($(key))> : [ $(property-set).raw ] ] ;
+                if $(p0) {
+                    local p = [ $(property-set).get <$(p0)> ] ;
+                    if $(p)
+                    {
+                        result += [ join-tag $(f:G=) : $(p) ] ;
+                    }
                 }
 
                 case * :
@@ -697,7 +799,7 @@ rule format-name ( format * : name : type ? : property-set )
 
 local rule join-tag ( joiner ? : tag ? )
 {
-    if ! $(joinder) { joiner = - ; }
+    if ! $(joiner) { joiner = - ; }
     return $(joiner)$(tag) ;
 }
 
@@ -712,7 +814,7 @@ local rule toolset-tag ( name : type ? : property-set )
         case borland* : tag += bcb ;
         case como* : tag += como ;
         case cw : tag += cw ;
-        case darwin* : tag += ;
+        case darwin* : tag += xgcc ;
         case edg* : tag += edg ;
         case gcc* :
         {
@@ -756,8 +858,8 @@ local rule toolset-tag ( name : type ? : property-set )
             version = 7 ;
         }
     }
-    # On intel, version is not added, because it does not matter and it's the
-    # version of vc used as backend that matters. Ideally, we'd encode the
+    # On intel, version is not added, because it does not matter and it is the
+    # version of vc used as backend that matters. Ideally, we should encode the
     # backend version but that would break compatibility with V1.
     if $(tag) = iw
     {
@@ -798,7 +900,7 @@ local rule runtime-tag ( name : type ? : property-set )
     # toolset, the tag rules won't even see <runtime-debugging>. Similar
     # functionality in V2 is not implemented yet, so we just check for toolsets
     # which are known to care about runtime debug.
-    if <toolset>msvc in $(properties) 
+    if <toolset>msvc in $(properties)
       || <stdlib>stlport in $(properties)
       || <toolset-intel:platform>win in $(properties)
     {
@@ -821,7 +923,7 @@ rule __test__ ( )
     local nl = "
 " ;
 
-    local save-os = [ modules.peek os : name ] ;
+    local save-os = [ modules.peek os : .name ] ;
 
     modules.poke os : .name : LINUX ;
 

@@ -1,4 +1,4 @@
-# Copyright 2002-2006 Vladimir Prus 
+# Copyright 2002-2006 Vladimir Prus
 # Copyright 2005 Alo Sarv
 # Copyright 2005-2006 Juergen Hunold
 #
@@ -20,12 +20,12 @@
 #
 # Example:
 #
-#     exe myapp : myapp.cpp myapp.h myapp.ui myapp.qrc 
+#     exe myapp : myapp.cpp myapp.h myapp.ui myapp.qrc
 #                 /qt4//QtGui /qt4//QtNetwork ;
 #
 # It's also possible to run moc on cpp sources:
 #
-#   import cast ; 
+#   import cast ;
 #
 #   exe myapp : myapp.cpp [ cast _ moccable-cpp : myapp.cpp ] /qt4//QtGui ;
 #
@@ -56,11 +56,11 @@ import scanner ;
 #
 # The Qt3Support library can be activated by adding
 # "<qt3support>on" to requirements
-# 
+#
 # Use "<qt3support>on:<define>QT3_SUPPORT_WARNINGS"
 # to get warnings about deprecated Qt3 support funtions and classes.
-# Files ported by the "qt3to4" conversion tool contain _tons_ of 
-# warnings, so this define is not set as default. 
+# Files ported by the "qt3to4" conversion tool contain _tons_ of
+# warnings, so this define is not set as default.
 #
 # Todo: Detect Qt3Support from Qt's configure data.
 #       Or add more auto-configuration (like python).
@@ -73,18 +73,61 @@ project qt ;
 .project = [ project.current ] ;
 
 
-# Initialized the QT support module. The 'prefix' parameter
-# tells where QT is installed. 
-rule init ( prefix )
+# Initialized the QT support module. The 'prefix' parameter tells where QT is
+# installed.
+#
+rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
 {
     project.push-current $(.project) ;
-    
+
+    # pre-build paths to detect reinitializations changes
+    local inc_prefix lib_prefix bin_prefix ;
+    if $(full_inc)
+    {
+        inc_prefix = $(full_inc) ; 
+    }
+    else
+    {
+        inc_prefix = $(prefix)/include ;
+    }
+    if $(full_lib)
+    {
+        lib_prefix = $(full_lib) ;
+    }
+    else
+    {
+        lib_prefix = $(prefix)/lib ;
+    }
+    if $(full_bin)
+    {
+        bin_prefix = $(full_bin) ;
+    }
+    else
+    {
+        bin_prefix = $(prefix)/bin ;
+    }
+
     if $(.initialized)
     {
         if $(prefix) != $(.prefix)
         {
             errors.error
-              "Attempt the reinitialize QT with different installation prefix" ;
+                "Attempt the reinitialize QT with different installation prefix" ;
+        }
+        if $(inc_prefix) != $(.incprefix)
+        {
+            errors.error
+                "Attempt the reinitialize QT with different include path" ;
+        }
+        if $(lib_prefix) != $(.libprefix)
+        {
+            errors.error
+                "Attempt the reinitialize QT with different library path" ;
+        }
+        if $(bin_prefix) != $(.binprefix)
+        {
+            errors.error
+                "Attempt the reinitialize QT with different bin path" ;
         }
     }
     else
@@ -92,360 +135,163 @@ rule init ( prefix )
         .initialized = true ;
         .prefix = $(prefix) ;
 
-        #~ Setup prefixes for include, binaries and libs.
-        #~ TODO: Implement overrides in "init" parameter list.
+        # Setup prefixes for include, binaries and libs.
         .incprefix = $(.prefix)/include ;
         .libprefix = $(.prefix)/lib ;
         .binprefix = $(.prefix)/bin ;
 
         # Generates cpp files from header files using "moc" tool
         generators.register-standard qt4.moc : H : CPP(moc_%) : <allow>qt4 ;
-        
-        # The OBJ result type is a fake, 'H' will be really produces.
-        # See comments on the generator calss, defined below 
-        # the 'init' function.
-        generators.register [ new uic-h-generator qt4.uic-h : UI : OBJ
-            : <allow>qt4  ] ;
-        
+
+        # The OBJ result type is a fake, 'H' will be really produced. See
+        # comments on the generator class, defined below the 'init' function.
+        generators.register [ new uic-h-generator qt4.uic-h : UI : OBJ :
+            <allow>qt4  ] ;
+
         # The OBJ result type is a fake here too.
-        generators.register [ new moc-h-generator 
+        generators.register [ new moc-h-generator
             qt4.moc.inc : MOCCABLE_CPP : OBJ : <allow>qt4 ] ;
 
-        generators.register [ new moc-inc-generator 
+        generators.register [ new moc-inc-generator
             qt4.moc.inc : MOCCABLE_H : OBJ : <allow>qt4 ] ;
 
-        # Generates .cpp file from qrc file
+        # Generates .cpp files from .qrc files.
         generators.register-standard qt4.rcc : QRC : CPP(qrc_%) ;
-        
-        # dependency scanner for wrapped files
-        type.set-scanner QRC : qrc-scanner ;
 
+        # dependency scanner for wrapped files.
+        type.set-scanner QRC : qrc-scanner ;
+        
         # Test for a buildable Qt.
         if [ glob $(.prefix)/Jamroot ]
         {
-            # Import all Qt Modules
-            local all-libraries = QtCore QtGui QtNetwork QtXml QtSql QtSvg QtOpenGL Qt3Support QtTest QtAssistantClient QtDesigner QtUiTools QtDBus QtScript ;
-            for local l in $(all-libraries) 
-            {
-                alias $(l) 
-                  : $(.prefix)//$(l) 
-                  : 
-                  : 
-                  : <allow>qt4 
-                  ;
-                explicit $(l) ;
-            }
+            .bjam-qt = true
+
+            # this will declare QtCore (and qtmain on <target-os>windows)
+            add-shared-library QtCore ;
         }
         else
-        # Use pre-built Qt
+        # Setup common pre-built Qt.
+        # Special setup for QtCore on which everything depends
         {
-            local usage-requirements = 
-                <include>$(.incprefix) 
-                <library-path>$(.libprefix) 
-                <dll-path>$(.libprefix) 
-                <threading>multi 
-                <allow>qt4
-                ;
-            
+            local usage-requirements =
+                <include>$(.incprefix)
+                <library-path>$(.libprefix)
+                <dll-path>$(.libprefix)
+                <threading>multi
+                <allow>qt4 ;
+
             local suffix ;
             if [ os.name ] = NT
             {
-                # On NT, the libs have "4" suffix, and "d" suffix in debug builds
-                # Also, on NT we must link against qtmain library (for WinMain)
-                suffix_version = "4" ;
-                suffix_debug = "d" ;
-                lib qtmain 
+                # On NT, the libs have "4" suffix, and "d" suffix in debug
+                # builds. Also, on NT we must link against the qtmain library
+                # (for WinMain).
+                .suffix_version = "4" ;
+                .suffix_debug = "d" ;
+                lib qtmain
                     : # sources
                     : # requirements
-                      <name>qtmain$(suffix_debug)
+                      <name>qtmain$(.suffix_debug)
                       <variant>debug
                     ;
 
-                lib qtmain 
-                    : # sources 
+                lib qtmain
+                    : # sources
                     : # requirements
-                        <name>qtmain  
+                        <name>qtmain
                     ;
                 main = qtmain ;
-            } 
+            }
             else if [ os.name ] = MACOSX
             {
                 # On MacOS X, both debug and release libraries are available.
-                suffix_version = "" ;
-                suffix_debug = "_debug" ;
+                .suffix_version = "" ;
+                .suffix_debug = "_debug" ;
             }
-            else 
+            else
             {
-                # Since Qt-4.2, debug versions on unix have to be built separately 
-                # and therefore have no suffix. 
-                suffix_version = "" ;
-                suffix_debug = "" ;
+                # Since Qt-4.2, debug versions on unix have to be built
+                # separately and therefore have no suffix.
+                .suffix_version = "" ;
+                .suffix_debug = "" ;
             }
-            
+
             lib QtCore : $(main)
                 : # requirements
-                  <name>QtCore$(suffix_version) 
+                  <name>QtCore$(.suffix_version)
                 : # default-build
                 : # usage-requirements
                   <define>QT_CORE_LIB
                   <define>QT_NO_DEBUG
-                  <include>$(.incprefix)/QtCore 
+                  <include>$(.incprefix)/QtCore
                   $(usage-requirements)
                 ;
             lib QtCore : $(main)
                 : # requirements
-                  <name>QtCore$(suffix_debug)$(suffix_version)
+                  <name>QtCore$(.suffix_debug)$(.suffix_version)
                   <variant>debug
                 : # default-build
                 : # usage-requirements
                   <define>QT_CORE_LIB
-                  <include>$(.incprefix)/QtCore 
-                  $(usage-requirements) 
+                  <include>$(.incprefix)/QtCore
+                  $(usage-requirements)
                 ;
-            
-            lib QtGui : QtCore
-                : # requirements
-                  <name>QtGui$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <define>QT_GUI_LIB
-                  <include>$(.incprefix)/QtGui 
-                ;
-            
-            lib QtGui : QtCore
-                : # requirements
-                  <name>QtGui$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_GUI_LIB
-                  <include>$(.incprefix)/QtGui 
-                ;
-            
-            lib QtNetwork : QtCore
-                : # requirements
-                  <name>QtNetwork$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <define>QT_NETWORK_LIB
-                  <include>$(.incprefix)/QtNetwork  
-                ;
-            lib QtNetwork : QtCore
-                : # requirements
-                  <name>QtNetwork$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_NETWORK_LIB
-                  <include>$(.incprefix)/QtNetwork  
-                ;
-            
-            lib QtSql : QtCore
-                : # requirements
-                  <name>QtSql$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <define>QT_SQL_LIB
-                  <include>$(.incprefix)/QtSql 
-                ;
-            lib QtSql : QtCore
-                : # requirements
-                  <name>QtSql$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_SQL_LIB
-                  <include>$(.incprefix)/QtSql 
-                ;
-            
-            lib QtXml : QtCore
-                : # requirements
-                  <name>QtXml$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <define>QT_XML_LIB
-                  <include>$(.incprefix)/QtXml 
-                ;
-            lib QtXml : QtCore
-                : # requirements
-                  <name>QtXml$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_XML_LIB
-                  <include>$(.incprefix)/QtXml 
-                ;
-            
-            lib Qt3Support : QtGui QtNetwork QtXml QtSql
-                : # requirements
-                  <name>Qt3Support$(suffix_version)
-                  <qt3support>on
-                : # default-build
-                : # usage-requirements
-                  <define>QT_QT3SUPPORT_LIB
-                  <define>QT3_SUPPORT
-                  <include>$(.incprefix)/Qt3Support 
-                ;
- 
-            lib Qt3Support : QtGui QtNetwork QtXml QtSql
-                : # requirements
-                  <name>Qt3Support$(suffix_debug)$(suffix_version)
-                  <qt3support>on
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_QT3SUPPORT_LIB
-                  <define>QT3_SUPPORT
-                  <include>$(.incprefix)/Qt3Support 
-                ;
+         }
 
-            # Dummy target to enable "<qt3support>off" and "<library>/qt//Qt3Support" at the same time.
-            # This enables quick switching from one to the other for test/porting purposes.        
-            alias Qt3Support : : <qt3support>off ;
-            
-            # OpenGl Support
-            lib QtOpenGL : QtGui
-                : # requirements
-                  <name>QtOpenGL$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <define>QT_OPENGL_LIB
-                  <include>$(.incprefix)/QtOpenGL 
-                ;
-            lib QtOpenGL : QtGui
-                : # requirements
-                  <name>QtOpenGL$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_OPENGL_LIB
-                  <include>$(.incprefix)/QtOpenGL 
-                ;
-            
-            # SVG-Support (Qt 4.1)
-            lib QtSvg : QtXml QtOpenGL
-                : # requirements
-                  <name>QtSvg$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <define>QT_SVG_LIB
-                  <include>$(.incprefix)/QtSvg 
-                ;
-            lib QtSvg : QtXml QtOpenGL
-                : # requirements
-                  <name>QtSvg$(suffix_debug)$(suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements 
-                  <define>QT_SVG_LIB
-                  <include>$(.incprefix)/QtSvg 
-                ;
-            
-            # Test-Support (Qt 4.1)
-            lib QtTest : QtCore
-                : # requirements
-                  <name>QtTest$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtTest 
-                ;
-            lib QtTest : QtCore
-                : # requirements
-                  <name>QtTest$(suffix_debug)$(suffix_version)
-                  <variant>debug 
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtTest 
-                ;
-            
-            # AssistantClient Support
-            lib QtAssistantClient : QtGui
-                : # requirements
-                  <name>QtAssistantClient$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtAssistant
-                ;
-            lib QtAssistantClient : QtGui
-                : # requirements
-                  <name>QtAssistantClient$(suffix_debug)$(suffix_version) 
-                  <variant>debug 
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtAssistant 
-                ;
-            
-            # Qt designer library
-            lib QtDesigner : QtGui QtXml
-                : # requirements
-                  <name>QtDesigner$(suffix_version) 
-                : # default-build  
-                : # usage-requirements
-                  <include>$(.incprefix)/QtDesigner
-                ;
+         # Initialising the remaining libraries is canonical
+         add-shared-library QtGui     : QtCore : QT_GUI_LIB     ;
+         add-shared-library QtNetwork : QtCore : QT_NETWORK_LIB ;
+         add-shared-library QtSql     : QtCore : QT_SQL_LIB     ;
+         add-shared-library QtXml     : QtCore : QT_XML_LIB     ;
 
-            lib QtDesigner : QtGui QtXml
-                : # requirements
-                  <name>QtDesigner$(suffix_debug)$(suffix_version) 
-                  <variant>debug 
-                : # default-build  
-                : # usage-requirements
-                  <include>$(.incprefix)/QtDesigner
-                ;
+         add-shared-library Qt3Support : QtGui QtNetwork QtXml QtSql 
+                                       : QT_QT3SUPPORT_LIB QT3_SUPPORT
+                                       : <qt3support>on ;
 
-            # Support for dynamic Widgets (Qt 4.1)
-            lib QtUiTools : QtGui QtXml
-                : # requirements 
-                  <name>QtUiTools
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtUiTools 
-                ;
-            lib QtUiTools : QtGui QtXml
-                : # requirements
-                  <name>QtUiTools$(suffix_debug) 
-                  <variant>debug 
-                : # default-build  
-                : # usage-requirements
-                  <include>$(.incprefix)/QtUiTools 
-                ;
+         # Dummy target to enable "<qt3support>off" and
+         # "<library>/qt//Qt3Support" at the same time. This enables quick
+         # switching from one to the other for test/porting purposes.
+         alias Qt3Support : : : : <qt3support>off ;
 
-            # DBus-Support (Qt 4.2)
-            lib QtDBus : QtXml
-                : # requirements
-                  <name>QtDBus$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtDBus 
-                ;
-            lib QtDBus : QtXml
-                : # requirements
-                  <name>QtDBus$(suffix_debug)$(suffix_version) 
-                  <variant>debug 
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtDBus
-                ;
+         # OpenGl Support
+         add-shared-library QtOpenGL : QtGui : QT_OPENGL_LIB ;
 
-            # Script-Engine (Qt 4.3)
-            lib QtScript : QtGui QtXml
-                : # requirements
-                  <name>QtScript$(suffix_version) 
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtScript 
-                ;
-            lib QtScript : QtGui QtXml
-                : # requirements
-                  <name>QtScript$(suffix_debug)$(suffix_version) 
-                  <variant>debug 
-                : # default-build
-                : # usage-requirements
-                  <include>$(.incprefix)/QtScript
-                ;
-        }
+         # SVG-Support (Qt 4.1)
+         add-shared-library QtSvg : QtXml QtOpenGL : QT_SVG_LIB ;
+
+         # Test-Support (Qt 4.1)
+         add-shared-library QtTest : QtCore ;
+
+         # Qt designer library
+         add-shared-library QtDesigner : QtGui QtXml ;
+
+         # Support for dynamic Widgets (Qt 4.1)
+         add-static-library  QtUiTools : QtGui QtXml ;
+
+         # DBus-Support (Qt 4.2)
+         add-shared-library QtDBus : QtXml ;
+
+         # Script-Engine (Qt 4.3)
+         add-shared-library QtScript : QtGui QtXml ;
+
+         # WebKit (Qt 4.4)
+         add-shared-library QtWebKit : QtGui : QT_WEBKIT_LIB ;
+
+         # Phonon Multimedia (Qt 4.4) 
+         add-shared-library phonon : QtGui QtXml : QT_PHONON_LIB ;
+
+         # XmlPatterns-Engine (Qt 4.4) 
+         add-shared-library QtXmlPatterns : QtNetwork : QT_XMLPATTERNS_LIB ;
+
+         # Help-Engine (Qt 4.4) 
+         add-shared-library QtHelp : QtGui QtSql QtXml ;
+
+         # AssistantClient Support
+         # Compat library
+         # Pre-4.4 help system, use QtHelp for new programs
+         add-shared-library QtAssistantClient : QtGui : : : QtAssistant ;
     }
-    
+
     project.pop-current ;
 }
 
@@ -456,17 +302,15 @@ rule initialized ( )
 
 
 
-# This custom generator is needed because it QT4, UI files are translated
-# only in H files, and no C++ files are created. Further, the H files
-# need not be passed via MOC. The header is used only via inclusion.
-# If we define standard UI -> H generator, Boost.Build will run
-# MOC on H, and the compile resulting cpp. It will give a warning, since
-# output from moc will be empty.
+# This custom generator is needed because in QT4, UI files are translated only
+# into H files, and no C++ files are created. Further, the H files need not be
+# passed via MOC. The header is used only via inclusion. If we define a standard
+# UI -> H generator, Boost.Build will run MOC on H, and then compile the
+# resulting cpp. It will give a warning, since output from moc will be empty.
 #
-# This generator is declared with UI -> OBJ signature, so it's
-# invoked when linking generator tries to convert sources to OBJ,
-# but it produces target of type H. This is non-standard, but allowed.
-# That header won't be mocced.
+# This generator is declared with a UI -> OBJ signature, so it gets invoked when
+# linking generator tries to convert sources to OBJ, but it produces target of
+# type H. This is non-standard, but allowed. That header won't be mocced.
 #
 class uic-h-generator : generator
 {
@@ -476,31 +320,29 @@ class uic-h-generator : generator
     }
 
     rule run ( project name ? : property-set : sources * )
-    {       
-        if ! $(name)        
+    {
+        if ! $(name)
         {
             name = [ $(sources[0]).name ] ;
             name = $(name:B) ;
         }
-                
-        local a = [ new action $(sources[1]) : qt4.uic-h :
-          $(property-set) ] ;
-        
+
+        local a = [ new action $(sources[1]) : qt4.uic-h : $(property-set) ] ;
+
         # The 'ui_' prefix is to match qmake's default behavior.
-        local target = [ 
-          new file-target ui_$(name) : H : $(project) : $(a) ] ;
-        
+        local target = [ new file-target ui_$(name) : H : $(project) : $(a) ] ;
+
         local r = [ virtual-target.register $(target) ] ;
- 
+
         # Since this generator will return a H target, the linking generator
         # won't use it at all, and won't set any dependency on it. However, we
         # need the target to be seen by bjam, so that dependency from sources to
         # this generated header is detected -- if jam does not know about this
         # target, it won't do anything.
         DEPENDS all : [ $(r).actualize ] ;
-        
+
         return $(r) ;
-    }    
+    }
 }
 
 
@@ -512,29 +354,29 @@ class moc-h-generator : generator
     }
 
     rule run ( project name ? : property-set : sources * )
-    {       
+    {
         if ! $(sources[2]) && [ $(sources[1]).type ] = MOCCABLE_CPP
-        {                              
+        {
             name = [ $(sources[0]).name ] ;
             name = $(name:B) ;
-            
+
             local a = [ new action $(sources[1]) : qt4.moc.inc :
-              $(property-set) ] ;
-            
-            local target = [ 
-              new file-target $(name) : MOC : $(project) : $(a) ] ;
-            
+                $(property-set) ] ;
+
+            local target = [ new file-target $(name) : MOC : $(project) : $(a)
+                ] ;
+
             local r = [ virtual-target.register $(target) ] ;
-            
+
             # Since this generator will return a H target, the linking generator
             # won't use it at all, and won't set any dependency on it. However,
             # we need the target to be seen by bjam, so that dependency from
             # sources to this generated header is detected -- if jam does not
             # know about this target, it won't do anything.
             DEPENDS all : [ $(r).actualize ] ;
-            
+
             return $(r) ;
-        }        
+        }
     }
 }
 
@@ -547,88 +389,163 @@ class moc-inc-generator : generator
     }
 
     rule run ( project name ? : property-set : sources * )
-    {       
+    {
         if ! $(sources[2]) && [ $(sources[1]).type ] = MOCCABLE_H
-        {                              
+        {
             name = [ $(sources[0]).name ] ;
             name = $(name:B) ;
-            
+
             local a = [ new action $(sources[1]) : qt4.moc.inc :
-              $(property-set) ] ;
-            
-            local target = [ 
-              new file-target moc_$(name) : CPP : $(project) : $(a) ] ;
-            
+                $(property-set) ] ;
+
+            local target = [ new file-target moc_$(name) : CPP : $(project) :
+                $(a) ] ;
+
             # Since this generator will return a H target, the linking generator
             # won't use it at all, and won't set any dependency on it. However,
             # we need the target to be seen by bjam, so that dependency from
             # sources to this generated header is detected -- if jam does not
             # know about this target, it won't do anything.
             DEPENDS all : [ $(target).actualize ] ;
-            
+
             return [ virtual-target.register $(target) ] ;
-        }        
-    }    
+        }
+    }
 }
 
 
 # Query the installation directory. This is needed in at least two scenarios.
 # First, when re-using sources from the Qt-Tree. Second, to "install" custom Qt
 # plugins to the Qt-Tree.
+#
 rule directory
 {
     return $(.prefix) ;
 }
 
+# Add a shared Qt library.
+rule add-shared-library ( lib-name : depends-on * : usage-defines * : requirements * :  include ? )
+{
+     add-library $(lib-name) : $(.suffix_version) : $(depends-on) : $(usage-defines) : $(requirements) : $(include) ;
+}
 
-# Get <include> and <defines> from current toolset
+# Add a static Qt library.
+rule add-static-library ( lib-name : depends-on * : usage-defines * : requirements * : include ? )
+{
+     add-library $(lib-name) : : $(depends-on) : $(usage-defines) : $(requirements) : $(include) ;
+}
+
+# Add a Qt library.
+# Static libs are unversioned, whereas shared libs have the major number as suffix.
+# Creates both release and debug versions on platforms where both are enabled by Qt configure.
+# Flags:
+# - lib-name Qt library Name
+# - version  Qt major number used as shared library suffix (QtCore4.so)
+# - depends-on other Qt libraries
+# - usage-defines those are set by qmake, so set them when using this library
+# - requirements addional requirements
+# - include non-canonical include path. The canonical path is $(.incprefix)/$(lib-name).
+rule add-library ( lib-name : version ? : depends-on * : usage-defines * : requirements * : include ? )
+{
+    if $(.bjam-qt)
+    {
+        # Import Qt module
+        # Eveything will be setup there
+        alias $(lib-name)
+           : $(.prefix)//$(lib-name)
+           :
+           :
+           : <allow>qt4 ;
+    }
+    else
+    {
+        local real_include ;
+        real_include ?= $(include) ;
+        real_include ?= $(lib-name) ;
+        
+        lib $(lib-name) 
+           : # sources
+             $(depends-on)
+           : # requirements
+             <name>$(lib-name)$(version)
+             $(requirements)
+           : # default-build
+           : # usage-requirements
+             <define>$(usage-defines)
+             <include>$(.incprefix)/$(real_include)
+           ;
+        
+        lib $(lib-name) 
+           : # sources
+             $(depends-on)
+           : # requirements
+             <name>$(lib-name)$(.suffix_debug)$(version)
+             $(requirements)
+             <variant>debug
+           : # default-build
+           : # usage-requirements
+             <define>$(usage-defines)
+             <include>$(.incprefix)/$(real_include)
+           ;
+    } 
+
+    # Make library explicit so that a simple <use>qt4 will not bring in everything.
+    # And some components like QtDBus/Phonon may not be available on all platforms.
+    explicit $(lib-name) ;
+}
+
+
+# Get <include> and <defines> from current toolset.
 flags qt4.moc INCLUDES <include> ;
 flags qt4.moc DEFINES <define> ;
 
 
-# Processes headers to create Qt MetaObject information
-# Qt4-moc has its c++-parser, so pass INCLUDES and DEFINES.
+# Processes headers to create Qt MetaObject information. Qt4-moc has its
+# c++-parser, so pass INCLUDES and DEFINES.
+#
 actions moc
 {
     $(.binprefix)/moc -I$(INCLUDES) -D$(DEFINES) -f $(>) -o $(<)
 }
 
 
-# When moccing files for include only, we don't need -f, 
-# otherwise the generated code will include the .cpp 
-# and we'll get duplicated symbols.
+# When moccing files for include only, we don't need -f, otherwise the generated
+# code will include the .cpp and we'll get duplicated symbols.
+#
 actions moc.inc
 {
     $(.binprefix)/moc -I$(INCLUDES) -D$(DEFINES) $(>) -o $(<)
 }
 
 
-# Generates source files from resource files
+# Generates source files from resource files.
+#
 actions rcc
 {
     $(.binprefix)/rcc $(>) -name $(>:B) -o $(<)
 }
 
 
-# Generates user-interface source from .ui files
+# Generates user-interface source from .ui files.
+#
 actions uic-h
 {
     $(.binprefix)/uic $(>) -o $(<)
 }
 
 
-# Scanner for .qrc files.
-# Look for the CDATA section of the <file> tag.
-# Ignore the "alias" attribute.
-# See http://doc.trolltech.com/qt/resources.html
-# for detailed documentation of the Qt Resource System.
-class qrc-scanner : common-scanner 
+# Scanner for .qrc files. Look for the CDATA section of the <file> tag. Ignore
+# the "alias" attribute. See http://doc.trolltech.com/qt/resources.html for
+# detailed documentation of the Qt Resource System.
+#
+class qrc-scanner : common-scanner
 {
     rule pattern ( )
     {
         return "<file.*>(.*)</file>" ;
     }
 }
+
 
 # Wrapped files are "included".
 scanner.register qrc-scanner : include ;
