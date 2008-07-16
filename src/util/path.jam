@@ -292,13 +292,15 @@ local rule .glob-tree ( roots * : patterns * : exclude-patterns * )
     {
         excluded = [ GLOB $(roots) : $(exclude-patterns) ] ;
     }
-    local result = [ set.difference
-        [ GLOB $(roots) : $(patterns) ] : $(excluded) ] ;
+    local result = [ set.difference [ GLOB $(roots) : $(patterns) ] :
+        $(excluded) ] ;
     local subdirs ;
-    for local d in [ set.difference
-        [ GLOB $(roots) : * ] : $(excluded) ]
+    for local d in [ set.difference [ GLOB $(roots) : * ] : $(excluded) ]
     {
-        if ! ( $(d:D=) in . .. ) && ! [ CHECK_IF_FILE $(d) ] { subdirs += $(d) ; }
+        if ! ( $(d:D=) in . .. ) && ! [ CHECK_IF_FILE $(d) ]
+        {
+            subdirs += $(d) ;
+        }
     }
     if $(subdirs)
     {

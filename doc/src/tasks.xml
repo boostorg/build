@@ -657,24 +657,24 @@ exe main : main.cpp pch ;
       <title>Generated headers</title>
 
       <para>Usually, Boost.Build handles implicit dependendies completely
-        automatically. For example, for C++ files, all <literal>#include</literal>
-        statements are found and handled. The only aspect where user help
-        might be needed is implicit dependency on generated files.</para>
+        automatically. For example, for C++ files, all
+        <literal>#include</literal> statements are found and handled. The only
+        aspect where user help might be needed is implicit dependency on
+        generated files.</para>
 
-      <para>By default, Boost.Build handles such dependencies within one
-        main target. For example, assume that main target "app" has two
-        sources, "app.cpp" and "parser.y". The latter source is converted
-        into "parser.c" and "parser.h". Then, if "app.cpp" includes
-        "parser.h", Boost.Build will detect this dependency. Moreover,
-        since "parser.h" will be generated into a build directory, the
-        path to that directory will automatically added to include
-        path.</para>
+      <para>By default, Boost.Build handles such dependencies within one main
+        target. For example, assume that main target "app" has two sources,
+        "app.cpp" and "parser.y". The latter source is converted into "parser.c"
+        and "parser.h". Then, if "app.cpp" includes "parser.h", Boost.Build will
+        detect this dependency. Moreover, since "parser.h" will be generated
+        into a build directory, the path to that directory will automatically
+        added to include path.</para>
 
       <para>Making this mechanism work across main target boundaries is
-        possible, but imposes certain overhead. For that reason, if
-        there's implicit dependency on files from other main targets, the
-        <literal>&lt;implicit-dependency&gt;</literal> [ link ] feature must
-        be used, for example:</para>
+        possible, but imposes certain overhead. For that reason, if there is
+        implicit dependency on files from other main targets, the
+        <literal>&lt;implicit-dependency&gt;</literal> [ link ] feature must be
+        used, for example:</para>
 
 <programlisting>
 lib parser : parser.y ;
@@ -682,9 +682,9 @@ exe app : app.cpp : &lt;implicit-dependency&gt;parser ;
 </programlisting>
 
       <para>
-        The above example tells the build system that when scanning
-        all sources of "app" for implicit-dependencies, it should consider
-        targets from "parser" as potential dependencies.
+        The above example tells the build system that when scanning all sources
+        of "app" for implicit-dependencies, it should consider targets from
+        "parser" as potential dependencies.
       </para>
 </section>
 
