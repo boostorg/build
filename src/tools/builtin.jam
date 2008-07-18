@@ -386,6 +386,7 @@ class c-scanner : scanner
     import path ;
     import regex ;
     import scanner ;
+    import sequence ;
     import virtual-target ;
 
     rule __init__ ( includes * )
@@ -394,7 +395,8 @@ class c-scanner : scanner
 
         for local i in $(includes)
         {
-            self.includes += [ path.native $(i:G=) ] ;
+            self.includes += [ sequence.transform path.native
+                                : [ regex.split $(i:G=) "&&" ] ] ;
         }
     }
 
