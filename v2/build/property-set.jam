@@ -378,10 +378,15 @@ rule create-with-validation ( raw-properties * )
 #
 rule create-from-user-input ( raw-properties * : jamfile-module location )
 {
+    import project ;
+    import path ;
     local specification = [ property.translate-paths $(raw-properties)
         : $(location) ] ;
     specification = [ property.translate-indirect $(specification)
         : $(jamfile-module) ] ;
+    local project-id = [ project.attribute $(jamfile-module) id ] ;
+    project-id ?= [ path.root [ project.attribute $(jamfile-module) location ] [ path.pwd ] ] ;
+    specification = [ property.translate-dependencies $(specification) : $(project-id) ] ;
     specification =
         [ property.expand-subfeatures-in-conditions $(specification) ] ;
     specification = [ property.make $(specification) ] ;
