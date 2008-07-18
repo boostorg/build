@@ -526,9 +526,12 @@ rule translate-dependencies ( specification * : project-id )
 
         if dependency in [ feature.attributes $(p:G) ]
         {
-            if [ regex.match (.*//.*) : $(p:G=) ] {
+            if [ regex.match (.*//.*) : $(p:G=) ]
+            {
                 result += $(condition)$(p) ;
-            } else {
+            }
+            else
+            {
                 result += $(condition)$(p:G)$(project-id)//$(p:G=) ;
             }
         }
