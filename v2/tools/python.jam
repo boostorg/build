@@ -1218,7 +1218,7 @@ rule capture-output ( target : sources * : properties * )
     local path-separator = [ os.path-separator [ translate-os $(target-os) ] ] ;
     local set-PYTHONPATH = [ common.variable-setting-command PYTHONPATH :
         $(PYTHONPATH:J=$(path-separator)) ] ;
-    LAUNCHER on $(target) = $(set-PYTHONPATH) [ on $(target) return $(PYTHON) ] ;
+    LAUNCHER on $(target) = $(set-PYTHONPATH) [ on $(target) return \"$(PYTHON)\" ] ;
 }
 
 
