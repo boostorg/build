@@ -511,6 +511,35 @@ rule translate-indirect ( specification * : context-module )
     return $(result) ;
 }
 
+rule translate-dependencies ( specification * : project-id )
+{
+    local result ;
+    for local p in $(specification)
+    {
+        local split = [ split-conditional $(p) ] ;
+        local condition = "" ;
+        if $(split)
+        {
+            condition = $(split[1]): ;
+            p = $(split[2]) ;
+        }
+
+        if dependency in [ feature.attributes $(p:G) ]
+        {
+            if [ regex.match (.*//.*) : $(p:G=) ] {
+                result += $(condition)$(p) ;
+            } else {
+                result += $(condition)$(p:G)$(project-id)//$(p:G=) ;
+            }
+        }
+        else
+        {
+            result += $(condition)$(p) ;
+        }
+    }
+    return $(result) ;
+}
+
 
 # Class maintaining a property set -> string mapping.
 #

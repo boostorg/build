@@ -168,7 +168,8 @@ tests = [ "rebuilds",
           "remove_requirement",
           "free_features_request",
           "file_name_handling",
-          "sort_rule"
+          "sort_rule",
+          "inherited_dependency"
           ]
 
 if os.name == 'posix':
