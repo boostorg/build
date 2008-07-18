@@ -5,6 +5,8 @@
 
 import "class" : new ;
 import feature ;
+import path ;
+import project ;
 import property ;
 import sequence ;
 import set ;
@@ -378,8 +380,6 @@ rule create-with-validation ( raw-properties * )
 #
 rule create-from-user-input ( raw-properties * : jamfile-module location )
 {
-    import project ;
-    import path ;
     local specification = [ property.translate-paths $(raw-properties)
         : $(location) ] ;
     specification = [ property.translate-indirect $(specification)
