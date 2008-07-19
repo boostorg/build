@@ -469,7 +469,8 @@ rule translate-paths ( properties * : path )
 # Assumes that all feature values that start with '@' are names of rules, used
 # in 'context-module'. Such rules can be either local to the module or global.
 # Converts such values into 'indirect-rule' format (see indirect.jam), so they
-# can be called from other modules.
+# can be called from other modules. Does nothing for such values that are
+# already in the 'indirect-rule' format.
 #
 rule translate-indirect ( specification * : context-module )
 {
@@ -482,7 +483,7 @@ rule translate-indirect ( specification * : context-module )
             local v ;
             if [ MATCH "^([^%]*)%([^%]+)$" : $(m) ]
             {
-                # Rule is already in indirect format.
+                # Rule is already in the 'indirect-rule' format.
                 v = $(m) ;
             }
             else

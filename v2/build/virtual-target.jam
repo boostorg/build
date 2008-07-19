@@ -358,7 +358,7 @@ class abstract-file-target : virtual-target
     rule grist ( )
     {
         # Depending on target, there may be different approaches to generating
-        # unique prefixes. We'll generate prefixes in the form
+        # unique prefixes. We generate prefixes in the form:
         # <one letter approach code> <the actual prefix>
         local path = [ path ] ;
         if $(path)

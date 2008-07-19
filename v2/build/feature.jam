@@ -433,8 +433,8 @@ local rule extend-feature ( feature : values * )
     }
     if ! $($(feature).values)
     {
-        # This is the first value specified for this feature,
-        # take it as default value
+        # This is the first value specified for this feature so make it be the
+        # default.
         $(feature).default = $(values[1]) ;
     }
     $(feature).values += $(values) ;
@@ -584,7 +584,7 @@ rule extend ( feature-or-property subfeature ? : values * )
     }
     else
     {
-        # If no subfeature was specified, we didn't expect to see a
+        # If no subfeature was specified, we do not expect to see a
         # value-string.
         if $(value-string)
         {
