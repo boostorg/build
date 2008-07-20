@@ -21,8 +21,8 @@ import set ;
 
 .ignore-requirements = ;
 
-# This is used only for testing, to make sure we don't get random extra elements
-# in paths.
+# This is used only for testing, to make sure we do not get random extra
+# elements in paths.
 if --ignore-toolset-requirements in [ modules.peek : ARGV ]
 {
     .ignore-requirements = 1 ;
@@ -101,7 +101,7 @@ rule flags (
                      #   <architecture>ia64/<address-model>
                      #
                      # Where both features are optional. Without this syntax
-                     # we'd be forced to define "default" values.
+                     # we would be forced to define "default" values.
 
     values * :       # The value to add to variable. If <feature> is specified,
                      # then the value of 'feature' will be added.
@@ -138,7 +138,7 @@ rule flags (
     if $(condition) && ! $(condition:G=) && ! $(hack-hack)
     {
         # We have condition in the form '<feature>', that is, without value.
-        # That's a previous syntax:
+        # That is an older syntax:
         #   flags gcc.link RPATH <dll-path> ;
         # for compatibility, convert it to
         #   flags gcc.link RPATH : <dll-path> ;
@@ -162,10 +162,10 @@ local rule add-flag ( rule-or-module : variable-name : condition * : values * )
 {
     .$(rule-or-module).flags += $(.flag-no) ;
 
-    # Store all flags for a module
+    # Store all flags for a module.
     local module_ = [ MATCH "([^.]*).*" : $(rule-or-module) ] ;
     .module-flags.$(module_) += $(.flag-no) ;
-    # Store flag-no -> rule-or-module mapping
+    # Store flag-no -> rule-or-module mapping.
     .rule-or-module.$(.flag-no) = $(rule-or-module) ;
 
     .$(rule-or-module).variable.$(.flag-no) += $(variable-name) ;
@@ -177,7 +177,7 @@ local rule add-flag ( rule-or-module : variable-name : condition * : values * )
 
 
 # Returns the first element of 'property-sets' which is a subset of
-# 'properties', or an empty list if no such element exists.
+# 'properties' or an empty list if no such element exists.
 #
 rule find-property-subset ( property-sets * : properties * )
 {
@@ -225,6 +225,9 @@ rule find-property-subset ( property-sets * : properties * )
 }
 
 
+# Returns a value to be added to some flag for some target based on the flag's
+# value definition and the given target's property set.
+#
 rule handle-flag-value ( value * : properties * )
 {
     local result ;
@@ -245,8 +248,8 @@ rule handle-flag-value ( value * : properties * )
                 local values ;
                 # Treat features with && in the value specially -- each
                 # &&-separated element is considered a separate value. This is
-                # needed to handle searched libraries, which must be in a
-                # specific order.
+                # needed to handle searched libraries or include paths, which
+                # may need to be in a specific order.
                 if ! [ MATCH (&&) : $(p:G=) ]
                 {
                     values = $(p:G=) ;
