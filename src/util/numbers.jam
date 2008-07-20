@@ -187,7 +187,7 @@ rule __test__ ( )
     assert.result 10000123456 : trim-leading-zeroes 10000123456 ;
     assert.result 10000       : trim-leading-zeroes 10000       ;
     assert.result 10000       : trim-leading-zeroes 00010000    ;
-                       
+
     assert.true  less 1 2 ;
     assert.true  less 1 12 ;
     assert.true  less 1 21 ;
