@@ -57,16 +57,16 @@ generators.override gcc.searched-lib-generator : searched-lib-generator ;
 #     xxx.dll      DLL
 #     libxxx.dll.a import library
 #
-# Note: user can always override by using the <tag>@rule
-#       This settings have been choosen, so that mingw
-#       is in line with msvc naming conventions. For
-#       cygwin the cygwin naming convention has been choosen.
+# Implementation notes:
+#   * User can always override this by using the <tag>@rule.
+#   * These settings have been chosen so that mingw is in line with msvc naming
+#     conventions.
+#   * For cygwin the cygwin naming convention has been chosen.
 
-# Make the "o" suffix used for gcc toolset on all
-# platforms
+# Make gcc toolset object files use the "o" suffix on all platforms.
 type.set-generated-target-suffix OBJ : <toolset>gcc : o ;
-type.set-generated-target-suffix STATIC_LIB : <toolset>gcc <target-os>cygwin : a ;
 
+type.set-generated-target-suffix STATIC_LIB : <toolset>gcc <target-os>cygwin : a ;
 type.set-generated-target-suffix IMPORT_LIB : <toolset>gcc <target-os>cygwin : dll.a ;
 type.set-generated-target-prefix IMPORT_LIB : <toolset>gcc <target-os>cygwin : lib ;
 
@@ -76,10 +76,11 @@ import rc ;
 # be used to specify where the compiler is located. The parameter 'options' is a
 # space-delimited list of options, each one specified as
 # <option-name>option-value. Valid option names are: cxxflags, linkflags and
-# linker-type. Accepted linker-type values are gnu, darwin, osf, hpux or sun
-# and the default value will be selected based on the current OS.
+# linker-type. Accepted linker-type values are aix, darwin, gnu, hpux, osf or
+# sun and the default value will be selected based on the current OS.
 # Example:
 #   using gcc : 3.4 : : <cxxflags>foo <linkflags>bar <linker-type>sun ;
+#
 rule init ( version ? : command * : options * )
 {
     # Information about the gcc command...
@@ -286,7 +287,7 @@ generators.override gcc.compile.c++.pch : pch.default-cpp-pch-generator ;
 
 flags gcc.compile PCH_FILE <pch>on : <pch-file> ;
 
-# Declare flags and action for compilation
+# Declare flags and action for compilation.
 flags gcc.compile OPTIONS <optimization>off   : -O0 ;
 flags gcc.compile OPTIONS <optimization>speed : -O3 ;
 flags gcc.compile OPTIONS <optimization>space : -Os ;
@@ -306,10 +307,10 @@ flags gcc.compile OPTIONS <rtti>off : -fno-rtti ;
 
 # On cygwin and mingw, gcc generates position independent code by default, and
 # warns if -fPIC is specified. This might not be the right way of checking if
-# we're using cygwin. For example, it's possible to run cygwin gcc from NT
-# shell, or using crosscompiling. But we'll solve that problem when it's time.
-# In that case we'll just add another parameter to 'init' and move this login
-# inside 'init'.
+# we are using cygwin. For example, it is possible to run cygwin gcc from NT
+# shell, or using crosscompiling. But we shall solve that problem at a later
+# time. In that case we shall just add another parameter to 'init' and move this
+# login inside 'init'.
 if [ os.name ] != CYGWIN && [ os.name ] != NT
 {
     # This logic will add -fPIC for all compilations:
@@ -320,20 +321,20 @@ if [ os.name ] != CYGWIN && [ os.name ] != NT
     # obj d : d.cpp ;
     #
     # This all is fine, except that 'd' will be compiled with -fPIC even though
-    # it's not needed, as 'd' is used only in exe. However, it's hard to detect
-    # where a target is going to be used. Alternative, we can set -fPIC only
-    # when main target type is LIB but than 'b' will be compiled without -fPIC.
-    # In x86-64 that will lead to link errors. So, compile everything with
-    # -fPIC.
+    # it is not needed, as 'd' is used only in exe. However, it is hard to
+    # detect where a target is going to be used. Alternatively, we can set -fPIC
+    # only when main target type is LIB but than 'b' would be compiled without
+    # -fPIC which would lead to link errors on x86-64. So, compile everything
+    # with -fPIC.
     #
-    # Yet another alternative would be to create propagated <sharedable>
-    # feature, and set it when building shared libraries, but that's hard to
-    # implement and will increase target path length even more.
+    # Yet another alternative would be to create a propagated <sharedable>
+    # feature and set it when building shared libraries, but that would be hard
+    # to implement and would increase the target path length even more.
     flags gcc.compile OPTIONS <link>shared : -fPIC ;
 }
 if [ os.name ] != NT && [ os.name ] != OSF && [ os.name ] != HPUX && [ os.name ] != AIX
 {
-    # OSF does have an option called -soname but it doesn't seem to work as
+    # OSF does have an option called -soname but it does not seem to work as
     # expected, therefore it has been disabled.
     HAVE_SONAME   = "" ;
     SONAME_OPTION = -h ;
@@ -505,7 +506,7 @@ if [ os.name ] != HPUX
 }
 
 # Now, the vendor specific flags.
-# The parameter linker can be either gnu, darwin, osf, hpux or sun.
+# The parameter linker can be either aix, darwin, gnu, hpux, osf or sun.
 rule init-link-flags ( toolset linker condition )
 {
     switch $(linker)
@@ -645,10 +646,10 @@ rule init-link-flags ( toolset linker condition )
 
     case * :
         {
-            errors.user-error
+        errors.user-error
             "$(toolset) initialization: invalid linker '$(linker)'" :
             "The value '$(linker)' specified for <linker> is not recognized." :
-            "Possible values are 'gnu', 'darwin', 'osf', 'hpux' or 'sun'" ;
+            "Possible values are 'aix', 'darwin', 'gnu', 'hpux', 'osf' or 'sun'" ;
         }
     }
 }
@@ -679,7 +680,7 @@ flags gcc.archive AROPTIONS <archiveflags> ;
 
 rule archive ( targets * : sources * : properties * )
 {
-    # Always remove archive and start again. Here's rationale from
+    # Always remove archive and start again. Here is the rationale from
     #
     # Andre Hentz:
     #
@@ -723,13 +724,13 @@ rule link.dll ( targets * : sources * : properties * )
     JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
 }
 
-# Differ from 'link' above only by -shared.
+# Differs from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 }
 
-# Set up threading support. It's somewhat contrived, so perform it at the end,
+# Set up threading support. It is somewhat contrived, so perform it at the end,
 # to avoid cluttering other code.
 
 if [ os.on-windows ]
@@ -747,26 +748,27 @@ else if [ modules.peek : UNIX ]
         }
     case BeOS :
         {
-        # BeOS has no threading options, don't set anything here.
+        # BeOS has no threading options, so do not set anything here.
         }
     case *BSD :
         {
         flags gcc OPTIONS <threading>multi : -pthread ;
-        # there is no -lrt on BSD
+        # There is no -lrt on BSD.
         }
     case DragonFly :
         {
         flags gcc OPTIONS <threading>multi : -pthread ;
-        # there is no -lrt on BSD - DragonFly is a FreeBSD variant,
-        # which anoyingly doesn't say it's a *BSD.
+        # There is no -lrt on BSD - DragonFly is a FreeBSD variant, which
+        # annoyingly does not say it is a *BSD.
         }
     case IRIX :
         {
-        # gcc on IRIX does not support multi-threading, don't set anything here.
+        # gcc on IRIX does not support multi-threading so do not set anything
+        # here.
         }
     case Darwin :
         {
-        # Darwin has no threading options, don't set anything here.
+        # Darwin has no threading options so do not set anything here.
         }
     case * :
         {
