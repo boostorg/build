@@ -204,8 +204,8 @@ rule unique ( list * : stable ? )
 }
 
 
-# Returns the maximum number in 'elements'. Uses 'ordered' for comparisons, or
-# 'numbers.less' is none is provided.
+# Returns the maximum number in 'elements'. Uses 'ordered' for comparisons or
+# 'numbers.less' if none is provided.
 #
 rule max-element ( elements + : ordered ? )
 {
