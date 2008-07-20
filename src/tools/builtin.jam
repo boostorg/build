@@ -125,12 +125,12 @@ feature.feature location-prefix : : free ;
 #    unit-test a : a.cpp : <use>b ;
 #    lib b : a.cpp b ;
 #
-# Here, if <use> is not incidental, we'll decide we have two targets for a.obj
-# with different properties, and will complain.
+# Here, if <use> is not incidental, we would decide we have two targets for
+# a.obj with different properties and complain about it.
 #
-# Note that making feature incidental does not mean it's ignored. It may be
-# ignored when creating the virtual target, but the rest of build process will
-# use them.
+# Note that making a feature incidental does not mean it is ignored. It may be
+# ignored when creating a virtual target, but the rest of build process will use
+# them.
 feature.feature use                 : : free dependency incidental ;
 feature.feature dependency          : : free dependency incidental ;
 feature.feature implicit-dependency : : free dependency incidental ;
@@ -165,8 +165,8 @@ feature.feature hardcode-dll-paths  : true false : incidental ;
 
 
 # An internal feature that holds the paths of all dependency shared libraries.
-# On Windows, it's needed so that we can add all those paths to PATH when
-# running applications. On Linux, it's needed to add proper -rpath-link command
+# On Windows, it is needed so that we can add all those paths to PATH when
+# running applications. On Linux, it is needed to add proper -rpath-link command
 # line options.
 feature.feature xdll-path : : free path ;
 
@@ -207,7 +207,7 @@ feature.feature architecture :
 
     # HP/PA-RISC
     parisc
-    
+
     # Advanced RISC Machines
     arm
 
@@ -247,7 +247,7 @@ feature.feature instruction-set :
 
     # HP/PA-RISC
     700 7100 7100lc 7200 7300 8000
-    
+
     # Advanced RISC Machines
     armv2 armv2a armv3 armv3m armv4 armv4t armv5 armv5t armv5te armv6 armv6j iwmmxt ep9312
 
