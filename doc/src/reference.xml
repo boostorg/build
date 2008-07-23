@@ -769,6 +769,32 @@ path-constant DATA : data/a.txt ;
         </listitem>
       </varlistentry>
 
+      <varlistentry><term><literal>c++-template-depth</literal></term>
+        <indexterm><primary>64-bit compilation</primary></indexterm>
+        <listitem>
+          <para>
+            <emphasis role="bold">Allowed values:</emphasis> Any positive
+            integer.
+          </para>
+
+          <para>
+            This feature allows configuring a C++ compiler with the maximal
+            template instantiation depth parameter. Exact default values as well
+            as whether this feature is supported at all depend on the toolset
+            used.
+          </para>
+
+          <para>
+            <emphasis role="bold">Note:</emphasis> Due to some internal details
+            in the current Boost Build implementation it is not possible to have
+            features whose valid values are all positive integer. As a
+            workaround a large set of allowed values has been defined for this
+            feature and, if a different one is needed, user can easily add it by
+            calling the feature.extend rule.
+          </para>
+        </listitem>
+      </varlistentry>
+
     </variablelist>
   </section>
 

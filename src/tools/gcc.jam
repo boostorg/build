@@ -345,6 +345,8 @@ flags gcc.compile USER_OPTIONS <cflags> ;
 flags gcc.compile.c++ USER_OPTIONS <cxxflags> ;
 flags gcc.compile DEFINES <define> ;
 flags gcc.compile INCLUDES <include> ;
+flags gcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
+
 
 actions compile.c++.pch
 {
@@ -381,7 +383,7 @@ rule compile.c
 
 actions compile.c++ bind PCH_FILE
 {
-    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-128 $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<:W)" "$(>:W)"
+    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<:W)" "$(>:W)"
 }
 
 actions compile.c bind PCH_FILE

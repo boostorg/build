@@ -79,10 +79,13 @@ flags qcc.compile INCLUDES <include> ;
 
 flags qcc.compile OPTIONS <link>shared : -shared ;
 
+flags qcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
+feature.set-default c++-template-depth : 100 ;
+
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" -Wc,-ftemplate-depth-100 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -Wc,-ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.c

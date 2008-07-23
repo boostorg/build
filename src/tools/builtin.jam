@@ -15,6 +15,7 @@ import toolset : flags ;
 import errors : error ;
 import generate ;
 import generators ;
+import numbers ;
 import os ;
 import print ;
 import project ;
@@ -145,6 +146,33 @@ feature.feature warnings-as-errors :
     off        # Do not fail the compilation if there are warnings.
     on         # Fail the compilation if there are warnings.
   : incidental propagated ;
+
+# Feature that allows us to configure the maximal template instantiation depth
+# level allowed by a C++ compiler. Applies only to C++ toolsets whose compilers
+# actually support this configuration setting.
+#
+# Note that Boost Build currently does not allow defining features that take any
+# positive integral value as a parameter, which is what we need here, so we just
+# define some of the values here and leave it up to the user to extend this set
+# as he needs using the feature.extend rule.
+#
+# If a specific toolset requires a default value for this feature other than the
+# one defined here it should set the feature's default value using the
+# feature.set-default rule.
+#
+# TODO: This should be upgraded as soon as Boost Build adds support for custom
+# validated feature values or at least features allowing any positive integral
+# value. See related Boost Build related trac ticket #194.
+#
+feature.feature c++-template-depth
+    :
+        [ numbers.range 128 1024 : 128 ]
+        [ numbers.range  20 1000 :  10 ]
+        #   Maximum template instantiation depth guaranteed for ANSI/ISO C++
+        # conforming programs.
+        17
+    :
+        incidental propagated ;
 
 feature.feature source              :            : free dependency incidental ;
 feature.feature library             :            : free dependency incidental ;
