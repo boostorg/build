@@ -190,7 +190,7 @@ class quickbook-binary-generator : generator
                     [ $(quickbook-main-target[1]).main-target quickbook ] ;
 
                 quickbook-binary-dependencies =
-                    [ $(quickbook-main-target).generate $(property-set) ] ;
+                    [ $(quickbook-main-target).generate [ $(property-set).propagated ] ] ;
 
                 # Ignore usage-requirements returned as first element.
                 quickbook-binary-dependencies = $(quickbook-binary-dependencies[2-]) ;
