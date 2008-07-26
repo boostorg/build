@@ -111,9 +111,9 @@ rule make-test ( target-type : sources + : requirements * : target-name ? )
     }
 
     # Remember the test (for --dump-tests). A good way would be to collect all
-    # given a project. This has some technical problems: e.g. we can't call this
-    # dump from Jamfile since projects referred by 'build-project' are not
-    # available until the whole Jamfile is loaded.
+    # given a project. This has some technical problems: e.g. we can not call
+    # this dump from a Jamfile since projects referred by 'build-project' are
+    # not available until the whole Jamfile has been loaded.
     .all-tests += $(t) ;
     return $(t) ;
 }
