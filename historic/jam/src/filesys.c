@@ -19,7 +19,6 @@ file_build1(
             printf( "dir = '%.*s' ", f->f_dir.len, f->f_dir.ptr );
 	if( f->f_base.len )
             printf( "base = '%.*s' ", f->f_base.len, f->f_base.ptr );
-    printf( "\n" );
     }
 	
     /* Start with the grist.  If the current grist isn't */

@@ -479,12 +479,12 @@ int execwait()
     /* wait for a command to complete, while snarfing up any output */
     do
     {
-        /* check for a complete command, briefly */
-        i = try_wait(500);
         /* read in the output of all running commands */
         read_output();
         /* close out pending debug style dialogs */
         close_alerts();
+        /* check for a complete command, briefly */
+        if ( i < 0 ) i = try_wait(500);
         /* check if a command ran out of time */
         if ( i < 0 ) i = try_kill_one();
     }
@@ -499,16 +499,13 @@ int execwait()
         /* the time data for the command */
         record_times(cmdtab[i].pi.hProcess, &time);
 
-        /* clear the temp file */
+        /* Clear the temp file */
         if ( cmdtab[i].tempfile_bat )
         {
             unlink( cmdtab[ i ].tempfile_bat );
             BJAM_FREE(cmdtab[i].tempfile_bat);
             cmdtab[i].tempfile_bat = NULL;
         }
-
-        /* find out the process exit code */
-        GetExitCodeProcess( cmdtab[i].pi.hProcess, &cmdtab[i].exitcode );
 
         /* the dispossition of the command */
         if( intr )
@@ -887,39 +884,43 @@ static void read_output()
     }
 }
 
-/* Waits for a single child process command to complete, or the timeout,
-   whichever comes first. Returns the index of the completed command in the
-   cmdtab array, or -1. */
+/*  waits for a single child process command to complete, or the
+    timeout, whichever is first. returns the index of the completed
+    command, or -1. */
 static int try_wait(int timeoutMillis)
 {
-    int i;
-    int num_active;
-    int wait_api_result;
+    int i, num_active, waiting;
     HANDLE active_handles[MAXJOBS];
     int active_procs[MAXJOBS];
 
-    /* prepare a list of all active processes to wait for */
-    for ( num_active = 0, i = 0; i < globs.jobs; ++i )
+    for ( waiting = 1; waiting;  )
     {
-        if ( cmdtab[i].pi.hProcess )
+        /* find the first completed child process */
+        for ( num_active = 0, i = 0; i < globs.jobs; ++i )
         {
+            /* if we have an already dead process, return it. */
+            cmdtab[i].exitcode = 0;
+            if ( GetExitCodeProcess( cmdtab[i].pi.hProcess, &cmdtab[i].exitcode ) )
+            {
+                if ( STILL_ACTIVE != cmdtab[i].exitcode )
+                {
+                    return i;
+                }
+            }
+            /* it's running, add it to the list to watch for */
             active_handles[num_active] = cmdtab[i].pi.hProcess;
             active_procs[num_active] = i;
-            ++num_active;
+            num_active += 1;
+        }
+        
+        /* wait for a child to complete, or for our timeout window to expire */
+        if ( waiting )
+        {
+            WaitForMultipleObjects( num_active, active_handles, FALSE, timeoutMillis );
+            waiting = 0;
         }
     }
-
-    /* wait for a child to complete, or for our timeout window to expire */
-    wait_api_result = WaitForMultipleObjects( num_active, active_handles,
-        FALSE, timeoutMillis );
-    if ( ( WAIT_OBJECT_0 <= wait_api_result ) &&
-        ( wait_api_result < WAIT_OBJECT_0 + num_active ) )
-    {
-        /* terminated process detected - return its index */
-        return active_procs[ wait_api_result - WAIT_OBJECT_0 ];
-    }
-
-    /* timeout */
+    
     return -1;
 }
 
@@ -940,7 +941,9 @@ static int try_kill_one()
                 close_alert(cmdtab[i].pi.hProcess);
                 /* we have a "runaway" job, kill it */
                 kill_process_tree(0,cmdtab[i].pi.hProcess);
-                /* and return it marked as a timeout */
+                /* and return it as complete, with the failure code */
+                GetExitCodeProcess( cmdtab[i].pi.hProcess, &cmdtab[i].exitcode );
+                /* mark it as a timeout */
                 cmdtab[i].exit_reason = EXIT_TIMEOUT;
                 return i;
             }

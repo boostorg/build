@@ -41,7 +41,7 @@ sleeper 4.b
 [.b] 1
 [.b] 2
 ...updated 8 targets...
-" : (==) : [ SHELL "\"$(ARGV[1])\" -f parallel_actions.jam -sBJAM_SUBTEST=1 -j4" ] ;
+" : (==) : [ SHELL "$(ARGV[1]) -f parallel_actions.jam -sBJAM_SUBTEST=1 -j4" ] ;
 }
 else
 {
