@@ -749,12 +749,7 @@ void var_expand_unit_test()
     assert(l != 0);
     assert(list_next(l) == 0);
     # ifdef OS_CYGWIN
-    /* On some installations of cygwin the drive letter is expanded to other case. */
-    /* This has been reported to be the case if cygwin has been installed to C:\   */
-    /* as opposed to C:\cygwin                                                     */
-    /* Since case of the drive letter will not matter, we allow for both.          */
-    assert( 0 == strcmp( l->string, "c:\\foo\\bar" ) 
-              || 0 == strcmp( l->string, "C:\\foo\\bar") );
+    assert( !strcmp( l->string, "c:\\foo\\bar" ) );
     # else 
     assert( !strcmp( l->string, cygpath ) );
     # endif   

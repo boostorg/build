@@ -20,8 +20,7 @@ ECHO ###
 ECHO ### You can specify the toolset as the argument, i.e.:
 ECHO ###     .\build.bat msvc
 ECHO ###
-ECHO ### Toolsets supported by this script are: borland, como, gcc, gcc-nocygwin,
-ECHO ###     intel-win32, metrowerks, mingw, msvc, vc7, vc8, vc9
+ECHO ### Toolsets supported by this script are: borland, como, gcc, gcc-nocygwin, intel-win32, metrowerks, mingw, msvc, vc7, vc8
 ECHO ###
 set _error_=
 endlocal
@@ -41,7 +40,7 @@ goto :eof
 
 
 :Test_Option
-REM Tests whether the given string is in the form of an option: "--*"
+REM Tests wether the given string is in the form of an option: "--*"
 setlocal & endlocal
 setlocal
 set test=%1

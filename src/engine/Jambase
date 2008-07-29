@@ -18,10 +18,9 @@ if $(NT)
 }
 SLASH ?= / ;
 
-
-# Glob for patterns in the directories starting from the given start directory,
-# up to and including the root of the file-system. We stop globbing as soon as
-# we find at least one match.
+# Glob for patterns in the directories starting from the given
+# start directory, up to and including the root of the file-system.
+# We stop globbing as soon as we find at least one match.
 #
 rule find-to-root ( dir : patterns + )
 {
@@ -34,7 +33,6 @@ rule find-to-root ( dir : patterns + )
     return $(globs) ;
 }
 
-
 # This global will hold the location of the user's boost-build.jam file.
 .boost-build-file = ;
 
@@ -44,16 +42,16 @@ rule find-to-root ( dir : patterns + )
 # Remember the value of $(BOOST_BUILD_PATH) supplied to us by the user.
 BOOST_BUILD_PATH.user-value = $(BOOST_BUILD_PATH) ;
 
-# On Unix only, when BOOST_BUILD_PATH is not supplied by the user, set it to a
-# sensible default value. This allows Boost.Build to work without any
-# environment variables, which is good in itself and also required by the Debian
-# Policy.
+# On Unix only, when BOOST_BUILD_PATH is not supplied by user, put
+# sensible default value. This allowes Boost.Build to work without
+# any environment variables, which is good in itself and also
+# required by Debian Policy.
 if ! $(BOOST_BUILD_PATH) && $(UNIX)
 {
     BOOST_BUILD_PATH = /usr/share/boost-build ;
 }
 
-
+    
 rule _poke ( module-name ? : variables + : value * )
 {
     module $(<)
@@ -62,37 +60,41 @@ rule _poke ( module-name ? : variables + : value * )
     }
 }
 
-
-# This rule can be invoked from an optional user's boost-build.jam file to both
-# indicate where to find the build system files, and to load them. The path
-# indicated is relative to the location of the boost-build.jam file.
+# This rule can be invoked from an optional user's boost-build.jam
+# file to both indicate where to find the build system files, and to
+# load them. The path indicated is relative to the location of the
+# boost-build.jam file. 
 #
 rule boost-build ( dir ? )
 {
     if $(.bootstrap-file)
     {
-        ECHO "Error: Illegal attempt to re-bootstrap the build system by invoking" ;
+        EXIT "Error: Illegal attempt to re-bootstrap the build system by invoking" ;
         ECHO ;
         ECHO "   'boost-build" $(dir) ";'" ;
         ECHO ;
         EXIT "Please consult the documentation at 'http://www.boost.org'." ;
     }
-
-    # Add the given directory to the path so we can find the build system. If
-    # dir is empty, has no effect.
+    
+    # Add the given directory to the path so we can find the build
+    # system. If dir is empty, has no effect.
+    #
     BOOST_BUILD_PATH = $(dir:R=$(.boost-build-file:D)) $(BOOST_BUILD_PATH) ;
-
-    # We might have just modified the *global* value of BOOST_BUILD_PATH. The
-    # code that loads the rest of Boost.Build, in particular the site-config.jam
-    # and user-config.jam configuration files uses os.environ, so we need to
-    # update the value there.
+    
+    # We might have just modified the *global* value of BOOST_BUILD_PATH.
+    # The code that loads the rest of Boost.Build, in particular the 
+    # site-config.jam and user-config.jam files uses os.environ, so we need to
+    # update the value there.    
     _poke .ENVIRON : BOOST_BUILD_PATH : $(BOOST_BUILD_PATH) ;
-
+            
     # Try to find the build system bootstrap file 'bootstrap.jam'.
-    local bootstrap-file = [ GLOB $(BOOST_BUILD_PATH) : bootstrap.jam ] ;
+    #
+    local bootstrap-file =
+        [ GLOB $(BOOST_BUILD_PATH) : bootstrap.jam ] ;
     .bootstrap-file = $(bootstrap-file[1]) ;
-
-    # There is no bootstrap.jam we can find, exit with an error.
+            
+    # There is no boost-build.jam we can find, exit with an error
+    #
     if ! $(.bootstrap-file)
     {
         ECHO "Unable to load Boost.Build: could not find build system." ;
@@ -106,43 +108,44 @@ rule boost-build ( dir ? )
         ECHO ;
         EXIT "Please consult the documentation at 'http://www.boost.org'." ;
     }
-
+    
     if [ MATCH .*(--debug-configuration).* : $(ARGV) ]
     {
-        ECHO "notice: loading Boost.Build from"
-            [ NORMALIZE_PATH $(.bootstrap-file:D) ] ;
+        ECHO "notice: loading Boost.Build from" 
+          [ NORMALIZE_PATH $(.bootstrap-file:D) ] ;
     }
-
+           
     # Load the build system, now that we know where to start from.
+    #
     include $(.bootstrap-file) ;
 }
 
 
 if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
-  || $(BOOST_ROOT)    # A temporary measure so Jam works with Boost.Build v1.
+  || $(BOOST_ROOT)    # A temporary measure so Jam works with Boost.Build v1
 {
-    # We attempt to load "boost-build.jam" by searching from the current
-    # invocation directory up to the root of the file-system.
+    # We attempt to load "boost-build.jam" by searching from the current invocation directory
+    # up to the root of the file-system.
     #
-    # boost-build.jam is expected to invoke the "boost-build" rule to load the
-    # Boost.Build files.
-
+    # boost-build.jam is expected to invoke the "boost-build" rule to
+    # load the Boost.Build files.
+    
     local search-path = $(BOOST_BUILD_PATH) $(BOOST_ROOT) ;
-
+    
     local boost-build-files =
         [ find-to-root [ PWD ] : boost-build.jam ]
-        # Another temporary measure so Jam works with Boost.Build v1.
+        # Another temporary measure so Jam works with Boost.Build v1
         [ GLOB $(search-path) : boost-build.jam ] ;
-
+    
     .boost-build-file = $(boost-build-files[1]) ;
-
-    # There is no boost-build.jam we can find, exit with an error, and
-    # information.
+            
+    # There is no boost-build.jam we can find, exit with an error, and information.
+    #
     if ! $(.boost-build-file)
     {
         ECHO "Unable to load Boost.Build: could not find \"boost-build.jam\"" ;
         ECHO --------------------------------------------------------------- ;
-
+        
         if ! [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
         {
             ECHO "BOOST_ROOT must be set, either in the environment, or " ;
@@ -155,21 +158,23 @@ if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
         ECHO "and in these directories from BOOST_BUILD_PATH and BOOST_ROOT: "$(search-path:J=", ")"." ;
         EXIT "Please consult the documentation at 'http://www.boost.org'." ;
     }
-
-    if [ MATCH .*(--debug-configuration).* : $(ARGV) ]
+    
+    if [ MATCH .*(--debug-configuration).* : $(ARGV) ]      
     {
-        ECHO "notice: found boost-build.jam at"
-            [ NORMALIZE_PATH $(.boost-build-file) ] ;
+        ECHO "notice: found boost-build.jam at" 
+             [ NORMALIZE_PATH $(.boost-build-file) ] ;
     }
-
+    
     # Now load the boost-build.jam to get the build system loaded. This
     # incidentaly loads the users jamfile and attempts to build targets.
     #
-    # We also set it up so we can tell whether we are loading the new V2 system
-    # or the the old V1 system.
+    # We also set it up so we can tell wether we are loading the new V2
+    # system or the the old V1 system.
+    #
     include $(.boost-build-file) ;
-
+    
     # Check that, at minimum, the bootstrap file was found.
+    #
     if ! $(.bootstrap-file)
     {
         ECHO "Unable to load Boost.Build" ;
@@ -206,7 +211,7 @@ else
 # 01/08/95 (seiwald) - Shell now handled with awk, not sed
 # 01/09/95 (seiwald) - Install* now take dest directory as target
 # 01/10/95 (seiwald) - All entries sorted.
-# 01/10/95 (seiwald) - NT support moved in, with LauraW's help.
+# 01/10/95 (seiwald) - NT support moved in, with LauraW's help.  
 # 01/10/95 (seiwald) - VMS support moved in.
 # 02/06/95 (seiwald) - ObjectC++Flags and SubDirC++Flags added.
 # 02/07/95 (seiwald) - Iron out when HDRSEARCH uses "" or SEARCH_SOURCE.
@@ -222,14 +227,14 @@ else
 #
 # all       - parent of first, shell, files, lib, exe
 # first     - first dependent of 'all', for potential initialization
-# shell     - parent of all Shell targets
+# shell     - parent of all Shell targets 
 # files     - parent of all File targets
 # lib       - parent of all Library targets
 # exe       - parent of all Main targets
 # dirs      - parent of all MkDir targets
 # clean     - removes all Shell, File, Library, and Main targets
 # uninstall - removes all Install targets
-#
+#   
 
 # Rules defined by this file:
 #
@@ -309,7 +314,7 @@ else
 #   EXIT - blurt out targets and exit
 #   INCLUDES - marks sources as headers for target (a codependency)
 #   NOCARE - don't panic if the target can't be built
-#   NOUPDATE - create the target if needed but never update it
+#   NOUPDATE - create the target if needed but never update it 
 #   NOTFILE - ignore the timestamp of the target (it's not a file)
 #   TEMPORARY - target need not be present if sources haven't changed
 #
@@ -342,35 +347,35 @@ if $(NT)
     #
     local SUPPORTED_TOOLSETS = "BORLANDC" "VC7" "VISUALC" "VISUALC16" "INTELC" "WATCOM"
                                "MINGW" "LCC" ;
-
+  
     # this variable holds the current toolset
     #
     TOOLSET = "" ;
-
+    
     # if the JAM_TOOLSET environment variable is defined, check that it is
     # one of our supported values
     #
     if $(JAM_TOOLSET)
     {
       local t ;
-
+      
       for t in $(SUPPORTED_TOOLSETS)
       {
         $(t) = $($(t):J=" ") ; # reconstitute paths with spaces in them
         if $(t) = $(JAM_TOOLSET) { TOOLSET = $(t) ; }
       }
-
+      
       if ! $(TOOLSET)
       {
         ECHO  "The JAM_TOOLSET environment variable is defined but its value" ;
         ECHO  "is invalid, please use one of the following:" ;
         ECHO  ;
-
+        
         for t in $(SUPPORTED_TOOLSETS) { ECHO "  " $(t) ; }
         EXIT ;
       }
     }
-
+    
     # if TOOLSET is empty, we'll try to detect the toolset from other
     # environment variables to remain backwards compatible with Jam 2.3
     #
@@ -464,7 +469,7 @@ if $(NT)
     C++FLAGS    ?= $(CCFLAGS) ;
     LINK        ?= $(CC) ;
     LINKFLAGS   ?= $(CCFLAGS) ;
-    LINKLIBS    ?=
+    LINKLIBS    ?= 
                 \"$(VISUALC16)\\lib\\mlibce.lib\"
                 \"$(VISUALC16)\\lib\\oldnames.lib\"
                 ;
@@ -577,7 +582,7 @@ if $(NT)
     else if $(TOOLSET) = MINGW
     {
         ECHO "Compiler is GCC with Mingw" ;
-
+        
         AR              ?= ar -ru ;
         CC              ?= gcc ;
         CCFLAGS         ?= "" ;
@@ -595,7 +600,7 @@ if $(NT)
     else if $(TOOLSET) = LCC
     {
         ECHO "Compiler is Win32-LCC" ;
-
+        
         AR              ?= lcclib ;
         CC              ?= lcc ;
         CCFLAGS         ?= "" ;
@@ -611,7 +616,7 @@ if $(NT)
     {
 #
 # XXX: We need better comments here !!
-#
+#    
     EXIT On NT, set BCCROOT, MSVCNT, MINGW or MSVC to the root of the
         Borland or Microsoft directories. ;
     }
@@ -622,18 +627,18 @@ else if $(OS2)
     # the list of supported toolsets on Windows NT and Windows 95/98
     #
     local SUPPORTED_TOOLSETS = "EMX" "WATCOM" ;
-
+  
     # this variable holds the current toolset
     #
     TOOLSET = "" ;
-
+    
     # if the JAM_TOOLSET environment variable is defined, check that it is
     # one of our supported values
     #
     if $(JAM_TOOLSET)
     {
       local t ;
-
+      
       for t in $(SUPPORTED_TOOLSETS)
       {
         $(t) = $($(t):J=" ") ; # reconstitute paths with spaces in them
@@ -645,12 +650,12 @@ else if $(OS2)
         ECHO  "The JAM_TOOLSET environment variable is defined but its value" ;
         ECHO  "is invalid, please use one of the following:" ;
         ECHO  ;
-
+        
         for t in $(SUPPORTED_TOOLSETS) { ECHO "  " $(t) ; }
         EXIT ;
       }
     }
-
+    
     # if TOOLSET is empty, we'll try to detect the toolset from other
     # environment variables to remain backwards compatible with Jam 2.3
     #
@@ -693,7 +698,7 @@ else if $(OS2)
     SUFLIB  ?= .lib ;
     SUFOBJ  ?= .obj ;
     SUFEXE  ?= .exe ;
-
+  
     if $(TOOLSET) = WATCOM
     {
        AR           ?= wlib ;
@@ -764,7 +769,7 @@ else if $(VMS)
     SUFLIB      ?= .olb ;
     SUFOBJ      ?= .obj ;
 
-    switch $(OS)
+    switch $(OS) 
     {
     case OPENVMS : CCFLAGS  ?= /stand=vaxc ;
     case VMS     : LINKLIBS ?= sys$library:vaxcrtl.olb/lib ;
@@ -773,7 +778,7 @@ else if $(VMS)
 else if $(MAC)
 {
     local OPT ;
-
+    
     CW  ?= "{CW}" ;
 
     MACHDRS ?=
@@ -785,19 +790,19 @@ else if $(MAC)
         "$(CW):MacOS Support:Universal:Libraries:StubLibraries:Interfacelib"
         "$(CW):MacOS Support:Universal:Libraries:StubLibraries:Mathlib" ;
 
-    MPWLIBS ?=
+    MPWLIBS ?= 
         "$(CW):MacOS Support:Libraries:Runtime:Runtime PPC:MSL MPWCRuntime.lib"
         "$(CW):MSL:MSL_C:MSL_MacOS:Lib:PPC:MSL C.PPC MPW.Lib" ;
 
-    MPWNLLIBS ?=
+    MPWNLLIBS ?= 
         "$(CW):MacOS Support:Libraries:Runtime:Runtime PPC:MSL MPWCRuntime.lib"
         "$(CW):MSL:MSL_C:MSL_MacOS:Lib:PPC:MSL C.PPC MPW(NL).Lib" ;
-
+        
     SIOUXHDRS ?= ;
-
-    SIOUXLIBS ?=
+    
+    SIOUXLIBS ?= 
         "$(CW):MacOS Support:Libraries:Runtime:Runtime PPC:MSL RuntimePPC.lib"
-        "$(CW):MSL:MSL_C:MSL_MacOS:Lib:PPC:MSL SIOUX.PPC.Lib"
+        "$(CW):MSL:MSL_C:MSL_MacOS:Lib:PPC:MSL SIOUX.PPC.Lib" 
         "$(CW):MSL:MSL_C:MSL_MacOS:Lib:PPC:MSL C.PPC.Lib" ;
 
     C++         ?= mwcppc ;
@@ -809,15 +814,15 @@ else if $(MAC)
     DOTDOT      ?= "::" ;
     HDRS        ?= $(MACHDRS) $(MPWHDRS) ;
     LINK        ?= mwlinkppc ;
-    LINKFLAGS   ?= -mpwtool -warn ;
-    LINKLIBS    ?= $(MACLIBS) $(MPWLIBS) ;
+    LINKFLAGS   ?= -mpwtool -warn ;             
+    LINKLIBS    ?= $(MACLIBS) $(MPWLIBS) ;              
     MKDIR       ?= newfolder ;
     MV          ?= rename -y ;
     NOARSCAN    ?= true ;
     OPTIM       ?= ;
     RM          ?= delete -y ;
     SLASH       ?= ":" ;
-    STDHDRS     ?= ;
+    STDHDRS     ?= ; 
     SUFLIB      ?= .lib ;
     SUFOBJ      ?= .o ;
 }
@@ -837,7 +842,7 @@ else if $(OS) = BEOS && $(METROWERKS)
     NOARSCAN    ?= true ;
     STDHDRS     ?= /boot/develop/headers/posix ;
 }
-else if $(OS) = BEOS
+else if $(OS) = BEOS 
 {
     BINDIR      ?= /boot/apps ;
     CC          ?= gcc ;
@@ -860,7 +865,7 @@ else if $(UNIX)
     CC          ?= gcc ;
     YACC        ?= "bison -y" ;
 
-    case CYGWIN :
+    case CYGWIN :   
     CC          ?= gcc ;
     CCFLAGS     += -D__cygwin__ ;
     LEX         ?= flex ;
@@ -890,12 +895,12 @@ else if $(UNIX)
     C++         ?= gcc ;
     CCFLAGS     += -D_POSIX_SOURCE ;
     HDRS        += /usr/include ;
-    RANLIB      ?= "" ;
+    RANLIB      ?= "" ; 
     NOARSCAN    ?= true ;
     NOARUPDATE  ?= true ;
 
     case MVS :
-    RANLIB      ?= "" ;
+    RANLIB      ?= "" ; 
 
     case NEXT :
     AR          ?= libtool -o ;
@@ -1012,7 +1017,7 @@ else if $(UNIX)
     YACCFILES   ?= ;
     YACCFLAGS   ?= ;
 
-    HDRPATTERN =
+    HDRPATTERN = 
             "^[     ]*#[    ]*include[  ]*[<\"]([^\">]*)[\">].*$" ;
 
     OSFULL = $(OS)$(OSVER)$(OSPLAT) $(OS)$(OSPLAT) $(OS)$(OSVER) $(OS) ;
@@ -1132,7 +1137,7 @@ rule Fortran
     DEPENDS $(<) : $(>) ;
 }
 
-rule GenFile
+rule GenFile 
 {
     local _t = [ FGristSourceFiles $(<) ] ;
     local _s = [ FAppendSuffix $(>[1]) : $(SUFEXE) ] ;
@@ -1183,11 +1188,11 @@ rule HdrRule
 
     local s ;
 
-    if $(HDRGRIST)
-    {
+    if $(HDRGRIST) 
+    { 
         s = $(>:G=$(HDRGRIST)) ;
-    } else {
-        s = $(>) ;
+    } else { 
+        s = $(>) ; 
     }
 
     INCLUDES $(<) : $(s) ;
@@ -1231,14 +1236,14 @@ rule InstallInto
         Install $(tt) : $(i) ;
         Chmod $(tt) ;
 
-        if $(OWNER) && $(CHOWN)
-        {
+        if $(OWNER) && $(CHOWN) 
+        { 
         Chown $(tt) ;
         OWNER on $(tt) = $(OWNER) ;
         }
 
-        if $(GROUP) && $(CHGRP)
-        {
+        if $(GROUP) && $(CHGRP) 
+        { 
         Chgrp $(tt) ;
         GROUP on $(tt) = $(GROUP) ;
         }
@@ -1339,11 +1344,11 @@ rule LibraryFromObjects
         MakeLocate $(_l) $(_l)($(_s:BS)) : $(LOCATE_TARGET) ;
     }
 
-    if $(NOARSCAN)
-    {
+    if $(NOARSCAN) 
+    { 
         # If we can't scan the library to timestamp its contents,
         # we have to just make the library depend directly on the
-        # on-disk object files.
+        # on-disk object files.  
 
         DEPENDS $(_l) : $(_s) ;
     }
@@ -1441,12 +1446,12 @@ rule MkDir
 
     NOUPDATE $(<) ;
 
-    if $(<) != $(DOT) && ! $($(<)-mkdir)
+    if $(<) != $(DOT) && ! $($(<)-mkdir) 
     {
         local s ;
 
         # Cheesy gate to prevent multiple invocations on same dir
-        # MkDir1 has the actions
+        # MkDir1 has the actions 
         # Arrange for jam dirs
 
         $(<)-mkdir = true ;
@@ -1503,7 +1508,7 @@ rule Object
     # the regexp pattern $(HDRSCAN) and then invokes $(HDRRULE)
     # with the scanned file as the target and the found headers
     # as the sources.  HDRSEARCH is the value of SEARCH used for
-    # the found header files.  Finally, if jam must deal with
+    # the found header files.  Finally, if jam must deal with 
     # header files of the same name in different directories,
     # they can be distinguished with HDRGRIST.
 
@@ -1598,17 +1603,17 @@ rule SubDir
     #
     # SubDir TOP d1 [ ... ]
     #
-    # This introduces a Jamfile that is part of a project tree
+    # This introduces a Jamfile that is part of a project tree 
     # rooted at $(TOP).  It (only once) includes the project-specific
     # rules file $(TOP)/Jamrules and then sets search & locate stuff.
     #
-    # If the variable $(TOPRULES) is set (where TOP is the first arg
+    # If the variable $(TOPRULES) is set (where TOP is the first arg 
     # to SubDir), that file is included instead of $(TOP)/Jamrules.
     #
-    # d1 ... are the directory elements that lead to this directory
+    # d1 ... are the directory elements that lead to this directory 
     # from $(TOP).  We construct the system dependent path from these
     # directory elements in order to set search&locate stuff.
-    #
+    # 
 
     if ! $($(<[1]))
     {
@@ -1698,7 +1703,7 @@ rule SubInclude
     }
 
     _s = [ FDirName $(<[2-]) ] ;
-
+    
     include $(JAMFILE:D=$(_s):R=$($(<[1]))) ;
 }
 
@@ -1756,13 +1761,13 @@ rule FGrist
     return $(_g) ;
 }
 
-rule FGristFiles
+rule FGristFiles 
 {
     if ! $(SOURCE_GRIST)
     {
         return $(<) ;
     }
-    else
+    else 
     {
         return $(<:G=$(SOURCE_GRIST)) ;
     }
@@ -1770,7 +1775,7 @@ rule FGristFiles
 
 rule FGristSourceFiles
 {
-    # Produce source file name name with grist in it,
+    # Produce source file name name with grist in it, 
     # if SOURCE_GRIST is set.
 
     # Leave header files alone, because they have a global
@@ -1780,7 +1785,7 @@ rule FGristSourceFiles
     {
         return $(<) ;
     }
-    else
+    else 
     {
         local _i _o ;
 
@@ -1821,10 +1826,10 @@ rule FSubDir
     # path (using ../../ etc) back to that root directory.
     # Sets result in $(<)
 
-    if ! $(<[1])
+    if ! $(<[1]) 
     {
         _d = $(DOT) ;
-    }
+    } 
     else
     {
         _d = $(DOTDOT) ;
@@ -1872,7 +1877,7 @@ rule FDirName
     else if $(MAC)
     {
         _s = $(DOT) ;
-
+        
         for _i in $(<)
         {
             _s = $(_i:R=$(_s)) ;
@@ -1880,7 +1885,7 @@ rule FDirName
     }
     else
     {
-        _s = $(<[1]) ;
+        _s = $(<[1]) ; 
 
         for _i in $(<[2-])
         {
@@ -1935,7 +1940,7 @@ rule FRelPath
 rule FAppendSuffix
 {
        # E.g., "FAppendSuffix yacc lex foo.bat : $(SUFEXE) ;"
-       # returns (yacc,lex,foo.bat) on Unix and
+       # returns (yacc,lex,foo.bat) on Unix and 
        # (yacc.exe,lex.exe,foo.bat) on NT.
 
     if $(>)
@@ -1963,7 +1968,7 @@ rule FAppendSuffix
 
 rule unmakeDir
 {
-    if $(>[1]:D) && $(>[1]:D) != $(>[1]) && $(>[1]:D) != \\\\
+    if $(>[1]:D) && $(>[1]:D) != $(>[1]) && $(>[1]:D) != \\\\ 
     {
         unmakeDir $(<) : $(>[1]:D) $(>[1]:BS) $(>[2-]) ;
     }
@@ -1977,10 +1982,10 @@ rule unmakeDir
 rule FConvertToSlashes
 {
   local _d, _s, _i ;
-
+  
   unmakeDir _d : $(<) ;
-
-  _s = $(_d[1]) ;
+  
+  _s = $(_d[1]) ; 
   for _i in $(_d[2-])
   {
     _s = $(_s)/$(_i) ;
@@ -2059,7 +2064,7 @@ actions HardLink
 
 actions Install
 {
-    $(CP) $(>) $(<)
+    $(CP) $(>) $(<) 
 }
 
 actions Lex
@@ -2074,7 +2079,7 @@ actions LexMv
 
 actions Link bind NEEDLIBS
 {
-    $(LINK) $(LINKFLAGS) -o $(<) $(UNDEFS) $(>) $(NEEDLIBS) $(LINKLIBS)
+    $(LINK) $(LINKFLAGS) -o $(<) $(UNDEFS) $(>) $(NEEDLIBS) $(LINKLIBS) 
 }
 
 actions MkDir1
@@ -2247,7 +2252,7 @@ if $(NT)
   {
     actions together piecemeal Archive
     {
-    $(AR) $(<) +-$(>)
+    $(AR) $(<) +-$(>) 
     }
 
     actions Cc
@@ -2274,7 +2279,7 @@ if $(NT)
   {
     actions together piecemeal Archive
     {
-    $(AR) /out:$(<) $(>)
+    $(AR) /out:$(<) $(>) 
     }
 
     actions Cc
@@ -2298,13 +2303,13 @@ if $(NT)
 # OS2 specific actions
 #
 
-else if $(OS2)
+else if $(OS2)             
 {
   if $(TOOLSET) = WATCOM
   {
     actions together piecemeal Archive
     {
-    $(AR) $(<) +-$(>)
+    $(AR) $(<) +-$(>) 
     }
 
     actions Cc
@@ -2352,19 +2357,19 @@ else if $(OS2)
 
 else if $(VMS)
 {
-    actions updated together piecemeal Archive
+    actions updated together piecemeal Archive 
     {
     lib/replace $(<) $(>[1]) ,$(>[2-])
     }
 
     actions Cc
-    {
-    $(CC)/obj=$(<) $(CCFLAGS) $(OPTIM) $(SLASHINC) $(>)
+    { 
+    $(CC)/obj=$(<) $(CCFLAGS) $(OPTIM) $(SLASHINC) $(>) 
     }
 
     actions C++
-    {
-    $(C++)/obj=$(<) $(C++FLAGS) $(OPTIM) $(SLASHINC) $(>)
+    { 
+    $(C++)/obj=$(<) $(C++FLAGS) $(OPTIM) $(SLASHINC) $(>) 
     }
 
     actions piecemeal together existing Clean
@@ -2404,7 +2409,7 @@ else if $(VMS)
 
 else if $(MAC)
 {
-    actions together Archive
+    actions together Archive 
     {
     $(LINK) -library -o $(<) $(>)
     }
@@ -2412,13 +2417,13 @@ else if $(MAC)
     actions Cc
     {
     set -e MWCincludes $(MACINC)
-    $(CC) -o $(<) $(CCFLAGS) $(OPTIM) $(>)
+    $(CC) -o $(<) $(CCFLAGS) $(OPTIM) $(>) 
     }
 
     actions C++
-    {
+    { 
     set -e MWCincludes $(MACINC)
-    $(CC) -o $(<) $(C++FLAGS) $(OPTIM) $(>)
+    $(CC) -o $(<) $(C++FLAGS) $(OPTIM) $(>) 
     }
 
     actions Link bind NEEDLIBS
