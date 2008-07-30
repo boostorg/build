@@ -770,7 +770,6 @@ path-constant DATA : data/a.txt ;
       </varlistentry>
 
       <varlistentry><term><literal>c++-template-depth</literal></term>
-        <indexterm><primary>64-bit compilation</primary></indexterm>
         <listitem>
           <para>
             <emphasis role="bold">Allowed values:</emphasis> Any positive
@@ -779,9 +778,9 @@ path-constant DATA : data/a.txt ;
 
           <para>
             This feature allows configuring a C++ compiler with the maximal
-            template instantiation depth parameter. Exact default values as well
-            as whether this feature is supported at all depend on the toolset
-            used.
+            template instantiation depth parameter. Specific toolsets may or may
+            not provide support for this feature depending on whether their
+            compilers provide a corresponding command-line option.
           </para>
 
           <para>
