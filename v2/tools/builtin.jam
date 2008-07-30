@@ -156,6 +156,10 @@ feature.feature warnings-as-errors :
 # define some of the values here and leave it up to the user to extend this set
 # as he needs using the feature.extend rule.
 #
+# If a specific toolset requires a default value for this feature other than the
+# one defined here it should set the feature's default value using the
+# feature.set-default rule.
+#
 # TODO: This should be upgraded as soon as Boost Build adds support for custom
 # validated feature values or at least features allowing any positive integral
 # value. See related Boost Build related trac ticket #194.
@@ -168,7 +172,7 @@ feature.feature c++-template-depth
         # conforming programs.
         17
     :
-        incidental optional propagated ;
+        incidental propagated ;
 
 feature.feature source              :            : free dependency incidental ;
 feature.feature library             :            : free dependency incidental ;
