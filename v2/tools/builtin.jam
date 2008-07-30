@@ -162,8 +162,8 @@ feature.feature warnings-as-errors :
 #
 feature.feature c++-template-depth
     :
-        [ numbers.range 128 1024 : 128 ]
-        [ numbers.range  20 1000 :  10 ]
+        [ numbers.range 64 1024 : 64 ]
+        [ numbers.range 20 1000 : 10 ]
         #   Maximum template instantiation depth guaranteed for ANSI/ISO C++
         # conforming programs.
         17
