@@ -80,6 +80,7 @@ flags qcc.compile INCLUDES <include> ;
 flags qcc.compile OPTIONS <link>shared : -shared ;
 
 flags qcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
+feature.set-default c++-template-depth : 100 ;
 
 
 actions compile.c++
