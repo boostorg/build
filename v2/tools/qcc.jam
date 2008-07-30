@@ -80,8 +80,25 @@ flags qcc.compile INCLUDES <include> ;
 flags qcc.compile OPTIONS <link>shared : -shared ;
 
 flags qcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
-feature.set-default c++-template-depth : 100 ;
 
+
+rule compile.c++
+{
+    # Here we want to raise the template-depth parameter value to something
+    # higher than the default value of 17. Note that we could do this using the
+    # feature.set-default rule but we do not want to set the default value for
+    # all toolsets as well.
+    #
+    # TODO: This 'modified default' has been inherited from some 'older Boost
+    # Build implementation' and has most likely been added to make some Boost
+    # library parts compile correctly. We should see what exactly prompted this
+    # and whether we can get around the problem more locally.
+    local template-depth = [ on $(1) return $(TEMPLATE_DEPTH) ] ;
+    if ! $(template-depth)
+    {
+        TEMPLATE_DEPTH on $(1) = 100 ;
+    }
+}
 
 actions compile.c++
 {
