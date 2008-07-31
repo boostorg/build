@@ -564,16 +564,20 @@ static void free_argv( char** args )
     BJAM_FREE( args );
 }
 
+/* For more details on Windows cmd.exe shell command-line length limitations see
+ * the following MSDN article:
+ * 
+ *     http://support.microsoft.com/default.aspx?scid=kb;en-us;830473
+ */
 int maxline()
 {
     OSVERSIONINFO os_info;
     os_info.dwOSVersionInfoSize = sizeof(os_info);
     GetVersionEx(&os_info);
     
-    return (os_info.dwMajorVersion == 3)
-        ? 996 /* NT 3.5.1 */
-        : 2047 /* NT >= 4.x */
-        ;
+    if (os_info.dwMajorVersion >= 5) return 8191; /* XP >     */
+    if (os_info.dwMajorVersion == 4) return 2047; /* NT 4.x   */
+    return 996;                                   /* NT 3.5.1 */
 }
 
 /* Convert a command string into arguments for spawnvp.  The original
