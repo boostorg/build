@@ -650,6 +650,7 @@ local rule system-library-dependencies ( target-os )
         case windows : return ;
 
         case hpux : return  <library>rt ;
+        case *bsd : return  <library>pthread <toolset>gcc:<library>util ;
 
         case aix : return  <library>pthread <library>dl ;
 
