@@ -97,7 +97,7 @@ actions acc.link.dll bind NEEDLIBS
 
 actions acc.compile.c
 {
-    $(CONFIG_COMMAND) -Ae -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)" $(OPTIONS)
+    cc -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)" $(OPTIONS)
 }
 
 actions acc.compile.c++
