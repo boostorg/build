@@ -169,7 +169,8 @@ tests = [ "rebuilds",
           "free_features_request",
           "file_name_handling",
           "sort_rule",
-          "ordered_include"
+          "ordered_include",
+          "test_result_dumping"
           ]
 
 if os.name == 'posix':
