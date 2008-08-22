@@ -206,12 +206,10 @@ local rule locate-default-setup ( command : parent : setup-name )
 
 local rule configure-really ( version ? : options * )
 {
-    # Note that if no version supplied uses the default configuration condition
-    # remains versionless.
     local v = $(version) ;
     if ! $(v)
     {
-        # take the first detected version
+        # Take the first detected version.
         version = [ $(.versions).all ] ;
         version = $(version[1]) ;
         v = $(version) ;
@@ -221,13 +219,13 @@ local rule configure-really ( version ? : options * )
         version ?= "default" ;
     }
 
-    # Version alias -> real version number
+    # Version alias -> real version number.
     if $(.version-alias-$(version))
     {
         version = $(.version-alias-$(version)) ;
     }
 
-    # Check whether selected configuration is used already
+    # Check whether the selected configuration is already in use.
     if $(version) in [ $(.versions).used ]
     {
         # Allow multiple 'toolset.using' calls for the same configuration if the
@@ -311,10 +309,11 @@ local rule configure-really ( version ? : options * )
             # TODO: Note that if we specify a non-existant toolset version then
             # this rule may find and use a corresponding compiler executable
             # belonging to an incorrect toolset version. For example, if you
-            # have only MSVC 7.1 installed and specify you want Boost Build to
-            # use MSVC 9.0, then you want Boost Build to report an error but
-            # this may cause it to silently use the MSVC 7.1 compiler even
-            # though it thinks its using the msvc 9.0 toolset.
+            # have only MSVC 7.1 installed, have its executable on the path and
+            # specify you want Boost Build to use MSVC 9.0, then you want Boost
+            # Build to report an error but this may cause it to silently use the
+            # MSVC 7.1 compiler even though it thinks it is using the msvc-9.0
+            # toolset version.
             command = [ common.get-absolute-tool-path $(command[-1]) ] ;
 
             local parent = [ path.make $(command) ] ;
@@ -524,9 +523,10 @@ rule configure-version-specific ( toolset : version : conditions )
     toolset.push-checking-for-flags-module unchecked ;
     # Starting with versions 7.0, the msvc compiler have the /Zc:forScope and
     # /Zc:wchar_t options that improve C++ standard conformance, but those
-    # options are off by default. If we're sure that msvc version is at 7.*, add
-    # those options explicitly. We can be sure either if user specified version
-    # 7.* explicitly, or if the installation path contain 7.* (checked above).
+    # options are off by default. If we are sure that msvc version is at 7.*,
+    # add those options explicitly. We can be sure either if user specified
+    # version 7.* explicitly, or if the installation path contain 7.* (checked
+    # above).
     if ! [ MATCH ^(6\\.) : $(version) ]
     {
         toolset.flags $(toolset).compile CFLAGS $(conditions) : /Zc:forScope /Zc:wchar_t ;
@@ -546,7 +546,7 @@ rule configure-version-specific ( toolset : version : conditions )
     }
 
     #
-    # Processor-specific optimization
+    # Processor-specific optimization.
     #
 
     if [ MATCH ^([67]) : $(version) ]
@@ -590,7 +590,7 @@ rule configure-version-specific ( toolset : version : conditions )
 #
 local rule default-path ( version )
 {
-    # Use auto-detected path if possible
+    # Use auto-detected path if possible.
     local path = [ feature.get-values <command> :
         [ $(.versions).get $(version) : options ] ] ;
 
@@ -600,7 +600,7 @@ local rule default-path ( version )
     }
     else
     {
-        # Check environment
+        # Check environment.
         if $(.version-$(version)-env)
         {
             local vc-path = [ os.environ $(.version-$(version)-env) ] ;
@@ -614,7 +614,7 @@ local rule default-path ( version )
             }
         }
 
-        # Check default path
+        # Check default path.
         if ! $(path) && $(.version-$(version)-path)
         {
             path = [ path.native [ path.join $(.ProgramFiles) $(.version-$(version)-path) ] ] ;
@@ -659,7 +659,7 @@ generators.register-archiver msvc.archive : OBJ : STATIC_LIB : <toolset>msvc ;
 generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
 generators.register-c-compiler msvc.compile.c : C : OBJ : <toolset>msvc ;
 
-# Using 'register-c-compiler' adds the build directory to INCLUDES
+# Using 'register-c-compiler' adds the build directory to INCLUDES.
 generators.register-c-compiler msvc.compile.rc : RC : OBJ(%_res) : <toolset>msvc ;
 generators.override msvc.compile.rc : rc.compile.resource ;
 generators.register-standard msvc.compile.asm : ASM : OBJ : <toolset>msvc ;
@@ -680,7 +680,7 @@ class msvc-pch-generator : pch-generator
 
     rule run-pch ( project name ? : property-set : sources * )
     {
-        # Searching header and source file in the sources.
+        # Searching for the header and source file in the sources.
         local pch-header ;
         local pch-source ;
         for local s in $(sources)
@@ -699,10 +699,10 @@ class msvc-pch-generator : pch-generator
 
         if ! $(pch-header)
         {
-            errors.user-error "can't build pch without pch-header" ;
+            errors.user-error "can not build pch without pch-header" ;
         }
 
-        # If we don't have PCH source - that's fine. We'll just create a
+        # If we do not have the PCH source - that is fine. We will just create a
         # temporary .cpp file in the action.
 
         local generated = [ generator.run $(project) $(name)
@@ -883,7 +883,7 @@ actions compile.rc
 }
 
 
-# See midl.jam for details
+# See midl.jam for details.
 TOUCH_FILE = [ common.file-touch-command ] ;
 
 
@@ -899,8 +899,8 @@ actions compile.idl
 
 flags msvc.compile.asm USER_ASMFLAGS <asmflags> : ;
 
-#
-# for the assembler the following options are turned on by default:
+
+# For the assembler the following options are turned on by default:
 #
 # -coff  generate COFF format object file (compatible with cl.exe output)
 # -Zp4   align structures to 4 bytes
@@ -913,11 +913,11 @@ actions compile.asm
 }
 
 
-# Declare flags and action for linking
+# Declare flags and action for linking.
 flags msvc.link PDB_LINKFLAG <debug-symbols>on/<debug-store>database : /PDB: ;  # not used yet
 flags msvc.link LINKFLAGS <debug-symbols>on : /DEBUG ;
 flags msvc.link DEF_FILE <def-file> ;
-# The linker disables the default optimizations when using /DEBUG. Whe have to
+# The linker disables the default optimizations when using /DEBUG. We have to
 # enable them manually for release builds with debug symbols.
 flags msvc LINKFLAGS <debug-symbols>on/<runtime-debugging>off : /OPT:REF,ICF ;
 
@@ -967,9 +967,9 @@ else
 }
 
 
-# Incremental linking a DLL causes no end of problems: if the actual exports
-# do not change, the import .lib file is never updated. Therefore, the .lib is
-# always out-of-date and gets rebuilt every time. I'm not sure that incremental
+# Incremental linking a DLL causes no end of problems: if the actual exports do
+# not change, the import .lib file is never updated. Therefore, the .lib is
+# always out-of-date and gets rebuilt every time. I am not sure that incremental
 # linking is such a great idea in general, but in this case I am sure we do not
 # want it.
 
@@ -1041,7 +1041,7 @@ actions compile.mc
 .version-alias-9 = 9.0 ;
 
 # Name of the registry key that contains Visual C++ installation path
-#   (relative to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft"
+# (relative to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft").
 .version-6.0-reg = "VisualStudio\\6.0\\Setup\\Microsoft Visual C++" ;
 .version-7.0-reg = "VisualStudio\\7.0\\Setup\\VC" ;
 .version-7.1-reg = "VisualStudio\\7.1\\Setup\\VC" ;
@@ -1094,8 +1094,8 @@ if [ os.name ] in NT CYGWIN
             for local x in "" "Wow6432Node\\"
             {
                 vc-path += [ W32_GETREG
-                "HKEY_LOCAL_MACHINE\\SOFTWARE\\"$(x)"\\Microsoft\\"$(.version-$(i)-reg)
-                : "ProductDir" ] ;
+                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\"$(x)"\\Microsoft\\"$(.version-$(i)-reg)
+                    : "ProductDir" ] ;
             }
 
             if $(vc-path)

@@ -407,12 +407,12 @@ local rule process-explicit-toolset-requests
 
         if $(.debug-config)
         {
-            ECHO "notice: [cmdline-cfg] Detected command-line request for"
+            ECHO notice: [cmdline-cfg] Detected command-line request for
                 $(toolset-version): "toolset=" $(toolset) "version="
                 $(version) ;
         }
 
-        # If the toolset isn't known, configure it now.
+        # If the toolset is not known, configure it now.
         local known ;
         if $(toolset) in [ feature.values <toolset>  ]
         {
@@ -443,13 +443,14 @@ local rule process-explicit-toolset-requests
         }
 
         # Make sure we get an appropriate property into the build request in
-        # case toolset was specified using the "--toolset=..." command-line
+        # case toolset has been specified using the "--toolset=..." command-line
         # option form.
         if ! $(t) in $(.argv) && ! $(t) in $(feature-toolsets)
         {
             if $(.debug-config)
             {
-                ECHO notice: [cmdline-cfg] adding toolset=$(t) "to build request." ;
+                ECHO notice: [cmdline-cfg] adding toolset=$(t) to the build
+                    request. ;
             }
             extra-properties += toolset=$(t) ;
         }
@@ -546,7 +547,7 @@ local rule should-clean-project ( project )
         ECHO "warning: No toolsets are configured." ;
         ECHO "warning: Configuring default toolset" \"$(default-toolset)\". ;
         ECHO "warning: If the default is wrong, your build may not work correctly." ;
-        ECHO "warning: Use the \"--toolset=xxxxx\" option to override our guess." ;
+        ECHO "warning: Use the \"toolset=xxxxx\" option to override our guess." ;
         ECHO "warning: For more configuration options, please consult" ;
         ECHO "warning: http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html" ;
 

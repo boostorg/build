@@ -40,9 +40,9 @@ if [ MATCH (--show-configuration) : [ modules.peek : ARGV ] ]
 # A toolset configuration may be in one of the following states:
 #
 #   - registered
-#       Configuration has been registered (e.g. by autodetection code) but has
-#       not yet been marked as used, i.e. 'toolset.using' rule has not yet been
-#       called for it.
+#       Configuration has been registered (e.g. explicitly or by auto-detection
+#       code) but has not yet been marked as used, i.e. 'toolset.using' rule has
+#       not yet been called for it.
 #   - used
 #       Once called 'toolset.using' rule marks the configuration as 'used'.
 #
@@ -87,8 +87,8 @@ class configurations
     # Mark a configuration as 'used'.
     #
     # Returns 'true' if the state of the configuration has been changed to
-    # 'used' and an empty value if it the state wasn't changed. Reports an error
-    # if the configuration isn't known.
+    # 'used' and an empty value if it the state has not been changed. Reports an
+    # error if the configuration is not known.
     #
     rule use ( id )
     {
@@ -103,7 +103,7 @@ class configurations
         {
             self.used += $(id) ;
 
-            # indicate that the configuration has been marked as 'used'
+            # Indicate that the configuration has been marked as 'used'.
             retval = true ;
         }
 
@@ -174,7 +174,7 @@ rule check-init-parameters ( toolset requirement * : * )
             }
             # The below logic is for intel compiler. It calls this rule with
             # 'intel-linux' and 'intel-win' as toolset, so we need to get the
-            # base part of toolset name. We can't pass 'intel' as toolset
+            # base part of toolset name. We can not pass 'intel' as toolset
             # because in that case it will be impossible to register versionless
             # intel-linux and intel-win toolsets of a specific version.
             local t = $(toolset) ;
@@ -255,7 +255,7 @@ rule check-init-parameters ( toolset requirement * : * )
 # PATH and in the passed 'additional-path'. Otherwise, verifies that the first
 # element of 'user-provided-command' is an existing program.
 #
-# This rule returns the command to be used when invoking the tool. If we can't
+# This rule returns the command to be used when invoking the tool. If we can not
 # find the tool, a warning is issued. If 'path-last' is specified, PATH is
 # checked after 'additional-paths' when searching for 'tool'.
 #
@@ -268,7 +268,7 @@ rule get-invocation-command-nodefault (
         command = [ common.find-tool $(tool) : $(additional-paths) : $(path-last) ] ;
         if ! $(command) && $(.debug-configuration)
         {
-            ECHO "warning: toolset $(toolset) initialization: can't find tool $(tool)" ;
+            ECHO "warning: toolset $(toolset) initialization: can not find tool $(tool)" ;
             ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
         }
     }
@@ -278,7 +278,7 @@ rule get-invocation-command-nodefault (
         if ! $(command) && $(.debug-configuration)
         {
             ECHO "warning: toolset $(toolset) initialization: " ;
-            ECHO "warning: can't find user-provided command " '$(user-provided-command)' ;
+            ECHO "warning: can not find user-provided command " '$(user-provided-command)' ;
             ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
         }
     }

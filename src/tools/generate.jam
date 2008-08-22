@@ -2,9 +2,8 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-# Declares main target 'generate' that can be used to produce targets
-# by calling a user-provides rule, that takes virtual target and produces
-# virtual target.
+# Declares main target 'generate' used to produce targets by calling a
+# user-provided rule that takes and produces virtual targets.
 
 import targets ;
 import "class" : new ;
@@ -31,11 +30,10 @@ class generated-target-class : basic-target
         basic-target.__init__ $(name) : $(project) : $(sources)
             : $(requirements) : $(default-build) : $(usage-requirements) ;
 
-        local r = [ $(self.requirements).get <generating-rule> ] ;
-        if ! $(r)
+        if ! [ $(self.requirements).get <generating-rule> ]
         {
-            errors.user-error
-                "The generate rule requires <generating-rule> property to be set" ;
+            errors.user-error "The generate rule requires the <generating-rule>"
+                "property to be set" ;
         }
     }
 
@@ -44,8 +42,8 @@ class generated-target-class : basic-target
         local result ;
         local gr = [ $(property-set).get <generating-rule> ] ;
 
-        # FIXME: this is copy-paste from virtual-target.jam. Must
-        # have n utilty rule to call a rule like this.
+        # FIXME: this is a copy-paste from virtual-target.jam. We should add a
+        # utility rule to call a rule like this.
         local rule-name = [ MATCH ^@(.*) : $(gr) ] ;
         if $(rule-name)
         {
