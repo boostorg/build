@@ -6,7 +6,7 @@
 #  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
 #  http://www.boost.org/LICENSE_1_0.txt)
 
-import toolset : flags ;
+import toolset ;
 import property ;
 import generators ;
 import os ;
@@ -55,31 +55,31 @@ generators.register-c-compiler qcc.compile.asm : ASM : OBJ : <toolset>qcc ;
 
 
 # Declare flags for compilation.
-flags qcc.compile OPTIONS <debug-symbols>on : -gstabs+ ;
+toolset.flags qcc.compile OPTIONS <debug-symbols>on : -gstabs+ ;
 
 # Declare flags and action for compilation.
-flags qcc.compile OPTIONS <optimization>off : -O0 ;
-flags qcc.compile OPTIONS <optimization>speed : -O3 ;
-flags qcc.compile OPTIONS <optimization>space : -Os ;
+toolset.flags qcc.compile OPTIONS <optimization>off : -O0 ;
+toolset.flags qcc.compile OPTIONS <optimization>speed : -O3 ;
+toolset.flags qcc.compile OPTIONS <optimization>space : -Os ;
 
-flags qcc.compile OPTIONS <inlining>off : -Wc,-fno-inline ;
-flags qcc.compile OPTIONS <inlining>on : -Wc,-Wno-inline ;
-flags qcc.compile OPTIONS <inlining>full : -Wc,-finline-functions -Wc,-Wno-inline ;
+toolset.flags qcc.compile OPTIONS <inlining>off : -Wc,-fno-inline ;
+toolset.flags qcc.compile OPTIONS <inlining>on : -Wc,-Wno-inline ;
+toolset.flags qcc.compile OPTIONS <inlining>full : -Wc,-finline-functions -Wc,-Wno-inline ;
 
-flags qcc.compile OPTIONS <warnings>off : -w ;
-flags qcc.compile OPTIONS <warnings>all : -Wc,-Wall ;
-flags qcc.compile OPTIONS <warnings-as-errors>on : -Wc,-Werror ;
+toolset.flags qcc.compile OPTIONS <warnings>off : -w ;
+toolset.flags qcc.compile OPTIONS <warnings>all : -Wc,-Wall ;
+toolset.flags qcc.compile OPTIONS <warnings-as-errors>on : -Wc,-Werror ;
 
-flags qcc.compile OPTIONS <profiling>on : -p ;
+toolset.flags qcc.compile OPTIONS <profiling>on : -p ;
 
-flags qcc.compile OPTIONS <cflags> ;
-flags qcc.compile.c++ OPTIONS <cxxflags> ;
-flags qcc.compile DEFINES <define> ;
-flags qcc.compile INCLUDES <include> ;
+toolset.flags qcc.compile OPTIONS <cflags> ;
+toolset.flags qcc.compile.c++ OPTIONS <cxxflags> ;
+toolset.flags qcc.compile DEFINES <define> ;
+toolset.flags qcc.compile INCLUDES <include> ;
 
-flags qcc.compile OPTIONS <link>shared : -shared ;
+toolset.flags qcc.compile OPTIONS <link>shared : -shared ;
 
-flags qcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
+toolset.flags qcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
 
 
 rule compile.c++
@@ -166,23 +166,23 @@ generators.override qcc.searched-lib-generator : searched-lib-generator ;
 
 # Declare flags for linking.
 # First, the common flags.
-flags qcc.link OPTIONS <debug-symbols>on : -gstabs+ ;
-flags qcc.link OPTIONS <profiling>on : -p ;
-flags qcc.link OPTIONS <linkflags> ;
-flags qcc.link LINKPATH <library-path> ;
-flags qcc.link FINDLIBS-ST <find-static-library> ;
-flags qcc.link FINDLIBS-SA <find-shared-library> ;
-flags qcc.link LIBRARIES <library-file> ;
+toolset.flags qcc.link OPTIONS <debug-symbols>on : -gstabs+ ;
+toolset.flags qcc.link OPTIONS <profiling>on : -p ;
+toolset.flags qcc.link OPTIONS <linkflags> ;
+toolset.flags qcc.link LINKPATH <library-path> ;
+toolset.flags qcc.link FINDLIBS-ST <find-static-library> ;
+toolset.flags qcc.link FINDLIBS-SA <find-shared-library> ;
+toolset.flags qcc.link LIBRARIES <library-file> ;
 
-flags qcc.link FINDLIBS-SA : m ;
+toolset.flags qcc.link FINDLIBS-SA : m ;
 
 # For <runtime-link>static we made sure there are no dynamic libraries in the
 # link.
-flags qcc.link OPTIONS <runtime-link>static : -static ;
+toolset.flags qcc.link OPTIONS <runtime-link>static : -static ;
 
 # Assuming this is just like with gcc.
-flags qcc.link RPATH : <dll-path> : unchecked ;
-flags qcc.link RPATH_LINK : <xdll-path> : unchecked ;
+toolset.flags qcc.link RPATH : <dll-path> : unchecked ;
+toolset.flags qcc.link RPATH_LINK : <xdll-path> : unchecked ;
 
 
 # Declare actions for linking.

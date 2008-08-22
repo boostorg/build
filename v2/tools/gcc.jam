@@ -10,7 +10,7 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-import toolset : flags ;
+import toolset ;
 import property ;
 import generators ;
 import os ;
@@ -23,6 +23,7 @@ import errors ;
 import property-set ;
 import pch ;
 import regex ;
+
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
@@ -168,7 +169,7 @@ rule init ( version ? : command * : options * )
         {
             ECHO notice: using gcc libraries :: $(condition) :: $(lib_path) ;
         }
-        flags gcc.link RUN_PATH $(condition) : $(lib_path) ;
+        toolset.flags gcc.link RUN_PATH $(condition) : $(lib_path) ;
     }
 
     # If it's not a system gcc install we should adjust the various programs as
@@ -179,7 +180,7 @@ rule init ( version ? : command * : options * )
     local archiver =
         [ common.get-invocation-command gcc
             : ar : [ feature.get-values <archiver> : $(options) ] : $(bin) : search-path ] ;
-    flags gcc.archive .AR $(condition) : $(archiver[1]) ;
+    toolset.flags gcc.archive .AR $(condition) : $(archiver[1]) ;
     if $(.debug-configuration)
     {
         ECHO notice: using gcc archiver :: $(condition) :: $(archiver[1]) ;
@@ -285,25 +286,25 @@ generators.register [ new gcc-pch-generator gcc.compile.c++.pch : H : CPP_PCH : 
 generators.override gcc.compile.c.pch   : pch.default-c-pch-generator   ;
 generators.override gcc.compile.c++.pch : pch.default-cpp-pch-generator ;
 
-flags gcc.compile PCH_FILE <pch>on : <pch-file> ;
+toolset.flags gcc.compile PCH_FILE <pch>on : <pch-file> ;
 
 # Declare flags and action for compilation.
-flags gcc.compile OPTIONS <optimization>off   : -O0 ;
-flags gcc.compile OPTIONS <optimization>speed : -O3 ;
-flags gcc.compile OPTIONS <optimization>space : -Os ;
+toolset.flags gcc.compile OPTIONS <optimization>off   : -O0 ;
+toolset.flags gcc.compile OPTIONS <optimization>speed : -O3 ;
+toolset.flags gcc.compile OPTIONS <optimization>space : -Os ;
 
-flags gcc.compile OPTIONS <inlining>off  : -fno-inline ;
-flags gcc.compile OPTIONS <inlining>on   : -Wno-inline ;
-flags gcc.compile OPTIONS <inlining>full : -finline-functions -Wno-inline ;
+toolset.flags gcc.compile OPTIONS <inlining>off  : -fno-inline ;
+toolset.flags gcc.compile OPTIONS <inlining>on   : -Wno-inline ;
+toolset.flags gcc.compile OPTIONS <inlining>full : -finline-functions -Wno-inline ;
 
-flags gcc.compile OPTIONS <warnings>off : -w ;
-flags gcc.compile OPTIONS <warnings>on  : -Wall ;
-flags gcc.compile OPTIONS <warnings>all : -Wall -pedantic ;
-flags gcc.compile OPTIONS <warnings-as-errors>on : -Werror ;
+toolset.flags gcc.compile OPTIONS <warnings>off : -w ;
+toolset.flags gcc.compile OPTIONS <warnings>on  : -Wall ;
+toolset.flags gcc.compile OPTIONS <warnings>all : -Wall -pedantic ;
+toolset.flags gcc.compile OPTIONS <warnings-as-errors>on : -Werror ;
 
-flags gcc.compile OPTIONS <debug-symbols>on : -g ;
-flags gcc.compile OPTIONS <profiling>on : -pg ;
-flags gcc.compile OPTIONS <rtti>off : -fno-rtti ;
+toolset.flags gcc.compile OPTIONS <debug-symbols>on : -g ;
+toolset.flags gcc.compile OPTIONS <profiling>on : -pg ;
+toolset.flags gcc.compile OPTIONS <rtti>off : -fno-rtti ;
 
 # On cygwin and mingw, gcc generates position independent code by default, and
 # warns if -fPIC is specified. This might not be the right way of checking if
@@ -330,7 +331,7 @@ if [ os.name ] != CYGWIN && [ os.name ] != NT
     # Yet another alternative would be to create a propagated <sharedable>
     # feature and set it when building shared libraries, but that would be hard
     # to implement and would increase the target path length even more.
-    flags gcc.compile OPTIONS <link>shared : -fPIC ;
+    toolset.flags gcc.compile OPTIONS <link>shared : -fPIC ;
 }
 if [ os.name ] != NT && [ os.name ] != OSF && [ os.name ] != HPUX && [ os.name ] != AIX
 {
@@ -341,11 +342,11 @@ if [ os.name ] != NT && [ os.name ] != OSF && [ os.name ] != HPUX && [ os.name ]
 }
 
 
-flags gcc.compile USER_OPTIONS <cflags> ;
-flags gcc.compile.c++ USER_OPTIONS <cxxflags> ;
-flags gcc.compile DEFINES <define> ;
-flags gcc.compile INCLUDES <include> ;
-flags gcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
+toolset.flags gcc.compile USER_OPTIONS <cflags> ;
+toolset.flags gcc.compile.c++ USER_OPTIONS <cxxflags> ;
+toolset.flags gcc.compile DEFINES <define> ;
+toolset.flags gcc.compile INCLUDES <include> ;
+toolset.flags gcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
 
 
 actions compile.c++.pch
@@ -505,13 +506,13 @@ else
 
 # Declare flags for linking.
 # First, the common flags.
-flags gcc.link OPTIONS <debug-symbols>on : -g ;
-flags gcc.link OPTIONS <profiling>on : -pg ;
-flags gcc.link USER_OPTIONS <linkflags> ;
-flags gcc.link LINKPATH <library-path> ;
-flags gcc.link FINDLIBS-ST <find-static-library> ;
-flags gcc.link FINDLIBS-SA <find-shared-library> ;
-flags gcc.link LIBRARIES <library-file> ;
+toolset.flags gcc.link OPTIONS <debug-symbols>on : -g ;
+toolset.flags gcc.link OPTIONS <profiling>on : -pg ;
+toolset.flags gcc.link USER_OPTIONS <linkflags> ;
+toolset.flags gcc.link LINKPATH <library-path> ;
+toolset.flags gcc.link FINDLIBS-ST <find-static-library> ;
+toolset.flags gcc.link FINDLIBS-SA <find-shared-library> ;
+toolset.flags gcc.link LIBRARIES <library-file> ;
 
 # For <runtime-link>static we made sure there are no dynamic libraries in the
 # link. On HP-UX not all system libraries exist as archived libraries (for
@@ -519,7 +520,7 @@ flags gcc.link LIBRARIES <library-file> ;
 # cannot be specified.
 if [ os.name ] != HPUX
 {
-    flags gcc.link OPTIONS <runtime-link>static : -static ;
+    toolset.flags gcc.link OPTIONS <runtime-link>static : -static ;
 }
 
 # Now, the vendor specific flags.
@@ -528,17 +529,55 @@ rule init-link-flags ( toolset linker condition )
 {
     switch $(linker)
     {
+    case aix :
+        {
+        #
+        # On AIX we *have* to use the native linker.
+        #
+        # Using -brtl, the AIX linker will look for libraries with both the .a
+        # and .so extensions, such as libfoo.a and libfoo.so. Without -brtl, the
+        # AIX linker looks only for libfoo.a. Note that libfoo.a is an archived
+        # file that may contain shared objects and is different from static libs
+        # as on Linux.
+        #
+        # The -bnoipath strips the prepending (relative) path of libraries from
+        # the loader section in the target library or executable. Hence, during
+        # load-time LIBPATH (identical to LD_LIBRARY_PATH) or a hard-coded
+        # -blibpath (*similar* to -lrpath/-lrpath-link) is searched. Without
+        # this option, the prepending (relative) path + library name is
+        # hard-coded in the loader section, causing *only* this path to be
+        # searched during load-time. Note that the AIX linker does not have an
+        # -soname equivalent, this is as close as it gets.
+        #
+        # The above options are definately for AIX 5.x, and most likely also for
+        # AIX 4.x and AIX 6.x. For details about the AIX linker see:
+        # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
+        #
+
+        toolset.flags $(toolset).link OPTIONS : -Wl,-brtl -Wl,-bnoipath
+            : unchecked ;
+        }
+
+    case darwin :
+        {
+        # On Darwin, the -s option to ld does not work unless we pass -static,
+        # and passing -static unconditionally is a bad idea. So, don't pass -s.
+        # at all, darwin.jam will use separate 'strip' invocation.
+        toolset.flags $(toolset).link RPATH $(condition) : <dll-path> : unchecked ;
+        toolset.flags $(toolset).link RPATH_LINK $(condition) : <xdll-path> : unchecked ;
+        }
+
     case gnu :
         {
         # Strip the binary when no debugging is needed. We use --strip-all flag
         # as opposed to -s since icc (intel's compiler) is generally
         # option-compatible with and inherits from the gcc toolset, but does not
         # support -s.
-        flags $(toolset).link OPTIONS     $(condition)/<debug-symbols>off : -Wl,--strip-all   : unchecked ;
-        flags $(toolset).link RPATH       $(condition)                    : <dll-path>        : unchecked ;
-        flags $(toolset).link RPATH_LINK  $(condition)                    : <xdll-path>       : unchecked ;
-        flags $(toolset).link START-GROUP $(condition)                    : -Wl,--start-group : unchecked ;
-        flags $(toolset).link END-GROUP   $(condition)                    : -Wl,--end-group   : unchecked ;
+        toolset.flags $(toolset).link OPTIONS     $(condition)/<debug-symbols>off : -Wl,--strip-all   : unchecked ;
+        toolset.flags $(toolset).link RPATH       $(condition)                    : <dll-path>        : unchecked ;
+        toolset.flags $(toolset).link RPATH_LINK  $(condition)                    : <xdll-path>       : unchecked ;
+        toolset.flags $(toolset).link START-GROUP $(condition)                    : -Wl,--start-group : unchecked ;
+        toolset.flags $(toolset).link END-GROUP   $(condition)                    : -Wl,--end-group   : unchecked ;
 
         # gnu ld has the ability to change the search behaviour for libraries
         # referenced by -l switch. These modifiers are -Bstatic and -Bdynamic
@@ -572,49 +611,52 @@ rule init-link-flags ( toolset linker condition )
         # search patterns!
 
         # On *nix mixing shared libs with static runtime is not a good idea.
-        flags $(toolset).link FINDLIBS-ST-PFX $(condition)/<runtime-link>shared
+        toolset.flags $(toolset).link FINDLIBS-ST-PFX $(condition)/<runtime-link>shared
             : -Wl,-Bstatic : unchecked ;
-        flags $(toolset).link FINDLIBS-SA-PFX $(condition)/<runtime-link>shared
+        toolset.flags $(toolset).link FINDLIBS-SA-PFX $(condition)/<runtime-link>shared
             : -Wl,-Bdynamic : unchecked ;
 
         # On windows allow mixing of static and dynamic libs with static
         # runtime.
-        flags $(toolset).link FINDLIBS-ST-PFX $(condition)/<runtime-link>static/<target-os>windows
+        toolset.flags $(toolset).link FINDLIBS-ST-PFX $(condition)/<runtime-link>static/<target-os>windows
             : -Wl,-Bstatic : unchecked ;
-        flags $(toolset).link FINDLIBS-SA-PFX $(condition)/<runtime-link>static/<target-os>windows
+        toolset.flags $(toolset).link FINDLIBS-SA-PFX $(condition)/<runtime-link>static/<target-os>windows
             : -Wl,-Bdynamic : unchecked ;
-        flags $(toolset).link OPTIONS $(condition)/<runtime-link>static/<target-os>windows
+        toolset.flags $(toolset).link OPTIONS $(condition)/<runtime-link>static/<target-os>windows
             : -Wl,-Bstatic : unchecked ;
         }
 
-    case darwin :
+    case hpux :
         {
-        # On Darwin, the -s option to ld does not work unless we pass -static,
-        # and passing -static unconditionally is a bad idea. So, don't pass -s.
-        # at all, darwin.jam will use separate 'strip' invocation.
-        flags $(toolset).link RPATH $(condition) : <dll-path> : unchecked ;
-        flags $(toolset).link RPATH_LINK $(condition) : <xdll-path> : unchecked ;
+        toolset.flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off
+            : -Wl,-s : unchecked ;
+        toolset.flags $(toolset).link OPTIONS $(condition)/<link>shared
+            : -fPIC : unchecked ;
         }
 
     case osf :
         {
-            # No --strip-all, just -s.
-            flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off : -Wl,-s
-              : unchecked ;
-            flags $(toolset).link RPATH $(condition) : <dll-path> : unchecked ;
-            # This does not supports -R.
-            flags $(toolset).link RPATH_OPTION $(condition) : -rpath : unchecked ;
-            # -rpath-link is not supported at all.
+        # No --strip-all, just -s.
+        toolset.flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off
+            : -Wl,-s : unchecked ;
+        toolset.flags $(toolset).link RPATH $(condition) : <dll-path>
+            : unchecked ;
+        # This does not supports -R.
+        toolset.flags $(toolset).link RPATH_OPTION $(condition) : -rpath
+            : unchecked ;
+        # -rpath-link is not supported at all.
         }
 
     case sun :
         {
-        flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off : -Wl,-s
+        toolset.flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off
+            : -Wl,-s : unchecked ;
+        toolset.flags $(toolset).link RPATH $(condition) : <dll-path>
             : unchecked ;
-        flags $(toolset).link RPATH $(condition) : <dll-path> : unchecked ;
         # Solaris linker does not have a separate -rpath-link, but allows to use
         # -L for the same purpose.
-        flags $(toolset).link LINKPATH $(condition) : <xdll-path> : unchecked ;
+        toolset.flags $(toolset).link LINKPATH $(condition) : <xdll-path>
+            : unchecked ;
 
         # This permits shared libraries with non-PIC code on Solaris.
         # VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll, the
@@ -622,44 +664,9 @@ rule init-link-flags ( toolset linker condition )
         # separate question.
         # AH, 2004/10/16: it is still necessary because some tests link against
         # static libraries that were compiled without PIC.
-        flags $(toolset).link OPTIONS $(condition)/<link>shared : -mimpure-text
-            : unchecked ;
+        toolset.flags $(toolset).link OPTIONS $(condition)/<link>shared
+            : -mimpure-text : unchecked ;
         }
-
-    case hpux :
-        {
-            flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off
-                : -Wl,-s : unchecked ;
-            flags $(toolset).link OPTIONS $(condition)/<link>shared
-                : -fPIC : unchecked ;
-        }
-        
-    case aix :
-      {
-	  #
-	  # On AIX we *have* to use the native linker.
-	  #
-	  # Using -brtl, the AIX linker will look for libraries with both the .a and .so 
-	  # extensions, such as libfoo.a and libfoo.so. Without -brtl, the AIX linker 
-	  # looks only for libfoo.a. Note that libfoo.a is an archived file that may 
-	  # contain shared objects and is different from static libs as on Linux.
-	  #
-	  # The -bnoipath strips the prepending (relative) path of libraries from 
-	  # the loader section in the target library or executable. Hence, during load-
-	  # time LIBPATH (identical to LD_LIBRARY_PATH) or a hard-coded -blibpath 
-	  # (*similar* to -lrpath/-lrpath-link) is searched.  Without this option, 
-	  # the prepending (relative) path + library name is hard-coded in the loader 
-	  # section, causing *only* this path to be searched during load-time. 
-	  # Note that the AIX linker does not have an -soname equivalent, this
-	  # is as close as it gets.
-	  #
-	  # The above options are definately for AIX 5.x, and most likely also for
-	  # AIX 4.x and AIX 6.x. For details about AIX linker: 
-	  # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
-	  #
-	  
-	  flags $(toolset).link OPTIONS : -Wl,-brtl -Wl,-bnoipath : unchecked ;
-      }
 
     case * :
         {
@@ -693,7 +700,7 @@ actions link bind LIBRARIES
 # always available.
 .AR = ar ;
 
-flags gcc.archive AROPTIONS <archiveflags> ;
+toolset.flags gcc.archive AROPTIONS <archiveflags> ;
 
 rule archive ( targets * : sources * : properties * )
 {
@@ -752,7 +759,7 @@ actions link.dll bind LIBRARIES
 
 if [ os.on-windows ]
 {
-    flags gcc OPTIONS <threading>multi : -mthreads ;
+    toolset.flags gcc OPTIONS <threading>multi : -mthreads ;
 }
 else if [ modules.peek : UNIX ]
 {
@@ -760,8 +767,8 @@ else if [ modules.peek : UNIX ]
     {
     case SunOS* :
         {
-        flags gcc OPTIONS <threading>multi : -pthreads ;
-        flags gcc FINDLIBS-SA : rt ;
+        toolset.flags gcc OPTIONS <threading>multi : -pthreads ;
+        toolset.flags gcc FINDLIBS-SA : rt ;
         }
     case BeOS :
         {
@@ -769,12 +776,12 @@ else if [ modules.peek : UNIX ]
         }
     case *BSD :
         {
-        flags gcc OPTIONS <threading>multi : -pthread ;
+        toolset.flags gcc OPTIONS <threading>multi : -pthread ;
         # There is no -lrt on BSD.
         }
     case DragonFly :
         {
-        flags gcc OPTIONS <threading>multi : -pthread ;
+        toolset.flags gcc OPTIONS <threading>multi : -pthread ;
         # There is no -lrt on BSD - DragonFly is a FreeBSD variant, which
         # annoyingly does not say it is a *BSD.
         }
@@ -789,8 +796,8 @@ else if [ modules.peek : UNIX ]
         }
     case * :
         {
-        flags gcc OPTIONS <threading>multi : -pthread ;
-        flags gcc FINDLIBS-SA : rt ;
+        toolset.flags gcc OPTIONS <threading>multi : -pthread ;
+        toolset.flags gcc FINDLIBS-SA : rt ;
         }
     }
 }
@@ -799,11 +806,11 @@ local rule cpu-flags ( toolset variable : architecture : instruction-set + : val
 {
     if $(default)
     {
-        flags $(toolset) $(variable)
+        toolset.flags $(toolset) $(variable)
             <architecture>$(architecture)/<instruction-set>
             : $(values) ;
     }
-    flags $(toolset) $(variable)
+    toolset.flags $(toolset) $(variable)
         <architecture>/<instruction-set>$(instruction-set)
         <architecture>$(architecture)/<instruction-set>$(instruction-set)
         : $(values) ;
@@ -812,8 +819,8 @@ local rule cpu-flags ( toolset variable : architecture : instruction-set + : val
 # Set architecture/instruction-set options.
 #
 # x86 and compatible
-flags gcc OPTIONS <architecture>x86/<address-model>32 : -m32 ;
-flags gcc OPTIONS <architecture>x86/<address-model>64 : -m64 ;
+toolset.flags gcc OPTIONS <architecture>x86/<address-model>32 : -m32 ;
+toolset.flags gcc OPTIONS <architecture>x86/<address-model>64 : -m64 ;
 cpu-flags gcc OPTIONS : x86 : i386 : -march=i386 : default ;
 cpu-flags gcc OPTIONS : x86 : i486 : -march=i486 ;
 cpu-flags gcc OPTIONS : x86 : i586 : -march=i586 ;
@@ -847,8 +854,8 @@ cpu-flags gcc OPTIONS : x86 : winchip2 : -march=winchip2 ;
 cpu-flags gcc OPTIONS : x86 : c3 : -march=c3 ;
 cpu-flags gcc OPTIONS : x86 : c3-2 : -march=c3-2 ;
 # Sparc
-flags gcc OPTIONS <architecture>sparc/<address-model>32 : -m32 ;
-flags gcc OPTIONS <architecture>sparc/<address-model>64 : -m64 ;
+toolset.flags gcc OPTIONS <architecture>sparc/<address-model>32 : -m32 ;
+toolset.flags gcc OPTIONS <architecture>sparc/<address-model>64 : -m64 ;
 cpu-flags gcc OPTIONS : sparc : c3 : -mcpu=c3 : default ;
 cpu-flags gcc OPTIONS : sparc : v7 : -mcpu=v7 ;
 cpu-flags gcc OPTIONS : sparc : cypress : -mcpu=cypress ;
@@ -865,8 +872,8 @@ cpu-flags gcc OPTIONS : sparc : v9 : -mcpu=v9 ;
 cpu-flags gcc OPTIONS : sparc : ultrasparc : -mcpu=ultrasparc ;
 cpu-flags gcc OPTIONS : sparc : ultrasparc3 : -mcpu=ultrasparc3 ;
 # RS/6000 & PowerPC
-flags gcc OPTIONS <architecture>power/<address-model>32 : -m32 ;
-flags gcc OPTIONS <architecture>power/<address-model>64 : -m64 ;
+toolset.flags gcc OPTIONS <architecture>power/<address-model>32 : -m32 ;
+toolset.flags gcc OPTIONS <architecture>power/<address-model>64 : -m64 ;
 cpu-flags gcc OPTIONS : power : 403 : -mcpu=403 ;
 cpu-flags gcc OPTIONS : power : 505 : -mcpu=505 ;
 cpu-flags gcc OPTIONS : power : 601 : -mcpu=601 ;
@@ -900,6 +907,6 @@ cpu-flags gcc OPTIONS : power : rios2 : -mcpu=rios2 ;
 cpu-flags gcc OPTIONS : power : rsc : -mcpu=rsc ;
 cpu-flags gcc OPTIONS : power : rs64a : -mcpu=rs64 ;
 # AIX variant of RS/6000 & PowerPC
-flags gcc OPTIONS <architecture>power/<address-model>32/<target-os>aix : -maix32 ;
-flags gcc OPTIONS <architecture>power/<address-model>64/<target-os>aix : -maix64 ;
-flags gcc AROPTIONS <architecture>power/<address-model>64/<target-os>aix : "-X 64" ;
+toolset.flags gcc OPTIONS <architecture>power/<address-model>32/<target-os>aix : -maix32 ;
+toolset.flags gcc OPTIONS <architecture>power/<address-model>64/<target-os>aix : -maix64 ;
+toolset.flags gcc AROPTIONS <architecture>power/<address-model>64/<target-os>aix : "-X 64" ;
