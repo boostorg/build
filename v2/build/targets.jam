@@ -909,7 +909,7 @@ rule common-properties ( build-request requirements )
 
 # Given a 'context' -- a set of already present properties, and 'requirements',
 # decide which extra properties should be applied to 'context'. For conditional
-# requirements, this means evaluating condition. For indirect conditional
+# requirements, this means evaluating the condition. For indirect conditional
 # requirements, this means calling a rule. Ordinary requirements are always
 # applied.
 #
@@ -959,9 +959,10 @@ rule evaluate-requirements ( requirements : context : what )
     local current = $(raw) ;
 
     # It is assumed that ordinary conditional requirements can not add
-    # <indirect-conditional> properties, and that rules referred to by
-    # <indirect-conditional> properties can not add new <indirect-conditional>
-    # properties. So the list of indirect conditionals does not change.
+    # <conditional> properties (a.k.a. indirect conditional properties), and
+    # that rules referred to by <conditional> properties can not add new
+    # <conditional> properties. So the list of indirect conditionals does not
+    # change.
     local indirect = [ $(requirements).get <conditional> ] ;
     indirect = [ MATCH @(.*) : $(indirect) ] ;
 
@@ -980,7 +981,7 @@ rule evaluate-requirements ( requirements : context : what )
 
         if $(e) = $(added-requirements)
         {
-            # If we got the same result, we've found final properties.
+            # If we got the same result, we have found the final properties.
             count = ;
             ok = true ;
         }
@@ -1009,7 +1010,7 @@ rule evaluate-requirements ( requirements : context : what )
     }
     else
     {
-        errors.error "Invalid value of the 'what' parameter" ;
+        errors.error "Invalid value of the 'what' parameter." ;
     }
 }
 
