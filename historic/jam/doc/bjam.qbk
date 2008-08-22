@@ -1255,6 +1255,14 @@ A variable element's string value can be parsed into grist and filename-related 
 [[[^:L]]
  [Replace uppercase characters with lowercase.]]
 
+[[[^:T]]
+ [Converts all back-slashes ("\\") to forward slashes ("/"). For example
+`` 
+ x = "C:\\Program Files\\Borland" ; ECHO $(x:T) ;
+``
+prints [^"C:/Program Files/Borland"]
+]]
+
 [[[^:W]]
  [When invoking Windows-based tools from [@http://www.cygwin.com/ Cygwin] 
   it can be important to pass them true windows-style paths. The =:W= 
