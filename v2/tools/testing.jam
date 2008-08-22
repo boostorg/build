@@ -249,9 +249,9 @@ rule dump-test ( target )
                   [ path.pwd ] ] ;
 
             source-files +=
-              [ path.relative
-                  $(location)
-                  [ path.root $(project-root) [ path.pwd ] ] ] ;
+              [ path.relative-to
+                  [ path.root $(project-root) [ path.pwd ] ]
+                  $(location) ] ;
         }
     }
 
