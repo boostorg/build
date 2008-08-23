@@ -10,10 +10,8 @@
 
 import alias ;
 import "class" : new ;
-import feature : feature compose ;
-import toolset : flags ;
-import errors : error ;
-import generate ;
+import errors ;
+import feature ;
 import generators ;
 import numbers ;
 import os ;
@@ -24,10 +22,16 @@ import regex ;
 import scanner ;
 import stage ;
 import symlink ;
+import toolset ;
 import type ;
+import types/register ;
 import utility ;
 import virtual-target ;
-import types/register ;
+
+# FIXME: the following generate module import is not needed here but removing it
+# too hastly will break using code (e.g. the main Boost library Jamroot file)
+# that forgot to import the generate module before calling the generate rule.
+import generate ;
 
 
 .os-names = amiga aix bsd cygwin darwin dos emx freebsd hpux iphone linux netbsd
