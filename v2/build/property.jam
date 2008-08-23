@@ -513,6 +513,50 @@ rule translate-indirect ( specification * : context-module )
 }
 
 
+# Binds all dependency properties in a list relative to the given project.
+# Targets with absolute paths will be left unchanged and targets which have a
+# project specified will have the path to the project interpreted relative to
+# the specified location.
+#
+rule translate-dependencies ( specification * : project-id : location )
+{
+    local result ;
+    for local p in $(specification)
+    {
+        local split = [ split-conditional $(p) ] ;
+        local condition = "" ;
+        if $(split)
+        {
+            condition = $(split[1]): ;
+            p = $(split[2]) ;
+        }
+        if dependency in [ feature.attributes $(p:G) ]
+        {
+            local split-target = [ regex.match (.*)//(.*) : $(p:G=) ] ;
+            if $(split-target)
+            {
+                local rooted = [ path.root [ path.make $(split-target[1]) ]
+                     [ path.root $(location) [ path.pwd ] ] ] ;
+                result += $(condition)$(p:G)$(rooted)//$(split-target[2]) ;
+            }
+            else if [ path.is-rooted $(p:G=) ]
+            {
+                result += $(condition)$(p) ;
+            }
+            else
+            {
+                result += $(condition)$(p:G)$(project-id)//$(p:G=) ;
+            }
+        }
+        else
+        {
+            result += $(condition)$(p) ;
+        }
+    }
+    return $(result) ;
+}
+
+
 # Class maintaining a property set -> string mapping.
 #
 class property-map

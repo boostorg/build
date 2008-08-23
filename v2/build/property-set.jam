@@ -384,6 +384,10 @@ rule create-from-user-input ( raw-properties * : jamfile-module location )
         : $(location) ] ;
     specification = [ property.translate-indirect $(specification)
         : $(jamfile-module) ] ;
+    local project-id = [ project.attribute $(jamfile-module) id ] ;
+    project-id ?= [ path.root $(location) [ path.pwd ] ] ;
+    specification = [ property.translate-dependencies
+                      $(specification) : $(project-id) : $(location) ] ;
     specification =
         [ property.expand-subfeatures-in-conditions $(specification) ] ;
     specification = [ property.make $(specification) ] ;
