@@ -633,8 +633,14 @@ class project-attributes
             self.build-dir = [ path.root
                 [ path.make $(specification) ] $(self.location) ] ;
         }
-        else if ! $(attribute) in "id" "default-build" "location"
-            "source-location" "parent" "projects-to-build" "project-root"
+        else if $(attribute) = "id"
+        {
+            id = [ path.root $(specification) / ] ;
+            project.register-id $(id) : $(self.project-module) ;
+            self.id = $(id) ;
+        }
+        else if ! $(attribute) in "default-build" "location" "parent"
+            "projects-to-build" "project-root" "source-location"
         {
             errors.error "Invalid project attribute '$(attribute)' specified"
                 "for project at '$(self.location)'" ;
@@ -873,8 +879,6 @@ module project-rules
         local attributes = [ project.attributes $(__name__) ] ;
         if $(id)
         {
-           id = [ path.root $(id) / ] ;
-           project.register-id $(id) : $(__name__) ;
            $(attributes).set id : $(id) ;
         }
 
@@ -906,6 +910,9 @@ module project-rules
             # or wrong consequences.
             if $(location) && $(location) = [ $(attributes).get project-root ]
             {
+                # Re-read the project id, since it might have been changed in
+                # the project's attributes.
+                id = [ $(attributes).get id ] ;
                 # This is Jamroot.
                 if $(id)
                 {
