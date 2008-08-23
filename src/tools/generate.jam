@@ -5,14 +5,14 @@
 # Declares main target 'generate' used to produce targets by calling a
 # user-provided rule that takes and produces virtual targets.
 
-import targets ;
 import "class" : new ;
-import property ;
 import errors ;
-import regex ;
-import property-set ;
-import project ;
 import feature ;
+import project ;
+import property ;
+import property-set ;
+import targets ;
+import regex ;
 
 
 feature.feature generating-rule : : free ;
@@ -47,9 +47,11 @@ class generated-target-class : basic-target
         local rule-name = [ MATCH ^@(.*) : $(gr) ] ;
         if $(rule-name)
         {
-            if $(tag[2])
+            if $(gr[2])
             {
-                errors.error "<tag>@rulename is present but is not the only <tag> feature" ;
+                local target-name = [ full-name ] ;
+                errors.user-error "Multiple <generating-rule> properties"
+                    "encountered for target $(target-name)." ;
             }
 
             result = [ indirect.call $(rule-name) $(self.project) $(name)
@@ -77,8 +79,10 @@ class generated-target-class : basic-target
                 targets = $(result) ;
             }
         }
+        # FIXME: the following loop should be doable using sequence.transform or
+        # some similar utility rule.
         local rt ;
-        for t in $(targets)
+        for local t in $(targets)
         {
             rt += [ virtual-target.register $(t) ] ;
         }
