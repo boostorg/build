@@ -1509,10 +1509,10 @@ rule main-target-usage-requirements (
 {
     local project-usage-requirements = [ $(project).get usage-requirements ] ;
 
-    # We don't use 'refine-from-user-input' because:
-    # - I'm not sure if removing of parent's usage requirements makes sense
-    # - refining of usage requirements is not needed, since usage requirements
-    #   are always free.
+    # We do not use 'refine-from-user-input' because:
+    # - I am not sure if removing parent's usage requirements makes sense
+    # - refining usage requirements is not needed, since usage requirements are
+    #   always free.
     local usage-requirements = [ property-set.create-from-user-input
         $(specification)
         : [ $(project).project-module ] [ $(project).get location ] ] ;

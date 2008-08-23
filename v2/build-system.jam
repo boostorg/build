@@ -305,7 +305,7 @@ local rule load-configuration-files
     if $(uq)
     {
         test-config = $(uq) ;
-    }    
+    }
     if $(test-config)
     {
         local where =
@@ -366,7 +366,8 @@ local rule load-configuration-files
 
                 if $(.debug-config)
                 {
-                    ECHO "notice: Loading explicitly specified user configuration file:" ;
+                    ECHO "notice: Loading explicitly specified user"
+                        "configuration file:" ;
                     ECHO "    $(user-config)" ;
                 }
 
@@ -414,7 +415,7 @@ local rule process-explicit-toolset-requests
 
         # If the toolset is not known, configure it now.
         local known ;
-        if $(toolset) in [ feature.values <toolset>  ]
+        if $(toolset) in [ feature.values <toolset> ]
         {
             known = true ;
         }
@@ -423,6 +424,14 @@ local rule process-explicit-toolset-requests
         {
             known = ;
         }
+        # TODO: we should do 'using $(toolset)' in case no version has been
+        # specified and there are no versions defined for the given toolset to
+        # allow the toolset to configure its default version. For this we need
+        # to know how to detect whether a given toolset has any versions
+        # defined. An alternative would be to do this whenever version is not
+        # specified but that would require that toolsets correctly handle the
+        # case when their default version is configured multiple times which
+        # should be checked for all existing toolsets first.
 
         if ! $(known)
         {
@@ -616,7 +625,7 @@ local rule should-clean-project ( project )
     local virtual-targets ;
     local actual-targets ;
 
-    
+
     # Process each target specified on the command-line and convert it into
     # internal Boost Build target objects. Detect special clean target. If no
     # main Boost Build targets were explictly requested use the current project

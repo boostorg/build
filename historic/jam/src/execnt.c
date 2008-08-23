@@ -517,7 +517,7 @@ int execwait()
             rstat = EXEC_CMD_FAIL;
         else
             rstat = EXEC_CMD_OK;
-        
+
         /* output the action block */
         out_action(
             cmdtab[i].action.size > 0 ? cmdtab[i].action.value : 0,
