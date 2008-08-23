@@ -298,7 +298,7 @@ class generator
         # the top-level of a transformation graph, or if their name is passed
         # explicitly. Thus, we dissallow composing generators in the middle. For
         # example, the transformation CPP -> OBJ -> STATIC_LIB -> RSP -> EXE
-        # willl not be allowed as the OBJ -> STATIC_LIB generator is composing.
+        # will not be allowed as the OBJ -> STATIC_LIB generator is composing.
         if ! $(self.composing) || $(name)
         {
             run-really $(project) $(name) : $(property-set) : $(sources) ;
@@ -344,15 +344,20 @@ class generator
 
     # Constructs the dependency graph to be returned by this generator.
     #
-    rule construct-result (
-        consumed +        # Already prepared list of consumable targets. If
-                          # generator requires several source files, will
-                          # contain exactly len $(self.source-types) targets
-                          # with matching types. Otherwise, might contain
-                          # several targets with the type of
-                          # $(self.source-types[1]).
+    rule construct-result
+    (
+        consumed +        # Already prepared list of consumable targets.
+                          # Composing generators may receive multiple sources
+                          # all of which will have types matching those in 
+                          # $(self.source-types). Non-composing generators with
+                          # multiple $(self.source-types) will receive exactly
+                          # len $(self.source-types) sources with types matching
+                          # those in $(self.source-types). And non-composing
+                          # generators with only a single source type may
+                          # receive multiple sources with all of them of the
+                          # type listed in $(self.source-types).
         : project name ?
-        : property-set    # Properties to be used for all actions create here.
+        : property-set    # Properties to be used for all actions created here.
     )
     {
         local result ;
@@ -362,16 +367,14 @@ class generator
         {
             for local r in $(consumed)
             {
-                result += [ generated-targets $(r) : $(property-set) : $(project) $(name) ] ;
+                result += [ generated-targets $(r) : $(property-set) :
+                    $(project) $(name) ] ;
             }
         }
-        else
+        else if $(consumed)
         {
-            if $(consumed)
-            {
-                result += [ generated-targets $(consumed) : $(property-set)
-                            : $(project) $(name) ] ;
-            }
+            result += [ generated-targets $(consumed) : $(property-set) :
+                $(project) $(name) ] ;
         }
         return $(result) ;
     }
@@ -455,9 +458,9 @@ class generator
         return [ sequence.transform virtual-target.register : $(targets) ] ;
     }
 
-    # Attempts to convert 'source' to the types that this generator can handle.
-    # The intention is to produce the set of targets can should be used when the
-    # generator is run.
+    # Attempts to convert 'sources' to targets of types that this generator can
+    # handle. The intention is to produce the set of targets that can be used
+    # when the generator is run.
     #
     rule convert-to-consumable-types
     (
@@ -548,7 +551,8 @@ class generator
         $(bypassed-var) += $(_bypassed) ;
     }
 
-    # Converts several files to consumable types.
+    # Converts several files to consumable types. Called for composing
+    # generators only.
     #
     rule convert-multiple-sources-to-consumable-types ( project : property-set :
         sources * : consumed-var bypassed-var )
