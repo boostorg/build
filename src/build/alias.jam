@@ -54,7 +54,8 @@ class alias-target-class : basic-target
 
 # Declares the 'alias' target. It will build sources, and return them unaltered.
 #
-rule alias ( name : sources * : requirements * : default-build * : usage-requirements * )
+rule alias ( name : sources * : requirements * : default-build * :
+    usage-requirements * )
 {
     local project = [ project.current ] ;
 
