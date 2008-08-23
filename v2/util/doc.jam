@@ -606,7 +606,7 @@ local rule print-help-project (
     : jamfile *  # The project Jamfile.
 )
 {
-    if $(jamfile<$(jamfile)>.docs[1])
+    if $(jamfile<$(jamfile)>.docs)
     {
         # Print the docs.
         print.section "Project-specific help"
@@ -625,7 +625,7 @@ local rule print-help-config (
     config-file  # The configuration Jamfile.
 )
 {
-    if $(jamfile<$(config-file)>.docs[1])
+    if $(jamfile<$(config-file)>.docs)
     {
         # Print the docs.
         print.section "Configuration help"
@@ -649,7 +649,7 @@ local rule extract-comment (
     local l = [ MATCH "^[$(ws)]*(#)(.*)$" : $(line) ] ;
     while $(l[1]) && $($(var))
     {
-        if $(l[2]) { comment += [ MATCH "^[$(ws)](.*)$" : $(l[2]) ] ; }
+        if $(l[2]) { comment += [ MATCH "^[$(ws)]?(.*)$" : $(l[2]) ] ; }
         else { comment += "" ; }
         $(var) = $($(var)[2-]) ;
         line = $($(var)[1]) ;
@@ -908,7 +908,7 @@ rule scan-module (
             set-module-copyright $(module-name) : $(comment-block) ;
         }
         else if $(action[1]) in "print-help-project" "print-help-config"
-            && ! $(jamfile<$(target)>.docs[1])
+            && ! $(jamfile<$(target)>.docs)
         {
             # special module docs for the project jamfile.
             jamfile<$(target)>.docs = $(comment-block) ;
