@@ -68,7 +68,7 @@ rule register ( type : suffixes * : base-type ? )
         feature.compose <base-target-type>$(type) : <base-target-type>$(base-type) ;
 
         # We used to declare the main target rule only when a 'main' parameter
-        # was specified. However, it's hard to decide that a type will *never*
+        # was specified. However, it is hard to decide that a type will *never*
         # need a main target rule and so from time to time we needed to make yet
         # another type 'main'. So now a main target rule is defined for each
         # type.
@@ -361,9 +361,9 @@ local rule generated-target-ps ( ps : type : property-set )
 }
 
 
-# Returns file type given it's name. If there are several dots in filename,
-# tries each suffix. E.g. for name of "file.so.1.2" suffixes "2", "1", and "so"
-# will be tried.
+# Returns file type given its name. If there are several dots in filename, tries
+# each suffix. E.g. for name of "file.so.1.2" suffixes "2", "1", and "so" will
+# be tried.
 #
 rule type ( filename )
 {
