@@ -10,19 +10,21 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
-import toolset ;
-import property ;
-import generators ;
-import os ;
-import type ;
-import feature ;
 import "class" : new ;
-import set ;
 import common ;
 import errors ;
-import property-set ;
+import feature ;
+import generators ;
+import os ;
 import pch ;
+import property ;
+import property-set ;
+import toolset ;
+import type ;
+import rc ;
 import regex ;
+import set ;
+import unix ;
 
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
@@ -33,7 +35,6 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 feature.extend toolset : gcc ;
 
-import unix ;
 toolset.inherit-generators gcc : unix : unix.link unix.link.dll ;
 toolset.inherit-flags gcc : unix ;
 toolset.inherit-rules gcc : unix ;
@@ -71,7 +72,6 @@ type.set-generated-target-suffix STATIC_LIB : <toolset>gcc <target-os>cygwin : a
 type.set-generated-target-suffix IMPORT_LIB : <toolset>gcc <target-os>cygwin : dll.a ;
 type.set-generated-target-prefix IMPORT_LIB : <toolset>gcc <target-os>cygwin : lib ;
 
-import rc ;
 
 # Initializes the gcc toolset for the given version. If necessary, command may
 # be used to specify where the compiler is located. The parameter 'options' is a

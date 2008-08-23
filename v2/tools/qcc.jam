@@ -6,20 +6,20 @@
 #  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
 #  http://www.boost.org/LICENSE_1_0.txt)
 
-import toolset ;
-import property ;
-import generators ;
-import os ;
-import type ;
-import feature ;
 import "class" : new ;
-import set ;
 import common ;
 import errors ;
+import feature ;
+import generators ;
+import os ;
+import property ;
+import set ;
+import toolset ;
+import type ;
+import unix ;
 
 feature.extend toolset : qcc ;
 
-import unix ;
 toolset.inherit-generators qcc : unix : unix.link unix.link.dll ;
 generators.override builtin.lib-generator : qcc.prebuilt ;
 toolset.inherit-flags qcc : unix ;
