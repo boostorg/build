@@ -252,8 +252,8 @@ class property-set
     {
         if ! $(self.target-path)
         {
-            # The <location> feature can be used to explicitly
-            # change the location of generated targetsv
+            # The <location> feature can be used to explicitly change the
+            # location of generated targets.
             local l = [ get <location> ] ;
             if $(l)
             {
@@ -262,7 +262,7 @@ class property-set
             else
             {
                 local p = [ as-path ] ;
-                # Really, an ugly hack. Boost regression test system requires
+                # A real ugly hack. Boost regression test system requires
                 # specific target paths, and it seems that changing it to handle
                 # other directory layout is really hard. For that reason, we
                 # teach V2 to do the things regression system requires. The
