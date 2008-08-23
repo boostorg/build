@@ -868,9 +868,9 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
             framework-directory = $(framework-directory:D) ;
         }
 
-        if $(framework-directory) = Python.framework
+        if $(framework-directory:D=) = Python.framework
         {
-            debug-message framework directory is \"$(fwk)\" ;
+            debug-message framework directory is \"$(framework-directory)\" ;
         }
         else
         {
@@ -925,7 +925,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
           :
           : $(target-requirements)
           :
-          : $(usage-requirements) <framework>$(fwk)
+          : $(usage-requirements) <framework>$(framework-directory)
           ;
     }
     else
