@@ -315,13 +315,13 @@ install dist : hello
     <indexterm><primary>install-source-root</primary></indexterm>
 
     <para>
-      By default, the <code>install</code> rules will strip paths from its
+      By default, the <code>install</code> rule will strip paths from its
       sources. So, if sources include <filename>a/b/c.hpp</filename>, the
       <filename>a/b</filename> part will be ignored. To make the
       <code>install</code> rule preserve the directory hierarchy you need to
-      use the <code>install-source-root</code> feature to specify the root of
-      the hierarchy you are installing. Relative paths from that root will be
-      preserved. For example, if you write:
+      use the <literal>&lt;install-source-root&gt;</literal> feature to specify
+      the root of the hierarchy you are installing. Relative paths from that
+      root will be preserved. For example, if you write:
 <programlisting>
 install headers
     : a/b/c.h
