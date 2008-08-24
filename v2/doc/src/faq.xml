@@ -235,7 +235,7 @@ lib a : a.cpp : &lt;use&gt;b ;
     </para>
 
     <para>
-      The same approach works for searched libraries, too:
+      The same approach works for searched libraries as well:
 <programlisting>
 lib z ;
 lib png : : &lt;use&gt;z ;
@@ -246,7 +246,7 @@ exe viewer : viewer png z ;
 
   <section id="bbv2.faq.external">
     <title>
-      Can I get capture external program output in a Boost.Jam variable?
+      Can I get capture external program output using a Boost.Jam variable?
     </title>
 
     <para>
