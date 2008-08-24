@@ -168,9 +168,9 @@ rule check-init-parameters ( toolset requirement * : * )
             if $(.had-unspecified-value.$(toolset).$(name))
             {
                 errors.user-error
-                "$(toolset) initialization: parameter '$(name)' inconsistent" :
-                "no value was specified in earlier initialization" :
-                "an explicit value is specified now" ;
+                    "$(toolset) initialization: parameter '$(name)'"
+                    "inconsistent" : "no value was specified in earlier"
+                    "initialization" : "an explicit value is specified now" ;
             }
             # The below logic is for intel compiler. It calls this rule with
             # 'intel-linux' and 'intel-win' as toolset, so we need to get the
@@ -200,9 +200,9 @@ rule check-init-parameters ( toolset requirement * : * )
             if $(.had-value.$(toolset).$(name))
             {
                 errors.user-error
-                "$(toolset) initialization: parameter '$(name)' inconsistent" :
-                "an explicit value was specified in an earlier initialization" :
-                "no value is specified now" ;
+                    "$(toolset) initialization: parameter '$(name)'"
+                    "inconsistent" : "an explicit value was specified in an"
+                    "earlier initialization" : "no value is specified now" ;
             }
             .had-unspecified-value.$(toolset).$(name) = true ;
         }
@@ -259,8 +259,8 @@ rule check-init-parameters ( toolset requirement * : * )
 # find the tool, a warning is issued. If 'path-last' is specified, PATH is
 # checked after 'additional-paths' when searching for 'tool'.
 #
-rule get-invocation-command-nodefault (
-    toolset : tool : user-provided-command * : additional-paths * : path-last ? )
+rule get-invocation-command-nodefault ( toolset : tool :
+    user-provided-command * : additional-paths * : path-last ? )
 {
     local command ;
     if ! $(user-provided-command)
@@ -290,11 +290,11 @@ rule get-invocation-command-nodefault (
 # Same as get-invocation-command-nodefault, except that if no tool is found,
 # returns either the user-provided-command, if present, or the 'tool' parameter.
 #
-rule get-invocation-command (
-    toolset : tool : user-provided-command * : additional-paths * : path-last ? )
+rule get-invocation-command ( toolset : tool : user-provided-command * :
+    additional-paths * : path-last ? )
 {
-    local result = [ get-invocation-command-nodefault $(toolset) : $(tool)
-        : $(user-provided-command) : $(additional-paths) : $(path-last) ] ;
+    local result = [ get-invocation-command-nodefault $(toolset) : $(tool) :
+        $(user-provided-command) : $(additional-paths) : $(path-last) ] ;
 
     if ! $(result)
     {
@@ -334,7 +334,7 @@ rule get-absolute-tool-path ( command )
 # first path found. Otherwise, returns an empty string. If 'path-last' is
 # specified, PATH is searched after 'additional-paths'.
 #
-rule find-tool ( name : additional-paths * : path-last ? )
+local rule find-tool ( name : additional-paths * : path-last ? )
 {
     local path = [ path.programs-path ] ;
     local match = [ path.glob $(path) : $(name) $(name).exe ] ;
@@ -370,15 +370,16 @@ rule find-tool ( name : additional-paths * : path-last ? )
 # Checks if 'command' can be found either in path or is a full name to an
 # existing file.
 #
-rule check-tool-aux ( command )
+local rule check-tool-aux ( command )
 {
     if $(command:D)
     {
         if [ path.exists $(command) ]
             # Both NT and Cygwin will run .exe files by their unqualified names.
             || ( [ os.on-windows ] && [ path.exists $(command).exe ] )
-            # Only NT will run .bat files by their unqualified names.
-            || ( ( [ os.name ] = NT ) && [ path.exists $(command).bat ] )
+            # Only NT will run .bat & .cmd files by their unqualified names.
+            || ( ( [ os.name ] = NT ) && ( [ path.exists $(command).bat ] ||
+                [ path.exists $(command).cmd ] ) )
         {
             return $(command) ;
         }
@@ -397,7 +398,7 @@ rule check-tool-aux ( command )
 # path, checks if it can be found in 'path'. If comand is an absolute path,
 # check that it exists. Returns 'command' if ok or empty string otherwise.
 #
-rule check-tool ( xcommand + )
+local rule check-tool ( xcommand + )
 {
     if [ check-tool-aux $(xcommand[1]) ] ||
        [ check-tool-aux $(xcommand[-1]) ]
