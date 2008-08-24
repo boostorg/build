@@ -73,13 +73,13 @@ lib helpers : helpers.cpp ;
       <itemizedlist>
         <listitem>
           <para>
-            <term>Built libraries</term> that get built from specified sources,
+            <code>Built libraries</code> that get built from specified sources,
             as is the one in the example above. <!-- add link -->
           </para>
         </listitem>
         <listitem>
           <para>
-            <term>Prebuilt libraries</term> which already exist on the system
+            <code>Prebuilt libraries</code> which already exist on the system
             and are just supposed to be used by the build system. Such
             libraries may be searched for by the tools using them (typically
             linkers referencing the library using the <option>-l</option>
@@ -180,15 +180,15 @@ lib a : a.cpp : &lt;use&gt;b : : &lt;library&gt;b ;
     </note>
 
     <para>
-      One feature of Boost.Build that is very important for libraries is usage
-      requirements. <!-- Rephrase that. But then, it is much too late for an
-      introduction of usage requirements - you have already discussed them many
-      times. Also, add references to the sections describing requirements and
-      usage-requirements here. --> For example, imagine that you want you build
-      a <code>helpers</code> library and its interface is described in its
-      <code>helpers.hpp</code> header file located in the same directory as the
-      <code>helpers.cpp</code> source file. Then you could add the following to
-      the Jamfile located in that same directory:
+      One Boost.Build feature that is often very useful for defining library
+      targets are usage requirements. <!-- Rephrase that. But then, it is much
+      too late for an introduction of usage requirements - you have already
+      discussed them many times. Also, add references to the sections describing
+      requirements and usage-requirements here. --> For example, imagine that
+      you want you build a <code>helpers</code> library and its interface is
+      described in its <code>helpers.hpp</code> header file located in the same
+      directory as the <code>helpers.cpp</code> source file. Then you could add
+      the following to the Jamfile located in that same directory:
 <programlisting>
 lib helpers : helpers.cpp : : : &lt;include&gt;. ;
 </programlisting>
@@ -248,8 +248,8 @@ exe main : main.cpp static_libraries ;
     <title>Installing</title>
 
     <para>
-      This section describes various ways to install built target and
-      arbitrary files.
+      This section describes various ways to install built target and arbitrary
+      files.
     </para>
 
     <bridgehead>Basic install</bridgehead>
