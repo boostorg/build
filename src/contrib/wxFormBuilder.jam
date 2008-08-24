@@ -104,7 +104,7 @@ rule init ( executable ? )
     {
         if $(.debug-configuration)
         {
-            ECHO notice: [wxFormBuilder] Repeated initialization request
+            ECHO notice: [wxFormBuilder-cfg] Repeated initialization request
                 (executable \"$(executable:E="")\") detected and ignored. ;
         }
     }
@@ -114,7 +114,7 @@ rule init ( executable ? )
 
         if $(.debug-configuration)
         {
-            ECHO notice: [wxFormBuilder] Configuring wxFormBuilder... ;
+            ECHO notice: [wxFormBuilder-cfg] Configuring wxFormBuilder... ;
         }
 
         # Deduce the path to the used wxFormBuilder executable.
@@ -128,19 +128,19 @@ rule init ( executable ? )
             }
             else if $(.debug-configuration)
             {
-                ECHO notice: [wxFormBuilder] No wxFormBuilder path configured
-                    either explicitly or using the $(environmentVariable)
-                    environment variable. ;
-                ECHO notice: [wxFormBuilder] To avoid complications please
+                ECHO notice: [wxFormBuilder-cfg] No wxFormBuilder path
+                    configured either explicitly or using the
+                    $(environmentVariable) environment variable. ;
+                ECHO notice: [wxFormBuilder-cfg] To avoid complications please
                     update your configuration to includes a correct path to the
                     wxFormBuilder executable. ;
-                ECHO notice: [wxFormBuilder] wxFormBuilder executable will be
-                    searched for on the system path. ;
+                ECHO notice: [wxFormBuilder-cfg] wxFormBuilder executable will
+                    be searched for on the system path. ;
             }
         }
         if $(.debug-configuration)
         {
-            ECHO notice: [wxFormBuilder] Will use wxFormBuilder executable
+            ECHO notice: [wxFormBuilder-cfg] Will use wxFormBuilder executable
                 \"$(executable)\". ;
         }
 
