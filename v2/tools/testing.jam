@@ -3,51 +3,51 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-#  This module implements regression testing framework. It declares a number of
-#  main target rules which perform some action and, if the results are ok,
-#  creates an output file.
+# This module implements regression testing framework. It declares a number of
+# main target rules which perform some action and, if the results are OK,
+# creates an output file.
 #
-#  The exact list of rules is:
-#  'compile'       -- creates .test file if compilation of sources was
-#                     successful.
-#  'compile-fail'  -- creates .test file if compilation of sources failed.
-#  'run'           -- creates .test file is running of executable produced from
-#                     sources was successful. Also leaves behind .output file
-#                     with the output from program run.
-#  'run-fail'      -- same as above, but .test file is created if running fails.
+# The exact list of rules is:
+# 'compile'       -- creates .test file if compilation of sources was
+#                    successful.
+# 'compile-fail'  -- creates .test file if compilation of sources failed.
+# 'run'           -- creates .test file is running of executable produced from
+#                    sources was successful. Also leaves behind .output file
+#                    with the output from program run.
+# 'run-fail'      -- same as above, but .test file is created if running fails.
 #
-#  In all cases, presence of .test file is an indication that the test passed.
-#  For more convenient reporting, you might want to use C++ Boost regression
-#  testing utilities, see http://www.boost.org/more/regression.html
+# In all cases, presence of .test file is an indication that the test passed.
+# For more convenient reporting, you might want to use C++ Boost regression
+# testing utilities (see http://www.boost.org/more/regression.html).
 #
-#  For historical reason, a 'unit-test' rule is available which has the same
-#  syntax as 'exe' and behaves just like 'run'.
+# For historical reason, a 'unit-test' rule is available which has the same
+# syntax as 'exe' and behaves just like 'run'.
 
 # Things to do:
 #  - Teach compiler_status handle Jamfile.v2.
 # Notes:
-#  - <no-warn> is not implemented, since in Como-specific, and it's not clear
-#    how to implement it
-#  - std::locale-support is not implemented (it's used in one test).
+#  - <no-warn> is not implemented, since it is Como-specific, and it is not
+#    clear how to implement it
+#  - std::locale-support is not implemented (it is used in one test).
 
 
-import targets ;
-import "class" : new ;
-import property ;
-import feature ;
-import toolset ;
 import alias ;
-import type ;
-import generators ;
-import project ;
-import property-set ;
-import virtual-target ;
-import path ;
-import os ;
+import "class" : new ;
 import common ;
-import sequence ;
 import errors ;
+import feature ;
+import generators ;
+import os ;
+import path ;
+import project ;
+import property ;
+import property-set ;
 import regex ;
+import sequence ;
+import targets ;
+import toolset ;
+import type ;
+import virtual-target ;
 
 
 rule init ( )
@@ -81,17 +81,17 @@ type.register UNIT_TEST    : passed : TEST ;
 
 # Helper rule. Create a test target, using basename of first source if no target
 # name is explicitly passed. Remembers the created target in a global variable.
+#
 rule make-test ( target-type : sources + : requirements * : target-name ? )
 {
     target-name ?= $(sources[1]:D=:S=) ;
-    
-    # Having periods (".") in the target name is problematic because the
-    # typed generator will strip the suffix and use the bare name for the
-    # file targets. Even though the location-prefix averts problems most
-    # times it doesn't prevent ambiguity issues when referring to the
-    # test targets. For example when using the XML log output. So we
-    # rename the target to remove the periods, and provide an alias
-    # for users.
+
+    # Having periods (".") in the target name is problematic because the typed
+    # generator will strip the suffix and use the bare name for the file
+    # targets. Even though the location-prefix averts problems most times it
+    # does not prevent ambiguity issues when referring to the test targets. For
+    # example when using the XML log output. So we rename the target to remove
+    # the periods, and provide an alias for users.
     local real-name = [ regex.replace $(target-name) "[.]" "~" ] ;
 
     local project = [ project.current ] ;
@@ -103,7 +103,7 @@ rule make-test ( target-type : sources + : requirements * : target-name ? )
           [ type.type-from-rule-name $(target-type) ] : $(project)
             : $(real-name) : $(sources)
             : $(requirements) <location-prefix>$(real-name).test ] ;
-    
+
     # The alias to the real target, per period replacement above.
     if $(real-name) != $(target-name)
     {
@@ -149,7 +149,7 @@ rule handle-input-files ( input-files * )
 {
     if $(input-files[2])
     {
-        # Check that sorting made when creating property-set instance won't
+        # Check that sorting made when creating property-set instance will not
         # change the ordering.
         if [ sequence.insertion-sort $(input-files) ] != $(input-files)
         {
@@ -178,12 +178,14 @@ rule run-fail ( sources + : args * : input-files * : requirements *
     return [ make-test run-fail : $(sources) : $(requirements) : $(target-name) ] ;
 }
 
+
 # Use 'test-suite' as a synonym for 'alias', for backward compatibility.
 IMPORT : alias : : test-suite ;
 
 
 # For all main targets in 'project-module', which are typed targets with type
 # derived from 'TEST', produce some interesting information.
+#
 rule dump-tests # ( project-module )
 {
     for local t in $(.all-tests)
@@ -195,6 +197,7 @@ rule dump-tests # ( project-module )
 
 # Given a project location in normalized form (slashes are forward), compute the
 # name of the Boost library.
+#
 local rule get-library-name ( path )
 {
     # Path is in normalized form, so all slashes are forward.
@@ -219,10 +222,11 @@ local rule get-library-name ( path )
 
 
 # Takes a target (instance of 'basic-target') and prints
-# - its type
-# - its name
-# - comments specified via the <test-info> property
-# - relative location of all source from the project root.
+#   - its type
+#   - its name
+#   - comments specified via the <test-info> property
+#   - relative location of all source from the project root.
+#
 rule dump-test ( target )
 {
     local type = [ $(target).type ] ;
@@ -230,8 +234,8 @@ rule dump-test ( target )
     local project = [ $(target).project ] ;
 
     local project-root = [ $(project).get project-root ] ;
-    local library = [ get-library-name
-        [ path.root [ $(project).get location ] [ path.pwd ] ] ] ;
+    local library = [ get-library-name [ path.root [ $(project).get location ]
+        [ path.pwd ] ] ] ;
     if $(library)
     {
         name = $(library)/$(name) ;
@@ -300,10 +304,10 @@ generators.register-standard testing.expect-success : EXE        : LINK         
 # Generator which runs an EXE and captures output.
 generators.register-standard testing.capture-output : EXE : RUN_OUTPUT ;
 
-# Generator which creates a target if sources runs successfully. Differs from
-# RUN in that run output is not captured. The reason why it exists is that the
-# 'run' rule is much better for automated testing, but is not user-friendly. See
-# http://article.gmane.org/gmane.comp.lib.boost.build/6353/
+# Generator which creates a target if sources run successfully. Differs from RUN
+# in that run output is not captured. The reason why it exists is that the 'run'
+# rule is much better for automated testing, but is not user-friendly (see
+# http://article.gmane.org/gmane.comp.lib.boost.build/6353).
 generators.register-standard testing.unit-test : EXE : UNIT_TEST ;
 
 
@@ -311,13 +315,16 @@ generators.register-standard testing.unit-test : EXE : UNIT_TEST ;
 
 # Causes the 'target' to exist after bjam invocation if and only if all the
 # dependencies were successfully built.
+#
 rule expect-success ( target : dependency + : requirements * )
 {
     **passed** $(target) : $(sources) ;
 }
 
+
 # Causes the 'target' to exist after bjam invocation if and only if all some of
 # the dependencies were not successfully built.
+#
 rule expect-failure ( target : dependency + : properties * )
 {
     local grist = [ MATCH ^<(.*)> : $(dependency:G) ] ;
@@ -333,10 +340,11 @@ rule expect-failure ( target : dependency + : properties * )
 
 
 # The rule/action combination used to report successfull passing of a test.
+#
 rule **passed**
 {
     # Dump all the tests, if needed. We do it here, since dump should happen
-    # only after all Jamfiles have been read, and there's no such place
+    # only after all Jamfiles have been read, and there is no such place
     # currently defined (but there should be).
     if ! $(.dumped-tests) && --dump-tests in [ modules.peek : ARGV ]
     {
@@ -398,6 +406,7 @@ toolset.flags testing.capture-output LAUNCHER <testing.launcher> ;
 #   - if 'none', does not remove anything, ever
 #   - if empty, removes 'source'
 #   - if non-empty and not 'none', contains a list of sources to remove.
+#
 rule capture-output ( target : source : properties * : targets-to-remove * )
 {
     output-file on $(target) = $(target:S=.output) ;
@@ -405,7 +414,7 @@ rule capture-output ( target : source : properties * : targets-to-remove * )
 
     # The INCLUDES kill a warning about independent target...
     INCLUDES $(target) : $(target:S=.output) ;
-    # but it also puts .output into dependency graph, so we must tell jam it's
+    # but it also puts .output into dependency graph, so we must tell jam it is
     # OK if it cannot find the target or updating rule.
     NOCARE $(target:S=.output) ;
 
@@ -431,12 +440,12 @@ rule capture-output ( target : source : properties * : targets-to-remove * )
     {
         TEMPORARY $(targets-to-remove) ;
         # Set a second action on target that will be executed after capture
-        # output action. The 'RmTemps' rule has the 'ignore' modifier so it's
+        # output action. The 'RmTemps' rule has the 'ignore' modifier so it is
         # always considered succeeded. This is needed for 'run-fail' test. For
         # that test the target will be marked with FAIL_EXPECTED, and without
         # 'ignore' successful execution will be negated and be reported as
-        # failure. With 'ignore' we don't detect a case where removing files
-        # fails, but it's not likely to happen.
+        # failure. With 'ignore' we do not detect a case where removing files
+        # fails, but it is not likely to happen.
         RmTemps $(target) : $(targets-to-remove) ;
     }
 }
@@ -444,77 +453,77 @@ rule capture-output ( target : source : properties * : targets-to-remove * )
 
 if [ os.name ] = NT
 {
-    STATUS        = %status% ;
-    SET_STATUS    = "set status=%ERRORLEVEL%" ;
-    RUN_OUTPUT_NL = "echo." ;
-    STATUS_0      = "%status% EQU 0 (" ;
-    STATUS_NOT_0  = "%status% NEQ 0 (" ;
-    VERBOSE       = "%verbose% EQU 1 (" ;
-    ENDIF         = ")" ;
-    SHELL_SET     = "set " ;
-    CATENATE      = type ;
-    CP            = copy ;
+    .STATUS        = %status% ;
+    .SET_STATUS    = "set status=%ERRORLEVEL%" ;
+    .RUN_OUTPUT_NL = "echo." ;
+    .STATUS_0      = "%status% EQU 0 (" ;
+    .STATUS_NOT_0  = "%status% NEQ 0 (" ;
+    .VERBOSE       = "%verbose% EQU 1 (" ;
+    .ENDIF         = ")" ;
+    .SHELL_SET     = "set " ;
+    .CATENATE      = type ;
+    .CP            = copy ;
 }
 else
 {
-    STATUS        = "$status" ;
-    SET_STATUS    = "status=$?" ;
-    RUN_OUTPUT_NL = "echo" ;
-    STATUS_0      = "test $status -eq 0 ; then" ;
-    STATUS_NOT_0  = "test $status -ne 0 ; then" ;
-    VERBOSE       = "test $verbose -eq 1 ; then" ;
-    ENDIF         = "fi" ;
-    SHELL_SET     = "" ;
-    CATENATE      = cat ;
-    CP            = cp ;
+    .STATUS        = "$status" ;
+    .SET_STATUS    = "status=$?" ;
+    .RUN_OUTPUT_NL = "echo" ;
+    .STATUS_0      = "test $status -eq 0 ; then" ;
+    .STATUS_NOT_0  = "test $status -ne 0 ; then" ;
+    .VERBOSE       = "test $verbose -eq 1 ; then" ;
+    .ENDIF         = "fi" ;
+    .SHELL_SET     = "" ;
+    .CATENATE      = cat ;
+    .CP            = cp ;
 }
 
+
+.VERBOSE_TEST = 0 ;
 if --verbose-test in [ modules.peek : ARGV ]
 {
-    VERBOSE_TEST = 1 ;
-}
-else
-{
-    VERBOSE_TEST = 0 ;
+    .VERBOSE_TEST = 1 ;
 }
 
 
-RM = [ common.rm-command ] ;
+.RM = [ common.rm-command ] ;
 
 
 actions capture-output bind INPUT_FILES output-file
 {
     $(PATH_SETUP)
     $(LAUNCHER) "$(>)" $(ARGS) "$(INPUT_FILES)" > "$(output-file)" 2>&1
-    $(SET_STATUS)
-    $(RUN_OUTPUT_NL) >> "$(output-file)"
-    echo EXIT STATUS: $(STATUS) >> "$(output-file)"
-    if $(STATUS_0)
-        $(CP) "$(output-file)" "$(<)"
-    $(ENDIF)
-    $(SHELL_SET)verbose=$(VERBOSE_TEST)
-    if $(STATUS_NOT_0)
-        $(SHELL_SET)verbose=1
-    $(ENDIF)
-    if $(VERBOSE)
+    $(.SET_STATUS)
+    $(.RUN_OUTPUT_NL) >> "$(output-file)"
+    echo EXIT STATUS: $(.STATUS) >> "$(output-file)"
+    if $(.STATUS_0)
+        $(.CP) "$(output-file)" "$(<)"
+    $(.ENDIF)
+    $(.SHELL_SET)verbose=$(.VERBOSE_TEST)
+    if $(.STATUS_NOT_0)
+        $(.SHELL_SET)verbose=1
+    $(.ENDIF)
+    if $(.VERBOSE)
         echo ====== BEGIN OUTPUT ======
-        $(CATENATE) "$(output-file)"
+        $(.CATENATE) "$(output-file)"
         echo ====== END OUTPUT ======
-    $(ENDIF)
-    exit $(STATUS)
+    $(.ENDIF)
+    exit $(.STATUS)
 }
 
 
 actions quietly updated ignore piecemeal together RmTemps
 {
-    $(RM) "$(>)"
+    $(.RM) "$(>)"
 }
 
 
-MAKE_FILE = [ common.file-creation-command ] ;
+.MAKE_FILE = [ common.file-creation-command ] ;
 
 toolset.flags testing.unit-test LAUNCHER <testing.launcher> ;
 toolset.flags testing.unit-test ARGS <testing.arg> ;
+
+
 rule unit-test ( target : source : properties * )
 {
     run-path-setup $(target) : $(source) : $(properties) ;
@@ -524,8 +533,9 @@ rule unit-test ( target : source : properties * )
 actions unit-test
 {
     $(PATH_SETUP)
-    $(LAUNCHER) $(>) $(ARGS) && $(MAKE_FILE) $(<)
+    $(LAUNCHER) $(>) $(ARGS) && $(.MAKE_FILE) $(<)
 }
+
 
 IMPORT $(__name__) : compile compile-fail run run-fail link link-fail
     : : compile compile-fail run run-fail link link-fail ;
@@ -541,6 +551,7 @@ rule record-time ( target : source : start end user system )
     USER_TIME on $(target) += $(src-string)$(user) ;
     SYSTEM_TIME on $(target) += $(src-string)$(system) ;
 }
+
 
 IMPORT testing : record-time : : testing.record-time ;
 
