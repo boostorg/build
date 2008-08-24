@@ -44,7 +44,7 @@
 # Implementation note:
 #
 #   Avoiding the limitation on the generated target file names can be done but
-# would require depeding on external tools to copy the wxFormBuilder project to
+# would require depending on external tools to copy the wxFormBuilder project to
 # a temp location and then modify it in-place to set its target file names. On
 # the other hand wxFormBuilder is expected to add command-line options for
 # choosing the target file names from the command line which will allow us to
