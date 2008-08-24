@@ -265,7 +265,7 @@ rule get-invocation-command-nodefault ( toolset : tool :
     local command ;
     if ! $(user-provided-command)
     {
-        command = [ common.find-tool $(tool) : $(additional-paths) : $(path-last) ] ;
+        command = [ find-tool $(tool) : $(additional-paths) : $(path-last) ] ;
         if ! $(command) && $(.debug-configuration)
         {
             ECHO "warning: toolset $(toolset) initialization: can not find tool $(tool)" ;
@@ -274,7 +274,7 @@ rule get-invocation-command-nodefault ( toolset : tool :
     }
     else
     {
-        command = [ common.check-tool $(user-provided-command) ] ;
+        command = [ check-tool $(user-provided-command) ] ;
         if ! $(command) && $(.debug-configuration)
         {
             ECHO "warning: toolset $(toolset) initialization: " ;
