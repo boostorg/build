@@ -548,8 +548,8 @@ generators.register [ new lib-generator builtin.lib-generator :  : LIB ] ;
 # The implementation of the 'lib' rule. Beyond standard syntax that rule allows
 # simplified: "lib a b c ;".
 #
-rule lib ( names + : sources * : requirements * : default-build *
-    : usage-requirements * )
+rule lib ( names + : sources * : requirements * : default-build * :
+    usage-requirements * )
 {
     if $(names[2])
     {
