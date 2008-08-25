@@ -146,20 +146,32 @@ rule configure ( version ? : options * )
         case "all" :
             if $(options)
             {
-                errors.error "msvc: Options should be empty when '$(version)'"
-                    "is specified" ;
+                errors.error "MSVC toolset configuration: options should be"
+                    "empty when '$(version)' is specified." ;
             }
 
             # Configure (i.e. mark as used) all registered versions.
             local all-versions = [ $(.versions).all ] ;
-            for local v in $(all-versions)
+            if ! $(all-versions)
             {
-                # Note that there is no need to skip already configured
-                # versions here as this will request configure-really rule to
-                # configure the version using default options which will in turn
-                # cause it to simply do nothing in case the version has already
-                # been configured.
-                configure-really $(v) ;
+                if $(.debug-configuration)
+                {
+                    ECHO "notice: [msvc-cfg] Asked to configure all registered"
+                        "msvc toolset versions when there are none currently"
+                        "registered." ;
+                }
+            }
+            else
+            {
+                for local v in $(all-versions)
+                {
+                    # Note that there is no need to skip already configured
+                    # versions here as this will request configure-really rule
+                    # to configure the version using default options which will
+                    # in turn cause it to simply do nothing in case the version
+                    # has already been configured.
+                    configure-really $(v) ;
+                }
             }
 
         case "default" :
@@ -185,7 +197,6 @@ rule configure-version-specific ( toolset : version : conditions )
     # options are off by default. If we are sure that the msvc version is at
     # 7.*, add those options explicitly. We can be sure either if user specified
     # version 7.* explicitly or if we auto-detected the version ourselves.
-    # above).
     if ! [ MATCH ^(6\\.) : $(version) ]
     {
         toolset.flags $(toolset).compile CFLAGS $(conditions) : /Zc:forScope /Zc:wchar_t ;
@@ -603,8 +614,8 @@ local rule configure-really ( version ? : options * )
         # identical sets of options are used.
         if $(options) && ( $(options) != [ $(.versions).get $(version) : options ] )
         {
-            errors.error "msvc: Toolset version '$(version)' already"
-                "configured." ;
+            errors.error "MSVC toolset configuration: Toolset version"
+                "'$(version)' already configured." ;
         }
     }
     else
@@ -837,7 +848,7 @@ local rule configure-really ( version ? : options * )
             {
                 for local cpu-condition in $(cpu-conditions)
                 {
-                    ECHO "msvc: condition: '$(cpu-condition)', setup: '$(setup-$(c))'" ;
+                    ECHO "notice: [msvc-cfg] condition: '$(cpu-condition)', setup: '$(setup-$(c))'" ;
                 }
             }
 
@@ -1113,7 +1124,7 @@ local rule register-configuration ( version : path ? )
         {
             if $(.debug-configuration)
             {
-                ECHO "notice: msvc-$(version) detected, command: '$(command)'" ;
+                ECHO "notice: [msvc-cfg] msvc-$(version) detected, command: '$(command)'" ;
             }
 
             $(.versions).register $(version) ;
@@ -1209,13 +1220,9 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-7.1toolkit-envpath = "bin" ;
 
 
-# We try to auto-detect all the available msvc installations on the system
-# directly on module import.
+# Auto-detect all the available msvc installations on the system.
 auto-detect-toolset-versions ;
 
 
 # And finally trigger the actual Boost Build toolset registration.
-#
-# TODO: This should later be triggered lazily to avoid registering the toolset
-# in case none of its versions have been configured successfully.
 register-toolset ;
