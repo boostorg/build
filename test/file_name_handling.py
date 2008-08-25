@@ -70,7 +70,7 @@ def test_simple_file_names():
     t.write("testScript.jam", """
 actions create-file
 {
-    echo Modified file content ($(1:E="")).> "$(1:E="")"
+    echo "Modified file content ($(1:E=""))."> "$(1:E="")"
 }
 
 DEPENDS all : standaloneTarget.txt ;
