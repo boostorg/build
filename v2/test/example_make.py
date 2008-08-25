@@ -15,6 +15,6 @@ t.set_tree("../example/make")
 
 t.run_build_system()
 
-t.expect_addition(["bin/$toolset/debug/main.exe"])
+t.expect_addition(["bin/$toolset/debug/main.cpp"])
                    
 t.cleanup()
