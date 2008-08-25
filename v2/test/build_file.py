@@ -89,7 +89,7 @@ exe hello3 : hello3.cpp ;
     t.write("hello3.cpp", "int main() { return 0; }")
 
     t.run_build_system("hello1 " + t.adjust_suffix("hello2.obj"), status=1)
-    t.expect_output_line("don't know how to make*hello2.obj")
+    t.expect_output_line("don't know how to make*" + t.adjust_suffix("hello2.obj"))
     t.expect_nothing_more()
 
     t.cleanup()
