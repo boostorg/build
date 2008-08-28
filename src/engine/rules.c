@@ -60,7 +60,23 @@ struct _located_target {
 static struct hash *located_targets = 0;
 
 
-
+/*
+ * add_include() - adds the 'included' TARGET to the list of targets included by
+ * the 'including' TARGET. Such targets are modeled as dependencies of the
+ * internal include node belonging to the 'including' TARGET.
+ */
+void add_include( TARGET * including, TARGET * included )
+{
+    TARGET * internal;
+    if ( !including->includes )
+    {
+        including->includes = copytarget( including );
+        including->includes->original_target = including;
+    }
+    internal = including->includes;
+    internal->depends = targetentry( internal->depends, included );
+}
+
 
 /*
  * enter_rule() - return pointer to RULE, creating it if necessary in

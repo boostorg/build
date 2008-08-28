@@ -230,6 +230,7 @@ struct _target {
     char* failed;
 } ;
 
+void    add_include( TARGET * including, TARGET * included );
 RULE 	*bindrule( char *rulename, module_t* );
 
 RULE*   import_rule( RULE* source, module_t* m, char* name );
