@@ -1060,22 +1060,45 @@ evaluate_rule(
         action->targets = targetlist( (TARGETS *)0, lol_get( frame->args, 0 ) );
         action->sources = targetlist( (TARGETS *)0, lol_get( frame->args, 1 ) );
         
-        /*  Make targets[1,N-1] depend on targets[0], to describe the multply
-            generated targets for the rule. Do it with includes, to reflect
-            non-build dependency. */
+        /* If we have a group of targets all being built using the same action
+         * then we must not allow any of them to be used as sources unless they
+         * had all already been built in the first place or their joined action
+         * has had a chance to finish its work and build all of them anew.
+         *
+         * Without this it might be possible, in case of a multi-process build,
+         * for their action, triggered by buiding one of the targets, to still
+         * be running when another target in the group reports as done in order
+         * to avoid triggering the same action again and gets used prematurely.
+         *
+         * As a quick-fix to achieve this effect we make all the targets list
+         * each other as 'included targets'. More precisely, we mark the first
+         * listed target as including all the other targets in the list and vice
+         * versa. This makes anyone depending on any of those targets implicitly
+         * depend on all of them, thus making sure none of those targets can be
+         * used as sources until all of them have been built. Note that direct
+         * dependencies could not have been used due to the 'circular
+         * dependency' issue.
+         *
+         * TODO: Although the current implementation solves the problem of one
+         * of the targets getting used before its action completes its work it
+         * also forces the action to run whenever any of the targets in the
+         * group is not up to date even though some of them might not actually
+         * be used by the targets being built. We should see how we can
+         * correctly recognize such cases and use that to avoid running the
+         * action if possible and not rebuild targets not actually depending on
+         * targets that are not up to date.
+         *
+         * TODO: Using the 'include' feature might have side-effects due to
+         * interaction with the actual 'inclusion scanning' system. This should
+         * be checked.
+         */
         if ( action->targets )
         {
             TARGET * t0 = action->targets->target;
             for ( t = action->targets->next; t; t = t->next )
             {
-                TARGET * tn = t->target;
-                if ( !tn->includes )
-                {
-                    tn->includes = copytarget( tn );
-                    tn->includes->original_target = tn;
-                }
-                tn = tn->includes;
-                tn->depends = targetentry( tn->depends, t0 );
+                add_include( t->target, t0 );
+                add_include( t0, t->target );
             }
         }
 
