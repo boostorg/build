@@ -88,7 +88,7 @@ exe a : a-with-include ;
 exe b : a-with-include ;
 </programlisting>
           or if you want the <literal>includes</literal> property not to affect
-          how any other sources added for the built <code>a</code> &
+          how any other sources added for the built <code>a</code> and
           <code>b</code> executables would be compiled:
 <programlisting>
 obj a-obj : a.cpp : &lt;include&gt;/usr/local/include ;
@@ -99,7 +99,7 @@ exe b : a-obj ;
         <para>
           Note that in both of these cases the <literal>include</literal>
           property will be applied only for building these object files and not
-          any other sources that might be added for targets <code>a</code> &
+          any other sources that might be added for targets <code>a</code> and
           <code>b</code>.
         </para>
       </listitem>
@@ -125,7 +125,7 @@ exe b : a-obj ;
         <para>
           Note that in both of these cases the <literal>include</literal>
           property will be applied only for building these object files and not
-          any other sources that might be added for targets <code>a</code> &
+          any other sources that might be added for targets <code>a</code> and
           <code>b</code>.
         </para>
       </listitem>
