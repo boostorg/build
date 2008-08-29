@@ -25,9 +25,9 @@
  *
  * External routines:
  *
- *	file_dirscan() - scan a directory for files
- *	file_time() - get timestamp of file, if not done by file_dirscan()
- *	file_archscan() - scan an archive for files
+ *  file_dirscan() - scan a directory for files
+ *  file_time() - get timestamp of file, if not done by file_dirscan()
+ *  file_archscan() - scan an archive for files
  *
  * File_dirscan() and file_archscan() call back a caller provided function
  * for each file found.  A flag to this callback function lets file_dirscan()
@@ -45,10 +45,10 @@
  */
 
 void
-file_dirscan( 
-	char *dir,
-	scanback func,
-	void	*closure )
+file_dirscan(
+    char *dir,
+    scanback func,
+    void    *closure )
 {
     PATHNAME f;
     string filespec[1];
@@ -69,9 +69,9 @@ file_dirscan(
     string_copy( filespec, dir );
 
     if( f.f_dir.len == 1 && f.f_dir.ptr[0] == '\\' )
- 	    (*func)( closure, dir, 0 /* not stat()'ed */, (time_t)0 );
+        (*func)( closure, dir, 0 /* not stat()'ed */, (time_t)0 );
     else if( f.f_dir.len == 3 && f.f_dir.ptr[1] == ':' )
- 	    (*func)( closure, dir, 0 /* not stat()'ed */, (time_t)0 );
+        (*func)( closure, dir, 0 /* not stat()'ed */, (time_t)0 );
     else
         string_push_back( filespec, '/' );
 
@@ -92,7 +92,6 @@ file_dirscan(
         string_new( filename );
         do
         {
-            
             f.f_base.ptr = finfo->name;
             f.f_base.len = strlen( finfo->name );
 
@@ -111,27 +110,27 @@ file_dirscan(
 
 int
 file_time(
-	char	*filename,
-	time_t	*time )
+    char    *filename,
+    time_t  *time )
 {
-	/* This is called on OS2, not NT.  */
-	/* NT fills in the time in the dirscan. */
+    /* This is called on OS2, not NT.  */
+    /* NT fills in the time in the dirscan. */
 
-	struct stat statbuf;
+    struct stat statbuf;
 
-	if( stat( filename, &statbuf ) < 0 )
-	    return -1;
+    if( stat( filename, &statbuf ) < 0 )
+        return -1;
 
-	*time = statbuf.st_mtime;
+    *time = statbuf.st_mtime;
 
-	return 0;
+    return 0;
 }
 
 void
 file_archscan(
-	char *archive,
-	scanback func,
-	void	*closure )
+    char *archive,
+    scanback func,
+    void    *closure )
 {
 }
 

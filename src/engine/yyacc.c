@@ -11,11 +11,11 @@
 /*
 # yyacc - yacc wrapper
 #
-# Allows tokens to be written as `literal` and then automatically 
+# Allows tokens to be written as `literal` and then automatically
 # substituted with #defined tokens.
 #
 # Usage:
-#    yyacc file.y filetab.h file.yy 
+#    yyacc file.y filetab.h file.yy
 #
 # inputs:
 #    file.yy        yacc grammar with ` literals
@@ -59,7 +59,7 @@ int main(int argc, char ** argv)
         FILE * token_output_f = 0;
         FILE * grammar_output_f = 0;
         FILE * grammar_source_f = 0;
-        
+
         grammar_source_f = fopen(argv[3],"r");
         if (grammar_source_f == 0) { result = 1; }
         if (result == 0)
@@ -223,7 +223,7 @@ char * tokenize_string(char * s)
     char * literal = s;
     int l;
     int c;
-    
+
     if (strcmp(s,":") == 0) literal = "_colon";
     else if (strcmp(s,"!") == 0) literal = "_bang";
     else if (strcmp(s,"!=") == 0) literal = "_bang_equals";

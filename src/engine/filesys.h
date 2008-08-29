@@ -11,7 +11,7 @@
  */
 
 /*
- * filesys.h - OS specific file routines 
+ * filesys.h - OS specific file routines
  */
 
 #ifndef FILESYS_DWA20011025_H

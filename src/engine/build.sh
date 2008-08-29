@@ -127,15 +127,15 @@ case $BOOST_JAM_TOOLSET in
     fi
     BOOST_JAM_CC="gcc -DNT"
     ;;
-    
+
     gcc)
     BOOST_JAM_CC=gcc
     ;;
-    
+
     darwin)
     BOOST_JAM_CC=cc
     ;;
-    
+
     intel-linux)
     if test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
         BOOST_JAM_TOOLSET_ROOT=/opt/intel/cc/9.0/
@@ -164,35 +164,35 @@ case $BOOST_JAM_TOOLSET in
     fi
     BOOST_JAM_CC=icc
     ;;
-    
+
     vacpp)
     BOOST_JAM_CC=xlc
     ;;
-    
+
     como)
     BOOST_JAM_CC="como --c"
     ;;
-    
+
     kcc)
     BOOST_JAM_CC=KCC
     ;;
-    
+
     kylix)
     BOOST_JAM_CC=bc++
     ;;
-    
+
     mipspro)
     BOOST_JAM_CC=cc
     ;;
-    
+
     pathscale)
     BOOST_JAM_CC=pathcc
     ;;
-    
+
     pgi)
     BOOST_JAM_CC=pgcc
     ;;
-    
+
     sun*)
     if test -z "${BOOST_JAM_TOOLSET_ROOT}" -a -r /opt/SUNWspro/bin/cc ; then
         BOOST_JAM_TOOLSET_ROOT=/opt/SUNWspro/
@@ -203,15 +203,15 @@ case $BOOST_JAM_TOOLSET in
     fi
     BOOST_JAM_CC=cc
     ;;
-    
+
     tru64cxx)
     BOOST_JAM_CC=cc
     ;;
-    
+
     acc)
     BOOST_JAM_CC="cc -Ae"
     ;;
-    
+
     cc)
     if test -z "$CC" ; then CC=cc ; fi
     BOOST_JAM_CC=$CC
@@ -219,11 +219,11 @@ case $BOOST_JAM_TOOLSET in
     BOOST_JAM_OPT_MKJAMBASE="$BOOST_JAM_OPT_MKJAMBASE $CFLAGS $LIBS"
     BOOST_JAM_OPT_YYACC="$BOOST_JAM_OPT_YYACC $CFLAGS $LIBS"
     ;;
-   
+
     qcc)
     BOOST_JAM_CC=qcc
     ;;
-    
+
     *)
     error_exit "Unknown toolset: $BOOST_JAM_TOOLSET"
     ;;
@@ -247,7 +247,7 @@ case $BOOST_JAM_TOOLSET in
     mingw)
     BJAM_SOURCES="${BJAM_SOURCES} execnt.c filent.c"
     ;;
-    
+
     *)
     BJAM_SOURCES="${BJAM_SOURCES} execunix.c fileunix.c"
     ;;

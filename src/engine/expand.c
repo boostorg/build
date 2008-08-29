@@ -24,13 +24,13 @@
  *
  * External routines:
  *
- *	var_expand() - variable-expand input string into list of strings
+ *  var_expand() - variable-expand input string into list of strings
  *
  * Internal routines:
  *
- *	var_edit_parse() - parse : modifiers into PATHNAME structure
- *	var_edit_file() - copy input target name to output, modifying filename
- *	var_edit_shift() - do upshift/downshift mods
+ *  var_edit_parse() - parse : modifiers into PATHNAME structure
+ *  var_edit_file() - copy input target name to output, modifying filename
+ *  var_edit_shift() - do upshift/downshift mods
  *
  * 01/25/94 (seiwald) - $(X)$(UNDEF) was expanding like plain $(X)
  * 04/13/94 (seiwald) - added shorthand L0 for null list pointer
@@ -38,29 +38,29 @@
  */
 
 typedef struct {
-	PATHNAME	f;		/* :GDBSMR -- pieces */
-	char		parent;		/* :P -- go to parent directory */
-	char		filemods;	/* one of the above applied */
-	char		downshift;	/* :L -- downshift result */
-	char		upshift;	     /* :U -- upshift result */
+    PATHNAME    f;      /* :GDBSMR -- pieces */
+    char        parent;     /* :P -- go to parent directory */
+    char        filemods;   /* one of the above applied */
+    char        downshift;  /* :L -- downshift result */
+    char        upshift;         /* :U -- upshift result */
     char        to_slashes;    /* :T -- convert "\" to "/" */
     char        to_windows;    /* :W -- convert cygwin to native paths */
-	PATHPART	empty;		/* :E -- default for empties */
-	PATHPART	join;		/* :J -- join list with char */
+    PATHPART    empty;      /* :E -- default for empties */
+    PATHPART    join;       /* :J -- join list with char */
 } VAR_EDITS ;
 
 static void var_edit_parse( char *mods, VAR_EDITS *edits );
 static void var_edit_file( char *in, string *out, VAR_EDITS *edits );
 static void var_edit_shift( string *out, VAR_EDITS *edits );
 
-# define MAGIC_COLON	'\001'
-# define MAGIC_LEFT	'\002'
-# define MAGIC_RIGHT	'\003'
+# define MAGIC_COLON    '\001'
+# define MAGIC_LEFT '\002'
+# define MAGIC_RIGHT    '\003'
 
 /*
  * var_expand() - variable-expand input string into list of strings
  *
- * Would just copy input to output, performing variable expansion, 
+ * Would just copy input to output, performing variable expansion,
  * except that since variables can contain multiple values the result
  * of variable expansion may contain multiple values (a list).  Properly
  * performs "product" operations that occur in "$(var1)xxx$(var2)" or
@@ -70,12 +70,12 @@ static void var_edit_shift( string *out, VAR_EDITS *edits );
  */
 
 LIST *
-var_expand( 
-	LIST	*l,
-	char	*in,
-	char	*end,
-	LOL	*lol,
-	int	cancopyin )
+var_expand(
+    LIST    *l,
+    char    *in,
+    char    *end,
+    LOL *lol,
+    int cancopyin )
 {
     char out_buf[ MAXSYM ];
     string buf[1];
@@ -83,7 +83,7 @@ var_expand(
     size_t prefix_length;
     char *out;
     char *inp = in;
-    char *ov;		/* for temp copy of variable in outbuf */
+    char *ov;       /* for temp copy of variable in outbuf */
     int depth;
 
     if( DEBUG_VAREXP )
@@ -100,7 +100,7 @@ var_expand(
 
         case '>':
             return list_copy( l, lol_get( lol, 1 ) );
-        
+
         case '1':
         case '2':
         case '3':
@@ -113,9 +113,9 @@ var_expand(
             return list_copy( l, lol_get( lol, in[2]-'1' ) );
         }
     }
-    
+
     /* Expand @() files, to single item plus accompanying file. */
-    
+
     if ( in[0] == '@' && in[1] == '(' && *(end-1) == ')' )
     {
         /* We try the expansion until it fits within the propspective output buffer. */
@@ -144,8 +144,8 @@ var_expand(
 
     /* Just try simple copy of in to out. */
 
-    while( in < end )
-        if( *in++ == '$' && *in == '(' ) 
+    while ( in < end )
+        if ( *in++ == '$' && *in == '(' )
             goto expand;
 
     /* No variables expanded - just add copy of input string to list. */
@@ -154,7 +154,7 @@ var_expand(
     /* item, we can use the copystr() to put it on the new list. */
     /* Otherwise, we use the slower newstr(). */
 
-    if( cancopyin ) 
+    if( cancopyin )
     {
         return list_new( l, copystr( inp ) );
     }
@@ -239,7 +239,7 @@ expand:
      *  out_buf         out     ov
      *
      * Later we will overwrite 'variable' in out_buf, but we'll be
-     * done with it by then.  'variable' may be a multi-element list, 
+     * done with it by then.  'variable' may be a multi-element list,
      * so may each value for '$(variable element)', and so may 'remainder'.
      * Thus we produce a product of three lists.
      */
@@ -339,7 +339,7 @@ expand:
                     }
 
                     /* First, compute the index of the last element. */
-                    sub2 = atoi(s);               
+                    sub2 = atoi(s);
                     s++;
                     while ( isdigit( *s ) ) s++;
 
@@ -353,7 +353,7 @@ expand:
                 ** introducing a modifier is a syntax error.
                 */
 
-                s++;                
+                s++;
                 if (*s && *s != MAGIC_COLON)
                     sub2 = 0;
 
@@ -361,14 +361,14 @@ expand:
             }
 
             /* Get variable value, specially handling $(<), $(>), $(n) */
-		
+
             if( varname[0] == '<' && !varname[1] )
                 value = lol_get( lol, 0 );
             else if( varname[0] == '>' && !varname[1] )
                 value = lol_get( lol, 1 );
             else if( varname[0] >= '1' && varname[0] <= '9' && !varname[1] )
                 value = lol_get( lol, varname[0] - '1' );
-            else 
+            else
                 value = var_get( varname );
 
             /* Handle negitive indexes: part two. */
@@ -444,7 +444,7 @@ expand:
                 /* keep appending them (with the join value) */
                 /* rather than creating separate LIST elements. */
 
-                if( colon && edits.join.ptr && 
+                if( colon && edits.join.ptr &&
                     ( list_next( value ) || list_next( vars ) ) )
                 {
                     string_append( out1, edits.join.ptr );
@@ -511,160 +511,160 @@ expand:
  * var_edit_parse() - parse : modifiers into PATHNAME structure
  *
  * The : modifiers in a $(varname:modifier) currently support replacing
- * or omitting elements of a filename, and so they are parsed into a 
+ * or omitting elements of a filename, and so they are parsed into a
  * PATHNAME structure (which contains pointers into the original string).
  *
  * Modifiers of the form "X=value" replace the component X with
- * the given value.  Modifiers without the "=value" cause everything 
+ * the given value.  Modifiers without the "=value" cause everything
  * but the component X to be omitted.  X is one of:
  *
- *	G <grist>
- *	D directory name
- *	B base name
- *	S .suffix
- *	M (member)
- *	R root directory - prepended to whole path
+ *  G <grist>
+ *  D directory name
+ *  B base name
+ *  S .suffix
+ *  M (member)
+ *  R root directory - prepended to whole path
  *
  * This routine sets:
  *
- *	f->f_xxx.ptr = 0
- *	f->f_xxx.len = 0
- *		-> leave the original component xxx
+ *  f->f_xxx.ptr = 0
+ *  f->f_xxx.len = 0
+ *      -> leave the original component xxx
  *
- *	f->f_xxx.ptr = string
- *	f->f_xxx.len = strlen( string )
- *		-> replace component xxx with string
+ *  f->f_xxx.ptr = string
+ *  f->f_xxx.len = strlen( string )
+ *      -> replace component xxx with string
  *
- *	f->f_xxx.ptr = ""
- *	f->f_xxx.len = 0
- *		-> omit component xxx
+ *  f->f_xxx.ptr = ""
+ *  f->f_xxx.len = 0
+ *      -> omit component xxx
  *
  * var_edit_file() below and path_build() obligingly follow this convention.
  */
 
 static void
 var_edit_parse(
-	char		*mods,
-	VAR_EDITS	*edits )
+    char        *mods,
+    VAR_EDITS   *edits )
 {
-	int havezeroed = 0;
-	memset( (char *)edits, 0, sizeof( *edits ) );
+    int havezeroed = 0;
+    memset( (char *)edits, 0, sizeof( *edits ) );
 
-	while( *mods )
-	{
-	    char *p;
-	    PATHPART *fp;
+    while( *mods )
+    {
+        char *p;
+        PATHPART *fp;
 
-	    switch( *mods++ )
-	    {
-	    case 'L': edits->downshift = 1; continue;
-	    case 'U': edits->upshift = 1; continue;
-	    case 'P': edits->parent = edits->filemods = 1; continue;
-	    case 'E': fp = &edits->empty; goto strval;
-	    case 'J': fp = &edits->join; goto strval;
-	    case 'G': fp = &edits->f.f_grist; goto fileval;
-	    case 'R': fp = &edits->f.f_root; goto fileval;
-	    case 'D': fp = &edits->f.f_dir; goto fileval;
-	    case 'B': fp = &edits->f.f_base; goto fileval;
-	    case 'S': fp = &edits->f.f_suffix; goto fileval;
-	    case 'M': fp = &edits->f.f_member; goto fileval;
+        switch( *mods++ )
+        {
+        case 'L': edits->downshift = 1; continue;
+        case 'U': edits->upshift = 1; continue;
+        case 'P': edits->parent = edits->filemods = 1; continue;
+        case 'E': fp = &edits->empty; goto strval;
+        case 'J': fp = &edits->join; goto strval;
+        case 'G': fp = &edits->f.f_grist; goto fileval;
+        case 'R': fp = &edits->f.f_root; goto fileval;
+        case 'D': fp = &edits->f.f_dir; goto fileval;
+        case 'B': fp = &edits->f.f_base; goto fileval;
+        case 'S': fp = &edits->f.f_suffix; goto fileval;
+        case 'M': fp = &edits->f.f_member; goto fileval;
             case 'T': edits->to_slashes = 1; continue;
             case 'W': edits->to_windows = 1; continue;
 
-	    default: return; /* should complain, but so what... */
-	    }
+        default: return; /* should complain, but so what... */
+        }
 
-	fileval:
+    fileval:
 
-	    /* Handle :CHARS, where each char (without a following =) */
-	    /* selects a particular file path element.  On the first such */
-	    /* char, we deselect all others (by setting ptr = "", len = 0) */
-	    /* and for each char we select that element (by setting ptr = 0) */
+        /* Handle :CHARS, where each char (without a following =) */
+        /* selects a particular file path element.  On the first such */
+        /* char, we deselect all others (by setting ptr = "", len = 0) */
+        /* and for each char we select that element (by setting ptr = 0) */
 
-	    edits->filemods = 1;
+        edits->filemods = 1;
 
-	    if( *mods != '=' )
-	    {
-		int i;
+        if( *mods != '=' )
+        {
+        int i;
 
-		if( !havezeroed++ )
-		    for( i = 0; i < 6; i++ )
-		{
-		    edits->f.part[ i ].len = 0;
-		    edits->f.part[ i ].ptr = "";
-		}
+        if( !havezeroed++ )
+            for( i = 0; i < 6; i++ )
+        {
+            edits->f.part[ i ].len = 0;
+            edits->f.part[ i ].ptr = "";
+        }
 
-		fp->ptr = 0;
-		continue;
-	    }
+        fp->ptr = 0;
+        continue;
+        }
 
-	strval:
+    strval:
 
-	    /* Handle :X=value, or :X */
+        /* Handle :X=value, or :X */
 
-	    if( *mods != '=' )
-	    {
-		fp->ptr = "";
-		fp->len = 0;
-	    }
-	    else if( p = strchr( mods, MAGIC_COLON ) )
-	    {
-		*p = 0;
-		fp->ptr = ++mods;
-		fp->len = p - mods;
-		mods = p + 1;
-	    }
-	    else
-	    {
-		fp->ptr = ++mods;
-		fp->len = strlen( mods );
-		mods += fp->len;
-	    }
-	}
+        if( *mods != '=' )
+        {
+        fp->ptr = "";
+        fp->len = 0;
+        }
+        else if( p = strchr( mods, MAGIC_COLON ) )
+        {
+        *p = 0;
+        fp->ptr = ++mods;
+        fp->len = p - mods;
+        mods = p + 1;
+        }
+        else
+        {
+        fp->ptr = ++mods;
+        fp->len = strlen( mods );
+        mods += fp->len;
+        }
+    }
 }
 
 /*
  * var_edit_file() - copy input target name to output, modifying filename
  */
-	
+
 static void
-var_edit_file( 
-	char	*in,
-	string	*out,
-	VAR_EDITS *edits )
+var_edit_file(
+    char    *in,
+    string  *out,
+    VAR_EDITS *edits )
 {
-	PATHNAME pathname;
+    PATHNAME pathname;
 
-	/* Parse apart original filename, putting parts into "pathname" */
+    /* Parse apart original filename, putting parts into "pathname" */
 
-	path_parse( in, &pathname );
+    path_parse( in, &pathname );
 
-	/* Replace any pathname with edits->f */
+    /* Replace any pathname with edits->f */
 
-	if( edits->f.f_grist.ptr )
-	    pathname.f_grist = edits->f.f_grist;
+    if( edits->f.f_grist.ptr )
+        pathname.f_grist = edits->f.f_grist;
 
-	if( edits->f.f_root.ptr )
-	    pathname.f_root = edits->f.f_root;
+    if( edits->f.f_root.ptr )
+        pathname.f_root = edits->f.f_root;
 
-	if( edits->f.f_dir.ptr )
-	    pathname.f_dir = edits->f.f_dir;
+    if( edits->f.f_dir.ptr )
+        pathname.f_dir = edits->f.f_dir;
 
-	if( edits->f.f_base.ptr )
-	    pathname.f_base = edits->f.f_base;
+    if( edits->f.f_base.ptr )
+        pathname.f_base = edits->f.f_base;
 
-	if( edits->f.f_suffix.ptr )
-	    pathname.f_suffix = edits->f.f_suffix;
+    if( edits->f.f_suffix.ptr )
+        pathname.f_suffix = edits->f.f_suffix;
 
-	if( edits->f.f_member.ptr )
-	    pathname.f_member = edits->f.f_member;
+    if( edits->f.f_member.ptr )
+        pathname.f_member = edits->f.f_member;
 
-	/* If requested, modify pathname to point to parent */
+    /* If requested, modify pathname to point to parent */
 
-	if( edits->parent )
-	    path_parent( &pathname );
+    if( edits->parent )
+        path_parent( &pathname );
 
-	/* Put filename back together */
+    /* Put filename back together */
 
     path_build( &pathname, out, 0 );
 }
@@ -674,11 +674,11 @@ var_edit_file(
  */
 
 static void
-var_edit_shift( 
-	string	*out,
-	VAR_EDITS *edits )
+var_edit_shift(
+    string  *out,
+    VAR_EDITS *edits )
 {
-	/* Handle upshifting, downshifting and slash translation now */
+    /* Handle upshifting, downshifting and slash translation now */
 
     char *p;
     for ( p = out->value; *p; ++p)
@@ -690,7 +690,7 @@ var_edit_shift(
         else if ( edits->downshift )
         {
             *p = tolower( *p );
-        } 
+        }
         if ( edits->to_slashes )
         {
             if ( *p == '\\')
@@ -720,14 +720,14 @@ void var_expand_unit_test()
     char axyb[] = "a$(xy)b";
     char azb[] = "a$($(z))b";
     char path[] = "$(p:W)";
-    
+
     # ifdef OS_CYGWIN
     char cygpath[256];
     cygwin_conv_to_posix_path("c:\\foo\\bar", cygpath);
     # else
     char cygpath[] = "/cygdrive/c/foo/bar";
     # endif
-        
+
     lol_init(lol);
     var_set("xy", list_new( list_new( L0, newstr( "x" ) ), newstr( "y" ) ), VAR_SET );
     var_set("z", list_new( L0, newstr( "xy" ) ), VAR_SET );
@@ -738,7 +738,7 @@ void var_expand_unit_test()
         assert( !strcmp( e2->string, l2->string ) );
     assert(l2 == 0 && e2 == 0);
     list_free(l);
-    
+
     l = var_expand( 0, azb, azb + sizeof(azb) - 1, lol, 0 );
     for ( l2 = l, e2 = expected; l2 && e2; l2 = list_next(l2), e2 = list_next(e2) )
         assert( !strcmp( e2->string, l2->string ) );
@@ -753,15 +753,15 @@ void var_expand_unit_test()
     /* This has been reported to be the case if cygwin has been installed to C:\   */
     /* as opposed to C:\cygwin                                                     */
     /* Since case of the drive letter will not matter, we allow for both.          */
-    assert( 0 == strcmp( l->string, "c:\\foo\\bar" ) 
+    assert( 0 == strcmp( l->string, "c:\\foo\\bar" )
               || 0 == strcmp( l->string, "C:\\foo\\bar") );
-    # else 
+    # else
     assert( !strcmp( l->string, cygpath ) );
-    # endif   
+    # endif
     list_free(l);
 
     list_free(expected);
-    
+
     lol_free(lol);
 }
 #endif

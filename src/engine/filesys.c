@@ -12,16 +12,16 @@ file_build1(
 {
     if( DEBUG_SEARCH )
     {
-	printf("build file: ");
-	if( f->f_root.len )
+    printf("build file: ");
+    if( f->f_root.len )
             printf( "root = '%.*s' ", f->f_root.len, f->f_root.ptr );
-	if( f->f_dir.len )
+    if( f->f_dir.len )
             printf( "dir = '%.*s' ", f->f_dir.len, f->f_dir.ptr );
-	if( f->f_base.len )
+    if( f->f_base.len )
             printf( "base = '%.*s' ", f->f_base.len, f->f_base.ptr );
     printf( "\n" );
     }
-	
+
     /* Start with the grist.  If the current grist isn't */
     /* surrounded by <>'s, add them. */
 
@@ -41,10 +41,10 @@ static struct hash * filecache_hash = 0;
 file_info_t * file_info(char * filename)
 {
     file_info_t finfo_, *finfo = &finfo_;
-    
+
     if ( !filecache_hash )
         filecache_hash = hashinit( sizeof( file_info_t ), "file_info" );
-    
+
     finfo->name = filename;
     if ( hashenter( filecache_hash, (HASHDATA**)&finfo ) )
     {
@@ -56,7 +56,7 @@ file_info_t * file_info(char * filename)
         finfo->time = 0;
         finfo->files = 0;
     }
-    
+
     return finfo;
 }
 

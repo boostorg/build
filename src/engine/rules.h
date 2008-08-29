@@ -26,12 +26,12 @@
  *
  * The following are defined:
  *
- *	RULE - a generic jam rule, the product of RULE and ACTIONS 
- *	ACTIONS - a chain of ACTIONs 
- *	ACTION - a RULE instance with targets and sources 
- *	SETTINGS - variables to set when executing a TARGET's ACTIONS 
- *	TARGETS - a chain of TARGETs 
- *	TARGET - a file or "thing" that can be built 
+ *  RULE - a generic jam rule, the product of RULE and ACTIONS
+ *  ACTIONS - a chain of ACTIONs
+ *  ACTION - a RULE instance with targets and sources
+ *  SETTINGS - variables to set when executing a TARGET's ACTIONS
+ *  TARGETS - a chain of TARGETs
+ *  TARGET - a file or "thing" that can be built
  *
  * 04/11/94 (seiwald) - Combined deps & headers into deps[2] in TARGET.
  * 04/12/94 (seiwald) - actionlist() now just appends a single action.
@@ -77,77 +77,79 @@ struct rule_actions
 typedef struct rule_actions rule_actions;
 typedef struct argument_list argument_list;
 
-struct _rule {
-    char    *name;
-    PARSE   *procedure;        /* parse tree from RULE */
-    argument_list* arguments;  /* argument checking info, or NULL for unchecked */
-    rule_actions* actions;     /* build actions, or NULL for no actions */
-    module_t  *module;           /* module in which this rule is executed */
-    int     exported;          /* nonzero if this rule is supposed to
-                                * appear in the global module and be
-                                * automatically imported into other modules
-                                */
+struct _rule
+{
+    char          * name;
+    PARSE         * procedure;  /* parse tree from RULE */
+    argument_list * arguments;  /* argument checking info, or NULL for unchecked
+                                 */
+    rule_actions  * actions;    /* build actions, or NULL for no actions */
+    module_t      * module;     /* module in which this rule is executed */
+    int             exported;   /* nonzero if this rule is supposed to appear in
+                                 * the global module and be automatically
+                                 * imported into other modules
+                                 */
 #ifdef HAVE_PYTHON
-    PyObject* python_function;
-#endif    
+    PyObject * python_function;
+#endif
 };
 
 /* ACTIONS - a chain of ACTIONs */
 
 struct _actions {
-	ACTIONS	*next;
-	ACTIONS	*tail;			/* valid only for head */
-	ACTION	*action;
+    ACTIONS *next;
+    ACTIONS *tail;          /* valid only for head */
+    ACTION  *action;
 } ;
 
 /* ACTION - a RULE instance with targets and sources */
 
 struct _action {
-	RULE	*rule;
-	TARGETS	*targets;
-	TARGETS	*sources;		/* aka $(>) */
-	char	running;		/* has been started */
-	char	status;			/* see TARGET status */
+    RULE    *rule;
+    TARGETS *targets;
+    TARGETS *sources;       /* aka $(>) */
+    char    running;        /* has been started */
+    char    status;         /* see TARGET status */
 } ;
 
 /* SETTINGS - variables to set when executing a TARGET's ACTIONS */
 
 struct _settings {
-	SETTINGS *next;
-	char	*symbol;		/* symbol name for var_set() */
-	LIST	*value;			/* symbol value for var_set() */
+    SETTINGS *next;
+    char    *symbol;        /* symbol name for var_set() */
+    LIST    *value;         /* symbol value for var_set() */
 } ;
 
 /* TARGETS - a chain of TARGETs */
 
 struct _targets {
-	TARGETS	*next;
-	TARGETS	*tail;			/* valid only for head */
-	TARGET	*target;
+    TARGETS *next;
+    TARGETS *tail;          /* valid only for head */
+    TARGET  *target;
 } ;
 
 /* TARGET - a file or "thing" that can be built */
 
 struct _target {
-	char	*name;
-	char	*boundname;		/* if search() relocates target */
-	ACTIONS	*actions;		/* rules to execute, if any */
-	SETTINGS *settings;		/* variables to define */
+    char    *name;
+    char    *boundname;     /* if search() relocates target */
+    ACTIONS *actions;       /* rules to execute, if any */
+    SETTINGS *settings;     /* variables to define */
 
-	short flags;    		/* status info */
+    short flags;            /* status info */
 
-# define 	T_FLAG_TEMP 	0x0001	/* TEMPORARY applied */
-# define 	T_FLAG_NOCARE 	0x0002	/* NOCARE applied */
-# define 	T_FLAG_NOTFILE 	0x0004	/* NOTFILE applied */
-# define	T_FLAG_TOUCHED	0x0008	/* ALWAYS applied or -t target */
-# define	T_FLAG_LEAVES	0x0010	/* LEAVES applied */
-# define	T_FLAG_NOUPDATE	0x0020	/* NOUPDATE applied */
-# define	T_FLAG_VISITED  0x0040    /* CWM: Used in debugging */
+# define    T_FLAG_TEMP     0x0001  /* TEMPORARY applied */
+# define    T_FLAG_NOCARE   0x0002  /* NOCARE applied */
+# define    T_FLAG_NOTFILE  0x0004  /* NOTFILE applied */
+# define    T_FLAG_TOUCHED  0x0008  /* ALWAYS applied or -t target */
+# define    T_FLAG_LEAVES   0x0010  /* LEAVES applied */
+# define    T_FLAG_NOUPDATE 0x0020  /* NOUPDATE applied */
+# define    T_FLAG_VISITED  0x0040    /* CWM: Used in debugging */
 
 /* this flag was added to support a new builtin rule named "RMBAD" */
 /* it is used to force removal of outdated targets whose dependencies
  * fail to build  */
-    
+
 # define        T_FLAG_RMOLD    0x0080    /* RMBAD applied */
 
 /* this flag was added to support a new builting rule named "FAIL_EXPECTED" */
@@ -166,72 +168,72 @@ struct _target {
 
 
 #ifdef OPT_SEMAPHORE
-# define 	T_MAKE_SEMAPHORE 5 /* Special target type for semaphores */
+# define    T_MAKE_SEMAPHORE 5 /* Special target type for semaphores */
 #endif
 
 
-	char	binding;		/* how target relates to real file */
+    char    binding;        /* how target relates to real file */
 
-# define 	T_BIND_UNBOUND	0	/* a disembodied name */
-# define 	T_BIND_MISSING	1	/* couldn't find real file */
+# define    T_BIND_UNBOUND  0   /* a disembodied name */
+# define    T_BIND_MISSING  1   /* couldn't find real file */
 #ifdef OPT_SEMAPHORE
-	TARGET  *semaphore;		/* used in serialization */
+    TARGET  *semaphore;     /* used in serialization */
 #endif
-# define 	T_BIND_PARENTS	2	/* using parent's timestamp */
-# define 	T_BIND_EXISTS	3	/* real file, timestamp valid */
+# define    T_BIND_PARENTS  2   /* using parent's timestamp */
+# define    T_BIND_EXISTS   3   /* real file, timestamp valid */
 
-	TARGETS		*depends;	/* dependencies */
-	TARGETS		*dependents;/* the inverse of dependencies */
+    TARGETS     *depends;   /* dependencies */
+    TARGETS     *dependents;/* the inverse of dependencies */
     TARGETS     *rebuilds;  /* targets that should be force-rebuilt whenever this one is */
-	TARGET		*includes;	/* includes */
-    TARGET        *original_target; /* original_target->includes = this */
+    TARGET      *includes;  /* internal includes node */
+    TARGET      *original_target; /* original_target->includes = this */
     char rescanned;
 
-	time_t	time;			/* update time */
-	time_t	leaf;			/* update time of leaf sources */
+    time_t  time;           /* update time */
+    time_t  leaf;           /* update time of leaf sources */
 
-	char	fate;			/* make0()'s diagnosis */
+    char    fate;           /* make0()'s diagnosis */
 
-# define 	T_FATE_INIT	0	/* nothing done to target */
-# define 	T_FATE_MAKING	1	/* make0(target) on stack */
+# define    T_FATE_INIT     0   /* nothing done to target */
+# define    T_FATE_MAKING   1   /* make0(target) on stack */
 
-# define 	T_FATE_STABLE	2	/* target didn't need updating */
-# define	T_FATE_NEWER	3	/* target newer than parent */
+# define    T_FATE_STABLE   2   /* target didn't need updating */
+# define    T_FATE_NEWER    3   /* target newer than parent */
 
-# define	T_FATE_SPOIL	4	/* >= SPOIL rebuilds parents */
-# define 	T_FATE_ISTMP	4	/* unneeded temp target oddly present */
+# define    T_FATE_SPOIL    4   /* >= SPOIL rebuilds parents */
+# define    T_FATE_ISTMP    4   /* unneeded temp target oddly present */
 
-# define	T_FATE_BUILD	5	/* >= BUILD rebuilds target */
-# define	T_FATE_TOUCHED	5	/* manually touched with -t */
-# define	T_FATE_REBUILD	6
-# define	T_FATE_MISSING	7	/* is missing, needs updating */
-# define	T_FATE_NEEDTMP	8	/* missing temp that must be rebuild */
-# define 	T_FATE_OUTDATED	9	/* is out of date, needs updating */
-# define 	T_FATE_UPDATE	10	/* deps updated, needs updating */
+# define    T_FATE_BUILD    5   /* >= BUILD rebuilds target */
+# define    T_FATE_TOUCHED  5   /* manually touched with -t */
+# define    T_FATE_REBUILD  6
+# define    T_FATE_MISSING  7   /* is missing, needs updating */
+# define    T_FATE_NEEDTMP  8   /* missing temp that must be rebuild */
+# define    T_FATE_OUTDATED 9   /* is out of date, needs updating */
+# define    T_FATE_UPDATE   10  /* deps updated, needs updating */
 
-# define 	T_FATE_BROKEN	11	/* >= BROKEN ruins parents */
-# define 	T_FATE_CANTFIND	11	/* no rules to make missing target */
-# define 	T_FATE_CANTMAKE	12	/* can't find dependents */
+# define    T_FATE_BROKEN   11  /* >= BROKEN ruins parents */
+# define    T_FATE_CANTFIND 11  /* no rules to make missing target */
+# define    T_FATE_CANTMAKE 12  /* can't find dependents */
 
-	char	progress;		/* tracks make1() progress */
+    char    progress;       /* tracks make1() progress */
 
-# define	T_MAKE_INIT	0	/* make1(target) not yet called */
-# define	T_MAKE_ONSTACK	1	/* make1(target) on stack */
-# define	T_MAKE_ACTIVE	2	/* make1(target) in make1b() */
-# define	T_MAKE_RUNNING	3	/* make1(target) running commands */
-# define	T_MAKE_DONE	4	/* make1(target) done */
+# define    T_MAKE_INIT 0   /* make1(target) not yet called */
+# define    T_MAKE_ONSTACK  1   /* make1(target) on stack */
+# define    T_MAKE_ACTIVE   2   /* make1(target) in make1b() */
+# define    T_MAKE_RUNNING  3   /* make1(target) running commands */
+# define    T_MAKE_DONE 4   /* make1(target) done */
 
-	char	status;			/* execcmd() result */
+    char    status;         /* execcmd() result */
 
-	int	asynccnt;		/* child deps outstanding */
-	TARGETS	*parents;		/* used by make1() for completion */
-	char	*cmds;			/* type-punned command list */
+    int     asynccnt;       /* child deps outstanding */
+    TARGETS *parents;       /* used by make1() for completion */
+    char    *cmds;          /* type-punned command list */
 
     char* failed;
 } ;
 
-void    add_include( TARGET * including, TARGET * included );
-RULE 	*bindrule( char *rulename, module_t* );
+void     add_include( TARGET * including, TARGET * included );
+RULE *   bindrule   ( char * rulename, module_t* );
 
 RULE*   import_rule( RULE* source, module_t* m, char* name );
 RULE*   new_rule_body( module_t* m, char* rulename, argument_list* args, PARSE* procedure, int exprt );
@@ -240,7 +242,7 @@ TARGET  *bindtarget( const char *targetname );
 TARGET *copytarget( const TARGET *t );
 void bind_explicitly_located_targets();
 TARGET* search_for_target( char * name, LIST* search_path );
-void 	touchtarget( char *t );
+void    touchtarget( char *t );
 TARGETS *targetlist( TARGETS *chain, LIST  *targets );
 TARGETS *targetentry( TARGETS *chain, TARGET *target );
 TARGETS *targetchain( TARGETS *chain, TARGETS *targets );
@@ -248,12 +250,12 @@ void freetargets( TARGETS *chain );
 ACTIONS *actionlist( ACTIONS *chain, ACTION *action );
 void freeactions( ACTIONS *chain );
 SETTINGS *addsettings( SETTINGS *head, int flag, char *symbol, LIST *value );
-void 	pushsettings( SETTINGS *v );
-void 	popsettings( SETTINGS *v );
+void    pushsettings( SETTINGS *v );
+void    popsettings( SETTINGS *v );
 SETTINGS *copysettings( SETTINGS *v );
-void 	freesettings( SETTINGS *v );
+void    freesettings( SETTINGS *v );
 void    rule_free( RULE *r );
-void	donerules();
+void    donerules();
 
 argument_list* args_new();
 void    args_refer( argument_list* );

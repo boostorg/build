@@ -10,5 +10,5 @@
 
 #include "lists.h"
 
-LIST *var_expand( LIST	*l, char *in, char *end, LOL *lol, int cancopyin );
+LIST *var_expand( LIST  *l, char *in, char *end, LOL *lol, int cancopyin );
 void var_expand_unit_test();

@@ -16,7 +16,7 @@ http://www.boost.org/LICENSE_1_0.txt)
     #define ATOMIC_UNCOLLECTABLE
     #define NO_EXECUTE_PERMISSION
     #define ALL_INTERIOR_POINTERS
-    
+
     #define LARGE_CONFIG
     /*
     #define NO_SIGNALS
@@ -25,11 +25,11 @@ http://www.boost.org/LICENSE_1_0.txt)
     #ifndef GC_DEBUG
     #define NO_DEBUGGING
     #endif
-    
+
     #ifdef __GLIBC__
     #define __USE_GNU
     #endif
-    
+
     #include "boehm_gc/reclaim.c"
     #include "boehm_gc/allchblk.c"
     #include "boehm_gc/misc.c"
@@ -60,7 +60,7 @@ http://www.boost.org/LICENSE_1_0.txt)
     #include "boehm_gc/gc_dlopen.c"
     #include "boehm_gc/backgraph.c"
     #include "boehm_gc/win32_threads.c"
-    
+
     /* Needs to be last. */
     #include "boehm_gc/finalize.c"
 

@@ -1,35 +1,35 @@
 $ ! Copyright 2002-2003 Rene Rivera, Johan Nilsson.
 $ ! Distributed under the Boost Software License, Version 1.0.
 $ ! (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
-$ ! 
+$ !
 $ ! bootstrap build script for Jam
-$ ! 
+$ !
 $ SAY :== WRITE SYS$OUTPUT
-$ ! 
+$ !
 $ ON WARNING THEN CONTINUE
-$ ! 
+$ !
 $ IF "" .NES. F$SEARCH("[.bootstrap_vms]*.*")
 $ THEN
 $   SAY "Cleaning previous boostrap files..."
-$ ! 
+$ !
 $   SET FILE/PROTECTION=(S:RWED) [.bootstrap_vms]*.*;*
 $   DELETE [.bootstrap_vms]*.*;*
 $ ENDIF
-$ ! 
+$ !
 $ IF "" .NES. F$SEARCH("bootstrap_vms.dir")
 $ THEN
 $   SAY "Removing previous boostrap directory..."
-$ ! 
+$ !
 $   SET FILE/PROT=(S:RWED) bootstrap_vms.dir
 $   DELETE bootstrap_vms.dir;
 $ ENDIF
-$ ! 
+$ !
 $ SAY "Creating boostrap directory..."
-$ ! 
+$ !
 $ CREATE/DIR [.bootstrap_vms]
-$ ! 
+$ !
 $ SAY "Building bootstrap jam..."
-$ ! 
+$ !
 $ CC_FLAGS = "/DEFINE=VMS /STANDARD=VAXC /PREFIX_LIBRARY_ENTRIES=ALL_ENTRIES "
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]builtins.obj builtins.c
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]command.obj command.c
@@ -95,11 +95,11 @@ $ link -
  [.bootstrap_vms]subst.obj, -
  [.bootstrap_vms]timestamp.obj, -
  [.bootstrap_vms]variable.obj
-$ ! 
+$ !
 $ SAY "Cleaning any previous build..."
-$ ! 
+$ !
 $ MCR [.bootstrap_vms]jam0.exe -f build.jam --toolset=vmsdecc clean
-$ ! 
+$ !
 $ SAY "Building Boost.Jam..."
-$ ! 
+$ !
 $ MCR [.bootstrap_vms]jam0.exe -f build.jam --toolset=vmsdecc

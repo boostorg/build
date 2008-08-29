@@ -59,18 +59,16 @@ void profile_enter( char* rulename, profile_frame* frame )
     }
 }
 
+
 void profile_memory( long mem )
 {
     if ( DEBUG_PROFILE )
-    {
         if ( profile_stack && profile_stack->info )
-        {
             profile_stack->info->memory += mem;
-        }
-    }
 }
-    
-void profile_exit(profile_frame* frame)
+
+
+void profile_exit( profile_frame * frame )
 {
     if ( DEBUG_PROFILE )
     {
@@ -78,12 +76,12 @@ void profile_exit(profile_frame* frame)
         clock_t t = clock() - frame->entry_time - frame->overhead;
         /* If this rule is already present on the stack, don't add the time for
            this instance. */
-        if (frame->info->stack_count == 1)
+        if ( frame->info->stack_count == 1 )
             frame->info->cumulative += t;
         /* Net time does not depend on presense of the same rule in call stack. */
         frame->info->net += t - frame->subrules;
 
-        if (frame->caller)
+        if ( frame->caller )
         {
             /* caller's cumulative time must account for this overhead */
             frame->caller->overhead += frame->overhead;
@@ -95,9 +93,10 @@ void profile_exit(profile_frame* frame)
     }
 }
 
-static void dump_profile_entry(void* p_, void* ignored)
+
+static void dump_profile_entry( void * p_, void * ignored )
 {
-    profile_info* p = (profile_info*)p_;
+    profile_info * p = (profile_info *)p_;
     unsigned long mem_each = (p->memory/(p->num_entries ? p->num_entries : 1));
     double cumulative = p->cumulative;
     double net = p->net;
@@ -118,16 +117,17 @@ static void dump_profile_entry(void* p_, void* ignored)
         p->name);
 }
 
+
 void profile_dump()
 {
     if ( profile_hash )
     {
-        printf("%10s %12s %12s %12s %10s %10s %s\n",
+        printf( "%10s %12s %12s %12s %10s %10s %s\n",
             "--count--", "--gross--", "--net--", "--each--",
             "--mem--", "--each--",
-            "--name--");
+            "--name--" );
         hashenumerate( profile_hash, dump_profile_entry, 0 );
-        dump_profile_entry(&profile_other,0);
-        dump_profile_entry(&profile_total,(void*)1);
+        dump_profile_entry( &profile_other, 0 );
+        dump_profile_entry( &profile_total, (void *)1 );
     }
 }

@@ -42,7 +42,7 @@ struct _PARSE {
 void    parse_file( char *f, FRAME* frame );
 void    parse_save( PARSE *p );
 
-PARSE * parse_make( 
+PARSE * parse_make(
     LIST    *(*func)( PARSE *p, FRAME* frame ),
     PARSE   *left,
     PARSE   *right,

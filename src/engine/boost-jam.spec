@@ -11,9 +11,9 @@ Packager: Rene Rivera <grafik@redshift-software.com>
 BuildRoot: /var/tmp/%{name}-%{version}.root
 
 %description
-Boost Jam is a build tool based on FTJam, which in turn is based on 
+Boost Jam is a build tool based on FTJam, which in turn is based on
 Perforce Jam. It contains significant improvements made to facilitate
-its use in the Boost Build System, but should be backward compatible 
+its use in the Boost Build System, but should be backward compatible
 with Perforce Jam.
 
 Authors:
@@ -26,7 +26,7 @@ Copyright:
     +\  Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
     \+/
     License is hereby granted to use this software and distribute it
-    freely, as long as this copyright notice is retained and modifications 
+    freely, as long as this copyright notice is retained and modifications
     are clearly marked.
     ALL WARRANTIES ARE HEREBY DISCLAIMED.
 
@@ -34,7 +34,7 @@ Also:
     Copyright 2001-2006 David Abrahams.
     Copyright 2002-2006 Rene Rivera.
     Copyright 2003-2006 Vladimir Prus.
-    
+
     Distributed under the Boost Software License, Version 1.0.
     (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 

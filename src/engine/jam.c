@@ -1,12 +1,12 @@
 /*
  * /+\
- * +\	Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
+ * +\   Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.
  * \+/
  *
  * This file is part of jam.
  *
  * License is hereby granted to use this software and distribute it
- * freely, as long as this copyright notice is retained and modifications 
+ * freely, as long as this copyright notice is retained and modifications
  * are clearly marked.
  *
  * ALL WARRANTIES ARE HEREBY DISCLAIMED.
@@ -27,11 +27,11 @@
  *
  * The top half of the code is structured such:
  *
- *                       jam 
- *                      / | \ 
+ *                       jam
+ *                      / | \
  *                 +---+  |  \
- *                /       |   \ 
- *         jamgram     option  \ 
+ *                /       |   \
+ *         jamgram     option  \
  *        /  |   \              \
  *       /   |    \              \
  *      /    |     \             |
@@ -69,32 +69,32 @@
  *
  * Roughly, the modules are:
  *
- *	builtins.c - jam's built-in rules
- *	command.c - maintain lists of commands
- *	compile.c - compile parsed jam statements
- *	execunix.c - execute a shell script on UNIX
- *	execvms.c - execute a shell script, ala VMS
- *	expand.c - expand a buffer, given variable values
- *	file*.c - scan directories and archives on *
- *	hash.c - simple in-memory hashing routines 
+ *  builtins.c - jam's built-in rules
+ *  command.c - maintain lists of commands
+ *  compile.c - compile parsed jam statements
+ *  execunix.c - execute a shell script on UNIX
+ *  execvms.c - execute a shell script, ala VMS
+ *  expand.c - expand a buffer, given variable values
+ *  file*.c - scan directories and archives on *
+ *  hash.c - simple in-memory hashing routines
  *  hdrmacro.c - handle header file parsing for filename macro definitions
- *	headers.c - handle #includes in source files
- *	jambase.c - compilable copy of Jambase
- *	jamgram.y - jam grammar
- *	lists.c - maintain lists of strings
- *	make.c - bring a target up to date, once rules are in place
- *	make1.c - execute command to bring targets up to date
- *	newstr.c - string manipulation routines
- *	option.c - command line option processing
- *	parse.c - make and destroy parse trees as driven by the parser
- *	path*.c - manipulate file names on *
- *	hash.c - simple in-memory hashing routines 
- *	regexp.c - Henry Spencer's regexp
- *	rules.c - access to RULEs, TARGETs, and ACTIONs
- *	scan.c - the jam yacc scanner
- *	search.c - find a target along $(SEARCH) or $(LOCATE) 
- *	timestamp.c - get the timestamp of a file or archive member
- *	variable.c - handle jam multi-element variables
+ *  headers.c - handle #includes in source files
+ *  jambase.c - compilable copy of Jambase
+ *  jamgram.y - jam grammar
+ *  lists.c - maintain lists of strings
+ *  make.c - bring a target up to date, once rules are in place
+ *  make1.c - execute command to bring targets up to date
+ *  newstr.c - string manipulation routines
+ *  option.c - command line option processing
+ *  parse.c - make and destroy parse trees as driven by the parser
+ *  path*.c - manipulate file names on *
+ *  hash.c - simple in-memory hashing routines
+ *  regexp.c - Henry Spencer's regexp
+ *  rules.c - access to RULEs, TARGETs, and ACTIONs
+ *  scan.c - the jam yacc scanner
+ *  search.c - find a target along $(SEARCH) or $(LOCATE)
+ *  timestamp.c - get the timestamp of a file or archive member
+ *  variable.c - handle jam multi-element variables
  *
  * 05/04/94 (seiwald) - async multiprocess (-j) support
  * 02/08/95 (seiwald) - -n implies -d2.
@@ -138,17 +138,17 @@
 # endif
 
 struct globs globs = {
-	0,			/* noexec */
-	1,			/* jobs */
-	0,			/* quitquick */
-	0,			/* newestfirst */
+    0,          /* noexec */
+    1,          /* jobs */
+    0,          /* quitquick */
+    0,          /* newestfirst */
         0,                      /* pipes action stdout and stderr merged to action output */
 # ifdef OS_MAC
-	{ 0, 0 },		/* debug - suppress tracing output */
+    { 0, 0 },       /* debug - suppress tracing output */
 # else
-	{ 0, 1 }, 		/* debug ... */
+    { 0, 1 },       /* debug ... */
 # endif
-	0,			/* output commands, not run them */
+    0,          /* output commands, not run them */
     0 /* action timeout */
 } ;
 
@@ -156,9 +156,9 @@ struct globs globs = {
 
 static char *othersyms[] = { OSMAJOR, OSMINOR, OSPLAT, JAMVERSYM, 0 } ;
 
-/* Known for sure: 
- *	mac needs arg_enviro
- *	OS2 needs extern environ
+/* Known for sure:
+ *  mac needs arg_enviro
+ *  OS2 needs extern environ
  */
 
 # ifdef OS_MAC
@@ -180,7 +180,7 @@ extern char **_environ;
 
 # ifndef use_environ
 # define use_environ environ
-# if !defined( __WATCOM__ ) && !defined( OS_OS2 ) && !defined( OS_NT ) 
+# if !defined( __WATCOM__ ) && !defined( OS_OS2 ) && !defined( OS_NT )
 extern char **environ;
 # endif
 # endif
@@ -195,7 +195,7 @@ static void run_unit_tests()
 # if defined( USE_EXECNT )
     extern void execnt_unit_test();
     execnt_unit_test();
-# endif 
+# endif
     string_unit_test();
     var_expand_unit_test();
 }
@@ -204,7 +204,7 @@ static void run_unit_tests()
 #ifdef HAVE_PYTHON
     extern PyObject*
     bjam_call(PyObject *self, PyObject *args);
- 
+
     extern PyObject*
     bjam_import_rule(PyObject* self, PyObject* args);
 
@@ -220,12 +220,12 @@ static void run_unit_tests()
 
 int  main( int argc, char **argv, char **arg_environ )
 {
-    int		n;
-    char		*s;
-    struct option	optv[N_OPTS];
-    const char	*all = "all";
-    int		anyhow = 0;
-    int		status;
+    int     n;
+    char        *s;
+    struct option   optv[N_OPTS];
+    const char  *all = "all";
+    int     anyhow = 0;
+    int     status;
     int arg_c = argc;
     char ** arg_v = argv;
     const char *progname = argv[0];
@@ -292,7 +292,7 @@ int  main( int argc, char **argv, char **arg_environ )
     }
 
     if( ( s = getoptval( optv, 'q', 0 ) ) )
- 	globs.quitquick = 1;
+    globs.quitquick = 1;
 
     if( ( s = getoptval( optv, 'a', 0 ) ) )
         anyhow++;
@@ -341,7 +341,7 @@ int  main( int argc, char **argv, char **arg_environ )
     {
         PROFILE_ENTER(MAIN_PYTHON);
         Py_Initialize();
-    
+
         {
             static PyMethodDef BjamMethods[] = {
                 {"call", bjam_call, METH_VARARGS,
@@ -356,13 +356,13 @@ int  main( int argc, char **argv, char **arg_environ )
                  "Returns bjam backtrace from the last call into Python."},
                 {NULL, NULL, 0, NULL}
             };
-    
-            Py_InitModule("bjam", BjamMethods);
+
+            Py_InitModule( "bjam", BjamMethods );
         }
         PROFILE_EXIT(MAIN_PYTHON);
     }
     #endif
-    
+
 #ifndef NDEBUG
     run_unit_tests();
 #endif
@@ -375,10 +375,9 @@ int  main( int argc, char **argv, char **arg_environ )
 
     var_set( "JAMDATE", list_new( L0, outf_time(time(0)) ), VAR_SET );
 
- 
     var_set( "JAM_VERSION",
-             list_new( list_new( list_new( L0, newstr( VERSION_MAJOR_SYM ) ), 
-                                 newstr( VERSION_MINOR_SYM ) ), 
+             list_new( list_new( list_new( L0, newstr( VERSION_MAJOR_SYM ) ),
+                                 newstr( VERSION_MINOR_SYM ) ),
                        newstr( VERSION_PATCH_SYM ) ),
              VAR_SET );
 
@@ -389,12 +388,12 @@ int  main( int argc, char **argv, char **arg_environ )
 
         if( uname( &u ) >= 0 )
         {
-            var_set( "JAMUNAME", 
-                     list_new( 
+            var_set( "JAMUNAME",
+                     list_new(
                          list_new(
                              list_new(
                                  list_new(
-                                     list_new( L0, 
+                                     list_new( L0,
                                                newstr( u.sysname ) ),
                                      newstr( u.nodename ) ),
                                  newstr( u.release ) ),
@@ -408,18 +407,18 @@ int  main( int argc, char **argv, char **arg_environ )
 
     /* first into global module, with splitting, for backward compatibility */
     var_defines( use_environ, 1 );
-    
+
     /* then into .ENVIRON, without splitting */
     enter_module( bindmodule(".ENVIRON") );
     var_defines( use_environ, 0 );
     exit_module( bindmodule(".ENVIRON") );
 
-	/*
-	 * Jam defined variables OS, OSPLAT
+    /*
+     * Jam defined variables OS, OSPLAT
      * We load them after environment, so that
-     * setting OS in environment does not 
+     * setting OS in environment does not
      * change Jam notion of the current platform.
-	 */
+     */
 
     var_defines( othersyms, 1 );
 
@@ -444,9 +443,9 @@ int  main( int argc, char **argv, char **arg_environ )
         var_set( "ARGV", list_new( L0, newstr( arg_v[n] ) ), VAR_APPEND );
     }
 
-	/* Initialize built-in rules */
+    /* Initialize built-in rules */
 
-	load_builtins();
+    load_builtins();
 
     /* Add the targets in the command line to update list */
 
@@ -469,11 +468,11 @@ int  main( int argc, char **argv, char **arg_environ )
     {
         FRAME frame[1];
         frame_init( frame );
-	for( n = 0; s = getoptval( optv, 'f', n ); n++ )
-	    parse_file( s, frame );
+    for( n = 0; s = getoptval( optv, 'f', n ); n++ )
+        parse_file( s, frame );
 
-	if( !n )
-	    parse_file( "+", frame );
+    if( !n )
+        parse_file( "+", frame );
     }
 
     status = yyanyerrors();
@@ -499,13 +498,13 @@ int  main( int argc, char **argv, char **arg_environ )
 
     {
         PROFILE_ENTER(MAIN_MAKE);
-        
-        LIST* targets = targets_to_update();
+
+        LIST * targets = targets_to_update();
         if ( !targets )
         {
             status |= make( 1, &all, anyhow );
         }
-        else 
+        else
         {
             int targets_count = list_length(targets);
             const char **targets2 = (const char **)BJAM_MALLOC(targets_count * sizeof(char *));
@@ -514,16 +513,16 @@ int  main( int argc, char **argv, char **arg_environ )
             {
                 targets2[n++] = targets->string;
             }
-            status |= make( targets_count, targets2, anyhow );       
+            status |= make( targets_count, targets2, anyhow );
             free(targets);
         }
-        
+
         PROFILE_EXIT(MAIN_MAKE);
     }
 
 
     PROFILE_EXIT(MAIN); }
-    
+
     if ( DEBUG_PROFILE )
         profile_dump();
 
@@ -543,9 +542,8 @@ int  main( int argc, char **argv, char **arg_environ )
 #ifdef HAVE_PYTHON
     Py_Finalize();
 #endif
-    
-    BJAM_MEM_CLOSE();
 
+    BJAM_MEM_CLOSE();
 
     return status ? EXITBAD : EXITOK;
 }

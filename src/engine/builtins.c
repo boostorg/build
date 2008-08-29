@@ -31,16 +31,16 @@
  *
  * External routines:
  *
- * 	load_builtin() - define builtin rules
+ *  load_builtin() - define builtin rules
  *
  * Internal routines:
  *
- *	builtin_depends() - DEPENDS/INCLUDES rule
- *	builtin_echo() - ECHO rule
- *	builtin_exit() - EXIT rule
- *	builtin_flags() - NOCARE, NOTFILE, TEMPORARY rule
- *	builtin_glob() - GLOB rule
- *	builtin_match() - MATCH rule
+ *  builtin_depends() - DEPENDS/INCLUDES rule
+ *  builtin_echo() - ECHO rule
+ *  builtin_exit() - EXIT rule
+ *  builtin_flags() - NOCARE, NOTFILE, TEMPORARY rule
+ *  builtin_glob() - GLOB rule
+ *  builtin_match() - MATCH rule
  *
  * 01/10/01 (seiwald) - split from compile.c
  */
@@ -417,42 +417,44 @@ builtin_calc(
 
 LIST *
 builtin_depends(
-	PARSE	*parse,
-	FRAME *frame )
+    PARSE   *parse,
+    FRAME *frame )
 {
-	LIST *targets = lol_get( frame->args, 0 );
-	LIST *sources = lol_get( frame->args, 1 );
-	LIST *l;
+    LIST *targets = lol_get( frame->args, 0 );
+    LIST *sources = lol_get( frame->args, 1 );
+    LIST *l;
 
-	for( l = targets; l; l = list_next( l ) )
-	{
-	    TARGET *t = bindtarget( l->string );
+    for ( l = targets; l; l = list_next( l ) )
+    {
+        TARGET * t = bindtarget( l->string );
 
-	    /* If doing INCLUDES, switch to the TARGET's include */
-	    /* TARGET, creating it if needed.  The internal include */
-	    /* TARGET shares the name of its parent. */
+        /* If doing INCLUDES, switch to the TARGET's include */
+        /* TARGET, creating it if needed.  The internal include */
+        /* TARGET shares the name of its parent. */
 
-	    if( parse->num )
-	    {
-            if( !t->includes ) {
+        if ( parse->num )
+        {
+            if ( !t->includes )
+            {
                 t->includes = copytarget( t );
                 t->includes->original_target = t;
             }
             t = t->includes;
-	    }
+        }
 
-	    t->depends = targetlist( t->depends, sources );
-	}
+        t->depends = targetlist( t->depends, sources );
+    }
 
     /* Enter reverse links */
-	for( l = sources; l; l = list_next( l ) )
-	{
-	    TARGET *s = bindtarget( l->string );
+    for ( l = sources; l; l = list_next( l ) )
+    {
+        TARGET * s = bindtarget( l->string );
         s->dependents = targetlist( s->dependents, targets );
     }
 
-	return L0;
+    return L0;
 }
+
 
 /*
  * builtin_rebuilds() - REBUILDS rule
@@ -464,21 +466,22 @@ builtin_depends(
 
 LIST *
 builtin_rebuilds(
-	PARSE	*parse,
-	FRAME *frame )
+    PARSE   *parse,
+    FRAME *frame )
 {
-	LIST *targets = lol_get( frame->args, 0 );
-	LIST *rebuilds = lol_get( frame->args, 1 );
-	LIST *l;
+    LIST *targets = lol_get( frame->args, 0 );
+    LIST *rebuilds = lol_get( frame->args, 1 );
+    LIST *l;
 
-	for( l = targets; l; l = list_next( l ) )
-	{
-	    TARGET *t = bindtarget( l->string );
-	    t->rebuilds = targetlist( t->rebuilds, rebuilds );
-	}
+    for( l = targets; l; l = list_next( l ) )
+    {
+        TARGET *t = bindtarget( l->string );
+        t->rebuilds = targetlist( t->rebuilds, rebuilds );
+    }
 
-	return L0;
+    return L0;
 }
+
 
 /*
  * builtin_echo() - ECHO rule
@@ -489,14 +492,15 @@ builtin_rebuilds(
 
 LIST *
 builtin_echo(
-	PARSE	*parse,
-	FRAME *frame )
+    PARSE   *parse,
+    FRAME *frame )
 {
-	list_print( lol_get( frame->args, 0 ) );
-	printf( "\n" );
+    list_print( lol_get( frame->args, 0 ) );
+    printf( "\n" );
     fflush( stdout );
-	return L0;
+    return L0;
 }
+
 
 /*
  * builtin_exit() - EXIT rule
@@ -532,15 +536,15 @@ builtin_exit(
 
 LIST *
 builtin_flags(
-	PARSE	*parse,
-	FRAME *frame )
+    PARSE   *parse,
+    FRAME *frame )
 {
-	LIST *l = lol_get( frame->args, 0 );
+    LIST *l = lol_get( frame->args, 0 );
 
-	for( ; l; l = list_next( l ) )
-	    bindtarget( l->string )->flags |= parse->num;
+    for( ; l; l = list_next( l ) )
+        bindtarget( l->string )->flags |= parse->num;
 
-	return L0;
+    return L0;
 }
 
 /*
@@ -832,23 +836,23 @@ builtin_glob_recursive(
 
 LIST *
 builtin_match(
-	PARSE	*parse,
-	FRAME	*frame )
+    PARSE   *parse,
+    FRAME   *frame )
 {
-	LIST *l, *r;
-	LIST *result = 0;
+    LIST *l, *r;
+    LIST *result = 0;
 
         string buf[1];
         string_new(buf);
 
-	/* For each pattern */
+    /* For each pattern */
 
-	for( l = lol_get( frame->args, 0 ); l; l = l->next )
-	{
+    for( l = lol_get( frame->args, 0 ); l; l = l->next )
+    {
             /* Result is cached and intentionally never freed */
-	    regexp *re = regex_compile( l->string );
+        regexp *re = regex_compile( l->string );
 
-	    /* For each string to match against */
+        /* For each string to match against */
             for( r = lol_get( frame->args, 1 ); r; r = r->next )
             {
                 if( regexec( re, r->string ) )
@@ -1170,7 +1174,7 @@ void backtrace_line( FRAME *frame )
  */
 void backtrace( FRAME *frame )
 {
-	if ( !frame ) return;
+    if ( !frame ) return;
     while ( frame = frame->prev )
     {
         backtrace_line( frame );
