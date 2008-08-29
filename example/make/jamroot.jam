@@ -1,10 +1,9 @@
-
-import toolset : flags ;
+import toolset ;
 
 path-constant HERE : . ;
 make main.cpp : main_cpp.pro : @do-something ;
 
-flags do-something PYTHON : <python.interpreter> ;
+toolset.flags do-something PYTHON : <python.interpreter> ;
 actions do-something
 {
     "$(PYTHON:E=python)" "$(HERE)/foo.py" "$(>)" "$(<)"
