@@ -736,11 +736,12 @@ dependGraphOutput( TARGET *t, int depth )
 	break;
       case T_FATE_ISTMP:
 	printf( "  %s       : Up to date temp file\n", spaces(depth) );
+	break;
       case T_FATE_NEEDTMP:
-	printf( "  %s       : Temporary file, to be updated\n", spaces(depth) );
+    printf( "  %s       : Temporary file, to be updated\n", spaces(depth) );
 	break;
       case T_FATE_TOUCHED:
-        printf( "  %s       : Been touched, updating it\n", spaces(depth) );
+    printf( "  %s       : Been touched, updating it\n", spaces(depth) );
 	break;
       case T_FATE_MISSING:
 	printf( "  %s       : Missing, creating it\n", spaces(depth) );
@@ -749,16 +750,16 @@ dependGraphOutput( TARGET *t, int depth )
 	printf( "  %s       : Outdated, updating it\n", spaces(depth) );
 	break;
       case T_FATE_REBUILD:
-	printf( "  %s       : Rebuild, Updating it\n", spaces(depth) );
+	printf( "  %s       : Rebuild, updating it\n", spaces(depth) );
 	break;
       case T_FATE_UPDATE:
 	printf( "  %s       : Updating it\n", spaces(depth) );
 	break;
       case T_FATE_CANTFIND:
-	printf( "  %s       : Can't find it\n", spaces(depth) );
+	printf( "  %s       : Can not find it\n", spaces(depth) );
 	break;
       case T_FATE_CANTMAKE:
-	printf( "  %s       : Can't make it\n", spaces(depth) );
+	printf( "  %s       : Can not make it\n", spaces(depth) );
 	break;
     }
 
