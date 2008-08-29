@@ -1,4 +1,4 @@
-/* 
+/*
     Copyright 2007 Rene Rivera
     Distributed under the Boost Software License, Version 1.0.
     (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
@@ -12,10 +12,11 @@
 #define bjam_out (stdout)
 #define bjam_err (stderr)
 
-static void out_(
-    const char * data,
-    FILE * io
-    )
+static void out_
+(
+    char const * data,
+    FILE       * io
+)
 {
     while ( *data )
     {
@@ -26,36 +27,39 @@ static void out_(
     }
 }
 
-void out_action(
-    const char * action,
-    const char * target,
-    const char * command,
-    const char * out_data,
-    const char * err_data,
-    int exit_reason
-    )
+
+void out_action
+(
+    char const * action,
+    char const * target,
+    char const * command,
+    char const * out_data,
+    char const * err_data,
+    int          exit_reason
+)
 {
-    /* print out the action+target line, if the action is quite
-    the action should be null. */
+    /* Print out the action+target line, if the action is quite the action
+     * should be null.
+     */
     if ( action )
     {
-        fprintf(bjam_out,"%s %s\n",action,target);
-    }
-    
-    /* print out the command executed if given -d+2 */
-    if ( DEBUG_EXEC )
-    {
-        fputs(command,bjam_out);
-        fputc('\n',bjam_out);
-    }
-    
-    /* print out the command executed to the command stream */
-    if ( globs.cmdout )
-    {
-        fputs(command,globs.cmdout);
+        fprintf( bjam_out, "%s %s\n", action, target );
     }
 
-    switch (exit_reason)
+    /* Print out the command executed if given -d+2. */
+    if ( DEBUG_EXEC )
+    {
+        fputs( command, bjam_out );
+        fputc( '\n', bjam_out );
+    }
+
+    /* Print out the command executed to the command stream. */
+    if ( globs.cmdout )
+    {
+        fputs( command, globs.cmdout );
+    }
+
+    switch ( exit_reason )
     {
         case EXIT_OK:
             break;
@@ -63,59 +67,60 @@ void out_action(
             break;
         case EXIT_TIMEOUT:
         {
-            /* process expired, make user aware with explicit message */
+            /* Process expired, make user aware with explicit message. */
             if ( action )
             {
-                /* but only output for non-quietly actions */
-                fprintf(bjam_out, "%d second time limit exceeded\n", globs.timeout);
+                /* But only output for non-quietly actions. */
+                fprintf( bjam_out, "%d second time limit exceeded\n", globs.timeout );
             }
             break;
         }
         default:
           break;
     }
-    
-    /* print out the command output, if requested */
+
+    /* Print out the command output, if requested. */
     if ( action )
     {
-        /* but only output for non-quietly actions */
-        if (0 != out_data &&
-           ( globs.pipe_action & 1 /* STDOUT_FILENO */ ||
-             globs.pipe_action == 0))
+        /* But only output for non-quietly actions. */
+        if ( ( 0 != out_data ) &&
+           ( ( globs.pipe_action & 1 /* STDOUT_FILENO */ ) ||
+             ( globs.pipe_action == 0 ) ) )
         {
-            out_(out_data,bjam_out);
+            out_( out_data, bjam_out );
         }
-        if (0 != err_data &&
-            globs.pipe_action & 2 /* STDERR_FILENO */)
+        if ( ( 0 != err_data ) &&
+            ( globs.pipe_action & 2 /* STDERR_FILENO */ ) )
         {
-            out_(err_data,bjam_err);
+            out_( err_data, bjam_err );
         }
     }
-    
-    fflush(bjam_out);
-    fflush(bjam_err);
-    fflush(globs.cmdout);
+
+    fflush( bjam_out );
+    fflush( bjam_err );
+    fflush( globs.cmdout );
 }
 
 
 char * outf_int( int value )
 {
     char buffer[50];
-    sprintf(buffer, "%i", value);
-    return newstr(buffer);
+    sprintf( buffer, "%i", value );
+    return newstr( buffer );
 }
+
 
 char * outf_double( double value )
 {
     char buffer[50];
-    sprintf(buffer, "%f", value);
-    return newstr(buffer);
+    sprintf( buffer, "%f", value );
+    return newstr( buffer );
 }
+
 
 char * outf_time( time_t value )
 {
     char buffer[50];
-    strftime(buffer,49,"%Y-%m-%d %H:%M:%SZ",gmtime(&value));
-    return newstr(buffer);
+    strftime( buffer, 49, "%Y-%m-%d %H:%M:%SZ", gmtime( &value ) );
+    return newstr( buffer );
 }
-

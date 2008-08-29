@@ -25,7 +25,7 @@
  * 09/07/00 (seiwald) - documented lol_*() functions
  */
 
-static LIST *freelist = 0;	/* junkpile for list_free() */
+static LIST *freelist = 0;  /* junkpile for list_free() */
 
 /*
  * list_append() - append a list onto another one, returning total
@@ -33,25 +33,25 @@ static LIST *freelist = 0;	/* junkpile for list_free() */
 
 LIST *
 list_append(
-	LIST	*l,
-	LIST	*nl )
+    LIST    *l,
+    LIST    *nl )
 {
-	if( !nl )
-	{
-	    /* Just return l */
-	}
-	else if( !l )
-	{
-	    l = nl;
-	}
-	else
-	{
-	    /* Graft two non-empty lists. */
-	    l->tail->next = nl;
-	    l->tail = nl->tail;
-	}
+    if( !nl )
+    {
+        /* Just return l */
+    }
+    else if( !l )
+    {
+        l = nl;
+    }
+    else
+    {
+        /* Graft two non-empty lists. */
+        l->tail->next = nl;
+        l->tail = nl->tail;
+    }
 
-	return l;
+    return l;
 }
 
 /*
@@ -60,41 +60,41 @@ list_append(
 
 LIST *
 list_new(
-	LIST	*head,
-	char	*string )
+    LIST    *head,
+    char    *string )
 {
-	LIST *l;
+    LIST *l;
 
-	if( DEBUG_LISTS )
-	    printf( "list > %s <\n", string );
+    if( DEBUG_LISTS )
+        printf( "list > %s <\n", string );
 
-	/* Get list struct from freelist, if one available.  */
-	/* Otherwise allocate. */
-	/* If from freelist, must free string first */
+    /* Get list struct from freelist, if one available.  */
+    /* Otherwise allocate. */
+    /* If from freelist, must free string first */
 
-	if( freelist )
-	{
-	    l = freelist;
-	    freestr( l->string );
-	    freelist = freelist->next;
-	}
-	else
-	{
+    if( freelist )
+    {
+        l = freelist;
+        freestr( l->string );
+        freelist = freelist->next;
+    }
+    else
+    {
         l = (LIST *)BJAM_MALLOC( sizeof( LIST ) );
-	}
+    }
 
-	/* If first on chain, head points here. */
-	/* If adding to chain, tack us on. */
-	/* Tail must point to this new, last element. */
+    /* If first on chain, head points here. */
+    /* If adding to chain, tack us on. */
+    /* Tail must point to this new, last element. */
 
-	if( !head ) head = l;
-	else head->tail->next = l;
-	head->tail = l;
-	l->next = 0;
+    if( !head ) head = l;
+    else head->tail->next = l;
+    head->tail = l;
+    l->next = 0;
 
-	l->string = string;
+    l->string = string;
 
-	return head;
+    return head;
 }
 
 /*
@@ -103,13 +103,13 @@ list_new(
 
 LIST *
 list_copy(
-	LIST	*l,
-	LIST 	*nl )
+    LIST    *l,
+    LIST    *nl )
 {
-	for( ; nl; nl = list_next( nl ) )
-	    l = list_new( l, copystr( nl->string ) );
+    for( ; nl; nl = list_next( nl ) )
+        l = list_new( l, copystr( nl->string ) );
 
-	return l;
+    return l;
 }
 
 /*
@@ -118,19 +118,19 @@ list_copy(
 
 LIST *
 list_sublist(
-	LIST	*l,
-	int	start,
-	int	count )
+    LIST    *l,
+    int start,
+    int count )
 {
-	LIST	*nl = 0;
+    LIST    *nl = 0;
 
-	for( ; l && start--; l = list_next( l ) )
-	    ;
+    for( ; l && start--; l = list_next( l ) )
+        ;
 
-	for( ; l && count--; l = list_next( l ) )
-	    nl = list_new( nl, copystr( l->string ) );
+    for( ; l && count--; l = list_next( l ) )
+        nl = list_new( nl, copystr( l->string ) );
 
-	return nl;
+    return nl;
 }
 
 static int str_ptr_compare(const void *va, const void *vb)
@@ -177,15 +177,15 @@ list_sort(
  */
 
 void
-list_free( LIST	*head )
+list_free( LIST *head )
 {
-	/* Just tack onto freelist. */
+    /* Just tack onto freelist. */
 
-	if( head )
-	{
-	    head->tail->next = freelist;
-	    freelist = head;
-	}
+    if( head )
+    {
+        head->tail->next = freelist;
+        freelist = head;
+    }
 }
 
 /*
@@ -226,12 +226,12 @@ list_print( LIST *l )
 int
 list_length( LIST *l )
 {
-	int n = 0;
+    int n = 0;
 
-	for( ; l; l = list_next( l ), ++n )
-	    ;
+    for( ; l; l = list_next( l ), ++n )
+        ;
 
-	return n;
+    return n;
 }
 
 int
@@ -277,11 +277,11 @@ lol_init( LOL *lol )
 
 void
 lol_add(
-	LOL	*lol,
-	LIST	*l )
+    LOL *lol,
+    LIST    *l )
 {
-	if( lol->count < LOL_MAX )
-	    lol->list[ lol->count++ ] = l;
+    if( lol->count < LOL_MAX )
+        lol->list[ lol->count++ ] = l;
 }
 
 /*
@@ -291,12 +291,12 @@ lol_add(
 void
 lol_free( LOL *lol )
 {
-	int i;
+    int i;
 
-	for( i = 0; i < lol->count; i++ )
-	    list_free( lol->list[i] );
+    for( i = 0; i < lol->count; i++ )
+        list_free( lol->list[i] );
 
-	lol->count = 0;
+    lol->count = 0;
 }
 
 /*
@@ -305,10 +305,10 @@ lol_free( LOL *lol )
 
 LIST *
 lol_get(
-	LOL	*lol,
-	int	i )
+    LOL *lol,
+    int i )
 {
-	return i < lol->count ? lol->list[i] : 0;
+    return i < lol->count ? lol->list[i] : 0;
 }
 
 /*
@@ -318,12 +318,12 @@ lol_get(
 void
 lol_print( LOL *lol )
 {
-	int i;
+    int i;
 
-	for( i = 0; i < lol->count; i++ )
-	{
-	    if( i )
-		printf( " : " );
-	    list_print( lol->list[i] );
-	}
+    for( i = 0; i < lol->count; i++ )
+    {
+        if( i )
+        printf( " : " );
+        list_print( lol->list[i] );
+    }
 }

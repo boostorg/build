@@ -27,11 +27,11 @@
  *              #include statements.
  *
  *  we look for lines like "#define MACRO  <....>" or '#define MACRO  "    "'
- *  in the target file. When found, we 
+ *  in the target file. When found, we
  *
  *  we then phony up a rule invocation like:
  *
- *	$(HDRRULE) <target> : <resolved included files> ;
+ *  $(HDRRULE) <target> : <resolved included files> ;
  *
  * External routines:
  *    headers1() - scan a target for "#include MACRO" lines and try
@@ -42,8 +42,8 @@
  *
  * 04/13/94 (seiwald) - added shorthand L0 for null list pointer
  * 09/10/00 (seiwald) - replaced call to compile_rule with evaluate_rule,
- *		so that headers() doesn't have to mock up a parse structure
- *		just to invoke a rule.
+ *      so that headers() doesn't have to mock up a parse structure
+ *      just to invoke a rule.
  */
 
 static LIST *header_macros1( LIST *l, char *file, int rec, regexp *re[] );
@@ -53,9 +53,9 @@ typedef struct header_macro
 {
   char*  symbol;
   char*  filename;  /* we could maybe use a LIST here ?? */
-  
+
 } HEADER_MACRO;
- 
+
 static struct hash*   header_macros_hash = 0;
 
 /*
@@ -68,9 +68,9 @@ void
 macro_headers( TARGET *t )
 {
     static regexp *re = 0;
-    FILE	*f;
-    char	buf[ 1024 ];
-    
+    FILE    *f;
+    char    buf[ 1024 ];
+
     if ( DEBUG_HEADER )
         printf( "macro header scan for %s\n", t->name );
 
@@ -80,10 +80,10 @@ macro_headers( TARGET *t )
     if ( re == 0 )
     {
         re = regex_compile(
-            "^[ 	]*#[ 	]*define[ 	]*([A-Za-z][A-Za-z0-9_]*)[ 	]*"
+            "^[     ]*#[    ]*define[   ]*([A-Za-z][A-Za-z0-9_]*)[  ]*"
             "[<\"]([^\">]*)[\">].*$" );
     }
-    
+
     if( !( f = fopen( t->boundname, "r" ) ) )
         return;
 
@@ -96,7 +96,7 @@ macro_headers( TARGET *t )
             /* we detected a line that looks like "#define  MACRO  filename */
             re->endp[1][0] = '\0';
             re->endp[2][0] = '\0';
-        
+
             if ( DEBUG_HEADER )
                 printf( "macro '%s' used to define filename '%s' in '%s'\n",
                         re->startp[1], re->startp[2], t->boundname );
@@ -134,6 +134,6 @@ macro_header_get( const char*  macro_name )
       printf( "### macro '%s' evaluated to '%s'\n", macro_name, v->filename );
     return v->filename;
   }
-  return 0;  
+  return 0;
 }
 

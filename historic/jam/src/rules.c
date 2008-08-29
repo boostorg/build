@@ -53,11 +53,12 @@ static struct hash *targethash = 0;
 
 typedef struct _located_target LOCATED_TARGET ;
 
-struct _located_target {
-    char* file_name;
-    TARGET* target;
+struct _located_target
+{
+    char   * file_name;
+    TARGET * target;
 };
-static struct hash *located_targets = 0;
+static struct hash * located_targets = 0;
 
 
 /*
@@ -82,16 +83,16 @@ void add_include( TARGET * including, TARGET * included )
  * enter_rule() - return pointer to RULE, creating it if necessary in
  * target_module.
  */
-static RULE *
-enter_rule( char *rulename, module_t *target_module )
+static RULE * enter_rule( char * rulename, module_t * target_module )
 {
-    RULE rule, *r = &rule;
+    RULE rule;
+    RULE * r = &rule;
 
     r->name = rulename;
 
-    if ( hashenter( demand_rules( target_module ), (HASHDATA **)&r ) )
+    if ( hashenter( demand_rules( target_module ), (HASHDATA * *)&r ) )
     {
-        r->name = newstr( rulename );	/* never freed */
+        r->name = newstr( rulename );   /* never freed */
         r->procedure = (PARSE *)0;
         r->module = 0;
         r->actions = 0;
@@ -105,38 +106,42 @@ enter_rule( char *rulename, module_t *target_module )
     return r;
 }
 
+
 /*
  * define_rule() - return pointer to RULE, creating it if necessary in
  * target_module. Prepare it to accept a body or action originating in
  * src_module.
  */
-static RULE *
-define_rule( module_t *src_module, char *rulename, module_t *target_module )
-{
-    RULE *r = enter_rule( rulename, target_module );
 
+static RULE * define_rule
+(
+    module_t * src_module,
+    char     * rulename,
+    module_t * target_module
+)
+{
+    RULE * r = enter_rule( rulename, target_module );
     if ( r->module != src_module ) /* if the rule was imported from elsewhere, clear it now */
     {
-        set_rule_body( r, 0, 0 ); 
+        set_rule_body( r, 0, 0 );
         set_rule_actions( r, 0 );
         r->module = src_module; /* r will be executed in the source module */
     }
-
     return r;
 }
 
-void
-rule_free( RULE* r )
+
+void rule_free( RULE * r )
 {
     freestr( r->name );
     r->name = "";
     parse_free( r->procedure );
     r->procedure = 0;
-	if ( r->arguments )
-	    args_free( r->arguments );
+    if ( r->arguments )
+        args_free( r->arguments );
     r->arguments = 0;
     if ( r->actions )
-		actions_free( r->actions );
+        actions_free( r->actions );
     r->actions = 0;
 }
 
@@ -147,25 +152,25 @@ rule_free( RULE* r )
 TARGET *
 bindtarget( const char *targetname )
 {
-	TARGET target, *t = &target;
+    TARGET target, *t = &target;
 
-	if( !targethash )
-	    targethash = hashinit( sizeof( TARGET ), "targets" );
+    if( !targethash )
+        targethash = hashinit( sizeof( TARGET ), "targets" );
 
     /* Perforce added const everywhere. No time to merge that change. */
 #ifdef NT
     targetname = short_path_to_long_path( (char*)targetname );
 #endif
-	t->name = (char*)targetname;
+    t->name = (char*)targetname;
 
-	if( hashenter( targethash, (HASHDATA **)&t ) )
-	{
-	    memset( (char *)t, '\0', sizeof( *t ) );
-	    t->name = newstr( (char*)targetname );	/* never freed */
-	    t->boundname = t->name;		/* default for T_FLAG_NOTFILE */
-	}
+    if( hashenter( targethash, (HASHDATA **)&t ) )
+    {
+        memset( (char *)t, '\0', sizeof( *t ) );
+        t->name = newstr( (char*)targetname );  /* never freed */
+        t->boundname = t->name;     /* default for T_FLAG_NOTFILE */
+    }
 
-	return t;
+    return t;
 }
 
 
@@ -177,8 +182,8 @@ static void bind_explicitly_located_target(void* xtarget, void* data)
         /* Check if there's a setting for LOCATE */
         SETTINGS* s = t->settings;
         for(; s ; s = s->next)
-        {            
-            if (strcmp(s->symbol, "LOCATE") == 0) 
+        {
+            if (strcmp(s->symbol, "LOCATE") == 0)
             {
                 pushsettings(t->settings);
                 /* We're binding a target with explicit LOCATE. So
@@ -192,15 +197,18 @@ static void bind_explicitly_located_target(void* xtarget, void* data)
     }
 }
 
+
 void bind_explicitly_located_targets()
 {
     if (targethash)
         hashenumerate(targethash, bind_explicitly_located_target, (void*)0);
 }
 
-/* TODO: this is probably not a good idea to use functions in other modules like
+
+/* TODO: it is probably not a good idea to use functions in other modules like
   that. */
 void call_bind_rule(char* target, char* boundname);
+
 
 TARGET* search_for_target ( char * name, LIST* search_path )
 {
@@ -213,7 +221,7 @@ TARGET* search_for_target ( char * name, LIST* search_path )
 
     string_new( buf );
 
-	path_parse( name, f );
+    path_parse( name, f );
 
     f->f_grist.ptr = 0;
     f->f_grist.len = 0;
@@ -256,7 +264,7 @@ TARGET* search_for_target ( char * name, LIST* search_path )
         string_truncate( buf, 0 );
         path_build( f, buf, 1 );
 
-        timestamp( buf->value, &time );        
+        timestamp( buf->value, &time );
     }
 
     result = bindtarget( name );
@@ -265,12 +273,12 @@ TARGET* search_for_target ( char * name, LIST* search_path )
     result->binding = time ? T_BIND_EXISTS : T_BIND_MISSING;
 
     call_bind_rule( result->name, result->boundname );
-    
+
     string_free( buf );
 
     return result;
-
 }
+
 
 /*
  * copytarget() - make a new target with the old target's name
@@ -278,19 +286,18 @@ TARGET* search_for_target ( char * name, LIST* search_path )
  * Not entered into hash table -- for internal nodes.
  */
 
-TARGET *
-copytarget( const TARGET *ot )
+TARGET * copytarget( const TARGET * ot )
 {
-	TARGET *t;
+    TARGET *t;
 
-	t = (TARGET *)BJAM_MALLOC( sizeof( *t ) );
-	memset( (char *)t, '\0', sizeof( *t ) );
-	t->name = copystr( ot->name );
-	t->boundname = t->name;
+    t = (TARGET *)BJAM_MALLOC( sizeof( *t ) );
+    memset( (char *)t, '\0', sizeof( *t ) );
+    t->name = copystr( ot->name );
+    t->boundname = t->name;
 
-	t->flags |= T_FLAG_NOTFILE | T_FLAG_INTERNAL;
+    t->flags |= T_FLAG_NOTFILE | T_FLAG_INTERNAL;
 
-	return t;
+    return t;
 }
 
 /*
@@ -300,78 +307,80 @@ copytarget( const TARGET *ot )
 void
 touchtarget( char *t )
 {
-	bindtarget( t )->flags |= T_FLAG_TOUCHED;
+    bindtarget( t )->flags |= T_FLAG_TOUCHED;
 }
+
 
 /*
  * targetlist() - turn list of target names into a TARGET chain
  *
  * Inputs:
- *	chain	existing TARGETS to append to
- *	targets	list of target names
+ *  chain   existing TARGETS to append to
+ *  targets list of target names
  */
 
 TARGETS *
-targetlist( 
-	TARGETS	*chain,
-	LIST 	*targets )
+targetlist(
+    TARGETS *chain,
+    LIST    *targets )
 {
-	for( ; targets; targets = list_next( targets ) )
-	    chain = targetentry( chain, bindtarget( targets->string ) );
+    for( ; targets; targets = list_next( targets ) )
+        chain = targetentry( chain, bindtarget( targets->string ) );
 
-	return chain;
+    return chain;
 }
+
 
 /*
  * targetentry() - add a TARGET to a chain of TARGETS
  *
  * Inputs:
- *	chain	exisitng TARGETS to append to
- *	target	new target to append
+ *  chain   existing TARGETS to append to
+ *  target  new target to append
  */
 
 TARGETS *
-targetentry( 
-	TARGETS	*chain,
-	TARGET	*target )
+targetentry(
+    TARGETS *chain,
+    TARGET  *target )
 {
-	TARGETS *c;
+    TARGETS *c;
 
-	c = (TARGETS *)BJAM_MALLOC( sizeof( TARGETS ) );
-	c->target = target;
+    c = (TARGETS *)BJAM_MALLOC( sizeof( TARGETS ) );
+    c->target = target;
 
-	if( !chain ) chain = c;
-	else chain->tail->next = c;
-	chain->tail = c;
-	c->next = 0;
+    if( !chain ) chain = c;
+    else chain->tail->next = c;
+    chain->tail = c;
+    c->next = 0;
 
-	return chain;
+    return chain;
 }
 
 /*
  * targetchain() - append two TARGET chains
  *
  * Inputs:
- *	chain	exisitng TARGETS to append to
- *	target	new target to append
+ *  chain   exisitng TARGETS to append to
+ *  target  new target to append
  */
 
 TARGETS *
-targetchain( 
-	TARGETS	*chain,
-	TARGETS	*targets )
+targetchain(
+    TARGETS *chain,
+    TARGETS *targets )
 {
-	TARGETS *c;
+    TARGETS *c;
 
-	if( !targets )
-	    return chain;
-	else if( !chain )
-	    return targets;
+    if( !targets )
+        return chain;
+    else if( !chain )
+        return targets;
 
-	chain->tail->next = targets;
-	chain->tail = targets->tail;
+    chain->tail->next = targets;
+    chain->tail = targets->tail;
 
-	return chain;
+    return chain;
 }
 
 /*
@@ -380,19 +389,19 @@ targetchain(
 
 ACTIONS *
 actionlist(
-	ACTIONS	*chain,
-	ACTION	*action )
+    ACTIONS *chain,
+    ACTION  *action )
 {
-	ACTIONS *actions = (ACTIONS *)BJAM_MALLOC( sizeof( ACTIONS ) );
+    ACTIONS *actions = (ACTIONS *)BJAM_MALLOC( sizeof( ACTIONS ) );
 
-	actions->action = action;
+    actions->action = action;
 
-	if( !chain ) chain = actions;
-	else chain->tail->next = actions;
-	chain->tail = actions;
-	actions->next = 0;
+    if( !chain ) chain = actions;
+    else chain->tail->next = actions;
+    chain->tail = actions;
+    actions->next = 0;
 
-	return chain;
+    return chain;
 }
 
 static SETTINGS* settings_freelist;
@@ -409,54 +418,54 @@ static SETTINGS* settings_freelist;
 
 SETTINGS *
 addsettings(
-	SETTINGS *head,
-	int	flag,
-	char	*symbol,
-	LIST	*value )
+    SETTINGS *head,
+    int flag,
+    char    *symbol,
+    LIST    *value )
 {
-	SETTINGS *v;
-	
-	/* Look for previous setting */
+    SETTINGS *v;
 
-	for( v = head; v; v = v->next )
-	    if( !strcmp( v->symbol, symbol ) )
-		break;
+    /* Look for previous setting */
 
-	/* If not previously set, alloc a new. */
-	/* If appending, do so. */
-	/* Else free old and set new. */
+    for( v = head; v; v = v->next )
+        if( !strcmp( v->symbol, symbol ) )
+        break;
 
-	if( !v )
-	{
+    /* If not previously set, alloc a new. */
+    /* If appending, do so. */
+    /* Else free old and set new. */
+
+    if( !v )
+    {
         v = settings_freelist;
-        
+
         if ( v )
             settings_freelist = v->next;
         else
         {
             v = (SETTINGS *)BJAM_MALLOC( sizeof( *v ) );
         }
-        
-	    v->symbol = newstr( symbol );
-	    v->value = value;
-	    v->next = head;
-	    head = v;
-	}
-	else if( flag == VAR_APPEND )
-	{
-	    v->value = list_append( v->value, value );
-	}
-	else if( flag != VAR_DEFAULT )
-	{
-	    list_free( v->value );
-	    v->value = value;
-	} 
+
+        v->symbol = newstr( symbol );
+        v->value = value;
+        v->next = head;
+        head = v;
+    }
+    else if( flag == VAR_APPEND )
+    {
+        v->value = list_append( v->value, value );
+    }
+    else if( flag != VAR_DEFAULT )
+    {
+        list_free( v->value );
+        v->value = value;
+    }
         else
             list_free( value );
 
-	/* Return (new) head of list. */
+    /* Return (new) head of list. */
 
-	return head;
+    return head;
 }
 
 /*
@@ -466,8 +475,8 @@ addsettings(
 void
 pushsettings( SETTINGS *v )
 {
-	for( ; v; v = v->next )
-	    v->value = var_swap( v->symbol, v->value );
+    for( ; v; v = v->next )
+        v->value = var_swap( v->symbol, v->value );
 }
 
 /*
@@ -477,7 +486,7 @@ pushsettings( SETTINGS *v )
 void
 popsettings( SETTINGS *v )
 {
-	pushsettings( v );	/* just swap again */
+    pushsettings( v );  /* just swap again */
 }
 
 /*
@@ -489,7 +498,7 @@ copysettings( SETTINGS *head )
     SETTINGS *copy = 0, *v;
 
     for (v = head; v; v = v->next)
-	copy = addsettings(copy, VAR_SET, v->symbol, list_copy(0, v->value));
+    copy = addsettings(copy, VAR_SET, v->symbol, list_copy(0, v->value));
 
     return copy;
 }
@@ -528,17 +537,17 @@ void freeactions( ACTIONS *chain )
 void
 freesettings( SETTINGS *v )
 {
-	while( v )
-	{
-	    SETTINGS *n = v->next;
+    while( v )
+    {
+        SETTINGS *n = v->next;
 
-	    freestr( v->symbol );
-	    list_free( v->value );
+        freestr( v->symbol );
+        list_free( v->value );
         v->next = settings_freelist;
         settings_freelist = v;
 
-	    v = n;
-	}
+        v = n;
+    }
 }
 
 static void freetarget( void *xt, void *data )
@@ -562,7 +571,7 @@ void
 donerules()
 {
      hashenumerate( targethash, freetarget, 0 );
-	hashdone( targethash );
+    hashdone( targethash );
     while ( settings_freelist )
     {
         SETTINGS* n = settings_freelist->next;
@@ -633,7 +642,7 @@ static void set_rule_body( RULE* rule, argument_list* args, PARSE* procedure )
     if ( rule->arguments )
         args_free( rule->arguments );
     rule->arguments = args;
-    
+
     if ( procedure )
         parse_refer( procedure );
     if ( rule->procedure )
@@ -688,7 +697,7 @@ RULE* new_rule_body( module_t* m, char* rulename, argument_list* args, PARSE* pr
     RULE* local = define_rule( m, rulename, m );
     local->exported = exported;
     set_rule_body( local, args, procedure );
-    
+
     /* Mark the procedure with the global rule name, regardless of
      * whether the rule is exported. That gives us something
      * reasonably identifiable that we can use, e.g. in profiling
@@ -708,7 +717,7 @@ static void set_rule_actions( RULE* rule, rule_actions* actions )
     if ( rule->actions )
         actions_free( rule->actions );
     rule->actions = actions;
-    
+
 }
 
 static rule_actions* actions_new( char* command, LIST* bindlist, int flags )
@@ -732,7 +741,7 @@ RULE* new_rule_actions( module_t* m, char* rulename, char* command, LIST* bindli
 
 /* Looks for a rule in the specified module, and returns it, if found.
    First checks if the rule is present in the module's rule table.
-   Second, if name of the rule is in the form name1.name2 and name1 is in 
+   Second, if name of the rule is in the form name1.name2 and name1 is in
    the list of imported modules, look in module 'name1' for rule 'name2'.
 */
 RULE *lookup_rule( char *rulename, module_t *m, int local_only )
@@ -757,7 +766,7 @@ RULE *lookup_rule( char *rulename, module_t *m, int local_only )
                 result = lookup_rule(p+1, bindmodule(rulename), 1);
             }
             *p = '.';
-        }        
+        }
     }
 
     if (result)
@@ -771,15 +780,15 @@ RULE *lookup_rule( char *rulename, module_t *m, int local_only )
                Mark it for execution in the instance where we've started lookup.
             */
             int execute_in_class = (result->module == m);
-            int execute_in_some_instance = 
+            int execute_in_some_instance =
             (result->module->class_module && result->module->class_module == m);
             if (original_module != m && (execute_in_class || execute_in_some_instance))
-                result->module = original_module;            
+                result->module = original_module;
         }
     }
 
     return result;
-        
+
 }
 
 
@@ -790,7 +799,7 @@ RULE *bindrule( char *rulename, module_t* m)
     result = lookup_rule(rulename, m, 0);
     if (!result)
         result = lookup_rule(rulename, root_module(), 0);
-    /* We've only one caller, 'evaluate_rule', which will complain about 
+    /* We've only one caller, 'evaluate_rule', which will complain about
        calling underfined rule. We could issue the error
        here, but we don't have necessary information, such as frame.
     */

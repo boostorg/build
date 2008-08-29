@@ -39,12 +39,12 @@
  * If $(JAMSHELL) is defined, uses that to formulate execvp()/spawnvp().
  * The default is:
  *
- *	/bin/sh -c %		[ on UNIX/AmigaOS ]
- *	cmd.exe /c %		[ on OS2/WinNT ]
+ *  /bin/sh -c %        [ on UNIX/AmigaOS ]
+ *  cmd.exe /c %        [ on OS2/WinNT ]
  *
  * Each word must be an individual element in a jam variable value.
  *
- * In $(JAMSHELL), % expands to the command string and ! expands to 
+ * In $(JAMSHELL), % expands to the command string and ! expands to
  * the slot number (starting at 1) for multiprocess (-j) invocations.
  * If $(JAMSHELL) doesn't include a %, it is tacked on as the last
  * argument.
@@ -52,11 +52,11 @@
  * Don't just set JAMSHELL to /bin/sh or cmd.exe - it won't work!
  *
  * External routines:
- *	execcmd() - launch an async command execution
- * 	execwait() - wait and drive at most one execution completion
+ *  execcmd() - launch an async command execution
+ *  execwait() - wait and drive at most one execution completion
  *
  * Internal routines:
- *	onintr() - bump intr to note command interruption
+ *  onintr() - bump intr to note command interruption
  *
  * 04/08/94 (seiwald) - Coherent/386 support added.
  * 05/04/94 (seiwald) - async multiprocess interface
@@ -76,7 +76,7 @@ static struct tms old_time;
 
 static struct
 {
-    int	    pid;              /* on win32, a real process handle */
+    int     pid;              /* on win32, a real process handle */
     int     fd[2];            /* file descriptors for stdout and stderr */
     FILE   *stream[2];        /* child's stdout (0) and stderr (1) file stream */
     clock_t start_time;       /* start time of child process */
@@ -99,8 +99,8 @@ static struct
 void
 onintr( int disp )
 {
-	intr++;
-	printf( "...interrupted\n" );
+    intr++;
+    printf( "...interrupted\n" );
 }
 
 /*
@@ -108,70 +108,70 @@ onintr( int disp )
  */
 
 void
-execcmd( 
-	char *string,
-	void (*func)( void *closure, int status, timing_info*, char *, char * ),
-	void *closure,
-	LIST *shell,
+execcmd(
+    char *string,
+    void (*func)( void *closure, int status, timing_info*, char *, char * ),
+    void *closure,
+    LIST *shell,
         char *action,
         char *target )
 {
         static int initialized = 0;
         int out[2], err[2];
-	int slot, len;
-	char *argv[ MAXARGC + 1 ];	/* +1 for NULL */
+    int slot, len;
+    char *argv[ MAXARGC + 1 ];  /* +1 for NULL */
 
-	/* Find a slot in the running commands table for this one. */
+    /* Find a slot in the running commands table for this one. */
 
-	for( slot = 0; slot < MAXJOBS; slot++ )
-	    if( !cmdtab[ slot ].pid )
-		break;
+    for( slot = 0; slot < MAXJOBS; slot++ )
+        if( !cmdtab[ slot ].pid )
+        break;
 
-	if( slot == MAXJOBS )
-	{
-	    printf( "no slots for child!\n" );
-	    exit( EXITBAD );
-	}
+    if( slot == MAXJOBS )
+    {
+        printf( "no slots for child!\n" );
+        exit( EXITBAD );
+    }
 
-	/* Forumulate argv */
-	/* If shell was defined, be prepared for % and ! subs. */
-	/* Otherwise, use stock /bin/sh (on unix) or cmd.exe (on NT). */
+    /* Forumulate argv */
+    /* If shell was defined, be prepared for % and ! subs. */
+    /* Otherwise, use stock /bin/sh (on unix) or cmd.exe (on NT). */
 
-	if( shell )
-	{
-	    int i;
-	    char jobno[4];
-	    int gotpercent = 0;
+    if( shell )
+    {
+        int i;
+        char jobno[4];
+        int gotpercent = 0;
 
-	    sprintf( jobno, "%d", slot + 1 );
+        sprintf( jobno, "%d", slot + 1 );
 
-	    for( i = 0; shell && i < MAXARGC; i++, shell = list_next( shell ) )
-	    {
-		switch( shell->string[0] )
-		{
-		case '%':	argv[i] = string; gotpercent++; break;
-		case '!':	argv[i] = jobno; break;
-		default:	argv[i] = shell->string;
-		}
-		if( DEBUG_EXECCMD )
-		    printf( "argv[%d] = '%s'\n", i, argv[i] );
-	    }
+        for( i = 0; shell && i < MAXARGC; i++, shell = list_next( shell ) )
+        {
+        switch( shell->string[0] )
+        {
+        case '%':   argv[i] = string; gotpercent++; break;
+        case '!':   argv[i] = jobno; break;
+        default:    argv[i] = shell->string;
+        }
+        if( DEBUG_EXECCMD )
+            printf( "argv[%d] = '%s'\n", i, argv[i] );
+        }
 
-	    if( !gotpercent )
-		argv[i++] = string;
+        if( !gotpercent )
+        argv[i++] = string;
 
-	    argv[i] = 0;
-	}
-	else
-	{
-	    argv[0] = "/bin/sh";
-	    argv[1] = "-c";
-	    argv[2] = string;
-	    argv[3] = 0;
-	}
+        argv[i] = 0;
+    }
+    else
+    {
+        argv[0] = "/bin/sh";
+        argv[1] = "-c";
+        argv[2] = string;
+        argv[3] = 0;
+    }
 
-	/* increment jobs running */
-	++cmdsrunning;
+    /* increment jobs running */
+    ++cmdsrunning;
 
         /* save off actual command string */
         cmdtab[ slot ].command = BJAM_MALLOC_ATOMIC(strlen(string)+1);
@@ -197,24 +197,24 @@ execcmd(
         fcntl(err[0], F_SETFL, O_NONBLOCK);
         fcntl(err[1], F_SETFL, O_NONBLOCK);
 
-	/* Start the command */
+    /* Start the command */
 
         cmdtab[ slot ].start_dt = time(0);
 
         if (0 < globs.timeout) {
-            /* 
-             * handle hung processes by manually tracking elapsed 
+            /*
+             * handle hung processes by manually tracking elapsed
              * time and signal process when time limit expires
              */
             struct tms buf;
             cmdtab[ slot ].start_time = times(&buf);
 
             /* make a global, only do this once */
-            if (tps == 0) tps = sysconf(_SC_CLK_TCK);                
+            if (tps == 0) tps = sysconf(_SC_CLK_TCK);
         }
 
-	if ((cmdtab[slot].pid = vfork()) == 0) 
-   	{
+    if ((cmdtab[slot].pid = vfork()) == 0)
+    {
             int pid = getpid();
 
             close(out[0]);
@@ -251,20 +251,20 @@ execcmd(
             _exit(127);
         }
         else if( cmdtab[slot].pid == -1 )
-	{
-	    perror( "vfork" );
-	    exit( EXITBAD );
-	}
+    {
+        perror( "vfork" );
+        exit( EXITBAD );
+    }
 
         setpgid(cmdtab[slot].pid, cmdtab[slot].pid);
 
         /* close write end of pipes */
-        close(out[1]); 
-        close(err[1]); 
+        close(out[1]);
+        close(err[1]);
 
         /* child writes stdout to out[1], parent reads from out[0] */
-	cmdtab[slot].fd[OUT] = out[0];
-	cmdtab[slot].stream[OUT] = fdopen(cmdtab[slot].fd[OUT], "rb");
+    cmdtab[slot].fd[OUT] = out[0];
+    cmdtab[slot].stream[OUT] = fdopen(cmdtab[slot].fd[OUT], "rb");
         if (cmdtab[slot].stream[OUT] == NULL) {
             perror( "fdopen" );
             exit( EXITBAD );
@@ -277,8 +277,8 @@ execcmd(
         }
         else
         {
-	    cmdtab[slot].fd[ERR] = err[0];
-	    cmdtab[slot].stream[ERR] = fdopen(cmdtab[slot].fd[ERR], "rb");
+        cmdtab[slot].fd[ERR] = err[0];
+        cmdtab[slot].stream[ERR] = fdopen(cmdtab[slot].fd[ERR], "rb");
             if (cmdtab[slot].stream[ERR] == NULL) {
                 perror( "fdopen" );
                 exit( EXITBAD );
@@ -290,7 +290,7 @@ execcmd(
         if (action && target)
         {
             len = strlen(action) + 1;
-            if (cmdtab[slot].action_length < len) 
+            if (cmdtab[slot].action_length < len)
             {
                 BJAM_FREE(cmdtab[ slot ].action);
                 cmdtab[ slot ].action = BJAM_MALLOC_ATOMIC(len);
@@ -298,7 +298,7 @@ execcmd(
             }
             strcpy(cmdtab[ slot ].action, action);
             len = strlen(target) + 1;
-            if (cmdtab[slot].target_length < len) 
+            if (cmdtab[slot].target_length < len)
             {
                 BJAM_FREE(cmdtab[ slot ].target);
                 cmdtab[ slot ].target = BJAM_MALLOC_ATOMIC(len);
@@ -316,13 +316,13 @@ execcmd(
             cmdtab[ slot ].target_length = 0;
         }
 
-	/* Save the operation for execwait() to find. */
+    /* Save the operation for execwait() to find. */
 
-	cmdtab[ slot ].func = func;
-	cmdtab[ slot ].closure = closure;
+    cmdtab[ slot ].func = func;
+    cmdtab[ slot ].closure = closure;
 
-	/* Wait until we're under the limit of concurrent commands. */
-	/* Don't trust globs.jobs alone. */
+    /* Wait until we're under the limit of concurrent commands. */
+    /* Don't trust globs.jobs alone. */
 
         while( cmdsrunning >= MAXJOBS || cmdsrunning >= globs.jobs )
             if( !execwait() )
@@ -333,10 +333,10 @@ execcmd(
  *
  * i is index into cmdtab
  *
- * s (stream) indexes 
+ * s (stream) indexes
  *
- * cmdtab[i].stream[s] 
- * cmdtab[i].buffer[s] and 
+ * cmdtab[i].stream[s]
+ * cmdtab[i].buffer[s] and
  * cmdtab[i].fd[s]
  */
 
@@ -374,7 +374,7 @@ void close_streams(int i, int s)
     /* close the stream and pipe descriptor */
     fclose(cmdtab[i].stream[s]);
     cmdtab[i].stream[s] = 0;
-                                                                                  
+
     close(cmdtab[i].fd[s]);
     cmdtab[i].fd[s] = 0;
 }
@@ -487,9 +487,9 @@ execwait()
                         cmdtab[i].pid = 0;
 
                         /* set reason for exit if not timed out */
-                        if (WIFEXITED(status)) 
+                        if (WIFEXITED(status))
                         {
-                            if (0 == WEXITSTATUS(status)) 
+                            if (0 == WEXITSTATUS(status))
                                 cmdtab[i].exit_reason = EXIT_OK;
                             else
                                 cmdtab[i].exit_reason = EXIT_FAIL;
@@ -506,7 +506,7 @@ execwait()
                         time_info.user = (double)(new_time.tms_cutime - old_time.tms_cutime) / CLOCKS_PER_SEC;
                         time_info.start = cmdtab[i].start_dt;
                         time_info.end = time(0);
-    
+
                         old_time = new_time;
 
                         /* Drive the completion */

@@ -41,7 +41,7 @@
  *
  * Each word must be an individual element in a jam variable value.
  *
- * In $(JAMSHELL), % expands to the command string and ! expands to 
+ * In $(JAMSHELL), % expands to the command string and ! expands to
  * the slot number (starting at 1) for multiprocess (-j) invocations.
  * If $(JAMSHELL) doesn't include a %, it is tacked on as the last
  * argument.
@@ -96,7 +96,7 @@ static void read_output();
 static int try_kill_one();
 /* */
 static double creation_time(HANDLE);
-/* Recursive check if first process is parent (directly or indirectly) of 
+/* Recursive check if first process is parent (directly or indirectly) of
 the second one. */
 static int is_parent_child(DWORD, DWORD);
 /* */
@@ -142,7 +142,7 @@ static struct
 /* execution unit tests */
 void execnt_unit_test()
 {
-#if !defined(NDEBUG)        
+#if !defined(NDEBUG)
     /* vc6 preprocessor is broken, so assert with these strings gets
      * confused. Use a table instead.
      */
@@ -178,18 +178,22 @@ void execnt_unit_test()
         /* Work around vc6 bug; it doesn't like escaped string
          * literals inside assert
          */
-        char** argv = string_to_args("\"g++\" -c -I\"Foobar\"");
-        char const expected[] = "-c -I\"Foobar\""; 
-        
-        assert(!strcmp(argv[0], "g++"));
-        assert(!strcmp(argv[1], expected));
-        free_argv(argv);
+        char * * argv = string_to_args(" \"g++\" -c -I\"Foobar\"" );
+        char const expected[] = "-c -I\"Foobar\"";
+
+        assert( !strcmp( argv[0], "g++" ) );
+        assert( !strcmp( argv[1], expected ) );
+        free_argv( argv );
     }
-#endif 
+#endif
 }
 
-/* execcmd() - launch an async command execution */
-void execcmd( 
+
+/*
+ * execcmd() - launch an async command execution.
+ */
+
+void execcmd(
     char *command,
     void (*func)( void *closure, int status, timing_info*, char *invoked_command, char *command_output),
     void *closure,
@@ -203,7 +207,7 @@ void execcmd(
     char **argv = argv_static;
     char *p;
     char* command_orig = command;
-    
+
     /* Check to see if we need to hack around the line-length limitation. */
     /* Look for a JAMSHELL setting of "%", indicating that the command
      * should be invoked directly */
@@ -223,17 +227,17 @@ void execcmd(
         exit( EXITBAD );
     }
 
-    /* compute the name of a temp batch file, for possible use */
+    /* Compute the name of a temp batch file, for possible use. */
     if( !cmdtab[ slot ].tempfile_bat )
     {
         const char *tempdir = path_tmpdir();
         DWORD procID = GetCurrentProcessId();
-  
-        /* SVA - allocate 64 other just to be safe */
+
+        /* SVA - allocate 64 bytes extra just to be safe. */
         cmdtab[ slot ].tempfile_bat = BJAM_MALLOC_ATOMIC( strlen( tempdir ) + 64 );
-  
+
         sprintf(
-            cmdtab[ slot ].tempfile_bat, "%s\\jam%d-%02d.bat", 
+            cmdtab[ slot ].tempfile_bat, "%s\\jam%d-%02d.bat",
             tempdir, procID, slot );
     }
 
@@ -241,25 +245,26 @@ void execcmd(
     while( *(command+1) && isspace( *command ) )
         ++command;
 
-    /* Write to .BAT file unless the line would be too long and it
-     * meets the other spawnability criteria.
+    /* Write to .BAT file unless the line would be too long and it meets the
+     * other spawnability criteria.
      */
     if( raw_cmd && can_spawn( command ) >= MAXLINE )
     {
         if( DEBUG_EXECCMD )
-            printf("Executing raw command directly\n");        
+            printf("Executing raw command directly\n");
     }
     else
     {
         FILE *f = 0;
         int tries = 0;
         raw_cmd = 0;
-        
-        /* Write command to bat file. For some reason this open can
-           fails intermitently. But doing some retries works. Most likely
-           this is due to a previously existing file of the same name that
-           happens to be opened by an active virus scanner. Pointed out,
-           and fix by Bronek Kozicki. */
+
+        /* Write command to bat file. For some reason this open can fail
+         * intermitently. But doing some retries works. Most likely this is due
+         * to a previously existing file of the same name that happens to be
+         * opened by an active virus scanner. Pointed out and fixed by Bronek
+         * Kozicki.
+         */
         for (; !f && tries < 4; ++tries)
         {
             f = fopen( cmdtab[ slot ].tempfile_bat, "w" );
@@ -274,7 +279,7 @@ void execcmd(
         fclose( f );
 
         command = cmdtab[ slot ].tempfile_bat;
-        
+
         if( DEBUG_EXECCMD )
         {
             if (shell)
@@ -327,8 +332,8 @@ void execcmd(
 
     if( !cmdsrunning++ )
         istat = signal( SIGINT, onintr );
-    
-    /* Start the command */
+
+    /* Start the command. */
     {
         SECURITY_ATTRIBUTES sa
             = { sizeof(SECURITY_ATTRIBUTES), 0, 0 };
@@ -367,26 +372,26 @@ void execcmd(
             SetHandleInformation( cmdtab[ slot ].pipe_err[0], HANDLE_FLAG_INHERIT, 0 );
         }
 
-        /* hide the child window, if any */
+        /* Hide the child window, if any. */
         si.dwFlags |= STARTF_USESHOWWINDOW;
         si.wShowWindow = SW_HIDE;
 
-        /* set the child outputs to the pipes */
+        /* Set the child outputs to the pipes. */
         si.dwFlags |= STARTF_USESTDHANDLES;
         si.hStdOutput = cmdtab[ slot ].pipe_out[1];
         if ( globs.pipe_action == 2 )
         {
-            /* pipe stderr to the action error output */
+            /* Pipe stderr to the action error output. */
             si.hStdError = cmdtab[ slot ].pipe_err[1];
         }
         else if ( globs.pipe_action == 1 )
         {
-            /* pipe stderr to the console error output */
+            /* Pipe stderr to the console error output. */
             si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
         }
         else
         {
-            /* pipe stderr to the action merged output */
+            /* Pipe stderr to the action merged output. */
             si.hStdError = cmdtab[ slot ].pipe_out[1];
         }
 
@@ -406,8 +411,8 @@ void execcmd(
             string_new( &cmdtab[ slot ].target );
         }
         string_copy( &cmdtab[ slot ].command, command_orig );
-        
-        /* put together the comman we run */
+
+        /* Put together the command we run. */
         {
             char ** argp = argv;
             string_new(&cmd);
@@ -418,64 +423,64 @@ void execcmd(
                 string_append(&cmd,*(argp++));
             }
         }
-        
-        /* create the output buffers */
+
+        /* Create output buffers. */
         string_new( &cmdtab[ slot ].buffer_out );
         string_new( &cmdtab[ slot ].buffer_err );
 
-        /* run the command, by creating a sub-process for it */
+        /* Run the command by creating a sub-process for it. */
         if (
             ! CreateProcess(
-                NULL, /* application name */
-                cmd.value, /* command line */
-                NULL, /* process attributes */
-                NULL, /* thread attributes */
-                TRUE, /* inherit handles */
-                CREATE_NEW_PROCESS_GROUP, /* create flags */
-                NULL, /* env vars, null inherits env */
-                NULL, /* current dir, null is our current dir */
-                &si, /* startup info */
-                &cmdtab[ slot ].pi /* the child process info, if created */
+                NULL                    ,  /* application name               */
+                cmd.value               ,  /* command line                   */
+                NULL                    ,  /* process attributes             */
+                NULL                    ,  /* thread attributes              */
+                TRUE                    ,  /* inherit handles                */
+                CREATE_NEW_PROCESS_GROUP,  /* create flags                   */
+                NULL                    ,  /* env vars, null inherits env    */
+                NULL                    ,  /* current dir, null is our       */
+                                           /* current dir                    */
+                &si                     ,  /* startup info                   */
+                &cmdtab[ slot ].pi         /* child process info, if created */
                 )
             )
         {
             perror( "CreateProcess" );
             exit( EXITBAD );
         }
-        
-        /* clean up temporary stuff */
+
+        /* Clean up temporary stuff. */
         string_free(&cmd);
     }
 
-    /* Wait until we're under the limit of concurrent commands. */
-    /* Don't trust globs.jobs alone.                            */
-
-    while( cmdsrunning >= MAXJOBS || cmdsrunning >= globs.jobs )
+    /* Wait until we are under the limit of concurrent commands. Do not trust
+     * globs.jobs alone.
+     */
+    while( ( cmdsrunning >= MAXJOBS ) || ( cmdsrunning >= globs.jobs ) )
         if( !execwait() )
             break;
-    
+
     if (argv != argv_static)
-    {
         free_argv(argv);
-    }
 }
 
 
-
 /* execwait()
-    - wait and drive at most one execution completion
+    * wait and drive at most one execution completion
     * waits for one command to complete, while processing the io
       for all ongoing commands.
+
+      Returns 0 if called when there were no more commands being executed or 1
+    otherwise.
 */
 int execwait()
 {
     int i = -1;
 
-    /* Handle naive make1() which doesn't know if cmds are running. */
-
+    /* Handle naive make1() which does not know if cmds are running. */
     if( !cmdsrunning )
         return 0;
-    
+
     /* wait for a command to complete, while snarfing up any output */
     do
     {
@@ -489,13 +494,13 @@ int execwait()
         if ( i < 0 ) i = try_kill_one();
     }
     while ( i < 0 );
-    
-    /* we have a command... process it */
+
+    /* We have a command... process it. */
     --cmdsrunning;
     {
         timing_info time;
         int rstat;
-        
+
         /* the time data for the command */
         record_times(cmdtab[i].pi.hProcess, &time);
 
@@ -536,7 +541,7 @@ int execwait()
             &time,
             cmdtab[i].command.value,
             cmdtab[i].buffer_out.value );
-        
+
         /* clean up the command data, process, etc. */
         string_free(&cmdtab[i].action); string_new(&cmdtab[i].action);
         string_free(&cmdtab[i].target); string_new(&cmdtab[i].target);
@@ -556,6 +561,7 @@ int execwait()
     return 1;
 }
 
+
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 static void free_argv( char** args )
@@ -566,7 +572,7 @@ static void free_argv( char** args )
 
 /* For more details on Windows cmd.exe shell command-line length limitations see
  * the following MSDN article:
- * 
+ *
  *     http://support.microsoft.com/default.aspx?scid=kb;en-us;830473
  */
 int maxline()
@@ -574,7 +580,7 @@ int maxline()
     OSVERSIONINFO os_info;
     os_info.dwOSVersionInfoSize = sizeof(os_info);
     GetVersionEx(&os_info);
-    
+
     if (os_info.dwMajorVersion >= 5) return 8191; /* XP >     */
     if (os_info.dwMajorVersion == 4) return 2047; /* NT 4.x   */
     return 996;                                   /* NT 3.5.1 */
@@ -602,7 +608,7 @@ static char** string_to_args( const char*  string )
     /* drop leading and trailing whitespace if any */
     while (isspace(*string))
         ++string;
-  
+
     src_len = strlen( string );
     while ( src_len > 0 && isspace( string[src_len - 1] ) )
         --src_len;
@@ -624,7 +630,7 @@ static char** string_to_args( const char*  string )
         BJAM_FREE( line );
         return 0;
     }
-    
+
     /* Strip quotes from the first command-line argument and find
      * where it ends.  Quotes are illegal in Win32 pathnames, so we
      * don't need to worry about preserving escaped quotes here.
@@ -644,30 +650,31 @@ static char** string_to_args( const char*  string )
     *dst++ = 0;
     argv[0] = line;
 
-    /* skip whitespace in src */
+    /* Skip whitespace in src. */
     while (isspace(*src))
         ++src;
 
     argv[1] = dst;
 
-    /* Copy the rest of the arguments verbatim */
-    
+    /* Copy the rest of the arguments verbatim. */
     src_len -= src - string;
 
-    /* Use strncat because it appends a trailing nul */
+    /* Use strncat because it appends a trailing nul. */
     *dst = 0;
     strncat(dst, src, src_len);
 
     argv[2] = 0;
-    
+
     return argv;
 }
+
 
 static void onintr( int disp )
 {
     intr++;
     printf( "...interrupted\n" );
 }
+
 
 /*
  * can_spawn() - If the command is suitable for execution via spawnvp,
@@ -676,15 +683,15 @@ static void onintr( int disp )
  */
 long can_spawn(char* command)
 {
-    char *p;
-    
+    char * p;
+
     char inquote = 0;
 
     /* Move to the first non-whitespace */
     command += strspn( command, " \t" );
 
     p = command;
-    
+
     /* Look for newlines and unquoted i/o redirection */
     do
     {
@@ -702,7 +709,7 @@ long can_spawn(char* command)
             if (*p)
                 return 0;
             break;
-            
+
         case '"':
         case '\'':
             if (p > command && p[-1] != '\\')
@@ -712,10 +719,10 @@ long can_spawn(char* command)
                 else if (inquote == 0)
                     inquote = *p;
             }
-                
+
             ++p;
             break;
-            
+
         case '<':
         case '>':
         case '|':
@@ -798,11 +805,11 @@ static time_t filetime_dt(FILETIME t_utc)
     return ceil(filetime_seconds(t_utc)-time_diff);
 }
 
+
 static void record_times(HANDLE process, timing_info* time)
 {
     FILETIME creation, exit, kernel, user;
-    
-    if (GetProcessTimes(process, &creation, &exit, &kernel, &user))
+    if ( GetProcessTimes( process, &creation, &exit, &kernel, &user ) )
     {
         time->system = filetime_seconds(kernel);
         time->user = filetime_seconds(user);
@@ -811,9 +818,11 @@ static void record_times(HANDLE process, timing_info* time)
     }
 }
 
+
 #define IO_BUFFER_SIZE (16*1024)
 
 static char ioBuffer[IO_BUFFER_SIZE+1];
+
 
 static void read_pipe(
     HANDLE in, /* the pipe to read from */
@@ -822,7 +831,7 @@ static void read_pipe(
 {
     DWORD bytesInBuffer = 0;
     DWORD bytesAvailable = 0;
-    
+
     do
     {
         /* check if we have any data to read */
@@ -830,7 +839,7 @@ static void read_pipe(
         {
             bytesAvailable = 0;
         }
-        
+
         /* read in the available data */
         if ( bytesAvailable > 0 )
         {
@@ -879,7 +888,7 @@ static void read_pipe(
 static void read_output()
 {
     int i;
-    
+
     for ( i = 0; i < globs.jobs && i < MAXJOBS; ++i )
     {
         /* read stdout data */
@@ -933,7 +942,7 @@ static int try_kill_one()
     if ( globs.timeout > 0 )
     {
         int i;
-        
+
         for ( i = 0; i < globs.jobs; ++i )
         {
             double t = running_time(cmdtab[i].pi.hProcess);
@@ -1041,7 +1050,7 @@ static void kill_process_tree(DWORD pid, HANDLE process)
         pid = get_process_id(process);
     }
     process_snapshot_h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0);
-    
+
     if (INVALID_HANDLE_VALUE != process_snapshot_h)
     {
         BOOL ok = TRUE;
@@ -1079,61 +1088,65 @@ static double creation_time(HANDLE process)
     return 0.0;
 }
 
-/* Recursive check if first process is parent (directly or indirectly) of 
-the second one. Both processes are passed as process ids, not handles.
-Special return value 2 means that the second process is smss.exe and its 
-parent process is System (first argument is ignored) */
-static int is_parent_child(DWORD parent, DWORD child)
+
+/* Recursive check if first process is parent (directly or indirectly) of the
+ * second one. Both processes are passed as process ids, not handles. Special
+ * return value 2 means that the second process is smss.exe and its parent
+ * process is System (first argument is ignored).
+ */
+
+static int is_parent_child( DWORD parent, DWORD child )
 {
     HANDLE process_snapshot_h = INVALID_HANDLE_VALUE;
 
-    if (!child)
+    if ( !child )
         return 0;
-    if (parent == child)
+    if ( parent == child )
         return 1;
 
-    process_snapshot_h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS,0);
-    if (INVALID_HANDLE_VALUE != process_snapshot_h)
+    process_snapshot_h = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
+    if ( INVALID_HANDLE_VALUE != process_snapshot_h )
     {
         BOOL ok = TRUE;
         PROCESSENTRY32 pinfo;
         pinfo.dwSize = sizeof(PROCESSENTRY32);
         for (
-            ok = Process32First(process_snapshot_h, &pinfo); 
-            ok == TRUE; 
+            ok = Process32First(process_snapshot_h, &pinfo);
+            ok == TRUE;
             ok = Process32Next(process_snapshot_h, &pinfo) )
         {
             if (pinfo.th32ProcessID == child)
             {
-                /*
-                Unfortunately, process ids are not really unique. There might 
-                be spurious "parent and child" relationship match between
-                two non-related processes if real parent process of a given
-                process has exited (while child process kept running as an 
-                "orphan") and the process id of such parent process has been 
-                reused by internals of the operating system when creating 
-                another process. Thus additional check is needed - process
-                creation time. This check may fail (ie. return 0) for system 
-                processes due to insufficient privileges, and that's OK. */
+                /* Unfortunately, process ids are not really unique. There might
+                 * be spurious "parent and child" relationship match between two
+                 * non-related processes if real parent process of a given
+                 * process has exited (while child process kept running as an
+                 * "orphan") and the process id of such parent process has been
+                 * reused by internals of the operating system when creating
+                 * another process.
+                 *
+                 * Thus additional check is needed - process creation time. This
+                 * check may fail (i.e. return 0) for system processes due to
+                 * insufficient privileges, and that is OK.
+                 */
                 double tchild = 0.0;
                 double tparent = 0.0;
-                HANDLE hchild = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pinfo.th32ProcessID);
-
-                CloseHandle(process_snapshot_h);
+                HANDLE hchild = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, pinfo.th32ProcessID );
+                CloseHandle( process_snapshot_h );
 
                 /* csrss.exe may display message box like following:
                     xyz.exe - Unable To Locate Component
-                    This application has failed to start because 
-                    boost_foo-bar.dll was not found. Re-installing the 
+                    This application has failed to start because
+                    boost_foo-bar.dll was not found. Re-installing the
                     application may fix the problem
                 This actually happens when starting test process that depends
-                on a dynamic library which failed to build. We want to 
+                on a dynamic library which failed to build. We want to
                 automatically close these message boxes even though csrss.exe
                 is not our child process. We may depend on the fact that (in
-                all current versions of Windows) csrss.exe is directly 
+                all current versions of Windows) csrss.exe is directly
                 child of smss.exe process, which in turn is directly child of
                 System process, which always has process id == 4 .
-                This check must be performed before comparison of process 
+                This check must be performed before comparison of process
                 creation time */
                 if (stricmp(pinfo.szExeFile, "csrss.exe") == 0
                     && is_parent_child(parent, pinfo.th32ParentProcessID) == 2)
@@ -1153,7 +1166,7 @@ static int is_parent_child(DWORD parent, DWORD child)
                     {
                         tchild = creation_time(hchild);
                         tparent = creation_time(hparent);
-                        
+
                         CloseHandle(hparent);
                     }
                     CloseHandle(hchild);
@@ -1194,14 +1207,14 @@ BOOL CALLBACK close_alert_window_enum(HWND hwnd, LPARAM lParam)
 
     if (!GetClassNameA(hwnd, buf, sizeof(buf)))
         return TRUE; /* failed to read class name; presume it's not a dialog */
- 
+
     if (strcmp(buf, "#32770") != 0)
         return TRUE; /* not a dialog */
 
     /* GetWindowThreadProcessId returns 0 on error, otherwise thread id
     of window message pump thread */
     tid = GetWindowThreadProcessId(hwnd, &pid);
- 
+
     if (tid && is_parent_child(p.pid, pid))
     {
         /* ask really nice */
@@ -1212,7 +1225,7 @@ BOOL CALLBACK close_alert_window_enum(HWND hwnd, LPARAM lParam)
             PostThreadMessageA(tid, WM_QUIT, 0, 0);
             WaitForSingleObject(p.h, 300);
         }
-        
+
         /* done, we do not want to check any other window now */
         return FALSE;
     }
@@ -1220,17 +1233,19 @@ BOOL CALLBACK close_alert_window_enum(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
-static void close_alert(HANDLE process)
+
+static void close_alert( HANDLE process )
 {
     DWORD pid = get_process_id(process);
-    /* If process already exited or we just cannot get its process id, do not 
-    go any further */
-    if (pid)
+    /* If process already exited or we just cannot get its process id, do not go
+     * go any further.
+     */
+    if ( pid )
     {
         PROCESS_HANDLE_ID p;
         p.h = process;
-       	p.pid = pid;
-        EnumWindows(&close_alert_window_enum, (LPARAM) &p);
+        p.pid = pid;
+        EnumWindows( &close_alert_window_enum, (LPARAM)&p );
     }
 }
 

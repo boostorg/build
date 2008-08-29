@@ -10,7 +10,7 @@ else if $(MAC) { rule .path { return ":$(<:J=\:)" ; } }
 else { rule .path { return "$(<:J=/)" ; } }
 if $(VMS) { . = "_" ; }
 else { . = "." ; }
-./ ?= "" ; 
+./ ?= "" ;
 
 # Info about what we are building.
 _VERSION_ = 3 1 17 ;
@@ -341,13 +341,12 @@ toolset vmsdecc link .link : /EXECUTABLE= :
 toolset = [ MATCH --toolset=(.*) : $(ARGV) ] ;
 if ! $(toolset)
 {
-    # For some reason, the following test does not catch 
-    # empty toolset.
+    # For some reason, the following test does not catch empty toolset.
     ECHO "###" ;
     ECHO "###" No toolset specified. Please use --toolset option. ;
     ECHO "###" ;
     ECHO "###" Known toolsets are: $(toolsets:J=", ") ;
-    EXIT "###" ;    
+    EXIT "###" ;
 }
 if ! $(toolset) in $(toolsets)
 {
@@ -449,8 +448,8 @@ jam.source =
     lists.c make.c make1.c mem.c newstr.c
     option.c output.c parse.c regexp.c rules.c
     scan.c search.c subst.c w32_getreg.c
-    timestamp.c variable.c modules.c strings.c filesys.c 
-    builtins.c pwd.c class.c native.c modules/set.c 
+    timestamp.c variable.c modules.c strings.c filesys.c
+    builtins.c pwd.c class.c native.c modules/set.c
     modules/path.c modules/regex.c modules/property-set.c
     modules/sequence.c modules/order.c
     ;
@@ -461,7 +460,7 @@ if $(NT)
 else if $(OS2)
 {
     jam.source += execunix.c fileos2.c pathunix.c ;
-} 
+}
 else if $(VMS)
 {
     jam.source += execvms.c filevms.c pathvms.c ;
@@ -770,7 +769,7 @@ rule .jam
 {
     $(>).exe = [ .exe $(>) : $(jam.source) ] ;
     DEPENDS all : $($(>).exe) ;
-    
+
     if $(debug)
     {
         $(<).exe = $(<:S=$($(>).exe:S)) ;
@@ -929,14 +928,14 @@ rule .package ( dst-dir : src-files + )
             src-files-actual += $(src-path) ;
         }
     }
-    
+
     local pack = ;
     if $(NT) { pack = $(dst-dir).zip ; }
     if $(UNIX) { pack = $(dst-dir).tgz ; }
-    
+
     DEPENDS dist : $(pack) ;
     DEPENDS $(pack) : $(dst-files) ;
-    
+
     local dst-files-queue = $(dst-files) ;
     for local src-path in $(src-files-actual)
     {
@@ -944,11 +943,11 @@ rule .package ( dst-dir : src-files + )
         dst-files-queue = $(dst-files-queue[2-]) ;
         DEPENDS $(dst-file) : $(src-path) $(dst-file:D) ;
         .mkdir $(dst-file:D) ;
-        
+
         [COPY] $(dst-file) : $(src-path) ;
         .clean $(dst-file) ;
     }
-    
+
     [PACK] $(pack) : $(dst-files) ;
     .clean $(pack) ;
 }

@@ -31,10 +31,10 @@
 
 CMD *
 cmd_new(
-	RULE	*rule,
-	LIST	*targets,
-	LIST	*sources,
-	LIST	*shell )
+    RULE    *rule,
+    LIST    *targets,
+    LIST    *sources,
+    LIST    *shell )
 {
     CMD *cmd = (CMD *)BJAM_MALLOC( sizeof( CMD ) );
     /* lift line-length limitation entirely when JAMSHELL is just "%" */
@@ -54,14 +54,14 @@ cmd_new(
     do
     {
         BJAM_FREE(cmd->buf); /* free any buffer from previous iteration */
-        
+
         cmd->buf = (char*)BJAM_MALLOC_ATOMIC(max_line + 1);
-        
-        if (cmd->buf == 0)
+
+        if ( cmd->buf == 0 )
             break;
-        
+
         allocated = var_string( rule->actions->command, cmd->buf, max_line, &cmd->args );
-        
+
         max_line = max_line * 2;
     }
     while( allocated < 0 && max_line < INT_MAX / 2 );
@@ -69,18 +69,18 @@ cmd_new(
     if ( !no_limit )
     {
         /* Bail if the result won't fit in MAXLINE */
-        char *s = cmd->buf;
+        char * s = cmd->buf;
         while ( *s )
         {
             size_t l = strcspn( s, "\n" );
-            
+
             if ( l > MAXLINE )
             {
                 /* We don't free targets/sources/shell if bailing. */
                 cmd_free( cmd );
                 return 0;
             }
-            
+
             s += l;
             if ( *s )
                 ++s;
@@ -97,8 +97,8 @@ cmd_new(
 void
 cmd_free( CMD *cmd )
 {
-	lol_free( &cmd->args );
-	list_free( cmd->shell );
+    lol_free( &cmd->args );
+    list_free( cmd->shell );
     BJAM_FREE( cmd->buf );
-	BJAM_FREE( (char *)cmd );
+    BJAM_FREE( (char *)cmd );
 }

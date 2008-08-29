@@ -26,7 +26,7 @@
  *
  * Once a string is passed to newstr(), the returned string is readonly.
  *
- * This implementation builds a hash table of all strings, so that multiple 
+ * This implementation builds a hash table of all strings, so that multiple
  * calls of newstr() on the same string allocate memory for the string once.
  * Strings are never actually freed.
  */
@@ -104,25 +104,25 @@ static char* allocate(size_t n)
 char *
 newstr( char *string )
 {
-	STRING str, *s = &str;
+    STRING str, *s = &str;
 
-	if( !strhash )
-	    strhash = hashinit( sizeof( STRING ), "strings" );
+    if( !strhash )
+        strhash = hashinit( sizeof( STRING ), "strings" );
 
-	*s = string;
+    *s = string;
 
-	if( hashenter( strhash, (HASHDATA **)&s ) )
-	{
-	    int l = strlen( string );
-	    char *m = (char *)allocate( l + 1 );
+    if( hashenter( strhash, (HASHDATA **)&s ) )
+    {
+        int l = strlen( string );
+        char *m = (char *)allocate( l + 1 );
 
-	    strtotal += l + 1;
-	    memcpy( m, string, l + 1 );
-	    *s = m;
-	}
+        strtotal += l + 1;
+        memcpy( m, string, l + 1 );
+        *s = m;
+    }
 
     strcount_in += 1;
-	return *s;
+    return *s;
 }
 
 /*
@@ -133,7 +133,7 @@ char *
 copystr( char *s )
 {
     strcount_in += 1;
-	return s;
+    return s;
 }
 
 /*
@@ -160,11 +160,11 @@ donestr()
         BJAM_FREE(strblock_chain);
         strblock_chain = n;
     }
-    
+
     hashdone( strhash );
-    
+
     if( DEBUG_MEM )
         printf( "%dK in strings\n", strtotal / 1024 );
-    
+
     /* printf( "--- %d strings of %d dangling\n", strcount_in-strcount_out, strcount_in ); */
 }
