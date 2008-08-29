@@ -278,7 +278,6 @@ toolset sun cc : "-o " : -D
     :
     [ opt --release : -s -fast -xO4 ]
     [ opt --debug : -g ]
-    -xarch=generic
     -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Sun Workshop 6 C++ (old alias)
