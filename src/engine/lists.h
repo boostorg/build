@@ -55,7 +55,7 @@ struct _list {
     LIST    *next;
     LIST    *tail;      /* only valid in head node */
     char    *string;    /* private copy */
-} ;
+};
 
 /*
  * LOL - list of LISTs
@@ -68,7 +68,7 @@ typedef struct _lol LOL;
 struct _lol {
     int count;
     LIST    *list[ LOL_MAX ];
-} ;
+};
 
 LIST *  list_append( LIST *l, LIST *nl );
 LIST *  list_copy( LIST *l, LIST  *nl );

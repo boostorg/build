@@ -43,26 +43,23 @@
  * 11/21/96 (peterk) - BEOS does not have Unix-style archives
  */
 
-void CopyC2PStr(const char * cstr, StringPtr pstr)
+
+void CopyC2PStr( char const * cstr, StringPtr pstr )
 {
     int len;
-    for ( len = 0; *cstr && len < 255; pstr[++len] = *cstr++ );
-    pstr[0] = len;
+    for ( len = 0; *cstr && ( len < 255 ); pstr[ ++len ] = *cstr++ );
+    pstr[ 0 ] = len;
 }
 
 
 /*
- * file_dirscan() - scan a directory for files
+ * file_dirscan() - scan a directory for files.
  */
 
-void
-file_dirscan(
-    char    *dir,
-    scanback func,
-    void    *closure )
+void file_dirscan( char * dir, scanback func, void * closure )
 {
     PATHNAME f;
-    string filename[1];
+    string filename[ 1 ];
     unsigned char fullPath[ 512 ];
 
     FSSpec spec;
@@ -71,58 +68,57 @@ file_dirscan(
     CInfoPBRec lastInfo;
     int index = 1;
 
-    /* First enter directory itself */
+    /* First enter directory itself. */
 
     memset( (char *)&f, '\0', sizeof( f ) );
 
     f.f_dir.ptr = dir;
     f.f_dir.len = strlen(dir);
 
-    if( DEBUG_BINDSCAN )
+    if ( DEBUG_BINDSCAN )
         printf( "scan directory %s\n", dir );
 
     /* Special case ":" - enter it */
 
-    if( f.f_dir.len == 1 && f.f_dir.ptr[0] == ':' )
+    if ( ( f.f_dir.len == 1 ) && ( f.f_dir.ptr[0] == ':' ) )
         (*func)( closure, dir, 0 /* not stat()'ed */, (time_t)0 );
 
     /* Now enter contents of directory */
 
     vol.ioNamePtr = volName;
 
-    if( PBHGetVolSync( &vol ) )
+    if ( PBHGetVolSync( &vol ) )
         return;
 
     CopyC2PStr( dir, fullPath );
 
-    if( FSMakeFSSpec( vol.ioWDVRefNum, vol.ioWDDirID, fullPath, &spec ) )
+    if ( FSMakeFSSpec( vol.ioWDVRefNum, vol.ioWDDirID, fullPath, &spec ) )
         return;
 
-    lastInfo.dirInfo.ioVRefNum  = spec.vRefNum;
-    lastInfo.dirInfo.ioDrDirID  = spec.parID;
-    lastInfo.dirInfo.ioNamePtr  = spec.name;
-    lastInfo.dirInfo.ioFDirIndex    = 0;
-    lastInfo.dirInfo.ioACUser   = 0;
+    lastInfo.dirInfo.ioVRefNum   = spec.vRefNum;
+    lastInfo.dirInfo.ioDrDirID   = spec.parID;
+    lastInfo.dirInfo.ioNamePtr   = spec.name;
+    lastInfo.dirInfo.ioFDirIndex = 0;
+    lastInfo.dirInfo.ioACUser    = 0;
 
-    if( PBGetCatInfoSync(&lastInfo) )
+    if ( PBGetCatInfoSync( &lastInfo ) )
         return;
 
-    if (!(lastInfo.dirInfo.ioFlAttrib & 0x10))
+    if ( !( lastInfo.dirInfo.ioFlAttrib & 0x10 ) )
         return;
 
-    // ioDrDirID must be reset each time.
-
+    /* ioDrDirID must be reset each time. */
     spec.parID = lastInfo.dirInfo.ioDrDirID;
 
     string_new( filename );
-    for( ;; )
+    for ( ; ; )
     {
         lastInfo.dirInfo.ioVRefNum  = spec.vRefNum;
         lastInfo.dirInfo.ioDrDirID  = spec.parID;
         lastInfo.dirInfo.ioNamePtr  = fullPath;
         lastInfo.dirInfo.ioFDirIndex = index++;
 
-        if( PBGetCatInfoSync(&lastInfo) )
+        if ( PBGetCatInfoSync( &lastInfo ) )
             return;
 
         f.f_base.ptr = (char *)fullPath + 1;
@@ -135,18 +131,16 @@ file_dirscan(
     string_free( filename );
 }
 
+
 /*
- * file_time() - get timestamp of file, if not done by file_dirscan()
+ * file_time() - get timestamp of file, if not done by file_dirscan().
  */
 
-int
-file_time(
-    char    *filename,
-    time_t  *time )
+int file_time( char * filename, time_t * time )
 {
     struct stat statbuf;
 
-    if( stat( filename, &statbuf ) < 0 )
+    if ( stat( filename, &statbuf ) < 0 )
         return -1;
 
     *time = statbuf.st_mtime;
@@ -155,32 +149,22 @@ file_time(
 }
 
 
-int file_is_file(char* filename)
+int file_is_file( char * filename )
 {
     struct stat statbuf;
-
-    if( stat( filename, &statbuf ) < 0 )
+    if ( stat( filename, &statbuf ) < 0 )
         return -1;
-
-    if ( S_ISREG( statbuf.st_mode ) )
-        return 1;
-    else
-        return 0;
+    return S_ISREG( statbuf.st_mode ) ? 1 : 0;
 }
 
 
 /*
- * file_archscan() - scan an archive for files
+ * file_archscan() - scan an archive for files.
  */
 
-void
-file_archscan(
-    char    *archive,
-    scanback func,
-    void    *closure )
+void file_archscan( char * archive, scanback func, void * closure )
 {
 }
 
 
 # endif /* macintosh */
-

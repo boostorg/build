@@ -37,7 +37,7 @@ struct _PARSE {
     char*    rulename;
     char*    file;
     int      line;
-} ;
+};
 
 void    parse_file( char *f, FRAME* frame );
 void    parse_save( PARSE *p );

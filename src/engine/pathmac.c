@@ -63,7 +63,7 @@ path_parse(
 
     /* Look for <grist> */
 
-    if( file[0] == '<' && ( p = strchr( file, '>' ) ) )
+    if ( file[0] == '<' && ( p = strchr( file, '>' ) ) )
     {
         f->f_grist.ptr = file;
         f->f_grist.len = p - file;
@@ -72,7 +72,7 @@ path_parse(
 
     /* Look for dir: */
 
-    if( p = strrchr( file, DELIM ) )
+    if ( p = strrchr( file, DELIM ) )
     {
         f->f_dir.ptr = file;
         f->f_dir.len = p - file;
@@ -80,18 +80,17 @@ path_parse(
 
         /* All :'s? Include last : as part of directory name */
 
-        while( p > f->f_dir.ptr && *--p == DELIM )
-        ;
+        while ( ( p > f->f_dir.ptr ) && ( *--p == DELIM ) );
 
-        if( p == f->f_dir.ptr )
-        f->f_dir.len++;
+        if ( p == f->f_dir.ptr )
+            ++f->f_dir.len;
     }
 
     end = file + strlen( file );
 
-    /* Look for (member) */
+    /* Look for (member). */
 
-    if( ( p = strchr( file, '(' ) ) && end[-1] == ')' )
+    if ( ( p = strchr( file, '(' ) ) && ( end[-1] == ')' ) )
     {
         f->f_member.ptr = p + 1;
         f->f_member.len = end - p - 2;
@@ -104,10 +103,10 @@ path_parse(
     p = 0;
     q = file;
 
-    while( q = memchr( q, '.', end - q ) )
+    while ( q = memchr( q, '.', end - q ) )
         p = q++;
 
-    if( p )
+    if ( p )
     {
         f->f_suffix.ptr = p;
         f->f_suffix.len = end - p;
@@ -144,31 +143,27 @@ char grid[5][5] = {
 /* DOTDOT */  { G_ROOT, G_ROOT, G_DDDD, G_DIR,  G_DTDR },
 /* ABS */     { G_ROOT, G_ROOT, G_ROOT, G_DIR,  G_CAT },
 /* REL */     { G_ROOT, G_ROOT, G_ROOT, G_DIR,  G_CAT }
-} ;
+};
 
-static int
-file_flags(
-    char    *ptr,
-    int len )
+static int file_flags( char * ptr, int len )
 {
-    if( !len )
+    if ( !len )
         return DIR_EMPTY;
-    if( len == 1 && ptr[0] == DELIM )
+    if ( ( len == 1 ) && ( ptr[0] == DELIM ) )
         return DIR_DOT;
-    if( len == 2 && ptr[0] == DELIM && ptr[1] == DELIM )
+    if ( ( len == 2 ) && ( ptr[0] == DELIM ) && ( ptr[1] == DELIM ) )
         return DIR_DOTDOT;
-    if( ptr[0] == DELIM )
+    if ( ptr[0] == DELIM )
         return DIR_REL;
     return DIR_ABS;
 }
 
-void
-path_build(
-    PATHNAME *f,
-    string* file,
-    int binding )
+
+void path_build( PATHNAME * f, string * file, int binding )
 {
-    int dflag, rflag, act;
+    int dflag;
+    int rflag;
+    int act;
 
     file_build1( f, file );
 
@@ -177,7 +172,7 @@ path_build(
     dflag = file_flags( f->f_dir.ptr, f->f_dir.len );
     rflag = file_flags( f->f_root.ptr, f->f_root.len );
 
-    switch( act = grid[ rflag ][ dflag ] )
+    switch ( act = grid[ rflag ][ dflag ] )
     {
     case G_DTDR:
         {
@@ -199,7 +194,7 @@ path_build(
     case G_CAT:
         /* prepend root to dir */
         string_append_range( file, f->f_root.ptr, f->f_root.ptr + f->f_root.len  );
-        if( file->value[file->size - 1] == DELIM )
+        if ( file->value[ file->size - 1 ] == DELIM )
             string_pop_back( file );
         string_append_range( file, f->f_dir.ptr, f->f_dir.ptr + f->f_dir.len  );
         break;
@@ -210,44 +205,40 @@ path_build(
         break;
     }
 
-    /* Put : between dir and file (if none already) */
+    /* Put : between dir and file (if none already). */
 
-    if( act != G_MT &&
-        file->value[file->size - 1] != DELIM &&
+    if ( ( act != G_MT ) &&
+        ( file->value[ file->size - 1 ] != DELIM ) &&
         ( f->f_base.len || f->f_suffix.len ) )
     {
         string_push_back( file, DELIM );
     }
 
-    if( f->f_base.len )
-    {
+    if ( f->f_base.len )
         string_append_range( file, f->f_base.ptr, f->f_base.ptr + f->f_base.len  );
-    }
 
-    if( f->f_suffix.len )
-    {
+    if ( f->f_suffix.len )
         string_append_range( file, f->f_suffix.ptr, f->f_suffix.ptr + f->f_suffix.len  );
-    }
 
-    if( f->f_member.len )
+    if ( f->f_member.len )
     {
         string_push_back( file, '(' );
         string_append_range( file, f->f_member.ptr, f->f_member.ptr + f->f_member.len  );
         string_push_back( file, ')' );
     }
 
-    if( DEBUG_SEARCH )
-        printf(" -> '%s'\n", file->value);
+    if ( DEBUG_SEARCH )
+        printf( " -> '%s'\n", file->value );
 }
+
 
 /*
  *  path_parent() - make a PATHNAME point to its parent dir
  */
 
-void
-path_parent( PATHNAME *f )
+void path_parent( PATHNAME * f )
 {
-    /* just set everything else to nothing */
+    /* Just set everything else to nothing. */
 
     f->f_base.ptr =
     f->f_suffix.ptr =

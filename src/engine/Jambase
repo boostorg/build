@@ -221,7 +221,7 @@ else
 # Special targets defined in this file:
 #
 # all       - parent of first, shell, files, lib, exe
-# first     - first dependent of 'all', for potential initialization
+# first     - first dependency of 'all', for potential initialization
 # shell     - parent of all Shell targets
 # files     - parent of all File targets
 # lib       - parent of all Library targets
@@ -1607,14 +1607,14 @@ rule SubDir
     #
     # d1 ... are the directory elements that lead to this directory
     # from $(TOP).  We construct the system dependent path from these
-    # directory elements in order to set search&locate stuff.
+    # directory elements in order to set search & locate stuff.
     #
 
     if ! $($(<[1]))
     {
         if ! $(<[1])
         {
-        EXIT SubDir syntax error ;
+            EXIT SubDir syntax error ;
         }
 
         $(<[1]) = [ FSubDir $(<[2-]) ] ;
@@ -1730,14 +1730,13 @@ rule Yacc
         Clean clean : $(<) $(_h) ;
     }
 
-    # make sure someone includes $(_h) else it will be
-    # a deadly independent target
-
+    # Make sure someone includes $(_h) else it will be a deadly independent
+    # target.
     INCLUDES $(<) : $(_h) ;
 }
 
 #
-# Utility rules; no side effects on these
+# Utility rules; no side effects on these.
 #
 
 rule FGrist

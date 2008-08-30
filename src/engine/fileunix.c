@@ -119,25 +119,22 @@ struct ar_hdr       /* archive file member header - printable ascii */
  * 11/21/96 (peterk) - BEOS does not have Unix-style archives
  */
 
+
 /*
- * file_dirscan() - scan a directory for files
+ * file_dirscan() - scan a directory for files.
  */
 
-void
-file_dirscan(
-    char *dir,
-    scanback func,
-    void *closure )
+void file_dirscan( char * dir, scanback func, void * closure )
 {
-    PROFILE_ENTER(FILE_DIRSCAN);
+    PROFILE_ENTER( FILE_DIRSCAN );
 
     file_info_t * d = 0;
 
     d = file_query( dir );
 
-    if ( ! d || ! d->is_dir )
+    if ( !d || !d->is_dir )
     {
-        PROFILE_EXIT(FILE_DIRSCAN);
+        PROFILE_EXIT( FILE_DIRSCAN );
         return;
     }
 
@@ -158,19 +155,19 @@ file_dirscan(
 
         dir = *dir ? dir : ".";
 
-        /* Now enter contents of directory */
+        /* Now enter contents of directory. */
 
-        if( !( dd = opendir( dir ) ) )
+        if ( !( dd = opendir( dir ) ) )
         {
-            PROFILE_EXIT(FILE_DIRSCAN);
+            PROFILE_EXIT( FILE_DIRSCAN );
             return;
         }
 
-        if( DEBUG_BINDSCAN )
+        if ( DEBUG_BINDSCAN )
             printf( "scan directory %s\n", dir );
 
         string_new( filename );
-        while( dirent = readdir( dd ) )
+        while ( dirent = readdir( dd ) )
         {
             file_info_t * ff = 0;
 
@@ -198,7 +195,7 @@ file_dirscan(
     /* Special case / : enter it */
     {
         unsigned long len = strlen(d->name);
-        if( len == 1 && d->name[0] == '/' )
+        if ( ( len == 1 ) && ( d->name[0] == '/' ) )
             (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
     }
 
@@ -214,8 +211,9 @@ file_dirscan(
         }
     }
 
-    PROFILE_EXIT(FILE_DIRSCAN);
+    PROFILE_EXIT( FILE_DIRSCAN );
 }
+
 
 file_info_t * file_query( char * filename )
 {
@@ -224,7 +222,7 @@ file_info_t * file_query( char * filename )
     {
         struct stat statbuf;
 
-        if( stat( *filename ? filename : ".", &statbuf ) < 0 )
+        if ( stat( *filename ? filename : ".", &statbuf ) < 0 )
             return 0;
 
         ff->is_file = statbuf.st_mode & S_IFREG ? 1 : 0;
@@ -280,10 +278,10 @@ file_archscan(
     char    *string_table = 0;
     int fd;
 
-    if( ( fd = open( archive, O_RDONLY, 0 ) ) < 0 )
+    if ( ( fd = open( archive, O_RDONLY, 0 ) ) < 0 )
         return;
 
-    if( read( fd, buf, SARMAG ) != SARMAG ||
+    if ( read( fd, buf, SARMAG ) != SARMAG ||
         strncmp( ARMAG, buf, SARMAG ) )
     {
         close( fd );
@@ -292,24 +290,25 @@ file_archscan(
 
     offset = SARMAG;
 
-    if( DEBUG_BINDSCAN )
+    if ( DEBUG_BINDSCAN )
         printf( "scan archive %s\n", archive );
 
-    while( read( fd, &ar_hdr, SARHDR ) == SARHDR
-           && ! ( memcmp( ar_hdr.ar_fmag, ARFMAG, SARFMAG )
+    while ( ( read( fd, &ar_hdr, SARHDR ) == SARHDR )
+           && !( memcmp( ar_hdr.ar_fmag, ARFMAG, SARFMAG )
 #ifdef ARFZMAG
               /* OSF also has a compressed format */
               && memcmp( ar_hdr.ar_fmag, ARFZMAG, SARFMAG )
 #endif
           ) )
     {
-        char    lar_name_[257];
-            char*   lar_name = lar_name_ + 1;
-        long    lar_date;
-        long    lar_size;
-        long    lar_offset;
-        char *c;
-        char    *src, *dest;
+        char   lar_name_[257];
+        char * lar_name = lar_name_ + 1;
+        long   lar_date;
+        long   lar_size;
+        long   lar_offset;
+        char * c;
+        char * src;
+        char * dest;
 
         strncpy( lar_name, ar_hdr.ar_name, sizeof(ar_hdr.ar_name) );
 
@@ -346,8 +345,7 @@ file_archscan(
         }
 
         c = lar_name - 1;
-        while( *++c != ' ' && *c != '/' )
-        ;
+        while ( ( *++c != ' ' ) && ( *c != '/' ) ) ;
         *c = '\0';
 
         if ( DEBUG_BINDSCAN )
@@ -385,26 +383,26 @@ static void file_archscan_small(
     char buf[ MAXJPATH ];
     long offset;
 
-    if( read( fd, (char *)&fl_hdr, FL_HSZ ) != FL_HSZ)
+    if ( read( fd, (char *)&fl_hdr, FL_HSZ ) != FL_HSZ)
         return;
 
     sscanf( fl_hdr.fl_fstmoff, "%ld", &offset );
 
-    if( DEBUG_BINDSCAN )
+    if ( DEBUG_BINDSCAN )
         printf( "scan archive %s\n", archive );
 
-    while( offset > 0
-           && lseek( fd, offset, 0 ) >= 0
-           && read( fd, &ar_hdr, sizeof( ar_hdr ) ) >= sizeof( ar_hdr.hdr ) )
+    while ( ( offset > 0 )
+           && ( lseek( fd, offset, 0 ) >= 0 )
+           && ( read( fd, &ar_hdr, sizeof( ar_hdr ) ) >= sizeof( ar_hdr.hdr ) ) )
     {
-        long    lar_date;
-        int     lar_namlen;
+        long lar_date;
+        int  lar_namlen;
 
-        sscanf( ar_hdr.hdr.ar_namlen, "%d", &lar_namlen );
-        sscanf( ar_hdr.hdr.ar_date, "%ld", &lar_date );
-        sscanf( ar_hdr.hdr.ar_nxtmem, "%ld", &offset );
+        sscanf( ar_hdr.hdr.ar_namlen, "%d" , &lar_namlen );
+        sscanf( ar_hdr.hdr.ar_date  , "%ld", &lar_date   );
+        sscanf( ar_hdr.hdr.ar_nxtmem, "%ld", &offset     );
 
-        if( !lar_namlen )
+        if ( !lar_namlen )
             continue;
 
         ar_hdr.hdr._ar_name.ar_name[ lar_namlen ] = '\0';
@@ -431,26 +429,26 @@ static void file_archscan_big(
     char buf[ MAXJPATH ];
     long long offset;
 
-    if( read( fd, (char *)&fl_hdr, FL_HSZ_BIG) != FL_HSZ_BIG)
+    if ( read( fd, (char *)&fl_hdr, FL_HSZ_BIG) != FL_HSZ_BIG)
         return;
 
     sscanf( fl_hdr.fl_fstmoff, "%lld", &offset );
 
-    if( DEBUG_BINDSCAN )
+    if ( DEBUG_BINDSCAN )
         printf( "scan archive %s\n", archive );
 
-    while( offset > 0
-           && lseek( fd, offset, 0 ) >= 0
-           && read( fd, &ar_hdr, sizeof( ar_hdr ) ) >= sizeof( ar_hdr.hdr ) )
+    while ( ( offset > 0 )
+           && ( lseek( fd, offset, 0 ) >= 0 )
+           && ( read( fd, &ar_hdr, sizeof( ar_hdr ) ) >= sizeof( ar_hdr.hdr ) ) )
     {
-        long    lar_date;
-        int     lar_namlen;
+        long lar_date;
+        int  lar_namlen;
 
-        sscanf( ar_hdr.hdr.ar_namlen, "%d", &lar_namlen );
-        sscanf( ar_hdr.hdr.ar_date, "%ld", &lar_date );
-        sscanf( ar_hdr.hdr.ar_nxtmem, "%lld", &offset );
+        sscanf( ar_hdr.hdr.ar_namlen, "%d"  , &lar_namlen );
+        sscanf( ar_hdr.hdr.ar_date  , "%ld" , &lar_date   );
+        sscanf( ar_hdr.hdr.ar_nxtmem, "%lld", &offset     );
 
-        if( !lar_namlen )
+        if ( !lar_namlen )
             continue;
 
         ar_hdr.hdr._ar_name.ar_name[ lar_namlen ] = '\0';
@@ -469,10 +467,10 @@ void file_archscan(char *archive, scanback func, void *closure)
     int fd;
     char fl_magic[SAIAMAG];
 
-    if(( fd = open(archive, O_RDONLY, 0)) < 0)
+    if (( fd = open(archive, O_RDONLY, 0)) < 0)
         return;
 
-    if(read( fd, fl_magic, SAIAMAG) != SAIAMAG
+    if (read( fd, fl_magic, SAIAMAG) != SAIAMAG
        || lseek(fd, 0, SEEK_SET) == -1)
     {
         close(fd);

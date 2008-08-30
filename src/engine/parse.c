@@ -35,34 +35,31 @@ parse_file( char *f, FRAME* frame )
     /* Suspend scan of current file */
     /* and push this new file in the stream */
 
-    yyfparse(f);
+    yyfparse( f );
 
     /* Now parse each block of rules and execute it. */
     /* Execute it outside of the parser so that recursive */
     /* calls to yyrun() work (no recursive yyparse's). */
 
-    for(;;)
+    for ( ; ; )
     {
         PARSE *p;
 
-        /* Filled by yyparse() calling parse_save() */
-
+        /* Filled by yyparse() calling parse_save(). */
         yypsave = 0;
 
-        /* If parse error or empty parse, outta here */
-
-        if( yyparse() || !( p = yypsave ) )
-        break;
+        /* If parse error or empty parse, outta here. */
+        if ( yyparse() || !( p = yypsave ) )
+            break;
 
         /* Run the parse tree. */
-
-            parse_evaluate( p, frame );
+        parse_evaluate( p, frame );
         parse_free( p );
     }
 }
 
-void
-parse_save( PARSE *p )
+
+void parse_save( PARSE * p )
 {
     yypsave = p;
 }

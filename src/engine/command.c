@@ -14,30 +14,26 @@
  * command.c - maintain lists of commands
  */
 
-# include "jam.h"
+#include "jam.h"
 
-# include "lists.h"
-# include "parse.h"
-# include "variable.h"
-# include "rules.h"
+#include "lists.h"
+#include "parse.h"
+#include "variable.h"
+#include "rules.h"
 
-# include "command.h"
-# include <limits.h>
-# include <string.h>
+#include "command.h"
+#include <limits.h>
+#include <string.h>
+
 
 /*
  * cmd_new() - return a new CMD or 0 if too many args
  */
 
-CMD *
-cmd_new(
-    RULE    *rule,
-    LIST    *targets,
-    LIST    *sources,
-    LIST    *shell )
+CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
 {
-    CMD *cmd = (CMD *)BJAM_MALLOC( sizeof( CMD ) );
-    /* lift line-length limitation entirely when JAMSHELL is just "%" */
+    CMD * cmd = (CMD *)BJAM_MALLOC( sizeof( CMD ) );
+    /* Lift line-length limitation entirely when JAMSHELL is just "%". */
     int no_limit = ( shell && !strcmp(shell->string,"%") && !list_next(shell) );
     int max_line = MAXLINE;
     int allocated = -1;
@@ -53,9 +49,9 @@ cmd_new(
 
     do
     {
-        BJAM_FREE(cmd->buf); /* free any buffer from previous iteration */
+        BJAM_FREE( cmd->buf );  /* free any buffer from previous iteration */
 
-        cmd->buf = (char*)BJAM_MALLOC_ATOMIC(max_line + 1);
+        cmd->buf = (char*)BJAM_MALLOC_ATOMIC( max_line + 1 );
 
         if ( cmd->buf == 0 )
             break;
@@ -64,11 +60,11 @@ cmd_new(
 
         max_line = max_line * 2;
     }
-    while( allocated < 0 && max_line < INT_MAX / 2 );
+    while ( ( allocated < 0 ) && ( max_line < INT_MAX / 2 ) );
 
     if ( !no_limit )
     {
-        /* Bail if the result won't fit in MAXLINE */
+        /* Bail if the result will not fit in MAXLINE. */
         char * s = cmd->buf;
         while ( *s )
         {
@@ -76,7 +72,7 @@ cmd_new(
 
             if ( l > MAXLINE )
             {
-                /* We don't free targets/sources/shell if bailing. */
+                /* We do not free targets/sources/shell if bailing. */
                 cmd_free( cmd );
                 return 0;
             }
@@ -90,12 +86,12 @@ cmd_new(
     return cmd;
 }
 
+
 /*
  * cmd_free() - free a CMD
  */
 
-void
-cmd_free( CMD *cmd )
+void cmd_free( CMD * cmd )
 {
     lol_free( &cmd->args );
     list_free( cmd->shell );

@@ -46,17 +46,17 @@
  *      just to invoke a rule.
  */
 
-static LIST *header_macros1( LIST *l, char *file, int rec, regexp *re[] );
+static LIST * header_macros1( LIST * l, char * file, int rec, regexp * re[] );
 
 /* this type is used to store a dictionary of file header macros */
 typedef struct header_macro
 {
-  char*  symbol;
-  char*  filename;  /* we could maybe use a LIST here ?? */
-
+  char * symbol;
+  char * filename;  /* we could maybe use a LIST here ?? */
 } HEADER_MACRO;
 
-static struct hash*   header_macros_hash = 0;
+static struct hash * header_macros_hash = 0;
+
 
 /*
  * headers() - scan a target for include files and call HDRRULE
@@ -84,12 +84,13 @@ macro_headers( TARGET *t )
             "[<\"]([^\">]*)[\">].*$" );
     }
 
-    if( !( f = fopen( t->boundname, "r" ) ) )
+    if ( !( f = fopen( t->boundname, "r" ) ) )
         return;
 
-    while( fgets( buf, sizeof( buf ), f ) )
+    while ( fgets( buf, sizeof( buf ), f ) )
     {
-        HEADER_MACRO  var, *v = &var;
+        HEADER_MACRO var;
+        HEADER_MACRO *v = &var;
 
         if ( regexec( re, buf ) && re->startp[1] )
         {
@@ -121,19 +122,18 @@ macro_headers( TARGET *t )
 }
 
 
-char*
-macro_header_get( const char*  macro_name )
+char * macro_header_get( const char * macro_name )
 {
-  HEADER_MACRO  var, *v = &var;
+    HEADER_MACRO var;
+    HEADER_MACRO * v = &var;
 
-  v->symbol = (char*)macro_name;
+    v->symbol = (char* )macro_name;
 
-  if( header_macros_hash && hashcheck( header_macros_hash, (HASHDATA **)&v ) )
-  {
-    if ( DEBUG_HEADER )
-      printf( "### macro '%s' evaluated to '%s'\n", macro_name, v->filename );
-    return v->filename;
-  }
-  return 0;
+    if ( header_macros_hash && hashcheck( header_macros_hash, (HASHDATA **)&v ) )
+    {
+        if ( DEBUG_HEADER )
+            printf( "### macro '%s' evaluated to '%s'\n", macro_name, v->filename );
+        return v->filename;
+    }
+    return 0;
 }
-

@@ -103,132 +103,122 @@
  * 01/10/01 (seiwald) - pathsys.h split from filesys.h
  */
 
-# include "jam.h"
-# include "option.h"
-# include "patchlevel.h"
+
+#include "jam.h"
+#include "option.h"
+#include "patchlevel.h"
 
 /* These get various function declarations. */
-
-# include "lists.h"
-# include "parse.h"
-# include "variable.h"
-# include "compile.h"
-# include "builtins.h"
-# include "rules.h"
-# include "newstr.h"
-# include "scan.h"
-# include "timestamp.h"
-# include "make.h"
-# include "strings.h"
-# include "expand.h"
-# include "filesys.h"
-# include "output.h"
+#include "lists.h"
+#include "parse.h"
+#include "variable.h"
+#include "compile.h"
+#include "builtins.h"
+#include "rules.h"
+#include "newstr.h"
+#include "scan.h"
+#include "timestamp.h"
+#include "make.h"
+#include "strings.h"
+#include "expand.h"
+#include "filesys.h"
+#include "output.h"
 
 /* Macintosh is "special" */
+#ifdef OS_MAC
+    #include <QuickDraw.h>
+#endif
 
-# ifdef OS_MAC
-# include <QuickDraw.h>
-# endif
+/* And UNIX for this. */
+#ifdef unix
+    #include <sys/utsname.h>
+    #include <signal.h>
+#endif
 
-/* And UNIX for this */
-
-# ifdef unix
-# include <sys/utsname.h>
-# include <signal.h>
-# endif
-
-struct globs globs = {
+struct globs globs =
+{
     0,          /* noexec */
     1,          /* jobs */
     0,          /* quitquick */
     0,          /* newestfirst */
-        0,                      /* pipes action stdout and stderr merged to action output */
-# ifdef OS_MAC
-    { 0, 0 },       /* debug - suppress tracing output */
-# else
-    { 0, 1 },       /* debug ... */
-# endif
+    0,          /* pipes action stdout and stderr merged to action output */
+#ifdef OS_MAC
+    { 0, 0 },   /* debug - suppress tracing output */
+#else
+    { 0, 1 },   /* debug ... */
+#endif
     0,          /* output commands, not run them */
-    0 /* action timeout */
-} ;
+    0           /* action timeout */
+};
 
-/* Symbols to be defined as true for use in Jambase */
+/* Symbols to be defined as true for use in Jambase. */
+static char * othersyms[] = { OSMAJOR, OSMINOR, OSPLAT, JAMVERSYM, 0 };
 
-static char *othersyms[] = { OSMAJOR, OSMINOR, OSPLAT, JAMVERSYM, 0 } ;
 
 /* Known for sure:
  *  mac needs arg_enviro
  *  OS2 needs extern environ
  */
 
-# ifdef OS_MAC
-# define use_environ arg_environ
-# ifdef MPW
-QDGlobals qd;
-# endif
-# endif
-
-/* on Win32-LCC */
-# if defined( OS_NT ) && defined( __LCC__ )
-#   define  use_environ _environ
-# endif
-
-# if defined( __MWERKS__)
-# define use_environ _environ
-extern char **_environ;
+#ifdef OS_MAC
+    #define use_environ arg_environ
+    #ifdef MPW
+        QDGlobals qd;
+    #endif
 #endif
 
-# ifndef use_environ
-# define use_environ environ
-# if !defined( __WATCOM__ ) && !defined( OS_OS2 ) && !defined( OS_NT )
-extern char **environ;
-# endif
-# endif
+/* on Win32-LCC */
+#if defined( OS_NT ) && defined( __LCC__ )
+    #define use_environ _environ
+#endif
 
-# if YYDEBUG != 0
-extern int yydebug;
-# endif
+# if defined( __MWERKS__)
+    #define use_environ _environ
+    extern char * * _environ;
+#endif
+
+#ifndef use_environ
+    #define use_environ environ
+    #if !defined( __WATCOM__ ) && !defined( OS_OS2 ) && !defined( OS_NT )
+        extern char **environ;
+    #endif
+#endif
+
+#if YYDEBUG != 0
+    extern int yydebug;
+#endif
 
 #ifndef NDEBUG
 static void run_unit_tests()
 {
-# if defined( USE_EXECNT )
+#if defined( USE_EXECNT )
     extern void execnt_unit_test();
     execnt_unit_test();
-# endif
+#endif
     string_unit_test();
     var_expand_unit_test();
 }
 #endif
 
 #ifdef HAVE_PYTHON
-    extern PyObject*
-    bjam_call(PyObject *self, PyObject *args);
-
-    extern PyObject*
-    bjam_import_rule(PyObject* self, PyObject* args);
-
-    extern PyObject*
-    bjam_define_action(PyObject* self, PyObject* args);
-
-    extern PyObject*
-    bjam_variable(PyObject* self, PyObject* args);
-
-    extern PyObject*
-    bjam_backtrace(PyObject* self, PyObject *args);
+    extern PyObject * bjam_call         ( PyObject * self, PyObject * args );
+    extern PyObject * bjam_import_rule  ( PyObject * self, PyObject * args );
+    extern PyObject * bjam_define_action( PyObject * self, PyObject * args );
+    extern PyObject * bjam_variable     ( PyObject * self, PyObject * args );
+    extern PyObject * bjam_backtrace    ( PyObject * self, PyObject * args );
 #endif
 
-int  main( int argc, char **argv, char **arg_environ )
+int main( int argc, char * * argv, char * * arg_environ )
 {
-    int     n;
-    char        *s;
-    struct option   optv[N_OPTS];
-    const char  *all = "all";
-    int     anyhow = 0;
-    int     status;
-    int arg_c = argc;
-    char ** arg_v = argv;
-    const char *progname = argv[0];
+    int                     n;
+    char                  * s;
+    struct option           optv[N_OPTS];
+    char            const * all = "all";
+    int                     anyhow = 0;
+    int                     status;
+    int                     arg_c = argc;
+    char          *       * arg_v = argv;
+    char            const * progname = argv[0];
 
     BJAM_MEM_INIT();
 
@@ -236,9 +226,10 @@ int  main( int argc, char **argv, char **arg_environ )
     InitGraf(&qd.thePort);
 # endif
 
-    argc--, argv++;
+    --argc;
+    ++argv;
 
-    if( getoptions( argc, argv, "-:l:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
+    if ( getoptions( argc, argv, "-:l:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
     {
         printf( "\nusage: %s [ options ] targets...\n\n", progname );
 
@@ -261,8 +252,7 @@ int  main( int argc, char **argv, char **arg_environ )
     }
 
     /* Version info. */
-
-    if( ( s = getoptval( optv, 'v', 0 ) ) )
+    if ( ( s = getoptval( optv, 'v', 0 ) ) )
     {
         printf( "Boost.Jam  " );
         printf( "Version %s. %s.\n", VERSION, OSMINOR );
@@ -275,268 +265,256 @@ int  main( int argc, char **argv, char **arg_environ )
         return EXITOK;
     }
 
-    /* Pick up interesting options */
-
-    if( ( s = getoptval( optv, 'n', 0 ) ) )
+    /* Pick up interesting options. */
+    if ( ( s = getoptval( optv, 'n', 0 ) ) )
         globs.noexec++, globs.debug[2] = 1;
 
-    if( ( s = getoptval( optv, 'p', 0 ) ) )
+    if ( ( s = getoptval( optv, 'p', 0 ) ) )
     {
-        /* undocumented -p3 (acts like both -p1 -p2) means separate pipe action stdout and stderr */
-        globs.pipe_action = atoi(s);
-        if (3 < globs.pipe_action || globs.pipe_action < 0)
+        /* Undocumented -p3 (acts like both -p1 -p2) means separate pipe action
+         * stdout and stderr.
+         */
+        globs.pipe_action = atoi( s );
+        if ( ( 3 < globs.pipe_action ) || ( globs.pipe_action < 0 ) )
         {
-            printf( "Invalid pipe descriptor '%d', valid values are -p[0..3].\n", globs.pipe_action);
-            exit(EXITBAD);
+            printf(
+                "Invalid pipe descriptor '%d', valid values are -p[0..3].\n",
+                globs.pipe_action );
+            exit( EXITBAD );
         }
     }
 
-    if( ( s = getoptval( optv, 'q', 0 ) ) )
-    globs.quitquick = 1;
+    if ( ( s = getoptval( optv, 'q', 0 ) ) )
+        globs.quitquick = 1;
 
-    if( ( s = getoptval( optv, 'a', 0 ) ) )
+    if ( ( s = getoptval( optv, 'a', 0 ) ) )
         anyhow++;
 
-    if( ( s = getoptval( optv, 'j', 0 ) ) )
+    if ( ( s = getoptval( optv, 'j', 0 ) ) )
         globs.jobs = atoi( s );
 
-    if( ( s = getoptval( optv, 'g', 0 ) ) )
+    if ( ( s = getoptval( optv, 'g', 0 ) ) )
         globs.newestfirst = 1;
 
-    if( ( s = getoptval( optv, 'l', 0 ) ) )
+    if ( ( s = getoptval( optv, 'l', 0 ) ) )
         globs.timeout = atoi( s );
 
     /* Turn on/off debugging */
-
-    for( n = 0; s = getoptval( optv, 'd', n ); n++ )
+    for ( n = 0; s = getoptval( optv, 'd', n ); ++n )
     {
         int i;
 
         /* First -d, turn off defaults. */
-
-        if( !n )
-            for( i = 0; i < DEBUG_MAX; i++ )
+        if ( !n )
+            for ( i = 0; i < DEBUG_MAX; ++i )
                 globs.debug[i] = 0;
 
         i = atoi( s );
 
-        if( i < 0 || i >= DEBUG_MAX )
+        if ( ( i < 0 ) || ( i >= DEBUG_MAX ) )
         {
             printf( "Invalid debug level '%s'.\n", s );
             continue;
         }
 
-        /* n turns on levels 1-n */
-        /* +n turns on level n */
-
-        if( *s == '+' )
+        /* n turns on levels 1-n. */
+        /* +n turns on level n. */
+        if ( *s == '+' )
             globs.debug[i] = 1;
-        else while( i )
+        else while ( i )
             globs.debug[i--] = 1;
     }
 
-    { PROFILE_ENTER(MAIN);
-
-    #ifdef HAVE_PYTHON
     {
-        PROFILE_ENTER(MAIN_PYTHON);
-        Py_Initialize();
+        PROFILE_ENTER( MAIN );
 
+#ifdef HAVE_PYTHON
         {
-            static PyMethodDef BjamMethods[] = {
-                {"call", bjam_call, METH_VARARGS,
-                 "Call the specified bjam rule."},
-                {"import_rule", bjam_import_rule, METH_VARARGS,
-                 "Imports Python callable to bjam."},
-                {"define_action", bjam_define_action, METH_VARARGS,
-                 "Defines a command line action."},
-                {"variable", bjam_variable, METH_VARARGS,
-                 "Obtains a variable from bjam's global module."},
-                {"backtrace", bjam_backtrace, METH_VARARGS,
-                 "Returns bjam backtrace from the last call into Python."},
-                {NULL, NULL, 0, NULL}
-            };
+            PROFILE_ENTER( MAIN_PYTHON );
+            Py_Initialize();
+            {
+                static PyMethodDef BjamMethods[] = {
+                    {"call", bjam_call, METH_VARARGS,
+                     "Call the specified bjam rule."},
+                    {"import_rule", bjam_import_rule, METH_VARARGS,
+                     "Imports Python callable to bjam."},
+                    {"define_action", bjam_define_action, METH_VARARGS,
+                     "Defines a command line action."},
+                    {"variable", bjam_variable, METH_VARARGS,
+                     "Obtains a variable from bjam's global module."},
+                    {"backtrace", bjam_backtrace, METH_VARARGS,
+                     "Returns bjam backtrace from the last call into Python."},
+                    {NULL, NULL, 0, NULL}
+                };
 
-            Py_InitModule( "bjam", BjamMethods );
+                Py_InitModule( "bjam", BjamMethods );
+            }
+            PROFILE_EXIT( MAIN_PYTHON );
         }
-        PROFILE_EXIT(MAIN_PYTHON);
-    }
-    #endif
+#endif
 
 #ifndef NDEBUG
-    run_unit_tests();
+        run_unit_tests();
 #endif
 #if YYDEBUG != 0
-    if ( DEBUG_PARSE )
-        yydebug = 1;
+        if ( DEBUG_PARSE )
+            yydebug = 1;
 #endif
 
-    /* Set JAMDATE first */
+        /* Set JAMDATE. */
+        var_set( "JAMDATE", list_new( L0, outf_time(time(0)) ), VAR_SET );
 
-    var_set( "JAMDATE", list_new( L0, outf_time(time(0)) ), VAR_SET );
+        /* Set JAM_VERSION. */
+        var_set( "JAM_VERSION",
+                 list_new( list_new( list_new( L0,
+                   newstr( VERSION_MAJOR_SYM ) ),
+                   newstr( VERSION_MINOR_SYM ) ),
+                   newstr( VERSION_PATCH_SYM ) ),
+                   VAR_SET );
 
-    var_set( "JAM_VERSION",
-             list_new( list_new( list_new( L0, newstr( VERSION_MAJOR_SYM ) ),
-                                 newstr( VERSION_MINOR_SYM ) ),
-                       newstr( VERSION_PATCH_SYM ) ),
-             VAR_SET );
-
-    /* And JAMUNAME */
-# ifdef unix
-    {
-        struct utsname u;
-
-        if( uname( &u ) >= 0 )
+        /* Set JAMUNAME. */
+#ifdef unix
         {
-            var_set( "JAMUNAME",
-                     list_new(
+            struct utsname u;
+
+            if ( uname( &u ) >= 0 )
+            {
+                var_set( "JAMUNAME",
                          list_new(
                              list_new(
                                  list_new(
-                                     list_new( L0,
-                                               newstr( u.sysname ) ),
-                                     newstr( u.nodename ) ),
-                                 newstr( u.release ) ),
-                             newstr( u.version ) ),
-                         newstr( u.machine ) ), VAR_SET );
-        }
-    }
-# endif /* unix */
-
-    /* load up environment variables */
-
-    /* first into global module, with splitting, for backward compatibility */
-    var_defines( use_environ, 1 );
-
-    /* then into .ENVIRON, without splitting */
-    enter_module( bindmodule(".ENVIRON") );
-    var_defines( use_environ, 0 );
-    exit_module( bindmodule(".ENVIRON") );
-
-    /*
-     * Jam defined variables OS, OSPLAT
-     * We load them after environment, so that
-     * setting OS in environment does not
-     * change Jam notion of the current platform.
-     */
-
-    var_defines( othersyms, 1 );
-
-
-    /* Load up variables set on command line. */
-
-    for( n = 0; s = getoptval( optv, 's', n ); n++ )
-    {
-        char *symv[2];
-        symv[0] = s;
-        symv[1] = 0;
-        var_defines( symv, 1 );
-        enter_module( bindmodule(".ENVIRON") );
-        var_defines( symv, 0 );
-        exit_module( bindmodule(".ENVIRON") );
-    }
-
-    /* Set the ARGV to reflect the complete list of arguments of invocation. */
-
-    for ( n = 0; n < arg_c; ++n )
-    {
-        var_set( "ARGV", list_new( L0, newstr( arg_v[n] ) ), VAR_APPEND );
-    }
-
-    /* Initialize built-in rules */
-
-    load_builtins();
-
-    /* Add the targets in the command line to update list */
-
-    for ( n = 1; n < arg_c; ++n )
-    {
-        if ( arg_v[n][0] == '-' )
-        {
-            char *f = "-:l:d:j:f:gs:t:ano:qv";
-            for( ; *f; f++ ) if( *f == arg_v[n][1] ) break;
-            if ( f[1] == ':' && arg_v[n][2] == '\0' ) { ++n; }
-        }
-        else
-        {
-            mark_target_for_updating(arg_v[n]);
-        }
-    }
-
-    /* Parse ruleset */
-
-    {
-        FRAME frame[1];
-        frame_init( frame );
-    for( n = 0; s = getoptval( optv, 'f', n ); n++ )
-        parse_file( s, frame );
-
-    if( !n )
-        parse_file( "+", frame );
-    }
-
-    status = yyanyerrors();
-
-    /* Manually touch -t targets */
-
-    for( n = 0; s = getoptval( optv, 't', n ); n++ )
-        touchtarget( s );
-
-    /* If an output file is specified, set globs.cmdout to that */
-
-    if( s = getoptval( optv, 'o', 0 ) )
-    {
-        if( !( globs.cmdout = fopen( s, "w" ) ) )
-        {
-            printf( "Failed to write to '%s'\n", s );
-            exit( EXITBAD );
-        }
-        globs.noexec++;
-    }
-
-    /* Now make target */
-
-    {
-        PROFILE_ENTER(MAIN_MAKE);
-
-        LIST * targets = targets_to_update();
-        if ( !targets )
-        {
-            status |= make( 1, &all, anyhow );
-        }
-        else
-        {
-            int targets_count = list_length(targets);
-            const char **targets2 = (const char **)BJAM_MALLOC(targets_count * sizeof(char *));
-            int n = 0;
-            for ( ; targets; targets = list_next(targets) )
-            {
-                targets2[n++] = targets->string;
+                                     list_new(
+                                         list_new( L0,
+                                            newstr( u.sysname ) ),
+                                         newstr( u.nodename ) ),
+                                     newstr( u.release ) ),
+                                 newstr( u.version ) ),
+                             newstr( u.machine ) ), VAR_SET );
             }
-            status |= make( targets_count, targets2, anyhow );
-            free(targets);
+        }
+#endif /* unix */
+
+        /* Load up environment variables. */
+
+        /* First into the global module, with splitting, for backward
+         * compatibility.
+         */
+        var_defines( use_environ, 1 );
+
+        /* Then into .ENVIRON, without splitting. */
+        enter_module( bindmodule(".ENVIRON") );
+        var_defines( use_environ, 0 );
+        exit_module( bindmodule(".ENVIRON") );
+
+        /*
+         * Jam defined variables OS & OSPLAT. We load them after environment, so
+         * that setting OS in environment does not change Jam's notion of the
+         * current platform.
+         */
+        var_defines( othersyms, 1 );
+
+        /* Load up variables set on command line. */
+        for ( n = 0; s = getoptval( optv, 's', n ); ++n )
+        {
+            char *symv[2];
+            symv[ 0 ] = s;
+            symv[ 1 ] = 0;
+            var_defines( symv, 1 );
+            enter_module( bindmodule(".ENVIRON") );
+            var_defines( symv, 0 );
+            exit_module( bindmodule(".ENVIRON") );
         }
 
-        PROFILE_EXIT(MAIN_MAKE);
+        /* Set the ARGV to reflect the complete list of arguments of invocation.
+         */
+        for ( n = 0; n < arg_c; ++n )
+            var_set( "ARGV", list_new( L0, newstr( arg_v[n] ) ), VAR_APPEND );
+
+        /* Initialize built-in rules. */
+        load_builtins();
+
+        /* Add the targets in the command line to the update list. */
+        for ( n = 1; n < arg_c; ++n )
+        {
+            if ( arg_v[ n ][ 0 ] == '-' )
+            {
+                char * f = "-:l:d:j:f:gs:t:ano:qv";
+                for ( ; *f; ++f ) if ( *f == arg_v[ n ][ 1 ] ) break;
+                if ( ( f[ 1 ] == ':' ) && ( arg_v[ n ][ 2 ] == '\0' ) ) ++n;
+            }
+            else
+            {
+                mark_target_for_updating( arg_v[ n ] );
+            }
+        }
+
+        /* Parse ruleset. */
+        {
+            FRAME frame[ 1 ];
+            frame_init( frame );
+            for ( n = 0; s = getoptval( optv, 'f', n ); ++n )
+                parse_file( s, frame );
+
+            if ( !n )
+                parse_file( "+", frame );
+        }
+
+        status = yyanyerrors();
+
+        /* Manually touch -t targets. */
+        for ( n = 0; s = getoptval( optv, 't', n ); ++n )
+            touch_target( s );
+
+        /* If an output file is specified, set globs.cmdout to that. */
+        if ( s = getoptval( optv, 'o', 0 ) )
+        {
+            if ( !( globs.cmdout = fopen( s, "w" ) ) )
+            {
+                printf( "Failed to write to '%s'\n", s );
+                exit( EXITBAD );
+            }
+            ++globs.noexec;
+        }
+
+        /* Now make target. */
+        {
+            PROFILE_ENTER( MAIN_MAKE );
+
+            LIST * targets = targets_to_update();
+            if ( !targets )
+            {
+                status |= make( 1, &all, anyhow );
+            }
+            else
+            {
+                int targets_count = list_length( targets );
+                const char * * targets2 = (const char * *)
+                    BJAM_MALLOC( targets_count * sizeof( char * ) );
+                int n = 0;
+                for ( ; targets; targets = list_next( targets ) )
+                    targets2[ n++ ] = targets->string;
+                status |= make( targets_count, targets2, anyhow );
+                free( targets );
+            }
+
+            PROFILE_EXIT( MAIN_MAKE );
+        }
+
+        PROFILE_EXIT( MAIN );
     }
-
-
-    PROFILE_EXIT(MAIN); }
 
     if ( DEBUG_PROFILE )
         profile_dump();
 
-    /* Widely scattered cleanup */
-
+    /* Widely scattered cleanup. */
     var_done();
     file_done();
-    donerules();
-    donestamps();
-    donestr();
+    rules_done();
+    stamps_done();
+    str_done();
 
-    /* close cmdout */
-
-    if( globs.cmdout )
+    /* Close cmdout. */
+    if ( globs.cmdout )
         fclose( globs.cmdout );
 
 #ifdef HAVE_PYTHON
