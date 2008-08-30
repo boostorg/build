@@ -33,21 +33,25 @@ char    *hashsccssid="@(#)hash.c    1.14  ()  6/20/88";
 
 /* Header attached to all data items entered into a hash table. */
 
-struct hashhdr {
-    struct item *next;
-    unsigned int keyval;            /* for quick comparisons */
-} ;
+struct hashhdr
+{
+    struct item  * next;
+    unsigned int   keyval;  /* for quick comparisons */
+};
 
-/* This structure overlays the one handed to hashenter(). */
-/* It's actual size is given to hashinit(). */
+/* This structure overlays the one handed to hashenter(). Its actual size is
+ * given to hashinit().
+ */
 
-struct hashdata {
-    char    *key;
+struct hashdata
+{
+    char * key;
     /* rest of user data */
-} ;
+};
 
-typedef struct item {
-    struct hashhdr hdr;
+typedef struct item
+{
+    struct hashhdr  hdr;
     struct hashdata data;
 } ITEM ;
 
@@ -85,8 +89,8 @@ struct hash
         } lists[ MAX_LISTS ];
     } items;
 
-    char *name; /* just for hashstats() */
-} ;
+    char * name; /* just for hashstats() */
+};
 
 static void hashrehash( struct hash *hp );
 static void hashstat( struct hash *hp );
@@ -100,7 +104,7 @@ static unsigned int hash_keyval( const char * key_ )
 {
     const unsigned char * key = (const unsigned char *)key_;
     unsigned int keyval = *key;
-    while( *key )
+    while ( *key )
         keyval = keyval * 2147059363 + *key++;
     return keyval;
 }
@@ -116,14 +120,14 @@ static ITEM * hash_search(
     struct hash *hp,
     unsigned int keyval,
     const char * keydata,
-    ITEM ** previous )
+    ITEM * * previous )
 {
     ITEM * i = *hash_bucket(hp,keyval);
     ITEM * p = 0;
 
     for ( ; i; i = i->hdr.next )
     {
-        if( keyval == i->hdr.keyval &&
+        if ( ( keyval == i->hdr.keyval ) &&
             !strcmp( i->data.key, keydata ) )
         {
             if (previous)
@@ -192,10 +196,10 @@ hashitem(
         profile_enter( 0, prof );
     #endif
 
-    if( enter && !hp->items.more )
+    if ( enter && !hp->items.more )
         hashrehash( hp );
 
-    if( !enter && !hp->items.nel )
+    if ( !enter && !hp->items.nel )
     {
         #ifdef HASH_DEBUG_PROFILE
         if ( DEBUG_PROFILE )
@@ -266,7 +270,7 @@ static void hashrehash( register struct hash *hp )
     hp->items.lists[i].base = hp->items.next;
     hp->items.nel += hp->items.more;
 
-    if( hp->tab.base )
+    if ( hp->tab.base )
         hash_mem_free( hp->items.datalen, (char *)hp->tab.base );
 
     hp->tab.nel = hp->items.nel * hp->bloat;
@@ -274,12 +278,12 @@ static void hashrehash( register struct hash *hp )
 
     memset( (char *)hp->tab.base, '\0', hp->tab.nel * sizeof( ITEM * ) );
 
-    for( i = 0; i < hp->items.list; i++ )
+    for ( i = 0; i < hp->items.list; ++i )
     {
         int nel = hp->items.lists[i].nel;
         char *next = hp->items.lists[i].base;
 
-        for( ; nel--; next += hp->items.size )
+        for ( ; nel--; next += hp->items.size )
         {
             register ITEM *i = (ITEM *)next;
             ITEM **ip = hp->tab.base + i->hdr.keyval % hp->tab.nel;
@@ -292,20 +296,20 @@ static void hashrehash( register struct hash *hp )
     }
 }
 
-void hashenumerate( struct hash *hp, void (*f)(void*,void*), void* data )
+void hashenumerate( struct hash * hp, void (* f)( void *, void * ), void * data )
 {
     int i;
-    for( i = 0; i <= hp->items.list; i++ )
+    for ( i = 0; i <= hp->items.list; ++i )
     {
-        char *next = hp->items.lists[i].base;
+        char * next = hp->items.lists[i].base;
         int nel = hp->items.lists[i].nel;
         if ( i == hp->items.list )
             nel -= hp->items.more;
 
-        for( ; nel--; next += hp->items.size )
+        for ( ; nel--; next += hp->items.size )
         {
-            register ITEM * i = (ITEM *)next;
-            if ( i->data.key != 0 ) /* don't enumerate freed items */
+            ITEM * i = (ITEM *)next;
+            if ( i->data.key != 0 )  /* DO not enumerate freed items. */
                 f( &i->data, data );
         }
     }
@@ -350,15 +354,15 @@ hashdone( struct hash *hp )
 {
     int i;
 
-    if( !hp )
+    if ( !hp )
         return;
 
-    if( DEBUG_MEM || DEBUG_PROFILE )
+    if ( DEBUG_MEM || DEBUG_PROFILE )
         hashstat( hp );
 
-    if( hp->tab.base )
+    if ( hp->tab.base )
         hash_mem_free( hp->items.datalen, (char *)hp->tab.base );
-    for( i = 0; i <= hp->items.list; i++ )
+    for ( i = 0; i <= hp->items.list; ++i )
         hash_mem_free( hp->items.datalen, hp->items.lists[i].base );
     hash_mem_free( hp->items.datalen, (char *)hp );
 }
@@ -399,21 +403,21 @@ static void hash_mem_finalizer(char * key, struct hash * hp)
 
 /* ---- */
 
-static void
-hashstat( struct hash *hp )
+static void hashstat( struct hash * hp )
 {
-    ITEM **tab = hp->tab.base;
+    ITEM * * tab = hp->tab.base;
     int nel = hp->tab.nel;
     int count = 0;
     int sets = 0;
     int run = ( tab[ nel - 1 ] != (ITEM *)0 );
-    int i, here;
+    int i;
+    int here;
 
-    for( i = nel; i > 0; i-- )
+    for ( i = nel; i > 0; --i )
     {
-        if( here = ( *tab++ != (ITEM *)0 ) )
+        if ( here = ( *tab++ != (ITEM *)0 ) )
             count++;
-        if( here && !run )
+        if ( here && !run )
             sets++;
         run = here;
     }

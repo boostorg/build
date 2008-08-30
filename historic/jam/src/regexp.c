@@ -37,53 +37,54 @@
  *** THIS IS AN ALTERED VERSION.  It was altered by Christopher Seiwald
  *** seiwald@perforce.com, on 20 January 2000, to use function prototypes.
  *
- * Beware that some of this code is subtly aware of the way operator
- * precedence is structured in regular expressions.  Serious changes in
- * regular-expression syntax might require a total rethink.
+ * Beware that some of this code is subtly aware of the way operator precedence
+ * is structured in regular expressions. Serious changes in regular-expression
+ * syntax might require a total rethink.
  */
+
+
 #include "jam.h"
 #include "regexp.h"
 #include <stdio.h>
 #include <ctype.h>
 #ifndef ultrix
-#include <stdlib.h>
+    #include <stdlib.h>
 #endif
 #include <string.h>
+
 
 /*
  * The "internal use only" fields in regexp.h are present to pass info from
  * compile to execute that permits the execute phase to run lots faster on
- * simple cases.  They are:
- *
- * regstart char that must begin a match; '\0' if none obvious
- * reganch  is the match anchored (at beginning-of-line only)?
- * regmust  string (pointer into program) that match must include, or NULL
- * regmlen  length of regmust string
+ * simple cases. They are:
+ :
+ *  regstart char that must begin a match; '\0' if none obvious.
+ *  reganch  is the match anchored (at beginning-of-line only)?
+ *  regmust  string (pointer into program) that match must include, or NULL.
+ *  regmlen  length of regmust string.
  *
  * Regstart and reganch permit very fast decisions on suitable starting points
- * for a match, cutting down the work a lot.  Regmust permits fast rejection
- * of lines that cannot possibly match.  The regmust tests are costly enough
- * that regcomp() supplies a regmust only if the r.e. contains something
- * potentially expensive (at present, the only such thing detected is * or +
- * at the start of the r.e., which can involve a lot of backup).  Regmlen is
- * supplied because the test in regexec() needs it and regcomp() is computing
- * it anyway.
+ * for a match, cutting down the work a lot.  Regmust permits fast rejection of
+ * lines that cannot possibly match.  The regmust tests are costly enough that
+ * regcomp() supplies a regmust only if the r.e. contains something potentially
+ * expensive (at present, the only such thing detected is * or + at the start of
+ * the r.e., which can involve a lot of backup). Regmlen is supplied because the
+ * test in regexec() needs it and regcomp() is computing it anyway.
  */
 
 /*
- * Structure for regexp "program".  This is essentially a linear encoding
- * of a nondeterministic finite-state machine (aka syntax charts or
- * "railroad normal form" in parsing technology).  Each node is an opcode
- * plus a "next" pointer, possibly plus an operand.  "Next" pointers of
- * all nodes except BRANCH implement concatenation; a "next" pointer with
- * a BRANCH on both ends of it is connecting two alternatives.  (Here we
- * have one of the subtle syntax dependencies:  an individual BRANCH (as
- * opposed to a collection of them) is never concatenated with anything
- * because of operator precedence.)  The operand of some types of node is
- * a literal string; for others, it is a node leading into a sub-FSM.  In
- * particular, the operand of a BRANCH node is the first node of the branch.
- * (NB this is *not* a tree structure:  the tail of the branch connects
- * to the thing following the set of BRANCHes.)  The opcodes are:
+ * Structure for regexp "program". This is essentially a linear encoding of a
+ * nondeterministic finite-state machine (aka syntax charts or "railroad normal
+ * form" in parsing technology). Each node is an opcode plus a "next" pointer,
+ * possibly plus an operand. "Next" pointers of all nodes except BRANCH
+ * implement concatenation; a "next" pointer with a BRANCH on both ends of it is
+ * connecting two alternatives. [Here we have one of the subtle syntax
+ * dependencies: an individual BRANCH, as opposed to a collection of them, is
+ * never concatenated with anything because of operator precedence.] The operand
+ * of some types of node is a literal string; for others, it is a node leading
+ * into a sub-FSM. In particular, the operand of a BRANCH node is the first node
+ * of the branch. [NB this is *not* a tree structure: the tail of the branch
+ * connects to the thing following the set of BRANCHes.] The opcodes are:
  */
 
 /* definition   number  opnd?   meaning */
@@ -104,6 +105,7 @@
 #define OPEN    20  /* no   Mark this point in input as start of #n. */
             /*  OPEN+1 is number 1, etc. */
 #define CLOSE   30  /* no   Analogous to OPEN. */
+
 
 /*
  * Opcode notes:
@@ -809,23 +811,25 @@ regexec(
     }
 
     /* If there is a "must appear" string, look for it. */
-    if (prog->regmust != NULL) {
+    if ( prog->regmust != NULL )
+    {
         s = (char *)string;
-        while ((s = strchr(s, prog->regmust[0])) != NULL) {
-            if (strncmp(s, prog->regmust, prog->regmlen) == 0)
+        while ( ( s = strchr( s, prog->regmust[ 0 ] ) ) != NULL )
+        {
+            if ( !strncmp( s, prog->regmust, prog->regmlen ) )
                 break;  /* Found it. */
-            s++;
+            ++s;
         }
-        if (s == NULL)  /* Not present. */
-            return(0);
+        if ( s == NULL )  /* Not present. */
+            return 0;
     }
 
     /* Mark beginning of line for ^ . */
     regbol = (char *)string;
 
     /* Simplest case:  anchored match need be tried only once. */
-    if (prog->reganch)
-        return(regtry(prog, string));
+    if ( prog->reganch )
+        return regtry( prog, string );
 
     /* Messy cases:  unanchored match. */
     s = (char *)string;
@@ -837,27 +841,29 @@ regexec(
             s++;
         }
     else
-        /* We don't -- general case. */
+        /* We do not -- general case. */
         do {
-            if (regtry(prog, s))
-                return(1);
-        } while (*s++ != '\0');
+            if ( regtry( prog, s ) )
+                return( 1 );
+        } while ( *s++ != '\0' );
 
     /* Failure. */
-    return(0);
+    return 0;
 }
 
+
 /*
- - regtry - try match at specific point
+ * regtry() - try match at specific point.
  */
+
 static int          /* 0 failure, 1 success */
 regtry(
     regexp *prog,
     char *string )
 {
     register int i;
-    register char **sp;
-    register char **ep;
+    register char * * sp;
+    register char * * ep;
 
     reginput = string;
     regstartp = prog->startp;
@@ -865,33 +871,37 @@ regtry(
 
     sp = prog->startp;
     ep = prog->endp;
-    for (i = NSUBEXP; i > 0; i--) {
+    for ( i = NSUBEXP; i > 0; --i )
+    {
         *sp++ = NULL;
         *ep++ = NULL;
     }
-    if (regmatch(prog->program + 1)) {
-        prog->startp[0] = string;
-        prog->endp[0] = reginput;
-        return(1);
-    } else
-        return(0);
+    if ( regmatch( prog->program + 1 ) )
+    {
+        prog->startp[ 0 ] = string;
+        prog->endp[ 0 ] = reginput;
+        return 1;
+    }
+    else
+        return 0;
 }
 
+
 /*
- - regmatch - main matching routine
+ * regmatch() - main matching routine.
  *
- * Conceptually the strategy is simple:  check to see whether the current
- * node matches, call self recursively to see whether the rest matches,
- * and then act accordingly.  In practice we make some effort to avoid
- * recursion, in particular by going through "ordinary" nodes (that don't
- * need to know whether the rest of the match failed) by a loop instead of
- * by recursion.
+ * Conceptually the strategy is simple: check to see whether the current node
+ * matches, call self recursively to see whether the rest matches, and then act
+ * accordingly. In practice we make some effort to avoid recursion, in
+ * particular by going through "ordinary" nodes (that do not need to know
+ * whether the rest of the match failed) by a loop instead of by recursion.
  */
+
 static int          /* 0 failure, 1 success */
-regmatch( char *prog )
+regmatch( char * prog )
 {
-    register char *scan;    /* Current node. */
-    char *next;     /* Next node. */
+    char * scan;  /* Current node. */
+    char * next;  /* Next node. */
 
     scan = prog;
 #ifdef DEBUG

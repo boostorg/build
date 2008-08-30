@@ -38,22 +38,20 @@
  */
 
 /*
- * path_parse() - split a file name into dir/base/suffix/member
+ * path_parse() - split a file name into dir/base/suffix/member.
  */
 
-void
-path_parse(
-    char    *file,
-    PATHNAME *f )
+void path_parse( char * file, PATHNAME * f )
 {
-    char *p, *q;
-    char *end;
+    char * p;
+    char * q;
+    char * end;
 
     memset( (char *)f, 0, sizeof( *f ) );
 
     /* Look for <grist> */
 
-    if( file[0] == '<' && ( p = strchr( file, '>' ) ) )
+    if ( ( file[0] == '<' ) && ( p = strchr( file, '>' ) ) )
     {
         f->f_grist.ptr = file;
         f->f_grist.len = p - file;
@@ -62,7 +60,7 @@ path_parse(
 
     /* Look for dev:[dir] or dev: */
 
-    if( ( p = strchr( file, ']' ) ) || ( p = strchr( file, ':' ) ) )
+    if ( ( p = strchr( file, ']' ) ) || ( p = strchr( file, ':' ) ) )
     {
         f->f_dir.ptr = file;
         f->f_dir.len = p + 1 - file;
@@ -71,9 +69,9 @@ path_parse(
 
     end = file + strlen( file );
 
-    /* Look for (member) */
+    /* Look for (member). */
 
-    if( ( p = strchr( file, '(' ) ) && end[-1] == ')' )
+    if ( ( p = strchr( file, '(' ) ) && ( end[ -1 ] == ')' ) )
     {
         f->f_member.ptr = p + 1;
         f->f_member.len = end - p - 2;
@@ -81,28 +79,26 @@ path_parse(
     }
 
     /* Look for .suffix */
-    /* This would be memrchr() */
+    /* This would be memrchr(). */
 
     p = 0;
     q = file;
 
-    while( q = (char *)memchr( q, '.', end - q ) )
+    while ( q = (char *)memchr( q, '.', end - q ) )
         p = q++;
 
-    if( p )
+    if ( p )
     {
         f->f_suffix.ptr = p;
         f->f_suffix.len = end - p;
         end = p;
     }
 
-    /* Leaves base */
-
+    /* Leaves base. */
     f->f_base.ptr = file;
     f->f_base.len = end - file;
 
     /* Is this a directory without a file spec? */
-
     f->parent = 0;
 }
 
@@ -159,39 +155,33 @@ static int grid[7][7] = {
 /* ABSDIR */    G_ROOT, G_DIR,  G_DIR,  G_DRD,  G_DIR,  G_DIR,  G_DIR,
 /* ROOT */  G_ROOT, G_DIR,  G_DIR,  G_VRD,  G_DIR,  G_DIR,  G_DIR,
 
-} ;
+};
 
-struct dirinf {
+struct dirinf
+{
     int flags;
 
-    struct {
-        char    *ptr;
-        int len;
+    struct
+    {
+        char * ptr;
+        int   len;
     } dev, dir;
-} ;
+};
 
-static char *
-strnchr(
-    char    *buf,
-    int c,
-    int len )
+static char * strnchr( char * buf, int c, int len )
 {
-    while( len-- )
-        if( *buf && *buf++ == c )
-        return buf - 1;
-
+    while ( len-- )
+        if ( *buf && ( *buf++ == c ) )
+            return buf - 1;
     return 0;
 }
 
-static void
-dir_flags(
-    char    *buf,
-    int len,
-    struct dirinf *i )
-{
-    char *p;
 
-    if( !buf || !len )
+static void dir_flags( char * buf, int len, struct dirinf * i )
+{
+    char * p;
+
+    if ( !buf || !len )
     {
         i->flags = DIR_EMPTY;
         i->dev.ptr =
@@ -199,7 +189,7 @@ dir_flags(
         i->dev.len =
         i->dir.len = 0;
     }
-    else if( p = strnchr( buf, ':', len ) )
+    else if ( p = strnchr( buf, ':', len ) )
     {
         i->dev.ptr = buf;
         i->dev.len = p + 1 - buf;
@@ -214,45 +204,41 @@ dir_flags(
         i->dir.ptr = buf;
         i->dir.len = len;
 
-        if( *buf == '[' && buf[1] == ']' )
-        i->flags = DIR_EMPTY;
-        else if( *buf == '[' && buf[1] == '.' )
-        i->flags = DIR_DOTDIR;
-        else if( *buf == '[' && buf[1] == '-' )
-        i->flags = DIR_DASHDIR;
+        if ( ( *buf == '[' ) && ( buf[1] == ']' ) )
+            i->flags = DIR_EMPTY;
+        else if ( ( *buf == '[' ) && ( buf[1] == '.' ) )
+            i->flags = DIR_DOTDIR;
+        else if ( ( *buf == '[' ) && ( buf[1] == '-' ) )
+            i->flags = DIR_DASHDIR;
         else
-        i->flags = DIR_ABSDIR;
+            i->flags = DIR_ABSDIR;
     }
 
-    /* But if its rooted in any way */
+    /* But if its rooted in any way. */
 
-    if( i->dir.len == 8 && !strncmp( i->dir.ptr, "[000000]", 8 ) )
+    if ( ( i->dir.len == 8 ) && !strncmp( i->dir.ptr, "[000000]", 8 ) )
         i->flags = DIR_ROOT;
 }
+
 
 /*
  * path_build() - build a filename given dir/base/suffix/member
  */
 
-void
-path_build(
-    PATHNAME *f,
-    string  *file,
-    int binding )
+void path_build( PATHNAME * f, string * file, int binding )
 {
-    struct dirinf root, dir;
+    struct dirinf root;
+    struct dirinf dir;
     int g;
 
     file_build1( f, file );
 
     /* Get info on root and dir for combining. */
-
     dir_flags( f->f_root.ptr, f->f_root.len, &root );
     dir_flags( f->f_dir.ptr, f->f_dir.len, &dir );
 
-    /* Combine */
-
-    switch( g = grid[ root.flags ][ dir.flags ] )
+    /* Combine. */
+    switch ( g = grid[ root.flags ][ dir.flags ] )
     {
     case G_DIR:
         /* take dir */
@@ -277,12 +263,12 @@ path_build(
 
         /* sanity checks: root ends with ] */
 
-        if( file->value[file->size - 1] == ']' )
+        if ( file->value[file->size - 1] == ']' )
             string_pop_back( file );
 
         /* Add . if separating two -'s */
 
-        if( g == G_DDD )
+        if ( g == G_DDD )
             string_push_back( file, '.' );
 
         /* skip [ of dir */
@@ -299,11 +285,9 @@ path_build(
     }
 
 # ifdef DEBUG
-    if( DEBUG_SEARCH && ( root.flags || dir.flags ) )
-    {
+    if ( DEBUG_SEARCH && ( root.flags || dir.flags ) )
         printf( "%d x %d = %d (%s)\n", root.flags, dir.flags,
                 grid[ root.flags ][ dir.flags ], file->value );
-    }
 # endif
 
     /*
@@ -315,35 +299,38 @@ path_build(
      *  []      []
      */
 
-    if( file->value[file->size - 1] == ']' && f->parent )
+    if ( ( file->value[ file->size - 1 ] == ']' ) && f->parent )
     {
-        char* p = file->value + file->size;
-        while( p-- > file->value )
+        char * p = file->value + file->size;
+        while ( p-- > file->value )
         {
-            if( *p == '.' )
+            if ( *p == '.' )
             {
                 /* If we've truncated everything and left with '[',
                    return empty string. */
-                if (p == file->value + 1)
+                if ( p == file->value + 1 )
                     string_truncate( file, 0 );
-                else {
+                else
+                {
                     string_truncate( file, p - file->value );
                     string_push_back( file, ']' );
                 }
                 break;
             }
-            else if( *p == '-' )
+            
+            if ( *p == '-' )
             {
                 /* handle .- or - */
-                if( p > file->value && p[-1] == '.' )
+                if ( ( p > file->value ) && ( p[ -1 ] == '.' ) )
                     --p;
 
                 *p++ = ']';
                 break;
             }
-            else if( *p == '[' )
+            
+            if ( *p == '[' )
             {
-                if( p[1] == ']' )
+                if ( p[ 1 ] == ']' )
                 {
                     /* CONSIDER: I don't see any use of this code. We immediately
                        break, and 'p' is a local variable. */
@@ -360,26 +347,21 @@ path_build(
     }
 
     /* Now copy the file pieces. */
-
-    if( f->f_base.len )
+    if ( f->f_base.len )
     {
         string_append_range( file, f->f_base.ptr, f->f_base.ptr + f->f_base.len  );
     }
 
-    /* If there is no suffix, we append a "." onto all generated */
-    /* names.  This keeps VMS from appending its own (wrong) idea */
-    /* of what the suffix should be. */
-
-    if( f->f_suffix.len )
-    {
+    /* If there is no suffix, we append a "." onto all generated names. This
+     * keeps VMS from appending its own (wrong) idea of what the suffix should
+     * be.
+     */
+    if ( f->f_suffix.len )
         string_append_range( file, f->f_suffix.ptr, f->f_suffix.ptr + f->f_suffix.len  );
-    }
-    else if( binding && f->f_base.len )
-    {
+    else if ( binding && f->f_base.len )
         string_push_back( file, '.' );
-    }
 
-    if( f->f_member.len )
+    if ( f->f_member.len )
     {
         string_push_back( file, '(' );
         string_append_range( file, f->f_member.ptr, f->f_member.ptr + f->f_member.len  );
@@ -387,8 +369,8 @@ path_build(
     }
 
 # ifdef DEBUG
-    if( DEBUG_SEARCH )
-        printf("built %.*s + %.*s / %.*s suf %.*s mem %.*s -> %s\n",
+    if ( DEBUG_SEARCH )
+        printf( "built %.*s + %.*s / %.*s suf %.*s mem %.*s -> %s\n",
                f->f_root.len, f->f_root.ptr,
                f->f_dir.len, f->f_dir.ptr,
                f->f_base.len, f->f_base.ptr,
@@ -398,14 +380,14 @@ path_build(
 # endif
 }
 
+
 /*
  *  path_parent() - make a PATHNAME point to its parent dir
  */
 
-void
-path_parent( PATHNAME *f )
+void path_parent( PATHNAME * f )
 {
-    if( f->f_base.len )
+    if ( f->f_base.len )
     {
         f->f_base.ptr =
         f->f_suffix.ptr =

@@ -4,12 +4,12 @@
  * This file is part of Jam - see jam.c for Copyright information.
  */
 
-# include "jam.h"
-# include "lists.h"
-# include "execcmd.h"
-# include <errno.h>
+#include "jam.h"
+#include "lists.h"
+#include "execcmd.h"
+#include <errno.h>
 
-# ifdef OS_MAC
+#ifdef OS_MAC
 
 /*
  * execunix.c - execute a shell script on UNIX
@@ -29,39 +29,41 @@
  * Don't just set JAMSHELL to /bin/sh - it won't work!
  *
  * External routines:
- *  execcmd() - launch an async command execution
- *  execwait() - wait and drive at most one execution completion
+ *  exec_cmd()  - launch an async command execution.
+ *  exec_wait() - wait and drive at most one execution completion.
  *
  * Internal routines:
- *  onintr() - bump intr to note command interruption
+ *  onintr() - bump intr to note command interruption.
  *
  * 04/08/94 (seiwald) - Coherent/386 support added.
  * 05/04/94 (seiwald) - async multiprocess interface
  * 01/22/95 (seiwald) - $(JAMSHELL) support
  */
 
+
 /*
- * execcmd() - launch an async command execution
+ * exec_cmd() - launch an async command execution.
  */
 
-void execcmd(
-    char *string,
-    void (*func)( void *closure, int status, timing_info*, char *, char * ),
-    void *closure,
-    LIST *shell )
+void exec_cmd
+(
+    char * string,
+    void (* func)( void * closure, int status, timing_info *, char *, char * ),
+    void * closure,
+    LIST * shell
+)
 {
     printf( "%s", string );
     (*func)( closure, EXEC_CMD_OK );
 }
 
 /*
- * execwait() - wait and drive at most one execution completion
+ * exec_wait() - wait and drive at most one execution completion.
  */
 
-int
-execwait()
+int exec_wait()
 {
     return 0;
 }
 
-# endif /* OS_MAC */
+#endif /* OS_MAC */

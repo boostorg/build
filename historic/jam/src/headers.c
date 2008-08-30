@@ -58,24 +58,23 @@ static LIST *headers1( LIST *l, char *file, int rec, regexp *re[]);
 void
 headers( TARGET *t )
 {
-    LIST    *hdrscan;
-    LIST    *hdrrule;
-    LIST    *headlist = 0;
-    regexp  *re[ MAXINC ];
+    LIST   * hdrscan;
+    LIST   * hdrrule;
+    LIST   * headlist = 0;
+    regexp * re[ MAXINC ];
     int rec = 0;
 
-    if( !( hdrscan = var_get( "HDRSCAN" ) ) ||
+    if ( !( hdrscan = var_get( "HDRSCAN" ) ) ||
         !( hdrrule = var_get( "HDRRULE" ) ) )
         return;
 
-    if( DEBUG_HEADER )
+    if ( DEBUG_HEADER )
         printf( "header scan %s\n", t->name );
 
     /* Compile all regular expressions in HDRSCAN */
-
-    while( rec < MAXINC && hdrscan )
+    while ( ( rec < MAXINC ) && hdrscan )
     {
-        re[rec++] = regex_compile( hdrscan->string );
+        re[ rec++ ] = regex_compile( hdrscan->string );
         hdrscan = list_next( hdrscan );
     }
 
@@ -91,7 +90,7 @@ headers( TARGET *t )
         lol_add( frame->args, headers1( headlist, t->boundname, rec, re ) );
 #endif
 
-        if( lol_get( frame->args, 1 ) )
+        if ( lol_get( frame->args, 1 ) )
         {
             /* The third argument to HDRRULE is the bound name of
              * $(<) */
@@ -100,14 +99,14 @@ headers( TARGET *t )
             list_free( evaluate_rule( hdrrule->string, frame ) );
         }
 
-        /* Clean up */
-
+        /* Clean up. */
         frame_free( frame );
     }
 }
 
+
 /*
- * headers1() - using regexp, scan a file and build include LIST
+ * headers1() - using regexp, scan a file and build include LIST.
  */
 
 #ifdef OPT_HEADER_CACHE_EXT
@@ -116,16 +115,15 @@ LIST *
 static LIST *
 #endif
 headers1(
-    LIST    *l,
-    char    *file,
+    LIST    * l,
+    char    * file,
     int rec,
-    regexp  *re[] )
+    regexp  * re[] )
 {
-    FILE    *f;
-    char    buf[ 1024 ];
-    int     i;
-        static regexp *re_macros = 0;
-
+    FILE * f;
+    char buf[ 1024 ];
+    int  i;
+    static regexp * re_macros = 0;
 
 #ifdef OPT_IMPROVED_PATIENCE_EXT
     static int count = 0;
@@ -134,63 +132,61 @@ headers1(
         printf("...patience...\n");
 #endif
 
-        /* the following regexp is used to detect cases where a  */
-        /* file is included through a line line "#include MACRO" */
-        if ( re_macros == 0 )
-        {
-            re_macros = regex_compile(
-                "^[     ]*#[    ]*include[  ]*([A-Za-z][A-Za-z0-9_]*).*$" );
-        }
+    /* the following regexp is used to detect cases where a  */
+    /* file is included through a line line "#include MACRO" */
+    if ( re_macros == 0 )
+        re_macros = regex_compile(
+            "^[     ]*#[    ]*include[  ]*([A-Za-z][A-Za-z0-9_]*).*$" );
 
-
-    if( !( f = fopen( file, "r" ) ) )
+    if ( !( f = fopen( file, "r" ) ) )
         return l;
 
-    while( fgets( buf, sizeof( buf ), f ) )
+    while ( fgets( buf, sizeof( buf ), f ) )
     {
-            int size = strlen (buf);
-            /* Remove trailing \r and \n, if any. */
-            while (size > 0
-                   && (buf[size-1] == '\n' && buf[size-1] == '\r'))
-            {
-                buf[size-1] = '\0';
-                --size;
-            }
-
-        for( i = 0; i < rec; i++ )
-        if( regexec( re[i], buf ) && re[i]->startp[1] )
+        int size = strlen( buf );
+        /* Remove trailing \r and \n, if any. */
+        while ( ( size > 0 ) &&
+            ( buf[ size - 1 ] == '\n' ) &&
+            ( buf[ size - 1 ] == '\r' ) )
         {
-        re[i]->endp[1][0] = '\0';
-
-        if( DEBUG_HEADER )
-            printf( "header found: %s\n", re[i]->startp[1] );
-
-        l = list_new( l, newstr( re[i]->startp[1] ) );
+            buf[ size - 1 ] = '\0';
+            --size;
         }
 
-            /* special treatment for #include MACRO */
-            if ( regexec( re_macros, buf ) && re_macros->startp[1] )
+        for ( i = 0; i < rec; ++i )
+            if ( regexec( re[i], buf ) && re[i]->startp[1] )
             {
-                char*  header_filename;
-
-                re_macros->endp[1][0] = '\0';
+                re[i]->endp[1][0] = '\0';
 
                 if ( DEBUG_HEADER )
-                    printf( "macro header found: %s", re_macros->startp[1] );
+                    printf( "header found: %s\n", re[i]->startp[1] );
 
-                header_filename = macro_header_get( re_macros->startp[1] );
-                if ( header_filename )
-                {
-                    if ( DEBUG_HEADER )
-                        printf( " resolved to '%s'\n", header_filename );
-                    l = list_new( l, newstr( header_filename ) );
-                }
-                else
-                {
-                    if ( DEBUG_HEADER )
-                        printf( " ignored !!\n" );
-                }
+                l = list_new( l, newstr( re[i]->startp[1] ) );
             }
+
+        /* special treatment for #include MACRO */
+        if ( regexec( re_macros, buf ) && re_macros->startp[1] )
+        {
+            char*  header_filename;
+
+            re_macros->endp[1][0] = '\0';
+
+            if ( DEBUG_HEADER )
+                printf( "macro header found: %s", re_macros->startp[1] );
+
+            header_filename = macro_header_get( re_macros->startp[1] );
+            if ( header_filename )
+            {
+                if ( DEBUG_HEADER )
+                    printf( " resolved to '%s'\n", header_filename );
+                l = list_new( l, newstr( header_filename ) );
+            }
+            else
+            {
+                if ( DEBUG_HEADER )
+                    printf( " ignored !!\n" );
+            }
+        }
     }
 
     fclose( f );
@@ -198,8 +194,8 @@ headers1(
     return l;
 }
 
-void
-regerror( char *s )
+
+void regerror( char * s )
 {
     printf( "re error %s\n", s );
 }

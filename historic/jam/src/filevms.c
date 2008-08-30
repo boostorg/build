@@ -153,7 +153,7 @@ file_dirscan(
 
     status = sys$parse( &xfab );
 
-    if( DEBUG_BINDSCAN )
+    if ( DEBUG_BINDSCAN )
     printf( "scan directory %s\n", dir );
 
     if ( !( status & 1 ) )
@@ -163,17 +163,17 @@ file_dirscan(
 
     /* Add bogus directory for [000000] */
 
-    if( !strcmp( dir, "[000000]" ) )
+    if ( !strcmp( dir, "[000000]" ) )
     {
     (*func)( closure, "[000000]", 1 /* time valid */, 1 /* old but true */ );
     }
 
     /* Add bogus directory for [] */
 
-    if( !strcmp( dir, "[]" ) )
+    if ( !strcmp( dir, "[]" ) )
     {
-    (*func)( closure, "[]", 1 /* time valid */, 1 /* old but true */ );
-    (*func)( closure, "[-]", 1 /* time valid */, 1 /* old but true */ );
+        (*func)( closure, "[]", 1 /* time valid */, 1 /* old but true */ );
+        (*func)( closure, "[-]", 1 /* time valid */, 1 /* old but true */ );
     }
 
     string_new( filename2 );
@@ -196,7 +196,7 @@ file_dirscan(
     /* .xxx is a file with a suffix */
     /* . is no suffix at all */
 
-    if( xnam.nam$b_type == 4 && !strncmp( xnam.nam$l_type, ".DIR", 4 ) )
+    if ( xnam.nam$b_type == 4 && !strncmp( xnam.nam$l_type, ".DIR", 4 ) )
     {
         /* directory */
         sprintf( dirname, "[.%.*s]", xnam.nam$b_name, xnam.nam$l_name );
@@ -222,12 +222,12 @@ file_dirscan(
     path_build( &f, filename2, 0 );
 
     /*
-    if( DEBUG_SEARCH )
+    if ( DEBUG_SEARCH )
         printf("root '%s' base %.*s suf %.*s = %s\n",
             dir,
             xnam.nam$b_name, xnam.nam$l_name,
             xnam.nam$b_type, xnam.nam$l_type,
-            filename2);
+            filename2 );
     */
 
     (*func)( closure, filename2->value, 1 /* time valid */, time );
@@ -280,10 +280,10 @@ file_archmember(
 
     file_cvttime( &mhd->mhd$l_datim, &library_date );
 
-    for ( i = 0, p = module->dsc$a_pointer; i < module->dsc$w_length; i++, p++ )
-    filename[i] = *p;
+    for ( i = 0, p = module->dsc$a_pointer; i < module->dsc$w_length; ++i, ++p )
+    filename[ i ] = *p;
 
-    filename[i] = '\0';
+    filename[ i ] = '\0';
 
     sprintf( buf, "%s(%s.obj)", VMS_archive, filename );
 
@@ -292,11 +292,8 @@ file_archmember(
     return ( 1 );
 }
 
-void
-file_archscan(
-    char *archive,
-    scanback func,
-    void    *closure )
+
+void file_archscan( char * archive, scanback func, void * closure )
 {
     static struct dsc$descriptor_s library =
           {0, DSC$K_DTYPE_T, DSC$K_CLASS_S, NULL};
@@ -313,14 +310,14 @@ file_archscan(
 
     status = lbr$ini_control( &context, &lfunc, &typ, NULL );
     if ( !( status & 1 ) )
-    return;
+        return;
 
     library.dsc$a_pointer = archive;
     library.dsc$w_length = strlen( archive );
 
     status = lbr$open( &context, &library, NULL, NULL, NULL, NULL, NULL );
     if ( !( status & 1 ) )
-    return;
+        return;
 
     (void) lbr$get_index( &context, &index, file_archmember, NULL );
 
@@ -328,4 +325,3 @@ file_archscan(
 }
 
 # endif /* VMS */
-

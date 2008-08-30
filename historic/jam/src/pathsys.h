@@ -28,38 +28,39 @@
 typedef struct _pathname PATHNAME;
 typedef struct _pathpart PATHPART;
 
-struct _pathpart {
-    char    *ptr;
-    int len;
+struct _pathpart
+{
+    char * ptr;
+    int    len;
 };
 
-struct _pathname {
+struct _pathname
+{
     PATHPART    part[6];
-# ifdef OS_VMS
+#ifdef OS_VMS
     int     parent;
-# endif
+#endif
 
-# define f_grist    part[0]
-# define f_root     part[1]
-# define f_dir      part[2]
-# define f_base     part[3]
-# define f_suffix   part[4]
-# define f_member   part[5]
+#define f_grist    part[0]
+#define f_root     part[1]
+#define f_dir      part[2]
+#define f_base     part[3]
+#define f_suffix   part[4]
+#define f_member   part[5]
+};
 
-} ;
+void path_build( PATHNAME * f, string * file, int binding );
+void path_build1( PATHNAME * f, string * file );
 
-void path_build( PATHNAME *f, string *file, int binding );
-void path_build1( PATHNAME *f, string *file );
-
-void path_parse( char *file, PATHNAME *f );
-void path_parent( PATHNAME *f );
+void path_parse( char * file, PATHNAME * f );
+void path_parent( PATHNAME * f );
 
 #ifdef NT
 
 /** Returns newstr-allocated string with long equivivalent of 'short_name'.
     If none exists -- i.e. 'short_path' is already long path, it's returned
     unaltered. */
-char* short_path_to_long_path(char* short_path);
+char * short_path_to_long_path( char * short_path );
 
 #endif
 
@@ -67,15 +68,15 @@ char* short_path_to_long_path(char* short_path);
 /** Returns a static pointer to the system dependent path to the temporary
     directory. NOTE: *without* a trailing path separator.
 */
-const char * path_tmpdir(void);
+const char * path_tmpdir( void );
 
 /** Returns a new temporary name.
 */
-const char * path_tmpnam(void);
+const char * path_tmpnam( void );
 
 /** Returns a new temporary path.
 */
-const char * path_tmpfile(void);
+const char * path_tmpfile( void );
 #endif
 
 #endif

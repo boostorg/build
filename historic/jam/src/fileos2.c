@@ -68,9 +68,9 @@ file_dirscan(
     /* Special case \ or d:\ : enter it */
     string_copy( filespec, dir );
 
-    if( f.f_dir.len == 1 && f.f_dir.ptr[0] == '\\' )
+    if ( f.f_dir.len == 1 && f.f_dir.ptr[0] == '\\' )
         (*func)( closure, dir, 0 /* not stat()'ed */, (time_t)0 );
-    else if( f.f_dir.len == 3 && f.f_dir.ptr[1] == ':' )
+    else if ( f.f_dir.len == 3 && f.f_dir.ptr[1] == ':' )
         (*func)( closure, dir, 0 /* not stat()'ed */, (time_t)0 );
     else
         string_push_back( filespec, '/' );
@@ -79,14 +79,14 @@ file_dirscan(
 
     /* Now enter contents of directory */
 
-    if( DEBUG_BINDSCAN )
+    if ( DEBUG_BINDSCAN )
         printf( "scan directory %s\n", filespec->value );
 
     /* Time info in dos find_t is not very useful.  It consists */
     /* of a separate date and time, and putting them together is */
     /* not easy.  So we leave that to a later stat() call. */
 
-    if( !_dos_findfirst( filespec->value, _A_NORMAL|_A_RDONLY|_A_SUBDIR, finfo ) )
+    if ( !_dos_findfirst( filespec->value, _A_NORMAL|_A_RDONLY|_A_SUBDIR, finfo ) )
     {
         string filename[1];
         string_new( filename );
@@ -99,7 +99,7 @@ file_dirscan(
             path_build( &f, filename, 0 );
             (*func)( closure, filename->value, 0 /* not stat()'ed */, (time_t)0 );
         }
-        while( !_dos_findnext( finfo ) );
+        while ( !_dos_findnext( finfo ) );
         string_free( filename );
     }
 }
@@ -118,7 +118,7 @@ file_time(
 
     struct stat statbuf;
 
-    if( stat( filename, &statbuf ) < 0 )
+    if ( stat( filename, &statbuf ) < 0 )
         return -1;
 
     *time = statbuf.st_mtime;

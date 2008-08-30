@@ -25,38 +25,41 @@
  *          defined before Linux's yacc tries to redefine it.
  */
 
-struct keyword {
-    char *word;
-    int type;
-} keywords[] = {
-# include "jamgramtab.h"
+struct keyword
+{
+    char * word;
+    int    type;
+} keywords[] =
+{
+#include "jamgramtab.h"
     { 0, 0 }
-} ;
+};
 
-struct include {
-    struct include *next;   /* next serial include file */
-    char    *string;    /* pointer into current line */
-    char    **strings;  /* for yyfparse() -- text to parse */
-    FILE    *file;      /* for yyfparse() -- file being read */
-    char    *fname;     /* for yyfparse() -- file name */
-    int     line;       /* line counter for error messages */
-    char    buf[ 512 ]; /* for yyfparse() -- line buffer */
-} ;
+struct include
+{
+    struct include   * next;       /* next serial include file */
+    char             * string;     /* pointer into current line */
+    char           * * strings;    /* for yyfparse() -- text to parse */
+    FILE             * file;       /* for yyfparse() -- file being read */
+    char             * fname;      /* for yyfparse() -- file name */
+    int                line;       /* line counter for error messages */
+    char               buf[ 512 ]; /* for yyfparse() -- line buffer */
+};
 
-static struct include *incp = 0; /* current file; head of chain */
+static struct include * incp = 0; /* current file; head of chain */
 
 static int scanmode = SCAN_NORMAL;
 static int anyerrors = 0;
-static char *symdump( YYSTYPE *s );
+static char * symdump( YYSTYPE * );
 
 # define BIGGEST_TOKEN 10240    /* no single token can be larger */
+
 
 /*
  * Set parser mode: normal, string, or keyword
  */
 
-void
-yymode( int n )
+void yymode( int n )
 {
     scanmode = n;
 }
@@ -64,7 +67,7 @@ yymode( int n )
 void
 yyerror( char *s )
 {
-    if( incp )
+    if ( incp )
         printf( "%s:%d: ", incp->fname, incp->line );
 
     printf( "%s at %s\n", s, symdump( &yylval ) );
@@ -95,7 +98,7 @@ yyfparse( char *s )
 
     /* If the filename is "+", it means use the internal jambase. */
 
-    if( !strcmp( s, "+" ) )
+    if ( !strcmp( s, "+" ) )
         i->strings = jambase;
 }
 
@@ -111,7 +114,7 @@ yyline()
 {
     struct include *i = incp;
 
-    if( !incp )
+    if ( !incp )
         return EOF;
 
     /* Once we start reading from the input stream, we reset the */
@@ -120,16 +123,16 @@ yyline()
 
     /* If there is more data in this line, return it. */
 
-    if( *i->string )
+    if ( *i->string )
         return *i->string++;
 
     /* If we're reading from an internal string list, go to the */
     /* next string. */
 
-    if( i->strings )
+    if ( i->strings )
     {
-        if( !*i->strings )
-        goto next;
+        if ( !*i->strings )
+            goto next;
 
         i->line++;
         i->string = *(i->strings++);
@@ -138,19 +141,17 @@ yyline()
 
     /* If necessary, open the file */
 
-    if( !i->file )
+    if ( !i->file )
     {
-        FILE *f = stdin;
-
-        if( strcmp( i->fname, "-" ) && !( f = fopen( i->fname, "r" ) ) )
-        perror( i->fname );
-
+        FILE * f = stdin;
+        if ( strcmp( i->fname, "-" ) && !( f = fopen( i->fname, "r" ) ) )
+         perror( i->fname );
         i->file = f;
     }
 
     /* If there's another line in this file, start it. */
 
-    if( i->file && fgets( i->buf, sizeof( i->buf ), i->file ) )
+    if ( i->file && fgets( i->buf, sizeof( i->buf ), i->file ) )
     {
         i->line++;
         i->string = i->buf;
@@ -165,7 +166,7 @@ yyline()
 
     /* Close file, free name */
 
-    if( i->file && i->file != stdin )
+    if ( i->file && i->file != stdin )
         fclose( i->file );
     freestr( i->fname );
     BJAM_FREE( (char *)i );
@@ -188,66 +189,62 @@ yyline()
 # define yychar() ( *incp->string ? *incp->string++ : yyline() )
 # define yyprev() ( incp->string-- )
 
-int
-yylex()
+int yylex()
 {
     int c;
-    char buf[BIGGEST_TOKEN];
-    char *b = buf;
+    char buf[ BIGGEST_TOKEN ];
+    char * b = buf;
 
-    if( !incp )
+    if ( !incp )
         goto eof;
 
     /* Get first character (whitespace or of token) */
 
     c = yychar();
 
-    if( scanmode == SCAN_STRING )
+    if ( scanmode == SCAN_STRING )
     {
         /* If scanning for a string (action's {}'s), look for the */
         /* closing brace.  We handle matching braces, if they match! */
 
         int nest = 1;
 
-        while( c != EOF && b < buf + sizeof( buf ) )
+        while ( c != EOF && b < ( buf + sizeof( buf ) ) )
         {
-            if( c == '{' )
-            nest++;
+            if ( c == '{' )
+                nest++;
 
-            if( c == '}' && !--nest )
-            break;
+            if ( ( c == '}' ) && !--nest )
+                break;
 
             *b++ = c;
 
             c = yychar();
 
-                    /* turn trailing "\r\n" sequences into plain "\n"
-                     * for Cygwin
-                     */
-                    if (c == '\n' && b[-1] == '\r')
-                        --b;
+            /* Turn trailing "\r\n" sequences into plain "\n" for Cygwin. */
+            if ( ( c == '\n' ) && ( b[ -1 ] == '\r' ) )
+                --b;
         }
 
         /* We ate the ending brace -- regurgitate it. */
-
-        if( c != EOF )
-        yyprev();
+        if ( c != EOF )
+            yyprev();
 
         /* Check obvious errors. */
 
-        if( b == buf + sizeof( buf ) )
+        if ( b == buf + sizeof( buf ) )
         {
-        yyerror( "action block too big" );
-        goto eof;
+            yyerror( "action block too big" );
+            goto eof;
         }
 
-        if( nest )
+        if ( nest )
         {
-        yyerror( "unmatched {} in action block" );
-        goto eof;
+            yyerror( "unmatched {} in action block" );
+            goto eof;
         }
 
-        *b = 0;
+        * b = 0;
         yylval.type = STRING;
         yylval.string = newstr( buf );
         yylval.file = incp->fname;
@@ -256,32 +253,29 @@ yylex()
     }
     else
     {
-        char *b = buf;
-        struct keyword *k;
+        char * b = buf;
+        struct keyword * k;
         int inquote = 0;
         int notkeyword;
 
         /* Eat white space */
 
-        for( ;; )
+        for ( ;; )
         {
-            /* Skip past white space */
-
-            while( c != EOF && isspace( c ) )
+            /* Skip past white space. */
+            while ( ( c != EOF ) && isspace( c ) )
                 c = yychar();
 
             /* Not a comment?  Swallow up comment line. */
-
-            if( c != '#' )
+            if ( c != '#' )
                 break;
-            while( ( c = yychar() ) != EOF && c != '\n' )
-                ;
+            while ( ( ( c = yychar() ) != EOF ) && ( c != '\n' ) ) ;
         }
 
         /* c now points to the first character of a token. */
 
-        if( c == EOF )
-        goto eof;
+        if ( c == EOF )
+            goto eof;
 
         yylval.file = incp->fname;
         yylval.line = incp->line;
@@ -295,46 +289,48 @@ yylex()
         /* "'s get stripped but preserve white space */
         /* \ protects next character */
 
-        while(
-        c != EOF &&
-        b < buf + sizeof( buf ) &&
-        ( inquote || !isspace( c ) ) )
+        while
+        (
+            ( c != EOF ) &&
+            ( b < buf + sizeof( buf ) ) &&
+            ( inquote || !isspace( c ) )
+        )
         {
-        if( c == '"' )
-        {
-            /* begin or end " */
-            inquote = !inquote;
-            notkeyword = 1;
-        }
-        else if( c != '\\' )
-        {
-            /* normal char */
-            *b++ = c;
-        }
-        else if( ( c = yychar()) != EOF )
-        {
-            /* \c */
-            *b++ = c;
-            notkeyword = 1;
-        }
-        else
-        {
-            /* \EOF */
-            break;
-        }
+            if ( c == '"' )
+            {
+                /* begin or end " */
+                inquote = !inquote;
+                notkeyword = 1;
+            }
+            else if ( c != '\\' )
+            {
+                /* normal char */
+                *b++ = c;
+            }
+            else if ( ( c = yychar()) != EOF )
+            {
+                /* \c */
+                *b++ = c;
+                notkeyword = 1;
+            }
+            else
+            {
+                /* \EOF */
+                break;
+            }
 
-        c = yychar();
+            c = yychar();
         }
 
         /* Check obvious errors. */
 
-        if( b == buf + sizeof( buf ) )
+        if ( b == buf + sizeof( buf ) )
         {
         yyerror( "string too big" );
         goto eof;
         }
 
-        if( inquote )
+        if ( inquote )
         {
         yyerror( "unmatched \" in string" );
         goto eof;
@@ -342,7 +338,7 @@ yylex()
 
         /* We looked ahead a character - back up. */
 
-        if( c != EOF )
+        if ( c != EOF )
         yyprev();
 
         /* scan token table */
@@ -352,22 +348,22 @@ yylex()
         *b = 0;
         yylval.type = ARG;
 
-        if( !notkeyword && !( isalpha( *buf ) && scanmode == SCAN_PUNCT ) )
+        if ( !notkeyword && !( isalpha( *buf ) && scanmode == SCAN_PUNCT ) )
         {
-        for( k = keywords; k->word; k++ )
-            if( *buf == *k->word && !strcmp( k->word, buf ) )
-        {
-            yylval.type = k->type;
-            yylval.string = k->word;    /* used by symdump */
-            break;
-        }
+            for ( k = keywords; k->word; ++k )
+                if ( ( *buf == *k->word ) && !strcmp( k->word, buf ) )
+                {
+                    yylval.type = k->type;
+                    yylval.string = k->word;  /* used by symdump */
+                    break;
+                }
         }
 
-        if( yylval.type == ARG )
+        if ( yylval.type == ARG )
         yylval.string = newstr( buf );
     }
 
-    if( DEBUG_SCAN )
+    if ( DEBUG_SCAN )
         printf( "scan %s\n", symdump( &yylval ) );
 
     return yylval.type;
@@ -384,34 +380,24 @@ static char *
 symdump( YYSTYPE *s )
 {
     static char buf[ BIGGEST_TOKEN + 20 ];
-
-    switch( s->type )
+    switch ( s->type )
     {
-    case EOF:
-        sprintf( buf, "EOF" );
-        break;
-    case 0:
-        sprintf( buf, "unknown symbol %s", s->string );
-        break;
-    case ARG:
-        sprintf( buf, "argument %s", s->string );
-        break;
-    case STRING:
-        sprintf( buf, "string \"%s\"", s->string );
-        break;
-    default:
-        sprintf( buf, "keyword %s", s->string );
-        break;
+        case EOF   : sprintf( buf, "EOF"                          ); break;
+        case 0     : sprintf( buf, "unknown symbol %s", s->string ); break;
+        case ARG   : sprintf( buf, "argument %s"      , s->string ); break;
+        case STRING: sprintf( buf, "string \"%s\""    , s->string ); break;
+        default    : sprintf( buf, "keyword %s"       , s->string ); break;
     }
     return buf;
 }
 
+
 /*  Get information about the current file and line, for those epsilon
- *  transitions that produce a parse
+ *  transitions that produce a parse.
  */
-void yyinput_stream( char** name, int* line )
+void yyinput_stream( char * * name, int * line )
 {
-    if (incp)
+    if ( incp )
     {
         *name = incp->fname;
         *line = incp->line;
