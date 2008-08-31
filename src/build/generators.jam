@@ -109,7 +109,8 @@ class generator
     import "class" : new ;
     import property ;
 
-    EXPORT class@generator : indent increase-indent decrease-indent generators.dout ;
+    EXPORT class@generator : indent increase-indent decrease-indent
+        generators.dout ;
 
     rule __init__ (
         id                          # Identifies the generator - should be name
@@ -147,9 +148,9 @@ class generator
         {
             # Create three parallel lists: one with the list of target types,
             # and two other with prefixes and postfixes to be added to target
-            # name. We use parallel lists for prefix and postfix (as opposed
-            # to mapping), because given target type might occur several times,
-            # for example "H H(%_symbols)".
+            # name. We use parallel lists for prefix and postfix (as opposed to
+            # mapping), because given target type might occur several times, for
+            # example "H H(%_symbols)".
             local m = [ MATCH ([^\\(]*)(\\((.*)%(.*)\\))? : $(e) ] ;
             self.target-types += $(m[1]) ;
             self.name-prefix += $(m[3]:E="") ;
@@ -188,6 +189,7 @@ class generator
     # set must be present in build properties if this generator is to be used.
     # If result has grist-only element, that build properties must include some
     # value of that feature.
+    #
     # XXX: remove this method?
     #
     rule requirements ( )
@@ -269,8 +271,10 @@ class generator
     }
 
     # Tries to invoke this generator on the given sources. Returns a list of
-    # generated targets (instances of 'virtual-target'). Returning nothing from
-    # run indicates that the generator was unable to create the target.
+    # generated targets (instances of 'virtual-target') and optionally a set of
+    # properties to be added to the usage-requirements for all the generated
+    # targets. Returning nothing from run indicates that the generator was
+    # unable to create the target.
     #
     rule run
     (
