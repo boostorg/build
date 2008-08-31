@@ -45,6 +45,7 @@ rule install ( name : requirements * : binaries * : libraries * : headers * )
     # what is needed.
     local install-source-root = [ property.select <install-source-root> :
         $(requirements) ] ;
+    install-source-root = $(install-source-root:G=) ;
     requirements = [ property.change $(requirements) : <install-source-root> ] ;
 
     local install-header-subdir = [ property.select <install-header-subdir> :
@@ -58,6 +59,7 @@ rule install ( name : requirements * : binaries * : libraries * : headers * )
     # given.
     local prefix = [ option.get prefix : [ property.select
         <install-default-prefix> : $(requirements) ] ] ;
+    prefix = $(prefix:G=) ;
     requirements = [ property.change $(requirements) : <install-default-prefix>
         ] ;
     # Or some likely defaults if neither is given.
