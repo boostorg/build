@@ -124,6 +124,23 @@ rule ungrist ( names * )
 }
 
 
+# If the passed value is quoted, unquotes it. Otherwise returns the value
+# unchanged.
+#
+rule unquote ( value ? )
+{
+    local match-result = [ MATCH ^(\")(.*)(\")$ : $(value) ] ;
+    if $(match-result)
+    {
+        return $(match-result[2]) ;
+    }
+    else
+    {
+        return $(value) ;
+    }
+}
+
+
 rule __test__ ( )
 {
     import assert ;
@@ -154,6 +171,14 @@ rule __test__ ( )
     assert.result foo : basename foo ;
     assert.result foo : basename foo.so ;
     assert.result foo.so : basename foo.so.1 ;
+
+    assert.result         : unquote ;
+    assert.result ""      : unquote "" ;
+    assert.result foo     : unquote foo ;
+    assert.result \"foo   : unquote \"foo ;
+    assert.result foo\"   : unquote foo\" ;
+    assert.result foo     : unquote \"foo\" ;
+    assert.result \"foo\" : unquote \"\"foo\"\" ;
 
     assert.result         : ungrist ;
     assert.result foo     : ungrist <foo> ;
