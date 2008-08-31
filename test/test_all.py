@@ -6,17 +6,16 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #         http://www.boost.org/LICENSE_1_0.txt)
 
-import os, sys, string
+import os
+import sys
+import string
 import BoostBuild
-from BoostBuild import get_toolset
 
-# clear environment for testing
+
+# Clear environment for testing.
 #
-for s in (
-    'BOOST_ROOT','BOOST_BUILD_PATH','JAM_TOOLSET','BCCROOT',
-    'MSVCDir','MSVC','MSVCNT','MINGW','watcom'
-    ):
-
+for s in ('BOOST_ROOT', 'BOOST_BUILD_PATH', 'JAM_TOOLSET', 'BCCROOT', 'MSVCDir',
+    'MSVC', 'MSVCNT', 'MINGW', 'watcom' ):
     try:
         del os.environ[s]
     except:
@@ -24,12 +23,13 @@ for s in (
 
 BoostBuild.set_defer_annotations(1)
 
+
 def run_tests(critical_tests, other_tests):
     """Runs first critical tests and then other_tests.
 
        Stops on first error, and write the name of failed test to
-       test_results.txt. Critical tests are run in the specified order,
-       other tests are run starting with the one that failed the last time.
+       test_results.txt. Critical tests are run in the specified order, other
+       tests are run starting with the one that failed the last time.
     """
     last_failed = last_failed_test()
     other_tests = reorder_tests(other_tests, last_failed)
@@ -50,17 +50,16 @@ def run_tests(critical_tests, other_tests):
                 f.write(i)
                 f.close()
             failures_count = failures_count + 1
-            # Restore the current directory, which might be changed by the
-            # test
+            # Restore the current directory, which might be changed by the test.
             os.chdir(invocation_dir)
             BoostBuild.flush_annotations();
             continue
         print "PASSED"
         BoostBuild.flush_annotations();
         pass_count = pass_count + 1
-        sys.stdout.flush()  # makes testing under emacs more entertaining.
+        sys.stdout.flush()  # Makes testing under emacs more entertaining.
 
-    # Erase the file on success
+    # Erase the file on success.
     if failures_count == 0:
         open('test_results.txt', 'w')
 
@@ -79,6 +78,7 @@ def last_failed_test():
         return s
     except:
         return None
+
 
 def reorder_tests(tests, first_test):
     try:
@@ -176,26 +176,25 @@ tests = [ "rebuilds",
 
 if os.name == 'posix':
     tests.append("symlink")
-    # On windows, library order is not important, so skip this test
-    # Besides, it fails ;-)
-    # Further, the test relies on the fact that on Linux, one
-    # can build a shared library with unresolved symbols. This is
-    # not true on Windows (even with cygwin gcc).
+    # On windows, library order is not important, so skip this test. Besides, it
+    # fails ;-). Further, the test relies on the fact that on Linux, one can
+    # build a shared library with unresolved symbols. This is not true on
+    # Windows (even with cygwin gcc).
     if string.find(os.uname()[0], "CYGWIN") == -1:
         tests.append("library_order")
 
-if string.find(get_toolset(), 'gcc') == 0:
+if string.find(BoostBuild.get_toolset(), 'gcc') == 0:
     tests.append("gcc_runtime")
 
-if string.find(get_toolset(), 'gcc') == 0 or string.find(get_toolset(), 'msvc') == 0:
+if ( string.find(BoostBuild.get_toolset(), 'gcc') == 0 )or  \
+    ( string.find(BoostBuild.get_toolset(), 'msvc') == 0 ):
     tests.append("pch")
 
 if "--extras" in sys.argv:
     tests.append("boostbook")
     tests.append("qt4")
     tests.append("example_qt4")
-    # Requires ./whatever.py to work, so is
-    # not guaranted to work everywhere.
+    # Requires ./whatever.py to work, so is not guaranted to work everywhere.
     tests.append("example_customization")
     # Requires gettext tools.
     tests.append("example_gettext")

@@ -6,20 +6,18 @@
 # accompanying file LICENSE_1_0.txt) or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-from BoostBuild import Tester
+import BoostBuild
 
-tester = Tester()
+tester = BoostBuild.Tester()
 
-tester.write("Jamroot", """
-    obj test : test.cpp : <include>a&&b ;
+tester.write("jamroot.jam", """
+obj test : test.cpp : <include>a&&b ;
 """)
 
 tester.write("test.cpp", """
-    #include <test1.hpp>
-    #include <test2.hpp>
-    
-    int main() {
-    }
+#include <test1.hpp>
+#include <test2.hpp>
+int main() {}
 """)
 
 tester.write("a/test1.hpp", """

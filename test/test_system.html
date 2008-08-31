@@ -112,12 +112,11 @@
       "../../../jam/index.html">$boost_build_root/jam/index.html</a> for
       instructions.</li>
 
-      <li>Configure at least one toolset. You can edit
-      <tt>site-config.jam</tt> or <tt>user-config.jam</tt> to add new
-      toolsets. Or you can create file <tt>test-config.jam</tt> in
-      <tt>$boost_build_root/test</tt> directory. In this case,
-      <tt>site-config.jam</tt> and <tt>user-config.jam</tt> will be ignored
-      for testing.</li>
+      <li>Configure at least one toolset. You can edit <tt>site-config.jam</tt>
+      or <tt>user-config.jam</tt> to add new toolsets. Or you can create file
+      <tt>test-config.jam</tt> in <tt>$boost_build_root/test</tt> directory. In
+      this case, <tt>site-config.jam</tt> and <tt>user-config.jam</tt> will be
+      ignored for testing.</li>
     </ol>
 
     <p>When all is set, you can run all the tests using the <tt>test_all.py</tt>
@@ -211,14 +210,14 @@ python generators_test.py msvc-7.1
 
     <p>The "hello.py" module might contain:</p>
 <pre class="example">
-from BoostBuild import Tester, List
+from BoostBuild import List
 
 # Create a temporary working directory
-t = Tester()
+t = BoostBuild.Tester()
 
 # Create the needed files
-t.write("project-root.jam", "")
-t.write("Jamfile", """
+t.write("jamroot.jam", "")
+t.write("jamfile.jam", """
 exe hello : hello.cpp ;
 """)
 t.write("hello.cpp", """

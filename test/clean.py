@@ -58,7 +58,6 @@ __declspec(dllexport)
 void sub3() {}
 """)
 
-
 # The 'clean' should not remove files under separate jamroot.jam.
 t.run_build_system()
 t.run_build_system("--clean")
@@ -113,6 +112,5 @@ cast a cpp : a.h ;
 t.write("a.h", "")
 t.run_build_system("--clean")
 t.expect_nothing("a.h")
-
 
 t.cleanup()
