@@ -1402,11 +1402,11 @@ class typed-target : basic-target
 {
     import generators ;
 
-    rule __init__ ( name : project : type : sources * : requirements *
-        : default-build * : usage-requirements * )
+    rule __init__ ( name : project : type : sources * : requirements * :
+         default-build * : usage-requirements * )
     {
-        basic-target.__init__ $(name) : $(project) : $(sources)
-            : $(requirements) : $(default-build) : $(usage-requirements) ;
+        basic-target.__init__ $(name) : $(project) : $(sources) :
+            $(requirements) : $(default-build) : $(usage-requirements) ;
 
         self.type = $(type) ;
     }
@@ -1418,7 +1418,8 @@ class typed-target : basic-target
 
     rule construct ( name : source-targets * : property-set )
     {
-        local r = [ generators.construct $(self.project) $(name:S=) : $(self.type)
+        local r = [ generators.construct $(self.project) $(name:S=)
+            : $(self.type)
             : [ property-set.create [ $(property-set).raw ]
                 <main-target-type>$(self.type) ]
             : $(source-targets) ] ;
