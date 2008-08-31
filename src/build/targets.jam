@@ -490,7 +490,7 @@ class project-target : abstract-target
             self.constants += $(name) ;
         }
         self.constant.$(name) = $(value) ;
-        # Inject the constant in the scope of project-root module.
+        # Inject the constant in the scope of the Jamroot module.
         modules.poke $(self.project-module) : $(name) : $(value) ;
     }
 
