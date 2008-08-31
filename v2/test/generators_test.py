@@ -10,6 +10,7 @@ import BoostBuild
 t = BoostBuild.Tester()
 
 t.set_tree("generators-test")
+
 t.run_build_system()
 
 t.expect_addition( "bin/$toolset/debug/" * BoostBuild.List( "a.obj b.obj c.h "

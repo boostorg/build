@@ -21,7 +21,8 @@ def test_multiple_conditions():
     """Basic tests for properties conditioned on multiple other properties.
     """
 
-    t = BoostBuild.Tester("--ignore-regular-config toolset=testToolset", pass_toolset=False, use_test_config=False)
+    t = BoostBuild.Tester("--ignore-regular-config toolset=testToolset",
+        pass_toolset=False, use_test_config=False)
 
     t.write("testToolset.jam", """
 import feature ;
@@ -29,7 +30,7 @@ feature.extend toolset : testToolset ;
 rule init ( ) { }
 """)
 
-    t.write("Jamroot.jam", """
+    t.write("jamroot.jam", """
 import feature ;
 import notfile ;
 import toolset ;
@@ -134,7 +135,7 @@ feature.subfeature toolset %(toolset)s : version : 0 1 ;
 rule init ( version ? ) { }
 """ % {"toolset": toolset})
 
-    t.write("Jamroot.jam", """
+    t.write("jamroot.jam", """
 import feature ;
 import notfile ;
 import toolset ;

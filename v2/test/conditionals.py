@@ -20,13 +20,13 @@ int main() { return 0; }
 """)
 
 # Test conditionals in target requirements.
-t.write("Jamroot.jam", "exe a : a.cpp : <link>static:<define>STATIC ;")
+t.write("jamroot.jam", "exe a : a.cpp : <link>static:<define>STATIC ;")
 t.run_build_system("link=static")
 t.expect_addition("bin/$toolset/debug/link-static/a.exe")
 t.rm("bin")
 
 # Test conditionals in project requirements.
-t.write("Jamroot.jam", """
+t.write("jamroot.jam", """
 project : requirements <link>static:<define>STATIC ;
 exe a : a.cpp ;
 """)
@@ -36,7 +36,7 @@ t.rm("bin")
 
 # Regression test for a bug found by Ali Azarbayejani. Conditionals inside usage
 # requirement were not being evaluated.
-t.write("Jamroot.jam", """
+t.write("jamroot.jam", """
 lib l : l.cpp : : : <link>static:<define>STATIC ;
 exe a : a.cpp l ;
 """)

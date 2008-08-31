@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
-# Copyright 2003 Dave Abrahams 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Dave Abrahams
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-# This tests the core rule for enumerating the variable names in a module
+# This tests the core rule for enumerating the variable names in a module.
 
 import BoostBuild
 
@@ -34,4 +34,5 @@ NOTFILE xx ;
 """)
 
 t.run_build_system("-ffile.jam", status=0)
+
 t.cleanup()

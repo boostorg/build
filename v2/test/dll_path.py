@@ -1,41 +1,38 @@
 #!/usr/bin/python
 
-#  Copyright (C) Vladimir Prus 2003. Permission to copy, use, modify, sell and
-#  distribute this software is granted provided this copyright notice appears in
-#  all copies. This software is provided "as is" without express or implied
-#  warranty, and with no claim as to its suitability for any purpose.
+# Copyright (C) Vladimir Prus 2003. Permission to copy, use, modify, sell and
+# distribute this software is granted provided this copyright notice appears in
+# all copies. This software is provided "as is" without express or implied
+# warranty, and with no claim as to its suitability for any purpose.
 
-#  Test that the <dll-path> property is correctly set when using
-#  <hardcode-dll-paths>true.
-from BoostBuild import Tester, List
-from string import find
+# Test that the <dll-path> property is correctly set when using
+# <hardcode-dll-paths>true.
 
+import BoostBuild
 
-t = Tester()
+t = BoostBuild.Tester()
 
-# The point of this test is to have exe "main" which uses library "b",
-# which uses library "a". When "main" is built with <hardcode-dll-paths>true,
-# paths to both libraries should be present as values of <dll-path> feature.
-# We create a special target type which reports <dll-path> values on its sources
-# and compare the list of found values with out expectations.
+# The point of this test is to have exe "main" which uses library "b", which
+# uses library "a". When "main" is built with <hardcode-dll-paths>true, paths to
+# both libraries should be present as values of <dll-path> feature. We create a
+# special target type which reports <dll-path> values on its sources and compare
+# the list of found values with out expectations.
 
-t.write("Jamfile", """ 
+t.write("jamfile.jam", """
 exe main : main.cpp b//b ;
 explicit main ;
-
-path-list mp : main ; 
+path-list mp : main ;
 """)
 
-t.write("main.cpp", """ 
-int main() { return 0; }
-
+t.write("main.cpp", """
+int main() {}
 """)
 
-t.write("project-root.jam", """ 
-using dll-paths ; 
+t.write("jamroot.jam", """
+using dll-paths ;
 """)
 
-t.write("dll-paths.jam", """ 
+t.write("dll-paths.jam", """
 import type ;
 import generators ;
 import feature ;
@@ -43,18 +40,18 @@ import sequence ;
 import print ;
 import "class" : new ;
 
-rule init ( ) 
-{ 
+rule init ( )
+{
     type.register PATH_LIST : pathlist ;
-    
-    class dll-paths-list-generator : generator 
+
+    class dll-paths-list-generator : generator
     {
         rule __init__ ( )
         {
             generator.__init__ dll-paths.list : EXE : PATH_LIST ;
         }
-        
-        rule generated-targets ( sources + : property-set : project name ? )        
+
+        rule generated-targets ( sources + : property-set : project name ? )
         {
             local dll-paths ;
             for local s in $(sources)
@@ -64,15 +61,15 @@ rule init ( )
                 {
                     local p = [ $(a).properties ] ;
                     dll-paths += [ $(p).get <dll-path> ] ;
-                }                                                
+                }
             }
-            return [ generator.generated-targets $(sources) 
-              : [ $(property-set).add-raw $(dll-paths:G=<dll-path>) ] : $(project) $(name) ] ;
-            
+            return [ generator.generated-targets $(sources) :
+                [ $(property-set).add-raw $(dll-paths:G=<dll-path>) ] :
+                $(project) $(name) ] ;
+
         }
     }
     generators.register [ new dll-paths-list-generator ] ;
-    
 }
 
 rule list ( target : sources * : properties * )
@@ -82,35 +79,30 @@ rule list ( target : sources * : properties * )
     print.output $(target) ;
     print.text $(paths) ;
 }
-
 """)
 
-t.write("a/a.cpp", """ 
+t.write("a/a.cpp", """
 void
 #if defined(_WIN32)
 __declspec(dllexport)
 #endif
 foo() {}
-
-
 """)
 
-t.write("a/Jamfile", """ 
-lib a : a.cpp ; 
+t.write("a/jamfile.jam", """
+lib a : a.cpp ;
 """)
 
-t.write("b/b.cpp", """ 
+t.write("b/b.cpp", """
 void
 #if defined(_WIN32)
 __declspec(dllexport)
 #endif
 bar() {}
-
-
 """)
 
-t.write("b/Jamfile", """ 
-lib b : b.cpp ../a//a ; 
+t.write("b/jamfile.jam", """
+lib b : b.cpp ../a//a ;
 """)
 
 t.run_build_system("hardcode-dll-paths=true")
@@ -124,4 +116,3 @@ t.expect_content_line("bin/$toolset/debug/mp.pathlist", "*" + es1);
 t.expect_content_line("bin/$toolset/debug/mp.pathlist", "*" + es2);
 
 t.cleanup()
-

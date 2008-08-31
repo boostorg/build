@@ -40,7 +40,6 @@ actions make
     echo made from $(>) >> $(<)
 }
 
-
 time foo : bar ;
 make bar : baz ;
 """)
