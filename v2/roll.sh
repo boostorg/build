@@ -26,7 +26,7 @@ rm -rf example/versioned
 find . -maxdepth 1 -type f | egrep -v "boost-build.jam|timestamp.txt|roll.sh|bootstrap.jam|build-system.jam|boost_build.png|index.html|hacking.txt|site-config.jam|user-config.jam" | xargs rm -f
 
 # Build the documentation
-touch doc/project-root.jam
+touch doc/jamroot.jam
 export BOOST_BUILD_PATH=`pwd`
 cd doc
 /home/ghost/Work/Boost/boost-svn/tools/jam/src/bin.linuxx86/bjam --v2
