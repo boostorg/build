@@ -115,7 +115,7 @@ class abstract-target
         return $(self.project) ;
     }
 
-    # Return the location where the target was declared
+    # Return the location where the target was declared.
     rule location ( )
     {
         return $(self.location) ;
