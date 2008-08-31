@@ -22,6 +22,7 @@ import regex ;
 import sequence ;
 import targets ;
 import toolset ;
+import utility ;
 import version ;
 import virtual-target ;
 
@@ -350,6 +351,9 @@ local rule load-configuration-files
         local user-config = [ MATCH ^--user-config=(.*)$ : $(.argv) ] ;
         user-config = $(user-config[-1]) ;
         user-config ?= [ os.environ BOOST_BUILD_USER_CONFIG ] ;
+        # Special handling for the case when the OS does not strip the quotes
+        # around the file name, as is the case when using Cygwin bash.
+        user-config = [ utility.unquote $(user-config) ] ;
         local explicitly-requested = $(user-config) ;
         user-config ?= user-config.jam ;
 
