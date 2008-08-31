@@ -5,7 +5,7 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # This file is part of Boost Build version 2. You can think of it as forming the
-# the main() routine. It is invoked by the bootstrapping code in bootstrap.jam.
+# main() routine. It is invoked by the bootstrapping code in bootstrap.jam.
 
 import build-request ;
 import builtin ;
