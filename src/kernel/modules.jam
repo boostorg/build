@@ -242,11 +242,13 @@ rule import ( module-names + : rules-opt * : rename-opt * )
 {
     if ( $(rules-opt) = * || ! $(rules-opt) ) && $(rename-opt)
     {
+        import errors ;
         errors.error "Rule aliasing is only available for explicit imports." ;
     }
 
     if $(module-names[2]) && ( $(rules-opt) || $(rename-opt) )
     {
+        import errors ;
         errors.error "When loading multiple modules, no specific rules or"
             "renaming is allowed" ;
     }
