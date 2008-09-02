@@ -532,7 +532,7 @@ LIST * compile_rule( PARSE * parse, FRAME * frame )
     frame_init( inner );
     inner->prev = frame;
     inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
-    inner->module = frame->module; /* This gets fixed up in evaluate_rule(), below */
+    inner->module = frame->module;  /* This gets fixed up in evaluate_rule(), below. */
     inner->procedure = parse;
     for ( p = parse->left; p; p = p->left )
         lol_add( inner->args, parse_evaluate( p->right, frame ) );
