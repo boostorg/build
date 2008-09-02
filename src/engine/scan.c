@@ -129,32 +129,32 @@ int yyline()
     /* If we are reading from an internal string list, go to the next string. */
     if ( i->strings )
     {
-        if ( !*i->strings )
-            goto next;
-
-        ++i->line;
-        i->string = *(i->strings++);
-        return *i->string++;
+        if ( *i->strings )
+        {
+            ++i->line;
+            i->string = *(i->strings++);
+            return *i->string++;
+        }
     }
-
-    /* If necessary, open the file. */
-    if ( !i->file )
+    else
     {
-        FILE * f = stdin;
-        if ( strcmp( i->fname, "-" ) && !( f = fopen( i->fname, "r" ) ) )
-            perror( i->fname );
-        i->file = f;
-    }
+        /* If necessary, open the file. */
+        if ( !i->file )
+        {
+            FILE * f = stdin;
+            if ( strcmp( i->fname, "-" ) && !( f = fopen( i->fname, "r" ) ) )
+                perror( i->fname );
+            i->file = f;
+        }
 
-    /* If there is another line in this file, start it. */
-    if ( i->file && fgets( i->buf, sizeof( i->buf ), i->file ) )
-    {
-        ++i->line;
-        i->string = i->buf;
-        return *i->string++;
+        /* If there is another line in this file, start it. */
+        if ( i->file && fgets( i->buf, sizeof( i->buf ), i->file ) )
+        {
+            ++i->line;
+            i->string = i->buf;
+            return *i->string++;
+        }
     }
-
-    next:
 
     /* This include is done. Free it up and return EOF so yyparse() returns to
      * parse_file().
