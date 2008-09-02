@@ -10,13 +10,13 @@
  *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  */
 
-# include "jam.h"
-# include "lists.h"
-# include "parse.h"
-# include "scan.h"
-# include "newstr.h"
-# include "modules.h"
-# include "frames.h"
+#include "jam.h"
+#include "lists.h"
+#include "parse.h"
+#include "scan.h"
+#include "newstr.h"
+#include "modules.h"
+#include "frames.h"
 
 /*
  * parse.c - make and destroy parse trees as driven by the parser
@@ -27,23 +27,20 @@
  *      returns a LIST *.
  */
 
-static PARSE *yypsave;
+static PARSE * yypsave;
 
-void
-parse_file( char *f, FRAME* frame )
+void parse_file( char * f, FRAME * frame )
 {
-    /* Suspend scan of current file */
-    /* and push this new file in the stream */
-
+    /* Suspend scan of current file and push this new file in the stream. */
     yyfparse( f );
 
-    /* Now parse each block of rules and execute it. */
-    /* Execute it outside of the parser so that recursive */
-    /* calls to yyrun() work (no recursive yyparse's). */
+    /* Now parse each block of rules and execute it. Execute it outside of the
+     * parser so that recursive calls to yyrun() work (no recursive yyparse's).
+     */
 
     for ( ; ; )
     {
-        PARSE *p;
+        PARSE * p;
 
         /* Filled by yyparse() calling parse_save(). */
         yypsave = 0;
@@ -66,15 +63,15 @@ void parse_save( PARSE * p )
 
 
 PARSE * parse_make(
-    LIST    *(*func)( PARSE *p, FRAME *args ),
-    PARSE   *left,
-    PARSE   *right,
-    PARSE   *third,
-    char    *string,
-    char    *string1,
-    int num )
+    LIST  * (* func)( PARSE *, FRAME * ),
+    PARSE * left,
+    PARSE * right,
+    PARSE * third,
+    char  * string,
+    char  * string1,
+    int     num )
 {
-    PARSE   *p = (PARSE *)BJAM_MALLOC( sizeof( PARSE ) );
+    PARSE * p = (PARSE *)BJAM_MALLOC( sizeof( PARSE ) );
 
     p->func = func;
     p->left = left;
@@ -84,23 +81,23 @@ PARSE * parse_make(
     p->string1 = string1;
     p->num = num;
     p->refs = 1;
-        p->rulename = 0;
+    p->rulename = 0;
 
-        if ( left )
-        {
-            p->file = left->file;
-            p->line = left->line;
-        }
-        else
-        {
-            yyinput_stream( &p->file, &p->line );
-        }
+    if ( left )
+    {
+        p->file = left->file;
+        p->line = left->line;
+    }
+    else
+    {
+        yyinput_stream( &p->file, &p->line );
+    }
 
     return p;
 }
 
-void
-parse_refer( PARSE *p )
+
+void parse_refer( PARSE * p )
 {
     ++p->refs;
 }
