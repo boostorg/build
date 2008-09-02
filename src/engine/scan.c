@@ -69,11 +69,20 @@ void yymode( int n )
 
 void yyerror( char * s )
 {
-    if ( incp )
-        printf( "%s:%d: ", incp->fname, incp->line );
-
-    printf( "%s at %s\n", s, symdump( &yylval ) );
-
+    /* We use yylval instead of incp to access the error location information as
+     * the incp pointer will already be reset to 0 in case the error occurred at
+     * EOF.
+     *
+     * The two may differ only if we get an error while reading a lexical token
+     * spanning muliple lines, e.g. a multi-line string literal or action body,
+     * in which case yylval location information will hold the information about
+     * where this token started while incp will hold the information about where
+     * reading it broke.
+     *
+     * TODO: Test the theory about when yylval and incp location information are
+     * the same and when they differ.
+     */
+    printf( "%s:%d: %s at %s\n", yylval.file, yylval.line, s, symdump( &yylval ) );
     ++anyerrors;
 }
 
@@ -360,9 +369,9 @@ int yylex()
     return yylval.type;
 
 eof:
-    yylval.file = "end-of-input"; /* just in case */
-    yylval.line = 0;
-
+    /* We do not reset yylval.file & yylval.line here so unexpected EOF error
+     * messages would include correct error location information.
+     */
     yylval.type = EOF;
     return yylval.type;
 }
