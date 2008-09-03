@@ -722,13 +722,13 @@ actions hard-link
 #   <runtime>[joiner]
 #       ::  Collective tag of the build runtime.
 #   <version:/version-feature | X.Y[.Z]/>[joiner]
-#       ::  Short version tag taken from the given "version-feature"
-#           in the build properties. Or if not present, the literal
-#           value as the version number.
+#       ::  Short version tag taken from the given "version-feature" in the
+#           build properties. Or if not present, the literal value as the
+#           version number.
 #   <property:/property-name/>[joiner]
-#       ::  Direct lookup of the given property-name value in the
-#           build properties. /property-name/ is a regular expression.
-#           e.g. <property:toolset-.*:flavor> will match every toolset.
+#       ::  Direct lookup of the given property-name value in the build
+#           properties. /property-name/ is a regular expression. E.g.
+            <property:toolset-.*:flavor> will match every toolset.
 #   /otherwise/
 #       ::  The literal value of the format argument.
 #
@@ -757,29 +757,30 @@ rule format-name ( format * : name : type ? : property-set )
                 result += $(name:B) ;
 
                 case <toolset> :
-                result += [ join-tag $(f:G=) :
-                    [ toolset-tag $(name) : $(type) : $(property-set) ] ] ;
+                result += [ join-tag $(f:G=) : [ toolset-tag $(name) : $(type) :
+                    $(property-set) ] ] ;
 
                 case <threading> :
-                result += [ join-tag $(f:G=) :
-                    [ threading-tag $(name) : $(type) : $(property-set) ] ] ;
+                result += [ join-tag $(f:G=) : [ threading-tag $(name) : $(type)
+                    : $(property-set) ] ] ;
 
                 case <runtime> :
-                result += [ join-tag $(f:G=) :
-                    [ runtime-tag $(name) : $(type) : $(property-set) ] ] ;
+                result += [ join-tag $(f:G=) : [ runtime-tag $(name) : $(type) :
+                    $(property-set) ] ] ;
 
                 case <version:*> :
                 local key = [ MATCH <version:(.*)> : $(f:G) ] ;
                 local version = [ $(property-set).get <$(key)> ] ;
                 version ?= $(key) ;
-                version = [ MATCH "^([^.]+)[.]([^.]+)[.]?([^.]*)"
-                    : $(version) ] ;
+                version = [ MATCH "^([^.]+)[.]([^.]+)[.]?([^.]*)" : $(version) ]
+                    ;
                 result += [ join-tag $(f:G=) : $(version[1])_$(version[2]) ] ;
 
                 case <property:*> :
                 local key = [ MATCH <property:(.*)> : $(f:G) ] ;
                 local p0 = [ MATCH <($(key))> : [ $(property-set).raw ] ] ;
-                if $(p0) {
+                if $(p0)
+                {
                     local p = [ $(property-set).get <$(p0)> ] ;
                     if $(p)
                     {
@@ -791,8 +792,8 @@ rule format-name ( format * : name : type ? : property-set )
                 result += $(f:G=) ;
             }
         }
-        result = [ virtual-target.add-prefix-and-suffix
-            $(result:J=) : $(type) : $(property-set) ] ;
+        result = [ virtual-target.add-prefix-and-suffix $(result:J=) : $(type) :
+            $(property-set) ] ;
         return $(result) ;
     }
 }
@@ -896,14 +897,14 @@ local rule runtime-tag ( name : type ? : property-set )
     local properties = [ $(property-set).raw ] ;
     if <runtime-link>static in $(properties) { tag += s ; }
 
-    # This is an ugly thing. In V1, there's a code to automatically detect which
+    # This is an ugly thing. In V1, there is code to automatically detect which
     # properties affect a target. So, if <runtime-debugging> does not affect gcc
-    # toolset, the tag rules won't even see <runtime-debugging>. Similar
+    # toolset, the tag rules will not even see <runtime-debugging>. Similar
     # functionality in V2 is not implemented yet, so we just check for toolsets
-    # which are known to care about runtime debug.
-    if <toolset>msvc in $(properties)
-      || <stdlib>stlport in $(properties)
-      || <toolset-intel:platform>win in $(properties)
+    # known to care about runtime debugging.
+    if ( <toolset>msvc in $(properties) ) ||
+        ( <stdlib>stlport in $(properties) ) ||
+        ( <toolset-intel:platform>win in $(properties) )
     {
         if <runtime-debugging>on in $(properties) { tag += g ; }
     }
