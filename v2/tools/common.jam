@@ -728,7 +728,7 @@ actions hard-link
 #   <property:/property-name/>[joiner]
 #       ::  Direct lookup of the given property-name value in the build
 #           properties. /property-name/ is a regular expression. E.g.
-            <property:toolset-.*:flavor> will match every toolset.
+#           <property:toolset-.*:flavor> will match every toolset.
 #   /otherwise/
 #       ::  The literal value of the format argument.
 #
