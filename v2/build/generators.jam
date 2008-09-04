@@ -755,7 +755,7 @@ local rule viable-source-types-real ( target-type )
         }
     }
 
-    return [ sequence.unique $(result) ] ;
+    return $(result) ;
 }
 
 
