@@ -83,17 +83,6 @@ local rule decrease-indent ( )
 }
 
 
-# Takes a vector of 'virtual-target' instances and makes a normalized
-# representation, which is the same for given set of targets, regardless of
-# their order.
-#
-rule normalize-target-list ( targets )
-{
-    local v = [ $(targets).get ] ;
-    $(targets).set $(v[1]) [ sequence.insertion-sort $(v[2-]) : utility.less ] ;
-}
-
-
 # Models a generator.
 #
 class generator
