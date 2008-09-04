@@ -30,7 +30,7 @@ rule tag ( name : type ? : property-set )
 }
 exe a : a.cpp ;
 """)
-    t.write("version-1.32.0/a.cpp", "int main() { return 0; }\n")
+    t.write("version-1.32.0/a.cpp", "int main() {}\n")
 
     t.run_build_system(subdir="version-1.32.0")
     t.expect_addition("version-1.32.0/bin/$toolset/debug/a.exe")

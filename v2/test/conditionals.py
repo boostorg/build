@@ -15,7 +15,7 @@ t = BoostBuild.Tester()
 # define.
 t.write("a.cpp", """
 #ifdef STATIC
-int main() { return 0; }
+int main() {}
 #endif
 """)
 

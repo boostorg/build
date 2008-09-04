@@ -15,16 +15,13 @@ import string
 
 t = BoostBuild.Tester()
 
-t.write("jamroot.jam", "")
-t.write("jamfile.jam", """
+t.write("jamroot.jam", """
 lib foo : foo.cpp ;
 exe hello : hello.cpp ;
 exe hello2 : hello.cpp : <library>foo ;
 """)
 
-t.write("hello.cpp", """
-int main() { return 0; }
-""")
+t.write("hello.cpp", "int main() {}\n")
 
 t.write("foo.cpp", """
 #ifdef _WIN32

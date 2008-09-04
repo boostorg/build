@@ -48,7 +48,7 @@ make hello1.cpp : hello.cpp : common.copy ;
 """)
 
 t.write("dir/hello.cpp", """
-int main() { return 1; }
+int main() {}
 """)
 
 # Show only action names.

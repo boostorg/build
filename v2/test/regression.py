@@ -79,8 +79,6 @@ int main( int ac, char * av[] )
         std::ifstream ifs( av[ i ] );
         std::cout << ifs.rdbuf();
     }
-
-    return 0;
 }
 """)
 

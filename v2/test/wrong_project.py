@@ -13,9 +13,7 @@ import BoostBuild
 
 t = BoostBuild.Tester()
 
-t.write("a.cpp", """
-int main() { return 0; }
-""")
+t.write("a.cpp", "int main() {}\n")
 
 t.write("jamroot.jam", """
 using some_tool ;

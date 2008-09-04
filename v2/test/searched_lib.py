@@ -56,7 +56,7 @@ lib test_lib : : <name>test_lib <search>lib ;
 
 t.write("main.cpp", """
 void helper();
-int main() { helper(); return 0; }
+int main() { helper(); }
 """)
 
 t.write("helper.cpp", """
@@ -117,7 +117,7 @@ t.rm("bin/$toolset/debug/main.exe")
 t.write("jamfile.jam", "exe main : main.cpp d/d2//a ;")
 t.write("main.cpp", """
 void foo();
-int main() { foo(); return 0; }
+int main() { foo(); }
 """)
 
 t.write("d/d2/jamfile.jam", """
