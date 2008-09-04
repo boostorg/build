@@ -804,15 +804,18 @@ rule viable-source-types-for-generator-real ( generator )
         local result ;
         for local s in $(source-types)
         {
-            result += [ type.all-derived $(s) ] [ generators.viable-source-types
-                $(s) ] ;
+            local viable-sources = [ generators.viable-source-types $(s) ] ;
+            if $(viable-sources) = *
+            {
+                result = * ;
+                source-types = ;  # Terminate the loop.
+            }
+            else
+            {
+                result += [ type.all-derived $(s) ] $(viable-sources) ;
+            }
         }
-        result = [ sequence.unique $(result) ] ;
-        if * in $(result)
-        {
-            result = * ;
-        }
-        return $(result) ;
+        return [ sequence.unique $(result) ] ;
     }
 }
 
