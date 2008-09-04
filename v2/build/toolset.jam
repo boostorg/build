@@ -56,7 +56,7 @@ local rule normalize-condition ( property-sets * )
 
 
 # Specifies if the 'flags' rule should check that the invoking module is the
-# same as the module we're setting the flag for. 'v' can be either 'checked' or
+# same as the module we are setting the flag for. 'v' can be either 'checked' or
 # 'unchecked'. Subsequent call to 'pop-checking-for-flags-module' will restore
 # the setting that was in effect before calling this rule.
 #
@@ -386,11 +386,11 @@ rule inherit-generators ( toolset properties * : base : generators-to-ignore * )
         if ! $(id) in $(generators-to-ignore)
         {
             # Some generator names have multiple periods in their name, so
-            # $(id:B=$(toolset)) doesn't generate the right new-id name. E.g. if
-            # id = gcc.compile.c++, $(id:B=darwin) = darwin.c++, which is not
-            # what we want. Manually parse the base and suffix (if there's a
-            # better way to do this, I'd love to see it). See also register in
-            # module generators.
+            # $(id:B=$(toolset)) does not generate the right new-id name. E.g.
+            # if id = gcc.compile.c++ then $(id:B=darwin) = darwin.c++, which is
+            # not what we want. Manually parse the base and suffix. If there is
+            # a better way to do this, I would love to see it. See also the
+            # register() rule in the generators module.
             local base = $(id) ;
             local suffix = "" ;
             while $(base:S)
@@ -408,14 +408,14 @@ rule inherit-generators ( toolset properties * : base : generators-to-ignore * )
 
 # Brings all flag definitions from the 'base' toolset into the 'toolset'
 # toolset. Flag definitions whose conditions make use of properties in
-# 'prohibited-properties' are ignored. Don't confuse property and feature, for
+# 'prohibited-properties' are ignored. Do not confuse property and feature, for
 # example <debug-symbols>on and <debug-symbols>off, so blocking one of them does
 # not block the other one.
 #
 # The flag conditions are not altered at all, so if a condition includes a name,
-# or version of a base toolset, it won't ever match the inheriting toolset. When
-# such flag settings must be inherited, define a rule in base toolset module and
-# call it as needed.
+# or version of a base toolset, it will not ever match the inheriting toolset.
+# When such flag settings must be inherited, define a rule in base toolset
+# module and call it as needed.
 #
 rule inherit-flags ( toolset : base : prohibited-properties * )
 {
@@ -450,7 +450,7 @@ rule inherit-flags ( toolset : base : prohibited-properties * )
 
 rule inherit-rules ( toolset : base )
 {
-    # It appears that "action" creates a local rule...
+    # It appears that "action" creates a local rule.
     local base-generators = [ generators.generators-for-toolset $(base) ] ;
     local rules ;
     for local g in $(base-generators)
@@ -459,8 +459,7 @@ rule inherit-rules ( toolset : base )
         rules += $(id) ;
     }
     IMPORT $(base) : $(rules) : $(toolset) : $(rules) ;
-    # Import the rules to the global scope
-    IMPORT $(toolset) : $(rules) : : $(toolset).$(rules) ;
+    IMPORT $(base) : $(rules) : : $(toolset).$(rules) ;
 }
 
 
