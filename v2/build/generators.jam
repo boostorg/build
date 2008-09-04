@@ -151,7 +151,7 @@ class generator
         sequence.transform type.validate : $(self.target-types) ;
     }
 
-    ############## End of constructor #################
+    ################# End of constructor #################
 
     rule id ( )
     {
@@ -341,7 +341,7 @@ class generator
     (
         consumed +        # Already prepared list of consumable targets.
                           # Composing generators may receive multiple sources
-                          # all of which will have types matching those in 
+                          # all of which will have types matching those in
                           # $(self.source-types). Non-composing generators with
                           # multiple $(self.source-types) will receive exactly
                           # len $(self.source-types) sources with types matching
@@ -611,7 +611,7 @@ rule register ( g )
     .generators += $(g) ;
 
     # A generator can produce several targets of the same type. We want unique
-    # occurence of that generator in .generators.$(t) in that case, otherwise,
+    # occurrence of that generator in .generators.$(t) in that case, otherwise,
     # it will be tried twice and we will get false ambiguity.
     for local t in [ sequence.unique [ $(g).target-types ] ]
     {
@@ -640,10 +640,10 @@ rule register ( g )
 }
 
 
-# Creates new instance of the 'generator' class and registers it. Returns the
-# created instance. Rationale: the instance is returned so that it is possible
-# to first register a generator and then call the 'run' method on that
-# generator, bypassing all generator selection.
+# Creates a new non-composing 'generator' class instance and registers it.
+# Returns the created instance. Rationale: the instance is returned so that it
+# is possible to first register a generator and then call the 'run' method on
+# that generator, bypassing all generator selection.
 #
 rule register-standard ( id : source-types * : target-types + : requirements * )
 {
@@ -654,9 +654,10 @@ rule register-standard ( id : source-types * : target-types + : requirements * )
 }
 
 
-# Creates new instance of the 'composing-generator' class and registers it.
+# Creates a new composing 'generator' class instance and registers it.
 #
-rule register-composing ( id : source-types * : target-types + : requirements * )
+rule register-composing ( id : source-types * : target-types + : requirements *
+    )
 {
     local g = [ new generator $(id) true : $(source-types) : $(target-types) :
         $(requirements) ] ;
@@ -665,7 +666,7 @@ rule register-composing ( id : source-types * : target-types + : requirements * 
 }
 
 
-# Returns all generators which belong to 'toolset', i.e. whose ids are
+# Returns all generators belonging to the given 'toolset', i.e. whose ids are
 # '$(toolset).<something>'.
 #
 rule generators-for-toolset ( toolset )
@@ -676,11 +677,11 @@ rule generators-for-toolset ( toolset )
 
 # Make generator 'overrider-id' be preferred to 'overridee-id'. If, when
 # searching for generators that could produce a target of a certain type, both
-# those generators are amoung viable generators, the overridden generator is
+# those generators are among viable generators, the overridden generator is
 # immediately discarded.
 #
 # The overridden generators are discarded immediately after computing the list
-# of viable generators, before running any of them.
+# of viable generators but before running any of them.
 #
 rule override ( overrider-id : overridee-id )
 {
@@ -688,16 +689,11 @@ rule override ( overrider-id : overridee-id )
 }
 
 
-# Set if results of the current generators search are going to be cached. This
-# means no futher attempts to cache generators search should be made.
-.caching = ;
-
-
 # Returns a list of source type which can possibly be converted to 'target-type'
 # by some chain of generator invocation.
 #
 # More formally, takes all generators for 'target-type' and returns union of
-# source types for those generators and result of calling itself recirsively on
+# source types for those generators and result of calling itself recursively on
 # source types.
 #
 local rule viable-source-types-real ( target-type )

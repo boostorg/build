@@ -945,7 +945,7 @@ rule evaluate-requirements ( requirements : context : what )
 
     local conditionals = [ $(requirements).conditional ] ;
     # The 'count' variable has one element for each conditional feature and for
-    # each occurence of '<indirect-conditional>' feature. It is used as a loop
+    # each occurrence of '<indirect-conditional>' feature. It is used as a loop
     # counter: for each iteration of the loop before we remove one element and
     # the property set should stabilize before we are done. It is assumed that
     # #conditionals iterations should be enough for properties to propagate
