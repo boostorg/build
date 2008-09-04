@@ -971,8 +971,11 @@ local rule register-toolset-really ( )
     toolset.add-requirements
         <toolset>msvc,<runtime-link>shared:<threading>multi ;
 
-    # Precompiled header (PCH) support feature.
-    feature.feature pch-source : : free dependency ;
+    # Declare msvc toolset specific features.
+    {
+        feature.feature debug-store : object database : propagated ;
+        feature.feature pch-source  :                 : dependency free ;
+    }
 
     # Declare generators.
     {
@@ -1014,7 +1017,6 @@ local rule register-toolset-really ( )
     #
     # Declare flags for compilation.
     #
-    feature.feature debug-store : object database : propagated ;
 
     toolset.flags msvc.compile CFLAGS <optimization>speed : /O2 ;
     toolset.flags msvc.compile CFLAGS <optimization>space : /O1 ;
