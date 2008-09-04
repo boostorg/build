@@ -36,6 +36,12 @@
 # that as early as possible. Specifically, this is done after invoking each
 # generator. TODO: An example is needed to document the rationale for trying
 # extra target conversion at that point.
+#
+# In order for the system to be able to use a specific generator instance 'when
+# needed', the instance needs to be registered with the system using
+# generators.register() or one of its related rules. Unregistered generators may
+# only be run explicitly and will not be considered by Boost.Build when when
+# converting between given target types.
 
 import "class" : new ;
 import errors ;
@@ -166,8 +172,8 @@ class generator
     }
 
     # Returns the list of target types that this generator produces. It is
-    # assumed to be always the same -- i.e. it cannot change depending list of
-    # sources.
+    # assumed to be always the same -- i.e. it can not change depending on some
+    # provided list of sources.
     #
     rule target-types ( )
     {
@@ -612,7 +618,7 @@ rule register ( g )
 
     # A generator can produce several targets of the same type. We want unique
     # occurrence of that generator in .generators.$(t) in that case, otherwise,
-    # it will be tried twice and we will get false ambiguity.
+    # it will be tried twice and we will get a false ambiguity.
     for local t in [ sequence.unique [ $(g).target-types ] ]
     {
         .generators.$(t) += $(g) ;
@@ -642,8 +648,8 @@ rule register ( g )
 
 # Creates a new non-composing 'generator' class instance and registers it.
 # Returns the created instance. Rationale: the instance is returned so that it
-# is possible to first register a generator and then call the 'run' method on
-# that generator, bypassing all generator selection.
+# is possible to first register a generator and then call its 'run' method,
+# bypassing the whole generator selection process.
 #
 rule register-standard ( id : source-types * : target-types + : requirements * )
 {
@@ -692,22 +698,26 @@ rule override ( overrider-id : overridee-id )
 # Returns a list of source type which can possibly be converted to 'target-type'
 # by some chain of generator invocation.
 #
-# More formally, takes all generators for 'target-type' and returns union of
+# More formally, takes all generators for 'target-type' and returns a union of
 # source types for those generators and result of calling itself recursively on
 # source types.
 #
+# Returns '*' in case any type should be considered a viable source type for the
+# given type.
+#
 local rule viable-source-types-real ( target-type )
 {
-    local generators ;
+    local result ;
 
+    # 't' is the list of target types which have not yet been processed to get a
+    # list of their viable source target types. This list will get expanded as
+    # we locate more target types to process.
     local t = [ type.all-bases $(target-type) ] ;
 
-    local result ;
-    # 't' is the list of types which have not yet been processed.
     while $(t)
     {
-        # Find all generators for current type. Unlike 'find-viable-generators'
-        # we do not care about the property-set.
+        # Find all generators for the current type. Unlike
+        # 'find-viable-generators' we do not care about the property-set.
         local generators = $(.generators.$(t[1])) ;
         t = $(t[2-]) ;
 
@@ -722,7 +732,7 @@ local rule viable-source-types-real ( target-type )
                 result = * ;
                 # This will terminate this loop.
                 generators = ;
-                # This will terminate outer loop.
+                # This will terminate the outer loop.
                 t = ;
             }
 
@@ -730,10 +740,9 @@ local rule viable-source-types-real ( target-type )
             {
                 if ! $(source-type) in $(result)
                 {
-                    # If generator accepts 'source-type' it will happily accept
-                    # any type derived from it.
-                    local all = [ type.all-derived $(source-type) ] ;
-                    for local n in $(all)
+                    # If a generator accepts a 'source-type' it will also
+                    # happily accept any type derived from it.
+                    for local n in [ type.all-derived $(source-type) ]
                     {
                         if ! $(n) in $(result)
                         {
@@ -776,12 +785,15 @@ rule viable-source-types ( target-type )
 # 'generator', has some change of being eventually used (probably after
 # conversion by other generators).
 #
+# Returns '*' in case any type should be considered a viable source type for the
+# given generator.
+#
 rule viable-source-types-for-generator-real ( generator )
 {
     local source-types = [ $(generator).source-types ] ;
     if ! $(source-types)
     {
-        # If generator does not specify any source types, it might be special
+        # If generator does not specify any source types, it might be a special
         # generator like builtin.lib-generator which just relays to other
         # generators. Return '*' to indicate that any source type is possibly
         # OK, since we do not know for sure.
