@@ -709,10 +709,15 @@ local rule viable-source-types-real ( target-type )
 {
     local result ;
 
+    # 't0' is the initial list of target types we need to process to get a list
+    # of their viable source target types. New target types will not be added to
+    # this list.
+    local t0 = [ type.all-bases $(target-type) ] ;
+
     # 't' is the list of target types which have not yet been processed to get a
     # list of their viable source target types. This list will get expanded as
     # we locate more target types to process.
-    local t = [ type.all-bases $(target-type) ] ;
+    local t = $(t0) ;
 
     while $(t)
     {
@@ -746,7 +751,19 @@ local rule viable-source-types-real ( target-type )
                     {
                         if ! $(n) in $(result)
                         {
-                            t += $(n) ;
+                            # Here there is no point in adding target types to
+                            # the list of types to process in case they are or
+                            # have already been on that list. We optimize this
+                            # check by realizing that we only need to avoid the
+                            # original target type's base types. Other target
+                            # types that are or have been on the list of target
+                            # types to process have been added to the 'result'
+                            # list as well and have thus already been eliminated
+                            # by the previous if.
+                            if ! $(n) in $(t0)
+                            {
+                                t += $(n) ;
+                            }
                             result += $(n) ;
                         }
                     }
