@@ -13,7 +13,7 @@ t = BoostBuild.Tester()
 
 t.write("jamroot.jam", "import gcc ;")
 t.write("jamfile.jam", "exe a : a.cpp : : debug release ;")
-t.write("a.cpp", "int main() { return 0; }\n")
+t.write("a.cpp", "int main() {}\n")
 
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug/a.exe")
@@ -71,7 +71,7 @@ t.write("a/a.cpp", """
 __declspec(dllimport)
 #endif
 void foo();
-int main() { foo(); return 0; }
+int main() { foo(); }
 """)
 
 t.write("b/jamfile.jam", """

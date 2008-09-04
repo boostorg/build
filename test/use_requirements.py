@@ -74,7 +74,7 @@ foo() {}
 
 t.write("a.cpp", """
 #ifdef FOO
-int main() { return 0; }
+int main() {}
 #endif
 """)
 

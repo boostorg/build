@@ -27,7 +27,7 @@ t.write("hello.cpp", """
 __declspec(dllimport)
 #endif
 void foo();
-int main() { foo(); return 1; }
+int main() { foo(); }
 """)
 
 t.write("d/jamfile.jam", """

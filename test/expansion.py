@@ -11,19 +11,19 @@ t = BoostBuild.Tester()
 
 t.write("a.cpp", """
 #ifdef CF_IS_OFF
-int main() { return 0; }
+int main() {}
 #endif
 """)
 
 t.write("b.cpp", """
 #ifdef CF_1
-int main() { return 0; }
+int main() {}
 #endif
 """)
 
 t.write("c.cpp", """
 #ifdef FOO
-int main() { return 0; }
+int main() {}
 #endif
 """)
 
@@ -62,7 +62,7 @@ t.rm("bin")
 
 t.write("test.cpp", """
 #include "header.h"
-int main() { return 0; }
+int main() {}
 """)
 
 t.write("jamfile.jam", """

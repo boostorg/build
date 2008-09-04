@@ -28,11 +28,7 @@ actions valgrind
 
 t.write("hello.cpp", """
 #include <iostream>
-int main()
-{
-    std::cout << "Hello!\\n";
-    return 1;
-}
+int main() { std::cout << "Hello!\\n"; }
 """)
 
 
