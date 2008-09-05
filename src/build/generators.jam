@@ -67,29 +67,29 @@ rule invalidate-extendable-viable-source-target-type-cache ( )
 {
     local generators-with-cached-source-types = $(.vstg-cached-generators) ;
     .vstg-cached-generators = ;
-    for local gen in $(generators-with-cached-source-types)
+    for local g in $(generators-with-cached-source-types)
     {
-        if $(.vstg.$(gen)) = *
+        if $(.vstg.$(g)) = *
         {
-            .vstg-cached-generators += $(gen) ;
+            .vstg-cached-generators += $(g) ;
         }
         else
         {
-            .vstg.$(gen) = ;
+            .vstg.$(g) = ;
         }
     }
 
     local types-with-cached-source-types = $(.vst-cached-types) ;
     .vst-cached-types = ;
-    for local type in $(types-with-cached-source-types)
+    for local t in $(types-with-cached-source-types)
     {
-        if $(.vst.$(type)) = *
+        if $(.vst.$(t)) = *
         {
-            .vst-cached-types += $(type) ;
+            .vst-cached-types += $(t) ;
         }
         else
         {
-            .vst.$(type) = ;
+            .vst.$(t) = ;
         }
     }
 }
@@ -1046,7 +1046,7 @@ local rule ensure-type ( targets * )
 # Returns generators which can be used to construct target of specified type
 # with specified properties. Uses the following algorithm:
 # - iterates over requested target-type and all its bases (in the order returned
-#   by type.all-bases.
+#   by type.all-bases).
 # - for each type find all generators that generate that type and whose
 #   requirements are satisfied by properties.
 # - if the set of generators is not empty, returns that set.
