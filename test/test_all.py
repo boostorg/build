@@ -171,7 +171,8 @@ tests = [ "rebuilds",
           "sort_rule",
           "ordered_include",
           "test_result_dumping",
-          "inherited_dependency"
+          "inherited_dependency",
+          "generator_selection"
           ]
 
 if os.name == 'posix':

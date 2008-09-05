@@ -58,6 +58,43 @@ if "--debug-generators" in [ modules.peek : ARGV ]
 }
 
 
+# Clears cached viable source target type information except for target types
+# and generators with all source types listed as viable. Should be called when
+# something invalidates those cached values by possibly causing some new source
+# types to become viable.
+#
+local rule invalidate-extendable-viable-source-target-type-cache ( )
+{
+    local generators-with-cached-source-types = $(.vstg-cached-generators) ;
+    .vstg-cached-generators = ;
+    for local gen in $(generators-with-cached-source-types)
+    {
+        if $(.vstg.$(gen)) = *
+        {
+            .vstg-cached-generators += $(gen) ;
+        }
+        else
+        {
+            .vstg.$(gen) = ;
+        }
+    }
+
+    local types-with-cached-source-types = $(.vst-cached-types) ;
+    .vst-cached-types = ;
+    for local type in $(types-with-cached-source-types)
+    {
+        if $(.vst.$(type)) = *
+        {
+            .vst-cached-types += $(gen) ;
+        }
+        else
+        {
+            .vst.$(type) = ;
+        }
+    }
+}
+
+
 # Outputs a debug message if generators debugging is on. Each element of
 # 'message' is checked to see if it is a class instance. If so, instead of the
 # value, the result of 'str' call is output.
@@ -643,6 +680,24 @@ rule register ( g )
         base = $(base:B) ;
     }
     .generators-for-toolset.$(base) += $(g) ;
+
+
+    # After adding a new generator that can construct new target types, we need
+    # to clear the related cached viable source target type information for
+    # constructing a specific target type or using a specific generator. Cached
+    # viable source target type lists affected by this are those containing any
+    # of the target types constructed by the new generator or any of their base
+    # target types.
+    #
+    # A more advanced alternative to clearing that cached viable source target
+    # type information would be to expand it with additional source types or
+    # even better - mark it as needing to be expanded on next use.
+    #
+    # For now we just clear all the cached viable source target type information
+    # that does not simply state 'all types' and may implement a more detailed
+    # algorithm later on if it becomes needed.
+
+    invalidate-extendable-viable-source-target-type-cache ;
 }
 
 
@@ -783,6 +838,7 @@ rule viable-source-types ( target-type )
     local key = .vst.$(target-type) ;
     if ! $($(key))
     {
+        .vst-cached-types += $(target-type) ;
         local v = [ viable-source-types-real $(target-type) ] ;
         if ! $(v)
         {
@@ -844,6 +900,7 @@ local rule viable-source-types-for-generator ( generator )
     local key = .vstg.$(generator) ;
     if ! $($(key))
     {
+        .vstg-cached-generators += $(generator) ;
         local v = [ viable-source-types-for-generator-real $(generator) ] ;
         if ! $(v)
         {
