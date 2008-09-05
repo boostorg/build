@@ -25,6 +25,11 @@ if --debug in $(ARGV)
     debug = true ;
 }
 
+if --profile in $(ARGV)
+{
+    profile = true ;
+}
+
 # Attempt to generate and/or build the grammar?
 if --grammar in $(ARGV)
 {
@@ -33,7 +38,8 @@ if --grammar in $(ARGV)
 
 # Do we need to add a default build type argument?
 if ! ( --release in $(ARGV) ) &&
-   ! ( --debug in $(ARGV) )
+   ! ( --debug in $(ARGV) ) &&
+   ! ( --profile in $(ARGV) )
 {
     ARGV += --release ;
 }
@@ -171,6 +177,7 @@ toolset darwin cc :  "-o " : -D
     :
     [ opt --release : -Wl,-x -O3 -finline-functions ]
     [ opt --debug : -g -O0 -fno-inline -pg ]
+    [ opt --profile : -Wl,-x -O3 -finline-functions -g -pg ]
     -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## GCC 2.x, 3.x, 4.x
@@ -427,6 +434,10 @@ else
 if $(debug)
 {
     locate-target = [ .path $(locate-target)$(.)debug ] ;
+}
+if $(profile)
+{
+    locate-target = [ .path $(locate-target)$(.)profile ] ;
 }
 else
 {

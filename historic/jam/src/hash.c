@@ -100,13 +100,38 @@ static void hash_mem_free(size_t datalen, void * data);
 static void hash_mem_finalizer(char * key, struct hash * hp);
 #endif
 
-static unsigned int hash_keyval( const char * key_ )
+static unsigned int jenkins_one_at_a_time_hash(const unsigned char *key)
 {
-    const unsigned char * key = (const unsigned char *)key_;
+    unsigned int hash = 0;
+    size_t i;
+
+    while ( *key )
+    {
+        hash += *key++;
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+    return hash;
+}
+
+static unsigned int knuth_hash(const unsigned char *key)
+{
     unsigned int keyval = *key;
     while ( *key )
         keyval = keyval * 2147059363 + *key++;
     return keyval;
+}
+
+static unsigned int hash_keyval( const char * key_ )
+{
+    /**
+    return knuth_hash((const unsigned char *)key_);
+    /*/
+    return jenkins_one_at_a_time_hash((const unsigned char *)key_);
+    /**/
 }
 
 #define hash_bucket(hp,keyval) ((hp)->tab.base + ( (keyval) % (hp)->tab.nel ))
