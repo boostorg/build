@@ -50,6 +50,8 @@ obj other-obj : source.extension ;
 
     t.run_build_system()
     t.expect_output_line("Generating a CPP file...")
+    t.expect_addition("bin/$toolset/debug/dummy.obj")
+    t.expect_addition("Other/bin/$toolset/debug/other-obj.obj")
 
     t.cleanup()
 
