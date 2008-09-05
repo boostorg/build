@@ -48,6 +48,7 @@ import errors ;
 import property-set ;
 import sequence ;
 import set ;
+import type ;
 import utility ;
 import virtual-target ;
 
@@ -58,12 +59,46 @@ if "--debug-generators" in [ modules.peek : ARGV ]
 }
 
 
+# Updated cached viable source target type information as needed after a new
+# derived target type gets added. This is needed because if a target type is a
+# viable source target type for some generator then all of the target type's
+# derived target types are automatically viable as source target types for the
+# same generator. Does nothing if a non-derived target type is passed to it.
+#
+rule update-viable-source-target-type-cache-with-derived-type ( type )
+{
+    # TODO: There really ought be an interface to ask for a direct base target
+    # type without having to go through a list of all the base target types.
+    local all-base-types = [ type.all-bases $(type) ] ;
+    local base-type = $(all-base-types[2]) ;
+
+    if $(base-type)
+    {
+        for local g in $(.vstg-cached-generators)
+        {
+            if $(base-type) in $(.vstg.$(g))
+            {
+                .vstg.$(g) += $(type) ;
+            }
+        }
+
+        for local t in $(.vst-cached-types)
+        {
+            if $(base-type) in $(.vst.$(t))
+            {
+                .vst.$(t) += $(type) ;
+            }
+        }
+    }
+}
+
+
 # Clears cached viable source target type information except for target types
 # and generators with all source types listed as viable. Should be called when
 # something invalidates those cached values by possibly causing some new source
 # types to become viable.
 #
-rule invalidate-extendable-viable-source-target-type-cache ( )
+local rule invalidate-extendable-viable-source-target-type-cache ( )
 {
     local generators-with-cached-source-types = $(.vstg-cached-generators) ;
     .vstg-cached-generators = ;
