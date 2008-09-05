@@ -87,7 +87,8 @@ rule register ( type : suffixes * : base-type ? )
         # performant but needs to be tested and implemented at a later time.
         if $(base-type)
         {
-            generators.invalidate-extendable-viable-source-target-type-cache ;
+            generators.update-viable-source-target-type-cache-with-derived-type
+                $(type) ;
         }
     }
 }
