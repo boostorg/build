@@ -63,7 +63,7 @@ if "--debug-generators" in [ modules.peek : ARGV ]
 # something invalidates those cached values by possibly causing some new source
 # types to become viable.
 #
-rule invalidate-extendable-viable-source-target-type-cache ( )
+local rule invalidate-extendable-viable-source-target-type-cache ( )
 {
     local generators-with-cached-source-types = $(.vstg-cached-generators) ;
     .vstg-cached-generators = ;
