@@ -693,6 +693,12 @@ rule register ( g )
     # type information would be to expand it with additional source types or
     # even better - mark it as needing to be expanded on next use.
     #
+    # Also see the http://thread.gmane.org/gmane.comp.lib.boost.build/19077
+    # mailing list thread for an even more advanced idea of how we could convert
+    # Boost Build's Jamfile processing, target selection and generator selection
+    # into separate steps which would prevent these caches from ever being
+    # invalidated.
+    #
     # For now we just clear all the cached viable source target type information
     # that does not simply state 'all types' and may implement a more detailed
     # algorithm later on if it becomes needed.
