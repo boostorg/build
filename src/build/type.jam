@@ -14,7 +14,7 @@ import project ;
 import property ;
 import scanner ;
 
-# The follwing import would create a circular dependency:
+# The following import would create a circular dependency:
 # project -> project-root -> builtin -> type -> targets -> project
 # import targets ;
 
