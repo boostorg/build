@@ -58,9 +58,53 @@ obj other-obj : source.extension ;
 
 ################################################################################
 #
+# test_using_a_derived_source_type_created_after_generator_already_used()
+# -----------------------------------------------------------------------
+#
+################################################################################
+
+def test_using_a_derived_source_type_created_after_generator_already_used():
+    """Regression test for a Boost Build bug causing it to not use a generator
+    with a source type derived from one of the generator's sources but created
+    only after already using the generateor.
+    """
+
+    t = BoostBuild.Tester()
+
+    t.write("dummy.cpp", "void f() {}\n")
+
+    t.write("jamroot.jam", """
+# Building this dummy target must not cause a later defined UNGA_CPP target type
+# not to be recognized as a viable source type for building OBJ targets.
+obj dummy : dummy.cpp ;
+alias the-test-output : Other//other-obj ;
+""")
+
+    t.write("Other/source.unga_cpp", "void g() {}\n")
+
+    t.write("Other/jamfile.jam", """
+import type ;
+type.register UNGA_CPP : unga_cpp : CPP ;
+# We are careful not to do anything between defining our new UNGA_CPP target
+# type and using the CPP --> OBJ generator that could potentially cover the
+# Boost Build bug by clearing its internal viable source target type state.
+obj other-obj : source.unga_cpp ;
+""")
+
+    t.run_build_system()
+    t.expect_addition("bin/$toolset/debug/dummy.obj")
+    t.expect_addition("Other/bin/$toolset/debug/other-obj.obj")
+    t.expect_nothing_more()
+
+    t.cleanup()
+
+
+################################################################################
+#
 # main()
 # ------
 #
 ################################################################################
 
 test_generator_added_after_already_building_a_target_of_its_target_type()
+test_using_a_derived_source_type_created_after_generator_already_used()

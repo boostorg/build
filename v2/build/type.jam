@@ -76,6 +76,19 @@ rule register ( type : suffixes * : base-type ? )
         .main-target-type.$(main-rule-name) = $(type) ;
 
         IMPORT $(__name__) : main-target-rule : : $(main-rule-name) ;
+
+        # This is a hack to invalidate generator selection related cached viable
+        # source target type information because it adding a new derived target
+        # type logically adds the new type to the any viable source target type
+        # lists already containing its base type.
+        #
+        # We can improve the current implementation by not clearing the whole
+        # cache but simply updating the cached values. That might be more
+        # performant but needs to be tested and implemented at a later time.
+        if $(base-type)
+        {
+            generators.invalidate-extendable-viable-source-target-type-cache ;
+        }
     }
 }
 
