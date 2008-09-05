@@ -85,7 +85,7 @@ rule invalidate-extendable-viable-source-target-type-cache ( )
     {
         if $(.vst.$(type)) = *
         {
-            .vst-cached-types += $(gen) ;
+            .vst-cached-types += $(type) ;
         }
         else
         {
