@@ -679,15 +679,10 @@ class generator
 }
 
 
-.generators = ;
-
-
 # Registers a new generator instance 'g'.
 #
 rule register ( g )
 {
-    .generators += $(g) ;
-
     # A generator can produce several targets of the same type. We want unique
     # occurrence of that generator in .generators.$(t) in that case, otherwise,
     # it will be tried twice and we will get a false ambiguity.
