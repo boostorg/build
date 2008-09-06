@@ -25,19 +25,20 @@ class make-target-class : basic-target
     rule __init__ ( name : project : sources * : requirements *
         : default-build * : usage-requirements * )
     {
-        basic-target.__init__ $(name) : $(project) : $(sources)
-          : $(requirements) : $(default-build) : $(usage-requirements) ;
+        basic-target.__init__ $(name) : $(project) : $(sources) :
+            $(requirements) : $(default-build) : $(usage-requirements) ;
     }
 
     rule construct ( name : source-targets * : property-set )
     {
         local action-name = [ $(property-set).get <action> ] ;
-        # 'm' will always be set -- we add '@' ourselves in 'make' rule below.
+        # 'm' will always be set -- we add '@' ourselves in the 'make' rule
+        # below.
         local m = [ MATCH ^@(.*) : $(action-name) ] ;
 
         local a = [ new action $(source-targets) : $(m[1]) : $(property-set) ] ;
-        local t = [ new file-target $(self.name) exact
-            : [ type.type $(self.name) ] : $(self.project) : $(a) ] ;
+        local t = [ new file-target $(self.name) exact : [ type.type
+            $(self.name) ] : $(self.project) : $(a) ] ;
         return [ property-set.empty ] [ virtual-target.register $(t) ] ;
     }
 }
@@ -45,8 +46,8 @@ class make-target-class : basic-target
 
 # Declares the 'make' main target.
 #
-rule make ( target-name : sources * : generating-rule + : requirements *
-    : usage-requirements * )
+rule make ( target-name : sources * : generating-rule + : requirements * :
+    usage-requirements * )
 {
     local project = [ project.current ] ;
 
@@ -64,8 +65,9 @@ rule make ( target-name : sources * : generating-rule + : requirements *
             : [ targets.main-target-sources $(sources) : $(target-name) ]
             : [ targets.main-target-requirements $(requirements) : $(project) ]
             : [ targets.main-target-default-build : $(project) ]
-            : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-     ] ;
+            : [ targets.main-target-usage-requirements $(usage-requirements) :
+                $(project) ] ] ;
 }
+
 
 IMPORT $(__name__) : make : : make ;
