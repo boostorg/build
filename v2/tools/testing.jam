@@ -356,15 +356,20 @@ rule **passed**
 }
 
 
+# Used to create test files signifying passed tests.
+#
 actions **passed**
 {
-    echo passed > $(<)
+    echo passed > "$(<)"
 }
 
 
+# Used to create replacement object files that do not get created during tests
+# that are expected to fail.
+#
 actions (failed-as-expected)
 {
-    echo failed as expected > $(<)
+    echo failed as expected > "$(<)"
 }
 
 
