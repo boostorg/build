@@ -80,11 +80,7 @@ rule register ( type : suffixes * : base-type ? )
         # Adding a new derived type affects generator selection so we need to
         # make the generator selection module update any of its cached
         # information related to a new derived type being defined.
-        if $(base-type)
-        {
-            generators.update-viable-source-target-type-cache-with-derived-type
-                $(type) ;
-        }
+        generators.update-cached-information-with-a-new-type $(type) ;
     }
 }
 
