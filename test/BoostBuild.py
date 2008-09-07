@@ -67,7 +67,7 @@ def get_toolset():
 
 # Detect the host OS.
 windows = False
-if os.environ.get('OS','').lower().startswith('windows') or \
+if os.environ.get('OS', '').lower().startswith('windows') or \
        os.__dict__.has_key('uname') and \
        os.uname()[0].lower().startswith('cygwin'):
     windows = True
@@ -88,13 +88,13 @@ def prepare_suffix_map(toolset):
             suffixes['.lib'] = '.a' # static libs have '.a' suffix with mingw...
             suffixes['.obj'] = '.o'
         suffixes['.implib'] = '.lib'
-    if os.__dict__.has_key('uname') and os.uname()[0] == 'Darwin':
+    if os.__dict__.has_key('uname') and (os.uname()[0] == 'Darwin'):
         suffixes['.dll'] = '.dylib'
 
 
 def re_remove(sequence, regex):
     me = re.compile(regex)
-    result = filter( lambda x: me.match(x), sequence )
+    result = filter(lambda x: me.match(x), sequence)
     if 0 == len(result):
         raise ValueError()
     for r in result:
@@ -102,7 +102,7 @@ def re_remove(sequence, regex):
 
 
 def glob_remove(sequence, pattern):
-    result = fnmatch.filter(sequence,pattern)
+    result = fnmatch.filter(sequence, pattern)
     if 0 == len(result):
         raise ValueError()
     for r in result:
@@ -206,7 +206,7 @@ class Tester(TestCmd.TestCmd):
             jam_build_dir = ""
             if os.name == 'nt':
                 jam_build_dir = "bin.ntx86"
-            elif os.name == 'posix' and os.__dict__.has_key('uname'):
+            elif (os.name == 'posix') and os.__dict__.has_key('uname'):
                 if os.uname()[0].lower().startswith('cygwin'):
                     jam_build_dir = "bin.cygwinx86"
                     if 'TMP' in os.environ and os.environ['TMP'].find('~') != -1:
@@ -238,7 +238,7 @@ class Tester(TestCmd.TestCmd):
             else:
                 raise "Don't know directory where Jam is built for this system: " + os.name
 
-            # Find where jam_src is located. Try for the debug version if it's
+            # Find where jam_src is located. Try for the debug version if it is
             # lying around.
             dirs = [os.path.join('../../../jam/src', jam_build_dir + '.debug'),
                     os.path.join('../../../jam/src', jam_build_dir),
@@ -445,7 +445,7 @@ class Tester(TestCmd.TestCmd):
         finally:
             self.last_build_time_finish = time.time()
 
-        if status != None and _failed(self, status):
+        if (status != None) and _failed(self, status):
             expect = ''
             if status != 0:
                 expect = " (expected %d)" % status
@@ -456,7 +456,7 @@ class Tester(TestCmd.TestCmd):
             annotation("reason", "error returned by bjam")
             self.fail_test(1)
 
-        if not stdout is None and not match(self.stdout(), stdout):
+        if not (stdout is None) and not match(self.stdout(), stdout):
             annotation("failure", "Unexpected stdout")
             annotation("Expected STDOUT", stdout)
             annotation("Actual STDOUT", self.stdout())
@@ -470,7 +470,7 @@ class Tester(TestCmd.TestCmd):
         intel_workaround = re.compile("^xi(link|lib): executing.*\n", re.M)
         actual_stderr = re.sub(intel_workaround, "", self.stderr())
 
-        if not stderr is None and not match(actual_stderr, stderr):
+        if not (stderr is None) and not match(actual_stderr, stderr):
             annotation("failure", "Unexpected stderr")
             annotation("Expected STDERR", stderr)
             annotation("Actual STDERR", self.stderr())
@@ -480,7 +480,7 @@ class Tester(TestCmd.TestCmd):
 
         if not expected_duration is None:
             actual_duration = self.last_build_time_finish - self.last_build_time_start 
-            if ( actual_duration > expected_duration ):
+            if (actual_duration > expected_duration):
                 print "Test run lasted %f seconds while it was expected to " \
                     "finish in under %f seconds." % (actual_duration,
                     expected_duration)
@@ -493,9 +493,9 @@ class Tester(TestCmd.TestCmd):
 
     def glob_file(self, name):
         result = None
-        if hasattr(self,'difference'):
+        if hasattr(self, 'difference'):
             for f in self.difference.added_files+self.difference.modified_files+self.difference.touched_files:
-                if fnmatch.fnmatch(f,name):
+                if fnmatch.fnmatch(f, name):
                     result = self.native_file_name(f)
                     break
         if not result:
@@ -510,7 +510,7 @@ class Tester(TestCmd.TestCmd):
                 name = string.replace(name, "$toolset", self.toolset+"*")
             name = self.glob_file(name)
             openMode = "r"
-            if ( binary ):
+            if binary:
                 openMode += "b"
             else:
                 openMode += "U"
@@ -564,7 +564,7 @@ class Tester(TestCmd.TestCmd):
     def expect_addition(self, names):
         for name in self.adjust_names(names):
             try:
-                glob_remove(self.unexpected_difference.added_files,name)
+                glob_remove(self.unexpected_difference.added_files, name)
             except:
                 print "File %s not added as expected" % name
                 self.fail_test(1)
@@ -575,7 +575,7 @@ class Tester(TestCmd.TestCmd):
     def expect_removal(self, names):
         for name in self.adjust_names(names):
             try:
-                glob_remove(self.unexpected_difference.removed_files,name)
+                glob_remove(self.unexpected_difference.removed_files, name)
             except:
                 print "File %s not removed as expected" % name
                 self.fail_test(1)
@@ -586,13 +586,14 @@ class Tester(TestCmd.TestCmd):
     def expect_modification(self, names):
         for name in self.adjust_names(names):
             try:
-                glob_remove(self.unexpected_difference.modified_files,name)
+                glob_remove(self.unexpected_difference.modified_files, name)
             except:
                 print "File %s not modified as expected" % name
                 self.fail_test(1)
 
     def ignore_modification(self, wildcard):
-        self.ignore_elements(self.unexpected_difference.modified_files, wildcard)
+        self.ignore_elements(self.unexpected_difference.modified_files, \
+            wildcard)
 
     def expect_touch(self, names):
         d = self.unexpected_difference
@@ -607,7 +608,7 @@ class Tester(TestCmd.TestCmd):
 
             while filesets:
                 try:
-                    glob_remove(filesets[-1],name)
+                    glob_remove(filesets[-1], name)
                     break
                 except ValueError:
                     filesets.pop()
@@ -646,7 +647,7 @@ class Tester(TestCmd.TestCmd):
                 self.fail_test(1)
 
     def expect_nothing_more(self):
-        # Not totally sure about this change, but I don't see a good
+        # Not totally sure about this change, but I do not see a good
         # alternative.
         if windows:
             self.ignore('*.ilk')       # MSVC incremental linking files.
@@ -676,12 +677,12 @@ class Tester(TestCmd.TestCmd):
                 break
 
         if expected_to_exist and not found:
-            annotation( "failure",
+            annotation("failure",
                 "Did not find expected line:\n%s\nin output:\n%s" %
                 (expected, content))
             self.fail_test(1)
         if not expected_to_exist and found:
-            annotation( "failure",
+            annotation("failure",
                 "Found an unexpected line:\n%s\nin output:\n%s" %
                 (expected, content))
             self.fail_test(1)
@@ -712,22 +713,22 @@ class Tester(TestCmd.TestCmd):
 
         matched = False
         if exact:
-            matched = fnmatch.fnmatch(actual,content)
+            matched = fnmatch.fnmatch(actual, content)
         else:
             def sorted_(x):
                 x.sort()
                 return x
-            actual_ = map(lambda x: sorted_(x.split()),actual.splitlines())
-            content_ = map(lambda x: sorted_(x.split()),content.splitlines())
+            actual_ = map(lambda x: sorted_(x.split()), actual.splitlines())
+            content_ = map(lambda x: sorted_(x.split()), content.splitlines())
             if len(actual_) == len(content_):
                 matched = map(
-                    lambda x,y: map(lambda n,p: fnmatch.fnmatch(n,p),x,y),
-                    actual_, content_ )
+                    lambda x, y: map(lambda n, p: fnmatch.fnmatch(n, p), x, y),
+                    actual_, content_)
                 matched = reduce(
-                    lambda x,y: x and reduce(
-                        lambda a,b: a and b,
-                    y ),
-                    matched )
+                    lambda x, y: x and reduce(
+                        lambda a, b: a and b,
+                    y),
+                    matched)
 
         if not matched:
             print "Expected:\n"
@@ -744,7 +745,7 @@ class Tester(TestCmd.TestCmd):
             open(a, "w").write(actual)
             print "DIFFERENCE"
             if os.system("diff -u " + e + " " + a):
-                print "Unable to compute difference: diff -u %s %s" % (e,a)
+                print "Unable to compute difference: diff -u %s %s" % (e, a)
             os.unlink(e)
             os.unlink(a)
         else:
@@ -793,7 +794,7 @@ class Tester(TestCmd.TestCmd):
                     tail = "lib" + tail
                     result = os.path.join(head, tail)
         # If we want to use this name in a Jamfile, we better convert \ to /, as
-        # otherwise we'd have to quote \.
+        # otherwise we would have to quote \.
         result = string.replace(result, "\\", "/")
         return result
 
@@ -873,7 +874,7 @@ class List:
         return str(self.l)
 
     def __repr__(self):
-        return ( self.__module__ + '.List('
+        return (self.__module__ + '.List('
                  + repr(string.join(self.l, ' '))
                  + ')')
 
