@@ -580,6 +580,6 @@ actions time
     echo user: $(USER_TIME)
     echo system: $(SYSTEM_TIME)
 
-    echo user: $(USER_TIME)" seconds" > $(<)
-    echo system: $(SYSTEM_TIME)" seconds" >> $(<)
+    echo user: $(USER_TIME)" seconds" > "$(<)"
+    echo system: $(SYSTEM_TIME)" seconds" >> "$(<)"
 }
