@@ -1,16 +1,30 @@
 #!/usr/bin/python
-# Copyright David Abrahams 2005. Distributed under the Boost
-# Software License, Version 1.0. (See accompanying
-# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-# This tests the build step timing facilities.
+# Copyright 2005 David Abrahams
+# Copyright 2008 Jurko Gospodnetic
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
+# Tests the build step timing facilities.
+
 
 import BoostBuild
 import re
 
-t = BoostBuild.Tester(pass_toolset=0)
 
-t.write("file.jam", """
+################################################################################
+#
+# basic_jam_action_test()
+# -----------------------
+#
+################################################################################
+
+def basic_jam_action_test():
+    """Tests basic Jam action timing support."""
+
+    t = BoostBuild.Tester(pass_toolset=0)
+
+    t.write("file.jam", """
 rule time
 {
     DEPENDS $(<) : $(>) ;
@@ -44,9 +58,9 @@ time foo : bar ;
 make bar : baz ;
 """)
 
-t.write("baz", "nothing\n")
+    t.write("baz", "nothing\n")
 
-expected_output = """\.\.\.found 4 targets\.\.\.
+    expected_output = """\.\.\.found 4 targets\.\.\.
 \.\.\.updating 2 targets\.\.\.
 make bar
 time foo
@@ -54,10 +68,54 @@ bar +user: [0-9\.]+ +system: +[0-9\.]+ *
 \.\.\.updated 2 targets\.\.\.$
 """
 
-t.run_build_system("-ffile.jam -d+1", stdout=expected_output,
-    match=lambda actual, expected: re.search(expected, actual, re.DOTALL))
-t.expect_addition("foo")
-t.expect_addition("bar")
-t.expect_nothing_more()
+    t.run_build_system("-ffile.jam -d+1", stdout=expected_output, match=lambda
+        actual, expected: re.search(expected, actual, re.DOTALL))
+    t.expect_addition("foo")
+    t.expect_addition("bar")
+    t.expect_nothing_more()
 
-t.cleanup()
+    t.cleanup()
+
+
+################################################################################
+#
+# boost_build_testing_support_timing_rule():
+# ------------------------------------------
+#
+################################################################################
+
+def boost_build_testing_support_timing_rule():
+    """Tests the target build timing rule profided by the Boost Build tasting
+    support system.
+    """
+
+    t = BoostBuild.Tester()
+
+    t.write("aaa.cpp", "int main() {}\n")
+
+    t.write("jamroot.jam", """
+import testing ;
+exe my-exe : aaa.cpp ;
+time my-time : my-exe ;
+""")
+
+    t.run_build_system()
+    t.expect_addition("bin/$toolset/debug/aaa.obj")
+    t.expect_addition("bin/$toolset/debug/my-exe.exe")
+    t.expect_addition("bin/$toolset/debug/my-time.time")
+
+    t.expect_content_line("bin/$toolset/debug/my-time.time", "user: *")
+    t.expect_content_line("bin/$toolset/debug/my-time.time", "system: *")
+
+    t.cleanup()
+
+
+################################################################################
+#
+# main()
+# ------
+#
+################################################################################
+
+basic_jam_action_test()
+boost_build_testing_support_timing_rule()

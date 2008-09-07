@@ -560,6 +560,10 @@ rule record-time ( target : source : start end user system )
 IMPORT testing : record-time : : testing.record-time ;
 
 
+# Calling this rule requests that Boost Build time how long it taks to build the
+# 'source' target and display the results both on the standard output and in the
+# 'target' file.
+#
 rule time ( target : source : properties *  )
 {
     # Set up rule for recording timing information.
@@ -577,5 +581,5 @@ actions time
     echo system: $(SYSTEM_TIME)
 
     echo user: $(USER_TIME)" seconds" > $(<)
-    echo system: $(SYSTEM_TIME)" seconds" > $(<)
+    echo system: $(SYSTEM_TIME)" seconds" >> $(<)
 }
