@@ -16,7 +16,6 @@ os.remove("jamroot.jam")
 t.run_build_system(status=1, stdout=
 """error: Could not find parent for project at '.'
 error: Did not find Jamfile.jam or Jamroot.jam in any parent directory.
-
 """)
 
 t.set_tree("project-test3")

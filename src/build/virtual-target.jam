@@ -6,7 +6,7 @@
 
 # Implements virtual targets, which correspond to actual files created during a
 # build, but are not yet targets in Jam sense. They are needed, for example,
-# when searching for possible transformation sequences, when it's not yet known
+# when searching for possible transformation sequences, when it is not yet known
 # whether a particular target should be created at all.
 
 import "class" : new ;
@@ -16,6 +16,7 @@ import sequence ;
 import set ;
 import type ;
 import utility ;
+
 
 #                       +--------------------------+
 #                       | virtual-target           |
@@ -88,18 +89,24 @@ class virtual-target
 
     # Name of this target.
     #
-    rule name ( ) { return $(self.name) ; }
+    rule name ( )
+    {
+        return $(self.name) ;
+    }
 
     # Project of this target.
     #
-    rule project ( ) { return $(self.project) ; }
+    rule project ( )
+    {
+        return $(self.project) ;
+    }
 
     # Adds additional 'virtual-target' instances this one depends on.
     #
     rule depends ( d + )
     {
-        self.dependencies = [ sequence.merge $(self.dependencies)
-            : [ sequence.insertion-sort $(d) ] ] ;
+        self.dependencies = [ sequence.merge $(self.dependencies) :
+            [ sequence.insertion-sort $(d) ] ] ;
     }
 
     rule dependencies ( )
@@ -185,7 +192,8 @@ class virtual-target
     {
         # In fact, we just need to merge virtual-target with
         # abstract-file-target as the latter is the only class derived from the
-        # former. But that's for later.
+        # former. But that has been left for later.
+	
         errors.error "method should be defined in derived classes" ;
     }
 }
@@ -197,8 +205,9 @@ class virtual-target
 # May be a source file (when no action is specified) or a derived file
 # (otherwise).
 #
-# The target's grist is concatenation of its project's location, properties of
-# action (for derived files) and, optionally, value identifying the main target.
+# The target's grist is a concatenation of its project's location, action
+# properties (for derived targets) and, optionally, value identifying the main
+# target.
 #
 class abstract-file-target : virtual-target
 {
@@ -236,7 +245,10 @@ class abstract-file-target : virtual-target
         }
     }
 
-    rule type ( ) { return $(self.type) ; }
+    rule type ( )
+    {
+        return $(self.type) ;
+    }
 
     # Sets the path. When generating target name, it will override any path
     # computation from properties.
@@ -291,11 +303,11 @@ class abstract-file-target : virtual-target
     }
 
     # Return a human-readable representation of this target. If this target has
-    # an action, that's:
+    # an action, that is:
     #
     #    { <action-name>-<self.name>.<self.type> <action-sources>... }
     #
-    # otherwise, it's:
+    # otherwise, it is:
     #
     #    { <self.name>.<self.type> }
     #
@@ -441,7 +453,7 @@ class abstract-file-target : virtual-target
             }
         }
 
-        # If there's no tag or the tag rule returned nothing.
+        # If there is no tag or the tag rule returned nothing.
         if ! $(tag) || ! $(self.name)
         {
             self.name = [ virtual-target.add-prefix-and-suffix $(specified-name)
@@ -460,7 +472,7 @@ class abstract-file-target : virtual-target
 
             if $(self.action)
             {
-                # For non-derived target, we don't care if there are several
+                # For non-derived target, we do not care if there are several
                 # virtual targets that refer to the same name. One case when
                 # this is unavoidable is when the file name is main.cpp and two
                 # targets have types CPP (for compiling) and MOCCABLE_CPP (for
@@ -531,23 +543,23 @@ class file-target : abstract-file-target
     import errors ;
 
     rule __init__ (
-      name exact ?
-        : type ?  # Optional type for this target
+        name exact ?
+        : type ?  # Optional type for this target.
         : project
         : action ?
         : path ?
     )
     {
-        abstract-file-target.__init__ $(name) $(exact) : $(type) : $(project)
-          : $(action) ;
+        abstract-file-target.__init__ $(name) $(exact) : $(type) : $(project) :
+            $(action) ;
 
         self.path = $(path) ;
     }
 
     rule clone-with-different-type ( new-type )
     {
-        return [ new file-target $(self.name) exact : $(new-type)
-            : $(self.project) : $(self.action) : $(self.path) ] ;
+        return [ new file-target $(self.name) exact : $(new-type) :
+            $(self.project) : $(self.action) : $(self.path) ] ;
     }
 
     rule actualize-location ( target )
@@ -581,14 +593,14 @@ class file-target : abstract-file-target
             # target has no directory name and uses a special <e> grist.
             #
             # First, that means that "bjam hello.o" will build all known hello.o
-            # targets. Second, the <e> grist makes sure this target won't be
+            # targets. Second, the <e> grist makes sure this target will not be
             # confused with other targets, for example, if we have subdir 'test'
             # with target 'test' in it that includes a 'test.o' file, then the
             # target for directory will be just 'test' the target for test.o
             # will be <ptest/bin/gcc/debug>test.o and the target we create below
             # will be <e>test.o
             DEPENDS $(target:G=e) : $(target) ;
-            # Allow bjam <path-to-file>/<file> to work.  This won't catch all
+            # Allow bjam <path-to-file>/<file> to work. This will not catch all
             # possible ways to refer to the path (relative/absolute, extra ".",
             # various "..", but should help in obvious cases.
             DEPENDS $(target:G=e:R=$(path)) : $(target) ;
@@ -608,13 +620,13 @@ class file-target : abstract-file-target
             if $(self.action)
             {
                 local p = [ $(self.action).properties ] ;
-                local path = [ $(p).target-path ] ;
+                local path,relative-to-build-dir = [ $(p).target-path ] ;
+                local path = $(path,relative-to-build-dir[1]) ;
+                local relative-to-build-dir = $(path,relative-to-build-dir[2]) ;
 
-                if $(path[2]) = true
+                if $(relative-to-build-dir)
                 {
-                    # Indicates that the path is relative to the build dir.
-                    path = [ path.join [ $(self.project).build-dir ]
-                        $(path[1]) ] ;
+                    path = [ path.join [ $(self.project).build-dir ] $(path) ] ;
                 }
 
                 self.path = [ path.native $(path) ] ;
@@ -727,7 +739,8 @@ class action
 
             actualize-sources [ sources ] : $(properties) ;
 
-            DEPENDS $(actual-targets) : $(self.actual-sources) $(self.dependency-only-sources) ;
+            DEPENDS $(actual-targets) : $(self.actual-sources)
+                $(self.dependency-only-sources) ;
 
             # Action name can include additional argument to rule, which should
             # not be passed to 'set-target-variables'
@@ -794,8 +807,8 @@ class action
         #
         # For bjam to find the dependency the generated target must be
         # actualized (i.e. have its Jam target constructed). In the above case,
-        # if we're building just hello ("bjam hello"), 'a.h' won't be actualized
-        # unless we do it here.
+        # if we are building just hello ("bjam hello"), 'a.h' will not be
+        # actualized unless we do it here.
         local implicit = [ $(self.properties).get <implicit-dependency> ] ;
         for local i in $(implicit)
         {
@@ -816,7 +829,7 @@ class action
 
 
 # Action class which does nothing --- it produces the targets with specific
-# properties out of nowhere. It's needed to distinguish virtual targets with
+# properties out of nowhere. It is needed to distinguish virtual targets with
 # different properties that are known to exist and have no actions which create
 # them.
 #
@@ -866,16 +879,21 @@ class non-scanning-action : action
 # Creates a virtual target with an appropriate name and type from 'file'. If a
 # target with that name in that project already exists, returns that already
 # created target.
+#
 # FIXME: a more correct way would be to compute the path to the file, based on
 # name and source location for the project, and use that path to determine if
-# the target was already created.
+# the target has already been created. This logic should be shared with how we
+# usually find targets identified by a specific target id. It should also be
+# updated to work correctly when the file is specified using both relative and
+# absolute paths.
+#
 # TODO: passing a project with all virtual targets is starting to be annoying.
 #
 rule from-file ( file : file-loc : project )
 {
     import type ;  # Had to do this here to break a circular dependency.
 
-    # Check if we've created a target corresponding to this file.
+    # Check whether we already created a target corresponding to this file.
     local path = [ path.root [ path.root $(file) $(file-loc) ] [ path.pwd ] ] ;
 
     if $(.files.$(path))
@@ -888,11 +906,8 @@ rule from-file ( file : file-loc : project )
         local type = [ type.type $(file) ] ;
         local result ;
 
-        result = [ new file-target $(file)
-            : $(type)
-            : $(project)
-            : #action
-            : $(file-loc) ] ;
+        result = [ new file-target $(file) : $(type) : $(project) : :
+            $(file-loc) ] ;
 
         .files.$(path) = $(result) ;
         return $(result) ;
@@ -900,7 +915,7 @@ rule from-file ( file : file-loc : project )
 }
 
 
-# Registers a new virtual target. Checks if there's already a registered target
+# Registers a new virtual target. Checks if there is already a registered target
 # with the same name, type, project and subvariant properties as well as the
 # same sources and equal action. If such target is found it is returned and a
 # new 'target' is not registered. Otherwise, 'target' is registered and
@@ -926,15 +941,15 @@ rule register ( target )
             else
             {
                 if $(a1) && $(a2) &&
-                    [ $(a1).action-name ] = [ $(a2).action-name ] &&
-                    [ $(a1).sources     ] = [ $(a2).sources     ]
+                    ( [ $(a1).action-name ] = [ $(a2).action-name ] ) &&
+                    ( [ $(a1).sources     ] = [ $(a2).sources     ] )
                 {
                     local ps1 = [ $(a1).properties ] ;
                     local ps2 = [ $(a2).properties ] ;
-                    local p1 = [ $(ps1).base ] [ $(ps1).free ]
-                      [ set.difference [ $(ps1).dependency ] : [ $(ps1).incidental ] ] ;
-                    local p2 = [ $(ps2).base ] [ $(ps2).free ]
-                      [ set.difference [ $(ps2).dependency ] : [ $(ps2).incidental ] ] ;
+                    local p1 = [ $(ps1).base ] [ $(ps1).free ] [ set.difference
+                        [ $(ps1).dependency ] : [ $(ps1).incidental ] ] ;
+                    local p2 = [ $(ps2).base ] [ $(ps2).free ] [ set.difference
+                        [ $(ps2).dependency ] : [ $(ps2).incidental ] ] ;
                     if $(p1) = $(p2)
                     {
                         result = $(t) ;
@@ -957,10 +972,10 @@ rule register ( target )
 }
 
 
-# Each target returned by 'register' is added to a .recent-targets list,
+# Each target returned by 'register' is added to the .recent-targets list,
 # returned by this function. This allows us to find all virtual targets created
-# when building a given main target, even those constructed only as intermediate
-# targets.
+# when building a specific main target, even those constructed only as
+# intermediate targets.
 #
 rule recent-targets ( )
 {
@@ -1040,9 +1055,9 @@ rule register-actual-name ( actual-name : virtual-target )
 
 # Traverses the dependency graph of 'target' and return all targets that will be
 # created before this one is created. If the root of some dependency graph is
-# found during traversal, it's either included or not, depending on the value of
-# 'include-roots'. In either case traversal stops at root targets, i.e. sources
-# of root targets are not traversed.
+# found during traversal, it is either included or not, depending on the
+# 'include-roots' value. In either case traversal stops at root targets, i.e.
+# root target sources are not traversed.
 #
 rule traverse ( target : include-roots ? : include-sources ? )
 {
@@ -1097,9 +1112,9 @@ rule clone-action ( action : new-project : new-action-name ? : new-properties ? 
     for local target in [ $(action).targets ]
     {
         local n = [ $(target).name ] ;
-        # Don't modify produced targets names.
-        local cloned-target = [ class.new file-target $(n) exact
-            : [ $(target).type ] : $(new-project) : $(cloned-action) ] ;
+        # Do not modify produced target names.
+        local cloned-target = [ class.new file-target $(n) exact :
+            [ $(target).type ] : $(new-project) : $(cloned-action) ] ;
         local d = [ $(target).dependencies ] ;
         if $(d)
         {
