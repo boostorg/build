@@ -853,7 +853,12 @@ Marks /targets/ as temporary, allowing them to be removed after other targets th
 rule FAIL_EXPECTED ( /targets/ * )
 ]
 
-For handling targets whose build actions are expected to fail (e.g. when testing that assertions or compile-time type checkin work properly), Boost Jam supplies the =FAIL_EXPECTED= rule in the same style as =NOCARE=, et. al. During target updating, the return code of the build actions for arguments to =FAIL_EXPECTED= is inverted: if it fails, building of dependent targets continues as though it succeeded. If it succeeds, dependent targets are skipped.
+For handling targets whose build actions are expected to fail (e.g. when testing
+that assertions or compile-time type checking work properly), Boost Jam supplies
+the =FAIL_EXPECTED= rule in the same style as =NOCARE=, et. al. During target
+updating, the return code of the build actions for arguments to =FAIL_EXPECTED=
+is inverted: if it fails, building of dependent targets continues as though it
+succeeded. If it succeeds, dependent targets are skipped.
 
 [endsect]
 
