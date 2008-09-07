@@ -85,7 +85,7 @@ bar +user: [0-9\.]+ +system: +[0-9\.]+ *
 ################################################################################
 
 def boost_build_testing_support_timing_rule():
-    """Tests the target build timing rule profided by the Boost Build tasting
+    """Tests the target build timing rule provided by the Boost Build testing
     support system.
     """
 
@@ -112,6 +112,39 @@ time my-time : my-exe ;
 
 ################################################################################
 #
+# boost_build_testing_support_timing_rule_with_spaces_in_names()
+# --------------------------------------------------------------
+#
+################################################################################
+
+def boost_build_testing_support_timing_rule_with_spaces_in_names():
+    """Tests the target build timing rule provided by the Boost Build testing
+    support system when used with targets contining spaces in their names.
+    """
+
+    t = BoostBuild.Tester()
+
+    t.write("aaa bbb.cpp", "int main() {}\n")
+
+    t.write("jamroot.jam", """
+import testing ;
+exe "my exe" : "aaa bbb.cpp" ;
+time "my time" : "my exe" ;
+""")
+
+    t.run_build_system()
+    t.expect_addition("bin/$toolset/debug/aaa bbb.obj")
+    t.expect_addition("bin/$toolset/debug/my exe.exe")
+    t.expect_addition("bin/$toolset/debug/my time.time")
+
+    t.expect_content_line("bin/$toolset/debug/my time.time", "user: *")
+    t.expect_content_line("bin/$toolset/debug/my time.time", "system: *")
+
+    t.cleanup()
+
+
+################################################################################
+#
 # main()
 # ------
 #
@@ -119,3 +152,4 @@ time my-time : my-exe ;
 
 basic_jam_action_test()
 boost_build_testing_support_timing_rule()
+boost_build_testing_support_timing_rule_with_spaces_in_names()
