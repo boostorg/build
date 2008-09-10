@@ -13,6 +13,7 @@ import string ;
 
 
 # Transform property-set by applying f to each component property.
+#
 local rule apply-to-property-set ( f property-set )
 {
     local properties = [ feature.split $(property-set) ] ;
@@ -20,9 +21,10 @@ local rule apply-to-property-set ( f property-set )
 }
 
 
-# Expand the given build request by combining all property-sets which don't
+# Expand the given build request by combining all property-sets which do not
 # specify conflicting non-free features. Expects all the project files to
 # already be loaded.
+#
 rule expand-no-defaults ( property-sets * )
 {
     # First make all features and subfeatures explicit.
@@ -38,6 +40,7 @@ rule expand-no-defaults ( property-sets * )
 
 # Implementation of x-product, below. Expects all the project files to already
 # be loaded.
+#
 local rule x-product-aux ( property-sets + )
 {
     local result ;
@@ -49,7 +52,7 @@ local rule x-product-aux ( property-sets + )
     {
         local x-product-seen ;
         {
-            # Don't mix in any conflicting features.
+            # Do not mix in any conflicting features.
             local x-product-used = $(x-product-used) $(f) ;
 
             if $(property-sets[2])
@@ -61,8 +64,8 @@ local rule x-product-aux ( property-sets + )
             result ?= $(property-sets[1]) ;
         }
 
-        # If we didn't encounter a conflicting feature lower down, don't recurse
-        # again.
+        # If we did not encounter a conflicting feature lower down, do not
+        # recurse again.
         if ! [ set.intersection $(f) : $(x-product-seen) ]
         {
             property-sets = ;
@@ -76,7 +79,7 @@ local rule x-product-aux ( property-sets + )
         result += [ x-product-aux $(property-sets[2-]) : $(feature-space) ] ;
     }
 
-    # Note that we've seen these features so that higher levels will recurse
+    # Note that we have seen these features so that higher levels will recurse
     # again without them set.
     x-product-seen += $(f) $(seen) ;
     return $(result) ;
@@ -86,6 +89,7 @@ local rule x-product-aux ( property-sets + )
 # Return the cross-product of all elements of property-sets, less any that would
 # contain conflicting values for single-valued features. Expects all the project
 # files to already be loaded.
+#
 local rule x-product ( property-sets * )
 {
     if $(property-sets).non-empty
@@ -101,6 +105,7 @@ local rule x-product ( property-sets * )
 
 # Returns true if either 'v' or the part of 'v' before the first '-' symbol is
 # an implicit value. Expects all the project files to already be loaded.
+#
 local rule looks-like-implicit-value ( v )
 {
     if [ feature.is-implicit-value $(v) ]
@@ -123,6 +128,7 @@ local rule looks-like-implicit-value ( v )
 # "vector" means container.jam's "vector"). First is the set of targets
 # specified in the command line, and second is the set of requested build
 # properties. Expects all the project files to already be loaded.
+#
 rule from-command-line ( command-line * )
 {
     local targets ;
@@ -144,8 +150,8 @@ rule from-command-line ( command-line * )
             if [ MATCH "(.*=.*)" : $(e) ]
                 || [ looks-like-implicit-value $(e:D=) : $(feature-space) ]
             {
-                properties += [ convert-command-line-element $(e)
-                    : $(feature-space) ] ;
+                properties += [ convert-command-line-element $(e) :
+                    $(feature-space) ] ;
             }
             else
             {
@@ -165,6 +171,7 @@ rule from-command-line ( command-line * )
 
 # Converts one element of command line build request specification into internal
 # form. Expects all the project files to already be loaded.
+#
 local rule convert-command-line-element ( e )
 {
     local result ;
