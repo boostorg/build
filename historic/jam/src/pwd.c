@@ -6,25 +6,29 @@
 #include "lists.h"
 #include "newstr.h"
 #include "pathsys.h"
+#include "mem.h"
 
 #include <limits.h>
+#include <errno.h>
 
 /* MinGW on windows declares PATH_MAX in limits.h */
 #if defined(NT) && ! defined(__GNUC__)
 #include <direct.h>
 #define PATH_MAX _MAX_PATH
 #else
-#include <limits.h>
 #include <unistd.h>
 #if defined(__COMO__)
      #include <linux/limits.h>
 #endif
 #endif
 
+#ifndef PATH_MAX
+	#define PATH_MAX 1024
+#endif
+
 /* The current directory can't change in bjam, so optimize this to cache
 ** the result.
 */
-static char pwd_buffer[PATH_MAX];
 static char * pwd_result = NULL;
 
 
@@ -33,20 +37,30 @@ pwd(void)
 {
     if (!pwd_result)
     {
-        if (getcwd(pwd_buffer, sizeof(pwd_buffer)) == NULL)
-        {
+		int buffer_size = PATH_MAX;
+		char * result_buffer = 0;
+		do
+		{
+			char * buffer = BJAM_MALLOC_RAW(buffer_size);
+			result_buffer = getcwd(buffer,buffer_size);
+			if (result_buffer)
+			{
+				#ifdef NT
+				pwd_result = short_path_to_long_path(result_buffer);
+				#else
+				pwd_result = newstr(result_buffer);
+				#endif
+			}
+			buffer_size *= 2;
+			BJAM_FREE_RAW(buffer);
+		}
+		while (!pwd_result && errno == ERANGE);
+		
+		if (!pwd_result)
+		{
             perror("can not get current directory");
             return L0;
-        }
-        else
-        {
-#ifdef NT
-            pwd_result = short_path_to_long_path(pwd_buffer);
-#else
-            pwd_result = newstr(pwd_buffer);
-#endif
         }
     }
     return list_new(L0, pwd_result);
 }
-
