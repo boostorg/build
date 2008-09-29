@@ -341,7 +341,7 @@ The supported toolsets, and whether they are auto-detected, are:
 
 [   [] []
     [[lines
-        [line [@http://www-306.ibm.com/software/awdtools/vacpp/ =vacpp=]]
+        [line [@http://www.ibm.com/software/awdtools/vacpp/ =vacpp=]]
         [line IBM VisualAge C++]
         ]]
     [[list
