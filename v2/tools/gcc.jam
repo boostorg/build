@@ -67,6 +67,8 @@ generators.override gcc.searched-lib-generator : searched-lib-generator ;
 
 # Make gcc toolset object files use the "o" suffix on all platforms.
 type.set-generated-target-suffix OBJ : <toolset>gcc : o ;
+type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>windows : o ;
+type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>cygwin : o ;
 
 type.set-generated-target-suffix STATIC_LIB : <toolset>gcc <target-os>cygwin : a ;
 type.set-generated-target-suffix IMPORT_LIB : <toolset>gcc <target-os>cygwin : dll.a ;
@@ -306,33 +308,41 @@ toolset.flags gcc.compile OPTIONS <debug-symbols>on : -g ;
 toolset.flags gcc.compile OPTIONS <profiling>on : -pg ;
 toolset.flags gcc.compile OPTIONS <rtti>off : -fno-rtti ;
 
-# On cygwin and mingw, gcc generates position independent code by default, and
-# warns if -fPIC is specified. This might not be the right way of checking if
-# we are using cygwin. For example, it is possible to run cygwin gcc from NT
-# shell, or using crosscompiling. But we shall solve that problem at a later
-# time. In that case we shall just add another parameter to 'init' and move this
-# login inside 'init'.
-if [ os.name ] != CYGWIN && [ os.name ] != NT
+rule setup-fpic ( targets * : sources * : properties * )
 {
-    # This logic will add -fPIC for all compilations:
-    #
-    # lib a : a.cpp b ;
-    # obj b : b.cpp ;
-    # exe c : c.cpp a d ;
-    # obj d : d.cpp ;
-    #
-    # This all is fine, except that 'd' will be compiled with -fPIC even though
-    # it is not needed, as 'd' is used only in exe. However, it is hard to
-    # detect where a target is going to be used. Alternatively, we can set -fPIC
-    # only when main target type is LIB but than 'b' would be compiled without
-    # -fPIC which would lead to link errors on x86-64. So, compile everything
-    # with -fPIC.
-    #
-    # Yet another alternative would be to create a propagated <sharedable>
-    # feature and set it when building shared libraries, but that would be hard
-    # to implement and would increase the target path length even more.
-    toolset.flags gcc.compile OPTIONS <link>shared : -fPIC ;
+    local link = [ feature.get-values link : $(properties) ] ;
+    if $(link) = shared
+    {        
+        local target = [ feature.get-values target-os : $(properties) ] ;
+        
+        # This logic will add -fPIC for all compilations:
+        #
+        # lib a : a.cpp b ;
+        # obj b : b.cpp ;
+        # exe c : c.cpp a d ;
+        # obj d : d.cpp ;
+        #
+        # This all is fine, except that 'd' will be compiled with -fPIC even though
+        # it is not needed, as 'd' is used only in exe. However, it is hard to
+        # detect where a target is going to be used. Alternatively, we can set -fPIC
+        # only when main target type is LIB but than 'b' would be compiled without
+        # -fPIC which would lead to link errors on x86-64. So, compile everything
+        # with -fPIC.
+        #
+        # Yet another alternative would be to create a propagated <sharedable>
+        # feature and set it when building shared libraries, but that would be hard
+        # to implement and would increase the target path length even more.
+        
+        # On Windows, fPIC is default, specifying -fPIC explicitly leads to
+        # a warning.
+        if $(target) != cygwin && $(target) != windows
+        {
+            OPTIONS on $(targets) += -fPIC ;
+        }        
+    }
 }
+
+# FIXME: this should not use os.name.
 if [ os.name ] != NT && [ os.name ] != OSF && [ os.name ] != HPUX && [ os.name ] != AIX
 {
     # OSF does have an option called -soname but it does not seem to work as
@@ -359,8 +369,11 @@ actions compile.c.pch
     "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
-rule compile.c++
+rule compile.c++ ( targets * : sources * : properties * )
 {
+    setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-fpic $(targets) : $(sources) : $(properties) ;
+    
     # Some extensions are compiled as C++ by default. For others, we need to
     # pass -x c++. We could always pass -x c++ but distcc does not work with it.
     if ! $(>:S) in .cc .cp .cxx .cpp .c++ .C
@@ -385,8 +398,11 @@ rule compile.c++
     }
 }
 
-rule compile.c
+rule compile.c ( targets * : sources * : properties * )
 {
+    setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-fpic $(targets) : $(sources) : $(properties) ;
+    
     # If we use the name g++ then default file suffix -> language mapping does
     # not work. So have to pass -x option. Maybe, we can work around this by
     # allowing the user to specify both C and C++ compiler names.
@@ -681,6 +697,7 @@ rule init-link-flags ( toolset linker condition )
 # Declare actions for linking.
 rule link ( targets * : sources * : properties * )
 {
+    setup-threading $(targets) : $(sources) : $(properties) ;
     SPACE on $(targets) = " " ;
     # Serialize execution of the 'link' action, since running N links in
     # parallel is just slower. For now, serialize only gcc links, it might be a
@@ -744,6 +761,7 @@ actions piecemeal archive
 
 rule link.dll ( targets * : sources * : properties * )
 {
+    setup-threading $(targets) : $(sources) : $(properties) ;
     SPACE on $(targets) = " " ;
     JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
 }
@@ -754,51 +772,59 @@ actions link.dll bind LIBRARIES
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 }
 
-# Set up threading support. It is somewhat contrived, so perform it at the end,
-# to avoid cluttering other code.
-
-if [ os.on-windows ]
+rule setup-threading ( targets * : sources * : properties * )
 {
-    toolset.flags gcc OPTIONS <threading>multi : -mthreads ;
-}
-else if [ modules.peek : UNIX ]
-{
-    switch [ modules.peek : JAMUNAME ]
+    local target = [ feature.get-values target-os : $(properties) ] ;
+    local option ;
+    local libs ;
+    
+    switch $(target)
     {
-    case SunOS* :
+        case windows :
         {
-        toolset.flags gcc OPTIONS <threading>multi : -pthreads ;
-        toolset.flags gcc FINDLIBS-SA : rt ;
+            option = -mthreads ;
         }
-    case BeOS :
+        case cygwin :
         {
-        # BeOS has no threading options, so do not set anything here.
+            option = -mthreads ;
         }
-    case *BSD :
+        case sunos :
         {
-        toolset.flags gcc OPTIONS <threading>multi : -pthread ;
-        # There is no -lrt on BSD.
+            option = -pthreads ;
+            libs = rt ;
         }
-    case DragonFly :
+        case beos :
+        {            
+            # BeOS has no threading options, so do not set anything here.
+        }        
+        case *bsd :
         {
-        toolset.flags gcc OPTIONS <threading>multi : -pthread ;
-        # There is no -lrt on BSD - DragonFly is a FreeBSD variant, which
-        # annoyingly does not say it is a *BSD.
+            option = -pthread ;
+            # There is no -lrt on BSD.
         }
-    case IRIX :
+        case sgi :
         {
-        # gcc on IRIX does not support multi-threading so do not set anything
-        # here.
+            # gcc on IRIX does not support multi-threading so do not set anything
+            # here.
         }
-    case Darwin :
+        case darwin :
         {
-        # Darwin has no threading options so do not set anything here.
+            # Darwin has no threading options so do not set anything here.
         }
-    case * :
+        case * :
         {
-        toolset.flags gcc OPTIONS <threading>multi : -pthread ;
-        toolset.flags gcc FINDLIBS-SA : rt ;
+            option = -pthread ;
+            libs = rt ;
         }
+    }
+    
+    if $(option)
+    {
+        OPTIONS on $(targets) += $(option) ;
+    }
+    if $(libs)
+    {
+        FINDLIBS-SA on $(targets) = $(libs) ;
     }
 }
 
