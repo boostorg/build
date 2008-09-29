@@ -827,7 +827,7 @@ rule setup-threading ( targets * : sources * : properties * )
         }
         if $(libs)
         {
-            FINDLIBS-SA on $(targets) = $(libs) ;
+            FINDLIBS-SA on $(targets) += $(libs) ;
         }
     }    
 }
