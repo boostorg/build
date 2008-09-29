@@ -7,23 +7,25 @@ import os ;
 
 type.register LIB ;
 
-if [ os.on-unix ]
-{
-    type.set-generated-target-prefix LIB : : "lib" ;
-}
+type.set-generated-target-prefix LIB : : "lib" ;
+type.set-generated-target-prefix LIB : <target-os>windows : "" ;
+type.set-generated-target-prefix LIB : <target-os>cygwin : "" ;
 
-type STATIC_LIB : lib a : LIB : NT CYGWIN ;
-type STATIC_LIB : a : LIB : MACOSX ;
-type STATIC_LIB : a : LIB ;
+# FIXME: should not register both extensions on both
+# platforms.
+type.register STATIC_LIB : a lib : LIB ;
+
+type.set-generated-target-suffix STATIC_LIB : <target-os>windows : lib ;
+type.set-generated-target-suffix STATIC_LIB : <target-os>cygwin : lib ;
 type.set-generated-target-prefix STATIC_LIB : : lib ;
 
 type IMPORT_LIB : : STATIC_LIB ;
 type.set-generated-target-suffix IMPORT_LIB : : lib ;
 type.set-generated-target-prefix IMPORT_LIB : : "" ;
 
-type SHARED_LIB : dll : LIB : NT CYGWIN ;
-type SHARED_LIB : dylib : LIB : MACOSX ;
-type SHARED_LIB : so : LIB ;
+type.register SHARED_LIB : so dll dylib : LIB ;
+type.set-generated-target-suffix SHARED_LIB : <target-os>windows : dll ;
+type.set-generated-target-suffix SHARED_LIB : <target-os>darwin : dylib ;
 
 type SEARCHED_LIB : : LIB ;
 # This is needed so that when we create a target of SEARCHED_LIB
