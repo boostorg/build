@@ -103,7 +103,6 @@ static void hash_mem_finalizer(char * key, struct hash * hp);
 static unsigned int jenkins_one_at_a_time_hash(const unsigned char *key)
 {
     unsigned int hash = 0;
-    size_t i;
 
     while ( *key )
     {
@@ -114,9 +113,11 @@ static unsigned int jenkins_one_at_a_time_hash(const unsigned char *key)
     hash += (hash << 3);
     hash ^= (hash >> 11);
     hash += (hash << 15);
+	
     return hash;
 }
 
+/*
 static unsigned int knuth_hash(const unsigned char *key)
 {
     unsigned int keyval = *key;
@@ -124,14 +125,14 @@ static unsigned int knuth_hash(const unsigned char *key)
         keyval = keyval * 2147059363 + *key++;
     return keyval;
 }
+*/
 
 static unsigned int hash_keyval( const char * key_ )
 {
-    /**
-    return knuth_hash((const unsigned char *)key_);
-    /*/
+    /*
+	return knuth_hash((const unsigned char *)key_);
+	*/
     return jenkins_one_at_a_time_hash((const unsigned char *)key_);
-    /**/
 }
 
 #define hash_bucket(hp,keyval) ((hp)->tab.base + ( (keyval) % (hp)->tab.nel ))
@@ -364,7 +365,7 @@ hashinit(
     hp->items.size = sizeof( struct hashhdr ) + ALIGNED( datalen );
     hp->items.list = -1;
     hp->items.nel = 0;
-    hp->inel = /* */ 11 /*/ 47 /* */;
+    hp->inel = 11 /* 47 */;
     hp->name = name;
 
     return hp;
@@ -440,14 +441,14 @@ static void hashstat( struct hash * hp )
 
     for ( i = nel; i > 0; --i )
     {
-        if ( here = ( *tab++ != (ITEM *)0 ) )
+        if ( ( here = ( *tab++ != (ITEM *)0 ) ) )
             count++;
         if ( here && !run )
             sets++;
         run = here;
     }
 
-    printf( "%s table: %d+%d+%d (%dK+%dK) items+table+hash, %f density\n",
+    printf( "%s table: %d+%d+%d (%dK+%ldK) items+table+hash, %f density\n",
         hp->name,
         count,
         hp->items.nel,

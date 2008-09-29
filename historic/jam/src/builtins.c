@@ -1135,7 +1135,7 @@ void backtrace_line( FRAME * frame )
 void backtrace( FRAME * frame )
 {
     if ( !frame ) return;
-    while ( frame = frame->prev )
+    while ( ( frame = frame->prev ) )
         backtrace_line( frame );
 }
 
@@ -1289,13 +1289,12 @@ LIST * builtin_normalize_path( PARSE * parse, FRAME * frame )
 
     string   in[ 1 ];
     string   out[ 1 ];
-    char   * end;          /* Last character of the part of string still to be
-                            * processed.
-                            */
-    char   * current;      /* Working pointer. */
-    int      dotdots = 0;  /* Number of '..' elements seen and not processed
-                           /* yet.
-                            */
+	/* Last character of the part of string still to be processed. */
+    char   * end;
+	/* Working pointer. */
+    char   * current;
+	/* Number of '..' elements seen and not processed yet. */
+    int      dotdots = 0;
     int      rooted  = 0;
     char   * result  = 0;
 

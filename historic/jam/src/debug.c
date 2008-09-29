@@ -114,7 +114,7 @@ static void dump_profile_entry( void * p_, void * ignored )
         profile_total.cumulative += p->net;
         profile_total.memory += p->memory;
     }
-    printf( "%10d %12.6f %12.6f %12.8f %10d %10d %s\n", p->num_entries,
+    printf( "%10ld %12.6f %12.6f %12.8f %10ld %10ld %s\n", p->num_entries,
         cumulative, net, q, p->memory, mem_each, p->name );
 }
 

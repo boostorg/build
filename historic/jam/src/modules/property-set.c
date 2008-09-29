@@ -45,7 +45,9 @@ LIST *property_set_create( PARSE *parse, FRAME *frame )
 {
     LIST* properties = lol_get( frame->args, 0 );
     LIST* sorted = 0;
+#if 0
     LIST* order_sensitive = 0;
+#endif
     LIST* unique;
     LIST* tmp;
     LIST* val;

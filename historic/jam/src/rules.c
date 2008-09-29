@@ -358,8 +358,6 @@ TARGETS * targetentry( TARGETS * chain, TARGET * target )
 
 TARGETS * targetchain( TARGETS * chain, TARGETS * targets )
 {
-    TARGETS * c;
-
     if ( !targets ) return chain;
     if ( !chain   ) return targets;
 

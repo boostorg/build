@@ -74,8 +74,10 @@ void timestamp( char * target, time_t * time )
     BINDING    binding;
     BINDING  * b = &binding;
     string     buf[ 1 ];
+#ifdef DOWNSHIFT_PATHS
     string     path;
     char     * p;
+#endif
 
 #ifdef DOWNSHIFT_PATHS
     string_copy( &path, target );

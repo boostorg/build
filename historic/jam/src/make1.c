@@ -66,7 +66,7 @@
 
 #include <stdlib.h>
 
-#if defined(sun) || defined(__sun)
+#if ! defined(NT) || defined(__GNUC__)
     #include <unistd.h>  /* for unlink */
 #endif
 
@@ -914,8 +914,8 @@ static CMD * make1cmds( TARGET * t )
     ACTIONS  * a0;
 
     /* Step through actions. Actions may be shared with other targets or grouped
-    /* using RULE_TOGETHER, so actions already seen are skipped.
-    */
+     * using RULE_TOGETHER, so actions already seen are skipped.
+     */
     for ( a0 = t->actions ; a0; a0 = a0->next )
     {
         RULE         * rule = a0->action->rule;

@@ -110,7 +110,7 @@ void var_defines( char * const * e, int preprocess )
 
         if ( ( val = strchr( *e, '=' ) ) || ( val = *e + strlen( *e ) ) )
 # else
-        if ( val = strchr( *e, '=' ) )
+        if ( ( val = strchr( *e, '=' ) ) )
 # endif
         {
             LIST * l = L0;

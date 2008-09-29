@@ -167,10 +167,8 @@ void file_dirscan( char * dir, scanback func, void * closure )
             printf( "scan directory %s\n", dir );
 
         string_new( filename );
-        while ( dirent = readdir( dd ) )
+        while ( ( dirent = readdir( dd ) ) )
         {
-            file_info_t * ff = 0;
-
             # ifdef old_sinix
             /* Broken structure definition on sinix. */
             f.f_base.ptr = dirent->d_name - 2;
