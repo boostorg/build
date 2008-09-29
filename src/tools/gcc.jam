@@ -774,58 +774,62 @@ actions link.dll bind LIBRARIES
 
 rule setup-threading ( targets * : sources * : properties * )
 {
-    local target = [ feature.get-values target-os : $(properties) ] ;
-    local option ;
-    local libs ;
+    local threading = [ feature.get-values threading : $(properties) ] ;
+    if $(threading) = multi
+    {        
+        local target = [ feature.get-values target-os : $(properties) ] ;
+        local option ;
+        local libs ;
+        
+        switch $(target)
+        {
+            case windows :
+            {
+                option = -mthreads ;
+            }
+            case cygwin :
+            {
+                option = -mthreads ;
+            }
+            case sunos :
+            {
+                option = -pthreads ;
+                libs = rt ;
+            }
+            case beos :
+            {            
+                # BeOS has no threading options, so do not set anything here.
+            }        
+            case *bsd :
+            {
+                option = -pthread ;
+                # There is no -lrt on BSD.
+            }
+            case sgi :
+            {
+                # gcc on IRIX does not support multi-threading so do not set anything
+                # here.
+            }
+            case darwin :
+            {
+                # Darwin has no threading options so do not set anything here.
+            }
+            case * :
+            {
+                option = -pthread ;
+                libs = rt ;
+            }
+        }
     
-    switch $(target)
-    {
-        case windows :
+        if $(option)
         {
-            option = -mthreads ;
+            OPTIONS on $(targets) += $(option) ;
         }
-        case cygwin :
+        if $(libs)
         {
-            option = -mthreads ;
+            FINDLIBS-SA on $(targets) = $(libs) ;
         }
-        case sunos :
-        {
-            option = -pthreads ;
-            libs = rt ;
-        }
-        case beos :
-        {            
-            # BeOS has no threading options, so do not set anything here.
-        }        
-        case *bsd :
-        {
-            option = -pthread ;
-            # There is no -lrt on BSD.
-        }
-        case sgi :
-        {
-            # gcc on IRIX does not support multi-threading so do not set anything
-            # here.
-        }
-        case darwin :
-        {
-            # Darwin has no threading options so do not set anything here.
-        }
-        case * :
-        {
-            option = -pthread ;
-            libs = rt ;
-        }
-    }
-    
-    if $(option)
-    {
-        OPTIONS on $(targets) += $(option) ;
-    }
-    if $(libs)
-    {
-        FINDLIBS-SA on $(targets) = $(libs) ;
-    }
+    }    
 }
 
 local rule cpu-flags ( toolset variable : architecture : instruction-set + : values + : default ? )
