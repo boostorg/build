@@ -60,7 +60,9 @@ headers( TARGET *t )
 {
     LIST   * hdrscan;
     LIST   * hdrrule;
+	#ifndef OPT_HEADER_CACHE_EXT
     LIST   * headlist = 0;
+	#endif
     regexp * re[ MAXINC ];
     int rec = 0;
 

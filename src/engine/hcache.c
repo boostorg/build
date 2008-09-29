@@ -327,10 +327,10 @@ void hcache_done()
         else if ( c->age > maxage )
             continue;
 
-        sprintf( includes_count_str, "%lu", list_length( c->includes ) );
-        sprintf( hdrscan_count_str, "%lu", list_length( c->hdrscan ) );
-        sprintf( time_str, "%lu", c->time );
-        sprintf( age_str, "%lu", c->age );
+        sprintf( includes_count_str, "%lu", (long unsigned) list_length( c->includes ) );
+        sprintf( hdrscan_count_str, "%lu", (long unsigned) list_length( c->hdrscan ) );
+        sprintf( time_str, "%lu", (long unsigned) c->time );
+        sprintf( age_str, "%lu", (long unsigned) c->age );
 
         write_netstring( f, CACHE_RECORD_HEADER );
         write_netstring( f, c->boundname );

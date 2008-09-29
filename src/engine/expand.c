@@ -267,14 +267,14 @@ expand:
             string_copy( variable, vars->string );
             varname = variable->value;
 
-            if ( colon = strchr( varname, MAGIC_COLON ) )
+            if ( ( colon = strchr( varname, MAGIC_COLON ) ) )
             {
                 string_truncate( variable, colon - varname );
                 var_edit_parse( colon + 1, &edits );
             }
 
             /* Look for [x-y] subscripting. sub1 and sub2 are x and y. */
-            if ( bracket = strchr( varname, MAGIC_LEFT ) )
+            if ( ( bracket = strchr( varname, MAGIC_LEFT ) ) )
             {
                 /* Make all syntax errors in [] subscripting result in the same
                  * behavior: silenty return an empty expansion (by setting sub2
@@ -577,7 +577,7 @@ static void var_edit_parse( char * mods, VAR_EDITS * edits )
             fp->ptr = "";
             fp->len = 0;
         }
-        else if ( p = strchr( mods, MAGIC_COLON ) )
+        else if ( ( p = strchr( mods, MAGIC_COLON ) ) )
         {
             *p = 0;
             fp->ptr = ++mods;

@@ -46,8 +46,6 @@
  *      just to invoke a rule.
  */
 
-static LIST * header_macros1( LIST * l, char * file, int rec, regexp * re[] );
-
 /* this type is used to store a dictionary of file header macros */
 typedef struct header_macro
 {

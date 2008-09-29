@@ -195,7 +195,7 @@ static void update_dependants( TARGET * t )
             if ( DEBUG_FATE )
             {
                 printf( "fate change  %s from %s to %s (as dependant of %s)\n",
-                        p->name, target_fate[ fate0 ], target_fate[ p->fate ], t->name );
+                        p->name, target_fate[ (int) fate0 ], target_fate[ (int) p->fate ], t->name );
             }
 
             /* If we are done visiting it, go back and make sure its dependants
@@ -224,7 +224,7 @@ static void force_rebuilds( TARGET * t )
         {
             if ( DEBUG_FATE )
                 printf( "fate change  %s from %s to %s (by rebuild)\n",
-                        r->name, target_fate[ r->fate ], target_fate[ T_FATE_REBUILD ] );
+                        r->name, target_fate[ (int) r->fate ], target_fate[ T_FATE_REBUILD ] );
 
             /* Force rebuild it. */
             r->fate = T_FATE_REBUILD;
@@ -253,7 +253,6 @@ void make0
 )  /* forcibly touch all (real) targets */
 {
     TARGETS    * c;
-    TARGETS    * d;
     TARGET     * ptime = t;
     time_t       last;
     time_t       leaf;
@@ -352,7 +351,7 @@ void make0
         case T_BIND_MISSING:
         case T_BIND_PARENTS:
             printf( "time\t--\t%s%s: %s\n",
-                spaces( depth ), t->name, target_bind[ t->binding ] );
+                spaces( depth ), t->name, target_bind[ (int) t->binding ] );
             break;
 
         case T_BIND_EXISTS:
@@ -421,7 +420,7 @@ void make0
         if ( DEBUG_FATE )
             if ( fate < c->target->fate )
                 printf( "fate change %s from %s to %s by dependency %s\n",
-                    t->name, target_fate[fate], target_fate[c->target->fate],
+                    t->name, target_fate[(int) fate], target_fate[(int) c->target->fate],
                     c->target->name );
 #endif
     }
@@ -540,6 +539,7 @@ void make0
     }
 #ifdef OPT_GRAPH_DEBUG_EXT
     if ( DEBUG_FATE && ( fate != savedFate ) )
+	{
         if ( savedFate == T_FATE_STABLE )
             printf( "fate change  %s set to %s%s\n", t->name,
                 target_fate[ fate ], oldTimeStamp ? " (by timestamp)" : "" );
@@ -547,6 +547,7 @@ void make0
             printf( "fate change  %s from %s to %s%s\n", t->name,
                 target_fate[ savedFate ], target_fate[ fate ],
                 oldTimeStamp ? " (by timestamp)" : "" );
+	}
 #endif
 
     /* Step 4e: handle missing files */
@@ -635,7 +636,7 @@ void make0
         flag = "*";
 
     if ( DEBUG_MAKEPROG )
-        printf( "made%s\t%s\t%s%s\n", flag, target_fate[ t->fate ],
+        printf( "made%s\t%s\t%s%s\n", flag, target_fate[ (int) t->fate ],
             spaces( depth ), t->name );
 }
 
@@ -735,7 +736,7 @@ static void dependGraphOutput( TARGET * t, int depth )
     for ( c = t->depends; c; c = c->next )
     {
         printf( "  %s       : Depends on %s (%s)", spaces( depth ),
-               target_name( c->target ), target_fate[ c->target->fate ] );
+               target_name( c->target ), target_fate[ (int) c->target->fate ] );
         if ( c->target->time == t->time )
             printf( " (max time)");
         printf( "\n" );

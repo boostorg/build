@@ -71,7 +71,7 @@ void out_action
             if ( action )
             {
                 /* But only output for non-quietly actions. */
-                fprintf( bjam_out, "%d second time limit exceeded\n", globs.timeout );
+                fprintf( bjam_out, "%ld second time limit exceeded\n", globs.timeout );
             }
             break;
         }

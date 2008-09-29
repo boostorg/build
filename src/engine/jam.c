@@ -300,7 +300,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         globs.timeout = atoi( s );
 
     /* Turn on/off debugging */
-    for ( n = 0; s = getoptval( optv, 'd', n ); ++n )
+    for ( n = 0; ( s = getoptval( optv, 'd', n ) ); ++n )
     {
         int i;
 
@@ -414,7 +414,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         var_defines( othersyms, 1 );
 
         /* Load up variables set on command line. */
-        for ( n = 0; s = getoptval( optv, 's', n ); ++n )
+        for ( n = 0; ( s = getoptval( optv, 's', n ) ); ++n )
         {
             char *symv[2];
             symv[ 0 ] = s;
@@ -452,7 +452,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         {
             FRAME frame[ 1 ];
             frame_init( frame );
-            for ( n = 0; s = getoptval( optv, 'f', n ); ++n )
+            for ( n = 0; ( s = getoptval( optv, 'f', n ) ); ++n )
                 parse_file( s, frame );
 
             if ( !n )
@@ -462,11 +462,11 @@ int main( int argc, char * * argv, char * * arg_environ )
         status = yyanyerrors();
 
         /* Manually touch -t targets. */
-        for ( n = 0; s = getoptval( optv, 't', n ); ++n )
+        for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )
             touch_target( s );
 
         /* If an output file is specified, set globs.cmdout to that. */
-        if ( s = getoptval( optv, 'o', 0 ) )
+        if ( ( s = getoptval( optv, 'o', 0 ) ) )
         {
             if ( !( globs.cmdout = fopen( s, "w" ) ) )
             {

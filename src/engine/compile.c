@@ -295,7 +295,7 @@ LIST * compile_while( PARSE * p, FRAME * frame )
 {
     LIST * r = 0;
     LIST * l;
-    while ( l = parse_evaluate( p->left, frame ) )
+    while ( ( l = parse_evaluate( p->left, frame ) ) )
     {
         list_free( l );
         if ( r ) list_free( r );
@@ -753,12 +753,13 @@ collect_arguments( RULE* rule, FRAME* frame )
     return locals;
 }
 
-static int python_instance_number = 0;
-
 RULE *
 enter_rule( char *rulename, module_t *target_module );
 
 #ifdef HAVE_PYTHON
+
+static int python_instance_number = 0;
+
 static LIST*
 call_python_function(RULE* r, FRAME* frame)
 {
@@ -863,6 +864,7 @@ module_t * python_module()
         python = bindmodule("__python__");
     return python;
 }
+
 #endif
 
 
