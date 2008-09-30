@@ -350,10 +350,14 @@ rule link
     prepare-framework-path $(<) ;
 }
 
+# Note that using strip without any options was reported to result in broken
+# binaries, at least on OS X 10.5.5, see:
+#    http://svn.boost.org/trac/boost/ticket/2347
+# So we pass -S -x.
 actions link bind LIBRARIES
 {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=:S=) $(OPTIONS) $(USER_OPTIONS)
-    $(NEED_STRIP)"$(.STRIP)" $(NEED_STRIP)"$(<)"
+    $(NEED_STRIP)"$(.STRIP)" $(NEED_STRIP)-S $(NEED_STRIP)-x $(NEED_STRIP)"$(<)"
 }
 
 rule link.dll
