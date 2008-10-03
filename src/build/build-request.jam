@@ -176,21 +176,37 @@ local rule convert-command-line-element ( e )
 {
     local result ;
     local parts = [ regex.split $(e) "/" ] ;
-    for local p in $(parts)
+    while $(parts)
     {
+        local p = $(parts[1]) ;
         local m = [ MATCH "([^=]*)=(.*)" : $(p) ] ;
         local lresult ;
+        local feature ;
+        local values ;
         if $(m)
         {
-            local feature = $(m[1]) ;
-            local values = [ regex.split $(m[2]) "," ] ;
+            feature = $(m[1]) ;
+            values = [ regex.split $(m[2]) "," ] ;
             lresult = <$(feature)>$(values) ;
         }
         else
         {
             lresult = [ regex.split $(p) "," ] ;
         }
-
+        
+        if $(feature) && free in [ feature.attributes $(feature) ]
+        {
+            # If we have free feature, then the value is everything
+            # until the end of the command line token. Slashes in
+            # the following string are not taked to mean separation
+            # of properties. Commas are also not interpreted specially.
+            values = $(values:J=,) ;
+            values = $(values) $(parts[2-]) ;
+            values = $(values:J=/) ;
+            lresult = <$(feature)>$(values) ;
+            parts = ;
+        }
+        
         if ! [ MATCH (.*-.*) : $(p) ]
         {
             # property.validate cannot handle subfeatures, so we avoid the check
@@ -209,6 +225,8 @@ local rule convert-command-line-element ( e )
         {
             result = $(result)/$(lresult) ;
         }
+        
+        parts = $(parts[2-]) ;
     }
 
     return $(result) ;
