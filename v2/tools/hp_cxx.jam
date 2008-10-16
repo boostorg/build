@@ -124,6 +124,8 @@ flags hp_cxx.link LIBRARIES <library-file> ;
 flags hp_cxx.link FINDLIBS-ST <find-static-library> ;
 flags hp_cxx.link FINDLIBS-SA <find-shared-library> ;
 
+flags hp_cxx.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
+
 actions link bind LIBRARIES
 {
     $(CONFIG_COMMAND) -noimplicit_include $(OPTIONS) -o "$(<)" -L$(LIBPATH) "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) -lrt -lm
@@ -154,9 +156,20 @@ actions compile.c
 # Note: We deliberately don't suppress any warnings on the compiler command
 # line, the user can always do this in a customized toolset later on.
 
+rule compile.c++
+{
+    # We preprocess the TEMPLATE_DEPTH command line option here because we found
+    # no way to do it correctly in the actual action code. There we either get
+    # the -pending_instantiations parameter when no c++-template-depth property
+    # has been specified or we get additional quotes around
+    # "-pending_instantiations ".
+    local template-depth = [ on $(1) return $(TEMPLATE_DEPTH) ] ;
+    TEMPLATE_DEPTH on $(1) = "-pending_instantiations "$(template-depth) ;
+}
+
 actions compile.c++
 {
-    $(CONFIG_COMMAND) -x cxx -c -std strict_ansi -nopure_cname -noimplicit_include -timplicit_local -ptr "$(<[1]:D)/cxx_repository" $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
+    $(CONFIG_COMMAND) -x cxx -c -std strict_ansi -nopure_cname -noimplicit_include -timplicit_local -ptr "$(<[1]:D)/cxx_repository" $(OPTIONS) $(TEMPLATE_DEPTH) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
 }
 
 # Always create archive from scratch. See the gcc toolet for rationale.

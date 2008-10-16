@@ -1,17 +1,17 @@
 #!/usr/bin/python
 
-#  Copyright (C) Vladimir Prus 2006.
-#  Distributed under the Boost Software License, Version 1.0. (See
-#  accompanying file LICENSE_1_0.txt or copy at
-#  http://www.boost.org/LICENSE_1_0.txt)
+# Copyright (C) Vladimir Prus 2006.
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
-#  Test the 'libraries' example.
-from BoostBuild import Tester, List
+# Test the 'gettext' example.
+
+import BoostBuild
 import os
 import string
 
-# Create a temporary working directory
-t = Tester()
+t = BoostBuild.Tester()
 
 t.set_tree("../example/gettext")
 
@@ -19,7 +19,6 @@ t.run_build_system(stderr=None)
 
 t.expect_addition(["bin/$toolset/debug/main.exe",
                    "bin/$toolset/debug/russian.mo"])
-
 
 file = t.adjust_names(["bin/$toolset/debug/main.exe"])[0]
 

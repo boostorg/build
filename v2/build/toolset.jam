@@ -21,8 +21,8 @@ import set ;
 
 .ignore-requirements = ;
 
-# This is used only for testing, to make sure we don't get random extra elements
-# in paths.
+# This is used only for testing, to make sure we do not get random extra
+# elements in paths.
 if --ignore-toolset-requirements in [ modules.peek : ARGV ]
 {
     .ignore-requirements = 1 ;
@@ -56,7 +56,7 @@ local rule normalize-condition ( property-sets * )
 
 
 # Specifies if the 'flags' rule should check that the invoking module is the
-# same as the module we're setting the flag for. 'v' can be either 'checked' or
+# same as the module we are setting the flag for. 'v' can be either 'checked' or
 # 'unchecked'. Subsequent call to 'pop-checking-for-flags-module' will restore
 # the setting that was in effect before calling this rule.
 #
@@ -101,7 +101,7 @@ rule flags (
                      #   <architecture>ia64/<address-model>
                      #
                      # Where both features are optional. Without this syntax
-                     # we'd be forced to define "default" values.
+                     # we would be forced to define "default" values.
 
     values * :       # The value to add to variable. If <feature> is specified,
                      # then the value of 'feature' will be added.
@@ -138,7 +138,7 @@ rule flags (
     if $(condition) && ! $(condition:G=) && ! $(hack-hack)
     {
         # We have condition in the form '<feature>', that is, without value.
-        # That's a previous syntax:
+        # That is an older syntax:
         #   flags gcc.link RPATH <dll-path> ;
         # for compatibility, convert it to
         #   flags gcc.link RPATH : <dll-path> ;
@@ -162,10 +162,10 @@ local rule add-flag ( rule-or-module : variable-name : condition * : values * )
 {
     .$(rule-or-module).flags += $(.flag-no) ;
 
-    # Store all flags for a module
+    # Store all flags for a module.
     local module_ = [ MATCH "([^.]*).*" : $(rule-or-module) ] ;
     .module-flags.$(module_) += $(.flag-no) ;
-    # Store flag-no -> rule-or-module mapping
+    # Store flag-no -> rule-or-module mapping.
     .rule-or-module.$(.flag-no) = $(rule-or-module) ;
 
     .$(rule-or-module).variable.$(.flag-no) += $(variable-name) ;
@@ -177,7 +177,7 @@ local rule add-flag ( rule-or-module : variable-name : condition * : values * )
 
 
 # Returns the first element of 'property-sets' which is a subset of
-# 'properties', or an empty list if no such element exists.
+# 'properties' or an empty list if no such element exists.
 #
 rule find-property-subset ( property-sets * : properties * )
 {
@@ -225,6 +225,9 @@ rule find-property-subset ( property-sets * : properties * )
 }
 
 
+# Returns a value to be added to some flag for some target based on the flag's
+# value definition and the given target's property set.
+#
 rule handle-flag-value ( value * : properties * )
 {
     local result ;
@@ -245,8 +248,8 @@ rule handle-flag-value ( value * : properties * )
                 local values ;
                 # Treat features with && in the value specially -- each
                 # &&-separated element is considered a separate value. This is
-                # needed to handle searched libraries, which must be in a
-                # specific order.
+                # needed to handle searched libraries or include paths, which
+                # may need to be in a specific order.
                 if ! [ MATCH (&&) : $(p:G=) ]
                 {
                     values = $(p:G=) ;
@@ -383,11 +386,11 @@ rule inherit-generators ( toolset properties * : base : generators-to-ignore * )
         if ! $(id) in $(generators-to-ignore)
         {
             # Some generator names have multiple periods in their name, so
-            # $(id:B=$(toolset)) doesn't generate the right new-id name. E.g. if
-            # id = gcc.compile.c++, $(id:B=darwin) = darwin.c++, which is not
-            # what we want. Manually parse the base and suffix (if there's a
-            # better way to do this, I'd love to see it). See also register in
-            # module generators.
+            # $(id:B=$(toolset)) does not generate the right new-id name. E.g.
+            # if id = gcc.compile.c++ then $(id:B=darwin) = darwin.c++, which is
+            # not what we want. Manually parse the base and suffix. If there is
+            # a better way to do this, I would love to see it. See also the
+            # register() rule in the generators module.
             local base = $(id) ;
             local suffix = "" ;
             while $(base:S)
@@ -405,14 +408,14 @@ rule inherit-generators ( toolset properties * : base : generators-to-ignore * )
 
 # Brings all flag definitions from the 'base' toolset into the 'toolset'
 # toolset. Flag definitions whose conditions make use of properties in
-# 'prohibited-properties' are ignored. Don't confuse property and feature, for
+# 'prohibited-properties' are ignored. Do not confuse property and feature, for
 # example <debug-symbols>on and <debug-symbols>off, so blocking one of them does
 # not block the other one.
 #
 # The flag conditions are not altered at all, so if a condition includes a name,
-# or version of a base toolset, it won't ever match the inheriting toolset. When
-# such flag settings must be inherited, define a rule in base toolset module and
-# call it as needed.
+# or version of a base toolset, it will not ever match the inheriting toolset.
+# When such flag settings must be inherited, define a rule in base toolset
+# module and call it as needed.
 #
 rule inherit-flags ( toolset : base : prohibited-properties * )
 {
@@ -447,7 +450,7 @@ rule inherit-flags ( toolset : base : prohibited-properties * )
 
 rule inherit-rules ( toolset : base )
 {
-    # It appears that "action" creates a local rule...
+    # It appears that "action" creates a local rule.
     local base-generators = [ generators.generators-for-toolset $(base) ] ;
     local rules ;
     for local g in $(base-generators)
@@ -456,8 +459,7 @@ rule inherit-rules ( toolset : base )
         rules += $(id) ;
     }
     IMPORT $(base) : $(rules) : $(toolset) : $(rules) ;
-    # Import the rules to the global scope
-    IMPORT $(toolset) : $(rules) : : $(toolset).$(rules) ;
+    IMPORT $(base) : $(rules) : : $(toolset).$(rules) ;
 }
 
 

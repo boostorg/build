@@ -5,60 +5,78 @@
   <chapter id="bbv2.advanced">
     <title>Overview</title>
 
-  <para>This section will provide the information necessary to create your own
-  projects using Boost.Build. The information provided here is relatively
-  high-level, and <xref linkend="bbv2.reference"/> as well as the on-line help
-  system must be used to obtain low-level documentation (see <xref linkend=
-  "bbv2.reference.init.options.help"/>).</para>
+    <para>
+      This section will provide the information necessary to create your own
+      projects using Boost.Build. The information provided here is relatively
+      high-level, and <xref linkend="bbv2.reference"/> as well as the on-line
+      help system must be used to obtain low-level documentation (see <xref
+      linkend="bbv2.reference.init.options.help"/>).
+    </para>
 
-  <para>Boost.Build actually consists of two parts - Boost.Jam, a build engine
-  with its own interpreted language, and Boost.Build itself, implemented in
-  Boost.Jam's language. The chain of events when you type
-  <command>bjam</command> on the command line is:
+    <para>
+      Boost.Build actually consists of two parts - Boost.Jam, a build engine
+      with its own interpreted language, and Boost.Build itself, implemented in
+      Boost.Jam's language. The chain of events when you type
+      <command>bjam</command> on the command line is as follows:
       <orderedlist>
         <listitem>
-          <para>Boost.Jam tries to find Boost.Build and loads the top-level
-          module. The exact process is described in <xref
-          linkend="bbv2.reference.init"/></para>
-        </listitem>
-        <listitem>
-          <para>The top-level module loads user-defined configuration files,
-          <filename>user-config.jam</filename> and
-          <filename>site-config.jam</filename>, which define available toolsets.
+          <para>
+            Boost.Jam tries to find Boost.Build and loads the top-level module.
+            The exact process is described in <xref linkend=
+            "bbv2.reference.init"/>
           </para>
         </listitem>
         <listitem>
-          <para>The Jamfile in the current directory is read. That in turn
-          might cause reading of further Jamfiles. As a result, a tree of
-          projects is created, with targets inside projects.</para>
+          <para>
+            The top-level module loads user-defined configuration files,
+            <filename>user-config.jam</filename> and <filename>site-config.jam
+            </filename>, which define available toolsets.
+          </para>
         </listitem>
         <listitem>
-          <para>Finally, using the build request specified on the command line,
-          Boost.Build decides which targets should be built, and how. That
-          information is passed back to Boost.Jam, which takes care of
-          actually running commands.</para>
+          <para>
+            The Jamfile in the current directory is read. That in turn might
+            cause reading of further Jamfiles. As a result, a tree of projects
+            is created, with targets inside projects.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Finally, using the build request specified on the command line,
+            Boost.Build decides which targets should be built and how. That
+            information is passed back to Boost.Jam, which takes care of
+            actually running the scheduled build action commands.
+          </para>
         </listitem>
       </orderedlist>
     </para>
 
-    <para>So, to be able to successfully use Boost.Build, you need to know only
-      four things:
+    <para>
+      So, to be able to successfully use Boost.Build, you need to know only four
+      things:
       <itemizedlist>
         <listitem>
-          <para><link linkend="bbv2.advanced.configuration">
-              How to configure Boost.Build</link></para>
+          <para>
+            <link linkend="bbv2.advanced.configuration">How to configure
+            Boost.Build</link>
+          </para>
         </listitem>
         <listitem>
-          <para><link linkend="bbv2.advanced.targets">
-              How to write declares targets in Jamfiles</link></para>
+          <para>
+            <link linkend="bbv2.advanced.targets">How to declare targets in
+              Jamfiles</link>
+          </para>
         </listitem>
         <listitem>
-          <para><link linkend="bbv2.advanced.build_process">
-              How the build process works</link></para>
+          <para>
+            <link linkend="bbv2.advanced.build_process">How the build process
+              works</link>
+          </para>
         </listitem>
         <listitem>
-          <para>Some Basics about the Boost.Jam language. See
-          <xref linkend="bbv2.advanced.jam_language"/>.
+          <para>
+            Some Basics about the Boost.Jam language. See <xref linkend=
+            "bbv2.advanced.jam_language"/>.
           </para>
         </listitem>
       </itemizedlist>
@@ -67,153 +85,187 @@
     <section id="bbv2.advanced.jam_language">
       <title>Boost.Jam Language</title>
 
-      <para>This section will describe the basics of the Boost.Jam
-      language&#x2014;just enough for writing Jamfiles. For more information,
-      please see the <link linkend="bbv2.jam">Boost.Jam</link> documentation.
-      </para>
-
-      <para><link linkend="bbv2.jam">Boost.Jam</link> has an interpreted,
-      procedural language. On the lowest level, a <link linkend="bbv2.jam">
-      Boost.Jam</link> program consists of variables and
-      <indexterm><primary>rule</primary></indexterm>
-      <firstterm>rules</firstterm> (the Jam term for function). They are grouped
-      in modules&#x2014;there's one global module and a number of named modules.
-      Besides that, a <link linkend="bbv2.jam">Boost.Jam</link> program contains
-      classes and class instances.</para>
-
-      <para>Syntantically, a <link linkend="bbv2.jam">Boost.Jam</link> program
-      consists of two kind of elements&#x2014;keywords (which have a special
-      meaning to <link linkend="bbv2.jam">Boost.Jam</link>) and literals.
-
-      Consider this code:
-      <programlisting>
-a = b ;</programlisting>
-      which assigns the value <literal>b</literal> to the variable
-      <literal>a</literal>. Here, <literal>=</literal> and <literal>;</literal>
-      are keywords, while <literal>a</literal> and <literal>b</literal> are
-      literals.
-      <warning>
-        <para>All syntax elements, even keywords, must be separated by spaces.
-        For example, omitting the space character before <literal>;</literal>
-        will lead to a syntax error.
-        </para>
-      </warning>
-      If you want to use a literal value that is the same as some keyword, the
-      value can be quoted:
-      <programlisting>
-a = "=" ;</programlisting>
-      </para>
-
-      <para>All variables in <link linkend="bbv2.jam">Boost.Jam</link> have the
-      same type&#x2014;list of strings. To define a variable one assigns a value
-      to it, like in the previous example. An undefined variable is the same as
-      a variable with an empty value. Variables can be accessed using the
-      <code>$(<replaceable>variable</replaceable>)</code> syntax. For example:
-      <programlisting>
-a = $(b) $(c) ;</programlisting>
+      <para>
+        This section will describe the basics of the Boost.Jam language&#x2014;
+        just enough for writing Jamfiles. For more information, please see the
+        <link linkend="bbv2.jam">Boost.Jam</link> documentation.
       </para>
 
       <para>
-        Rules are defined by specifying the rule name, the parameter names,
-        and the allowed size of the list value for each parameter.
-        <programlisting>
+        <link linkend="bbv2.jam">Boost.Jam</link> has an interpreted, procedural
+        language. On the lowest level, a <link linkend="bbv2.jam">Boost.Jam
+        </link> program consists of variables and <indexterm><primary>rule
+        </primary></indexterm> <firstterm>rules</firstterm> (Jam term for
+        function). They are grouped into modules&#x2014;there is one global
+        module and a number of named modules. Besides that, a <link linkend=
+        "bbv2.jam">Boost.Jam</link> program contains classes and class
+        instances.
+      </para>
+
+      <para>
+        Syntantically, a <link linkend="bbv2.jam">Boost.Jam</link> program
+        consists of two kind of elements&#x2014;keywords (which have a special
+        meaning to <link linkend="bbv2.jam">Boost.Jam</link>) and literals.
+        Consider this code:
+<programlisting>
+a = b ;
+</programlisting>
+        which assigns the value <literal>b</literal> to the variable <literal>a
+        </literal>. Here, <literal>=</literal> and <literal>;</literal> are
+        keywords, while <literal>a</literal> and <literal>b</literal> are
+        literals.
+        <warning>
+          <para>
+            All syntax elements, even keywords, must be separated by spaces. For
+            example, omitting the space character before <literal>;</literal>
+            will lead to a syntax error.
+          </para>
+        </warning>
+        If you want to use a literal value that is the same as some keyword, the
+        value can be quoted:
+<programlisting>
+a = "=" ;
+</programlisting>
+      </para>
+
+      <para>
+        All variables in <link linkend="bbv2.jam">Boost.Jam</link> have the same
+        type&#x2014;list of strings. To define a variable one assigns a value to
+        it, like in the previous example. An undefined variable is the same as a
+        variable with an empty value. Variables can be accessed using the
+        <code>$(<replaceable>variable</replaceable>)</code> syntax. For example:
+<programlisting>
+a = $(b) $(c) ;
+</programlisting>
+      </para>
+
+      <para>
+        Rules are defined by specifying the rule name, the parameter names, and
+        the allowed value list size for each parameter.
+<programlisting>
 rule <replaceable>example</replaceable>
-     (
-         <replaceable>parameter1</replaceable> :
-         <replaceable>parameter2 ?</replaceable> :
-         <replaceable>parameter3 +</replaceable> :
-         <replaceable>parameter4 *</replaceable>
-     )
-     {
-        // body
-     }</programlisting>
+ (
+     <replaceable>parameter1</replaceable> :
+     <replaceable>parameter2 ?</replaceable> :
+     <replaceable>parameter3 +</replaceable> :
+     <replaceable>parameter4 *</replaceable>
+ )
+ {
+    # rule body
+ }
+ </programlisting>
         When this rule is called, the list passed as the first argument must
         have exactly one value. The list passed as the second argument can
         either have one value of be empty. The two remaining arguments can be
         arbitrarily long, but the third argument may not be empty.
       </para>
 
-      <para>The overview of <link linkend="bbv2.jam">Boost.Jam</link> language
-      statements is given below:
-      <programlisting>
+      <para>
+        The overview of <link linkend="bbv2.jam">Boost.Jam</link> language
+        statements is given below:
+<programlisting>
 helper 1 : 2 : 3 ;
-x = [ helper 1 : 2 : 3 ] ;</programlisting>
-      This code calls the named rule with the specified arguments. When the
-      result of the call must be used inside some expression, you need to add
-      brackets around the call, like shown on the second line.
-      <programlisting>
-if cond { statements } [ else { statements } ]</programlisting>
-      This is a regular if-statement. The condition is composed of:
-      <itemizedlist>
-        <listitem><para>Literals (true if at least one string is not empty)</para></listitem>
-        <listitem><para>Comparisons: <code>a
-        <replaceable>operator</replaceable> b</code> where
-        <replaceable>operator</replaceable> is one of <code>=</code>,
-        <code>!=</code>, <code>&lt;</code>, <code>&gt;</code>,
-        <code>&lt;=</code>, <code>&gt;=</code>. The comparison is done
-        pairwise between each string in the left and the right arguments.
-        </para>
-        </listitem>
-        <listitem><para>Logical operations: <code>! a</code>, <code>a &amp;&amp;
-        b</code>, <code>a || b</code></para></listitem>
-        <listitem><para>Grouping: <code>( cond )</code></para></listitem>
-      </itemizedlist>
-      <programlisting>
-for var in list { statements }</programlisting>
-      Executes statements for each element in list, setting the variable
-      <varname>var</varname> to the element value.
-      <programlisting>
-while cond { statements }</programlisting>
-      Repeatedly execute statements while cond remains true upon entry.
-      <programlisting>
+x = [ helper 1 : 2 : 3 ] ;
+</programlisting>
+        This code calls the named rule with the specified arguments. When the
+        result of the call must be used inside some expression, you need to add
+        brackets around the call, like shown on the second line.
+<programlisting>
+if cond { statements } [ else { statements } ]
+</programlisting>
+        This is a regular if-statement. The condition is composed of:
+        <itemizedlist>
+          <listitem>
+            <para>
+              Literals (true if at least one string is not empty)
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Comparisons: <code>a <replaceable>operator</replaceable> b</code>
+              where <replaceable>operator</replaceable> is one of
+              <code>=</code>, <code>!=</code>, <code>&lt;</code>,
+              <code>&gt;</code>, <code>&lt;=</code> or <code>&gt;=</code>. The
+              comparison is done pairwise between each string in the left and
+              the right arguments.
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Logical operations: <code>! a</code>, <code>a &amp;&amp; b</code>,
+              <code>a || b</code>
+            </para>
+          </listitem>
+          <listitem>
+            <para>
+              Grouping: <code>( cond )</code>
+            </para>
+          </listitem>
+        </itemizedlist>
+<programlisting>
+for var in list { statements }
+</programlisting>
+        Executes statements for each element in list, setting the variable
+        <varname>var</varname> to the element value.
+<programlisting>
+while cond { statements }
+</programlisting>
+        Repeatedly execute statements while cond remains true upon entry.
+<programlisting>
 return values ;
-      </programlisting>This statement should be used only inside a
-      rule and assigns <code>values</code> to the return value of the
-      rule.
-      <warning><para>
-        The <code>return</code> statement does not exit the rule. For example:
-        <programlisting>
+</programlisting>
+        This statement should be used only inside a rule and assigns
+        <code>values</code> to the return value of the rule.
+        <warning>
+          <para>
+            The <code>return</code> statement does not exit the rule. For
+            example:
+<programlisting>
 rule test ( )
 {
-   if 1 = 1 {
+   if 1 = 1
+   {
       return "reasonable" ;
    }
    return "strange" ;
-}</programlisting> will return <literal>strange</literal>, not
-<literal>reasonable</literal>.
-      </para></warning>
-
-        <programlisting>
+}
+</programlisting>
+            will return <literal>strange</literal>, not
+            <literal>reasonable</literal>.
+          </para>
+        </warning>
+<programlisting>
 import <replaceable>module</replaceable> ;
-import <replaceable>module</replaceable> : <replaceable>rule</replaceable> ;</programlisting>
-      The first form imports the specified bjam module. All rules from
-      that module are made available using the qualified name:
-      <code><replaceable>module</replaceable>.<replaceable>rule</replaceable></code>.
-      The second form imports the specified rules only, and they can be called
-      using unqualified names.
+import <replaceable>module</replaceable> : <replaceable>rule</replaceable> ;
+</programlisting>
+        The first form imports the specified bjam module. All rules from that
+        module are made available using the qualified name: <code><replaceable>
+        module</replaceable>.<replaceable>rule</replaceable></code>. The second
+        form imports the specified rules only, and they can be called using
+        unqualified names.
       </para>
 
       <para id="bbv2.advanced.jam_language.actions">
         Sometimes, you'd need to specify the actual command lines to be used
-        when creating targets. In jam language, you use named actions to do this.
-        For example:
+        when creating targets. In jam language, you use named actions to do
+        this. For example:
 <programlisting>
 actions create-file-from-another
 {
     create-file-from-another $(&lt;) $(&gt;)
 }
 </programlisting>
-        This specifies a named action called
-        <literal>create-file-from-another</literal>. The text inside braces is
-        the command to invoke. The <literal>$(&lt;)</literal> variable will be
-        expanded to a list of generated files, and the
-        <literal>$(&gt;)</literal> variable will be expanded to a list of
-        source files.
+        This specifies a named action called <literal>
+        create-file-from-another</literal>. The text inside braces is the
+        command to invoke. The <literal>$(&lt;)</literal> variable will be
+        expanded to a list of generated files, and the <literal>$(&gt;)
+        </literal> variable will be expanded to a list of source files.
       </para>
 
-      <para>To flexibly adjust command line, you can define a rule with the same
-      name as the action, and taking three parameters -- targets, sources and
-      properties. For example:
+      <para>
+        To flexibly adjust the command line, you can define a rule with the same
+        name as the action and taking three parameters -- targets, sources and
+        properties. For example:
 <programlisting>
 rule create-file-from-another ( targets * : sources * : properties * )
 {
@@ -227,18 +279,18 @@ actions create-file-from-another
     create-file-from-another $(OPTIONS) $(&lt;) $(&gt;)
 }
 </programlisting>
-      In this example, the rule checks if certain build property is specified.
-      If so, it sets variable <varname>OPIONS</varname> that is then used inside
-      the action. Note that the variables set "on a target" will be visible only
-      inside actions building that target, not globally. Were they set globally,
-      using variable named <varname>OPTIONS</varname> in two unrelated actions
-      would be impossible.
+        In this example, the rule checks if certain build property is specified.
+        If so, it sets variable <varname>OPIONS</varname> that is then used
+        inside the action. Note that the variables set "on a target" will be
+        visible only inside actions building that target, not globally. Were
+        they set globally, using variable named <varname>OPTIONS</varname> in
+        two unrelated actions would be impossible.
       </para>
 
-      <para>More details can be found in Jam reference,
-      <xref linkend="jam.language.rules"/>
+      <para>
+        More details can be found in Jam reference, <xref
+        linkend="jam.language.rules"/>.
       </para>
-
     </section>
 
   <section id="bbv2.advanced.configuration">
@@ -265,7 +317,7 @@ using <replaceable>tool-name</replaceable> ;
       default settings. For example, it will use the <command>gcc</command>
       executable found in the <envar>PATH</envar>, or look in some known
       installation locations. In most cases, this strategy works automatically.
-      In case you have several versions of a compiler, it's installed in some
+      In case you have several versions of a compiler, it is installed in some
       unusual location, or you need to tweak its configuration, you'll need to
       pass additional parameters to the <functionname>using</functionname> rule.
       The parameters to <functionname>using</functionname> can be different for
@@ -310,39 +362,39 @@ bjam --help <replaceable>tool-name</replaceable>.init
 using msvc : 7.1 ;
 using gcc ;
 </programlisting>
-If the compiler can be found in the <envar>PATH</envar> but only by a
-nonstandard name, you can just supply that name:
+      If the compiler can be found in the <envar>PATH</envar> but only by a
+      nonstandard name, you can just supply that name:
 <programlisting>
 using gcc : : g++-3.2 ;
 </programlisting>
-Otherwise, it might be necessary to supply the complete path to the
-compiler executable:
+      Otherwise, it might be necessary to supply the complete path to the
+      compiler executable:
 <programlisting>
 using msvc : : "Z:/Programs/Microsoft Visual Studio/vc98/bin/cl" ;
 </programlisting>
-Some Boost.Build toolsets will use that path to take additional
-actions required before invoking the compiler, such as calling
-vendor-supplied scripts to set up its required environment variables.
-When compiler executables for C and C++ are different, path to the C++
-compiler executable must be specified. The &#x201C;invocation command&#x201D;
-can be any command allowed by the operating system. For example:
+      Some Boost.Build toolsets will use that path to take additional actions
+      required before invoking the compiler, such as calling vendor-supplied
+      scripts to set up its required environment variables. When compiler
+      executables for C and C++ are different, path to the C++ compiler
+      executable must be specified. The &#x201C;invocation command&#x201D; can
+      be any command allowed by the operating system. For example:
 <programlisting>
 using msvc : : echo Compiling &#x26;&#x26; foo/bar/baz/cl ;
 </programlisting>
-will work.
+      will work.
     </para>
 
-    <para>To configure several versions of a toolset, simply invoke
-    the <functionname>using</functionname> rule multiple times:
+    <para>
+      To configure several versions of a toolset, simply invoke the
+      <functionname>using</functionname> rule multiple times:
 <programlisting>
 using gcc : 3.3 ;
 using gcc : 3.4 : g++-3.4 ;
 using gcc : 3.2 : g++-3.2 ;
 </programlisting>
-        Note that in the first call to
-        <functionname>using</functionname>, the compiler found in the
-        <envar>PATH</envar> will be used, and there's no need to
-        explicitly specify the command.
+      Note that in the first call to <functionname>using</functionname>, the
+      compiler found in the <envar>PATH</envar> will be used, and there is no
+      need to explicitly specify the command.
     </para>
 
     <para>As shown above, both the <parameter
@@ -664,34 +716,31 @@ exe b : [ glob *.cpp ] ;  # all .cpp files in this directory are sources
 
         <para>
           <!-- use "project-id" here? -->
-          The list of sources can also refer to other main targets.
-          Targets in the same project can be referred to by name, while
-          targets in other projects must be qualified with a directory or a
-          symbolic project name. The directory/project name is separated from
-          the target name by a double forward slash. There's no special syntax to
-          distinguish the directory name from the project name&#x2014;the part before
-          the double slash is first looked up as project name, and then as directory
-          name. For example:
+          The list of sources can also refer to other main targets. Targets in
+          the same project can be referred to by name, while targets in other
+          projects must be qualified with a directory or a symbolic project
+          name. The directory/project name is separated from the target name by
+          a double forward slash. There is no special syntax to distinguish the
+          directory name from the project name&#x2014;the part before the double
+          slash is first looked up as project name, and then as directory name.
+          For example:
         </para>
-
 <programlisting>
 lib helper : helper.cpp ;
 exe a : a.cpp helper ;
-# Since all project ids start with slash, ".." is directory name.
+# Since all project ids start with slash, ".." is a directory name.
 exe b : b.cpp ..//utils ;
 exe c : c.cpp /boost/program_options//program_options ;
 </programlisting>
         <para>
-          The first exe uses the library defined in the same
-          project. The second one uses some target (most likely library)
-          defined by Jamfile one level higher. Finally, the third target
-          uses some <ulink url="http://boost.org">C++ Boost</ulink>
-          library, referring to it by absolute symbolic name. More
-          information about target references can be found in <xref
-          linkend="bbv2.tutorial.libs"/> and <xref
+          The first exe uses the library defined in the same project. The second
+          one uses some target (most likely a library) defined by a Jamfile one
+          level higher. Finally, the third target uses a <ulink url=
+          "http://boost.org">C++ Boost</ulink> library, referring to it using
+          its absolute symbolic name. More information about target references
+          can be found in <xref linkend="bbv2.tutorial.libs"/> and <xref
           linkend="bbv2.reference.ids"/>.
         </para>
-
       </section>
 
       <section id="bbv2.advanced.targets.requirements">

@@ -14,7 +14,8 @@ import project ;
 import property ;
 import scanner ;
 
-# The follwing import would create a circular dependency:
+
+# The following import would create a circular dependency:
 # project -> project-root -> builtin -> type -> targets -> project
 # import targets ;
 
@@ -48,15 +49,15 @@ rule register ( type : suffixes * : base-type ? )
     else
     {
         .types += $(type) ;
-        .bases.$(type) = $(base-type) ;
+        .base.$(type) = $(base-type) ;
         .derived.$(base-type) += $(type) ;
 
         if $(suffixes)-is-not-empty
         {
             # Specify mapping from suffixes to type.
             register-suffixes $(suffixes) : $(type) ;
-            # Generated targets of 'type' will use the first of 'suffixes'. This
-            # may be overriden.
+            # By default generated targets of 'type' will use the first of
+            #'suffixes'. This may be overriden.
             set-generated-target-suffix $(type) : : $(suffixes[1]) ;
         }
 
@@ -68,14 +69,18 @@ rule register ( type : suffixes * : base-type ? )
         feature.compose <base-target-type>$(type) : <base-target-type>$(base-type) ;
 
         # We used to declare the main target rule only when a 'main' parameter
-        # was specified. However, it's hard to decide that a type will *never*
-        # need a main target rule and so from time to time we needed to make yet
-        # another type 'main'. So now a main target rule is defined for each
-        # type.
+        # has been specified. However, it is hard to decide that a type will
+        # *never* need a main target rule and so from time to time we needed to
+        # make yet another type 'main'. So now a main target rule is defined for
+        # each type.
         main-rule-name = [ type-to-rule-name $(type) ] ;
         .main-target-type.$(main-rule-name) = $(type) ;
-
         IMPORT $(__name__) : main-target-rule : : $(main-rule-name) ;
+
+        # Adding a new derived type affects generator selection so we need to
+        # make the generator selection module update any of its cached
+        # information related to a new derived type being defined.
+        generators.update-cached-information-with-a-new-type $(type) ;
     }
 }
 
@@ -114,8 +119,8 @@ rule register-suffixes ( suffixes + : type )
         }
         else if $(.type.$(s)) != type
         {
-            errors.error Attempting to specify multiple types for suffix \"$(s)\"
-                : "Old type $(.type.$(s)), New type $(type)" ;
+            errors.error Attempting to specify multiple types for suffix
+                \"$(s)\" : "Old type $(.type.$(s)), New type $(type)" ;
         }
     }
 }
@@ -136,7 +141,7 @@ rule registered ( type )
 #
 rule validate ( type )
 {
-    if ! $(type) in $(.types)
+    if ! [ registered $(type) ]
     {
         errors.error "Unknown target type $(type)" ;
     }
@@ -147,10 +152,7 @@ rule validate ( type )
 #
 rule set-scanner ( type : scanner )
 {
-    if ! $(type) in $(.types)
-    {
-        error "Type" $(type) "is not declared" ;
-    }
+    validate $(type) ;
     .scanner.$(type) = $(scanner) ;
 }
 
@@ -166,6 +168,15 @@ rule get-scanner ( type : property-set )
 }
 
 
+# Returns a base type for the given type or nothing in case the given type is
+# not derived.
+#
+rule base ( type )
+{
+    return $(.base.$(type)) ;
+}
+
+
 # Returns the given type and all of its base types in order of their distance
 # from type.
 #
@@ -174,13 +185,16 @@ rule all-bases ( type )
     local result = $(type) ;
     while $(type)
     {
-        type = $(.bases.$(type)) ;
+        type = [ base $(type) ] ;
         result += $(type) ;
     }
     return $(result) ;
 }
 
 
+# Returns the given type and all of its derived types in order of their distance
+# from type.
+#
 rule all-derived ( type )
 {
     local result = $(type) ;
@@ -192,7 +206,8 @@ rule all-derived ( type )
 }
 
 
-# Returns true if 'type' has 'base' as its direct or indirect base.
+# Returns true if 'type' is equal to 'base' or has 'base' as its direct or
+# indirect base.
 #
 rule is-derived ( type base )
 {
@@ -202,19 +217,15 @@ rule is-derived ( type base )
     }
 }
 
-
 # Returns true if 'type' is either derived from or is equal to 'base'.
+#
+# TODO: It might be that is-derived and is-subtype were meant to be different
+# rules - one returning true for type = base and one not, but as currently
+# implemented they are actually the same. Clean this up.
 #
 rule is-subtype ( type base )
 {
-    if $(type) = $(base)
-    {
-        return true ;
-    }
-    else
-    {
-        return [ is-derived $(type) $(base) ] ;
-    }
+    return [ is-derived $(type) $(base) ] ;
 }
 
 
@@ -329,7 +340,7 @@ local rule generated-target-ps-real ( ps : type : properties * )
         {
             found = true ;
         }
-        type = $(.bases.$(type)) ;
+        type = $(.base.$(type)) ;
     }
     if $(result) = ""
     {
@@ -345,8 +356,8 @@ local rule generated-target-ps ( ps : type : property-set )
     local v = $($(key)) ;
     if ! $(v)
     {
-        v = [ generated-target-ps-real $(ps) : $(type)
-            : [ $(property-set).raw ] ] ;
+        v = [ generated-target-ps-real $(ps) : $(type) : [ $(property-set).raw ]
+            ] ;
         if ! $(v)
         {
             v = none ;
@@ -361,9 +372,9 @@ local rule generated-target-ps ( ps : type : property-set )
 }
 
 
-# Returns file type given it's name. If there are several dots in filename,
-# tries each suffix. E.g. for name of "file.so.1.2" suffixes "2", "1", and "so"
-# will be tried.
+# Returns file type given its name. If there are several dots in filename, tries
+# each suffix. E.g. for name of "file.so.1.2" suffixes "2", "1", and "so" will
+# be tried.
 #
 rule type ( filename )
 {
@@ -379,23 +390,32 @@ rule type ( filename )
 
 
 # Rule used to construct all main targets. Note that this rule gets imported
-# into the global namespace under different alias names and exactly what type of
-# target it is supposed to construct is read from the name of the alias rule
-# actually used to invoke it.
+# into the global namespace under different alias names and the exact target
+# type to construct is selected based on the alias used to actually invoke this
+# rule.
 #
-rule main-target-rule ( name : sources * : requirements * : default-build *
-    : usage-requirements * )
+rule main-target-rule ( name : sources * : requirements * : default-build * :
+    usage-requirements * )
 {
-    # First discover the required target type, which is equal to the rule name
-    # used to invoke us.
+    # First discover the required target type based on the exact alias used to
+    # invoke this rule.
     local bt = [ BACKTRACE 1 ] ;
     local rulename = $(bt[4]) ;
+    local target-type = [ type-from-rule-name $(rulename) ] ;
 
-    local project = [ project.current ] ;
-
-    # This is a circular module dependency so it must be imported here.
+    # This is a circular module dependency and so must be imported here.
     import targets ;
-    return [ targets.create-typed-target $(.main-target-type.$(rulename))
-        : $(project) : $(name) : $(sources) : $(requirements)
-        : $(default-build) : $(usage-requirements) ] ;
+
+    return [ targets.create-typed-target $(target-type) : [ project.current ] :
+        $(name) : $(sources) : $(requirements) : $(default-build) :
+        $(usage-requirements) ] ;
+}
+
+
+rule __test__ ( )
+{
+    import assert ;
+
+    # TODO: Add tests for all the is-derived, is-base & related type relation
+    # checking rules.
 }

@@ -1,18 +1,17 @@
 #!/usr/bin/python
 
-# Copyright 2003 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # This tests the "existing" and "updated" modifiers on actions.
 
 import BoostBuild
-from string import strip, replace
+import string
 
 t = BoostBuild.Tester(pass_toolset=0)
 
 code = """
-
 DEPENDS all : a ;
 ALWAYS a ;
 NOTFILE a ;
@@ -36,25 +35,17 @@ t.write("file.jam", code)
 t.write("a-1", "")
 
 t.run_build_system("-ffile.jam")
-t.fail_test(strip(t.read("list")) != "a-1")
+t.fail_test(string.strip(t.read("list")) != "a-1")
 t.rm(["a-3", "list"])
 
-code = replace(code, "existing", "updated")
+code = string.replace(code, "existing", "updated")
 t.write("file.jam", code)
 t.run_build_system("-ffile.jam")
-t.fail_test(strip(t.read("list")) != "a-3")
+t.fail_test(string.strip(t.read("list")) != "a-3")
 
-code = replace(code, "updated", "existing updated")
+code = string.replace(code, "updated", "existing updated")
 t.write("file.jam", code)
 t.run_build_system("-ffile.jam")
-t.fail_test(strip(t.read("list")) != "a-1 a-3")
-
-
-
-
-
-
-
-
+t.fail_test(string.strip(t.read("list")) != "a-1 a-3")
 
 t.cleanup()

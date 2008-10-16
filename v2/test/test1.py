@@ -8,8 +8,9 @@ import BoostBuild
 
 t = BoostBuild.Tester()
 
-t.write("test.jam","""
-actions unbuilt { } unbuilt all ;
+t.write("test.jam", """
+actions unbuilt { }
+unbuilt all ;
 ECHO "Hi" ;
 """)
 

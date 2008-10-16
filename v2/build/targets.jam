@@ -13,8 +13,8 @@
 # each Jamfile, and can be obtained by the 'target' rule in the Jamfile's module
 # (see project.jam).
 #
-# Project targets keep a list of 'main-target' instances. A main target is
-# what the user explicitly defines in a Jamfile. It is possible to have several
+# Project targets keep a list of 'main-target' instances. A main target is what
+# the user explicitly defines in a Jamfile. It is possible to have several
 # definitions for a main target, for example to have different lists of sources
 # for different platforms. So, main targets keep a list of alternatives.
 #
@@ -89,8 +89,8 @@ class abstract-target
     import "class" ;
     import errors ;
 
-    rule __init__ ( name      # name of the target in Jamfile
-        : project-target      # the project target to which this one belongs
+    rule __init__ ( name  # Name of the target in Jamfile.
+        : project-target  # The project target to which this one belongs.
     )
     {
         # Note: it might seem that we don't need either name or project at all.
@@ -115,7 +115,7 @@ class abstract-target
         return $(self.project) ;
     }
 
-    # Return the location where the target was declared
+    # Return the location where the target was declared.
     rule location ( )
     {
         return $(self.location) ;
@@ -232,10 +232,8 @@ class project-target : abstract-target
             self.build-dir = [ get build-dir ] ;
             if ! $(self.build-dir)
             {
-                self.build-dir = [ path.join
-                    [ $(self.project).get location ]
-                      bin
-                ] ;
+                self.build-dir = [ path.join [ $(self.project).get location ]
+                    bin ] ;
             }
         }
         return $(self.build-dir) ;
@@ -300,8 +298,8 @@ class project-target : abstract-target
     #
     rule mark-target-as-explicit ( target-name )
     {
-        # Record the name of the target, not instance, since this
-        # rule is called before main target instaces are created.
+        # Record the name of the target, not instance, since this rule is called
+        # before main target instances are created.
         self.explicit-targets += $(target-name) ;
     }
 
@@ -311,13 +309,13 @@ class project-target : abstract-target
     {
         if $(self.built-main-targets)
         {
-            errors.error "add-alternative called when main targets are already created."
-                : "in project" [ full-name ] ;
+            errors.error add-alternative called when main targets are already
+                created. : in project [ full-name ] ;
         }
         self.alternatives += $(target-instance) ;
     }
 
-    # Returns a 'main-target' class instance corresponding to the 'name'.
+    # Returns a 'main-target' class instance corresponding to 'name'.
     #
     rule main-target ( name )
     {
@@ -325,11 +323,10 @@ class project-target : abstract-target
         {
             build-main-targets ;
         }
-
         return $(self.main-target.$(name)) ;
     }
 
-    # Tells if a main target with the specified name exists.
+    # Returns whether a main target with the specified name exists.
     #
     rule has-main-target ( name )
     {
@@ -344,13 +341,12 @@ class project-target : abstract-target
         }
     }
 
-    # Find and return the target with the specified id, treated relative to
-    # self.
+    # Worker function for the find rule not implementing any caching and simply
+    # returning nothing in case the target can not be found.
     #
     rule find-really ( id )
     {
         local result ;
-        local project = $(self.project) ;
         local current-location = [ get location ] ;
 
         local split = [ MATCH (.*)//(.*) : $(id) ] ;
@@ -360,8 +356,8 @@ class project-target : abstract-target
         local extra-error-message ;
         if $(project-part)
         {
-            # There's explicit project part in id. Looks up the project and
-            #  passes the request to it.
+            # There is an explicitly specified project part in id. Looks up the
+            # project and passes the request to it.
             local pm = [ project.find $(project-part) : $(current-location) ] ;
             if $(pm)
             {
@@ -370,37 +366,44 @@ class project-target : abstract-target
             }
             else
             {
-                extra-error-message = "error: could not find project '$(project-part)'" ;
+                # TODO: This extra error message will not get displayed most
+                # likely due to some buggy refactoring. Refactor the code so the
+                # message gets diplayed again.
+                extra-error-message = error: could not find project
+                    '$(project-part)' ;
             }
         }
         else
         {
             # Interpret target-name as name of main target. Need to do this
-            # before checking for file. Consider this:
+            # before checking for file. Consider the following scenario with a
+            # toolset not modifying its executable's names, e.g. gcc on
+            # Unix-like platforms:
             #
             #  exe test : test.cpp ;
             #  install s : test : <location>. ;
             #
-            # After first build we'll have target 'test' in Jamfile and file
-            # 'test' on the disk. We need target to override the file.
+            # After the first build we would have a target named 'test' in the
+            # Jamfile and a file named 'test' on the disk. We need the target to
+            # override the file.
             result = [ main-target $(id) ] ;
-
+            
+            # Interpret id as an existing file reference.
             if ! $(result)
             {
-                result = [ new file-reference [ path.make $(id) ] : $(project) ] ;
-
+                result = [ new file-reference [ path.make $(id) ] :
+                    $(self.project) ] ;
                 if ! [ $(result).exists ]
                 {
-                    # File actually does not exist. Reset 'target' so that an
-                    # error is issued.
                     result = ;
                 }
             }
 
-            # Interpret id as project-id
+            # Interpret id as project-id.
             if ! $(result)
             {
-                local project-module = [ project.find $(id) : $(current-location) ] ;
+                local project-module = [ project.find $(id) :
+                    $(current-location) ] ;
                 if $(project-module)
                 {
                     result = [ project.target $(project-module) ] ;
@@ -411,6 +414,11 @@ class project-target : abstract-target
         return $(result) ;
     }
 
+    # Find and return the target with the specified id, treated relative to
+    # self. Id may specify either a target or a file name with the target taking
+    # priority. May report an error or return nothing if the target is not found
+    # depending on the 'no-error' parameter.
+    #
     rule find ( id : no-error ? )
     {
         local v = $(.id.$(id)) ;
@@ -490,7 +498,7 @@ class project-target : abstract-target
             self.constants += $(name) ;
         }
         self.constant.$(name) = $(value) ;
-        # Inject the constant in the scope of project-root module.
+        # Inject the constant in the scope of the Jamroot module.
         modules.poke $(self.project-module) : $(name) : $(value) ;
     }
 
@@ -771,7 +779,7 @@ class main-target : abstract-target
 }
 
 
-# Abstract target which refers to a source file. This is an artificial entity
+# Abstract target refering to a source file. This is an artificial entity
 # allowing sources to a target to be represented using a list of abstract target
 # instances.
 #
@@ -788,11 +796,8 @@ class file-reference : abstract-target
 
     rule generate ( properties )
     {
-        location ;
-        return [ property-set.empty ]
-               [ virtual-target.from-file $(self.name)
-                                         : $(self.file-location)
-                                         : $(self.project) ] ;
+        return [ property-set.empty ] [ virtual-target.from-file $(self.name) :
+            [ location ] : $(self.project) ] ;
     }
 
     # Returns true if the referred file really exists.
@@ -909,7 +914,7 @@ rule common-properties ( build-request requirements )
 
 # Given a 'context' -- a set of already present properties, and 'requirements',
 # decide which extra properties should be applied to 'context'. For conditional
-# requirements, this means evaluating condition. For indirect conditional
+# requirements, this means evaluating the condition. For indirect conditional
 # requirements, this means calling a rule. Ordinary requirements are always
 # applied.
 #
@@ -945,7 +950,7 @@ rule evaluate-requirements ( requirements : context : what )
 
     local conditionals = [ $(requirements).conditional ] ;
     # The 'count' variable has one element for each conditional feature and for
-    # each occurence of '<indirect-conditional>' feature. It is used as a loop
+    # each occurrence of '<indirect-conditional>' feature. It is used as a loop
     # counter: for each iteration of the loop before we remove one element and
     # the property set should stabilize before we are done. It is assumed that
     # #conditionals iterations should be enough for properties to propagate
@@ -959,9 +964,10 @@ rule evaluate-requirements ( requirements : context : what )
     local current = $(raw) ;
 
     # It is assumed that ordinary conditional requirements can not add
-    # <indirect-conditional> properties, and that rules referred to by
-    # <indirect-conditional> properties can not add new <indirect-conditional>
-    # properties. So the list of indirect conditionals does not change.
+    # <conditional> properties (a.k.a. indirect conditional properties), and
+    # that rules referred to by <conditional> properties can not add new
+    # <conditional> properties. So the list of indirect conditionals does not
+    # change.
     local indirect = [ $(requirements).get <conditional> ] ;
     indirect = [ MATCH @(.*) : $(indirect) ] ;
 
@@ -980,7 +986,7 @@ rule evaluate-requirements ( requirements : context : what )
 
         if $(e) = $(added-requirements)
         {
-            # If we got the same result, we've found final properties.
+            # If we got the same result, we have found the final properties.
             count = ;
             ok = true ;
         }
@@ -1009,7 +1015,7 @@ rule evaluate-requirements ( requirements : context : what )
     }
     else
     {
-        errors.error "Invalid value of the 'what' parameter" ;
+        errors.error "Invalid value of the 'what' parameter." ;
     }
 }
 
@@ -1074,7 +1080,8 @@ class basic-target : abstract-target
 
         if $(sources:G)
         {
-            errors.user-error "properties found in the 'sources' parameter for" [ full-name ] ;
+            errors.user-error properties found in the 'sources' parameter for
+                [ full-name ] ;
         }
     }
 
@@ -1198,7 +1205,8 @@ class basic-target : abstract-target
                 ECHO [ targets.indent ] "Common properties: " [ $(rproperties).raw ] ;
             }
 
-            if $(rproperties[1]) != "@error" && [ $(rproperties).get <build> ] != no
+            if ( $(rproperties[1]) != "@error" ) && ( [ $(rproperties).get
+                <build> ] != no )
             {
                 local source-targets ;
                 local properties = [ $(rproperties).non-dependency ] ;
@@ -1401,11 +1409,11 @@ class typed-target : basic-target
 {
     import generators ;
 
-    rule __init__ ( name : project : type : sources * : requirements *
-        : default-build * : usage-requirements * )
+    rule __init__ ( name : project : type : sources * : requirements * :
+         default-build * : usage-requirements * )
     {
-        basic-target.__init__ $(name) : $(project) : $(sources)
-            : $(requirements) : $(default-build) : $(usage-requirements) ;
+        basic-target.__init__ $(name) : $(project) : $(sources) :
+            $(requirements) : $(default-build) : $(usage-requirements) ;
 
         self.type = $(type) ;
     }
@@ -1508,10 +1516,10 @@ rule main-target-usage-requirements (
 {
     local project-usage-requirements = [ $(project).get usage-requirements ] ;
 
-    # We don't use 'refine-from-user-input' because:
-    # - I'm not sure if removing of parent's usage requirements makes sense
-    # - refining of usage requirements is not needed, since usage requirements
-    #   are always free.
+    # We do not use 'refine-from-user-input' because:
+    # - I am not sure if removing parent's usage requirements makes sense
+    # - refining usage requirements is not needed, since usage requirements are
+    #   always free.
     local usage-requirements = [ property-set.create-from-user-input
         $(specification)
         : [ $(project).project-module ] [ $(project).get location ] ] ;

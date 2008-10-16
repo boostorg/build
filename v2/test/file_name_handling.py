@@ -33,10 +33,9 @@ import time
 # prepare_file()
 # --------------
 #
-#
 ################################################################################
 
-def prepare_file(tester, target_name, age_in_seconds = 0):
+def prepare_file(tester, target_name, age_in_seconds=0):
     """Prepares a new file with the given name, optionally setting its last
     access and modification timestamps to the given number of seconds in the
     history.
@@ -70,7 +69,7 @@ def test_simple_file_names():
     t.write("testScript.jam", """
 actions create-file
 {
-    echo Modified file content ($(1:E="")).> "$(1:E="")"
+    echo "Modified file content ($(1:E=""))."> "$(1:E="")"
 }
 
 DEPENDS all : standaloneTarget.txt ;

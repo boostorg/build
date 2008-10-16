@@ -6,17 +6,16 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #         http://www.boost.org/LICENSE_1_0.txt)
 
-import os, sys, string
+import os
+import sys
+import string
 import BoostBuild
-from BoostBuild import get_toolset
 
-# clear environment for testing
+
+# Clear environment for testing.
 #
-for s in (
-    'BOOST_ROOT','BOOST_BUILD_PATH','JAM_TOOLSET','BCCROOT',
-    'MSVCDir','MSVC','MSVCNT','MINGW','watcom'
-    ):
-
+for s in ('BOOST_ROOT', 'BOOST_BUILD_PATH', 'JAM_TOOLSET', 'BCCROOT', 'MSVCDir',
+    'MSVC', 'MSVCNT', 'MINGW', 'watcom' ):
     try:
         del os.environ[s]
     except:
@@ -24,12 +23,13 @@ for s in (
 
 BoostBuild.set_defer_annotations(1)
 
+
 def run_tests(critical_tests, other_tests):
     """Runs first critical tests and then other_tests.
 
        Stops on first error, and write the name of failed test to
-       test_results.txt. Critical tests are run in the specified order,
-       other tests are run starting with the one that failed the last time.
+       test_results.txt. Critical tests are run in the specified order, other
+       tests are run starting with the one that failed the last time.
     """
     last_failed = last_failed_test()
     other_tests = reorder_tests(other_tests, last_failed)
@@ -50,17 +50,16 @@ def run_tests(critical_tests, other_tests):
                 f.write(i)
                 f.close()
             failures_count = failures_count + 1
-            # Restore the current directory, which might be changed by the
-            # test
+            # Restore the current directory, which might be changed by the test.
             os.chdir(invocation_dir)
             BoostBuild.flush_annotations();
             continue
         print "PASSED"
         BoostBuild.flush_annotations();
         pass_count = pass_count + 1
-        sys.stdout.flush()  # makes testing under emacs more entertaining.
+        sys.stdout.flush()  # Makes testing under emacs more entertaining.
 
-    # Erase the file on success
+    # Erase the file on success.
     if failures_count == 0:
         open('test_results.txt', 'w')
 
@@ -80,6 +79,7 @@ def last_failed_test():
     except:
         return None
 
+
 def reorder_tests(tests, first_test):
     try:
         n = tests.index(first_test)
@@ -93,106 +93,110 @@ critical_tests = ["unit_tests", "module_actions", "startup_v1", "startup_v2"]
 critical_tests += ["core_d12", "core_typecheck", "core_delete_module",
                    "core_varnames", "core_import_module"]
 
-tests = [ "rebuilds",
-          "timedata",
-          "project_test3",
-          "project_test4",
-          "generators_test",
-          "dependency_test",
-          "path_features",
-          "relative_sources",
-          "no_type",
+tests = [ "absolute_sources",
+          "alias",
+          "alternatives",
+          "bad_dirname",
+          "build_dir",
+          "build_file",
+          "build_no",
+          "c_file",
           "chain",
-          "default_build",
-          "default_toolset",
-          "use_requirements",
+          "clean",
+          "composite",
           "conditionals",
           "conditionals2",
           "conditionals3",
           "conditionals_multiple",
           "configuration",
-          "indirect_conditional",
-          "stage",
-          "prebuilt",
-          "project_dependencies",
-          "build_dir",
-          "searched_lib",
-          "make_rule",
-          "alias",
-          "alternatives",
-          "default_features",
-          "print",
-          "ndebug",
-          "explicit",
-          "absolute_sources",
-          "dependency_property",
           "custom_generator",
-          "bad_dirname",
-          "c_file",
-          "inline",
-          "property_expansion",
-          "loop",
-          "tag",
-          "suffix",
-          "inherit_toolset",
-          "skipping",
-          "project_glob",
-          "project_root_constants",
-          "double_loading",
-          "dll_path",
-          "regression",
-          "composite",
-          "library_chain",
-          "unit_test",
-          "standalone",
-          "expansion",
-          "wrapper",
-          "duplicate",
-          "library_property",
-          "load_order",
-          "wrong_project",
-          "using",
-          "source_locations",
-          "out_of_tree",
-          "notfile",
-          "project_root_rule",
-          "resolution",
-          "build_file",
-          "build_no",
+          "default_build",
+          "default_features",
+          "default_toolset",
+          "dependency_property",
+          "dependency_test",
           "disambiguation",
-          "clean",
-          "lib_source_property",
-          "implicit_dependency",
+          "dll_path",
+          "double_loading",
+          "duplicate",
           "example_libraries",
           "example_make",
-          "remove_requirement",
-          "free_features_request",
+          "expansion",
+          "explicit",
           "file_name_handling",
-          "sort_rule"
+          "free_features_request",
+          "generator_selection",
+          "generators_test",
+          "implicit_dependency",
+          "indirect_conditional",
+          "inherit_toolset",
+          "inherited_dependency",
+          "inline",
+          "lib_source_property",
+          "library_chain",
+          "library_property",
+          "load_order",
+          "loop",
+          "make_rule",
+          "ndebug",
+          "no_type",
+          "notfile",
+          "ordered_include",
+          "out_of_tree",
+          "path_features",
+          "prebuilt",
+          "print",
+          "project_dependencies",
+          "project_glob",
+          "project_root_constants",
+          "project_root_rule",
+          "project_test3",
+          "project_test4",
+          "property_expansion",
+          "rebuilds",
+          "regression",
+          "relative_sources",
+          "remove_requirement",
+          "resolution",
+          "searched_lib",
+          "skipping",
+          "sort_rule",
+          "source_locations",
+          "stage",
+          "standalone",
+          "suffix",
+          "tag",
+          "test_result_dumping",
+          "testing_support",
+          "timedata",
+          "unit_test",
+          "use_requirements",
+          "using",
+          "wrapper",
+          "wrong_project"
           ]
 
 if os.name == 'posix':
     tests.append("symlink")
-    # On windows, library order is not important, so skip this test
-    # Besides, it fails ;-)
-    # Further, the test relies on the fact that on Linux, one
-    # can build a shared library with unresolved symbols. This is
-    # not true on Windows (even with cygwin gcc).
+    # On windows, library order is not important, so skip this test. Besides, it
+    # fails ;-). Further, the test relies on the fact that on Linux, one can
+    # build a shared library with unresolved symbols. This is not true on
+    # Windows (even with cygwin gcc).
     if string.find(os.uname()[0], "CYGWIN") == -1:
         tests.append("library_order")
 
-if string.find(get_toolset(), 'gcc') == 0:
+if string.find(BoostBuild.get_toolset(), 'gcc') == 0:
     tests.append("gcc_runtime")
 
-if string.find(get_toolset(), 'gcc') == 0 or string.find(get_toolset(), 'msvc') == 0:
+if ( string.find(BoostBuild.get_toolset(), 'gcc') == 0 )or  \
+    ( string.find(BoostBuild.get_toolset(), 'msvc') == 0 ):
     tests.append("pch")
 
 if "--extras" in sys.argv:
     tests.append("boostbook")
     tests.append("qt4")
     tests.append("example_qt4")
-    # Requires ./whatever.py to work, so is
-    # not guaranted to work everywhere.
+    # Requires ./whatever.py to work, so is not guaranted to work everywhere.
     tests.append("example_customization")
     # Requires gettext tools.
     tests.append("example_gettext")

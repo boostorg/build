@@ -5,7 +5,7 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # This file is part of Boost Build version 2. You can think of it as forming the
-# the main() routine. It is invoked by the bootstrapping code in bootstrap.jam.
+# main() routine. It is invoked by the bootstrapping code in bootstrap.jam.
 
 import build-request ;
 import builtin ;
@@ -22,6 +22,7 @@ import regex ;
 import sequence ;
 import targets ;
 import toolset ;
+import utility ;
 import version ;
 import virtual-target ;
 
@@ -90,8 +91,8 @@ rule command-line-free-features ( )
 
 
 # Returns the location of the build system. The primary use case is building
-# Boost where it's sometimes needed to get the location of other components
-# (e.g. BoostBook files) and it's convenient to use locations relative to the
+# Boost where it is sometimes needed to get the location of other components
+# (e.g. BoostBook files) and it is convenient to use locations relative to the
 # Boost Build path.
 #
 rule location ( )
@@ -138,7 +139,7 @@ local rule actual-clean-targets ( )
     local targets-to-clean ;
     for local t in $(.results-of-main-targets)
     {
-        # Don't include roots or sources.
+        # Do not include roots or sources.
         targets-to-clean += [ virtual-target.traverse $(t) ] ;
     }
     targets-to-clean = [ sequence.unique $(targets-to-clean) ] ;
@@ -169,8 +170,8 @@ local rule actual-clean-targets ( )
 
 
 # Given a target id, try to find and return the corresponding target. This is
-# only invoked when there's no Jamfile in ".". This code somewhat duplicates
-# code in project-target.find but we can't reuse that code without a
+# only invoked when there is no Jamfile in ".". This code somewhat duplicates
+# code in project-target.find but we can not reuse that code without a
 # project-targets instance.
 #
 local rule find-target ( target-id )
@@ -305,7 +306,7 @@ local rule load-configuration-files
     if $(uq)
     {
         test-config = $(uq) ;
-    }    
+    }
     if $(test-config)
     {
         local where =
@@ -350,6 +351,9 @@ local rule load-configuration-files
         local user-config = [ MATCH ^--user-config=(.*)$ : $(.argv) ] ;
         user-config = $(user-config[-1]) ;
         user-config ?= [ os.environ BOOST_BUILD_USER_CONFIG ] ;
+        # Special handling for the case when the OS does not strip the quotes
+        # around the file name, as is the case when using Cygwin bash.
+        user-config = [ utility.unquote $(user-config) ] ;
         local explicitly-requested = $(user-config) ;
         user-config ?= user-config.jam ;
 
@@ -366,7 +370,8 @@ local rule load-configuration-files
 
                 if $(.debug-config)
                 {
-                    ECHO "notice: Loading explicitly specified user configuration file:" ;
+                    ECHO "notice: Loading explicitly specified user"
+                        "configuration file:" ;
                     ECHO "    $(user-config)" ;
                 }
 
@@ -407,14 +412,14 @@ local rule process-explicit-toolset-requests
 
         if $(.debug-config)
         {
-            ECHO "notice: [cmdline-cfg] Detected command-line request for"
+            ECHO notice: [cmdline-cfg] Detected command-line request for
                 $(toolset-version): "toolset=" $(toolset) "version="
                 $(version) ;
         }
 
-        # If the toolset isn't known, configure it now.
+        # If the toolset is not known, configure it now.
         local known ;
-        if $(toolset) in [ feature.values <toolset>  ]
+        if $(toolset) in [ feature.values <toolset> ]
         {
             known = true ;
         }
@@ -423,6 +428,14 @@ local rule process-explicit-toolset-requests
         {
             known = ;
         }
+        # TODO: we should do 'using $(toolset)' in case no version has been
+        # specified and there are no versions defined for the given toolset to
+        # allow the toolset to configure its default version. For this we need
+        # to know how to detect whether a given toolset has any versions
+        # defined. An alternative would be to do this whenever version is not
+        # specified but that would require that toolsets correctly handle the
+        # case when their default version is configured multiple times which
+        # should be checked for all existing toolsets first.
 
         if ! $(known)
         {
@@ -443,13 +456,14 @@ local rule process-explicit-toolset-requests
         }
 
         # Make sure we get an appropriate property into the build request in
-        # case toolset was specified using the "--toolset=..." command-line
+        # case toolset has been specified using the "--toolset=..." command-line
         # option form.
         if ! $(t) in $(.argv) && ! $(t) in $(feature-toolsets)
         {
             if $(.debug-config)
             {
-                ECHO notice: [cmdline-cfg] adding toolset=$(t) "to build request." ;
+                ECHO notice: [cmdline-cfg] adding toolset=$(t) to the build
+                    request. ;
             }
             extra-properties += toolset=$(t) ;
         }
@@ -546,7 +560,7 @@ local rule should-clean-project ( project )
         ECHO "warning: No toolsets are configured." ;
         ECHO "warning: Configuring default toolset" \"$(default-toolset)\". ;
         ECHO "warning: If the default is wrong, your build may not work correctly." ;
-        ECHO "warning: Use the \"--toolset=xxxxx\" option to override our guess." ;
+        ECHO "warning: Use the \"toolset=xxxxx\" option to override our guess." ;
         ECHO "warning: For more configuration options, please consult" ;
         ECHO "warning: http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html" ;
 
@@ -615,7 +629,7 @@ local rule should-clean-project ( project )
     local virtual-targets ;
     local actual-targets ;
 
-    
+
     # Process each target specified on the command-line and convert it into
     # internal Boost Build target objects. Detect special clean target. If no
     # main Boost Build targets were explictly requested use the current project
@@ -641,7 +655,7 @@ local rule should-clean-project ( project )
             if ! $(t)
             {
                 ECHO "notice: could not find main target" $(id) ;
-                ECHO "notice: assuming it's a name of file to create." ;
+                ECHO "notice: assuming it is a name of file to create." ;
                 explicitly-requested-files += $(id) ;
             }
             else

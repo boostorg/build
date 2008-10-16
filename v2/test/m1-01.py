@@ -1,19 +1,18 @@
 #!/usr/bin/python
 
-# Copyright 2002 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2002 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Test the very basic 'make' functionality.
 
-from BoostBuild import Tester, List
+import BoostBuild
 
-t = Tester()
+t = BoostBuild.Tester()
+
 t.set_tree("test1")
 
-
-# Check that we can build something
-
+# Check that we can build something.
 t.run_build_system("-sTOOLSET=yfc")
 
 t.expect_addition("bin/a.obj/yfc/debug/runtime-link-dynamic/a.obj")
@@ -33,18 +32,16 @@ t.fail(t.read("bin/a/yfc/debug/runtime-link-dynamic/a") !=\
 a.cpp
 """)
 
-# Check that we have vanilla target names available
-
+# Check that we have vanilla target names available.
 t.touch("a.cpp")
 t.run_build_system("-sTOOLSET a.obj")
 t.expect_touch("bin/a.obj/yfc/debug/runtime-link-dynamic/a.obj")
 t.expect_no_modification("bin/a/yfc/debug/runtime-link-dynamic/a")
 
 
-# Check that if build request cannot be completely matches, a warning is
-# issued and subvariant with link-compatible properties is used
-
-t.write("Jamfile", t.read("Jamfile2"))
+# Check that if a build request cannot be completely matches, a warning is
+# issued and a subvariant with link-compatible properties is used.
+t.write("jamfile.jam", t.read("jamfile2.jam"))
 stdout="""Warning: cannot exactly satisfy request for ./a with properties
     <optimization>off <rtti>on <runtime-link>dynamic <toolset>yfc <variant>debug
 Using
@@ -54,7 +51,7 @@ instead.
 t.run_build_system("-sTOOLSET=yfc", stdout=stdout)
 
 # Check that conflicting link-incompatible requirements prevent building.
-t.write("Jamfile", t.read("Jamfile3"))
+t.write("jamfile.jam", t.read("jamfile3.jam"))
 stdout="""Warning: cannot satisfy request for ./a with properties
     <optimization>off <rtti>on <runtime-link>dynamic <toolset>yfc <variant>debug
 Nothing will be built.
@@ -62,4 +59,3 @@ Nothing will be built.
 t.run_build_system("-sTOOLSET=yfc", stdout=stdout, status=1)
 
 t.pass_test()
-

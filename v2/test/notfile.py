@@ -1,22 +1,20 @@
 #!/usr/bin/python
 
-#  Copyright (C) Vladimir Prus 2005.
-#  Distributed under the Boost Software License, Version 1.0. (See
-#  accompanying file LICENSE_1_0.txt or copy at
-#  http://www.boost.org/LICENSE_1_0.txt)
+# Copyright (C) Vladimir Prus 2005.
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
-#  Basic tests for the 'notfile' rule.
+# Basic tests for the 'notfile' rule.
 
-from BoostBuild import Tester, List
+import BoostBuild
 import string
 import os
-import fnmatch
 
-t = Tester()
+t = BoostBuild.Tester()
 
-t.write("Jamroot", """ 
+t.write("jamroot.jam", """ 
 import notfile ;
-
 notfile say : "echo hi" ;
 
 exe hello : hello.cpp ;
@@ -26,19 +24,11 @@ actions valgrind
 {
    valgrind $(>) 
 }
-
 """)
 
 t.write("hello.cpp", """
-
 #include <iostream>
-
-int main()
-{
-    std::cout << "Hello!\\n";
-    return 1;
-}
-
+int main() { std::cout << "Hello!\\n"; }
 """)
 
 
@@ -51,6 +41,4 @@ name = apply(os.path.join, string.split(name, "/"));
 c = "valgrind " + name
 t.expect_output_line(c)
 
-
 t.cleanup()
-

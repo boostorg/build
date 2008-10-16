@@ -420,41 +420,55 @@ path-constant DATA : data/a.txt ;
 
         <listitem>
           <para>
-            A feature that combines several low-level features, making
-            it easy to request common build configurations.
+            A feature combining several low-level features, making it easy to
+            request common build configurations.
           </para>
 
-          <para><emphasis role="bold">Allowed values:</emphasis> <literal>debug</literal>, <literal>release</literal>,
-            <literal>profile</literal>.</para>
+          <para>
+            <emphasis role="bold">Allowed values:</emphasis>
+            <literal>debug</literal>, <literal>release</literal>,
+            <literal>profile</literal>.
+          </para>
 
-          <para>The value <literal>debug</literal> expands to</para>
+          <para>
+            The value <literal>debug</literal> expands to
+          </para>
 
 <programlisting>
 &lt;optimization&gt;off &lt;debug-symbols&gt;on &lt;inlining&gt;off &lt;runtime-debugging&gt;on
 </programlisting>
 
-          <para>The value <literal>release</literal> expands to</para>
+          <para>
+            The value <literal>release</literal> expands to
+          </para>
 
 <programlisting>
 &lt;optimization&gt;speed &lt;debug-symbols&gt;off &lt;inlining&gt;full &lt;runtime-debugging&gt;off
 </programlisting>
 
-          <para>The value <literal>profile</literal> expands to the same as
-          <literal>release</literal>, plus:</para>
+          <para>
+            The value <literal>profile</literal> expands to the same as
+            <literal>release</literal>, plus:
+          </para>
 
 <programlisting>
 &lt;profiling&gt;on &lt;debug-symbols&gt;on
 </programlisting>
 
-          <para>User can define his own build variants using the <code>variant</code> rule from the <code>common</code>
-          module.</para>
-
-          <para><emphasis role="bold">Notee:</emphasis> Runtime
-          debugging is on in debug builds to suit the expectations of
-          people used to various IDEs.
-          <!-- Define "runtime debugging." Why will those people expect it to be on in debug builds? -->
+          <para>
+            Users can define their own build variants using the
+            <code>variant</code> rule from the <code>common</code> module.
           </para>
-        </listitem></varlistentry>
+
+          <para>
+            <emphasis role="bold">Note:</emphasis> Runtime debugging is on in
+            debug builds to suit the expectations of people used to various
+            IDEs.
+            <!-- Define "runtime debugging". Why will those people expect it to
+            be on in debug builds? -->
+          </para>
+        </listitem>
+      </varlistentry>
 
       <varlistentry id="bbv2.advanced.builtins.features.link">
         <term><literal>link</literal></term>
@@ -465,10 +479,11 @@ path-constant DATA : data/a.txt ;
             <literal>static</literal></para>
 
           <simpara>
-            A feature that controls how libraries are built.
+            A feature controling how libraries are built.
           </simpara>
 
-        </listitem></varlistentry>
+        </listitem>
+      </varlistentry>
 
       <varlistentry id="bbv2.advanced.builtins.features.runtime-link">
         <indexterm><primary>runtime linking</primary></indexterm>
@@ -720,7 +735,10 @@ path-constant DATA : data/a.txt ;
       <varlistentry><term><literal>instruction-set</literal></term>
         <indexterm><primary>instruction-set</primary></indexterm>
         <listitem>
-          <para>Allowed values for this feature depend on used toolset.</para>
+          <para>
+            <emphasis role="bold">Allowed values:</emphasis> depend on the used
+            toolset.
+          </para>
 
           <para>The <literal>instruction-set</literal> specifies for which
           specific instruction set the code should be generated.  The
@@ -748,6 +766,31 @@ path-constant DATA : data/a.txt ;
           <literal>instruction-set</literal>
           features. Please see <xref linkend="bbv2.reference.tools.compilers"/>
           for details.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry><term><literal>c++-template-depth</literal></term>
+        <listitem>
+          <para>
+            <emphasis role="bold">Allowed values:</emphasis> Any positive
+            integer.
+          </para>
+
+          <para>
+            This feature allows configuring a C++ compiler with the maximal
+            template instantiation depth parameter. Specific toolsets may or may
+            not provide support for this feature depending on whether their
+            compilers provide a corresponding command-line option.
+          </para>
+
+          <para>
+            <emphasis role="bold">Note:</emphasis> Due to some internal details
+            in the current Boost Build implementation it is not possible to have
+            features whose valid values are all positive integer. As a
+            workaround a large set of allowed values has been defined for this
+            feature and, if a different one is needed, user can easily add it by
+            calling the feature.extend rule.
+          </para>
         </listitem>
       </varlistentry>
 
@@ -970,9 +1013,9 @@ using msvc : &toolset_ops; ;
             </varlistentry>
 
             <varlistentry>
-              <term><literal>setup-amd64></literal></term>
-              <term><literal>setup-i386></literal></term>
-              <term><literal>setup-ia64></literal></term>
+              <term><literal>setup-amd64</literal></term>
+              <term><literal>setup-i386</literal></term>
+              <term><literal>setup-ia64</literal></term>
 
               <listitem><para>The filename of the target platform specific
               environment setup script to run before invoking any of the tools

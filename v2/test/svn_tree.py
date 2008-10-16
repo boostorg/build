@@ -16,15 +16,14 @@
 #
 ######################################################################
 
-# This file was modified by Vladimir Prus to store modification times in
-# tree nodes.
+# This file was modified by Vladimir Prus to store modification times in tree
+# nodes.
 
 import re
 import string
 import os.path
 import os
 import stat
-
 
 
 #========================================================================
@@ -498,7 +497,7 @@ def compare_trees(a, b,
 def dump_tree(n,indent=""):
   "Print out a nice representation of the tree's structure."
 
-  # Code partially stolen from Dave Beazley
+  # Code partially stolen from Dave Beazley.
   if n.children is None:
     tmp_children = []
   else:
@@ -509,12 +508,11 @@ def dump_tree(n,indent=""):
   else:
     print "%s%s" % (indent, n.name)
 
-  indent = indent.replace("-"," ")
-  indent = indent.replace("+"," ")
+  indent = indent.replace("-", " ")
+  indent = indent.replace("+", " ")
   for i in range(len(tmp_children)):
     c = tmp_children[i]
-    if i == len(tmp_children
-                )-1:
+    if i == len(tmp_children) - 1:
       dump_tree(c,indent + "  +-- ")
     else:
       dump_tree(c,indent + "  |-- ")

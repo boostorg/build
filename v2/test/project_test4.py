@@ -1,15 +1,13 @@
 #!/usr/bin/python
 
-# Copyright 2003 Dave Abrahams 
-# Copyright 2002, 2003, 2004 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Dave Abrahams
+# Copyright 2002, 2003, 2004 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-from BoostBuild import Tester
-import os
-from string import strip, find
+import BoostBuild
 
-t = Tester(translate_suffixes=0)
+t = BoostBuild.Tester(translate_suffixes=0)
 
 
 t.set_tree("project-test4")
@@ -40,20 +38,20 @@ t.expect_content("bin/$toolset/debug/b.exe",
 "bin/$toolset/debug/a.obj\n"
 )
 
-
-t.copy("lib/Jamfile3", "lib/Jamfile")
+t.copy("lib/jamfile3.jam", "lib/jamfile.jam")
 
 # Link-compatibility check for rtti is disabled...
 #t.run_build_system(status=None)
-#t.fail_test(find(t.stdout(),
+#import string
+#t.fail_test(string.find(t.stdout(),
 #"""warning: targets produced from b.obj are link incompatible
 #warning: with main target a.exe""") !=-0)
 
-# Test that if we specified composite property in target reference,
-# everything works OK.
+# Test that if we specified composite property in target reference, everything
+# works OK.
 
-t.copy("lib/Jamfile1", "lib/Jamfile")
-t.copy("Jamfile5", "Jamfile")
+t.copy("lib/jamfile1.jam", "lib/jamfile.jam")
+t.copy("jamfile5.jam", "jamfile.jam")
 
 t.run_build_system()
 
@@ -63,6 +61,5 @@ t.expect_content("bin/$toolset/debug/a.exe",
 "$toolset/debug/include-everything\n" +
 "bin/$toolset/debug/a.obj lib/bin/$toolset/release/b.obj\n"
 )
-
 
 t.cleanup()

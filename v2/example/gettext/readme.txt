@@ -1,14 +1,14 @@
-Copyright 2003 Vladimir Prus 
-Distributed under the Boost Software License, Version 1.0. 
-(See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+Copyright 2003 Vladimir Prus
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 
-This example shows how it's possible to used GNU gettext utilities with
+This example shows how it is possible to use GNU gettext utilities with
 Boost.Build.
 
 A simple translation file is compiled and installed as message catalog for
-russian. The main application explicitly switches to russian locale and
-output the translation of "hello".
+russian. The main application explicitly switches to russian locale and outputs
+the translation of "hello".
 
 To test:
 
@@ -22,4 +22,3 @@ To test even more:
    - edit "russian.po"
    - run bjam
    - run "main"
-

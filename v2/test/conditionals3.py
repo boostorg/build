@@ -4,23 +4,23 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-#  Test that conditional properties work, even if property is free, and value
-#  includes a colon.
+# Test that conditional properties work, even if property is free, and value
+# includes a colon.
 
 import BoostBuild
 
 t = BoostBuild.Tester()
 
-t.write("Jamroot.jam", """
+t.write("jamroot.jam", """
 exe hello : hello.cpp : <variant>debug:<define>CLASS=Foo::Bar ;
 """)
+
 t.write("hello.cpp", """
 namespace Foo { class Bar { } ; }
 int main()
 {
     CLASS c;
     c;  // Disables the unused variable warning.
-    return 0;
 }
 """)
 

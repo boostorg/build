@@ -6,35 +6,9 @@
 import errors ;
 
 
-digits = 0 1 2 3 4 5 6 7 8 9 ;
-powers = 1 ;
-zeros = "" ;
-natural = $(digits) ;
-positive = $(digits[2-]) ;
-incr = $(positive[2-]) ;
-znatural = $(digits) ;
-zero-test = is zero ;  # if $(zero-test[$(n)]) == "is" "zero", n == 0
-
-
-local rule extend ( )
-{
-    local next = $(digits[2-])$(znatural) ;
-    natural += $(next) ;
-    positive += $(next) ;
-    incr += $(next) ;
-    znatural = $(digits)$(znatural) ;
-}
-
-
 rule trim-leading-zeroes ( value )
 {
-    local value2 = [ MATCH "^0(.*)$" : $(value) ] ;
-    while $(value2)
-    {
-        value = $(value2) ;
-        value2 = [ MATCH "^0(.*)$" : $(value) ] ;
-    }
-    return $(value:E="") ;
+    return [ CALC $(value) + 0 ] ;
 }
 
 
@@ -76,45 +50,22 @@ rule range ( start finish ? : step ? )
 
     if $(finish) != 0
     {
-        while ! $(positive[$(finish)])
+        local result ;
+        while [ less $(start) $(finish) ] || $(start) = $(finish)
         {
-            extend ;
+            result += $(start) ;
+            start = [ CALC $(start) + $(step) ] ;
         }
-
-        if $(step) = 1
-        {
-            return $(positive[$(start)-$(finish)]) ;
-        }
-        else
-        {
-            local index = [ increment $(step) ] ;
-            local by1 = $(positive[$(start)-$(finish)]) ;
-            local result ;
-            while $(by1)
-            {
-                result += $(by1[1]) ;
-                by1 = $(by1[$(index)-]) ;
-            }
-            return $(result) ;
-        }
+        return $(result) ;
     }
 }
 
 
 rule less ( n1 n2 )
 {
-    check $(n1) $(n2) ;
-    n1 = [ trim-leading-zeroes $(n1) ] ;
-    n2 = [ trim-leading-zeroes $(n2) ] ;
-
-    # Avoid messy 0 case by appending 1.
-    local l1 = [ range 2 [ log10 $(n1)1 ] ] ;
-    local l2 = [ range 2 [ log10 $(n2)1 ] ] ;
-
-    # Number of digits mismatch?
-    if ( $(l1) < $(l2) ) || ( ( $(l1) = $(l2) ) && $(n1) < $(n2) )
+    switch [ CALC $(n2) - $(n1) ]
     {
-        return true ;
+        case [1-9]* : return true ;
     }
 }
 
@@ -184,10 +135,10 @@ rule __test__ ( )
     assert.result 0           : trim-leading-zeroes 0           ;
     assert.result 1234        : trim-leading-zeroes 1234        ;
     assert.result 123456      : trim-leading-zeroes 0000123456  ;
-    assert.result 10000123456 : trim-leading-zeroes 10000123456 ;
+    assert.result 1000123456  : trim-leading-zeroes 1000123456  ;
     assert.result 10000       : trim-leading-zeroes 10000       ;
     assert.result 10000       : trim-leading-zeroes 00010000    ;
-                       
+
     assert.true  less 1 2 ;
     assert.true  less 1 12 ;
     assert.true  less 1 21 ;

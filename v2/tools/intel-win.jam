@@ -3,21 +3,19 @@
 # (See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-import toolset ;
-import feature ;
-import toolset : flags ;
-import os ;
-import errors ;
-
-# This is needed because the rule we import here depend on 'common'
-# That's nasty.
+# Importing common is needed because the rules we inherit here depend on it.
+# That is nasty.
 import common ;
-
+import errors ;
+import feature ;
 import intel ;
+import msvc ;
+import os ;
+import toolset ;
+
 
 feature.extend-subfeature toolset intel : platform : win ;
 
-import msvc ;
 toolset.inherit-generators intel-win <toolset>intel <toolset-intel:platform>win : msvc ;
 toolset.inherit-flags intel-win : msvc ;
 toolset.inherit-rules intel-win : msvc ;
@@ -31,28 +29,28 @@ rule init ( version ? :     # the compiler version
                             # either 'vc6', 'vc7', 'vc7.1'
                             # or 'native'(default).
           )
-{           
-    local compatibility = 
+{
+    local compatibility =
       [ feature.get-values <compatibility> : $(options) ] ;
     local condition = [  common.check-init-parameters intel-win
         : version $(version) : compatibility $(compatibility) ] ;
-    
+
     command = [ common.get-invocation-command intel-win : icl.exe :
-        $(command) ] ;    
-    
+        $(command) ] ;
+
     common.handle-options intel-win : $(condition) : $(command) : $(options) ;
-   
+
     local root ;
     if $(command)
     {
         root = [ common.get-absolute-tool-path $(command[-1]) ] ;
         root = $(root)/ ;
     }
-    
+
     local setup ;
     setup = $(root)/iclvars.bat ;
     setup = "call \""$(setup)"\" > nul " ;
-        
+
     if [ os.name ] = NT
     {
         setup = $(setup)"
@@ -62,52 +60,51 @@ rule init ( version ? :     # the compiler version
     {
         setup = "cmd /S /C "$(setup)" \"&&\" " ;
     }
-    
-    
-    flags intel-win.compile .CC $(condition) : $(setup)icl ; 
-    flags intel-win.link .LD $(condition) : $(setup)xilink ; 
-    flags intel-win.archive .LD $(condition) : $(setup)xilink /lib ;       
-    flags intel-win.link .MT $(condition) : mt -nologo ;
-    
+
+    toolset.flags intel-win.compile .CC $(condition) : $(setup)icl ;
+    toolset.flags intel-win.link .LD $(condition) : $(setup)xilink ;
+    toolset.flags intel-win.archive .LD $(condition) : $(setup)xilink /lib ;
+    toolset.flags intel-win.link .MT $(condition) : mt -nologo ;
+
     local m = [ MATCH (.).* : $(version) ] ;
     local major = $(m[1]) ;
 
     local C++FLAGS ;
-    
+
     C++FLAGS += /nologo ;
-    
+
     # Reduce the number of spurious error messages
     C++FLAGS += /Qwn5 /Qwd985 ;
 
     # Enable ADL
     C++FLAGS += -Qoption,c,--arg_dep_lookup ; #"c" works for C++, too
-    
-    # Disable Microsoft "secure" overloads in Dinkumware libraries
-    # since they cause compile errors with Intel versions 9 and 10    
+
+    # Disable Microsoft "secure" overloads in Dinkumware libraries since they
+    # cause compile errors with Intel versions 9 and 10.
     C++FLAGS += -D_SECURE_SCL=0 ;
 
     if $(major) > 5
     {
-        C++FLAGS += /Zc:forScope ;  # Add support for correct for loop scoping
+        C++FLAGS += /Zc:forScope ;  # Add support for correct for loop scoping.
     }
 
-    # Add options recognized only by intel7
+    # Add options recognized only by intel7 and above.
     if $(major) >= 7
     {
         C++FLAGS += /Qansi_alias ;
     }
-    
+
     if $(compatibility) = vc6
     {
-        C++FLAGS += 
+        C++FLAGS +=
           # Emulate VC6
           /Qvc6
-      
-          # no wchar_t support in vc6 dinkum library.  Furthermore, in vc6
+
+          # No wchar_t support in vc6 dinkum library.  Furthermore, in vc6
           # compatibility-mode, wchar_t is not a distinct type from unsigned
-          # short
+          # short.
           -DBOOST_NO_INTRINSIC_WCHAR_T
-          ; 
+          ;
     }
     else
     {
@@ -119,21 +116,19 @@ rule init ( version ? :     # the compiler version
               -D_NATIVE_WCHAR_T_DEFINED
               ;
         }
-    }        
-    
-    
+    }
+
     if $(compatibility) && $(compatibility) != native
-    {        
+    {
         C++FLAGS += /Q$(base-vc) ;
     }
-    else        
+    else
     {
-        C++FLAGS += 
+        C++FLAGS +=
           -Qoption,cpp,--arg_dep_lookup
-          # The following options were intended to disable
-          # 'bug-emulation' mode of intel compiler, but later
-          # were reported to case ICE with Intel-Win 9.0
-          # It's not yet clear which options can be safely used.
+          # The following options were intended to disable the Intel compiler's
+          # 'bug-emulation' mode, but were later reported to be causing ICE with
+          # Intel-Win 9.0. It is not yet clear which options can be safely used.
           # -Qoption,cpp,--const_string_literals
           # -Qoption,cpp,--new_for_init
           # -Qoption,cpp,--no_implicit_typename
@@ -141,28 +136,26 @@ rule init ( version ? :     # the compiler version
           # -Qoption,cpp,--no_microsoft_bugs
           ;
     }
-    
-    flags intel-win CFLAGS $(condition) : $(C++FLAGS) ;
-    
+
+    toolset.flags intel-win CFLAGS $(condition) : $(C++FLAGS) ;
+
     if ! $(compatibility)
     {
         # If there's no backend version, assume 7.1.
         compatibility = vc7.1 ;
     }
-    
+
     local extract-version = [ MATCH ^vc(.*) : $(compatibility) ] ;
     if ! $(extract-version)
     {
         errors.user-error "Invalid value for compatibility option:"
-          $(compatibility) ;
+            $(compatibility) ;
     }
-    
+
     # Depending on the settings, running of tests require some runtime DLLs.
-    flags intel-win RUN_PATH $(condition) : $(root) ;
-    
+    toolset.flags intel-win RUN_PATH $(condition) : $(root) ;
+
     msvc.configure-version-specific intel-win : $(extract-version[1]) : $(condition) ;
 }
 
-flags intel-win.link LIBRARY_OPTION <toolset>intel : "" ;
-
-
+toolset.flags intel-win.link LIBRARY_OPTION <toolset>intel : "" ;
