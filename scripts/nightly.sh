@@ -25,5 +25,5 @@ echo "Building packages and uploading docs"
 ./roll.sh > ../roll-log 2>&1
 cd ..
 echo "Uploading packages"
-scp boost-build.zip boost-build.tar.bz2 vladimir_prus@shell.sourceforge.net:/home/groups/b/bo/boost/htdocs/boost-build2 > scp-log
+scp boost-build.zip boost-build.tar.bz2 vladimir_prus,boost@web.sourceforge.net:/home/groups/b/bo/boost/htdocs/boost-build2 > scp-log
 echo "Nightly build successful"

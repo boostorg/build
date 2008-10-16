@@ -357,7 +357,8 @@ local rule expand-subfeatures-aux (
         local subvalue = $(subvalues[1]) ;  # Pop the head off of subvalues.
         subvalues = $(subvalues[2-]) ;
 
-        local subfeature = [ find-implied-subfeature $(feature) $(subvalue) : $(value) ] ;
+        local subfeature = [ find-implied-subfeature $(feature) $(subvalue) :
+            $(value) ] ;
 
         # If no subfeature was found reconstitute the value string and use that.
         if ! $(subfeature)
@@ -433,8 +434,8 @@ local rule extend-feature ( feature : values * )
     }
     if ! $($(feature).values)
     {
-        # This is the first value specified for this feature,
-        # take it as default value
+        # This is the first value specified for this feature so make it be the
+        # default.
         $(feature).default = $(values[1]) ;
     }
     $(feature).values += $(values) ;
@@ -584,7 +585,7 @@ rule extend ( feature-or-property subfeature ? : values * )
     }
     else
     {
-        # If no subfeature was specified, we didn't expect to see a
+        # If no subfeature was specified, we do not expect to see a
         # value-string.
         if $(value-string)
         {
@@ -771,7 +772,8 @@ local rule is-subfeature-of ( parent-property f )
         {
             # The feature has the form <topfeature-topvalue:subfeature>, e.g.
             # <toolset-msvc:version>.
-            local feature-value = [ split-top-feature $(specific-subfeature[1]) ] ;
+            local feature-value = [ split-top-feature $(specific-subfeature[1])
+                ] ;
             if <$(feature-value[1])>$(feature-value[2]) = $(parent-property)
             {
                 return true ;

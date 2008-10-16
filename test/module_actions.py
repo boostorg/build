@@ -46,7 +46,7 @@ act t3: X1-global X2-global X3-t3
 # Accomodate for that fact.
 if os.name != 'nt':
     expected_output = re.sub(spaces_re, " ", expected_output)
-    expected_output = re.sub(trailing_spaces_re, "\n", expected_output)    
+    expected_output = re.sub(trailing_spaces_re, "\n", expected_output)
 
 t.run_build_system(stdout=expected_output)
 t.expect_nothing_more()

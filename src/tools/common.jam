@@ -40,9 +40,9 @@ if [ MATCH (--show-configuration) : [ modules.peek : ARGV ] ]
 # A toolset configuration may be in one of the following states:
 #
 #   - registered
-#       Configuration has been registered (e.g. by autodetection code) but has
-#       not yet been marked as used, i.e. 'toolset.using' rule has not yet been
-#       called for it.
+#       Configuration has been registered (e.g. explicitly or by auto-detection
+#       code) but has not yet been marked as used, i.e. 'toolset.using' rule has
+#       not yet been called for it.
 #   - used
 #       Once called 'toolset.using' rule marks the configuration as 'used'.
 #
@@ -87,8 +87,8 @@ class configurations
     # Mark a configuration as 'used'.
     #
     # Returns 'true' if the state of the configuration has been changed to
-    # 'used' and an empty value if it the state wasn't changed. Reports an error
-    # if the configuration isn't known.
+    # 'used' and an empty value if it the state has not been changed. Reports an
+    # error if the configuration is not known.
     #
     rule use ( id )
     {
@@ -103,7 +103,7 @@ class configurations
         {
             self.used += $(id) ;
 
-            # indicate that the configuration has been marked as 'used'
+            # Indicate that the configuration has been marked as 'used'.
             retval = true ;
         }
 
@@ -168,13 +168,13 @@ rule check-init-parameters ( toolset requirement * : * )
             if $(.had-unspecified-value.$(toolset).$(name))
             {
                 errors.user-error
-                "$(toolset) initialization: parameter '$(name)' inconsistent" :
-                "no value was specified in earlier initialization" :
-                "an explicit value is specified now" ;
+                    "$(toolset) initialization: parameter '$(name)'"
+                    "inconsistent" : "no value was specified in earlier"
+                    "initialization" : "an explicit value is specified now" ;
             }
             # The below logic is for intel compiler. It calls this rule with
             # 'intel-linux' and 'intel-win' as toolset, so we need to get the
-            # base part of toolset name. We can't pass 'intel' as toolset
+            # base part of toolset name. We can not pass 'intel' as toolset
             # because in that case it will be impossible to register versionless
             # intel-linux and intel-win toolsets of a specific version.
             local t = $(toolset) ;
@@ -200,9 +200,9 @@ rule check-init-parameters ( toolset requirement * : * )
             if $(.had-value.$(toolset).$(name))
             {
                 errors.user-error
-                "$(toolset) initialization: parameter '$(name)' inconsistent" :
-                "an explicit value was specified in an earlier initialization" :
-                "no value is specified now" ;
+                    "$(toolset) initialization: parameter '$(name)'"
+                    "inconsistent" : "an explicit value was specified in an"
+                    "earlier initialization" : "no value is specified now" ;
             }
             .had-unspecified-value.$(toolset).$(name) = true ;
         }
@@ -255,30 +255,30 @@ rule check-init-parameters ( toolset requirement * : * )
 # PATH and in the passed 'additional-path'. Otherwise, verifies that the first
 # element of 'user-provided-command' is an existing program.
 #
-# This rule returns the command to be used when invoking the tool. If we can't
+# This rule returns the command to be used when invoking the tool. If we can not
 # find the tool, a warning is issued. If 'path-last' is specified, PATH is
 # checked after 'additional-paths' when searching for 'tool'.
 #
-rule get-invocation-command-nodefault (
-    toolset : tool : user-provided-command * : additional-paths * : path-last ? )
+rule get-invocation-command-nodefault ( toolset : tool :
+    user-provided-command * : additional-paths * : path-last ? )
 {
     local command ;
     if ! $(user-provided-command)
     {
-        command = [ common.find-tool $(tool) : $(additional-paths) : $(path-last) ] ;
+        command = [ find-tool $(tool) : $(additional-paths) : $(path-last) ] ;
         if ! $(command) && $(.debug-configuration)
         {
-            ECHO "warning: toolset $(toolset) initialization: can't find tool $(tool)" ;
+            ECHO "warning: toolset $(toolset) initialization: can not find tool $(tool)" ;
             ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
         }
     }
     else
     {
-        command = [ common.check-tool $(user-provided-command) ] ;
+        command = [ check-tool $(user-provided-command) ] ;
         if ! $(command) && $(.debug-configuration)
         {
             ECHO "warning: toolset $(toolset) initialization: " ;
-            ECHO "warning: can't find user-provided command " '$(user-provided-command)' ;
+            ECHO "warning: can not find user-provided command " '$(user-provided-command)' ;
             ECHO "warning: initialized from" [ errors.nearest-user-location ] ;
         }
     }
@@ -290,11 +290,11 @@ rule get-invocation-command-nodefault (
 # Same as get-invocation-command-nodefault, except that if no tool is found,
 # returns either the user-provided-command, if present, or the 'tool' parameter.
 #
-rule get-invocation-command (
-    toolset : tool : user-provided-command * : additional-paths * : path-last ? )
+rule get-invocation-command ( toolset : tool : user-provided-command * :
+    additional-paths * : path-last ? )
 {
-    local result = [ get-invocation-command-nodefault $(toolset) : $(tool)
-        : $(user-provided-command) : $(additional-paths) : $(path-last) ] ;
+    local result = [ get-invocation-command-nodefault $(toolset) : $(tool) :
+        $(user-provided-command) : $(additional-paths) : $(path-last) ] ;
 
     if ! $(result)
     {
@@ -334,7 +334,7 @@ rule get-absolute-tool-path ( command )
 # first path found. Otherwise, returns an empty string. If 'path-last' is
 # specified, PATH is searched after 'additional-paths'.
 #
-rule find-tool ( name : additional-paths * : path-last ? )
+local rule find-tool ( name : additional-paths * : path-last ? )
 {
     local path = [ path.programs-path ] ;
     local match = [ path.glob $(path) : $(name) $(name).exe ] ;
@@ -370,15 +370,16 @@ rule find-tool ( name : additional-paths * : path-last ? )
 # Checks if 'command' can be found either in path or is a full name to an
 # existing file.
 #
-rule check-tool-aux ( command )
+local rule check-tool-aux ( command )
 {
     if $(command:D)
     {
         if [ path.exists $(command) ]
             # Both NT and Cygwin will run .exe files by their unqualified names.
             || ( [ os.on-windows ] && [ path.exists $(command).exe ] )
-            # Only NT will run .bat files by their unqualified names.
-            || ( ( [ os.name ] = NT ) && [ path.exists $(command).bat ] )
+            # Only NT will run .bat & .cmd files by their unqualified names.
+            || ( ( [ os.name ] = NT ) && ( [ path.exists $(command).bat ] ||
+                [ path.exists $(command).cmd ] ) )
         {
             return $(command) ;
         }
@@ -397,7 +398,7 @@ rule check-tool-aux ( command )
 # path, checks if it can be found in 'path'. If comand is an absolute path,
 # check that it exists. Returns 'command' if ok or empty string otherwise.
 #
-rule check-tool ( xcommand + )
+local rule check-tool ( xcommand + )
 {
     if [ check-tool-aux $(xcommand[1]) ] ||
        [ check-tool-aux $(xcommand[-1]) ]
@@ -721,13 +722,13 @@ actions hard-link
 #   <runtime>[joiner]
 #       ::  Collective tag of the build runtime.
 #   <version:/version-feature | X.Y[.Z]/>[joiner]
-#       ::  Short version tag taken from the given "version-feature"
-#           in the build properties. Or if not present, the literal
-#           value as the version number.
+#       ::  Short version tag taken from the given "version-feature" in the
+#           build properties. Or if not present, the literal value as the
+#           version number.
 #   <property:/property-name/>[joiner]
-#       ::  Direct lookup of the given property-name value in the
-#           build properties. /property-name/ is a regular expression.
-#           e.g. <property:toolset-.*:flavor> will match every toolset.
+#       ::  Direct lookup of the given property-name value in the build
+#           properties. /property-name/ is a regular expression. E.g.
+#           <property:toolset-.*:flavor> will match every toolset.
 #   /otherwise/
 #       ::  The literal value of the format argument.
 #
@@ -756,29 +757,30 @@ rule format-name ( format * : name : type ? : property-set )
                 result += $(name:B) ;
 
                 case <toolset> :
-                result += [ join-tag $(f:G=) :
-                    [ toolset-tag $(name) : $(type) : $(property-set) ] ] ;
+                result += [ join-tag $(f:G=) : [ toolset-tag $(name) : $(type) :
+                    $(property-set) ] ] ;
 
                 case <threading> :
-                result += [ join-tag $(f:G=) :
-                    [ threading-tag $(name) : $(type) : $(property-set) ] ] ;
+                result += [ join-tag $(f:G=) : [ threading-tag $(name) : $(type)
+                    : $(property-set) ] ] ;
 
                 case <runtime> :
-                result += [ join-tag $(f:G=) :
-                    [ runtime-tag $(name) : $(type) : $(property-set) ] ] ;
+                result += [ join-tag $(f:G=) : [ runtime-tag $(name) : $(type) :
+                    $(property-set) ] ] ;
 
                 case <version:*> :
                 local key = [ MATCH <version:(.*)> : $(f:G) ] ;
                 local version = [ $(property-set).get <$(key)> ] ;
                 version ?= $(key) ;
-                version = [ MATCH "^([^.]+)[.]([^.]+)[.]?([^.]*)"
-                    : $(version) ] ;
+                version = [ MATCH "^([^.]+)[.]([^.]+)[.]?([^.]*)" : $(version) ]
+                    ;
                 result += [ join-tag $(f:G=) : $(version[1])_$(version[2]) ] ;
 
                 case <property:*> :
                 local key = [ MATCH <property:(.*)> : $(f:G) ] ;
                 local p0 = [ MATCH <($(key))> : [ $(property-set).raw ] ] ;
-                if $(p0) {
+                if $(p0)
+                {
                     local p = [ $(property-set).get <$(p0)> ] ;
                     if $(p)
                     {
@@ -790,8 +792,8 @@ rule format-name ( format * : name : type ? : property-set )
                 result += $(f:G=) ;
             }
         }
-        result = [ virtual-target.add-prefix-and-suffix
-            $(result:J=) : $(type) : $(property-set) ] ;
+        result = [ virtual-target.add-prefix-and-suffix $(result:J=) : $(type) :
+            $(property-set) ] ;
         return $(result) ;
     }
 }
@@ -895,14 +897,14 @@ local rule runtime-tag ( name : type ? : property-set )
     local properties = [ $(property-set).raw ] ;
     if <runtime-link>static in $(properties) { tag += s ; }
 
-    # This is an ugly thing. In V1, there's a code to automatically detect which
+    # This is an ugly thing. In V1, there is code to automatically detect which
     # properties affect a target. So, if <runtime-debugging> does not affect gcc
-    # toolset, the tag rules won't even see <runtime-debugging>. Similar
+    # toolset, the tag rules will not even see <runtime-debugging>. Similar
     # functionality in V2 is not implemented yet, so we just check for toolsets
-    # which are known to care about runtime debug.
-    if <toolset>msvc in $(properties)
-      || <stdlib>stlport in $(properties)
-      || <toolset-intel:platform>win in $(properties)
+    # known to care about runtime debugging.
+    if ( <toolset>msvc in $(properties) ) ||
+        ( <stdlib>stlport in $(properties) ) ||
+        ( <toolset-intel:platform>win in $(properties) )
     {
         if <runtime-debugging>on in $(properties) { tag += g ; }
     }

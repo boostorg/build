@@ -5,12 +5,13 @@
 # Distributed under the Boost Software License, Version 1.0. 
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
-from BoostBuild import Tester, List
+import BoostBuild
 
-t = Tester()
+t = BoostBuild.Tester()
 
-t.write("project-root.jam", "import gcc ;")
-t.write("Jamfile", """
+t.write("jamroot.jam", "import gcc ;")
+
+t.write("jamfile.jam", """
 import print ;
 print.output foo ;
 print.text \\\"Something\\\" ;
@@ -21,7 +22,7 @@ ALWAYS foo ;
 t.run_build_system()
 t.expect_content("foo", """\"Something\"""")
 
-t.write("Jamfile", """
+t.write("jamfile.jam", """
 import print ;
 print.output foo ;
 print.text \\\n\\\"Somethingelse\\\" ;
@@ -33,7 +34,7 @@ t.run_build_system()
 t.expect_content("foo", """\"Something\"
 \"Somethingelse\"""")
 
-t.write("Jamfile", """
+t.write("jamfile.jam", """
 import print ;
 print.output foo ;
 print.text \\\"Different\\\" : true ;

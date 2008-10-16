@@ -19,15 +19,15 @@ toolset.inherit acc : unix ;
 generators.override builtin.lib-generator : acc.prebuilt ;
 generators.override acc.searched-lib-generator : searched-lib-generator ;
 
-# Configures the acc toolset. 
+# Configures the acc toolset.
 rule init ( version ? : user-provided-command * : options * )
 {
-    local condition = [ common.check-init-parameters acc 
+    local condition = [ common.check-init-parameters acc
         : version $(version) ] ;
-    
+
     local command = [ common.get-invocation-command acc : aCC
         : $(user-provided-command) ] ;
-    
+
     common.handle-options acc : $(condition) : $(command) : $(options) ;
 }
 
@@ -81,6 +81,9 @@ flags acc FINDLIBS <find-static-library> ;
 flags acc CFLAGS <threading>multi : -mt   ;
 flags acc LINKFLAGS <threading>multi : -mt ;
 
+flags acc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
+
+
 actions acc.link bind NEEDLIBS
 {
     $(CONFIG_COMMAND) -AA $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS)
@@ -93,13 +96,13 @@ actions acc.link.dll bind NEEDLIBS
 }
 
 actions acc.compile.c
-{    
-    $(CONFIG_COMMAND) -Ae -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)" $(OPTIONS)
+{
+    cc -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)" $(OPTIONS)
 }
 
 actions acc.compile.c++
 {
-    $(CONFIG_COMMAND) -AA -c -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)" $(OPTIONS)
+    $(CONFIG_COMMAND) -AA -c -Wc,--pending_instantiations=$(TEMPLATE_DEPTH) -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)" $(OPTIONS)
 }
 
 actions updated together piecemeal acc.archive

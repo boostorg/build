@@ -1,29 +1,26 @@
 #!/usr/bin/python
 
-#  Copyright (C) Vladimir Prus 2007.
-#  Distributed under the Boost Software License, Version 1.0. (See
-#  accompanying file LICENSE_1_0.txt or copy at
-#  http://www.boost.org/LICENSE_1_0.txt)
+# Copyright (C) Vladimir Prus 2007.
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
-#  Tests that a free feature specified on the command
-#  line applies to all targets ever built.
-from BoostBuild import Tester, List
+# Tests that a free feature specified on the command line applies to all targets
+# ever built.
 
+import BoostBuild
 
-t = Tester()
+t = BoostBuild.Tester()
 
-t.write("Jamroot", """
+t.write("jamroot.jam", """
 exe hello : hello.cpp foo ;
 lib foo : foo.cpp ;
 """)
+
 t.write("hello.cpp", """
 extern void foo();
 #ifdef FOO
-int main()
-{
-    foo();
-    return 0;
-}
+int main() { foo(); }
 #endif
 """)
 
@@ -36,8 +33,8 @@ void foo() {}
 #endif
 """)
 
-# If FOO is not defined when compiling the 'foo'
-# target, we'll get a link error at this point.
+# If FOO is not defined when compiling the 'foo' target, we will get a link
+# error at this point.
 t.run_build_system("hello define=FOO")
 
 t.expect_addition("bin/$toolset/debug/hello.exe")

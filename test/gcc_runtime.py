@@ -4,28 +4,28 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-#  Tests that on gcc, we correctly report problem when static runtime
-#  is requested when building DLL.
-from BoostBuild import Tester, List
+# Tests that on gcc, we correctly report problem when static runtime is
+# requested for building a shared library.
+
+import BoostBuild
 import string
 
-t = Tester()
+t = BoostBuild.Tester()
 
-# Create the needed files
-t.write("project-root.jam", "")
-t.write("Jamfile", """
+# Create the needed files.
+t.write("jamroot.jam", "")
+
+t.write("jamfile.jam", """
 lib hello : hello.cpp ;
 """)
+
 t.write("hello.cpp", """
-int main()
-{
-    return 0;
-}
+int main() { }
 """)
 
 t.run_build_system("runtime-link=static", status=1)
 t.fail_test(string.find(t.stdout(),
-                        "On gcc, DLL can't be build with '<runtime-link>static'") == -1)
+    "On gcc, DLL can't be build with '<runtime-link>static'") == -1)
 
 t.run_build_system("link=static runtime-link=static")
 t.expect_addition("bin/$toolset/debug/link-static/runtime-link-static/hello.lib")

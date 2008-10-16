@@ -6,10 +6,10 @@
 #  http://www.boost.org/LICENSE_1_0.txt)
 
 #  Test the 'qt4' examples.
-from BoostBuild import Tester, List
 
-# Create a temporary working directory
-t = Tester()
+import BoostBuild
+
+t = BoostBuild.Tester()
 
 t.set_tree("../example/qt/qt4/hello")
 t.run_build_system()

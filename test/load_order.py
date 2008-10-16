@@ -5,71 +5,60 @@
 # accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-#  Test that we load parent projects before loading children.
-from BoostBuild import Tester, List
-from string import find
+# Test that we load parent projects before loading children.
 
-t = Tester()
+import BoostBuild
+import string
 
-t.write("Jamfile", """ 
+t = BoostBuild.Tester()
+
+t.write("jamroot.jam", """
 use-project /child : child ;
-
 ECHO "Setting parent requirements" ;
-project
-    : requirements <define>PASS_THE_TEST
-    ; 
-    
-alias x : child//main ;    
+project : requirements <define>PASS_THE_TEST ;
+alias x : child//main ;
 """)
 
-t.write("project-root.jam", """ 
-""")
-
-t.write("child/Jamfile", """ 
+t.write("child/jamfile.jam", """
 ECHO "Setting child requirements" ;
 project /child ;
-
-exe main : main.cpp ; 
+exe main : main.cpp ;
 """)
 
-t.write("child/main.cpp", """ 
+t.write("child/main.cpp", """
 #if defined(PASS_THE_TEST)
-int main() { return 0; }
+int main() {}
 #endif
-
 """)
 
 t.run_build_system()
 
-
 t.expect_addition("child/bin/$toolset/debug/main.exe")
-t.fail_test(find(t.stdout(), "Setting child requirements") <
-            find(t.stdout(), "Setting parent requirements"))
+t.fail_test(string.find(t.stdout(), "Setting child requirements") <
+            string.find(t.stdout(), "Setting parent requirements"))
 
 
-# Regression test: parent requirements were ignored in some cases
+# Regression test: parent requirements were ignored in some cases.
 t.rm(".")
-t.write("Jamroot", """ 
-build-project src ; 
+t.write("jamroot.jam", """
+build-project src ;
 """)
 
-t.write("src/Jamfile", """ 
-project : requirements <define>EVERYTHING_OK ; 
+t.write("src/jamfile.jam", """
+project : requirements <define>EVERYTHING_OK ;
 """)
 
-t.write("src/app/Jamfile", """ 
-exe test : test.cpp ; 
+t.write("src/app/jamfile.jam", """
+exe test : test.cpp ;
 """)
 
-t.write("src/app/test.cpp", """ 
+t.write("src/app/test.cpp", """
 #ifdef EVERYTHING_OK
 int main() {}
 #endif
-
 """)
 
 t.run_build_system(subdir="src/app")
 t.expect_addition("src/app/bin/$toolset/debug/test.exe")
-
 
 t.cleanup()

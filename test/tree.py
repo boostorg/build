@@ -1,7 +1,7 @@
-# Copyright 2003 Dave Abrahams 
-# Copyright 2001, 2002 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Dave Abrahams
+# Copyright 2001, 2002 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # This file is based in part on the content of svn_tree.py.
 
@@ -20,7 +20,7 @@ class Trees_difference:
         self.removed_files.extend(other.removed_files)
         self.modified_files.extend(other.modified_files)
         self.touched_files.extend(other.touched_files)
-     
+
     def ignore_directories(self):
         "Removes directories for list of found differences"
 
@@ -33,13 +33,15 @@ class Trees_difference:
 
     def pprint(self, f=None):
         print >> f, "Added files   :", self.added_files
-        print >> f,"Removed files :", self.removed_files
+        print >> f, "Removed files :", self.removed_files
         print >> f, "Modified files:", self.modified_files
         print >> f, "Touched files :", self.touched_files
 
     def empty(self):
-        return (len(self.added_files) == 0 and len(self.removed_files) == 0)\
-                and len(self.modified_files) == 0 and len(self.touched_files) == 0
+        return ( len(self.added_files) == 0 ) and \
+            ( len(self.removed_files) == 0 ) and \
+            ( len(self.modified_files) == 0 ) and \
+            ( len(self.touched_files) == 0 )
 
 def build_tree(dir):
     return svn_tree.build_tree_from_wc(dir, load_props=0, ignore_svn=1)

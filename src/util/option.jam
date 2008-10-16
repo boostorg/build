@@ -6,6 +6,7 @@
 
 import modules ;
 
+
 rule get ( name : default-value ? )
 {
     local m = [ MATCH --$(name)=(.*) : [ modules.peek : ARGV ] ] ;
@@ -16,23 +17,22 @@ rule get ( name : default-value ? )
     else
     {
         return $(default-value) ;
-    }        
+    }
 }
 
 
+# Check command-line args as soon as possible. For each option try to load
+# module named after option. Is that succeeds, invoke 'process' rule in the
+# module. The rule may return "true" to indicate that the regular build process
+# should not be attempted.
+#
+# Options take the general form of: --<name>[=<value>] [<value>]
+#
 rule process ( )
-{ 
-    # Check command-line args as soon as possible.  For each option try
-    # to load module named after option. Is that succeeds, invoke 'process'
-    # rule in the module. The rule may return "true" to indicate that the
-    # regular build process should not be attempted.
-    #
-    # Options take the general form of: --<name>[=<value>] [<value>]
-    #
-    
+{
     local ARGV = [ modules.peek : ARGV ] ;
     local BOOST_BUILD_PATH = [ modules.peek : BOOST_BUILD_PATH ] ;
-    
+
     local dont-build ;
     local args = $(ARGV) ;
     while $(args)
@@ -62,27 +62,26 @@ rule process ( )
                 args = $(args[2-]) ;
             }
 
-            # look in options subdirectories of BOOST_BUILD_PATH for modules
+            # Jook in options subdirectories of BOOST_BUILD_PATH for modules
             # matching the full option name and then its prefix.
             local plugin-dir = options ;
-            local option-files = [
-              GLOB $(plugin-dir:D=$(BOOST_BUILD_PATH)) : $(full-name).jam $(prefix).jam
-            ] ;
+            local option-files = [ GLOB $(plugin-dir:D=$(BOOST_BUILD_PATH)) :
+                $(full-name).jam $(prefix).jam ] ;
 
             if $(option-files)
             {
-                # load the file into a module named for the option
+                # Load the file into a module named for the option.
                 local f = $(option-files[1]) ;
                 local module-name = --$(f:D=:S=) ;
                 modules.load $(module-name) : $(f:D=) : $(f:D) ;
 
-                # if there's a process rule, call it with the full option name
-                # and its value (if any).  If there was no "=" in the option,
-                # the value will be empty.
+                # If there is a process rule, call it with the full option name
+                # and its value (if any). If there was no "=" in the option, the
+                # value will be empty.
                 if process in [ RULENAMES $(module-name) ]
                 {
-                    dont-build +=
-                      [ modules.call-in $(module-name) : process --$(full-name) : $(values) ] ;
+                    dont-build += [ modules.call-in $(module-name) : process
+                        --$(full-name) : $(values) ] ;
                 }
             }
         }
@@ -90,4 +89,3 @@ rule process ( )
 
     return $(dont-build) ;
 }
-

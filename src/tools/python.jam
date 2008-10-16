@@ -650,6 +650,7 @@ local rule system-library-dependencies ( target-os )
         case windows : return ;
 
         case hpux : return  <library>rt ;
+        case *bsd : return  <library>pthread <toolset>gcc:<library>util ;
 
         case aix : return  <library>pthread <library>dl ;
 
@@ -867,9 +868,9 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
             framework-directory = $(framework-directory:D) ;
         }
 
-        if $(framework-directory) = Python.framework
+        if $(framework-directory:D=) = Python.framework
         {
-            debug-message framework directory is \"$(fwk)\" ;
+            debug-message framework directory is \"$(framework-directory)\" ;
         }
         else
         {
@@ -924,7 +925,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
           :
           : $(target-requirements)
           :
-          : $(usage-requirements) <framework>$(fwk)
+          : $(usage-requirements) <framework>$(framework-directory)
           ;
     }
     else
@@ -1218,7 +1219,7 @@ rule capture-output ( target : sources * : properties * )
     local path-separator = [ os.path-separator [ translate-os $(target-os) ] ] ;
     local set-PYTHONPATH = [ common.variable-setting-command PYTHONPATH :
         $(PYTHONPATH:J=$(path-separator)) ] ;
-    LAUNCHER on $(target) = $(set-PYTHONPATH) [ on $(target) return $(PYTHON) ] ;
+    LAUNCHER on $(target) = $(set-PYTHONPATH) [ on $(target) return \"$(PYTHON)\" ] ;
 }
 
 

@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-# Copyright 2003 Dave Abrahams 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Dave Abrahams
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # This tests the facilities for deleting modules.
 
@@ -28,12 +28,12 @@ module foo
      {
          EXIT DELETE_MODULE failed to kill foo's variables ;
      }
-     
+
      rule bar { }
      var = x y ;
-     
+
      DELETE_MODULE foo ;
-     
+
      if $(var)
      {
          EXIT internal DELETE_MODULE failed to kill foo's variables ;

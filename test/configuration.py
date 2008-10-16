@@ -23,7 +23,8 @@ def test_user_configuration():
     path handling is tested.
     """
 
-    t = BoostBuild.Tester("--debug-configuration", pass_toolset=False, use_test_config=False)
+    t = BoostBuild.Tester("--debug-configuration", pass_toolset=False,
+        use_test_config=False)
 
     implicitConfigLoadMessage = "notice: Loading user-config configuration file: *"
     explicitConfigLoadMessage = "notice: Loading explicitly specified user configuration file:"
@@ -46,7 +47,7 @@ import feature ;
 feature.extend toolset : %s ;
 rule init ( ) { }
 """ % toolsetName )
-    t.write("Jamroot.jam", "using %s ;" % toolsetName)
+    t.write("jamroot.jam", "using %s ;" % toolsetName)
 
     t.run_build_system()
     t.expect_output_line(explicitConfigLoadMessage, False)

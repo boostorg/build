@@ -1,44 +1,39 @@
 #!/usr/bin/python
 
-# Copyright 2003 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-#  Test that features with default values are always present 
-#  in build properties of any target.
+# Test that features with default values are always present in build properties
+# of any target.
 
-from BoostBuild import Tester, List
+import BoostBuild
 
-t = Tester()
+t = BoostBuild.Tester()
 
 # Declare *non-propagated* feature foo.
-t.write("project-root.jam", """
+t.write("jamroot.jam", """
 import feature : feature ;
-
 feature foo : on off ;
 """)
 
-# Note that '<foo>on' won't be propagated
-# to 'd/l'.
-t.write("Jamfile", """
+# Note that '<foo>on' will not be propagated to 'd/l'.
+t.write("jamfile.jam", """
 exe hello : hello.cpp d//l ;
 """)
+
 t.write("hello.cpp", """
 #ifdef _WIN32
 __declspec(dllimport)
 #endif
 void foo();
-int main()
-{
-   foo();
-   return 1;
-}
-
+int main() { foo(); }
 """)
 
-t.write("d/Jamfile", """
+t.write("d/jamfile.jam", """
 lib l : l.cpp : <foo>on:<define>FOO ;
 """)
+
 t.write("d/l.cpp", """
 #ifdef _WIN32
 __declspec(dllexport)
@@ -46,7 +41,6 @@ __declspec(dllexport)
 #ifdef FOO
 void foo() {}
 #endif
-
 """)
 
 t.run_build_system()

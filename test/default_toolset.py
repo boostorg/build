@@ -58,7 +58,7 @@ rule init ( version ) { ECHO "%(message_initialized)s" ; }
     'toolset_version_unused': toolset_version_unused})
 
     # Main Boost Build project script.
-    t.write("Jamroot.jam", """
+    t.write("jamroot.jam", """
 import build-system ;
 import errors ;
 import feature ;
@@ -121,7 +121,7 @@ def test_default_toolset_on_os( os, expected_toolset ):
     t = BoostBuild.Tester("--user-config= --ignore-site-config",
         pass_toolset=False, use_test_config=False)
 
-    t.write("Jamroot.jam", "modules.poke os : .name : %s ;" % os)
+    t.write("jamroot.jam", "modules.poke os : .name : %s ;" % os)
 
     # We need to tell the test system to ignore stderr output as attempting to
     # load missing toolsets might cause random failures with which we are not
@@ -159,7 +159,7 @@ rule init ( ) { }
 """ % {'toolset_name': toolset_name})
 
     # Main Boost Build project script.
-    t.write("Jamroot.jam", """
+    t.write("jamroot.jam", """
 import build-system ;
 import errors ;
 import feature ;

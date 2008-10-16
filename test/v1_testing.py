@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
-# Copyright 2002 Dave Abrahams 
-# Copyright 2004 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2002 Dave Abrahams
+# Copyright 2004 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-from BoostBuild import Tester, List
+import BoostBuild
 import os
 from string import strip
 import re
@@ -14,7 +14,7 @@ import time
 def match_re(actual,expected):
     return re.match(expected,actual,re.DOTALL) != None
 
-t = Tester(match = match_re, boost_build_path = os.path.join(os.getcwd(), ".."))
+t = BoostBuild.Tester(match = match_re, boost_build_path = os.path.join(os.getcwd(), ".."))
 t.set_tree('v1_testing')
 
 os.environ['TOOLS'] = 'gcc'
@@ -59,11 +59,11 @@ t.expect_addition(
      # function, but we actually need to spell out a lot more than
      # what we currently have to do that.
 
-# 4) Introduced error into one of the library files, causing a library build 
-# compile to fail. path_test.test was deleted, so the reporting programs 
-# would know that failure occurred. Excellent! This is the case that has 
-# caused regression testing to report the wrong results in the past, so it 
-# was good news to see it working correctly now. We probably should figure 
+# 4) Introduced error into one of the library files, causing a library build
+# compile to fail. path_test.test was deleted, so the reporting programs
+# would know that failure occurred. Excellent! This is the case that has
+# caused regression testing to report the wrong results in the past, so it
+# was good news to see it working correctly now. We probably should figure
 # out some other test cases just to be sure it is working for full coverage.
 t.rename('lib.cpp', 'lib.cpp.bak')
 t.rename('lib-err.cpp', 'lib.cpp')
@@ -74,9 +74,9 @@ t.expect_removal(
      , 'bin/nolink.test/gcc/debug/runtime-link-dynamic/nolink.test'
      , 'bin/run.test/gcc/debug/runtime-link-dynamic/run.test'])
 
-# 5) Fixed the error in the library file.  The library build then worked, and 
-# path_test.exe was relinked, without first recompiling path_test.obj. Test 
-# was rerun. Exactly right behavior!
+# 5) Fixed the error in the library file.  The library build then worked, and
+# path_test.exe was relinked, without first recompiling path_test.obj. Test was
+# rerun. Exactly the right behavior!
 t.rename('lib.cpp.bak', 'lib.cpp')
 t.run_build_system(arguments = 'test', status = 0)
 t.expect_addition(
@@ -85,4 +85,4 @@ t.expect_addition(
      , 'bin/run.test/gcc/debug/runtime-link-dynamic/run.test'])
 
 t.cleanup()
-print 'tesing complete'
+print 'testing complete'

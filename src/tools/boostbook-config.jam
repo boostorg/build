@@ -21,9 +21,11 @@ if [ os.name ] = NT
             : "InstallRoot" ] ;
     }
     # Plausible locations.
-    docbook_xsl-path ?= [ GLOB "$(boost-dir)\\share" "\\Boost\\share" : docbook-xsl* ] ;
-    docbook_dtd-path ?= [ GLOB "$(boost-dir)\\share" "\\Boost\\share" : docbook-xml* ] ;
-    boostbook-path ?= [ GLOB "$(boost-dir)\\share" "\\Boost\\share" : boostbook* ] ;
+    local root = [ PWD ] ;
+    while $(root) != $(root:D) { root = $(root:D) ; }
+    docbook_xsl-path ?= [ GLOB "$(boost-dir)\\share" "$(root)Boost\\share" : docbook-xsl* ] ;
+    docbook_dtd-path ?= [ GLOB "$(boost-dir)\\share" "$(root)Boost\\share" : docbook-xml* ] ;
+    boostbook-path ?= [ GLOB "$(boost-dir)\\share" "$(root)Boost\\share" : boostbook* ] ;
     
     docbook_xsl-path = $(docbook_xsl-path[1]) ;
     docbook_dtd-path = $(docbook_dtd-path[1]) ;

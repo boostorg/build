@@ -22,18 +22,18 @@ import BoostBuild
 def test_building_file_from_specific_project():
     t = BoostBuild.Tester()
 
-    t.write("Jamroot.jam", """
+    t.write("jamroot.jam", """
 exe hello : hello.cpp ;
 exe hello2 : hello.cpp ;
 build-project sub ;
 """)
-    t.write("hello.cpp", "int main() { return 0; }")
-    t.write("sub/Jamfile.jam", """
+    t.write("hello.cpp", "int main() {}")
+    t.write("sub/jamfile.jam", """
 exe hello : hello.cpp ;
 exe hello2 : hello.cpp ;
 exe sub : hello.cpp ;
 """)
-    t.write("sub/hello.cpp", "int main() { return 0; }")
+    t.write("sub/hello.cpp", "int main() {}")
 
     t.run_build_system("sub " + t.adjust_suffix("hello.obj"))
     t.expect_output_line("*depends on itself*", False)
@@ -53,14 +53,14 @@ exe sub : hello.cpp ;
 def test_building_file_from_specific_target():
     t = BoostBuild.Tester()
 
-    t.write("Jamroot.jam", """
+    t.write("jamroot.jam", """
 exe hello1 : hello1.cpp ;
 exe hello2 : hello2.cpp ;
 exe hello3 : hello3.cpp ;
 """)
-    t.write("hello1.cpp", "int main() { return 0; }")
-    t.write("hello2.cpp", "int main() { return 0; }")
-    t.write("hello3.cpp", "int main() { return 0; }")
+    t.write("hello1.cpp", "int main() {}")
+    t.write("hello2.cpp", "int main() {}")
+    t.write("hello3.cpp", "int main() {}")
 
     t.run_build_system("hello1 " + t.adjust_suffix("hello1.obj"))
     t.expect_addition("bin/$toolset/debug/hello1.obj")
@@ -79,17 +79,17 @@ exe hello3 : hello3.cpp ;
 def test_building_missing_file_from_specific_target():
     t = BoostBuild.Tester()
 
-    t.write("Jamroot.jam", """
+    t.write("jamroot.jam", """
 exe hello1 : hello1.cpp ;
 exe hello2 : hello2.cpp ;
 exe hello3 : hello3.cpp ;
 """)
-    t.write("hello1.cpp", "int main() { return 0; }")
-    t.write("hello2.cpp", "int main() { return 0; }")
-    t.write("hello3.cpp", "int main() { return 0; }")
+    t.write("hello1.cpp", "int main() {}")
+    t.write("hello2.cpp", "int main() {}")
+    t.write("hello3.cpp", "int main() {}")
 
     t.run_build_system("hello1 " + t.adjust_suffix("hello2.obj"), status=1)
-    t.expect_output_line("don't know how to make*hello2.obj")
+    t.expect_output_line("don't know how to make*" + t.adjust_suffix("hello2.obj"))
     t.expect_nothing_more()
 
     t.cleanup()
@@ -105,14 +105,14 @@ exe hello3 : hello3.cpp ;
 def test_building_multiple_files_with_different_names():
     t = BoostBuild.Tester()
 
-    t.write("Jamroot.jam", """
+    t.write("jamroot.jam", """
 exe hello1 : hello1.cpp ;
 exe hello2 : hello2.cpp ;
 exe hello3 : hello3.cpp ;
 """)
-    t.write("hello1.cpp", "int main() { return 0; }")
-    t.write("hello2.cpp", "int main() { return 0; }")
-    t.write("hello3.cpp", "int main() { return 0; }")
+    t.write("hello1.cpp", "int main() {}")
+    t.write("hello2.cpp", "int main() {}")
+    t.write("hello3.cpp", "int main() {}")
 
     t.run_build_system(
         t.adjust_suffix("hello1.obj") + " " +
@@ -134,18 +134,18 @@ exe hello3 : hello3.cpp ;
 def test_building_multiple_files_with_the_same_name():
     t = BoostBuild.Tester()
 
-    t.write("Jamroot.jam", """
+    t.write("jamroot.jam", """
 exe hello : hello.cpp ;
 exe hello2 : hello.cpp ;
 build-project sub ;
 """)
-    t.write("hello.cpp", "int main() { return 0; }")
-    t.write("sub/Jamfile.jam", """
+    t.write("hello.cpp", "int main() {}")
+    t.write("sub/jamfile.jam", """
 exe hello : hello.cpp ;
 exe hello2 : hello.cpp ;
 exe sub : hello.cpp ;
 """)
-    t.write("sub/hello.cpp", "int main() { return 0; }")
+    t.write("sub/hello.cpp", "int main() {}")
 
     t.run_build_system(t.adjust_suffix("hello.obj"))
     t.expect_output_line("*depends on itself*", False)

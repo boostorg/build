@@ -91,13 +91,15 @@ class install-target-class : basic-target
             # for relinking.
             local l = [ $(build-property-set).get <linkflags> ] ;
             ps-raw += $(l:G=<linkflags>) ;
-        }
 
-        # Remove the <tag> feature on original targets.
-        ps-raw = [ property.change $(ps-raw) : <tag> ] ;
-        # And <location>. If stage target has another stage target in sources,
-        # then we shall get virtual targets with <location> property set.
-        ps-raw = [ property.change $(ps-raw) : <location> ] ;
+            # Remove the <tag> feature on original targets.
+            ps-raw = [ property.change $(ps-raw) : <tag> ] ;
+
+            # And <location>. If stage target has another stage target in
+            # sources, then we shall get virtual targets with the <location>
+            # property set.
+            ps-raw = [ property.change $(ps-raw) : <location> ] ;
+        }
 
         local d = [ $(build-property-set).get <dependency> ] ;
         ps-raw += $(d:G=<dependency>) ;

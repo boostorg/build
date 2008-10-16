@@ -33,8 +33,8 @@ class alias-target-class : basic-target
     rule __init__ ( name : project : sources * : requirements *
         : default-build * : usage-requirements * )
     {
-        basic-target.__init__ $(name) : $(project) : $(sources) : $(requirements)
-            : $(default-build) : $(usage-requirements) ;
+        basic-target.__init__ $(name) : $(project) : $(sources) :
+            $(requirements) : $(default-build) : $(usage-requirements) ;
     }
 
     rule construct ( name : source-targets * : property-set )
@@ -45,16 +45,16 @@ class alias-target-class : basic-target
     rule compute-usage-requirements ( subvariant )
     {
         local base = [ basic-target.compute-usage-requirements $(subvariant) ] ;
-        # Add source's usage requirement. If we don't do this, "alias" does not
-        # look like a 100% alias.
         return [ $(base).add [ $(subvariant).sources-usage-requirements ] ] ;
     }
 }
 
 
-# Declares the 'alias' target. It will build sources, and return them unaltered.
+# Declares the 'alias' target. It will process its sources virtual-targets by
+# returning them unaltered as its own constructed virtual-targets.
 #
-rule alias ( name : sources * : requirements * : default-build * : usage-requirements * )
+rule alias ( name : sources * : requirements * : default-build * :
+    usage-requirements * )
 {
     local project = [ project.current ] ;
 
@@ -62,8 +62,10 @@ rule alias ( name : sources * : requirements * : default-build * : usage-require
         [ new alias-target-class $(name) : $(project)
             : [ targets.main-target-sources $(sources) : $(name) : no-renaming ]
             : [ targets.main-target-requirements $(requirements) : $(project) ]
-            : [ targets.main-target-default-build $(default-build) : $(project) ]
-            : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
+            : [ targets.main-target-default-build $(default-build) : $(project)
+                ]
+            : [ targets.main-target-usage-requirements $(usage-requirements) :
+                $(project) ]
         ] ;
 }
 

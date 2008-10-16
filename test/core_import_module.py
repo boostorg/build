@@ -1,24 +1,23 @@
 #!/usr/bin/python
 
-# Copyright 2003 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-from BoostBuild import Tester, List
+import BoostBuild
 
-
-t = Tester(pass_toolset=0)
-
-# Test that 
+t = BoostBuild.Tester(pass_toolset=0)
 
 t.write("code", """
-module a {
+module a
+{
     rule r1 ( )
     {
         ECHO R1 ;
     }
 }
-module a2 {
+module a2
+{
     rule r2 ( )
     {
         ECHO R2 ;
@@ -26,9 +25,9 @@ module a2 {
 }
 IMPORT a2 : r2 : : a2.r2 ;
 
-module b {
+module b
+{
     IMPORT_MODULE a : b ;
-
     rule test
     {
         # Call rule visible via IMPORT_MODULE
@@ -41,19 +40,19 @@ module b {
 IMPORT b : test : : test ;
 test ;
 
-module c {
+module c
+{
     rule test
     {
         ECHO CTEST ;
     }
-}    
+}
 
 IMPORT_MODULE c : ;
 c.test ;
 
 actions do-nothing { }
 do-nothing all ;
-
 """)
 
 t.run_build_system("-fcode", stdout="""R1

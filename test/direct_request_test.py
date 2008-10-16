@@ -1,46 +1,40 @@
 #!/usr/bin/python
 
-from BoostBuild import Tester, List
-import os
-from string import strip
+import BoostBuild
 
-t = Tester()
+t = BoostBuild.Tester()
 
-# First check some startup
+
+# First check some startup.
 t.set_tree("direct-request-test")
 t.run_build_system(extra_args="define=MACROS")
-
 t.expect_addition("bin/$toolset/debug/" 
-                  * (List("a.obj b.obj b.dll a.exe")))
+                  * (BoostBuild.List("a.obj b.obj b.dll a.exe")))
 
-# When building debug version, the 'define' still applies
+
+# When building a debug version, the 'define' still applies.
 t.rm("bin")
 t.run_build_system(extra_args="debug define=MACROS")
 t.expect_addition("bin/$toolset/debug/" 
-                  * (List("a.obj b.obj b.dll a.exe")))
+                  * (BoostBuild.List("a.obj b.obj b.dll a.exe")))
 
-# When building release version, the 'define' should not
-# apply: we'll have direct build request 'release <define>MACROS'
-# and real build properties 'debug'.
-t.copy("Jamfile2", "Jamfile")
+
+# When building release version, the 'define' should not apply: we will have
+# direct build request 'release <define>MACROS' and a real build property
+# 'debug'.
+t.copy("jamfile2.jam", "jamfile.jam")
 t.copy("b_inverse.cpp", "b.cpp")
 t.rm("bin")
 t.run_build_system(extra_args="release define=MACROS")
 
 
-# Regression test: direct build request was not working
-# when there's more than one level of 'build-project'
-
+# Regression test: direct build request was not working when there was more than
+# one level of 'build-project'.
 t.rm(".")
-t.write('project-root.jam', '')
-t.write('Jamfile', 'build-project a ;')
-t.write('a/Jamfile', 'build-project b ;')
-t.write('a/b/Jamfile', '')
-
+t.write('jamroot.jam', '')
+t.write('jamfile.jam', 'build-project a ;')
+t.write('a/jamfile.jam', 'build-project b ;')
+t.write('a/b/jamfile.jam', '')
 t.run_build_system("release")
-
-
-
-
 
 t.cleanup()

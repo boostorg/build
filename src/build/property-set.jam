@@ -5,6 +5,8 @@
 
 import "class" : new ;
 import feature ;
+import path ;
+import project ;
 import property ;
 import sequence ;
 import set ;
@@ -250,8 +252,8 @@ class property-set
     {
         if ! $(self.target-path)
         {
-            # The <location> feature can be used to explicitly
-            # change the location of generated targetsv
+            # The <location> feature can be used to explicitly change the
+            # location of generated targets.
             local l = [ get <location> ] ;
             if $(l)
             {
@@ -260,7 +262,7 @@ class property-set
             else
             {
                 local p = [ as-path ] ;
-                # Really, an ugly hack. Boost regression test system requires
+                # A real ugly hack. Boost regression test system requires
                 # specific target paths, and it seems that changing it to handle
                 # other directory layout is really hard. For that reason, we
                 # teach V2 to do the things regression system requires. The
@@ -382,6 +384,10 @@ rule create-from-user-input ( raw-properties * : jamfile-module location )
         : $(location) ] ;
     specification = [ property.translate-indirect $(specification)
         : $(jamfile-module) ] ;
+    local project-id = [ project.attribute $(jamfile-module) id ] ;
+    project-id ?= [ path.root $(location) [ path.pwd ] ] ;
+    specification = [ property.translate-dependencies
+                      $(specification) : $(project-id) : $(location) ] ;
     specification =
         [ property.expand-subfeatures-in-conditions $(specification) ] ;
     specification = [ property.make $(specification) ] ;

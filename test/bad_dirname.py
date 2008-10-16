@@ -1,23 +1,22 @@
 #!/usr/bin/python
 
-# Copyright 2003 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-#  Regression test: when directory of project root contained regex metacharacters,
-#  Boost.Build failed to work. Bug reported by Michael Stevens
+# Regression test: when directory of project root contained regex
+# metacharacters, Boost.Build failed to work. Bug reported by Michael Stevens.
 
-from BoostBuild import Tester, List
+import BoostBuild
 
-t = Tester()
+t = BoostBuild.Tester()
 
-t.write("bad[abc]dirname/Jamfile", """ 
+t.write("bad[abc]dirname/jamfile.jam", """
 """)
 
-t.write("bad[abc]dirname/project-root.jam", """ 
+t.write("bad[abc]dirname/jamroot.jam", """
 """)
 
 t.run_build_system(subdir="bad[abc]dirname")
 
 t.cleanup()
-

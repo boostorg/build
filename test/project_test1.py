@@ -5,15 +5,14 @@
 # Distributed under the Boost Software License, Version 1.0. 
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
-from BoostBuild import Tester
+import BoostBuild
 import os
 
-t = Tester("--build-system=project-test1", boost_build_path='', pass_toolset=0)
+t = BoostBuild.Tester("--build-system=project-test1", boost_build_path='',
+    pass_toolset=0)
 
-# This test does no modifications, so run in in the invocation dir
-
+# This test does no modifications, so run in in the invocation dir.
 os.chdir(t.original_workdir)
-
 
 expected_output1="""Project Roots:
 
@@ -59,16 +58,16 @@ Projects:
 
 """
 
-# Test that correct project structure is created when jam is invoked
-# outside of the source tree.
+# Test that correct project structure is created when jam is invoked outside of
+# the source tree.
 expected = (expected_output1 + expected_output2 + expected_output3) % \
     {"root-dir": "project-test1",
      "root-dir-prefix": "project-test1/" }
 
 t.run_build_system(stdout=expected)
 
-# Test that correct project structure is created when jam is invoked
-# at the top of the source tree.
+# Test that correct project structure is created when jam is invoked at the top
+# of the source tree.
 expected = (expected_output1 + expected_output3 + expected_output2) % \
     {"root-dir": ".",
      "root-dir-prefix": "" }

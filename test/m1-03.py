@@ -1,16 +1,16 @@
 #!/usr/bin/python
 
-# Copyright 2002 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2002 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-# Tests that we can use objects from other projects
-# (i.e. with other project root)
-# Test also that we can refer to those target using project-id.
+# Tests that we can use objects from other projects, i.e. with other project
+# root. Test also that we can refer to those target using project-id.
 
-from BoostBuild import Tester, List
+import BoostBuild
 
-t = Tester()
+t = BoostBuild.Tester()
+
 t.set_tree("test1")
 
 t.run_build_system("-sTOOLSET=yfc", subdir="p1")
@@ -39,7 +39,6 @@ t.fail(t.read("p2/bin/c.obj/yfc/debug/runtime-link-dynamic/c.obj") !=\
 a.cpp
 """)
 
-
 t.fail(t.read("bin/a/yfc/debug/runtime-link-dynamic/a") !=\
 """
 <optimization>off <rtti>on <runtime-link>dynamic <toolset>yfc <variant>debug
@@ -55,7 +54,4 @@ t.expect_nothing_more()
 
 # TODO: need to write test cases for referring to targets using project-id.
 
-
-
 t.pass_test()
-

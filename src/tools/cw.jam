@@ -43,7 +43,7 @@ rule init ( version ? : command * : options * )
         version $(version) ] ;
 
     command = [ common.get-invocation-command cw : mwcc.exe : $(command) :
-      [ default-paths $(version) ] ] ;
+        [ default-paths $(version) ] ] ;
     
     common.handle-options cw : $(condition) : $(command) : $(options) ;
 
@@ -103,7 +103,8 @@ rule init ( version ? : command * : options * )
     }    
 }
 
-rule default-paths ( version ? ) # FIXME
+
+local rule default-paths ( version ? )  # FIXME
 {
    local possible-paths ;
    local ProgramFiles = [ common.get-program-files-dir ] ;

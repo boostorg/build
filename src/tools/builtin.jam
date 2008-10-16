@@ -6,15 +6,14 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-#  Defines standard features and rules.
+# Defines standard features and rules.
 
 import alias ;
 import "class" : new ;
-import feature : feature compose ;
-import toolset : flags ;
-import errors : error ;
-import generate ;
+import errors ;
+import feature ;
 import generators ;
+import numbers ;
 import os ;
 import print ;
 import project ;
@@ -23,10 +22,17 @@ import regex ;
 import scanner ;
 import stage ;
 import symlink ;
+import toolset ;
 import type ;
+import types/register ;
 import utility ;
 import virtual-target ;
-import types/register ;
+import message ;
+
+# FIXME: the following generate module import is not needed here but removing it
+# too hastly will break using code (e.g. the main Boost library Jamroot file)
+# that forgot to import the generate module before calling the generate rule.
+import generate ;
 
 
 .os-names = amiga aix bsd cygwin darwin dos emx freebsd hpux iphone linux netbsd
@@ -125,12 +131,12 @@ feature.feature location-prefix : : free ;
 #    unit-test a : a.cpp : <use>b ;
 #    lib b : a.cpp b ;
 #
-# Here, if <use> is not incidental, we'll decide we have two targets for a.obj
-# with different properties, and will complain.
+# Here, if <use> is not incidental, we would decide we have two targets for
+# a.obj with different properties and complain about it.
 #
-# Note that making feature incidental does not mean it's ignored. It may be
-# ignored when creating the virtual target, but the rest of build process will
-# use them.
+# Note that making a feature incidental does not mean it is ignored. It may be
+# ignored when creating a virtual target, but the rest of build process will use
+# them.
 feature.feature use                 : : free dependency incidental ;
 feature.feature dependency          : : free dependency incidental ;
 feature.feature implicit-dependency : : free dependency incidental ;
@@ -145,6 +151,29 @@ feature.feature warnings-as-errors :
     off        # Do not fail the compilation if there are warnings.
     on         # Fail the compilation if there are warnings.
   : incidental propagated ;
+
+# Feature that allows us to configure the maximal template instantiation depth
+# level allowed by a C++ compiler. Applies only to C++ toolsets whose compilers
+# actually support this configuration setting.
+#
+# Note that Boost Build currently does not allow defining features that take any
+# positive integral value as a parameter, which is what we need here, so we just
+# define some of the values here and leave it up to the user to extend this set
+# as he needs using the feature.extend rule.
+#
+# TODO: This should be upgraded as soon as Boost Build adds support for custom
+# validated feature values or at least features allowing any positive integral
+# value. See related Boost Build related trac ticket #194.
+#
+feature.feature c++-template-depth
+    :
+        [ numbers.range 64 1024 : 64 ]
+        [ numbers.range 20 1000 : 10 ]
+        #   Maximum template instantiation depth guaranteed for ANSI/ISO C++
+        # conforming programs.
+        17
+    :
+        incidental optional propagated ;
 
 feature.feature source              :            : free dependency incidental ;
 feature.feature library             :            : free dependency incidental ;
@@ -165,8 +194,8 @@ feature.feature hardcode-dll-paths  : true false : incidental ;
 
 
 # An internal feature that holds the paths of all dependency shared libraries.
-# On Windows, it's needed so that we can add all those paths to PATH when
-# running applications. On Linux, it's needed to add proper -rpath-link command
+# On Windows, it is needed so that we can add all those paths to PATH when
+# running applications. On Linux, it is needed to add proper -rpath-link command
 # line options.
 feature.feature xdll-path : : free path ;
 
@@ -207,7 +236,7 @@ feature.feature architecture :
 
     # HP/PA-RISC
     parisc
-    
+
     # Advanced RISC Machines
     arm
 
@@ -247,7 +276,7 @@ feature.feature instruction-set :
 
     # HP/PA-RISC
     700 7100 7100lc 7200 7300 8000
-    
+
     # Advanced RISC Machines
     armv2 armv2a armv3 armv3m armv4 armv4t armv5 armv5t armv5te armv6 armv6j iwmmxt ep9312
 
@@ -386,6 +415,7 @@ class c-scanner : scanner
     import path ;
     import regex ;
     import scanner ;
+    import sequence ;
     import virtual-target ;
 
     rule __init__ ( includes * )
@@ -394,7 +424,8 @@ class c-scanner : scanner
 
         for local i in $(includes)
         {
-            self.includes += [ path.native $(i:G=) ] ;
+            self.includes += [ sequence.transform path.native
+                                : [ regex.split $(i:G=) "&&" ] ] ;
         }
     }
 
@@ -415,9 +446,9 @@ class c-scanner : scanner
         # Attach binding of including file to included targets. When a target is
         # directly created from virtual target this extra information is
         # unnecessary. But in other cases, it allows us to distinguish between
-        # two headers of the same name included from different places. We don't
+        # two headers of the same name included from different places. We do not
         # need this extra information for angle includes, since they should not
-        # depend on including file (we can't get literal "." in include path).
+        # depend on including file (we can not get literal "." in include path).
         local g2 = $(g)"#"$(b) ;
 
         angle = $(angle:G=$(g)) ;
@@ -480,7 +511,7 @@ class lib-generator : generator
             # Determine the needed target type.
             local actual-type ;
                 # <source>files can be generated by <conditional>@rule feature
-                # in which case we don't consider it a SEARCHED_LIB type.
+                # in which case we do not consider it a SEARCHED_LIB type.
             if ! <source> in $(properties:G) &&
                ( <search> in $(properties:G) || <name> in $(properties:G) )
             {
@@ -518,20 +549,20 @@ generators.register [ new lib-generator builtin.lib-generator :  : LIB ] ;
 # The implementation of the 'lib' rule. Beyond standard syntax that rule allows
 # simplified: "lib a b c ;".
 #
-rule lib ( names + : sources * : requirements * : default-build *
-    : usage-requirements * )
+rule lib ( names + : sources * : requirements * : default-build * :
+    usage-requirements * )
 {
     if $(names[2])
     {
         if <name> in $(requirements:G)
         {
             errors.user-error "When several names are given to the 'lib' rule" :
-                "it's not allowed to specify the <name> feature." ;
+                "it is not allowed to specify the <name> feature." ;
         }
         if $(sources)
         {
             errors.user-error "When several names are given to the 'lib' rule" :
-                "it's not allowed to specify sources." ;
+                "it is not allowed to specify sources." ;
         }
     }
 
@@ -599,7 +630,7 @@ class searched-lib-generator : generator
             lib-name ?= $(name) ;
             local t = [ new searched-lib-target $(lib-name) : $(project)
                 : $(shared) : $(search) : $(a) ] ;
-            # We return sources for a simple reason. If there's
+            # We return sources for a simple reason. If there is
             #    lib png : z : <name>png ;
             # the 'z' target should be returned, so that apps linking to 'png'
             # will link to 'z', too.
@@ -677,11 +708,11 @@ class C-compiling-generator : generator
 rule register-c-compiler ( id : source-types + : target-types + : requirements *
     : optional-properties * )
 {
-    generators.register [ new C-compiling-generator $(id) : $(source-types)
-        : $(target-types) : $(requirements) : $(optional-properties) ] ;
+    generators.register [ new C-compiling-generator $(id) : $(source-types) :
+        $(target-types) : $(requirements) : $(optional-properties) ] ;
 }
 
-# FIXME: this is ugly, should find a better way (we'd like client code to
+# FIXME: this is ugly, should find a better way (we would like client code to
 # register all generators as "generators.some-rule" instead of
 # "some-module.some-rule".)
 #
@@ -726,18 +757,22 @@ class linking-generator : generator
             }
         }
 
-        # It's possible that sources include shared libraries that did not came
+        # It is possible that sources include shared libraries that did not came
         # from 'lib' targets, e.g. .so files specified as sources. In this case
         # we have to add extra dll-path properties and propagate extra xdll-path
-        # properties so that application linking to use will get xdll-path to
+        # properties so that application linking to us will get xdll-path to
         # those libraries.
         local extra-xdll-paths ;
         for local s in $(sources)
         {
             if [ type.is-derived [ $(s).type ] SHARED_LIB ] && ! [ $(s).action ]
             {
-                # Unfortunately, we don't have a good way to find the path to a
+                # Unfortunately, we do not have a good way to find the path to a
                 # file, so use this nasty approach.
+                #
+                # TODO: This needs to be done better. One thing that is really
+                # broken with this is that it does not work correctly with
+                # projects having multiple source locations.
                 local p = [ $(s).project ] ;
                 local location = [ path.root [ $(s).name ]
                     [ $(p).get source-location ] ] ;
@@ -746,8 +781,8 @@ class linking-generator : generator
         }
 
         # Hardcode DLL paths only when linking executables.
-        # Pros: don't need to relink libraries when installing.
-        # Cons: "standalone" libraries (plugins, python extensions) can't
+        # Pros: do not need to relink libraries when installing.
+        # Cons: "standalone" libraries (plugins, python extensions) can not
         # hardcode paths to dependent libraries.
         if [ $(property-set).get <hardcode-dll-paths> ] = true
             && [ type.is-derived $(self.target-types[1]) EXE ]
@@ -800,9 +835,9 @@ class linking-generator : generator
         # to other shared libraries this one depends on in order to be able to
         # find them all at runtime.
 
-        # Just pass all features in property-set, it's theorically possible that
-        # we'll propagate <xdll-path> features explicitly specified by the user,
-        # but then the user's to blaim for using an internal feature.
+        # Just pass all features in property-set, it is theorically possible
+        # that we will propagate <xdll-path> features explicitly specified by
+        # the user, but then the user is to blaim for using an internal feature.
         local values = [ $(property-set).get <xdll-path> ] ;
         extra += $(values:G=<xdll-path>) ;
 
@@ -881,7 +916,7 @@ class archive-generator : generator
         local result = [ generator.run $(project) $(name) : $(property-set)
             : $(sources) ] ;
 
-        # For static linking, if we get a library in source, we can't directly
+        # For static linking, if we get a library in source, we can not directly
         # link to it so we need to cause our dependencies to link to that
         # library. There are two approaches:
         # - adding the library to the list of returned targets.
@@ -892,11 +927,11 @@ class archive-generator : generator
         #     lib a2 : a2.cpp a1 : <link>static ;
         #     install dist : a2 ;
         #
-        # here we'll try to install 'a1', even though it's not necessary in the
-        # general case. With the second approach, even indirect dependants will
-        # link to the library, but it should not cause any harm. So, return all
-        # LIB sources together with created targets, so that dependants link to
-        # them.
+        # here we will try to install 'a1', even though it is not necessary in
+        # the general case. With the second approach, even indirect dependants
+        # will link to the library, but it should not cause any harm. So, return
+        # all LIB sources together with created targets, so that dependants link
+        # to them.
         local usage-requirements ;
         if [ $(property-set).get <link> ] = static
         {
