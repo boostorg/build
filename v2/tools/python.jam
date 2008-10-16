@@ -874,7 +874,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         }
         else
         {
-            debug-message no framework directory found; using library path ;
+            debug-message "no framework directory found; using library path" ;
             framework-directory = ;
         }
     }
