@@ -258,6 +258,7 @@ generators.register-c-compiler darwin.compile.mm : OBJECTIVE_CPP : OBJ : <toolse
 rule compile.m
 {
     LANG on $(<) = "-x objective-c" ;
+    gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
 }
 
 actions compile.m
@@ -265,9 +266,10 @@ actions compile.m
     "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
-rule compile.mm
+rule compile.mm  ( targets * : sources * : properties * )
 {
     LANG on $(<) = "-x objective-c++" ;
+    gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
 }
 
 actions compile.mm
