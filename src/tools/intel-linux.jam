@@ -89,7 +89,7 @@ actions compile.c++
     "$(CONFIG_COMMAND)" -c -xc++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
-rule compile.c++ ( targets * : sources * : properties * )
+rule compile.c ( targets * : sources * : properties * )
 {
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
 }
