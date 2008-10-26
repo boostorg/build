@@ -352,6 +352,7 @@ rule compile-c-c++ ( targets + : sources * )
 # The global .escaped-double-quote variable is used to avoid messing up Emacs
 # syntax highlighting in the messy N-quoted code below.
 #
+# If you change this rule, make corresponding change in intel-win.jam
 actions compile-c-c++-pch
 {
     $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote))" $(.CC.FILTER)
@@ -362,6 +363,7 @@ actions compile-c-c++-pch
 # built source file for compiling the precompiled headers is expected to be
 # given as one of the source parameters.
 #
+# If you change this rule, make corresponding change in intel-win.jam
 actions compile-c-c++-pch-s
 {
     $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
@@ -943,7 +945,7 @@ local rule default-paths ( version ? )
 }
 
 
-local rule get-rspline ( target : lang-opt )
+rule get-rspline ( target : lang-opt )
 {
     CC_RSPLINE on $(target) = [ on $(target) return $(lang-opt) -U$(UNDEFS)
         $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c $(.nl)-D$(DEFINES)
