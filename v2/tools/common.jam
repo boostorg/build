@@ -466,9 +466,14 @@ rule get-program-files-dir ( )
 if [ os.name ] = NT
 {
     RM = del /f /q ;
-    CP = copy ;
+    CP = copy /b ;
     IGNORE = "2>nul >nul & setlocal" ;
     LN ?= $(CP) ;
+    # Ugly hack to convince copy to set the timestamp of the
+    # destination to the current time by concatenating the
+    # source with a nonexistent file.  Note that this requires
+    # /b (binary) as the default when concatenating files is /a (ascii).
+    WINDOWS-CP-HACK = "+ this-file-does-not-exist-A698EE7806899E69" ;
 }
 else
 {
@@ -681,7 +686,7 @@ rule copy
 
 actions copy
 {
-    $(CP) "$(>)" "$(<)"
+    $(CP) "$(>)" $(WINDOWS-CP-HACK) "$(<)"
 }
 
 
