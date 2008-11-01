@@ -467,6 +467,17 @@ path-constant DATA : data/a.txt ;
         </listitem>
       </varlistentry>
 
+      <varlistentry>
+        <term><literal>include</literal></term>
+
+        <listitem>
+          <simpara>
+            Specifies an additional include path that is to be passed to C and
+            C++ compilers.
+          </simpara>
+        </listitem>
+      </varlistentry>
+
       <varlistentry><term><literal>warnings</literal></term>
         <listitem>
           <simpara>
