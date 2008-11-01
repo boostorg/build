@@ -34,6 +34,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 
 feature.extend toolset : gcc ;
+# feature.subfeature toolset gcc : flavor : : optional ;
 
 toolset.inherit-generators gcc : unix : unix.link unix.link.dll ;
 toolset.inherit-flags gcc : unix ;
@@ -130,6 +131,7 @@ rule init ( version ? : command * : options * )
         condition = [ common.check-init-parameters gcc
             : version $(version)
             ] ;
+        condition = $(condition) ;  #/<toolset-gcc:flavor> ;
     }
 
     common.handle-options gcc : $(condition) : $(command) : $(options) ;
@@ -360,6 +362,7 @@ toolset.flags gcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
 
 rule compile.c++.pch ( targets * : sources * : properties * )
 {
+    setup-threading $(targets) : $(sources) : $(properties) ;
     setup-fpic $(targets) : $(sources) : $(properties) ;
 }
 
@@ -370,6 +373,7 @@ actions compile.c++.pch
 
 rule compile.c.pch ( targets * : sources * : properties * )
 {
+    setup-threading $(targets) : $(sources) : $(properties) ;
     setup-fpic $(targets) : $(sources) : $(properties) ;
 }
 
