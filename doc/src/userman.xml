@@ -13,8 +13,8 @@
   <xi:include href="tutorial.xml"/>
   <xi:include href="advanced.xml"/>
   <xi:include href="tasks.xml"/>
-  <xi:include href="extending.xml"/>
   <xi:include href="reference.xml"/>
+  <xi:include href="extending.xml"/>
   <xi:include href="faq.xml"/>
 
   <!-- Appendicies -->
