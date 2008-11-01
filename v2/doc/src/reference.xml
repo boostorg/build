@@ -9,7 +9,7 @@
 
 <chapter id="bbv2.reference"
          xmlns:xi="http://www.w3.org/2001/XInclude">
-  <title>Detailed reference</title>
+  <title>Reference</title>
 
   <section id="bbv2.reference.general">
     <title>General information</title>
@@ -49,186 +49,9 @@ boost-build build-system ;
         automatically find the build system.</para>
 
       <para>The default <filename>bootstrap.jam</filename>, after loading some standard
-        definitions, loads two files, which can be provided/customised by
-        user: <filename>site-config.jam</filename> and <filename>user-config.jam</filename>.</para>
-
-      <para>Locations where those files are searched are summarized below:</para>
-
-      <table id="bbv2.reference.init.config">
-        <title>Search paths for configuration files</title>
-
-        <tgroup cols="3">
-          <thead>
-
-            <row>
-              <entry></entry>
-
-              <entry>site-config.jam</entry>
-
-              <entry>user-config.jam</entry>
-            </row>
-
-          </thead>
-          <tbody>
-
-            <row>
-              <entry>Linux</entry>
-
-              <entry>
-                <simpara><code>/etc</code></simpara>
-                <simpara><code>$HOME</code></simpara>
-                <simpara><code>$BOOST_BUILD_PATH</code></simpara>
-              </entry>
-
-              <entry>
-                <simpara><code>$HOME</code></simpara>
-                <simpara><code>$BOOST_BUILD_PATH</code></simpara>
-              </entry>
-            </row>
-
-            <row>
-              <entry>Windows</entry>
-
-              <entry>
-                <simpara><code>%SystemRoot%</code></simpara>
-                <simpara><code>%HOMEDRIVE%%HOMEPATH%</code></simpara>
-                <simpara><code>%HOME%</code></simpara>
-                <simpara><code>%BOOST_BUILD_PATH%</code></simpara>
-              </entry>
-
-              <entry>
-                <simpara><code>%HOMEDRIVE%%HOMEPATH%</code></simpara>
-                <simpara><code>%HOME%</code></simpara>
-                <simpara><code>%BOOST_BUILD_PATH%</code></simpara>
-              </entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-
-      <para>
-        Boost.Build comes with default versions of those files,
-        <!-- Where are those files installed?  The user can't use them as templates unless she can find them -->
-        which can serve as templates for customized versions.
-      </para>
+        definitions, loads two <filename>site-config.jam</filename> and <filename>user-config.jam</filename>.</para>
 
     </section>
-    <section id="bbv2.reference.commandline">
-      <title>Command line</title>
-
-      <para>The command line may contain:</para>
-
-      <itemizedlist>
-        <listitem><simpara>Jam options,</simpara></listitem>
-
-        <listitem><simpara>Boost.Build <link linkend=
-              "bbv2.reference.init.options">options</link>,</simpara></listitem>
-
-        <listitem><simpara>Command line arguments</simpara></listitem>
-      </itemizedlist>
-
-      <section id="bbv2.reference.init.args">
-        <title>Command line arguments</title>
-
-        <para>
-          Command line arguments specify targets and build
-          request using the following rules.
-        </para>
-
-        <itemizedlist>
-          <listitem>
-            <simpara>
-              An argument that does not contain slashes or the <code>=</code>
-              symbol is either a value of an implicit feature or of a target to
-              be built. It is taken to be value of a feature if an appropriate
-              feature exists. Otherwise, it is considered a <link linkend=
-                "bbv2.reference.ids">target id</link>. Building the
-              special target name “clean” has the same effect as
-              using the <code>--clean</code> option.
-            </simpara>
-          </listitem>
-
-          <listitem>
-            <para>
-              An argument containing either slashes or the <code>=</code> symbol
-              specifies a number of build request elements (see <xref linkend=
-              "bbv2.advanced.build_request"/>). In its simplest form, it is just
-              a set of properties, separated by slashes, which become a single
-              build request element, for example:
-
-<programlisting>
-borland/runtime-link=static
-</programlisting>
-
-              A more complex form can be used to save typing. For example,
-              instead of
-
-<programlisting>
-borland/runtime-link=static borland/runtime-link=dynamic
-</programlisting>
-
-              one can use
-
-<programlisting>
-borland/runtime-link=static,dynamic
-</programlisting>
-
-              Exactly, the conversion from argument to build request
-              elements is performed by (1) splitting the argument at each slash,
-              (2) converting each split part into a set of properties and (3)
-              taking all possible combinations
-                <!-- Be specific.  Do you mean the cross-product? -->
-              of the property sets. Each split
-              part should have either the form
-
-<programlisting>
-<emphasis>feature-name</emphasis>=<emphasis>feature-value1</emphasis>[","<emphasis>feature-valueN</emphasis>]*
-</programlisting>
-
-              or, in case of implicit features
-
-<programlisting>
-<emphasis>feature-value1</emphasis>[","<emphasis>feature-valueN</emphasis>;]*
-</programlisting>
-
-              will be converted into the property set
-
-<programlisting>
-&lt;feature-name&gt;feature-value1 .... &lt;feature-name&gt;feature-valueN
-</programlisting>
-
-<!-- There's absolutely no explanation of how arguments are combined.  Fix that. -->
-
-            </para>
-          </listitem>
-        </itemizedlist>
-
-        <para>
-          For example, the command line
-
-<programlisting>
-target1 debug gcc/runtime-link=dynamic,static
-</programlisting>
-
-          would cause target called <literal>target1</literal> to be rebuilt in
-          debug mode, except that for gcc, both dynamically and statically
-          linked binaries would be created.
-        </para>
-
-      </section>
-      <section id="bbv2.reference.init.options">
-        <title>Command line options</title>
-
-        <para>All of the Boost.Build options start with the "--" prefix.
-          They are described in the following table.</para>
-
-        <para>FIXME: That table has moved into "User documentation" section
-        and there is nothing we can add here. Remove this part?</para>
-
-
-      </section>
-    </section>
-
 
   </section>
 
@@ -805,15 +628,19 @@ path-constant DATA : data/a.txt ;
 
       <para>Before using any tool, you must declare your intention, and possibly
       specify additional information about the tool's configuration. This is
-      done with the <code>using</code> rule, for example:
+      done by calling the <code>using</code> rule, typically in your
+      <filename>user-config.jam</filename>, for example:</para>
 <programlisting>
 using gcc ;
 </programlisting>
-      additional parameters can be passed just like for other rules, for example:
+    <para>additional parameters can be passed just like for other rules, for example:</para>
 <programlisting>
 using gcc : 4.0 : g++-4.0 ;
 </programlisting>
-      The options that can be passed to each tool will be documented in the
+      
+
+
+      <para>The options that can be passed to each tool are documented in the
       subsequent sections.</para>
 
       <section id="bbv2.reference.tools.compilers">
@@ -821,7 +648,10 @@ using gcc : 4.0 : g++-4.0 ;
         <title>C++ Compilers</title>
 
         <para>This section lists all Boost.Build modules that support C++
-        compilers and documents how each one can be initialized.</para>
+          compilers and documents how each one can be initialized.  The name
+          of support module for compiler is also the value for
+          the <code>toolset</code> feature that can be used to explicitly
+          request that compiler. </para>
 
         <section id="bbv2.reference.tools.compiler.gcc">
 
@@ -1310,7 +1140,7 @@ using dmc : &toolset_ops; ;</programlisting>
           &using_repeation;
 
           <para>If the command is not specified, Boost.Build will search for
-          a binary named <command>como</command> in
+          a binary named <command>dmc</command> in
           <envar>PATH</envar>.</para>
 
           &option_list_intro;

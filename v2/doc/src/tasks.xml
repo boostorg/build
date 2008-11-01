@@ -712,6 +712,7 @@ exe app : app.cpp : &lt;implicit-dependency&gt;parser ;
       as potential dependencies.
     </para>
   </section>
+
 </chapter>
 
 <!--
