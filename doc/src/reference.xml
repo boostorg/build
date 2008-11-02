@@ -557,6 +557,33 @@ path-constant DATA : data/a.txt ;
         </listitem>
       </varlistentry>
 
+      <varlistentry><term><literal>target-os</literal></term>
+        <listitem>
+
+          <anchor id="bbv2.reference.features.target-os"/>
+
+          <para>
+            The operating system for which the code is to be generated. The
+            compiler you used should be the compiler for that operating
+            system. This option causes Boost.Build to use naming conventions
+            suitable for that operating system, and adjust build process
+            accordingly. For example, with gcc, it controls if import
+            libraries are produced for shared libraries or not.                       
+          </para>
+
+          <para>The complete list of possible values for this feature is:
+            amiga, aix, bsd, cygwin, darwin, dos, emx, freebsd, hpux, iphone,
+            linux, netbsd, openbsd, osf, qnx, qnxnto, sgi, solaris, sun,
+            sunos, svr4, sysv, ultrix, unix, unixware, windows.
+          </para>
+
+          <para>See <xref linkend="bbv2.tasks.crosscompile"/> for details of
+          crosscompilation</para>
+
+        </listitem>
+      </varlistentry>
+
+
       <varlistentry><term><literal>architecture</literal></term>
         <listitem>
 
@@ -865,7 +892,7 @@ using msvc : &toolset_ops; ;
             </varlistentry>
         </variablelist>
 
-          <section>
+          <section id="v2.reference.tools.compiler.msvc.64">
             <title>64-bit support</title>
 
             <indexterm><primary>64-bit compilation</primary>
