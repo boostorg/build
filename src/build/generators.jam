@@ -203,6 +203,7 @@ class generator
     )
     {
         self.id = $(id) ;
+        self.rule-name = $(id) ;
         self.composing = $(composing) ;
         self.source-types = $(source-types) ;
         self.target-types-and-names = $(target-types-and-names) ;
@@ -260,7 +261,17 @@ class generator
     {
         return $(self.requirements) ;
     }
-
+    
+    rule set-rule-name ( rule-name )
+    {
+        self.rule-name = $(rule-name) ;
+    }
+    
+    rule rule-name ( )
+    {
+        return $(self.rule-name) ;
+    }
+        
     # Returns a true value if the generator can be run with the specified
     # properties.
     #
@@ -506,7 +517,7 @@ class generator
 
         # Assign an action for each target.
         local action = [ action-class ] ;
-        local a = [ class.new $(action) $(sources) : $(self.id) :
+        local a = [ class.new $(action) $(sources) : $(self.rule-name) :
                     $(property-set) ] ;
 
         # Create generated target for each target type.
