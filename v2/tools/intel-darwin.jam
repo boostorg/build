@@ -17,7 +17,7 @@ import generators ;
 feature.extend-subfeature toolset intel : platform : darwin ;
 
 toolset.inherit-generators intel-darwin 
-  <toolset>intel <toolset-intel:platform>darwin : gcc ;
+  <toolset>intel <toolset-intel:platform>darwin : gcc : gcc.mingw.link gcc.mingw.link.dll ;
 
 generators.override intel-darwin.prebuilt : builtin.lib-generator ;
 generators.override intel-darwin.prebuilt : builtin.prebuilt ;
