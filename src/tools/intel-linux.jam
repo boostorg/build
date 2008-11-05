@@ -17,7 +17,7 @@ import generators ;
 feature.extend-subfeature toolset intel : platform : linux ;
 
 toolset.inherit-generators intel-linux 
-     <toolset>intel <toolset-intel:platform>linux : gcc ;
+     <toolset>intel <toolset-intel:platform>linux : gcc : gcc.mingw.link gcc.mingw.link.dll ;
 generators.override intel-linux.prebuilt : builtin.lib-generator ;
 generators.override intel-linux.prebuilt : builtin.prebuilt ;
 generators.override intel-linux.searched-lib-generator : searched-lib-generator ;
