@@ -571,10 +571,9 @@ path-constant DATA : data/a.txt ;
             libraries are produced for shared libraries or not.                       
           </para>
 
-          <para>The complete list of possible values for this feature is:
-            amiga, aix, bsd, cygwin, darwin, dos, emx, freebsd, hpux, iphone,
-            linux, netbsd, openbsd, osf, qnx, qnxnto, sgi, solaris, sun,
-            sunos, svr4, sysv, ultrix, unix, unixware, windows.
+          <para>The complete list of possible values for this feature is: 
+            aix, bsd, cygwin, darwin, freebsd, hpux, iphone, linux, netbsd,
+            openbsd, osf, qnx, qnxnto, sgi, solaris, unix, unixware, windows.
           </para>
 
           <para>See <xref linkend="bbv2.tasks.crosscompile"/> for details of

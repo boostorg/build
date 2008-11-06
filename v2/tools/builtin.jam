@@ -35,10 +35,8 @@ import message ;
 import generate ;
 
 
-.os-names = amiga aix bsd cygwin darwin dos emx freebsd hpux iphone linux netbsd
-    openbsd osf qnx qnxnto sgi solaris sun sunos svr4 sysv ultrix unix unixware
-    vms windows ;
-
+.os-names = aix bsd cygwin darwin freebsd hpux iphone linux netbsd
+    openbsd osf qnx qnxnto sgi solaris unix unixware windows ;
 
 # Feature used to determine which OS we're on. New <target-os> and <host-os>
 # features should be used instead.
@@ -70,6 +68,12 @@ local rule default-host-os ( )
             case MACOSX       : host-os = darwin  ;
             case KFREEBSD     : host-os = freebsd ;
             case LINUX        : host-os = linux   ;
+            case SUNOS        : 
+              ECHO "SunOS is not a supported operating system." ;
+              ECHO "We believe last version of SunOS was released in 1992, " ;
+              ECHO "so if you get this message, something is very wrong with configuration logic. " ;
+              ECHO "Please report this as a bug. " ;
+              EXIT ;
             case *            : host-os = unix    ;
         }
     }
