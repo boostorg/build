@@ -810,7 +810,7 @@ rule setup-threading ( targets * : sources * : properties * )
             {
                 option = -mthreads ;
             }
-            case sunos :
+            case solaris :
             {
                 option = -pthreads ;
                 libs = rt ;
