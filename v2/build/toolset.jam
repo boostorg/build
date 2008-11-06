@@ -455,9 +455,9 @@ rule inherit-rules ( toolset : base )
     local rules ;
     for local g in $(base-generators)
     {
-        local id = [ MATCH "[^.]*\.(.*)" : [ $(g).id ] ] ;
-        rules += $(id) ;
+        rules += [ MATCH "[^.]*\.(.*)" : [ $(g).rule-name ] ] ;
     }
+    rules = [ sequence.unique $(rules) ] ;
     IMPORT $(base) : $(rules) : $(toolset) : $(rules) ;
     IMPORT $(base) : $(rules) : : $(toolset).$(rules) ;
 }
