@@ -137,6 +137,7 @@ rule init ( version ? : command * : options * )
     common.handle-options gcc : $(condition) : $(command) : $(options) ;
 
     local linker = [ feature.get-values <linker-type> : $(options) ] ;
+    # The logic below should actually be keyed on <target-os>
     if ! $(linker)
     {
         if [ os.name ] = OSF
@@ -151,6 +152,10 @@ rule init ( version ? : command * : options * )
         {
             linker = aix ;
         }
+        else if [ os.name ] = SOLARIS
+        {
+            linker = sun ;
+        }        
         else
         {
             linker = gnu ;
