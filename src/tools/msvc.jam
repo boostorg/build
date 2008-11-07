@@ -37,6 +37,9 @@ import toolset ;
 import type ;
 
 
+type.register MANIFEST : manifest ;
+feature.feature standalone-manifest : off on : incidental propagated ;
+
 ################################################################################
 #
 # Public rules.
@@ -332,11 +335,11 @@ rule compile.c.pch ( targets + : sources * : properties * )
 
 # Action for running the C/C++ compiler without using precompiled headers.
 #
+# WARNING: Synchronize any changes this in action with intel-win
 actions compile-c-c++
 {
     $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
 }
-
 
 rule compile-c-c++ ( targets + : sources * )
 {
@@ -416,9 +419,21 @@ actions compile.rc
 }
 
 
+rule link ( targets + : sources * : properties * )
+{
+    if ! <standalone-manifest>on in $(properties)
+    {        
+        msvc.manifest $(targets) : $(sources) : $(properties) ;
+    }    
+}
+
 rule link.dll ( targets + : sources * : properties * )
 {
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
+    if ! <standalone-manifest>on in $(properties)
+    {        
+        msvc.manifest.dll $(targets) : $(sources) : $(properties) ;
+    }    
 }
 
 
@@ -438,37 +453,53 @@ if [ os.name ] in NT
     {
         $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
+    }
+    
+    actions manifest
+    {        
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
         )
     }
-
+    
     actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
+    }
+
+    actions manifest.dll
+    {        
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
         )
-    }
+    }    
 }
 else
-{
+{        
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+    }
+
+    actions manifest
+    {        
         if test -e "$(<[1]).manifest"; then
             $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);1"
         fi
     }
-
+    
     actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
-        if test -e "$(<[1]).manifest"; then
-            $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
-        fi
     }
+    
+    actions manifest.dll
+    {
+        if test -e "$(<[1]).manifest"; then
+          $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
+        fi
+    }    
 }
 
 
@@ -952,6 +983,32 @@ rule get-rspline ( target : lang-opt )
         $(.nl)\"-I$(INCLUDES:W)\" ] ;
 }
 
+class msvc-linking-generator : linking-generator
+{
+    # Calls the base version.  If necessary, also create a target for the
+    # manifest file.specifying source's name as the name of the created
+    # target. As result, the PCH will be named whatever.hpp.gch, and not
+    # whatever.gch.
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        local result = [ generator.generated-targets $(sources)
+          : $(property-set) : $(project) $(name) ] ;
+        if [ $(property-set).get <standalone-manifest> ] = "on"
+        {
+            if ! $(name)
+            {
+                name = [ determine-output-name $(sources) ] ;
+            }
+            
+            local action = [ $(result[0]).action ] ;
+            result += [ virtual-target.register
+                [ class.new file-target $(name) : MANIFEST : $(project) : $(action) ] ] ;
+        }
+        return $(result) ;
+    }
+}
+
+
 
 # Unsafe worker rule for the register-toolset() rule. Must not be called
 # multiple times.
@@ -984,8 +1041,10 @@ local rule register-toolset-really ( )
         # TODO: Is it possible to combine these? Make the generators
         # non-composing so that they do not convert each source into a separate
         # .rsp file.
-        generators.register-linker msvc.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>msvc ;
-        generators.register-linker msvc.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB : <toolset>msvc ;
+        generators.register [ new msvc-linking-generator 
+            msvc.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>msvc ] ;
+        generators.register [ new msvc-linking-generator 
+            msvc.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB : <toolset>msvc ] ;
 
         generators.register-archiver msvc.archive : OBJ : STATIC_LIB : <toolset>msvc ;
         generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
