@@ -38,7 +38,7 @@ import type ;
 
 
 type.register MANIFEST : manifest ;
-feature.feature standalone-manifest : off on : incidental propagated ;
+feature.feature embed-manifest : on off : incidental propagated ;
 
 ################################################################################
 #
@@ -421,7 +421,7 @@ actions compile.rc
 
 rule link ( targets + : sources * : properties * )
 {
-    if ! <standalone-manifest>on in $(properties)
+    if <embed-manifest>on in $(properties)
     {        
         msvc.manifest $(targets) : $(sources) : $(properties) ;
     }    
@@ -430,12 +430,11 @@ rule link ( targets + : sources * : properties * )
 rule link.dll ( targets + : sources * : properties * )
 {
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
-    if ! <standalone-manifest>on in $(properties)
+    if <embed-manifest>on in $(properties)
     {        
         msvc.manifest.dll $(targets) : $(sources) : $(properties) ;
     }    
 }
-
 
 # Incremental linking a DLL causes no end of problems: if the actual exports do
 # not change, the import .lib file is never updated. Therefore, the .lib is
@@ -993,7 +992,7 @@ class msvc-linking-generator : linking-generator
     {
         local result = [ generator.generated-targets $(sources)
           : $(property-set) : $(project) $(name) ] ;
-        if [ $(property-set).get <standalone-manifest> ] = "on"
+        if [ $(property-set).get <embed-manifest> ] = "off"
         {
             if ! $(name)
             {
