@@ -238,6 +238,12 @@ path-constant DATA : data/a.txt ;
   <section id="bbv2.advanced.builtins.features">
     <title>Builtin features</title>
 
+    <para>This section documents the features that are built-in into
+    Boost.Build. For features with a fixed set of values, that set is
+    provided, with the default value listed first.</para>
+
+    <indexterm><primary>features</primary><secondary>builtin</secondary></indexterm>
+
     <variablelist>
       <varlistentry><term><literal>variant</literal></term>
 
@@ -323,6 +329,25 @@ path-constant DATA : data/a.txt ;
             not use shared libraries at all, and on some compilers,
             mixing static and shared runtime requires extreme care.  Check
             your compiler documentation for more details.
+          </simpara>
+
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>threading</literal></term>
+
+        <listitem>
+
+          <para><emphasis role="bold">Allowed values:</emphasis> <literal>single</literal>,
+            <literal>multi</literal></para>
+
+          <simpara>
+            Controls if the project should be built in multi-threaded mode.  This feature does not
+            necessary change code generation in the compiler, but it causes the compiler to link
+            to additional or different runtime libraries, and define additional preprocessor 
+            symbols (for example, <code>_MT</code> on Windows and <code>_REENTRANT</code> on Linux). 
+            How those symbols affect the compiled code depends on the code itself.
           </simpara>
 
         </listitem>
@@ -2077,7 +2102,7 @@ requested-properties -&gt; property-path
 
 <!--
      Local Variables:
-     mode: xml
+     mode: nxml
      sgml-indent-data: t
      sgml-parent-document: ("userman.xml" "chapter")
      sgml-set-face: t
