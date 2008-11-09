@@ -54,6 +54,8 @@ generators.override darwin.searched-lib-generator : searched-lib-generator ;
 generators.override darwin.compile.c.pch   : pch.default-c-pch-generator   ;
 generators.override darwin.compile.c++.pch : pch.default-cpp-pch-generator ;
 
+type.set-generated-target-suffix PCH : <toolset>darwin : gch ;
+
 toolset.inherit-rules darwin : gcc ;
 toolset.inherit-flags darwin : gcc     
   :  <runtime-link>static
