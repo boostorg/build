@@ -307,7 +307,7 @@ macro(boost_library_project LIBNAME)
     # Include each of the source directories
     if(THIS_PROJECT_SRCDIRS)
       foreach(SUBDIR ${THIS_PROJECT_SRCDIRS})
-    add_subdirectory(${SUBDIR})
+        add_subdirectory(${SUBDIR})
       endforeach(SUBDIR ${THIS_PROJECT_SRCDIRS})
     endif()
 
@@ -322,8 +322,9 @@ macro(boost_library_project LIBNAME)
       # logs are in, has to match the binary directory
       # passed to 'add_subdirectory', in the foreach() just below
       boost_post_results(${PROJECT_NAME} ${PROJECT_NAME}-test
-    test
-    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-test)
+                         test
+                         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-test
+                         )
 
       foreach(SUBDIR ${THIS_PROJECT_TESTDIRS})
         add_subdirectory(${SUBDIR} ${PROJECT_NAME}-test)
@@ -387,7 +388,19 @@ macro(boost_tool_project TOOLNAME)
   endif()
 endmacro(boost_tool_project)
 
-# TODO: Document me! (Here and on the Trac)
+#TODO: Finish this documentation
+# Defines dependencies of a boost project and testing targets. Use as:
+#
+#   boost_module(libname
+#                DEPENDS srcdir1 srcdir2 ...
+#                TEST_DEPENDS testdir1 testdir2 ...
+#
+# Example: 
+#   boost_library_project(
+#     Thread
+#     SRCDIRS src 
+#     TESTDIRS test
+#     )
 macro(boost_module LIBNAME)
   parse_arguments(THIS_MODULE
     "DEPENDS"
@@ -398,6 +411,15 @@ macro(boost_module LIBNAME)
   # Export BOOST_${LIBNAME}_DEPENDS
   string(TOUPPER "BOOST_${LIBNAME}_DEPENDS" THIS_MODULE_LIBNAME_DEPENDS)
   set(${THIS_MODULE_LIBNAME_DEPENDS} ${THIS_MODULE_DEPENDS})
+  #
+  #message(STATUS "----------------------------------------------------------------")
+  #message(STATUS "LIBNAME: ${LIBNAME}")
+  #message(STATUS "THIS_MODULE_DEPENDS: ${THIS_MODULE_DEPENDS}")
+  #message(STATUS "THIS_MODULE_LIBNAME_DEPENDS: ${THIS_MODULE_LIBNAME_DEPENDS}")
+  #message(STATUS "${THIS_MODULE_LIBNAME_DEPENDS}: ${${THIS_MODULE_LIBNAME_DEPENDS}}")
+  #message(STATUS "THIS_MODULE_TEST_DEPENDS: ${THIS_MODULE_TEST_DEPENDS}")
+  #message(STATUS "THIS_MODULE_LIBNAME_TEST_DEPENDS: ${THIS_MODULE_LIBNAME_TEST_DEPENDS}")
+  #message(STATUS "${THIS_MODULE_LIBNAME_TEST_DEPENDS}: ${${THIS_MODULE_LIBNAME_TEST_DEPENDS}}")
 endmacro(boost_module)
 
 # This macro is an internal utility macro that builds the name of a
@@ -647,9 +669,9 @@ macro(boost_library_variant LIBNAME)
       # different names, so we follow the Boost.Build version 2 style
       # and prepend "lib" to the name.
       if(WIN32 AND NOT CYGWIN)
-    set(LIBPREFIX "lib")
+        set(LIBPREFIX "lib")
       else(WIN32 AND NOT CYGWIN)
-    set(LIBPREFIX "")
+        set(LIBPREFIX "")
       endif(WIN32 AND NOT CYGWIN)
       
       # Add the library itself
@@ -1018,6 +1040,11 @@ macro(boost_add_library LIBNAME)
     ${ARGN}
     )
   set(THIS_LIB_SOURCES ${THIS_LIB_DEFAULT_ARGS})
+
+  string(TOUPPER "${LIBNAME}_COMPILED_LIB" var) 
+ # message(STATUS "var: ${var}")
+  set (${var} TRUE CACHE INTERNAL "")
+ # message(STATUS "${var}: ${${var}}")
 
   if (NOT TEST_INSTALLED_TREE)
     # A top-level target that refers to all of the variants of the

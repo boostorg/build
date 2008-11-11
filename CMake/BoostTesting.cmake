@@ -28,6 +28,9 @@
 #
 #   boost_test_compile_fail: Tests that the given source file produces 
 #                            errors when compiled.
+#
+#   boost_additional_test_dependencies: Adds needed include directories for
+#                                       the tests.
 
 # User-controlled option that can be used to enable/disable regression
 # testing. By default, we disable testing, because most users won't
@@ -57,18 +60,83 @@ else(BOOST_BUILD_SANITY_TEST)
 endif(BOOST_BUILD_SANITY_TEST)
 
 
-# This macro is an internal utility macro that helps parse the
-# arguments passed to the Boost testing commands. It will generally
-# not be used by Boost developers.
-macro(boost_test_add_dependent_includes includes)
-  foreach (include ${includes})
-    #message(STATUS "include: ${include}")
-    include_directories("${Boost_SOURCE_DIR}/libs/${include}/include")
-  endforeach (include ${includes})
-endmacro(boost_test_add_dependent_includes includes)
+#-------------------------------------------------------------------------------
+# This macro adds additional include directories based on the dependencies of 
+# the library being tested 'libname' and all of its dependencies.
+#
+#   boost_additional_test_dependencies(libname 
+#                         BOOST_DEPENDS libdepend1 libdepend2 ...)
+#
+#   libname is the name of the boost library being tested. (signals)
+#
+# There is mandatory argument to the macro: 
+#
+#   BOOST_DEPENDS: The list of the extra boost libraries that the test suite will
+#    depend on. You do NOT have to list those libraries already listed by the 
+#    module.cmake file as these will be used.
+#
+#
+# example usage:
+#  boost_additional_test_dependencies(signals BOOST_DEPENDS test optional)
+#
+macro(boost_additional_test_dependencies libname)
+  parse_arguments(BOOST_TEST 
+    "BOOST_DEPENDS"
+    ""
+    ${ARGN}
+  )
+  # Get the list of libraries that this test depends on
+  # Set THIS_PROJECT_DEPENDS_ALL to the set of all of its
+  # dependencies, its dependencies' dependencies, etc., transitively.
+  string(TOUPPER "BOOST_${libname}_DEPENDS" THIS_PROJECT_DEPENDS)
+  set(THIS_TEST_DEPENDS_ALL ${libname} ${${THIS_PROJECT_DEPENDS}} )
+  set(ADDED_DEPS TRUE)
+  while (ADDED_DEPS)
+    set(ADDED_DEPS FALSE)
+    foreach(DEP ${THIS_TEST_DEPENDS_ALL})
+      string(TOUPPER "BOOST_${DEP}_DEPENDS" DEP_DEPENDS)
+      foreach(DEPDEP ${${DEP_DEPENDS}})
+        list(FIND THIS_TEST_DEPENDS_ALL ${DEPDEP} DEPDEP_INDEX)
+        if (DEPDEP_INDEX EQUAL -1)
+          list(APPEND THIS_TEST_DEPENDS_ALL ${DEPDEP})
+          set(ADDED_DEPS TRUE)
+        endif()
+      endforeach()
+    endforeach()
+  endwhile()
+ 
+  # Get the list of dependencies for the additional libraries arguments
+  foreach(additional_lib ${BOOST_TEST_BOOST_DEPENDS})
+   list(FIND THIS_TEST_DEPENDS_ALL ${additional_lib} DEPDEP_INDEX)
+   if (DEPDEP_INDEX EQUAL -1)
+     list(APPEND THIS_TEST_DEPENDS_ALL ${additional_lib})
+     set(ADDED_DEPS TRUE)
+   endif()
+    string(TOUPPER "BOOST_${additional_lib}_DEPENDS" THIS_PROJECT_DEPENDS)
+    set(ADDED_DEPS TRUE)
+    while (ADDED_DEPS)
+      set(ADDED_DEPS FALSE)
+      foreach(DEP ${THIS_TEST_DEPENDS_ALL})
+        string(TOUPPER "BOOST_${DEP}_DEPENDS" DEP_DEPENDS)
+        foreach(DEPDEP ${${DEP_DEPENDS}})
+          list(FIND THIS_TEST_DEPENDS_ALL ${DEPDEP} DEPDEP_INDEX)
+          if (DEPDEP_INDEX EQUAL -1)
+            list(APPEND THIS_TEST_DEPENDS_ALL ${DEPDEP})
+            set(ADDED_DEPS TRUE)
+          endif()
+        endforeach()
+      endforeach()
+    endwhile()
+  endforeach()
+  
+    foreach (include ${THIS_TEST_DEPENDS_ALL})
+        include_directories("${Boost_SOURCE_DIR}/libs/${include}/include")
+    endforeach (include ${includes})
+  
+endmacro(boost_additional_test_dependencies libname)
+#-------------------------------------------------------------------------------
 
-
-
+#-------------------------------------------------------------------------------
 # This macro is an internal utility macro that helps parse the
 # arguments passed to the Boost testing commands. It will generally
 # not be used by Boost developers.
@@ -112,7 +180,7 @@ macro(boost_test_parse_args testname)
   set(BOOST_TEST_OKAY TRUE)
   set(BOOST_TEST_COMPILE_FLAGS "")
   parse_arguments(BOOST_TEST 
-    "LINK_LIBS;LINK_FLAGS;DEPENDS;COMPILE_FLAGS;ARGS;EXTRA_OPTIONS"
+    "BOOST_LIB;LINK_LIBS;LINK_FLAGS;DEPENDS;COMPILE_FLAGS;ARGS;EXTRA_OPTIONS"
     "COMPILE;RUN;LINK;FAIL;RELEASE;DEBUG"
     ${ARGN}
     )
@@ -216,7 +284,7 @@ endmacro(boost_test_parse_args)
 #   boost_test_run(signal_test DEPENDS boost_signals)
 macro(boost_test_run testname)
   boost_test_parse_args(${testname} ${ARGN} RUN)
-  if (BOOST_TEST_OKAY)
+  if (BOOST_TEST_OKAY)  
     boost_add_executable(${testname} ${BOOST_TEST_SOURCES}
       OUTPUT_NAME tests/${PROJECT_NAME}/${testname}
       DEPENDS "${BOOST_TEST_DEPENDS}"
@@ -243,7 +311,7 @@ macro(boost_test_run testname)
                         ${THIS_TEST_PREFIX_ARGS} 
                         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/tests/${PROJECT_NAME}/${testname}
                         ${BOOST_TEST_ARGS}
-                        COMMENT "Running ${testname} in project ${PROJECT_NAME}"
+                        COMMENT "${PROJECT_NAME} => Running '${testname}'"
                         )
 
       add_dependencies(${BOOST_TEST_TESTNAME}
@@ -288,8 +356,12 @@ endmacro(boost_test_run_fail)
 macro(boost_test_compile testname)
   boost_test_parse_args(${testname} ${ARGN} COMPILE)
 
-
+  set (test_pass "PASSED")
+  if (BOOST_TEST_FAIL)
+    set (test_pass "FAILED")
+  endif(BOOST_TEST_FAIL)
   if (BOOST_TEST_OKAY)
+  
     # Determine the include directories to pass along to the underlying
     # project.
     # works but not great
@@ -313,7 +385,7 @@ macro(boost_test_compile testname)
       -o ${CMAKE_CURRENT_BINARY_DIR}/${BOOST_TEST_TESTNAME}${CMAKE_CXX_OUTPUT_EXTENSION}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       DEPENDS ${BOOST_TEST_SOURCES}
-      COMMENT "Running ${testname} in project ${PROJECT_NAME}"
+      COMMENT "${PROJECT_NAME} => Running Compile ${test_pass} Test '${BOOST_TEST_SOURCES}'"
       )
 
     add_custom_target(${BOOST_TEST_TESTNAME}
@@ -356,7 +428,7 @@ macro(boost_test_link testname)
     #
     add_custom_target(TARGET ${BOOST_TEST_TESTNAME}
       COMMAND /link/tests/are/failing/at/the/moment
-      COMMENT "Link test ${testname} in ${PROJECT_NAME} is failing."
+      COMMENT "${PROJECT_NAME} => Link test '${testname}' is failing."
       )
 
     # POST_BUILD
