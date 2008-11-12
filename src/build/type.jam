@@ -13,7 +13,7 @@ import generators : * ;
 import project ;
 import property ;
 import scanner ;
-
+import os ;
 
 # The following import would create a circular dependency:
 # project -> project-root -> builtin -> type -> targets -> project
@@ -378,6 +378,10 @@ local rule generated-target-ps ( ps : type : property-set )
 #
 rule type ( filename )
 {
+    if [ os.name ] in NT CYGWIN
+    {
+        filename = $(filename:L) ;
+    }    
     local type ;
     while ! $(type) && $(filename:S)
     {
