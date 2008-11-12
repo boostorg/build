@@ -417,15 +417,16 @@ rule inherit-generators ( toolset properties * : base : generators-to-ignore * )
 # When such flag settings must be inherited, define a rule in base toolset
 # module and call it as needed.
 #
-rule inherit-flags ( toolset : base : prohibited-properties * )
+rule inherit-flags ( toolset : base : prohibited-properties * : prohibited-vars * )
 {
     for local f in $(.module-flags.$(base))
     {
         local rule-or-module = $(.rule-or-module.$(f)) ;
-        if [ set.difference
-                $(.$(rule-or-module).condition.$(f)) :
-                $(prohibited-properties)
-           ] || ! $(.$(rule-or-module).condition.$(f))
+        if ( [ set.difference
+            $(.$(rule-or-module).condition.$(f)) :
+                  $(prohibited-properties) ] 
+                  || ! $(.$(rule-or-module).condition.$(f)) 
+        ) && ( ! $(.$(rule-or-module).variable.$(f)) in $(prohibited-vars) )
         {
             local rule_ = [ MATCH "[^.]*\.(.*)" : $(rule-or-module) ] ;
             local new-rule-or-module ;

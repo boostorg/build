@@ -332,6 +332,7 @@ rule compile.c.pch ( targets + : sources * : properties * )
     }
 }
 
+toolset.flags msvc YLOPTION : "-Yl" ;
 
 # Action for running the C/C++ compiler without using precompiled headers.
 #
@@ -347,29 +348,24 @@ rule compile-c-c++ ( targets + : sources * )
     DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_FILE) ] ;
 }
 
-
 # Action for running the C/C++ compiler using precompiled headers. In addition
 # to whatever else it needs to compile, this action also adds a temporary source
 # .cpp file used to compile the precompiled headers themselves.
 #
 # The global .escaped-double-quote variable is used to avoid messing up Emacs
 # syntax highlighting in the messy N-quoted code below.
-#
-# If you change this rule, make corresponding change in intel-win.jam
 actions compile-c-c++-pch
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote))" $(.CC.FILTER)
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote))" $(.CC.FILTER)
 }
 
 
 # Action for running the C/C++ compiler using precompiled headers. An already
 # built source file for compiling the precompiled headers is expected to be
 # given as one of the source parameters.
-#
-# If you change this rule, make corresponding change in intel-win.jam
 actions compile-c-c++-pch-s
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
 }
 
 
