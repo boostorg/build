@@ -892,14 +892,7 @@ local rule configure-really ( version ? : options * )
             toolset.flags msvc.compile .IDL $(cpu-conditions) : $(setup-$(c))$(idl-compiler) ;
             toolset.flags msvc.compile .MC  $(cpu-conditions) : $(setup-$(c))$(mc-compiler) ;
 
-            if ! [ os.name ] in NT
-            {
-                toolset.flags msvc.link .MT $(cpu-conditions) : $(setup-$(c))$(manifest-tool) -nologo ;
-            }
-            else
-            {
-                toolset.flags msvc.link .MT $(cpu-conditions) : $(manifest-tool) -nologo ;
-            }
+            toolset.flags msvc.link .MT $(cpu-conditions) : $(setup-$(c))$(manifest-tool) -nologo ;
 
             if $(cc-filter)
             {
@@ -990,7 +983,7 @@ class msvc-linking-generator : linking-generator
     # whatever.gch.
     rule generated-targets ( sources + : property-set : project name ? )
     {
-        local result = [ generator.generated-targets $(sources)
+        local result = [ linking-generator.generated-targets $(sources)
           : $(property-set) : $(project) $(name) ] ;
         if [ $(property-set).get <embed-manifest> ] = "off"
         {
