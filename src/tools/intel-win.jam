@@ -18,7 +18,7 @@ import type ;
 feature.extend-subfeature toolset intel : platform : win ;
 
 toolset.inherit-generators intel-win <toolset>intel <toolset-intel:platform>win : msvc ;
-toolset.inherit-flags intel-win : msvc ;
+toolset.inherit-flags intel-win : msvc : : YLOPTION ;
 toolset.inherit-rules intel-win : msvc ;
 
 # Override default do-nothing generators.
@@ -26,8 +26,6 @@ generators.override intel-win.compile.c.pch   : pch.default-c-pch-generator   ;
 generators.override intel-win.compile.c++.pch : pch.default-cpp-pch-generator ;
 
 toolset.flags intel-win.compile PCH_SOURCE <pch>on : <pch-source> ;
-
-type.set-generated-target-suffix PCH : <toolset>intel <toolset-intel:platform>win : pchi ;
 
 toolset.add-requirements <toolset>intel-win,<runtime-link>shared:<threading>multi ;
 
@@ -147,6 +145,11 @@ rule init ( version ? :     # the compiler version
     }
 
     toolset.flags intel-win CFLAGS $(condition) : $(C++FLAGS) ;
+    # By default, when creating PCH, intel adds 'i' to the explicitly
+    # specified name of the PCH file. Of course, Boost.Build is not
+    # happy when compiler produces not the file it was asked for.
+    # The option below stops this behaviour.
+    toolset.flags intel-win CFLAGS : -Qpchi- ;
 
     if ! $(compatibility)
     {
@@ -169,37 +172,4 @@ rule init ( version ? :     # the compiler version
 
 toolset.flags intel-win.link LIBRARY_OPTION <toolset>intel : "" ;
 
-.escaped-double-quote = "\"" ;
-# Unline msvc, intel-win does not support the -Yl option, so this is a version
-# of msvc rules without -Yl
-# Also note that intel compiler has totally broken handling of the -Fp option --
-# it always adds 'i' to the provided extension. So, we have to copy the actual
-# file produced to the one that Boost.Build expects so that dependency analysis
-# works.
-actions compile-c-c++-pch
-{
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Fp"$(<[1]:S=.pch:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote))" $(.CC.FILTER)
-}
-
-actions compile-c-c++-pch-s
-{
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Fp"$(<[1]:S=.pch:W)" $(CC_RSPLINE))" $(.CC.FILTER)
-}
-
-# We also need to mess with pch vs. pchi here.
-actions compile-c-c++
-{
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:S=.pch:W)" $(CC_RSPLINE))" $(.CC.FILTER)
-}
-
-
-# The compile.c.pch rule that is actually called from the generator for PCH
-# is imported by toolset.inherit-rules, but it's not localized, so it will
-# use compile-c-c++-pch* defined in msvc. Re-import it localized.
-IMPORT msvc : compile.c.pch : intel-win : intel-win.compile.c.pch : localized ;
-IMPORT msvc : compile.c++.pch : intel-win : intel-win.compile.c++.pch : localized ;
-IMPORT msvc : compile.c : intel-win : intel-win.compile.c : localized ;
-IMPORT msvc : compile.c++ : intel-win : intel-win.compile.c++ : localized ;
-# This one is used by compile.c++.pch. Of course, this is a mess, but Python port
-# will clean this up.
-IMPORT msvc : get-rspline : intel-win : get-rspline ;
+toolset.flags intel-win YLOPTION ;
