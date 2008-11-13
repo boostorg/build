@@ -609,8 +609,8 @@ class property-map
         local best = [ sequence.select-highest-ranked $(matches)
             : $(match-ranks) ] ;
         if $(best[2])
-        {
-            errors.error "Ambiguous key" ;
+        {            
+            errors.error "Ambiguous key" $(properties) ;
         }
         local original = $(self.value.$(best)) ;
         if $(value)
@@ -736,7 +736,7 @@ rule __test__ ( )
 
     try ;
         $(pm).find <toolset>gcc <os>NT <os>CYGWIN ;
-    catch "Ambiguous key" ;
+    catch "Ambiguous key <toolset>gcc <os>NT <os>CYGWIN" ;
 
     # Test ordinary properties.
     assert.result : split-conditional <toolset>gcc ;
