@@ -11,7 +11,10 @@ import sys
 import string
 import BoostBuild
 
-
+xml = "--xml" in sys.argv
+toolset = BoostBuild.get_toolset()
+        
+    
 # Clear environment for testing.
 #
 for s in ('BOOST_ROOT', 'BOOST_BUILD_PATH', 'JAM_TOOLSET', 'BCCROOT', 'MSVCDir',
@@ -39,12 +42,15 @@ def run_tests(critical_tests, other_tests):
 
     pass_count = 0
     failures_count = 0
+    
     for i in all_tests:
-        print ("%-25s : " %(i)),
+        passed = 1
+	if not xml:
+	    print ("%-25s : " %(i)),
         try:
             __import__(i)
         except SystemExit:
-            print "FAILED"
+            passed = 0;
             if failures_count == 0:
                 f = open(os.path.join(invocation_dir, 'test_results.txt'), 'w')
                 f.write(i)
@@ -52,10 +58,26 @@ def run_tests(critical_tests, other_tests):
             failures_count = failures_count + 1
             # Restore the current directory, which might be changed by the test.
             os.chdir(invocation_dir)
-            BoostBuild.flush_annotations();
+            if not xml:
+                BoostBuild.flush_annotations();
             continue
-        print "PASSED"
-        BoostBuild.flush_annotations();
+        if not xml:
+            if passed:
+                print "PASSED"
+            else:
+                print "FAILED"            
+                BoostBuild.flush_annotations();
+        else:
+            rs = "succeed"
+            if not passed:
+                rs = "fail"
+            print """
+<test-log library="build" test-name="%s" test-type="run" toolset="%s">
+<run result="%s"/>
+</test-log>
+""" % (i, toolset, rs)
+
+                
         pass_count = pass_count + 1
         sys.stdout.flush()  # Makes testing under emacs more entertaining.
 
@@ -63,11 +85,12 @@ def run_tests(critical_tests, other_tests):
     if failures_count == 0:
         open('test_results.txt', 'w')
 
-    print """
-    === Test summary ===
-    PASS: %d
-    FAIL: %d
-    """ % (pass_count, failures_count)
+    if not xml:
+        print """
+        === Test summary ===
+        PASS: %d
+        FAIL: %d
+        """ % (pass_count, failures_count)
 
 
 def last_failed_test():
@@ -202,7 +225,7 @@ if "--extras" in sys.argv:
     # Requires gettext tools.
     tests.append("example_gettext")
 
-else:
+elif not xml:
     print 'Note: skipping extra tests'
 
 run_tests(critical_tests, tests)
