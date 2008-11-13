@@ -811,7 +811,17 @@ rule glob-internal ( project : wildcards + : excludes * : rule-name )
         # absolute.
         for local p in $(paths)
         {
-            result += [ path.root $(p) [ path.pwd ] ] ;
+            # If the path is below source location, use relative path.
+            # Otherwise, use full path just to avoid any ambiguities.
+            local rel = [ path.relative $(p) $(location) : no-error ] ;
+            if $(rel) = not-a-child
+            {                   
+                result += [ path.root $(p) [ path.pwd ] ] ;
+            }
+            else
+            {
+                result += $(rel) ;
+            }                
         }
     }
     else

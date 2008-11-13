@@ -172,6 +172,7 @@ class generator
     import virtual-target ;
     import "class" : new ;
     import property ;
+    import path ;
 
     EXPORT class@generator : indent increase-indent decrease-indent
         generators.dout ;
@@ -458,6 +459,32 @@ class generator
         return $(result) ;
     }
 
+    # Determine target name from fullname (maybe including path components)
+    # Place optional prefix and postfix around basename
+    #
+    rule determine-target-name ( fullname  : prefix ? : postfix ? )
+    {
+        # See if we need to add directory to the target name.
+        local dir  = $(fullname:D) ;            
+        local name = $(fullname:B) ; 
+        
+        name = $(prefix:E=)$(name) ;
+        name = $(name)$(postfix:E=) ;
+
+        if $(dir) && 
+          # Never append '..' to target path.
+          ! [ MATCH .*(\\.\\.).* : $(dir) ] 
+            && 
+          ! [ path.is-rooted $(dir) ]
+        {
+            # Relative path is always relative to the source
+            # directory. Retain it, so that users can have files
+            # with the same in two different subdirectories.
+            name = $(dir)/$(name) ;                
+        }            
+        return $(name) ;
+    }
+
     # Determine the name of the produced target from the names of the sources.
     #
     rule determine-output-name ( sources + )
@@ -480,10 +507,7 @@ class generator
                 errors.error "$(self.id): source targets have different names: cannot determine target name" ;
             }
         }
-
-        # Names of sources might include directory. We should strip it.
-        name = $(name:D=) ;
-
+        name = [ determine-target-name [ $(sources[1]).name ] ] ;
         return $(name) ;
     }
 
@@ -526,7 +550,8 @@ class generator
         local post = $(self.name-postfix) ;
         for local t in $(self.target-types)
         {
-            local generated-name = $(pre[1])$(name)$(post[1]) ;
+            local generated-name = $(pre[1])$(name:B)$(post[1]) ;
+            generated-name = $(generated-name:R=$(name:D)) ;
             pre = $(pre[2-]) ;
             post = $(post[2-]) ;
 
