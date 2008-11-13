@@ -40,7 +40,7 @@ import type ;
 type.register MY_TYPE : extension ;
 generators.register-standard mygen.generate-a-cpp-file : MY_TYPE : CPP ;
 rule generate-a-cpp-file { ECHO Generating a CPP file... ; }
-actions generate-a-cpp-file { echo void g() {} > "$(<)" }
+actions generate-a-cpp-file { echo "void g() {}" > "$(<)" }
 """)
 
     t.write("Other/jamfile.jam", """
