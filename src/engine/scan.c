@@ -314,6 +314,10 @@ int yylex()
             else if ( ( c = yychar() ) != EOF )
             {
                 /* \c */
+                if (c == 'n')
+                    c = '\n';
+                else if (c == 'r')
+                    c = '\r';
                 *b++ = c;
                 notkeyword = 1;
             }
