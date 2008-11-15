@@ -503,44 +503,13 @@ rule copy-command ( )
 #
 rule variable-setting-command ( variable : value )
 {
-    local nl = "
-" ;
-
     if [ os.name ] = NT
     {
-        return "set $(variable)=$(value)$(nl)" ;
+        return "set $(variable)=$(value)\n" ;
     }
     else
     {
-        # (todo)
-        #   The following does not work on CYGWIN and needs to be fixed. On
-        # CYGWIN the $(nl) variable holds a Windows new-line \r\n sequence that
-        # messes up the executed export command which then reports that the
-        # passed variable name is incorrect. This is most likely due to the
-        # extra \r character getting interpreted as a part of the variable name.
-        #
-        #   Several ideas pop to mind on how to fix this:
-        #     * One way would be to separate the commands using the ; shell
-        #       command separator. This seems like the quickest possible
-        #       solution but I do not know whether this would break code on any
-        #       platforms I I have no access to.
-        #     * Another would be to not use the terminating $(nl) but that would
-        #       require updating all the using code so it does not simply
-        #       prepend this variable to its own commands.
-        #     * I guess the cleanest solution would be to update Boost Jam to
-        #       allow explicitly specifying \n & \r characters in its scripts
-        #       instead of always relying only on the 'current OS native newline
-        #       sequence'.
-        #
-        #   Some code found to depend on this behaviour:
-        #     * This Boost Build module.
-        #         * __test__ rule.
-        #         * path-variable-setting-command rule.
-        #     * python.jam toolset.
-        #     * xsltproc.jam toolset.
-        #     * fop.jam toolset.
-        #                                     (todo) (07.07.2008.) (Jurko)
-        return "$(variable)=$(value)$(nl)export $(variable)$(nl)" ;
+        return "$(variable)=$(value)\nexport $(variable)\n" ;
     }
 }
 
