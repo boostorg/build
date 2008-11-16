@@ -252,7 +252,7 @@ class Tester(TestCmd.TestCmd):
                     break
             else:
                 print "Cannot find built Boost.Jam"
-                os.exit(1)
+                sys.exit(1)
 
         verbosity = ['-d0', '--quiet']
         if '--verbose' in sys.argv:
