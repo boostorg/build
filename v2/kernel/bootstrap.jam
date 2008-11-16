@@ -20,7 +20,7 @@ for local r in $(required-rules)
     {
         ECHO "error: builtin rule '$(r)' is not present" ;
         ECHO "error: your version of bjam is likely out of date" ;
-        ECHO "error: please get a fresh version from CVS." ;
+        ECHO "error: please get a fresh version from SVN." ;
         EXIT ;
     }
 }
@@ -37,7 +37,7 @@ while $(native)
         ECHO "error: missing native rule '$(native[1]).$(native[2])'" ;
         ECHO "error: or interface version of that rule is too low" ;
         ECHO "error: your version of bjam is likely out of date" ;
-        ECHO "error: please get a fresh version from CVS." ;
+        ECHO "error: please get a fresh version from SVN." ;
         EXIT ;
     }
     native = $(native[4-]) ;
@@ -54,7 +54,7 @@ module .ENVIRON
     {
         ECHO "error: no builtin module .ENVIRON is found" ;
         ECHO "error: your version of bjam is likely out of date" ;
-        ECHO "error: please get a fresh version from CVS." ;
+        ECHO "error: please get a fresh version from SVN." ;
         EXIT ;
     }
 }
@@ -68,12 +68,19 @@ module .ENVIRON
     {
         ECHO "error: no @() functionality found" ;
         ECHO "error: your version of bjam is likely out of date" ;
-        ECHO "error: please get a fresh version from CVS." ;
+        ECHO "error: please get a fresh version from SVN." ;
         EXIT ;
     }
 }
 
-
+# Make sure that \n escape is avaiable.
+if "\n" = "n"
+{
+    ECHO "error: escape sequences are not supported" ;
+    ECHO "error: your version of bjam is likely out of date" ;
+    ECHO "error: please get a fresh version from SVN." ;
+    EXIT ;
+}
 
 # Bootstrap the module system. Then bring the import rule into the global module.
 #
