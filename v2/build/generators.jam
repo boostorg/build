@@ -550,7 +550,7 @@ class generator
         local post = $(self.name-postfix) ;
         for local t in $(self.target-types)
         {
-            local generated-name = $(pre[1])$(name:B)$(post[1]) ;
+            local generated-name = $(pre[1])$(name:BS)$(post[1]) ;
             generated-name = $(generated-name:R=$(name:D)) ;
             pre = $(pre[2-]) ;
             post = $(post[2-]) ;
