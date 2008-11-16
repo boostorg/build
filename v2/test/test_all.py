@@ -58,9 +58,7 @@ def run_tests(critical_tests, other_tests):
             failures_count = failures_count + 1
             # Restore the current directory, which might be changed by the test.
             os.chdir(invocation_dir)
-            if not xml:
-                BoostBuild.flush_annotations();
-            continue
+            
         if not xml:
             if passed:
                 print "PASSED"
