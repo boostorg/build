@@ -76,9 +76,13 @@ module .ENVIRON
 # Make sure that \n escape is avaiable.
 if "\n" = "n"
 {
-    ECHO "warning: escape sequences are not supported" ;
-    ECHO "warning: your version of bjam is likely out of date" ;
-    ECHO "warning: please get a fresh version from SVN." ;
+    if $(OS) = CYGWIN 
+    {        
+        ECHO "warning: escape sequences are not supported" ;
+        ECHO "warning: this will cause major misbehaviour on cygwin" ;
+        ECHO "warning: your version of bjam is likely out of date" ;
+        ECHO "warning: please get a fresh version from SVN." ;
+    }    
 }
 
 # Bootstrap the module system. Then bring the import rule into the global module.
