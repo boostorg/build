@@ -286,7 +286,13 @@ local rule load-jamfile (
     {
         jamfile-to-load = [ find-jamfile $(dir) ] ;
     }
-
+    
+    if $(jamfile-to-load[2])
+    {
+        errors.error "Multiple Jamfiles found at '$(dir)'" 
+          :  "Filenames are: " $(jamfile-to-load:D=) ;
+    }
+    
     # The module of the Jamfile.
     #
     local jamfile-module = [ module-name [ path.parent $(jamfile-to-load) ] ] ;
