@@ -610,7 +610,7 @@ class property-map
             : $(match-ranks) ] ;
         if $(best[2])
         {            
-            errors.error "Ambiguous key" $(properties) ;
+            errors.error "Ambiguous key $(properties:J= :E=)" ;
         }
         local original = $(self.value.$(best)) ;
         if $(value)
