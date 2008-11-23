@@ -1017,7 +1017,7 @@ static CMD * make1cmds( TARGET * t )
                 cmd = cmd_new( rule, list_copy( L0, nt ),
                     list_sublist( ns, start, chunk ),
                     list_new( L0, newstr( "%" ) ) );
-                printf( cmd->buf );
+                fputs( cmd->buf, stdout );
                 exit( EXITBAD );
             }
         }

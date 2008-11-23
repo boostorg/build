@@ -21,8 +21,7 @@ static void out_
     while ( *data )
     {
         size_t len = strcspn(data,"\r");
-        fwrite(data,len,1,io);
-        data += len;
+        data += fwrite(data,1,len,io);
         if ( *data == '\r' ) ++data;
     }
 }
