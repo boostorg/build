@@ -1354,7 +1354,7 @@ static void debug_compile( int which, char * s, FRAME * frame )
         i = ( level + 1 ) * 2;
         while ( i > 35 )
         {
-            printf( indent );
+            fputs( indent, stdout );
             i -= 35;
         }
 

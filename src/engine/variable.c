@@ -441,8 +441,22 @@ void var_string_to_file( const char * in, int insize, const char * out, LOL * lo
         }
         else if ( output_0 < output_1 )
         {
-            if ( out_file  ) fwrite( output_0, output_1 - output_0, 1, out_file );
-            if ( out_debug ) fwrite( output_0, output_1 - output_0, 1, stdout   );
+            if ( out_file )
+            {
+                const char * output_n = output_0;
+                while ( output_n < output_1 )
+                {
+                    output_n += fwrite( output_n, 1, output_1-output_n, out_file );
+                }
+            }
+            if ( out_debug )
+            {
+                const char * output_n = output_0;
+                while ( output_n < output_1 )
+                {
+                    output_n += fwrite( output_n, 1, output_1-output_n, stdout );
+                }
+            }
         }
 
         in = output_1;
