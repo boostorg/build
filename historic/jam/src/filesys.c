@@ -34,24 +34,25 @@ void file_build1( PATHNAME * f, string * file )
 }
 
 static struct hash * filecache_hash = 0;
+static file_info_t filecache_finfo;
 
 file_info_t * file_info(char * filename)
 {
-    file_info_t finfo_, *finfo = &finfo_;
+    file_info_t *finfo = &filecache_finfo;
 
     if ( !filecache_hash )
         filecache_hash = hashinit( sizeof( file_info_t ), "file_info" );
 
     finfo->name = filename;
+    finfo->is_file = 0;
+    finfo->is_dir = 0;
+    finfo->size = 0;
+    finfo->time = 0;
+    finfo->files = 0;
     if ( hashenter( filecache_hash, (HASHDATA**)&finfo ) )
     {
         /* printf( "file_info: %s\n", filename ); */
         finfo->name = newstr( finfo->name );
-        finfo->is_file = 0;
-        finfo->is_dir = 0;
-        finfo->size = 0;
-        finfo->time = 0;
-        finfo->files = 0;
     }
 
     return finfo;
