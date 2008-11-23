@@ -622,10 +622,10 @@ rule .exe
     return $(exe) ;
 }
 if ! $(--def[2]) { actions [COMPILE] {
-    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" "$(--out)$(<)" "$(--def)$(--defs)" "$(--flags)" "$(--libs)" "$(>)"
+    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def)$(--defs)" "$(--flags)" "$(--libs)" "$(>)"
 } }
 else { actions [COMPILE] {
-    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" "$(--out)$(<)" "$(--def[1])$(--defs:J=$(--def[2]))$(--def[3])" "$(--flags)" "$(--libs)" "$(>)"
+    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def[1])$(--defs:J=$(--def[2]))$(--def[3])" "$(--flags)" "$(--libs)" "$(>)"
 } }
 if $(VMS) { actions [COMPILE.LINK] {
     "$(--link)" $(--link-bin)$(<:D=) $(--link-dir)$(<:D)$(./) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>J=", ")
