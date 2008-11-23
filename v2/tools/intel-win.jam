@@ -24,6 +24,7 @@ toolset.inherit-rules intel-win : msvc ;
 # Override default do-nothing generators.
 generators.override intel-win.compile.c.pch   : pch.default-c-pch-generator   ;
 generators.override intel-win.compile.c++.pch : pch.default-cpp-pch-generator ;
+generators.override intel-win.compile.rc : rc.compile.resource ;
 
 toolset.flags intel-win.compile PCH_SOURCE <pch>on : <pch-source> ;
 
