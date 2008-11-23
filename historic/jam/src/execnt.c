@@ -879,12 +879,11 @@ static void read_pipe
             {
                 if ( bytesInBuffer > 0 )
                 {
-                    /* Clean up non-ASCII chars. */
+                    /* Clean up some illegal chars. */
                     int i;
                     for ( i = 0; i < bytesInBuffer; ++i )
                     {
-                        if ( ( (unsigned char)ioBuffer[ i ] < 1 ) ||
-                            ( (unsigned char)ioBuffer[ i ] > 127 ) )
+                        if ( ( (unsigned char)ioBuffer[ i ] < 1 ) )
                             ioBuffer[ i ] = '?';
                     }
                     /* Null, terminate. */
