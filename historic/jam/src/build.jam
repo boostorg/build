@@ -261,7 +261,7 @@ toolset msvc cl : /Fe /Fe /Fd /Fo : -D
     : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
 ## QNX 6.x GCC 3.x/2.95.3
 toolset qcc qcc : "-o " : -D
-    : -Wc,-pedantic
+    : -Wc,-pedantic -Wc,-fno-strict-aliasing
     [ opt --release : [ opt --symbols : -g ] -O3 -Wc,-finline-functions ]
     [ opt --debug : -g -O0 -Wc,-fno-inline ]
     -I$(--python-include) -I$(--extra-include)
