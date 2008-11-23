@@ -7,8 +7,8 @@ REM ~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0
 setlocal
 goto Start
 
-REM NOTE: The "setlocal & endlocal" construct is used to reset the errorlevel to 0.
-REM NOTE: The "set _error_=" construct is used to set the errorlevel to 1
+REM NOTE: The "setlocal & endlocal & ver>NUL" construct is used to reset the errorlevel to 0.
+REM NOTE: The "move >NUL 2>&1" construct is used to set the errorlevel to 1
 
 
 :Error_Print
@@ -23,7 +23,7 @@ ECHO ###
 ECHO ### Toolsets supported by this script are: borland, como, gcc, gcc-nocygwin,
 ECHO ###     intel-win32, metrowerks, mingw, msvc, vc7, vc8, vc9
 ECHO ###
-set _error_=
+move >NUL 2>&1
 endlocal
 goto :eof
 
@@ -32,7 +32,7 @@ goto :eof
 REM Tests for the given file(executable) presence in the directories in the PATH
 REM environment variable. Additionaly sets FOUND_PATH to the path of the
 REM found file.
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 setlocal
 set test=%~$PATH:1
 endlocal
@@ -42,14 +42,14 @@ goto :eof
 
 :Test_Option
 REM Tests whether the given string is in the form of an option: "--*"
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 setlocal
 set test=%1
 set test=###%test%###
 set test=%test:"###=%
 set test=%test:###"=%
 set test=%test:###=%
-if not [-] == [%test:~1,1%] set _error_=
+if not [-] == [%test:~1,1%] move >NUL 2>&1
 endlocal
 goto :eof
 
@@ -67,130 +67,130 @@ REM location of the found toolset.
 
 if "_%ProgramFiles%_" == "__" set ProgramFiles=C:\Program Files
 
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if NOT "_%VS90COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc9"
     set "BOOST_JAM_TOOLSET_ROOT=%VS90COMNTOOLS%..\..\VC\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc9"
     set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 9.0\VC\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if NOT "_%VS80COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc8"
     set "BOOST_JAM_TOOLSET_ROOT=%VS80COMNTOOLS%..\..\VC\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc8"
     set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 8\VC\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if NOT "_%VS71COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc7"
     set "BOOST_JAM_TOOLSET_ROOT=%VS71COMNTOOLS%\..\..\VC7\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if NOT "_%VCINSTALLDIR%_" == "__" (
     REM %VCINSTALLDIR% is also set for VC9 (and probably VC8)
     set "BOOST_JAM_TOOLSET=vc7"
     set "BOOST_JAM_TOOLSET_ROOT=%VCINSTALLDIR%\VC7\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if EXIST "%ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\bin\VCVARS32.BAT" (
     set "BOOST_JAM_TOOLSET=vc7"
     set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if EXIST "%ProgramFiles%\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
     set "BOOST_JAM_TOOLSET=vc7"
     set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET\VC7\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if NOT "_%MSVCDir%_" == "__" (
     set "BOOST_JAM_TOOLSET=msvc"
     set "BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if EXIST "%ProgramFiles%\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT" (
     set "BOOST_JAM_TOOLSET=msvc"
     set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio\VC98\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if EXIST "%ProgramFiles%\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" (
     set "BOOST_JAM_TOOLSET=msvc"
     set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual C++\VC98\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 call :Test_Path cl.exe
 if not errorlevel 1 (
     set "BOOST_JAM_TOOLSET=msvc"
     set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 call :Test_Path vcvars32.bat
 if not errorlevel 1 (
     set "BOOST_JAM_TOOLSET=msvc"
     call "%FOUND_PATH%VCVARS32.BAT"
     set "BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if EXIST "C:\Borland\BCC55\Bin\bcc32.exe" (
     set "BOOST_JAM_TOOLSET=borland"
     set "BOOST_JAM_TOOLSET_ROOT=C:\Borland\BCC55\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 call :Test_Path bcc32.exe
 if not errorlevel 1 (
     set "BOOST_JAM_TOOLSET=borland"
     set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 call :Test_Path icl.exe
 if not errorlevel 1 (
     set "BOOST_JAM_TOOLSET=intel-win32"
     set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if EXIST "C:\MinGW\bin\gcc.exe" (
     set "BOOST_JAM_TOOLSET=mingw"
     set "BOOST_JAM_TOOLSET_ROOT=C:\MinGW\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if NOT "_%CWFolder%_" == "__" (
     set "BOOST_JAM_TOOLSET=metrowerks"
     set "BOOST_JAM_TOOLSET_ROOT=%CWFolder%\"
     goto :eof )
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 call :Test_Path mwcc.exe
 if not errorlevel 1 (
     set "BOOST_JAM_TOOLSET=metrowerks"
     set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\..\"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 call :Error_Print "Could not find a suitable toolset."
 goto :eof
 
 
 :Guess_Yacc
 REM Tries to find bison or yacc in common places so we can build the grammar.
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 call :Test_Path yacc.exe
 if not errorlevel 1 (
     set "YACC=yacc -d"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 call :Test_Path bison.exe
 if not errorlevel 1 (
     set "YACC=bison -d --yacc"
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if EXIST "C:\Program Files\GnuWin32\bin\bison.exe" (
     set "YACC=C:\Program Files\GnuWin32\bin\bison.exe" -d --yacc
     goto :eof)
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 call :Error_Print "Could not find Yacc to build the Jam grammar."
 goto :eof
 
@@ -211,7 +211,7 @@ if "_%1_" == "__" (
         call :Guess_Toolset
         if not errorlevel 1 goto Setup_Toolset
     ) else (
-        setlocal & endlocal
+        setlocal & endlocal & ver>NUL
         set "BOOST_JAM_TOOLSET=%1"
         shift
         goto Setup_Toolset
@@ -362,7 +362,7 @@ set "BOOST_JAM_OPT_MKJAMBASE=-o bootstrap\mkjambase0.exe"
 set "BOOST_JAM_OPT_YYACC=-o bootstrap\yyacc0.exe"
 set "_known_=1"
 :Skip_MINGW
-setlocal & endlocal
+setlocal & endlocal & ver>NUL
 if "_%_known_%_" == "__" (
     call :Error_Print "Unknown toolset: %BOOST_JAM_TOOLSET%"
 )
