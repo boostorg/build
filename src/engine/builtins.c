@@ -1665,8 +1665,19 @@ PyObject* bjam_call( PyObject * self, PyObject * args )
 
     frame_free( inner );
 
-    Py_INCREF( Py_None );
-    return Py_None;
+    /* Convert the bjam list into a Python list result. */
+    {
+        PyObject * pyResult = PyList_New( list_length( result ) );
+        int i = 0;
+        while ( result )
+        {
+            PyList_SetItem( pyResult, i, PyString_FromString( result->string ) );
+            result = list_next( result );
+            i += 1;
+        }
+        list_free( result );
+        return pyResult;
+    }
 }
 
 
