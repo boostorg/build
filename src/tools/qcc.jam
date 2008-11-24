@@ -96,7 +96,7 @@ rule compile.c++
     local template-depth = [ on $(1) return $(TEMPLATE_DEPTH) ] ;
     if ! $(template-depth)
     {
-        TEMPLATE_DEPTH on $(1) = 100 ;
+        TEMPLATE_DEPTH on $(1) = 128 ;
     }
 }
 
