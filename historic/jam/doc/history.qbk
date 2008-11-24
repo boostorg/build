@@ -1,5 +1,164 @@
 [variablelist
 
+[[3.1.17] [
+
+A year in the making this release has many stability improvements and various performance
+improvements. And because of the efforts of Jurko the code is considerably more readable!
+
+[list
+    [li Reflect the results of calling bjam from Python.
+        -- ['Rene R.]
+        ]
+    [li For building on Windows: Rework how arguments are parsed and tested to fix handling
+        of quoted arguments, options arguments, and arguments with "=".
+        -- ['Rene R.]
+        ]
+    [li Try to work around at least one compiler bug with GCC and variable aliasing that
+        causes crashes with hashing file cache entries.
+        -- ['Rene R.]
+        ]
+    [li Add -Wc,-fno-strict-aliasing for QCC/QNX to avoid the same aliasing crashes as in
+        the general GCC 4.x series (thanks to Niklas Angare for the fix).
+        -- ['Rene R.]
+        ]
+    [li On Windows let the child bjam commands inherit stdin, as some commands assume
+        it's available.
+        -- ['Rene R.]
+        ]
+    [li On Windows don't limit bjam output to ASCII as some tools output characters in
+        extended character sets.
+        -- ['Rene R.]
+        ]
+    [li Isolate running of bjam tests to individual bjam instances to prevent possible
+        spillover errors from one test affecting another test. Separate the bjam used to run
+        the tests vs. the bjam being tested. And add automatic re-building of the bjam being
+        tested.
+        -- ['Rene R.]
+        ]
+    [li Fix some possible overrun issues revealed by Fortify build. Thanks to Steven Robbins
+        for pointing out the issues.
+        -- ['Rene R.]
+        ]
+    [li Handle \\n and \\r escape sequences.
+        -- ['Vladimir P.]
+        ]
+    [li Minor edits to remove -Wall warnings.
+        -- ['Rene R.]
+        ]
+    [li Dynamically adjust pwd buffer query size to allow for when PATH_MAX is default
+        defined instead of being provided by the system C library.
+        -- ['Rene R.]
+        ]
+    [li Minor perf improvement for bjam by replacing hash function with faster version. Only
+        1% diff for Boost tree.
+        -- ['Rene R.]
+        ]
+    [li Updated Boost Jam's error location reporting when parsing Jamfiles. Now it reports
+        the correct error location information when encountering an unexpected EOF. It now
+        also reports where an invalid lexical token being read started instead of finished
+        which makes it much easier to find errors like unclosed quotes or curly braces.
+        -- ['Jurko G.]
+        ]
+    [li Removed the -xarch=generic architecture from build.jam
+        as this option is unknown so the Sun compilers on Linux.
+        -- ['Noel B.]
+        ]
+    [li Fixed a bug with T_FATE_ISTMP getting reported as T_FATE_ISTMP & T_FATE_NEEDTMP at
+        the same time due to a missing break in a switch statement.
+        -- ['Jurko G.]
+        ]
+    [li Fixed a Boost Jam bug causing it to sometimes trigger actions depending on targets
+        that have not been built yet.
+        -- ['Jurko G.]
+        ]
+    [li Added missing documentation for Boost Jam's :T variable expansion modifier which
+        converts all back-slashes ('\\') to forward slashed ('/').
+        -- ['Jurko G.]
+        ]
+    [li Added Boost Jam support for executing command lines longer than 2047 characters (up
+        to 8191) characters when running on Windows XP or later OS version.
+        -- ['Jurko G.]
+        ]
+    [li Fixed a Boost Jam bug on Windows causing its SHELL command not to work correctly with
+        some commands containing quotes.
+        -- ['Jurko G.]
+        ]
+    [li Corrected a potential memory leak in Boost Jam's builtin_shell() function that would
+        appear should Boost Jam ever start to release its allocated string objects.
+        -- ['Jurko G.]
+        ]
+    [li Made all Boost Jam's ECHO commands automatically flush the standard output to make
+        that output more promptly displayed to the user.
+        -- ['Jurko G.]
+        ]
+    [li Made Boost Jam tests quote their bjam executable name when calling it allowing those
+        executables to contain spaces in their name and/or path.
+        -- ['Jurko G.]
+        ]
+    [li Change execunix.c to always use fork() instead of
+        vfork() on the Mac.  This works around known issues
+        with bjam on PPC under Tiger and a problem reported
+        by Rene with bjam on x86 under Leopard.
+        -- ['Noel B.]
+        ]
+    [li Corrected a bug in Boost Jam's base Jambase script causing it to trim the error
+        message displayed when its boost-build rule gets called multiple times.
+        -- ['Jurko G.]
+        ]
+    [li When importing from Python into an module with empty string as name,
+        import into root module.
+        -- ['Vladimir P.]
+        ]
+    [li Patch for the NORMALIZE_PATH builtin Boost Jam rule as well as an appropriate update
+        for the path.jam Boost Build module where that rule was being used to implement path
+        join and related operations.
+        -- ['Jurko G.]
+        ]
+    [li Fixed a bug causing Boost Jam not to handle target file names specified as both short
+        and long file names correctly.
+        -- ['Jurko G.]
+        ]
+    [li Relaxed test, ignoring case of drive letter.
+        -- ['Roland S.]
+        ]
+    [li Implemented a patch contributed by Igor Nazarenko reimplementing the list_sort()
+        function to use a C qsort() function instead of a hand-crafted merge-sort algorithm.
+        Makes some list sortings (e.g. 1,2,1,2,1,2,1,2,...) extremely faster, in turn
+        significantly speeding up some project builds.
+        -- ['Jurko G.]
+        ]
+    [li Fixed a bug with bjam not handling the '\' root Windows path correctly without its
+        drive letter being specified.
+        -- ['Jurko G.]
+        ]
+    [li Solved the problem with child process returning the value 259 (Windows constant
+        STILL_ACTIVE) causing bjam never to detect that it exited and therefore keep running
+        in an endless loop.
+        -- ['Jurko G.]
+        ]
+    [li Solved the problem with bjam going into an active wait state, hogging up processor
+        resources, when waiting for one of its child processes to terminate while not all of
+        its available child process slots are being used.
+        -- ['Jurko G.]
+        ]
+    [li Solved a race condition between bjam's output reading/child process termination
+        detection and the child process's output generation/termination which could have
+        caused bjam not to collect the terminated process's final output.
+        -- ['Jurko G.]
+        ]
+    [li Change from vfork to fork for executing actions on Darwin to improve stability.
+        -- ['Noel B.]
+        ]
+    [li Code reformatting and cleanups.
+        -- ['Jurko G.]
+        ]
+    [li Implement ISFILE built-in.
+        -- ['Vladimir P.]
+        ]
+]
+
+]]
+
 [[3.1.16] [
 
 This is mostly a bug fix release.
