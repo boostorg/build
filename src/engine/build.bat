@@ -485,12 +485,22 @@ rename y.tab.h jamgram.h
 .\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " clean
 :Skip_Clean
 @set args=%*
+@echo OFF
 :Set_Args
-@if [-] == [%args:~1,1%] goto Set_Args_End
-@if [^"-] == [%args:~1,2%] goto Set_Args_End
-@set args=%args:~2%
-@goto Set_Args
+setlocal
+call :Test_Empty %args%
+if not errorlevel 1 goto Set_Args_End
+set test=###%args:~0,2%###
+set test=%test:"###=%
+set test=%test:###"=%
+set test=%test:###=%
+set test=%test:~0,1%
+if "-" == "%test%" goto Set_Args_End
+endlocal
+set args=%args:~1%
+goto Set_Args
 :Set_Args_End
+@echo ON
 .\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " %args%
 :Skip_Jam
 
