@@ -620,7 +620,7 @@ macro(boost_library_variant LIBNAME)
   set(THIS_VARIANT_COMPILE_FLAGS "${THIS_LIB_COMPILE_FLAGS}")
   set(THIS_VARIANT_LINK_FLAGS "${THIS_LIB_LINK_FLAGS}")
   set(THIS_VARIANT_LINK_LIBS ${THIS_LIB_LINK_LIBS})
-
+  
   # Determine if it is okay to build this variant
   set(THIS_VARIANT_OKAY TRUE)
   foreach(ARG ${ARGN})
@@ -649,6 +649,7 @@ macro(boost_library_variant LIBNAME)
   boost_feature_interactions("THIS_VARIANT" ${ARGN})
 
   if (THIS_VARIANT_OKAY)
+ 
     # Determine the suffix for this library target
     boost_library_variant_target_name(${ARGN})
     set(VARIANT_LIBNAME "${LIBNAME}${VARIANT_TARGET_NAME}")
@@ -696,12 +697,12 @@ macro(boost_library_variant LIBNAME)
         CLEAN_DIRECT_OUTPUT 1
         COMPILE_FLAGS "${THIS_VARIANT_COMPILE_FLAGS}"
         LINK_FLAGS "${THIS_VARIANT_LINK_FLAGS}"
-        SOVERSION "${BOOST_VERSION}"
+       # SOVERSION "${BOOST_VERSION}"
         )
     else (THIS_LIB_IS_STATIC)
+      #TODO: Check the SOVERSION behavior on Linux and Windows
       # Add a module
       add_library(${VARIANT_LIBNAME} SHARED ${THIS_LIB_SOURCES})
-
       # Set properties on this library
       set_target_properties(${VARIANT_LIBNAME}
         PROPERTIES
@@ -709,7 +710,7 @@ macro(boost_library_variant LIBNAME)
         CLEAN_DIRECT_OUTPUT 1
         COMPILE_FLAGS "${THIS_VARIANT_COMPILE_FLAGS}"
         LINK_FLAGS "${THIS_VARIANT_LINK_FLAGS}"
-        SOVERSION "${BOOST_VERSION}"
+        # SOVERSION "${BOOST_VERSION}"
         )
     endif (THIS_LIB_IS_STATIC)
       
@@ -733,18 +734,18 @@ macro(boost_library_variant LIBNAME)
       string(TOLOWER ${PROJECT_NAME} libname)
       install(TARGETS ${VARIANT_LIBNAME} DESTINATION lib COMPONENT ${LIB_COMPONENT})
       set_property( 
-    TARGET ${VARIANT_LIBNAME}
-    PROPERTY BOOST_CPACK_COMPONENT
-    ${LIB_COMPONENT})
+            TARGET ${VARIANT_LIBNAME}
+            PROPERTY BOOST_CPACK_COMPONENT
+            ${LIB_COMPONENT})
       
       # Make the library installation component dependent on the library
       # installation components of dependent libraries.
       set(THIS_LIB_COMPONENT_DEPENDS)
       foreach(DEP ${THIS_LIB_DEPENDS})
-    # We ask the library variant that this library depends on to tell us
-    # what it's associated installation component is. We depend on that 
-    # installation component.
-    get_property(DEP_COMPONENT 
+        # We ask the library variant that this library depends on to tell us
+        # what it's associated installation component is. We depend on that 
+        # installation component.
+        get_property(DEP_COMPONENT 
           TARGET "${DEP}${VARIANT_TARGET_NAME}"
           PROPERTY BOOST_CPACK_COMPONENT)
         
@@ -880,7 +881,7 @@ endmacro(boost_add_default_variant)
 # boost_add_extra_variant is that adding a new default variant
 # introduces additional variants to *all* Boost libraries, unless
 # those variants are explicitly excluded by the library. Adding a new
-# extra variant, on the other hand, allows librarie to specifically
+# extra variant, on the other hand, allows libraries to specifically
 # request extra variants using that feature.
 #
 # Variables affected:
@@ -930,7 +931,8 @@ endmacro(boost_add_extra_variant)
 #                     [STATIC_TAG]
 #                     [MODULE]
 #                     [NOT_feature]
-#                     [EXTRA_VARIANTS variant1 variant2 ...])
+#                     [EXTRA_VARIANTS variant1 variant2 ...]
+#                     [FORCE_VARIANTS variant1])
 #
 # where libname is the name of Boost library binary (e.g.,
 # "boost_regex") and source1, source2, etc. are the source files used
@@ -1023,6 +1025,9 @@ endmacro(boost_add_extra_variant)
 #   some with the PYTHON_NODEBUG feature and some with the
 #   PYTHON_DEBUG feature. 
 #
+#   FORCE_VARIANTS: This will force the build system to ALWAYS build this 
+#   variant of the library not matter what variants are set.
+#
 # Example:
 #   boost_add_library(
 #     boost_thread
@@ -1031,20 +1036,18 @@ endmacro(boost_add_extra_variant)
 #     tss.cpp xtime.cpp
 #     SHARED_COMPILE_FLAGS "-DBOOST_THREAD_BUILD_DLL=1"
 #     STATIC_COMPILE_FLAGS "-DBOOST_THREAD_BUILD_LIB=1"
-#     NO_SINGLE_THREADED
+#     NOT_SINGLE_THREADED
 #   )
 macro(boost_add_library LIBNAME)
   parse_arguments(THIS_LIB
-    "DEPENDS;COMPILE_FLAGS;LINK_FLAGS;LINK_LIBS;EXTRA_VARIANTS;${BOOST_ADD_ARG_NAMES}"
+    "DEPENDS;COMPILE_FLAGS;LINK_FLAGS;LINK_LIBS;EXTRA_VARIANTS;FORCE_VARIANTS;${BOOST_ADD_ARG_NAMES}"
     "STATIC_TAG;MODULE;NO_INSTALL;${BOOST_ADDLIB_OPTION_NAMES}"
     ${ARGN}
     )
   set(THIS_LIB_SOURCES ${THIS_LIB_DEFAULT_ARGS})
 
-  string(TOUPPER "${LIBNAME}_COMPILED_LIB" var) 
- # message(STATUS "var: ${var}")
-  set (${var} TRUE CACHE INTERNAL "")
- # message(STATUS "${var}: ${${var}}")
+  string(TOUPPER "${LIBNAME}_COMPILED_LIB" compiled_lib) 
+  set (${compiled_lib} TRUE CACHE INTERNAL "")
 
   if (NOT TEST_INSTALLED_TREE)
     # A top-level target that refers to all of the variants of the
@@ -1067,6 +1070,14 @@ macro(boost_add_library LIBNAME)
       set(THIS_LIB_VARIANTS ${BOOST_DEFAULT_VARIANTS})
     endif (THIS_LIB_EXTRA_VARIANTS)
     
+    if (THIS_LIB_FORCE_VARIANTS)
+    #  string(TOUPPER "${LIBNAME}_FORCE_VARIANTS" force_variants)
+    #  set(${force_variants} ${THIS_LIB_FORCE_VARIANTS} CACHE INTERNAL "")
+      set(BUILD_${THIS_LIB_FORCE_VARIANTS}_PREV ${BUILD_${THIS_LIB_FORCE_VARIANTS}} )
+      set(BUILD_${THIS_LIB_FORCE_VARIANTS} TRUE)
+    endif (THIS_LIB_FORCE_VARIANTS)
+    
+    
     # Build each of the library variants
     foreach(VARIANT_STR ${THIS_LIB_VARIANTS})
       string(REPLACE ":" ";" VARIANT ${VARIANT_STR})
@@ -1074,6 +1085,12 @@ macro(boost_add_library LIBNAME)
       boost_library_variant(${LIBNAME} ${VARIANT})
     endforeach(VARIANT_STR ${THIS_LIB_VARIANTS})
   endif (NOT TEST_INSTALLED_TREE)
+  
+  if (THIS_LIB_FORCE_VARIANTS)
+    set(BUILD_${THIS_LIB_FORCE_VARIANTS} ${BUILD_${THIS_LIB_FORCE_VARIANTS}_PREV} )
+   # message(STATUS "* ^^ BUILD_${THIS_LIB_FORCE_VARIANTS}  ${BUILD_${THIS_LIB_FORCE_VARIANTS}}")
+  endif (THIS_LIB_FORCE_VARIANTS)
+  
 endmacro(boost_add_library)
 
 # Creates a new executable from source files.
@@ -1205,6 +1222,7 @@ macro(boost_add_executable EXENAME)
         # with that feature), then we won't build this executable.
         if (NOT BUILD_${FEATURE})
           set(THIS_EXE_OKAY FALSE)
+          message(STATUS "* ${EXENAME} is NOT being built because BUILD_${FEATURE} is FALSE")
         endif (NOT BUILD_${FEATURE})
       endif (THIS_EXE_${FEATURE})
     endforeach (FEATURE ${FEATURESET})
