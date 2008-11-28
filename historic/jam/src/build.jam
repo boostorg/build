@@ -132,6 +132,7 @@ toolset-root = [ MATCH --toolset-root=(.*) : $(ARGV) ] ;
 # commands and options to compile the full Jam. When
 # adding new toolsets make sure to add them to the
 # "known" list also.
+
 rule toolset ( name command .type ? : opt.out + : opt.define * : flags * : linklibs * )
 {
     .type ?= "" ;
@@ -142,7 +143,13 @@ rule toolset ( name command .type ? : opt.out + : opt.define * : flags * : linkl
     tool.$(name)$(.type).linklibs ?= $(linklibs) ;
     if ! $(name) in $(toolsets) { toolsets += $(name) ; }
 }
-rule opt ( type : yes-opt * : no-opt * ) { if $(type) in $(ARGV) { return $(yes-opt) ; } else { return $(no-opt) ; } }
+
+rule if-os ( os + : yes-opt * : no-opt * )
+    { if $(os) in $(OS) { return $(yes-opt) ; } else { return $(no-opt) ; } }
+
+rule opt ( type : yes-opt * : no-opt * )
+    { if $(type) in $(ARGV) { return $(yes-opt) ; } else { return $(no-opt) ; } }
+
 ## HP-UX aCC compiler
 toolset acc cc : "-o " : -D
     : -Ae
@@ -307,7 +314,7 @@ toolset vacpp xlc : "-o " : -D
     [ opt --release : -s -O3 -qstrict -qinline ]
     [ opt --debug : -g -qNOOPTimize -qnoinline -pg ]
     -I$(--python-include) -I$(--extra-include)
-    : -L$(--python-lib[1]) -l$(--python-lib[2]) -bmaxdata:0x40000000 ;
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) [ if-os AIX : -bmaxdata:0x40000000 ] ;
 ## Microsoft Visual C++ .NET 7.x
 toolset vc7 cl : /Fe /Fe /Fd /Fo : -D
     : /nologo
