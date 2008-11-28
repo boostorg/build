@@ -347,8 +347,13 @@ class generator
             }
         }
 
-        return [ new $(__class__) $(self.id) $(self.composing) :
+        local g = [ new $(__class__) $(self.id) $(self.composing) :
             $(self.source-types) : $(target-types) : $(self.requirements) ] ;
+        if $(self.rule-name)
+        {            
+            $(g).set-rule-name $(self.rule-name) ;
+        }        
+        return $(g) ;        
     }
 
     # Tries to invoke this generator on the given sources. Returns a list of
