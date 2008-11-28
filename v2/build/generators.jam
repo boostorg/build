@@ -319,11 +319,7 @@ class generator
             # Note: this does not remove any subfeatures of <toolset> which
             # might cause problems.
             [ property.change $(self.requirements) : <toolset> ]
-            $(new-toolset-properties) ] ;
-        if $(self.rule-name)
-        {            
-            $(g).set-rule-name $(self.rule-name) ;
-        }        
+            $(new-toolset-properties) ] ;       
         return $(g) ;
     }
 
