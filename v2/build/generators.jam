@@ -320,7 +320,10 @@ class generator
             # might cause problems.
             [ property.change $(self.requirements) : <toolset> ]
             $(new-toolset-properties) ] ;
-        $(g).set-rule-name [ $(self.rule-name) ] ;
+        if $(self.rule-name)
+        {            
+            $(g).set-rule-name $(self.rule-name) ;
+        }        
         return $(g) ;
     }
 
