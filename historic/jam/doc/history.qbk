@@ -123,7 +123,7 @@ improvements. And because of the efforts of Jurko the code is considerably more 
         ]
     [li Implemented a patch contributed by Igor Nazarenko reimplementing the list_sort()
         function to use a C qsort() function instead of a hand-crafted merge-sort algorithm.
-        Makes some list sortings (e.g. 1,2,1,2,1,2,1,2,...) extremely faster, in turn
+        Makes some list sortings (e.g. 1,2,1,2,1,2,1,2, \.\.\.) extremely faster, in turn
         significantly speeding up some project builds.
         -- ['Jurko G.]
         ]
