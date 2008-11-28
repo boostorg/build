@@ -314,12 +314,13 @@ class generator
     #
     rule clone ( new-id : new-toolset-properties + )
     {
-        return [ new $(__class__) $(new-id) $(self.composing) :
+        local g = [ new $(__class__) $(new-id) $(self.composing) :
             $(self.source-types) : $(self.target-types-and-names) :
             # Note: this does not remove any subfeatures of <toolset> which
             # might cause problems.
             [ property.change $(self.requirements) : <toolset> ]
             $(new-toolset-properties) ] ;
+        $(g).set-rule-name [ $(self.rule-name) ] ;
     }
 
     # Creates another generator that is the same as $(self), except that if
