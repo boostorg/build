@@ -259,8 +259,8 @@ int main( int argc, char * * argv, char * * arg_environ )
         printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.  \n" );
         printf( "   Copyright 2001 David Turner.\n" );
         printf( "   Copyright 2001-2004 David Abrahams.\n" );
-        printf( "   Copyright 2002-2005 Rene Rivera.\n" );
-        printf( "   Copyright 2003-2005 Vladimir Prus.\n" );
+        printf( "   Copyright 2002-2008 Rene Rivera.\n" );
+        printf( "   Copyright 2003-2008 Vladimir Prus.\n" );
 
         return EXITOK;
     }
