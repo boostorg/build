@@ -321,6 +321,7 @@ class generator
             [ property.change $(self.requirements) : <toolset> ]
             $(new-toolset-properties) ] ;
         $(g).set-rule-name [ $(self.rule-name) ] ;
+        return $(g) ;
     }
 
     # Creates another generator that is the same as $(self), except that if
