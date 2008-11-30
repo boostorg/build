@@ -22,8 +22,12 @@ feature framework : : free ;
 
 ## The MacOSX versions we can target.
 .macosx-versions =
-    10.5 10.4 10.3 10.2 10.1
-    iphone-2.0 iphone-1.x iphonesim-2.0
+    10.6 10.5 10.4 10.3 10.2 10.1
+    iphone-2.3 iphonesim-2.3
+    iphone-2.2 iphonesim-2.2
+    iphone-2.1 iphonesim-2.1
+    iphone-2.0 iphonesim-2.0
+    iphone-1.x
     ;
 
 ## The MacOSX version to compile for, which maps to the SDK to use (sysroot).
