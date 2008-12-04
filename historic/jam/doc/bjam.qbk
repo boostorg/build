@@ -1343,7 +1343,10 @@ files during any of the three build phases.
 
 [section:builtins Built-in Variables]
 
-This section discusses variables that have special meaning to =bjam=.
+This section discusses variables that have special meaning to =bjam=. All of
+these must be defined or used in the global module -- using those variables
+inside a named module will not have the desired effect.
+See [link jam.language.modules Modules].
 
 [section:search SEARCH and LOCATE]
 
