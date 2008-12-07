@@ -22,22 +22,28 @@ import traceback
 import tree
 import types
 
+from xml.sax.saxutils import escape
+
 
 annotations = []
 
 
-def print_annotation(name, value):
+def print_annotation(name, value, xml):
     """Writes some named bits of information about test run.
     """
-    print name + " {{{"
-    print value
-    print "}}}"
-
-
-def flush_annotations():
+    if xml:      
+        print escape(name) + " {{{"
+        print escape(value)
+        print "}}}"
+    else:
+        print name + " {{{"
+        print value
+        print "}}}"
+        
+def flush_annotations(xml=0):
     global annotations
     for ann in annotations:
-        print_annotation(ann[0], ann[1])
+        print_annotation(ann[0], ann[1], xml)
     annotations = []
 
 
