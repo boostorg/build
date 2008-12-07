@@ -81,6 +81,7 @@ flags intel-linux.compile OPTIONS <warnings>all : -w2 ;
 
 rule compile.c++ ( targets * : sources * : properties * )
 {
+    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
 }
 
@@ -91,6 +92,7 @@ actions compile.c++
 
 rule compile.c ( targets * : sources * : properties * )
 {
+    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
 }
 
@@ -99,9 +101,23 @@ actions compile.c
     "$(CONFIG_COMMAND)" -c -xc $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
+rule link ( targets * : sources * : properties * )
+{
+    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    SPACE on $(targets) = " " ;
+    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
+}
+
 actions link bind LIBRARIES
 {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(OPTIONS)
+}
+
+rule link.dll ( targets * : sources * : properties * )
+{
+    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    SPACE on $(targets) = " " ;
+    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
 }
 
 # Differ from 'link' above only by -shared.
