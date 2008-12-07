@@ -596,14 +596,7 @@ rule MkDir
         $(<)-mkdir = true ;
 
         # Schedule the mkdir build action.
-        if [ os.name ] = NT
-        {
-            MkDir1-quick-fix-for-windows $(<) ;
-        }
-        else
-        {
-            MkDir1-quick-fix-for-unix $(<) ;
-        }
+        common.mkdir $(<) ;
 
         # Prepare a Jam 'dirs' target that can be used to make the build only
         # construct all the target directories.
@@ -638,26 +631,30 @@ rule MkDir
 }
 
 
-actions MkDir1
-{
-    mkdir "$(<)"
-}
+#actions MkDir1
+#{
+#    mkdir "$(<)"
+#}
 
-
-# (todo)
 #   The following quick-fix actions should be replaced using the original MkDir1
 # action once Boost Jam gets updated to correctly detect different paths leading
 # up to the same filesystem target and triggers their build action only once.
 #                                             (todo) (04.07.2008.) (Jurko)
-actions MkDir1-quick-fix-for-unix
-{
-    mkdir -p "$(<)"
-}
-actions MkDir1-quick-fix-for-windows
-{
-    if not exist "$(<)\\" mkdir "$(<)"
-}
 
+if [ os.name ] = NT
+{
+    actions mkdir
+    {
+        if not exist "$(<)\\" mkdir "$(<)"
+    }
+}
+else
+{
+    actions mkdir
+    {
+        mkdir -p "$(<)"
+    }
+}
 
 actions piecemeal together existing Clean
 {
