@@ -69,8 +69,9 @@ def run_tests(critical_tests, other_tests):
             if not passed:
                 rs = "fail"
             print """
-<test-log library="build" test-name="%s" test-type="run" toolset="%s">
-<run result="%s">""" % (i, toolset, rs)
+<test-log library="build" test-name="%s" test-type="run" toolset="%s" test-program="%s" target-directory="%s">
+<run result="%s">""" % (i, toolset, "tools/build/v2/test/" + i + ".py",
+                        "boost/bin.v2/boost.build.tests/" + toolset + "/" + i, rs)
 
             if not passed:
                 BoostBuild.flush_annotations(1)
