@@ -64,17 +64,21 @@ def run_tests(critical_tests, other_tests):
                 print "PASSED"
             else:
                 print "FAILED"            
-                BoostBuild.flush_annotations();
         else:
             rs = "succeed"
             if not passed:
                 rs = "fail"
             print """
 <test-log library="build" test-name="%s" test-type="run" toolset="%s">
-<run result="%s"/>
-</test-log>
-""" % (i, toolset, rs)
+<run result="%s">""" % (i, toolset, rs)
 
+            if not passed:
+                BoostBuild.flush_annotations(1)
+
+            print """
+</run>
+</test-log>
+""" 
                 
         pass_count = pass_count + 1
         sys.stdout.flush()  # Makes testing under emacs more entertaining.
