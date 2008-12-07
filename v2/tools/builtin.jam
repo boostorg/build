@@ -219,7 +219,7 @@ feature.feature allow : : free ;
 
 # The addressing model to generate code for. Currently a limited set only
 # specifying the bit size of pointers.
-feature.feature address-model : 16 32 64 : propagated optional ;
+feature.feature address-model : 16 32 64 32_64 : propagated optional ;
 
 # Type of CPU architecture to compile for.
 feature.feature architecture :
