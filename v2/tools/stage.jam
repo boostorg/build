@@ -77,7 +77,7 @@ class install-target-class : basic-target
             # Unless <hardcode-dll-paths>true is in properties, which can happen
             # only if the user has explicitly requested it, nuke all <dll-path>
             # properties.
-            if [ $(property-set).get <hardcode-dll-paths> ] != true
+            if [ $(build-property-set).get <hardcode-dll-paths> ] != true
             {
                 ps-raw = [ property.change $(ps-raw) : <dll-path> ] ;
             }
