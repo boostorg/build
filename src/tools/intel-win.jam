@@ -56,7 +56,11 @@ rule init ( version ? :     # the compiler version
     }
 
     local setup ;
-    setup = $(root)/iclvars.bat ;
+    setup = [ GLOB $(root) : iclvars_*.bat ] ;
+    if ! $(setup)
+    {
+       setup = $(root)/iclvars.bat ;
+    }
     setup = "call \""$(setup)"\" > nul " ;
 
     if [ os.name ] = NT
@@ -174,3 +178,4 @@ rule init ( version ? :     # the compiler version
 toolset.flags intel-win.link LIBRARY_OPTION <toolset>intel : "" ;
 
 toolset.flags intel-win YLOPTION ;
+
