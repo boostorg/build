@@ -15,11 +15,13 @@ import feature ;
 import generators ;
 import numbers ;
 import os ;
+import path ;
 import print ;
 import project ;
 import property ;
 import regex ;
 import scanner ;
+import sequence ;
 import stage ;
 import symlink ;
 import toolset ;
@@ -441,7 +443,9 @@ class c-scanner : scanner
     rule process ( target : matches * : binding )
     {
         local angle  = [ regex.transform $(matches) : "<(.*)>"   ] ;
+        angle = [ sequence.transform path.native : $(angle) ] ;
         local quoted = [ regex.transform $(matches) : "\"(.*)\"" ] ;
+        quoted = [ sequence.transform path.native : $(quoted) ] ;
 
         # CONSIDER: the new scoping rule seem to defeat "on target" variables.
         local g = [ on $(target) return $(HDRGRIST) ] ;
