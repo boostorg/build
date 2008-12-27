@@ -58,7 +58,11 @@ rule init ( version ? :  command * : options * )
     
         if $(root)
         {
-            local lib_path = $(root)/lib ;
+            # Libraries required to run the executable may be in either
+            # $(root)/lib (10.1 and earlier) 
+            #     or 
+            # $(root)/lib/architecture-name (11.0 and later:
+            local lib_path = $(root)/lib $(root:P)/lib/$(bin:B) ;
             if $(.debug-configuration)
             {
                 ECHO notice: using intel libraries :: $(condition) :: $(lib_path) ;
