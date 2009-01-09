@@ -312,7 +312,7 @@ arch-addr-flags darwin OPTIONS : power : 32 : -arch ppc : default ;
 arch-addr-flags darwin OPTIONS : power : 64 : -arch ppc64 ;
 arch-addr-flags darwin OPTIONS : power : 32_64 : -arch ppc -arch ppc64 ;
 
-arch-addr-flags darwin OPTIONS : arm : 32 : -arch arm : default ;
+arch-addr-flags darwin OPTIONS : arm : 32 : -arch armv6 : default ;
 
 # Set the max header padding to allow renaming of libs for installation.
 flags darwin.link.dll OPTIONS : -headerpad_max_install_names ;
