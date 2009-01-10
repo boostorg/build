@@ -10,10 +10,10 @@ else if $(MAC) { rule .path { return ":$(<:J=\:)" ; } }
 else { rule .path { return "$(<:J=/)" ; } }
 if $(VMS) { . = "_" ; }
 else { . = "." ; }
-./ ?= "" ; 
+./ ?= "" ;
 
 # Info about what we are building.
-_VERSION_ = 3 1 16 ;
+_VERSION_ = 3 1 17 ;
 NAME = boost-jam ;
 VERSION = $(_VERSION_:J=$(.)) ;
 RELEASE = 1 ;
@@ -25,6 +25,11 @@ if --debug in $(ARGV)
     debug = true ;
 }
 
+if --profile in $(ARGV)
+{
+    profile = true ;
+}
+
 # Attempt to generate and/or build the grammar?
 if --grammar in $(ARGV)
 {
@@ -33,7 +38,8 @@ if --grammar in $(ARGV)
 
 # Do we need to add a default build type argument?
 if ! ( --release in $(ARGV) ) &&
-   ! ( --debug in $(ARGV) )
+   ! ( --debug in $(ARGV) ) &&
+   ! ( --profile in $(ARGV) )
 {
     ARGV += --release ;
 }
@@ -126,6 +132,7 @@ toolset-root = [ MATCH --toolset-root=(.*) : $(ARGV) ] ;
 # commands and options to compile the full Jam. When
 # adding new toolsets make sure to add them to the
 # "known" list also.
+
 rule toolset ( name command .type ? : opt.out + : opt.define * : flags * : linklibs * )
 {
     .type ?= "" ;
@@ -136,7 +143,13 @@ rule toolset ( name command .type ? : opt.out + : opt.define * : flags * : linkl
     tool.$(name)$(.type).linklibs ?= $(linklibs) ;
     if ! $(name) in $(toolsets) { toolsets += $(name) ; }
 }
-rule opt ( type : yes-opt * : no-opt * ) { if $(type) in $(ARGV) { return $(yes-opt) ; } else { return $(no-opt) ; } }
+
+rule if-os ( os + : yes-opt * : no-opt * )
+    { if $(os) in $(OS) { return $(yes-opt) ; } else { return $(no-opt) ; } }
+
+rule opt ( type : yes-opt * : no-opt * )
+    { if $(type) in $(ARGV) { return $(yes-opt) ; } else { return $(no-opt) ; } }
+
 ## HP-UX aCC compiler
 toolset acc cc : "-o " : -D
     : -Ae
@@ -171,6 +184,7 @@ toolset darwin cc :  "-o " : -D
     :
     [ opt --release : -Wl,-x -O3 -finline-functions ]
     [ opt --debug : -g -O0 -fno-inline -pg ]
+    [ opt --profile : -Wl,-x -O3 -finline-functions -g -pg ]
     -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## GCC 2.x, 3.x, 4.x
@@ -254,7 +268,7 @@ toolset msvc cl : /Fe /Fe /Fd /Fo : -D
     : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
 ## QNX 6.x GCC 3.x/2.95.3
 toolset qcc qcc : "-o " : -D
-    : -Wc,-pedantic
+    : -Wc,-pedantic -Wc,-fno-strict-aliasing
     [ opt --release : [ opt --symbols : -g ] -O3 -Wc,-finline-functions ]
     [ opt --debug : -g -O0 -Wc,-fno-inline ]
     -I$(--python-include) -I$(--extra-include)
@@ -278,7 +292,6 @@ toolset sun cc : "-o " : -D
     :
     [ opt --release : -s -fast -xO4 ]
     [ opt --debug : -g ]
-    -xarch=generic
     -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Sun Workshop 6 C++ (old alias)
@@ -286,7 +299,6 @@ toolset sunpro cc : "-o " : -D
     :
     [ opt --release : -s -fast -xO4 ]
     [ opt --debug : -g ]
-    -xarch=generic
     -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Compaq Alpha CXX
@@ -302,7 +314,7 @@ toolset vacpp xlc : "-o " : -D
     [ opt --release : -s -O3 -qstrict -qinline ]
     [ opt --debug : -g -qNOOPTimize -qnoinline -pg ]
     -I$(--python-include) -I$(--extra-include)
-    : -L$(--python-lib[1]) -l$(--python-lib[2]) -bmaxdata:0x40000000 ;
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) [ if-os AIX : -bmaxdata:0x40000000 ] ;
 ## Microsoft Visual C++ .NET 7.x
 toolset vc7 cl : /Fe /Fe /Fd /Fo : -D
     : /nologo
@@ -341,13 +353,12 @@ toolset vmsdecc link .link : /EXECUTABLE= :
 toolset = [ MATCH --toolset=(.*) : $(ARGV) ] ;
 if ! $(toolset)
 {
-    # For some reason, the following test does not catch 
-    # empty toolset.
+    # For some reason, the following test does not catch empty toolset.
     ECHO "###" ;
     ECHO "###" No toolset specified. Please use --toolset option. ;
     ECHO "###" ;
     ECHO "###" Known toolsets are: $(toolsets:J=", ") ;
-    EXIT "###" ;    
+    EXIT "###" ;
 }
 if ! $(toolset) in $(toolsets)
 {
@@ -431,6 +442,10 @@ if $(debug)
 {
     locate-target = [ .path $(locate-target)$(.)debug ] ;
 }
+if $(profile)
+{
+    locate-target = [ .path $(locate-target)$(.)profile ] ;
+}
 else
 {
     locate-target = [ .path $(locate-target) ] ;
@@ -449,8 +464,8 @@ jam.source =
     lists.c make.c make1.c mem.c newstr.c
     option.c output.c parse.c regexp.c rules.c
     scan.c search.c subst.c w32_getreg.c
-    timestamp.c variable.c modules.c strings.c filesys.c 
-    builtins.c pwd.c class.c native.c modules/set.c 
+    timestamp.c variable.c modules.c strings.c filesys.c
+    builtins.c pwd.c class.c native.c modules/set.c
     modules/path.c modules/regex.c modules/property-set.c
     modules/sequence.c modules/order.c
     ;
@@ -461,7 +476,7 @@ if $(NT)
 else if $(OS2)
 {
     jam.source += execunix.c fileos2.c pathunix.c ;
-} 
+}
 else if $(VMS)
 {
     jam.source += execvms.c filevms.c pathvms.c ;
@@ -541,10 +556,10 @@ rule .clean
     [DELETE] clean : $(<) ;
 }
 if $(NT) { actions piecemeal together existing [DELETE] {
-    del /F /Q $(>)
+    del /F /Q "$(>)"
 } }
 if $(UNIX) { actions piecemeal together existing [DELETE] {
-    rm -f $(>)
+    rm -f "$(>)"
 } }
 if $(VMS) { actions piecemeal together existing [DELETE] {
     DELETE $(>[--2]:J=";*, ") $(>[-1]);*
@@ -566,10 +581,10 @@ rule .mkdir
     if ! $(md<$(<)>) { [MKDIR] $(<) ; md<$(<)> = - ; }
 }
 if $(NT) { actions [MKDIR] {
-    md $(<)
+    md "$(<)"
 } }
 if $(UNIX) { actions [MKDIR] {
-    mkdir $(<)
+    mkdir "$(<)"
 } }
 if $(VMS) { actions [MKDIR] {
     CREATE/DIR $(<J=", ")
@@ -614,16 +629,16 @@ rule .exe
     return $(exe) ;
 }
 if ! $(--def[2]) { actions [COMPILE] {
-    "$(--cc)" $(--bin)$(<:D=) $(--dir)$(<:D)$(./) $(--out)$(<) $(--def)$(--defs) $(--flags) "$(--libs)" $(>)
+    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def)$(--defs)" "$(--flags)" "$(--libs)" "$(>)"
 } }
 else { actions [COMPILE] {
-    "$(--cc)" $(--bin)$(<:D=) $(--dir)$(<:D)$(./) $(--out)$(<) $(--def[1])$(--defs:J=$(--def[2]))$(--def[3]) $(--flags) "$(--libs)" $(>)
+    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def[1])$(--defs:J=$(--def[2]))$(--def[3])" "$(--flags)" "$(--libs)" "$(>)"
 } }
 if $(VMS) { actions [COMPILE.LINK] {
     "$(--link)" $(--link-bin)$(<:D=) $(--link-dir)$(<:D)$(./) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>J=", ")
 } }
 else { actions [COMPILE.LINK] {
-    "$(--link)" $(--link-bin)$(<:D=) $(--link-dir)$(<:D)$(./) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>)
+    "$(--link)" "$(--link-bin)$(<:D=)" "$(--link-dir)$(<:D)$(./)" "$(--link-out)$(<)" "$(--link-def)$(--link-defs)" "$(--link-flags)" "$(--link-libs)" "$(>)"
 } }
 
 rule .link
@@ -634,10 +649,10 @@ rule .link
     .clean $(<) ;
 }
 if $(NT) { actions [LINK] {
-    copy $(>) $(<)
+    copy "$(>)" "$(<)"
 } }
 if $(UNIX) { actions [LINK] {
-    ln -fs $(>) $(<)
+    ln -fs "$(>)" "$(<)"
 } }
 if $(VMS) { actions [LINK] {
     COPY/REPLACE $(>) $(<)
@@ -649,14 +664,14 @@ rule .move
     [MOVE] $(<) : $(>) ;
 }
 if $(NT) { actions [MOVE] {
-    del /f $(<)
-    rename $(>) $(<)
+    del /f "$(<)"
+    rename "$(>)" "$(<)"
 } }
 if $(UNIX) { actions [MOVE] {
-    mv -f $(>) $(<)
+    mv -f "$(>)" "$(<)"
 } }
 if $(VMS) { actions [MOVE] {
-    RENAME $(>) $(<)
+    RENAME "$(>)" "$(<)"
 } }
 
 # Generate the grammar tokens table, and the real yacc grammar.
@@ -672,7 +687,7 @@ rule .yyacc
 actions [YYACC] {
     $(--chmod+w)$(<[1])
     $(--chmod+w)$(<[2])
-    "$(yyacc.exe)" $(<) $(>)
+    "$(yyacc.exe)" "$(<)" "$(>)"
 }
 if $(grammar)
 {
@@ -715,18 +730,18 @@ rule .yacc
     [YACC] $(<) : $(>) ;
 }
 if $(NT) { actions [YACC] {
-    "$(yacc)" $(>)
+    "$(yacc)" "$(>)"
     if not errorlevel 1 (
-        del /f $(<[1])
-        rename y.tab$(<[1]:S) $(<[1])
+        del /f "$(<[1])"
+        rename y.tab$(<[1]:S) "$(<[1])"
         del /f $(<[2])
-        rename y.tab$(<[2]:S) $(<[2])
+        rename y.tab$(<[2]:S) "$(<[2])"
     ) else set _error_ =
 } }
 if $(UNIX) { actions [YACC] {
-    if ` "$(yacc)" $(>) ` ; then
-        mv -f y.tab$(<[1]:S) $(<[1])
-        mv -f y.tab$(<[2]:S) $(<[2])
+    if ` "$(yacc)" "$(>)" ` ; then
+        mv -f y.tab$(<[1]:S) "$(<[1])"
+        mv -f y.tab$(<[2]:S) "$(<[2])"
     else
         exit 1
     fi
@@ -758,7 +773,7 @@ rule .mkjambase
 }
 actions [MKJAMBASE] {
     $(--chmod+w)$(<)
-    $(mkjambase.exe) $(<) $(>)
+    $(mkjambase.exe) "$(<)" "$(>)"
 }
 if $(debug)
 {
@@ -770,7 +785,7 @@ rule .jam
 {
     $(>).exe = [ .exe $(>) : $(jam.source) ] ;
     DEPENDS all : $($(>).exe) ;
-    
+
     if $(debug)
     {
         $(<).exe = $(<:S=$($(>).exe:S)) ;
@@ -929,14 +944,14 @@ rule .package ( dst-dir : src-files + )
             src-files-actual += $(src-path) ;
         }
     }
-    
+
     local pack = ;
     if $(NT) { pack = $(dst-dir).zip ; }
     if $(UNIX) { pack = $(dst-dir).tgz ; }
-    
+
     DEPENDS dist : $(pack) ;
     DEPENDS $(pack) : $(dst-files) ;
-    
+
     local dst-files-queue = $(dst-files) ;
     for local src-path in $(src-files-actual)
     {
@@ -944,11 +959,11 @@ rule .package ( dst-dir : src-files + )
         dst-files-queue = $(dst-files-queue[2-]) ;
         DEPENDS $(dst-file) : $(src-path) $(dst-file:D) ;
         .mkdir $(dst-file:D) ;
-        
+
         [COPY] $(dst-file) : $(src-path) ;
         .clean $(dst-file) ;
     }
-    
+
     [PACK] $(pack) : $(dst-files) ;
     .clean $(pack) ;
 }

@@ -14,16 +14,16 @@ int make( int n_targets, const char **targets, int anyhow );
 int make1( TARGET *t );
 
 typedef struct {
-	int	temp;
-	int	updating;
-	int	cantfind;
-	int	cantmake;
-	int	targets;
-	int	made;
+    int temp;
+    int updating;
+    int cantfind;
+    int cantmake;
+    int targets;
+    int made;
 } COUNTS ;
 
 
-void make0( TARGET *t, TARGET  *p, int depth, 
+void make0( TARGET *t, TARGET  *p, int depth,
             COUNTS *counts, int anyhow );
 
 
@@ -31,7 +31,7 @@ void make0( TARGET *t, TARGET  *p, int depth,
  * Specifies that the target should be updated.
  */
 void mark_target_for_updating(char *target);
-/* 
+/*
  * Returns the list of all the target previously passed to 'mark_target_for_updating'.
  */
 LIST *targets_to_update();

@@ -77,7 +77,7 @@ LIST *order( PARSE *parse, FRAME *frame )
     LIST* arg = lol_get( frame->args, 0 );  
     LIST* tmp;
     LIST* result = 0;
-    int src, dst;
+    int src;
 
     /* We need to create a graph of order dependencies between
        the passed objects. We assume that there are no duplicates

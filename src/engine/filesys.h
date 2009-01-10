@@ -11,7 +11,7 @@
  */
 
 /*
- * filesys.h - OS specific file routines 
+ * filesys.h - OS specific file routines
  */
 
 #ifndef FILESYS_DWA20011025_H
@@ -31,24 +31,29 @@ int file_time( char *filename, time_t *time );
 void file_build1(PATHNAME *f, string* file) ;
 int file_is_file(char* filename);
 
-struct file_info_t {
-    char * name;
-    short is_file;
-    short is_dir;
-    unsigned long size;
-    time_t time;
-    LIST * files;
-} ;
 typedef struct file_info_t file_info_t ;
+struct file_info_t
+{
+    char          * name;
+    short           is_file;
+    short           is_dir;
+    unsigned long   size;
+    time_t          time;
+    LIST          * files;
+};
 
-file_info_t * file_info(char * filename);
 
-file_info_t * file_query(char * filename);
+/* Creates a pointer to information about file 'filename', creating it as
+ * necessary. If created, the structure will be default initialized.
+ */
+file_info_t * file_info( char * filename );
+
+/* Returns information about a file, queries the OS if needed. */
+file_info_t * file_query( char * filename );
 
 void file_done();
 
-/** Marks a path/file to be removed when jam exits.
-*/
+/* Marks a path/file to be removed when jam exits. */
 void file_remove_atexit( const char * path );
 
 #endif

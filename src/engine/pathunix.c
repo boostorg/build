@@ -29,9 +29,9 @@
  *
  * External routines:
  *
- *	path_parse() - split a file name into dir/base/suffix/member
- *	path_build() - build a filename given dir/base/suffix/member
- *	path_parent() - make a PATHNAME point to its parent dir
+ *  path_parse() - split a file name into dir/base/suffix/member
+ *  path_build() - build a filename given dir/base/suffix/member
+ *  path_parent() - make a PATHNAME point to its parent dir
  *
  * File_parse() and path_build() just manipuate a string and a structure;
  * they do not make system calls.
@@ -48,7 +48,7 @@
  * 03/16/95 (seiwald) - fixed accursed typo on line 69.
  * 05/03/96 (seiwald) - split from filent.c, fileunix.c
  * 12/20/96 (seiwald) - when looking for the rightmost . in a file name,
- *		      don't include the archive member name.
+ *            don't include the archive member name.
  * 01/13/01 (seiwald) - turn on \ handling on UNIX, on by accident
  */
 
@@ -56,88 +56,86 @@
  * path_parse() - split a file name into dir/base/suffix/member
  */
 
-void
-path_parse( 
-	char	*file,
-	PATHNAME *f )
+void path_parse( char * file, PATHNAME * f )
 {
-	char *p, *q;
-	char *end;
-	
-	memset( (char *)f, 0, sizeof( *f ) );
+    char * p;
+    char * q;
+    char * end;
 
-	/* Look for <grist> */
+    memset( (char *)f, 0, sizeof( *f ) );
 
-	if( file[0] == '<' && ( p = strchr( file, '>' ) ) )
-	{
-	    f->f_grist.ptr = file;
-	    f->f_grist.len = p - file;
-	    file = p + 1;
-	}
+    /* Look for <grist> */
 
-	/* Look for dir/ */
+    if ( ( file[0] == '<' ) && ( p = strchr( file, '>' ) ) )
+    {
+        f->f_grist.ptr = file;
+        f->f_grist.len = p - file;
+        file = p + 1;
+    }
 
-	p = strrchr( file, '/' );
+    /* Look for dir/ */
 
-# if PATH_DELIM == '\\'
-	/* On NT, look for dir\ as well */
-	{
-	    char *p1 = strrchr( file, '\\' );
-	    p = p1 > p ? p1 : p;
-	}
-# endif
-
-	if( p )
-	{
-	    f->f_dir.ptr = file;
-	    f->f_dir.len = p - file;
-	
-	    /* Special case for / - dirname is /, not "" */
-
-	    if( !f->f_dir.len )
-		f->f_dir.len = 1;
+    p = strrchr( file, '/' );
 
 # if PATH_DELIM == '\\'
-	    /* Special case for D:/ - dirname is D:/, not "D:" */
-
-	    if( f->f_dir.len == 2 && file[1] == ':' )
-		f->f_dir.len = 3;
+    /* On NT, look for dir\ as well */
+    {
+        char *p1 = strrchr( file, '\\' );
+        p = p1 > p ? p1 : p;
+    }
 # endif
 
-	    file = p + 1;
-	}
+    if ( p )
+    {
+        f->f_dir.ptr = file;
+        f->f_dir.len = p - file;
 
-	end = file + strlen( file );
+        /* Special case for / - dirname is /, not "" */
 
-	/* Look for (member) */
+        if ( !f->f_dir.len )
+        f->f_dir.len = 1;
 
-	if( ( p = strchr( file, '(' ) ) && end[-1] == ')' )
-	{
-	    f->f_member.ptr = p + 1;
-	    f->f_member.len = end - p - 2;
-	    end = p;
-	} 
+# if PATH_DELIM == '\\'
+        /* Special case for D:/ - dirname is D:/, not "D:" */
 
-	/* Look for .suffix */
-	/* This would be memrchr() */
+        if ( f->f_dir.len == 2 && file[1] == ':' )
+            f->f_dir.len = 3;
+# endif
 
-	p = 0;
-	q = file;
+        file = p + 1;
+    }
 
-	while( q = (char *)memchr( q, '.', end - q ) )
-	    p = q++;
+    end = file + strlen( file );
 
-	if( p )
-	{
-	    f->f_suffix.ptr = p;
-	    f->f_suffix.len = end - p;
-	    end = p;
-	}
+    /* Look for (member) */
 
-	/* Leaves base */
+    if ( ( p = strchr( file, '(' ) ) && ( end[ -1 ] == ')' ) )
+    {
+        f->f_member.ptr = p + 1;
+        f->f_member.len = end - p - 2;
+        end = p;
+    }
 
-	f->f_base.ptr = file;
-	f->f_base.len = end - file;
+    /* Look for .suffix */
+    /* This would be memrchr() */
+
+    p = 0;
+    q = file;
+
+    while ( ( q = (char *)memchr( q, '.', end - q ) ) )
+        p = q++;
+
+    if ( p )
+    {
+        f->f_suffix.ptr = p;
+        f->f_suffix.len = end - p;
+        end = p;
+    }
+
+    /* Leaves base */
+
+    f->f_base.ptr = file;
+    f->f_base.len = end - file;
 }
 
 /*
@@ -188,22 +186,22 @@ static char as_path_delim( char c )
 
 void
 path_build(
-	PATHNAME *f,
-	string	*file,
-	int	binding )
+    PATHNAME *f,
+    string  *file,
+    int binding )
 {
     file_build1( f, file );
-    
+
     /* Don't prepend root if it's . or directory is rooted */
 # if PATH_DELIM == '/'
 
-    if( f->f_root.len 
+    if ( f->f_root.len
         && !( f->f_root.len == 1 && f->f_root.ptr[0] == '.' )
         && !( f->f_dir.len && f->f_dir.ptr[0] == '/' ) )
 
 # else /* unix */
 
-    if( f->f_root.len 
+    if ( f->f_root.len
         && !( f->f_root.len == 1 && f->f_root.ptr[0] == '.' )
         && !( f->f_dir.len && f->f_dir.ptr[0] == '/' )
         && !( f->f_dir.len && f->f_dir.ptr[0] == '\\' )
@@ -213,43 +211,41 @@ path_build(
 
     {
         string_append_range( file, f->f_root.ptr, f->f_root.ptr + f->f_root.len  );
-        /* If 'root' already ends with path delimeter, 
+        /* If 'root' already ends with path delimeter,
            don't add yet another one. */
-        if( ! is_path_delim( f->f_root.ptr[f->f_root.len-1] ) )
+        if ( ! is_path_delim( f->f_root.ptr[f->f_root.len-1] ) )
             string_push_back( file, as_path_delim( f->f_root.ptr[f->f_root.len] ) );
     }
 
-    if( f->f_dir.len )
-    {
+    if ( f->f_dir.len )
         string_append_range( file, f->f_dir.ptr, f->f_dir.ptr + f->f_dir.len  );
-    }
 
     /* UNIX: Put / between dir and file */
     /* NT:   Put \ between dir and file */
 
-    if( f->f_dir.len && ( f->f_base.len || f->f_suffix.len ) )
+    if ( f->f_dir.len && ( f->f_base.len || f->f_suffix.len ) )
     {
         /* UNIX: Special case for dir \ : don't add another \ */
         /* NT:   Special case for dir / : don't add another / */
 
 # if PATH_DELIM == '\\'
-        if( !( f->f_dir.len == 3 && f->f_dir.ptr[1] == ':' ) )
+        if ( !( f->f_dir.len == 3 && f->f_dir.ptr[1] == ':' ) )
 # endif
-            if( !( f->f_dir.len == 1 && is_path_delim( f->f_dir.ptr[0] ) ) )
+            if ( !( f->f_dir.len == 1 && is_path_delim( f->f_dir.ptr[0] ) ) )
                 string_push_back( file, as_path_delim( f->f_dir.ptr[f->f_dir.len] ) );
     }
 
-    if( f->f_base.len )
+    if ( f->f_base.len )
     {
         string_append_range( file, f->f_base.ptr, f->f_base.ptr + f->f_base.len  );
     }
 
-    if( f->f_suffix.len )
+    if ( f->f_suffix.len )
     {
         string_append_range( file, f->f_suffix.ptr, f->f_suffix.ptr + f->f_suffix.len  );
     }
 
-    if( f->f_member.len )
+    if ( f->f_member.len )
     {
         string_push_back( file, '(' );
         string_append_range( file, f->f_member.ptr, f->f_member.ptr + f->f_member.len  );
@@ -258,21 +254,21 @@ path_build(
 }
 
 /*
- *	path_parent() - make a PATHNAME point to its parent dir
+ *  path_parent() - make a PATHNAME point to its parent dir
  */
 
 void
 path_parent( PATHNAME *f )
 {
-	/* just set everything else to nothing */
+    /* just set everything else to nothing */
 
-	f->f_base.ptr =
-	f->f_suffix.ptr =
-	f->f_member.ptr = "";
+    f->f_base.ptr =
+    f->f_suffix.ptr =
+    f->f_member.ptr = "";
 
-	f->f_base.len = 
-	f->f_suffix.len = 
-	f->f_member.len = 0;
+    f->f_base.len =
+    f->f_suffix.len =
+    f->f_member.len = 0;
 }
 
 #ifdef NT
@@ -296,7 +292,7 @@ DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
     /* Is the string valid? */
     if (!lpszShortPath) {
         SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;  
+        return 0;
     }
 
     /* Is the path valid? */
@@ -305,7 +301,7 @@ DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
 
     /* Convert "/" to "\" */
     for (i=0;i<len;++i) {
-        if (lpszShortPath[i]==_T('/')) 
+        if (lpszShortPath[i]==_T('/'))
             path[i]=_T('\\');
         else
             path[i]=lpszShortPath[i];
@@ -331,7 +327,7 @@ DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
         }
         _tcsncpy(ret,path,2);
     }
-    
+
     /* Expand the path for each subpath, and strip trailing backslashes */
     for (prev_pos = pos-1;pos<=len;++pos) {
         if (path[pos]==_T('\\') || (path[pos]==_T('\0') &&
@@ -356,9 +352,9 @@ DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
             /* If it's ".." element, we need to append it, not
                the name in parent that FindFirstFile will return.
                Same goes for "." */
-            
+
             if (new_element[0] == _T('.') && new_element[1] == _T('\0') ||
-                new_element[0] == _T('.') && new_element[1] == _T('.') 
+                new_element[0] == _T('.') && new_element[1] == _T('.')
                 && new_element[2] == _T('\0'))
             {
                 _tcscat(ret, new_element);
@@ -378,21 +374,21 @@ DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
             prev_pos = pos;
         }
     }
- 
+
     len=_tcslen(ret)+1;
     if (cchBuffer>=len)
         _tcscpy(lpszLongPath,ret);
-    
+
     return len;
 }
 
 char* short_path_to_long_path(char* short_path)
-{  
+{
     char buffer2[_MAX_PATH];
     int ret = ShortPathToLongPath(short_path, buffer2, _MAX_PATH);
 
     if (ret)
-	return newstr(buffer2);
+    return newstr(buffer2);
     else
       return newstr(short_path);
 }
@@ -446,14 +442,14 @@ const char * path_tmpnam(void)
 const char * path_tmpfile(void)
 {
     const char * result = 0;
-    
+
     string file_path;
     string_copy(&file_path,path_tmpdir());
     string_push_back(&file_path,PATH_DELIM);
     string_append(&file_path,path_tmpnam());
     result = newstr(file_path.value);
     string_free(&file_path);
-    
+
     return result;
 }
 
