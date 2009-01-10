@@ -1,6 +1,6 @@
 [article Boost.Jam
     [quickbook 1.3]
-    [version: 3.1.16]
+    [version: 3.1.17]
     [authors [Rivera, Rene], [Abrahams, David], [Prus, Vladimir]]
     [copyright 2003 2004 2005 2006 2007 Rene Rivera, David Abrahams, Vladimir Prus]
     [category tool-build]
@@ -21,7 +21,7 @@
 
 [/ Shortcuts ]
 
-[def :version: 3.1.16]
+[def :version: 3.1.17]
 
 [/ Images ]
 
@@ -116,7 +116,7 @@ If the scripts fail to detect an appropriate toolset to build with your particul
 The toolset used to build Boost.Jam is independent of the toolsets used for Boost.Build. Only one version of Boost.Jam is needed to use Boost.Build.
 ]
 
-The supported toolsets, and wether they are auto-detected, are:
+The supported toolsets, and whether they are auto-detected, are:
 
 [table Supported Toolsets
 
@@ -341,7 +341,7 @@ The supported toolsets, and wether they are auto-detected, are:
 
 [   [] []
     [[lines
-        [line [@http://www-306.ibm.com/software/awdtools/vacpp/ =vacpp=]]
+        [line [@http://www.ibm.com/software/awdtools/vacpp/ =vacpp=]]
         [line IBM VisualAge C++]
         ]]
     [[list
@@ -758,7 +758,7 @@ If you omit the list of formal arguments, all checking is bypassed as in "classi
 rule DEPENDS ( /targets1/ * : /targets2/ * )
 ]
 
-Builds a direct dependency: makes each of /targets1/ depend on each of /targets2/. Generally, /targets1/ will be rebuilt if /targets2/ are themselves rebuilt are or are newer than /targets1/.
+Builds a direct dependency: makes each of /targets1/ depend on each of /targets2/. Generally, /targets1/ will be rebuilt if /targets2/ are themselves rebuilt or are newer than /targets1/.
 
 [endsect]
 
@@ -853,7 +853,12 @@ Marks /targets/ as temporary, allowing them to be removed after other targets th
 rule FAIL_EXPECTED ( /targets/ * )
 ]
 
-For handling targets whose build actions are expected to fail (e.g. when testing that assertions or compile-time type checkin work properly), Boost Jam supplies the =FAIL_EXPECTED= rule in the same style as =NOCARE=, et. al. During target updating, the return code of the build actions for arguments to =FAIL_EXPECTED= is inverted: if it fails, building of dependent targets continues as though it succeeded. If it succeeds, dependent targets are skipped.
+For handling targets whose build actions are expected to fail (e.g. when testing
+that assertions or compile-time type checking work properly), Boost Jam supplies
+the =FAIL_EXPECTED= rule in the same style as =NOCARE=, et. al. During target
+updating, the return code of the build actions for arguments to =FAIL_EXPECTED=
+is inverted: if it fails, building of dependent targets continues as though it
+succeeded. If it succeeds, dependent targets are skipped.
 
 [endsect]
 
@@ -954,7 +959,7 @@ Classic jam treats any non-option element of command line as a name of target to
 # It clears the list of targets to update, and
 # Causes the specified targets to be updated.
 
-If no target was specified with the =UPDATE= rule, no targets will be updated. To support changing of the update list in more usefull ways, the rule also returns the targets previously in the update list. This makes it possible to add targets as such:
+If no target was specified with the =UPDATE= rule, no targets will be updated. To support changing of the update list in more useful ways, the rule also returns the targets previously in the update list. This makes it possible to add targets as such:
 
 [pre
 local previous-updates = \[ UPDATE \] ;
@@ -1254,6 +1259,14 @@ A variable element's string value can be parsed into grist and filename-related 
 
 [[[^:L]]
  [Replace uppercase characters with lowercase.]]
+
+[[[^:T]]
+ [Converts all back-slashes ("\\") to forward slashes ("/"). For example
+`` 
+ x = "C:\\Program Files\\Borland" ; ECHO $(x:T) ;
+``
+prints [^"C:/Program Files/Borland"]
+]]
 
 [[[^:W]]
  [When invoking Windows-based tools from [@http://www.cygwin.com/ Cygwin] 
@@ -1773,7 +1786,7 @@ This section is derived from the official Jam documentation and from experience 
 * "Grist" is just a string prefix of the form </characters/>. It is used in Jam to create unique target names based on simpler names. For example, the file name "=test.exe=" may be used by targets in separate subprojects, or for the debug and release variants of the "same" abstract target. Each distinct target bound to a file called "test.exe" has its own unique grist prefix. The Boost build system also takes full advantage of Jam's ability to divide strings on grist boundaries, sometimes concatenating multiple gristed elements at the beginning of a string. Grist is used instead of identifying targets with absolute paths for two reasons:
 
    # The location of targets cannot always be derived solely from what the user puts in a Jamfile, but sometimes depends also on the binding process. Some mechanism to distinctly identify targets with the same name is still needed.
-   # Grist allows us to use a uniform abstract identifier for each built target, regardless of target file location (as allowed by setting ALL_LOCATE_TARGET.
+   # Grist allows us to use a uniform abstract identifier for each built target, regardless of target file location (as allowed by setting ALL_LOCATE_TARGET).
 
 * When grist is extracted from a name with $(var:G), the result includes the leading and trailing angle brackets. When grist is added to a name with $(var:G=expr), existing grist is first stripped. Then, if expr is non-empty, leading <s and trailing >s are added if necessary to form an expression of the form <expr2>; <expr2> is then prepended.
 

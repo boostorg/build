@@ -65,23 +65,23 @@ builtin_system_registry(
     char const* path = lol_get(frame->args, 0)->string;
     LIST* result = L0;
     HKEY key = get_key(&path);
-    
+
     if (
         key != 0
-        && ERROR_SUCCESS == RegOpenKeyEx(key, path, 0, KEY_QUERY_VALUE, &key) 
+        && ERROR_SUCCESS == RegOpenKeyEx(key, path, 0, KEY_QUERY_VALUE, &key)
     )
     {
         DWORD  type;
         BYTE   data[MAX_REGISTRY_DATA_LENGTH];
         DWORD  len = sizeof(data);
         LIST const* const field = lol_get(frame->args, 1);
-        
+
         if ( ERROR_SUCCESS ==
              RegQueryValueEx(key, field ? field->string : 0, 0, &type, data, &len) )
         {
             switch (type)
             {
-                
+
              case REG_EXPAND_SZ:
                  {
                      long len;
@@ -101,7 +101,7 @@ builtin_system_registry(
                      string_free( expanded );
                  }
                  break;
-            
+
              case REG_MULTI_SZ:
                  {
                      char* s;
@@ -111,7 +111,7 @@ builtin_system_registry(
 
                  }
                  break;
-             
+
              case REG_DWORD:
                  {
                      char buf[100];
@@ -133,9 +133,9 @@ builtin_system_registry(
 static LIST* get_subkey_names(HKEY key, char const* path)
 {
     LIST* result = 0;
-    
-    if ( ERROR_SUCCESS == 
-         RegOpenKeyEx(key, path, 0, KEY_ENUMERATE_SUB_KEYS, &key) 
+
+    if ( ERROR_SUCCESS ==
+         RegOpenKeyEx(key, path, 0, KEY_ENUMERATE_SUB_KEYS, &key)
     )
     {
         char name[MAX_REGISTRY_KEYNAME_LENGTH];
@@ -143,47 +143,47 @@ static LIST* get_subkey_names(HKEY key, char const* path)
         DWORD index;
         FILETIME last_write_time;
 
-        for ( index = 0; 
+        for ( index = 0;
               ERROR_SUCCESS == RegEnumKeyEx(
                   key, index, name, &name_size, 0, 0, 0, &last_write_time);
-              ++index, 
+              ++index,
               name_size = sizeof(name)
         )
         {
             name[name_size] = 0;
             result = list_append(result, list_new(0, newstr(name)));
         }
-        
+
         RegCloseKey(key);
     }
-    
+
     return result;
 }
 
 static LIST* get_value_names(HKEY key, char const* path)
 {
     LIST* result = 0;
-    
+
     if ( ERROR_SUCCESS == RegOpenKeyEx(key, path, 0, KEY_QUERY_VALUE, &key) )
     {
         char name[MAX_REGISTRY_VALUENAME_LENGTH];
         DWORD name_size = sizeof(name);
         DWORD index;
 
-        for ( index = 0; 
+        for ( index = 0;
               ERROR_SUCCESS == RegEnumValue(
                   key, index, name, &name_size, 0, 0, 0, 0);
-              ++index, 
+              ++index,
               name_size = sizeof(name)
         )
         {
             name[name_size] = 0;
             result = list_append(result, list_new(0, newstr(name)));
         }
-        
+
         RegCloseKey(key);
     }
-    
+
     return result;
 }
 
@@ -194,7 +194,7 @@ builtin_system_registry_names(
 {
     char const* path        = lol_get(frame->args, 0)->string;
     char const* result_type = lol_get(frame->args, 1)->string;
-    
+
     HKEY key = get_key(&path);
 
     if ( !strcmp(result_type, "subkeys") )

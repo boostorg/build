@@ -5,6 +5,7 @@
 if ! $(BJAM_SUBTEST)
 {
     ECHO --- Testing -l option... ;
+
     assert "...found 2 targets...
 ...updating 1 target...
 .a. sleeper
@@ -17,7 +18,7 @@ echo 002
 
 ...failed .a. sleeper...
 ...failed updating 1 target...
-" : (==) : [ SHELL "$(ARGV[1]) -f option_l.jam -sBJAM_SUBTEST=1 -l2" ] ;
+" : (==) : [ SHELL "\"$(ARGV[1])\" -f option_l.jam -sBJAM_SUBTEST=1 -l2" ] ;
 }
 else
 {

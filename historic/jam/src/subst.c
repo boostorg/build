@@ -22,13 +22,13 @@ regexp* regex_compile( const char* pattern )
 {
     regex_entry entry, *e = &entry;
     entry.pattern = pattern;
-    
+
     if ( !regex_hash )
         regex_hash = hashinit(sizeof(regex_entry), "regex");
-        
+
     if ( hashenter( regex_hash, (HASHDATA **)&e ) )
         e->regex = regcomp( (char*)pattern );
-    
+
     return e->regex;
 }
 
@@ -36,13 +36,13 @@ LIST*
 builtin_subst(
     PARSE    *parse,
     FRAME      *frame )
-{        
+{
   LIST* result = L0;
   LIST* arg1 = lol_get( frame->args, 0 );
 
   if ( arg1 && list_next(arg1) && list_next(list_next(arg1)) )
-  {    
-  
+  {
+
       const char* source = arg1->string;
       const char* pattern = list_next(arg1)->string;
       regexp* repat = regex_compile( pattern );
@@ -50,7 +50,7 @@ builtin_subst(
       if ( regexec( repat, (char*)source) )
       {
           LIST* subst = list_next(arg1);
-          
+
           while ((subst = list_next(subst)) != L0)
           {
 # define BUFLEN 4096
@@ -88,7 +88,7 @@ builtin_subst(
           }
       }
   }
-  
+
   return result;
 }
 

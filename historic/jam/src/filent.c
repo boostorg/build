@@ -25,7 +25,7 @@
 # include <dir.h>
 # include <dos.h>
 # endif
-# undef FILENAME	/* cpp namespace collision */
+# undef FILENAME    /* cpp namespace collision */
 # define _finddata_t ffblk
 # endif
 
@@ -38,9 +38,9 @@
  *
  * External routines:
  *
- *	file_dirscan() - scan a directory for files
- *	file_time() - get timestamp of file, if not done by file_dirscan()
- *	file_archscan() - scan an archive for files
+ *  file_dirscan() - scan a directory for files
+ *  file_time() - get timestamp of file, if not done by file_dirscan()
+ *  file_archscan() - scan an archive for files
  *
  * File_dirscan() and file_archscan() call back a caller provided function
  * for each file found.  A flag to this callback function lets file_dirscan()
@@ -56,14 +56,10 @@
  * file_dirscan() - scan a directory for files
  */
 
-void
-file_dirscan(
-	char *dir,
-	scanback func,
-	void *closure )
+void file_dirscan( char * dir, scanback func, void * closure )
 {
-    PROFILE_ENTER(FILE_DIRSCAN);
-    
+    PROFILE_ENTER( FILE_DIRSCAN );
+
     file_info_t * d = 0;
 
     dir = short_path_to_long_path( dir );
@@ -71,49 +67,64 @@ file_dirscan(
     /* First enter directory itself */
 
     d = file_query( dir );
-    
-    if ( ! d || ! d->is_dir )
+
+    if ( !d || !d->is_dir )
     {
-        PROFILE_EXIT(FILE_DIRSCAN);
+        PROFILE_EXIT( FILE_DIRSCAN );
         return;
     }
 
-    if ( ! d->files )
+    if ( !d->files )
     {
         PATHNAME f;
-        string filespec[1];
-        string filename[1];
+        string filespec[ 1 ];
+        string filename[ 1 ];
         long handle;
         int ret;
-        struct _finddata_t finfo[1];
-        LIST* files = L0;
+        struct _finddata_t finfo[ 1 ];
+        LIST * files = L0;
+        int d_length = strlen( d->name );
 
         memset( (char *)&f, '\0', sizeof( f ) );
-        
+
         f.f_dir.ptr = d->name;
-        f.f_dir.len = strlen(d->name);
-        
+        f.f_dir.len = d_length;
+
         /* Now enter contents of directory */
 
-        string_copy( filespec, *d->name ? d->name : "." );
-        string_append( filespec, "/*" );
+        /* Prepare file search specification for the findfirst() API. */
+        if ( d_length == 0 )
+            string_copy( filespec, ".\\*" );
+        else
+        {
+            /*
+             * We can not simply assume the given folder name will never include
+             * its trailing path separator or otherwise we would not support the
+             * Windows root folder specified without its drive letter, i.e. '\'.
+             */
+            char trailingChar = d->name[ d_length - 1 ] ;
+            string_copy( filespec, d->name );
+            if ( ( trailingChar != '\\' ) && ( trailingChar != '/' ) )
+                string_append( filespec, "\\" );
+            string_append( filespec, "*" );
+        }
 
-        if( DEBUG_BINDSCAN )
+        if ( DEBUG_BINDSCAN )
             printf( "scan directory %s\n", dir );
 
-        # if defined(__BORLANDC__) && __BORLANDC__ < 0x550
+        #if defined(__BORLANDC__) && __BORLANDC__ < 0x550
         if ( ret = findfirst( filespec->value, finfo, FA_NORMAL | FA_DIREC ) )
         {
             string_free( filespec );
-            PROFILE_EXIT(FILE_DIRSCAN);
+            PROFILE_EXIT( FILE_DIRSCAN );
             return;
         }
 
-        string_new( filename );
-        while( !ret )
+        string_new ( filename );
+        while ( !ret )
         {
             file_info_t * ff = 0;
-            
+
             f.f_base.ptr = finfo->ff_name;
             f.f_base.len = strlen( finfo->ff_name );
 
@@ -132,15 +143,15 @@ file_dirscan(
         # else
         handle = _findfirst( filespec->value, finfo );
 
-        if( ret = ( handle < 0L ) )
+        if ( ret = ( handle < 0L ) )
         {
             string_free( filespec );
-            PROFILE_EXIT(FILE_DIRSCAN);
+            PROFILE_EXIT( FILE_DIRSCAN );
             return;
         }
 
         string_new( filename );
-        while( !ret )
+        while ( !ret )
         {
             file_info_t * ff = 0;
 
@@ -150,7 +161,7 @@ file_dirscan(
             string_truncate( filename, 0 );
             path_build( &f, filename, 0 );
 
-            files = list_new( files, newstr(filename->value) );
+            files = list_new( files, newstr( filename->value ) );
             ff = file_info( filename->value );
             ff->is_file = finfo->attrib & _A_SUBDIR ? 0 : 1;
             ff->is_dir = finfo->attrib & _A_SUBDIR ? 1 : 0;
@@ -164,16 +175,16 @@ file_dirscan(
         # endif
         string_free( filename );
         string_free( filespec );
-    
+
         d->files = files;
     }
 
     /* Special case \ or d:\ : enter it */
     {
         unsigned long len = strlen(d->name);
-        if( len == 1 && d->name[0] == '\\' )
+        if ( len == 1 && d->name[0] == '\\' )
             (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
-        else if( len == 3 && d->name[1] == ':' )
+        else if ( len == 3 && d->name[1] == ':' )
             (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
     }
 
@@ -188,8 +199,8 @@ file_dirscan(
             files = list_next( files );
         }
     }
-    
-    PROFILE_EXIT(FILE_DIRSCAN);
+
+    PROFILE_EXIT( FILE_DIRSCAN );
 }
 
 file_info_t * file_query( char * filename )
@@ -199,7 +210,7 @@ file_info_t * file_query( char * filename )
     {
         struct stat statbuf;
 
-        if( stat( *filename ? filename : ".", &statbuf ) < 0 )
+        if ( stat( *filename ? filename : ".", &statbuf ) < 0 )
             return 0;
 
         ff->is_file = statbuf.st_mode & S_IFREG ? 1 : 0;
@@ -216,8 +227,8 @@ file_info_t * file_query( char * filename )
 
 int
 file_time(
-	char	*filename,
-	time_t	*time )
+    char    *filename,
+    time_t  *time )
 {
     file_info_t * ff = file_query( filename );
     if ( !ff ) return -1;
@@ -239,19 +250,19 @@ int file_is_file(char* filename)
 
 /* Straight from SunOS */
 
-#define	ARMAG	"!<arch>\n"
-#define	SARMAG	8
+#define ARMAG   "!<arch>\n"
+#define SARMAG  8
 
-#define	ARFMAG	"`\n"
+#define ARFMAG  "`\n"
 
 struct ar_hdr {
-	char	ar_name[16];
-	char	ar_date[12];
-	char	ar_uid[6];
-	char	ar_gid[6];
-	char	ar_mode[8];
-	char	ar_size[10];
-	char	ar_fmag[2];
+    char    ar_name[16];
+    char    ar_date[12];
+    char    ar_uid[6];
+    char    ar_gid[6];
+    char    ar_mode[8];
+    char    ar_size[10];
+    char    ar_fmag[2];
 };
 
 # define SARFMAG 2
@@ -259,98 +270,98 @@ struct ar_hdr {
 
 void
 file_archscan(
-	char *archive,
-	scanback func,
-	void *closure )
+    char *archive,
+    scanback func,
+    void *closure )
 {
-	struct ar_hdr ar_hdr;
-	char *string_table = 0;
-	char buf[ MAXJPATH ];
-	long offset;
-	int fd;
+    struct ar_hdr ar_hdr;
+    char *string_table = 0;
+    char buf[ MAXJPATH ];
+    long offset;
+    int fd;
 
-	if( ( fd = open( archive, O_RDONLY | O_BINARY, 0 ) ) < 0 )
-	    return;
+    if ( ( fd = open( archive, O_RDONLY | O_BINARY, 0 ) ) < 0 )
+        return;
 
-	if( read( fd, buf, SARMAG ) != SARMAG ||
-	    strncmp( ARMAG, buf, SARMAG ) )
-	{
-	    close( fd );
-	    return;
-	}
+    if ( read( fd, buf, SARMAG ) != SARMAG ||
+        strncmp( ARMAG, buf, SARMAG ) )
+    {
+        close( fd );
+        return;
+    }
 
-	offset = SARMAG;
+    offset = SARMAG;
 
-	if( DEBUG_BINDSCAN )
-	    printf( "scan archive %s\n", archive );
+    if ( DEBUG_BINDSCAN )
+        printf( "scan archive %s\n", archive );
 
-	while( read( fd, &ar_hdr, SARHDR ) == SARHDR &&
-	       !memcmp( ar_hdr.ar_fmag, ARFMAG, SARFMAG ) )
-	{
-	    long    lar_date;
-	    long    lar_size;
-	    char    *name = 0;
- 	    char    *endname;
-	    char    *c;
+    while ( ( read( fd, &ar_hdr, SARHDR ) == SARHDR ) &&
+           !memcmp( ar_hdr.ar_fmag, ARFMAG, SARFMAG ) )
+    {
+        long    lar_date;
+        long    lar_size;
+        char    *name = 0;
+        char    *endname;
+        char    *c;
 
-	    sscanf( ar_hdr.ar_date, "%ld", &lar_date );
-	    sscanf( ar_hdr.ar_size, "%ld", &lar_size );
+        sscanf( ar_hdr.ar_date, "%ld", &lar_date );
+        sscanf( ar_hdr.ar_size, "%ld", &lar_size );
 
-	    lar_size = ( lar_size + 1 ) & ~1;
+        lar_size = ( lar_size + 1 ) & ~1;
 
-	    if (ar_hdr.ar_name[0] == '/' && ar_hdr.ar_name[1] == '/' )
-	    {
-		/* this is the "string table" entry of the symbol table,
-		** which holds strings of filenames that are longer than
-		** 15 characters (ie. don't fit into a ar_name
-		*/
+        if (ar_hdr.ar_name[0] == '/' && ar_hdr.ar_name[1] == '/' )
+        {
+        /* this is the "string table" entry of the symbol table,
+        ** which holds strings of filenames that are longer than
+        ** 15 characters (ie. don't fit into a ar_name
+        */
 
-		string_table = BJAM_MALLOC_ATOMIC(lar_size+1);
-		if (read(fd, string_table, lar_size) != lar_size)
-		    printf("error reading string table\n");
-		string_table[lar_size] = '\0';
-		offset += SARHDR + lar_size;
-		continue;
-	    }
-	    else if (ar_hdr.ar_name[0] == '/' && ar_hdr.ar_name[1] != ' ')
-	    {
-		/* Long filenames are recognized by "/nnnn" where nnnn is
-		** the offset of the string in the string table represented
-		** in ASCII decimals.
-		*/
+        string_table = BJAM_MALLOC_ATOMIC(lar_size+1);
+        if (read(fd, string_table, lar_size) != lar_size)
+            printf("error reading string table\n");
+        string_table[lar_size] = '\0';
+        offset += SARHDR + lar_size;
+        continue;
+        }
+        else if (ar_hdr.ar_name[0] == '/' && ar_hdr.ar_name[1] != ' ')
+        {
+            /* Long filenames are recognized by "/nnnn" where nnnn is
+            ** the offset of the string in the string table represented
+            ** in ASCII decimals.
+            */
 
-		name = string_table + atoi( ar_hdr.ar_name + 1 );
-		for ( endname = name; *endname && *endname != '\n'; ++endname) {}
-	    }
-	    else
-	    {
-		/* normal name */
-		name = ar_hdr.ar_name;
-		endname = name + sizeof( ar_hdr.ar_name );
-	    }
+            name = string_table + atoi( ar_hdr.ar_name + 1 );
+            for ( endname = name; *endname && *endname != '\n'; ++endname) {}
+        }
+        else
+        {
+            /* normal name */
+            name = ar_hdr.ar_name;
+            endname = name + sizeof( ar_hdr.ar_name );
+        }
 
-	    /* strip trailing white-space, slashes, and backslashes */
+        /* strip trailing white-space, slashes, and backslashes */
 
-	    while( endname-- > name )
-	    	if( !isspace(*endname) && *endname != '\\' && *endname != '/' )
-		    break;
-	    *++endname = 0;
+        while ( endname-- > name )
+            if ( !isspace(*endname) && ( *endname != '\\' ) && ( *endname != '/' ) )
+                break;
+        *++endname = 0;
 
-	    /* strip leading directory names, an NT specialty */
+        /* strip leading directory names, an NT specialty */
 
-	    if( c = strrchr( name, '/' ) )
-		name = c + 1;
-	    if( c = strrchr( name, '\\' ) )
-		name = c + 1;
+        if ( c = strrchr( name, '/' ) )
+        name = c + 1;
+        if ( c = strrchr( name, '\\' ) )
+        name = c + 1;
 
-	    sprintf( buf, "%s(%.*s)", archive, endname - name, name );
-	    (*func)( closure, buf, 1 /* time valid */, (time_t)lar_date );
+        sprintf( buf, "%s(%.*s)", archive, endname - name, name );
+        (*func)( closure, buf, 1 /* time valid */, (time_t)lar_date );
 
-	    offset += SARHDR + lar_size;
-	    lseek( fd, offset, 0 );
-	}
+        offset += SARHDR + lar_size;
+        lseek( fd, offset, 0 );
+    }
 
-	close( fd );
+    close( fd );
 }
 
 # endif /* NT */
