@@ -6,6 +6,12 @@
 
 import modules ;
 
+# Set a value for a named option, to be used when not overridden on the command
+# line.
+rule set ( name : value )
+{
+    .option.$(name) = $(value) ;
+}
 
 rule get ( name : default-value ? )
 {
@@ -14,6 +20,10 @@ rule get ( name : default-value ? )
     {
         return $(m[1]) ;
     }
+    else if $(.option.$(name))
+    {
+        return $(.option.$(name)) ;
+    }    
     else
     {
         return $(default-value) ;

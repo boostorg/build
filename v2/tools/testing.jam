@@ -62,6 +62,7 @@ feature.feature test-info          : : free incidental ;
 feature.feature testing.arg        : : free incidental ;
 feature.feature testing.input-file : : free dependency ;
 
+feature.feature preserve-test-targets : off on : incidental propagated ;
 
 # Register target types.
 type.register TEST         : test          ;
@@ -393,11 +394,6 @@ rule run-path-setup ( target : source : properties * )
 
 
 local argv = [ modules.peek : ARGV ] ;
-if --preserve-test-targets in $(argv)
-{
-    preserve-test-targets = true ;
-}
-
 
 toolset.flags testing.capture-output ARGS <testing.arg> ;
 toolset.flags testing.capture-output INPUT_FILES <testing.input-file> ;
@@ -440,7 +436,7 @@ rule capture-output ( target : source : properties * : targets-to-remove * )
 
     run-path-setup $(target) : $(source) : $(properties) ;
 
-    if ! $(preserve-test-targets)
+    if [ feature.get-values preserve-test-targets : $(properties) ] = off
     {
         TEMPORARY $(targets-to-remove) ;
         # Set a second action on target that will be executed after capture

@@ -608,6 +608,49 @@ bjam toolset=gcc variant=debug optimization=space
               </para>
             </listitem>
           </varlistentry>
+
+          <varlistentry>
+            <term><option>-a</option></term>
+            <listitem>
+              <para>Causes all files to be rebuilt.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-n</option></term>
+            <listitem>
+              <para>Do no execute the commands, only print them.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-d+2</option></term>
+            <listitem>
+              <para>Show commands as they are executed.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-d0</option></term>
+            <listitem>
+              <para>Supress all informational messages.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-q</option></term>
+            <listitem>
+              <para>Stop at first error, as opposed to continuing to build targets
+              that don't depend on the failed ones.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-j <replaceable>N</replaceable></option></term>
+            <listitem>
+              <para>Run up to <replaceable>N</replaceable> commands in parallel.</para>
+            </listitem>
+          </varlistentry>
          
           <varlistentry>
             <term><option>--debug-configuration</option></term>

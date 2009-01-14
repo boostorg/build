@@ -37,6 +37,9 @@ import toolset ;
 import type ;
 
 
+type.register MANIFEST : manifest ;
+feature.feature embed-manifest : on off : incidental propagated ;
+
 ################################################################################
 #
 # Public rules.
@@ -329,14 +332,15 @@ rule compile.c.pch ( targets + : sources * : properties * )
     }
 }
 
+toolset.flags msvc YLOPTION : "-Yl" ;
 
 # Action for running the C/C++ compiler without using precompiled headers.
 #
+# WARNING: Synchronize any changes this in action with intel-win
 actions compile-c-c++
 {
     $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
 }
-
 
 rule compile-c-c++ ( targets + : sources * )
 {
@@ -344,27 +348,24 @@ rule compile-c-c++ ( targets + : sources * )
     DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_FILE) ] ;
 }
 
-
 # Action for running the C/C++ compiler using precompiled headers. In addition
 # to whatever else it needs to compile, this action also adds a temporary source
 # .cpp file used to compile the precompiled headers themselves.
 #
 # The global .escaped-double-quote variable is used to avoid messing up Emacs
 # syntax highlighting in the messy N-quoted code below.
-#
 actions compile-c-c++-pch
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote))" $(.CC.FILTER)
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote))" $(.CC.FILTER)
 }
 
 
 # Action for running the C/C++ compiler using precompiled headers. An already
 # built source file for compiling the precompiled headers is expected to be
 # given as one of the source parameters.
-#
 actions compile-c-c++-pch-s
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" -Yl"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
 }
 
 
@@ -414,11 +415,22 @@ actions compile.rc
 }
 
 
+rule link ( targets + : sources * : properties * )
+{
+    if <embed-manifest>on in $(properties)
+    {        
+        msvc.manifest $(targets) : $(sources) : $(properties) ;
+    }    
+}
+
 rule link.dll ( targets + : sources * : properties * )
 {
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
+    if <embed-manifest>on in $(properties)
+    {        
+        msvc.manifest.dll $(targets) : $(sources) : $(properties) ;
+    }    
 }
-
 
 # Incremental linking a DLL causes no end of problems: if the actual exports do
 # not change, the import .lib file is never updated. Therefore, the .lib is
@@ -436,37 +448,53 @@ if [ os.name ] in NT
     {
         $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
+    }
+    
+    actions manifest
+    {        
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
         )
     }
-
+    
     actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
+    }
+
+    actions manifest.dll
+    {        
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
         )
-    }
+    }    
 }
 else
-{
+{        
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+    }
+
+    actions manifest
+    {        
         if test -e "$(<[1]).manifest"; then
             $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);1"
         fi
     }
-
+    
     actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
-        if test -e "$(<[1]).manifest"; then
-            $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
-        fi
     }
+    
+    actions manifest.dll
+    {
+        if test -e "$(<[1]).manifest"; then
+          $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
+        fi
+    }    
 }
 
 
@@ -860,14 +888,7 @@ local rule configure-really ( version ? : options * )
             toolset.flags msvc.compile .IDL $(cpu-conditions) : $(setup-$(c))$(idl-compiler) ;
             toolset.flags msvc.compile .MC  $(cpu-conditions) : $(setup-$(c))$(mc-compiler) ;
 
-            if ! [ os.name ] in NT
-            {
-                toolset.flags msvc.link .MT $(cpu-conditions) : $(setup-$(c))$(manifest-tool) -nologo ;
-            }
-            else
-            {
-                toolset.flags msvc.link .MT $(cpu-conditions) : $(manifest-tool) -nologo ;
-            }
+            toolset.flags msvc.link .MT $(cpu-conditions) : $(setup-$(c))$(manifest-tool) -nologo ;
 
             if $(cc-filter)
             {
@@ -943,12 +964,38 @@ local rule default-paths ( version ? )
 }
 
 
-local rule get-rspline ( target : lang-opt )
+rule get-rspline ( target : lang-opt )
 {
     CC_RSPLINE on $(target) = [ on $(target) return $(lang-opt) -U$(UNDEFS)
         $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c $(.nl)-D$(DEFINES)
         $(.nl)\"-I$(INCLUDES:W)\" ] ;
 }
+
+class msvc-linking-generator : linking-generator
+{
+    # Calls the base version.  If necessary, also create a target for the
+    # manifest file.specifying source's name as the name of the created
+    # target. As result, the PCH will be named whatever.hpp.gch, and not
+    # whatever.gch.
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        local result = [ linking-generator.generated-targets $(sources)
+          : $(property-set) : $(project) $(name) ] ;
+        if [ $(property-set).get <embed-manifest> ] = "off"
+        {
+            if ! $(name)
+            {
+                name = [ determine-output-name $(sources) ] ;
+            }
+            
+            local action = [ $(result[0]).action ] ;
+            result += [ virtual-target.register
+                [ class.new file-target $(name) : MANIFEST : $(project) : $(action) ] ] ;
+        }
+        return $(result) ;
+    }
+}
+
 
 
 # Unsafe worker rule for the register-toolset() rule. Must not be called
@@ -982,8 +1029,10 @@ local rule register-toolset-really ( )
         # TODO: Is it possible to combine these? Make the generators
         # non-composing so that they do not convert each source into a separate
         # .rsp file.
-        generators.register-linker msvc.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>msvc ;
-        generators.register-linker msvc.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB : <toolset>msvc ;
+        generators.register [ new msvc-linking-generator 
+            msvc.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>msvc ] ;
+        generators.register [ new msvc-linking-generator 
+            msvc.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB : <toolset>msvc ] ;
 
         generators.register-archiver msvc.archive : OBJ : STATIC_LIB : <toolset>msvc ;
         generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;

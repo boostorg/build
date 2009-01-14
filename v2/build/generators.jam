@@ -172,6 +172,7 @@ class generator
     import virtual-target ;
     import "class" : new ;
     import property ;
+    import path ;
 
     EXPORT class@generator : indent increase-indent decrease-indent
         generators.dout ;
@@ -203,6 +204,7 @@ class generator
     )
     {
         self.id = $(id) ;
+        self.rule-name = $(id) ;
         self.composing = $(composing) ;
         self.source-types = $(source-types) ;
         self.target-types-and-names = $(target-types-and-names) ;
@@ -260,7 +262,17 @@ class generator
     {
         return $(self.requirements) ;
     }
-
+    
+    rule set-rule-name ( rule-name )
+    {
+        self.rule-name = $(rule-name) ;
+    }
+    
+    rule rule-name ( )
+    {
+        return $(self.rule-name) ;
+    }
+        
     # Returns a true value if the generator can be run with the specified
     # properties.
     #
@@ -302,12 +314,13 @@ class generator
     #
     rule clone ( new-id : new-toolset-properties + )
     {
-        return [ new $(__class__) $(new-id) $(self.composing) :
+        local g = [ new $(__class__) $(new-id) $(self.composing) :
             $(self.source-types) : $(self.target-types-and-names) :
             # Note: this does not remove any subfeatures of <toolset> which
             # might cause problems.
             [ property.change $(self.requirements) : <toolset> ]
-            $(new-toolset-properties) ] ;
+            $(new-toolset-properties) ] ;       
+        return $(g) ;
     }
 
     # Creates another generator that is the same as $(self), except that if
@@ -330,8 +343,13 @@ class generator
             }
         }
 
-        return [ new $(__class__) $(self.id) $(self.composing) :
+        local g = [ new $(__class__) $(self.id) $(self.composing) :
             $(self.source-types) : $(target-types) : $(self.requirements) ] ;
+        if $(self.rule-name)
+        {            
+            $(g).set-rule-name $(self.rule-name) ;
+        }        
+        return $(g) ;        
     }
 
     # Tries to invoke this generator on the given sources. Returns a list of
@@ -447,6 +465,32 @@ class generator
         return $(result) ;
     }
 
+    # Determine target name from fullname (maybe including path components)
+    # Place optional prefix and postfix around basename
+    #
+    rule determine-target-name ( fullname  : prefix ? : postfix ? )
+    {
+        # See if we need to add directory to the target name.
+        local dir  = $(fullname:D) ;            
+        local name = $(fullname:B) ; 
+        
+        name = $(prefix:E=)$(name) ;
+        name = $(name)$(postfix:E=) ;
+
+        if $(dir) && 
+          # Never append '..' to target path.
+          ! [ MATCH .*(\\.\\.).* : $(dir) ] 
+            && 
+          ! [ path.is-rooted $(dir) ]
+        {
+            # Relative path is always relative to the source
+            # directory. Retain it, so that users can have files
+            # with the same in two different subdirectories.
+            name = $(dir)/$(name) ;                
+        }            
+        return $(name) ;
+    }
+
     # Determine the name of the produced target from the names of the sources.
     #
     rule determine-output-name ( sources + )
@@ -469,10 +513,7 @@ class generator
                 errors.error "$(self.id): source targets have different names: cannot determine target name" ;
             }
         }
-
-        # Names of sources might include directory. We should strip it.
-        name = $(name:D=) ;
-
+        name = [ determine-target-name [ $(sources[1]).name ] ] ;
         return $(name) ;
     }
 
@@ -506,7 +547,7 @@ class generator
 
         # Assign an action for each target.
         local action = [ action-class ] ;
-        local a = [ class.new $(action) $(sources) : $(self.id) :
+        local a = [ class.new $(action) $(sources) : $(self.rule-name) :
                     $(property-set) ] ;
 
         # Create generated target for each target type.
@@ -515,7 +556,8 @@ class generator
         local post = $(self.name-postfix) ;
         for local t in $(self.target-types)
         {
-            local generated-name = $(pre[1])$(name)$(post[1]) ;
+            local generated-name = $(pre[1])$(name:BS)$(post[1]) ;
+            generated-name = $(generated-name:R=$(name:D)) ;
             pre = $(pre[2-]) ;
             post = $(post[2-]) ;
 

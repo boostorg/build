@@ -15,11 +15,13 @@ import feature ;
 import generators ;
 import numbers ;
 import os ;
+import path ;
 import print ;
 import project ;
 import property ;
 import regex ;
 import scanner ;
+import sequence ;
 import stage ;
 import symlink ;
 import toolset ;
@@ -35,10 +37,8 @@ import message ;
 import generate ;
 
 
-.os-names = amiga aix bsd cygwin darwin dos emx freebsd hpux iphone linux netbsd
-    openbsd osf qnx qnxnto sgi solaris sun sunos svr4 sysv ultrix unix unixware
-    vms windows ;
-
+.os-names = aix bsd cygwin darwin freebsd hpux iphone linux netbsd
+    openbsd osf qnx qnxnto sgi solaris unix unixware windows ;
 
 # Feature used to determine which OS we're on. New <target-os> and <host-os>
 # features should be used instead.
@@ -70,6 +70,12 @@ local rule default-host-os ( )
             case MACOSX       : host-os = darwin  ;
             case KFREEBSD     : host-os = freebsd ;
             case LINUX        : host-os = linux   ;
+            case SUNOS        : 
+              ECHO "SunOS is not a supported operating system." ;
+              ECHO "We believe last version of SunOS was released in 1992, " ;
+              ECHO "so if you get this message, something is very wrong with configuration logic. " ;
+              ECHO "Please report this as a bug. " ;
+              EXIT ;
             case *            : host-os = unix    ;
         }
     }
@@ -215,7 +221,7 @@ feature.feature allow : : free ;
 
 # The addressing model to generate code for. Currently a limited set only
 # specifying the bit size of pointers.
-feature.feature address-model : 16 32 64 : propagated optional ;
+feature.feature address-model : 16 32 64 32_64 : propagated optional ;
 
 # Type of CPU architecture to compile for.
 feature.feature architecture :
@@ -437,7 +443,9 @@ class c-scanner : scanner
     rule process ( target : matches * : binding )
     {
         local angle  = [ regex.transform $(matches) : "<(.*)>"   ] ;
+        angle = [ sequence.transform path.native : $(angle) ] ;
         local quoted = [ regex.transform $(matches) : "\"(.*)\"" ] ;
+        quoted = [ sequence.transform path.native : $(quoted) ] ;
 
         # CONSIDER: the new scoping rule seem to defeat "on target" variables.
         local g = [ on $(target) return $(HDRGRIST) ] ;

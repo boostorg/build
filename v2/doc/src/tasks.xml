@@ -713,11 +713,58 @@ exe app : app.cpp : &lt;implicit-dependency&gt;parser ;
     </para>
   </section>
 
+  <section id="bbv2.tasks.crosscompile">
+    <title>Cross-compilation</title>
+
+    <indexterm><primary>cross compilation</primary></indexterm>
+
+    <para>Boost.Build supports cross compilation with the gcc and msvc
+    toolsets.</para>
+    
+    <para>
+      When using gcc, you first need to specify your cross compiler
+      in <filename>user-config.jam</filename> (see <xref linkend="bbv2.advanced.configuration"/>), 
+      for example:</para>
+<programlisting>
+using gcc : arm : arm-none-linux-gnueabi-g++ ;
+</programlisting>
+    <para>
+      After that, if the host and target os are the same, for example Linux, you can
+      just request that this compiler version to be used:
+    </para>
+<screen>
+bjam toolset=gcc-arm
+</screen>
+
+    <para>
+      If you want to target different operating system from the host, you need
+      to additionally specify the value for the <code>target-os</code> feature, for
+      example:
+    </para>
+<screen>
+# On windows box
+bjam toolset=gcc-arm <emphasis role="bold">target-os=linux</emphasis>
+# On Linux box
+bjam toolset=gcc-mingw <emphasis role="bold">target-os=windows</emphasis>
+</screen>
+    <para>
+      For the complete list of allowed opeating system names, please see the documentation for 
+      <link linkend="bbv2.reference.features.target-os">target-os feature</link>.
+    </para>
+
+    <para>
+      When using the msvc compiler, it's only possible to cross-compiler to a 64-bit system
+      on a 32-bit host. Please see <xref linkend="v2.reference.tools.compiler.msvc.64"/> for
+      details.
+    </para>
+         
+  </section>
+
 </chapter>
 
 <!--
      Local Variables:
-     mode: xml
+     mode: nxml
      sgml-indent-data: t
      sgml-parent-document: ("userman.xml" "chapter")
      sgml-set-face: t
