@@ -441,8 +441,8 @@ local rule process-explicit-toolset-requests
         {
             if $(.debug-config)
             {
-                ECHO notice: [cmdline-cfg] toolset $(toolset-version) not
-                    previously configured; attempting to auto-configure now ;
+                ECHO "notice: [cmdline-cfg] toolset $(toolset-version) not"
+                    "previously configured; attempting to auto-configure now" ;
             }
             toolset.using $(toolset) : $(version) ;
         }
@@ -870,14 +870,18 @@ local rule should-clean-project ( project )
         }
     }
 
-
+    local j = [ option.get jobs ] ;
+    if $(j)
+    {
+        modules.poke : PARALLELISM : $(j) ;
+    }
+    
     # The 'all' pseudo target is not strictly needed expect in the case when we
     # use it below but people often assume they always have this target
     # available and do not declare it themselves before use which may cause
     # build failures with an error message about not being able to build the
     # 'all' target.
     NOTFILE all ;
-
 
     # And now that all the actual raw Jam targets and all the dependencies
     # between them have been prepared all that is left is to tell Jam to update

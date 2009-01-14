@@ -285,11 +285,11 @@ rule lines (
         indent = "" ;
         for local c in $(indent-chars)
         {
-            if $(c) = " " { c = &nbsp; ; }
-            else if $(c) = "	" { c = &nbsp;&nbsp;&nbsp;&nbsp; ; }
+            if $(c) = " " { c = "&nbsp;" ; }
+            else if $(c) = "	" { c = "&nbsp;&nbsp;&nbsp;&nbsp;" ; }
             indent = $(indent)$(c) ;
         }
-        local html-text = [ escape-html $(text) : &nbsp; ] ;
+        local html-text = [ escape-html $(text) : "&nbsp;" ] ;
         text $(html-text[1])<br> $(indent)$(html-text[2-])<br> ;
     }
 }

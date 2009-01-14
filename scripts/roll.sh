@@ -33,6 +33,7 @@ cd doc
 /home/ghost/Work/Boost/boost-svn/tools/jam/src/bin.linuxx86/bjam --v2 pdf
 cp `find bin -name "*.pdf"` ../..
 mv ../../standalone.pdf ../../userman.pdf
+cp ../../userman.pdf .
 rm -rf bin
 cd ..
 

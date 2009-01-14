@@ -286,7 +286,13 @@ local rule load-jamfile (
     {
         jamfile-to-load = [ find-jamfile $(dir) ] ;
     }
-
+    
+    if $(jamfile-to-load[2])
+    {
+        errors.error "Multiple Jamfiles found at '$(dir)'" 
+          :  "Filenames are: " $(jamfile-to-load:D=) ;
+    }
+    
     # The module of the Jamfile.
     #
     local jamfile-module = [ module-name [ path.parent $(jamfile-to-load) ] ] ;
@@ -811,7 +817,17 @@ rule glob-internal ( project : wildcards + : excludes * : rule-name )
         # absolute.
         for local p in $(paths)
         {
-            result += [ path.root $(p) [ path.pwd ] ] ;
+            # If the path is below source location, use relative path.
+            # Otherwise, use full path just to avoid any ambiguities.
+            local rel = [ path.relative $(p) $(location) : no-error ] ;
+            if $(rel) = not-a-child
+            {                   
+                result += [ path.root $(p) [ path.pwd ] ] ;
+            }
+            else
+            {
+                result += $(rel) ;
+            }                
         }
     }
     else
@@ -1036,4 +1052,15 @@ module project-rules
             return $(condition):$(requirements) ;
         }
     }
+    
+    rule option ( name : value )
+    {
+        if $(__name__) != site-config && $(__name__) != user-config
+        {
+            import errors ;
+            errors.error "The 'option' rule may be used only in site-config or user-config" ;
+        }        
+        import option ;
+        option.set $(name) : $(value) ;
+    }    
 }

@@ -238,6 +238,12 @@ path-constant DATA : data/a.txt ;
   <section id="bbv2.advanced.builtins.features">
     <title>Builtin features</title>
 
+    <para>This section documents the features that are built-in into
+    Boost.Build. For features with a fixed set of values, that set is
+    provided, with the default value listed first.</para>
+
+    <indexterm><primary>features</primary><secondary>builtin</secondary></indexterm>
+
     <variablelist>
       <varlistentry><term><literal>variant</literal></term>
 
@@ -323,6 +329,25 @@ path-constant DATA : data/a.txt ;
             not use shared libraries at all, and on some compilers,
             mixing static and shared runtime requires extreme care.  Check
             your compiler documentation for more details.
+          </simpara>
+
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>threading</literal></term>
+
+        <listitem>
+
+          <para><emphasis role="bold">Allowed values:</emphasis> <literal>single</literal>,
+            <literal>multi</literal></para>
+
+          <simpara>
+            Controls if the project should be built in multi-threaded mode.  This feature does not
+            necessary change code generation in the compiler, but it causes the compiler to link
+            to additional or different runtime libraries, and define additional preprocessor 
+            symbols (for example, <code>_MT</code> on Windows and <code>_REENTRANT</code> on Linux). 
+            How those symbols affect the compiled code depends on the code itself.
           </simpara>
 
         </listitem>
@@ -557,6 +582,32 @@ path-constant DATA : data/a.txt ;
         </listitem>
       </varlistentry>
 
+      <varlistentry><term><literal>target-os</literal></term>
+        <listitem>
+
+          <anchor id="bbv2.reference.features.target-os"/>
+
+          <para>
+            The operating system for which the code is to be generated. The
+            compiler you used should be the compiler for that operating
+            system. This option causes Boost.Build to use naming conventions
+            suitable for that operating system, and adjust build process
+            accordingly. For example, with gcc, it controls if import
+            libraries are produced for shared libraries or not.                       
+          </para>
+
+          <para>The complete list of possible values for this feature is: 
+            aix, bsd, cygwin, darwin, freebsd, hpux, iphone, linux, netbsd,
+            openbsd, osf, qnx, qnxnto, sgi, solaris, unix, unixware, windows.
+          </para>
+
+          <para>See <xref linkend="bbv2.tasks.crosscompile"/> for details of
+          crosscompilation</para>
+
+        </listitem>
+      </varlistentry>
+
+
       <varlistentry><term><literal>architecture</literal></term>
         <listitem>
 
@@ -627,6 +678,31 @@ path-constant DATA : data/a.txt ;
           </para>
         </listitem>
       </varlistentry>
+
+      <varlistentry><term><literal>embed-manifest</literal></term>
+        <listitem>
+
+          <indexterm><primary>manifest file</primary><secondary>embedding</secondary></indexterm>
+          <indexterm><primary>embed-manifest</primary></indexterm>
+
+          <para>
+            <emphasis role="bold">Allowed values:</emphasis> on, off.
+          </para>
+
+          <para>This feature is specific to the msvc toolset (see
+          <xref linkend="bbv2.reference.tools.compiler.msvc"/>),
+          and controls whether the manifest files should be embedded inside
+          executables and shared libraries, or placed alongside them.  This
+          feature corresponds to the IDE option found in the project settings dialog,
+          under <menuchoice><guimenu>Configuration Properties</guimenu> 
+            <guisubmenu>Manifest Tool</guisubmenu>
+            <guisubmenu>Input and Output</guisubmenu>
+            <guimenuitem>Embed manifest</guimenuitem> </menuchoice>.
+          </para>
+
+        </listitem>
+      </varlistentry>
+
 
     </variablelist>
   </section>
@@ -865,7 +941,7 @@ using msvc : &toolset_ops; ;
             </varlistentry>
         </variablelist>
 
-          <section>
+          <section id="v2.reference.tools.compiler.msvc.64">
             <title>64-bit support</title>
 
             <indexterm><primary>64-bit compilation</primary>
@@ -2026,7 +2102,7 @@ requested-properties -&gt; property-path
 
 <!--
      Local Variables:
-     mode: xml
+     mode: nxml
      sgml-indent-data: t
      sgml-parent-document: ("userman.xml" "chapter")
      sgml-set-face: t

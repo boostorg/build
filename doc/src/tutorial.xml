@@ -426,7 +426,7 @@ exe app : app.cpp /library-example/foo//bar ;</programlisting>
 
       <programlisting>
 project
-   : requirements &lt;source&gt;/boost/filesystem//fs
+   : requirements &lt;library&gt;/boost/filesystem//fs
    ;</programlisting>
     </tip>
   </section>

@@ -45,4 +45,37 @@ t.run_build_system()
 
 t.expect_addition("bin/$toolset/debug/hello.exe")
 
+t.rm("bin")
+
+t.write("jamroot.jam", """
+make dir/a.h : : gen-header ;
+explicit dir/a.h ;
+
+exe hello : hello.cpp : <implicit-dependency>dir/a.h ;
+
+import os ;
+if [ os.name ] = NT
+{
+    actions gen-header
+    {
+       echo int i; > $(<)
+    }
+}
+else
+{
+    actions gen-header
+    {
+        echo "int i;" > $(<)
+    }
+}
+""")
+
+t.write("hello.cpp", """
+#include "dir/a.h"
+int main() { return i; }
+""")
+t.run_build_system()
+
+t.expect_addition("bin/$toolset/debug/hello.exe")
+
 t.cleanup()

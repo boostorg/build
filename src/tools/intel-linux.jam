@@ -17,7 +17,7 @@ import generators ;
 feature.extend-subfeature toolset intel : platform : linux ;
 
 toolset.inherit-generators intel-linux 
-     <toolset>intel <toolset-intel:platform>linux : gcc ;
+     <toolset>intel <toolset-intel:platform>linux : gcc : gcc.mingw.link gcc.mingw.link.dll ;
 generators.override intel-linux.prebuilt : builtin.lib-generator ;
 generators.override intel-linux.prebuilt : builtin.prebuilt ;
 generators.override intel-linux.searched-lib-generator : searched-lib-generator ;
@@ -58,7 +58,11 @@ rule init ( version ? :  command * : options * )
     
         if $(root)
         {
-            local lib_path = $(root)/lib ;
+            # Libraries required to run the executable may be in either
+            # $(root)/lib (10.1 and earlier) 
+            #     or 
+            # $(root)/lib/architecture-name (11.0 and later:
+            local lib_path = $(root)/lib $(root:P)/lib/$(bin:B) ;
             if $(.debug-configuration)
             {
                 ECHO notice: using intel libraries :: $(condition) :: $(lib_path) ;
@@ -81,6 +85,7 @@ flags intel-linux.compile OPTIONS <warnings>all : -w2 ;
 
 rule compile.c++ ( targets * : sources * : properties * )
 {
+    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
 }
 
@@ -89,8 +94,9 @@ actions compile.c++
     "$(CONFIG_COMMAND)" -c -xc++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
-rule compile.c++ ( targets * : sources * : properties * )
+rule compile.c ( targets * : sources * : properties * )
 {
+    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
 }
 
@@ -99,9 +105,23 @@ actions compile.c
     "$(CONFIG_COMMAND)" -c -xc $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
+rule link ( targets * : sources * : properties * )
+{
+    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    SPACE on $(targets) = " " ;
+    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
+}
+
 actions link bind LIBRARIES
 {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(OPTIONS)
+}
+
+rule link.dll ( targets * : sources * : properties * )
+{
+    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    SPACE on $(targets) = " " ;
+    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
 }
 
 # Differ from 'link' above only by -shared.

@@ -34,6 +34,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 
 feature.extend toolset : gcc ;
+# feature.subfeature toolset gcc : flavor : : optional ;
 
 toolset.inherit-generators gcc : unix : unix.link unix.link.dll ;
 toolset.inherit-flags gcc : unix ;
@@ -130,11 +131,13 @@ rule init ( version ? : command * : options * )
         condition = [ common.check-init-parameters gcc
             : version $(version)
             ] ;
+        condition = $(condition) ;  #/<toolset-gcc:flavor> ;
     }
 
     common.handle-options gcc : $(condition) : $(command) : $(options) ;
 
     local linker = [ feature.get-values <linker-type> : $(options) ] ;
+    # The logic below should actually be keyed on <target-os>
     if ! $(linker)
     {
         if [ os.name ] = OSF
@@ -149,6 +152,10 @@ rule init ( version ? : command * : options * )
         {
             linker = aix ;
         }
+        else if [ os.name ] = SOLARIS
+        {
+            linker = sun ;
+        }        
         else
         {
             linker = gnu ;
@@ -360,22 +367,24 @@ toolset.flags gcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
 
 rule compile.c++.pch ( targets * : sources * : properties * )
 {
+    setup-threading $(targets) : $(sources) : $(properties) ;
     setup-fpic $(targets) : $(sources) : $(properties) ;
 }
 
 actions compile.c++.pch
 {
-    "$(CONFIG_COMMAND)" -x c++-header $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 rule compile.c.pch ( targets * : sources * : properties * )
 {
+    setup-threading $(targets) : $(sources) : $(properties) ;
     setup-fpic $(targets) : $(sources) : $(properties) ;
 }
 
 actions compile.c.pch
 {
-    "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 rule compile.c++ ( targets * : sources * : properties * )
@@ -500,34 +509,38 @@ class gcc-linking-generator : unix-linking-generator
     }
 }
 
-.IMPLIB-COMMAND = ;
-if [ os.on-windows ]
-{
-    .IMPLIB-COMMAND = "-Wl,--out-implib," ;
-    generators.register
-        [ new gcc-linking-generator gcc.link
-            : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
-            : EXE
-            : <toolset>gcc ] ;
-    generators.register
-        [ new gcc-linking-generator gcc.link.dll
-            : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
-            : IMPORT_LIB SHARED_LIB
-            : <toolset>gcc ] ;
-}
-else
-{
-    generators.register
-        [ new gcc-linking-generator gcc.link
-            : LIB OBJ
-            : EXE
-            : <toolset>gcc ] ;
-    generators.register
-        [ new gcc-linking-generator gcc.link.dll
-            : LIB OBJ
-            : SHARED_LIB
-            : <toolset>gcc ] ;
-}
+# The set of permissible input types is different on mingw.
+# So, define two sets of generators, with mingw generators
+# selected when target-os=windows.
+
+local g ;
+g = [ new gcc-linking-generator gcc.mingw.link
+      : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
+      : EXE
+      : <toolset>gcc <target-os>windows ] ;
+$(g).set-rule-name gcc.link ;
+generators.register $(g) ;
+
+g = [ new gcc-linking-generator gcc.mingw.link.dll
+      : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
+      : IMPORT_LIB SHARED_LIB
+      : <toolset>gcc <target-os>windows ] ;
+$(g).set-rule-name gcc.link.dll ;
+generators.register $(g) ;
+
+generators.register
+  [ new gcc-linking-generator gcc.link
+      : LIB OBJ
+      : EXE
+      : <toolset>gcc ] ;
+generators.register
+  [ new gcc-linking-generator gcc.link.dll
+      : LIB OBJ
+      : SHARED_LIB
+      : <toolset>gcc ] ;
+
+generators.override gcc.mingw.link : gcc.link ;
+generators.override gcc.mingw.link.dll : gcc.link.dll ;
 
 # Declare flags for linking.
 # First, the common flags.
@@ -538,6 +551,8 @@ toolset.flags gcc.link LINKPATH <library-path> ;
 toolset.flags gcc.link FINDLIBS-ST <find-static-library> ;
 toolset.flags gcc.link FINDLIBS-SA <find-shared-library> ;
 toolset.flags gcc.link LIBRARIES <library-file> ;
+
+toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>windows : "-Wl,--out-implib," ;
 
 # For <runtime-link>static we made sure there are no dynamic libraries in the
 # link. On HP-UX not all system libraries exist as archived libraries (for
@@ -800,7 +815,7 @@ rule setup-threading ( targets * : sources * : properties * )
             {
                 option = -mthreads ;
             }
-            case sunos :
+            case solaris :
             {
                 option = -pthreads ;
                 libs = rt ;

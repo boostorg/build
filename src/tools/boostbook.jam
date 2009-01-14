@@ -114,7 +114,7 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
     if ! $(.boostbook-xsl-dir) || ! $(.boostbook-dtd-dir)
     {
         errors.warning
-          couldn't find BoostBook xsl or dtd directories; 
+          "couldn't find BoostBook xsl or dtd directories;" 
         : please set \"BOOST_ROOT\" variable to the root directory of
         your boost installation.  Searched in:
           : $(search-dirs:J="

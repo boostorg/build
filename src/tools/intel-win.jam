@@ -12,13 +12,21 @@ import intel ;
 import msvc ;
 import os ;
 import toolset ;
-
+import generators ;
+import type ;
 
 feature.extend-subfeature toolset intel : platform : win ;
 
 toolset.inherit-generators intel-win <toolset>intel <toolset-intel:platform>win : msvc ;
-toolset.inherit-flags intel-win : msvc ;
+toolset.inherit-flags intel-win : msvc : : YLOPTION ;
 toolset.inherit-rules intel-win : msvc ;
+
+# Override default do-nothing generators.
+generators.override intel-win.compile.c.pch   : pch.default-c-pch-generator   ;
+generators.override intel-win.compile.c++.pch : pch.default-cpp-pch-generator ;
+generators.override intel-win.compile.rc : rc.compile.resource ;
+
+toolset.flags intel-win.compile PCH_SOURCE <pch>on : <pch-source> ;
 
 toolset.add-requirements <toolset>intel-win,<runtime-link>shared:<threading>multi ;
 
@@ -48,7 +56,11 @@ rule init ( version ? :     # the compiler version
     }
 
     local setup ;
-    setup = $(root)/iclvars.bat ;
+    setup = [ GLOB $(root) : iclvars_*.bat ] ;
+    if ! $(setup)
+    {
+       setup = $(root)/iclvars.bat ;
+    }
     setup = "call \""$(setup)"\" > nul " ;
 
     if [ os.name ] = NT
@@ -138,6 +150,11 @@ rule init ( version ? :     # the compiler version
     }
 
     toolset.flags intel-win CFLAGS $(condition) : $(C++FLAGS) ;
+    # By default, when creating PCH, intel adds 'i' to the explicitly
+    # specified name of the PCH file. Of course, Boost.Build is not
+    # happy when compiler produces not the file it was asked for.
+    # The option below stops this behaviour.
+    toolset.flags intel-win CFLAGS : -Qpchi- ;
 
     if ! $(compatibility)
     {
@@ -159,3 +176,6 @@ rule init ( version ? :     # the compiler version
 }
 
 toolset.flags intel-win.link LIBRARY_OPTION <toolset>intel : "" ;
+
+toolset.flags intel-win YLOPTION ;
+
