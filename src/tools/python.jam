@@ -654,7 +654,8 @@ local rule system-library-dependencies ( target-os )
 
         case aix : return  <library>pthread <library>dl ;
 
-        case * : return  <library>pthread <library>dl <toolset>gcc:<library>util ;
+        case * : return  <library>pthread <library>dl 
+            <toolset>gcc:<library>util <toolset-intel:platform>linux:<library>util ;
     }
 }
 
