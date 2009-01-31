@@ -449,12 +449,6 @@ endmacro(boost_module)
 #   VARIANT_DISPLAY_NAME: The display name that describes this
 #   variant, e.g., "Debug, static, multi-threaded".
 #
-if (UNIX)
-  option(BUILD_VERSIONED "Add versioning information to names of built files" OFF)
-else(UNIX)
-  option(BUILD_VERSIONED "Add versioning information to names of built files" ON)
-endif(UNIX)
-
 macro(boost_library_variant_target_name)
   set(VARIANT_TARGET_NAME "")
 
