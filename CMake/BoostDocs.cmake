@@ -322,6 +322,18 @@ macro(boost_add_documentation SOURCE)
         COMMENT "Generating HTML documentation for Boost.${PROJECT_NAME}..."
         MAKE_TARGET ${PROJECT_NAME}-html)
 
+      #
+      #  Install associated stuff
+      #
+      add_custom_command(TARGET ${PROJECT_NAME}-html
+	POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/doc/src/boostbook.css ${CMAKE_CURRENT_BINARY_DIR}/html/boostbook.css
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/doc/src/docutils.css ${CMAKE_CURRENT_BINARY_DIR}/html/docutils.css
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/doc/src/reference.css ${CMAKE_CURRENT_BINARY_DIR}/html/reference.css
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/boost.png ${CMAKE_CURRENT_BINARY_DIR}/html/boost.png
+	COMMENT "Copying in associated stuff, boostbook.css and boost.png"
+	)
+
       # Install generated documentation
       install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html 
         DESTINATION share/boost-${BOOST_VERSION}
@@ -439,6 +451,9 @@ set(WANT_DOCBOOK_XSL_VERSION 1.73.2)
 find_program(XSLTPROC xsltproc DOC "xsltproc transforms XML via XSLT")
 set(XSLTPROC_FLAGS "--xinclude" CACHE STRING 
   "Flags to pass to xsltproc to transform XML documents")
+if(NOT XSLTPROC)
+  message(STATUS "xsltproc not found... this will disable build of documentation.")
+endif()
 
 # Find the DocBook DTD (version 4.2)
 find_path(DOCBOOK_DTD_DIR docbookx.dtd
@@ -496,25 +511,29 @@ if (XSLTPROC AND DOXYGEN)
   endif()
 endif()
 
-# Turn off BUILD_DOCUMENTATION if it isn't going to succeed.
-if (BUILD_DOCUMENTATION)
+set(BUILD_OCUMENTATION_OKAY TRUE)
+if (NOT XSLTPROC)
+  message(STATUS "XSLTPROC not found, disabling build of documentation")
+  set(BUILD_DOCUMENTATION_OKAY FALSE)
+elseif (NOT DOXYGEN)
+  message(STATUS "DOXYGEN not found, disabling build of documentation")
+  set(BUILD_DOCUMENTATION_OKAY FALSE)
+elseif (NOT DOCBOOK_DTD_DIR)
+  message(STATUS "DOCBOOK_DTD_DIR not found, disabling build of documentation")
+  message(STATUS "Set DOCBOOK_AUTOCONFIG to ON to get it automatically")
+  set(BUILD_DOCUMENTATION_OKAY FALSE)
+elseif (NOT DOCBOOK_XSL_DIR)
+  message(STATUS "DOCBOOK_XSL_DIR not found, disabling build of documentation")
+  message(STATUS "Set DOCBOOK_AUTOCONFIG to ON to get it automatically")
+  set(BUILD_DOCUMENTATION_OKAY FALSE)
+else()
+  message(STATUS "Documentation prerequisites found, enabling docs build.")
   set(BUILD_DOCUMENTATION_OKAY TRUE)
-  if (NOT XSLTPROC)
-    set(BUILD_DOCUMENTATION_OKAY FALSE)
-  elseif (NOT DOXYGEN)
-    set(BUILD_DOCUMENTATION_OKAY FALSE)
-  elseif (NOT DOCBOOK_DTD_DIR)
-    set(BUILD_DOCUMENTATION_OKAY FALSE)
-  elseif (NOT DOCBOOK_XSL_DIR)
-    set(BUILD_DOCUMENTATION_OKAY FALSE)
-  else()
-    set(BUILD_DOCUMENTATION_OKAY TRUE)
-  endif()
+endif()
 
-  if (NOT BUILD_DOCUMENTATION_OKAY)
-    if (BUILD_DOCUMENTATION)
-      set(BUILD_DOCUMENTATION OFF CACHE BOOL 
-        "Whether to build library documentation" FORCE)
-    endif()
+if (NOT BUILD_DOCUMENTATION_OKAY)
+  if (BUILD_DOCUMENTATION)
+    set(BUILD_DOCUMENTATION OFF CACHE BOOL 
+      "Whether to build library documentation" FORCE)
   endif()
 endif()
