@@ -16,8 +16,299 @@
     ]
 ]
 
-[section:intro Introduction]
+[section Configuring and Building Boost with CMake]
 
-This is a placeholder for documentation of the cmake-based build system.
+This page describes how to configure and build Boost with CMake. By
+following these instructions, you should be able to get CMake,
+configure a Boost build tree to your liking with CMake, and then
+build, install, and package Boost libraries.
+
+[@http://www.cmake.org/HTML/Download.html Download CMake]
+
+There are precompiled binaries for CMake on several different
+platforms. The installation of these pre-compiled binaries is mostly
+self-explanatory. If you need to build your own copy of CMake, please
+see the [@http://www.cmake.org/HTML/Install.html CMake installation
+instructions]. In these instructions, we will do things such that the
+Boost source tree (with CMake build files) is available in the
+directory [^$BOOST/src] and that the build will happen in
+[^$BOOST/build]: 
+[pre
+$BOOST/ 
+   src/     (source checked out to here) 
+   build/   (build output here)
+]
+Note that it is *not* necessary to set any environment
+variable =BOOST=, this is a convention used in this document.
+ 
+[section Check out Boost-CMake]
+To get a copy of Boost with the CMake build system, retrieve it from the [wiki:BoostSubversion  Boost Subversion repository] with the URL http://svn.boost.org/svn/boost/trunk].  
+
+On unix:
+[pre
+% mkdir $BOOST
+% svn co http://svn.boost.org/svn/boost/trunk $BOOST/src
+]
+
+[endsect]
+
+
+[section Configure the Boost source tree]
+
+To discourage the casual developer from trying the CMake build system
+before it is fully developed a "kill switch" has been added to the
+CMake file that needs to be turned off or the CMake build system will
+simply NOT work. 
+
+This is the makefile generation step, using `CMake`'s configuration
+tool. This step differs depending on whether you are using CMake's GUI
+on Microsoft Windows or whether you are using the command-line tools
+provided on Unix.
+
+[section On Windows]
+Run CMake by selecting it from the Start menu. 
+
+* Use the ''Browse...'' button to point CMake at the Boost source
+  code in [^ $BOOST\src].
+* Use the second ''Browse...'' button to select the directory where
+  Boost will build binaries, [^ $BOOST\build].
+* CMake will ask you what kind of project files or make files to
+  build. If you're using Microsoft Visual Studio, select the
+  appropriate version to generate project files. Otherwise, you can
+  use Borland's make files, generate NMake files, etc.
+* Click ''Configure'' a first time to configure Boost, which will
+  search for various libraries on your system and prepare the build.
+* You will then be given the opportunity to tune build options in
+  the CMake GUI (see also [wiki:CMakeBuildConfiguration]. These
+  options will affect what libraries are built and how.  They will
+  initially appear red.  Click ''Configure'' again when you are done
+  editing them.
+* Finally, click ''OK'' to generate project files.
+
+[endsect]
+[section On Unix]
+Create the directory that will hold the binaries that CMake build,
+[pre mkdir $BOOST/build ]
+Change into the build directory you have just created:
+[pre cd $BOOST/build ]
+Run the CMake configuration program, providing it with the Boost source directory:
+[pre cmake $BOOST/src ]
+
+You'll see output from `cmake`.  It looks somewhat like this:
+[pre 
+% cmake BOOST/src 
+-- Check for working C compiler: /usr/bin/gcc
+-- Check for working C compiler: /usr/bin/gcc -- works
+-- Check size of void*
+-- Check size of void* - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Scanning subdirectories:
+--  + io
+--  + any
+--  + crc
+--  + mpl
+
+  (etc, etc)
+
+--  + program_options
+--  + ptr_container
+--  + type_traits
+-- Configuring done
+-- Generating done
+-- Build files have been written to: BOOST/build
+]
+
+The directory ^BOOST/build^ should now contain a bunch of generated files, including a top level ^Makefile^, something like this:
+[pre 
+% ls
+CMakeCache.txt           CPackConfig.cmake    Makefile  
+cmake_install.cmake      libs/                CMakeFiles/     
+CPackSourceConfig.cmake  bin/                 lib/
+]
+
+
+That's it! You've now configured your source tree and are ready to start building Boost.
+
+[endsect]
+[endsect]
+
+[section Build Boost]
+Like configuration, the way in which one builds Boost with CMake differs from one platform to another, depending on your platform and how you configured CMake. Either way, you'll be using the tools provided to you by your compiler or operating system vendor.
+[section Microsoft Visual Studio]
+If you have generated project files for Microsoft Visual Studio, you will need to start up Visual Studio to build Boost. Once Visual Studio has loaded, load the solution or project`Boost` from the Boost build directory you set in the CMake configuration earlier. Then, just click "Build" to build all of Boost.
+[endsect]
+[section On Unix (and when using makefile variants on Microsoft Windows)]
+
+The first thing to run is the "modularize" target. 
+[pre
+make modularize
+]
+
+This will MOVE most of the headers and subdirectories from the BOOST/src/boost/boost into BOOST/src/boost/libs. This WILL in effect DISABLE the bjam build system until you 'revert' your svn repository.
+
+The next step is to run the actual build.
+
+One builds using standard "make" tools. In the directory BOOST/build (where the generated makefiles are) run `make`:
+[pre
+make
+]
+
+That's it! Once the build completes (which make take a while, if you are building all of the Boost libraries), the Boost libraries will be available in the `lib` subdirectory of your build directory, ready to be used, installed, or packaged. 
+
+[endsect]
+
+[section Installing Boost]
+The installation of Boost's headers and compiled libraries uses the same tools as building the library. With Microsoft Visual Studio, just load the Boost solution or project and build the 'INSTALL' target to perform the installation. Unix and makefile users will change into the Boost build directory and use the `install` make target, e.g.,
+[pre
+make install
+]
+
+[endsect]
+
+
+[endsect]
+[endsect]
+
+[section Configuring the build]
+[section Setting the compiler]
+
+See '''''Advanced Options''''' below.
+
+[endsect]
+[section Configuration tools]
+
+Included in the standard cmake distribution are the Windows [^ CMake]
+gui and the unix [^ ccmake] curses interface, which allow one to
+configure various aspects of the cmake build.
+
+On Microsoft Windows run the CMake configuration program from the Start menu.  On unix, run
+[pre
+ccmake <path-to-source>
+]
+where `ccmake` will be in CMake's binary directory.  If you have not yet run `cmake` in this directory, 
+you will see an empty list of options:
+[pre
+                                                     Page 0 of 1
+ EMPTY CACHE
+
+EMPTY CACHE:                                                                                   
+Press \[enter\] to edit option                                        CMake Version 2.6 - patch 0
+Press [c\] to configure
+Press [h\] for help         Press [q\] to quit without generating
+Press [t\] to toggle advanced mode (Currently Off)
+]
+
+After pressing *c* to configure, (or if you've run [^ cmake] already), 
+You will be presented with a list of editable build options something like this:
+
+[pre
+ BUILD_BOOST_DATE_TIME            ON                                                        
+ BUILD_BOOST_FILESYSTEM           ON                                                        
+ BUILD_BOOST_GRAPH                ON                                                        
+ BUILD_BOOST_IOSTREAMS            ON                                                        
+ BUILD_BOOST_PROGRAM_OPTIONS      ON                                                        
+ BUILD_BOOST_PYTHON               ON                                                        
+ BUILD_BOOST_REGEX                ON                                                        
+ BUILD_BOOST_SERIALIZATION        ON                                                        
+ BUILD_BOOST_SIGNALS              ON                                                        
+ BUILD_BOOST_TEST                 ON                                                        
+ BUILD_BOOST_THREAD               ON                                                        
+ BUILD_BOOST_WAVE                 ON                                                        
+ BUILD_BOOST_WSERIALIZATION       ON                                                        
+ BUILD_DEBUG                      ON                                                        
+ BUILD_MULTI_THREADED             ON                                                        
+ BUILD_RELEASE                    ON                                                        
+ BUILD_SHARED                     ON                                                        
+ BUILD_SINGLE_THREADED            ON                                                        
+ BUILD_STATIC                     ON                                                        
+ BUILD_TESTING                    OFF                                                       
+ BUILD_VERSIONED                  ON                                                        
+ CMAKE_BACKWARDS_COMPATIBILITY    2.4                                                       
+ CMAKE_BUILD_TYPE                                                                           
+ CMAKE_INSTALL_PREFIX             /usr/local                                                
+ DEBUG_COMPILE_FLAGS              -g                                                        
+ EXECUTABLE_OUTPUT_PATH                                                                     
+ LIBRARY_OUTPUT_PATH                                                                        
+ PYTHON_EXECUTABLE                /usr/bin/python2.4                                        
+ PYTHON_INCLUDE_PATH              /usr/include/python2.4                                    
+ PYTHON_LIBRARY                   /usr/lib/python2.4/config/libpython2.4.so                 
+ RELEASE_COMPILE_FLAGS            -O3 -DNDEBUG                                              
+
+
+BUILD_VERSIONED: Use versioned library names, e.g., boost_filesystem-gcc41-1_34              
+Press [enter\] to edit option                        CMake Version 2.4 - patch 5
+Press [c\] to configure     Press [g\] to generate and exit
+Press [h\] for help         Press [q\] to quit without generating
+Press [t\] to toggle advanced mode (Currently Off)
+]
+   
+Use the arrow keys to select particular options.  Press '''''c'''''
+(for (c)onfigure) to perform the preliminary configuration of the
+CMake build system when you are done.  When the options you have
+selected have stabilized, CMake will give you the (g)enerate
+option. If you do not see this option, press '''''c''''' again to
+reconfigure.  Try the '''''t''''' key to see more options.  When
+you're done press '''''g''''' to generate makefiles and exit.
+
+[endsect]
+[section CMakeCache.txt]
+
+The same information is stored in a file [^ CMakeCache.txt] located in the build directory.  For this reason, after you've done the initial configuration of a build directory you can invoke [^ ccmake] like this:
+[pre
+ccmake <path-to-build>
+]
+or have the makefiles do it for you:
+[pre
+make edit_cache
+]
+
+
+The CMakeCache.txt file is hand-editable, though this is usually not as convenient as the cmake-supplied configuration tools mentioned above.  An excerpt of this file: 
+[pre
+////
+//// Enable/Disable color output during build.
+////
+CMAKE_COLOR_MAKEFILE:BOOL=ON
+
+////
+//// Use versioned library names, e.g., boost_filesystem-gcc41-1_34
+////
+BUILD_VERSIONED:BOOL=ON
+]
+
+On unix, (?windows too?) the generated makefiles will detect if this file has been edited and will automatically rerun the makefile generation phase.  If you should need to trigger this regeneration manually you may execute
+[pre
+make rebuild_cache
+]
+
+[section Useful options]
+
+More detail on some of these options is available elsewhere.  But here is a summary:
+
+[table Options
+ [[Name][Description]]
+ [[=BUILD_VERSIONED=]   [Toggles mangling of compiler name and boost version into library names]]
+ [[=BUILD_TESTING=  ]   [Toggles build of testing]]
+ [[[^ BUILD\_BOOST\_]/library/][Toggles building and testing of [~ library] (e.g. this will appear as [^ BUILD_BOOST_REGEX], [^ BUILD_BOOST_PROGRAM_OPTIONS], etc.)]]
+ [[=BUILD_=/feature/] [Toggles build of feature /feature/, where /feature/ comes from the list found at *FIXME*,  
+			  e.g. [^BUILD_RELEASE], [^BUILD_DEBUG], [^BUILD_MULTI_THREADED], etc.]]
+
+ [[=TEST_BOOST_=/library/][Toggles testing of /library/ (this option appears only if [^ BUILD_BOOST_]/library/ and [^ BUILD_TESTING] are enabled.  See *FIXME*)]]
+ [[[^ CMAKE_OSX_ARCHITECTURES]][ /Mac OS X users/: to build universal binaries, set this to [^ ppc;i386].]]
+]
+  
+[^ ccmake] provides the keystroke option [^ t] which toggles advanced mode.  Some of the useful options here are:
+
+[table Advanced options
+
+[[Option][Description]]
+[[=CMAKE_VERBOSE_MAKEFILE=] [Displays full build commands during build.  Good for debugging.  Advanced option:  use [^ t] to toggle display of this option and others.  On unix, you can also build verbose by passing the command line option VERBOSE=1 to your [^ make] invocation.]]
+[[=CMAKE_CXX_COMPILER=] [Sets the compiler.]]
+]
+
+[endsect]
+[endsect]
+
 
 [endsect]

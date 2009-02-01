@@ -316,8 +316,8 @@ macro(boost_add_documentation SOURCE)
         STYLESHEET ${BOOSTBOOK_XSL_DIR}/html.xsl
         CATALOG ${CMAKE_BINARY_DIR}/catalog.xml
         DIRECTORY HTML.manifest
-        PARAMETERS admon.graphics.path=images
-                   navig.graphics.path=images
+        PARAMETERS admon.graphics.path=images/
+                   navig.graphics.path=images/
                    boost.image.src=boost.png
         COMMENT "Generating HTML documentation for Boost.${PROJECT_NAME}..."
         MAKE_TARGET ${PROJECT_NAME}-html)
