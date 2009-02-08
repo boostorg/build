@@ -25,14 +25,14 @@ boostbook standalone
     :
         bjam
     :
-        <format>html
+        #<format>html
         <name>html
         <dependency>html
         <dependency>html/images
         <xsl:param>boost.root=.
         <xsl:param>nav.layout=none
-        <xsl:param>admon.graphics.path=images/
-        <xsl:param>navig.graphics.path=images/
+        <format>html:<xsl:param>admon.graphics.path=images/
+        <format>html:<xsl:param>navig.graphics.path=images/
     ;
 
 # Copyright Rene Rivera 2005-2006. Use, modification, and distribution are
