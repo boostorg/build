@@ -9,9 +9,9 @@
 
 import qt4 ;
 
-rule init ( prefix ? )
+rule init ( prefix : full_bin ? : full_inc ? : full_lib ? : version ? : condition * )
 {
-    qt4.init $(prefix) ;
+    qt4.init $(prefix) : $(full_bin)  : $(full_inc) : $(full_lib) : $(version) : $(condition) ;
 }
 
 

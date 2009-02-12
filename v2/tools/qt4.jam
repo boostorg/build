@@ -1,6 +1,6 @@
 # Copyright 2002-2006 Vladimir Prus
 # Copyright 2005 Alo Sarv
-# Copyright 2005-2006 Juergen Hunold
+# Copyright 2005-2009 Juergen Hunold
 #
 # Distributed under the Boost Software License, Version 1.0. (See
 # accompanying file LICENSE_1_0.txt or copy at
@@ -66,19 +66,107 @@ import scanner ;
 #       Or add more auto-configuration (like python).
 feature.feature qt3support : off on : propagated link-incompatible ;
 
+# The Qt version used for requirements
+# Valid are <qt>4.4 or <qt>4.5.0
+# Auto-detection via qmake sets '<qt>major.minor.patch' 
+feature.feature qt : : propagated ;
+
 project.initialize $(__name__) ;
 project qt ;
 
 # Save the project so that we tolerate 'import + using' combo.
 .project = [ project.current ] ;
 
+# Helper utils for easy debug output
+if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
+{
+    .debug-configuration = TRUE ;
+}
 
-# Initialized the QT support module. The 'prefix' parameter tells where QT is
-# installed.
+local rule debug-message ( message * )
+{
+    if $(.debug-configuration) = TRUE
+    {
+        ECHO notice: [qt4-cfg] $(message) ;
+    }
+}
+
+# Capture qmake output line by line
+local rule read-output ( content )
+{
+    local lines ;
+    local nl = "
+" ;
+    local << = "([^$(nl)]*)[$(nl)](.*)" ;
+    local line+ = [ MATCH "$(<<)" : "$(content)" ] ;
+    while $(line+)
+    {
+        lines += $(line+[1]) ;
+        line+ = [ MATCH "$(<<)" : "$(line+[2])" ] ;
+    }
+    return $(lines) ;
+}
+
+# Capture Qt version from qmake
+local rule check-version ( bin_prefix )
+{
+    full-cmd = $(bin_prefix)"/qmake -v" ; 
+    debug-message Running '$(full-cmd)' ;
+    local output = [ SHELL $(full-cmd) ] ;
+    for line in [ read-output $(output) ]
+    {
+        # Parse the output to get all the results.
+        if [ MATCH "QMake" : $(line) ]
+        {
+            # Skip first line of output
+        }
+        else 
+        {
+            temp = [ MATCH "([0-9]*)\\.([0-9]*)\\.([0-9]*)" : $(line) ] ;
+        }
+    }
+    return $(temp) ;
+}
+
+# Validate the version string and extract the major/minor part we care about.
 #
-rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
+local rule split-version ( version )
+{
+    local major-minor = [ MATCH ^([0-9]+)\.([0-9]+)(.*)$ : $(version) : 1 2 3 ] ;
+    if ! $(major-minor[2]) || $(major-minor[3])
+    {
+        ECHO "Warning: 'using qt' expects a two part (major, minor) version number; got" $(version) instead ;
+
+        # Add a zero to account for the missing digit if necessary.
+        major-minor += 0 ;
+    }
+
+    return $(major-minor[1]) $(major-minor[2]) ;
+}
+
+# Initialize the QT support module. 
+# Parameters:
+# - 'prefix'    parameter tells where Qt is installed.
+# - 'full_bin'  optional full path to Qt binaries (qmake,moc,uic,rcc)
+# - 'full_inc'  optional full path to Qt top-level include directory
+# - 'full_lib'  optional full path to Qt library directory
+# - 'version'   optional version of Qt, else autodetected via 'qmake -v'
+# - 'condition' optional requirements 
+rule init ( prefix : full_bin ? : full_inc ? : full_lib ? : version ? : condition * )
 {
     project.push-current $(.project) ;
+
+    debug-message "==== Configuring Qt ... ====" ;
+    for local v in version cmd-or-prefix includes libraries condition
+    {
+        if $($(v))
+        {
+            debug-message "  user-specified "$(v): '$($(v))' ;
+        }
+    }
+
+    # Needed as default value
+    .prefix = $(prefix) ;
 
     # pre-build paths to detect reinitializations changes
     local inc_prefix lib_prefix bin_prefix ;
@@ -107,38 +195,15 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
         bin_prefix = $(prefix)/bin ;
     }
 
-    if $(.initialized)
-    {
-        if $(prefix) != $(.prefix)
-        {
-            errors.error
-                "Attempt the reinitialize QT with different installation prefix" ;
-        }
-        if $(inc_prefix) != $(.incprefix)
-        {
-            errors.error
-                "Attempt the reinitialize QT with different include path" ;
-        }
-        if $(lib_prefix) != $(.libprefix)
-        {
-            errors.error
-                "Attempt the reinitialize QT with different library path" ;
-        }
-        if $(bin_prefix) != $(.binprefix)
-        {
-            errors.error
-                "Attempt the reinitialize QT with different bin path" ;
-        }
-    }
-    else
-    {
-        .initialized = true ;
-        .prefix = $(prefix) ;
+    # Globally needed variables
+    .incprefix = $(inc_prefix) ;
+    .libprefix = $(lib_prefix) ;
+    .binprefix = $(bin_prefix) ;
 
-        # Setup prefixes for include, binaries and libs.
-        .incprefix = $(.prefix)/include ;
-        .libprefix = $(.prefix)/lib ;
-        .binprefix = $(.prefix)/bin ;
+    if ! $(.initialized)
+    {
+        # Make sure this is initialised only once
+        .initialized = true ;
 
         # Generates cpp files from header files using "moc" tool
         generators.register-standard qt4.moc : H : CPP(moc_%) : <allow>qt4 ;
@@ -160,137 +225,224 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? )
 
         # dependency scanner for wrapped files.
         type.set-scanner QRC : qrc-scanner ;
-        
-        # Test for a buildable Qt.
-        if [ glob $(.prefix)/Jamroot ]
-        {
-            .bjam-qt = true
 
-            # this will declare QtCore (and qtmain on <target-os>windows)
-            add-shared-library QtCore ;
-        }
-        else
-        # Setup common pre-built Qt.
-        # Special setup for QtCore on which everything depends
-        {
-            local usage-requirements =
-                <include>$(.incprefix)
-                <library-path>$(.libprefix)
-                <dll-path>$(.libprefix)
-                <threading>multi
-                <allow>qt4 ;
-
-            local suffix ;
-            if [ os.name ] = NT
-            {
-                # On NT, the libs have "4" suffix, and "d" suffix in debug
-                # builds. Also, on NT we must link against the qtmain library
-                # (for WinMain).
-                .suffix_version = "4" ;
-                .suffix_debug = "d" ;
-                lib qtmain
-                    : # sources
-                    : # requirements
-                      <name>qtmain$(.suffix_debug)
-                      <variant>debug
-                    ;
-
-                lib qtmain
-                    : # sources
-                    : # requirements
-                        <name>qtmain
-                    ;
-                main = qtmain ;
-            }
-            else if [ os.name ] = MACOSX
-            {
-                # On MacOS X, both debug and release libraries are available.
-                .suffix_version = "" ;
-                .suffix_debug = "_debug" ;
-            }
-            else
-            {
-                # Since Qt-4.2, debug versions on unix have to be built
-                # separately and therefore have no suffix.
-                .suffix_version = "" ;
-                .suffix_debug = "" ;
-            }
-
-            lib QtCore : $(main)
-                : # requirements
-                  <name>QtCore$(.suffix_version)
-                : # default-build
-                : # usage-requirements
-                  <define>QT_CORE_LIB
-                  <define>QT_NO_DEBUG
-                  <include>$(.incprefix)/QtCore
-                  $(usage-requirements)
-                ;
-            lib QtCore : $(main)
-                : # requirements
-                  <name>QtCore$(.suffix_debug)$(.suffix_version)
-                  <variant>debug
-                : # default-build
-                : # usage-requirements
-                  <define>QT_CORE_LIB
-                  <include>$(.incprefix)/QtCore
-                  $(usage-requirements)
-                ;
-         }
-
-         # Initialising the remaining libraries is canonical
-         add-shared-library QtGui     : QtCore : QT_GUI_LIB     ;
-         add-shared-library QtNetwork : QtCore : QT_NETWORK_LIB ;
-         add-shared-library QtSql     : QtCore : QT_SQL_LIB     ;
-         add-shared-library QtXml     : QtCore : QT_XML_LIB     ;
-
-         add-shared-library Qt3Support : QtGui QtNetwork QtXml QtSql 
-                                       : QT_QT3SUPPORT_LIB QT3_SUPPORT
-                                       : <qt3support>on ;
-
-         # Dummy target to enable "<qt3support>off" and
-         # "<library>/qt//Qt3Support" at the same time. This enables quick
-         # switching from one to the other for test/porting purposes.
-         alias Qt3Support : : : : <qt3support>off ;
-
-         # OpenGl Support
-         add-shared-library QtOpenGL : QtGui : QT_OPENGL_LIB ;
-
-         # SVG-Support (Qt 4.1)
-         add-shared-library QtSvg : QtXml QtOpenGL : QT_SVG_LIB ;
-
-         # Test-Support (Qt 4.1)
-         add-shared-library QtTest : QtCore ;
-
-         # Qt designer library
-         add-shared-library QtDesigner : QtGui QtXml ;
-
-         # Support for dynamic Widgets (Qt 4.1)
-         add-static-library  QtUiTools : QtGui QtXml ;
-
-         # DBus-Support (Qt 4.2)
-         add-shared-library QtDBus : QtXml ;
-
-         # Script-Engine (Qt 4.3)
-         add-shared-library QtScript : QtGui QtXml ;
-
-         # WebKit (Qt 4.4)
-         add-shared-library QtWebKit : QtGui : QT_WEBKIT_LIB ;
-
-         # Phonon Multimedia (Qt 4.4) 
-         add-shared-library phonon : QtGui QtXml : QT_PHONON_LIB ;
-
-         # XmlPatterns-Engine (Qt 4.4) 
-         add-shared-library QtXmlPatterns : QtNetwork : QT_XMLPATTERNS_LIB ;
-
-         # Help-Engine (Qt 4.4) 
-         add-shared-library QtHelp : QtGui QtSql QtXml ;
-
-         # AssistantClient Support
-         # Compat library
-         # Pre-4.4 help system, use QtHelp for new programs
-         add-shared-library QtAssistantClient : QtGui : : : QtAssistant ;
+        # Save value of first occuring prefix
+        .PREFIX = $(prefix) ;
     }
+
+    if $(version)
+    {
+        major-minor = [ split-version $(version) ] ;
+        version = $(major-minor:J=.) ;
+    }
+    else
+    {   
+        version = [ check-version $(bin_prefix) ] ;
+        if $(version)
+        {
+            version = $(version:J=.) ;
+        }
+        debug-message Detected version '$(version)' ;
+    }
+
+    local target-requirements = $(condition) ;
+
+    # Add the version, if any, to the target requirements.
+    if $(version)
+    {
+        if ! $(version) in [ feature.values qt ]
+        {
+            feature.extend qt : $(version) ;
+        }
+        target-requirements += <qt>$(version:E=default) ;
+    }
+
+    local target-os = [ feature.get-values target-os : $(condition) ] ;
+    if ! $(target-os)
+    { 
+        target-os ?= [ feature.defaults target-os ] ;
+        target-os = $(target-os:G=) ;
+        target-requirements += <target-os>$(target-os) ;
+    }
+
+    # Build exact requirements for the tools
+    local tools-requirements = $(target-requirements:J=/) ;
+
+    debug-message "Details of this Qt configuration:" ;
+    debug-message "  prefix:      " '$(prefix:E=<empty>)' ;
+    debug-message "  binary path: " '$(bin_prefix:E=<empty>)' ;
+    debug-message "  include path:" '$(inc_prefix:E=<empty>)' ;
+    debug-message "  library path:" '$(lib_prefix:E=<empty>)' ;
+    debug-message "  target requirements:" '$(target-requirements)' ;
+    debug-message "  tool requirements:  " '$(tools-requirements)' ;
+
+    # setup the paths for the tools
+    toolset.flags qt4.moc   .BINPREFIX $(tools-requirements) : $(bin_prefix) ;
+    toolset.flags qt4.rcc   .BINPREFIX $(tools-requirements) : $(bin_prefix) ;
+    toolset.flags qt4.uic-h .BINPREFIX $(tools-requirements) : $(bin_prefix) ;
+
+    # TODO: 2009-02-12: Better support for directories
+    # Most likely needed are separate getters for: include,libraries,binaries and sources.
+    toolset.flags qt4.directory .PREFIX $(tools-requirements) : $(prefix) ;
+
+    # Test for a buildable Qt.
+    if [ glob $(.prefix)/Jamroot ]
+    {
+       .bjam-qt = true
+
+       # this will declare QtCore (and qtmain on <target-os>windows)
+       add-shared-library QtCore ;
+   }
+   else
+   # Setup common pre-built Qt.
+   # Special setup for QtCore on which everything depends
+   {
+       local usage-requirements =
+           <include>$(.incprefix)
+           <library-path>$(.libprefix)
+           <dll-path>$(.libprefix)
+           <threading>multi
+           <allow>qt4 ;
+
+       local suffix ;
+
+       # Since Qt-4.2, debug versions on unix have to be built
+       # separately and therefore have no suffix.
+       .suffix_version = "" ;
+       .suffix_debug = "" ;
+
+       # Control flag for auto-configuration of the debug libraries.
+       # This setup requires Qt 'configure -debug-and-release'.
+       # Only available on some platforms.
+       # ToDo: 2009-02-12: Maybe throw this away and
+       # require separate setup with <variant>debug as condition.
+       .have_separate_debug = FALSE ;
+              
+       # Setup other platforms
+       if $(target-os) in windows cygwin 
+       {
+           .have_separate_debug = TRUE ;
+    
+           # On NT, the libs have "4" suffix, and "d" suffix in debug builds.
+           .suffix_version = "4" ;
+           .suffix_debug = "d" ;
+
+           # On Windows we must link against the qtmain library
+           lib qtmain
+               : # sources
+               : # requirements
+                  <name>qtmain$(.suffix_debug)
+                  <variant>debug
+                  $(target-requirements)
+               ;
+           
+           lib qtmain
+               : # sources
+               : # requirements
+                   <name>qtmain
+                   $(target-requirements)
+               ;
+       }
+       else if $(target-os) = darwin
+       {
+           # On MacOS X, both debug and release libraries are available.
+           .suffix_debug = "_debug" ;
+
+           .have_separate_debug = TRUE ;
+
+           alias qtmain ;
+       }
+       else
+       {
+           alias qtmain : : $(target-requirements) ;
+       }
+
+       lib QtCore : qtmain
+           : # requirements
+             <name>QtCore$(.suffix_version)
+             $(target-requirements)
+           : # default-build
+           : # usage-requirements
+             <define>QT_CORE_LIB
+             <define>QT_NO_DEBUG
+             <include>$(.incprefix)/QtCore
+             $(usage-requirements)
+           ;
+
+       if $(.have_separate_debug) = TRUE
+       {    
+           debug-message Configure debug libraries with suffix '$(.suffix_debug)' ;
+
+           lib QtCore : $(main)
+               : # requirements
+                 <name>QtCore$(.suffix_debug)$(.suffix_version)
+                 <variant>debug
+                 $(target-requirements)
+               : # default-build
+               : # usage-requirements
+                 <define>QT_CORE_LIB
+                 <include>$(.incprefix)/QtCore
+                 $(usage-requirements)
+               ;
+        }
+    }
+
+    # Initialising the remaining libraries is canonical
+    # parameters 'module' : 'depends-on' : 'usage-define' : 'requirements' : 'include'
+    # 'include' only for non-canonical include paths. 
+    add-shared-library QtGui     : QtCore : QT_GUI_LIB     : $(target-requirements) ;
+    add-shared-library QtNetwork : QtCore : QT_NETWORK_LIB : $(target-requirements) ;
+    add-shared-library QtSql     : QtCore : QT_SQL_LIB     : $(target-requirements) ;
+    add-shared-library QtXml     : QtCore : QT_XML_LIB     : $(target-requirements) ;
+
+    add-shared-library Qt3Support : QtGui QtNetwork QtXml QtSql 
+                                  : QT_QT3SUPPORT_LIB QT3_SUPPORT
+                                  : <qt3support>on $(target-requirements) ;
+
+    # Dummy target to enable "<qt3support>off" and
+    # "<library>/qt//Qt3Support" at the same time. This enables quick
+    # switching from one to the other for test/porting purposes.
+    alias Qt3Support : : <qt3support>off $(target-requirements) ;
+
+    # OpenGl Support
+    add-shared-library QtOpenGL : QtGui : QT_OPENGL_LIB : $(target-requirements) ;
+
+    # SVG-Support (Qt 4.1)
+    add-shared-library QtSvg : QtXml QtOpenGL : QT_SVG_LIB : $(target-requirements) ;
+
+    # Test-Support (Qt 4.1)
+    add-shared-library QtTest : QtCore : : $(target-requirements) ;
+
+    # Qt designer library
+    add-shared-library QtDesigner : QtGui QtXml : : $(target-requirements) ;
+
+    # Support for dynamic Widgets (Qt 4.1)
+    add-static-library  QtUiTools : QtGui QtXml : $(target-requirements) ;
+
+    # DBus-Support (Qt 4.2)
+    add-shared-library QtDBus : QtXml : : $(target-requirements) ;
+
+    # Script-Engine (Qt 4.3)
+    add-shared-library QtScript : QtGui QtXml : : $(target-requirements) ;
+
+    # WebKit (Qt 4.4)
+    add-shared-library QtWebKit : QtGui : QT_WEBKIT_LIB : $(target-requirements) ;
+
+    # Phonon Multimedia (Qt 4.4) 
+    add-shared-library phonon : QtGui QtXml : QT_PHONON_LIB : $(target-requirements) ;
+
+    # XmlPatterns-Engine (Qt 4.4) 
+    add-shared-library QtXmlPatterns : QtNetwork : QT_XMLPATTERNS_LIB : $(target-requirements) ;
+
+    # Help-Engine (Qt 4.4) 
+    add-shared-library QtHelp : QtGui QtSql QtXml : : $(target-requirements) ;
+
+    # AssistantClient Support
+    # Compat library
+    # Pre-4.4 help system, use QtHelp for new programs
+    add-shared-library QtAssistantClient : QtGui : : $(target-requirements) : QtAssistant ;
+
+    debug-message "==== Configured Qt-$(version) ====" ;
 
     project.pop-current ;
 }
@@ -420,7 +572,7 @@ class moc-inc-generator : generator
 #
 rule directory
 {
-    return $(.prefix) ;
+    return $(.PREFIX) ;
 }
 
 # Add a shared Qt library.
@@ -474,19 +626,22 @@ rule add-library ( lib-name : version ? : depends-on * : usage-defines * : requi
              <define>$(usage-defines)
              <include>$(.incprefix)/$(real_include)
            ;
-        
-        lib $(lib-name) 
-           : # sources
-             $(depends-on)
-           : # requirements
-             <name>$(lib-name)$(.suffix_debug)$(version)
-             $(requirements)
-             <variant>debug
-           : # default-build
-           : # usage-requirements
-             <define>$(usage-defines)
-             <include>$(.incprefix)/$(real_include)
-           ;
+
+        if $(.have_separate_debug) = TRUE
+        {
+            lib $(lib-name) 
+               : # sources
+                 $(depends-on)
+               : # requirements
+                 <name>$(lib-name)$(.suffix_debug)$(version)
+                 $(requirements)
+                 <variant>debug
+               : # default-build
+               : # usage-requirements
+                 <define>$(usage-defines)
+                 <include>$(.incprefix)/$(real_include)
+               ;
+        }
     } 
 
     # Make library explicit so that a simple <use>qt4 will not bring in everything.
@@ -494,18 +649,19 @@ rule add-library ( lib-name : version ? : depends-on * : usage-defines * : requi
     explicit $(lib-name) ;
 }
 
+# Use $(.BINPREFIX[-1]) for the paths as several tools-requirements can match.
+# The exact match is the last one.
 
 # Get <include> and <defines> from current toolset.
 flags qt4.moc INCLUDES <include> ;
 flags qt4.moc DEFINES <define> ;
 
-
 # Processes headers to create Qt MetaObject information. Qt4-moc has its
 # c++-parser, so pass INCLUDES and DEFINES.
-#
+# 
 actions moc
 {
-    $(.binprefix)/moc -I$(INCLUDES) -D$(DEFINES) -f $(>) -o $(<)
+    $(.BINPREFIX[-1])/moc -I$(INCLUDES) -D$(DEFINES) -f $(>) -o $(<)
 }
 
 
@@ -514,7 +670,7 @@ actions moc
 #
 actions moc.inc
 {
-    $(.binprefix)/moc -I$(INCLUDES) -D$(DEFINES) $(>) -o $(<)
+    $(.BINPREFIX[-1])/moc -I$(INCLUDES) -D$(DEFINES) $(>) -o $(<)
 }
 
 
@@ -522,7 +678,7 @@ actions moc.inc
 #
 actions rcc
 {
-    $(.binprefix)/rcc $(>) -name $(>:B) -o $(<)
+    $(.BINPREFIX[-1])/rcc $(>) -name $(>:B) -o $(<)
 }
 
 
@@ -530,7 +686,7 @@ actions rcc
 #
 actions uic-h
 {
-    $(.binprefix)/uic $(>) -o $(<)
+    $(.BINPREFIX[-1])/uic $(>) -o $(<)
 }
 
 
