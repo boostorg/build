@@ -311,6 +311,7 @@ class boostbook-generator : generator
         local global-catalog = [ boostbook.xml-catalog ] ;
         local catalog = $(global-catalog[1]) ;
         local catalog-file = $(global-catalog[2]) ;
+        local targets ;
        
         # Add the catalog to the property set
         property-set = [ $(property-set).add-raw <catalog>$(catalog-file) ] ;
