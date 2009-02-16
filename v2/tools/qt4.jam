@@ -661,7 +661,7 @@ flags qt4.moc DEFINES <define> ;
 # 
 actions moc
 {
-    $(.BINPREFIX[-1])/moc -I$(INCLUDES) -D$(DEFINES) -f $(>) -o $(<)
+    $(.BINPREFIX[-1])/moc -I"$(INCLUDES)" -D$(DEFINES) -f $(>) -o $(<)
 }
 
 
@@ -670,7 +670,7 @@ actions moc
 #
 actions moc.inc
 {
-    $(.BINPREFIX[-1])/moc -I$(INCLUDES) -D$(DEFINES) $(>) -o $(<)
+    $(.BINPREFIX[-1])/moc -I"$(INCLUDES)" -D$(DEFINES) $(>) -o $(<)
 }
 
 
