@@ -423,7 +423,10 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? : version ? : conditio
     add-shared-library QtDBus : QtXml : : $(target-requirements) ;
 
     # Script-Engine (Qt 4.3)
-    add-shared-library QtScript : QtGui QtXml : : $(target-requirements) ;
+    add-shared-library QtScript : QtGui QtXml : QT_SCRIPT_LIB : $(target-requirements) ;
+
+    # Tools for the Script-Engine (Qt 4.5)
+    add-shared-library QtScriptTools : QtScript : QT_SCRIPTTOOLS_LIB : $(target-requirements) ;
 
     # WebKit (Qt 4.4)
     add-shared-library QtWebKit : QtGui : QT_WEBKIT_LIB : $(target-requirements) ;
