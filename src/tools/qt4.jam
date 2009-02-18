@@ -210,7 +210,7 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? : version ? : conditio
 
         # The OBJ result type is a fake, 'H' will be really produced. See
         # comments on the generator class, defined below the 'init' function.
-        generators.register [ new uic-h-generator qt4.uic-h : UI : OBJ :
+        generators.register [ new uic-generator qt4.uic : UI : OBJ :
             <allow>qt4  ] ;
 
         # The OBJ result type is a fake here too.
@@ -277,9 +277,9 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? : version ? : conditio
     debug-message "  tool requirements:  " '$(tools-requirements)' ;
 
     # setup the paths for the tools
-    toolset.flags qt4.moc   .BINPREFIX $(tools-requirements) : $(bin_prefix) ;
-    toolset.flags qt4.rcc   .BINPREFIX $(tools-requirements) : $(bin_prefix) ;
-    toolset.flags qt4.uic-h .BINPREFIX $(tools-requirements) : $(bin_prefix) ;
+    toolset.flags qt4.moc .BINPREFIX $(tools-requirements) : $(bin_prefix) ;
+    toolset.flags qt4.rcc .BINPREFIX $(tools-requirements) : $(bin_prefix) ;
+    toolset.flags qt4.uic .BINPREFIX $(tools-requirements) : $(bin_prefix) ;
 
     # TODO: 2009-02-12: Better support for directories
     # Most likely needed are separate getters for: include,libraries,binaries and sources.
@@ -467,7 +467,7 @@ rule initialized ( )
 # linking generator tries to convert sources to OBJ, but it produces target of
 # type H. This is non-standard, but allowed. That header won't be mocced.
 #
-class uic-h-generator : generator
+class uic-generator : generator
 {
     rule __init__ ( * : * )
     {
@@ -482,7 +482,7 @@ class uic-h-generator : generator
             name = $(name:B) ;
         }
 
-        local a = [ new action $(sources[1]) : qt4.uic-h : $(property-set) ] ;
+        local a = [ new action $(sources[1]) : qt4.uic : $(property-set) ] ;
 
         # The 'ui_' prefix is to match qmake's default behavior.
         local target = [ new file-target ui_$(name) : H : $(project) : $(a) ] ;
@@ -687,7 +687,7 @@ actions rcc
 
 # Generates user-interface source from .ui files.
 #
-actions uic-h
+actions uic
 {
     $(.BINPREFIX[-1])/uic $(>) -o $(<)
 }
