@@ -49,7 +49,7 @@ generators.register-c-compiler sun.compile.c++ : CPP : OBJ : <toolset>sun ;
 # Declare flags and actions for compilation
 flags sun.compile OPTIONS <debug-symbols>on : -g ;
 flags sun.compile OPTIONS <profiling>on : -xprofile=tcov ;
-flags sun.compile OPTIONS <optimization>speed : -fast ;
+flags sun.compile OPTIONS <optimization>speed : -xO4  ;
 flags sun.compile OPTIONS <optimization>space : -xO2 -xspace ;
 flags sun.compile OPTIONS <threading>multi : -mt ;
 
