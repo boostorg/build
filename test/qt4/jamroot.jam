@@ -27,6 +27,7 @@ if [ qt4.initialized ]
       [ run qtxml.cpp  /qt//QtXml  ]   
       [ run qtnetwork.cpp /qt//QtNetwork ]
       [ run qtscript.cpp  /qt//QtScript  ]
+      [ run qtscripttools.cpp  /qt//QtScriptTools  ]
       [ run qtxmlpatterns.cpp  /qt//QtXmlPatterns  ]
     
       # ToDo: runable example code
