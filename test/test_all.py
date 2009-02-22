@@ -45,8 +45,8 @@ def run_tests(critical_tests, other_tests):
 
     for i in all_tests:
         passed = 1
-	if not xml:
-	    print ("%-25s : " %(i)),
+        if not xml:
+            print ("%-25s : " %(i)),
         try:
             __import__(i)
         except SystemExit:
