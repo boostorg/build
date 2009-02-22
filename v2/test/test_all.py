@@ -80,8 +80,8 @@ def run_tests(critical_tests, other_tests):
 </run>
 </test-log>
 """
-
-        pass_count = pass_count + 1
+        if passed:
+            pass_count = pass_count + 1
         sys.stdout.flush()  # Makes testing under emacs more entertaining.
 
     # Erase the file on success.
