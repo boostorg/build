@@ -559,6 +559,23 @@ rule file-creation-command ( )
 {
     if [ os.name ] = NT
     {
+        # A few alternative implementations on Windows:
+        #
+        #   'type NUL >> '
+        #        That would construct an empty file instead of a file containing
+        #      a space and an end-of-line marker but it would also not change
+        #      the target's timestamp in case the file already exists.
+        #
+        #   'type NUL > '
+        #        That would construct an empty file instead of a file containing
+        #      a space and an end-of-line marker but it would also destroy an
+        #      already existing file by overwriting it with an empty one.
+        #
+        #   I guess the best solution would be to allow Boost Jam to define
+        # built-in functions such as 'create a file', 'touch a file' or 'copy a
+        # file' which could be used from inside action code. That would allow
+        # completely portable operations without this kind of kludge.
+        #                                            (22.02.2009.) (Jurko)
         return "echo. > " ;
     }
     else
