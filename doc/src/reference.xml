@@ -770,10 +770,10 @@ using gcc : &toolset_ops; ;</programlisting>
           &option_list_intro;
           <variablelist>
 
-            <xi:include href="fragments.xml#xpointer(id('common_options')/*)"
+            <xi:include href="fragments.xml" xpointer="xpointer(id('common_options')/*)"
                         parse="xml"/>
 
-            <xi:include href="fragments.xml#xpointer(id('root_option')/*)"
+            <xi:include href="fragments.xml" xpointer="xpointer(id('root_option')/*)"
                         parse="xml"/>
 
             <varlistentry>
@@ -848,7 +848,7 @@ using msvc : &toolset_ops; ;
           &option_list_intro;
           <variablelist>
 
-            <xi:include href="fragments.xml#xpointer(id('common_options')/*)"
+            <xi:include href="fragments.xml" xpointer="xpointer(id('common_options')/*)"
                         parse="xml"/>
 
             <varlistentry>
@@ -1034,7 +1034,7 @@ using intel-win : &toolset_ops; ;</programlisting>
           &option_list_intro;
           <variablelist>
 
-            <xi:include href="fragments.xml#xpointer(id('common_options')/*)"
+            <xi:include href="fragments.xml" xpointer="xpointer(id('common_options')/*)"
                         parse="xml"/>
 
           </variablelist>
@@ -1042,7 +1042,7 @@ using intel-win : &toolset_ops; ;</programlisting>
           <para>The Linux version supports the following additional options:</para>
           <variablelist>
 
-            <xi:include href="fragments.xml#xpointer(id('root_option')/*)"
+            <xi:include href="fragments.xml" xpointer="xpointer(id('root_option')/*)"
                         parse="xml"/>
 
           </variablelist>
@@ -1073,7 +1073,7 @@ using acc : &toolset_ops; ;</programlisting>
 
           &option_list_intro;
           <variablelist>
-            <xi:include href="fragments.xml#xpointer(id('common_options')/*)"
+            <xi:include href="fragments.xml" xpointer="xpointer(id('common_options')/*)"
                         parse="xml"/>
           </variablelist>
 
@@ -1108,7 +1108,7 @@ using borland : &toolset_ops; ;</programlisting>
 
           &option_list_intro;
           <variablelist>
-            <xi:include href="fragments.xml#xpointer(id('common_options')/*)"
+            <xi:include href="fragments.xml" xpointer="xpointer(id('common_options')/*)"
                         parse="xml"/>
           </variablelist>
 
@@ -1135,7 +1135,7 @@ using como-linux : &toolset_ops; ;</programlisting>
 
           &option_list_intro;
           <variablelist>
-            <xi:include href="fragments.xml#xpointer(id('common_options')/*)"
+            <xi:include href="fragments.xml" xpointer="xpointer(id('common_options')/*)"
                         parse="xml"/>
           </variablelist>
 
@@ -1170,10 +1170,10 @@ using cw : &toolset_ops; ;</programlisting>
           &option_list_intro;
           <variablelist>
 
-            <xi:include href="fragments.xml#xpointer(id('common_options')/*)"
+            <xi:include href="fragments.xml" xpointer="xpointer(id('common_options')/*)"
                         parse="xml"/>
 
-            <xi:include href="fragments.xml#xpointer(id('root_option')/*)"
+            <xi:include href="fragments.xml" xpointer="xpointer(id('root_option')/*)"
                         parse="xml"/>
 
             <varlistentry>
@@ -1232,7 +1232,7 @@ using dmc : &toolset_ops; ;</programlisting>
 
           &option_list_intro;
           <variablelist>
-            <xi:include href="fragments.xml#xpointer(id('common_options')/*)"
+            <xi:include href="fragments.xml" xpointer="xpointer(id('common_options')/*)"
                         parse="xml"/>
           </variablelist>
 
@@ -1257,7 +1257,7 @@ using hp_cxx : &toolset_ops; ;</programlisting>
 
           &option_list_intro;
           <variablelist>
-            <xi:include href="fragments.xml#xpointer(id('common_options')/*)"
+            <xi:include href="fragments.xml" xpointer="xpointer(id('common_options')/*)"
                         parse="xml"/>
           </variablelist>
 
@@ -1293,7 +1293,7 @@ using sun : &toolset_ops; ;</programlisting>
 
           &option_list_intro;
           <variablelist>
-            <xi:include href="fragments.xml#xpointer(id('common_options')/*)"
+            <xi:include href="fragments.xml" xpointer="xpointer(id('common_options')/*)"
                         parse="xml"/>
           </variablelist>
 
