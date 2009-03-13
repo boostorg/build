@@ -69,12 +69,7 @@ flags vacpp LINKFLAGS <debug-symbols>off : -s ;
 
 if [ os.name ] = AIX
 {
-    # Tell the linker to discard unneeded object files from archive libraries.
-    # Please note that the static constructors contained by the discarded object
-    # files will not be invoked.
     flags vacpp.compile C++FLAGS : -qfuncsect ;
-    flags vacpp.link LINKFLAGS <link>static : -qtwolink ;
-
 
     # The -bnoipath strips the prepending (relative) path of libraries from
     # the loader section in the target library or executable. Hence, during
