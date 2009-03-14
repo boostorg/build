@@ -335,6 +335,7 @@ class boostbook-generator : generator
             case htmlhelp    : 
             {
                 type = HTMLHELP ;
+                manifest = HTML.manifest ;
             }
             
             case onehtml : type = HTML ;
