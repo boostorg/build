@@ -87,7 +87,7 @@ if [ os.name ] = AIX
     flags vacpp.link LINKFLAGS <link>shared : -bnoipath ;
 
     # Run-time linking
-    flags vacpp.link EXE-LINKFLAGS <link>shared : -brtl -qtwolink ;
+    flags vacpp.link EXE-LINKFLAGS <link>shared : -brtl ;
 }
 else
 {
