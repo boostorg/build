@@ -410,6 +410,7 @@
 #include <signal.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #ifndef OS_QNX
     #include <memory.h>
