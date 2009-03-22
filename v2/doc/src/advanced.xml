@@ -1402,7 +1402,7 @@ bjam app1 lib1//lib1 toolset=gcc variant=debug optimization=full
 bjam app1 lib1//lib1 gcc debug optimization=full
 </programlisting>
         The complete syntax, which has some additional shortcuts, is
-        described in <xref linkend="bbv2.reference.commandline"/>.
+        described in <xref linkend="bbv2.advanced.invocation"/>.
       </para>
     </section>
 
