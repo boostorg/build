@@ -92,7 +92,7 @@ bjam toolset=msvc variant=release some_target
 <programlisting>
 bjam msvc release some_target
 </programlisting>
-      See <link linkend="bbv2.reference.commandline">the reference</link> for a
+      See <link linkend="bbv2.advanced.invocation">the reference</link> for a
       complete description of the syntax.
       </para>
 

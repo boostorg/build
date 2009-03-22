@@ -22,7 +22,7 @@
     <para>
       If you're trying to build a project which uses Boost.Build,
       see <xref linkend="bbv2.installation"/> and then read about
-      <xref linkend="bbv2.reference.commandline"/>.
+      <xref linkend="bbv2.advanced.invocation"/>.
     </para>
 
     <para>
