@@ -62,7 +62,7 @@ feature.feature test-info          : : free incidental ;
 feature.feature testing.arg        : : free incidental ;
 feature.feature testing.input-file : : free dependency ;
 
-feature.feature preserve-test-targets : off on : incidental propagated ;
+feature.feature preserve-test-targets : on off : incidental propagated ;
 
 # Register target types.
 type.register TEST         : test          ;
