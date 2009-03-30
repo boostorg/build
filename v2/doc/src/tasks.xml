@@ -457,10 +457,12 @@ rule run ( sources + : args * : input-files * : requirements * : target-name ?
     </para>
 
     <para>
-      The <code>run</code> and the <code>run-fail</code> rules, if the test
-      passes, automatically delete the linked executable, to save space. This
-      behaviour can be suppressed by passing the <literal>
-      --preserve-test-targets</literal> command line option.
+      <indexterm><primary>preserve-test-targets</primary></indexterm>
+      If the <literal>preserve-test-targets</literal> feature has the value
+      <literal>off</literal>, then <code>run</code> and the <code>run-fail</code>
+      rules will remove the executable after running it.  This somewhat decreases
+      disk space requirements for continuous testing environments. The default 
+      value of <literal>preserve-test-targets</literal> feature is <literal>on</literal>.      
     </para>
 
     <para>
