@@ -388,6 +388,15 @@ local rule load-configuration-files
             ECHO "notice: User configuration file loading explicitly disabled." ;
         }
     }
+    
+    initialize-config-module project-config ;
+    
+    if [ project.find "." : "." ]
+    {
+        local project-module = [ project.load "." ] ;
+        local root = [ project.attribute $(project-module) project-root ] ;
+        load-config project-config : project-config.jam : $(root) ;        
+    }   
 }
 
 
