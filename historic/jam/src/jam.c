@@ -476,6 +476,25 @@ int main( int argc, char * * argv, char * * arg_environ )
             ++globs.noexec;
         }
 
+        /* The build system may set the PARALLELISM variable to override -j
+           options.  */
+        {
+            LIST *p = L0;
+            p = var_get ("PARALLELISM");
+            if (p)
+            {
+                int j = atoi (p->string);
+                if (j == -1)
+                {
+                    printf( "Invalid value of PARALLELISM: %s\n", p->string);
+                }
+                else
+                {
+                    globs.jobs = j;
+                }
+            }
+        }
+
         /* Now make target. */
         {
             PROFILE_ENTER( MAIN_MAKE );
