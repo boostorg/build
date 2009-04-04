@@ -439,6 +439,10 @@ rule initialize (
     {
         parent-module = site-config ;
     }
+    else if $(module-name) = project-config
+    {
+        parent-module = user-config ;
+    }    
     else
     {
         # We search for parent/project-root only if Jamfile was specified, i.e.
@@ -453,7 +457,15 @@ rule initialize (
             # inherit from user-config.
             if $(location)
             {
-                parent-module = user-config ;
+                # If project-config module exist, inherit from it.
+                if $(project-config.attributes)
+                {   
+                    parent-module = project-config ;
+                }
+                else
+                {                    
+                    parent-module = user-config ;
+                }                
                 jamroot = true ;
             }
         }
