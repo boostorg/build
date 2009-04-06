@@ -6,4 +6,4 @@ import type ;
 
 type.register EXE ;
 type.set-generated-target-suffix EXE : <target-os>windows : "exe" ;
-type.set-generated-target-suffix EXE : <target-os>cygiwn : "exe" ;
+type.set-generated-target-suffix EXE : <target-os>cygwin : "exe" ;
