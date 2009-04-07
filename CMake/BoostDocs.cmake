@@ -13,7 +13,8 @@
 
 # Transforms the source XML file by applying the given XSL stylesheet.
 #
-#   xsl_transform(output input [input2 input3 ...]
+#   xsl_transform(OUTPUT output 
+#                 INPUT input [input2 input3 ...]
 #                 STYLESHEET stylesheet
 #                 [CATALOG catalog]
 #                 [DIRECTORY mainfile]
@@ -53,9 +54,9 @@
 # If a COMMENT argument is provided, it will be used as the comment
 # CMake provides when running this XSL transformation. Otherwise, the
 # comment will be "Generating "output" via XSL transformation...".
-macro(xsl_transform OUTPUT INPUT)
+macro(xsl_transform)
   parse_arguments(THIS_XSL
-    "STYLESHEET;CATALOG;MAKE_ALL_TARGET;MAKE_TARGET;PARAMETERS;DIRECTORY;COMMENT"
+    "OUTPUT;INPUT;STYLESHEET;CATALOG;MAKE_ALL_TARGET;MAKE_TARGET;PARAMETERS;DIRECTORY;COMMENT"
     ""
     ${ARGN}
     )
@@ -81,18 +82,18 @@ macro(xsl_transform OUTPUT INPUT)
   # If the user didn't provide a comment for this transformation,
   # create a default one.
   if(NOT THIS_XSL_COMMENT)
-    set(THIS_XSL_COMMENT "Generating ${OUTPUT} via XSL transformation...")
+    set(THIS_XSL_COMMENT "Generating ${THIS_XSL_OUTPUT} via XSL transformation...")
   endif()
 
   # Figure out the actual output file that we tell CMake about
   # (THIS_XSL_OUTPUT_FILE) and the output file or directory that we
   # tell xsltproc about (THIS_XSL_OUTPUT).
   if (THIS_XSL_DIRECTORY)
-    set(THIS_XSL_OUTPUT_FILE ${OUTPUT}/${THIS_XSL_DIRECTORY})
-    set(THIS_XSL_OUTPUT      ${OUTPUT}/)
+    set(THIS_XSL_OUTPUT_FILE ${THIS_XSL_OUTPUT}/${THIS_XSL_DIRECTORY})
+    set(THIS_XSL_OUTPUT      ${THIS_XSL_OUTPUT}/)
   else()
-    set(THIS_XSL_OUTPUT_FILE ${OUTPUT})
-    set(THIS_XSL_OUTPUT      ${OUTPUT})
+    set(THIS_XSL_OUTPUT_FILE ${THIS_XSL_OUTPUT})
+    set(THIS_XSL_OUTPUT      ${THIS_XSL_OUTPUT})
   endif()
 
   if(NOT THIS_XSL_STYLESHEET)
@@ -104,9 +105,9 @@ macro(xsl_transform OUTPUT INPUT)
       COMMAND ${THIS_XSL_CATALOG} ${XSLTPROC} ${XSLTPROC_FLAGS} 
               ${THIS_XSL_EXTRA_FLAGS} -o ${THIS_XSL_OUTPUT} 
               --path ${CMAKE_CURRENT_BINARY_DIR}
-              ${THIS_XSL_STYLESHEET} ${INPUT}
+              ${THIS_XSL_STYLESHEET} ${THIS_XSL_INPUT}
       COMMENT ${THIS_XSL_COMMENT}
-      DEPENDS ${INPUT} ${THIS_XSL_DEFAULT_ARGS})
+      DEPENDS ${THIS_XSL_INPUT} ${THIS_XSL_DEFAULT_ARGS})
     set_source_files_properties(${THIS_XSL_OUTPUT_FILE}
       PROPERTIES GENERATED TRUE)
 
@@ -188,14 +189,15 @@ macro(doxygen_to_boostbook OUTPUT)
     ${CMAKE_CURRENT_BINARY_DIR}/xml/combine.xslt
     PROPERTIES GENERATED TRUE)
   xsl_transform(
-    ${CMAKE_CURRENT_BINARY_DIR}/xml/all.xml
-    ${CMAKE_CURRENT_BINARY_DIR}/xml/index.xml
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/xml/all.xml
+    INPUT ${CMAKE_CURRENT_BINARY_DIR}/xml/index.xml
     STYLESHEET ${CMAKE_CURRENT_BINARY_DIR}/xml/combine.xslt
     COMMENT "Collecting Doxygen XML output for Boost.${PROJECT_NAME}...")
 
   # Transform single Doxygen XML file into BoostBook XML
-  xsl_transform(${OUTPUT}
-    ${CMAKE_CURRENT_BINARY_DIR}/xml/all.xml
+  xsl_transform(
+    OUTPUT ${OUTPUT}
+    INPUT ${CMAKE_CURRENT_BINARY_DIR}/xml/all.xml
     STYLESHEET ${BOOSTBOOK_XSL_DIR}/doxygen/doxygen2boostbook.xsl
     COMMENT "Transforming Doxygen XML into BoostBook XML for Boost.${PROJECT_NAME}...")
 endmacro(doxygen_to_boostbook)
@@ -224,12 +226,7 @@ macro(boost_add_documentation SOURCE)
 
   # If SOURCE is not a full path, it's in the current source
   # directory.
-  get_filename_component(THIS_DOC_SOURCE_PATH ${SOURCE} PATH)
-  if(THIS_DOC_SOURCE_PATH STREQUAL "")
-    set(THIS_DOC_SOURCE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE}")
-  else()
-    set(THIS_DOC_SOURCE_PATH ${SOURCE})
-  endif()
+  get_filename_component(THIS_DOC_SOURCE_PATH ${SOURCE} ABSOLUTE)
 
   # If we are parsing C++ headers (with Doxygen) for reference
   # documentation, do so now and produce the requested BoostBook XML
@@ -281,7 +278,7 @@ macro(boost_add_documentation SOURCE)
     if (BUILD_QUICKBOOK)
       # Transform Quickbook into BoostBook XML
       get_filename_component(SOURCE_FILENAME ${SOURCE} NAME_WE)
-      set(BOOSTBOOK_FILE ${SOURCE_FILENAME}.xml)
+      set(BOOSTBOOK_FILE ${CMAKE_CURRENT_BINARY_DIR}/${SOURCE_FILENAME}.xml)
       add_custom_command(OUTPUT ${BOOSTBOOK_FILE}
         COMMAND quickbook "--output-file=${BOOSTBOOK_FILE}"
         ${THIS_DOC_SOURCE_PATH} 
@@ -289,7 +286,7 @@ macro(boost_add_documentation SOURCE)
         COMMENT "Generating BoostBook documentation for Boost.${PROJECT_NAME}...")
 
       # Transform BoostBook into other formats
-      boost_add_documentation(${CMAKE_CURRENT_BINARY_DIR}/${BOOSTBOOK_FILE})
+      boost_add_documentation(${BOOSTBOOK_FILE})
     else()
       message(SEND_ERROR 
         "Quickbook is required to build Boost documentation.\nQuickbook can be built by enabling the BUILD_QUICKBOOK.")
@@ -297,8 +294,10 @@ macro(boost_add_documentation SOURCE)
   elseif (THIS_DOC_EXT STREQUAL ".XML")
     # Transform BoostBook XML into DocBook XML
     get_filename_component(SOURCE_FILENAME ${SOURCE} NAME_WE)
-    set(DOCBOOK_FILE ${SOURCE_FILENAME}.docbook)
-    xsl_transform(${DOCBOOK_FILE} ${THIS_DOC_SOURCE_PATH} 
+    set(DOCBOOK_FILE ${CMAKE_CURRENT_BINARY_DIR}/${SOURCE_FILENAME}.docbook)
+    xsl_transform(
+      OUTPUT ${DOCBOOK_FILE} 
+      INPUT ${THIS_DOC_SOURCE_PATH} 
       ${THIS_DOC_DEFAULT_ARGS}
       STYLESHEET ${BOOSTBOOK_XSL_DIR}/docbook.xsl
       CATALOG ${CMAKE_BINARY_DIR}/catalog.xml
@@ -306,13 +305,13 @@ macro(boost_add_documentation SOURCE)
       MAKE_TARGET ${PROJECT_NAME}-docbook)
 
     # Transform DocBook into other formats
-    boost_add_documentation(${CMAKE_CURRENT_BINARY_DIR}/${DOCBOOK_FILE})
+    boost_add_documentation(${DOCBOOK_FILE})
   elseif(THIS_DOC_EXT STREQUAL ".DOCBOOK")
     # If requested, build HTML documentation
     if (BUILD_DOCUMENTATION_HTML)
       xsl_transform(
-        ${CMAKE_CURRENT_BINARY_DIR}/html 
-        ${THIS_DOC_SOURCE_PATH} 
+	OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/html 
+        INPUT ${THIS_DOC_SOURCE_PATH} 
         STYLESHEET ${BOOSTBOOK_XSL_DIR}/html.xsl
         CATALOG ${CMAKE_BINARY_DIR}/catalog.xml
         DIRECTORY HTML.manifest
@@ -321,7 +320,6 @@ macro(boost_add_documentation SOURCE)
                    boost.image.src=boost.png
         COMMENT "Generating HTML documentation for Boost.${PROJECT_NAME}..."
         MAKE_TARGET ${PROJECT_NAME}-html)
-
       #
       #  Install associated stuff
       #
@@ -334,6 +332,8 @@ macro(boost_add_documentation SOURCE)
 	COMMENT "Copying in associated stuff, boostbook.css and boost.png"
 	)
 
+      add_dependencies(html ${PROJECT_NAME}-html)
+
       # Install generated documentation
       install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html 
         DESTINATION share/boost-${BOOST_VERSION}
@@ -344,13 +344,15 @@ macro(boost_add_documentation SOURCE)
     # If requested, build Unix man pages
     if (BUILD_DOCUMENTATION_MAN_PAGES)
       xsl_transform(
-        ${CMAKE_CURRENT_BINARY_DIR}/man 
-        ${THIS_DOC_SOURCE_PATH} 
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/man 
+        INPUT ${THIS_DOC_SOURCE_PATH} 
         STYLESHEET ${BOOSTBOOK_XSL_DIR}/manpages.xsl
         CATALOG ${CMAKE_BINARY_DIR}/catalog.xml
         DIRECTORY man.manifest
         COMMENT "Generating man pages for Boost.${PROJECT_NAME}..."
-        MAKE_ALL_TARGET ${PROJECT_NAME}-man)
+        MAKE_ALL_TARGET ${PROJECT_NAME}-manpages)
+
+      add_dependencies(manpages ${PROJECT_NAME}-manpages)
 
       # Install man pages
       install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/man
@@ -530,6 +532,9 @@ else()
   message(STATUS "Documentation prerequisites found, enabling docs build.")
   set(BUILD_DOCUMENTATION_OKAY TRUE)
 endif()
+
+add_custom_target(html)
+add_custom_target(manpages)
 
 if (NOT BUILD_DOCUMENTATION_OKAY)
   if (BUILD_DOCUMENTATION)
