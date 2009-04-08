@@ -166,12 +166,20 @@ macro(doxygen_to_boostbook OUTPUT)
     file(APPEND ${DOXYFILE} "${PARAM}\n")
   endforeach(PARAM)
 
-  set(THIS_DOXY_HEADER_PATH ${CMAKE_SOURCE_DIR}/libs/${libname}/include)
+  set(THIS_DOXY_MODULAR_HEADER_PATH ${CMAKE_SOURCE_DIR}/libs/${libname}/include)
 
   set(THIS_DOXY_HEADER_LIST "")
   set(THIS_DOXY_HEADERS)
   foreach(HDR ${THIS_DOXY_DEFAULT_ARGS})
-    list(APPEND THIS_DOXY_HEADERS ${THIS_DOXY_HEADER_PATH}/${HDR})
+    if(EXISTS ${CMAKE_SOURCE_DIR}/${HDR})
+      list(APPEND THIS_DOXY_HEADERS ${CMAKE_SOURCE_DIR}/${HDR})
+    elseif(EXISTS ${THIS_DOXY_MODULAR_HEADER_PATH}/${HDR})
+      list(APPEND THIS_DOXY_HEADERS ${THIS_DOXY_MODULAR_HEADER_PATH}/${HDR})
+    else(EXISTS ${CMAKE_SOURCE_DIR}/${HDR})
+      message("Warning: Attempting to generate doxygen to boostbook target for header ${HDR},")  
+      message("         which was not found in the main source directory or in a modularized location")
+    endif(EXISTS ${CMAKE_SOURCE_DIR}/${HDR})
+
     set(THIS_DOXY_HEADER_LIST 
       "${THIS_DOXY_HEADER_LIST} ${THIS_DOXY_HEADER_PATH}/${HDR}")
   endforeach(HDR)
@@ -278,22 +286,17 @@ macro(boost_add_documentation SOURCE)
   get_filename_component(THIS_DOC_EXT ${SOURCE} EXT)
   string(TOUPPER ${THIS_DOC_EXT} THIS_DOC_EXT)
   if (THIS_DOC_EXT STREQUAL ".QBK")
-    if (BUILD_QUICKBOOK)
-      # Transform Quickbook into BoostBook XML
-      get_filename_component(SOURCE_FILENAME ${SOURCE} NAME_WE)
-      set(BOOSTBOOK_FILE ${SOURCE_FILENAME}.xml)
-      add_custom_command(OUTPUT ${BOOSTBOOK_FILE}
-        COMMAND quickbook "--output-file=${BOOSTBOOK_FILE}"
-        ${THIS_DOC_SOURCE_PATH} 
-        DEPENDS ${THIS_DOC_SOURCE_PATH} ${THIS_DOC_DEFAULT_ARGS}
-        COMMENT "Generating BoostBook documentation for Boost.${PROJECT_NAME}...")
+    # Transform Quickbook into BoostBook XML
+    get_filename_component(SOURCE_FILENAME ${SOURCE} NAME_WE)
+    set(BOOSTBOOK_FILE ${SOURCE_FILENAME}.xml)
+    add_custom_command(OUTPUT ${BOOSTBOOK_FILE}
+      COMMAND quickbook "--output-file=${BOOSTBOOK_FILE}"
+      ${THIS_DOC_SOURCE_PATH} 
+      DEPENDS ${THIS_DOC_SOURCE_PATH} ${THIS_DOC_DEFAULT_ARGS}
+      COMMENT "Generating BoostBook documentation for Boost.${PROJECT_NAME}...")
 
-      # Transform BoostBook into other formats
-      boost_add_documentation(${CMAKE_CURRENT_BINARY_DIR}/${BOOSTBOOK_FILE})
-    else()
-      message(SEND_ERROR 
-        "Quickbook is required to build Boost documentation.\nQuickbook can be built by enabling the BUILD_QUICKBOOK.")
-    endif()
+    # Transform BoostBook into other formats
+    boost_add_documentation(${CMAKE_CURRENT_BINARY_DIR}/${BOOSTBOOK_FILE})
   elseif (THIS_DOC_EXT STREQUAL ".XML")
     # Transform BoostBook XML into DocBook XML
     get_filename_component(SOURCE_FILENAME ${SOURCE} NAME_WE)
