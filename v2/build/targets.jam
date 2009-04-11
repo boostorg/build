@@ -78,6 +78,7 @@ import property-set ;
 import sequence ;
 import set ;
 import toolset ;
+import build-request ;
 
 
 # Base class for all abstract targets.
@@ -557,7 +558,6 @@ local rule end-building ( main-target-instance )
 class main-target : abstract-target
 {
     import assert ;
-    import build-request ;
     import errors ;
     import feature ;
     import print ;
@@ -657,65 +657,8 @@ class main-target : abstract-target
 
     rule apply-default-build ( property-set )
     {
-        # 1. First, see what properties from default-build are already present
-        # in property-set.
-
-        local raw = [ $(property-set).raw ] ;
-        local specified-features = $(raw:G) ;
-
-        local defaults-to-apply ;
-        for local d in [ $(self.default-build).raw ]
-        {
-            if ! $(d:G) in $(specified-features)
-            {
-                defaults-to-apply += $(d) ;
-            }
-        }
-
-        # 2. If there are any defaults to be applied, form a new build request.
-        # Pass it through to 'expand-no-defaults' since default-build might
-        # contain "release debug" resulting in two property-sets.
-        local result ;
-        if $(defaults-to-apply)
-        {
-            properties = [
-              build-request.expand-no-defaults
-
-                # We have to compress subproperties here to prevent property
-                # lists like:
-                #
-                #    <toolset>msvc <toolset-msvc:version>7.1 <threading>multi
-                #
-                # from being expanded into:
-                #
-                #    <toolset-msvc:version>7.1/<threading>multi
-                #    <toolset>msvc/<toolset-msvc:version>7.1/<threading>multi
-                #
-                # due to a cross-product property combination. That may be an
-                # indication that build-request.expand-no-defaults is the wrong
-                # rule to use here.
-                [ feature.compress-subproperties $(raw) ]
-                  $(defaults-to-apply)
-            ] ;
-
-            if $(properties)
-            {
-                for local p in $(properties)
-                {
-                    result += [ property-set.create
-                        [ feature.expand [ feature.split $(p) ] ] ] ;
-                }
-            }
-            else
-            {
-                result = [ property-set.empty ] ;
-            }
-        }
-        else
-        {
-            result = $(property-set) ;
-        }
-        return $(result) ;
+        return [ targets.apply-default-build $(property-set) 
+          : $(self.default-build) ] ;
     }
 
     # Select an alternative for this main target, by finding all alternatives
@@ -881,6 +824,69 @@ rule generate-from-reference (
             $(rproperties[2-]) ;
     }
     return [ $(target).generate $(rproperties) ] ;
+}
+
+rule apply-default-build ( property-set : default-build )
+{
+    # 1. First, see what properties from default-build are already present
+    # in property-set.
+
+    local raw = [ $(property-set).raw ] ;
+    local specified-features = $(raw:G) ;
+
+    local defaults-to-apply ;
+    for local d in [ $(default-build).raw ]
+    {
+        if ! $(d:G) in $(specified-features)
+        {
+            defaults-to-apply += $(d) ;
+        }
+    }
+
+    # 2. If there are any defaults to be applied, form a new build request.
+    # Pass it through to 'expand-no-defaults' since default-build might
+    # contain "release debug" resulting in two property-sets.
+    local result ;
+    if $(defaults-to-apply)
+    {
+        properties = [
+          build-request.expand-no-defaults
+
+            # We have to compress subproperties here to prevent property
+            # lists like:
+            #
+            #    <toolset>msvc <toolset-msvc:version>7.1 <threading>multi
+            #
+            # from being expanded into:
+            #
+            #    <toolset-msvc:version>7.1/<threading>multi
+            #    <toolset>msvc/<toolset-msvc:version>7.1/<threading>multi
+            #
+            # due to a cross-product property combination. That may be an
+            # indication that build-request.expand-no-defaults is the wrong
+            # rule to use here.
+            [ feature.compress-subproperties $(raw) ]
+              $(defaults-to-apply)
+        ] ;
+
+        if $(properties)
+        {
+            for local p in $(properties)
+            {
+                result += [ property-set.create
+                    [ feature.expand [ feature.split $(p) ] ] ] ;
+            }
+        }
+        else
+        {
+            result = [ property-set.empty ] ;
+        }
+    }
+    else
+    {
+        result = $(property-set) ;
+    }
+    return $(result) ;
 }
 
 
@@ -1559,6 +1565,23 @@ rule main-target-alternative ( target )
     return $(target) ;
 }
 
+# Creates a new metargets with the specified properties, using 'klass' as
+# the class. The 'name', 'sources',
+# 'requirements', 'default-build' and 'usage-requirements' are assumed to be in
+# the form specified by the user in Jamfile corresponding to 'project'.
+#
+rule create-metatarget ( klass : project : name : sources * : requirements * :
+    default-build * : usage-requirements * )
+{
+    return [
+        targets.main-target-alternative
+        [ new $(klass) $(name) : $(project)
+            : [ targets.main-target-sources $(sources) : $(name) ]
+            : [ targets.main-target-requirements $(requirements) : $(project) ]
+            : [ targets.main-target-default-build $(default-build) : $(project) ]
+            : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
+        ] ] ;
+}
 
 # Creates a typed-target with the specified properties. The 'name', 'sources',
 # 'requirements', 'default-build' and 'usage-requirements' are assumed to be in
