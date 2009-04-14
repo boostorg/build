@@ -36,11 +36,19 @@ alias the-other-obj : Other//other-obj ;
 
     t.write("Other/mygen.jam", """
 import generators ;
+import os ;
 import type ;
 type.register MY_TYPE : extension ;
 generators.register-standard mygen.generate-a-cpp-file : MY_TYPE : CPP ;
 rule generate-a-cpp-file { ECHO Generating a CPP file... ; }
-actions generate-a-cpp-file { echo "void g() {}" > "$(<)" }
+if [ os.name ] = NT
+{
+    actions generate-a-cpp-file { echo void g() {} > "$(<)" }
+}
+else
+{
+    actions generate-a-cpp-file { echo "void g() {}" > "$(<)" }
+}
 """)
 
     t.write("Other/jamfile.jam", """

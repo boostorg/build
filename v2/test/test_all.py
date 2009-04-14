@@ -13,8 +13,8 @@ import BoostBuild
 
 xml = "--xml" in sys.argv
 toolset = BoostBuild.get_toolset()
-        
-    
+
+
 # Clear environment for testing.
 #
 for s in ('BOOST_ROOT', 'BOOST_BUILD_PATH', 'JAM_TOOLSET', 'BCCROOT', 'MSVCDir',
@@ -42,11 +42,11 @@ def run_tests(critical_tests, other_tests):
 
     pass_count = 0
     failures_count = 0
-    
+
     for i in all_tests:
         passed = 1
-	if not xml:
-	    print ("%-25s : " %(i)),
+        if not xml:
+            print ("%-25s : " %(i)),
         try:
             __import__(i)
         except SystemExit:
@@ -58,12 +58,12 @@ def run_tests(critical_tests, other_tests):
             failures_count = failures_count + 1
             # Restore the current directory, which might be changed by the test.
             os.chdir(invocation_dir)
-            
+
         if not xml:
             if passed:
                 print "PASSED"
             else:
-                print "FAILED"            
+                print "FAILED"
         else:
             rs = "succeed"
             if not passed:
@@ -79,9 +79,9 @@ def run_tests(critical_tests, other_tests):
             print """
 </run>
 </test-log>
-""" 
-                
-        pass_count = pass_count + 1
+"""
+        if passed:
+            pass_count = pass_count + 1
         sys.stdout.flush()  # Makes testing under emacs more entertaining.
 
     # Erase the file on success.
