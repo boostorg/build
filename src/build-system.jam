@@ -388,6 +388,24 @@ local rule load-configuration-files
             ECHO "notice: User configuration file loading explicitly disabled." ;
         }
     }
+        
+    # We look for project-config.jam from "." upward.
+    # I am not sure this is 100% right decision, we might as well check for
+    # it only alonside the Jamroot file. However:
+    #
+    # - We need to load project-root.jam before Jamroot
+    # - We probably would need to load project-root.jam even if there's no
+    #   Jamroot - e.g. to implement automake-style out-of-tree builds.
+    local file = [ path.glob "." : project-config.jam ] ;
+    if ! $(file)
+    {
+        file = [ path.glob-in-parents "." : project-config.jam ] ;
+    }
+    if $(file)
+    {
+        initialize-config-module project-config ;
+        load-config project-config : project-config.jam : $(file:D) ;        
+    }   
 }
 
 

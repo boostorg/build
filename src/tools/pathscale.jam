@@ -13,7 +13,7 @@ import fortran ;
 
 feature.extend toolset : pathscale ;
 toolset.inherit  pathscale : unix ;
-generators.override pathscale.prebuilt : builtin.lib-generator ;
+generators.override pathscale.prebuilt : builtin.prebuilt ;
 generators.override pathscale.searched-lib-generator : searched-lib-generator ;
 
 # Documentation and toolchain description located

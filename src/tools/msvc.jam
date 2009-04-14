@@ -988,16 +988,22 @@ class msvc-linking-generator : linking-generator
     {
         local result = [ linking-generator.generated-targets $(sources)
           : $(property-set) : $(project) $(name) ] ;
-        if [ $(property-set).get <embed-manifest> ] = "off"
+
+        if $(result)
         {
-            if ! $(name)
-            {
-                name = [ determine-output-name $(sources) ] ;
-            }
-            
+            local name = [ $(result[0]).name ] ;
             local action = [ $(result[0]).action ] ;
-            result += [ virtual-target.register
-                [ class.new file-target $(name) : MANIFEST : $(project) : $(action) ] ] ;
+
+            if [ $(property-set).get <embed-manifest> ] = "off"
+            {
+                local target = [ class.new file-target $(name) : MANIFEST : $(project) : $(action) ] ;
+                local registered-target = [ virtual-target.register $(target) ] ;
+                if $(action) && ( $(target) != $(registered-target) )
+                {
+                    $(action).replace-targets $(target) : $(registered-target) ;
+                }
+                result += $(registered-target) ;
+            }
         }
         return $(result) ;
     }

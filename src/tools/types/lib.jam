@@ -25,6 +25,7 @@ type.set-generated-target-prefix IMPORT_LIB : : "" ;
 
 type.register SHARED_LIB : so dll dylib : LIB ;
 type.set-generated-target-suffix SHARED_LIB : <target-os>windows : dll ;
+type.set-generated-target-suffix SHARED_LIB : <target-os>cygwin : dll ;
 type.set-generated-target-suffix SHARED_LIB : <target-os>darwin : dylib ;
 
 type SEARCHED_LIB : : LIB ;

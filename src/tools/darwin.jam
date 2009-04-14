@@ -91,6 +91,9 @@ rule init ( version ? : command * : options * : requirement * )
     # - The configured compile driver command.
     local command = [ common.get-invocation-command darwin : g++ : $(command) ] ;
     
+    # The version as reported by the compiler
+    local real-version ;
+    
     # - Autodetect the root and bin dir if not given.
     if $(command)
     {
@@ -113,8 +116,9 @@ rule init ( version ? : command * : options * : requirement * )
         # - The 'command' variable can have multiple elements. When calling
         #   the SHELL builtin we need a single string.
         local command-string = $(command:J=" ") ;
-        version ?= [ MATCH "^([0-9.]+)"
+        real-version = [ MATCH "^([0-9.]+)"
             : [ SHELL "$(command-string) -dumpversion" ] ] ;
+        version ?= $(real-version) ;
     }
     
     # - Define the condition for this toolset instance.
@@ -125,12 +129,12 @@ rule init ( version ? : command * : options * : requirement * )
     common.handle-options darwin : $(condition) : $(command) : $(options) ;
     
     # - GCC 4.0 and higher in Darwin does not have -fcoalesce-templates.
-    if $(version) < "4.0.0"
+    if $(real-version) < "4.0.0"
     {
         flags darwin.compile.c++ OPTIONS $(condition) : -fcoalesce-templates ;
     }
     # - GCC 4.2 and higher in Darwin does not have -Wno-long-double.
-    if $(version) < "4.2.0"
+    if $(real-version) < "4.2.0"
     {
         flags darwin.compile OPTIONS $(condition) : -Wno-long-double ;
     }

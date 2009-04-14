@@ -17,7 +17,12 @@ import generators ;
 feature.extend-subfeature toolset intel : platform : darwin ;
 
 toolset.inherit-generators intel-darwin 
-  <toolset>intel <toolset-intel:platform>darwin : gcc : gcc.mingw.link gcc.mingw.link.dll ;
+  <toolset>intel <toolset-intel:platform>darwin 
+  : gcc 
+  # Don't inherit PCH generators. They were not tested, and probably
+  # don't work for this compiler.
+  : gcc.mingw.link gcc.mingw.link.dll gcc.compile.c.pch gcc.compile.c++.pch
+  ;
 
 generators.override intel-darwin.prebuilt : builtin.lib-generator ;
 generators.override intel-darwin.prebuilt : builtin.prebuilt ;

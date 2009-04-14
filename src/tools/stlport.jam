@@ -142,7 +142,14 @@ class stlport-target-class : basic-target
                 name += _static ;
             }
 
-            name += .$(self.version.5) ;
+            # Starting with version 5.2.0, the STLport static libraries no longer
+            #  include a version number in their name
+            local version.pre.5.2 = [ MATCH "^(5[.][01]+).*" : $(version) ] ;
+            if $(version.pre.5.2) || [ feature.get-values <runtime-link> : $(raw) ] != "static" 
+            {
+                name += .$(self.version.5) ;
+            }
+			
             name = $(name:J=) ;
             
             if [ feature.get-values <install-dependencies> : $(raw) ] = "on"

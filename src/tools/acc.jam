@@ -63,6 +63,9 @@ flags acc LINKFLAGS <debug-symbols>off : -s ;
 flags acc CFLAGS <profiling>on : -pg ;
 flags acc LINKFLAGS <profiling>on : -pg ;
 
+flags acc CFLAGS <address-model>64 : +DD64 ;
+flags acc LINKFLAGS <address-model>64 : +DD64 ;
+
 flags acc CFLAGS <cflags> ;
 flags acc C++FLAGS <cxxflags> ;
 flags acc DEFINES <define> ;

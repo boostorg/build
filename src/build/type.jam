@@ -117,7 +117,7 @@ rule register-suffixes ( suffixes + : type )
         {
             .type.$(s) = $(type) ;
         }
-        else if $(.type.$(s)) != type
+        else if $(.type.$(s)) != $(type)
         {
             errors.error Attempting to specify multiple types for suffix
                 \"$(s)\" : "Old type $(.type.$(s)), New type $(type)" ;
