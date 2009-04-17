@@ -5,7 +5,7 @@ local dll-suffix = so ;
 local prefix = "" ;
 if [ modules.peek : OS ] in CYGWIN NT
 {
-   if $toolset = gcc
+   if [ MATCH ^(gcc) : $toolset ]
    {
       dll-suffix = dll ;
    }
@@ -18,7 +18,7 @@ else
 {
    prefix = "lib" ;      
 }
-if $toolset = darwin
+if [ MATCH ^(darwin) : $toolset ]
 {
    dll-suffix = dylib ;
 }
