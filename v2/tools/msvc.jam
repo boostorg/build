@@ -729,7 +729,10 @@ local rule configure-really ( version ? : options * )
             # MSVC 7.1 compiler even though it thinks it is using the msvc-9.0
             # toolset version.
             command = [ common.get-absolute-tool-path $(command[-1]) ] ;
-
+        }
+        
+        if $(command)
+        {            
             local parent = [ path.make $(command) ] ;
             parent = [ path.parent $(parent) ] ;
             parent = [ path.native $(parent) ] ;
