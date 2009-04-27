@@ -65,6 +65,6 @@ urchinTracker();
 </script>
 EOF`
 echo $x
-perl -pi -e "s|</body>|$x</body>|" `find doc -name '*.html'`
+perl -pi -e "s|</body>|$x</body>|" index.html `find doc -name '*.html'`
 scp -r  doc example boost_build.png *.html hacking.txt vladimir_prus,boost@web.sourceforge.net:/home/groups/b/bo/boost/htdocs/boost-build2
 scp ../userman.pdf vladimir_prus,boost@web.sourceforge.net:/home/groups/b/bo/boost/htdocs/boost-build2/doc
