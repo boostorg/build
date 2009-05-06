@@ -49,17 +49,6 @@ if (BUILD_TESTING)
   endif (TEST_INSTALLED_TREE)
 endif (BUILD_TESTING)
 
-option(BOOST_BUILD_SANITY_TEST
-  "Don't build regular boost libraries, build libraries that test the boost cmake build system itself" OFF)
-
-if(BOOST_BUILD_SANITY_TEST)
-  set(BOOST_LIBS_DIR ${CMAKE_SOURCE_DIR}/tools/build/CMake/sanity)
-  configure_file(${CMAKE_SOURCE_DIR}/libs/CMakeLists.txt ${BOOST_LIBS_DIR}/CMakeLists.txt COPYONLY)
-else(BOOST_BUILD_SANITY_TEST)
-  set(BOOST_LIBS_DIR ${CMAKE_SOURCE_DIR}/libs)
-endif(BOOST_BUILD_SANITY_TEST)
-
-
 #-------------------------------------------------------------------------------
 # This macro adds additional include directories based on the dependencies of 
 # the library being tested 'libname' and all of its dependencies.
