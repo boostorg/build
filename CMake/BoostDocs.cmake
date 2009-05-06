@@ -118,6 +118,9 @@ macro(xsl_transform OUTPUT INPUT)
     elseif(THIS_XSL_MAKE_TARGET)
       add_custom_target(${THIS_XSL_MAKE_TARGET}
         DEPENDS ${THIS_XSL_OUTPUT_FILE})
+      set_target_properties(${THIS_XSL_MAKE_TARGET}
+	PROPERTIES
+	EXCLUDE_FROM_ALL ON)
     endif()
   endif()
 endmacro(xsl_transform)
@@ -319,9 +322,14 @@ macro(boost_add_documentation SOURCE)
         PARAMETERS admon.graphics.path=images
                    navig.graphics.path=images
                    boost.image.src=boost.png
-        COMMENT "Generating HTML documentation for Boost.${PROJECT_NAME}..."
+        COMMENT "Generating HTML documentaiton for Boost.${PROJECT_NAME}..."
         MAKE_TARGET ${PROJECT_NAME}-html)
 
+      add_custom_command(TARGET ${PROJECT_NAME}-html
+	POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/doc/src/boostbook.css ${CMAKE_CURRENT_BINARY_DIR}/html
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/boost.png ${CMAKE_CURRENT_BINARY_DIR}/html
+	)
       # Install generated documentation
       install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html 
         DESTINATION share/boost-${BOOST_VERSION}
@@ -338,7 +346,7 @@ macro(boost_add_documentation SOURCE)
         CATALOG ${CMAKE_BINARY_DIR}/catalog.xml
         DIRECTORY man.manifest
         COMMENT "Generating man pages for Boost.${PROJECT_NAME}..."
-        MAKE_ALL_TARGET ${PROJECT_NAME}-man)
+        MAKE_TARGET ${PROJECT_NAME}-man)
 
       # Install man pages
       install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/man
@@ -501,12 +509,18 @@ if (BUILD_DOCUMENTATION)
   set(BUILD_DOCUMENTATION_OKAY TRUE)
   if (NOT XSLTPROC)
     set(BUILD_DOCUMENTATION_OKAY FALSE)
+    message(STATUS "Docs build disabled due to missing xsltproc")
   elseif (NOT DOXYGEN)
     set(BUILD_DOCUMENTATION_OKAY FALSE)
+    message(STATUS "Docs build disabled due to missing doxygen")
   elseif (NOT DOCBOOK_DTD_DIR)
     set(BUILD_DOCUMENTATION_OKAY FALSE)
+    message(STATUS "Docs build disabled due to missing docbook dtd dir")
+    message(STATUS "You can set DOCBOOK_AUTOCONFIG to attempt this automatically.")
   elseif (NOT DOCBOOK_XSL_DIR)
     set(BUILD_DOCUMENTATION_OKAY FALSE)
+    message(STATUS "Docs build disabled due to missing docbook xsl dir")
+    message(STATUS "You can set DOCBOOK_AUTOCONFIG to attempt this automatically.")
   else()
     set(BUILD_DOCUMENTATION_OKAY TRUE)
   endif()
