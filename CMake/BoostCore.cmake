@@ -311,25 +311,14 @@ macro(boost_library_project LIBNAME)
       endforeach(SUBDIR ${THIS_PROJECT_SRCDIRS})
     endif()
 
+    # FIXME: Temporary testing hack
     if(BUILD_TESTING AND THIS_PROJECT_TESTDIRS)
       # Testing is enabled globally and this project has some
       # tests. So, include the tests
-      add_custom_target(${PROJECT_NAME}-test)
-
-      add_dependencies(test ${PROJECT_NAME}-test)
-
-      # the last argument here, the binary directory that the 
-      # logs are in, has to match the binary directory
-      # passed to 'add_subdirectory', in the foreach() just below
-      boost_post_results(${PROJECT_NAME} ${PROJECT_NAME}-test
-                         test
-                         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-test
-                         )
-
       foreach(SUBDIR ${THIS_PROJECT_TESTDIRS})
-        add_subdirectory(${SUBDIR} ${PROJECT_NAME}-test)
+        add_subdirectory(${SUBDIR})
       endforeach()
-    endif(BUILD_TESTING AND THIS_PROJECT_TESTDIRS)
+    endif()
 
     if (BUILD_DOCUMENTATION AND THIS_PROJECT_DOCDIRS)
       foreach(SUBDIR ${THIS_PROJECT_DOCDIRS})
@@ -715,8 +704,6 @@ macro(boost_library_variant LIBNAME)
     # The basic LIBNAME target depends on each of the variants
     add_dependencies(${LIBNAME} ${VARIANT_LIBNAME})
     
-    boost_post_results(${PROJECT_NAME} ${VARIANT_LIBNAME} build ${CMAKE_CURRENT_BINARY_DIR})
-
     # Link against whatever libraries this library depends on
     target_link_libraries(${VARIANT_LIBNAME} ${THIS_VARIANT_LINK_LIBS})
     foreach(dependency ${THIS_LIB_DEPENDS})
