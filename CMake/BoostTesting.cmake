@@ -274,6 +274,11 @@ macro(boost_test_run testname)
         ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/tests/${PROJECT_NAME}/${testname}
         ${BOOST_TEST_ARGS})
 
+      set_tests_properties(${BOOST_TEST_TESTNAME}
+        PROPERTIES
+        LABELS "${PROJECT_NAME}"
+        )
+
       if (BOOST_TEST_FAIL)
         set_tests_properties(${BOOST_TEST_TESTNAME} PROPERTIES WILL_FAIL ON)
       endif ()
@@ -339,6 +344,11 @@ macro(boost_test_compile testname)
       "-DCOMPILE_FLAGS:STRING=${BOOST_TEST_COMPILE_FLAGS}"
       )
 
+    set_tests_properties(${BOOST_TEST_TESTNAME}
+      PROPERTIES
+      LABELS "${PROJECT_NAME}"
+      )
+
     if (BOOST_TEST_FAIL)
       set_tests_properties(${BOOST_TEST_TESTNAME} PROPERTIES WILL_FAIL ON)      
     endif ()
@@ -375,6 +385,11 @@ macro(boost_test_link testname)
       "-DSOURCE:STRING=${CMAKE_CURRENT_SOURCE_DIR}/${BOOST_TEST_SOURCES}"
       "-DINCLUDES:STRING=${BOOST_TEST_INCLUDES}"
       "-DCOMPILE_FLAGS:STRING=${BOOST_TEST_COMPILE_FLAGS}"
+      )
+
+    set_tests_properties(${BOOST_TEST_TESTNAME}
+      PROPERTIES
+      LABELS "${PROJECT_NAME}"
       )
 
     if (BOOST_TEST_FAIL)

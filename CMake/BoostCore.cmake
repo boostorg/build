@@ -311,7 +311,6 @@ macro(boost_library_project LIBNAME)
       endforeach(SUBDIR ${THIS_PROJECT_SRCDIRS})
     endif()
 
-    # FIXME: Temporary testing hack
     if(BUILD_TESTING AND THIS_PROJECT_TESTDIRS)
       # Testing is enabled globally and this project has some
       # tests. So, include the tests
@@ -672,6 +671,7 @@ macro(boost_library_variant LIBNAME)
         CLEAN_DIRECT_OUTPUT 1
         COMPILE_FLAGS "${THIS_VARIANT_COMPILE_FLAGS}"
         LINK_FLAGS "${THIS_VARIANT_LINK_FLAGS}"
+        LABELS "${PROJECT_NAME}"
         )
     elseif (THIS_LIB_MODULE)
       # Add a module
@@ -684,6 +684,7 @@ macro(boost_library_variant LIBNAME)
         CLEAN_DIRECT_OUTPUT 1
         COMPILE_FLAGS "${THIS_VARIANT_COMPILE_FLAGS}"
         LINK_FLAGS "${THIS_VARIANT_LINK_FLAGS}"
+        LABELS "${PROJECT_NAME}"
        # SOVERSION "${BOOST_VERSION}"
         )
     else (THIS_LIB_IS_STATIC)
@@ -697,6 +698,7 @@ macro(boost_library_variant LIBNAME)
         CLEAN_DIRECT_OUTPUT 1
         COMPILE_FLAGS "${THIS_VARIANT_COMPILE_FLAGS}"
         LINK_FLAGS "${THIS_VARIANT_LINK_FLAGS}"
+        LABELS "${PROJECT_NAME}"
         # SOVERSION "${BOOST_VERSION}"
         )
     endif (THIS_LIB_IS_STATIC)
@@ -1340,6 +1342,7 @@ macro(boost_add_executable EXENAME)
       PROPERTIES
       COMPILE_FLAGS "${THIS_EXE_COMPILE_FLAGS}"
       LINK_FLAGS "${THIS_EXE_LINK_FLAGS}"
+      LABELS "${PROJECT_NAME}"
       )
 
     # For IDE generators where we can build both debug and release
