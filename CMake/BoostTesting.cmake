@@ -43,6 +43,9 @@ if (BUILD_TESTING)
   enable_testing()
 
   option(TEST_INSTALLED_TREE "Enable testing of an already-installed tree" OFF)
+
+  set(BOOST_TEST_LIBRARIES ""
+    CACHE STRING "Semicolon-separated list of Boost libraries to test")
   
   if (TEST_INSTALLED_TREE)
     include("${CMAKE_INSTALL_PREFIX}/lib/Boost${BOOST_VERSION}/boost-targets.cmake")

@@ -313,7 +313,20 @@ macro(boost_library_project LIBNAME)
 
     if(BUILD_TESTING AND THIS_PROJECT_TESTDIRS)
       # Testing is enabled globally and this project has some
-      # tests. So, include the tests
+      # tests. Check whether we should include these tests.
+      if (BOOST_TEST_LIBRARIES)
+        set(SAVED_TESTDIRS ${THIS_PROJECT_TESTDIRS})
+        set(THIS_PROJECT_TESTDIRS)
+        foreach (TESTLIB ${BOOST_TEST_LIBRARIES})
+          if (${TESTLIB} STREQUAL ${libname})
+            # We are allowed to test this library; restore the set of
+            # test directories for this library.
+            set(THIS_PROJECT_TESTDIRS ${SAVED_TESTDIRS})
+          endif()
+        endforeach ()
+      endif()
+
+      # Include the test directories.
       foreach(SUBDIR ${THIS_PROJECT_TESTDIRS})
         add_subdirectory(${SUBDIR})
       endforeach()
