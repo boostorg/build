@@ -313,23 +313,24 @@ macro(boost_library_project LIBNAME)
 
     if(BUILD_TESTING AND THIS_PROJECT_TESTDIRS)
       # Testing is enabled globally and this project has some
-      # tests. So, include the tests
-      add_custom_target(${PROJECT_NAME}-test)
+      # tests. Check whether we should include these tests.
+      if (BOOST_TEST_LIBRARIES)
+        set(SAVED_TESTDIRS ${THIS_PROJECT_TESTDIRS})
+        set(THIS_PROJECT_TESTDIRS)
+        foreach (TESTLIB ${BOOST_TEST_LIBRARIES})
+          if (${TESTLIB} STREQUAL ${libname})
+            # We are allowed to test this library; restore the set of
+            # test directories for this library.
+            set(THIS_PROJECT_TESTDIRS ${SAVED_TESTDIRS})
+          endif()
+        endforeach ()
+      endif()
 
-      add_dependencies(test ${PROJECT_NAME}-test)
-
-      # the last argument here, the binary directory that the 
-      # logs are in, has to match the binary directory
-      # passed to 'add_subdirectory', in the foreach() just below
-      boost_post_results(${PROJECT_NAME} ${PROJECT_NAME}-test
-                         test
-                         ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-test
-                         )
-
+      # Include the test directories.
       foreach(SUBDIR ${THIS_PROJECT_TESTDIRS})
-        add_subdirectory(${SUBDIR} ${PROJECT_NAME}-test)
+        add_subdirectory(${SUBDIR})
       endforeach()
-    endif(BUILD_TESTING AND THIS_PROJECT_TESTDIRS)
+    endif()
 
     if (BUILD_DOCUMENTATION AND THIS_PROJECT_DOCDIRS)
       foreach(SUBDIR ${THIS_PROJECT_DOCDIRS})
@@ -647,7 +648,6 @@ macro(boost_library_variant LIBNAME)
   boost_feature_interactions("THIS_VARIANT" ${ARGN})
 
   if (THIS_VARIANT_OKAY)
- 
     # Determine the suffix for this library target
     boost_library_variant_target_name(${ARGN})
     set(VARIANT_LIBNAME "${LIBNAME}${VARIANT_TARGET_NAME}")
@@ -683,6 +683,7 @@ macro(boost_library_variant LIBNAME)
         CLEAN_DIRECT_OUTPUT 1
         COMPILE_FLAGS "${THIS_VARIANT_COMPILE_FLAGS}"
         LINK_FLAGS "${THIS_VARIANT_LINK_FLAGS}"
+        LABELS "${PROJECT_NAME}"
         )
     elseif (THIS_LIB_MODULE)
       # Add a module
@@ -691,10 +692,12 @@ macro(boost_library_variant LIBNAME)
       # Set properties on this library
       set_target_properties(${VARIANT_LIBNAME}
         PROPERTIES
-        OUTPUT_NAME "${LIBNAME}${VARIANT_VERSIONED_NAME}"
+        OUTPUT_NAME ${LIBNAME}
         CLEAN_DIRECT_OUTPUT 1
         COMPILE_FLAGS "${THIS_VARIANT_COMPILE_FLAGS}"
         LINK_FLAGS "${THIS_VARIANT_LINK_FLAGS}"
+        LABELS "${PROJECT_NAME}"
+        PREFIX ""
        # SOVERSION "${BOOST_VERSION}"
         )
     else (THIS_LIB_IS_STATIC)
@@ -708,6 +711,7 @@ macro(boost_library_variant LIBNAME)
         CLEAN_DIRECT_OUTPUT 1
         COMPILE_FLAGS "${THIS_VARIANT_COMPILE_FLAGS}"
         LINK_FLAGS "${THIS_VARIANT_LINK_FLAGS}"
+        LABELS "${PROJECT_NAME}"
         # SOVERSION "${BOOST_VERSION}"
         )
     endif (THIS_LIB_IS_STATIC)
@@ -715,8 +719,6 @@ macro(boost_library_variant LIBNAME)
     # The basic LIBNAME target depends on each of the variants
     add_dependencies(${LIBNAME} ${VARIANT_LIBNAME})
     
-    boost_post_results(${PROJECT_NAME} ${VARIANT_LIBNAME} build ${CMAKE_CURRENT_BINARY_DIR})
-
     # Link against whatever libraries this library depends on
     target_link_libraries(${VARIANT_LIBNAME} ${THIS_VARIANT_LINK_LIBS})
     foreach(dependency ${THIS_LIB_DEPENDS})
@@ -764,7 +766,7 @@ macro(boost_library_variant LIBNAME)
           DEPENDS ${THIS_LIB_COMPONENT_DEPENDS})
       endif ()
     endif(NOT THIS_LIB_NO_INSTALL)
-  endif (THIS_VARIANT_OKAY)
+  endif ()
 endmacro(boost_library_variant)
 
 # Updates the set of default build variants to account for variations
@@ -816,13 +818,13 @@ endmacro(boost_library_variant)
 #
 #   BOOST_ADDLIB_OPTION_NAMES:
 #     Like BOOST_ADD_ARG_NAMES, this variable describes
-#     feature-specific options to boost_library that can be used to
+#     feature-specific options to boost_add_library that can be used to
 #     turn off building of the library when the variant would require
 #     certain features. For example, the NO_SINGLE_THREADED option
 #     turns off building of single-threaded variants for a library.
 #
 #   BOOST_ADDEXE_OPTION_NAMES:
-#     Like BOOST_ADDLIB_OPTION_NAMES, execept that that variable 
+#     Like BOOST_ADDLIB_OPTION_NAMES, except that that variable 
 #     describes options to boost_add_executable that can be used to
 #     describe which features are needed to build the executable.
 #     For example, the MULTI_THREADED option requires that the 
@@ -910,6 +912,116 @@ macro(boost_add_extra_variant)
   endforeach(FEATURE ${ARGN})  
   list(APPEND BOOST_FEATURES ${BOOST_EXTVAR_FEATURES})
 endmacro(boost_add_extra_variant)
+
+# Compute the variant that will be used to build this executable or
+# module, taking into account both the requested features passed to
+# boost_add_executable or boost_add_library and what options the user
+# has set.
+macro(boost_select_variant NAME PREFIX)
+  set(${PREFIX}_DEBUG_AND_RELEASE FALSE)
+  set(SELECT_VARIANT_OKAY TRUE)
+  set(${PREFIX}_VARIANT)
+
+  foreach(FEATURESET_STR ${BOOST_FEATURES})
+    string(REPLACE ":" ";" FEATURESET ${FEATURESET_STR})
+    separate_arguments(FEATURESET)
+    set(${PREFIX}_REQUESTED_FROM_SET FALSE)
+    foreach (FEATURE ${FEATURESET})
+      if (${PREFIX}_${FEATURE})
+        # Make this feature part of the variant
+        list(APPEND ${PREFIX}_VARIANT ${FEATURE})
+        set(${PREFIX}_REQUESTED_FROM_SET TRUE)
+
+        # The caller has requested this particular feature be used
+        # when building the executable or module. If we can't satisfy
+        # that request (because the user has turned off the build
+        # variants with that feature), then we won't build this
+        # executable or module.
+        if (NOT BUILD_${FEATURE})
+          set(SELECT_VARIANT_OKAY FALSE)
+          message(STATUS "* ${NAME} is NOT being built because BUILD_${FEATURE} is FALSE")
+        endif (NOT BUILD_${FEATURE})
+      endif (${PREFIX}_${FEATURE})
+    endforeach (FEATURE ${FEATURESET})
+
+    if (NOT ${PREFIX}_REQUESTED_FROM_SET)
+      # The caller did not specify which feature value to use from
+      # this set, so find the first feature value that actually works.
+      set(${PREFIX}_FOUND_FEATURE FALSE)
+
+      # If this feature set decides between Release and Debug, we
+      # either query CMAKE_BUILD_TYPE to determine which to use (for
+      # makefile targets) or handle both variants separately (for IDE
+      # targets). We only build both variants separately for executable targets.
+      if (FEATURESET_STR STREQUAL "RELEASE:DEBUG")
+        if (CMAKE_CONFIGURATION_TYPES)
+          # IDE target: can we build both debug and release?
+          if (BUILD_DEBUG AND BUILD_RELEASE)
+            if (${PREFIX} STREQUAL "THIS_EXE")
+              # Remember that we're capable of building both configurations
+              set(${PREFIX}_DEBUG_AND_RELEASE TRUE)
+
+              # Don't add RELEASE or DEBUG to the variant (yet)
+              set(${PREFIX}_FOUND_FEATURE TRUE)
+            endif ()
+          endif ()
+        else (CMAKE_CONFIGURATION_TYPES)
+          # Makefile target: CMAKE_BUILD_TYPE tells us which variant to build
+          if (CMAKE_BUILD_TYPE STREQUAL "Release")
+            # Okay, build the release variant
+            list(APPEND ${PREFIX}_VARIANT RELEASE)
+            set(${PREFIX}_FOUND_FEATURE TRUE)
+          elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
+            # Okay, build the debug variant
+            list(APPEND ${PREFIX}_VARIANT DEBUG)
+            set(${PREFIX}_FOUND_FEATURE TRUE)
+          endif (CMAKE_BUILD_TYPE STREQUAL "Release")
+        endif (CMAKE_CONFIGURATION_TYPES)
+      endif (FEATURESET_STR STREQUAL "RELEASE:DEBUG")
+
+      # Search through all of the features in the set to find one that works
+      foreach (FEATURE ${FEATURESET})
+        # We only care about the first feature value we find...
+        if (NOT ${PREFIX}_FOUND_FEATURE)
+          # Are we allowed to build this feature?
+          if (BUILD_${FEATURE})
+            # Found it: we're done
+            list(APPEND ${PREFIX}_VARIANT ${FEATURE})
+            set(${PREFIX}_FOUND_FEATURE TRUE)
+          endif (BUILD_${FEATURE})
+        endif (NOT ${PREFIX}_FOUND_FEATURE)
+      endforeach (FEATURE ${FEATURESET})
+
+      if (NOT ${PREFIX}_FOUND_FEATURE)
+        # All of the features in this set were turned off. 
+        # Just don't build anything.
+        set(SELECT_VARIANT_OKAY FALSE)
+      endif (NOT ${PREFIX}_FOUND_FEATURE)
+    endif (NOT ${PREFIX}_REQUESTED_FROM_SET)
+  endforeach(FEATURESET_STR ${BOOST_FEATURES})
+  
+  # Propagate flags from each of the features
+  if (SELECT_VARIANT_OKAY)
+    foreach (FEATURE ${${PREFIX}_VARIANT})
+      # Add all of the flags for this feature
+      set(${PREFIX}_COMPILE_FLAGS 
+          "${${PREFIX}_COMPILE_FLAGS} ${${PREFIX}_${FEATURE}_COMPILE_FLAGS} ${${FEATURE}_COMPILE_FLAGS}")
+      set(${PREFIX}_LINK_FLAGS 
+          "${${PREFIX}_LINK_FLAGS} ${${PREFIX}_${FEATURE}_LINK_FLAGS} ${${FEATURE}_LINK_FLAGS}")
+      if (${PREFIX} STREQUAL "THIS_EXE")
+        set(${PREFIX}_LINK_FLAGS 
+          "${${PREFIX}_LINK_FLAGS} ${${FEATURE}_EXE_LINK_FLAGS}")
+      endif()
+      set(${PREFIX}_LINK_LIBS 
+          ${${PREFIX}_LINK_LIBS} ${${PREFIX}_${FEATURE}_LINK_LIBS} ${${FEATURE}_LINK_LIBS})
+    endforeach (FEATURE ${${PREFIX}_VARIANT})
+
+    # Handle feature interactions
+    boost_feature_interactions("${PREFIX}" ${${PREFIX}_VARIANT})
+  else ()
+    set(${PREFIX}_VARIANT)
+  endif ()
+endmacro(boost_select_variant)
 
 # Creates a new Boost library target that generates a compiled library
 # (.a, .lib, .dll, .so, etc) from source files. This routine will
@@ -1087,9 +1199,31 @@ macro(boost_add_library LIBNAME)
   if (THIS_LIB_FORCE_VARIANTS)
     set(BUILD_${THIS_LIB_FORCE_VARIANTS} ${BUILD_${THIS_LIB_FORCE_VARIANTS}_PREV} )
    # message(STATUS "* ^^ BUILD_${THIS_LIB_FORCE_VARIANTS}  ${BUILD_${THIS_LIB_FORCE_VARIANTS}}")
-  endif (THIS_LIB_FORCE_VARIANTS)
-  
+  endif (THIS_LIB_FORCE_VARIANTS)  
 endmacro(boost_add_library)
+
+# Like boost_add_library, but builds a single library variant
+# FIXME: I'm not sure if I like this or not. Document it if it survives.
+macro(boost_add_single_library LIBNAME)
+  parse_arguments(THIS_LIB
+    "DEPENDS;COMPILE_FLAGS;LINK_FLAGS;LINK_LIBS;${BOOST_ADD_ARG_NAMES}"
+    "NO_INSTALL;MODULE;${BOOST_ADDEXE_OPTION_NAMES}"
+    ${ARGN}
+    )
+  set(THIS_LIB_SOURCES ${THIS_LIB_DEFAULT_ARGS})
+
+  string(TOUPPER "${LIBNAME}_COMPILED_LIB" compiled_lib) 
+  set (${compiled_lib} TRUE CACHE INTERNAL "")
+
+  if (NOT TEST_INSTALLED_TREE)
+    boost_select_variant(${LIBNAME} THIS_LIB)
+    if (THIS_LIB_VARIANT)
+      add_custom_target(${LIBNAME})
+      separate_arguments(THIS_LIB_VARIANT)
+      boost_library_variant(${LIBNAME} ${THIS_LIB_VARIANT})
+    endif ()
+  endif (NOT TEST_INSTALLED_TREE)
+endmacro(boost_add_single_library)
 
 # Creates a new executable from source files.
 #
@@ -1201,101 +1335,13 @@ macro(boost_add_executable EXENAME)
   # Compute the variant that will be used to build this executable,
   # taking into account both the requested features passed to
   # boost_add_executable and what options the user has set.
-  set(THIS_EXE_OKAY TRUE)
-  set(THIS_EXE_VARIANT)
+  boost_select_variant(${EXENAME} THIS_EXE)
 
-  foreach(FEATURESET_STR ${BOOST_FEATURES})
-    string(REPLACE ":" ";" FEATURESET ${FEATURESET_STR})
-    separate_arguments(FEATURESET)
-    set(THIS_EXE_REQUESTED_FROM_SET FALSE)
-    foreach (FEATURE ${FEATURESET})
-      if (THIS_EXE_${FEATURE})
-        # Make this feature part of the variant
-        list(APPEND THIS_EXE_VARIANT ${FEATURE})
-        set(THIS_EXE_REQUESTED_FROM_SET TRUE)
+  set(THIS_EXE_OKAY FALSE)
+  if (THIS_EXE_VARIANT)
+    # It's okay to build this executable
+    set(THIS_EXE_OKAY TRUE)
 
-        # The caller has requested this particular feature be used
-        # when building the executable. If we can't satisfy that
-        # request (because the user has turned off the build variants
-        # with that feature), then we won't build this executable.
-        if (NOT BUILD_${FEATURE})
-          set(THIS_EXE_OKAY FALSE)
-          message(STATUS "* ${EXENAME} is NOT being built because BUILD_${FEATURE} is FALSE")
-        endif (NOT BUILD_${FEATURE})
-      endif (THIS_EXE_${FEATURE})
-    endforeach (FEATURE ${FEATURESET})
-
-    if (NOT THIS_EXE_REQUESTED_FROM_SET)
-      # The caller did not specify which feature value to use from
-      # this set, so find the first feature value that actually works.
-      set(THIS_EXE_FOUND_FEATURE FALSE)
-
-      # If this feature set decides between Release and Debug, we
-      # either query CMAKE_BUILD_TYPE to determine which to use (for
-      # makefile targets) or handle both variants separately (for IDE
-      # targets).
-      if (FEATURESET_STR STREQUAL "RELEASE:DEBUG")
-        if (CMAKE_CONFIGURATION_TYPES)
-          # IDE target: can we build both debug and release?
-          if (BUILD_DEBUG AND BUILD_RELEASE)
-            # Remember that we're capable of building both configurations
-            set(THIS_EXE_DEBUG_AND_RELEASE TRUE)
-
-            # Don't add RELEASE or DEBUG to the variant (yet)
-            set(THIS_EXE_FOUND_FEATURE TRUE)
-          endif (BUILD_DEBUG AND BUILD_RELEASE)
-        else (CMAKE_CONFIGURATION_TYPES)
-          # Makefile target: CMAKE_BUILD_TYPE tells us which variant to build
-          if (CMAKE_BUILD_TYPE STREQUAL "Release")
-            # Okay, build the release variant
-            list(APPEND THIS_EXE_VARIANT RELEASE)
-            set(THIS_EXE_FOUND_FEATURE TRUE)
-          elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
-            # Okay, build the debug variant
-            list(APPEND THIS_EXE_VARIANT DEBUG)
-            set(THIS_EXE_FOUND_FEATURE TRUE)
-          endif (CMAKE_BUILD_TYPE STREQUAL "Release")
-        endif (CMAKE_CONFIGURATION_TYPES)
-      endif (FEATURESET_STR STREQUAL "RELEASE:DEBUG")
-
-      # Search through all of the features in the set to find one that works
-      foreach (FEATURE ${FEATURESET})
-        # We only care about the first feature value we find...
-        if (NOT THIS_EXE_FOUND_FEATURE)
-          # Are we allowed to build this feature?
-          if (BUILD_${FEATURE})
-            # Found it: we're done
-            list(APPEND THIS_EXE_VARIANT ${FEATURE})
-            set(THIS_EXE_FOUND_FEATURE TRUE)
-          endif (BUILD_${FEATURE})
-        endif (NOT THIS_EXE_FOUND_FEATURE)
-      endforeach (FEATURE ${FEATURESET})
-
-      if (NOT THIS_EXE_FOUND_FEATURE)
-        # All of the features in this set were turned off. 
-        # Just don't build anything.
-        set(THIS_EXE_OKAY FALSE)
-      endif (NOT THIS_EXE_FOUND_FEATURE)
-    endif (NOT THIS_EXE_REQUESTED_FROM_SET)
-  endforeach(FEATURESET_STR ${BOOST_FEATURES})
-  
-  # Propagate flags from each of the features
-  if (THIS_EXE_OKAY)
-    foreach (FEATURE ${THIS_EXE_VARIANT})
-      # Add all of the flags for this feature
-      set(THIS_EXE_COMPILE_FLAGS 
-          "${THIS_EXE_COMPILE_FLAGS} ${THIS_EXE_${FEATURE}_COMPILE_FLAGS} ${${FEATURE}_COMPILE_FLAGS}")
-      set(THIS_EXE_LINK_FLAGS 
-          "${THIS_EXE_LINK_FLAGS} ${THIS_EXE_${FEATURE}_LINK_FLAGS} ${${FEATURE}_LINK_FLAGS} ${${FEATURE}_EXE_LINK_FLAGS}")
-      set(THIS_EXE_LINK_LIBS 
-          ${THIS_EXE_LINK_LIBS} ${THIS_EXE_${FEATURE}_LINK_LIBS} ${${FEATURE}_LINK_LIBS})
-    endforeach (FEATURE ${THIS_EXE_VARIANT})
-
-    # Handle feature interactions
-    boost_feature_interactions("THIS_EXE" ${THIS_EXE_VARIANT})
-  endif (THIS_EXE_OKAY)
-
-  if (THIS_EXE_OKAY)
     # Compute the name of the variant targets that we'll be linking
     # against. We'll use this to link against the appropriate
     # dependencies. For IDE targets where we can build both debug and
@@ -1353,6 +1399,7 @@ macro(boost_add_executable EXENAME)
       PROPERTIES
       COMPILE_FLAGS "${THIS_EXE_COMPILE_FLAGS}"
       LINK_FLAGS "${THIS_EXE_LINK_FLAGS}"
+      LABELS "${PROJECT_NAME}"
       )
 
     # For IDE generators where we can build both debug and release
@@ -1399,5 +1446,5 @@ macro(boost_add_executable EXENAME)
     if (NOT THIS_EXE_NO_INSTALL)
       install(TARGETS ${THIS_EXE_NAME} DESTINATION bin)
     endif (NOT THIS_EXE_NO_INSTALL)
-  endif (THIS_EXE_OKAY)
+  endif ()
 endmacro(boost_add_executable)
