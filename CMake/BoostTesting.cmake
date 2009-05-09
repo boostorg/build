@@ -336,8 +336,8 @@ macro(boost_test_compile testname)
     add_test(${BOOST_TEST_TESTNAME}
       ${CMAKE_CTEST_COMMAND}
       --build-and-test
-      ${Boost_SOURCE_DIR}/tools/Build/CMake/CompileTest
-      ${Boost_BINARY_DIR}/tools/Build/CMake/CompileTest
+      ${Boost_SOURCE_DIR}/tools/build/CMake/CompileTest
+      ${Boost_BINARY_DIR}/tools/build/CMake/CompileTest
       --build-generator ${CMAKE_GENERATOR}
       --build-makeprogram ${CMAKE_MAKE_PROGRAM}
       --build-project CompileTest
