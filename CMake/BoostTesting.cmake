@@ -282,6 +282,10 @@ macro(boost_test_run testname)
         LABELS "${PROJECT_NAME}"
         )
 
+      # Make sure that the -test target that corresponds to this
+      # library or tool depends on this test executable.
+      add_dependencies(${PROJECT_NAME}-test ${THIS_EXE_NAME})
+
       if (BOOST_TEST_FAIL)
         set_tests_properties(${BOOST_TEST_TESTNAME} PROPERTIES WILL_FAIL ON)
       endif ()
@@ -377,6 +381,15 @@ endmacro(boost_test_compile_fail)
 macro(boost_test_link testname)
   boost_test_parse_args(${testname} ${ARGN} LINK)
   if(BOOST_TEST_OKAY)
+    # Determine the include directories to pass along to the underlying
+    # project.
+    # works but not great
+    get_directory_property(BOOST_TEST_INCLUDE_DIRS INCLUDE_DIRECTORIES)
+    set(BOOST_TEST_INCLUDES "")
+    foreach(DIR ${BOOST_TEST_INCLUDE_DIRS})
+      set(BOOST_TEST_INCLUDES "${BOOST_TEST_INCLUDES};${DIR}")
+    endforeach(DIR ${BOOST_TEST_INCLUDE_DIRS})
+
     add_test(${BOOST_TEST_TESTNAME}
       ${CMAKE_CTEST_COMMAND}
       --build-and-test
@@ -385,6 +398,7 @@ macro(boost_test_link testname)
       --build-generator ${CMAKE_GENERATOR}
       --build-makeprogram ${CMAKE_MAKE_PROGRAM}
       --build-project LinkTest
+      --build-options 
       "-DSOURCE:STRING=${CMAKE_CURRENT_SOURCE_DIR}/${BOOST_TEST_SOURCES}"
       "-DINCLUDES:STRING=${BOOST_TEST_INCLUDES}"
       "-DCOMPILE_FLAGS:STRING=${BOOST_TEST_COMPILE_FLAGS}"

@@ -326,6 +326,14 @@ macro(boost_library_project LIBNAME)
         endforeach ()
       endif()
 
+      # Create a target <library name>-test, which will run all of
+      # this library's tests.
+      if (THIS_PROJECT_TESTDIRS)
+        add_custom_target(${PROJECT_NAME}-test
+          COMMAND ${CMAKE_CTEST_COMMAND} -R "^${PROJECT_NAME}-*"
+          MESSAGE "Running tests for Boost.${PROJECT_NAME}...")
+      endif ()
+
       # Include the test directories.
       foreach(SUBDIR ${THIS_PROJECT_TESTDIRS})
         add_subdirectory(${SUBDIR})
@@ -1156,9 +1164,6 @@ macro(boost_add_library LIBNAME)
     )
   set(THIS_LIB_SOURCES ${THIS_LIB_DEFAULT_ARGS})
 
-  string(TOUPPER "${LIBNAME}_COMPILED_LIB" compiled_lib) 
-  set (${compiled_lib} TRUE CACHE INTERNAL "")
-
   if (NOT TEST_INSTALLED_TREE)
     # A top-level target that refers to all of the variants of the
     # library, collectively.
@@ -1211,9 +1216,6 @@ macro(boost_add_single_library LIBNAME)
     ${ARGN}
     )
   set(THIS_LIB_SOURCES ${THIS_LIB_DEFAULT_ARGS})
-
-  string(TOUPPER "${LIBNAME}_COMPILED_LIB" compiled_lib) 
-  set (${compiled_lib} TRUE CACHE INTERNAL "")
 
   if (NOT TEST_INSTALLED_TREE)
     boost_select_variant(${LIBNAME} THIS_LIB)
@@ -1382,11 +1384,6 @@ macro(boost_add_executable EXENAME)
     endforeach(LIB ${THIS_EXE_DEPENDS})
 
     # Build the executable
-    # TODO: the use of ${PROJECT_NAME}/${EXENAME} is a bit strange.
-    # It's designed to keep the names of regression tests from one library
-    # separate from the regression tests of another library, but this can
-    # be handled better with OUTPUT_NAME. This would also allow us to eliminate
-    # the directory-creation logic in boost_library_project.
     if (THIS_PROJECT_IS_TOOL)
       set(THIS_EXE_NAME ${EXENAME})
     else()
