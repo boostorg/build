@@ -181,7 +181,8 @@ macro(boost_library_project LIBNAME)
         endif (THIS_PROJECT_DESCRIPTION)
       
         # Create a component group for this library
-        cpack_add_component_group(${libname}
+        fix_cpack_component_name(CPACK_COMPONENT_GROUP_NAME ${libname})
+        cpack_add_component_group(${CPACK_COMPONENT_GROUP_NAME}
           DISPLAY_NAME "${LIBNAME}"
           DESCRIPTION ${THIS_PROJECT_DESCRIPTION})
       endif ()
@@ -212,9 +213,10 @@ macro(boost_library_project LIBNAME)
         endforeach(DEP)
 
         # Tell CPack about the headers component
+        fix_cpack_component_name(CPACK_COMPONENT_GROUP_NAME ${libname})
         cpack_add_component(${libname}_headers
           DISPLAY_NAME "Header files"
-          GROUP      ${libname}
+          GROUP      ${CPACK_COMPONENT_GROUP_NAME}
           DEPENDS    ${THIS_PROJECT_HEADER_DEPENDS})
       endif ()
     endif ()
@@ -768,9 +770,10 @@ macro(boost_library_variant LIBNAME)
       endforeach(DEP)
       
       if (COMMAND cpack_add_component)
+        fix_cpack_component_name(CPACK_COMPONENT_GROUP_NAME ${libname})
         cpack_add_component(${LIB_COMPONENT}
           DISPLAY_NAME "${VARIANT_DISPLAY_NAME}"
-          GROUP ${libname}
+          GROUP ${CPACK_COMPONENT_GROUP_NAME}
           DEPENDS ${THIS_LIB_COMPONENT_DEPENDS})
       endif ()
     endif(NOT THIS_LIB_NO_INSTALL)
