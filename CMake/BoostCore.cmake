@@ -195,6 +195,7 @@ macro(boost_library_project LIBNAME)
       # Install this module's headers
       install(DIRECTORY include/boost 
         DESTINATION ${BOOST_HEADER_DIR}
+	OPTIONAL
         COMPONENT ${libname}_headers
         PATTERN "CVS" EXCLUDE
         PATTERN ".svn" EXCLUDE)
