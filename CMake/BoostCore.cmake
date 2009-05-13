@@ -192,10 +192,18 @@ macro(boost_library_project LIBNAME)
       # Add this module's include directory
       include_directories("${Boost_SOURCE_DIR}/libs/${libname}/include")
      
+      #
+      # Horrible hackery.  Make install of headers from modularized directories
+      # OPTIONAL, which only works on cmake >= 2.7
+      # 
+      if (${CMAKE_MAJOR_VERSION} GREATER 1 AND ${CMAKE_MINOR_VERSION} GREATER 6)
+	set(_INSTALL_OPTIONAL "OPTIONAL")
+      endif()
+
       # Install this module's headers
       install(DIRECTORY include/boost 
         DESTINATION ${BOOST_HEADER_DIR}
-	OPTIONAL
+	${_INSTALL_OPTIONAL}
         COMPONENT ${libname}_headers
         PATTERN "CVS" EXCLUDE
         PATTERN ".svn" EXCLUDE)
