@@ -56,7 +56,7 @@ add_custom_target(modularize)
 # therefore, will build and install the library binary.
 #
 # For libraries that have regression tests, and when testing is
-# enabled globally by the BUILD_TESTING option, this macro also
+# enabled globally by the BUILD_REGRESSION_TESTS option, this macro also
 # defines the TEST_BOOST_LIBNAME option (defaults to ON). When ON, the
 # generated makefiles/project files will contain regression tests for
 # this library.
@@ -313,7 +313,7 @@ macro(boost_library_project LIBNAME)
       endforeach(SUBDIR ${THIS_PROJECT_SRCDIRS})
     endif()
 
-    if(BUILD_TESTING AND THIS_PROJECT_TESTDIRS)
+    if(BUILD_REGRESSION_TESTS AND THIS_PROJECT_TESTDIRS)
       # Testing is enabled globally and this project has some
       # tests. Check whether we should include these tests.
       if (BOOST_TEST_LIBRARIES)

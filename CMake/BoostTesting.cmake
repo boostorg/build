@@ -37,10 +37,11 @@
 # want or need to perform regression testing on Boost. The Boost build
 # is significantly faster when we aren't also building regression
 # tests.
-option(BUILD_TESTING "Enable testing" OFF)
+option(BUILD_REGRESSION_TESTS "Enable regression testing" OFF)
 
-if (BUILD_TESTING)
+if (BUILD_REGRESSION_TESTS)
   enable_testing()
+  mark_as_advanced(BUILD_TESTING)
 
   option(TEST_INSTALLED_TREE "Enable testing of an already-installed tree" OFF)
 
@@ -50,7 +51,7 @@ if (BUILD_TESTING)
   if (TEST_INSTALLED_TREE)
     include("${CMAKE_INSTALL_PREFIX}/lib/Boost${BOOST_VERSION}/boost-targets.cmake")
   endif (TEST_INSTALLED_TREE)
-endif (BUILD_TESTING)
+endif (BUILD_REGRESSION_TESTS)
 
 #-------------------------------------------------------------------------------
 # This macro adds additional include directories based on the dependencies of 
@@ -203,9 +204,9 @@ macro(boost_test_parse_args testname)
   set(BOOST_TEST_TESTNAME "${PROJECT_NAME}-${testname}")
   #message("testname: ${BOOST_TEST_TESTNAME}")
   # If testing is turned off, this test is not okay
-  if (NOT BUILD_TESTING)
+  if (NOT BUILD_REGRESSION_TESTS)
     set(BOOST_TEST_OKAY FALSE)
-  endif(NOT BUILD_TESTING)
+  endif(NOT BUILD_REGRESSION_TESTS)
 
 endmacro(boost_test_parse_args)
 
