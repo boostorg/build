@@ -41,19 +41,35 @@ if (NOT BOOST_TOOLSET)
   set(BOOST_TOOLSET "unknown")
   if (MSVC60)
     set(BOOST_TOOLSET "vc6")
+    set(BOOST_COMPILER "msvc")
+    set(BOOST_COMPILER_VERSION "6.0")
   elseif(MSVC70)
     set(BOOST_TOOLSET "vc7")
+    set(BOOST_COMPILER "msvc")
+    set(BOOST_COMPILER_VERSION "7.0")
   elseif(MSVC71)
     set(BOOST_TOOLSET "vc71")
+    set(BOOST_COMPILER "msvc")
+    set(BOOST_COMPILER_VERSION "7.1")
   elseif(MSVC80)
     set(BOOST_TOOLSET "vc80")
+    set(BOOST_COMPILER "msvc")
+    set(BOOST_COMPILER_VERSION "8.0")
   elseif(MSVC90)
     set(BOOST_TOOLSET "vc90")
+    set(BOOST_COMPILER "msvc")
+    set(BOOST_COMPILER_VERSION "9.0")
   elseif(MSVC)
     set(BOOST_TOOLSET "vc")
+    set(BOOST_COMPILER "msvc")
+    set(BOOST_COMPILER_VERSION "unknown")
   elseif(BORLAND)
     set(BOOST_TOOLSET "bcb")
+    set(BOOST_COMPILER "msvc")
+    set(BOOST_COMPILER_VERSION "unknown")
   elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+    set(BOOST_COMPILER "gcc")
+
     # Execute GCC with the -dumpversion option, to give us a version string
     execute_process(
       COMMAND ${CMAKE_CXX_COMPILER} "-dumpversion" 
@@ -61,6 +77,10 @@ if (NOT BOOST_TOOLSET)
     
     # Match only the major and minor versions of the version string
     string(REGEX MATCH "[0-9]+.[0-9]+" GCC_MAJOR_MINOR_VERSION_STRING
+      "${GCC_VERSION_STRING}")
+
+    # Match the full compiler version for the build name
+    string(REGEX MATCH "[0-9]+.[0-9]+.[0-9]+" BOOST_COMPILER_VERSION
       "${GCC_VERSION_STRING}")
     
     # Strip out the period between the major and minor versions
@@ -76,26 +96,45 @@ endif (NOT BOOST_TOOLSET)
 if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
   set(MULTI_THREADED_COMPILE_FLAGS "-pthreads")
   set(MULTI_THREADED_LINK_LIBS rt)
+  set(BOOST_PLATFORM "sunos")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "BeOS")
   # No threading options necessary for BeOS
+  set(BOOST_PLATFORM "beos")
 elseif(CMAKE_SYSTEM_NAME MATCHES ".*BSD")
   set(MULTI_THREADED_COMPILE_FLAGS "-pthread")
   set(MULTI_THREADED_LINK_LIBS pthread)
+  set(BOOST_PLATFORM "bsd")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "DragonFly")
-  # DragonFly is  FreeBSD bariant
+  # DragonFly is a FreeBSD bariant
   set(MULTI_THREADED_COMPILE_FLAGS "-pthread")
+  set(BOOST_PLATFORM "dragonfly")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "IRIX")
   # TODO: GCC on Irix doesn't support multi-threading?
+  set(BOOST_PLATFORM "irix")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "HP-UX")
   # TODO: gcc on HP-UX does not support multi-threading?
+  set(BOOST_PLATFORM "hpux")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   # No threading options necessary for Mac OS X
+  set(BOOST_PLATFORM "macos")
 elseif(UNIX)
   # Assume -pthread and -lrt on all other variants
   set(MULTI_THREADED_COMPILE_FLAGS "-pthread -D_REENTRANT")
   set(MULTI_THREADED_LINK_FLAGS "")  
   set(MULTI_THREADED_LINK_LIBS pthread rt)
-endif(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
+
+  if (MINGW)
+    set(BOOST_PLATFORM "mingw")
+  elseif(CYGWIN)
+    set(BOOST_PLATFORM "cygwin")
+  else()
+    set(BOOST_PLATFORM "unix")
+  endif()
+elseif(WIN32)
+  set(BOOST_PLATFORM "windows")
+else()
+  set(BOOST_PLATFORM "unknown")
+endif()
 
 # Setup DEBUG_COMPILE_FLAGS, RELEASE_COMPILE_FLAGS, DEBUG_LINK_FLAGS and
 # and RELEASE_LINK_FLAGS based on the CMake equivalents
@@ -159,3 +198,6 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "" CACHE INTERNAL "Unused by Boost")
 set(CMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO "" CACHE INTERNAL "Unused by Boost")
 set(CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO "" CACHE INTERNAL "Unused by Boost")
 set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "" CACHE INTERNAL "Unused by Boost")
+
+# Set the build name 
+set(BUILDNAME "${BOOST_COMPILER}-${BOOST_COMPILER_VERSION}-${BOOST_PLATFORM}")
