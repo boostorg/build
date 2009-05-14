@@ -674,15 +674,6 @@ macro(boost_library_variant LIBNAME)
     # We handle static vs. dynamic libraries differently
     list_contains(THIS_LIB_IS_STATIC "STATIC" ${ARGN})
     if (THIS_LIB_IS_STATIC)
-      # If the STATIC_TAG flag was set, we append "-s" to the name of
-      # the library. This is an unfortunate hack, needed only for the
-      # test library.
-      if (THIS_LIB_STATIC_TAG)
-        set(THIS_LIB_STATIC_TAG "-s")
-      else(THIS_LIB_STATIC_TAG)
-        set(THIS_LIB_STATIC_TAG "")
-      endif(THIS_LIB_STATIC_TAG)
-      
       # On Windows, we need static and shared libraries to have
       # different names, so we follow the Boost.Build version 2 style
       # and prepend "lib" to the name.
@@ -698,7 +689,7 @@ macro(boost_library_variant LIBNAME)
       # Set properties on this library
       set_target_properties(${VARIANT_LIBNAME}
         PROPERTIES
-        OUTPUT_NAME "${LIBPREFIX}${LIBNAME}${VARIANT_VERSIONED_NAME}${THIS_LIB_STATIC_TAG}"
+        OUTPUT_NAME "${LIBPREFIX}${LIBNAME}${VARIANT_VERSIONED_NAME}"
         CLEAN_DIRECT_OUTPUT 1
         COMPILE_FLAGS "${THIS_VARIANT_COMPILE_FLAGS}"
         LINK_FLAGS "${THIS_VARIANT_LINK_FLAGS}"
@@ -1058,7 +1049,6 @@ endmacro(boost_select_variant)
 #                     [LINK_LIBS linklibs]
 #                     [feature_LINK_LIBS linklibs]
 #                     [DEPENDS libdepend1 libdepend2 ...]
-#                     [STATIC_TAG]
 #                     [MODULE]
 #                     [NOT_feature]
 #                     [EXTRA_VARIANTS variant1 variant2 ...]
@@ -1127,16 +1117,6 @@ endmacro(boost_select_variant)
 #   boost_python, multi-threaded variants of boost_mpi_python will
 #   link against multi-threaded variants of boost_python.
 #
-#   STATIC_TAG: States that the name of static library variants on
-#   Unix need to be named differently from shared library
-#   variants. This particular option should only be used in rare cases
-#   where the static and shared library variants are incompatible,
-#   such that linking against the shared library rather than the
-#   static library will cause features. When this option is provided,
-#   static libraries on Unix variants will have "-s" appended to their
-#   names. Note: we hope that this is a temporary solution. At
-#   present, it is only used by the Test library.
-#
 #   MODULE: This option states that, when building a shared library,
 #   the shared library should be built as a module rather than a
 #   normal shared library. Modules have special meaning an behavior on
@@ -1171,7 +1151,7 @@ endmacro(boost_select_variant)
 macro(boost_add_library LIBNAME)
   parse_arguments(THIS_LIB
     "DEPENDS;COMPILE_FLAGS;LINK_FLAGS;LINK_LIBS;EXTRA_VARIANTS;FORCE_VARIANTS;${BOOST_ADD_ARG_NAMES}"
-    "STATIC_TAG;MODULE;NO_INSTALL;${BOOST_ADDLIB_OPTION_NAMES}"
+    "MODULE;NO_INSTALL;${BOOST_ADDLIB_OPTION_NAMES}"
     ${ARGN}
     )
   set(THIS_LIB_SOURCES ${THIS_LIB_DEFAULT_ARGS})
