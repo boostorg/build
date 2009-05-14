@@ -89,6 +89,14 @@ if (NOT BOOST_TOOLSET)
     
     # Set the GCC versioning toolset
     set(BOOST_TOOLSET "gcc${BOOST_VERSIONING_GCC_VERSION}")
+  elseif(CMAKE_CXX_COMPILER MATCHES "/icpc$" OR CMAKE_CXX_COMPILER MATCHES "/icpc.exe$")
+    set(BOOST_TOOLSET "intel")
+    set(BOOST_COMPILER "intel")
+    execute_process(
+      COMMAND ${CMAKE_CXX_COMPILER} "-dumpversion"
+      OUTPUT_VARIABLE INTEL_VERSION_STRING
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(BOOST_COMPILER_VERSION ${INTEL_VERSION_STRING})
   endif(MSVC60)
 endif (NOT BOOST_TOOLSET)
 
