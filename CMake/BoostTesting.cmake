@@ -434,20 +434,3 @@ macro(boost_test_link testname)
   endif(BOOST_TEST_OKAY)
 endmacro(boost_test_link)
 
-if(SLAVE_DIR)
-  message(STATUS "")
-  message(STATUS "Configuring slave scripts")
-  message(STATUS "To SLAVE_DIR = ${SLAVE_DIR}")
-  message(STATUS "")
-
-  foreach(slavefile
-      Experimental
-      Continuous
-      Nightly
-      )
-    configure_file(tools/build/CMake/slaves/${slavefile}.cmake.in 
-      ${SLAVE_DIR}/${slavefile}.cmake
-      ESCAPE_QUOTES
-      @ONLY)
-  endforeach()
-endif()
