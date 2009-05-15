@@ -632,7 +632,7 @@ endmacro(boost_feature_interactions)
 #
 # If any of the features listed conflict with this library, no new
 # targets will be built. For example, if the library provides the
-# option NOT_MULTI_THREADED, and one of the features provided is
+# option NO_MULTI_THREADED, and one of the features provided is
 # MULTI_THREADED, this macro will essentially be a no-op.
 macro(boost_library_variant LIBNAME)
   set(THIS_VARIANT_COMPILE_FLAGS "${THIS_LIB_COMPILE_FLAGS}")
@@ -1050,7 +1050,7 @@ endmacro(boost_select_variant)
 #                     [feature_LINK_LIBS linklibs]
 #                     [DEPENDS libdepend1 libdepend2 ...]
 #                     [MODULE]
-#                     [NOT_feature]
+#                     [NO_feature]
 #                     [EXTRA_VARIANTS variant1 variant2 ...]
 #                     [FORCE_VARIANTS variant1])
 #
