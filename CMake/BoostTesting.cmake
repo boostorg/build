@@ -122,9 +122,9 @@ macro(boost_additional_test_dependencies libname)
     endwhile()
   endforeach()
   
-    foreach (include ${THIS_TEST_DEPENDS_ALL})
-        include_directories("${Boost_SOURCE_DIR}/libs/${include}/include")
-    endforeach (include ${includes})
+  foreach (include ${THIS_TEST_DEPENDS_ALL})
+    include_directories("${Boost_SOURCE_DIR}/libs/${include}/include")
+  endforeach (include ${includes})
   
 endmacro(boost_additional_test_dependencies libname)
 #-------------------------------------------------------------------------------
@@ -141,6 +141,7 @@ endmacro(boost_additional_test_dependencies libname)
 #                         [LINK_FLAGS linkflags]
 #                         [LINK_LIBS linklibs]
 #                         [DEPENDS libdepend1 libdepend2 ...]
+#                         [KNOWN_FAILURES string1 string2 ...]
 #                         [COMPILE] [RUN] [FAIL])
 #
 # testname is the name of the test. The remaining arguments passed to
@@ -170,7 +171,7 @@ macro(boost_test_parse_args testname)
   set(BOOST_TEST_OKAY TRUE)
   set(BOOST_TEST_COMPILE_FLAGS "")
   parse_arguments(BOOST_TEST 
-    "BOOST_LIB;LINK_LIBS;LINK_FLAGS;DEPENDS;COMPILE_FLAGS;ARGS;EXTRA_OPTIONS"
+    "BOOST_LIB;LINK_LIBS;LINK_FLAGS;DEPENDS;COMPILE_FLAGS;ARGS;EXTRA_OPTIONS;KNOWN_FAILURES"
     "COMPILE;RUN;LINK;FAIL;RELEASE;DEBUG"
     ${ARGN}
     )
@@ -207,8 +208,20 @@ macro(boost_test_parse_args testname)
   if (NOT BUILD_REGRESSION_TESTS)
     set(BOOST_TEST_OKAY FALSE)
   endif(NOT BUILD_REGRESSION_TESTS)
-
 endmacro(boost_test_parse_args)
+
+# This macro attaches a the "known-failure" label to the given test
+# target if the build name matches any of the declared, known
+# failures.
+macro(boost_test_known_failures TEST)
+  foreach(PATTERN ${ARGN})
+    if (${BUILDNAME} MATCHES ${PATTERN})
+      set_tests_properties("${PROJECT_NAME}-${TEST}"
+        PROPERTIES LABELS "${PROJECT_NAME};known-failure")
+    endif()
+  endforeach()
+endmacro(boost_test_known_failures)
+
 
 # This macro creates a Boost regression test that will be executed. If
 # the test can be built, executed, and exits with a return code of
@@ -282,6 +295,7 @@ macro(boost_test_run testname)
         PROPERTIES
         LABELS "${PROJECT_NAME}"
         )
+      boost_test_known_failures(${testname} ${BOOST_TEST_KNOWN_FAILURES})
 
       # Make sure that the -test target that corresponds to this
       # library or tool depends on this test executable.
@@ -357,6 +371,8 @@ macro(boost_test_compile testname)
       LABELS "${PROJECT_NAME}"
       )
 
+    boost_test_known_failures(${testname} ${BOOST_TEST_KNOWN_FAILURES})
+
     if (BOOST_TEST_FAIL)
       set_tests_properties(${BOOST_TEST_TESTNAME} PROPERTIES WILL_FAIL ON)      
     endif ()
@@ -409,6 +425,8 @@ macro(boost_test_link testname)
       PROPERTIES
       LABELS "${PROJECT_NAME}"
       )
+
+    boost_test_known_failures(${testname} ${BOOST_TEST_KNOWN_FAILURES})
 
     if (BOOST_TEST_FAIL)
       set_tests_properties(${BOOST_TEST_TESTNAME} PROPERTIES WILL_FAIL ON)      
