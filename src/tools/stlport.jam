@@ -279,7 +279,7 @@ local .version-subfeature-defined ;
 # Initialize stlport support.
 rule init (
     version ? :
-    headers         # Location of header files
+    headers   :     # Location of header files
     libraries *     # Location of libraries, lib and bin subdirs of STLport.
     )
 {
