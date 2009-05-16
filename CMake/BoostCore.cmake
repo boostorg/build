@@ -1,8 +1,8 @@
 ##########################################################################
 # Core Functionality for Boost                                           #
 ##########################################################################
-# Copyright (C) 2007-2008 Douglas Gregor <doug.gregor@gmail.com>         #
-# Copyright (C) 2007 Troy Straszheim                                     #
+# Copyright (C) 2007-2009 Douglas Gregor <doug.gregor@gmail.com>         #
+# Copyright (C) 2007-2009 Troy Straszheim <troy@resophonic.com>          #
 #                                                                        #
 # Distributed under the Boost Software License, Version 1.0.             #
 # See accompanying file LICENSE_1_0.txt or copy at                       #
