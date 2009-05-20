@@ -51,6 +51,9 @@ if (BUILD_REGRESSION_TESTS)
   if (TEST_INSTALLED_TREE)
     include("${CMAKE_INSTALL_PREFIX}/lib/Boost${BOOST_VERSION}/boost-targets.cmake")
   endif (TEST_INSTALLED_TREE)
+
+  set(DART_TESTING_TIMEOUT=15 CACHE INTEGER "Timeout after this much madness")
+
 endif (BUILD_REGRESSION_TESTS)
 
 #-------------------------------------------------------------------------------
