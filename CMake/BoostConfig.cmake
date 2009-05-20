@@ -31,10 +31,7 @@ include(CheckCXXSourceCompiles)
 #  Python interpreter
 #
 include(FindPythonInterp)
-message(STATUS "found python executable  ${PYTHON_EXECUTABLE}")
 include(FindPythonLibs)
-message(STATUS "found python includes    ${PYTHON_INCLUDE_PATH}")
-message(STATUS "found python libs        ${PYTHON_LIBRARIES}")
 
 # Toolset detection.
 if (NOT BOOST_TOOLSET)
@@ -92,6 +89,7 @@ if (NOT BOOST_TOOLSET)
   elseif(CMAKE_CXX_COMPILER MATCHES "/icpc$" OR CMAKE_CXX_COMPILER MATCHES "/icpc.exe$")
     set(BOOST_TOOLSET "intel")
     set(BOOST_COMPILER "intel")
+    set(CMAKE_COMPILER_IS_INTEL ON)
     execute_process(
       COMMAND ${CMAKE_CXX_COMPILER} "-dumpversion"
       OUTPUT_VARIABLE INTEL_VERSION_STRING
@@ -99,6 +97,12 @@ if (NOT BOOST_TOOLSET)
     set(BOOST_COMPILER_VERSION ${INTEL_VERSION_STRING})
   endif(MSVC60)
 endif (NOT BOOST_TOOLSET)
+
+message(STATUS "Boost compiler: ${BOOST_COMPILER}")
+message(STATUS "Boost toolset:  ${BOOST_TOOLSET}")
+
+# create cache entry
+set(BOOST_PLATFORM "unknown" CACHE STRING "Boost platform name")
 
 # Multi-threading support
 if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
@@ -145,6 +149,8 @@ elseif(WIN32)
 else()
   set(BOOST_PLATFORM "unknown")
 endif()
+
+message(STATUS "Boost platform: ${BOOST_PLATFORM}")
 
 # Setup DEBUG_COMPILE_FLAGS, RELEASE_COMPILE_FLAGS, DEBUG_LINK_FLAGS and
 # and RELEASE_LINK_FLAGS based on the CMake equivalents
