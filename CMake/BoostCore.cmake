@@ -340,9 +340,12 @@ macro(boost_library_project LIBNAME)
       # Create a target <library name>-test, which will run all of
       # this library's tests.
       if (THIS_PROJECT_TESTDIRS)
+	add_custom_target(${PROJECT_NAME}-test-drivers)
         add_custom_target(${PROJECT_NAME}-test
           COMMAND ${CMAKE_CTEST_COMMAND} -R "^${PROJECT_NAME}-*"
           MESSAGE "Running tests for Boost.${PROJECT_NAME}...")
+	add_dependencies(${PROJECT_NAME}-test
+	  ${PROJECT_NAME}-test-drivers)
       endif ()
 
       # Include the test directories.
