@@ -428,6 +428,8 @@ macro(boost_test_link testname)
       --build-makeprogram ${CMAKE_MAKE_PROGRAM}
       --build-project LinkTest
       --build-options 
+      "-DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}"
+      "-DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}"
       "-DBOOST_EXPORTS_DIR:FILEPATH=${CMAKE_BINARY_DIR}/exports"
       "-DSOURCE:STRING=${CMAKE_CURRENT_SOURCE_DIR}/${BOOST_TEST_SOURCES}"
       "-DINCLUDES:STRING=${BOOST_TEST_INCLUDES}"
