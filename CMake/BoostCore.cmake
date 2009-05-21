@@ -1,8 +1,8 @@
 ##########################################################################
 # Core Functionality for Boost                                           #
 ##########################################################################
-# Copyright (C) 2007-2008 Douglas Gregor <doug.gregor@gmail.com>         #
-# Copyright (C) 2007 Troy Straszheim                                     #
+# Copyright (C) 2007-2009 Douglas Gregor <doug.gregor@gmail.com>         #
+# Copyright (C) 2007-2009 Troy Straszheim <troy@resophonic.com>          #
 #                                                                        #
 # Distributed under the Boost Software License, Version 1.0.             #
 # See accompanying file LICENSE_1_0.txt or copy at                       #
@@ -56,7 +56,7 @@ add_custom_target(modularize)
 # therefore, will build and install the library binary.
 #
 # For libraries that have regression tests, and when testing is
-# enabled globally by the BUILD_TESTING option, this macro also
+# enabled globally by the BUILD_REGRESSION_TESTS option, this macro also
 # defines the TEST_BOOST_LIBNAME option (defaults to ON). When ON, the
 # generated makefiles/project files will contain regression tests for
 # this library.
@@ -181,7 +181,8 @@ macro(boost_library_project LIBNAME)
         endif (THIS_PROJECT_DESCRIPTION)
       
         # Create a component group for this library
-        cpack_add_component_group(${libname}
+        fix_cpack_component_name(CPACK_COMPONENT_GROUP_NAME ${libname})
+        cpack_add_component_group(${CPACK_COMPONENT_GROUP_NAME}
           DISPLAY_NAME "${LIBNAME}"
           DESCRIPTION ${THIS_PROJECT_DESCRIPTION})
       endif ()
@@ -191,9 +192,18 @@ macro(boost_library_project LIBNAME)
       # Add this module's include directory
       include_directories("${Boost_SOURCE_DIR}/libs/${libname}/include")
      
+      #
+      # Horrible hackery.  Make install of headers from modularized directories
+      # OPTIONAL, which only works on cmake >= 2.7
+      # 
+      if (${CMAKE_MAJOR_VERSION} GREATER 1 AND ${CMAKE_MINOR_VERSION} GREATER 6)
+	set(_INSTALL_OPTIONAL "OPTIONAL")
+      endif()
+
       # Install this module's headers
       install(DIRECTORY include/boost 
         DESTINATION ${BOOST_HEADER_DIR}
+	${_INSTALL_OPTIONAL}
         COMPONENT ${libname}_headers
         PATTERN "CVS" EXCLUDE
         PATTERN ".svn" EXCLUDE)
@@ -212,9 +222,10 @@ macro(boost_library_project LIBNAME)
         endforeach(DEP)
 
         # Tell CPack about the headers component
+        fix_cpack_component_name(CPACK_COMPONENT_GROUP_NAME ${libname})
         cpack_add_component(${libname}_headers
           DISPLAY_NAME "Header files"
-          GROUP      ${libname}
+          GROUP      ${CPACK_COMPONENT_GROUP_NAME}
           DEPENDS    ${THIS_PROJECT_HEADER_DEPENDS})
       endif ()
     endif ()
@@ -311,7 +322,7 @@ macro(boost_library_project LIBNAME)
       endforeach(SUBDIR ${THIS_PROJECT_SRCDIRS})
     endif()
 
-    if(BUILD_TESTING AND THIS_PROJECT_TESTDIRS)
+    if(BUILD_REGRESSION_TESTS AND THIS_PROJECT_TESTDIRS)
       # Testing is enabled globally and this project has some
       # tests. Check whether we should include these tests.
       if (BOOST_TEST_LIBRARIES)
@@ -325,6 +336,14 @@ macro(boost_library_project LIBNAME)
           endif()
         endforeach ()
       endif()
+
+      # Create a target <library name>-test, which will run all of
+      # this library's tests.
+      if (THIS_PROJECT_TESTDIRS)
+        add_custom_target(${PROJECT_NAME}-test
+          COMMAND ${CMAKE_CTEST_COMMAND} -R "^${PROJECT_NAME}-*"
+          MESSAGE "Running tests for Boost.${PROJECT_NAME}...")
+      endif ()
 
       # Include the test directories.
       foreach(SUBDIR ${THIS_PROJECT_TESTDIRS})
@@ -613,7 +632,7 @@ endmacro(boost_feature_interactions)
 #
 # If any of the features listed conflict with this library, no new
 # targets will be built. For example, if the library provides the
-# option NOT_MULTI_THREADED, and one of the features provided is
+# option NO_MULTI_THREADED, and one of the features provided is
 # MULTI_THREADED, this macro will essentially be a no-op.
 macro(boost_library_variant LIBNAME)
   set(THIS_VARIANT_COMPILE_FLAGS "${THIS_LIB_COMPILE_FLAGS}")
@@ -655,15 +674,6 @@ macro(boost_library_variant LIBNAME)
     # We handle static vs. dynamic libraries differently
     list_contains(THIS_LIB_IS_STATIC "STATIC" ${ARGN})
     if (THIS_LIB_IS_STATIC)
-      # If the STATIC_TAG flag was set, we append "-s" to the name of
-      # the library. This is an unfortunate hack, needed only for the
-      # test library.
-      if (THIS_LIB_STATIC_TAG)
-        set(THIS_LIB_STATIC_TAG "-s")
-      else(THIS_LIB_STATIC_TAG)
-        set(THIS_LIB_STATIC_TAG "")
-      endif(THIS_LIB_STATIC_TAG)
-      
       # On Windows, we need static and shared libraries to have
       # different names, so we follow the Boost.Build version 2 style
       # and prepend "lib" to the name.
@@ -679,7 +689,7 @@ macro(boost_library_variant LIBNAME)
       # Set properties on this library
       set_target_properties(${VARIANT_LIBNAME}
         PROPERTIES
-        OUTPUT_NAME "${LIBPREFIX}${LIBNAME}${VARIANT_VERSIONED_NAME}${THIS_LIB_STATIC_TAG}"
+        OUTPUT_NAME "${LIBPREFIX}${LIBNAME}${VARIANT_VERSIONED_NAME}"
         CLEAN_DIRECT_OUTPUT 1
         COMPILE_FLAGS "${THIS_VARIANT_COMPILE_FLAGS}"
         LINK_FLAGS "${THIS_VARIANT_LINK_FLAGS}"
@@ -718,7 +728,9 @@ macro(boost_library_variant LIBNAME)
       
     # The basic LIBNAME target depends on each of the variants
     add_dependencies(${LIBNAME} ${VARIANT_LIBNAME})
-    
+
+    export(TARGETS ${VARIANT_LIBNAME} FILE ${CMAKE_BINARY_DIR}/exports/${VARIANT_LIBNAME}.cmake)
+
     # Link against whatever libraries this library depends on
     target_link_libraries(${VARIANT_LIBNAME} ${THIS_VARIANT_LINK_LIBS})
     foreach(dependency ${THIS_LIB_DEPENDS})
@@ -760,9 +772,10 @@ macro(boost_library_variant LIBNAME)
       endforeach(DEP)
       
       if (COMMAND cpack_add_component)
+        fix_cpack_component_name(CPACK_COMPONENT_GROUP_NAME ${libname})
         cpack_add_component(${LIB_COMPONENT}
           DISPLAY_NAME "${VARIANT_DISPLAY_NAME}"
-          GROUP ${libname}
+          GROUP ${CPACK_COMPONENT_GROUP_NAME}
           DEPENDS ${THIS_LIB_COMPONENT_DEPENDS})
       endif ()
     endif(NOT THIS_LIB_NO_INSTALL)
@@ -1038,9 +1051,8 @@ endmacro(boost_select_variant)
 #                     [LINK_LIBS linklibs]
 #                     [feature_LINK_LIBS linklibs]
 #                     [DEPENDS libdepend1 libdepend2 ...]
-#                     [STATIC_TAG]
 #                     [MODULE]
-#                     [NOT_feature]
+#                     [NO_feature]
 #                     [EXTRA_VARIANTS variant1 variant2 ...]
 #                     [FORCE_VARIANTS variant1])
 #
@@ -1107,16 +1119,6 @@ endmacro(boost_select_variant)
 #   boost_python, multi-threaded variants of boost_mpi_python will
 #   link against multi-threaded variants of boost_python.
 #
-#   STATIC_TAG: States that the name of static library variants on
-#   Unix need to be named differently from shared library
-#   variants. This particular option should only be used in rare cases
-#   where the static and shared library variants are incompatible,
-#   such that linking against the shared library rather than the
-#   static library will cause features. When this option is provided,
-#   static libraries on Unix variants will have "-s" appended to their
-#   names. Note: we hope that this is a temporary solution. At
-#   present, it is only used by the Test library.
-#
 #   MODULE: This option states that, when building a shared library,
 #   the shared library should be built as a module rather than a
 #   normal shared library. Modules have special meaning an behavior on
@@ -1151,13 +1153,10 @@ endmacro(boost_select_variant)
 macro(boost_add_library LIBNAME)
   parse_arguments(THIS_LIB
     "DEPENDS;COMPILE_FLAGS;LINK_FLAGS;LINK_LIBS;EXTRA_VARIANTS;FORCE_VARIANTS;${BOOST_ADD_ARG_NAMES}"
-    "STATIC_TAG;MODULE;NO_INSTALL;${BOOST_ADDLIB_OPTION_NAMES}"
+    "MODULE;NO_INSTALL;${BOOST_ADDLIB_OPTION_NAMES}"
     ${ARGN}
     )
   set(THIS_LIB_SOURCES ${THIS_LIB_DEFAULT_ARGS})
-
-  string(TOUPPER "${LIBNAME}_COMPILED_LIB" compiled_lib) 
-  set (${compiled_lib} TRUE CACHE INTERNAL "")
 
   if (NOT TEST_INSTALLED_TREE)
     # A top-level target that refers to all of the variants of the
@@ -1211,9 +1210,6 @@ macro(boost_add_single_library LIBNAME)
     ${ARGN}
     )
   set(THIS_LIB_SOURCES ${THIS_LIB_DEFAULT_ARGS})
-
-  string(TOUPPER "${LIBNAME}_COMPILED_LIB" compiled_lib) 
-  set (${compiled_lib} TRUE CACHE INTERNAL "")
 
   if (NOT TEST_INSTALLED_TREE)
     boost_select_variant(${LIBNAME} THIS_LIB)
@@ -1382,11 +1378,6 @@ macro(boost_add_executable EXENAME)
     endforeach(LIB ${THIS_EXE_DEPENDS})
 
     # Build the executable
-    # TODO: the use of ${PROJECT_NAME}/${EXENAME} is a bit strange.
-    # It's designed to keep the names of regression tests from one library
-    # separate from the regression tests of another library, but this can
-    # be handled better with OUTPUT_NAME. This would also allow us to eliminate
-    # the directory-creation logic in boost_library_project.
     if (THIS_PROJECT_IS_TOOL)
       set(THIS_EXE_NAME ${EXENAME})
     else()

@@ -211,3 +211,17 @@ function(topological_sort LIST PREFIX SUFFIX)
 
   set(${LIST} ${${LIST}} PARENT_SCOPE)
 endfunction(topological_sort)
+
+# Small little hack that tweaks a component name (as used for CPack)
+# to make sure to avoid certain names that cause problems. Sets the
+# variable named varname to the "sanitized" name.
+#
+# FIXME: This is a complete hack. We probably need to fix the CPack
+# generators (NSIS in particular) to get rid of the need for this.
+macro(fix_cpack_component_name varname name)
+  if (${name} STREQUAL "foreach")
+    set(${varname} "boost_foreach")
+  else()
+    set(${varname} ${name})
+  endif()
+endmacro()

@@ -118,6 +118,9 @@ macro(xsl_transform OUTPUT INPUT)
     elseif(THIS_XSL_MAKE_TARGET)
       add_custom_target(${THIS_XSL_MAKE_TARGET}
         DEPENDS ${THIS_XSL_OUTPUT_FILE})
+      set_target_properties(${THIS_XSL_MAKE_TARGET}
+	PROPERTIES
+	EXCLUDE_FROM_ALL ON)
     endif()
   endif()
 endmacro(xsl_transform)
@@ -166,20 +169,12 @@ macro(doxygen_to_boostbook OUTPUT)
     file(APPEND ${DOXYFILE} "${PARAM}\n")
   endforeach(PARAM)
 
-  set(THIS_DOXY_MODULAR_HEADER_PATH ${CMAKE_SOURCE_DIR}/libs/${libname}/include)
+  set(THIS_DOXY_HEADER_PATH ${CMAKE_SOURCE_DIR}/libs/${libname}/include)
 
   set(THIS_DOXY_HEADER_LIST "")
   set(THIS_DOXY_HEADERS)
   foreach(HDR ${THIS_DOXY_DEFAULT_ARGS})
-    if(EXISTS ${CMAKE_SOURCE_DIR}/${HDR})
-      list(APPEND THIS_DOXY_HEADERS ${CMAKE_SOURCE_DIR}/${HDR})
-    elseif(EXISTS ${THIS_DOXY_MODULAR_HEADER_PATH}/${HDR})
-      list(APPEND THIS_DOXY_HEADERS ${THIS_DOXY_MODULAR_HEADER_PATH}/${HDR})
-    else(EXISTS ${CMAKE_SOURCE_DIR}/${HDR})
-      message("Warning: Attempting to generate doxygen to boostbook target for header ${HDR},")  
-      message("         which was not found in the main source directory or in a modularized location")
-    endif(EXISTS ${CMAKE_SOURCE_DIR}/${HDR})
-
+    list(APPEND THIS_DOXY_HEADERS ${THIS_DOXY_HEADER_PATH}/${HDR})
     set(THIS_DOXY_HEADER_LIST 
       "${THIS_DOXY_HEADER_LIST} ${THIS_DOXY_HEADER_PATH}/${HDR}")
   endforeach(HDR)
@@ -286,17 +281,22 @@ macro(boost_add_documentation SOURCE)
   get_filename_component(THIS_DOC_EXT ${SOURCE} EXT)
   string(TOUPPER ${THIS_DOC_EXT} THIS_DOC_EXT)
   if (THIS_DOC_EXT STREQUAL ".QBK")
-    # Transform Quickbook into BoostBook XML
-    get_filename_component(SOURCE_FILENAME ${SOURCE} NAME_WE)
-    set(BOOSTBOOK_FILE ${SOURCE_FILENAME}.xml)
-    add_custom_command(OUTPUT ${BOOSTBOOK_FILE}
-      COMMAND quickbook "--output-file=${BOOSTBOOK_FILE}"
-      ${THIS_DOC_SOURCE_PATH} 
-      DEPENDS ${THIS_DOC_SOURCE_PATH} ${THIS_DOC_DEFAULT_ARGS}
-      COMMENT "Generating BoostBook documentation for Boost.${PROJECT_NAME}...")
+    if (BUILD_QUICKBOOK)
+      # Transform Quickbook into BoostBook XML
+      get_filename_component(SOURCE_FILENAME ${SOURCE} NAME_WE)
+      set(BOOSTBOOK_FILE ${SOURCE_FILENAME}.xml)
+      add_custom_command(OUTPUT ${BOOSTBOOK_FILE}
+        COMMAND quickbook "--output-file=${BOOSTBOOK_FILE}"
+        ${THIS_DOC_SOURCE_PATH} 
+        DEPENDS ${THIS_DOC_SOURCE_PATH} ${THIS_DOC_DEFAULT_ARGS}
+        COMMENT "Generating BoostBook documentation for Boost.${PROJECT_NAME}...")
 
-    # Transform BoostBook into other formats
-    boost_add_documentation(${CMAKE_CURRENT_BINARY_DIR}/${BOOSTBOOK_FILE})
+      # Transform BoostBook into other formats
+      boost_add_documentation(${CMAKE_CURRENT_BINARY_DIR}/${BOOSTBOOK_FILE})
+    else()
+      message(SEND_ERROR 
+        "Quickbook is required to build Boost documentation.\nQuickbook can be built by enabling the BUILD_QUICKBOOK.")
+    endif()
   elseif (THIS_DOC_EXT STREQUAL ".XML")
     # Transform BoostBook XML into DocBook XML
     get_filename_component(SOURCE_FILENAME ${SOURCE} NAME_WE)
@@ -319,25 +319,17 @@ macro(boost_add_documentation SOURCE)
         STYLESHEET ${BOOSTBOOK_XSL_DIR}/html.xsl
         CATALOG ${CMAKE_BINARY_DIR}/catalog.xml
         DIRECTORY HTML.manifest
-        PARAMETERS admon.graphics.path=images/
-                   navig.graphics.path=images/
+        PARAMETERS admon.graphics.path=images
+                   navig.graphics.path=images
                    boost.image.src=boost.png
-        COMMENT "Generating HTML documentation for Boost.${PROJECT_NAME}..."
+        COMMENT "Generating HTML documentaiton for Boost.${PROJECT_NAME}..."
         MAKE_TARGET ${PROJECT_NAME}-html)
-      add_dependencies(html ${PROJECT_NAME}-html)
 
-      #
-      #  Install associated stuff
-      #
       add_custom_command(TARGET ${PROJECT_NAME}-html
 	POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/doc/src/boostbook.css ${CMAKE_CURRENT_BINARY_DIR}/html/boostbook.css
-	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/doc/src/docutils.css ${CMAKE_CURRENT_BINARY_DIR}/html/docutils.css
-	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/doc/src/reference.css ${CMAKE_CURRENT_BINARY_DIR}/html/reference.css
-	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/boost.png ${CMAKE_CURRENT_BINARY_DIR}/html/boost.png
-	COMMENT "Copying in associated stuff, boostbook.css and boost.png"
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/doc/src/boostbook.css ${CMAKE_CURRENT_BINARY_DIR}/html
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/boost.png ${CMAKE_CURRENT_BINARY_DIR}/html
 	)
-
       # Install generated documentation
       install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html 
         DESTINATION share/boost-${BOOST_VERSION}
@@ -354,8 +346,7 @@ macro(boost_add_documentation SOURCE)
         CATALOG ${CMAKE_BINARY_DIR}/catalog.xml
         DIRECTORY man.manifest
         COMMENT "Generating man pages for Boost.${PROJECT_NAME}..."
-        MAKE_ALL_TARGET ${PROJECT_NAME}-manpages)
-      add_dependencies(manpages ${PROJECT_NAME}-manpages)
+        MAKE_TARGET ${PROJECT_NAME}-man)
 
       # Install man pages
       install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/man
@@ -456,9 +447,6 @@ set(WANT_DOCBOOK_XSL_VERSION 1.73.2)
 find_program(XSLTPROC xsltproc DOC "xsltproc transforms XML via XSLT")
 set(XSLTPROC_FLAGS "--xinclude" CACHE STRING 
   "Flags to pass to xsltproc to transform XML documents")
-if(NOT XSLTPROC)
-  message(STATUS "xsltproc not found... this will disable build of documentation.")
-endif()
 
 # Find the DocBook DTD (version 4.2)
 find_path(DOCBOOK_DTD_DIR docbookx.dtd
@@ -489,12 +477,8 @@ if (XSLTPROC AND DOXYGEN)
   if (DOCBOOK_DTD_DIR AND DOCBOOK_XSL_DIR)
     # Documentation build options
     option(BUILD_DOCUMENTATION "Whether to build library documentation" ON)
-
     option(BUILD_DOCUMENTATION_HTML "Whether to build HTML documentation" ON)
-    add_custom_target(html)
-
     option(BUILD_DOCUMENTATION_MAN_PAGES "Whether to build Unix man pages" ON)
-    add_custom_target(manpages)
 
     # Generate an XML catalog file.
     configure_file(${CMAKE_SOURCE_DIR}/tools/build/CMake/catalog.xml.in
@@ -520,30 +504,31 @@ if (XSLTPROC AND DOXYGEN)
   endif()
 endif()
 
-set(BUILD_OCUMENTATION_OKAY TRUE)
-if (NOT XSLTPROC)
-  message(STATUS "XSLTPROC not found, disabling build of documentation")
-  set(BUILD_DOCUMENTATION_OKAY FALSE)
-elseif (NOT DOXYGEN)
-  message(STATUS "DOXYGEN not found, disabling build of documentation")
-  set(BUILD_DOCUMENTATION_OKAY FALSE)
-elseif (NOT DOCBOOK_DTD_DIR)
-  message(STATUS "DOCBOOK_DTD_DIR not found, disabling build of documentation")
-  message(STATUS "Set DOCBOOK_AUTOCONFIG to ON to get it automatically")
-  set(BUILD_DOCUMENTATION_OKAY FALSE)
-elseif (NOT DOCBOOK_XSL_DIR)
-  message(STATUS "DOCBOOK_XSL_DIR not found, disabling build of documentation")
-  message(STATUS "Set DOCBOOK_AUTOCONFIG to ON to get it automatically")
-  set(BUILD_DOCUMENTATION_OKAY FALSE)
-else()
-  message(STATUS "Documentation prerequisites found, enabling docs build.")
+# Turn off BUILD_DOCUMENTATION if it isn't going to succeed.
+if (BUILD_DOCUMENTATION)
   set(BUILD_DOCUMENTATION_OKAY TRUE)
-endif()
+  if (NOT XSLTPROC)
+    set(BUILD_DOCUMENTATION_OKAY FALSE)
+    message(STATUS "Docs build disabled due to missing xsltproc")
+  elseif (NOT DOXYGEN)
+    set(BUILD_DOCUMENTATION_OKAY FALSE)
+    message(STATUS "Docs build disabled due to missing doxygen")
+  elseif (NOT DOCBOOK_DTD_DIR)
+    set(BUILD_DOCUMENTATION_OKAY FALSE)
+    message(STATUS "Docs build disabled due to missing docbook dtd dir")
+    message(STATUS "You can set DOCBOOK_AUTOCONFIG to attempt this automatically.")
+  elseif (NOT DOCBOOK_XSL_DIR)
+    set(BUILD_DOCUMENTATION_OKAY FALSE)
+    message(STATUS "Docs build disabled due to missing docbook xsl dir")
+    message(STATUS "You can set DOCBOOK_AUTOCONFIG to attempt this automatically.")
+  else()
+    set(BUILD_DOCUMENTATION_OKAY TRUE)
+  endif()
 
-if (NOT BUILD_DOCUMENTATION_OKAY)
-  if (BUILD_DOCUMENTATION)
-    set(BUILD_DOCUMENTATION OFF CACHE BOOL 
-      "Whether to build library documentation" FORCE)
+  if (NOT BUILD_DOCUMENTATION_OKAY)
+    if (BUILD_DOCUMENTATION)
+      set(BUILD_DOCUMENTATION OFF CACHE BOOL 
+        "Whether to build library documentation" FORCE)
+    endif()
   endif()
 endif()
-

@@ -37,10 +37,11 @@
 # want or need to perform regression testing on Boost. The Boost build
 # is significantly faster when we aren't also building regression
 # tests.
-option(BUILD_TESTING "Enable testing" OFF)
+option(BUILD_REGRESSION_TESTS "Enable regression testing" OFF)
 
-if (BUILD_TESTING)
+if (BUILD_REGRESSION_TESTS)
   enable_testing()
+  mark_as_advanced(BUILD_TESTING)
 
   option(TEST_INSTALLED_TREE "Enable testing of an already-installed tree" OFF)
 
@@ -50,7 +51,10 @@ if (BUILD_TESTING)
   if (TEST_INSTALLED_TREE)
     include("${CMAKE_INSTALL_PREFIX}/lib/Boost${BOOST_VERSION}/boost-targets.cmake")
   endif (TEST_INSTALLED_TREE)
-endif (BUILD_TESTING)
+
+  set(DART_TESTING_TIMEOUT=15 CACHE INTEGER "Timeout after this much madness")
+
+endif (BUILD_REGRESSION_TESTS)
 
 #-------------------------------------------------------------------------------
 # This macro adds additional include directories based on the dependencies of 
@@ -121,9 +125,9 @@ macro(boost_additional_test_dependencies libname)
     endwhile()
   endforeach()
   
-    foreach (include ${THIS_TEST_DEPENDS_ALL})
-        include_directories("${Boost_SOURCE_DIR}/libs/${include}/include")
-    endforeach (include ${includes})
+  foreach (include ${THIS_TEST_DEPENDS_ALL})
+    include_directories("${Boost_SOURCE_DIR}/libs/${include}/include")
+  endforeach (include ${includes})
   
 endmacro(boost_additional_test_dependencies libname)
 #-------------------------------------------------------------------------------
@@ -140,6 +144,7 @@ endmacro(boost_additional_test_dependencies libname)
 #                         [LINK_FLAGS linkflags]
 #                         [LINK_LIBS linklibs]
 #                         [DEPENDS libdepend1 libdepend2 ...]
+#                         [KNOWN_FAILURES string1 string2 ...]
 #                         [COMPILE] [RUN] [FAIL])
 #
 # testname is the name of the test. The remaining arguments passed to
@@ -169,7 +174,7 @@ macro(boost_test_parse_args testname)
   set(BOOST_TEST_OKAY TRUE)
   set(BOOST_TEST_COMPILE_FLAGS "")
   parse_arguments(BOOST_TEST 
-    "BOOST_LIB;LINK_LIBS;LINK_FLAGS;DEPENDS;COMPILE_FLAGS;ARGS;EXTRA_OPTIONS"
+    "BOOST_LIB;LINK_LIBS;LINK_FLAGS;DEPENDS;COMPILE_FLAGS;ARGS;EXTRA_OPTIONS;KNOWN_FAILURES"
     "COMPILE;RUN;LINK;FAIL;RELEASE;DEBUG"
     ${ARGN}
     )
@@ -203,11 +208,23 @@ macro(boost_test_parse_args testname)
   set(BOOST_TEST_TESTNAME "${PROJECT_NAME}-${testname}")
   #message("testname: ${BOOST_TEST_TESTNAME}")
   # If testing is turned off, this test is not okay
-  if (NOT BUILD_TESTING)
+  if (NOT BUILD_REGRESSION_TESTS)
     set(BOOST_TEST_OKAY FALSE)
-  endif(NOT BUILD_TESTING)
-
+  endif(NOT BUILD_REGRESSION_TESTS)
 endmacro(boost_test_parse_args)
+
+# This macro attaches a the "known-failure" label to the given test
+# target if the build name matches any of the declared, known
+# failures.
+macro(boost_test_known_failures TEST)
+  foreach(PATTERN ${ARGN})
+    if (${BUILDNAME} MATCHES ${PATTERN})
+      set_tests_properties("${PROJECT_NAME}-${TEST}"
+        PROPERTIES LABELS "${PROJECT_NAME};known-failure")
+    endif()
+  endforeach()
+endmacro(boost_test_known_failures)
+
 
 # This macro creates a Boost regression test that will be executed. If
 # the test can be built, executed, and exits with a return code of
@@ -281,6 +298,11 @@ macro(boost_test_run testname)
         PROPERTIES
         LABELS "${PROJECT_NAME}"
         )
+      boost_test_known_failures(${testname} ${BOOST_TEST_KNOWN_FAILURES})
+
+      # Make sure that the -test target that corresponds to this
+      # library or tool depends on this test executable.
+      add_dependencies(${PROJECT_NAME}-test ${THIS_EXE_NAME})
 
       if (BOOST_TEST_FAIL)
         set_tests_properties(${BOOST_TEST_TESTNAME} PROPERTIES WILL_FAIL ON)
@@ -352,6 +374,8 @@ macro(boost_test_compile testname)
       LABELS "${PROJECT_NAME}"
       )
 
+    boost_test_known_failures(${testname} ${BOOST_TEST_KNOWN_FAILURES})
+
     if (BOOST_TEST_FAIL)
       set_tests_properties(${BOOST_TEST_TESTNAME} PROPERTIES WILL_FAIL ON)      
     endif ()
@@ -372,28 +396,54 @@ endmacro(boost_test_compile_fail)
 #
 # boost_test_link:
 #
-# Under construction.
+#
+# Each library "exports" itself to
+# ${CMAKE_BINARY_DIR}/exports/<variantname>.cmake
+#
+# The list of 'depends' for these libraries has to match one of those
+# files, this way the export mechanism works.  The generated
+# cmakelists will include() those exported .cmake files, for each
+# DEPENDS.
+#
 #
 macro(boost_test_link testname)
   boost_test_parse_args(${testname} ${ARGN} LINK)
   if(BOOST_TEST_OKAY)
+    # Determine the include directories to pass along to the underlying
+    # project.
+    # works but not great
+    get_directory_property(BOOST_TEST_INCLUDE_DIRS INCLUDE_DIRECTORIES)
+    set(BOOST_TEST_INCLUDES "")
+    foreach(DIR ${BOOST_TEST_INCLUDE_DIRS})
+      set(BOOST_TEST_INCLUDES "${BOOST_TEST_INCLUDES};${DIR}")
+    endforeach(DIR ${BOOST_TEST_INCLUDE_DIRS})
+
     add_test(${BOOST_TEST_TESTNAME}
       ${CMAKE_CTEST_COMMAND}
+      -VV
       --build-and-test
       ${Boost_SOURCE_DIR}/tools/build/CMake/LinkTest
       ${Boost_BINARY_DIR}/tools/build/CMake/LinkTest
       --build-generator ${CMAKE_GENERATOR}
       --build-makeprogram ${CMAKE_MAKE_PROGRAM}
       --build-project LinkTest
+      --build-options 
+      "-DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}"
+      "-DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}"
+      "-DBOOST_EXPORTS_DIR:FILEPATH=${CMAKE_BINARY_DIR}/exports"
       "-DSOURCE:STRING=${CMAKE_CURRENT_SOURCE_DIR}/${BOOST_TEST_SOURCES}"
       "-DINCLUDES:STRING=${BOOST_TEST_INCLUDES}"
       "-DCOMPILE_FLAGS:STRING=${BOOST_TEST_COMPILE_FLAGS}"
+      "-DLINK_LIBS:STRING=${BOOST_TEST_LINK_LIBS}"
+      "-DDEPENDS:STRING=${BOOST_TEST_DEPENDS}"
       )
 
     set_tests_properties(${BOOST_TEST_TESTNAME}
       PROPERTIES
       LABELS "${PROJECT_NAME}"
       )
+
+    boost_test_known_failures(${testname} ${BOOST_TEST_KNOWN_FAILURES})
 
     if (BOOST_TEST_FAIL)
       set_tests_properties(${BOOST_TEST_TESTNAME} PROPERTIES WILL_FAIL ON)      
