@@ -396,7 +396,15 @@ endmacro(boost_test_compile_fail)
 #
 # boost_test_link:
 #
-# Under construction.
+#
+# Each library "exports" itself to
+# ${CMAKE_BINARY_DIR}/exports/<variantname>.cmake
+#
+# The list of 'depends' for these libraries has to match one of those
+# files, this way the export mechanism works.  The generated
+# cmakelists will include() those exported .cmake files, for each
+# DEPENDS.
+#
 #
 macro(boost_test_link testname)
   boost_test_parse_args(${testname} ${ARGN} LINK)
@@ -410,15 +418,9 @@ macro(boost_test_link testname)
       set(BOOST_TEST_INCLUDES "${BOOST_TEST_INCLUDES};${DIR}")
     endforeach(DIR ${BOOST_TEST_INCLUDE_DIRS})
 
-    set(TARGET_LINK_LIBRARIES_LIST "")
-    foreach(DEP ${BOOST_TEST_DEPENDS})
-      get_target_property(THISONE_LOCATION ${DEP} LOCATION)
-      list(APPEND TARGET_LINK_LIBRARIES_LIST ${THISONE_LOCATION})
-    endforeach()
-
-
     add_test(${BOOST_TEST_TESTNAME}
       ${CMAKE_CTEST_COMMAND}
+      -VV
       --build-and-test
       ${Boost_SOURCE_DIR}/tools/build/CMake/LinkTest
       ${Boost_BINARY_DIR}/tools/build/CMake/LinkTest
@@ -426,11 +428,12 @@ macro(boost_test_link testname)
       --build-makeprogram ${CMAKE_MAKE_PROGRAM}
       --build-project LinkTest
       --build-options 
-      "-DPARENT_BINARY_DIR:FILEPATH=${CMAKE_CACHEFILE_DIR}"
+      "-DBOOST_EXPORTS_DIR:FILEPATH=${CMAKE_BINARY_DIR}/exports"
       "-DSOURCE:STRING=${CMAKE_CURRENT_SOURCE_DIR}/${BOOST_TEST_SOURCES}"
       "-DINCLUDES:STRING=${BOOST_TEST_INCLUDES}"
       "-DCOMPILE_FLAGS:STRING=${BOOST_TEST_COMPILE_FLAGS}"
-      "-DLINK_LIBS:STRING=${BOOST_TEST_LINK_LIBS};${TARGET_LINK_LIBRARIES_LIST}"
+      "-DLINK_LIBS:STRING=${BOOST_TEST_LINK_LIBS}"
+      "-DDEPENDS:STRING=${BOOST_TEST_DEPENDS}"
       )
 
     set_tests_properties(${BOOST_TEST_TESTNAME}

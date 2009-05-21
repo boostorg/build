@@ -728,7 +728,9 @@ macro(boost_library_variant LIBNAME)
       
     # The basic LIBNAME target depends on each of the variants
     add_dependencies(${LIBNAME} ${VARIANT_LIBNAME})
-    
+
+    export(TARGETS ${VARIANT_LIBNAME} FILE ${CMAKE_BINARY_DIR}/exports/${VARIANT_LIBNAME}.cmake)
+
     # Link against whatever libraries this library depends on
     target_link_libraries(${VARIANT_LIBNAME} ${THIS_VARIANT_LINK_LIBS})
     foreach(dependency ${THIS_LIB_DEPENDS})
