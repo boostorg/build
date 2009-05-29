@@ -52,6 +52,10 @@ flags sun.compile OPTIONS <profiling>on : -xprofile=tcov ;
 flags sun.compile OPTIONS <optimization>speed : -xO4  ;
 flags sun.compile OPTIONS <optimization>space : -xO2 -xspace ;
 flags sun.compile OPTIONS <threading>multi : -mt ;
+flags sun.compile OPTIONS <warnings>off : -erroff ;
+flags sun.compile OPTIONS <warnings>on : -erroff=%none ;
+flags sun.compile OPTIONS <warnings>all  : -erroff=%none 
+flags sun.compile OPTIONS <warnings-as-errors>on : -errwarn ;
 
 flags sun.compile.c++ OPTIONS <inlining>off : +d ;
 
