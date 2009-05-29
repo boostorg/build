@@ -846,6 +846,7 @@ local rule toolset-tag ( name : type ? : property-set )
         #case mingw* : tag += mgw ;
         case mipspro* : tag += mp ;
         case msvc* : tag += vc ;
+        case qcc* : tag += qcc ;
         case sun* : tag += sw ;
         case tru64cxx* : tag += tru ;
         case vacpp* : tag += xlc ;
