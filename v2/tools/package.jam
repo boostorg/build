@@ -83,8 +83,26 @@ rule install ( name : requirements * : binaries * : libraries * : headers * )
 
     stage.install $(name)-bin : $(binaries) : $(requirements)
         <location>$(bin-locate) ;
-    stage.install $(name)-lib : $(binaries) $(libraries) : $(requirements)
-        <location>$(lib-locate) <install-dependencies>on <install-type>LIB ;
+    alias $(name)-lib : $(name)-lib-shared $(name)-lib-static ;
+    
+    # Since the install location of shared libraries differs on universe
+    # and cygwin, use target alternatives to make different targets.
+    # We should have used indirection conditioanl requirements, but it's
+    # awkward to pass bin-locate and lib-locate from there to another rule.
+    alias $(name)-lib-shared : $(name)-lib-shared-universe ;
+    alias $(name)-lib-shared : $(name)-lib-shared-cygwin : <target-os>cygwin ;
+    
+    # For shared libraries, we install both explicitly specified one and the
+    # shared libraries that the installed executables depend on.
+    stage.install $(name)-lib-shared-universe : $(binaries) $(libraries) : $(requirements)
+      <location>$(lib-locate) <install-dependencies>on <install-type>SHARED_LIB ;
+    stage.install $(name)-lib-shared-cygwin : $(binaries) $(libraries) : $(requirements)
+      <location>$(bin-locate) <install-dependencies>on <install-type>SHARED_LIB ;
+
+    # For static libraries, we do not care about executable dependencies, since
+    # static libraries are already incorporated into them.
+    stage.install $(name)-lib-static : $(libraries) : $(requirements)
+        <location>$(lib-locate) <install-dependencies>on <install-type>STATIC_LIB ;
     stage.install $(name)-headers : $(headers) : $(requirements)
         <location>$(include-locate)$(install-header-subdir)
         <install-source-root>$(install-source-root) ;
@@ -94,6 +112,7 @@ rule install ( name : requirements * : binaries * : libraries * : headers * )
     local project-module = [ $(c).project-module ] ;
     module $(project-module)
     {
-        explicit $(1)-bin $(1)-lib $(1)-headers $(1) ;
+        explicit $(1)-bin $(1)-lib $(1)-headers $(1) $(1)-lib-shared $(1)-lib-static 
+          $(1)-lib-shared-universe $(1)-lib-shared-cygwin ;
     }
 }
