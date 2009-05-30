@@ -9,7 +9,7 @@ type.register LIB ;
 
 type.set-generated-target-prefix LIB : : "lib" ;
 type.set-generated-target-prefix LIB : <target-os>windows : "" ;
-type.set-generated-target-prefix LIB : <target-os>cygwin : "" ;
+type.set-generated-target-prefix LIB : <target-os>cygwin : "cyg" ;
 
 # FIXME: should not register both extensions on both
 # platforms.
