@@ -542,6 +542,28 @@ generators.register
 generators.override gcc.mingw.link : gcc.link ;
 generators.override gcc.mingw.link.dll : gcc.link.dll ;
 
+# Cygwin is similar to msvc and mingw in that it uses import libraries.
+# While in simple cases, it can directly link to a shared library,
+# it is believed to be slower, and not always possible. Define cygwin-specific
+# generators here.
+
+g = [ new gcc-linking-generator gcc.cygwin.link
+      : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
+      : EXE
+      : <toolset>gcc <target-os>cygwin ] ;
+$(g).set-rule-name gcc.link ;
+generators.register $(g) ;
+
+g = [ new gcc-linking-generator gcc.cygwin.link.dll
+      : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
+      : IMPORT_LIB SHARED_LIB
+      : <toolset>gcc <target-os>cygwin ] ;
+$(g).set-rule-name gcc.link.dll ;
+generators.register $(g) ;
+
+generators.override gcc.cygwin.link : gcc.link ;
+generators.override gcc.cygwin.link.dll : gcc.link.dll ;
+
 # Declare flags for linking.
 # First, the common flags.
 toolset.flags gcc.link OPTIONS <debug-symbols>on : -g ;
@@ -553,6 +575,7 @@ toolset.flags gcc.link FINDLIBS-SA <find-shared-library> ;
 toolset.flags gcc.link LIBRARIES <library-file> ;
 
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>windows : "-Wl,--out-implib," ;
+toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib," ;
 
 # For <runtime-link>static we made sure there are no dynamic libraries in the
 # link. On HP-UX not all system libraries exist as archived libraries (for
