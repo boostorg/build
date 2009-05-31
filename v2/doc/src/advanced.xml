@@ -737,6 +737,17 @@ bjam toolset=gcc variant=debug optimization=space
               </row>
 
               <row>
+                <entry>address-model</entry>
+                
+                <entry>32,64</entry>
+                
+                <entry>Explicitly request either 32-bit or 64-bit code generation. This typically
+                requires that your compiler is appropriately configured. Please refer to
+                <xref linkend="bbv2.reference.tools.compilers"/> and your compiler documentation
+                in case of problems.</entry>
+              </row>
+
+              <row>
                 <entry>toolset</entry>
                 
                 <entry>(Depends on configuration)</entry>
