@@ -30,6 +30,7 @@ import types/register ;
 import utility ;
 import virtual-target ;
 import message ;
+import convert ;
 
 # FIXME: the following generate module import is not needed here but removing it
 # too hastly will break using code (e.g. the main Boost library Jamroot file)
