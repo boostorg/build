@@ -46,7 +46,15 @@
 
 [section:intro Introduction]
 
-Boost.Jam (BJam)  is a build tool based on FTJam, which in turn is based on :Perforce_Jam:. It contains significant improvements made to facilitate its use in the Boost Build System, but should be backward compatible with :Perforce_Jam:.
+[warning Most probably, you are looking for [@http://boost.org/boost-build2/doc/html/index.html Boost.Build
+manual]. This document is not meant to be read standalone and will only
+confuse you. Boost.Build manual refers to specific sections when necessary.]
+
+Boost.Jam (BJam) is the low-level build engine tool for
+[@http://boost.org/boost-build2 Boost.Build]. Historically, Boost.Jam is based
+on on FTJam and on :Perforce_Jam: but has grown a number of significant
+features and is now developed independently, with no merge back expected to
+happen, and little use outside Boost.Build.
 
 This is version :version: of BJam and is based on version 2.4 of Jam/MR:
 
@@ -60,24 +68,6 @@ freely, as long as this copyright notice is retained and modifications
 are clearly marked.
 ALL WARRANTIES ARE HEREBY DISCLAIMED.
 ]
-
-[section:features Features]
-
-Jam is a make(1) replacement that makes building simple things simple and building complicated things manageable. 
-
-Jam's language is expressive, making Jamfiles (c.f. Makefiles) compact.
-
-Jam handles header file dependencies automatically and on-the-fly.
-
-Jam is very portable: it runs on UNIX, VMS, Mac, and NT. Most Jamfiles themselves are portable.
-
-Jam is unintrusive: it is small, it has negligible CPU overhead, and it doesn't create any of its own funny files (c.f. Odin, nmake, SunOS make).
-
-Jam can build large projects spread across many directories in one pass, without recursing, tracking the relationships among all files. Jam can do this with multiple, concurrent processes.
-
-Jam isn't under the blinkin GNU copyright, so you can incorporate it into commercial products.
-
-[endsect]
 
 [endsect]
 
