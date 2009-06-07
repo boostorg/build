@@ -408,6 +408,13 @@ The arguments starting with the "=--option=" forms are passed to the =build.jam=
 
 [section:usage Using BJam]
 
+[warning Most probably, you are looking for 
+[@http://boost.org/boost-build2/doc/html/index.html Boost.Build
+manual] or [@http://www.boost.org/boost-build2/doc/html/bbv2/advanced/invocation.html Boost.Build
+command-line syntax]. This section documents only low-level options used by
+the Boost.Jam build engine, and does not mention any high-level syntax of Boost.Build]
+
+
 If /target/ is provided on the command line, =bjam=  builds /target/; otherwise =bjam= builds the target =all=.
 
 [pre
