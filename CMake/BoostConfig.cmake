@@ -102,7 +102,7 @@ message(STATUS "Boost compiler: ${BOOST_COMPILER}")
 message(STATUS "Boost toolset:  ${BOOST_TOOLSET}")
 
 # create cache entry
-set(BOOST_PLATFORM "unknown" CACHE STRING "Boost platform name")
+set(BOOST_PLATFORM "unknown")
 
 # Multi-threading support
 if(CMAKE_SYSTEM_NAME STREQUAL "SunOS")
@@ -149,6 +149,9 @@ elseif(WIN32)
 else()
   set(BOOST_PLATFORM "unknown")
 endif()
+
+# create cache entry
+set(BOOST_PLATFORM ${BOOST_PLATFORM} CACHE STRING "Boost platform name")
 
 message(STATUS "Boost platform: ${BOOST_PLATFORM}")
 
