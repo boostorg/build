@@ -528,7 +528,7 @@ rule variable-setting-command ( variable : value )
         # sequence that messes up the executed export command which then reports
         # that the passed variable name is incorrect.
         # But we have a check for cygwin in kernel/bootstrap.jam already.
-        return "$(variable)=$(q)$(value)$(nl)export $(variable)$(q)$(nl)" ;
+        return "$(variable)=$(q)$(value)$(q)$(nl)export $(variable)$(nl)" ;
     }
 }
 
