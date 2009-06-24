@@ -751,37 +751,34 @@ actions hard-link
 #
 rule format-name ( format * : name : type ? : property-set )
 {
-    if [ type.is-derived $(type) LIB ]
+    local result = "" ;
+    for local f in $(format)
     {
-        local result = "" ;
-        for local f in $(format)
+        switch $(f:G)
         {
-            switch $(f:G)
-            {
-                case <base> :
+            case <base> :
                 result += $(name:B) ;
-
-                case <toolset> :
+            
+            case <toolset> :
                 result += [ join-tag $(f:G=) : [ toolset-tag $(name) : $(type) :
-                    $(property-set) ] ] ;
-
-                case <threading> :
+                $(property-set) ] ] ;
+            
+            case <threading> :
                 result += [ join-tag $(f:G=) : [ threading-tag $(name) : $(type)
-                    : $(property-set) ] ] ;
-
-                case <runtime> :
+                : $(property-set) ] ] ;
+            
+            case <runtime> :
                 result += [ join-tag $(f:G=) : [ runtime-tag $(name) : $(type) :
-                    $(property-set) ] ] ;
-
-                case <version:*> :
+                $(property-set) ] ] ;
+            
+            case <version:*> :
                 local key = [ MATCH <version:(.*)> : $(f:G) ] ;
                 local version = [ $(property-set).get <$(key)> ] ;
                 version ?= $(key) ;
-                version = [ MATCH "^([^.]+)[.]([^.]+)[.]?([^.]*)" : $(version) ]
-                    ;
+                version = [ MATCH "^([^.]+)[.]([^.]+)[.]?([^.]*)" : $(version) ] ;
                 result += [ join-tag $(f:G=) : $(version[1])_$(version[2]) ] ;
 
-                case <property:*> :
+            case <property:*> :
                 local key = [ MATCH <property:(.*)> : $(f:G) ] ;
                 local p0 = [ MATCH <($(key))> : [ $(property-set).raw ] ] ;
                 if $(p0)
@@ -793,14 +790,13 @@ rule format-name ( format * : name : type ? : property-set )
                     }
                 }
 
-                case * :
+            case * :
                 result += $(f:G=) ;
-            }
         }
-        result = [ virtual-target.add-prefix-and-suffix $(result:J=) : $(type) :
-            $(property-set) ] ;
-        return $(result) ;
     }
+    result = [ virtual-target.add-prefix-and-suffix $(result:J=) : $(type) :
+      $(property-set) ] ;
+    return $(result) ;
 }
 
 
