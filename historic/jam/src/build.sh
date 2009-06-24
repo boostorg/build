@@ -240,7 +240,7 @@ BJAM_SOURCES="\
  hdrmacro.c headers.c jam.c jambase.c jamgram.c lists.c make.c make1.c\
  newstr.c option.c output.c parse.c pathunix.c pathvms.c regexp.c\
  rules.c scan.c search.c subst.c timestamp.c variable.c modules.c\
- strings.c filesys.c builtins.c pwd.c class.c native.c w32_getreg.c\
+ strings.c filesys.c builtins.c pwd.c class.c native.c md5.c w32_getreg.c\
  modules/set.c modules/path.c modules/regex.c modules/property-set.c\
  modules/sequence.c modules/order.c"
 case $BOOST_JAM_TOOLSET in
