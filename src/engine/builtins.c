@@ -24,6 +24,7 @@
 #include "native.h"
 #include "variable.h"
 #include "timestamp.h"
+#include "md5.h"
 #include <ctype.h>
 
 
@@ -340,6 +341,12 @@ void load_builtins()
           duplicate_rule( "SHELL",
             bind_builtin( "COMMAND",
                           builtin_shell, 0, args ) );
+      }
+
+      {
+          char * args[] = { "string", 0 };
+          bind_builtin( "MD5",
+                        builtin_md5, 0, args ) ;
       }
 
       /* Initialize builtin modules. */
@@ -1485,6 +1492,28 @@ LIST * builtin_check_if_file( PARSE * parse, FRAME * frame )
     return file_is_file( name->string ) == 1
         ? list_new( 0, newstr( "true" ) )
         : L0 ;
+}
+
+
+LIST * builtin_md5( PARSE * parse, FRAME * frame )
+{
+    LIST * l = lol_get( frame->args, 0 );
+    char* s = l->string;
+
+    md5_state_t state;
+    md5_byte_t digest[16];
+    char hex_output[16*2 + 1];
+
+    int di;
+
+    md5_init(&state);
+    md5_append(&state, (const md5_byte_t *)s, strlen(s));
+    md5_finish(&state, digest);
+
+    for (di = 0; di < 16; ++di)
+        sprintf(hex_output + di * 2, "%02x", digest[di]);
+
+    return list_new (0, newstr(hex_output));
 }
 
 
