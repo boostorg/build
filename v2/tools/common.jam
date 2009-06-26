@@ -773,6 +773,14 @@ rule format-name ( format * : name : type ? : property-set )
                 result += [ join-tag $(f:G=) : [ runtime-tag $(name) : $(type) :
                 $(property-set) ] ] ;
             
+            case <qt> :
+            result += [ join-tag $(f:G=) : [ qt-tag $(name) : $(type) :
+                $(property-set) ] ] ;
+
+            case <address-model> :
+            result += [ join-tag $(f:G=) : [ address-model-tag $(name) : $(type) :
+                $(property-set) ] ] ;
+
             case <version:*> :
                 local key = [ MATCH <version:(.*)> : $(f:G) ] ;
                 local version = [ $(property-set).get <$(key)> ] ;
@@ -921,6 +929,25 @@ local rule runtime-tag ( name : type ? : property-set )
     return $(tag:J=) ;
 }
 
+# Create a tag for the Qt library version
+# "<qt>4.6.0" will result in tag "qt460"
+local rule qt-tag ( name : type ? : property-set )
+{
+    local properties = [ $(property-set).get <qt> ] ;
+    local version = [ MATCH "([0123456789]+)[.]?([0123456789]*)[.]?([0123456789]*)"
+        : $(properties) ] ;
+    local tag = "qt"$(version:J=) ;
+    return $(tag) ;
+}
+
+# Create a tag for the address-model
+# <address-model>64 will simply generate "64"
+local rule address-model-tag ( name : type ? : property-set )
+{
+    local tag = ;
+    local version = [ $(property-set).get <address-model> ] ;
+    return $(version) ;
+}
 
 rule __test__ ( )
 {
