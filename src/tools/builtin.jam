@@ -39,7 +39,13 @@ import generate ;
 
 
 .os-names = aix bsd cygwin darwin freebsd hpux iphone linux netbsd
-    openbsd osf qnx qnxnto sgi solaris unix unixware windows ;
+    openbsd osf qnx qnxnto sgi solaris unix unixware windows 
+    elf # Not actually an OS -- used for targeting bare metal where
+        # object format is ELF.  This catches both -elf and -eabi gcc
+        # targets and well as other compilers targeting ELF. It is not
+        # clear how often do we need to key of ELF specifically as opposed
+        # to other bare metal targets, but let's stick with gcc naming.
+    ;
 
 # Feature used to determine which OS we're on. New <target-os> and <host-os>
 # features should be used instead.
