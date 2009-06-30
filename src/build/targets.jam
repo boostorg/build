@@ -1434,7 +1434,7 @@ class typed-target : basic-target
         local r = [ generators.construct $(self.project) $(name:S=) : $(self.type)
             : [ property-set.create [ $(property-set).raw ]
                 <main-target-type>$(self.type) ]
-            : $(source-targets) ] ;
+            : $(source-targets) : true ] ;
         if ! $(r)
         {
             ECHO "warn: Unable to construct" [ full-name ] ;

@@ -1215,6 +1215,10 @@ rule find-viable-generators ( target-type : property-set )
         {
             viable-generators += $(g) ;
         }
+        else
+        {
+            generators.dout [ indent ] "   generator " [ $(g).id ] "is active, discaring" ;
+        }        
     }
 
     # Generators which override 'all'.
@@ -1320,8 +1324,20 @@ local rule construct-really ( project name ? : target-type : property-set :
 # 'construct' in stack, returns only targets of requested 'target-type',
 # otherwise, returns also unused sources and additionally generated targets.
 #
-rule construct ( project name ? : target-type : property-set * : sources * )
+# If 'top-level' is set, does not suppress generators that are already
+# used in the stack. This may be useful in cases where a generator
+# has to build a metatargets -- for example a target corresponding to
+# built tool.
+#
+rule construct ( project name ? : target-type : property-set * : sources * : top-level ? )
 {
+    local saved-stack ;
+    if $(top-level)
+    {
+        saved-active = $(.active-generators) ;
+        .active-generators = ;
+    }
+        
     if (.construct-stack)
     {
         ensure-type $(sources) ;
@@ -1348,10 +1364,14 @@ rule construct ( project name ? : target-type : property-set * : sources * )
     decrease-indent ;
 
     .construct-stack = $(.construct-stack[2-]) ;
+    
+    if $(top-level)
+    {
+        .active-generators = $(saved-active) ;
+    }
 
     return $(result) ;
 }
-
 
 # Given 'result', obtained from some generator or generators.construct, adds
 # 'raw-properties' as usage requirements to it. If result already contains usage
