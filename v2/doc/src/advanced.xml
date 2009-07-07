@@ -756,6 +756,22 @@ bjam toolset=gcc variant=debug optimization=space
               </row>
 
               <row>
+                <entry>include</entry>
+                
+                <entry>(Arbitrary string)</entry>
+                
+                <entry>Additional include paths for C and C++ compilers.</entry>
+              </row>
+
+              <row>
+                <entry>define</entry>
+                
+                <entry>(Arbitrary string)</entry>
+                
+                <entry>Additional macro definitions for C and C++ compilers.</entry>
+              </row>
+
+              <row>
                 <entry>cxxflags</entry>
                 
                 <entry>(Arbitrary string)</entry>
@@ -772,19 +788,11 @@ bjam toolset=gcc variant=debug optimization=space
               </row>
 
               <row>
-                <entry>includes</entry>
+                <entry>linkflags</entry>
                 
                 <entry>(Arbitrary string)</entry>
                 
-                <entry>Additional include paths for C and C++ compilers.</entry>
-              </row>
-
-              <row>
-                <entry>define</entry>
-                
-                <entry>(Arbitrary string)</entry>
-                
-                <entry>Additional macro definitions for C and C++ compilers.</entry>
+                <entry>Custom options to pass to the C++ linker.</entry>
               </row>
 
               <row>
