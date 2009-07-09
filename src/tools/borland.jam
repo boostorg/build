@@ -108,10 +108,6 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 # -q     no banner
 # -c     compile to object
 # -P     C++ code regardless of file extention
-# -Ve    zero sized empty base classes, this option is on in the IDE by default 
-#        and effects binary compatibility.
-# -Vx    zero sized empty members, this option is on in the IDE by default 
-#        and effects binary compatibility.
 # -a8    8 byte alignment, this option is on in the IDE by default 
 #        and effects binary compatibility.
 #
@@ -121,13 +117,13 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -P -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -P -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 # For C, we don't pass -P flag
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -Ve -Vx -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 
