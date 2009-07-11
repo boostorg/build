@@ -8,7 +8,7 @@ import modules ;
 
 # Set a value for a named option, to be used when not overridden on the command
 # line.
-rule set ( name : value )
+rule set ( name : value ? )
 {
     .option.$(name) = $(value) ;
 }
