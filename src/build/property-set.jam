@@ -10,7 +10,7 @@ import project ;
 import property ;
 import sequence ;
 import set ;
-
+import option ;
 
 # Class for storing a set of properties.
 #
@@ -37,7 +37,7 @@ class property-set
     import property ;
     import property-set ;
     import set ;
-
+    
     rule __init__ ( raw-properties * )
     {
         self.raw = $(raw-properties) ;
@@ -262,6 +262,8 @@ class property-set
             else
             {
                 local p = [ as-path ] ;
+                p = [ property-set.hash-maybe $(p) ] ;
+                
                 # A real ugly hack. Boost regression test system requires
                 # specific target paths, and it seems that changing it to handle
                 # other directory layout is really hard. For that reason, we
@@ -460,3 +462,20 @@ rule empty ( )
     }
     return $(.empty) ;
 }
+
+if [ option.get hash : : yes ] = yes
+{    
+    rule hash-maybe ( path )
+    {
+        path ?= "" ;
+        return [ MD5 $(path) ] ;
+    }
+}
+else
+{
+    rule hash-maybe ( path )
+    {
+        return $(path) ;
+    }    
+}
+
