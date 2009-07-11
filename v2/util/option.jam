@@ -13,21 +13,29 @@ rule set ( name : value )
     .option.$(name) = $(value) ;
 }
 
-rule get ( name : default-value ? )
+rule get ( name : default-value ? : implied-value ? )
 {
     local m = [ MATCH --$(name)=(.*) : [ modules.peek : ARGV ] ] ;
     if $(m)
     {
         return $(m[1]) ;
     }
-    else if $(.option.$(name))
-    {
-        return $(.option.$(name)) ;
-    }    
-    else
-    {
-        return $(default-value) ;
-    }
+    else  
+    {        
+        m = [ MATCH (--$(name)) : [ modules.peek : ARGV ] ] ;
+        if $(m) && $(implied-value)
+        {
+            return $(implied-value) ;
+        }
+        else if $(.option.$(name))
+        {
+            return $(.option.$(name)) ;
+        }    
+        else
+        {
+            return $(default-value) ;
+        }    
+    }              
 }
 
 
