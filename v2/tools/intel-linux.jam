@@ -112,6 +112,7 @@ rule compile.c++ ( targets * : sources * : properties * )
 {
     gcc.setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
+    gcc.setup-address-model $(targets) : $(sources) : $(properties) ;
     DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
@@ -124,6 +125,7 @@ rule compile.c ( targets * : sources * : properties * )
 {
     gcc.setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
+    gcc.setup-address-model $(targets) : $(sources) : $(properties) ;    
     DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
@@ -136,6 +138,7 @@ rule compile.c++.pch ( targets * : sources * : properties * )
 {
     gcc.setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
+    gcc.setup-address-model $(targets) : $(sources) : $(properties) ;    
 }
 #
 # Compiling a pch first deletes any existing *.pchi file, as Intel's compiler
@@ -151,6 +154,7 @@ rule compile.c.pch ( targets * : sources * : properties * )
 {
     gcc.setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
+    gcc.setup-address-model $(targets) : $(sources) : $(properties) ;    
 }
 
 actions compile.c.pch
@@ -161,6 +165,7 @@ actions compile.c.pch
 rule link ( targets * : sources * : properties * )
 {
     gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    gcc.setup-address-model $(targets) : $(sources) : $(properties) ;    
     SPACE on $(targets) = " " ;
     JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
 }
@@ -173,6 +178,7 @@ actions link bind LIBRARIES
 rule link.dll ( targets * : sources * : properties * )
 {
     gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    gcc.setup-address-model $(targets) : $(sources) : $(properties) ;    
     SPACE on $(targets) = " " ;
     JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
 }

@@ -501,10 +501,12 @@ if "\n" = "n"
     # see below.
     nl = "
 " ;
+    q = "" ;
 }
 else
 {
     nl = "\n" ; 
+    q = "\"" ;
 }
 
 # Returns the command needed to set an environment variable on the current
@@ -526,7 +528,7 @@ rule variable-setting-command ( variable : value )
         # sequence that messes up the executed export command which then reports
         # that the passed variable name is incorrect.
         # But we have a check for cygwin in kernel/bootstrap.jam already.
-        return "$(variable)=$(value)$(nl)export $(variable)$(nl)" ;
+        return "$(variable)=$(q)$(value)$(q)$(nl)export $(variable)$(nl)" ;
     }
 }
 
@@ -751,37 +753,42 @@ actions hard-link
 #
 rule format-name ( format * : name : type ? : property-set )
 {
-    if [ type.is-derived $(type) LIB ]
+    local result = "" ;
+    for local f in $(format)
     {
-        local result = "" ;
-        for local f in $(format)
+        switch $(f:G)
         {
-            switch $(f:G)
-            {
-                case <base> :
+            case <base> :
                 result += $(name:B) ;
-
-                case <toolset> :
+            
+            case <toolset> :
                 result += [ join-tag $(f:G=) : [ toolset-tag $(name) : $(type) :
-                    $(property-set) ] ] ;
-
-                case <threading> :
+                $(property-set) ] ] ;
+            
+            case <threading> :
                 result += [ join-tag $(f:G=) : [ threading-tag $(name) : $(type)
-                    : $(property-set) ] ] ;
-
-                case <runtime> :
+                : $(property-set) ] ] ;
+            
+            case <runtime> :
                 result += [ join-tag $(f:G=) : [ runtime-tag $(name) : $(type) :
-                    $(property-set) ] ] ;
+                $(property-set) ] ] ;
+            
+            case <qt> :
+            result += [ join-tag $(f:G=) : [ qt-tag $(name) : $(type) :
+                $(property-set) ] ] ;
 
-                case <version:*> :
+            case <address-model> :
+            result += [ join-tag $(f:G=) : [ address-model-tag $(name) : $(type) :
+                $(property-set) ] ] ;
+
+            case <version:*> :
                 local key = [ MATCH <version:(.*)> : $(f:G) ] ;
                 local version = [ $(property-set).get <$(key)> ] ;
                 version ?= $(key) ;
-                version = [ MATCH "^([^.]+)[.]([^.]+)[.]?([^.]*)" : $(version) ]
-                    ;
+                version = [ MATCH "^([^.]+)[.]([^.]+)[.]?([^.]*)" : $(version) ] ;
                 result += [ join-tag $(f:G=) : $(version[1])_$(version[2]) ] ;
 
-                case <property:*> :
+            case <property:*> :
                 local key = [ MATCH <property:(.*)> : $(f:G) ] ;
                 local p0 = [ MATCH <($(key))> : [ $(property-set).raw ] ] ;
                 if $(p0)
@@ -793,14 +800,13 @@ rule format-name ( format * : name : type ? : property-set )
                     }
                 }
 
-                case * :
+            case * :
                 result += $(f:G=) ;
-            }
         }
-        result = [ virtual-target.add-prefix-and-suffix $(result:J=) : $(type) :
-            $(property-set) ] ;
-        return $(result) ;
     }
+    result = [ virtual-target.add-prefix-and-suffix $(result:J=) : $(type) :
+      $(property-set) ] ;
+    return $(result) ;
 }
 
 
@@ -846,6 +852,7 @@ local rule toolset-tag ( name : type ? : property-set )
         #case mingw* : tag += mgw ;
         case mipspro* : tag += mp ;
         case msvc* : tag += vc ;
+        case qcc* : tag += qcc ;
         case sun* : tag += sw ;
         case tru64cxx* : tag += tru ;
         case vacpp* : tag += xlc ;
@@ -922,6 +929,25 @@ local rule runtime-tag ( name : type ? : property-set )
     return $(tag:J=) ;
 }
 
+# Create a tag for the Qt library version
+# "<qt>4.6.0" will result in tag "qt460"
+local rule qt-tag ( name : type ? : property-set )
+{
+    local properties = [ $(property-set).get <qt> ] ;
+    local version = [ MATCH "([0123456789]+)[.]?([0123456789]*)[.]?([0123456789]*)"
+        : $(properties) ] ;
+    local tag = "qt"$(version:J=) ;
+    return $(tag) ;
+}
+
+# Create a tag for the address-model
+# <address-model>64 will simply generate "64"
+local rule address-model-tag ( name : type ? : property-set )
+{
+    local tag = ;
+    local version = [ $(property-set).get <address-model> ] ;
+    return $(version) ;
+}
 
 rule __test__ ( )
 {
