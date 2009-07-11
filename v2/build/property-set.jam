@@ -465,7 +465,7 @@ rule empty ( )
 
 if [ option.get hash : : yes ] = yes
 {    
-    rule hash-maybe ( path )
+    rule hash-maybe ( path ? )
     {
         path ?= "" ;
         return [ MD5 $(path) ] ;
@@ -473,7 +473,7 @@ if [ option.get hash : : yes ] = yes
 }
 else
 {
-    rule hash-maybe ( path )
+    rule hash-maybe ( path ? )
     {
         return $(path) ;
     }    
