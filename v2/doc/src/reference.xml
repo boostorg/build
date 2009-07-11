@@ -746,9 +746,10 @@ using gcc : 4.0 : g++-4.0 ;
 
           <para>The <code>gcc</code> module supports the
           <ulink url="http://gcc.gnu.org">GNU C++ compiler</ulink>
-          on Linux, a number of Unix-like system including MacOS X, SunOS and
-          BeOS, and on Windows (either <ulink url="http://www.cygwin.com">Cygwin</ulink>
-          or <ulink url="http://www.mingw.org">MinGW</ulink>).
+          on Linux, a number of Unix-like system including SunOS and on Windows 
+          (either <ulink url="http://www.cygwin.com">Cygwin</ulink> or 
+          <ulink url="http://www.mingw.org">MinGW</ulink>). On Mac OSX, it is recommended
+          to use system gcc, see <xref linkend="bbv2.reference.tools.compiler.darwin"/>.
           </para>
 
           <para>The <code>gcc</code> module is initialized using the following
@@ -811,6 +812,28 @@ using gcc : &toolset_ops; ;</programlisting>
 
         </section>
 
+        <section id="bbv2.reference.tools.compiler.darwin">
+
+          <title>Apple Darwin gcc</title>
+
+          <para>The <code>darwin</code> module supports the version of gcc that is
+          modified and provided by Apple. The configuration is essentially identical
+          to that of the gcc module.
+          </para>
+
+          <para>
+          <indexterm><primary>fat binaries</primary></indexterm>
+          The darwin toolset can generate so called "fat"
+          binaries&#x2014;binaries that can run support more than one
+          architecture, or address mode. To build a binary that can run both
+          on Intel and PowerPC processors, specify
+          <code>architecture=combined</code>. To build a binary that can run
+          both in 32-bit and 64-bit modes, specify
+          <code>address-model=32_64</code>. If you specify both of those
+          properties, a "4-way" fat binary will be generated.
+          </para>
+
+        </section>
 
         <section id="bbv2.reference.tools.compiler.msvc">
 
