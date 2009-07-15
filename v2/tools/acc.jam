@@ -66,6 +66,10 @@ flags acc LINKFLAGS <profiling>on : -pg ;
 flags acc CFLAGS <address-model>64 : +DD64 ;
 flags acc LINKFLAGS <address-model>64 : +DD64 ;
 
+# It is unknown if there's separate option for rpath used only
+# at link time, similar to -rpath-link in GNU. We'll use -L.
+flags acc RPATH_LINK : <xdll-path> ;
+
 flags acc CFLAGS <cflags> ;
 flags acc C++FLAGS <cxxflags> ;
 flags acc DEFINES <define> ;
@@ -89,13 +93,13 @@ flags acc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
 
 actions acc.link bind NEEDLIBS
 {
-    $(CONFIG_COMMAND) -AA $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS)
+    $(CONFIG_COMMAND) -AA $(LINKFLAGS) -o "$(<[1])" -L"$(RPATH_LINK)" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS)
 }
 
 SPACE = " " ;
 actions acc.link.dll bind NEEDLIBS
 {
-    $(CONFIG_COMMAND) -AA -b $(LINKFLAGS) -o "$(<[1])" -Wl,+h$(SPACE)-Wl,$(<[-1]:D=)  -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS)
+    $(CONFIG_COMMAND) -AA -b $(LINKFLAGS) -o "$(<[1])" -L"$(RPATH_LINK)" -Wl,+h$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS)
 }
 
 actions acc.compile.c
