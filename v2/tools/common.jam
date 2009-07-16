@@ -960,10 +960,10 @@ rule __test__ ( )
 
     modules.poke os : .name : LINUX ;
 
-    assert.result "PATH=foo:bar:baz$(nl)export PATH$(nl)"
+    assert.result "PATH=\"foo:bar:baz\"$(nl)export PATH$(nl)"
         : path-variable-setting-command PATH : foo bar baz ;
 
-    assert.result "PATH=foo:bar:$PATH$(nl)export PATH$(nl)"
+    assert.result "PATH=\"foo:bar:$PATH\"$(nl)export PATH$(nl)"
         : prepend-path-variable-command PATH : foo bar ;
 
     modules.poke os : .name : NT ;
