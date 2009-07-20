@@ -78,8 +78,8 @@ void out_action
           break;
     }
 
-    /* Print out the command output, if requested. */
-    if ( action )
+    /* Print out the command output, if requested, or if the program failed. */
+    if ( action || exit_reason != EXIT_OK)
     {
         /* But only output for non-quietly actions. */
         if ( ( 0 != out_data ) &&
