@@ -40,6 +40,8 @@ import type ;
 type.register MANIFEST : manifest ;
 feature.feature embed-manifest : on off : incidental propagated ;
 
+type.register PDB : pdb ;
+
 ################################################################################
 #
 # Public rules.
@@ -259,6 +261,10 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-amd64) : /MACHINE:X64 ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-i386)  : /MACHINE:X86 ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-ia64)  : /MACHINE:IA64 ;
+        
+        # Make sure that manifest will be generated even if there is no
+        # dependencies to put there.
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest>off : /MANIFEST ;
     }
     toolset.pop-checking-for-flags-module ;
 }
@@ -1005,12 +1011,23 @@ class msvc-linking-generator : linking-generator
         {
             local name = [ $(result[0]).name ] ;
             local action = [ $(result[0]).action ] ;
+            
+            if [ $(property-set).get <debug-symbols> ] = "on"
+            {
+                local target = [ class.new file-target $(name) : PDB : $(project) : $(action) ] ;
+                lcoal registered-target = [ virtual-target.register $(target) ] ;
+                if $(target) != $(registered-target)
+                {
+                    $(action).replace-targets $(target) : $(registered-target) ;
+                }
+                result += $(registered-target) ;
+            }
 
             if [ $(property-set).get <embed-manifest> ] = "off"
             {
                 local target = [ class.new file-target $(name) : MANIFEST : $(project) : $(action) ] ;
                 local registered-target = [ virtual-target.register $(target) ] ;
-                if $(action) && ( $(target) != $(registered-target) )
+                if $(target) != $(registered-target)
                 {
                     $(action).replace-targets $(target) : $(registered-target) ;
                 }
