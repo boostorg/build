@@ -1037,7 +1037,7 @@ class msvc-linking-generator : linking-generator
             if [ $(property-set).get <debug-symbols> ] = "on"
             {
                 local target = [ class.new file-target $(name) : PDB : $(project) : $(action) ] ;
-                lcoal registered-target = [ virtual-target.register $(target) ] ;
+                local registered-target = [ virtual-target.register $(target) ] ;
                 if $(target) != $(registered-target)
                 {
                     $(action).replace-targets $(target) : $(registered-target) ;
