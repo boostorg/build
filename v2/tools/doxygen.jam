@@ -354,9 +354,20 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
     {
         # Build an HTML directory from the sources.
         local html-location = [ feature.get-values <location> : $(requirements) ] ;
-        local output-dir = [ path.root
-            [ path.join [ $(project).get build-dir ] $(html-location:E=html) ]
-            [ path.pwd ] ] ;
+        local output-dir ;
+        if [ $(project).get build-dir ] 
+        {
+            # Explicitly specified build dir. Add html at the end.
+            output-dir = [ path.join [ $(project).build-dir ] $(html-location:E=html) ] ;
+        }
+        else
+        {
+            # Trim 'bin' from implicit build dir, for no other reason that backward
+            # compatibility.
+            output-dir = [ path.join [ path.parent [ $(project).build-dir ] ] 
+              $(html-location:E=html) ] ;
+        }
+        output-dir = [ path.root $(output-dir) [ path.pwd ] ] ;        
         local output-dir-native = [ path.native $(output-dir) ] ;
         requirements = [ property.change $(requirements) : <location> ] ;
 
