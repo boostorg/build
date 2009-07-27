@@ -40,6 +40,8 @@ import type ;
 type.register MANIFEST : manifest ;
 feature.feature embed-manifest : on off : incidental propagated ;
 
+type.register PDB : pdb ;
+
 ################################################################################
 #
 # Public rules.
@@ -259,6 +261,10 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-amd64) : /MACHINE:X64 ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-i386)  : /MACHINE:X86 ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-ia64)  : /MACHINE:IA64 ;
+        
+        # Make sure that manifest will be generated even if there is no
+        # dependencies to put there.
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest>off : /MANIFEST ;
     }
     toolset.pop-checking-for-flags-module ;
 }
@@ -341,15 +347,27 @@ toolset.flags msvc YLOPTION : "-Yl" ;
 # Action for running the C/C++ compiler without using precompiled headers.
 #
 # WARNING: Synchronize any changes this in action with intel-win
-actions compile-c-c++
+#
+# Notes regarding PDB generation, for when we use <debug-symbols>on/<debug-store>database
+#
+# 1. PDB_CFLAG is only set for <debug-symbols>on/<debug-store>database, ensuring that the /Fd flag is dropped if PDB_CFLAG is empty
+#
+# 2. When compiling executables's source files, PDB_NAME is set on a per-source file basis by rule compile-c-c++. 
+#    The linker will pull these into the executable's PDB
+#
+# 3. When compiling library's source files, PDB_NAME is updated to <libname>.pdb for each source file by rule archive, 
+#    as in this case the compiler must be used to create a single PDB for our library.
+#
+actions compile-c-c++ bind PDB_NAME
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
 }
 
 rule compile-c-c++ ( targets + : sources * )
 {
     DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_HEADER) ] ;
     DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_FILE) ] ;
+    PDB_NAME on $(<) = $(<:S=.pdb) ;
 }
 
 # Action for running the C/C++ compiler using precompiled headers. In addition
@@ -501,6 +519,16 @@ else
     }    
 }
 
+# this rule sets up the pdb file that will be used when generating static 
+# libraries and the debug-store option is database, so that the compiler 
+# puts all debug info into a single .pdb file named after the library
+#
+# Poking at source targets this way is probably not clean, but it's the
+# easiest approach.
+rule archive ( targets + : sources * : properties * )
+{
+    PDB_NAME on $(>) = $(<:S=.pdb) ;
+}
 
 ################################################################################
 #
@@ -1005,12 +1033,23 @@ class msvc-linking-generator : linking-generator
         {
             local name = [ $(result[0]).name ] ;
             local action = [ $(result[0]).action ] ;
+            
+            if [ $(property-set).get <debug-symbols> ] = "on"
+            {
+                local target = [ class.new file-target $(name) : PDB : $(project) : $(action) ] ;
+                local registered-target = [ virtual-target.register $(target) ] ;
+                if $(target) != $(registered-target)
+                {
+                    $(action).replace-targets $(target) : $(registered-target) ;
+                }
+                result += $(registered-target) ;
+            }
 
             if [ $(property-set).get <embed-manifest> ] = "off"
             {
                 local target = [ class.new file-target $(name) : MANIFEST : $(project) : $(action) ] ;
                 local registered-target = [ virtual-target.register $(target) ] ;
-                if $(action) && ( $(target) != $(registered-target) )
+                if $(target) != $(registered-target)
                 {
                     $(action).replace-targets $(target) : $(registered-target) ;
                 }
@@ -1129,7 +1168,7 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile.c OPTIONS <cflags> : ;
     toolset.flags msvc.compile.c++ OPTIONS <cxxflags> : ;
 
-    toolset.flags msvc.compile PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;  # not used yet
+    toolset.flags msvc.compile PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;
 
     toolset.flags msvc.compile DEFINES <define> ;
     toolset.flags msvc.compile UNDEFS <undef> ;
