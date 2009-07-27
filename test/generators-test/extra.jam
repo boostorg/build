@@ -6,6 +6,7 @@
 import type ;
 import generators ;
 import "class" : new ;
+import common ;
 
 type.register WHL : whl ;
 type.register DLP : dlp ;
@@ -53,17 +54,18 @@ class wd-to-cpp : generator
 generators.override extra.wd-to-cpp : extra.whale ;
 generators.override extra.wd-to-cpp : extra.dolphin ;
 
-
 generators.register [ new wd-to-cpp extra.wd-to-cpp : : CPP ] ;
     
 rule whale ( targets * : sources * : properties * )
 {
 }
 
+TOUCH = [ common.file-touch-command ] ;
+
 actions whale 
 {
     echo "Whale consuming " $(>)
-    touch $(<)
+    $(TOUCH) $(<)
 }
 
 rule dolphin ( targets * : source * : properties * )
@@ -73,7 +75,7 @@ rule dolphin ( targets * : source * : properties * )
 actions dolphin
 {    
     echo "Dolphin consuming" $(>)
-    touch $(<)        
+    $(TOUCH) $(<)        
 }
 
 rule wd ( targets * : source * : properties * )
@@ -83,7 +85,7 @@ rule wd ( targets * : source * : properties * )
 actions wd
 {    
     echo "WD consuming" $(>)
-    touch $(<)        
+    $(TOUCH) $(<)        
 }
 
 rule x ( target * : source * : properties * )
@@ -94,7 +96,7 @@ rule x ( target * : source * : properties * )
 actions x 
 {
     echo "X: source is " $(>)
-    touch $(<)
+    $(TOUCH) $(<)
 }
 
 rule x_pro ( target * : source * : properties * )
@@ -105,7 +107,7 @@ rule x_pro ( target * : source * : properties * )
 actions x_pro
 {
     echo "X_PRO: source is " $(>)
-    touch $(<)
+    $(TOUCH) $(<)
 }
 
 
