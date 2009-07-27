@@ -111,6 +111,8 @@ IMPORT modules : import : : import ;
     BOOST_BUILD_PATH += $(whereami:D)/$(subdirs) ;
 
     modules.poke .ENVIRON : BOOST_BUILD_PATH : $(BOOST_BUILD_PATH) ;
+    
+    modules.poke : EXTRA_PYTHONPATH : $(whereami) ;
 }
 
 # Reload the modules, to clean up things. The modules module can tolerate
@@ -129,11 +131,110 @@ local dont-build = [ option.process ] ;
 #
 if ! $(dont-build)
 {
-    # Allow users to override the build system file from the
-    # command-line (mostly for testing)
-    local build-system = [ MATCH --build-system=(.*) : $(ARGV) ] ;
-    build-system ?= build-system ;
+    if ! [ MATCH (--python) : $(ARGV) ]
+    {
+        # Allow users to override the build system file from the
+        # command-line (mostly for testing)
+        local build-system = [ MATCH --build-system=(.*) : $(ARGV) ] ;
+        build-system ?= build-system ;
 
-    # Use last element in case of multiple command-line options
-    import $(build-system[-1]) ;
+        # Use last element in case of multiple command-line options
+        import $(build-system[-1]) ;
+    }
+    else
+    {
+        ECHO "Boost.Build V2 Python port (experimental)" ;
+                
+        # Define additional interface that is exposed to Python code. Python code will
+        # also have access to select bjam builtins in the 'bjam' module, but some
+        # things are easier to define outside C.
+        module python_interface
+        {
+            rule load ( module-name : location )
+            {        
+                USER_MODULE $(module-name) ;
+	        # Make all rules in the loaded module available in
+	        # the global namespace, so that we don't have
+	        # to bother specifying "right" module when calling
+	        # from Python.
+                module $(module-name)
+                {
+                    __name__ = $(1) ;
+                    include $(2) ;
+                    local rules = [ RULENAMES $(1) ] ;
+                    IMPORT $(1) : $(rules) : $(1) : $(1).$(rules) ;
+                }
+            }    
+            
+            rule peek ( module-name ? : variables + )
+            {
+                module $(<)
+                {
+                    return $($(>)) ;
+                }
+            }
+            
+            rule set-variable ( module-name : name : value * )
+            {
+                module $(<)
+                {
+                    $(>) = $(3) ;
+                }        
+            }
+            
+            rule set-top-level-targets ( targets * )
+            {
+                DEPENDS all : $(targets) ;
+            }
+            
+            rule set-update-action ( action : targets * : sources * : properties * )
+            {
+                $(action) $(targets) : $(sources) : $(properties) ;
+            }
+            
+            rule set-target-variable ( targets + : variable : value * : append ? )
+            {
+                if $(append)
+                {            
+	            $(variable) on $(targets) += $(value) ;
+                }
+                else
+                {
+	            $(variable) on $(targets) = $(value) ;            
+                }        
+            }        
+
+            rule get-target-variable ( target : variable )
+            {
+                return [ on $(target) return $($(variable)) ] ;
+            }
+
+            rule import-rules-from-parent ( parent-module : this-module : user-rules )
+            {
+                IMPORT $(parent-module) : $(user-rules) : $(this-module) : $(user-rules) ;
+                EXPORT $(this-module) : $(user-rules) ;
+            }
+
+            rule mark-included ( targets * : includes * ) {
+                INCLUDES $(targets) : $(INCLUDES) ;
+            }
+        }
+
+        PYTHON_IMPORT_RULE bootstrap : bootstrap : PyBB : bootstrap ;
+        modules.poke PyBB : root : [ NORMALIZE_PATH $(.bootstrap-file:DT)/.. ] ;
+        
+        module PyBB
+        {
+            bootstrap $(root) ;
+        }
+        
+        
+        #PYTHON_IMPORT_RULE boost.build.build_system : main : PyBB : main ;
+
+        #module PyBB
+        #{    
+        #    main ;
+        #}
+
+    }
 }
