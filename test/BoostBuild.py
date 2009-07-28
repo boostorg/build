@@ -667,9 +667,10 @@ class Tester(TestCmd.TestCmd):
         self.ignore('*/gmon.out')
 
         if not self.unexpected_difference.empty():
-            print 'FAILED'
-            print '------- The following changes were unexpected -------'
-            self.unexpected_difference.pprint()
+            annotation('failure', 'Unexpected changes found')
+            output = StringIO.StringIO()
+            self.unexpected_difference.pprint(output)
+            annotation("unexpected changes", output.getvalue())
             self.fail_test(1)
 
     def __expect_line(self, content, expected, expected_to_exist):
