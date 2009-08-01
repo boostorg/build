@@ -4,6 +4,9 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
 import modules ;
+import common ;
+
+TOUCH = [ common.file-touch-command ] ;
 
 rule target-source ( targets * : sources * : properties * )
 {
@@ -30,7 +33,8 @@ rule cpp-mark ( targets * : sources * : properties * )
 actions cpp-mark
 {
     echo "CPP-MARK consuming " $(>)
-    touch $(<)
+    $(TOUCH) $(<[1])
+    $(TOUCH) $(<[2])
 }
 
 
