@@ -65,7 +65,10 @@ TOUCH = [ common.file-touch-command ] ;
 actions whale 
 {
     echo "Whale consuming " $(>)
-    $(TOUCH) $(<)
+    $(TOUCH) $(<[1])
+    $(TOUCH) $(<[2])
+    $(TOUCH) $(<[3])
+    $(TOUCH) $(<[4])
 }
 
 rule dolphin ( targets * : source * : properties * )
@@ -85,7 +88,8 @@ rule wd ( targets * : source * : properties * )
 actions wd
 {    
     echo "WD consuming" $(>)
-    $(TOUCH) $(<)        
+    $(TOUCH) $(<[1])        
+    $(TOUCH) $(<[2])
 }
 
 rule x ( target * : source * : properties * )
@@ -96,7 +100,7 @@ rule x ( target * : source * : properties * )
 actions x 
 {
     echo "X: source is " $(>)
-    $(TOUCH) $(<)
+    $(TOUCH) $(<[1])
 }
 
 rule x_pro ( target * : source * : properties * )
@@ -107,7 +111,8 @@ rule x_pro ( target * : source * : properties * )
 actions x_pro
 {
     echo "X_PRO: source is " $(>)
-    $(TOUCH) $(<)
+    $(TOUCH) $(<[1])
+    $(TOUCH) $(<[2])
 }
 
 
