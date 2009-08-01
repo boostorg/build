@@ -133,7 +133,7 @@ actions ln-UNIX
 actions ln-NT
 {
     echo "NT symlinks not supported yet, making copy"
-    del /f /q "$(<)" 2$(NULL_OUT) $(NULL_OUT)
+    del /f /q "$(<)" 2>nul >nul
     copy "$(>)" "$(<)" $(NULL_OUT)
 }
 

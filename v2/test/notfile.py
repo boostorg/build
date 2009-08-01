@@ -22,7 +22,7 @@ notfile hello_valgrind : @valgrind : hello ;
 
 actions valgrind
 {
-   valgrind $(>) 
+   valgrind $(>[1]) 
 }
 """)
 
