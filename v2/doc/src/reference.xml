@@ -158,7 +158,7 @@ ECHO [ glob-tree *.cpp : .svn ] ;
         <term><literal>project</literal></term>
 
         <listitem><para>Declares project id and attributes, including
-        project requirements. See <xref linkend="bbv2.advanced.projects"/>.
+        project requirements. See <xref linkend="bbv2.overview.projects"/>.
         </para></listitem>
       </varlistentry>
 
@@ -235,7 +235,7 @@ path-constant DATA : data/a.txt ;
 
   </section>
 
-  <section id="bbv2.advanced.builtins.features">
+  <section id="bbv2.overview.builtins.features">
     <title>Builtin features</title>
 
     <para>This section documents the features that are built-in into
@@ -299,7 +299,7 @@ path-constant DATA : data/a.txt ;
         </listitem>
       </varlistentry>
 
-      <varlistentry id="bbv2.advanced.builtins.features.link">
+      <varlistentry id="bbv2.overview.builtins.features.link">
         <term><literal>link</literal></term>
 
         <listitem>
@@ -314,7 +314,7 @@ path-constant DATA : data/a.txt ;
         </listitem>
       </varlistentry>
 
-      <varlistentry id="bbv2.advanced.builtins.features.runtime-link">
+      <varlistentry id="bbv2.overview.builtins.features.runtime-link">
         <indexterm><primary>runtime linking</primary></indexterm>
         <term><literal>runtime-link</literal></term>
 
@@ -1399,7 +1399,7 @@ using stlport : <optional><replaceable>version</replaceable></optional> : <repla
     <title>Build process</title>
 
     <para>The general overview of the build process was given in the
-      <link linkend="bbv2.advanced.build_process">user documentation</link>.
+      <link linkend="bbv2.overview.build_process">user documentation</link>.
       This section provides additional details, and some specific rules.
     </para>
 
@@ -1631,7 +1631,7 @@ exe a : a.cpp
 
             <para>Features of this kind are
               propagated to dependencies. That is, if a <link linkend=
-                "bbv2.advanced.targets.main">main target</link> is built using a
+                "bbv2.overview.targets.main">main target</link> is built using a
               propagated
               property, the build systems attempts to use the same property
               when building any of its dependencies as part of that main

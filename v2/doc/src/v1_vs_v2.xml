@@ -16,7 +16,7 @@
   some of the syntax was changed, and some new important features were
   added. This chapter describes most of the changes.</para>
   
-    <section id="bbv2.advanced.differences_to_v1.configuration">
+    <section id="bbv2.overview.differences_to_v1.configuration">
       <title>Configuration</title>
       
       <para>In V1, toolsets were configured by environment variables. If you
@@ -25,12 +25,12 @@
       toolset. In V2, toolsets are configured by the
       <functionname>using</functionname>, and you can easily configure several
       versions of a toolset. See <xref
-      linkend="bbv2.advanced.configuration"/> for details.
+      linkend="bbv2.overview.configuration"/> for details.
       </para>
       
     </section>
 
-    <section id="bbv2.advanced.differences_to_v1.jamfiles">
+    <section id="bbv2.overview.differences_to_v1.jamfiles">
       <title>Writing Jamfiles</title>
 
       <para>Probably one of the most important differences in V2 Jamfiles is
@@ -38,7 +38,7 @@
       requirements (for example, a common <code>#include</code> path), it was necessary to
       manually write the requirements or use a helper rule or template target. In V2, the
       common properties can be specified with the <code>requirements</code> project
-      attribute, as documented in <xref linkend="bbv2.advanced.projects"/>.
+      attribute, as documented in <xref linkend="bbv2.overview.projects"/>.
       </para>
 
       <para><link linkend="bbv2.tutorial.libs">Usage requirements</link>
@@ -54,7 +54,7 @@
       <para>The difference between <code>lib</code> and <code>dll</code> targets in V1 is completely
       eliminated in V2. There's only one library target type, <code>lib</code>, which can create
       either static or shared libraries depending on the value of the 
-        <link linkend="bbv2.advanced.builtins.features.link"><varname>&lt;link&gt;</varname>
+        <link linkend="bbv2.overview.builtins.features.link"><varname>&lt;link&gt;</varname>
       feature</link>. If your target should be only built in one way<!--"variant" has a different meaning here-->, you
       can add <code>&lt;link&gt;shared</code> or <code>&lt;link&gt;static</code> to its requirements.
       </para>
@@ -77,7 +77,7 @@ exe a : a.cpp ../foo//bar ;
                   
     </section>
 
-    <section id="bbv2.advanced.differences_to_v1.build_process">
+    <section id="bbv2.overview.differences_to_v1.build_process">
       <title>Build process</title>
 
       <para>The command line syntax in V2 is completely different. For example
@@ -92,7 +92,7 @@ bjam toolset=msvc variant=release some_target
 <programlisting>
 bjam msvc release some_target
 </programlisting>
-      See <link linkend="bbv2.advanced.invocation">the reference</link> for a
+      See <link linkend="bbv2.overview.invocation">the reference</link> for a
       complete description of the syntax.
       </para>
 
