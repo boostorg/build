@@ -768,7 +768,8 @@ bjam toolset=gcc variant=debug optimization=space
                 
                 <entry>(Arbitrary string)</entry>
                 
-                <entry>Additional macro definitions for C and C++ compilers.</entry>
+                <entry>Additional macro definitions for C and C++ compilers. The string should be either
+                <code>SYMBOL</code> or <code>SYMBOL=VALUE</code></entry>
               </row>
 
               <row>
@@ -1022,6 +1023,7 @@ exe c : c.cpp /boost/program_options//program_options ;
 
       <section id="bbv2.advanced.targets.requirements">
         <title>Requirements</title>
+        <indexterm><primary>requirements</primary></indexterm>
         <para>Requirements are the properties that should always be present when
         building a target. Typically, they are includes and defines:
 <programlisting>
