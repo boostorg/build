@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd">
 
-  <chapter id="bbv2.advanced">
+  <chapter id="bbv2.overview">
     <title>Overview</title>
 
     <para>
@@ -57,32 +57,32 @@
       <itemizedlist>
         <listitem>
           <para>
-            <link linkend="bbv2.advanced.configuration">How to configure
+            <link linkend="bbv2.overview.configuration">How to configure
             Boost.Build</link>
           </para>
         </listitem>
         <listitem>
           <para>
-            <link linkend="bbv2.advanced.targets">How to declare targets in
+            <link linkend="bbv2.overview.targets">How to declare targets in
               Jamfiles</link>
           </para>
         </listitem>
         <listitem>
           <para>
-            <link linkend="bbv2.advanced.build_process">How the build process
+            <link linkend="bbv2.overview.build_process">How the build process
               works</link>
           </para>
         </listitem>
         <listitem>
           <para>
             Some Basics about the Boost.Jam language. See <xref linkend=
-            "bbv2.advanced.jam_language"/>.
+            "bbv2.overview.jam_language"/>.
           </para>
         </listitem>
       </itemizedlist>
     </para>
 
-    <section id="bbv2.advanced.jam_language">
+    <section id="bbv2.overview.jam_language">
       <title>Boost.Jam Language</title>
 
       <para>
@@ -245,7 +245,7 @@ import <replaceable>module</replaceable> : <replaceable>rule</replaceable> ;
         unqualified names.
       </para>
 
-      <para id="bbv2.advanced.jam_language.actions">
+      <para id="bbv2.overview.jam_language.actions">
         Sometimes, you'd need to specify the actual command lines to be used
         when creating targets. In jam language, you use named actions to do
         this. For example:
@@ -293,7 +293,7 @@ actions create-file-from-another
       </para>
     </section>
 
-  <section id="bbv2.advanced.configuration">
+  <section id="bbv2.overview.configuration">
     <title>Configuration</title>
 
     <para>
@@ -491,7 +491,7 @@ using gcc : 3.4 : g++-3.4 ;
 
     </section>
 
-    <section id="bbv2.advanced.invocation">
+    <section id="bbv2.overview.invocation">
       <title>Invocation</title>
 
       <para>To invoke Boost.Build, type <command>bjam</command> on the command line. Three kinds
@@ -523,7 +523,7 @@ using gcc : 3.4 : g++-3.4 ;
         </varlistentry>
       </variablelist>
 
-      <section id="bbv2.advanced.invocation.examples">
+      <section id="bbv2.overview.invocation.examples">
         <title>Examples</title>
        
         <para>To build all targets defined in Jamfile in the current directory with default properties, run:
@@ -546,7 +546,7 @@ bjam toolset=gcc variant=debug optimization=space
         </para>
       </section>
 
-      <section id="bbv2.advanced.invocation.options">
+      <section id="bbv2.overview.invocation.options">
         <title>Options</title>
       
         <para>Boost.Build recognizes the following command line options.</para>
@@ -688,13 +688,13 @@ bjam toolset=gcc variant=debug optimization=space
         </variablelist>
       </section>
 
-      <section id="bbv2.advanced.invocation.properties">
+      <section id="bbv2.overview.invocation.properties">
         <title>Properties</title>
 
         <para>In the simplest case, the build is performed with a single set of properties,
         that you specify on the command line with elements in the form
         <command><replaceable>feature</replaceable>=<replaceable>value</replaceable></command>.
-        The complete list of features can be found in <xref linkend="bbv2.advanced.builtins.features"/>. 
+        The complete list of features can be found in <xref linkend="bbv2.overview.builtins.features"/>. 
         The most common features are summarized below.</para>
 
         <table>
@@ -842,7 +842,7 @@ bjam include=static,shared
                 
       </section>
 
-      <section id="bbv2.advanced.invocation.targets">
+      <section id="bbv2.overview.invocation.targets">
         <title>Targets</title>
 
         <para>All command line elements that are neither options nor properties are the names of the
@@ -852,10 +852,10 @@ bjam include=static,shared
 
     </section>
 
-    <section id="bbv2.advanced.targets">
+    <section id="bbv2.overview.targets">
       <title>Declaring Targets</title>
 
-      <para id="bbv2.advanced.targets.main">
+      <para id="bbv2.overview.targets.main">
         A <firstterm>Main target</firstterm> is a user-defined named
         entity that can be built, for example an executable file.
         Declaring a main target is usually done using one of the main
@@ -989,7 +989,7 @@ exe b : [ glob *.cpp ] ;  # all .cpp files in this directory are sources
         considered relative to the source directory&#x200A;&#x2014;&#x200A;which is typically
         the directory where the Jamfile is located, but can be changed as
         described in <xref linkend=
-          "bbv2.advanced.projects.attributes.projectrule"/>.
+          "bbv2.overview.projects.attributes.projectrule"/>.
         </para>
 
         <para>
@@ -1021,7 +1021,7 @@ exe c : c.cpp /boost/program_options//program_options ;
         </para>
       </section>
 
-      <section id="bbv2.advanced.targets.requirements">
+      <section id="bbv2.overview.targets.requirements">
         <title>Requirements</title>
         <indexterm><primary>requirements</primary></indexterm>
         <para>Requirements are the properties that should always be present when
@@ -1030,7 +1030,7 @@ exe c : c.cpp /boost/program_options//program_options ;
 exe hello : hello.cpp : &lt;include&gt;/opt/boost &lt;define&gt;MY_DEBUG ;
 </programlisting>
         There is a number of other features, listed in
-        <xref linkend="bbv2.advanced.builtins.features"/>. For example if
+        <xref linkend="bbv2.overview.builtins.features"/>. For example if
         a library can only be built statically, or a file can't be compiled
         with optimization due to a compiler bug, one can use
 <programlisting>
@@ -1039,7 +1039,7 @@ obj main : main.cpp : &lt;optimization&gt;off ;
 </programlisting>
         </para>
 
-        <para id="bbv2.advanced.targets.requirements.conditional">Sometimes, particular relationships need to be maintained
+        <para id="bbv2.overview.targets.requirements.conditional">Sometimes, particular relationships need to be maintained
         among a target's build properties. This can be achieved with
         <firstterm>conditional
         requirements</firstterm>. For example, you might want to set
@@ -1067,7 +1067,7 @@ lib network : network.cpp
 </programlisting>
         </para>
 
-        <para id="bbv2.advanced.targets.requirements.indirect">
+        <para id="bbv2.overview.targets.requirements.indirect">
           A more powerful variant of conditional requirements
           is <firstterm>indirect conditional requirements</firstterm>.
           You can provide a rule that will be called with the current build properties and can compute additional properties
@@ -1184,7 +1184,7 @@ explicit install_programs ;</programlisting>
       </section>
     </section>
 
-    <section id="bbv2.advanced.projects">
+    <section id="bbv2.overview.projects">
       <title>Projects</title>
 
       <para>As mentioned before, targets are grouped into projects,
@@ -1244,7 +1244,7 @@ project tennis
              documentation; you almost *had* to get it wrong once.
         -->
 
-      <para id="bbv2.advanced.projects.attributes.projectrule">
+      <para id="bbv2.overview.projects.attributes.projectrule">
         The default values for those attributes are
         given in the table below.
 
@@ -1372,7 +1372,7 @@ project tennis
            of material. -->
     </section>
 
-  <section id="bbv2.advanced.build_process">
+  <section id="bbv2.overview.build_process">
     <title>The Build Process</title>
 
     <para>When you've described your targets, you want Boost.Build to run the
@@ -1405,7 +1405,7 @@ project tennis
       </para>
     </tip>
 
-    <section id="bbv2.advanced.build_request">
+    <section id="bbv2.overview.build_request">
       <title>Build Request</title>
 
       <para>
@@ -1423,7 +1423,7 @@ bjam app1 lib1//lib1 toolset=gcc variant=debug optimization=full
 bjam app1 lib1//lib1 gcc debug optimization=full
 </programlisting>
         The complete syntax, which has some additional shortcuts, is
-        described in <xref linkend="bbv2.advanced.invocation"/>.
+        described in <xref linkend="bbv2.overview.invocation"/>.
       </para>
     </section>
 
