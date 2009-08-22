@@ -952,8 +952,10 @@ rule viable-source-types-for-generator-real ( generator )
     else
     {
         local result ;
-        for local s in $(source-types)
+        while $(source-types)
         {
+            local s = $(source-types[1]) ;
+            source-types = $(source-types[2-]) ;
             local viable-sources = [ generators.viable-source-types $(s) ] ;
             if $(viable-sources) = *
             {
