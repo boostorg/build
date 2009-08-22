@@ -82,6 +82,93 @@
       </itemizedlist>
     </para>
 
+    <section id="bbv2.overview.concepts">
+      <title>Concepts</title>
+
+      <para>Boost.Build has a few unique concepts that are introduced in this section. The best
+      way to explain the concepts is by comparison with more classical build tools.</para>
+
+      <para>
+        When using any flavour of make, you directly specify <firstterm>targets</firstterm>
+        and commands that are used to create them from other target. The below example
+        creates <filename>a.o</filename> from <filename>a.c</filename> using a hardcoded
+        compiler invocation command.
+<programlisting>
+a.o: a.c
+    g++ -o a.o -g a.c
+</programlisting>
+        This is rather low-level description mechanism and it's hard to adjust commands, options,
+        and sets of created targets depending on the used compiler and operating system.        
+      </para>
+
+      <para>
+        To improve portability, most modern build system provide a set of higher-level 
+        functions that can be used in build description files. Consider this example:
+<programlisting>
+add_program ("a", "a.c")
+</programlisting>
+        This is a function call that creates targets necessary to create executable file
+        from source file <filename>a.c</filename>. Depending on configured properties,
+        different commands line may be used. However, <code>add_program</code> is higher-level,
+        but rather thin level. All targets are created immediately when build description
+        is parsed, which makes it impossible to perform multi-variant builds. Often, change
+        in any build property requires complete reconfiguration of the build tree.        
+      </para>
+
+      <para>
+        In order to support true multivariant builds, Boost.Build introduces the concept of
+        <indexterm> <primary>metatarget</primary> <secondary>definition</secondary></indexterm>
+        <indexterm> <primary>main target</primary> <see>metataget</see> </indexterm>
+        <firstterm>metatarget</firstterm>&mdash;object that is created when build description
+        is parsed and can be later called with specific build properties to generate
+        actual targets. 
+      </para>
+
+      <para>
+        Consider an example:
+<programlisting>
+exe a : a.cpp ;
+</programlisting>
+        When this declaration is parsed, Boost.Build creates a metatarget, but does not
+        yet decides what files must be created, or what commands must be used. After
+        all build files are parsed, Boost.Build considers properties requested on the
+        command line. Supposed you have invoked Boost.Build with:
+<screen>
+bjam toolset=gcc toolset=msvc
+</screen>
+        In that case, the metatarget will be called twice, once with <code>toolset=gcc</code>
+        and once with <code>toolset=msvc</code>. Both invocations will produce concrete
+        targets, that will have different extensions and use different command lines.
+      </para>
+
+      <para>
+        Another key concept is 
+        <indexterm><primary>property</primary><secondary>definition</secondary></indexterm>
+        <firstterm>build property</firstterm>. Build property is a variable
+        that affects the build process. It can be specified on the command line, and is
+        passed when calling a metatarget. While all build tools have a similar mechanism,
+        Boost.Build differs by requiring that all build properties are declared in advance,
+        and providing a large set of properties with portable semantics.
+      </para>
+
+      <para>
+        The final concept is <indexterm><primary>property</primary><secondary>propagation</secondary></indexterm>
+        <firstterm>property propagation</firstterm>. Boost.Build does not require that every
+        metatarget is called with the same properties. Instead, the 
+        "top-level" metatargets are called with the properties specified on the command line.
+        Each metatarget can elect to augment or override some properties (in particular,
+        using the requirements mechanism, see <xref linkend="bbv2.overview.targets.requirements"/>).
+        Then, the dependency metatargets are called with modified properties and produce
+        concrete targets that are then used in build process. Of course, dependency metatargets
+        maybe in turn modify build properties and have dependencies of their own.
+      </para>
+
+      <para>For more in-depth treatment of the requirements and concepts, you may refer 
+      to <ulink url="http://syrcose.ispras.ru/2009/files/04_paper.pdf">SYRCoSE 2009 Boost.Build article</ulink>.
+      </para>
+           
+    </section>
+
     <section id="bbv2.overview.jam_language">
       <title>Boost.Jam Language</title>
 
