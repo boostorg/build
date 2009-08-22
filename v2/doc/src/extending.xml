@@ -8,64 +8,403 @@
     <section id="bbv2.extender.intro">
       <title>Introduction</title>
 
-  <para>This document explains how to extend Boost.Build to accomodate
-  your local requirements. Let's start with a simple but
-  realistic example.</para>
+      <para>
+        This section explains how to extend Boost.Build to accomodate your
+        local requirements&mdash;primarily to add support for non-standard
+        tools you have. Before we start, be sure you have read and understoon
+        the concept of metatarget, <xref linkend="bbv2.overview.concepts"/>,
+        which is critical to understanding the remaining material.
+      </para>
 
-  <para>Say you're writing an application that generates C++ code. If
-  you ever did this, you know that it's not nice. Embedding large
-  portions of C++ code in string literals is very awkward. A much
-  better solution is:</para>
+      <para>
+        The current version of Boost.Build has three levels of targets, listed
+        below.
+      </para>
 
-  <orderedlist>
-    <listitem>
-      <simpara>
-        Write the template of the code to be generated, leaving
-    placeholders at the points that will change
-      </simpara>
-    </listitem>
+      <variablelist>
+        
+        <varlistentry>
+          <term>metatarget</term>
+          <listitem>
+            <para>
+              Object that is created from declarations in Jamfiles. May
+              be called with a set of properties to produce concrete
+              targets.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term>concrete target</term>
+          <listitem>
+            <para>
+              Object that corresponds to a file or an action.
+            </para>
+          </listitem>
+        </varlistentry>
+        
+        <varlistentry>
+          <term>jam target</term>
+          <listitem>
+            <para>
+              Low-level concrete target that is specific to Boost.Jam build
+              engine. Essentially a string&mdash;most often a name of file.                
+            </para>
+          </listitem>
+        </varlistentry>
+        
+      </variablelist>
 
-    <listitem>
-      <simpara>
-        Access the template in your application and replace
-    placeholders with appropriate text.
-      </simpara>
-    </listitem>
+      <para>
+        In most cases, you will only have to deal with concrete targets and
+        the process that creates concrete targets from
+        metatargets. Extending metatarget level is rarely required. The jam
+        targets are typically only used inside the command line patterns.
+      </para>
 
-    <listitem>
-      <simpara>Write the result.</simpara>
-    </listitem>
-  </orderedlist>
+      <warning>
+        <para>All of the Boost.Jam target-related builtin functions, like
+        <code>DEPENDS</code> or <code>ALWAYS</code> operate on jam
+        targets. Applying them to metatargets or concrete targets has no
+        effect.</para>
+      </warning>
+            
+      <section id="bbv2.extender.overview.metatargets">
+        <title>Metatargets</title>
+        
+        <para>Metatarget is an object that records information specified
+        in Jamfile, such as metatarget kind, name, sources and properties,
+        and can be called with specific properties to generate concrete
+        targets. At the code level it is represented by an instance of
+        class derived from <classname>abstract-target</classname>. 
+        <footnote><para>This name is historic, and will be eventuall changed to 
+        <code>metatarget</code></para></footnote>
+        </para>
+        
+        <para>The <methodname>generate</methodname> method takes the build properties
+        (as an instance of the <classname>property-set</classname> class) and returns
+        a list containing:</para>
+        <itemizedlist>
+          <listitem><para>As front element&mdash;Usage-requirements from this invocation
+          (an instance of <classname>property-set</classname>)</para></listitem>
+          <listitem><para>As subsequent elements&mdash;created concrete targets (
+          instances of the <classname>virtual-target</classname> class.)</para></listitem>
+        </itemizedlist>
+        
+        <para>It's possible to lookup a metataget by target-id using the 
+        <code>targets.resolve-reference</code> function, and the
+        <code>targets.generate-from-reference</code> function can both
+        lookup and generate a metatarget.</para>
+        
+        <para>The <classname>abstract-target</classname> class has three immediate
+        derived classes:</para>
+        <itemizedlist>
+          
+          <listitem><para><classname>project-target</classname> that
+          corresponds to a project and is not intended for further
+          subclassing. The <methodname>generate</methodname> method of this
+          class builds all targets in the project that are not marked as
+          explicit.</para></listitem>
+          
+          <listitem><para><classname>main-target</classname> corresponds to a target in a project
+          and contains one or more target alternatives. This class also should not be 
+          subclassed. The <methodname>generate</methodname> method of this class selects 
+          an alternative to build, and calls the <methodname>generate</methodname> method of that
+          alternative.</para></listitem>
+          
+          <listitem><para><classname>basic-target</classname> corresponds to a
+          specific target alternative. This is base class, with a number of
+          derived classes.  The <methodname>generate</methodname> method
+          processes the target requirements and requested build properties to
+          determine final properties for the target, builds all sources, and
+          finally calls the abstract <classname>construct</classname> method with the list
+          of source virtual targets, and the final properties.
+          </para></listitem>
+          
+        </itemizedlist>
+        
+        <para>The instances of the <classname>project-target</classname> and
+        <classname>main-target</classname> classes are created
+        implicitly&mdash;when loading a new Jamfiles, or when a new target
+        alternative with as-yet unknown name is created.  The instances of the
+        classes derived from <classname>basic-target</classname> are typically
+        created when Jamfile calls a <firstterm>metatarget rule</firstterm>,
+        such as such as <code>exe</code>.
+        </para>
+        
+        <para>It it permissible to create a custom class derived from
+        <classname>basic-target</classname> and create new metatarget rule
+        that creates instance of such target. However, in the majority
+        of cases, a specific subclass of <classname>basic-target</classname>&mdash;
+        <classname>typed-target</classname> is used. That class is associated
+        with a <firstterm>type</firstterm> and relays to <firstterm>generators</firstterm>
+        to construct concrete targets of that type. This process will be explained below.
+        When a new type is declared, a new metatarget rule is automatically defined.
+        That rule creates new instance of type-target, associated with that type.                
+        </para>
+        
+      </section>
 
-  <para>It's quite easy to achieve. You write special verbatim files that are
-  just C++, except that the very first line of the file contains the name of a
-  variable that should be generated. A simple tool is created that takes a
-  verbatim file and creates a cpp file with a single <code>char*</code> variable
-  whose name is taken from the first line of the verbatim file and whose value
-  is the file's properly quoted content.</para>
+      <section id="bbv2.extender.overview.targets">
+        <title>Concrete targets</title>
 
-  <para>Let's see what Boost.Build can do.</para>
+        <para>Concrete targets are represented by instance of classes derived
+        from <classname>virtual-target</classname>. The most commonly used
+        subclass is <classname>file-target</classname>. A file target is associated
+        with an action that creates it&mdash; an instance of the <classname>action</classname>
+        class. The action, in turn, hold a list of source targets. It also holds the 
+        <classname>property-set</classname> instance with the build properties that
+        should be used for the action.</para>
 
-  <para>First off, Boost.Build has no idea about "verbatim files". So, you must
-  register a new target type. The following code does it:</para>
+        <para>Here's an example of creating a target from another target, <code>source</code></para>
+<programlisting>
+local a = [ new action $(source) : common.copy : $(property-set) ] ;
+local t = [ new file-target $(name) : CPP : $(project) : $(a) ] ;
+</programlisting>
+        <para>The first line creates an instance of the <classname>action></classname> class.
+        The first parameter is the list of sources. The second parameter is the name
+        a jam-level <link linkend="bbv2.overview.jam_language.actions">action</link>.
+        The third parameter is the property-set applying to this action. The second line
+        creates a target. We specifie a name, a type and a project. We also pass the
+        action object created earlier.  If the action creates several targets, we can repeat
+        the second line several times.</para>
 
+        <para>In some cases, code that creates concrete targets may be invoked more than
+        once with the same properties. Returning to different instance of <classname>file-target</classname>
+        that correspond to the same file clearly will result in problems. Therefore, whenever
+        returning targets you should pass them via the <code>virtual-target.register</code>
+        function, that will replace targets with previously created identical ones, as
+        necessary.<footnote><para>This create-then-register pattern is caused by limitations 
+        of the Boost.Jam language. Python port is likely to never create duplicate targets.</para></footnote>
+        Here are a couple of examples:
+<programlisting>
+return [ virtual-target.register $(t) ] ;
+return [ sequence.transform virtual-target.register : $(targets) ] ;
+</programlisting>
+        </para>
+
+      </section>
+      
+      <section id="bbv2.extender.overview.generators">
+        <title>Generators</title>
+
+        <para>In theory, every kind of metatarget in Boost.Build (like <code>exe</code>, 
+        <code>lib</code> or <code>obj</code>) could be implemented
+        by writing a new metatarget class that, independently of the other code, figures
+        what files to produce and what commands to use. However, that would be rather inflexible.
+        For example, adding support for a new compiler would require editing several metatargets.
+        </para>
+
+        <para>In practice, most files have specific types, and most tools
+        consume and produce files of specific type. To take advantage of this
+        fact, Boost.Build defines concept of target type and
+        <indexterm><primary>generators</primary></indexterm>
+        <firstterm>generators</firstterm>, and has special metatarget class
+        <classname>typed-target</classname>.  Target type is merely an
+        identifier. It is associated with a set of file extensions that
+        correspond to that type. Generator is an abstraction of a tool. It advertises
+        the types it produces and, if called with a set of input target, tries to construct
+        output targets of the advertised types. Finally, <classname>typed-target</classname>
+        is associated with specific target type, and relays the generator (or generators)
+        for that type.
+        </para>
+
+        <para>A generator is an instance of a class derived from <classname>generator</classname>.
+        The <classname>generator</classname> class itself is suitable for common cases.
+        You can define derived classes for custom scenarios.</para>
+
+        <!--
+        <para>Given a set of generators, the fundamental operation is to
+        construct a target of a given type, with given properties, from a
+        set of targets. That operation is performed by rule
+        <literal>generators.construct</literal> and the used algorithm is described
+        below.</para>
+
+        <section>
+          <title>Selecting and ranking viable generators</title>
+
+          <para>Each generator, in addition to target types that it can
+          produce, have attribute that affects its applicability in
+          particular sitiation. Those attributes are:</para>
+
+          <orderedlist>
+            <listitem>
+              <simpara>
+                Required properties, which are properties absolutely
+                necessary for the generator to work. For example, generator
+                encapsulating the gcc compiler would have &lt;toolset&gt;gcc as
+                required property.
+              </simpara>
+            </listitem>
+
+            <listitem>
+              <simpara>
+                Optional properties, which increase the generators
+                suitability for a particual build.
+              </simpara>
+            </listitem>
+          </orderedlist>
+
+          <para>
+            Generator's required and optional properties may not include
+            either free or incidental properties. (Allowing this would
+            greatly complicate caching targets).
+          </para>
+
+          <para>When trying to construct a target, the first step is to select
+          all possible generators for the requested target type, which
+          required properties are a subset of requested properties.
+          Generators that were already selected up the call stack are
+          excluded. In addition, if any composing generators were selected
+          up the call stack, all other composing generators are ignored
+          (TODO: define composing generators). The found generators
+          are assigned a rank, which is the number of optional properties
+          present in requested properties. Finally, generators with highest
+          rank are selected for futher processing.</para>
+
+        </section>
+        <section>
+          <title>Running generators</title>
+
+          <para>When generators are selected, each is run to produce a list of
+          created targets. This list might include targets that are not of
+          requested types, because generators create the same targets as
+          some tool, and tool's behaviour is fixed. (Note: should specify
+          that in some cases we actually want extra targets). If generator
+          fails, it returns an empty list. Generator is free to call
+          'construct' again, to convert sources to the types it can handle.
+          It also can pass modified properties to 'construct'. However, a
+          generator is not allowed to modify any propagated properties,
+          otherwise when actually consuming properties we might discover
+          that the set of propagated properties is different from what was
+          used for building sources.</para>
+
+          <para>For all targets that are not of requested types, we try to
+          convert them to requested type, using a second call to
+          <literal>construct</literal>. This is done in order to support
+          transformation sequences where single source file expands to
+          several later. See <ulink url=
+          "http://groups.yahoo.com/group/jamboost/message/1667">this
+          message</ulink> for details.</para>
+
+        </section>
+
+        -->
+
+        <!-- FIXME: review the below content. Maybe, some of it is
+             still useful.
+        <section>
+          <title>Property adjustment</title>
+
+          <para>Because target location is determined by the build system, it
+          is sometimes necessary to adjust properties, in order to not
+          break actions. For example, if there's an action that generates
+          a header, say "a_parser.h", and a source file "a.cpp" which
+          includes that file, we must make everything work as if a_parser.h
+          is generated in the same directory where it would be generated
+          without any subvariants.</para>
+
+          <para>Correct property adjustment can be done only after all targets
+          are created, so the approach taken is:</para>
+
+          <orderedlist>
+            <listitem>
+              <para>
+                When dependency graph is constructed, each action can be
+                assigned a rule for property adjustment.
+              </para>
+            </listitem>
+
+            <listitem>
+              <para>
+                When virtual target is actualized, that rule is run and
+                return the final set of properties. At this stage it can use
+                information of all created virtual targets.
+              </para>
+            </listitem>
+          </orderedlist>
+
+          <para>In case of quoted includes, no adjustment can give 100% correct
+          results. If target dirs are not changed by build system, quoted
+          includes are searched in "." and then in include path, while angle
+          includes are searched only in include path. When target dirs are
+          changed, we'd want to make quoted includes to be search in "." then in
+          additional dirs and then in the include path and make angle includes
+          be searched in include path, probably with additional paths added at
+          some position. Unless, include path already has "." as the first
+          element, this is not possible. So, either generated headers should not
+          be included with quotes, or first element of include path should be
+          ".", which essentially erases the difference between quoted and angle
+          includes. <emphasis role="bold">Note:</emphasis> the only way to get
+          "." as include path into compiler command line is via verbatim
+          compiler option. In all other case, Boost.Build will convert "." into
+          directory where it occurs.</para> 
+
+        </section>
+
+        -->
+
+      </section>
+      
+    </section>
+
+    <section id="bbv2.extender.example">
+      <title>Example: 1-to-1 generator</title>
+
+      <para>Say you're writing an application that generates C++ code. If
+      you ever did this, you know that it's not nice. Embedding large
+      portions of C++ code in string literals is very awkward. A much
+      better solution is:</para>
+
+      <orderedlist>
+        <listitem>
+          <simpara>
+            Write the template of the code to be generated, leaving
+            placeholders at the points that will change
+          </simpara>
+        </listitem>
+        
+        <listitem>
+          <simpara>
+            Access the template in your application and replace
+            placeholders with appropriate text.
+          </simpara>
+        </listitem>
+        
+        <listitem>
+          <simpara>Write the result.</simpara>
+        </listitem>
+      </orderedlist>
+      
+      <para>It's quite easy to achieve. You write special verbatim files that are
+      just C++, except that the very first line of the file contains the name of a
+      variable that should be generated. A simple tool is created that takes a
+      verbatim file and creates a cpp file with a single <code>char*</code> variable
+      whose name is taken from the first line of the verbatim file and whose value
+      is the file's properly quoted content.</para>
+
+      <para>Let's see what Boost.Build can do.</para>
+      
+      <para>First off, Boost.Build has no idea about "verbatim files". So, you must
+      register a new target type. The following code does it:</para>
+      
 <programlisting>
 import type ;
 type.register VERBATIM : verbatim ;
 </programlisting>
 
-  <para>The first parameter to <functionname>type.register</functionname> gives
-  the name of the declared type. By convention, it's uppercase. The second
-  parameter is the suffix for files of this type. So, if Boost.Build sees
-  <filename>code.verbatim</filename> in a list of sources, it knows that it's of
-  type <code>VERBATIM</code>.</para>
+      <para>The first parameter to <functionname>type.register</functionname> gives
+      the name of the declared type. By convention, it's uppercase. The second
+      parameter is the suffix for files of this type. So, if Boost.Build sees
+      <filename>code.verbatim</filename> in a list of sources, it knows that it's of
+      type <code>VERBATIM</code>.</para>
 
-  <para>Next, you tell Boost.Build that the verbatim files can be
-  transformed into C++ files in one build step.  A
-  <firstterm>generator</firstterm> is a template for a build step that
-  transforms targets of one type (or set of types) into another.  Our
-  generator will be called <code>verbatim.inline-file</code>; it
-  transforms <code>VERBATIM</code> files into <code>CPP</code> files:
+      <para>Next, you tell Boost.Build that the verbatim files can be
+      transformed into C++ files in one build step.  A
+      <firstterm>generator</firstterm> is a template for a build step that
+      transforms targets of one type (or set of types) into another.  Our
+      generator will be called <code>verbatim.inline-file</code>; it
+      transforms <code>VERBATIM</code> files into <code>CPP</code> files:
 
 <programlisting>
 import generators ;
@@ -73,9 +412,9 @@ generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
 </programlisting>
   </para>
 
-  <para>Lastly, you have to inform Boost.Build about the shell
-  commands used to make that transformation.  That's done with an
-  <code>actions</code> declaration.
+       <para>Lastly, you have to inform Boost.Build about the shell
+       commands used to make that transformation.  That's done with an
+       <code>actions</code> declaration.
 
 <programlisting>
 actions inline-file
