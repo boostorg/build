@@ -50,7 +50,7 @@ int main() { a(); }
 t.write("jamroot.jam", """
 """)
 
-t.run_build_system()
+t.run_build_system("-d2")
 t.expect_addition("bin/$toolset/debug/main.exe")
 
 
