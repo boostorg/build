@@ -58,7 +58,7 @@ t.write("b/jamfile.jam", """
 lib b : b.cpp ../a//a ;
 """)
 
-t.run_build_system(stderr=None)
+t.run_build_system("-d2", stderr=None)
 t.expect_addition("bin/$toolset/debug/main.exe")
 t.rm(["bin", "a/bin", "b/bin"])
 
