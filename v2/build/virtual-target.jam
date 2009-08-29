@@ -113,7 +113,12 @@ class virtual-target
     {
         return $(self.dependencies) ;
     }
-
+    
+    rule always ( )
+    {
+        .always = 1 ;
+    }
+    
     # Generates all the actual targets and sets up build actions for this
     # target.
     #
@@ -128,7 +133,12 @@ class virtual-target
     rule actualize ( scanner ? )
     {
         local actual-name = [ actualize-no-scanner ] ;
-
+        
+        if $(.always)
+        {
+            ALWAYS $(actual-name) ;
+        }
+        
         if ! $(scanner)
         {
             return $(actual-name) ;
