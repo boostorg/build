@@ -17,19 +17,21 @@ import assert : * ;
 local rule setup ( )
 {
     .all-attributes =
-        implicit
-        composite
-        optional
-        symmetric
-        free
-        incidental
-        path
-        dependency
-        propagated
-        link-incompatible
-        subfeature
-        order-sensitive
-    ;
+
+      implicit 
+      executed 
+      composite
+      optional 
+      symmetric
+      free      
+      incidental  
+      path  
+      dependency  
+      propagated 
+      link-incompatible
+      subfeature
+      order-sensitive
+      ;
 
     .all-features = ;
     .all-subfeatures = ; # non-subfeatures
@@ -156,7 +158,6 @@ rule feature (
 rule set-default ( feature : value )
 {
     local f = [ grist $(feature) ] ;
-<<<<<<< .working
     local a = $($(f).attributes) ;
     local bad-attribute = ;
     if free in $(a)
@@ -172,9 +173,6 @@ rule set-default ( feature : value )
         errors.error "$(bad-attribute) property $(f) cannot have a default." ;
     }
     if ! $(value) in $($(f).values)
-=======
-    if ! $(value) in $($(f).values) 
->>>>>>> .merge-right.r42493
     {
         errors.error "The specified default value, '$(value)' is invalid" 
           : "allowed values are: " $($(f).values) ;
