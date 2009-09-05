@@ -1,5 +1,5 @@
 # Status: being ported by Vladimir Prus
-# Base revision: 40480
+# Base revision: 41324
 
 # Copyright 2002, 2003 Dave Abrahams 
 # Copyright 2002, 2005, 2006 Rene Rivera 
@@ -1008,4 +1008,7 @@ attribute is allowed only for top-level 'project' invocations""")
         """
 
         c = string.join(condition, ",")
-        return [c + ":" + r for r in requirements]
+        if c.find(":") != -1:
+            return [c + r for r in requirements]
+        else:
+            return [c + ":" + r for r in requirements]
