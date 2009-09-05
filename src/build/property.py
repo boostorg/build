@@ -162,7 +162,7 @@ def translate_paths (properties, path):
 
             t = [os.path.join(path, v) for v in values]
             t = '&&'.join (t)
-            tp = backslashes_to_slashes (replace_grist (t, get_grist (p)))
+            tp = replace_grist (t, get_grist (p)).replace("\\", "/")
             result.append (condition + tp)
             
         else:
