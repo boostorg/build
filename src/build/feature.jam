@@ -1,19 +1,18 @@
-# Copyright 2001, 2002, 2003 Dave Abrahams
-# Copyright 2002, 2006 Rene Rivera
-# Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
-# Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# Copyright 2001, 2002, 2003 Dave Abrahams 
+# Copyright 2002, 2006 Rene Rivera 
+# Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus 
+# Distributed under the Boost Software License, Version 1.0. 
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
-import assert : * ;
 import "class" : * ;
-import errors : lol->list ;
-import indirect ;
-import modules ;
-import regex ;
+
+import errors : error lol->list ;
 import sequence ;
+import regex ;
 import set ;
 import utility ;
-
+import modules indirect ;
+import assert : * ;
 
 local rule setup ( )
 {
@@ -33,21 +32,19 @@ local rule setup ( )
     ;
 
     .all-features = ;
-    .all-subfeatures = ;
-    .all-top-features = ;  # non-subfeatures
+    .all-subfeatures = ; # non-subfeatures
+    .all-top-features = ; # non-subfeatures
     .all-implicit-values = ;
 }
 setup ;
 
-
-# Prepare a fresh space to test in by moving all global variable settings into
-# the given temporary module and erasing them here.
-#
+# prepare a fresh space to test in by moving all global variable
+# settings into the given temporary module and erasing them here.
 rule prepare-test ( temp-module )
 {
     DELETE_MODULE $(temp-module) ;
-
-    # Transfer globals to temp-module.
+    
+    # transfer globals to temp-module
     for local v in [ VARNAMES feature ]
     {
         if [ MATCH (\\.) : $(v) ]
@@ -59,13 +56,11 @@ rule prepare-test ( temp-module )
     setup ;
 }
 
-
-# Clear out all global variables and recover all variables from the given
-# temporary module.
-#
+# clear out all global variables and recover all variables from the
+# given temporary module
 rule finish-test ( temp-module )
 {
-    # Clear globals.
+    # clear globals
     for local v in [ VARNAMES feature ]
     {
         if [ MATCH (\\.) : $(v) ]
@@ -73,7 +68,7 @@ rule finish-test ( temp-module )
             $(v) = ;
         }
     }
-
+    
     for local v in [ VARNAMES $(temp-module) ]
     {
         $(v) = [ modules.peek $(temp-module) : $(v) ] ;
@@ -82,33 +77,33 @@ rule finish-test ( temp-module )
 }
 
 
-# Transform features by bracketing any elements which are not already bracketed
-# by "<>".
-#
+# Transform features by bracketing any elements which aren't already
+# bracketed by "<>"
 local rule grist ( features * )
 {
     local empty = "" ;
-    return $(empty:G=$(features)) ;
+    local r = $(empty:G=$(features)) ;
+    return $(r) ;
 }
 
+empty = "" ;
 
-# Declare a new feature with the given name, values, and attributes.
-#
-rule feature (
-      name          # Feature name.
-    : values *      # Allowable values - may be extended later using feature.extend.
-    : attributes *  # Feature attributes (e.g. implicit, free, propagated...).
+# declare a new feature with the given name, values, and attributes.
+rule feature ( 
+    name         # feature name
+  : values *     # the allowable values - may be extended later with feature.extend
+  : attributes * # The feature's attributes (e.g. implicit, free, propagated...)
 )
 {
     name = [ grist $(name) ] ;
 
     local error ;
 
-    # Check for any unknown attributes.
+    # if there are any unknown attributes...
     if ! ( $(attributes) in $(.all-attributes) )
     {
         error = unknown attributes:
-            [ set.difference $(attributes) : $(.all-attributes) ] ;
+          [ set.difference $(attributes) : $(.all-attributes) ] ;
     }
     else if $(name) in $(.all-features)
     {
@@ -119,23 +114,24 @@ rule feature (
         error = free features cannot also be implicit ;
     }
     else if free in $(attributes) && propagated in $(attributes)
-    {
+    {            
         error = free features cannot be propagated ;
-    }
-    else
+    }           
+    
+    else 
     {
         local m = [ MATCH (.*=.*) : $(values) ] ;
         if $(m[1])
         {
             error = "feature value may not contain '='" ;
-        }
+        }        
     }
-
+    
     if $(error)
     {
-        errors.error $(error)
-              : "in" feature declaration:
-              : feature [ lol->list $(1) : $(2) : $(3) ] ;
+        error $(error)
+          : "in" feature declaration:
+          : feature [ lol->list $(1) : $(2) : $(3) ] ;
     }
 
     $(name).values ?= ;
@@ -152,15 +148,15 @@ rule feature (
     {
         .all-top-features += $(name) ;
     }
-    extend $(name) : $(values) ;
+    extend $(name) : $(values) ;    
 }
 
-
-# Sets the default value of the given feature, overriding any previous default.
-#
+# set default value of the given feature, overriding any previous
+# default.
 rule set-default ( feature : value )
 {
     local f = [ grist $(feature) ] ;
+<<<<<<< .working
     local a = $($(f).attributes) ;
     local bad-attribute = ;
     if free in $(a)
@@ -176,16 +172,18 @@ rule set-default ( feature : value )
         errors.error "$(bad-attribute) property $(f) cannot have a default." ;
     }
     if ! $(value) in $($(f).values)
+=======
+    if ! $(value) in $($(f).values) 
+>>>>>>> .merge-right.r42493
     {
-        errors.error "The specified default value, '$(value)' is invalid"
+        errors.error "The specified default value, '$(value)' is invalid" 
           : "allowed values are: " $($(f).values) ;
-    }
+    }    
     $(f).default = $(value) ;
 }
 
 
-# Returns the default property values for the given features.
-#
+# return the default property values for the given features.
 rule defaults ( features * )
 {
     local result ;
@@ -204,9 +202,7 @@ rule defaults ( features * )
     return $(result) ;
 }
 
-
-# Returns true iff all 'names' elements are valid features.
-#
+# returns true iff all elements of names are valid features.
 rule valid ( names + )
 {
     if $(names) in $(.all-features)
@@ -215,36 +211,31 @@ rule valid ( names + )
     }
 }
 
-
-# Returns the attibutes of the given feature.
-#
+# return the attibutes of the given feature
 rule attributes ( feature )
 {
     return $($(:E=:G=$(feature)).attributes) ;
 }
 
-
-# Returns the values of the given feature.
-#
+# return the values of the given feature
 rule values ( feature )
 {
     return $($(:E=:G=$(feature)).values) ;
 }
 
-
-# Returns true iff 'value-string' is a value-string of an implicit feature.
-#
+# returns true iff 'value-string' is a value-string of an implicit feature
 rule is-implicit-value ( value-string )
 {
     local v = [ regex.split $(value-string) - ] ;
     local failed ;
-    if ! $(v[1]) in $(.all-implicit-values)
+    if ! $(v[1]) in $(.all-implicit-values) 
     {
         failed = true ;
     }
-    else
+    else 
     {
         local feature = $($(v[1]).implicit-feature) ;
+        
         for local subvalue in $(v[2-])
         {
             if ! [ find-implied-subfeature $(feature) $(subvalue) : $(v[1]) ]
@@ -253,91 +244,82 @@ rule is-implicit-value ( value-string )
             }
         }
     }
-
-    if ! $(failed)
+    
+    if ! $(failed)       
     {
         return true ;
     }
 }
 
-
-# Returns the implicit feature associated with the given implicit value.
-#
+# return the implicit feature associated with the given implicit value.
 rule implied-feature ( implicit-value )
 {
     local components = [ regex.split $(implicit-value) "-" ] ;
-
+    
     local feature = $($(components[1]).implicit-feature) ;
     if ! $(feature)
     {
-        errors.error \"$(implicit-value)\" is not a value of an implicit feature ;
-        feature = "" ;  # Keep testing happy; it expects a result.
+        error \"$(implicit-value)\" is not a value of an implicit feature ;
+        feature = "" ; # keep testing happy; it expects a result.
     }
     return $(feature) ;
 }
 
-
 local rule find-implied-subfeature ( feature subvalue : value-string ? )
 {
-    # Feature should be of the form <feature-name>.
+    # feature should be of the form <feature-name>
     if $(feature) != $(feature:G)
     {
-        errors.error invalid feature $(feature) ;
+        error invalid feature $(feature) ;
     }
 
     return $($(feature)$(value-string:E="")<>$(subvalue).subfeature) ;
 }
 
-
-# Given a feature and a value of one of its subfeatures, find the name of the
-# subfeature. If value-string is supplied, looks for implied subfeatures that
-# are specific to that value of feature
-#
-rule implied-subfeature (
-      feature         # The main feature name.
-      subvalue        # The value of one of its subfeatures.
-    : value-string ?  # The value of the main feature.
+# Given a feature and a value of one of its subfeatures, find the name
+# of the subfeature. If value-string is supplied, looks for implied
+# subfeatures that are specific to that value of feature
+rule implied-subfeature ( 
+  feature               # The main feature name
+    subvalue            # The value of one of its subfeatures
+    : value-string ?    # The value of the main feature
 )
 {
     local subfeature = [ find-implied-subfeature $(feature) $(subvalue)
-        : $(value-string) ] ;
+      : $(value-string) ] ;
+
     if ! $(subfeature)
     {
         value-string ?= "" ;
-        errors.error \"$(subvalue)\" is not a known subfeature value of
-            $(feature)$(value-string) ;
+        error \"$(subvalue)\" is not a known subfeature value of
+          $(feature)$(value-string) ;
     }
+
     return $(subfeature) ;
 }
 
-
-# Generate an error if the feature is unknown.
-#
+# generate an error if the feature is unknown
 local rule validate-feature ( feature )
 {
     if ! $(feature) in $(.all-features)
     {
-        errors.error unknown feature \"$(feature)\" ;
+        error unknown feature \"$(feature)\" ;
     }
 }
 
-
-# Given a feature and its value or just a value corresponding to an implicit
-# feature, returns a property set consisting of all component subfeatures and
-# their values. For example all the following calls:
+# Given a feature and value, or just a value corresponding to an
+# implicit feature, returns a property set consisting of all component
+# subfeatures and their values. For example:
 #
-#   expand-subfeatures-aux <toolset>gcc-2.95.2-linux-x86
-#   expand-subfeatures-aux gcc-2.95.2-linux-x86
+#   expand-subfeatures <toolset>gcc-2.95.2-linux-x86
+#       -> <toolset>gcc <toolset-version>2.95.2 <toolset-os>linux <toolset-cpu>x86
 #
-# return:
-#
-#   <toolset>gcc <toolset-version>2.95.2 <toolset-os>linux <toolset-cpu>x86
-#
-local rule expand-subfeatures-aux (
-      feature ?        # Feature name or empty if value corresponds to an
-                       # implicit property.
-    : value            # Feature value.
-    : dont-validate ?  # If set, no value string validation will be done.
+#   equivalent to:
+#       expand-subfeatures gcc-2.95.2-linux-x86
+local rule expand-subfeatures-aux ( 
+    feature ? # The name of the feature, or empty if value corresponds to an implicit property
+  : value     # The value of the feature.
+  : dont-validate ? # If set, no validation of value string will be done  
 )
 {
     if $(feature)
@@ -354,32 +336,31 @@ local rule expand-subfeatures-aux (
         validate-feature $(feature) ;
     }
     if ! $(dont-validate)
-    {
+    {        
         validate-value-string $(feature) $(value) ;
     }
-
+    
     local components = [ regex.split $(value) "-" ] ;
-
-    # Get the top-level feature's value.
+    
+    # get the top-level feature's value
     local value = $(components[1]:G=) ;
 
     local result = $(components[1]:G=$(feature)) ;
-
+    
     local subvalues = $(components[2-]) ;
     while $(subvalues)
     {
-        local subvalue = $(subvalues[1]) ;  # Pop the head off of subvalues.
+        local subvalue = $(subvalues[1]) ; # pop the head off of subvalues
         subvalues = $(subvalues[2-]) ;
-
-        local subfeature = [ find-implied-subfeature $(feature) $(subvalue) :
-            $(value) ] ;
-
-        # If no subfeature was found reconstitute the value string and use that.
+        
+        local subfeature = [ find-implied-subfeature $(feature) $(subvalue) : $(value) ] ;
+        
+        # If no subfeature was found, reconstitute the value string and use that
         if ! $(subfeature)
         {
             result = $(components:J=-) ;
             result = $(result:G=$(feature)) ;
-            subvalues = ;  # Stop looping.
+            subvalues = ; # stop looping
         }
         else
         {
@@ -387,27 +368,25 @@ local rule expand-subfeatures-aux (
             result += $(subvalue:G=$(f)-$(subfeature)) ;
         }
     }
-
+    
     return $(result) ;
 }
 
-
-# Make all elements of properties corresponding to implicit features explicit,
-# and express all subfeature values as separate properties in their own right.
-# For example, all of the following properties
+# Make all elements of properties corresponding to implicit features
+# explicit, and express all subfeature values as separate properties
+# in their own right. For example, the property
 #
 #    gcc-2.95.2-linux-x86
-#    <toolset>gcc-2.95.2-linux-x86
 #
 # might expand to
 #
 #   <toolset>gcc <toolset-version>2.95.2 <toolset-os>linux <toolset-cpu>x86
 #
-rule expand-subfeatures (
-    properties *       # Property set with elements of the form
-                       # <feature>value-string or just value-string in the case
-                       # of implicit features.
-    : dont-validate ?
+rule expand-subfeatures ( 
+  properties * # property set with elements of the form
+           # <feature>value-string or just value-string in the
+           # case of implicit features.
+  : dont-validate ?
 )
 {
     local result ;
@@ -415,20 +394,18 @@ rule expand-subfeatures (
     {
         # Don't expand subfeatures in subfeatures
         if ! [ MATCH "(:)" : $(p:G) ]
-        {
+        {            
             result += [ expand-subfeatures-aux $(p:G) : $(p:G=) : $(dont-validate) ] ;
         }
         else
         {
             result += $(p) ;
-        }
+        }        
     }
     return $(result) ;
 }
 
-
 # Helper for extend, below. Handles the feature case.
-#
 local rule extend-feature ( feature : values * )
 {
     feature = [ grist $(feature) ] ;
@@ -439,7 +416,7 @@ local rule extend-feature ( feature : values * )
         {
             if $($(v).implicit-feature)
             {
-                errors.error $(v) is already associated with the \"$($(v).implicit-feature)\" feature ;
+                error $(v) is already associated with the \"$($(v).implicit-feature)\" feature ;
             }
             $(v).implicit-feature = $(feature) ;
         }
@@ -448,25 +425,23 @@ local rule extend-feature ( feature : values * )
     }
     if ! $($(feature).values)
     {
-        # This is the first value specified for this feature so make it be the
-        # default.
+        # This is the first value specified for this feature,
+        # take it as default value
         $(feature).default = $(values[1]) ;
-    }
+    }    
     $(feature).values += $(values) ;
 }
 
-
 # Checks that value-string is a valid value-string for the given feature.
-#
 rule validate-value-string ( feature value-string )
-{
-    if ! (
-        free in $($(feature).attributes)
-        || ( $(value-string) in $(feature).values )
+{    
+    if ! ( 
+      free in $($(feature).attributes) 
+      || ( $(value-string) in $(feature).values )
     )
     {
         local values = $(value-string) ;
-
+    
         if $($(feature).subfeatures)
         {
             if ! ( $(value-string) in $($(feature).subfeatures) ) {
@@ -476,34 +451,38 @@ rule validate-value-string ( feature value-string )
 
         if ! ( $(values[1]) in $($(feature).values) ) &&
 
-            # An empty value is allowed for optional features.
-            ( $(values[1]) || ! ( optional in $($(feature).attributes) ) )
+            # An empty value is allowed for optional features
+           ( $(values[1]) || ! ( optional in $($(feature).attributes) ) )
         {
-            errors.error \"$(values[1])\" is not a known value of feature $(feature)
-                : legal values: \"$($(feature).values)\" ;
+            error \"$(values[1])\" is not a known value of feature $(feature)
+              : legal values: \"$($(feature).values)\" ;
         }
 
         for local v in $(values[2-])
         {
-            # This will validate any subfeature values in value-string.
+            # this will validate any subfeature values in value-string
             implied-subfeature $(feature) $(v) : $(values[1]) ;
         }
     }
 }
 
-
 # A helper that computes:
-#  * name(s) of module-local variable(s) used to record the correspondence
-#    between subvalue(s) and a subfeature
-#  * value of that variable when such a subfeature/subvalue has been defined and
-# returns a list consisting of the latter followed by the former.
+#  * the name(s) of the module-local variable(s) used to record the
+#    correspondence between subvalue(s) and a subfeature
 #
-local rule subvalue-var (
-    feature         # Main feature name.
-    value-string ?  # If supplied, specifies a specific value of the main
-                    # feature for which the subfeature values are valid.
-    : subfeature    # Subfeature name.
-    : subvalues *   # Subfeature values.
+#  * the value of that variable when such a subfeature/subvalue has
+#    been defined
+#
+# Returns a list consisting of the latter followed by the former
+local rule subvalue-var ( 
+  feature           # Main feature name
+    
+    value-string ?  # If supplied, specifies a specific value of the
+                    # main feature for which the subfeature values
+                    # are valid
+    
+    : subfeature    # The name of the subfeature
+    : subvalues *   # The subfeature values
 )
 {
     feature = [ grist $(feature) ] ;
@@ -519,51 +498,48 @@ local rule subvalue-var (
     $(feature)$(value-string:E="")<>$(subvalues).subfeature ;
 }
 
-
-# Extends the given subfeature with the subvalues. If the optional value-string
-# is provided, the subvalues are only valid for the given value of the feature.
-# Thus, you could say that <target-platform>mingw is specific to
-# <toolset>gcc-2.95.2 as follows:
+# Extends the given subfeature with the subvalues.  If the optional
+# value-string is provided, the subvalues are only valid for the given
+# value of the feature. Thus, you could say that
+# <target-platform>mingw is specifc to <toolset>gcc-2.95.2 as follows:
 #
 #       extend-subfeature toolset gcc-2.95.2 : target-platform : mingw ;
 #
-rule extend-subfeature (
-    feature         # The feature whose subfeature is being extended.
-
-    value-string ?  # If supplied, specifies a specific value of the main
-                    # feature for which the new subfeature values are valid.
-
-    : subfeature    # Subfeature name.
-    : subvalues *   # Additional subfeature values.
+rule extend-subfeature ( 
+  feature           # The feature whose subfeature is being extended
+    
+    value-string ?  # If supplied, specifies a specific value of the
+                    # main feature for which the new subfeature values
+                    # are valid
+    
+    : subfeature    # The name of the subfeature
+    : subvalues *   # The additional values of the subfeature being defined.
 )
 {
-    local subfeature-vars = [ subvalue-var $(feature) $(value-string)
-        : $(subfeature) : $(subvalues) ] ;
-
+    local subfeature-vars = [ 
+      subvalue-var $(feature) $(value-string) : $(subfeature) : $(subvalues) ] ;
+    
     local f = [ utility.ungrist [ grist $(feature) ] ] ;
     extend $(f)-$(subfeature-vars[1]) : $(subvalues) ;
-
-    # Provide a way to get from the given feature or property and subfeature
-    # value to the subfeature name.
+    
+    # provide a way to get from the given feature or property and
+    # subfeature value to the subfeature name.
     $(subfeature-vars[2-]) = $(subfeature-vars[1]) ;
 }
 
-
-# Returns true iff the subvalues are valid for the feature. When the optional
-# value-string is provided, returns true iff the subvalues are valid for the
-# given value of the feature.
-#
+# Returns true iff the subvalues are valid for the feature.  When the
+# optional value-string is provided, returns true iff the subvalues
+# are valid for the given value of the feature.
 rule is-subvalue ( feature : value-string ? : subfeature : subvalue )
 {
-    local subfeature-vars = [ subvalue-var $(feature) $(value-string)
-        : $(subfeature) : $(subvalue) ] ;
-
-    if $($(subfeature-vars[2])) = $(subfeature-vars[1])
+    local subfeature-vars = [ 
+      subvalue-var $(feature) $(value-string) : $(subfeature) : $(subvalue) ] ;
+    
+    if $($(subfeature-vars[2])) = $(subfeature-vars[1]) 
     {
         return true ;
     }
 }
-
 
 # Can be called three ways:
 #
@@ -571,17 +547,19 @@ rule is-subvalue ( feature : value-string ? : subfeature : subvalue )
 #    2. extend <feature> subfeature : values *
 #    3. extend <feature>value-string subfeature : values *
 #
-# * Form 1 adds the given values to the given feature.
-# * Forms 2 and 3 add subfeature values to the given feature.
-# * Form 3 adds the subfeature values as specific to the given property
-#   value-string.
+# * Form 1 adds the given values to the given feature
+# * Forms 2 and 3 add subfeature values to the given feature
+# * Form 3 adds the subfeature values as specific to the given
+#   property value-string.
 #
 rule extend ( feature-or-property subfeature ? : values * )
 {
-    local feature ;       # If a property was specified this is its feature.
-    local value-string ;  # E.g., the gcc-2.95-2 part of <toolset>gcc-2.95.2.
+    local
+      feature           # If a property was specified this is its feature
+      value-string      # E.G., the gcc-2.95-2 part of <toolset>gcc-2.95.2
+      ;
 
-    # If a property was specified.
+    # if a property was specified
     if $(feature-or-property:G) && $(feature-or-property:G=)
     {
         # Extract the feature and value-string, if any.
@@ -593,30 +571,29 @@ rule extend ( feature-or-property subfeature ? : values * )
         feature = [ grist $(feature-or-property) ] ;
     }
 
-    # Dispatch to the appropriate handler.
+    # Dispatch to the appropriate handler
     if $(subfeature)
     {
-        extend-subfeature $(feature) $(value-string) : $(subfeature)
-            : $(values) ;
+        extend-subfeature $(feature) $(value-string)
+          : $(subfeature) : $(values) ;
     }
     else
     {
-        # If no subfeature was specified, we do not expect to see a
-        # value-string.
+        # If no subfeature was specified, we didn't expect to see a
+        # value-string
         if $(value-string)
         {
-            errors.error can only specify a property as the first argument when
-                extending a subfeature
-                : usage:
-                : "    extend" feature ":" values...
-                : "  | extend" <feature>value-string subfeature ":" values...
-                ;
+            error can only be specify a property as the first argument
+              when extending a subfeature
+              : usage:
+              : "    extend" feature ":" values...
+              : "  | extend" <feature>value-string subfeature ":" values...
+              ;
         }
 
         extend-feature $(feature) : $(values) ;
     }
 }
-
 
 local rule get-subfeature-name ( subfeature value-string ? )
 {
@@ -624,118 +601,110 @@ local rule get-subfeature-name ( subfeature value-string ? )
     return $(prefix:E="")$(subfeature) ;
 }
 
-
-# Declares a subfeature.
-#
-rule subfeature (
-    feature         # Root feature that is not a subfeature.
-    value-string ?  # A value-string specifying which feature or subfeature
-                    # values this subfeature is specific to, if any.
-    : subfeature    # The name of the subfeature being declared.
-    : subvalues *   # The allowed values of this subfeature.
-    : attributes *  # The attributes of the subfeature.
+# Declares a subfeature
+rule subfeature ( 
+  feature        # Root feature that is not a subfeature
+  value-string ? # A value-string specifying which feature or
+                 # subfeature values this subfeature is specific to,
+                 # if any
+    
+  : subfeature   # The name of the subfeature being declared
+  : subvalues *  # The allowed values of this subfeature
+  : attributes * # The attributes of the subfeature
 )
 {
     feature = [ grist $(feature) ] ;
     validate-feature $(feature) ;
-
-    # Add grist to the subfeature name if a value-string was supplied.
+    
+    # Add grist to the subfeature name if a value-string was supplied
     local subfeature-name = [ get-subfeature-name $(subfeature) $(value-string) ] ;
-
+    
     if $(subfeature-name) in $($(feature).subfeatures)
     {
-        errors.error \"$(subfeature)\" already declared as a subfeature of \"$(feature)\"
-            "specific to "$(value-string) ;
+        error \"$(subfeature)\" already declared as a subfeature of \"$(feature)\" 
+          "specific to "$(value-string) ;
     }
     $(feature).subfeatures += $(subfeature-name) ;
-
-    # First declare the subfeature as a feature in its own right.
+    
+    # First declare the subfeature as a feature in its own right
     local f = [ utility.ungrist $(feature) ] ;
     feature $(f)-$(subfeature-name) : $(subvalues) : $(attributes) subfeature ;
-
+    
     # Now make sure the subfeature values are known.
     extend-subfeature $(feature) $(value-string) : $(subfeature) : $(subvalues) ;
 }
 
-
-# Set components of the given composite property.
-#
+# Set the components of the given composite property
 rule compose ( composite-property : component-properties * )
 {
     local feature = $(composite-property:G) ;
     if ! ( composite in [ attributes $(feature) ] )
     {
-        errors.error "$(feature)" is not a composite feature ;
+        error "$(feature)" is not a composite feature ;
     }
 
     $(composite-property).components ?= ;
     if $($(composite-property).components)
     {
-        errors.error components of "$(composite-property)" already set:
-            $($(composite-property).components) ;
+        error components of "$(composite-property)" already set:
+                $($(composite-property).components) ;
     }
 
     if $(composite-property) in $(component-properties)
     {
-        errors.error composite property "$(composite-property)" cannot have itself as a component ;
+        error composite property "$(composite-property)" cannot have itself as a component ;
     }
     $(composite-property).components = $(component-properties) ;
 }
 
-
 local rule expand-composite ( property )
 {
     return $(property)
-        [ sequence.transform expand-composite : $($(property).components) ] ;
+      [ sequence.transform expand-composite : $($(property).components) ] ;
 }
 
-
-# Return all values of the given feature specified by the given property set.
-#
+# return all values of the given feature specified by the given property set.
 rule get-values ( feature : properties * )
 {
     local result ;
-
-    feature = $(:E=:G=$(feature)) ;  # Add <> if necessary.
+    
+    feature = $(:E=:G=$(feature)) ; # add <> if necessary.
     for local p in $(properties)
     {
         if $(p:G) = $(feature)
         {
-            # Use MATCH instead of :G= to get the value, in order to preserve
-            # the value intact instead of having bjam treat it as a decomposable
-            # path.
+            #~ Use MATCH instead if :G= to get the value, in order to preserve
+            #~ the value intact instead of having bjam treat it as a decompossible
+            #~ path.
             result += [ MATCH ">(.*)" : $(p) ] ;
         }
     }
     return $(result) ;
 }
 
-
 rule free-features ( )
 {
     return $(free.features) ;
 }
 
-
-# Expand all composite properties in the set so that all components are
-# explicitly expressed.
-#
+# Expand all composite properties in the set so that all components
+# are explicitly expressed.
 rule expand-composites ( properties * )
 {
     local explicit-features = $(properties:G) ;
-    local result ;
 
-    # Now expand composite features.
+    local result ;
+    # now expand composite features
     for local p in $(properties)
     {
         local expanded = [ expand-composite $(p) ] ;
-
+        
         for local x in $(expanded)
         {
             if ! $(x) in $(result)
             {
                 local f = $(x:G) ;
-
+                
                 if $(f) in $(free.features)
                 {
                     result += $(x) ;
@@ -746,21 +715,21 @@ rule expand-composites ( properties * )
                     {
                         if $(f) in $(result:G)
                         {
-                            errors.error expansions of composite features result
-                                in conflicting values for $(f)
-                                : values: [ get-values $(f) : $(result) ] $(x:G=)
-                                : one contributing composite property was $(p) ;
+                            error expansions of composite features result in conflicting 
+                              values for $(f)
+                                : values: [ get-values $(f) : $(result) ] $(x:G=) 
+                                  : one contributing composite property was $(p) ;
                         }
                         else
                         {
                             result += $(x) ;
                         }
                     }
-                }
+                }                
                 else if $(f) in $(result:G)
                 {
-                    errors.error explicitly-specified values of non-free feature
-                        $(f) conflict :
+                    error explicitly-specified values of non-free feature
+                      $(f) conflict :
                         "existing values:" [ get-values $(f) : $(properties) ] :
                         "value from expanding " $(p) ":" $(x:G=) ;
                 }
@@ -768,17 +737,15 @@ rule expand-composites ( properties * )
                 {
                     result += $(x) ;
                 }
-            }
+            }            
         }
     }
     return $(result) ;
 }
 
-
-# Return true iff f is an ordinary subfeature of the parent-property's feature,
-# or if f is a subfeature of the parent-property's feature specific to the
-# parent-property's value.
-#
+# Return true iff f is an ordinary subfeature of the parent-property's
+# feature, or if f is a subfeature fo the parent-property's feature
+# specific to the parent-property's value
 local rule is-subfeature-of ( parent-property f )
 {
     if subfeature in $($(f).attributes)
@@ -786,10 +753,10 @@ local rule is-subfeature-of ( parent-property f )
         local specific-subfeature = [ MATCH <(.*):(.*)> : $(f) ] ;
         if $(specific-subfeature)
         {
-            # The feature has the form <topfeature-topvalue:subfeature>, e.g.
-            # <toolset-msvc:version>.
-            local feature-value = [ split-top-feature $(specific-subfeature[1])
-                ] ;
+            # The feature has the form
+            # <topfeature-topvalue:subfeature>,
+            # e.g. <toolset-msvc:version>
+            local feature-value = [ split-top-feature $(specific-subfeature[1]) ] ;
             if <$(feature-value[1])>$(feature-value[2]) = $(parent-property)
             {
                 return true ;
@@ -797,9 +764,10 @@ local rule is-subfeature-of ( parent-property f )
         }
         else
         {
-            # The feature has the form <topfeature-subfeature>, e.g.
-            # <toolset-version>
+            # The feature has the form <topfeature-subfeature>,
+            # e.g. <toolset-version>
             local top-sub = [ split-top-feature [ utility.ungrist $(f) ] ] ;
+            
             if $(top-sub[2]) && <$(top-sub[1])> = $(parent-property:G)
             {
                 return true ;
@@ -808,52 +776,46 @@ local rule is-subfeature-of ( parent-property f )
     }
 }
 
-
-# As for is-subfeature-of but for subproperties.
-#
+# as above, for subproperties
 local rule is-subproperty-of ( parent-property p )
 {
     return [ is-subfeature-of $(parent-property) $(p:G) ] ;
 }
 
-
-# Given a property, return the subset of features consisting of all ordinary
-# subfeatures of the property's feature, and all specific subfeatures of the
-# property's feature which are conditional on the property's value.
-#
+# Given a property, return the subset of features consisting of all
+# ordinary subfeatures of the property's feature, and all specific
+# subfeatures of the property's feature which are conditional on the
+# property's value.
 local rule select-subfeatures ( parent-property : features * )
 {
     return [ sequence.filter is-subfeature-of $(parent-property) : $(features) ] ;
 }
-
-
-# As for select-subfeatures but for subproperties.
-#
+  
+# as above, for subproperties
 local rule select-subproperties ( parent-property : properties * )
 {
     return [ sequence.filter is-subproperty-of $(parent-property) : $(properties) ] ;
 }
 
-
-# Given a property set which may consist of composite and implicit properties
-# and combined subfeature values, returns an expanded, normalized property set
-# with all implicit features expressed explicitly, all subfeature values
-# individually expressed, and all components of composite properties expanded.
-# Non-free features directly expressed in the input properties cause any values
-# of those features due to composite feature expansion to be dropped. If two
-# values of a given non-free feature are directly expressed in the input, an
-# error is issued.
-#
+# Given a property set which may consist of composite and implicit
+# properties and combined subfeature values, returns an expanded,
+# normalized property set with all implicit features expressed
+# explicitly, all subfeature values individually expressed, and all
+# components of composite properties expanded. Non-free features
+# directly expressed in the input properties cause any values of
+# those features due to composite feature expansion to be dropped. If
+# two values of a given non-free feature are directly expressed in the
+# input, an error is issued.
 rule expand ( properties * )
 {
     local expanded = [ expand-subfeatures $(properties) ] ;
+
     return [ expand-composites $(expanded) ] ;
 }
 
 
-# Helper rule for minimize. Returns true iff property's feature is present in
-# the contents of the variable named by feature-set-var.
-#
+# Helper rule for minimize, below - return true iff property's feature
+# is present in the contents of the variable named by feature-set-var.
 local rule in-features ( feature-set-var property )
 {
     if $(property:G) in $($(feature-set-var))
@@ -862,10 +824,9 @@ local rule in-features ( feature-set-var property )
     }
 }
 
-
-# Helper rule for minimize. Returns the list with the same properties, but with
-# all subfeatures moved to the end of the list.
-#
+# Helper for minimize, below - returns the list with
+# the same properties, but where all subfeatures
+# are in the end of the list
 local rule move-subfeatures-to-the-end ( properties * )
 {
     local x1 ;
@@ -879,54 +840,53 @@ local rule move-subfeatures-to-the-end ( properties * )
         else
         {
             x1 += $(p) ;
-        }
+        }                
     }
-    return $(x1) $(x2) ;
+    return $(x1) $(x2) ;    
 }
 
 
-# Given an expanded property set, eliminate all redundancy: properties that are
-# elements of other (composite) properties in the set will be eliminated.
-# Non-symmetric properties equal to default values will be eliminated unless
-# they override a value from some composite property. Implicit properties will
-# be expressed without feature grist, and sub-property values will be expressed
-# as elements joined to the corresponding main property.
-#
+# Given an expanded property set, eliminate all redundancy: properties
+# which are elements of other (composite) properties in the set will
+# be eliminated. Non-symmetric properties equal to default values will be
+# eliminated, unless the override a value from some composite property.
+# Implicit properties will be expressed without feature
+# grist, and sub-property values will be expressed as elements joined
+# to the corresponding main property.
 rule minimize ( properties * )
 {
     # Precondition checking
     local implicits = [ set.intersection $(p:G=) : $(p:G) ] ;
     if $(implicits)
     {
-        errors.error minimize requires an expanded property set, but
-            \"$(implicits[1])\" appears to be the value of an un-expanded
-            implicit feature ;
+        error minimize requires an expanded property set, but \"$(implicits[1])\"
+          appears to be the value of an un-expanded implicit feature ;
     }
-
-    # Remove properties implied by composite features.
+        
+    # remove properties implied by composite features
     local components = $($(properties).components) ;
     local x = [ set.difference $(properties) : $(components) ] ;
-
-    # Handle subfeatures and implicit features.
-    x = [ move-subfeatures-to-the-end $(x) ] ;
+    
+    # handle subfeatures and implicit features
+    x = [ move-subfeatures-to-the-end $(x) ] ;    
     local result ;
     while $(x)
     {
         local p fullp = $(x[1]) ;
         local f = $(p:G) ;
         local v = $(p:G=) ;
-
-        # Eliminate features in implicit properties.
+        
+        # eliminate features in implicit properties.
         if implicit in [ attributes $(f) ]
         {
             p = $(v) ;
         }
 
-        # Locate all subproperties of $(x[1]) in the property set.
+        # locate all subproperties of $(x[1]) in the property set
         local subproperties = [ select-subproperties $(fullp) : $(x) ] ;
         if $(subproperties)
         {
-            # Reconstitute the joined property name.
+            # reconstitute the joined property name
             local sorted = [ sequence.insertion-sort $(subproperties) ] ;
             result += $(p)-$(sorted:G="":J=-) ;
 
@@ -934,16 +894,16 @@ rule minimize ( properties * )
         }
         else
         {
-            # Eliminate properties whose value is equal to feature's default,
-            # which are not symmetric and which do not contradict values implied
-            # by composite properties.
-
-            # Since all component properties of composites in the set have been
-            # eliminated, any remaining property whose feature is the same as a
-            # component of a composite in the set must have a non-redundant
-            # value.
+            # eliminate properties whose value is equal to feature's
+            # default and which are not symmetric and which do not
+            # contradict values implied by composite properties.
+            
+            # since all component properties of composites in the set
+            # have been eliminated, any remaining property whose
+            # feature is the same as a component of a composite in the
+            # set must have a non-redundant value.
             if $(fullp) != [ defaults $(f) ]
-                || symmetric in [ attributes $(f) ]
+              || symmetric in [ attributes $(f) ]
                 || $(fullp:G) in $(components:G)
             {
                 result += $(p) ;
@@ -955,21 +915,18 @@ rule minimize ( properties * )
     return $(result) ;
 }
 
-
 # Combine all subproperties into their parent properties
 #
-# Requires: for every subproperty, there is a parent property. All features are
-# explicitly expressed.
+# Requires: for every subproperty, there is a parent property.  All
+# features are explicitly expressed.
 #
-# This rule probably should not be needed, but build-request.expand-no-defaults
-# is being abused for unintended purposes and it needs help.
-#
+# This rule probably shouldn't be needed, but
+# build-request.expand-no-defaults is being abused for unintended
+# purposes and it needs help
 rule compress-subproperties ( properties * )
 {
-    local all-subs ;
-    local matched-subs ;
-    local result ;
-
+    local all-subs matched-subs result ;
+    
     for local p in $(properties)
     {
         if ! $(p:G)
@@ -977,12 +934,15 @@ rule compress-subproperties ( properties * )
             # Expecting fully-gristed properties.
             assert.variable-not-empty p:G ;
         }
-
+        
+        
         if ! subfeature in $($(p:G).attributes)
         {
-            local subs = [ sequence.insertion-sort
-                [ sequence.filter is-subproperty-of $(p) : $(properties) ] ] ;
-
+            local subs = [ 
+              sequence.insertion-sort
+                [ sequence.filter is-subproperty-of $(p) : $(properties) ]
+            ] ;
+            
             matched-subs += $(subs) ;
 
             local subvalues = -$(subs:G=:J=-) ;
@@ -997,17 +957,17 @@ rule compress-subproperties ( properties * )
     assert.result true : set.equal $(all-subs) : $(matched-subs) ;
     return $(result) ;
 }
-
-
-# Given an ungristed string, finds the longest prefix which is a top-level
-# feature name followed by a dash, and return a pair consisting of the parts
-# before and after that dash. More interesting than a simple split because
-# feature names may contain dashes.
-#
+  
+# given an ungristed string, finds the longest prefix which is a
+# top-level feature name followed by a dash, and return a pair
+# consisting of the parts before and after that dash.  More
+# interesting than a simple split because feature names can contain
+# dashes.
 local rule split-top-feature ( feature-plus )
 {
     local e = [ regex.split $(feature-plus) - ] ;
     local f = $(e[1]) ;
+    
     local v ;
     while $(e)
     {
@@ -1020,49 +980,45 @@ local rule split-top-feature ( feature-plus )
     }
     return $(v) ;
 }
-
-
-# Given a set of properties, add default values for features not represented in
-# the set.
-#
-# Note: if there's an ordinary feature F1 and a composite feature F2 which
-# includes some value for F1 and both feature have default values then the
-# default value of F1 will be added (as opposed to the value in F2). This might
-# not be the right idea, e.g. consider:
+  
+# Given a set of properties, add default values for features not
+# represented in the set. 
+# Note: if there's there's ordinary feature F1 and composite feature
+# F2, which includes some value for F1, and both feature have default values,
+# then the default value of F1 will be added, not the value in F2. This might
+# not be right idea: consider
 #
 #   feature variant : debug ... ;
 #        <variant>debug : .... <runtime-debugging>on
 #   feature <runtime-debugging> : off on ;
-#
+#   
 #   Here, when adding default for an empty property set, we'll get
 #
 #     <variant>debug <runtime_debugging>off
-#
+#  
 #   and that's kind of strange.
-#
 rule add-defaults ( properties * )
 {
     for local v in $(properties:G=)
     {
         if $(v) in $(properties)
         {
-            errors.error add-defaults requires explicitly specified features,
-                but \"$(v)\" appears to be the value of an un-expanded implicit
-                feature ;
+            error add-defaults requires explicitly specified features,
+                but \"$(v)\" appears to be the value of an un-expanded implicit feature ;
         }
     }
     # We don't add default for elements with ":" inside. This catches:
     # 1. Conditional properties --- we don't want <variant>debug:<define>DEBUG
     #    to be takes as specified value for <variant>
-    # 2. Free properties with ":" in values. We don't care, since free
-    #    properties don't have defaults.
+    # 2. Free properties with ":" in values. We don't care, since free properties
+    #    don't have defaults.
     local xproperties = [ MATCH "^([^:]+)$" : $(properties) ] ;
     local missing-top = [ set.difference $(.all-top-features) : $(xproperties:G) ] ;
     local more =  [ defaults $(missing-top) ] ;
     properties += $(more) ;
     xproperties += $(more) ;
-
-    # Add defaults for subfeatures of features which are present.
+    
+    # Add defaults for subfeatures of features which are present
     for local p in $(xproperties)
     {
         local s = $($(p:G).subfeatures) ;
@@ -1070,10 +1026,9 @@ rule add-defaults ( properties * )
         local missing-subs = [ set.difference <$(f)-$(s)> : $(properties:G) ] ;
         properties += [ defaults [ select-subfeatures $(p) : $(missing-subs) ] ] ;
     }
-
+    
     return $(properties)  ;
 }
-
 
 # Given a property-set of the form
 #       v1/v2/...vN-1/<fN>vN/<fN+1>vN+1/...<fM>vM
@@ -1081,10 +1036,9 @@ rule add-defaults ( properties * )
 # Returns
 #       v1 v2 ... vN-1 <fN>vN <fN+1>vN+1 ... <fM>vM
 #
-# Note that vN...vM may contain slashes. This needs to be resilient to the
-# substitution of backslashes for slashes, since Jam, unbidden, sometimes swaps
-# slash direction on NT.
-#
+# Note that vN...vM may contain slashes. This is resilient to the
+# substitution of backslashes for slashes, since Jam, unbidden,
+# sometimes swaps slash direction on NT.
 rule split ( property-set )
 {
     local pieces = [ regex.split $(property-set) [\\/] ] ;
@@ -1105,20 +1059,18 @@ rule split ( property-set )
     return $(result) ;
 }
 
-
-# Tests of module feature.
-#
+# tests of module feature
 rule __test__ ( )
 {
-    # Use a fresh copy of the feature module.
+    # use a fresh copy of the feature module
     prepare-test feature-test-temp ;
 
-    import assert ;
+    # These are local rules and so must be explicitly reimported into
+    # the testing module
+    import feature : extend-feature validate-feature select-subfeatures ; 
+    
     import errors : try catch ;
-
-    # These are local rules and so must be explicitly reimported into the
-    # testing module.
-    import feature : extend-feature validate-feature select-subfeatures ;
+    import assert ;
 
     feature toolset : gcc : implicit ;
     feature define : : free ;
@@ -1138,74 +1090,84 @@ rule __test__ ( )
     {
         compose <variant>profile : <variant>profile ;
     }
-    catch composite property <variant>profile cannot have itself as a component ;
+    catch composite property <variant>profile cannot have itself as a component ;   
 
     extend-feature toolset : msvc metrowerks ;
-    subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4 3.0 3.0.1 3.0.2 ;
-
+    subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
+      3.0 3.0.1 3.0.2 ;
+    
     assert.true is-subvalue toolset : gcc : version : 2.95.3 ;
     assert.false is-subvalue toolset : gcc : version : 1.1 ;
 
     assert.false is-subvalue toolset : msvc : version : 2.95.3 ;
     assert.false is-subvalue toolset : : version : yabba ;
-
+    
     feature yabba ;
     subfeature yabba : version : dabba ;
     assert.true is-subvalue yabba : : version : dabba ;
-
+    
+    
     subfeature toolset gcc : platform : linux cygwin : optional ;
-
+    
     assert.result <toolset-gcc:version>
-        : select-subfeatures <toolset>gcc
-        : <toolset-gcc:version>
-          <toolset-msvc:version>
-          <toolset-version>
-          <stdlib> ;
-
+      : select-subfeatures <toolset>gcc
+         : <toolset-gcc:version>
+           <toolset-msvc:version>
+           <toolset-version>
+           <stdlib>
+      ;
+           
     subfeature stdlib : version : 3 4 : optional ;
 
     assert.result <stdlib-version>
-        : select-subfeatures <stdlib>native
-        : <toolset-gcc:version>
-          <toolset-msvc:version>
-          <toolset-version>
-          <stdlib-version> ;
-
+      : select-subfeatures <stdlib>native
+         : <toolset-gcc:version>
+           <toolset-msvc:version>
+           <toolset-version>
+           <stdlib-version>
+      ;
+           
     assert.result <toolset>gcc <toolset-gcc:version>3.0.1
-        : expand-subfeatures <toolset>gcc-3.0.1 ;
-
+      : expand-subfeatures <toolset>gcc-3.0.1 ;
+    
     assert.result <toolset>gcc <toolset-gcc:version>3.0.1 <toolset-gcc:platform>linux
-        : expand-subfeatures <toolset>gcc-3.0.1-linux ;
+      : expand-subfeatures <toolset>gcc-3.0.1-linux ;
 
+    
     assert.result <toolset>gcc <toolset-gcc:version>3.0.1
-        : expand <toolset>gcc <toolset-gcc:version>3.0.1  ;
-
+      : expand <toolset>gcc <toolset-gcc:version>3.0.1  ;
+      
     assert.result <define>foo=x-y
-        : expand-subfeatures <define>foo=x-y ;
+      : expand-subfeatures <define>foo=x-y ;
 
     assert.result <toolset>gcc <toolset-gcc:version>3.0.1
-        : expand-subfeatures gcc-3.0.1 ;
-
+      : expand-subfeatures gcc-3.0.1 ;
+    
     assert.result a c e
-        : get-values <x> : <x>a <y>b <x>c <y>d <x>e ;
+      : get-values <x> : <x>a <y>b <x>c <y>d <x>e ;
 
     assert.result <toolset>gcc <toolset-gcc:version>3.0.1
-        <variant>debug <define>_DEBUG <optimization>on
-        : expand gcc-3.0.1 debug <optimization>on ;
-
+      <variant>debug <define>_DEBUG <optimization>on
+      : expand gcc-3.0.1 debug <optimization>on
+      ;
+    
     assert.result <variant>debug <define>_DEBUG <optimization>on
-        : expand debug <optimization>on ;
+      : expand debug <optimization>on
+      ;
 
-    assert.result <optimization>on <variant>debug <define>_DEBUG
-        : expand <optimization>on debug ;
+    assert.result <optimization>on <variant>debug <define>_DEBUG 
+      : expand <optimization>on debug 
+      ;
 
     assert.result <runtime-link>dynamic <optimization>on
-        : defaults <runtime-link> <define> <optimization> ;
-
-    # Make sure defaults is resilient to missing grist.
+      : defaults <runtime-link> <define> <optimization>
+      ;
+    
+    # make sure defaults is resilient to missing grist.
     assert.result <runtime-link>dynamic <optimization>on
-        : defaults runtime-link define optimization ;
-
+      : defaults runtime-link define optimization
+      ;
+    
     feature dummy : dummy1 dummy2 ;
     subfeature dummy : subdummy : x y z : optional ;
 
@@ -1215,54 +1177,68 @@ rule __test__ ( )
 
     assert.result optional : attributes <fu> ;
     assert.result optional : attributes fu ;
+    
+    assert.result <runtime-link>static <define>foobar <optimization>on <toolset>gcc:<define>FOO
+      <toolset>gcc <variant>debug <stdlib>native <dummy>dummy1 <toolset-gcc:version>2.95.2
 
-    assert.result <runtime-link>static <define>foobar <optimization>on
-        <toolset>gcc:<define>FOO <toolset>gcc <variant>debug <stdlib>native
-        <dummy>dummy1 <toolset-gcc:version>2.95.2
-        : add-defaults <runtime-link>static <define>foobar <optimization>on
-          <toolset>gcc:<define>FOO ;
-
-    assert.result <runtime-link>static <define>foobar <optimization>on
-        <toolset>gcc:<define>FOO <fu>fu1 <toolset>gcc <variant>debug
-        <stdlib>native <dummy>dummy1 <fu-subfu2>q <toolset-gcc:version>2.95.2
-        : add-defaults <runtime-link>static <define>foobar <optimization>on
-          <toolset>gcc:<define>FOO <fu>fu1 ;
-
+      : add-defaults <runtime-link>static <define>foobar
+        <optimization>on <toolset>gcc:<define>FOO 
+      ;
+    
+    assert.result <runtime-link>static <define>foobar <optimization>on <toolset>gcc:<define>FOO
+      <fu>fu1 <toolset>gcc <variant>debug <stdlib>native <dummy>dummy1 <fu-subfu2>q      
+      <toolset-gcc:version>2.95.2
+      
+      : add-defaults <runtime-link>static <define>foobar
+        <optimization>on <toolset>gcc:<define>FOO <fu>fu1
+      ;
+    
     set-default <runtime-link> : static ;
-    assert.result <runtime-link>static : defaults <runtime-link> ;
-
+    assert.result <runtime-link>static 
+      : defaults <runtime-link>
+      ;
+      
     assert.result gcc-3.0.1 debug <optimization>on
-        : minimize [ expand gcc-3.0.1 debug <optimization>on <stdlib>native ] ;
+      : minimize [ expand gcc-3.0.1 debug <optimization>on <stdlib>native ]
+      ;
 
     assert.result gcc-3.0.1 debug <runtime-link>dynamic
-        : minimize
-          [ expand gcc-3.0.1 debug <optimization>off <runtime-link>dynamic ] ;
+      : minimize [ expand gcc-3.0.1 debug <optimization>off <runtime-link>dynamic ]
+      ;
 
     assert.result gcc-3.0.1 debug
-        : minimize [ expand gcc-3.0.1 debug <optimization>off ] ;
+      : minimize [ expand gcc-3.0.1 debug <optimization>off ]
+      ;
 
     assert.result debug <optimization>on
-        : minimize [ expand debug <optimization>on ] ;
+      : minimize [ expand debug <optimization>on ]
+      ;
 
     assert.result gcc-3.0
-        : minimize <toolset>gcc <toolset-gcc:version>3.0 ;
+      : minimize <toolset>gcc <toolset-gcc:version>3.0 
+      ;
 
     assert.result gcc-3.0
-        : minimize <toolset-gcc:version>3.0 <toolset>gcc ;
+      : minimize <toolset-gcc:version>3.0 <toolset>gcc
+      ;
 
     assert.result <x>y/z <a>b/c <d>e/f
-        : split <x>y/z/<a>b/c/<d>e/f ;
+      : split <x>y/z/<a>b/c/<d>e/f
+      ;
 
     assert.result <x>y/z <a>b/c <d>e/f
-        : split <x>y\\z\\<a>b\\c\\<d>e\\f ;
+      : split <x>y\\z\\<a>b\\c\\<d>e\\f
+      ;
 
     assert.result a b c <d>e/f/g <h>i/j/k
-        : split a/b/c/<d>e/f/g/<h>i/j/k ;
+      : split a/b/c/<d>e/f/g/<h>i/j/k
+      ;
 
     assert.result a b c <d>e/f/g <h>i/j/k
-        : split a\\b\\c\\<d>e\\f\\g\\<h>i\\j\\k ;
+      : split a\\b\\c\\<d>e\\f\\g\\<h>i\\j\\k
+      ;
 
-    # Test error checking.
+    # test error checking
 
     try ;
     {
@@ -1320,14 +1296,16 @@ rule __test__ ( )
     {
         implied-subfeature <toolset> 3.0.1 ;
     }
-    catch \"3.0.1\" is not a known subfeature value of <toolset> ;
+    catch \"3.0.1\" is not a known subfeature value of
+      <toolset> ;
 
     try ;
     {
         implied-subfeature <toolset> not-a-version : gcc ;
     }
-    catch \"not-a-version\" is not a known subfeature value of <toolset>gcc ;
+    catch \"not-a-version\" is not a known subfeature value of
+      <toolset>gcc ;
 
-    # Leave a clean copy of the features module behind.
+    # leave a clean copy of the features module behind
     finish-test feature-test-temp ;
 }
