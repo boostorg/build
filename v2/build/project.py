@@ -1,5 +1,5 @@
 # Status: being ported by Vladimir Prus
-# Base revision: 42486
+# Base revision: 42507
 
 # Copyright 2002, 2003 Dave Abrahams 
 # Copyright 2002, 2005, 2006 Rene Rivera 
