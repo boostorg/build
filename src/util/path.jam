@@ -213,15 +213,11 @@ rule root ( path root )
 #
 rule pwd ( )
 {
-    if $(.pwd)
-    {
-        return $(.pwd) ;
-    }
-    else
+    if ! $(.pwd)
     {
         .pwd = [ make [ PWD ] ] ;
-        return $(.pwd) ;
     }
+    return $(.pwd) ;
 }
 
 
@@ -264,8 +260,8 @@ rule glob ( dirs * : patterns + : exclude-patterns * )
     local exc = [ GLOB-RECURSIVELY $(real-exclude-patterns) ] ;
     exc = [ sequence.transform NORMALIZE_PATH : $(exc) ] ;
 
-    return [ sequence.transform path.make :
-        [ set.difference $(inc) : $(exc) ] ] ;
+    return [ sequence.transform path.make : [ set.difference $(inc) : $(exc) ] ]
+        ;
 }
 
 
@@ -277,11 +273,8 @@ rule glob ( dirs * : patterns + : exclude-patterns * )
 #
 rule glob-tree ( roots * : patterns + : exclude-patterns * )
 {
-    return [ sequence.transform path.make : [ .glob-tree
-        [ sequence.transform path.native : $(roots) ]
-        : $(patterns)
-        : $(exclude-patterns)
-        ] ] ;
+    return [ sequence.transform path.make : [ .glob-tree [ sequence.transform
+        path.native : $(roots) ] : $(patterns) : $(exclude-patterns) ] ] ;
 }
 
 
@@ -304,7 +297,8 @@ local rule .glob-tree ( roots * : patterns * : exclude-patterns * )
     }
     if $(subdirs)
     {
-        result += [ .glob-tree $(subdirs) : $(patterns) : $(exclude-patterns) ] ;
+        result += [ .glob-tree $(subdirs) : $(patterns) : $(exclude-patterns) ]
+            ;
     }
     return $(result) ;
 }
@@ -328,32 +322,33 @@ rule all-parents ( path : upper_limit ? : cwd ? )
     cwd ?= [ pwd ] ;
     local path_ele = [ regex.split [ root $(path) $(cwd) ] "/" ] ;
 
-    if ! $(upper_limit) {
+    if ! $(upper_limit)
+    {
         upper_limit = / ;
     }
     local upper_ele = [ regex.split [ root $(upper_limit) $(cwd) ] "/" ] ;
 
-    # Leave only elements in 'path_ele' below 'upper_ele'
-    while $(path_ele) && $(upper_ele[1]) = $(path_ele[1]) {
+    # Leave only elements in 'path_ele' below 'upper_ele'.
+    while $(path_ele) && ( $(upper_ele[1]) = $(path_ele[1]) )
+    {
         upper_ele = $(upper_ele[2-]) ;
         path_ele = $(path_ele[2-]) ;
     }
 
-    # All upper elements removed ?
-    if ! $(upper_ele)
-    {
-        # Create the relative paths to parents, number of elements in 'path_ele'
-        local result ;
-        for local i in $(path_ele) {
-            path = [ parent $(path) ] ;
-            result += $(path) ;
-        }
-        return $(result) ;
-    }
-    else
+    # Have all upper elements been removed ?
+    if $(upper_ele)
     {
         errors.error "$(upper_limit) is not prefix of $(path)" ;
     }
+    
+    # Create the relative paths to parents, number of elements in 'path_ele'.
+    local result ;
+    for local i in $(path_ele)
+    {
+        path = [ parent $(path) ] ;
+        result += $(path) ;
+    }
+    return $(result) ;
 }
 
 
