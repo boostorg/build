@@ -469,8 +469,7 @@ rule translate-paths ( properties * : path )
 # Assumes that all feature values that start with '@' are names of rules, used
 # in 'context-module'. Such rules can be either local to the module or global.
 # Converts such values into 'indirect-rule' format (see indirect.jam), so they
-# can be called from other modules. Does nothing for such values that are
-# already in the 'indirect-rule' format.
+# can be called from other modules.
 #
 rule translate-indirect ( specification * : context-module )
 {
@@ -483,7 +482,7 @@ rule translate-indirect ( specification * : context-module )
             local v ;
             if [ MATCH "^([^%]*)%([^%]+)$" : $(m) ]
             {
-                # Rule is already in the 'indirect-rule' format.
+                # Rule is already in indirect format.
                 v = $(m) ;
             }
             else
@@ -542,9 +541,7 @@ rule translate-dependencies ( specification * : project-id : location )
             else if [ path.is-rooted $(p:G=) ]
             {
                 result += $(condition)$(p) ;
-            }
-            else
-            {
+            } else {
                 result += $(condition)$(p:G)$(project-id)//$(p:G=) ;
             }
         }
