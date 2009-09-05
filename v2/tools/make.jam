@@ -7,14 +7,13 @@
 
 #  This module defines the 'make' main target rule.
 
-import targets ;
 import "class" : new ;
-import property ;
 import errors : error ;
-import type : type ;
-import regex ;
-import property-set ;
 import project ;
+import property ;
+import property-set ;
+import regex ;
+import targets ;
 
 
 class make-target-class : basic-target

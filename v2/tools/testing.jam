@@ -32,7 +32,7 @@
 
 
 import alias ;
-import "class" : new ;
+import "class" ;
 import common ;
 import errors ;
 import feature ;
@@ -99,11 +99,9 @@ rule make-test ( target-type : sources + : requirements * : target-name ? )
     # The <location-prefix> forces the build system for generate paths in the
     # form '$build_dir/array1.test/gcc/debug'. This is necessary to allow
     # post-processing tools to work.
-    local t =
-      [ targets.create-typed-target
-          [ type.type-from-rule-name $(target-type) ] : $(project)
-            : $(real-name) : $(sources)
-            : $(requirements) <location-prefix>$(real-name).test ] ;
+    local t = [ targets.create-typed-target [ type.type-from-rule-name
+        $(target-type) ] : $(project) : $(real-name) : $(sources) :
+        $(requirements) <location-prefix>$(real-name).test ] ;
 
     # The alias to the real target, per period replacement above.
     if $(real-name) != $(target-name)
@@ -122,15 +120,18 @@ rule make-test ( target-type : sources + : requirements * : target-name ? )
 
 # Note: passing more that one cpp file here is known to fail. Passing a cpp file
 # and a library target works.
+#
 rule compile ( sources + : requirements * : target-name ? )
 {
-    return [ make-test compile : $(sources) : $(requirements) : $(target-name) ] ;
+    return [ make-test compile : $(sources) : $(requirements) : $(target-name) ]
+        ;
 }
 
 
 rule compile-fail ( sources + : requirements * : target-name ? )
 {
-    return [ make-test compile-fail : $(sources) : $(requirements) : $(target-name) ] ;
+    return [ make-test compile-fail : $(sources) : $(requirements) :
+        $(target-name) ] ;
 }
 
 
@@ -142,7 +143,8 @@ rule link ( sources + : requirements * : target-name ? )
 
 rule link-fail ( sources + : requirements * : target-name ? )
 {
-    return [ make-test link-fail : $(sources) : $(requirements) : $(target-name) ] ;
+    return [ make-test link-fail : $(sources) : $(requirements) : $(target-name)
+        ] ;
 }
 
 
@@ -162,8 +164,8 @@ rule handle-input-files ( input-files * )
 }
 
 
-rule run ( sources + : args * : input-files * : requirements * : target-name ?
-    : default-build * )
+rule run ( sources + : args * : input-files * : requirements * : target-name ? :
+    default-build * )
 {
     requirements += <testing.arg>$(args:J=" ") ;
     requirements += [ handle-input-files $(input-files) ] ;
@@ -171,12 +173,13 @@ rule run ( sources + : args * : input-files * : requirements * : target-name ?
 }
 
 
-rule run-fail ( sources + : args * : input-files * : requirements *
-    : target-name ? : default-build * )
+rule run-fail ( sources + : args * : input-files * : requirements * :
+    target-name ? : default-build * )
 {
     requirements += <testing.arg>$(args:J=" ") ;
     requirements += [ handle-input-files $(input-files) ] ;
-    return [ make-test run-fail : $(sources) : $(requirements) : $(target-name) ] ;
+    return [ make-test run-fail : $(sources) : $(requirements) : $(target-name)
+        ] ;
 }
 
 
@@ -187,7 +190,7 @@ IMPORT : alias : : test-suite ;
 # For all main targets in 'project-module', which are typed targets with type
 # derived from 'TEST', produce some interesting information.
 #
-rule dump-tests # ( project-module )
+rule dump-tests
 {
     for local t in $(.all-tests)
     {
@@ -248,19 +251,16 @@ rule dump-test ( target )
     {
         if [ class.is-a $(s) : file-reference ]
         {
-            local location =
-              [ path.root
-                  [ path.root [ $(s).name ] [ $(s).location ] ]
-                  [ path.pwd ] ] ;
+            local location = [ path.root [ path.root [ $(s).name ]
+                [ $(s).location ] ] [ path.pwd ] ] ;
 
-            source-files +=
-              [ path.relative-to
-                  [ path.root $(project-root) [ path.pwd ] ]
-                  $(location) ] ;
+            source-files += [ path.relative-to [ path.root $(project-root)
+                [ path.pwd ] ] $(location) ] ;
         }
     }
 
-    local target-name = [ $(project).get location ] // [ $(target).name ] .test ;
+    local target-name = [ $(project).get location ] // [ $(target).name ] .test
+        ;
     target-name = $(target-name:J=) ;
 
     local r = [ $(target).requirements ] ;
@@ -286,9 +286,8 @@ rule dump-test ( target )
         # Format them into a single string of quoted strings.
         test-info = \"$(test-info:J=\"\ \")\" ;
 
-        ECHO boost-test($(type)) \"$(name)\"
-            [$(test-info)]
-            ":" \"$(source-files)\" ;
+        ECHO boost-test($(type)) \"$(name)\" [$(test-info)] ":"
+            \"$(source-files)\" ;
     }
 }
 
@@ -340,14 +339,14 @@ rule expect-failure ( target : dependency + : properties * )
 }
 
 
-# The rule/action combination used to report successfull passing of a test.
+# The rule/action combination used to report successful passing of a test.
 #
 rule **passed**
 {
     # Dump all the tests, if needed. We do it here, since dump should happen
     # only after all Jamfiles have been read, and there is no such place
     # currently defined (but there should be).
-    if ! $(.dumped-tests) && --dump-tests in [ modules.peek : ARGV ]
+    if ! $(.dumped-tests) && ( --dump-tests in [ modules.peek : ARGV ] )
     {
         .dumped-tests = true ;
         dump-tests ;

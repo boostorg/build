@@ -91,8 +91,8 @@ rule command-line-free-features ( )
 
 
 # Returns the location of the build system. The primary use case is building
-# Boost where it's sometimes needed to get the location of other components
-# (e.g. BoostBook files) and it's convenient to use locations relative to the
+# Boost where it is sometimes needed to get the location of other components
+# (e.g. BoostBook files) and it is convenient to use locations relative to the
 # Boost Build path.
 #
 rule location ( )
@@ -139,7 +139,7 @@ local rule actual-clean-targets ( )
     local targets-to-clean ;
     for local t in $(.results-of-main-targets)
     {
-        # Don't include roots or sources.
+        # Do not include roots or sources.
         targets-to-clean += [ virtual-target.traverse $(t) ] ;
     }
     targets-to-clean = [ sequence.unique $(targets-to-clean) ] ;
@@ -170,8 +170,8 @@ local rule actual-clean-targets ( )
 
 
 # Given a target id, try to find and return the corresponding target. This is
-# only invoked when there's no Jamfile in ".". This code somewhat duplicates
-# code in project-target.find but we can't reuse that code without a
+# only invoked when there is no Jamfile in ".". This code somewhat duplicates
+# code in project-target.find but we can not reuse that code without a
 # project-targets instance.
 #
 local rule find-target ( target-id )
@@ -673,7 +673,7 @@ local rule should-clean-project ( project )
             if ! $(t)
             {
                 ECHO "notice: could not find main target" $(id) ;
-                ECHO "notice: assuming it's a name of file to create." ;
+                ECHO "notice: assuming it is a name of file to create." ;
                 explicitly-requested-files += $(id) ;
             }
             else
