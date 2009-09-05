@@ -1,5 +1,5 @@
 # Status: being ported by Vladimir Prus
-# Base revision: 41324
+# Base revision: 42486
 
 # Copyright 2002, 2003 Dave Abrahams 
 # Copyright 2002, 2005, 2006 Rene Rivera 
@@ -899,7 +899,7 @@ Don't know how to combine that with the --build-dir option.""")
                     attributes.set("build-dir", p, exact=1)
             elif explicit_build_dir:
                 self.registry.manager.errors()(
-"""When --build-dir is specified, the 'build-project'
+"""When --build-dir is specified, the 'build-dir'
 attribute is allowed only for top-level 'project' invocations""")
 
     def constant(self, name, value):
