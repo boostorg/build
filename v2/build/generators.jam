@@ -68,7 +68,11 @@ if "--debug-generators" in [ modules.peek : ARGV ]
 #
 rule update-cached-information-with-a-new-type ( type )
 {
-    local base-type = [ type.base $(type) ] ;
+    # TODO: There really ought be an interface to ask for a direct base target
+    # type without having to go through a list of all the base target types.
+    local all-base-types = [ type.all-bases $(type) ] ;
+    local base-type = $(all-base-types[2]) ;
+
     if $(base-type)
     {
         for local g in $(.vstg-cached-generators)
