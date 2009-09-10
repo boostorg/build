@@ -5,7 +5,7 @@
 
 #define BOOST_TEST_MODULE QtPhonon
 
-#include <phonon>
+#include <Phonon/MediaObject>
 
 #include <boost/test/unit_test.hpp>
 
