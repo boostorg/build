@@ -858,7 +858,7 @@ LIST * builtin_split_by_characters( PARSE * parse, FRAME * frame )
 
     LIST * result = 0;
 
-    char* s = l1->string;
+    char* s = strdup (l1->string);
     char* delimiters = l2->string;
     char* t;
 
@@ -868,6 +868,8 @@ LIST * builtin_split_by_characters( PARSE * parse, FRAME * frame )
         result = list_new(result, newstr(t));
         t = strtok (NULL, delimiters);
     }
+
+    free (s);
 
     return result;
 }
