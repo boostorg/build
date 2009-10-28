@@ -2,7 +2,7 @@
 <!DOCTYPE chapter PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd">
 
-  <chapter id="bbv2.advanced">
+  <chapter id="bbv2.overview">
     <title>Overview</title>
 
     <para>
@@ -57,32 +57,119 @@
       <itemizedlist>
         <listitem>
           <para>
-            <link linkend="bbv2.advanced.configuration">How to configure
+            <link linkend="bbv2.overview.configuration">How to configure
             Boost.Build</link>
           </para>
         </listitem>
         <listitem>
           <para>
-            <link linkend="bbv2.advanced.targets">How to declare targets in
+            <link linkend="bbv2.overview.targets">How to declare targets in
               Jamfiles</link>
           </para>
         </listitem>
         <listitem>
           <para>
-            <link linkend="bbv2.advanced.build_process">How the build process
+            <link linkend="bbv2.overview.build_process">How the build process
               works</link>
           </para>
         </listitem>
         <listitem>
           <para>
             Some Basics about the Boost.Jam language. See <xref linkend=
-            "bbv2.advanced.jam_language"/>.
+            "bbv2.overview.jam_language"/>.
           </para>
         </listitem>
       </itemizedlist>
     </para>
 
-    <section id="bbv2.advanced.jam_language">
+    <section id="bbv2.overview.concepts">
+      <title>Concepts</title>
+
+      <para>Boost.Build has a few unique concepts that are introduced in this section. The best
+      way to explain the concepts is by comparison with more classical build tools.</para>
+
+      <para>
+        When using any flavour of make, you directly specify <firstterm>targets</firstterm>
+        and commands that are used to create them from other target. The below example
+        creates <filename>a.o</filename> from <filename>a.c</filename> using a hardcoded
+        compiler invocation command.
+<programlisting>
+a.o: a.c
+    g++ -o a.o -g a.c
+</programlisting>
+        This is rather low-level description mechanism and it's hard to adjust commands, options,
+        and sets of created targets depending on the used compiler and operating system.        
+      </para>
+
+      <para>
+        To improve portability, most modern build system provide a set of higher-level 
+        functions that can be used in build description files. Consider this example:
+<programlisting>
+add_program ("a", "a.c")
+</programlisting>
+        This is a function call that creates targets necessary to create executable file
+        from source file <filename>a.c</filename>. Depending on configured properties,
+        different commands line may be used. However, <code>add_program</code> is higher-level,
+        but rather thin level. All targets are created immediately when build description
+        is parsed, which makes it impossible to perform multi-variant builds. Often, change
+        in any build property requires complete reconfiguration of the build tree.        
+      </para>
+
+      <para>
+        In order to support true multivariant builds, Boost.Build introduces the concept of
+        <indexterm> <primary>metatarget</primary> <secondary>definition</secondary></indexterm>
+        <indexterm> <primary>main target</primary> <see>metataget</see> </indexterm>
+        <firstterm>metatarget</firstterm>&mdash;object that is created when build description
+        is parsed and can be later called with specific build properties to generate
+        actual targets. 
+      </para>
+
+      <para>
+        Consider an example:
+<programlisting>
+exe a : a.cpp ;
+</programlisting>
+        When this declaration is parsed, Boost.Build creates a metatarget, but does not
+        yet decides what files must be created, or what commands must be used. After
+        all build files are parsed, Boost.Build considers properties requested on the
+        command line. Supposed you have invoked Boost.Build with:
+<screen>
+bjam toolset=gcc toolset=msvc
+</screen>
+        In that case, the metatarget will be called twice, once with <code>toolset=gcc</code>
+        and once with <code>toolset=msvc</code>. Both invocations will produce concrete
+        targets, that will have different extensions and use different command lines.
+      </para>
+
+      <para>
+        Another key concept is 
+        <indexterm><primary>property</primary><secondary>definition</secondary></indexterm>
+        <firstterm>build property</firstterm>. Build property is a variable
+        that affects the build process. It can be specified on the command line, and is
+        passed when calling a metatarget. While all build tools have a similar mechanism,
+        Boost.Build differs by requiring that all build properties are declared in advance,
+        and providing a large set of properties with portable semantics.
+      </para>
+
+      <para>
+        The final concept is <indexterm><primary>property</primary><secondary>propagation</secondary></indexterm>
+        <firstterm>property propagation</firstterm>. Boost.Build does not require that every
+        metatarget is called with the same properties. Instead, the 
+        "top-level" metatargets are called with the properties specified on the command line.
+        Each metatarget can elect to augment or override some properties (in particular,
+        using the requirements mechanism, see <xref linkend="bbv2.overview.targets.requirements"/>).
+        Then, the dependency metatargets are called with modified properties and produce
+        concrete targets that are then used in build process. Of course, dependency metatargets
+        maybe in turn modify build properties and have dependencies of their own.
+      </para>
+
+      <para>For more in-depth treatment of the requirements and concepts, you may refer 
+      to <ulink url="http://syrcose.ispras.ru/2009/files/04_paper.pdf">SYRCoSE 2009 Boost.Build article</ulink>.
+      </para>
+           
+    </section>
+
+    <section id="bbv2.overview.jam_language">
       <title>Boost.Jam Language</title>
 
       <para>
@@ -245,7 +332,7 @@ import <replaceable>module</replaceable> : <replaceable>rule</replaceable> ;
         unqualified names.
       </para>
 
-      <para id="bbv2.advanced.jam_language.actions">
+      <para id="bbv2.overview.jam_language.actions">
         Sometimes, you'd need to specify the actual command lines to be used
         when creating targets. In jam language, you use named actions to do
         this. For example:
@@ -293,7 +380,7 @@ actions create-file-from-another
       </para>
     </section>
 
-  <section id="bbv2.advanced.configuration">
+  <section id="bbv2.overview.configuration">
     <title>Configuration</title>
 
     <para>
@@ -491,7 +578,7 @@ using gcc : 3.4 : g++-3.4 ;
 
     </section>
 
-    <section id="bbv2.advanced.invocation">
+    <section id="bbv2.overview.invocation">
       <title>Invocation</title>
 
       <para>To invoke Boost.Build, type <command>bjam</command> on the command line. Three kinds
@@ -523,7 +610,7 @@ using gcc : 3.4 : g++-3.4 ;
         </varlistentry>
       </variablelist>
 
-      <section id="bbv2.advanced.invocation.examples">
+      <section id="bbv2.overview.invocation.examples">
         <title>Examples</title>
        
         <para>To build all targets defined in Jamfile in the current directory with default properties, run:
@@ -546,7 +633,7 @@ bjam toolset=gcc variant=debug optimization=space
         </para>
       </section>
 
-      <section id="bbv2.advanced.invocation.options">
+      <section id="bbv2.overview.invocation.options">
         <title>Options</title>
       
         <para>Boost.Build recognizes the following command line options.</para>
@@ -688,13 +775,13 @@ bjam toolset=gcc variant=debug optimization=space
         </variablelist>
       </section>
 
-      <section id="bbv2.advanced.invocation.properties">
+      <section id="bbv2.overview.invocation.properties">
         <title>Properties</title>
 
         <para>In the simplest case, the build is performed with a single set of properties,
         that you specify on the command line with elements in the form
         <command><replaceable>feature</replaceable>=<replaceable>value</replaceable></command>.
-        The complete list of features can be found in <xref linkend="bbv2.advanced.builtins.features"/>. 
+        The complete list of features can be found in <xref linkend="bbv2.overview.builtins.features"/>. 
         The most common features are summarized below.</para>
 
         <table>
@@ -768,7 +855,8 @@ bjam toolset=gcc variant=debug optimization=space
                 
                 <entry>(Arbitrary string)</entry>
                 
-                <entry>Additional macro definitions for C and C++ compilers.</entry>
+                <entry>Additional macro definitions for C and C++ compilers. The string should be either
+                <code>SYMBOL</code> or <code>SYMBOL=VALUE</code></entry>
               </row>
 
               <row>
@@ -841,7 +929,7 @@ bjam include=static,shared
                 
       </section>
 
-      <section id="bbv2.advanced.invocation.targets">
+      <section id="bbv2.overview.invocation.targets">
         <title>Targets</title>
 
         <para>All command line elements that are neither options nor properties are the names of the
@@ -851,10 +939,10 @@ bjam include=static,shared
 
     </section>
 
-    <section id="bbv2.advanced.targets">
+    <section id="bbv2.overview.targets">
       <title>Declaring Targets</title>
 
-      <para id="bbv2.advanced.targets.main">
+      <para id="bbv2.overview.targets.main">
         A <firstterm>Main target</firstterm> is a user-defined named
         entity that can be built, for example an executable file.
         Declaring a main target is usually done using one of the main
@@ -988,7 +1076,7 @@ exe b : [ glob *.cpp ] ;  # all .cpp files in this directory are sources
         considered relative to the source directory&#x200A;&#x2014;&#x200A;which is typically
         the directory where the Jamfile is located, but can be changed as
         described in <xref linkend=
-          "bbv2.advanced.projects.attributes.projectrule"/>.
+          "bbv2.overview.projects.attributes.projectrule"/>.
         </para>
 
         <para>
@@ -1020,15 +1108,16 @@ exe c : c.cpp /boost/program_options//program_options ;
         </para>
       </section>
 
-      <section id="bbv2.advanced.targets.requirements">
+      <section id="bbv2.overview.targets.requirements">
         <title>Requirements</title>
+        <indexterm><primary>requirements</primary></indexterm>
         <para>Requirements are the properties that should always be present when
         building a target. Typically, they are includes and defines:
 <programlisting>
 exe hello : hello.cpp : &lt;include&gt;/opt/boost &lt;define&gt;MY_DEBUG ;
 </programlisting>
         There is a number of other features, listed in
-        <xref linkend="bbv2.advanced.builtins.features"/>. For example if
+        <xref linkend="bbv2.overview.builtins.features"/>. For example if
         a library can only be built statically, or a file can't be compiled
         with optimization due to a compiler bug, one can use
 <programlisting>
@@ -1037,7 +1126,7 @@ obj main : main.cpp : &lt;optimization&gt;off ;
 </programlisting>
         </para>
 
-        <para id="bbv2.advanced.targets.requirements.conditional">Sometimes, particular relationships need to be maintained
+        <para id="bbv2.overview.targets.requirements.conditional">Sometimes, particular relationships need to be maintained
         among a target's build properties. This can be achieved with
         <firstterm>conditional
         requirements</firstterm>. For example, you might want to set
@@ -1065,7 +1154,7 @@ lib network : network.cpp
 </programlisting>
         </para>
 
-        <para id="bbv2.advanced.targets.requirements.indirect">
+        <para id="bbv2.overview.targets.requirements.indirect">
           A more powerful variant of conditional requirements
           is <firstterm>indirect conditional requirements</firstterm>.
           You can provide a rule that will be called with the current build properties and can compute additional properties
@@ -1182,7 +1271,7 @@ explicit install_programs ;</programlisting>
       </section>
     </section>
 
-    <section id="bbv2.advanced.projects">
+    <section id="bbv2.overview.projects">
       <title>Projects</title>
 
       <para>As mentioned before, targets are grouped into projects,
@@ -1242,7 +1331,7 @@ project tennis
              documentation; you almost *had* to get it wrong once.
         -->
 
-      <para id="bbv2.advanced.projects.attributes.projectrule">
+      <para id="bbv2.overview.projects.attributes.projectrule">
         The default values for those attributes are
         given in the table below.
 
@@ -1370,7 +1459,7 @@ project tennis
            of material. -->
     </section>
 
-  <section id="bbv2.advanced.build_process">
+  <section id="bbv2.overview.build_process">
     <title>The Build Process</title>
 
     <para>When you've described your targets, you want Boost.Build to run the
@@ -1403,7 +1492,7 @@ project tennis
       </para>
     </tip>
 
-    <section id="bbv2.advanced.build_request">
+    <section id="bbv2.overview.build_request">
       <title>Build Request</title>
 
       <para>
@@ -1421,7 +1510,7 @@ bjam app1 lib1//lib1 toolset=gcc variant=debug optimization=full
 bjam app1 lib1//lib1 gcc debug optimization=full
 </programlisting>
         The complete syntax, which has some additional shortcuts, is
-        described in <xref linkend="bbv2.advanced.invocation"/>.
+        described in <xref linkend="bbv2.overview.invocation"/>.
       </para>
     </section>
 

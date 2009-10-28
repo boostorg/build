@@ -68,7 +68,7 @@ __declspec(dllexport)
 helper() { foo(); }
 """)
 
-t.run_build_system()
+t.run_build_system("-d2")
 t.expect_addition("bin/$toolset/debug/main.exe")
 t.rm("bin/$toolset/debug/main.exe")
 

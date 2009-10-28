@@ -25,7 +25,7 @@ import toolset ;
 import utility ;
 import version ;
 import virtual-target ;
-
+import generators ;
 
 ################################################################################
 #
@@ -686,8 +686,12 @@ local rule should-clean-project ( project )
     {
         targets += [ project.target [ project.module-name "." ] ] ;
     }
-
-
+    
+    if [ option.get dump-generators : : true ] 
+    {
+        generators.dump ;
+    }
+    
     # Now that we have a set of targets to build and a set of property sets to
     # build the targets with, we can start the main build process by using each
     # property set to generate virtual targets from all of our listed targets

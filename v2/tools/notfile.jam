@@ -39,7 +39,8 @@ class notfile-generator : generator
             action = [ new action $(sources) : notfile.run
               : $(property-set) ] ;
         }
-        return [ new notfile-target $(name) : $(project) : $(action) ] ;
+        return [ virtual-target.register 
+            [ new notfile-target $(name) : $(project) : $(action) ] ] ;
     }
 }
 

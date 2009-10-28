@@ -30,7 +30,7 @@
       <listitem>
         <simpara>
           Use conditional requirements or indirect conditional requirements. See
-          <xref linkend="bbv2.advanced.targets.requirements.conditional"/>.
+          <xref linkend="bbv2.overview.targets.requirements.conditional"/>.
         </simpara>
       </listitem>
       <listitem>

@@ -12,7 +12,7 @@
   <para>
     This section describes main targets types that Boost.Build supports
     out-of-the-box. Unless otherwise noted, all mentioned main target rules have
-    the common signature, described in <xref linkend="bbv2.advanced.targets"/>.
+    the common signature, described in <xref linkend="bbv2.overview.targets"/>.
   </para>
 
   <section id="bbv2.tasks.programs">
@@ -537,7 +537,7 @@ actions in2out
       If you run <command>bjam</command> and <filename>file.out</filename> does
       not exist, Boost.Build will run the <command>in2out</command> command to
       create that file. For more details on specifying actions, see <xref
-      linkend="bbv2.advanced.jam_language.actions"/>.
+      linkend="bbv2.overview.jam_language.actions"/>.
     </para>
 
     <para>
@@ -725,7 +725,7 @@ exe app : app.cpp : &lt;implicit-dependency&gt;parser ;
     
     <para>
       When using gcc, you first need to specify your cross compiler
-      in <filename>user-config.jam</filename> (see <xref linkend="bbv2.advanced.configuration"/>), 
+      in <filename>user-config.jam</filename> (see <xref linkend="bbv2.overview.configuration"/>), 
       for example:</para>
 <programlisting>
 using gcc : arm : arm-none-linux-gnueabi-g++ ;

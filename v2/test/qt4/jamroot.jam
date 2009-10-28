@@ -37,6 +37,7 @@ if [ qt4.initialized ]
       # Multimedia toolkits.
       [ link qtwebkit.cpp /qt//QtWebKit ]
       [ link phonon.cpp   /qt//phonon  ]
+      [ link qtmultimedia.cpp /qt//QtMultimedia ]
 
       # Help systems.
       [ link qthelp.cpp      /qt//QtHelp ]

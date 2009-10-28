@@ -722,6 +722,8 @@ class generator
 #
 rule register ( g )
 {
+    .all-generators += $(g) ;
+        
     # A generator can produce several targets of the same type. We want unique
     # occurrence of that generator in .generators.$(t) in that case, otherwise,
     # it will be tried twice and we will get a false ambiguity.
@@ -950,8 +952,10 @@ rule viable-source-types-for-generator-real ( generator )
     else
     {
         local result ;
-        for local s in $(source-types)
+        while $(source-types)
         {
+            local s = $(source-types[1]) ;
+            source-types = $(source-types[2-]) ;
             local viable-sources = [ generators.viable-source-types $(s) ] ;
             if $(viable-sources) = *
             {
@@ -1393,3 +1397,12 @@ rule add-usage-requirements ( result * : raw-properties * )
         }
     }
 }
+
+rule dump ( )
+{
+    for local g in $(.all-generators)
+    {
+        ECHO [ $(g).id ] ":" [ $(g).source-types ] -> [ $(g).target-types ] ;            
+    }    
+}
+

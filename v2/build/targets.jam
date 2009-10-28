@@ -1245,7 +1245,10 @@ class basic-target : abstract-target
                 source-targets += $(extra:G=) ;
                 # We might get duplicate sources, for example if we link to two
                 # libraries having the same <library> usage requirement.
-                source-targets = [ sequence.unique $(source-targets) ] ;
+                # Use stable sort, since for some targets the order is
+                # important. E.g. RUN_PY target need python source to come
+                # first.
+                source-targets = [ sequence.unique $(source-targets) : stable ] ;
 
                 local result = [ construct $(self.name) : $(source-targets) :
                     $(rproperties) ] ;

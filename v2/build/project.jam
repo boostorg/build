@@ -412,9 +412,18 @@ rule initialize (
     {
         $(attributes).set source-location : [ path.make $(location) ] : exact ;
     }
-    else
+    else if ! $(module-name) in test-config site-config user-config project-config
     {
-        $(attributes).set source-location : "" : exact ;
+        # This is a standalone project with known location. Set source location
+        # so that it can declare targets. This is intended so that you can put
+        # a .jam file in your sources and use it via 'using'. Standard modules
+        # (in 'tools' subdir) may not assume source dir is set.
+        local s = [ modules.binding $(module-name) ] ;
+        if ! $(s)
+        {
+            errors.error "Could not determine project location $(module-name)" ;
+        }        
+        $(attributes).set source-location : $(s:D) : exact ;
     }
 
     $(attributes).set requirements       : [ property-set.empty ] : exact ;
@@ -762,7 +771,8 @@ rule use ( id : location )
             $(project-module) )
         {
             errors.user-error Attempt to redeclare already existing project id
-                '$(id)' ;
+                '$(id)' 
+                location '$(location)' ;
         }
         $(id).jamfile-module = $(project-module) ;
     }
