@@ -1099,15 +1099,6 @@ class python-test-generator : generator
         local python ;
         local other-pythons ;
     
-        #XXX(bhy) DEBUG CODE BEGIN
-        ECHO beforerun= ;
-        for local s in $(sources)
-        {
-            ECHO [ $(s).name ] ;
-        }
-        ECHO ;
-        #XXX(bhy) DEBUG CODE END
-
         # Make new target that converting Python source by 2to3 when running with Python 3.
         local rule make-2to3-source ( source )
         {
@@ -1268,14 +1259,6 @@ rule bpl-test ( name : sources * : requirements * )
 {
     local s ;
     sources ?= $(name).py $(name).cpp ;
-    #XXX(bhy) DEBUG CODE BEGIN
-    ECHO bpl-test= ; 
-    for local s in $(sources)
-    {
-        ECHO $(s) ;
-    }
-    ECHO ;
-    #XXX(bhy) DEBUG CODE END
     return [ testing.make-test run-pyd : $(sources) /boost/python//boost_python
         : $(requirements) : $(name) ] ;
 }
