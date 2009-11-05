@@ -1173,7 +1173,7 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>static/<threading>multi : /MT ;
     toolset.flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>static/<threading>multi : /MTd ;
 
-    toolset.flags msvc.compile.c OPTIONS <cflags> : ;
+    toolset.flags msvc.compile OPTIONS <cflags> : ;
     toolset.flags msvc.compile.c++ OPTIONS <cxxflags> : ;
 
     toolset.flags msvc.compile PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;
