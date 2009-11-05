@@ -23,7 +23,9 @@ feature framework : : free ;
 ## The MacOSX versions we can target.
 .macosx-versions =
     10.6 10.5 10.4 10.3 10.2 10.1
-    iphone-2.3 iphonesim-2.3
+    iphone-3.2 iphonesim-3.2
+    iphone-3.1 iphonesim-3.1
+    iphone-3.0 iphonesim-3.0
     iphone-2.2 iphonesim-2.2
     iphone-2.1 iphonesim-2.1
     iphone-2.0 iphonesim-2.0
