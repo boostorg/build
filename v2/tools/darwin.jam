@@ -261,10 +261,25 @@ flags darwin.compile OPTIONS <flags> ;
 # option to not be included to let the compiler default take hold.
 for local macosx-version in $(.macosx-versions)
 {
-    flags darwin.compile OPTIONS <macosx-version-min>$(macosx-version)
-        : -mmacosx-version-min=$(macosx-version) ;
-    flags darwin.link OPTIONS <macosx-version-min>$(macosx-version)
-        : -mmacosx-version-min=$(macosx-version) ;
+    switch $(macosx-version)
+    {
+        case iphone* :
+        {
+            local version-match = [ MATCH ([^0-9]+)([0-9.]+) : $(macosx-version) ] ;
+            flags darwin.compile OPTIONS <macosx-version-min>$(macosx-version)
+                : -miphoneos-version-min=$(version-match[2]) ;
+            flags darwin.link OPTIONS <macosx-version-min>$(macosx-version)
+                : -miphoneos-version-min=$(version-match[2]) ;
+        }
+        
+        case * :
+        {
+            flags darwin.compile OPTIONS <macosx-version-min>$(macosx-version)
+                : -mmacosx-version-min=$(macosx-version) ;
+            flags darwin.link OPTIONS <macosx-version-min>$(macosx-version)
+                : -mmacosx-version-min=$(macosx-version) ;
+        }
+    }
 }
 
 # The following adds objective-c support to darwin.
