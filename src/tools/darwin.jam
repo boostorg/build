@@ -3,7 +3,7 @@
 # Copyright 2003, 2004, 2005, 2006 Vladimir Prus 
 # Copyright 2005-2007 Mat Marcus
 # Copyright 2005-2007 Adobe Systems Incorporated
-# Copyright 2007-2008 Rene Rivera
+# Copyright 2007-2009 Rene Rivera
 # Distributed under the Boost Software License, Version 1.0. 
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
@@ -319,14 +319,22 @@ rule setup-address-model ( targets * : sources * : properties * )
     
     osx-version ?= $(.host-osx-version) ;
 
-    if $(osx-version) && ! [ version.version-less [ regex.split $(osx-version) \\. ] : 10 6 ]
+    switch $(osx-version)
     {
-        # When targeting 10.6:
-        # - gcc 4.2 will give a compiler errir if ppc64 compilation is requested
-        # - gcc 4.0 will compile fine, somehow, but then fail at link time
-        support-ppc64 = ;
+        case iphone* :
+        {
+            support-ppc64 = ;
+        }
+        
+        case * :
+        if $(osx-version) && ! [ version.version-less [ regex.split $(osx-version) \\. ] : 10 6 ]
+        {
+            # When targeting 10.6:
+            # - gcc 4.2 will give a compiler errir if ppc64 compilation is requested
+            # - gcc 4.0 will compile fine, somehow, but then fail at link time
+            support-ppc64 = ;
+        }
     }
-           
     switch $(arch)
     {
         case combined : 
@@ -403,7 +411,7 @@ rule compile.m ( targets * : sources * : properties * )
 {
     LANG on $(<) = "-x objective-c" ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
-    setup-arch-addr-flags $(targets) : $(sources) : $(properties) ;
+    setup-address-model $(targets) : $(sources) : $(properties) ;
 }
 
 actions compile.m
@@ -415,7 +423,7 @@ rule compile.mm  ( targets * : sources * : properties * )
 {
     LANG on $(<) = "-x objective-c++" ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
-    setup-arch-addr-flags $(targets) : $(sources) : $(properties) ;
+    setup-address-model $(targets) : $(sources) : $(properties) ;
 }
 
 actions compile.mm
