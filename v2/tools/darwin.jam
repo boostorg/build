@@ -3,7 +3,7 @@
 # Copyright 2003, 2004, 2005, 2006 Vladimir Prus 
 # Copyright 2005-2007 Mat Marcus
 # Copyright 2005-2007 Adobe Systems Incorporated
-# Copyright 2007-2008 Rene Rivera
+# Copyright 2007-2009 Rene Rivera
 # Distributed under the Boost Software License, Version 1.0. 
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
@@ -16,6 +16,10 @@ import type ;
 import common ;
 import generators ;
 import path : basename ;
+import version ;
+import property-set ;
+import regex ;
+import errors ;
 
 ## Use a framework.
 feature framework : : free ;
@@ -23,7 +27,11 @@ feature framework : : free ;
 ## The MacOSX versions we can target.
 .macosx-versions =
     10.6 10.5 10.4 10.3 10.2 10.1
-    iphone-2.3 iphonesim-2.3
+    iphone-3.2 iphonesim-3.2
+    iphone-3.1.2 iphonesim-3.1.2
+    iphone-3.1 iphonesim-3.1
+    iphone-3.0 iphonesim-3.0
+    iphone-2.2.1 iphonesim-2.2.1
     iphone-2.2 iphonesim-2.2
     iphone-2.1 iphonesim-2.1
     iphone-2.0 iphonesim-2.0
@@ -60,7 +68,7 @@ generators.override darwin.compile.c++.pch : pch.default-cpp-pch-generator ;
 
 type.set-generated-target-suffix PCH : <toolset>darwin : gch ;
 
-toolset.inherit-rules darwin : gcc ;
+toolset.inherit-rules darwin : gcc : localize ;
 toolset.inherit-flags darwin : gcc     
   :  <runtime-link>static
      <architecture>arm/<address-model>32
@@ -82,6 +90,17 @@ toolset.inherit-flags darwin : gcc
 #
 rule init ( version ? : command * : options * : requirement * )
 {
+    # First time around, figure what is host OSX version
+    if ! $(.host-osx-version)  
+    {
+        .host-osx-version = [ MATCH "^([0-9.]+)"
+          : [ SHELL "/usr/bin/sw_vers -productVersion" ] ] ;
+        if $(.debug-configuration)
+        {
+            ECHO notice: OSX version on this machine is $(.host-osx-version) ;
+        }
+    }
+                      
     # - The root directory of the tool install.
     local root = [ feature.get-values <root> : $(options) ] ;
     
@@ -120,6 +139,8 @@ rule init ( version ? : command * : options * : requirement * )
             : [ SHELL "$(command-string) -dumpversion" ] ] ;
         version ?= $(real-version) ;
     }
+    
+    .real-version.$(version) = $(real-version) ;
     
     # - Define the condition for this toolset instance.
     local condition =
@@ -211,6 +232,10 @@ local rule init-available-sdk-versions ( condition * : root ? )
         local sdk-match = [ MATCH ([^0-9]+)([0-9]+)[.]([0-9x]+)[.]?([0-9x]+)? : $(sdk:D=) ] ;
         local sdk-platform = $(sdk-match[1]:L) ;
         local sdk-version = $(sdk-match[2]).$(sdk-match[3]) ;
+        if $(sdk-match[4])
+        {
+            sdk-version = $(sdk-version).$(sdk-match[4]) ;
+        }
         if $(sdk-version)
         {
             switch $(sdk-platform)
@@ -253,10 +278,25 @@ flags darwin.compile OPTIONS <flags> ;
 # option to not be included to let the compiler default take hold.
 for local macosx-version in $(.macosx-versions)
 {
-    flags darwin.compile OPTIONS <macosx-version-min>$(macosx-version)
-        : -mmacosx-version-min=$(macosx-version) ;
-    flags darwin.link OPTIONS <macosx-version-min>$(macosx-version)
-        : -mmacosx-version-min=$(macosx-version) ;
+    switch $(macosx-version)
+    {
+        case iphone* :
+        {
+            local version-match = [ MATCH ([^0-9]+)([0-9.]+) : $(macosx-version) ] ;
+            flags darwin.compile OPTIONS <macosx-version-min>$(macosx-version)
+                : -miphoneos-version-min=$(version-match[2]) ;
+            flags darwin.link OPTIONS <macosx-version-min>$(macosx-version)
+                : -miphoneos-version-min=$(version-match[2]) ;
+        }
+        
+        case * :
+        {
+            flags darwin.compile OPTIONS <macosx-version-min>$(macosx-version)
+                : -mmacosx-version-min=$(macosx-version) ;
+            flags darwin.link OPTIONS <macosx-version-min>$(macosx-version)
+                : -mmacosx-version-min=$(macosx-version) ;
+        }
+    }
 }
 
 # The following adds objective-c support to darwin.
@@ -265,10 +305,113 @@ for local macosx-version in $(.macosx-versions)
 generators.register-c-compiler darwin.compile.m : OBJECTIVE_C : OBJ : <toolset>darwin ;
 generators.register-c-compiler darwin.compile.mm : OBJECTIVE_CPP : OBJ : <toolset>darwin ;
 
-rule compile.m
+rule setup-address-model ( targets * : sources * : properties * )
+{
+    local ps = [ property-set.create $(properties) ] ;
+    local arch = [ $(ps).get <architecture> ] ;
+    local address-model = [ $(ps).get <address-model> ] ;
+    local osx-version = [ $(ps).get <macosx-version> ] ;
+    local gcc-version = [ $(ps).get <toolset-darwin:version> ] ;
+    gcc-version = $(.real-version.$(gcc-version)) ;
+    local options ;
+    
+    local support-ppc64 = 1 ;
+    
+    osx-version ?= $(.host-osx-version) ;
+
+    switch $(osx-version)
+    {
+        case iphone* :
+        {
+            support-ppc64 = ;
+        }
+        
+        case * :
+        if $(osx-version) && ! [ version.version-less [ regex.split $(osx-version) \\. ] : 10 6 ]
+        {
+            # When targeting 10.6:
+            # - gcc 4.2 will give a compiler errir if ppc64 compilation is requested
+            # - gcc 4.0 will compile fine, somehow, but then fail at link time
+            support-ppc64 = ;
+        }
+    }
+    switch $(arch)
+    {
+        case combined : 
+        {
+            if $(address-model) = 32_64 {
+                if $(support-ppc64) {
+                    options = -arch i386 -arch ppc -arch x86_64 -arch ppc64 ;                    
+                } else {
+                    # Build 3-way binary
+                    options = -arch i386 -arch ppc -arch x86_64 ;
+                }                                
+            } else if $(address-model) = 64 {
+                if $(support-ppc64) {
+                    options = -arch x86_64 -arch ppc64 ;
+                } else {
+                    errors.user-error "64-bit PPC compilation is not supported when targeting OSX 10.6 or later" ;
+                }                
+            } else {
+                options = -arch i386 -arch ppc ;
+            }
+        }
+        
+        case x86 : 
+        {
+            if $(address-model) = 32_64 {
+                options = -arch i386 -arch x86_64 ;
+            } else if $(address-model) = 64 {
+                options = -arch x86_64 ;
+            } else {
+                options = -arch i386 ;
+            }
+        }        
+        
+        case power :
+        {
+            if ! $(support-ppc64) 
+              && (  $(address-model) = 32_64 || $(address-model) = 64 )
+            {
+                errors.user-error "64-bit PPC compilation is not supported when targeting OSX 10.6 or later" ;
+            }
+            
+            if $(address-model) = 32_64 {
+                options = -arch ppc -arch ppc64 ;
+            } else if $(address-model) = 64 {
+                options = -arch ppc64 ;
+            } else {
+                options = -arch ppc ;
+            }
+        }
+        
+        case arm :
+        {
+            options = -arch armv6 ;
+        }        
+    }
+    
+    if $(options)
+    {
+        OPTIONS on $(targets) += $(options) ;
+    }            
+}
+
+rule setup-threading ( targets * : sources * : properties * )
+{
+    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+}
+
+rule setup-fpic ( targets * : sources * : properties * )
+{
+    gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
+}
+
+rule compile.m ( targets * : sources * : properties * )
 {
     LANG on $(<) = "-x objective-c" ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
+    setup-address-model $(targets) : $(sources) : $(properties) ;
 }
 
 actions compile.m
@@ -280,43 +423,13 @@ rule compile.mm  ( targets * : sources * : properties * )
 {
     LANG on $(<) = "-x objective-c++" ;
     gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
+    setup-address-model $(targets) : $(sources) : $(properties) ;
 }
 
 actions compile.mm
 {
     "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
-
-# Add option selection for combined and specific architecture combinations.
-
-local rule arch-addr-flags ( toolset variable
-    : architecture : address-model + : values + : default ? )
-{
-    if $(default)
-    {
-        flags $(toolset) $(variable)
-            <architecture>$(architecture)/<address-model>
-            : $(values) ;
-    }
-    flags $(toolset) $(variable)
-        <architecture>/<address-model>$(address-model)
-        <architecture>$(architecture)/<address-model>$(address-model)
-        : $(values) ;
-}
-
-arch-addr-flags darwin OPTIONS : combined : 32 : -arch i386 -arch ppc : default ;
-arch-addr-flags darwin OPTIONS : combined : 64 : -arch x86_64 -arch ppc64 ;
-arch-addr-flags darwin OPTIONS : combined : 32_64 : -arch i386 -arch ppc -arch x86_64 -arch ppc64 ;
-
-arch-addr-flags darwin OPTIONS : x86 : 32 : -arch i386 : default ;
-arch-addr-flags darwin OPTIONS : x86 : 64 : -arch x86_64 ;
-arch-addr-flags darwin OPTIONS : x86 : 32_64 : -arch i386 -arch x86_64 ;
-
-arch-addr-flags darwin OPTIONS : power : 32 : -arch ppc : default ;
-arch-addr-flags darwin OPTIONS : power : 64 : -arch ppc64 ;
-arch-addr-flags darwin OPTIONS : power : 32_64 : -arch ppc -arch ppc64 ;
-
-arch-addr-flags darwin OPTIONS : arm : 32 : -arch armv6 : default ;
 
 # Set the max header padding to allow renaming of libs for installation.
 flags darwin.link.dll OPTIONS : -headerpad_max_install_names ;
@@ -360,8 +473,9 @@ local rule prepare-framework-path ( target + )
     }
 }
 
-rule link
+rule link ( targets * : sources * : properties * )
 {
+    setup-address-model $(targets) : $(sources) : $(properties) ;
     prepare-framework-path $(<) ;
 }
 
@@ -375,8 +489,9 @@ actions link bind LIBRARIES
     $(NEED_STRIP)"$(.STRIP)" $(NEED_STRIP)-S $(NEED_STRIP)-x $(NEED_STRIP)"$(<)"
 }
 
-rule link.dll
+rule link.dll ( targets * : sources * : properties * )
 {
+    setup-address-model $(targets) : $(sources) : $(properties) ;
     prepare-framework-path $(<) ;
 }
 
