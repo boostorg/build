@@ -24,29 +24,11 @@ import errors ;
 ## Use a framework.
 feature framework : : free ;
 
-## The MacOSX versions we can target.
-.macosx-versions =
-    10.6 10.5 10.4 10.3 10.2 10.1
-    iphone-3.2 iphonesim-3.2
-    iphone-3.1.2 iphonesim-3.1.2
-    iphone-3.1 iphonesim-3.1
-    iphone-3.0 iphonesim-3.0
-    iphone-2.2.1 iphonesim-2.2.1
-    iphone-2.2 iphonesim-2.2
-    iphone-2.1 iphonesim-2.1
-    iphone-2.0 iphonesim-2.0
-    iphone-1.x
-    ;
-
 ## The MacOSX version to compile for, which maps to the SDK to use (sysroot).
-feature macosx-version
-    : $(.macosx-versions)
-    : propagated link-incompatible symmetric optional ;
+feature macosx-version : : propagated link-incompatible symmetric optional ;
 
 ## The minimal MacOSX version to target.
-feature macosx-version-min
-    : $(.macosx-versions)
-    : propagated optional ;
+feature macosx-version-min : : propagated optional ;
 
 #############################################################################
 
@@ -190,7 +172,7 @@ rule init ( version ? : command * : options * : requirement * )
         flags darwin.link .STRIP $(condition) : $(strip[1]) ;
         if $(.debug-configuration)
         {
-            ECHO notice: using strip :: $(condition) :: $(strip[1]) ;
+            ECHO notice: using strip for $(condition) at $(strip[1]) ;
         }
     }
 
@@ -202,7 +184,7 @@ rule init ( version ? : command * : options * : requirement * )
     flags darwin.archive .LIBTOOL $(condition) : $(archiver[1]) ;
     if $(.debug-configuration)
     {
-        ECHO notice: using archiver :: $(condition) :: $(archiver[1]) ;
+        ECHO notice: using archiver for $(condition) at $(archiver[1]) ;
     }
     
     # - Initialize the SDKs available in the root for this tool.
@@ -220,6 +202,94 @@ rule init ( version ? : command * : options * : requirement * )
     #~ EXIT ;
 }
 
+# Add and set options for a discovered SDK version.
+local rule init-sdk ( condition * : root ? : version + : version-feature ? )
+{
+    local rule version-to-feature ( version + )
+    {
+        switch $(version[1])
+        {
+            case iphone* :
+            {
+                return $(version[1])-$(version[2-]:J=.) ;
+            }
+            case mac* :
+            {
+                return $(version[2-]:J=.) ;
+            }
+            case * :
+            {
+                return $(version:J=.) ;
+            }
+        }
+    }
+    
+    if $(version-feature)
+    {
+        if $(.debug-configuration)
+        {
+            ECHO notice: available sdk for $(condition)/<macosx-version>$(version-feature) at $(sdk) ;
+        }
+        
+        # Add the version to the features for specifying them.
+        if ! $(version-feature) in [ feature.values macosx-version ]
+        {
+            feature.extend macosx-version : $(version-feature) ;
+        }
+        if ! $(version-feature) in [ feature.values macosx-version-min ]
+        {
+            feature.extend macosx-version-min : $(version-feature) ;
+        }
+        
+        # Set the flags the version needs to compile with, first
+        # generic options.
+        flags darwin.compile OPTIONS $(condition)/<macosx-version>$(version-feature)
+            : -isysroot $(sdk) ;
+        flags darwin.link OPTIONS $(condition)/<macosx-version>$(version-feature)
+            : -isysroot $(sdk) ;
+        
+        # Then device variation options.
+        switch $(version[1])
+        {
+            case iphone* :
+            {
+                flags darwin.compile OPTIONS <macosx-version-min>$(version-feature)
+                    : -miphoneos-version-min=$(version[2-]:J=.) ;
+                flags darwin.link OPTIONS <macosx-version-min>$(version-feature)
+                    : -miphoneos-version-min=$(version[2-]:J=.) ;
+            }
+            
+            case mac* :
+            {
+                flags darwin.compile OPTIONS <macosx-version-min>$(version-feature)
+                    : -miphoneos-version-min=$(version[2-]:J=.) ;
+                flags darwin.link OPTIONS <macosx-version-min>$(version-feature)
+                    : -miphoneos-version-min=$(version[2-]:J=.) ;
+            }
+        }
+        
+        return $(version-feature) ;
+    }
+    else if $(version[4])
+    {
+        # We have a patch version of an SDK. We want to set up
+        # both the specific patch version, and the minor version.
+        # So we recurse to set up the minor version. Plus the minor version.
+        return
+            [ init-sdk $(condition) : $(root)
+                : $(version[1-3]) : [ version-to-feature $(version[1-3]) ] ]
+            [ init-sdk $(condition) : $(root)
+                : $(version) : [ version-to-feature $(version) ] ] ;
+    }
+    else
+    {
+        # Yes, this is intentionally recursive.
+        return
+            [ init-sdk $(condition) : $(root)
+                : $(version) : [ version-to-feature $(version) ] ] ;
+    }
+}
+
 # Determine the MacOSX SDK versions installed and their locations.
 local rule init-available-sdk-versions ( condition * : root ? )
 {
@@ -231,45 +301,29 @@ local rule init-available-sdk-versions ( condition * : root ? )
     {
         local sdk-match = [ MATCH ([^0-9]+)([0-9]+)[.]([0-9x]+)[.]?([0-9x]+)? : $(sdk:D=) ] ;
         local sdk-platform = $(sdk-match[1]:L) ;
-        local sdk-version = $(sdk-match[2]).$(sdk-match[3]) ;
+        local sdk-version = $(sdk-match[2-]) ;
         if $(sdk-version)
         {
             switch $(sdk-platform)
             {
                 case macosx :
                 {
-                    sdk-version = $(sdk-version) ;
+                    sdk-version = mac $(sdk-version) ;
                 }
                 case iphoneos :
                 {
-                    if $(sdk-match[4])
-                    {
-                        sdk-version = $(sdk-version).$(sdk-match[4]) ;
-                    }
-                    sdk-version = iphone-$(sdk-version) ;
+                    sdk-version = iphone $(sdk-version) ;
                 }
                 case iphonesimulator :
                 {
-                    if $(sdk-match[4])
-                    {
-                        sdk-version = $(sdk-version).$(sdk-match[4]) ;
-                    }
-                    sdk-version = iphonesim-$(sdk-version) ;
+                    sdk-version = iphonesim $(sdk-version) ;
                 }
                 case * :
                 {
                     sdk-version = $(sdk-version:J=-) ;
                 }
             }
-            result += $(sdk-version) ;
-            flags darwin.compile OPTIONS $(condition)/<macosx-version>$(sdk-version)
-                : -isysroot $(sdk) ;
-            flags darwin.link OPTIONS $(condition)/<macosx-version>$(sdk-version)
-                : -isysroot $(sdk) ;
-            if $(.debug-configuration)
-            {
-                ECHO notice: available sdk :: $(condition)/<macosx-version>$(sdk-version) :: $(sdk) ;
-            }
+            result += [ init-sdk $(condition) : $(sdk) : $(sdk-version) ] ;
         }
     }
     return $(result) ;
@@ -277,31 +331,6 @@ local rule init-available-sdk-versions ( condition * : root ? )
 
 # Generic options.
 flags darwin.compile OPTIONS <flags> ;
-
-# Minimal OSX target option. Note that the default is for the min-version
-# option to not be included to let the compiler default take hold.
-for local macosx-version in $(.macosx-versions)
-{
-    switch $(macosx-version)
-    {
-        case iphone* :
-        {
-            local version-match = [ MATCH ([^0-9]+)([0-9.]+) : $(macosx-version) ] ;
-            flags darwin.compile OPTIONS <macosx-version-min>$(macosx-version)
-                : -miphoneos-version-min=$(version-match[2]) ;
-            flags darwin.link OPTIONS <macosx-version-min>$(macosx-version)
-                : -miphoneos-version-min=$(version-match[2]) ;
-        }
-        
-        case * :
-        {
-            flags darwin.compile OPTIONS <macosx-version-min>$(macosx-version)
-                : -mmacosx-version-min=$(macosx-version) ;
-            flags darwin.link OPTIONS <macosx-version-min>$(macosx-version)
-                : -mmacosx-version-min=$(macosx-version) ;
-        }
-    }
-}
 
 # The following adds objective-c support to darwin.
 # Thanks to http://thread.gmane.org/gmane.comp.lib.boost.build/13759
