@@ -92,7 +92,7 @@ if [ os.name ] = AIX
 else
 {
     # Linux PPC
-    flags vacpp.compile CFLAGS <link>shared : -qpic ;
+    flags vacpp.compile CFLAGS <link>shared : -qpic=large ;
     flags vacpp FINDLIBS : rt ;
 }
 
@@ -120,6 +120,9 @@ flags vacpp VA_C_COMPILER  <threading>multi : xlc_r ;
 flags vacpp VA_CXX_COMPILER <threading>single : xlC   ;
 flags vacpp VA_CXX_COMPILER <threading>multi : xlC_r ;
 
+SPACE = " " ;
+
+flags vacpp.link.dll HAVE_SONAME <target-os>linux : "" ;
 
 actions vacpp.link bind NEEDLIBS
 {
@@ -128,7 +131,7 @@ actions vacpp.link bind NEEDLIBS
 
 actions vacpp.link.dll bind NEEDLIBS
 {
-    xlC_r -G $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
+    xlC_r -G $(LINKFLAGS) -o "$(<[1])" $(HAVE_SONAME)-Wl,-soname$(SPACE)-Wl,$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS)
 }
 
 actions vacpp.compile.c
