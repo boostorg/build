@@ -485,7 +485,17 @@ class project-target : abstract-target
               local r ;
               for local v in $(value)
               {
-                v = [ path.root [ path.make $(v) ] $(self.location) ] ;
+                local l = $(self.location) ;
+                if ! $(l)
+                {
+                    # Project corresponding to config files do not have 
+                    # 'location' attribute, but do have source location.
+                    # It might be more reasonable to make every project have
+                    # a location and use some other approach to prevent buildable
+                    # targets in config files, but that's for later.
+                    l = [ get source-location ] ;
+                }                
+                v = [ path.root [ path.make $(v) ] $(l) ] ;
                 # Now make the value absolute path.
                 v = [ path.root $(v) [ path.pwd ] ] ;
                 # Constants should be in platform-native form.

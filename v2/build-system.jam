@@ -238,6 +238,12 @@ local rule load-config ( module-name : filename : path + : must-find ? )
                 "$(filename)" "from" $(where) "." ;
         }
 
+        # Set source location so that path-constant in config files
+        # with relative paths work. This is of most importance
+        # for project-config.jam, but may be used in other
+        # config files as well.
+        local attributes = [ project.attributes $(module-name) ] ;
+        $(attributes).set source-location : $(where:D) : exact ;
         modules.load $(module-name) : $(filename) : $(path) ;
         project.load-used-projects $(module-name) ;
     }
