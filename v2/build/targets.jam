@@ -303,6 +303,13 @@ class project-target : abstract-target
         # before main target instances are created.
         self.explicit-targets += $(target-name) ;
     }
+    
+    rule mark-target-as-always ( target-name )
+    {
+        # Record the name of the target, not instance, since this rule is called
+        # before main target instances are created.
+        self.always-targets += $(target-name) ;
+    }
 
     # Add new target alternative
     #
@@ -466,6 +473,11 @@ class project-target : abstract-target
                 self.main-targets += $(t) ;
                 target = $(self.main-target.$(name)) ;
             }
+            
+            if $(name) in $(self.always-targets)
+            {
+                $(a).always ;
+            }                
 
             $(target).add-alternative $(a) ;
         }
@@ -1100,7 +1112,12 @@ class basic-target : abstract-target
                 [ full-name ] ;
         }
     }
-
+    
+    rule always ( )
+    {
+        self.always = 1 ;
+    }
+    
     # Returns the list of abstract-targets which are used as sources. The extra
     # properties specified for sources are not represented. The only user for
     # this rule at the moment is the "--dump-tests" feature of the test system.
@@ -1267,7 +1284,15 @@ class basic-target : abstract-target
                 {
                     local gur = $(result[1]) ;
                     result = $(result[2-]) ;
-
+                    
+                    if $(self.always)
+                    {
+                        for local t in $(result)
+                        {
+                            $(t).always ;
+                        }                        
+                    }
+                    
                     local s = [ create-subvariant $(result)
                         : [ virtual-target.recent-targets ]
                         : $(property-set) : $(source-targets)
