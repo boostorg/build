@@ -182,6 +182,26 @@ ECHO [ glob-tree *.cpp : .svn ] ;
       </varlistentry>
 
       <varlistentry>
+        <term><literal>always</literal></term>
+        <indexterm><primary>always building a metatarget</primary></indexterm>
+
+        <listitem><para>The <literal>always</literal> funciton takes a single
+        parameter&#x2014;a list of metatarget names. The top-level targets produced
+        by the named metatargets will be always considered out of date. Consider this example:
+        </para>
+<programlisting>
+exe hello : hello.cpp ;
+exe bye : bye.cpp ;
+always hello ;
+</programlisting>
+        <para>If a build of <filename>hello</filename> is requested, then the binary will
+        always be relinked. The object files will not be recompiled, though. Note that if
+        a build of <filename>hello</filename> is not requested, for example you specify just
+        <filename>bye</filename> on the command line, <filename>hello</filename> will not
+        be relinked.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><literal>constant</literal></term>
 
         <listitem><para>Sets project-wide constant. Takes two
