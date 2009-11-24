@@ -28,7 +28,6 @@ rule init ( version ? : command * : options * )
     command = [ common.get-invocation-command vacpp : xlC
         : $(command) : "/usr/vacpp/bin/xlC" ] ;
         
-    ECHO "XXXXXXXX" $(options) ;
     common.handle-options vacpp : $(condition) : $(command) : $(options) ;
 }
 
