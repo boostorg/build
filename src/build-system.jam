@@ -904,7 +904,7 @@ local rule should-clean-project ( project )
         modules.poke : PARALLELISM : $(j) ;
     }
     
-    local k = [ option.get keep-going : false : true ] ;
+    local k = [ option.get keep-going : true : true ] ;
     if $(k) in "on" "yes" "true"
     {
         modules.poke : KEEP_GOING : 1 ;
