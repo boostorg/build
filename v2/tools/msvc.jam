@@ -1322,7 +1322,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 
 # Known toolset versions, in order of preference.
-.known-versions = 10.0 9.0 9.0express 8.0 8.0express 7.1 7.1toolkit 7.0 6.0 ;
+.known-versions = 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1 7.1toolkit 7.0 6.0 ;
 
 # Version aliases.
 .version-alias-6 = 6.0 ;
@@ -1342,6 +1342,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-9.0-reg = "VisualStudio\\9.0\\Setup\\VC" ;
 .version-9.0express-reg = "VCExpress\\9.0\\Setup\\VC" ;
 .version-10.0-reg = "VisualStudio\\10.0\\Setup\\VC" ;
+.version-10.0express-reg = "VCExpress\\10.0\\Setup\\VC" ;
 
 # Visual C++ Toolkit 2003 does not store its installation path in the registry.
 # The environment variable 'VCToolkitInstallDir' and the default installation
