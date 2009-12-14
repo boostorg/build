@@ -1743,7 +1743,7 @@ exe a : a.cpp
           <listitem>
             <para><emphasis>dependency</emphasis></para>
 
-            <para>The value of dependency feature if a target reference.
+            <para>The value of a dependency feature is a target reference.
               When used for building of a main target, the value of
               dependency feature is treated as additional dependency.</para>
 
