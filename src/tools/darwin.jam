@@ -165,7 +165,7 @@ rule init ( version ? : command * : options * : requirement * )
         # Otherwise we need to find a strip program to use. And hence
         # also tell the link action that we need to use a strip
         # post-process.
-        flags darwin.link NEED_STRIP $(condition)/<debug-symbols>off : "" ;        
+        flags darwin.link NEED_STRIP $(condition)/<strip>off : "" ;
         strip =
             [ common.get-invocation-command darwin
                 : strip : [ feature.get-values <striper> : $(options) ] : $(bin) : search-path ] ;
