@@ -36,6 +36,7 @@ import toolset : flags ;
 import alias ;
 import common ;
 import modules ;
+import project ;
 
 
 # Use to specify extra configuration paramters. These get translated
@@ -60,6 +61,9 @@ feature.feature doxygen.doxproc.id : : free ;
 # The title for the resulting BoostBook reference section.
 feature.feature doxygen.doxproc.title : : free ;
 
+# Location for images when generating XML
+feature.feature doxygen:xml-imagedir : : free ;
+
 # Doxygen configuration input file.
 type.register DOXYFILE : doxyfile ;
 
@@ -75,6 +79,7 @@ type.register DOXYGEN_HTML_MULTIFILE : html-dir : HTML ;
 # Redirection HTML file to HTML multifile directory.
 type.register DOXYGEN_HTML : : HTML ;
 
+type.register DOXYGEN_XML_IMAGES : doxygen-xml-images ;
 
 # Initialize the Doxygen module. Parameters are:
 #   name: the name of the 'doxygen' executable. If not specified, the name
@@ -152,6 +157,8 @@ rule init ( name ? )
             : DOXYFILE : DOXYGEN_HTML_MULTIFILE ;
         generators.register-standard doxygen.html-redirect
             : DOXYGEN_HTML_MULTIFILE : DOXYGEN_HTML ;
+        generators.register-standard doxygen.copy-latex-pngs
+            : DOXYGEN_HTML : DOXYGEN_XML_IMAGES ;
 
         IMPORT $(__name__) : doxygen : : doxygen ;
     }
@@ -343,6 +350,129 @@ rule html-redirect ( target : source : properties * )
         : true ;
 }
 
+rule copy-latex-pngs ( target : source : requirements * )
+{
+    local directory = [ path.native
+                        [ feature.get-values <doxygen:xml-imagedir> :
+                          $(requirements) ] ] ;
+    if [ os.name ] = NT
+    {
+        CP on $(target) = copy /y ;
+        MKDIR on $(target) = mkdir ;
+        FROM on $(target) = \\*.png ;
+        TOHTML on $(target) = .\\html\\$(directory) ;
+        TOPDF on $(target) = \\$(directory) ;
+    }
+    else
+    {
+        CP on $(target) = cp ;
+        MKDIR on $(target) = mkdir -p ;
+        FROM on $(target) = /*.png ;
+        TOHTML on $(target) = ./html/$(directory) ;
+        TOPDF on $(target) = $(target:D)/$(directory) ;
+    }
+}
+
+actions copy-latex-pngs
+{
+    $(MKDIR) $(TOHTML)
+    $(MKDIR) $(<:D)$(TOPDF)
+    $(CP) $(>:S=)$(FROM) $(TOHTML)
+    $(CP) $(>:S=)$(FROM) $(<:D)$(TOPDF)
+    echo "Stamped" > "$(<)"
+}
+
+# building latex images for doxygen XML depends
+# on latex, dvips, and ps being in your PATH.
+# This is true for most Unix installs, but
+# not on Win32, where you will need to install
+# MkTex and Ghostscript and add these tools
+# to your path.
+
+actions check-latex
+{
+    latex -version >$(<)
+}
+
+actions check-dvips
+{
+    dvips -version >$(<)
+}
+
+if [ os.name ] = "NT"
+{
+   actions check-gs
+   {
+       gswin32c -version >$(<)
+   }
+}
+else
+{
+   actions check-gs
+   {
+       gs -version >$(<)
+   }
+}
+
+rule check-tools ( )
+{
+    if ! $(.check-tools-targets)
+    {
+        # Find the root project.
+        local root-project = [ project.current ] ;
+        root-project = [ $(root-project).project-module ] ;
+        while
+            [ project.attribute $(root-project) parent-module ] &&
+            [ project.attribute $(root-project) parent-module ] != user-config
+        {
+            root-project =
+                [ project.attribute $(root-project) parent-module ] ;
+        }
+
+        .latex.check = [ new file-target latex.check
+            :
+            : [ project.target $(root-project) ]
+            : [ new action : doxygen.check-latex ]
+            :
+            ] ;
+        .dvips.check = [ new file-target dvips.check
+            :
+            : [ project.target $(root-project) ]
+            : [ new action : doxygen.check-dvips ]
+            :
+            ] ;
+        .gs.check = [ new file-target gs.check
+            :
+            : [ project.target $(root-project) ]
+            : [ new action : doxygen.check-gs ]
+            :
+            ] ;
+        .check-tools-targets = $(.latex.check) $(.dvips.check) $(.gs.check) ;
+    }
+    return $(.check-tools-targets) ;
+}
+
+project.initialize $(__name__) ;
+project doxygen ;
+
+class doxygen-check-tools-target-class : basic-target
+{
+    import doxygen ;
+    rule construct ( name : sources * : property-set )
+    {
+        return [ property-set.empty ] [ doxygen.check-tools ] ;
+    }
+}
+
+local project = [ project.current ] ;
+
+targets.main-target-alternative
+    [ new doxygen-check-tools-target-class check-tools : $(project)
+        : [ targets.main-target-sources : check-tools : no-renaming ]
+        : [ targets.main-target-requirements : $(project) ]
+        : [ targets.main-target-default-build : $(project) ]
+        : [ targets.main-target-usage-requirements : $(project) ]
+    ] ;
 
 # User-level rule to generate BoostBook XML from a set of headers via Doxygen.
 #
@@ -411,6 +541,43 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
         local location-xml = [ feature.get-values <location> : $(requirements) ] ;
         requirements = [ property.change $(requirements) : <location> ] ;
         local target-xml = $(target:B=$(target:B)-xml) ;
+
+        # Check whether we need to build images
+        local images-location =
+            [ feature.get-values <doxygen:xml-imagedir> : $(requirements) ] ;
+        if $(images-location)
+        {
+            doxygen $(target).doxygen-xml-images.html : $(sources)
+                : $(requirements)
+                  <doxygen:param>QUIET=YES
+                  <doxygen:param>WARNINGS=NO
+                  <doxygen:param>WARN_IF_UNDOCUMENTED=NO
+                  <dependency>/doxygen//check-tools ;
+            $(project).mark-target-as-explicit
+                $(target).doxygen-xml-images.html ;
+
+            targets.main-target-alternative
+                [ new typed-target $(target).doxygen-xml-images
+                    : $(project) : DOXYGEN_XML_IMAGES
+                    : $(target).doxygen-xml-images.html
+                    : [ targets.main-target-requirements $(requirements)
+                        : $(project) ]
+                    : [ targets.main-target-default-build $(default-build)
+                        : $(project) ]
+                ] ;
+
+            $(project).mark-target-as-explicit
+                $(target).doxygen-xml-images ;
+
+            if ! [ regex.match "^(.*/)$" : $(images-location) ]
+            {
+                images-location = $(images-location)/ ;
+            }
+
+            requirements +=
+                <dependency>$(target).doxygen-xml-images
+                <xsl:param>boost.doxygen.formuladir=$(images-location) ;
+        }
 
         ## The doxygen configuration file.
         targets.main-target-alternative
