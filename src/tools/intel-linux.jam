@@ -150,6 +150,11 @@ actions compile.c++.pch
     rm -f "$(<)" && "$(CONFIG_COMMAND)" -x c++-header $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -pch-create "$(<)" "$(>)"
 }
 
+actions compile.fortran
+{
+    "ifort" -c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
+
 rule compile.c.pch ( targets * : sources * : properties * )
 {
     gcc.setup-threading $(targets) : $(sources) : $(properties) ;

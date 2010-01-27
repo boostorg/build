@@ -25,6 +25,7 @@ import rc ;
 import regex ;
 import set ;
 import unix ;
+import fortran ;
 
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
@@ -224,6 +225,7 @@ if [ os.name ] = NT
 generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c   : C   : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.asm : ASM : OBJ : <toolset>gcc ;
+generators.register-fortran-compiler gcc.compile.fortran : FORTRAN FORTRAN90 : OBJ : <toolset>gcc ;
 
 # pch support
 
@@ -400,6 +402,7 @@ toolset.flags gcc.compile.c++ USER_OPTIONS <cxxflags> ;
 toolset.flags gcc.compile DEFINES <define> ;
 toolset.flags gcc.compile INCLUDES <include> ;
 toolset.flags gcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
+toolset.flags gcc.compile.fortran USER_OPTIONS <fflags> ;
 
 rule compile.c++.pch ( targets * : sources * : properties * )
 {
@@ -471,6 +474,10 @@ rule compile.c ( targets * : sources * : properties * )
     DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
+rule compile.fortran
+{
+}
+
 actions compile.c++ bind PCH_FILE
 {
     "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<:W)" "$(>:W)"
@@ -479,6 +486,11 @@ actions compile.c++ bind PCH_FILE
 actions compile.c bind PCH_FILE
 {
     "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
+
+actions compile.fortran
+{
+  "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 rule compile.asm
