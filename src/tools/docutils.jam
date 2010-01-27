@@ -44,9 +44,7 @@ generators.register-standard docutils.html : ReST : HTML ;
 
 rule init ( docutils-dir ? : tools-dir ? )
 {
-    ECHO docutils-dir= $(docutils-dir) ;
     docutils-dir ?= [ modules.peek : DOCUTILS_DIR ] ;
-    ECHO tools-dir= $(tools-dir) ;
     tools-dir ?= $(docutils-dir)/tools ;
 
     if ! $(.initialized)
