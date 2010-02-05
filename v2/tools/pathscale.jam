@@ -30,7 +30,7 @@ rule init ( version ? : command * : options * )
   toolset.flags pathscale.compile.fortran90 OPTIONS $(condition) :
     [ feature.get-values <fflags> : $(options) ] : unchecked ;
 
-  command_c = $(command_c[1--2]) $(command[-1]:B=pathCC) ;
+  command_c = $(command_c[1--2]) $(command[-1]:B=pathcc) ;
 
   toolset.flags pathscale CONFIG_C_COMMAND $(condition) : $(command_c) ;
 
