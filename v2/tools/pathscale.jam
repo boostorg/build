@@ -36,7 +36,7 @@ rule init ( version ? : command * : options * )
 
   # fortran support
   local f-command = [ common.get-invocation-command pathscale : pathf90 : $(command) ] ;
-  local command_f = $(command_f[1--2]) $(f-command[-1]:B=pathf77) ;
+  local command_f = $(command_f[1--2]) $(f-command[-1]:B=pathf90) ;
   local command_f90 = $(command_f[1--2]) $(f-command[-1]:B=pathf90) ;
 
   toolset.flags pathscale CONFIG_F_COMMAND $(condition) : $(command_f) ;
@@ -87,7 +87,7 @@ actions compile.c++
 
 actions compile.fortran
 {
-    "$(CONFIG_F_COMMAND)" -f77 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_F_COMMAND)" $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 rule compile.fortran90 ( targets * : sources * : properties * )
