@@ -396,6 +396,12 @@ if [ os.name ] != NT && [ os.name ] != OSF && [ os.name ] != HPUX && [ os.name ]
     SONAME_OPTION = -h ;
 }
 
+# HPUX, for some reason, seem to use '+h', not '-h'.
+if [ os.name ] = HPUX
+{
+    HAVE_SONAME   = "" ;
+    SONAME_OPTION = +h ;
+}
 
 toolset.flags gcc.compile USER_OPTIONS <cflags> ;
 toolset.flags gcc.compile.c++ USER_OPTIONS <cxxflags> ;
