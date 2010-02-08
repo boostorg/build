@@ -59,7 +59,7 @@ rule load ( jamfile-location )
     # If Jamfile is already loaded, don't try again.
     if ! $(module-name) in $(.jamfile-modules)
     {
-        load-jamfile $(jamfile-location) ;
+        load-jamfile $(jamfile-location) : $(module-name) ;
 
         # We want to make sure that child project are loaded only after parent
         # projects. In particular, because parent projects define attributes
@@ -277,6 +277,7 @@ rule find-jamfile (
 #
 local rule load-jamfile (
     dir  # The directory of the project Jamfile.
+    : jamfile-module
     )
 {
     # See if the Jamfile is where it should be.
@@ -293,10 +294,6 @@ local rule load-jamfile (
           :  "Filenames are: " $(jamfile-to-load:D=) ;
     }
     
-    # The module of the Jamfile.
-    #
-    local jamfile-module = [ module-name [ path.parent $(jamfile-to-load) ] ] ;
-
     # Initialize the Jamfile module before loading.
     #
     initialize $(jamfile-module) : [ path.parent $(jamfile-to-load) ]
