@@ -30,6 +30,7 @@ boostbook standalone
         <dependency>html
         <dependency>html/images
         <xsl:param>boost.root=.
+        -<xsl:param>nav.layout=horizontal
         <xsl:param>nav.layout=none
         <format>html:<xsl:param>admon.graphics.path=images/
         <format>html:<xsl:param>navig.graphics.path=images/
