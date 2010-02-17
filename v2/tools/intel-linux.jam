@@ -32,7 +32,8 @@ type.set-generated-target-suffix PCH : <toolset>intel <toolset-intel:platform>li
 
 toolset.inherit-rules intel-linux : gcc ;
 toolset.inherit-flags intel-linux : gcc 
-        : <inlining>off <inlining>on <inlining>full <optimization>space 
+        : <inlining>off <inlining>on <inlining>full
+          <optimization>space <optimization>speed
           <warnings>off <warnings>all <warnings>on
         ;
         
@@ -103,6 +104,7 @@ rule init ( version ? :  command * : options * )
 SPACE = " " ;
 
 flags intel-linux.compile OPTIONS <optimization>space : "-O1" ; # no specific space optimization flag in icc
+flags intel-linux.compile OPTIONS <optimization>speed : "-O3 -ip" ; # no specific space optimization flag in icc
 
 flags intel-linux.compile OPTIONS <warnings>off : -w0 ;
 flags intel-linux.compile OPTIONS <warnings>on : -w1 ;
@@ -147,7 +149,12 @@ rule compile.c++.pch ( targets * : sources * : properties * )
 #
 actions compile.c++.pch
 {
-    rm -f "$(<)" && "$(CONFIG_COMMAND)" -x c++-header $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -pch-create "$(<)" "$(>)"
+    rm -f "$(<)" && "$(CONFIG_COMMAND)" -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -pch-create "$(<)" "$(>)"
+}
+
+actions compile.fortran
+{
+    "ifort" -c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 rule compile.c.pch ( targets * : sources * : properties * )
@@ -159,7 +166,7 @@ rule compile.c.pch ( targets * : sources * : properties * )
 
 actions compile.c.pch
 {
-    rm -f "$(<)" && "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -pch-create "$(<)" "$(>)"
+    rm -f "$(<)" && "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -pch-create "$(<)" "$(>)"
 }
 
 rule link ( targets * : sources * : properties * )
@@ -186,7 +193,7 @@ rule link.dll ( targets * : sources * : properties * )
 # Differ from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-soname$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-soname$(SPACE)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(OPTIONS) $(USER_OPTIONS)
 }
 
 

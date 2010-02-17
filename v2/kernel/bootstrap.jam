@@ -131,7 +131,7 @@ local dont-build = [ option.process ] ;
 #
 if ! $(dont-build)
 {
-    if ! [ MATCH (--python) : $(ARGV) ]
+    if ! --python in $(ARGV)
     {
         # Allow users to override the build system file from the
         # command-line (mostly for testing)

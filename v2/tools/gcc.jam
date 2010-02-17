@@ -25,6 +25,7 @@ import rc ;
 import regex ;
 import set ;
 import unix ;
+import fortran ;
 
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
@@ -224,6 +225,7 @@ if [ os.name ] = NT
 generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c   : C   : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.asm : ASM : OBJ : <toolset>gcc ;
+generators.register-fortran-compiler gcc.compile.fortran : FORTRAN FORTRAN90 : OBJ : <toolset>gcc ;
 
 # pch support
 
@@ -394,12 +396,19 @@ if [ os.name ] != NT && [ os.name ] != OSF && [ os.name ] != HPUX && [ os.name ]
     SONAME_OPTION = -h ;
 }
 
+# HPUX, for some reason, seem to use '+h', not '-h'.
+if [ os.name ] = HPUX
+{
+    HAVE_SONAME   = "" ;
+    SONAME_OPTION = +h ;
+}
 
 toolset.flags gcc.compile USER_OPTIONS <cflags> ;
 toolset.flags gcc.compile.c++ USER_OPTIONS <cxxflags> ;
 toolset.flags gcc.compile DEFINES <define> ;
 toolset.flags gcc.compile INCLUDES <include> ;
 toolset.flags gcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
+toolset.flags gcc.compile.fortran USER_OPTIONS <fflags> ;
 
 rule compile.c++.pch ( targets * : sources * : properties * )
 {
@@ -471,6 +480,10 @@ rule compile.c ( targets * : sources * : properties * )
     DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
+rule compile.fortran
+{
+}
+
 actions compile.c++ bind PCH_FILE
 {
     "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<:W)" "$(>:W)"
@@ -479,6 +492,11 @@ actions compile.c++ bind PCH_FILE
 actions compile.c bind PCH_FILE
 {
     "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
+
+actions compile.fortran
+{
+  "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 rule compile.asm
@@ -676,7 +694,7 @@ rule init-link-flags ( toolset linker condition )
         # as opposed to -s since icc (intel's compiler) is generally
         # option-compatible with and inherits from the gcc toolset, but does not
         # support -s.
-        toolset.flags $(toolset).link OPTIONS     $(condition)/<debug-symbols>off : -Wl,--strip-all   : unchecked ;
+        toolset.flags $(toolset).link OPTIONS     $(condition)/<strip>on          : -Wl,--strip-all   : unchecked ;
         toolset.flags $(toolset).link RPATH       $(condition)                    : <dll-path>        : unchecked ;
         toolset.flags $(toolset).link RPATH_LINK  $(condition)                    : <xdll-path>       : unchecked ;
         toolset.flags $(toolset).link START-GROUP $(condition)                    : -Wl,--start-group : unchecked ;
@@ -731,7 +749,7 @@ rule init-link-flags ( toolset linker condition )
 
     case hpux :
         {
-        toolset.flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off
+        toolset.flags $(toolset).link OPTIONS $(condition)/<strip>on
             : -Wl,-s : unchecked ;
         toolset.flags $(toolset).link OPTIONS $(condition)/<link>shared
             : -fPIC : unchecked ;
@@ -740,7 +758,7 @@ rule init-link-flags ( toolset linker condition )
     case osf :
         {
         # No --strip-all, just -s.
-        toolset.flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off
+        toolset.flags $(toolset).link OPTIONS $(condition)/<strip>on
             : -Wl,-s : unchecked ;
         toolset.flags $(toolset).link RPATH $(condition) : <dll-path>
             : unchecked ;
@@ -752,7 +770,7 @@ rule init-link-flags ( toolset linker condition )
 
     case sun :
         {
-        toolset.flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off
+        toolset.flags $(toolset).link OPTIONS $(condition)/<strip>on
             : -Wl,-s : unchecked ;
         toolset.flags $(toolset).link RPATH $(condition) : <dll-path>
             : unchecked ;
