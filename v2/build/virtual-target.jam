@@ -1218,7 +1218,7 @@ class subvariant
     # referred to using the dependency property are returned as properties, not
     # targets.
     #
-    rule all-referenced-targets ( )
+    rule all-referenced-targets ( theset )
     {
         # Find directly referenced targets.
         local deps = [ $(self.build-properties).dependency ] ;
@@ -1228,17 +1228,20 @@ class subvariant
         local r ;
         for local t in $(all-targets)
         {
-            r += [ $(t:G=).creating-subvariant ] ;
+            if ! [ $(theset).contains $(t) ]
+            {
+                $(theset).add $(t) ;
+                r += [ $(t:G=).creating-subvariant ] ;
+            }            
         }
         r = [ sequence.unique $(r) ] ;
         for local s in $(r)
         {
             if $(s) != $(__name__)
             {
-                all-targets += [ $(s).all-referenced-targets ] ;
+                $(s).all-referenced-targets $(theset) ;
             }
         }
-        return $(all-targets) ;
     }
 
     # Returns the properties specifying implicit include paths to generated
