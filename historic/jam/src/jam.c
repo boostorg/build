@@ -200,6 +200,8 @@ static void run_unit_tests()
 }
 #endif
 
+int anyhow = 0;
+
 #ifdef HAVE_PYTHON
     extern PyObject * bjam_call         ( PyObject * self, PyObject * args );
     extern PyObject * bjam_import_rule  ( PyObject * self, PyObject * args );
@@ -214,7 +216,6 @@ int main( int argc, char * * argv, char * * arg_environ )
     char                  * s;
     struct option           optv[N_OPTS];
     char            const * all = "all";
-    int                     anyhow = 0;
     int                     status;
     int                     arg_c = argc;
     char          *       * arg_v = argv;
@@ -448,6 +449,9 @@ int main( int argc, char * * argv, char * * arg_environ )
             }
         }
 
+        if (!targets_to_update())
+            mark_target_for_updating("all");
+
         /* Parse ruleset. */
         {
             FRAME frame[ 1 ];
@@ -514,11 +518,7 @@ int main( int argc, char * * argv, char * * arg_environ )
             PROFILE_ENTER( MAIN_MAKE );
 
             LIST * targets = targets_to_update();
-            if ( !targets )
-            {
-                status |= make( 1, &all, anyhow );
-            }
-            else
+            if (targets)
             {
                 int targets_count = list_length( targets );
                 const char * * targets2 = (const char * *)
