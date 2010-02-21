@@ -188,6 +188,12 @@ void load_builtins()
       }
 
       {
+          char * args[] = { "targets", "*", ":", "log", "?", 0 };
+          bind_builtin( "UPDATE_NOW",
+                        builtin_update_now, 0, args );
+      }
+
+      {
           char * args[] = { "string", "pattern", "replacements", "+", 0 };
           duplicate_rule( "subst",
             bind_builtin( "SUBST",
@@ -353,6 +359,18 @@ void load_builtins()
           char * args[] = { "string", 0 };
           bind_builtin( "MD5",
                         builtin_md5, 0, args ) ;
+      }
+
+      {
+          char * args[] = { "name", ":", "mode", 0 };
+          bind_builtin( "FILE_OPEN",
+                        builtin_file_open, 0, args );
+      }
+
+      {
+          char * args[] = { "string", ":", "width", 0 };
+          bind_builtin( "PAD",
+                        builtin_pad, 0, args );
       }
 
       /* Initialize builtin modules. */
@@ -1266,6 +1284,60 @@ LIST * builtin_update( PARSE * parse, FRAME * frame )
     return result;
 }
 
+extern int anyhow;
+
+/* Takes a list of target names as first argument, and immediately
+   updates them.
+   Second parameter, if specified, if the descriptor (converted to a string)
+   of a log file where all build output is redirected.
+*/
+LIST * builtin_update_now( PARSE * parse, FRAME * frame )
+{
+    LIST * targets = lol_get( frame->args, 0 );
+    LIST * log = lol_get( frame->args, 1 );
+    int status = 0;
+    int original_stdout;
+    int original_stderr;
+    int n;
+	int targets_count;
+	const char** targets2;
+	int i;
+	
+
+    if (log)
+    {
+        int fd = atoi(log->string);
+        /* Redirect stdout and stderr, temporary, to the log file.  */
+        original_stdout = dup (0);
+        original_stderr = dup (1);
+        dup2 (fd, 0);
+        dup2 (fd, 1);
+    }
+
+    targets_count = list_length( targets );
+    targets2 = (const char * *)BJAM_MALLOC( targets_count * sizeof( char * ) );    
+    for (i = 0 ; targets; targets = list_next( targets ) )
+        targets2[ i++ ] = targets->string;
+    status |= make( targets_count, targets2, anyhow);
+    free( targets );
+
+    if (log)
+    {
+        /* Flush whatever stdio might have buffered, while descriptions
+           0 and 1 still refer to the log file.  */
+        fflush (stdout);
+        fflush (stderr);
+        dup2 (original_stdout, 0);
+        dup2 (original_stderr, 1);
+        close (original_stdout);
+        close (original_stderr);
+    }
+	
+    if (status == 0)
+        return list_new (L0, newstr ("ok"));
+    else
+        return L0;
+}
 
 LIST * builtin_search_for_target( PARSE * parse, FRAME * frame )
 {
@@ -1544,6 +1616,57 @@ LIST * builtin_md5( PARSE * parse, FRAME * frame )
     return list_new (0, newstr(hex_output));
 }
 
+LIST *builtin_file_open( PARSE *parse, FRAME *frame )
+{
+    char* name = lol_get(frame->args, 0)->string;
+    char* mode = lol_get(frame->args, 1)->string;
+    int fd;
+    char buffer[sizeof("4294967295")];
+
+    if (strcmp(mode, "w") == 0)
+    {
+        fd = open(name, O_WRONLY|O_CREAT|O_TRUNC, 0666);
+    }
+    else
+    {
+        fd = open(name, O_RDONLY);
+    }
+
+    if (fd != -1)
+    {
+        sprintf(buffer, "%d", fd);
+        return list_new(L0, newstr(buffer));
+    }
+    else
+    {
+        return L0;
+    }
+}
+
+LIST *builtin_pad( PARSE *parse, FRAME *frame )
+{
+    char *string = lol_get(frame->args, 0)->string;
+    char *width_s = lol_get(frame->args, 1)->string;
+
+    int current = strlen (string);
+    int desired = atoi(width_s);
+    if (current >= desired)
+        return list_new (L0, string);
+    else
+    {
+        char *buffer = malloc (desired + 1);
+        int i;
+        LIST *result;
+
+        strcpy (buffer, string);
+        for (i = current; i < desired; ++i)
+            buffer[i] = ' ';
+        buffer[desired] = '\0';
+        result = list_new (L0, newstr (buffer));
+        free (buffer);
+        return result;
+    }
+}
 
 #ifdef HAVE_PYTHON
 
