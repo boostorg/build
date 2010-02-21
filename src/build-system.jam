@@ -113,6 +113,10 @@ rule set-default-toolset ( toolset : version ? )
     .default-toolset-version = $(version) ;
 }
 
+rule set-post-build-hook ( function )
+{
+    .post-build-hook = $(function) ;
+}
 
 ################################################################################
 #
@@ -947,8 +951,23 @@ local rule should-clean-project ( project )
         UPDATE clean ;
     }
     else
-    {
+    {      
         DEPENDS all : $(actual-targets) ;
-        UPDATE all $(.out-xml) ;
+        if UPDATE_NOW in [ RULENAMES ]
+        {            
+            local ok = [ UPDATE_NOW all $(.out-xml) ] ;
+            if $(.post-build-hook)
+            {
+                $(.post-build-hook) $(ok) ;
+            }
+            # Prevent automatic update of the 'all' target, now that
+            # we have explicitly updated what we wanted.
+            UPDATE ;
+        }
+        else
+        {
+            UPDATE all $(.out-xml) ;
+        }            
     }
 }
+
