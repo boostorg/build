@@ -1320,8 +1320,10 @@ class basic-target : abstract-target
                 }
                 else if [ $(rproperties).get <build> ] = no
                 {
-                    ECHO [ targets.indent ] "Skipping build of: " [ full-name ]
-                        " <build>no in common properties" ;
+                    # If we just see <build>no, we cannot produce any reasonable
+                    # diagnostics. The code that adds this property is expected
+                    # to explain why a target is not built, for example using
+                    # the configure.log-component-configuration function.
                 }
                 else
                 {
