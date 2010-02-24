@@ -1290,18 +1290,22 @@ extern int anyhow;
    updates them.
    Second parameter, if specified, if the descriptor (converted to a string)
    of a log file where all build output is redirected.
+   Third parameter, if non-empty, specifies that the -n option should have
+   no effect -- that is, all out-of-date targets should be rebuild.
 */
 LIST * builtin_update_now( PARSE * parse, FRAME * frame )
 {
     LIST * targets = lol_get( frame->args, 0 );
     LIST * log = lol_get( frame->args, 1 );
+    LIST * force = lol_get (frame->args, 2);
     int status = 0;
     int original_stdout;
     int original_stderr;
     int n;
-	int targets_count;
-	const char** targets2;
-	int i;
+    int targets_count;
+    const char** targets2;
+    int i;
+    int original_noexec;
 	
 
     if (log)
@@ -1314,12 +1318,23 @@ LIST * builtin_update_now( PARSE * parse, FRAME * frame )
         dup2 (fd, 1);
     }
 
+    if (force)
+    {
+        original_noexec = globs.noexec;
+        globs.noexec = 0;
+    }
+
     targets_count = list_length( targets );
     targets2 = (const char * *)BJAM_MALLOC( targets_count * sizeof( char * ) );    
     for (i = 0 ; targets; targets = list_next( targets ) )
         targets2[ i++ ] = targets->string;
     status |= make( targets_count, targets2, anyhow);
     free( targets );
+
+    if (force)
+    {
+        globs.noexec = original_noexec;
+    }
 
     if (log)
     {
