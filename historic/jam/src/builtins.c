@@ -188,7 +188,9 @@ void load_builtins()
       }
 
       {
-          char * args[] = { "targets", "*", ":", "log", "?", 0 };
+          char * args[] = { "targets", "*", 
+                            ":", "log", "?",
+                            ":", "ignore-minus-n", "?", 0 };
           bind_builtin( "UPDATE_NOW",
                         builtin_update_now, 0, args );
       }
