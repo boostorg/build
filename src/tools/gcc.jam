@@ -103,12 +103,12 @@ rule init ( version ? : command * : options * )
         bin ?= [ common.get-absolute-tool-path $(command[-1]) ] ;
         root ?= $(bin:D) ;
     }
+    # The 'command' variable can have multiple elements. When calling
+    # the SHELL builtin we need a single string.
+    local command-string = $(command:J=" ") ;
     #   Autodetect the version and flavor if not given.
     if $(command)
-    {
-        # The 'command' variable can have multiple elements. When calling
-        # the SHELL builtin we need a single string.
-        local command-string = $(command:J=" ") ;
+    {    
         local machine = [ MATCH "^([^ ]+)"
             : [ SHELL "$(command-string) -dumpmachine" ] ] ;
         version ?= [ MATCH "^([0-9.]+)"
@@ -185,16 +185,34 @@ rule init ( version ? : command * : options * )
     # If it's not a system gcc install we should adjust the various programs as
     # needed to prefer using the install specific versions. This is essential
     # for correct use of MinGW and for cross-compiling.
+    
+    local nl = "
+" ;
 
     # - The archive builder.
-    local archiver =
-        [ common.get-invocation-command gcc
-            : ar : [ feature.get-values <archiver> : $(options) ] : $(bin) : search-path ] ;
+    local archiver = [ common.get-invocation-command gcc
+            : [ NORMALIZE_PATH [ MATCH "(.*)[$(nl)]+" : [ SHELL "$(command-string) -print-prog-name=ar" ] ] ]
+            : [ feature.get-values <archiver> : $(options) ] 
+            : $(bin) 
+            : search-path ] ;
     toolset.flags gcc.archive .AR $(condition) : $(archiver[1]) ;
     if $(.debug-configuration)
     {
         ECHO notice: using gcc archiver :: $(condition) :: $(archiver[1]) ;
     }
+
+    # - Ranlib
+    local ranlib = [ common.get-invocation-command gcc
+            : [ NORMALIZE_PATH [ MATCH "(.*)[$(nl)]+" : [ SHELL "$(command-string) -print-prog-name=ranlib" ] ] ]
+            : [ feature.get-values <ranlib> : $(options) ] 
+            : $(bin) 
+            : search-path ] ;
+    toolset.flags gcc.archive .RANLIB $(condition) : $(ranlib[1]) ;
+    if $(.debug-configuration)
+    {
+        ECHO notice: using gcc ranlib :: $(condition) :: $(ranlib[1]) ;
+    }
+
 
     # - The resource compiler.
     local rc =
@@ -839,6 +857,7 @@ actions link bind LIBRARIES
 # logic in intel-linux, but that's hardly worth the trouble as on Linux, 'ar' is
 # always available.
 .AR = ar ;
+.RANLIB = ranlib ;
 
 toolset.flags gcc.archive AROPTIONS <archiveflags> ;
 
@@ -879,8 +898,8 @@ rule archive ( targets * : sources * : properties * )
 actions piecemeal archive
 {
     "$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
+    "$(.RANLIB)" "$(<)"
 }
-
 
 rule link.dll ( targets * : sources * : properties * )
 {
