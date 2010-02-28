@@ -498,8 +498,11 @@ rule compile.c ( targets * : sources * : properties * )
     DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
-rule compile.fortran
+rule compile.fortran ( targets * : sources * : properties * )
 {
+    setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-fpic $(targets) : $(sources) : $(properties) ;
+    setup-address-model $(targets) : $(sources) : $(properties) ;
 }
 
 actions compile.c++ bind PCH_FILE
