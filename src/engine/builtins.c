@@ -375,6 +375,12 @@ void load_builtins()
                         builtin_pad, 0, args );
       }
 
+      {
+          char * args[] = { "targets", "*", 0 };
+          bind_builtin( "PRECIOUS",
+                        builtin_precious, 0, args );
+      }
+
       /* Initialize builtin modules. */
       init_set();
       init_path();
@@ -1684,6 +1690,20 @@ LIST *builtin_pad( PARSE *parse, FRAME *frame )
         return result;
     }
 }
+
+LIST *builtin_precious( PARSE *parse, FRAME *frame )
+{
+    LIST* targets = lol_get(frame->args, 0);
+
+    for ( ; targets; targets = list_next( targets ) )    
+    {
+        TARGET* t = bindtarget (targets->string);
+        t->flags |= T_FLAG_PRECIOUS;
+    }
+
+    return L0;
+}
+
 
 #ifdef HAVE_PYTHON
 

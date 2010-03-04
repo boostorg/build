@@ -59,6 +59,7 @@ LIST *builtin_shell( PARSE *parse, FRAME *frame );
 LIST *builtin_md5( PARSE *parse, FRAME *frame );
 LIST *builtin_file_open( PARSE *parse, FRAME *frame );
 LIST *builtin_pad( PARSE *parse, FRAME *frame );
+LIST *builtin_precious( PARSE *parse, FRAME *frame );
 
 void backtrace( FRAME *frame );
 
