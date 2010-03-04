@@ -166,6 +166,8 @@ struct _target
  */
 #define T_FLAG_ISFILE         0x0400
 
+#define T_FLAG_PRECIOUS       0x0800 
+
     char       binding;               /* how target relates to a real file or
                                        * folder
                                        */
