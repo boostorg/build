@@ -660,11 +660,13 @@ class Tester(TestCmd.TestCmd):
             self.ignore('*.pdb')       # MSVC program database files.
             self.ignore('*.rsp')       # Response files.
             self.ignore('*.tds')       # Borland debug symbols.
-            self.ignore('*.manifest')  # MSVC DLL manifests.
+            self.ignore('*.manifest')  # MSVC DLL manifests.            
 
         # Debug builds of bjam built with gcc produce this profiling data.
         self.ignore('gmon.out')
         self.ignore('*/gmon.out')
+
+        self.ignore("bin/config.log")
 
         if not self.unexpected_difference.empty():
             annotation('failure', 'Unexpected changes found')
