@@ -1040,6 +1040,77 @@ builtin rule, =COMMAND= can be used as an alias for =SHELL= in such a case.
 
 [endsect]
 
+[section =MD5= ]
+
+[pre
+rule MD5 ( /string/ )
+]
+
+=MD5= computes the MD5 hash of the string passed as paramater and returns it.
+
+[endsect]
+
+[section =SPLIT_BY_CHARACTERS= ]
+
+[pre
+rule SPLIT_BY_CHARACTERS ( /string/ : /delimiters/ )
+]
+
+=SPLIT_BY_CHARACTERS= splits the specified /string/ on any delimiter character
+present in /delimiters/ and returns the resulting list.
+
+[endsect]
+
+[section =PRECIOUS= ]
+
+[pre
+rule PRECIOUS ( /targets/ * )
+]
+
+The =PRECIOUS= rule specifies that each of the targets passed as the arguments
+should not be removed even if the command updating that target fails.
+
+[endsect]
+
+[section =PAD= ]
+
+[pre
+rule PAD ( /string/ : /width/ )
+]
+
+If /string/ is shorter than /width/ characters, pads it with whitespace
+characters on the right, and returns the result.  Otherwise, returns
+/string/ unmodified.
+
+[endsect]
+
+[section =FILE_OPEN= ]
+
+[pre
+rule FILE_OPEN ( /filename/ : /mode/ )
+]
+
+The =FILE_OPEN= rule opens the specified file and returns a file
+descriptor. The /mode/ parameter can be either "w" or "r". Note
+that at present, only the =UPDATE_NOW= rule can use the resulting
+file descriptor number.
+
+[endsect]
+
+[section =UPDATE_NOW= ]
+
+[pre
+rule UPDATE_NOW ( /targets/ * : /log/ ? : /ignore-minus-n/ ? )
+]
+
+The =UPDATE_NOW= caused the specified targets to be updated immediately.
+If update was successfully, non-empty string is returned. The /log/ parameter,
+if present, specifies a descriptor of a file where all output from building
+is redirected. If the /ignore-minus-n/ parameter is specified, the targets
+are updated even if the =-n= parameter is specified on the command line.
+
+[endsect]
+
 [endsect]
 
 [endsect]
