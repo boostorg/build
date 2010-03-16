@@ -968,7 +968,7 @@ rule evaluate-requirements ( requirements : context : what )
     # might come from project's requirements.
 
     local unconditional = [ feature.expand [ $(requirements).non-conditional ] ] ;
-
+ 
     local raw = [ $(context).raw ] ;
     raw = [ property.refine $(raw) : $(unconditional) ] ;
 
@@ -997,7 +997,7 @@ rule evaluate-requirements ( requirements : context : what )
     # <conditional> properties. So the list of indirect conditionals does not
     # change.
     local indirect = [ $(requirements).get <conditional> ] ;
-    indirect = [ MATCH @(.*) : $(indirect) ] ;
+    indirect = [ MATCH ^@(.*) : $(indirect) ] ;
 
     local ok ;
     while $(count)
@@ -1064,6 +1064,22 @@ rule common-properties2 ( build-request requirements )
 
     return [ evaluate-requirements $(requirements) : $(build-request) :
         refined ] ;
+}
+
+rule push-target ( target )
+{
+    .targets = $(target) $(.targets) ;
+}
+
+rule pop-target ( )
+{
+    .targets = $(.targets[2-]) ;
+}
+
+# Return the metatarget that is currently being generated.
+rule current ( )
+{
+    return $(.targets[1]) ;
 }
 
 
@@ -1221,6 +1237,7 @@ class basic-target : abstract-target
             ECHO [ targets.indent ] "Command line free features: " [ $(cf).raw ] ;
             ECHO [ targets.indent ] "Target requirements: " [ $(self.requirements).raw ] ;
         }
+        targets.push-target $(__name__) ;
 
         if ! $(self.generated.$(property-set))
         {
@@ -1361,6 +1378,7 @@ class basic-target : abstract-target
             }
         }
 
+        targets.pop-target ;
         targets.decrease-indent ;
         return $(self.generated.$(property-set)) ;
     }

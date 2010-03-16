@@ -14,6 +14,7 @@ import targets ;
 import errors ;
 import targets ;
 import sequence ;
+import "class" : new ;
 
 rule log-summary ( )
 {
@@ -48,16 +49,25 @@ rule log-component-configuration ( component : message )
     .component-logs.$(component) += $(message) ;
 }
 
+
+
 rule log-check-result ( result )
 {
-    .check-results += $(result) ;
+    if ! $(.announced-checks)
+    {
+        ECHO "Performing configuration checks\n" ;
+        .announced-checks = 1 ;
+    }
+    
+    ECHO $(result) ;    
+    #.check-results += $(result) ;
 }
 
 rule print-component-configuration ( )
 {
     local c = [ sequence.unique $(.components) ] ;
     
-    ECHO "Component configuration:\n" ;
+    ECHO "\nComponent configuration:\n" ;
     for c in $(.components)
     {
         local s ;
@@ -102,11 +112,11 @@ rule print-configure-checks-summary ( )
 rule builds ( metatarget-reference : project : ps : what )
 {   
     local result ;
-    
+           
     if ! $(.$(what)-tested.$(ps))
-    {
+    {        
         .$(what)-tested.$(ps) = true ;
-
+        
         local targets = [ targets.generate-from-reference 
             $(metatarget-reference) : $(project) : $(ps) ] ;
         
@@ -154,4 +164,50 @@ rule set-log-file ( log-file )
         .log-fd = [ FILE_OPEN $(log-file) : "w" ] ;
     }    
 }
+
+# Frontend rules
+
+class check-target-builds-worker
+{
+    import configure ;
+    import property-set ;
+    import targets ;
+    import property ; 
+    
+    rule __init__ ( target : true-properties * : false-properties * )    
+    {
+        self.target = $(target) ;
+        self.true-properties = $(true-properties) ;
+        self.false-properties = $(false-properties) ;
+    }
+        
+    rule check ( properties * )
+    {
+        # FIXME: this should not be hardcoded. Other checks might
+        # want to consider different set of features as relevant.
+        local toolset = [ property.select <toolset> : $(properties) ] ;
+        local ps = [ property-set.create $(toolset) ] ;        
+        local t = [ targets.current ] ;
+        local p = [ $(t).project ] ;
+        if [ configure.builds $(self.target) : $(p) : $(ps) : "$(self.target) builds" ]
+        {
+            return $(self.true-properties) ;
+        }        
+        else
+        {
+            return $(self.false-properties) ;
+        }        
+    }    
+}
+
+
+rule check-target-builds ( target : true-properties * : false-properties * )
+{
+    local instance = [ new check-target-builds-worker $(target) : $(true-properties)
+      : $(false-properties) ] ;
+    return <conditional>@$(instance).check ;
+}
+
+IMPORT $(__name__) : check-target-builds :  : check-target-builds ;
+
 
