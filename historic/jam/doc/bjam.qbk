@@ -1104,7 +1104,7 @@ rule UPDATE_NOW ( /targets/ * : /log/ ? : /ignore-minus-n/ ? )
 ]
 
 The =UPDATE_NOW= caused the specified targets to be updated immediately.
-If update was successfully, non-empty string is returned. The /log/ parameter,
+If update was successfull, non-empty string is returned. The /log/ parameter,
 if present, specifies a descriptor of a file where all output from building
 is redirected. If the /ignore-minus-n/ parameter is specified, the targets
 are updated even if the =-n= parameter is specified on the command line.
