@@ -1,5 +1,49 @@
 [variablelist
 
+[[3.1.18] [
+
+After years of bjam developments.. This is going to be the last unbundled release of the
+3.1.x series. From this point forward bjam will only be bundled as part of the larger
+Boost Build system. And hence will likely change name at some point. As a side effect
+of this move people will get more frequent release of bjam (or whatever it ends up being
+called).
+
+[list
+    [li New built-ins, MD5, SPLIT_BY_CHARACTERS, PRECIOUS, PAD, FILE_OPEN, and UPDATE_NOW.
+        -- ['Vladimir P.]
+        ]
+    [li Ensure all file descriptors are closed when executing actions complete on *nix.
+        -- ['Noel B.]
+        ]
+    [li Fix warnings, patch from Mateusz Loskot.
+        -- ['Vladimir P.]
+        ]
+    [li Add KEEP_GOING var to programatically override the '-q' option.
+        -- ['Vladimir P.]
+        ]
+    [li Add more parameters, up to 19 from 9, to rule invocations. Patch from
+        Jonathan Biggar.
+        -- ['Vladimir P.]
+        ]
+    [li Print failed command output even if the normally quite '-d0' option.
+        -- ['Vladimir P.]
+        ]
+    [li Build of bjam with vc10, aka Visual Studio 2010.
+        -- ['Vladimir P.]
+        ]
+    [li More macros for detection of OSPLAT, patch from John W. Bito.
+        -- ['Vladimir P.]
+        ]
+    [li Add PARALLELISM var to programatically override the '-j' option.
+        -- ['Vladimir P.]
+        ]
+    [li Tweak doc building to allow for PDF generation of docs.
+        -- ['John M.]
+        ]
+]
+
+]]
+
 [[3.1.17] [
 
 A year in the making this release has many stability improvements and various performance
