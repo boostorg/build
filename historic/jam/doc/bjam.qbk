@@ -37,7 +37,7 @@
 
 [/ Templates ]
 
-[template literal[text]'''<literallayout>'''[text]'''</literallayout>''']
+[template literal[text]'''<literallayout><literal>'''[text]'''</literal></literallayout>''']
 [template list[items]'''<itemizedlist>'''[items]'''</itemizedlist>''']
 [template orderedlist[items]'''<orderedlist>'''[items]'''</orderedlist>''']
 [template li[text]'''<listitem>'''[text]'''</listitem>''']
@@ -378,29 +378,29 @@ The arguments immediately after the toolset are passed directly to the setup scr
 The arguments starting with the "=--option=" forms are passed to the =build.jam= script and are used to further customize what gets built. Options and targets supported by the =build.jam= script:
 
 [variablelist
-    [[[^---]]
+    [[[literal ---]]
         [Empty option when one wants to only specify a target.]]
-    [[[^--release]]
+    [[[literal --release]]
         [The default, builds the optimized executable.]]
-    [[[^--debug]]
+    [[[literal --debug]]
         [Builds debugging versions of the executable. When built they are placed in their own directory "=bin./platform/.debug=".]]
-    [[[^--grammar]]
+    [[[literal --grammar]]
         [Normally the Jam language grammar parsing files are not regenerated. This forces building of the grammar, although it may not force the regeneration of the grammar parser. If the parser is out of date it will be regenerated and subsequently built.]]
-    [[[^--with-python=/path/]]
+    [[[literal --with-python=/path/]]
         [Enables Python integration, given a path to the Python libraries.]]
-    [[[^--gc]]
+    [[[literal --gc]]
         [Enables use of the Boehm Garbage Collector. The build will look for the Boehm-GC source in a "boehm_gc" subdirectory from the =bjam= sources.]]
-    [[[^--duma]]
+    [[[literal --duma]]
         [Enables use of the DUMA (Detect Uintended Memory Access) debugging memory allocator. The build expects to find the DUMA source files in a "duma" subdirectory from the =bjam= sources.]]
-    [[[^--toolset-root=/path/]]
+    [[[literal --toolset-root=/path/]]
         [Indicates where the toolset used to build is located. This option is passed in by the bootstrap (=build.bat= or =build.sh=) script.]]
-    [[[^--show-locate-target]]
+    [[[literal --show-locate-target]]
         [For information, prints out where it will put the built executable.]]
-    [[[^--noassert]]
+    [[[literal --noassert]]
         [Disable debug assertions, even if building the debug version of the executable.]]
-    [[[^dist]]
+    [[[literal dist]]
         [Generate packages (compressed archives) as appropriate for distribution in the platform, if possible.]]
-    [[[^clean]]
+    [[[literal clean]]
         [Remove all the built executables and objects.]]
 ]
 
@@ -427,10 +427,10 @@ Options are either singular or have an accompanying value. When a value is allow
 
 [variablelist
   
-  [ [[^-a]]
+  [ [[literal -a]]
     [Build all targets anyway, even if they are up-to-date.] ]
   
-  [ [[^-d'''&nbsp;'''/n/]]
+  [ [[literal -d /n/]]
     [
     Enable cummulative debugging levels from 1 to n. Values are:
     
@@ -451,43 +451,43 @@ Options are either singular or have an accompanying value. When a value is allow
         ]
     ] ]
   
-  [ [[^-d'''&nbsp;'''+/n/]]
+  [ [[literal -d +/n/]]
     [Enable debugging level /n/.] ]
   
-  [ [[^-d'''&nbsp;'''0]]
+  [ [[literal -d 0]]
     [Turn off all debugging levels. Only errors are reported.] ]
   
-  [ [[^-f'''&nbsp;'''/Jambase/]] [Read /Jambase/ instead of using the built-in
+  [ [[literal -f /Jambase/]] [Read /Jambase/ instead of using the built-in
     Jambase. Only one -f flag is permitted, but the /Jambase/ may explicitly
     include other files. A /Jambase/ name of "-" is allowed, in which case
     console input is read until it is closed, at which point the input is
     treated as the Jambase.] ]
   
-  [ [[^-j'''&nbsp;'''/n/]]
+  [ [[literal -j /n/]]
     [Run up to /n/ shell commands concurrently (UNIX and NT only). The default is 1.] ]
   
-  [ [[^-l'''&nbsp;'''/n/]]
+  [ [[literal -l /n/]]
     [Limit actions to running for /n/ number of seconds, after which they are stopped. Note: Windows only.] ]
   
-  [ [[^-n]]
+  [ [[literal -n]]
     [Don't actually execute the updating actions, but do everything else. This changes the debug level default to =-d 2=.] ]
   
-  [ [[^-o'''&nbsp;'''/file/]]
+  [ [[literal -o /file/]]
     [Write the updating actions to the specified file instead of running them.] ]
   
-  [ [[^-q]]
+  [ [[literal -q]]
     [Quit quickly (as if an interrupt was received) as soon as *any* target fails.] ]
   
-  [ [[^-s'''&nbsp;'''/var/=/value/]]
+  [ [[literal -s /var/=/value/]]
     [Set the variable /var/ to /value/, overriding both internal variables and variables imported from the environment.] ]
   
-  [ [[^-t'''&nbsp;'''/target/]]
+  [ [[literal -t /target/]]
     [Rebuild /target/ and everything that depends on it, even if it is up-to-date.] ]
   
-  [ [[^--'''&nbsp;'''/value/]]
+  [ [[literal -- /value/]]
     [The option and /value/ is ignored, but is available from the =$(ARGV)= variable. ]]
   
-  [ [[^-v]]
+  [ [[literal -v]]
     [Print the version of =bjam= and exit.] ]
 ]
 
