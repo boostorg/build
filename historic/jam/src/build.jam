@@ -3,7 +3,7 @@
 #~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Clean env vars of any "extra" empty values.
-for local v in ARGV CC CFLAGS
+for local v in ARGV CC CFLAGS LIBS
 {
 	local values ;
 	for local x in $($(v))
