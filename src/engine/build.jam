@@ -57,7 +57,7 @@ if $(with-python)
     {
         --python-include = [ .path $(python-location) include ] ;
         --python-lib = ;
-        for local v in 25 24 23 22
+        for local v in 26 25 24 23 22
         {
             --python-lib ?=
                 [ GLOB [ .path $(python-location) libs ] : "python$(v).lib" ]
@@ -80,7 +80,7 @@ if $(with-python)
     {
         --python-include = ;
         --python-lib = ;
-        for local v in 2.5 2.4 2.3 2.2
+        for local v in 2.6 2.5 2.4 2.3 2.2
         {
             local inc = [ GLOB [ .path $(python-location) include ] : python$(v) ] ;
             local lib = [ GLOB [ .path $(python-location) lib ] : libpython$(v)* ] ;
