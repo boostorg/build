@@ -27,7 +27,7 @@ else { . = "." ; }
 ./ ?= "" ;
 
 # Info about what we are building.
-_VERSION_ = 3 1 18 ;
+_VERSION_ = 3 1 19 ;
 NAME = boost-jam ;
 VERSION = $(_VERSION_:J=$(.)) ;
 RELEASE = 1 ;
