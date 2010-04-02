@@ -80,27 +80,18 @@ flags borland.compile OPTIONS <warnings-as-errors>on : -w! ;
 # Deal with various runtime configs...
 
 # This should be not for DLL
-local target = [ feature.get-values target-os : $(properties) ] ;
+flags borland OPTIONS <user-interface>console : -tWC ;
 
-flags borland OPTIONS <user-interface>console : -tC ;
+# -tWR sets -tW as well, so we turn it off here and then turn it 
+# on again later if we need it:
+flags borland OPTIONS <runtime-link>shared : -tWR -tWC ;
+flags borland OPTIONS <user-interface>gui : -tW ;
 
-switch $(target)
-{
-    case windows :
-    {
-        # -tWR sets -tW as well, so we turn it off here and then turn it 
-        # on again later if we need it:
-        flags borland OPTIONS <runtime-link>shared : -tWR -tWC ;
-        flags borland OPTIONS <user-interface>gui : -tW ;
-        flags borland OPTIONS <main-target-type>LIB/<link>shared : -tWD ;
-        # Hmm.. not sure what's going on here.
-        flags borland OPTIONS : -WM- ;
-        flags borland OPTIONS <threading>multi : -tWM ;
-    }
-    case darwin :
-    {
-    }
-}
+flags borland OPTIONS <main-target-type>LIB/<link>shared : -tWD ;
+# Hmm.. not sure what's going on here.
+flags borland OPTIONS : -WM- ;
+flags borland OPTIONS <threading>multi : -tWM ;
+
 
 
 flags borland.compile OPTIONS <cxxflags> ;
