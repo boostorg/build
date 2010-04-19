@@ -20,7 +20,7 @@ class objc-scanner : c-scanner
 
 scanner.register objc-scanner : include ;
 
-type OBJECTIVE_C : m ;
-type OBJECTIVE_CPP : mm ;
+type.register OBJECTIVE_C : m ;
+type.register OBJECTIVE_CPP : mm ;
 type.set-scanner OBJECTIVE_C : objc-scanner ;
 type.set-scanner OBJECTIVE_CPP : objc-scanner ;

@@ -69,10 +69,10 @@ class c-scanner : scanner
 
 scanner.register c-scanner : include ;
 
-type CPP : cpp cxx cc ;
-type H   : h ;
-type HPP : hpp : H ;
-type C   : c ;
+type.register CPP : cpp cxx cc ;
+type.register H   : h ;
+type.register HPP : hpp : H ;
+type.register C   : c ;
 
 # It most cases where a CPP file or a H file is a source of some action, we
 # should rebuild the result if any of files included by CPP/H are changed. One
